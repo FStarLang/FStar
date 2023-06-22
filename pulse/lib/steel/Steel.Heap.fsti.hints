@@ -1,0 +1,194 @@
+[
+  "\fÂ‚‚f’€n\u0015ÀÍ7\"Äbó",
+  [
+    [
+      "Steel.Heap.is_null",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.Heap.null" ],
+      0,
+      "7454d849beda05dd08db23975e51b258"
+    ],
+    [
+      "Steel.Heap.join_commutative",
+      1,
+      2,
+      1,
+      [ "@query", "lemma_Steel.Heap.disjoint_sym" ],
+      0,
+      "5eef5b336072316b8e9d6aeb306f594d"
+    ],
+    [
+      "Steel.Heap.disjoint_join",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "747c65385c24e5a6611cf8ae88a59e7c"
+    ],
+    [
+      "Steel.Heap.join_associative",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_b3a6822d21434eb6a4849a21492ca268"
+      ],
+      0,
+      "b06dac2eb6986cf61e391f79ef076480"
+    ],
+    [
+      "Steel.Heap.heap_prop_is_affine",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "75492b7ca1250cf853e85e0d8ddc2664"
+    ],
+    [
+      "Steel.Heap.pts_to_compatible",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b8c53281c1f6f6db89139e11c207cfdc"
+    ],
+    [
+      "Steel.Heap.intro_star",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "18a1e88b421908f78ca004eb2ba6c6d0"
+    ],
+    [
+      "Steel.Heap.pure",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Steel.Heap.heap_prop_is_affine",
+        "interpretation_Tm_abs_631a29915bf9a085ae2d714058f48fbf"
+      ],
+      0,
+      "bb6ed1498b3d53e3b8b0b1b039bcd08d"
+    ],
+    [
+      "Steel.Heap.is_frame_preserving",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "264b5e61d730d3b18c20142cb389389c"
+    ],
+    [
+      "Steel.Heap.action_with_frame",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e34df7fe8ebf8daad7b288c993ca5f1f"
+    ],
+    [
+      "Steel.Heap.action_framing",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Steel.Heap.action",
+        "equation_Steel.Heap.frame_related_heaps",
+        "equation_Steel.Heap.full_hheap", "equation_Steel.Heap.hheap",
+        "equation_Steel.Heap.is_frame_preserving",
+        "refinement_interpretation_Tm_refine_7fbf7a8bf0cfe36969e1ed377ac741c7",
+        "refinement_interpretation_Tm_refine_da7320b2dfec01e1d9eb5c40de6dbb67",
+        "refinement_interpretation_Tm_refine_edbdae9d6b6624a6ec3f6b429364c960"
+      ],
+      0,
+      "0f74b44d39bf26d2bc4ad562fd2174cf"
+    ],
+    [
+      "Steel.Heap.sel_v",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a672b7e49959dfe73e229fcde36bab09"
+    ],
+    [
+      "Steel.Heap.witnessed_ref",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "92b7c4f137fe11aa1537b52249789efd"
+    ],
+    [
+      "Steel.Heap.select_refine",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "8e0a779857dbe2c6d77c6ee2d3e85860"
+    ],
+    [
+      "Steel.Heap.split_action",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_782bbf7acd60ae0036bd61a1f4d3807b"
+      ],
+      0,
+      "f3cc9c80f432323be16c2f3f5916ecf3"
+    ],
+    [
+      "Steel.Heap.gather_action",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_625413e9a3a548e616103efddf1886c4"
+      ],
+      0,
+      "a0a638b41df78cc5bc4d82120ad3bee4"
+    ],
+    [
+      "Steel.Heap.extend",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "546ca9f52698b895e60d283acdb4e874"
+    ],
+    [
+      "Steel.Heap.id_elim_star",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "17119aca23daf08a7a0fe5b1e83b2279"
+    ]
+  ]
+]

@@ -1,0 +1,305 @@
+[
+  "¡ÊÃM7Ï‹SåÃ§]ŸÙdÛ",
+  [
+    [
+      "Pulse.Syntax.Base.range_singleton",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "0e569877d73494303d06b6d9baf80cca"
+    ],
+    [
+      "Pulse.Syntax.Base.ppname_default",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ce036b6b736ef4e0bc3a9ff132a12aed",
+        "equation_FStar.Sealed.Inhabited.is_sealed",
+        "equation_Pulse.Syntax.Base.range_singleton_trigger",
+        "string_typing", "true_interp"
+      ],
+      0,
+      "e3a931ebee483bf56ce807c5ee1d48ed"
+    ],
+    [
+      "Pulse.Syntax.Base.mk_ppname",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Pulse.Syntax.Base.range_singleton_trigger" ],
+      0,
+      "8598554e9e2bc5fb83ebd5f33a4590db"
+    ],
+    [
+      "Pulse.Syntax.Base.as_fv",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Pulse.Syntax.Base.range_singleton_trigger" ],
+      0,
+      "c2f8e85a16e5c687f190a45b50d1f6ea"
+    ],
+    [
+      "Pulse.Syntax.Base.tm_vprop",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Pulse.Syntax.Base.range_singleton_trigger" ],
+      0,
+      "4a5f6e259ce0491105b06cd15d47d5a3"
+    ],
+    [
+      "Pulse.Syntax.Base.tm_inames",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Pulse.Syntax.Base.range_singleton_trigger" ],
+      0,
+      "095fc93ebbc434632fb7c31b3d186209"
+    ],
+    [
+      "Pulse.Syntax.Base.tm_emp",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Pulse.Syntax.Base.range_singleton_trigger" ],
+      0,
+      "c7707e2c25e3e4238faf45c733dd9593"
+    ],
+    [
+      "Pulse.Syntax.Base.tm_emp_inames",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Pulse.Syntax.Base.range_singleton_trigger" ],
+      0,
+      "dac3f9d868d7f296f8b6de815b6cfa77"
+    ],
+    [
+      "Pulse.Syntax.Base.tm_unknown",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Pulse.Syntax.Base.range_singleton_trigger" ],
+      0,
+      "03d9be60497e3bf64fbe00765915fd5a"
+    ],
+    [
+      "Pulse.Syntax.Base.tm_star",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Pulse.Syntax.Base.range_singleton_trigger" ],
+      0,
+      "86274da4ac79e072e2811f2c8f447172"
+    ],
+    [
+      "Pulse.Syntax.Base.tm_exists_sl",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Pulse.Syntax.Base.range_singleton_trigger" ],
+      0,
+      "bff24bf8c9d78de27bd0403c289ec864"
+    ],
+    [
+      "Pulse.Syntax.Base.tm_forall_sl",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Pulse.Syntax.Base.range_singleton_trigger" ],
+      0,
+      "0d8bbd91fa92a05537068854a45e3ba6"
+    ],
+    [
+      "Pulse.Syntax.Base.__proj__C_Tot__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_f30c5c1cb0a78245bc6b75b64fa49472"
+      ],
+      0,
+      "28366c22c355c8be5382fd8ec51d0cb2"
+    ],
+    [
+      "Pulse.Syntax.Base.__proj__C_ST__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_d79470205dca7f56c9b5a5da9d23b961"
+      ],
+      0,
+      "2df97087ef55344db59382ae8c0349cc"
+    ],
+    [
+      "Pulse.Syntax.Base.__proj__C_STAtomic__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_13d5b859272356b5c25fbc5503eba342"
+      ],
+      0,
+      "241e7c05e128b6a810d5b11c2113b51c"
+    ],
+    [
+      "Pulse.Syntax.Base.__proj__C_STAtomic__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_13d5b859272356b5c25fbc5503eba342"
+      ],
+      0,
+      "4feb55c32a56a1c7ef5212ef269ee383"
+    ],
+    [
+      "Pulse.Syntax.Base.__proj__C_STGhost__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_dc14c56dc5eae6acd747c5a527061f28"
+      ],
+      0,
+      "ed507b7608f2578a27069f2fef41b4f5"
+    ],
+    [
+      "Pulse.Syntax.Base.__proj__C_STGhost__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_dc14c56dc5eae6acd747c5a527061f28"
+      ],
+      0,
+      "4a5fe3e5e86f9c01afa7d143f1daac02"
+    ],
+    [
+      "Pulse.Syntax.Base.comp_res",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_Pulse.Syntax.Base.C_ST",
+        "disc_equation_Pulse.Syntax.Base.C_STAtomic",
+        "disc_equation_Pulse.Syntax.Base.C_STGhost",
+        "disc_equation_Pulse.Syntax.Base.C_Tot",
+        "fuel_guarded_inversion_Pulse.Syntax.Base.comp",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "ed41a41d5b1d16f1bdc7256c20f60210"
+    ],
+    [
+      "Pulse.Syntax.Base.st_comp_of_comp",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_Pulse.Syntax.Base.C_ST",
+        "disc_equation_Pulse.Syntax.Base.C_STAtomic",
+        "disc_equation_Pulse.Syntax.Base.C_STGhost",
+        "equation_Pulse.Syntax.Base.stateful_comp",
+        "primitive_Prims.op_BarBar", "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_385f59c31213d29cc308b93df5d99dc9"
+      ],
+      0,
+      "453338037dd4190c995d4747b6cf7223"
+    ],
+    [
+      "Pulse.Syntax.Base.with_st_comp",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_Pulse.Syntax.Base.C_ST",
+        "disc_equation_Pulse.Syntax.Base.C_STAtomic",
+        "disc_equation_Pulse.Syntax.Base.C_STGhost",
+        "equation_Pulse.Syntax.Base.stateful_comp",
+        "primitive_Prims.op_BarBar", "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_385f59c31213d29cc308b93df5d99dc9"
+      ],
+      0,
+      "49ba5457356083f424efdb0be831ffcc"
+    ],
+    [
+      "Pulse.Syntax.Base.comp_u",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_Pulse.Syntax.Base.C_ST",
+        "disc_equation_Pulse.Syntax.Base.C_STAtomic",
+        "disc_equation_Pulse.Syntax.Base.C_STGhost",
+        "equation_Pulse.Syntax.Base.stateful_comp",
+        "primitive_Prims.op_BarBar", "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_385f59c31213d29cc308b93df5d99dc9"
+      ],
+      0,
+      "6cf4c8108cc34952039f1beeb925aaa4"
+    ],
+    [
+      "Pulse.Syntax.Base.comp_pre",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_Pulse.Syntax.Base.C_ST",
+        "disc_equation_Pulse.Syntax.Base.C_STAtomic",
+        "disc_equation_Pulse.Syntax.Base.C_STGhost",
+        "equation_Pulse.Syntax.Base.stateful_comp",
+        "primitive_Prims.op_BarBar", "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_385f59c31213d29cc308b93df5d99dc9"
+      ],
+      0,
+      "8f7191656bc20e01ce8cc4af5b1caa1a"
+    ],
+    [
+      "Pulse.Syntax.Base.comp_post",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_Pulse.Syntax.Base.C_ST",
+        "disc_equation_Pulse.Syntax.Base.C_STAtomic",
+        "disc_equation_Pulse.Syntax.Base.C_STGhost",
+        "equation_Pulse.Syntax.Base.stateful_comp",
+        "primitive_Prims.op_BarBar", "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_385f59c31213d29cc308b93df5d99dc9"
+      ],
+      0,
+      "a94926d041f8a2e82d62c9de89595ae7"
+    ],
+    [
+      "Pulse.Syntax.Base.comp_inames",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_bebfa9a182c5e6d65227dc4b5fcbd611"
+      ],
+      0,
+      "05e6b7dfc239ab7c2156822776078571"
+    ]
+  ]
+]

@@ -1,0 +1,18 @@
+[
+  "ò¤÷ìƒ.©ÛÂ`v»if†r",
+  [
+    [
+      "Steel.ST.C.Types.Array.Base.array_domain",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_FStar.SizeT.t"
+      ],
+      0,
+      "ca004a41ac34c37c5755724b4634c1e4"
+    ]
+  ]
+]

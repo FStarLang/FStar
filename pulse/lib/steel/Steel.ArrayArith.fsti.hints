@@ -1,0 +1,24 @@
+[
+  "Ð˜‚è)\\\u0014˜‚ˆ×ÌËvš#",
+  [
+    [
+      "Steel.ArrayArith.within_bounds_intro",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_Prims.Mkdtuple2",
+        "equation_FStar.Pervasives.dsnd", "equation_Prims.nat",
+        "equation_Steel.ST.Array.array", "equation_Steel.ST.Array.length",
+        "equation_Steel.ST.Array.ptr_of",
+        "fuel_guarded_inversion_Prims.dtuple2",
+        "interpretation_Tm_abs_4d5e86439a4b92fb1d3f2062e682ba81",
+        "lemma_FStar.Ghost.hide_reveal", "proj_equation_Prims.Mkdtuple2__2",
+        "refinement_interpretation_Tm_refine_14d43361b7e9404d179ef736339e2265",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "e7bceb7a7825315a10f0a23864810386"
+    ]
+  ]
+]

@@ -1,0 +1,131 @@
+[
+  "eõZÂ=U$0Ÿ´\bd\u000fæ\fo",
+  [
+    [
+      "Steel.ST.C.Types.UserStruct.nonempty_set_nonempty_type",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e7e7ec63ff3fb6b46310a8963041386c"
+    ],
+    [
+      "Steel.ST.C.Types.UserStruct.set_aux",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Steel.ST.C.Types.UserStruct.field_t",
+        "primitive_Prims.op_Equality",
+        "proj_equation_Steel.ST.C.Types.Struct.Aux.Mkfield_description_gen_t_fd_type",
+        "proj_equation_Steel.ST.C.Types.UserStruct.Mkstruct_def_field_desc",
+        "projection_inverse_BoxBool_proj_0",
+        "token_correspondence_Steel.ST.C.Types.Struct.Aux.__proj__Mkfield_description_gen_t__item__fd_type"
+      ],
+      0,
+      "869e4b880dade286425f727f391e2c66"
+    ],
+    [
+      "Steel.ST.C.Types.UserStruct.get_set",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ce036b6b736ef4e0bc3a9ff132a12aed", "bool_inversion",
+        "equation_Steel.ST.C.Types.UserStruct.field_t",
+        "equation_Steel.ST.C.Types.UserStruct.set",
+        "equation_Steel.ST.C.Types.UserStruct.set_aux",
+        "fuel_guarded_inversion_Steel.ST.C.Types.UserStruct.struct_def",
+        "function_token_typing_Prims.string", "primitive_Prims.op_Equality",
+        "proj_equation_Steel.ST.C.Types.Struct.Aux.Mkfield_description_gen_t_fd_type",
+        "proj_equation_Steel.ST.C.Types.UserStruct.Mkstruct_def_field_desc",
+        "proj_equation_Steel.ST.C.Types.UserStruct.Mkstruct_def_fields",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_fb41605e255cfe22dc4c0998102c435a",
+        "string_inversion", "string_typing",
+        "token_correspondence_Steel.ST.C.Types.Struct.Aux.__proj__Mkfield_description_gen_t__item__fd_type",
+        "typing_FStar.Set.mem",
+        "typing_Steel.ST.C.Types.UserStruct.__proj__Mkstruct_def__item__fields"
+      ],
+      0,
+      "cb998eab4f50496d01746867ea600789"
+    ],
+    [
+      "Steel.ST.C.Types.UserStruct.struct_field0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_444d25c85876e6ad9fa4dce9efafe473"
+      ],
+      0,
+      "fe9eacceb82067a3d158b8de0a8133ce"
+    ],
+    [
+      "Steel.ST.C.Types.UserStruct.struct_field",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "187f493fac5009d4d9fc6f526ddc3d31"
+    ],
+    [
+      "Steel.ST.C.Types.UserStruct.struct_field",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_Steel.ST.C.Types.UserStruct.field_t",
+        "fuel_guarded_inversion_Steel.ST.C.Types.UserStruct.struct_def",
+        "proj_equation_Steel.ST.C.Types.Struct.Aux.Mkfield_description_gen_t_fd_type",
+        "proj_equation_Steel.ST.C.Types.UserStruct.Mkstruct_def_field_desc",
+        "token_correspondence_Steel.ST.C.Types.Struct.Aux.__proj__Mkfield_description_gen_t__item__fd_type"
+      ],
+      0,
+      "0ac18f1f790cdee7c018b84fbf408074"
+    ],
+    [
+      "Steel.ST.C.Types.UserStruct.unstruct_field_alt",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "equation_Steel.ST.C.Types.UserStruct.field_t",
+        "lemma_FStar.Ghost.reveal_hide",
+        "proj_equation_Steel.ST.C.Types.UserStruct.Mkstruct_def_field_desc",
+        "proj_equation_Steel.ST.C.Types.UserStruct.Mkstruct_def_fields",
+        "refinement_interpretation_Tm_refine_fb41605e255cfe22dc4c0998102c435a",
+        "string_inversion",
+        "token_correspondence_Steel.ST.C.Types.Struct.Aux.__proj__Mkfield_description_gen_t__item__fd_type",
+        "typing_FStar.Ghost.reveal",
+        "typing_Steel.ST.C.Types.Struct.Aux.__proj__Mkfield_description_gen_t__item__fd_type",
+        "typing_Steel.ST.C.Types.UserStruct.__proj__Mkstruct_def__item__field_desc",
+        "typing_Steel.ST.C.Types.UserStruct.__proj__Mkstruct_def__item__fields",
+        "typing_Steel.ST.C.Types.UserStruct.field_t",
+        "typing_Steel.ST.C.Types.UserStruct.set"
+      ],
+      0,
+      "cfd6bbeea886f407aead940caca69063"
+    ],
+    [
+      "Steel.ST.C.Types.UserStruct.mk_fraction_struct",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "lemma_Steel.ST.C.Types.UserStruct.fractionable_struct",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "9e908a1c16c981c7f598fec856aca893"
+    ]
+  ]
+]

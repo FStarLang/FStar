@@ -1,0 +1,185 @@
+[
+  "!\u000bˇÿÕHJ˛”ïÌ≥êªá!",
+  [
+    [
+      "Steel.ST.C.Types.Base.mk_fraction_full",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "3e6c3cf542fafda8cdbe68925f4252d5"
+    ],
+    [
+      "Steel.ST.C.Types.Base.mk_fraction_compose",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_09330b422710f4c31e4f35e32425bfa0"
+      ],
+      0,
+      "25ffcdd2c79dccb650bf30da4edef9e8"
+    ],
+    [
+      "Steel.ST.C.Types.Base.mk_fraction_unknown",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "fc3ca1b679310df9436f6ca9c4fcb07f"
+    ],
+    [
+      "Steel.ST.C.Types.Base.pts_to_or_null",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_21978cef57ee75dadfd152dc2b700d93"
+      ],
+      0,
+      "2a5e7ae9e222b6dde65d47713c30b3c0"
+    ],
+    [
+      "Steel.ST.C.Types.Base.assert_null",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
+        "equation_Prims.logical", "equation_Steel.ST.C.Types.Base.ptr",
+        "equation_Steel.ST.C.Types.Base.pts_to_or_null",
+        "refinement_interpretation_Tm_refine_2c7ecebd8a41d0890aab4251b61d6458",
+        "typing_FStar.StrongExcludedMiddle.strong_excluded_middle",
+        "typing_Prims.eq2", "typing_Steel.ST.C.Types.Base.ptr"
+      ],
+      0,
+      "248fbda2e1c5d83a3e11b72db71d4a3e"
+    ],
+    [
+      "Steel.ST.C.Types.Base.assert_not_null",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_d6781048ef5c486361eac574171a24f0"
+      ],
+      0,
+      "7333caaea92ffdb316c7d6452e09859a"
+    ],
+    [
+      "Steel.ST.C.Types.Base.assert_not_null",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_d6781048ef5c486361eac574171a24f0"
+      ],
+      0,
+      "7333caaea92ffdb316c7d6452e09859a"
+    ],
+    [
+      "Steel.ST.C.Types.Base.assert_not_null",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
+        "equation_Prims.logical", "equation_Steel.ST.C.Types.Base.null",
+        "equation_Steel.ST.C.Types.Base.ptr",
+        "equation_Steel.ST.C.Types.Base.pts_to_or_null",
+        "refinement_interpretation_Tm_refine_2c7ecebd8a41d0890aab4251b61d6458",
+        "refinement_interpretation_Tm_refine_d6781048ef5c486361eac574171a24f0",
+        "typing_FStar.StrongExcludedMiddle.strong_excluded_middle",
+        "typing_Prims.eq2", "typing_Steel.ST.C.Types.Base.null",
+        "typing_Steel.ST.C.Types.Base.ptr"
+      ],
+      0,
+      "c24e96edeb839e46cb6f030a8f324843"
+    ],
+    [
+      "Steel.ST.C.Types.Base.freeable_or_null",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_21978cef57ee75dadfd152dc2b700d93"
+      ],
+      0,
+      "24bcf90c452c0c4123483fcb29b5891d"
+    ],
+    [
+      "Steel.ST.C.Types.Base.mk_fraction_split_gen",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_bae2571ed68e278dcba8f334582b87a0"
+      ],
+      0,
+      "f9c7eef619a65973303b6dd39d6515db"
+    ],
+    [
+      "Steel.ST.C.Types.Base.mk_fraction_split",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_Steel.FractionalPermission.lesser_equal_perm",
+        "lemma_FStar.Ghost.hide_reveal",
+        "primitive_FStar.Real.op_Less_Equals_Dot",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_60affa7158c291242bb51b7fbd53177a"
+      ],
+      0,
+      "29473323fc078b0e8cf7f5e059236188"
+    ],
+    [
+      "Steel.ST.C.Types.Base.mk_fraction_join",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_bae2571ed68e278dcba8f334582b87a0"
+      ],
+      0,
+      "2fee5d11916fda80279d939765079c67"
+    ],
+    [
+      "Steel.ST.C.Types.Base.fractional_permissions_theorem",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_bae2571ed68e278dcba8f334582b87a0"
+      ],
+      0,
+      "f4e6649c9ab75bb37dfc8b26563ef44d"
+    ],
+    [
+      "Steel.ST.C.Types.Base.copy",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_ade53f969f41f6c1b6d29003e624f2f4"
+      ],
+      0,
+      "c8b2a7ad34dc976f28f1dbd6faaa97fb"
+    ]
+  ]
+]

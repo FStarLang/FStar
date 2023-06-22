@@ -1,0 +1,29 @@
+[
+  "¥éì„v6ÚÊ\\Øõ\fhzy6",
+  [
+    [
+      "Steel.Channel.Duplex.send",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Steel.Channel.Protocol.tag__uu___haseq",
+        "equation_Steel.Channel.Protocol.more"
+      ],
+      0,
+      "33e9dd3fc3a12c025eb27ecde9acf7cc"
+    ],
+    [
+      "Steel.Channel.Duplex.recv",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Steel.Channel.Protocol.tag__uu___haseq",
+        "equation_Steel.Channel.Protocol.more"
+      ],
+      0,
+      "c15bc46ab64a0d62ac44d91232072a7a"
+    ]
+  ]
+]

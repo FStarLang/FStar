@@ -1,0 +1,37 @@
+[
+  "›Á5:…\bQt‘j“\u000bE{¿H",
+  [
+    [
+      "Steel.ST.GenArraySwap.array_index_t",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a76923f0342f65f4ea6b5803d02ec545"
+    ],
+    [
+      "Steel.ST.GenArraySwap.array_upd_t",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "c95cd58af5b23265a360b4873df67b19"
+    ],
+    [
+      "Steel.ST.GenArraySwap.array_swap_gen",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "65d78995cd843058174d91e07e386365"
+    ]
+  ]
+]

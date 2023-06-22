@@ -1,5 +1,5 @@
 [
-  "y/ûB™i%«ö\u001e!\f;»uã",
+  "§—ÞL¼>\u001aD.\u007fë·‰=Û[",
   [
     [
       "Pulse.Soundness.Lift.elab_lift_stt_ghost_typing",
@@ -7,20 +7,21 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Pulse.Syntax.C_ST",
-        "disc_equation_Pulse.Syntax.C_STAtomic",
-        "disc_equation_Pulse.Syntax.C_STGhost",
-        "disc_equation_Pulse.Syntax.C_Tot",
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_Pulse.Syntax.Base.C_ST",
+        "disc_equation_Pulse.Syntax.Base.C_STAtomic",
+        "disc_equation_Pulse.Syntax.Base.C_STGhost",
+        "disc_equation_Pulse.Syntax.Base.C_Tot",
         "equation_Pulse.Soundness.Common.ln_comp",
-        "equation_Pulse.Syntax.comp_st",
-        "equation_Pulse.Syntax.stateful_comp",
-        "fuel_guarded_inversion_Pulse.Syntax.comp",
+        "equation_Pulse.Syntax.Base.comp_st",
+        "equation_Pulse.Syntax.Base.stateful_comp",
+        "fuel_guarded_inversion_Pulse.Syntax.Base.comp",
         "primitive_Prims.op_BarBar", "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_9ccaab801535aa13d5662b90134148ed",
-        "refinement_interpretation_Tm_refine_ae3aa26ed321bec26ff7cf294084135e"
+        "refinement_interpretation_Tm_refine_1a9f04995d36bb6733d3dcaec28cbf75",
+        "refinement_interpretation_Tm_refine_78cf9fabb706bab7e54de904b7db9d2a"
       ],
       0,
-      "656720fe89b57c45e547a3652773b3f9"
+      "904983375c6a0bfbab9ae881c86d3499"
     ]
   ]
 ]

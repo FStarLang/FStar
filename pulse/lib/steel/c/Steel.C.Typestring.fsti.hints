@@ -1,0 +1,20 @@
+[
+  "-ı\u0000‰W%ÂC®∞\u001c/±9\"”",
+  [
+    [
+      "Steel.C.Typestring.string_t_of_chars",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_4bb2ecabb8dd73bd801eb57f838ec7dc_0",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_FStar.String.char", "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "e5aba2c2280d8be5136d2bc03ac1a542"
+    ]
+  ]
+]
