@@ -55,26 +55,13 @@ let infer_binder_types (g:env) (bs:list binder) (v:vprop)
             bs
             tv
     in
-    T.print (Printf.sprintf "About to elaborate assert body: %s" (T.term_to_string abstraction));
+    // T.print (Printf.sprintf "About to elaborate assert body: %s" (T.term_to_string abstraction));
     let inst_abstraction, _ = PC.instantiate_term_implicits g (tm_fstar abstraction v.range) in
-    T.print (Printf.sprintf "Instantiated abstraction is: %s" (T.term_to_string abstraction));
+    // T.print (Printf.sprintf "Instantiated abstraction is: %s" (T.term_to_string abstraction));
     match inst_abstraction.t with
     | Tm_FStar t -> 
       instantiate_binders_with_uvars t
     |  _ -> T.fail "Impossible"
-
-let instantiate_binders (bs:list (binder & T.binder)) (v:vprop)
-  : T.Tac (list (Inf.uvar & term) & vprop)
-  = let binder_uniq (x:T.binder) : nat = x.uniq in
-    let uvs_subst = 
-        T.map
-            (fun (b,tb) -> 
-                let uv, t = Inf.gen_uvar b.binder_ppname in
-                (uv, t), N.NT (binder_uniq tb) t)
-            bs
-    in
-    let uvs, subst = L.unzip uvs_subst in
-    uvs, subst_term v subst
 
 let check
   (g:env)
@@ -86,9 +73,7 @@ let check
   : T.Tac (checker_result_t g pre post_hint)
   = let Tm_AssertWithBinders { binders; v; t=body } = st.term in
     let uvs, v = infer_binder_types g binders v in
-    T.print (Printf.sprintf "Elaborated assertion is %s\n" (P.term_to_string v));
-    // let uvs, v = instantiate_binders t_binders v in
-    T.print (Printf.sprintf "Trying to solve %s \nagainst goal %s" (P.term_to_string v) (P.term_to_string pre));
+    // T.print (Printf.sprintf "Trying to solve %s \nagainst goal %s" (P.term_to_string v) (P.term_to_string pre));
     let solution = Pulse.Checker.Inference.try_inst_uvs_in_goal g pre v in
     match Inf.unsolved solution uvs with
     | Some uvs ->
@@ -96,7 +81,7 @@ let check
              (Printf.sprintf "Could not instantiate %s"
                              (String.concat ", " (T.map (fun (_, t) -> P.term_to_string t) uvs)))
     | _ ->
-      T.print (Printf.sprintf "Got solution: %s\n" (Inf.solutions_to_string solution));
+    //   T.print (Printf.sprintf "Got solution: %s\n" (Inf.solutions_to_string solution));
       let body_subst = 
         T.fold_left 
             (fun subst (uv, t) ->
@@ -106,7 +91,7 @@ let check
             uvs
       in
       let body' = subst_st_term body body_subst in
-      T.print (Printf.sprintf "Substituted body from %s\nto %s\nEnv is %s\n"
-                    (P.st_term_to_string body) (P.st_term_to_string body') (env_to_string g));
+    //   T.print (Printf.sprintf "Substituted body from %s\nto %s\nEnv is %s\n"
+    //                 (P.st_term_to_string body) (P.st_term_to_string body') (env_to_string g));
       check g body' pre pre_typing post_hint
     

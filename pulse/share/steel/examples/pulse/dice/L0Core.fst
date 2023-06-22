@@ -288,13 +288,13 @@ fn l0_core_step1
   //     A.pts_to l0.authKeyID full_perm s5
   //   ) with _;
 
-  // get_witness is successful on arrays in bug-reports/Records.fst
-  // (code at the bottom) so it's unclear why it doesn't work here...
-  let s1 = get_witness (l0.deviceID_pub);
-  let s2 = get_witness (l0.deviceID_priv);
-  let s3 = get_witness (l0.aliasKey_pub);
-  let s4 = get_witness (l0.aliasKey_priv);
-  let s5 = get_witness (l0.authKeyID);
+  with s1 s2 s3 s4 s5.
+  assert A.pts_to l0.deviceID_pub full_perm s1 **
+         A.pts_to l0.deviceID_priv full_perm s2 **
+         A.pts_to l0.aliasKey_pub full_perm s3 **
+         A.pts_to l0.aliasKey_priv full_perm s4 **
+         A.pts_to l0.authKeyID full_perm s5;
+
 
   rewrite  (
       A.pts_to l0.cdi full_perm vl0.cdi `star`
