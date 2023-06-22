@@ -228,6 +228,12 @@ let find_solution (sol:solution) (t:uvar)
     | None -> None
     | Some (_, t) -> Some t
 
+let unsolved (sol:solution) (uvs:list (uvar & term))
+  : option (list (uvar & term))
+  = let unsolved = List.Tot.filter (fun (uv, _) -> None? (find_solution sol uv)) uvs in
+    match unsolved with
+    | [] -> None
+    | _ -> Some unsolved
 
 let try_inst_uvs_in_goal (g:env) (ctxt:term)
                          (goal:vprop)

@@ -108,6 +108,9 @@ let rec freevars_st (t:st_term)
 
     | Tm_Protect { t } -> freevars_st t
 
+    | Tm_AssertWithBinders { binders; v; t } ->
+      Set.union (freevars v) (freevars_st t)
+
 let rec ln' (t:term) (i:int) : Tot bool (decreases t) =
   match t.t with
   | Tm_Emp
@@ -225,6 +228,11 @@ let rec ln_st' (t:st_term) (i:int)
 
     | Tm_Protect { t } ->
       ln_st' t i
+
+    | Tm_AssertWithBinders { binders; v; t } ->
+      let n = L.length binders in
+      ln' v (i + n) &&
+      ln_st' t (i + n)
 
 let ln (t:term) = ln' t (-1)
 let ln_st (t:st_term) = ln_st' t (-1)
@@ -421,6 +429,13 @@ let rec subst_st_term (t:st_term) (ss:subst)
 
     | Tm_Protect { t } ->
       Tm_Protect { t = subst_st_term t ss }
+
+    | Tm_AssertWithBinders { binders; v; t} ->
+      let n = L.length binders in
+      let ss = shift_subst_n n ss in
+      Tm_AssertWithBinders { binders;
+                             v = subst_term v ss;
+                             t = subst_st_term t ss }
     in
     { t with term = t' }
 
@@ -528,3 +543,6 @@ val close_comp_with_non_free_var (c:comp) (x:var) (i:nat)
   : Lemma
     (requires ~ (x `Set.mem` freevars_comp c))
     (ensures close_comp' c x i == c)
+
+val close_binders (bs:list binder) (vs:list var { L.length bs == L.length vs })
+  : list binder

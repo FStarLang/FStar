@@ -112,6 +112,11 @@ type stmt' =
       p2:vprop;
     }
 
+  | AssertWithBinders {
+      binders:binders;
+      vprop:vprop;
+    }
+
 and stmt = {
   s:stmt';
   range:rng
@@ -152,3 +157,4 @@ let mk_decl id binders ascription body range = { id; binders; ascription; body; 
 let mk_open lid = Open lid
 let mk_par p1 p2 q1 q2 b1 b2 = Parallel { p1; p2; q1; q2; b1; b2 }
 let mk_rewrite p1 p2 = Rewrite { p1; p2 }
+let mk_assert_with_binders bs p =  AssertWithBinders { binders=bs; vprop=p }

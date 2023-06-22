@@ -26,6 +26,8 @@ val gen_uvar (name:ppname)
 
 val find_solution (sol:solution) (u:uvar) : option term
 
+val unsolved (sol:solution) (uvars:list (uvar & term)) : option (list (uvar & term))
+
 val try_inst_uvs_in_goal (g:env) (ctxt:term)
                          (goal:vprop)
   : T.Tac solution

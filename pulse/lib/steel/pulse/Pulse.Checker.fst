@@ -194,20 +194,10 @@ let maybe_infer_intro_exists
         solutions
     in
     let _ =
-      match List.Tot.tryFind (fun (u, _u_ty) ->
-           None? (Pulse.Checker.Inference.find_solution solutions u)
-         ) uvs with
-      | Some (u, _) ->
-        let i = FStar.Issue.mk_issue "Error" 
-                    (Printf.sprintf "Could not instantiate existential variable %s introduced at %s\n"
-                                    (Pulse.Checker.Inference.uvar_to_string u)
-                                    (T.range_to_string (Pulse.Checker.Inference.range_of_uvar u)))
-                    (Some st.range)
-                    (Some (RU.error_code_uninstantiated_variable()))
-                    [print_context g] in
-        T.log_issues [i];
-        T.fail (Printf.sprintf "maybe_infer_intro_exists: unification failed for uvar %s\n"
-                               (Pulse.Checker.Inference.uvar_to_string u))
+      match Pulse.Checker.Inference.unsolved solutions uvs with
+      | Some uvs ->
+        fail g (Some st.range) (Printf.sprintf "Could not instantiate existential variables %s\n"
+                                    (String.concat ", " (T.map (fun (u, _) -> Pulse.Checker.Inference.uvar_to_string u) uvs)))
       | None -> ()
     in
     let wr t = { term = t; range = st.range } in
@@ -445,6 +435,9 @@ let rec check' : bool -> check_t =
 
       | Tm_Rewrite _ ->
         Rewrite.check_rewrite g t pre pre_typing post_hint
+
+      | Tm_AssertWithBinders _ ->
+        Pulse.Checker.AssertWithBinders.check g t pre pre_typing post_hint (check' true)
     with
     | Framing_failure failure ->
       handle_framing_failure g t pre pre_typing post_hint failure (check' true)

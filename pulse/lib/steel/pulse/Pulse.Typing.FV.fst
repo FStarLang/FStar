@@ -158,6 +158,11 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
 
     | Tm_Protect { t } ->
       freevars_close_st_term' t x i
+
+    | Tm_AssertWithBinders { binders; v; t } ->
+      let n = L.length binders in
+      freevars_close_term' v x (i + n);
+      freevars_close_st_term' t x (i + n)
       
 let freevars_close_term (e:term) (x:var) (i:index)
   : Lemma 

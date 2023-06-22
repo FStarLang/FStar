@@ -261,6 +261,16 @@ let mk_bind b s1 s2 r : SW.st_term =
   then SW.tm_bind b (SW.tm_protect s1) (SW.tm_protect s2) r
   else SW.tm_bind b s1 s2 r
 
+let explicit_rvalues (env:env_t) (s:Sugar.stmt)
+  : Sugar.stmt
+  = s
+
+let qual = option SW.qualifier
+let as_qual (q:A.aqual) : qual =
+  match q with
+  | Some A.Implicit -> SW.as_qual true
+  | _ -> SW.as_qual false
+
 (* s has already been transformed with explicit dereferences for r-values *)
 let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
   : err SW.st_term
@@ -282,6 +292,9 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
 
     | Sequence { s1={s=LetBinding lb}; s2 } ->
       desugar_bind env lb s2 s.range
+
+    | Sequence { s1; s2 } when AssertWithBinders? s1.s ->
+      desugar_assert_with_binders env s1 s2 s.range
 
     | Sequence { s1; s2 } -> 
       desugar_sequence env s1 s2 s.range
@@ -389,17 +402,22 @@ and desugar_sequence (env:env_t) (s1 s2:Sugar.stmt) r
     let annot = SW.mk_binder (Ident.id_of_text "_") (SW.tm_unknown r) in
     return (mk_bind annot s1 s2 r)
 
-let explicit_rvalues (env:env_t) (s:Sugar.stmt)
-  : Sugar.stmt
-  = s
+and desugar_assert_with_binders (env:env_t) (s1 s2:Sugar.stmt) r
+  : err SW.st_term
+  = match s1.s with
+    | Sugar.AssertWithBinders { binders=bs; vprop=v } ->
+      let? env, binders, bvs = desugar_binders env bs in
+      let vars = L.map (fun bv -> bv.S.index) bvs in
+      let? v = desugar_vprop env v in
+      let? s2 = desugar_stmt env s2 in
+      let binders = L.map snd binders in
+      let sub = SW.bvs_as_subst vars in
+      let s2 = SW.subst_st_term sub s2 in
+      let v = SW.subst_term sub v in
+      return (SW.tm_assert_with_binders (SW.close_binders binders vars) v s2 r)
+    | _ -> fail "Expected AssertWithBinders" s1.range
 
-let qual = option SW.qualifier
-let as_qual (q:A.aqual) : qual =
-  match q with
-  | Some A.Implicit -> SW.as_qual true
-  | _ -> SW.as_qual false
-  
-let desugar_binders (env:env_t) (bs:Sugar.binders)
+and desugar_binders (env:env_t) (bs:Sugar.binders)
   : err (env_t & list (option SW.qualifier & SW.binder) & list S.bv)
   = let rec aux env bs 
       : err (env_t & list (qual & ident & SW.term) & list S.bv)

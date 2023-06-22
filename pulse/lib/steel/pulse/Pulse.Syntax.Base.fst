@@ -73,14 +73,20 @@ let eq_tm_opt (t1 t2:option term)
     | Some t1, Some t2 -> eq_tm t1 t2
     | _ -> false
 
-let rec eq_tm_list (t1 t2:list term)
-  : b:bool { b <==> (t1 == t2) }
-  = match t1, t2 with
+
+let rec eq_list (f: (x:'a -> y:'a -> b:bool { b <==> (x == y)})) (l m:list 'a)
+  : b:bool { b <==> (l == m) }
+  = match l, m with
     | [], [] -> true
     | h1::t1, h2::t2 ->
-      eq_tm h1 h2 &&
-      eq_tm_list t1 t2
+      f h1 h2 &&
+      eq_list f t1 t2
     | _ -> false
+
+let eq_binder (b0 b1:binder) : b:bool { b <==> (b0 == b1) } =
+  eq_tm b0.binder_ty b1.binder_ty
+
+let eq_tm_list (t1 t2:list term) = eq_list eq_tm t1 t2
 
 let rec eq_st_term (t1 t2:st_term) 
   : b:bool { b <==> (t1 == t2) }
@@ -175,4 +181,11 @@ let rec eq_st_term (t1 t2:st_term)
       Tm_Protect { t = t2 } ->
       eq_st_term t1 t2
       
+    | Tm_AssertWithBinders { binders=bs1; t=t1; v=v1 },
+      Tm_AssertWithBinders { binders=bs2; t=t2; v=v2 } ->
+      eq_list eq_binder bs1 bs2 &&
+      eq_tm v1 v2 &&
+      eq_st_term t1 t2
+
     | _ -> false
+    

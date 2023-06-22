@@ -177,6 +177,9 @@ and stmt'__Parallel__payload =
 and stmt'__Rewrite__payload = {
   p11: vprop ;
   p21: vprop }
+and stmt'__AssertWithBinders__payload = {
+  binders1: binders ;
+  vprop1: vprop }
 and stmt' =
   | Open of FStar_Ident.lident 
   | Expr of stmt'__Expr__payload 
@@ -190,6 +193,7 @@ and stmt' =
   | Sequence of stmt'__Sequence__payload 
   | Parallel of stmt'__Parallel__payload 
   | Rewrite of stmt'__Rewrite__payload 
+  | AssertWithBinders of stmt'__AssertWithBinders__payload 
 and stmt = {
   s: stmt' ;
   range1: rng }
@@ -317,6 +321,12 @@ let (__proj__Mkstmt'__Rewrite__payload__item__p1 :
 let (__proj__Mkstmt'__Rewrite__payload__item__p2 :
   stmt'__Rewrite__payload -> vprop) =
   fun projectee -> match projectee with | { p11 = p1; p21 = p2;_} -> p2
+let (__proj__Mkstmt'__AssertWithBinders__payload__item__binders :
+  stmt'__AssertWithBinders__payload -> binders) =
+  fun projectee -> match projectee with | { binders1; vprop1;_} -> binders1
+let (__proj__Mkstmt'__AssertWithBinders__payload__item__vprop :
+  stmt'__AssertWithBinders__payload -> vprop) =
+  fun projectee -> match projectee with | { binders1; vprop1;_} -> vprop1
 let (uu___is_Open : stmt' -> Prims.bool) =
   fun projectee -> match projectee with | Open _0 -> true | uu___ -> false
 let (__proj__Open__item___0 : stmt' -> FStar_Ident.lident) =
@@ -370,6 +380,12 @@ let (uu___is_Rewrite : stmt' -> Prims.bool) =
   fun projectee -> match projectee with | Rewrite _0 -> true | uu___ -> false
 let (__proj__Rewrite__item___0 : stmt' -> stmt'__Rewrite__payload) =
   fun projectee -> match projectee with | Rewrite _0 -> _0
+let (uu___is_AssertWithBinders : stmt' -> Prims.bool) =
+  fun projectee ->
+    match projectee with | AssertWithBinders _0 -> true | uu___ -> false
+let (__proj__AssertWithBinders__item___0 :
+  stmt' -> stmt'__AssertWithBinders__payload) =
+  fun projectee -> match projectee with | AssertWithBinders _0 -> _0
 let (__proj__Mkstmt__item__s : stmt -> stmt') =
   fun projectee -> match projectee with | { s; range1 = range;_} -> s
 let (__proj__Mkstmt__item__range : stmt -> rng) =
@@ -377,34 +393,35 @@ let (__proj__Mkstmt__item__range : stmt -> rng) =
 type decl =
   {
   id3: FStar_Ident.ident ;
-  binders1: binders ;
+  binders2: binders ;
   ascription: computation_type ;
   body2: stmt ;
   range2: rng }
 let (__proj__Mkdecl__item__id : decl -> FStar_Ident.ident) =
   fun projectee ->
     match projectee with
-    | { id3 = id; binders1; ascription; body2 = body; range2 = range;_} -> id
+    | { id3 = id; binders2 = binders1; ascription; body2 = body;
+        range2 = range;_} -> id
 let (__proj__Mkdecl__item__binders : decl -> binders) =
   fun projectee ->
     match projectee with
-    | { id3 = id; binders1; ascription; body2 = body; range2 = range;_} ->
-        binders1
+    | { id3 = id; binders2 = binders1; ascription; body2 = body;
+        range2 = range;_} -> binders1
 let (__proj__Mkdecl__item__ascription : decl -> computation_type) =
   fun projectee ->
     match projectee with
-    | { id3 = id; binders1; ascription; body2 = body; range2 = range;_} ->
-        ascription
+    | { id3 = id; binders2 = binders1; ascription; body2 = body;
+        range2 = range;_} -> ascription
 let (__proj__Mkdecl__item__body : decl -> stmt) =
   fun projectee ->
     match projectee with
-    | { id3 = id; binders1; ascription; body2 = body; range2 = range;_} ->
-        body
+    | { id3 = id; binders2 = binders1; ascription; body2 = body;
+        range2 = range;_} -> body
 let (__proj__Mkdecl__item__range : decl -> rng) =
   fun projectee ->
     match projectee with
-    | { id3 = id; binders1; ascription; body2 = body; range2 = range;_} ->
-        range
+    | { id3 = id; binders2 = binders1; ascription; body2 = body;
+        range2 = range;_} -> range
 let (mk_comp :
   st_comp_tag ->
     vprop ->
@@ -475,7 +492,13 @@ let (mk_decl :
       fun ascription ->
         fun body ->
           fun range ->
-            { id3 = id; binders1; ascription; body2 = body; range2 = range }
+            {
+              id3 = id;
+              binders2 = binders1;
+              ascription;
+              body2 = body;
+              range2 = range
+            }
 let (mk_open : FStar_Ident.lident -> stmt') = fun lid -> Open lid
 let (mk_par : vprop -> vprop -> vprop -> vprop -> stmt -> stmt -> stmt') =
   fun p1 ->
@@ -484,3 +507,5 @@ let (mk_par : vprop -> vprop -> vprop -> vprop -> stmt -> stmt -> stmt') =
         fun q2 -> fun b1 -> fun b2 -> Parallel { p1; p2; q1; q2; b1; b2 }
 let (mk_rewrite : vprop -> vprop -> stmt') =
   fun p1 -> fun p2 -> Rewrite { p11 = p1; p21 = p2 }
+let (mk_assert_with_binders : binders -> vprop -> stmt') =
+  fun bs -> fun p -> AssertWithBinders { binders1 = bs; vprop1 = p }

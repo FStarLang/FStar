@@ -217,6 +217,11 @@ type st_term' =
       //Wrap a term to indicate that no proof-automation heuristics should be applied
       t:st_term;
     }
+  | Tm_AssertWithBinders { // assert (R.pts_to x ?p ?v) in body
+      binders:list binder;
+      v:vprop;
+      t:st_term
+  }
 
 and st_term = {
     term : st_term';

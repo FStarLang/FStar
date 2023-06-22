@@ -3074,6 +3074,63 @@ let rec (st_term_to_string' :
                     Prims.strcat
                       (Prims.strcat "Protect(\n" (Prims.strcat level ""))
                       (Prims.strcat uu___ ")")))
+      | Pulse_Syntax_Base.Tm_AssertWithBinders
+          { Pulse_Syntax_Base.binders = binders; Pulse_Syntax_Base.v = v;
+            Pulse_Syntax_Base.t4 = t1;_}
+          ->
+          FStar_Tactics_Effect.tac_bind
+            (FStar_Sealed.seal
+               (Obj.magic
+                  (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
+                     (Prims.of_int (253)) (Prims.of_int (8))
+                     (Prims.of_int (253)) (Prims.of_int (36)))))
+            (FStar_Sealed.seal
+               (Obj.magic
+                  (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
+                     (Prims.of_int (251)) (Prims.of_int (6))
+                     (Prims.of_int (253)) (Prims.of_int (36)))))
+            (Obj.magic (st_term_to_string' level t1))
+            (fun uu___ ->
+               (fun uu___ ->
+                  Obj.magic
+                    (FStar_Tactics_Effect.tac_bind
+                       (FStar_Sealed.seal
+                          (Obj.magic
+                             (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
+                                (Prims.of_int (251)) (Prims.of_int (6))
+                                (Prims.of_int (253)) (Prims.of_int (36)))))
+                       (FStar_Sealed.seal
+                          (Obj.magic
+                             (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
+                                (Prims.of_int (251)) (Prims.of_int (6))
+                                (Prims.of_int (253)) (Prims.of_int (36)))))
+                       (Obj.magic
+                          (FStar_Tactics_Effect.tac_bind
+                             (FStar_Sealed.seal
+                                (Obj.magic
+                                   (FStar_Range.mk_range
+                                      "Pulse.Syntax.Printer.fst"
+                                      (Prims.of_int (252)) (Prims.of_int (8))
+                                      (Prims.of_int (252))
+                                      (Prims.of_int (26)))))
+                             (FStar_Sealed.seal
+                                (Obj.magic
+                                   (FStar_Range.mk_range "FStar.Printf.fst"
+                                      (Prims.of_int (121)) (Prims.of_int (8))
+                                      (Prims.of_int (123))
+                                      (Prims.of_int (44)))))
+                             (Obj.magic (term_to_string v))
+                             (fun uu___1 ->
+                                FStar_Tactics_Effect.lift_div_tac
+                                  (fun uu___2 ->
+                                     fun x ->
+                                       Prims.strcat
+                                         (Prims.strcat "assert "
+                                            (Prims.strcat uu___1 " in\n"))
+                                         (Prims.strcat x "")))))
+                       (fun uu___1 ->
+                          FStar_Tactics_Effect.lift_div_tac
+                            (fun uu___2 -> uu___1 uu___)))) uu___)
 let (st_term_to_string :
   Pulse_Syntax_Base.st_term ->
     (Prims.string, unit) FStar_Tactics_Effect.tac_repr)
@@ -3109,6 +3166,7 @@ let (tag_of_st_term : Pulse_Syntax_Base.st_term -> Prims.string) =
     | Pulse_Syntax_Base.Tm_Rewrite uu___ -> "Tm_Rewrite"
     | Pulse_Syntax_Base.Tm_Admit uu___ -> "Tm_Admit"
     | Pulse_Syntax_Base.Tm_Protect uu___ -> "Tm_Protect"
+    | Pulse_Syntax_Base.Tm_AssertWithBinders uu___ -> "Tm_AssertWithBinders"
 let rec (print_st_head : Pulse_Syntax_Base.st_term -> Prims.string) =
   fun t ->
     match t.Pulse_Syntax_Base.term1 with
@@ -3130,6 +3188,7 @@ let rec (print_st_head : Pulse_Syntax_Base.st_term -> Prims.string) =
     | Pulse_Syntax_Base.Tm_IntroPure uu___ -> "IntroPure"
     | Pulse_Syntax_Base.Tm_IntroExists uu___ -> "IntroExists"
     | Pulse_Syntax_Base.Tm_ElimExists uu___ -> "ElimExists"
+    | Pulse_Syntax_Base.Tm_AssertWithBinders uu___ -> "AssertWithBinders"
 and (print_head : Pulse_Syntax_Base.term -> Prims.string) =
   fun t -> "<pure term>"
 let rec (print_skel : Pulse_Syntax_Base.st_term -> Prims.string) =
@@ -3170,3 +3229,4 @@ let rec (print_skel : Pulse_Syntax_Base.st_term -> Prims.string) =
     | Pulse_Syntax_Base.Tm_IntroPure uu___ -> "IntroPure"
     | Pulse_Syntax_Base.Tm_IntroExists uu___ -> "IntroExists"
     | Pulse_Syntax_Base.Tm_ElimExists uu___ -> "ElimExists"
+    | Pulse_Syntax_Base.Tm_AssertWithBinders uu___ -> "AssertWithBinders"

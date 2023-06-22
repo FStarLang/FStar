@@ -118,6 +118,9 @@ let is_tm_intro_exists (s:st_term) : bool =
 
 let tm_protect (s:st_term) : st_term = PSB.(with_range (tm_protect s) s.range2)
 
+let tm_assert_with_binders (binders: binder list) (p:term) (s:st_term) r : st_term =
+  PSB.(with_range (tm_assert_with_binders binders p s) r)
+
 let tm_par p1 p2 q1 q2 b1 b2 r : st_term =
   PSB.(with_range (tm_par p1 b1 q1 p2 b2 q2) r)
 
@@ -179,3 +182,10 @@ let st_term_to_string (env:Env.env) (t:st_term)
 let comp_to_string (env:Env.env) (t:comp)
   : string
   = tac_to_string env (Pulse_Syntax_Printer.comp_to_string t)  
+let close_binders bs xs = Pulse_Syntax_Naming.close_binders bs xs
+let bvs_as_subst bvs =
+  List.fold_left
+    (fun s b -> Pulse_Syntax_Naming.(ND(b, Z.of_int 0)::shift_subst s))
+    [] bvs
+let subst_term s t = Pulse_Syntax_Naming.subst_term t s
+let subst_st_term s t = Pulse_Syntax_Naming.subst_st_term t s
