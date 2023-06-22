@@ -17,6 +17,8 @@ RUN sudo apt-get update && \
 
 RUN opam install -j $opamthreads -v -v -v steel/steel.opam
 
+ARG OTHERFLAGS=--use_hints
+
 RUN cp -p -r steel/share/steel /tmp/steel-share && \
     rm -rf steel /tmp/steel-share/Makefile.include && \
     eval $(opam env) && \
