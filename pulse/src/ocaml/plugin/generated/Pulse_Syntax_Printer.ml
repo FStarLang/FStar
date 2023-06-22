@@ -159,7 +159,7 @@ let rec (term_to_string' :
                                                                   ""
                                                                   (Prims.strcat
                                                                     uu___1
-                                                                    " `star`\n"))
+                                                                    " ** \n"))
                                                                (Prims.strcat
                                                                   x ""))
                                                             (Prims.strcat x1

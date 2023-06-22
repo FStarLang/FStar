@@ -46,7 +46,7 @@ let rec term_to_string' (level:string) (t:term)
         (term_to_string' (indent level) p)
       
     | Tm_Star p1 p2 ->
-      sprintf "%s `star`\n%s%s" 
+      sprintf "%s ** \n%s%s" 
         (term_to_string' level p1)
         level
         (term_to_string' level p2)

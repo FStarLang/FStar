@@ -148,24 +148,6 @@ let (readback_qual :
     | FStar_Reflection_V2_Data.Q_Implicit ->
         FStar_Pervasives_Native.Some Pulse_Syntax_Base.Implicit
     | uu___1 -> FStar_Pervasives_Native.None
-let (collect_app_refined :
-  FStar_Reflection_Types.term ->
-    (FStar_Reflection_Types.term * FStar_Reflection_V2_Data.argv Prims.list))
-  = fun t -> FStar_Reflection_V2_Derived.collect_app_ln t
-let (readback_ty_ascribed :
-  FStar_Reflection_Types.term ->
-    Pulse_Syntax_Base.term FStar_Pervasives_Native.option)
-  =
-  fun t ->
-    match FStar_Reflection_V2_Builtins.inspect_ln t with
-    | FStar_Reflection_V2_Data.Tv_AscribedT (t1, uu___, uu___1, uu___2) ->
-        FStar_Pervasives_Native.Some
-          (Pulse_Syntax_Base.tm_fstar t1
-             (FStar_Reflection_V2_Builtins.range_of_term t1))
-    | FStar_Reflection_V2_Data.Tv_AscribedC (t1, uu___, uu___1, uu___2) ->
-        FStar_Pervasives_Native.Some
-          (Pulse_Syntax_Base.tm_fstar t1
-             (FStar_Reflection_V2_Builtins.range_of_term t1))
 let rec (readback_ty :
   FStar_Reflection_Types.term ->
     Pulse_Syntax_Base.term FStar_Pervasives_Native.option)
@@ -195,25 +177,26 @@ let rec (readback_ty :
           | FStar_Reflection_V2_Data.Q_Meta uu___1 ->
               FStar_Pervasives_Native.None
           | uu___1 -> return (Pulse_Syntax_Base.Tm_FStar t) in
-        let uu___ = collect_app_refined t in
+        let uu___ = FStar_Reflection_V2_Derived.collect_app_ln t in
         (match uu___ with
          | (head, args) ->
              (match ((FStar_Reflection_V2_Builtins.inspect_ln head), args)
               with
-              | (FStar_Reflection_V2_Data.Tv_FVar fv,
-                 (a1, uu___1)::(a2, uu___2)::[]) ->
+              | (FStar_Reflection_V2_Data.Tv_FVar fv, a1::a2::[]) ->
                   if
                     (FStar_Reflection_V2_Builtins.inspect_fv fv) =
                       Pulse_Reflection_Util.star_lid
                   then
-                    op_let_Question (readback_ty a1)
-                      (fun t1 ->
-                         op_let_Question (readback_ty a2)
-                           (fun t2 ->
-                              return (Pulse_Syntax_Base.Tm_Star (t1, t2))))
+                    let t1 = FStar_Pervasives_Native.fst a1 in
+                    let t2 = FStar_Pervasives_Native.fst a2 in
+                    op_let_Question (readback_ty t1)
+                      (fun t11 ->
+                         op_let_Question (readback_ty t2)
+                           (fun t21 ->
+                              return (Pulse_Syntax_Base.Tm_Star (t11, t21))))
                   else aux ()
-              | (FStar_Reflection_V2_Data.Tv_UInst (fv, u::[]),
-                 (a1, uu___1)::(a2, uu___2)::[]) ->
+              | (FStar_Reflection_V2_Data.Tv_UInst (fv, u::[]), a1::a2::[])
+                  ->
                   if
                     ((FStar_Reflection_V2_Builtins.inspect_fv fv) =
                        Pulse_Reflection_Util.exists_lid)
@@ -221,10 +204,12 @@ let rec (readback_ty :
                       ((FStar_Reflection_V2_Builtins.inspect_fv fv) =
                          Pulse_Reflection_Util.forall_lid)
                   then
-                    op_let_Question (readback_ty a1)
+                    let t1 = FStar_Pervasives_Native.fst a1 in
+                    let t2 = FStar_Pervasives_Native.fst a2 in
+                    op_let_Question (readback_ty t1)
                       (fun ty ->
                          op_let_Question
-                           (match FStar_Reflection_V2_Builtins.inspect_ln a2
+                           (match FStar_Reflection_V2_Builtins.inspect_ln t2
                             with
                             | FStar_Reflection_V2_Data.Tv_Abs (b, body) ->
                                 op_let_Question (readback_ty body)
@@ -236,9 +221,9 @@ let rec (readback_ty :
                                        ((bview.FStar_Reflection_V2_Data.ppname2),
                                          (Pulse_RuntimeUtils.binder_range b),
                                          p))
-                            | uu___3 -> FStar_Pervasives_Native.None)
-                           (fun uu___3 ->
-                              match uu___3 with
+                            | uu___1 -> FStar_Pervasives_Native.None)
+                           (fun uu___1 ->
+                              match uu___1 with
                               | (ppname, range, p) ->
                                   let b =
                                     {
@@ -260,13 +245,14 @@ let rec (readback_ty :
                                       (Pulse_Syntax_Base.Tm_ForallSL
                                          (u, b, p))))
                   else aux ()
-              | (FStar_Reflection_V2_Data.Tv_FVar fv, (a1, uu___1)::[]) ->
+              | (FStar_Reflection_V2_Data.Tv_FVar fv, a1::[]) ->
                   if
                     (FStar_Reflection_V2_Builtins.inspect_fv fv) =
                       Pulse_Reflection_Util.pure_lid
                   then
-                    op_let_Question (readback_ty a1)
-                      (fun t1 -> return (Pulse_Syntax_Base.Tm_Pure t1))
+                    let t1 = FStar_Pervasives_Native.fst a1 in
+                    op_let_Question (readback_ty t1)
+                      (fun t11 -> return (Pulse_Syntax_Base.Tm_Pure t11))
                   else aux ()
               | uu___1 -> aux ()))
     | FStar_Reflection_V2_Data.Tv_Refine (uu___, uu___1) ->
@@ -289,12 +275,12 @@ let rec (readback_ty :
         return (Pulse_Syntax_Base.Tm_FStar t)
     | FStar_Reflection_V2_Data.Tv_Abs (uu___, uu___1) ->
         return (Pulse_Syntax_Base.Tm_FStar t)
+    | FStar_Reflection_V2_Data.Tv_AscribedT (t1, uu___, uu___1, uu___2) ->
+        readback_ty t1
+    | FStar_Reflection_V2_Data.Tv_AscribedC (t1, uu___, uu___1, uu___2) ->
+        readback_ty t1
     | FStar_Reflection_V2_Data.Tv_Uvar (uu___, uu___1) ->
         FStar_Pervasives_Native.None
-    | FStar_Reflection_V2_Data.Tv_AscribedT (uu___, uu___1, uu___2, uu___3)
-        -> readback_ty_ascribed t
-    | FStar_Reflection_V2_Data.Tv_AscribedC (uu___, uu___1, uu___2, uu___3)
-        -> readback_ty_ascribed t
     | FStar_Reflection_V2_Data.Tv_Unknown ->
         return Pulse_Syntax_Base.Tm_Unknown
     | FStar_Reflection_V2_Data.Tv_Unsupp -> FStar_Pervasives_Native.None

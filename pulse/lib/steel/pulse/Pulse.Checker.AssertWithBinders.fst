@@ -16,6 +16,8 @@ module RT = FStar.Reflection.Typing
 module RU = Pulse.RuntimeUtils
 let is_host_term (t:R.term) = not (R.Tv_Unknown? (R.inspect_ln t))
 
+let debug_log = Pulse.Checker.Common.debug_log "with_binders"
+
 let instantiate_binders_with_uvars (top:R.term) : T.Tac (list (Inf.uvar & term) & vprop) =
     let rec aux uvars (t:R.term) : T.Tac (list (Inf.uvar & term) & vprop) = 
         match R.inspect_ln t with
@@ -63,6 +65,11 @@ let infer_binder_types (g:env) (bs:list binder) (v:vprop)
       instantiate_binders_with_uvars t
     |  _ -> T.fail "Impossible"
 
+let option_must (f:option 'a) (msg:string) : T.Tac 'a =
+  match f with
+  | Some x -> x
+  | None -> T.fail msg
+
 let unfold_head (g:env) (t:term) 
   : T.Tac term
   = match t.t with
@@ -70,16 +77,24 @@ let unfold_head (g:env) (t:term)
       let head, _ = T.collect_app rt in
       match R.inspect_ln head with
       | R.Tv_FVar fv
-      | R.Tv_UInst fv _ ->
+      | R.Tv_UInst fv _ -> (
         let rt = RU.unfold_def (fstar_env g) (String.concat "." (R.inspect_fv fv)) rt in
-        if None? rt || not (is_host_term (Some?.v rt))
-        then T.fail "Unexpected: reduction produced an ill-formed term"
-        else tm_fstar (Some?.v rt) t.range
+        let rt = option_must rt "Unexpected: reduction produced an ill-formed term" in
+        let ty = option_must (readback_ty rt) "Unexpected: unable to readback unfolded term" in
+        debug_log g (fun _ -> Printf.sprintf "Unfolded %s to F* term %s and readback as %s" (P.term_to_string t) (T.term_to_string rt) (P.term_to_string ty));
+        ty
+      )
       | _ ->
         fail g (Some t.range) (Printf.sprintf "Cannot unfold %s" (P.term_to_string t))
     )
      
     | _ -> T.fail "Impossible"
+
+let prepare_goal hint_type g v : T.Tac term = 
+  match hint_type with
+  | ASSERT
+  | UNFOLD -> v
+  | FOLD -> unfold_head g v
 
 let check
   (g:env)
@@ -91,14 +106,17 @@ let check
   : T.Tac (checker_result_t g pre post_hint)
   = let Tm_ProofHintWithBinders { hint_type; binders; v; t=body } = st.term in
     let uvs, v = infer_binder_types g binders v in
-    // T.print (Printf.sprintf "Trying to solve %s \nagainst goal %s" (P.term_to_string v) (P.term_to_string pre));
-    let solution = Pulse.Checker.Inference.try_inst_uvs_in_goal g pre v in
+    let goal = prepare_goal hint_type g v in
+    debug_log g (fun _ -> Printf.sprintf "Trying to solve %s \nagainst context %s" (P.term_to_string goal) (P.term_to_string pre));
+    let solution = Pulse.Checker.Inference.try_inst_uvs_in_goal g pre goal in
     match Inf.unsolved solution uvs with
     | Some uvs ->
       fail g (Some st.range) 
              (Printf.sprintf "Could not instantiate %s"
                              (String.concat ", " (T.map (fun (_, t) -> P.term_to_string t) uvs)))
     | _ ->
+      debug_log g (fun _ -> 
+        Printf.sprintf "Solution: %s\n" (Inf.solutions_to_string solution));
       let sub = 
         T.fold_left 
             (fun subst (uv, t) ->
@@ -114,7 +132,7 @@ let check
                            head = rw;
                            body = body' } in
         let tm = { term = tm; range = st.range } in
-        T.print (Printf.sprintf "After unfold: about to check %s\n" (P.st_term_to_string tm));
+        debug_log g (fun _ -> Printf.sprintf "After unfold: about to check %s\n" (P.st_term_to_string tm));
         check g tm pre pre_typing post_hint
       in
       match hint_type with
@@ -122,12 +140,12 @@ let check
         let body' = subst_st_term body sub in
         check g body' pre pre_typing post_hint
       | UNFOLD ->
-        let v = subst_term v sub in
+        let v = Inf.apply_solution solution v in
         let unfolded_v = unfold_head g v in
-        rewrite_and_check v unfolded_v    
+        rewrite_and_check v unfolded_v
       | FOLD ->
-        let v = subst_term v sub in
-        let unfolded_v = unfold_head g v in
+        let v = Inf.apply_solution solution v in
+        let unfolded_v = Inf.apply_solution solution goal in
         rewrite_and_check unfolded_v v
 
     

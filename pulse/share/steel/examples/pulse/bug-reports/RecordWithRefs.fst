@@ -19,27 +19,27 @@ let u8_pair_pred (p:u8_pair) (v:u8_pair_repr) : vprop =
     R.pts_to p.a full_perm (fst v) `star`
     R.pts_to p.b full_perm (snd v)
 
-[@@expect_failure]
-```pulse
-fn swap_pair (p: u8_pair) (#v: erased u8_pair_repr)
-  requires 
-    u8_pair_pred p v
-  ensures
-    u8_pair_pred p (snd v, fst v)
-{
-    rewrite (u8_pair_pred p v)
-    as      (R.pts_to p.a full_perm (fst v) `star`
-             R.pts_to p.b full_perm (snd v));
-    let x = !p.a;
-    let y = !p.b;
-    p.a := y; //p.a doesn't parse on the lhs of an assignemtn
-    p.b := x; 
-    rewrite (R.pts_to p.a full_perm y `star`
-             R.pts_to p.b full_perm x)
-        as (u8_pair_pred p (snd v, fst v));
-    ()
-}
-```
+// [@@expect_failure]
+// ```pulse
+// fn swap_pair (p: u8_pair) (#v: erased u8_pair_repr)
+//   requires 
+//     u8_pair_pred p v
+//   ensures
+//     u8_pair_pred p (snd v, fst v)
+// {
+//     rewrite (u8_pair_pred p v)
+//     as      (R.pts_to p.a full_perm (fst v) `star`
+//              R.pts_to p.b full_perm (snd v));
+//     let x = !p.a;
+//     let y = !p.b;
+//     p.a := y; //p.a doesn't parse on the lhs of an assignemtn
+//     p.b := x; 
+//     rewrite (R.pts_to p.a full_perm y `star`
+//              R.pts_to p.b full_perm x)
+//         as (u8_pair_pred p (snd v, fst v));
+//     ()
+// }
+// ```
 
 ```pulse
 fn swap_pair (p: u8_pair) (#v: erased u8_pair_repr)
@@ -71,12 +71,13 @@ fn swap_pair_alt (p: u8_pair) (#v: erased u8_pair_repr)
   ensures
     u8_pair_pred p (snd v, fst v)
 {
-    unfold (u8_pair_pred p v);
+    with _p _v. unfold (u8_pair_pred _p _v);
     let x = !p.a;
     let y = !p.b;
     (write p.a y);
     (write p.b x);
-    with v1 v2. fold (u8_pair_pred p (v1, v2));
+    with v1 v2. fold [u8_pair_pred; fst; snd] 
+      (u8_pair_pred p (v1, v2));
     ()
 }
 ```
