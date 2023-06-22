@@ -282,12 +282,14 @@ let add_mod (a b: t) : Pure t
   r
 #pop-options
 
+#push-options "--retry 5"
 let sub (a b: t) : Pure t
   (requires (v a - v b >= 0))
   (ensures (fun r -> v r = v a - v b)) =
   let l = U64.sub_mod a.low b.low in
   { low = l;
     high = U64.sub (U64.sub a.high b.high) (carry a.low l); }
+#pop-options
 
 let sub_underspec (a b: t) =
   let l = U64.sub_mod a.low b.low in
@@ -312,6 +314,7 @@ val u64_diff_wrap : a:U64.t -> b:U64.t ->
          (ensures (U64.v (U64.sub_mod a b) == U64.v a - U64.v b + pow2 64))
 let u64_diff_wrap a b = ()
 
+#push-options "--z3rlimit 20"
 val sub_mod_wrap1_ok : a:t -> b:t -> Lemma
   (requires (v a - v b < 0 /\ U64.v a.low < U64.v b.low))
   (ensures (v (sub_mod_impl a b) = v a - v b + pow2 128))
@@ -670,6 +673,7 @@ let shift_t_mod_val (a: t) (s: nat{s < 64}) :
   Math.paren_mul_right a_h (pow2 64) (pow2 s);
   ()
 
+#push-options "--z3rlimit 20"
 let shift_left_small (a: t) (s: U32.t) : Pure t
   (requires (U32.v s < 64))
   (ensures (fun r -> v r = (v a * pow2 (U32.v s)) % pow2 128)) =
@@ -683,6 +687,7 @@ let shift_left_small (a: t) (s: U32.t) : Pure t
     mod_spec_rew_n (a_l * pow2 s) (pow2 64);
     shift_t_mod_val a s;
     r
+#pop-options
 
 val shift_left_large : a:t -> s:U32.t{U32.v s >= 64 /\ U32.v s < 128} ->
   r:t{v r = (v a * pow2 (U32.v s)) % pow2 128}
@@ -908,10 +913,12 @@ let mul32_digits x y = ()
 
 let u32_32 : x:U32.t{U32.v x == 32} = U32.uint_to_t 32
 
+#push-options "--z3rlimit 30"
 let u32_combine (hi lo: U64.t) : Pure U64.t
   (requires (U64.v lo < pow2 32))
   (ensures (fun r -> U64.v r = U64.v hi % pow2 32 * pow2 32 + U64.v lo)) =
   U64.add lo (U64.shift_left hi u32_32)
+#pop-options
 
 let product_bound (a b:nat) (k:pos) :
   Lemma (requires (a < k /\ b < k))
@@ -1049,6 +1056,7 @@ let product_sums (a b c d:nat) :
 val u64_32_product (xl xh yl yh:UInt.uint_t 32) :
   Lemma ((xl + xh * pow2 32) * (yl + yh * pow2 32) ==
   xl * yl + (xl * yh) * pow2 32 + (xh * yl) * pow2 32 + (xh * yh) * pow2 64)
+#push-options "--z3rlimit 25"
 let u64_32_product xl xh yl yh =
   assert (xh >= 0); //flakiness; without this, can't prove that (xh * pow2 32) >= 0
   assert (pow2 32 >= 0); //flakiness; without this, can't prove that (xh * pow2 32) >= 0
@@ -1058,6 +1066,7 @@ let u64_32_product xl xh yl yh =
   assert (xl * (yh * pow2 32) == (xl * yh) * pow2 32);
   Math.pow2_plus 32 32;
   assert ((xh * pow2 32) * (yh * pow2 32) == (xh * yh) * pow2 64)
+#pop-options
 
 let product_expand (x y: U64.t) :
   Lemma (U64.v x * U64.v y == phh x y * pow2 64 +
@@ -1096,9 +1105,9 @@ let mul_wide_low_ok (x y: U64.t) :
   assert (mul_wide_low x y == ((plh x y + phl x y + pll_h x y) * pow2 32 + pll_l x y) % pow2 64);
   product_low_expand x y
 
-#push-options "--z3rlimit 10"
 val product_high32 : x:U64.t -> y:U64.t ->
   Lemma ((U64.v x * U64.v y) / pow2 32 == phh x y * pow2 32 + plh x y + phl x y + pll_h x y)
+#push-options "--z3rlimit 20"
 let product_high32 x y =
   Math.pow2_plus 32 32;
   product_expand x y;
@@ -1155,6 +1164,7 @@ let sub_mod_gt_0 (n:nat) (k:pos) :
 
 val sum_rounded_mod_exact : n:nat -> m:nat -> k:pos ->
   Lemma (((n - n%k) + (m - m%k)) / k * k == (n - n%k) + (m - m%k))
+#push-options "--retry 5" // sporadically fails
 let sum_rounded_mod_exact n m k =
   n_minus_mod_exact n k;
   n_minus_mod_exact m k;
@@ -1162,6 +1172,7 @@ let sum_rounded_mod_exact n m k =
   sub_mod_gt_0 m k;
   mod_add (n - n%k) (m - m%k) k;
   Math.div_exact_r ((n - n%k) + (m - m % k)) k
+#pop-options
 
 val div_sum_combine : n:nat -> m:nat -> k:pos ->
   Lemma (n / k + m / k == (n + (m - n % k) - m % k) / k)
