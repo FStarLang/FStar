@@ -1005,21 +1005,28 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
         if not (head_matches && List.length args0 = List.length args1)
         then maybe_unfold_and_retry t0 t1
         else (
-          (* If we're proving equality and SMT queries are ok, 
-             defer things like `v.v1 == u.v1` to SMT
-             rather than matching on the v1 projector and
-             trying to prove `v == u` *)
-          if guard_ok &&
-            (rel=EQUALITY) && 
-            equatable g t0 &&
-            equatable g t1
-          then emit_guard t0 t1
-          else (
+          (* If we're proving equality, SMT queries are ok, and either head
+             is equatable:
+              - first try proving equality structurally, without a guard.
+              - if that fails, then emit an SMT query
+             This is designed to be able to prove things like `v.v1 == u.v1`
+             first by trying to unify `v` and `u` and if it fails
+             then prove `v.v1 == u.v1` *)
+          let compare_head_and_args () =
             handle_with
               (check_relation g EQUALITY head0 head1 ;!
-              check_relation_args g EQUALITY args0 args1)
+               check_relation_args g EQUALITY args0 args1)
               (fun _ -> maybe_unfold_side_and_retry Both t0 t1)
+          in
+          if guard_ok &&
+            (rel=EQUALITY) && 
+            (equatable g t0 || equatable g t1)
+          then (
+            handle_with 
+              (no_guard (compare_head_and_args ()))
+              (fun _ -> emit_guard t0 t1)
           )
+          else compare_head_and_args ()
         )
 
       | Tm_abs {bs=b0::b1::bs; body; rc_opt=ropt}, _ ->
