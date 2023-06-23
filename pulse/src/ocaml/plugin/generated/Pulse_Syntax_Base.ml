@@ -480,10 +480,10 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
       | (Tm_Protect { t3 = t11;_}, Tm_Protect { t3 = t21;_}) ->
           eq_st_term t11 t21
       | (Tm_ProofHintWithBinders
-         { hint_type = uu___; binders = bs1; v = v1; t4 = t11;_},
+         { hint_type = ht1; binders = bs1; v = v1; t4 = t11;_},
          Tm_ProofHintWithBinders
-         { hint_type = uu___1; binders = bs2; v = v2; t4 = t21;_}) ->
-          ((eq_list eq_binder bs1 bs2) && (eq_tm v1 v2)) &&
+         { hint_type = ht2; binders = bs2; v = v2; t4 = t21;_}) ->
+          (((ht1 = ht2) && (eq_list eq_binder bs1 bs2)) && (eq_tm v1 v2)) &&
             (eq_st_term t11 t21)
       | uu___ -> false
 let (comp_res : comp -> term) =

@@ -181,8 +181,9 @@ let rec eq_st_term (t1 t2:st_term)
       Tm_Protect { t = t2 } ->
       eq_st_term t1 t2
       
-    | Tm_ProofHintWithBinders { binders=bs1; t=t1; v=v1 },
-      Tm_ProofHintWithBinders { binders=bs2; t=t2; v=v2 } ->
+    | Tm_ProofHintWithBinders { hint_type=ht1; binders=bs1; t=t1; v=v1 },
+      Tm_ProofHintWithBinders { hint_type=ht2; binders=bs2; t=t2; v=v2 } ->
+      ht1 = ht2 &&
       eq_list eq_binder bs1 bs2 &&
       eq_tm v1 v2 &&
       eq_st_term t1 t2
