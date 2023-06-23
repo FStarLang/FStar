@@ -119,10 +119,14 @@ pulseStmtNoSeq:
     { PulseSugar.mk_rewrite p1 p2 }
   | bs=withBindersOpt ASSERT p=pulseVprop
     { PulseSugar.mk_proof_hint_with_binders ASSERT bs p }
-  | bs=withBindersOpt UNFOLD p=pulseVprop
-    { PulseSugar.mk_proof_hint_with_binders UNFOLD bs p }
-  | bs=withBindersOpt FOLD p=pulseVprop
-    { PulseSugar.mk_proof_hint_with_binders FOLD bs p }
+  | bs=withBindersOpt UNFOLD ns=option(names) p=pulseVprop
+    { PulseSugar.mk_proof_hint_with_binders (UNFOLD ns) bs p }
+  | bs=withBindersOpt FOLD ns=option(names) p=pulseVprop
+    { PulseSugar.mk_proof_hint_with_binders (FOLD ns) bs p }
+
+names:
+  | LBRACK l=separated_nonempty_list(SEMICOLON, qlident) RBRACK
+    { l }
 
 withBindersOpt:
   | WITH bs=nonempty_list(pulseMultiBinder) DOT

@@ -13,5 +13,8 @@ let error_code_uninstantiated_variable () = FStar_Errors.errno FStar_Errors_Code
 let is_range_zero (r:FStar_Range.range) = r = FStar_Range.range_0
 let union_ranges (r0:FStar_Range.range) (r1:FStar_Range.range) = FStar_Compiler_Range.union_ranges r0 r1
 let range_of_term (t:FStar_Syntax_Syntax.term) = t.FStar_Syntax_Syntax.pos
-let unfold_def (g:FStar_Reflection_Types.env) (n:string) (t:FStar_Syntax_Syntax.term) =
-    FStar_TypeChecker_Normalize.maybe_unfold_head g t
+let unfold_def (g:FStar_Reflection_Types.env) (head:string) (names:string list) (t:FStar_Syntax_Syntax.term) : FStar_Syntax_Syntax.term option =
+    let open FStar_TypeChecker_Env in
+    Some (FStar_TypeChecker_Normalize.normalize
+            [Beta; Iota;
+             UnfoldOnly (FStar_Ident.lid_of_str head::List.map FStar_Ident.lid_of_str names)] g t)

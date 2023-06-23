@@ -118,11 +118,15 @@ let is_tm_intro_exists (s:st_term) : bool =
 
 let tm_protect (s:st_term) : st_term = PSB.(with_range (tm_protect s) s.range2)
 
+let trans_ns = function
+  | None -> None
+  | Some l -> Some (List.map FStar_Ident.string_of_lid l)
+
 let trans_hint_type (ht:PulseSugar.hint_type) =
   match ht with
   | PulseSugar.ASSERT -> Pulse_Syntax_Base.ASSERT
-  | PulseSugar.UNFOLD -> Pulse_Syntax_Base.UNFOLD
-  | PulseSugar.FOLD -> Pulse_Syntax_Base.FOLD
+  | PulseSugar.UNFOLD ns -> Pulse_Syntax_Base.UNFOLD (trans_ns ns)
+  | PulseSugar.FOLD ns -> Pulse_Syntax_Base.FOLD (trans_ns ns)
 
 let tm_proof_hint_with_binders (ht:PulseSugar.hint_type) (binders: binder list) (p:term) (s:st_term) r : st_term =
   PSB.(with_range (Tm_ProofHintWithBinders { hint_type=trans_hint_type ht;

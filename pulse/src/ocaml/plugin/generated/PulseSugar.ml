@@ -130,14 +130,20 @@ let (__proj__PatConstructor__item___0 : pat -> pat__PatConstructor__payload)
   = fun projectee -> match projectee with | PatConstructor _0 -> _0
 type hint_type =
   | ASSERT 
-  | UNFOLD 
-  | FOLD 
+  | UNFOLD of FStar_Ident.lident Prims.list FStar_Pervasives_Native.option 
+  | FOLD of FStar_Ident.lident Prims.list FStar_Pervasives_Native.option 
 let (uu___is_ASSERT : hint_type -> Prims.bool) =
   fun projectee -> match projectee with | ASSERT -> true | uu___ -> false
 let (uu___is_UNFOLD : hint_type -> Prims.bool) =
-  fun projectee -> match projectee with | UNFOLD -> true | uu___ -> false
+  fun projectee -> match projectee with | UNFOLD _0 -> true | uu___ -> false
+let (__proj__UNFOLD__item___0 :
+  hint_type -> FStar_Ident.lident Prims.list FStar_Pervasives_Native.option)
+  = fun projectee -> match projectee with | UNFOLD _0 -> _0
 let (uu___is_FOLD : hint_type -> Prims.bool) =
-  fun projectee -> match projectee with | FOLD -> true | uu___ -> false
+  fun projectee -> match projectee with | FOLD _0 -> true | uu___ -> false
+let (__proj__FOLD__item___0 :
+  hint_type -> FStar_Ident.lident Prims.list FStar_Pervasives_Native.option)
+  = fun projectee -> match projectee with | FOLD _0 -> _0
 type stmt'__Expr__payload = {
   e: FStar_Parser_AST.term }
 and stmt'__Assignment__payload =

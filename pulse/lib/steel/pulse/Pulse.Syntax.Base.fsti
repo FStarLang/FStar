@@ -136,8 +136,8 @@ type ctag =
 
 type proof_hint_type =
   | ASSERT
-  | FOLD
-  | UNFOLD
+  | FOLD of option (list string)
+  | UNFOLD of option (list string)
 
 (* terms with STT types *)
 [@@ no_auto_projectors]

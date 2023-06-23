@@ -47,8 +47,8 @@ type pat =
 
 type hint_type =
   | ASSERT 
-  | UNFOLD
-  | FOLD
+  | UNFOLD of option (list lident)
+  | FOLD of option (list lident)
 
 type stmt' =
   | Open of lident

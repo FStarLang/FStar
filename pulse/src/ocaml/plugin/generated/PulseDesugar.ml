@@ -303,6 +303,33 @@ let (resolve_name :
           let uu___1 = FStar_Ident.range_of_id id in
           fail "Name not found" uu___1
       | FStar_Pervasives_Native.Some t -> return t
+let (resolve_lid : env_t -> FStar_Ident.lident -> FStar_Ident.lident err) =
+  fun env ->
+    fun lid ->
+      let uu___ =
+        FStar_Syntax_DsEnv.try_lookup_lid
+          (env.tcenv).FStar_TypeChecker_Env.dsenv lid in
+      match uu___ with
+      | FStar_Pervasives_Native.None ->
+          let uu___1 =
+            let uu___2 = FStar_Ident.string_of_lid lid in
+            FStar_Compiler_Util.format1 "Name %s not found" uu___2 in
+          let uu___2 = FStar_Ident.range_of_lid lid in fail uu___1 uu___2
+      | FStar_Pervasives_Native.Some t ->
+          let uu___1 =
+            let uu___2 = FStar_Syntax_Subst.compress t in
+            uu___2.FStar_Syntax_Syntax.n in
+          (match uu___1 with
+           | FStar_Syntax_Syntax.Tm_fvar fv ->
+               let uu___2 = FStar_Syntax_Syntax.lid_of_fv fv in return uu___2
+           | uu___2 ->
+               let uu___3 =
+                 let uu___4 = FStar_Ident.string_of_lid lid in
+                 let uu___5 = FStar_Syntax_Print.term_to_string t in
+                 FStar_Compiler_Util.format2
+                   "Name %s resolved unexpectedly to %s" uu___4 uu___5 in
+               let uu___4 = FStar_Ident.range_of_lid lid in
+               fail uu___3 uu___4)
 let (pulse_arrow_formals :
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.binder Prims.list FStar_Pervasives_Native.option)
@@ -599,6 +626,31 @@ let (as_qual : FStar_Parser_AST.aqual -> qual) =
     | FStar_Pervasives_Native.Some (FStar_Parser_AST.Implicit) ->
         PulseSyntaxWrapper.as_qual true
     | uu___ -> PulseSyntaxWrapper.as_qual false
+let (resolve_names :
+  env_t ->
+    FStar_Ident.lident Prims.list FStar_Pervasives_Native.option ->
+      FStar_Ident.lident Prims.list FStar_Pervasives_Native.option err)
+  =
+  fun env ->
+    fun ns ->
+      match ns with
+      | FStar_Pervasives_Native.None -> return FStar_Pervasives_Native.None
+      | FStar_Pervasives_Native.Some ns1 ->
+          let uu___ = map_err (resolve_lid env) ns1 in
+          op_let_Question uu___
+            (fun ns2 -> return (FStar_Pervasives_Native.Some ns2))
+let (resolve_hint_type :
+  env_t -> PulseSugar.hint_type -> PulseSugar.hint_type err) =
+  fun env ->
+    fun ht ->
+      match ht with
+      | PulseSugar.ASSERT -> return PulseSugar.ASSERT
+      | PulseSugar.UNFOLD ns ->
+          let uu___ = resolve_names env ns in
+          op_let_Question uu___ (fun ns1 -> return (PulseSugar.UNFOLD ns1))
+      | PulseSugar.FOLD ns ->
+          let uu___ = resolve_names env ns in
+          op_let_Question uu___ (fun ns1 -> return (PulseSugar.FOLD ns1))
 let rec (desugar_stmt :
   env_t -> PulseSugar.stmt -> PulseSyntaxWrapper.st_term err) =
   fun env ->
@@ -896,12 +948,16 @@ and (desugar_assert_with_binders :
                                  let v2 =
                                    PulseSyntaxWrapper.subst_term sub v1 in
                                  let uu___4 =
-                                   let uu___5 =
-                                     PulseSyntaxWrapper.close_binders
-                                       binders1 vars in
-                                   PulseSyntaxWrapper.tm_proof_hint_with_binders
-                                     hint_type uu___5 v2 s22 r in
-                                 return uu___4)))
+                                   resolve_hint_type env1 hint_type in
+                                 op_let_Question uu___4
+                                   (fun ht ->
+                                      let uu___5 =
+                                        let uu___6 =
+                                          PulseSyntaxWrapper.close_binders
+                                            binders1 vars in
+                                        PulseSyntaxWrapper.tm_proof_hint_with_binders
+                                          ht uu___6 v2 s22 r in
+                                      return uu___5))))
           | uu___ ->
               fail "Expected ProofHintWithBinders" s1.PulseSugar.range1
 and (desugar_binders :

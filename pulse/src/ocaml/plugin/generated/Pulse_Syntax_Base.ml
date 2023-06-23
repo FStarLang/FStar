@@ -181,14 +181,20 @@ let (uu___is_STT_Ghost : ctag -> Prims.bool) =
   fun projectee -> match projectee with | STT_Ghost -> true | uu___ -> false
 type proof_hint_type =
   | ASSERT 
-  | FOLD 
-  | UNFOLD 
+  | FOLD of Prims.string Prims.list FStar_Pervasives_Native.option 
+  | UNFOLD of Prims.string Prims.list FStar_Pervasives_Native.option 
 let (uu___is_ASSERT : proof_hint_type -> Prims.bool) =
   fun projectee -> match projectee with | ASSERT -> true | uu___ -> false
 let (uu___is_FOLD : proof_hint_type -> Prims.bool) =
-  fun projectee -> match projectee with | FOLD -> true | uu___ -> false
+  fun projectee -> match projectee with | FOLD _0 -> true | uu___ -> false
+let (__proj__FOLD__item___0 :
+  proof_hint_type -> Prims.string Prims.list FStar_Pervasives_Native.option)
+  = fun projectee -> match projectee with | FOLD _0 -> _0
 let (uu___is_UNFOLD : proof_hint_type -> Prims.bool) =
-  fun projectee -> match projectee with | UNFOLD -> true | uu___ -> false
+  fun projectee -> match projectee with | UNFOLD _0 -> true | uu___ -> false
+let (__proj__UNFOLD__item___0 :
+  proof_hint_type -> Prims.string Prims.list FStar_Pervasives_Native.option)
+  = fun projectee -> match projectee with | UNFOLD _0 -> _0
 type st_term'__Tm_Return__payload =
   {
   ctag: ctag ;
