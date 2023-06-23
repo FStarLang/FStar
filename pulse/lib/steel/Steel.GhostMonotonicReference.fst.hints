@@ -1,0 +1,105 @@
+[
+  "ªº\u0003)hN ≈„¿é\u001d1VÒ^",
+  [
+    [
+      "Steel.GhostMonotonicReference.raise_preorder",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Preorder.preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive",
+        "equation_FStar.Preorder.transitive",
+        "interpretation_Tm_abs_7ef80e11d602832fa45cd7d1743dc360",
+        "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
+        "typing_FStar.Universe.downgrade_val"
+      ],
+      0,
+      "da2836d08c60c5a2df87200b5f0a800a"
+    ],
+    [
+      "Steel.GhostMonotonicReference.alloc",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Steel.FractionalPermission.full_perm",
+        "equation_Steel.GhostMonotonicReference.pts_to_sl"
+      ],
+      0,
+      "638c476127c9fb3b2a174aad98816927"
+    ],
+    [
+      "Steel.GhostMonotonicReference.write",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Steel.FractionalPermission.full_perm",
+        "equation_Steel.GhostMonotonicReference.pts_to_sl",
+        "equation_Steel.GhostMonotonicReference.raise_preorder",
+        "function_token_typing_Steel.GhostMonotonicReference.raise_preorder",
+        "interpretation_Tm_abs_7ef80e11d602832fa45cd7d1743dc360",
+        "lemma_FStar.Universe.downgrade_val_raise_val"
+      ],
+      0,
+      "1f1d3b725e5bd5311e3e2ed3b9398ac1"
+    ],
+    [
+      "Steel.GhostMonotonicReference.witness",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Preorder.stable",
+        "equation_Prims.squash",
+        "equation_Steel.GhostMonotonicReference.lift_property",
+        "equation_Steel.GhostMonotonicReference.raise_preorder",
+        "equation_Steel.GhostMonotonicReference.stable_property",
+        "function_token_typing_Steel.GhostMonotonicReference.lift_property",
+        "interpretation_Tm_abs_606bd25446a5871d87f8562d8358385a",
+        "interpretation_Tm_abs_7ef80e11d602832fa45cd7d1743dc360",
+        "lemma_FStar.Universe.downgrade_val_raise_val",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_a1f58262bcd794ed927b444f9f475459",
+        "typing_FStar.Ghost.reveal", "typing_FStar.Universe.downgrade_val"
+      ],
+      0,
+      "a95e838bb78bf04b769912546e2c29f4"
+    ],
+    [
+      "Steel.GhostMonotonicReference.recall",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Steel.GhostMonotonicReference.lift_property",
+        "interpretation_Tm_abs_606bd25446a5871d87f8562d8358385a",
+        "lemma_FStar.Universe.downgrade_val_raise_val",
+        "token_correspondence_Steel.GhostMonotonicReference.lift_property",
+        "typing_FStar.Ghost.reveal"
+      ],
+      0,
+      "48a684fe2ce67b547561a44050047143"
+    ],
+    [
+      "Steel.GhostMonotonicReference.share",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "7ea6f6311866e16906f8a457e96f3a69"
+    ],
+    [
+      "Steel.GhostMonotonicReference.gather",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "decfab0b343459f404f071bebfece934"
+    ]
+  ]
+]

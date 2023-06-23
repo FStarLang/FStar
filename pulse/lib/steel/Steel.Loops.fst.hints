@@ -1,0 +1,151 @@
+[
+  "Äò?õëT–î¶¸îvKUÊ\u000f",
+  [
+    [
+      "Steel.Loops.for_loop'",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "equation_Steel.Loops.u32_between", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_a1d502d8e0b172ffcd22072c2bb46a53",
+        "refinement_interpretation_Tm_refine_d686fd558af661d405d23027daf3f8ef"
+      ],
+      0,
+      "634c522139b8d62c074270f134c746aa"
+    ],
+    [
+      "Steel.Loops.for_loop'",
+      2,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "equation_Steel.Loops.u32_between", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_a1d502d8e0b172ffcd22072c2bb46a53"
+      ],
+      0,
+      "0c71f83fe9581a36c1230cf148c03019"
+    ],
+    [
+      "Steel.Loops.for_loop'",
+      3,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "int_inversion", "int_typing",
+        "lemma_FStar.SizeT.fits_lte", "lemma_FStar.SizeT.size_v_inj",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_4102cf3bbb19f9fe0428d2e5a32fadcb",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_7df43cb9feb536df62477b7b30ce1682",
+        "refinement_interpretation_Tm_refine_d686fd558af661d405d23027daf3f8ef",
+        "typing_FStar.SizeT.t", "typing_FStar.SizeT.v"
+      ],
+      0,
+      "14023ff2e8cd0b8441711ab83944026d"
+    ],
+    [
+      "Steel.Loops.for_loop",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "equation_Steel.Loops.u32_between", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_4102cf3bbb19f9fe0428d2e5a32fadcb",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_a1d502d8e0b172ffcd22072c2bb46a53"
+      ],
+      0,
+      "79adb1801ec564ff486fe19ba6aa43bc"
+    ],
+    [
+      "Steel.Loops.for_loop",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "equation_Steel.Loops.u32_between", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_a1d502d8e0b172ffcd22072c2bb46a53"
+      ],
+      0,
+      "632f11215ad0de39db5094b733e6b2bd"
+    ],
+    [
+      "Steel.Loops.for_loop",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_4102cf3bbb19f9fe0428d2e5a32fadcb"
+      ],
+      0,
+      "83a9739e6c6a67c9fcbc83517478227d"
+    ],
+    [
+      "Steel.Loops.for_loop_full",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Steel.Effect.Common.t_of.fuel_instrumented",
+        "@fuel_irrelevance_Steel.Effect.Common.t_of.fuel_instrumented",
+        "@query", "equation_Prims.nat", "equation_Steel.Loops.u32_between",
+        "equation_with_fuel_Steel.Effect.Common.t_of.fuel_instrumented",
+        "fuel_guarded_inversion_Steel.Effect.Common.vprop",
+        "lemma_Steel.Effect.Common.can_be_split_refl",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_a1d502d8e0b172ffcd22072c2bb46a53"
+      ],
+      0,
+      "314f558061df30ff47c1aea3ee0db127"
+    ],
+    [
+      "Steel.Loops.for_loop_full",
+      2,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Steel.Effect.Common.t_of.fuel_instrumented",
+        "@fuel_irrelevance_Steel.Effect.Common.t_of.fuel_instrumented",
+        "@query", "equation_Prims.nat", "equation_Steel.Loops.u32_between",
+        "equation_with_fuel_Steel.Effect.Common.t_of.fuel_instrumented",
+        "fuel_guarded_inversion_Steel.Effect.Common.vprop",
+        "lemma_Steel.Effect.Common.can_be_split_refl",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_4102cf3bbb19f9fe0428d2e5a32fadcb",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_a1d502d8e0b172ffcd22072c2bb46a53"
+      ],
+      0,
+      "6511b0953909eea061a16ba48f1bcde6"
+    ],
+    [
+      "Steel.Loops.while_loop",
+      1,
+      2,
+      1,
+      [ "@MaxIFuel_assumption", "@query", "bool_inversion" ],
+      0,
+      "f77a6e4195c3b72403b0a45bee20203f"
+    ]
+  ]
+]

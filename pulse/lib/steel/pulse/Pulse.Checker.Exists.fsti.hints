@@ -1,0 +1,30 @@
+[
+  "\r„\u0010Oi0…‘\"ˇ1dêL\r¬",
+  [
+    [
+      "Pulse.Checker.Exists.intro_exists_vprop",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_2e3881200c03c5d6a5e08c8400580303"
+      ],
+      0,
+      "9cc0ef4bbda35c0e353f207a40d85f6d"
+    ],
+    [
+      "Pulse.Checker.Exists.check_intro_exists_either",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_Pulse.Syntax.Base.Tm_IntroExists",
+        "equation_Pulse.Checker.Exists.intro_exists_witness_singleton",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "8819078a3ace75be9f776bcd2e63f75e"
+    ]
+  ]
+]

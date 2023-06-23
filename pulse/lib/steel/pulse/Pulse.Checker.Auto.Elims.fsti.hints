@@ -1,0 +1,27 @@
+[
+  "öóc†¢’\u0013Ç¥\u0003¬+\u0016ÊèÏ",
+  [
+    [
+      "Pulse.Checker.Auto.Elims.continuation_elaborator_with_bind",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "constructor_distinct_FStar.Pervasives.Native.Some",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "equation_FStar.Reflection.V2.Data.var", "equation_Prims.nat",
+        "equation_Pulse.Syntax.Base.typ", "equation_Pulse.Syntax.Base.var",
+        "equation_Pulse.Typing.Env.dom", "equation_Pulse.Typing.Env.lookup",
+        "kinding_Pulse.Syntax.Base.term@tok",
+        "lemma_FStar.Map.lemma_ContainsDom",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_f2631f1e9df7e7fe731df0b4c6310657",
+        "typing_FStar.Reflection.V2.Data.var", "typing_FStar.Set.mem",
+        "typing_Pulse.Typing.Env.as_map", "typing_Pulse.Typing.Env.dom"
+      ],
+      0,
+      "c1691bfd781d00c0fcdf6c6021e7201b"
+    ]
+  ]
+]

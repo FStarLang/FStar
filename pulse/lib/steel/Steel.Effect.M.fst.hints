@@ -1,0 +1,73 @@
+[
+  "¾aÊååÉ•‚X¤_ªì%\u000b-",
+  [
+    [
+      "Steel.Effect.M.lift_ens",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Steel.Effect.M.ens_t",
+        "equation_Steel.Effect.M.lift_post",
+        "equation_Steel.Semantics.Hoare.MST.depends_only_on2",
+        "equation_Steel.Semantics.Hoare.MST.depends_only_on_0_2",
+        "equation_Steel.Semantics.Hoare.MST.fp_prop2",
+        "equation_Steel.Semantics.Hoare.MST.l_post",
+        "equation_Steel.Semantics.Instantiate.state",
+        "interpretation_Tm_abs_017654e54bf878f12967333505b3c296",
+        "interpretation_Tm_abs_634afe31c74121e38f4ae4133e22221f",
+        "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_hprop",
+        "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_mem",
+        "refinement_interpretation_Tm_refine_11278f97612c1fcf2fe3e7f800944a87",
+        "typing_FStar.Universe.downgrade_val"
+      ],
+      0,
+      "8136aa869cc141bcedf4afd9ac17eee8"
+    ],
+    [
+      "Steel.Effect.M.lift_ens_x",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Steel.Effect.M_interpretation_Tm_arrow_b8453e05b8bd18b29b8a99432311d6b5",
+        "equation_Steel.Effect.M.ens_t", "equation_Steel.Effect.M.lift_post",
+        "equation_Steel.Semantics.Hoare.MST.depends_only_on2",
+        "equation_Steel.Semantics.Hoare.MST.depends_only_on_0_2",
+        "equation_Steel.Semantics.Hoare.MST.fp_prop2",
+        "equation_Steel.Semantics.Hoare.MST.l_post",
+        "equation_Steel.Semantics.Instantiate.state",
+        "interpretation_Tm_abs_017654e54bf878f12967333505b3c296",
+        "interpretation_Tm_abs_1193ae479a734c8e49b55792736518ec",
+        "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_hprop",
+        "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_mem",
+        "refinement_interpretation_Tm_refine_11278f97612c1fcf2fe3e7f800944a87",
+        "token_correspondence_Steel.Effect.M.lift_post",
+        "typing_FStar.Universe.downgrade_val"
+      ],
+      0,
+      "f84f85a04138318f00874c7a295ad7f6"
+    ],
+    [
+      "Steel.Effect.M.lift_m",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Steel.Semantics.Hoare.MST.Ret",
+        "equation_Steel.Effect.M.lift_post", "equation_Steel.Effect.M.repr",
+        "equation_Steel.Semantics.Hoare.MST.fp_prop2",
+        "equation_Steel.Semantics.Hoare.MST.l_post",
+        "function_token_typing_Steel.Effect.M.lift_post",
+        "interpretation_Tm_abs_017654e54bf878f12967333505b3c296",
+        "lemma_FStar.Universe.downgrade_val_raise_val",
+        "refinement_interpretation_Tm_refine_11278f97612c1fcf2fe3e7f800944a87",
+        "true_interp"
+      ],
+      0,
+      "27120032a9bd835ef00302eefd9ac244"
+    ]
+  ]
+]
