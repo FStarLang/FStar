@@ -8,6 +8,23 @@ let rec (inspect_ln_unascribe :
     | FStar_Reflection_V2_Data.Tv_AscribedC (t', uu___, uu___1, uu___2) ->
         inspect_ln_unascribe t'
     | tv -> tv
+let (compare_bv :
+  FStar_Reflection_Types.bv -> FStar_Reflection_Types.bv -> FStar_Order.order)
+  =
+  fun v1 ->
+    fun v2 ->
+      FStar_Order.compare_int
+        (FStar_Reflection_V2_Builtins.inspect_bv v1).FStar_Reflection_V2_Data.index
+        (FStar_Reflection_V2_Builtins.inspect_bv v2).FStar_Reflection_V2_Data.index
+let (compare_namedv :
+  FStar_Reflection_Types.namedv ->
+    FStar_Reflection_Types.namedv -> FStar_Order.order)
+  =
+  fun v1 ->
+    fun v2 ->
+      FStar_Order.compare_int
+        (FStar_Reflection_V2_Builtins.inspect_namedv v1).FStar_Reflection_V2_Data.uniq
+        (FStar_Reflection_V2_Builtins.inspect_namedv v2).FStar_Reflection_V2_Data.uniq
 let (shift :
   Prims.int -> FStar_Syntax_Syntax.subst_elt -> FStar_Syntax_Syntax.subst_elt)
   =
