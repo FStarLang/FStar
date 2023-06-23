@@ -335,13 +335,7 @@ let (mk_binder : Prims.string -> range -> term -> binder) =
             (mk_ppname (FStar_Reflection_Typing.seal_pp_name s) r)
         }
 let (eq_univ : universe -> universe -> Prims.bool) =
-  fun u1 ->
-    fun u2 ->
-      FStar_Reflection_V2_Builtins.term_eq
-        (FStar_Reflection_V2_Builtins.pack_ln
-           (FStar_Reflection_V2_Data.Tv_Type u1))
-        (FStar_Reflection_V2_Builtins.pack_ln
-           (FStar_Reflection_V2_Data.Tv_Type u2))
+  fun u1 -> fun u2 -> FStar_Reflection_V2_TermEq.univ_eq_dec u1 u2
 let rec (eq_tm : term -> term -> Prims.bool) =
   fun t1 ->
     fun t2 ->
@@ -361,7 +355,7 @@ let rec (eq_tm : term -> term -> Prims.bool) =
           ((eq_univ u1 u2) && (eq_tm t11.binder_ty t21.binder_ty)) &&
             (eq_tm b1 b2)
       | (Tm_FStar t11, Tm_FStar t21) ->
-          FStar_Reflection_V2_Builtins.term_eq t11 t21
+          FStar_Reflection_V2_TermEq.term_eq_dec t11 t21
       | uu___ -> false
 let (eq_st_comp : st_comp -> st_comp -> Prims.bool) =
   fun s1 ->
