@@ -811,18 +811,23 @@ and faithful_lemma_comp (c1 c2 : comp) : Lemma (requires faithful_comp c1 /\ fai
   | _ -> ()
 #pop-options
 
+
+let faithful_term = t:term{faithful t}
+
 (* A conservative version: works on all terms, returns `true` if they
 are guaranteed to be equal. *)
 let term_eq (t1 t2 : term) : (b:bool{b ==> t1 == t2}) =
-  match term_cmp t1 t2 with
-  | Eq -> true
-  | _ -> false
-
-let faithful_term = t:term{faithful t}
+  Eq? (term_cmp t1 t2)
 
 (* A fully decidable version, for faithful terms. *)
 let term_eq_dec (t1 t2 : faithful_term) : (b:bool{b <==> t1 == t2}) =
   faithful_lemma t1 t2;
-  match term_cmp t1 t2 with
-  | Eq -> true
-  | Neq -> false
+  Eq? (term_cmp t1 t2)
+
+(* Idem for universes *)
+let faithful_universe = t:universe{faithful_univ t}
+let univ_eq (u1 u2 : universe) : (b:bool{b ==> u1 == u2}) =
+  Eq? (univ_cmp u1 u2)
+let univ_eq_dec (u1 u2 : faithful_universe) : (b:bool{b <==> u1 == u2}) =
+  univ_faithful_lemma u1 u2;
+  Eq? (univ_cmp u1 u2)
