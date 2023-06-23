@@ -1,0 +1,41 @@
+[
+  "2ÀRWV≈Œ∫Û‘aΩ`|,j",
+  [
+    [
+      "Steel.ST.BitVector.bv_is_set",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_e6db31ac56ddf9a30d2e6d65c32872a6"
+      ],
+      0,
+      "1fabbb1a99c748212369bf2272f31281"
+    ],
+    [
+      "Steel.ST.BitVector.bv_set",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_e6db31ac56ddf9a30d2e6d65c32872a6"
+      ],
+      0,
+      "31175988294bbe9b85fc36a57fe4cb30"
+    ],
+    [
+      "Steel.ST.BitVector.bv_unset",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_e6db31ac56ddf9a30d2e6d65c32872a6"
+      ],
+      0,
+      "31c8007553cb8dedc01cdf9a61e776ba"
+    ]
+  ]
+]

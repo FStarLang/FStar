@@ -1,0 +1,38 @@
+[
+  "heõ:N¹ÝŒo\u001dJûï§É¿",
+  [
+    [
+      "Steel.Closure.next",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "43882a47757dab04a0bb8c8fadd37831"
+    ],
+    [
+      "Steel.Closure.new_counter'",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "constructor_distinct_Steel.Effect.Common.VUnit",
+        "equation_FStar.Pervasives.dfst", "equation_Steel.Closure.repr",
+        "equation_Steel.FractionalPermission.full_perm",
+        "equation_Steel.Reference.pts_to",
+        "fuel_guarded_inversion_Steel.Effect.Common.vprop",
+        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_Steel.Closure.repr", "int_typing",
+        "proj_equation_Prims.Mkdtuple2__1",
+        "projection_inverse_Prims.Mkdtuple2__1",
+        "projection_inverse_Steel.Effect.Common.VUnit__0",
+        "token_correspondence_FStar.Pervasives.dfst",
+        "typing_Steel.Closure.repr"
+      ],
+      0,
+      "db59c02330857284830d3ab96c5b52c7"
+    ]
+  ]
+]

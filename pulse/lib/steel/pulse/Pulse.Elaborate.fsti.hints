@@ -1,5 +1,5 @@
 [
-  "Z‡3EwóÇ9¢\u0007l√[ù\u0013à",
+  "œÔ®5}Ë\u00043¬Ü‹)≤’a.",
   [
     [
       "Pulse.Elaborate.elab_freevars",
@@ -8,13 +8,13 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.nat", "equation_Pulse.Syntax.var",
+        "equation_Prims.nat", "equation_Pulse.Syntax.Base.var",
         "function_token_typing_Prims.int",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "e7fd6ffd490b7e2cd546a340b197c073"
+      "2e9b0d72001f92c47721b8119e6be744"
     ]
   ]
 ]

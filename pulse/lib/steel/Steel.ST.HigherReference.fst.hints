@@ -1,0 +1,80 @@
+[
+  "¢LáY\u007f=,y˜ækLç<\u0017b",
+  [
+    [
+      "Steel.ST.HigherReference.is_null",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.ST.HigherReference.null" ],
+      0,
+      "7b3bc4adfbbb9b7d13f6465928b62ecb"
+    ],
+    [
+      "Steel.ST.HigherReference.pts_to_injective_eq",
+      1,
+      2,
+      1,
+      [ "@query", "lemma_FStar.Ghost.reveal_hide" ],
+      0,
+      "fd9eaa0eb3cfcb7423ea424d21c41d95"
+    ],
+    [
+      "Steel.ST.HigherReference.pts_to_not_null",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption",
+        "@fuel_correspondence_Steel.Effect.Common.hp_of.fuel_instrumented",
+        "@query", "constructor_distinct_Steel.Effect.Common.VUnit",
+        "equation_Steel.Effect.Common.to_vprop_",
+        "equation_Steel.ST.HigherReference.null",
+        "equation_Steel.ST.HigherReference.pts_to",
+        "equation_with_fuel_Steel.Effect.Common.hp_of.fuel_instrumented",
+        "proj_equation_Steel.Effect.Common.Mkvprop__hp",
+        "projection_inverse_Steel.Effect.Common.Mkvprop__hp",
+        "projection_inverse_Steel.Effect.Common.VUnit__0",
+        "typing_Steel.ST.HigherReference.pts_to"
+      ],
+      0,
+      "430a487e69d09068fa08a7b7cde0d3e0"
+    ],
+    [
+      "Steel.ST.HigherReference.alloc",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.ST.HigherReference.is_null" ],
+      0,
+      "d82019cb9c7a6ce3bfbde5c7bc13649a"
+    ],
+    [
+      "Steel.ST.HigherReference.read",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "69f4ee2cc9fa05b207585175cd671e04"
+    ],
+    [
+      "Steel.ST.HigherReference._push_frame",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.ST.HigherReference._stack_frame" ],
+      0,
+      "1042c606b6b9fb9588ba371eb837e84b"
+    ],
+    [
+      "Steel.ST.HigherReference._free_and_pop_frame",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.ST.HigherReference._stack_frame" ],
+      0,
+      "876eacceeabb001fd9c828256b5a5267"
+    ]
+  ]
+]

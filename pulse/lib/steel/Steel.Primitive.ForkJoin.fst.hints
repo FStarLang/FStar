@@ -1,0 +1,85 @@
+[
+  "שךE×\fףp3D‡<­«{\u0012\u0006",
+  [
+    [
+      "Steel.Primitive.ForkJoin.intro_maybe_p_false",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Steel.Effect.Common.hp_of.fuel_instrumented",
+        "@fuel_irrelevance_Steel.Effect.Common.hp_of.fuel_instrumented",
+        "@query", "bool_typing", "equation_Steel.Primitive.ForkJoin.maybe_p",
+        "fuel_guarded_inversion_Steel.Effect.Common.vprop",
+        "projection_inverse_BoxBool_proj_0",
+        "typing_Steel.Effect.Common.emp",
+        "typing_Steel.Primitive.ForkJoin.maybe_p"
+      ],
+      0,
+      "484067d50c61374786ecb19e48b190f7"
+    ],
+    [
+      "Steel.Primitive.ForkJoin.intro_maybe_p_true",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Steel.Effect.Common.hp_of.fuel_instrumented",
+        "@fuel_irrelevance_Steel.Effect.Common.hp_of.fuel_instrumented",
+        "@query", "equation_Steel.Primitive.ForkJoin.maybe_p",
+        "fuel_guarded_inversion_Steel.Effect.Common.vprop"
+      ],
+      0,
+      "b2f08176b36c705666974d1d696d52cc"
+    ],
+    [
+      "Steel.Primitive.ForkJoin.fork",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "46e7fe6373360789e23c75b163070cc2"
+    ],
+    [
+      "Steel.Primitive.ForkJoin.join",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Steel.Effect.Common.hp_of.fuel_instrumented",
+        "@fuel_irrelevance_Steel.Effect.Common.hp_of.fuel_instrumented",
+        "@query", "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "bool_inversion", "bool_typing",
+        "constructor_distinct_Steel.Effect.Common.VStar",
+        "constructor_distinct_Steel.Effect.Common.VUnit",
+        "equation_Prims.eqtype", "equation_Steel.Effect.Common.star",
+        "equation_Steel.FractionalPermission.full_perm",
+        "equation_Steel.Primitive.ForkJoin.lock_inv",
+        "equation_Steel.Primitive.ForkJoin.lock_inv_pred",
+        "equation_Steel.Primitive.ForkJoin.maybe_p",
+        "equation_Steel.Reference.pts_to",
+        "equation_with_fuel_Steel.Effect.Common.hp_of.fuel_instrumented",
+        "fuel_guarded_inversion_Steel.Effect.Common.vprop",
+        "fuel_guarded_inversion_Steel.Primitive.ForkJoin.thread",
+        "function_token_typing_Prims.bool",
+        "lemma_Steel.Memory.affine_star_smt",
+        "proj_equation_Steel.Primitive.ForkJoin.Mkthread_r",
+        "projection_inverse_Steel.Effect.Common.VStar__0",
+        "projection_inverse_Steel.Effect.Common.VStar__1",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Steel.Effect.Common.hp_of",
+        "typing_Steel.FractionalPermission.full_perm",
+        "typing_Steel.Primitive.ForkJoin.__proj__Mkthread__item__r",
+        "typing_Steel.Primitive.ForkJoin.lock_inv_pred",
+        "typing_Steel.Primitive.ForkJoin.maybe_p",
+        "typing_Steel.Reference.pts_to"
+      ],
+      0,
+      "cb58664c5e31ec83ffbbbb226e8d64c9"
+    ]
+  ]
+]

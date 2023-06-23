@@ -1,0 +1,23 @@
+[
+  "ÂrG)Ö?\r\u0016Çè∫0É \u0016_",
+  [
+    [
+      "Steel.ST.C.Types.Fields.field_description_cons0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ce036b6b736ef4e0bc3a9ff132a12aed", "bool_inversion",
+        "bool_typing", "primitive_Prims.op_BarBar",
+        "primitive_Prims.op_Equality",
+        "proj_equation_Steel.ST.C.Types.Fields.Mkfield_description_t_fd_empty",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Steel.ST.C.Types.Fields.Mkfield_description_t_fd_empty",
+        "string_inversion"
+      ],
+      0,
+      "3b13c391203d0f6d2173896a5eee4491"
+    ]
+  ]
+]

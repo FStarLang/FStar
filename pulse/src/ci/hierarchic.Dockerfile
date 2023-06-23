@@ -19,4 +19,5 @@ RUN sudo apt-get install -y --no-install-recommends nodejs
 
 # Steel CI proper
 ARG STEEL_NIGHTLY_CI
+ARG OTHERFLAGS=--use_hints
 RUN eval $(opam env) && env STEEL_NIGHTLY_CI="$STEEL_NIGHTLY_CI" make -k -j $opamthreads -C $HOME/steel/src ci

@@ -1,0 +1,26 @@
+[
+  "JVUV\u000b8!Kó\u0005½\u0011ˆÀ¦™",
+  [
+    [
+      "Steel.Semantics.Instantiate.state_uses",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "7078f9f8134679906ad98844017459bd"
+    ],
+    [
+      "Steel.Semantics.Instantiate.state_correspondence",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_83b7f74668e2de4073384eaaf24260ac"
+      ],
+      0,
+      "9ba7552e30c1bd2bcbd9ee7c4624a50f"
+    ]
+  ]
+]

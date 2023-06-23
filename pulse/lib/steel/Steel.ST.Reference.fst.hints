@@ -1,0 +1,102 @@
+[
+  "ë\u0015H/…√Q9∑€ï∞f∂y\u0002",
+  [
+    [
+      "Steel.ST.Reference.is_null",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.ST.Reference.null" ],
+      0,
+      "acf96b33596fde20fb43bc3b0858b024"
+    ],
+    [
+      "Steel.ST.Reference.pts_to_injective_eq",
+      1,
+      2,
+      1,
+      [ "@query", "lemma_FStar.Ghost.reveal_hide" ],
+      0,
+      "7397b2ab72a9eb58f40f462605071728"
+    ],
+    [
+      "Steel.ST.Reference.pts_to_not_null",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption",
+        "@fuel_correspondence_Steel.Effect.Common.hp_of.fuel_instrumented",
+        "@query", "constructor_distinct_Steel.Effect.Common.VUnit",
+        "equation_Steel.Effect.Common.to_vprop_",
+        "equation_Steel.Reference.pts_to",
+        "equation_Steel.ST.Reference.null",
+        "equation_Steel.ST.Reference.pts_to",
+        "equation_with_fuel_Steel.Effect.Common.hp_of.fuel_instrumented",
+        "proj_equation_Steel.Effect.Common.Mkvprop__hp",
+        "projection_inverse_Steel.Effect.Common.Mkvprop__hp",
+        "projection_inverse_Steel.Effect.Common.VUnit__0",
+        "typing_Steel.ST.Reference.pts_to"
+      ],
+      0,
+      "cef1be4543847a84637c15719a7eec1d"
+    ],
+    [
+      "Steel.ST.Reference.alloc",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.ST.Reference.is_null" ],
+      0,
+      "5c8db3c438010219a17b5f0b22fdc297"
+    ],
+    [
+      "Steel.ST.Reference.read",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e62545341792eab4d503e480d5c610b2"
+    ],
+    [
+      "Steel.ST.Reference._push_frame",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.ST.Reference._stack_frame" ],
+      0,
+      "cdb1c164adaffb219e1806f0c85d52db"
+    ],
+    [
+      "Steel.ST.Reference._free_and_pop_frame",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.ST.Reference._stack_frame" ],
+      0,
+      "b36d90c055d12da50b651eb7984d2f99"
+    ],
+    [
+      "Steel.ST.Reference.gather",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0dee8cb03258a67c2f7ec66427696212"
+      ],
+      0,
+      "36dae182d1b4cd618724ef6515c3b96f"
+    ],
+    [
+      "Steel.ST.Reference.atomic_read_u32",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "1691651a7b5f4f88c2159e568097858c"
+    ]
+  ]
+]
