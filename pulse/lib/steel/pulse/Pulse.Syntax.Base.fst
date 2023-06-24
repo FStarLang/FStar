@@ -4,24 +4,13 @@ module RT = FStar.Reflection.Typing
 module R = FStar.Reflection.V2
 module T = FStar.Tactics.V2
 
-let host_term_equality (t1 t2:host_term)
-  : Lemma
-    (ensures R.term_eq t1 t2 <==> t1==t2)
-  = admit()
+let eq_univ (u1 u2:universe) : b:bool{b <==> u1 == u2} =
+  let open FStar.Reflection.V2.TermEq in
+  assume (faithful_univ u1);
+  assume (faithful_univ u2);
+  univ_eq_dec u1 u2
 
-let eq_univ (u1 u2:universe) =
-  host_term_equality (R.pack_ln (R.Tv_Type u1))
-                     (R.pack_ln (R.Tv_Type u2));
-  R.(term_eq (pack_ln (Tv_Type u1))
-             (pack_ln (Tv_Type u2)))
-
-let univ_equality (u1 u2:universe)
-  : Lemma (ensures eq_univ u1 u2 <==> u1 == u2) =
-  let open R in  
-  host_term_equality (pack_ln (Tv_Type u1))
-                     (pack_ln (Tv_Type u2))
-
-let rec eq_tm (t1 t2:term) 
+let rec eq_tm (t1 t2:term)
   : Tot (b:bool { b <==> (t1 == t2) }) (decreases t1)
   = match t1.t, t2.t with
     | Tm_VProp, Tm_VProp
@@ -36,19 +25,19 @@ let rec eq_tm (t1 t2:term)
       eq_tm p1 p2
     | Tm_ExistsSL u1 t1 b1, Tm_ExistsSL u2 t2 b2
     | Tm_ForallSL u1 t1 b1, Tm_ForallSL u2 t2 b2 ->
-      univ_equality u1 u2;
       eq_univ u1 u2 &&
       eq_tm t1.binder_ty t2.binder_ty &&
       eq_tm b1 b2
     | Tm_FStar t1, Tm_FStar t2 ->
-      host_term_equality t1 t2;
-      R.term_eq t1 t2
+      let open FStar.Reflection.V2.TermEq in
+      assume (faithful t1);
+      assume (faithful t2);
+      term_eq_dec t1 t2
     | _ -> false
 
 let eq_st_comp (s1 s2:st_comp)  
   : b:bool { b <==> (s1 == s2) }
-  = univ_equality s1.u s2.u;
-    eq_univ s1.u s2.u && 
+  = eq_univ s1.u s2.u &&
     eq_tm s1.res s2.res &&
     eq_tm s1.pre s2.pre &&
     eq_tm s1.post s2.post
@@ -171,7 +160,6 @@ let rec eq_st_term (t1 t2:st_term)
 
     | Tm_Admit { ctag=c1; u=u1; typ=t1; post=post1 }, 
       Tm_Admit { ctag=c2; u=u2; typ=t2; post=post2 } ->
-      univ_equality u1 u2;
       c1 = c2 &&
       eq_univ u1 u2 &&
       eq_tm t1 t2 &&
@@ -189,4 +177,3 @@ let rec eq_st_term (t1 t2:st_term)
       eq_st_term t1 t2
 
     | _ -> false
-    
