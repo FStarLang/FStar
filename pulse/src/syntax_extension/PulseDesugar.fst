@@ -309,8 +309,8 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
       let? tm = tosyntax env e in
       return (st_term_of_stapp_or_return (stapp_or_return env tm))
 
-    | Assignment { id; value } ->
-      let? lhs = resolve_name env id in
+    | Assignment { lhs; value } ->
+      let? lhs = tosyntax env lhs in
       let? value = tosyntax env value in
       return (stapp_assignment lhs value s.range)
     

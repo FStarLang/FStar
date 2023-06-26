@@ -148,12 +148,12 @@ type stmt'__Expr__payload = {
   e: FStar_Parser_AST.term }
 and stmt'__Assignment__payload =
   {
-  id: FStar_Ident.ident ;
+  lhs: FStar_Parser_AST.term ;
   value: FStar_Parser_AST.term }
 and stmt'__LetBinding__payload =
   {
   qualifier: mut_or_ref FStar_Pervasives_Native.option ;
-  id1: FStar_Ident.ident ;
+  id: FStar_Ident.ident ;
   typ: FStar_Parser_AST.term FStar_Pervasives_Native.option ;
   init: FStar_Parser_AST.term FStar_Pervasives_Native.option }
 and stmt'__Block__payload = {
@@ -172,7 +172,7 @@ and stmt'__Match__payload =
 and stmt'__While__payload =
   {
   guard: stmt ;
-  id2: FStar_Ident.ident ;
+  id1: FStar_Ident.ident ;
   invariant: vprop ;
   body1: stmt }
 and stmt'__Introduce__payload =
@@ -218,32 +218,31 @@ and stmt = {
 let (__proj__Mkstmt'__Expr__payload__item__e :
   stmt'__Expr__payload -> FStar_Parser_AST.term) =
   fun projectee -> match projectee with | { e;_} -> e
-let (__proj__Mkstmt'__Assignment__payload__item__id :
-  stmt'__Assignment__payload -> FStar_Ident.ident) =
-  fun projectee -> match projectee with | { id; value;_} -> id
+let (__proj__Mkstmt'__Assignment__payload__item__lhs :
+  stmt'__Assignment__payload -> FStar_Parser_AST.term) =
+  fun projectee -> match projectee with | { lhs; value;_} -> lhs
 let (__proj__Mkstmt'__Assignment__payload__item__value :
   stmt'__Assignment__payload -> FStar_Parser_AST.term) =
-  fun projectee -> match projectee with | { id; value;_} -> value
+  fun projectee -> match projectee with | { lhs; value;_} -> value
 let (__proj__Mkstmt'__LetBinding__payload__item__qualifier :
   stmt'__LetBinding__payload -> mut_or_ref FStar_Pervasives_Native.option) =
   fun projectee ->
-    match projectee with | { qualifier; id1 = id; typ; init;_} -> qualifier
+    match projectee with | { qualifier; id; typ; init;_} -> qualifier
 let (__proj__Mkstmt'__LetBinding__payload__item__id :
   stmt'__LetBinding__payload -> FStar_Ident.ident) =
-  fun projectee ->
-    match projectee with | { qualifier; id1 = id; typ; init;_} -> id
+  fun projectee -> match projectee with | { qualifier; id; typ; init;_} -> id
 let (__proj__Mkstmt'__LetBinding__payload__item__typ :
   stmt'__LetBinding__payload ->
     FStar_Parser_AST.term FStar_Pervasives_Native.option)
   =
   fun projectee ->
-    match projectee with | { qualifier; id1 = id; typ; init;_} -> typ
+    match projectee with | { qualifier; id; typ; init;_} -> typ
 let (__proj__Mkstmt'__LetBinding__payload__item__init :
   stmt'__LetBinding__payload ->
     FStar_Parser_AST.term FStar_Pervasives_Native.option)
   =
   fun projectee ->
-    match projectee with | { qualifier; id1 = id; typ; init;_} -> init
+    match projectee with | { qualifier; id; typ; init;_} -> init
 let (__proj__Mkstmt'__Block__payload__item__stmt :
   stmt'__Block__payload -> stmt) =
   fun projectee -> match projectee with | { stmt = stmt1;_} -> stmt1
@@ -285,22 +284,22 @@ let (__proj__Mkstmt'__While__payload__item__guard :
   stmt'__While__payload -> stmt) =
   fun projectee ->
     match projectee with
-    | { guard; id2 = id; invariant; body1 = body;_} -> guard
+    | { guard; id1 = id; invariant; body1 = body;_} -> guard
 let (__proj__Mkstmt'__While__payload__item__id :
   stmt'__While__payload -> FStar_Ident.ident) =
   fun projectee ->
     match projectee with
-    | { guard; id2 = id; invariant; body1 = body;_} -> id
+    | { guard; id1 = id; invariant; body1 = body;_} -> id
 let (__proj__Mkstmt'__While__payload__item__invariant :
   stmt'__While__payload -> vprop) =
   fun projectee ->
     match projectee with
-    | { guard; id2 = id; invariant; body1 = body;_} -> invariant
+    | { guard; id1 = id; invariant; body1 = body;_} -> invariant
 let (__proj__Mkstmt'__While__payload__item__body :
   stmt'__While__payload -> stmt) =
   fun projectee ->
     match projectee with
-    | { guard; id2 = id; invariant; body1 = body;_} -> body
+    | { guard; id1 = id; invariant; body1 = body;_} -> body
 let (__proj__Mkstmt'__Introduce__payload__item__vprop :
   stmt'__Introduce__payload -> vprop) =
   fun projectee ->
@@ -419,7 +418,7 @@ let (__proj__Mkstmt__item__range : stmt -> rng) =
   fun projectee -> match projectee with | { s; range1 = range;_} -> range
 type decl =
   {
-  id3: FStar_Ident.ident ;
+  id2: FStar_Ident.ident ;
   binders2: binders ;
   ascription: computation_type ;
   body2: stmt ;
@@ -427,27 +426,27 @@ type decl =
 let (__proj__Mkdecl__item__id : decl -> FStar_Ident.ident) =
   fun projectee ->
     match projectee with
-    | { id3 = id; binders2 = binders1; ascription; body2 = body;
+    | { id2 = id; binders2 = binders1; ascription; body2 = body;
         range2 = range;_} -> id
 let (__proj__Mkdecl__item__binders : decl -> binders) =
   fun projectee ->
     match projectee with
-    | { id3 = id; binders2 = binders1; ascription; body2 = body;
+    | { id2 = id; binders2 = binders1; ascription; body2 = body;
         range2 = range;_} -> binders1
 let (__proj__Mkdecl__item__ascription : decl -> computation_type) =
   fun projectee ->
     match projectee with
-    | { id3 = id; binders2 = binders1; ascription; body2 = body;
+    | { id2 = id; binders2 = binders1; ascription; body2 = body;
         range2 = range;_} -> ascription
 let (__proj__Mkdecl__item__body : decl -> stmt) =
   fun projectee ->
     match projectee with
-    | { id3 = id; binders2 = binders1; ascription; body2 = body;
+    | { id2 = id; binders2 = binders1; ascription; body2 = body;
         range2 = range;_} -> body
 let (__proj__Mkdecl__item__range : decl -> rng) =
   fun projectee ->
     match projectee with
-    | { id3 = id; binders2 = binders1; ascription; body2 = body;
+    | { id2 = id; binders2 = binders1; ascription; body2 = body;
         range2 = range;_} -> range
 let (mk_comp :
   st_comp_tag ->
@@ -472,8 +471,8 @@ let (mk_comp :
 let (mk_vprop_exists : binders -> vprop -> vprop') =
   fun binders1 -> fun body -> VPropExists { binders = binders1; body }
 let (mk_expr : FStar_Parser_AST.term -> stmt') = fun e -> Expr { e }
-let (mk_assignment : FStar_Ident.ident -> FStar_Parser_AST.term -> stmt') =
-  fun id -> fun value -> Assignment { id; value }
+let (mk_assignment : FStar_Parser_AST.term -> FStar_Parser_AST.term -> stmt')
+  = fun id -> fun value -> Assignment { lhs = id; value }
 let (mk_let_binding :
   mut_or_ref FStar_Pervasives_Native.option ->
     FStar_Ident.ident ->
@@ -481,8 +480,7 @@ let (mk_let_binding :
         FStar_Parser_AST.term FStar_Pervasives_Native.option -> stmt')
   =
   fun qualifier ->
-    fun id ->
-      fun typ -> fun init -> LetBinding { qualifier; id1 = id; typ; init }
+    fun id -> fun typ -> fun init -> LetBinding { qualifier; id; typ; init }
 let (mk_block : stmt -> stmt') = fun stmt1 -> Block { stmt = stmt1 }
 let (mk_if :
   FStar_Parser_AST.term ->
@@ -505,7 +503,7 @@ let (mk_while : stmt -> FStar_Ident.ident -> vprop -> stmt -> stmt') =
   fun guard ->
     fun id ->
       fun invariant ->
-        fun body -> While { guard; id2 = id; invariant; body1 = body }
+        fun body -> While { guard; id1 = id; invariant; body1 = body }
 let (mk_intro : vprop -> FStar_Parser_AST.term Prims.list -> stmt') =
   fun vprop1 -> fun witnesses -> Introduce { vprop = vprop1; witnesses }
 let (mk_sequence : stmt -> stmt -> stmt') =
@@ -520,7 +518,7 @@ let (mk_decl :
         fun body ->
           fun range ->
             {
-              id3 = id;
+              id2 = id;
               binders2 = binders1;
               ascription;
               body2 = body;

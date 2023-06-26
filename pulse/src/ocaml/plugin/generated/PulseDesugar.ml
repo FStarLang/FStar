@@ -665,15 +665,15 @@ let rec (desugar_stmt :
                  st_term_of_stapp_or_return uu___2 in
                return uu___1)
       | PulseSugar.Assignment
-          { PulseSugar.id = id; PulseSugar.value = value;_} ->
-          let uu___ = resolve_name env id in
+          { PulseSugar.lhs = lhs; PulseSugar.value = value;_} ->
+          let uu___ = tosyntax env lhs in
           op_let_Question uu___
-            (fun lhs ->
+            (fun lhs1 ->
                let uu___1 = tosyntax env value in
                op_let_Question uu___1
                  (fun value1 ->
                     let uu___2 =
-                      stapp_assignment lhs value1 s.PulseSugar.range1 in
+                      stapp_assignment lhs1 value1 s.PulseSugar.range1 in
                     return uu___2))
       | PulseSugar.Sequence
           {
@@ -744,7 +744,7 @@ let rec (desugar_stmt :
             PulseSugar.branches = branches;_}
           -> failwith "Match is not yet handled"
       | PulseSugar.While
-          { PulseSugar.guard = guard; PulseSugar.id2 = id;
+          { PulseSugar.guard = guard; PulseSugar.id1 = id;
             PulseSugar.invariant = invariant; PulseSugar.body1 = body;_}
           ->
           let uu___ = desugar_stmt env guard in
@@ -841,7 +841,7 @@ and (desugar_bind :
           op_let_Question uu___
             (fun annot ->
                let uu___1 =
-                 let uu___2 = push_bv env lb.PulseSugar.id1 in
+                 let uu___2 = push_bv env lb.PulseSugar.id in
                  match uu___2 with
                  | (env1, bv) ->
                      let uu___3 = desugar_stmt env1 s2 in
@@ -865,7 +865,7 @@ and (desugar_bind :
                                (fun s1 ->
                                   let b =
                                     PulseSyntaxWrapper.mk_binder
-                                      lb.PulseSugar.id1 annot in
+                                      lb.PulseSugar.id annot in
                                   let t =
                                     let uu___3 = stapp_or_return env s1 in
                                     match uu___3 with
@@ -880,7 +880,7 @@ and (desugar_bind :
                                (fun e11 ->
                                   let b =
                                     PulseSyntaxWrapper.mk_binder
-                                      lb.PulseSugar.id1 annot in
+                                      lb.PulseSugar.id annot in
                                   let uu___3 =
                                     PulseSyntaxWrapper.tm_let_mut b e11 s21 r in
                                   return uu___3)
@@ -890,7 +890,7 @@ and (desugar_bind :
                                (fun e11 ->
                                   let b =
                                     PulseSyntaxWrapper.mk_binder
-                                      lb.PulseSugar.id1 annot in
+                                      lb.PulseSugar.id annot in
                                   let uu___3 =
                                     PulseSyntaxWrapper.tm_let_mut b e11 s21 r in
                                   return uu___3))))

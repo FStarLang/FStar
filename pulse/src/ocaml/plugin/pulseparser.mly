@@ -107,8 +107,8 @@ pulseStmtNoSeq:
     { PulseSugar.mk_open i }
   | tm=appTerm
     { PulseSugar.mk_expr tm }
-  | i=lident COLON_EQUALS a=noSeqTerm
-    { PulseSugar.mk_assignment i a }
+  | lhs=appTermNoRecordExp COLON_EQUALS a=noSeqTerm
+    { PulseSugar.mk_assignment lhs a }
   | LET q=option(mutOrRefQualifier) i=lident typOpt=option(appTerm) EQUALS tm=noSeqTerm
     { PulseSugar.mk_let_binding q i typOpt (Some tm) }
   | LBRACE s=pulseStmt RBRACE
