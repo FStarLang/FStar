@@ -28,6 +28,12 @@ val len_of_deviceIDCRI
   : U32.t
 
 assume
+val spec_serialize_deviceIDCSR 
+  (deviceIDCRI_len: U32.t)
+  (deviceIDCSR: deviceIDCSR_t deviceIDCRI_len)
+  : Seq.seq U8.t
+
+assume
 val serialize_deviceIDCSR 
   (deviceIDCRI_len: U32.t)
   (deviceIDCSR: deviceIDCSR_t deviceIDCRI_len)
@@ -36,7 +42,8 @@ val serialize_deviceIDCSR
 assume
 val spec_serialize_deviceIDCRI
   (deviceIDCRI: deviceIDCRI_t)
-  : Seq.seq U8.t
+  (deviceIDCRI_len: U32.t)
+  : elseq U8.t (U32.v deviceIDCRI_len)
 
 assume
 val serialize_deviceIDCRI
@@ -46,7 +53,7 @@ val serialize_deviceIDCRI
   (#deviceIDCRI_buf0: Ghost.erased (Seq.seq U8.t))
   : stt unit
     (A.pts_to deviceIDCRI_buf full_perm deviceIDCRI_buf0)
-    (fun _ -> A.pts_to deviceIDCRI_buf full_perm (spec_serialize_deviceIDCRI deviceIDCRI))
+    (fun _ -> A.pts_to deviceIDCRI_buf full_perm (spec_serialize_deviceIDCRI deviceIDCRI deviceIDCRI_len))
 
 assume 
 val spec_x509_get_deviceIDCRI
@@ -73,9 +80,9 @@ val x509_get_deviceIDCRI
       A.pts_to deviceID_pub full_perm deviceID_pub0 `star`
       pure (res == spec_x509_get_deviceIDCRI version s_common s_org s_country ku deviceID_pub0))
 
-assume
-val serialize32_deviceIDCRI_backwards
-  (deviceIDCRI: deviceIDCRI_t)
+assume 
+val spec_x509_get_deviceIDCSR
   (deviceIDCRI_len: U32.t)
-  (deviceIDCRI_buf: A.array U8.t)
-  : U32.t
+  (deviceIDCRI_buf: Seq.seq U8.t)
+  (deviceIDCRI_sig: Seq.seq U8.t)
+  : deviceIDCSR_t deviceIDCRI_len

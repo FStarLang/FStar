@@ -21,11 +21,18 @@ open L0Crypto
 assume
 val deviceIDCRI_pre (v:deviceIDCSR_ingredients_t) : vprop
 
-assume
-val deviceIDCSR_pre 
-  (v:deviceIDCSR_ingredients_t) 
-  (llen:U32.t) 
-  : vprop
+let deviceIDCSR_pre 
+  (deviceIDCSR: deviceIDCSR_ingredients_t) 
+  (deviceIDCSR_len: U32.t) 
+  : prop
+  = let deviceIDCRI_len = len_of_deviceIDCRI
+                            deviceIDCSR.version
+                            deviceIDCSR.s_common
+                            deviceIDCSR.s_org
+                            deviceIDCSR.s_country in
+    U32.(0ul <^ deviceIDCRI_len) /\ 
+    valid_deviceIDCSR_ingredients deviceIDCRI_len /\
+    deviceIDCSR_len == length_of_deviceIDCSR deviceIDCRI_len
 
 assume
 val aliasKeyCRT_pre 
@@ -96,9 +103,9 @@ fn l0
   // (#pcdi #pfwid #pdeviceID_label #paliasKey_label: perm)
   requires (l0_perm l0 vl0 `star`
             l0_pre l0 vl0)
-   ensures exists (vl0': l0_repr). (
-                      l0_perm l0 vl0' `star`
-                      l0_post l0 vl0)
+  ensures exists (vl0': l0_repr). (
+                    l0_perm l0 vl0' `star`
+                    l0_post l0 vl0)
 {
 (* Derive DeviceID *)
 

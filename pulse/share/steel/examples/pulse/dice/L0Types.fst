@@ -32,7 +32,7 @@ type deviceIDCSR_ingredients_t = {
 }
 
 assume
-val valid_deviceIDCSR_ingredients (len: U32.t) : Type0
+val valid_deviceIDCSR_ingredients (len: U32.t) : prop
 
 assume
 val x509_version_t : Type0
@@ -75,11 +75,12 @@ type l0_record = {
   aliasKey_pub: A.larray U8.t 32; (* public bytes *)
   aliasKey_priv: A.larray U8.t 32; (* secret bytes *)
 (* DeviceID CSR Outputs *)
-  deviceIDCSR_len: U32.t; (* should be U32 *)
-  deviceIDCSR_buf: A.larray U8.t (U32.v deviceIDCSR_len); (* public bytes *)
+  deviceIDCSR_len: R.ref U32.t; (* should be U32 *)
+  deviceIDCSR_buf: A.array U8.t; (* public bytes *)
 (* DeviceID CRI Outputs *)
   deviceIDCRI_len: R.ref U32.t; (* should be U32 *)
   deviceIDCRI_buf: A.array U8.t; (* public bytes *)
+  deviceIDCRI_sig: A.array U8.t;
 (* AliasKey Crt Outputs *)
   aliasKeyCRT_len: US.t; (* should be U32 *)
   aliasKeyCRT_buf: A.larray U8.t (US.v aliasKeyCRT_len); (* public bytes *)
@@ -97,9 +98,11 @@ type l0_repr = {
   deviceID_priv: Seq.seq U8.t;
   aliasKey_pub: Seq.seq U8.t;
   aliasKey_priv: Seq.seq U8.t;
-  deviceIDCSR_buf: Seq.seq U8.t;
+  deviceIDCSR_len: U32.t;
+  deviceIDCSR_buf: elseq U8.t (U32.v deviceIDCSR_len);
   deviceIDCRI_len: U32.t;
   deviceIDCRI_buf: elseq U8.t (U32.v deviceIDCRI_len);
+  deviceIDCRI_sig: Seq.seq U8.t;
   aliasKeyCRT_buf: Seq.seq U8.t;
   authKeyID: Seq.seq U8.t;
 }
@@ -119,9 +122,11 @@ let l0_perm (l0:l0_record) (vl0: l0_repr)
   A.pts_to l0.deviceID_priv full_perm vl0.deviceID_priv `star`
   A.pts_to l0.aliasKey_pub full_perm vl0.aliasKey_pub `star`
   A.pts_to l0.aliasKey_priv full_perm vl0.aliasKey_priv `star`
+  R.pts_to l0.deviceIDCSR_len full_perm vl0.deviceIDCSR_len `star`
   A.pts_to l0.deviceIDCSR_buf full_perm vl0.deviceIDCSR_buf `star`
   R.pts_to l0.deviceIDCRI_len full_perm vl0.deviceIDCRI_len `star`
   A.pts_to l0.deviceIDCRI_buf full_perm vl0.deviceIDCRI_buf `star`
+  A.pts_to l0.deviceIDCRI_sig full_perm vl0.deviceIDCRI_sig `star`
   A.pts_to l0.aliasKeyCRT_buf full_perm vl0.aliasKeyCRT_buf `star`
   A.pts_to l0.authKeyID full_perm vl0.authKeyID
 
