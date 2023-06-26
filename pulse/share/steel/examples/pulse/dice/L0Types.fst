@@ -14,6 +14,8 @@ module U8 = FStar.UInt8
 module U32 = FStar.UInt32
 open HACL
 
+let elseq (a:Type) (l:nat) = s:Ghost.erased (Seq.seq a) { Seq.length s == l }
+
 assume
 val deviceIDCRI_t : Type0
 
@@ -76,8 +78,8 @@ type l0_record = {
   deviceIDCSR_len: U32.t; (* should be U32 *)
   deviceIDCSR_buf: A.larray U8.t (U32.v deviceIDCSR_len); (* public bytes *)
 (* DeviceID CRI Outputs *)
-  deviceIDCRI_len: U32.t; (* should be U32 *)
-  deviceIDCRI_buf: A.larray U8.t (U32.v deviceIDCRI_len); (* public bytes *)
+  deviceIDCRI_len: R.ref U32.t; (* should be U32 *)
+  deviceIDCRI_buf: A.array U8.t; (* public bytes *)
 (* AliasKey Crt Outputs *)
   aliasKeyCRT_len: US.t; (* should be U32 *)
   aliasKeyCRT_buf: A.larray U8.t (US.v aliasKeyCRT_len); (* public bytes *)
@@ -85,6 +87,7 @@ type l0_record = {
   authKeyID: A.larray U8.t 32;
 }
 
+noeq
 type l0_repr = {
   cdi: Seq.seq U8.t;
   fwid: Seq.seq U8.t;
@@ -95,7 +98,8 @@ type l0_repr = {
   aliasKey_pub: Seq.seq U8.t;
   aliasKey_priv: Seq.seq U8.t;
   deviceIDCSR_buf: Seq.seq U8.t;
-  deviceIDCRI_buf: Seq.seq U8.t;
+  deviceIDCRI_len: U32.t;
+  deviceIDCRI_buf: elseq U8.t (U32.v deviceIDCRI_len);
   aliasKeyCRT_buf: Seq.seq U8.t;
   authKeyID: Seq.seq U8.t;
 }
@@ -116,6 +120,8 @@ let l0_perm (l0:l0_record) (vl0: l0_repr)
   A.pts_to l0.aliasKey_pub full_perm vl0.aliasKey_pub `star`
   A.pts_to l0.aliasKey_priv full_perm vl0.aliasKey_priv `star`
   A.pts_to l0.deviceIDCSR_buf full_perm vl0.deviceIDCSR_buf `star`
+  R.pts_to l0.deviceIDCRI_len full_perm vl0.deviceIDCRI_len `star`
+  A.pts_to l0.deviceIDCRI_buf full_perm vl0.deviceIDCRI_buf `star`
   A.pts_to l0.aliasKeyCRT_buf full_perm vl0.aliasKeyCRT_buf `star`
   A.pts_to l0.authKeyID full_perm vl0.authKeyID
 

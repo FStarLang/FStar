@@ -74,7 +74,6 @@ let cdi_functional_correctness (c0:Seq.seq U8.t) (vl0:l0_repr)
 
 // array utilities
 
-let elseq (a:Type) (l:nat) = s:Ghost.erased (Seq.seq a) { Seq.length s == l }
 ```pulse
 fn compare (#t:eqtype) (l:US.t) (a1 a2:A.larray t (US.v l))
            (#p1 #p2:perm) (#s1 #s2:elseq t (US.v l))
