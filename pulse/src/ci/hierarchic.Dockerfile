@@ -14,7 +14,11 @@ RUN mkdir -p $HOME/steel_tools && \
     env OTHERFLAGS='--admit_smt_queries true' make -C $KRML_HOME -j $opamthreads
 
 # CI dependencies for the Wasm11 test: node.js
-RUN curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+# The sed call is a workaround for these upstream issues... sigh.
+# https://github.com/nodesource/distributions/issues/1576
+# https://github.com/nodesource/distributions/issues/1593
+# Remove when they are solved
+RUN curl -fsSL https://deb.nodesource.com/setup_16.x | sed 's,https://deb.nodesource.com,http://deb.nodesource.com,' | sudo -E bash -
 RUN sudo apt-get install -y --no-install-recommends nodejs
 
 # Steel CI proper
