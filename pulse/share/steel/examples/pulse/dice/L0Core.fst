@@ -1,4 +1,5 @@
 module L0Core
+
 module R = Steel.ST.Reference
 module A = Steel.ST.Array
 module T = FStar.Tactics
@@ -211,20 +212,20 @@ fn mutate_rec_get_witness (l:US.t) (l0:l0_record) (#vl0:Ghost.erased l0_repr)
     exists (s:Seq.seq U8.t) . A.pts_to l0.deviceID_pub full_perm s
   )
 {
-  rewrite (l0_perm l0 vl0)
-    as (
-      A.pts_to l0.cdi full_perm vl0.cdi `star`
-      A.pts_to l0.fwid full_perm vl0.fwid `star`
-      A.pts_to l0.deviceID_label full_perm vl0.deviceID_label `star`
-      A.pts_to l0.aliasKey_label full_perm vl0.aliasKey_label `star`
-      A.pts_to l0.deviceID_pub full_perm vl0.deviceID_pub `star`
-      A.pts_to l0.deviceID_priv full_perm vl0.deviceID_priv `star`
-      A.pts_to l0.aliasKey_pub full_perm vl0.aliasKey_pub `star`
-      A.pts_to l0.aliasKey_priv full_perm vl0.aliasKey_priv `star`
-      A.pts_to l0.deviceIDCSR_buf full_perm vl0.deviceIDCSR_buf `star`
-      A.pts_to l0.aliasKeyCRT_buf full_perm vl0.aliasKeyCRT_buf `star`
-      A.pts_to l0.authKeyID full_perm vl0.authKeyID
-    );
+  unfold (l0_perm l0 vl0);
+    // as (
+    //   A.pts_to l0.cdi full_perm vl0.cdi `star`
+    //   A.pts_to l0.fwid full_perm vl0.fwid `star`
+    //   A.pts_to l0.deviceID_label full_perm vl0.deviceID_label `star`
+    //   A.pts_to l0.aliasKey_label full_perm vl0.aliasKey_label `star`
+    //   A.pts_to l0.deviceID_pub full_perm vl0.deviceID_pub `star`
+    //   A.pts_to l0.deviceID_priv full_perm vl0.deviceID_priv `star`
+    //   A.pts_to l0.aliasKey_pub full_perm vl0.aliasKey_pub `star`
+    //   A.pts_to l0.aliasKey_priv full_perm vl0.aliasKey_priv `star`
+    //   A.pts_to l0.deviceIDCSR_buf full_perm vl0.deviceIDCSR_buf `star`
+    //   A.pts_to l0.aliasKeyCRT_buf full_perm vl0.aliasKeyCRT_buf `star`
+    //   A.pts_to l0.authKeyID full_perm vl0.authKeyID
+    // );
   
   mutate_array l l0.deviceID_pub;
   // let y = get_witness (l0.deviceID_pub); (* this works! *)
@@ -259,20 +260,20 @@ fn l0_core_step1
 {
   dice_digest_len_is_hkdf_ikm;
 
-  rewrite (l0_perm l0 vl0)
-    as (
-      A.pts_to l0.cdi full_perm vl0.cdi `star`
-      A.pts_to l0.fwid full_perm vl0.fwid `star`
-      A.pts_to l0.deviceID_label full_perm vl0.deviceID_label `star`
-      A.pts_to l0.aliasKey_label full_perm vl0.aliasKey_label `star`
-      A.pts_to l0.deviceID_pub full_perm vl0.deviceID_pub `star`
-      A.pts_to l0.deviceID_priv full_perm vl0.deviceID_priv `star`
-      A.pts_to l0.aliasKey_pub full_perm vl0.aliasKey_pub `star`
-      A.pts_to l0.aliasKey_priv full_perm vl0.aliasKey_priv `star`
-      A.pts_to l0.deviceIDCSR_buf full_perm vl0.deviceIDCSR_buf `star`
-      A.pts_to l0.aliasKeyCRT_buf full_perm vl0.aliasKeyCRT_buf `star`
-      A.pts_to l0.authKeyID full_perm vl0.authKeyID
-    );
+  unfold (l0_perm l0 vl0);
+    // as (
+    //   A.pts_to l0.cdi full_perm vl0.cdi `star`
+    //   A.pts_to l0.fwid full_perm vl0.fwid `star`
+    //   A.pts_to l0.deviceID_label full_perm vl0.deviceID_label `star`
+    //   A.pts_to l0.aliasKey_label full_perm vl0.aliasKey_label `star`
+    //   A.pts_to l0.deviceID_pub full_perm vl0.deviceID_pub `star`
+    //   A.pts_to l0.deviceID_priv full_perm vl0.deviceID_priv `star`
+    //   A.pts_to l0.aliasKey_pub full_perm vl0.aliasKey_pub `star`
+    //   A.pts_to l0.aliasKey_priv full_perm vl0.aliasKey_priv `star`
+    //   A.pts_to l0.deviceIDCSR_buf full_perm vl0.deviceIDCSR_buf `star`
+    //   A.pts_to l0.aliasKeyCRT_buf full_perm vl0.aliasKeyCRT_buf `star`
+    //   A.pts_to l0.authKeyID full_perm vl0.authKeyID
+    // );
 
   derive_DeviceID dice_hash_alg l0.deviceID_pub l0.deviceID_priv l0.cdi l0.deviceID_label_len l0.deviceID_label;
   
@@ -296,20 +297,8 @@ fn l0_core_step1
          A.pts_to l0.authKeyID full_perm s5;
 
 
-  rewrite  (
-      A.pts_to l0.cdi full_perm vl0.cdi `star`
-      A.pts_to l0.fwid full_perm vl0.fwid `star`
-      A.pts_to l0.deviceID_label full_perm vl0.deviceID_label `star`
-      A.pts_to l0.aliasKey_label full_perm vl0.aliasKey_label `star`
-      A.pts_to l0.deviceID_pub full_perm s1 `star`
-      A.pts_to l0.deviceID_priv full_perm s2 `star`
-      A.pts_to l0.aliasKey_pub full_perm s3 `star`
-      A.pts_to l0.aliasKey_priv full_perm s4 `star`
-      A.pts_to l0.deviceIDCSR_buf full_perm vl0.deviceIDCSR_buf `star`
-      A.pts_to l0.aliasKeyCRT_buf full_perm vl0.aliasKeyCRT_buf `star`
-      A.pts_to l0.authKeyID full_perm s5
-  )
-  as (l0_perm l0 (l0_core_post_state vl0 s1 s2 s3 s4 s5));
+  fold (l0_perm l0 (l0_core_post_state vl0 s1 s2 s3 s4 s5));
+  
   ()
 }
 ```
@@ -392,12 +381,12 @@ fn l0
 {
 (* Derive DeviceID *)
 
-  rewrite (l0_pre l0 vl0)
-    as (deviceIDCRI_pre l0.deviceIDCSR_ingredients `star`
-        deviceIDCSR_pre l0.deviceIDCSR_ingredients l0.deviceIDCSR_len `star`
-        aliasKeyCRT_pre l0.aliasKeyCRT_ingredients l0.aliasKeyCRT_len `star`
-        pure (valid_hkdf_lbl_len l0.deviceID_label_len /\
-              valid_hkdf_lbl_len l0.aliasKey_label_len));
+  unfold (l0_pre l0 vl0);
+    // as (deviceIDCRI_pre l0.deviceIDCSR_ingredients `star`
+    //     deviceIDCSR_pre l0.deviceIDCSR_ingredients l0.deviceIDCSR_len `star`
+    //     aliasKeyCRT_pre l0.aliasKeyCRT_ingredients l0.aliasKeyCRT_len `star`
+    //     pure (valid_hkdf_lbl_len l0.deviceID_label_len /\
+    //           valid_hkdf_lbl_len l0.aliasKey_label_len));
 
   l0_core_step1 l0;
 
