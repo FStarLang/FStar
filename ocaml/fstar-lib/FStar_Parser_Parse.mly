@@ -621,6 +621,18 @@ atomicPattern:
       { mk_pattern (PatWild (Some Implicit, [])) (rr $loc) }
   | c=constant
       { mk_pattern (PatConst c) (rr $loc(c)) }
+  | tok=MINUS c=constant
+      { let r = rr2 $loc(tok) $loc(c) in
+        let c =
+          match c with
+          | Const_int (s, swopt) ->
+            (match swopt with
+             | None
+             | Some (Signed, _) -> Const_int ("-" ^ s, swopt)
+             | _ -> raise_error (Fatal_SyntaxError, "Syntax_error: negative integer constant with unsigned width") r)
+          | _ -> raise_error (Fatal_SyntaxError, "Syntax_error: negative constant that is not an integer") r
+        in
+        mk_pattern (PatConst c) r }
   | BACKTICK_PERC q=atomicTerm
       { mk_pattern (PatVQuote q) (rr $loc) }
   | qual_id=aqualifiedWithAttrs(lident)
