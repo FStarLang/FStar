@@ -58,7 +58,7 @@ val tm_protect (s:st_term) : st_term
 val tm_par (p1:term) (p2:term) (q1:term) (q2:term) (b1:st_term) (b2:st_term) (_:range) : st_term
 val tm_rewrite (p1:term) (p2:term) (_:range) : st_term
 val tm_admit (_:range) : st_term
-val tm_assert_with_binders (_:list binder) (t:term) (body:st_term) (_:range) : st_term
+val tm_proof_hint_with_binders (_:PulseSugar.hint_type) (_:list binder) (t:term) (body:st_term) (_:range) : st_term
 val close_binders (bs:list binder) (xs:list var) : list binder
 val close_term (t:term) (v:var) : term
 val close_st_term (t:st_term) (v:var) : st_term

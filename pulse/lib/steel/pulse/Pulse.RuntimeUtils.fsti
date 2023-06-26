@@ -15,3 +15,4 @@ val set_use_range (t:T.term) (r:range) : t':T.term{t == t'}
 val error_code_uninstantiated_variable (_:unit) : int
 val is_range_zero (r:range) : Dv bool
 val union_ranges (r0 r1:range) : range
+val unfold_def (g:env) (nm:string) (fully:list string) (t:T.term) : option T.term   

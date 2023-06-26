@@ -1,1 +1,55 @@
-[ ">š\u0003Š\u001d¢ë\u0015dæþ•n\f” ", [] ]
+[
+  "$ðëyµ7¤€\u0007rÑqÐ~ë¼",
+  [
+    [
+      "Pulse.Checker.Bind.mk_bind",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_Pulse.Syntax.Base.C_ST",
+        "disc_equation_Pulse.Syntax.Base.C_STAtomic",
+        "disc_equation_Pulse.Syntax.Base.C_STGhost",
+        "disc_equation_Pulse.Syntax.Base.C_Tot", "equation_Prims.eqtype",
+        "equation_Prims.nat", "equation_Pulse.Syntax.Base.comp_st",
+        "equation_Pulse.Syntax.Base.stateful_comp",
+        "equation_Pulse.Syntax.Base.var",
+        "fuel_guarded_inversion_Pulse.Syntax.Base.comp",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "primitive_Prims.op_BarBar", "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_78cf9fabb706bab7e54de904b7db9d2a",
+        "refinement_interpretation_Tm_refine_c3db93a75dbfff93223215a880c044ae"
+      ],
+      0,
+      "d531acad4eb2f4103aa7fe389314d325"
+    ],
+    [
+      "Pulse.Checker.Bind.bind_res_and_post_typing",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "constructor_distinct_FStar.Pervasives.Native.Some",
+        "constructor_distinct_Pulse.Syntax.Base.C_ST",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_Pulse.Syntax.Base.C_Tot",
+        "equation_FStar.Reflection.V2.Data.var", "equation_Prims.nat",
+        "equation_Pulse.Syntax.Base.typ", "equation_Pulse.Syntax.Base.var",
+        "equation_Pulse.Typing.Env.dom", "equation_Pulse.Typing.Env.lookup",
+        "equation_Pulse.Typing.Metatheory.fresh_wrt",
+        "kinding_Pulse.Syntax.Base.term@tok",
+        "lemma_FStar.Map.lemma_ContainsDom",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_df4c639aa9a827ee3d5d909cba8bbb01",
+        "typing_FStar.Reflection.V2.Data.var", "typing_FStar.Set.mem",
+        "typing_Pulse.Typing.Env.as_map", "typing_Pulse.Typing.Env.dom"
+      ],
+      0,
+      "e5892d5d71a57e0f6419c1281ca6359e"
+    ]
+  ]
+]

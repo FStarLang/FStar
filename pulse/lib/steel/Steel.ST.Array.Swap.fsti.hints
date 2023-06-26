@@ -1,0 +1,19 @@
+[
+  "7ˆÁ\u0002ø»ûÙË÷_J(kP\u0017",
+  [
+    [
+      "Steel.ST.Array.Swap.swap",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "d6f5cb473fe8888c2583e5786b88cf64"
+    ]
+  ]
+]

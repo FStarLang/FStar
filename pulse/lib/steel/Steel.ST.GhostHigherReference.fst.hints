@@ -1,0 +1,116 @@
+[
+  "ÿZ\nFN§ã \u000f¬\u0002wpü}\u0014",
+  [
+    [
+      "Steel.ST.GhostHigherReference.hide_ref",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Steel.ST.GhostHigherReference.reveal_ref",
+        "proj_equation_Steel.ST.GhostHigherReference.Hide_reveal",
+        "projection_inverse_Steel.ST.GhostHigherReference.Hide_reveal"
+      ],
+      0,
+      "3b7ed32b31b390d8b7f45048ff093ffd"
+    ],
+    [
+      "Steel.ST.GhostHigherReference.hide_reveal_ref",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_Steel.ST.GhostHigherReference.hide_ref",
+        "equation_Steel.ST.GhostHigherReference.ref",
+        "equation_Steel.ST.GhostHigherReference.reveal_ref",
+        "fuel_guarded_inversion_Steel.ST.GhostHigherReference.ref_",
+        "proj_equation_Steel.ST.GhostHigherReference.Hide_reveal"
+      ],
+      0,
+      "4566333244eb54ab6ac29e0937ef7db3"
+    ],
+    [
+      "Steel.ST.GhostHigherReference.reveal_pts_to",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Steel.ST.GhostHigherReference.pts_to",
+        "equation_Steel.ST.GhostHigherReference.reveal_ref"
+      ],
+      0,
+      "fe0e41d2de3b757851259152e3b325a9"
+    ],
+    [
+      "Steel.ST.GhostHigherReference.pts_to_injective_eq",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_Steel.ST.GhostHigherReference.pts_to",
+        "equation_Steel.ST.GhostHigherReference.ref",
+        "fuel_guarded_inversion_Steel.FractionalPermission.perm",
+        "fuel_guarded_inversion_Steel.ST.GhostHigherReference.ref_"
+      ],
+      0,
+      "8be8431a692f6a43fff632b9e858b84d"
+    ],
+    [
+      "Steel.ST.GhostHigherReference.alloc",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Steel.FractionalPermission.full_perm",
+        "equation_Steel.ST.GhostHigherReference.pts_to",
+        "equation_Steel.ST.HigherReference.pts_to",
+        "proj_equation_Steel.ST.GhostHigherReference.Hide_reveal",
+        "projection_inverse_Steel.ST.GhostHigherReference.Hide_reveal"
+      ],
+      0,
+      "6f25e422df3625f396f411de0bc33d25"
+    ],
+    [
+      "Steel.ST.GhostHigherReference.write",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Pervasives.coerce_eq",
+        "equation_Steel.FractionalPermission.full_perm",
+        "equation_Steel.ST.GhostHigherReference.pts_to",
+        "equation_Steel.ST.GhostHigherReference.ref",
+        "equation_Steel.ST.HigherReference.pts_to",
+        "fuel_guarded_inversion_Steel.ST.GhostHigherReference.ref_",
+        "lemma_FStar.Ghost.reveal_hide",
+        "proj_equation_Steel.ST.GhostHigherReference.Hide_reveal",
+        "typing_Steel.HigherReference.ref",
+        "typing_Steel.ST.GhostHigherReference.__proj__Hide__item__reveal"
+      ],
+      0,
+      "4416d3d6344eebd22b3ee967b417cb33"
+    ],
+    [
+      "Steel.ST.GhostHigherReference.free",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Pervasives.coerce_eq",
+        "equation_Steel.FractionalPermission.full_perm",
+        "equation_Steel.ST.GhostHigherReference.pts_to",
+        "equation_Steel.ST.GhostHigherReference.ref",
+        "equation_Steel.ST.HigherReference.pts_to",
+        "lemma_FStar.Ghost.reveal_hide",
+        "proj_equation_Steel.ST.GhostHigherReference.Hide_reveal",
+        "typing_Steel.HigherReference.ref",
+        "typing_Steel.ST.GhostHigherReference.__proj__Hide__item__reveal"
+      ],
+      0,
+      "446b5bd99a3939b938188ed344f82bce"
+    ]
+  ]
+]

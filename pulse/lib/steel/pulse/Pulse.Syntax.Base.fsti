@@ -134,6 +134,11 @@ type ctag =
   | STT_Atomic
   | STT_Ghost
 
+type proof_hint_type =
+  | ASSERT
+  | FOLD of option (list string)
+  | UNFOLD of option (list string)
+
 (* terms with STT types *)
 [@@ no_auto_projectors]
 noeq
@@ -217,7 +222,8 @@ type st_term' =
       //Wrap a term to indicate that no proof-automation heuristics should be applied
       t:st_term;
     }
-  | Tm_AssertWithBinders { // assert (R.pts_to x ?p ?v) in body
+  | Tm_ProofHintWithBinders { // assert (R.pts_to x ?p ?v) in body
+      hint_type:proof_hint_type;
       binders:list binder;
       v:vprop;
       t:st_term

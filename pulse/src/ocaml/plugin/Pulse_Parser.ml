@@ -11,13 +11,12 @@ let rewrite_token (tok:FP.token)
   : PP.token
   = match tok with
     | IDENT "mut" -> PP.MUT
-(*    | IDENT "var" -> PP.VAR *)
     | IDENT "invariant" -> PP.INVARIANT
     | IDENT "while" -> PP.WHILE
     | IDENT "fn" -> PP.FN
     | IDENT "parallel" -> PP.PARALLEL
     | IDENT "rewrite" -> PP.REWRITE
-    (*     | IDENT "ref" -> PP.REF *)
+    | IDENT "fold" -> PP.FOLD
     (* the rest are just copied from FStar_Parser_Parse *)
     | IDENT s -> PP.IDENT s
     | AMP -> PP.AMP

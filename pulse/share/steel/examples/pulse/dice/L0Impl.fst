@@ -68,20 +68,7 @@ fn l0_core_step1
 {
   dice_digest_len_is_hkdf_ikm;
 
-  rewrite (l0_perm l0 vl0)
-    as (
-      A.pts_to l0.cdi full_perm vl0.cdi `star`
-      A.pts_to l0.fwid full_perm vl0.fwid `star`
-      A.pts_to l0.deviceID_label full_perm vl0.deviceID_label `star`
-      A.pts_to l0.aliasKey_label full_perm vl0.aliasKey_label `star`
-      A.pts_to l0.deviceID_pub full_perm vl0.deviceID_pub `star`
-      A.pts_to l0.deviceID_priv full_perm vl0.deviceID_priv `star`
-      A.pts_to l0.aliasKey_pub full_perm vl0.aliasKey_pub `star`
-      A.pts_to l0.aliasKey_priv full_perm vl0.aliasKey_priv `star`
-      A.pts_to l0.deviceIDCSR_buf full_perm vl0.deviceIDCSR_buf `star`
-      A.pts_to l0.aliasKeyCRT_buf full_perm vl0.aliasKeyCRT_buf `star`
-      A.pts_to l0.authKeyID full_perm vl0.authKeyID
-    );
+  unfold (l0_perm l0 vl0);
 
   derive_DeviceID dice_hash_alg l0.deviceID_pub l0.deviceID_priv l0.cdi l0.deviceID_label_len l0.deviceID_label;
   derive_AliasKey dice_hash_alg l0.aliasKey_pub l0.aliasKey_priv l0.cdi l0.fwid l0.aliasKey_label_len l0.aliasKey_label;
@@ -93,19 +80,7 @@ fn l0_core_step1
   let s4 = get_witness (l0.aliasKey_priv);
   let s5 = get_witness (l0.authKeyID);
 
-  rewrite (
-    A.pts_to l0.cdi full_perm vl0.cdi `star`
-    A.pts_to l0.fwid full_perm vl0.fwid `star`
-    A.pts_to l0.deviceID_label full_perm vl0.deviceID_label `star`
-    A.pts_to l0.aliasKey_label full_perm vl0.aliasKey_label `star`
-    A.pts_to l0.deviceID_pub full_perm s1 `star`
-    A.pts_to l0.deviceID_priv full_perm s2 `star`
-    A.pts_to l0.aliasKey_pub full_perm s3 `star`
-    A.pts_to l0.aliasKey_priv full_perm s4 `star`
-    A.pts_to l0.deviceIDCSR_buf full_perm vl0.deviceIDCSR_buf `star`
-    A.pts_to l0.aliasKeyCRT_buf full_perm vl0.aliasKeyCRT_buf `star`
-    A.pts_to l0.authKeyID full_perm s5
-  ) as (l0_perm l0 (l0_repr_post_state vl0 s1 s2 s3 s4 s5));
+  fold (l0_perm l0 (l0_repr_post_state vl0 s1 s2 s3 s4 s5));
   ()
 }
 ```

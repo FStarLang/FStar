@@ -100,7 +100,7 @@ type l0_repr = {
   authKeyID: Seq.seq U8.t;
 }
 
-let l0_perm' (l0:l0_record) (vl0: l0_repr) 
+let l0_perm (l0:l0_record) (vl0: l0_repr) 
             // (#pcdi #pfwid #pdeviceID_label #paliasKey_label: perm)
   : vprop = 
   // A.pts_to l0.cdi pcdi vl0.cdi `star`
@@ -119,14 +119,14 @@ let l0_perm' (l0:l0_record) (vl0: l0_repr)
   A.pts_to l0.aliasKeyCRT_buf full_perm vl0.aliasKeyCRT_buf `star`
   A.pts_to l0.authKeyID full_perm vl0.authKeyID
 
-assume
-val l0_perm (l0:l0_record) (vl0: l0_repr) : vprop
+// assume
+// val l0_perm (l0:l0_record) (vl0: l0_repr) : vprop
 
-assume
-val l0_perm_definition (l0:l0_record) (vl0: l0_repr)
-  : Lemma 
-    (ensures l0_perm l0 vl0 === l0_perm' l0 vl0)
-    [SMTPat (l0_perm l0 vl0)]
+// assume
+// val l0_perm_definition (l0:l0_record) (vl0: l0_repr)
+//   : Lemma 
+//     (ensures l0_perm l0 vl0 === l0_perm' l0 vl0)
+//     [SMTPat (l0_perm l0 vl0)]
 
 assume 
 val u32_to_us (v:U32.t) : US.t

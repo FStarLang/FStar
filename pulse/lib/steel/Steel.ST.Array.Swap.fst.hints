@@ -1,0 +1,49 @@
+[
+  "\u007f-\u001aBÇ€zÎÚó9~½©µÕ",
+  [
+    [
+      "Steel.ST.Array.Swap.array_index",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "457d66e1013cb04e8091cbc2dfc91068"
+    ],
+    [
+      "Steel.ST.Array.Swap.array_upd",
+      1,
+      2,
+      1,
+      [
+        "@query", "lemma_FStar.Ghost.reveal_hide",
+        "typing_FStar.Seq.Base.seq"
+      ],
+      0,
+      "7c2164392604ddc66c9770263b4db962"
+    ],
+    [
+      "Steel.ST.Array.Swap.swap",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "9b226b2ed93c4ab074e4ac37b3b26385"
+    ],
+    [
+      "Steel.ST.Array.Swap.swap",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "7b297c4542d34f26448f3fc890f23054"
+    ]
+  ]
+]

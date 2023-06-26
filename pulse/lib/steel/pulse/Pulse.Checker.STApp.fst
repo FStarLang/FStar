@@ -28,39 +28,33 @@ let check_stapp
   //
   // c is the comp remaining after applying head to arg,
   //
-  let infer_logical_implicits_and_check
-    (t:term)
-    (c:comp{C_Tot? c}) : T.Tac _ =
+  // let infer_logical_implicits_and_check
+  //   (t:term)
+  //   (c:comp{C_Tot? c}) : T.Tac _ =
 
-    match c with
-    | C_Tot ty ->
-      begin match is_arrow ty with
-            | Some (_, Some Implicit, _) -> 
-              //Some implicits to follow
-              let t = Pulse.Checker.Inference.infer g t ty pre range in
-              check' false g t pre pre_typing post_hint
-            | _ ->
-              T.fail "Unexpected c in infer_logical_implicits_and_check"
-      end
+  //   match c with
+  //   | C_Tot ty ->
+  //     begin match is_arrow ty with
+  //           | Some (_, Some Implicit, _) -> 
+  //             //Some implicits to follow
+  //             let t = Pulse.Checker.Inference.infer g t ty pre range in
+  //             check' false g t pre pre_typing post_hint
+  //           | _ ->
+  //             T.fail "Unexpected c in infer_logical_implicits_and_check"
+  //     end
 
-    | _ ->
-      T.fail "Unexpected c in infer_logical_implicits_and_check" in
+  //   | _ ->
+  //     T.fail "Unexpected c in infer_logical_implicits_and_check" in
 
-  T.or_else
-    (fun _ -> 
-      let g = push_context "pure_app" t.range g in    
-      let pure_app = tm_pureapp head qual arg in
-      let t, ty = instantiate_term_implicits g pure_app in
-      infer_logical_implicits_and_check t (C_Tot ty))
-    (fun _ ->
-      let g = push_context "st_app" t.range g in        
-      let (| head, ty_head, dhead |) = check_term g head in
-      if RU.debug_at_level (fstar_env g) "st_app" then
+  let check_st_app ()  : T.Tac (checker_result_t g pre post_hint) =
+    let g = push_context "st_app" t.range g in        
+    let (| head, ty_head, dhead |) = check_term g head in
+    if RU.debug_at_level (fstar_env g) "st_app" then
         T.print (Printf.sprintf "st_app: head = %s, ty_head = %s\n"
                    (P.term_to_string head)
                    (P.term_to_string ty_head));
-      match is_arrow ty_head with
-      | Some ({binder_ty=formal;binder_ppname=ppname}, bqual, comp_typ) ->
+    match is_arrow ty_head with
+    | Some ({binder_ty=formal;binder_ppname=ppname}, bqual, comp_typ) ->
         is_arrow_tm_arrow ty_head;
         assert (ty_head ==
                 tm_arrow ({binder_ty=formal;binder_ppname=ppname}) bqual comp_typ);
@@ -78,14 +72,23 @@ let check_stapp
           //             (Pulse.Syntax.Printer.term_to_string (comp_pre (open_comp_with comp_typ arg))));
            repack (try_frame_pre pre_typing d) post_hint
          | _ ->
-           let t = tm_pureapp head qual arg in
-           let comp_typ = open_comp_with comp_typ arg in
-           infer_logical_implicits_and_check t comp_typ
+           fail g (Some t.range) "Expected an effectful application; got a pure term (could it be partially applied by mistake?)"
         else 
-         fail g None (Printf.sprintf "(%s) Unexpected qualifier in head type %s of stateful application: head = %s, arg = %s"
-                                (T.range_to_string t.range)
-                                (P.term_to_string ty_head)
-                                (P.term_to_string head)
-                                (P.term_to_string arg))
+         fail g (Some t.range) (Printf.sprintf "Unexpected qualifier in head type %s of stateful application: head = %s, arg = %s"
+                                  (P.term_to_string ty_head)
+                                  (P.term_to_string head)
+                                  (P.term_to_string arg))
     
-     | _ -> fail g None (Printf.sprintf "Unexpected head type in impure application: %s" (P.term_to_string ty_head)))
+     | _ -> fail g (Some t.range) (Printf.sprintf "Unexpected head type in impure application: %s" (P.term_to_string ty_head))
+  in
+
+  let g = push_context "pure_app" t.range g in    
+  let pure_app = tm_pureapp head qual arg in
+  let t, ty = instantiate_term_implicits g pure_app in
+  match is_arrow ty with
+  | Some (_, Some Implicit, _) -> 
+    //Some implicits to follow
+    let t = Pulse.Checker.Inference.infer g t ty pre range in
+    check' false g t pre pre_typing post_hint
+  | _ ->
+    check_st_app ()

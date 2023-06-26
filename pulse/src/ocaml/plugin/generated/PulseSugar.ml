@@ -128,6 +128,22 @@ let (uu___is_PatConstructor : pat -> Prims.bool) =
     match projectee with | PatConstructor _0 -> true | uu___ -> false
 let (__proj__PatConstructor__item___0 : pat -> pat__PatConstructor__payload)
   = fun projectee -> match projectee with | PatConstructor _0 -> _0
+type hint_type =
+  | ASSERT 
+  | UNFOLD of FStar_Ident.lident Prims.list FStar_Pervasives_Native.option 
+  | FOLD of FStar_Ident.lident Prims.list FStar_Pervasives_Native.option 
+let (uu___is_ASSERT : hint_type -> Prims.bool) =
+  fun projectee -> match projectee with | ASSERT -> true | uu___ -> false
+let (uu___is_UNFOLD : hint_type -> Prims.bool) =
+  fun projectee -> match projectee with | UNFOLD _0 -> true | uu___ -> false
+let (__proj__UNFOLD__item___0 :
+  hint_type -> FStar_Ident.lident Prims.list FStar_Pervasives_Native.option)
+  = fun projectee -> match projectee with | UNFOLD _0 -> _0
+let (uu___is_FOLD : hint_type -> Prims.bool) =
+  fun projectee -> match projectee with | FOLD _0 -> true | uu___ -> false
+let (__proj__FOLD__item___0 :
+  hint_type -> FStar_Ident.lident Prims.list FStar_Pervasives_Native.option)
+  = fun projectee -> match projectee with | FOLD _0 -> _0
 type stmt'__Expr__payload = {
   e: FStar_Parser_AST.term }
 and stmt'__Assignment__payload =
@@ -177,7 +193,9 @@ and stmt'__Parallel__payload =
 and stmt'__Rewrite__payload = {
   p11: vprop ;
   p21: vprop }
-and stmt'__AssertWithBinders__payload = {
+and stmt'__ProofHintWithBinders__payload =
+  {
+  hint_type: hint_type ;
   binders1: binders ;
   vprop1: vprop }
 and stmt' =
@@ -193,7 +211,7 @@ and stmt' =
   | Sequence of stmt'__Sequence__payload 
   | Parallel of stmt'__Parallel__payload 
   | Rewrite of stmt'__Rewrite__payload 
-  | AssertWithBinders of stmt'__AssertWithBinders__payload 
+  | ProofHintWithBinders of stmt'__ProofHintWithBinders__payload 
 and stmt = {
   s: stmt' ;
   range1: rng }
@@ -321,12 +339,21 @@ let (__proj__Mkstmt'__Rewrite__payload__item__p1 :
 let (__proj__Mkstmt'__Rewrite__payload__item__p2 :
   stmt'__Rewrite__payload -> vprop) =
   fun projectee -> match projectee with | { p11 = p1; p21 = p2;_} -> p2
-let (__proj__Mkstmt'__AssertWithBinders__payload__item__binders :
-  stmt'__AssertWithBinders__payload -> binders) =
-  fun projectee -> match projectee with | { binders1; vprop1;_} -> binders1
-let (__proj__Mkstmt'__AssertWithBinders__payload__item__vprop :
-  stmt'__AssertWithBinders__payload -> vprop) =
-  fun projectee -> match projectee with | { binders1; vprop1;_} -> vprop1
+let (__proj__Mkstmt'__ProofHintWithBinders__payload__item__hint_type :
+  stmt'__ProofHintWithBinders__payload -> hint_type) =
+  fun projectee ->
+    match projectee with
+    | { hint_type = hint_type1; binders1; vprop1;_} -> hint_type1
+let (__proj__Mkstmt'__ProofHintWithBinders__payload__item__binders :
+  stmt'__ProofHintWithBinders__payload -> binders) =
+  fun projectee ->
+    match projectee with
+    | { hint_type = hint_type1; binders1; vprop1;_} -> binders1
+let (__proj__Mkstmt'__ProofHintWithBinders__payload__item__vprop :
+  stmt'__ProofHintWithBinders__payload -> vprop) =
+  fun projectee ->
+    match projectee with
+    | { hint_type = hint_type1; binders1; vprop1;_} -> vprop1
 let (uu___is_Open : stmt' -> Prims.bool) =
   fun projectee -> match projectee with | Open _0 -> true | uu___ -> false
 let (__proj__Open__item___0 : stmt' -> FStar_Ident.lident) =
@@ -380,12 +407,12 @@ let (uu___is_Rewrite : stmt' -> Prims.bool) =
   fun projectee -> match projectee with | Rewrite _0 -> true | uu___ -> false
 let (__proj__Rewrite__item___0 : stmt' -> stmt'__Rewrite__payload) =
   fun projectee -> match projectee with | Rewrite _0 -> _0
-let (uu___is_AssertWithBinders : stmt' -> Prims.bool) =
+let (uu___is_ProofHintWithBinders : stmt' -> Prims.bool) =
   fun projectee ->
-    match projectee with | AssertWithBinders _0 -> true | uu___ -> false
-let (__proj__AssertWithBinders__item___0 :
-  stmt' -> stmt'__AssertWithBinders__payload) =
-  fun projectee -> match projectee with | AssertWithBinders _0 -> _0
+    match projectee with | ProofHintWithBinders _0 -> true | uu___ -> false
+let (__proj__ProofHintWithBinders__item___0 :
+  stmt' -> stmt'__ProofHintWithBinders__payload) =
+  fun projectee -> match projectee with | ProofHintWithBinders _0 -> _0
 let (__proj__Mkstmt__item__s : stmt -> stmt') =
   fun projectee -> match projectee with | { s; range1 = range;_} -> s
 let (__proj__Mkstmt__item__range : stmt -> rng) =
@@ -507,5 +534,8 @@ let (mk_par : vprop -> vprop -> vprop -> vprop -> stmt -> stmt -> stmt') =
         fun q2 -> fun b1 -> fun b2 -> Parallel { p1; p2; q1; q2; b1; b2 }
 let (mk_rewrite : vprop -> vprop -> stmt') =
   fun p1 -> fun p2 -> Rewrite { p11 = p1; p21 = p2 }
-let (mk_assert_with_binders : binders -> vprop -> stmt') =
-  fun bs -> fun p -> AssertWithBinders { binders1 = bs; vprop1 = p }
+let (mk_proof_hint_with_binders : hint_type -> binders -> vprop -> stmt') =
+  fun ht ->
+    fun bs ->
+      fun p ->
+        ProofHintWithBinders { hint_type = ht; binders1 = bs; vprop1 = p }

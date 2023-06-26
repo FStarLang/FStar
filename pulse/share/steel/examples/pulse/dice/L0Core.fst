@@ -1,4 +1,5 @@
 module L0Core
+
 module R = Steel.ST.Reference
 module A = Steel.ST.Array
 module T = FStar.Tactics
@@ -101,12 +102,12 @@ fn l0
 {
 (* Derive DeviceID *)
 
-  rewrite (l0_pre l0 vl0)
-    as (deviceIDCRI_pre l0.deviceIDCSR_ingredients `star`
-        deviceIDCSR_pre l0.deviceIDCSR_ingredients l0.deviceIDCSR_len `star`
-        aliasKeyCRT_pre l0.aliasKeyCRT_ingredients l0.aliasKeyCRT_len `star`
-        pure (valid_hkdf_lbl_len l0.deviceID_label_len /\
-              valid_hkdf_lbl_len l0.aliasKey_label_len));
+  unfold (l0_pre l0 vl0);
+    // as (deviceIDCRI_pre l0.deviceIDCSR_ingredients `star`
+    //     deviceIDCSR_pre l0.deviceIDCSR_ingredients l0.deviceIDCSR_len `star`
+    //     aliasKeyCRT_pre l0.aliasKeyCRT_ingredients l0.aliasKeyCRT_len `star`
+    //     pure (valid_hkdf_lbl_len l0.deviceID_label_len /\
+    //           valid_hkdf_lbl_len l0.aliasKey_label_len));
 
   l0_core_step1 l0;
   

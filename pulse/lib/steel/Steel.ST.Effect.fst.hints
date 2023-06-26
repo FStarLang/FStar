@@ -1,0 +1,150 @@
+[
+  "Q²¥Ð\u001a€›ƒ\rî\u0007Ç\u0019Ä\u0007ƒ",
+  [
+    [
+      "Steel.ST.Effect.equiv_star_emp_r",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "9a2484a0a832e42250b3be2205de473e"
+    ],
+    [
+      "Steel.ST.Effect.weaken_repr",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Steel.Effect.Common_interpretation_Tm_arrow_bb7a711af297fead4d60d7aa8b8ddd2f",
+        "bool_inversion", "equation_Prims.l_True",
+        "equation_Steel.Effect.Common.can_be_split_dep",
+        "equation_Steel.Effect.Common.maybe_emp",
+        "equation_Steel.Effect.Common.post_t",
+        "equation_Steel.Effect.Common.pre_t",
+        "lemma_Steel.Effect.Common.can_be_split_refl",
+        "refinement_interpretation_Tm_refine_021cb0d87026d403e1b766cfc287f6bb",
+        "refinement_interpretation_Tm_refine_036a4426b88dd36e638aebc89922374a",
+        "refinement_interpretation_Tm_refine_3f762ae732d5b5138080a59ba4ea4860",
+        "typing_Steel.Effect.Common.emp",
+        "typing_Steel.Effect.Common.mk_rmem",
+        "typing_Steel.Effect.Common.star"
+      ],
+      0,
+      "2962e011e338c3556c3b8c0e30c3977b"
+    ],
+    [
+      "Steel.ST.Effect.return_",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Steel.Effect.Common_interpretation_Tm_arrow_bb7a711af297fead4d60d7aa8b8ddd2f",
+        "lemma_Steel.Effect.Common.can_be_split_refl"
+      ],
+      0,
+      "88e56a31e34a34f803bc8c191d8ba942"
+    ],
+    [
+      "Steel.ST.Effect.bind",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "db4b4aa89579bd1e10bc06997e76dbfc"
+    ],
+    [
+      "Steel.ST.Effect.subcomp",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "equation_Prims.l_True", "equation_Prims.squash",
+        "equation_Steel.Effect.Common.can_be_split_dep",
+        "equation_Steel.Effect.Common.star", "equation_Steel.ST.Effect.repr",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "5f1c10a4d637d7ce055be21692641f20"
+    ],
+    [
+      "Steel.ST.Effect.STBase",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "ce3be64ed3a52ab50f5a330bd2c9b20c"
+    ],
+    [
+      "Steel.ST.Effect.STBase",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "36b766c096c2d7862ee6eec5866adf97"
+    ],
+    [
+      "Steel.ST.Effect.STBase",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "b82e2c1cb46ccc235277dcf896b5dc6b"
+    ],
+    [
+      "Steel.ST.Effect.STBase",
+      4,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
+      ],
+      0,
+      "6d034aee91f0bab7b44073df63a06180"
+    ],
+    [
+      "Steel.ST.Effect.STBase",
+      5,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "4f0eeaefb4e61fbe66f9485d61f51afc"
+    ],
+    [
+      "Steel.ST.Effect.bind_pure_st_",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
+        "equation_Prims.l_True", "equation_Prims.pure_post",
+        "equation_Prims.pure_post_",
+        "interpretation_Tm_abs_6ba36691ee58dee85cd144324b083848",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "typing_Tm_abs_6ba36691ee58dee85cd144324b083848"
+      ],
+      0,
+      "415b1d0c3797b77aa4c9e51c580daab0"
+    ]
+  ]
+]

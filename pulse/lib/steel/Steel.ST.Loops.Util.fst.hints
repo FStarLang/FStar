@@ -1,0 +1,48 @@
+[
+  "¦C\u000ekDæÞHÊþJ\u001b¯-ZÝ",
+  [
+    [
+      "Steel.ST.Loops.Util.repeat_until_cond",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Steel.ST.Loops.Util.repeat_until_inv",
+        "interpretation_Tm_abs_2ebd128720fc95445e963f439b53abe3",
+        "token_correspondence_Steel.ST.Loops.Util.repeat_until_inv"
+      ],
+      0,
+      "78ec335422ca473448007a3b7765e20f"
+    ],
+    [
+      "Steel.ST.Loops.Util.repeat_until_body",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "equation_Steel.ST.Loops.Util.repeat_until_inv",
+        "interpretation_Tm_abs_2ebd128720fc95445e963f439b53abe3",
+        "token_correspondence_Steel.ST.Loops.Util.repeat_until_inv"
+      ],
+      0,
+      "2fe796b463ab715c03d7ffde430bd00d"
+    ],
+    [
+      "Steel.ST.Loops.Util.repeat_until",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Prims.l_True",
+        "equation_Steel.Effect.Common.prop_and",
+        "equation_Steel.ST.Loops.Util.repeat_until_inv",
+        "interpretation_Tm_abs_2ebd128720fc95445e963f439b53abe3",
+        "token_correspondence_Steel.ST.Loops.Util.repeat_until_inv",
+        "true_interp"
+      ],
+      0,
+      "70b2d8e07306657965b28b6013e3fa69"
+    ]
+  ]
+]

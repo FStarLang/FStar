@@ -87,6 +87,16 @@ let resolve_name (env:env_t) (id:ident)
     | None -> fail "Name not found" (Ident.range_of_id id)
     | Some t -> return t
 
+let resolve_lid (env:env_t) (lid:lident)
+  : err lident
+  = match D.try_lookup_lid env.tcenv.dsenv lid with
+    | None -> fail (BU.format1 "Name %s not found" (Ident.string_of_lid lid)) (Ident.range_of_lid lid)
+    | Some t ->
+      match (SS.compress t).n with
+      | S.Tm_fvar fv -> return (S.lid_of_fv fv)
+      | _ -> fail (BU.format2 "Name %s resolved unexpectedly to %s" (Ident.string_of_lid lid) (P.term_to_string t))
+                  (Ident.range_of_lid lid)
+
 let pulse_arrow_formals (t:S.term) =
     let formals, comp = U.arrow_formals_comp_ln t in
     if U.is_total_comp comp
@@ -271,6 +281,24 @@ let as_qual (q:A.aqual) : qual =
   | Some A.Implicit -> SW.as_qual true
   | _ -> SW.as_qual false
 
+let resolve_names (env:env_t) (ns:option (list lident)) 
+  : err (option (list lident))
+  = match ns with
+    | None -> return None
+    | Some ns -> let? ns = map_err (resolve_lid env) ns in return (Some ns)
+
+let resolve_hint_type (env:env_t) (ht:Sugar.hint_type)
+  : err Sugar.hint_type
+  = let open Sugar in
+    match ht with
+    | ASSERT -> return ASSERT
+    | UNFOLD ns -> 
+      let? ns = resolve_names env ns in
+      return (UNFOLD ns)
+    | FOLD ns -> 
+      let? ns = resolve_names env ns in
+      return (FOLD ns)
+
 (* s has already been transformed with explicit dereferences for r-values *)
 let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
   : err SW.st_term
@@ -293,7 +321,7 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
     | Sequence { s1={s=LetBinding lb}; s2 } ->
       desugar_bind env lb s2 s.range
 
-    | Sequence { s1; s2 } when AssertWithBinders? s1.s ->
+    | Sequence { s1; s2 } when ProofHintWithBinders? s1.s ->
       desugar_assert_with_binders env s1 s2 s.range
 
     | Sequence { s1; s2 } -> 
@@ -405,7 +433,7 @@ and desugar_sequence (env:env_t) (s1 s2:Sugar.stmt) r
 and desugar_assert_with_binders (env:env_t) (s1 s2:Sugar.stmt) r
   : err SW.st_term
   = match s1.s with
-    | Sugar.AssertWithBinders { binders=bs; vprop=v } ->
+    | Sugar.ProofHintWithBinders { hint_type; binders=bs; vprop=v } ->
       let? env, binders, bvs = desugar_binders env bs in
       let vars = L.map (fun bv -> bv.S.index) bvs in
       let? v = desugar_vprop env v in
@@ -414,8 +442,9 @@ and desugar_assert_with_binders (env:env_t) (s1 s2:Sugar.stmt) r
       let sub = SW.bvs_as_subst vars in
       let s2 = SW.subst_st_term sub s2 in
       let v = SW.subst_term sub v in
-      return (SW.tm_assert_with_binders (SW.close_binders binders vars) v s2 r)
-    | _ -> fail "Expected AssertWithBinders" s1.range
+      let? ht = resolve_hint_type env hint_type in
+      return (SW.tm_proof_hint_with_binders ht (SW.close_binders binders vars) v s2 r)
+    | _ -> fail "Expected ProofHintWithBinders" s1.range
 
 and desugar_binders (env:env_t) (bs:Sugar.binders)
   : err (env_t & list (option SW.qualifier & SW.binder) & list S.bv)

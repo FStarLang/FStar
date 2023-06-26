@@ -11,6 +11,9 @@ module P = Pulse.Syntax.Printer
 
 module RT = FStar.Reflection.Typing
 module RUtil = Pulse.Reflection.Util
+module RU = Pulse.RuntimeUtils
+
+let debug_log = Pulse.Checker.Common.debug_log "inference"
 
 let uvar_id = nat
 let uvar = uvar_id & ppname
@@ -171,19 +174,20 @@ let infer_one_atomic_vprop (g:env) (t:term) (ctxt:list term) (uv_sols:solution)
   if atomic_vprop_has_uvar t
   then
     let matching_ctxt = List.Tot.filter (fun ctxt_vp -> atomic_vprops_may_match t ctxt_vp) ctxt in
-    // T.print (FStar.Printf.sprintf "infer_one_atomic_vprop %s, found %d matching candidates\n"
-    //            (P.term_to_string t)
-    //            (List.Tot.length matching_ctxt));
+    debug_log g (fun _ -> Printf.sprintf "infer_one_atomic_vprop %s, found %d matching candidates\n"
+                            (P.term_to_string t)
+                            (List.Tot.length matching_ctxt));
     if List.Tot.length matching_ctxt = 1
-    then
-      // let _ = T.print (FStar.Printf.sprintf "infer_one_atomic_vprop: matching %s and %s with %d exisiting solutions\n"
-      //                    (P.term_to_string t)
-      //                    (P.term_to_string (List.Tot.hd matching_ctxt))
-      //                    (List.Tot.length uv_sols)) in 
+    then (
+      debug_log g (fun _ -> Printf.sprintf "infer_one_atomic_vprop: matching %s and %s with %d exisiting solutions\n"
+                                  (P.term_to_string t)
+                                  (P.term_to_string (List.Tot.hd matching_ctxt))
+                                  (List.Tot.length uv_sols));
       let uv_sols = match_typ g t (List.Tot.hd matching_ctxt) uv_sols in
-      // T.print (FStar.Printf.sprintf "post matching, uv_sols has %d solutions\n"
-      //            (List.Tot.length uv_sols))
+      debug_log g (fun _ -> Printf.sprintf "post matching, uv_sols has %d solutions\n"
+                                   (List.Tot.length uv_sols));
       uv_sols
+    )
     else uv_sols
   else uv_sols
 
@@ -273,16 +277,17 @@ let infer
   if List.Tot.length uvs = 0
   then fail g (Some r) "Inference did not find anything to infer"
   else begin
-    // T.print (FStar.Printf.sprintf "infer: generated %d uvars,\n\
-    //                                ctx: {\n%s\n}\n\
-    //                                st_comp.pre:{\n%s\n}"
-    //            (List.Tot.length uvs)
-    //            (P.term_list_to_string "\n" (vprop_as_list ctxt_pre))
-    //            (P.term_list_to_string "\n" (vprop_as_list pre)));
+    debug_log g (fun _ -> 
+      Printf.sprintf "Generated %d uvars,\n\
+                                    ctx: {\n%s\n}\n\
+                                    st_comp.pre:{\n%s\n}"
+                (List.Tot.length uvs)
+                (P.term_list_to_string "\n" (vprop_as_list ctxt_pre))
+                (P.term_list_to_string "\n" (vprop_as_list pre)));
     let uv_sols = try_inst_uvs_in_goal g ctxt_pre pre in
-    // T.print (Printf.sprintf "Got solutions: {\n%s\}"  (print_solutions uv_sols));
+    debug_log g (fun _ -> Printf.sprintf "Got solutions: {\n%s\}"  (print_solutions uv_sols));
     let head = rebuild_head g head uvs uv_sols r in
-    // T.print (Printf.sprintf "Rebuilt head= %s" (P.st_term_to_string head));
+    debug_log g (fun _ -> Printf.sprintf "Rebuilt head= %s" (P.st_term_to_string head));
     head
   end
 

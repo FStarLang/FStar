@@ -1,23 +1,75 @@
 [
-  "št\u000fÜÊzßåãÙŒ<nè\u000f",
+  "ªeí(—Ñ\fG\u0012­V³;Ž\u001aþ",
   [
+    [
+      "Pulse.Checker.Framing.__proj__Mkmatch_result__item__p_eq",
+      1,
+      2,
+      1,
+      [
+        "@query",
+        "proj_equation_Pulse.Checker.Framing.Mkmatch_result_matched",
+        "proj_equation_Pulse.Checker.Framing.Mkmatch_result_unmatched_p",
+        "projection_inverse_Pulse.Checker.Framing.Mkmatch_result_matched",
+        "projection_inverse_Pulse.Checker.Framing.Mkmatch_result_unmatched_p"
+      ],
+      0,
+      "2f62f7a5f39e3e87c39c9f0322e35ccf"
+    ],
+    [
+      "Pulse.Checker.Framing.__proj__Mkmatch_result__item__q_eq",
+      1,
+      2,
+      1,
+      [
+        "@query",
+        "proj_equation_Pulse.Checker.Framing.Mkmatch_result_matched",
+        "proj_equation_Pulse.Checker.Framing.Mkmatch_result_unmatched_q",
+        "projection_inverse_Pulse.Checker.Framing.Mkmatch_result_matched",
+        "projection_inverse_Pulse.Checker.Framing.Mkmatch_result_unmatched_q"
+      ],
+      0,
+      "04feb117913e2dd6b5bcfffffc0476b3"
+    ],
+    [
+      "Pulse.Checker.Framing.apply_frame",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_Pulse.Syntax.Base.C_ST",
+        "disc_equation_Pulse.Syntax.Base.C_STAtomic",
+        "disc_equation_Pulse.Syntax.Base.C_STGhost",
+        "disc_equation_Pulse.Syntax.Base.C_Tot",
+        "equation_Pulse.Syntax.Base.comp_st",
+        "equation_Pulse.Syntax.Base.stateful_comp",
+        "fuel_guarded_inversion_Pulse.Syntax.Base.comp",
+        "primitive_Prims.op_BarBar", "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_78cf9fabb706bab7e54de904b7db9d2a"
+      ],
+      0,
+      "a93c2e0588a88af996e6d84cff053a9c"
+    ],
     [
       "Pulse.Checker.Framing.try_frame_pre",
       1,
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Pulse.Syntax.C_ST",
-        "disc_equation_Pulse.Syntax.C_STAtomic",
-        "disc_equation_Pulse.Syntax.C_STGhost",
-        "disc_equation_Pulse.Syntax.C_Tot", "equation_Pulse.Syntax.comp_st",
-        "equation_Pulse.Syntax.stateful_comp",
-        "fuel_guarded_inversion_Pulse.Syntax.comp",
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_Pulse.Syntax.Base.C_ST",
+        "disc_equation_Pulse.Syntax.Base.C_STAtomic",
+        "disc_equation_Pulse.Syntax.Base.C_STGhost",
+        "disc_equation_Pulse.Syntax.Base.C_Tot",
+        "equation_Pulse.Syntax.Base.comp_st",
+        "equation_Pulse.Syntax.Base.stateful_comp",
+        "fuel_guarded_inversion_Pulse.Syntax.Base.comp",
         "primitive_Prims.op_BarBar", "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_9ccaab801535aa13d5662b90134148ed"
+        "refinement_interpretation_Tm_refine_78cf9fabb706bab7e54de904b7db9d2a"
       ],
       0,
-      "5c4b8e5bc6021837b03107fa315f237f"
+      "c36409bdf1c01d461ef814c63cf7cb84"
     ],
     [
       "Pulse.Checker.Framing.frame_empty",
@@ -25,17 +77,19 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Pulse.Syntax.C_ST",
-        "disc_equation_Pulse.Syntax.C_STAtomic",
-        "disc_equation_Pulse.Syntax.C_STGhost",
-        "disc_equation_Pulse.Syntax.C_Tot", "equation_Pulse.Syntax.comp_st",
-        "equation_Pulse.Syntax.stateful_comp",
-        "fuel_guarded_inversion_Pulse.Syntax.comp",
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_Pulse.Syntax.Base.C_ST",
+        "disc_equation_Pulse.Syntax.Base.C_STAtomic",
+        "disc_equation_Pulse.Syntax.Base.C_STGhost",
+        "disc_equation_Pulse.Syntax.Base.C_Tot",
+        "equation_Pulse.Syntax.Base.comp_st",
+        "equation_Pulse.Syntax.Base.stateful_comp",
+        "fuel_guarded_inversion_Pulse.Syntax.Base.comp",
         "primitive_Prims.op_BarBar", "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_9ccaab801535aa13d5662b90134148ed"
+        "refinement_interpretation_Tm_refine_78cf9fabb706bab7e54de904b7db9d2a"
       ],
       0,
-      "fccc8fbdf4c89f7d7ae7a87ed31de002"
+      "1f6808cce042a0ac40825aa61e5c1931"
     ]
   ]
 ]

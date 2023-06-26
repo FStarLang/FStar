@@ -1,0 +1,95 @@
+[
+  "ñÙ\u001fLxó¨U¦\nFÜº\u0003g—",
+  [
+    [
+      "Steel.ST.BitVector.pts_to_length",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Steel.ST.BitVector.bv_t",
+        "refinement_interpretation_Tm_refine_2eaf265e06e007b6d90c5550035c35fd"
+      ],
+      0,
+      "85bfceab65ec2ea1799e4bc3ec185323"
+    ],
+    [
+      "Steel.ST.BitVector.bv_is_set",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_e6db31ac56ddf9a30d2e6d65c32872a6"
+      ],
+      0,
+      "eb9e9db5812a1504857a30607c2cf031"
+    ],
+    [
+      "Steel.ST.BitVector.bv_is_set",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Steel.ST.BitVector.repr",
+        "refinement_interpretation_Tm_refine_e6db31ac56ddf9a30d2e6d65c32872a6"
+      ],
+      0,
+      "e446f0e81a24cf996c050c218fe748a6"
+    ],
+    [
+      "Steel.ST.BitVector.bv_set",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_e6db31ac56ddf9a30d2e6d65c32872a6"
+      ],
+      0,
+      "f42e6a3c9284ca7297480ce42c3877fd"
+    ],
+    [
+      "Steel.ST.BitVector.bv_set",
+      2,
+      2,
+      1,
+      [ "@query", "equation_Steel.ST.BitVector.repr" ],
+      0,
+      "a5ab0c6147a4c0ce8ea000b2dd31a86f"
+    ],
+    [
+      "Steel.ST.BitVector.bv_unset",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_e6db31ac56ddf9a30d2e6d65c32872a6"
+      ],
+      0,
+      "2da12386137c38ba00bb448634cd6a51"
+    ],
+    [
+      "Steel.ST.BitVector.bv_unset",
+      2,
+      2,
+      1,
+      [ "@query", "equation_Steel.ST.BitVector.repr" ],
+      0,
+      "02a1f42f7bc7b2b92f28f202a355814f"
+    ],
+    [
+      "Steel.ST.BitVector.free",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Steel.ST.BitVector.bv_t",
+        "refinement_interpretation_Tm_refine_2eaf265e06e007b6d90c5550035c35fd"
+      ],
+      0,
+      "413fb59a53dfe7a5a8871d83f0d498c5"
+    ]
+  ]
+]

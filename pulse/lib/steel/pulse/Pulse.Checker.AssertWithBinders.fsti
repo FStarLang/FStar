@@ -9,7 +9,7 @@ open Pulse.Checker.Common
 
 val check
   (g:env)
-  (st:st_term{Tm_AssertWithBinders? st.term})
+  (st:st_term{Tm_ProofHintWithBinders? st.term})
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)

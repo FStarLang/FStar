@@ -3600,7 +3600,7 @@ let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
                                                                     g1 t1 pre
                                                                     ()
                                                                     post_hint))
-                                                              | Pulse_Syntax_Base.Tm_AssertWithBinders
+                                                              | Pulse_Syntax_Base.Tm_ProofHintWithBinders
                                                                   uu___3 ->
                                                                   Obj.magic
                                                                     (

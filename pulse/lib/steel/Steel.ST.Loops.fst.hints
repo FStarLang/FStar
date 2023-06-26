@@ -1,0 +1,88 @@
+[
+  "Íû\u000e¸BÁ<N¦*²$\u001d]¹\f",
+  [
+    [
+      "Steel.ST.Loops.for_loop'",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "equation_Steel.ST.Loops.u32_between", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_a1d502d8e0b172ffcd22072c2bb46a53"
+      ],
+      0,
+      "1baaa548562a8dce7d0c680ba90cf6f5"
+    ],
+    [
+      "Steel.ST.Loops.for_loop'",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "equation_Steel.ST.Loops.u32_between", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_4102cf3bbb19f9fe0428d2e5a32fadcb",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_a1d502d8e0b172ffcd22072c2bb46a53"
+      ],
+      0,
+      "b34c01ff38af17ff8cd9f7a56e1d4e6e"
+    ],
+    [
+      "Steel.ST.Loops.for_loop",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "equation_Steel.ST.Loops.u32_between", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_4102cf3bbb19f9fe0428d2e5a32fadcb",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_a1d502d8e0b172ffcd22072c2bb46a53"
+      ],
+      0,
+      "6d7b5aba64c2d4d03f8115d94d94269f"
+    ],
+    [
+      "Steel.ST.Loops.for_loop",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "equation_Steel.ST.Loops.u32_between", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_a1d502d8e0b172ffcd22072c2bb46a53"
+      ],
+      0,
+      "57349f1508882674f898bbb55b389876"
+    ],
+    [
+      "Steel.ST.Loops.for_loop",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_4102cf3bbb19f9fe0428d2e5a32fadcb"
+      ],
+      0,
+      "7b06b725818585ff16fd64ac833e117a"
+    ],
+    [
+      "Steel.ST.Loops.while_loop'",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "8eb96d67292871080b0c227741373ae6"
+    ]
+  ]
+]
