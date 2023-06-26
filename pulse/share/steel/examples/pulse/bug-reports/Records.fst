@@ -45,16 +45,6 @@ val rec_perm_definition (r:rec2) (v:rec_repr)
 // helpers 
 
 ```pulse
-fn get_witness (x:R.ref U8.t) (#y:Ghost.erased U8.t)
-requires R.pts_to x full_perm y
-returns z:Ghost.erased U8.t
-ensures R.pts_to x full_perm y ** pure (y==z)
-{   
-    y
-}
-```
-
-```pulse
 fn mutate_ref (r:R.ref U8.t) (x:U8.t) (#v:Ghost.erased U8.t)
   requires R.pts_to r full_perm v
   ensures R.pts_to r full_perm x
@@ -106,11 +96,7 @@ fn mutate_rec_get_witness (r:rec2) (#v:Ghost.erased rec_repr)
         R.pts_to r.r2 full_perm v.v2);
 
   mutate_ref r.r2 0uy;
-  let v2_ = get_witness(r.r2);
-
-
-  // assert_ (R.pts_to r.r1 full_perm v.v1 `star`
-  //          R.pts_to r.r2 full_perm v2_);
+  with v2_. assert R.pts_to r.r2 full_perm v2_;
 
   rewrite (R.pts_to r.r1 full_perm v.v1 `star`
            R.pts_to r.r2 full_perm v2_)
@@ -139,16 +125,6 @@ let rec_array_perm (r:rec_array) (v:rec_array_repr)
   A.pts_to r.r2 full_perm v.v2
 
 // helpers 
-
-```pulse
-fn get_witness_array (x:A.array U8.t) (#y:Ghost.erased (Seq.seq U8.t))
-requires A.pts_to x full_perm y
-returns z:Ghost.erased (Seq.seq U8.t)
-ensures A.pts_to x full_perm y ** pure (y==z)
-{   
-    y
-}
-```
 
 ```pulse
 fn mutate_array (l:US.t) (a:(a:A.array U8.t{ US.v l == A.length a }))
@@ -181,7 +157,7 @@ fn mutate_rec_get_witness (l:US.t) (r:rec_array) (#v:Ghost.erased rec_array_repr
         A.pts_to r.r2 full_perm v.v2);
   
   mutate_array l r.r2;
-  let y = get_witness_array (r.r2); (* this works! *)
+  with y. assert A.pts_to r.r2 full_perm y;
 
   rewrite (A.pts_to r.r1 full_perm v.v1 `star`
            A.pts_to r.r2 full_perm y)
