@@ -154,13 +154,11 @@ let rec st_term_to_string' (level:string) (t:st_term)
         level
         (st_term_to_string' level body)
   
-    | Tm_Abs { b; q; pre; body; ret_ty; post } ->
-      sprintf "(fun (%s%s)\nrequires\n%s\nreturns %s\nensures\n%s\n {\n%s%s\n}"
+    | Tm_Abs { b; q; ascription=c; body } ->
+      sprintf "(fun (%s%s)\n%s\n {\n%s%s\n}"
               (qual_to_string q)
               (binder_to_string b)
-              (term_opt_to_string pre)
-              (term_opt_to_string ret_ty)
-              (term_opt_to_string post)
+              (comp_to_string c)
               (indent level)
               (st_term_to_string' (indent level) body)
 
@@ -287,6 +285,15 @@ let tag_of_st_term (t:st_term) =
   | Tm_Protect _ -> "Tm_Protect"
   | Tm_ProofHintWithBinders _ -> "Tm_ProofHintWithBinders"
 
+let tag_of_comp (c:comp) : T.Tac string =
+  match c with
+  | C_Tot _ -> "Total"
+  | C_ST _ -> "ST"
+  | C_STAtomic i _ ->
+    Printf.sprintf "Atomic %s" (term_to_string i)
+  | C_STGhost i _ ->
+    Printf.sprintf "Ghost %s" (term_to_string i)
+    
 let rec print_st_head (t:st_term)
   : Tot string (decreases t) =
   match t.term with

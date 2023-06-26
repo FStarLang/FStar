@@ -55,14 +55,6 @@ let eq_comp (c1 c2:comp)
       eq_st_comp s1 s2
     | _ -> false
 
-let eq_tm_opt (t1 t2:option term)
-  : b:bool { b <==> (t1 == t2) }
-  = match t1, t2 with
-    | None, None -> true
-    | Some t1, Some t2 -> eq_tm t1 t2
-    | _ -> false
-
-
 let rec eq_list (f: (x:'a -> y:'a -> b:bool { b <==> (x == y)})) (l m:list 'a)
   : b:bool { b <==> (l == m) }
   = match l, m with
@@ -71,6 +63,17 @@ let rec eq_list (f: (x:'a -> y:'a -> b:bool { b <==> (x == y)})) (l m:list 'a)
       f h1 h2 &&
       eq_list f t1 t2
     | _ -> false
+
+let eq_opt (f: (x:'a -> y:'a -> b:bool { b <==> (x == y)})) (l m:option 'a)
+  : b:bool { b <==> (l == m) }
+  = match l, m with
+    | None, None -> true
+    | Some l, Some m -> f l m
+    | _ -> false
+
+let eq_tm_opt (t1 t2:option term)
+  : b:bool { b <==> (t1 == t2) }
+  = eq_opt eq_tm t1 t2
 
 let eq_binder (b0 b1:binder) : b:bool { b <==> (b0 == b1) } =
   eq_tm b0.binder_ty b1.binder_ty
@@ -86,14 +89,12 @@ let rec eq_st_term (t1 t2:st_term)
       b1 = b2 &&
       eq_tm t1 t2
 
-    | Tm_Abs { b=b1; q=o1; pre=p1; body=t1; ret_ty=r1; post=q1},
-      Tm_Abs { b=b2; q=o2; pre=p2; body=t2; ret_ty=r2; post=q2} ->
+    | Tm_Abs { b=b1; q=o1; ascription=c1; body=t1 },
+      Tm_Abs { b=b2; q=o2; ascription=c2; body=t2 } ->
       eq_tm b1.binder_ty b2.binder_ty &&
       o1=o2 &&
-      eq_tm_opt p1 p2 &&
-      eq_st_term t1 t2 &&
-      eq_tm_opt r1 r2 &&
-      eq_tm_opt q1 q2
+      eq_comp c1 c2 &&
+      eq_st_term t1 t2
   
     | Tm_STApp { head=h1; arg_qual=o1; arg=t1},
       Tm_STApp { head=h2; arg_qual=o2; arg=t2} ->

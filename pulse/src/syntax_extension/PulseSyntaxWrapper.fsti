@@ -39,13 +39,16 @@ val tm_exists (b:binder) (body:vprop) (_:range)  : term
 val tm_arrow (b:binder) (q:FStar.Syntax.Syntax.aqual) (body:comp) (_:range)  : term
 val tm_expr (t:FStar.Syntax.Syntax.term) (_:range) : term
 val tm_unknown (_:range)  : term
+val tm_emp_inames : term 
+val mk_tot (t:term) : comp
 val mk_comp (pre:term) (ret:binder) (post:term) : comp
 val ghost_comp (inames:term) (pre:term) (ret:binder) (post:term) : comp
 val atomic_comp (inames:term) (pre:term) (ret:binder) (post:term) : comp
 
 new val st_term : Type0
 val tm_return (t:term) (_:range) : st_term
-val tm_abs (b:binder) (q:option qualifier) (pre:term) (body:st_term) (ret_ty:option term) (post:option term) (_:range) : st_term
+val tm_ghost_return (t:term) (_:range) : st_term
+val tm_abs (b:binder) (q:option qualifier) (_:comp) (body:st_term) (_:range) : st_term
 val tm_st_app (head:term) (q:FStar.Syntax.Syntax.aqual) (arg:term) (_:range) : st_term
 val tm_bind (x:binder) (e1:st_term) (e2:st_term) (_:range) : st_term
 val tm_totbind (x:binder) (e1:term) (e2:st_term) (_:range) : st_term
