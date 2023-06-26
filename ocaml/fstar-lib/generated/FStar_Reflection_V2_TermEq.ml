@@ -483,9 +483,16 @@ type 'p faithful_pattern = Obj.t
 type 'pb faithful_pattern_arg = Obj.t
 type 'ats faithful_attrs = Obj.t
 type 'c faithful_comp = Obj.t
+type faithful_term = FStar_Reflection_Types.term
 let (term_eq :
   FStar_Reflection_Types.term -> FStar_Reflection_Types.term -> Prims.bool) =
-  fun t1 -> fun t2 -> match term_cmp t1 t2 with | Eq -> true | uu___ -> false
-type faithful_term = FStar_Reflection_Types.term
+  fun t1 -> fun t2 -> uu___is_Eq (term_cmp t1 t2)
 let (term_eq_dec : faithful_term -> faithful_term -> Prims.bool) =
-  fun t1 -> fun t2 -> match term_cmp t1 t2 with | Eq -> true | Neq -> false
+  fun t1 -> fun t2 -> uu___is_Eq (term_cmp t1 t2)
+type faithful_universe = FStar_Reflection_Types.universe
+let (univ_eq :
+  FStar_Reflection_Types.universe ->
+    FStar_Reflection_Types.universe -> Prims.bool)
+  = fun u1 -> fun u2 -> uu___is_Eq (univ_cmp u1 u2)
+let (univ_eq_dec : faithful_universe -> faithful_universe -> Prims.bool) =
+  fun u1 -> fun u2 -> uu___is_Eq (univ_cmp u1 u2)
