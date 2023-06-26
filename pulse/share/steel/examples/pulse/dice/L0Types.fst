@@ -15,18 +15,22 @@ module U32 = FStar.UInt32
 open HACL
 
 assume
-val valid_key_usage (i: U32.t) : Type0
+val deviceIDCRI_t : Type0
 
-let key_usage_payload_t = i: U32.t { valid_key_usage i }
+assume
+val deviceIDCSR_t (len: U32.t) : Type0
 
 noeq
 type deviceIDCSR_ingredients_t = {
-  deviceIDCSR_ku: key_usage_payload_t;
-  // deviceIDCSR_version: datatype_of_asn1_type INTEGER;
-  // deviceIDCSR_s_common:  x509_RDN_x520_attribute_string_t COMMON_NAME  IA5_STRING;
-  // deviceIDCSR_s_org:     x509_RDN_x520_attribute_string_t ORGANIZATION IA5_STRING;
-  // deviceIDCSR_s_country: x509_RDN_x520_attribute_string_t COUNTRY      PRINTABLE_STRING
+  ku: U32.t;
+  version: U32.t;
+  s_common: string;
+  s_org: string;
+  s_country: string;
 }
+
+assume
+val valid_deviceIDCSR_ingredients (len: U32.t) : Type0
 
 assume
 val x509_version_t : Type0
@@ -69,8 +73,11 @@ type l0_record = {
   aliasKey_pub: A.larray U8.t 32; (* public bytes *)
   aliasKey_priv: A.larray U8.t 32; (* secret bytes *)
 (* DeviceID CSR Outputs *)
-  deviceIDCSR_len: US.t; (* should be U32 *)
-  deviceIDCSR_buf: A.larray U8.t (US.v deviceIDCSR_len); (* public bytes *)
+  deviceIDCSR_len: U32.t; (* should be U32 *)
+  deviceIDCSR_buf: A.larray U8.t (U32.v deviceIDCSR_len); (* public bytes *)
+(* DeviceID CRI Outputs *)
+  deviceIDCRI_len: U32.t; (* should be U32 *)
+  deviceIDCRI_buf: A.larray U8.t (U32.v deviceIDCRI_len); (* public bytes *)
 (* AliasKey Crt Outputs *)
   aliasKeyCRT_len: US.t; (* should be U32 *)
   aliasKeyCRT_buf: A.larray U8.t (US.v aliasKeyCRT_len); (* public bytes *)
@@ -88,6 +95,7 @@ type l0_repr = {
   aliasKey_pub: Seq.seq U8.t;
   aliasKey_priv: Seq.seq U8.t;
   deviceIDCSR_buf: Seq.seq U8.t;
+  deviceIDCRI_buf: Seq.seq U8.t;
   aliasKeyCRT_buf: Seq.seq U8.t;
   authKeyID: Seq.seq U8.t;
 }
@@ -119,3 +127,6 @@ val l0_perm_definition (l0:l0_record) (vl0: l0_repr)
   : Lemma 
     (ensures l0_perm l0 vl0 === l0_perm' l0 vl0)
     [SMTPat (l0_perm l0 vl0)]
+
+assume 
+val u32_to_us (v:U32.t) : US.t
