@@ -2,7 +2,7 @@ module Pulse.Syntax.Builder
 open Pulse.Syntax
 
 let tm_return ctag insert_eq term = Tm_Return { ctag; insert_eq; term }
-let tm_abs b q pre body ret_ty post = Tm_Abs { b; q; pre; body; ret_ty; post }
+let tm_abs b q ascription body = Tm_Abs { b; q; ascription; body }
 let tm_stapp head arg_qual arg = Tm_STApp { head; arg_qual; arg }
 let tm_bind binder head body = Tm_Bind { binder; head; body }
 let tm_totbind _binder head body = Tm_TotBind { head; body }

@@ -59,7 +59,7 @@ fn sort3_alt (a:array U32.t)
 ```
 
 //But, an explicitly annotated version doesn't work either
-[@@expect_failure [228;189]]
+[@@expect_failure]
 ```pulse
 fn sort3_alt (a:array U32.t)
              (#s:(s:Ghost.erased (Seq.seq U32.t) {Seq.length s == 3}))

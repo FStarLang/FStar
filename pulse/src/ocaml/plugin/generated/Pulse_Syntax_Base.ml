@@ -204,10 +204,8 @@ and st_term'__Tm_Abs__payload =
   {
   b: binder ;
   q: qualifier FStar_Pervasives_Native.option ;
-  pre1: vprop FStar_Pervasives_Native.option ;
-  body: st_term ;
-  ret_ty: term FStar_Pervasives_Native.option ;
-  post1: vprop FStar_Pervasives_Native.option }
+  ascription: comp ;
+  body: st_term }
 and st_term'__Tm_STApp__payload =
   {
   head: term ;
@@ -226,7 +224,7 @@ and st_term'__Tm_If__payload =
   b1: term ;
   then_: st_term ;
   else_: st_term ;
-  post2: vprop FStar_Pervasives_Native.option }
+  post1: vprop FStar_Pervasives_Native.option }
 and st_term'__Tm_IntroPure__payload =
   {
   p: term ;
@@ -247,12 +245,12 @@ and st_term'__Tm_While__payload =
   body3: st_term }
 and st_term'__Tm_Par__payload =
   {
-  pre11: term ;
+  pre1: term ;
   body11: st_term ;
   post11: term ;
   pre2: term ;
   body21: st_term ;
-  post21: term }
+  post2: term }
 and st_term'__Tm_WithLocal__payload =
   {
   binder1: binder ;
@@ -335,13 +333,7 @@ let (mk_binder : Prims.string -> range -> term -> binder) =
             (mk_ppname (FStar_Reflection_Typing.seal_pp_name s) r)
         }
 let (eq_univ : universe -> universe -> Prims.bool) =
-  fun u1 ->
-    fun u2 ->
-      FStar_Reflection_V2_Builtins.term_eq
-        (FStar_Reflection_V2_Builtins.pack_ln
-           (FStar_Reflection_V2_Data.Tv_Type u1))
-        (FStar_Reflection_V2_Builtins.pack_ln
-           (FStar_Reflection_V2_Data.Tv_Type u2))
+  fun u1 -> fun u2 -> FStar_Reflection_V2_TermEq.univ_eq_dec u1 u2
 let rec (eq_tm : term -> term -> Prims.bool) =
   fun t1 ->
     fun t2 ->
@@ -361,7 +353,7 @@ let rec (eq_tm : term -> term -> Prims.bool) =
           ((eq_univ u1 u2) && (eq_tm t11.binder_ty t21.binder_ty)) &&
             (eq_tm b1 b2)
       | (Tm_FStar t11, Tm_FStar t21) ->
-          FStar_Reflection_V2_Builtins.term_eq t11 t21
+          FStar_Reflection_V2_TermEq.term_eq_dec t11 t21
       | uu___ -> false
 let (eq_st_comp : st_comp -> st_comp -> Prims.bool) =
   fun s1 ->
@@ -380,17 +372,6 @@ let (eq_comp : comp -> comp -> Prims.bool) =
       | (C_STGhost (i1, s1), C_STGhost (i2, s2)) ->
           (eq_tm i1 i2) && (eq_st_comp s1 s2)
       | uu___ -> false
-let (eq_tm_opt :
-  term FStar_Pervasives_Native.option ->
-    term FStar_Pervasives_Native.option -> Prims.bool)
-  =
-  fun t1 ->
-    fun t2 ->
-      match (t1, t2) with
-      | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None) -> true
-      | (FStar_Pervasives_Native.Some t11, FStar_Pervasives_Native.Some t21)
-          -> eq_tm t11 t21
-      | uu___ -> false
 let rec eq_list :
   'a .
     ('a -> 'a -> Prims.bool) -> 'a Prims.list -> 'a Prims.list -> Prims.bool
@@ -402,6 +383,25 @@ let rec eq_list :
         | ([], []) -> true
         | (h1::t1, h2::t2) -> (f h1 h2) && (eq_list f t1 t2)
         | uu___ -> false
+let eq_opt :
+  'a .
+    ('a -> 'a -> Prims.bool) ->
+      'a FStar_Pervasives_Native.option ->
+        'a FStar_Pervasives_Native.option -> Prims.bool
+  =
+  fun f ->
+    fun l ->
+      fun m ->
+        match (l, m) with
+        | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None) ->
+            true
+        | (FStar_Pervasives_Native.Some l1, FStar_Pervasives_Native.Some m1)
+            -> f l1 m1
+        | uu___ -> false
+let (eq_tm_opt :
+  term FStar_Pervasives_Native.option ->
+    term FStar_Pervasives_Native.option -> Prims.bool)
+  = fun t1 -> fun t2 -> eq_opt eq_tm t1 t2
 let (eq_binder : binder -> binder -> Prims.bool) =
   fun b0 -> fun b1 -> eq_tm b0.binder_ty b1.binder_ty
 let (eq_tm_list : term Prims.list -> term Prims.list -> Prims.bool) =
@@ -413,16 +413,11 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
       | (Tm_Return { ctag = c1; insert_eq = b1; term = t11;_}, Tm_Return
          { ctag = c2; insert_eq = b2; term = t21;_}) ->
           ((c1 = c2) && (b1 = b2)) && (eq_tm t11 t21)
-      | (Tm_Abs
-         { b = b1; q = o1; pre1 = p1; body = t11; ret_ty = r1; post1 = q1;_},
-         Tm_Abs
-         { b = b2; q = o2; pre1 = p2; body = t21; ret_ty = r2; post1 = q2;_})
-          ->
-          (((((eq_tm b1.binder_ty b2.binder_ty) && (o1 = o2)) &&
-               (eq_tm_opt p1 p2))
-              && (eq_st_term t11 t21))
-             && (eq_tm_opt r1 r2))
-            && (eq_tm_opt q1 q2)
+      | (Tm_Abs { b = b1; q = o1; ascription = c1; body = t11;_}, Tm_Abs
+         { b = b2; q = o2; ascription = c2; body = t21;_}) ->
+          (((eq_tm b1.binder_ty b2.binder_ty) && (o1 = o2)) &&
+             (eq_comp c1 c2))
+            && (eq_st_term t11 t21)
       | (Tm_STApp { head = h1; arg_qual = o1; arg = t11;_}, Tm_STApp
          { head = h2; arg_qual = o2; arg = t21;_}) ->
           ((eq_tm h1 h2) && (o1 = o2)) && (eq_tm t11 t21)
@@ -441,8 +436,8 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
          { erased = b2; p2; witnesses = l2; should_check1 = uu___1;_}) ->
           ((b1 = b2) && (eq_tm p1 p2)) && (eq_tm_list l1 l2)
       | (Tm_ElimExists { p1;_}, Tm_ElimExists { p1 = p2;_}) -> eq_tm p1 p2
-      | (Tm_If { b1 = g1; then_ = ethen1; else_ = eelse1; post2 = p1;_},
-         Tm_If { b1 = g2; then_ = ethen2; else_ = eelse2; post2 = p2;_}) ->
+      | (Tm_If { b1 = g1; then_ = ethen1; else_ = eelse1; post1 = p1;_},
+         Tm_If { b1 = g2; then_ = ethen2; else_ = eelse2; post1 = p2;_}) ->
           (((eq_tm g1 g2) && (eq_st_term ethen1 ethen2)) &&
              (eq_st_term eelse1 eelse2))
             && (eq_tm_opt p1 p2)
@@ -456,11 +451,11 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
           ((eq_tm inv1 inv2) && (eq_st_term cond1 cond2)) &&
             (eq_st_term body1 body2)
       | (Tm_Par
-         { pre11 = preL1; body11 = eL1; post11 = postL1; pre2 = preR1;
-           body21 = eR1; post21 = postR1;_},
+         { pre1 = preL1; body11 = eL1; post11 = postL1; pre2 = preR1;
+           body21 = eR1; post2 = postR1;_},
          Tm_Par
-         { pre11 = preL2; body11 = eL2; post11 = postL2; pre2 = preR2;
-           body21 = eR2; post21 = postR2;_})
+         { pre1 = preL2; body11 = eL2; post11 = postL2; pre2 = preR2;
+           body21 = eR2; post2 = postR2;_})
           ->
           (((((eq_tm preL1 preL2) && (eq_st_term eL1 eL2)) &&
                (eq_tm postL1 postL2))

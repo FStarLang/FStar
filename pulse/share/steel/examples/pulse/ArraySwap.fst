@@ -11,7 +11,7 @@ module Prf = Steel.ST.GenArraySwap.Proof
 module SZ = FStar.SizeT
 
 #set-options "--ide_id_info_off"
-
+#push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
 #restart-solver
 
 ```pulse
@@ -150,6 +150,8 @@ fn pulse_assert (p: prop)
 ```
 
 #restart-solver
+
+#push-options "--z3rlimit_factor 4"
 
 ```pulse
 fn array_swap(#t: Type0) (#s0: Ghost.erased (Seq.seq t)) (a: A.array t) (n: SZ.t) (l: SZ.t) (bz: Prf.bezout (SZ.v n) (SZ.v l)) (d: SZ.t) (q: SZ.t)

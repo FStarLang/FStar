@@ -54,12 +54,12 @@ let (check_par :
                                 (fun uu___ ->
                                    match uu___ with
                                    | Pulse_Syntax_Base.Tm_Par
-                                       { Pulse_Syntax_Base.pre11 = preL;
+                                       { Pulse_Syntax_Base.pre1 = preL;
                                          Pulse_Syntax_Base.body11 = eL;
                                          Pulse_Syntax_Base.post11 = postL;
                                          Pulse_Syntax_Base.pre2 = preR;
                                          Pulse_Syntax_Base.body21 = eR;
-                                         Pulse_Syntax_Base.post21 = postR;_}
+                                         Pulse_Syntax_Base.post2 = postR;_}
                                        ->
                                        Obj.magic
                                          (FStar_Tactics_Effect.tac_bind
@@ -399,7 +399,7 @@ let (check_par :
                                                                     (Pulse_Typing.wr
                                                                     (Pulse_Syntax_Base.Tm_Par
                                                                     {
-                                                                    Pulse_Syntax_Base.pre11
+                                                                    Pulse_Syntax_Base.pre1
                                                                     =
                                                                     Pulse_Syntax_Base.tm_unknown;
                                                                     Pulse_Syntax_Base.body11
@@ -412,7 +412,7 @@ let (check_par :
                                                                     Pulse_Syntax_Base.tm_unknown;
                                                                     Pulse_Syntax_Base.body21
                                                                     = eR1;
-                                                                    Pulse_Syntax_Base.post21
+                                                                    Pulse_Syntax_Base.post2
                                                                     =
                                                                     Pulse_Syntax_Base.tm_unknown
                                                                     })) pre
@@ -430,7 +430,7 @@ let (check_par :
                                                                     (Pulse_Typing.wr
                                                                     (Pulse_Syntax_Base.Tm_Par
                                                                     {
-                                                                    Pulse_Syntax_Base.pre11
+                                                                    Pulse_Syntax_Base.pre1
                                                                     =
                                                                     Pulse_Syntax_Base.tm_unknown;
                                                                     Pulse_Syntax_Base.body11
@@ -443,7 +443,7 @@ let (check_par :
                                                                     Pulse_Syntax_Base.tm_unknown;
                                                                     Pulse_Syntax_Base.body21
                                                                     = eR1;
-                                                                    Pulse_Syntax_Base.post21
+                                                                    Pulse_Syntax_Base.post2
                                                                     =
                                                                     Pulse_Syntax_Base.tm_unknown
                                                                     }))

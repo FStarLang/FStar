@@ -151,10 +151,8 @@ type st_term' =
   | Tm_Abs {
       b:binder;
       q:option qualifier;
-      pre:option vprop;
+      ascription: comp;
       body:st_term;
-      ret_ty:option term;
-      post:option vprop;
     }
   | Tm_STApp {
       head:term;

@@ -4,24 +4,13 @@ module RT = FStar.Reflection.Typing
 module R = FStar.Reflection.V2
 module T = FStar.Tactics.V2
 
-let host_term_equality (t1 t2:host_term)
-  : Lemma
-    (ensures R.term_eq t1 t2 <==> t1==t2)
-  = admit()
+let eq_univ (u1 u2:universe) : b:bool{b <==> u1 == u2} =
+  let open FStar.Reflection.V2.TermEq in
+  assume (faithful_univ u1);
+  assume (faithful_univ u2);
+  univ_eq_dec u1 u2
 
-let eq_univ (u1 u2:universe) =
-  host_term_equality (R.pack_ln (R.Tv_Type u1))
-                     (R.pack_ln (R.Tv_Type u2));
-  R.(term_eq (pack_ln (Tv_Type u1))
-             (pack_ln (Tv_Type u2)))
-
-let univ_equality (u1 u2:universe)
-  : Lemma (ensures eq_univ u1 u2 <==> u1 == u2) =
-  let open R in  
-  host_term_equality (pack_ln (Tv_Type u1))
-                     (pack_ln (Tv_Type u2))
-
-let rec eq_tm (t1 t2:term) 
+let rec eq_tm (t1 t2:term)
   : Tot (b:bool { b <==> (t1 == t2) }) (decreases t1)
   = match t1.t, t2.t with
     | Tm_VProp, Tm_VProp
@@ -36,19 +25,19 @@ let rec eq_tm (t1 t2:term)
       eq_tm p1 p2
     | Tm_ExistsSL u1 t1 b1, Tm_ExistsSL u2 t2 b2
     | Tm_ForallSL u1 t1 b1, Tm_ForallSL u2 t2 b2 ->
-      univ_equality u1 u2;
       eq_univ u1 u2 &&
       eq_tm t1.binder_ty t2.binder_ty &&
       eq_tm b1 b2
     | Tm_FStar t1, Tm_FStar t2 ->
-      host_term_equality t1 t2;
-      R.term_eq t1 t2
+      let open FStar.Reflection.V2.TermEq in
+      assume (faithful t1);
+      assume (faithful t2);
+      term_eq_dec t1 t2
     | _ -> false
 
 let eq_st_comp (s1 s2:st_comp)  
   : b:bool { b <==> (s1 == s2) }
-  = univ_equality s1.u s2.u;
-    eq_univ s1.u s2.u && 
+  = eq_univ s1.u s2.u &&
     eq_tm s1.res s2.res &&
     eq_tm s1.pre s2.pre &&
     eq_tm s1.post s2.post
@@ -66,14 +55,6 @@ let eq_comp (c1 c2:comp)
       eq_st_comp s1 s2
     | _ -> false
 
-let eq_tm_opt (t1 t2:option term)
-  : b:bool { b <==> (t1 == t2) }
-  = match t1, t2 with
-    | None, None -> true
-    | Some t1, Some t2 -> eq_tm t1 t2
-    | _ -> false
-
-
 let rec eq_list (f: (x:'a -> y:'a -> b:bool { b <==> (x == y)})) (l m:list 'a)
   : b:bool { b <==> (l == m) }
   = match l, m with
@@ -82,6 +63,17 @@ let rec eq_list (f: (x:'a -> y:'a -> b:bool { b <==> (x == y)})) (l m:list 'a)
       f h1 h2 &&
       eq_list f t1 t2
     | _ -> false
+
+let eq_opt (f: (x:'a -> y:'a -> b:bool { b <==> (x == y)})) (l m:option 'a)
+  : b:bool { b <==> (l == m) }
+  = match l, m with
+    | None, None -> true
+    | Some l, Some m -> f l m
+    | _ -> false
+
+let eq_tm_opt (t1 t2:option term)
+  : b:bool { b <==> (t1 == t2) }
+  = eq_opt eq_tm t1 t2
 
 let eq_binder (b0 b1:binder) : b:bool { b <==> (b0 == b1) } =
   eq_tm b0.binder_ty b1.binder_ty
@@ -97,14 +89,12 @@ let rec eq_st_term (t1 t2:st_term)
       b1 = b2 &&
       eq_tm t1 t2
 
-    | Tm_Abs { b=b1; q=o1; pre=p1; body=t1; ret_ty=r1; post=q1},
-      Tm_Abs { b=b2; q=o2; pre=p2; body=t2; ret_ty=r2; post=q2} ->
+    | Tm_Abs { b=b1; q=o1; ascription=c1; body=t1 },
+      Tm_Abs { b=b2; q=o2; ascription=c2; body=t2 } ->
       eq_tm b1.binder_ty b2.binder_ty &&
       o1=o2 &&
-      eq_tm_opt p1 p2 &&
-      eq_st_term t1 t2 &&
-      eq_tm_opt r1 r2 &&
-      eq_tm_opt q1 q2
+      eq_comp c1 c2 &&
+      eq_st_term t1 t2
   
     | Tm_STApp { head=h1; arg_qual=o1; arg=t1},
       Tm_STApp { head=h2; arg_qual=o2; arg=t2} ->
@@ -171,7 +161,6 @@ let rec eq_st_term (t1 t2:st_term)
 
     | Tm_Admit { ctag=c1; u=u1; typ=t1; post=post1 }, 
       Tm_Admit { ctag=c2; u=u2; typ=t2; post=post2 } ->
-      univ_equality u1 u2;
       c1 = c2 &&
       eq_univ u1 u2 &&
       eq_tm t1 t2 &&
@@ -189,4 +178,3 @@ let rec eq_st_term (t1 t2:st_term)
       eq_st_term t1 t2
 
     | _ -> false
-    

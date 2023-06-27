@@ -124,7 +124,11 @@ let rec match_typ (g:env) (t1 t2:term) (uv_sols:solution)
     if Some? (is_uvar t1)
     then check_valid_solution g (uvar_index t1) t2 uv_sols
     else if Some? (is_uvar t2)
-    then fail g None "match_typ: t2 is a uvar"
+    then fail g (Some t2.range) 
+                (Printf.sprintf 
+                  "Could not match the term %s with %s, since the former contains a unification variable"
+                    (P.term_to_string t2)
+                    (P.term_to_string t1))
     else match t1.t, t2.t with
          | Tm_Pure t1, Tm_Pure t2 ->
            match_typ g t1 t2 uv_sols

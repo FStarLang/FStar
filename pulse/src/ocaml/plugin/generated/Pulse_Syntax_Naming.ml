@@ -35,14 +35,21 @@ let (freevars_comp :
         FStar_Set.union (freevars inames) (freevars_st_comp s)
     | Pulse_Syntax_Base.C_STGhost (inames, s) ->
         FStar_Set.union (freevars inames) (freevars_st_comp s)
-let (freevars_opt :
+let freevars_opt :
+  'a .
+    ('a -> Pulse_Syntax_Base.var FStar_Set.set) ->
+      'a FStar_Pervasives_Native.option ->
+        Pulse_Syntax_Base.var FStar_Set.set
+  =
+  fun f ->
+    fun x ->
+      match x with
+      | FStar_Pervasives_Native.None -> FStar_Set.empty ()
+      | FStar_Pervasives_Native.Some x1 -> f x1
+let (freevars_term_opt :
   Pulse_Syntax_Base.term FStar_Pervasives_Native.option ->
     Pulse_Syntax_Base.var FStar_Set.set)
-  =
-  fun t ->
-    match t with
-    | FStar_Pervasives_Native.None -> FStar_Set.empty ()
-    | FStar_Pervasives_Native.Some t1 -> freevars t1
+  = fun t -> freevars_opt freevars t
 let rec (freevars_list :
   Pulse_Syntax_Base.term Prims.list -> Pulse_Syntax_Base.var FStar_Set.set) =
   fun t ->
@@ -60,14 +67,11 @@ let rec (freevars_st :
         -> freevars term
     | Pulse_Syntax_Base.Tm_Abs
         { Pulse_Syntax_Base.b = b; Pulse_Syntax_Base.q = uu___;
-          Pulse_Syntax_Base.pre1 = pre; Pulse_Syntax_Base.body = body;
-          Pulse_Syntax_Base.ret_ty = ret_ty;
-          Pulse_Syntax_Base.post1 = post;_}
+          Pulse_Syntax_Base.ascription = ascription;
+          Pulse_Syntax_Base.body = body;_}
         ->
         FStar_Set.union (freevars b.Pulse_Syntax_Base.binder_ty)
-          (FStar_Set.union (freevars_st body)
-             (FStar_Set.union (freevars_opt pre)
-                (FStar_Set.union (freevars_opt ret_ty) (freevars_opt post))))
+          (FStar_Set.union (freevars_st body) (freevars_comp ascription))
     | Pulse_Syntax_Base.Tm_STApp
         { Pulse_Syntax_Base.head = head; Pulse_Syntax_Base.arg_qual = uu___;
           Pulse_Syntax_Base.arg = arg;_}
@@ -84,10 +88,10 @@ let rec (freevars_st :
         -> FStar_Set.union (freevars head) (freevars_st body)
     | Pulse_Syntax_Base.Tm_If
         { Pulse_Syntax_Base.b1 = b; Pulse_Syntax_Base.then_ = then_;
-          Pulse_Syntax_Base.else_ = else_; Pulse_Syntax_Base.post2 = post;_}
+          Pulse_Syntax_Base.else_ = else_; Pulse_Syntax_Base.post1 = post;_}
         ->
         FStar_Set.union (FStar_Set.union (freevars b) (freevars_st then_))
-          (FStar_Set.union (freevars_st else_) (freevars_opt post))
+          (FStar_Set.union (freevars_st else_) (freevars_term_opt post))
     | Pulse_Syntax_Base.Tm_IntroPure
         { Pulse_Syntax_Base.p = p; Pulse_Syntax_Base.should_check = uu___;_}
         -> freevars p
@@ -107,10 +111,10 @@ let rec (freevars_st :
         FStar_Set.union (freevars invariant)
           (FStar_Set.union (freevars_st condition) (freevars_st body))
     | Pulse_Syntax_Base.Tm_Par
-        { Pulse_Syntax_Base.pre11 = pre1; Pulse_Syntax_Base.body11 = body1;
+        { Pulse_Syntax_Base.pre1 = pre1; Pulse_Syntax_Base.body11 = body1;
           Pulse_Syntax_Base.post11 = post1; Pulse_Syntax_Base.pre2 = pre2;
           Pulse_Syntax_Base.body21 = body2;
-          Pulse_Syntax_Base.post21 = post2;_}
+          Pulse_Syntax_Base.post2 = post2;_}
         ->
         FStar_Set.union
           (FStar_Set.union (freevars pre1)
@@ -130,7 +134,7 @@ let rec (freevars_st :
     | Pulse_Syntax_Base.Tm_Admit
         { Pulse_Syntax_Base.ctag1 = uu___; Pulse_Syntax_Base.u1 = uu___1;
           Pulse_Syntax_Base.typ = typ; Pulse_Syntax_Base.post3 = post;_}
-        -> FStar_Set.union (freevars typ) (freevars_opt post)
+        -> FStar_Set.union (freevars typ) (freevars_term_opt post)
     | Pulse_Syntax_Base.Tm_Protect { Pulse_Syntax_Base.t3 = t1;_} ->
         freevars_st t1
     | Pulse_Syntax_Base.Tm_ProofHintWithBinders
@@ -196,15 +200,12 @@ let rec (ln_st' : Pulse_Syntax_Base.st_term -> Prims.int -> Prims.bool) =
           -> ln' term i
       | Pulse_Syntax_Base.Tm_Abs
           { Pulse_Syntax_Base.b = b; Pulse_Syntax_Base.q = uu___;
-            Pulse_Syntax_Base.pre1 = pre; Pulse_Syntax_Base.body = body;
-            Pulse_Syntax_Base.ret_ty = ret_ty;
-            Pulse_Syntax_Base.post1 = post;_}
+            Pulse_Syntax_Base.ascription = ascription;
+            Pulse_Syntax_Base.body = body;_}
           ->
-          ((((ln' b.Pulse_Syntax_Base.binder_ty i) &&
-               (ln_st' body (i + Prims.int_one)))
-              && (ln_opt' pre (i + Prims.int_one)))
-             && (ln_opt' ret_ty (i + Prims.int_one)))
-            && (ln_opt' post (i + (Prims.of_int (2))))
+          ((ln' b.Pulse_Syntax_Base.binder_ty i) &&
+             (ln_st' body (i + Prims.int_one)))
+            && (ln_c' ascription (i + Prims.int_one))
       | Pulse_Syntax_Base.Tm_STApp
           { Pulse_Syntax_Base.head = head;
             Pulse_Syntax_Base.arg_qual = uu___;
@@ -222,7 +223,7 @@ let rec (ln_st' : Pulse_Syntax_Base.st_term -> Prims.int -> Prims.bool) =
       | Pulse_Syntax_Base.Tm_If
           { Pulse_Syntax_Base.b1 = b; Pulse_Syntax_Base.then_ = then_;
             Pulse_Syntax_Base.else_ = else_;
-            Pulse_Syntax_Base.post2 = post;_}
+            Pulse_Syntax_Base.post1 = post;_}
           ->
           (((ln' b i) && (ln_st' then_ i)) && (ln_st' else_ i)) &&
             (ln_opt' post (i + Prims.int_one))
@@ -246,10 +247,10 @@ let rec (ln_st' : Pulse_Syntax_Base.st_term -> Prims.int -> Prims.bool) =
           ((ln' invariant (i + Prims.int_one)) && (ln_st' condition i)) &&
             (ln_st' body i)
       | Pulse_Syntax_Base.Tm_Par
-          { Pulse_Syntax_Base.pre11 = pre1; Pulse_Syntax_Base.body11 = body1;
+          { Pulse_Syntax_Base.pre1 = pre1; Pulse_Syntax_Base.body11 = body1;
             Pulse_Syntax_Base.post11 = post1; Pulse_Syntax_Base.pre2 = pre2;
             Pulse_Syntax_Base.body21 = body2;
-            Pulse_Syntax_Base.post21 = post2;_}
+            Pulse_Syntax_Base.post2 = post2;_}
           ->
           (((((ln' pre1 i) && (ln_st' body1 i)) &&
                (ln' post1 (i + Prims.int_one)))
@@ -487,22 +488,17 @@ let rec (subst_st_term :
               }
         | Pulse_Syntax_Base.Tm_Abs
             { Pulse_Syntax_Base.b = b; Pulse_Syntax_Base.q = q;
-              Pulse_Syntax_Base.pre1 = pre; Pulse_Syntax_Base.body = body;
-              Pulse_Syntax_Base.ret_ty = ret_ty;
-              Pulse_Syntax_Base.post1 = post;_}
+              Pulse_Syntax_Base.ascription = ascription;
+              Pulse_Syntax_Base.body = body;_}
             ->
             Pulse_Syntax_Base.Tm_Abs
               {
                 Pulse_Syntax_Base.b = (subst_binder b ss);
                 Pulse_Syntax_Base.q = q;
-                Pulse_Syntax_Base.pre1 =
-                  (subst_term_opt pre (shift_subst ss));
+                Pulse_Syntax_Base.ascription =
+                  (subst_comp ascription (shift_subst ss));
                 Pulse_Syntax_Base.body =
-                  (subst_st_term body (shift_subst ss));
-                Pulse_Syntax_Base.ret_ty =
-                  (subst_term_opt ret_ty (shift_subst ss));
-                Pulse_Syntax_Base.post1 =
-                  (subst_term_opt post (shift_subst_n (Prims.of_int (2)) ss))
+                  (subst_st_term body (shift_subst ss))
               }
         | Pulse_Syntax_Base.Tm_STApp
             { Pulse_Syntax_Base.head = head;
@@ -540,14 +536,14 @@ let rec (subst_st_term :
         | Pulse_Syntax_Base.Tm_If
             { Pulse_Syntax_Base.b1 = b; Pulse_Syntax_Base.then_ = then_;
               Pulse_Syntax_Base.else_ = else_;
-              Pulse_Syntax_Base.post2 = post;_}
+              Pulse_Syntax_Base.post1 = post;_}
             ->
             Pulse_Syntax_Base.Tm_If
               {
                 Pulse_Syntax_Base.b1 = (subst_term b ss);
                 Pulse_Syntax_Base.then_ = (subst_st_term then_ ss);
                 Pulse_Syntax_Base.else_ = (subst_st_term else_ ss);
-                Pulse_Syntax_Base.post2 =
+                Pulse_Syntax_Base.post1 =
                   (subst_term_opt post (shift_subst ss))
               }
         | Pulse_Syntax_Base.Tm_IntroPure
@@ -589,23 +585,22 @@ let rec (subst_st_term :
                 Pulse_Syntax_Base.body3 = (subst_st_term body ss)
               }
         | Pulse_Syntax_Base.Tm_Par
-            { Pulse_Syntax_Base.pre11 = pre1;
+            { Pulse_Syntax_Base.pre1 = pre1;
               Pulse_Syntax_Base.body11 = body1;
               Pulse_Syntax_Base.post11 = post1;
               Pulse_Syntax_Base.pre2 = pre2;
               Pulse_Syntax_Base.body21 = body2;
-              Pulse_Syntax_Base.post21 = post2;_}
+              Pulse_Syntax_Base.post2 = post2;_}
             ->
             Pulse_Syntax_Base.Tm_Par
               {
-                Pulse_Syntax_Base.pre11 = (subst_term pre1 ss);
+                Pulse_Syntax_Base.pre1 = (subst_term pre1 ss);
                 Pulse_Syntax_Base.body11 = (subst_st_term body1 ss);
                 Pulse_Syntax_Base.post11 =
                   (subst_term post1 (shift_subst ss));
                 Pulse_Syntax_Base.pre2 = (subst_term pre2 ss);
                 Pulse_Syntax_Base.body21 = (subst_st_term body2 ss);
-                Pulse_Syntax_Base.post21 =
-                  (subst_term post2 (shift_subst ss))
+                Pulse_Syntax_Base.post2 = (subst_term post2 (shift_subst ss))
               }
         | Pulse_Syntax_Base.Tm_WithLocal
             { Pulse_Syntax_Base.binder1 = binder;

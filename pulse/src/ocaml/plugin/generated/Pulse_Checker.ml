@@ -2671,7 +2671,7 @@ let rec (unprotect : Pulse_Syntax_Base.st_term -> Pulse_Syntax_Base.st_term)
               Pulse_Syntax_Base.term1 = Pulse_Syntax_Base.Tm_If
                 { Pulse_Syntax_Base.b1 = b; Pulse_Syntax_Base.then_ = then_;
                   Pulse_Syntax_Base.else_ = else_;
-                  Pulse_Syntax_Base.post2 = post;_};
+                  Pulse_Syntax_Base.post1 = post;_};
               Pulse_Syntax_Base.range2 = uu___;_};_}
         ->
         wr
@@ -2680,7 +2680,7 @@ let rec (unprotect : Pulse_Syntax_Base.st_term -> Pulse_Syntax_Base.st_term)
                Pulse_Syntax_Base.b1 = b;
                Pulse_Syntax_Base.then_ = (protect then_);
                Pulse_Syntax_Base.else_ = (protect else_);
-               Pulse_Syntax_Base.post2 = post
+               Pulse_Syntax_Base.post1 = post
              })
     | Pulse_Syntax_Base.Tm_Protect { Pulse_Syntax_Base.t3 = t1;_} ->
         unprotect t1
@@ -3206,7 +3206,7 @@ let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
                                                                     = e1;
                                                                     Pulse_Syntax_Base.else_
                                                                     = e2;
-                                                                    Pulse_Syntax_Base.post2
+                                                                    Pulse_Syntax_Base.post1
                                                                     = post_if;_}
                                                                   ->
                                                                   Obj.magic

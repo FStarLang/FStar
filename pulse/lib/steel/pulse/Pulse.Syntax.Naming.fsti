@@ -42,10 +42,13 @@ let freevars_comp (c:comp) : Tot (Set.set var) (decreases c) =
   | C_STGhost inames s ->
     freevars inames `Set.union` freevars_st_comp s
 
-let freevars_opt (t:option term) : Set.set var =
-  match t with
+let freevars_opt (f: 'a -> Set.set var) (x:option 'a) : Set.set var =
+  match x with
   | None -> Set.empty
-  | Some t -> freevars t
+  | Some x -> f x
+
+let freevars_term_opt (t:option term) : Set.set var =
+  freevars_opt freevars t
 
 let rec freevars_list (t:list term) : Set.set var =
   match t with
@@ -57,12 +60,10 @@ let rec freevars_st (t:st_term)
   = match t.term with
     | Tm_Return { term } ->
       freevars term
-    | Tm_Abs { b; pre; body; ret_ty; post } ->
+    | Tm_Abs { b; ascription; body } ->
       Set.union (freevars b.binder_ty) 
                 (Set.union (freevars_st body)
-                           (Set.union (freevars_opt pre)
-                                      (Set.union (freevars_opt ret_ty)
-                                                 (freevars_opt post))))
+                           (freevars_comp ascription))
     | Tm_STApp { head; arg } ->
       Set.union (freevars head) (freevars arg)
     | Tm_Bind { binder; head; body } ->
@@ -74,7 +75,7 @@ let rec freevars_st (t:st_term)
       Set.union (freevars head) (freevars_st body)
     | Tm_If { b; then_; else_; post } ->
       Set.union (Set.union (freevars b) (freevars_st then_))
-                (Set.union (freevars_st else_) (freevars_opt post))
+                (Set.union (freevars_st else_) (freevars_term_opt post))
 
     | Tm_IntroPure { p }
     | Tm_ElimExists { p } ->
@@ -104,7 +105,7 @@ let rec freevars_st (t:st_term)
 
     | Tm_Admit { typ; post } ->
       Set.union (freevars typ)
-                (freevars_opt post)
+                (freevars_term_opt post)
 
     | Tm_Protect { t } -> freevars_st t
 
@@ -166,13 +167,11 @@ let rec ln_st' (t:st_term) (i:int)
     | Tm_Return { term } ->
       ln' term i
       
-    | Tm_Abs { b; pre; body; ret_ty; post } ->
+    | Tm_Abs { b; ascription; body } ->
       ln' b.binder_ty i &&
       ln_st' body (i + 1) &&
-      ln_opt' pre (i + 1) &&
-      ln_opt' ret_ty (i + 1) &&
-      ln_opt' post (i + 2)
-  
+      ln_c' ascription (i + 1)
+
     | Tm_STApp { head; arg } ->
       ln' head i &&
       ln' arg i
@@ -358,13 +357,11 @@ let rec subst_st_term (t:st_term) (ss:subst)
     | Tm_Return { ctag; insert_eq; term } ->
       Tm_Return { ctag; insert_eq; term=subst_term term ss }
 
-    | Tm_Abs { b; q; pre; body; ret_ty; post } ->
+    | Tm_Abs { b; q; ascription; body } ->
       Tm_Abs { b=subst_binder b ss;
                q;
-               pre=subst_term_opt pre (shift_subst ss);
-               body=subst_st_term body (shift_subst ss);
-               ret_ty=subst_term_opt ret_ty (shift_subst ss);               
-               post=subst_term_opt post (shift_subst_n 2 ss) }
+               ascription=subst_comp ascription (shift_subst ss);
+               body=subst_st_term body (shift_subst ss) }
 
     | Tm_STApp { head; arg_qual; arg } ->
       Tm_STApp { head = subst_term head ss;
@@ -495,7 +492,7 @@ val close_open_inverse_comp' (c:comp)
   : Lemma (ensures close_comp' (open_comp' c (U.term_of_no_name_var x) i) x i == c)
 
 val close_open_inverse_opt' (t:option term)
-                            (x:var { ~(x `Set.mem` freevars_opt t) })
+                            (x:var { ~(x `Set.mem` freevars_term_opt t) })
                             (i:index)
   : Lemma (ensures close_term_opt' (open_term_opt' t (U.term_of_no_name_var x) i) x i == t)
 

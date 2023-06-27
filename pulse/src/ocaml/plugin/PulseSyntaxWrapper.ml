@@ -58,7 +58,9 @@ let tm_arrow (b:binder) (q:S.aqual) (body:comp) : term =
   U.tm_arrow b (map_aqual q) body
 let tm_expr (t:S.term) r : term = wr r (Tm_FStar t)
 let tm_unknown r : term = wr r Tm_Unknown
+let tm_emp_inames :term = wr FStar_Range.range_0 Tm_EmpInames
 
+let mk_tot (t:term) : comp = C_Tot t
 
 let mk_st_comp (pre:term) (ret:binder) (post:term) : st_comp =
   { u = U_unknown;
@@ -80,15 +82,15 @@ module PSB = Pulse_Syntax_Builder
 type st_term = Pulse_Syntax_Base.st_term
 let tm_return (t:term) r : st_term = PSB.(with_range (tm_return STT false t) r)
 
+let tm_ghost_return (t:term) r : st_term = PSB.(with_range (tm_return STT_Ghost false t) r)
+
 let tm_abs (b:binder)
            (q:qualifier option)
-           (pre:term)
+           (c:comp)
            (body:st_term)
-           (ret_ty:term option)
-           (post:term option)
            r
   : st_term 
-  = PSB.(with_range (tm_abs b q (Some pre) body ret_ty post) r)
+  = PSB.(with_range (tm_abs b q c body) r)
 
 let tm_st_app (head:term) (q:S.aqual) (arg:term) r : st_term =
   PSB.(with_range (tm_stapp head (map_aqual q) arg) r)

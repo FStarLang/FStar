@@ -55,7 +55,7 @@ let close_open_inverse_comp' (c:comp)
       close_open_inverse' s.post x (i + 1)
 
 let close_open_inverse_opt' (t:option term)
-                            (x:var { ~(x `Set.mem` freevars_opt t) })
+                            (x:var { ~(x `Set.mem` freevars_term_opt t) })
                             (i:index)
   : Lemma (ensures close_term_opt' (open_term_opt' t (U.term_of_no_name_var x) i) x i == t)
   = match t with
@@ -86,12 +86,10 @@ let rec close_open_inverse_st'  (t:st_term)
     | Tm_ElimExists { p } ->
       close_open_inverse' p x i    
 
-    | Tm_Abs { b; pre; body; ret_ty; post } ->
+    | Tm_Abs { b; ascription; body } ->
       close_open_inverse' b.binder_ty x i;
       close_open_inverse_st' body x (i + 1);
-      close_open_inverse_opt' pre x (i + 1);
-      close_open_inverse_opt' ret_ty x (i + 1);      
-      close_open_inverse_opt' post x (i + 2)
+      close_open_inverse_comp' ascription x (i + 1)
 
     | Tm_Bind { binder; head; body } ->
       close_open_inverse' binder.binder_ty x i;
