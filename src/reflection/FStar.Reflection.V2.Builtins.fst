@@ -177,6 +177,13 @@ let pack_universe uv =
   | Uv_Unif u -> U_unif u
   | Uv_Unk -> U_unknown
 
+let rec inspect_pat p =
+  match p.v with
+  | Pat_constant c -> Pat_Constant (inspect_const c)
+  | Pat_cons (fv, us_opt, ps) -> Pat_Cons fv us_opt (List.map (fun (p, b) -> inspect_pat p, b) ps)
+  | Pat_var bv -> Pat_Var bv.sort (string_of_id bv.ppname)
+  | Pat_dot_term eopt -> Pat_Dot_Term eopt
+
 let rec inspect_ln (t:term) : term_view =
     //
     // Only pushes delayed substitutions,
@@ -261,13 +268,6 @@ let rec inspect_ln (t:term) : term_view =
         end
 
     | Tm_match {scrutinee=t; ret_opt; brs} ->
-        let rec inspect_pat p =
-            match p.v with
-            | Pat_constant c -> Pat_Constant (inspect_const c)
-            | Pat_cons (fv, us_opt, ps) -> Pat_Cons fv us_opt (List.map (fun (p, b) -> inspect_pat p, b) ps)
-            | Pat_var bv -> Pat_Var bv.sort (string_of_id bv.ppname)
-            | Pat_dot_term eopt -> Pat_Dot_Term eopt
-        in
         let brs = List.map (function (pat, _, t) -> (inspect_pat pat, t)) brs in
         Tv_Match (t, ret_opt, brs)
 
@@ -362,6 +362,16 @@ let pack_const (c:vconst) : sconst =
     | C_Reify        -> C.Const_reify None
     | C_Reflect ns   -> C.Const_reflect (Ident.lid_of_path ns Range.dummyRange)
 
+let rec pack_pat p : S.pat =
+  let wrap v = {v=v;p=Range.dummyRange} in
+  match p with
+  | Pat_Constant c -> wrap <| Pat_constant (pack_const c)
+  | Pat_Cons head univs subpats -> wrap <| Pat_cons (head, univs, List.map (fun (p, b) -> pack_pat p, b) subpats)
+  | Pat_Var  sort ppname ->
+    let bv = S.gen_bv ppname None sort in
+    wrap <| Pat_var bv
+  | Pat_Dot_Term eopt -> wrap <| Pat_dot_term eopt
+
 // TODO: pass in range?
 let pack_ln (tv:term_view) : term =
     match tv with
@@ -406,16 +416,6 @@ let pack_ln (tv:term_view) : term =
         S.mk (Tm_let {lbs=(isrec, [lb]); body=t2}) Range.dummyRange
 
     | Tv_Match (t, ret_opt, brs) ->
-        let wrap v = {v=v;p=Range.dummyRange} in
-        let rec pack_pat p : S.pat =
-            match p with
-            | Pat_Constant c -> wrap <| Pat_constant (pack_const c)
-            | Pat_Cons head univs subpats -> wrap <| Pat_cons (head, univs, List.map (fun (p, b) -> pack_pat p, b) subpats)
-            | Pat_Var  sort ppname ->
-              let bv = S.gen_bv ppname None sort in
-              wrap <| Pat_var bv
-            | Pat_Dot_Term eopt -> wrap <| Pat_dot_term eopt
-        in
         let brs = List.map (function (pat, t) -> (pack_pat pat, None, t)) brs in
         S.mk (Tm_match {scrutinee=t; ret_opt; brs; rc_opt=None}) Range.dummyRange
 
