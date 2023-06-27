@@ -294,19 +294,18 @@ fn l0_core_step2
 {
   create_deviceIDCRI l0 deviceIDCSR;
 
-  unfold (pure(l0_core_step2_pre l0 deviceIDCSR aliasKeyCRT vl0));
+  with vl0_. assert (
+    l0_perm l0 vl0_ `star`
+    pure (
+      U32.(0ul <^ vl0_.deviceIDCRI_len) /\ 
+      valid_deviceIDCSR_ingredients vl0_.deviceIDCRI_len /\
+      vl0.deviceIDCSR_len == length_of_deviceIDCSR vl0_.deviceIDCRI_len
+    ));
 
-  // assert (
-  //   exists (vl0_:l0_repr). pure (
-  //     vl0_.deviceIDCRI_len = len_of_deviceIDCRI
-  //       deviceIDCSR.version
-  //       deviceIDCSR.s_common
-  //       deviceIDCSR.s_org
-  //       deviceIDCSR.s_country
-  //   )
-  // );
+(* according to the above assert, the precond to sign_and_finalize_deviceIDCSR
+is satisfies but pulse uses vl0 as the implicit, not vl0_, so it doesn't verify *)
 
-  sign_and_finalize_deviceIDCSR l0 deviceIDCSR;
+  // sign_and_finalize_deviceIDCSR l0 deviceIDCSR; (* want to use vl0_ not vl0 *)
   admit()
 (*
   printf "Signing and finalizing DeviceID Certificate Signing Request\n" done;
