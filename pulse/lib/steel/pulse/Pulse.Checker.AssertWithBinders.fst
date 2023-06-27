@@ -162,22 +162,32 @@ let check
             []
             uvs
       in
-      let rewrite_and_check lhs rhs =
-        let rw = { term = Tm_Rewrite { t1 = lhs; t2 = rhs }; range = st.range } in
-        let body' = subst_st_term body sub in
-        let tm = Tm_Bind { binder = as_binder (tm_fstar (`unit) st.range);
-                           head = rw;
-                           body = body' } in
-        let tm = { term = tm; range = st.range } in
-        debug_log g (fun _ -> Printf.sprintf "After unfold: about to check %s\n" (P.st_term_to_string tm));
-        check g tm pre pre_typing post_hint
+      let seq t1 t2 = 
+          { term = Tm_Bind { binder = as_binder (tm_fstar (`unit) st.range);
+                             head = t1; body = t2 };
+            range = st.range }
       in
       match hint_type with
       | ASSERT ->
-        let body' = subst_st_term body sub in
-        check g body' pre pre_typing post_hint
+        let assert_term = tm_fstar (`(Pulse.Steel.Wrapper.assert_)) st.range in
+        let vprops_to_assert = Pulse.Checker.VPropEquiv.vprop_as_list (Inf.apply_solution solution lhs) in
+        let tm =
+          L.fold_right 
+            (fun vp out -> 
+              let asrt = { term = Tm_STApp { head=assert_term; arg_qual=None; arg=vp}; 
+                          range = st.range } in
+              seq asrt out)
+            vprops_to_assert
+            (subst_st_term body sub)
+        in
+        debug_log g (fun _ -> Printf.sprintf "After with_binders: about to check %s\n" (P.st_term_to_string tm));
+        check g tm pre pre_typing post_hint
       | UNFOLD _
       | FOLD _ ->
-        rewrite_and_check (Inf.apply_solution solution lhs) (Inf.apply_solution solution rhs)
-
-    
+        let rw = { term = Tm_Rewrite { t1 = Inf.apply_solution solution lhs;
+                                       t2 = Inf.apply_solution solution rhs };
+                   range = st.range } in
+        let body' = subst_st_term body sub in
+        let tm = seq rw body' in
+        debug_log g (fun _ -> Printf.sprintf "After with_binders: about to check %s\n" (P.st_term_to_string tm));
+        check g tm pre pre_typing post_hint
