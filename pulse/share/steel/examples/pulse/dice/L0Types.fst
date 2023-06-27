@@ -107,6 +107,18 @@ type l0_repr = {
   authKeyID: Seq.seq U8.t;
 }
 
+let mk_l0_repr cdi fwid deviceID_label aliasKey_label deviceID_pub
+               deviceID_priv aliasKey_pub aliasKey_priv
+               deviceIDCSR_len deviceIDCSR_buf
+               deviceIDCRI_len deviceIDCRI_buf
+               deviceIDCRI_sig aliasKeyCRT_buf authKeyID = 
+
+    { cdi; fwid; deviceID_label; aliasKey_label; deviceID_pub;
+      deviceID_priv; aliasKey_pub; aliasKey_priv;
+      deviceIDCSR_len; deviceIDCSR_buf;
+      deviceIDCRI_len; deviceIDCRI_buf;
+      deviceIDCRI_sig; aliasKeyCRT_buf; authKeyID }
+
 let l0_perm (l0:l0_record) (vl0: l0_repr) 
             // (#pcdi #pfwid #pdeviceID_label #paliasKey_label: perm)
   : vprop = 
@@ -129,6 +141,48 @@ let l0_perm (l0:l0_record) (vl0: l0_repr)
   A.pts_to l0.deviceIDCRI_sig full_perm vl0.deviceIDCRI_sig `star`
   A.pts_to l0.aliasKeyCRT_buf full_perm vl0.aliasKeyCRT_buf `star`
   A.pts_to l0.authKeyID full_perm vl0.authKeyID
+
+```pulse
+ghost
+fn fold_l0_perm (l0:l0_record)
+                (#cdi #fwid #deviceID_label #aliasKey_label #deviceID_pub
+                 #deviceID_priv #aliasKey_pub #aliasKey_priv:erased (Seq.seq U8.t))
+                (#deviceIDCSR_len:erased U32.t)
+                (#deviceIDCSR_buf:elseq U8.t (U32.v deviceIDCSR_len))
+                (#deviceIDCRI_len:erased U32.t)
+                (#deviceIDCRI_buf:elseq U8.t (U32.v deviceIDCRI_len))
+                (#deviceIDCRI_sig #aliasKeyCRT_buf #authKeyID: erased (Seq.seq U8.t))
+  requires
+    A.pts_to l0.cdi full_perm cdi `star`
+    A.pts_to l0.fwid full_perm fwid `star`
+    A.pts_to l0.deviceID_label full_perm deviceID_label `star`
+    A.pts_to l0.aliasKey_label full_perm aliasKey_label `star`
+    A.pts_to l0.deviceID_pub full_perm deviceID_pub `star`
+    A.pts_to l0.deviceID_priv full_perm deviceID_priv `star`
+    A.pts_to l0.aliasKey_pub full_perm aliasKey_pub `star`
+    A.pts_to l0.aliasKey_priv full_perm aliasKey_priv `star`
+    R.pts_to l0.deviceIDCSR_len full_perm deviceIDCSR_len `star`
+    A.pts_to l0.deviceIDCSR_buf full_perm deviceIDCSR_buf `star`
+    R.pts_to l0.deviceIDCRI_len full_perm deviceIDCRI_len `star`
+    A.pts_to l0.deviceIDCRI_buf full_perm deviceIDCRI_buf `star`
+    A.pts_to l0.deviceIDCRI_sig full_perm deviceIDCRI_sig `star`
+    A.pts_to l0.aliasKeyCRT_buf full_perm aliasKeyCRT_buf `star`
+    A.pts_to l0.authKeyID full_perm authKeyID
+  ensures
+    l0_perm l0 (mk_l0_repr cdi fwid deviceID_label aliasKey_label deviceID_pub
+                           deviceID_priv aliasKey_pub aliasKey_priv
+                           deviceIDCSR_len deviceIDCSR_buf
+                           deviceIDCRI_len deviceIDCRI_buf
+                           deviceIDCRI_sig aliasKeyCRT_buf authKeyID)
+{
+   fold (l0_perm l0 (mk_l0_repr cdi fwid deviceID_label aliasKey_label deviceID_pub
+                           deviceID_priv aliasKey_pub aliasKey_priv
+                           deviceIDCSR_len deviceIDCSR_buf
+                           deviceIDCRI_len deviceIDCRI_buf
+                           deviceIDCRI_sig aliasKeyCRT_buf authKeyID))
+}
+```
+
 
 // assume
 // val l0_perm (l0:l0_record) (vl0: l0_repr) : vprop

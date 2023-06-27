@@ -64,14 +64,8 @@ fn l0_core_step1
   derive_DeviceID dice_hash_alg l0.deviceID_pub l0.deviceID_priv l0.cdi l0.deviceID_label_len l0.deviceID_label;
   derive_AliasKey dice_hash_alg l0.aliasKey_pub l0.aliasKey_priv l0.cdi l0.fwid l0.aliasKey_label_len l0.aliasKey_label;
   derive_authkeyID dice_hash_alg l0.authKeyID l0.deviceID_pub;
-
-  with s1. assert A.pts_to l0.deviceID_pub full_perm s1;
-  with s2. assert A.pts_to l0.deviceID_priv full_perm s2;
-  with s3. assert A.pts_to l0.aliasKey_pub full_perm s3;
-  with s4. assert A.pts_to l0.aliasKey_priv full_perm s4;
-  with s5. assert A.pts_to l0.authKeyID full_perm s5;
-
-  fold (l0_perm l0 (l0_step1_repr_post_state vl0 s1 s2 s3 s4 s5));
+  
+  fold_l0_perm l0;
   ()
 }
 ```
@@ -125,10 +119,7 @@ fn create_deviceIDCRI
                           deviceIDCSR.s_org
                           deviceIDCSR.s_country;
   
-  (write l0.deviceIDCRI_len deviceIDCRI_len);
-
-  // interestingly, verification doesn't go through without this assert
-  assert (R.pts_to l0.deviceIDCRI_len full_perm deviceIDCRI_len);
+  l0.deviceIDCRI_len := deviceIDCRI_len;
 
   let deviceIDCRI = x509_get_deviceIDCRI
                       deviceIDCSR.version
@@ -140,10 +131,7 @@ fn create_deviceIDCRI
 
   serialize_deviceIDCRI deviceIDCRI deviceIDCRI_len l0.deviceIDCRI_buf;
 
-  with s. assert (A.pts_to l0.deviceIDCRI_buf full_perm s);
-
-  fold (l0_perm l0 (l0_step2_repr_post_state vl0 deviceIDCRI_len s));
-
+  fold_l0_perm l0;
   ()
 }
 ```
