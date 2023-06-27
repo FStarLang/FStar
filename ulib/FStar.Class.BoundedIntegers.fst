@@ -31,7 +31,8 @@ let add (#t:eqtype) {| bounded_int t |} (x:t) (y:t { ok (+) x y }) = x + y
 
 let add3 (#t:eqtype) {| bounded_int t |} (x:t) (y:t) (z:t { ok (+) x y /\ ok (+) z (x + y)}) = x + y + z
 
-//Writing the signature of bounded_int.(+) allows this to work, since the type of (x+y) is not refined
+//Writing the signature of bounded_int.(+) using Pure
+//allows this to work, since the type of (x+y) is not refined
 let add3_alt (#t:eqtype) {| bounded_int t |} (x:t) (y:t) (z:t { ok (+) x y /\ ok (+) (x + y) z}) = x + y + z
 
 instance bounded_int_u32 : bounded_int FStar.UInt32.t = {
