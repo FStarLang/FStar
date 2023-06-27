@@ -186,6 +186,9 @@ let rewrite p q _ = fun _ -> rewrite_equiv p q
 module R = Steel.ST.Reference
 open Steel.ST.Util
 
+let alloc #a x = 
+  fun _ -> let x = R.alloc x in return x
+  
 let read #a r #n #p =
   fun _ ->
   let x = R.read r in

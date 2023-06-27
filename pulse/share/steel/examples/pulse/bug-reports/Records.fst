@@ -62,6 +62,28 @@ fn mutate_r2 (r:rec2) (#v:Ghost.erased rec_repr)
 }
 ```
 
+let mk_rec2 r1 r2 = { r1=r1; r2=r2 }
+
+```pulse
+fn alloc_rec (v1 v2:U8.t)
+  requires emp
+  returns r:rec2
+  ensures rec_perm r (mk_rec_repr v1 v2)
+{
+  let r1 = alloc #U8.t v1;
+  let r2 = alloc #U8.t v2; 
+  let r = mk_rec2 r1 r2;
+  (* Unfortunately, these two rewrites are still needed
+     to "rename" r1 and r2 as r.r1 and r.r2 *)
+  rewrite (R.pts_to r1 full_perm v1)
+      as  (R.pts_to r.r1 full_perm v1);
+  rewrite (R.pts_to r2 full_perm v2)
+      as  (R.pts_to r.r2 full_perm v2);
+  fold_rec_perm r;
+  r
+}
+```
+
 //Some alternate ways to do it, useful test cases
 
 // helpers 

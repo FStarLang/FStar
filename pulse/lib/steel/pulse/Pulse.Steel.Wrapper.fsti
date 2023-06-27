@@ -246,6 +246,9 @@ open FStar.Ghost
 
 (***** begin ref *****)
 
+val alloc (#a:Type) (x:a)
+  : stt (R.ref a) emp (fun r -> R.pts_to r full_perm x)
+  
 val read (#a:Type) (r:R.ref a) (#n:erased a) (#p:perm)
   : stt a
         (R.pts_to r p n)
