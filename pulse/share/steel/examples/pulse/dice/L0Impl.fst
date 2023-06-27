@@ -159,11 +159,6 @@ fn sign_and_finalize_deviceIDCSR
   requires (
     l0_perm l0 vl0 `star`
     pure (
-      // let deviceIDCRI_len = len_of_deviceIDCRI
-      //                       deviceIDCSR.version
-      //                       deviceIDCSR.s_common
-      //                       deviceIDCSR.s_org
-      //                       deviceIDCSR.s_country in
       U32.(0ul <^ vl0.deviceIDCRI_len) /\ 
       valid_deviceIDCSR_ingredients vl0.deviceIDCRI_len /\
       vl0.deviceIDCSR_len == length_of_deviceIDCSR vl0.deviceIDCRI_len
@@ -172,11 +167,6 @@ fn sign_and_finalize_deviceIDCSR
     exists (vl0_:l0_repr). 
       l0_perm l0 vl0_ **
       pure (
-        // let deviceIDCRI_len = len_of_deviceIDCRI
-        //                     deviceIDCSR.version
-        //                     deviceIDCSR.s_common
-        //                     deviceIDCSR.s_org
-        //                     deviceIDCSR.s_country in
         Seq.equal 
           vl0_.deviceIDCSR_buf
           (spec_serialize_deviceIDCSR vl0.deviceIDCRI_len
@@ -256,11 +246,6 @@ let l0_core_step2_post
   (aliasKeyCRT: aliasKeyCRT_ingredients_t)
   (vl0: Ghost.erased l0_repr)
   : prop = 
-  // let deviceIDCRI_len = len_of_deviceIDCRI
-  //                           deviceIDCSR.version
-  //                           deviceIDCSR.s_common
-  //                           deviceIDCSR.s_org
-  //                           deviceIDCSR.s_country in
   Seq.equal 
     vl0.deviceIDCRI_buf
     (spec_sign_and_finalize_deviceIDCSR

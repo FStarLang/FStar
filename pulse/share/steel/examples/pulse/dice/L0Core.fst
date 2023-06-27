@@ -17,9 +17,10 @@ open HACL
 open L0Types
 open L0Impl
 open L0Crypto
+open X509
 
 assume
-val deviceIDCRI_pre (v:deviceIDCSR_ingredients_t) : vprop
+val deviceIDCRI_pre (v:deviceIDCSR_ingredients_t) : prop
 
 let deviceIDCSR_pre 
   (deviceIDCSR: deviceIDCSR_ingredients_t) 
@@ -38,48 +39,48 @@ assume
 val aliasKeyCRT_pre 
   (v:aliasKeyCRT_ingredients_t) 
   (len:US.t) 
-  : vprop
+  : prop
 
 let l0_pre
   (l0: l0_record)
   (vl0: l0_repr)
-  : vprop =
-  deviceIDCRI_pre l0.deviceIDCSR_ingredients `star`
-  deviceIDCSR_pre l0.deviceIDCSR_ingredients l0.deviceIDCSR_len `star`
-  aliasKeyCRT_pre l0.aliasKeyCRT_ingredients l0.aliasKeyCRT_len `star`
-  pure (valid_hkdf_lbl_len l0.deviceID_label_len /\
-        valid_hkdf_lbl_len l0.aliasKey_label_len)
+  : prop =
+  deviceIDCRI_pre l0.deviceIDCSR_ingredients /\
+  deviceIDCSR_pre l0.deviceIDCSR_ingredients vl0.deviceIDCSR_len /\
+  aliasKeyCRT_pre l0.aliasKeyCRT_ingredients l0.aliasKeyCRT_len /\
+  valid_hkdf_lbl_len l0.deviceID_label_len /\
+  valid_hkdf_lbl_len l0.aliasKey_label_len
 
 assume
 val aliasKey_post 
-  (cdi: A.larray U8.t 32)
-  (fwid: A.larray U8.t 32)
+  (cdi: Seq.seq U8.t)
+  (fwid: Seq.seq U8.t)
   (aliasKey_label_len: US.t)
-  (aliasKey_label: A.larray U8.t (US.v aliasKey_label_len))
-  (aliasKey_pub: A.larray U8.t 32)
-  (aliasKey_priv: A.larray U8.t 32)
+  (aliasKey_label: Seq.seq U8.t)
+  (aliasKey_pub: Seq.seq U8.t)
+  (aliasKey_priv: Seq.seq U8.t)
   : vprop
 
 assume
 val deviceIDCSR_post
-  (cdi: A.larray U8.t 32)
+  (cdi: Seq.seq U8.t)
   (deviceID_label_len: US.t)
-  (deviceID_label: A.larray U8.t (US.v deviceID_label_len))
+  (deviceID_label: Seq.seq U8.t)
   (deviceIDCSR_ingredients: deviceIDCSR_ingredients_t)
   (deviceIDCSR_len: U32.t)
-  (deviceIDCSR_buf: A.larray U8.t (U32.v deviceIDCSR_len))
+  (deviceIDCSR_buf: Seq.seq U8.t)
   : vprop
 
 assume
 val aliasKeyCRT_post
-  (cdi: A.larray U8.t 32)
-  (fwid: A.larray U8.t 32)
+  (cdi: Seq.seq U8.t)
+  (fwid: Seq.seq U8.t)
   (deviceID_label_len: US.t)
-  (deviceID_label: A.larray U8.t (US.v deviceID_label_len))
+  (deviceID_label: Seq.seq U8.t)
   (aliasKeyCRT_ingredients: aliasKeyCRT_ingredients_t)
   (aliasKeyCRT_len: US.t)
-  (aliasKeyCRT_buf: A.larray U8.t (US.v aliasKeyCRT_len))
-  (aliasKey_pub: A.larray U8.t 32)
+  (aliasKeyCRT_buf: Seq.seq U8.t)
+  (aliasKey_pub: Seq.seq U8.t)
   : vprop
 
 let l0_post
@@ -87,14 +88,14 @@ let l0_post
   (vl0: l0_repr)
   : vprop
   = aliasKey_post 
-      l0.cdi l0.fwid l0.aliasKey_label_len l0.aliasKey_label 
-      l0.aliasKey_pub l0.aliasKey_priv `star`
+      vl0.cdi vl0.fwid l0.aliasKey_label_len vl0.aliasKey_label 
+      vl0.aliasKey_pub vl0.aliasKey_priv `star`
     deviceIDCSR_post 
-      l0.cdi l0.deviceID_label_len l0.deviceID_label l0.deviceIDCSR_ingredients 
-      l0.deviceIDCSR_len l0.deviceIDCSR_buf `star`
+      vl0.cdi l0.deviceID_label_len vl0.deviceID_label l0.deviceIDCSR_ingredients 
+      vl0.deviceIDCSR_len vl0.deviceIDCSR_buf `star`
     aliasKeyCRT_post 
-      l0.cdi l0.fwid l0.deviceID_label_len l0.deviceID_label l0.aliasKeyCRT_ingredients 
-      l0.aliasKeyCRT_len l0.aliasKeyCRT_buf l0.aliasKey_pub
+      vl0.cdi vl0.fwid l0.deviceID_label_len vl0.deviceID_label l0.aliasKeyCRT_ingredients 
+      l0.aliasKeyCRT_len vl0.aliasKeyCRT_buf vl0.aliasKey_pub
 
 ```pulse
 fn l0
@@ -102,60 +103,16 @@ fn l0
   (#vl0: Ghost.erased l0_repr)
   // (#pcdi #pfwid #pdeviceID_label #paliasKey_label: perm)
   requires (l0_perm l0 vl0 `star`
-            l0_pre l0 vl0)
+            pure (l0_pre l0 vl0))
   ensures exists (vl0': l0_repr). (
                     l0_perm l0 vl0' `star`
                     l0_post l0 vl0)
 {
-(* Derive DeviceID *)
-
-  unfold (l0_pre l0 vl0);
-    // as (deviceIDCRI_pre l0.deviceIDCSR_ingredients `star`
-    //     deviceIDCSR_pre l0.deviceIDCSR_ingredients l0.deviceIDCSR_len `star`
-    //     aliasKeyCRT_pre l0.aliasKeyCRT_ingredients l0.aliasKeyCRT_len `star`
-    //     pure (valid_hkdf_lbl_len l0.deviceID_label_len /\
-    //           valid_hkdf_lbl_len l0.aliasKey_label_len));
-
   l0_core_step1 l0;
+
+  l0_core_step2 l0;
   
   admit()
-
-//   l0_core_step2
-//     (* version   *) deviceIDCSR_ingredients.deviceIDCSR_version
-//                     deviceIDCSR_ingredients.deviceIDCSR_s_common
-//                     deviceIDCSR_ingredients.deviceIDCSR_s_org
-//                     deviceIDCSR_ingredients.deviceIDCSR_s_country
-//     (* key usage *) deviceIDCSR_ingredients.deviceIDCSR_ku
-//     (* DeviceID  *) deviceID_pub
-//                     deviceID_priv
-//     (*DeviceIDCRI*) deviceIDCSR_len
-//                     deviceIDCSR_buf;
-//   let _h_step2_post = HST.get () in
-
-//   (**) B.modifies_trans (
-//     B.loc_buffer deviceID_pub  `B.loc_union`
-//     B.loc_buffer deviceID_priv `B.loc_union`
-//     B.loc_buffer aliasKey_pub  `B.loc_union`
-//     B.loc_buffer aliasKey_priv `B.loc_union`
-//     B.loc_buffer authKeyID
-//   ) h0 _h_step2_pre (
-//     B.loc_buffer deviceIDCSR_buf
-//   ) _h_step2_post;
-
-//   let _h_step3_pre = _h_step2_post in
-
-//   (**) B.modifies_buffer_elim fwid (
-//          B.loc_buffer deviceID_pub  `B.loc_union`
-//          B.loc_buffer deviceID_priv `B.loc_union`
-//          B.loc_buffer aliasKey_pub  `B.loc_union`
-//          B.loc_buffer aliasKey_priv `B.loc_union`
-//          B.loc_buffer authKeyID     `B.loc_union`
-//          B.loc_buffer deviceIDCSR_buf
-//   ) h0 _h_step3_pre;
-//   (**) B.modifies_buffer_elim authKeyID     (B.loc_buffer deviceIDCSR_buf) _h_step1_post _h_step3_pre;
-//   (**) B.modifies_buffer_elim deviceID_pub  (B.loc_buffer deviceIDCSR_buf) _h_step1_post _h_step3_pre;
-//   (**) B.modifies_buffer_elim deviceID_priv (B.loc_buffer deviceIDCSR_buf) _h_step1_post _h_step3_pre;
-//   (**) B.modifies_buffer_elim aliasKey_pub  (B.loc_buffer deviceIDCSR_buf) _h_step1_post _h_step3_pre;
 
 //   l0_core_step3
 //     (aliasKeyCRT_ingredients.aliasKeyCrt_version)
