@@ -23,6 +23,20 @@ let rec map_err :
             (fun hd1 ->
                let uu___1 = map_err f tl in
                op_let_Question uu___1 (fun tl1 -> return (hd1 :: tl1)))
+let map_err_opt :
+  'a 'b .
+    ('a -> 'b err) ->
+      'a FStar_Pervasives_Native.option ->
+        'b FStar_Pervasives_Native.option err
+  =
+  fun f ->
+    fun o ->
+      match o with
+      | FStar_Pervasives_Native.None -> return FStar_Pervasives_Native.None
+      | FStar_Pervasives_Native.Some v ->
+          let uu___ = f v in
+          op_let_Question uu___
+            (fun v' -> return (FStar_Pervasives_Native.Some v'))
 let (as_term : FStar_Syntax_Syntax.term -> PulseSyntaxWrapper.term) =
   fun t ->
     match t.FStar_Syntax_Syntax.n with
@@ -151,6 +165,21 @@ let (push_bv :
                 (uu___1.FStar_TypeChecker_Env.core_check)
             } in
           let env1 = { tcenv; local_refs = (env.local_refs) } in (env1, bv)
+let rec (push_bvs :
+  env_t ->
+    FStar_Ident.ident Prims.list ->
+      (env_t * FStar_Syntax_Syntax.bv Prims.list))
+  =
+  fun env ->
+    fun xs ->
+      match xs with
+      | [] -> (env, [])
+      | x::xs1 ->
+          let uu___ = push_bv env x in
+          (match uu___ with
+           | (env1, bv) ->
+               let uu___1 = push_bvs env1 xs1 in
+               (match uu___1 with | (env2, bvs) -> (env2, (bv :: bvs))))
 let (push_namespace : env_t -> FStar_Ident.lident -> env_t) =
   fun env ->
     fun lid ->
@@ -254,6 +283,8 @@ let (push_namespace : env_t -> FStar_Ident.lident -> env_t) =
             (uu___.FStar_TypeChecker_Env.core_check)
         } in
       let env1 = { tcenv; local_refs = (env.local_refs) } in env1
+let (desugar_const : FStar_Const.sconst -> PulseSyntaxWrapper.constant) =
+  fun c -> PulseSyntaxWrapper.inspect_const c
 let (r_ : FStar_Compiler_Range_Type.range) =
   FStar_Compiler_Range_Type.dummyRange
 let (admit_lid : FStar_Ident.lident) =
@@ -651,6 +682,41 @@ let (resolve_hint_type :
       | PulseSugar.FOLD ns ->
           let uu___ = resolve_names env ns in
           op_let_Question uu___ (fun ns1 -> return (PulseSugar.FOLD ns1))
+let (desugar_datacon : env_t -> FStar_Ident.lid -> PulseSyntaxWrapper.fv err)
+  =
+  fun env ->
+    fun l ->
+      let rng = FStar_Ident.range_of_lid l in
+      let t =
+        FStar_Parser_AST.mk_term (FStar_Parser_AST.Name l) rng
+          FStar_Parser_AST.Expr in
+      let uu___ = tosyntax env t in
+      op_let_Question uu___
+        (fun tt ->
+           let uu___1 =
+             let uu___2 =
+               let uu___3 = FStar_Syntax_Subst.compress tt in
+               uu___3.FStar_Syntax_Syntax.n in
+             match uu___2 with
+             | FStar_Syntax_Syntax.Tm_fvar fv -> FStar_Pervasives.Inl fv
+             | FStar_Syntax_Syntax.Tm_uinst
+                 ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv;
+                    FStar_Syntax_Syntax.pos = uu___3;
+                    FStar_Syntax_Syntax.vars = uu___4;
+                    FStar_Syntax_Syntax.hash_code = uu___5;_},
+                  uu___6)
+                 -> FStar_Pervasives.Inl fv
+             | uu___3 ->
+                 let uu___4 =
+                   let uu___5 = FStar_Ident.string_of_lid l in
+                   FStar_Compiler_Util.format1 "Not a datacon? %s" uu___5 in
+                 fail uu___4 rng in
+           op_let_Question uu___1
+             (fun sfv ->
+                let uu___2 =
+                  let uu___3 = FStar_Syntax_Syntax.lid_of_fv sfv in
+                  PulseSyntaxWrapper.mk_fv uu___3 rng in
+                FStar_Pervasives.Inl uu___2))
 let rec (desugar_stmt :
   env_t -> PulseSugar.stmt -> PulseSyntaxWrapper.st_term err) =
   fun env ->
@@ -742,7 +808,20 @@ let rec (desugar_stmt :
           { PulseSugar.head2 = head;
             PulseSugar.returns_annot = returns_annot;
             PulseSugar.branches = branches;_}
-          -> failwith "Match is not yet handled"
+          ->
+          let uu___ = desugar_term env head in
+          op_let_Question uu___
+            (fun head1 ->
+               let uu___1 = map_err_opt (desugar_vprop env) returns_annot in
+               op_let_Question uu___1
+                 (fun returns_annot1 ->
+                    let uu___2 = map_err (desugar_branch env) branches in
+                    op_let_Question uu___2
+                      (fun branches1 ->
+                         let uu___3 =
+                           PulseSyntaxWrapper.tm_match head1 returns_annot1
+                             branches1 s.PulseSugar.range1 in
+                         return uu___3)))
       | PulseSugar.While
           { PulseSugar.guard = guard; PulseSugar.id1 = id;
             PulseSugar.invariant = invariant; PulseSugar.body1 = body;_}
@@ -827,6 +906,99 @@ let rec (desugar_stmt :
                     return uu___2))
       | PulseSugar.LetBinding uu___ ->
           fail "Terminal let binding" s.PulseSugar.range1
+and (desugar_branch :
+  env_t ->
+    (FStar_Parser_AST.pattern * PulseSugar.stmt) ->
+      PulseSyntaxWrapper.branch err)
+  =
+  fun env ->
+    fun br ->
+      let uu___ = br in
+      match uu___ with
+      | (p, e) ->
+          let uu___1 = desugar_pat env p in
+          op_let_Question uu___1
+            (fun uu___2 ->
+               match uu___2 with
+               | (p1, vs) ->
+                   let uu___3 = push_bvs env vs in
+                   (match uu___3 with
+                    | (env1, bvs) ->
+                        let uu___4 = desugar_stmt env1 e in
+                        op_let_Question uu___4
+                          (fun e1 ->
+                             let e2 =
+                               let uu___5 =
+                                 FStar_Compiler_List.map
+                                   (fun v -> v.FStar_Syntax_Syntax.index) bvs in
+                               PulseSyntaxWrapper.close_st_term_n e1 uu___5 in
+                             return (p1, e2))))
+and (desugar_pat :
+  env_t ->
+    FStar_Parser_AST.pattern ->
+      (PulseSyntaxWrapper.pattern * FStar_Ident.ident Prims.list) err)
+  =
+  fun env ->
+    fun p ->
+      let r = p.FStar_Parser_AST.prange in
+      match p.FStar_Parser_AST.pat with
+      | FStar_Parser_AST.PatVar (id, uu___, uu___1) ->
+          let uu___2 =
+            let uu___3 =
+              let uu___4 = FStar_Ident.string_of_id id in
+              PulseSyntaxWrapper.pat_var uu___4 r in
+            (uu___3, [id]) in
+          return uu___2
+      | FStar_Parser_AST.PatWild uu___ ->
+          let id = FStar_Ident.mk_ident ("_", r) in
+          let uu___1 =
+            let uu___2 = PulseSyntaxWrapper.pat_var "_" r in (uu___2, [id]) in
+          return uu___1
+      | FStar_Parser_AST.PatConst c ->
+          let c1 = desugar_const c in
+          let uu___ =
+            let uu___1 = PulseSyntaxWrapper.pat_constant c1 r in (uu___1, []) in
+          return uu___
+      | FStar_Parser_AST.PatName lid ->
+          let uu___ = desugar_datacon env lid in
+          op_let_Question uu___
+            (fun fv ->
+               let uu___1 =
+                 let uu___2 = PulseSyntaxWrapper.pat_cons fv [] r in
+                 (uu___2, []) in
+               return uu___1)
+      | FStar_Parser_AST.PatApp
+          ({ FStar_Parser_AST.pat = FStar_Parser_AST.PatName lid;
+             FStar_Parser_AST.prange = uu___;_},
+           args)
+          ->
+          let uu___1 = desugar_datacon env lid in
+          op_let_Question uu___1
+            (fun fv ->
+               let uu___2 =
+                 map_err
+                   (fun p1 ->
+                      match p1.FStar_Parser_AST.pat with
+                      | FStar_Parser_AST.PatVar (id, uu___3, uu___4) ->
+                          return id
+                      | FStar_Parser_AST.PatWild uu___3 ->
+                          let uu___4 = FStar_Ident.mk_ident ("_", r) in
+                          return uu___4
+                      | uu___3 ->
+                          fail "invalid pattern: no deep patterns allowed" r)
+                   args in
+               op_let_Question uu___2
+                 (fun idents ->
+                    let strs =
+                      FStar_Compiler_List.map FStar_Ident.string_of_id idents in
+                    let pats =
+                      FStar_Compiler_List.map
+                        (fun s -> PulseSyntaxWrapper.pat_var s r) strs in
+                    let uu___3 =
+                      let uu___4 = PulseSyntaxWrapper.pat_cons fv pats r in
+                      (uu___4, idents) in
+                    return uu___3))
+      | uu___ -> fail "invalid pattern" r
 and (desugar_bind :
   env_t ->
     PulseSugar.stmt'__LetBinding__payload ->
@@ -1023,7 +1195,7 @@ and (desugar_binders :
                             (aq, uu___5)) bs1 in
                  (env1, uu___3, bvs) in
                return uu___2)
-let (desugar_computation_type :
+and (desugar_computation_type :
   env_t -> PulseSugar.computation_type -> PulseSyntaxWrapper.comp err) =
   fun env ->
     fun c ->

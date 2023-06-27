@@ -1,4 +1,14 @@
 open Prims
+let (pat_var :
+  FStar_Reflection_Typing.pp_name_t -> Pulse_Syntax_Base.pattern) =
+  fun s -> Pulse_Syntax_Base.Pat_Var s
+let (pat_const : Pulse_Syntax_Base.constant -> Pulse_Syntax_Base.pattern) =
+  fun c -> Pulse_Syntax_Base.Pat_Constant c
+let (pat_cons :
+  Pulse_Syntax_Base.fv ->
+    (Pulse_Syntax_Base.pattern * Prims.bool) Prims.list ->
+      Pulse_Syntax_Base.pattern)
+  = fun fv -> fun vs -> Pulse_Syntax_Base.Pat_Cons (fv, vs)
 let (tm_return :
   Pulse_Syntax_Base.ctag ->
     Prims.bool -> Pulse_Syntax_Base.term -> Pulse_Syntax_Base.st_term')
@@ -86,6 +96,21 @@ let (tm_if :
               Pulse_Syntax_Base.else_ = else_;
               Pulse_Syntax_Base.post1 = post
             }
+let (tm_match :
+  Pulse_Syntax_Base.term ->
+    Pulse_Syntax_Base.vprop FStar_Pervasives_Native.option ->
+      (Pulse_Syntax_Base.pattern * Pulse_Syntax_Base.st_term) Prims.list ->
+        Pulse_Syntax_Base.st_term')
+  =
+  fun sc ->
+    fun returns_ ->
+      fun brs ->
+        Pulse_Syntax_Base.Tm_Match
+          {
+            Pulse_Syntax_Base.sc = sc;
+            Pulse_Syntax_Base.returns_ = returns_;
+            Pulse_Syntax_Base.brs = brs
+          }
 let (tm_elim_exists : Pulse_Syntax_Base.vprop -> Pulse_Syntax_Base.st_term')
   = fun p -> Pulse_Syntax_Base.Tm_ElimExists { Pulse_Syntax_Base.p1 = p }
 let (tm_intro_exists :

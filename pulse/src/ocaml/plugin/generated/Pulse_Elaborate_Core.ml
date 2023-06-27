@@ -352,6 +352,16 @@ let rec (elab_st_typing :
                         Pulse_Typing.tm_bool b Pulse_Typing.tm_false)) uu___2
                   uu___3 e2_typing in
               FStar_Reflection_Typing.mk_if rb re1 re2
+          | Pulse_Typing.T_Match
+              (uu___, uu___1, uu___2, sc, uu___3, uu___4, uu___5, uu___6,
+               brty, uu___7)
+              ->
+              let sc1 = Pulse_Elaborate_Pure.elab_term sc in
+              let brs =
+                elab_branches uu___ uu___5 uu___1 uu___2 sc uu___6 brty in
+              FStar_Reflection_V2_Builtins.pack_ln
+                (FStar_Reflection_V2_Data.Tv_Match
+                   (sc1, FStar_Pervasives_Native.None, brs))
           | Pulse_Typing.T_IntroPure (uu___, p, uu___1, uu___2) ->
               let head =
                 Pulse_Syntax_Pure.tm_pureapp
@@ -502,3 +512,71 @@ let rec (elab_st_typing :
                | Pulse_Syntax_Base.STT_Ghost ->
                    Pulse_Reflection_Util.mk_stt_ghost_admit ru rres rpre
                      rpost1)
+and (elab_br :
+  Pulse_Typing_Env.env ->
+    Pulse_Syntax_Base.comp_st ->
+      Pulse_Syntax_Base.universe ->
+        Pulse_Syntax_Base.typ ->
+          Pulse_Syntax_Base.term ->
+            Pulse_Syntax_Base.pattern ->
+              Pulse_Syntax_Base.st_term ->
+                (unit, unit, unit, unit, unit, unit, unit)
+                  Pulse_Typing.br_typing -> FStar_Reflection_V2_Data.branch)
+  =
+  fun g ->
+    fun c ->
+      fun sc_u ->
+        fun sc_ty ->
+          fun sc ->
+            fun p ->
+              fun e ->
+                fun d ->
+                  let uu___ = d in
+                  match uu___ with
+                  | Pulse_Typing.TBR
+                      (uu___1, uu___2, uu___3, uu___4, uu___5, uu___6,
+                       uu___7, uu___8, bs, uu___9, uu___10, uu___11, ed)
+                      ->
+                      let e1 =
+                        elab_st_typing
+                          (Pulse_Typing_Env.push_binding
+                             (Pulse_Typing.push_bindings uu___1
+                                (FStar_List_Tot_Base.map
+                                   Pulse_Typing.readback_binding uu___8))
+                             uu___11
+                             {
+                               Pulse_Syntax_Base.name =
+                                 (FStar_Sealed.seal "branch equality");
+                               Pulse_Syntax_Base.range = FStar_Range.range_0
+                             }
+                             (Pulse_Typing.mk_sq_eq2 uu___2 uu___3 uu___4
+                                (Pulse_Syntax_Base.tm_fstar
+                                   (FStar_Pervasives_Native.fst
+                                      (FStar_Pervasives_Native.__proj__Some__item__v
+                                         (FStar_Reflection_Typing.elaborate_pat
+                                            (Pulse_Elaborate_Pure.elab_pat
+                                               uu___6) uu___8)))
+                                   FStar_Range.range_0))) uu___7 uu___5 ed in
+                      ((Pulse_Elaborate_Pure.elab_pat p), e1)
+and (elab_branches :
+  Pulse_Typing_Env.env ->
+    Pulse_Syntax_Base.comp_st ->
+      Pulse_Syntax_Base.universe ->
+        Pulse_Syntax_Base.typ ->
+          Pulse_Syntax_Base.term ->
+            Pulse_Syntax_Base.branch Prims.list ->
+              (unit, unit, unit, unit, unit, unit) Pulse_Typing.brs_typing ->
+                FStar_Reflection_V2_Data.branch Prims.list)
+  =
+  fun g ->
+    fun c ->
+      fun sc_u ->
+        fun sc_ty ->
+          fun sc ->
+            fun brs ->
+              fun d ->
+                match d with
+                | Pulse_Typing.TBRS_0 uu___ -> []
+                | Pulse_Typing.TBRS_1 (uu___, p, e, bd, uu___1, d') ->
+                    (elab_br g uu___ sc_u sc_ty sc p e bd) ::
+                    (elab_branches g uu___ sc_u sc_ty sc uu___1 d')

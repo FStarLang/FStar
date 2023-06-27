@@ -3,6 +3,7 @@ let (tun : FStar_Reflection_Types.term) =
   FStar_Reflection_V2_Builtins.pack_ln FStar_Reflection_V2_Data.Tv_Unknown
 let (unit_lid : Prims.string Prims.list) = FStar_Reflection_Const.unit_lid
 let (bool_lid : Prims.string Prims.list) = FStar_Reflection_Const.bool_lid
+let (int_lid : Prims.string Prims.list) = FStar_Reflection_Const.int_lid
 let (erased_lid : Prims.string Prims.list) = ["FStar"; "Ghost"; "erased"]
 let (hide_lid : Prims.string Prims.list) = ["FStar"; "Ghost"; "hide"]
 let (reveal_lid : Prims.string Prims.list) = ["FStar"; "Ghost"; "reveal"]
