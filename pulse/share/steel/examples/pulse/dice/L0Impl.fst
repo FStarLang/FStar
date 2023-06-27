@@ -84,6 +84,10 @@ let l0_step2_repr_post_state (vl0:l0_repr) (l:U32.t) (s:elseq U8.t (U32.v l))
       deviceIDCRI_buf = s;
     }
 
+let l0_repr_modifies_IDCRI_buf_len (vl0:l0_repr) (vl1:l0_repr) = 
+  vl1 == { vl0 with deviceIDCRI_buf = vl1.deviceIDCRI_buf;
+                    deviceIDCRI_len = vl1.deviceIDCRI_len }
+
 ```pulse
 fn create_deviceIDCRI
   (l0: l0_record)
@@ -94,11 +98,12 @@ fn create_deviceIDCRI
     exists (vl0_:l0_repr). 
       l0_perm l0 vl0_ **
       pure (
-        vl0_.deviceIDCRI_len = len_of_deviceIDCRI
-                                deviceIDCSR.version
-                                deviceIDCSR.s_common
-                                deviceIDCSR.s_org
-                                deviceIDCSR.s_country /\
+        l0_repr_modifies_IDCRI_buf_len vl0 vl0_ /\
+        vl0_.deviceIDCRI_len == len_of_deviceIDCRI
+                                  deviceIDCSR.version
+                                  deviceIDCSR.s_common
+                                  deviceIDCSR.s_org
+                                  deviceIDCSR.s_country /\
         Seq.equal 
           vl0_.deviceIDCRI_buf
           (spec_serialize_deviceIDCRI (spec_x509_get_deviceIDCRI
@@ -278,19 +283,9 @@ fn l0_core_step2
   )
 {
   create_deviceIDCRI l0 deviceIDCSR;
+  
+  sign_and_finalize_deviceIDCSR l0 deviceIDCSR;
 
-  with vl0_. assert (
-    l0_perm l0 vl0_ `star`
-    pure (
-      U32.(0ul <^ vl0_.deviceIDCRI_len) /\ 
-      valid_deviceIDCSR_ingredients vl0_.deviceIDCRI_len /\
-      vl0.deviceIDCSR_len == length_of_deviceIDCSR vl0_.deviceIDCRI_len
-    ));
-
-(* according to the above assert, the precond to sign_and_finalize_deviceIDCSR
-is satisfies but pulse uses vl0 as the implicit, not vl0_, so it doesn't verify *)
-
-  // sign_and_finalize_deviceIDCSR l0 deviceIDCSR; (* want to use vl0_ not vl0 *)
   admit()
 (*
   printf "Signing and finalizing DeviceID Certificate Signing Request\n" done;
