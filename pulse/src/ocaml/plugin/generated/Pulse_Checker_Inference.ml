@@ -523,13 +523,13 @@ let rec (match_typ :
                                                                     fun x ->
                                                                     Prims.strcat
                                                                     (Prims.strcat
-                                                                    "Could not assign the term "
+                                                                    "Could not match the term "
                                                                     (Prims.strcat
                                                                     uu___3
-                                                                    " to the unification variable "))
+                                                                    " with "))
                                                                     (Prims.strcat
                                                                     x
-                                                                    ", since it is not a ground term")))))
+                                                                    ", since the former contains a unification variable")))))
                                                           (fun uu___3 ->
                                                              FStar_Tactics_Effect.lift_div_tac
                                                                (fun uu___4 ->
