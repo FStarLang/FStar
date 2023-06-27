@@ -136,6 +136,7 @@ fn create_deviceIDCRI
 }
 ```
 
+
 assume 
 val spec_sign_and_finalize_deviceIDCSR
   (deviceID_priv: Seq.seq U8.t)
@@ -329,5 +330,90 @@ fn l0_core_step2
 ()
 
 *)
+}
+```
+
+
+//An alternate way, without passing the whole l0 state to create_deviceIDCRI
+
+```pulse
+fn create_deviceIDCRI_alt
+  (deviceID_pub: A.array U8.t)
+  (deviceIDCRI_len: R.ref U32.t)
+  (deviceIDCRI_buf: A.array U8.t)
+  (deviceIDCSR: deviceIDCSR_ingredients_t)
+  (#pub_perm:perm)
+  (#pub: erased (Seq.seq U8.t))
+  (#_len:erased U32.t)
+  (#_buf:erased (Seq.seq U8.t))
+  requires 
+    A.pts_to deviceID_pub pub_perm pub **
+    R.pts_to deviceIDCRI_len full_perm _len **
+    A.pts_to deviceIDCRI_buf full_perm _buf
+  ensures
+    exists (len:U32.t) (buf:Seq.seq U8.t).
+      A.pts_to deviceID_pub pub_perm pub **
+      R.pts_to deviceIDCRI_len full_perm len **
+      A.pts_to deviceIDCRI_buf full_perm buf **
+      pure (
+        len == len_of_deviceIDCRI deviceIDCSR.version
+                                  deviceIDCSR.s_common
+                                  deviceIDCSR.s_org
+                                  deviceIDCSR.s_country /\
+        buf `Seq.equal`
+          (spec_serialize_deviceIDCRI (spec_x509_get_deviceIDCRI
+                                        deviceIDCSR.version
+                                        deviceIDCSR.s_common
+                                        deviceIDCSR.s_org
+                                        deviceIDCSR.s_country
+                                        deviceIDCSR.ku
+                                        pub) len)
+      )
+{
+  let len = len_of_deviceIDCRI
+                          deviceIDCSR.version
+                          deviceIDCSR.s_common
+                          deviceIDCSR.s_org
+                          deviceIDCSR.s_country;
+
+  deviceIDCRI_len := len;
+  
+  let deviceIDCRI = x509_get_deviceIDCRI
+                      deviceIDCSR.version
+                      deviceIDCSR.s_common
+                      deviceIDCSR.s_org
+                      deviceIDCSR.s_country
+                      deviceIDCSR.ku
+                      deviceID_pub;
+
+  serialize_deviceIDCRI deviceIDCRI len deviceIDCRI_buf;
+
+  ()
+}
+```
+
+```pulse
+fn l0_core_step2_alt
+  (l0: l0_record)
+  (deviceIDCSR: deviceIDCSR_ingredients_t)
+  (aliasKeyCRT: aliasKeyCRT_ingredients_t)
+  (#vl0: Ghost.erased l0_repr)
+  requires (
+    l0_perm l0 vl0 **
+    pure (l0_core_step2_pre l0 deviceIDCSR aliasKeyCRT vl0)
+  )
+  ensures (
+    exists (vl0_:l0_repr). 
+      l0_perm l0 vl0_ **
+      pure (l0_core_step2_post l0 deviceIDCSR aliasKeyCRT vl0_)
+  )
+{
+  unfold (l0_perm l0 vl0);
+  create_deviceIDCRI_alt l0.deviceID_pub l0.deviceIDCRI_len l0.deviceIDCRI_buf deviceIDCSR;
+  fold_l0_perm l0;
+  
+  sign_and_finalize_deviceIDCSR l0 deviceIDCSR;
+
+  admit()
 }
 ```

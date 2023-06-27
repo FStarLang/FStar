@@ -73,11 +73,12 @@ val x509_get_deviceIDCRI
   (s_country: string)
   (ku: U32.t)
   (deviceID_pub: A.array U8.t)
+  (#pub_perm:perm)
   (#deviceID_pub0: Ghost.erased (Seq.seq U8.t))
   : stt deviceIDCRI_t
-    (A.pts_to deviceID_pub full_perm deviceID_pub0)
+    (A.pts_to deviceID_pub pub_perm deviceID_pub0)
     (fun res -> 
-      A.pts_to deviceID_pub full_perm deviceID_pub0 `star`
+      A.pts_to deviceID_pub pub_perm deviceID_pub0 `star`
       pure (res == spec_x509_get_deviceIDCRI version s_common s_org s_country ku deviceID_pub0))
 
 assume 
