@@ -32,7 +32,7 @@ jobs:
       - name: Build Steel and its dependencies
         run: |
           ci_docker_image_tag=steel:local-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT
-          docker build -t $ci_docker_image_tag -f src/ci/$CI_FLAVOR.Dockerfile --build-arg FSTAR_BRANCH=$FSTAR_BRANCH .
+          docker build -t $ci_docker_image_tag -f src/ci/$CI_FLAVOR.Dockerfile --build-arg FSTAR_BRANCH=$FSTAR_BRANCH . |& tee BUILDLOG
       - name: Compute elapsed time
         if: ${{ always() }}
         run: |
@@ -53,6 +53,17 @@ jobs:
             ;;
           esac
           echo "CI_COMMIT=$(echo ${{ github.event.head_commit.id || github.event.pull_request.head.sha }} | grep -o '^........')" >> $GITHUB_ENV
+      - name: Output build log error summary
+        if: ${{ failure () }}
+        run: |
+          # Just outputs to the github snippet. Could be part of slack message.
+          # This command never triggers a failure, if we did not find anything
+          # with grep then we just no-op
+          if grep -C10 -E ' \*\*\* |\(Error' BUILDLOG > BUILDLOG_ERRORS; then
+            ERRORS_URL=$(.scripts/sprang BUILDLOG_ERRORS)
+            ERRORS_MSG=" <$ERRORS_URL|(Error summary)>"
+            echo "ERRORS_MSG=$ERRORS_MSG" >> $GITHUB_ENV
+          fi
       - name: Post to the Slack channel
         if: ${{ always() }}
         id: slack
@@ -80,7 +91,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "${{ env.CI_EMOJI }} <https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}|${{ job.status }}>"
+                    "text": "${{ env.CI_EMOJI }} <https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}|${{ job.status }}>${{env.ERRORS_MSG}}"
                   }
                 },
                 {

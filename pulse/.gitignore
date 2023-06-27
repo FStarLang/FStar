@@ -11,3 +11,6 @@ lib/steel/META
 lib/steel/dune-package
 *.krml
 *.o
+
+# Created by CI
+BUILDLOG
