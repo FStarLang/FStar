@@ -16,7 +16,7 @@
    Authors: Brian G. Milnes
 *)
 
-module FStar.Printable
+module FStar.Class.Printable
 
 open FStar.String
 open FStar.Seq.Properties
