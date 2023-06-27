@@ -12,7 +12,7 @@ module A = Steel.ST.Array
 module US = FStar.SizeT
 module U8 = FStar.UInt8
 open HACL
-
+open L0Types
 
 // DICE constants
 
