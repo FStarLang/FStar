@@ -82,7 +82,7 @@ type stmt' =
 
   | Match {
       head:A.term;
-      returns_annot:option computation_type;
+      returns_annot:option vprop;
       branches:list (A.pattern & stmt);
     }
 

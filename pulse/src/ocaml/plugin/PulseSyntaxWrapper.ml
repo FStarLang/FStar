@@ -79,7 +79,18 @@ let atomic_comp (inames:term) (pre:term) (ret:binder) (post:term) : comp =
    C_STAtomic (inames, mk_st_comp pre ret post)
 
 module PSB = Pulse_Syntax_Builder
+type constant = Pulse_Syntax_Base.constant
+let inspect_const = FStar_Reflection_V2_Builtins.inspect_const
+
+type pattern = Pulse_Syntax_Base.pattern
+
+let pat_var s _r = PSB.(pat_var s)
+let pat_constant c _r = PSB.(pat_const c)
+let pat_cons fv vs _r = PSB.(pat_cons fv (List.map (fun v -> (v,false)) vs))
+
 type st_term = Pulse_Syntax_Base.st_term
+type branch = Pulse_Syntax_Base.branch
+
 let tm_return (t:term) r : st_term = PSB.(with_range (tm_return STT false t) r)
 
 let tm_ghost_return (t:term) r : st_term = PSB.(with_range (tm_return STT_Ghost false t) r)
@@ -109,6 +120,9 @@ let tm_while (head:st_term) (invariant: (ident * vprop)) (body:st_term) r : st_t
    
 let tm_if (head:term) (returns_annot:vprop option) (then_:st_term) (else_:st_term) r : st_term =
   PSB.(with_range (tm_if head then_ else_ returns_annot) r)
+
+let tm_match (sc:term) (returns_:vprop option) (brs:branch list) r : st_term =
+  PSB.(with_range (tm_match sc returns_ brs) r)
 
 let tm_intro_exists (erased:bool) (p:vprop) (witnesses:term list) r : st_term =
   PSB.(with_range (tm_intro_exists erased p witnesses) r)
@@ -147,6 +161,7 @@ let tm_admit r : st_term =
   
 let close_term t v = Pulse_Syntax_Naming.close_term t v
 let close_st_term t v = Pulse_Syntax_Naming.close_st_term t v
+let close_st_term_n t v = Pulse_Syntax_Naming.close_st_term_n t v
 let close_comp t v = Pulse_Syntax_Naming.close_comp t v
 let comp_pre c =
   match c with

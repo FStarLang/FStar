@@ -8,6 +8,7 @@ open FStar.List.Tot
 let tun = R.pack_ln R.Tv_Unknown
 let unit_lid = R.unit_lid
 let bool_lid = R.bool_lid
+let int_lid  = R.int_lid
 let erased_lid = ["FStar"; "Ghost"; "erased"]
 let hide_lid = ["FStar"; "Ghost"; "hide"]
 let reveal_lid = ["FStar"; "Ghost"; "reveal"]

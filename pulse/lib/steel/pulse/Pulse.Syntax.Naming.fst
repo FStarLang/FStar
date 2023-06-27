@@ -123,6 +123,12 @@ let rec close_open_inverse_st'  (t:st_term)
       close_open_inverse_st' else_ x i;
       close_open_inverse_opt' post x (i + 1)
 
+    | Tm_Match { sc; returns_; brs } ->
+      close_open_inverse' sc x i;
+      close_open_inverse_opt' returns_ x i;
+      admit(); // need map dec fusion
+      ()
+
     | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
       close_open_inverse' pre1 x i;
       close_open_inverse_st' body1 x i;

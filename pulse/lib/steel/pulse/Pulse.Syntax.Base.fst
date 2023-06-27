@@ -75,10 +75,59 @@ let eq_tm_opt (t1 t2:option term)
   : b:bool { b <==> (t1 == t2) }
   = eq_opt eq_tm t1 t2
 
+let eq_comp_opt (c1 c2:option comp)
+  : b:bool { b <==> (c1 == c2) }
+  = eq_opt eq_comp c1 c2
+
+let rec eq_list_dec top1 top2
+   (f: (x:'a -> y:'a{x << top1 /\ y << top2} -> b:bool { b <==> (x == y)}))
+   (l : list 'a{l << top1})
+   (m : list 'a{m << top2})
+  : b:bool { b <==> (l == m) }
+  = match l, m with
+    | [], [] -> true
+    | h1::t1, h2::t2 ->
+      f h1 h2 &&
+      eq_list_dec top1 top2 f t1 t2
+    | _ -> false
+
 let eq_binder (b0 b1:binder) : b:bool { b <==> (b0 == b1) } =
   eq_tm b0.binder_ty b1.binder_ty
 
 let eq_tm_list (t1 t2:list term) = eq_list eq_tm t1 t2
+
+// wire to Reflection.TermEq
+assume val fstar_const_eq : c1:R.vconst -> c2:R.vconst -> b:bool{b <==> (c1==c2)}
+
+let rec sealed_list_eq #a (l1 l2 : list (Sealed.sealed a))
+  : Lemma ((length l1 = length l2) ==> (l1 == l2))
+  = match l1, l2 with
+    | [], [] -> ()
+    | h1::t1, h2::t2 ->
+      Sealed.sealed_singl h1 h2;
+      sealed_list_eq t1 t2
+    | _ -> ()
+
+let rec eq_pattern (p1 p2 : pattern) : b:bool{ b <==> (p1 == p2) } =
+  match p1, p2 with
+  | Pat_Cons f1 vs1,
+    Pat_Cons f2 vs2 ->
+    f1.fv_name = f2.fv_name &&
+    eq_list_dec p1 p2 eq_sub_pat vs1 vs2
+
+  | Pat_Constant c1, Pat_Constant c2 ->
+    fstar_const_eq c1 c2
+
+  | Pat_Var _, Pat_Var _ -> true
+  
+  | Pat_Dot_Term to1, Pat_Dot_Term to2 -> eq_opt eq_tm to1 to2
+
+  | _ -> false
+
+and eq_sub_pat (pb1 pb2 : pattern & bool) : b:bool{b <==> pb1 == pb2} =
+  let (p1, b1) = pb1 in
+  let (p2, b2) = pb2 in
+  eq_pattern p1 p2 && b1 = b2
 
 let rec eq_st_term (t1 t2:st_term) 
   : b:bool { b <==> (t1 == t2) }
@@ -133,6 +182,12 @@ let rec eq_st_term (t1 t2:st_term)
       eq_st_term eelse1 eelse2 &&
       eq_tm_opt p1 p2
     
+    | Tm_Match {sc=sc1; returns_=r1; brs=br1},
+      Tm_Match {sc=sc2; returns_=r2; brs=br2} ->
+      eq_tm sc1 sc2 &&
+      eq_tm_opt r1 r2 &&
+      eq_list_dec t1 t2 eq_branch br1 br2
+
     | Tm_While { invariant=inv1; condition=cond1; body=body1 },
       Tm_While { invariant=inv2; condition=cond2; body=body2 } ->
       eq_tm inv1 inv2 &&
@@ -178,3 +233,9 @@ let rec eq_st_term (t1 t2:st_term)
       eq_st_term t1 t2
 
     | _ -> false
+
+and eq_branch (b1 b2 : pattern & st_term)
+  : b:bool{b <==> (b1 == b2)}
+  = let (p1, e1) = b1 in
+    let (p2, e2) = b2 in
+    eq_pattern p1 p2 && eq_st_term e1 e2

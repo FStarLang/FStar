@@ -175,6 +175,11 @@ let rec st_term_to_string' (level:string) (t:st_term)
         (st_term_to_string' (indent level) else_)
         level
 
+    | Tm_Match {sc; brs} ->
+      sprintf "match (%s) with %s"
+        (term_to_string sc)
+        (branches_to_string brs)
+
     | Tm_IntroPure { p } ->
       sprintf "introduce pure (\n%s%s)"
         (indent level)
@@ -250,6 +255,15 @@ let rec st_term_to_string' (level:string) (t:st_term)
         (term_to_string v)
         (st_term_to_string' level t)
 
+and branches_to_string brs : T.Tac _ =
+  match brs with
+  | [] -> ""
+  | b::bs -> branch_to_string b ^ branches_to_string bs
+
+and branch_to_string br : T.Tac _ =
+  let (pat, e) = br in
+  st_term_to_string' "" e
+
 let st_term_to_string t = st_term_to_string' "" t
 
 
@@ -274,6 +288,7 @@ let tag_of_st_term (t:st_term) =
   | Tm_Bind _ -> "Tm_Bind"
   | Tm_TotBind _ -> "Tm_TotBind"
   | Tm_If _ -> "Tm_If"
+  | Tm_Match _ -> "Tm_Match"
   | Tm_IntroPure _ -> "Tm_IntroPure"
   | Tm_ElimExists _ -> "Tm_ElimExists"
   | Tm_IntroExists _ -> "Tm_IntroExists"
@@ -303,6 +318,7 @@ let rec print_st_head (t:st_term)
   | Tm_Bind _ -> "Bind"
   | Tm_TotBind _ -> "TotBind"
   | Tm_If _ -> "If"
+  | Tm_Match _ -> "Match"
   | Tm_While _ -> "While"
   | Tm_Admit _ -> "Admit"
   | Tm_Par _ -> "Par"
@@ -329,6 +345,7 @@ let rec print_skel (t:st_term) =
   | Tm_Bind { head=e1; body=e2 } -> Printf.sprintf "(Bind %s %s)" (print_skel e1) (print_skel e2)
   | Tm_TotBind { body=e2 } -> Printf.sprintf "(TotBind _ %s)" (print_skel e2)
   | Tm_If _ -> "If"
+  | Tm_Match _ -> "Match"
   | Tm_While _ -> "While"
   | Tm_Admit _ -> "Admit"
   | Tm_Par _ -> "Par"

@@ -23,7 +23,6 @@ val elab_ln_inverse (e:term)
     (requires RT.ln (elab_term e))
     (ensures ln e)
 
-
 assume
 val open_term_ln_host' (t:host_term) (x:R.term) (i:index)
   : Lemma 
@@ -137,6 +136,12 @@ let rec open_st_term_ln' (e:st_term)
       open_st_term_ln' else_ x i;          
       open_term_ln_opt' post x (i + 1)
 
+    | Tm_Match {sc;returns_;brs} ->
+      open_term_ln' sc x i;
+      open_term_ln_opt' returns_ x i;
+      // TODO: this is pretty cumbersome, but should not be conceptually hard
+      admit()
+
     | Tm_IntroPure { p }
     | Tm_ElimExists { p } ->
       open_term_ln' p x i
@@ -178,7 +183,7 @@ let rec open_st_term_ln' (e:st_term)
       let n = L.length binders in
       open_term_ln' v x (i + n);
       open_st_term_ln' t x (i + n)
-      
+
 let open_term_ln (e:term) (v:var)
   : Lemma 
     (requires ln (open_term e v))
@@ -295,6 +300,9 @@ let rec ln_weakening_st (t:st_term) (i j:int)
       ln_weakening_st then_ i j;    
       ln_weakening_st else_ i j;          
       ln_weakening_opt post (i + 1) (j + 1)
+
+    | Tm_Match _ ->
+      admit ()
 
     | Tm_STApp { head; arg } ->
       ln_weakening head i j;
@@ -457,6 +465,9 @@ let rec open_term_ln_inv_st' (t:st_term)
       open_term_ln_inv_st' else_ x i;          
       open_term_ln_inv_opt' post x (i + 1)      
 
+    | Tm_Match _ ->
+      admit ()
+
     | Tm_Bind { binder; head; body } ->
       open_term_ln_inv' binder.binder_ty x i;
       open_term_ln_inv_st' head x i;
@@ -611,6 +622,9 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
       close_st_term_ln' then_ x i;    
       close_st_term_ln' else_ x i;          
       close_term_ln_opt' post x (i + 1)      
+
+    | Tm_Match _ ->
+      admit ()
 
     | Tm_Bind { binder; head; body } ->
       close_term_ln' binder.binder_ty x i;
@@ -841,6 +855,10 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       tot_typing_ln tb;
       st_typing_ln d1;
       st_typing_ln d2
+
+    | T_Match _ _ _ sc _ scd c _ _ _ ->
+      tot_typing_ln scd;
+      admit ()
 
     | T_Frame _ _ _ _ df dc ->
       tot_typing_ln df;
