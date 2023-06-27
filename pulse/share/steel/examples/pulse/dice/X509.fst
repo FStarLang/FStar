@@ -27,11 +27,19 @@ val len_of_deviceIDCRI
   (s_country: string)
   : U32.t
 
+assume 
+val spec_sign_and_finalize_deviceIDCSR
+  (deviceID_priv: Seq.seq U8.t)
+  (deviceIDCRI_len: U32.t)
+  (deviceIDCRI_seq: Seq.seq U8.t)
+  : deviceIDCSR_t deviceIDCRI_len
+
 assume
 val spec_serialize_deviceIDCSR 
   (deviceIDCRI_len: U32.t)
+  (deviceIDCSR_len: U32.t)
   (deviceIDCSR: deviceIDCSR_t deviceIDCRI_len)
-  : Seq.seq U8.t
+  : elseq U8.t (U32.v deviceIDCSR_len)
 
 assume
 val serialize_deviceIDCSR 
