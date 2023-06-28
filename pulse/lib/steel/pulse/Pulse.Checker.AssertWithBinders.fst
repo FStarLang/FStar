@@ -21,7 +21,7 @@ let debug_log = Pulse.Typing.debug_log "with_binders"
 let instantiate_binders_with_fresh_names (g:env) (top:R.term) : T.Tac (list nvar & R.term) =
     let rec aux g (vars:list nvar) (t:R.term) : T.Tac (list nvar & R.term) = 
         match R.inspect_ln t with
-        | R.Tv_Unknown -> T.fail "Impossible"
+        | R.Tv_Unknown -> T.fail "Impossible: instantiate_binders_with_fresh_names got an unknown term"
         | R.Tv_Abs b body ->
             let bv = R.inspect_binder b in
             let x = fresh g in
@@ -51,7 +51,7 @@ let instantiate_names_with_uvars (xs:list nvar) (t0 t1:term)
 let instantiate_binders_with_uvars (top:R.term) : T.Tac (list (Inf.uvar & term) & vprop) =
     let rec aux uvars (t:R.term) : T.Tac (list (Inf.uvar & term) & vprop) = 
         match R.inspect_ln t with
-        | R.Tv_Unknown -> T.fail "Impossible"
+        | R.Tv_Unknown -> T.fail "Impossible: instantiate_binders_with_uvars got an unknown term"
         | R.Tv_Abs b body ->
             let bv = R.inspect_binder b in
             let uv, t = Inf.gen_uvar (mk_ppname bv.ppname (RU.range_of_term t)) in
@@ -91,9 +91,8 @@ let infer_binder_types (g:env) (bs:list binder) (v:vprop)
     let inst_abstraction, _ = PC.instantiate_term_implicits g (tm_fstar abstraction v.range) in
     // T.print (Printf.sprintf "Instantiated abstraction is: %s" (T.term_to_string abstraction));
     match inst_abstraction.t with
-    | Tm_FStar t -> 
-      instantiate_binders_with_fresh_names g t
-    |  _ -> T.fail "Impossible"
+    | Tm_FStar t -> instantiate_binders_with_fresh_names g t
+    |  _ -> T.fail "Impossible: Instantiated abstraction is not embedded F* term"
 
 let option_must (f:option 'a) (msg:string) : T.Tac 'a =
   match f with
@@ -133,6 +132,20 @@ let prepare_goal hint_type g (v:R.term) : T.Tac (term & term) =
     unfold_defs g ns v,
     option_must (readback_ty v) "Failed to readback elaborated assertion"
 
+let check_unfoldable g hint_type (v:term) : T.Tac unit = 
+  match hint_type with
+  | ASSERT -> ()
+  | FOLD _ 
+  | UNFOLD _ ->
+    match v.t with
+    | Tm_FStar _ -> ()
+    | _ -> 
+     fail g 
+        (Some v.range)
+        (Printf.sprintf "`fold` and `unfold` expect a single user-defined predicate as an argument, \
+                          but %s is a primitive term that cannot be folded or unfolded"
+                          (P.term_to_string v))
+
 let check
   (g:env)
   (st:st_term{Tm_ProofHintWithBinders? st.term})
@@ -142,6 +155,7 @@ let check
   (check:check_t)
   : T.Tac (checker_result_t g pre post_hint)
   = let Tm_ProofHintWithBinders { hint_type; binders; v; t=body } = st.term in
+    check_unfoldable g hint_type v;
     let nvars, v = infer_binder_types g binders v in
     let lhs, rhs = prepare_goal hint_type g v in
     let uvs, lhs, rhs = instantiate_names_with_uvars nvars lhs rhs in
