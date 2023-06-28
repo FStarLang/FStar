@@ -133,7 +133,7 @@ val  mk_bind' (g:env)
                  open_term (comp_post c1) x == comp_pre c2))
   : T.Tac (checker_result_t g pre post_hint)
 
-#push-options "--z3rlimit_factor 8 --fuel 1 --ifuel 1 --admit_smt_queries true"
+#push-options "--z3rlimit_factor 8 --fuel 1 --ifuel 1"
 let check_bind
   (g:env)
   (t:st_term {Tm_Bind? t.term})
