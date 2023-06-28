@@ -234,7 +234,9 @@ let mod_add_small n1 n2 k =
   mod_add n1 n2 k;
   Math.small_modulo_lemma_1 (n1%k + n2%k) k
 
-#push-options "--z3rlimit 100 --split_queries no"
+// This proof is pretty stable with the calc proof, but it can fail
+// ~1% of the times, so add a retry.
+#push-options "--split_queries no --z3rlimit 20 --retry 5"
 let add_mod (a b: t) : Pure t
   (requires True)
   (ensures (fun r -> (v a + v b) % pow2 128 = v r)) =
@@ -248,14 +250,19 @@ let add_mod (a b: t) : Pure t
   let b_h = U64.v b.high in
   carry_sum_ok a.low b.low;
   Math.lemma_mod_plus_distr_l (a_h + b_h) ((a_l + b_l) / (pow2 64)) (pow2 64);
-  assert (U64.v r.high == (a_h + b_h + (a_l + b_l) / (pow2 64)) % pow2 64);
-  // mod_mul (a_h + b_h + (a_l + b_l) / (pow2 64)) (pow2 64) (pow2 64);
-  assert (U64.v r.high * pow2 64 ==
-            (a_h * pow2 64 +
-              b_h * pow2 64 +
-              (a_l + b_l) / (pow2 64) * (pow2 64)) % pow2 128)
-      by (Tactics.SMT.set_rlimit 200);
-  // mod_mod (U64.v r.low) (pow2 64) (pow2 64);
+  calc (==) {
+    U64.v r.high * pow2 64;
+    == {}
+    ((a_h + b_h + (a_l + b_l) / (pow2 64)) % pow2 64) * pow2 64;
+    == { mod_mul (a_h + b_h + (a_l + b_l) / (pow2 64)) (pow2 64) (pow2 64) }
+    ((a_h + b_h + (a_l + b_l) / (pow2 64)) * pow2 64) % (pow2 64 * pow2 64);
+    == {}
+    ((a_h + b_h + (a_l + b_l)/(pow2 64)) * pow2 64)
+      % pow2 128;
+    == {}
+    (a_h * pow2 64 + b_h * pow2 64 + ((a_l + b_l)/(pow2 64)) * pow2 64)
+      % pow2 128;
+  };
   assert (U64.v r.low == (U64.v r.low) % pow2 128);
   mod_add_small (a_h * pow2 64 +
                   b_h * pow2 64 +
