@@ -13,7 +13,7 @@ module RT = FStar.Reflection.Typing
 module RUtil = Pulse.Reflection.Util
 module RU = Pulse.RuntimeUtils
 
-let debug_log = Pulse.Checker.Common.debug_log "inference"
+let debug_log = Pulse.Typing.debug_log "inference"
 
 let uvar_id = nat
 let uvar = uvar_id & ppname

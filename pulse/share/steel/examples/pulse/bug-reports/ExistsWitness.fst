@@ -21,11 +21,6 @@ ensures R.pts_to x p y ** pure (y==z)
 
 let assume_squash (p:prop) : squash p = assume p
 
-//This fails because as it opens the existential for `p`
-//it adds an extra level of reveal/hide around it
-//and this causes the match to fail; although one would expect
-//F* to cancel the additional layer of reveal/hide
-[@@expect_failure]    
 ```pulse
 fn sample (x:R.ref int)
 requires exists p y. R.pts_to x p y

@@ -1,4 +1,67 @@
 open Prims
+let (debug_log :
+  Prims.string ->
+    Pulse_Typing_Env.env ->
+      (unit -> (Prims.string, unit) FStar_Tactics_Effect.tac_repr) ->
+        (unit, unit) FStar_Tactics_Effect.tac_repr)
+  =
+  fun uu___2 ->
+    fun uu___1 ->
+      fun uu___ ->
+        (fun level ->
+           fun g ->
+             fun f ->
+               if
+                 Pulse_RuntimeUtils.debug_at_level
+                   (Pulse_Typing_Env.fstar_env g) level
+               then
+                 Obj.magic
+                   (Obj.repr
+                      (FStar_Tactics_Effect.tac_bind
+                         (FStar_Sealed.seal
+                            (Obj.magic
+                               (FStar_Range.mk_range "Pulse.Typing.fst"
+                                  (Prims.of_int (15)) (Prims.of_int (15))
+                                  (Prims.of_int (15)) (Prims.of_int (64)))))
+                         (FStar_Sealed.seal
+                            (Obj.magic
+                               (FStar_Range.mk_range "Pulse.Typing.fst"
+                                  (Prims.of_int (15)) (Prims.of_int (7))
+                                  (Prims.of_int (15)) (Prims.of_int (64)))))
+                         (Obj.magic
+                            (FStar_Tactics_Effect.tac_bind
+                               (FStar_Sealed.seal
+                                  (Obj.magic
+                                     (FStar_Range.mk_range "Pulse.Typing.fst"
+                                        (Prims.of_int (15))
+                                        (Prims.of_int (57))
+                                        (Prims.of_int (15))
+                                        (Prims.of_int (63)))))
+                               (FStar_Sealed.seal
+                                  (Obj.magic
+                                     (FStar_Range.mk_range "prims.fst"
+                                        (Prims.of_int (590))
+                                        (Prims.of_int (19))
+                                        (Prims.of_int (590))
+                                        (Prims.of_int (31)))))
+                               (Obj.magic (f ()))
+                               (fun uu___ ->
+                                  FStar_Tactics_Effect.lift_div_tac
+                                    (fun uu___1 ->
+                                       Prims.strcat
+                                         (Prims.strcat "Debug@"
+                                            (Prims.strcat level ":{ "))
+                                         (Prims.strcat uu___ " }\n")))))
+                         (fun uu___ ->
+                            (fun uu___ ->
+                               Obj.magic
+                                 (FStar_Tactics_V1_Builtins.print uu___))
+                              uu___)))
+               else
+                 Obj.magic
+                   (Obj.repr
+                      (FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> ()))))
+          uu___2 uu___1 uu___
 let (tm_unit : Pulse_Syntax_Base.term) =
   Pulse_Syntax_Pure.tm_fvar
     (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.unit_lid)

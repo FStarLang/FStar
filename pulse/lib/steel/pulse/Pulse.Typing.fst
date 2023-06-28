@@ -6,7 +6,13 @@ open FStar.List.Tot
 open Pulse.Syntax
 module L = FStar.List.Tot
 module FTB = FStar.Tactics.V2
+module RU = Pulse.RuntimeUtils
+module T= FStar.Tactics
 include Pulse.Typing.Env
+
+let debug_log (level:string)  (g:env) (f: unit -> T.Tac string) : T.Tac unit =
+  if RU.debug_at_level (fstar_env g) level
+  then T.print (Printf.sprintf "Debug@%s:{ %s }\n" level (f ()))
 
 let tm_unit = tm_fvar (as_fv unit_lid)
 let tm_bool = tm_fvar (as_fv bool_lid)

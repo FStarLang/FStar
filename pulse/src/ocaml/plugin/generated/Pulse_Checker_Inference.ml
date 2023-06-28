@@ -3,7 +3,7 @@ let (debug_log :
   Pulse_Typing_Env.env ->
     (unit -> (Prims.string, unit) FStar_Tactics_Effect.tac_repr) ->
       (unit, unit) FStar_Tactics_Effect.tac_repr)
-  = Pulse_Checker_Common.debug_log "inference"
+  = Pulse_Typing.debug_log "inference"
 type uvar_id = Prims.nat
 type uvar = (uvar_id * Pulse_Syntax_Base.ppname)
 let (uvar_eq : uvar -> uvar -> Prims.bool) =
