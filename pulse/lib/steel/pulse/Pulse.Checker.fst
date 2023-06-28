@@ -11,6 +11,7 @@ open Pulse.Checker.Pure
 open Pulse.Checker.Framing
 open Pulse.Checker.Bind
 open Pulse.Checker.VPropEquiv
+open Pulse.Checker.Common
 
 module P = Pulse.Syntax.Printer
 module RTB = FStar.Tactics.Builtins
@@ -219,23 +220,6 @@ let maybe_infer_intro_exists
     );
     result
       
-let format_failed_goal (g:env) (ctxt:list term) (goal:list term) =
-  let terms_to_strings (ts:list term)= T.map Pulse.Syntax.Printer.term_to_string ts in
-  let numbered_list ss = 
-       let _, s = T.fold_left (fun (i, acc) s -> (i+1, Printf.sprintf "%d. %s" i s :: acc)) (1, []) ss in
-       String.concat "\n  " (List.rev s)
-  in
-  let format_terms (ts:list term) = numbered_list (terms_to_strings ts) in
-  Printf.sprintf 
-    "Failed to prove the following goals:\n  \
-     %s\n\
-     The remaining conjuncts in the separation logic context available for use are:\n  \
-     %s\n\
-     The typing context is:\n  \
-     %s\n"
-    (format_terms goal)
-    (format_terms ctxt)
-    (env_to_string g)
 
 let handle_framing_failure
     (g:env)
