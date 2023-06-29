@@ -2437,8 +2437,7 @@ let (elim_then_check :
                       (FStar_Range.mk_range "Pulse.Checker.fst"
                          (Prims.of_int (302)) (Prims.of_int (3))
                          (Prims.of_int (309)) (Prims.of_int (44)))))
-                (Obj.magic
-                   (Pulse_Checker_Auto_ElimExists.elim_exists g ctxt ()))
+                (Obj.magic (Pulse_Prover_ElimExists.elim_exists g ctxt ()))
                 (fun uu___ ->
                    (fun uu___ ->
                       match uu___ with
@@ -2463,8 +2462,8 @@ let (elim_then_check :
                                         (Prims.of_int (309))
                                         (Prims.of_int (44)))))
                                (Obj.magic
-                                  (Pulse_Checker_Auto_ElimPure.elim_pure g'
-                                     ctxt' ()))
+                                  (Pulse_Prover_ElimPure.elim_pure g' ctxt'
+                                     ()))
                                (fun uu___1 ->
                                   (fun uu___1 ->
                                      match uu___1 with

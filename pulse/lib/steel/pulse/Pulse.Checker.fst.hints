@@ -1,5 +1,5 @@
 [
-  "ò„\u000bﬂñ\u0003íâ^Ô·ı€\u001dñ¿",
+  "‡\nÙ»dMRÎ8ä$Äø-gb",
   [
     [
       "Pulse.Checker.build_instantiations",
@@ -69,20 +69,6 @@
       ],
       0,
       "7ef384ea27f8d6a42233150522d37204"
-    ],
-    [
-      "Pulse.Checker.format_failed_goal",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ce036b6b736ef4e0bc3a9ff132a12aed",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
-        "string_typing"
-      ],
-      0,
-      "f7ff4b80de76100fd09f5d0366bc6348"
     ],
     [
       "Pulse.Checker.handle_framing_failure",

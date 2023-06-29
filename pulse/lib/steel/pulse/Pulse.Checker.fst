@@ -29,8 +29,8 @@ module Par = Pulse.Checker.Par
 module Admit = Pulse.Checker.Admit
 module Return = Pulse.Checker.Return
 module Rewrite = Pulse.Checker.Rewrite
-module ElimPure = Pulse.Checker.Auto.ElimPure
-module ElimExists = Pulse.Checker.Auto.ElimExists
+module ElimPure = Pulse.Prover.ElimPure
+module ElimExists = Pulse.Prover.ElimExists
 
 let terms_to_string (t:list term)
   : T.Tac string 
@@ -293,7 +293,7 @@ let rec unprotect t =
   
 #push-options "--ifuel 2"
 
-let elim_then_check (#g:env) (#ctxt:term) 
+let elim_then_check (#g:env) (#ctxt:term)
                     (ctxt_typing:tot_typing g ctxt tm_vprop)
                     (st:st_term { not (Tm_Protect? st.term) })
                     (post_hint: post_hint_opt g)
