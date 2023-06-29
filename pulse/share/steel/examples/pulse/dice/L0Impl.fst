@@ -72,7 +72,7 @@ fn l0_core_step1
 
 (* ------- L0 CORE STEP 2 ------- *)
 
-let l0_step2_repr_post_state (vl0:l0_repr) (l:U32.t) (s:elseq U8.t (U32.v l))
+let l0_step2_repr_post_state (vl0:l0_repr) (l:U32.t) (s:Seq.seq U8.t)
   = { vl0 with 
       deviceIDCRI_len = l;
       deviceIDCRI_buf = s;
@@ -142,9 +142,8 @@ fn sign_and_finalize_deviceIDCSR
   (deviceIDCSR_len: R.ref U32.t)
   (deviceIDCSR_buf: A.array U8.t)
   (#priv_perm:perm)
-  (#priv:erased (Seq.seq U8.t))
-  (#_cri_len#_csr_len:erased U32.t)
-  (#_cri_buf#_csr_buf:erased (Seq.seq U8.t))
+  (#_cri_len#_csr_len:U32.t)
+  (#priv#_cri_buf#_csr_buf:erased (Seq.seq U8.t))
   requires (
     A.pts_to deviceID_priv priv_perm priv **
     R.pts_to deviceIDCRI_len full_perm _cri_len **
@@ -157,7 +156,7 @@ fn sign_and_finalize_deviceIDCSR
       _csr_len == length_of_deviceIDCSR _cri_len
     ))
   ensures (
-    exists (csr_buf:elseq U8.t (U32.v _csr_len)). 
+    exists (csr_buf:Seq.seq U8.t). 
     A.pts_to deviceID_priv priv_perm priv **
     R.pts_to deviceIDCRI_len full_perm _cri_len **
     A.pts_to deviceIDCRI_buf full_perm _cri_buf **
@@ -173,51 +172,16 @@ fn sign_and_finalize_deviceIDCSR
                                       _cri_buf))
     ))
 {
+  let deviceIDCRI_len_v = !deviceIDCRI_len;
+  let deviceIDCRI_sig = new_array 0uy (u32_to_us deviceIDCRI_len_v);
+  ed25519_sign deviceIDCRI_sig deviceID_priv (u32_to_us deviceIDCRI_len_v) deviceIDCRI_buf;
+  // let deviceIDCSR = x509_get_deviceIDCSR
+  //                     deviceIDCRI_len
+  //                     deviceIDCRI_buf
+  //                     deviceIDCRI_sig;
+                    
+  // serialize_deviceIDCSR deviceIDCRI_len deviceIDCSR deviceIDCRI_buf deviceIDCSR_len;
   admit()
-(* 
-(* Classify AliasKeyTBS *)
-  let deviceIDCRI_buf_sec: B.lbuffer byte_sec (v deviceIDCRI_len) = B.alloca (u8 0x00) deviceIDCRI_len in
-  classify_public_buffer
-    (* len *) deviceIDCRI_len
-    (* src *) deviceIDCRI_buf
-    (* dst *) deviceIDCRI_buf_sec;
-
-(* Sign Classified AliasKeyTBS *)
-  let deviceIDCRI_sig_sec: B.lbuffer byte_sec 64 = B.alloca (u8 0x00) 64ul in
-  Ed25519.sign
-    (* sig *) deviceIDCRI_sig_sec
-    (* key *) deviceID_priv
-    (* len *) deviceIDCRI_len
-    (* msg *) deviceIDCRI_buf_sec;
-
-(* Declassify AliasKeyTBS Signature *)
-  let deviceIDCRI_sig: B.lbuffer byte_pub 64 = B.alloca 0x00uy 64ul in
-  declassify_secret_buffer
-    (* len *) 64ul
-    (* src *) deviceIDCRI_sig_sec
-    (* dst *) deviceIDCRI_sig;
-
-(* Finalize AliasKeyCRT with AliasKeyTBS and Signature *)
-  let deviceIDCRI_buf32: B32.lbytes32 deviceIDCRI_len = B32.of_buffer deviceIDCRI_len deviceIDCRI_buf in
-  let deviceIDCRI_sig32: x509_signature_raw_t = B32.of_buffer 64ul deviceIDCRI_sig in
-
-  printf "Creating AliasKey Certificate CRT message\n" done;
-  let deviceIDCSR: deviceIDCSR_t deviceIDCRI_len = x509_get_deviceIDCSR
-                                                             deviceIDCRI_len
-                                                             deviceIDCRI_buf32
-                                                             deviceIDCRI_sig32 in
-  (* Prf *) lemma_serialize_deviceIDCSR_size_exact deviceIDCRI_len deviceIDCSR;
-
-  printf "Serializing AliasKey Certificate CRT\n" done;
-(* Serialize AliasKeyCRT *)
-  let offset = serialize32_deviceIDCSR_backwards
-                 deviceIDCRI_len
-                 deviceIDCSR
-                 deviceIDCSR_buf
-                 deviceIDCSR_len in
-
-  HST.pop_frame ()
-*)
 }
 ```
 
@@ -276,6 +240,9 @@ fn l0_core_step2
   with vl0_. assert l0_perm l0 vl0_;
 
   unfold (l0_perm l0 vl0_);
+
+  let deviceIDCRI_len = !l0.deviceIDCRI_len;
+  let deviceIDCSR_len = !l0.deviceIDCSR_len;
 
   sign_and_finalize_deviceIDCSR l0.deviceID_priv 
                                 l0.deviceIDCRI_len l0.deviceIDCRI_buf 

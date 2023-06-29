@@ -26,10 +26,8 @@ val aliaskey_len_is_valid (len:US.t)
 assume
 val derive_key_pair_spec
   (ikm_len: hkdf_ikm_len)
-  // (ikm: Seq.lseq U8.t (US.v ikm_len))
   (ikm: Seq.seq U8.t)
   (lbl_len: hkdf_lbl_len)
-  // (lbl: Seq.lseq U8.t (US.v lbl_len))
   (lbl: Seq.seq U8.t)
   : Seq.seq U8.t & Seq.seq U8.t (* should be length 32 *)
 
@@ -38,7 +36,6 @@ let derive_DeviceID_spec
   (dig_len:hkdf_ikm_len)
   (cdi: Seq.seq U8.t) (* should be length 32 *)
   (l0_label_DeviceID_len: hkdf_lbl_len)
-  // (l0_label_DeviceID: Seq.lseq U8.t (US.v l0_label_DeviceID_len))
   (l0_label_DeviceID: Seq.seq U8.t)
 : Seq.seq U8.t & Seq.seq U8.t (* should be length 32 *)
 = let cdigest = spec_hash alg cdi in
@@ -83,7 +80,6 @@ let derive_AliasKey_spec
   (cdi: Seq.seq U8.t)  (* should be length 32 *)
   (fwid: Seq.seq U8.t) (* should be length 32 *)
   (l0_label_AliasKey_len: hkdf_lbl_len)
-  // (l0_label_AliasKey: Seq.lseq U8.t (US.v l0_label_AliasKey_len))
   (l0_label_AliasKey: Seq.seq U8.t)
 : Seq.seq U8.t & Seq.seq U8.t (* should be length 32 *)
 = let cdigest = spec_hash alg cdi in

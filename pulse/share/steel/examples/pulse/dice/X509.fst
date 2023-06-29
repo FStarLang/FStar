@@ -39,7 +39,7 @@ val spec_serialize_deviceIDCSR
   (deviceIDCRI_len: U32.t)
   (deviceIDCSR_len: U32.t)
   (deviceIDCSR: deviceIDCSR_t deviceIDCRI_len)
-  : elseq U8.t (U32.v deviceIDCSR_len)
+  : Seq.seq U8.t
 
 assume
 val serialize_deviceIDCSR 
@@ -51,7 +51,7 @@ assume
 val spec_serialize_deviceIDCRI
   (deviceIDCRI: deviceIDCRI_t)
   (deviceIDCRI_len: U32.t)
-  : elseq U8.t (U32.v deviceIDCRI_len)
+  : Seq.seq U8.t
 
 assume
 val serialize_deviceIDCRI

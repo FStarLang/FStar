@@ -99,9 +99,9 @@ type l0_repr = {
   aliasKey_pub: Seq.seq U8.t;
   aliasKey_priv: Seq.seq U8.t;
   deviceIDCSR_len: U32.t;
-  deviceIDCSR_buf: elseq U8.t (U32.v deviceIDCSR_len);
+  deviceIDCSR_buf: Seq.seq U8.t;
   deviceIDCRI_len: U32.t;
-  deviceIDCRI_buf: elseq U8.t (U32.v deviceIDCRI_len);
+  deviceIDCRI_buf: Seq.seq U8.t;
   deviceIDCRI_sig: Seq.seq U8.t;
   aliasKeyCRT_buf: Seq.seq U8.t;
   authKeyID: Seq.seq U8.t;
@@ -148,10 +148,8 @@ fn fold_l0_perm (l0:l0_record)
                 (#cdi #fwid #deviceID_label #aliasKey_label #deviceID_pub
                  #deviceID_priv #aliasKey_pub #aliasKey_priv:erased (Seq.seq U8.t))
                 (#deviceIDCSR_len:erased U32.t)
-                (#deviceIDCSR_buf:elseq U8.t (U32.v deviceIDCSR_len))
                 (#deviceIDCRI_len:erased U32.t)
-                (#deviceIDCRI_buf:elseq U8.t (U32.v deviceIDCRI_len))
-                (#deviceIDCRI_sig #aliasKeyCRT_buf #authKeyID: erased (Seq.seq U8.t))
+                (#deviceIDCRI_sig #aliasKeyCRT_buf #authKeyID #deviceIDCSR_buf #deviceIDCRI_buf: erased (Seq.seq U8.t))
   requires
     A.pts_to l0.cdi full_perm cdi `star`
     A.pts_to l0.fwid full_perm fwid `star`
@@ -182,16 +180,6 @@ fn fold_l0_perm (l0:l0_record)
                            deviceIDCRI_sig aliasKeyCRT_buf authKeyID))
 }
 ```
-
-
-// assume
-// val l0_perm (l0:l0_record) (vl0: l0_repr) : vprop
-
-// assume
-// val l0_perm_definition (l0:l0_record) (vl0: l0_repr)
-//   : Lemma 
-//     (ensures l0_perm l0 vl0 === l0_perm' l0 vl0)
-//     [SMTPat (l0_perm l0 vl0)]
 
 assume 
 val u32_to_us (v:U32.t) : US.t

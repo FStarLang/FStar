@@ -12,6 +12,8 @@ module A = Steel.ST.Array
 module US = FStar.SizeT
 module U8 = FStar.UInt8
 
+let elseq (a:Type) (l:nat) = s:Ghost.erased (Seq.seq a) { Seq.length s == l }
+
 (* a tiny model of HACL* hashes *)
 
 assume
@@ -103,6 +105,27 @@ val ed25519_verify
       A.pts_to hdr phdr hdr_seq `star`
       A.pts_to sig psig sig_seq `star`
       pure (spec_ed25519_verify pubk_seq hdr_seq sig_seq))
+
+assume
+val spec_ed25519_sign (privk msg:Seq.seq U8.t) : prop 
+
+assume
+val ed25519_sign 
+  (buf:A.array U8.t)
+  (privk:A.array U8.t)
+  (len:US.t)
+  (msg:A.array U8.t)
+  (#pprivk #pmsg:perm)
+  (#buf0 #privk_seq #msg_seq:Ghost.erased (Seq.seq U8.t))
+  : stt unit
+    (A.pts_to buf full_perm buf0 `star`
+     A.pts_to privk pprivk privk_seq `star`
+     A.pts_to msg pmsg msg_seq)
+    (fun _ -> exists_ (fun (buf1:Seq.seq U8.t) ->
+      A.pts_to buf full_perm buf1 `star`
+      A.pts_to privk pprivk privk_seq `star`
+      A.pts_to msg pmsg msg_seq `star`
+      pure (spec_ed25519_sign privk_seq msg_seq)))
 
 (* DICE hash constants *)
 
