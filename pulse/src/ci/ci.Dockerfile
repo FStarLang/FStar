@@ -3,6 +3,14 @@
 ARG ocaml_version=4.12
 FROM ocaml/opam:ubuntu-22.04-ocaml-$ocaml_version
 
+# CI dependencies for the Wasm11 test: node.js
+# The sed call is a workaround for these upstream issues... sigh.
+# https://github.com/nodesource/distributions/issues/1576
+# https://github.com/nodesource/distributions/issues/1593
+# Remove when they are solved
+RUN curl -fsSL https://deb.nodesource.com/setup_16.x | sed 's,https://deb.nodesource.com,http://deb.nodesource.com,' | sudo -E bash -
+RUN sudo apt-get install -y --no-install-recommends nodejs
+
 ARG opamthreads=24
 
 ADD --chown=opam:opam ./ steel/
@@ -22,10 +30,6 @@ RUN sudo apt-get update && sudo apt-get install --yes --no-install-recommends \
     git clone --branch $(jq -c -r '.RepoVersions.karamel' steel/src/ci/config.json || echo master) https://github.com/FStarLang/karamel $KRML_HOME && \
     eval $(opam env) && $KRML_HOME/.docker/build/install-other-deps.sh && \
     env OTHERFLAGS='--admit_smt_queries true' make -C $KRML_HOME -j $opamthreads
-
-# CI dependencies for the Wasm11 test: node.js
-RUN curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
-RUN sudo apt-get install -y --no-install-recommends nodejs
 
 # Steel CI proper
 ARG STEEL_NIGHTLY_CI

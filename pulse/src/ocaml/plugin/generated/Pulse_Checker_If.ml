@@ -866,7 +866,7 @@ let (check_if :
                                                                     = e11;
                                                                     Pulse_Syntax_Base.else_
                                                                     = e21;
-                                                                    Pulse_Syntax_Base.post2
+                                                                    Pulse_Syntax_Base.post1
                                                                     =
                                                                     FStar_Pervasives_Native.None
                                                                     })), c,

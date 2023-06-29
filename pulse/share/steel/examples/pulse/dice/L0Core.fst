@@ -1,4 +1,5 @@
 module L0Core
+
 module R = Steel.ST.Reference
 module A = Steel.ST.Array
 module T = FStar.Tactics
@@ -14,355 +15,72 @@ module U8 = FStar.UInt8
 module U32 = FStar.UInt32
 open HACL
 open L0Types
-
-// assume val ex (x:US.t) : 
-//   stt unit
-//   (x > 0)
-//   (fun _ -> emp)
-
-assume 
-val deviceid_len_is_valid (len:US.t)
-  : valid_hkdf_lbl_len len
-
-assume 
-val aliaskey_len_is_valid (len:US.t)
-  : valid_hkdf_lbl_len len
+open L0Impl
+open L0Crypto
+open X509
 
 assume
-val derive_key_pair_spec
-  (ikm_len: hkdf_ikm_len)
-  // (ikm: Seq.lseq U8.t (US.v ikm_len))
-  (ikm: Seq.seq U8.t)
-  (lbl_len: hkdf_lbl_len)
-  // (lbl: Seq.lseq U8.t (US.v lbl_len))
-  (lbl: Seq.seq U8.t)
-  : Seq.seq U8.t & Seq.seq U8.t (* should be length 32 *)
+val deviceIDCRI_pre (v:deviceIDCSR_ingredients_t) : prop
 
-let derive_DeviceID_spec
-  (alg:alg_t)
-  (dig_len:hkdf_ikm_len)
-  (cdi: Seq.seq U8.t) (* should be length 32 *)
-  (l0_label_DeviceID_len: hkdf_lbl_len)
-  // (l0_label_DeviceID: Seq.lseq U8.t (US.v l0_label_DeviceID_len))
-  (l0_label_DeviceID: Seq.seq U8.t)
-: Seq.seq U8.t & Seq.seq U8.t (* should be length 32 *)
-= let cdigest = spec_hash alg cdi in
-  derive_key_pair_spec
-    (* ikm *) dig_len cdigest
-    (* lbl *) l0_label_DeviceID_len l0_label_DeviceID
-
-```pulse 
-fn derive_DeviceID
-  (alg:alg_t)
-  (deviceID_pub: A.larray U8.t 32)
-  (deviceID_priv: A.larray U8.t 32)
-  (cdi: A.larray U8.t 32)
-  (deviceID_label_len: hkdf_lbl_len)
-  (deviceID_label: A.larray U8.t (US.v deviceID_label_len))
-  (#cdi0 #deviceID_label0 #deviceID_pub0 #deviceID_priv0: Ghost.erased (Seq.seq U8.t))
-  requires (
-    A.pts_to cdi full_perm cdi0 `star`
-    A.pts_to deviceID_label full_perm deviceID_label0 `star`
-    A.pts_to deviceID_pub full_perm deviceID_pub0 `star`
-    A.pts_to deviceID_priv full_perm deviceID_priv0
-  )
-  ensures (
-    A.pts_to cdi full_perm cdi0 `star`
-    A.pts_to deviceID_label full_perm deviceID_label0 `star`
-    // (exists (deviceID_pub1:Seq.seq U8.t). A.pts_to deviceID_pub full_perm deviceID_pub1) `star`
-    (exists (deviceID_pub1:Seq.seq U8.t) (deviceID_priv1:Seq.seq U8.t). (
-        A.pts_to deviceID_pub full_perm deviceID_pub1 `star`
-        A.pts_to deviceID_priv full_perm deviceID_priv1 `star`
-        pure (valid_hkdf_ikm_len (digest_len alg) /\
-              derive_DeviceID_spec alg (digest_len alg) cdi0 deviceID_label_len deviceID_label0 == (deviceID_pub1, deviceID_priv1))
-      ))
-  )
-{
-  admit()
-}
-```
-
-let derive_AliasKey_spec
-  (alg:alg_t)
-  (dig_len:hkdf_ikm_len)
-  (cdi: Seq.seq U8.t)  (* should be length 32 *)
-  (fwid: Seq.seq U8.t) (* should be length 32 *)
-  (l0_label_AliasKey_len: hkdf_lbl_len)
-  // (l0_label_AliasKey: Seq.lseq U8.t (US.v l0_label_AliasKey_len))
-  (l0_label_AliasKey: Seq.seq U8.t)
-: Seq.seq U8.t & Seq.seq U8.t (* should be length 32 *)
-= let cdigest = spec_hash alg cdi in
-  let adigest = spec_hmac alg cdigest fwid in
-  derive_key_pair_spec
-    (* ikm *) dig_len adigest
-    (* lbl *) l0_label_AliasKey_len l0_label_AliasKey
-
-```pulse 
-fn derive_AliasKey
-  (alg:alg_t)
-  (aliasKey_pub: A.larray U8.t 32)
-  (aliasKey_priv: A.larray U8.t 32)
-  (cdi: A.larray U8.t 32)
-  (fwid: A.larray U8.t 32)
-  (aliasKey_label_len: hkdf_lbl_len)
-  (aliasKey_label: A.larray U8.t (US.v aliasKey_label_len))
-  (#cdi0 #fwid0 #aliasKey_label0 #aliasKey_pub0 #aliasKey_priv0: Ghost.erased (Seq.seq U8.t))
-  requires (
-    A.pts_to cdi full_perm cdi0 `star`
-    A.pts_to fwid full_perm fwid0 `star`
-    A.pts_to aliasKey_label full_perm aliasKey_label0 `star`
-    A.pts_to aliasKey_pub full_perm aliasKey_pub0 `star`
-    A.pts_to aliasKey_priv full_perm aliasKey_priv0
-  )
-  ensures (
-    A.pts_to cdi full_perm cdi0 `star`
-    A.pts_to fwid full_perm fwid0 `star`
-    A.pts_to aliasKey_label full_perm aliasKey_label0 `star`
-    (exists (aliasKey_pub1:Seq.seq U8.t) (aliasKey_priv1:Seq.seq U8.t). (
-        A.pts_to aliasKey_pub full_perm aliasKey_pub1 `star`
-        A.pts_to aliasKey_priv full_perm aliasKey_priv1 `star`
-        pure (valid_hkdf_ikm_len (digest_len alg) /\
-              derive_AliasKey_spec alg (digest_len alg) cdi0 fwid0 aliasKey_label_len aliasKey_label0 == (aliasKey_pub1, aliasKey_priv1))
-      ))
-  )
-{
-  admit()
-}
-```
-
-let derive_authKeyID_spec
-  (alg:alg_t)
-  (deviceID_pub: Seq.seq U8.t) (* should be length 32 *)
-: Seq.seq U8.t (* should be length 20 *)
-= spec_hash alg deviceID_pub
-
-```pulse 
-fn derive_authkeyID
-  (alg:alg_t)
-  (authKeyID: A.larray U8.t 32)
-  (deviceID_pub: A.larray U8.t 32)
-  (#authKeyID0 #deviceID_pub0: Ghost.erased (Seq.seq U8.t))
-  requires (
-    A.pts_to deviceID_pub full_perm deviceID_pub0 `star`
-    A.pts_to authKeyID full_perm authKeyID0 
-  )
-  ensures (
-    A.pts_to deviceID_pub full_perm deviceID_pub0 `star`
-    (exists (authKeyID1:Seq.seq U8.t). (
-        A.pts_to authKeyID full_perm authKeyID1 `star`
-        pure (Seq.equal (derive_authKeyID_spec alg deviceID_pub0) authKeyID1)
-      ))
-  )
-{
-  admit()
-}
-```
-
-let l0_core_step1_post
-  (l0: l0_record)
-  (vl0: l0_repr)
-  (alg:alg_t)
-  : prop = 
-    valid_hkdf_ikm_len (digest_len alg) /\
-    derive_DeviceID_spec alg (digest_len alg) vl0.cdi l0.deviceID_label_len vl0.deviceID_label
-      == (vl0.deviceID_pub, vl0.deviceID_priv) /\
-    derive_AliasKey_spec alg (digest_len alg) vl0.cdi vl0.fwid l0.aliasKey_label_len vl0.aliasKey_label
-      == (vl0.aliasKey_pub, vl0.aliasKey_priv) /\
-    derive_authKeyID_spec alg vl0.deviceID_pub
-      == vl0.authKeyID 
-  
-```pulse
-fn get_witness (x:A.array U8.t) (#y:Ghost.erased (Seq.seq U8.t))
-requires A.pts_to x full_perm y
-returns z:Ghost.erased (Seq.seq U8.t)
-ensures A.pts_to x full_perm y ** pure (y==z)
-{   
-    y
-}
-```
-
-(* BEGIN RECORD MUT/PERM EXPERIMENT *)
-```pulse
-fn mutate_array (l:US.t) (a:(a:A.array U8.t{ US.v l == A.length a }))
-                (#s:(s:Ghost.erased (Seq.seq U8.t){ US.v l > 0 /\ US.v l == Seq.length s }))
-   requires A.pts_to a full_perm s
-   ensures A.pts_to a full_perm (Seq.upd s 0 0uy)
-{
-  (a.(0sz) <- 0uy)
-}
-```
-```pulse
-fn mutate_rec_get_witness (l:US.t) (l0:l0_record) (#vl0:Ghost.erased l0_repr)
-  requires (
-    l0_perm l0 vl0 `star`
-    pure (US.v l > 0 /\ A.length l0.deviceID_pub == (US.v l) /\ Seq.length vl0.deviceID_pub == (US.v l))
-  )
-  ensures (
-    A.pts_to l0.cdi full_perm vl0.cdi `star`
-    A.pts_to l0.fwid full_perm vl0.fwid `star`
-    A.pts_to l0.deviceID_label full_perm vl0.deviceID_label `star`
-    A.pts_to l0.aliasKey_label full_perm vl0.aliasKey_label `star`
-    A.pts_to l0.deviceID_priv full_perm vl0.deviceID_priv `star`
-    A.pts_to l0.aliasKey_pub full_perm vl0.aliasKey_pub `star`
-    A.pts_to l0.aliasKey_priv full_perm vl0.aliasKey_priv `star`
-    A.pts_to l0.deviceIDCSR_buf full_perm vl0.deviceIDCSR_buf `star`
-    A.pts_to l0.aliasKeyCRT_buf full_perm vl0.aliasKeyCRT_buf `star`
-    A.pts_to l0.authKeyID full_perm vl0.authKeyID `star`
-    exists (s:Seq.seq U8.t) . A.pts_to l0.deviceID_pub full_perm s
-  )
-{
-  rewrite (l0_perm l0 vl0)
-    as (
-      A.pts_to l0.cdi full_perm vl0.cdi `star`
-      A.pts_to l0.fwid full_perm vl0.fwid `star`
-      A.pts_to l0.deviceID_label full_perm vl0.deviceID_label `star`
-      A.pts_to l0.aliasKey_label full_perm vl0.aliasKey_label `star`
-      A.pts_to l0.deviceID_pub full_perm vl0.deviceID_pub `star`
-      A.pts_to l0.deviceID_priv full_perm vl0.deviceID_priv `star`
-      A.pts_to l0.aliasKey_pub full_perm vl0.aliasKey_pub `star`
-      A.pts_to l0.aliasKey_priv full_perm vl0.aliasKey_priv `star`
-      A.pts_to l0.deviceIDCSR_buf full_perm vl0.deviceIDCSR_buf `star`
-      A.pts_to l0.aliasKeyCRT_buf full_perm vl0.aliasKeyCRT_buf `star`
-      A.pts_to l0.authKeyID full_perm vl0.authKeyID
-    );
-  
-  mutate_array l l0.deviceID_pub;
-  // let y = get_witness (l0.deviceID_pub); (* this works! *)
-  ()
-}
-```
-(* END RECORD MUT/PERM EXPERIMENT *)
-
-let l0_core_post_state (vl0:l0_repr) (s1 s2 s3 s4 s5:_) 
-  = { vl0 with 
-      deviceID_pub = s1;
-      deviceID_priv = s2;
-      aliasKey_pub = s3;
-      aliasKey_priv = s4;
-      authKeyID = s5;
-    }
-
-```pulse
-fn l0_core_step1
-  (l0: l0_record)
-  (#vl0: Ghost.erased l0_repr)
-  requires (
-    l0_perm l0 vl0 `star`
-    pure(valid_hkdf_lbl_len l0.deviceID_label_len /\
-         valid_hkdf_lbl_len l0.aliasKey_label_len)
-  )
-  ensures (
-    exists (vl0_:l0_repr). 
-      l0_perm l0 vl0_ **
-      pure (l0_core_step1_post l0 vl0_ dice_hash_alg)
-  )
-{
-  dice_digest_len_is_hkdf_ikm;
-
-  rewrite (l0_perm l0 vl0)
-    as (
-      A.pts_to l0.cdi full_perm vl0.cdi `star`
-      A.pts_to l0.fwid full_perm vl0.fwid `star`
-      A.pts_to l0.deviceID_label full_perm vl0.deviceID_label `star`
-      A.pts_to l0.aliasKey_label full_perm vl0.aliasKey_label `star`
-      A.pts_to l0.deviceID_pub full_perm vl0.deviceID_pub `star`
-      A.pts_to l0.deviceID_priv full_perm vl0.deviceID_priv `star`
-      A.pts_to l0.aliasKey_pub full_perm vl0.aliasKey_pub `star`
-      A.pts_to l0.aliasKey_priv full_perm vl0.aliasKey_priv `star`
-      A.pts_to l0.deviceIDCSR_buf full_perm vl0.deviceIDCSR_buf `star`
-      A.pts_to l0.aliasKeyCRT_buf full_perm vl0.aliasKeyCRT_buf `star`
-      A.pts_to l0.authKeyID full_perm vl0.authKeyID
-    );
-
-  derive_DeviceID dice_hash_alg l0.deviceID_pub l0.deviceID_priv l0.cdi l0.deviceID_label_len l0.deviceID_label;
-  
-  derive_AliasKey dice_hash_alg l0.aliasKey_pub l0.aliasKey_priv l0.cdi l0.fwid l0.aliasKey_label_len l0.aliasKey_label;
-
-  derive_authkeyID dice_hash_alg l0.authKeyID l0.deviceID_pub;
-
-  // introduce exists (s1 s2 s3 s4 s5: Seq.seq U8.t). (
-  //     A.pts_to l0.deviceID_pub full_perm s1 `star`
-  //     A.pts_to l0.deviceID_priv full_perm s2 `star`
-  //     A.pts_to l0.aliasKey_pub full_perm s3 `star`
-  //     A.pts_to l0.aliasKey_priv full_perm s4 `star`
-  //     A.pts_to l0.authKeyID full_perm s5
-  //   ) with _;
-
-  with s1 s2 s3 s4 s5.
-  assert A.pts_to l0.deviceID_pub full_perm s1 **
-         A.pts_to l0.deviceID_priv full_perm s2 **
-         A.pts_to l0.aliasKey_pub full_perm s3 **
-         A.pts_to l0.aliasKey_priv full_perm s4 **
-         A.pts_to l0.authKeyID full_perm s5;
-
-
-  rewrite  (
-      A.pts_to l0.cdi full_perm vl0.cdi `star`
-      A.pts_to l0.fwid full_perm vl0.fwid `star`
-      A.pts_to l0.deviceID_label full_perm vl0.deviceID_label `star`
-      A.pts_to l0.aliasKey_label full_perm vl0.aliasKey_label `star`
-      A.pts_to l0.deviceID_pub full_perm s1 `star`
-      A.pts_to l0.deviceID_priv full_perm s2 `star`
-      A.pts_to l0.aliasKey_pub full_perm s3 `star`
-      A.pts_to l0.aliasKey_priv full_perm s4 `star`
-      A.pts_to l0.deviceIDCSR_buf full_perm vl0.deviceIDCSR_buf `star`
-      A.pts_to l0.aliasKeyCRT_buf full_perm vl0.aliasKeyCRT_buf `star`
-      A.pts_to l0.authKeyID full_perm s5
-  )
-  as (l0_perm l0 (l0_core_post_state vl0 s1 s2 s3 s4 s5));
-  ()
-}
-```
+let deviceIDCSR_pre 
+  (deviceIDCSR: deviceIDCSR_ingredients_t) 
+  (deviceIDCSR_len: U32.t) 
+  : prop
+  = let deviceIDCRI_len = len_of_deviceIDCRI
+                            deviceIDCSR.version
+                            deviceIDCSR.s_common
+                            deviceIDCSR.s_org
+                            deviceIDCSR.s_country in
+    U32.(0ul <^ deviceIDCRI_len) /\ 
+    valid_deviceIDCSR_ingredients deviceIDCRI_len /\
+    deviceIDCSR_len == length_of_deviceIDCSR deviceIDCRI_len
 
 assume
-val deviceIDCRI_pre (v:deviceIDCSR_ingredients_t) : vprop
-
-assume
-val deviceIDCSR_pre (v:deviceIDCSR_ingredients_t) (l:US.t) : vprop
-
-assume
-val aliasKeyCRT_pre (v:aliasKeyCRT_ingredients_t) (l:US.t) : vprop
+val aliasKeyCRT_pre 
+  (v:aliasKeyCRT_ingredients_t) 
+  (len:US.t) 
+  : prop
 
 let l0_pre
   (l0: l0_record)
   (vl0: l0_repr)
-  : vprop =
-  deviceIDCRI_pre l0.deviceIDCSR_ingredients `star`
-  deviceIDCSR_pre l0.deviceIDCSR_ingredients l0.deviceIDCSR_len `star`
-  aliasKeyCRT_pre l0.aliasKeyCRT_ingredients l0.aliasKeyCRT_len `star`
-  pure (valid_hkdf_lbl_len l0.deviceID_label_len /\
-        valid_hkdf_lbl_len l0.aliasKey_label_len)
+  : prop =
+  deviceIDCRI_pre l0.deviceIDCSR_ingredients /\
+  deviceIDCSR_pre l0.deviceIDCSR_ingredients vl0.deviceIDCSR_len /\
+  aliasKeyCRT_pre l0.aliasKeyCRT_ingredients l0.aliasKeyCRT_len /\
+  valid_hkdf_lbl_len l0.deviceID_label_len /\
+  valid_hkdf_lbl_len l0.aliasKey_label_len
 
 assume
 val aliasKey_post 
-  (cdi: A.larray U8.t 32)
-  (fwid: A.larray U8.t 32)
+  (cdi: Seq.seq U8.t)
+  (fwid: Seq.seq U8.t)
   (aliasKey_label_len: US.t)
-  (aliasKey_label: A.larray U8.t (US.v aliasKey_label_len))
-  (aliasKey_pub: A.larray U8.t 32)
-  (aliasKey_priv: A.larray U8.t 32)
+  (aliasKey_label: Seq.seq U8.t)
+  (aliasKey_pub: Seq.seq U8.t)
+  (aliasKey_priv: Seq.seq U8.t)
   : vprop
 
 assume
 val deviceIDCSR_post
-  (cdi: A.larray U8.t 32)
+  (cdi: Seq.seq U8.t)
   (deviceID_label_len: US.t)
-  (deviceID_label: A.larray U8.t (US.v deviceID_label_len))
+  (deviceID_label: Seq.seq U8.t)
   (deviceIDCSR_ingredients: deviceIDCSR_ingredients_t)
-  (deviceIDCSR_len: US.t)
-  (deviceIDCSR_buf: A.larray U8.t (US.v deviceIDCSR_len))
+  (deviceIDCSR_len: U32.t)
+  (deviceIDCSR_buf: Seq.seq U8.t)
   : vprop
 
 assume
 val aliasKeyCRT_post
-  (cdi: A.larray U8.t 32)
-  (fwid: A.larray U8.t 32)
+  (cdi: Seq.seq U8.t)
+  (fwid: Seq.seq U8.t)
   (deviceID_label_len: US.t)
-  (deviceID_label: A.larray U8.t (US.v deviceID_label_len))
+  (deviceID_label: Seq.seq U8.t)
   (aliasKeyCRT_ingredients: aliasKeyCRT_ingredients_t)
   (aliasKeyCRT_len: US.t)
-  (aliasKeyCRT_buf: A.larray U8.t (US.v aliasKeyCRT_len))
-  (aliasKey_pub: A.larray U8.t 32)
+  (aliasKeyCRT_buf: Seq.seq U8.t)
+  (aliasKey_pub: Seq.seq U8.t)
   : vprop
 
 let l0_post
@@ -370,14 +88,14 @@ let l0_post
   (vl0: l0_repr)
   : vprop
   = aliasKey_post 
-      l0.cdi l0.fwid l0.aliasKey_label_len l0.aliasKey_label 
-      l0.aliasKey_pub l0.aliasKey_priv `star`
+      vl0.cdi vl0.fwid l0.aliasKey_label_len vl0.aliasKey_label 
+      vl0.aliasKey_pub vl0.aliasKey_priv `star`
     deviceIDCSR_post 
-      l0.cdi l0.deviceID_label_len l0.deviceID_label l0.deviceIDCSR_ingredients 
-      l0.deviceIDCSR_len l0.deviceIDCSR_buf `star`
+      vl0.cdi l0.deviceID_label_len vl0.deviceID_label l0.deviceIDCSR_ingredients 
+      vl0.deviceIDCSR_len vl0.deviceIDCSR_buf `star`
     aliasKeyCRT_post 
-      l0.cdi l0.fwid l0.deviceID_label_len l0.deviceID_label l0.aliasKeyCRT_ingredients 
-      l0.aliasKeyCRT_len l0.aliasKeyCRT_buf l0.aliasKey_pub
+      vl0.cdi vl0.fwid l0.deviceID_label_len vl0.deviceID_label l0.aliasKeyCRT_ingredients 
+      l0.aliasKeyCRT_len vl0.aliasKeyCRT_buf vl0.aliasKey_pub
 
 ```pulse
 fn l0
@@ -385,60 +103,16 @@ fn l0
   (#vl0: Ghost.erased l0_repr)
   // (#pcdi #pfwid #pdeviceID_label #paliasKey_label: perm)
   requires (l0_perm l0 vl0 `star`
-            l0_pre l0 vl0)
-   ensures exists (vl0': l0_repr). (
-                      l0_perm l0 vl0' `star`
-                      l0_post l0 vl0)
+            pure (l0_pre l0 vl0))
+  ensures exists (vl0': l0_repr). (
+                    l0_perm l0 vl0' `star`
+                    l0_post l0 vl0)
 {
-(* Derive DeviceID *)
-
-  rewrite (l0_pre l0 vl0)
-    as (deviceIDCRI_pre l0.deviceIDCSR_ingredients `star`
-        deviceIDCSR_pre l0.deviceIDCSR_ingredients l0.deviceIDCSR_len `star`
-        aliasKeyCRT_pre l0.aliasKeyCRT_ingredients l0.aliasKeyCRT_len `star`
-        pure (valid_hkdf_lbl_len l0.deviceID_label_len /\
-              valid_hkdf_lbl_len l0.aliasKey_label_len));
-
   l0_core_step1 l0;
 
+  l0_core_step2 l0;
+  
   admit()
-
-//   l0_core_step2
-//     (* version   *) deviceIDCSR_ingredients.deviceIDCSR_version
-//                     deviceIDCSR_ingredients.deviceIDCSR_s_common
-//                     deviceIDCSR_ingredients.deviceIDCSR_s_org
-//                     deviceIDCSR_ingredients.deviceIDCSR_s_country
-//     (* key usage *) deviceIDCSR_ingredients.deviceIDCSR_ku
-//     (* DeviceID  *) deviceID_pub
-//                     deviceID_priv
-//     (*DeviceIDCRI*) deviceIDCSR_len
-//                     deviceIDCSR_buf;
-//   let _h_step2_post = HST.get () in
-
-//   (**) B.modifies_trans (
-//     B.loc_buffer deviceID_pub  `B.loc_union`
-//     B.loc_buffer deviceID_priv `B.loc_union`
-//     B.loc_buffer aliasKey_pub  `B.loc_union`
-//     B.loc_buffer aliasKey_priv `B.loc_union`
-//     B.loc_buffer authKeyID
-//   ) h0 _h_step2_pre (
-//     B.loc_buffer deviceIDCSR_buf
-//   ) _h_step2_post;
-
-//   let _h_step3_pre = _h_step2_post in
-
-//   (**) B.modifies_buffer_elim fwid (
-//          B.loc_buffer deviceID_pub  `B.loc_union`
-//          B.loc_buffer deviceID_priv `B.loc_union`
-//          B.loc_buffer aliasKey_pub  `B.loc_union`
-//          B.loc_buffer aliasKey_priv `B.loc_union`
-//          B.loc_buffer authKeyID     `B.loc_union`
-//          B.loc_buffer deviceIDCSR_buf
-//   ) h0 _h_step3_pre;
-//   (**) B.modifies_buffer_elim authKeyID     (B.loc_buffer deviceIDCSR_buf) _h_step1_post _h_step3_pre;
-//   (**) B.modifies_buffer_elim deviceID_pub  (B.loc_buffer deviceIDCSR_buf) _h_step1_post _h_step3_pre;
-//   (**) B.modifies_buffer_elim deviceID_priv (B.loc_buffer deviceIDCSR_buf) _h_step1_post _h_step3_pre;
-//   (**) B.modifies_buffer_elim aliasKey_pub  (B.loc_buffer deviceIDCSR_buf) _h_step1_post _h_step3_pre;
 
 //   l0_core_step3
 //     (aliasKeyCRT_ingredients.aliasKeyCrt_version)

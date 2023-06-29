@@ -14,19 +14,25 @@ module U8 = FStar.UInt8
 module U32 = FStar.UInt32
 open HACL
 
-assume
-val valid_key_usage (i: U32.t) : Type0
+let elseq (a:Type) (l:nat) = s:Ghost.erased (Seq.seq a) { Seq.length s == l }
 
-let key_usage_payload_t = i: U32.t { valid_key_usage i }
+assume
+val deviceIDCRI_t : Type0
+
+assume
+val deviceIDCSR_t (len: U32.t) : Type0
 
 noeq
 type deviceIDCSR_ingredients_t = {
-  deviceIDCSR_ku: key_usage_payload_t;
-  // deviceIDCSR_version: datatype_of_asn1_type INTEGER;
-  // deviceIDCSR_s_common:  x509_RDN_x520_attribute_string_t COMMON_NAME  IA5_STRING;
-  // deviceIDCSR_s_org:     x509_RDN_x520_attribute_string_t ORGANIZATION IA5_STRING;
-  // deviceIDCSR_s_country: x509_RDN_x520_attribute_string_t COUNTRY      PRINTABLE_STRING
+  ku: U32.t;
+  version: U32.t;
+  s_common: string;
+  s_org: string;
+  s_country: string;
 }
+
+assume
+val valid_deviceIDCSR_ingredients (len: U32.t) : prop
 
 assume
 val x509_version_t : Type0
@@ -69,8 +75,12 @@ type l0_record = {
   aliasKey_pub: A.larray U8.t 32; (* public bytes *)
   aliasKey_priv: A.larray U8.t 32; (* secret bytes *)
 (* DeviceID CSR Outputs *)
-  deviceIDCSR_len: US.t; (* should be U32 *)
-  deviceIDCSR_buf: A.larray U8.t (US.v deviceIDCSR_len); (* public bytes *)
+  deviceIDCSR_len: R.ref U32.t; (* should be U32 *)
+  deviceIDCSR_buf: A.array U8.t; (* public bytes *)
+(* DeviceID CRI Outputs *)
+  deviceIDCRI_len: R.ref U32.t; (* should be U32 *)
+  deviceIDCRI_buf: A.array U8.t; (* public bytes *)
+  deviceIDCRI_sig: A.array U8.t;
 (* AliasKey Crt Outputs *)
   aliasKeyCRT_len: US.t; (* should be U32 *)
   aliasKeyCRT_buf: A.larray U8.t (US.v aliasKeyCRT_len); (* public bytes *)
@@ -78,6 +88,7 @@ type l0_record = {
   authKeyID: A.larray U8.t 32;
 }
 
+noeq
 type l0_repr = {
   cdi: Seq.seq U8.t;
   fwid: Seq.seq U8.t;
@@ -87,12 +98,28 @@ type l0_repr = {
   deviceID_priv: Seq.seq U8.t;
   aliasKey_pub: Seq.seq U8.t;
   aliasKey_priv: Seq.seq U8.t;
-  deviceIDCSR_buf: Seq.seq U8.t;
+  deviceIDCSR_len: U32.t;
+  deviceIDCSR_buf: elseq U8.t (U32.v deviceIDCSR_len);
+  deviceIDCRI_len: U32.t;
+  deviceIDCRI_buf: elseq U8.t (U32.v deviceIDCRI_len);
+  deviceIDCRI_sig: Seq.seq U8.t;
   aliasKeyCRT_buf: Seq.seq U8.t;
   authKeyID: Seq.seq U8.t;
 }
 
-let l0_perm' (l0:l0_record) (vl0: l0_repr) 
+let mk_l0_repr cdi fwid deviceID_label aliasKey_label deviceID_pub
+               deviceID_priv aliasKey_pub aliasKey_priv
+               deviceIDCSR_len deviceIDCSR_buf
+               deviceIDCRI_len deviceIDCRI_buf
+               deviceIDCRI_sig aliasKeyCRT_buf authKeyID = 
+
+    { cdi; fwid; deviceID_label; aliasKey_label; deviceID_pub;
+      deviceID_priv; aliasKey_pub; aliasKey_priv;
+      deviceIDCSR_len; deviceIDCSR_buf;
+      deviceIDCRI_len; deviceIDCRI_buf;
+      deviceIDCRI_sig; aliasKeyCRT_buf; authKeyID }
+
+let l0_perm (l0:l0_record) (vl0: l0_repr) 
             // (#pcdi #pfwid #pdeviceID_label #paliasKey_label: perm)
   : vprop = 
   // A.pts_to l0.cdi pcdi vl0.cdi `star`
@@ -107,15 +134,64 @@ let l0_perm' (l0:l0_record) (vl0: l0_repr)
   A.pts_to l0.deviceID_priv full_perm vl0.deviceID_priv `star`
   A.pts_to l0.aliasKey_pub full_perm vl0.aliasKey_pub `star`
   A.pts_to l0.aliasKey_priv full_perm vl0.aliasKey_priv `star`
+  R.pts_to l0.deviceIDCSR_len full_perm vl0.deviceIDCSR_len `star`
   A.pts_to l0.deviceIDCSR_buf full_perm vl0.deviceIDCSR_buf `star`
+  R.pts_to l0.deviceIDCRI_len full_perm vl0.deviceIDCRI_len `star`
+  A.pts_to l0.deviceIDCRI_buf full_perm vl0.deviceIDCRI_buf `star`
+  A.pts_to l0.deviceIDCRI_sig full_perm vl0.deviceIDCRI_sig `star`
   A.pts_to l0.aliasKeyCRT_buf full_perm vl0.aliasKeyCRT_buf `star`
   A.pts_to l0.authKeyID full_perm vl0.authKeyID
 
-assume
-val l0_perm (l0:l0_record) (vl0: l0_repr) : vprop
+```pulse
+ghost
+fn fold_l0_perm (l0:l0_record)
+                (#cdi #fwid #deviceID_label #aliasKey_label #deviceID_pub
+                 #deviceID_priv #aliasKey_pub #aliasKey_priv:erased (Seq.seq U8.t))
+                (#deviceIDCSR_len:erased U32.t)
+                (#deviceIDCSR_buf:elseq U8.t (U32.v deviceIDCSR_len))
+                (#deviceIDCRI_len:erased U32.t)
+                (#deviceIDCRI_buf:elseq U8.t (U32.v deviceIDCRI_len))
+                (#deviceIDCRI_sig #aliasKeyCRT_buf #authKeyID: erased (Seq.seq U8.t))
+  requires
+    A.pts_to l0.cdi full_perm cdi `star`
+    A.pts_to l0.fwid full_perm fwid `star`
+    A.pts_to l0.deviceID_label full_perm deviceID_label `star`
+    A.pts_to l0.aliasKey_label full_perm aliasKey_label `star`
+    A.pts_to l0.deviceID_pub full_perm deviceID_pub `star`
+    A.pts_to l0.deviceID_priv full_perm deviceID_priv `star`
+    A.pts_to l0.aliasKey_pub full_perm aliasKey_pub `star`
+    A.pts_to l0.aliasKey_priv full_perm aliasKey_priv `star`
+    R.pts_to l0.deviceIDCSR_len full_perm deviceIDCSR_len `star`
+    A.pts_to l0.deviceIDCSR_buf full_perm deviceIDCSR_buf `star`
+    R.pts_to l0.deviceIDCRI_len full_perm deviceIDCRI_len `star`
+    A.pts_to l0.deviceIDCRI_buf full_perm deviceIDCRI_buf `star`
+    A.pts_to l0.deviceIDCRI_sig full_perm deviceIDCRI_sig `star`
+    A.pts_to l0.aliasKeyCRT_buf full_perm aliasKeyCRT_buf `star`
+    A.pts_to l0.authKeyID full_perm authKeyID
+  ensures
+    l0_perm l0 (mk_l0_repr cdi fwid deviceID_label aliasKey_label deviceID_pub
+                           deviceID_priv aliasKey_pub aliasKey_priv
+                           deviceIDCSR_len deviceIDCSR_buf
+                           deviceIDCRI_len deviceIDCRI_buf
+                           deviceIDCRI_sig aliasKeyCRT_buf authKeyID)
+{
+   fold (l0_perm l0 (mk_l0_repr cdi fwid deviceID_label aliasKey_label deviceID_pub
+                           deviceID_priv aliasKey_pub aliasKey_priv
+                           deviceIDCSR_len deviceIDCSR_buf
+                           deviceIDCRI_len deviceIDCRI_buf
+                           deviceIDCRI_sig aliasKeyCRT_buf authKeyID))
+}
+```
 
-assume
-val l0_perm_definition (l0:l0_record) (vl0: l0_repr)
-  : Lemma 
-    (ensures l0_perm l0 vl0 === l0_perm' l0 vl0)
-    [SMTPat (l0_perm l0 vl0)]
+
+// assume
+// val l0_perm (l0:l0_record) (vl0: l0_repr) : vprop
+
+// assume
+// val l0_perm_definition (l0:l0_record) (vl0: l0_repr)
+//   : Lemma 
+//     (ensures l0_perm l0 vl0 === l0_perm' l0 vl0)
+//     [SMTPat (l0_perm l0 vl0)]
+
+assume 
+val u32_to_us (v:U32.t) : US.t

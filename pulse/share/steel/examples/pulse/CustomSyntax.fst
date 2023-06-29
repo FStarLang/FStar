@@ -124,6 +124,7 @@ fn if_example (r:ref U32.t)
 
 
 ```pulse
+ghost
 fn elim_intro_exists2 (r:ref U32.t)
    requires 
      exists n. pts_to r full_perm n

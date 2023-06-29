@@ -11,6 +11,25 @@ open Pulse.Checker.Common
 module P = Pulse.Syntax.Printer
 module FV = Pulse.Typing.FV
 
+let check_effect_annotation g r (c_annot c_computed:comp) =
+  match c_annot, c_computed with
+  | C_Tot _, C_Tot _ -> ()
+  | C_ST _, C_ST _ -> ()
+  | C_STAtomic i _, C_STAtomic j _
+  | C_STGhost i _, C_STGhost j _ ->
+    if eq_tm i j
+    then ()
+    else fail g (Some i.range)
+                (Printf.sprintf "Annotated effect expects only invariants in %s to be opened; but computed effect claims that invariants %s are opened"
+                  (P.term_to_string i)
+                  (P.term_to_string j))
+  | _, _ ->
+    fail g (Some r)
+           (Printf.sprintf "Expected effect %s but this function body has effect %s"
+                  (P.tag_of_comp c_annot)
+                  (P.tag_of_comp c_computed))
+
+
 #push-options "--z3rlimit_factor 2"
 let check_abs
   (g:env)
@@ -23,22 +42,31 @@ let check_abs
   if Some? post_hint then fail g None "Unexpected post-condition annotation from context for an abstraction" else 
   let range = t.range in
   match t.term with  
-  | Tm_Abs { b = {binder_ty=t;binder_ppname=ppname}; q=qual; pre=pre_hint; body; ret_ty; post=post_hint_body } ->
+  | Tm_Abs { b = {binder_ty=t;binder_ppname=ppname}; q=qual; ascription=c; body } -> //pre=pre_hint; body; ret_ty; post=post_hint_body } ->
     (*  (fun (x:t) -> {pre_hint} body : t { post_hint } *)
     let (| t, _, _ |) = check_term g t in //elaborate it first
     let (| u, t_typing |) = check_universe g t in //then check that its universe ... We could collapse the two calls
     let x = fresh g in
     let px = ppname, x in
+    let var = tm_var {nm_ppname=ppname;nm_index=x} in
     let g' = push_binding g x ppname t in
-    let pre_opened = 
-      match pre_hint with
-      | None -> fail g None "Cannot typecheck an function without a precondition"
-      | Some pre_hint -> open_term_nv pre_hint px in
+    let pre_opened, ret_ty, post_hint_body = 
+      match c with
+      | C_Tot { t = Tm_Unknown } -> 
+        tm_emp, None, None
+
+      | C_Tot ty ->
+        tm_emp,
+        Some (open_term_nv ty px),
+        None
+
+      | _ -> 
+        open_term_nv (comp_pre c) px,
+        Some (open_term_nv (comp_res c) px),
+        Some (open_term' (comp_post c) var 1)
+    in
     let (| pre_opened, pre_typing |) = check_vprop g' pre_opened in
     let pre = close_term pre_opened x in
-    let var = tm_var {nm_ppname=ppname;nm_index=x} in
-    let ret_ty = open_term_opt' ret_ty var 0 in
-    let post_hint_body = open_term_opt' post_hint_body var 1 in
     let post =
       match post_hint_body with
       | None -> None
@@ -50,6 +78,7 @@ let check_abs
         Some post_hint_typing
     in
     let (| body', c_body, body_typing |) = check g' (open_st_term_nv body px) pre_opened pre_typing post in
+    check_effect_annotation g' body'.range c c_body;
     FV.st_typing_freevars body_typing;
     let body_closed = close_st_term body' x in
     assume (open_st_term body_closed x == body');

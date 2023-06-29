@@ -6,7 +6,13 @@ open FStar.List.Tot
 open Pulse.Syntax
 module L = FStar.List.Tot
 module FTB = FStar.Tactics.V2
+module RU = Pulse.RuntimeUtils
+module T= FStar.Tactics
 include Pulse.Typing.Env
+
+let debug_log (level:string)  (g:env) (f: unit -> T.Tac string) : T.Tac unit =
+  if RU.debug_at_level (fstar_env g) level
+  then T.print (Printf.sprintf "Debug@%s:{ %s }\n" level (f ()))
 
 let tm_unit = tm_fvar (as_fv unit_lid)
 let tm_bool = tm_fvar (as_fv bool_lid)
@@ -557,7 +563,7 @@ type st_typing : env -> st_term -> comp -> Type =
       c:comp ->
       tot_typing g b.binder_ty (tm_type u) ->
       st_typing (push_binding g x ppname_default b.binder_ty) (open_st_term_nv body (b.binder_ppname, x)) c ->
-      st_typing g (wr (Tm_Abs { b; q; pre=None; body; ret_ty=None; post=None }))
+      st_typing g (wr (Tm_Abs { b; q; body; ascription=(close_comp c x)}))
                   (C_Tot (tm_arrow b q (close_comp c x)))
   | T_STApp :
       g:env ->

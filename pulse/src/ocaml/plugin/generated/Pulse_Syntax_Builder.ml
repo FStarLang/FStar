@@ -15,27 +15,20 @@ let (tm_return :
 let (tm_abs :
   Pulse_Syntax_Base.binder ->
     Pulse_Syntax_Base.qualifier FStar_Pervasives_Native.option ->
-      Pulse_Syntax_Base.vprop FStar_Pervasives_Native.option ->
-        Pulse_Syntax_Base.st_term ->
-          Pulse_Syntax_Base.term FStar_Pervasives_Native.option ->
-            Pulse_Syntax_Base.vprop FStar_Pervasives_Native.option ->
-              Pulse_Syntax_Base.st_term')
+      Pulse_Syntax_Base.comp ->
+        Pulse_Syntax_Base.st_term -> Pulse_Syntax_Base.st_term')
   =
   fun b ->
     fun q ->
-      fun pre ->
+      fun ascription ->
         fun body ->
-          fun ret_ty ->
-            fun post ->
-              Pulse_Syntax_Base.Tm_Abs
-                {
-                  Pulse_Syntax_Base.b = b;
-                  Pulse_Syntax_Base.q = q;
-                  Pulse_Syntax_Base.pre1 = pre;
-                  Pulse_Syntax_Base.body = body;
-                  Pulse_Syntax_Base.ret_ty = ret_ty;
-                  Pulse_Syntax_Base.post1 = post
-                }
+          Pulse_Syntax_Base.Tm_Abs
+            {
+              Pulse_Syntax_Base.b = b;
+              Pulse_Syntax_Base.q = q;
+              Pulse_Syntax_Base.ascription = ascription;
+              Pulse_Syntax_Base.body = body
+            }
 let (tm_stapp :
   Pulse_Syntax_Base.term ->
     Pulse_Syntax_Base.qualifier FStar_Pervasives_Native.option ->
@@ -91,7 +84,7 @@ let (tm_if :
               Pulse_Syntax_Base.b1 = b;
               Pulse_Syntax_Base.then_ = then_;
               Pulse_Syntax_Base.else_ = else_;
-              Pulse_Syntax_Base.post2 = post
+              Pulse_Syntax_Base.post1 = post
             }
 let (tm_elim_exists : Pulse_Syntax_Base.vprop -> Pulse_Syntax_Base.st_term')
   = fun p -> Pulse_Syntax_Base.Tm_ElimExists { Pulse_Syntax_Base.p1 = p }
@@ -144,12 +137,12 @@ let (tm_par :
             fun post2 ->
               Pulse_Syntax_Base.Tm_Par
                 {
-                  Pulse_Syntax_Base.pre11 = pre1;
+                  Pulse_Syntax_Base.pre1 = pre1;
                   Pulse_Syntax_Base.body11 = body1;
                   Pulse_Syntax_Base.post11 = post1;
                   Pulse_Syntax_Base.pre2 = pre2;
                   Pulse_Syntax_Base.body21 = body2;
-                  Pulse_Syntax_Base.post21 = post2
+                  Pulse_Syntax_Base.post2 = post2
                 }
 let (tm_with_local :
   Pulse_Syntax_Base.binder ->

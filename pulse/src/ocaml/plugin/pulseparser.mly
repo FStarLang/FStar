@@ -45,13 +45,19 @@ let pos_of_lexpos (p:Lexing.position) = FStar_Parser_Util.pos_of_lexpos p
 let default_return =
     gen dummyRange,
     mk_term (Var (lid_of_ids [(mk_ident("unit", dummyRange))])) dummyRange Un
-    
+
+let with_computation_tag (c:PulseSugar.computation_type) t =
+  match t with
+  | None -> c
+  | Some t -> { c with tag = t }    
+
 let rng p1 p2 = FStar_Parser_Util.mksyn_range p1 p2
 let r p = rng (fst p) (snd p)
+
 %}
 
 /* pulse specific tokens; rest are inherited from F* */
-%token MUT FN INVARIANT WHILE REF PARALLEL REWRITE FOLD
+%token MUT FN INVARIANT WHILE REF PARALLEL REWRITE FOLD GHOST ATOMIC
 
 %start pulseDecl
 %start peekFnId
@@ -61,13 +67,18 @@ let r p = rng (fst p) (snd p)
 
 /* This is to just peek at the name of the top-level definition */
 peekFnId:
-  | FN id=lident
+  | q=option(qual) FN id=lident
       { FStar_Ident.string_of_id id }
+
+qual:
+  | GHOST { PulseSugar.STGhost (unit_const (rr $loc)) }
+  | ATOMIC { PulseSugar.STAtomic (unit_const (rr $loc)) }
 
 /* This is the main entry point for the pulse parser */
 pulseDecl:
-  | FN lid=lident bs=nonempty_list(pulseMultiBinder) ascription=pulseComputationType LBRACE body=pulseStmt RBRACE
+  | q=option(qual) FN lid=lident bs=nonempty_list(pulseMultiBinder) ascription=pulseComputationType LBRACE body=pulseStmt RBRACE
     {
+      let ascription = with_computation_tag ascription q in
       PulseSugar.mk_decl lid (List.flatten bs) ascription body (rr $loc)
     }
     
@@ -96,8 +107,8 @@ pulseStmtNoSeq:
     { PulseSugar.mk_open i }
   | tm=appTerm
     { PulseSugar.mk_expr tm }
-  | i=lident COLON_EQUALS a=noSeqTerm
-    { PulseSugar.mk_assignment i a }
+  | lhs=appTermNoRecordExp COLON_EQUALS a=noSeqTerm
+    { PulseSugar.mk_assignment lhs a }
   | LET q=option(mutOrRefQualifier) i=lident typOpt=option(appTerm) EQUALS tm=noSeqTerm
     { PulseSugar.mk_let_binding q i typOpt (Some tm) }
   | LBRACE s=pulseStmt RBRACE

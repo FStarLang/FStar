@@ -16,7 +16,6 @@ val env : Type0
 
 val fstar_env (g:env) : RT.fstar_top_env
 
-
 //
 // most recent binding at the head of the list
 //

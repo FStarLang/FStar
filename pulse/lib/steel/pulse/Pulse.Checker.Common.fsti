@@ -10,10 +10,7 @@ module FV = Pulse.Typing.FV
 module RU = Pulse.RuntimeUtils
 module Metatheory = Pulse.Typing.Metatheory
 
-
-let debug_log (level:string)  (g:env) (f: unit -> T.Tac string) : T.Tac unit =
-  if RU.debug_at_level (fstar_env g) level
-  then T.print (Printf.sprintf "Debug@%s:{ %s }\n" level (f ()))
+val format_failed_goal (g:env) (ctxt:list term) (goal:list term) : T.Tac string
 
 let mk_abs ty t = RT.(mk_abs (elab_term ty) T.Q_Explicit (elab_term t))
 let mk_arrow ty t = RT.mk_arrow (elab_term ty) T.Q_Explicit (elab_term t)

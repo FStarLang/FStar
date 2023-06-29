@@ -69,8 +69,8 @@ let freevars_close_comp (c:comp)
 
 let freevars_close_term_opt' (t:option term) (x:var) (i:index)
   : Lemma
-    (ensures (freevars_opt (close_term_opt' t x i) `Set.equal`
-             (freevars_opt t `set_minus` x)))
+    (ensures (freevars_term_opt (close_term_opt' t x i) `Set.equal`
+             (freevars_term_opt t `set_minus` x)))
     (decreases t)
   = match t with
     | None -> ()
@@ -100,12 +100,10 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
       freevars_close_term' head x i;
       freevars_close_term' arg x i
     
-    | Tm_Abs { b; pre; body; ret_ty; post } ->
+    | Tm_Abs { b; ascription=c; body } ->
       freevars_close_term' b.binder_ty x i;
-      freevars_close_term_opt' pre x (i + 1);
-      freevars_close_term_opt' ret_ty x (i + 1);      
-      freevars_close_st_term' body x (i + 1);
-      freevars_close_term_opt' post x (i + 2)
+      freevars_close_comp c x (i + 1);
+      freevars_close_st_term' body x (i + 1)
 
     | Tm_Bind { binder; head; body } ->
       freevars_close_term' binder.binder_ty x i;
@@ -424,7 +422,7 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
         freevars_st t;
      (==) {}
        ((Set.union (freevars _b) (freevars_st e1)) `Set.union`
-        (freevars_st e2 `Set.union` freevars_opt None));
+        (freevars_st e2 `Set.union` freevars_term_opt None));
      (Set.equal) {}
        (freevars _b `Set.union` (freevars_st e1 `Set.union` freevars_st e2));
      (Set.subset) { tot_typing_freevars tb }

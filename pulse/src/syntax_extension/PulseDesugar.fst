@@ -309,8 +309,8 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
       let? tm = tosyntax env e in
       return (st_term_of_stapp_or_return (stapp_or_return env tm))
 
-    | Assignment { id; value } ->
-      let? lhs = resolve_name env id in
+    | Assignment { lhs; value } ->
+      let? lhs = tosyntax env lhs in
       let? value = tosyntax env value in
       return (stapp_assignment lhs value s.range)
     
@@ -321,8 +321,11 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
     | Sequence { s1={s=LetBinding lb}; s2 } ->
       desugar_bind env lb s2 s.range
 
+    | ProofHintWithBinders _ ->
+      desugar_assert_with_binders env s None s.range
+
     | Sequence { s1; s2 } when ProofHintWithBinders? s1.s ->
-      desugar_assert_with_binders env s1 s2 s.range
+      desugar_assert_with_binders env s1 (Some s2) s.range
 
     | Sequence { s1; s2 } -> 
       desugar_sequence env s1 s2 s.range
@@ -430,14 +433,17 @@ and desugar_sequence (env:env_t) (s1 s2:Sugar.stmt) r
     let annot = SW.mk_binder (Ident.id_of_text "_") (SW.tm_unknown r) in
     return (mk_bind annot s1 s2 r)
 
-and desugar_assert_with_binders (env:env_t) (s1 s2:Sugar.stmt) r
+and desugar_assert_with_binders (env:env_t) (s1:Sugar.stmt) (k:option Sugar.stmt) r
   : err SW.st_term
   = match s1.s with
     | Sugar.ProofHintWithBinders { hint_type; binders=bs; vprop=v } ->
       let? env, binders, bvs = desugar_binders env bs in
       let vars = L.map (fun bv -> bv.S.index) bvs in
       let? v = desugar_vprop env v in
-      let? s2 = desugar_stmt env s2 in
+      let? s2 = 
+        match k with
+        | None -> return (SW.tm_ghost_return (SW.tm_expr S.unit_const r) r)
+        | Some s2 -> desugar_stmt env s2 in
       let binders = L.map snd binders in
       let sub = SW.bvs_as_subst vars in
       let s2 = SW.subst_st_term sub s2 in
@@ -470,11 +476,13 @@ let desugar_computation_type (env:env_t) (c:Sugar.computation_type)
     let post = SW.close_term post bv.index in
     match c.tag with
     | Sugar.ST -> return SW.(mk_comp pre (mk_binder c.return_name ret) post)
-    | Sugar.STAtomic inames ->
-      let? inames = desugar_term env inames in
+    | Sugar.STAtomic _ -> // For now, we only support empty inames ->
+      // let? inames = desugar_term env inames in
+      let inames = SW.tm_emp_inames in
       return SW.(atomic_comp inames pre (mk_binder c.return_name ret) post)
-    | Sugar.STGhost inames ->
-      let? inames = desugar_term env inames in
+    | Sugar.STGhost _ -> // For now, we only support empty inames ->
+      // let? inames = desugar_term env inames in
+      let inames = SW.tm_emp_inames in
       return SW.(ghost_comp inames pre (mk_binder c.return_name ret) post)      
 
 
@@ -489,16 +497,14 @@ let desugar_decl (env:env_t)
       | [(q, last)], [last_bv] -> 
         let body = SW.close_st_term body last_bv.S.index in
         let comp = SW.close_comp comp last_bv.S.index in
-        return (SW.tm_abs last q
-                          (SW.comp_pre comp)
+        return (SW.tm_abs last q comp
                           body
-                          (Some (SW.comp_res comp))
-                          (Some (SW.comp_post comp))
                           p.range)
       | (q, b)::bs, bv::bvs ->
         let? body = aux bs bvs in
         let body = SW.close_st_term body bv.index in
-        return (SW.tm_abs b q (SW.tm_emp p.range) body None None p.range)
+        let comp = SW.mk_tot (SW.tm_unknown r_) in
+        return (SW.tm_abs b q comp body p.range)
       | _ -> fail "Unexpected empty binders in decl" r_
     in
     aux bs bvs
