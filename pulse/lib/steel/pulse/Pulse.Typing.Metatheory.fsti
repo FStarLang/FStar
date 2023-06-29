@@ -102,4 +102,14 @@ let st_typing_subst
               (subst_comp c1 (nt x e)) =
   admit ()
 
+let vprop_equiv_subst
+  (g:env) (x:var) (t:typ) (g':env { pairwise_disjoint g (singleton_env (fstar_env g) x t) g' })
+  (#e:term)
+  (e_typing:tot_typing g e t)
+  (#p1:term) (#p2:term)
+  (veq:vprop_equiv (push_env g (push_env (singleton_env (fstar_env g) x t) g')) p1 p2)
 
+: vprop_equiv (push_env g (subst_env g' (nt x e)))
+              (subst_term p1 (nt x e))
+              (subst_term p2 (nt x e)) =
+  admit ()
