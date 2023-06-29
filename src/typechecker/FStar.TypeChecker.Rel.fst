@@ -2070,6 +2070,8 @@ Otherwise, we do a normalization pass and try again. FIXME: this could
 be VERY expensive, so we should find a smarter way. *)
 let rec try_make_equal env (t1 t2 : term) : U.eq_result =
   let blast (t1 t2 : term) : U.eq_result =
+    if Options.debug_any () then
+      BU.print2 "GGG BLAST\n(%s)\nand\n(%s)\n\n" (Print.term_to_string t1) (Print.term_to_string t2);
     let steps = [
       Env.UnfoldUntil delta_constant;
       Env.Primops;
@@ -2086,9 +2088,27 @@ let rec try_make_equal env (t1 t2 : term) : U.eq_result =
     | U.Unknown -> false
   in
   let r1 = U.eq_tm t1 t2 in
-  if defined r1
-   then r1
-   else blast t1 t2
+  if defined r1 then
+    r1
+ else
+   let h1, args1 = U.head_and_args t1 in
+   let h2, args2 = U.head_and_args t2 in
+   if U.eq_tm h1 h2 = U.Equal && List.length args1 = List.length args2 then begin
+     if Options.debug_any () then
+       BU.print2 "GGG OPT\n(%s)\nand\n(%s)\n\n" (Print.term_to_string t1) (Print.term_to_string t2);
+     let rec aux args1 args2 : bool =
+       match args1, args2 with
+       | [], [] -> true
+       | (a1,_)::args1, (a2,_)::args2 ->
+         if try_make_equal env a1 a2 = U.Equal
+         then aux args1 args2
+         else false
+     in
+     if aux args1 args2
+     then U.Equal
+     else U.Unknown
+   end else
+     blast t1 t2
 
 let try_make_equal_bool env (t1 t2 : term) : bool =
   try_make_equal env t1 t2 = U.Equal
