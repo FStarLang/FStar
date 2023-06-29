@@ -152,12 +152,7 @@ fn authenticate_l0_image (l0:l0_image_t) (#vl0:Ghost.erased l0_repr)
         pure (b ==> l0_is_authentic vl0)
     )
 {
-  rewrite (l0_perm l0 vl0)
-    as (A.pts_to l0.l0_image_header full_perm vl0.l0_image_header `star`
-      A.pts_to l0.l0_image_header_sig full_perm vl0.l0_image_header_sig `star`
-      A.pts_to l0.l0_binary full_perm vl0.l0_binary `star`
-      A.pts_to l0.l0_binary_hash full_perm vl0.l0_binary_hash `star`
-      A.pts_to l0.l0_image_auth_pubkey full_perm vl0.l0_image_auth_pubkey);
+  unfold l0_perm l0 vl0;
 
   let valid_header_sig = ed25519_verify
                           l0.l0_image_auth_pubkey
@@ -169,32 +164,11 @@ fn authenticate_l0_image (l0:l0_image_t) (#vl0:Ghost.erased l0_repr)
     let hash_buf = new_array 0uy dice_digest_len;
     hacl_hash dice_hash_alg l0.l0_binary l0.l0_binary_size hash_buf;
     let res = compare dice_digest_len hash_buf l0.l0_binary_hash;
-    if res {
-      free_array hash_buf;
-      rewrite (A.pts_to l0.l0_image_header full_perm vl0.l0_image_header `star`
-          A.pts_to l0.l0_image_header_sig full_perm vl0.l0_image_header_sig `star`
-          A.pts_to l0.l0_binary full_perm vl0.l0_binary `star`
-          A.pts_to l0.l0_binary_hash full_perm vl0.l0_binary_hash `star`
-          A.pts_to l0.l0_image_auth_pubkey full_perm vl0.l0_image_auth_pubkey)
-        as (l0_perm l0 vl0);
-      true
-    } else {
-      free_array hash_buf;
-      rewrite (A.pts_to l0.l0_image_header full_perm vl0.l0_image_header `star`
-          A.pts_to l0.l0_image_header_sig full_perm vl0.l0_image_header_sig `star`
-          A.pts_to l0.l0_binary full_perm vl0.l0_binary `star`
-          A.pts_to l0.l0_binary_hash full_perm vl0.l0_binary_hash `star`
-          A.pts_to l0.l0_image_auth_pubkey full_perm vl0.l0_image_auth_pubkey)
-        as (l0_perm l0 vl0);
-      false
-    }
+    free_array hash_buf;
+    fold l0_perm l0 vl0;
+    res
   } else {
-    rewrite (A.pts_to l0.l0_image_header full_perm vl0.l0_image_header `star`
-        A.pts_to l0.l0_image_header_sig full_perm vl0.l0_image_header_sig `star`
-        A.pts_to l0.l0_binary full_perm vl0.l0_binary `star`
-        A.pts_to l0.l0_binary_hash full_perm vl0.l0_binary_hash `star`
-        A.pts_to l0.l0_image_auth_pubkey full_perm vl0.l0_image_auth_pubkey)
-      as (l0_perm l0 vl0);
+    fold l0_perm l0 vl0;
     false
   };
 }

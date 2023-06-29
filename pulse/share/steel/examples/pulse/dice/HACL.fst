@@ -107,7 +107,7 @@ val ed25519_verify
       pure (spec_ed25519_verify pubk_seq hdr_seq sig_seq))
 
 assume
-val spec_ed25519_sign (privk msg:Seq.seq U8.t) : prop 
+val spec_ed25519_sign (privk msg:Seq.seq U8.t) : Seq.seq U8.t
 
 assume
 val ed25519_sign 
@@ -125,7 +125,7 @@ val ed25519_sign
       A.pts_to buf full_perm buf1 `star`
       A.pts_to privk pprivk privk_seq `star`
       A.pts_to msg pmsg msg_seq `star`
-      pure (spec_ed25519_sign privk_seq msg_seq)))
+      pure (buf1 `Seq.equal` spec_ed25519_sign privk_seq msg_seq)))
 
 (* DICE hash constants *)
 

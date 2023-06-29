@@ -166,22 +166,30 @@ fn sign_and_finalize_deviceIDCSR
       csr_buf `Seq.equal`
         (spec_serialize_deviceIDCSR _cri_len 
                                     _csr_len
-                                    (spec_sign_and_finalize_deviceIDCSR
-                                      priv
+                                    (spec_x509_get_deviceIDCSR
                                       _cri_len
-                                      _cri_buf))
+                                      _cri_buf
+                                      (spec_ed25519_sign
+                                        priv
+                                        _cri_buf)))
     ))
 {
   let deviceIDCRI_len_v = !deviceIDCRI_len;
+  let deviceIDCSR_len_v = !deviceIDCSR_len;
   let deviceIDCRI_sig = new_array 0uy (u32_to_us deviceIDCRI_len_v);
+
   ed25519_sign deviceIDCRI_sig deviceID_priv (u32_to_us deviceIDCRI_len_v) deviceIDCRI_buf;
-  // let deviceIDCSR = x509_get_deviceIDCSR
-  //                     deviceIDCRI_len
-  //                     deviceIDCRI_buf
-  //                     deviceIDCRI_sig;
+
+  let deviceIDCSR = x509_get_deviceIDCSR
+                      deviceIDCRI_len_v
+                      deviceIDCRI_buf
+                      deviceIDCRI_sig;
                     
-  // serialize_deviceIDCSR deviceIDCRI_len deviceIDCSR deviceIDCRI_buf deviceIDCSR_len;
-  admit()
+  serialize_deviceIDCSR deviceIDCRI_len_v deviceIDCSR deviceIDCSR_buf deviceIDCSR_len_v;
+
+  free_array deviceIDCRI_sig;
+
+  ()
 }
 ```
 
@@ -210,10 +218,12 @@ let l0_core_step2_post
   vl0.deviceIDCSR_buf `Seq.equal`
     (spec_serialize_deviceIDCSR vl0.deviceIDCRI_len 
                                 vl0.deviceIDCSR_len
-                                (spec_sign_and_finalize_deviceIDCSR
-                                  vl0.deviceID_priv
+                                (spec_x509_get_deviceIDCSR
                                   vl0.deviceIDCRI_len
-                                  vl0.deviceIDCRI_buf))
+                                  vl0.deviceIDCRI_buf
+                                  (spec_ed25519_sign
+                                    vl0.deviceID_priv
+                                    vl0.deviceIDCRI_buf)))
 
 ```pulse
 fn l0_core_step2
@@ -235,12 +245,6 @@ fn l0_core_step2
 
   create_deviceIDCRI l0.deviceID_pub l0.deviceIDCRI_len l0.deviceIDCRI_buf deviceIDCSR;
 
-  fold_l0_perm l0;
-
-  with vl0_. assert l0_perm l0 vl0_;
-
-  unfold (l0_perm l0 vl0_);
-
   let deviceIDCRI_len = !l0.deviceIDCRI_len;
   let deviceIDCSR_len = !l0.deviceIDCSR_len;
 
@@ -249,62 +253,7 @@ fn l0_core_step2
                                 l0.deviceIDCSR_len l0.deviceIDCSR_buf;
 
   fold_l0_perm l0;
-
-  admit()
-(*
-  printf "Signing and finalizing DeviceID Certificate Signing Request\n" done;
-  sign_and_finalize_deviceIDCSR
-    (*Signing Key*) deviceID_priv
-    (*DeviceIDCRI*) deviceIDCRI_len
-                    deviceIDCRI_buf
-    (*DeviceIDCSR*) deviceIDCSR_len
-                    deviceIDCSR_buf;
-  (**) let hs3 = HST.get () in
-
-  (**) assert (
-    let deviceIDCSR: deviceIDCSR_t deviceIDCRI_len = sign_and_finalize_deviceIDCSR_spec
-                                                                      (B.as_seq h0 deviceID_priv)
-                                                                      (deviceIDCRI_len)
-                                                                      (B.as_seq hs2 deviceIDCRI_buf) in
-    (* Prf *) lemma_serialize_deviceIDCSR_size_exact deviceIDCRI_len deviceIDCSR;
-    B.as_seq hs3 deviceIDCSR_buf == serialize_deviceIDCSR deviceIDCRI_len `serialize` deviceIDCSR
-  );
-
-  (**) assert (
-    let deviceIDCRI_len: asn1_TLV_int32_of_type SEQUENCE = len_of_deviceIDCRI
-                                                            csr_version
-                                                            s_common
-                                                            s_org
-                                                            s_country in
-    let deviceIDCRI: deviceIDCRI_t = create_deviceIDCRI_spec
-                                                                      (csr_version)
-                                                                      (s_common)
-                                                                      (s_org)
-                                                                      (s_country)
-                                                                      (ku)
-                                                                      (B.as_seq h0 deviceID_pub) in
-    let deviceIDCRI_seq = serialize_deviceIDCRI `serialize` deviceIDCRI in
-    let (* Prf *) _ = lemma_serialize_deviceIDCRI_size_exact deviceIDCRI in
-    let deviceIDCSR: deviceIDCSR_t deviceIDCRI_len = sign_and_finalize_deviceIDCSR_spec
-                                                                      (B.as_seq h0 deviceID_priv)
-                                                                      (deviceIDCRI_len)
-                                                                      (deviceIDCRI_seq) in
-    (* Prf *) lemma_serialize_deviceIDCSR_size_exact deviceIDCRI_len deviceIDCSR;
-    B.as_seq hs3 deviceIDCSR_buf == serialize_deviceIDCSR deviceIDCRI_len `serialize` deviceIDCSR
-  );
-
-  (**) B.modifies_trans (B.loc_buffer deviceIDCRI_buf) h0 hs2 (B.loc_buffer deviceIDCSR_buf) hs3;
-  (**) let hsf = HST.get () in
-  HST.pop_frame ();
-  (**) let hf = HST.get () in
-  (**) B.popped_modifies hsf hf;
-  (**) B.modifies_buffer_elim deviceIDCSR_buf (B.loc_region_only false (HS.get_tip hsf)) hsf hf;
-  (**) B.modifies_fresh_frame_popped h0 hs0 (
-    B.loc_buffer deviceIDCSR_buf
-  ) hsf hf;
-()
-
-*)
+  ()
 }
 ```
 

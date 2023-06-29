@@ -100,18 +100,33 @@ let l0_post
 ```pulse
 fn l0
   (l0: l0_record)
-  (#vl0: Ghost.erased l0_repr)
+  (#_vl0: Ghost.erased l0_repr)
   // (#pcdi #pfwid #pdeviceID_label #paliasKey_label: perm)
-  requires (l0_perm l0 vl0 `star`
-            pure (l0_pre l0 vl0))
-  ensures exists (vl0': l0_repr). (
-                    l0_perm l0 vl0' `star`
+  requires (l0_perm l0 _vl0 `star`
+            pure (l0_pre l0 _vl0))
+  ensures exists (vl0: l0_repr). (
+                    l0_perm l0 vl0 `star`
                     l0_post l0 vl0)
 {
-  l0_core_step1 l0;
+  unfold l0_perm l0 _vl0;
 
-  l0_core_step2 l0;
+  dice_digest_len_is_hkdf_ikm;
+
+  derive_DeviceID dice_hash_alg l0.deviceID_pub l0.deviceID_priv l0.cdi l0.deviceID_label_len l0.deviceID_label;
+  derive_AliasKey dice_hash_alg l0.aliasKey_pub l0.aliasKey_priv l0.cdi l0.fwid l0.aliasKey_label_len l0.aliasKey_label;
+  derive_authkeyID dice_hash_alg l0.authKeyID l0.deviceID_pub;
+
+  create_deviceIDCRI l0.deviceID_pub l0.deviceIDCRI_len l0.deviceIDCRI_buf l0.deviceIDCSR_ingredients;
+
+  let deviceIDCRI_len = !l0.deviceIDCRI_len;
+  let deviceIDCSR_len = !l0.deviceIDCSR_len;
   
+  sign_and_finalize_deviceIDCSR l0.deviceID_priv 
+                                l0.deviceIDCRI_len l0.deviceIDCRI_buf 
+                                l0.deviceIDCSR_len l0.deviceIDCSR_buf;
+
+  fold_l0_perm l0;
+
   admit()
 
 //   l0_core_step3
