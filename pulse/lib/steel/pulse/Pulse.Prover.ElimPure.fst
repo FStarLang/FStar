@@ -1,4 +1,5 @@
-module Pulse.Checker.Auto.ElimPure
+module Pulse.Prover.ElimPure
+
 module RT = FStar.Reflection.Typing
 module R = FStar.Reflection.V2
 module L = FStar.List.Tot
@@ -6,11 +7,10 @@ module T = FStar.Tactics.V2
 open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Checker.Pure
-open Pulse.Checker.Common
 open Pulse.Typing
 module Metatheory = Pulse.Typing.Metatheory
 open Pulse.Reflection.Util
-open Pulse.Checker.Auto.Elims
+open Pulse.Prover.Common
 
 let elim_pure_head =
     let elim_pure_explicit_lid = mk_steel_wrapper_lid "elim_pure_explicit" in

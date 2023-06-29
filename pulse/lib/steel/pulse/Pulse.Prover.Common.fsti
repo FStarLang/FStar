@@ -9,13 +9,74 @@ open Pulse.Typing.Metatheory
 open Pulse.Checker.VPropEquiv
 open Pulse.Prover.Util
 
-open Pulse.Checker.Auto.Elims
-
 module T = FStar.Tactics
 
 module PS = Pulse.Prover.Substs
 
 let vprop_typing (g:env) (t:term) = tot_typing g t tm_vprop
+
+type continuation_elaborator
+  (g:env) (ctxt:term)
+  (g':env) (ctxt':term) =
+  post_hint:post_hint_opt g ->
+  checker_result_t g' ctxt' post_hint ->
+  T.Tac (checker_result_t g ctxt post_hint)
+
+val k_elab_unit (g:env) (ctxt:term)
+  : continuation_elaborator g ctxt g ctxt
+
+val k_elab_trans (#g0 #g1 #g2:env) (#ctxt0 #ctxt1 #ctxt2:term)
+                 (k0:continuation_elaborator g0 ctxt0 g1 ctxt1)
+                 (k1:continuation_elaborator g1 ctxt1 g2 ctxt2 { g1 `env_extends` g0})
+   : continuation_elaborator g0 ctxt0 g2 ctxt2
+
+val k_elab_equiv (#g1 #g2:env) (#ctxt1 #ctxt1' #ctxt2 #ctxt2':term)
+                 (k:continuation_elaborator g1 ctxt1 g2 ctxt2)
+                 (d1:vprop_equiv g1 ctxt1 ctxt1')
+                 (d2:vprop_equiv g2 ctxt2 ctxt2')
+  : continuation_elaborator g1 ctxt1' g2 ctxt2'
+
+//
+// A canonical continuation elaborator for Bind
+//
+val continuation_elaborator_with_bind (#g:env) (ctxt:term)
+  (#c1:comp{stateful_comp c1})
+  (#e1:st_term)
+  (e1_typing:st_typing g e1 c1)
+  (ctxt_pre1_typing:tot_typing g (tm_star ctxt (comp_pre c1)) tm_vprop)
+  : T.Tac (x:var { None? (lookup g x) } &
+           continuation_elaborator
+             g                                (tm_star ctxt (comp_pre c1))
+             (push_binding g x ppname_default (comp_res c1)) (tm_star (open_term (comp_post c1) x) ctxt))
+
+
+
+//
+// Scaffolding for adding elims
+//
+// Given a function f : vprop -> T.Tac bool that decides whether a vprop
+//   should be elim-ed,
+//   and an mk function to create the elim term, comp, and typing,
+//   add_elims will create a continuation_elaborator
+//
+
+type mk_t =
+  #g:env ->
+  #v:vprop ->
+  tot_typing g v tm_vprop ->
+  T.Tac (option (x:ppname &
+                 t:st_term &
+                 c:comp { stateful_comp c /\ comp_pre c == v } &
+                 st_typing g t c))
+
+val add_elims (#g:env) (#ctxt:term)
+  (f:vprop -> T.Tac bool)
+  (mk:mk_t)
+  (ctxt_typing:tot_typing g ctxt tm_vprop)
+   : T.Tac (g':env { env_extends g' g } &
+            ctxt':term &
+            tot_typing g' ctxt' tm_vprop &
+            continuation_elaborator g ctxt g' ctxt')
 
 noeq type preamble = {
   g0 : env;
@@ -133,6 +194,8 @@ let  mk_bind' (g:env)
                  open_term (comp_post c1) x == comp_pre c2))
   : T.Tac (checker_result_t g pre post_hint) = magic ()
 
+let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y == x} = x
+
 #push-options "--z3rlimit_factor 8 --fuel 1 --ifuel 1"
 let check_bind
   (g:env)
@@ -184,7 +247,10 @@ let check_bind
    
         let e2_closed = close_st_term e2 x in
         assume (open_st_term e2_closed x == e2);
-
+        let d1 : st_typing g1 e1 c1 = coerce_eq d1 () in
+        let d2
+          : st_typing (push_binding g1 (snd px) (fst px) (comp_res c1)) (open_st_term_nv e2_closed px) c2
+          = coerce_eq d2 () in
         let r = mk_bind' g1 (comp_pre c1) e1 e2_closed c1 c2 px d1 (magic ()) d2 post_hint () in
 
         k post_hint r
