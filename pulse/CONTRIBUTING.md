@@ -57,6 +57,36 @@ extract-pulse-plugin`). Then you can compile the obtained plugin and
 reverify Steel and Pulse with it, by simply running `make` from the
 Steel root directory.
 
+### Notes on the implementation of Pulse
+
+The Pulse checker is an F* program implemented as a plugin to the F*
+compiler. The sources of the core part of the plugin is in
+lib/steel/pulse in files named Pulse.Checker.* but also Pulse.Typing,
+Pulse.Soundness. Maybe all of these should move under the
+Pulse.Checker namespace to make it clear that they are not
+user-facing.
+
+Pulse also provides custom syntax, and this is implemented as a
+OCaml/Menhir parser in src/ocaml/plugin, which builds an AST in
+src/syntax_extension/PulseSugar.fst
+
+The surface syntax parsed by the parser above is desugared to the the
+Pulse AST using the code in src/syntax_extension/PulseDesugar.fst
+
+
+Phases of the Pulse checker:
+
+1. menhir parser produces PulseSugar
+
+2. PulseDesugar transforms PulseSugar to Pulse.Syntax.Base (in lib/steel/pulse)
+
+3. Pulse.Main is the main Pulse checker, and it typechecks the
+   Pulse.Syntax.Base AST and transforms it into FStar.Reflection.Data,
+   the syntax of F* terms and their typing derivations.
+
+4. The F* compiler then processes this as usual
+
+
 ## Modify the Steel or SteelC extraction rules, or the syntax extension.
 
 If you modify the Steel or SteelC extraction rules in `src/extraction`
