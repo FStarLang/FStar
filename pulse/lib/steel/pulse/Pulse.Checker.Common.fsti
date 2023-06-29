@@ -10,46 +10,10 @@ module FV = Pulse.Typing.FV
 module RU = Pulse.RuntimeUtils
 module Metatheory = Pulse.Typing.Metatheory
 
+val format_failed_goal (g:env) (ctxt:list term) (goal:list term) : T.Tac string
 
-let debug_log (level:string)  (g:env) (f: unit -> T.Tac string) : T.Tac unit =
-  if RU.debug_at_level (fstar_env g) level
-  then T.print (Printf.sprintf "Debug@%s:{ %s }\n" level (f ()))
-
-let mk_abs ty t = RT.(mk_abs (elab_term ty) T.Q_Explicit (elab_term t))
-let mk_arrow ty t = RT.mk_arrow (elab_term ty) T.Q_Explicit (elab_term t)
-
-noeq
-type post_hint_t = {
-  g:env;
-  ret_ty:term;
-  u:universe;
-  ty_typing:universe_of g ret_ty u;
-  post:term;
-  post_typing:FStar.Ghost.erased (RT.tot_typing (elab_env g) (mk_abs ret_ty post) (mk_arrow ret_ty tm_vprop))
-}
-
-let post_hint_for_env_p (g:env) (p:post_hint_t) = g `env_extends` p.g
-
-let post_hint_for_env_extends (g:env) (p:post_hint_t) (x:var { ~ (Set.mem x (dom g)) }) (b:typ)
-  : Lemma
-    (requires post_hint_for_env_p g p)
-    (ensures post_hint_for_env_p (push_binding g x ppname_default b) p)
-    [SMTPat (post_hint_for_env_p (push_binding g x ppname_default b) p)]
-  = env_extends_push g x ppname_default b
-  
-let post_hint_for_env (g:env) = p:post_hint_t { post_hint_for_env_p g p }
-let post_hint_opt (g:env) = o:option post_hint_t { None? o \/ post_hint_for_env_p g (Some?.v o) }
-
-noeq
-type post_hint_typing_t (g:env) (p:post_hint_t) (x:var { ~ (Set.mem x (dom g)) }) = {
-  ty_typing:universe_of g p.ret_ty p.u;
-  post_typing:tot_typing (push_binding g x ppname_default p.ret_ty) (open_term p.post x) tm_vprop
-}
-
-val post_hint_typing (g:env)
-                     (p:post_hint_for_env g)
-                     (x:var { Metatheory.fresh_wrt x g (freevars p.post) })
-  : post_hint_typing_t g p x
+// let mk_abs ty t = RT.(mk_abs (elab_term ty) T.Q_Explicit (elab_term t))
+// let mk_arrow ty t = RT.mk_arrow (elab_term ty) T.Q_Explicit (elab_term t)
 
 val intro_post_hint (g:env) (ret_ty:option term) (post:term)
   : T.Tac (post_hint_for_env g)
@@ -67,14 +31,6 @@ val try_frame_pre (#g:env)
                   (t_typing: st_typing g t c)
   : T.Tac (c':comp_st { comp_pre c' == pre } &
            st_typing g t c')
-
-let comp_post_matches_hint (c:comp_st) (post_hint:option post_hint_t) =
-  match post_hint with
-  | None -> True
-  | Some post_hint ->
-    comp_res c == post_hint.ret_ty /\
-    comp_u c == post_hint.u /\
-    comp_post c == post_hint.post
 
 type checker_result_t (g:env) (ctxt:term) (post_hint:option post_hint_t) =
     t:st_term &
@@ -98,6 +54,6 @@ val intro_comp_typing (g:env)
                       (c:comp_st)
                       (pre_typing:tot_typing g (comp_pre c) tm_vprop)
                       (res_typing:universe_of g (comp_res c) (comp_u c))
-                      (x:var { Metatheory.fresh_wrt x g (freevars (comp_post c)) })
+                      (x:var { fresh_wrt x g (freevars (comp_post c)) })
                       (post_typing:tot_typing (push_binding g x ppname_default (comp_res c)) (open_term (comp_post c) x) tm_vprop)
   : T.Tac (comp_typing g c (comp_u c))

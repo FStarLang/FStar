@@ -24,7 +24,7 @@ let while_body_comp_typing (#g:env) (u:universe) (x:ppname) (ty:term) (inv_body:
   : Metatheory.comp_typing_u g (comp_while_body x inv_body)
   = Metatheory.admit_comp_typing g (comp_while_body x inv_body)
 
-#push-options "--ifuel 2 --z3rlimit_factor 8 --split_queries no --query_stats"
+#push-options "--ifuel 2 --z3rlimit_factor 10 --split_queries no --query_stats"
 let check_while
   (allow_inst:bool)
   (g:env)

@@ -115,11 +115,11 @@ let (elim_pure :
       unit ->
         ((Pulse_Typing_Env.env, Pulse_Syntax_Base.term, unit,
            (unit, unit, unit, unit)
-             Pulse_Checker_Auto_Elims.continuation_elaborator)
+             Pulse_Prover_Common.continuation_elaborator)
            FStar_Pervasives.dtuple4,
           unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
     fun ctxt ->
       fun ctxt_typing ->
-        Pulse_Checker_Auto_Elims.add_elims g ctxt is_elim_pure mk ()
+        Pulse_Prover_Common.add_elims g ctxt is_elim_pure mk ()

@@ -362,7 +362,7 @@ let (check_if :
         Pulse_Syntax_Base.st_term ->
           Pulse_Syntax_Base.term ->
             unit ->
-              unit Pulse_Checker_Common.post_hint_for_env ->
+              unit Pulse_Typing.post_hint_for_env ->
                 Pulse_Checker_Common.check_t ->
                   ((unit, unit, unit) Pulse_Checker_Common.checker_result_t,
                     unit) FStar_Tactics_Effect.tac_repr)
@@ -413,7 +413,7 @@ let (check_if :
                                             (Prims.of_int (78)))))
                                    (FStar_Tactics_Effect.lift_div_tac
                                       (fun uu___1 ->
-                                         post_hint.Pulse_Checker_Common.post))
+                                         post_hint.Pulse_Typing.post))
                                    (fun uu___1 ->
                                       (fun post ->
                                          Obj.magic
@@ -796,17 +796,17 @@ let (check_if :
                                                                     (((Pulse_Syntax_Base.eq_tm
                                                                     (Pulse_Syntax_Base.comp_res
                                                                     c)
-                                                                    post_hint.Pulse_Checker_Common.ret_ty)
+                                                                    post_hint.Pulse_Typing.ret_ty)
                                                                     &&
                                                                     (Pulse_Syntax_Base.eq_univ
                                                                     (Pulse_Syntax_Base.comp_u
                                                                     c)
-                                                                    post_hint.Pulse_Checker_Common.u))
+                                                                    post_hint.Pulse_Typing.u))
                                                                     &&
                                                                     (Pulse_Syntax_Base.eq_tm
                                                                     (Pulse_Syntax_Base.comp_post
                                                                     c)
-                                                                    post_hint.Pulse_Checker_Common.post))
+                                                                    post_hint.Pulse_Typing.post))
                                                                     then
                                                                     Obj.magic
                                                                     (Pulse_Typing_Env.fail
@@ -835,7 +835,7 @@ let (check_if :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___6 ->
-                                                                    Pulse_Checker_Common.post_hint_typing
+                                                                    Pulse_Typing.post_hint_typing
                                                                     g
                                                                     post_hint
                                                                     x))

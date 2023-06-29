@@ -32,14 +32,14 @@ val try_inst_uvs_in_goal (g:env) (ctxt:term)
                          (goal:vprop)
   : T.Tac solution
 
-val infer (g:env) (head:term) (t_head:term) (ctxt_pre:term) (r:range)
-  : T.Tac st_term
-
 val solutions_to_string (sol:solution)
   : T.Tac string
 
 val apply_solution (sol:solution) (t:term)
   : T.Tac term
+
+val infer (g:env) (head:term) (t_head:term) (ctxt_pre:term) (r:range)
+  : T.Tac st_term
 
 val contains_uvar (t:term)
   : T.Tac bool

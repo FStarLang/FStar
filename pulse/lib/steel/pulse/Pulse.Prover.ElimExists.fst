@@ -1,11 +1,11 @@
-module Pulse.Checker.Auto.ElimExists
+module Pulse.Prover.ElimExists
+
 open Pulse.Syntax
-open Pulse.Checker.Common
 open Pulse.Typing
 
 module T = FStar.Tactics.V2
 
-open Pulse.Checker.Auto.Elims
+open Pulse.Prover.Common
 
 let should_elim_exists (v:vprop) : T.Tac bool =
   match v.t with

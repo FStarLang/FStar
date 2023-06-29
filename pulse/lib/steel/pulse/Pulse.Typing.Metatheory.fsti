@@ -15,9 +15,6 @@ val st_typing_correctness (#g:env) (#t:st_term) (#c:comp_st)
 val comp_typing_inversion (#g:env) (#c:comp_st) (ct:comp_typing_u g c)
   : st_comp_typing g (st_comp_of_comp c)
 
-let fresh_wrt (x:var) (g:env) (vars:_) = 
-    None? (lookup g x) /\  ~(x `Set.mem` vars)
-    
 val st_comp_typing_inversion_cofinite (#g:env) (#st:_) (ct:st_comp_typing g st)
   : (universe_of g st.res st.u &
      tot_typing g st.pre tm_vprop &
@@ -80,6 +77,12 @@ let st_typing_equiv_pre (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
 let pairwise_disjoint (g g' g'':env) =
   disjoint g g' /\ disjoint g' g'' /\ disjoint g g''
 
+let st_typing_weakening
+  (g:env) (g':env { disjoint g g' })
+  (t:st_term) (c:comp_st) (_:st_typing (push_env g g') t c)
+  (g1:env { pairwise_disjoint g g1 g' })
+  : st_typing (push_env (push_env g g1) g') t c = magic ()
+
 // move to Env
 let singleton_env (f:_) (x:var) (t:typ) = push_binding (mk_env f) x ppname_default t
 
@@ -102,4 +105,14 @@ let st_typing_subst
               (subst_comp c1 (nt x e)) =
   admit ()
 
+let vprop_equiv_subst
+  (g:env) (x:var) (t:typ) (g':env { pairwise_disjoint g (singleton_env (fstar_env g) x t) g' })
+  (#e:term)
+  (e_typing:tot_typing g e t)
+  (#p1:term) (#p2:term)
+  (veq:vprop_equiv (push_env g (push_env (singleton_env (fstar_env g) x t) g')) p1 p2)
 
+: vprop_equiv (push_env g (subst_env g' (nt x e)))
+              (subst_term p1 (nt x e))
+              (subst_term p2 (nt x e)) =
+  admit ()

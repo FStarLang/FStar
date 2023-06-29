@@ -7,7 +7,7 @@ open Pulse.Syntax
 module L = FStar.List.Tot
 module FTB = FStar.Tactics.V2
 module RU = Pulse.RuntimeUtils
-module T= FStar.Tactics
+module T= FStar.Tactics.V2
 include Pulse.Typing.Env
 
 let debug_log (level:string)  (g:env) (f: unit -> T.Tac string) : T.Tac unit =
@@ -827,3 +827,55 @@ let star_typing (#g:_) (#t0 #t1:term)
 let emp_typing (#g:_) 
   : tot_typing g tm_emp tm_vprop
   = admit ()
+
+noeq
+type post_hint_t = {
+  g:env;
+  ret_ty:term;
+  u:universe;
+  ty_typing:universe_of g ret_ty u;
+  post:term;
+  post_typing:
+    FStar.Ghost.erased (RT.tot_typing (elab_env g)
+                                      (RT.(mk_abs (elab_term ret_ty) T.Q_Explicit (elab_term post)))
+                                      (RT.mk_arrow (elab_term ret_ty) T.Q_Explicit (elab_term tm_vprop)))
+}
+
+let post_hint_for_env_p (g:env) (p:post_hint_t) = g `env_extends` p.g
+
+let post_hint_for_env_extends (g:env) (p:post_hint_t) (x:var { ~ (Set.mem x (dom g)) }) (b:typ)
+  : Lemma
+    (requires post_hint_for_env_p g p)
+    (ensures post_hint_for_env_p (push_binding g x ppname_default b) p)
+    [SMTPat (post_hint_for_env_p (push_binding g x ppname_default b) p)]
+  = env_extends_push g x ppname_default b
+  
+let post_hint_for_env (g:env) = p:post_hint_t { post_hint_for_env_p g p }
+let post_hint_opt (g:env) = o:option post_hint_t { None? o \/ post_hint_for_env_p g (Some?.v o) }
+
+noeq
+type post_hint_typing_t (g:env) (p:post_hint_t) (x:var { ~ (Set.mem x (dom g)) }) = {
+  ty_typing:universe_of g p.ret_ty p.u;
+  post_typing:tot_typing (push_binding g x ppname_default p.ret_ty) (open_term p.post x) tm_vprop
+}
+
+let fresh_wrt (x:var) (g:env) (vars:_) = 
+    None? (lookup g x) /\  ~(x `Set.mem` vars)
+
+let post_hint_typing (g:env)
+                     (p:post_hint_for_env g)
+                     (x:var { fresh_wrt x g (freevars p.post) })
+  : post_hint_typing_t g p x =
+
+  {
+    ty_typing = magic ();
+    post_typing = magic ();
+  }
+
+let comp_post_matches_hint (c:comp_st) (post_hint:option post_hint_t) =
+  match post_hint with
+  | None -> True
+  | Some post_hint ->
+    comp_res c == post_hint.ret_ty /\
+    comp_u c == post_hint.u /\
+    comp_post c == post_hint.post

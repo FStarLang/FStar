@@ -8,7 +8,7 @@ open Pulse.Typing
 open Pulse.Checker.Framing
 open Pulse.Checker.VPropEquiv
 module P = Pulse.Syntax.Printer
-
+module Common = Pulse.Checker.Common
 module RT = FStar.Reflection.Typing
 module RUtil = Pulse.Reflection.Util
 module RU = Pulse.RuntimeUtils
@@ -22,11 +22,13 @@ let uvar_eq (u1 u2:uvar) : b:bool { b <==> (u1 == u2)} =
   fst u1 = fst u2
 
 let uvar_to_string (num, pp) =
-  FStar.Printf.sprintf "?%s_%d" (T.unseal pp.name) num
-
+  if RU.debug_at_level_no_module "Pulse"
+  then FStar.Printf.sprintf "?.%s_%d" (T.unseal pp.name) num
+  else FStar.Printf.sprintf "?.%s" (T.unseal pp.name)
+  
 let range_of_uvar (u:uvar) : range = (snd u).range
 
-let embedded_uvar_prefix = "__pulse_embedded_uvar__"
+let embedded_uvar_prefix = "?"
 
 let is_uvar_r (t:R.term) : option uvar = 
     match R.inspect_ln t with
@@ -236,6 +238,13 @@ let find_solution (sol:solution) (t:uvar)
     | None -> None
     | Some (_, t) -> Some t
 
+let unsolved_uvs (sol:solution) (uvs:list uvar)
+  : option (list uvar)
+  = let unsolved = List.Tot.filter (fun uv-> None? (find_solution sol uv)) uvs in
+    match unsolved with
+    | [] -> None
+    | _ -> Some unsolved
+
 let unsolved (sol:solution) (uvs:list (uvar & term))
   : option (list (uvar & term))
   = let unsolved = List.Tot.filter (fun (uv, _) -> None? (find_solution sol uv)) uvs in
@@ -260,40 +269,6 @@ let try_inst_uvs_in_goal (g:env) (ctxt:term)
     sols
 
 
-
-let infer
-  (g:env)
-  (head:term)
-  (t_head:term)
-  (ctxt_pre:term)
-  (r:range)
-  : T.Tac st_term =
-  let g = push_context g "infer" r in
-  let uvs, pre =
-    let uvs, comp = gen_uvars g t_head in
-    match comp with
-    | C_ST st_comp
-    | C_STAtomic _ st_comp
-    | C_STGhost _ st_comp -> uvs, st_comp.pre
-    | _ -> fail g (Some r) "infer:unexpected comp type"
-  in
-
-  if List.Tot.length uvs = 0
-  then fail g (Some r) "Inference did not find anything to infer"
-  else begin
-    debug_log g (fun _ -> 
-      Printf.sprintf "Generated %d uvars,\n\
-                                    ctx: {\n%s\n}\n\
-                                    st_comp.pre:{\n%s\n}"
-                (List.Tot.length uvs)
-                (P.term_list_to_string "\n" (vprop_as_list ctxt_pre))
-                (P.term_list_to_string "\n" (vprop_as_list pre)));
-    let uv_sols = try_inst_uvs_in_goal g ctxt_pre pre in
-    debug_log g (fun _ -> Printf.sprintf "Got solutions: {\n%s\}"  (print_solutions uv_sols));
-    let head = rebuild_head g head uvs uv_sols r in
-    debug_log g (fun _ -> Printf.sprintf "Rebuilt head= %s" (P.st_term_to_string head));
-    head
-  end
 
 let solutions_to_string sol = print_solutions sol
 
@@ -338,6 +313,55 @@ let rec apply_solution (sol:solution) (t:term)
     | Tm_ForallSL u b body ->
       w (Tm_ForallSL u { b with binder_ty = apply_solution sol b.binder_ty }
                        (apply_solution sol body))
+
+let filter_common_terms (goal ctxt:list term) : list term * list term =
+  let matched, unsolved_goals = L.partition (fun g -> L.existsb (eq_tm g) ctxt) goal in
+  let remaining_ctxt = L.filter (fun g -> not (L.existsb (eq_tm g) matched)) ctxt in
+  unsolved_goals, remaining_ctxt
+
+let infer
+  (g:env)
+  (head:term)
+  (t_head:term)
+  (ctxt_pre:term)
+  (r:range)
+  : T.Tac st_term =
+  let g = push_context g "infer" r in
+  let uvs, pre =
+    let uvs, comp = gen_uvars g t_head in
+    match comp with
+    | C_ST st_comp
+    | C_STAtomic _ st_comp
+    | C_STGhost _ st_comp -> uvs, st_comp.pre
+    | _ -> fail g (Some r) "infer:unexpected comp type"
+  in
+
+  if List.Tot.length uvs = 0
+  then fail g (Some r) "Inference did not find anything to infer"
+  else begin
+    debug_log g (fun _ -> 
+      Printf.sprintf "Generated %d uvars,\n\
+                                    ctx: {\n%s\n}\n\
+                                    st_comp.pre:{\n%s\n}"
+                (List.Tot.length uvs)
+                (P.term_list_to_string "\n" (vprop_as_list ctxt_pre))
+                (P.term_list_to_string "\n" (vprop_as_list pre)));
+    let uv_sols = try_inst_uvs_in_goal g ctxt_pre pre in
+    match unsolved_uvs uv_sols uvs with
+    | None ->
+      debug_log g (fun _ -> Printf.sprintf "Got solutions: {\n%s\}"  (print_solutions uv_sols));
+      let head = rebuild_head g head uvs uv_sols r in
+      debug_log g (fun _ -> Printf.sprintf "Rebuilt head= %s" (P.st_term_to_string head));
+      head
+    | Some uvs ->
+      let goals = vprop_as_list (apply_solution uv_sols pre) in
+      let ctxt = vprop_as_list ctxt_pre in
+      let goals, ctxt = filter_common_terms goals ctxt in
+      fail g (Some r)
+             (Printf.sprintf "Could not infer some implicit arguments: %s;\n%s"
+                (String.concat ", " (T.map uvar_to_string uvs))
+                (Pulse.Checker.Common.format_failed_goal g ctxt goals))
+  end
 
 let contains_uvar_r (t:R.term) =
     let is_uvar (t:R.term) : T.Tac R.term = 

@@ -55,7 +55,7 @@ let (debug_log :
                          (fun uu___ ->
                             (fun uu___ ->
                                Obj.magic
-                                 (FStar_Tactics_V1_Builtins.print uu___))
+                                 (FStar_Tactics_V2_Builtins.print uu___))
                               uu___)))
                else
                  Obj.magic
@@ -856,3 +856,48 @@ let uu___is_T_Admit uu___2 uu___1 uu___ uu___3 =
 
 
 
+
+type post_hint_t =
+  {
+  g: Pulse_Typing_Env.env ;
+  ret_ty: Pulse_Syntax_Base.term ;
+  u: Pulse_Syntax_Base.universe ;
+  ty_typing: unit ;
+  post: Pulse_Syntax_Base.term ;
+  post_typing: unit }
+let (__proj__Mkpost_hint_t__item__g : post_hint_t -> Pulse_Typing_Env.env) =
+  fun projectee ->
+    match projectee with
+    | { g; ret_ty; u; ty_typing; post; post_typing;_} -> g
+let (__proj__Mkpost_hint_t__item__ret_ty :
+  post_hint_t -> Pulse_Syntax_Base.term) =
+  fun projectee ->
+    match projectee with
+    | { g; ret_ty; u; ty_typing; post; post_typing;_} -> ret_ty
+let (__proj__Mkpost_hint_t__item__u :
+  post_hint_t -> Pulse_Syntax_Base.universe) =
+  fun projectee ->
+    match projectee with
+    | { g; ret_ty; u; ty_typing; post; post_typing;_} -> u
+
+let (__proj__Mkpost_hint_t__item__post :
+  post_hint_t -> Pulse_Syntax_Base.term) =
+  fun projectee ->
+    match projectee with
+    | { g; ret_ty; u; ty_typing; post; post_typing;_} -> post
+type ('g, 'p) post_hint_for_env_p = unit
+type 'g post_hint_for_env = post_hint_t
+type 'g post_hint_opt = post_hint_t FStar_Pervasives_Native.option
+type ('g, 'p, 'x) post_hint_typing_t =
+  {
+  ty_typing1: unit ;
+  post_typing1: unit }
+
+
+type ('x, 'g, 'vars) fresh_wrt = unit
+let (post_hint_typing :
+  Pulse_Typing_Env.env ->
+    unit post_hint_for_env ->
+      Pulse_Syntax_Base.var -> (unit, unit, unit) post_hint_typing_t)
+  = fun g -> fun p -> fun x -> { ty_typing1 = (); post_typing1 = () }
+type ('c, 'postuhint) comp_post_matches_hint = Obj.t
