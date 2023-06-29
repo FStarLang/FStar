@@ -4149,7 +4149,14 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
          let equal t1 t2 =
             (U.eq_tm t1 t2 = U.Equal) ||
             (let steps = [
+               // NOTE: No strong reduction, that can be HUGELY
+               // expensive to do here. Perhaps a function
+               // that does WHNF and matches component-wise could
+               // be of use here, but blasting both terms to full normal
+               // form for the off chance that they end up being equal
+               // does not make sense.
                Env.UnfoldUntil delta_constant;
+               Env.Weak;
                Env.Primops;
                Env.Beta;
                Env.Eager_unfolding;
