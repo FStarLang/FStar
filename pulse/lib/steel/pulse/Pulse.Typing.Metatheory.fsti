@@ -80,6 +80,12 @@ let st_typing_equiv_pre (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
 let pairwise_disjoint (g g' g'':env) =
   disjoint g g' /\ disjoint g' g'' /\ disjoint g g''
 
+let st_typing_weakening
+  (g:env) (g':env { disjoint g g' })
+  (t:st_term) (c:comp_st) (_:st_typing (push_env g g') t c)
+  (g1:env { pairwise_disjoint g g1 g' })
+  : st_typing (push_env (push_env g g1) g') t c = magic ()
+
 // move to Env
 let singleton_env (f:_) (x:var) (t:typ) = push_binding (mk_env f) x ppname_default t
 

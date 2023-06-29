@@ -163,6 +163,15 @@ let (st_typing_equiv_pre :
             unit -> (unit, unit, unit) Pulse_Typing.st_typing)
   = fun g -> fun t -> fun c -> fun d -> fun pre -> fun veq -> Prims.admit ()
 type ('g, 'gu, 'guu) pairwise_disjoint = unit
+let (st_typing_weakening :
+  Pulse_Typing_Env.env ->
+    Pulse_Typing_Env.env ->
+      Pulse_Syntax_Base.st_term ->
+        Pulse_Syntax_Base.comp_st ->
+          (unit, unit, unit) Pulse_Typing.st_typing ->
+            Pulse_Typing_Env.env -> (unit, unit, unit) Pulse_Typing.st_typing)
+  =
+  fun g -> fun g' -> fun t -> fun c -> fun uu___ -> fun g1 -> Prims.magic ()
 let (singleton_env :
   FStar_Reflection_Typing.fstar_top_env ->
     Pulse_Syntax_Base.var -> Pulse_Syntax_Base.typ -> Pulse_Typing_Env.env)

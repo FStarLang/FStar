@@ -11,6 +11,33 @@ module L = FStar.List.Tot
 
 module Env = Pulse.Typing.Env
 
+let rec nt_subst_st_comp_commutes (s:st_comp) (ss:nt_substs)
+  : Lemma (ensures nt_subst_st_comp s ss ==
+           { s with res = nt_subst_term s.res ss;
+                    pre = nt_subst_term s.pre ss;
+                    post = nt_subst_term s.post ss; })
+          (decreases L.length ss) =
+  match ss with
+  | [] -> ()
+  | (NT x e)::tl ->
+    nt_subst_st_comp_commutes (subst_st_comp s [ NT x e ]) tl
+
+
+let rec nt_subst_comp_commutes (c:comp) (ss:nt_substs)
+  : Lemma (ensures (let r = nt_subst_comp c ss in
+           (C_Tot? c ==> r == C_Tot (nt_subst_term (comp_res c) ss)) /\
+           (C_ST? c ==> r == C_ST (nt_subst_st_comp (st_comp_of_comp c) ss)) /\
+           (C_STAtomic? c ==> r == C_STAtomic (nt_subst_term (comp_inames c) ss)
+                                              (nt_subst_st_comp (st_comp_of_comp c) ss)) /\
+           (C_STGhost? c ==> r == C_STGhost (nt_subst_term (comp_inames c) ss)
+                                            (nt_subst_st_comp (st_comp_of_comp c) ss))))
+          (decreases L.length ss) =
+  
+  match ss with
+  | [] -> ()
+  | (NT x e)::tl ->
+    nt_subst_comp_commutes (subst_comp c [ NT x e ]) tl
+
 let rec nt_subst_term_compose (t:term) (ss1 ss2:nt_substs)
 : Lemma (ensures nt_subst_term (nt_subst_term t ss1) ss2 ==
                  nt_subst_term t (compose_nt_substs ss1 ss2))
@@ -131,6 +158,8 @@ let push s1 s2 = {
 }
 
 let push_as_map _ _ = ()
+
+let check_well_typedness g uvs ss = admit (); true
 
 // let t _ = magic ()
 // let as_subst _ = magic ()

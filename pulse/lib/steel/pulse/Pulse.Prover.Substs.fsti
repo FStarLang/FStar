@@ -8,6 +8,7 @@ open Pulse.Typing
 open Pulse.Typing.Metatheory
 
 module L = FStar.List.Tot
+module T = FStar.Tactics
 
 module Env = Pulse.Typing.Env
 
@@ -20,11 +21,34 @@ let compose_nt_substs (ss1 ss2:nt_substs) : nt_substs =
 let nt_subst_term (t:term) (ss:nt_substs) : term =
   L.fold_left (fun t elt -> subst_term t [elt]) t ss
 
+let nt_subst_binder (b:binder) (ss:nt_substs) : binder =
+  L.fold_left (fun b elt -> subst_binder b [elt]) b ss
+
 let nt_subst_st_term (t:st_term) (ss:nt_substs) : st_term =
   L.fold_left (fun t elt -> subst_st_term t [elt]) t ss
 
+let nt_subst_st_comp (s:st_comp) (ss:nt_substs) : st_comp =
+  L.fold_left (fun s elt -> subst_st_comp s [elt]) s ss
+
 let nt_subst_comp (c:comp) (ss:nt_substs) : comp =
   L.fold_left (fun c elt -> subst_comp c [elt]) c ss
+
+val nt_subst_st_comp_commutes (s:st_comp) (ss:nt_substs)
+  : Lemma (nt_subst_st_comp s ss ==
+           { s with res = nt_subst_term s.res ss;
+                    pre = nt_subst_term s.pre ss;
+                    post = nt_subst_term s.post ss; })  // note no shifting needed
+          [SMTPat (nt_subst_st_comp s ss)]
+
+val nt_subst_comp_commutes (c:comp) (ss:nt_substs)
+  : Lemma (let r = nt_subst_comp c ss in
+           (C_Tot? c ==> r == C_Tot (nt_subst_term (comp_res c) ss)) /\
+           (C_ST? c ==> r == C_ST (nt_subst_st_comp (st_comp_of_comp c) ss)) /\
+           (C_STAtomic? c ==> r == C_STAtomic (nt_subst_term (comp_inames c) ss)
+                                              (nt_subst_st_comp (st_comp_of_comp c) ss)) /\
+           (C_STGhost? c ==> r == C_STGhost (nt_subst_term (comp_inames c) ss)
+                                            (nt_subst_st_comp (st_comp_of_comp c) ss)))
+          [SMTPat (nt_subst_comp c ss)]
 
 let nt_subst_env (g:env) (ss:nt_substs) : g':env { fstar_env g' == fstar_env g /\
                                                    dom g' == dom g } =
@@ -72,6 +96,15 @@ val as_nt_substs (s:t) : nt_substs
 
 val as_map (s:t) : Map.t var term
 
+let sel (s:t) (x:var) = Map.sel (as_map s) x
+let contains (s:t) (x:var) = Map.contains (as_map s) x
+let dom (s:t) : Set.set var = Map.domain (as_map s)
+
+let subst_term (e:term) (s:t) = nt_subst_term e (as_nt_substs s)
+let subst_st_term (e:st_term) (s:t) = nt_subst_st_term e (as_nt_substs s)
+let subst_comp (c:comp) (s:t) = nt_subst_comp c (as_nt_substs s)
+let subst_st_comp (c:st_comp) (s:t) = nt_subst_st_comp c (as_nt_substs s)
+
 // let relates_to (g:env) (s:subst) (m:Map.t var term) =
 //   (forall (elt:subst_elt).{:pattern L.memP elt s}
 //           L.memP elt s ==> (NT? elt /\
@@ -89,8 +122,6 @@ val as_map (s:t) : Map.t var term
 // val subst_as_map (#g:env) (s:t g)
 //   : Lemma (relates_to g (as_subst s) (as_map s))
 //           [SMTPat (as_subst s); SMTPat (as_map s)]
-
-let dom (s:t) : Set.set var = Map.domain (as_map s)
 
 // let lookup (#g:_) (s:t g) (x:var { x `Set.mem` dom s }) : term =
 //   Map.sel (as_map s) x
@@ -127,6 +158,9 @@ val push_as_map (s1 s2:t)
   : Lemma (requires Set.disjoint (dom s1) (dom s2))
           (ensures as_map (push s1 s2) == Map.concat (as_map s1) (as_map s2))
           [SMTPat (as_map (push s1 s2))]
+
+val check_well_typedness (g:env) (uvs:env) (ss:t)
+  : T.Tac (b:bool { b ==> well_typed_ss g uvs (as_nt_substs ss) })
 
 // val push_substs_as_map (#g:_) (s1 s2:t g)
 //   : Lemma (requires Set.disjoint (dom s1) (dom s2))

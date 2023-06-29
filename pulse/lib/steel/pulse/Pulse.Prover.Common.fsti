@@ -13,7 +13,7 @@ open Pulse.Checker.Auto.Elims
 
 module T = FStar.Tactics
 
-module Psubst = Pulse.Prover.Substs
+module PS = Pulse.Prover.Substs
 
 let vprop_typing (g:env) (t:term) = tot_typing g t tm_vprop
 
@@ -26,23 +26,15 @@ noeq type preamble = {
   goals : vprop;
 }
 
-type ss_t = Map.t var term
-
-let as_subst (ss:ss_t) : subst = magic ()
-
-let shift (ss:ss_t) = shift_subst (as_subst ss)
-
-let op_Array_Access (ss:ss_t) (t:term) =
-  subst_term t (as_subst ss)
-
-let op_String_Access = Map.sel
+let op_Array_Access (ss:PS.t) (t:term) =
+  PS.subst_term t ss
 
 let op_Star = tm_star
 
-let well_typed_ss (ss:ss_t) (uvs g:env) =
+let well_typed_ss (ss:PS.t) (uvs g:env) =
   forall (x:var).
-  Map.contains ss x ==> (Set.mem x (dom uvs) /\
-                         tot_typing g ss.[x] (ss.(Some?.v (lookup uvs x))))
+  PS.contains ss x ==> (Set.mem x (dom uvs) /\
+                        tot_typing g (PS.sel ss x) (ss.(Some?.v (lookup uvs x))))
 
 noeq type prover_state (preamble:preamble) = {
   pg : g:env { g `env_extends` preamble.g0 };
@@ -50,7 +42,7 @@ noeq type prover_state (preamble:preamble) = {
   remaining_ctxt : list vprop;
 
   uvs : uvs:env { disjoint uvs pg };
-  ss : ss:ss_t { well_typed_ss ss uvs pg};
+  ss : ss:PS.t { well_typed_ss ss uvs pg};
 
   solved : vprop;
   unsolved : list vprop;
@@ -63,12 +55,8 @@ noeq type prover_state (preamble:preamble) = {
   solved_inv : squash (freevars ss.(solved) `Set.subset` dom pg);
 }
 
-let covers (ss:ss_t) (uvs:env) =
-  Set.equal (Map.domain ss) (dom uvs)
-
 let is_terminal (#preamble:_) (st:prover_state preamble) =
-  st.unsolved == [] /\ covers st.ss st.uvs
-
+  st.unsolved == []
 
 let prove
   (#g:env) (#ctxt:vprop) (ctxt_typing:vprop_typing g ctxt)
@@ -76,9 +64,9 @@ let prove
   (#goals:vprop) (goals_typing:vprop_typing (push_env g uvs) goals)
 
   : T.Tac (g1 : env { g1 `env_extends` g /\ disjoint g1 uvs } &
-           ss : ss_t { well_typed_ss ss uvs g1 } &
+           ss : PS.t { well_typed_ss ss uvs g1 } &
            remaining_ctxt : vprop &
-           k : continuation_elaborator g ctxt g1 (ss.(goals) * remaining_ctxt)) = magic ()
+           continuation_elaborator g ctxt g1 (ss.(goals) * remaining_ctxt)) = magic ()
 
 open Pulse.Checker.Common
 
@@ -88,6 +76,7 @@ let check_stapp_no_ctxt (g:env) (t:st_term { Tm_STApp? t.term })
            c:comp_st &
            st_typing (push_env g uvs) t c) = magic ()
 
+irreducible
 let extend_post_hint_opt_g (g:env) (post_hint:post_hint_opt g) (g1:env { g1 `env_extends` g })
   : p:post_hint_opt g1 { p == post_hint } =
   match post_hint with
@@ -105,9 +94,18 @@ let add_frame (#g:env) (#t:st_term) (#c:comp_st) (t_typing:st_typing g t c)
            st_typing g t' c') = magic ()
 
 let st_typing_subst (g:env) (uvs:env { disjoint uvs g }) (t:st_term) (c:comp_st)
-  (_:st_typing (push_env g uvs) t c)
-  (ss:ss_t { well_typed_ss ss uvs g })
-  : T.Tac (st_typing g (subst_st_term t (as_subst ss)) (subst_comp c (as_subst ss))) = magic ()
+  (d:st_typing (push_env g uvs) t c)
+  (ss:PS.t { well_typed_ss ss uvs g })
+
+: T.Tac (option (st_typing g (PS.subst_st_term t ss) (PS.subst_comp c ss))) =
+
+let b = PS.check_well_typedness g uvs ss in
+if not b then None
+else let g' = mk_env (fstar_env g) in
+     assert (equal (push_env uvs g') uvs);
+     let d = PS.st_typing_nt_substs g uvs g' d (PS.as_nt_substs ss) in
+     assume (equal (push_env g (PS.nt_subst_env g' (PS.as_nt_substs ss))) g);
+     Some d
 
 let st_typing_weakening
   (g:env) (g':env { disjoint g g' })
@@ -158,41 +156,45 @@ let check_bind
     let px = b.binder_ppname, x in
     // TODO: if the binder is annotated, check subtyping
     let g2 = push_binding g1 x b.binder_ppname ss1.(comp_res c1) in
-    let pre_e2 = open_term_nv (subst_term (comp_post c1) (shift ss1)) px * remaining_pre in
+    let pre_e2 = open_term_nv ss1.(comp_post c1) px * remaining_pre in
     assert (g2 `env_extends` g1);
+    assert (g2 `env_extends` g);
     // magic is the typing of pre_e2 in g2
     // remaining_pre is well-typed, may be prove function can return it?
     // well-typedness of open_term?
     let (| e2, c2, d2 |) =
       check g2 (open_st_term_nv e2 px) pre_e2 (magic ()) (extend_post_hint_opt_g g post_hint g2) in
-
+    
     if not (stateful_comp c2)
     then fail g None "Bind: c2 is not st"
     else
-      let d1 = st_typing_weakening g uvs1 e1 c1 d1 g1 in 
-      // g1 |- ss1 e1 : ss1 c1
-      let d1 = st_typing_subst g1 uvs1 e1 c1 d1 ss1 in
-      let (| e1, c1, d1 |) = add_frame d1 remaining_pre in
-
-      assert (comp_pre c1 == ss1.(comp_pre c10) * remaining_pre);
-      assert (comp_res c1 == ss1.(comp_res c10));
-      assert (None? (lookup g1 x));
-      assert (comp_post c1 == (subst_term (comp_post c10) (shift ss1)) * remaining_pre);
-      assume (open_term remaining_pre x == remaining_pre);
-      assert (open_term (comp_post c1) x == comp_pre c2);
+      let d1 = st_typing_weakening g uvs1 e1 c1 d1 g1 in
+      let d1opt = st_typing_subst g1 uvs1 e1 c1 d1 ss1 in
+      if None? d1opt then fail g None "Bind: could not find a well-typed substitution"
+      else
+        // g1 |- ss1 e1 : ss1 c1
+        let Some d1 = d1opt in
+        let (| e1, c1, d1 |) = add_frame d1 remaining_pre in
+        assert (comp_pre c1 == ss1.(comp_pre c10) * remaining_pre);
+        assert (comp_res c1 == ss1.(comp_res c10));
+        assert (None? (lookup g1 x));
+        assert (comp_post c1 == ss1.(comp_post c10) * remaining_pre);
+        assume (open_term remaining_pre x == remaining_pre);
+        assert (open_term (comp_post c1) x == comp_pre c2);
    
-      let e2_closed = close_st_term e2 x in
-      assume (open_st_term e2_closed x == e2);
+        let e2_closed = close_st_term e2 x in
+        assume (open_st_term e2_closed x == e2);
 
-      let r = mk_bind' g1 (comp_pre c1) e1 e2_closed c1 c2 px d1 (magic ()) d2 post_hint () in
+        let r = mk_bind' g1 (comp_pre c1) e1 e2_closed c1 c2 px d1 (magic ()) d2 post_hint () in
 
-      k post_hint r
+        k post_hint r
 
   | _ -> fail g None "Bind: e1 is not an stapp"
+#pop-options
 
-let ss_extends (ss1 ss2:ss_t) =
-  Set.subset (Map.domain ss2) (Map.domain ss1) /\
-  (forall (x:var). Map.contains ss2 x ==> ss1.[x] == ss2.[x])
+let ss_extends (ss1 ss2:PS.t) =
+  Set.subset (PS.dom ss2) (PS.dom ss1) /\
+  (forall (x:var). PS.contains ss2 x ==> PS.sel ss1 x == PS.sel ss2 x)
 
 let pst_extends (#preamble:_) (pst1 pst2:prover_state preamble) =
   pst1.pg `env_extends` pst2.pg /\
@@ -227,6 +229,7 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
     ctxt_typing = magic ();
     goals = pst.solved * open_term_nv body px * (list_as_vprop unsolved'); 
   } in
+  assume (pst.ss.(tm_emp) == tm_emp);
   let pst_sub : prover_state preamble_sub = {
     pg = pst.pg;
     remaining_ctxt = vprop_as_list preamble_sub.ctxt;
@@ -238,13 +241,13 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
     goals_inv = magic ();
     solved_inv = ();
   } in
+
   let pst_sub_terminal = prover pst_sub in
   let pst_sub_terminal_goals_inv
     : vprop_equiv (push_env pst_sub_terminal.pg pst_sub_terminal.uvs)
                   preamble_sub.goals
                   (list_as_vprop [] * pst_sub_terminal.solved) = pst_sub_terminal.goals_inv in
   assert (well_typed_ss pst_sub_terminal.ss pst_sub_terminal.uvs pst_sub_terminal.pg);
-  assert (pst_sub_terminal.ss `covers` pst_sub_terminal.uvs);
   // substitution lemma on pst_sub_terminal_goals_inv
   let pst_sub_terminal_goals_inv
     : vprop_equiv pst_sub_terminal.pg
@@ -289,14 +292,14 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
         pst_sub_terminal.pg ((list_as_vprop pst_sub_terminal.remaining_ctxt *
                               pst_sub_terminal.ss.(pst.solved) *
                               pst_sub_terminal.ss.(list_as_vprop unsolved')) *
-                             (tm_exists_sl u (subst_binder b (as_subst pst_sub_terminal.ss)) pst_sub_terminal.ss.(body))) =
-    k_intro_exists pst_sub_terminal.pg u (subst_binder b (as_subst pst_sub_terminal.ss)) pst_sub_terminal.ss.(body) witness
+                             (tm_exists_sl u (PS.nt_subst_binder b (PS.as_nt_substs pst_sub_terminal.ss)) pst_sub_terminal.ss.(body))) =
+    k_intro_exists pst_sub_terminal.pg u (PS.nt_subst_binder b (PS.as_nt_substs pst_sub_terminal.ss)) pst_sub_terminal.ss.(body) witness
       (list_as_vprop pst_sub_terminal.remaining_ctxt *
        pst_sub_terminal.ss.(pst.solved) *
        pst_sub_terminal.ss.(list_as_vprop unsolved')) in
-  // these are all NT substitutions
-  assume (shift_subst (as_subst pst_sub_terminal.ss) == as_subst pst_sub_terminal.ss);
-  assert (tm_exists_sl u (subst_binder b (as_subst pst_sub_terminal.ss)) pst_sub_terminal.ss.(body) ==
+  // // these are all NT substitutions
+  // assume (shift_subst (as_subst pst_sub_terminal.ss) == as_subst pst_sub_terminal.ss);
+  assume (tm_exists_sl u (PS.nt_subst_binder b (PS.as_nt_substs pst_sub_terminal.ss)) pst_sub_terminal.ss.(body) ==
           pst_sub_terminal.ss.(tm_exists_sl u b body));
   let k_intro_exists
     : continuation_elaborator
@@ -392,11 +395,11 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
 let try_match_pq (g:env) (uvs:env { disjoint uvs g})
   (#p:vprop) (p_typing:vprop_typing g p)
   (#q:vprop) (q_typing:vprop_typing (push_env g uvs) q)
-  : T.Tac (option (ss:ss_t { well_typed_ss ss uvs g /\
-                             Map.domain ss `Set.subset` freevars q } &
+  : T.Tac (option (ss:PS.t { well_typed_ss ss uvs g /\
+                             PS.dom ss `Set.subset` freevars q } &
                    vprop_equiv g p ss.(q))) = magic ()
 
-let compose_ss (ss1 ss2:ss_t) : ss_t = magic ()
+let compose_ss (ss1 ss2:PS.t) : PS.t = magic ()
 
 let match_step (#preamble:preamble) (pst:prover_state preamble)
   (p:vprop) (remaining_ctxt':list vprop)
@@ -406,13 +409,13 @@ let match_step (#preamble:preamble) (pst:prover_state preamble)
 : T.Tac (option (pst':prover_state preamble { pst' `pst_extends` pst })) =
 
 let q_ss = pst.ss.(q) in
-assume (freevars q_ss `Set.disjoint` Map.domain pst.ss);
+assume (freevars q_ss `Set.disjoint` PS.dom pst.ss);
 
 let ropt = try_match_pq pst.pg pst.uvs #p (magic ()) #q_ss (magic ()) in
 match ropt with
 | None -> None
 | Some (| ss_q, veq |) ->
-  assert (Map.domain ss_q `Set.disjoint` Map.domain pst.ss);
+  assert (PS.dom ss_q `Set.disjoint` PS.dom pst.ss);
   assert (well_typed_ss ss_q pst.uvs pst.pg);
 
   let ss_new = compose_ss ss_q pst.ss in
@@ -450,6 +453,8 @@ match ropt with
     : continuation_elaborator
         preamble.g0 preamble.ctxt
         pst.pg (list_as_vprop remaining_ctxt' * (ss_new.(q) * ss_new.(pst.solved))) = magic () in
+
+  assume (ss_new.(q) * ss_new.(pst.solved) == ss_new.(q * pst.solved));
 
   let k
     : continuation_elaborator
