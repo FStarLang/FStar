@@ -4718,27 +4718,71 @@ let rec (try_make_equal :
     fun t1 ->
       fun t2 ->
         let blast t11 t21 =
-          let steps =
-            [FStar_TypeChecker_Env.UnfoldUntil
-               FStar_Syntax_Syntax.delta_constant;
-            FStar_TypeChecker_Env.Primops;
-            FStar_TypeChecker_Env.Beta;
-            FStar_TypeChecker_Env.Eager_unfolding;
-            FStar_TypeChecker_Env.Iota] in
-          let t12 =
-            norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.2" steps
-              env t11 in
-          let t22 =
-            norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.3" steps
-              env t21 in
-          FStar_Syntax_Util.eq_tm t12 t22 in
+          (let uu___1 = FStar_Options.debug_any () in
+           if uu___1
+           then
+             let uu___2 = FStar_Syntax_Print.term_to_string t11 in
+             let uu___3 = FStar_Syntax_Print.term_to_string t21 in
+             FStar_Compiler_Util.print2 "GGG BLAST\n(%s)\nand\n(%s)\n\n"
+               uu___2 uu___3
+           else ());
+          (let steps =
+             [FStar_TypeChecker_Env.UnfoldUntil
+                FStar_Syntax_Syntax.delta_constant;
+             FStar_TypeChecker_Env.Primops;
+             FStar_TypeChecker_Env.Beta;
+             FStar_TypeChecker_Env.Eager_unfolding;
+             FStar_TypeChecker_Env.Iota] in
+           let t12 =
+             norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.2" steps
+               env t11 in
+           let t22 =
+             norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.3" steps
+               env t21 in
+           FStar_Syntax_Util.eq_tm t12 t22) in
         let defined uu___ =
           match uu___ with
           | FStar_Syntax_Util.Equal -> true
           | FStar_Syntax_Util.NotEqual -> true
           | FStar_Syntax_Util.Unknown -> false in
         let r1 = FStar_Syntax_Util.eq_tm t1 t2 in
-        if defined r1 then r1 else blast t1 t2
+        if defined r1
+        then r1
+        else
+          (let uu___1 = FStar_Syntax_Util.head_and_args t1 in
+           match uu___1 with
+           | (h1, args1) ->
+               let uu___2 = FStar_Syntax_Util.head_and_args t2 in
+               (match uu___2 with
+                | (h2, args2) ->
+                    let uu___3 =
+                      (let uu___4 = FStar_Syntax_Util.eq_tm h1 h2 in
+                       uu___4 = FStar_Syntax_Util.Equal) &&
+                        ((FStar_Compiler_List.length args1) =
+                           (FStar_Compiler_List.length args2)) in
+                    if uu___3
+                    then
+                      ((let uu___5 = FStar_Options.debug_any () in
+                        if uu___5
+                        then
+                          let uu___6 = FStar_Syntax_Print.term_to_string t1 in
+                          let uu___7 = FStar_Syntax_Print.term_to_string t2 in
+                          FStar_Compiler_Util.print2
+                            "GGG OPT\n(%s)\nand\n(%s)\n\n" uu___6 uu___7
+                        else ());
+                       (let rec aux args11 args21 =
+                          match (args11, args21) with
+                          | ([], []) -> true
+                          | ((a1, uu___5)::args12, (a2, uu___6)::args22) ->
+                              let uu___7 =
+                                let uu___8 = try_make_equal env a1 a2 in
+                                uu___8 = FStar_Syntax_Util.Equal in
+                              if uu___7 then aux args12 args22 else false in
+                        let uu___5 = aux args1 args2 in
+                        if uu___5
+                        then FStar_Syntax_Util.Equal
+                        else FStar_Syntax_Util.Unknown))
+                    else blast t1 t2))
 let (try_make_equal_bool :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> Prims.bool)
