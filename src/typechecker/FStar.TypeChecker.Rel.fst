@@ -4155,7 +4155,6 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
            | U.NotEqual -> false
            | U.Unknown ->
              let steps = [
-               Env.UnfoldUntil delta_constant;
                Env.Primops;
                Env.Beta;
                Env.Eager_unfolding;
