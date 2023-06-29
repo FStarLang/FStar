@@ -72,30 +72,39 @@ let has_struct_field
 = has_struct_field1 r field r'
 
 let has_struct_field_dup
-  r field r'
-= has_struct_field_dup' r field r'
+  #opened #tn #tf #n #fields r field r'
+= let r'2 : ref ((fd_gen_of_nonempty_fd fields).fd_typedef field) = coerce_eq () r' in
+  has_struct_field_dup' r field r'2
 
 let has_struct_field_inj
-  r field r1 r2
-= has_struct_field_inj' r field r1 r2
+  #_ #tn #tf #n #fields r field r1 r2
+= let r1' : ref ((fd_gen_of_nonempty_fd fields).fd_typedef field) = coerce_eq () r1 in
+  let r2' : ref ((fd_gen_of_nonempty_fd fields).fd_typedef field) = coerce_eq () r2 in
+  has_struct_field_inj' r field r1' r2'
 
 let has_struct_field_equiv_from
-  r1 field r' r2
-= has_struct_field_equiv_from' r1 field r' r2
+  #_ #tn #tf #n #fields r1 field r' r2
+= let r'_ : ref ((fd_gen_of_nonempty_fd fields).fd_typedef field) = coerce_eq () r' in
+  has_struct_field_equiv_from' r1 field r'_ r2
 
 let has_struct_field_equiv_to
-  r field r1 r2
-= has_struct_field_equiv_to' r field r1 r2
-  
+  #_ #tn #tf #n #fields r field r1 r2
+= let r1' : ref ((fd_gen_of_nonempty_fd fields).fd_typedef field) = coerce_eq () r1 in
+  let r2' : ref ((fd_gen_of_nonempty_fd fields).fd_typedef field) = coerce_eq () r2 in
+  has_struct_field_equiv_to' r field r1' r2'
+
 let ghost_struct_field_focus
-  r field r'
-= noop (); // FIXME: WHY WHY WHY? without this noop, z3 fails to prove precondition of field_description_t.fd_typedef . But also works if I put noop () after the function call
-  ghost_struct_field_focus' r field r'
+  #_ #tn #tf #n #fields r field r'
+= let r'_ : ref ((fd_gen_of_nonempty_fd fields).fd_typedef field) = coerce_eq () r' in
+  ghost_struct_field_focus' r field r'_
 
 let ghost_struct_field
-  r field
-= noop (); // FIXME: WHY WHY WHY? (same as ghost_struct_field_focus above)
-  ghost_struct_field' r field
+  #_ #tn #tf #n #fields #v r field
+= let r' = ghost_struct_field' r field in
+  let r'2 : Ghost.erased (ref (fields.fd_typedef field)) = coerce_eq () r' in
+  rewrite (pts_to r' _) (pts_to r'2 (struct_get_field v field));
+  rewrite (has_struct_field1 r field r') (has_struct_field r field r'2);
+  r'2
 
 let struct_field0
   t' #_ #_ #v r field td'
@@ -106,8 +115,13 @@ let struct_field0
   return r'
 
 let unstruct_field
-  r field r'
-= unstruct_field' r field r'
+  #_ #tn #tf #n #fields #v r field #v' r'
+= let r'_ : ref ((fd_gen_of_nonempty_fd fields).fd_typedef field) = coerce_eq () r' in
+  let v'_ : Ghost.erased ((fd_gen_of_nonempty_fd fields).fd_type field) = coerce_eq () v' in
+  rewrite (has_struct_field r field r') (has_struct_field1 r field r'_);
+  rewrite (pts_to r' v') (pts_to r'_ v'_);
+  unstruct_field' r field r'_;
+  rewrite (has_struct_field1 r field r'_) (has_struct_field r field r')
 
 let fractionable_struct _ = ()
 let mk_fraction_struct _ _ _ = ()
