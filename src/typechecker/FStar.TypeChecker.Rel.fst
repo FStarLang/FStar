@@ -2065,6 +2065,34 @@ let apply_ad_hoc_indexed_subcomp (env:Env.env)
   f_sub_probs@g_sub_probs,
   wl
 
+(* Try to use eq_tm. If that gives a definite answer, we use it.
+Otherwise, we do a normalization pass and try again. FIXME: this could
+be VERY expensive, so we should find a smarter way. *)
+let rec try_make_equal env (t1 t2 : term) : U.eq_result =
+  let blast (t1 t2 : term) : U.eq_result =
+    let steps = [
+      Env.UnfoldUntil delta_constant;
+      Env.Primops;
+      Env.Beta;
+      Env.Eager_unfolding;
+      Env.Iota ] in
+    let t1 = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.2" steps env t1 in
+    let t2 = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.3" steps env t2 in
+    U.eq_tm t1 t2
+  in
+  let defined = function
+    | U.Equal
+    | U.NotEqual -> true
+    | U.Unknown -> false
+  in
+  let r1 = U.eq_tm t1 t2 in
+  if defined r1
+   then r1
+   else blast t1 t2
+
+let try_make_equal_bool env (t1 t2 : term) : bool =
+  try_make_equal env t1 t2 = U.Equal
+
 (******************************************************************************************************)
 (* Main solving algorithm begins here *)
 (******************************************************************************************************)
@@ -4146,31 +4174,12 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
                 (string_of_bool (Env.is_interpreted wl.tcenv head2));
                 (string_of_bool (no_free_uvars t2))]
          in
-         let equal t1 t2 : bool =
-          (* Try comparing the terms as they are. If we get Equal or NotEqual,
-             we are done. If we get an Unknown, attempt some normalization. *)
-           let r = U.eq_tm t1 t2 in
-           match r with
-           | U.Equal -> true
-           | U.NotEqual -> false
-           | U.Unknown ->
-             let steps = [
-               Env.UnfoldUntil delta_constant;
-               Env.Primops;
-               Env.Beta;
-               Env.Eager_unfolding;
-               Env.Iota ] in
-             let env = p_env wl orig in
-             let t1 = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.2" steps env t1 in
-             let t2 = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.3" steps env t2 in
-             U.eq_tm t1 t2 = U.Equal
-         in
          if (Env.is_interpreted wl.tcenv head1 || Env.is_interpreted wl.tcenv head2) //we have something like (+ x1 x2) =?= (- y1 y2)
            && problem.relation = EQ
          then (
            let solve_with_smt () =
              let guard, wl =
-                 if equal t1 t2
+                 if try_make_equal_bool (p_env wl orig) t1 t2
                  then None, wl
                  else let g, wl = mk_eq2 wl orig t1 t2 in
                       Some g, wl
@@ -4182,7 +4191,7 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
            then
              if not wl.smt_ok
              || Options.ml_ish ()
-             then if equal t1 t2
+             then if try_make_equal_bool (p_env wl orig) t1 t2
                   then solve (solve_prob orig None [] wl)
                   else rigid_rigid_delta problem wl head1 head2 t1 t2
              else solve_with_smt()
