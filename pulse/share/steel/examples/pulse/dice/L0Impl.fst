@@ -17,77 +17,15 @@ open L0Types
 open L0Crypto
 open X509
 
-
-(* ------- L0 CORE STEP 1 ------- *)
-
-let l0_step1_repr_post_state (vl0:l0_repr) (s1 s2 s3 s4 s5:_) 
-  = { vl0 with 
-      deviceID_pub = s1;
-      deviceID_priv = s2;
-      aliasKey_pub = s3;
-      aliasKey_priv = s4;
-      authKeyID = s5;
-    }
-
-let l0_core_step1_post
-  (l0: l0_record)
-  (vl0: l0_repr)
-  (alg:alg_t)
-  : prop = 
-    valid_hkdf_ikm_len (digest_len alg) /\
-    derive_DeviceID_spec alg (digest_len alg) vl0.cdi l0.deviceID_label_len vl0.deviceID_label
-      == (vl0.deviceID_pub, vl0.deviceID_priv) /\
-    derive_AliasKey_spec alg (digest_len alg) vl0.cdi vl0.fwid l0.aliasKey_label_len vl0.aliasKey_label
-      == (vl0.aliasKey_pub, vl0.aliasKey_priv) /\
-    derive_authKeyID_spec alg vl0.deviceID_pub
-      == vl0.authKeyID 
-
-```pulse
-fn l0_core_step1
-  (l0: l0_record)
-  (#vl0: Ghost.erased l0_repr)
-  requires (
-    l0_perm l0 vl0 `star`
-    pure(valid_hkdf_lbl_len l0.deviceID_label_len /\
-         valid_hkdf_lbl_len l0.aliasKey_label_len)
-  )
-  ensures (
-    exists (vl0_:l0_repr). 
-      l0_perm l0 vl0_ **
-      pure (l0_core_step1_post l0 vl0_ dice_hash_alg)
-  )
-{
-  dice_digest_len_is_hkdf_ikm;
-
-  unfold (l0_perm l0 vl0);
-
-  derive_DeviceID dice_hash_alg l0.deviceID_pub l0.deviceID_priv l0.cdi l0.deviceID_label_len l0.deviceID_label;
-  derive_AliasKey dice_hash_alg l0.aliasKey_pub l0.aliasKey_priv l0.cdi l0.fwid l0.aliasKey_label_len l0.aliasKey_label;
-  derive_authkeyID dice_hash_alg l0.authKeyID l0.deviceID_pub;
-  
-  fold_l0_perm l0;
-  ()
-}
-```
-
-(* ------- L0 CORE STEP 2 ------- *)
-
-let l0_step2_repr_post_state (vl0:l0_repr) (l:U32.t) (s:elseq U8.t (U32.v l))
-  = { vl0 with 
-      deviceIDCRI_len = l;
-      deviceIDCRI_buf = s;
-    }
-
 ```pulse
 fn create_deviceIDCRI
   (deviceID_pub: A.array U8.t)
   (deviceIDCRI_len: R.ref U32.t)
   (deviceIDCRI_buf: A.array U8.t)
-  (deviceIDCSR: deviceIDCSR_ingredients_t)
+  (deviceIDCSR_ingredients: deviceIDCSR_ingredients_t)
   (#pub_perm:perm)
-  (#pub: erased (Seq.seq U8.t))
   (#_len:erased U32.t)
-  (#_buf:erased (Seq.seq U8.t))
+  (#pub#_buf:erased (Seq.seq U8.t))
   requires 
     A.pts_to deviceID_pub pub_perm pub **
     R.pts_to deviceIDCRI_len full_perm _len **
@@ -98,34 +36,34 @@ fn create_deviceIDCRI
       R.pts_to deviceIDCRI_len full_perm len **
       A.pts_to deviceIDCRI_buf full_perm buf **
       pure (
-        len == len_of_deviceIDCRI deviceIDCSR.version
-                                  deviceIDCSR.s_common
-                                  deviceIDCSR.s_org
-                                  deviceIDCSR.s_country /\
+        len == len_of_deviceIDCRI deviceIDCSR_ingredients.version
+                                  deviceIDCSR_ingredients.s_common
+                                  deviceIDCSR_ingredients.s_org
+                                  deviceIDCSR_ingredients.s_country /\
         buf `Seq.equal`
           (spec_serialize_deviceIDCRI (spec_x509_get_deviceIDCRI
-                                        deviceIDCSR.version
-                                        deviceIDCSR.s_common
-                                        deviceIDCSR.s_org
-                                        deviceIDCSR.s_country
-                                        deviceIDCSR.ku
+                                        deviceIDCSR_ingredients.version
+                                        deviceIDCSR_ingredients.s_common
+                                        deviceIDCSR_ingredients.s_org
+                                        deviceIDCSR_ingredients.s_country
+                                        deviceIDCSR_ingredients.ku
                                         pub) len)
       )
 {
   let len = len_of_deviceIDCRI
-                          deviceIDCSR.version
-                          deviceIDCSR.s_common
-                          deviceIDCSR.s_org
-                          deviceIDCSR.s_country;
+              deviceIDCSR_ingredients.version
+              deviceIDCSR_ingredients.s_common
+              deviceIDCSR_ingredients.s_org
+              deviceIDCSR_ingredients.s_country;
 
   deviceIDCRI_len := len;
   
   let deviceIDCRI = x509_get_deviceIDCRI
-                      deviceIDCSR.version
-                      deviceIDCSR.s_common
-                      deviceIDCSR.s_org
-                      deviceIDCSR.s_country
-                      deviceIDCSR.ku
+                      deviceIDCSR_ingredients.version
+                      deviceIDCSR_ingredients.s_common
+                      deviceIDCSR_ingredients.s_org
+                      deviceIDCSR_ingredients.s_country
+                      deviceIDCSR_ingredients.ku
                       deviceID_pub;
 
   serialize_deviceIDCRI deviceIDCRI len deviceIDCRI_buf;
@@ -134,6 +72,8 @@ fn create_deviceIDCRI
 }
 ```
 
+// TODO: don't need full perm on all of these
+// TODO: we never set deviceIDCSR_len
 ```pulse
 fn sign_and_finalize_deviceIDCSR
   (deviceID_priv: A.array U8.t)
@@ -142,9 +82,8 @@ fn sign_and_finalize_deviceIDCSR
   (deviceIDCSR_len: R.ref U32.t)
   (deviceIDCSR_buf: A.array U8.t)
   (#priv_perm:perm)
-  (#priv:erased (Seq.seq U8.t))
   (#_cri_len#_csr_len:erased U32.t)
-  (#_cri_buf#_csr_buf:erased (Seq.seq U8.t))
+  (#priv#_cri_buf#_csr_buf:erased (Seq.seq U8.t))
   requires (
     A.pts_to deviceID_priv priv_perm priv **
     R.pts_to deviceIDCRI_len full_perm _cri_len **
@@ -157,7 +96,7 @@ fn sign_and_finalize_deviceIDCSR
       _csr_len == length_of_deviceIDCSR _cri_len
     ))
   ensures (
-    exists (csr_buf:elseq U8.t (U32.v _csr_len)). 
+    exists (csr_buf:Seq.seq U8.t). 
     A.pts_to deviceID_priv priv_perm priv **
     R.pts_to deviceIDCRI_len full_perm _cri_len **
     A.pts_to deviceIDCRI_buf full_perm _cri_buf **
@@ -167,177 +106,158 @@ fn sign_and_finalize_deviceIDCSR
       csr_buf `Seq.equal`
         (spec_serialize_deviceIDCSR _cri_len 
                                     _csr_len
-                                    (spec_sign_and_finalize_deviceIDCSR
-                                      priv
+                                    (spec_x509_get_deviceIDCSR
                                       _cri_len
-                                      _cri_buf))
+                                      _cri_buf
+                                      (spec_ed25519_sign
+                                        priv
+                                        _cri_buf)))
     ))
 {
-  admit()
-(* 
-(* Classify AliasKeyTBS *)
-  let deviceIDCRI_buf_sec: B.lbuffer byte_sec (v deviceIDCRI_len) = B.alloca (u8 0x00) deviceIDCRI_len in
-  classify_public_buffer
-    (* len *) deviceIDCRI_len
-    (* src *) deviceIDCRI_buf
-    (* dst *) deviceIDCRI_buf_sec;
+  let deviceIDCRI_len_v = !deviceIDCRI_len;
+  let deviceIDCSR_len_v = !deviceIDCSR_len;
+  let deviceIDCRI_sig = new_array 0uy (u32_to_us deviceIDCRI_len_v);
 
-(* Sign Classified AliasKeyTBS *)
-  let deviceIDCRI_sig_sec: B.lbuffer byte_sec 64 = B.alloca (u8 0x00) 64ul in
-  Ed25519.sign
-    (* sig *) deviceIDCRI_sig_sec
-    (* key *) deviceID_priv
-    (* len *) deviceIDCRI_len
-    (* msg *) deviceIDCRI_buf_sec;
+  ed25519_sign deviceIDCRI_sig deviceID_priv (u32_to_us deviceIDCRI_len_v) deviceIDCRI_buf;
 
-(* Declassify AliasKeyTBS Signature *)
-  let deviceIDCRI_sig: B.lbuffer byte_pub 64 = B.alloca 0x00uy 64ul in
-  declassify_secret_buffer
-    (* len *) 64ul
-    (* src *) deviceIDCRI_sig_sec
-    (* dst *) deviceIDCRI_sig;
+  let deviceIDCSR = x509_get_deviceIDCSR
+                      deviceIDCRI_len_v
+                      deviceIDCRI_buf
+                      deviceIDCRI_sig;
+                    
+  serialize_deviceIDCSR deviceIDCRI_len_v deviceIDCSR deviceIDCSR_buf deviceIDCSR_len_v;
 
-(* Finalize AliasKeyCRT with AliasKeyTBS and Signature *)
-  let deviceIDCRI_buf32: B32.lbytes32 deviceIDCRI_len = B32.of_buffer deviceIDCRI_len deviceIDCRI_buf in
-  let deviceIDCRI_sig32: x509_signature_raw_t = B32.of_buffer 64ul deviceIDCRI_sig in
+  free_array deviceIDCRI_sig;
 
-  printf "Creating AliasKey Certificate CRT message\n" done;
-  let deviceIDCSR: deviceIDCSR_t deviceIDCRI_len = x509_get_deviceIDCSR
-                                                             deviceIDCRI_len
-                                                             deviceIDCRI_buf32
-                                                             deviceIDCRI_sig32 in
-  (* Prf *) lemma_serialize_deviceIDCSR_size_exact deviceIDCRI_len deviceIDCSR;
-
-  printf "Serializing AliasKey Certificate CRT\n" done;
-(* Serialize AliasKeyCRT *)
-  let offset = serialize32_deviceIDCSR_backwards
-                 deviceIDCRI_len
-                 deviceIDCSR
-                 deviceIDCSR_buf
-                 deviceIDCSR_len in
-
-  HST.pop_frame ()
-*)
+  ()
 }
 ```
-
-let l0_core_step2_pre
-  (l0: l0_record)
-  (deviceIDCSR: deviceIDCSR_ingredients_t)
-  (aliasKeyCRT: aliasKeyCRT_ingredients_t)
-  (vl0: Ghost.erased l0_repr)
-  : prop = 
-  let deviceIDCRI_len = len_of_deviceIDCRI
-                          deviceIDCSR.version
-                          deviceIDCSR.s_common
-                          deviceIDCSR.s_org
-                          deviceIDCSR.s_country in
-  U32.(0ul <^ deviceIDCRI_len) /\ 
-  valid_deviceIDCSR_ingredients deviceIDCRI_len /\
-  vl0.deviceIDCSR_len == length_of_deviceIDCSR deviceIDCRI_len
-
-
-let l0_core_step2_post
-  (l0: l0_record)
-  (deviceIDCSR: deviceIDCSR_ingredients_t)
-  (aliasKeyCRT: aliasKeyCRT_ingredients_t)
-  (vl0: Ghost.erased l0_repr)
-  : prop = 
-  vl0.deviceIDCSR_buf `Seq.equal`
-    (spec_serialize_deviceIDCSR vl0.deviceIDCRI_len 
-                                vl0.deviceIDCSR_len
-                                (spec_sign_and_finalize_deviceIDCSR
-                                  vl0.deviceID_priv
-                                  vl0.deviceIDCRI_len
-                                  vl0.deviceIDCRI_buf))
 
 ```pulse
-fn l0_core_step2
-  (l0: l0_record)
-  (deviceIDCSR: deviceIDCSR_ingredients_t)
-  (aliasKeyCRT: aliasKeyCRT_ingredients_t)
-  (#vl0: Ghost.erased l0_repr)
-  requires (
-    l0_perm l0 vl0 **
-    pure (l0_core_step2_pre l0 deviceIDCSR aliasKeyCRT vl0)
-  )
-  ensures (
-    exists (vl0_:l0_repr). 
-      l0_perm l0 vl0_ **
-      pure (l0_core_step2_post l0 deviceIDCSR aliasKeyCRT vl0_)
-  )
+fn create_aliasKeyTBS
+  (fwid: A.larray U8.t 32)
+  (authKeyID: A.array U8.t)
+  (deviceID_pub: A.larray U8.t 32)
+  (aliasKey_pub: A.larray U8.t 32)
+  (aliasKeyTBS_len: R.ref U32.t)
+  (aliasKeyTBS_buf: A.array U8.t)
+  (aliasKeyCRT_ingredients: aliasKeyCRT_ingredients_t)
+  (#fwid_perm #authKey_perm #device_perm #aliasKey_perm:perm)
+  (#_len:erased U32.t)
+  (#fwid0 #authKeyID0 #deviceID0 #aliasKey0 #_buf:erased (Seq.seq U8.t))
+  requires 
+    A.pts_to fwid fwid_perm fwid0 **
+    A.pts_to authKeyID authKey_perm authKeyID0 **
+    A.pts_to deviceID_pub device_perm deviceID0 **
+    A.pts_to aliasKey_pub aliasKey_perm aliasKey0 **
+    R.pts_to aliasKeyTBS_len full_perm _len **
+    A.pts_to aliasKeyTBS_buf full_perm _buf
+  ensures exists (len:U32.t) (buf:Seq.seq U8.t).
+    A.pts_to fwid fwid_perm fwid0 **
+    A.pts_to authKeyID authKey_perm authKeyID0 **
+    A.pts_to deviceID_pub device_perm deviceID0 **
+    A.pts_to aliasKey_pub aliasKey_perm aliasKey0 **
+    R.pts_to aliasKeyTBS_len full_perm len **
+    A.pts_to aliasKeyTBS_buf full_perm buf **
+    pure (
+      len == len_of_aliasKeyTBS
+              aliasKeyCRT_ingredients.serialNumber
+              aliasKeyCRT_ingredients.i_common
+              aliasKeyCRT_ingredients.i_org
+              aliasKeyCRT_ingredients.i_country
+              aliasKeyCRT_ingredients.s_common
+              aliasKeyCRT_ingredients.s_org
+              aliasKeyCRT_ingredients.s_country
+              aliasKeyCRT_ingredients.l0_version /\
+      buf `Seq.equal`
+        (spec_serialize_aliasKeyTBS (spec_x509_get_aliasKeyTBS
+                                      aliasKeyCRT_ingredients
+                                      fwid0
+                                      deviceID0
+                                      aliasKey0) 
+                                    len)
+    )
 {
-  unfold (l0_perm l0 vl0);
+  let len = len_of_aliasKeyTBS
+              aliasKeyCRT_ingredients.serialNumber
+              aliasKeyCRT_ingredients.i_common
+              aliasKeyCRT_ingredients.i_org
+              aliasKeyCRT_ingredients.i_country
+              aliasKeyCRT_ingredients.s_common
+              aliasKeyCRT_ingredients.s_org
+              aliasKeyCRT_ingredients.s_country
+              aliasKeyCRT_ingredients.l0_version;
 
-  create_deviceIDCRI l0.deviceID_pub l0.deviceIDCRI_len l0.deviceIDCRI_buf deviceIDCSR;
+  aliasKeyTBS_len := len;
 
-  fold_l0_perm l0;
+  let aliasKeyTBS = x509_get_aliasKeyTBS
+                      aliasKeyCRT_ingredients
+                      fwid
+                      deviceID_pub
+                      aliasKey_pub;
 
-  with vl0_. assert l0_perm l0 vl0_;
-
-  unfold (l0_perm l0 vl0_);
-
-  sign_and_finalize_deviceIDCSR l0.deviceID_priv 
-                                l0.deviceIDCRI_len l0.deviceIDCRI_buf 
-                                l0.deviceIDCSR_len l0.deviceIDCSR_buf;
-
-  fold_l0_perm l0;
-
-  admit()
-(*
-  printf "Signing and finalizing DeviceID Certificate Signing Request\n" done;
-  sign_and_finalize_deviceIDCSR
-    (*Signing Key*) deviceID_priv
-    (*DeviceIDCRI*) deviceIDCRI_len
-                    deviceIDCRI_buf
-    (*DeviceIDCSR*) deviceIDCSR_len
-                    deviceIDCSR_buf;
-  (**) let hs3 = HST.get () in
-
-  (**) assert (
-    let deviceIDCSR: deviceIDCSR_t deviceIDCRI_len = sign_and_finalize_deviceIDCSR_spec
-                                                                      (B.as_seq h0 deviceID_priv)
-                                                                      (deviceIDCRI_len)
-                                                                      (B.as_seq hs2 deviceIDCRI_buf) in
-    (* Prf *) lemma_serialize_deviceIDCSR_size_exact deviceIDCRI_len deviceIDCSR;
-    B.as_seq hs3 deviceIDCSR_buf == serialize_deviceIDCSR deviceIDCRI_len `serialize` deviceIDCSR
-  );
-
-  (**) assert (
-    let deviceIDCRI_len: asn1_TLV_int32_of_type SEQUENCE = len_of_deviceIDCRI
-                                                            csr_version
-                                                            s_common
-                                                            s_org
-                                                            s_country in
-    let deviceIDCRI: deviceIDCRI_t = create_deviceIDCRI_spec
-                                                                      (csr_version)
-                                                                      (s_common)
-                                                                      (s_org)
-                                                                      (s_country)
-                                                                      (ku)
-                                                                      (B.as_seq h0 deviceID_pub) in
-    let deviceIDCRI_seq = serialize_deviceIDCRI `serialize` deviceIDCRI in
-    let (* Prf *) _ = lemma_serialize_deviceIDCRI_size_exact deviceIDCRI in
-    let deviceIDCSR: deviceIDCSR_t deviceIDCRI_len = sign_and_finalize_deviceIDCSR_spec
-                                                                      (B.as_seq h0 deviceID_priv)
-                                                                      (deviceIDCRI_len)
-                                                                      (deviceIDCRI_seq) in
-    (* Prf *) lemma_serialize_deviceIDCSR_size_exact deviceIDCRI_len deviceIDCSR;
-    B.as_seq hs3 deviceIDCSR_buf == serialize_deviceIDCSR deviceIDCRI_len `serialize` deviceIDCSR
-  );
-
-  (**) B.modifies_trans (B.loc_buffer deviceIDCRI_buf) h0 hs2 (B.loc_buffer deviceIDCSR_buf) hs3;
-  (**) let hsf = HST.get () in
-  HST.pop_frame ();
-  (**) let hf = HST.get () in
-  (**) B.popped_modifies hsf hf;
-  (**) B.modifies_buffer_elim deviceIDCSR_buf (B.loc_region_only false (HS.get_tip hsf)) hsf hf;
-  (**) B.modifies_fresh_frame_popped h0 hs0 (
-    B.loc_buffer deviceIDCSR_buf
-  ) hsf hf;
-()
-
-*)
+  serialize_aliasKeyTBS aliasKeyTBS len aliasKeyTBS_buf;
+  ()
 }
 ```
 
+// TODO: don't need full perm on all of these
+// TODO: we never set aliasKeyCRT_len
+```pulse
+fn sign_and_finalize_aliasKeyCRT
+  (deviceID_priv: A.array U8.t)
+  (aliasKeyTBS_len: R.ref U32.t)
+  (aliasKeyTBS_buf: A.array U8.t)
+  (aliasKeyCRT_len: R.ref U32.t)
+  (aliasKeyCRT_buf: A.array U8.t)
+  (#priv_perm:perm)
+  (#_tbs_len#_crt_len:erased U32.t)
+  (#priv#_tbs_buf#_crt_buf:erased (Seq.seq U8.t))
+  requires (
+    A.pts_to deviceID_priv priv_perm priv **
+    R.pts_to aliasKeyTBS_len full_perm _tbs_len **
+    A.pts_to aliasKeyTBS_buf full_perm _tbs_buf **
+    R.pts_to aliasKeyCRT_len full_perm _crt_len **
+    A.pts_to aliasKeyCRT_buf full_perm _crt_buf **
+    pure (
+      U32.(0ul <^ _tbs_len) /\ 
+      valid_aliasKeyCRT_ingredients _tbs_len /\
+      _crt_len == length_of_aliasKeyCRT _tbs_len
+    ))
+  ensures (
+    exists (crt_buf:Seq.seq U8.t). 
+    A.pts_to deviceID_priv priv_perm priv **
+    R.pts_to aliasKeyTBS_len full_perm _tbs_len **
+    A.pts_to aliasKeyTBS_buf full_perm _tbs_buf **
+    R.pts_to aliasKeyCRT_len full_perm _crt_len **
+    A.pts_to aliasKeyCRT_buf full_perm crt_buf **
+    pure (
+      crt_buf `Seq.equal`
+        (spec_serialize_aliasKeyCRT _tbs_len 
+                                    _crt_len
+                                    (spec_x509_get_aliasKeyCRT
+                                      _tbs_len
+                                      _tbs_buf
+                                      (spec_ed25519_sign
+                                        priv
+                                        _tbs_buf)))
+    ))
+{
+  let aliasKeyTBS_len_v = !aliasKeyTBS_len;
+  let aliasKeyCRT_len_v = !aliasKeyCRT_len;
+  let aliasKeyTBS_sig = new_array 0uy (u32_to_us aliasKeyTBS_len_v);
+
+  ed25519_sign aliasKeyTBS_sig deviceID_priv (u32_to_us aliasKeyTBS_len_v) aliasKeyTBS_buf;
+
+  let aliasKeyCRT = x509_get_aliasKeyCRT
+                      aliasKeyTBS_len_v
+                      aliasKeyTBS_buf
+                      aliasKeyTBS_sig;
+                    
+  serialize_aliasKeyCRT aliasKeyTBS_len_v aliasKeyCRT aliasKeyCRT_buf aliasKeyCRT_len_v;
+
+  free_array aliasKeyTBS_sig;
+
+  ()
+}
+```
