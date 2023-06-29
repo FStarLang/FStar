@@ -241,22 +241,10 @@ fn compute_cdi (c:cdi_t) (l0:l0_image_t)
     let l0_digest = new_array 0uy dice_digest_len;
     read_uds uds;
     hacl_hash dice_hash_alg uds uds_len uds_digest;
-    //Mysterious error above when trying to instantiate an implicit argument
-    //It would be nice if it could say what it tried to match and why it didn't actually match
-    //the problem was that an implicit argument of reveal was in one case an seq and another an lseq
-    rewrite (l0_perm l0 vl0)
-         as (A.pts_to l0.l0_image_header full_perm vl0.l0_image_header `star`
-            A.pts_to l0.l0_image_header_sig full_perm vl0.l0_image_header_sig `star`
-            A.pts_to l0.l0_binary full_perm vl0.l0_binary `star`
-            A.pts_to l0.l0_binary_hash full_perm vl0.l0_binary_hash `star`
-            A.pts_to l0.l0_image_auth_pubkey full_perm vl0.l0_image_auth_pubkey);
+
+    unfold (l0_perm l0 vl0);
     hacl_hash dice_hash_alg l0.l0_binary l0.l0_binary_size l0_digest;
-    rewrite (A.pts_to l0.l0_image_header full_perm vl0.l0_image_header `star`
-            A.pts_to l0.l0_image_header_sig full_perm vl0.l0_image_header_sig `star`
-            A.pts_to l0.l0_binary full_perm vl0.l0_binary `star`
-            A.pts_to l0.l0_binary_hash full_perm vl0.l0_binary_hash `star`
-            A.pts_to l0.l0_image_auth_pubkey full_perm vl0.l0_image_auth_pubkey)
-         as (l0_perm l0 vl0);
+    fold (l0_perm l0 vl0);
 
     dice_digest_len_is_hashable;
 
@@ -303,56 +291,3 @@ fn dice_main (c:cdi_t) (l0:l0_image_t)
   }
 }
 ```
-
-(*
-```pulse
-fn compute_cdi_v2 (c:cdi_t) (l0:l0_image_t) (#vl0:Ghost.erased l0_repr)
- requires exists (c0: Seq.seq U8.t). (
-    uds_is_enabled `star`
-    A.pts_to c full_perm c0 `star`
-    l0_perm l0 vl0 (* should CDI only be computed on authentic l0 images? *)
- )
- ensures exists (c1:Seq.seq U8.t). (
-    A.pts_to c full_perm c1 `star`
-    l0_perm l0 vl0 `star`
-    pure (cdi_functional_correctness c1 vl0)
- )
-{
-    disable_uds();
-    admit() //NB: let _ does not work
-}
-```
-
-// #push-options "--fuel 0 --ifuel 1"
-```pulse
-fn dice_main_v2 (c:cdi_t) (l0:l0_image_t) (#vl0:Ghost.erased l0_repr)
-  requires exists (c0:Seq.seq U8.t). (
-    uds_is_enabled `star`
-    A.pts_to c full_perm c0 `star`
-    l0_perm l0 vl0
-  )
-  returns r: dice_return_code
-  ensures exists (c1:Seq.seq U8.t). (
-      A.pts_to c full_perm c1 `star`
-      l0_perm l0 vl0 `star`
-      pure (r == DICE_SUCCESS ==> l0_is_authentic vl0 /\ cdi_functional_correctness c1 vl0)
-  )
-{
-  let b = authenticate_l0_image l0;
-  if b 
-  {
-    //Note, compute_cdi's implicit arg vl0 appears beneath an existential
-    //and the current implicit arg solver does not descend into existentials
-    //so we needed to instantiate manually
-    //The new solver should hande this case
-    compute_cdi c l0 #vl0; 
-    DICE_SUCCESS
-  }
-  else
-  {
-    disable_uds ();
-    DICE_ERROR
-  }
-}
-```
-*)
