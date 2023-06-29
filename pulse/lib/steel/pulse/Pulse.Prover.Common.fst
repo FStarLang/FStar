@@ -8,7 +8,6 @@ open Pulse.Checker.Common
 open Pulse.Typing.Metatheory
 open Pulse.Checker.Framing
 open Pulse.Checker.VPropEquiv
-open Pulse.Prover.Util
 
 module T = FStar.Tactics
 
