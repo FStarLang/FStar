@@ -5,6 +5,7 @@ module T = FStar.Tactics
 open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Common
+open Pulse.Typing.Combinators
 open Pulse.Typing.Metatheory
 open Pulse.Checker.Framing
 open Pulse.Checker.VPropEquiv
@@ -35,7 +36,7 @@ let ve_unit_r g (p:term) : vprop_equiv g (tm_star p tm_emp) p =
 
 let st_equiv_post (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
                   (post:term { freevars post `Set.subset` freevars (comp_post c)})
-                  (veq: (x:var { Metatheory.fresh_wrt x g (freevars (comp_post c)) } ->
+                  (veq: (x:var { fresh_wrt x g (freevars (comp_post c)) } ->
                          vprop_equiv (push_binding g x ppname_default (comp_res c)) 
                                      (open_term (comp_post c) x)
                                      (open_term post x)))
@@ -232,9 +233,9 @@ let continuation_elaborator_with_bind (#g:env) (ctxt:term)
       then T.fail "Impossible"
       else (
         let t_typing, post_typing =
-          Pulse.Checker.Bind.bind_res_and_post_typing g (st_comp_of_comp c2) x post_hint in
+          bind_res_and_post_typing g (st_comp_of_comp c2) x post_hint in
         let (| e, c, e_typing |) =
-          Pulse.Checker.Bind.mk_bind
+          mk_bind
             g (tm_star ctxt pre1) 
             e1 e2_closed c1 c2 (v_as_nv x) e1_typing
             u_of_1 
@@ -334,6 +335,17 @@ let add_elims_aux (#g:env) (#ctxt:term)
       let (| g'', ctxt'', ctxt''_typing, k' |) = add_elims f mk ctxt'_typing in
       (| g'', ctxt'', ctxt''_typing, k_elab_trans k k' |)
      )
+
+let prove
+  (#g:env) (#ctxt:vprop) (ctxt_typing:vprop_typing g ctxt)
+  (uvs:env { disjoint g uvs })
+  (#goals:vprop) (goals_typing:vprop_typing (push_env g uvs) goals)
+
+  : T.Tac (g1 : env { g1 `env_extends` g /\ disjoint g1 uvs } &
+           ss : PS.t { well_typed_ss ss uvs g1 } &
+           remaining_ctxt : vprop &
+           continuation_elaborator g ctxt g1 (ss.(goals) * remaining_ctxt)) = admit ()
+
 
 // module Metatheory = Pulse.Typing.Metatheory
 

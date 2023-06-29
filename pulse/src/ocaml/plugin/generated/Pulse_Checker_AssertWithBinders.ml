@@ -1555,7 +1555,7 @@ let (check :
     Pulse_Syntax_Base.st_term ->
       Pulse_Syntax_Base.term ->
         unit ->
-          unit Pulse_Checker_Common.post_hint_opt ->
+          unit Pulse_Typing.post_hint_opt ->
             Pulse_Checker_Common.check_t ->
               ((unit, unit, unit) Pulse_Checker_Common.checker_result_t,
                 unit) FStar_Tactics_Effect.tac_repr)

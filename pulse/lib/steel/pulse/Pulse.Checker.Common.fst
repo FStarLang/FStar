@@ -1,5 +1,6 @@
 module Pulse.Checker.Common
 module T = FStar.Tactics.V2
+module RT = FStar.Reflection.Typing
 module Metatheory = Pulse.Typing.Metatheory
 module CP = Pulse.Checker.Pure
 module RU = Pulse.RuntimeUtils
@@ -24,12 +25,11 @@ let format_failed_goal (g:env) (ctxt:list term) (goal:list term) =
     (format_terms ctxt)
     (env_to_string g)
 
-let post_hint_typing g p x = {
-  ty_typing=admit();
-  post_typing=admit()
-}
 
-let post_typing_as_abstraction (#g:env) (#x:var) (#ty:term) (#t:term { Metatheory.fresh_wrt x g (freevars t) })
+let mk_arrow ty t = RT.mk_arrow (elab_term ty) T.Q_Explicit (elab_term t)
+let mk_abs ty t = RT.(mk_abs (elab_term ty) T.Q_Explicit (elab_term t))
+
+let post_typing_as_abstraction (#g:env) (#x:var) (#ty:term) (#t:term { fresh_wrt x g (freevars t) })
                                (_:tot_typing (push_binding g x ppname_default ty) (open_term t x) tm_vprop)
   : FStar.Ghost.erased (RT.tot_typing (elab_env g) (mk_abs ty t) (mk_arrow ty tm_vprop))                                 
   = admit()
@@ -48,8 +48,6 @@ let intro_post_hint g ret_ty_opt post =
   Pulse.Typing.FV.freevars_close_term post x 0;
   assume (open_term post' x == post);
   { g; ret_ty; u; ty_typing; post=post'; post_typing=post_typing_as_abstraction #_ #_ #_ #post' post_typing }
-
-
 
 let post_hint_from_comp_typing #g #c ct = 
   let st_comp_typing = Metatheory.comp_typing_inversion ct in
@@ -160,7 +158,7 @@ let intro_comp_typing (g:env)
                       (c:comp_st)
                       (pre_typing:tot_typing g (comp_pre c) tm_vprop)
                       (res_typing:universe_of g (comp_res c) (comp_u c))
-                      (x:var { Metatheory.fresh_wrt x g (freevars (comp_post c)) })
+                      (x:var { fresh_wrt x g (freevars (comp_post c)) })
                       (post_typing:tot_typing (push_binding g x ppname_default (comp_res c)) (open_term (comp_post c) x) tm_vprop)
   : T.Tac (comp_typing g c (comp_u c))
   = let intro_st_comp_typing (st:st_comp { comp_u c == st.u /\

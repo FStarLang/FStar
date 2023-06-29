@@ -1,24 +1,23 @@
 open Prims
 let (extend_post_hint_for_local :
   Pulse_Typing_Env.env ->
-    unit Pulse_Checker_Common.post_hint_for_env ->
+    unit Pulse_Typing.post_hint_for_env ->
       Pulse_Syntax_Base.term ->
-        Pulse_Syntax_Base.var -> unit Pulse_Checker_Common.post_hint_for_env)
+        Pulse_Syntax_Base.var -> unit Pulse_Typing.post_hint_for_env)
   =
   fun g ->
     fun p ->
       fun init_t ->
         fun x ->
           {
-            Pulse_Checker_Common.g = (p.Pulse_Checker_Common.g);
-            Pulse_Checker_Common.ret_ty = (p.Pulse_Checker_Common.ret_ty);
-            Pulse_Checker_Common.u = (p.Pulse_Checker_Common.u);
-            Pulse_Checker_Common.ty_typing = ();
-            Pulse_Checker_Common.post =
-              (Pulse_Typing.comp_withlocal_body_post
-                 p.Pulse_Checker_Common.post init_t
-                 (Pulse_Syntax_Pure.null_var x));
-            Pulse_Checker_Common.post_typing = ()
+            Pulse_Typing.g = (p.Pulse_Typing.g);
+            Pulse_Typing.ret_ty = (p.Pulse_Typing.ret_ty);
+            Pulse_Typing.u = (p.Pulse_Typing.u);
+            Pulse_Typing.ty_typing = ();
+            Pulse_Typing.post =
+              (Pulse_Typing.comp_withlocal_body_post p.Pulse_Typing.post
+                 init_t (Pulse_Syntax_Pure.null_var x));
+            Pulse_Typing.post_typing = ()
           }
 
 let (check_withlocal :
@@ -27,7 +26,7 @@ let (check_withlocal :
       Pulse_Syntax_Base.st_term ->
         Pulse_Syntax_Base.term ->
           unit ->
-            unit Pulse_Checker_Common.post_hint_opt ->
+            unit Pulse_Typing.post_hint_opt ->
               (Prims.bool -> Pulse_Checker_Common.check_t) ->
                 ((unit, unit, unit) Pulse_Checker_Common.checker_result_t,
                   unit) FStar_Tactics_Effect.tac_repr)
@@ -432,7 +431,7 @@ let (check_withlocal :
                                                                     FStar_Set.mem
                                                                     x
                                                                     (Pulse_Syntax_Naming.freevars
-                                                                    post.Pulse_Checker_Common.post)
+                                                                    post.Pulse_Typing.post)
                                                                     then
                                                                     Obj.magic
                                                                     (Pulse_Typing_Env.fail
@@ -584,7 +583,7 @@ let (check_withlocal :
                                                                     = pre;
                                                                     Pulse_Syntax_Base.post
                                                                     =
-                                                                    (post.Pulse_Checker_Common.post)
+                                                                    (post.Pulse_Typing.post)
                                                                     }))
                                                                     (fun
                                                                     uu___6 ->
@@ -628,7 +627,7 @@ let (check_withlocal :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___6 ->
-                                                                    Pulse_Checker_Common.post_hint_typing
+                                                                    Pulse_Typing.post_hint_typing
                                                                     g1 post x))
                                                                     (fun
                                                                     uu___6 ->

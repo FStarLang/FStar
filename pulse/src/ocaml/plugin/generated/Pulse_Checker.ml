@@ -1926,7 +1926,7 @@ let (handle_framing_failure :
     Pulse_Syntax_Base.st_term ->
       Pulse_Syntax_Base.term ->
         unit ->
-          unit Pulse_Checker_Common.post_hint_opt ->
+          unit Pulse_Typing.post_hint_opt ->
             Pulse_Checker_Framing.framing_failure ->
               Pulse_Checker_Common.check_t ->
                 ((unit, unit, unit) Pulse_Checker_Common.checker_result_t,
@@ -2415,7 +2415,7 @@ let (elim_then_check :
     Pulse_Syntax_Base.term ->
       unit ->
         Pulse_Syntax_Base.st_term ->
-          unit Pulse_Checker_Common.post_hint_opt ->
+          unit Pulse_Typing.post_hint_opt ->
             Pulse_Checker_Common.check_t ->
               ((unit, unit, unit) Pulse_Checker_Common.checker_result_t,
                 unit) FStar_Tactics_Effect.tac_repr)
@@ -3065,7 +3065,7 @@ let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
                                                                     (Prims.of_int (44)))))
                                                                     (Obj.magic
                                                                     (Pulse_Syntax_Printer.term_to_string
-                                                                    q.Pulse_Checker_Common.post))
+                                                                    q.Pulse_Typing.post))
                                                                     (fun
                                                                     uu___4 ->
                                                                     FStar_Tactics_Effect.lift_div_tac

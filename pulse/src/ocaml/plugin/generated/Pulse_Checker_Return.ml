@@ -5,7 +5,7 @@ let (check_return :
       Pulse_Syntax_Base.st_term ->
         Pulse_Syntax_Base.term ->
           unit ->
-            unit Pulse_Checker_Common.post_hint_opt ->
+            unit Pulse_Typing.post_hint_opt ->
               ((unit, unit, unit) Pulse_Checker_Common.checker_result_t,
                 unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -102,7 +102,7 @@ let (check_return :
                                                     (Obj.magic
                                                        (Pulse_Checker_Pure.check_term_with_expected_type
                                                           g1 t
-                                                          post.Pulse_Checker_Common.ret_ty))
+                                                          post.Pulse_Typing.ret_ty))
                                                     (fun uu___1 ->
                                                        FStar_Tactics_Effect.lift_div_tac
                                                          (fun uu___2 ->
@@ -112,9 +112,9 @@ let (check_return :
                                                                 FStar_Pervasives.Mkdtuple5
                                                                   (t1,
                                                                     (
-                                                                    post.Pulse_Checker_Common.u),
+                                                                    post.Pulse_Typing.u),
                                                                     (
-                                                                    post.Pulse_Checker_Common.ret_ty),
+                                                                    post.Pulse_Typing.ret_ty),
                                                                     (), d)))))
                                           (fun uu___1 ->
                                              (fun uu___1 ->
@@ -296,7 +296,7 @@ let (check_return :
                                                                     FStar_Set.mem
                                                                     x
                                                                     (Pulse_Syntax_Naming.freevars
-                                                                    post1.Pulse_Checker_Common.post)
+                                                                    post1.Pulse_Typing.post)
                                                                     then
                                                                     Obj.magic
                                                                     (Obj.repr
@@ -312,7 +312,7 @@ let (check_return :
                                                                     uu___4 ->
                                                                     Prims.Mkdtuple2
                                                                     ((Pulse_Syntax_Naming.open_term_nv
-                                                                    post1.Pulse_Checker_Common.post
+                                                                    post1.Pulse_Typing.post
                                                                     px), ())))))
                                                                     uu___3)))
                                                                     (fun

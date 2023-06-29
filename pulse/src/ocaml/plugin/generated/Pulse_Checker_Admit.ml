@@ -5,7 +5,7 @@ let (check_admit :
     Pulse_Syntax_Base.st_term ->
       Pulse_Syntax_Base.term ->
         unit ->
-          unit Pulse_Checker_Common.post_hint_opt ->
+          unit Pulse_Typing.post_hint_opt ->
             ((unit, unit, unit) Pulse_Checker_Common.checker_result_t, 
               unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -250,7 +250,7 @@ let (check_admit :
                                                                     FStar_Set.mem
                                                                     x
                                                                     (Pulse_Syntax_Naming.freevars
-                                                                    post2.Pulse_Checker_Common.post)
+                                                                    post2.Pulse_Typing.post)
                                                                    then
                                                                     Obj.magic
                                                                     (Obj.repr
@@ -265,11 +265,11 @@ let (check_admit :
                                                                     (fun
                                                                     uu___4 ->
                                                                     FStar_Pervasives.Mkdtuple5
-                                                                    ((post2.Pulse_Checker_Common.ret_ty),
-                                                                    (post2.Pulse_Checker_Common.u),
+                                                                    ((post2.Pulse_Typing.ret_ty),
+                                                                    (post2.Pulse_Typing.u),
                                                                     (),
                                                                     (Pulse_Syntax_Naming.open_term_nv
-                                                                    post2.Pulse_Checker_Common.post
+                                                                    post2.Pulse_Typing.post
                                                                     px), ())))))
                                                                   uu___3)))
                                                    (fun res ->

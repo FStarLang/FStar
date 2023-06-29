@@ -51,7 +51,6 @@ let (comp_typing_inversion :
         | Pulse_Typing.CT_ST (uu___, uu___1, st) -> st
         | Pulse_Typing.CT_STAtomic (uu___, uu___1, uu___2, uu___3, st) -> st
         | Pulse_Typing.CT_STGhost (uu___, uu___1, uu___2, uu___3, st) -> st
-type ('x, 'g, 'vars) fresh_wrt = unit
 let (st_comp_typing_inversion_cofinite :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.st_comp ->
