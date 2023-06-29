@@ -1075,7 +1075,7 @@ let tc_decls env ses =
     let r =
       Profiling.profile
                  (fun () -> process_one_decl acc se)
-                 (Some (Ident.string_of_lid (Env.current_module env)))
+                 (Some (Print.sigelt_to_string_short se))
                  "FStar.TypeChecker.Tc.process_one_decl"
       // ^ See a special case for this phase in FStar.Options. --timing
       // enables it.
