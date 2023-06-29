@@ -10181,6 +10181,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                       (let steps =
                          [FStar_TypeChecker_Env.UnfoldUntil
                             FStar_Syntax_Syntax.delta_constant;
+                         FStar_TypeChecker_Env.Weak;
                          FStar_TypeChecker_Env.Primops;
                          FStar_TypeChecker_Env.Beta;
                          FStar_TypeChecker_Env.Eager_unfolding;
@@ -10314,6 +10315,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                       (let steps =
                          [FStar_TypeChecker_Env.UnfoldUntil
                             FStar_Syntax_Syntax.delta_constant;
+                         FStar_TypeChecker_Env.Weak;
                          FStar_TypeChecker_Env.Primops;
                          FStar_TypeChecker_Env.Beta;
                          FStar_TypeChecker_Env.Eager_unfolding;
@@ -10447,6 +10449,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                       (let steps =
                          [FStar_TypeChecker_Env.UnfoldUntil
                             FStar_Syntax_Syntax.delta_constant;
+                         FStar_TypeChecker_Env.Weak;
                          FStar_TypeChecker_Env.Primops;
                          FStar_TypeChecker_Env.Beta;
                          FStar_TypeChecker_Env.Eager_unfolding;
@@ -10580,6 +10583,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                       (let steps =
                          [FStar_TypeChecker_Env.UnfoldUntil
                             FStar_Syntax_Syntax.delta_constant;
+                         FStar_TypeChecker_Env.Weak;
                          FStar_TypeChecker_Env.Primops;
                          FStar_TypeChecker_Env.Beta;
                          FStar_TypeChecker_Env.Eager_unfolding;
@@ -10713,6 +10717,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                       (let steps =
                          [FStar_TypeChecker_Env.UnfoldUntil
                             FStar_Syntax_Syntax.delta_constant;
+                         FStar_TypeChecker_Env.Weak;
                          FStar_TypeChecker_Env.Primops;
                          FStar_TypeChecker_Env.Beta;
                          FStar_TypeChecker_Env.Eager_unfolding;
@@ -10846,6 +10851,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                       (let steps =
                          [FStar_TypeChecker_Env.UnfoldUntil
                             FStar_Syntax_Syntax.delta_constant;
+                         FStar_TypeChecker_Env.Weak;
                          FStar_TypeChecker_Env.Primops;
                          FStar_TypeChecker_Env.Beta;
                          FStar_TypeChecker_Env.Eager_unfolding;
@@ -10979,6 +10985,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                       (let steps =
                          [FStar_TypeChecker_Env.UnfoldUntil
                             FStar_Syntax_Syntax.delta_constant;
+                         FStar_TypeChecker_Env.Weak;
                          FStar_TypeChecker_Env.Primops;
                          FStar_TypeChecker_Env.Beta;
                          FStar_TypeChecker_Env.Eager_unfolding;
@@ -11112,6 +11119,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                       (let steps =
                          [FStar_TypeChecker_Env.UnfoldUntil
                             FStar_Syntax_Syntax.delta_constant;
+                         FStar_TypeChecker_Env.Weak;
                          FStar_TypeChecker_Env.Primops;
                          FStar_TypeChecker_Env.Beta;
                          FStar_TypeChecker_Env.Eager_unfolding;
@@ -11245,6 +11253,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                       (let steps =
                          [FStar_TypeChecker_Env.UnfoldUntil
                             FStar_Syntax_Syntax.delta_constant;
+                         FStar_TypeChecker_Env.Weak;
                          FStar_TypeChecker_Env.Primops;
                          FStar_TypeChecker_Env.Beta;
                          FStar_TypeChecker_Env.Eager_unfolding;
@@ -11378,6 +11387,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                       (let steps =
                          [FStar_TypeChecker_Env.UnfoldUntil
                             FStar_Syntax_Syntax.delta_constant;
+                         FStar_TypeChecker_Env.Weak;
                          FStar_TypeChecker_Env.Primops;
                          FStar_TypeChecker_Env.Beta;
                          FStar_TypeChecker_Env.Eager_unfolding;
@@ -11511,6 +11521,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                       (let steps =
                          [FStar_TypeChecker_Env.UnfoldUntil
                             FStar_Syntax_Syntax.delta_constant;
+                         FStar_TypeChecker_Env.Weak;
                          FStar_TypeChecker_Env.Primops;
                          FStar_TypeChecker_Env.Beta;
                          FStar_TypeChecker_Env.Eager_unfolding;
@@ -11644,6 +11655,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                       (let steps =
                          [FStar_TypeChecker_Env.UnfoldUntil
                             FStar_Syntax_Syntax.delta_constant;
+                         FStar_TypeChecker_Env.Weak;
                          FStar_TypeChecker_Env.Primops;
                          FStar_TypeChecker_Env.Beta;
                          FStar_TypeChecker_Env.Eager_unfolding;
