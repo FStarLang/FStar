@@ -16,7 +16,7 @@ module RT = FStar.Reflection.Typing
 module RU = Pulse.RuntimeUtils
 let is_host_term (t:R.term) = not (R.Tv_Unknown? (R.inspect_ln t))
 
-let debug_log = Pulse.Checker.Common.debug_log "with_binders"
+let debug_log = Pulse.Typing.debug_log "with_binders"
 
 let instantiate_binders_with_fresh_names (g:env) (top:R.term) : T.Tac (list nvar & R.term) =
     let rec aux g (vars:list nvar) (t:R.term) : T.Tac (list nvar & R.term) = 
