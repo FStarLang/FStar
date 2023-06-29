@@ -46,17 +46,18 @@ let derive_DeviceID_spec
 ```pulse 
 fn derive_DeviceID
   (alg:alg_t)
-  (deviceID_pub: A.larray U8.t 32)
-  (deviceID_priv: A.larray U8.t 32)
-  (cdi: A.larray U8.t 32)
-  (deviceID_label_len: hkdf_lbl_len)
-  (deviceID_label: A.larray U8.t (US.v deviceID_label_len))
+  (deviceID_pub:A.larray U8.t 32)
+  (deviceID_priv:A.larray U8.t 32)
+  (cdi:A.larray U8.t 32)
+  (deviceID_label_len:hkdf_lbl_len)
+  (deviceID_label:A.larray U8.t (US.v deviceID_label_len))
   (#cdi0 #deviceID_label0 #deviceID_pub0 #deviceID_priv0: Ghost.erased (Seq.seq U8.t))
   requires (
     A.pts_to cdi full_perm cdi0 `star`
     A.pts_to deviceID_label full_perm deviceID_label0 `star`
     A.pts_to deviceID_pub full_perm deviceID_pub0 `star`
-    A.pts_to deviceID_priv full_perm deviceID_priv0
+    A.pts_to deviceID_priv full_perm deviceID_priv0 `star`
+    pure (valid_hkdf_ikm_len (digest_len alg))
   )
   ensures (
     A.pts_to cdi full_perm cdi0 `star`
@@ -102,7 +103,8 @@ fn derive_AliasKey
     A.pts_to fwid full_perm fwid0 `star`
     A.pts_to aliasKey_label full_perm aliasKey_label0 `star`
     A.pts_to aliasKey_pub full_perm aliasKey_pub0 `star`
-    A.pts_to aliasKey_priv full_perm aliasKey_priv0
+    A.pts_to aliasKey_priv full_perm aliasKey_priv0 `star`
+    pure (valid_hkdf_ikm_len (digest_len alg))
   )
   ensures (
     A.pts_to cdi full_perm cdi0 `star`

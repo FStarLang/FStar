@@ -163,7 +163,6 @@ fn fold_l0_perm (l0:l0_record)
                 (#cdi #fwid #deviceID_label #aliasKey_label #deviceID_pub
                  #deviceID_priv #aliasKey_pub #aliasKey_priv:erased (Seq.seq U8.t))
                 (#deviceIDCSR_len #deviceIDCRI_len #aliasKeyTBS_len #aliasKeyCRT_len:erased U32.t)
-                (#deviceIDCRI_len:erased U32.t)
                 (#deviceIDCSR_buf #deviceIDCRI_buf #deviceIDCRI_sig #aliasKeyTBS_buf #aliasKeyCRT_buf #authKeyID: erased (Seq.seq U8.t))
   requires
     A.pts_to l0.cdi full_perm cdi `star`

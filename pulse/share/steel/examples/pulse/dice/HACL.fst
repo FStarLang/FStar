@@ -141,3 +141,7 @@ val dice_digest_len_is_hashable
 assume 
 val dice_digest_len_is_hkdf_ikm
   : valid_hkdf_ikm_len dice_digest_len
+
+assume 
+val dice_digest_len_is_hkdf_ikm_
+  : valid_hkdf_ikm_len (digest_len dice_hash_alg)

@@ -47,7 +47,8 @@ fn create_deviceIDCRI
                                         deviceIDCSR_ingredients.s_org
                                         deviceIDCSR_ingredients.s_country
                                         deviceIDCSR_ingredients.ku
-                                        pub) len)
+                                        pub) 
+                                      len)
       )
 {
   let len = len_of_deviceIDCRI
@@ -144,19 +145,19 @@ fn create_aliasKeyTBS
   (aliasKeyCRT_ingredients: aliasKeyCRT_ingredients_t)
   (#fwid_perm #authKey_perm #device_perm #aliasKey_perm:perm)
   (#_len:erased U32.t)
-  (#fwid0 #authKeyID0 #deviceID0 #aliasKey0 #_buf:erased (Seq.seq U8.t))
+  (#fwid0 #authKeyID0 #deviceID_pub0 #aliasKey_pub0 #_buf:erased (Seq.seq U8.t))
   requires 
     A.pts_to fwid fwid_perm fwid0 **
     A.pts_to authKeyID authKey_perm authKeyID0 **
-    A.pts_to deviceID_pub device_perm deviceID0 **
-    A.pts_to aliasKey_pub aliasKey_perm aliasKey0 **
+    A.pts_to deviceID_pub device_perm deviceID_pub0 **
+    A.pts_to aliasKey_pub aliasKey_perm aliasKey_pub0 **
     R.pts_to aliasKeyTBS_len full_perm _len **
     A.pts_to aliasKeyTBS_buf full_perm _buf
   ensures exists (len:U32.t) (buf:Seq.seq U8.t).
     A.pts_to fwid fwid_perm fwid0 **
     A.pts_to authKeyID authKey_perm authKeyID0 **
-    A.pts_to deviceID_pub device_perm deviceID0 **
-    A.pts_to aliasKey_pub aliasKey_perm aliasKey0 **
+    A.pts_to deviceID_pub device_perm deviceID_pub0 **
+    A.pts_to aliasKey_pub aliasKey_perm aliasKey_pub0 **
     R.pts_to aliasKeyTBS_len full_perm len **
     A.pts_to aliasKeyTBS_buf full_perm buf **
     pure (
@@ -173,8 +174,8 @@ fn create_aliasKeyTBS
         (spec_serialize_aliasKeyTBS (spec_x509_get_aliasKeyTBS
                                       aliasKeyCRT_ingredients
                                       fwid0
-                                      deviceID0
-                                      aliasKey0) 
+                                      deviceID_pub0
+                                      aliasKey_pub0) 
                                     len)
     )
 {
