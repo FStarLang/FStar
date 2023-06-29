@@ -28,7 +28,7 @@ noeq type preamble = {
 
 type ss_t = Map.t var term
 
-val as_subst (ss:ss_t) : subst
+let as_subst (ss:ss_t) : subst = magic ()
 
 let shift (ss:ss_t) = shift_subst (as_subst ss)
 
@@ -70,7 +70,7 @@ let is_terminal (#preamble:_) (st:prover_state preamble) =
   st.unsolved == [] /\ covers st.ss st.uvs
 
 
-val prove
+let prove
   (#g:env) (#ctxt:vprop) (ctxt_typing:vprop_typing g ctxt)
   (uvs:env { disjoint g uvs })
   (#goals:vprop) (goals_typing:vprop_typing (push_env g uvs) goals)
@@ -78,15 +78,15 @@ val prove
   : T.Tac (g1 : env { g1 `env_extends` g /\ disjoint g1 uvs } &
            ss : ss_t { well_typed_ss ss uvs g1 } &
            remaining_ctxt : vprop &
-           k : continuation_elaborator g ctxt g1 (ss.(goals) * remaining_ctxt))
+           k : continuation_elaborator g ctxt g1 (ss.(goals) * remaining_ctxt)) = magic ()
 
 open Pulse.Checker.Common
 
-val check_stapp_no_ctxt (g:env) (t:st_term { Tm_STApp? t.term })
+let check_stapp_no_ctxt (g:env) (t:st_term { Tm_STApp? t.term })
   : T.Tac (uvs : env { disjoint uvs g } &
            t:st_term &
            c:comp_st &
-           st_typing (push_env g uvs) t c)
+           st_typing (push_env g uvs) t c) = magic ()
 
 let extend_post_hint_opt_g (g:env) (post_hint:post_hint_opt g) (g1:env { g1 `env_extends` g })
   : p:post_hint_opt g1 { p == post_hint } =
@@ -98,25 +98,25 @@ let extend_post_hint_opt_g (g:env) (post_hint:post_hint_opt g) (g1:env { g1 `env
     assert (g1 `env_extends` post_hint.g);
     Some post_hint
 
-val add_frame (#g:env) (#t:st_term) (#c:comp_st) (t_typing:st_typing g t c)
+let add_frame (#g:env) (#t:st_term) (#c:comp_st) (t_typing:st_typing g t c)
   (frame:vprop)
   : T.Tac (t':st_term &
            c':comp_st { c' == add_frame c frame } &
-           st_typing g t' c')
+           st_typing g t' c') = magic ()
 
-val st_typing_subst (g:env) (uvs:env { disjoint uvs g }) (t:st_term) (c:comp_st)
+let st_typing_subst (g:env) (uvs:env { disjoint uvs g }) (t:st_term) (c:comp_st)
   (_:st_typing (push_env g uvs) t c)
   (ss:ss_t { well_typed_ss ss uvs g })
-  : T.Tac (st_typing g (subst_st_term t (as_subst ss)) (subst_comp c (as_subst ss)))
+  : T.Tac (st_typing g (subst_st_term t (as_subst ss)) (subst_comp c (as_subst ss))) = magic ()
 
-val st_typing_weakening
+let st_typing_weakening
   (g:env) (g':env { disjoint g g' })
   (t:st_term) (c:comp_st) (_:st_typing (push_env g g') t c)
   (g1:env { g1 `env_extends` g /\ disjoint g1 g' })
-  : T.Tac (st_typing (push_env g1 g') t c)
+  : T.Tac (st_typing (push_env g1 g') t c) = magic ()
 
 // This is implemented in Pulse.Checker.Bind
-val  mk_bind' (g:env)
+let  mk_bind' (g:env)
               (pre:term)
               (e1:st_term)
               (e2:st_term)
@@ -133,7 +133,7 @@ val  mk_bind' (g:env)
                  None? (lookup g x) /\
                  (~(x `Set.mem` freevars_st e2)) /\
                  open_term (comp_post c1) x == comp_pre c2))
-  : T.Tac (checker_result_t g pre post_hint)
+  : T.Tac (checker_result_t g pre post_hint) = magic ()
 
 #push-options "--z3rlimit_factor 8 --fuel 1 --ifuel 1"
 let check_bind
@@ -206,10 +206,10 @@ type prover_t =
                                       is_terminal pst2 }) 
 
 // there will be some side conditions related to the typings
-val k_intro_exists (g:env) (u:universe) (b:binder) (p:vprop) (e:term)
+let k_intro_exists (g:env) (u:universe) (b:binder) (p:vprop) (e:term)
   (frame:vprop)
   : T.Tac (continuation_elaborator g (frame * subst_term p [ DT 0 e ])
-                                   g (frame * tm_exists_sl u b p))
+                                   g (frame * tm_exists_sl u b p)) = magic ()
 
 let intro_exists (#preamble:_) (pst:prover_state preamble)
   (u:universe) (b:binder) (body:vprop)
@@ -389,14 +389,14 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
 
   pst'
 
-val try_match_pq (g:env) (uvs:env { disjoint uvs g})
+let try_match_pq (g:env) (uvs:env { disjoint uvs g})
   (#p:vprop) (p_typing:vprop_typing g p)
   (#q:vprop) (q_typing:vprop_typing (push_env g uvs) q)
   : T.Tac (option (ss:ss_t { well_typed_ss ss uvs g /\
                              Map.domain ss `Set.subset` freevars q } &
-                   vprop_equiv g p ss.(q)))
+                   vprop_equiv g p ss.(q))) = magic ()
 
-val compose_ss (ss1 ss2:ss_t) : ss_t
+let compose_ss (ss1 ss2:ss_t) : ss_t = magic ()
 
 let match_step (#preamble:preamble) (pst:prover_state preamble)
   (p:vprop) (remaining_ctxt':list vprop)
