@@ -4709,6 +4709,45 @@ let (apply_ad_hoc_indexed_subcomp :
                                        (fml,
                                          (FStar_Compiler_List.op_At
                                             f_sub_probs g_sub_probs), wl3))))
+let rec (try_make_equal :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.term ->
+      FStar_Syntax_Syntax.term -> FStar_Syntax_Util.eq_result)
+  =
+  fun env ->
+    fun t1 ->
+      fun t2 ->
+        let blast t11 t21 =
+          let steps =
+            [FStar_TypeChecker_Env.UnfoldUntil
+               FStar_Syntax_Syntax.delta_constant;
+            FStar_TypeChecker_Env.Primops;
+            FStar_TypeChecker_Env.Beta;
+            FStar_TypeChecker_Env.Eager_unfolding;
+            FStar_TypeChecker_Env.Iota] in
+          let t12 =
+            norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.2" steps
+              env t11 in
+          let t22 =
+            norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.3" steps
+              env t21 in
+          FStar_Syntax_Util.eq_tm t12 t22 in
+        let defined uu___ =
+          match uu___ with
+          | FStar_Syntax_Util.Equal -> true
+          | FStar_Syntax_Util.NotEqual -> true
+          | FStar_Syntax_Util.Unknown -> false in
+        let r1 = FStar_Syntax_Util.eq_tm t1 t2 in
+        if defined r1 then r1 else blast t1 t2
+let (try_make_equal_bool :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> Prims.bool)
+  =
+  fun env ->
+    fun t1 ->
+      fun t2 ->
+        let uu___ = try_make_equal env t1 t2 in
+        uu___ = FStar_Syntax_Util.Equal
 let rec (solve : worklist -> solution) =
   fun probs ->
     (let uu___1 =
@@ -10175,31 +10214,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                       ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
                       uu___11
                   else ());
-                 (let equal t11 t21 =
-                    let r = FStar_Syntax_Util.eq_tm t11 t21 in
-                    match r with
-                    | FStar_Syntax_Util.Equal -> true
-                    | FStar_Syntax_Util.NotEqual -> false
-                    | FStar_Syntax_Util.Unknown ->
-                        let steps =
-                          [FStar_TypeChecker_Env.UnfoldUntil
-                             FStar_Syntax_Syntax.delta_constant;
-                          FStar_TypeChecker_Env.Primops;
-                          FStar_TypeChecker_Env.Beta;
-                          FStar_TypeChecker_Env.Eager_unfolding;
-                          FStar_TypeChecker_Env.Iota] in
-                        let env = p_env wl orig in
-                        let t12 =
-                          norm_with_steps
-                            "FStar.TypeChecker.Rel.norm_with_steps.2" steps
-                            env t11 in
-                        let t22 =
-                          norm_with_steps
-                            "FStar.TypeChecker.Rel.norm_with_steps.3" steps
-                            env t21 in
-                        let uu___10 = FStar_Syntax_Util.eq_tm t12 t22 in
-                        uu___10 = FStar_Syntax_Util.Equal in
-                  let uu___10 =
+                 (let uu___10 =
                     ((FStar_TypeChecker_Env.is_interpreted wl.tcenv head1) ||
                        (FStar_TypeChecker_Env.is_interpreted wl.tcenv head2))
                       &&
@@ -10209,7 +10224,8 @@ and (solve_t' : tprob -> worklist -> solution) =
                   then
                     let solve_with_smt uu___11 =
                       let uu___12 =
-                        let uu___13 = equal t1 t2 in
+                        let uu___13 =
+                          try_make_equal_bool (p_env wl orig) t1 t2 in
                         if uu___13
                         then (FStar_Pervasives_Native.None, wl)
                         else
@@ -10229,7 +10245,8 @@ and (solve_t' : tprob -> worklist -> solution) =
                            (FStar_Options.ml_ish ()) in
                        (if uu___12
                         then
-                          let uu___13 = equal t1 t2 in
+                          let uu___13 =
+                            try_make_equal_bool (p_env wl orig) t1 t2 in
                           (if uu___13
                            then
                              let uu___14 =
@@ -10311,31 +10328,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                       ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
                       uu___11
                   else ());
-                 (let equal t11 t21 =
-                    let r = FStar_Syntax_Util.eq_tm t11 t21 in
-                    match r with
-                    | FStar_Syntax_Util.Equal -> true
-                    | FStar_Syntax_Util.NotEqual -> false
-                    | FStar_Syntax_Util.Unknown ->
-                        let steps =
-                          [FStar_TypeChecker_Env.UnfoldUntil
-                             FStar_Syntax_Syntax.delta_constant;
-                          FStar_TypeChecker_Env.Primops;
-                          FStar_TypeChecker_Env.Beta;
-                          FStar_TypeChecker_Env.Eager_unfolding;
-                          FStar_TypeChecker_Env.Iota] in
-                        let env = p_env wl orig in
-                        let t12 =
-                          norm_with_steps
-                            "FStar.TypeChecker.Rel.norm_with_steps.2" steps
-                            env t11 in
-                        let t22 =
-                          norm_with_steps
-                            "FStar.TypeChecker.Rel.norm_with_steps.3" steps
-                            env t21 in
-                        let uu___10 = FStar_Syntax_Util.eq_tm t12 t22 in
-                        uu___10 = FStar_Syntax_Util.Equal in
-                  let uu___10 =
+                 (let uu___10 =
                     ((FStar_TypeChecker_Env.is_interpreted wl.tcenv head1) ||
                        (FStar_TypeChecker_Env.is_interpreted wl.tcenv head2))
                       &&
@@ -10345,7 +10338,8 @@ and (solve_t' : tprob -> worklist -> solution) =
                   then
                     let solve_with_smt uu___11 =
                       let uu___12 =
-                        let uu___13 = equal t1 t2 in
+                        let uu___13 =
+                          try_make_equal_bool (p_env wl orig) t1 t2 in
                         if uu___13
                         then (FStar_Pervasives_Native.None, wl)
                         else
@@ -10365,7 +10359,8 @@ and (solve_t' : tprob -> worklist -> solution) =
                            (FStar_Options.ml_ish ()) in
                        (if uu___12
                         then
-                          let uu___13 = equal t1 t2 in
+                          let uu___13 =
+                            try_make_equal_bool (p_env wl orig) t1 t2 in
                           (if uu___13
                            then
                              let uu___14 =
@@ -10447,31 +10442,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                       ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
                       uu___11
                   else ());
-                 (let equal t11 t21 =
-                    let r = FStar_Syntax_Util.eq_tm t11 t21 in
-                    match r with
-                    | FStar_Syntax_Util.Equal -> true
-                    | FStar_Syntax_Util.NotEqual -> false
-                    | FStar_Syntax_Util.Unknown ->
-                        let steps =
-                          [FStar_TypeChecker_Env.UnfoldUntil
-                             FStar_Syntax_Syntax.delta_constant;
-                          FStar_TypeChecker_Env.Primops;
-                          FStar_TypeChecker_Env.Beta;
-                          FStar_TypeChecker_Env.Eager_unfolding;
-                          FStar_TypeChecker_Env.Iota] in
-                        let env = p_env wl orig in
-                        let t12 =
-                          norm_with_steps
-                            "FStar.TypeChecker.Rel.norm_with_steps.2" steps
-                            env t11 in
-                        let t22 =
-                          norm_with_steps
-                            "FStar.TypeChecker.Rel.norm_with_steps.3" steps
-                            env t21 in
-                        let uu___10 = FStar_Syntax_Util.eq_tm t12 t22 in
-                        uu___10 = FStar_Syntax_Util.Equal in
-                  let uu___10 =
+                 (let uu___10 =
                     ((FStar_TypeChecker_Env.is_interpreted wl.tcenv head1) ||
                        (FStar_TypeChecker_Env.is_interpreted wl.tcenv head2))
                       &&
@@ -10481,7 +10452,8 @@ and (solve_t' : tprob -> worklist -> solution) =
                   then
                     let solve_with_smt uu___11 =
                       let uu___12 =
-                        let uu___13 = equal t1 t2 in
+                        let uu___13 =
+                          try_make_equal_bool (p_env wl orig) t1 t2 in
                         if uu___13
                         then (FStar_Pervasives_Native.None, wl)
                         else
@@ -10501,7 +10473,8 @@ and (solve_t' : tprob -> worklist -> solution) =
                            (FStar_Options.ml_ish ()) in
                        (if uu___12
                         then
-                          let uu___13 = equal t1 t2 in
+                          let uu___13 =
+                            try_make_equal_bool (p_env wl orig) t1 t2 in
                           (if uu___13
                            then
                              let uu___14 =
@@ -10583,31 +10556,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                       ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
                       uu___11
                   else ());
-                 (let equal t11 t21 =
-                    let r = FStar_Syntax_Util.eq_tm t11 t21 in
-                    match r with
-                    | FStar_Syntax_Util.Equal -> true
-                    | FStar_Syntax_Util.NotEqual -> false
-                    | FStar_Syntax_Util.Unknown ->
-                        let steps =
-                          [FStar_TypeChecker_Env.UnfoldUntil
-                             FStar_Syntax_Syntax.delta_constant;
-                          FStar_TypeChecker_Env.Primops;
-                          FStar_TypeChecker_Env.Beta;
-                          FStar_TypeChecker_Env.Eager_unfolding;
-                          FStar_TypeChecker_Env.Iota] in
-                        let env = p_env wl orig in
-                        let t12 =
-                          norm_with_steps
-                            "FStar.TypeChecker.Rel.norm_with_steps.2" steps
-                            env t11 in
-                        let t22 =
-                          norm_with_steps
-                            "FStar.TypeChecker.Rel.norm_with_steps.3" steps
-                            env t21 in
-                        let uu___10 = FStar_Syntax_Util.eq_tm t12 t22 in
-                        uu___10 = FStar_Syntax_Util.Equal in
-                  let uu___10 =
+                 (let uu___10 =
                     ((FStar_TypeChecker_Env.is_interpreted wl.tcenv head1) ||
                        (FStar_TypeChecker_Env.is_interpreted wl.tcenv head2))
                       &&
@@ -10617,7 +10566,8 @@ and (solve_t' : tprob -> worklist -> solution) =
                   then
                     let solve_with_smt uu___11 =
                       let uu___12 =
-                        let uu___13 = equal t1 t2 in
+                        let uu___13 =
+                          try_make_equal_bool (p_env wl orig) t1 t2 in
                         if uu___13
                         then (FStar_Pervasives_Native.None, wl)
                         else
@@ -10637,7 +10587,8 @@ and (solve_t' : tprob -> worklist -> solution) =
                            (FStar_Options.ml_ish ()) in
                        (if uu___12
                         then
-                          let uu___13 = equal t1 t2 in
+                          let uu___13 =
+                            try_make_equal_bool (p_env wl orig) t1 t2 in
                           (if uu___13
                            then
                              let uu___14 =
@@ -10719,31 +10670,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                       ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
                       uu___11
                   else ());
-                 (let equal t11 t21 =
-                    let r = FStar_Syntax_Util.eq_tm t11 t21 in
-                    match r with
-                    | FStar_Syntax_Util.Equal -> true
-                    | FStar_Syntax_Util.NotEqual -> false
-                    | FStar_Syntax_Util.Unknown ->
-                        let steps =
-                          [FStar_TypeChecker_Env.UnfoldUntil
-                             FStar_Syntax_Syntax.delta_constant;
-                          FStar_TypeChecker_Env.Primops;
-                          FStar_TypeChecker_Env.Beta;
-                          FStar_TypeChecker_Env.Eager_unfolding;
-                          FStar_TypeChecker_Env.Iota] in
-                        let env = p_env wl orig in
-                        let t12 =
-                          norm_with_steps
-                            "FStar.TypeChecker.Rel.norm_with_steps.2" steps
-                            env t11 in
-                        let t22 =
-                          norm_with_steps
-                            "FStar.TypeChecker.Rel.norm_with_steps.3" steps
-                            env t21 in
-                        let uu___10 = FStar_Syntax_Util.eq_tm t12 t22 in
-                        uu___10 = FStar_Syntax_Util.Equal in
-                  let uu___10 =
+                 (let uu___10 =
                     ((FStar_TypeChecker_Env.is_interpreted wl.tcenv head1) ||
                        (FStar_TypeChecker_Env.is_interpreted wl.tcenv head2))
                       &&
@@ -10753,7 +10680,8 @@ and (solve_t' : tprob -> worklist -> solution) =
                   then
                     let solve_with_smt uu___11 =
                       let uu___12 =
-                        let uu___13 = equal t1 t2 in
+                        let uu___13 =
+                          try_make_equal_bool (p_env wl orig) t1 t2 in
                         if uu___13
                         then (FStar_Pervasives_Native.None, wl)
                         else
@@ -10773,7 +10701,8 @@ and (solve_t' : tprob -> worklist -> solution) =
                            (FStar_Options.ml_ish ()) in
                        (if uu___12
                         then
-                          let uu___13 = equal t1 t2 in
+                          let uu___13 =
+                            try_make_equal_bool (p_env wl orig) t1 t2 in
                           (if uu___13
                            then
                              let uu___14 =
@@ -10855,31 +10784,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                       ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
                       uu___11
                   else ());
-                 (let equal t11 t21 =
-                    let r = FStar_Syntax_Util.eq_tm t11 t21 in
-                    match r with
-                    | FStar_Syntax_Util.Equal -> true
-                    | FStar_Syntax_Util.NotEqual -> false
-                    | FStar_Syntax_Util.Unknown ->
-                        let steps =
-                          [FStar_TypeChecker_Env.UnfoldUntil
-                             FStar_Syntax_Syntax.delta_constant;
-                          FStar_TypeChecker_Env.Primops;
-                          FStar_TypeChecker_Env.Beta;
-                          FStar_TypeChecker_Env.Eager_unfolding;
-                          FStar_TypeChecker_Env.Iota] in
-                        let env = p_env wl orig in
-                        let t12 =
-                          norm_with_steps
-                            "FStar.TypeChecker.Rel.norm_with_steps.2" steps
-                            env t11 in
-                        let t22 =
-                          norm_with_steps
-                            "FStar.TypeChecker.Rel.norm_with_steps.3" steps
-                            env t21 in
-                        let uu___10 = FStar_Syntax_Util.eq_tm t12 t22 in
-                        uu___10 = FStar_Syntax_Util.Equal in
-                  let uu___10 =
+                 (let uu___10 =
                     ((FStar_TypeChecker_Env.is_interpreted wl.tcenv head1) ||
                        (FStar_TypeChecker_Env.is_interpreted wl.tcenv head2))
                       &&
@@ -10889,7 +10794,8 @@ and (solve_t' : tprob -> worklist -> solution) =
                   then
                     let solve_with_smt uu___11 =
                       let uu___12 =
-                        let uu___13 = equal t1 t2 in
+                        let uu___13 =
+                          try_make_equal_bool (p_env wl orig) t1 t2 in
                         if uu___13
                         then (FStar_Pervasives_Native.None, wl)
                         else
@@ -10909,7 +10815,8 @@ and (solve_t' : tprob -> worklist -> solution) =
                            (FStar_Options.ml_ish ()) in
                        (if uu___12
                         then
-                          let uu___13 = equal t1 t2 in
+                          let uu___13 =
+                            try_make_equal_bool (p_env wl orig) t1 t2 in
                           (if uu___13
                            then
                              let uu___14 =
@@ -10991,31 +10898,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                       ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
                       uu___11
                   else ());
-                 (let equal t11 t21 =
-                    let r = FStar_Syntax_Util.eq_tm t11 t21 in
-                    match r with
-                    | FStar_Syntax_Util.Equal -> true
-                    | FStar_Syntax_Util.NotEqual -> false
-                    | FStar_Syntax_Util.Unknown ->
-                        let steps =
-                          [FStar_TypeChecker_Env.UnfoldUntil
-                             FStar_Syntax_Syntax.delta_constant;
-                          FStar_TypeChecker_Env.Primops;
-                          FStar_TypeChecker_Env.Beta;
-                          FStar_TypeChecker_Env.Eager_unfolding;
-                          FStar_TypeChecker_Env.Iota] in
-                        let env = p_env wl orig in
-                        let t12 =
-                          norm_with_steps
-                            "FStar.TypeChecker.Rel.norm_with_steps.2" steps
-                            env t11 in
-                        let t22 =
-                          norm_with_steps
-                            "FStar.TypeChecker.Rel.norm_with_steps.3" steps
-                            env t21 in
-                        let uu___10 = FStar_Syntax_Util.eq_tm t12 t22 in
-                        uu___10 = FStar_Syntax_Util.Equal in
-                  let uu___10 =
+                 (let uu___10 =
                     ((FStar_TypeChecker_Env.is_interpreted wl.tcenv head1) ||
                        (FStar_TypeChecker_Env.is_interpreted wl.tcenv head2))
                       &&
@@ -11025,7 +10908,8 @@ and (solve_t' : tprob -> worklist -> solution) =
                   then
                     let solve_with_smt uu___11 =
                       let uu___12 =
-                        let uu___13 = equal t1 t2 in
+                        let uu___13 =
+                          try_make_equal_bool (p_env wl orig) t1 t2 in
                         if uu___13
                         then (FStar_Pervasives_Native.None, wl)
                         else
@@ -11045,7 +10929,8 @@ and (solve_t' : tprob -> worklist -> solution) =
                            (FStar_Options.ml_ish ()) in
                        (if uu___12
                         then
-                          let uu___13 = equal t1 t2 in
+                          let uu___13 =
+                            try_make_equal_bool (p_env wl orig) t1 t2 in
                           (if uu___13
                            then
                              let uu___14 =
@@ -11127,31 +11012,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                       ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
                       uu___11
                   else ());
-                 (let equal t11 t21 =
-                    let r = FStar_Syntax_Util.eq_tm t11 t21 in
-                    match r with
-                    | FStar_Syntax_Util.Equal -> true
-                    | FStar_Syntax_Util.NotEqual -> false
-                    | FStar_Syntax_Util.Unknown ->
-                        let steps =
-                          [FStar_TypeChecker_Env.UnfoldUntil
-                             FStar_Syntax_Syntax.delta_constant;
-                          FStar_TypeChecker_Env.Primops;
-                          FStar_TypeChecker_Env.Beta;
-                          FStar_TypeChecker_Env.Eager_unfolding;
-                          FStar_TypeChecker_Env.Iota] in
-                        let env = p_env wl orig in
-                        let t12 =
-                          norm_with_steps
-                            "FStar.TypeChecker.Rel.norm_with_steps.2" steps
-                            env t11 in
-                        let t22 =
-                          norm_with_steps
-                            "FStar.TypeChecker.Rel.norm_with_steps.3" steps
-                            env t21 in
-                        let uu___10 = FStar_Syntax_Util.eq_tm t12 t22 in
-                        uu___10 = FStar_Syntax_Util.Equal in
-                  let uu___10 =
+                 (let uu___10 =
                     ((FStar_TypeChecker_Env.is_interpreted wl.tcenv head1) ||
                        (FStar_TypeChecker_Env.is_interpreted wl.tcenv head2))
                       &&
@@ -11161,7 +11022,8 @@ and (solve_t' : tprob -> worklist -> solution) =
                   then
                     let solve_with_smt uu___11 =
                       let uu___12 =
-                        let uu___13 = equal t1 t2 in
+                        let uu___13 =
+                          try_make_equal_bool (p_env wl orig) t1 t2 in
                         if uu___13
                         then (FStar_Pervasives_Native.None, wl)
                         else
@@ -11181,7 +11043,8 @@ and (solve_t' : tprob -> worklist -> solution) =
                            (FStar_Options.ml_ish ()) in
                        (if uu___12
                         then
-                          let uu___13 = equal t1 t2 in
+                          let uu___13 =
+                            try_make_equal_bool (p_env wl orig) t1 t2 in
                           (if uu___13
                            then
                              let uu___14 =
@@ -11263,31 +11126,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                       ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
                       uu___11
                   else ());
-                 (let equal t11 t21 =
-                    let r = FStar_Syntax_Util.eq_tm t11 t21 in
-                    match r with
-                    | FStar_Syntax_Util.Equal -> true
-                    | FStar_Syntax_Util.NotEqual -> false
-                    | FStar_Syntax_Util.Unknown ->
-                        let steps =
-                          [FStar_TypeChecker_Env.UnfoldUntil
-                             FStar_Syntax_Syntax.delta_constant;
-                          FStar_TypeChecker_Env.Primops;
-                          FStar_TypeChecker_Env.Beta;
-                          FStar_TypeChecker_Env.Eager_unfolding;
-                          FStar_TypeChecker_Env.Iota] in
-                        let env = p_env wl orig in
-                        let t12 =
-                          norm_with_steps
-                            "FStar.TypeChecker.Rel.norm_with_steps.2" steps
-                            env t11 in
-                        let t22 =
-                          norm_with_steps
-                            "FStar.TypeChecker.Rel.norm_with_steps.3" steps
-                            env t21 in
-                        let uu___10 = FStar_Syntax_Util.eq_tm t12 t22 in
-                        uu___10 = FStar_Syntax_Util.Equal in
-                  let uu___10 =
+                 (let uu___10 =
                     ((FStar_TypeChecker_Env.is_interpreted wl.tcenv head1) ||
                        (FStar_TypeChecker_Env.is_interpreted wl.tcenv head2))
                       &&
@@ -11297,7 +11136,8 @@ and (solve_t' : tprob -> worklist -> solution) =
                   then
                     let solve_with_smt uu___11 =
                       let uu___12 =
-                        let uu___13 = equal t1 t2 in
+                        let uu___13 =
+                          try_make_equal_bool (p_env wl orig) t1 t2 in
                         if uu___13
                         then (FStar_Pervasives_Native.None, wl)
                         else
@@ -11317,7 +11157,8 @@ and (solve_t' : tprob -> worklist -> solution) =
                            (FStar_Options.ml_ish ()) in
                        (if uu___12
                         then
-                          let uu___13 = equal t1 t2 in
+                          let uu___13 =
+                            try_make_equal_bool (p_env wl orig) t1 t2 in
                           (if uu___13
                            then
                              let uu___14 =
@@ -11399,31 +11240,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                       ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
                       uu___11
                   else ());
-                 (let equal t11 t21 =
-                    let r = FStar_Syntax_Util.eq_tm t11 t21 in
-                    match r with
-                    | FStar_Syntax_Util.Equal -> true
-                    | FStar_Syntax_Util.NotEqual -> false
-                    | FStar_Syntax_Util.Unknown ->
-                        let steps =
-                          [FStar_TypeChecker_Env.UnfoldUntil
-                             FStar_Syntax_Syntax.delta_constant;
-                          FStar_TypeChecker_Env.Primops;
-                          FStar_TypeChecker_Env.Beta;
-                          FStar_TypeChecker_Env.Eager_unfolding;
-                          FStar_TypeChecker_Env.Iota] in
-                        let env = p_env wl orig in
-                        let t12 =
-                          norm_with_steps
-                            "FStar.TypeChecker.Rel.norm_with_steps.2" steps
-                            env t11 in
-                        let t22 =
-                          norm_with_steps
-                            "FStar.TypeChecker.Rel.norm_with_steps.3" steps
-                            env t21 in
-                        let uu___10 = FStar_Syntax_Util.eq_tm t12 t22 in
-                        uu___10 = FStar_Syntax_Util.Equal in
-                  let uu___10 =
+                 (let uu___10 =
                     ((FStar_TypeChecker_Env.is_interpreted wl.tcenv head1) ||
                        (FStar_TypeChecker_Env.is_interpreted wl.tcenv head2))
                       &&
@@ -11433,7 +11250,8 @@ and (solve_t' : tprob -> worklist -> solution) =
                   then
                     let solve_with_smt uu___11 =
                       let uu___12 =
-                        let uu___13 = equal t1 t2 in
+                        let uu___13 =
+                          try_make_equal_bool (p_env wl orig) t1 t2 in
                         if uu___13
                         then (FStar_Pervasives_Native.None, wl)
                         else
@@ -11453,7 +11271,8 @@ and (solve_t' : tprob -> worklist -> solution) =
                            (FStar_Options.ml_ish ()) in
                        (if uu___12
                         then
-                          let uu___13 = equal t1 t2 in
+                          let uu___13 =
+                            try_make_equal_bool (p_env wl orig) t1 t2 in
                           (if uu___13
                            then
                              let uu___14 =
@@ -11535,31 +11354,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                       ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
                       uu___11
                   else ());
-                 (let equal t11 t21 =
-                    let r = FStar_Syntax_Util.eq_tm t11 t21 in
-                    match r with
-                    | FStar_Syntax_Util.Equal -> true
-                    | FStar_Syntax_Util.NotEqual -> false
-                    | FStar_Syntax_Util.Unknown ->
-                        let steps =
-                          [FStar_TypeChecker_Env.UnfoldUntil
-                             FStar_Syntax_Syntax.delta_constant;
-                          FStar_TypeChecker_Env.Primops;
-                          FStar_TypeChecker_Env.Beta;
-                          FStar_TypeChecker_Env.Eager_unfolding;
-                          FStar_TypeChecker_Env.Iota] in
-                        let env = p_env wl orig in
-                        let t12 =
-                          norm_with_steps
-                            "FStar.TypeChecker.Rel.norm_with_steps.2" steps
-                            env t11 in
-                        let t22 =
-                          norm_with_steps
-                            "FStar.TypeChecker.Rel.norm_with_steps.3" steps
-                            env t21 in
-                        let uu___10 = FStar_Syntax_Util.eq_tm t12 t22 in
-                        uu___10 = FStar_Syntax_Util.Equal in
-                  let uu___10 =
+                 (let uu___10 =
                     ((FStar_TypeChecker_Env.is_interpreted wl.tcenv head1) ||
                        (FStar_TypeChecker_Env.is_interpreted wl.tcenv head2))
                       &&
@@ -11569,7 +11364,8 @@ and (solve_t' : tprob -> worklist -> solution) =
                   then
                     let solve_with_smt uu___11 =
                       let uu___12 =
-                        let uu___13 = equal t1 t2 in
+                        let uu___13 =
+                          try_make_equal_bool (p_env wl orig) t1 t2 in
                         if uu___13
                         then (FStar_Pervasives_Native.None, wl)
                         else
@@ -11589,7 +11385,8 @@ and (solve_t' : tprob -> worklist -> solution) =
                            (FStar_Options.ml_ish ()) in
                        (if uu___12
                         then
-                          let uu___13 = equal t1 t2 in
+                          let uu___13 =
+                            try_make_equal_bool (p_env wl orig) t1 t2 in
                           (if uu___13
                            then
                              let uu___14 =
@@ -11671,31 +11468,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                       ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
                       uu___11
                   else ());
-                 (let equal t11 t21 =
-                    let r = FStar_Syntax_Util.eq_tm t11 t21 in
-                    match r with
-                    | FStar_Syntax_Util.Equal -> true
-                    | FStar_Syntax_Util.NotEqual -> false
-                    | FStar_Syntax_Util.Unknown ->
-                        let steps =
-                          [FStar_TypeChecker_Env.UnfoldUntil
-                             FStar_Syntax_Syntax.delta_constant;
-                          FStar_TypeChecker_Env.Primops;
-                          FStar_TypeChecker_Env.Beta;
-                          FStar_TypeChecker_Env.Eager_unfolding;
-                          FStar_TypeChecker_Env.Iota] in
-                        let env = p_env wl orig in
-                        let t12 =
-                          norm_with_steps
-                            "FStar.TypeChecker.Rel.norm_with_steps.2" steps
-                            env t11 in
-                        let t22 =
-                          norm_with_steps
-                            "FStar.TypeChecker.Rel.norm_with_steps.3" steps
-                            env t21 in
-                        let uu___10 = FStar_Syntax_Util.eq_tm t12 t22 in
-                        uu___10 = FStar_Syntax_Util.Equal in
-                  let uu___10 =
+                 (let uu___10 =
                     ((FStar_TypeChecker_Env.is_interpreted wl.tcenv head1) ||
                        (FStar_TypeChecker_Env.is_interpreted wl.tcenv head2))
                       &&
@@ -11705,7 +11478,8 @@ and (solve_t' : tprob -> worklist -> solution) =
                   then
                     let solve_with_smt uu___11 =
                       let uu___12 =
-                        let uu___13 = equal t1 t2 in
+                        let uu___13 =
+                          try_make_equal_bool (p_env wl orig) t1 t2 in
                         if uu___13
                         then (FStar_Pervasives_Native.None, wl)
                         else
@@ -11725,7 +11499,8 @@ and (solve_t' : tprob -> worklist -> solution) =
                            (FStar_Options.ml_ish ()) in
                        (if uu___12
                         then
-                          let uu___13 = equal t1 t2 in
+                          let uu___13 =
+                            try_make_equal_bool (p_env wl orig) t1 t2 in
                           (if uu___13
                            then
                              let uu___14 =
