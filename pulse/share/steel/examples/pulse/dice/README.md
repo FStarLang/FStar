@@ -10,32 +10,26 @@ DICE Layer 0 in Pulse. The implementation is based on a DICE implementationin in
 [DICE*](https://github.com/verified-HRoT/dice-star) (dice-star). 
 The new contribution is organized as follows
 
-`engine/`
+```
+engine/
+  EngineCore.fst (* main engine logic *)
+  EngineTypes.fst (* abstraction of L0 types *)
+l0/
+  L0Core.fst (* main L0 logic *)
+  L0Crypto.fst (* L0 crypto helpers *)
+  L0Types.fst (* abstraction of L0 types *)
+  X509.fst (* abstraction of X509 API *)
+common/
+  HACL.fst (* abstraction of HACL* API *)
+```
 
-&emsp;`EngineCore.fst` (* main engine logic *)
-
-&emsp;`EngineTypes.fst` (* abstraction of L0 types *)
-
-`l0/`
-
-&emsp;`L0Core.fst` (* main L0 logic *)
-
-&emsp;`L0Crypto.fst` (* L0 crypto helpers *)
-
-&emsp;`L0Types.fst` (* abstraction of L0 types *)
-
-&emsp;`X509.fst` (* abstraction of X509 API *)
-
-`common/`
-
-&emsp;`HACL.fst` (* abstraction of HACL* API *)
 
 ## About the Implementation
 
 The engine and L0 implementations in Pulse correspond to 
 [dice-star/src/dice_engine](https://github.com/verified-HRoT/dice-star/tree/main/src/dice_engine)
 and [dice-star/src/l0](https://github.com/verified-HRoT/dice-star/tree/main/src/l0),
-respectively. A record type is defined per layer to maintain program state, these defintions
+from DICE*. A record type is defined per layer to maintain program state, these defintions
 are located in `EngineTypes.fst` and `L0Types.fst`. The main logic for each layer are 
 located in `EngineCore.engine_main` and `L0Core.l0_main`. 
 
