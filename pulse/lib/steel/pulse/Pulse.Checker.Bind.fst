@@ -130,6 +130,7 @@ let check_stapp_no_ctxt (g:env) (t:st_term { Tm_STApp? t.term })
            st_typing (push_env g uvs) t c) = magic ()
 
 open Pulse.Prover.Common
+open Pulse.Prover
 #push-options "--z3rlimit_factor 8 --fuel 1 --ifuel 1"
 let check_bindv2
   (g:env)

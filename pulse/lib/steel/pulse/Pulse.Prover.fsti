@@ -4,17 +4,16 @@ module T = FStar.Tactics
 
 open Pulse.Syntax
 open Pulse.Typing
-open Pulse.Checker.Common
-open Pulse.Typing.Metatheory
-open Pulse.Checker.VPropEquiv
 open Pulse.Prover.Common
 
-val prover : prover_t
+module PS = Pulse.Prover.Substs
 
-val prove_precondition (#g:env) (#ctxt:term)
-  (ctxt_typing:vprop_typing g ctxt)
-  (#t:st_term) (#c:comp_st)
-  (t_typing:st_typing g t c)
-  : T.Tac (option (t:st_term &
-                   c:comp_st { comp_pre c == ctxt } &
-                   st_typing g t c))
+val prove
+  (#g:env) (#ctxt:vprop) (ctxt_typing:vprop_typing g ctxt)
+  (uvs:env { disjoint g uvs })
+  (#goals:vprop) (goals_typing:vprop_typing (push_env g uvs) goals)
+
+  : T.Tac (g1 : env { g1 `env_extends` g /\ disjoint g1 uvs } &
+           ss : PS.t { well_typed_ss ss uvs g1 } &
+           remaining_ctxt : vprop &
+           continuation_elaborator g ctxt g1 (ss.(goals) * remaining_ctxt))

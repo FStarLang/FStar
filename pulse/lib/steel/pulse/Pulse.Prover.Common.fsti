@@ -118,16 +118,6 @@ noeq type prover_state (preamble:preamble) = {
 let is_terminal (#preamble:_) (st:prover_state preamble) =
   st.unsolved == []
 
-val prove
-  (#g:env) (#ctxt:vprop) (ctxt_typing:vprop_typing g ctxt)
-  (uvs:env { disjoint g uvs })
-  (#goals:vprop) (goals_typing:vprop_typing (push_env g uvs) goals)
-
-  : T.Tac (g1 : env { g1 `env_extends` g /\ disjoint g1 uvs } &
-           ss : PS.t { well_typed_ss ss uvs g1 } &
-           remaining_ctxt : vprop &
-           continuation_elaborator g ctxt g1 (ss.(goals) * remaining_ctxt))
-
 irreducible
 let extend_post_hint_opt_g (g:env) (post_hint:post_hint_opt g) (g1:env { g1 `env_extends` g })
   : p:post_hint_opt g1 { p == post_hint } =
