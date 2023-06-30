@@ -32,8 +32,6 @@ val is_signable_len (_:US.t) : prop
 
 let signable_len = v:US.t{ is_signable_len v }
 
-let key_len = v:US.t{ is_hashable_len v }
-
 assume
 val valid_hkdf_lbl_len (l:US.t) : prop
 
@@ -69,7 +67,7 @@ assume
 val hacl_hmac (alg:alg_t)
               (dst:A.larray U8.t (US.v (digest_len alg)))
               (key:A.array U8.t)
-              (key_len: key_len { US.v key_len == A.length key })
+              (key_len: hashable_len { US.v key_len == A.length key })
               (msg:A.array U8.t)
               (msg_len: hashable_len { US.v msg_len == A.length msg })
               (#pkey #pmsg:perm)
@@ -142,6 +140,6 @@ assume
 val dice_digest_len_is_hkdf_ikm
   : valid_hkdf_ikm_len dice_digest_len
 
-assume 
-val dice_digest_len_is_hkdf_ikm_
-  : valid_hkdf_ikm_len (digest_len dice_hash_alg)
+assume
+val is_hashable_len_32
+  : is_hashable_len 32sz

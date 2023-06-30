@@ -74,7 +74,6 @@ fn create_deviceIDCRI
 ```
 
 // TODO: don't need full perm on all of these
-// TODO: we never set deviceIDCSR_len
 ```pulse
 fn sign_and_finalize_deviceIDCSR
   (deviceID_priv: A.array U8.t)
@@ -203,7 +202,6 @@ fn create_aliasKeyTBS
 ```
 
 // TODO: don't need full perm on all of these
-// TODO: we never set aliasKeyCRT_len
 ```pulse
 fn sign_and_finalize_aliasKeyCRT
   (deviceID_priv: A.array U8.t)

@@ -31,6 +31,35 @@ val derive_key_pair_spec
   (lbl: Seq.seq U8.t)
   : Seq.seq U8.t & Seq.seq U8.t (* should be length 32 *)
 
+```pulse
+fn derive_key_pair
+  (pub : A.larray U8.t 32)
+  (priv: A.larray U8.t 32)
+  (ikm_len: hkdf_ikm_len) 
+  (ikm: A.array U8.t)
+  (lbl_len: hkdf_lbl_len) 
+  (lbl: A.array U8.t)
+  (#ikm_perm #lbl_perm:perm)
+  (#_pub_seq #_priv_seq #ikm_seq #lbl_seq:erased (Seq.seq U8.t))
+  requires (
+    A.pts_to pub full_perm _pub_seq ** 
+    A.pts_to priv full_perm _priv_seq ** 
+    A.pts_to ikm ikm_perm ikm_seq ** 
+    A.pts_to lbl lbl_perm lbl_seq
+  )
+  ensures (
+    A.pts_to ikm ikm_perm ikm_seq ** 
+    A.pts_to lbl lbl_perm lbl_seq **
+    exists (pub_seq priv_seq:Seq.seq U8.t). (
+      A.pts_to pub full_perm pub_seq ** 
+      A.pts_to priv full_perm priv_seq **
+      pure ((pub_seq, priv_seq) == derive_key_pair_spec ikm_len ikm_seq lbl_len lbl_seq)
+    ))
+{
+  admit()
+}
+```
+
 let derive_DeviceID_spec
   (alg:alg_t)
   (dig_len:hkdf_ikm_len)
@@ -70,7 +99,17 @@ fn derive_DeviceID
       ))
   )
 {
-  admit()
+  let cdigest = new_array 0uy (digest_len alg);
+  is_hashable_len_32;
+  hacl_hash alg cdi 32sz cdigest;
+
+  derive_key_pair
+    deviceID_pub deviceID_priv
+    (digest_len alg) cdigest
+    deviceID_label_len deviceID_label;
+
+  free_array cdigest;
+  ()
 }
 ```
 
@@ -104,7 +143,7 @@ fn derive_AliasKey
     A.pts_to aliasKey_label full_perm aliasKey_label0 `star`
     A.pts_to aliasKey_pub full_perm aliasKey_pub0 `star`
     A.pts_to aliasKey_priv full_perm aliasKey_priv0 `star`
-    pure (valid_hkdf_ikm_len (digest_len alg))
+    pure (is_hashable_len (digest_len alg) /\ valid_hkdf_ikm_len (digest_len alg))
   )
   ensures (
     A.pts_to cdi full_perm cdi0 `star`
@@ -113,12 +152,26 @@ fn derive_AliasKey
     (exists (aliasKey_pub1:Seq.seq U8.t) (aliasKey_priv1:Seq.seq U8.t). (
         A.pts_to aliasKey_pub full_perm aliasKey_pub1 `star`
         A.pts_to aliasKey_priv full_perm aliasKey_priv1 `star`
-        pure (valid_hkdf_ikm_len (digest_len alg) /\
+        pure (is_hashable_len (digest_len alg) /\ valid_hkdf_ikm_len (digest_len alg) /\
               derive_AliasKey_spec alg (digest_len alg) cdi0 fwid0 aliasKey_label_len aliasKey_label0 == (aliasKey_pub1, aliasKey_priv1))
       ))
   )
 {
-  admit()
+  let cdigest = new_array 0uy (digest_len alg);
+  let adigest = new_array 0uy (digest_len alg);
+
+  is_hashable_len_32;
+  hacl_hash alg cdi 32sz cdigest;
+  hacl_hmac alg adigest cdigest (digest_len alg) fwid 32sz;
+
+  derive_key_pair
+    aliasKey_pub aliasKey_priv
+    (digest_len alg) adigest
+    aliasKey_label_len aliasKey_label;
+
+  free_array cdigest;
+  free_array adigest;
+  ()
 }
 ```
 
@@ -131,7 +184,7 @@ let derive_AuthKeyID_spec
 ```pulse 
 fn derive_AuthKeyID
   (alg:alg_t)
-  (authKeyID: A.array U8.t)
+  (authKeyID: A.larray U8.t (US.v (digest_len alg)))
   (deviceID_pub: A.larray U8.t 32)
   (#authKeyID0 #deviceID_pub0: Ghost.erased (Seq.seq U8.t))
   requires (
@@ -146,6 +199,8 @@ fn derive_AuthKeyID
       ))
   )
 {
-  admit()
+  is_hashable_len_32;
+  hacl_hash alg deviceID_pub 32sz authKeyID;
+  ()
 }
 ```

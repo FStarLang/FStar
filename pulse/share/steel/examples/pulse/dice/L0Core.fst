@@ -131,7 +131,19 @@ let aliasKeyCRT_post
                                     (spec_ed25519_sign
                                       deviceID_priv
                                       aliasKeyTBS_buf)))
-
+(* 
+Need logic to construct initial l0_record given the cdi and fwid. 
+This logic should compute and set the following record entries:
+  deviceID_label_len
+  deviceID_label
+  aliasKey_label_len
+  aliasKey_label
+  deviceIDCSR_ingredients
+  aliasKeyCRT_ingredients
+  deviceIDCSR_len
+  aliasKeyCRT_len
+The remaining record entries are given as input or computed by l0.
+*)
 ```pulse
 fn l0
   (l0: l0_record)
@@ -166,6 +178,7 @@ fn l0
     ))
 {
   unfold l0_perm l0 _vl0;
+  dice_digest_len_is_hashable;
 
   derive_DeviceID dice_hash_alg 
     l0.deviceID_pub l0.deviceID_priv l0.cdi 
@@ -196,7 +209,6 @@ fn l0
     l0.aliasKeyCRT_len l0.aliasKeyCRT_buf;
 
   fold_l0_perm l0;
-
   ()
 }
 ```

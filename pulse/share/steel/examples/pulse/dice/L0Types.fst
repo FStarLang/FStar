@@ -90,7 +90,7 @@ type l0_record = {
   aliasKeyCRT_len: R.ref U32.t; (* should be U32 *)
   aliasKeyCRT_buf: A.array U8.t; (* public bytes *)
 (* AuthKey Outputs *)
-  authKeyID: A.array U8.t;
+  authKeyID: A.larray U8.t (US.v dice_digest_len);
 }
 
 noeq

@@ -13,6 +13,7 @@ module US = FStar.SizeT
 module U8 = FStar.UInt8
 open HACL
 open L0Types
+open Array
 
 // DICE constants
 
@@ -30,11 +31,11 @@ noeq
 type l0_image_t = {
   l0_image_header_size : signable_len;
   l0_image_header      : A.larray U8.t (US.v l0_image_header_size);
-  l0_image_header_sig  : A.larray U8.t 64; (* should be secret bytes *)
+  l0_image_header_sig  : A.larray U8.t 64; (* secret bytes *)
   l0_binary_size       : hashable_len;
   l0_binary            : A.larray U8.t (US.v l0_binary_size);
-  l0_binary_hash       : A.larray U8.t (US.v dice_digest_len); (* should be secret bytes, digest len should be poly in alg *)
-  l0_image_auth_pubkey : A.larray U8.t 32; (* should be secret bytes *)
+  l0_binary_hash       : A.larray U8.t (US.v dice_digest_len); (*secret bytes *)
+  l0_image_auth_pubkey : A.larray U8.t 32; (* secret bytes *)
 }
 
 //[@@erasable] Could we make l0_repr erasable from the get go?
@@ -46,7 +47,6 @@ type l0_repr = {
     l0_image_auth_pubkey : Seq.seq U8.t;
 }
 
-// Maybe a version that doesn't give us full permission to l0?
 let l0_perm (l0:l0_image_t) (vl0: l0_repr) : vprop = 
   A.pts_to l0.l0_image_header full_perm vl0.l0_image_header `star`
   A.pts_to l0.l0_image_header_sig full_perm vl0.l0_image_header_sig `star`
@@ -71,75 +71,6 @@ let l0_is_authentic (vl0:l0_repr)
 let cdi_functional_correctness (c0:Seq.seq U8.t) (vl0:l0_repr)
   : prop 
   = c0 == spec_hmac dice_hash_alg (spec_hash dice_hash_alg uds_bytes) (spec_hash dice_hash_alg vl0.l0_binary)
-
-// array utilities
-
-```pulse
-fn compare (#t:eqtype) (l:US.t) (a1 a2:A.larray t (US.v l))
-           (#p1 #p2:perm) (#s1 #s2:elseq t (US.v l))
-  requires (
-    A.pts_to a1 p1 s1 `star`
-    A.pts_to a2 p2 s2
-  )
-  returns res:bool
-  ensures (
-    A.pts_to a1 p1 s1 `star`
-    A.pts_to a2 p2 s2 `star`
-    (pure (res <==> Seq.equal s1 s2))
-  )
-{
-  let mut i = 0sz;
-  while (let vi = !i; if US.(vi <^ l) { let v1 = a1.(vi); let v2 = a2.(vi); (v1 = v2) } else { false } )
-  invariant b. exists (vi:US.t). ( 
-    R.pts_to i full_perm vi `star`
-    A.pts_to a1 p1 s1 `star`
-    A.pts_to a2 p2 s2 `star`
-    pure (
-      US.v vi <= US.v l /\
-      (b == (US.(vi <^ l) && Seq.index s1 (US.v vi) = Seq.index s2 (US.v vi))) /\
-      (forall (i:nat). i < US.v vi ==> Seq.index s1 i == Seq.index s2 i)
-    )
-  )
-  {
-    let vi = !i; 
-    i := US.(vi +^ 1sz);
-    ()
-  };
-  let vi = !i;
-  let res = vi = l;
-  res
-}
-```
-
-```pulse
-fn fill_array (#t:Type0) (l:US.t) (a:(a:A.array t{ US.v l == A.length a })) (v:t)
-              (#s:(s:Ghost.erased (Seq.seq t) { Seq.length s == US.v l }))
-   requires (A.pts_to a full_perm s)
-   ensures 
-      exists (s:Seq.seq t). (
-         A.pts_to a full_perm s `star`
-         pure (s `Seq.equal` Seq.create (US.v l) v)
-      )
-{
-   let mut i = 0sz;
-   while (let vi = !i; US.(vi <^ l))
-   invariant b. exists (s:Seq.seq t) (vi:US.t). ( 
-      A.pts_to a full_perm s `star`
-      R.pts_to i full_perm vi `star`
-      pure ((b == US.(vi <^ l)) /\
-            US.v vi <= US.v l /\
-            Seq.length s == A.length a /\
-            (forall (i:nat). i < US.v vi ==> Seq.index s i == v))
-   )
-   {
-      let vi = !i; 
-      (a.(vi) <- v);
-      i := US.(vi +^ 1sz);
-      ()
-   };
-   ()
-}
-```
 
 // DICE engine functionality 
 
@@ -214,7 +145,6 @@ val read_uds (uds:A.larray U8.t (US.v uds_len))
       (fun _ -> A.pts_to uds full_perm uds_bytes `star` uds_is_enabled)
 
 (* Pulse desugaring seems to allow the val to be in scope, even though it is not assumed *)
-(* Also the polymorphic version doesn't work *)
 val free_array_u8 (a: A.array U8.t)
   : stt unit
     (exists_ (fun (x:Seq.seq U8.t) -> A.pts_to a full_perm x) `star` pure (A.is_full_array a))
@@ -241,22 +171,10 @@ fn compute_cdi (c:cdi_t) (l0:l0_image_t)
     let l0_digest = new_array 0uy dice_digest_len;
     read_uds uds;
     hacl_hash dice_hash_alg uds uds_len uds_digest;
-    //Mysterious error above when trying to instantiate an implicit argument
-    //It would be nice if it could say what it tried to match and why it didn't actually match
-    //the problem was that an implicit argument of reveal was in one case an seq and another an lseq
-    rewrite (l0_perm l0 vl0)
-         as (A.pts_to l0.l0_image_header full_perm vl0.l0_image_header `star`
-            A.pts_to l0.l0_image_header_sig full_perm vl0.l0_image_header_sig `star`
-            A.pts_to l0.l0_binary full_perm vl0.l0_binary `star`
-            A.pts_to l0.l0_binary_hash full_perm vl0.l0_binary_hash `star`
-            A.pts_to l0.l0_image_auth_pubkey full_perm vl0.l0_image_auth_pubkey);
+
+    unfold l0_perm l0 vl0;
     hacl_hash dice_hash_alg l0.l0_binary l0.l0_binary_size l0_digest;
-    rewrite (A.pts_to l0.l0_image_header full_perm vl0.l0_image_header `star`
-            A.pts_to l0.l0_image_header_sig full_perm vl0.l0_image_header_sig `star`
-            A.pts_to l0.l0_binary full_perm vl0.l0_binary `star`
-            A.pts_to l0.l0_binary_hash full_perm vl0.l0_binary_hash `star`
-            A.pts_to l0.l0_image_auth_pubkey full_perm vl0.l0_image_auth_pubkey)
-         as (l0_perm l0 vl0);
+    fold l0_perm l0 vl0;
 
     dice_digest_len_is_hashable;
 
@@ -293,7 +211,7 @@ fn dice_main (c:cdi_t) (l0:l0_image_t)
   let b = authenticate_l0_image l0;
   if b 
   {
-    compute_cdi c l0; //Initially, we partially applied compute_cdi c; and were very confused; can we warn on partial applications?
+    compute_cdi c l0;
     DICE_SUCCESS
   }
   else
@@ -303,56 +221,3 @@ fn dice_main (c:cdi_t) (l0:l0_image_t)
   }
 }
 ```
-
-(*
-```pulse
-fn compute_cdi_v2 (c:cdi_t) (l0:l0_image_t) (#vl0:Ghost.erased l0_repr)
- requires exists (c0: Seq.seq U8.t). (
-    uds_is_enabled `star`
-    A.pts_to c full_perm c0 `star`
-    l0_perm l0 vl0 (* should CDI only be computed on authentic l0 images? *)
- )
- ensures exists (c1:Seq.seq U8.t). (
-    A.pts_to c full_perm c1 `star`
-    l0_perm l0 vl0 `star`
-    pure (cdi_functional_correctness c1 vl0)
- )
-{
-    disable_uds();
-    admit() //NB: let _ does not work
-}
-```
-
-// #push-options "--fuel 0 --ifuel 1"
-```pulse
-fn dice_main_v2 (c:cdi_t) (l0:l0_image_t) (#vl0:Ghost.erased l0_repr)
-  requires exists (c0:Seq.seq U8.t). (
-    uds_is_enabled `star`
-    A.pts_to c full_perm c0 `star`
-    l0_perm l0 vl0
-  )
-  returns r: dice_return_code
-  ensures exists (c1:Seq.seq U8.t). (
-      A.pts_to c full_perm c1 `star`
-      l0_perm l0 vl0 `star`
-      pure (r == DICE_SUCCESS ==> l0_is_authentic vl0 /\ cdi_functional_correctness c1 vl0)
-  )
-{
-  let b = authenticate_l0_image l0;
-  if b 
-  {
-    //Note, compute_cdi's implicit arg vl0 appears beneath an existential
-    //and the current implicit arg solver does not descend into existentials
-    //so we needed to instantiate manually
-    //The new solver should hande this case
-    compute_cdi c l0 #vl0; 
-    DICE_SUCCESS
-  }
-  else
-  {
-    disable_uds ();
-    DICE_ERROR
-  }
-}
-```
-*)
