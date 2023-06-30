@@ -1,10 +1,10 @@
-all: verify
 
-# assuming share/steel/examples/pulse
-STEEL_HOME ?= ../../../../..
+all:
+	$(MAKE) -C common
+	$(MAKE) -C engine
+	$(MAKE) -C l0
 
-FSTAR_OPTIONS = --include $(STEEL_HOME)/lib/steel/pulse --include $(STEEL_HOME)/share/steel/examples/pulse/lib
-
-COMPAT_INDEXED_EFFECTS=
-
-include $(STEEL_HOME)/share/steel/Makefile.include
+clean: 
+	$(MAKE) -C common clean
+	$(MAKE) -C engine clean
+	$(MAKE) -C l0 clean

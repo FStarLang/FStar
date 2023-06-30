@@ -11,7 +11,6 @@ module T = FStar.Tactics
 module US = FStar.SizeT
 module U8 = FStar.UInt8
 open HACL
-open L0Types
 open Array
 
 type dice_return_code = | DICE_SUCCESS | DICE_ERROR

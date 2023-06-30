@@ -405,7 +405,7 @@ This logic should compute and set the following record entries:
 The remaining record entries are given as input or computed by l0.
 *)
 ```pulse
-fn l0
+fn l0_main
   (l0: l0_record)
   (#_vl0: Ghost.erased l0_repr)
   requires (
