@@ -99,7 +99,7 @@ let well_typed_ss (ss:PS.t) (uvs g:env) =
 noeq type prover_state (preamble:preamble) = {
   pg : g:env { g `env_extends` preamble.g0 };
 
-  remaining_ctxt : list vprop;
+  remaining_ctxt : list vprop;  // we may have to add remaining_ctxt typing ...
 
   uvs : uvs:env { disjoint uvs pg };
   ss : ss:PS.t { well_typed_ss ss uvs pg};

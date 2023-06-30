@@ -12,3 +12,6 @@ val elim_exists (#g:env) (#ctxt:term) (ctxt_typing:tot_typing g ctxt tm_vprop)
             ctxt':term &
             tot_typing g' ctxt' tm_vprop &
             continuation_elaborator g ctxt g' ctxt')
+
+val elim_exists_pst (#preamble:_) (pst:prover_state preamble)
+  : T.Tac (pst':prover_state preamble { pst' `pst_extends` pst })

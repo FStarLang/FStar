@@ -5,6 +5,8 @@ open Pulse.Typing
 
 module T = FStar.Tactics.V2
 
+open Pulse.Checker.VPropEquiv
+
 open Pulse.Prover.Common
 
 let should_elim_exists (v:vprop) : T.Tac bool =
@@ -35,3 +37,14 @@ let elim_exists (#g:env) (#ctxt:term) (ctxt_typing:tot_typing g ctxt tm_vprop)
            continuation_elaborator g ctxt g' ctxt') =
 
   add_elims should_elim_exists mk ctxt_typing
+
+let elim_exists_pst (#preamble:_) (pst:prover_state preamble)
+  : T.Tac (pst':prover_state preamble { pst' `pst_extends` pst }) = admit ()
+
+  // let (| pg', remaining_ctxt', remaining_ctxt'_typing, k' |) =
+  //   elim_exists #pst.pg #(list_as_vprop pst.remaining_ctxt) (magic ()) in
+
+  // { pst with
+  //   pg = pg';
+  //   remaining_ctxt = vprop_as_list remaining_ctxt';
+  //   k = k_elab_trans pst.k k'; }
