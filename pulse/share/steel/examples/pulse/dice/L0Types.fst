@@ -1,14 +1,13 @@
 module L0Types
-module R = Steel.ST.Reference
-module A = Steel.ST.Array
-module T = FStar.Tactics
-module PM = Pulse.Main
+open Pulse.Main
+open Pulse.Steel.Wrapper
 open Steel.ST.Util 
 open Steel.ST.Array
 open Steel.FractionalPermission
 open FStar.Ghost
-open Pulse.Steel.Wrapper
+module R = Steel.ST.Reference
 module A = Steel.ST.Array
+module T = FStar.Tactics
 module US = FStar.SizeT
 module U8 = FStar.UInt8
 module U32 = FStar.UInt32
@@ -122,7 +121,6 @@ let mk_l0_repr cdi fwid deviceID_label aliasKey_label deviceID_pub
                aliasKeyTBS_len aliasKeyTBS_buf 
                aliasKeyCRT_len aliasKeyCRT_buf 
                authKeyID = 
-
     { cdi; fwid; deviceID_label; aliasKey_label; deviceID_pub;
       deviceID_priv; aliasKey_pub; aliasKey_priv;
       deviceIDCSR_len; deviceIDCSR_buf;

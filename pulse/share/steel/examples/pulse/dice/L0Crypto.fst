@@ -1,14 +1,14 @@
 module L0Crypto
-module R = Steel.ST.Reference
-module A = Steel.ST.Array
-module T = FStar.Tactics
-module PM = Pulse.Main
+open Pulse.Main
+open Pulse.Steel.Wrapper
+open Pulse.Class.BoundedIntegers
 open Steel.ST.Util 
 open Steel.ST.Array
 open Steel.FractionalPermission
 open FStar.Ghost
-open Pulse.Steel.Wrapper
+module R = Steel.ST.Reference
 module A = Steel.ST.Array
+module T = FStar.Tactics
 module US = FStar.SizeT
 module U8 = FStar.UInt8
 module U32 = FStar.UInt32
@@ -94,8 +94,11 @@ fn derive_DeviceID
     (exists (deviceID_pub1:Seq.seq U8.t) (deviceID_priv1:Seq.seq U8.t). (
         A.pts_to deviceID_pub full_perm deviceID_pub1 **
         A.pts_to deviceID_priv full_perm deviceID_priv1 **
-        pure (valid_hkdf_ikm_len (digest_len alg) /\
-              derive_DeviceID_spec alg (digest_len alg) cdi0 deviceID_label_len deviceID_label0 == (deviceID_pub1, deviceID_priv1))
+        pure (
+          valid_hkdf_ikm_len (digest_len alg) /\
+          derive_DeviceID_spec alg (digest_len alg) cdi0 deviceID_label_len deviceID_label0 
+            == (deviceID_pub1, deviceID_priv1)
+        )
       ))
   )
 {
@@ -152,8 +155,12 @@ fn derive_AliasKey
     (exists (aliasKey_pub1:Seq.seq U8.t) (aliasKey_priv1:Seq.seq U8.t). (
         A.pts_to aliasKey_pub full_perm aliasKey_pub1 **
         A.pts_to aliasKey_priv full_perm aliasKey_priv1 **
-        pure (is_hashable_len (digest_len alg) /\ valid_hkdf_ikm_len (digest_len alg) /\
-              derive_AliasKey_spec alg (digest_len alg) cdi0 fwid0 aliasKey_label_len aliasKey_label0 == (aliasKey_pub1, aliasKey_priv1))
+        pure (
+          is_hashable_len (digest_len alg) /\ 
+          valid_hkdf_ikm_len (digest_len alg) /\
+          derive_AliasKey_spec alg (digest_len alg) cdi0 fwid0 aliasKey_label_len aliasKey_label0 
+            == (aliasKey_pub1, aliasKey_priv1)
+        )
       ))
   )
 {
@@ -193,10 +200,10 @@ fn derive_AuthKeyID
   )
   ensures (
     A.pts_to deviceID_pub full_perm deviceID_pub0 **
-    (exists (authKeyID1:Seq.seq U8.t). (
-        A.pts_to authKeyID full_perm authKeyID1 **
-        pure (Seq.equal (derive_AuthKeyID_spec alg deviceID_pub0) authKeyID1)
-      ))
+    exists (authKeyID1:Seq.seq U8.t). (
+      A.pts_to authKeyID full_perm authKeyID1 **
+      pure (Seq.equal (derive_AuthKeyID_spec alg deviceID_pub0) authKeyID1)
+    )
   )
 {
   is_hashable_len_32;
