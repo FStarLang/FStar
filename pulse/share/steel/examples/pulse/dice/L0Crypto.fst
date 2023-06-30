@@ -82,18 +82,18 @@ fn derive_DeviceID
   (deviceID_label:A.larray U8.t (US.v deviceID_label_len))
   (#cdi0 #deviceID_label0 #deviceID_pub0 #deviceID_priv0: Ghost.erased (Seq.seq U8.t))
   requires (
-    A.pts_to cdi full_perm cdi0 `star`
-    A.pts_to deviceID_label full_perm deviceID_label0 `star`
-    A.pts_to deviceID_pub full_perm deviceID_pub0 `star`
-    A.pts_to deviceID_priv full_perm deviceID_priv0 `star`
+    A.pts_to cdi full_perm cdi0 **
+    A.pts_to deviceID_label full_perm deviceID_label0 **
+    A.pts_to deviceID_pub full_perm deviceID_pub0 **
+    A.pts_to deviceID_priv full_perm deviceID_priv0 **
     pure (valid_hkdf_ikm_len (digest_len alg))
   )
   ensures (
-    A.pts_to cdi full_perm cdi0 `star`
-    A.pts_to deviceID_label full_perm deviceID_label0 `star`
+    A.pts_to cdi full_perm cdi0 **
+    A.pts_to deviceID_label full_perm deviceID_label0 **
     (exists (deviceID_pub1:Seq.seq U8.t) (deviceID_priv1:Seq.seq U8.t). (
-        A.pts_to deviceID_pub full_perm deviceID_pub1 `star`
-        A.pts_to deviceID_priv full_perm deviceID_priv1 `star`
+        A.pts_to deviceID_pub full_perm deviceID_pub1 **
+        A.pts_to deviceID_priv full_perm deviceID_priv1 **
         pure (valid_hkdf_ikm_len (digest_len alg) /\
               derive_DeviceID_spec alg (digest_len alg) cdi0 deviceID_label_len deviceID_label0 == (deviceID_pub1, deviceID_priv1))
       ))
@@ -138,20 +138,20 @@ fn derive_AliasKey
   (aliasKey_label: A.larray U8.t (US.v aliasKey_label_len))
   (#cdi0 #fwid0 #aliasKey_label0 #aliasKey_pub0 #aliasKey_priv0: Ghost.erased (Seq.seq U8.t))
   requires (
-    A.pts_to cdi full_perm cdi0 `star`
-    A.pts_to fwid full_perm fwid0 `star`
-    A.pts_to aliasKey_label full_perm aliasKey_label0 `star`
-    A.pts_to aliasKey_pub full_perm aliasKey_pub0 `star`
-    A.pts_to aliasKey_priv full_perm aliasKey_priv0 `star`
+    A.pts_to cdi full_perm cdi0 **
+    A.pts_to fwid full_perm fwid0 **
+    A.pts_to aliasKey_label full_perm aliasKey_label0 **
+    A.pts_to aliasKey_pub full_perm aliasKey_pub0 **
+    A.pts_to aliasKey_priv full_perm aliasKey_priv0 **
     pure (is_hashable_len (digest_len alg) /\ valid_hkdf_ikm_len (digest_len alg))
   )
   ensures (
-    A.pts_to cdi full_perm cdi0 `star`
-    A.pts_to fwid full_perm fwid0 `star`
-    A.pts_to aliasKey_label full_perm aliasKey_label0 `star`
+    A.pts_to cdi full_perm cdi0 **
+    A.pts_to fwid full_perm fwid0 **
+    A.pts_to aliasKey_label full_perm aliasKey_label0 **
     (exists (aliasKey_pub1:Seq.seq U8.t) (aliasKey_priv1:Seq.seq U8.t). (
-        A.pts_to aliasKey_pub full_perm aliasKey_pub1 `star`
-        A.pts_to aliasKey_priv full_perm aliasKey_priv1 `star`
+        A.pts_to aliasKey_pub full_perm aliasKey_pub1 **
+        A.pts_to aliasKey_priv full_perm aliasKey_priv1 **
         pure (is_hashable_len (digest_len alg) /\ valid_hkdf_ikm_len (digest_len alg) /\
               derive_AliasKey_spec alg (digest_len alg) cdi0 fwid0 aliasKey_label_len aliasKey_label0 == (aliasKey_pub1, aliasKey_priv1))
       ))
@@ -188,13 +188,13 @@ fn derive_AuthKeyID
   (deviceID_pub: A.larray U8.t 32)
   (#authKeyID0 #deviceID_pub0: Ghost.erased (Seq.seq U8.t))
   requires (
-    A.pts_to deviceID_pub full_perm deviceID_pub0 `star`
+    A.pts_to deviceID_pub full_perm deviceID_pub0 **
     A.pts_to authKeyID full_perm authKeyID0 
   )
   ensures (
-    A.pts_to deviceID_pub full_perm deviceID_pub0 `star`
+    A.pts_to deviceID_pub full_perm deviceID_pub0 **
     (exists (authKeyID1:Seq.seq U8.t). (
-        A.pts_to authKeyID full_perm authKeyID1 `star`
+        A.pts_to authKeyID full_perm authKeyID1 **
         pure (Seq.equal (derive_AuthKeyID_spec alg deviceID_pub0) authKeyID1)
       ))
   )

@@ -79,7 +79,7 @@ fn authenticate_l0_image (l0:l0_image_t) (#vl0:Ghost.erased l0_repr)
     requires l0_perm l0 vl0
     returns b:bool
     ensures (
-        l0_perm l0 vl0 `star`
+        l0_perm l0 vl0 **
         pure (b ==> l0_is_authentic vl0)
     )
 {
@@ -123,14 +123,14 @@ fn zeroize_uds (uds:A.array U8.t)
                (l:(l:US.t{ US.v l = A.length uds })) 
                (#uds0:(uds0:Ghost.erased (Seq.seq U8.t) { Seq.length uds0 = A.length uds }))
   requires (
-    uds_is_enabled `star`
+    uds_is_enabled **
     A.pts_to uds full_perm uds0
   )
   ensures (
-    uds_is_enabled `star`
-    (exists_ (fun (uds1:Seq.seq U8.t) ->   
-      A.pts_to uds full_perm uds1 `star`
-      pure (uds1 `Seq.equal` Seq.create (US.v l) 0uy)))
+    uds_is_enabled **
+    exists (uds1:Seq.seq U8.t). (
+      A.pts_to uds full_perm uds1 **
+      pure (uds1 `Seq.equal` Seq.create (US.v l) 0uy))
   )
 {
   fill_array l uds 0uy;
@@ -144,26 +144,20 @@ val read_uds (uds:A.larray U8.t (US.v uds_len))
       (A.pts_to uds full_perm s `star` uds_is_enabled)
       (fun _ -> A.pts_to uds full_perm uds_bytes `star` uds_is_enabled)
 
-(* Pulse desugaring seems to allow the val to be in scope, even though it is not assumed *)
-val free_array_u8 (a: A.array U8.t)
-  : stt unit
-    (exists_ (fun (x:Seq.seq U8.t) -> A.pts_to a full_perm x) `star` pure (A.is_full_array a))
-    (fun _ -> emp)
-
 ```pulse
 fn compute_cdi (c:cdi_t) (l0:l0_image_t) 
                (#vl0:Ghost.erased l0_repr)
                (#c0:Ghost.erased (Seq.seq U8.t))
   requires (
-    uds_is_enabled `star`
-    A.pts_to c full_perm c0 `star`
+    uds_is_enabled **
+    A.pts_to c full_perm c0 **
     l0_perm l0 vl0 (* should CDI only be computed on authentic l0 images? *)
   )
   ensures (
-    l0_perm l0 vl0 `star`
-    (exists_ (fun (c1:Seq.seq U8.t) ->
-      A.pts_to c full_perm c1 `star`
-      pure (cdi_functional_correctness c1 vl0)))
+    l0_perm l0 vl0 **
+    exists (c1:Seq.seq U8.t). (
+      A.pts_to c full_perm c1 **
+      pure (cdi_functional_correctness c1 vl0))
   )
 {
     let uds = new_array 0uy uds_len;
@@ -197,14 +191,14 @@ fn dice_main (c:cdi_t) (l0:l0_image_t)
              (#vl0:Ghost.erased l0_repr)
              (#c0:Ghost.erased (Seq.seq U8.t))
   requires (
-    uds_is_enabled `star`
-    A.pts_to c full_perm c0 `star`
+    uds_is_enabled **
+    A.pts_to c full_perm c0 **
     l0_perm l0 vl0
   )
   returns r: dice_return_code
   ensures exists (c1:Seq.seq U8.t). (
-      A.pts_to c full_perm c1 `star`
-      l0_perm l0 vl0 `star`
+      A.pts_to c full_perm c1 **
+      l0_perm l0 vl0 **
       pure (r == DICE_SUCCESS ==> l0_is_authentic vl0 /\ cdi_functional_correctness c1 vl0)
   )
 {
