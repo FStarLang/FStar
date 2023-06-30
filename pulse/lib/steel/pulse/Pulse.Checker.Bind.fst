@@ -171,7 +171,7 @@ let check_bindv2
       else
         // g1 |- ss1 e1 : ss1 c1
         let Some d1 = d1opt in
-        let (| e1, c1, d1 |) = add_frame d1 remaining_pre in
+        let (| e1, c1, d1 |) = add_frame d1 #remaining_pre (magic ()) in
         assert (comp_pre c1 == ss1.(comp_pre c10) * remaining_pre);
         assert (comp_res c1 == ss1.(comp_res c10));
         assert (None? (lookup g1 x));

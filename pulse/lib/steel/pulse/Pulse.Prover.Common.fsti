@@ -139,12 +139,6 @@ let extend_post_hint_opt_g (g:env) (post_hint:post_hint_opt g) (g1:env { g1 `env
     assert (g1 `env_extends` post_hint.g);
     Some post_hint
 
-let add_frame (#g:env) (#t:st_term) (#c:comp_st) (t_typing:st_typing g t c)
-  (frame:vprop)
-  : T.Tac (t':st_term &
-           c':comp_st { c' == add_frame c frame } &
-           st_typing g t' c') = magic ()
-
 let st_typing_subst (g:env) (uvs:env { disjoint uvs g }) (t:st_term) (c:comp_st)
   (d:st_typing (push_env g uvs) t c)
   (ss:PS.t { well_typed_ss ss uvs g })
@@ -163,7 +157,7 @@ let st_typing_weakening
   (g:env) (g':env { disjoint g g' })
   (t:st_term) (c:comp_st) (d:st_typing (push_env g g') t c)
   (g1:env { g1 `env_extends` g /\ disjoint g1 g' })
-  : T.Tac (st_typing (push_env g1 g') t c) =
+  : st_typing (push_env g1 g') t c =
 
   let g2 = diff g1 g in
   let d = st_typing_weakening g g' t c d g2 in

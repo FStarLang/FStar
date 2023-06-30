@@ -149,3 +149,12 @@ let bind_res_and_post_typing (g:env) (s2:st_comp) (x:var { fresh_wrt x g (freeva
          let pr = post_hint_typing g post x in
          pr.ty_typing, pr.post_typing
       )
+
+let add_frame (#g:env) (#t:st_term) (#c:comp_st) (t_typing:st_typing g t c)
+  (#frame:vprop)
+  (frame_typing:tot_typing g frame tm_vprop)
+  : t':st_term &
+    c':comp_st { c' == add_frame c frame } &
+    st_typing g t' c' =
+
+  (| t, add_frame c frame, T_Frame _ _ _ _ frame_typing t_typing |)
