@@ -72,7 +72,7 @@ if any of the following are true:
 
 2. **The sub-term ordering on inductive types**
 
-    If ``v₂ = D u1 ... un``, where ``D`` is a constructor of an
+    If ``v2 = D u1 ... un``, where ``D`` is a constructor of an
     inductive type fully applied to arguments ``u1`` to ``un``, then
     ``v1 << v2`` if either
 
