@@ -252,30 +252,40 @@ let continuation_elaborator_with_bind (#g:env) (ctxt:term)
 #pop-options
 
 let elim_one (#g:env)
-  (ctxt:term) (p:vprop)
-  (ctxt_p_typing:tot_typing g (tm_star ctxt p) tm_vprop)
+  (ctxt:term) (frame:vprop) (p:vprop)
+  (ctxt_frame_p_typing:tot_typing g (tm_star (tm_star ctxt frame) p) tm_vprop)
   (nx:ppname) (e1:st_term) (c1:comp { stateful_comp c1 /\ comp_pre c1 == p })
   (e1_typing:st_typing g e1 c1)
   : T.Tac (g':env { env_extends g' g } &
            ctxt':term &
-           tot_typing g' ctxt' tm_vprop &
-           continuation_elaborator g (tm_star ctxt p) g' ctxt') =
+           tot_typing g' (tm_star ctxt' frame) tm_vprop &
+           continuation_elaborator g (tm_star (tm_star ctxt frame) p) g' (tm_star ctxt' frame)) =
   
-  let ctxt_typing = star_typing_inversion_l ctxt_p_typing in
-
-  let (| x, k |) = continuation_elaborator_with_bind ctxt e1_typing ctxt_p_typing in
+  let ctxt_frame_typing = star_typing_inversion_l ctxt_frame_p_typing in
+  let (| x, k |) =
+    continuation_elaborator_with_bind (tm_star ctxt frame) e1_typing ctxt_frame_p_typing in
   let g' = push_binding g x nx (comp_res c1) in
-  let ctxt_g'_typing : tot_typing g' ctxt tm_vprop =
-    Metatheory.tot_typing_weakening x (comp_res c1) ctxt_typing in
   let ctxt' = tm_star (open_term_nv (comp_post c1) (v_as_nv x)) ctxt in
+  let veq
+    : vprop_equiv g' (tm_star (open_term_nv (comp_post c1) (v_as_nv x)) (tm_star ctxt frame))
+                     (tm_star ctxt' frame) = VE_Assoc _ _ _ _ in
   let k
     : continuation_elaborator
-        g (tm_star ctxt p)
-        g' ctxt' =
-    k in
-  let ctxt'_typing : tot_typing g' ctxt' tm_vprop = magic () in
+        g (tm_star (tm_star ctxt frame) p)
+        g' (tm_star (open_term (comp_post c1) x) (tm_star ctxt frame)) = k in
+  let k
+    : continuation_elaborator
+        g  (tm_star (tm_star ctxt frame) p)
+        g' (tm_star ctxt' frame) =
+    k_elab_equiv #g #g' #(tm_star (tm_star ctxt frame) p)
+                        #(tm_star (tm_star ctxt frame) p)
+                        #(tm_star (open_term_nv (comp_post c1) (v_as_nv x)) (tm_star ctxt frame))
+                        #(tm_star ctxt' frame)
+      k (VE_Refl g (tm_star (tm_star ctxt frame) p)) veq in
+ 
+  let ctxt'_frame_typing : tot_typing g' (tm_star ctxt' frame) tm_vprop = magic () in
   env_extends_push g x ppname_default (comp_res c1);
-  (| g', ctxt', ctxt'_typing, k |)
+  (| g', ctxt', ctxt'_frame_typing, k |)
 
 let rec elim_all (#g:env)
   (f:vprop -> T.Tac bool)
