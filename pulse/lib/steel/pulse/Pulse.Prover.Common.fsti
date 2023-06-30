@@ -68,14 +68,14 @@ type mk_t =
                  c:comp { stateful_comp c /\ comp_pre c == v } &
                  st_typing g t c))
 
-val add_elims (#g:env) (#ctxt:term)
+val add_elims (#g:env) (#ctxt:term) (#frame:term)
   (f:vprop -> T.Tac bool)
   (mk:mk_t)
-  (ctxt_typing:tot_typing g ctxt tm_vprop)
+  (ctxt_typing:tot_typing g (tm_star ctxt frame) tm_vprop)
    : T.Tac (g':env { env_extends g' g } &
             ctxt':term &
-            tot_typing g' ctxt' tm_vprop &
-            continuation_elaborator g ctxt g' ctxt')
+            tot_typing g' (tm_star ctxt' frame) tm_vprop &
+            continuation_elaborator g (tm_star ctxt frame) g' (tm_star ctxt' frame))
 
 noeq type preamble = {
   g0 : env;

@@ -170,17 +170,18 @@ let rec canon_right_aux (g:env) (vps:list vprop) (f:vprop -> T.Tac bool)
 module VP = Pulse.Checker.VPropEquiv
 module F = Pulse.Checker.Framing
 
-let canon_right (#g:env) (#ctxt:term) (ctxt_typing:tot_typing g ctxt tm_vprop)
+let canon_right (#g:env) (#ctxt:term) (#frame:term)
+  (ctxt_frame_typing:tot_typing g (tm_star ctxt frame) tm_vprop)
   (f:vprop -> T.Tac bool)
   : T.Tac (ctxt':term &
-           tot_typing g ctxt' tm_vprop &
-           continuation_elaborator g ctxt g ctxt')
+           tot_typing g (tm_star ctxt' frame) tm_vprop &
+           continuation_elaborator g (tm_star ctxt frame) g (tm_star ctxt' frame))
   = let (| vps', pures, veq |) = canon_right_aux g (vprop_as_list ctxt) f in
     let veq : vprop_equiv g ctxt (list_as_vprop' (list_as_vprop vps') pures)
       = magic () in
-    //   VE_Trans _ _ _ _ (vprop_list_equiv g ctxt) veq
-    // in
-    (| _, VP.vprop_equiv_typing_fwd ctxt_typing veq, k_elab_equiv (k_elab_unit _ _) (VE_Refl _ _) veq |)
+    let veq : vprop_equiv g (tm_star ctxt frame) (tm_star (list_as_vprop' (list_as_vprop vps') pures) frame)
+      = VE_Ctxt _ _ _ _ _ veq (VE_Refl _ _) in
+    (| _, VP.vprop_equiv_typing_fwd ctxt_frame_typing veq, k_elab_equiv (k_elab_unit _ _) (VE_Refl _ _) veq |)
 
 #push-options "--query_stats --fuel 2 --ifuel 2 --split_queries no --z3rlimit_factor 10"
 let continuation_elaborator_with_bind (#g:env) (ctxt:term)
@@ -271,16 +272,14 @@ let elim_one (#g:env)
                      (tm_star ctxt' frame) = VE_Assoc _ _ _ _ in
   let k
     : continuation_elaborator
-        g (tm_star (tm_star ctxt frame) p)
-        g' (tm_star (open_term (comp_post c1) x) (tm_star ctxt frame)) = k in
-  let k
-    : continuation_elaborator
         g  (tm_star (tm_star ctxt frame) p)
         g' (tm_star ctxt' frame) =
-    k_elab_equiv #g #g' #(tm_star (tm_star ctxt frame) p)
-                        #(tm_star (tm_star ctxt frame) p)
-                        #(tm_star (open_term_nv (comp_post c1) (v_as_nv x)) (tm_star ctxt frame))
-                        #(tm_star ctxt' frame)
+    k_elab_equiv
+      #g #g'
+      #(tm_star (tm_star ctxt frame) p)
+      #(tm_star (tm_star ctxt frame) p)
+      #(tm_star (open_term_nv (comp_post c1) (v_as_nv x)) (tm_star ctxt frame))
+      #(tm_star ctxt' frame)
       k (VE_Refl g (tm_star (tm_star ctxt frame) p)) veq in
  
   let ctxt'_frame_typing : tot_typing g' (tm_star ctxt' frame) tm_vprop = magic () in
@@ -290,53 +289,62 @@ let elim_one (#g:env)
 let rec elim_all (#g:env)
   (f:vprop -> T.Tac bool)
   (mk:mk_t)
-  (#ctxt:term) (ctxt_typing:tot_typing g ctxt tm_vprop)
+  (#ctxt:term) (#frame:term) (ctxt_frame_typing:tot_typing g (tm_star ctxt frame) tm_vprop)
    : T.Tac (bool & 
            (g':env { env_extends g' g } &
             ctxt':term &
-            tot_typing g' ctxt' tm_vprop &
-            continuation_elaborator g ctxt g' ctxt'))
+            tot_typing g' (tm_star ctxt' frame) tm_vprop &
+            continuation_elaborator g (tm_star ctxt frame) g' (tm_star ctxt' frame)))
    = match ctxt.t with
      | Tm_Star ctxt' p ->
-       let p_typing = star_typing_inversion_r #_ #ctxt' #p ctxt_typing in
+       let p_typing =
+         star_typing_inversion_r #_ #ctxt' #p (star_typing_inversion_l ctxt_frame_typing) in
        if f p
        then match mk #_ #p p_typing with
             | Some (| nx, e1, c1, e1_typing |) ->
               let (| g', _, ctxt_typing', k |) =
-                elim_one ctxt' p ctxt_typing nx e1 c1 e1_typing in
+                elim_one ctxt' frame p (magic ()) nx e1 c1 e1_typing in
+              let k
+                : continuation_elaborator g (tm_star (tm_star ctxt' frame) p)
+                                          g' (tm_star _ frame) = k in
+              let k
+                : continuation_elaborator g (tm_star (tm_star ctxt' p) frame)
+                                          g' (tm_star _ frame) =
+                k_elab_equiv k
+                  (magic ()) (VE_Refl _ _) in
               let _, (| g'', ctxt'', ctxt_typing'', k' |) =
                 elim_all #g' f mk ctxt_typing' in
               true, (| g'', ctxt'', ctxt_typing'', k_elab_trans k k' |)
             | None ->
-              false, (| g, ctxt, ctxt_typing, k_elab_unit _ _ |)
+              false, (| g, ctxt, ctxt_frame_typing, k_elab_unit _ _ |)
        else begin
-         false, (| g, ctxt, ctxt_typing, k_elab_unit _ _ |)
+         false, (| g, ctxt, ctxt_frame_typing, k_elab_unit _ _ |)
        end
      | _ ->
-       false, (| g, ctxt, ctxt_typing, k_elab_unit _ _ |)
+       false, (| g, ctxt, ctxt_frame_typing, k_elab_unit _ _ |)
 
-let add_elims_aux (#g:env) (#ctxt:term)
+let add_elims_aux (#g:env) (#ctxt:term) (#frame:term)
   (f:vprop -> T.Tac bool)
   (mk:mk_t)
-  (ctxt_typing:tot_typing g ctxt tm_vprop)
+  (ctxt_frame_typing:tot_typing g (tm_star ctxt frame) tm_vprop)
    : T.Tac (bool & 
            (g':env { env_extends g' g } &
             ctxt':term &
-            tot_typing g' ctxt' tm_vprop &
-            continuation_elaborator g ctxt g' ctxt'))
-   = let (| ctxt', ctxt'_typing, k |) = canon_right ctxt_typing f in
+            tot_typing g' (tm_star ctxt' frame) tm_vprop &
+            continuation_elaborator g (tm_star ctxt frame) g' (tm_star ctxt' frame)))
+   = let (| ctxt', ctxt'_typing, k |) = canon_right ctxt_frame_typing f in
      let progress, (| g', ctxt'', ctxt''_typing, k' |) =
          elim_all f mk ctxt'_typing in
       progress, (| g', ctxt'', ctxt''_typing, k_elab_trans k k' |)
 
-  let rec add_elims (#g:env) (#ctxt:term)
+let rec add_elims (#g:env) (#ctxt:term) (#frame:term)
                     (f:vprop -> T.Tac bool)
                     (mk:mk_t)
-                    (ctxt_typing:tot_typing g ctxt tm_vprop)
+                    (ctxt_typing:tot_typing g (tm_star ctxt frame) tm_vprop)
    : T.Tac (g':env { env_extends g' g } &
             ctxt':term &
-            tot_typing g' ctxt' tm_vprop &
-            continuation_elaborator g ctxt g' ctxt')
+            tot_typing g' (tm_star ctxt' frame) tm_vprop &
+            continuation_elaborator g (tm_star ctxt frame) g' (tm_star ctxt' frame))
    = let progress, res = add_elims_aux f mk ctxt_typing in
      if not progress
      then res
