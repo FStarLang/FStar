@@ -2,6 +2,7 @@
 
 June 30th, 2023
 
+
 ## Introduction
 
 This document describes a milestone in the work on building a verified DPE (DICE Protection 
@@ -12,15 +13,15 @@ The new contribution is organized as follows
 
 ```
 engine/
-  EngineCore.fst (* main engine logic *)
+  EngineCore.fst  (* main engine logic *)
   EngineTypes.fst (* abstraction of L0 types *)
 l0/
-  L0Core.fst (* main L0 logic *)
-  L0Crypto.fst (* L0 crypto helpers *)
-  L0Types.fst (* abstraction of L0 types *)
-  X509.fst (* abstraction of X509 API *)
+  L0Core.fst      (* main L0 logic *)
+  L0Crypto.fst    (* L0 crypto helpers *)
+  L0Types.fst     (* abstraction of L0 types *)
+  X509.fst        (* abstraction of X509 API *)
 common/
-  HACL.fst (* abstraction of HACL* API *)
+  HACL.fst        (* abstraction of HACL* API *)
 ```
 
 
@@ -41,6 +42,7 @@ and disjointness of program state by forcing the programmer to be explict about 
 in the specification and requiring that distinct pieces of owned program state are
 disjoint. 
 
+
 ## Limitations
 
 The Pulse implementation of DICE engine and DICE L0
@@ -49,6 +51,7 @@ The Pulse implementation of DICE engine and DICE L0
 - doesn't model public vs. secret data,
 - abstracts HACL*/X509/ASN1 types to basic F* types, and
 - doesn't implement HACL* and X509 primitives.
+
 
 ## Next Steps
 
