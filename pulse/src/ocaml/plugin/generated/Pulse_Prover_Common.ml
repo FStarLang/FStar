@@ -1454,31 +1454,6 @@ let (extend_post_hint_opt_g :
         | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
         | FStar_Pervasives_Native.Some post_hint1 ->
             FStar_Pervasives_Native.Some post_hint1
-let (add_frame :
-  Pulse_Typing_Env.env ->
-    Pulse_Syntax_Base.st_term ->
-      Pulse_Syntax_Base.comp_st ->
-        (unit, unit, unit) Pulse_Typing.st_typing ->
-          Pulse_Syntax_Base.vprop ->
-            ((Pulse_Syntax_Base.st_term, Pulse_Syntax_Base.comp_st,
-               (unit, unit, unit) Pulse_Typing.st_typing)
-               FStar_Pervasives.dtuple3,
-              unit) FStar_Tactics_Effect.tac_repr)
-  =
-  fun uu___4 ->
-    fun uu___3 ->
-      fun uu___2 ->
-        fun uu___1 ->
-          fun uu___ ->
-            (fun g ->
-               fun t ->
-                 fun c ->
-                   fun t_typing ->
-                     fun frame ->
-                       Obj.magic
-                         (FStar_Tactics_Effect.lift_div_tac
-                            (fun uu___ -> Prims.magic ()))) uu___4 uu___3
-              uu___2 uu___1 uu___
 let (st_typing_subst :
   Pulse_Typing_Env.env ->
     Pulse_Typing_Env.env ->
@@ -1500,13 +1475,13 @@ let (st_typing_subst :
                 (FStar_Sealed.seal
                    (Obj.magic
                       (FStar_Range.mk_range "Pulse.Prover.Common.fsti"
-                         (Prims.of_int (156)) (Prims.of_int (8))
-                         (Prims.of_int (156)) (Prims.of_int (40)))))
+                         (Prims.of_int (148)) (Prims.of_int (10))
+                         (Prims.of_int (148)) (Prims.of_int (42)))))
                 (FStar_Sealed.seal
                    (Obj.magic
                       (FStar_Range.mk_range "Pulse.Prover.Common.fsti"
-                         (Prims.of_int (157)) Prims.int_zero
-                         (Prims.of_int (162)) (Prims.of_int (11)))))
+                         (Prims.of_int (149)) (Prims.of_int (2))
+                         (Prims.of_int (154)) (Prims.of_int (13)))))
                 (Obj.magic
                    (Pulse_Prover_Substs.check_well_typedness g uvs ss))
                 (fun b ->
@@ -1526,26 +1501,18 @@ let (st_typing_weakening :
       Pulse_Syntax_Base.st_term ->
         Pulse_Syntax_Base.comp_st ->
           (unit, unit, unit) Pulse_Typing.st_typing ->
-            Pulse_Typing_Env.env ->
-              ((unit, unit, unit) Pulse_Typing.st_typing, unit)
-                FStar_Tactics_Effect.tac_repr)
+            Pulse_Typing_Env.env -> (unit, unit, unit) Pulse_Typing.st_typing)
   =
-  fun uu___5 ->
-    fun uu___4 ->
-      fun uu___3 ->
-        fun uu___2 ->
-          fun uu___1 ->
-            fun uu___ ->
-              (fun g ->
-                 fun g' ->
-                   fun t ->
-                     fun c ->
-                       fun uu___ ->
-                         fun g1 ->
-                           Obj.magic
-                             (FStar_Tactics_Effect.lift_div_tac
-                                (fun uu___1 -> Prims.magic ()))) uu___5
-                uu___4 uu___3 uu___2 uu___1 uu___
+  fun g ->
+    fun g' ->
+      fun t ->
+        fun c ->
+          fun d ->
+            fun g1 ->
+              let g2 = Pulse_Typing_Env.diff g1 g in
+              let d1 =
+                Pulse_Typing_Metatheory.st_typing_weakening g g' t c d g2 in
+              d1
 type ('ss1, 'ss2) ss_extends = unit
 type ('preamble1, 'pst1, 'pst2) pst_extends = unit
 type prover_t =
