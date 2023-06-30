@@ -128,8 +128,6 @@ val prove
            remaining_ctxt : vprop &
            continuation_elaborator g ctxt g1 (ss.(goals) * remaining_ctxt))
 
-open Pulse.Checker.Common
-
 irreducible
 let extend_post_hint_opt_g (g:env) (post_hint:post_hint_opt g) (g1:env { g1 `env_extends` g })
   : p:post_hint_opt g1 { p == post_hint } =
@@ -151,22 +149,26 @@ let st_typing_subst (g:env) (uvs:env { disjoint uvs g }) (t:st_term) (c:comp_st)
   (d:st_typing (push_env g uvs) t c)
   (ss:PS.t { well_typed_ss ss uvs g })
 
-: T.Tac (option (st_typing g (PS.subst_st_term t ss) (PS.subst_comp c ss))) =
+  : T.Tac (option (st_typing g (PS.subst_st_term t ss) (PS.subst_comp c ss))) =
 
-let b = PS.check_well_typedness g uvs ss in
-if not b then None
-else let g' = mk_env (fstar_env g) in
-     assert (equal (push_env uvs g') uvs);
-     let d = PS.st_typing_nt_substs g uvs g' d (PS.as_nt_substs ss) in
-     assume (equal (push_env g (PS.nt_subst_env g' (PS.as_nt_substs ss))) g);
-     Some d
+  let b = PS.check_well_typedness g uvs ss in
+  if not b then None
+  else let g' = mk_env (fstar_env g) in
+       assert (equal (push_env uvs g') uvs);
+       let d = PS.st_typing_nt_substs g uvs g' d (PS.as_nt_substs ss) in
+       assume (equal (push_env g (PS.nt_subst_env g' (PS.as_nt_substs ss))) g);
+       Some d
 
 let st_typing_weakening
   (g:env) (g':env { disjoint g g' })
-  (t:st_term) (c:comp_st) (_:st_typing (push_env g g') t c)
+  (t:st_term) (c:comp_st) (d:st_typing (push_env g g') t c)
   (g1:env { g1 `env_extends` g /\ disjoint g1 g' })
-  : T.Tac (st_typing (push_env g1 g') t c) = magic ()
+  : T.Tac (st_typing (push_env g1 g') t c) =
 
+  let g2 = diff g1 g in
+  let d = st_typing_weakening g g' t c d g2 in
+  assert (equal (push_env (push_env g g2) g') (push_env g1 g'));
+  d
 
 let ss_extends (ss1 ss2:PS.t) =
   Set.subset (PS.dom ss2) (PS.dom ss1) /\
