@@ -81,7 +81,8 @@ noeq type preamble = {
   g0 : env;
   
   ctxt : vprop;
-  ctxt_typing : vprop_typing g0 ctxt;
+  frame : vprop;
+  ctxt_frame_typing : vprop_typing g0 (tm_star ctxt frame);
 
   goals : vprop;
 }
@@ -99,7 +100,8 @@ let well_typed_ss (ss:PS.t) (uvs g:env) =
 noeq type prover_state (preamble:preamble) = {
   pg : g:env { g `env_extends` preamble.g0 };
 
-  remaining_ctxt : list vprop;  // we may have to add remaining_ctxt typing ...
+  remaining_ctxt : list vprop;
+  remaining_ctxt_frame_typing : vprop_typing pg (list_as_vprop remaining_ctxt * preamble.frame);
 
   uvs : uvs:env { disjoint uvs pg };
   ss : ss:PS.t { well_typed_ss ss uvs pg};
@@ -107,12 +109,12 @@ noeq type prover_state (preamble:preamble) = {
   solved : vprop;
   unsolved : list vprop;
 
-  k : continuation_elaborator preamble.g0 preamble.ctxt
-                              pg (list_as_vprop remaining_ctxt * ss.(solved));
+  solved_typing : vprop_typing pg ss.(solved);
+
+  k : continuation_elaborator preamble.g0 (preamble.ctxt * preamble.frame)
+                              pg ((list_as_vprop remaining_ctxt * preamble.frame) * ss.(solved));
 
   goals_inv : vprop_equiv (push_env pg uvs) preamble.goals (list_as_vprop unsolved * solved);
-
-  solved_inv : squash (freevars ss.(solved) `Set.subset` dom pg);
 }
 
 let is_terminal (#preamble:_) (st:prover_state preamble) =
@@ -153,6 +155,18 @@ let st_typing_weakening
   let d = st_typing_weakening g g' t c d g2 in
   assert (equal (push_env (push_env g g2) g') (push_env g1 g'));
   d
+
+let veq_weakening
+  (g:env) (g':env { disjoint g g' })
+  (#v1 #v2:vprop) (d:vprop_equiv (push_env g g') v1 v2)
+  (g1:env { g1 `env_extends` g /\ disjoint g1 g' })
+  : vprop_equiv (push_env g1 g') v1 v2 =
+
+  let g2 = diff g1 g in
+  let d = veq_weakening g g' d g2 in
+  assert (equal (push_env (push_env g g2) g') (push_env g1 g'));
+  d
+
 
 let ss_extends (ss1 ss2:PS.t) =
   Set.subset (PS.dom ss2) (PS.dom ss1) /\

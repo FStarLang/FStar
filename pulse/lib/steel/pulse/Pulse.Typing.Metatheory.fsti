@@ -83,6 +83,12 @@ let st_typing_weakening
   (g1:env { pairwise_disjoint g g1 g' })
   : st_typing (push_env (push_env g g1) g') t c = magic ()
 
+let veq_weakening
+  (g:env) (g':env { disjoint g g' })
+  (#v1 #v2:vprop) (_:vprop_equiv (push_env g g') v1 v2)
+  (g1:env { pairwise_disjoint g g1 g' })
+  : vprop_equiv (push_env (push_env g g1) g') v1 v2 = magic ()
+
 // move to Env
 let singleton_env (f:_) (x:var) (t:typ) = push_binding (mk_env f) x ppname_default t
 
