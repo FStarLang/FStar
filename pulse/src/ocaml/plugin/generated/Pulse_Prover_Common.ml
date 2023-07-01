@@ -1478,18 +1478,26 @@ type preamble =
   {
   g0: Pulse_Typing_Env.env ;
   ctxt: Pulse_Syntax_Base.vprop ;
-  ctxt_typing: unit ;
+  frame: Pulse_Syntax_Base.vprop ;
+  ctxt_frame_typing: unit ;
   goals: Pulse_Syntax_Base.vprop }
 let (__proj__Mkpreamble__item__g0 : preamble -> Pulse_Typing_Env.env) =
   fun projectee ->
-    match projectee with | { g0; ctxt; ctxt_typing; goals;_} -> g0
+    match projectee with
+    | { g0; ctxt; frame; ctxt_frame_typing; goals;_} -> g0
 let (__proj__Mkpreamble__item__ctxt : preamble -> Pulse_Syntax_Base.vprop) =
   fun projectee ->
-    match projectee with | { g0; ctxt; ctxt_typing; goals;_} -> ctxt
+    match projectee with
+    | { g0; ctxt; frame; ctxt_frame_typing; goals;_} -> ctxt
+let (__proj__Mkpreamble__item__frame : preamble -> Pulse_Syntax_Base.vprop) =
+  fun projectee ->
+    match projectee with
+    | { g0; ctxt; frame; ctxt_frame_typing; goals;_} -> frame
 
 let (__proj__Mkpreamble__item__goals : preamble -> Pulse_Syntax_Base.vprop) =
   fun projectee ->
-    match projectee with | { g0; ctxt; ctxt_typing; goals;_} -> goals
+    match projectee with
+    | { g0; ctxt; frame; ctxt_frame_typing; goals;_} -> goals
 let (op_Array_Access :
   Pulse_Prover_Substs.t -> Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)
   = fun ss -> fun t -> Pulse_Prover_Substs.subst_term t ss
@@ -1502,55 +1510,58 @@ type 'preamble1 prover_state =
   {
   pg: Pulse_Typing_Env.env ;
   remaining_ctxt: Pulse_Syntax_Base.vprop Prims.list ;
+  remaining_ctxt_frame_typing: unit ;
   uvs: Pulse_Typing_Env.env ;
   ss: Pulse_Prover_Substs.t ;
   solved: Pulse_Syntax_Base.vprop ;
   unsolved: Pulse_Syntax_Base.vprop Prims.list ;
+  solved_typing: unit ;
   k: (unit, unit, unit, unit) continuation_elaborator ;
-  goals_inv: unit ;
-  solved_inv: unit }
+  goals_inv: unit }
 let (__proj__Mkprover_state__item__pg :
   preamble -> unit prover_state -> Pulse_Typing_Env.env) =
   fun preamble1 ->
     fun projectee ->
       match projectee with
-      | { pg; remaining_ctxt; uvs; ss; solved; unsolved; k; goals_inv;
-          solved_inv;_} -> pg
+      | { pg; remaining_ctxt; remaining_ctxt_frame_typing; uvs; ss; solved;
+          unsolved; solved_typing; k; goals_inv;_} -> pg
 let (__proj__Mkprover_state__item__remaining_ctxt :
   preamble -> unit prover_state -> Pulse_Syntax_Base.vprop Prims.list) =
   fun preamble1 ->
     fun projectee ->
       match projectee with
-      | { pg; remaining_ctxt; uvs; ss; solved; unsolved; k; goals_inv;
-          solved_inv;_} -> remaining_ctxt
+      | { pg; remaining_ctxt; remaining_ctxt_frame_typing; uvs; ss; solved;
+          unsolved; solved_typing; k; goals_inv;_} -> remaining_ctxt
+
 let (__proj__Mkprover_state__item__uvs :
   preamble -> unit prover_state -> Pulse_Typing_Env.env) =
   fun preamble1 ->
     fun projectee ->
       match projectee with
-      | { pg; remaining_ctxt; uvs; ss; solved; unsolved; k; goals_inv;
-          solved_inv;_} -> uvs
+      | { pg; remaining_ctxt; remaining_ctxt_frame_typing; uvs; ss; solved;
+          unsolved; solved_typing; k; goals_inv;_} -> uvs
 let (__proj__Mkprover_state__item__ss :
   preamble -> unit prover_state -> Pulse_Prover_Substs.t) =
   fun preamble1 ->
     fun projectee ->
       match projectee with
-      | { pg; remaining_ctxt; uvs; ss; solved; unsolved; k; goals_inv;
-          solved_inv;_} -> ss
+      | { pg; remaining_ctxt; remaining_ctxt_frame_typing; uvs; ss; solved;
+          unsolved; solved_typing; k; goals_inv;_} -> ss
 let (__proj__Mkprover_state__item__solved :
   preamble -> unit prover_state -> Pulse_Syntax_Base.vprop) =
   fun preamble1 ->
     fun projectee ->
       match projectee with
-      | { pg; remaining_ctxt; uvs; ss; solved; unsolved; k; goals_inv;
-          solved_inv;_} -> solved
+      | { pg; remaining_ctxt; remaining_ctxt_frame_typing; uvs; ss; solved;
+          unsolved; solved_typing; k; goals_inv;_} -> solved
 let (__proj__Mkprover_state__item__unsolved :
   preamble -> unit prover_state -> Pulse_Syntax_Base.vprop Prims.list) =
   fun preamble1 ->
     fun projectee ->
       match projectee with
-      | { pg; remaining_ctxt; uvs; ss; solved; unsolved; k; goals_inv;
-          solved_inv;_} -> unsolved
+      | { pg; remaining_ctxt; remaining_ctxt_frame_typing; uvs; ss; solved;
+          unsolved; solved_typing; k; goals_inv;_} -> unsolved
+
 let (__proj__Mkprover_state__item__k :
   preamble ->
     unit prover_state -> (unit, unit, unit, unit) continuation_elaborator)
@@ -1558,8 +1569,8 @@ let (__proj__Mkprover_state__item__k :
   fun preamble1 ->
     fun projectee ->
       match projectee with
-      | { pg; remaining_ctxt; uvs; ss; solved; unsolved; k; goals_inv;
-          solved_inv;_} -> k
+      | { pg; remaining_ctxt; remaining_ctxt_frame_typing; uvs; ss; solved;
+          unsolved; solved_typing; k; goals_inv;_} -> k
 type ('preamble1, 'st) is_terminal = unit
 let (extend_post_hint_opt_g :
   Pulse_Typing_Env.env ->
@@ -1594,13 +1605,13 @@ let (st_typing_subst :
                 (FStar_Sealed.seal
                    (Obj.magic
                       (FStar_Range.mk_range "Pulse.Prover.Common.fsti"
-                         (Prims.of_int (138)) (Prims.of_int (10))
-                         (Prims.of_int (138)) (Prims.of_int (42)))))
+                         (Prims.of_int (140)) (Prims.of_int (10))
+                         (Prims.of_int (140)) (Prims.of_int (42)))))
                 (FStar_Sealed.seal
                    (Obj.magic
                       (FStar_Range.mk_range "Pulse.Prover.Common.fsti"
-                         (Prims.of_int (139)) (Prims.of_int (2))
-                         (Prims.of_int (144)) (Prims.of_int (13)))))
+                         (Prims.of_int (141)) (Prims.of_int (2))
+                         (Prims.of_int (146)) (Prims.of_int (13)))))
                 (Obj.magic
                    (Pulse_Prover_Substs.check_well_typedness g uvs ss))
                 (fun b ->
