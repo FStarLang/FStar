@@ -26,9 +26,6 @@ let (try_match_pq :
                              (FStar_Tactics_Effect.lift_div_tac
                                 (fun uu___ -> Prims.magic ()))) uu___5 uu___4
                 uu___3 uu___2 uu___1 uu___
-let (compose_ss :
-  Pulse_Prover_Substs.t -> Pulse_Prover_Substs.t -> Pulse_Prover_Substs.t) =
-  fun ss1 -> fun ss2 -> Prims.magic ()
 let coerce_eq : 'a 'b . 'a -> unit -> 'b =
   fun uu___1 -> fun uu___ -> (fun x -> fun uu___ -> Obj.magic x) uu___1 uu___
 let (match_step :
@@ -54,13 +51,13 @@ let (match_step :
                   (FStar_Sealed.seal
                      (Obj.magic
                         (FStar_Range.mk_range "Pulse.Prover.Match.fst"
-                           (Prims.of_int (30)) (Prims.of_int (11))
-                           (Prims.of_int (30)) (Prims.of_int (21)))))
+                           (Prims.of_int (28)) (Prims.of_int (11))
+                           (Prims.of_int (28)) (Prims.of_int (21)))))
                   (FStar_Sealed.seal
                      (Obj.magic
                         (FStar_Range.mk_range "Pulse.Prover.Match.fst"
-                           (Prims.of_int (31)) (Prims.of_int (52))
-                           (Prims.of_int (90)) (Prims.of_int (11)))))
+                           (Prims.of_int (29)) (Prims.of_int (52))
+                           (Prims.of_int (88)) (Prims.of_int (11)))))
                   (FStar_Tactics_Effect.lift_div_tac
                      (fun uu___1 ->
                         Pulse_Prover_Common.op_Array_Access
@@ -73,14 +70,14 @@ let (match_step :
                                 (Obj.magic
                                    (FStar_Range.mk_range
                                       "Pulse.Prover.Match.fst"
-                                      (Prims.of_int (33)) (Prims.of_int (11))
-                                      (Prims.of_int (33)) (Prims.of_int (69)))))
+                                      (Prims.of_int (31)) (Prims.of_int (11))
+                                      (Prims.of_int (31)) (Prims.of_int (69)))))
                              (FStar_Sealed.seal
                                 (Obj.magic
                                    (FStar_Range.mk_range
                                       "Pulse.Prover.Match.fst"
-                                      (Prims.of_int (34)) Prims.int_zero
-                                      (Prims.of_int (90)) (Prims.of_int (11)))))
+                                      (Prims.of_int (32)) Prims.int_zero
+                                      (Prims.of_int (88)) (Prims.of_int (11)))))
                              (Obj.magic
                                 (try_match_pq pst.Pulse_Prover_Common.pg
                                    pst.Pulse_Prover_Common.uvs p () q_ss ()))
@@ -103,8 +100,9 @@ let (match_step :
                                              Pulse_Prover_Common.uvs =
                                                (pst.Pulse_Prover_Common.uvs);
                                              Pulse_Prover_Common.ss =
-                                               (compose_ss ss_q
-                                                  pst.Pulse_Prover_Common.ss);
+                                               (Pulse_Prover_Substs.push
+                                                  pst.Pulse_Prover_Common.ss
+                                                  ss_q);
                                              Pulse_Prover_Common.solved =
                                                (Pulse_Prover_Common.op_Star q
                                                   pst.Pulse_Prover_Common.solved);
@@ -130,8 +128,9 @@ let (match_step :
                                                               remaining_ctxt'))
                                                            preamble.Pulse_Prover_Common.frame)
                                                         (Pulse_Prover_Common.op_Array_Access
-                                                           (compose_ss ss_q
-                                                              pst.Pulse_Prover_Common.ss)
+                                                           (Pulse_Prover_Substs.push
+                                                              pst.Pulse_Prover_Common.ss
+                                                              ss_q)
                                                            pst.Pulse_Prover_Common.solved))
                                                      (Pulse_Prover_Common.op_Star
                                                         (Pulse_Prover_Common.op_Star
@@ -140,14 +139,13 @@ let (match_step :
                                                            preamble.Pulse_Prover_Common.frame)
                                                         (Pulse_Prover_Common.op_Star
                                                            (Pulse_Prover_Common.op_Array_Access
-                                                              (compose_ss
-                                                                 ss_q
-                                                                 pst.Pulse_Prover_Common.ss)
-                                                              q)
+                                                              (Pulse_Prover_Substs.push
+                                                                 pst.Pulse_Prover_Common.ss
+                                                                 ss_q) q)
                                                            (Pulse_Prover_Common.op_Array_Access
-                                                              (compose_ss
-                                                                 ss_q
-                                                                 pst.Pulse_Prover_Common.ss)
+                                                              (Pulse_Prover_Substs.push
+                                                                 pst.Pulse_Prover_Common.ss
+                                                                 ss_q)
                                                               pst.Pulse_Prover_Common.solved)))
                                                      (coerce_eq
                                                         pst.Pulse_Prover_Common.k

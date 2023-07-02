@@ -154,12 +154,12 @@ let (elim_exists_pst :
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "Pulse.Prover.ElimExists.fst"
-                 (Prims.of_int (60)) (Prims.of_int (4)) (Prims.of_int (65))
+                 (Prims.of_int (61)) (Prims.of_int (4)) (Prims.of_int (66))
                  (Prims.of_int (13)))))
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "Pulse.Prover.ElimExists.fst"
-                 (Prims.of_int (57)) (Prims.of_int (67)) (Prims.of_int (96))
+                 (Prims.of_int (58)) (Prims.of_int (74)) (Prims.of_int (97))
                  (Prims.of_int (3)))))
         (Obj.magic
            (elim_exists_frame pst.Pulse_Prover_Common.pg
