@@ -132,7 +132,7 @@ let (elim_pure :
              (Obj.magic
                 (FStar_Range.mk_range "Pulse.Prover.ElimPure.fst"
                    (Prims.of_int (92)) (Prims.of_int (81))
-                   (Prims.of_int (96)) (Prims.of_int (62)))))
+                   (Prims.of_int (97)) (Prims.of_int (62)))))
           (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> ()))
           (fun uu___ ->
              (fun ctxt_emp_typing ->
@@ -141,16 +141,18 @@ let (elim_pure :
                      (FStar_Sealed.seal
                         (Obj.magic
                            (FStar_Range.mk_range "Pulse.Prover.ElimPure.fst"
-                              (Prims.of_int (93)) (Prims.of_int (45))
-                              (Prims.of_int (93)) (Prims.of_int (86)))))
+                              (Prims.of_int (94)) (Prims.of_int (4))
+                              (Prims.of_int (94)) (Prims.of_int (68)))))
                      (FStar_Sealed.seal
                         (Obj.magic
                            (FStar_Range.mk_range "Pulse.Prover.ElimPure.fst"
                               (Prims.of_int (92)) (Prims.of_int (81))
-                              (Prims.of_int (96)) (Prims.of_int (62)))))
+                              (Prims.of_int (97)) (Prims.of_int (62)))))
                      (Obj.magic
                         (Pulse_Prover_Common.add_elims g ctxt
-                           Pulse_Syntax_Base.tm_emp is_elim_pure mk ()))
+                           Pulse_Syntax_Base.tm_emp is_elim_pure mk ()
+                           (Pulse_Typing_Env.mk_env
+                              (Pulse_Typing_Env.fstar_env g))))
                      (fun uu___ ->
                         FStar_Tactics_Effect.lift_div_tac
                           (fun uu___1 ->
