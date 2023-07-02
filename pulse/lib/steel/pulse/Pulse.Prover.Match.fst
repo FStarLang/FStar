@@ -16,8 +16,6 @@ let try_match_pq (g:env) (uvs:env { disjoint uvs g})
                              PS.dom ss `Set.subset` freevars q } &
                    vprop_equiv g p ss.(q))) = magic ()
 
-let compose_ss (ss1 ss2:PS.t) : PS.t = magic ()
-
 let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y == x} = x
 
 let match_step (#preamble:preamble) (pst:prover_state preamble)
@@ -37,7 +35,7 @@ match ropt with
   assert (PS.dom ss_q `Set.disjoint` PS.dom pst.ss);
   assert (well_typed_ss ss_q pst.uvs pst.pg);
   
-  let ss_new = compose_ss ss_q pst.ss in
+  let ss_new = PS.push pst.ss ss_q in
   assume (well_typed_ss ss_new pst.uvs pst.pg);
 
   let veq : vprop_equiv pst.pg p (ss_q.(pst.ss.(q))) = veq in
