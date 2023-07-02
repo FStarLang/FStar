@@ -43,8 +43,8 @@ val continuation_elaborator_with_bind (#g:env) (ctxt:term)
   (#e1:st_term)
   (e1_typing:st_typing g e1 c1)
   (ctxt_pre1_typing:tot_typing g (tm_star ctxt (comp_pre c1)) tm_vprop)
-  : T.Tac (x:var { None? (lookup g x) } &
-           continuation_elaborator
+  (x:var { None? (lookup g x) })
+  : T.Tac (continuation_elaborator
              g                                (tm_star ctxt (comp_pre c1))
              (push_binding g x ppname_default (comp_res c1)) (tm_star (open_term (comp_post c1) x) ctxt))
 
@@ -72,7 +72,8 @@ val add_elims (#g:env) (#ctxt:term) (#frame:term)
   (f:vprop -> T.Tac bool)
   (mk:mk_t)
   (ctxt_typing:tot_typing g (tm_star ctxt frame) tm_vprop)
-   : T.Tac (g':env { env_extends g' g } &
+  (uvs:env { disjoint uvs g })
+   : T.Tac (g':env { env_extends g' g /\ disjoint uvs g' } &
             ctxt':term &
             tot_typing g' (tm_star ctxt' frame) tm_vprop &
             continuation_elaborator g (tm_star ctxt frame) g' (tm_star ctxt' frame))
