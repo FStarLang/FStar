@@ -54,7 +54,8 @@ let elim_exists (#g:env) (#ctxt:term)
   (| g', ctxt', star_typing_inversion_l ctxt'_emp_typing, k |)
 
 let elim_exists_pst (#preamble:_) (pst:prover_state preamble)
-  : T.Tac (pst':prover_state preamble { pst' `pst_extends` pst }) =
+  : T.Tac (pst':prover_state preamble { pst' `pst_extends` pst /\
+                                        pst'.unsolved == pst.unsolved }) =
 
   let (| g', remaining_ctxt', ty, k |) =
     elim_exists_frame

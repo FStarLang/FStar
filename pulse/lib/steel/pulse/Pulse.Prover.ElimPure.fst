@@ -110,7 +110,8 @@ let elim_pure (#g:env) (#ctxt:term) (ctxt_typing:tot_typing g ctxt tm_vprop)
 // a lot of this is copy-pasted from elim_exists_pst,
 //   can add a common function to Prover.Common
 let elim_pure_pst (#preamble:_) (pst:prover_state preamble)
-  : T.Tac (pst':prover_state preamble { pst' `pst_extends` pst }) =
+  : T.Tac (pst':prover_state preamble { pst' `pst_extends` pst /\
+                                        pst'.unsolved == pst.unsolved }) =
 
   let (| g', remaining_ctxt', ty, k |) =
     elim_pure_frame

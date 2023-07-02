@@ -8,7 +8,7 @@ open Pulse.Checker.Common
 open Pulse.Typing.Metatheory
 open Pulse.Checker.VPropEquiv
 
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 
 module PS = Pulse.Prover.Substs
 
