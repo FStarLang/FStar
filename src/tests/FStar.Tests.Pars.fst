@@ -210,19 +210,19 @@ let parse_incremental_decls () =
   let open FStar.Parser.ParseIt in
   let input = Incremental { frag_fname = "Demo.fst";
                             frag_text = source;
-                            frag_line = 0;
+                            frag_line = 1;
                             frag_col = 0 } in
   let open FStar.Compiler.Range in
   match parse input with
   | IncrementalFragment (decls, _, parse_err) -> (
       let _ = match parse_err with
       | None -> 
-        failwith "Incremental parsing failed: Expected syntax error at (7,6), got no error"
+        failwith "Incremental parsing failed: Expected syntax error at (8, 6), got no error"
       | Some (_, _, rng) ->
         let p = start_of_range rng in
-        if line_of_pos p = 7 && col_of_pos p = 6
+        if line_of_pos p = 8 && col_of_pos p = 6
         then ()
-        else failwith (format2 "Incremental parsing failed: Expected syntax error at (7,6), got error at (%s, %s)"
+        else failwith (format2 "Incremental parsing failed: Expected syntax error at (8, 6), got error at (%s, %s)"
                                (string_of_int (line_of_pos p))
                                (string_of_int (col_of_pos p)))
       in

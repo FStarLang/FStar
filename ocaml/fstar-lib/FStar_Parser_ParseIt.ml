@@ -267,6 +267,11 @@ let parse fn =
             current_pos lexbuf
           in
           let raw_contents = contents_at d.drange in
+          if FStar_Options.debug_any()
+          then 
+            FStar_Compiler_Util.print2 "At range %s, got code\n%s\n"
+              (FStar_Compiler_Range.string_of_range raw_contents.range)
+              (raw_contents.code);
           parse ((d, raw_contents)::decls)
         | Inr err -> List.rev decls, Some err
       in

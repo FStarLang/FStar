@@ -52,8 +52,11 @@ let none_to_empty_list x =
   | None -> []
   | Some l -> l
 
-let parse_extension_blob (extension_name:string) (s:string) r : FStar_Parser_AST.decl' =
-    DeclSyntaxExtension (extension_name, s, r)
+let parse_extension_blob (extension_name:string)
+                         (s:string)
+                         (blob_range:range)
+                         (extension_syntax_start:range) : FStar_Parser_AST.decl' =
+    DeclSyntaxExtension (extension_name, s, blob_range, extension_syntax_start)
 %}
 
 %token <string> STRING
@@ -344,8 +347,13 @@ rawDecl:
       { Polymonadic_subcomp c }
   | blob=BLOB
       {
-        let ext_name, contents, pos, _ = blob in
-        parse_extension_blob ext_name contents (rr (pos, pos))
+        let ext_name, contents, pos, snap = blob in
+        (* blob_range is the full range of the blob, including the enclosing ``` *)
+        let blob_range = rr (snd snap, snd $loc) in
+        (* extension_syntax_start_range is where the extension syntax starts not incluing
+           the "```ident" prefix *)
+        let extension_syntax_start_range = (rr (pos, pos)) in
+        parse_extension_blob ext_name contents blob_range extension_syntax_start_range
       }
 
 

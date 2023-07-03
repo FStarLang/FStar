@@ -810,7 +810,7 @@ type decl' =
   | Assume of (FStar_Ident.ident * term) 
   | Splice of (Prims.bool * FStar_Ident.ident Prims.list * term) 
   | DeclSyntaxExtension of (Prims.string * Prims.string *
-  FStar_Compiler_Range_Type.range) 
+  FStar_Compiler_Range_Type.range * FStar_Compiler_Range_Type.range) 
 and decl =
   {
   d: decl' ;
@@ -909,8 +909,10 @@ let (uu___is_DeclSyntaxExtension : decl' -> Prims.bool) =
   fun projectee ->
     match projectee with | DeclSyntaxExtension _0 -> true | uu___ -> false
 let (__proj__DeclSyntaxExtension__item___0 :
-  decl' -> (Prims.string * Prims.string * FStar_Compiler_Range_Type.range)) =
-  fun projectee -> match projectee with | DeclSyntaxExtension _0 -> _0
+  decl' ->
+    (Prims.string * Prims.string * FStar_Compiler_Range_Type.range *
+      FStar_Compiler_Range_Type.range))
+  = fun projectee -> match projectee with | DeclSyntaxExtension _0 -> _0
 let (__proj__Mkdecl__item__d : decl -> decl') =
   fun projectee -> match projectee with | { d; drange; quals; attrs;_} -> d
 let (__proj__Mkdecl__item__drange : decl -> FStar_Compiler_Range_Type.range)
@@ -1008,7 +1010,11 @@ let (mk_decl :
                match uu___ with
                | Qualifier q -> FStar_Pervasives_Native.Some q
                | uu___1 -> FStar_Pervasives_Native.None) decorations in
-        { d; drange = r; quals = qualifiers1; attrs = attributes_2 }
+        let range =
+          match d with
+          | DeclSyntaxExtension (uu___, uu___1, r1, uu___2) -> r1
+          | uu___ -> r in
+        { d; drange = range; quals = qualifiers1; attrs = attributes_2 }
 let (mk_binder_with_attrs :
   binder' ->
     FStar_Compiler_Range_Type.range ->
@@ -2439,7 +2445,7 @@ let (decl_to_string : decl -> Prims.string) =
     | SubEffect uu___ -> "sub_effect"
     | Pragma p ->
         let uu___ = string_of_pragma p in Prims.op_Hat "pragma #" uu___
-    | DeclSyntaxExtension (id, content, uu___) ->
+    | DeclSyntaxExtension (id, content, uu___, uu___1) ->
         Prims.op_Hat "```"
           (Prims.op_Hat id (Prims.op_Hat "\n" (Prims.op_Hat content "\n```")))
 let (modul_to_string : modul -> Prims.string) =

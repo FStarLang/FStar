@@ -44,7 +44,14 @@ let mk_decl d r decorations =
   ) in
   let attributes_ = Util.dflt [] attributes_ in
   let qualifiers = List.choose (function Qualifier q -> Some q | _ -> None) decorations in
-  { d=d; drange=r; quals=qualifiers; attrs=attributes_ }
+  (* for syntax extensions, take the range stored there rather than the callers
+     range, which may be inaccurate *)
+  let range = 
+    match d with
+    | DeclSyntaxExtension(_, _, r, _) -> r
+    | _ -> r
+  in
+  { d=d; drange=range; quals=qualifiers; attrs=attributes_ }
 
 let mk_binder_with_attrs b r l i attrs = {b=b; brange=r; blevel=l; aqual=i; battributes=attrs}
 let mk_binder b r l i = mk_binder_with_attrs b r l i []
@@ -736,7 +743,7 @@ let decl_to_string (d:decl) = match d.d with
              ^ (String.concat ";" <| List.map (fun i -> (string_of_id i)) ids) ^ "] (" ^ term_to_string t ^ ")"
   | SubEffect _ -> "sub_effect"
   | Pragma p -> "pragma #" ^ string_of_pragma p
-  | DeclSyntaxExtension (id, content, _) -> 
+  | DeclSyntaxExtension (id, content, _, _) -> 
     "```" ^ id ^ "\n" ^ content ^ "\n```"
 
 let modul_to_string (m:modul) = match m with

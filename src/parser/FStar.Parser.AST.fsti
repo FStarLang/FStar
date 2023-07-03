@@ -235,7 +235,9 @@ type decl' =
   | Pragma of pragma
   | Assume of ident * term
   | Splice of bool * list ident * term  (* bool is true for a typed splice *)
-  | DeclSyntaxExtension of string * string * range
+  (* The first range is the entire range of the blob.
+     The second range is the start point of the extension syntax itself *)
+  | DeclSyntaxExtension of string * string * range * range
 
 and decl = {
   d:decl';
