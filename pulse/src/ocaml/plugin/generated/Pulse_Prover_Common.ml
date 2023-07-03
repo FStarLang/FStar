@@ -1668,7 +1668,7 @@ let (st_typing_weakening :
   Pulse_Typing_Env.env ->
     Pulse_Typing_Env.env ->
       Pulse_Syntax_Base.st_term ->
-        Pulse_Syntax_Base.comp_st ->
+        Pulse_Syntax_Base.comp ->
           (unit, unit, unit) Pulse_Typing.st_typing ->
             Pulse_Typing_Env.env -> (unit, unit, unit) Pulse_Typing.st_typing)
   =
