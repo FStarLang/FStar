@@ -1,6 +1,6 @@
 module Pulse.Syntax.Printer
 open FStar.Printf
-open Pulse.Syntax
+open Pulse.Syntax.Base
 module T = FStar.Tactics.V2
 module Un = FStar.Sealed
 module R = FStar.Reflection.V2

@@ -184,16 +184,10 @@ let check
       match hint_type with
       | ASSERT ->
         let assert_term = tm_fstar (`(Pulse.Steel.Wrapper.assert_)) st.range in
-        let vprops_to_assert = Pulse.Checker.VPropEquiv.vprop_as_list (Inf.apply_solution solution lhs) in
-        let tm =
-          L.fold_right 
-            (fun vp out -> 
-              let asrt = { term = Tm_STApp { head=assert_term; arg_qual=None; arg=vp}; 
-                          range = st.range } in
-              seq asrt out)
-            vprops_to_assert
-            (subst_st_term body sub)
-        in
+        let vprop_to_assert = Inf.apply_solution solution lhs in
+        let asrt = { term = Tm_STApp { head=assert_term; arg_qual=None; arg=vprop_to_assert}; 
+                     range = st.range } in
+        let tm = seq asrt (subst_st_term body sub) in
         debug_log g (fun _ -> Printf.sprintf "After with_binders: about to check %s\n" (P.st_term_to_string tm));
         check g tm pre pre_typing post_hint
       | UNFOLD _

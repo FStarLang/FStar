@@ -1,5 +1,5 @@
 module Pulse.Syntax.Printer
-open Pulse.Syntax
+open Pulse.Syntax.Base
 module R = FStar.Reflection.V2
 module T = FStar.Tactics.V2
 

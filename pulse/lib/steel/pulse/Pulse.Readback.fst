@@ -3,6 +3,9 @@ module R = FStar.Reflection.V2
 open Pulse.Syntax.Base
 open Pulse.Reflection.Util
 module RU = Pulse.RuntimeUtils
+module T = FStar.Tactics
+module P = Pulse.Syntax.Printer
+let debug_log (f: unit -> T.Tac unit) : T.Tac unit = if RU.debug_at_level_no_module "readback" then f()
 
 let (let?) (f:option 'a) (g:'a -> option 'b) : option 'b =
   match f with
@@ -212,7 +215,9 @@ let readback_comp (t:R.term)
 
   let ropt = try_readback_st_comp t readback_ty in
   match ropt with
-  | Some _ -> ropt
+  | Some c ->
+    // debug_log (fun _ -> T.print (Printf.sprintf "readback_comp: %s as\n%s\n" (T.term_to_string t) (P.comp_to_string c)));
+    ropt
   | _ ->
     let? t' = readback_ty t in
     Some (C_Tot t' <: c:comp{ elab_comp c == t })
