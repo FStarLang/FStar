@@ -2439,6 +2439,9 @@ let (decl_to_string : decl -> Prims.string) =
     | SubEffect uu___ -> "sub_effect"
     | Pragma p ->
         let uu___ = string_of_pragma p in Prims.op_Hat "pragma #" uu___
+    | DeclSyntaxExtension (id, content, uu___) ->
+        Prims.op_Hat "```"
+          (Prims.op_Hat id (Prims.op_Hat "\n" (Prims.op_Hat content "\n```")))
 let (modul_to_string : modul -> Prims.string) =
   fun m ->
     match m with

@@ -635,7 +635,7 @@ let (test_hashes : unit -> unit) =
 let (parse_incremental_decls : unit -> unit) =
   fun uu___ ->
     let source =
-      "module Demo\nlet f x = match x with | Some x -> true | None -> false\nlet test y = if Some? y then f y else true\nlet some junk )(" in
+      "module Demo\nlet f x = match x with | Some x -> true | None -> false\nlet test y = if Some? y then f y else true\n```pulse\nfn f() {}\n```\nlet something = more\nlet >< junk" in
     let input =
       FStar_Parser_ParseIt.Incremental
         {
@@ -650,14 +650,14 @@ let (parse_incremental_decls : unit -> unit) =
         ((match parse_err with
           | FStar_Pervasives_Native.None ->
               failwith
-                "Incremental parsing failed: Expected syntax error at (3,15), got no error"
+                "Incremental parsing failed: Expected syntax error at (7,6), got no error"
           | FStar_Pervasives_Native.Some (uu___4, uu___5, rng) ->
               let p = FStar_Compiler_Range_Ops.start_of_range rng in
               let uu___6 =
                 (let uu___7 = FStar_Compiler_Range_Ops.line_of_pos p in
-                 uu___7 = (Prims.of_int (3))) &&
+                 uu___7 = (Prims.of_int (7))) &&
                   (let uu___7 = FStar_Compiler_Range_Ops.col_of_pos p in
-                   uu___7 = (Prims.of_int (15))) in
+                   uu___7 = (Prims.of_int (6))) in
               if uu___6
               then ()
               else
@@ -669,18 +669,18 @@ let (parse_incremental_decls : unit -> unit) =
                      let uu___11 = FStar_Compiler_Range_Ops.col_of_pos p in
                      FStar_Compiler_Util.string_of_int uu___11 in
                    FStar_Compiler_Util.format2
-                     "Incremental parsing failed: Expected syntax error at (3,15), got error at (%s, %s)"
+                     "Incremental parsing failed: Expected syntax error at (7,6), got error at (%s, %s)"
                      uu___9 uu___10 in
                  failwith uu___8));
          (match decls with
-          | d0::d1::d2::[] -> ()
+          | d0::d1::d2::d3::d4::[] -> ()
           | uu___4 ->
               let uu___5 =
                 let uu___6 =
                   FStar_Compiler_Util.string_of_int
                     (FStar_Compiler_List.length decls) in
                 FStar_Compiler_Util.format1
-                  "Incremental parsing failed; expected 3 decls got %s\n"
+                  "Incremental parsing failed; expected 5 decls got %s\n"
                   uu___6 in
               failwith uu___5))
     | FStar_Parser_ParseIt.ParseError (code, message, range) ->

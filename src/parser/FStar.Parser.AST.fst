@@ -736,6 +736,8 @@ let decl_to_string (d:decl) = match d.d with
              ^ (String.concat ";" <| List.map (fun i -> (string_of_id i)) ids) ^ "] (" ^ term_to_string t ^ ")"
   | SubEffect _ -> "sub_effect"
   | Pragma p -> "pragma #" ^ string_of_pragma p
+  | DeclSyntaxExtension (id, content, _) -> 
+    "```" ^ id ^ "\n" ^ content ^ "\n```"
 
 let modul_to_string (m:modul) = match m with
     | Module (_, decls)

@@ -72,6 +72,13 @@ let backtrack b =
   b.cur_p <- b.mark_p;
   b.mark_val
 
+type snap = int * pos
+
+let snapshot b = b.start, b.start_p
+let restore_snapshot b (cur, cur_p) =
+  b.cur <- cur;
+  b.cur_p <- cur_p
+
 let next b =
   if b.cur = b.len then None
   else
