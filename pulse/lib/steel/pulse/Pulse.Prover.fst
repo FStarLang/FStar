@@ -122,7 +122,43 @@ let prove
            remaining_ctxt : vprop &
            continuation_elaborator g ctxt g1 (ss.(goals) * remaining_ctxt)) =
   
-  admit ()
+  let ctxt_frame_typing : vprop_typing g (ctxt * tm_emp) = magic () in
+  let preamble = {
+    g0 = g;
+    ctxt;
+    frame = tm_emp;
+    ctxt_frame_typing;
+    goals;
+  } in
+  assume (list_as_vprop (vprop_as_list ctxt) == ctxt);
+  assume (well_typed_ss PS.empty (mk_env (fstar_env g)) g);
+  let pst : prover_state preamble = {
+    pg = g;
+    remaining_ctxt = vprop_as_list ctxt;
+    remaining_ctxt_frame_typing = ctxt_frame_typing;
+    uvs = mk_env (fstar_env g);
+    ss = PS.empty;
+    solved = tm_emp;
+    unsolved = vprop_as_list goals;
+    solved_typing = magic ();
+    k = k_elab_equiv (k_elab_unit g ctxt) (magic ()) (magic ());
+    goals_inv = magic ();
+  } in
+  let pst = prover pst in
+  let b = PS.check_well_typedness pst.pg pst.uvs pst.ss in
+  if not b then fail pst.pg None "prove: ss not well-typed";
+  let k
+    : continuation_elaborator
+        g (ctxt * tm_emp)
+        pst.pg ((list_as_vprop pst.remaining_ctxt * tm_emp) * pst.ss.(pst.solved)) = pst.k in
+  let goals_inv
+    : vprop_equiv (push_env pst.pg pst.uvs) goals (list_as_vprop [] * pst.solved) = pst.goals_inv in
+  let goals_inv
+    : vprop_equiv pst.pg pst.ss.(goals) pst.ss.(list_as_vprop [] * pst.solved) =
+    PS.vprop_equiv_nt_substs_derived pst.pg pst.uvs goals_inv (PS.as_nt_substs pst.ss) in
+  assume (well_typed_ss pst.ss uvs pst.pg);  // hmmmm
+  assume (disjoint pst.pg uvs);
+  (| pst.pg, pst.ss, list_as_vprop pst.remaining_ctxt, k_elab_equiv k (magic ()) (magic ()) |)
 
 
 // let vprop_as_list_of_list_as_vprop (l:list vprop)
