@@ -77,4 +77,61 @@ let (elim_exists :
   fun g ->
     fun ctxt ->
       fun ctxt_typing ->
-        Pulse_Prover_Common.add_elims g ctxt should_elim_exists mk ()
+        FStar_Tactics_Effect.tac_bind
+          (FStar_Sealed.seal
+             (Obj.magic
+                (FStar_Range.mk_range "Pulse.Prover.ElimExists.fst"
+                   (Prims.of_int (39)) (Prims.of_int (70))
+                   (Prims.of_int (39)) (Prims.of_int (78)))))
+          (FStar_Sealed.seal
+             (Obj.magic
+                (FStar_Range.mk_range "Pulse.Prover.ElimExists.fst"
+                   (Prims.of_int (39)) (Prims.of_int (81))
+                   (Prims.of_int (43)) (Prims.of_int (62)))))
+          (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> ()))
+          (fun uu___ ->
+             (fun ctxt_emp_typing ->
+                Obj.magic
+                  (FStar_Tactics_Effect.tac_bind
+                     (FStar_Sealed.seal
+                        (Obj.magic
+                           (FStar_Range.mk_range
+                              "Pulse.Prover.ElimExists.fst"
+                              (Prims.of_int (40)) (Prims.of_int (45))
+                              (Prims.of_int (40)) (Prims.of_int (92)))))
+                     (FStar_Sealed.seal
+                        (Obj.magic
+                           (FStar_Range.mk_range
+                              "Pulse.Prover.ElimExists.fst"
+                              (Prims.of_int (39)) (Prims.of_int (81))
+                              (Prims.of_int (43)) (Prims.of_int (62)))))
+                     (Obj.magic
+                        (Pulse_Prover_Common.add_elims g ctxt
+                           Pulse_Syntax_Base.tm_emp should_elim_exists mk ()))
+                     (fun uu___ ->
+                        FStar_Tactics_Effect.lift_div_tac
+                          (fun uu___1 ->
+                             match uu___ with
+                             | FStar_Pervasives.Mkdtuple4
+                                 (g', ctxt', ctxt'_emp_typing, k) ->
+                                 FStar_Pervasives.Mkdtuple4
+                                   (g', ctxt', (),
+                                     (Pulse_Prover_Common.k_elab_equiv g g'
+                                        (Pulse_Syntax_Base.tm_star ctxt
+                                           Pulse_Syntax_Base.tm_emp) ctxt
+                                        (Pulse_Syntax_Base.tm_star ctxt'
+                                           Pulse_Syntax_Base.tm_emp) ctxt' k
+                                        () ())))))) uu___)
+let (elim_exists_pst :
+  Pulse_Prover_Common.preamble ->
+    unit Pulse_Prover_Common.prover_state ->
+      (unit Pulse_Prover_Common.prover_state, unit)
+        FStar_Tactics_Effect.tac_repr)
+  =
+  fun uu___1 ->
+    fun uu___ ->
+      (fun preamble ->
+         fun pst ->
+           Obj.magic
+             (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> Prims.admit ())))
+        uu___1 uu___

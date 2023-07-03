@@ -1099,3 +1099,23 @@ let (bind_res_and_post_typing :
                                  (FStar_Tactics_Effect.lift_div_tac
                                     (fun uu___1 -> ((), ())))))) uu___3
             uu___2 uu___1 uu___
+let (add_frame :
+  Pulse_Typing_Env.env ->
+    Pulse_Syntax_Base.st_term ->
+      Pulse_Syntax_Base.comp_st ->
+        (unit, unit, unit) Pulse_Typing.st_typing ->
+          Pulse_Syntax_Base.vprop ->
+            unit ->
+              (Pulse_Syntax_Base.st_term, Pulse_Syntax_Base.comp_st,
+                (unit, unit, unit) Pulse_Typing.st_typing)
+                FStar_Pervasives.dtuple3)
+  =
+  fun g ->
+    fun t ->
+      fun c ->
+        fun t_typing ->
+          fun frame ->
+            fun frame_typing ->
+              FStar_Pervasives.Mkdtuple3
+                (t, (Pulse_Typing.add_frame c frame),
+                  (Pulse_Typing.T_Frame (g, t, c, frame, (), t_typing)))

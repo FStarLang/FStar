@@ -122,4 +122,46 @@ let (elim_pure :
   fun g ->
     fun ctxt ->
       fun ctxt_typing ->
-        Pulse_Prover_Common.add_elims g ctxt is_elim_pure mk ()
+        FStar_Tactics_Effect.tac_bind
+          (FStar_Sealed.seal
+             (Obj.magic
+                (FStar_Range.mk_range "Pulse.Prover.ElimPure.fst"
+                   (Prims.of_int (92)) (Prims.of_int (70))
+                   (Prims.of_int (92)) (Prims.of_int (78)))))
+          (FStar_Sealed.seal
+             (Obj.magic
+                (FStar_Range.mk_range "Pulse.Prover.ElimPure.fst"
+                   (Prims.of_int (92)) (Prims.of_int (81))
+                   (Prims.of_int (96)) (Prims.of_int (62)))))
+          (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> ()))
+          (fun uu___ ->
+             (fun ctxt_emp_typing ->
+                Obj.magic
+                  (FStar_Tactics_Effect.tac_bind
+                     (FStar_Sealed.seal
+                        (Obj.magic
+                           (FStar_Range.mk_range "Pulse.Prover.ElimPure.fst"
+                              (Prims.of_int (93)) (Prims.of_int (45))
+                              (Prims.of_int (93)) (Prims.of_int (86)))))
+                     (FStar_Sealed.seal
+                        (Obj.magic
+                           (FStar_Range.mk_range "Pulse.Prover.ElimPure.fst"
+                              (Prims.of_int (92)) (Prims.of_int (81))
+                              (Prims.of_int (96)) (Prims.of_int (62)))))
+                     (Obj.magic
+                        (Pulse_Prover_Common.add_elims g ctxt
+                           Pulse_Syntax_Base.tm_emp is_elim_pure mk ()))
+                     (fun uu___ ->
+                        FStar_Tactics_Effect.lift_div_tac
+                          (fun uu___1 ->
+                             match uu___ with
+                             | FStar_Pervasives.Mkdtuple4
+                                 (g', ctxt', ctxt'_emp_typing, k) ->
+                                 FStar_Pervasives.Mkdtuple4
+                                   (g', ctxt', (),
+                                     (Pulse_Prover_Common.k_elab_equiv g g'
+                                        (Pulse_Syntax_Base.tm_star ctxt
+                                           Pulse_Syntax_Base.tm_emp) ctxt
+                                        (Pulse_Syntax_Base.tm_star ctxt'
+                                           Pulse_Syntax_Base.tm_emp) ctxt' k
+                                        () ())))))) uu___)

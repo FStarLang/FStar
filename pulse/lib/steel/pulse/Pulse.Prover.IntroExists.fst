@@ -9,12 +9,15 @@ open Pulse.Prover.Common
 module T = FStar.Tactics.V2
 module PS = Pulse.Prover.Substs
 
+let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y == x} = x
+
 // there will be some side conditions related to the typings
 let k_intro_exists (g:env) (u:universe) (b:binder) (p:vprop) (e:term)
   (frame:vprop)
   : T.Tac (continuation_elaborator g (frame * subst_term p [ DT 0 e ])
                                    g (frame * tm_exists_sl u b p)) = magic ()
 
+#push-options "--z3rlimit_factor 4 --ifuel 1 --fuel 1"
 let intro_exists (#preamble:_) (pst:prover_state preamble)
   (u:universe) (b:binder) (body:vprop)
   (unsolved':list vprop)
@@ -27,172 +30,272 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
   let px = b.binder_ppname, x in
   let preamble_sub = {
     g0 = pst.pg;
-    ctxt = (list_as_vprop pst.remaining_ctxt) * pst.ss.(pst.solved);
-    ctxt_typing = magic ();
-    goals = pst.solved * open_term_nv body px * (list_as_vprop unsolved'); 
+    ctxt = list_as_vprop pst.remaining_ctxt;
+    frame = preamble.frame * pst.ss.(pst.solved);
+    ctxt_frame_typing = magic ();
+    goals = open_term_nv body px * (list_as_vprop unsolved'); 
   } in
-  assume (pst.ss.(tm_emp) == tm_emp);
+  let k_sub:
+    continuation_elaborator
+      preamble_sub.g0 (preamble_sub.ctxt * preamble_sub.frame)
+      pst.pg ((list_as_vprop (vprop_as_list preamble_sub.ctxt) * preamble_sub.frame) * pst.ss.(tm_emp)) =
+    let k = k_elab_unit preamble_sub.g0 (preamble_sub.ctxt * preamble_sub.frame) in
+    let k = k_elab_equiv k
+      (VE_Refl _ _)
+      (magic () <:
+         vprop_equiv
+           preamble_sub.g0
+           (preamble_sub.ctxt * preamble_sub.frame)
+           ((list_as_vprop (vprop_as_list preamble_sub.ctxt) * preamble_sub.frame) * pst.ss.(tm_emp))) in
+    coerce_eq k ()
+  in
   let pst_sub : prover_state preamble_sub = {
     pg = pst.pg;
     remaining_ctxt = vprop_as_list preamble_sub.ctxt;
+    remaining_ctxt_frame_typing = magic ();
     uvs = pst.uvs;
     ss = pst.ss;
     solved = tm_emp;
-    unsolved = (vprop_as_list (pst.ss.(pst.solved))) @ [open_term_nv body px] @ unsolved';
-    k = magic ();
+    unsolved = [open_term_nv body px] @ unsolved';
+    solved_typing = magic ();
+    k = k_sub;
     goals_inv = magic ();
-    solved_inv = ();
   } in
-
-  let pst_sub_terminal = prover pst_sub in
-  let pst_sub_terminal_goals_inv
-    : vprop_equiv (push_env pst_sub_terminal.pg pst_sub_terminal.uvs)
+  let pst_sub = prover pst_sub in
+  let pst_sub_goals_inv
+    : vprop_equiv (push_env pst_sub.pg pst_sub.uvs)
                   preamble_sub.goals
-                  (list_as_vprop [] * pst_sub_terminal.solved) = pst_sub_terminal.goals_inv in
-  assert (well_typed_ss pst_sub_terminal.ss pst_sub_terminal.uvs pst_sub_terminal.pg);
-  // substitution lemma on pst_sub_terminal_goals_inv
-  let pst_sub_terminal_goals_inv
-    : vprop_equiv pst_sub_terminal.pg
-                  pst_sub_terminal.ss.(preamble_sub.goals)
-                  pst_sub_terminal.ss.(pst_sub_terminal.solved) = magic () in
-  let k_sub_terminal
-    : continuation_elaborator preamble_sub.g0 preamble_sub.ctxt
-                              pst_sub_terminal.pg (list_as_vprop pst_sub_terminal.remaining_ctxt * pst_sub_terminal.ss.(pst_sub_terminal.solved)) =
-    pst_sub_terminal.k in
-  // replacing pst_sub_terminal.ss.(pst_sub_terminal.solved) with
-  // pst_sub_terminal.ss.(preamble_sub.goals) using the equiv relation
-  let k_sub_terminal
-    : continuation_elaborator preamble_sub.g0 preamble_sub.ctxt
-                              pst_sub_terminal.pg (list_as_vprop pst_sub_terminal.remaining_ctxt * pst_sub_terminal.ss.(preamble_sub.goals)) =
-    magic () in
+                  (list_as_vprop [] * pst_sub.solved) = pst_sub.goals_inv in
+  if not (PS.check_well_typedness pst_sub.pg pst_sub.uvs pst_sub.ss)
+  then fail pst_sub.pg None "intro exists ss not well-typed";
+  assert (PS.well_typed_ss pst_sub.pg pst_sub.uvs (PS.as_nt_substs pst_sub.ss));
+  let pst_sub_goals_inv
+    : vprop_equiv pst_sub.pg
+                  pst_sub.ss.(preamble_sub.goals)
+                  pst_sub.ss.(list_as_vprop [] * pst_sub.solved) =
+    PS.vprop_equiv_nt_substs_derived pst_sub.pg pst_sub.uvs pst_sub_goals_inv (PS.as_nt_substs pst_sub.ss) in
+  assume (pst_sub.ss.(list_as_vprop [] * pst_sub.solved) ==
+          tm_emp * pst_sub.ss.(pst_sub.solved));
+  let pst_sub_goals_inv
+    : vprop_equiv pst_sub.pg
+                  pst_sub.ss.(preamble_sub.goals)
+                  (tm_emp * pst_sub.ss.(pst_sub.solved)) = coerce_eq pst_sub_goals_inv () in
+  let pst_sub_goals_inv
+    : vprop_equiv pst_sub.pg
+                  pst_sub.ss.(preamble_sub.goals)
+                  pst_sub.ss.(pst_sub.solved) = VE_Trans _ _ _ _ pst_sub_goals_inv (VE_Unit _ _) in
+  let k_sub
+    : continuation_elaborator
+        preamble_sub.g0 (preamble_sub.ctxt * preamble_sub.frame)
+        pst_sub.pg ((list_as_vprop pst_sub.remaining_ctxt * preamble_sub.frame) * pst_sub.ss.(pst_sub.solved)) =
+    pst_sub.k in
+  // replacing pst_sub.ss.(pst_sub.solved) with
+  // pst_sub.ss.(preamble_sub.goals) using the equiv relation
+  let k_sub
+    : continuation_elaborator
+        preamble_sub.g0 (preamble_sub.ctxt * preamble_sub.frame)
+        pst_sub.pg ((list_as_vprop pst_sub.remaining_ctxt * preamble_sub.frame) * pst_sub.ss.(preamble_sub.goals)) =
+    k_elab_equiv k_sub (VE_Refl _ _) (magic ()) in
   // substitute preamble_sub.goals
-  let k_sub_terminal
+  let k_sub
     : continuation_elaborator
-        preamble_sub.g0 preamble_sub.ctxt
-        pst_sub_terminal.pg (list_as_vprop pst_sub_terminal.remaining_ctxt *
-                             pst_sub_terminal.ss.(pst.solved * open_term_nv body px * (list_as_vprop unsolved'))) =
-    k_sub_terminal in
-  // huh why is this not provable?
-  assume (pst_sub_terminal.ss.(pst.solved * open_term_nv body px * (list_as_vprop unsolved')) ==
-          pst_sub_terminal.ss.(pst.solved) * pst_sub_terminal.ss.(open_term_nv body px) * pst_sub_terminal.ss.(list_as_vprop unsolved'));
-  let witness = pst_sub_terminal.ss.(null_var x) in
-  // assume (pst_sub_terminal.ss.(open_term_nv body px) == subst_term (pst_sub_terminal.ss.(body)) [DT 0 witness]);
-  // rejig some of the *s in k_sub_terminal
-  let k_sub_terminal
+        preamble_sub.g0 (preamble_sub.ctxt * preamble_sub.frame)
+        pst_sub.pg ((list_as_vprop pst_sub.remaining_ctxt * preamble_sub.frame) *
+                    pst_sub.ss.(open_term_nv body px * (list_as_vprop unsolved'))) =
+    coerce_eq k_sub () in
+  assume (pst_sub.ss.(open_term_nv body px * (list_as_vprop unsolved')) ==
+          pst_sub.ss.(open_term_nv body px) * pst_sub.ss.(list_as_vprop unsolved'));
+  let witness = pst_sub.ss.(null_var x) in
+  assume (pst_sub.ss.(open_term_nv body px) == subst_term (pst_sub.ss.(body)) [DT 0 witness]);
+  // rewrite
+  let k_sub
     : continuation_elaborator
-        preamble_sub.g0 preamble_sub.ctxt
-        pst_sub_terminal.pg ((list_as_vprop pst_sub_terminal.remaining_ctxt *
-                              pst_sub_terminal.ss.(pst.solved) *
-                              pst_sub_terminal.ss.(list_as_vprop unsolved')) *
-                             (subst_term (pst_sub_terminal.ss.(body)) [DT 0 witness])) = magic () in
+        preamble_sub.g0 (preamble_sub.ctxt * preamble_sub.frame)
+        pst_sub.pg ((list_as_vprop pst_sub.remaining_ctxt * preamble_sub.frame) *
+                    (subst_term (pst_sub.ss.(body)) [DT 0 witness] * pst_sub.ss.(list_as_vprop unsolved'))) =
+    coerce_eq k_sub () in
+  // some * rearrangement
+  let k_sub
+    : continuation_elaborator
+        preamble_sub.g0 (preamble_sub.ctxt * preamble_sub.frame)
+        pst_sub.pg ((list_as_vprop pst_sub.remaining_ctxt *
+                     preamble_sub.frame *
+                     pst_sub.ss.(list_as_vprop unsolved')) *
+                    (subst_term (pst_sub.ss.(body)) [DT 0 witness])) =
+    k_elab_equiv k_sub (VE_Refl _ _) (magic ()) in
   let k_intro_exists
     : continuation_elaborator
-        pst_sub_terminal.pg ((list_as_vprop pst_sub_terminal.remaining_ctxt *
-                              pst_sub_terminal.ss.(pst.solved) *
-                              pst_sub_terminal.ss.(list_as_vprop unsolved')) *
-                             (subst_term (pst_sub_terminal.ss.(body)) [DT 0 witness]))
-        pst_sub_terminal.pg ((list_as_vprop pst_sub_terminal.remaining_ctxt *
-                              pst_sub_terminal.ss.(pst.solved) *
-                              pst_sub_terminal.ss.(list_as_vprop unsolved')) *
-                             (tm_exists_sl u (PS.nt_subst_binder b (PS.as_nt_substs pst_sub_terminal.ss)) pst_sub_terminal.ss.(body))) =
-    k_intro_exists pst_sub_terminal.pg u (PS.nt_subst_binder b (PS.as_nt_substs pst_sub_terminal.ss)) pst_sub_terminal.ss.(body) witness
-      (list_as_vprop pst_sub_terminal.remaining_ctxt *
-       pst_sub_terminal.ss.(pst.solved) *
-       pst_sub_terminal.ss.(list_as_vprop unsolved')) in
-  // // these are all NT substitutions
-  // assume (shift_subst (as_subst pst_sub_terminal.ss) == as_subst pst_sub_terminal.ss);
-  assume (tm_exists_sl u (PS.nt_subst_binder b (PS.as_nt_substs pst_sub_terminal.ss)) pst_sub_terminal.ss.(body) ==
-          pst_sub_terminal.ss.(tm_exists_sl u b body));
+        pst_sub.pg ((list_as_vprop pst_sub.remaining_ctxt *
+                     preamble_sub.frame *
+                     pst_sub.ss.(list_as_vprop unsolved')) *
+                    (subst_term (pst_sub.ss.(body)) [DT 0 witness]))
+        pst_sub.pg ( _ *
+                    (tm_exists_sl u (PS.nt_subst_binder b (PS.as_nt_substs pst_sub.ss)) pst_sub.ss.(body))) =
+    k_intro_exists
+      pst_sub.pg
+      u
+      (PS.nt_subst_binder b (PS.as_nt_substs pst_sub.ss))
+      pst_sub.ss.(body)
+      witness
+      _  in
+  assume (tm_exists_sl u (PS.nt_subst_binder b (PS.as_nt_substs pst_sub.ss)) pst_sub.ss.(body) ==
+          pst_sub.ss.(tm_exists_sl u b body));
+  // pst_sub.ss extends pst.ss, and pst.ss already solved all of pst.solved
+  assume (pst.ss.(pst.solved) == pst_sub.ss.(pst.solved));
+  // also substitute preamble_sub.frame
   let k_intro_exists
     : continuation_elaborator
-        pst_sub_terminal.pg ((list_as_vprop pst_sub_terminal.remaining_ctxt *
-                              pst_sub_terminal.ss.(pst.solved) *
-                              pst_sub_terminal.ss.(list_as_vprop unsolved')) *
-                             (subst_term (pst_sub_terminal.ss.(body)) [DT 0 witness]))
-        pst_sub_terminal.pg ((list_as_vprop pst_sub_terminal.remaining_ctxt *
-                              pst_sub_terminal.ss.(pst.solved) *
-                              pst_sub_terminal.ss.(list_as_vprop unsolved')) *
-                             (pst_sub_terminal.ss.(tm_exists_sl u b body))) = k_intro_exists in
-  // rejig some stars
+        pst_sub.pg ((list_as_vprop pst_sub.remaining_ctxt *
+                     preamble_sub.frame *
+                     pst_sub.ss.(list_as_vprop unsolved')) *
+                    (subst_term (pst_sub.ss.(body)) [DT 0 witness]))
+        pst_sub.pg ((list_as_vprop pst_sub.remaining_ctxt *
+                     (preamble.frame * pst_sub.ss.(pst.solved)) *
+                     pst_sub.ss.(list_as_vprop unsolved')) *
+                    (pst_sub.ss.(tm_exists_sl u b body))) = coerce_eq k_intro_exists () in
+
+  // rejig some *s in the continuation context
   let k_intro_exists
     : continuation_elaborator
-        pst_sub_terminal.pg ((list_as_vprop pst_sub_terminal.remaining_ctxt *
-                              pst_sub_terminal.ss.(pst.solved) *
-                              pst_sub_terminal.ss.(list_as_vprop unsolved')) *
-                             (subst_term (pst_sub_terminal.ss.(body)) [DT 0 witness]))
-        pst_sub_terminal.pg (list_as_vprop pst_sub_terminal.remaining_ctxt *
-                             pst_sub_terminal.ss.(pst.solved * tm_exists_sl u b body * list_as_vprop unsolved')) = magic () in
+        pst_sub.pg ((list_as_vprop pst_sub.remaining_ctxt *
+                     preamble_sub.frame *
+                     pst_sub.ss.(list_as_vprop unsolved')) *
+                    (subst_term (pst_sub.ss.(body)) [DT 0 witness]))
+        pst_sub.pg ((list_as_vprop pst_sub.remaining_ctxt * preamble.frame) *
+                    (pst_sub.ss.(pst.solved) *
+                     pst_sub.ss.(tm_exists_sl u b body) *
+                     pst_sub.ss.(list_as_vprop unsolved'))) =
+     k_elab_equiv k_intro_exists (VE_Refl _ _) (magic ()) in
+  assume (pst_sub.ss.(pst.solved) *
+          pst_sub.ss.(tm_exists_sl u b body) *
+          pst_sub.ss.(list_as_vprop unsolved') ==
+          pst_sub.ss.(pst.solved * tm_exists_sl u b body * list_as_vprop unsolved'));
+  let k_intro_exists
+    : continuation_elaborator
+        pst_sub.pg ((list_as_vprop pst_sub.remaining_ctxt *
+                     preamble_sub.frame *
+                     pst_sub.ss.(list_as_vprop unsolved')) *
+                    (subst_term (pst_sub.ss.(body)) [DT 0 witness]))
+        pst_sub.pg ((list_as_vprop pst_sub.remaining_ctxt * preamble.frame) *
+                    (pst_sub.ss.(pst.solved * tm_exists_sl u b body * list_as_vprop unsolved'))) =
+    coerce_eq k_intro_exists () in
+  let k_sub
+    : continuation_elaborator
+        preamble_sub.g0 (preamble_sub.ctxt * preamble_sub.frame)
+        pst_sub.pg ((list_as_vprop pst_sub.remaining_ctxt * preamble.frame) *
+                    (pst_sub.ss.(pst.solved * tm_exists_sl u b body * list_as_vprop unsolved'))) =
+    k_elab_trans k_sub k_intro_exists in
+  // pst.unsolved == tm_exists_sl u b body::unsolved'
+  let k_sub
+    : continuation_elaborator
+        preamble_sub.g0 (preamble_sub.ctxt * preamble_sub.frame)
+        pst_sub.pg ((list_as_vprop pst_sub.remaining_ctxt * preamble.frame) *
+                    (pst_sub.ss.(pst.solved * list_as_vprop pst.unsolved))) =
+    k_elab_equiv k_sub (VE_Refl _ _) (magic ()) in
 
-  let k_sub_terminal
+  let k_sub
     : continuation_elaborator
-        preamble_sub.g0 preamble_sub.ctxt
-        pst_sub_terminal.pg (list_as_vprop pst_sub_terminal.remaining_ctxt *
-                             pst_sub_terminal.ss.(pst.solved * tm_exists_sl u b body * list_as_vprop unsolved')) =
-    k_elab_trans k_sub_terminal k_intro_exists in
-  // pst.unsolved == tm_exists_sl u b body * list_as_vprop unsolved'
-  let k_sub_terminal
-    : continuation_elaborator
-        preamble_sub.g0 preamble_sub.ctxt
-        pst_sub_terminal.pg (list_as_vprop pst_sub_terminal.remaining_ctxt *
-                             pst_sub_terminal.ss.(pst.solved * list_as_vprop pst.unsolved)) = magic () in
+        pst.pg (list_as_vprop pst.remaining_ctxt * (preamble.frame * pst.ss.(pst.solved)))
+        pst_sub.pg ((list_as_vprop pst_sub.remaining_ctxt * preamble.frame) *
+                    (pst_sub.ss.(pst.solved * list_as_vprop pst.unsolved))) =
+    coerce_eq k_sub () in
 
-  let k_pst
+  // rejig *s in the elab ctxt
+  let k_sub
     : continuation_elaborator
-        preamble.g0 preamble.ctxt
-        pst.pg (list_as_vprop pst.remaining_ctxt * pst.ss.(pst.solved)) = pst.k in
-
-  let k_pst
-    : continuation_elaborator
-        preamble.g0 preamble.ctxt
-        preamble_sub.g0 preamble_sub.ctxt = k_pst in
+        pst.pg ((list_as_vprop pst.remaining_ctxt * preamble.frame) * pst.ss.(pst.solved))
+        pst_sub.pg ((list_as_vprop pst_sub.remaining_ctxt * preamble.frame) *
+                    (pst_sub.ss.(pst.solved * list_as_vprop pst.unsolved))) =
+    k_elab_equiv k_sub (magic ()) (VE_Refl _ _) in
 
   let k
     : continuation_elaborator
-        preamble.g0 preamble.ctxt
-        pst_sub_terminal.pg (list_as_vprop pst_sub_terminal.remaining_ctxt *
-                             pst_sub_terminal.ss.(pst.solved * list_as_vprop pst.unsolved)) =
-    k_elab_trans k_pst k_sub_terminal in
+        preamble.g0 (preamble.ctxt * preamble.frame)
+        pst_sub.pg ((list_as_vprop pst_sub.remaining_ctxt * preamble.frame) *
+                    (pst_sub.ss.(pst.solved * list_as_vprop pst.unsolved))) =
+    k_elab_trans pst.k k_sub in
 
   let goals_inv
-    : vprop_equiv (push_env pst.pg pst.uvs) preamble.goals (list_as_vprop pst.unsolved * pst.solved) =
+    : vprop_equiv (push_env pst.pg pst.uvs)
+                  preamble.goals
+                  (list_as_vprop pst.unsolved * pst.solved) =
     pst.goals_inv in
 
-  assert (pst_sub_terminal.pg `env_extends` pst.pg);
-  assert (pst_sub_terminal.uvs `env_extends` pst.uvs);
-
-  // weakening of goals_inv
+  // weakening
   let goals_inv
-    : vprop_equiv (push_env pst_sub_terminal.pg pst_sub_terminal.uvs)
+    : vprop_equiv (push_env pst_sub.pg pst_sub.uvs)
                   preamble.goals
                   (pst.solved * list_as_vprop pst.unsolved) = magic () in
 
-  // substitution lemma
   let goals_inv
-    : vprop_equiv pst_sub_terminal.pg
-                  (pst_sub_terminal.ss.(preamble.goals))
-                  (pst_sub_terminal.ss.(pst.solved * list_as_vprop pst.unsolved)) = magic () in
+    : vprop_equiv pst_sub.pg
+                  (pst_sub.ss.(preamble.goals))
+                  (pst_sub.ss.(pst.solved * list_as_vprop pst.unsolved)) =
+    PS.vprop_equiv_nt_substs_derived pst_sub.pg pst_sub.uvs goals_inv (PS.as_nt_substs pst_sub.ss) in
 
-  // replace in k
+  // rewrite k using goals_inv
   let k
     : continuation_elaborator
-        preamble.g0 preamble.ctxt
-        pst_sub_terminal.pg (list_as_vprop pst_sub_terminal.remaining_ctxt *
-                             pst_sub_terminal.ss.(preamble.goals)) =
-    magic () in
+        preamble.g0 (preamble.ctxt * preamble.frame)
+        pst_sub.pg ((list_as_vprop pst_sub.remaining_ctxt * preamble.frame) *
+                    (pst_sub.ss.(preamble.goals))) =
+    k_elab_equiv k (VE_Refl _ _) (magic ()) in
 
   let pst' : prover_state preamble = {
-    pg = pst_sub_terminal.pg;
-    remaining_ctxt = pst_sub_terminal.remaining_ctxt;
-    uvs = pst_sub_terminal.uvs;
-    ss = pst_sub_terminal.ss;
+    pg = pst_sub.pg;
+    remaining_ctxt = pst_sub.remaining_ctxt;
+    remaining_ctxt_frame_typing = magic ();
+    uvs = pst_sub.uvs;
+    ss = pst_sub.ss;
     solved = preamble.goals;
+    solved_typing = magic ();
     unsolved = [];
     k;
     goals_inv = magic ();
-    solved_inv = magic (); // what is this? is this a dynamic check?
   } in
 
   pst'
+#pop-options
+  // let goals_inv
+  //   : vprop_equiv (push_env pst.pg pst.uvs) preamble.goals (list_as_vprop pst.unsolved * pst.solved) =
+  //   pst.goals_inv in
+
+  // assert (pst_sub_terminal.pg `env_extends` pst.pg);
+  // assert (pst_sub_terminal.uvs `env_extends` pst.uvs);
+
+  // // weakening of goals_inv
+  // let goals_inv
+  //   : vprop_equiv (push_env pst_sub_terminal.pg pst_sub_terminal.uvs)
+  //                 preamble.goals
+  //                 (pst.solved * list_as_vprop pst.unsolved) = magic () in
+
+  // // substitution lemma
+  // let goals_inv
+  //   : vprop_equiv pst_sub_terminal.pg
+  //                 (pst_sub_terminal.ss.(preamble.goals))
+  //                 (pst_sub_terminal.ss.(pst.solved * list_as_vprop pst.unsolved)) = magic () in
+
+  // // replace in k
+  // let k
+  //   : continuation_elaborator
+  //       preamble.g0 preamble.ctxt
+  //       pst_sub_terminal.pg (list_as_vprop pst_sub_terminal.remaining_ctxt *
+  //                            pst_sub_terminal.ss.(preamble.goals)) =
+  //   magic () in
+
+  // let pst' : prover_state preamble = {
+  //   pg = pst_sub_terminal.pg;
+  //   remaining_ctxt = pst_sub_terminal.remaining_ctxt;
+  //   uvs = pst_sub_terminal.uvs;
+  //   ss = pst_sub_terminal.ss;
+  //   solved = preamble.goals;
+  //   unsolved = [];
+  //   k;
+  //   goals_inv = magic ();
+  //   solved_inv = magic (); // what is this? is this a dynamic check?
+  // } in
+
+  // pst'
 
 
 // let vprop_as_list_of_list_as_vprop (l:list vprop)

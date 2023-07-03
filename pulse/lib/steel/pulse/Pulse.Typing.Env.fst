@@ -2,6 +2,7 @@ module Pulse.Typing.Env
 
 open Pulse.Syntax
 
+module G = FStar.Ghost
 module L = FStar.List.Tot
 
 module R = FStar.Reflection
@@ -151,7 +152,6 @@ let remove_latest_binding g =
     assert (equal g (push_binding g' x ppname_default t));
     x, t, g'    
 
-
 let intro_env_extends (g1 g2 g3:env)
   : Lemma (requires extends_with g1 g2 g3)
           (ensures g1 `env_extends` g2) = ()
@@ -160,6 +160,78 @@ let elim_env_extends (g1:env) (g2:env { g1 `env_extends` g2 })
   : GTot (g3:env { extends_with g1 g2 g3 }) =
   FStar.IndefiniteDescription.indefinite_description_ghost
     env (fun g3 -> extends_with g1 g2 g3)
+
+let elim_env_extends_tot (g1:env) (g2:env { g1 `env_extends` g2 })
+  : g3:G.erased env { extends_with g1 g2 (Ghost.reveal g3)  }
+  = G.hide (elim_env_extends g1 g2)
+
+let rec diff_witness (#a:Type) (l1 l2:list a) (l3:G.erased (list a))
+  : Pure (list a)
+         (requires l1 == l2 @ G.reveal l3)
+         (ensures fun w -> w == G.reveal l3) =
+  match l1, l2 with
+  | [], _ -> []
+  | _, [] -> l1
+  | hd1::tl1, hd2::tl2 ->
+    diff_witness tl1 tl2 l3
+
+let rec create_m (bs:list (var & typ)) : m:bmap { related bs m } =
+  match bs with
+  | [] -> empty_bmap
+  | (x, t)::tl ->
+    // TODO: need to encode uniqueness in the repr
+    assume (forall (b:var & typ). List.Tot.memP b tl ==> fst b =!= x);
+    Map.upd (create_m tl) x t
+
+let rec diff_names (#a:Type) (l1 l2:list a)
+  : Pure (list a)
+         (requires L.length l1 >= L.length l2)
+         (ensures fun l -> L.length l == L.length l1 - L.length l2) =
+  match l1, l2 with
+  | [], _ -> []
+  | _, [] -> l1
+  | _::tl1, _::tl2 -> diff_names tl1 tl2
+
+
+#push-options "--z3rlimit_factor 4"
+let diff g1 g2 =
+  let g3 = elim_env_extends_tot g1 g2 in
+  assert (g1.bs == g3.bs @ g2.bs);
+
+  let g1_bs_rev = L.rev g1.bs in
+  let g2_bs_rev = L.rev g2.bs in
+  let g3_bs_rev : G.erased _ = G.elift1 L.rev g3.bs in
+
+  L.rev_append g3.bs g2.bs;
+  assert (g1_bs_rev == g2_bs_rev @ g3_bs_rev);
+
+  let rev_bs3 = diff_witness g1_bs_rev g2_bs_rev g3_bs_rev in
+  assert (g1_bs_rev == g2_bs_rev @ rev_bs3);
+
+  L.rev_append g2_bs_rev rev_bs3;
+  L.rev_involutive g1.bs;
+  L.rev_involutive g2.bs;
+
+  let bs3 = L.rev rev_bs3 in
+  assert (g1.bs == bs3 @ g2.bs);
+
+  L.append_length bs3 g2.bs;
+  assume (forall (a:Type) (l:list a). L.length (L.rev l) == L.length l);
+
+  let names3 = L.rev (diff_names (L.rev g1.names) (L.rev g2.names)) in
+  let m3 = create_m bs3 in
+
+  let g3 = {
+    f = g1.f;
+    bs = bs3;
+    names = names3;
+    m = m3;
+    ctxt = g1.ctxt;
+  } in
+  assume (disjoint g2 g3);  // needs distinct entries in g
+  assert (equal g1 (push_env g2 g3));
+  g3
+#pop-options
 
 let env_extends_refl (g:env) : Lemma (g `env_extends` g) =
   assert (equal g (push_env g (mk_env g.f)));

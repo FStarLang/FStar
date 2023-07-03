@@ -68,20 +68,21 @@ type mk_t =
                  c:comp { stateful_comp c /\ comp_pre c == v } &
                  st_typing g t c))
 
-val add_elims (#g:env) (#ctxt:term)
+val add_elims (#g:env) (#ctxt:term) (#frame:term)
   (f:vprop -> T.Tac bool)
   (mk:mk_t)
-  (ctxt_typing:tot_typing g ctxt tm_vprop)
+  (ctxt_typing:tot_typing g (tm_star ctxt frame) tm_vprop)
    : T.Tac (g':env { env_extends g' g } &
             ctxt':term &
-            tot_typing g' ctxt' tm_vprop &
-            continuation_elaborator g ctxt g' ctxt')
+            tot_typing g' (tm_star ctxt' frame) tm_vprop &
+            continuation_elaborator g (tm_star ctxt frame) g' (tm_star ctxt' frame))
 
 noeq type preamble = {
   g0 : env;
   
   ctxt : vprop;
-  ctxt_typing : vprop_typing g0 ctxt;
+  frame : vprop;
+  ctxt_frame_typing : vprop_typing g0 (tm_star ctxt frame);
 
   goals : vprop;
 }
@@ -100,6 +101,7 @@ noeq type prover_state (preamble:preamble) = {
   pg : g:env { g `env_extends` preamble.g0 };
 
   remaining_ctxt : list vprop;
+  remaining_ctxt_frame_typing : vprop_typing pg (list_as_vprop remaining_ctxt * preamble.frame);
 
   uvs : uvs:env { disjoint uvs pg };
   ss : ss:PS.t { well_typed_ss ss uvs pg};
@@ -107,28 +109,16 @@ noeq type prover_state (preamble:preamble) = {
   solved : vprop;
   unsolved : list vprop;
 
-  k : continuation_elaborator preamble.g0 preamble.ctxt
-                              pg (list_as_vprop remaining_ctxt * ss.(solved));
+  solved_typing : vprop_typing pg ss.(solved);
+
+  k : continuation_elaborator preamble.g0 (preamble.ctxt * preamble.frame)
+                              pg ((list_as_vprop remaining_ctxt * preamble.frame) * ss.(solved));
 
   goals_inv : vprop_equiv (push_env pg uvs) preamble.goals (list_as_vprop unsolved * solved);
-
-  solved_inv : squash (freevars ss.(solved) `Set.subset` dom pg);
 }
 
 let is_terminal (#preamble:_) (st:prover_state preamble) =
   st.unsolved == []
-
-val prove
-  (#g:env) (#ctxt:vprop) (ctxt_typing:vprop_typing g ctxt)
-  (uvs:env { disjoint g uvs })
-  (#goals:vprop) (goals_typing:vprop_typing (push_env g uvs) goals)
-
-  : T.Tac (g1 : env { g1 `env_extends` g /\ disjoint g1 uvs } &
-           ss : PS.t { well_typed_ss ss uvs g1 } &
-           remaining_ctxt : vprop &
-           continuation_elaborator g ctxt g1 (ss.(goals) * remaining_ctxt))
-
-open Pulse.Checker.Common
 
 irreducible
 let extend_post_hint_opt_g (g:env) (post_hint:post_hint_opt g) (g1:env { g1 `env_extends` g })
@@ -141,31 +131,41 @@ let extend_post_hint_opt_g (g:env) (post_hint:post_hint_opt g) (g1:env { g1 `env
     assert (g1 `env_extends` post_hint.g);
     Some post_hint
 
-let add_frame (#g:env) (#t:st_term) (#c:comp_st) (t_typing:st_typing g t c)
-  (frame:vprop)
-  : T.Tac (t':st_term &
-           c':comp_st { c' == add_frame c frame } &
-           st_typing g t' c') = magic ()
-
 let st_typing_subst (g:env) (uvs:env { disjoint uvs g }) (t:st_term) (c:comp_st)
   (d:st_typing (push_env g uvs) t c)
   (ss:PS.t { well_typed_ss ss uvs g })
 
-: T.Tac (option (st_typing g (PS.subst_st_term t ss) (PS.subst_comp c ss))) =
+  : T.Tac (option (st_typing g (PS.subst_st_term t ss) (PS.subst_comp c ss))) =
 
-let b = PS.check_well_typedness g uvs ss in
-if not b then None
-else let g' = mk_env (fstar_env g) in
-     assert (equal (push_env uvs g') uvs);
-     let d = PS.st_typing_nt_substs g uvs g' d (PS.as_nt_substs ss) in
-     assume (equal (push_env g (PS.nt_subst_env g' (PS.as_nt_substs ss))) g);
-     Some d
+  let b = PS.check_well_typedness g uvs ss in
+  if not b then None
+  else let g' = mk_env (fstar_env g) in
+       assert (equal (push_env uvs g') uvs);
+       let d = PS.st_typing_nt_substs g uvs g' d (PS.as_nt_substs ss) in
+       assume (equal (push_env g (PS.nt_subst_env g' (PS.as_nt_substs ss))) g);
+       Some d
 
 let st_typing_weakening
   (g:env) (g':env { disjoint g g' })
-  (t:st_term) (c:comp_st) (_:st_typing (push_env g g') t c)
+  (t:st_term) (c:comp_st) (d:st_typing (push_env g g') t c)
   (g1:env { g1 `env_extends` g /\ disjoint g1 g' })
-  : T.Tac (st_typing (push_env g1 g') t c) = magic ()
+  : st_typing (push_env g1 g') t c =
+
+  let g2 = diff g1 g in
+  let d = st_typing_weakening g g' t c d g2 in
+  assert (equal (push_env (push_env g g2) g') (push_env g1 g'));
+  d
+
+let veq_weakening
+  (g:env) (g':env { disjoint g g' })
+  (#v1 #v2:vprop) (d:vprop_equiv (push_env g g') v1 v2)
+  (g1:env { g1 `env_extends` g /\ disjoint g1 g' })
+  : vprop_equiv (push_env g1 g') v1 v2 =
+
+  let g2 = diff g1 g in
+  let d = veq_weakening g g' d g2 in
+  assert (equal (push_env (push_env g g2) g') (push_env g1 g'));
+  d
 
 
 let ss_extends (ss1 ss2:PS.t) =

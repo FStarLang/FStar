@@ -109,6 +109,9 @@ let vprop_equiv_nt_substs
 
 admit ()
 
+let vprop_equiv_nt_substs_derived _ _ _ _ = admit ()
+
+
 type map = m:Map.t var term {
   forall (x:var). (~ (Map.contains m x)) ==> Map.sel m x == tm_unknown
 }

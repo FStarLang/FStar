@@ -89,6 +89,12 @@ val vprop_equiv_nt_substs
   (ss:nt_substs { well_typed_ss g uvs ss })
 : vprop_equiv (push_env g (nt_subst_env g' ss)) (nt_subst_term p1 ss) (nt_subst_term p2 ss)
 
+val vprop_equiv_nt_substs_derived
+  (g:env) (uvs:env { disjoint g uvs })
+  (#p1 #p2:vprop) (veq:vprop_equiv (push_env g uvs) p1 p2)
+  (ss:nt_substs { well_typed_ss g uvs ss })
+: vprop_equiv g (nt_subst_term p1 ss) (nt_subst_term p2 ss)
+
 
 val t : Type0
 

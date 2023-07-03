@@ -89,6 +89,9 @@ let elim_pure (#g:env) (#ctxt:term) (ctxt_typing:tot_typing g ctxt tm_vprop)
            ctxt':term &
            tot_typing g' ctxt' tm_vprop &
            continuation_elaborator g ctxt g' ctxt') =
-  
-  add_elims is_elim_pure mk ctxt_typing
+  let ctxt_emp_typing : tot_typing g (tm_star ctxt tm_emp) tm_vprop = magic () in
+  let (| g', ctxt', ctxt'_emp_typing, k |) = add_elims is_elim_pure mk ctxt_emp_typing in
+  let k = k_elab_equiv k (VE_Trans _ _ _ _ (VE_Comm _ _ _) (VE_Unit _ _))
+                         (VE_Trans _ _ _ _ (VE_Comm _ _ _) (VE_Unit _ _)) in
+  (| g', ctxt', star_typing_inversion_l ctxt'_emp_typing, k |)
  

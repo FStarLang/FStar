@@ -130,6 +130,7 @@ let check_stapp_no_ctxt (g:env) (t:st_term { Tm_STApp? t.term })
            st_typing (push_env g uvs) t c) = magic ()
 
 open Pulse.Prover.Common
+open Pulse.Prover
 #push-options "--z3rlimit_factor 8 --fuel 1 --ifuel 1"
 let check_bindv2
   (g:env)
@@ -171,7 +172,7 @@ let check_bindv2
       else
         // g1 |- ss1 e1 : ss1 c1
         let Some d1 = d1opt in
-        let (| e1, c1, d1 |) = add_frame d1 remaining_pre in
+        let (| e1, c1, d1 |) = add_frame d1 #remaining_pre (magic ()) in
         assert (comp_pre c1 == ss1.(comp_pre c10) * remaining_pre);
         assert (comp_res c1 == ss1.(comp_res c10));
         assert (None? (lookup g1 x));

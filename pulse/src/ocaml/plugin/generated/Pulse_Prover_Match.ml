@@ -29,6 +29,8 @@ let (try_match_pq :
 let (compose_ss :
   Pulse_Prover_Substs.t -> Pulse_Prover_Substs.t -> Pulse_Prover_Substs.t) =
   fun ss1 -> fun ss2 -> Prims.magic ()
+let coerce_eq : 'a 'b . 'a -> unit -> 'b =
+  fun uu___1 -> fun uu___ -> (fun x -> fun uu___ -> Obj.magic x) uu___1 uu___
 let (match_step :
   Pulse_Prover_Common.preamble ->
     unit Pulse_Prover_Common.prover_state ->
@@ -52,13 +54,13 @@ let (match_step :
                   (FStar_Sealed.seal
                      (Obj.magic
                         (FStar_Range.mk_range "Pulse.Prover.Match.fst"
-                           (Prims.of_int (28)) (Prims.of_int (11))
-                           (Prims.of_int (28)) (Prims.of_int (21)))))
+                           (Prims.of_int (30)) (Prims.of_int (11))
+                           (Prims.of_int (30)) (Prims.of_int (21)))))
                   (FStar_Sealed.seal
                      (Obj.magic
                         (FStar_Range.mk_range "Pulse.Prover.Match.fst"
-                           (Prims.of_int (29)) (Prims.of_int (52))
-                           (Prims.of_int (91)) (Prims.of_int (11)))))
+                           (Prims.of_int (31)) (Prims.of_int (52))
+                           (Prims.of_int (90)) (Prims.of_int (11)))))
                   (FStar_Tactics_Effect.lift_div_tac
                      (fun uu___1 ->
                         Pulse_Prover_Common.op_Array_Access
@@ -71,14 +73,14 @@ let (match_step :
                                 (Obj.magic
                                    (FStar_Range.mk_range
                                       "Pulse.Prover.Match.fst"
-                                      (Prims.of_int (31)) (Prims.of_int (11))
-                                      (Prims.of_int (31)) (Prims.of_int (69)))))
+                                      (Prims.of_int (33)) (Prims.of_int (11))
+                                      (Prims.of_int (33)) (Prims.of_int (69)))))
                              (FStar_Sealed.seal
                                 (Obj.magic
                                    (FStar_Range.mk_range
                                       "Pulse.Prover.Match.fst"
-                                      (Prims.of_int (32)) Prims.int_zero
-                                      (Prims.of_int (91)) (Prims.of_int (11)))))
+                                      (Prims.of_int (34)) Prims.int_zero
+                                      (Prims.of_int (90)) (Prims.of_int (11)))))
                              (Obj.magic
                                 (try_match_pq pst.Pulse_Prover_Common.pg
                                    pst.Pulse_Prover_Common.uvs p () q_ss ()))
@@ -96,6 +98,8 @@ let (match_step :
                                                (pst.Pulse_Prover_Common.pg);
                                              Pulse_Prover_Common.remaining_ctxt
                                                = remaining_ctxt';
+                                             Pulse_Prover_Common.remaining_ctxt_frame_typing
+                                               = ();
                                              Pulse_Prover_Common.uvs =
                                                (pst.Pulse_Prover_Common.uvs);
                                              Pulse_Prover_Common.ss =
@@ -106,10 +110,48 @@ let (match_step :
                                                   pst.Pulse_Prover_Common.solved);
                                              Pulse_Prover_Common.unsolved =
                                                unsolved';
+                                             Pulse_Prover_Common.solved_typing
+                                               = ();
                                              Pulse_Prover_Common.k =
-                                               (Prims.magic ());
+                                               (coerce_eq
+                                                  (Pulse_Prover_Common.k_elab_equiv
+                                                     preamble.Pulse_Prover_Common.g0
+                                                     pst.Pulse_Prover_Common.pg
+                                                     (Pulse_Prover_Common.op_Star
+                                                        preamble.Pulse_Prover_Common.ctxt
+                                                        preamble.Pulse_Prover_Common.frame)
+                                                     (Pulse_Prover_Common.op_Star
+                                                        preamble.Pulse_Prover_Common.ctxt
+                                                        preamble.Pulse_Prover_Common.frame)
+                                                     (Pulse_Prover_Common.op_Star
+                                                        (Pulse_Prover_Common.op_Star
+                                                           (Pulse_Checker_VPropEquiv.list_as_vprop
+                                                              (p ::
+                                                              remaining_ctxt'))
+                                                           preamble.Pulse_Prover_Common.frame)
+                                                        (Pulse_Prover_Common.op_Array_Access
+                                                           (compose_ss ss_q
+                                                              pst.Pulse_Prover_Common.ss)
+                                                           pst.Pulse_Prover_Common.solved))
+                                                     (Pulse_Prover_Common.op_Star
+                                                        (Pulse_Prover_Common.op_Star
+                                                           (Pulse_Checker_VPropEquiv.list_as_vprop
+                                                              remaining_ctxt')
+                                                           preamble.Pulse_Prover_Common.frame)
+                                                        (Pulse_Prover_Common.op_Star
+                                                           (Pulse_Prover_Common.op_Array_Access
+                                                              (compose_ss
+                                                                 ss_q
+                                                                 pst.Pulse_Prover_Common.ss)
+                                                              q)
+                                                           (Pulse_Prover_Common.op_Array_Access
+                                                              (compose_ss
+                                                                 ss_q
+                                                                 pst.Pulse_Prover_Common.ss)
+                                                              pst.Pulse_Prover_Common.solved)))
+                                                     (coerce_eq
+                                                        pst.Pulse_Prover_Common.k
+                                                        ()) () ()) ());
                                              Pulse_Prover_Common.goals_inv =
-                                               ();
-                                             Pulse_Prover_Common.solved_inv =
                                                ()
                                            })))) uu___1)

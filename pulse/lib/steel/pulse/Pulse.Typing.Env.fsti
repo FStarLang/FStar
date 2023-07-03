@@ -133,6 +133,10 @@ let extends_with (g1 g2 g3:env) =
 let env_extends (g1 g2:env) =
   exists g3. extends_with g1 g2 g3
 
+val diff (g1 g2:env)
+  : Pure env (requires g1 `env_extends` g2)
+             (ensures fun g3 -> extends_with g1 g2 g3)
+
 val env_extends_refl (g:env)
   : Lemma (g `env_extends` g)
           [SMTPat (g `env_extends` g)]
