@@ -446,8 +446,9 @@ match%sedlex lexbuf with
    let s = L.lexeme lexbuf in
    let name = BatString.lchop ~n:3 s in
    Buffer.clear blob_buffer;
+   let snap = Sedlexing.snapshot lexbuf in
    let pos = L.current_pos lexbuf in
-   uninterpreted_blob name pos blob_buffer lexbuf
+   uninterpreted_blob snap name pos blob_buffer lexbuf
  | "`%" -> BACKTICK_PERC
  | "`#" -> BACKTICK_HASH
  | "`@" -> BACKTICK_AT
@@ -637,19 +638,19 @@ match%sedlex lexbuf with
    comment inner buffer startpos lexbuf
  | _ -> assert false
 
-and uninterpreted_blob name pos buffer lexbuf =
+and uninterpreted_blob snap name pos buffer lexbuf =
 match %sedlex lexbuf with
  | "```" ->
-   BLOB(name, Buffer.contents buffer, pos)
+   BLOB(name, Buffer.contents buffer, pos, snap)
  | eof ->
    EOF
  | newline ->
    L.new_line lexbuf;
    Buffer.add_string buffer (L.lexeme lexbuf);
-   uninterpreted_blob name pos buffer lexbuf
+   uninterpreted_blob snap name pos buffer lexbuf
  | any ->
    Buffer.add_string buffer (L.lexeme lexbuf);
-   uninterpreted_blob name pos buffer lexbuf
+   uninterpreted_blob snap name pos buffer lexbuf
  | _ -> assert false
 
 and ignore_endline lexbuf =
