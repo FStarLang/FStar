@@ -1,14 +1,13 @@
 module HACL
-module R = Steel.ST.Reference
-module A = Steel.ST.Array
-module T = FStar.Tactics
-module PM = Pulse.Main
+open Pulse.Main
+open Pulse.Steel.Wrapper
 open Steel.ST.Util 
 open Steel.ST.Array
 open Steel.FractionalPermission
 open FStar.Ghost
-open Pulse.Steel.Wrapper
+module R = Steel.ST.Reference
 module A = Steel.ST.Array
+module T = FStar.Tactics
 module US = FStar.SizeT
 module U8 = FStar.UInt8
 
@@ -32,8 +31,6 @@ val is_signable_len (_:US.t) : prop
 
 let signable_len = v:US.t{ is_signable_len v }
 
-let key_len = v:US.t{ is_hashable_len v }
-
 assume
 val valid_hkdf_lbl_len (l:US.t) : prop
 
@@ -45,7 +42,10 @@ val valid_hkdf_ikm_len (_:US.t) : prop
 let hkdf_ikm_len = v:US.t{ valid_hkdf_ikm_len v }
 
 assume
-val spec_hash (a:alg_t) (s:Seq.seq U8.t) : s:(Seq.seq U8.t){ Seq.length s = (US.v (digest_len a)) }
+val spec_hash 
+  (a:alg_t) 
+  (s:Seq.seq U8.t) 
+  : s:(Seq.seq U8.t){ Seq.length s = (US.v (digest_len a)) }
 
 assume
 val hacl_hash (alg:alg_t)
@@ -63,13 +63,17 @@ val hacl_hash (alg:alg_t)
        A.pts_to dst full_perm (spec_hash alg src_seq))
 
 assume
-val spec_hmac (a:alg_t) (k:Seq.seq U8.t) (m:Seq.seq U8.t) : s:(Seq.seq U8.t){ Seq.length s = (US.v (digest_len a)) }
+val spec_hmac 
+  (a:alg_t) 
+  (k:Seq.seq U8.t) 
+  (m:Seq.seq U8.t) 
+  : s:(Seq.seq U8.t){ Seq.length s = (US.v (digest_len a)) }
 
 assume
 val hacl_hmac (alg:alg_t)
               (dst:A.larray U8.t (US.v (digest_len alg)))
               (key:A.array U8.t)
-              (key_len: key_len { US.v key_len == A.length key })
+              (key_len: hashable_len { US.v key_len == A.length key })
               (msg:A.array U8.t)
               (msg_len: hashable_len { US.v msg_len == A.length msg })
               (#pkey #pmsg:perm)
@@ -141,3 +145,7 @@ val dice_digest_len_is_hashable
 assume 
 val dice_digest_len_is_hkdf_ikm
   : valid_hkdf_ikm_len dice_digest_len
+
+assume
+val is_hashable_len_32
+  : is_hashable_len 32sz

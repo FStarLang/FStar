@@ -1,14 +1,13 @@
 module X509
-module R = Steel.ST.Reference
-module A = Steel.ST.Array
-module T = FStar.Tactics
-module PM = Pulse.Main
+open Pulse.Main
+open Pulse.Steel.Wrapper
 open Steel.ST.Util 
 open Steel.ST.Array
 open Steel.FractionalPermission
 open FStar.Ghost
-open Pulse.Steel.Wrapper
+module R = Steel.ST.Reference
 module A = Steel.ST.Array
+module T = FStar.Tactics
 module US = FStar.SizeT
 module U8 = FStar.UInt8
 module U32 = FStar.UInt32
@@ -64,7 +63,9 @@ val serialize_deviceIDCRI
   (#deviceIDCRI_buf0: Ghost.erased (Seq.seq U8.t))
   : stt unit
     (A.pts_to deviceIDCRI_buf full_perm deviceIDCRI_buf0)
-    (fun _ -> A.pts_to deviceIDCRI_buf full_perm (spec_serialize_deviceIDCRI deviceIDCRI deviceIDCRI_len))
+    (fun _ -> A.pts_to deviceIDCRI_buf full_perm (spec_serialize_deviceIDCRI 
+                                                    deviceIDCRI 
+                                                    deviceIDCRI_len))
 
 assume
 val spec_serialize_deviceIDCSR 
@@ -82,7 +83,10 @@ val serialize_deviceIDCSR
   (#_buf:Ghost.erased (Seq.seq U8.t))
   : stt unit
     (A.pts_to deviceIDCSR_buf full_perm _buf)
-    (fun _ -> A.pts_to deviceIDCSR_buf full_perm (spec_serialize_deviceIDCSR deviceIDCRI_len deviceIDCSR_len deviceIDCSR))
+    (fun _ -> A.pts_to deviceIDCSR_buf full_perm (spec_serialize_deviceIDCSR 
+                                                    deviceIDCRI_len 
+                                                    deviceIDCSR_len 
+                                                    deviceIDCSR))
 
 assume
 val spec_serialize_aliasKeyTBS
@@ -98,7 +102,9 @@ val serialize_aliasKeyTBS
   (#aliasKeyTBS_buf0: Ghost.erased (Seq.seq U8.t))
   : stt unit
     (A.pts_to aliasKeyTBS_buf full_perm aliasKeyTBS_buf0)
-    (fun _ -> A.pts_to aliasKeyTBS_buf full_perm (spec_serialize_aliasKeyTBS aliasKeyTBS aliasKeyTBS_len))
+    (fun _ -> A.pts_to aliasKeyTBS_buf full_perm (spec_serialize_aliasKeyTBS 
+                                                   aliasKeyTBS 
+                                                   aliasKeyTBS_len))
 
 assume
 val spec_serialize_aliasKeyCRT
@@ -116,7 +122,10 @@ val serialize_aliasKeyCRT
   (#_buf:Ghost.erased (Seq.seq U8.t))
   : stt unit
     (A.pts_to aliasKeyCRT_buf full_perm _buf)
-    (fun _ -> A.pts_to aliasKeyCRT_buf full_perm (spec_serialize_aliasKeyCRT aliasKeyTBS_len aliasKeyCRT_len aliasKeyCRT))
+    (fun _ -> A.pts_to aliasKeyCRT_buf full_perm (spec_serialize_aliasKeyCRT 
+                                                    aliasKeyTBS_len 
+                                                    aliasKeyCRT_len 
+                                                    aliasKeyCRT))
 
 (* Get Functions *)
 
@@ -140,7 +149,9 @@ val x509_get_deviceIDCSR
      (fun res -> 
         A.pts_to deviceIDCRI_buf buf_perm buf `star`
         A.pts_to deviceIDCRI_sig sig_perm sig `star`
-        pure (res == spec_x509_get_deviceIDCSR deviceIDCRI_len buf sig))
+        pure (res == spec_x509_get_deviceIDCSR 
+                      deviceIDCRI_len 
+                      buf sig))
 
 assume 
 val spec_x509_get_deviceIDCRI
@@ -166,7 +177,10 @@ val x509_get_deviceIDCRI
     (A.pts_to deviceID_pub pub_perm deviceID_pub0)
     (fun res -> 
       A.pts_to deviceID_pub pub_perm deviceID_pub0 `star`
-      pure (res == spec_x509_get_deviceIDCRI version s_common s_org s_country ku deviceID_pub0))
+      pure (res == spec_x509_get_deviceIDCRI 
+                    version s_common 
+                    s_org s_country 
+                    ku deviceID_pub0))
 
 assume 
 val spec_x509_get_aliasKeyTBS
@@ -190,7 +204,9 @@ val x509_get_aliasKeyTBS
     A.pts_to fwid fwid_perm fwid0 `star`
     A.pts_to deviceID_pub deviceID_perm deviceID0 `star`
     A.pts_to aliasKey_pub aliasKey_perm aliasKey0 `star`
-    pure (res == spec_x509_get_aliasKeyTBS aliasKeyCRT_ingredients fwid0 deviceID0 aliasKey0))
+    pure (res == spec_x509_get_aliasKeyTBS 
+                  aliasKeyCRT_ingredients 
+                  fwid0 deviceID0 aliasKey0))
   
 assume 
 val spec_x509_get_aliasKeyCRT
@@ -212,4 +228,6 @@ val x509_get_aliasKeyCRT
      (fun res -> 
         A.pts_to aliasKeyTBS_buf buf_perm buf `star`
         A.pts_to aliasKeyTBS_sig sig_perm sig `star`
-        pure (res == spec_x509_get_aliasKeyCRT aliasKeyTBS_len buf sig))
+        pure (res == spec_x509_get_aliasKeyCRT 
+                      aliasKeyTBS_len 
+                      buf sig))

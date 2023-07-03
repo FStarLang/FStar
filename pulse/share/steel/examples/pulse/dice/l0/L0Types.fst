@@ -1,14 +1,13 @@
 module L0Types
-module R = Steel.ST.Reference
-module A = Steel.ST.Array
-module T = FStar.Tactics
-module PM = Pulse.Main
+open Pulse.Main
+open Pulse.Steel.Wrapper
 open Steel.ST.Util 
 open Steel.ST.Array
 open Steel.FractionalPermission
 open FStar.Ghost
-open Pulse.Steel.Wrapper
+module R = Steel.ST.Reference
 module A = Steel.ST.Array
+module T = FStar.Tactics
 module US = FStar.SizeT
 module U8 = FStar.UInt8
 module U32 = FStar.UInt32
@@ -90,7 +89,7 @@ type l0_record = {
   aliasKeyCRT_len: R.ref U32.t; (* should be U32 *)
   aliasKeyCRT_buf: A.array U8.t; (* public bytes *)
 (* AuthKey Outputs *)
-  authKeyID: A.array U8.t;
+  authKeyID: A.larray U8.t (US.v dice_digest_len);
 }
 
 noeq
@@ -122,7 +121,6 @@ let mk_l0_repr cdi fwid deviceID_label aliasKey_label deviceID_pub
                aliasKeyTBS_len aliasKeyTBS_buf 
                aliasKeyCRT_len aliasKeyCRT_buf 
                authKeyID = 
-
     { cdi; fwid; deviceID_label; aliasKey_label; deviceID_pub;
       deviceID_priv; aliasKey_pub; aliasKey_priv;
       deviceIDCSR_len; deviceIDCSR_buf;
@@ -163,26 +161,25 @@ fn fold_l0_perm (l0:l0_record)
                 (#cdi #fwid #deviceID_label #aliasKey_label #deviceID_pub
                  #deviceID_priv #aliasKey_pub #aliasKey_priv:erased (Seq.seq U8.t))
                 (#deviceIDCSR_len #deviceIDCRI_len #aliasKeyTBS_len #aliasKeyCRT_len:erased U32.t)
-                (#deviceIDCRI_len:erased U32.t)
                 (#deviceIDCSR_buf #deviceIDCRI_buf #deviceIDCRI_sig #aliasKeyTBS_buf #aliasKeyCRT_buf #authKeyID: erased (Seq.seq U8.t))
   requires
-    A.pts_to l0.cdi full_perm cdi `star`
-    A.pts_to l0.fwid full_perm fwid `star`
-    A.pts_to l0.deviceID_label full_perm deviceID_label `star`
-    A.pts_to l0.aliasKey_label full_perm aliasKey_label `star`
-    A.pts_to l0.deviceID_pub full_perm deviceID_pub `star`
-    A.pts_to l0.deviceID_priv full_perm deviceID_priv `star`
-    A.pts_to l0.aliasKey_pub full_perm aliasKey_pub `star`
-    A.pts_to l0.aliasKey_priv full_perm aliasKey_priv `star`
-    R.pts_to l0.deviceIDCSR_len full_perm deviceIDCSR_len `star`
-    A.pts_to l0.deviceIDCSR_buf full_perm deviceIDCSR_buf `star`
-    R.pts_to l0.deviceIDCRI_len full_perm deviceIDCRI_len `star`
-    A.pts_to l0.deviceIDCRI_buf full_perm deviceIDCRI_buf `star`
-    A.pts_to l0.deviceIDCRI_sig full_perm deviceIDCRI_sig `star`
-    R.pts_to l0.aliasKeyTBS_len full_perm aliasKeyTBS_len `star`
-    A.pts_to l0.aliasKeyTBS_buf full_perm aliasKeyTBS_buf `star`
-    R.pts_to l0.aliasKeyCRT_len full_perm aliasKeyCRT_len `star`
-    A.pts_to l0.aliasKeyCRT_buf full_perm aliasKeyCRT_buf `star`
+    A.pts_to l0.cdi full_perm cdi **
+    A.pts_to l0.fwid full_perm fwid **
+    A.pts_to l0.deviceID_label full_perm deviceID_label **
+    A.pts_to l0.aliasKey_label full_perm aliasKey_label **
+    A.pts_to l0.deviceID_pub full_perm deviceID_pub **
+    A.pts_to l0.deviceID_priv full_perm deviceID_priv **
+    A.pts_to l0.aliasKey_pub full_perm aliasKey_pub **
+    A.pts_to l0.aliasKey_priv full_perm aliasKey_priv **
+    R.pts_to l0.deviceIDCSR_len full_perm deviceIDCSR_len **
+    A.pts_to l0.deviceIDCSR_buf full_perm deviceIDCSR_buf **
+    R.pts_to l0.deviceIDCRI_len full_perm deviceIDCRI_len **
+    A.pts_to l0.deviceIDCRI_buf full_perm deviceIDCRI_buf **
+    A.pts_to l0.deviceIDCRI_sig full_perm deviceIDCRI_sig **
+    R.pts_to l0.aliasKeyTBS_len full_perm aliasKeyTBS_len **
+    A.pts_to l0.aliasKeyTBS_buf full_perm aliasKeyTBS_buf **
+    R.pts_to l0.aliasKeyCRT_len full_perm aliasKeyCRT_len **
+    A.pts_to l0.aliasKeyCRT_buf full_perm aliasKeyCRT_buf **
     A.pts_to l0.authKeyID full_perm authKeyID
   ensures
     l0_perm l0 (mk_l0_repr cdi fwid deviceID_label aliasKey_label deviceID_pub
