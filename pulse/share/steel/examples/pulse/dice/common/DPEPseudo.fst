@@ -1,11 +1,12 @@
-module DPEScratch
-module A = Steel.ST.Array
-module PM = Pulse.Main
+module DPEPseudo
+open Pulse.Main
+open Pulse.Steel.Wrapper
+open FStar.Ghost
 open Steel.ST.Util 
 open Steel.ST.Array
 open Steel.FractionalPermission
-open FStar.Ghost
-open Pulse.Steel.Wrapper
+module A = Steel.ST.Array
+module R = Steel.ST.Reference
 module US = FStar.SizeT
 module U8 = FStar.UInt8
 module U32 = FStar.UInt32
@@ -29,7 +30,11 @@ type context_t =
 fn init_dpe ()
 {
   let session_tbl = (new_table);
-  let session_tbl_lock = new_lock (exists s. A.pts_to session_tbl full_perm s);   (* needs to be global *)
+
+  (* the following should be GLOBAL state *)
+  let session_tbl_lock = new_lock (exists s. A.pts_to session_tbl full_perm s); 
+  let session_id_ctr = R.ref US.t;
+  session_id_ctr := 0;
 }
 
 
@@ -41,11 +46,11 @@ fn OpenSession ()
   let ctxt_tbl = (new_table);
   let ctxt_tbl_lock = new_lock (exists s. A.pts_to ctxt_tbl full_perm s);
   
-  let cur_session = !session_id;
+  let cur_session = !session_id_ctr;
   let session_tbl = acquire session_tbl_lock;
   store session_tbl cur_session ctxt_tbl_lock;
 
-  session_id := cur_session + 1;
+  session_id_ctr := cur_session + 1;
 }
 
 
@@ -57,11 +62,9 @@ fn CloseSession ()
   let ctxt_tbl = (new_table);
   let ctxt_tbl_lock = new_lock (exists s. A.pts_to ctxt_tbl full_perm s);
   
-  let cur_session = !session_id;
+  let cur_session = !session_id_ctr;
   let session_tbl = acquire session_tbl_lock;
   store session_tbl cur_session ctxt_tbl_lock;
-
-  session_id := cur_session + 1;
 }
 
 
@@ -73,7 +76,7 @@ fn InitializeContext (seed:A.array U8.t) : A.array U32.t
   let ctxt = Engine_context seed;
   let ctxt_hndl = (PRNG);
 
-  let cur_session = !session_id;
+  let cur_session = !session_id_ctr;
   let session_tbl = acquire session_tbl_lock;
   let ctxt_tbl_lock = get session_tbl cur_session;
   let ctxt_tbl = acquire ctxt_tbl_lock;
@@ -89,7 +92,7 @@ fn InitializeContext (seed:A.array U8.t) : A.array U32.t
 // and store the new context in the table. 
 fn DeriveChild (ctxt_hndl:A.array U32.t) (data:A.array U32.t) : A.array U32.t
 {
-  let cur_session = !session_id;
+  let cur_session = !session_id_ctr;
   let session_tbl = acquire session_tbl_lock;
   let ctxt_tbl_lock = get session_tbl cur_session;
   let ctxt_tbl = acquire ctxt_tbl_lock;
