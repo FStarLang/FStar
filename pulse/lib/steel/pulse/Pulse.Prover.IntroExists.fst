@@ -12,10 +12,57 @@ module PS = Pulse.Prover.Substs
 let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y == x} = x
 
 // there will be some side conditions related to the typings
-let k_intro_exists (g:env) (u:universe) (b:binder) (p:vprop) (e:term)
-  (frame:vprop)
+let k_intro_exists (#g:env) (#u:universe) (#b:binder) (#p:vprop)
+  (ex_typing:tot_typing g (tm_exists_sl u b p) tm_vprop)
+  (#e:term)
+  (e_typing:tot_typing g e b.binder_ty)
+  (#frame:vprop)
+  (frame_typing:tot_typing g frame tm_vprop)
   : T.Tac (continuation_elaborator g (frame * subst_term p [ DT 0 e ])
-                                   g (frame * tm_exists_sl u b p)) = magic ()
+                                   g (frame * tm_exists_sl u b p)) =
+  
+  let t = wr (Tm_IntroExists { erased = false;
+                               p = tm_exists_sl u b p;
+                               witnesses = [e];
+                               should_check = should_check_true }) in
+
+  let c = comp_intro_exists u b p e in
+
+  let t_typing = T_IntroExists g u b p e (magic ()) ex_typing e_typing in
+
+  assert (comp_pre c == subst_term p [ DT 0 e ]);
+  assert (comp_post c == tm_exists_sl u b p);
+
+  let x = fresh g in
+  assume (open_term (comp_post c) x == comp_post c);
+
+  let k
+    : continuation_elaborator
+        g (frame * subst_term p [ DT 0 e ])
+        (push_binding g x ppname_default (comp_res c)) (tm_exists_sl u b p * frame) =
+    continuation_elaborator_with_bind frame t_typing (magic ()) x in
+
+  let k
+    : continuation_elaborator
+        g (frame * subst_term p [ DT 0 e ])
+        (push_binding g x ppname_default (comp_res c)) (frame * tm_exists_sl u b p) =
+    k_elab_equiv k (VE_Refl _ _) (VE_Comm _ _ _) in
+
+  fun post_hint r ->
+  let (| t1, c1, d1 |) = r in
+  let d1 : st_typing g t1 c1 = d1 in
+  let empty_env = mk_env (fstar_env g) in
+  assert (equal g (push_env g empty_env));
+  assert (equal (push_env (push_binding g x ppname_default (comp_res c)) empty_env)
+                (push_binding g x ppname_default (comp_res c)));
+  let d1 : st_typing (push_binding g x ppname_default (comp_res c)) t1 c1 =
+    st_typing_weakening
+      g
+      empty_env
+      t1 c1 d1
+      (push_binding g x ppname_default (comp_res c)) in
+
+  k post_hint (| t1, c1, d1 |)
 
 #push-options "--z3rlimit_factor 4 --ifuel 1 --fuel 1"
 let intro_exists (#preamble:_) (pst:prover_state preamble)
@@ -132,12 +179,16 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
         pst_sub.pg ( _ *
                     (tm_exists_sl u (PS.nt_subst_binder b (PS.as_nt_substs pst_sub.ss)) pst_sub.ss.(body))) =
     k_intro_exists
-      pst_sub.pg
-      u
-      (PS.nt_subst_binder b (PS.as_nt_substs pst_sub.ss))
-      pst_sub.ss.(body)
-      witness
-      _  in
+      #pst_sub.pg
+      #u
+      #(PS.nt_subst_binder b (PS.as_nt_substs pst_sub.ss))
+      #pst_sub.ss.(body)
+      (magic ())  // typing of tm_exists_sl with pst_sub.ss applied
+      #witness
+      (magic ())  // witness typing
+      #_
+      (magic ())  // frame typing
+  in
   assume (tm_exists_sl u (PS.nt_subst_binder b (PS.as_nt_substs pst_sub.ss)) pst_sub.ss.(body) ==
           pst_sub.ss.(tm_exists_sl u b body));
   // pst_sub.ss extends pst.ss, and pst.ss already solved all of pst.solved

@@ -148,7 +148,7 @@ let st_typing_subst (g:env) (uvs:env { disjoint uvs g }) (t:st_term) (c:comp_st)
 
 let st_typing_weakening
   (g:env) (g':env { disjoint g g' })
-  (t:st_term) (c:comp_st) (d:st_typing (push_env g g') t c)
+  (t:st_term) (c:comp) (d:st_typing (push_env g g') t c)
   (g1:env { g1 `env_extends` g /\ disjoint g1 g' })
   : st_typing (push_env g1 g') t c =
 

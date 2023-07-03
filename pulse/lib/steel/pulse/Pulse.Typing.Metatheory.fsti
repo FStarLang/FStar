@@ -79,7 +79,7 @@ let pairwise_disjoint (g g' g'':env) =
 
 let st_typing_weakening
   (g:env) (g':env { disjoint g g' })
-  (t:st_term) (c:comp_st) (_:st_typing (push_env g g') t c)
+  (t:st_term) (c:comp) (_:st_typing (push_env g g') t c)
   (g1:env { pairwise_disjoint g g1 g' })
   : st_typing (push_env (push_env g g1) g') t c = magic ()
 
