@@ -112,16 +112,18 @@ let rec prover
         | None -> fail pst.pg None "cannot match a vprop"
         | Some pst -> prover pst  // a little wasteful?
 
+#push-options "--z3rlimit_factor 4"
 let prove
   (#g:env) (#ctxt:vprop) (ctxt_typing:vprop_typing g ctxt)
   (uvs:env { disjoint g uvs })
   (#goals:vprop) (goals_typing:vprop_typing (push_env g uvs) goals)
 
-  : T.Tac (g1 : env { g1 `env_extends` g /\ disjoint g1 uvs } &
-           ss : PS.t { well_typed_ss ss uvs g1 } &
+  : T.Tac (g1 : env { g1 `env_extends` g } &
+           uvs1 : env { uvs1 `env_extends` uvs /\ disjoint uvs1 g1 } &
+           ss1 : PS.t { well_typed_ss ss1 uvs1 g1 } &
            remaining_ctxt : vprop &
-           continuation_elaborator g ctxt g1 (ss.(goals) * remaining_ctxt)) =
-  
+           continuation_elaborator g ctxt g1 (ss1.(goals) * remaining_ctxt)) =
+
   let ctxt_frame_typing : vprop_typing g (ctxt * tm_emp) = magic () in
   let preamble = {
     g0 = g;
@@ -136,7 +138,7 @@ let prove
     pg = g;
     remaining_ctxt = vprop_as_list ctxt;
     remaining_ctxt_frame_typing = ctxt_frame_typing;
-    uvs = mk_env (fstar_env g);
+    uvs = uvs;
     ss = PS.empty;
     solved = tm_emp;
     unsolved = vprop_as_list goals;
@@ -156,9 +158,7 @@ let prove
   let goals_inv
     : vprop_equiv pst.pg pst.ss.(goals) pst.ss.(list_as_vprop [] * pst.solved) =
     PS.vprop_equiv_nt_substs_derived pst.pg pst.uvs goals_inv (PS.as_nt_substs pst.ss) in
-  assume (well_typed_ss pst.ss uvs pst.pg);  // hmmmm
-  assume (disjoint pst.pg uvs);
-  (| pst.pg, pst.ss, list_as_vprop pst.remaining_ctxt, k_elab_equiv k (magic ()) (magic ()) |)
+  (| pst.pg, pst.uvs, pst.ss, list_as_vprop pst.remaining_ctxt, k_elab_equiv k (magic ()) (magic ()) |)
 
 
 // let vprop_as_list_of_list_as_vprop (l:list vprop)

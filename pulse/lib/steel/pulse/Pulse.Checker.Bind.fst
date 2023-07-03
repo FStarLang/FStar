@@ -145,11 +145,11 @@ let check_bindv2
 
   match e1.term with
   | Tm_STApp _ ->
-    let (| uvs1, e1, c1, d1 |) = check_stapp_no_ctxt g e1 in
+    let (| uvs, e1, c1, d1 |) = check_stapp_no_ctxt g e1 in
     let c10 = c1 in
     // magic is comp_pre c1 typing, get from inversion of d1 
-    let (| g1, ss1, remaining_pre, k |) =
-      prove pre_typing uvs1 #(comp_pre c1) (magic ()) in
+    let (| g1, uvs1, ss1, remaining_pre, k |) =
+      prove pre_typing uvs #(comp_pre c1) (magic ()) in
     let x = fresh g1 in
     let px = b.binder_ppname, x in
     // TODO: if the binder is annotated, check subtyping
@@ -166,7 +166,8 @@ let check_bindv2
     if not (stateful_comp c2)
     then fail g None "Bind: c2 is not st"
     else
-      let d1 = st_typing_weakening g uvs1 e1 c1 d1 g1 in
+      let d1 = st_typing_weakening g uvs e1 c1 d1 g1 in
+      let d1 = st_typing_weakening_end g1 uvs e1 c1 d1 uvs1 in
       let d1opt = st_typing_subst g1 uvs1 e1 c1 d1 ss1 in
       if None? d1opt then fail g None "Bind: could not find a well-typed substitution"
       else

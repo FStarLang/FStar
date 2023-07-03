@@ -13,7 +13,8 @@ val prove
   (uvs:env { disjoint g uvs })
   (#goals:vprop) (goals_typing:vprop_typing (push_env g uvs) goals)
 
-  : T.Tac (g1 : env { g1 `env_extends` g /\ disjoint g1 uvs } &
-           ss : PS.t { well_typed_ss ss uvs g1 } &
+  : T.Tac (g1 : env { g1 `env_extends` g } &
+           uvs1 : env { uvs1 `env_extends` uvs /\ disjoint uvs1 g1 } &
+           ss1 : PS.t { well_typed_ss ss1 uvs1 g1 } &
            remaining_ctxt : vprop &
-           continuation_elaborator g ctxt g1 (ss.(goals) * remaining_ctxt))
+           continuation_elaborator g ctxt g1 (ss1.(goals) * remaining_ctxt))

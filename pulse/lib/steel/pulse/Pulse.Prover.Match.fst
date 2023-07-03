@@ -400,5 +400,5 @@ match ropt with
                k;
                goals_inv=magic (); } in
 
-   assume (ss_new `ss_extends` pst.ss);
+  assume (ss_new `ss_extends` pst.ss);
   Some pst'

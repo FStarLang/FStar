@@ -157,6 +157,12 @@ let st_typing_weakening
   assert (equal (push_env (push_env g g2) g') (push_env g1 g'));
   d
 
+let st_typing_weakening_end
+  (g:env) (g':env { disjoint g g' })
+  (t:st_term) (c:comp) (d:st_typing (push_env g g') t c)
+  (g'':env { g'' `env_extends` g' /\ disjoint g'' g })
+  : st_typing (push_env g g'') t c = admit ()
+
 let veq_weakening
   (g:env) (g':env { disjoint g g' })
   (#v1 #v2:vprop) (d:vprop_equiv (push_env g g') v1 v2)
