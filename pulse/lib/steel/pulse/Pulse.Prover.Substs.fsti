@@ -146,6 +146,8 @@ val empty : t
 val empty_dom (_:unit)
   : Lemma (dom empty == Set.empty)
 
+val singleton (x:var) (e:term) : t
+
 // val singleton (g:env)
 //   (x:var { ~ (Set.mem x (Env.dom g)) })
 //   (e:term { freevars e `Set.subset` Env.dom g })

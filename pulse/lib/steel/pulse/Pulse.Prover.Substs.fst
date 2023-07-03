@@ -145,6 +145,11 @@ let empty = {
 
 let empty_dom () = assert (Set.equal (dom empty) Set.empty)
 
+let singleton (x:var) (t:term) = {
+  l = [ (x, t) ];
+  m = Map.upd (Map.const_on Set.empty tm_unknown) x t;
+}
+
 //
 // TODO: Move to ulib
 //
