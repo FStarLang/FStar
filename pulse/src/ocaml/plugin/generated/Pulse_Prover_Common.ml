@@ -1682,6 +1682,14 @@ let (st_typing_weakening :
               let d1 =
                 Pulse_Typing_Metatheory.st_typing_weakening g g' t c d g2 in
               d1
+let (st_typing_weakening_end :
+  Pulse_Typing_Env.env ->
+    Pulse_Typing_Env.env ->
+      Pulse_Syntax_Base.st_term ->
+        Pulse_Syntax_Base.comp ->
+          (unit, unit, unit) Pulse_Typing.st_typing ->
+            Pulse_Typing_Env.env -> (unit, unit, unit) Pulse_Typing.st_typing)
+  = fun g -> fun g' -> fun t -> fun c -> fun d -> fun g'' -> Prims.admit ()
 type ('ss1, 'ss2) ss_extends = unit
 type ('preamble1, 'pst1, 'pst2) pst_extends = unit
 type prover_t =
