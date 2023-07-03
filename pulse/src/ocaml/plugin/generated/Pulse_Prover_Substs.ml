@@ -128,6 +128,16 @@ let (empty : t) =
     m =
       (FStar_Map.const_on (FStar_Set.empty ()) Pulse_Syntax_Base.tm_unknown)
   }
+let (singleton : Pulse_Syntax_Base.var -> Pulse_Syntax_Base.term -> t) =
+  fun x ->
+    fun t1 ->
+      {
+        l = [(x, t1)];
+        m =
+          (FStar_Map.upd
+             (FStar_Map.const_on (FStar_Set.empty ())
+                Pulse_Syntax_Base.tm_unknown) x t1)
+      }
 let (push : t -> t -> t) =
   fun s1 ->
     fun s2 ->
