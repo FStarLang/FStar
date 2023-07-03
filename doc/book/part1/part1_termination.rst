@@ -65,14 +65,14 @@ if any of the following are true:
 
 1. **The ordering on integers**:
 
-   ``t1 = nat`` and ``t2 = nat`` and ``v1 < v₂``
+   ``t1 = nat`` and ``t2 = nat`` and ``v1 < v2``
 
    Negative integers are not related by the `<<` relation, which is
    only a _partial_ order.
 
 2. **The sub-term ordering on inductive types**
 
-    If ``v₂ = D u1 ... un``, where ``D`` is a constructor of an
+    If ``v2 = D u1 ... un``, where ``D`` is a constructor of an
     inductive type fully applied to arguments ``u1`` to ``un``, then
     ``v1 << v2`` if either
 
@@ -150,7 +150,7 @@ F* also provides a convenience to enhance the well-founded ordering
 lists of terms ``v1, ..., vn`` and ``u1, ..., un``, F* accepts that
 the following lexicographic ordering::
 
-   v1 << u1 ‌‌\/ (v1 == u1 /\ (v₂ << u₂ ‌‌\/ (v₂ == u₂ /\ ( ... vn << un))))
+   v1 << u1 ‌‌\/ (v1 == u1 /\ (v2 << u2 ‌‌\/ (v2 == u2 /\ ( ... vn << un))))
 
 is also well-founded. In fact, it is possible to prove in F* that this
 ordering is well-founded, provided ``<<`` is itself well-founded.
