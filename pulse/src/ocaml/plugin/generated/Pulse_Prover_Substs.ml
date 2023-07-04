@@ -1,7 +1,133 @@
 open Prims
+type 'l no_repeats = Obj.t
+type ss_dom = Pulse_Syntax_Base.var Prims.list
+type ss_map = (Pulse_Syntax_Base.var, Pulse_Syntax_Base.term) FStar_Map.t
+let (remove_map :
+  ss_map ->
+    Pulse_Syntax_Base.var ->
+      (Pulse_Syntax_Base.var, Pulse_Syntax_Base.term) FStar_Map.t)
+  =
+  fun m ->
+    fun x ->
+      FStar_Map.restrict (FStar_Set.complement (FStar_Set.singleton x))
+        (FStar_Map.upd m x Pulse_Syntax_Base.tm_unknown)
+type ('l, 'm) is_dom = Obj.t
+type ss_t = {
+  l: ss_dom ;
+  m: ss_map }
+let (__proj__Mkss_t__item__l : ss_t -> ss_dom) =
+  fun projectee -> match projectee with | { l; m;_} -> l
+let (__proj__Mkss_t__item__m : ss_t -> ss_map) =
+  fun projectee -> match projectee with | { l; m;_} -> m
+let (as_map :
+  ss_t -> (Pulse_Syntax_Base.var, Pulse_Syntax_Base.term) FStar_Map.t) =
+  fun ss -> ss.m
+let (dom : ss_t -> Pulse_Syntax_Base.var FStar_Set.set) =
+  fun ss -> FStar_Map.domain (as_map ss)
+let (contains : ss_t -> Pulse_Syntax_Base.var -> Prims.bool) =
+  fun ss -> fun x -> FStar_Map.contains (as_map ss) x
+let (sel : ss_t -> Pulse_Syntax_Base.var -> Pulse_Syntax_Base.term) =
+  fun ss -> fun x -> FStar_Map.sel (as_map ss) x
+type ('ss, 'uvs) solves = unit
+let (empty : ss_t) =
+  {
+    l = [];
+    m =
+      (FStar_Map.const_on (FStar_Set.empty ()) Pulse_Syntax_Base.tm_unknown)
+  }
+let (push :
+  Pulse_Typing_Env.env ->
+    ss_t -> Pulse_Syntax_Base.var -> Pulse_Syntax_Base.term -> ss_t)
+  =
+  fun uvs ->
+    fun ss ->
+      fun x -> fun t -> { l = (x :: (ss.l)); m = (FStar_Map.upd ss.m x t) }
+let (tail : ss_t -> ss_t) =
+  fun ss ->
+    {
+      l = (FStar_List_Tot_Base.tl ss.l);
+      m = (remove_map ss.m (FStar_List_Tot_Base.hd ss.l))
+    }
+let rec (push_ss : Pulse_Typing_Env.env -> ss_t -> ss_t -> ss_t) =
+  fun uvs ->
+    fun ss1 ->
+      fun ss2 ->
+        match ss2.l with
+        | [] -> ss1
+        | x::tl ->
+            push_ss uvs (push uvs ss1 x (FStar_Map.sel ss2.m x)) (tail ss2)
+let rec (remove_l : ss_dom -> Pulse_Syntax_Base.var -> ss_dom) =
+  fun l ->
+    fun x ->
+      match l with
+      | [] -> []
+      | y::tl -> if y = x then tl else y :: (remove_l tl x)
+let rec (ss_term : Pulse_Syntax_Base.term -> ss_t -> Pulse_Syntax_Base.term)
+  =
+  fun t ->
+    fun ss ->
+      match ss.l with
+      | [] -> t
+      | y::tl ->
+          let t1 =
+            Pulse_Syntax_Naming.subst_term t
+              [Pulse_Syntax_Naming.NT (y, (FStar_Map.sel ss.m y))] in
+          ss_term t1 (tail ss)
+let rec (ss_st_term :
+  Pulse_Syntax_Base.st_term -> ss_t -> Pulse_Syntax_Base.st_term) =
+  fun t ->
+    fun ss ->
+      match ss.l with
+      | [] -> t
+      | y::tl ->
+          let t1 =
+            Pulse_Syntax_Naming.subst_st_term t
+              [Pulse_Syntax_Naming.NT (y, (FStar_Map.sel ss.m y))] in
+          ss_st_term t1 (tail ss)
+let rec (ss_st_comp :
+  Pulse_Syntax_Base.st_comp -> ss_t -> Pulse_Syntax_Base.st_comp) =
+  fun s ->
+    fun ss ->
+      match ss.l with
+      | [] -> s
+      | y::tl ->
+          let s1 =
+            Pulse_Syntax_Naming.subst_st_comp s
+              [Pulse_Syntax_Naming.NT (y, (FStar_Map.sel ss.m y))] in
+          ss_st_comp s1 (tail ss)
+let rec (ss_comp : Pulse_Syntax_Base.comp -> ss_t -> Pulse_Syntax_Base.comp)
+  =
+  fun c ->
+    fun ss ->
+      match ss.l with
+      | [] -> c
+      | y::tl ->
+          let c1 =
+            Pulse_Syntax_Naming.subst_comp c
+              [Pulse_Syntax_Naming.NT (y, (FStar_Map.sel ss.m y))] in
+          ss_comp c1 (tail ss)
+let rec (ss_binder :
+  Pulse_Syntax_Base.binder -> ss_t -> Pulse_Syntax_Base.binder) =
+  fun b ->
+    fun ss ->
+      match ss.l with
+      | [] -> b
+      | y::tl ->
+          let b1 =
+            Pulse_Syntax_Naming.subst_binder b
+              [Pulse_Syntax_Naming.NT (y, (FStar_Map.sel ss.m y))] in
+          ss_binder b1 (tail ss)
+let rec (ss_env : Pulse_Typing_Env.env -> ss_t -> Pulse_Typing_Env.env) =
+  fun g ->
+    fun ss ->
+      match ss.l with
+      | [] -> g
+      | y::tl ->
+          ss_env
+            (Pulse_Typing_Metatheory.subst_env g
+               [Pulse_Syntax_Naming.NT (y, (FStar_Map.sel ss.m y))])
+            (tail ss)
 type nt_substs = Pulse_Syntax_Naming.subst_elt Prims.list
-let (compose_nt_substs : nt_substs -> nt_substs -> nt_substs) =
-  fun ss1 -> fun ss2 -> FStar_List_Tot_Base.op_At ss1 ss2
 let (nt_subst_term :
   Pulse_Syntax_Base.term -> nt_substs -> Pulse_Syntax_Base.term) =
   fun t ->
@@ -34,121 +160,14 @@ let (nt_subst_comp :
     fun ss ->
       FStar_List_Tot_Base.fold_left
         (fun c1 -> fun elt -> Pulse_Syntax_Naming.subst_comp c1 [elt]) c ss
-let (nt_subst_env :
-  Pulse_Typing_Env.env -> nt_substs -> Pulse_Typing_Env.env) =
-  fun g ->
-    fun ss ->
-      FStar_List_Tot_Base.fold_left
-        (fun g1 -> fun elt -> Pulse_Typing_Metatheory.subst_env g1 [elt]) g
-        ss
-type ('g, 'uvs, 'ss) well_typed_ss = Obj.t
-let coerce_eq : 'a 'b . 'a -> unit -> 'b =
-  fun uu___1 -> fun uu___ -> (fun x -> fun uu___ -> Obj.magic x) uu___1 uu___
-let rec (st_typing_nt_substs :
+type ('g, 'uvs, 'nts) well_typed_nt_substs = Obj.t
+type ('uuuuu, 'nts, 'ss) is_permutation = Obj.t
+let rec (ss_to_nt_substs :
   Pulse_Typing_Env.env ->
     Pulse_Typing_Env.env ->
-      Pulse_Typing_Env.env ->
-        Pulse_Syntax_Base.st_term ->
-          Pulse_Syntax_Base.comp_st ->
-            (unit, unit, unit) Pulse_Typing.st_typing ->
-              nt_substs -> (unit, unit, unit) Pulse_Typing.st_typing)
-  =
-  fun g ->
-    fun uvs ->
-      fun g' ->
-        fun t ->
-          fun c ->
-            fun t_typing ->
-              fun ss ->
-                match Pulse_Typing_Env.bindings uvs with
-                | [] -> t_typing
-                | uu___ ->
-                    let uu___1 = Pulse_Typing_Env.remove_binding uvs in
-                    (match uu___1 with
-                     | (x, ty, uvs') ->
-                         let uu___2 = ss in
-                         (match uu___2 with
-                          | (Pulse_Syntax_Naming.NT (y, e))::ss' ->
-                              let t_typing1 = coerce_eq t_typing () in
-                              let t_typing2 =
-                                Pulse_Typing_Metatheory.st_typing_subst g x
-                                  ty (Pulse_Typing_Env.push_env uvs' g') e ()
-                                  t c t_typing1 in
-                              st_typing_nt_substs g
-                                (Pulse_Typing_Metatheory.subst_env uvs'
-                                   [Pulse_Syntax_Naming.NT (y, e)])
-                                (Pulse_Typing_Metatheory.subst_env g'
-                                   [Pulse_Syntax_Naming.NT (y, e)])
-                                (Pulse_Syntax_Naming.subst_st_term t
-                                   [Pulse_Syntax_Naming.NT (y, e)])
-                                (Pulse_Syntax_Naming.subst_comp c
-                                   [Pulse_Syntax_Naming.NT (y, e)]) t_typing2
-                                ss'))
-type map = (Pulse_Syntax_Base.var, Pulse_Syntax_Base.term) FStar_Map.t
-type ('l, 'm) related = unit
-type t =
-  {
-  l: (Pulse_Syntax_Base.var * Pulse_Syntax_Base.term) Prims.list ;
-  m: map }
-let (__proj__Mkt__item__l :
-  t -> (Pulse_Syntax_Base.var * Pulse_Syntax_Base.term) Prims.list) =
-  fun projectee -> match projectee with | { l; m;_} -> l
-let (__proj__Mkt__item__m : t -> map) =
-  fun projectee -> match projectee with | { l; m;_} -> m
-let rec (as_nt_substs_aux :
-  (Pulse_Syntax_Base.var * Pulse_Syntax_Base.term) Prims.list -> nt_substs) =
-  fun l ->
-    match l with
-    | [] -> []
-    | (x, t1)::tl -> (Pulse_Syntax_Naming.NT (x, t1)) ::
-        (as_nt_substs_aux tl)
-let (as_nt_substs : t -> nt_substs) = fun s -> as_nt_substs_aux s.l
-let (as_map :
-  t -> (Pulse_Syntax_Base.var, Pulse_Syntax_Base.term) FStar_Map.t) =
-  fun s -> s.m
-let (sel : t -> Pulse_Syntax_Base.var -> Pulse_Syntax_Base.term) =
-  fun s -> fun x -> FStar_Map.sel (as_map s) x
-let (contains : t -> Pulse_Syntax_Base.var -> Prims.bool) =
-  fun s -> fun x -> FStar_Map.contains (as_map s) x
-let (dom : t -> Pulse_Syntax_Base.var FStar_Set.set) =
-  fun s -> FStar_Map.domain (as_map s)
-let (subst_term : Pulse_Syntax_Base.term -> t -> Pulse_Syntax_Base.term) =
-  fun e -> fun s -> nt_subst_term e (as_nt_substs s)
-let (subst_st_term :
-  Pulse_Syntax_Base.st_term -> t -> Pulse_Syntax_Base.st_term) =
-  fun e -> fun s -> nt_subst_st_term e (as_nt_substs s)
-let (subst_comp : Pulse_Syntax_Base.comp -> t -> Pulse_Syntax_Base.comp) =
-  fun c -> fun s -> nt_subst_comp c (as_nt_substs s)
-let (subst_st_comp :
-  Pulse_Syntax_Base.st_comp -> t -> Pulse_Syntax_Base.st_comp) =
-  fun c -> fun s -> nt_subst_st_comp c (as_nt_substs s)
-let (empty : t) =
-  {
-    l = [];
-    m =
-      (FStar_Map.const_on (FStar_Set.empty ()) Pulse_Syntax_Base.tm_unknown)
-  }
-let (singleton : Pulse_Syntax_Base.var -> Pulse_Syntax_Base.term -> t) =
-  fun x ->
-    fun t1 ->
-      {
-        l = [(x, t1)];
-        m =
-          (FStar_Map.upd
-             (FStar_Map.const_on (FStar_Set.empty ())
-                Pulse_Syntax_Base.tm_unknown) x t1)
-      }
-let (push : t -> t -> t) =
-  fun s1 ->
-    fun s2 ->
-      {
-        l = (FStar_List_Tot_Base.op_At s1.l s2.l);
-        m = (FStar_Map.concat s1.m s2.m)
-      }
-let (check_well_typedness :
-  Pulse_Typing_Env.env ->
-    Pulse_Typing_Env.env ->
-      t -> (Prims.bool, unit) FStar_Tactics_Effect.tac_repr)
+      ss_t ->
+        (nt_substs FStar_Pervasives_Native.option, unit)
+          FStar_Tactics_Effect.tac_repr)
   =
   fun uu___2 ->
     fun uu___1 ->
@@ -156,6 +175,143 @@ let (check_well_typedness :
         (fun g ->
            fun uvs ->
              fun ss ->
-               Obj.magic
-                 (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> true)))
-          uu___2 uu___1 uu___
+               match Pulse_Typing_Env.bindings uvs with
+               | [] ->
+                   Obj.magic
+                     (Obj.repr
+                        (FStar_Tactics_Effect.lift_div_tac
+                           (fun uu___ -> FStar_Pervasives_Native.Some [])))
+               | uu___ ->
+                   Obj.magic
+                     (Obj.repr
+                        (FStar_Tactics_Effect.tac_bind
+                           (FStar_Sealed.seal
+                              (Obj.magic
+                                 (FStar_Range.mk_range
+                                    "Pulse.Prover.Substs.fst"
+                                    (Prims.of_int (206)) (Prims.of_int (26))
+                                    (Prims.of_int (206)) (Prims.of_int (44)))))
+                           (FStar_Sealed.seal
+                              (Obj.magic
+                                 (FStar_Range.mk_range
+                                    "Pulse.Prover.Substs.fst"
+                                    (Prims.of_int (205)) (Prims.of_int (8))
+                                    (Prims.of_int (220)) (Prims.of_int (13)))))
+                           (FStar_Tactics_Effect.lift_div_tac
+                              (fun uu___1 ->
+                                 Pulse_Typing_Env.remove_binding uvs))
+                           (fun uu___1 ->
+                              (fun uu___1 ->
+                                 match uu___1 with
+                                 | (x, ty, rest_uvs) ->
+                                     if FStar_Map.contains ss.m x
+                                     then
+                                       Obj.magic
+                                         (Obj.repr
+                                            (FStar_Tactics_Effect.tac_bind
+                                               (FStar_Sealed.seal
+                                                  (Obj.magic
+                                                     (FStar_Range.mk_range
+                                                        "Pulse.Prover.Substs.fst"
+                                                        (Prims.of_int (208))
+                                                        (Prims.of_int (17))
+                                                        (Prims.of_int (208))
+                                                        (Prims.of_int (31)))))
+                                               (FStar_Sealed.seal
+                                                  (Obj.magic
+                                                     (FStar_Range.mk_range
+                                                        "Pulse.Prover.Substs.fst"
+                                                        (Prims.of_int (208))
+                                                        (Prims.of_int (34))
+                                                        (Prims.of_int (219))
+                                                        (Prims.of_int (19)))))
+                                               (FStar_Tactics_Effect.lift_div_tac
+                                                  (fun uu___2 ->
+                                                     FStar_Map.sel ss.m x))
+                                               (fun uu___2 ->
+                                                  (fun t ->
+                                                     Obj.magic
+                                                       (FStar_Tactics_Effect.tac_bind
+                                                          (FStar_Sealed.seal
+                                                             (Obj.magic
+                                                                (FStar_Range.mk_range
+                                                                   "Pulse.Prover.Substs.fst"
+                                                                   (Prims.of_int (209))
+                                                                   (Prims.of_int (37))
+                                                                   (Prims.of_int (209))
+                                                                   (Prims.of_int (45)))))
+                                                          (FStar_Sealed.seal
+                                                             (Obj.magic
+                                                                (FStar_Range.mk_range
+                                                                   "Pulse.Prover.Substs.fst"
+                                                                   (Prims.of_int (210))
+                                                                   (Prims.of_int (48))
+                                                                   (Prims.of_int (219))
+                                                                   (Prims.of_int (19)))))
+                                                          (FStar_Tactics_Effect.lift_div_tac
+                                                             (fun uu___2 ->
+                                                                ()))
+                                                          (fun uu___2 ->
+                                                             (fun d ->
+                                                                Obj.magic
+                                                                  (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "Pulse.Prover.Substs.fst"
+                                                                    (Prims.of_int (212))
+                                                                    (Prims.of_int (11))
+                                                                    (Prims.of_int (213))
+                                                                    (Prims.of_int (82)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "Pulse.Prover.Substs.fst"
+                                                                    (Prims.of_int (214))
+                                                                    (Prims.of_int (9))
+                                                                    (Prims.of_int (219))
+                                                                    (Prims.of_int (19)))))
+                                                                    (Obj.magic
+                                                                    (ss_to_nt_substs
+                                                                    g
+                                                                    (Pulse_Typing_Metatheory.subst_env
+                                                                    rest_uvs
+                                                                    [
+                                                                    Pulse_Syntax_Naming.NT
+                                                                    (x, t)])
+                                                                    {
+                                                                    l =
+                                                                    (remove_l
+                                                                    ss.l x);
+                                                                    m =
+                                                                    (remove_map
+                                                                    ss.m x)
+                                                                    }))
+                                                                    (fun
+                                                                    nts_opt
+                                                                    ->
+                                                                    FStar_Tactics_Effect.lift_div_tac
+                                                                    (fun
+                                                                    uu___2 ->
+                                                                    match nts_opt
+                                                                    with
+                                                                    | 
+                                                                    FStar_Pervasives_Native.None
+                                                                    ->
+                                                                    FStar_Pervasives_Native.None
+                                                                    | 
+                                                                    FStar_Pervasives_Native.Some
+                                                                    nts ->
+                                                                    FStar_Pervasives_Native.Some
+                                                                    ((Pulse_Syntax_Naming.NT
+                                                                    (x, t))
+                                                                    :: nts)))))
+                                                               uu___2)))
+                                                    uu___2)))
+                                     else
+                                       Obj.magic
+                                         (Obj.repr
+                                            (FStar_Tactics_Effect.lift_div_tac
+                                               (fun uu___3 ->
+                                                  FStar_Pervasives_Native.None))))
+                                uu___1)))) uu___2 uu___1 uu___

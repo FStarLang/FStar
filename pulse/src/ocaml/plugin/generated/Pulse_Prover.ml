@@ -551,7 +551,7 @@ let (prove :
           Pulse_Syntax_Base.vprop ->
             unit ->
               ((Pulse_Typing_Env.env, Pulse_Typing_Env.env,
-                 Pulse_Prover_Substs.t, Pulse_Syntax_Base.vprop,
+                 Pulse_Prover_Substs.ss_t, Pulse_Syntax_Base.vprop,
                  (unit, unit, unit, unit)
                    Pulse_Prover_Common.continuation_elaborator)
                  FStar_Pervasives.dtuple5,
@@ -573,7 +573,7 @@ let (prove :
                    (Obj.magic
                       (FStar_Range.mk_range "Pulse.Prover.fst"
                          (Prims.of_int (127)) (Prims.of_int (70))
-                         (Prims.of_int (161)) (Prims.of_int (103)))))
+                         (Prims.of_int (164)) (Prims.of_int (103)))))
                 (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> ()))
                 (fun uu___ ->
                    (fun ctxt_frame_typing ->
@@ -588,7 +588,7 @@ let (prove :
                               (Obj.magic
                                  (FStar_Range.mk_range "Pulse.Prover.fst"
                                     (Prims.of_int (136)) (Prims.of_int (59))
-                                    (Prims.of_int (161)) (Prims.of_int (103)))))
+                                    (Prims.of_int (164)) (Prims.of_int (103)))))
                            (FStar_Tactics_Effect.lift_div_tac
                               (fun uu___ ->
                                  {
@@ -617,7 +617,7 @@ let (prove :
                                                "Pulse.Prover.fst"
                                                (Prims.of_int (148))
                                                (Prims.of_int (6))
-                                               (Prims.of_int (161))
+                                               (Prims.of_int (164))
                                                (Prims.of_int (103)))))
                                       (FStar_Tactics_Effect.lift_div_tac
                                          (fun uu___ ->
@@ -678,7 +678,7 @@ let (prove :
                                                           "Pulse.Prover.fst"
                                                           (Prims.of_int (149))
                                                           (Prims.of_int (25))
-                                                          (Prims.of_int (161))
+                                                          (Prims.of_int (164))
                                                           (Prims.of_int (103)))))
                                                  (Obj.magic
                                                     (prover preamble pst))
@@ -691,24 +691,24 @@ let (prove :
                                                                   (FStar_Range.mk_range
                                                                     "Pulse.Prover.fst"
                                                                     (Prims.of_int (150))
-                                                                    (Prims.of_int (10))
+                                                                    (Prims.of_int (13))
                                                                     (Prims.of_int (150))
-                                                                    (Prims.of_int (55)))))
+                                                                    (Prims.of_int (53)))))
                                                             (FStar_Sealed.seal
                                                                (Obj.magic
                                                                   (FStar_Range.mk_range
                                                                     "Pulse.Prover.fst"
                                                                     (Prims.of_int (151))
                                                                     (Prims.of_int (2))
-                                                                    (Prims.of_int (161))
+                                                                    (Prims.of_int (164))
                                                                     (Prims.of_int (103)))))
                                                             (Obj.magic
-                                                               (Pulse_Prover_Substs.check_well_typedness
+                                                               (Pulse_Prover_Substs.ss_to_nt_substs
                                                                   pst1.Pulse_Prover_Common.pg
                                                                   pst1.Pulse_Prover_Common.uvs
                                                                   pst1.Pulse_Prover_Common.ss))
                                                             (fun uu___ ->
-                                                               (fun b ->
+                                                               (fun ropt ->
                                                                   Obj.magic
                                                                     (
                                                                     FStar_Tactics_Effect.tac_bind
@@ -719,18 +719,18 @@ let (prove :
                                                                     (Prims.of_int (151))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (151))
-                                                                    (Prims.of_int (59)))))
+                                                                    (Prims.of_int (64)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.fst"
-                                                                    (Prims.of_int (161))
-                                                                    (Prims.of_int (2))
-                                                                    (Prims.of_int (161))
+                                                                    (Prims.of_int (151))
+                                                                    (Prims.of_int (65))
+                                                                    (Prims.of_int (164))
                                                                     (Prims.of_int (103)))))
                                                                     (if
-                                                                    Prims.op_Negation
-                                                                    b
+                                                                    FStar_Pervasives_Native.uu___is_None
+                                                                    ropt
                                                                     then
                                                                     Obj.magic
                                                                     (Obj.repr
@@ -750,6 +750,11 @@ let (prove :
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___1 ->
+                                                                    match ropt
+                                                                    with
+                                                                    | 
+                                                                    FStar_Pervasives_Native.Some
+                                                                    nt ->
                                                                     FStar_Pervasives.Mkdtuple5
                                                                     ((pst1.Pulse_Prover_Common.pg),
                                                                     (pst1.Pulse_Prover_Common.uvs),

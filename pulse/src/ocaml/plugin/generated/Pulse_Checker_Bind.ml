@@ -1278,9 +1278,9 @@ let (check_bindv2 :
                                                                     (match 
                                                                     Pulse_Typing_Combinators.add_frame
                                                                     g1
-                                                                    (Pulse_Prover_Substs.subst_st_term
+                                                                    (Pulse_Prover_Substs.ss_st_term
                                                                     e11 ss1)
-                                                                    (Pulse_Prover_Substs.subst_comp
+                                                                    (Pulse_Prover_Substs.ss_comp
                                                                     c1 ss1)
                                                                     d13
                                                                     remaining_pre

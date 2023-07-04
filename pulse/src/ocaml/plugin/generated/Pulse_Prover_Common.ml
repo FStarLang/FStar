@@ -1538,8 +1538,9 @@ let (__proj__Mkpreamble__item__goals : preamble -> Pulse_Syntax_Base.vprop) =
     match projectee with
     | { g0; ctxt; frame; ctxt_frame_typing; goals;_} -> goals
 let (op_Array_Access :
-  Pulse_Prover_Substs.t -> Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)
-  = fun ss -> fun t -> Pulse_Prover_Substs.subst_term t ss
+  Pulse_Prover_Substs.ss_t ->
+    Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)
+  = fun ss -> fun t -> Pulse_Prover_Substs.ss_term t ss
 let (op_Star :
   Pulse_Syntax_Base.vprop ->
     Pulse_Syntax_Base.vprop -> Pulse_Syntax_Base.term)
@@ -1551,7 +1552,7 @@ type 'preamble1 prover_state =
   remaining_ctxt: Pulse_Syntax_Base.vprop Prims.list ;
   remaining_ctxt_frame_typing: unit ;
   uvs: Pulse_Typing_Env.env ;
-  ss: Pulse_Prover_Substs.t ;
+  ss: Pulse_Prover_Substs.ss_t ;
   solved: Pulse_Syntax_Base.vprop ;
   unsolved: Pulse_Syntax_Base.vprop Prims.list ;
   solved_typing: unit ;
@@ -1580,7 +1581,7 @@ let (__proj__Mkprover_state__item__uvs :
       | { pg; remaining_ctxt; remaining_ctxt_frame_typing; uvs; ss; solved;
           unsolved; solved_typing; k; goals_inv;_} -> uvs
 let (__proj__Mkprover_state__item__ss :
-  preamble -> unit prover_state -> Pulse_Prover_Substs.t) =
+  preamble -> unit prover_state -> Pulse_Prover_Substs.ss_t) =
   fun preamble1 ->
     fun projectee ->
       match projectee with
@@ -1629,41 +1630,27 @@ let (st_typing_subst :
       Pulse_Syntax_Base.st_term ->
         Pulse_Syntax_Base.comp_st ->
           (unit, unit, unit) Pulse_Typing.st_typing ->
-            Pulse_Prover_Substs.t ->
+            Pulse_Prover_Substs.ss_t ->
               ((unit, unit, unit) Pulse_Typing.st_typing
                  FStar_Pervasives_Native.option,
                 unit) FStar_Tactics_Effect.tac_repr)
   =
-  fun g ->
-    fun uvs ->
-      fun t ->
-        fun c ->
-          fun d ->
-            fun ss ->
-              FStar_Tactics_Effect.tac_bind
-                (FStar_Sealed.seal
-                   (Obj.magic
-                      (FStar_Range.mk_range "Pulse.Prover.Common.fsti"
-                         (Prims.of_int (141)) (Prims.of_int (10))
-                         (Prims.of_int (141)) (Prims.of_int (42)))))
-                (FStar_Sealed.seal
-                   (Obj.magic
-                      (FStar_Range.mk_range "Pulse.Prover.Common.fsti"
-                         (Prims.of_int (142)) (Prims.of_int (2))
-                         (Prims.of_int (147)) (Prims.of_int (13)))))
-                (Obj.magic
-                   (Pulse_Prover_Substs.check_well_typedness g uvs ss))
-                (fun b ->
-                   FStar_Tactics_Effect.lift_div_tac
-                     (fun uu___ ->
-                        if Prims.op_Negation b
-                        then FStar_Pervasives_Native.None
-                        else
-                          FStar_Pervasives_Native.Some
-                            (Pulse_Prover_Substs.st_typing_nt_substs g uvs
-                               (Pulse_Typing_Env.mk_env
-                                  (Pulse_Typing_Env.fstar_env g)) t c d
-                               (Pulse_Prover_Substs.as_nt_substs ss))))
+  fun uu___5 ->
+    fun uu___4 ->
+      fun uu___3 ->
+        fun uu___2 ->
+          fun uu___1 ->
+            fun uu___ ->
+              (fun g ->
+                 fun uvs ->
+                   fun t ->
+                     fun c ->
+                       fun d ->
+                         fun ss ->
+                           Obj.magic
+                             (FStar_Tactics_Effect.lift_div_tac
+                                (fun uu___ -> Prims.admit ()))) uu___5 uu___4
+                uu___3 uu___2 uu___1 uu___
 let (st_typing_weakening :
   Pulse_Typing_Env.env ->
     Pulse_Typing_Env.env ->
@@ -1703,7 +1690,7 @@ let (prove :
         Pulse_Typing_Env.env ->
           Pulse_Syntax_Base.vprop ->
             unit ->
-              ((Pulse_Typing_Env.env, Pulse_Prover_Substs.t,
+              ((Pulse_Typing_Env.env, Pulse_Prover_Substs.ss_t,
                  Pulse_Syntax_Base.vprop,
                  (unit, unit, unit, unit) continuation_elaborator)
                  FStar_Pervasives.dtuple4,
