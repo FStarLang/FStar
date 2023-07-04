@@ -10,6 +10,7 @@ open Pulse.Steel.Wrapper
 
 
 #push-options "--using_facts_from 'Prims FStar.Pervasives FStar.UInt FStar.UInt32 FStar.Ghost Pulse.Steel.Wrapper CustomSyntax'"
+#push-options "--ide_id_info_off"
 
 ```pulse
 fn test_write_10 (x:ref U32.t)

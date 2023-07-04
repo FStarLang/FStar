@@ -92,7 +92,10 @@ let infer_binder_types (g:env) (bs:list binder) (v:vprop)
     // T.print (Printf.sprintf "Instantiated abstraction is: %s" (T.term_to_string abstraction));
     match inst_abstraction.t with
     | Tm_FStar t -> instantiate_binders_with_fresh_names g t
-    |  _ -> T.fail "Impossible: Instantiated abstraction is not embedded F* term"
+    | t ->
+      match bs with
+      | [] -> [], elab_term inst_abstraction
+      | _ -> T.fail "Impossible: Instantiated abstraction is not embedded F* term"
 
 let option_must (f:option 'a) (msg:string) : T.Tac 'a =
   match f with
@@ -184,16 +187,10 @@ let check
       match hint_type with
       | ASSERT ->
         let assert_term = tm_fstar (`(Pulse.Steel.Wrapper.assert_)) st.range in
-        let vprops_to_assert = Pulse.Checker.VPropEquiv.vprop_as_list (Inf.apply_solution solution lhs) in
-        let tm =
-          L.fold_right 
-            (fun vp out -> 
-              let asrt = { term = Tm_STApp { head=assert_term; arg_qual=None; arg=vp}; 
-                          range = st.range } in
-              seq asrt out)
-            vprops_to_assert
-            (subst_st_term body sub)
-        in
+        let vprop_to_assert = Inf.apply_solution solution lhs in
+        let asrt = { term = Tm_STApp { head=assert_term; arg_qual=None; arg=vprop_to_assert}; 
+                     range = st.range } in
+        let tm = seq asrt (subst_st_term body sub) in
         debug_log g (fun _ -> Printf.sprintf "After with_binders: about to check %s\n" (P.st_term_to_string tm));
         check g tm pre pre_typing post_hint
       | UNFOLD _

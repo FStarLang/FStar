@@ -21,6 +21,7 @@ let rec fib_mono (n:nat) (m:nat { m <= n})
 open Pulse.Class.BoundedIntegers
 
 #push-options "--using_facts_from 'Prims FStar.Pervasives FStar.Ghost FStar.UInt FStar.UInt32 Pulse.Class.BoundedIntegers Fibo32'"
+#push-options "--ide_id_info_off"
 ```pulse
 fn fibo32 (k:U32.t) (_:squash(0ul < k /\ fits #U32.t (fib (v k))))
   requires emp

@@ -1,4 +1,16 @@
 open Prims
+let (debug_log :
+  (unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) ->
+    (unit, unit) FStar_Tactics_Effect.tac_repr)
+  =
+  fun uu___ ->
+    (fun f ->
+       if Pulse_RuntimeUtils.debug_at_level_no_module "readback"
+       then Obj.magic (Obj.repr (f ()))
+       else
+         Obj.magic
+           (Obj.repr (FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> ()))))
+      uu___
 let op_let_Question :
   'a 'b .
     'a FStar_Pervasives_Native.option ->
@@ -291,7 +303,7 @@ let (readback_comp :
   fun t ->
     let ropt = try_readback_st_comp t readback_ty in
     match ropt with
-    | FStar_Pervasives_Native.Some uu___ -> ropt
+    | FStar_Pervasives_Native.Some c -> ropt
     | uu___ ->
         op_let_Question (readback_ty t)
           (fun t' ->
