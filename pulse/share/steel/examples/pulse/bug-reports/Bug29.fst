@@ -49,3 +49,14 @@ fn test_assert_with_duplicates(r: ref nat)
     ()
 }
 ```
+
+
+```pulse
+fn test_with_assert_pure(r: R.ref nat)
+    requires R.pts_to r full_perm 5 
+    ensures R.pts_to r full_perm 5
+{
+    with v. assert (R.pts_to r full_perm v ** pure (v = 5));
+    ()
+}
+```
