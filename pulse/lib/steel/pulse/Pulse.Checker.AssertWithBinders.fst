@@ -92,7 +92,10 @@ let infer_binder_types (g:env) (bs:list binder) (v:vprop)
     // T.print (Printf.sprintf "Instantiated abstraction is: %s" (T.term_to_string abstraction));
     match inst_abstraction.t with
     | Tm_FStar t -> instantiate_binders_with_fresh_names g t
-    |  _ -> T.fail "Impossible: Instantiated abstraction is not embedded F* term"
+    | t ->
+      match bs with
+      | [] -> [], elab_term inst_abstraction
+      | _ -> T.fail "Impossible: Instantiated abstraction is not embedded F* term"
 
 let option_must (f:option 'a) (msg:string) : T.Tac 'a =
   match f with
