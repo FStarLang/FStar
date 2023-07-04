@@ -120,7 +120,7 @@ let prove
 
   : T.Tac (g1 : env { g1 `env_extends` g } &
            uvs1 : env { uvs1 `env_extends` uvs /\ disjoint uvs1 g1 } &
-           ss1 : PS.t { well_typed_ss ss1 uvs1 g1 } &
+           ss1 : PS.ss_t { well_typed_ss ss1 uvs1 g1 } &
            remaining_ctxt : vprop &
            continuation_elaborator g ctxt g1 (ss1.(goals) * remaining_ctxt)) =
 
@@ -147,8 +147,11 @@ let prove
     goals_inv = magic ();
   } in
   let pst = prover pst in
-  let b = PS.check_well_typedness pst.pg pst.uvs pst.ss in
-  if not b then fail pst.pg None "prove: ss not well-typed";
+  let ropt = PS.ss_to_nt_substs pst.pg pst.uvs pst.ss in
+  if None? ropt then fail pst.pg None "prove: ss not well-typed";
+  let Some nt = ropt in
+  // let b = PS.check_well_typedness pst.pg pst.uvs pst.ss in
+  // if not b then fail pst.pg None "prove: ss not well-typed";
   let k
     : continuation_elaborator
         g (ctxt * tm_emp)
@@ -157,7 +160,7 @@ let prove
     : vprop_equiv (push_env pst.pg pst.uvs) goals (list_as_vprop [] * pst.solved) = pst.goals_inv in
   let goals_inv
     : vprop_equiv pst.pg pst.ss.(goals) pst.ss.(list_as_vprop [] * pst.solved) =
-    PS.vprop_equiv_nt_substs_derived pst.pg pst.uvs goals_inv (PS.as_nt_substs pst.ss) in
+    PS.vprop_equiv_nt_substs_derived pst.pg pst.uvs goals_inv nt in
   (| pst.pg, pst.uvs, pst.ss, list_as_vprop pst.remaining_ctxt, k_elab_equiv k (magic ()) (magic ()) |)
 
 

@@ -88,12 +88,12 @@ noeq type preamble = {
   goals : vprop;
 }
 
-let op_Array_Access (ss:PS.t) (t:term) =
-  PS.subst_term t ss
+let op_Array_Access (ss:PS.ss_t) (t:term) =
+  PS.ss_term t ss
 
 let op_Star = tm_star
 
-let well_typed_ss (ss:PS.t) (uvs g:env) =
+let well_typed_ss (ss:PS.ss_t) (uvs g:env) =
   forall (x:var).
   PS.contains ss x ==> (Set.mem x (dom uvs) /\
                         tot_typing g (PS.sel ss x) (ss.(Some?.v (lookup uvs x))))
@@ -105,7 +105,7 @@ noeq type prover_state (preamble:preamble) = {
   remaining_ctxt_frame_typing : vprop_typing pg (list_as_vprop remaining_ctxt * preamble.frame);
 
   uvs : uvs:env { disjoint uvs pg };
-  ss : ss:PS.t { well_typed_ss ss uvs pg};
+  ss : ss:PS.ss_t { well_typed_ss ss uvs pg};
 
   solved : vprop;
   unsolved : list vprop;
@@ -134,17 +134,17 @@ let extend_post_hint_opt_g (g:env) (post_hint:post_hint_opt g) (g1:env { g1 `env
 
 let st_typing_subst (g:env) (uvs:env { disjoint uvs g }) (t:st_term) (c:comp_st)
   (d:st_typing (push_env g uvs) t c)
-  (ss:PS.t { well_typed_ss ss uvs g })
+  (ss:PS.ss_t { well_typed_ss ss uvs g })
 
-  : T.Tac (option (st_typing g (PS.subst_st_term t ss) (PS.subst_comp c ss))) =
+  : T.Tac (option (st_typing g (PS.ss_st_term t ss) (PS.ss_comp c ss))) = admit ()
 
-  let b = PS.check_well_typedness g uvs ss in
-  if not b then None
-  else let g' = mk_env (fstar_env g) in
-       assert (equal (push_env uvs g') uvs);
-       let d = PS.st_typing_nt_substs g uvs g' d (PS.as_nt_substs ss) in
-       assume (equal (push_env g (PS.nt_subst_env g' (PS.as_nt_substs ss))) g);
-       Some d
+  // let b = PS.check_well_typedness g uvs ss in
+  // if not b then None
+  // else let g' = mk_env (fstar_env g) in
+  //      assert (equal (push_env uvs g') uvs);
+  //      let d = PS.st_typing_nt_substs g uvs g' d (PS.as_nt_substs ss) in
+  //      assume (equal (push_env g (PS.nt_subst_env g' (PS.as_nt_substs ss))) g);
+  //      Some d
 
 let st_typing_weakening
   (g:env) (g':env { disjoint g g' })
@@ -175,7 +175,7 @@ let veq_weakening
   d
 
 
-let ss_extends (ss1 ss2:PS.t) =
+let ss_extends (ss1 ss2:PS.ss_t) =
   Set.subset (PS.dom ss2) (PS.dom ss1) /\
   (forall (x:var). PS.contains ss2 x ==> PS.sel ss1 x == PS.sel ss2 x)
 

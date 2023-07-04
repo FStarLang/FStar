@@ -113,14 +113,17 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
     : vprop_equiv (push_env pst_sub.pg pst_sub.uvs)
                   preamble_sub.goals
                   (list_as_vprop [] * pst_sub.solved) = pst_sub.goals_inv in
-  if not (PS.check_well_typedness pst_sub.pg pst_sub.uvs pst_sub.ss)
-  then fail pst_sub.pg None "intro exists ss not well-typed";
-  assert (PS.well_typed_ss pst_sub.pg pst_sub.uvs (PS.as_nt_substs pst_sub.ss));
+  let ropt = PS.ss_to_nt_substs pst_sub.pg pst_sub.uvs pst_sub.ss in
+  if None? ropt then fail pst_sub.pg None "intro exists ss not well-typed";
+  // if not (PS.check_well_typedness pst_sub.pg pst_sub.uvs pst_sub.ss)
+  // then fail pst_sub.pg None "intro exists ss not well-typed";
+  let Some nt = ropt in
+  assert (PS.well_typed_nt_substs pst_sub.pg pst_sub.uvs nt);
   let pst_sub_goals_inv
     : vprop_equiv pst_sub.pg
                   pst_sub.ss.(preamble_sub.goals)
                   pst_sub.ss.(list_as_vprop [] * pst_sub.solved) =
-    PS.vprop_equiv_nt_substs_derived pst_sub.pg pst_sub.uvs pst_sub_goals_inv (PS.as_nt_substs pst_sub.ss) in
+    PS.vprop_equiv_nt_substs_derived pst_sub.pg pst_sub.uvs pst_sub_goals_inv nt in
   assume (pst_sub.ss.(list_as_vprop [] * pst_sub.solved) ==
           tm_emp * pst_sub.ss.(pst_sub.solved));
   let pst_sub_goals_inv
@@ -170,6 +173,7 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
                      pst_sub.ss.(list_as_vprop unsolved')) *
                     (subst_term (pst_sub.ss.(body)) [DT 0 witness])) =
     k_elab_equiv k_sub (VE_Refl _ _) (magic ()) in
+
   let k_intro_exists
     : continuation_elaborator
         pst_sub.pg ((list_as_vprop pst_sub.remaining_ctxt *
@@ -177,11 +181,11 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
                      pst_sub.ss.(list_as_vprop unsolved')) *
                     (subst_term (pst_sub.ss.(body)) [DT 0 witness]))
         pst_sub.pg ( _ *
-                    (tm_exists_sl u (PS.nt_subst_binder b (PS.as_nt_substs pst_sub.ss)) pst_sub.ss.(body))) =
+                    (tm_exists_sl u (PS.nt_subst_binder b nt) pst_sub.ss.(body))) =
     k_intro_exists
       #pst_sub.pg
       #u
-      #(PS.nt_subst_binder b (PS.as_nt_substs pst_sub.ss))
+      #(PS.nt_subst_binder b nt)
       #pst_sub.ss.(body)
       (magic ())  // typing of tm_exists_sl with pst_sub.ss applied
       #witness
@@ -189,7 +193,7 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
       #_
       (magic ())  // frame typing
   in
-  assume (tm_exists_sl u (PS.nt_subst_binder b (PS.as_nt_substs pst_sub.ss)) pst_sub.ss.(body) ==
+  assume (tm_exists_sl u (PS.nt_subst_binder b nt) pst_sub.ss.(body) ==
           pst_sub.ss.(tm_exists_sl u b body));
   // pst_sub.ss extends pst.ss, and pst.ss already solved all of pst.solved
   assume (pst.ss.(pst.solved) == pst_sub.ss.(pst.solved));
@@ -282,7 +286,7 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
     : vprop_equiv pst_sub.pg
                   (pst_sub.ss.(preamble.goals))
                   (pst_sub.ss.(pst.solved * list_as_vprop pst.unsolved)) =
-    PS.vprop_equiv_nt_substs_derived pst_sub.pg pst_sub.uvs goals_inv (PS.as_nt_substs pst_sub.ss) in
+    PS.vprop_equiv_nt_substs_derived pst_sub.pg pst_sub.uvs goals_inv nt in
 
   // rewrite k using goals_inv
   let k

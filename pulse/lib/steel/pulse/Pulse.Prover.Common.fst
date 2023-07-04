@@ -364,7 +364,7 @@ let prove
   (#goals:vprop) (goals_typing:vprop_typing (push_env g uvs) goals)
 
   : T.Tac (g1 : env { g1 `env_extends` g /\ disjoint g1 uvs } &
-           ss : PS.t { well_typed_ss ss uvs g1 } &
+           ss : PS.ss_t { well_typed_ss ss uvs g1 } &
            remaining_ctxt : vprop &
            continuation_elaborator g ctxt g1 (ss.(goals) * remaining_ctxt)) = admit ()
 
