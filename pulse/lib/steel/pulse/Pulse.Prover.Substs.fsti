@@ -20,30 +20,16 @@ let dom (ss:ss_t) = Map.domain (as_map ss)
 let contains (ss:ss_t) (x:var) = Map.contains (as_map ss) x
 let sel (ss:ss_t) (x:var { contains ss x }) = Map.sel (as_map ss) x
 
-let solves (ss:ss_t) (uvs:env) =
-  Set.subset (dom ss) (Env.dom uvs) /\
-  (forall (x:var). contains ss x ==> Set.disjoint (freevars (sel ss x)) (Env.dom uvs))
-
 val empty : ss_t
 
-val push
-  (uvs:env)
-  (ss:ss_t { ss `solves` uvs })
-  (x:var { Set.mem x (Env.dom uvs) /\ ~ (contains ss x) })
-  (t:term { Set.disjoint (freevars t) (Env.dom uvs) })
-  : ss':ss_t { ss' `solves` uvs }
+val push (ss:ss_t) (x:var { ~ (contains ss x) }) (t:term) : ss_t
 
-val push_ss
-  (uvs:env)
-  (ss1:ss_t { ss1 `solves` uvs })
-  (ss2:ss_t { ss2 `solves` uvs /\ Set.disjoint (dom ss1) (dom ss2) })
-  : ss':ss_t { ss' `solves` uvs }
+val push_ss (ss1:ss_t) (ss2:ss_t { Set.disjoint (dom ss1) (dom ss2) }) : ss_t
 
-val push_as_map (uvs:env) (ss1 ss2:ss_t)
-  : Lemma (requires ss1 `solves` uvs /\ ss2 `solves` uvs /\ Set.disjoint (dom ss1) (dom ss2))
-          (ensures as_map (push_ss uvs ss1 ss2) ==
-                   Map.concat (as_map ss1) (as_map ss2))
-          [SMTPat (as_map (push_ss uvs ss1 ss2))]
+val push_as_map (ss1 ss2:ss_t)
+  : Lemma (requires Set.disjoint (dom ss1) (dom ss2))
+          (ensures as_map (push_ss ss1 ss2) == Map.concat (as_map ss1) (as_map ss2))
+          [SMTPat (as_map (push_ss ss1 ss2))]
 
 val ss_term (t:term) (ss:ss_t) : term
 val ss_st_term (t:st_term) (ss:ss_t) : st_term
@@ -108,21 +94,21 @@ let rec well_typed_nt_substs (g:env) (uvs:env) (nts:nt_substs)
     well_typed_nt_substs g (subst_env rest_uvs [ NT x e ]) nts_rest
   | _, _ -> False
 
-val is_permutation (uvs:env) (nts:nt_substs) (ss:ss_t) : Type0
+val is_permutation (nts:nt_substs) (ss:ss_t) : Type0
 
 val ss_to_nt_substs (g:env) (uvs:env) (ss:ss_t)
   : T.Tac (option (nts:nt_substs { well_typed_nt_substs g uvs nts /\
-                                   is_permutation uvs nts ss }))
+                                   is_permutation nts ss }))
 
-val ss_nt_subst (uvs:env) (ss:ss_t) (nts:nt_substs)
-  : Lemma (requires is_permutation uvs nts ss)
+val ss_nt_subst (g:env) (uvs:env) (ss:ss_t) (nts:nt_substs)
+  : Lemma (requires disjoint uvs g /\ well_typed_nt_substs g uvs nts /\ is_permutation nts ss)
           (ensures
              (forall (t:term). nt_subst_term t nts == ss_term t ss) /\
              (forall (b:binder). nt_subst_binder b nts == ss_binder b ss) /\
              (forall (t:st_term). nt_subst_st_term t nts == ss_st_term t ss) /\
              (forall (c:comp). nt_subst_comp c nts == ss_comp c ss) /\
              (forall (s:st_comp). nt_subst_st_comp s nts == ss_st_comp s ss))
-          [SMTPat (is_permutation uvs nts ss)]
+          [SMTPat (well_typed_nt_substs g uvs nts); SMTPat (is_permutation nts ss)]
 
 
 // type nt_substs = l:list subst_elt { forall elt. L.memP elt l ==> NT? elt }

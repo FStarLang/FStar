@@ -229,8 +229,6 @@ let rec unify (g:env) (uvs:env { disjoint uvs g})
   let q = ss.(q) in
   assume (freevars q `Set.disjoint` PS.dom ss);
 
-  assume (PS.solves PS.empty uvs);
-
   if eq_tm p q
   then begin
     assume (PS.dom ss `Set.subset` freevars q);
@@ -253,12 +251,11 @@ let rec unify (g:env) (uvs:env { disjoint uvs g})
          assume (Set.mem n (dom uvs));
          assume (~ (PS.contains PS.empty n));
          assume (Set.disjoint (freevars w) (dom uvs));
-         let ss_new = PS.push uvs PS.empty n w in
+         let ss_new = PS.push PS.empty n w in
          assume (n `Set.mem` freevars q);
          assume (Set.equal (PS.dom ss_new) (Set.singleton n));
          assert (Set.disjoint (PS.dom ss_new) (PS.dom ss));
-         assume (ss `PS.solves` uvs);
-         let ss' = PS.push_ss uvs ss ss_new in
+         let ss' = PS.push_ss ss ss_new in
          assume (ss' `ss_extends` ss);
          assume (ss'.(q0) == w);
          assume (well_typed_ss ss' uvs g);  // typechecker call?
@@ -274,12 +271,11 @@ let rec unify (g:env) (uvs:env { disjoint uvs g})
            assume (Set.mem n (dom uvs));
            assume (~ (PS.contains PS.empty n));
            assume (Set.disjoint (freevars p) (dom uvs));
-           let ss_new = PS.push uvs PS.empty n p in
+           let ss_new = PS.push PS.empty n p in
            assume (n `Set.mem` freevars q);
            assume (Set.equal (PS.dom ss_new) (Set.singleton n));
            assert (Set.disjoint (PS.dom ss_new) (PS.dom ss));
-           assume (ss `PS.solves` uvs);
-           let ss' = PS.push_ss uvs ss ss_new in
+           let ss' = PS.push_ss ss ss_new in
            assume (well_typed_ss ss' uvs g);  // p is already well-typed
            assume (PS.dom ss' `Set.subset` freevars q0);  // again equal
            assume (ss'.(q0) == p);
@@ -362,9 +358,7 @@ match ropt with
   assert (PS.dom ss_q `Set.disjoint` PS.dom pst.ss);
   assert (well_typed_ss ss_q pst.uvs pst.pg);
   
-  assume (pst.ss `PS.solves` pst.uvs);
-  assume (ss_q `PS.solves` pst.uvs);
-  let ss_new = PS.push_ss pst.uvs pst.ss ss_q in
+  let ss_new = PS.push_ss pst.ss ss_q in
   assume (well_typed_ss ss_new pst.uvs pst.pg);
 
   let veq : vprop_equiv pst.pg p (ss_q.(pst.ss.(q))) = veq in

@@ -62,11 +62,7 @@ let is_dom_push
 
   assert (Map.equal (remove_map (Map.upd m x t) x) m)
 
-let push
-  (uvs:env)
-  (ss:ss_t { ss `solves` uvs })
-  (x:var { Set.mem x (Env.dom uvs) /\ ~ (contains ss x) })
-  (t:term { Set.disjoint (freevars t) (Env.dom uvs) }) : ss':ss_t { ss' `solves` uvs } =
+let push (ss:ss_t) (x:var { ~ (contains ss x) }) (t:term) : ss_t =
   
   is_dom_push ss.l ss.m x t;
   { l = x::ss.l;
@@ -75,22 +71,33 @@ let push
 let tail (ss:ss_t { Cons? ss.l }) : ss_t =
    { l = L.tl ss.l; m = remove_map ss.m (L.hd ss.l) }
 
-let rec push_ss
-  (uvs:env)
-  (ss1:ss_t { ss1 `solves` uvs })
-  (ss2:ss_t { ss2 `solves` uvs /\ Set.disjoint (dom ss1) (dom ss2) })
-  : Tot (ss':ss_t { ss' `solves` uvs })
-        (decreases L.length ss2.l) =
+let rec push_ss (ss1:ss_t) (ss2:ss_t { Set.disjoint (dom ss1) (dom ss2) })
+  : Tot ss_t (decreases L.length ss2.l) =
   match ss2.l with
   | [] -> ss1
   | x::tl ->
-    push_ss uvs (push uvs ss1 x (Map.sel ss2.m x)) (tail ss2)
+    push_ss (push ss1 x (Map.sel ss2.m x)) (tail ss2)
 
-let push_as_map (uvs:env) (ss1 ss2:ss_t)
-  : Lemma (requires ss1 `solves` uvs /\ ss2 `solves` uvs /\ Set.disjoint (dom ss1) (dom ss2))
-          (ensures as_map (push_ss uvs ss1 ss2) ==
-                   Map.concat (as_map ss1) (as_map ss2))
-          [SMTPat (as_map (push_ss uvs ss1 ss2))] = admit ()
+#push-options "--warn_error -271"
+let push_as_map (ss1 ss2:ss_t)
+  : Lemma (requires Set.disjoint (dom ss1) (dom ss2))
+          (ensures Map.equal (as_map (push_ss ss1 ss2))
+                             (Map.concat (as_map ss1) (as_map ss2)))
+          (decreases L.length ss2.l)
+          [SMTPat (as_map (push_ss ss1 ss2))] =
+
+  let rec aux (ss1 ss2:ss_t)
+    : Lemma (requires Set.disjoint (dom ss1) (dom ss2))
+            (ensures Map.equal (as_map (push_ss ss1 ss2))
+                               (Map.concat (as_map ss1) (as_map ss2)))
+            (decreases L.length ss2.l)
+            [SMTPat ()] =
+    match ss2.l with
+    | [] -> ()
+    | x::tl -> aux (push ss1 x (Map.sel ss2.m x)) (tail ss2)
+  in
+  ()
+#pop-options
 
 let rec remove_l (l:ss_dom) (x:var { L.memP x l })
   : Pure ss_dom
@@ -195,15 +202,15 @@ let rec ss_comp_commutes (c:comp) (ss:ss_t)
   | [] -> ()
   | y::tl -> ss_comp_commutes (subst_comp c [ NT y (Map.sel ss.m y) ]) (tail ss)
 
-let is_permutation _ (nts:nt_substs) (ss:ss_t) : Type0 =
+let is_permutation (nts:nt_substs) (ss:ss_t) : Type0 =
   magic ()
 
 let rec ss_to_nt_substs (g:env) (uvs:env) (ss:ss_t)
   : T.Tac (option (nts:nt_substs { well_typed_nt_substs g uvs nts /\
-                                   is_permutation uvs nts ss })) =
+                                   is_permutation nts ss })) =
   
   match bindings uvs with
-  | [] -> assume (is_permutation uvs [] ss); Some []
+  | [] -> assume (is_permutation [] ss); Some []
   | _ ->
     let x, ty, rest_uvs = remove_binding uvs in
     if Map.contains ss.m x
@@ -217,12 +224,12 @@ let rec ss_to_nt_substs (g:env) (uvs:env) (ss:ss_t)
          | None -> None
          | Some nts ->
            let nts : nts:nt_substs { well_typed_nt_substs g uvs nts } = (NT x t)::nts in
-           assume (is_permutation uvs nts ss);
+           assume (is_permutation nts ss);
            Some nts
     else None
 
-let ss_nt_subst (uvs:env) (ss:ss_t) (nts:nt_substs)
-  : Lemma (requires is_permutation uvs nts ss)
+let ss_nt_subst (g:env) (uvs:env) (ss:ss_t) (nts:nt_substs)
+  : Lemma (requires disjoint uvs g /\ well_typed_nt_substs g uvs nts /\ is_permutation nts ss)
           (ensures
              (forall (t:term). nt_subst_term t nts == ss_term t ss) /\
              (forall (b:binder). nt_subst_binder b nts == ss_binder b ss) /\
