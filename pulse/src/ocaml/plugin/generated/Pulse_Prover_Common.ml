@@ -1635,22 +1635,35 @@ let (st_typing_subst :
                  FStar_Pervasives_Native.option,
                 unit) FStar_Tactics_Effect.tac_repr)
   =
-  fun uu___5 ->
-    fun uu___4 ->
-      fun uu___3 ->
-        fun uu___2 ->
-          fun uu___1 ->
-            fun uu___ ->
-              (fun g ->
-                 fun uvs ->
-                   fun t ->
-                     fun c ->
-                       fun d ->
-                         fun ss ->
-                           Obj.magic
-                             (FStar_Tactics_Effect.lift_div_tac
-                                (fun uu___ -> Prims.admit ()))) uu___5 uu___4
-                uu___3 uu___2 uu___1 uu___
+  fun g ->
+    fun uvs ->
+      fun t ->
+        fun c ->
+          fun d ->
+            fun ss ->
+              FStar_Tactics_Effect.tac_bind
+                (FStar_Sealed.seal
+                   (Obj.magic
+                      (FStar_Range.mk_range "Pulse.Prover.Common.fsti"
+                         (Prims.of_int (141)) (Prims.of_int (16))
+                         (Prims.of_int (141)) (Prims.of_int (43)))))
+                (FStar_Sealed.seal
+                   (Obj.magic
+                      (FStar_Range.mk_range "Pulse.Prover.Common.fsti"
+                         (Prims.of_int (142)) (Prims.of_int (2))
+                         (Prims.of_int (149)) (Prims.of_int (10)))))
+                (Obj.magic (Pulse_Prover_Substs.ss_to_nt_substs g uvs ss))
+                (fun nts_opt ->
+                   FStar_Tactics_Effect.lift_div_tac
+                     (fun uu___ ->
+                        match nts_opt with
+                        | FStar_Pervasives_Native.None ->
+                            FStar_Pervasives_Native.None
+                        | FStar_Pervasives_Native.Some nts ->
+                            FStar_Pervasives_Native.Some
+                              (Pulse_Prover_Substs.st_typing_nt_substs g uvs
+                                 (Pulse_Typing_Env.mk_env
+                                    (Pulse_Typing_Env.fstar_env g)) t c d nts)))
 let (st_typing_weakening :
   Pulse_Typing_Env.env ->
     Pulse_Typing_Env.env ->
