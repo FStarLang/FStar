@@ -202,15 +202,24 @@ let rec ss_comp_commutes (c:comp) (ss:ss_t)
   | [] -> ()
   | y::tl -> ss_comp_commutes (subst_comp c [ NT y (Map.sel ss.m y) ]) (tail ss)
 
-let is_permutation (nts:nt_substs) (ss:ss_t) : Type0 =
-  magic ()
+let rec is_permutation (nts:nt_substs) (ss:ss_t) : Type0 =
+  match nts, ss.l with
+  | [], [] -> True
+  | (NT x e)::nts_rest, _::_ ->
+    Map.contains ss.m x /\
+    Map.sel ss.m x == e /\
+    is_permutation nts_rest ({l=remove_l ss.l x; m=remove_map ss.m x})
+  | _ -> False
 
 let rec ss_to_nt_substs (g:env) (uvs:env) (ss:ss_t)
   : T.Tac (option (nts:nt_substs { well_typed_nt_substs g uvs nts /\
                                    is_permutation nts ss })) =
   
   match bindings uvs with
-  | [] -> assume (is_permutation [] ss); Some []
+  | [] ->
+    (match ss.l with
+     | [] -> Some []
+     | _ -> None)
   | _ ->
     let x, ty, rest_uvs = remove_binding uvs in
     if Map.contains ss.m x
@@ -224,7 +233,6 @@ let rec ss_to_nt_substs (g:env) (uvs:env) (ss:ss_t)
          | None -> None
          | Some nts ->
            let nts : nts:nt_substs { well_typed_nt_substs g uvs nts } = (NT x t)::nts in
-           assume (is_permutation nts ss);
            Some nts
     else None
 
