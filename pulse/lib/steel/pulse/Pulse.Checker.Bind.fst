@@ -129,6 +129,7 @@ let check_stapp_no_ctxt (g:env) (t:st_term { Tm_STApp? t.term })
            c:comp_st &
            st_typing (push_env g uvs) t c) = magic ()
 
+module PS = Pulse.Prover.Substs
 open Pulse.Prover.Common
 open Pulse.Prover
 #push-options "--z3rlimit_factor 8 --fuel 1 --ifuel 1"
@@ -153,8 +154,8 @@ let check_bindv2
     let x = fresh g1 in
     let px = b.binder_ppname, x in
     // TODO: if the binder is annotated, check subtyping
-    let g2 = push_binding g1 x b.binder_ppname ss1.(comp_res c1) in
-    let pre_e2 = open_term_nv ss1.(comp_post c1) px * remaining_pre in
+    let g2 = push_binding g1 x b.binder_ppname (PS.nt_subst_term (comp_res c1) ss1) in
+    let pre_e2 = open_term_nv (PS.nt_subst_term (comp_post c1) ss1) px * remaining_pre in
     assert (g2 `env_extends` g1);
     assert (g2 `env_extends` g);
     // magic is the typing of pre_e2 in g2
@@ -168,28 +169,27 @@ let check_bindv2
     else
       let d1 = st_typing_weakening g uvs e1 c1 d1 g1 in
       let d1 = st_typing_weakening_end g1 uvs e1 c1 d1 uvs1 in
-      let d1opt = st_typing_subst g1 uvs1 e1 c1 d1 ss1 in
-      if None? d1opt then fail g None "Bind: could not find a well-typed substitution"
-      else
+      let d1 = PS.st_typing_nt_substs_derived g1 uvs1 #e1 #c1 d1 ss1 in
+      // if None? d1opt then fail g None "Bind: could not find a well-typed substitution"
+      // else
         // g1 |- ss1 e1 : ss1 c1
-        let Some d1 = d1opt in
-        let (| e1, c1, d1 |) = add_frame d1 #remaining_pre (magic ()) in
-        assert (comp_pre c1 == ss1.(comp_pre c10) * remaining_pre);
-        assert (comp_res c1 == ss1.(comp_res c10));
-        assert (None? (lookup g1 x));
-        assert (comp_post c1 == ss1.(comp_post c10) * remaining_pre);
-        assume (open_term remaining_pre x == remaining_pre);
-        assert (open_term (comp_post c1) x == comp_pre c2);
+      let (| e1, c1, d1 |) = add_frame d1 #remaining_pre (magic ()) in
+      assert (comp_pre c1 == PS.nt_subst_term (comp_pre c10) ss1 * remaining_pre);
+      assert (comp_res c1 == PS.nt_subst_term (comp_res c10) ss1);
+      assert (None? (lookup g1 x));
+      assert (comp_post c1 == PS.nt_subst_term (comp_post c10) ss1 * remaining_pre);
+      assume (open_term remaining_pre x == remaining_pre);
+      assert (open_term (comp_post c1) x == comp_pre c2);
    
-        let e2_closed = close_st_term e2 x in
-        assume (open_st_term e2_closed x == e2);
-        let d1 : st_typing g1 e1 c1 = coerce_eq d1 () in
-        let d2
-          : st_typing (push_binding g1 (snd px) (fst px) (comp_res c1)) (open_st_term_nv e2_closed px) c2
-          = coerce_eq d2 () in
-        // let r = mk_bind' g1 (comp_pre c1) e1 e2_closed c1 c2 px d1 (magic ()) d2 post_hint () in
+      let e2_closed = close_st_term e2 x in
+      assume (open_st_term e2_closed x == e2);
+      let d1 : st_typing g1 e1 c1 = coerce_eq d1 () in
+      let d2
+        : st_typing (push_binding g1 (snd px) (fst px) (comp_res c1)) (open_st_term_nv e2_closed px) c2
+        = coerce_eq d2 () in
+      // let r = mk_bind' g1 (comp_pre c1) e1 e2_closed c1 c2 px d1 (magic ()) d2 post_hint () in
 
-        // k post_hint r
-        admit ()
+      // k post_hint r
+      admit ()
   | _ -> fail g None "Bind: e1 is not an stapp"
 #pop-options

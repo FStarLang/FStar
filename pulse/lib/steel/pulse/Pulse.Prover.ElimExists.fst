@@ -85,13 +85,12 @@ let elim_exists_pst (#preamble:_) (pst:prover_state preamble)
     k_elab_trans pst.k k in
   
   assume (list_as_vprop (vprop_as_list remaining_ctxt') == remaining_ctxt');
-  assume (well_typed_ss pst.ss pst.uvs g');
 
   { pst with
     pg = g';
     remaining_ctxt = vprop_as_list remaining_ctxt';
     remaining_ctxt_frame_typing = magic ();
-    solved_typing = magic ();  // weakening of pst.solved_typing
     k = k_new;
     goals_inv = magic ();  // weakening of pst.goals_inv
+    solved_inv = ()
   }

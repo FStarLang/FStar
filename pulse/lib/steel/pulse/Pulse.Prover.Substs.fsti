@@ -82,6 +82,26 @@ let nt_subst_env (g:env) (ss:nt_substs) : g':env { Env.dom g' == Env.dom g /\
   assume (Env.dom g' == Env.dom g /\ Env.fstar_env g' == Env.fstar_env g);
   g'
 
+val nt_substs_st_comp_commutes (s:st_comp) (nts:nt_substs)
+  : Lemma (ensures
+             nt_subst_st_comp s nts ==
+             { s with res = nt_subst_term s.res nts;
+                      pre = nt_subst_term s.pre nts;
+                      post = nt_subst_term s.post nts; })  // no shifting required
+          [SMTPat (nt_subst_st_comp s nts)]
+
+val nt_subst_comp_commutes (c:comp) (nts:nt_substs)
+  : Lemma (ensures
+             (let r = nt_subst_comp c nts in
+              (C_Tot? c ==> r == C_Tot (nt_subst_term (comp_res c) nts)) /\
+              (C_ST? c ==> r == C_ST (nt_subst_st_comp (st_comp_of_comp c) nts)) /\
+              (C_STAtomic? c ==> r == C_STAtomic (nt_subst_term (comp_inames c) nts)
+                                                 (nt_subst_st_comp (st_comp_of_comp c) nts)) /\
+              (C_STGhost? c ==> r == C_STGhost (nt_subst_term (comp_inames c) nts)
+                                               (nt_subst_st_comp (st_comp_of_comp c) nts))))
+          [SMTPat (nt_subst_comp c nts)]
+
+
 let rec well_typed_nt_substs (g:env) (uvs:env) (nts:nt_substs)
   : Tot Type0 (decreases L.length nts) =
   
@@ -181,6 +201,12 @@ val st_typing_nt_substs
   (#t:st_term) (#c:comp_st) (t_typing:st_typing (push_env g (push_env uvs g')) t c)
   (ss:nt_substs { well_typed_nt_substs g uvs ss })
 : st_typing (push_env g (nt_subst_env g' ss)) (nt_subst_st_term t ss) (nt_subst_comp c ss)
+
+val st_typing_nt_substs_derived
+  (g:env) (uvs:env { disjoint uvs g })
+  (#t:st_term) (#c:comp_st) (t_typing:st_typing (push_env g uvs) t c)
+  (ss:nt_substs { well_typed_nt_substs g uvs ss })
+: st_typing g (nt_subst_st_term t ss) (nt_subst_comp c ss)
 
 // val vprop_equiv_nt_substs
 //   (g:env) (uvs:env) (g':env { pairwise_disjoint g uvs g' })

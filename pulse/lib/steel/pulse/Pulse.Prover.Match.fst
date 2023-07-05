@@ -219,9 +219,8 @@ module RT = FStar.Reflection.Typing
 let rec unify (g:env) (uvs:env { disjoint uvs g})
   (#p #p_t:term) (p_typing:tot_typing g p p_t)
   (#q #q_t:term) (q_typing:tot_typing (push_env g uvs) q q_t)
-  (ss:PS.ss_t { well_typed_ss ss uvs g })
+  (ss:PS.ss_t)
   : T.Tac (option (ss':PS.ss_t { ss' `ss_extends` ss /\
-                                 well_typed_ss ss' uvs g /\
                                  PS.dom ss' `Set.subset` freevars q } &
                    RT.equiv (elab_env g) (elab_term p) (elab_term ss'.(q)))) =
 
@@ -258,7 +257,6 @@ let rec unify (g:env) (uvs:env { disjoint uvs g})
          let ss' = PS.push_ss ss ss_new in
          assume (ss' `ss_extends` ss);
          assume (ss'.(q0) == w);
-         assume (well_typed_ss ss' uvs g);  // typechecker call?
          assume (PS.dom ss' `Set.subset` freevars q0);  // they are actually equal
          let b, _ = T.check_equiv (elab_env g) (elab_term (mk_reveal u ty w)) (elab_term p) in
          if Some? b
@@ -276,7 +274,6 @@ let rec unify (g:env) (uvs:env { disjoint uvs g})
            assume (Set.equal (PS.dom ss_new) (Set.singleton n));
            assert (Set.disjoint (PS.dom ss_new) (PS.dom ss));
            let ss' = PS.push_ss ss ss_new in
-           assume (well_typed_ss ss' uvs g);  // p is already well-typed
            assume (PS.dom ss' `Set.subset` freevars q0);  // again equal
            assume (ss'.(q0) == p);
            Some (| ss', RT.EQ_Refl _ _ |)
@@ -291,7 +288,6 @@ let rec unify (g:env) (uvs:env { disjoint uvs g})
               | Some (| ss', _ |) ->
                 assume (Set.subset (PS.dom ss') (freevars q0));
                 let ss' : ss':PS.ss_t { ss' `ss_extends` ss /\
-                                        well_typed_ss ss' uvs g /\
                                         PS.dom ss' `Set.subset` freevars q0 } = ss' in
                 Some (| ss', magic () |)
               | None -> None)
@@ -315,7 +311,6 @@ let rec unify (g:env) (uvs:env { disjoint uvs g})
                     | Some (| ss', _|) ->
                       admit ();
                       let ss' : ss':PS.ss_t { ss' `ss_extends` ss /\
-                                              well_typed_ss ss' uvs g /\
                                               PS.dom ss' `Set.subset` freevars q0 } = ss' in
                       Some (| ss', magic () |)
                     | _ -> None)
@@ -326,17 +321,14 @@ let rec unify (g:env) (uvs:env { disjoint uvs g})
 let try_match_pq (g:env) (uvs:env { disjoint uvs g})
   (#p:vprop) (p_typing:vprop_typing g p)
   (#q:vprop) (q_typing:vprop_typing (push_env g uvs) q)
-  : T.Tac (option (ss:PS.ss_t { well_typed_ss ss uvs g /\
-                                PS.dom ss `Set.subset` freevars q } &
+  : T.Tac (option (ss:PS.ss_t { PS.dom ss `Set.subset` freevars q } &
                    vprop_equiv g p ss.(q))) =
 
-  assume (well_typed_ss PS.empty uvs g);
   let r = unify g uvs p_typing q_typing PS.empty in
   match r with
   | None -> None
   | Some (| ss, _ |) ->
-    let ss : ss:PS.ss_t { well_typed_ss ss uvs g /\
-                          PS.dom ss `Set.subset` freevars q } = ss in
+    let ss : ss:PS.ss_t { PS.dom ss `Set.subset` freevars q } = ss in
     Some (| ss, magic () |)
 
 let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y == x} = x
@@ -356,10 +348,8 @@ match ropt with
 | None -> None
 | Some (| ss_q, veq |) ->
   assert (PS.dom ss_q `Set.disjoint` PS.dom pst.ss);
-  assert (well_typed_ss ss_q pst.uvs pst.pg);
   
   let ss_new = PS.push_ss pst.ss ss_q in
-  assume (well_typed_ss ss_new pst.uvs pst.pg);
 
   let veq : vprop_equiv pst.pg p (ss_q.(pst.ss.(q))) = veq in
 
@@ -403,9 +393,9 @@ match ropt with
                ss=ss_new;
                solved=solved_new;
                unsolved=unsolved_new;
-               solved_typing=magic ();
                k;
-               goals_inv=magic (); } in
+               goals_inv=magic ();
+               solved_inv=magic () } in
 
   assume (ss_new `ss_extends` pst.ss);
   Some pst'
