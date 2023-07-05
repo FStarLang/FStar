@@ -162,7 +162,7 @@ let prove
     : vprop_equiv pst.pg pst.ss.(goals) pst.ss.(list_as_vprop [] * pst.solved) =
     PS.vprop_equiv_nt_substs_derived pst.pg pst.uvs goals_inv nt in
   (| pst.pg, pst.uvs, pst.ss, list_as_vprop pst.remaining_ctxt, k_elab_equiv k (magic ()) (magic ()) |)
-
+#pop-options
 
 // let vprop_as_list_of_list_as_vprop (l:list vprop)
 //   : Lemma (vprop_as_list (list_as_vprop l) == l)

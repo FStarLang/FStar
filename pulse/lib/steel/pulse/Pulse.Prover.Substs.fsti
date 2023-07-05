@@ -90,6 +90,12 @@ let nt_subst_st_comp (s:st_comp) (ss:nt_substs) : st_comp =
 let nt_subst_comp (c:comp) (ss:nt_substs) : comp =
   L.fold_left (fun c elt -> subst_comp c [elt]) c ss
 
+let nt_subst_env (g:env) (ss:nt_substs) : g':env { Env.dom g' == Env.dom g /\
+                                                   Env.fstar_env g' == Env.fstar_env g } =
+  let g' = L.fold_left (fun g elt -> subst_env g [elt]) g ss in
+  assume (Env.dom g' == Env.dom g /\ Env.fstar_env g' == Env.fstar_env g);
+  g'
+
 let rec well_typed_nt_substs (g:env) (uvs:env) (nts:nt_substs)
   : Tot Type0 (decreases L.length nts) =
   
@@ -184,11 +190,11 @@ val ss_nt_subst (uvs:env) (ss:ss_t) (nts:nt_substs)
 //     well_typed_ss g (subst_env rest_uvs [ NT x e ]) ss_rest
 //   | _, _ -> False
 
-// val st_typing_nt_substs
-//   (g:env) (uvs:env) (g':env { pairwise_disjoint g uvs g' })
-//   (#t:st_term) (#c:comp_st) (t_typing:st_typing (push_env g (push_env uvs g')) t c)
-//   (ss:nt_substs { well_typed_ss g uvs ss })
-// : st_typing (push_env g (nt_subst_env g' ss)) (nt_subst_st_term t ss) (nt_subst_comp c ss)
+val st_typing_nt_substs
+  (g:env) (uvs:env) (g':env { pairwise_disjoint g uvs g' })
+  (#t:st_term) (#c:comp_st) (t_typing:st_typing (push_env g (push_env uvs g')) t c)
+  (ss:nt_substs { well_typed_nt_substs g uvs ss })
+: st_typing (push_env g (nt_subst_env g' ss)) (nt_subst_st_term t ss) (nt_subst_comp c ss)
 
 // val vprop_equiv_nt_substs
 //   (g:env) (uvs:env) (g':env { pairwise_disjoint g uvs g' })

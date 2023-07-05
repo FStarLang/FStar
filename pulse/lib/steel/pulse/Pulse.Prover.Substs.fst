@@ -11,6 +11,8 @@ module L = FStar.List.Tot
 
 module Env = Pulse.Typing.Env
 
+let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b {y == x} = x
+
 let rec no_repeats (l:list var) : Type0 =
   match l with
   | [] -> True
@@ -228,6 +230,39 @@ let ss_nt_subst (uvs:env) (ss:ss_t) (nts:nt_substs)
              (forall (c:comp). nt_subst_comp c nts == ss_comp c ss) /\
              (forall (s:st_comp). nt_subst_st_comp s nts == ss_st_comp s ss)) = admit ()
 
+let rec st_typing_nt_substs
+  (g:env) (uvs:env) (g':env { pairwise_disjoint g uvs g' })
+  (#t:st_term) (#c:comp_st) (t_typing:st_typing (push_env g (push_env uvs g')) t c)
+  (nts:nt_substs { well_typed_nt_substs g uvs nts })
+  : Tot (st_typing (push_env g (nt_subst_env g' nts)) (nt_subst_st_term t nts) (nt_subst_comp c nts))
+        (decreases L.length nts) =
+
+  match bindings uvs with
+  | [] ->
+    assert (equal (push_env uvs g') g');
+    t_typing
+  | _ ->
+    let x, ty, uvs_rest = remove_binding uvs in
+    let (NT _ e)::nts_rest = nts in
+    let e_typing : tot_typing g e ty = FStar.IndefiniteDescription.elim_squash () in
+    push_env_assoc (singleton_env (fstar_env uvs) x ty) uvs_rest g';
+    let t_typing
+      : st_typing (push_env g (push_env (singleton_env (fstar_env g) x ty) (push_env uvs_rest g'))) t c
+      = coerce_eq t_typing () in
+    let t_typing
+      : st_typing (push_env g (subst_env (push_env uvs_rest g') [ NT x e ]))
+                  (subst_st_term t [ NT x e ])
+                  (subst_comp c [ NT x e ])
+      = st_typing_subst g x ty (push_env uvs_rest g') e_typing t_typing in
+
+    assume (subst_env (push_env uvs_rest g') [ NT x e ] ==
+            push_env (subst_env uvs_rest [ NT x e ]) (subst_env g' [ NT x e ]));
+
+    st_typing_nt_substs g
+      (subst_env uvs_rest [ NT x e ])
+      (subst_env g' [ NT x e ])
+      t_typing nts_rest
+   
 
 // let well_typed_nt_substs 
 
