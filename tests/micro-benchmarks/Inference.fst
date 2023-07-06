@@ -52,3 +52,6 @@ let rec lemma_desc_hash_empty_implies_no_desc
   (d:merkle_addr{is_desc_empty d a})
 : bool
 = admit ()
+
+(* Uvars of unit type get inferred to () *)
+let unit_uvar : unit = _
