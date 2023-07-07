@@ -1247,7 +1247,7 @@ let (substitutive_indexed_close_substs :
                                         [uu___5] in
                                       FStar_Compiler_List.op_At ss uu___4)
                            subst1 close_bs2 ct_args1)
-let (mk_indexed_close :
+let (close_layered_comp_with_combinator :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.bv Prims.list ->
       FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.comp)
@@ -1319,7 +1319,27 @@ let (mk_indexed_close :
             FStar_Syntax_Syntax.effect_args = effect_args;
             FStar_Syntax_Syntax.flags = (ct.FStar_Syntax_Syntax.flags)
           }
-let (close_layered_lcomp :
+let (close_layered_lcomp_with_combinator :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.bv Prims.list ->
+      FStar_TypeChecker_Common.lcomp -> FStar_TypeChecker_Common.lcomp)
+  =
+  fun env ->
+    fun bvs ->
+      fun lc ->
+        let bs =
+          FStar_Compiler_Effect.op_Bar_Greater bvs
+            (FStar_Compiler_List.map FStar_Syntax_Syntax.mk_binder) in
+        FStar_Compiler_Effect.op_Bar_Greater lc
+          (FStar_TypeChecker_Common.apply_lcomp
+             (close_layered_comp_with_combinator env bvs)
+             (fun g ->
+                let uu___ =
+                  FStar_Compiler_Effect.op_Bar_Greater g
+                    (FStar_TypeChecker_Env.close_guard env bs) in
+                FStar_Compiler_Effect.op_Bar_Greater uu___
+                  (close_guard_implicits env false bs)))
+let (close_layered_lcomp_with_substitutions :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.bv Prims.list ->
       FStar_Syntax_Syntax.term Prims.list ->
