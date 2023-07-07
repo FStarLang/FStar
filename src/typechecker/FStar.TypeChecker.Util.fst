@@ -713,9 +713,11 @@ let substitutive_indexed_close_substs (env:env)
     let eff_params_bs, close_bs = List.splitAt num_effect_params close_bs in
     let ct_eff_params_args, ct_args = List.splitAt num_effect_params ct_args in
     close_bs,
-    List.map2 (fun b (arg, _) -> NT (b.binder_bv, arg)) eff_params_bs ct_eff_params_args,
+    (subst@
+     List.map2 (fun b (arg, _) -> NT (b.binder_bv, arg)) eff_params_bs ct_eff_params_args),
     ct_args in
 
+  let close_bs, _ = List.splitAt (List.length close_bs - 1) close_bs in
   List.fold_left2 (fun ss b (ct_arg, _) ->
     ss@[NT (b.binder_bv, U.abs [b_bv |> S.mk_binder] ct_arg None)]
   ) subst close_bs ct_args

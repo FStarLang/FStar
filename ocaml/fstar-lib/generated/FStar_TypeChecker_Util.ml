@@ -1210,43 +1210,52 @@ let (substitutive_indexed_close_substs :
                           (match uu___3 with
                            | (ct_eff_params_args, ct_args1) ->
                                let uu___4 =
-                                 FStar_Compiler_List.map2
-                                   (fun b ->
-                                      fun uu___5 ->
-                                        match uu___5 with
-                                        | (arg, uu___6) ->
-                                            FStar_Syntax_Syntax.NT
-                                              ((b.FStar_Syntax_Syntax.binder_bv),
-                                                arg)) eff_params_bs
-                                   ct_eff_params_args in
+                                 let uu___5 =
+                                   FStar_Compiler_List.map2
+                                     (fun b ->
+                                        fun uu___6 ->
+                                          match uu___6 with
+                                          | (arg, uu___7) ->
+                                              FStar_Syntax_Syntax.NT
+                                                ((b.FStar_Syntax_Syntax.binder_bv),
+                                                  arg)) eff_params_bs
+                                     ct_eff_params_args in
+                                 FStar_Compiler_List.op_At subst uu___5 in
                                (close_bs2, uu___4, ct_args1)) in
                     (match uu___1 with
                      | (close_bs2, subst1, ct_args1) ->
-                         FStar_Compiler_List.fold_left2
-                           (fun ss ->
-                              fun b ->
-                                fun uu___2 ->
-                                  match uu___2 with
-                                  | (ct_arg, uu___3) ->
-                                      let uu___4 =
-                                        let uu___5 =
-                                          let uu___6 =
-                                            let uu___7 =
-                                              let uu___8 =
-                                                let uu___9 =
-                                                  FStar_Compiler_Effect.op_Bar_Greater
-                                                    b_bv
-                                                    FStar_Syntax_Syntax.mk_binder in
-                                                [uu___9] in
-                                              FStar_Syntax_Util.abs uu___8
-                                                ct_arg
-                                                FStar_Pervasives_Native.None in
-                                            ((b.FStar_Syntax_Syntax.binder_bv),
-                                              uu___7) in
-                                          FStar_Syntax_Syntax.NT uu___6 in
-                                        [uu___5] in
-                                      FStar_Compiler_List.op_At ss uu___4)
-                           subst1 close_bs2 ct_args1)
+                         let uu___2 =
+                           FStar_Compiler_List.splitAt
+                             ((FStar_Compiler_List.length close_bs2) -
+                                Prims.int_one) close_bs2 in
+                         (match uu___2 with
+                          | (close_bs3, uu___3) ->
+                              FStar_Compiler_List.fold_left2
+                                (fun ss ->
+                                   fun b ->
+                                     fun uu___4 ->
+                                       match uu___4 with
+                                       | (ct_arg, uu___5) ->
+                                           let uu___6 =
+                                             let uu___7 =
+                                               let uu___8 =
+                                                 let uu___9 =
+                                                   let uu___10 =
+                                                     let uu___11 =
+                                                       FStar_Compiler_Effect.op_Bar_Greater
+                                                         b_bv
+                                                         FStar_Syntax_Syntax.mk_binder in
+                                                     [uu___11] in
+                                                   FStar_Syntax_Util.abs
+                                                     uu___10 ct_arg
+                                                     FStar_Pervasives_Native.None in
+                                                 ((b.FStar_Syntax_Syntax.binder_bv),
+                                                   uu___9) in
+                                               FStar_Syntax_Syntax.NT uu___8 in
+                                             [uu___7] in
+                                           FStar_Compiler_List.op_At ss
+                                             uu___6) subst1 close_bs3
+                                ct_args1))
 let (close_layered_comp_with_combinator :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.bv Prims.list ->
