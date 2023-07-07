@@ -4930,12 +4930,15 @@ let (apply_layered_eff_combinators :
       let uu___2 = map3 combs.FStar_Syntax_Syntax.l_bind in
       let uu___3 = map3 combs.FStar_Syntax_Syntax.l_subcomp in
       let uu___4 = map3 combs.FStar_Syntax_Syntax.l_if_then_else in
+      let uu___5 =
+        FStar_Compiler_Util.map_option map2 combs.FStar_Syntax_Syntax.l_close in
       {
         FStar_Syntax_Syntax.l_repr = uu___;
         FStar_Syntax_Syntax.l_return = uu___1;
         FStar_Syntax_Syntax.l_bind = uu___2;
         FStar_Syntax_Syntax.l_subcomp = uu___3;
-        FStar_Syntax_Syntax.l_if_then_else = uu___4
+        FStar_Syntax_Syntax.l_if_then_else = uu___4;
+        FStar_Syntax_Syntax.l_close = uu___5
       }
 let (apply_eff_combinators :
   (FStar_Syntax_Syntax.tscheme -> FStar_Syntax_Syntax.tscheme) ->
@@ -4954,6 +4957,30 @@ let (apply_eff_combinators :
       | FStar_Syntax_Syntax.Layered_eff combs1 ->
           let uu___ = apply_layered_eff_combinators f combs1 in
           FStar_Syntax_Syntax.Layered_eff uu___
+let (get_layered_close_combinator :
+  FStar_Syntax_Syntax.eff_decl ->
+    FStar_Syntax_Syntax.tscheme FStar_Pervasives_Native.option)
+  =
+  fun ed ->
+    match ed.FStar_Syntax_Syntax.combinators with
+    | FStar_Syntax_Syntax.Layered_eff
+        { FStar_Syntax_Syntax.l_repr = uu___;
+          FStar_Syntax_Syntax.l_return = uu___1;
+          FStar_Syntax_Syntax.l_bind = uu___2;
+          FStar_Syntax_Syntax.l_subcomp = uu___3;
+          FStar_Syntax_Syntax.l_if_then_else = uu___4;
+          FStar_Syntax_Syntax.l_close = FStar_Pervasives_Native.None;_}
+        -> FStar_Pervasives_Native.None
+    | FStar_Syntax_Syntax.Layered_eff
+        { FStar_Syntax_Syntax.l_repr = uu___;
+          FStar_Syntax_Syntax.l_return = uu___1;
+          FStar_Syntax_Syntax.l_bind = uu___2;
+          FStar_Syntax_Syntax.l_subcomp = uu___3;
+          FStar_Syntax_Syntax.l_if_then_else = uu___4;
+          FStar_Syntax_Syntax.l_close = FStar_Pervasives_Native.Some
+            (ts, uu___5);_}
+        -> FStar_Pervasives_Native.Some ts
+    | uu___ -> FStar_Pervasives_Native.None
 let (get_wp_close_combinator :
   FStar_Syntax_Syntax.eff_decl ->
     FStar_Syntax_Syntax.tscheme FStar_Pervasives_Native.option)

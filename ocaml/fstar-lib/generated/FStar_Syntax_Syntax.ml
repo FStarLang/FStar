@@ -1486,17 +1486,20 @@ type layered_eff_combinators =
   l_if_then_else:
     (tscheme * tscheme * indexed_effect_combinator_kind
       FStar_Pervasives_Native.option)
-    }
+    ;
+  l_close: (tscheme * tscheme) FStar_Pervasives_Native.option }
 let (__proj__Mklayered_eff_combinators__item__l_repr :
   layered_eff_combinators -> (tscheme * tscheme)) =
   fun projectee ->
     match projectee with
-    | { l_repr; l_return; l_bind; l_subcomp; l_if_then_else;_} -> l_repr
+    | { l_repr; l_return; l_bind; l_subcomp; l_if_then_else; l_close;_} ->
+        l_repr
 let (__proj__Mklayered_eff_combinators__item__l_return :
   layered_eff_combinators -> (tscheme * tscheme)) =
   fun projectee ->
     match projectee with
-    | { l_repr; l_return; l_bind; l_subcomp; l_if_then_else;_} -> l_return
+    | { l_repr; l_return; l_bind; l_subcomp; l_if_then_else; l_close;_} ->
+        l_return
 let (__proj__Mklayered_eff_combinators__item__l_bind :
   layered_eff_combinators ->
     (tscheme * tscheme * indexed_effect_combinator_kind
@@ -1504,7 +1507,8 @@ let (__proj__Mklayered_eff_combinators__item__l_bind :
   =
   fun projectee ->
     match projectee with
-    | { l_repr; l_return; l_bind; l_subcomp; l_if_then_else;_} -> l_bind
+    | { l_repr; l_return; l_bind; l_subcomp; l_if_then_else; l_close;_} ->
+        l_bind
 let (__proj__Mklayered_eff_combinators__item__l_subcomp :
   layered_eff_combinators ->
     (tscheme * tscheme * indexed_effect_combinator_kind
@@ -1512,7 +1516,8 @@ let (__proj__Mklayered_eff_combinators__item__l_subcomp :
   =
   fun projectee ->
     match projectee with
-    | { l_repr; l_return; l_bind; l_subcomp; l_if_then_else;_} -> l_subcomp
+    | { l_repr; l_return; l_bind; l_subcomp; l_if_then_else; l_close;_} ->
+        l_subcomp
 let (__proj__Mklayered_eff_combinators__item__l_if_then_else :
   layered_eff_combinators ->
     (tscheme * tscheme * indexed_effect_combinator_kind
@@ -1520,8 +1525,16 @@ let (__proj__Mklayered_eff_combinators__item__l_if_then_else :
   =
   fun projectee ->
     match projectee with
-    | { l_repr; l_return; l_bind; l_subcomp; l_if_then_else;_} ->
+    | { l_repr; l_return; l_bind; l_subcomp; l_if_then_else; l_close;_} ->
         l_if_then_else
+let (__proj__Mklayered_eff_combinators__item__l_close :
+  layered_eff_combinators ->
+    (tscheme * tscheme) FStar_Pervasives_Native.option)
+  =
+  fun projectee ->
+    match projectee with
+    | { l_repr; l_return; l_bind; l_subcomp; l_if_then_else; l_close;_} ->
+        l_close
 type eff_combinators =
   | Primitive_eff of wp_eff_combinators 
   | DM4F_eff of wp_eff_combinators 
