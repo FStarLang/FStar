@@ -960,6 +960,64 @@ let validate_indexed_effect_ite_shape (env:env)
 
   k, kind
 
+
+//
+// Validate the shape of an indexed effect close combinator
+//
+let validate_indexed_effect_close_shape (env:env)
+  (eff_name:lident)
+  (sig_ts:tscheme)
+  (repr_ts:tscheme)
+  (u_a:univ_name)
+  (u_b:univ_name)
+  (close_tm:term)
+  (num_effect_params:int)
+  (r:Range.range) : term =
+
+  let close_name = BU.format1 "close_%s" (string_of_lid eff_name) in
+
+  let b_b = u_b |> U_name |> U.type_with_u |> S.gen_bv "b" None |> S.mk_binder in
+
+  let a_b::sig_bs = Env.inst_tscheme_with sig_ts [U_name u_a] |> snd |> U.arrow_formals |> fst in
+  let eff_params_bs, sig_bs = List.splitAt num_effect_params sig_bs in
+  let bs = List.map (fun b ->
+    let x_b = S.gen_bv "x" None (S.bv_to_name b_b.binder_bv) |> S.mk_binder in
+    {b with binder_bv={b.binder_bv with sort=U.arrow [x_b] (S.mk_Total b.binder_bv.sort)}}
+  ) sig_bs in
+  let f_b =
+    let _, repr_t = Env.inst_tscheme_with repr_ts [U_name u_a] in
+    let x_b = S.gen_bv "x" None (S.bv_to_name b_b.binder_bv) |> S.mk_binder in
+    let is_args =
+      List.map (fun {binder_bv} ->
+                S.mk_Tm_app (S.bv_to_name binder_bv) [x_b.binder_bv |> S.bv_to_name |> S.as_arg] Range.dummyRange
+                |> S.as_arg) bs in
+    let repr_app = S.mk_Tm_app repr_t ((a_b.binder_bv |> S.bv_to_name |> S.as_arg)::is_args) Range.dummyRange in
+    let f_sort = U.arrow [x_b] (S.mk_Total repr_app) in
+    S.gen_bv "f" None f_sort |> S.mk_binder in
+  let body_tm, g_body = TcUtil.fresh_effect_repr
+    (Env.push_binders env (a_b::b_b::(eff_params_bs@bs)))
+    r
+    eff_name
+    sig_ts
+    (Some repr_ts)
+    (U_name u_a)
+    (a_b.binder_bv |> S.bv_to_name) in
+  
+  let k = U.abs (a_b::b_b::(eff_params_bs@bs@[f_b])) body_tm None in
+
+  let g_eq =
+    match Rel.teq_nosmt env close_tm k with
+    | None ->
+      raise_error (Errors.Fatal_UnexpectedEffect,
+                   BU.format2 "Unexpected term for %s (%s)\n"
+                     close_name
+                     (Print.term_to_string close_tm)) r
+    | Some g -> g in
+  
+  Rel.force_trivial_guard env (Env.conj_guard g_body g_eq);
+
+  k |> N.remove_uvar_solutions env |> SS.compress
+
 //
 // Check the kind of an indexed effect lift
 //
@@ -1601,6 +1659,23 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
   )  //Errors.with_ctx
   in
 
+  let close_ =
+    let ts_opt = ed |> U.get_layered_close_combinator in
+    match ts_opt with
+    | None -> None
+    | Some close_ts ->
+      let r = (snd close_ts).pos in
+      let close_us, close_t, close_ty = check_and_gen "close" 2 close_ts in
+      let us, t = SS.open_univ_vars close_us close_t in
+      let env = Env.push_univ_vars env0 us in
+      let k =
+        let sig_ts = let us, t, _ = signature in (us, t) in
+        let repr_ts = let us, t, _ = repr in (us, t) in
+        let [u_a; u_b] = us in
+        validate_indexed_effect_close_shape env ed.mname sig_ts repr_ts u_a u_b t num_effect_params r
+      in
+      Some (close_us, k |> SS.close_univ_vars close_us, close_ty) in
+    
 
   (*
    * Actions
@@ -1785,6 +1860,9 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
     l_bind = tschemes_of bind_repr (Some bind_kind);
     l_subcomp = tschemes_of stronger_repr (Some subcomp_kind);
     l_if_then_else = tschemes_of if_then_else (Some ite_kind);
+    l_close = (match close_ with
+               | None -> None
+               | Some (us, t, ty) -> Some ((us, t), (us, ty)));
   }) in
 
   { ed with
