@@ -1165,6 +1165,160 @@ let (close_wp_lcomp :
                     (FStar_TypeChecker_Env.close_guard env bs) in
                 FStar_Compiler_Effect.op_Bar_Greater uu___
                   (close_guard_implicits env false bs)))
+let (substitutive_indexed_close_substs :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.binders ->
+      FStar_Syntax_Syntax.typ ->
+        FStar_Syntax_Syntax.bv ->
+          FStar_Syntax_Syntax.args ->
+            Prims.int ->
+              FStar_Compiler_Range_Type.range ->
+                FStar_Syntax_Syntax.subst_elt Prims.list)
+  =
+  fun env ->
+    fun close_bs ->
+      fun a ->
+        fun b_bv ->
+          fun ct_args ->
+            fun num_effect_params ->
+              fun r ->
+                let debug =
+                  FStar_Compiler_Effect.op_Less_Bar
+                    (FStar_TypeChecker_Env.debug env)
+                    (FStar_Options.Other "LayeredEffectsApp") in
+                let uu___ =
+                  let uu___1 = close_bs in
+                  match uu___1 with
+                  | a_b::b_b::close_bs1 ->
+                      (close_bs1,
+                        [FStar_Syntax_Syntax.NT
+                           ((a_b.FStar_Syntax_Syntax.binder_bv), a);
+                        FStar_Syntax_Syntax.NT
+                          ((b_b.FStar_Syntax_Syntax.binder_bv),
+                            (b_bv.FStar_Syntax_Syntax.sort))]) in
+                match uu___ with
+                | (close_bs1, subst) ->
+                    let uu___1 =
+                      let uu___2 =
+                        FStar_Compiler_List.splitAt num_effect_params
+                          close_bs1 in
+                      match uu___2 with
+                      | (eff_params_bs, close_bs2) ->
+                          let uu___3 =
+                            FStar_Compiler_List.splitAt num_effect_params
+                              ct_args in
+                          (match uu___3 with
+                           | (ct_eff_params_args, ct_args1) ->
+                               let uu___4 =
+                                 FStar_Compiler_List.map2
+                                   (fun b ->
+                                      fun uu___5 ->
+                                        match uu___5 with
+                                        | (arg, uu___6) ->
+                                            FStar_Syntax_Syntax.NT
+                                              ((b.FStar_Syntax_Syntax.binder_bv),
+                                                arg)) eff_params_bs
+                                   ct_eff_params_args in
+                               (close_bs2, uu___4, ct_args1)) in
+                    (match uu___1 with
+                     | (close_bs2, subst1, ct_args1) ->
+                         FStar_Compiler_List.fold_left2
+                           (fun ss ->
+                              fun b ->
+                                fun uu___2 ->
+                                  match uu___2 with
+                                  | (ct_arg, uu___3) ->
+                                      let uu___4 =
+                                        let uu___5 =
+                                          let uu___6 =
+                                            let uu___7 =
+                                              let uu___8 =
+                                                let uu___9 =
+                                                  FStar_Compiler_Effect.op_Bar_Greater
+                                                    b_bv
+                                                    FStar_Syntax_Syntax.mk_binder in
+                                                [uu___9] in
+                                              FStar_Syntax_Util.abs uu___8
+                                                ct_arg
+                                                FStar_Pervasives_Native.None in
+                                            ((b.FStar_Syntax_Syntax.binder_bv),
+                                              uu___7) in
+                                          FStar_Syntax_Syntax.NT uu___6 in
+                                        [uu___5] in
+                                      FStar_Compiler_List.op_At ss uu___4)
+                           subst1 close_bs2 ct_args1)
+let (mk_indexed_close :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.bv Prims.list ->
+      FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.comp)
+  =
+  fun env ->
+    fun bvs ->
+      fun c ->
+        let r = c.FStar_Syntax_Syntax.pos in
+        let env_bvs = FStar_TypeChecker_Env.push_bvs env bvs in
+        let ct = FStar_TypeChecker_Env.unfold_effect_abbrev env_bvs c in
+        let ed =
+          FStar_TypeChecker_Env.get_effect_decl env_bvs
+            ct.FStar_Syntax_Syntax.effect_name in
+        let num_effect_params =
+          match ed.FStar_Syntax_Syntax.signature with
+          | FStar_Syntax_Syntax.Layered_eff_sig (n, uu___) -> n
+          | uu___ ->
+              FStar_Errors.raise_error
+                (FStar_Errors_Codes.Fatal_UnexpectedEffect,
+                  "mk_indexed_close called with a non-indexed effect") r in
+        let close_ts =
+          let uu___ = FStar_Syntax_Util.get_layered_close_combinator ed in
+          FStar_Compiler_Effect.op_Bar_Greater uu___ FStar_Compiler_Util.must in
+        let effect_args =
+          FStar_Compiler_List.fold_right
+            (fun x ->
+               fun args ->
+                 let u_a =
+                   FStar_Compiler_List.hd ct.FStar_Syntax_Syntax.comp_univs in
+                 let u_b =
+                   env.FStar_TypeChecker_Env.universe_of env_bvs
+                     x.FStar_Syntax_Syntax.sort in
+                 let uu___ =
+                   FStar_TypeChecker_Env.inst_tscheme_with close_ts
+                     [u_a; u_b] in
+                 match uu___ with
+                 | (uu___1, close_t) ->
+                     let uu___2 = FStar_Syntax_Util.abs_formals close_t in
+                     (match uu___2 with
+                      | (close_bs, close_body, uu___3) ->
+                          let ss =
+                            substitutive_indexed_close_substs env_bvs
+                              close_bs ct.FStar_Syntax_Syntax.result_typ x
+                              args num_effect_params r in
+                          let uu___4 =
+                            let uu___5 =
+                              let uu___6 =
+                                FStar_Syntax_Subst.subst ss close_body in
+                              FStar_Syntax_Subst.compress uu___6 in
+                            uu___5.FStar_Syntax_Syntax.n in
+                          (match uu___4 with
+                           | FStar_Syntax_Syntax.Tm_app
+                               { FStar_Syntax_Syntax.hd = uu___5;
+                                 FStar_Syntax_Syntax.args = uu___6::args1;_}
+                               -> args1
+                           | uu___5 ->
+                               FStar_Errors.raise_error
+                                 (FStar_Errors_Codes.Fatal_UnexpectedEffect,
+                                   "Unexpected close combinator shape") r)))
+            bvs ct.FStar_Syntax_Syntax.effect_args in
+        FStar_Syntax_Syntax.mk_Comp
+          {
+            FStar_Syntax_Syntax.comp_univs =
+              (ct.FStar_Syntax_Syntax.comp_univs);
+            FStar_Syntax_Syntax.effect_name =
+              (ct.FStar_Syntax_Syntax.effect_name);
+            FStar_Syntax_Syntax.result_typ =
+              (ct.FStar_Syntax_Syntax.result_typ);
+            FStar_Syntax_Syntax.effect_args = effect_args;
+            FStar_Syntax_Syntax.flags = (ct.FStar_Syntax_Syntax.flags)
+          }
 let (close_layered_lcomp :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.bv Prims.list ->
