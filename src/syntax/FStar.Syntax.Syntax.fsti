@@ -563,6 +563,7 @@ type layered_eff_combinators = {
   l_bind         : (tscheme * tscheme * option indexed_effect_combinator_kind);
   l_subcomp      : (tscheme * tscheme * option indexed_effect_combinator_kind);
   l_if_then_else : (tscheme * tscheme * option indexed_effect_combinator_kind);
+  l_close        : option (tscheme * tscheme)
 }
 
 type eff_combinators =

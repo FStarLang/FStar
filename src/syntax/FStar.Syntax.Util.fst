@@ -2388,13 +2388,20 @@ let apply_layered_eff_combinators (f:tscheme -> tscheme) (combs:layered_eff_comb
     l_return = map2 combs.l_return;
     l_bind = map3 combs.l_bind;
     l_subcomp = map3 combs.l_subcomp;
-    l_if_then_else = map3 combs.l_if_then_else }
+    l_if_then_else = map3 combs.l_if_then_else;
+    l_close = map_option map2 combs.l_close; }
 
 let apply_eff_combinators (f:tscheme -> tscheme) (combs:eff_combinators) : eff_combinators =
   match combs with
   | Primitive_eff combs -> Primitive_eff (apply_wp_eff_combinators f combs)
   | DM4F_eff combs -> DM4F_eff (apply_wp_eff_combinators f combs)
   | Layered_eff combs -> Layered_eff (apply_layered_eff_combinators f combs)
+
+let get_layered_close_combinator (ed:eff_decl) : option tscheme =
+  match ed.combinators with
+  | Layered_eff {l_close=None} -> None
+  | Layered_eff {l_close=Some (ts, _)} -> Some ts
+  | _ -> None
 
 let get_wp_close_combinator (ed:eff_decl) : option tscheme =
   match ed.combinators with
