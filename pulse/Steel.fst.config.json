@@ -1,3 +1,16 @@
-{ "fstar_exe":"fstar.exe",
-  "options":["--load_cmxs", "steel"],
-  "include_dirs":["lib/steel", "lib/steel/pulse", "share/steel/examples/pulse", "share/steel/examples/pulse/bug-reports", "share/steel/examples/pulse/dice"] }
+{
+  "fstar_exe": "fstar.exe",
+  "options": [
+    "--load_cmxs",
+    "steel"
+  ],
+  "include_dirs": [
+    "lib/steel",
+    "lib/steel/pulse",
+    "share/steel/examples/pulse",
+    "share/steel/examples/pulse/bug-reports",
+    "share/steel/examples/pulse/dice",
+    "share/steel/examples/pulse/dice/lib",
+    "share/steel/examples/pulse/dice/common"
+  ]
+}
