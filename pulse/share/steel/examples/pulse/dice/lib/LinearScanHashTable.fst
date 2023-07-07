@@ -27,10 +27,16 @@ type repr_t (s : pht_sig) (sz : pos) =
 let canonical_index #s (k : s.keyt) (sz : pos) : n:nat{n < sz} =
   (s.hashf k) % sz
 
+let (@@) = Seq.index
+
+let (++) #s (htf : spec_t s) (k, v) : spec_t s =
+  fun k' ->
+    if k = k' then Some v else htf k'
+
 let rec walk #s #sz (repr : repr_t s sz) (idx:nat) (k : s.keyt) (off:nat{off <= sz}) : Tot (option s.valt) (decreases sz - off) =
   if off = sz then None
   else
-  match repr `Seq.index` ((idx + off) % sz) with
+  match repr @@ ((idx + off) % sz) with
   | Clean -> None
   | Used k' v ->
     if k = k'
@@ -72,19 +78,13 @@ type pht (s : pht_sig) = {
   inv : squash (pht_models s sz spec repr);
 }
 
-let (@@) = Seq.index
-
-let (++) #s (htf : spec_t s) (k, v) : spec_t s =
-  fun k' ->
-    if k = k' then Some v else htf k'
-
 let lookup #s (ht : pht s) (k : s.keyt) : option s.valt =
   lookup_repr ht.repr k
   
 let upd1 #s #sz (repr : repr_t s sz) idx k v : repr_t s sz =
   Seq.upd repr idx (Used k v)
   
-let clean_up_lookup_walk #s #sz (spec1 spec2 : spec_t s) (repr1 repr2 : repr_t s sz) idx k v (k':_{k =!= k'})
+let clean_upd_lookup_walk #s #sz (spec1 spec2 : spec_t s) (repr1 repr2 : repr_t s sz) idx k v (k':_{k =!= k'})
   : Lemma (requires
       (forall i. i < sz /\ i <> idx ==> repr1 @@ i == repr2 @@ i)
       /\ None? (lookup_repr repr1 k)
@@ -114,7 +114,7 @@ let clean_up_lookup_walk #s #sz (spec1 spec2 : spec_t s) (repr1 repr2 : repr_t s
         ()
       end
     else begin
-      match repr1 `Seq.index` ((idx' + off) % sz) with
+      match repr1 @@ ((idx' + off) % sz) with
       | Clean -> ()
       | Used k'' v'' ->
         if k' = k'' then
@@ -137,7 +137,60 @@ let clean_up_lookup_walk #s #sz (spec1 spec2 : spec_t s) (repr1 repr2 : repr_t s
     end
   in
   aux 0
-  
+
+// let used_upd_lookup_walk #s #sz (spec1 spec2 : spec_t s) (repr1 repr2 : repr_t s sz) idx k v (k':_{k =!= k'})
+//   : Lemma (requires
+//       (forall i. i < sz /\ i <> idx ==> repr1 @@ i == repr2 @@ i)
+//       /\ pht_models s sz spec1 repr1
+//       /\ Used? (repr1 @@ idx)
+//       /\ repr2 @@ idx == Used k v // reundandant, given precondition below
+//       /\ repr2 == upd1 repr1 idx k v
+//       /\ spec2 == spec1 ++ (k,v))
+//       (ensures lookup_repr repr1 k' == lookup_repr repr2 k')
+// =
+//   let idx' = canonical_index k' sz in
+//   let rec aux (off:nat{off <= sz}) : Lemma
+//         (requires walk repr1 idx' k' off == lookup_repr repr1 k'
+//                /\ walk repr2 idx' k' off == lookup_repr repr2 k')
+//         (ensures walk repr1 idx' k' off == walk repr2 idx' k' off)
+//         (decreases sz - off) 
+//   =
+//     if off = sz then ()
+//     else if (idx' + off) % sz = idx then
+//       begin 
+//         assert (None? (walk repr1 idx' k' off));
+//         assert (None? (lookup_repr repr1 k'));
+//         assert (None? (lookup_spec spec1 k'));
+//         assert (None? (lookup_spec spec2 k'));
+//         assume (None? (lookup_repr repr2 k')); // FIXME: requires backwards containment / no dups in pht_models
+//         assert (None? (walk repr2 idx' k' off));
+//         ()
+//       end
+//     else begin
+//       match repr1 @@ ((idx' + off) % sz) with
+//       | Clean -> ()
+//       | Used k'' v'' ->
+//         if k' = k'' then
+//           ()
+//         else
+//         if k = k'' then (
+//           // NOTE: this requires the backwards containment in
+//           // pht_models: otherwise there may very well be
+//           // extraneous Used k v cells in repr1.
+
+//           // Not only that, but even with that property, we would
+//           // not be ruling out any other extraneous duplicate occurrence
+//           // of k within the sequence. So we cannot prove this without
+//           // more hypotheses.
+//           admit()
+//         )
+//         else aux (off+1)
+//       | Zombie ->
+//         aux (off+1)
+//     end
+//   in
+//   aux 0
+
 let used_not_by #s #sz (repr : repr_t s sz) (k : s.keyt) (i : nat{i < sz}): prop =
   Used? (repr @@ i) /\ Used?.k (repr @@ i) <> k
   
@@ -172,7 +225,7 @@ let lem_walk_from_canonical_all_used #s #sz
 let clean_upd #s #sz spec (repr : repr_t s sz{pht_models s sz spec repr}) idx k v 
   : Lemma
        (requires None? (lookup_repr repr k)
-              /\ Seq.index repr idx == Clean
+              /\ repr @@ idx == Clean
               /\ all_used_not_by repr (canonical_index k sz) idx k)
        (ensures pht_models s sz (spec ++ (k,v)) (upd1 repr idx k v))
   = let spec' = spec ++ (k,v) in
@@ -187,11 +240,34 @@ let clean_upd #s #sz spec (repr : repr_t s sz{pht_models s sz spec repr}) idx k 
         let Some v' = lookup_spec spec k' in
         assert (lookup_repr repr k' == Some v');
         assert (lookup_spec spec' k' == Some v');
-        clean_up_lookup_walk spec spec' repr repr' idx k v k';
+        clean_upd_lookup_walk spec spec' repr repr' idx k v k';
         ()
       )
     in
     Classical.forall_intro (Classical.move_requires aux)
+
+// let used_upd #s #sz spec (repr : repr_t s sz{pht_models s sz spec repr}) idx k v 
+//   : Lemma
+//        (requires Used? (repr @@ idx)
+//               /\ all_used_not_by repr (canonical_index k sz) idx k)
+//        (ensures pht_models s sz (spec ++ (k,v)) (upd1 repr idx k v))
+//   = let spec' = spec ++ (k,v) in
+//     let repr' = upd1 repr idx k v in
+//     let aux (k':s.keyt) : Lemma (requires (Some? (lookup_spec spec' k')))
+//                                 (ensures (lookup_repr repr' k' == lookup_spec spec' k'))
+//     =
+//       if k' = k then
+//         lem_walk_from_canonical_all_used repr' idx k v
+//       else (
+//         assert (Some? (lookup_spec spec k'));
+//         let Some v' = lookup_spec spec k' in
+//         assert (lookup_repr repr k' == Some v');
+//         assert (lookup_spec spec' k' == Some v');
+//         used_upd_lookup_walk spec spec' repr repr' idx k v k';
+//         ()
+//       )
+//     in
+//     Classical.forall_intro (Classical.move_requires aux)
 
 let insert_repr #s #sz (#spec : erased (spec_t s)) (repr : repr_t s sz{pht_models s sz spec repr}) (k : s.keyt) (v : s.valt)
 : r':repr_t s sz{pht_models s sz (spec ++ (k,v)) r'}
@@ -199,13 +275,13 @@ let insert_repr #s #sz (#spec : erased (spec_t s)) (repr : repr_t s sz{pht_model
   let cidx = canonical_index k sz in
   let rec walk_ (off:nat{off <= sz}) (_ : squash (all_used_not_by repr cidx ((cidx+off) % sz) k))
                                      (_ : squash (walk repr cidx k off == lookup_repr repr k))
-    : Tot (r':repr_t s sz{pht_models s sz (spec ++ (k,v)) r'})
+    : Tot (repr':repr_t s sz{pht_models s sz (spec ++ (k,v)) repr'})
           (decreases sz - off)
     =
       if off = sz then admit() // FIXME: table full, need side condition
       else
       let idx = (cidx+off) % sz in
-      match repr `Seq.index` idx with
+      match repr @@ idx with
       | Used k' _ ->
         if k = k'
         then begin
@@ -213,6 +289,8 @@ let insert_repr #s #sz (#spec : erased (spec_t s)) (repr : repr_t s sz{pht_model
           // similar to the Clean case, where we accumulate a all_used_not_by proof
           // and then use it to show that the two walks are the same.
           admit();
+          assume (Some? (lookup_spec (spec ++ (k,v)) k));
+          assume (lookup_repr (upd1 repr idx k v) k == lookup_spec (spec ++ (k,v)) k);
           upd1 repr idx k v
         end else begin 
           assert (all_used_not_by repr cidx ((cidx+off) % sz) k);
@@ -222,7 +300,6 @@ let insert_repr #s #sz (#spec : erased (spec_t s)) (repr : repr_t s sz{pht_model
         end
 
       | Clean ->
-        assert (None? (lookup_repr repr k));
         clean_upd spec repr idx k v;
         upd1 repr idx k v
 
