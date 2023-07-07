@@ -84,13 +84,15 @@ let lookup #s (ht : pht s) (k : s.keyt) : option s.valt =
 let upd1 #s #sz (repr : repr_t s sz) idx k v : repr_t s sz =
   Seq.upd repr idx (Used k v)
   
-let clean_up_lookup_walk #s #sz spec (repr1 repr2 : repr_t s sz) idx k v (k':_{k =!= k'})
+let clean_up_lookup_walk #s #sz (spec1 spec2 : spec_t s) (repr1 repr2 : repr_t s sz) idx k v (k':_{k =!= k'})
   : Lemma (requires
       (forall i. i < sz /\ i <> idx ==> repr1 @@ i == repr2 @@ i)
-      /\ None? (lookup_spec spec k)
-      /\ pht_models s sz spec repr1
+      /\ None? (lookup_spec spec1 k)
+      /\ pht_models s sz spec1 repr1
       /\ repr1 @@ idx == Clean
-      /\ repr2 @@ idx == Used k v)
+      /\ repr2 @@ idx == Used k v
+      /\ repr2 == upd1 repr1 idx k v
+      /\ spec2 == spec1 ++ (k,v))
       (ensures lookup_repr repr1 k' == lookup_repr repr2 k')
 =
   let idx' = canonical_index k' sz in
@@ -100,7 +102,15 @@ let clean_up_lookup_walk #s #sz spec (repr1 repr2 : repr_t s sz) idx k v (k':_{k
       // We're looking for k'. On the LHS, we got a Clean, so k' is not in
       // repr1. That means it should not be in spec. And on the RHS, it's repr1
       // plus (k,v), so k' should also not be there. Need to write this up.
-      admit ()
+      begin 
+        assert (None? (walk repr1 idx' k' off));
+        assume (None? (lookup_repr repr1 k'));
+        assert (None? (lookup_spec spec1 k'));
+        assert (None? (lookup_spec spec2 k'));
+        assume (None? (lookup_repr repr2 k'));
+        assume (None? (walk repr2 idx' k' off));
+        ()
+      end
     else begin
       match repr1 `Seq.index` ((idx' + off) % sz) with
       | Clean -> ()
@@ -175,7 +185,7 @@ let clean_upd #s #sz spec (repr : repr_t s sz{pht_models s sz spec repr}) idx k 
         let Some v' = lookup_spec spec k' in
         assert (lookup_repr repr k' == Some v');
         assert (lookup_spec spec' k' == Some v');
-        clean_up_lookup_walk spec repr repr' idx k v k';
+        clean_up_lookup_walk spec spec' repr repr' idx k v k';
         ()
       )
     in
