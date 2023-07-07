@@ -87,28 +87,30 @@ let upd1 #s #sz (repr : repr_t s sz) idx k v : repr_t s sz =
 let clean_up_lookup_walk #s #sz (spec1 spec2 : spec_t s) (repr1 repr2 : repr_t s sz) idx k v (k':_{k =!= k'})
   : Lemma (requires
       (forall i. i < sz /\ i <> idx ==> repr1 @@ i == repr2 @@ i)
-      /\ None? (lookup_spec spec1 k)
+      /\ None? (lookup_repr repr1 k)
       /\ pht_models s sz spec1 repr1
       /\ repr1 @@ idx == Clean
-      /\ repr2 @@ idx == Used k v
+      // /\ repr2 @@ idx == Used k v // reundandant, given precondition below
       /\ repr2 == upd1 repr1 idx k v
       /\ spec2 == spec1 ++ (k,v))
       (ensures lookup_repr repr1 k' == lookup_repr repr2 k')
 =
   let idx' = canonical_index k' sz in
-  let rec aux (off:nat{off <= sz}) : Lemma (ensures walk repr1 idx' k' off == walk repr2 idx' k' off) (decreases sz - off) =
+  let rec aux (off:nat{off <= sz}) : Lemma
+        (requires walk repr1 idx' k' off == lookup_repr repr1 k'
+               /\ walk repr2 idx' k' off == lookup_repr repr2 k')
+        (ensures walk repr1 idx' k' off == walk repr2 idx' k' off)
+        (decreases sz - off) 
+  =
     if off = sz then ()
     else if (idx' + off) % sz = idx then
-      // We're looking for k'. On the LHS, we got a Clean, so k' is not in
-      // repr1. That means it should not be in spec. And on the RHS, it's repr1
-      // plus (k,v), so k' should also not be there. Need to write this up.
       begin 
         assert (None? (walk repr1 idx' k' off));
-        assume (None? (lookup_repr repr1 k'));
+        assert (None? (lookup_repr repr1 k'));
         assert (None? (lookup_spec spec1 k'));
         assert (None? (lookup_spec spec2 k'));
-        assume (None? (lookup_repr repr2 k'));
-        assume (None? (walk repr2 idx' k' off));
+        assume (None? (lookup_repr repr2 k')); // FIXME: requires backwards containment / no dups in pht_models
+        assert (None? (walk repr2 idx' k' off));
         ()
       end
     else begin
@@ -169,7 +171,7 @@ let lem_walk_from_canonical_all_used #s #sz
 
 let clean_upd #s #sz spec (repr : repr_t s sz{pht_models s sz spec repr}) idx k v 
   : Lemma
-       (requires None? (lookup_spec spec k)
+       (requires None? (lookup_repr repr k)
               /\ Seq.index repr idx == Clean
               /\ all_used_not_by repr (canonical_index k sz) idx k)
        (ensures pht_models s sz (spec ++ (k,v)) (upd1 repr idx k v))
@@ -195,7 +197,8 @@ let insert_repr #s #sz (#spec : erased (spec_t s)) (repr : repr_t s sz{pht_model
 : r':repr_t s sz{pht_models s sz (spec ++ (k,v)) r'}
 =
   let cidx = canonical_index k sz in
-  let rec walk (off:nat{off <= sz}) (_ : squash (all_used_not_by repr cidx ((cidx+off) % sz) k))
+  let rec walk_ (off:nat{off <= sz}) (_ : squash (all_used_not_by repr cidx ((cidx+off) % sz) k))
+                                     (_ : squash (walk repr cidx k off == lookup_repr repr k))
     : Tot (r':repr_t s sz{pht_models s sz (spec ++ (k,v)) r'})
           (decreases sz - off)
     =
@@ -215,11 +218,11 @@ let insert_repr #s #sz (#spec : erased (spec_t s)) (repr : repr_t s sz{pht_model
           assert (all_used_not_by repr cidx ((cidx+off) % sz) k);
           assert (used_not_by repr k idx);
           assume (all_used_not_by repr cidx ((cidx+off+1) % sz) k); // FIXME: modular arithmetic?
-          walk (off+1) ()
+          walk_ (off+1) () ()
         end
 
       | Clean ->
-        assume (None? (lookup_spec spec k)); // TODO: prove this, should be straightforward (though tedious maybe)
+        assert (None? (lookup_repr repr k));
         clean_upd spec repr idx k v;
         upd1 repr idx k v
 
@@ -237,7 +240,7 @@ let insert_repr #s #sz (#spec : erased (spec_t s)) (repr : repr_t s sz{pht_model
         // we need to delete the one below too.
         admit ()
   in
-  let res = walk 0 () in
+  let res = walk_ 0 () () in
   res
 
 let insert #s (ht : pht s) (k : s.keyt) (v : s.valt)
