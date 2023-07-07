@@ -102,8 +102,9 @@ val strengthen_precondition: (option (unit -> string) -> env -> term -> lcomp ->
 val weaken_guard: guard_formula -> guard_formula -> guard_formula
 val weaken_precondition: env -> lcomp -> guard_formula -> lcomp
 val maybe_assume_result_eq_pure_term: env -> term -> lcomp -> lcomp
+val close_layered_lcomp_with_combinator: env -> list bv -> lcomp -> lcomp
 val close_wp_lcomp: env -> list bv -> lcomp -> lcomp
-val close_layered_lcomp: env -> list bv -> list term -> lcomp -> lcomp
+val close_layered_lcomp_with_substitutions: env -> list bv -> list term -> lcomp -> lcomp
 val pure_or_ghost_pre_and_post: env -> comp -> (option typ * typ)
 
 //

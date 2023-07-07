@@ -720,7 +720,7 @@ let substitutive_indexed_close_substs (env:env)
     ss@[NT (b.binder_bv, U.abs [b_bv |> S.mk_binder] ct_arg None)]
   ) subst close_bs ct_args
 
-let mk_indexed_close (env:env) (bvs:list bv) (c:comp) : comp =
+let close_layered_comp_with_combinator (env:env) (bvs:list bv) (c:comp) : comp =
   let r = c.pos in
   
   let env_bvs = Env.push_bvs env bvs in
@@ -746,10 +746,17 @@ let mk_indexed_close (env:env) (bvs:list bv) (c:comp) : comp =
   ) bvs ct.effect_args in
   S.mk_Comp {ct with effect_args}
 
+let close_layered_lcomp_with_combinator env bvs lc =
+  let bs = bvs |> List.map S.mk_binder in
+  lc |>
+  TcComm.apply_lcomp
+    (close_layered_comp_with_combinator env bvs)
+    (fun g -> g |> Env.close_guard env bs |> close_guard_implicits env false bs)
+
 (*
  * Closing of layered computations happens via substitution
  *)
-let close_layered_lcomp env bvs tms (lc:lcomp) =
+let close_layered_lcomp_with_substitutions env bvs tms (lc:lcomp) =
   let bs = bvs |> List.map S.mk_binder in
   let substs = List.map2 (fun bv tm ->
     NT (bv, tm)
