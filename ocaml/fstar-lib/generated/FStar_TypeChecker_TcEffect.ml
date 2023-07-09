@@ -3577,20 +3577,19 @@ let (validate_indexed_effect_close_shape :
                                        FStar_Pervasives_Native.None f_sort in
                                    FStar_Compiler_Effect.op_Bar_Greater
                                      uu___4 FStar_Syntax_Syntax.mk_binder in
+                             let env1 =
+                               FStar_TypeChecker_Env.push_binders env (a_b ::
+                                 b_b ::
+                                 (FStar_Compiler_List.op_At eff_params_bs bs)) in
                              let uu___2 =
                                let uu___3 =
-                                 FStar_TypeChecker_Env.push_binders env (a_b
-                                   :: b_b ::
-                                   (FStar_Compiler_List.op_At eff_params_bs
-                                      bs)) in
-                               let uu___4 =
                                  FStar_Compiler_Effect.op_Bar_Greater
                                    a_b.FStar_Syntax_Syntax.binder_bv
                                    FStar_Syntax_Syntax.bv_to_name in
-                               FStar_TypeChecker_Util.fresh_effect_repr
-                                 uu___3 r eff_name sig_ts
+                               FStar_TypeChecker_Util.fresh_effect_repr env1
+                                 r eff_name sig_ts
                                  (FStar_Pervasives_Native.Some repr_ts)
-                                 (FStar_Syntax_Syntax.U_name u_a) uu___4 in
+                                 (FStar_Syntax_Syntax.U_name u_a) uu___3 in
                              (match uu___2 with
                               | (body_tm, g_body) ->
                                   let k =
@@ -3601,7 +3600,7 @@ let (validate_indexed_effect_close_shape :
                                       body_tm FStar_Pervasives_Native.None in
                                   let g_eq =
                                     let uu___3 =
-                                      FStar_TypeChecker_Rel.teq_nosmt env
+                                      FStar_TypeChecker_Rel.teq_nosmt env1
                                         close_tm k in
                                     match uu___3 with
                                     | FStar_Pervasives_Native.None ->
@@ -3621,11 +3620,11 @@ let (validate_indexed_effect_close_shape :
                                       FStar_TypeChecker_Env.conj_guard g_body
                                         g_eq in
                                     FStar_TypeChecker_Rel.force_trivial_guard
-                                      env uu___4);
+                                      env1 uu___4);
                                    (let uu___4 =
                                       FStar_Compiler_Effect.op_Bar_Greater k
                                         (FStar_TypeChecker_Normalize.remove_uvar_solutions
-                                           env) in
+                                           env1) in
                                     FStar_Compiler_Effect.op_Bar_Greater
                                       uu___4 FStar_Syntax_Subst.compress))))
 let (lift_combinator_kind :
