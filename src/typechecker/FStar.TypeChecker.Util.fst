@@ -692,6 +692,9 @@ let close_wp_lcomp env bvs (lc:lcomp) : lcomp =
 //
 // Apply substitutive close combinator for indexed effects
 //
+// The effect indices binders in the close combinator are arrows,
+//   so we abstract b_bv on the effect args for the substitutions
+//
 let substitutive_indexed_close_substs (env:env)
   (close_bs:binders)
   (a:typ)
@@ -722,6 +725,9 @@ let substitutive_indexed_close_substs (env:env)
     ss@[NT (b.binder_bv, U.abs [b_bv |> S.mk_binder] ct_arg None)]
   ) subst close_bs ct_args
 
+//
+// The caller ensures that the effect has the close combinator defined
+//
 let close_layered_comp_with_combinator (env:env) (bvs:list bv) (c:comp) : comp =
   let r = c.pos in
   
@@ -756,7 +762,7 @@ let close_layered_lcomp_with_combinator env bvs lc =
     (fun g -> g |> Env.close_guard env bs |> close_guard_implicits env false bs)
 
 (*
- * Closing of layered computations happens via substitution
+ * Closing of layered computations via substitution
  *)
 let close_layered_lcomp_with_substitutions env bvs tms (lc:lcomp) =
   let bs = bvs |> List.map S.mk_binder in

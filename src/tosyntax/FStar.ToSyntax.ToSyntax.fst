@@ -3233,7 +3233,7 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
       let rr_members = ["repr" ; "return" ; "bind"] in
       if for_free then rr_members
         (*
-         * AR: subcomp and if_then_else are optional
+         * AR: subcomp, if_then_else, and close are optional
          *     but adding here so as not to count them as actions
          *)
       else if is_layered then rr_members @ [ "subcomp"; "if_then_else"; "close" ]
@@ -3380,7 +3380,8 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
             else dummy_tscheme, dummy_tscheme, None;
           l_close =
             if has_close then Some (lookup "close", dummy_tscheme)
-            else None;
+            else None;  // If close is not specified, leave it to None
+                        // The typechecker will also not fill it in
         })
       else
         let rr = BU.for_some (function S.Reifiable | S.Reflectable _ -> true | _ -> false) qualifiers in

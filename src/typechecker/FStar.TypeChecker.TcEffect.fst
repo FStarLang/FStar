@@ -964,6 +964,9 @@ let validate_indexed_effect_ite_shape (env:env)
 //
 // Validate the shape of an indexed effect close combinator
 //
+// Only substitutive close combinator is supported
+//  fun (a:Type) (b:Type) (is:b -> is_t) (f:(x:a -> repr a (is x))) -> repr a js
+//
 let validate_indexed_effect_close_shape (env:env)
   (eff_name:lident)
   (sig_ts:tscheme)
@@ -1660,6 +1663,10 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
   )  //Errors.with_ctx
   in
 
+  //
+  // Close combinator is optional,
+  //   typecheck it only if it is set, else leave it as None
+  //
   let close_ =
     let ts_opt = ed |> U.get_layered_close_combinator in
     match ts_opt with
@@ -1676,13 +1683,39 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
         validate_indexed_effect_close_shape env ed.mname sig_ts repr_ts u_a u_b t num_effect_params r
       in
       Some (close_us, k |> SS.close_univ_vars close_us, close_ty) in
-    
+  
+  //
+  // Checking the soundness of the close combinator
+  //
+  // Close combinator has the shape:
+  //   fun (a:Type) (b:type) (is:a -> is_t) (f:(x:a -> repr a (is x))) -> repr a js
+  //
+  // We check:
+  //
+  // a, b, is, x:a |- subcomp (repr a (is x)) (repr a js)
+  //
+  // Operationally, we create names for a, b, is, and x
+  //   substitute them in the subcomp combinator,
+  //   and prove its (Pure) precondition
+  //
   let _close_is_sound =
     match close_ with
     | None -> ()
     | Some close_ ->
       let us, close_tm, _ = close_ in
       let r = close_tm.pos in
+      let _ =
+        let supported_subcomp =
+          match subcomp_kind with
+          | Substitutive_combinator l ->
+            not (List.contains Ad_hoc_binder l)
+          | _ -> false in
+        
+        if not supported_subcomp
+        then raise_error (Errors.Fatal_UnexpectedEffect,
+                         "close combinator is only allowed for effects with substitutive subcomp")
+                         r
+      in
       let us, close_tm = SS.open_univ_vars us close_tm in
       let close_bs, close_body, _ = U.abs_formals close_tm in
       let a_b::b_b::close_bs = close_bs in

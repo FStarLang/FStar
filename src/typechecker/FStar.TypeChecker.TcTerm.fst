@@ -3639,6 +3639,12 @@ and tc_eqn (scrutinee:bv) (env:Env.env) (ret_opt : option match_returns_ascripti
 
      //g_branch is trivial, its logical content is now incorporated within c
 
+     //
+     // Working towards closing the branches comp with the pattern variables
+     // For effects with close combinator defined, we will use that
+     // For other effects, we will close with substituting pattern variables with
+     //   corresponding projector expressions applied to the scrutinee
+     //
      let close_branch_with_substitutions =
        let m = c.eff_name |> Env.norm_eff_name env in
        Env.is_layered_effect env m &&
