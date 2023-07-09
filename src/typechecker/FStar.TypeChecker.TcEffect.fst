@@ -1677,49 +1677,49 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
       in
       Some (close_us, k |> SS.close_univ_vars close_us, close_ty) in
     
-  // let _close_is_sound =
-  //   match close_ with
-  //   | None -> ()
-  //   | Some close_ ->
-  //     let us, close_tm, _ = close_ in
-  //     let r = close_tm.pos in
-  //     let us, close_tm = SS.open_univ_vars us close_tm in
-  //     let close_bs, close_body, _ = U.abs_formals close_tm in
-  //     let a_b::b_b::close_bs = close_bs in
-  //     let is_bs, _ = List.splitAt (List.length close_bs - 1) close_bs in
-  //     let x_bv = S.gen_bv "x" None (S.bv_to_name b_b.binder_bv) in
-  //     let args1 = List.map (fun i_b ->
-  //       S.mk_Tm_app (S.bv_to_name i_b.binder_bv) [S.as_arg (S.bv_to_name x_bv)] r
-  //     ) is_bs in
-  //     let args2 =
-  //       match (SS.compress close_body).n with
-  //       | Tm_app {args=a::args} -> args |> List.map fst
-  //       | _ -> raise_error (Errors.Fatal_UnexpectedEffect, "close combinator body not a repr") r in
+  let _close_is_sound =
+    match close_ with
+    | None -> ()
+    | Some close_ ->
+      let us, close_tm, _ = close_ in
+      let r = close_tm.pos in
+      let us, close_tm = SS.open_univ_vars us close_tm in
+      let close_bs, close_body, _ = U.abs_formals close_tm in
+      let a_b::b_b::close_bs = close_bs in
+      let is_bs, _ = List.splitAt (List.length close_bs - 1) close_bs in
+      let x_bv = S.gen_bv "x" None (S.bv_to_name b_b.binder_bv) in
+      let args1 = List.map (fun i_b ->
+        S.mk_Tm_app (S.bv_to_name i_b.binder_bv) [S.as_arg (S.bv_to_name x_bv)] r
+      ) is_bs in
+      let args2 =
+        match (SS.compress close_body).n with
+        | Tm_app {args=a::args} -> args |> List.map fst
+        | _ -> raise_error (Errors.Fatal_UnexpectedEffect, "close combinator body not a repr") r in
 
-  //     let env = Env.push_binders env0 ((a_b:b_b::is_bs)@[x_bv |> S.mk_binder]) in
-  //     let subcomp_ts =
-  //       let (us, _, t) = stronger_repr in
-  //       (us, t) in
-  //     let _, subcomp_t = Env.inst_tscheme_with subcomp_ts [List.hd us |> S.U_name] in
-  //     let a_b_subcomp::subcomp_bs, subcomp_c = U.arrow_formals_comp subcomp_t in
-  //     let subcomp_substs = [ NT (a_b_subcomp.binder_bv, a_b.binder_bv |> S.bv_to_name) ] in
-  //     let subcomp_f_bs, subcomp_bs = List.splitAt (List.length args1) subcomp_bs in
-  //     let subcomp_substs = subcomp_substs @ (List.map2 (fun b arg1 ->
-  //       NT (b.binder_bv, arg1)
-  //     ) subcomp_f_bs args1) in
-  //     let subcomp_g_bs, _ = List.splitAt (List.length args2) subcomp_bs in
-  //     let subcomp_substs = subcomp_substs @ (List.map2 (fun b arg2 ->
-  //       NT (b.binder_bv, arg2)
-  //     ) subcomp_g_bs args2) in
-  //     let subcomp_c = SS.subst_comp subcomp_substs subcomp_c |> Env.unfold_effect_abbrev env in
-  //     let fml = Env.pure_precondition_for_trivial_post
-  //       env
-  //       (List.hd subcomp_c.comp_univs)
-  //       subcomp_c.result_typ
-  //       (subcomp_c.effect_args |> List.hd |> fst)
-  //       r in
-  //     Rel.force_trivial_guard env (fml |> NonTrivial |> Env.guard_of_guard_formula)
-  // in
+      let env = Env.push_binders env0 ((a_b::b_b::is_bs)@[x_bv |> S.mk_binder]) in
+      let subcomp_ts =
+        let (us, _, t) = stronger_repr in
+        (us, t) in
+      let _, subcomp_t = Env.inst_tscheme_with subcomp_ts [List.hd us |> S.U_name] in
+      let a_b_subcomp::subcomp_bs, subcomp_c = U.arrow_formals_comp subcomp_t in
+      let subcomp_substs = [ NT (a_b_subcomp.binder_bv, a_b.binder_bv |> S.bv_to_name) ] in
+      let subcomp_f_bs, subcomp_bs = List.splitAt (List.length args1) subcomp_bs in
+      let subcomp_substs = subcomp_substs @ (List.map2 (fun b arg1 ->
+        NT (b.binder_bv, arg1)
+      ) subcomp_f_bs args1) in
+      let subcomp_g_bs, _ = List.splitAt (List.length args2) subcomp_bs in
+      let subcomp_substs = subcomp_substs @ (List.map2 (fun b arg2 ->
+        NT (b.binder_bv, arg2)
+      ) subcomp_g_bs args2) in
+      let subcomp_c = SS.subst_comp subcomp_substs subcomp_c |> Env.unfold_effect_abbrev env in
+      let fml = Env.pure_precondition_for_trivial_post
+        env
+        (List.hd subcomp_c.comp_univs)
+        subcomp_c.result_typ
+        (subcomp_c.effect_args |> List.hd |> fst)
+        r in
+      Rel.force_trivial_guard env (fml |> NonTrivial |> Env.guard_of_guard_formula)
+  in
 
   (*
    * Actions
