@@ -196,6 +196,11 @@ val lemma_swap_permutes_aux: #a:eqtype -> s:seq a -> i:nat{i<length s} -> j:nat{
 
 type permutation (a:eqtype) (s1:seq a) (s2:seq a) =
        (forall i. count i s1 = count i s2)
+
+val append_permutations: #a:eqtype -> s1:seq a -> s2:seq a -> s1':seq a -> s2':seq a -> Lemma
+    (requires permutation a s1 s1' /\ permutation a s2 s2')
+    (ensures permutation a (append s1 s2) (append s1' s2'))
+
 val lemma_swap_permutes (#a:eqtype) (s:seq a) (i:nat{i<length s}) (j:nat{i <= j && j<length s})
   : Lemma (permutation a s (swap s i j))
 
