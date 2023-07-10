@@ -4056,7 +4056,7 @@ and desugar_decl_noattrs top_attrs env (d:decl) : (env_t * sigelts) =
     let env = push_sigelt env se in
     env, [se]
 
-  | DeclSyntaxExtension (extension_name, code, range) ->
+  | DeclSyntaxExtension (extension_name, code, _, range) ->
     let extension_parser = FStar.Parser.AST.Util.lookup_extension_parser extension_name in
     match extension_parser with
     | None ->

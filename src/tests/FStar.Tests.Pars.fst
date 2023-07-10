@@ -201,30 +201,34 @@ let parse_incremental_decls () =
     "module Demo\n\
      let f x = match x with | Some x -> true | None -> false\n\
      let test y = if Some? y then f y else true\n\
-     let some junk )("
+     ```pulse\n\
+     fn f() {}\n\
+     ```\n\
+     let something = more\n\
+     let >< junk"
   in
   let open FStar.Parser.ParseIt in
   let input = Incremental { frag_fname = "Demo.fst";
                             frag_text = source;
-                            frag_line = 0;
+                            frag_line = 1;
                             frag_col = 0 } in
   let open FStar.Compiler.Range in
   match parse input with
   | IncrementalFragment (decls, _, parse_err) -> (
       let _ = match parse_err with
       | None -> 
-        failwith "Incremental parsing failed: Expected syntax error at (3,15), got no error"
+        failwith "Incremental parsing failed: Expected syntax error at (8, 6), got no error"
       | Some (_, _, rng) ->
         let p = start_of_range rng in
-        if line_of_pos p = 3 && col_of_pos p = 15
+        if line_of_pos p = 8 && col_of_pos p = 6
         then ()
-        else failwith (format2 "Incremental parsing failed: Expected syntax error at (3,15), got error at (%s, %s)"
+        else failwith (format2 "Incremental parsing failed: Expected syntax error at (8, 6), got error at (%s, %s)"
                                (string_of_int (line_of_pos p))
                                (string_of_int (col_of_pos p)))
       in
       match decls with
-      | [d0;d1;d2] -> ()
-      | _ -> failwith (format1 "Incremental parsing failed; expected 3 decls got %s\n"
+      | [d0;d1;d2;d3;d4] -> ()
+      | _ -> failwith (format1 "Incremental parsing failed; expected 5 decls got %s\n"
                               (string_of_int (List.length decls)))
       )
       
