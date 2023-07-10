@@ -72,7 +72,7 @@ let rec combine_if_branches
   else fail g None "Cannot combine then and else branches (different st_comp)"
 #pop-options
 
-#push-options "--query_stats --ifuel 2 --z3rlimit_factor 4"
+#push-options "--z3rlimit_factor 4 --fuel 0 --ifuel 1"
 let check_if (g:env)
              (b:term)
              (e1 e2:st_term)
