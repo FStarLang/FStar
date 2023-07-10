@@ -33,6 +33,10 @@ let (++) #s (htf : spec_t s) (k, v) : spec_t s =
   fun k' ->
     if k = k' then Some v else htf k'
 
+let (--) #s (htf : spec_t s) k : spec_t s =
+  fun k' ->
+    if k = k' then None else htf k'
+
 let rec walk_val_idx #s #sz (repr : repr_t s sz) (idx:nat) (k : s.keyt) (off:nat{off <= sz}) : Tot (option (s.valt & nat)) (decreases sz - off) =
   if off = sz then None
   else
@@ -199,13 +203,14 @@ let upd_and_delete_older #s #sz (spec : erased (spec_t s)) (repr : repr_t s sz) 
     in
     aux off0
 
-let zombie_upd_lookup_walk #s #sz (spec1 spec2 : spec_t s) (repr1 repr2 : repr_t s sz) cidx off k v (k':_{k =!= k'})
+
+let zombie_del_lookup_walk #s #sz (spec1 spec2 : spec_t s) (repr1 repr2 : repr_t s sz) upos k v (k':_{k =!= k'})
   : Lemma (requires
-      forall i. i < sz /\ i <> (cidx + off) % sz ==> repr1 @@ i == repr2 @@ i /\ // not true: might delete an old (k,v') at some i
+      (forall i. i < sz /\ i <> upos ==> repr1 @@ i == repr2 @@ i) /\ // not true: might delete an old (k,v') at some i
       pht_models s sz spec1 repr1 /\
-      repr1 @@ (cidx + off) % sz == Zombie /\
-      repr2 == upd_and_delete_older spec1 repr1 cidx off k v /\
-      spec2 == spec1 ++ (k,v))
+      repr1 @@ upos == Used k v /\
+      repr2 @@ upos == Zombie /\
+      spec2 == spec1 -- k)
       (ensures lookup_repr repr1 k' == lookup_repr repr2 k')
 = let idx' = canonical_index k' sz in
   let rec aux (off:nat{off <= sz}) : Lemma
@@ -215,16 +220,20 @@ let zombie_upd_lookup_walk #s #sz (spec1 spec2 : spec_t s) (repr1 repr2 : repr_t
         (decreases sz - off) 
   =
     if off = sz then ()
-    else if (idx' + off) % sz = (cidx + off) % sz then
-      admit()
-    else begin
+    else if (idx' + off) % sz = upos then (
+      assert (repr1 @@ upos == Used k v);
+      assert (repr2 @@ upos == Zombie);
+      assert (repr1 @@ (idx' + off) % sz == Used k v);
+      assert (repr2 @@ (idx' + off) % sz == Zombie);
+      aux (off+1)
+    ) else begin
       match repr1 @@ (idx' + off) % sz with
       | Clean -> ()
       | Used k'' v'' ->
         if k' = k'' then ()
         else aux (off+1)
       | Zombie ->
-        admit()
+        aux (off+1)
     end
   in
   aux 0
@@ -334,7 +343,7 @@ let zombie_upd #s #sz spec (repr : repr_t s sz{pht_models s sz spec repr}) cidx 
         admit()
       else
         admit(); // FIXME: precondition of following lemma is false 
-        zombie_upd_lookup_walk spec spec' repr repr' cidx off k v k'
+        zombie_del_lookup_walk spec spec' repr repr' ((cidx+off) % sz) k v k'
     in
     let aux2 (k':s.keyt) : Lemma (requires (Some? (lookup_repr repr' k')))
                                  (ensures (lookup_repr repr' k' == lookup_spec spec' k'))
@@ -344,7 +353,7 @@ let zombie_upd #s #sz spec (repr : repr_t s sz{pht_models s sz spec repr}) cidx 
         admit()
       else
         admit(); // FIXME: precondition of following lemma is false
-        zombie_upd_lookup_walk spec spec' repr repr' cidx off k v k'
+        zombie_del_lookup_walk spec spec' repr repr' ((cidx+off) % sz) k v k'
     in
     let aux3 (i':nat{i' < Seq.Base.length repr'}) (k':s.keyt) (v':s.valt) : Lemma (requires (repr' @@ i' == Used k' v'))
                                                                                   (ensures (lookup_repr_index repr' k' == Some (v', i')))
