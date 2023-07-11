@@ -76,7 +76,7 @@ val void_null: void_ptr
 
 // To be extracted as: *t
 [@@noextract_to "krml"] // primitive
-let ptr_gen (t: Type) : Tot Type0 = void_ptr
+let ptr_gen ([@@@unused] t: Type) : Tot Type0 = void_ptr
 [@@noextract_to "krml"] // primitive
 let null_gen (t: Type) : Tot (ptr_gen t) = void_null
 
