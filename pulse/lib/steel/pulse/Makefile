@@ -10,6 +10,8 @@ FSTAR_FILES:=$(wildcard *.fst *.fsti)
 
 FSTAR_OPTIONS=$(OTHERFLAGS) --cache_checked_modules --warn_error @241 --already_cached '*,-Pulse' --include ..
 
+include ../runlim.mk
+
 MY_FSTAR=$(RUNLIM) $(FSTAR) $(SIL) $(FSTAR_OPTIONS)
 
 Pulse.Steel.Wrapper.fst.checked: FSTAR_OPTIONS+=--load_cmxs steel

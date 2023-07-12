@@ -43,7 +43,7 @@ let  mk_bind' (g:env)
         (| t, c, d |)
       )
 
-#push-options "--z3rlimit_factor 8 --fuel 2 --ifuel 2 --query_stats"
+#push-options "--z3rlimit_factor 4 --fuel 0 --ifuel 1"
 let check_bind
   (g:env)
   (t:st_term{Tm_Bind? t.term})

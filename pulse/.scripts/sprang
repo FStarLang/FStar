@@ -1,0 +1,26 @@
+#!/bin/bash
+
+function usage () {
+	cat << HERE
+$0
+
+DESCRIPTION
+  Upload data and fetch URL from the pastebin http://sprunge.us
+  Echoes back the URL where to find the paste
+
+USAGE
+  $0 filename.txt
+  $0 < filename.txt
+  piped_data | $0
+
+HERE
+	exit 1
+}
+
+case "$1" in
+	-h|--help)
+	    usage
+	    ;;
+esac
+
+cat "$@" | curl -F 'sprunge=<-' http://sprunge.us

@@ -3,7 +3,7 @@ all: verify
 # assuming share/steel/examples/pulse/dice/engine
 STEEL_HOME ?= ../../../../../..
 
-FSTAR_OPTIONS = --include $(STEEL_HOME)/lib/steel/pulse --include $(STEEL_HOME)/share/steel/examples/pulse/lib --include $(STEEL_HOME)/share/steel/examples/pulse/dice/common
+FSTAR_OPTIONS = --include $(STEEL_HOME)/lib/steel/pulse --include ../lib --include ../common
 
 COMPAT_INDEXED_EFFECTS=
 

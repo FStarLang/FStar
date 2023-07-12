@@ -13,6 +13,8 @@ FSTAR_OPTIONS=$(OTHERFLAGS) --cache_checked_modules --warn_error @241 --already_
 COMPAT_INDEXED_EFFECTS=--compat_pre_typed_indexed_effects
 MY_FSTAR=$(RUNLIM) $(FSTAR) $(SIL) $(FSTAR_OPTIONS)
 
+include runlim.mk
+
 %.checked:
 	$(call msg, "CHECK", $(basename $(notdir $@)))
 	@# You can debug with --debug $(basename $(notdir $<))
