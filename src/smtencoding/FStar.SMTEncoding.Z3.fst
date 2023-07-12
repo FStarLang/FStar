@@ -177,7 +177,9 @@ let query_logging =
      {set_module_name=set_module_name;
       get_module_name=get_module_name;
       write_to_log=write_to_log;
-      close_log=close_log}
+      append_to_log=append_to_log;
+      close_log=close_log;
+     }
 
 (*  Z3 background process handling *)
 let z3_cmd_and_args () =
@@ -613,6 +615,7 @@ let ask
     (cache:option string)
     (label_messages:error_labels)
     (qry:list decl)
+    (queryid:string)
     (_scope : option scope_t) // GM: This was only used in ask_n_cores
     (fresh:bool) : z3result
   = let theory =
@@ -626,7 +629,24 @@ let ask
     let theory, _used_unsat_core = filter_theory theory in
     let input, qhash, log_file_name = mk_input fresh theory in
 
-    let just_ask () = z3_job log_file_name r fresh label_messages input qhash () in
+    let just_ask () =
+      let res = z3_job log_file_name r fresh label_messages input qhash () in
+      (* If we are logging, write some more information to the
+      smt2 file, such as the result of the query and the new unsat
+      core generated. *)
+      begin match log_file_name with
+      | Some fname ->
+        ignore (query_logging.append_to_log ("; QUERY ID: " ^ queryid));
+        ignore (query_logging.append_to_log ("; STATUS: " ^ fst (status_string_and_errors res.z3result_status)));
+        begin match res.z3result_status with
+        | UNSAT (Some core) ->
+          ignore (query_logging.append_to_log ("; UNSAT CORE GENERATED: " ^ String.concat ", " core))
+        | _ -> ()
+        end
+      | None -> ()
+      end;
+      res
+    in
     if fresh then
         match cache_hit log_file_name cache qhash with
         | Some z3r -> z3r

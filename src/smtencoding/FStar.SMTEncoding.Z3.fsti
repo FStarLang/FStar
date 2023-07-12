@@ -43,8 +43,9 @@ type z3result = {
 type query_log = {
     get_module_name: unit -> string;
     set_module_name: string -> unit;
-    write_to_log:    bool -> string -> string;
-    close_log:       unit -> unit
+    write_to_log:    bool -> string -> string; (* returns name of log file written to *)
+    append_to_log:   string -> string; (* idem *)
+    close_log:       unit -> unit;
 }
 
 val status_string_and_errors : z3status -> string * error_labels
@@ -56,6 +57,7 @@ val ask: r:Range.range
        -> cache:(option string) // hash
        -> label_messages:error_labels
        -> qry:list decl
+       -> queryid:string
        -> scope:option scope_t
        -> fresh:bool
        -> z3result
