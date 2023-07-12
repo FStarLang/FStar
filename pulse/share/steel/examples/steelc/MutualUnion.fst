@@ -54,4 +54,53 @@ and test_struct = {
   payload: test_union_FAIL;
 }
 
+#push-options "--__no_positivity"
+
+(* The following SHOULD extract to something like:
+<<
+
+typedef union MutualUnion_test_union2_FAIL_u MutualUnion_test_union2_FAIL;
+
+typedef struct MutualUnion_test_struct2_before_s {
+  bool tag;
+  MutualUnion_test_union2_FAIL *payload;
+} MutualUnion_test_struct2_before;
+
+typedef struct MutualUnion_test_struct2_after_s MutualUnion_test_struct2_after;
+
+typedef union MutualUnion_test_union2_FAIL_u {
+  MutualUnion_test_struct2_before as_struct;
+  MutualUnion_test_struct2_after *as_ptr;
+}
+MutualUnion_test_union2_FAIL;
+
+typedef struct MutualUnion_test_struct2_after_s
+{
+  bool tag;
+  MutualUnion_test_union2_FAIL payload;
+}
+MutualUnion_test_struct2_after;
+
+>>
+But right now, KaRaMel generates struct2_after before the union, and
+does not generate any forward declaration for union2, so the generated
+C code fails to compile.
+*)
+noeq
+type test_struct2_before = {
+  tag: bool;
+  payload: ptr_gen test_union2_FAIL;
+}
+and test_union2_FAIL = union_t "MutualUnion.test_union2_FAIL" (
+       field_description_cons "as_struct" (scalar test_struct2_before (* TODO TR: solve positivity issue here, independently of extraction *)) (
+       field_description_cons "as_ptr" (scalar (ptr_gen test_struct2_after)) (
+       field_description_nil))
+     )
+and test_struct2_after = {
+  tag: bool;
+  payload: test_union2_FAIL;
+}
+
+#pop-options
+
 let test_fun () = 0s
