@@ -78,30 +78,37 @@ type query_log =
   get_module_name: unit -> Prims.string ;
   set_module_name: Prims.string -> unit ;
   write_to_log: Prims.bool -> Prims.string -> Prims.string ;
+  append_to_log: Prims.string -> Prims.string ;
   close_log: unit -> unit }
 let (__proj__Mkquery_log__item__get_module_name :
   query_log -> unit -> Prims.string) =
   fun projectee ->
     match projectee with
-    | { get_module_name; set_module_name; write_to_log; close_log;_} ->
-        get_module_name
+    | { get_module_name; set_module_name; write_to_log; append_to_log;
+        close_log;_} -> get_module_name
 let (__proj__Mkquery_log__item__set_module_name :
   query_log -> Prims.string -> unit) =
   fun projectee ->
     match projectee with
-    | { get_module_name; set_module_name; write_to_log; close_log;_} ->
-        set_module_name
+    | { get_module_name; set_module_name; write_to_log; append_to_log;
+        close_log;_} -> set_module_name
 let (__proj__Mkquery_log__item__write_to_log :
   query_log -> Prims.bool -> Prims.string -> Prims.string) =
   fun projectee ->
     match projectee with
-    | { get_module_name; set_module_name; write_to_log; close_log;_} ->
-        write_to_log
+    | { get_module_name; set_module_name; write_to_log; append_to_log;
+        close_log;_} -> write_to_log
+let (__proj__Mkquery_log__item__append_to_log :
+  query_log -> Prims.string -> Prims.string) =
+  fun projectee ->
+    match projectee with
+    | { get_module_name; set_module_name; write_to_log; append_to_log;
+        close_log;_} -> append_to_log
 let (__proj__Mkquery_log__item__close_log : query_log -> unit -> unit) =
   fun projectee ->
     match projectee with
-    | { get_module_name; set_module_name; write_to_log; close_log;_} ->
-        close_log
+    | { get_module_name; set_module_name; write_to_log; append_to_log;
+        close_log;_} -> close_log
 let (_z3version_checked : Prims.bool FStar_Compiler_Effect.ref) =
   FStar_Compiler_Util.mk_ref false
 let (_z3version_expected : Prims.string) = "Z3 version 4.8.5"
@@ -290,7 +297,8 @@ let (query_logging : query_log) =
     match uu___1 with
     | FStar_Pervasives_Native.None -> failwith "no log file"
     | FStar_Pervasives_Native.Some n -> n in
-  { get_module_name; set_module_name; write_to_log; close_log }
+  { get_module_name; set_module_name; write_to_log; append_to_log; close_log
+  }
 let (z3_cmd_and_args : unit -> (Prims.string * Prims.string Prims.list)) =
   fun uu___ ->
     let cmd = FStar_Options.z3_exe () in
@@ -1016,40 +1024,73 @@ let (ask :
       Prims.string FStar_Pervasives_Native.option ->
         FStar_SMTEncoding_Term.error_labels ->
           FStar_SMTEncoding_Term.decl Prims.list ->
-            scope_t FStar_Pervasives_Native.option -> Prims.bool -> z3result)
+            Prims.string ->
+              scope_t FStar_Pervasives_Native.option ->
+                Prims.bool -> z3result)
   =
   fun r ->
     fun filter_theory ->
       fun cache ->
         fun label_messages ->
           fun qry ->
-            fun _scope ->
-              fun fresh ->
-                let theory =
-                  if fresh
-                  then flatten_fresh_scope ()
-                  else
-                    (let theory1 = FStar_Compiler_Effect.op_Bang bg_scope in
-                     FStar_Compiler_Effect.op_Colon_Equals bg_scope [];
-                     theory1) in
-                let theory1 =
-                  FStar_Compiler_List.op_At theory
-                    (FStar_Compiler_List.op_At [FStar_SMTEncoding_Term.Push]
-                       (FStar_Compiler_List.op_At qry
-                          [FStar_SMTEncoding_Term.Pop])) in
-                let uu___ = filter_theory theory1 in
-                match uu___ with
-                | (theory2, _used_unsat_core) ->
-                    let uu___1 = mk_input fresh theory2 in
-                    (match uu___1 with
-                     | (input, qhash, log_file_name) ->
-                         let just_ask uu___2 =
-                           z3_job log_file_name r fresh label_messages input
-                             qhash () in
-                         if fresh
-                         then
-                           let uu___2 = cache_hit log_file_name cache qhash in
-                           (match uu___2 with
-                            | FStar_Pervasives_Native.Some z3r -> z3r
-                            | FStar_Pervasives_Native.None -> just_ask ())
-                         else just_ask ())
+            fun queryid ->
+              fun _scope ->
+                fun fresh ->
+                  let theory =
+                    if fresh
+                    then flatten_fresh_scope ()
+                    else
+                      (let theory1 = FStar_Compiler_Effect.op_Bang bg_scope in
+                       FStar_Compiler_Effect.op_Colon_Equals bg_scope [];
+                       theory1) in
+                  let theory1 =
+                    FStar_Compiler_List.op_At theory
+                      (FStar_Compiler_List.op_At
+                         [FStar_SMTEncoding_Term.Push]
+                         (FStar_Compiler_List.op_At qry
+                            [FStar_SMTEncoding_Term.Pop])) in
+                  let uu___ = filter_theory theory1 in
+                  match uu___ with
+                  | (theory2, _used_unsat_core) ->
+                      let uu___1 = mk_input fresh theory2 in
+                      (match uu___1 with
+                       | (input, qhash, log_file_name) ->
+                           let just_ask uu___2 =
+                             let res =
+                               z3_job log_file_name r fresh label_messages
+                                 input qhash () in
+                             (match log_file_name with
+                              | FStar_Pervasives_Native.Some fname ->
+                                  ((let uu___5 =
+                                      query_logging.append_to_log
+                                        (Prims.op_Hat "; QUERY ID: " queryid) in
+                                    ());
+                                   (let uu___6 =
+                                      let uu___7 =
+                                        let uu___8 =
+                                          let uu___9 =
+                                            status_string_and_errors
+                                              res.z3result_status in
+                                          FStar_Pervasives_Native.fst uu___9 in
+                                        Prims.op_Hat "; STATUS: " uu___8 in
+                                      query_logging.append_to_log uu___7 in
+                                    ());
+                                   (match res.z3result_status with
+                                    | UNSAT (FStar_Pervasives_Native.Some
+                                        core) ->
+                                        let uu___6 =
+                                          query_logging.append_to_log
+                                            (Prims.op_Hat
+                                               "; UNSAT CORE GENERATED: "
+                                               (FStar_String.concat ", " core)) in
+                                        ()
+                                    | uu___6 -> ()))
+                              | FStar_Pervasives_Native.None -> ());
+                             res in
+                           if fresh
+                           then
+                             let uu___2 = cache_hit log_file_name cache qhash in
+                             (match uu___2 with
+                              | FStar_Pervasives_Native.Some z3r -> z3r
+                              | FStar_Pervasives_Native.None -> just_ask ())
+                           else just_ask ())

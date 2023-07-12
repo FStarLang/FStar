@@ -185,7 +185,7 @@ let rec (filter_assertions_with_stats :
                       let uu___5 =
                         FStar_Compiler_Effect.op_Bar_Greater core1
                           (FStar_String.concat ", ") in
-                      Prims.op_Hat "UNSAT CORE: " uu___5 in
+                      Prims.op_Hat "UNSAT CORE USED: " uu___5 in
                     FStar_SMTEncoding_Term.Caption uu___4 in
                   [uu___3] in
                 (uu___2, Prims.int_zero, Prims.int_zero) in
@@ -574,9 +574,14 @@ let (detail_hint_replay :
             let ask_z3 label_assumptions =
               let uu___1 =
                 with_fuel_and_diagnostics settings label_assumptions in
+              let uu___2 =
+                let uu___3 =
+                  FStar_Compiler_Util.string_of_int settings.query_index in
+                FStar_Compiler_Util.format2 "(%s, %s)" settings.query_name
+                  uu___3 in
               FStar_SMTEncoding_Z3.ask settings.query_range
                 (filter_assertions settings.query_env settings.query_hint)
-                settings.query_hash settings.query_all_labels uu___1
+                settings.query_hash settings.query_all_labels uu___1 uu___2
                 FStar_Pervasives_Native.None false in
             FStar_SMTEncoding_ErrorReporting.detail_errors true
               settings.query_env settings.query_all_labels ask_z3
@@ -746,10 +751,14 @@ let (errors_to_report : query_settings -> FStar_Errors.error Prims.list) =
        let ask_z3 label_assumptions =
          let uu___1 =
            with_fuel_and_diagnostics initial_fuel label_assumptions in
+         let uu___2 =
+           let uu___3 =
+             FStar_Compiler_Util.string_of_int settings.query_index in
+           FStar_Compiler_Util.format2 "(%s, %s)" settings.query_name uu___3 in
          FStar_SMTEncoding_Z3.ask settings.query_range
            (filter_facts_without_core settings.query_env) settings.query_hash
-           settings.query_all_labels uu___1 FStar_Pervasives_Native.None
-           false in
+           settings.query_all_labels uu___1 uu___2
+           FStar_Pervasives_Native.None false in
        FStar_SMTEncoding_ErrorReporting.detail_errors false
          settings.query_env settings.query_all_labels ask_z3
      else ());
@@ -1388,11 +1397,14 @@ let (__ask_solver :
          if uu___1 then FStar_SMTEncoding_Z3.refresh () else ());
         (let uu___1 = with_fuel_and_diagnostics config [] in
          let uu___2 =
-           let uu___3 = FStar_SMTEncoding_Z3.mk_fresh_scope () in
-           FStar_Pervasives_Native.Some uu___3 in
+           let uu___3 = FStar_Compiler_Util.string_of_int config.query_index in
+           FStar_Compiler_Util.format2 "(%s, %s)" config.query_name uu___3 in
+         let uu___3 =
+           let uu___4 = FStar_SMTEncoding_Z3.mk_fresh_scope () in
+           FStar_Pervasives_Native.Some uu___4 in
          FStar_SMTEncoding_Z3.ask config.query_range
            (filter_assertions config.query_env config.query_hint)
-           config.query_hash config.query_all_labels uu___1 uu___2
+           config.query_hash config.query_all_labels uu___1 uu___2 uu___3
            (used_hint config)) in
       fold_queries configs check_one_config process_result
 let (ask_solver_quake :
