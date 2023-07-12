@@ -40,9 +40,10 @@ let (--) #s (htf : spec_t s) k : spec_t s =
 // starting at idx, walk until you find kv pair (k,v) at index idx'
 // return Some (idx',v) else None if took sz steps and did not find
 let rec walk_get_idx #s #sz (repr : repr_t s sz) (idx:nat) (k:s.keyt) (off:nat{off<=sz}) 
-  : Tot (o:(option (s.valt & nat)){match o with 
-                                  | Some (_,i) -> i<sz
-                                  | None -> true})
+  : Tot (o:(option (s.valt & nat))
+          {match o with 
+           | Some (v,i) -> i<sz /\ repr @@ i == Used k v
+           | None -> true})
         (decreases sz - off) =
   if off = sz then None
   else
@@ -69,9 +70,10 @@ let lookup_repr (#s : pht_sig) #sz (repr : repr_t s sz) (k : s.keyt) : option s.
 
 // perform a walk starting at the cacnonical index of k
 // but do not return idx' where k was found
-let lookup_repr_index (#s : pht_sig) #sz (repr : repr_t s sz) (k : s.keyt) : (option (s.valt & nat)) =
-  let idx = canonical_index k sz in
-  walk_get_idx repr idx k 0
+let lookup_repr_index (#s : pht_sig) #sz (repr : repr_t s sz) (k : s.keyt) 
+  : (option (s.valt & nat))
+  = let idx = canonical_index k sz in
+    walk_get_idx repr idx k 0
 
 type spec_submap_repr (s : pht_sig) (sz : pos)
   (spec : spec_t s)
@@ -128,10 +130,10 @@ let lemma_none_upd #s #sz (repr1 repr2 : repr_t s sz) idx k v (k':_{k =!= k'})
           (ensures None? (lookup_repr repr2 k'))
   = admit() // PROVEME: hopefully straightforward via a walk of repr2 
 
-let lemma_lookup_idx #s #sz (repr : repr_t s sz) i k v
-  : Lemma (requires lookup_repr_index repr k == Some (v,i))
-          (ensures repr @@ i == Used k v)
-  = admit() // PROVEME: tried following lookup_repr by doing a walk, didn't quite get it yet
+let lemma_lookup_idx #s #sz (repr : repr_t s sz) (i:nat{i<sz}) k v
+  : Lemma (requires repr @@ i == Used k v)
+          (ensures lookup_repr_index repr k == Some (v,i))      
+= admit()
 
 let lemma_clean_upd_lookup_walk #s #sz (spec1 spec2 : spec_t s) (repr1 repr2 : repr_t s sz) idx k v (k':_{k =!= k'})
   : Lemma (requires
@@ -313,7 +315,7 @@ let lemma_clean_upd #s #sz spec (repr : repr_t s sz{pht_models s sz spec repr}) 
     in
     let aux3 (i':nat{i'<sz}) (k':s.keyt) (v':s.valt) : Lemma (requires (repr' @@ i' == Used k' v'))
                                                              (ensures (lookup_repr_index repr' k' == Some (v', i')))
-    = admit() // PROVEME: converse of lemma_lookup_idx
+    = lemma_lookup_idx repr' i' k' v'
     in
     Classical.forall_intro (Classical.move_requires aux1);
     Classical.forall_intro (Classical.move_requires aux2);
@@ -343,7 +345,7 @@ let lemma_used_upd #s #sz spec (repr : repr_t s sz{pht_models s sz spec repr}) i
     in
     let aux3 (i':nat{i'<sz}) (k':s.keyt) (v':s.valt) : Lemma (requires (repr' @@ i' == Used k' v'))
                                                              (ensures (lookup_repr_index repr' k' == Some (v', i')))
-    = admit() // PROVEME: converse of lemma_lookup_idx
+    = lemma_lookup_idx repr' i' k' v'
     in
     Classical.forall_intro (Classical.move_requires aux1);
     Classical.forall_intro (Classical.move_requires aux2);
@@ -373,7 +375,7 @@ let lemma_zombie_upd #s #sz spec (repr : repr_t s sz{pht_models s sz spec repr})
     in
     let aux3 (i':nat{i'<sz}) (k':s.keyt) (v':s.valt) : Lemma (requires (repr' @@ i' == Used k' v'))
                                                              (ensures (lookup_repr_index repr' k' == Some (v', i')))
-    = admit() // PROVEME: converse of lemma_lookup_idx
+    = lemma_lookup_idx repr' i' k' v'
     in
     Classical.forall_intro (Classical.move_requires aux1);
     Classical.forall_intro (Classical.move_requires aux2);
@@ -402,7 +404,7 @@ let lemma_zombie_del #s #sz spec (repr : repr_t s sz{pht_models s sz spec repr})
     in
     let aux3 (i':nat{i'<sz}) (k':s.keyt) (v':s.valt) : Lemma (requires (repr' @@ i' == Used k' v'))
                                                              (ensures (lookup_repr_index repr' k' == Some (v', i')))
-    = admit() // PROVEME: converse of lemma_lookup_idx
+    = lemma_lookup_idx repr' i' k' v'
     in
     Classical.forall_intro (Classical.move_requires aux1);
     Classical.forall_intro (Classical.move_requires aux2);
@@ -435,7 +437,6 @@ let insert_repr #s #sz (#spec : erased (spec_t s)) (repr : repr_t s sz{pht_model
         // (**)lemma_get_idx_repr_lookup_corresp repr k;
         match lookup_repr_index repr k with 
           | Some (v_old,i) -> (
-            (**)lemma_lookup_idx repr i k v_old;
             (**)lemma_zombie_del spec repr i k v_old;
             assume (None? (lookup_repr repr k)); // FIXME: should be post condition of zombie_del... or separate lemma? 
             (**)lemma_zombie_upd spec repr idx k v;
