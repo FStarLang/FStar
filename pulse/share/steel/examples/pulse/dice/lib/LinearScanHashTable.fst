@@ -11,7 +11,7 @@ type cell (kt : Type) (vt : Type) =
 noeq
 type pht_sig = {
   keyt : eqtype;
-  valt : eqtype;
+  valt : Type0;
   hashf : keyt -> nat;
 }
 
