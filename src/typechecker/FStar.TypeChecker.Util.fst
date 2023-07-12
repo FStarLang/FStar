@@ -689,10 +689,82 @@ let close_wp_lcomp env bvs (lc:lcomp) : lcomp =
     (close_wp_comp env bvs)
     (fun g -> g |> Env.close_guard env bs |> close_guard_implicits env false bs)
 
+//
+// Apply substitutive close combinator for indexed effects
+//
+// The effect indices binders in the close combinator are arrows,
+//   so we abstract b_bv on the effect args for the substitutions
+//
+let substitutive_indexed_close_substs (env:env)
+  (close_bs:binders)
+  (a:typ)
+  (b_bv:bv)
+  (ct_args:args)
+  (num_effect_params:int)
+  (r:Range.range)
+
+  : list subst_elt =
+  
+  let debug = Env.debug env <| Options.Other "LayeredEffectsApp" in
+
+  // go through the binders bs and aggregate substitutions
+  let close_bs, subst =
+    let a_b::b_b::close_bs = close_bs in
+    close_bs, [NT (a_b.binder_bv, a); NT (b_b.binder_bv, b_bv.sort)] in
+  
+  let close_bs, subst, ct_args =
+    let eff_params_bs, close_bs = List.splitAt num_effect_params close_bs in
+    let ct_eff_params_args, ct_args = List.splitAt num_effect_params ct_args in
+    close_bs,
+    (subst@
+     List.map2 (fun b (arg, _) -> NT (b.binder_bv, arg)) eff_params_bs ct_eff_params_args),
+    ct_args in
+
+  let close_bs, _ = List.splitAt (List.length close_bs - 1) close_bs in
+  List.fold_left2 (fun ss b (ct_arg, _) ->
+    ss@[NT (b.binder_bv, U.abs [b_bv |> S.mk_binder] ct_arg None)]
+  ) subst close_bs ct_args
+
+//
+// The caller ensures that the effect has the close combinator defined
+//
+let close_layered_comp_with_combinator (env:env) (bvs:list bv) (c:comp) : comp =
+  let r = c.pos in
+  
+  let env_bvs = Env.push_bvs env bvs in
+  let ct = Env.unfold_effect_abbrev env_bvs c in
+  let ed = Env.get_effect_decl env_bvs ct.effect_name in
+  let num_effect_params =
+    match ed.signature with
+    | Layered_eff_sig (n, _) -> n
+    | _ -> raise_error (Errors.Fatal_UnexpectedEffect,
+                        "mk_indexed_close called with a non-indexed effect") r in
+  let close_ts = U.get_layered_close_combinator ed |> must in
+  let effect_args = List.fold_right (fun x args ->
+    let u_a = List.hd ct.comp_univs in
+    let u_b = env.universe_of env_bvs x.sort in
+    let _, close_t = Env.inst_tscheme_with close_ts [u_a; u_b] in
+    let close_bs, close_body, _ = U.abs_formals close_t in
+    let ss = substitutive_indexed_close_substs
+      env_bvs close_bs ct.result_typ x args num_effect_params r in
+    match (SS.compress (SS.subst ss close_body)).n with
+    | Tm_app { args = _::args} -> args
+    | _ -> raise_error (Errors.Fatal_UnexpectedEffect,
+                        "Unexpected close combinator shape") r
+  ) bvs ct.effect_args in
+  S.mk_Comp {ct with effect_args}
+
+let close_layered_lcomp_with_combinator env bvs lc =
+  let bs = bvs |> List.map S.mk_binder in
+  lc |>
+  TcComm.apply_lcomp
+    (close_layered_comp_with_combinator env bvs)
+    (fun g -> g |> Env.close_guard env bs |> close_guard_implicits env false bs)
+
 (*
- * Closing of layered computations happens via substitution
+ * Closing of layered computations via substitution
  *)
-let close_layered_lcomp env bvs tms (lc:lcomp) =
+let close_layered_lcomp_with_substitutions env bvs tms (lc:lcomp) =
   let bs = bvs |> List.map S.mk_binder in
   let substs = List.map2 (fun bv tm ->
     NT (bv, tm)

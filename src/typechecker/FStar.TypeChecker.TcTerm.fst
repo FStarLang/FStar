@@ -3639,11 +3639,20 @@ and tc_eqn (scrutinee:bv) (env:Env.env) (ret_opt : option match_returns_ascripti
 
      //g_branch is trivial, its logical content is now incorporated within c
 
-     let branch_has_layered_effect = c.eff_name |> Env.norm_eff_name env |> Env.is_layered_effect env in
+     //
+     // Working towards closing the branches comp with the pattern variables
+     // For effects with close combinator defined, we will use that
+     // For other effects, we will close with substituting pattern variables with
+     //   corresponding projector expressions applied to the scrutinee
+     //
+     let close_branch_with_substitutions =
+       let m = c.eff_name |> Env.norm_eff_name env in
+       Env.is_layered_effect env m &&
+       None? (m |> Env.get_effect_decl env |> U.get_layered_close_combinator) in
 
      (* (b) *)
      let c_weak, g_when_weak =
-       if branch_has_layered_effect
+       if close_branch_with_substitutions
        then
          //branch_guard is a boolean, so b2t it
          let c = TcUtil.weaken_precondition pat_env c (NonTrivial (U.b2t branch_guard)) in
@@ -3682,7 +3691,7 @@ and tc_eqn (scrutinee:bv) (env:Env.env) (ret_opt : option match_returns_ascripti
             TcComm.is_pure_or_ghost_lcomp c_weak
          then TcUtil.maybe_assume_result_eq_pure_term env branch_exp c_weak
          else c_weak in
-       if branch_has_layered_effect
+       if close_branch_with_substitutions
        then
          let _ =
            if Env.debug env <| Options.Other "LayeredEffects"
@@ -3737,7 +3746,9 @@ and tc_eqn (scrutinee:bv) (env:Env.env) (ret_opt : option match_returns_ascripti
          |> TcComm.apply_lcomp (fun c -> c) (fun g -> match eqs with
                                                | None -> g
                                                | Some eqs -> TcComm.weaken_guard_formula g eqs)
-         |> TcUtil.close_layered_lcomp (Env.push_bv env scrutinee) pat_bvs pat_bv_tms
+         |> TcUtil.close_layered_lcomp_with_substitutions (Env.push_bv env scrutinee) pat_bvs pat_bv_tms
+       else if c_weak.eff_name |> Env.norm_eff_name env |> Env.is_layered_effect env
+       then TcUtil.close_layered_lcomp_with_combinator (Env.push_bv env scrutinee) pat_bvs c_weak
        else TcUtil.close_wp_lcomp (Env.push_bv env scrutinee) pat_bvs c_weak in
 
     c_weak.eff_name,

@@ -556,6 +556,10 @@ type wp_eff_combinators = {
  *
  * Additionally, bind, subcomp, and if_then_else have a combinator kind,
  *   this is also set to None in desugaring and set during typechecking the effect
+ *
+ * The close combinator is optional
+ *   If it is not provided as part of the effect declaration,
+ *   the typechecker also does not synthesize it (unlike if-then-else and subcomp)
  *)
 type layered_eff_combinators = {
   l_repr         : (tscheme * tscheme);
@@ -563,6 +567,7 @@ type layered_eff_combinators = {
   l_bind         : (tscheme * tscheme * option indexed_effect_combinator_kind);
   l_subcomp      : (tscheme * tscheme * option indexed_effect_combinator_kind);
   l_if_then_else : (tscheme * tscheme * option indexed_effect_combinator_kind);
+  l_close        : option (tscheme * tscheme)
 }
 
 type eff_combinators =

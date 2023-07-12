@@ -9742,20 +9742,30 @@ and (tc_eqn :
                                                      g_branch in
                                                  (match uu___13 with
                                                   | (c1, g_branch1) ->
-                                                      let branch_has_layered_effect
+                                                      let close_branch_with_substitutions
                                                         =
-                                                        let uu___14 =
+                                                        let m =
                                                           FStar_Compiler_Effect.op_Bar_Greater
                                                             c1.FStar_TypeChecker_Common.eff_name
                                                             (FStar_TypeChecker_Env.norm_eff_name
                                                                env) in
-                                                        FStar_Compiler_Effect.op_Bar_Greater
-                                                          uu___14
-                                                          (FStar_TypeChecker_Env.is_layered_effect
-                                                             env) in
+                                                        (FStar_TypeChecker_Env.is_layered_effect
+                                                           env m)
+                                                          &&
+                                                          (let uu___14 =
+                                                             let uu___15 =
+                                                               FStar_Compiler_Effect.op_Bar_Greater
+                                                                 m
+                                                                 (FStar_TypeChecker_Env.get_effect_decl
+                                                                    env) in
+                                                             FStar_Compiler_Effect.op_Bar_Greater
+                                                               uu___15
+                                                               FStar_Syntax_Util.get_layered_close_combinator in
+                                                           FStar_Pervasives_Native.uu___is_None
+                                                             uu___14) in
                                                       let uu___14 =
                                                         if
-                                                          branch_has_layered_effect
+                                                          close_branch_with_substitutions
                                                         then
                                                           let c2 =
                                                             let uu___15 =
@@ -9870,7 +9880,7 @@ and (tc_eqn :
                                                                    c_weak
                                                                else c_weak in
                                                              if
-                                                               branch_has_layered_effect
+                                                               close_branch_with_substitutions
                                                              then
                                                                ((let uu___16
                                                                    =
@@ -10209,7 +10219,7 @@ and (tc_eqn :
                                                                     FStar_TypeChecker_Env.push_bv
                                                                     env
                                                                     scrutinee in
-                                                                    FStar_TypeChecker_Util.close_layered_lcomp
+                                                                    FStar_TypeChecker_Util.close_layered_lcomp_with_substitutions
                                                                     uu___19
                                                                     pat_bvs
                                                                     pat_bv_tms2 in
@@ -10218,13 +10228,38 @@ and (tc_eqn :
                                                                     uu___18)))
                                                              else
                                                                (let uu___16 =
-                                                                  FStar_TypeChecker_Env.push_bv
+                                                                  let uu___17
+                                                                    =
+                                                                    FStar_Compiler_Effect.op_Bar_Greater
+                                                                    c_weak1.FStar_TypeChecker_Common.eff_name
+                                                                    (FStar_TypeChecker_Env.norm_eff_name
+                                                                    env) in
+                                                                  FStar_Compiler_Effect.op_Bar_Greater
+                                                                    uu___17
+                                                                    (
+                                                                    FStar_TypeChecker_Env.is_layered_effect
+                                                                    env) in
+                                                                if uu___16
+                                                                then
+                                                                  let uu___17
+                                                                    =
+                                                                    FStar_TypeChecker_Env.push_bv
                                                                     env
                                                                     scrutinee in
-                                                                FStar_TypeChecker_Util.close_wp_lcomp
-                                                                  uu___16
-                                                                  pat_bvs
-                                                                  c_weak1) in
+                                                                  FStar_TypeChecker_Util.close_layered_lcomp_with_combinator
+                                                                    uu___17
+                                                                    pat_bvs
+                                                                    c_weak1
+                                                                else
+                                                                  (let uu___18
+                                                                    =
+                                                                    FStar_TypeChecker_Env.push_bv
+                                                                    env
+                                                                    scrutinee in
+                                                                   FStar_TypeChecker_Util.close_wp_lcomp
+                                                                    uu___18
+                                                                    pat_bvs
+                                                                    c_weak1)) in
                                                            let uu___15 =
                                                              FStar_TypeChecker_Env.close_guard
                                                                env binders

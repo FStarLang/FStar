@@ -7669,7 +7669,7 @@ let rec (desugar_effect :
                               if is_layered
                               then
                                 FStar_Compiler_List.op_At rr_members
-                                  ["subcomp"; "if_then_else"]
+                                  ["subcomp"; "if_then_else"; "close"]
                               else
                                 FStar_Compiler_List.op_At rr_members
                                   ["return_wp";
@@ -7919,6 +7919,12 @@ let rec (desugar_effect :
                                                    name_of_eff_decl decl in
                                                  uu___6 = "if_then_else")
                                               eff_decls in
+                                          let has_close =
+                                            FStar_Compiler_List.existsb
+                                              (fun decl ->
+                                                 let uu___6 =
+                                                   name_of_eff_decl decl in
+                                                 uu___6 = "close") eff_decls in
                                           let to_comb uu___6 =
                                             match uu___6 with
                                             | (us, t) ->
@@ -8067,6 +8073,18 @@ let rec (desugar_effect :
                                                       (dummy_tscheme,
                                                         dummy_tscheme,
                                                         FStar_Pervasives_Native.None) in
+                                                  let uu___14 =
+                                                    if has_close
+                                                    then
+                                                      let uu___15 =
+                                                        let uu___16 =
+                                                          lookup "close" in
+                                                        (uu___16,
+                                                          dummy_tscheme) in
+                                                      FStar_Pervasives_Native.Some
+                                                        uu___15
+                                                    else
+                                                      FStar_Pervasives_Native.None in
                                                   {
                                                     FStar_Syntax_Syntax.l_repr
                                                       = uu___9;
@@ -8077,7 +8095,9 @@ let rec (desugar_effect :
                                                     FStar_Syntax_Syntax.l_subcomp
                                                       = uu___12;
                                                     FStar_Syntax_Syntax.l_if_then_else
-                                                      = uu___13
+                                                      = uu___13;
+                                                    FStar_Syntax_Syntax.l_close
+                                                      = uu___14
                                                   } in
                                                 FStar_Syntax_Syntax.Layered_eff
                                                   uu___8 in

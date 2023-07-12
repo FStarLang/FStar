@@ -1336,13 +1336,28 @@ let (layered_eff_combinators_to_string :
             let uu___7 = to_str combs.FStar_Syntax_Syntax.l_subcomp in
             let uu___8 =
               let uu___9 = to_str combs.FStar_Syntax_Syntax.l_if_then_else in
-              [uu___9] in
+              let uu___10 =
+                let uu___11 =
+                  if
+                    FStar_Pervasives_Native.uu___is_None
+                      combs.FStar_Syntax_Syntax.l_close
+                  then ""
+                  else
+                    (let uu___13 =
+                       let uu___14 =
+                         FStar_Compiler_Effect.op_Bar_Greater
+                           combs.FStar_Syntax_Syntax.l_close
+                           FStar_Compiler_Util.must in
+                       FStar_Compiler_Effect.op_Bar_Greater uu___14 to_str2 in
+                     FStar_Compiler_Util.format1 "; l_close = %s\n" uu___13) in
+                [uu___11] in
+              uu___9 :: uu___10 in
             uu___7 :: uu___8 in
           uu___5 :: uu___6 in
         uu___3 :: uu___4 in
       uu___1 :: uu___2 in
     FStar_Compiler_Util.format
-      "{\n; l_repr = %s\n; l_return = %s\n; l_bind = %s\n; l_subcomp = %s\n; l_if_then_else = %s\n\n  }\n"
+      "{\n; l_repr = %s\n; l_return = %s\n; l_bind = %s\n; l_subcomp = %s\n; l_if_then_else = %s\n\n  %s\n  }\n"
       uu___
 let (eff_combinators_to_string :
   FStar_Syntax_Syntax.eff_combinators -> Prims.string) =

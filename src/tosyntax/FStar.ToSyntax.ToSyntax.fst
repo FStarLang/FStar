@@ -3233,10 +3233,10 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
       let rr_members = ["repr" ; "return" ; "bind"] in
       if for_free then rr_members
         (*
-         * AR: subcomp and if_then_else are optional
+         * AR: subcomp, if_then_else, and close are optional
          *     but adding here so as not to count them as actions
          *)
-      else if is_layered then rr_members @ [ "subcomp"; "if_then_else" ]
+      else if is_layered then rr_members @ [ "subcomp"; "if_then_else"; "close" ]
         (* the first 3 are optional but must not be counted as actions *)
       else rr_members @ [
         "return_wp";
@@ -3327,6 +3327,7 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
       else if is_layered then
         let has_subcomp = List.existsb (fun decl -> name_of_eff_decl decl = "subcomp") eff_decls in
         let has_if_then_else = List.existsb (fun decl -> name_of_eff_decl decl = "if_then_else") eff_decls in
+        let has_close = List.existsb (fun decl -> name_of_eff_decl decl = "close") eff_decls in
 
         //setting the second component to dummy_ts,
         //  and kind to None, typechecker fills them in
@@ -3377,6 +3378,10 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
           l_if_then_else =
             if has_if_then_else then lookup "if_then_else" |> to_comb
             else dummy_tscheme, dummy_tscheme, None;
+          l_close =
+            if has_close then Some (lookup "close", dummy_tscheme)
+            else None;  // If close is not specified, leave it to None
+                        // The typechecker will also not fill it in
         })
       else
         let rr = BU.for_some (function S.Reifiable | S.Reflectable _ -> true | _ -> false) qualifiers in

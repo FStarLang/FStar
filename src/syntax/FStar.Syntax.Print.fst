@@ -658,12 +658,17 @@ let layered_eff_combinators_to_string combs =
   ; l_bind = %s\n\
   ; l_subcomp = %s\n\
   ; l_if_then_else = %s\n
+  %s
   }\n"
     [ to_str2 combs.l_repr;
       to_str2 combs.l_return;
       to_str  combs.l_bind;
       to_str  combs.l_subcomp;
-      to_str  combs.l_if_then_else ]
+      to_str  combs.l_if_then_else;
+
+      (if None? combs.l_close then ""
+       else U.format1 "; l_close = %s\n" (combs.l_close |> must |> to_str2));
+    ]
 
 let eff_combinators_to_string = function
   | Primitive_eff combs
