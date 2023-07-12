@@ -202,7 +202,7 @@ let (elim_pure_pst :
            (Obj.magic
               (FStar_Range.mk_range "Pulse.Prover.ElimPure.fst"
                  (Prims.of_int (114)) (Prims.of_int (74))
-                 (Prims.of_int (153)) (Prims.of_int (3)))))
+                 (Prims.of_int (152)) (Prims.of_int (3)))))
         (Obj.magic
            (elim_pure_frame pst.Pulse_Prover_Common.pg
               (Pulse_Checker_VPropEquiv.list_as_vprop
@@ -228,7 +228,6 @@ let (elim_pure_pst :
                         (pst.Pulse_Prover_Common.solved);
                       Pulse_Prover_Common.unsolved =
                         (pst.Pulse_Prover_Common.unsolved);
-                      Pulse_Prover_Common.solved_typing = ();
                       Pulse_Prover_Common.k =
                         (Pulse_Prover_Common.k_elab_trans
                            preamble.Pulse_Prover_Common.g0
@@ -285,5 +284,6 @@ let (elim_pure_pst :
                                  (Pulse_Prover_Common.op_Array_Access
                                     pst.Pulse_Prover_Common.ss
                                     pst.Pulse_Prover_Common.solved)) k () ()));
-                      Pulse_Prover_Common.goals_inv = ()
+                      Pulse_Prover_Common.goals_inv = ();
+                      Pulse_Prover_Common.solved_inv = ()
                     }))

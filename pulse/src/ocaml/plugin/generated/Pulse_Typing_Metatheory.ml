@@ -144,23 +144,6 @@ let (comp_st_with_pre :
                 Pulse_Syntax_Base.pre = pre;
                 Pulse_Syntax_Base.post = (st.Pulse_Syntax_Base.post)
               })
-type ('g, 't, 'p1, 'p2) vprop_equiv_x = unit
-let (st_typing_equiv_post :
-  Pulse_Typing_Env.env ->
-    Pulse_Syntax_Base.st_term ->
-      Pulse_Syntax_Base.comp_st ->
-        (unit, unit, unit) Pulse_Typing.st_typing ->
-          Pulse_Syntax_Base.term ->
-            unit -> (unit, unit, unit) Pulse_Typing.st_typing)
-  = fun g -> fun t -> fun c -> fun d -> fun post -> fun veq -> Prims.admit ()
-let (st_typing_equiv_pre :
-  Pulse_Typing_Env.env ->
-    Pulse_Syntax_Base.st_term ->
-      Pulse_Syntax_Base.comp_st ->
-        (unit, unit, unit) Pulse_Typing.st_typing ->
-          Pulse_Syntax_Base.term ->
-            unit -> (unit, unit, unit) Pulse_Typing.st_typing)
-  = fun g -> fun t -> fun c -> fun d -> fun pre -> fun veq -> Prims.admit ()
 type ('g, 'gu, 'guu) pairwise_disjoint = unit
 let (st_typing_weakening :
   Pulse_Typing_Env.env ->

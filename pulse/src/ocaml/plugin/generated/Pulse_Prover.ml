@@ -18,9 +18,9 @@ let (unsolved_equiv_pst :
             Pulse_Prover_Common.ss = (pst.Pulse_Prover_Common.ss);
             Pulse_Prover_Common.solved = (pst.Pulse_Prover_Common.solved);
             Pulse_Prover_Common.unsolved = unsolved';
-            Pulse_Prover_Common.solved_typing = ();
             Pulse_Prover_Common.k = (pst.Pulse_Prover_Common.k);
-            Pulse_Prover_Common.goals_inv = ()
+            Pulse_Prover_Common.goals_inv = ();
+            Pulse_Prover_Common.solved_inv = ()
           }
 let (remaining_ctxt_equiv_pst :
   Pulse_Prover_Common.preamble ->
@@ -40,7 +40,6 @@ let (remaining_ctxt_equiv_pst :
             Pulse_Prover_Common.ss = (pst.Pulse_Prover_Common.ss);
             Pulse_Prover_Common.solved = (pst.Pulse_Prover_Common.solved);
             Pulse_Prover_Common.unsolved = (pst.Pulse_Prover_Common.unsolved);
-            Pulse_Prover_Common.solved_typing = ();
             Pulse_Prover_Common.k =
               (Pulse_Prover_Common.k_elab_equiv
                  preamble.Pulse_Prover_Common.g0
@@ -71,7 +70,8 @@ let (remaining_ctxt_equiv_pst :
                        pst.Pulse_Prover_Common.ss
                        pst.Pulse_Prover_Common.solved))
                  pst.Pulse_Prover_Common.k () ());
-            Pulse_Prover_Common.goals_inv = ()
+            Pulse_Prover_Common.goals_inv = ();
+            Pulse_Prover_Common.solved_inv = ()
           }
 let rec (collect_exists :
   Pulse_Typing_Env.env ->
@@ -551,7 +551,7 @@ let (prove :
           Pulse_Syntax_Base.vprop ->
             unit ->
               ((Pulse_Typing_Env.env, Pulse_Typing_Env.env,
-                 Pulse_Prover_Substs.ss_t, Pulse_Syntax_Base.vprop,
+                 Pulse_Prover_Substs.nt_substs, Pulse_Syntax_Base.vprop,
                  (unit, unit, unit, unit)
                    Pulse_Prover_Common.continuation_elaborator)
                  FStar_Pervasives.dtuple5,
@@ -573,7 +573,7 @@ let (prove :
                    (Obj.magic
                       (FStar_Range.mk_range "Pulse.Prover.fst"
                          (Prims.of_int (127)) (Prims.of_int (70))
-                         (Prims.of_int (164)) (Prims.of_int (103)))))
+                         (Prims.of_int (162)) (Prims.of_int (100)))))
                 (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> ()))
                 (fun uu___ ->
                    (fun ctxt_frame_typing ->
@@ -587,8 +587,8 @@ let (prove :
                            (FStar_Sealed.seal
                               (Obj.magic
                                  (FStar_Range.mk_range "Pulse.Prover.fst"
-                                    (Prims.of_int (136)) (Prims.of_int (59))
-                                    (Prims.of_int (164)) (Prims.of_int (103)))))
+                                    (Prims.of_int (136)) (Prims.of_int (41))
+                                    (Prims.of_int (162)) (Prims.of_int (100)))))
                            (FStar_Tactics_Effect.lift_div_tac
                               (fun uu___ ->
                                  {
@@ -610,15 +610,15 @@ let (prove :
                                                (Prims.of_int (138))
                                                (Prims.of_int (4))
                                                (Prims.of_int (147))
-                                               (Prims.of_int (25)))))
+                                               (Prims.of_int (19)))))
                                       (FStar_Sealed.seal
                                          (Obj.magic
                                             (FStar_Range.mk_range
                                                "Pulse.Prover.fst"
                                                (Prims.of_int (148))
                                                (Prims.of_int (6))
-                                               (Prims.of_int (164))
-                                               (Prims.of_int (103)))))
+                                               (Prims.of_int (162))
+                                               (Prims.of_int (100)))))
                                       (FStar_Tactics_Effect.lift_div_tac
                                          (fun uu___ ->
                                             {
@@ -637,8 +637,6 @@ let (prove :
                                               Pulse_Prover_Common.unsolved =
                                                 (Pulse_Checker_VPropEquiv.vprop_as_list
                                                    goals);
-                                              Pulse_Prover_Common.solved_typing
-                                                = ();
                                               Pulse_Prover_Common.k =
                                                 (Pulse_Prover_Common.k_elab_equiv
                                                    g g ctxt
@@ -658,7 +656,9 @@ let (prove :
                                                    (Pulse_Prover_Common.k_elab_unit
                                                       g ctxt) () ());
                                               Pulse_Prover_Common.goals_inv =
-                                                ()
+                                                ();
+                                              Pulse_Prover_Common.solved_inv
+                                                = ()
                                             }))
                                       (fun uu___ ->
                                          (fun pst ->
@@ -678,8 +678,8 @@ let (prove :
                                                           "Pulse.Prover.fst"
                                                           (Prims.of_int (149))
                                                           (Prims.of_int (25))
-                                                          (Prims.of_int (164))
-                                                          (Prims.of_int (103)))))
+                                                          (Prims.of_int (162))
+                                                          (Prims.of_int (100)))))
                                                  (Obj.magic
                                                     (prover preamble pst))
                                                  (fun uu___ ->
@@ -700,8 +700,8 @@ let (prove :
                                                                     "Pulse.Prover.fst"
                                                                     (Prims.of_int (151))
                                                                     (Prims.of_int (2))
-                                                                    (Prims.of_int (164))
-                                                                    (Prims.of_int (103)))))
+                                                                    (Prims.of_int (162))
+                                                                    (Prims.of_int (100)))))
                                                             (Obj.magic
                                                                (Pulse_Prover_Substs.ss_to_nt_substs
                                                                   pst1.Pulse_Prover_Common.pg
@@ -726,8 +726,8 @@ let (prove :
                                                                     "Pulse.Prover.fst"
                                                                     (Prims.of_int (151))
                                                                     (Prims.of_int (65))
-                                                                    (Prims.of_int (164))
-                                                                    (Prims.of_int (103)))))
+                                                                    (Prims.of_int (162))
+                                                                    (Prims.of_int (100)))))
                                                                     (if
                                                                     FStar_Pervasives_Native.uu___is_None
                                                                     ropt
@@ -754,11 +754,11 @@ let (prove :
                                                                     with
                                                                     | 
                                                                     FStar_Pervasives_Native.Some
-                                                                    nt ->
+                                                                    nts ->
                                                                     FStar_Pervasives.Mkdtuple5
                                                                     ((pst1.Pulse_Prover_Common.pg),
                                                                     (pst1.Pulse_Prover_Common.uvs),
-                                                                    (pst1.Pulse_Prover_Common.ss),
+                                                                    nts,
                                                                     (Pulse_Checker_VPropEquiv.list_as_vprop
                                                                     pst1.Pulse_Prover_Common.remaining_ctxt),
                                                                     (Pulse_Prover_Common.k_elab_equiv
@@ -773,13 +773,12 @@ let (prove :
                                                                     (Pulse_Checker_VPropEquiv.list_as_vprop
                                                                     pst1.Pulse_Prover_Common.remaining_ctxt)
                                                                     Pulse_Syntax_Base.tm_emp)
-                                                                    (Pulse_Prover_Common.op_Array_Access
-                                                                    pst1.Pulse_Prover_Common.ss
-                                                                    pst1.Pulse_Prover_Common.solved))
+                                                                    (Pulse_Prover_Substs.nt_subst_term
+                                                                    pst1.Pulse_Prover_Common.solved
+                                                                    nts))
                                                                     (Pulse_Prover_Common.op_Star
-                                                                    (Pulse_Prover_Common.op_Array_Access
-                                                                    pst1.Pulse_Prover_Common.ss
-                                                                    goals)
+                                                                    (Pulse_Prover_Substs.nt_subst_term
+                                                                    goals nts)
                                                                     (Pulse_Checker_VPropEquiv.list_as_vprop
                                                                     pst1.Pulse_Prover_Common.remaining_ctxt))
                                                                     pst1.Pulse_Prover_Common.k

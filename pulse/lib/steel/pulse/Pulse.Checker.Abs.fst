@@ -30,7 +30,7 @@ let check_effect_annotation g r (c_annot c_computed:comp) =
                   (P.tag_of_comp c_computed))
 
 
-#push-options "--z3rlimit_factor 2"
+#push-options "--z3rlimit_factor 2 --fuel 0 --ifuel 1"
 let check_abs
   (g:env)
   (t:st_term{Tm_Abs? t.term})
