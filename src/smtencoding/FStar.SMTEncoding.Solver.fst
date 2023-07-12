@@ -170,7 +170,7 @@ let rec filter_assertions_with_stats (e:env) (core:Z3.unsat_core) (theory:list d
               decls |> filter_assertions_with_stats e (Some core)
                     |> (fun (decls, _, r, p) -> Module (name, decls)::theory, n_retained + r, n_pruned + p)
             | _ -> d::theory, n_retained, n_pruned)
-            ([Caption ("UNSAT CORE: " ^ (core |> String.concat ", "))], 0, 0) theory_rev in  //start with the unsat core caption at the end
+            ([Caption ("UNSAT CORE USED: " ^ (core |> String.concat ", "))], 0, 0) theory_rev in  //start with the unsat core caption at the end
         theory', true, n_retained, n_pruned
 
 let filter_assertions (e:env) (core:Z3.unsat_core) (theory:list decl) =
@@ -290,6 +290,7 @@ let detail_hint_replay settings z3result =
                       settings.query_hash
                       settings.query_all_labels
                       (with_fuel_and_diagnostics settings label_assumptions)
+                      (BU.format2 "(%s, %s)" settings.query_name (string_of_int settings.query_index))
                       None
                       false
            in
@@ -426,6 +427,7 @@ let errors_to_report (settings : query_settings) : list Errors.error =
                       settings.query_hash
                       settings.query_all_labels
                       (with_fuel_and_diagnostics initial_fuel label_assumptions)
+                      (BU.format2 "(%s, %s)" settings.query_name (string_of_int settings.query_index))
                       None
                       false
               in
@@ -801,6 +803,7 @@ let __ask_solver
                   config.query_hash
                   config.query_all_labels
                   (with_fuel_and_diagnostics config [])
+                  (BU.format2 "(%s, %s)" config.query_name (string_of_int config.query_index))
                   (Some (Z3.mk_fresh_scope()))
                   (used_hint config)
     in
