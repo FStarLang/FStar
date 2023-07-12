@@ -13,17 +13,7 @@ FSTAR_OPTIONS=$(OTHERFLAGS) --cache_checked_modules --warn_error @241 --already_
 COMPAT_INDEXED_EFFECTS=--compat_pre_typed_indexed_effects
 MY_FSTAR=$(RUNLIM) $(FSTAR) $(SIL) $(FSTAR_OPTIONS)
 
-# Passing RESOURCEMONITOR=1 will create .runlim files through the source tree with
-# information about the time and space taken by each F* invocation.
-ifneq ($(RESOURCEMONITOR),)
-	ifeq ($(shell which runlim),)
-		_ := $(error $(NO_RUNLIM_ERR)))
-	endif
-	ifneq ($(MONID),)
-		MONPREFIX=$(MONID).
-	endif
-	RUNLIM=runlim -p -o $@.$(MONPREFIX)runlim
-endif
+include runlim.mk
 
 %.checked:
 	$(call msg, "CHECK", $(basename $(notdir $@)))
