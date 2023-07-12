@@ -78,6 +78,7 @@ let stderr = Stdlib.stderr
 let stdout = Stdlib.stdout
 
 let open_file_for_writing (fn : string) = Stdlib.open_out_bin fn
+let open_file_for_appending (fn : string) = Stdlib.open_out_gen [Open_append; Open_wronly; Open_creat; Open_binary] 0o644 fn
 let close_out_channel (c : out_channel) = Stdlib.close_out c
 
 let flush (c:out_channel) : unit = Stdlib.flush c
