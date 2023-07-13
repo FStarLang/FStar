@@ -790,7 +790,7 @@ let (try_frame_pre :
                                              FStar_Tactics_Effect.raise
                                                (Framing_failure fail))))
                                 uu___))) uu___)
-type ('g, 'ctxt, 'postuhint) checker_result_t =
+type ('g, 'ctxt, 'postuhint, 'frameupre) checker_result_t =
   (Pulse_Syntax_Base.st_term, Pulse_Syntax_Base.comp,
     (unit, unit, unit) Pulse_Typing.st_typing) FStar_Pervasives.dtuple3
 type check_t =
@@ -799,8 +799,9 @@ type check_t =
       Pulse_Syntax_Base.term ->
         unit ->
           unit Pulse_Typing.post_hint_opt ->
-            ((unit, unit, unit) checker_result_t, unit)
-              FStar_Tactics_Effect.tac_repr
+            Prims.bool ->
+              ((unit, unit, unit, unit) checker_result_t, unit)
+                FStar_Tactics_Effect.tac_repr
 let (replace_equiv_post :
   Pulse_Syntax_Base.range ->
     Pulse_Typing_Env.env ->
@@ -1318,7 +1319,7 @@ let (repack :
         (Pulse_Syntax_Base.comp_st,
           (unit, unit, unit) Pulse_Typing.st_typing) Prims.dtuple2 ->
           unit Pulse_Typing.post_hint_opt ->
-            ((unit, unit, unit) checker_result_t, unit)
+            ((unit, unit, unit, unit) checker_result_t, unit)
               FStar_Tactics_Effect.tac_repr)
   =
   fun g ->

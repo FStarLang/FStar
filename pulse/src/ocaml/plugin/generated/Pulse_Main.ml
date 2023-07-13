@@ -157,7 +157,7 @@ let (main' :
                                                                     (Prims.of_int (29))
                                                                     (Prims.of_int (38))
                                                                     (Prims.of_int (29))
-                                                                    (Prims.of_int (67)))))
+                                                                    (Prims.of_int (72)))))
                                                                   (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -170,7 +170,8 @@ let (main' :
                                                                     (Pulse_Checker.check
                                                                     g1 t pre1
                                                                     ()
-                                                                    FStar_Pervasives_Native.None))
+                                                                    FStar_Pervasives_Native.None
+                                                                    true))
                                                                   (fun uu___2
                                                                     ->
                                                                     FStar_Tactics_Effect.lift_div_tac

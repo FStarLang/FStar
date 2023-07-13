@@ -2,9 +2,9 @@ open Prims
 type ('g, 't) vprop_typing = unit
 type ('g, 'ctxt, 'gu, 'ctxtu) continuation_elaborator =
   unit Pulse_Typing.post_hint_opt ->
-    (unit, unit, unit) Pulse_Checker_Common.checker_result_t ->
-      ((unit, unit, unit) Pulse_Checker_Common.checker_result_t, unit)
-        FStar_Tactics_Effect.tac_repr
+    (unit, unit, unit, unit) Pulse_Checker_Common.checker_result_t ->
+      ((unit, unit, unit, unit) Pulse_Checker_Common.checker_result_t, 
+        unit) FStar_Tactics_Effect.tac_repr
 let (k_elab_unit :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
