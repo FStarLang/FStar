@@ -30,7 +30,8 @@ let check_elim_exists
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
-  : T.Tac (checker_result_t g pre post_hint) =
+  (frame_pre:bool)
+  : T.Tac (checker_result_t g pre post_hint frame_pre) =
   let Tm_ElimExists { p = t } = t.term in
   let t_t_typing : (t:term & tot_typing g t tm_vprop ) = 
       match t.t with
@@ -65,7 +66,11 @@ let check_elim_exists
     if eq_univ u u'
     then let x = fresh g in
          let d = T_ElimExists g u ty p x ty_typing t_typing in
-         repack (try_frame_pre pre_typing d) post_hint
+         if frame_pre
+         then repack (try_frame_pre pre_typing d) post_hint
+         else if Some? post_hint
+         then T.fail "check_elim_exists: frame_pre is false but post hint is set, bailing"
+         else (| _, _, d |)
     else fail g None "Universe checking failed in elim_exists"
   | _ -> fail g None "elim_exists argument not a Tm_ExistsSL"
 
@@ -82,7 +87,8 @@ let check_intro_exists_erased
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
-  : T.Tac (checker_result_t g pre post_hint) =
+  (frame_pre:bool)
+  : T.Tac (checker_result_t g pre post_hint frame_pre) =
 
   let Tm_IntroExists { p=t; witnesses=[e]; should_check } = st.term in
   let (| t, t_typing |) = 
@@ -101,7 +107,11 @@ let check_intro_exists_erased
     let (| e, e_typing |) = 
         check_term_with_expected_type g e (mk_erased u b.binder_ty) in
     let d = T_IntroExistsErased g u b p e ty_typing t_typing (E e_typing) in
-    repack (try_frame_pre pre_typing d) post_hint
+    if frame_pre
+    then repack (try_frame_pre pre_typing d) post_hint
+    else if Some? post_hint
+    then T.fail "check_intro_exists_erased: frame_pre is false but post hint is set, bailing"
+    else (| _, _, d |)
   | _ -> fail g None "elim_exists argument not a Tm_ExistsSL"
 
 
@@ -112,7 +122,8 @@ let check_intro_exists
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
-  : T.Tac (checker_result_t g pre post_hint) =
+  (frame_pre:bool)
+  : T.Tac (checker_result_t g pre post_hint frame_pre) =
 
   let Tm_IntroExists { p=t; witnesses=[witness]; should_check } = st.term in
   let (| t, t_typing |) =
@@ -132,7 +143,11 @@ let check_intro_exists
         check_term_with_expected_type g witness b.binder_ty in
     let d = T_IntroExists g u b p witness ty_typing t_typing (E witness_typing) in
     let (| c, d |) : (c:_ & st_typing g _ c) = (| _, d |) in
-    repack (try_frame_pre pre_typing d) post_hint
+    if frame_pre
+    then repack (try_frame_pre pre_typing d) post_hint
+    else if Some? post_hint
+    then T.fail "check_intro_exists: frame_pre is false but post hint is set, bailing"
+    else (| _, _, d |)
   | _ -> fail g None "elim_exists argument not a Tm_ExistsSL"
 
 let check_intro_exists_either
@@ -142,9 +157,10 @@ let check_intro_exists_either
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
-  : T.Tac (checker_result_t g pre post_hint) = 
+  (frame_pre:bool)
+  : T.Tac (checker_result_t g pre post_hint frame_pre) = 
   // T.print (Printf.sprintf "LOG INTRO EXISTS: %s"
   //                           (P.term_to_string (intro_exists_vprop st)));
     if is_intro_exists_erased st
-    then check_intro_exists_erased g st vprop_typing pre pre_typing post_hint
-    else check_intro_exists g st vprop_typing pre pre_typing post_hint
+    then check_intro_exists_erased g st vprop_typing pre pre_typing post_hint frame_pre
+    else check_intro_exists g st vprop_typing pre pre_typing post_hint frame_pre

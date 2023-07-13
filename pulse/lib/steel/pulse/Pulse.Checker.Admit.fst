@@ -25,7 +25,8 @@ let check_admit
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
-  : T.Tac (checker_result_t g pre post_hint) =
+  (frame_pre:bool)
+  : T.Tac (checker_result_t g pre post_hint frame_pre) =
   let Tm_Admit { ctag = c; typ=t; post } = t.term in
   let x = fresh g in
   let px = v_as_nv x in

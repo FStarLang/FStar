@@ -19,7 +19,8 @@ let check_return
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
-  : T.Tac (checker_result_t g pre post_hint) =
+  (frame_pre:bool)
+  : T.Tac (checker_result_t g pre post_hint frame_pre) =
   let g = push_context "check_return" st.range g in
   let Tm_Return {ctag=c; insert_eq=use_eq; term=t} = st.term in
   let (| t, u, ty, uty, d |) :
@@ -59,4 +60,8 @@ let check_return
   assume (open_term (close_term post_opened x) x == post_opened);
   let post = close_term post_opened x in
   let d = T_Return g c use_eq u ty t post x uty (E d) post_typing in
-  repack (Pulse.Checker.Common.try_frame_pre pre_typing d) post_hint
+  if frame_pre
+  then repack (Pulse.Checker.Common.try_frame_pre pre_typing d) post_hint
+  else if Some? post_hint
+  then T.fail "check_return frame_pre is false but post_hint is set, bailing"
+  else (| _, _, d |)

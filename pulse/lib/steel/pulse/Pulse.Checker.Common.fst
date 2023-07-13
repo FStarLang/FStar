@@ -144,7 +144,7 @@ let replace_equiv_post
 let repack (#g:env) (#pre:term) (#t:st_term)
            (x:(c:comp_st { comp_pre c == pre } & st_typing g t c))
            (post_hint:post_hint_opt g)
-  : T.Tac (checker_result_t g pre post_hint)
+  : T.Tac (checker_result_t g pre post_hint true)
   = let (| c, d_c |) = x in
     if stateful_comp c
     then (

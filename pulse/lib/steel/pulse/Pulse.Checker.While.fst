@@ -24,7 +24,7 @@ let while_body_comp_typing (#g:env) (u:universe) (x:ppname) (ty:term) (inv_body:
   : Metatheory.comp_typing_u g (comp_while_body x inv_body)
   = Metatheory.admit_comp_typing g (comp_while_body x inv_body)
 
-#push-options "--ifuel 2 --z3rlimit_factor 10 --split_queries no --query_stats"
+#push-options "--fuel 0 --ifuel 2 --z3rlimit_factor 10 --split_queries no --query_stats"
 let check_while
   (allow_inst:bool)
   (g:env)
@@ -32,8 +32,11 @@ let check_while
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
+  (frame_pre:bool)
   (check':bool -> check_t)
-  : T.Tac (checker_result_t g pre post_hint) =
+  : T.Tac (checker_result_t g pre post_hint frame_pre) =
+  if not frame_pre
+  then T.fail "check_while, frame_pre is false, bailing";
   let g = push_context "while loop" t.range g in
   let Tm_While { invariant=inv; condition=cond; body; condition_var } = t.term in
   let (| ex_inv, inv_typing |) =
@@ -68,6 +71,7 @@ let check_while
                  (comp_pre (comp_while_cond nm inv))
                  cond_pre_typing
                  (Some while_cond_hint)
+                 frame_pre
         in
         if eq_comp cond_comp (comp_while_cond nm inv)
         then begin
@@ -86,6 +90,7 @@ let check_while
                      (comp_pre (comp_while_body nm inv))
                      body_pre_typing
                      (Some while_post_hint)
+                     frame_pre
           in
           if eq_comp body_comp (comp_while_body nm inv)
           then let d = T_While g inv cond body inv_typing cond_typing body_typing in

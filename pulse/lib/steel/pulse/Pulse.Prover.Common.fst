@@ -111,7 +111,7 @@ let k_elab_equiv_prefix (#g1 #g2:env) (#ctxt1 #ctxt2 #ctxt:term)
         simplify_lemma c c' post_hint;
         let c''  = comp_st_with_post c' (comp_post c) in
         let st_d' : st_typing g1 st c'' = simplify_post st_d' (comp_post c) in
-        let res : (checker_result_t g1 ctxt2 post_hint) = (| st, c'', st_d' |) in
+        let res : (checker_result_t g1 ctxt2 post_hint true) = (| st, c'', st_d' |) in
         res
 #pop-options
 

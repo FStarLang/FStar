@@ -18,8 +18,8 @@ type continuation_elaborator
   (g:env) (ctxt:term)
   (g':env) (ctxt':term) =
   post_hint:post_hint_opt g ->
-  checker_result_t g' ctxt' post_hint ->
-  T.Tac (checker_result_t g ctxt post_hint)
+  checker_result_t g' ctxt' post_hint true ->
+  T.Tac (checker_result_t g ctxt post_hint true)
 
 val k_elab_unit (g:env) (ctxt:term)
   : continuation_elaborator g ctxt g ctxt

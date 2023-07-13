@@ -32,9 +32,9 @@ val try_frame_pre (#g:env)
   : T.Tac (c':comp_st { comp_pre c' == pre } &
            st_typing g t c')
 
-type checker_result_t (g:env) (ctxt:term) (post_hint:option post_hint_t) =
+type checker_result_t (g:env) (ctxt:term) (post_hint:option post_hint_t) (frame_pre:bool) =
     t:st_term &
-    c:comp{stateful_comp c ==> (comp_pre c == ctxt /\ comp_post_matches_hint c post_hint) } &
+    c:comp{(stateful_comp c /\ frame_pre) ==> (comp_pre c == ctxt /\ comp_post_matches_hint c post_hint) } &
     st_typing g t c
 
 type check_t =
@@ -43,12 +43,13 @@ type check_t =
   pre:term ->
   pre_typing:tot_typing g pre tm_vprop ->
   post_hint:post_hint_opt g ->
-  T.Tac (checker_result_t g pre post_hint)
+  frame_pre:bool ->
+  T.Tac (checker_result_t g pre post_hint frame_pre)
 
 val repack (#g:env) (#pre:term) (#t:st_term)
            (x:(c:comp_st { comp_pre c == pre } & st_typing g t c))
            (post_hint:post_hint_opt g)
-  : T.Tac (checker_result_t g pre post_hint)
+  : T.Tac (checker_result_t g pre post_hint true)
 
 val intro_comp_typing (g:env) 
                       (c:comp_st)

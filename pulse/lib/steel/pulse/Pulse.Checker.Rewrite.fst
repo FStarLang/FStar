@@ -16,7 +16,8 @@ let check_rewrite
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
-  : T.Tac (checker_result_t g pre post_hint) =
+  (frame_pre:bool)
+  : T.Tac (checker_result_t g pre post_hint frame_pre) =
   let g = push_context "check_rewrite" t.range g in
   let Tm_Rewrite {t1=p; t2=q} = t.term in
   let (| p, p_typing |) = check_vprop g p in
@@ -38,5 +39,9 @@ let check_rewrite
                            (T.term_to_string elab_q))
            | Some token ->
             VE_Ext g p q token in
-	     let d = T_Rewrite _ p q p_typing equiv_p_q in
-	     repack (Pulse.Checker.Common.try_frame_pre pre_typing d) post_hint
+	let d = T_Rewrite _ p q p_typing equiv_p_q in
+  if frame_pre
+	then repack (Pulse.Checker.Common.try_frame_pre pre_typing d) post_hint
+  else if Some? post_hint
+  then T.fail "check_rewrite: frame_pre is false but post_hint is set, bailing"
+  else (| _, _, d |)

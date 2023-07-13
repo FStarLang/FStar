@@ -79,9 +79,12 @@ let check_if (g:env)
              (pre:term)
              (pre_typing: tot_typing g pre tm_vprop)
              (post_hint:post_hint_for_env g)
+             (frame_pre:bool)
              (check:check_t)
-  : T.Tac (checker_result_t g pre (Some post_hint))
-  = let (| b, b_typing |) =
+  : T.Tac (checker_result_t g pre (Some post_hint) frame_pre)
+  = if not frame_pre
+    then T.fail "check_if, frame_pre is not set, bailing";
+    let (| b, b_typing |) =
       check_term_with_expected_type g b tm_bool in
     let post = post_hint.post in
     let hyp = fresh g in
@@ -99,7 +102,7 @@ let check_if (g:env)
                                             pre_typing
         in
         let (| br, c, br_typing |) =
-            check g_with_eq br pre pre_typing (Some post_hint)
+            check g_with_eq br pre pre_typing (Some post_hint) frame_pre
         in
         if hyp `Set.mem` freevars_st br
         then fail g (Some br.range) "Illegal use of control-flow hypothesis in branch"

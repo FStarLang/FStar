@@ -13,4 +13,5 @@ val check_return
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
-  : T.Tac (checker_result_t g pre post_hint)
+  (frame_pre:bool)
+  : T.Tac (checker_result_t g pre post_hint frame_pre)

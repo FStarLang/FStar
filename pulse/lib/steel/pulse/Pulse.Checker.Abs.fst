@@ -37,8 +37,9 @@ let check_abs
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
+  (frame_pre:bool)
   (check:check_t)
-  : T.Tac (checker_result_t g pre post_hint) =
+  : T.Tac (checker_result_t g pre post_hint frame_pre) =
   if Some? post_hint then fail g None "Unexpected post-condition annotation from context for an abstraction" else 
   let range = t.range in
   match t.term with  
@@ -77,7 +78,7 @@ let check_abs
         in
         Some post_hint_typing
     in
-    let (| body', c_body, body_typing |) = check g' (open_st_term_nv body px) pre_opened pre_typing post in
+    let (| body', c_body, body_typing |) = check g' (open_st_term_nv body px) pre_opened pre_typing post frame_pre in
     check_effect_annotation g' body'.range c c_body;
     FV.st_typing_freevars body_typing;
     let body_closed = close_st_term body' x in

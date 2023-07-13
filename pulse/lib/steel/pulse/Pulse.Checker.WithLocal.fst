@@ -33,8 +33,11 @@ let check_withlocal
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
+  (frame_pre:bool)
   (check':bool -> check_t)
-  : T.Tac (checker_result_t g pre post_hint) =
+  : T.Tac (checker_result_t g pre post_hint frame_pre) =
+  if not frame_pre
+  then T.fail "withlocal: frame_pre is false, bailing";
   let g = push_context "check_withlocal" t.range g in
   let wr t0 = { term = t0; range = t.range } in
   let Tm_WithLocal {binder; initializer=init; body} = t.term in
@@ -63,7 +66,7 @@ let check_withlocal
          else (
            let body_post = extend_post_hint_for_local g post init_t x in
            let (| opened_body, c_body, body_typing |) =
-             check' allow_inst g_extended (open_st_term_nv body px) body_pre body_pre_typing (Some body_post) in
+             check' allow_inst g_extended (open_st_term_nv body px) body_pre body_pre_typing (Some body_post) frame_pre in
            //
            // Checking post equality here to match the typing rule
            // 

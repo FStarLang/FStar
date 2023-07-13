@@ -34,7 +34,7 @@ let canonicalize_st_typing (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c
     T_Equiv _ _ _ _ d st_eq
 
 
-
+#push-options "--fuel 0 --ifuel 1 --z3rlimit_factor 2"
 let check_stapp
   (allow_inst:bool)
   (g:env)
@@ -42,8 +42,9 @@ let check_stapp
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
+  (frame_pre:bool)
   (check':bool -> check_t)
-  : T.Tac (checker_result_t g pre post_hint) =
+  : T.Tac (checker_result_t g pre post_hint frame_pre) =
   // maybe_log t;
   let range = t.range in
   let Tm_STApp { head; arg_qual=qual; arg } = t.term in
@@ -69,7 +70,7 @@ let check_stapp
   //   | _ ->
   //     T.fail "Unexpected c in infer_logical_implicits_and_check" in
 
-  let check_st_app ()  : T.Tac (checker_result_t g pre post_hint) =
+  let check_st_app ()  : T.Tac (checker_result_t g pre post_hint frame_pre) =
     let g = push_context "st_app" t.range g in        
     let (| head, ty_head, dhead |) = check_term g head in
     debug_log g (fun _ ->
@@ -98,7 +99,11 @@ let check_stapp
           //  T.print (Printf.sprintf "ST application trying to frame, context: %s and pre: %s\n"
           //             (Pulse.Syntax.Printer.term_to_string pre)
           //             (Pulse.Syntax.Printer.term_to_string (comp_pre (open_comp_with comp_typ arg))));
-           repack (try_frame_pre pre_typing d') post_hint
+          if frame_pre
+          then repack (try_frame_pre pre_typing d') post_hint
+          else if Some? post_hint
+          then T.fail "stapp: frame_pre is false but post_hint is set, bailing"
+          else (| _, _, d' |)
          | _ ->
            fail g (Some t.range) "Expected an effectful application; got a pure term (could it be partially applied by mistake?)"
         else 
@@ -117,6 +122,7 @@ let check_stapp
   | Some (_, Some Implicit, _) -> 
     //Some implicits to follow
     let t = Pulse.Checker.Inference.infer g t ty pre range in
-    check' false g t pre pre_typing post_hint
+    check' false g t pre pre_typing post_hint frame_pre
   | _ ->
     check_st_app ()
+#pop-options

@@ -155,8 +155,9 @@ let check
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
+  (frame_pre:bool)
   (check:check_t)
-  : T.Tac (checker_result_t g pre post_hint)
+  : T.Tac (checker_result_t g pre post_hint frame_pre)
   = let Tm_ProofHintWithBinders { hint_type; binders; v; t=body } = st.term in
     check_unfoldable g hint_type v;
     let nvars, v = infer_binder_types g binders v in
@@ -192,7 +193,7 @@ let check
                      range = st.range } in
         let tm = seq asrt (subst_st_term body sub) in
         debug_log g (fun _ -> Printf.sprintf "After with_binders: about to check %s\n" (P.st_term_to_string tm));
-        check g tm pre pre_typing post_hint
+        check g tm pre pre_typing post_hint frame_pre
       | UNFOLD _
       | FOLD _ ->
         let rw = { term = Tm_Rewrite { t1 = Inf.apply_solution solution lhs;
@@ -201,4 +202,4 @@ let check
         let body' = subst_st_term body sub in
         let tm = seq rw body' in
         debug_log g (fun _ -> Printf.sprintf "After with_binders: about to check %s\n" (P.st_term_to_string tm));
-        check g tm pre pre_typing post_hint
+        check g tm pre pre_typing post_hint frame_pre

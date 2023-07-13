@@ -12,6 +12,7 @@ open Pulse.Checker.Comp
 module FV = Pulse.Typing.FV
 module MT = Pulse.Typing.Metatheory
 
+#push-options "--fuel 0 --ifuel 1 --z3rlimit_factor 2"
 let check_par
   (allow_inst:bool)
   (g:env)
@@ -19,8 +20,11 @@ let check_par
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
+  (frame_pre:bool)
   (check':bool -> check_t)
-  : T.Tac (checker_result_t g pre post_hint) =
+  : T.Tac (checker_result_t g pre post_hint frame_pre) =
+  if not frame_pre
+  then T.fail "par: frame_pre false not supported";
   let g = push_context "check_par" t.range g in
   let Tm_Par {pre1=preL; body1=eL; post1=postL;
               pre2=preR; body2=eR; post2=postR} = t.term in
@@ -31,14 +35,14 @@ let check_par
 
   let postL_hint = intro_post_hint g None postL in
   let (| eL, cL, eL_typing |) =
-    check' allow_inst g eL preL (E preL_typing) (Some postL_hint) in
+    check' allow_inst g eL preL (E preL_typing) (Some postL_hint) frame_pre in
 
   if C_ST? cL
   then
     let cL_typing = MT.st_typing_correctness eL_typing in
     let postR_hint = intro_post_hint g None postR in
     let (| eR, cR, eR_typing |) =
-      check' allow_inst g eR preR (E preR_typing) (Some postR_hint) in
+      check' allow_inst g eR preR (E preR_typing) (Some postR_hint) frame_pre in
 
     if C_ST? cR && eq_univ (comp_u cL) (comp_u cR)
     then
@@ -48,3 +52,4 @@ let check_par
       repack (try_frame_pre pre_typing d) post_hint
     else fail g (Some eR.range) "par: cR is not stt"
   else fail g (Some eL.range) "par: cL is not stt"
+#pop-options

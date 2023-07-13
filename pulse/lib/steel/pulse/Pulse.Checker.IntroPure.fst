@@ -26,7 +26,8 @@ let check_intro_pure
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
-  : T.Tac (checker_result_t g pre post_hint)
+  (frame_pre:bool)
+  : T.Tac (checker_result_t g pre post_hint frame_pre)
   = let Tm_IntroPure { p; should_check } = t.term in
     let (| p, p_typing |) = 
         if T.unseal should_check
@@ -36,4 +37,8 @@ let check_intro_pure
     in 
     let pv = check_prop_validity g p p_typing in
     let st_typing = T_IntroPure _ _ p_typing pv in
-    repack (try_frame_pre pre_typing st_typing) post_hint
+    if frame_pre
+    then repack (try_frame_pre pre_typing st_typing) post_hint
+    else if Some? post_hint
+    then T.fail "intro_pure: frame_pre false and post_hint not None, bailing"
+    else (| _, _, st_typing |)
