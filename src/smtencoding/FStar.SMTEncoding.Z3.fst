@@ -339,7 +339,7 @@ let smt_output_sections (log_file:option string) (r:Range.range) (lines:list str
      smt_statistics = statistics;
      smt_labels = labels}
 
-let doZ3Exe (log_file:_) (r:Range.range) (fresh:bool) (input:string) (label_messages:error_labels) : z3status * z3statistics =
+let doZ3Exe (log_file:_) (r:Range.range) (fresh:bool) (input:string) (label_messages:error_labels) (queryid:string) : z3status * z3statistics =
   let parse (z3out:string) =
     let lines = String.split ['\n'] z3out |> List.map BU.trim_string in
     let smt_output = smt_output_sections log_file r lines in
@@ -409,17 +409,42 @@ let doZ3Exe (log_file:_) (r:Range.range) (fresh:bool) (input:string) (label_mess
     in
     status, statistics
   in
-  let stdout =
-    if fresh then
-      let proc = new_z3proc_with_id (z3_cmd_and_args ()) in
-      let kill_handler () = "\nkilled\n" in
-      let out = BU.ask_process proc input kill_handler warn_handler in
-      BU.kill_process proc;
-      out
-    else
-      (!bg_z3_proc).ask input
+  let log_result fwrite (res, _stats) =
+    (* If we are logging, write some more information to the
+    smt2 file, such as the result of the query and the new unsat
+    core generated. We take a call back to do so, since for the
+    bg z3 process we must call query_logging.append_to_log, but for
+    fresh invocations (such as hints) we must reopen the file to write
+    to it. *)
+    begin match log_file with
+    | Some fname ->
+      fwrite fname ("; QUERY ID: " ^ queryid);
+      fwrite fname ("; STATUS: " ^ fst (status_string_and_errors res));
+      begin match res with
+      | UNSAT (Some core) ->
+        fwrite fname ("; UNSAT CORE GENERATED: " ^ String.concat ", " core)
+      | _ -> ()
+      end
+    | None -> ()
+    end
   in
-  parse (BU.trim_string stdout)
+  if fresh then
+    let proc = new_z3proc_with_id (z3_cmd_and_args ()) in
+    let kill_handler () = "\nkilled\n" in
+    let out = BU.ask_process proc input kill_handler warn_handler in
+    let r = parse (BU.trim_string out) in
+    log_result (fun fname s ->
+      let h = BU.open_file_for_appending fname in
+      BU.append_to_file h s;
+      BU.close_out_channel h
+    ) r;
+    BU.kill_process proc;
+    r
+  else
+    let out = (!bg_z3_proc).ask input in
+    let r = parse (BU.trim_string out) in
+    log_result (fun _fname s -> ignore (query_logging.append_to_log s)) r;
+    r
 
 let z3_options = BU.mk_ref
     "(set-option :global-decls false)\n\
@@ -584,7 +609,7 @@ let cache_hit
     else
         None
 
-let z3_job (log_file:_) (r:Range.range) fresh (label_messages:error_labels) input qhash () : z3result =
+let z3_job (log_file:_) (r:Range.range) fresh (label_messages:error_labels) input qhash queryid () : z3result =
   //This code is a little ugly:
   //We insert a profiling call to accumulate total time spent in Z3
   //But, we also record the time of this particular call so that we can
@@ -596,7 +621,7 @@ let z3_job (log_file:_) (r:Range.range) fresh (label_messages:error_labels) inpu
     Profiling.profile
       (fun () ->
         try
-          BU.record_time (fun () -> doZ3Exe log_file r fresh input label_messages)
+          BU.record_time (fun () -> doZ3Exe log_file r fresh input label_messages queryid)
         with e ->
           refresh(); //refresh the solver but don't handle the exception; it'll be caught upstream
           raise e)
@@ -629,24 +654,7 @@ let ask
     let theory, _used_unsat_core = filter_theory theory in
     let input, qhash, log_file_name = mk_input fresh theory in
 
-    let just_ask () =
-      let res = z3_job log_file_name r fresh label_messages input qhash () in
-      (* If we are logging, write some more information to the
-      smt2 file, such as the result of the query and the new unsat
-      core generated. *)
-      begin match log_file_name with
-      | Some fname ->
-        ignore (query_logging.append_to_log ("; QUERY ID: " ^ queryid));
-        ignore (query_logging.append_to_log ("; STATUS: " ^ fst (status_string_and_errors res.z3result_status)));
-        begin match res.z3result_status with
-        | UNSAT (Some core) ->
-          ignore (query_logging.append_to_log ("; UNSAT CORE GENERATED: " ^ String.concat ", " core))
-        | _ -> ()
-        end
-      | None -> ()
-      end;
-      res
-    in
+    let just_ask () = z3_job log_file_name r fresh label_messages input qhash queryid () in
     if fresh then
         match cache_hit log_file_name cache qhash with
         | Some z3r -> z3r
