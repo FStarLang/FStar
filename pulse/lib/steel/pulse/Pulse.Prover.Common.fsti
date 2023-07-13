@@ -1,7 +1,5 @@
 module Pulse.Prover.Common
 
-module T = FStar.Tactics
-
 open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Common
@@ -184,3 +182,8 @@ type prover_t =
   pst1:prover_state preamble ->
   T.Tac (pst2:prover_state preamble { pst2 `pst_extends` pst1 /\
                                       is_terminal pst2 }) 
+
+let debug_prover (g:env) (s:unit -> T.Tac string) : T.Tac unit =
+  if Pulse.RuntimeUtils.debug_at_level (fstar_env g) "prover"
+  then T.print (s ())
+  else ()

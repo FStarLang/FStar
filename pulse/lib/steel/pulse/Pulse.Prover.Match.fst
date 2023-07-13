@@ -12,6 +12,7 @@ module TermEq = FStar.Reflection.V2.TermEq
 module T = FStar.Tactics.V2
 
 module RUtil = Pulse.Reflection.Util
+module P = Pulse.Syntax.Printer
 module PS = Pulse.Prover.Substs
 
 let equational (t:term) : bool =
@@ -344,6 +345,11 @@ let q_ss = pst.ss.(q) in
 assume (freevars q_ss `Set.disjoint` PS.dom pst.ss);
 
 let ropt = try_match_pq pst.pg pst.uvs #p (magic ()) #q_ss (magic ()) in
+
+debug_prover pst.pg (fun _ ->
+  Printf.sprintf "prover matcher: tried to match %s and %s, result: %s"
+    (P.term_to_string p) (P.term_to_string q_ss) (if None? ropt then "fail" else "success"));
+
 match ropt with
 | None -> None
 | Some (| ss_q, veq |) ->

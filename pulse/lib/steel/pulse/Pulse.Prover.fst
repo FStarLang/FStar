@@ -16,6 +16,7 @@ module IntroExists = Pulse.Prover.IntroExists
 
 module T = FStar.Tactics.V2
 
+module P = Pulse.Syntax.Printer
 module PS = Pulse.Prover.Substs
 
 let unsolved_equiv_pst (#preamble:_) (pst:prover_state preamble) (unsolved':list vprop)
@@ -89,14 +90,32 @@ let rec prover
   : T.Tac (pst':prover_state preamble { pst' `pst_extends` pst0 /\
                                         is_terminal pst' }) =
 
+  debug_prover pst0.pg (fun _ ->
+    Printf.sprintf "At the prover top-level with remaining_ctxt: %s\nunsolved: %s"
+      (P.term_to_string (list_as_vprop pst0.remaining_ctxt))
+      (P.term_to_string (list_as_vprop pst0.unsolved)));
+
   match pst0.unsolved with
   | [] -> pst0
   | _ ->
     let pst = ElimExists.elim_exists_pst pst0 in
+
+    debug_prover pst.pg (fun _ ->
+      Printf.sprintf "prover: remaining_ctxt after elim exists: %s\n"
+        (P.term_to_string (list_as_vprop pst.remaining_ctxt)));
+
     let pst = ElimPure.elim_pure_pst pst in
+
+    debug_prover pst.pg (fun _ ->
+      Printf.sprintf "prover: remaining_ctxt after elim pure: %s\n"
+        (P.term_to_string (list_as_vprop pst.remaining_ctxt)));
 
     let (| exs, rest, d |) = collect_exists (push_env pst.pg pst.uvs) pst.unsolved in
     let pst = unsolved_equiv_pst pst (exs@rest) d in
+
+    debug_prover pst.pg (fun _ ->
+      Printf.sprintf "prover: unsolved after pulling exists at the top: %s\n"
+        (P.term_to_string (list_as_vprop pst.unsolved)));
 
     match pst.unsolved with
     | {t=Tm_ExistsSL u b body}::unsolved' ->
@@ -124,6 +143,10 @@ let prove
            remaining_ctxt : vprop &
            continuation_elaborator g ctxt g1 ((PS.nt_subst_term goals nts1) * remaining_ctxt)) =
 
+  debug_prover g (fun _ ->
+    Printf.sprintf "\nEnter top-level prove with ctxt: %s\ngoals: %s\n"
+      (P.term_to_string ctxt) (P.term_to_string goals));
+
   let ctxt_frame_typing : vprop_typing g (ctxt * tm_emp) = magic () in
   let preamble = {
     g0 = g;
@@ -146,6 +169,7 @@ let prove
     goals_inv = magic ();
     solved_inv = ()
   } in
+
   let pst = prover pst in
   let ropt = PS.ss_to_nt_substs pst.pg pst.uvs pst.ss in
   if None? ropt then fail pst.pg None "prove: ss not well-typed";

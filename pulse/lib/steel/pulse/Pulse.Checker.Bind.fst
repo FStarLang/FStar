@@ -153,7 +153,7 @@ let check_bindv2
   let Tm_Bind { binder=b; head=e1; body=e2 } = t.term in
 
   match e1.term with
-  | Tm_STApp _ ->
+  | _ ->
     // let (| uvs, e1, c1, d1 |) =
     let (| e1, c1, d1 |) =
       check g e1 pre pre_typing None false in
