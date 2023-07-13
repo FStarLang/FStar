@@ -52,4 +52,29 @@ let tot_typing_weakening #g #t #ty x b d = admit()
 
 let pure_typing_inversion (#g:env) (#p:term) (_:tot_typing g (tm_pure p) tm_vprop)
    : tot_typing g p (tm_fstar FStar.Reflection.Typing.tm_prop Range.range_0)
-   = admit()
+   = admit ()
+
+let rec st_typing_weakening g g' t c d g1
+  : Tot (st_typing (push_env (push_env g g1) g') t c)
+        (decreases d) =
+  
+  match d with
+  | T_Abs _ _ _ _ _ _ _ _ _ ->
+    // T_Abs is used only at the top, should not come up
+    magic ()
+
+  | T_STApp _ head ty q res arg _ _ ->
+    T_STApp _ head ty q res arg (magic ()) (magic ())
+
+  | T_Return _ c use_eq u t e post x_old _ _ _ ->
+    let x = fresh (push_env (push_env g g1) g') in
+    assume (~ (x `Set.mem` freevars post));
+    assume (comp_return c use_eq u t e post x_old ==
+            comp_return c use_eq u t e post x);
+    T_Return _ c use_eq u t e post x (magic ()) (magic ()) (magic ())
+
+  | T_Lift _ e c1 c2 d_c1 d_lift ->
+    
+
+  | _ -> admit ()
+  

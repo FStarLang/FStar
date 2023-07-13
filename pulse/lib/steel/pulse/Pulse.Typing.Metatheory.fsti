@@ -58,11 +58,11 @@ let comp_st_with_pre (c:comp_st) (pre:term) : comp_st =
 let pairwise_disjoint (g g' g'':env) =
   disjoint g g' /\ disjoint g' g'' /\ disjoint g g''
 
-let st_typing_weakening
+val st_typing_weakening
   (g:env) (g':env { disjoint g g' })
   (t:st_term) (c:comp) (_:st_typing (push_env g g') t c)
   (g1:env { pairwise_disjoint g g1 g' })
-  : st_typing (push_env (push_env g g1) g') t c = magic ()
+  : st_typing (push_env (push_env g g1) g') t c
 
 let veq_weakening
   (g:env) (g':env { disjoint g g' })
