@@ -229,17 +229,6 @@ let rec (filter_assertions_with_stats :
             (match uu___ with
              | (theory', n_retained, n_pruned) ->
                  (theory', true, n_retained, n_pruned))
-let (filter_assertions :
-  FStar_TypeChecker_Env.env ->
-    FStar_SMTEncoding_Z3.unsat_core ->
-      FStar_SMTEncoding_Term.decl Prims.list ->
-        (FStar_SMTEncoding_Term.decl Prims.list * Prims.bool))
-  =
-  fun e ->
-    fun core ->
-      fun theory ->
-        let uu___ = filter_assertions_with_stats e core theory in
-        match uu___ with | (theory1, b, uu___1, uu___2) -> (theory1, b)
 let (filter_facts_without_core :
   FStar_TypeChecker_Env.env ->
     FStar_SMTEncoding_Term.decl Prims.list ->
@@ -441,6 +430,76 @@ let (__proj__Mkquery_settings__item__query_term :
         query_fuel; query_ifuel; query_rlimit; query_hint; query_errors;
         query_all_labels; query_suffix; query_hash;
         query_can_be_split_and_retried; query_term;_} -> query_term
+let (filter_assertions :
+  FStar_TypeChecker_Env.env ->
+    query_settings FStar_Pervasives_Native.option ->
+      FStar_SMTEncoding_Z3.unsat_core ->
+        FStar_SMTEncoding_Term.decl Prims.list ->
+          (FStar_SMTEncoding_Term.decl Prims.list * Prims.bool))
+  =
+  fun e ->
+    fun qsettings ->
+      fun core ->
+        fun theory ->
+          let core1 =
+            match (core, qsettings) with
+            | (FStar_Pervasives_Native.Some uu___, uu___1) -> core
+            | (uu___, FStar_Pervasives_Native.None) -> core
+            | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.Some
+               qsettings1) ->
+                let qryid =
+                  let uu___ =
+                    FStar_Compiler_Util.string_of_int qsettings1.query_index in
+                  FStar_Compiler_Util.format2 "(%s, %s)"
+                    qsettings1.query_name uu___ in
+                let qry =
+                  FStar_SMTEncoding_Term.declToSmt_no_caps ""
+                    qsettings1.query_decl in
+                let qry1 = FStar_Compiler_Util.replace_chars qry 10 "" in
+                (match e.FStar_TypeChecker_Env.qtbl_name_and_index with
+                 | (FStar_Pervasives_Native.Some (lid, typ, ctr), uu___) ->
+                     let input =
+                       let uu___1 =
+                         let uu___2 =
+                           let uu___3 =
+                             let uu___4 =
+                               let uu___5 =
+                                 let uu___6 =
+                                   FStar_Syntax_Print.term_to_string typ in
+                                 FStar_Json.JsonStr uu___6 in
+                               ("type", uu___5) in
+                             let uu___5 =
+                               let uu___6 =
+                                 let uu___7 =
+                                   let uu___8 =
+                                     let uu___9 =
+                                       FStar_Compiler_List.map
+                                         (fun d ->
+                                            let uu___10 =
+                                              FStar_SMTEncoding_Term.declToSmt_no_caps
+                                                "" d in
+                                            FStar_Json.JsonStr uu___10)
+                                         theory in
+                                     FStar_Json.JsonList uu___9 in
+                                   ("theory", uu___8) in
+                                 [uu___7] in
+                               ("query", (FStar_Json.JsonStr qry1)) :: uu___6 in
+                             uu___4 :: uu___5 in
+                           ("query_ctr", (FStar_Json.JsonInt ctr)) :: uu___3 in
+                         ("query_name",
+                           (FStar_Json.JsonStr (qsettings1.query_name))) ::
+                           uu___2 in
+                       FStar_Json.JsonAssoc uu___1 in
+                     let input1 = FStar_Json.string_of_json input in
+                     let output =
+                       FStar_Compiler_Util.run_process
+                         (Prims.op_Hat "llm-" qryid) "fstar-llm-hook.sh" []
+                         (FStar_Pervasives_Native.Some input1) in
+                     let facts = FStar_String.split [44] output in
+                     FStar_Pervasives_Native.Some facts
+                 | uu___ -> core) in
+          let uu___ = filter_assertions_with_stats e core1 theory in
+          match uu___ with | (theory1, b, uu___1, uu___2) -> (theory1, b)
 let (with_fuel_and_diagnostics :
   query_settings ->
     FStar_SMTEncoding_Term.decl Prims.list ->
@@ -580,7 +639,8 @@ let (detail_hint_replay :
                 FStar_Compiler_Util.format2 "(%s, %s)" settings.query_name
                   uu___3 in
               FStar_SMTEncoding_Z3.ask settings.query_range
-                (filter_assertions settings.query_env settings.query_hint)
+                (filter_assertions settings.query_env
+                   FStar_Pervasives_Native.None settings.query_hint)
                 settings.query_hash settings.query_all_labels uu___1 uu___2
                 FStar_Pervasives_Native.None false in
             FStar_SMTEncoding_ErrorReporting.detail_errors true
@@ -1180,9 +1240,10 @@ let (make_solver_configs :
                     let uu___1 =
                       match env.FStar_TypeChecker_Env.qtbl_name_and_index
                       with
-                      | (uu___2, FStar_Pervasives_Native.None) ->
+                      | (FStar_Pervasives_Native.None, uu___2) ->
                           failwith "No query name set!"
-                      | (uu___2, FStar_Pervasives_Native.Some (q, n)) ->
+                      | (FStar_Pervasives_Native.Some (q, _typ, n), uu___2)
+                          ->
                           let uu___3 = FStar_Ident.string_of_lid q in
                           (uu___3, n) in
                     match uu___1 with
@@ -1403,7 +1464,8 @@ let (__ask_solver :
            let uu___4 = FStar_SMTEncoding_Z3.mk_fresh_scope () in
            FStar_Pervasives_Native.Some uu___4 in
          FStar_SMTEncoding_Z3.ask config.query_range
-           (filter_assertions config.query_env config.query_hint)
+           (filter_assertions config.query_env
+              (FStar_Pervasives_Native.Some config) config.query_hint)
            config.query_hash config.query_all_labels uu___1 uu___2 uu___3
            (used_hint config)) in
       fold_queries configs check_one_config process_result
@@ -1678,10 +1740,10 @@ let (report : FStar_TypeChecker_Env.env -> query_settings -> answer -> unit)
               if quaking
               then
                 (let rng =
-                   match FStar_Pervasives_Native.snd
+                   match FStar_Pervasives_Native.fst
                            env.FStar_TypeChecker_Env.qtbl_name_and_index
                    with
-                   | FStar_Pervasives_Native.Some (l, uu___2) ->
+                   | FStar_Pervasives_Native.Some (l, uu___2, uu___3) ->
                        FStar_Ident.range_of_lid l
                    | uu___2 -> FStar_Compiler_Range_Type.dummyRange in
                  let uu___2 =

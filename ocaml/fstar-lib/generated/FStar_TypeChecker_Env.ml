@@ -305,8 +305,8 @@ and env =
   subtype_nosmt_force:
     env -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> Prims.bool ;
   qtbl_name_and_index:
-    (Prims.int FStar_Compiler_Util.smap * (FStar_Ident.lident * Prims.int)
-      FStar_Pervasives_Native.option)
+    ((FStar_Ident.lident * FStar_Syntax_Syntax.typ * Prims.int)
+      FStar_Pervasives_Native.option * Prims.int FStar_Compiler_Util.smap)
     ;
   normalized_eff_names: FStar_Ident.lident FStar_Compiler_Util.smap ;
   fv_delta_depths: FStar_Syntax_Syntax.delta_depth FStar_Compiler_Util.smap ;
@@ -984,8 +984,8 @@ let (__proj__Mkenv__item__subtype_nosmt_force :
         subtype_nosmt_force
 let (__proj__Mkenv__item__qtbl_name_and_index :
   env ->
-    (Prims.int FStar_Compiler_Util.smap * (FStar_Ident.lident * Prims.int)
-      FStar_Pervasives_Native.option))
+    ((FStar_Ident.lident * FStar_Syntax_Syntax.typ * Prims.int)
+      FStar_Pervasives_Native.option * Prims.int FStar_Compiler_Util.smap))
   =
   fun projectee ->
     match projectee with
@@ -1753,7 +1753,7 @@ let (initial_env :
                           let uu___4 =
                             FStar_Compiler_Util.smap_create
                               (Prims.of_int (10)) in
-                          (uu___4, FStar_Pervasives_Native.None) in
+                          (FStar_Pervasives_Native.None, uu___4) in
                         let uu___4 =
                           FStar_Compiler_Util.smap_create (Prims.of_int (20)) in
                         let uu___5 =
@@ -1929,13 +1929,13 @@ let (push_stack : env -> env) =
      let uu___3 = FStar_Compiler_Util.smap_copy (attrtab env1) in
      let uu___4 =
        let uu___5 =
-         let uu___6 =
-           FStar_Compiler_Effect.op_Bar_Greater env1.qtbl_name_and_index
-             FStar_Pervasives_Native.fst in
-         FStar_Compiler_Util.smap_copy uu___6 in
-       let uu___6 =
          FStar_Compiler_Effect.op_Bar_Greater env1.qtbl_name_and_index
-           FStar_Pervasives_Native.snd in
+           FStar_Pervasives_Native.fst in
+       let uu___6 =
+         let uu___7 =
+           FStar_Compiler_Effect.op_Bar_Greater env1.qtbl_name_and_index
+             FStar_Pervasives_Native.snd in
+         FStar_Compiler_Util.smap_copy uu___7 in
        (uu___5, uu___6) in
      let uu___5 = FStar_Compiler_Util.smap_copy env1.normalized_eff_names in
      let uu___6 = FStar_Compiler_Util.smap_copy env1.fv_delta_depths in
@@ -2140,8 +2140,8 @@ let (incr_query_index : env -> env) =
   fun env1 ->
     let qix = peek_query_indices () in
     match env1.qtbl_name_and_index with
-    | (uu___, FStar_Pervasives_Native.None) -> env1
-    | (tbl, FStar_Pervasives_Native.Some (l, n)) ->
+    | (FStar_Pervasives_Native.None, uu___) -> env1
+    | (FStar_Pervasives_Native.Some (l, typ, n), tbl) ->
         let uu___ =
           FStar_Compiler_Effect.op_Bar_Greater qix
             (FStar_Compiler_List.tryFind
@@ -2189,7 +2189,7 @@ let (incr_query_index : env -> env) =
                 teq_nosmt_force = (env1.teq_nosmt_force);
                 subtype_nosmt_force = (env1.subtype_nosmt_force);
                 qtbl_name_and_index =
-                  (tbl, (FStar_Pervasives_Native.Some (l, next)));
+                  ((FStar_Pervasives_Native.Some (l, typ, next)), tbl);
                 normalized_eff_names = (env1.normalized_eff_names);
                 fv_delta_depths = (env1.fv_delta_depths);
                 proof_ns = (env1.proof_ns);
@@ -2249,7 +2249,7 @@ let (incr_query_index : env -> env) =
                 teq_nosmt_force = (env1.teq_nosmt_force);
                 subtype_nosmt_force = (env1.subtype_nosmt_force);
                 qtbl_name_and_index =
-                  (tbl, (FStar_Pervasives_Native.Some (l, next)));
+                  ((FStar_Pervasives_Native.Some (l, typ, next)), tbl);
                 normalized_eff_names = (env1.normalized_eff_names);
                 fv_delta_depths = (env1.fv_delta_depths);
                 proof_ns = (env1.proof_ns);
