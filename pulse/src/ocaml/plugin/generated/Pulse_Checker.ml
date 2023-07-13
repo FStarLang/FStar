@@ -2915,7 +2915,7 @@ let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
                                                                     uu___3 ->
                                                                     Obj.magic
                                                                     (Obj.repr
-                                                                    (Pulse_Checker_Bind.check_bind
+                                                                    (Pulse_Checker_Bind.check_bindv2
                                                                     g1 t1 pre
                                                                     ()
                                                                     post_hint

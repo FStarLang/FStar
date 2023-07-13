@@ -351,7 +351,7 @@ let rec check' : bool -> check_t =
         STApp.check_stapp allow_inst g t pre pre_typing post_hint frame_pre check'
 
       | Tm_Bind _ ->
-        check_bind g t pre pre_typing post_hint frame_pre (check' true)
+        check_bindv2 g t pre pre_typing post_hint frame_pre (check' true)
 
       | Tm_TotBind _ ->
         check_tot_bind g t pre pre_typing post_hint frame_pre (check' true)
