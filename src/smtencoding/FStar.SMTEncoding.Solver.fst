@@ -715,8 +715,8 @@ let make_solver_configs
     let default_settings, next_hint =
         let qname, index =
             match env.qtbl_name_and_index with
-            | _, None -> failwith "No query name set!"
-            | _, Some (q, n) -> Ident.string_of_lid q, n
+            | None, _ -> failwith "No query name set!"
+            | Some (q, _typ, n), _ -> Ident.string_of_lid q, n
         in
         let rlimit =
             Prims.op_Multiply
@@ -1017,8 +1017,8 @@ let report (env:Env.env) (default_settings : query_settings) (a : answer) : unit
         * (but not for --retry) *)
         if quaking then begin
           (* Get the range of the lid we're checking for the quake error *)
-          let rng = match snd (env.qtbl_name_and_index) with
-                    | Some (l, _) -> Ident.range_of_lid l
+          let rng = match fst (env.qtbl_name_and_index) with
+                    | Some (l, _, _) -> Ident.range_of_lid l
                     | _ -> Range.dummyRange
           in
           FStar.TypeChecker.Err.log_issue

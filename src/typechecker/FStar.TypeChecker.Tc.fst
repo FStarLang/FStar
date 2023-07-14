@@ -50,20 +50,34 @@ module EMB = FStar.Syntax.Embeddings
 module ToSyntax = FStar.ToSyntax.ToSyntax
 module O = FStar.Options
 
+let sigelt_typ (se:sigelt) : option typ =
+  match se.sigel with
+  | Sig_inductive_typ {t}
+  | Sig_datacon {t}
+  | Sig_declare_typ {t} -> Some t
+
+  | Sig_let {lbs=(_, lb::_)} ->
+    Some lb.lbtyp
+
+  | _ ->
+    None
+
 //set the name of the query so that we can correlate hints to source program fragments
 let set_hint_correlator env se =
     //if the tbl has a counter for lid, we use that, else we start from 0
     //this is useful when we verify the extracted interface alongside
-    let tbl = env.qtbl_name_and_index |> fst in
+    let tbl = env.qtbl_name_and_index |> snd in
     let get_n lid =
       let n_opt = BU.smap_try_find tbl (string_of_lid lid) in
       if is_some n_opt then n_opt |> must else 0
     in
 
+    let typ = match sigelt_typ se with | Some t -> t | _ -> S.tun in
+
     match Options.reuse_hint_for () with
     | Some l ->
       let lid = Ident.lid_add_suffix (Env.current_module env) l in
-      {env with qtbl_name_and_index=tbl, Some (lid, get_n lid)}
+      {env with qtbl_name_and_index=Some (lid, typ, get_n lid), tbl}
 
     | None ->
       let lids = U.lids_of_sigelt se in
@@ -71,7 +85,7 @@ let set_hint_correlator env se =
             | [] -> Ident.lid_add_suffix (Env.current_module env)
                                          (GenSym.next_id () |> BU.string_of_int) // GM: Should we really touch the gensym?
             | l::_ -> l in
-      {env with qtbl_name_and_index=tbl, Some (lid, get_n lid)}
+      {env with qtbl_name_and_index=Some (lid, typ, get_n lid), tbl}
 
 let log env = (Options.log_types()) &&  not(lid_equals PC.prims_lid (Env.current_module env))
 
@@ -530,6 +544,14 @@ let tc_sig_let env r se lbs lids : list sigelt * list sigelt * Env.env =
         let lbdef = Env.postprocess env tau lbtyp lbdef in
         let lbdef = SS.close_univ_vars univnames lbdef in
         { lb with lbdef = lbdef }
+    in
+    let env' =
+        match (SS.compress e).n with
+        | Tm_let {lbs} ->
+          let se = { se with sigel = Sig_let {lbs; lids} } in
+          set_hint_correlator env' se
+        | _ ->
+          failwith "no way, not a let?"
     in
     let r =
         //We already generalized phase1; don't need to generalize again
@@ -1139,7 +1161,7 @@ let finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) 
   let env = Env.finish_module en m in
 
   //we can clear the lid to query index table
-  env.qtbl_name_and_index |> fst |> BU.smap_clear;
+  env.qtbl_name_and_index |> snd |> BU.smap_clear;
 
   //pop BUT ignore the old env
   pop_context env ("Ending modul " ^ string_of_lid m.name) |> ignore;
