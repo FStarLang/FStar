@@ -316,3 +316,237 @@ let rec st_typing_weakening g g' t c d g1
   | T_Rewrite _ p q _ _ -> T_Rewrite _ p q (magic ()) (magic ())
 
   | T_Admit _ s c d_s -> T_Admit _ s c (st_comp_typing_weakening g g' d_s g1)
+#pop-options
+
+#push-options "--admit_smt_queries true"
+
+let non_informative_t_subst (g:env) (x:var) (t:typ) (g':env { pairwise_disjoint g (singleton_env (fstar_env g) x t) g' })
+  (#e:term)
+  (e_typing:tot_typing g e t)
+  (u:universe) (t1:term)
+  (d:non_informative_t (push_env g (push_env (singleton_env (fstar_env g) x t) g')) u t1)
+
+  : non_informative_t (push_env g (subst_env g' (nt x e))) u (subst_term t1 (nt x e)) =
+
+  let ss = nt x e in
+
+  let (| w, _ |) = d in
+  (| subst_term w ss, magic () |)
+
+let non_informative_c_subst (g:env) (x:var) (t:typ) (g':env { pairwise_disjoint g (singleton_env (fstar_env g) x t) g' })
+  (#e:term)
+  (e_typing:tot_typing g e t)
+  (c:comp)
+  (d:non_informative_c (push_env g (push_env (singleton_env (fstar_env g) x t) g')) c)
+
+  : non_informative_c (push_env g (subst_env g' (nt x e))) (subst_comp c (nt x e)) =
+
+  non_informative_t_subst g x t g' e_typing _ _ d
+
+let lift_comp_subst
+  (g:env) (x:var) (t:typ) (g':env { pairwise_disjoint g (singleton_env (fstar_env g) x t) g' })
+  (#e:term)
+  (e_typing:tot_typing g e t)
+  (#c1 #c2:comp)
+  (d:lift_comp (push_env g (push_env (singleton_env (fstar_env g) x t) g')) c1 c2)
+
+  : lift_comp (push_env g (subst_env g' (nt x e)))
+              (subst_comp c1 (nt x e))
+              (subst_comp c2 (nt x e)) =
+
+  let ss = nt x e in
+  
+  match d with
+  | Lift_STAtomic_ST _ c ->
+    Lift_STAtomic_ST _ (subst_comp c ss)
+
+  | Lift_STGhost_STAtomic _ c d_non_informative ->
+    Lift_STGhost_STAtomic _ (subst_comp c ss)
+      (non_informative_c_subst g x t g' e_typing _ d_non_informative)
+
+let bind_comp_subst
+  (g:env) (x:var) (t:typ) (g':env { pairwise_disjoint g (singleton_env (fstar_env g) x t) g' })
+  (#e:term)
+  (e_typing:tot_typing g e t)
+  (#y:var) (#c1 #c2 #c3:comp) (d:bind_comp (push_env g (push_env (singleton_env (fstar_env g) x t) g')) y c1 c2 c3)
+  : bind_comp (push_env g (subst_env g' (nt x e)))
+              y
+              (subst_comp c1 (nt x e))
+              (subst_comp c2 (nt x e))
+              (subst_comp c3 (nt x e)) =
+  
+  let ss = nt x e in
+
+  match d with
+  | Bind_comp _ y c1 c2 _ z _ ->
+    Bind_comp _ y (subst_comp c1 ss)
+                  (subst_comp c2 ss)
+                  (magic ())
+                  z
+                  (magic ())
+  
+  | Bind_comp_ghost_l _ y c1 c2 d_non_informative _ z _ ->
+    Bind_comp_ghost_l _ y (subst_comp c1 ss)
+                          (subst_comp c2 ss)
+                          (non_informative_c_subst g x t g' e_typing _ d_non_informative)
+                          (magic ())
+                          z
+                          (magic ())
+
+  | Bind_comp_ghost_r _ y c1 c2 d_non_informative _ z _ ->
+    Bind_comp_ghost_r _ y (subst_comp c1 ss)
+                          (subst_comp c2 ss)
+                          (non_informative_c_subst g x t g' e_typing _ d_non_informative)
+                          (magic ())
+                          z
+                          (magic ())
+
+let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b { y == x } = x
+
+let rec st_typing_subst g x t g' #e e_typing #e1 #c1 e1_typing
+  : Tot (st_typing (push_env g (subst_env g' (nt x e)))
+                   (subst_st_term e1 (nt x e))
+                   (subst_comp c1 (nt x e)))
+        (decreases e1_typing) =
+  
+  let ss = nt x e in
+
+  match e1_typing with
+  | T_Abs _ _ _ _ _ _ _ _ _ -> magic ()
+
+  | T_STApp _ head ty q res arg _ _ ->
+    T_STApp _ (subst_term head ss)
+              (subst_term ty ss)
+              q
+              (subst_comp res ss)
+              (subst_term arg ss)
+              (magic ())
+              (magic ())
+
+  | T_Return _ c use_eq u t e post x _ _ _ ->
+    T_Return _ c use_eq u
+      (subst_term t ss)
+      (subst_term e ss)
+      (subst_term post ss)
+      x
+      (magic ())
+      (magic ())
+      (magic ())
+
+  | T_Lift _ e c1 c2 d_e d_lift ->
+    T_Lift _ (subst_st_term e ss)
+             (subst_comp c1 ss)
+             (subst_comp c2 ss)
+             (st_typing_subst g x t g' e_typing d_e)
+             (lift_comp_subst g x t g' e_typing d_lift)
+
+  | T_Bind _ e1 e2 c1 c2 b y c d_e1 _ d_e2 d_bc ->
+    T_Bind _ (subst_st_term e1 ss)
+             (subst_st_term e2 ss)
+             (subst_comp c1 ss)
+             (subst_comp c2 ss)
+             (subst_binder b ss)
+             y
+             (subst_comp c ss)
+             (st_typing_subst g x t g' e_typing d_e1)
+             (magic ())
+             (coerce_eq (st_typing_subst g x t (push_binding g' y ppname_default (comp_res c1)) e_typing d_e2) ())
+             (bind_comp_subst g x t g' e_typing d_bc)
+
+  | T_TotBind _ e1 e2 t1 c2 y _ d_e2 ->
+    T_TotBind _ (subst_term e1 ss)
+                (subst_st_term e2 ss)
+                (subst_term t1 ss)
+                (subst_comp c2 ss)
+                y
+                (magic ())
+                (coerce_eq (st_typing_subst g x t (push_binding g' y ppname_default t1) e_typing d_e2) ())
+
+  | T_If _ b e1 e2 c uc hyp _ d_e1 d_e2 _ ->
+    T_If _ (subst_term b ss)
+           (subst_st_term e1 ss)
+           (subst_st_term e2 ss)
+           (subst_comp c ss)
+           uc
+           hyp
+           (magic ())
+           (coerce_eq (st_typing_subst g x t (push_binding g' hyp ppname_default (mk_eq2 u0 tm_bool b tm_true)) e_typing d_e1) ())
+           (coerce_eq (st_typing_subst g x t (push_binding g' hyp ppname_default (mk_eq2 u0 tm_bool b tm_false)) e_typing d_e2) ())
+           (magic ())
+
+  | T_Frame _ e c frame _ d_e ->
+    T_Frame _ (subst_st_term e ss)
+              (subst_comp c ss)
+              (subst_term frame ss)
+              (magic ())
+              (st_typing_subst g x t g' e_typing d_e)
+
+  | T_Equiv _ e c c' d_e _ ->
+    T_Equiv _ (subst_st_term e ss)
+              (subst_comp c ss)
+              (subst_comp c' ss)
+              (st_typing_subst g x t g' e_typing d_e)
+              (magic ())
+
+  | T_IntroPure _ p _ _ ->
+    T_IntroPure _ (subst_term p ss)
+                  (magic ())
+                  (magic ())
+
+  | T_ElimExists _ u t p y _ _ ->
+    T_ElimExists _ u (subst_term t ss) (subst_term p ss) y (magic ()) (magic ())
+
+  | T_IntroExists _ u b p e _ _ _ ->
+    T_IntroExists _ u (subst_binder b ss)
+                      (subst_term p ss)
+                      (subst_term e ss)
+                      (magic ())
+                      (magic ())
+                      (magic ())
+
+  | T_IntroExistsErased _ u b p e _ _ _ ->
+    T_IntroExistsErased _ u (subst_binder b ss)
+                            (subst_term p ss)
+                            (subst_term e ss)
+                            (magic ())
+                            (magic ())
+                            (magic ())
+
+  | T_While _ inv cond body _ cond_typing body_typing ->
+    T_While _ (subst_term inv ss)
+              (subst_st_term cond ss)
+              (subst_st_term body ss)
+              (magic ())
+              (st_typing_subst g x t g' e_typing cond_typing)
+              (st_typing_subst g x t g' e_typing body_typing)
+
+  | T_Par _ eL cL eR cR y _ _ d_eL d_eR ->
+    T_Par _ (subst_st_term eL ss)
+            (subst_comp cL ss)
+            (subst_st_term eR ss)
+            (subst_comp cR ss)
+            y
+            (magic ())
+            (magic ())
+            (st_typing_subst g x t g' e_typing d_eL)
+            (st_typing_subst g x t g' e_typing d_eR)
+
+  | T_WithLocal _ init body init_t c y _ _ _ d_body ->
+    T_WithLocal _ (subst_term init ss)
+                  (subst_st_term body ss)
+                  (subst_term init_t ss)
+                  (subst_comp c ss)
+                  y
+                  (magic ())
+                  (magic ())
+                  (magic ())
+                  (coerce_eq (st_typing_subst g x t (push_binding g' y ppname_default (mk_ref init_t)) e_typing d_body) ())
+
+  | T_Rewrite _ p q _ _ ->
+    T_Rewrite _ (subst_term p ss)
+                (subst_term q ss)
+                (magic ())
+                (magic ())
+
+  | T_Admit _ s c _ ->
+    T_Admit _ (subst_st_comp s ss) c (magic ())
