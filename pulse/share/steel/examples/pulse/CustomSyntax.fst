@@ -18,7 +18,7 @@ fn test_read (x:ref U32.t)
    requires pts_to x full_perm n
    ensures  pts_to x full_perm n
 {
-    let y = read #U32.t x #n #full_perm;
+    let y = read #U32.t x;
     ()
 }
 ```
