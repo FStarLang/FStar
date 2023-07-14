@@ -360,16 +360,19 @@ let (intro_exists :
                           (FStar_Range.mk_range
                              "Pulse.Prover.IntroExists.fst"
                              (Prims.of_int (76)) (Prims.of_int (10))
-                             (Prims.of_int (76)) (Prims.of_int (22)))))
+                             (Prims.of_int (76)) (Prims.of_int (41)))))
                     (FStar_Sealed.seal
                        (Obj.magic
                           (FStar_Range.mk_range
                              "Pulse.Prover.IntroExists.fst"
-                             (Prims.of_int (76)) (Prims.of_int (25))
+                             (Prims.of_int (76)) (Prims.of_int (44))
                              (Prims.of_int (313)) (Prims.of_int (6)))))
                     (FStar_Tactics_Effect.lift_div_tac
                        (fun uu___1 ->
-                          Pulse_Typing_Env.fresh pst.Pulse_Prover_Common.pg))
+                          Pulse_Typing_Env.fresh
+                            (Pulse_Typing_Env.push_env
+                               pst.Pulse_Prover_Common.pg
+                               pst.Pulse_Prover_Common.uvs)))
                     (fun uu___1 ->
                        (fun x ->
                           Obj.magic
@@ -521,7 +524,11 @@ let (intro_exists :
                                                                     = ();
                                                                     Pulse_Prover_Common.uvs
                                                                     =
-                                                                    (pst.Pulse_Prover_Common.uvs);
+                                                                    (Pulse_Typing_Env.push_binding
+                                                                    pst.Pulse_Prover_Common.uvs
+                                                                    x
+                                                                    b.Pulse_Syntax_Base.binder_ppname
+                                                                    b.Pulse_Syntax_Base.binder_ty);
                                                                     Pulse_Prover_Common.ss
                                                                     =
                                                                     (pst.Pulse_Prover_Common.ss);

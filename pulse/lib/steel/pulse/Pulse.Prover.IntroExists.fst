@@ -73,7 +73,7 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
   : T.Tac (pst':prover_state preamble { pst' `pst_extends` pst /\
                                         is_terminal pst' }) =
 
-  let x = fresh pst.pg in
+  let x = fresh (push_env pst.pg pst.uvs) in
   let px = b.binder_ppname, x in
   let preamble_sub = {
     g0 = pst.pg;
@@ -101,7 +101,7 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
     pg = pst.pg;
     remaining_ctxt = vprop_as_list preamble_sub.ctxt;
     remaining_ctxt_frame_typing = magic ();
-    uvs = pst.uvs;
+    uvs = push_binding pst.uvs x b.binder_ppname b.binder_ty;
     ss = pst.ss;
     solved = tm_emp;
     unsolved = [open_term_nv body px] @ unsolved';
