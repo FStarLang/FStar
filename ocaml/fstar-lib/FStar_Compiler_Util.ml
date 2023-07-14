@@ -266,9 +266,13 @@ let run_process (id: string) (prog: string) (args: string list) (stdin: string o
   let p = start_process' id prog args None in
   (match stdin with
    | None -> ()
-   | Some str -> output_string p.outc str);
-  flush p.outc;
-  close_out p.outc;
+   | Some str ->
+     try output_string p.outc str with
+     | Sys_error _ -> () (* FIXME: check for "Broken pipe". In that case this is fine, process must have finished without reading input *)
+     | e -> raise e
+  );
+  (try flush p.outc with | _ -> ()); (* only _attempt_ to flush, so we don't get an exception if the process is finished *)
+  (try close_out p.outc with | _ -> ()); (* idem *)
   let s = process_read_all_output p in
   kill_process p;
   s
