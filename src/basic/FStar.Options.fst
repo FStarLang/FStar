@@ -804,7 +804,7 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * string) 
         "hint_hook",
         SimpleStr "command",
         "Use <command> to generate hints for definitions which do not have them. The command will\n\t\
-         receive a JSON representation of the query, the type of the top-levle definition involved,\n\t\
+         receive a JSON representation of the query, the type of the top-level definition involved,\n\t\
          and the full SMT theory, and must output a comma separated list\n\t\
          of facts to be used.");
 
