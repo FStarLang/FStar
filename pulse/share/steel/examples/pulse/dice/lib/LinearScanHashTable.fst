@@ -124,12 +124,6 @@ let upd_ #s #sz (repr : repr_t s sz) idx k v : repr_t s sz =
 let del_ #s #sz (repr : repr_t s sz) idx : repr_t s sz =
   Seq.upd repr idx Zombie
 
-let lemma_none_upd #s #sz (repr1 repr2 : repr_t s sz) idx k v (k':_{k =!= k'})
-  : Lemma (requires repr2 == upd_ repr1 idx k v /\
-                    None? (lookup_repr repr1 k'))
-          (ensures None? (lookup_repr repr2 k'))
-= admit() // PROVEME: hopefully straightforward via a walk of repr2 
-
 let lemma_some_repr_none_spec #s #sz (spec: spec_t s) (repr : repr_t s sz) idx k v 
   : Lemma (requires Some? (lookup_repr repr k) /\
                     None? (lookup_spec spec k))
@@ -149,7 +143,6 @@ let lemma_clean_upd_lookup_walk #s #sz (spec1 spec2 : spec_t s) (repr1 repr2 : r
       /\ None? (lookup_repr repr1 k)
       /\ pht_models s sz spec1 repr1
       /\ repr1 @@ idx == Clean
-      // /\ repr2 @@ idx == Used k v // reundandant, given precondition below
       /\ repr2 == upd_ repr1 idx k v
       /\ spec2 == spec1 ++ (k,v))
       (ensures lookup_repr repr1 k' == lookup_repr repr2 k')
@@ -159,10 +152,9 @@ let lemma_clean_upd_lookup_walk #s #sz (spec1 spec2 : spec_t s) (repr1 repr2 : r
                /\ walk repr2 idx' k' off == lookup_repr repr2 k')
         (ensures walk repr1 idx' k' off == walk repr2 idx' k' off)
         (decreases sz - off) 
-  =
-    if off = sz then ()
+  = if off = sz then ()
     else if (idx' + off) % sz = idx then
-      lemma_none_upd repr1 repr2 idx k v k'
+      aux (off+1)
     else begin
       match repr1 @@ ((idx' + off) % sz) with
       | Clean -> ()
@@ -238,27 +230,25 @@ let lemma_zombie_del_lookup_walk #s #sz (spec1 spec2 : spec_t s) (repr1 repr2 : 
   in
   aux 0
 
-let lemma_zombie_upd_lookup_walk #s #sz (spec1 spec2 : spec_t s) (repr1 repr2 : repr_t s sz) idx k v (k':_{k =!= k'})
+let lemma_zombie_upd_lookup_walk #s #sz (spec spec' : spec_t s) (repr repr' : repr_t s sz) idx k v (k':_{k =!= k'})
   : Lemma (requires
-      (forall i. i < sz /\ i <> idx ==> repr1 @@ i == repr2 @@ i)
-      /\ None? (lookup_repr repr1 k)
-      /\ pht_models s sz spec1 repr1
-      /\ repr1 @@ idx == Zombie
-      // /\ repr2 @@ idx == Used k v // reundandant, given precondition below
-      /\ repr2 == upd_ repr1 idx k v
-      /\ spec2 == spec1 ++ (k,v))
-      (ensures lookup_repr repr1 k' == lookup_repr repr2 k')
+      (forall i. i < sz /\ i <> idx ==> repr @@ i == repr' @@ i)
+      /\ pht_models s sz spec repr
+      /\ repr' == upd_ repr idx k v
+      /\ repr @@ idx == Zombie
+      /\ spec' == spec ++ (k,v))
+      (ensures lookup_repr repr k' == lookup_repr repr' k')
 = let idx' = canonical_index k' sz in
   let rec aux (off:nat{off <= sz}) : Lemma
-        (requires walk repr1 idx' k' off == lookup_repr repr1 k'
-               /\ walk repr2 idx' k' off == lookup_repr repr2 k')
-        (ensures walk repr1 idx' k' off == walk repr2 idx' k' off)
+        (requires walk repr idx' k' off == lookup_repr repr k'
+               /\ walk repr' idx' k' off == lookup_repr repr' k')
+        (ensures walk repr idx' k' off == walk repr' idx' k' off)
         (decreases sz - off) 
   = if off = sz then ()
     else if (idx' + off) % sz = idx then
       aux (off+1)
     else begin
-      match repr1 @@ ((idx' + off) % sz) with
+      match repr @@ ((idx' + off) % sz) with
       | Clean -> ()
       | Used k'' v'' ->
         if k' = k'' then ()
@@ -276,12 +266,10 @@ let all_used_not_by #s #sz (repr : repr_t s sz) (idx1 idx2 : (n:nat{n < sz})) (k
   // funny! draw a picture to see why this makes sense
   if idx2 >= idx1 then
     forall i. idx1 <= i /\ i < idx2 ==> used_not_by repr k i
-  else
-       (forall i. idx1 <= i ==> used_not_by repr k i)
+  else (forall i. idx1 <= i ==> used_not_by repr k i)
     /\ (forall i. i < idx2 ==> used_not_by repr k i)
 
-let lemma_walk_from_canonical_all_used #s #sz
-   (repr : repr_t s sz) idx k v 
+let lemma_walk_from_canonical_all_used #s #sz (repr : repr_t s sz) idx k v 
   : Lemma (requires all_used_not_by repr (canonical_index k sz) idx k
                  /\ repr @@ idx == Used k v)
           (ensures lookup_repr repr k == Some v)
@@ -298,9 +286,10 @@ let lemma_walk_from_canonical_all_used #s #sz
   in
   aux 0
 
-let lemma_clean_upd #s #sz spec (repr : repr_t s sz{pht_models s sz spec repr}) idx k v 
+let lemma_clean_upd #s #sz spec (repr : repr_t s sz) idx k v 
   : Lemma
-       (requires None? (lookup_repr repr k)
+       (requires pht_models s sz spec repr
+              /\ None? (lookup_repr repr k)
               /\ repr @@ idx == Clean
               /\ all_used_not_by repr (canonical_index k sz) idx k)
        (ensures pht_models s sz (spec ++ (k,v)) (upd_ repr idx k v))
@@ -331,9 +320,10 @@ let lemma_clean_upd #s #sz spec (repr : repr_t s sz{pht_models s sz spec repr}) 
     Classical.forall_intro (Classical.move_requires aux2);
     Classical.forall_intro_3 (Classical.move_requires_3 aux3)
 
-let lemma_used_upd #s #sz spec (repr : repr_t s sz{pht_models s sz spec repr}) idx k (v v' : s.valt) 
+let lemma_used_upd #s #sz spec (repr : repr_t s sz) idx k (v v' : s.valt) 
   : Lemma
-       (requires Some? (lookup_repr repr k)
+       (requires pht_models s sz spec repr
+              /\ Some? (lookup_repr repr k)
               /\ repr @@ idx == Used k v'
               /\ all_used_not_by repr (canonical_index k sz) idx k)
        (ensures pht_models s sz (spec ++ (k,v)) (upd_ repr idx k v))
@@ -356,8 +346,8 @@ let lemma_used_upd #s #sz spec (repr : repr_t s sz{pht_models s sz spec repr}) i
     let aux3 (i':nat{i'<sz}) (k':s.keyt) (v'':s.valt) : Lemma (requires (repr' @@ i' == Used k' v''))
                                                               (ensures (lookup_repr_index repr' k' == Some (v'', i')))
     = if k' = k then begin
+        assert (lookup_repr_index repr k == Some (v',idx)); // this assert is necessary
         lemma_walk_from_canonical_all_used repr' idx k v;
-        assert (lookup_repr_index repr k == Some (v',idx));
         ()
       end
       else
@@ -367,9 +357,10 @@ let lemma_used_upd #s #sz spec (repr : repr_t s sz{pht_models s sz spec repr}) i
     Classical.forall_intro (Classical.move_requires aux2);
     Classical.forall_intro_3 (Classical.move_requires_3 aux3)
 
-let lemma_zombie_upd #s #sz spec (repr : repr_t s sz{pht_models s sz spec repr}) idx k v 
+let lemma_zombie_upd #s #sz spec (repr : repr_t s sz) idx k v 
   : Lemma
-       (requires None? (lookup_repr repr k)
+       (requires pht_models s sz spec repr
+              /\ None? (lookup_repr repr k)
               /\ repr @@ idx == Zombie
               /\ all_used_not_by repr (canonical_index k sz) idx k)
        (ensures pht_models s sz (spec ++ (k,v)) (upd_ repr idx k v))
@@ -400,9 +391,10 @@ let lemma_zombie_upd #s #sz spec (repr : repr_t s sz{pht_models s sz spec repr})
     Classical.forall_intro (Classical.move_requires aux2);
     Classical.forall_intro_3 (Classical.move_requires_3 aux3)
 
-let lemma_zombie_del #s #sz spec (repr : repr_t s sz{pht_models s sz spec repr}) idx k v 
+let lemma_zombie_del #s #sz spec (repr : repr_t s sz) idx k v 
   : Lemma
-       (requires Some? (lookup_repr repr k)
+       (requires pht_models s sz spec repr
+              /\ Some? (lookup_repr repr k)
               /\ repr @@ idx == Used k v)
        (ensures pht_models s sz (spec -- k) (del_ repr idx))
   = let spec' = spec -- k in
@@ -424,7 +416,7 @@ let lemma_zombie_del #s #sz spec (repr : repr_t s sz{pht_models s sz spec repr})
     let aux3 (i':nat{i'<sz}) (k':s.keyt) (v':s.valt) : Lemma (requires (repr' @@ i' == Used k' v'))
                                                              (ensures (lookup_repr_index repr' k' == Some (v', i')))
     = if k' = k then begin
-        assert (lookup_repr_index repr k == Some (v,idx));
+        assert (lookup_repr_index repr k == Some (v,idx)); // this assert is necessary
         lemma_some_index_none_repr spec' repr' i' k' v'
       end else 
         lemma_zombie_del_lookup_walk spec spec' repr repr' idx k v k'
@@ -433,7 +425,6 @@ let lemma_zombie_del #s #sz spec (repr : repr_t s sz{pht_models s sz spec repr})
     Classical.forall_intro (Classical.move_requires aux2);
     Classical.forall_intro_3 (Classical.move_requires_3 aux3)
 
-#push-options "--z3rlimit 200"
 let insert_repr #s #sz (#spec : erased (spec_t s)) (repr : repr_t s sz{pht_models s sz spec repr}) (k : s.keyt) (v : s.valt)
 : r':repr_t s sz{pht_models s sz (spec ++ (k,v)) r'}
 = let cidx = canonical_index k sz in
@@ -458,12 +449,15 @@ let insert_repr #s #sz (#spec : erased (spec_t s)) (repr : repr_t s sz{pht_model
         (**)lemma_clean_upd spec repr idx k v;
         upd_ repr idx k v
       | Zombie ->
-        // (**)lemma_get_idx_repr_lookup_corresp repr k;
         match lookup_repr_index repr k with 
           | Some (v_old,i) -> (
             (**)lemma_zombie_del spec repr i k v_old;
-            assume (None? (lookup_repr repr k)); // FIXME: should be post condition of zombie_del... or separate lemma? 
-            (**)lemma_zombie_upd spec repr idx k v;
+            // Don't need these asserts
+            let cidx = canonical_index k sz in
+            assert (all_used_not_by repr cidx idx k);
+            assert (if idx >= cidx then i > idx || i <= cidx else i > idx /\ i <= cidx);
+            assert (all_used_not_by (del_ repr i) cidx idx k);
+            (**)lemma_zombie_upd (spec -- k) (del_ repr i) idx k v;
             upd_ (del_ repr i) idx k v
           )
           | None -> (
