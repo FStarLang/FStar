@@ -229,24 +229,40 @@ let rec unify (g:env) (uvs:env { disjoint uvs g})
   let q = ss.(q) in
   assume (freevars q `Set.disjoint` PS.dom ss);
 
+  debug_prover g (fun _ ->
+    Printf.sprintf "prover.match trying %s =?= %s" (P.term_to_string p) (P.term_to_string q));
+
   if eq_tm p q
   then begin
+    debug_prover g (fun _ ->
+      Printf.sprintf "prover.match trying %s =?= %s, eq_tm" (P.term_to_string p) (P.term_to_string q));
+
     assume (PS.dom ss `Set.subset` freevars q);
     Some (| ss, RT.EQ_Refl _ _ |)
   end
   else if not (contains_uvar q uvs g)
   then begin
     if eligible_for_smt_equality g p q
-    then let _ = assume (PS.dom ss `Set.subset` freevars q) in
+    then let _ =
+           debug_prover g (fun _ ->
+             Printf.sprintf "prover.match trying %s =?= %s, not eq_tm, q has no uvar, eligible for smt" (P.term_to_string p) (P.term_to_string q))
+         in
+         let _ = assume (PS.dom ss `Set.subset` freevars q) in
          let v0 = elab_term p in
          let v1 = elab_term q in
          match T.check_equiv (elab_env g) v0 v1 with
          | Some token, _ -> Some (| ss, RT.EQ_Token _ _ _ (FStar.Squash.return_squash token) |)
          | None, _ -> None
-    else None
+    else let _ =
+           debug_prover g (fun _ ->
+             Printf.sprintf "prover.match trying %s =?= %s, not eq_tm, q has no uvar, not eligible for smt" (P.term_to_string p) (P.term_to_string q))
+         in
+         None
   end
   else match is_reveal_uvar q uvs, is_reveal p with
        | Some (u, ty, n), false ->
+         debug_prover g (fun _ ->
+             Printf.sprintf "prover.match trying %s =?= %s, not eq_tm, q is reveal of uvar, p is not reveal" (P.term_to_string p) (P.term_to_string q));
          let w = mk_hide u ty p in
          assume (Set.mem n (dom uvs));
          assume (~ (PS.contains PS.empty n));
@@ -267,6 +283,8 @@ let rec unify (g:env) (uvs:env { disjoint uvs g})
        | _ ->
          match is_uvar q uvs with
          | Some n ->
+           debug_prover g (fun _ ->
+             Printf.sprintf "prover.match trying %s =?= %s, not eq_tm, q is uvar" (P.term_to_string p) (P.term_to_string q));
            assume (Set.mem n (dom uvs));
            assume (~ (PS.contains PS.empty n));
            assume (Set.disjoint (freevars p) (dom uvs));
@@ -281,6 +299,8 @@ let rec unify (g:env) (uvs:env { disjoint uvs g})
          | _ ->
            match p.t, q.t with
            | Tm_Pure p1, Tm_Pure q1 ->
+             debug_prover g (fun _ ->
+               Printf.sprintf "prover.match trying %s =?= %s, both p and q are pure" (P.term_to_string p) (P.term_to_string q));
              let r = unify g uvs
                #p1 #(magic ()) (magic ())
                #q1 #(magic ()) (magic ())
@@ -296,6 +316,9 @@ let rec unify (g:env) (uvs:env { disjoint uvs g})
            | _, _ ->
              match is_pure_app p, is_pure_app q with
              | Some (head_p, qual_p, arg_p), Some (head_q, qual_q, arg_q) ->
+               debug_prover g (fun _ ->
+                 Printf.sprintf "prover.match trying %s =?= %s, both are pure app" (P.term_to_string p) (P.term_to_string q));
+
                if not (qual_p = qual_q) then None
                else begin
                  let r = unify g uvs
