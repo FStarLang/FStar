@@ -468,7 +468,7 @@ let insert_repr #s #sz (#spec : erased (spec_t s)) (repr : repr_t s sz{pht_model
   let res = walk_ 0 () () in
   res
 
-let delete_repr #s #sz (#spec : erased (spec_t s)) (repr : repr_t s sz{pht_models s sz spec repr}) (k : s.keyt) (v : s.valt)
+let delete_repr #s #sz (#spec : erased (spec_t s)) (repr : repr_t s sz{pht_models s sz spec repr}) (k : s.keyt)
 : r':repr_t s sz{pht_models s sz (spec -- k) r'}
 = let cidx = canonical_index k sz in
   let rec walk_ (off:nat{off <= sz}) (_ : squash (all_used_not_by repr cidx ((cidx+off) % sz) k))
@@ -503,11 +503,11 @@ let insert #s (ht : pht s) (k : s.keyt) (v : s.valt)
             repr = insert_repr #_ #_ #ht.spec ht.repr k v;
             inv = () }
 
-let delete #s (ht : pht s) (k : s.keyt) (v : s.valt)
+let delete #s (ht : pht s) (k : s.keyt)
 : ht':(pht s){ht'.spec == Ghost.hide (ht.spec -- k) }
 =
   { ht with spec = Ghost.hide (ht.spec -- k);
-            repr = delete_repr #_ #_ #ht.spec ht.repr k v;
+            repr = delete_repr #_ #_ #ht.spec ht.repr k;
             inv = () }
 (*
 noeq
