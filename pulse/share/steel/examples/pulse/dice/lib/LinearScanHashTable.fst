@@ -475,7 +475,7 @@ let delete_repr #s #sz (#spec : erased (spec_t s)) (repr : repr_t s sz{pht_model
                                      (_ : squash (walk repr cidx k off == lookup_repr repr k))
     : Tot (repr':repr_t s sz{pht_models s sz (spec -- k) repr'})
           (decreases sz - off)
-    = if off = sz then admit () // FIXME: table full, need side condition
+    = if off = sz then repr // If we reach this, the element was not in the table
       else
       let idx = (cidx+off) % sz in
       match repr @@ idx with
