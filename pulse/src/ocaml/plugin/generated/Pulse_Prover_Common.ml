@@ -1687,7 +1687,21 @@ let (st_typing_weakening_end :
         Pulse_Syntax_Base.comp ->
           (unit, unit, unit) Pulse_Typing.st_typing ->
             Pulse_Typing_Env.env -> (unit, unit, unit) Pulse_Typing.st_typing)
-  = fun g -> fun g' -> fun t -> fun c -> fun d -> fun g'' -> Prims.admit ()
+  =
+  fun g ->
+    fun g' ->
+      fun t ->
+        fun c ->
+          fun d ->
+            fun g'' ->
+              let g2 = Pulse_Typing_Env.diff g'' g' in
+              let emp_env =
+                Pulse_Typing_Env.mk_env (Pulse_Typing_Env.fstar_env g) in
+              let d1 =
+                Pulse_Typing_Metatheory.st_typing_weakening
+                  (Pulse_Typing_Env.push_env g g') emp_env t c
+                  (FStar_Pervasives.coerce_eq () d) g2 in
+              FStar_Pervasives.coerce_eq () d1
 type ('ss1, 'ss2) ss_extends = unit
 type ('preamble1, 'pst1, 'pst2) pst_extends = unit
 type prover_t =
@@ -1713,13 +1727,13 @@ let (debug_prover :
                      (FStar_Sealed.seal
                         (Obj.magic
                            (FStar_Range.mk_range "Pulse.Prover.Common.fsti"
-                              (Prims.of_int (188)) (Prims.of_int (15))
-                              (Prims.of_int (188)) (Prims.of_int (21)))))
+                              (Prims.of_int (204)) (Prims.of_int (15))
+                              (Prims.of_int (204)) (Prims.of_int (21)))))
                      (FStar_Sealed.seal
                         (Obj.magic
                            (FStar_Range.mk_range "Pulse.Prover.Common.fsti"
-                              (Prims.of_int (188)) (Prims.of_int (7))
-                              (Prims.of_int (188)) (Prims.of_int (21)))))
+                              (Prims.of_int (204)) (Prims.of_int (7))
+                              (Prims.of_int (204)) (Prims.of_int (21)))))
                      (Obj.magic (s ()))
                      (fun uu___ ->
                         (fun uu___ ->

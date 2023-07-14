@@ -534,9 +534,20 @@ let (nt :
   Pulse_Syntax_Base.var ->
     Pulse_Syntax_Base.term -> Pulse_Syntax_Naming.subst_elt Prims.list)
   = fun x -> fun t -> [Pulse_Syntax_Naming.NT (x, t)]
-let (subst_env :
+let rec (subst_env :
   Pulse_Typing_Env.env -> Pulse_Syntax_Naming.subst -> Pulse_Typing_Env.env)
-  = fun en -> fun ss -> Prims.admit ()
+  =
+  fun en ->
+    fun ss ->
+      match Pulse_Typing_Env.bindings en with
+      | [] -> en
+      | uu___ ->
+          let uu___1 = Pulse_Typing_Env.remove_latest_binding en in
+          (match uu___1 with
+           | (x, t, en1) ->
+               Pulse_Typing_Env.push_binding (subst_env en1 ss) x
+                 Pulse_Syntax_Base.ppname_default
+                 (Pulse_Syntax_Naming.subst_term t ss))
 let (non_informative_t_subst :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.var ->
