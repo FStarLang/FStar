@@ -173,9 +173,6 @@ let rec filter_assertions_with_stats (e:env) (core:Z3.unsat_core) (theory:list d
             ([Caption ("UNSAT CORE USED: " ^ (core |> String.concat ", "))], 0, 0) theory_rev in  //start with the unsat core caption at the end
         theory', true, n_retained, n_pruned
 
-let filter_assertions (e:env) (core:Z3.unsat_core) (theory:list decl) =
-  let (theory, b, _, _) = filter_assertions_with_stats e core theory in theory, b
-
 let filter_facts_without_core (e:env) x = filter_using_facts_from e x, false
 
 (***********************************************************************************)
@@ -223,6 +220,41 @@ type query_settings = {
     query_term: FStar.Syntax.Syntax.term;
 }
 
+let maybe_build_core_from_hook (e:env) (qsettings:option query_settings) (core:Z3.unsat_core) (theory:list decl): Z3.unsat_core =
+  match qsettings with | None -> core | Some qsettings -> // Only when we have a full query
+  match core with | Some _ -> core | None -> // No current core/hint
+  match Options.hint_hook () with | None -> core | Some hint_hook_cmd -> // And a hint_hook set
+
+  let qryid = BU.format2 "(%s, %s)" qsettings.query_name (string_of_int qsettings.query_index) in
+  let qry = Term.declToSmt_no_caps "" qsettings.query_decl in
+  let qry = BU.replace_chars qry '\n' "" in
+  match e.qtbl_name_and_index with
+  | None, _ ->
+    // Should not happen
+    Err.diag qsettings.query_range "maybe_build_core_from_hook: qbtl name unset?";
+    core
+  | Some (lid, typ, ctr), _ ->
+    (* Err.log_issue qsettings.query_range (Err.Warning_UnexpectedZ3Stderr, *)
+    (*                         BU.format3 "will construct hint for queryid=%s,  typ=%s, query=%s" *)
+    (*                                   qryid (Print.term_to_string typ) qry); *)
+    let open FStar.Json in
+    let input = JsonAssoc [
+      ("query_name", JsonStr qsettings.query_name);
+      ("query_ctr", JsonInt ctr);
+      ("type", JsonStr (Print.term_to_string typ)); // TODO: normalize print options, they will affect this output
+      ("query", JsonStr qry);
+      ("theory", JsonList (List.map (fun d -> JsonStr (Term.declToSmt_no_caps "" d)) theory));
+    ]
+    in
+    let input = string_of_json input in
+    let output = BU.run_process ("hint-hook-"^qryid) hint_hook_cmd [] (Some input) in
+    let facts = String.split [','] output in
+    Some facts
+
+let filter_assertions (e:env) (qsettings:option query_settings) (core:Z3.unsat_core) (theory:list decl) =
+  let core = maybe_build_core_from_hook e qsettings core theory in
+  let (theory, b, _, _) = filter_assertions_with_stats e core theory in
+  theory, b
 
 //surround the query with fuel options and various diagnostics
 let with_fuel_and_diagnostics settings label_assumptions =
@@ -286,7 +318,7 @@ let detail_hint_replay settings z3result =
          | _failed ->
            let ask_z3 label_assumptions =
                Z3.ask settings.query_range
-                      (filter_assertions settings.query_env settings.query_hint)
+                      (filter_assertions settings.query_env None settings.query_hint)
                       settings.query_hash
                       settings.query_all_labels
                       (with_fuel_and_diagnostics settings label_assumptions)
@@ -799,7 +831,7 @@ let __ask_solver
     let check_one_config config : z3result =
           if Options.z3_refresh() then Z3.refresh();
           Z3.ask config.query_range
-                  (filter_assertions config.query_env config.query_hint)
+                  (filter_assertions config.query_env (Some config) config.query_hint)
                   config.query_hash
                   config.query_all_labels
                   (with_fuel_and_diagnostics config [])
