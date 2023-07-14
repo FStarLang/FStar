@@ -200,7 +200,7 @@ let lemma_used_upd_lookup_walk #s #sz (spec1 spec2 : spec_t s) (repr1 repr2 : re
   in
   aux 0
 
-let lemma_zombie_del_lookup_walk #s #sz (spec1 spec2 : spec_t s) (repr1 repr2 : repr_t s sz) upos k v (k':_{k =!= k'})
+let lemma_del_lookup_walk #s #sz (spec1 spec2 : spec_t s) (repr1 repr2 : repr_t s sz) upos k v (k':_{k =!= k'})
   : Lemma (requires
       (forall i. i < sz /\ i <> upos ==> repr1 @@ i == repr2 @@ i) /\
       pht_models s sz spec1 repr1 /\
@@ -391,7 +391,7 @@ let lemma_zombie_upd #s #sz spec (repr : repr_t s sz) idx k v
     Classical.forall_intro (Classical.move_requires aux2);
     Classical.forall_intro_3 (Classical.move_requires_3 aux3)
 
-let lemma_zombie_del #s #sz spec (repr : repr_t s sz) idx k v 
+let lemma_del #s #sz spec (repr : repr_t s sz) idx k v 
   : Lemma
        (requires pht_models s sz spec repr
               /\ Some? (lookup_repr repr k)
@@ -404,14 +404,14 @@ let lemma_zombie_del #s #sz spec (repr : repr_t s sz) idx k v
     = if k' = k then 
         ()
       else 
-        lemma_zombie_del_lookup_walk spec spec' repr repr' idx k v k'
+        lemma_del_lookup_walk spec spec' repr repr' idx k v k'
     in
     let aux2 (k':s.keyt) : Lemma (requires (Some? (lookup_repr repr' k')))
                                  (ensures (lookup_repr repr' k' == lookup_spec spec' k'))
     = if k' = k then 
         lemma_some_repr_none_spec spec' repr' idx k v
       else 
-        lemma_zombie_del_lookup_walk spec spec' repr repr' idx k v k'
+        lemma_del_lookup_walk spec spec' repr repr' idx k v k'
     in
     let aux3 (i':nat{i'<sz}) (k':s.keyt) (v':s.valt) : Lemma (requires (repr' @@ i' == Used k' v'))
                                                              (ensures (lookup_repr_index repr' k' == Some (v', i')))
@@ -419,7 +419,7 @@ let lemma_zombie_del #s #sz spec (repr : repr_t s sz) idx k v
         assert (lookup_repr_index repr k == Some (v,idx)); // this assert is necessary
         lemma_some_index_none_repr spec' repr' i' k' v'
       end else 
-        lemma_zombie_del_lookup_walk spec spec' repr repr' idx k v k'
+        lemma_del_lookup_walk spec spec' repr repr' idx k v k'
     in
     Classical.forall_intro (Classical.move_requires aux1);
     Classical.forall_intro (Classical.move_requires aux2);
@@ -451,7 +451,7 @@ let insert_repr #s #sz (#spec : erased (spec_t s)) (repr : repr_t s sz{pht_model
       | Zombie ->
         match lookup_repr_index repr k with 
           | Some (v_old,i) -> (
-            (**)lemma_zombie_del spec repr i k v_old;
+            (**)lemma_del spec repr i k v_old;
             // Don't need these asserts
             let cidx = canonical_index k sz in
             assert (all_used_not_by repr cidx idx k);
@@ -468,6 +468,34 @@ let insert_repr #s #sz (#spec : erased (spec_t s)) (repr : repr_t s sz{pht_model
   let res = walk_ 0 () () in
   res
 
+let delete_repr #s #sz (#spec : erased (spec_t s)) (repr : repr_t s sz{pht_models s sz spec repr}) (k : s.keyt) (v : s.valt)
+: r':repr_t s sz{pht_models s sz (spec -- k) r'}
+= let cidx = canonical_index k sz in
+  let rec walk_ (off:nat{off <= sz}) (_ : squash (all_used_not_by repr cidx ((cidx+off) % sz) k))
+                                     (_ : squash (walk repr cidx k off == lookup_repr repr k))
+    : Tot (repr':repr_t s sz{pht_models s sz (spec -- k) repr'})
+          (decreases sz - off)
+    = if off = sz then admit () // FIXME: table full, need side condition
+      else
+      let idx = (cidx+off) % sz in
+      match repr @@ idx with
+      | Used k' v' ->
+        if k = k'
+        then begin
+          (**)lemma_del spec repr idx k v';
+          del_ repr idx
+        end else begin
+          assume (all_used_not_by repr cidx ((cidx+off+1) % sz) k); // FIXME: modular arithmetic?
+          walk_ (off+1) () ()
+        end
+      | _ -> begin 
+          assume (all_used_not_by repr cidx ((cidx+off+1) % sz) k); // FIXME: modular arithmetic?
+          walk_ (off+1) () ()
+        end
+  in
+  let res = walk_ 0 () () in
+  res
+
 let insert #s (ht : pht s) (k : s.keyt) (v : s.valt)
 : ht':(pht s){ht'.spec == Ghost.hide (ht.spec ++ (k,v)) }
 =
@@ -475,7 +503,12 @@ let insert #s (ht : pht s) (k : s.keyt) (v : s.valt)
             repr = insert_repr #_ #_ #ht.spec ht.repr k v;
             inv = () }
 
-
+let delete #s (ht : pht s) (k : s.keyt) (v : s.valt)
+: ht':(pht s){ht'.spec == Ghost.hide (ht.spec -- k) }
+=
+  { ht with spec = Ghost.hide (ht.spec -- k);
+            repr = delete_repr #_ #_ #ht.spec ht.repr k v;
+            inv = () }
 (*
 noeq
 type table kt vt = {
