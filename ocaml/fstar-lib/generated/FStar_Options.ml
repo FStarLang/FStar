@@ -1092,7 +1092,7 @@ let rec (specs_with_types :
     (FStar_Getopt.noshort, "hint_file", (PathStr "path"),
       "Read/write hints to  path (instead of module-specific hints files; overrides hint_dir)");
     (FStar_Getopt.noshort, "hint_hook", (SimpleStr "command"),
-      "Use <command> to generate hints for definitions which do not have them. The command will\n\treceive a JSON representation of the query, the type of the top-levle definition involved,\n\tand the full SMT theory, and must output a comma separated list\n\tof facts to be used.");
+      "Use <command> to generate hints for definitions which do not have them. The command will\n\treceive a JSON representation of the query, the type of the top-level definition involved,\n\tand the full SMT theory, and must output a comma separated list\n\tof facts to be used.");
     (FStar_Getopt.noshort, "hint_info", (Const (Bool true)),
       "Print information regarding hints (deprecated; use --query_stats instead)");
     (FStar_Getopt.noshort, "in", (Const (Bool true)),
