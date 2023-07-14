@@ -75,10 +75,9 @@ let singleton_env (f:_) (x:var) (t:typ) = push_binding (mk_env f) x ppname_defau
 
 let nt (x:var) (t:term) = [ NT x t ]
 
-let subst_env (en:env) (ss:subst)
+val subst_env (en:env) (ss:subst)
   : en':env { fstar_env en == fstar_env en' /\
-              dom en == dom en' } =
-  admit ()
+              dom en == dom en' }
 
 val st_typing_subst
   (g:env) (x:var) (t:typ) (g':env { pairwise_disjoint g (singleton_env (fstar_env g) x t) g' })

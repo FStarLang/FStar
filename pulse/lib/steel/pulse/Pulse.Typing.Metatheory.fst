@@ -319,6 +319,14 @@ let rec st_typing_weakening g g' t c d g1
 #pop-options
 
 #push-options "--admit_smt_queries true"
+let rec subst_env (en:env) (ss:subst)
+  : en':env { fstar_env en == fstar_env en' /\
+              dom en == dom en' } =
+  match bindings en with
+  | [] -> en
+  | _ ->
+    let x, t, en = remove_latest_binding en in
+    push_binding (subst_env en ss) x ppname_default (subst_term t ss) 
 
 let non_informative_t_subst (g:env) (x:var) (t:typ) (g':env { pairwise_disjoint g (singleton_env (fstar_env g) x t) g' })
   (#e:term)
@@ -550,3 +558,4 @@ let rec st_typing_subst g x t g' #e e_typing #e1 #c1 e1_typing
 
   | T_Admit _ s c _ ->
     T_Admit _ (subst_st_comp s ss) c (magic ())
+#pop-options

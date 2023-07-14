@@ -155,7 +155,23 @@ let st_typing_weakening_end
   (g:env) (g':env { disjoint g g' })
   (t:st_term) (c:comp) (d:st_typing (push_env g g') t c)
   (g'':env { g'' `env_extends` g' /\ disjoint g'' g })
-  : st_typing (push_env g g'') t c = admit ()
+  : st_typing (push_env g g'') t c =
+
+  let g2 = diff g'' g' in
+  let emp_env = mk_env (fstar_env g) in
+  assert (equal (push_env g g')
+                (push_env (push_env g g') emp_env));
+  let d
+    : st_typing (push_env (push_env (push_env g g') g2) emp_env) _ _
+    = Pulse.Typing.Metatheory.st_typing_weakening (push_env g g') emp_env t c (coerce_eq () d) g2 in
+  assert (equal (push_env (push_env (push_env g g') g2) emp_env)
+                (push_env (push_env g g') g2));
+  push_env_assoc g g' g2;
+  assert (equal (push_env (push_env g g') g2)
+                (push_env g (push_env g' g2)));
+  assert (equal (push_env g (push_env g' g2))
+                (push_env g g''));
+  coerce_eq () d
 
 let veq_weakening
   (g:env) (g':env { disjoint g g' })
