@@ -504,7 +504,7 @@ let insert_repr #s #sz (#spec : erased (spec_t s)) (repr : repr_t s sz{pht_model
           (**)lemma_used_upd spec repr off k v v';
           upd_ repr idx k v
         end else begin
-          assume (all_used_not_by repr cidx (off+1) k); // FIXME: modular arithmetic?
+          assert (all_used_not_by repr cidx (off+1) k);
           walk_ (off+1) () ()
         end
       | Clean ->
