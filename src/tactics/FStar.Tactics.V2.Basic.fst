@@ -2004,11 +2004,13 @@ let push_bv_dsenv (e: Env.env) (i: string): tac (env * RD.binding)
     ret ({ e with dsenv }, bv_to_binding bv)
 
 let term_to_string (t:term) : tac string
-  = let s = Print.term_to_string t in
+  = let! g = top_env () in
+    let s = Print.term_to_string' g.dsenv t in
     ret s
 
 let comp_to_string (c:comp) : tac string
-  = let s = Print.comp_to_string c in
+  = let! g = top_env () in
+    let s = Print.comp_to_string' g.dsenv c in
     ret s
 
 let range_to_string (r:FStar.Compiler.Range.range) : tac string
