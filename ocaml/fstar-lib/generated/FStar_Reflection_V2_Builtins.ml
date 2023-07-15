@@ -148,6 +148,26 @@ let (pack_universe :
     | FStar_Reflection_V2_Data.Uv_Name i -> FStar_Syntax_Syntax.U_name i
     | FStar_Reflection_V2_Data.Uv_Unif u -> FStar_Syntax_Syntax.U_unif u
     | FStar_Reflection_V2_Data.Uv_Unk -> FStar_Syntax_Syntax.U_unknown
+let rec (inspect_pat :
+  FStar_Syntax_Syntax.pat -> FStar_Reflection_V2_Data.pattern) =
+  fun p ->
+    match p.FStar_Syntax_Syntax.v with
+    | FStar_Syntax_Syntax.Pat_constant c ->
+        let uu___ = inspect_const c in
+        FStar_Reflection_V2_Data.Pat_Constant uu___
+    | FStar_Syntax_Syntax.Pat_cons (fv, us_opt, ps) ->
+        let uu___ =
+          FStar_Compiler_List.map
+            (fun uu___1 ->
+               match uu___1 with
+               | (p1, b) -> let uu___2 = inspect_pat p1 in (uu___2, b)) ps in
+        FStar_Reflection_V2_Data.Pat_Cons (fv, us_opt, uu___)
+    | FStar_Syntax_Syntax.Pat_var bv ->
+        let uu___ = FStar_Ident.string_of_id bv.FStar_Syntax_Syntax.ppname in
+        FStar_Reflection_V2_Data.Pat_Var
+          ((bv.FStar_Syntax_Syntax.sort), uu___)
+    | FStar_Syntax_Syntax.Pat_dot_term eopt ->
+        FStar_Reflection_V2_Data.Pat_Dot_Term eopt
 let rec (inspect_ln :
   FStar_Syntax_Syntax.term -> FStar_Reflection_V2_Data.term_view) =
   fun t ->
@@ -260,26 +280,6 @@ let rec (inspect_ln :
           FStar_Syntax_Syntax.brs = brs;
           FStar_Syntax_Syntax.rc_opt1 = uu___;_}
         ->
-        let rec inspect_pat p =
-          match p.FStar_Syntax_Syntax.v with
-          | FStar_Syntax_Syntax.Pat_constant c ->
-              let uu___1 = inspect_const c in
-              FStar_Reflection_V2_Data.Pat_Constant uu___1
-          | FStar_Syntax_Syntax.Pat_cons (fv, us_opt, ps) ->
-              let uu___1 =
-                FStar_Compiler_List.map
-                  (fun uu___2 ->
-                     match uu___2 with
-                     | (p1, b) -> let uu___3 = inspect_pat p1 in (uu___3, b))
-                  ps in
-              FStar_Reflection_V2_Data.Pat_Cons (fv, us_opt, uu___1)
-          | FStar_Syntax_Syntax.Pat_var bv ->
-              let uu___1 =
-                FStar_Ident.string_of_id bv.FStar_Syntax_Syntax.ppname in
-              FStar_Reflection_V2_Data.Pat_Var
-                ((bv.FStar_Syntax_Syntax.sort), uu___1)
-          | FStar_Syntax_Syntax.Pat_dot_term eopt ->
-              FStar_Reflection_V2_Data.Pat_Dot_Term eopt in
         let brs1 =
           FStar_Compiler_List.map
             (fun uu___1 ->
@@ -440,6 +440,40 @@ let (pack_const :
         let uu___ =
           FStar_Ident.lid_of_path ns FStar_Compiler_Range_Type.dummyRange in
         FStar_Const.Const_reflect uu___
+let rec (pack_pat :
+  FStar_Reflection_V2_Data.pattern -> FStar_Syntax_Syntax.pat) =
+  fun p ->
+    let wrap v =
+      {
+        FStar_Syntax_Syntax.v = v;
+        FStar_Syntax_Syntax.p = FStar_Compiler_Range_Type.dummyRange
+      } in
+    match p with
+    | FStar_Reflection_V2_Data.Pat_Constant c ->
+        let uu___ =
+          let uu___1 = pack_const c in
+          FStar_Syntax_Syntax.Pat_constant uu___1 in
+        FStar_Compiler_Effect.op_Less_Bar wrap uu___
+    | FStar_Reflection_V2_Data.Pat_Cons (head, univs, subpats) ->
+        let uu___ =
+          let uu___1 =
+            let uu___2 =
+              FStar_Compiler_List.map
+                (fun uu___3 ->
+                   match uu___3 with
+                   | (p1, b) -> let uu___4 = pack_pat p1 in (uu___4, b))
+                subpats in
+            (head, univs, uu___2) in
+          FStar_Syntax_Syntax.Pat_cons uu___1 in
+        FStar_Compiler_Effect.op_Less_Bar wrap uu___
+    | FStar_Reflection_V2_Data.Pat_Var (sort, ppname) ->
+        let bv =
+          FStar_Syntax_Syntax.gen_bv ppname FStar_Pervasives_Native.None sort in
+        FStar_Compiler_Effect.op_Less_Bar wrap
+          (FStar_Syntax_Syntax.Pat_var bv)
+    | FStar_Reflection_V2_Data.Pat_Dot_Term eopt ->
+        FStar_Compiler_Effect.op_Less_Bar wrap
+          (FStar_Syntax_Syntax.Pat_dot_term eopt)
 let (pack_ln :
   FStar_Reflection_V2_Data.term_view -> FStar_Syntax_Syntax.term) =
   fun tv ->
@@ -506,39 +540,6 @@ let (pack_ln :
                FStar_Syntax_Syntax.body1 = t2
              }) FStar_Compiler_Range_Type.dummyRange
     | FStar_Reflection_V2_Data.Tv_Match (t, ret_opt, brs) ->
-        let wrap v =
-          {
-            FStar_Syntax_Syntax.v = v;
-            FStar_Syntax_Syntax.p = FStar_Compiler_Range_Type.dummyRange
-          } in
-        let rec pack_pat p =
-          match p with
-          | FStar_Reflection_V2_Data.Pat_Constant c ->
-              let uu___ =
-                let uu___1 = pack_const c in
-                FStar_Syntax_Syntax.Pat_constant uu___1 in
-              FStar_Compiler_Effect.op_Less_Bar wrap uu___
-          | FStar_Reflection_V2_Data.Pat_Cons (head, univs, subpats) ->
-              let uu___ =
-                let uu___1 =
-                  let uu___2 =
-                    FStar_Compiler_List.map
-                      (fun uu___3 ->
-                         match uu___3 with
-                         | (p1, b) -> let uu___4 = pack_pat p1 in (uu___4, b))
-                      subpats in
-                  (head, univs, uu___2) in
-                FStar_Syntax_Syntax.Pat_cons uu___1 in
-              FStar_Compiler_Effect.op_Less_Bar wrap uu___
-          | FStar_Reflection_V2_Data.Pat_Var (sort, ppname) ->
-              let bv =
-                FStar_Syntax_Syntax.gen_bv ppname
-                  FStar_Pervasives_Native.None sort in
-              FStar_Compiler_Effect.op_Less_Bar wrap
-                (FStar_Syntax_Syntax.Pat_var bv)
-          | FStar_Reflection_V2_Data.Pat_Dot_Term eopt ->
-              FStar_Compiler_Effect.op_Less_Bar wrap
-                (FStar_Syntax_Syntax.Pat_dot_term eopt) in
         let brs1 =
           FStar_Compiler_List.map
             (fun uu___ ->
