@@ -6650,11 +6650,21 @@ let (push_bv_dsenv :
 let (term_to_string :
   FStar_Syntax_Syntax.term -> Prims.string FStar_Tactics_Monad.tac) =
   fun t ->
-    let s = FStar_Syntax_Print.term_to_string t in FStar_Tactics_Monad.ret s
+    let uu___ = top_env () in
+    FStar_Tactics_Monad.op_let_Bang uu___
+      (fun g ->
+         let s =
+           FStar_Syntax_Print.term_to_string' g.FStar_TypeChecker_Env.dsenv t in
+         FStar_Tactics_Monad.ret s)
 let (comp_to_string :
   FStar_Syntax_Syntax.comp -> Prims.string FStar_Tactics_Monad.tac) =
   fun c ->
-    let s = FStar_Syntax_Print.comp_to_string c in FStar_Tactics_Monad.ret s
+    let uu___ = top_env () in
+    FStar_Tactics_Monad.op_let_Bang uu___
+      (fun g ->
+         let s =
+           FStar_Syntax_Print.comp_to_string' g.FStar_TypeChecker_Env.dsenv c in
+         FStar_Tactics_Monad.ret s)
 let (range_to_string :
   FStar_Compiler_Range_Type.range -> Prims.string FStar_Tactics_Monad.tac) =
   fun r ->
