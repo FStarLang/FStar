@@ -218,12 +218,15 @@ let is_reveal (t:term) : bool =
 
 module RT = FStar.Reflection.Typing
 let rec unify (g:env) (uvs:env { disjoint uvs g})
-  (#p #p_t:term) (p_typing:tot_typing g p p_t)
-  (#q #q_t:term) (q_typing:tot_typing (push_env g uvs) q q_t)
-  (ss:PS.ss_t)
+  (p q:term) (ss:PS.ss_t)
   : T.Tac (option (ss':PS.ss_t { ss' `ss_extends` ss /\
                                  PS.dom ss' `Set.subset` freevars q } &
                    RT.equiv (elab_env g) (elab_term p) (elab_term ss'.(q)))) =
+
+  let rt_equiv g t1 t2 : RT.equiv g t1 t2 =
+    assume (t1 == t2);
+    RT.EQ_Refl _ _
+  in
 
   let q0 = q in
   let q = ss.(q) in
@@ -277,7 +280,7 @@ let rec unify (g:env) (uvs:env { disjoint uvs g})
          assume (PS.dom ss' `Set.subset` freevars q0);  // they are actually equal
          let b, _ = T.check_equiv (elab_env g) (elab_term (mk_reveal u ty w)) (elab_term p) in
          if Some? b
-         then let d : RT.equiv (elab_env g) (elab_term p) (elab_term ss'.(q0)) = magic () in
+         then let d : RT.equiv (elab_env g) (elab_term p) (elab_term ss'.(q0)) = rt_equiv _ _ _ in
               Some (| ss', d |)
          else None
        | _ ->
@@ -301,16 +304,13 @@ let rec unify (g:env) (uvs:env { disjoint uvs g})
            | Tm_Pure p1, Tm_Pure q1 ->
              debug_prover g (fun _ ->
                Printf.sprintf "prover.match trying %s =?= %s, both p and q are pure" (P.term_to_string p) (P.term_to_string q));
-             let r = unify g uvs
-               #p1 #(magic ()) (magic ())
-               #q1 #(magic ()) (magic ())
-               ss in
+             let r = unify g uvs p1 q1 ss in
              (match r with
               | Some (| ss', _ |) ->
                 assume (Set.subset (PS.dom ss') (freevars q0));
                 let ss' : ss':PS.ss_t { ss' `ss_extends` ss /\
                                         PS.dom ss' `Set.subset` freevars q0 } = ss' in
-                Some (| ss', magic () |)
+                Some (| ss', rt_equiv _ _ _ |)
               | None -> None)
 
            | _, _ ->
@@ -321,34 +321,26 @@ let rec unify (g:env) (uvs:env { disjoint uvs g})
 
                if not (qual_p = qual_q) then None
                else begin
-                 let r = unify g uvs
-                   #head_p #(magic ()) (magic ())
-                   #head_q #(magic ()) (magic ())
-                   ss in
+                 let r = unify g uvs head_p head_q ss in
                  match r with
                  | Some (| ss', _ |) ->
-                   let r = unify g uvs
-                      #arg_p #(magic ()) (magic ())
-                      #arg_q #(magic ()) (magic ())
-                      ss' in
+                   let r = unify g uvs arg_p arg_q ss' in
                    (match r with
                     | Some (| ss', _|) ->
                       admit ();
                       let ss' : ss':PS.ss_t { ss' `ss_extends` ss /\
                                               PS.dom ss' `Set.subset` freevars q0 } = ss' in
-                      Some (| ss', magic () |)
+                      Some (| ss', rt_equiv _ _ _ |)
                     | _ -> None)
                  | _ -> None
                end
              | _, _ -> None
 
-let try_match_pq (g:env) (uvs:env { disjoint uvs g})
-  (#p:vprop) (p_typing:vprop_typing g p)
-  (#q:vprop) (q_typing:vprop_typing (push_env g uvs) q)
+let try_match_pq (g:env) (uvs:env { disjoint uvs g}) (p q:vprop)
   : T.Tac (option (ss:PS.ss_t { PS.dom ss `Set.subset` freevars q } &
                    vprop_equiv g p ss.(q))) =
 
-  let r = unify g uvs p_typing q_typing PS.empty in
+  let r = unify g uvs p q PS.empty in
   match r with
   | None -> None
   | Some (| ss, _ |) ->
@@ -367,7 +359,7 @@ let match_step (#preamble:preamble) (pst:prover_state preamble)
 let q_ss = pst.ss.(q) in
 assume (freevars q_ss `Set.disjoint` PS.dom pst.ss);
 
-let ropt = try_match_pq pst.pg pst.uvs #p (magic ()) #q_ss (magic ()) in
+let ropt = try_match_pq pst.pg pst.uvs p q_ss in
 
 debug_prover pst.pg (fun _ ->
   Printf.sprintf "prover matcher: tried to match %s and %s, result: %s"
@@ -416,6 +408,7 @@ match ropt with
         pst.pg ((list_as_vprop remaining_ctxt_new * preamble.frame) * (ss_new.(solved_new))) =
     coerce_eq k () in
 
+  assume (freevars ss_new.(solved_new) `Set.subset` dom pst.pg);
   let pst' : prover_state preamble =
     { pst with remaining_ctxt=remaining_ctxt_new;
                remaining_ctxt_frame_typing=magic ();
@@ -424,7 +417,7 @@ match ropt with
                unsolved=unsolved_new;
                k;
                goals_inv=magic ();
-               solved_inv=magic () } in
+               solved_inv=() } in
 
   assume (ss_new `ss_extends` pst.ss);
   Some pst'

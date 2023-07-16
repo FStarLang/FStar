@@ -27,6 +27,7 @@ let main' (t:st_term) (pre:term) (g:RT.fstar_top_env)
       if eq_tm ty tm_vprop
       then let pre_typing : tot_typing g pre tm_vprop = E pre_typing in
            let (| t, c, t_typing |) = check g t pre pre_typing None true in
+           Pulse.Prover.Common.debug_prover g (fun _ -> "\ncheck call returned in main\n");
            let refl_e = elab_st_typing t_typing in
            let refl_t = elab_comp c in
            soundness_lemma g t c t_typing;

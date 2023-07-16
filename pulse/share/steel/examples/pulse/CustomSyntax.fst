@@ -12,16 +12,20 @@ open Pulse.Steel.Wrapper
 #push-options "--using_facts_from 'Prims FStar.Pervasives FStar.UInt FStar.UInt32 FStar.Ghost Pulse.Steel.Wrapper CustomSyntax'"
 #push-options "--ide_id_info_off"
 
+// exists n1. p n1 * exists n2. q n1 * r n1 n2
+
 assume val p : U32.t -> vprop
+assume val q : U32.t -> vprop
+assume val r : U32.t -> U32.t -> vprop
 
 assume val read (_:unit)
-  : stt U32.t (exists_ (fun n -> p n))
-              (fun _ -> exists_ (fun n -> p n))
+  : stt U32.t (exists_ (fun n1 -> p n1 `star` (exists_ (fun n2 -> r n1 n2 `star` q n1))))
+              (fun _ -> emp)
 
 ```pulse
-fn test_read (x:U32.t)
-   requires p x
-   ensures  exists n. p n
+fn test_read (x:U32.t) (y:U32.t)
+   requires q x `star` r x y `star` p x
+   ensures  emp
 {
     let y = read ();
     ()

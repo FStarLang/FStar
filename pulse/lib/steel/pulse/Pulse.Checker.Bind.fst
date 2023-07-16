@@ -164,6 +164,26 @@ let check_bindv2
     assume (stateful_comp c1);
     let (| g1, uvs1, ss1, remaining_pre, k |) =
       prove pre_typing uvs #(comp_pre c1) (magic ()) in
+
+    debug_prover g (fun _ -> "\nprover returned in bind\n");
+  
+    let x = fresh g1 in
+    let r : checker_result_t g1 ((PS.nt_subst_term _ ss1) * remaining_pre) None true =
+      let t = wr (Tm_Admit {ctag=STT;u=u_zero;typ=tm_unit;post=None}) in
+      let c = C_ST {u=u_zero;res=tm_unit;pre=((PS.nt_subst_term (comp_pre c1) ss1) * remaining_pre);post=tm_emp} in
+      let d = T_Admit g1 {u=u_zero;res=tm_unit;pre=((PS.nt_subst_term (comp_pre c1) ss1) * remaining_pre);post=tm_emp}
+        STT (STC _ _ x (magic ()) (magic ()) (magic ())) in
+      (| t, c, d |) in
+    
+
+    debug_prover g (fun _ -> "\ncalling the continuation elaborator\n");
+    let (| t, _, _ |) = k None r in
+    debug_prover g (fun _ -> "\ncontinuation elaborator exited\n");
+    debug_prover g1 (fun _ ->
+      Printf.sprintf "Elaborated term: %s\n" (P.st_term_to_string t));
+    T.fail "Exiting\n";
+
+
     let x = fresh g1 in
     let px = b.binder_ppname, x in
     // TODO: if the binder is annotated, check subtyping

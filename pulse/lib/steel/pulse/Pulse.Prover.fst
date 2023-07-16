@@ -111,6 +111,11 @@ let rec prover
         (P.term_to_string (list_as_vprop pst.remaining_ctxt)));
 
     let (| exs, rest, d |) = collect_exists (push_env pst.pg pst.uvs) pst.unsolved in
+
+    debug_prover pst.pg (fun _ ->
+      Printf.sprintf "prover: tried to pull exists: exs: %s and rest: %s\n"
+        (P.term_to_string (list_as_vprop exs)) (P.term_to_string (list_as_vprop rest)));
+
     let pst = unsolved_equiv_pst pst (exs@rest) d in
 
     debug_prover pst.pg (fun _ ->
@@ -171,7 +176,9 @@ let prove
   } in
 
   let pst = prover pst in
+
   let ropt = PS.ss_to_nt_substs pst.pg pst.uvs pst.ss in
+
   if None? ropt then fail pst.pg None "prove: ss not well-typed";
   let Some nts = ropt in
   let k

@@ -538,9 +538,9 @@ let (intro_exists :
                                                                     Pulse_Prover_Common.unsolved
                                                                     =
                                                                     (FStar_List_Tot_Base.append
-                                                                    [
-                                                                    Pulse_Syntax_Naming.open_term_nv
-                                                                    body px]
+                                                                    (Pulse_Checker_VPropEquiv.vprop_as_list
+                                                                    (Pulse_Syntax_Naming.open_term_nv
+                                                                    body px))
                                                                     unsolved');
                                                                     Pulse_Prover_Common.k
                                                                     = k_sub;

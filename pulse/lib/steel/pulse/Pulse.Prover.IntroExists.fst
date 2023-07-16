@@ -104,7 +104,7 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
     uvs = push_binding pst.uvs x b.binder_ppname b.binder_ty;
     ss = pst.ss;
     solved = tm_emp;
-    unsolved = [open_term_nv body px] @ unsolved';
+    unsolved = (vprop_as_list (open_term_nv body px)) @ unsolved';
     k = k_sub;
     goals_inv = magic ();
     solved_inv = ();
