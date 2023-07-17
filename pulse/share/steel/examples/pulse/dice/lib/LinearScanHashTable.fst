@@ -599,14 +599,3 @@ let lookup #s (ht : pht s) (k : s.keyt)
 =
   lookup_repr ht.repr k
 
-(*
-noeq
-type table kt vt = {
-  sz : pos;
-  contents : A.larray (cell kt vt) sz;
-  s_contents : Ghost.erased (persistent_table kt vt);
-  lk : LK.lock (A.pts_to contents 
-  consistent : squash (models contents s_contents)
-}
-
-*)
