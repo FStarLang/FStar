@@ -117,28 +117,12 @@ type pht (s : pht_sig) = {
   repr : Seq.lseq (cell s.keyt s.valt) sz;
   inv : squash (pht_models s sz spec repr);
 }
-
-let lookup #s (ht : pht s) (k : s.keyt) : option s.valt =
-  lookup_repr ht.repr k
   
 let upd_ #s #sz (repr : repr_t s sz) idx k v : repr_t s sz =
   Seq.upd repr idx (Used k v)
 
 let del_ #s #sz (repr : repr_t s sz) idx : repr_t s sz =
   Seq.upd repr idx Zombie
-
-let lemma_some_repr_none_spec #s #sz (spec: spec_t s) (repr : repr_t s sz) idx k v 
-  : Lemma (requires Some? (lookup_repr repr k) /\
-                    None? (lookup_spec spec k))
-          (ensures False)
-= admit() // PROVEME: hopefully straightforward via a walk of repr
-
-let lemma_some_index_none_repr #s #sz (spec: spec_t s) (repr : repr_t s sz) idx k v 
-  : Lemma (requires repr @@ idx == Used k v /\
-                    None? (lookup_repr repr k))
-          (ensures False)
-= admit() // PROVEME: hopefully straightforward via a walk of repr
- 
 
 let lemma_clean_upd_lookup_walk #s #sz (spec1 spec2 : spec_t s) (repr1 repr2 : repr_t s sz) idx k v (k':_{k =!= k'})
   : Lemma (requires
@@ -262,21 +246,22 @@ let lemma_zombie_upd_lookup_walk #s #sz (spec spec' : spec_t s) (repr repr' : re
   in
   aux 0
 
+let strong_used_not_by #s #sz (repr : repr_t s sz) (k : s.keyt) (i : nat{i < sz}): prop =
+  (Used? (repr @@ i) /\ Used?.k (repr @@ i) <> k)
+
 let used_not_by #s #sz (repr : repr_t s sz) (k : s.keyt) (i : nat{i < sz}): prop =
-  Used? (repr @@ i) /\ Used?.k (repr @@ i) <> k
+  strong_used_not_by repr k i \/ Zombie? (repr @@ i)
   
-let all_used_not_by #s #sz (repr : repr_t s sz) (idx : (n:nat{n < sz})) (off : nat) (k : s.keyt) : prop =
-  // funny! draw a picture to see why this makes sense
-//  if idx2 >= idx1 then
-//    forall i. idx1 <= i /\ i < idx2 ==> used_not_by repr k i
-//  else (forall i. idx1 <= i ==> used_not_by repr k i)
-//    /\ (forall i. i < idx2 ==> used_not_by repr k i)
-  forall (i:nat{i < off}). used_not_by repr k ((idx+i) % sz)
+let all_used_not_by #s #sz (repr : repr_t s sz) (idx : (n:nat{n < sz})) (len : nat) (k : s.keyt) : prop =
+  forall (i:nat{i < len}). used_not_by repr k ((idx+i) % sz)
+
+let strong_all_used_not_by #s #sz (repr : repr_t s sz) (idx : (n:nat{n < sz})) (len : nat) (k : s.keyt) : prop =
+  forall (i:nat{i < len}). strong_used_not_by repr k ((idx+i) % sz)
 
 let aunb_extend #s #sz (repr : repr_t s sz) (idx : (n:nat{n < sz})) (off : nat) (k : s.keyt)
-  : Lemma (requires all_used_not_by repr idx off k /\ used_not_by repr k ((idx+off+1) % sz))
+  : Lemma (requires all_used_not_by repr idx off k /\ used_not_by repr k ((idx+off) % sz))
           (ensures  all_used_not_by repr idx (off+1) k)
-  = admit()
+  = ()
 
 let aunb_shrink #s #sz (repr : repr_t s sz) (idx : (n:nat{n < sz})) (off : nat) (k : s.keyt)
   : Lemma (requires all_used_not_by repr idx off k /\ off > 0)
@@ -410,11 +395,25 @@ let lemma_zombie_upd #s #sz spec (repr : repr_t s sz) (off:nat{off < sz}) k v
   = let spec' = spec ++ (k,v) in
     let idx = (canonical_index k sz + off) % sz in
     let repr' = upd_ repr idx k v in
+    
+    let aux (i:nat{i < off}) : Lemma (used_not_by repr' k ((canonical_index k sz + i) % sz)) =
+      calc (==>) {
+        (canonical_index k sz + i) % sz == idx;
+        ==> {}
+        (canonical_index k sz + i) % sz == (canonical_index k sz + off) % sz;
+        ==> { Math.Lemmas.lemma_mod_plus_injective sz (canonical_index k sz) i off }
+        i == off;
+      }
+    in
+    Classical.forall_intro aux;
+    assert (all_used_not_by repr' (canonical_index k sz) off k);
+
     let aux1 (k':s.keyt) : Lemma (requires (Some? (lookup_spec spec' k')))
                                  (ensures (lookup_repr repr' k' == lookup_spec spec' k'))
-    = if k' = k then
-        lemma_walk_from_canonical_all_used repr' off k v
-      else
+    = if k' = k then begin
+        lemma_walk_from_canonical_all_used repr' off k v;
+        ()
+      end else
         lemma_zombie_upd_lookup_walk spec spec' repr repr' idx k v k' 
     in
     let aux2 (k':s.keyt) : Lemma (requires (Some? (lookup_repr repr' k')))
@@ -452,16 +451,22 @@ let lemma_del #s #sz spec (repr : repr_t s sz) idx k v
     in
     let aux2 (k':s.keyt) : Lemma (requires (Some? (lookup_repr repr' k')))
                                  (ensures (lookup_repr repr' k' == lookup_spec spec' k'))
-    = if k' = k then 
-        lemma_some_repr_none_spec spec' repr' idx k v
-      else 
+    = if k' = k then begin
+        let Some (v', i') = lookup_repr_index repr' k' in
+        assert (i' <> idx);
+        assert (lookup_repr_index repr k == Some (v', i'));
+        assert (lookup_repr_index repr k == Some (v, idx));
+        ()
+      end else 
         lemma_del_lookup_walk spec spec' repr repr' idx k v k'
     in
     let aux3 (i':nat{i'<sz}) (k':s.keyt) (v':s.valt) : Lemma (requires (repr' @@ i' == Used k' v'))
                                                              (ensures (lookup_repr_index repr' k' == Some (v', i')))
     = if k' = k then begin
-        assert (lookup_repr_index repr k == Some (v,idx)); // this assert is necessary
-        lemma_some_index_none_repr spec' repr' i' k' v'
+        assert (i' <> idx);
+        assert (lookup_repr_index repr k == Some (v', i'));
+        assert (lookup_repr_index repr k == Some (v, idx));
+        ()
       end else 
         lemma_del_lookup_walk spec spec' repr repr' idx k v k'
     in
@@ -479,7 +484,7 @@ let insert_repr #s #sz (#spec : erased (spec_t s)) (repr : repr_t s sz{pht_model
        (requires not_full repr)
        (ensures fun _ -> True)
 = let cidx = canonical_index k sz in
-  let rec walk_ (off:nat{off <= sz}) (_ : squash (all_used_not_by repr cidx off k))
+  let rec walk_ (off:nat{off <= sz}) (_ : squash (strong_all_used_not_by repr cidx off k))
                                      (_ : squash (walk repr cidx k off == lookup_repr repr k))
     : Tot (repr':repr_t s sz{pht_models s sz (spec ++ (k,v)) repr'})
           (decreases sz - off)
@@ -488,7 +493,17 @@ let insert_repr #s #sz (#spec : erased (spec_t s)) (repr : repr_t s sz{pht_model
         let aux (i:nat{i < sz}) : Lemma (Used? (repr @@ i)) =
           assert (all_used_not_by repr cidx sz k);
           let off = (i - cidx) % sz in
-          assume ((cidx + off) % sz == i); // FIXME: prove this, should be easy
+          calc (==) {
+            (cidx + off) % sz;
+            == {}
+            (cidx + ((i - cidx) % sz)) % sz;
+            == { Math.Lemmas.modulo_lemma cidx sz }
+            (cidx % sz + ((i - cidx) % sz)) % sz;
+            == { Math.Lemmas.modulo_distributivity cidx (i-cidx) sz }
+            i % sz;
+            == { Math.Lemmas.modulo_lemma i sz }
+            i;
+          };
           assert (Used? (repr @@ i));
           ()
         in
@@ -552,10 +567,10 @@ let delete_repr #s #sz (#spec : erased (spec_t s)) (repr : repr_t s sz{pht_model
           assert (all_used_not_by repr cidx (off+1) k);
           walk_ (off+1) () ()
         end
-      | _ -> begin 
-          assume (all_used_not_by repr cidx (off+1) k); // FIXME: not true! We may be traversing across a zombie.
-          walk_ (off+1) () ()
-        end
+
+      | Clean -> repr
+
+      | Zombie -> walk_ (off+1) () ()
   in
   let res = walk_ 0 () () in
   res
@@ -578,6 +593,12 @@ let delete #s (ht : pht s) (k : s.keyt)
   { ht with spec = Ghost.hide (ht.spec -- k);
             repr = delete_repr #_ #_ #ht.spec ht.repr k;
             inv = () }
+
+let lookup #s (ht : pht s) (k : s.keyt)
+: o:(option s.valt){o == lookup_spec ht.spec k}
+=
+  lookup_repr ht.repr k
+
 (*
 noeq
 type table kt vt = {
