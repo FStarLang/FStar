@@ -117,7 +117,7 @@ let (elim_pure_frame :
           Pulse_Typing_Env.env ->
             ((Pulse_Typing_Env.env, Pulse_Syntax_Base.term, unit,
                (unit, unit, unit, unit)
-                 Pulse_Prover_Common.continuation_elaborator)
+                 Pulse_Checker_Common.continuation_elaborator)
                FStar_Pervasives.dtuple4,
               unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -133,7 +133,7 @@ let (elim_pure :
       unit ->
         ((Pulse_Typing_Env.env, Pulse_Syntax_Base.term, unit,
            (unit, unit, unit, unit)
-             Pulse_Prover_Common.continuation_elaborator)
+             Pulse_Checker_Common.continuation_elaborator)
            FStar_Pervasives.dtuple4,
           unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -144,13 +144,13 @@ let (elim_pure :
           (FStar_Sealed.seal
              (Obj.magic
                 (FStar_Range.mk_range "Pulse.Prover.ElimPure.fst"
-                   (Prims.of_int (103)) (Prims.of_int (70))
-                   (Prims.of_int (103)) (Prims.of_int (78)))))
+                   (Prims.of_int (104)) (Prims.of_int (70))
+                   (Prims.of_int (104)) (Prims.of_int (78)))))
           (FStar_Sealed.seal
              (Obj.magic
                 (FStar_Range.mk_range "Pulse.Prover.ElimPure.fst"
-                   (Prims.of_int (103)) (Prims.of_int (81))
-                   (Prims.of_int (108)) (Prims.of_int (62)))))
+                   (Prims.of_int (104)) (Prims.of_int (81))
+                   (Prims.of_int (109)) (Prims.of_int (62)))))
           (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> ()))
           (fun uu___ ->
              (fun ctxt_emp_typing ->
@@ -159,13 +159,13 @@ let (elim_pure :
                      (FStar_Sealed.seal
                         (Obj.magic
                            (FStar_Range.mk_range "Pulse.Prover.ElimPure.fst"
-                              (Prims.of_int (105)) (Prims.of_int (4))
-                              (Prims.of_int (105)) (Prims.of_int (58)))))
+                              (Prims.of_int (106)) (Prims.of_int (4))
+                              (Prims.of_int (106)) (Prims.of_int (58)))))
                      (FStar_Sealed.seal
                         (Obj.magic
                            (FStar_Range.mk_range "Pulse.Prover.ElimPure.fst"
-                              (Prims.of_int (103)) (Prims.of_int (81))
-                              (Prims.of_int (108)) (Prims.of_int (62)))))
+                              (Prims.of_int (104)) (Prims.of_int (81))
+                              (Prims.of_int (109)) (Prims.of_int (62)))))
                      (Obj.magic
                         (elim_pure_frame g ctxt Pulse_Syntax_Base.tm_emp ()
                            (Pulse_Typing_Env.mk_env
@@ -178,7 +178,7 @@ let (elim_pure :
                                  (g', ctxt', ctxt'_emp_typing, k) ->
                                  FStar_Pervasives.Mkdtuple4
                                    (g', ctxt', (),
-                                     (Pulse_Prover_Common.k_elab_equiv g g'
+                                     (Pulse_Checker_Common.k_elab_equiv g g'
                                         (Pulse_Prover_Common.op_Star ctxt
                                            Pulse_Syntax_Base.tm_emp) ctxt
                                         (Pulse_Prover_Common.op_Star ctxt'
@@ -196,16 +196,16 @@ let (elim_pure_pst :
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "Pulse.Prover.ElimPure.fst"
-                 (Prims.of_int (117)) (Prims.of_int (4)) (Prims.of_int (122))
+                 (Prims.of_int (118)) (Prims.of_int (4)) (Prims.of_int (123))
                  (Prims.of_int (13)))))
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "Pulse.Prover.ElimPure.fst"
-                 (Prims.of_int (114)) (Prims.of_int (74))
-                 (Prims.of_int (152)) (Prims.of_int (3)))))
+                 (Prims.of_int (115)) (Prims.of_int (74))
+                 (Prims.of_int (153)) (Prims.of_int (3)))))
         (Obj.magic
            (elim_pure_frame pst.Pulse_Prover_Common.pg
-              (Pulse_Checker_VPropEquiv.list_as_vprop
+              (Pulse_Typing_Combinators.list_as_vprop
                  pst.Pulse_Prover_Common.remaining_ctxt)
               (Pulse_Prover_Common.op_Star preamble.Pulse_Prover_Common.frame
                  (Pulse_Prover_Common.op_Array_Access
@@ -219,7 +219,7 @@ let (elim_pure_pst :
                     {
                       Pulse_Prover_Common.pg = g';
                       Pulse_Prover_Common.remaining_ctxt =
-                        (Pulse_Checker_VPropEquiv.vprop_as_list
+                        (Pulse_Typing_Combinators.vprop_as_list
                            remaining_ctxt');
                       Pulse_Prover_Common.remaining_ctxt_frame_typing = ();
                       Pulse_Prover_Common.uvs = (pst.Pulse_Prover_Common.uvs);
@@ -229,7 +229,7 @@ let (elim_pure_pst :
                       Pulse_Prover_Common.unsolved =
                         (pst.Pulse_Prover_Common.unsolved);
                       Pulse_Prover_Common.k =
-                        (Pulse_Prover_Common.k_elab_trans
+                        (Pulse_Checker_Common.k_elab_trans
                            preamble.Pulse_Prover_Common.g0
                            (Pulse_Prover_Common.__proj__Mkprover_state__item__pg
                               preamble pst) g'
@@ -238,7 +238,7 @@ let (elim_pure_pst :
                               preamble.Pulse_Prover_Common.frame)
                            (Pulse_Prover_Common.op_Star
                               (Pulse_Prover_Common.op_Star
-                                 (Pulse_Checker_VPropEquiv.list_as_vprop
+                                 (Pulse_Typing_Combinators.list_as_vprop
                                     (Pulse_Prover_Common.__proj__Mkprover_state__item__remaining_ctxt
                                        preamble pst))
                                  preamble.Pulse_Prover_Common.frame)
@@ -254,10 +254,10 @@ let (elim_pure_pst :
                                  pst.Pulse_Prover_Common.ss
                                  pst.Pulse_Prover_Common.solved))
                            pst.Pulse_Prover_Common.k
-                           (Pulse_Prover_Common.k_elab_equiv
+                           (Pulse_Checker_Common.k_elab_equiv
                               pst.Pulse_Prover_Common.pg g'
                               (Pulse_Prover_Common.op_Star
-                                 (Pulse_Checker_VPropEquiv.list_as_vprop
+                                 (Pulse_Typing_Combinators.list_as_vprop
                                     pst.Pulse_Prover_Common.remaining_ctxt)
                                  (Pulse_Prover_Common.op_Star
                                     preamble.Pulse_Prover_Common.frame
@@ -266,7 +266,7 @@ let (elim_pure_pst :
                                        pst.Pulse_Prover_Common.solved)))
                               (Pulse_Prover_Common.op_Star
                                  (Pulse_Prover_Common.op_Star
-                                    (Pulse_Checker_VPropEquiv.list_as_vprop
+                                    (Pulse_Typing_Combinators.list_as_vprop
                                        pst.Pulse_Prover_Common.remaining_ctxt)
                                     preamble.Pulse_Prover_Common.frame)
                                  (Pulse_Prover_Common.op_Array_Access

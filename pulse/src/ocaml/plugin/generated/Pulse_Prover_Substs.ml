@@ -323,6 +323,34 @@ let rec (ss_to_nt_substs :
                                                (fun uu___3 ->
                                                   FStar_Pervasives_Native.None))))
                                 uu___1)))) uu___2 uu___1 uu___
+let rec (well_typed_nt_substs_prefix :
+  Pulse_Typing_Env.env ->
+    Pulse_Typing_Env.env -> nt_substs -> Pulse_Typing_Env.env -> nt_substs)
+  =
+  fun g ->
+    fun uvs ->
+      fun nts ->
+        fun uvs1 ->
+          match ((Pulse_Typing_Env.bindings uvs1),
+                  (Pulse_Typing_Env.bindings uvs))
+          with
+          | ([], uu___) -> []
+          | (uu___::uu___1, uu___2::uu___3) ->
+              let uu___4 = Pulse_Typing_Env.remove_binding uvs1 in
+              (match uu___4 with
+               | (x1, ty1, rest_uvs1) ->
+                   let uu___5 = Pulse_Typing_Env.remove_binding uvs in
+                   (match uu___5 with
+                    | (x, ty, rest_uvs) ->
+                        let uu___6 = nts in
+                        (match uu___6 with
+                         | (Pulse_Syntax_Naming.NT (y, e))::nts_rest ->
+                             (Pulse_Syntax_Naming.NT (y, e)) ::
+                             (well_typed_nt_substs_prefix g
+                                (Pulse_Typing_Metatheory.subst_env rest_uvs
+                                   [Pulse_Syntax_Naming.NT (y, e)]) nts_rest
+                                (Pulse_Typing_Metatheory.subst_env rest_uvs1
+                                   [Pulse_Syntax_Naming.NT (y, e)])))))
 let rec (st_typing_nt_substs :
   Pulse_Typing_Env.env ->
     Pulse_Typing_Env.env ->

@@ -12,7 +12,7 @@ let (k_intro_exists :
                 Pulse_Syntax_Base.vprop ->
                   unit ->
                     ((unit, unit, unit, unit)
-                       Pulse_Prover_Common.continuation_elaborator,
+                       Pulse_Checker_Common.continuation_elaborator,
                       unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
@@ -29,14 +29,14 @@ let (k_intro_exists :
                          (Obj.magic
                             (FStar_Range.mk_range
                                "Pulse.Prover.IntroExists.fst"
-                               (Prims.of_int (24)) (Prims.of_int (10))
-                               (Prims.of_int (27)) (Prims.of_int (66)))))
+                               (Prims.of_int (26)) (Prims.of_int (10))
+                               (Prims.of_int (29)) (Prims.of_int (66)))))
                       (FStar_Sealed.seal
                          (Obj.magic
                             (FStar_Range.mk_range
                                "Pulse.Prover.IntroExists.fst"
-                               (Prims.of_int (27)) (Prims.of_int (69))
-                               (Prims.of_int (65)) (Prims.of_int (30)))))
+                               (Prims.of_int (29)) (Prims.of_int (69))
+                               (Prims.of_int (67)) (Prims.of_int (30)))))
                       (FStar_Tactics_Effect.lift_div_tac
                          (fun uu___ ->
                             Pulse_Typing.wr
@@ -57,17 +57,17 @@ let (k_intro_exists :
                                     (Obj.magic
                                        (FStar_Range.mk_range
                                           "Pulse.Prover.IntroExists.fst"
-                                          (Prims.of_int (29))
+                                          (Prims.of_int (31))
                                           (Prims.of_int (10))
-                                          (Prims.of_int (29))
+                                          (Prims.of_int (31))
                                           (Prims.of_int (35)))))
                                  (FStar_Sealed.seal
                                     (Obj.magic
                                        (FStar_Range.mk_range
                                           "Pulse.Prover.IntroExists.fst"
-                                          (Prims.of_int (29))
+                                          (Prims.of_int (31))
                                           (Prims.of_int (38))
-                                          (Prims.of_int (65))
+                                          (Prims.of_int (67))
                                           (Prims.of_int (30)))))
                                  (FStar_Tactics_Effect.lift_div_tac
                                     (fun uu___ ->
@@ -80,17 +80,17 @@ let (k_intro_exists :
                                                (Obj.magic
                                                   (FStar_Range.mk_range
                                                      "Pulse.Prover.IntroExists.fst"
-                                                     (Prims.of_int (31))
+                                                     (Prims.of_int (33))
                                                      (Prims.of_int (17))
-                                                     (Prims.of_int (31))
+                                                     (Prims.of_int (33))
                                                      (Prims.of_int (70)))))
                                             (FStar_Sealed.seal
                                                (Obj.magic
                                                   (FStar_Range.mk_range
                                                      "Pulse.Prover.IntroExists.fst"
-                                                     (Prims.of_int (34))
+                                                     (Prims.of_int (36))
                                                      (Prims.of_int (45))
-                                                     (Prims.of_int (65))
+                                                     (Prims.of_int (67))
                                                      (Prims.of_int (30)))))
                                             (FStar_Tactics_Effect.lift_div_tac
                                                (fun uu___ ->
@@ -105,17 +105,17 @@ let (k_intro_exists :
                                                           (Obj.magic
                                                              (FStar_Range.mk_range
                                                                 "Pulse.Prover.IntroExists.fst"
-                                                                (Prims.of_int (36))
+                                                                (Prims.of_int (38))
                                                                 (Prims.of_int (10))
-                                                                (Prims.of_int (36))
+                                                                (Prims.of_int (38))
                                                                 (Prims.of_int (17)))))
                                                        (FStar_Sealed.seal
                                                           (Obj.magic
                                                              (FStar_Range.mk_range
                                                                 "Pulse.Prover.IntroExists.fst"
-                                                                (Prims.of_int (37))
+                                                                (Prims.of_int (39))
                                                                 (Prims.of_int (52))
-                                                                (Prims.of_int (65))
+                                                                (Prims.of_int (67))
                                                                 (Prims.of_int (30)))))
                                                        (FStar_Tactics_Effect.lift_div_tac
                                                           (fun uu___ ->
@@ -129,20 +129,20 @@ let (k_intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (43))
+                                                                    (Prims.of_int (45))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (43))
+                                                                    (Prims.of_int (45))
                                                                     (Prims.of_int (65)))))
                                                                   (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (51))
+                                                                    (Prims.of_int (53))
                                                                     (Prims.of_int (20))
-                                                                    (Prims.of_int (65))
+                                                                    (Prims.of_int (67))
                                                                     (Prims.of_int (30)))))
                                                                   (Obj.magic
-                                                                    (Pulse_Prover_Common.continuation_elaborator_with_bind
+                                                                    (Pulse_Checker_Common.continuation_elaborator_with_bind
                                                                     g frame
                                                                     (Pulse_Typing.comp_intro_exists
                                                                     u b p e)
@@ -176,17 +176,17 @@ let (k_intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (52))
+                                                                    (Prims.of_int (54))
                                                                     (Prims.of_int (25))
-                                                                    (Prims.of_int (52))
+                                                                    (Prims.of_int (54))
                                                                     (Prims.of_int (26)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (51))
+                                                                    (Prims.of_int (53))
                                                                     (Prims.of_int (20))
-                                                                    (Prims.of_int (65))
+                                                                    (Prims.of_int (67))
                                                                     (Prims.of_int (30)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -208,17 +208,17 @@ let (k_intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (53))
+                                                                    (Prims.of_int (55))
                                                                     (Prims.of_int (31))
-                                                                    (Prims.of_int (53))
+                                                                    (Prims.of_int (55))
                                                                     (Prims.of_int (33)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (53))
+                                                                    (Prims.of_int (55))
                                                                     (Prims.of_int (36))
-                                                                    (Prims.of_int (65))
+                                                                    (Prims.of_int (67))
                                                                     (Prims.of_int (30)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -234,17 +234,17 @@ let (k_intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (54))
+                                                                    (Prims.of_int (56))
                                                                     (Prims.of_int (18))
-                                                                    (Prims.of_int (54))
+                                                                    (Prims.of_int (56))
                                                                     (Prims.of_int (38)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (57))
+                                                                    (Prims.of_int (59))
                                                                     (Prims.of_int (64))
-                                                                    (Prims.of_int (65))
+                                                                    (Prims.of_int (67))
                                                                     (Prims.of_int (30)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -263,17 +263,17 @@ let (k_intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (59))
+                                                                    (Prims.of_int (61))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (63))
+                                                                    (Prims.of_int (65))
                                                                     (Prims.of_int (52)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (65))
+                                                                    (Prims.of_int (67))
                                                                     (Prims.of_int (2))
-                                                                    (Prims.of_int (65))
+                                                                    (Prims.of_int (67))
                                                                     (Prims.of_int (30)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -292,7 +292,7 @@ let (k_intro_exists :
                                                                     (fun d12
                                                                     ->
                                                                     Obj.magic
-                                                                    (Pulse_Prover_Common.k_elab_equiv
+                                                                    (Pulse_Checker_Common.k_elab_equiv
                                                                     g
                                                                     (Pulse_Typing_Env.push_binding
                                                                     g x
@@ -359,14 +359,14 @@ let (intro_exists :
                        (Obj.magic
                           (FStar_Range.mk_range
                              "Pulse.Prover.IntroExists.fst"
-                             (Prims.of_int (76)) (Prims.of_int (10))
-                             (Prims.of_int (76)) (Prims.of_int (41)))))
+                             (Prims.of_int (78)) (Prims.of_int (10))
+                             (Prims.of_int (78)) (Prims.of_int (41)))))
                     (FStar_Sealed.seal
                        (Obj.magic
                           (FStar_Range.mk_range
                              "Pulse.Prover.IntroExists.fst"
-                             (Prims.of_int (76)) (Prims.of_int (44))
-                             (Prims.of_int (313)) (Prims.of_int (6)))))
+                             (Prims.of_int (78)) (Prims.of_int (44))
+                             (Prims.of_int (315)) (Prims.of_int (6)))))
                     (FStar_Tactics_Effect.lift_div_tac
                        (fun uu___1 ->
                           Pulse_Typing_Env.fresh
@@ -381,17 +381,17 @@ let (intro_exists :
                                   (Obj.magic
                                      (FStar_Range.mk_range
                                         "Pulse.Prover.IntroExists.fst"
-                                        (Prims.of_int (77))
+                                        (Prims.of_int (79))
                                         (Prims.of_int (11))
-                                        (Prims.of_int (77))
+                                        (Prims.of_int (79))
                                         (Prims.of_int (29)))))
                                (FStar_Sealed.seal
                                   (Obj.magic
                                      (FStar_Range.mk_range
                                         "Pulse.Prover.IntroExists.fst"
-                                        (Prims.of_int (77))
+                                        (Prims.of_int (79))
                                         (Prims.of_int (32))
-                                        (Prims.of_int (313))
+                                        (Prims.of_int (315))
                                         (Prims.of_int (6)))))
                                (FStar_Tactics_Effect.lift_div_tac
                                   (fun uu___1 ->
@@ -404,17 +404,17 @@ let (intro_exists :
                                              (Obj.magic
                                                 (FStar_Range.mk_range
                                                    "Pulse.Prover.IntroExists.fst"
-                                                   (Prims.of_int (79))
+                                                   (Prims.of_int (81))
                                                    (Prims.of_int (4))
-                                                   (Prims.of_int (83))
+                                                   (Prims.of_int (85))
                                                    (Prims.of_int (61)))))
                                           (FStar_Sealed.seal
                                              (Obj.magic
                                                 (FStar_Range.mk_range
                                                    "Pulse.Prover.IntroExists.fst"
-                                                   (Prims.of_int (84))
+                                                   (Prims.of_int (86))
                                                    (Prims.of_int (6))
-                                                   (Prims.of_int (313))
+                                                   (Prims.of_int (315))
                                                    (Prims.of_int (6)))))
                                           (FStar_Tactics_Effect.lift_div_tac
                                              (fun uu___1 ->
@@ -422,7 +422,7 @@ let (intro_exists :
                                                   Pulse_Prover_Common.g0 =
                                                     (pst.Pulse_Prover_Common.pg);
                                                   Pulse_Prover_Common.ctxt =
-                                                    (Pulse_Checker_VPropEquiv.list_as_vprop
+                                                    (Pulse_Typing_Combinators.list_as_vprop
                                                        pst.Pulse_Prover_Common.remaining_ctxt);
                                                   Pulse_Prover_Common.frame =
                                                     (Pulse_Prover_Common.op_Star
@@ -436,7 +436,7 @@ let (intro_exists :
                                                     (Pulse_Prover_Common.op_Star
                                                        (Pulse_Syntax_Naming.open_term_nv
                                                           body px)
-                                                       (Pulse_Checker_VPropEquiv.list_as_vprop
+                                                       (Pulse_Typing_Combinators.list_as_vprop
                                                           unsolved'))
                                                 }))
                                           (fun uu___1 ->
@@ -447,22 +447,22 @@ let (intro_exists :
                                                         (Obj.magic
                                                            (FStar_Range.mk_range
                                                               "Pulse.Prover.IntroExists.fst"
-                                                              (Prims.of_int (88))
+                                                              (Prims.of_int (90))
                                                               (Prims.of_int (105))
-                                                              (Prims.of_int (97))
+                                                              (Prims.of_int (99))
                                                               (Prims.of_int (18)))))
                                                      (FStar_Sealed.seal
                                                         (Obj.magic
                                                            (FStar_Range.mk_range
                                                               "Pulse.Prover.IntroExists.fst"
-                                                              (Prims.of_int (99))
+                                                              (Prims.of_int (101))
                                                               (Prims.of_int (37))
-                                                              (Prims.of_int (313))
+                                                              (Prims.of_int (315))
                                                               (Prims.of_int (6)))))
                                                      (FStar_Tactics_Effect.lift_div_tac
                                                         (fun uu___1 ->
                                                            coerce_eq
-                                                             (Pulse_Prover_Common.k_elab_equiv
+                                                             (Pulse_Checker_Common.k_elab_equiv
                                                                 preamble_sub.Pulse_Prover_Common.g0
                                                                 preamble_sub.Pulse_Prover_Common.g0
                                                                 (Pulse_Prover_Common.op_Star
@@ -476,14 +476,14 @@ let (intro_exists :
                                                                    preamble_sub.Pulse_Prover_Common.frame)
                                                                 (Pulse_Prover_Common.op_Star
                                                                    (Pulse_Prover_Common.op_Star
-                                                                    (Pulse_Checker_VPropEquiv.list_as_vprop
-                                                                    (Pulse_Checker_VPropEquiv.vprop_as_list
+                                                                    (Pulse_Typing_Combinators.list_as_vprop
+                                                                    (Pulse_Typing_Combinators.vprop_as_list
                                                                     preamble_sub.Pulse_Prover_Common.ctxt))
                                                                     preamble_sub.Pulse_Prover_Common.frame)
                                                                    (Pulse_Prover_Common.op_Array_Access
                                                                     pst.Pulse_Prover_Common.ss
                                                                     Pulse_Syntax_Base.tm_emp))
-                                                                (Pulse_Prover_Common.k_elab_unit
+                                                                (Pulse_Checker_Common.k_elab_unit
                                                                    preamble_sub.Pulse_Prover_Common.g0
                                                                    (Pulse_Prover_Common.op_Star
                                                                     preamble_sub.Pulse_Prover_Common.ctxt
@@ -497,17 +497,17 @@ let (intro_exists :
                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (101))
+                                                                    (Prims.of_int (103))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (110))
+                                                                    (Prims.of_int (112))
                                                                     (Prims.of_int (20)))))
                                                                 (FStar_Sealed.seal
                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (111))
+                                                                    (Prims.of_int (113))
                                                                     (Prims.of_int (6))
-                                                                    (Prims.of_int (313))
+                                                                    (Prims.of_int (315))
                                                                     (Prims.of_int (6)))))
                                                                 (FStar_Tactics_Effect.lift_div_tac
                                                                    (fun
@@ -518,7 +518,7 @@ let (intro_exists :
                                                                     (pst.Pulse_Prover_Common.pg);
                                                                     Pulse_Prover_Common.remaining_ctxt
                                                                     =
-                                                                    (Pulse_Checker_VPropEquiv.vprop_as_list
+                                                                    (Pulse_Typing_Combinators.vprop_as_list
                                                                     preamble_sub.Pulse_Prover_Common.ctxt);
                                                                     Pulse_Prover_Common.remaining_ctxt_frame_typing
                                                                     = ();
@@ -538,7 +538,7 @@ let (intro_exists :
                                                                     Pulse_Prover_Common.unsolved
                                                                     =
                                                                     (FStar_List_Tot_Base.append
-                                                                    (Pulse_Checker_VPropEquiv.vprop_as_list
+                                                                    (Pulse_Typing_Combinators.vprop_as_list
                                                                     (Pulse_Syntax_Naming.open_term_nv
                                                                     body px))
                                                                     unsolved');
@@ -560,17 +560,17 @@ let (intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (112))
+                                                                    (Prims.of_int (114))
                                                                     (Prims.of_int (16))
-                                                                    (Prims.of_int (112))
+                                                                    (Prims.of_int (114))
                                                                     (Prims.of_int (30)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (112))
+                                                                    (Prims.of_int (114))
                                                                     (Prims.of_int (33))
-                                                                    (Prims.of_int (313))
+                                                                    (Prims.of_int (315))
                                                                     (Prims.of_int (6)))))
                                                                     (Obj.magic
                                                                     (prover
@@ -587,17 +587,17 @@ let (intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (116))
+                                                                    (Prims.of_int (118))
                                                                     (Prims.of_int (56))
-                                                                    (Prims.of_int (116))
+                                                                    (Prims.of_int (118))
                                                                     (Prims.of_int (73)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (116))
+                                                                    (Prims.of_int (118))
                                                                     (Prims.of_int (76))
-                                                                    (Prims.of_int (313))
+                                                                    (Prims.of_int (315))
                                                                     (Prims.of_int (6)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -614,17 +614,17 @@ let (intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (117))
+                                                                    (Prims.of_int (119))
                                                                     (Prims.of_int (13))
-                                                                    (Prims.of_int (117))
+                                                                    (Prims.of_int (119))
                                                                     (Prims.of_int (65)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (118))
+                                                                    (Prims.of_int (120))
                                                                     (Prims.of_int (2))
-                                                                    (Prims.of_int (313))
+                                                                    (Prims.of_int (315))
                                                                     (Prims.of_int (6)))))
                                                                     (Obj.magic
                                                                     (Pulse_Prover_Substs.ss_to_nt_substs
@@ -641,17 +641,17 @@ let (intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (118))
+                                                                    (Prims.of_int (120))
                                                                     (Prims.of_int (2))
-                                                                    (Prims.of_int (118))
+                                                                    (Prims.of_int (120))
                                                                     (Prims.of_int (74)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (118))
+                                                                    (Prims.of_int (120))
                                                                     (Prims.of_int (75))
-                                                                    (Prims.of_int (313))
+                                                                    (Prims.of_int (315))
                                                                     (Prims.of_int (6)))))
                                                                     (if
                                                                     FStar_Pervasives_Native.uu___is_None
@@ -680,17 +680,17 @@ let (intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (121))
+                                                                    (Prims.of_int (123))
                                                                     (Prims.of_int (16))
-                                                                    (Prims.of_int (121))
+                                                                    (Prims.of_int (123))
                                                                     (Prims.of_int (20)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (118))
+                                                                    (Prims.of_int (120))
                                                                     (Prims.of_int (75))
-                                                                    (Prims.of_int (313))
+                                                                    (Prims.of_int (315))
                                                                     (Prims.of_int (6)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -711,17 +711,17 @@ let (intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (127))
+                                                                    (Prims.of_int (129))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (127))
+                                                                    (Prims.of_int (129))
                                                                     (Prims.of_int (80)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (129))
+                                                                    (Prims.of_int (131))
                                                                     (Prims.of_int (48))
-                                                                    (Prims.of_int (313))
+                                                                    (Prims.of_int (315))
                                                                     (Prims.of_int (6)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -738,17 +738,17 @@ let (intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (133))
+                                                                    (Prims.of_int (135))
                                                                     (Prims.of_int (59))
-                                                                    (Prims.of_int (133))
+                                                                    (Prims.of_int (135))
                                                                     (Prims.of_int (89)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (133))
+                                                                    (Prims.of_int (135))
                                                                     (Prims.of_int (92))
-                                                                    (Prims.of_int (313))
+                                                                    (Prims.of_int (315))
                                                                     (Prims.of_int (6)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -765,17 +765,17 @@ let (intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (137))
+                                                                    (Prims.of_int (139))
                                                                     (Prims.of_int (48))
-                                                                    (Prims.of_int (137))
+                                                                    (Prims.of_int (139))
                                                                     (Prims.of_int (96)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (137))
+                                                                    (Prims.of_int (139))
                                                                     (Prims.of_int (99))
-                                                                    (Prims.of_int (313))
+                                                                    (Prims.of_int (315))
                                                                     (Prims.of_int (6)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -792,17 +792,17 @@ let (intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (142))
+                                                                    (Prims.of_int (144))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (142))
+                                                                    (Prims.of_int (144))
                                                                     (Prims.of_int (13)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (142))
+                                                                    (Prims.of_int (144))
                                                                     (Prims.of_int (16))
-                                                                    (Prims.of_int (313))
+                                                                    (Prims.of_int (315))
                                                                     (Prims.of_int (6)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -818,22 +818,22 @@ let (intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (149))
+                                                                    (Prims.of_int (151))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (149))
+                                                                    (Prims.of_int (151))
                                                                     (Prims.of_int (47)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (149))
+                                                                    (Prims.of_int (151))
                                                                     (Prims.of_int (50))
-                                                                    (Prims.of_int (313))
+                                                                    (Prims.of_int (315))
                                                                     (Prims.of_int (6)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___3 ->
-                                                                    Pulse_Prover_Common.k_elab_equiv
+                                                                    Pulse_Checker_Common.k_elab_equiv
                                                                     preamble_sub.Pulse_Prover_Common.g0
                                                                     pst_sub1.Pulse_Prover_Common.pg
                                                                     (Pulse_Prover_Common.op_Star
@@ -844,7 +844,7 @@ let (intro_exists :
                                                                     preamble_sub.Pulse_Prover_Common.frame)
                                                                     (Pulse_Prover_Common.op_Star
                                                                     (Pulse_Prover_Common.op_Star
-                                                                    (Pulse_Checker_VPropEquiv.list_as_vprop
+                                                                    (Pulse_Typing_Combinators.list_as_vprop
                                                                     pst_sub1.Pulse_Prover_Common.remaining_ctxt)
                                                                     preamble_sub.Pulse_Prover_Common.frame)
                                                                     (Pulse_Prover_Common.op_Array_Access
@@ -852,7 +852,7 @@ let (intro_exists :
                                                                     pst_sub1.Pulse_Prover_Common.solved))
                                                                     (Pulse_Prover_Common.op_Star
                                                                     (Pulse_Prover_Common.op_Star
-                                                                    (Pulse_Checker_VPropEquiv.list_as_vprop
+                                                                    (Pulse_Typing_Combinators.list_as_vprop
                                                                     pst_sub1.Pulse_Prover_Common.remaining_ctxt)
                                                                     preamble_sub.Pulse_Prover_Common.frame)
                                                                     (Pulse_Prover_Common.op_Array_Access
@@ -870,17 +870,17 @@ let (intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (156))
+                                                                    (Prims.of_int (158))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (156))
+                                                                    (Prims.of_int (158))
                                                                     (Prims.of_int (22)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (158))
+                                                                    (Prims.of_int (160))
                                                                     (Prims.of_int (84))
-                                                                    (Prims.of_int (313))
+                                                                    (Prims.of_int (315))
                                                                     (Prims.of_int (6)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -897,17 +897,17 @@ let (intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (159))
+                                                                    (Prims.of_int (161))
                                                                     (Prims.of_int (16))
-                                                                    (Prims.of_int (159))
+                                                                    (Prims.of_int (161))
                                                                     (Prims.of_int (39)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (160))
+                                                                    (Prims.of_int (162))
                                                                     (Prims.of_int (94))
-                                                                    (Prims.of_int (313))
+                                                                    (Prims.of_int (315))
                                                                     (Prims.of_int (6)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -927,17 +927,17 @@ let (intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (167))
+                                                                    (Prims.of_int (169))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (167))
+                                                                    (Prims.of_int (169))
                                                                     (Prims.of_int (22)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (167))
+                                                                    (Prims.of_int (169))
                                                                     (Prims.of_int (25))
-                                                                    (Prims.of_int (313))
+                                                                    (Prims.of_int (315))
                                                                     (Prims.of_int (6)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -954,22 +954,22 @@ let (intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (176))
+                                                                    (Prims.of_int (178))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (176))
+                                                                    (Prims.of_int (178))
                                                                     (Prims.of_int (47)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (176))
+                                                                    (Prims.of_int (178))
                                                                     (Prims.of_int (50))
-                                                                    (Prims.of_int (313))
+                                                                    (Prims.of_int (315))
                                                                     (Prims.of_int (6)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___3 ->
-                                                                    Pulse_Prover_Common.k_elab_equiv
+                                                                    Pulse_Checker_Common.k_elab_equiv
                                                                     preamble_sub.Pulse_Prover_Common.g0
                                                                     pst_sub1.Pulse_Prover_Common.pg
                                                                     (Pulse_Prover_Common.op_Star
@@ -980,7 +980,7 @@ let (intro_exists :
                                                                     preamble_sub.Pulse_Prover_Common.frame)
                                                                     (Pulse_Prover_Common.op_Star
                                                                     (Pulse_Prover_Common.op_Star
-                                                                    (Pulse_Checker_VPropEquiv.list_as_vprop
+                                                                    (Pulse_Typing_Combinators.list_as_vprop
                                                                     pst_sub1.Pulse_Prover_Common.remaining_ctxt)
                                                                     preamble_sub.Pulse_Prover_Common.frame)
                                                                     (Pulse_Prover_Common.op_Star
@@ -994,17 +994,17 @@ let (intro_exists :
                                                                     witness)])
                                                                     (Pulse_Prover_Common.op_Array_Access
                                                                     pst_sub1.Pulse_Prover_Common.ss
-                                                                    (Pulse_Checker_VPropEquiv.list_as_vprop
+                                                                    (Pulse_Typing_Combinators.list_as_vprop
                                                                     unsolved'))))
                                                                     (Pulse_Prover_Common.op_Star
                                                                     (Pulse_Prover_Common.op_Star
                                                                     (Pulse_Prover_Common.op_Star
-                                                                    (Pulse_Checker_VPropEquiv.list_as_vprop
+                                                                    (Pulse_Typing_Combinators.list_as_vprop
                                                                     pst_sub1.Pulse_Prover_Common.remaining_ctxt)
                                                                     preamble_sub.Pulse_Prover_Common.frame)
                                                                     (Pulse_Prover_Common.op_Array_Access
                                                                     pst_sub1.Pulse_Prover_Common.ss
-                                                                    (Pulse_Checker_VPropEquiv.list_as_vprop
+                                                                    (Pulse_Typing_Combinators.list_as_vprop
                                                                     unsolved')))
                                                                     (Pulse_Syntax_Naming.subst_term
                                                                     (Pulse_Prover_Common.op_Array_Access
@@ -1026,17 +1026,17 @@ let (intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (186))
+                                                                    (Prims.of_int (188))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (195))
+                                                                    (Prims.of_int (197))
                                                                     (Prims.of_int (16)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (301))
+                                                                    (Prims.of_int (303))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (310))
+                                                                    (Prims.of_int (312))
                                                                     (Prims.of_int (26)))))
                                                                     (Obj.magic
                                                                     (k_intro_exists
@@ -1051,12 +1051,12 @@ let (intro_exists :
                                                                     ()
                                                                     (Pulse_Prover_Common.op_Star
                                                                     (Pulse_Prover_Common.op_Star
-                                                                    (Pulse_Checker_VPropEquiv.list_as_vprop
+                                                                    (Pulse_Typing_Combinators.list_as_vprop
                                                                     pst_sub1.Pulse_Prover_Common.remaining_ctxt)
                                                                     preamble_sub.Pulse_Prover_Common.frame)
                                                                     (Pulse_Prover_Common.op_Array_Access
                                                                     pst_sub1.Pulse_Prover_Common.ss
-                                                                    (Pulse_Checker_VPropEquiv.list_as_vprop
+                                                                    (Pulse_Typing_Combinators.list_as_vprop
                                                                     unsolved')))
                                                                     ()))
                                                                     (fun
@@ -1087,7 +1087,7 @@ let (intro_exists :
                                                                     = [];
                                                                     Pulse_Prover_Common.k
                                                                     =
-                                                                    (Pulse_Prover_Common.k_elab_equiv
+                                                                    (Pulse_Checker_Common.k_elab_equiv
                                                                     preamble.Pulse_Prover_Common.g0
                                                                     pst_sub1.Pulse_Prover_Common.pg
                                                                     (Pulse_Prover_Common.op_Star
@@ -1098,24 +1098,24 @@ let (intro_exists :
                                                                     preamble.Pulse_Prover_Common.frame)
                                                                     (Pulse_Prover_Common.op_Star
                                                                     (Pulse_Prover_Common.op_Star
-                                                                    (Pulse_Checker_VPropEquiv.list_as_vprop
+                                                                    (Pulse_Typing_Combinators.list_as_vprop
                                                                     pst_sub1.Pulse_Prover_Common.remaining_ctxt)
                                                                     preamble.Pulse_Prover_Common.frame)
                                                                     (Pulse_Prover_Common.op_Array_Access
                                                                     pst_sub1.Pulse_Prover_Common.ss
                                                                     (Pulse_Prover_Common.op_Star
                                                                     pst.Pulse_Prover_Common.solved
-                                                                    (Pulse_Checker_VPropEquiv.list_as_vprop
+                                                                    (Pulse_Typing_Combinators.list_as_vprop
                                                                     pst.Pulse_Prover_Common.unsolved))))
                                                                     (Pulse_Prover_Common.op_Star
                                                                     (Pulse_Prover_Common.op_Star
-                                                                    (Pulse_Checker_VPropEquiv.list_as_vprop
+                                                                    (Pulse_Typing_Combinators.list_as_vprop
                                                                     pst_sub1.Pulse_Prover_Common.remaining_ctxt)
                                                                     preamble.Pulse_Prover_Common.frame)
                                                                     (Pulse_Prover_Common.op_Array_Access
                                                                     pst_sub1.Pulse_Prover_Common.ss
                                                                     preamble.Pulse_Prover_Common.goals))
-                                                                    (Pulse_Prover_Common.k_elab_trans
+                                                                    (Pulse_Checker_Common.k_elab_trans
                                                                     preamble.Pulse_Prover_Common.g0
                                                                     (Pulse_Prover_Common.__proj__Mkprover_state__item__pg
                                                                     preamble
@@ -1126,7 +1126,7 @@ let (intro_exists :
                                                                     preamble.Pulse_Prover_Common.frame)
                                                                     (Pulse_Prover_Common.op_Star
                                                                     (Pulse_Prover_Common.op_Star
-                                                                    (Pulse_Checker_VPropEquiv.list_as_vprop
+                                                                    (Pulse_Typing_Combinators.list_as_vprop
                                                                     (Pulse_Prover_Common.__proj__Mkprover_state__item__remaining_ctxt
                                                                     preamble
                                                                     pst))
@@ -1140,21 +1140,21 @@ let (intro_exists :
                                                                     pst)))
                                                                     (Pulse_Prover_Common.op_Star
                                                                     (Pulse_Prover_Common.op_Star
-                                                                    (Pulse_Checker_VPropEquiv.list_as_vprop
+                                                                    (Pulse_Typing_Combinators.list_as_vprop
                                                                     pst_sub1.Pulse_Prover_Common.remaining_ctxt)
                                                                     preamble.Pulse_Prover_Common.frame)
                                                                     (Pulse_Prover_Common.op_Array_Access
                                                                     pst_sub1.Pulse_Prover_Common.ss
                                                                     (Pulse_Prover_Common.op_Star
                                                                     pst.Pulse_Prover_Common.solved
-                                                                    (Pulse_Checker_VPropEquiv.list_as_vprop
+                                                                    (Pulse_Typing_Combinators.list_as_vprop
                                                                     pst.Pulse_Prover_Common.unsolved))))
                                                                     pst.Pulse_Prover_Common.k
-                                                                    (Pulse_Prover_Common.k_elab_equiv
+                                                                    (Pulse_Checker_Common.k_elab_equiv
                                                                     pst.Pulse_Prover_Common.pg
                                                                     pst_sub1.Pulse_Prover_Common.pg
                                                                     (Pulse_Prover_Common.op_Star
-                                                                    (Pulse_Checker_VPropEquiv.list_as_vprop
+                                                                    (Pulse_Typing_Combinators.list_as_vprop
                                                                     pst.Pulse_Prover_Common.remaining_ctxt)
                                                                     (Pulse_Prover_Common.op_Star
                                                                     preamble.Pulse_Prover_Common.frame
@@ -1163,7 +1163,7 @@ let (intro_exists :
                                                                     pst.Pulse_Prover_Common.solved)))
                                                                     (Pulse_Prover_Common.op_Star
                                                                     (Pulse_Prover_Common.op_Star
-                                                                    (Pulse_Checker_VPropEquiv.list_as_vprop
+                                                                    (Pulse_Typing_Combinators.list_as_vprop
                                                                     pst.Pulse_Prover_Common.remaining_ctxt)
                                                                     preamble.Pulse_Prover_Common.frame)
                                                                     (Pulse_Prover_Common.op_Array_Access
@@ -1171,28 +1171,28 @@ let (intro_exists :
                                                                     pst.Pulse_Prover_Common.solved))
                                                                     (Pulse_Prover_Common.op_Star
                                                                     (Pulse_Prover_Common.op_Star
-                                                                    (Pulse_Checker_VPropEquiv.list_as_vprop
+                                                                    (Pulse_Typing_Combinators.list_as_vprop
                                                                     pst_sub1.Pulse_Prover_Common.remaining_ctxt)
                                                                     preamble.Pulse_Prover_Common.frame)
                                                                     (Pulse_Prover_Common.op_Array_Access
                                                                     pst_sub1.Pulse_Prover_Common.ss
                                                                     (Pulse_Prover_Common.op_Star
                                                                     pst.Pulse_Prover_Common.solved
-                                                                    (Pulse_Checker_VPropEquiv.list_as_vprop
+                                                                    (Pulse_Typing_Combinators.list_as_vprop
                                                                     pst.Pulse_Prover_Common.unsolved))))
                                                                     (Pulse_Prover_Common.op_Star
                                                                     (Pulse_Prover_Common.op_Star
-                                                                    (Pulse_Checker_VPropEquiv.list_as_vprop
+                                                                    (Pulse_Typing_Combinators.list_as_vprop
                                                                     pst_sub1.Pulse_Prover_Common.remaining_ctxt)
                                                                     preamble.Pulse_Prover_Common.frame)
                                                                     (Pulse_Prover_Common.op_Array_Access
                                                                     pst_sub1.Pulse_Prover_Common.ss
                                                                     (Pulse_Prover_Common.op_Star
                                                                     pst.Pulse_Prover_Common.solved
-                                                                    (Pulse_Checker_VPropEquiv.list_as_vprop
+                                                                    (Pulse_Typing_Combinators.list_as_vprop
                                                                     pst.Pulse_Prover_Common.unsolved))))
                                                                     (coerce_eq
-                                                                    (Pulse_Prover_Common.k_elab_equiv
+                                                                    (Pulse_Checker_Common.k_elab_equiv
                                                                     preamble_sub.Pulse_Prover_Common.g0
                                                                     pst_sub1.Pulse_Prover_Common.pg
                                                                     (Pulse_Prover_Common.op_Star
@@ -1203,7 +1203,7 @@ let (intro_exists :
                                                                     preamble_sub.Pulse_Prover_Common.frame)
                                                                     (Pulse_Prover_Common.op_Star
                                                                     (Pulse_Prover_Common.op_Star
-                                                                    (Pulse_Checker_VPropEquiv.list_as_vprop
+                                                                    (Pulse_Typing_Combinators.list_as_vprop
                                                                     pst_sub1.Pulse_Prover_Common.remaining_ctxt)
                                                                     preamble.Pulse_Prover_Common.frame)
                                                                     (Pulse_Prover_Common.op_Array_Access
@@ -1213,20 +1213,20 @@ let (intro_exists :
                                                                     pst.Pulse_Prover_Common.solved
                                                                     (Pulse_Syntax_Base.tm_exists_sl
                                                                     u b body))
-                                                                    (Pulse_Checker_VPropEquiv.list_as_vprop
+                                                                    (Pulse_Typing_Combinators.list_as_vprop
                                                                     unsolved'))))
                                                                     (Pulse_Prover_Common.op_Star
                                                                     (Pulse_Prover_Common.op_Star
-                                                                    (Pulse_Checker_VPropEquiv.list_as_vprop
+                                                                    (Pulse_Typing_Combinators.list_as_vprop
                                                                     pst_sub1.Pulse_Prover_Common.remaining_ctxt)
                                                                     preamble.Pulse_Prover_Common.frame)
                                                                     (Pulse_Prover_Common.op_Array_Access
                                                                     pst_sub1.Pulse_Prover_Common.ss
                                                                     (Pulse_Prover_Common.op_Star
                                                                     pst.Pulse_Prover_Common.solved
-                                                                    (Pulse_Checker_VPropEquiv.list_as_vprop
+                                                                    (Pulse_Typing_Combinators.list_as_vprop
                                                                     pst.Pulse_Prover_Common.unsolved))))
-                                                                    (Pulse_Prover_Common.k_elab_trans
+                                                                    (Pulse_Checker_Common.k_elab_trans
                                                                     preamble_sub.Pulse_Prover_Common.g0
                                                                     pst_sub1.Pulse_Prover_Common.pg
                                                                     pst_sub1.Pulse_Prover_Common.pg
@@ -1236,12 +1236,12 @@ let (intro_exists :
                                                                     (Pulse_Prover_Common.op_Star
                                                                     (Pulse_Prover_Common.op_Star
                                                                     (Pulse_Prover_Common.op_Star
-                                                                    (Pulse_Checker_VPropEquiv.list_as_vprop
+                                                                    (Pulse_Typing_Combinators.list_as_vprop
                                                                     pst_sub1.Pulse_Prover_Common.remaining_ctxt)
                                                                     preamble_sub.Pulse_Prover_Common.frame)
                                                                     (Pulse_Prover_Common.op_Array_Access
                                                                     pst_sub1.Pulse_Prover_Common.ss
-                                                                    (Pulse_Checker_VPropEquiv.list_as_vprop
+                                                                    (Pulse_Typing_Combinators.list_as_vprop
                                                                     unsolved')))
                                                                     (Pulse_Syntax_Naming.subst_term
                                                                     (Pulse_Prover_Common.op_Array_Access
@@ -1253,7 +1253,7 @@ let (intro_exists :
                                                                     witness)]))
                                                                     (Pulse_Prover_Common.op_Star
                                                                     (Pulse_Prover_Common.op_Star
-                                                                    (Pulse_Checker_VPropEquiv.list_as_vprop
+                                                                    (Pulse_Typing_Combinators.list_as_vprop
                                                                     pst_sub1.Pulse_Prover_Common.remaining_ctxt)
                                                                     preamble.Pulse_Prover_Common.frame)
                                                                     (Pulse_Prover_Common.op_Array_Access
@@ -1263,22 +1263,22 @@ let (intro_exists :
                                                                     pst.Pulse_Prover_Common.solved
                                                                     (Pulse_Syntax_Base.tm_exists_sl
                                                                     u b body))
-                                                                    (Pulse_Checker_VPropEquiv.list_as_vprop
+                                                                    (Pulse_Typing_Combinators.list_as_vprop
                                                                     unsolved'))))
                                                                     k_sub5
                                                                     (coerce_eq
-                                                                    (Pulse_Prover_Common.k_elab_equiv
+                                                                    (Pulse_Checker_Common.k_elab_equiv
                                                                     pst_sub1.Pulse_Prover_Common.pg
                                                                     pst_sub1.Pulse_Prover_Common.pg
                                                                     (Pulse_Prover_Common.op_Star
                                                                     (Pulse_Prover_Common.op_Star
                                                                     (Pulse_Prover_Common.op_Star
-                                                                    (Pulse_Checker_VPropEquiv.list_as_vprop
+                                                                    (Pulse_Typing_Combinators.list_as_vprop
                                                                     pst_sub1.Pulse_Prover_Common.remaining_ctxt)
                                                                     preamble_sub.Pulse_Prover_Common.frame)
                                                                     (Pulse_Prover_Common.op_Array_Access
                                                                     pst_sub1.Pulse_Prover_Common.ss
-                                                                    (Pulse_Checker_VPropEquiv.list_as_vprop
+                                                                    (Pulse_Typing_Combinators.list_as_vprop
                                                                     unsolved')))
                                                                     (Pulse_Syntax_Naming.subst_term
                                                                     (Pulse_Prover_Common.op_Array_Access
@@ -1291,12 +1291,12 @@ let (intro_exists :
                                                                     (Pulse_Prover_Common.op_Star
                                                                     (Pulse_Prover_Common.op_Star
                                                                     (Pulse_Prover_Common.op_Star
-                                                                    (Pulse_Checker_VPropEquiv.list_as_vprop
+                                                                    (Pulse_Typing_Combinators.list_as_vprop
                                                                     pst_sub1.Pulse_Prover_Common.remaining_ctxt)
                                                                     preamble_sub.Pulse_Prover_Common.frame)
                                                                     (Pulse_Prover_Common.op_Array_Access
                                                                     pst_sub1.Pulse_Prover_Common.ss
-                                                                    (Pulse_Checker_VPropEquiv.list_as_vprop
+                                                                    (Pulse_Typing_Combinators.list_as_vprop
                                                                     unsolved')))
                                                                     (Pulse_Syntax_Naming.subst_term
                                                                     (Pulse_Prover_Common.op_Array_Access
@@ -1309,7 +1309,7 @@ let (intro_exists :
                                                                     (Pulse_Prover_Common.op_Star
                                                                     (Pulse_Prover_Common.op_Star
                                                                     (Pulse_Prover_Common.op_Star
-                                                                    (Pulse_Checker_VPropEquiv.list_as_vprop
+                                                                    (Pulse_Typing_Combinators.list_as_vprop
                                                                     pst_sub1.Pulse_Prover_Common.remaining_ctxt)
                                                                     (Pulse_Prover_Common.op_Star
                                                                     preamble.Pulse_Prover_Common.frame
@@ -1318,7 +1318,7 @@ let (intro_exists :
                                                                     pst.Pulse_Prover_Common.solved)))
                                                                     (Pulse_Prover_Common.op_Array_Access
                                                                     pst_sub1.Pulse_Prover_Common.ss
-                                                                    (Pulse_Checker_VPropEquiv.list_as_vprop
+                                                                    (Pulse_Typing_Combinators.list_as_vprop
                                                                     unsolved')))
                                                                     (Pulse_Prover_Common.op_Array_Access
                                                                     pst_sub1.Pulse_Prover_Common.ss
@@ -1326,7 +1326,7 @@ let (intro_exists :
                                                                     u b body)))
                                                                     (Pulse_Prover_Common.op_Star
                                                                     (Pulse_Prover_Common.op_Star
-                                                                    (Pulse_Checker_VPropEquiv.list_as_vprop
+                                                                    (Pulse_Typing_Combinators.list_as_vprop
                                                                     pst_sub1.Pulse_Prover_Common.remaining_ctxt)
                                                                     preamble.Pulse_Prover_Common.frame)
                                                                     (Pulse_Prover_Common.op_Star
@@ -1340,7 +1340,7 @@ let (intro_exists :
                                                                     u b body)))
                                                                     (Pulse_Prover_Common.op_Array_Access
                                                                     pst_sub1.Pulse_Prover_Common.ss
-                                                                    (Pulse_Checker_VPropEquiv.list_as_vprop
+                                                                    (Pulse_Typing_Combinators.list_as_vprop
                                                                     unsolved'))))
                                                                     (coerce_eq
                                                                     k_intro_exists1
