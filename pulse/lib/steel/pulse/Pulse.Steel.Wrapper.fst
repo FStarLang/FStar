@@ -242,6 +242,8 @@ let op_Array_Assignment
   (v: t)
   (#s: Ghost.erased (Seq.seq t) {US.v i < Seq.length s}) = admit()
 
+let op_Array_Index = admit ()
+
 let free_array
       (#elt: Type)
       (a: A.array elt) = admit()
