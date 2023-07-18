@@ -36,36 +36,12 @@ val check_vprop_equiv
   (vp1_typing:tot_typing g vp1 tm_vprop)
   : T.Tac (vprop_equiv g vp1 vp2)
 
-
-let frame_for_req_in_ctxt (g:env) (ctxt:term) (req:term)
-   = (frame:term &
-      tot_typing g frame tm_vprop &
-      vprop_equiv g (tm_star req frame) ctxt)
-
-let frame_of #g #ctxt #req (f:frame_for_req_in_ctxt g ctxt req) =
-  let (| frame, _, _ |) = f in frame
-
-
 val check_frameable (#g:env)
                     (#ctxt:term)
                     (ctxt_typing: tot_typing g ctxt tm_vprop)
                     (req:term)
    : T.Tac (either (frame_for_req_in_ctxt g ctxt req)
                    framing_failure)
-
-val apply_frame (#g:env)
-                (#t:st_term)
-                (#ctxt:term)
-                (ctxt_typing: tot_typing g ctxt tm_vprop)
-                (#c:comp { stateful_comp c })
-                (t_typing: st_typing g t c)
-                (frame_t:frame_for_req_in_ctxt g ctxt (comp_pre c))
-  : Tot (c':comp_st { comp_pre c' == ctxt /\
-                      comp_res c' == comp_res c /\
-                      comp_u c' == comp_u c /\
-                      comp_post c' == tm_star (comp_post c) (frame_of frame_t) } &
-         st_typing g t c')
-
 
 (* this just composes check_frameable and apply_frame *)
 val try_frame_pre (#g:env)

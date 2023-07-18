@@ -7,6 +7,8 @@ module RU = Pulse.RuntimeUtils
 module FV = Pulse.Typing.FV
 module P = Pulse.Syntax.Printer
 
+open Pulse.Typing.Combinators
+
 let format_failed_goal (g:env) (ctxt:list term) (goal:list term) =
   let terms_to_strings (ts:list term)= T.map Pulse.Syntax.Printer.term_to_string ts in
   let numbered_list ss = 
@@ -79,87 +81,6 @@ let post_hint_from_comp_typing #g #c ct =
 //     | Inl ok -> ok
 //     | Inr fail -> T.raise (Framing_failure fail)
 
-let rec vprop_equiv_typing (#g:_) (#t0 #t1:term) (v:vprop_equiv g t0 t1)
-  : GTot ((tot_typing g t0 tm_vprop -> tot_typing g t1 tm_vprop) &
-          (tot_typing g t1 tm_vprop -> tot_typing g t0 tm_vprop))
-        (decreases v)
-  = match v with
-    | VE_Refl _ _ -> (fun x -> x), (fun x -> x)
-
-    | VE_Sym _ _ _ v' -> 
-      let f, g = vprop_equiv_typing v' in
-      g, f
-
-    | VE_Trans g t0 t2 t1 v02 v21 ->
-      let f02, f20 = vprop_equiv_typing v02 in
-      let f21, f12 = vprop_equiv_typing v21 in
-      (fun x -> f21 (f02 x)), 
-      (fun x -> f20 (f12 x))
-
-    | VE_Ctxt g s0 s1 s0' s1' v0 v1 ->
-      let f0, f0' = vprop_equiv_typing v0 in
-      let f1, f1' = vprop_equiv_typing v1 in      
-      let ff (x:tot_typing g (tm_star s0 s1) tm_vprop)
-        : tot_typing g (tm_star s0' s1') tm_vprop
-        = let s0_typing = star_typing_inversion_l x in
-          let s1_typing = star_typing_inversion_r x in
-          let s0'_typing, s1'_typing = f0 s0_typing, f1 s1_typing in
-          star_typing s0'_typing s1'_typing
-      in
-      let gg (x:tot_typing g (tm_star s0' s1') tm_vprop)
-        : tot_typing g (tm_star s0 s1) tm_vprop
-        = let s0'_typing = star_typing_inversion_l x in
-          let s1'_typing = star_typing_inversion_r x in
-          star_typing (f0' s0'_typing) (f1' s1'_typing)        
-      in
-      ff, gg
-
-    | VE_Unit g t ->
-      let fwd (x:tot_typing g (tm_star tm_emp t) tm_vprop)
-        : tot_typing g t tm_vprop
-        = let r = star_typing_inversion_r x in
-          r
-      in
-      let bk (x:tot_typing g t tm_vprop)
-        : tot_typing g (tm_star tm_emp t) tm_vprop
-        = star_typing emp_typing x
-      in
-      fwd, bk
-
-    | VE_Comm g t0 t1 ->
-      let f t0 t1 (x:tot_typing g (tm_star t0 t1) tm_vprop)
-        : tot_typing g (tm_star t1 t0) tm_vprop
-        = let tt0 = star_typing_inversion_l x in
-          let tt1 = star_typing_inversion_r x in
-          star_typing tt1 tt0
-      in
-      f t0 t1, f t1 t0
-
-    | VE_Assoc g t0 t1 t2 ->
-      let fwd (x:tot_typing g (tm_star t0 (tm_star t1 t2)) tm_vprop)
-        : tot_typing g (tm_star (tm_star t0 t1) t2) tm_vprop
-        = let tt0 = star_typing_inversion_l x in
-          let tt12 = star_typing_inversion_r x in
-          let tt1 = star_typing_inversion_l tt12 in
-          let tt2 = star_typing_inversion_r tt12 in
-          star_typing (star_typing tt0 tt1) tt2
-      in
-      let bk (x : tot_typing g (tm_star (tm_star t0 t1) t2) tm_vprop)
-        : tot_typing g (tm_star t0 (tm_star t1 t2)) tm_vprop
-        = let tt01 = star_typing_inversion_l x in
-          let tt2 = star_typing_inversion_r x in
-          let tt0 = star_typing_inversion_l tt01 in
-          let tt1 = star_typing_inversion_r tt01 in
-          star_typing tt0 (star_typing tt1 tt2)
-      in
-      fwd, bk
-   
-    | VE_Ext g t0 t1 token ->
-      let d1, d2 = vprop_eq_typing_inversion g t0 t1 token in
-      (fun _ -> d2),
-      (fun _ -> d1)
-
-
 let k_elab_unit (g:env) (ctxt:term)
   : continuation_elaborator g ctxt g ctxt
   = fun p r -> r
@@ -212,11 +133,6 @@ let simplify_lemma (c:comp_st) (c':comp_st) (post_hint:option post_hint_t)
              comp_pre (comp_st_with_post c' (comp_post c)) == comp_pre c')
   = () 
 
-let frame_for_req_in_ctxt (g:env) (ctxt:term) (req:term)
-   = (frame:term &
-      tot_typing g frame tm_vprop &
-      vprop_equiv g (tm_star req frame) ctxt)
-
 let vprop_equiv_typing_bk (#g:env) (#ctxt:_) (ctxt_typing:tot_typing g ctxt tm_vprop)
                            (#p:_) (d:vprop_equiv g p ctxt)
   : tot_typing g p tm_vprop 
@@ -241,7 +157,7 @@ let k_elab_equiv_continutation (#g1:env) (#g2:env { g2 `env_extends` g1 }) (#ctx
     let (| _, pre_typing, _, _ |) =
       Metatheory.(st_comp_typing_inversion (comp_typing_inversion (st_typing_correctness st_d))) in
     let (| c', st_d' |) =
-      Pulse.Checker.Framing.apply_frame (vprop_equiv_typing_bk pre_typing d) st_d framing_token in
+      apply_frame (vprop_equiv_typing_bk pre_typing d) st_d framing_token in
     assert (comp_post c' == tm_star (comp_post c) tm_emp);
     let st_d' = simplify_post st_d' (comp_post c) in
     k post_hint (| st, _, st_d' |)
@@ -270,7 +186,7 @@ let k_elab_equiv_prefix
   else let (| _, pre_typing, _, _ |) =
          Metatheory.(st_comp_typing_inversion (comp_typing_inversion (st_typing_correctness st_d))) in
        let (| c', st_d' |) =
-         Pulse.Checker.Framing.apply_frame
+         apply_frame
            (vprop_equiv_typing_fwd pre_typing d)
            st_d
            framing_token in
@@ -315,7 +231,7 @@ let continuation_elaborator_with_bind (#g:env) (ctxt:term)
     (| ctxt, ctxt_typing, VE_Comm g pre1 ctxt  |)
   in
   let (| c1, e1_typing |) =
-    Pulse.Checker.Framing.apply_frame ctxt_pre1_typing e1_typing framing_token in
+    apply_frame ctxt_pre1_typing e1_typing framing_token in
   let (| u_of_1, pre_typing, _, _ |) =
     Metatheory.(st_comp_typing_inversion (comp_typing_inversion (st_typing_correctness e1_typing))) in
   let b = res1 in

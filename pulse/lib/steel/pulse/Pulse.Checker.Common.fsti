@@ -21,11 +21,7 @@ val intro_post_hint (g:env) (ret_ty:option term) (post:term)
 val post_hint_from_comp_typing (#g:env) (#c:comp_st) (ct:Metatheory.comp_typing_u g c)
   : post_hint_for_env g
 
-exception Framing_failure of Pulse.Checker.Framing.framing_failure
-
-val vprop_equiv_typing (#g:_) (#t0 #t1:term) (v:vprop_equiv g t0 t1)
-  : GTot ((tot_typing g t0 tm_vprop -> tot_typing g t1 tm_vprop) &
-          (tot_typing g t1 tm_vprop -> tot_typing g t0 tm_vprop))
+// exception Framing_failure of Pulse.Checker.Framing.framing_failure
 
 let rec vprop_as_list (vp:term)
   : list term

@@ -1,17 +1,12 @@
 module Pulse.Checker.VPropEquiv
-open Pulse.Syntax
-open Pulse.Typing
+
 open FStar.List.Tot
 
-val vprop_equiv_typing (#g:_) (#t0 #t1:term) (v:vprop_equiv g t0 t1)
-  : GTot ((tot_typing g t0 tm_vprop -> tot_typing g t1 tm_vprop) &
-          (tot_typing g t1 tm_vprop -> tot_typing g t0 tm_vprop))
+open Pulse.Syntax
+open Pulse.Typing
+open Pulse.Typing.Combinators
 
-val vprop_as_list (vp:term)
-  : list term
-
-val list_as_vprop (vps:list term)
-  : term
+open Pulse.Checker.Common
 
 let canon_vprop (vp:term)
   : term

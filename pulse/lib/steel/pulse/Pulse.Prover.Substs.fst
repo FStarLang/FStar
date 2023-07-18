@@ -263,7 +263,7 @@ let rec ss_to_nt_substs (g:env) (uvs:env) (ss:ss_t)
            Some nts
     else None
 
-let well_typed_nt_substs_prefix (g:env) (uvs:env) (nts:nt_substs)
+let rec well_typed_nt_substs_prefix (g:env) (uvs:env) (nts:nt_substs)
   (uvs1:env)
   : Pure nt_substs
          (requires well_typed_nt_substs g uvs nts /\ env_extends uvs uvs1)

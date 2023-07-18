@@ -378,38 +378,6 @@ let check_frameable (#g:env)
                    framing_failure)
    = split_vprop g ctxt ctxt_typing req
 
-let apply_frame (#g:env)
-                (#t:st_term)
-                (#ctxt:term)
-                (ctxt_typing: tot_typing g ctxt tm_vprop)
-                (#c:comp { stateful_comp c })
-                (t_typing: st_typing g t c)
-                (frame_t:frame_for_req_in_ctxt g ctxt (comp_pre c))
-  : Tot (c':comp_st { comp_pre c' == ctxt /\
-                      comp_res c' == comp_res c /\
-                      comp_u c' == comp_u c /\
-                      comp_post c' == tm_star (comp_post c) (frame_of frame_t) } &
-           st_typing g t c')
-  = let s = st_comp_of_comp c in
-    let (| frame, frame_typing, ve |) = frame_t in
-    let t_typing
-      : st_typing g t (add_frame c frame)
-      = T_Frame g t c frame frame_typing t_typing in
-    let c' = add_frame c frame in
-    let c'_typing = Metatheory.st_typing_correctness t_typing in
-    let s' = st_comp_of_comp c' in
-    let ve: vprop_equiv g s'.pre ctxt = ve in
-    let s'' = { s' with pre = ctxt } in
-    let c'' = c' `with_st_comp` s'' in
-    assert (comp_post c' == comp_post c'');
-    let ve: vprop_equiv g (comp_pre c') (comp_pre c'') = ve in    
-    let st_typing = Metatheory.comp_typing_inversion c'_typing in
-    let (| res_typing, pre_typing, x, post_typing |) = Metatheory.st_comp_typing_inversion st_typing in
-    let st_equiv = ST_VPropEquiv g c' c'' x pre_typing res_typing post_typing ve (VE_Refl _ _) in
-    let t_typing = T_Equiv _ _ _ _ t_typing st_equiv in
-    (| c'', t_typing |)
-
-
 let try_frame_pre (#g:env)
                   (#t:st_term)
                   (#pre:term)
