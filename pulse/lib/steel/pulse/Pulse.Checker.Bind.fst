@@ -154,6 +154,8 @@ let check_bind
   let (| y, ty_y, ctxt'', g2, k2 |) =
     check g1 ctxt' (magic ()) post_hint e2 in
 
+  // TODO: CHECK THAT ty_y is well-typed in g AND ctxt'' is well-typed in g, y:ty_y
+
   let d : st_typing_in_ctxt g2 ctxt'' post_hint = magic () in
   let d : st_typing_in_ctxt g1 ctxt' post_hint = k2 post_hint d in
   let (| t, c, d |) : st_typing_in_ctxt g ctxt post_hint = k1 post_hint d in
@@ -161,29 +163,25 @@ let check_bind
   let x = fresh g in
   assume (stateful_comp c);
 
-  if x `Set.mem` freevars (comp_post c)
-  then fail g None (Printf.sprintf "Unexpected bound variable %d in postcondition %s" x (P.term_to_string (comp_post c)))
-  else
-    let _ = bind_res_and_post_typing g (st_comp_of_comp c) x post_hint  in
-    let g' = push_binding g x ppname_default (comp_res c) in
-    let ctxt' = open_term_nv (comp_post c) (ppname_default, x) in
-    let k
-      : continuation_elaborator
-          g (tm_emp * comp_pre c)
-          g' (ctxt' * tm_emp) =
-      continuation_elaborator_with_bind tm_emp d (magic ()) x in
-    let k
-      : continuation_elaborator g (comp_pre c) g' ctxt' =
-      k_elab_equiv k (magic ()) (magic ()) in
+  let g' = push_binding g x ppname_default (comp_res c) in
+  let ctxt' = open_term_nv (comp_post c) (ppname_default, x) in
+  let k
+    : continuation_elaborator
+        g (tm_emp * comp_pre c)
+        g' (ctxt' * tm_emp) =
+    continuation_elaborator_with_bind tm_emp d (magic ()) x in
+  let k
+    : continuation_elaborator g (comp_pre c) g' ctxt' =
+    k_elab_equiv k (magic ()) (magic ()) in
 
-    let _ : squash (checker_res_matches_post_hint g post_hint x (comp_res c) ctxt') =
-      match post_hint with
-      | None -> ()
-      | Some post_hint -> () in
+  let _ : squash (checker_res_matches_post_hint g post_hint x (comp_res c) ctxt') =
+    match post_hint with
+    | None -> ()
+    | Some post_hint -> () in
 
-    assert (g' `env_extends` g);
+  assert (g' `env_extends` g);
 
-    (| x, comp_res c, ctxt', g', k |) 
+  (| x, comp_res c, ctxt', g', k |) 
 
 //   if not frame_pre
 //   then T.fail "check_bindv2: frame_pre is not set, bailing";
