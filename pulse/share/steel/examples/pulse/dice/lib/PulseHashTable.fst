@@ -23,32 +23,124 @@ let models (s:pht_sig) (pht:pht s) (ht:ht s) : vprop
 = A.pts_to ht.contents full_perm pht.repr `star`
   pure (pht.sz == ht.sz)
 
+let coerce_nat (n:int{n>=0}) : nat = n
+let coerce_us (n:nat) : US.t = assume (US.fits n); US.uint_to_t n
+let refine_repr (s:pht_sig) (sz:pos) (i:US.t) (repr:Seq.lseq (cell s.keyt s.valt) sz) 
+  : s:(Seq.lseq (cell s.keyt s.valt) sz){US.v i < sz} = admit()
+  // : stt (s:(Seq.lseq (cell s.keyt s.valt) sz){US.v i < sz})
+  //       (requires pure (US.v i < sz))
+  //       (ensures fun _ -> emp)
+  // = fun _ -> repr
+
+(* 
+  See FIXME comments for current debugging status
+*)
+[@@expect_failure]
 ```pulse
 fn insert (#s:pht_sig) (#pht:(p:pht s{not_full p.repr})) 
-          (table:ht s) (k:s.keyt) (v:s.valt)
-  requires models s pht table
-  ensures  models s (PHT.insert pht k v) table
+          (ht:ht s) (k:s.keyt) (v:s.valt)
+  requires models s pht ht
+  ensures  models s (PHT.insert pht k v) ht
 {
-  admit()
+  let sz = ht.sz;
+  let a = ht.contents;
+  let cidx = canonical_index k sz;
+  let mut off = coerce_nat 0;
+  while (let voff = !off; (voff < sz)) (* ignore the case voff=sz? *)
+  invariant b. exists (voff:nat). (
+    R.pts_to off full_perm voff **
+    pure (
+      voff >= 0 /\ voff <= sz /\
+      // walk pht.repr cidx k off == lookup_repr pht.repr k /\
+      // strong_all_used_not_by #s #sz pht.repr cidx voff k /\
+      b == (voff < sz)
+    )
+  )
+  {
+    let voff = !off;
+    let idx = coerce_us ((cidx+voff)%sz);
+    assume_ (pure (US.v idx < pht.sz)); // FIXME: can prove based on modulo calc above
+    let c = op_Array_Index ht.contents idx #full_perm #(refine_repr s pht.sz idx pht.repr); // FIXME: currently breaks because the repr
+                                                                                            // param to op_Array_Index is ill-typed
+    match c {
+      Used k' v' -> { if (k' = k) {
+        op_Array_Assignment ht.contents idx (cell k v);
+        return ()
+      }}
+      Clean -> {
+        op_Array_Assignment ht.contents idx (cell k v);
+        return ()
+      }
+      Zombie -> {
+        let o = lookup ht k;
+        match o {
+          Some p -> {
+            op_Array_Assignment ht.contents (snd p) Zombie;
+            op_Array_Assignment ht.contents idx (cell k v);
+          }
+          None -> { op_Array_Assignment ht.contents idx (cell k v); }
+        };
+        return ()
+      }
+    };
+    off := voff + 1;
+    ()
+  }
 }
 ```
 
+(* 
+  Basic implementation of delete expected to fail, working out the kinks 
+  should follow easily after I get insert working
+*)
+[@@expect_failure]
 ```pulse
-fn delete (#s:pht_sig) (#pht:(p:pht s{not_full p.repr})) 
-          (table:ht s) (k:s.keyt)
-  requires models s pht table
-  ensures  models s (PHT.delete pht k) table
+fn delete (#s:pht_sig) (#pht:pht s) 
+          (ht:ht s) (k:s.keyt)
+  requires models s pht ht
+  ensures  models s (PHT.delete pht k) ht
 {
-  admit()
+  let sz = ht.sz;
+  let a = ht.contents;
+  let cidx = canonical_index k sz;
+  let mut off = 0;
+  while (let voff = !off; (voff <= sz)) (* include the case voff=sz *)
+  invariant b. exists (voff:nat). (
+    R.pts_to off full_perm voff **
+    pure (
+      voff >= 0 /\ voff <= sz /\
+      // walk pht.repr cidx k off == lookup_repr pht.repr k /\
+      // strong_all_used_not_by #s #sz pht.repr cidx voff k /\
+      b == (voff <= sz)
+    )
+  )
+  {
+    let voff = !off;
+    if (voff = sz) {
+    return () (* element is not in the table *)
+    } else {
+    let idx = (cidx+voff)%sz;
+    let c = A.index ht.contents idx;
+    match c {
+      Used k' v' -> { if (k' = k) {
+        op_Array_Assignment ht.contents idx Zombie;
+        return ()
+      }}
+      Clean -> { return () (* element is not in the table *) }
+      Zombie -> { noop() }
+    };
+    off := voff - 1;
+    ()
+  }}
 }
 ```
 
 ```pulse
 fn lookup (#s:pht_sig) (#pht:(p:pht s{not_full p.repr})) 
-          (table:ht s) (k:s.keyt)
-  requires models s pht table
-  returns  o:option s.valt
-  ensures  models s pht table
+          (ht:ht s) (k:s.keyt)
+  requires models s pht ht
+  returns  o:(o:option s.valt{o == PHT.lookup pht k})
+  ensures  models s pht ht
 {
   admit()
 }

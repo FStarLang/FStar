@@ -105,6 +105,7 @@ type pht_models (s : pht_sig) (sz : pos)
   repr_submap_spec s sz spec repr /\
   unique_keys s sz spec repr
 
+(* This is the main hash table type *)
 noeq
 type pht (s : pht_sig) = {
   sz : pos;
