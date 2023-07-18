@@ -5,6 +5,7 @@ module RT = FStar.Reflection.Typing
 
 open Pulse.Syntax
 open Pulse.Typing
+open Pulse.Typing.Combinators
 open Pulse.Checker.Pure
 open Pulse.Checker.Common
 
@@ -34,12 +35,9 @@ let check_effect_annotation g r (c_annot c_computed:comp) =
 let check_abs
   (g:env)
   (t:st_term{Tm_Abs? t.term})
-  (pre:term)
-  (pre_typing:tot_typing g pre tm_vprop)
-  (post_hint:post_hint_opt g)
   (check:check_t)
-  : T.Tac (checker_result_t g pre post_hint) =
-  if Some? post_hint then fail g None "Unexpected post-condition annotation from context for an abstraction" else 
+  : T.Tac (t:st_term & c:comp & st_typing g t c)=
+
   let range = t.range in
   match t.term with  
   | Tm_Abs { b = {binder_ty=t;binder_ppname=ppname}; q=qual; ascription=c; body } -> //pre=pre_hint; body; ret_ty; post=post_hint_body } ->
@@ -68,9 +66,9 @@ let check_abs
     in
     let (| pre_opened, pre_typing |) = check_vprop g' pre_opened in
     let pre = close_term pre_opened x in
-    let post =
+    let post : post_hint_opt g' =
       match post_hint_body with
-      | None -> None
+      | None -> fail g (Some body.range) "Tm_Abs without a post hint, bailing"
       | Some post ->
         let post_hint_typing
           : post_hint_t
@@ -79,15 +77,23 @@ let check_abs
         Some post_hint_typing
     in
 
+  let (| y, ty_y, ctxt', g1, k |)  =
+    check g' pre_opened pre_typing post (open_st_term_nv body px)  in
 
-    admit ()
+ 
+  let (| u_ty_y, d_ty_y |) = check_universe g1 ty_y in
+  let d : st_typing_in_ctxt g1 ctxt' post =
+    return_in_ctxt g1 y u_ty_y ty_y ctxt' d_ty_y post in
 
-    // let (| body', c_body, body_typing |) = check g' (open_st_term_nv body px) pre_opened pre_typing post frame_pre in
-    // check_effect_annotation g' body'.range c c_body;
-    // FV.st_typing_freevars body_typing;
-    // let body_closed = close_st_term body' x in
-    // assume (open_st_term body_closed x == body');
-    // let b = {binder_ty=t;binder_ppname=ppname} in
-    // let tt = T_Abs g x qual b u body_closed c_body t_typing body_typing in
-    // let tres = tm_arrow {binder_ty=t;binder_ppname=ppname} qual (close_comp c_body x) in
-    // (| _, C_Tot tres, tt |)
+  let (| body, c_body, body_typing |) : st_typing_in_ctxt g' pre_opened post = k post d in
+
+  check_effect_annotation g' body.range c c_body;
+
+
+  FV.st_typing_freevars body_typing;
+  let body_closed = close_st_term body x in
+  assume (open_st_term body_closed x == body);
+  let b = {binder_ty=t;binder_ppname=ppname} in
+  let tt = T_Abs g x qual b u body_closed c_body t_typing body_typing in
+  let tres = tm_arrow {binder_ty=t;binder_ppname=ppname} qual (close_comp c_body x) in
+  (| _, C_Tot tres, tt |)
