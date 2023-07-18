@@ -114,4 +114,5 @@ let is_irrelevant (g:goal) : bool =
 let subtyping_token (g:env) (t0 t1:typ) = unit
 let equiv_token (g:env) (t0 t1:typ) = unit
 let typing_token (g:env) (e:term) (c:tot_or_ghost & typ) = unit
+let match_complete_token (g:env) (sc:term) (t:typ) (pats:list pattern) = unit
 let issues = list FStar.Issue.issue

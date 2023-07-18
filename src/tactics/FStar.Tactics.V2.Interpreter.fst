@@ -631,6 +631,13 @@ let () =
         refl_check_prop_validity RE.e_env RE.e_term (e_tuple2 (e_option e_unit) (e_list e_issue))
         refl_check_prop_validity NRE.e_env NRE.e_term NBET.(e_tuple2 (NBET.e_option NBET.e_unit) (e_list e_issue));
 
+      mk_tac_step_4 0 "check_match_complete"
+        refl_check_match_complete RE.e_env RE.e_term RE.e_term (e_list RE.e_pattern)
+                (e_option (e_tuple2 (e_list RE.e_pattern) (e_list (e_list RE.e_binding))))
+        refl_check_match_complete NRE.e_env NRE.e_term NRE.e_term (NBET.e_list NRE.e_pattern)
+                (NBET.e_option (NBET.e_tuple2 (NBET.e_list NRE.e_pattern) (NBET.e_list (NBET.e_list NRE.e_binding))))
+        ;
+
       mk_tac_step_2 0 "instantiate_implicits"
         refl_instantiate_implicits RE.e_env RE.e_term (e_tuple2 (e_option (e_tuple2 RE.e_term RE.e_term)) (e_list e_issue))
         refl_instantiate_implicits NRE.e_env NRE.e_term NBET.(e_tuple2 (e_option (NBET.e_tuple2 NRE.e_term NRE.e_term)) (e_list e_issue));

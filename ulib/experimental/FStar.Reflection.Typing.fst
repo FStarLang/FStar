@@ -84,6 +84,9 @@ let rename_spec (t:term) (x y:var) = admit ()
 let bv_index_of_make_bv (n:nat) = ()
 let namedv_uniq_of_make_namedv (n:nat) = ()
 
+let bindings_ok_for_pat bnds pat = magic ()
+let bindings_ok_pat_constant c = admit ()
+
 let subtyping_token_renaming (g:env)
                              (bs0:bindings)
                              (bs1:bindings)
@@ -925,3 +928,5 @@ and open_with_gt_ln_pats (l:list (pattern & bool)) (i:nat) (t:term) (j:nat)
     open_with_gt_ln_pat (fst hd) i t j;
     let k = binder_offset_pattern (fst hd) in
     open_with_gt_ln_pats tl (i + k) t (j + k)
+
+let if_complete_match (g:env) (t:term) = magic()
