@@ -146,13 +146,16 @@ let check_bind
   (check:check_t)
   : T.Tac (checker_result_t g ctxt post_hint) =
 
+  debug_prover g (fun _ ->
+    Printf.sprintf "checking bind:\n%s\n" (P.st_term_to_string t));
+ 
   if None? post_hint
-  then fail g (Some t.range) "check_bind: post_hint is None, bailing";
+  then fail g (Some t.range) "check_bind: post_hint is None, bailing (t:\n%s\n)";
 
   let Tm_Bind { binder; head=e1; body=e2} = t.term in
 
   let (| x, ty, ctxt', g1, k1 |) =
-    check g ctxt ctxt_typing None t in
+    check g ctxt ctxt_typing None e1 in
   
   let (| y, ty_y, ctxt'', g2, k2 |) =
     check g1 ctxt' (magic ()) post_hint e2 in
