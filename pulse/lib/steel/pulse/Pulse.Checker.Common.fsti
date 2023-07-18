@@ -32,24 +32,96 @@ val try_frame_pre (#g:env)
   : T.Tac (c':comp_st { comp_pre c' == pre } &
            st_typing g t c')
 
-type checker_result_t (g:env) (ctxt:term) (post_hint:option post_hint_t) (frame_pre:bool) =
-    t:st_term &
-    c:comp{(stateful_comp c /\ frame_pre) ==> (comp_pre c == ctxt /\ comp_post_matches_hint c post_hint) } &
-    st_typing g t c
+val vprop_equiv_typing (#g:_) (#t0 #t1:term) (v:vprop_equiv g t0 t1)
+  : GTot ((tot_typing g t0 tm_vprop -> tot_typing g t1 tm_vprop) &
+          (tot_typing g t1 tm_vprop -> tot_typing g t0 tm_vprop))
+
+let rec vprop_as_list (vp:term)
+  : list term
+  = match vp.t with
+    | Tm_Emp -> []
+    | Tm_Star vp0 vp1 -> vprop_as_list vp0 @ vprop_as_list vp1
+    | _ -> [vp]
+
+let rec list_as_vprop (vps:list term)
+  : term
+  = match vps with
+    | [] -> tm_emp
+    | hd::tl -> tm_star hd (list_as_vprop tl)
+
+type st_typing_in_ctxt (g:env) (ctxt:vprop) (post_hint:post_hint_opt g) =
+  t:st_term &
+  c:comp { stateful_comp c ==> (comp_pre c == ctxt /\ comp_post_matches_hint c post_hint) } &
+  st_typing g t c
+
+type continuation_elaborator
+  (g:env)                         (ctxt:vprop)
+  (g':env { g' `env_extends` g }) (ctxt':vprop) =
+
+  post_hint:post_hint_opt g ->
+  st_typing_in_ctxt g' ctxt' post_hint ->
+  T.Tac (st_typing_in_ctxt g ctxt post_hint)
+
+val k_elab_unit (g:env) (ctxt:term)
+  : continuation_elaborator g ctxt g ctxt
+
+val k_elab_trans
+  (#g0:env) (#g1:env { g1 `env_extends` g0 }) (#g2:env { g2 `env_extends` g1 }) (#ctxt0 #ctxt1 #ctxt2:term)
+  (k0:continuation_elaborator g0 ctxt0 g1 ctxt1)
+  (k1:continuation_elaborator g1 ctxt1 g2 ctxt2 { g1 `env_extends` g0})
+   : continuation_elaborator g0 ctxt0 g2 ctxt2
+
+val k_elab_equiv
+  (#g1:env) (#g2:env { g2 `env_extends` g1 }) (#ctxt1 #ctxt1' #ctxt2 #ctxt2':term)
+  (k:continuation_elaborator g1 ctxt1 g2 ctxt2)
+  (d1:vprop_equiv g1 ctxt1 ctxt1')
+  (d2:vprop_equiv g2 ctxt2 ctxt2')
+  : continuation_elaborator g1 ctxt1' g2 ctxt2'
+
+//
+// A canonical continuation elaborator for Bind
+//
+val continuation_elaborator_with_bind (#g:env) (ctxt:term)
+  (#c1:comp{stateful_comp c1})
+  (#e1:st_term)
+  (e1_typing:st_typing g e1 c1)
+  (ctxt_pre1_typing:tot_typing g (tm_star ctxt (comp_pre c1)) tm_vprop)
+  (x:var { None? (lookup g x) })
+  : T.Tac (continuation_elaborator
+             g                                (tm_star ctxt (comp_pre c1))
+             (push_binding g x ppname_default (comp_res c1)) (tm_star (open_term (comp_post c1) x) ctxt))
+
+
+let checker_res_matches_post_hint
+  (g:env)
+  (post_hint:post_hint_opt g)
+  (x:var) (t:term) (ctxt':vprop) =
+
+  match post_hint with
+  | None -> True
+  | Some post_hint ->
+    t == post_hint.ret_ty /\
+    ctxt' == open_term post_hint.post x
+  
+type checker_result_t (g:env) (ctxt:vprop) (post_hint:post_hint_opt g) =
+  x:var &
+  t:term &
+  ctxt':vprop { checker_res_matches_post_hint g post_hint x t ctxt' } &
+  g1:env { g1 `env_extends` g /\ lookup g1 x == Some t } &
+  continuation_elaborator g ctxt g1 ctxt'
 
 type check_t =
   g:env ->
-  t:st_term ->
-  pre:term ->
-  pre_typing:tot_typing g pre tm_vprop ->
+  ctxt:vprop ->
+  ctxt_typing:tot_typing g ctxt tm_vprop ->
   post_hint:post_hint_opt g ->
-  frame_pre:bool ->
-  T.Tac (checker_result_t g pre post_hint frame_pre)
-
-val repack (#g:env) (#pre:term) (#t:st_term)
-           (x:(c:comp_st { comp_pre c == pre } & st_typing g t c))
-           (post_hint:post_hint_opt g)
-  : T.Tac (checker_result_t g pre post_hint true)
+  t:st_term ->
+  T.Tac (checker_result_t g ctxt post_hint)
+  
+// val repack (#g:env) (#pre:term) (#t:st_term)
+//            (x:(c:comp_st { comp_pre c == pre } & st_typing g t c))
+//            (post_hint:post_hint_opt g)
+//   : T.Tac (checker_result_t g pre post_hint true)
 
 val intro_comp_typing (g:env) 
                       (c:comp_st)

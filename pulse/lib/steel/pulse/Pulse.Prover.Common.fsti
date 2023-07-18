@@ -12,41 +12,12 @@ module PS = Pulse.Prover.Substs
 
 let vprop_typing (g:env) (t:term) = tot_typing g t tm_vprop
 
-type continuation_elaborator
-  (g:env) (ctxt:term)
-  (g':env) (ctxt':term) =
-  post_hint:post_hint_opt g ->
-  checker_result_t g' ctxt' post_hint true ->
-  T.Tac (checker_result_t g ctxt post_hint true)
-
-val k_elab_unit (g:env) (ctxt:term)
-  : continuation_elaborator g ctxt g ctxt
-
-val k_elab_trans (#g0 #g1 #g2:env) (#ctxt0 #ctxt1 #ctxt2:term)
-                 (k0:continuation_elaborator g0 ctxt0 g1 ctxt1)
-                 (k1:continuation_elaborator g1 ctxt1 g2 ctxt2 { g1 `env_extends` g0})
-   : continuation_elaborator g0 ctxt0 g2 ctxt2
-
-val k_elab_equiv (#g1 #g2:env) (#ctxt1 #ctxt1' #ctxt2 #ctxt2':term)
-                 (k:continuation_elaborator g1 ctxt1 g2 ctxt2)
-                 (d1:vprop_equiv g1 ctxt1 ctxt1')
-                 (d2:vprop_equiv g2 ctxt2 ctxt2')
-  : continuation_elaborator g1 ctxt1' g2 ctxt2'
-
-//
-// A canonical continuation elaborator for Bind
-//
-val continuation_elaborator_with_bind (#g:env) (ctxt:term)
-  (#c1:comp{stateful_comp c1})
-  (#e1:st_term)
-  (e1_typing:st_typing g e1 c1)
-  (ctxt_pre1_typing:tot_typing g (tm_star ctxt (comp_pre c1)) tm_vprop)
-  (x:var { None? (lookup g x) })
-  : T.Tac (continuation_elaborator
-             g                                (tm_star ctxt (comp_pre c1))
-             (push_binding g x ppname_default (comp_res c1)) (tm_star (open_term (comp_post c1) x) ctxt))
-
-
+// type continuation_elaborator
+//   (g:env) (ctxt:term)
+//   (g':env) (ctxt':term) =
+//   post_hint:post_hint_opt g ->
+//   checker_result_t g' ctxt' post_hint true ->
+//   T.Tac (checker_result_t g ctxt post_hint true)
 
 //
 // Scaffolding for adding elims
