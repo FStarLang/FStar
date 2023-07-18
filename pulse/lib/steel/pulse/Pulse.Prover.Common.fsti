@@ -122,6 +122,17 @@ let st_typing_weakening
   assert (equal (push_env (push_env g g2) g') (push_env g1 g'));
   d
 
+let st_typing_weakening_standard
+  (#g:env) (#t:st_term) (#c:comp) (d:st_typing g t c)
+  (g1:env { g1 `env_extends` g })
+  : st_typing g1 t c =
+
+  let g' = mk_env (fstar_env g) in
+  assert (equal (push_env g g') g);
+  let d = st_typing_weakening g g' t c d g1 in
+  assert (equal (push_env g1 g') g1);
+  d
+
 let st_typing_weakening_end
   (g:env) (g':env { disjoint g g' })
   (t:st_term) (c:comp) (d:st_typing (push_env g g') t c)

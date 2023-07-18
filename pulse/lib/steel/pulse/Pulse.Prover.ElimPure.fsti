@@ -3,6 +3,7 @@ module Pulse.Prover.ElimPure
 open Pulse.Syntax
 open Pulse.Typing
 
+open Pulse.Checker.Common
 open Pulse.Prover.Common
 
 module T = FStar.Tactics.V2

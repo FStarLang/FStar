@@ -60,24 +60,24 @@ let post_hint_from_comp_typing #g #c ct =
   in
   p
 
-let try_frame_pre (#g:env)
-                  (#t:st_term)
-                  (#pre:term)
-                  (pre_typing: tot_typing g pre tm_vprop)
-                  (#c:comp_st)
-                  (t_typing: st_typing g t c)
-  : T.Tac (c':comp_st { comp_pre c' == pre } &
-           st_typing g t c')
-  = let g = CP.push_context "try_frame_pre" t.range g in
-    if RU.debug_at_level (fstar_env g) "try_frame"
-    then T.print (Printf.sprintf "(Try frame@%s) with %s\n\tcomp=%s,\n\tpre=%s\n"
-                                 (T.range_to_string t.range)
-                                 (print_context g)
-                                 (P.comp_to_string c)
-                                 (P.term_to_string pre));
-    match Pulse.Checker.Framing.try_frame_pre #g pre_typing t_typing with
-    | Inl ok -> ok
-    | Inr fail -> T.raise (Framing_failure fail)
+// let try_frame_pre (#g:env)
+//                   (#t:st_term)
+//                   (#pre:term)
+//                   (pre_typing: tot_typing g pre tm_vprop)
+//                   (#c:comp_st)
+//                   (t_typing: st_typing g t c)
+//   : T.Tac (c':comp_st { comp_pre c' == pre } &
+//            st_typing g t c')
+//   = let g = CP.push_context "try_frame_pre" t.range g in
+//     if RU.debug_at_level (fstar_env g) "try_frame"
+//     then T.print (Printf.sprintf "(Try frame@%s) with %s\n\tcomp=%s,\n\tpre=%s\n"
+//                                  (T.range_to_string t.range)
+//                                  (print_context g)
+//                                  (P.comp_to_string c)
+//                                  (P.term_to_string pre));
+//     match Pulse.Checker.Framing.try_frame_pre #g pre_typing t_typing with
+//     | Inl ok -> ok
+//     | Inr fail -> T.raise (Framing_failure fail)
 
 let rec vprop_equiv_typing (#g:_) (#t0 #t1:term) (v:vprop_equiv g t0 t1)
   : GTot ((tot_typing g t0 tm_vprop -> tot_typing g t1 tm_vprop) &
@@ -362,6 +362,21 @@ let continuation_elaborator_with_bind (#g:env) (ctxt:term)
   k
 #pop-options
 
+let rec check_equiv_emp (g:env) (vp:term)
+  : option (vprop_equiv g vp tm_emp)
+  = match vp.t with
+    | Tm_Emp -> Some (VE_Refl _ _)
+    | Tm_Star vp1 vp2 ->
+      (match check_equiv_emp g vp1, check_equiv_emp g vp2 with
+       | Some d1, Some d2 ->
+         let d3 : vprop_equiv g (tm_star vp1 vp2) (tm_star tm_emp tm_emp)
+           = VE_Ctxt _ _ _ _ _ d1 d2 in
+         let d4 : vprop_equiv g (tm_star tm_emp tm_emp) tm_emp =
+           VE_Unit _ _ in
+         Some (VE_Trans _ _ _ _ d3 d4)
+       | _, _ -> None)
+     | _ -> None
+
 
 // #push-options "--z3rlimit_factor 2"
 // let replace_equiv_post
@@ -468,3 +483,4 @@ let intro_comp_typing (g:env)
       if not (eq_tm ty tm_inames)
       then fail g None "Ill-typed inames"
       else CT_STGhost _ _ _ (E i_typing) stc
+

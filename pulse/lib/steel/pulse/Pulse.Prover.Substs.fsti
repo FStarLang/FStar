@@ -120,6 +120,12 @@ val ss_to_nt_substs (g:env) (uvs:env) (ss:ss_t)
   : T.Tac (option (nts:nt_substs { well_typed_nt_substs g uvs nts /\
                                    is_permutation nts ss }))
 
+val well_typed_nt_substs_prefix (g:env) (uvs:env) (nts:nt_substs)
+  (uvs1:env)
+  : Pure nt_substs
+         (requires well_typed_nt_substs g uvs nts /\ env_extends uvs uvs1)
+         (ensures fun nts1 -> well_typed_nt_substs g uvs1 nts1)
+
 val ss_nt_subst (g:env) (uvs:env) (ss:ss_t) (nts:nt_substs)
   : Lemma (requires disjoint uvs g /\ well_typed_nt_substs g uvs nts /\ is_permutation nts ss)
           (ensures

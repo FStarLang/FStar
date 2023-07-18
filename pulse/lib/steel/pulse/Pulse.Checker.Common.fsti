@@ -23,15 +23,6 @@ val post_hint_from_comp_typing (#g:env) (#c:comp_st) (ct:Metatheory.comp_typing_
 
 exception Framing_failure of Pulse.Checker.Framing.framing_failure
 
-val try_frame_pre (#g:env)
-                  (#t:st_term)
-                  (#pre:term)
-                  (pre_typing: tot_typing g pre tm_vprop)
-                  (#c:comp_st)
-                  (t_typing: st_typing g t c)
-  : T.Tac (c':comp_st { comp_pre c' == pre } &
-           st_typing g t c')
-
 val vprop_equiv_typing (#g:_) (#t0 #t1:term) (v:vprop_equiv g t0 t1)
   : GTot ((tot_typing g t0 tm_vprop -> tot_typing g t1 tm_vprop) &
           (tot_typing g t1 tm_vprop -> tot_typing g t0 tm_vprop))
@@ -91,6 +82,8 @@ val continuation_elaborator_with_bind (#g:env) (ctxt:term)
              g                                (tm_star ctxt (comp_pre c1))
              (push_binding g x ppname_default (comp_res c1)) (tm_star (open_term (comp_post c1) x) ctxt))
 
+val check_equiv_emp (g:env) (vp:term)
+  : option (vprop_equiv g vp tm_emp)
 
 let checker_res_matches_post_hint
   (g:env)
@@ -118,11 +111,6 @@ type check_t =
   t:st_term ->
   T.Tac (checker_result_t g ctxt post_hint)
   
-// val repack (#g:env) (#pre:term) (#t:st_term)
-//            (x:(c:comp_st { comp_pre c == pre } & st_typing g t c))
-//            (post_hint:post_hint_opt g)
-//   : T.Tac (checker_result_t g pre post_hint true)
-
 val intro_comp_typing (g:env) 
                       (c:comp_st)
                       (pre_typing:tot_typing g (comp_pre c) tm_vprop)

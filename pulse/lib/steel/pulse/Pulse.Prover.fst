@@ -19,6 +19,8 @@ module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
 module PS = Pulse.Prover.Substs
 
+let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y == x} = x
+
 let unsolved_equiv_pst (#preamble:_) (pst:prover_state preamble) (unsolved':list vprop)
   (d:vprop_equiv (push_env pst.pg pst.uvs) (list_as_vprop pst.unsolved) (list_as_vprop unsolved'))
   : prover_state preamble =
@@ -143,10 +145,9 @@ let prove
   (#goals:vprop) (goals_typing:vprop_typing (push_env g uvs) goals)
 
   : T.Tac (g1 : env { g1 `env_extends` g } &
-           uvs1 : env { uvs1 `env_extends` uvs /\ disjoint uvs1 g1 } &
-           nts1 : PS.nt_substs { PS.well_typed_nt_substs g1 uvs1 nts1 } &
+           nts : PS.nt_substs { PS.well_typed_nt_substs g1 uvs nts } &
            remaining_ctxt : vprop &
-           continuation_elaborator g ctxt g1 ((PS.nt_subst_term goals nts1) * remaining_ctxt)) =
+           continuation_elaborator g ctxt g1 ((PS.nt_subst_term goals nts) * remaining_ctxt)) =
 
   debug_prover g (fun _ ->
     Printf.sprintf "\nEnter top-level prove with ctxt: %s\ngoals: %s\n"
@@ -181,14 +182,87 @@ let prove
 
   if None? ropt then fail pst.pg None "prove: ss not well-typed";
   let Some nts = ropt in
+  let nts_uvs = PS.well_typed_nt_substs_prefix pst.pg pst.uvs nts uvs in
   let k
     : continuation_elaborator
         g (ctxt * tm_emp)
         pst.pg ((list_as_vprop pst.remaining_ctxt * tm_emp) * (PS.nt_subst_term pst.solved nts)) = pst.k in
+  // admit ()
   let goals_inv
     : vprop_equiv (push_env pst.pg pst.uvs) goals (list_as_vprop [] * pst.solved) = pst.goals_inv in
   let goals_inv
     : vprop_equiv pst.pg (PS.nt_subst_term goals nts) (PS.nt_subst_term (list_as_vprop [] * pst.solved) nts) =
     PS.vprop_equiv_nt_substs_derived pst.pg pst.uvs goals_inv nts in
-  (| pst.pg, pst.uvs, nts, list_as_vprop pst.remaining_ctxt, k_elab_equiv k (magic ()) (magic ()) |)
+  
+  // goals is well-typed in initial g + uvs
+  // so any of the remaining uvs in pst.uvs should not be in goals
+  // so we can drop their substitutions from the tail of nts
+  assume (PS.nt_subst_term goals nts == PS.nt_subst_term goals nts_uvs);
+
+  (| pst.pg, nts_uvs, list_as_vprop pst.remaining_ctxt, k_elab_equiv k (magic ()) (magic ()) |)
 #pop-options
+
+let try_frame_pre (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_vprop)
+  (#t:st_term) (#c:comp_st) (d:st_typing g t c)
+
+  : T.Tac (checker_result_t g ctxt None) =
+
+  let (| g1, nts, remaining_ctxt, k_frame |) =
+  prove ctxt_typing (mk_env (fstar_env g)) #(comp_pre c) (magic ()) in
+  assert (nts == []);
+  let k_frame : continuation_elaborator g ctxt g1 (comp_pre c * remaining_ctxt) = coerce_eq k_frame () in
+
+  let x = fresh g1 in
+  let ty = comp_res c in
+  let g2 = push_binding g1 x ppname_default ty in
+  assert (g2 `env_extends` g1);
+  let ctxt' = (open_term_nv (comp_post c) (ppname_default, x) * remaining_ctxt) in
+
+  let d : st_typing g1 t c = st_typing_weakening_standard d g1 in
+
+  let k
+    : continuation_elaborator g1 (remaining_ctxt * comp_pre c)
+                              g2 ctxt' =
+    continuation_elaborator_with_bind remaining_ctxt d (magic ()) x in
+
+  let k
+    : continuation_elaborator g1 (comp_pre c * remaining_ctxt)
+                              g2 ctxt' =
+    k_elab_equiv k (VE_Comm _ _ _) (VE_Refl _ _) in
+
+  let k = k_elab_trans k_frame k in
+
+  (| x, ty, ctxt', g2, k |)
+
+
+let repack (#g:env) (#ctxt:vprop)
+  (r:checker_result_t g ctxt None)
+  (post_hint:post_hint_opt g)
+  (rng:range)
+  
+  : T.Tac (checker_result_t g ctxt post_hint) =
+
+  match post_hint with
+  | None -> r
+  | Some post_hint ->
+    let (| x, ty, ctxt', g2, k |) = r in
+
+    // TODO: subtyping
+    if not (eq_tm ty post_hint.ret_ty)
+    then fail g (Some rng) (Printf.sprintf "result type is not the same in stapp")
+    else
+      let (| g3, nts, remaining_ctxt, k_post |) =
+        prove #g2 #ctxt' (magic ()) (mk_env (fstar_env g2)) #(open_term_nv post_hint.post (ppname_default, x)) (magic ()) in
+          
+      assert (nts == []);
+      let k_post
+        : continuation_elaborator g2 ctxt' g3 (open_term_nv post_hint.post (ppname_default, x) * remaining_ctxt) =
+        coerce_eq k_post () in
+
+      match check_equiv_emp g3 remaining_ctxt with
+      | None -> fail g (Some rng) (Printf.sprintf "cannot match post hint in st app")
+      | Some d ->
+        let k_post
+          : continuation_elaborator g2 ctxt' g3 (open_term_nv post_hint.post (ppname_default, x)) =
+          k_elab_equiv k_post (VE_Refl _ _) (magic ()) in
+        (| x, ty, (open_term_nv post_hint.post (ppname_default, x)), g3, k_elab_trans k k_post |)
