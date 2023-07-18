@@ -6,6 +6,7 @@ module T = FStar.Tactics.V2
 open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Typing
+open Pulse.Typing.Combinators
 module FV = Pulse.Typing.FV
 module RU = Pulse.RuntimeUtils
 module Metatheory = Pulse.Typing.Metatheory
@@ -35,11 +36,6 @@ let rec list_as_vprop (vps:list term)
   = match vps with
     | [] -> tm_emp
     | hd::tl -> tm_star hd (list_as_vprop tl)
-
-type st_typing_in_ctxt (g:env) (ctxt:vprop) (post_hint:post_hint_opt g) =
-  t:st_term &
-  c:comp { stateful_comp c ==> (comp_pre c == ctxt /\ comp_post_matches_hint c post_hint) } &
-  st_typing g t c
 
 type continuation_elaborator
   (g:env)                         (ctxt:vprop)
@@ -84,14 +80,8 @@ val check_equiv_emp (g:env) (vp:term)
 let checker_res_matches_post_hint
   (g:env)
   (post_hint:post_hint_opt g)
-  (x:var) (t:term) (ctxt':vprop) =
+  (x:var) (t:term) (ctxt':vprop) = x_t_ctxt_match_post_hint g post_hint x t ctxt'
 
-  match post_hint with
-  | None -> True
-  | Some post_hint ->
-    t == post_hint.ret_ty /\
-    ctxt' == open_term post_hint.post x
-  
 type checker_result_t (g:env) (ctxt:vprop) (post_hint:post_hint_opt g) =
   x:var &
   t:term &

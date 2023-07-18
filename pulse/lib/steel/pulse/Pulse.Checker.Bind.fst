@@ -146,6 +146,9 @@ let check_bind
   (check:check_t)
   : T.Tac (checker_result_t g ctxt post_hint) =
 
+  if None? post_hint
+  then fail g (Some t.range) "check_bind: post_hint is None, bailing";
+
   let Tm_Bind { binder; head=e1; body=e2} = t.term in
 
   let (| x, ty, ctxt', g1, k1 |) =
@@ -154,9 +157,11 @@ let check_bind
   let (| y, ty_y, ctxt'', g2, k2 |) =
     check g1 ctxt' (magic ()) post_hint e2 in
 
-  // TODO: CHECK THAT ty_y is well-typed in g AND ctxt'' is well-typed in g, y:ty_y
+  // CAN WE AVOID THIS?
+  let (| u, d_ty_y |) = check_universe g2 ty_y in
 
-  let d : st_typing_in_ctxt g2 ctxt'' post_hint = magic () in
+  let d : st_typing_in_ctxt g2 ctxt'' post_hint =
+    return_in_ctxt g2 y u ty_y ctxt'' d_ty_y post_hint in
   let d : st_typing_in_ctxt g1 ctxt' post_hint = k2 post_hint d in
   let (| t, c, d |) : st_typing_in_ctxt g ctxt post_hint = k1 post_hint d in
 

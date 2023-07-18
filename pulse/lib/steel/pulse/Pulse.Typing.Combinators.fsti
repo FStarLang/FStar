@@ -74,3 +74,27 @@ val apply_frame (#g:env)
                       comp_u c' == comp_u c /\
                       comp_post c' == tm_star (comp_post c) (frame_of frame_t) } &
          st_typing g t c')
+
+type st_typing_in_ctxt (g:env) (ctxt:vprop) (post_hint:post_hint_opt g) =
+  t:st_term &
+  c:comp { stateful_comp c ==> (comp_pre c == ctxt /\ comp_post_matches_hint c post_hint) } &
+  st_typing g t c
+
+let x_t_ctxt_match_post_hint
+  (g:env)
+  (post_hint:post_hint_opt g)
+  (x:var) (t:term) (ctxt:vprop) =
+
+  match post_hint with
+  | None -> True
+  | Some post_hint ->
+    t == post_hint.ret_ty /\
+    ctxt == open_term post_hint.post x
+ 
+val return_in_ctxt (g:env) (y:var) (u:universe) (ty:term) (ctxt:vprop)
+  (ty_typing:universe_of g ty u)
+  (post_hint0:post_hint_opt g { Some? post_hint0 /\ x_t_ctxt_match_post_hint g post_hint0 y ty ctxt})
+
+  : Pure (st_typing_in_ctxt g ctxt post_hint0)
+         (requires lookup g y == Some ty)
+         (ensures fun _ -> True)
