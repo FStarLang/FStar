@@ -208,7 +208,7 @@ let try_frame_pre (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_vprop
   : T.Tac (checker_result_t g ctxt None) =
 
   let (| g1, nts, remaining_ctxt, k_frame |) =
-  prove ctxt_typing (mk_env (fstar_env g)) #(comp_pre c) (magic ()) in
+    prove ctxt_typing (mk_env (fstar_env g)) #(comp_pre c) (magic ()) in
   assert (nts == []);
   let k_frame : continuation_elaborator g ctxt g1 (comp_pre c * remaining_ctxt) = coerce_eq k_frame () in
 
