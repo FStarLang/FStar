@@ -362,9 +362,9 @@ val op_Array_Assignment
 val op_Array_Index
   (#t: Type)
   (a: A.array t)
-  (i: US.t)
   (#p: perm)
-  (#s: Ghost.erased (Seq.seq t) {US.v i < Seq.length s})
+  (#s: Ghost.erased (Seq.seq t))
+  (i: US.t{ US.v i < Seq.length s })
 : stt t
     (requires A.pts_to a p s)
     (ensures fun res -> A.pts_to a p s `star` pure (res == Seq.index s (US.v i)))

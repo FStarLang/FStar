@@ -35,57 +35,79 @@ let refine_repr (s:pht_sig) (sz:pos) (i:US.t) (repr:Seq.lseq (cell s.keyt s.valt
 (* 
   See FIXME comments for current debugging status
 *)
-[@@expect_failure]
+#set-options "--split_queries no"
+// [@@expect_failure]
 ```pulse
 fn insert (#s:pht_sig) (#pht:(p:pht s{not_full p.repr})) 
           (ht:ht s) (k:s.keyt) (v:s.valt)
   requires models s pht ht
   ensures  models s (PHT.insert pht k v) ht
 {
+  unfold (models s pht ht);
   let sz = ht.sz;
   let a = ht.contents;
   let cidx = canonical_index k sz;
   let mut off = coerce_nat 0;
-  while (let voff = !off; (voff < sz)) (* ignore the case voff=sz? *)
-  invariant b. exists (voff:nat). (
+  let mut cont = true;
+  while (let voff = !off; let vcont = !cont; (voff <= sz && vcont = true))
+  invariant b. exists (voff:nat) (vcont:bool) (s:Seq.lseq (cell s.keyt s.valt) pht.sz). (
+    A.pts_to ht.contents full_perm s `star`
+    // `@(if vcont=true 
+    //   then (A.pts_to ht.contents full_perm pht.repr) 
+    //   else (A.pts_to ht.contents full_perm (PHT.insert pht k v).repr)) `star`
     R.pts_to off full_perm voff **
+    R.pts_to cont full_perm vcont **
     pure (
+      pht.sz == ht.sz /\
       voff >= 0 /\ voff <= sz /\
+      // walk_ pht.repr cidx k off == PHT.insert pht k v /\
       // walk pht.repr cidx k off == lookup_repr pht.repr k /\
       // strong_all_used_not_by #s #sz pht.repr cidx voff k /\
-      b == (voff < sz)
+      (if vcont=true
+        then s == pht.repr
+        else s == (PHT.insert pht k v).repr) /\
+      b == (voff <= sz && vcont = true)
     )
   )
   {
+    // if (off=sz) {
+    // admit()
+    // } else {
     let voff = !off;
     let idx = coerce_us ((cidx+voff)%sz);
     assume_ (pure (US.v idx < pht.sz)); // FIXME: can prove based on modulo calc above
-    let c = op_Array_Index ht.contents idx #full_perm #(refine_repr s pht.sz idx pht.repr); // FIXME: currently breaks because the repr
-                                                                                            // param to op_Array_Index is ill-typed
+    let c = op_Array_Index ht.contents #full_perm #pht.repr idx;
     match c {
-      Used k' v' -> { if (k' = k) {
-        op_Array_Assignment ht.contents idx (cell k v);
-        return ()
-      }}
+      Used k' v' -> { 
+        if (k' = k) {
+          op_Array_Assignment ht.contents idx (mk_used_cell k v);
+          cont := false;
+          ()
+        } else {
+          off := voff + 1;
+          ()
+        } 
+      }
       Clean -> {
-        op_Array_Assignment ht.contents idx (cell k v);
-        return ()
+        op_Array_Assignment ht.contents idx (mk_used_cell k v);
+        cont := false;
+        ()
       }
       Zombie -> {
         let o = lookup ht k;
         match o {
           Some p -> {
             op_Array_Assignment ht.contents (snd p) Zombie;
-            op_Array_Assignment ht.contents idx (cell k v);
+            op_Array_Assignment ht.contents idx (mk_used_cell k v);
           }
-          None -> { op_Array_Assignment ht.contents idx (cell k v); }
+          None -> { op_Array_Assignment ht.contents idx (mk_used_cell k v); }
         };
-        return ()
+        cont := false;
+        ()
       }
-    };
-    off := voff + 1;
+    };};
+    fold (models s (PHT.insert pht k v) ht);
     ()
-  }
 }
 ```
 
