@@ -1,5 +1,5 @@
 [
-  "cKØÍåy\nð]¹·\u0018’‹2Y",
+  "\u001aë\u0005\u001cÇñ*,[\u000eã²oVû¾",
   [
     [
       "Pulse.Soundness.tabs_t",
@@ -27,7 +27,7 @@
         "typing_Pulse.Typing.Env.dom"
       ],
       0,
-      "6d0e3eaa448e204f13a5ba6143ed8232"
+      "bd776a2800af95eeb568ceb7fdc3693f"
     ],
     [
       "Pulse.Soundness.lift_soundness",
@@ -140,7 +140,7 @@
         "typing_tok_Pulse.Syntax.Base.Implicit@tok"
       ],
       0,
-      "3fb868cec2cff74c79a0a24e5954b592"
+      "9a62b8516797a3888bfb64cbea2ab052"
     ],
     [
       "Pulse.Soundness.frame_soundness",
@@ -167,7 +167,7 @@
         "subterm_ordering_Pulse.Typing.T_Frame"
       ],
       0,
-      "d1a4b8c5fbb87b8b15a966626caa76f0"
+      "7ef536819850bcd6635e9ecc49f49204"
     ],
     [
       "Pulse.Soundness.stapp_soundness",
@@ -282,7 +282,7 @@
         "typing_Pulse.Syntax.Pure.tm_arrow", "typing_Pulse.Typing.as_binder"
       ],
       0,
-      "26397b623331a0f29ae514e2a5e25c62"
+      "58c7e3ceab5e68c249078bdc7b10d946"
     ],
     [
       "Pulse.Soundness.stequiv_soundness",
@@ -314,7 +314,7 @@
         "subterm_ordering_Pulse.Typing.T_Equiv"
       ],
       0,
-      "8fa9c06fb9a7d21ac874527879431661"
+      "8bb1e9c533571537657051dc8f58d8f3"
     ],
     [
       "Pulse.Soundness.bind_soundness",
@@ -346,7 +346,6 @@
         "constructor_distinct_Pulse.Syntax.Base.C_STAtomic",
         "constructor_distinct_Pulse.Syntax.Base.C_STGhost",
         "constructor_distinct_Pulse.Syntax.Base.C_Tot",
-        "constructor_distinct_Pulse.Syntax.Base.Tm_Emp",
         "constructor_distinct_Pulse.Syntax.Base.Tm_FStar",
         "constructor_distinct_Pulse.Syntax.Base.Tm_VProp",
         "constructor_distinct_Pulse.Typing.Bind_comp",
@@ -427,6 +426,8 @@
         "equation_Pulse.Syntax.Base.with_range",
         "equation_Pulse.Syntax.Naming.close_comp",
         "equation_Pulse.Syntax.Naming.close_comp_",
+        "equation_Pulse.Syntax.Naming.freevars_comp",
+        "equation_Pulse.Syntax.Naming.freevars_st_comp",
         "equation_Pulse.Syntax.Naming.ln_c",
         "equation_Pulse.Syntax.Naming.ln_c_",
         "equation_Pulse.Syntax.Naming.ln_st",
@@ -472,6 +473,7 @@
         "kinding_Pulse.Syntax.Naming.subst_elt@tok",
         "lemma_FStar.Map.lemma_ContainsDom",
         "lemma_FStar.Sealed.Inhabited.sealed_singleton",
+        "lemma_FStar.Set.mem_union",
         "lemma_Pulse.Syntax.Base.range_singleton",
         "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
         "primitive_Prims.op_BarBar",
@@ -561,12 +563,13 @@
         "typing_FStar.Map.contains", "typing_FStar.Pervasives.Native.fst",
         "typing_FStar.Pervasives.Native.snd", "typing_FStar.Range.range_0",
         "typing_FStar.Reflection.Typing.binder_of_t_q",
+        "typing_FStar.Reflection.Typing.tm_type",
         "typing_FStar.Reflection.V2.Builtins.pack_comp",
         "typing_FStar.Reflection.V2.Builtins.pack_fv",
         "typing_FStar.Reflection.V2.Builtins.pack_ln",
         "typing_FStar.Reflection.V2.Data.var",
-        "typing_FStar.Reflection.V2.Derived.mk_app",
-        "typing_Pulse.Elaborate.Pure.elab_comp",
+        "typing_FStar.Reflection.V2.Derived.mk_app", "typing_FStar.Set.mem",
+        "typing_FStar.Set.union", "typing_Pulse.Elaborate.Pure.elab_comp",
         "typing_Pulse.Elaborate.Pure.elab_term",
         "typing_Pulse.Reflection.Util.binder_of_t_q_s",
         "typing_Pulse.Reflection.Util.mk_total",
@@ -584,10 +587,12 @@
         "typing_Pulse.Syntax.Base.comp_res",
         "typing_Pulse.Syntax.Base.comp_u",
         "typing_Pulse.Syntax.Base.stateful_comp",
-        "typing_Pulse.Syntax.Base.tm_vprop",
         "typing_Pulse.Syntax.Base.uu___is_C_Tot",
-        "typing_Pulse.Syntax.Base.v_as_nv", "typing_Pulse.Syntax.Naming.ln_",
-        "typing_Pulse.Syntax.Naming.ln_c",
+        "typing_Pulse.Syntax.Base.v_as_nv",
+        "typing_Pulse.Syntax.Base.with_range",
+        "typing_Pulse.Syntax.Naming.freevars",
+        "typing_Pulse.Syntax.Naming.freevars_comp",
+        "typing_Pulse.Syntax.Naming.ln_", "typing_Pulse.Syntax.Naming.ln_c",
         "typing_Pulse.Syntax.Naming.ln_st",
         "typing_Pulse.Syntax.Naming.subst_term",
         "typing_Pulse.Syntax.Pure.tm_arrow",
@@ -598,10 +603,11 @@
         "typing_Pulse.Typing.bind_comp_out",
         "typing_Pulse.Typing.non_informative_witness_t",
         "typing_tok_FStar.Reflection.V2.Data.Q_Explicit@tok",
-        "typing_tok_Pulse.Syntax.Base.Implicit@tok", "unit_typing"
+        "typing_tok_Pulse.Syntax.Base.Implicit@tok",
+        "typing_tok_Pulse.Syntax.Base.Tm_VProp@tok", "unit_typing"
       ],
       0,
-      "14a1cc521069dab8864b9119d4b0b247"
+      "2c53020e8bf8c0b309a57a211a6e7cc6"
     ],
     [
       "Pulse.Soundness.if_soundness",
@@ -756,7 +762,7 @@
         "typing_tok_Pulse.Syntax.Base.Implicit@tok"
       ],
       0,
-      "2017f5c5db3d2e0ad334979841437fed"
+      "881eba0e8181bc1b6e4e60b6e69ff39d"
     ],
     [
       "Pulse.Soundness.soundness",
@@ -783,6 +789,7 @@
         "constructor_distinct_Pulse.Typing.T_IntroExists",
         "constructor_distinct_Pulse.Typing.T_IntroExistsErased",
         "constructor_distinct_Pulse.Typing.T_Lift",
+        "constructor_distinct_Pulse.Typing.T_Match",
         "constructor_distinct_Pulse.Typing.T_Par",
         "constructor_distinct_Pulse.Typing.T_Return",
         "constructor_distinct_Pulse.Typing.T_Rewrite",
@@ -804,6 +811,7 @@
         "disc_equation_Pulse.Typing.T_IntroExistsErased",
         "disc_equation_Pulse.Typing.T_IntroPure",
         "disc_equation_Pulse.Typing.T_Lift",
+        "disc_equation_Pulse.Typing.T_Match",
         "disc_equation_Pulse.Typing.T_Par",
         "disc_equation_Pulse.Typing.T_Return",
         "disc_equation_Pulse.Typing.T_Rewrite",
@@ -894,7 +902,7 @@
         "typing_Pulse.Typing.Env.dom", "typing_Pulse.Typing.Env.fstar_env"
       ],
       0,
-      "10a91462939e7dd9389a0cb09747abff"
+      "60ad9231380ee93bd8e2391070bfe4a2"
     ],
     [
       "Pulse.Soundness.soundness_lemma",
@@ -902,11 +910,13 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Reflection.Typing.tot_typing",
+        "equation_Prims.squash",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "5c97988c24e76ed97ec29e3679b8cdcc"
+      "c95eade1ac1f0f6d1d796d3d627615c9"
     ]
   ]
 ]

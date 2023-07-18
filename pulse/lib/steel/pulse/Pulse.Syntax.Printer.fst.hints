@@ -1,5 +1,5 @@
 [
-  "◊î1ÉdJ\u0018˘Ùá%\u0018–!\u0018˘",
+  "3J.%Ú–˜¥\u0015IÕß∑ÀÎç",
   [
     [
       "Pulse.Syntax.Printer.universe_to_string",
@@ -21,7 +21,7 @@
         "typing_FStar.Reflection.V2.Builtins.inspect_universe"
       ],
       0,
-      "e6a7bbaac5257b6218a90147f1b37a30"
+      "7f223d2be21c9d36d346054d67ca4db2"
     ],
     [
       "Pulse.Syntax.Printer.univ_to_string",
@@ -30,7 +30,7 @@
       1,
       [ "@query" ],
       0,
-      "40323f564fc1999e5e6cf71512014a97"
+      "74302b545446a62ac62b9a6ee3ba9122"
     ],
     [
       "Pulse.Syntax.Printer.qual_to_string",
@@ -42,7 +42,7 @@
         "lemma_FStar.Pervasives.invertOption"
       ],
       0,
-      "ccf19310e15b1acc59a0f18bb5836d89"
+      "178e4915e5c02124bb03406554e9e028"
     ],
     [
       "Pulse.Syntax.Printer.term_to_string'",
@@ -70,7 +70,7 @@
         "typing_Pulse.Syntax.Base.__proj__Mkterm__item__t"
       ],
       0,
-      "48795c5f04d6cc9f958df545847a5801"
+      "1b1652a8cbe290a475e0e0d6ba5eca08"
     ],
     [
       "Pulse.Syntax.Printer.binder_to_string",
@@ -84,7 +84,7 @@
         "string_typing"
       ],
       0,
-      "4553393b97d9e96cf31406c6fd2f9ecf"
+      "d31cbd3b9a8ba67870614a7275cab386"
     ],
     [
       "Pulse.Syntax.Printer.comp_to_string",
@@ -103,7 +103,7 @@
         "projection_inverse_BoxBool_proj_0", "string_typing"
       ],
       0,
-      "b7c569fe9ced9f9fbc9aa4aed6dba60b"
+      "4e86e5572f49a3b4249a1c51cbfbb9eb"
     ],
     [
       "Pulse.Syntax.Printer.term_opt_to_string",
@@ -115,7 +115,7 @@
         "lemma_FStar.Pervasives.invertOption"
       ],
       0,
-      "9e5f9cf8e534427b12d937baed3b8406"
+      "d30dc470866f82583b4b878608c9b08b"
     ],
     [
       "Pulse.Syntax.Printer.st_term_to_string'",
@@ -126,30 +126,26 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ce036b6b736ef4e0bc3a9ff132a12aed",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
-        "Pulse.Syntax.Base_pretyping_a0b86c7f20af6765a7550eda93d38e97",
-        "Pulse.Syntax.Base_pretyping_b358fbd6307496fe01bd1dc3ca15cb98",
         "Pulse.Syntax.Base_pretyping_f0a71477fd567f96c0f87dffa5cea230",
         "bool_inversion", "bool_typing",
         "constructor_distinct_FStar.Tactics.Result.Failed",
         "constructor_distinct_FStar.Tactics.Result.Success",
+        "constructor_distinct_Pulse.Syntax.Base.STT",
         "data_elim_Pulse.Syntax.Base.Mkst_term___Tm_IntroExists__payload",
-        "data_elim_Pulse.Syntax.Base.Tm_Admit",
         "data_elim_Pulse.Syntax.Base.Tm_IntroExists",
-        "data_elim_Pulse.Syntax.Base.Tm_Return",
-        "disc_equation_FStar.Pervasives.Native.None",
-        "disc_equation_FStar.Pervasives.Native.Some",
         "disc_equation_Pulse.Syntax.Base.STT",
         "disc_equation_Pulse.Syntax.Base.STT_Atomic",
         "disc_equation_Pulse.Syntax.Base.STT_Ghost",
         "disc_equation_Pulse.Syntax.Base.Tm_Abs",
         "disc_equation_Pulse.Syntax.Base.Tm_Admit",
-        "disc_equation_Pulse.Syntax.Base.Tm_AssertWithBinders",
         "disc_equation_Pulse.Syntax.Base.Tm_Bind",
         "disc_equation_Pulse.Syntax.Base.Tm_ElimExists",
         "disc_equation_Pulse.Syntax.Base.Tm_If",
         "disc_equation_Pulse.Syntax.Base.Tm_IntroExists",
         "disc_equation_Pulse.Syntax.Base.Tm_IntroPure",
+        "disc_equation_Pulse.Syntax.Base.Tm_Match",
         "disc_equation_Pulse.Syntax.Base.Tm_Par",
+        "disc_equation_Pulse.Syntax.Base.Tm_ProofHintWithBinders",
         "disc_equation_Pulse.Syntax.Base.Tm_Protect",
         "disc_equation_Pulse.Syntax.Base.Tm_Return",
         "disc_equation_Pulse.Syntax.Base.Tm_Rewrite",
@@ -164,14 +160,9 @@
         "fuel_guarded_inversion_Pulse.Syntax.Base.st_term___Tm_IntroExists__payload",
         "kinding_Pulse.Syntax.Base.term@tok",
         "lemma_FStar.Pervasives.invertOption", "primitive_Prims.op_Equality",
-        "proj_equation_Pulse.Syntax.Base.Mkst_term___Tm_Admit__payload_ctag",
-        "proj_equation_Pulse.Syntax.Base.Mkst_term___Tm_Admit__payload_post",
         "proj_equation_Pulse.Syntax.Base.Mkst_term___Tm_IntroExists__payload_erased",
-        "proj_equation_Pulse.Syntax.Base.Mkst_term___Tm_Return__payload_ctag",
         "proj_equation_Pulse.Syntax.Base.Mkst_term_term",
-        "proj_equation_Pulse.Syntax.Base.Tm_Admit__0",
         "proj_equation_Pulse.Syntax.Base.Tm_IntroExists__0",
-        "proj_equation_Pulse.Syntax.Base.Tm_Return__0",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Tactics.Result.Failed_a",
         "projection_inverse_FStar.Tactics.Result.Failed_exn",
@@ -179,13 +170,24 @@
         "projection_inverse_FStar.Tactics.Result.Success_a",
         "projection_inverse_FStar.Tactics.Result.Success_ps",
         "projection_inverse_FStar.Tactics.Result.Success_v",
-        "typing_Pulse.Syntax.Base.__proj__Mkst_term___Tm_Admit__payload__item__ctag",
-        "typing_Pulse.Syntax.Base.__proj__Mkst_term___Tm_Admit__payload__item__post",
-        "typing_Pulse.Syntax.Base.__proj__Mkst_term___Tm_Return__payload__item__ctag",
-        "typing_Pulse.Syntax.Base.__proj__Mkst_term__item__term"
+        "typing_Pulse.Syntax.Base.__proj__Mkst_term__item__term",
+        "typing_Pulse.Syntax.Base.uu___is_Tm_Admit"
       ],
       0,
-      "8add64da0ebf506b2492fdd82589476a"
+      "b3de7d776243179ed748a5901d316f3c"
+    ],
+    [
+      "Pulse.Syntax.Printer.st_term_to_string'",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "baaf8c9728d149fa4a1c5e59244d517a"
     ],
     [
       "Pulse.Syntax.Printer.tag_of_term",
@@ -210,7 +212,7 @@
         "typing_Pulse.Syntax.Base.__proj__Mkterm__item__t"
       ],
       0,
-      "fa62ec50368043a19189bcb7070f1bbc"
+      "4fb1a9a021c0a4ed47b5d361c0fbdaa6"
     ],
     [
       "Pulse.Syntax.Printer.tag_of_st_term",
@@ -221,13 +223,14 @@
         "@MaxIFuel_assumption", "@query",
         "disc_equation_Pulse.Syntax.Base.Tm_Abs",
         "disc_equation_Pulse.Syntax.Base.Tm_Admit",
-        "disc_equation_Pulse.Syntax.Base.Tm_AssertWithBinders",
         "disc_equation_Pulse.Syntax.Base.Tm_Bind",
         "disc_equation_Pulse.Syntax.Base.Tm_ElimExists",
         "disc_equation_Pulse.Syntax.Base.Tm_If",
         "disc_equation_Pulse.Syntax.Base.Tm_IntroExists",
         "disc_equation_Pulse.Syntax.Base.Tm_IntroPure",
+        "disc_equation_Pulse.Syntax.Base.Tm_Match",
         "disc_equation_Pulse.Syntax.Base.Tm_Par",
+        "disc_equation_Pulse.Syntax.Base.Tm_ProofHintWithBinders",
         "disc_equation_Pulse.Syntax.Base.Tm_Protect",
         "disc_equation_Pulse.Syntax.Base.Tm_Return",
         "disc_equation_Pulse.Syntax.Base.Tm_Rewrite",
@@ -241,7 +244,26 @@
         "typing_Pulse.Syntax.Base.__proj__Mkst_term__item__term"
       ],
       0,
-      "748ff4522ec62e3314bb75d120f13978"
+      "6b98248508ef72661ece9e25844c656f"
+    ],
+    [
+      "Pulse.Syntax.Printer.tag_of_comp",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ce036b6b736ef4e0bc3a9ff132a12aed",
+        "disc_equation_Pulse.Syntax.Base.C_ST",
+        "disc_equation_Pulse.Syntax.Base.C_STAtomic",
+        "disc_equation_Pulse.Syntax.Base.C_STGhost",
+        "disc_equation_Pulse.Syntax.Base.C_Tot",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "fuel_guarded_inversion_Pulse.Syntax.Base.comp",
+        "projection_inverse_BoxBool_proj_0", "string_typing"
+      ],
+      0,
+      "89dab05a58081998e1a0631ab5c887ce"
     ],
     [
       "Pulse.Syntax.Printer.print_st_head",
@@ -258,13 +280,14 @@
         "data_elim_Pulse.Syntax.Base.Tm_STApp",
         "disc_equation_Pulse.Syntax.Base.Tm_Abs",
         "disc_equation_Pulse.Syntax.Base.Tm_Admit",
-        "disc_equation_Pulse.Syntax.Base.Tm_AssertWithBinders",
         "disc_equation_Pulse.Syntax.Base.Tm_Bind",
         "disc_equation_Pulse.Syntax.Base.Tm_ElimExists",
         "disc_equation_Pulse.Syntax.Base.Tm_If",
         "disc_equation_Pulse.Syntax.Base.Tm_IntroExists",
         "disc_equation_Pulse.Syntax.Base.Tm_IntroPure",
+        "disc_equation_Pulse.Syntax.Base.Tm_Match",
         "disc_equation_Pulse.Syntax.Base.Tm_Par",
+        "disc_equation_Pulse.Syntax.Base.Tm_ProofHintWithBinders",
         "disc_equation_Pulse.Syntax.Base.Tm_Protect",
         "disc_equation_Pulse.Syntax.Base.Tm_Return",
         "disc_equation_Pulse.Syntax.Base.Tm_Rewrite",
@@ -293,7 +316,7 @@
         "typing_Pulse.Syntax.Base.__proj__Mkst_term__item__term"
       ],
       0,
-      "314390a9cd7bab6b557691f2cf4473c3"
+      "8ebfe6d456e66c309cb152b0802584bb"
     ],
     [
       "Pulse.Syntax.Printer.print_skel",
@@ -311,13 +334,14 @@
         "data_elim_Pulse.Syntax.Base.Tm_TotBind",
         "disc_equation_Pulse.Syntax.Base.Tm_Abs",
         "disc_equation_Pulse.Syntax.Base.Tm_Admit",
-        "disc_equation_Pulse.Syntax.Base.Tm_AssertWithBinders",
         "disc_equation_Pulse.Syntax.Base.Tm_Bind",
         "disc_equation_Pulse.Syntax.Base.Tm_ElimExists",
         "disc_equation_Pulse.Syntax.Base.Tm_If",
         "disc_equation_Pulse.Syntax.Base.Tm_IntroExists",
         "disc_equation_Pulse.Syntax.Base.Tm_IntroPure",
+        "disc_equation_Pulse.Syntax.Base.Tm_Match",
         "disc_equation_Pulse.Syntax.Base.Tm_Par",
+        "disc_equation_Pulse.Syntax.Base.Tm_ProofHintWithBinders",
         "disc_equation_Pulse.Syntax.Base.Tm_Protect",
         "disc_equation_Pulse.Syntax.Base.Tm_Return",
         "disc_equation_Pulse.Syntax.Base.Tm_Rewrite",
@@ -344,7 +368,7 @@
         "typing_Pulse.Syntax.Base.__proj__Mkst_term__item__term"
       ],
       0,
-      "7a0800991b801202fb30028438cfc6bf"
+      "c487ff876ddecf3527c1c7209b335d51"
     ]
   ]
 ]

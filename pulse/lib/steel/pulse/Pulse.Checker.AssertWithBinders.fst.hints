@@ -1,6 +1,25 @@
 [
-  "¸\u0001!ƒ\nNGÅl√\u0016®\u0016†OI",
+  "¨Œ≈„Cº7p\u007f]&)8WR‹",
   [
+    [
+      "Pulse.Checker.AssertWithBinders.instantiate_binders_with_fresh_names",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ce036b6b736ef4e0bc3a9ff132a12aed",
+        "equation_FStar.Sealed.Inhabited.is_sealed", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "equation_Pulse.Syntax.Base.range_singleton_trigger",
+        "equation_Pulse.Syntax.Base.var", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "string_typing", "true_interp"
+      ],
+      0,
+      "f0fe4d175b5211e17b4db2030572f809"
+    ],
     [
       "Pulse.Checker.AssertWithBinders.instantiate_binders_with_uvars",
       1,
@@ -17,7 +36,7 @@
         "typing_Pulse.Readback.readback_ty"
       ],
       0,
-      "a829d506a1c73ea16a057c5002f685aa"
+      "041a38e172547c683f6be9c8727aea0f"
     ],
     [
       "Pulse.Checker.AssertWithBinders.infer_binder_types",
@@ -72,7 +91,73 @@
         "typing_tok_FStar.Reflection.V2.Data.Q_Explicit@tok"
       ],
       0,
-      "01092ac204d702471e9cb6c994a68940"
+      "1492f3d725f3f77db48cecc5020b7148"
+    ],
+    [
+      "Pulse.Checker.AssertWithBinders.option_must",
+      1,
+      2,
+      1,
+      [ "@query", "lemma_FStar.Pervasives.invertOption" ],
+      0,
+      "663a5565c67860294df450b8f54eb1d4"
+    ],
+    [
+      "Pulse.Checker.AssertWithBinders.unfold_defs",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ce036b6b736ef4e0bc3a9ff132a12aed",
+        "constructor_distinct_FStar.Tactics.Result.Success",
+        "equation_Prims.eqtype",
+        "equation_Pulse.Syntax.Base.range_singleton_trigger",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "function_token_typing_Prims.string", "kinding_Prims.list@tok",
+        "lemma_FStar.Pervasives.invertOption",
+        "projection_inverse_FStar.Tactics.Result.Success_a",
+        "projection_inverse_FStar.Tactics.Result.Success_ps",
+        "projection_inverse_FStar.Tactics.Result.Success_v",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "string_typing"
+      ],
+      0,
+      "563df79c374388df7a22f694bc7a6bdc"
+    ],
+    [
+      "Pulse.Checker.AssertWithBinders.prepare_goal",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_Pulse.Syntax.Base.ASSERT",
+        "disc_equation_Pulse.Syntax.Base.FOLD",
+        "disc_equation_Pulse.Syntax.Base.UNFOLD",
+        "fuel_guarded_inversion_Pulse.Syntax.Base.proof_hint_type",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "d06fd7cf73b86250fda59337fcdc3da6"
+    ],
+    [
+      "Pulse.Checker.AssertWithBinders.check_unfoldable",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ce036b6b736ef4e0bc3a9ff132a12aed",
+        "disc_equation_Pulse.Syntax.Base.ASSERT",
+        "disc_equation_Pulse.Syntax.Base.FOLD",
+        "disc_equation_Pulse.Syntax.Base.UNFOLD",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "fuel_guarded_inversion_Pulse.Syntax.Base.proof_hint_type",
+        "projection_inverse_BoxBool_proj_0", "string_typing"
+      ],
+      0,
+      "a941387bddaae0c5a024ef8d0a981ce1"
     ],
     [
       "Pulse.Checker.AssertWithBinders.check",
@@ -82,21 +167,56 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ce036b6b736ef4e0bc3a9ff132a12aed",
+        "Pulse.Syntax.Base_pretyping_01e6cbbfeab3ba416b144f2c9223a2d4",
+        "Pulse.Syntax.Base_pretyping_fa5c7efe36c086579ecac559fdac8c1f",
+        "constructor_distinct_FStar.Pervasives.Native.Some",
+        "constructor_distinct_FStar.Reflection.V2.Data.Tv_FVar",
+        "constructor_distinct_FStar.Reflection.V2.Data.Tv_Unknown",
         "constructor_distinct_FStar.Tactics.Result.Failed",
         "constructor_distinct_FStar.Tactics.Result.Success",
+        "constructor_distinct_Pulse.Syntax.Base.ASSERT",
+        "constructor_distinct_Pulse.Syntax.Base.Tm_ProofHintWithBinders",
+        "constructor_distinct_Pulse.Syntax.Base.UNFOLD",
+        "data_elim_Pulse.Syntax.Base.Mkst_term",
+        "data_typing_intro_FStar.Reflection.V2.Data.Tv_FVar@tok",
+        "data_typing_intro_Prims.Cons@tok",
+        "data_typing_intro_Prims.Nil@tok",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_Pulse.Syntax.Base.ASSERT",
+        "disc_equation_Pulse.Syntax.Base.FOLD",
+        "disc_equation_Pulse.Syntax.Base.Tm_ProofHintWithBinders",
+        "disc_equation_Pulse.Syntax.Base.UNFOLD",
+        "equality_tok_FStar.Reflection.V2.Data.Tv_Unknown@tok",
+        "equation_FStar.Reflection.Const.unit_lid",
+        "equation_FStar.Reflection.Types.name",
+        "equation_FStar.Reflection.Typing.fstar_top_env",
+        "equation_FStar.Reflection.Typing.unit_fv", "equation_Prims.eqtype",
         "equation_Pulse.Checker.Inference.solution",
+        "equation_Pulse.Syntax.Base.not_tv_unknown",
         "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "fuel_guarded_inversion_Pulse.Syntax.Base.proof_hint_type",
+        "fuel_guarded_inversion_Pulse.Syntax.Base.st_term",
+        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_Prims.string", "int_inversion",
+        "lemma_FStar.Reflection.Typing.inspect_pack",
+        "proj_equation_Pulse.Syntax.Base.Mkst_term_term",
+        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Tactics.Result.Failed_a",
         "projection_inverse_FStar.Tactics.Result.Failed_exn",
         "projection_inverse_FStar.Tactics.Result.Failed_ps",
         "projection_inverse_FStar.Tactics.Result.Success_a",
         "projection_inverse_FStar.Tactics.Result.Success_ps",
         "projection_inverse_FStar.Tactics.Result.Success_v",
-        "refinement_interpretation_Tm_refine_1acbe8e094ec00d7cd52788db64b381d",
-        "string_typing"
+        "projection_inverse_Pulse.Syntax.Base.Tm_ProofHintWithBinders__0",
+        "refinement_interpretation_Tm_refine_262f039a938fc14ac016e995f8cd074e",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_bf49085558242af8c310020a9c32bdc7",
+        "string_typing", "typing_FStar.Reflection.Typing.unit_fv",
+        "typing_FStar.Reflection.V2.Builtins.pack_fv",
+        "typing_Pulse.Typing.Env.fstar_env"
       ],
       0,
-      "8af010386988ed619472692f676802b3"
+      "1aa1feaae11156bd4a42091a32193dc6"
     ]
   ]
 ]

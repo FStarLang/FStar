@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "6a8ea5520650349ccc0454244e37c90d"
+      "772695fa20977bc07b99f92eeb29059c"
     ],
     [
       "Steel.ST.Array.seq_map",
@@ -50,7 +50,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "3ba83160373fa4f6b76c736c15baae65"
+      "9c596f84fe63d63bdd0be6cb38a318a6"
     ],
     [
       "Steel.ST.Array.seq_map_append",
@@ -76,7 +76,7 @@
         "typing_FStar.Seq.Base.append", "typing_Steel.ST.Array.seq_map"
       ],
       0,
-      "aa86beb90707b3e55161f3c0e508a497"
+      "35773b28911aa79e217a894c627892be"
     ],
     [
       "Steel.ST.Array.seq_map_raise_inj",
@@ -102,7 +102,7 @@
         "typing_Steel.ST.Array.seq_map"
       ],
       0,
-      "35b43737b03226c099a4d8018b781e06"
+      "c4d2e3a7cd8fbbc7cebd4928e3253acb"
     ],
     [
       "Steel.ST.Array.is_null_ptr",
@@ -111,7 +111,7 @@
       1,
       [ "@query", "equation_Steel.ST.Array.null_ptr" ],
       0,
-      "06aa3cbabdc4613df1e859823e43d2b9"
+      "4d76eefb30e7c5f821a8b9c1fed4d049"
     ],
     [
       "Steel.ST.Array.offset",
@@ -123,7 +123,7 @@
         "equation_Steel.ST.Array.base_len"
       ],
       0,
-      "15decd94acfab3aef0dc78e3d0b8ef05"
+      "9f3bcd8743eeeb87ef24705227bdd4cf"
     ],
     [
       "Steel.ST.Array.ptr_base_offset_inj",
@@ -135,7 +135,7 @@
         "equation_Steel.ST.Array.offset"
       ],
       0,
-      "296130f5e428f8ae85d1030cf110adb1"
+      "c281999704a87d7d93ca8120f2e92522"
     ],
     [
       "Steel.ST.Array.base_len_null_ptr",
@@ -148,7 +148,7 @@
         "equation_Steel.ST.Array.null_ptr"
       ],
       0,
-      "a4b0433269f04f271d0517f1514a8410"
+      "efcc8520b7c29188ececf4169771b2f9"
     ],
     [
       "Steel.ST.Array.null",
@@ -164,7 +164,7 @@
         "typing_Steel.ST.Array.null_ptr", "typing_Steel.ST.Array.offset"
       ],
       0,
-      "5adc2fc89f9b5772022f9129e8b12b8b"
+      "09fb881669c25f0633a57b414eddc8fa"
     ],
     [
       "Steel.ST.Array.is_null",
@@ -179,7 +179,7 @@
         "equation_Steel.ST.Array.ptr_of",
         "fuel_guarded_inversion_Prims.dtuple2", "int_inversion",
         "interpretation_Tm_abs_4d5e86439a4b92fb1d3f2062e682ba81",
-        "lemma_FStar.Ghost.hide_reveal", "lemma_FStar.Ghost.reveal_hide",
+        "lemma_FStar.Ghost.hide_reveal",
         "lemma_Steel.ST.Array.base_len_null_ptr",
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Prims.Mkdtuple2__1",
@@ -187,13 +187,11 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_76c84c73641925b528edb32fe3ff3950",
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "typing_FStar.Ghost.reveal", "typing_Steel.ST.Array.base",
-        "typing_Steel.ST.Array.base_len", "typing_Steel.ST.Array.offset",
-        "typing_Steel.ST.Array.raise_t",
-        "typing_Steel.ST.HigherArray.null_ptr"
+        "typing_FStar.Ghost.reveal", "typing_Steel.ST.Array.offset",
+        "typing_Steel.ST.Array.ptr_of"
       ],
       0,
-      "cf123011ce3165cddeea57a2d3187ad2"
+      "a497f50a0f59b5a4d0584e31116c48d5"
     ],
     [
       "Steel.ST.Array.length_fits",
@@ -209,7 +207,7 @@
         "proj_equation_Prims.Mkdtuple2__2"
       ],
       0,
-      "c1150951db32365e132be543b13bc1a2"
+      "957c95a2a8acd28ea8eac0aa7a6b0b5a"
     ],
     [
       "Steel.ST.Array.larray",
@@ -223,7 +221,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "8321f99871ca98d7f3701235985384dd"
+      "5746eabd2b767aa0179d45af73f8a23d"
     ],
     [
       "Steel.ST.Array.pts_to_length",
@@ -237,7 +235,7 @@
         "proj_equation_Prims.Mkdtuple2__2"
       ],
       0,
-      "350355a9b8d35c65d2c1c8f9b3f8aef2"
+      "6087ae0664be9d4b26487fd54a01c2c5"
     ],
     [
       "Steel.ST.Array.h_array_eq'",
@@ -257,7 +255,7 @@
         "typing_FStar.Pervasives.dsnd", "typing_Steel.ST.HigherArray.ptr"
       ],
       0,
-      "661edd1dc212f3e331d83a8adaf27c2a"
+      "314f4a77111802fe10d9fb57891fecbf"
     ],
     [
       "Steel.ST.Array.pts_to_not_null",
@@ -275,7 +273,7 @@
         "projection_inverse_Prims.Mkdtuple2__2"
       ],
       0,
-      "06dfe1c4e0815d6014f3bc4713c16469"
+      "34764982e72e949fb32f23107524cd70"
     ],
     [
       "Steel.ST.Array.pts_to_inj",
@@ -291,7 +289,7 @@
         "lemma_Steel.ST.Array.seq_map_raise_inj"
       ],
       0,
-      "834b7168de6f20304b2e9f8aea7d74e7"
+      "9583ced3b8628eef5b4d62b4d6c36043"
     ],
     [
       "Steel.ST.Array.malloc",
@@ -322,7 +320,7 @@
         "typing_Steel.ST.Array.raise", "typing_Steel.ST.Array.raise_t"
       ],
       0,
-      "6d3712073fbcf150204044ff95e139ba"
+      "cc7fd2b8b496c75ed81eaf5c5c719c3b"
     ],
     [
       "Steel.ST.Array.free",
@@ -346,7 +344,7 @@
         "proj_equation_Prims.Mkdtuple2__2", "true_interp"
       ],
       0,
-      "7b86b10f8d80d54bfe501b2671f02125"
+      "376cb9afb03e5f3b181bd05a4ca45277"
     ],
     [
       "Steel.ST.Array.share",
@@ -360,7 +358,7 @@
         "fuel_guarded_inversion_Steel.FractionalPermission.perm"
       ],
       0,
-      "c78098ae5e17f19c46ae19e9bb1610b6"
+      "6c1144c64d6d35a87d99ddaee9defceb"
     ],
     [
       "Steel.ST.Array.gather",
@@ -378,7 +376,7 @@
         "lemma_Steel.ST.Array.seq_map_raise_inj"
       ],
       0,
-      "4e8cd372e6a3cc3a7f09e5e76c9f4198"
+      "d94e6aea884b03e795e3cb1886aab88e"
     ],
     [
       "Steel.ST.Array.index",
@@ -387,7 +385,7 @@
       1,
       [ "@query" ],
       0,
-      "84d1e0eab4da4a16c0a96e569b227b3c"
+      "3f6369274a6ba7db20baed85e34fe5ba"
     ],
     [
       "Steel.ST.Array.index",
@@ -419,7 +417,7 @@
         "typing_Steel.ST.Array.raise_t", "typing_Steel.ST.Array.seq_map"
       ],
       0,
-      "f46b2b3f51fd7f28ec66575d205d58fa"
+      "a4161828813f89839af05355d3c74b7b"
     ],
     [
       "Steel.ST.Array.upd",
@@ -431,7 +429,7 @@
         "refinement_interpretation_Tm_refine_7b1ec96d0f5266207133419d2f47e967"
       ],
       0,
-      "9052090cc33cb5108b281c72f9e342f8"
+      "0e832e3fc33b1143810f199c03ae6e84"
     ],
     [
       "Steel.ST.Array.upd",
@@ -467,7 +465,7 @@
         "typing_Steel.ST.Array.raise_t", "typing_Steel.ST.Array.seq_map"
       ],
       0,
-      "5d71c6bb94ac1215ccf62ab4e8cf0702"
+      "1ae8ec7c6c00256d0989cdf9a38f6058"
     ],
     [
       "Steel.ST.Array.merge",
@@ -493,7 +491,7 @@
         "typing_Steel.ST.Array.length"
       ],
       0,
-      "030dfbda369c38c18b090cb27cfdccbe"
+      "a36676a1a1fab58671a404333565a525"
     ],
     [
       "Steel.ST.Array.merge_assoc",
@@ -522,7 +520,7 @@
         "typing_Steel.ST.Array.length", "typing_Steel.ST.Array.merge"
       ],
       0,
-      "c7beb03c4a61bac2f95d7e7449739809"
+      "eca4a413d8b681791e4bc9242997e627"
     ],
     [
       "Steel.ST.Array.ghost_join",
@@ -534,7 +532,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "0332ff9f6a84e581c601ed7bc40c469c"
+      "46a2d401fee1a8b1b740e7bc2a10844b"
     ],
     [
       "Steel.ST.Array.ghost_join",
@@ -579,7 +577,7 @@
         "typing_Steel.ST.Array.seq_map"
       ],
       0,
-      "18cd68c58250b8ff7e976c8c2a3fabc6"
+      "9ac06b14b9e1758a99d3197a7a534eaa"
     ],
     [
       "Steel.ST.Array.join",
@@ -591,7 +589,7 @@
         "lemma_FStar.Ghost.hide_reveal", "typing_Steel.ST.Array.array"
       ],
       0,
-      "ebd46e76e039296825e4a9a00f177919"
+      "37d3e27e9de8c956f33e64093b83c062"
     ],
     [
       "Steel.ST.Array.split_l",
@@ -610,7 +608,7 @@
         "refinement_interpretation_Tm_refine_14d43361b7e9404d179ef736339e2265"
       ],
       0,
-      "8b4300696e19240ec93b97706eff0c85"
+      "d59864f5a5cf1573cc2fa974da6eff59"
     ],
     [
       "Steel.ST.Array.ptr_shift",
@@ -622,7 +620,7 @@
         "equation_Steel.ST.Array.base_len", "equation_Steel.ST.Array.offset"
       ],
       0,
-      "c7524a1fdf29a0a3f1ada6539fba73b4"
+      "5fd5dedef399af2b61cb8c9b0a99a44b"
     ],
     [
       "Steel.ST.Array.ptr_shift_zero",
@@ -638,7 +636,7 @@
         "typing_Steel.ST.Array.offset"
       ],
       0,
-      "1b9f2c6a495c1860f7e5ed983afe2872"
+      "3ce0ca81c0ee96049e32202d5f5b2862"
     ],
     [
       "Steel.ST.Array.split_r",
@@ -671,7 +669,7 @@
         "typing_Steel.ST.Array.array", "typing_Steel.ST.Array.length"
       ],
       0,
-      "8e2088228860135866e66f59bed16414"
+      "cf55cd638e6397372f57aaf67af15a71"
     ],
     [
       "Steel.ST.Array.ghost_split",
@@ -694,7 +692,7 @@
         "typing_FStar.Seq.Base.length", "typing_FStar.SizeT.v"
       ],
       0,
-      "c64d530780194a1cfa41d8108079531e"
+      "7bd5aac361d49b7d9f262b41d0296486"
     ],
     [
       "Steel.ST.Array.ghost_split",
@@ -761,7 +759,7 @@
         "typing_Steel.ST.Array.seq_map"
       ],
       0,
-      "014091e4a18ecb9adab3e65fa571202c"
+      "ad1425eda65b24b5bb6ab17075e362f7"
     ],
     [
       "Steel.ST.Array.memcpy",
@@ -777,7 +775,7 @@
         "proj_equation_Prims.Mkdtuple2__2"
       ],
       0,
-      "6980537337b3ff71440c6659649fd814"
+      "6167e38001274431a25dc17324bcd92f"
     ],
     [
       "Steel.ST.Array.equal_up_to",
@@ -801,7 +799,7 @@
         "typing_FStar.SizeT.t"
       ],
       0,
-      "4dbefa9eb21bc3bbcc85d3eb1fe97ed8"
+      "9a0f4e3068ab6f8a180470d7977965cd"
     ],
     [
       "Steel.ST.Array.within_bounds",
@@ -815,7 +813,7 @@
         "typing_FStar.SizeT.t"
       ],
       0,
-      "88f2579bf0f4b1e9249553ff472ecd82"
+      "fc6ffae97ecd965e9a7d9bc0f769e1e4"
     ],
     [
       "Steel.ST.Array.elim_compare_inv",
@@ -824,7 +822,7 @@
       1,
       [ "@query", "equation_Steel.ST.Array.compare_inv" ],
       0,
-      "3d369b4685ea2ba96074c0ffee8c8de8"
+      "c2684ec73c69f77ad0f4adb3717642c6"
     ],
     [
       "Steel.ST.Array.intro_compare_inv",
@@ -836,7 +834,7 @@
         "refinement_interpretation_Tm_refine_f7c0cf691e471a37eca0098a3e824848"
       ],
       0,
-      "4192f92adcdfe53629f06faee270a83c"
+      "d4ebef2fce9fe0de89b400716893702a"
     ],
     [
       "Steel.ST.Array.intro_exists_compare_inv",
@@ -875,7 +873,7 @@
         "typing_FStar.SizeT.t", "typing_FStar.SizeT.v"
       ],
       0,
-      "ea8b5373bbcda6d191a6dd50af1dda6e"
+      "6b322c711c96a56690d907979bde95cd"
     ],
     [
       "Steel.ST.Array.extend_equal_up_to_lemma",
@@ -902,7 +900,7 @@
         "typing_FStar.Seq.Base.slice"
       ],
       0,
-      "dd2bc6ec922ea35f5dc89bd3433bca06"
+      "affc5536b88ebebbf270aadbe9754ce3"
     ],
     [
       "Steel.ST.Array.extend_equal_up_to",
@@ -927,7 +925,7 @@
         "typing_FStar.SizeT.v"
       ],
       0,
-      "5ce9b4a79bccf58daf2e413a9ab0c4b8"
+      "ca2d8e6245be71f856b19a784cbdaa39"
     ],
     [
       "Steel.ST.Array.extend_equal_up_to_neg",
@@ -945,7 +943,7 @@
         "typing_FStar.SizeT.lt"
       ],
       0,
-      "32af58c90ccdde66144dcceb9f0e67f3"
+      "7ce66d63e9bad027f47ffbb5b8867bf0"
     ],
     [
       "Steel.ST.Array.init_compare_inv",
@@ -978,7 +976,7 @@
         "typing_Steel.ST.Array.length"
       ],
       0,
-      "f56c3701f5dcef6fdfe20199b6ba5423"
+      "96c6b24ea833340d465746371d817ff7"
     ],
     [
       "Steel.ST.Array.compare_pts",
@@ -1033,7 +1031,7 @@
         "typing_Steel.ST.Array.length", "typing_Steel.ST.Reference.is_null"
       ],
       0,
-      "12537731536147d00a08f33e2b303835"
+      "86770121db0b792b2f3959948c07912b"
     ],
     [
       "Steel.ST.Array.compare_pts",
@@ -1049,7 +1047,7 @@
         "refinement_interpretation_Tm_refine_0d23b505b1814b6628d630937e5eae79"
       ],
       0,
-      "c38314871c5dd9ddaddb3097b12a3a21"
+      "f4ce99adca8a5eeeb0bfb8f98054008e"
     ],
     [
       "Steel.ST.Array.compare",
@@ -1079,7 +1077,7 @@
         "typing_FStar.SizeT.v", "typing_Steel.ST.Array.length"
       ],
       0,
-      "baf32e628448d4aa0deb38ad7a184c71"
+      "c6b1b8f62ba5a8981aacdbeed1e0df8e"
     ],
     [
       "Steel.ST.Array.ptrdiff",
@@ -1096,7 +1094,7 @@
         "fuel_guarded_inversion_Steel.FractionalPermission.perm"
       ],
       0,
-      "c9d98b8e903918bb651f090ec0e18dda"
+      "e04c7c52d2e380602784019259186fd6"
     ]
   ]
 ]

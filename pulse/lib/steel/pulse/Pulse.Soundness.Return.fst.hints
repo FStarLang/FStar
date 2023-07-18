@@ -18,7 +18,7 @@
         "@fuel_irrelevance_FStar.Reflection.Typing.subst_term.fuel_instrumented",
         "@fuel_irrelevance_Pulse.Elaborate.Pure.elab_term.fuel_instrumented",
         "@query",
-        "FStar.Classical_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
+        "FStar.Ghost_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
         "FStar.Reflection.V2.Data_pretyping_f60681fbcdc25fab56ef0ee7d5de8af8",
         "Prims_pretyping_ce036b6b736ef4e0bc3a9ff132a12aed",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
@@ -318,7 +318,7 @@
         "typing_tok_Pulse.Syntax.Base.Implicit@tok"
       ],
       0,
-      "d3f63e9ce2f6ea1dc37f243b45606c8d"
+      "40ac54e19b4f07d9941c1107629b244b"
     ]
   ]
 ]

@@ -31,7 +31,7 @@
         "subterm_ordering_Pulse.Typing.VE_Trans"
       ],
       0,
-      "e015bcf98bb67fda8c84f483c915c07c"
+      "262d38283fdd0516bac49bab8a52d8fa"
     ],
     [
       "Pulse.Checker.VPropEquiv.vprop_as_list",
@@ -48,7 +48,7 @@
         "typing_Pulse.Syntax.Base.__proj__Mkterm__item__t"
       ],
       0,
-      "1e1f287d0bf521946a800ce09ade61df"
+      "8cfd4059c183f1c55cdbd66fccf978b3"
     ],
     [
       "Pulse.Checker.VPropEquiv.list_as_vprop",
@@ -63,7 +63,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "eb78152c0daa688b0a6ad08da1c0691c"
+      "1df97d672de0230d52cb209192d85371"
     ],
     [
       "Pulse.Checker.VPropEquiv.list_as_vprop_append",
@@ -92,7 +92,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.List.Tot.Base.op_At"
       ],
       0,
-      "3774f6fcbb91434fde8c65acb65c1919"
+      "105e9cf078ed343bc1294823d9ffd453"
     ],
     [
       "Pulse.Checker.VPropEquiv.list_as_vprop_assoc",
@@ -101,7 +101,7 @@
       1,
       [ "@query" ],
       0,
-      "1f0eb3f261752c99885ccde599652ce6"
+      "57985c5633e122288769fd74a793e86d"
     ],
     [
       "Pulse.Checker.VPropEquiv.vprop_list_equiv",
@@ -150,7 +150,7 @@
         "typing_Pulse.Syntax.Base.__proj__Mkterm__item__t"
       ],
       0,
-      "7fde116589b3bd0874936cf40ab4b2e1"
+      "9fc8a1422895cfe7dae54744377f283a"
     ],
     [
       "Pulse.Checker.VPropEquiv.vprop_equiv_split_frame",
@@ -163,7 +163,7 @@
         "fuel_guarded_inversion_Pulse.Syntax.Base.term"
       ],
       0,
-      "6fdd79d44f7b712861e61e320b0f5cc1"
+      "ff1194134bb7ed12378deb7d4f5080c7"
     ]
   ]
 ]

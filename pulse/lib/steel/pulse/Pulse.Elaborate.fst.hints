@@ -97,10 +97,8 @@
         "equation_FStar.Reflection.V2.Data.ppname_t",
         "equation_FStar.Reflection.V2.Data.universes",
         "equation_FStar.Sealed.Inhabited.is_sealed",
-        "equation_FStar.Sealed.Inhabited.seal",
         "equation_FStar.Sealed.Inhabited.sealed",
-        "equation_FStar.Sealed.Inhabited.sealed_", "equation_Prims.eqtype",
-        "equation_Prims.nat",
+        "equation_FStar.Sealed.Inhabited.sealed_", "equation_Prims.nat",
         "equation_Pulse.Reflection.Util.binder_of_t_q_s",
         "equation_Pulse.Reflection.Util.emp_inames_tm",
         "equation_Pulse.Reflection.Util.mk_abs_with_name_and_range",
@@ -132,7 +130,6 @@
         "function_token_typing_FStar.Reflection.Types.term",
         "function_token_typing_FStar.Reflection.Types.universe",
         "function_token_typing_FStar.Reflection.Typing.shift_subst_elt",
-        "function_token_typing_Prims.string",
         "function_token_typing_Pulse.Syntax.Naming.rt_subst_elt",
         "function_token_typing_Pulse.Syntax.Naming.shift_subst_elt",
         "int_inversion", "int_typing",
@@ -141,7 +138,6 @@
         "kinding_Pulse.Syntax.Naming.subst_elt@tok",
         "lemma_FStar.Reflection.Typing.inspect_pack",
         "lemma_FStar.Reflection.Typing.inspect_pack_binder",
-        "lemma_FStar.Sealed.Inhabited.sealed_singleton",
         "lemma_Pulse.Syntax.Base.range_singleton",
         "primitive_Prims.op_Addition",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
@@ -194,7 +190,6 @@
         "projection_inverse_Pulse.Syntax.Naming.DT__1",
         "refinement_interpretation_Tm_refine_23dfcaa69174c552645c49ff9c2a2ea7",
         "refinement_interpretation_Tm_refine_25fe9861b42cf97d961ff4c8f44eb399",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_44fa926d2508e34ad2fc460ac05a36d0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_8c22aa61a47c16d0229ef090894097c8",
@@ -219,7 +214,6 @@
         "typing_FStar.Reflection.Typing.unit_fv",
         "typing_FStar.Reflection.V2.Builtins.pack_fv",
         "typing_FStar.Reflection.V2.Builtins.pack_ln",
-        "typing_FStar.Sealed.Inhabited.seal", "typing_FStar.Sealed.seal",
         "typing_Pulse.Elaborate.Pure.elab_term",
         "typing_Pulse.Reflection.Util.binder_of_t_q_s",
         "typing_Pulse.Reflection.Util.emp_inames_lid",
@@ -252,7 +246,7 @@
         "typing_tok_FStar.Reflection.V2.Data.Tv_Unknown@tok"
       ],
       0,
-      "825d07e94906e8b9c810c2a4ae890d18"
+      "03bda717a103cbf58156328bd39a8b65"
     ],
     [
       "Pulse.Elaborate.elab_comp_open_commute'",
@@ -417,10 +411,11 @@
         "typing_Pulse.Syntax.Base.__proj__Mkst_comp__item__pre",
         "typing_Pulse.Syntax.Base.__proj__Mkst_comp__item__res",
         "typing_Pulse.Syntax.Base.__proj__Mkst_comp__item__u",
+        "typing_Pulse.Syntax.Naming.open_term_",
         "typing_tok_FStar.Reflection.V2.Data.Q_Explicit@tok"
       ],
       0,
-      "8c1d587476158a806ee714a929807884"
+      "c862dd23d15c7ed4bac17e04ae868a42"
     ],
     [
       "Pulse.Elaborate.elab_close_commute'",
@@ -669,7 +664,7 @@
         "typing_tok_FStar.Reflection.V2.Data.Tv_Unknown@tok"
       ],
       0,
-      "bdd8b3551f617f0954b54d4289804882"
+      "72344f01942f64b22ba94c8dd9333820"
     ],
     [
       "Pulse.Elaborate.elab_comp_close_commute'",
@@ -762,7 +757,6 @@
         "function_token_typing_FStar.Reflection.Types.term",
         "function_token_typing_FStar.Reflection.Types.universe",
         "function_token_typing_FStar.Reflection.Typing.shift_subst_elt",
-        "function_token_typing_FStar.Reflection.Typing.shift_subst_n",
         "function_token_typing_Prims.string",
         "function_token_typing_Pulse.Syntax.Naming.shift_subst_elt",
         "int_inversion", "int_typing",
@@ -841,7 +835,7 @@
         "typing_tok_FStar.Reflection.V2.Data.Q_Explicit@tok"
       ],
       0,
-      "a89b0ecbdf80a5379b8ab8e1f608c839"
+      "b0fbe2946f22a8e7802a39226df2f1a4"
     ],
     [
       "Pulse.Elaborate.elab_open_commute",
@@ -906,7 +900,7 @@
         "typing_Pulse.Syntax.Pure.null_var"
       ],
       0,
-      "8da4a0905cf22a60e6e45c287477d5d0"
+      "e42de0f81f652e1b27ad0a07a727f26d"
     ],
     [
       "Pulse.Elaborate.elab_comp_close_commute",
@@ -915,7 +909,7 @@
       10,
       [ "@query", "equation_Pulse.Syntax.Naming.close_comp" ],
       0,
-      "e21ba60e46410ab568501c4eb0d42b50"
+      "2868143a212257022a42753f3951b2dd"
     ],
     [
       "Pulse.Elaborate.elab_comp_open_commute",
@@ -924,7 +918,7 @@
       10,
       [ "@query", "equation_Pulse.Syntax.Naming.open_comp_with" ],
       0,
-      "7a9c1f0a808e22a29d5caf882db92f2f"
+      "faa3ae2d05a31a3eb5c888b5a0eeeddd"
     ],
     [
       "Pulse.Elaborate.elab_ln",
@@ -1115,7 +1109,7 @@
         "typing_tok_FStar.Reflection.V2.Data.Tv_Unknown@tok"
       ],
       0,
-      "93c334033602d0937b09aeb9670d5a9d"
+      "54358b65ebb1dd2297835ef602076f0c"
     ],
     [
       "Pulse.Elaborate.elab_ln_comp",
@@ -1246,7 +1240,7 @@
         "typing_tok_FStar.Reflection.V2.Data.Q_Explicit@tok"
       ],
       0,
-      "74bbf195fdd9394cc36eb29ed2126053"
+      "52dd360084c5a832e27ddcf2ca9200a4"
     ],
     [
       "Pulse.Elaborate.elab_freevars_eq",
@@ -1261,7 +1255,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "fc1d1cca02fc723ea3c5ead58d2460ca"
+      "339e8d8f55ba8f876a5559283dc0dbd5"
     ],
     [
       "Pulse.Elaborate.elab_freevars_eq",
@@ -1434,6 +1428,7 @@
         "typing_FStar.Reflection.V2.Data.var",
         "typing_FStar.Sealed.Inhabited.seal", "typing_FStar.Sealed.seal",
         "typing_FStar.Set.mem", "typing_Pulse.Elaborate.Pure.elab_term",
+        "typing_Pulse.Reflection.Util.binder_of_t_q_s",
         "typing_Pulse.Reflection.Util.emp_inames_lid",
         "typing_Pulse.Reflection.Util.emp_inames_tm",
         "typing_Pulse.Reflection.Util.emp_lid",
@@ -1458,7 +1453,7 @@
         "typing_tok_FStar.Reflection.V2.Data.Tv_Unknown@tok"
       ],
       0,
-      "a414e176bb4f40c90a9e0be8dab2fc02"
+      "0c147feb8371b83d2f0511a2625fc18a"
     ],
     [
       "Pulse.Elaborate.elab_freevars_comp_eq",
@@ -1471,7 +1466,6 @@
         "@fuel_correspondence_Pulse.Elaborate.Pure.elab_term.fuel_instrumented",
         "@fuel_correspondence_Pulse.Syntax.Naming.freevars.fuel_instrumented",
         "@fuel_irrelevance_FStar.Reflection.Typing.freevars.fuel_instrumented",
-        "@fuel_irrelevance_FStar.Reflection.Typing.freevars_binder.fuel_instrumented",
         "@fuel_irrelevance_FStar.Reflection.Typing.freevars_terms.fuel_instrumented",
         "@query",
         "FStar.Reflection.Types_pretyping_2e55a80de3ea7e6dff8c6be83b8dd816",
@@ -1571,7 +1565,6 @@
         "refinement_interpretation_Tm_refine_25fe9861b42cf97d961ff4c8f44eb399",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_f8add969ed520f10123d9e882319340e",
         "string_typing",
         "token_correspondence_FStar.Reflection.Typing.freevars.fuel_instrumented",
         "token_correspondence_FStar.Reflection.Typing.freevars_binder.fuel_instrumented",
@@ -1579,10 +1572,7 @@
         "true_interp", "typing_FStar.Reflection.Typing.binder_of_t_q",
         "typing_FStar.Reflection.Typing.freevars",
         "typing_FStar.Reflection.Typing.unit_fv",
-        "typing_FStar.Reflection.V2.Builtins.inspect_binder",
         "typing_FStar.Reflection.V2.Builtins.pack_ln",
-        "typing_FStar.Reflection.V2.Data.__proj__Mkbinder_view__item__attrs",
-        "typing_FStar.Reflection.V2.Data.__proj__Mkbinder_view__item__sort",
         "typing_FStar.Reflection.V2.Data.var", "typing_FStar.Sealed.seal",
         "typing_FStar.Set.mem", "typing_FStar.Set.union",
         "typing_Pulse.Elaborate.Pure.elab_comp",
@@ -1601,7 +1591,7 @@
         "typing_tok_FStar.Reflection.V2.Data.Q_Explicit@tok"
       ],
       0,
-      "7456e44f36293cc26f9d591c4ee0c812"
+      "9300c20d3f1aae68219c126249dc8ce8"
     ],
     [
       "Pulse.Elaborate.elab_freevars",
@@ -1616,7 +1606,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "00e18b4b821e19867e5c3f15e99e5d00"
+      "43b1439e27cbcaa89d7f28b2e6557a61"
     ],
     [
       "Pulse.Elaborate.elab_freevars",
@@ -1633,7 +1623,7 @@
         "typing_Pulse.Syntax.Naming.freevars"
       ],
       0,
-      "c81e113eea1861ed438fa08fb5f68aaa"
+      "43bec0e7d3b0a5b5f465b000dd7b34f0"
     ]
   ]
 ]

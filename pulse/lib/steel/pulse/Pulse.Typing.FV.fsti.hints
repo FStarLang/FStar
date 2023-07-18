@@ -14,7 +14,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "1fbed7b7d5182f2f4be927747a8ca2f6"
+      "29f287bb662f4a29042cceb9d1590cb0"
     ],
     [
       "Pulse.Typing.FV.freevars_close_st_term",
@@ -29,7 +29,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "3b919716182d2b9f1a64e6d35445a4bb"
+      "d9147f798b88059fa006e3177be2113d"
     ],
     [
       "Pulse.Typing.FV.tot_typing_freevars",
@@ -44,7 +44,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "0331d553c684fc3932dc7f3890d5fb22"
+      "f8db76165d766d9f96ffc9637b8728af"
     ],
     [
       "Pulse.Typing.FV.comp_typing_freevars",
@@ -59,7 +59,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "68813b4e54b318f7c30d031e99905985"
+      "0582ecbb96ab8de1273c5f0e67c7ebe4"
     ],
     [
       "Pulse.Typing.FV.st_typing_freevars",
@@ -74,7 +74,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "1ab0b23a640d6565ddca5af5fc3128fb"
+      "54c0901e7bdabd28cc3a2f1486d45594"
     ],
     [
       "Pulse.Typing.FV.st_typing_freevars_inv",
@@ -93,15 +93,17 @@
         "function_token_typing_Prims.int",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
         "kinding_Pulse.Syntax.Base.term@tok",
-        "lemma_FStar.Map.lemma_ContainsDom",
+        "lemma_FStar.Map.lemma_ContainsDom", "lemma_FStar.Set.subset_mem",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "typing_FStar.Map.contains", "typing_FStar.Reflection.V2.Data.var",
-        "typing_Pulse.Typing.Env.as_map"
+        "typing_Pulse.Syntax.Naming.freevars_comp",
+        "typing_Pulse.Typing.Env.as_map",
+        "typing_Pulse.Typing.FV.vars_of_env"
       ],
       0,
-      "52b0381cc9ae96ab4bfef4017c474372"
+      "4d76707278343cc46b7ba34db833cf8c"
     ]
   ]
 ]

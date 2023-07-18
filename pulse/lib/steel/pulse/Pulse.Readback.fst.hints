@@ -1,5 +1,5 @@
 [
-  "า/ü@ป\u0003d+}…ทก่\u00158๖",
+  "รโฃํÿÝ\u0016u\u0016\"ลอ,€<",
   [
     [
       "Pulse.Readback.op_let_Question",
@@ -8,7 +8,7 @@
       1,
       [ "@query", "lemma_FStar.Pervasives.invertOption" ],
       0,
-      "20ab3aeed5d6df5a30736d05e4b311a8"
+      "43f3f5f7535236d001d722d5f37ac1f1"
     ],
     [
       "Pulse.Readback.try_readback_st_comp",
@@ -47,7 +47,7 @@
         "typing_FStar.Reflection.Types.name"
       ],
       0,
-      "bd0f03504545e2392d915c3fc170ed30"
+      "f8eaf2aabb588a4480c32302b28bb21b"
     ],
     [
       "Pulse.Readback.readback_ty",
@@ -55,16 +55,91 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption",
-        "binder_x_8632d594431d6c78cb2dd50457d25394_0",
-        "equation_Pulse.Readback.collect_app_refined",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "refinement_interpretation_Tm_refine_6145c14da50f091ce7134d4d680572e6",
-        "typing_FStar.Reflection.V2.Derived.collect_app_ln",
-        "typing_Pulse.Readback.collect_app_refined"
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Pulse.Elaborate.Pure.elab_term.fuel_instrumented",
+        "@query", "binder_x_8632d594431d6c78cb2dd50457d25394_0",
+        "constructor_distinct_FStar.Reflection.V2.Data.Tv_Abs",
+        "constructor_distinct_FStar.Reflection.V2.Data.Tv_Arrow",
+        "constructor_distinct_FStar.Reflection.V2.Data.Tv_BVar",
+        "constructor_distinct_FStar.Reflection.V2.Data.Tv_Const",
+        "constructor_distinct_FStar.Reflection.V2.Data.Tv_FVar",
+        "constructor_distinct_FStar.Reflection.V2.Data.Tv_Let",
+        "constructor_distinct_FStar.Reflection.V2.Data.Tv_Match",
+        "constructor_distinct_FStar.Reflection.V2.Data.Tv_Refine",
+        "constructor_distinct_FStar.Reflection.V2.Data.Tv_Type",
+        "constructor_distinct_FStar.Reflection.V2.Data.Tv_UInst",
+        "constructor_distinct_FStar.Reflection.V2.Data.Tv_Unknown",
+        "constructor_distinct_FStar.Reflection.V2.Data.Tv_Var",
+        "constructor_distinct_Pulse.Syntax.Base.Tm_Emp",
+        "constructor_distinct_Pulse.Syntax.Base.Tm_EmpInames",
+        "constructor_distinct_Pulse.Syntax.Base.Tm_FStar",
+        "constructor_distinct_Pulse.Syntax.Base.Tm_Inames",
+        "constructor_distinct_Pulse.Syntax.Base.Tm_Unknown",
+        "constructor_distinct_Pulse.Syntax.Base.Tm_VProp",
+        "disc_equation_FStar.Reflection.V2.Data.Tv_Abs",
+        "disc_equation_FStar.Reflection.V2.Data.Tv_App",
+        "disc_equation_FStar.Reflection.V2.Data.Tv_Arrow",
+        "disc_equation_FStar.Reflection.V2.Data.Tv_AscribedC",
+        "disc_equation_FStar.Reflection.V2.Data.Tv_AscribedT",
+        "disc_equation_FStar.Reflection.V2.Data.Tv_BVar",
+        "disc_equation_FStar.Reflection.V2.Data.Tv_Const",
+        "disc_equation_FStar.Reflection.V2.Data.Tv_FVar",
+        "disc_equation_FStar.Reflection.V2.Data.Tv_Let",
+        "disc_equation_FStar.Reflection.V2.Data.Tv_Match",
+        "disc_equation_FStar.Reflection.V2.Data.Tv_Refine",
+        "disc_equation_FStar.Reflection.V2.Data.Tv_Type",
+        "disc_equation_FStar.Reflection.V2.Data.Tv_UInst",
+        "disc_equation_FStar.Reflection.V2.Data.Tv_Unknown",
+        "disc_equation_FStar.Reflection.V2.Data.Tv_Unsupp",
+        "disc_equation_FStar.Reflection.V2.Data.Tv_Uvar",
+        "disc_equation_FStar.Reflection.V2.Data.Tv_Var",
+        "equality_tok_FStar.Reflection.V2.Data.Tv_Unknown@tok",
+        "equality_tok_Pulse.Syntax.Base.Tm_Emp@tok",
+        "equality_tok_Pulse.Syntax.Base.Tm_EmpInames@tok",
+        "equality_tok_Pulse.Syntax.Base.Tm_Inames@tok",
+        "equality_tok_Pulse.Syntax.Base.Tm_Unknown@tok",
+        "equality_tok_Pulse.Syntax.Base.Tm_VProp@tok",
+        "equation_FStar.Reflection.Types.name",
+        "equation_FStar.Reflection.Typing.tun", "equation_Prims.eqtype",
+        "equation_Pulse.Reflection.Util.emp_inames_tm",
+        "equation_Pulse.Syntax.Base.not_tv_unknown",
+        "equation_Pulse.Syntax.Base.range",
+        "equation_Pulse.Syntax.Base.range_singleton_trigger",
+        "equation_Pulse.Syntax.Base.with_range",
+        "equation_with_fuel_Pulse.Elaborate.Pure.elab_term.fuel_instrumented",
+        "fuel_guarded_inversion_FStar.Reflection.V2.Data.term_view",
+        "lemma_FStar.Reflection.Typing.pack_inspect",
+        "lemma_FStar.Reflection.Typing.pack_inspect_fv",
+        "lemma_Pulse.Syntax.Base.range_singleton",
+        "primitive_Prims.op_Equality",
+        "proj_equation_Pulse.Syntax.Base.Mkterm_range",
+        "proj_equation_Pulse.Syntax.Base.Mkterm_t",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Reflection.V2.Data.Tv_FVar_v",
+        "projection_inverse_Pulse.Syntax.Base.Mkterm_range",
+        "projection_inverse_Pulse.Syntax.Base.Mkterm_t",
+        "projection_inverse_Pulse.Syntax.Base.Tm_FStar__0",
+        "refinement_interpretation_Tm_refine_2ec6ce5a1e7a7fbf7c3d0a16c7b15719",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_8c22aa61a47c16d0229ef090894097c8",
+        "refinement_interpretation_Tm_refine_8f5e548ef706786f2660c70892a994cf",
+        "refinement_interpretation_Tm_refine_f39ae41739caa6a3420811af45940127",
+        "typing_FStar.Reflection.Types.name",
+        "typing_FStar.Reflection.Typing.tun",
+        "typing_FStar.Reflection.V2.Builtins.inspect_ln",
+        "typing_FStar.Reflection.V2.Builtins.pack_ln",
+        "typing_Pulse.Reflection.Util.emp_inames_tm",
+        "typing_Pulse.RuntimeUtils.range_of_term",
+        "typing_Pulse.RuntimeUtils.set_range",
+        "typing_Pulse.Syntax.Base.with_range",
+        "typing_tok_Pulse.Syntax.Base.Tm_Emp@tok",
+        "typing_tok_Pulse.Syntax.Base.Tm_EmpInames@tok",
+        "typing_tok_Pulse.Syntax.Base.Tm_Inames@tok",
+        "typing_tok_Pulse.Syntax.Base.Tm_Unknown@tok",
+        "typing_tok_Pulse.Syntax.Base.Tm_VProp@tok"
       ],
       0,
-      "71c0a50514e56a4a56624e1eb8891553"
+      "fac1a6531cb20004b9fbb9102e9586f7"
     ],
     [
       "Pulse.Readback.readback_comp",
@@ -79,7 +154,7 @@
         "refinement_interpretation_Tm_refine_4017a0e357291bf7f7b0fd33e180ad38"
       ],
       0,
-      "de73fa1355d606fdd6a4d7fad67ff51a"
+      "23e52274fdca231e04e719984717120a"
     ]
   ]
 ]

@@ -1,6 +1,22 @@
 [
-  "eıZ¬=U$0ü¥\bd\u000fÊ\fo",
+  "ù∑Ã{m\u000b\u0005\u0013Ò\n\u001bó\u001cD¶æ",
   [
+    [
+      "Steel.ST.C.Types.UserStruct.set_snoc",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion", "bool_typing",
+        "equation_Steel.ST.C.Types.UserStruct.set_def",
+        "lemma_FStar.Set.mem_singleton", "lemma_FStar.Set.mem_union",
+        "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
+        "projection_inverse_BoxBool_proj_0", "typing_FStar.Set.mem",
+        "typing_FStar.Set.singleton"
+      ],
+      0,
+      "c8594d90e4258004568d01a0714bf469"
+    ],
     [
       "Steel.ST.C.Types.UserStruct.nonempty_set_nonempty_type",
       1,
@@ -8,7 +24,7 @@
       1,
       [ "@query" ],
       0,
-      "e7e7ec63ff3fb6b46310a8963041386c"
+      "aed89741d3158889d1888bbe4a74f4bf"
     ],
     [
       "Steel.ST.C.Types.UserStruct.set_aux",
@@ -24,7 +40,7 @@
         "token_correspondence_Steel.ST.C.Types.Struct.Aux.__proj__Mkfield_description_gen_t__item__fd_type"
       ],
       0,
-      "869e4b880dade286425f727f391e2c66"
+      "055e18cbbfed72956b02f09e242cb050"
     ],
     [
       "Steel.ST.C.Types.UserStruct.get_set",
@@ -50,7 +66,7 @@
         "typing_Steel.ST.C.Types.UserStruct.__proj__Mkstruct_def__item__fields"
       ],
       0,
-      "cb998eab4f50496d01746867ea600789"
+      "da1c8a682f7fd00c3aa9f775bccf7ee5"
     ],
     [
       "Steel.ST.C.Types.UserStruct.struct_field0",
@@ -62,7 +78,7 @@
         "refinement_interpretation_Tm_refine_444d25c85876e6ad9fa4dce9efafe473"
       ],
       0,
-      "fe9eacceb82067a3d158b8de0a8133ce"
+      "8b46a586a9251e2db264b3169a4965ca"
     ],
     [
       "Steel.ST.C.Types.UserStruct.struct_field",
@@ -71,7 +87,7 @@
       1,
       [ "@query" ],
       0,
-      "187f493fac5009d4d9fc6f526ddc3d31"
+      "d0c43aaa55f7a11609cb58ff79e2baeb"
     ],
     [
       "Steel.ST.C.Types.UserStruct.struct_field",
@@ -87,7 +103,7 @@
         "token_correspondence_Steel.ST.C.Types.Struct.Aux.__proj__Mkfield_description_gen_t__item__fd_type"
       ],
       0,
-      "0ac18f1f790cdee7c018b84fbf408074"
+      "c664cc34bb2ed2bc0141e39c19a8558b"
     ],
     [
       "Steel.ST.C.Types.UserStruct.unstruct_field_alt",
@@ -112,7 +128,7 @@
         "typing_Steel.ST.C.Types.UserStruct.set"
       ],
       0,
-      "cfd6bbeea886f407aead940caca69063"
+      "8c353dcee9328a0ad8b5782244132eeb"
     ],
     [
       "Steel.ST.C.Types.UserStruct.mk_fraction_struct",
@@ -125,7 +141,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "9e908a1c16c981c7f598fec856aca893"
+      "9dc3ebb3a399778bd96416a277491836"
     ]
   ]
 ]
