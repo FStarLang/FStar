@@ -18,19 +18,30 @@ assume val p : U32.t -> vprop
 assume val q : U32.t -> vprop
 assume val r : U32.t -> U32.t -> vprop
 
-assume val read (_:unit)
-  : stt U32.t (exists_ (fun n1 -> p n1 `star` (exists_ (fun n2 -> r n1 n2 `star` q n1))))
-              (fun _ -> emp)
-
 ```pulse
-fn test_read (x:U32.t) (y:U32.t)
-   requires q x `star` r x y `star` p x
-   ensures  emp
+fn test_write
+  (r:ref U32.t)
+  (#n:erased U32.t)
+  requires pts_to r full_perm n
+  ensures exists n. pts_to r full_perm n
 {
-    let y = read ();
-    ()
+  write #U32.t r 1ul #n
 }
 ```
+
+// assume val read (_:unit)
+//   : stt U32.t (exists_ (fun n1 -> p n1 `star` (exists_ (fun n2 -> r n1 n2 `star` q n1))))
+//               (fun _ -> emp)
+
+// ```pulse
+// fn test_read (x:U32.t) (y:U32.t)
+//    requires q x `star` r x y `star` p x
+//    ensures  emp
+// {
+//     let y = read ();
+//     ()
+// }
+// ```
 
 // ```pulse
 // fn test_read (r:ref U32.t)

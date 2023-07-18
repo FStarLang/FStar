@@ -32,7 +32,7 @@ let check_effect_annotation g r (c_annot c_computed:comp) =
 
 
 #push-options "--z3rlimit_factor 2 --fuel 0 --ifuel 1"
-let check_abs
+let rec check_abs
   (g:env)
   (t:st_term{Tm_Abs? t.term})
   (check:check_t)
@@ -49,51 +49,63 @@ let check_abs
     let px = ppname, x in
     let var = tm_var {nm_ppname=ppname;nm_index=x} in
     let g' = push_binding g x ppname t in
-    let pre_opened, ret_ty, post_hint_body = 
-      match c with
-      | C_Tot { t = Tm_Unknown } -> 
-        tm_emp, None, None
+    let body_opened = open_st_term_nv body px in
+    match body_opened.term with
+    | Tm_Abs _ ->
+      let (| body, c_body, body_typing |) = check_abs g' body_opened check in
+      check_effect_annotation g' body.range c c_body;
+      FV.st_typing_freevars body_typing;
+      let body_closed = close_st_term body x in
+      assume (open_st_term body_closed x == body);
+      let b = {binder_ty=t;binder_ppname=ppname} in
+      let tt = T_Abs g x qual b u body_closed c_body t_typing body_typing in
+      let tres = tm_arrow {binder_ty=t;binder_ppname=ppname} qual (close_comp c_body x) in
+      (| _, C_Tot tres, tt |)
+    | _ ->
+      let pre_opened, ret_ty, post_hint_body = 
+        match c with
+        | C_Tot _ ->
+          fail g (Some body.range) "Tm_Abs in case of st term, C_Tot annotation" 
+          // tm_emp, None, None
 
-      | C_Tot ty ->
-        tm_emp,
-        Some (open_term_nv ty px),
-        None
+        // | C_Tot ty ->
+        //   tm_emp,
+        //   Some (open_term_nv ty px),
+        //   None
 
-      | _ -> 
-        open_term_nv (comp_pre c) px,
-        Some (open_term_nv (comp_res c) px),
-        Some (open_term' (comp_post c) var 1)
-    in
-    let (| pre_opened, pre_typing |) = check_vprop g' pre_opened in
-    let pre = close_term pre_opened x in
-    let post : post_hint_opt g' =
-      match post_hint_body with
-      | None -> fail g (Some body.range) "Tm_Abs without a post hint, bailing"
-      | Some post ->
-        let post_hint_typing
-          : post_hint_t
-          = Pulse.Checker.Common.intro_post_hint (push_context "post_hint_typing" range g') ret_ty post
-        in
-        Some post_hint_typing
-    in
+        | _ -> 
+          open_term_nv (comp_pre c) px,
+          Some (open_term_nv (comp_res c) px),
+          Some (open_term' (comp_post c) var 1)
+      in
+      let (| pre_opened, pre_typing |) = check_vprop g' pre_opened in
+      let pre = close_term pre_opened x in
+      let post : post_hint_opt g' =
+        match post_hint_body with
+        | None -> fail g (Some body.range) "Tm_Abs without a post hint, bailing"
+        | Some post ->
+          let post_hint_typing
+            : post_hint_t
+            = Pulse.Checker.Common.intro_post_hint (push_context "post_hint_typing" range g') ret_ty post
+          in
+          Some post_hint_typing
+      in
 
-  let (| y, ty_y, ctxt', g1, k |)  =
-    check g' pre_opened pre_typing post (open_st_term_nv body px)  in
-
+      let (| y, ty_y, ctxt', g1, k |)  =
+        check g' pre_opened pre_typing post body_opened  in
  
-  let (| u_ty_y, d_ty_y |) = check_universe g1 ty_y in
-  let d : st_typing_in_ctxt g1 ctxt' post =
-    return_in_ctxt g1 y u_ty_y ty_y ctxt' d_ty_y post in
+      let (| u_ty_y, d_ty_y |) = check_universe g1 ty_y in
+      let d : st_typing_in_ctxt g1 ctxt' post =
+        return_in_ctxt g1 y u_ty_y ty_y ctxt' d_ty_y post in
 
-  let (| body, c_body, body_typing |) : st_typing_in_ctxt g' pre_opened post = k post d in
+      let (| body, c_body, body_typing |) : st_typing_in_ctxt g' pre_opened post = k post d in
 
-  check_effect_annotation g' body.range c c_body;
+      check_effect_annotation g' body.range c c_body;
 
-
-  FV.st_typing_freevars body_typing;
-  let body_closed = close_st_term body x in
-  assume (open_st_term body_closed x == body);
-  let b = {binder_ty=t;binder_ppname=ppname} in
-  let tt = T_Abs g x qual b u body_closed c_body t_typing body_typing in
-  let tres = tm_arrow {binder_ty=t;binder_ppname=ppname} qual (close_comp c_body x) in
-  (| _, C_Tot tres, tt |)
+      FV.st_typing_freevars body_typing;
+      let body_closed = close_st_term body x in
+      assume (open_st_term body_closed x == body);
+      let b = {binder_ty=t;binder_ppname=ppname} in
+      let tt = T_Abs g x qual b u body_closed c_body t_typing body_typing in
+      let tres = tm_arrow {binder_ty=t;binder_ppname=ppname} qual (close_comp c_body x) in
+      (| _, C_Tot tres, tt |)
