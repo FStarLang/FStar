@@ -1,4 +1,13 @@
 open Prims
+let rec fold_left_dec : 'a 'b . 'a -> 'b Prims.list -> ('a -> 'b -> 'a) -> 'a
+  =
+  fun acc ->
+    fun l ->
+      fun f ->
+        match l with | [] -> acc | x::xs -> fold_left_dec (f acc x) xs f
+let rec map_dec : 'a 'b . 'a Prims.list -> ('a -> 'b) -> 'b Prims.list =
+  fun l ->
+    fun f -> match l with | [] -> [] | x::xs -> (f x) :: (map_dec xs f)
 let (lookup_bvar :
   FStar_Reflection_Types.env ->
     Prims.int -> FStar_Reflection_Types.term FStar_Pervasives_Native.option)
@@ -1100,6 +1109,27 @@ let (uu___is_R_Eq : relation -> Prims.bool) =
   fun projectee -> match projectee with | R_Eq -> true | uu___ -> false
 let (uu___is_R_Sub : relation -> Prims.bool) =
   fun projectee -> match projectee with | R_Sub -> true | uu___ -> false
+type binding = (FStar_Reflection_V2_Data.var * FStar_Reflection_Types.term)
+type bindings = binding Prims.list
+let rename_bindings :
+  'uuuuu .
+    ('uuuuu * FStar_Reflection_Types.term) Prims.list ->
+      FStar_Reflection_V2_Data.var ->
+        FStar_Reflection_V2_Data.var ->
+          ('uuuuu * FStar_Reflection_Types.term) Prims.list
+  =
+  fun bs ->
+    fun x ->
+      fun y ->
+        FStar_List_Tot_Base.map
+          (fun uu___ -> match uu___ with | (v, t) -> (v, (rename t x y))) bs
+let rec (extend_env_l :
+  FStar_Reflection_Types.env -> bindings -> FStar_Reflection_Types.env) =
+  fun g ->
+    fun bs ->
+      match bs with
+      | [] -> g
+      | (x, t)::bs1 -> extend_env (extend_env_l g bs1) x t
 let (is_non_informative_name : FStar_Reflection_Types.name -> Prims.bool) =
   fun l ->
     ((l = FStar_Reflection_Const.unit_lid) ||
@@ -1108,6 +1138,72 @@ let (is_non_informative_name : FStar_Reflection_Types.name -> Prims.bool) =
 let (is_non_informative_fv : FStar_Reflection_Types.fv -> Prims.bool) =
   fun f ->
     is_non_informative_name (FStar_Reflection_V2_Builtins.inspect_fv f)
+let rec (close_forall_vs :
+  FStar_Reflection_V2_Data.var Prims.list ->
+    FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
+  =
+  fun vs ->
+    fun t ->
+      match vs with
+      | [] -> t
+      | v::vs1 ->
+          let uu___ = close_term (close_forall_vs vs1 t) v in
+          FStar_Reflection_V2_Builtins.pack_ln
+            (FStar_Reflection_V2_Data.Tv_App
+               ((FStar_Reflection_V2_Builtins.pack_ln
+                   (FStar_Reflection_V2_Data.Tv_App
+                      ((FStar_Reflection_V2_Builtins.pack_ln
+                          (FStar_Reflection_V2_Data.Tv_FVar
+                             (FStar_Reflection_V2_Builtins.pack_fv
+                                ["Prims"; "l_Forall"]))),
+                        ((FStar_Reflection_V2_Builtins.pack_ln
+                            FStar_Reflection_V2_Data.Tv_Unknown),
+                          FStar_Reflection_V2_Data.Q_Implicit)))),
+                 (uu___, FStar_Reflection_V2_Data.Q_Explicit)))
+let rec (__close_term_vs :
+  Prims.nat ->
+    FStar_Reflection_V2_Data.var Prims.list ->
+      FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
+  =
+  fun i ->
+    fun vs ->
+      fun t ->
+        match vs with
+        | [] -> t
+        | v::vs1 ->
+            subst_term (__close_term_vs (i + Prims.int_one) vs1 t)
+              [ND (v, i)]
+let (close_term_vs :
+  FStar_Reflection_V2_Data.var Prims.list ->
+    FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
+  = fun vs -> fun t -> __close_term_vs Prims.int_zero vs t
+let (close_term_bs :
+  binding Prims.list ->
+    FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
+  =
+  fun bs ->
+    fun t ->
+      close_term_vs (FStar_List_Tot_Base.map FStar_Pervasives_Native.fst bs)
+        t
+let (bindings_to_refl_bindings :
+  binding Prims.list -> FStar_Reflection_V2_Data.binding Prims.list) =
+  fun bs ->
+    FStar_List_Tot_Base.map
+      (fun uu___ ->
+         match uu___ with
+         | (v, ty) ->
+             {
+               FStar_Reflection_V2_Data.uniq1 = v;
+               FStar_Reflection_V2_Data.sort3 = ty;
+               FStar_Reflection_V2_Data.ppname3 = pp_name_default
+             }) bs
+let (refl_bindings_to_bindings :
+  FStar_Reflection_V2_Data.binding Prims.list -> binding Prims.list) =
+  fun bs ->
+    FStar_List_Tot_Base.map
+      (fun b ->
+         ((b.FStar_Reflection_V2_Data.uniq1),
+           (b.FStar_Reflection_V2_Data.sort3))) bs
 type 'dummyV0 non_informative =
   | Non_informative_type of FStar_Reflection_Types.universe 
   | Non_informative_fv of FStar_Reflection_Types.fv 
@@ -1132,6 +1228,74 @@ let uu___is_Non_informative_total_arrow uu___ uu___1 =
   match uu___1 with | Non_informative_total_arrow _ -> true | _ -> false
 let uu___is_Non_informative_ghost_arrow uu___ uu___1 =
   match uu___1 with | Non_informative_ghost_arrow _ -> true | _ -> false
+type ('bnds, 'pat) bindings_ok_for_pat = Obj.t
+type ('bs, 'br) bindings_ok_for_branch = Obj.t
+type ('a, 'b, 'f, 'xs, 'ys) zip2prop = Obj.t
+type ('bss, 'brs) bindings_ok_for_branch_N = Obj.t
+let (binding_to_namedv :
+  FStar_Reflection_V2_Data.binding -> FStar_Reflection_Types.namedv) =
+  fun b ->
+    FStar_Reflection_V2_Builtins.pack_namedv
+      {
+        FStar_Reflection_V2_Data.uniq = (b.FStar_Reflection_V2_Data.uniq1);
+        FStar_Reflection_V2_Data.sort =
+          (FStar_Sealed.seal b.FStar_Reflection_V2_Data.sort3);
+        FStar_Reflection_V2_Data.ppname =
+          (b.FStar_Reflection_V2_Data.ppname3)
+      }
+let rec (elaborate_pat :
+  FStar_Reflection_V2_Data.pattern ->
+    FStar_Reflection_V2_Data.binding Prims.list ->
+      (FStar_Reflection_Types.term * FStar_Reflection_V2_Data.binding
+        Prims.list) FStar_Pervasives_Native.option)
+  =
+  fun p ->
+    fun bs ->
+      match (p, bs) with
+      | (FStar_Reflection_V2_Data.Pat_Constant c, uu___) ->
+          FStar_Pervasives_Native.Some
+            ((FStar_Reflection_V2_Builtins.pack_ln
+                (FStar_Reflection_V2_Data.Tv_Const c)), bs)
+      | (FStar_Reflection_V2_Data.Pat_Cons (fv, univs, subpats), bs1) ->
+          let head =
+            FStar_Reflection_V2_Builtins.pack_ln
+              (FStar_Reflection_V2_Data.Tv_FVar fv) in
+          fold_left_dec (FStar_Pervasives_Native.Some (head, bs1)) subpats
+            (fun st ->
+               fun pi ->
+                 let uu___ = pi in
+                 match uu___ with
+                 | (p1, i) ->
+                     (match st with
+                      | FStar_Pervasives_Native.None ->
+                          FStar_Pervasives_Native.None
+                      | FStar_Pervasives_Native.Some (head1, bs2) ->
+                          (match elaborate_pat p1 bs2 with
+                           | FStar_Pervasives_Native.None ->
+                               FStar_Pervasives_Native.None
+                           | FStar_Pervasives_Native.Some (t, bs') ->
+                               FStar_Pervasives_Native.Some
+                                 ((FStar_Reflection_V2_Builtins.pack_ln
+                                     (FStar_Reflection_V2_Data.Tv_App
+                                        (head1,
+                                          (t,
+                                            (if i
+                                             then
+                                               FStar_Reflection_V2_Data.Q_Implicit
+                                             else
+                                               FStar_Reflection_V2_Data.Q_Explicit))))),
+                                   bs'))))
+      | (FStar_Reflection_V2_Data.Pat_Var (uu___, uu___1), b::bs1) ->
+          FStar_Pervasives_Native.Some
+            ((FStar_Reflection_V2_Builtins.pack_ln
+                (FStar_Reflection_V2_Data.Tv_Var (binding_to_namedv b))),
+              bs1)
+      | (FStar_Reflection_V2_Data.Pat_Dot_Term (FStar_Pervasives_Native.Some
+         t), uu___) -> FStar_Pervasives_Native.Some (t, bs)
+      | (FStar_Reflection_V2_Data.Pat_Dot_Term
+         (FStar_Pervasives_Native.None), uu___) ->
+          FStar_Pervasives_Native.None
+      | uu___ -> FStar_Pervasives_Native.None
 type ('dummyV0, 'dummyV1, 'dummyV2) typing =
   | T_Token of FStar_Reflection_Types.env * FStar_Reflection_Types.term *
   comp_typ * unit 
@@ -1179,7 +1343,14 @@ type ('dummyV0, 'dummyV1, 'dummyV2) typing =
   FStar_Reflection_Types.term * FStar_Reflection_Types.universe *
   FStar_Reflection_V2_Data.var * FStar_Tactics_Types.tot_or_ghost *
   FStar_Tactics_Types.tot_or_ghost * (unit, unit, unit) typing * (unit, 
-  unit, unit) typing * (unit, unit, unit) typing * (unit, unit, unit) typing 
+  unit, unit) typing * (unit, unit, unit) typing * (unit, unit, unit) typing
+  
+  | T_Match of FStar_Reflection_Types.env * FStar_Reflection_Types.term *
+  FStar_Tactics_Types.tot_or_ghost * FStar_Reflection_Types.term * (unit,
+  unit, unit) typing * FStar_Reflection_V2_Data.branch Prims.list * comp_typ
+  * FStar_Reflection_V2_Data.binding Prims.list Prims.list * (unit, unit,
+  unit, unit, unit) match_is_complete * (unit, unit, unit, unit, unit, 
+  unit) branches_typing 
 and ('dummyV0, 'dummyV1, 'dummyV2, 'dummyV3) related =
   | Rel_equiv of FStar_Reflection_Types.env * FStar_Reflection_Types.term *
   FStar_Reflection_Types.term * relation * (unit, unit, unit) equiv 
@@ -1218,6 +1389,23 @@ and ('dummyV0, 'dummyV1, 'dummyV2, 'dummyV3) related_comp =
   FStar_Reflection_Types.term 
   | Relc_ghost_total of FStar_Reflection_Types.env *
   FStar_Reflection_Types.term * unit non_informative 
+and ('g, 'sc, 'scuty, 'rty, 'dummyV0, 'dummyV1) branches_typing =
+  | BT_Nil 
+  | BT_S of FStar_Reflection_V2_Data.branch *
+  FStar_Reflection_V2_Data.binding Prims.list * (unit, unit, unit, unit,
+  unit, unit) branch_typing * FStar_Reflection_V2_Data.branch Prims.list *
+  FStar_Reflection_V2_Data.binding Prims.list Prims.list * (unit, unit, 
+  unit, unit, unit, unit) branches_typing 
+and ('dummyV0, 'dummyV1, 'dummyV2, 'dummyV3, 'dummyV4,
+  'dummyV5) branch_typing =
+  | BO of FStar_Reflection_Types.env * FStar_Reflection_Types.term *
+  FStar_Reflection_Types.typ * comp_typ * FStar_Reflection_V2_Data.pattern *
+  FStar_Reflection_V2_Data.binding Prims.list * FStar_Reflection_V2_Data.var
+  * FStar_Reflection_Types.term * unit * (unit, unit, unit) typing 
+and ('dummyV0, 'dummyV1, 'dummyV2, 'dummyV3, 'dummyV4) match_is_complete =
+  | MC_Tok of FStar_Reflection_Types.env * FStar_Reflection_Types.term *
+  FStar_Reflection_Types.typ * FStar_Reflection_V2_Data.pattern Prims.list *
+  FStar_Reflection_V2_Data.binding Prims.list Prims.list * unit 
 let uu___is_T_Token uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_Token _ -> true | _ -> false
 let uu___is_T_Var uu___2 uu___1 uu___ uu___3 =
@@ -1244,6 +1432,8 @@ let uu___is_T_Sub uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_Sub _ -> true | _ -> false
 let uu___is_T_If uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_If _ -> true | _ -> false
+let uu___is_T_Match uu___2 uu___1 uu___ uu___3 =
+  match uu___3 with | T_Match _ -> true | _ -> false
 let uu___is_Rel_equiv uu___3 uu___2 uu___1 uu___ uu___4 =
   match uu___4 with | Rel_equiv _ -> true | _ -> false
 let uu___is_Rel_subtyping_token uu___3 uu___2 uu___1 uu___ uu___4 =
@@ -1272,31 +1462,18 @@ let uu___is_Relc_total_ghost uu___3 uu___2 uu___1 uu___ uu___4 =
   match uu___4 with | Relc_total_ghost _ -> true | _ -> false
 let uu___is_Relc_ghost_total uu___3 uu___2 uu___1 uu___ uu___4 =
   match uu___4 with | Relc_ghost_total _ -> true | _ -> false
+let uu___is_BT_Nil uu___5 uu___4 uu___3 uu___2 uu___1 uu___ uu___6 =
+  match uu___6 with | BT_Nil _ -> true | _ -> false
+let uu___is_BT_S uu___5 uu___4 uu___3 uu___2 uu___1 uu___ uu___6 =
+  match uu___6 with | BT_S _ -> true | _ -> false
+let uu___is_BO uu___5 uu___4 uu___3 uu___2 uu___1 uu___ uu___6 =
+  match uu___6 with | BO _ -> true | _ -> false
+let uu___is_MC_Tok uu___4 uu___3 uu___2 uu___1 uu___ uu___5 =
+  match uu___5 with | MC_Tok _ -> true | _ -> false
 type ('g, 't1, 't2) sub_typing = (unit, unit, unit, unit) related
 type ('g, 'c1, 'c2) sub_comp = (unit, unit, unit, unit) related_comp
 type ('g, 'e, 't) tot_typing = (unit, unit, unit) typing
 type ('g, 'e, 't) ghost_typing = (unit, unit, unit) typing
-type bindings =
-  (FStar_Reflection_V2_Data.var * FStar_Reflection_Types.term) Prims.list
-let rename_bindings :
-  'uuuuu .
-    ('uuuuu * FStar_Reflection_Types.term) Prims.list ->
-      FStar_Reflection_V2_Data.var ->
-        FStar_Reflection_V2_Data.var ->
-          ('uuuuu * FStar_Reflection_Types.term) Prims.list
-  =
-  fun bs ->
-    fun x ->
-      fun y ->
-        FStar_List_Tot_Base.map
-          (fun uu___ -> match uu___ with | (v, t) -> (v, (rename t x y))) bs
-let rec (extend_env_l :
-  FStar_Reflection_Types.env -> bindings -> FStar_Reflection_Types.env) =
-  fun g ->
-    fun bs ->
-      match bs with
-      | [] -> g
-      | (x, t)::bs1 -> extend_env (extend_env_l g bs1) x t
 let (subtyping_token_renaming :
   FStar_Reflection_Types.env ->
     bindings ->
@@ -1401,3 +1578,76 @@ type dsl_tac_t =
   fstar_top_env ->
     ((FStar_Reflection_Types.term * FStar_Reflection_Types.typ), unit)
       FStar_Tactics_Effect.tac_repr
+let (if_complete_match :
+  FStar_Reflection_Types.env ->
+    FStar_Reflection_Types.term ->
+      (unit, unit, unit, unit, unit)
+        FStar_Tactics_V2_Builtins.match_complete_token)
+  = fun g -> fun t -> Prims.magic ()
+let (mkif :
+  FStar_Reflection_Types.env ->
+    FStar_Reflection_Types.term ->
+      FStar_Reflection_Types.term ->
+        FStar_Reflection_Types.term ->
+          FStar_Reflection_Types.term ->
+            FStar_Reflection_Types.universe ->
+              FStar_Reflection_V2_Data.var ->
+                FStar_Tactics_Types.tot_or_ghost ->
+                  FStar_Tactics_Types.tot_or_ghost ->
+                    (unit, unit, unit) typing ->
+                      (unit, unit, unit) typing ->
+                        (unit, unit, unit) typing ->
+                          (unit, unit, unit) typing ->
+                            (unit, unit, unit) typing)
+  =
+  fun g ->
+    fun scrutinee ->
+      fun then_ ->
+        fun else_ ->
+          fun ty ->
+            fun u_ty ->
+              fun hyp ->
+                fun eff ->
+                  fun ty_eff ->
+                    fun ts ->
+                      fun tt ->
+                        fun te ->
+                          fun tr ->
+                            let brt =
+                              ((FStar_Reflection_V2_Data.Pat_Constant
+                                  FStar_Reflection_V2_Data.C_True), then_) in
+                            let bre =
+                              ((FStar_Reflection_V2_Data.Pat_Constant
+                                  FStar_Reflection_V2_Data.C_False), else_) in
+                            let brty uu___ =
+                              BT_S
+                                (((FStar_Reflection_V2_Data.Pat_Constant
+                                     FStar_Reflection_V2_Data.C_True), then_),
+                                  [],
+                                  (BO
+                                     (g, scrutinee, bool_ty, (eff, ty),
+                                       (FStar_Reflection_V2_Data.Pat_Constant
+                                          FStar_Reflection_V2_Data.C_True),
+                                       [], hyp, then_, (), tt)),
+                                  [((FStar_Reflection_V2_Data.Pat_Constant
+                                       FStar_Reflection_V2_Data.C_False),
+                                     else_)], [[]],
+                                  (BT_S
+                                     (((FStar_Reflection_V2_Data.Pat_Constant
+                                          FStar_Reflection_V2_Data.C_False),
+                                        else_), [],
+                                       (BO
+                                          (g, scrutinee, bool_ty, (eff, ty),
+                                            (FStar_Reflection_V2_Data.Pat_Constant
+                                               FStar_Reflection_V2_Data.C_False),
+                                            [], hyp, else_, (), te)), [], [],
+                                       BT_Nil))) in
+                            T_Match
+                              (g, scrutinee, eff, bool_ty, ts, [brt; bre],
+                                (eff, ty), [[]; []],
+                                (MC_Tok
+                                   (g, scrutinee, bool_ty,
+                                     (FStar_List_Tot_Base.map
+                                        FStar_Pervasives_Native.fst
+                                        [brt; bre]), [[]; []], ())),
+                                (brty ()))
