@@ -98,3 +98,16 @@ val return_in_ctxt (g:env) (y:var) (u:universe) (ty:term) (ctxt:vprop)
   : Pure (st_typing_in_ctxt g ctxt post_hint0)
          (requires lookup g y == Some ty)
          (ensures fun _ -> True)
+
+let rec vprop_as_list (vp:term)
+  : list term
+  = match vp.t with
+    | Tm_Emp -> []
+    | Tm_Star vp0 vp1 -> vprop_as_list vp0 @ vprop_as_list vp1
+    | _ -> [vp]
+
+let rec list_as_vprop (vps:list term)
+  : term
+  = match vps with
+    | [] -> tm_emp
+    | hd::tl -> tm_star hd (list_as_vprop tl)

@@ -5,6 +5,7 @@ module T = FStar.Tactics.V2
 open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Typing
+open Pulse.Typing.Combinators
 open Pulse.Checker.Framing
 open Pulse.Checker.VPropEquiv
 module P = Pulse.Syntax.Printer

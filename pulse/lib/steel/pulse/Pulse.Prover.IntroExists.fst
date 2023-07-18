@@ -2,9 +2,11 @@ module Pulse.Prover.IntroExists
 
 open Pulse.Syntax
 open Pulse.Typing
+open Pulse.Typing.Combinators
 open Pulse.Typing.Metatheory
 open Pulse.Checker.VPropEquiv
 open Pulse.Prover.Common
+open Pulse.Checker.Common
 
 module T = FStar.Tactics.V2
 module PS = Pulse.Prover.Substs

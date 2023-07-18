@@ -24,19 +24,6 @@ val post_hint_from_comp_typing (#g:env) (#c:comp_st) (ct:Metatheory.comp_typing_
 
 // exception Framing_failure of Pulse.Checker.Framing.framing_failure
 
-let rec vprop_as_list (vp:term)
-  : list term
-  = match vp.t with
-    | Tm_Emp -> []
-    | Tm_Star vp0 vp1 -> vprop_as_list vp0 @ vprop_as_list vp1
-    | _ -> [vp]
-
-let rec list_as_vprop (vps:list term)
-  : term
-  = match vps with
-    | [] -> tm_emp
-    | hd::tl -> tm_star hd (list_as_vprop tl)
-
 type continuation_elaborator
   (g:env)                         (ctxt:vprop)
   (g':env { g' `env_extends` g }) (ctxt':vprop) =

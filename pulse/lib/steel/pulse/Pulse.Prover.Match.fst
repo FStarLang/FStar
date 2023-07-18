@@ -2,6 +2,7 @@ module Pulse.Prover.Match
 
 open Pulse.Syntax
 open Pulse.Typing
+open Pulse.Typing.Combinators
 open Pulse.Typing.Metatheory
 open Pulse.Checker.VPropEquiv
 open Pulse.Prover.Common

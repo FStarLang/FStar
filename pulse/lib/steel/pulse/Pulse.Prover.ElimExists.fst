@@ -2,6 +2,7 @@ module Pulse.Prover.ElimExists
 
 open Pulse.Syntax
 open Pulse.Typing
+open Pulse.Typing.Combinators
 
 module T = FStar.Tactics.V2
 

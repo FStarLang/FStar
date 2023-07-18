@@ -7,6 +7,7 @@ open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Reflection.Util
 open Pulse.Typing
+open Pulse.Typing.Combinators
 open Pulse.Checker.Pure
 open Pulse.Checker.Framing
 open Pulse.Checker.Bind
@@ -221,215 +222,215 @@ let maybe_infer_intro_exists
     result
       
 
-let handle_framing_failure
-    (g:env)
-    (t0:st_term)
-    (pre:term)
-    (pre_typing: tot_typing g pre tm_vprop)
-    (post_hint:post_hint_opt g)
-    (failure:framing_failure)
-    (check:check_t)
-  : T.Tac (checker_result_t g pre post_hint true)
-  = let wr t = { term = t; range = t0.range } in
-    if RU.debug_at_level (fstar_env g) "inference"
-    then (      
-      T.print (Printf.sprintf
-                      "Handling framing failure in term:\n%s\n\
-                        with unmatched_pre={\n%s\n} and context={\n%s\n}"
-                      (P.st_term_to_string t0)
-                      (terms_to_string failure.unmatched_preconditions)
-                      (terms_to_string failure.remaining_context))
-    );
-    let pures, rest = 
-      L.partition #term (function {t=Tm_Pure _} -> true | _ -> false) failure.unmatched_preconditions
-    in
-    let t =
-      T.fold_left 
-        (fun t (p:term) ->
-          match p.t with
-          | Tm_Pure p -> add_intro_pure t0.range t p
-          | _ -> T.fail "Impossible")
-        (wr (Tm_Protect { t = t0 })) //don't elim what we just intro'd here
-        pures
-    in
-    let rec handle_intro_exists (rest:list term) (t:st_term)
-      : T.Tac (checker_result_t g pre post_hint true)
-      = match rest with
-        | [] -> check g t pre pre_typing post_hint true
-        | {t=Tm_ExistsSL u ty p; range} :: rest ->
-          let t = 
-              Tm_Bind { 
-                binder = default_binder_annot;
-                head =
-                   wr (Tm_Protect {
-                          t = wr (Tm_IntroExists {
-                                    erased=true;
-                                    p=with_range (Tm_ExistsSL u ty p) range;
-                                    witnesses=[];
-                                    should_check=should_check_true
-                                  });
-                      });
-                body = wr (Tm_Protect { t })
-              }
-          in
-          handle_intro_exists rest (wr t)
-        | _ ->
-         fail g (Some t0.range) (format_failed_goal g failure.remaining_context rest)
-    in
-    handle_intro_exists rest t
+// let handle_framing_failure
+//     (g:env)
+//     (t0:st_term)
+//     (pre:term)
+//     (pre_typing: tot_typing g pre tm_vprop)
+//     (post_hint:post_hint_opt g)
+//     (failure:framing_failure)
+//     (check:check_t)
+//   : T.Tac (checker_result_t g pre post_hint true)
+//   = let wr t = { term = t; range = t0.range } in
+//     if RU.debug_at_level (fstar_env g) "inference"
+//     then (      
+//       T.print (Printf.sprintf
+//                       "Handling framing failure in term:\n%s\n\
+//                         with unmatched_pre={\n%s\n} and context={\n%s\n}"
+//                       (P.st_term_to_string t0)
+//                       (terms_to_string failure.unmatched_preconditions)
+//                       (terms_to_string failure.remaining_context))
+//     );
+//     let pures, rest = 
+//       L.partition #term (function {t=Tm_Pure _} -> true | _ -> false) failure.unmatched_preconditions
+//     in
+//     let t =
+//       T.fold_left 
+//         (fun t (p:term) ->
+//           match p.t with
+//           | Tm_Pure p -> add_intro_pure t0.range t p
+//           | _ -> T.fail "Impossible")
+//         (wr (Tm_Protect { t = t0 })) //don't elim what we just intro'd here
+//         pures
+//     in
+//     let rec handle_intro_exists (rest:list term) (t:st_term)
+//       : T.Tac (checker_result_t g pre post_hint true)
+//       = match rest with
+//         | [] -> check g t pre pre_typing post_hint true
+//         | {t=Tm_ExistsSL u ty p; range} :: rest ->
+//           let t = 
+//               Tm_Bind { 
+//                 binder = default_binder_annot;
+//                 head =
+//                    wr (Tm_Protect {
+//                           t = wr (Tm_IntroExists {
+//                                     erased=true;
+//                                     p=with_range (Tm_ExistsSL u ty p) range;
+//                                     witnesses=[];
+//                                     should_check=should_check_true
+//                                   });
+//                       });
+//                 body = wr (Tm_Protect { t })
+//               }
+//           in
+//           handle_intro_exists rest (wr t)
+//         | _ ->
+//          fail g (Some t0.range) (format_failed_goal g failure.remaining_context rest)
+//     in
+//     handle_intro_exists rest t
 
-let protect t = { term = Tm_Protect { t }; range = t.range }
+// let protect t = { term = Tm_Protect { t }; range = t.range }
   
-let rec unprotect t = 
-  let wr t0 = { term = t0; range = t.range } in
-  match t.term with
-  | Tm_Protect { t = { term = Tm_Bind { binder; head; body } } } ->
-    wr (Tm_Bind { binder; head=protect head; body })
-  | Tm_Protect { t = { term = Tm_If { b; then_; else_; post }}} ->
-    wr (Tm_If {b; then_=protect then_; else_=protect else_; post } )
-  | Tm_Protect { t } ->
-    unprotect t
-  | _ -> t
+// let rec unprotect t = 
+//   let wr t0 = { term = t0; range = t.range } in
+//   match t.term with
+//   | Tm_Protect { t = { term = Tm_Bind { binder; head; body } } } ->
+//     wr (Tm_Bind { binder; head=protect head; body })
+//   | Tm_Protect { t = { term = Tm_If { b; then_; else_; post }}} ->
+//     wr (Tm_If {b; then_=protect then_; else_=protect else_; post } )
+//   | Tm_Protect { t } ->
+//     unprotect t
+//   | _ -> t
   
-#push-options "--ifuel 2"
+// #push-options "--ifuel 2"
 
-let elim_then_check (#g:env) (#ctxt:term)
-                    (ctxt_typing:tot_typing g ctxt tm_vprop)
-                    (st:st_term { not (Tm_Protect? st.term) })
-                    (post_hint: post_hint_opt g)
-                    (check:check_t)
-  : T.Tac (checker_result_t g ctxt post_hint true)
-  = let (| g', ctxt', ctxt'_typing, elab_k |) = ElimExists.elim_exists ctxt_typing in
-    let (| g'', ctxt'', ctxt'_typing, elab_k' |) = ElimPure.elim_pure ctxt'_typing in
-    if RU.debug_at_level (fstar_env g) "inference"
-    then ( T.print (Printf.sprintf "Eliminated context from\n\t%s\n\tto %s\n"
-                (P.term_to_string ctxt)
-                (P.term_to_string ctxt'') )) ;
-    let res = check g'' (protect st) ctxt'' ctxt'_typing post_hint true in
-    elab_k post_hint (elab_k' post_hint res)
+// let elim_then_check (#g:env) (#ctxt:term)
+//                     (ctxt_typing:tot_typing g ctxt tm_vprop)
+//                     (st:st_term { not (Tm_Protect? st.term) })
+//                     (post_hint: post_hint_opt g)
+//                     (check:check_t)
+//   : T.Tac (checker_result_t g ctxt post_hint true)
+//   = let (| g', ctxt', ctxt'_typing, elab_k |) = ElimExists.elim_exists ctxt_typing in
+//     let (| g'', ctxt'', ctxt'_typing, elab_k' |) = ElimPure.elim_pure ctxt'_typing in
+//     if RU.debug_at_level (fstar_env g) "inference"
+//     then ( T.print (Printf.sprintf "Eliminated context from\n\t%s\n\tto %s\n"
+//                 (P.term_to_string ctxt)
+//                 (P.term_to_string ctxt'') )) ;
+//     let res = check g'' (protect st) ctxt'' ctxt'_typing post_hint true in
+//     elab_k post_hint (elab_k' post_hint res)
       
 
 #push-options "--query_stats"
 let rec check' : bool -> check_t =
   fun (allow_inst:bool)
       (g:env)
-      (t:st_term)
       (pre:term)
       (pre_typing: tot_typing g pre tm_vprop)
       (post_hint:post_hint_opt g)
-      (frame_pre:bool) ->
-  let open T in
+      (t:st_term) ->
+  // let open T in
   // T.print (Printf.sprintf "At %s: allow_inst: %s, context: %s, term: %s\n"
   //            (T.range_to_string t.range)
   //            (string_of_bool allow_inst)
   //            (Pulse.Syntax.Printer.term_to_string pre)
   //            (Pulse.Syntax.Printer.st_term_to_string t));
 
-  if not (Tm_Protect? t.term) && frame_pre
-  then elim_then_check pre_typing t post_hint (check' allow_inst)
-  else begin
-    if RU.debug_at_level (fstar_env g) "proof_states"
-    then (
-      T.print (Printf.sprintf "At %s: context is {\n%s\n}"
-                            (T.range_to_string t.range)
-                            (P.term_to_string pre))
-    );
-    let t = unprotect t in
+  // if not (Tm_Protect? t.term) && frame_pre
+  // then elim_then_check pre_typing t post_hint (check' allow_inst)
+  // else begin
+  //   if RU.debug_at_level (fstar_env g) "proof_states"
+  //   then (
+  //     T.print (Printf.sprintf "At %s: context is {\n%s\n}"
+  //                           (T.range_to_string t.range)
+  //                           (P.term_to_string pre))
+  //   );
+  //   let t = unprotect t in
     let g = push_context (P.tag_of_st_term t) t.range g in
-    try 
+    // try 
       match t.term with
       | Tm_Protect _ -> T.fail "Protect should have been removed"
 
       // | Tm_Return {term = Tm_Bvar _} -> T.fail "not locally nameless"
-      | Tm_Return _ ->
-        Return.check_return allow_inst g t pre pre_typing post_hint frame_pre
+      // | Tm_Return _ ->
+      //   Return.check_return allow_inst g t pre pre_typing post_hint frame_pre
     
-      | Tm_Abs _ ->
-        Abs.check_abs g t pre pre_typing post_hint frame_pre (check' true)
+      | Tm_Abs _ -> T.fail "Tm_Abs check should not have been called in the checker"
 
       | Tm_STApp _ ->
-        STApp.check_stapp allow_inst g t pre pre_typing post_hint frame_pre check'
+        STApp.check_stapp g t pre pre_typing post_hint
 
       | Tm_Bind _ ->
-        check_bindv2 g t pre pre_typing post_hint frame_pre (check' true)
+        check_bind g t pre pre_typing post_hint (check' true)
 
-      | Tm_TotBind _ ->
-        check_tot_bind g t pre pre_typing post_hint frame_pre (check' true)
+      | _ -> T.fail "Checker form not implemented"
 
-      | Tm_If { b; then_=e1; else_=e2; post=post_if } ->
-        let post =
-          match post_if, post_hint with
-          | None, Some p -> p
-          | Some p, None ->
-            Checker.Common.intro_post_hint g None p
-          | Some p, Some q ->
-            Pulse.Typing.Env.fail g (Some t.range) 
-              (Printf.sprintf 
-                 "Multiple annotated postconditions---remove one of them.\n\
-                  The context expects the postcondition %s,\n\
-                  but this conditional was annotated with postcondition %s"
-                  (P.term_to_string (q <: post_hint_t).post)
-                  (P.term_to_string p))
-          | _, _ ->
-            Pulse.Typing.Env.fail g (Some t.range) 
-              (Printf.sprintf
-                 "Pulse cannot yet infer a postcondition for a non-tail conditional statement;\n\
-                  Either annotate this `if` with `returns` clause; or rewrite your code to use a tail conditional")
-        in
-        let (| t, c, d |) = If.check_if g b e1 e2 pre pre_typing post frame_pre (check' true) in
-        ( (| t, c, d |) <: checker_result_t g pre post_hint frame_pre)
+      // | Tm_TotBind _ ->
+      //   check_tot_bind g t pre pre_typing post_hint frame_pre (check' true)
 
-      | Tm_IntroPure _ -> 
-        Pulse.Checker.IntroPure.check_intro_pure g t pre pre_typing post_hint frame_pre
+      // | Tm_If { b; then_=e1; else_=e2; post=post_if } ->
+      //   let post =
+      //     match post_if, post_hint with
+      //     | None, Some p -> p
+      //     | Some p, None ->
+      //       Checker.Common.intro_post_hint g None p
+      //     | Some p, Some q ->
+      //       Pulse.Typing.Env.fail g (Some t.range) 
+      //         (Printf.sprintf 
+      //            "Multiple annotated postconditions---remove one of them.\n\
+      //             The context expects the postcondition %s,\n\
+      //             but this conditional was annotated with postcondition %s"
+      //             (P.term_to_string (q <: post_hint_t).post)
+      //             (P.term_to_string p))
+      //     | _, _ ->
+      //       Pulse.Typing.Env.fail g (Some t.range) 
+      //         (Printf.sprintf
+      //            "Pulse cannot yet infer a postcondition for a non-tail conditional statement;\n\
+      //             Either annotate this `if` with `returns` clause; or rewrite your code to use a tail conditional")
+      //   in
+      //   let (| t, c, d |) = If.check_if g b e1 e2 pre pre_typing post frame_pre (check' true) in
+      //   ( (| t, c, d |) <: checker_result_t g pre post_hint frame_pre)
 
-      | Tm_ElimExists _ ->
-        Exists.check_elim_exists g t pre pre_typing post_hint frame_pre
+      // | Tm_IntroPure _ -> 
+      //   Pulse.Checker.IntroPure.check_intro_pure g t pre pre_typing post_hint frame_pre
 
-      | Tm_IntroExists { witnesses } ->
-        let should_infer_witnesses =
-          match witnesses with
-          | [w] -> (
-            match w.t with
-            | Tm_Unknown -> true
-            | _ -> false
-          )
-          | _ -> true
-        in
-        if should_infer_witnesses
-        then (
-          let unary_intros = maybe_infer_intro_exists g t pre in
-          // T.print (Printf.sprintf "Inferred unary_intros:\n%s\n"
-          //                         (P.st_term_to_string unary_intros));
-          check' allow_inst g unary_intros pre pre_typing post_hint frame_pre
-        )
-        else (
-          Exists.check_intro_exists_either g t None pre pre_typing post_hint frame_pre
-        )
+      // | Tm_ElimExists _ ->
+      //   Exists.check_elim_exists g t pre pre_typing post_hint frame_pre
 
-      | Tm_While _ ->
-        While.check_while allow_inst g t pre pre_typing post_hint frame_pre check'
+      // | Tm_IntroExists { witnesses } ->
+      //   let should_infer_witnesses =
+      //     match witnesses with
+      //     | [w] -> (
+      //       match w.t with
+      //       | Tm_Unknown -> true
+      //       | _ -> false
+      //     )
+      //     | _ -> true
+      //   in
+      //   if should_infer_witnesses
+      //   then (
+      //     let unary_intros = maybe_infer_intro_exists g t pre in
+      //     // T.print (Printf.sprintf "Inferred unary_intros:\n%s\n"
+      //     //                         (P.st_term_to_string unary_intros));
+      //     check' allow_inst g unary_intros pre pre_typing post_hint frame_pre
+      //   )
+      //   else (
+      //     Exists.check_intro_exists_either g t None pre pre_typing post_hint frame_pre
+      //   )
 
-      | Tm_Admit _ ->
-        Admit.check_admit g t pre pre_typing post_hint frame_pre
+      // | Tm_While _ ->
+      //   While.check_while allow_inst g t pre pre_typing post_hint frame_pre check'
 
-      | Tm_Par _ ->
-        Par.check_par allow_inst g t pre pre_typing post_hint frame_pre check'
+      // | Tm_Admit _ ->
+      //   Admit.check_admit g t pre pre_typing post_hint frame_pre
 
-      | Tm_WithLocal _ ->
-        WithLocal.check_withlocal allow_inst g t pre pre_typing post_hint frame_pre check'
+      // | Tm_Par _ ->
+      //   Par.check_par allow_inst g t pre pre_typing post_hint frame_pre check'
 
-      | Tm_Rewrite _ ->
-        Rewrite.check_rewrite g t pre pre_typing post_hint frame_pre
+      // | Tm_WithLocal _ ->
+      //   WithLocal.check_withlocal allow_inst g t pre pre_typing post_hint frame_pre check'
 
-      | Tm_ProofHintWithBinders _ ->
-        Pulse.Checker.AssertWithBinders.check g t pre pre_typing post_hint frame_pre (check' true)
-    with
-    | Framing_failure failure ->
-      if not frame_pre
-      then T.fail "Impossible, handle_framing_failure when frame_pre is false"
-      else
-        handle_framing_failure g t pre pre_typing post_hint failure (check' true)
-    | e -> T.raise e
-  end
+      // | Tm_Rewrite _ ->
+      //   Rewrite.check_rewrite g t pre pre_typing post_hint frame_pre
+
+      // | Tm_ProofHintWithBinders _ ->
+      //   Pulse.Checker.AssertWithBinders.check g t pre pre_typing post_hint frame_pre (check' true)
+    // with
+    // | Framing_failure failure ->
+    //   if not frame_pre
+    //   then T.fail "Impossible, handle_framing_failure when frame_pre is false"
+    //   else
+    //     handle_framing_failure g t pre pre_typing post_hint failure (check' true)
+    // | e -> T.raise e
+  // end
 
 let check = check' true

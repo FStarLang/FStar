@@ -255,9 +255,9 @@ let apply_frame (#g:env)
   = let s = st_comp_of_comp c in
     let (| frame, frame_typing, ve |) = frame_t in
     let t_typing
-      : st_typing g t (add_frame c frame)
+      : st_typing g t (Pulse.Typing.add_frame c frame)
       = T_Frame g t c frame frame_typing t_typing in
-    let c' = add_frame c frame in
+    let c' = Pulse.Typing.add_frame c frame in
     let c'_typing = Metatheory.st_typing_correctness t_typing in
     let s' = st_comp_of_comp c' in
     let ve: vprop_equiv g s'.pre ctxt = ve in

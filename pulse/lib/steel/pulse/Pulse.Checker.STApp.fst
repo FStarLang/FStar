@@ -39,7 +39,7 @@ let canonicalize_st_typing (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c
 let coerce_eq (#a #b:Type) (x:a) (_:squash (a === b)) : y:b { y == x } = x
 
 #push-options "--z3rlimit_factor 4 --fuel 1 --ifuel 1"
-let check_st_app
+let check_stapp
   (g:env)
   (t:st_term { Tm_STApp? t.term })
   (ctxt:vprop)

@@ -10,6 +10,7 @@ open Pulse.Checker.Pure
 open Pulse.Checker.VPropEquiv
 
 open Pulse.Typing
+open Pulse.Typing.Combinators
 module Metatheory = Pulse.Typing.Metatheory
 open Pulse.Reflection.Util
 open Pulse.Prover.Common
