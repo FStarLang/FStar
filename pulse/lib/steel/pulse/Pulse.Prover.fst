@@ -14,6 +14,7 @@ module ElimExists = Pulse.Prover.ElimExists
 module ElimPure =  Pulse.Prover.ElimPure
 module Match = Pulse.Prover.Match
 module IntroExists = Pulse.Prover.IntroExists
+module IntroPure = Pulse.Prover.IntroPure
 
 module T = FStar.Tactics.V2
 
@@ -87,6 +88,24 @@ let rec match_q (#preamble:_) (pst:prover_state preamble)
           (move_hd_end pst.pg pst.remaining_ctxt) in
       match_q pst q unsolved' () (i+1)
 
+let rec prove_pures #preamble (pst:prover_state preamble)
+  : T.Tac (pst':prover_state preamble { pst' `pst_extends` pst /\
+                                        is_terminal pst }) =
+  
+  match pst.unsolved with
+  | [] -> pst
+  | {t=Tm_Pure p}::unsolved' ->
+    let pst_opt = IntroPure.intro_pure pst p unsolved' () in
+    (match pst_opt with
+     | None -> fail pst.pg None (Printf.sprintf "cannot prove pure %s\n" (P.term_to_string p))
+     | Some pst1 ->
+       let pst2 = prove_pures pst in
+       assert (pst1 `pst_extends` pst);
+       assert (pst2 `pst_extends` pst1);
+       assert (pst2 `pst_extends` pst);
+       pst2)
+  | _ -> fail pst.pg None "prove_pures: not a pure"
+
 #push-options "--z3rlimit_factor 4"
 let rec prover
   (#preamble:_)
@@ -133,7 +152,7 @@ let rec prover
       let (| pures, rest, d |) = collect_pures (push_env pst.pg pst.uvs) pst.unsolved in
       let pst = unsolved_equiv_pst pst (rest@pures) d in
       match pst.unsolved with
-      | {t=Tm_Pure _}::tl -> fail pst.pg None "intro pure not implemented yet"  // only pures left
+      | {t=Tm_Pure _}::tl -> prove_pures pst
       | q::tl ->
         let pst_opt = match_q pst q tl () 0 in
         match pst_opt with
