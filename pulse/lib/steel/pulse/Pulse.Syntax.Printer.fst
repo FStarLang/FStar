@@ -135,18 +135,18 @@ let rec st_term_to_string' (level:string) (t:st_term)
         (term_to_string arg)
         
     | Tm_Bind { binder; head; body } ->
-      if T.unseal binder.binder_ppname.name = "_"
-      then sprintf "%s;\n%s%s" 
-                   (st_term_to_string' level head)
-                   level
-                   (st_term_to_string' level body)                   
-      else (
+      // if T.unseal binder.binder_ppname.name = "_"
+      // then sprintf "%s;\n%s%s" 
+      //              (st_term_to_string' level head)
+      //              level
+      //              (st_term_to_string' level body)                   
+      // else (
         sprintf "let %s = %s;\n%s%s"
           (binder_to_string binder)      
           (st_term_to_string' level head)
           level
           (st_term_to_string' level body)
-      )
+      // )
 
     | Tm_TotBind { head; body } ->
       sprintf "let tot _ = %s;\n%s%s"
