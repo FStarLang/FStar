@@ -101,7 +101,6 @@ val nt_subst_comp_commutes (c:comp) (nts:nt_substs)
                                                (nt_subst_st_comp (st_comp_of_comp c) nts))))
           [SMTPat (nt_subst_comp c nts)]
 
-
 let rec well_typed_nt_substs (g:env) (uvs:env) (nts:nt_substs)
   : Tot Type0 (decreases L.length nts) =
   

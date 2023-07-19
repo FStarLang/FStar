@@ -45,181 +45,181 @@ let default_binder_annot = {
     binder_ty = tm_unknown
 }
    
-let add_intro_pure rng (continuation:st_term) (p:term) =
-    let wr t = { term = t; range = rng } in
-    let intro_pure_tm =
-      wr (
-        Tm_Protect
-          { t = wr (Tm_IntroPure { p; should_check=should_check_false }) }
-      )
-    in
-    wr (
-      Tm_Protect { t = wr (Tm_Bind { binder = default_binder_annot;
-                                      head = intro_pure_tm;
-                                      body = continuation }) }
-    )
+// let add_intro_pure rng (continuation:st_term) (p:term) =
+//     let wr t = { term = t; range = rng } in
+//     let intro_pure_tm =
+//       wr (
+//         Tm_Protect
+//           { t = wr (Tm_IntroPure { p; should_check=should_check_false }) }
+//       )
+//     in
+//     wr (
+//       Tm_Protect { t = wr (Tm_Bind { binder = default_binder_annot;
+//                                       head = intro_pure_tm;
+//                                       body = continuation }) }
+//     )
 
-#push-options "--fuel 2 --ifuel 1 --z3rlimit_factor 10"
-let uvar_tys = list (Pulse.Checker.Inference.uvar & term)
-let rec prepare_instantiations
-          (g:env)
-          (out:list (vprop & either term term))
-          (out_uvars: uvar_tys)
-          (goal_vprop:vprop)
-          witnesses
-  : T.Tac (vprop & list (vprop & either term term) & uvar_tys)
-  = match witnesses, goal_vprop.t with
-    | [], Tm_ExistsSL u b p ->
-      let next_goal_vprop, inst, uv =
-          let uv, t = Pulse.Checker.Inference.gen_uvar b.binder_ppname in
-          open_term' p t 0, Inr t, uv
-      in
-      prepare_instantiations g ((goal_vprop, inst)::out) ((uv,b.binder_ty)::out_uvars) next_goal_vprop []
+// #push-options "--fuel 2 --ifuel 1 --z3rlimit_factor 10"
+// let uvar_tys = list (Pulse.Checker.Inference.uvar & term)
+// let rec prepare_instantiations
+//           (g:env)
+//           (out:list (vprop & either term term))
+//           (out_uvars: uvar_tys)
+//           (goal_vprop:vprop)
+//           witnesses
+//   : T.Tac (vprop & list (vprop & either term term) & uvar_tys)
+//   = match witnesses, goal_vprop.t with
+//     | [], Tm_ExistsSL u b p ->
+//       let next_goal_vprop, inst, uv =
+//           let uv, t = Pulse.Checker.Inference.gen_uvar b.binder_ppname in
+//           open_term' p t 0, Inr t, uv
+//       in
+//       prepare_instantiations g ((goal_vprop, inst)::out) ((uv,b.binder_ty)::out_uvars) next_goal_vprop []
 
-    | [], _ -> 
-      goal_vprop, out, out_uvars
+//     | [], _ -> 
+//       goal_vprop, out, out_uvars
 
-    | t :: witnesses, Tm_ExistsSL u b p ->
-      let next_goal_vprop, inst, uvs =
-          match (t<:term).t with
-          | Tm_Unknown ->
-            let uv, t = Pulse.Checker.Inference.gen_uvar b.binder_ppname in
-            open_term' p t 0, Inr t, [(uv,b.binder_ty)]
-          | _ ->
-            open_term' p t 0, Inl t, []
-      in
-      prepare_instantiations g ((goal_vprop, inst)::out) (uvs@out_uvars) next_goal_vprop witnesses
+//     | t :: witnesses, Tm_ExistsSL u b p ->
+//       let next_goal_vprop, inst, uvs =
+//           match (t<:term).t with
+//           | Tm_Unknown ->
+//             let uv, t = Pulse.Checker.Inference.gen_uvar b.binder_ppname in
+//             open_term' p t 0, Inr t, [(uv,b.binder_ty)]
+//           | _ ->
+//             open_term' p t 0, Inl t, []
+//       in
+//       prepare_instantiations g ((goal_vprop, inst)::out) (uvs@out_uvars) next_goal_vprop witnesses
 
-    |  _ ->
-       fail g None "Unexpected number of instantiations in intro"
+//     |  _ ->
+//        fail g None "Unexpected number of instantiations in intro"
 
- let rec build_instantiations solutions insts
-      : T.Tac st_term 
-      = let one_inst (v, i) =
-          let v = Pulse.Checker.Inference.apply_solution solutions v in
-          match i with
-          | Inl user_provided ->
-            wr (Tm_IntroExists {erased=false; p=v; witnesses=[user_provided]; should_check=should_check_true})
+//  let rec build_instantiations solutions insts
+//       : T.Tac st_term 
+//       = let one_inst (v, i) =
+//           let v = Pulse.Checker.Inference.apply_solution solutions v in
+//           match i with
+//           | Inl user_provided ->
+//             wr (Tm_IntroExists {erased=false; p=v; witnesses=[user_provided]; should_check=should_check_true})
 
-          | Inr inferred ->
-            let sol = Pulse.Checker.Inference.apply_solution solutions inferred in
-            match unreveal sol with
-            | Some sol ->
-              wr (Tm_IntroExists {erased=true; p=v; witnesses=[sol]; should_check=should_check_false})
-            | _ ->
-              wr (Tm_IntroExists {erased=true; p=v; witnesses=[sol]; should_check=should_check_false})
-        in
-        match insts with
-        | [] -> T.fail "Impossible"
-        | [hd] -> wr (Tm_Protect { t = one_inst hd })
+//           | Inr inferred ->
+//             let sol = Pulse.Checker.Inference.apply_solution solutions inferred in
+//             match unreveal sol with
+//             | Some sol ->
+//               wr (Tm_IntroExists {erased=true; p=v; witnesses=[sol]; should_check=should_check_false})
+//             | _ ->
+//               wr (Tm_IntroExists {erased=true; p=v; witnesses=[sol]; should_check=should_check_false})
+//         in
+//         match insts with
+//         | [] -> T.fail "Impossible"
+//         | [hd] -> wr (Tm_Protect { t = one_inst hd })
 
-        | hd::tl -> wr (Tm_Protect 
-                          { t = wr (Tm_Bind { binder = default_binder_annot;
-                                              head = wr (Tm_Protect { t = one_inst hd });
-                                              body = build_instantiations solutions tl }) })
+//         | hd::tl -> wr (Tm_Protect 
+//                           { t = wr (Tm_Bind { binder = default_binder_annot;
+//                                               head = wr (Tm_Protect { t = one_inst hd });
+//                                               body = build_instantiations solutions tl }) })
    
-let maybe_infer_intro_exists
-  (g:env)
-  (st:st_term{Tm_IntroExists? st.term})
-  (pre:term)
-  : T.Tac st_term
-  = let remove_pure_conjuncts t =
-        let rest, pure = 
-            List.Tot.partition #term
-              (function {t=Tm_Pure _} | {t=Tm_Emp} -> false | _ -> true)
-              (vprop_as_list t)
-        in
-        let rest =
-          match list_as_vprop rest with
-          | {t=Tm_Star t {t=Tm_Emp}} -> t
-          | {t=Tm_Star {t=Tm_Emp} t} -> t        
-          | t -> t
-        in
-        rest, pure
-    in
-    (* Weird: defining prepare_instantiations here causes extraction to crash with
-       Failure("This should not happen (should have been handled at Tm_abs level)")
-     *)
-    if RU.debug_at_level (fstar_env g) "inference"
-    then (      
-      T.print (Printf.sprintf "At %s: infer_intro_exists for %s\n"
-                  (T.range_to_string st.range)
-                  (P.st_term_to_string st))
-    );
-    let Tm_IntroExists {erased; p=t; witnesses} = st.term in
-    let t, _ = Pulse.Checker.Pure.instantiate_term_implicits g t in
-    let goal_vprop, insts, uvs = prepare_instantiations g [] [] t witnesses in
-    let goal_vprop, pure_conjuncts = remove_pure_conjuncts goal_vprop in      
-    let solutions = Pulse.Checker.Inference.try_inst_uvs_in_goal g pre goal_vprop in
-    // T.print
-    //   (Printf.sprintf
-    //      "maybe_infer_intro_exists: solutions after trying inst with pre: %s, goal: %s: %s\n"
-    //       (P.term_to_string pre)
-    //       (P.term_to_string goal_vprop)
-    //       (Pulse.Checker.Inference.solutions_to_string solutions));
-    let maybe_solve_pure solutions p =
-      let p = Pulse.Checker.Inference.apply_solution solutions p in
-      match p.t with
-      | Tm_Pure p -> (
-        let sols = Pulse.Checker.Inference.try_solve_pure_equalities g p in
-        sols @ solutions
-        )
-      | _ -> solutions
-    in
-    let solutions = T.fold_left maybe_solve_pure solutions pure_conjuncts in
-    if RU.debug_at_level (fstar_env g) "inference"
-    then (      
-      T.print
-        (Printf.sprintf
-          "maybe_infer_intro_exists: solutions after solving pure conjuncts (%s): %s\n"
-            (P.term_to_string (list_as_vprop pure_conjuncts))
-            (Pulse.Checker.Inference.solutions_to_string solutions))
-    );
-    let mk_hide ty_opt (e:term) : term =
-        let hd = tm_fvar (as_fv hide_lid) in
-        match ty_opt with
-        | None -> tm_pureapp hd None e
-        | Some ty -> tm_pureapp (tm_pureapp hd (Some Implicit) ty) None e
-    in
-    let type_of_uvar uv =
-      match List.Tot.tryFind (fun (u, _) -> Pulse.Checker.Inference.uvar_eq u uv) uvs with
-      | None -> None
-      | Some (_, ty) -> Some ty
-    in
-    let solutions = 
-      T.map
-        (fun (u, v) -> 
-          let sol = Pulse.Checker.Inference.apply_solution solutions v in
-          match unreveal sol with
-          | Some _ -> u, sol
-          | _ -> u, mk_hide (type_of_uvar u) sol)
-        solutions
-    in
-    let _ =
-      match Pulse.Checker.Inference.unsolved solutions uvs with
-      | Some uvs ->
-        fail g (Some st.range) (Printf.sprintf "Could not instantiate existential variables %s\n"
-                                    (String.concat ", " (T.map (fun (u, _) -> Pulse.Checker.Inference.uvar_to_string u) uvs)))
-      | None -> ()
-    in
-    let wr t = { term = t; range = st.range } in
-    let intro_exists_chain = build_instantiations solutions insts in
-    let pure_conjuncts =
-      T.map 
-       (fun vp -> 
-          match (Pulse.Checker.Inference.apply_solution solutions vp).t with
-          | Tm_Pure p -> [p]
-          | p -> [])
-       pure_conjuncts
-    in
-    let pure_conjuncts = L.flatten pure_conjuncts in
-    let result = List.Tot.fold_left (add_intro_pure intro_exists_chain.range) intro_exists_chain pure_conjuncts in
-    if RU.debug_at_level (fstar_env g) "inference"
-    then (      
-      T.print (Printf.sprintf "Inferred pure and exists:{\n\t %s\n\t}"
-                (P.st_term_to_string result))
-    );
-    result
+// let maybe_infer_intro_exists
+//   (g:env)
+//   (st:st_term{Tm_IntroExists? st.term})
+//   (pre:term)
+//   : T.Tac st_term
+//   = let remove_pure_conjuncts t =
+//         let rest, pure = 
+//             List.Tot.partition #term
+//               (function {t=Tm_Pure _} | {t=Tm_Emp} -> false | _ -> true)
+//               (vprop_as_list t)
+//         in
+//         let rest =
+//           match list_as_vprop rest with
+//           | {t=Tm_Star t {t=Tm_Emp}} -> t
+//           | {t=Tm_Star {t=Tm_Emp} t} -> t        
+//           | t -> t
+//         in
+//         rest, pure
+//     in
+//     (* Weird: defining prepare_instantiations here causes extraction to crash with
+//        Failure("This should not happen (should have been handled at Tm_abs level)")
+//      *)
+//     if RU.debug_at_level (fstar_env g) "inference"
+//     then (      
+//       T.print (Printf.sprintf "At %s: infer_intro_exists for %s\n"
+//                   (T.range_to_string st.range)
+//                   (P.st_term_to_string st))
+//     );
+//     let Tm_IntroExists {erased; p=t; witnesses} = st.term in
+//     let t, _ = Pulse.Checker.Pure.instantiate_term_implicits g t in
+//     let goal_vprop, insts, uvs = prepare_instantiations g [] [] t witnesses in
+//     let goal_vprop, pure_conjuncts = remove_pure_conjuncts goal_vprop in      
+//     let solutions = Pulse.Checker.Inference.try_inst_uvs_in_goal g pre goal_vprop in
+//     // T.print
+//     //   (Printf.sprintf
+//     //      "maybe_infer_intro_exists: solutions after trying inst with pre: %s, goal: %s: %s\n"
+//     //       (P.term_to_string pre)
+//     //       (P.term_to_string goal_vprop)
+//     //       (Pulse.Checker.Inference.solutions_to_string solutions));
+//     let maybe_solve_pure solutions p =
+//       let p = Pulse.Checker.Inference.apply_solution solutions p in
+//       match p.t with
+//       | Tm_Pure p -> (
+//         let sols = Pulse.Checker.Inference.try_solve_pure_equalities g p in
+//         sols @ solutions
+//         )
+//       | _ -> solutions
+//     in
+//     let solutions = T.fold_left maybe_solve_pure solutions pure_conjuncts in
+//     if RU.debug_at_level (fstar_env g) "inference"
+//     then (      
+//       T.print
+//         (Printf.sprintf
+//           "maybe_infer_intro_exists: solutions after solving pure conjuncts (%s): %s\n"
+//             (P.term_to_string (list_as_vprop pure_conjuncts))
+//             (Pulse.Checker.Inference.solutions_to_string solutions))
+//     );
+//     let mk_hide ty_opt (e:term) : term =
+//         let hd = tm_fvar (as_fv hide_lid) in
+//         match ty_opt with
+//         | None -> tm_pureapp hd None e
+//         | Some ty -> tm_pureapp (tm_pureapp hd (Some Implicit) ty) None e
+//     in
+//     let type_of_uvar uv =
+//       match List.Tot.tryFind (fun (u, _) -> Pulse.Checker.Inference.uvar_eq u uv) uvs with
+//       | None -> None
+//       | Some (_, ty) -> Some ty
+//     in
+//     let solutions = 
+//       T.map
+//         (fun (u, v) -> 
+//           let sol = Pulse.Checker.Inference.apply_solution solutions v in
+//           match unreveal sol with
+//           | Some _ -> u, sol
+//           | _ -> u, mk_hide (type_of_uvar u) sol)
+//         solutions
+//     in
+//     let _ =
+//       match Pulse.Checker.Inference.unsolved solutions uvs with
+//       | Some uvs ->
+//         fail g (Some st.range) (Printf.sprintf "Could not instantiate existential variables %s\n"
+//                                     (String.concat ", " (T.map (fun (u, _) -> Pulse.Checker.Inference.uvar_to_string u) uvs)))
+//       | None -> ()
+//     in
+//     let wr t = { term = t; range = st.range } in
+//     let intro_exists_chain = build_instantiations solutions insts in
+//     let pure_conjuncts =
+//       T.map 
+//        (fun vp -> 
+//           match (Pulse.Checker.Inference.apply_solution solutions vp).t with
+//           | Tm_Pure p -> [p]
+//           | p -> [])
+//        pure_conjuncts
+//     in
+//     let pure_conjuncts = L.flatten pure_conjuncts in
+//     let result = List.Tot.fold_left (add_intro_pure intro_exists_chain.range) intro_exists_chain pure_conjuncts in
+//     if RU.debug_at_level (fstar_env g) "inference"
+//     then (      
+//       T.print (Printf.sprintf "Inferred pure and exists:{\n\t %s\n\t}"
+//                 (P.st_term_to_string result))
+//     );
+//     result
       
 
 // let handle_framing_failure
@@ -340,9 +340,8 @@ let rec check' : bool -> check_t =
       match t.term with
       | Tm_Protect _ -> T.fail "Protect should have been removed"
 
-      // | Tm_Return {term = Tm_Bvar _} -> T.fail "not locally nameless"
-      // | Tm_Return _ ->
-      //   Return.check_return allow_inst g t pre pre_typing post_hint frame_pre
+      | Tm_Return _ ->
+        Return.check_return g t pre pre_typing post_hint
     
       | Tm_Abs _ -> T.fail "Tm_Abs check should not have been called in the checker"
 

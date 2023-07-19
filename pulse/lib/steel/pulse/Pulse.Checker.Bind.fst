@@ -158,7 +158,7 @@ let check_bind
     check g ctxt ctxt_typing None e1 in
   
   let (| y, ty_y, ctxt'', g2, k2 |) =
-    check g1 ctxt' (magic ()) post_hint e2 in
+    check g1 ctxt' (magic ()) post_hint (open_st_term_nv e2 (binder.binder_ppname, x)) in
 
   // CAN WE AVOID THIS?
   let (| u, d_ty_y |) = check_universe g2 ty_y in

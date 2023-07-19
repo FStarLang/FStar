@@ -7,9 +7,42 @@ open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Pure
 open Pulse.Checker.Common
+open Pulse.Prover
 
 module P = Pulse.Syntax.Printer
 module FV = Pulse.Typing.FV
+
+let check_return
+  (g:env)
+  (st:st_term { Tm_Return? st.term })
+  (ctxt:term)
+  (ctxt_typing:tot_typing g ctxt tm_vprop)
+  (post_hint:post_hint_opt g)
+  : T.Tac (checker_result_t g ctxt post_hint) =
+  
+  let g = push_context "check_return" st.range g in
+  let Tm_Return {ctag=c; insert_eq=use_eq; term=t} = st.term in
+  let (| t, u, ty, uty, d |) :
+    t:term &
+    u:universe &
+    ty:term &
+    universe_of g ty u &
+    typing g t ty =
+    match post_hint with
+    | None -> check_term_and_type g t
+    | Some post ->
+      let (| t, d |) = check_term_with_expected_type g t post.ret_ty in
+      assert (g `env_extends` post.g);
+      let ty_typing : universe_of post.g post.ret_ty post.u =
+        post.ty_typing in
+      // weakening of post.g to g
+      let ty_typing : universe_of g post.ret_ty post.u = magic () in
+      (| t, post.u, post.ret_ty, ty_typing, d |)
+  in
+  let x = fresh g in
+  // magic () is the post typing, where post is tm_emp
+  let d = T_Return g c use_eq u ty t tm_emp x uty (E d) (magic ()) in
+  repack (try_frame_pre ctxt_typing d) post_hint t.range
 
 // #push-options "--query_stats --z3rlimit_factor 2"
 // let check_return
