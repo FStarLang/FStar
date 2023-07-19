@@ -23,15 +23,11 @@ let models (s:pht_sig) (pht:pht s) (ht:ht s) : vprop
 = A.pts_to ht.contents full_perm pht.repr `star`
   pure (pht.sz == ht.sz)
 
+
 let coerce_nat (n:int{n>=0}) : nat = n
 let coerce_us (n:nat) : US.t = assume (US.fits n); US.uint_to_t n
-let refine_repr (s:pht_sig) (sz:pos) (i:US.t) (repr:Seq.lseq (cell s.keyt s.valt) sz) 
-  : s:(Seq.lseq (cell s.keyt s.valt) sz){US.v i < sz} = admit()
-  // : stt (s:(Seq.lseq (cell s.keyt s.valt) sz){US.v i < sz})
-  //       (requires pure (US.v i < sz))
-  //       (ensures fun _ -> emp)
-  // = fun _ -> repr
 
+(*
 (* 
   See FIXME comments for current debugging status
 *)
@@ -156,6 +152,7 @@ fn delete (#s:pht_sig) (#pht:pht s)
   }}
 }
 ```
+*)
 
 ```pulse
 fn lookup (#s:pht_sig) (#pht:(p:pht s{not_full p.repr})) 
@@ -164,6 +161,49 @@ fn lookup (#s:pht_sig) (#pht:(p:pht s{not_full p.repr}))
   returns  o:(o:option s.valt{o == PHT.lookup pht k})
   ensures  models s pht ht
 {
-  admit()
+  let sz = ht.sz;
+  let cidx = canonical_index k sz;
+  let mut off = coerce_nat 0;
+  let mut cont = true;
+  let mut ret = None #(s.valt);
+  unfold (models s pht ht);
+  while (let voff = !off; let vcont = !cont; (voff <= sz && vcont = true)) 
+  invariant b. exists (voff:nat) (vcont:bool) (o:option s.valt). (
+    A.pts_to ht.contents full_perm pht.repr **
+    R.pts_to off full_perm voff **
+    R.pts_to cont full_perm vcont **
+    R.pts_to ret full_perm o **
+    pure (
+      (if vcont=true
+        then o == None 
+        else o == PHT.lookup pht k) /\
+      b == (voff <= sz && vcont = true)
+    )
+  )
+  {
+    let voff = !off;
+    if (voff = sz) {
+      cont := false;
+      ()
+    } else {
+      let idx = coerce_us ((cidx+voff)%sz);
+      assume_ (pure (US.v idx < pht.sz)); // FIXME: can prove based on modulo calc above
+      let c = op_Array_Index ht.contents #full_perm #pht.repr idx;
+      match c {
+        Used k' v' -> { if (k' = k) {
+          cont := false;
+          ret := Some v';
+          ()
+        }}
+        Clean -> { 
+          cont := false;
+          ()
+         }
+        Zombie -> { admit() }
+      };
+    };
+  };
+  fold (models s pht ht);
+  ret
 }
 ```
