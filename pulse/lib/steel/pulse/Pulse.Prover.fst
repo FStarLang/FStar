@@ -90,7 +90,7 @@ let rec match_q (#preamble:_) (pst:prover_state preamble)
 
 let rec prove_pures #preamble (pst:prover_state preamble)
   : T.Tac (pst':prover_state preamble { pst' `pst_extends` pst /\
-                                        is_terminal pst }) =
+                                        is_terminal pst' }) =
   
   match pst.unsolved with
   | [] -> pst
@@ -99,7 +99,7 @@ let rec prove_pures #preamble (pst:prover_state preamble)
     (match pst_opt with
      | None -> fail pst.pg None (Printf.sprintf "cannot prove pure %s\n" (P.term_to_string p))
      | Some pst1 ->
-       let pst2 = prove_pures pst in
+       let pst2 = prove_pures pst1 in
        assert (pst1 `pst_extends` pst);
        assert (pst2 `pst_extends` pst1);
        assert (pst2 `pst_extends` pst);
@@ -291,22 +291,26 @@ let repack (#g:env) (#ctxt:vprop)
   | Some post_hint ->
     let (| x, ty, ctxt', g2, k |) = r in
 
+    let post_hint_opened = open_term_nv post_hint.post (ppname_default, x) in
+
     // TODO: subtyping
     if not (eq_tm ty post_hint.ret_ty)
     then fail g (Some rng) (Printf.sprintf "result type is not the same in stapp")
+    else if eq_tm post_hint_opened ctxt'
+    then (| x, ty, post_hint_opened, g2, k |)
     else
       let (| g3, nts, remaining_ctxt, k_post |) =
-        prove #g2 #ctxt' (magic ()) (mk_env (fstar_env g2)) #(open_term_nv post_hint.post (ppname_default, x)) (magic ()) in
+        prove #g2 #ctxt' (magic ()) (mk_env (fstar_env g2)) #post_hint_opened (magic ()) in
           
       assert (nts == []);
       let k_post
-        : continuation_elaborator g2 ctxt' g3 (open_term_nv post_hint.post (ppname_default, x) * remaining_ctxt) =
+        : continuation_elaborator g2 ctxt' g3 (post_hint_opened * remaining_ctxt) =
         coerce_eq k_post () in
 
       match check_equiv_emp g3 remaining_ctxt with
       | None -> fail g (Some rng) (Printf.sprintf "cannot match post hint in st app")
       | Some d ->
         let k_post
-          : continuation_elaborator g2 ctxt' g3 (open_term_nv post_hint.post (ppname_default, x)) =
+          : continuation_elaborator g2 ctxt' g3 post_hint_opened =
           k_elab_equiv k_post (VE_Refl _ _) (magic ()) in
-        (| x, ty, (open_term_nv post_hint.post (ppname_default, x)), g3, k_elab_trans k k_post |)
+        (| x, ty, post_hint_opened, g3, k_elab_trans k k_post |)

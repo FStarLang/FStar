@@ -12,130 +12,81 @@ open Pulse.Steel.Wrapper
 #push-options "--using_facts_from 'Prims FStar.Pervasives FStar.UInt FStar.UInt32 FStar.Ghost Pulse.Steel.Wrapper CustomSyntax'"
 #push-options "--ide_id_info_off"
 
-// exists n1. p n1 * exists n2. q n1 * r n1 n2
-
-assume val p : U32.t -> vprop
-assume val q : U32.t -> vprop
-assume val r : U32.t -> U32.t -> vprop
-
 ```pulse
-fn test (r:ref U32.t)
-  requires exists n. pts_to r full_perm n
-  returns x:U32.t
-  ensures pts_to r full_perm x
+fn test_read (r:ref U32.t)
+             (#n:erased U32.t)
+             (#p:perm)
+   requires pts_to r p n
+   returns x : U32.t
+   ensures pts_to r p x
 {
-  let x = read r;
+  let x = !r;
   x
 }
 ```
 
-// ```pulse
-// fn test2
-//   (r1:ref U32.t)
-//   (r2:ref U32.t)
-//   requires exists n1 n2. (pts_to r1 full_perm n1 `star` pts_to r2 full_perm n2)
-//   returns x:U32.t
-//   ensures exists n1 n2. (pts_to r1 full_perm n1 `star` pts_to r2 full_perm n2)
-// {
-//   let x = read r1;
-//   let y = read r2;
-//   write r1 1ul;
-//   write r2 2ul;
-//   x
-// }
-// ```
+```pulse
+fn swap (r1 r2:ref U32.t)
+        (#n1 #n2:erased U32.t)
+  requires 
+     (pts_to r1 full_perm n1 `star`
+      pts_to r2 full_perm n2)
+  ensures
+     (pts_to r1 full_perm n2 `star`
+      pts_to r2 full_perm n1)
+{
+  let x = !r1;
+  let y = !r2;
+  r1 := y;
+  r2 := x
+}
+```
 
-// assume val read (_:unit)
-//   : stt U32.t (exists_ (fun n1 -> p n1 `star` (exists_ (fun n2 -> r n1 n2 `star` q n1))))
-//               (fun _ -> emp)
+```pulse
+fn call_swap2 (r1 r2:ref U32.t)
+              (#n1 #n2:erased U32.t)
+   requires
+      (pts_to r1 full_perm n1 `star`
+       pts_to r2 full_perm n2)
+   ensures
+      (pts_to r1 full_perm n1 `star`
+       pts_to r2 full_perm n2)
+{
+   swap r1 r2;
+   swap r1 r2
+}
+```
 
-// ```pulse
-// fn test_read (x:U32.t) (y:U32.t)
-//    requires q x `star` r x y `star` p x
-//    ensures  emp
-// {
-//     let y = read ();
-//     ()
-// }
-// ```
+```pulse
+fn swap_with_elim_pure (r1 r2:ref U32.t) 
+                       (#n1 #n2:erased U32.t)
+   requires
+     (pts_to r1 full_perm n1 `star`
+      pts_to r2 full_perm n2)
+   ensures
+     (pts_to r1 full_perm n2 `star`
+      pts_to r2 full_perm n1)
+{
+   let x = !r1;
+   let y = !r2;
+   r1 := y;
+   r2 := x
+}
+```
 
-// ```pulse
-// fn test_read (r:ref U32.t)
-//              (#n:erased U32.t)
-//              (#p:perm)
-//    requires pts_to r p n
-//    returns x : U32.t
-//    ensures pts_to r p x
-// {
-//   let x = !r;
-//   x
-// }
-// ```
-
-// ```pulse
-// fn swap (r1 r2:ref U32.t)
-//         (#n1 #n2:erased U32.t)
-//   requires 
-//      (pts_to r1 full_perm n1 `star`
-//       pts_to r2 full_perm n2)
-//   ensures
-//      (pts_to r1 full_perm n2 `star`
-//       pts_to r2 full_perm n1)
-// {
-//   let x = !r1;
-//   let y = !r2;
-//   r1 := y;
-//   r2 := x
-// }
-// ```
-
-
-// ```pulse
-// fn call_swap2 (r1 r2:ref U32.t)
-//               (#n1 #n2:erased U32.t)
-//    requires
-//       (pts_to r1 full_perm n1 `star`
-//        pts_to r2 full_perm n2)
-//    ensures
-//       (pts_to r1 full_perm n1 `star`
-//        pts_to r2 full_perm n2)
-// {
-//    swap r1 r2;
-//    swap r1 r2
-// }
-// ```
-
-
-// ```pulse
-// fn swap_with_elim_pure (r1 r2:ref U32.t) 
-//                        (#n1 #n2:erased U32.t)
-//    requires
-//      (pts_to r1 full_perm n1 `star`
-//       pts_to r2 full_perm n2)
-//    ensures
-//      (pts_to r1 full_perm n2 `star`
-//       pts_to r2 full_perm n1)
-// {
-//    let x = !r1;
-//    let y = !r2;
-//    r1 := y;
-//    r2 := x
-// }
-// ```
-
-// ```pulse
-// fn intro_pure_example (r:ref U32.t)
-//                       (#n1 #n2:erased U32.t)
-//    requires 
-//      (pts_to r full_perm n1 `star`
-//       pure (reveal n1 == reveal n2))
-//    ensures 
-//      (pts_to r full_perm n2 `star`
-//       pure (reveal n2 == reveal n1))
-// {
-//   ()
-// }
-// ```
+```pulse
+fn intro_pure_example (r:ref U32.t)
+                      (#n1 #n2:erased U32.t)
+   requires 
+     (pts_to r full_perm n1 `star`
+      pure (reveal n1 == reveal n2))
+   ensures 
+     (pts_to r full_perm n2 `star`
+      pure (reveal n2 == reveal n1))
+{
+  ()
+}
+```
 
 
 // ```pulse
