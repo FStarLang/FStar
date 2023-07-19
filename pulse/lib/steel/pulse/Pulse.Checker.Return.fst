@@ -39,10 +39,32 @@ let check_return
       let ty_typing : universe_of g post.ret_ty post.u = magic () in
       (| t, post.u, post.ret_ty, ty_typing, d |)
   in
+  
   let x = fresh g in
-  // magic () is the post typing, where post is tm_emp
-  let d = T_Return g c use_eq u ty t tm_emp x uty (E d) (magic ()) in
+  let px = v_as_nv x in
+  let (| post_opened, post_typing |) : t:term & tot_typing (push_binding g x (fst px) ty)  t tm_vprop =
+      match post_hint with
+      | None -> 
+        let (| t, ty |) = check_term_with_expected_type (push_binding g x (fst px) ty) tm_emp tm_vprop in
+        (| t, E ty |)
+        
+      | Some post ->
+        // we already checked for the return type
+        let post : post_hint_t = post in
+        if x `Set.mem` (freevars post.post)
+        then fail g None "Unexpected variable clash in return"
+        else 
+         let ty_rec = post_hint_typing g post x in
+         (| open_term_nv post.post px, ty_rec.post_typing |)
+  in
+  assume (open_term (close_term post_opened x) x == post_opened);
+  let post = close_term post_opened x in
+  let d = T_Return g c use_eq u ty t post x uty (E d) post_typing in
   repack (try_frame_pre ctxt_typing d) post_hint t.range
+
+  // magic () is the post typing, where post is tm_emp
+  // let d = T_Return g c use_eq u ty t tm_emp x uty (E d) (magic ()) in
+  // repack (try_frame_pre ctxt_typing d) post_hint t.range
 
 // #push-options "--query_stats --z3rlimit_factor 2"
 // let check_return
