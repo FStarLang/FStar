@@ -6650,11 +6650,21 @@ let (push_bv_dsenv :
 let (term_to_string :
   FStar_Syntax_Syntax.term -> Prims.string FStar_Tactics_Monad.tac) =
   fun t ->
-    let s = FStar_Syntax_Print.term_to_string t in FStar_Tactics_Monad.ret s
+    let uu___ = top_env () in
+    FStar_Tactics_Monad.op_let_Bang uu___
+      (fun g ->
+         let s =
+           FStar_Syntax_Print.term_to_string' g.FStar_TypeChecker_Env.dsenv t in
+         FStar_Tactics_Monad.ret s)
 let (comp_to_string :
   FStar_Syntax_Syntax.comp -> Prims.string FStar_Tactics_Monad.tac) =
   fun c ->
-    let s = FStar_Syntax_Print.comp_to_string c in FStar_Tactics_Monad.ret s
+    let uu___ = top_env () in
+    FStar_Tactics_Monad.op_let_Bang uu___
+      (fun g ->
+         let s =
+           FStar_Syntax_Print.comp_to_string' g.FStar_TypeChecker_Env.dsenv c in
+         FStar_Tactics_Monad.ret s)
 let (range_to_string :
   FStar_Compiler_Range_Type.range -> Prims.string FStar_Tactics_Monad.tac) =
   fun r ->
@@ -7563,6 +7573,114 @@ let (refl_check_prop_validity :
              [uu___4] in
            (FStar_Pervasives_Native.None, uu___3) in
          FStar_Tactics_Monad.ret uu___2)
+let (refl_check_match_complete :
+  env ->
+    FStar_Syntax_Syntax.term ->
+      FStar_Syntax_Syntax.term ->
+        FStar_Reflection_V2_Data.pattern Prims.list ->
+          (FStar_Reflection_V2_Data.pattern Prims.list *
+            FStar_Reflection_V2_Data.binding Prims.list Prims.list)
+            FStar_Pervasives_Native.option FStar_Tactics_Monad.tac)
+  =
+  fun g ->
+    fun sc ->
+      fun scty ->
+        fun pats ->
+          FStar_Tactics_Monad.op_let_Bang FStar_Tactics_Monad.idtac
+            (fun uu___ ->
+               let one = FStar_Syntax_Util.exp_int "1" in
+               let brs =
+                 FStar_Compiler_List.map
+                   (fun p ->
+                      let p1 = FStar_Reflection_V2_Builtins.pack_pat p in
+                      (p1, FStar_Pervasives_Native.None, one)) pats in
+               let mm =
+                 FStar_Syntax_Syntax.mk
+                   (FStar_Syntax_Syntax.Tm_match
+                      {
+                        FStar_Syntax_Syntax.scrutinee = sc;
+                        FStar_Syntax_Syntax.ret_opt =
+                          FStar_Pervasives_Native.None;
+                        FStar_Syntax_Syntax.brs = brs;
+                        FStar_Syntax_Syntax.rc_opt1 =
+                          FStar_Pervasives_Native.None
+                      }) sc.FStar_Syntax_Syntax.pos in
+               let env1 = g in
+               let env2 =
+                 FStar_TypeChecker_Env.set_expected_typ env1
+                   FStar_Syntax_Syntax.t_int in
+               let uu___1 = __tc env2 mm in
+               FStar_Tactics_Monad.op_let_Bang uu___1
+                 (fun uu___2 ->
+                    match uu___2 with
+                    | (mm1, uu___3, g1) ->
+                        let uu___4 =
+                          FStar_Errors.catch_errors_and_ignore_rest
+                            (fun uu___5 ->
+                               let uu___6 =
+                                 FStar_TypeChecker_Rel.discharge_guard env2
+                                   g1 in
+                               FStar_Compiler_Effect.op_Less_Bar
+                                 FStar_TypeChecker_Env.is_trivial uu___6) in
+                        (match uu___4 with
+                         | (errs, b) ->
+                             (match (errs, b) with
+                              | ([], FStar_Pervasives_Native.Some (true)) ->
+                                  let get_pats t =
+                                    let uu___5 =
+                                      let uu___6 = FStar_Syntax_Util.unmeta t in
+                                      uu___6.FStar_Syntax_Syntax.n in
+                                    match uu___5 with
+                                    | FStar_Syntax_Syntax.Tm_match
+                                        {
+                                          FStar_Syntax_Syntax.scrutinee =
+                                            uu___6;
+                                          FStar_Syntax_Syntax.ret_opt =
+                                            uu___7;
+                                          FStar_Syntax_Syntax.brs = brs1;
+                                          FStar_Syntax_Syntax.rc_opt1 =
+                                            uu___8;_}
+                                        ->
+                                        FStar_Compiler_List.map
+                                          (fun uu___9 ->
+                                             match uu___9 with
+                                             | (p, uu___10, uu___11) -> p)
+                                          brs1
+                                    | uu___6 ->
+                                        failwith
+                                          "refl_check_match_complete: not a match?" in
+                                  let pats1 = get_pats mm1 in
+                                  let rec bnds_for_pat p =
+                                    match p.FStar_Syntax_Syntax.v with
+                                    | FStar_Syntax_Syntax.Pat_constant uu___5
+                                        -> []
+                                    | FStar_Syntax_Syntax.Pat_cons
+                                        (fv, uu___5, pats2) ->
+                                        FStar_Compiler_List.concatMap
+                                          (fun uu___6 ->
+                                             match uu___6 with
+                                             | (p1, uu___7) ->
+                                                 bnds_for_pat p1) pats2
+                                    | FStar_Syntax_Syntax.Pat_var bv ->
+                                        let uu___5 = bv_to_binding bv in
+                                        [uu___5]
+                                    | FStar_Syntax_Syntax.Pat_dot_term uu___5
+                                        -> [] in
+                                  let uu___5 =
+                                    let uu___6 =
+                                      let uu___7 =
+                                        FStar_Compiler_List.map
+                                          FStar_Reflection_V2_Builtins.inspect_pat
+                                          pats1 in
+                                      let uu___8 =
+                                        FStar_Compiler_List.map bnds_for_pat
+                                          pats1 in
+                                      (uu___7, uu___8) in
+                                    FStar_Pervasives_Native.Some uu___6 in
+                                  FStar_Tactics_Monad.ret uu___5
+                              | uu___5 ->
+                                  FStar_Tactics_Monad.ret
+                                    FStar_Pervasives_Native.None))))
 let (refl_instantiate_implicits :
   env ->
     FStar_Syntax_Syntax.term ->

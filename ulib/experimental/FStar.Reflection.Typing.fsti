@@ -32,6 +32,34 @@ open FStar.Reflection.V2
 module L = FStar.List.Tot
 module R = FStar.Reflection.V2
 module T = FStar.Tactics.V2
+module RD = FStar.Reflection.V2.Data
+
+(* MOVE to some helper module *)
+let rec fold_left_dec #a #b
+  (acc : a)
+  (l : list b)
+  (f : a -> (x:b{x << l}) -> a)
+  : Tot a (decreases l)
+  =
+  match l with
+  | [] -> acc
+  | x::xs -> fold_left_dec (f acc x) xs f
+
+let rec map_dec #a #b
+  (l : list a)
+  (f : (x:a{x << l}) -> b)
+  : Tot (list b) (decreases l)
+  =
+  match l with
+  | [] -> []
+  | x::xs -> f x :: map_dec xs f
+
+let rec zip2prop #a #b (f : a -> b -> Type0) (xs : list a) (ys : list b) : Type0 =
+  match xs, ys with
+  | [], [] -> True
+  | x::xx, y::yy -> f x y /\ zip2prop f xx yy
+  | _ -> False
+(* / MOVE *)
 
 val inspect_pack (t:R.term_view)
   : Lemma (ensures R.(inspect_ln (pack_ln t) == t))
@@ -987,6 +1015,16 @@ type relation =
   | R_Eq
   | R_Sub
 
+let binding = var & term
+let bindings = list binding
+let rename_bindings bs x y = FStar.List.Tot.map (fun (v, t) -> (v, rename t x y)) bs
+
+let rec extend_env_l (g:env) (bs:bindings)
+  : env
+  = match bs with
+    | [] -> g
+    | (x,t)::bs -> extend_env (extend_env_l g bs) x t
+
 //
 // TODO: support for erasable attribute
 //
@@ -997,6 +1035,24 @@ let is_non_informative_name (l:name) : bool =
 
 let is_non_informative_fv (f:fv) : bool =
   is_non_informative_name (inspect_fv f)
+
+let rec __close_term_vs (i:nat) (vs : list var) (t : term) : Tot term (decreases vs) =
+  match vs with
+  | [] -> t
+  | v::vs ->
+    subst_term (__close_term_vs (i+1) vs t) [ND v i]
+
+let close_term_vs (vs : list var) (t : term) : term =
+  __close_term_vs 0 vs t
+
+let close_term_bs (bs : list binding) (t : term) : term =
+  close_term_vs (List.Tot.map fst bs) t
+
+let bindings_to_refl_bindings (bs : list binding) : list R.binding =
+  L.map (fun (v, ty) -> {uniq=v; sort=ty; ppname = pp_name_default}) bs
+
+let refl_bindings_to_bindings (bs : list R.binding) : list binding =
+  L.map (fun b -> b.uniq, b.sort) bs
 
 [@@ no_auto_projectors]
 noeq
@@ -1032,7 +1088,50 @@ type non_informative : term -> Type0 =
     q:aqualv ->
     t1:term ->
     non_informative (mk_arrow_ct t0 q (T.E_Ghost, t1))
-    
+
+// assumed
+val bindings_ok_for_pat : list R.binding -> pattern -> Type0
+
+val bindings_ok_pat_constant :
+  c:R.vconst -> Lemma (bindings_ok_for_pat [] (Pat_Constant c))
+
+let bindings_ok_for_branch (bs : list R.binding) (br : branch) : Type0 =
+  bindings_ok_for_pat bs (fst br)
+
+let bindings_ok_for_branch_N (bss : list (list R.binding)) (brs : list branch) =
+  zip2prop bindings_ok_for_branch bss brs
+
+let binding_to_namedv (b:R.binding) : Tot namedv =
+  pack_namedv {
+    RD.uniq   = b.uniq;
+    RD.sort   = seal b.sort;
+    RD.ppname = b.ppname;
+  }
+
+(* Elaborates the p pattern into a term, using the bs bindings for the
+pattern variables. The resulting term is properly scoped only on an
+environment which contains all of bs. See for instance the branch_typing
+judg. Returns an option, since this can fail if e.g. there are not
+enough bindings, and returns the list of unused binders as well, which
+should be empty if the list of binding was indeed ok. *)
+let rec elaborate_pat (p : pattern) (bs : list R.binding) : Tot (option (term & list R.binding)) (decreases p) =
+  match p, bs with
+  | Pat_Constant c, _ -> Some (pack_ln (Tv_Const c), bs)
+  | Pat_Cons fv univs subpats, bs ->
+    let head = pack_ln (Tv_FVar fv) in
+    fold_left_dec
+      (Some (head, bs))
+      subpats
+      (fun st pi ->
+        let (p,i) = pi in
+        match st with | None -> None | Some (head, bs) ->
+          match elaborate_pat p bs with | None -> None | Some (t, bs') -> Some (pack_ln (Tv_App head (t, (if i then Q_Implicit else Q_Explicit))), bs'))
+
+  | Pat_Var _ _, b::bs ->
+    Some (pack_ln (Tv_Var (binding_to_namedv b)), bs)
+  | Pat_Dot_Term (Some t), _ -> Some (t, bs)
+  | Pat_Dot_Term None, _ -> None
+  | _ -> None
 
 [@@ no_auto_projectors]
 noeq
@@ -1174,15 +1273,22 @@ type typing : env -> term -> comp_typ -> Type0 =
      typing g ty (ty_eff, tm_type u_ty) -> //typedness of ty cannot rely on hyp
      typing g (mk_if scrutinee then_ else_) (eff, ty)
 
-  // | T_Match: 
-  //    g:env ->
-  //    scrutinee:term ->
-  //    i_ty:term ->
-  //    branches:list branch ->
-  //    ty:term ->
-  //    typing g scrutinee i_ty ->
-  //    branches_typing g scrutinee i_ty branches ty ->
-  //    typing g (pack_ln (Tv_Match scrutinee None branches)) ty
+  | T_Match:
+     g:env ->
+     sc_u : universe ->
+     sc_ty : typ ->
+     sc : term ->
+     ty_eff:T.tot_or_ghost ->
+     typing g sc_ty (ty_eff, tm_type sc_u) ->
+     eff:T.tot_or_ghost ->
+     typing g sc (eff, sc_ty) ->
+     branches:list branch ->
+     ty:comp_typ ->
+     // TODO: bnds shouldn't really be here, but on each branch_typin
+     bnds:list (list R.binding) ->
+     complet : match_is_complete g sc sc_ty (List.Tot.map fst branches) bnds -> // complete patterns
+     branches_typing g sc_u sc_ty sc ty branches bnds -> // each branch has proper type
+     typing g (pack_ln (Tv_Match sc None branches)) ty
 
 and related : env -> term -> relation -> term -> Type0 =
   | Rel_equiv:
@@ -1310,7 +1416,57 @@ and related_comp : env -> comp_typ -> relation -> comp_typ -> Type0 =
     non_informative t ->
     related_comp g (T.E_Ghost, t) R_Sub (T.E_Total, t)
 
-// and branches_typing : env -> term -> term -> list branch -> term -> Type0 =
+and branches_typing (g:env) (sc_u:universe) (sc_ty:typ) (sc:term) (rty:comp_typ)
+  : (brs:list branch) -> (bnds : list (list R.binding)) -> Type0
+=
+  (* This judgement only enforces that branch_typing holds for every
+  element of brs and its respective bnds (which must have the same
+  length). *)
+
+  | BT_Nil :
+    branches_typing g sc_u sc_ty sc rty [] []
+
+  | BT_S :
+
+    br : branch ->
+    bnds : list R.binding{bindings_ok_for_branch bnds br} ->
+    pf : branch_typing g sc_u sc_ty sc rty br bnds ->
+
+    rest_br : list branch ->
+    rest_bnds : list (list R.binding) ->
+    rest : branches_typing g sc_u sc_ty sc rty rest_br rest_bnds ->
+    branches_typing g sc_u sc_ty sc rty (br :: rest_br) (bnds :: rest_bnds)
+
+and branch_typing (g:env) (sc_u:universe) (sc_ty:typ) (sc:term) (rty:comp_typ)
+  : (br : branch) -> (bnds : list R.binding) -> Type0
+=
+  | BO :
+    pat : pattern ->
+    bnds : list R.binding{bindings_ok_for_pat bnds pat} ->
+    hyp_var:var{None? (lookup_bvar (extend_env_l g (refl_bindings_to_bindings bnds)) hyp_var)} ->
+
+    body:term ->
+
+    _ : squash (Some? (elaborate_pat pat bnds)) ->
+
+    typing (extend_env
+            (extend_env_l g (refl_bindings_to_bindings bnds))
+             hyp_var (eq2 sc_u sc_ty sc (fst (Some?.v (elaborate_pat pat bnds))))
+           )
+           body rty ->
+
+    branch_typing g sc_u sc_ty sc rty
+       (pat, close_term_bs (refl_bindings_to_bindings bnds) body)
+       bnds
+
+and match_is_complete : env -> term -> typ -> list pattern -> list (list R.binding) -> Type0 =
+  | MC_Tok :
+    env:_ ->
+    sc:_ ->
+    ty:_ ->
+    pats:_ ->
+    bnds:_ ->
+    squash (T.match_complete_token env sc ty pats bnds) -> match_is_complete env sc ty pats bnds
 
 and sub_typing (g:env) (t1 t2:term) = related g t1 R_Sub t2
 
@@ -1319,15 +1475,6 @@ and sub_comp (g:env) (c1 c2:comp_typ) = related_comp g c1 R_Sub c2
 type tot_typing (g:env) (e:term) (t:term) = typing g e (T.E_Total, t)
 
 type ghost_typing (g:env) (e:term) (t:term) = typing g e (T.E_Ghost, t)
-
-let bindings = list (var & term)
-let rename_bindings bs x y = FStar.List.Tot.map (fun (v, t) -> (v, rename t x y)) bs
-
-let rec extend_env_l (g:env) (bs:bindings) 
-  : env
-  = match bs with
-    | [] -> g
-    | (x,t)::bs -> extend_env (extend_env_l g bs) x t
 
 val subtyping_token_renaming (g:env)
                              (bs0:bindings)
@@ -1601,3 +1748,45 @@ type fstar_top_env = g:fstar_env {
 //
 
 type dsl_tac_t = g:fstar_top_env -> T.Tac (r:(R.term & R.typ){typing g (fst r) (T.E_Total, snd r)})
+
+val if_complete_match (g:env) (t:term)
+  : T.match_complete_token g t bool_ty [
+       Pat_Constant C_True;
+       Pat_Constant C_False;
+    ] [[]; []]
+
+// Derived rule for if
+
+
+let mkif
+    (g:fstar_env)
+    (scrutinee:term)
+    (then_:term)
+    (else_:term)
+    (ty:term)
+    (u_ty:universe)
+    (hyp:var { None? (lookup_bvar g hyp) /\ ~(hyp `Set.mem` (freevars then_ `Set.union` freevars else_)) })
+    (eff:T.tot_or_ghost)
+    (ty_eff:T.tot_or_ghost)
+    (ts : typing g scrutinee (eff, bool_ty))
+    (tt : typing (extend_env g hyp (eq2 (pack_universe Uv_Zero) bool_ty scrutinee true_bool)) then_ (eff, ty))
+    (te : typing (extend_env g hyp (eq2 (pack_universe Uv_Zero) bool_ty scrutinee false_bool)) else_ (eff, ty))
+    (tr : typing g ty (ty_eff, tm_type u_ty))
+: typing g (mk_if scrutinee then_ else_) (eff, ty)
+= let brt = (Pat_Constant C_True, then_) in
+  let bre = (Pat_Constant C_False, else_) in
+  bindings_ok_pat_constant C_True;
+  bindings_ok_pat_constant C_False;
+  let brty () : branches_typing g u_zero bool_ty scrutinee (eff,ty) [brt; bre] [[]; []] =
+    BT_S (Pat_Constant C_True, then_) []
+         (BO (Pat_Constant C_True) [] hyp then_ () tt)
+         _ _ (
+      BT_S (Pat_Constant C_False, else_) []
+           (BO (Pat_Constant C_False) [] hyp else_ () te)
+           _ _
+        BT_Nil)
+  in
+  T_Match g u_zero bool_ty scrutinee T.E_Total (T_FVar g bool_fv) eff ts [brt; bre] (eff, ty)
+    [[]; []]
+    (MC_Tok g scrutinee bool_ty _ _ (Squash.return_squash (if_complete_match g scrutinee)))
+    (brty ())

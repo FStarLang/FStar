@@ -2004,11 +2004,13 @@ let push_bv_dsenv (e: Env.env) (i: string): tac (env * RD.binding)
     ret ({ e with dsenv }, bv_to_binding bv)
 
 let term_to_string (t:term) : tac string
-  = let s = Print.term_to_string t in
+  = let! g = top_env () in
+    let s = Print.term_to_string' g.dsenv t in
     ret s
 
 let comp_to_string (c:comp) : tac string
-  = let s = Print.comp_to_string c in
+  = let! g = top_env () in
+    let s = Print.comp_to_string' g.dsenv c in
     ret s
 
 let range_to_string (r:FStar.Compiler.Range.range) : tac string
@@ -2087,7 +2089,7 @@ let dbg_refl (g:env) (msg:unit -> string) =
 let issues = list Errors.issue
 let refl_typing_builtin_wrapper (f:unit -> 'a) : tac (option 'a & issues) =
   let tx = UF.new_transaction () in
-  let errs, r = 
+  let errs, r =
     try Errors.catch_errors_and_ignore_rest f
     with exn -> //catch everything
       let issue = FStar.Errors.({
@@ -2319,6 +2321,38 @@ let refl_check_prop_validity (g:env) (e:term) : tac (option unit & issues) =
          Rel.force_trivial_guard g
            {Env.trivial_guard with guard_f=NonTrivial e})
   else ret (None, [unexpected_uvars_issue (Env.get_range g)])
+
+let refl_check_match_complete (g:env) (sc:term) (scty:typ) (pats : list RD.pattern)
+: tac (option (list RD.pattern & list (list RD.binding)))
+=
+  idtac ;!
+  (* We just craft a match with the sc and patterns, using `1` in every
+  branch, and check it against type int. *)
+  let one = U.exp_int "1" in
+  let brs = List.map (fun p -> let p = pack_pat p in (p, None, one)) pats in
+  let mm = mk (Tm_match {scrutinee=sc; ret_opt=None; brs=brs; rc_opt=None}) sc.pos in
+  let env = g in
+  let env = Env.set_expected_typ env S.t_int in
+  let! mm, _, g = __tc env mm in
+
+  let errs, b = Errors.catch_errors_and_ignore_rest (fun () -> Env.is_trivial <| Rel.discharge_guard env g) in
+  match errs, b with
+  | [], Some true ->
+    let get_pats t =
+      match (U.unmeta t).n with
+      | Tm_match {brs} -> List.map (fun (p,_,_) -> p) brs
+      | _ -> failwith "refl_check_match_complete: not a match?"
+    in
+    let pats = get_pats mm in
+    let rec bnds_for_pat (p:pat) : list RD.binding =
+      match p.v with
+      | Pat_constant _ -> []
+      | Pat_cons (fv, _, pats) -> List.concatMap (fun (p, _) -> bnds_for_pat p) pats
+      | Pat_var bv -> [bv_to_binding bv]
+      | Pat_dot_term _ -> []
+    in
+    ret (Some (List.map inspect_pat pats, List.map bnds_for_pat pats))
+  | _ -> ret None
 
 let refl_instantiate_implicits (g:env) (e:term) : tac (option (term & typ) & issues) =
   if no_uvars_in_g g &&

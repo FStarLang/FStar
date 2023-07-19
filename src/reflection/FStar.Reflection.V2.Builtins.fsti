@@ -16,19 +16,20 @@
 module FStar.Reflection.V2.Builtins
 
 open FStar.Compiler
-
-open FStar.Ident
-open FStar.Syntax.Syntax
-open FStar.Syntax.Embeddings
-open FStar.Order
-module Env = FStar.TypeChecker.Env
-open FStar.Reflection.V2.Data
 open FStar.Compiler.Effect
+open FStar.Ident
+open FStar.Order
+open FStar.Reflection.V2.Data
+open FStar.Syntax.Embeddings
+open FStar.Syntax.Syntax
+open FStar.VConfig
+
+module EMB = FStar.Syntax.Embeddings
+module Env = FStar.TypeChecker.Env
 module O   = FStar.Options
 module RD  = FStar.Reflection.V2.Data
-module EMB = FStar.Syntax.Embeddings
+module S   = FStar.Syntax.Syntax
 module Z   = FStar.BigInt
-open FStar.VConfig
 
 (* Primitives *)
 val compare_bv            : bv -> bv -> order
@@ -83,6 +84,12 @@ val pack_aqual     : aqualv -> aqual
 
 val inspect_universe : universe -> universe_view
 val pack_universe    : universe_view -> universe
+
+(* Only used internally by check_match_complete... the pattern
+(abstract) type is not really exposed, so the user has no use for these.
+Perhaps it is more consistent to introduce a pattern_view... *)
+val inspect_pat   : S.pat -> pattern
+val pack_pat      : pattern -> S.pat
 
 (* We're only taking these as primitives to break the dependency from *
 FStar.Tactics into FStar.String, which pulls a LOT of modules. *)

@@ -1660,8 +1660,8 @@ let (termToSmt : Prims.bool -> Prims.string -> term -> Prims.string) =
                    let pats1 = remove_guard_free pats in
                    let pats_str =
                      match pats1 with
-                     | []::[] -> ";;no pats"
-                     | [] -> ";;no pats"
+                     | []::[] -> if print_ranges then ";;no pats" else ""
+                     | [] -> if print_ranges then ";;no pats" else ""
                      | uu___1 ->
                          let uu___2 =
                            FStar_Compiler_Effect.op_Bar_Greater pats1

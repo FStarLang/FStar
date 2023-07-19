@@ -148,33 +148,23 @@ let rec fresh (e:list (var & 'a))
   : var
   = match e with
     | [] -> 0
-    | hd :: tl -> 
+    | hd :: tl ->
       max (fresh tl) (fst hd) + 1
+
+let _ = assert (fresh [1,();2,();3,();4,()] == 8) // odd.. but ok
 
 let rec fresh_not_mem (e:list (var & 'a)) (elt: (var & 'a))
   : Lemma (ensures L.memP elt e ==> fresh e > fst elt)
   = match e with
     | [] -> ()
     | hd :: tl -> fresh_not_mem tl elt
-  
-let rec lookup_mem (e:list (var & 'a)) (x:var)
+
+let lookup_mem (e:list (var & 'a)) (x:var)
   : Lemma
     (requires Some? (lookup e x))
     (ensures exists elt. L.memP elt e /\ fst elt == x)
-  = match e with
-    | [] -> ()
-    | hd :: tl -> 
-      match lookup tl x with
-      | None -> assert (L.memP hd e)
-      | _ -> 
-        lookup_mem tl x;
-        eliminate exists elt. L.memP elt tl /\ fst elt == x
-        returns _
-        with _ . ( 
-          introduce exists elt. L.memP elt e /\ fst elt == x
-          with elt
-          and ()
-        )
+  = let Some y = lookup e x in
+    List.Tot.Properties.assoc_memP_some x y e
 
 let fresh_is_fresh (e:list (var & 'a))
   : Lemma (None? (lookup e (fresh e)))
@@ -556,8 +546,6 @@ let main (src:stlc_exp) : RT.dsl_tac_t =
   else T.fail "Not locally nameless"
 
 (***** Tests *****)
-
-#set-options "--ugly"
 
 %splice_t[foo] (main (ELam TUnit (EBVar 0)))
 

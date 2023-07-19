@@ -489,4 +489,5 @@ let (uu___is_E_Ghost : tot_or_ghost -> Prims.bool) =
 type ('g, 't0, 't1) subtyping_token = unit
 type ('g, 't0, 't1) equiv_token = unit
 type ('g, 'e, 'c) typing_token = unit
+type ('g, 'sc, 't, 'pats) match_complete_token = unit
 type issues = FStar_Issue.issue Prims.list
