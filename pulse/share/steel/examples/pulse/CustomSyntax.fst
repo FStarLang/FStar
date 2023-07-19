@@ -22,7 +22,7 @@ assume val r : U32.t -> U32.t -> vprop
 fn test (r:ref U32.t)
   requires exists n. pts_to r full_perm n
   returns x:U32.t
-  ensures exists n. pts_to r full_perm n
+  ensures pts_to r full_perm x
 {
   let x = read r;
   x
