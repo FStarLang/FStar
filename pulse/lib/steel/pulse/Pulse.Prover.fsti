@@ -14,10 +14,16 @@ val prove
   (uvs:env { disjoint g uvs })
   (#goals:vprop) (goals_typing:tot_typing (push_env g uvs) goals tm_vprop)
 
-  : T.Tac (g1 : env { g1 `env_extends` g } &
+  : T.Tac (g1 : env { g1 `env_extends` g /\ disjoint g1 uvs } &
            nts : PS.nt_substs { PS.well_typed_nt_substs g1 uvs nts } &
            remaining_ctxt : vprop &
            continuation_elaborator g ctxt g1 ((PS.nt_subst_term goals nts) * remaining_ctxt))
+
+val try_frame_pre_uvs (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_vprop)
+  (uvs:env { disjoint g uvs })
+  (#t:st_term) (#c:comp_st) (d:st_typing (push_env g uvs) t c)
+
+  : T.Tac (checker_result_t g ctxt None)
 
 val try_frame_pre (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_vprop)
   (#t:st_term) (#c:comp_st) (d:st_typing g t c)

@@ -87,6 +87,7 @@ let rec match_q (#preamble:_) (pst:prover_state preamble)
           (move_hd_end pst.pg pst.remaining_ctxt) in
       match_q pst q unsolved' () (i+1)
 
+#push-options "--z3rlimit_factor 4"
 let rec prover
   (#preamble:_)
   (pst0:prover_state preamble)
@@ -138,6 +139,7 @@ let rec prover
         match pst_opt with
         | None -> fail pst.pg None "cannot match a vprop"
         | Some pst -> prover pst  // a little wasteful?
+#pop-options
 
 #push-options "--z3rlimit_factor 4"
 let prove
@@ -145,7 +147,7 @@ let prove
   (uvs:env { disjoint g uvs })
   (#goals:vprop) (goals_typing:vprop_typing (push_env g uvs) goals)
 
-  : T.Tac (g1 : env { g1 `env_extends` g } &
+  : T.Tac (g1 : env { g1 `env_extends` g /\ disjoint g1 uvs } &
            nts : PS.nt_substs { PS.well_typed_nt_substs g1 uvs nts } &
            remaining_ctxt : vprop &
            continuation_elaborator g ctxt g1 ((PS.nt_subst_term goals nts) * remaining_ctxt)) =
@@ -164,7 +166,7 @@ let prove
   } in
   assume (list_as_vprop (vprop_as_list ctxt) == ctxt);
   assume ((PS.empty).(tm_emp) == tm_emp);
-  let pst : prover_state preamble = {
+  let pst0 : prover_state preamble = {
     pg = g;
     remaining_ctxt = vprop_as_list ctxt;
     remaining_ctxt_frame_typing = ctxt_frame_typing;
@@ -177,7 +179,7 @@ let prove
     solved_inv = ()
   } in
 
-  let pst = prover pst in
+  let pst = prover pst0 in
 
   let ropt = PS.ss_to_nt_substs pst.pg pst.uvs pst.ss in
 
@@ -203,14 +205,27 @@ let prove
   (| pst.pg, nts_uvs, list_as_vprop pst.remaining_ctxt, k_elab_equiv k (magic ()) (magic ()) |)
 #pop-options
 
-let try_frame_pre (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_vprop)
-  (#t:st_term) (#c:comp_st) (d:st_typing g t c)
+#push-options "--z3rlimit_factor 4 --fuel 1 --ifuel 1"
+let try_frame_pre_uvs (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_vprop)
+  (uvs:env { disjoint g uvs })
+  (#t:st_term) (#c:comp_st) (d:st_typing (push_env g uvs) t c)
 
   : T.Tac (checker_result_t g ctxt None) =
 
   let (| g1, nts, remaining_ctxt, k_frame |) =
-    prove ctxt_typing (mk_env (fstar_env g)) #(comp_pre c) (magic ()) in
-  assert (nts == []);
+    prove ctxt_typing uvs #(comp_pre c) (magic ()) in
+  // assert (nts == []);
+
+  let d : st_typing (push_env g1 uvs) t c =
+    st_typing_weakening g uvs t c d g1 in
+
+  assert (comp_pre (PS.nt_subst_comp c nts) == PS.nt_subst_term (comp_pre c) nts);
+  let t = PS.nt_subst_st_term t nts in
+  let c = PS.nt_subst_comp c nts in
+
+  let d : st_typing g1 t c =
+    PS.st_typing_nt_substs_derived g1 uvs d nts in
+
   let k_frame : continuation_elaborator g ctxt g1 (comp_pre c * remaining_ctxt) = coerce_eq k_frame () in
 
   let x = fresh g1 in
@@ -234,7 +249,16 @@ let try_frame_pre (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_vprop
   let k = k_elab_trans k_frame k in
 
   (| x, ty, ctxt', g2, k |)
+#pop-options
 
+let try_frame_pre (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_vprop)
+  (#t:st_term) (#c:comp_st) (d:st_typing g t c)
+
+  : T.Tac (checker_result_t g ctxt None) =
+
+  let uvs = mk_env (fstar_env g) in
+  assert (equal g (push_env g uvs));
+  try_frame_pre_uvs ctxt_typing uvs d
 
 let repack (#g:env) (#ctxt:vprop)
   (r:checker_result_t g ctxt None)

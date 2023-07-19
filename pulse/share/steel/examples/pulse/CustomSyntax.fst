@@ -25,8 +25,8 @@ fn test_write
   requires pts_to r full_perm n
   ensures exists n. pts_to r full_perm n
 {
-  write #U32.t r 1ul #n;
-  write #U32.t r 2ul #(Ghost.hide 1ul)
+  write #U32.t r 1ul
+  // write #U32.t r 2ul #(Ghost.hide 1ul)
 }
 ```
 
