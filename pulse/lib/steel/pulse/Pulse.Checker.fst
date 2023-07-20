@@ -44,7 +44,7 @@ let default_binder_annot = {
     binder_ppname = ppname_default;
     binder_ty = tm_unknown
 }
-   
+
 // let add_intro_pure rng (continuation:st_term) (p:term) =
 //     let wr t = { term = t; range = rng } in
 //     let intro_pure_tm =

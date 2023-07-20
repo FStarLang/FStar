@@ -42,51 +42,51 @@ fn swap (r1 r2:ref U32.t)
 }
 ```
 
-// ```pulse
-// fn call_swap2 (r1 r2:ref U32.t)
-//               (#n1 #n2:erased U32.t)
-//    requires
-//       (pts_to r1 full_perm n1 `star`
-//        pts_to r2 full_perm n2)
-//    ensures
-//       (pts_to r1 full_perm n1 `star`
-//        pts_to r2 full_perm n2)
-// {
-//    swap r1 r2;
-//    swap r1 r2
-// }
-// ```
+```pulse
+fn call_swap2 (r1 r2:ref U32.t)
+              (#n1 #n2:erased U32.t)
+   requires
+      (pts_to r1 full_perm n1 `star`
+       pts_to r2 full_perm n2)
+   ensures
+      (pts_to r1 full_perm n1 `star`
+       pts_to r2 full_perm n2)
+{
+   swap r1 r2;
+   swap r1 r2
+}
+```
 
-// ```pulse
-// fn swap_with_elim_pure (r1 r2:ref U32.t) 
-//                        (#n1 #n2:erased U32.t)
-//    requires
-//      (pts_to r1 full_perm n1 `star`
-//       pts_to r2 full_perm n2)
-//    ensures
-//      (pts_to r1 full_perm n2 `star`
-//       pts_to r2 full_perm n1)
-// {
-//    let x = !r1;
-//    let y = !r2;
-//    r1 := y;
-//    r2 := x
-// }
-// ```
+```pulse
+fn swap_with_elim_pure (r1 r2:ref U32.t) 
+                       (#n1 #n2:erased U32.t)
+   requires
+     (pts_to r1 full_perm n1 `star`
+      pts_to r2 full_perm n2)
+   ensures
+     (pts_to r1 full_perm n2 `star`
+      pts_to r2 full_perm n1)
+{
+   let x = !r1;
+   let y = !r2;
+   r1 := y;
+   r2 := x
+}
+```
 
-// ```pulse
-// fn intro_pure_example (r:ref U32.t)
-//                       (#n1 #n2:erased U32.t)
-//    requires 
-//      (pts_to r full_perm n1 `star`
-//       pure (reveal n1 == reveal n2))
-//    ensures 
-//      (pts_to r full_perm n2 `star`
-//       pure (reveal n2 == reveal n1))
-// {
-//   ()
-// }
-// ```
+```pulse
+fn intro_pure_example (r:ref U32.t)
+                      (#n1 #n2:erased U32.t)
+   requires 
+     (pts_to r full_perm n1 `star`
+      pure (reveal n1 == reveal n2))
+   ensures 
+     (pts_to r full_perm n2 `star`
+      pure (reveal n2 == reveal n1))
+{
+  ()
+}
+```
 
 // ```pulse
 // fn if_example (r:ref U32.t)
