@@ -109,6 +109,31 @@ fn if_example (r:ref U32.t)
 }
 ```
 
+assume
+val pred (b:bool) : vprop
+assume
+val read_pred (_:unit) (#b:erased bool)
+    : stt bool (pred b) (fun r -> pred r)
+
+```pulse
+fn while_test_alt (r:ref U32.t)
+  requires 
+    exists b n.
+      (pts_to r full_perm n `star`
+       pred b)
+  ensures 
+    exists n. (pts_to r full_perm n `star`
+              pred false)
+{
+  while (read_pred())
+  invariant b . exists n. (pts_to r full_perm n `star` pred b)
+  {
+    ()
+  }
+}
+```
+
+
 // ```pulse
 // ghost
 // fn elim_intro_exists2 (r:ref U32.t)
@@ -118,30 +143,6 @@ fn if_example (r:ref U32.t)
 //      exists n. pts_to r full_perm n
 // {
 //   introduce exists n. pts_to r full_perm n with _
-// }
-// ```
-
-// assume
-// val pred (b:bool) : vprop
-// assume
-// val read_pred (_:unit) (#b:erased bool)
-//     : stt bool (pred b) (fun r -> pred r)
-
-// ```pulse
-// fn while_test_alt (r:ref U32.t)
-//   requires 
-//     exists b n.
-//       (pts_to r full_perm n `star`
-//        pred b)
-//   ensures 
-//     exists n. (pts_to r full_perm n `star`
-//               pred false)
-// {
-//   while (let x = read_pred(); x)
-//   invariant b . exists n. (pts_to r full_perm n `star` pred b)
-//   {
-//     ()
-//   }
 // }
 // ```
 
