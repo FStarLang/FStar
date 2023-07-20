@@ -313,11 +313,12 @@ let default_binder_annot = {
 #push-options "--query_stats"
 let rec check' : bool -> check_t =
   fun (allow_inst:bool)
-      (g:env)
-      (pre:term)
-      (pre_typing: tot_typing g pre tm_vprop)
-      (post_hint:post_hint_opt g)
+      (g0:env)
+      (pre0:term)
+      (pre0_typing: tot_typing g0 pre0 tm_vprop)
+      (post_hint:post_hint_opt g0)
       (t:st_term) ->
+
   // let open T in
   // T.print (Printf.sprintf "At %s: allow_inst: %s, context: %s, term: %s\n"
   //            (T.range_to_string t.range)
@@ -335,49 +336,64 @@ let rec check' : bool -> check_t =
   //                           (P.term_to_string pre))
   //   );
   //   let t = unprotect t in
+
+  
+  let (| g, pre, pre_typing, k_elim_pure |) =
+    Pulse.Prover.ElimPure.elim_pure pre0_typing in
+
+  let r : checker_result_t g pre post_hint =
     let g = push_context (P.tag_of_st_term t) t.range g in
     // try 
-      match t.term with
-      | Tm_Protect _ -> T.fail "Protect should have been removed"
+    match t.term with
+    | Tm_Protect _ -> T.fail "Protect should have been removed"
 
-      | Tm_Return _ ->
-        Return.check_return g t pre pre_typing post_hint
+    | Tm_Return _ ->
+      Return.check_return g t pre pre_typing post_hint
     
-      | Tm_Abs _ -> T.fail "Tm_Abs check should not have been called in the checker"
+    | Tm_Abs _ -> T.fail "Tm_Abs check should not have been called in the checker"
 
-      | Tm_STApp _ ->
-        STApp.check_stapp g t pre pre_typing post_hint
+    | Tm_STApp _ ->
+      STApp.check_stapp g t pre pre_typing post_hint
 
-      | Tm_Bind _ ->
-        check_bind g t pre pre_typing post_hint (check' true)
-
-      | _ -> T.fail "Checker form not implemented"
+    | Tm_Bind _ ->
+      check_bind g t pre pre_typing post_hint (check' true)
 
       // | Tm_TotBind _ ->
       //   check_tot_bind g t pre pre_typing post_hint frame_pre (check' true)
 
-      // | Tm_If { b; then_=e1; else_=e2; post=post_if } ->
-      //   let post =
-      //     match post_if, post_hint with
-      //     | None, Some p -> p
-      //     | Some p, None ->
-      //       Checker.Common.intro_post_hint g None p
-      //     | Some p, Some q ->
-      //       Pulse.Typing.Env.fail g (Some t.range) 
-      //         (Printf.sprintf 
-      //            "Multiple annotated postconditions---remove one of them.\n\
-      //             The context expects the postcondition %s,\n\
-      //             but this conditional was annotated with postcondition %s"
-      //             (P.term_to_string (q <: post_hint_t).post)
-      //             (P.term_to_string p))
-      //     | _, _ ->
-      //       Pulse.Typing.Env.fail g (Some t.range) 
-      //         (Printf.sprintf
-      //            "Pulse cannot yet infer a postcondition for a non-tail conditional statement;\n\
-      //             Either annotate this `if` with `returns` clause; or rewrite your code to use a tail conditional")
-      //   in
-      //   let (| t, c, d |) = If.check_if g b e1 e2 pre pre_typing post frame_pre (check' true) in
-      //   ( (| t, c, d |) <: checker_result_t g pre post_hint frame_pre)
+    | Tm_If { b; then_=e1; else_=e2; post=post_if } ->
+      let post =
+        match post_if, post_hint with
+        | None, Some p -> p
+        | Some p, None ->
+            Checker.Common.intro_post_hint g None p
+        | Some p, Some q ->
+          Pulse.Typing.Env.fail g (Some t.range) 
+            (Printf.sprintf 
+                "Multiple annotated postconditions---remove one of them.\n\
+                The context expects the postcondition %s,\n\
+                but this conditional was annotated with postcondition %s"
+                (P.term_to_string (q <: post_hint_t).post)
+                (P.term_to_string p))
+        | _, _ ->
+          Pulse.Typing.Env.fail g (Some t.range) 
+            (Printf.sprintf
+                "Pulse cannot yet infer a postcondition for a non-tail conditional statement;\n\
+                Either annotate this `if` with `returns` clause; or rewrite your code to use a tail conditional")
+      in
+      let (| x, t, pre', g1, k |) : checker_result_t g pre (Some post) =
+        If.check_if g b e1 e2 pre pre_typing post (check' true) in
+      (| x, t, pre', g1, k |)
+
+    | _ -> T.fail "Checker form not implemented"
+  in
+
+  let (| x, t, pre', g1, k |) = r in
+  (| x, t, pre', g1, k_elab_trans k_elim_pure k |)
+
+  // admit ()
+
+  // (| x, t, pre'', g2, k_elab_trans k_elim_pure k |)
 
       // | Tm_IntroPure _ -> 
       //   Pulse.Checker.IntroPure.check_intro_pure g t pre pre_typing post_hint frame_pre
@@ -433,3 +449,10 @@ let rec check' : bool -> check_t =
   // end
 
 let check = check' true
+// fun g ctxt ctxt_typing post_hint t ->
+// let (| g1, ctxt', ctxt'_typing, k_elim |) =
+//   Pulse.Prover.ElimPure.elim_pure ctxt_typing in
+
+// let (| x, t, ctxt', g1, k |) = check' true g1 ctxt' ctxt'_typing post_hint t in
+
+// (| x, t, ctxt', g1, k_elab_trans k_elim k |)
