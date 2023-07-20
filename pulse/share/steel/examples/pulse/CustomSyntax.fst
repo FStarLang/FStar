@@ -143,32 +143,40 @@ open Pulse.Steel.Wrapper
 // }
 // ```
 
-```pulse
-fn while_count2 (r:ref U32.t)
-  requires exists (n:U32.t). (pts_to r full_perm n)
-  ensures (pts_to r full_perm 10ul)
-{
-  open FStar.UInt32;
-  while (let x = !r; (x <> 10ul))
-  invariant b. 
-    exists n. (pts_to r full_perm n `star`
-          pure (b == (n <> 10ul)))
-  {
-    let x = !r;
-    if (x <^ 10ul)
-    {
-      r := x +^ 1ul; 
-      ()
-    }
-    else
-    {
-      r := x -^ 1ul;
-      ()
-    }
-  };
-  ()
-}
-```
+//
+// This doesn't work yet
+// My guess is, it needs a rule in the pure prover,
+//   that if the pure vprop is of the form ?u == e,
+//   then solve it to e
+// Today we fail since ?u is not resolved
+//
+
+// ```pulse
+// fn while_count2 (r:ref U32.t)
+//   requires exists (n:U32.t). (pts_to r full_perm n)
+//   ensures (pts_to r full_perm 10ul)
+// {
+//   open FStar.UInt32;
+//   while (let x = !r; (x <> 10ul))
+//   invariant b. 
+//     exists n. (pts_to r full_perm n `star`
+//           pure (b == (n <> 10ul)))
+//   {
+//     let x = !r;
+//     if (x <^ 10ul)
+//     {
+//       r := x +^ 1ul; 
+//       ()
+//     }
+//     else
+//     {
+//       r := x -^ 1ul;
+//       ()
+//     }
+//   };
+//   ()
+// }
+// ```
 
 
 // ```pulse

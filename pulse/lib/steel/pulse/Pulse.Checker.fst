@@ -378,8 +378,6 @@ let rec check' : bool -> check_t =
       )
       else Exists.check_intro_exists_either g t None pre pre_typing post_hint
 
-
-
     | Tm_Bind _ ->
       check_bind g t pre pre_typing post_hint (check' true)
 
