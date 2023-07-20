@@ -385,6 +385,10 @@ let rec check' : bool -> check_t =
         If.check_if g b e1 e2 pre pre_typing post (check' true) in
       (| x, t, pre', g1, k |)
 
+    | Tm_While _ ->
+      While.check_while g t pre pre_typing post_hint (check' true)
+
+
     | _ -> T.fail "Checker form not implemented"
   in
 
@@ -421,9 +425,6 @@ let rec check' : bool -> check_t =
       //   else (
       //     Exists.check_intro_exists_either g t None pre pre_typing post_hint frame_pre
       //   )
-
-      // | Tm_While _ ->
-      //   While.check_while allow_inst g t pre pre_typing post_hint frame_pre check'
 
       // | Tm_Admit _ ->
       //   Admit.check_admit g t pre pre_typing post_hint frame_pre
