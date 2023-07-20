@@ -441,3 +441,37 @@ let apply_checker_result_k (#g:env) (#ctxt:vprop) (#post_hint:post_hint_for_env 
     return_in_ctxt g1 y u_ty_y ty_y pre' d_ty_y (Some post_hint) in
 
   k (Some post_hint) d
+
+#push-options "--z3rlimit_factor 2 --fuel 0 --ifuel 1"
+let checker_result_for_st_typing (#g:env) (#ctxt:vprop) (#post_hint:post_hint_opt g)
+  (d:st_typing_in_ctxt g ctxt post_hint)
+  : T.Tac (checker_result_t g ctxt post_hint) =
+
+  let (| t, c, d |) = d in
+ 
+  if not (stateful_comp c)
+  then fail g None "checker_result_for_st_typing: not a stateful comp";
+
+
+  let x = fresh g in
+
+  let g' = push_binding g x ppname_default (comp_res c) in
+  let ctxt' = open_term_nv (comp_post c) (ppname_default, x) in
+  let k
+    : continuation_elaborator
+        g (tm_star tm_emp (comp_pre c))
+        g' (tm_star ctxt' tm_emp) =
+    continuation_elaborator_with_bind tm_emp d (magic ()) x in
+  let k
+    : continuation_elaborator g (comp_pre c) g' ctxt' =
+    k_elab_equiv k (magic ()) (magic ()) in
+
+  let _ : squash (checker_res_matches_post_hint g post_hint x (comp_res c) ctxt') =
+    match post_hint with
+    | None -> ()
+    | Some post_hint -> () in
+
+  assert (g' `env_extends` g);
+
+  (| x, comp_res c, ctxt', g', k |)
+#pop-options

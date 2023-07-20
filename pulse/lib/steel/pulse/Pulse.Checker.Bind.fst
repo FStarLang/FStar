@@ -160,30 +160,32 @@ let check_bind
   let r =
     check g1 ctxt' (magic ()) post_hint (open_st_term_nv e2 (binder.binder_ppname, x)) in
   let d : st_typing_in_ctxt g1 ctxt' post_hint = apply_checker_result_k #_ #_ #(Some?.v post_hint) r in
-  let (| t, c, d |) : st_typing_in_ctxt g ctxt post_hint = k1 post_hint d in
+  let d : st_typing_in_ctxt g ctxt post_hint = k1 post_hint d in
 
-  let x = fresh g in
-  assume (stateful_comp c);
+  checker_result_for_st_typing d
 
-  let g' = push_binding g x ppname_default (comp_res c) in
-  let ctxt' = open_term_nv (comp_post c) (ppname_default, x) in
-  let k
-    : continuation_elaborator
-        g (tm_emp * comp_pre c)
-        g' (ctxt' * tm_emp) =
-    continuation_elaborator_with_bind tm_emp d (magic ()) x in
-  let k
-    : continuation_elaborator g (comp_pre c) g' ctxt' =
-    k_elab_equiv k (magic ()) (magic ()) in
+  // let x = fresh g in
+  // assume (stateful_comp c);
 
-  let _ : squash (checker_res_matches_post_hint g post_hint x (comp_res c) ctxt') =
-    match post_hint with
-    | None -> ()
-    | Some post_hint -> () in
+  // let g' = push_binding g x ppname_default (comp_res c) in
+  // let ctxt' = open_term_nv (comp_post c) (ppname_default, x) in
+  // let k
+  //   : continuation_elaborator
+  //       g (tm_emp * comp_pre c)
+  //       g' (ctxt' * tm_emp) =
+  //   continuation_elaborator_with_bind tm_emp d (magic ()) x in
+  // let k
+  //   : continuation_elaborator g (comp_pre c) g' ctxt' =
+  //   k_elab_equiv k (magic ()) (magic ()) in
 
-  assert (g' `env_extends` g);
+  // let _ : squash (checker_res_matches_post_hint g post_hint x (comp_res c) ctxt') =
+  //   match post_hint with
+  //   | None -> ()
+  //   | Some post_hint -> () in
 
-  (| x, comp_res c, ctxt', g', k |) 
+  // assert (g' `env_extends` g);
+
+  // (| x, comp_res c, ctxt', g', k |) 
 
 //   if not frame_pre
 //   then T.fail "check_bindv2: frame_pre is not set, bailing";

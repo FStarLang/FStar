@@ -133,22 +133,24 @@ let check_if
         intro_comp_typing g c pre_typing post_typing.ty_typing x post_typing.post_typing
   in
 
-  let (| t, c, d |) : st_typing_in_ctxt g pre (Some post_hint) =
+  let d : st_typing_in_ctxt g pre (Some post_hint) =
     (| _, c, T_If g b e1 e2 c _ hyp (E b_typing) e1_typing e2_typing (E c_typing) |) in
 
-  let x = fresh g in
+  checker_result_for_st_typing d
 
-  let g' = push_binding g x ppname_default (comp_res c) in
-  let pre' = open_term_nv (comp_post c) (ppname_default, x) in
-  let k
-    : continuation_elaborator
-        g (tm_emp * comp_pre c)
-        g' (pre' * tm_emp) =
-    continuation_elaborator_with_bind tm_emp d (magic ()) x in
-  let k
-    : continuation_elaborator g (comp_pre c) g' pre' =
-    k_elab_equiv k (magic ()) (magic ()) in
+  // let x = fresh g in
 
-  assert (g' `env_extends` g);
+  // let g' = push_binding g x ppname_default (comp_res c) in
+  // let pre' = open_term_nv (comp_post c) (ppname_default, x) in
+  // let k
+  //   : continuation_elaborator
+  //       g (tm_emp * comp_pre c)
+  //       g' (pre' * tm_emp) =
+  //   continuation_elaborator_with_bind tm_emp d (magic ()) x in
+  // let k
+  //   : continuation_elaborator g (comp_pre c) g' pre' =
+  //   k_elab_equiv k (magic ()) (magic ()) in
 
-  (| x, comp_res c, pre', g', k |)
+  // assert (g' `env_extends` g);
+
+  // (| x, comp_res c, pre', g', k |)
