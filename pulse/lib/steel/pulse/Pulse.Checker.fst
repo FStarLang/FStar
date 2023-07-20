@@ -411,6 +411,8 @@ let rec check' : bool -> check_t =
     | Tm_While _ ->
       While.check_while g t pre pre_typing post_hint (check' true)
 
+    | Tm_ProofHintWithBinders _ ->
+      Pulse.Checker.AssertWithBinders.check g t pre pre_typing post_hint (check' true)
 
     | _ -> T.fail "Checker form not implemented"
   in
@@ -437,8 +439,6 @@ let rec check' : bool -> check_t =
       // | Tm_Rewrite _ ->
       //   Rewrite.check_rewrite g t pre pre_typing post_hint frame_pre
 
-      // | Tm_ProofHintWithBinders _ ->
-      //   Pulse.Checker.AssertWithBinders.check g t pre pre_typing post_hint frame_pre (check' true)
     // with
     // | Framing_failure failure ->
     //   if not frame_pre

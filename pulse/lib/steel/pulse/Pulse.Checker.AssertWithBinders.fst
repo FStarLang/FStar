@@ -12,6 +12,7 @@ module PC = Pulse.Checker.Pure
 module P = Pulse.Syntax.Printer
 module N = Pulse.Syntax.Naming 
 module Inf = Pulse.Checker.Inference
+module Prover = Pulse.Prover
 module RT = FStar.Reflection.Typing
 module RU = Pulse.RuntimeUtils
 let is_host_term (t:R.term) = not (R.Tv_Unknown? (R.inspect_ln t))
@@ -65,37 +66,67 @@ let debug_log = Pulse.Typing.debug_log "with_binders"
 //     in
 //     aux [] top
 
-// let infer_binder_types (g:env) (bs:list binder) (v:vprop)
-//   : T.Tac (list nvar & R.term) = 
-//     let tv = elab_term v in
-//     if not (is_host_term tv)
-//     then fail g (Some v.range) (Printf.sprintf "Cannot infer type of %s" (P.term_to_string v));
-//     let as_binder (b:binder) : R.binder =
-//         let open R in
-//         let bv : binder_view = 
-//             { sort = elab_term b.binder_ty;
-//               ppname = b.binder_ppname.name;
-//               qual = Q_Explicit;
-//               attrs = [] } in
-//         pack_binder bv
-//     in
-//     let abstraction = 
-//         L.fold_right 
-//             (fun b (tv:host_term) -> 
-//                 let b = as_binder b in
-//                 R.pack_ln (R.Tv_Abs b tv))
-//             bs
-//             tv
-//     in
-//     // T.print (Printf.sprintf "About to elaborate assert body: %s" (T.term_to_string abstraction));
-//     let inst_abstraction, _ = PC.instantiate_term_implicits g (tm_fstar abstraction v.range) in
-//     // T.print (Printf.sprintf "Instantiated abstraction is: %s" (T.term_to_string abstraction));
-//     match inst_abstraction.t with
-//     | Tm_FStar t -> instantiate_binders_with_fresh_names g t
-//     | t ->
-//       match bs with
-//       | [] -> [], elab_term inst_abstraction
-//       | _ -> T.fail "Impossible: Instantiated abstraction is not embedded F* term"
+let option_must (f:option 'a) (msg:string) : T.Tac 'a =
+  match f with
+  | Some x -> x
+  | None -> T.fail msg
+
+let rec refl_abs_binders (t:R.term) (acc:list binder) : T.Tac (list binder) =
+  let open R in
+  match inspect_ln t with
+  | Tv_Abs b body ->
+    let {sort; ppname} = R.inspect_binder b in
+    let sort = option_must (readback_ty sort) "Failed to readback elaborated binder in peel_off" in
+    refl_abs_binders body
+     ({ binder_ty = sort; binder_ppname = mk_ppname ppname (RU.range_of_term t) }::acc)
+  | _ -> L.rev acc  
+
+let infer_binder_types (g:env) (bs:list binder) (v:vprop)
+  : T.Tac (list binder) =
+  match bs with
+  | [] -> []
+  | _ ->
+    let tv = elab_term v in
+    if not (is_host_term tv)
+    then fail g (Some v.range) (Printf.sprintf "Cannot infer type of %s" (P.term_to_string v));
+    let as_binder (b:binder) : R.binder =
+      let open R in
+      let bv : binder_view = 
+        { sort = elab_term b.binder_ty;
+          ppname = b.binder_ppname.name;
+          qual = Q_Explicit;
+          attrs = [] } in
+      pack_binder bv
+    in
+    let abstraction = 
+      L.fold_right 
+        (fun b (tv:host_term) -> 
+         let b = as_binder b in
+         R.pack_ln (R.Tv_Abs b tv))
+        bs
+        tv
+    in
+    let inst_abstraction, _ = PC.instantiate_term_implicits g (tm_fstar abstraction v.range) in
+    match inst_abstraction.t with
+    | Tm_FStar t -> refl_abs_binders t []
+    | _ -> T.fail "Impossible: Instantiated abstraction is not embedded F* term"
+
+let rec open_binders (g:env) (bs:list binder) (uvs:env { disjoint uvs g }) (v:term) (body:st_term)
+  : T.Tac (uvs:env { disjoint uvs g } & term & st_term) =
+
+  match bs with
+  | [] -> (| uvs, v, body |)
+  | b::bs ->
+    // these binders are only lax checked so far
+    let _ = PC.check_universe (push_env g uvs) b.binder_ty in
+    let x = fresh (push_env g uvs) in
+    let ss = [ DT 0 (tm_var {nm_index=x;nm_ppname=b.binder_ppname}) ] in
+    let bs = L.mapi (fun i b ->
+      assume (i >= 0);
+      subst_binder b (shift_subst_n i ss)) bs in
+    let v = subst_term v (shift_subst_n (L.length bs) ss) in
+    let body = subst_st_term body (shift_subst_n (L.length bs) ss) in
+    open_binders g bs (push_binding uvs x b.binder_ppname b.binder_ty) v body
 
 // let option_must (f:option 'a) (msg:string) : T.Tac 'a =
 //   match f with
@@ -148,15 +179,33 @@ let debug_log = Pulse.Typing.debug_log "with_binders"
 //         (Printf.sprintf "`fold` and `unfold` expect a single user-defined predicate as an argument, \
 //                           but %s is a primitive term that cannot be folded or unfolded"
 //                           (P.term_to_string v))
+module PS = Pulse.Prover.Substs
+let check
+  (g:env)
+  (st:st_term { Tm_ProofHintWithBinders? st.term })
+  (pre:term)
+  (pre_typing:tot_typing g pre tm_vprop)
+  (post_hint:post_hint_opt g)
+  (check:check_t)
 
-// let check
-//   (g:env)
-//   (st:st_term{Tm_ProofHintWithBinders? st.term})
-//   (pre:term)
-//   (pre_typing:tot_typing g pre tm_vprop)
-//   (post_hint:post_hint_opt g)
-//   (frame_pre:bool)
-//   (check:check_t)
+  : T.Tac (checker_result_t g pre post_hint) =
+
+  let Tm_ProofHintWithBinders { hint_type; binders=bs; v; t=body } = st.term in
+
+  match hint_type with
+  | ASSERT ->
+    let bs = infer_binder_types g bs v in
+    let (| uvs, v, body |) = open_binders g bs (mk_env (fstar_env g)) v body in
+    let (| v, d |) = PC.check_vprop (push_env g uvs) v in
+    let (| g1, nts, pre', k_frame |) = Prover.prove pre_typing uvs d in
+    let (| x, x_ty, pre'', g2, k |) =
+      check g1 (tm_star (PS.nt_subst_term v nts) pre') (magic ()) post_hint (PS.nt_subst_st_term body nts) in
+    (| x, x_ty, pre'', g2, k_elab_trans k_frame k |)
+
+  | _ ->
+    fail g (Some st.range)
+      (Printf.sprintf "non-assert proof hints are not yet supported")
+
 //   : T.Tac (checker_result_t g pre post_hint frame_pre)
 //   = let Tm_ProofHintWithBinders { hint_type; binders; v; t=body } = st.term in
 //     check_unfoldable g hint_type v;
