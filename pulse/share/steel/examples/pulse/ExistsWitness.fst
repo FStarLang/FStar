@@ -9,6 +9,9 @@ open Pulse.Steel.Wrapper
 //This example illustrates how to get your "hands" on an existential witness
 //Using the `with ... assert` construct
 
+// prepare Z3
+let _ = assert (hasEq nat)
+
 ```pulse
 fn get_witness (x:R.ref int) (#p:perm) (#y:Ghost.erased int)
 requires R.pts_to x p y
