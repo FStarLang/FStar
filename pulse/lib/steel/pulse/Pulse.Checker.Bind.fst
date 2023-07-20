@@ -157,15 +157,9 @@ let check_bind
   let (| x, ty, ctxt', g1, k1 |) =
     check g ctxt ctxt_typing None e1 in
   
-  let (| y, ty_y, ctxt'', g2, k2 |) =
+  let r =
     check g1 ctxt' (magic ()) post_hint (open_st_term_nv e2 (binder.binder_ppname, x)) in
-
-  // CAN WE AVOID THIS?
-  let (| u, d_ty_y |) = check_universe g2 ty_y in
-
-  let d : st_typing_in_ctxt g2 ctxt'' post_hint =
-    return_in_ctxt g2 y u ty_y ctxt'' d_ty_y post_hint in
-  let d : st_typing_in_ctxt g1 ctxt' post_hint = k2 post_hint d in
+  let d : st_typing_in_ctxt g1 ctxt' post_hint = apply_checker_result_k #_ #_ #(Some?.v post_hint) r in
   let (| t, c, d |) : st_typing_in_ctxt g ctxt post_hint = k1 post_hint d in
 
   let x = fresh g in

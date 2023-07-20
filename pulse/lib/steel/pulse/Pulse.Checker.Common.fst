@@ -400,3 +400,44 @@ let intro_comp_typing (g:env)
       then fail g None "Ill-typed inames"
       else CT_STGhost _ _ _ (E i_typing) stc
 
+let return_in_ctxt (g:env) (y:var) (u:universe) (ty:term) (ctxt:vprop)
+  (ty_typing:universe_of g ty u)
+  (post_hint0:post_hint_opt g { Some? post_hint0 /\ x_t_ctxt_match_post_hint g post_hint0 y ty ctxt})
+
+  : Pure (st_typing_in_ctxt g ctxt post_hint0)
+         (requires lookup g y == Some ty)
+         (ensures fun _ -> True) =
+
+  let Some post_hint = post_hint0 in
+
+  let x = fresh g in
+  assume (~ (x `Set.mem` freevars post_hint.post));
+  let d = T_Return g STT false u ty (null_var y) post_hint.post x ty_typing
+    (magic ())  // that null_var y is well typed at ty in g, we know since lookup g y == Some ty
+    (magic ())  // typing of (open post x) in (g, x) ... post_hint is well-typed, so should get
+  in
+  let t = wr (Tm_Return {ctag=STT;insert_eq=false;term=null_var y}) in
+  let c = comp_return STT false u ty (null_var y) post_hint.post x in
+  let d : st_typing g t c = d in
+
+  let _ :squash (comp_pre c == ctxt /\ comp_post_matches_hint c (Some post_hint)) =
+    match post_hint0 with
+    | Some post_hint ->
+      // this u should follow from equality of t
+      assume (comp_u c == post_hint.u) in
+
+  (| _, _, d |)
+
+let apply_checker_result_k (#g:env) (#ctxt:vprop) (#post_hint:post_hint_for_env g)
+  (r:checker_result_t g ctxt (Some post_hint))
+  : T.Tac (st_typing_in_ctxt g ctxt (Some post_hint)) =
+
+  // TODO: FIXME add to checker result type?
+  let (| y, ty_y, pre', g1, k |) = r in
+
+  let (| u_ty_y, d_ty_y |) = Pulse.Checker.Pure.check_universe g1 ty_y in
+
+  let d : st_typing_in_ctxt g1 pre' (Some post_hint) =
+    return_in_ctxt g1 y u_ty_y ty_y pre' d_ty_y (Some post_hint) in
+
+  k (Some post_hint) d

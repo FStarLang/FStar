@@ -91,14 +91,9 @@ let rec check_abs
           Some post_hint_typing
       in
 
-      let (| y, ty_y, ctxt', g1, k |)  =
-        check g' pre_opened pre_typing post body_opened  in
- 
-      let (| u_ty_y, d_ty_y |) = check_universe g1 ty_y in
-      let d : st_typing_in_ctxt g1 ctxt' post =
-        return_in_ctxt g1 y u_ty_y ty_y ctxt' d_ty_y post in
-
-      let (| body, c_body, body_typing |) : st_typing_in_ctxt g' pre_opened post = k post d in
+      let r  = check g' pre_opened pre_typing post body_opened  in
+      let (| body, c_body, body_typing |) : st_typing_in_ctxt g' pre_opened post =
+        apply_checker_result_k #_ #_ #(Some?.v post) r in
 
       check_effect_annotation g' body.range c c_body;
 

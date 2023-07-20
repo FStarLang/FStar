@@ -105,17 +105,8 @@ let check_if
                                       (mk_eq2 u0 tm_bool b eq_v)
                                       pre_typing
     in
-    let (| y, ty_y, pre', g1, k |) =
-      check g_with_eq pre pre_typing (Some post_hint) br in
-
-    // we are doing this in bind, here, etc. etc.
-    // perhaps the check function can return it
-    let (| u_ty_y, d_ty_y |) = check_universe g1 ty_y in
-
-    let d : st_typing_in_ctxt g1 pre' (Some post_hint) =
-      return_in_ctxt g1 y u_ty_y ty_y pre' d_ty_y (Some post_hint) in
-
-    let (| br, c, d |) = k (Some post_hint) d in
+    let r = check g_with_eq pre pre_typing (Some post_hint) br in
+    let (| br, c, d |) = apply_checker_result_k r in
 
     if hyp `Set.mem` freevars_st br
     then fail g (Some br.range) "Illegal use of control-flow hypothesis in branch"

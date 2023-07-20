@@ -64,6 +64,17 @@ val continuation_elaborator_with_bind (#g:env) (ctxt:term)
 val check_equiv_emp (g:env) (vp:term)
   : option (vprop_equiv g vp tm_emp)
 
+let x_t_ctxt_match_post_hint
+  (g:env)
+  (post_hint:post_hint_opt g)
+  (x:var) (t:term) (ctxt:vprop) =
+
+  match post_hint with
+  | None -> True
+  | Some post_hint ->
+    t == post_hint.ret_ty /\
+    ctxt == open_term post_hint.post x
+
 let checker_res_matches_post_hint
   (g:env)
   (post_hint:post_hint_opt g)
@@ -91,3 +102,7 @@ val intro_comp_typing (g:env)
                       (x:var { fresh_wrt x g (freevars (comp_post c)) })
                       (post_typing:tot_typing (push_binding g x ppname_default (comp_res c)) (open_term (comp_post c) x) tm_vprop)
   : T.Tac (comp_typing g c (comp_u c))
+
+val apply_checker_result_k (#g:env) (#ctxt:vprop) (#post_hint:post_hint_for_env g)
+  (r:checker_result_t g ctxt (Some post_hint))
+  : T.Tac (st_typing_in_ctxt g ctxt (Some post_hint))
