@@ -285,6 +285,24 @@ val union_field0
     (pts_to r v)
     (fun r' -> has_union_field r field r' `star` pts_to r' (union_get_field v field))
 
+[@@noextract_to "krml"] // primitive
+let union_field1
+  (#tn: Type0)
+  (#tf: Type0)
+  (t': Type0)
+  (#n: string)
+  (#fields: field_description_t tf)
+  (#v: Ghost.erased (union_t0 tn n fields))
+  (r: ref (union0 tn n fields))
+  (field: field_t fields {union_get_case v == Some field})
+  (td': typedef t')
+  (sq_t': squash (t' ==  fields.fd_type field))
+  (sq_td': squash (td' == fields.fd_typedef field))
+: STT (ref td')
+    (pts_to r v)
+    (fun r' -> has_union_field r field r' `star` pts_to r' (union_get_field v field))
+= union_field0 t' r field td'
+
 inline_for_extraction [@@noextract_to "krml"] // primitive
 let union_field
   (#tn: Type0)
@@ -316,6 +334,22 @@ val ununion_field
 : STGhostT unit opened
     (has_union_field r field r' `star` pts_to r' v')
     (fun _ -> has_union_field r field r' `star` pts_to r (union_set_field tn n fields field v'))
+
+let ununion_field_and_drop
+  (#opened: _)
+  (#tn: Type0)
+  (#tf: Type0)
+  (#n: string)
+  (#fields: field_description_t tf)
+  (r: ref (union0 tn n fields))
+  (field: field_t fields)
+  (#v': Ghost.erased (fields.fd_type field))
+  (r': ref (fields.fd_typedef field))
+: STGhostT unit opened
+    (has_union_field r field r' `star` pts_to r' v')
+    (fun _ -> pts_to r (union_set_field tn n fields field v'))
+= ununion_field r field r';
+  drop (has_union_field _ _ _)
 
 // NOTE: we DO NOT support preservation of struct prefixes
 

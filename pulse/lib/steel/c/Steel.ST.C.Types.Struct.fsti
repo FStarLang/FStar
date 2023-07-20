@@ -222,6 +222,25 @@ val struct_field0
     (pts_to r v)
     (fun r' -> pts_to r (struct_set_field field (unknown (fields.fd_typedef field)) v) `star` pts_to r' (struct_get_field v field) `star` has_struct_field r field r')
 
+inline_for_extraction
+[@@noextract_to "krml"] // primitive
+let struct_field1
+  (#tn: Type0)
+  (#tf: Type0)
+  (t': Type0)
+  (#n: string)
+  (#fields: nonempty_field_description_t tf)
+  (#v: Ghost.erased (struct_t0 tn n fields))
+  (r: ref (struct0 tn n fields))
+  (field: field_t fields)
+  (td': typedef t')
+  (sq_t': squash (t' ==  fields.fd_type field))
+  (sq_td': squash (td' == fields.fd_typedef field))
+: STT (ref td')
+    (pts_to r v)
+    (fun r' -> pts_to r (struct_set_field field (unknown (fields.fd_typedef field)) v) `star` pts_to r' (struct_get_field v field) `star` has_struct_field r field r')
+= struct_field0 t' r field td'
+
 inline_for_extraction [@@noextract_to "krml"] // primitive
 let struct_field
   (#tn: Type0)
@@ -258,6 +277,27 @@ val unstruct_field
       struct_get_field v field == unknown (fields.fd_typedef field)
     )
     (fun _ -> True)
+
+let unstruct_field_and_drop
+  (#opened: _)
+  (#tn: Type0)
+  (#tf: Type0)
+  (#n: string)
+  (#fields: nonempty_field_description_t tf)
+  (#v: Ghost.erased (struct_t0 tn n fields))
+  (r: ref (struct0 tn n fields))
+  (field: field_t fields)
+  (#v': Ghost.erased (fields.fd_type field))
+  (r': ref (fields.fd_typedef field))
+: STGhost unit opened
+    (has_struct_field r field r' `star` pts_to r v `star` pts_to r' v')
+    (fun _ -> pts_to r (struct_set_field field v' v))
+    (
+      struct_get_field v field == unknown (fields.fd_typedef field)
+    )
+    (fun _ -> True)
+= unstruct_field r field r';
+  drop (has_struct_field _ _ _)
 
 let unstruct_field_alt
   (#opened: _)
