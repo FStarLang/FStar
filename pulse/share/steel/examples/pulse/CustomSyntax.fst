@@ -109,7 +109,6 @@ fn if_example (r:ref U32.t)
 }
 ```
 
-
 // ```pulse
 // ghost
 // fn elim_intro_exists2 (r:ref U32.t)
@@ -121,7 +120,6 @@ fn if_example (r:ref U32.t)
 //   introduce exists n. pts_to r full_perm n with _
 // }
 // ```
-
 
 // assume
 // val pred (b:bool) : vprop
