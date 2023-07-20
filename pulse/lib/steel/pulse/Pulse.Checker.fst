@@ -308,9 +308,26 @@ let default_binder_annot = {
 //                 (P.term_to_string ctxt'') )) ;
 //     let res = check g'' (protect st) ctxt'' ctxt'_typing post_hint true in
 //     elab_k post_hint (elab_k' post_hint res)
-      
 
-#push-options "--query_stats"
+let rec transform_to_unary_intro_exists (g:env) (t:term) (ws:list term)
+  : T.Tac st_term =
+  
+  let should_check = should_check_false in
+  match ws with
+  | [] -> fail g (Some t.range) "intro exists with empty witnesses"
+  | [w] ->
+    wr (Tm_IntroExists {erased=false;p=t;witnesses=[w];should_check})
+  | w::ws ->
+    match t.t with
+    | Tm_ExistsSL u b body ->
+      let body = subst_term body [ DT 0 w ] in
+      let st = transform_to_unary_intro_exists g body ws in
+      wr (Tm_Bind {binder=null_binder tm_unit;
+                   head=st;
+                   body=wr (Tm_IntroExists {erased=false;p=t;witnesses=[w];should_check})})
+    | _ -> fail g (Some t.range) "intro exists with non-existential"
+
+#push-options "--z3rlimit_factor 4 --fuel 0 --ifuel 1"
 let rec check' : bool -> check_t =
   fun (allow_inst:bool)
       (g0:env)
@@ -358,25 +375,31 @@ let rec check' : bool -> check_t =
     | Tm_ElimExists _ ->
       Exists.check_elim_exists g t pre pre_typing post_hint
 
-    | Tm_IntroExists { witnesses } ->
-      let should_infer_witnesses =
-        match witnesses with
-        | [w] -> (
-          match w.t with
-          | Tm_Unknown -> true
-          | _ -> false
-        )
-        | _ -> true
-      in
-      if should_infer_witnesses
-      then (
-        fail g None "Pulse cannot yet infer witnesses for existential quantifiers; annotate them explicitly"
-        // let unary_intros = maybe_infer_intro_exists g t pre in
-        // // T.print (Printf.sprintf "Inferred unary_intros:\n%s\n"
-        // //                         (P.st_term_to_string unary_intros));
-        // check' allow_inst g unary_intros pre pre_typing post_hint frame_pre
-      )
-      else Exists.check_intro_exists_either g t None pre pre_typing post_hint
+    | Tm_IntroExists { p; witnesses } ->
+      (match witnesses with
+       | [] -> fail g (Some t.range) "intro exists with empty witnesses"
+       | [_] -> Exists.check_intro_exists_either g t None pre pre_typing post_hint
+       | _ ->
+         let t = transform_to_unary_intro_exists g p witnesses in
+         check' true g pre pre_typing post_hint t)
+      // let should_infer_witnesses =
+      //   match witnesses with
+      //   | [w] -> (
+      //     match w.t with
+      //     | Tm_Unknown -> true
+      //     | _ -> false
+      //   )
+      //   | _ -> true
+      // in
+      // if should_infer_witnesses
+      // then (
+      //   fail g None "Pulse cannot yet infer witnesses for existential quantifiers; annotate them explicitly"
+      //   // let unary_intros = maybe_infer_intro_exists g t pre in
+      //   // // T.print (Printf.sprintf "Inferred unary_intros:\n%s\n"
+      //   // //                         (P.st_term_to_string unary_intros));
+      //   // check' allow_inst g unary_intros pre pre_typing post_hint frame_pre
+      // )
+      // else Exists.check_intro_exists_either g t None pre pre_typing post_hint
 
     | Tm_Bind _ ->
       check_bind g t pre pre_typing post_hint (check' true)
