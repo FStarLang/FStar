@@ -316,7 +316,9 @@ let rec transform_to_unary_intro_exists (g:env) (t:term) (ws:list term)
   match ws with
   | [] -> fail g (Some t.range) "intro exists with empty witnesses"
   | [w] ->
-    wr (Tm_IntroExists {erased=false;p=t;witnesses=[w];should_check})
+    if Tm_ExistsSL? t.t
+    then wr (Tm_IntroExists {erased=false;p=t;witnesses=[w];should_check})
+    else fail g (Some t.range) "intro exists with non-existential"
   | w::ws ->
     match t.t with
     | Tm_ExistsSL u b body ->
