@@ -355,6 +355,31 @@ let rec check' : bool -> check_t =
     | Tm_STApp _ ->
       STApp.check_stapp g t pre pre_typing post_hint
 
+    | Tm_ElimExists _ ->
+      Exists.check_elim_exists g t pre pre_typing post_hint
+
+    | Tm_IntroExists { witnesses } ->
+      let should_infer_witnesses =
+        match witnesses with
+        | [w] -> (
+          match w.t with
+          | Tm_Unknown -> true
+          | _ -> false
+        )
+        | _ -> true
+      in
+      if should_infer_witnesses
+      then (
+        fail g None "Pulse cannot yet infer witnesses for existential quantifiers; annotate them explicitly"
+        // let unary_intros = maybe_infer_intro_exists g t pre in
+        // // T.print (Printf.sprintf "Inferred unary_intros:\n%s\n"
+        // //                         (P.st_term_to_string unary_intros));
+        // check' allow_inst g unary_intros pre pre_typing post_hint frame_pre
+      )
+      else Exists.check_intro_exists_either g t None pre pre_typing post_hint
+
+
+
     | Tm_Bind _ ->
       check_bind g t pre pre_typing post_hint (check' true)
 
@@ -401,30 +426,6 @@ let rec check' : bool -> check_t =
 
       // | Tm_IntroPure _ -> 
       //   Pulse.Checker.IntroPure.check_intro_pure g t pre pre_typing post_hint frame_pre
-
-      // | Tm_ElimExists _ ->
-      //   Exists.check_elim_exists g t pre pre_typing post_hint frame_pre
-
-      // | Tm_IntroExists { witnesses } ->
-      //   let should_infer_witnesses =
-      //     match witnesses with
-      //     | [w] -> (
-      //       match w.t with
-      //       | Tm_Unknown -> true
-      //       | _ -> false
-      //     )
-      //     | _ -> true
-      //   in
-      //   if should_infer_witnesses
-      //   then (
-      //     let unary_intros = maybe_infer_intro_exists g t pre in
-      //     // T.print (Printf.sprintf "Inferred unary_intros:\n%s\n"
-      //     //                         (P.st_term_to_string unary_intros));
-      //     check' allow_inst g unary_intros pre pre_typing post_hint frame_pre
-      //   )
-      //   else (
-      //     Exists.check_intro_exists_either g t None pre pre_typing post_hint frame_pre
-      //   )
 
       // | Tm_Admit _ ->
       //   Admit.check_admit g t pre pre_typing post_hint frame_pre
