@@ -12,124 +12,161 @@ open Pulse.Steel.Wrapper
 #push-options "--using_facts_from 'Prims FStar.Pervasives FStar.UInt FStar.UInt32 FStar.Ghost Pulse.Steel.Wrapper CustomSyntax'"
 #push-options "--ide_id_info_off"
 
+// ```pulse
+// fn test_read (r:ref U32.t)
+//              (#n:erased U32.t)
+//              (#p:perm)
+//    requires pts_to r p n
+//    returns x : U32.t
+//    ensures pts_to r p x
+// {
+//   let x = !r;
+//   x
+// }
+// ```
+
+// ```pulse
+// fn swap (r1 r2:ref U32.t)
+//         (#n1 #n2:erased U32.t)
+//   requires 
+//      (pts_to r1 full_perm n1 `star`
+//       pts_to r2 full_perm n2)
+//   ensures
+//      (pts_to r1 full_perm n2 `star`
+//       pts_to r2 full_perm n1)
+// {
+//   let x = !r1;
+//   let y = !r2;
+//   r1 := y;
+//   r2 := x
+// }
+// ```
+
+// ```pulse
+// fn call_swap2 (r1 r2:ref U32.t)
+//               (#n1 #n2:erased U32.t)
+//    requires
+//       (pts_to r1 full_perm n1 `star`
+//        pts_to r2 full_perm n2)
+//    ensures
+//       (pts_to r1 full_perm n1 `star`
+//        pts_to r2 full_perm n2)
+// {
+//    swap r1 r2;
+//    swap r1 r2
+// }
+// ```
+
+// ```pulse
+// fn swap_with_elim_pure (r1 r2:ref U32.t) 
+//                        (#n1 #n2:erased U32.t)
+//    requires
+//      (pts_to r1 full_perm n1 `star`
+//       pts_to r2 full_perm n2)
+//    ensures
+//      (pts_to r1 full_perm n2 `star`
+//       pts_to r2 full_perm n1)
+// {
+//    let x = !r1;
+//    let y = !r2;
+//    r1 := y;
+//    r2 := x
+// }
+// ```
+
+// ```pulse
+// fn intro_pure_example (r:ref U32.t)
+//                       (#n1 #n2:erased U32.t)
+//    requires 
+//      (pts_to r full_perm n1 `star`
+//       pure (reveal n1 == reveal n2))
+//    ensures 
+//      (pts_to r full_perm n2 `star`
+//       pure (reveal n2 == reveal n1))
+// {
+//   ()
+// }
+// ```
+
+// ```pulse
+// fn if_example (r:ref U32.t)
+//               (n:(n:erased U32.t{U32.v (reveal n) == 1}))
+//               (b:bool)
+//    requires 
+//      pts_to r full_perm n
+//    ensures
+//      pts_to r full_perm (U32.add (reveal n) 2ul)
+// {
+//    let x = read_atomic r;
+//    if b
+//    {
+//      r := U32.add x 2ul
+//    }
+//    else
+//    {
+//      write_atomic r 3ul
+//    }
+// }
+// ```
+
+// assume
+// val pred (b:bool) : vprop
+// assume
+// val read_pred (_:unit) (#b:erased bool)
+//     : stt bool (pred b) (fun r -> pred r)
+
+// ```pulse
+// fn while_test_alt (r:ref U32.t)
+//   requires 
+//     exists b n.
+//       (pts_to r full_perm n `star`
+//        pred b)
+//   ensures 
+//     exists n. (pts_to r full_perm n `star`
+//               pred false)
+// {
+//   while (read_pred())
+//   invariant b . exists n. (pts_to r full_perm n `star` pred b)
+//   {
+//     ()
+//   }
+// }
+// ```
+
+// ```pulse
+// fn infer_read_ex (r:ref U32.t)
+//   requires exists n. pts_to r full_perm n
+//   returns _:U32.t
+//   ensures exists n. pts_to r full_perm n
+// {
+//   !r
+// }
+// ```
+
 ```pulse
-fn test_read (r:ref U32.t)
-             (#n:erased U32.t)
-             (#p:perm)
-   requires pts_to r p n
-   returns x : U32.t
-   ensures pts_to r p x
+fn while_count2 (r:ref U32.t)
+  requires exists (n:U32.t). (pts_to r full_perm n)
+  ensures (pts_to r full_perm 10ul)
 {
-  let x = !r;
-  x
-}
-```
-
-```pulse
-fn swap (r1 r2:ref U32.t)
-        (#n1 #n2:erased U32.t)
-  requires 
-     (pts_to r1 full_perm n1 `star`
-      pts_to r2 full_perm n2)
-  ensures
-     (pts_to r1 full_perm n2 `star`
-      pts_to r2 full_perm n1)
-{
-  let x = !r1;
-  let y = !r2;
-  r1 := y;
-  r2 := x
-}
-```
-
-```pulse
-fn call_swap2 (r1 r2:ref U32.t)
-              (#n1 #n2:erased U32.t)
-   requires
-      (pts_to r1 full_perm n1 `star`
-       pts_to r2 full_perm n2)
-   ensures
-      (pts_to r1 full_perm n1 `star`
-       pts_to r2 full_perm n2)
-{
-   swap r1 r2;
-   swap r1 r2
-}
-```
-
-```pulse
-fn swap_with_elim_pure (r1 r2:ref U32.t) 
-                       (#n1 #n2:erased U32.t)
-   requires
-     (pts_to r1 full_perm n1 `star`
-      pts_to r2 full_perm n2)
-   ensures
-     (pts_to r1 full_perm n2 `star`
-      pts_to r2 full_perm n1)
-{
-   let x = !r1;
-   let y = !r2;
-   r1 := y;
-   r2 := x
-}
-```
-
-```pulse
-fn intro_pure_example (r:ref U32.t)
-                      (#n1 #n2:erased U32.t)
-   requires 
-     (pts_to r full_perm n1 `star`
-      pure (reveal n1 == reveal n2))
-   ensures 
-     (pts_to r full_perm n2 `star`
-      pure (reveal n2 == reveal n1))
-{
-  ()
-}
-```
-
-```pulse
-fn if_example (r:ref U32.t)
-              (n:(n:erased U32.t{U32.v (reveal n) == 1}))
-              (b:bool)
-   requires 
-     pts_to r full_perm n
-   ensures
-     pts_to r full_perm (U32.add (reveal n) 2ul)
-{
-   let x = read_atomic r;
-   if b
-   {
-     r := U32.add x 2ul
-   }
-   else
-   {
-     write_atomic r 3ul
-   }
-}
-```
-
-assume
-val pred (b:bool) : vprop
-assume
-val read_pred (_:unit) (#b:erased bool)
-    : stt bool (pred b) (fun r -> pred r)
-
-```pulse
-fn while_test_alt (r:ref U32.t)
-  requires 
-    exists b n.
-      (pts_to r full_perm n `star`
-       pred b)
-  ensures 
+  open FStar.UInt32;
+  while (let x = !r; (x <> 10ul))
+  invariant b. 
     exists n. (pts_to r full_perm n `star`
-              pred false)
-{
-  while (read_pred())
-  invariant b . exists n. (pts_to r full_perm n `star` pred b)
+          pure (b == (n <> 10ul)))
   {
-    ()
-  }
+    let x = !r;
+    if (x <^ 10ul)
+    {
+      r := x +^ 1ul; 
+      ()
+    }
+    else
+    {
+      r := x -^ 1ul;
+      ()
+    }
+  };
+  ()
 }
 ```
 
@@ -145,46 +182,6 @@ fn while_test_alt (r:ref U32.t)
 //   introduce exists n. pts_to r full_perm n with _
 // }
 // ```
-
-// ```pulse
-// fn infer_read_ex (r:ref U32.t)
-//   requires
-//     exists n. pts_to r full_perm n
-//   ensures exists n. pts_to r full_perm n
-// {
-//   let x = !r;
-//   ()
-// }
-// ```
-
-
-// ```pulse
-// fn while_count2 (r:ref U32.t)
-//   requires exists (n:U32.t). (pts_to r full_perm n)
-//   ensures (pts_to r full_perm 10ul)
-// {
-//   open FStar.UInt32;
-//   while (let x = !r; (x <> 10ul))
-//   invariant b. 
-//     exists n. (pts_to r full_perm n `star`
-//           pure (b == (n <> 10ul)))
-//   {
-//     let x = !r;
-//     if (x <^ 10ul)
-//     {
-//       r := x +^ 1ul; 
-//       ()
-//     }
-//     else
-//     {
-//       r := x -^ 1ul;
-//       ()
-//     }
-//   };
-//   ()
-// }
-// ```
-
 
 // ```pulse
 // fn test_par (r1 r2:ref U32.t)
