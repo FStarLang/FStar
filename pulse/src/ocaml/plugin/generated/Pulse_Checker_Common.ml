@@ -1180,6 +1180,7 @@ let rec (check_equiv_emp :
               d2) -> FStar_Pervasives_Native.Some ()
            | (uu___, uu___1) -> FStar_Pervasives_Native.None)
       | uu___ -> FStar_Pervasives_Native.None
+type ('g, 'postuhint, 'x, 't, 'ctxt) x_t_ctxt_match_post_hint = Obj.t
 type ('g, 'postuhint, 'x, 't, 'ctxtu) checker_res_matches_post_hint = Obj.t
 type ('g, 'ctxt, 'postuhint) checker_result_t =
   (Pulse_Syntax_Base.var, Pulse_Syntax_Base.term, Pulse_Syntax_Base.vprop,
@@ -1395,3 +1396,122 @@ let (intro_comp_typing :
                                                                    (g, i, st,
                                                                     (), stc)))))
                                                uu___))) uu___))) uu___)
+let (return_in_ctxt :
+  Pulse_Typing_Env.env ->
+    Pulse_Syntax_Base.var ->
+      Pulse_Syntax_Base.universe ->
+        Pulse_Syntax_Base.term ->
+          Pulse_Syntax_Base.vprop ->
+            unit ->
+              unit Pulse_Typing.post_hint_opt ->
+                (unit, unit, unit) Pulse_Typing_Combinators.st_typing_in_ctxt)
+  =
+  fun g ->
+    fun y ->
+      fun u ->
+        fun ty ->
+          fun ctxt ->
+            fun ty_typing ->
+              fun post_hint0 ->
+                let uu___ = post_hint0 in
+                match uu___ with
+                | FStar_Pervasives_Native.Some post_hint ->
+                    let x = Pulse_Typing_Env.fresh g in
+                    let d =
+                      Pulse_Typing.T_Return
+                        (g, Pulse_Syntax_Base.STT, false, u, ty,
+                          (Pulse_Syntax_Pure.null_var y),
+                          (post_hint.Pulse_Typing.post), x, (), (), ()) in
+                    let t =
+                      Pulse_Typing.wr
+                        (Pulse_Syntax_Base.Tm_Return
+                           {
+                             Pulse_Syntax_Base.ctag = Pulse_Syntax_Base.STT;
+                             Pulse_Syntax_Base.insert_eq = false;
+                             Pulse_Syntax_Base.term =
+                               (Pulse_Syntax_Pure.null_var y)
+                           }) in
+                    let c =
+                      Pulse_Typing.comp_return Pulse_Syntax_Base.STT false u
+                        ty (Pulse_Syntax_Pure.null_var y)
+                        post_hint.Pulse_Typing.post x in
+                    let d1 = d in FStar_Pervasives.Mkdtuple3 (t, c, d1)
+let (apply_checker_result_k :
+  Pulse_Typing_Env.env ->
+    Pulse_Syntax_Base.vprop ->
+      unit Pulse_Typing.post_hint_for_env ->
+        (unit, unit, unit) checker_result_t ->
+          ((unit, unit, unit) Pulse_Typing_Combinators.st_typing_in_ctxt,
+            unit) FStar_Tactics_Effect.tac_repr)
+  =
+  fun g ->
+    fun ctxt ->
+      fun post_hint ->
+        fun r ->
+          FStar_Tactics_Effect.tac_bind
+            (FStar_Sealed.seal
+               (Obj.magic
+                  (FStar_Range.mk_range "Pulse.Checker.Common.fst"
+                     (Prims.of_int (436)) (Prims.of_int (35))
+                     (Prims.of_int (436)) (Prims.of_int (36)))))
+            (FStar_Sealed.seal
+               (Obj.magic
+                  (FStar_Range.mk_range "Pulse.Checker.Common.fst"
+                     (Prims.of_int (433)) (Prims.of_int (55))
+                     (Prims.of_int (443)) (Prims.of_int (22)))))
+            (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> r))
+            (fun uu___ ->
+               (fun uu___ ->
+                  match uu___ with
+                  | FStar_Pervasives.Mkdtuple5 (y, ty_y, pre', g1, k) ->
+                      Obj.magic
+                        (FStar_Tactics_Effect.tac_bind
+                           (FStar_Sealed.seal
+                              (Obj.magic
+                                 (FStar_Range.mk_range
+                                    "Pulse.Checker.Common.fst"
+                                    (Prims.of_int (438)) (Prims.of_int (29))
+                                    (Prims.of_int (438)) (Prims.of_int (70)))))
+                           (FStar_Sealed.seal
+                              (Obj.magic
+                                 (FStar_Range.mk_range
+                                    "Pulse.Checker.Common.fst"
+                                    (Prims.of_int (436)) (Prims.of_int (39))
+                                    (Prims.of_int (443)) (Prims.of_int (22)))))
+                           (Obj.magic
+                              (Pulse_Checker_Pure.check_universe g1 ty_y))
+                           (fun uu___1 ->
+                              (fun uu___1 ->
+                                 match uu___1 with
+                                 | Prims.Mkdtuple2 (u_ty_y, d_ty_y) ->
+                                     Obj.magic
+                                       (FStar_Tactics_Effect.tac_bind
+                                          (FStar_Sealed.seal
+                                             (Obj.magic
+                                                (FStar_Range.mk_range
+                                                   "Pulse.Checker.Common.fst"
+                                                   (Prims.of_int (441))
+                                                   (Prims.of_int (4))
+                                                   (Prims.of_int (441))
+                                                   (Prims.of_int (64)))))
+                                          (FStar_Sealed.seal
+                                             (Obj.magic
+                                                (FStar_Range.mk_range
+                                                   "Pulse.Checker.Common.fst"
+                                                   (Prims.of_int (443))
+                                                   (Prims.of_int (2))
+                                                   (Prims.of_int (443))
+                                                   (Prims.of_int (22)))))
+                                          (FStar_Tactics_Effect.lift_div_tac
+                                             (fun uu___2 ->
+                                                return_in_ctxt g1 y u_ty_y
+                                                  ty_y pre' ()
+                                                  (FStar_Pervasives_Native.Some
+                                                     post_hint)))
+                                          (fun uu___2 ->
+                                             (fun d ->
+                                                Obj.magic
+                                                  (k
+                                                     (FStar_Pervasives_Native.Some
+                                                        post_hint) d)) uu___2)))
+                                uu___1))) uu___)

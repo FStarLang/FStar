@@ -1192,47 +1192,6 @@ let (apply_frame :
 type ('g, 'ctxt, 'postuhint) st_typing_in_ctxt =
   (Pulse_Syntax_Base.st_term, Pulse_Syntax_Base.comp,
     (unit, unit, unit) Pulse_Typing.st_typing) FStar_Pervasives.dtuple3
-type ('g, 'postuhint, 'x, 't, 'ctxt) x_t_ctxt_match_post_hint = Obj.t
-let (return_in_ctxt :
-  Pulse_Typing_Env.env ->
-    Pulse_Syntax_Base.var ->
-      Pulse_Syntax_Base.universe ->
-        Pulse_Syntax_Base.term ->
-          Pulse_Syntax_Base.vprop ->
-            unit ->
-              unit Pulse_Typing.post_hint_opt ->
-                (unit, unit, unit) st_typing_in_ctxt)
-  =
-  fun g ->
-    fun y ->
-      fun u ->
-        fun ty ->
-          fun ctxt ->
-            fun ty_typing ->
-              fun post_hint0 ->
-                let uu___ = post_hint0 in
-                match uu___ with
-                | FStar_Pervasives_Native.Some post_hint ->
-                    let x = Pulse_Typing_Env.fresh g in
-                    let d =
-                      Pulse_Typing.T_Return
-                        (g, Pulse_Syntax_Base.STT, false, u, ty,
-                          (Pulse_Syntax_Pure.null_var y),
-                          (post_hint.Pulse_Typing.post), x, (), (), ()) in
-                    let t =
-                      Pulse_Typing.wr
-                        (Pulse_Syntax_Base.Tm_Return
-                           {
-                             Pulse_Syntax_Base.ctag = Pulse_Syntax_Base.STT;
-                             Pulse_Syntax_Base.insert_eq = false;
-                             Pulse_Syntax_Base.term =
-                               (Pulse_Syntax_Pure.null_var y)
-                           }) in
-                    let c =
-                      Pulse_Typing.comp_return Pulse_Syntax_Base.STT false u
-                        ty (Pulse_Syntax_Pure.null_var y)
-                        post_hint.Pulse_Typing.post x in
-                    let d1 = d in FStar_Pervasives.Mkdtuple3 (t, c, d1)
 let rec (vprop_as_list :
   Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term Prims.list) =
   fun vp ->
