@@ -508,6 +508,9 @@ let rec check' : bool -> check_t =
     | Tm_Admit _ ->
       Admit.check_admit g t pre pre_typing post_hint
 
+    | Tm_Rewrite _ ->
+      Rewrite.check_rewrite g t pre pre_typing post_hint
+
     | _ -> T.fail "Checker form not implemented"
   in
 
@@ -522,8 +525,6 @@ let rec check' : bool -> check_t =
       // | Tm_Par _ ->
       //   Par.check_par allow_inst g t pre pre_typing post_hint frame_pre check'
 
-      // | Tm_Rewrite _ ->
-      //   Rewrite.check_rewrite g t pre pre_typing post_hint frame_pre
 
     // with
     // | Framing_failure failure ->
