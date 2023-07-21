@@ -11,19 +11,14 @@
         "@fuel_correspondence_FStar.List.Tot.Base.fold_right.fuel_instrumented",
         "@query",
         "FStar.List.Tot.Base_interpretation_Tm_arrow_3c1d21b8f6dcc5e202b4ff1cafbaba81",
-        "FStar.Pervasives_interpretation_Tm_arrow_0b6559e6ff3addf84b0c2880affbb335",
         "FStar.Reflection.Types_pretyping_b57262eead998d474939c05a17e1ffab",
-        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
         "Prims_pretyping_ce036b6b736ef4e0bc3a9ff132a12aed",
-        "Pulse.Main_interpretation_Tm_arrow_3b83849940dc7facf2c4db09199a2db9",
-        "Pulse.Typing_interpretation_Tm_arrow_057b258425247a37b4f6ea83e1d6f6fe",
         "Pulse.Typing_interpretation_Tm_arrow_7025f41b53a92b33286c43a926ef926b",
         "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "constructor_distinct_FStar.Tactics.Result.Failed",
         "constructor_distinct_FStar.Tactics.Result.Success",
         "constructor_distinct_Prims.Nil",
-        "data_elim_FStar.Tactics.Result.Success",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
         "disc_equation_Pulse.Syntax.Base.C_ST",
@@ -46,19 +41,13 @@
         "equation_Pulse.Typing.elab_env",
         "equation_Pulse.Typing.extend_env_l",
         "equation_with_fuel_FStar.List.Tot.Base.fold_right.fuel_instrumented",
-        "fuel_guarded_inversion_FStar.Pervasives.dtuple3",
         "fuel_guarded_inversion_FStar.Tactics.Result.__result",
         "function_token_typing_FStar.Reflection.Types.env",
         "function_token_typing_Prims.__cache_version_number__",
         "function_token_typing_Pulse.Typing.Env.binding", "int_inversion",
-        "interpretation_Tm_abs_feb43d7e306f9a48bff5606c2cef8474",
-        "kinding_Pulse.Syntax.Base.term@tok",
         "lemma_Pulse.Typing.Env.mk_env_bs", "primitive_Prims.op_BarBar",
-        "proj_equation_FStar.Pervasives.Mkdtuple3__1",
-        "proj_equation_FStar.Pervasives.Mkdtuple3__2",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
-        "proj_equation_FStar.Pervasives.Native.Some_v",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
@@ -74,19 +63,16 @@
         "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_Tm_refine_262f039a938fc14ac016e995f8cd074e",
         "refinement_interpretation_Tm_refine_30687c6bbf76a4ea67eae131536eafd7",
+        "refinement_interpretation_Tm_refine_8f56033db8fc241ac36f2bef28601f85",
         "refinement_interpretation_Tm_refine_b9943bf670d3eeece9d9f2e3e534ed66",
         "refinement_interpretation_Tm_refine_f0ac051651fa0e095f1b2c1241fd6a3f",
-        "string_typing",
-        "typing_FStar.Pervasives.__proj__Mkdtuple3__item___2",
-        "typing_Pulse.Syntax.Base.eq_tm",
+        "string_typing", "typing_Pulse.Syntax.Base.eq_tm",
         "typing_Pulse.Syntax.Base.tm_vprop",
         "typing_Pulse.Typing.Env.bindings", "typing_Pulse.Typing.Env.mk_env",
-        "typing_Tm_abs_1cbf43bdb4dc9f43697f717428ede9d7",
-        "typing_Tm_abs_9de830881eb0b7299cb605b2cfe97562",
-        "typing_Tm_abs_feb43d7e306f9a48bff5606c2cef8474"
+        "typing_Tm_abs_9de830881eb0b7299cb605b2cfe97562"
       ],
       0,
-      "c85d15de33dcda79b1acdc84af86fd64"
+      "51f38b69b6806ddc11d3609e8a87b77e"
     ],
     [
       "Pulse.Main.main",
@@ -95,7 +81,7 @@
       1,
       [ "@query", "equation_FStar.Reflection.Typing.tot_typing" ],
       0,
-      "2fedaec2dc19cd0f73fc2da0c943ee9a"
+      "9791c84d310aba755c73687786f18d97"
     ],
     [
       "Pulse.Main.check_pulse",
@@ -112,7 +98,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "20b884e56b44a2897d7c6e3bedc5a154"
+      "c2242123c388178d7a164763e0213ef0"
     ]
   ]
 ]

@@ -169,6 +169,35 @@ let (__proj__C_STGhost__item___0 : comp -> term) =
 let (__proj__C_STGhost__item___1 : comp -> st_comp) =
   fun projectee -> match projectee with | C_STGhost (_0, _1) -> _1
 type comp_st = comp
+type pattern =
+  | Pat_Cons of fv * (pattern * Prims.bool) Prims.list 
+  | Pat_Constant of constant 
+  | Pat_Var of FStar_Reflection_Typing.pp_name_t 
+  | Pat_Dot_Term of term FStar_Pervasives_Native.option 
+let (uu___is_Pat_Cons : pattern -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Pat_Cons (_0, _1) -> true | uu___ -> false
+let (__proj__Pat_Cons__item___0 : pattern -> fv) =
+  fun projectee -> match projectee with | Pat_Cons (_0, _1) -> _0
+let (__proj__Pat_Cons__item___1 :
+  pattern -> (pattern * Prims.bool) Prims.list) =
+  fun projectee -> match projectee with | Pat_Cons (_0, _1) -> _1
+let (uu___is_Pat_Constant : pattern -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Pat_Constant _0 -> true | uu___ -> false
+let (__proj__Pat_Constant__item___0 : pattern -> constant) =
+  fun projectee -> match projectee with | Pat_Constant _0 -> _0
+let (uu___is_Pat_Var : pattern -> Prims.bool) =
+  fun projectee -> match projectee with | Pat_Var _0 -> true | uu___ -> false
+let (__proj__Pat_Var__item___0 :
+  pattern -> FStar_Reflection_Typing.pp_name_t) =
+  fun projectee -> match projectee with | Pat_Var _0 -> _0
+let (uu___is_Pat_Dot_Term : pattern -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Pat_Dot_Term _0 -> true | uu___ -> false
+let (__proj__Pat_Dot_Term__item___0 :
+  pattern -> term FStar_Pervasives_Native.option) =
+  fun projectee -> match projectee with | Pat_Dot_Term _0 -> _0
 type ctag =
   | STT 
   | STT_Atomic 
@@ -225,6 +254,11 @@ and st_term'__Tm_If__payload =
   then_: st_term ;
   else_: st_term ;
   post1: vprop FStar_Pervasives_Native.option }
+and st_term'__Tm_Match__payload =
+  {
+  sc: term ;
+  returns_: vprop FStar_Pervasives_Native.option ;
+  brs: (pattern * st_term) Prims.list }
 and st_term'__Tm_IntroPure__payload =
   {
   p: term ;
@@ -280,6 +314,7 @@ and st_term' =
   | Tm_Bind of st_term'__Tm_Bind__payload 
   | Tm_TotBind of st_term'__Tm_TotBind__payload 
   | Tm_If of st_term'__Tm_If__payload 
+  | Tm_Match of st_term'__Tm_Match__payload 
   | Tm_IntroPure of st_term'__Tm_IntroPure__payload 
   | Tm_ElimExists of st_term'__Tm_ElimExists__payload 
   | Tm_IntroExists of st_term'__Tm_IntroExists__payload 
@@ -302,6 +337,8 @@ let uu___is_Tm_Bind uu___ = match uu___ with | Tm_Bind _ -> true | _ -> false
 let uu___is_Tm_TotBind uu___ =
   match uu___ with | Tm_TotBind _ -> true | _ -> false
 let uu___is_Tm_If uu___ = match uu___ with | Tm_If _ -> true | _ -> false
+let uu___is_Tm_Match uu___ =
+  match uu___ with | Tm_Match _ -> true | _ -> false
 let uu___is_Tm_IntroPure uu___ =
   match uu___ with | Tm_IntroPure _ -> true | _ -> false
 let uu___is_Tm_ElimExists uu___ =
@@ -321,6 +358,7 @@ let uu___is_Tm_Protect uu___ =
   match uu___ with | Tm_Protect _ -> true | _ -> false
 let uu___is_Tm_ProofHintWithBinders uu___ =
   match uu___ with | Tm_ProofHintWithBinders _ -> true | _ -> false
+type branch = (pattern * st_term)
 let (null_binder : term -> binder) =
   fun t -> { binder_ty = t; binder_ppname = ppname_default }
 let (mk_binder : Prims.string -> range -> term -> binder) =
@@ -402,10 +440,54 @@ let (eq_tm_opt :
   term FStar_Pervasives_Native.option ->
     term FStar_Pervasives_Native.option -> Prims.bool)
   = fun t1 -> fun t2 -> eq_opt eq_tm t1 t2
+let (eq_comp_opt :
+  comp FStar_Pervasives_Native.option ->
+    comp FStar_Pervasives_Native.option -> Prims.bool)
+  = fun c1 -> fun c2 -> eq_opt eq_comp c1 c2
+let rec eq_list_dec :
+  'uuuuu 'uuuuu1 'a .
+    'uuuuu ->
+      'uuuuu1 ->
+        ('a -> 'a -> Prims.bool) ->
+          'a Prims.list -> 'a Prims.list -> Prims.bool
+  =
+  fun top1 ->
+    fun top2 ->
+      fun f ->
+        fun l ->
+          fun m ->
+            match (l, m) with
+            | ([], []) -> true
+            | (h1::t1, h2::t2) ->
+                (f h1 h2) && (eq_list_dec top1 top2 f t1 t2)
+            | uu___ -> false
 let (eq_binder : binder -> binder -> Prims.bool) =
   fun b0 -> fun b1 -> eq_tm b0.binder_ty b1.binder_ty
 let (eq_tm_list : term Prims.list -> term Prims.list -> Prims.bool) =
   fun t1 -> fun t2 -> eq_list eq_tm t1 t2
+let (fstar_const_eq :
+  FStar_Reflection_V2_Data.vconst ->
+    FStar_Reflection_V2_Data.vconst -> Prims.bool)
+  = fun c1 -> fun c2 -> failwith "Not yet implemented:fstar_const_eq"
+let rec (eq_pattern : pattern -> pattern -> Prims.bool) =
+  fun p1 ->
+    fun p2 ->
+      match (p1, p2) with
+      | (Pat_Cons (f1, vs1), Pat_Cons (f2, vs2)) ->
+          (f1.fv_name = f2.fv_name) && (eq_list_dec p1 p2 eq_sub_pat vs1 vs2)
+      | (Pat_Constant c1, Pat_Constant c2) -> fstar_const_eq c1 c2
+      | (Pat_Var uu___, Pat_Var uu___1) -> true
+      | (Pat_Dot_Term to1, Pat_Dot_Term to2) -> eq_opt eq_tm to1 to2
+      | uu___ -> false
+and (eq_sub_pat :
+  (pattern * Prims.bool) -> (pattern * Prims.bool) -> Prims.bool) =
+  fun pb1 ->
+    fun pb2 ->
+      let uu___ = pb1 in
+      match uu___ with
+      | (p1, b1) ->
+          let uu___1 = pb2 in
+          (match uu___1 with | (p2, b2) -> (eq_pattern p1 p2) && (b1 = b2))
 let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
   fun t1 ->
     fun t2 ->
@@ -441,6 +523,10 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
           (((eq_tm g1 g2) && (eq_st_term ethen1 ethen2)) &&
              (eq_st_term eelse1 eelse2))
             && (eq_tm_opt p1 p2)
+      | (Tm_Match { sc = sc1; returns_ = r1; brs = br1;_}, Tm_Match
+         { sc = sc2; returns_ = r2; brs = br2;_}) ->
+          ((eq_tm sc1 sc2) && (eq_tm_opt r1 r2)) &&
+            (eq_list_dec t1 t2 eq_branch br1 br2)
       | (Tm_While
          { invariant = inv1; condition = cond1; condition_var = uu___;
            body3 = body1;_},
@@ -481,6 +567,15 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
           (((ht1 = ht2) && (eq_list eq_binder bs1 bs2)) && (eq_tm v1 v2)) &&
             (eq_st_term t11 t21)
       | uu___ -> false
+and (eq_branch : (pattern * st_term) -> (pattern * st_term) -> Prims.bool) =
+  fun b1 ->
+    fun b2 ->
+      let uu___ = b1 in
+      match uu___ with
+      | (p1, e1) ->
+          let uu___1 = b2 in
+          (match uu___1 with
+           | (p2, e2) -> (eq_pattern p1 p2) && (eq_st_term e1 e2))
 let (comp_res : comp -> term) =
   fun c ->
     match c with

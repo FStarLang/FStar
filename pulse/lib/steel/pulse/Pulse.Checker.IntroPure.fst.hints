@@ -8,11 +8,8 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
-        "Pulse.Typing_interpretation_Tm_arrow_057b258425247a37b4f6ea83e1d6f6fe",
         "constructor_distinct_FStar.Reflection.V2.Data.Tv_FVar",
         "constructor_distinct_FStar.Reflection.V2.Data.Tv_Unknown",
-        "data_elim_FStar.Tactics.Result.Success",
         "data_elim_Pulse.Syntax.Base.Mkterm",
         "data_typing_intro_FStar.Reflection.V2.Data.Tv_FVar@tok",
         "equality_tok_FStar.Reflection.V2.Data.Tv_Unknown@tok",
@@ -22,23 +19,19 @@
         "equation_Pulse.Syntax.Base.range",
         "equation_Pulse.Syntax.Base.tm_pure",
         "fuel_guarded_inversion_FStar.Tactics.Result.__result",
-        "fuel_guarded_inversion_Prims.dtuple2",
         "fuel_guarded_inversion_Pulse.Syntax.Base.term",
-        "kinding_Pulse.Syntax.Base.term@tok",
         "lemma_FStar.Reflection.Typing.inspect_pack",
         "lemma_Pulse.Syntax.Base.range_singleton",
-        "proj_equation_Prims.Mkdtuple2__1",
         "proj_equation_Pulse.Syntax.Base.Mkterm_range",
         "proj_equation_Pulse.Syntax.Base.Mkterm_t",
+        "projection_inverse_Pulse.Syntax.Base.Tm_Pure_p",
         "refinement_interpretation_Tm_refine_8c22aa61a47c16d0229ef090894097c8",
         "typing_FStar.Reflection.Const.prop_qn",
         "typing_FStar.Reflection.V2.Builtins.pack_fv",
-        "typing_Prims.__proj__Mkdtuple2__item___1",
-        "typing_Pulse.Syntax.Base.__proj__Mkterm__item__range",
-        "typing_Tm_abs_721820113e572d77dcb3e18038febf41"
+        "typing_Pulse.Syntax.Base.__proj__Mkterm__item__range"
       ],
       0,
-      "83d9c566d6f166e245f8bf4ded0ea1f5"
+      "a1709c140c674fc9b0c87acfdf201513"
     ],
     [
       "Pulse.Checker.IntroPure.check_intro_pure",
@@ -64,7 +57,6 @@
         "fuel_guarded_inversion_Pulse.Syntax.Base.comp",
         "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "primitive_Prims.op_BarBar",
-        "proj_equation_Prims.Mkdtuple2__1",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Tactics.Result.Failed_a",
         "projection_inverse_FStar.Tactics.Result.Failed_exn",
@@ -79,7 +71,7 @@
         "typing_Pulse.Typing.Env.fstar_env"
       ],
       0,
-      "1a14e123913b2e0946ca290c7ef3bc75"
+      "c196524933b3964597c441668fad7951"
     ]
   ]
 ]

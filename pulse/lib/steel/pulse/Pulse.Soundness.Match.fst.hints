@@ -1,0 +1,56 @@
+[
+  "ñ2Hã\u000fu¦ñ\u0007\u001e‘}ü´Lä",
+  [
+    [
+      "Pulse.Soundness.Match.complete_soundness",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_Pulse.Typing.pats_complete",
+        "projection_inverse_Pulse.Typing.PC_Elab_g",
+        "projection_inverse_Pulse.Typing.PC_Elab_pats",
+        "projection_inverse_Pulse.Typing.PC_Elab_sc",
+        "projection_inverse_Pulse.Typing.PC_Elab_sc_ty"
+      ],
+      0,
+      "ec6adcc626c8813d00de8f75ba022897"
+    ],
+    [
+      "Pulse.Soundness.Match.match_soundness",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Pulse.Elaborate.Pure.elab_term.fuel_instrumented",
+        "@query", "constructor_distinct_Pulse.Syntax.Base.Tm_FStar",
+        "constructor_distinct_Pulse.Syntax.Base.Tm_VProp",
+        "data_elim_Pulse.Typing.T_Match",
+        "data_typing_intro_FStar.Reflection.V2.Data.Tv_Type@tok",
+        "equation_FStar.Reflection.Typing.tm_type",
+        "equation_Pulse.Syntax.Base.comp_st",
+        "equation_Pulse.Syntax.Base.tm_fstar",
+        "equation_Pulse.Syntax.Base.universe",
+        "equation_Pulse.Syntax.Pure.tm_type",
+        "equation_with_fuel_Pulse.Elaborate.Pure.elab_term.fuel_instrumented",
+        "fuel_guarded_inversion_Pulse.Syntax.Base.st_term",
+        "proj_equation_Pulse.Syntax.Base.Mkterm_range",
+        "proj_equation_Pulse.Syntax.Base.Mkterm_t",
+        "projection_inverse_Pulse.Syntax.Base.Mkterm_range",
+        "projection_inverse_Pulse.Syntax.Base.Mkterm_t",
+        "projection_inverse_Pulse.Syntax.Base.Tm_FStar__0",
+        "refinement_interpretation_Tm_refine_78cf9fabb706bab7e54de904b7db9d2a",
+        "refinement_interpretation_Tm_refine_a9e98df61bd2c150c1a741dba4ce0884",
+        "refinement_interpretation_Tm_refine_f39ae41739caa6a3420811af45940127",
+        "typing_FStar.Range.range_0",
+        "typing_FStar.Reflection.V2.Builtins.pack_ln",
+        "typing_Pulse.RuntimeUtils.set_range",
+        "typing_Pulse.Syntax.Pure.tm_type"
+      ],
+      0,
+      "fc864a07103376bbe75b8fdb902a2fd9"
+    ]
+  ]
+]

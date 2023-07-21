@@ -37,6 +37,10 @@ let rec map_err (f:'a -> err 'b) (l:list 'a)
       let? tl = map_err f tl in
       return (hd :: tl)
 
+let map_err_opt (f : 'a -> err 'b) (o:option 'a) : err (option 'b) =
+  match o with
+  | None -> return None
+  | Some v -> let? v' = f v in return (Some v')
 
 let as_term (t:S.term)
   : SW.term
@@ -58,12 +62,23 @@ let push_bv env x =
   let env = { env with tcenv } in
   env, bv
 
+let rec push_bvs env xs =
+  match xs with
+  | [] -> env, []
+  | x::xs ->
+    let env, bv = push_bv env x in
+    let env, bvs = push_bvs env xs in
+    env, bv::bvs
+
 let push_namespace env lid =
   let dsenv = D.push_namespace env.tcenv.dsenv lid in
   let tcenv = { env.tcenv with dsenv } in
   let env = {env with tcenv} in
   env
   
+let desugar_const (c:FStar.Const.sconst) : SW.constant =
+  SW.inspect_const c
+
 let r_ = FStar.Compiler.Range.dummyRange
 let admit_lid = Ident.lid_of_path ["Prims"; "admit"] r_
 let star_lid = Ident.lid_of_path ["Steel"; "Effect"; "Common"; "star"] r_
@@ -299,6 +314,20 @@ let resolve_hint_type (env:env_t) (ht:Sugar.hint_type)
       let? ns = resolve_names env ns in
       return (FOLD ns)
 
+// FIXME
+// should just mimic let resolve_lid
+let desugar_datacon (env:env_t) (l:lid) : err SW.fv =
+  let rng = Ident.range_of_lid l in
+  let t = A.mk_term (A.Name l) rng A.Expr in
+  let? tt = tosyntax env t in
+  let? sfv =
+    match (SS.compress tt).n with
+    | S.Tm_fvar fv -> Inl fv
+    | S.Tm_uinst ({n = S.Tm_fvar fv}, _) -> Inl fv
+    | _ -> fail (BU.format1 "Not a datacon? %s" (Ident.string_of_lid l)) rng
+  in
+  Inl (SW.mk_fv (S.lid_of_fv sfv) rng)
+
 (* s has already been transformed with explicit dereferences for r-values *)
 let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
   : err SW.st_term
@@ -353,7 +382,10 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
       return (SW.tm_if head join_vprop then_ else_ s.range)
 
     | Match { head; returns_annot; branches } ->
-      failwith "Match is not yet handled"
+      let? head = desugar_term env head in
+      let? returns_annot = map_err_opt (desugar_vprop env) returns_annot in
+      let? branches = map_err (desugar_branch env) branches in
+      return (SW.tm_match head returns_annot branches s.range)
 
     | While { guard; id; invariant; body } ->
       let? guard = desugar_stmt env guard in
@@ -392,6 +424,46 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
 
     | LetBinding _ -> 
       fail "Terminal let binding" s.range
+
+and desugar_branch (env:env_t) (br:A.pattern & Sugar.stmt)
+  : err SW.branch
+  = let (p, e) = br in
+    let? (p, vs) = desugar_pat env p in
+    let env, bvs = push_bvs env vs in
+    let? e = desugar_stmt env e in
+    let e = SW.close_st_term_n e (L.map (fun (v:S.bv) -> v.index) bvs) in
+    return (p,e)
+
+and desugar_pat (env:env_t) (p:A.pattern)
+  : err (SW.pattern & list ident)
+  = let r = p.prange in
+    match p.pat with
+    | A.PatVar (id, _, _) ->
+      return (SW.pat_var (Ident.string_of_id id) r, [id])
+    | A.PatWild _ ->
+      let id = Ident.mk_ident ("_", r) in
+      return (SW.pat_var "_" r, [id])
+    | A.PatConst c ->
+      let c = desugar_const c in
+      return (SW.pat_constant c r, [])
+    | A.PatName lid ->
+      let? fv = desugar_datacon env lid in
+      return (SW.pat_cons fv [] r, [])
+    | A.PatApp ({pat=A.PatName lid}, args) ->
+      let? fv = desugar_datacon env lid in
+      let? idents = map_err (fun (p:A.pattern) ->
+          match p.pat with
+          | A.PatVar (id, _, _) -> return id
+          | A.PatWild _ -> return (Ident.mk_ident ("_", r))
+          | _ -> fail "invalid pattern: no deep patterns allowed" r
+      ) args
+      in
+      let strs = L.map Ident.string_of_id idents in
+      let pats = L.map (fun s -> SW.pat_var s r) strs in
+      return (SW.pat_cons fv pats r, idents)
+
+    | _ ->
+      fail "invalid pattern" r
 
 and desugar_bind (env:env_t) (lb:_) (s2:Sugar.stmt) (r:R.range)
   : err SW.st_term
@@ -467,7 +539,7 @@ and desugar_binders (env:env_t) (bs:Sugar.binders)
     let? env, bs, bvs = aux env bs in
     return (env, L.map (fun (aq, b, t) -> aq, SW.mk_binder b t) bs, bvs)
 
-let desugar_computation_type (env:env_t) (c:Sugar.computation_type)
+and desugar_computation_type (env:env_t) (c:Sugar.computation_type)
   : err SW.comp
   = let? pre = desugar_vprop env c.precondition in
     let? ret = desugar_term env c.return_type in
@@ -536,4 +608,3 @@ let initialize_env (env:TcEnv.env)
       tcenv = env;
       local_refs = []
     }
-
