@@ -17,9 +17,7 @@ fn test (r1:ref U32.t) (r2:ref U32.t) (#n:U32.t)
   requires pts_to r1 full_perm n `star` pts_to r2 full_perm n
   ensures exists n1 n2. pts_to r1 full_perm n1 `star` pts_to r2 full_perm n2
 {
-  with x y.
-  assert pts_to r1 full_perm x `star` pts_to r2 full_perm y;
-  introduce exists x y. pts_to r1 full_perm x `star` pts_to r2 full_perm y with x y
+  introduce exists x y. pts_to r1 full_perm x `star` pts_to r2 full_perm y with _ _
 }
 ```
 
