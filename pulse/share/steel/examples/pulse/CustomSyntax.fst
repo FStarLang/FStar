@@ -349,27 +349,23 @@ fn sum2 (r:ref nat) (n:nat)
 }
 ```
 
-//
-// FAILS: refl_contains_uvar, unsupported reflection term
-//
-
-// ```pulse
-// fn if_then_else_in_specs (r:ref U32.t)
-//   requires `@(if true
-//               then pts_to r full_perm 0ul
-//               else pts_to r full_perm 1ul)
-//   ensures  `@(if true
-//               then pts_to r full_perm 1ul
-//               else pts_to r full_perm 0ul)
-// {
-//   // need this for typechecking !r on the next line,
-//   //   with inference of implicits
-//   rewrite `@(if true then pts_to r full_perm 0ul else pts_to r full_perm 1ul)
-//        as (pts_to r full_perm 0ul);
-//   let x = !r;
-//   r := U32.add x 1ul
-// }
-// ```
+```pulse
+fn if_then_else_in_specs (r:ref U32.t)
+  requires `@(if true
+              then pts_to r full_perm 0ul
+              else pts_to r full_perm 1ul)
+  ensures  `@(if true
+              then pts_to r full_perm 1ul
+              else pts_to r full_perm 0ul)
+{
+  // need this for typechecking !r on the next line,
+  //   with inference of implicits
+  rewrite `@(if true then pts_to r full_perm 0ul else pts_to r full_perm 1ul)
+       as (pts_to r full_perm 0ul);
+  let x = !r;
+  r := U32.add x 1ul
+}
+```
 
 ```pulse
 fn test_tot_let (r:ref U32.t)
