@@ -317,7 +317,7 @@ let print_issues (g:env)
 
 let env_to_string (e:env) : T.Tac string =
   let bs = T.map
-    (fun ((_, t), x) -> Printf.sprintf "%s : %s" (T.unseal x.name) (Pulse.Syntax.Printer.term_to_string t))
+    (fun ((n, t), x) -> Printf.sprintf "%s#%d : %s" (T.unseal x.name) n (Pulse.Syntax.Printer.term_to_string t))
     (T.zip e.bs e.names) in
   String.concat "\n  " bs
 

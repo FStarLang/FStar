@@ -10,6 +10,7 @@ open Pulse.Prover.Common
 open Pulse.Checker.Common
 
 module T = FStar.Tactics.V2
+module P = Pulse.Syntax.Printer
 module PS = Pulse.Prover.Substs
 
 let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y == x} = x
@@ -55,6 +56,28 @@ let k_intro_pure (g:env) (p:term)
 
   k post_hint (| t1, c1, d1 |)
 
+let is_eq2_uvar (g:env) (uvs:env) (t:term)
+  : option (uv:var { uv `Set.mem` dom uvs } &
+            t:term { freevars t `Set.subset` dom g }) =
+  
+  match is_eq2 t with
+  | None -> None
+  | Some (l, r) ->
+    match is_var l with
+    | Some nm ->
+      if Set.mem nm.nm_index (dom uvs) && true  // very very sketchy, we should check that r is closed in g
+      then let _ = assume (freevars r `Set.subset` dom g) in
+           Some (| nm.nm_index, r |)
+      else None
+    | None ->
+      match is_var r with
+      | Some nm ->
+        if Set.mem nm.nm_index (dom uvs) && true  // same comment as above
+        then let _ = assume (freevars l `Set.subset` dom g) in
+             Some (| nm.nm_index, l |)
+        else None
+      | _ -> None
+
 let intro_pure (#preamble:_) (pst:prover_state preamble)
   (t:term)
   (unsolved':list vprop)
@@ -62,12 +85,42 @@ let intro_pure (#preamble:_) (pst:prover_state preamble)
   : T.Tac (option (pst':prover_state preamble { pst' `pst_extends` pst })) =
 
   let t_ss = pst.ss.(t) in
-  //
-  // we need to check that t is closed in pst.pg
-  // this is one way
-  //
-  let d = core_check_term_with_expected_type pst.pg t_ss tm_prop in
-  let d_valid = check_prop_validity pst.pg t_ss (E d) in
+
+  debug_prover pst.pg (fun _ ->
+    Printf.sprintf "Intro pure trying to typecheck prop: %s with uvs: %s\n"
+      (P.term_to_string t_ss)
+      (env_to_string pst.uvs));
+
+  let (| ss_new, t_ss, d, d_valid |) : ss_new:PS.ss_t { ss_new `ss_extends` pst.ss } &
+                                       t_ss:term { t_ss == ss_new.(t) } &
+                                       tot_typing pst.pg t_ss tm_prop &
+                                       prop_validity pst.pg t_ss =
+    match is_eq2_uvar pst.pg pst.uvs t_ss with
+    | Some (| uv, e |) ->
+      // uv is a freevar in t_ss,
+      //   which is obtained by applying pst.ss to t
+      // so uv can't possibly in the domain of pst.ss
+      // or it could be a check?
+      assume (~ (uv `Set.mem` (PS.dom pst.ss)));
+      assume (~ (PS.contains PS.empty uv));
+      let ss_uv = PS.push PS.empty uv e in
+      let t_ss_new = ss_uv.(t_ss) in
+      assume (Set.disjoint (PS.dom ss_uv) (PS.dom pst.ss));
+      let ss_new = PS.push_ss pst.ss ss_uv in
+      assume (t_ss_new == ss_new.(t));
+      // we know this is refl, can we avoid this call?
+      let token = check_prop_validity pst.pg t_ss_new (magic ()) in
+      (| ss_new,
+         t_ss_new,
+         magic (),
+         token |)
+    | None ->
+      //
+      // we need to check that t is closed in pst.pg
+      // this is one way
+      //
+      let d = core_check_term_with_expected_type pst.pg t_ss tm_prop in
+      (| pst.ss, t_ss, E d, check_prop_validity pst.pg t_ss (E d) |) in
 
   let x = fresh (push_env pst.pg pst.uvs) in
 
@@ -76,34 +129,42 @@ let intro_pure (#preamble:_) (pst:prover_state preamble)
 
   let k : continuation_elaborator
             preamble.g0 (preamble.ctxt * preamble.frame)
-            pst.pg ((list_as_vprop pst.remaining_ctxt * preamble.frame) * pst.ss.(solved_new)) =
-  
-    let frame = (list_as_vprop pst.remaining_ctxt * preamble.frame) * pst.ss.(pst.solved) in
+            pst.pg ((list_as_vprop pst.remaining_ctxt * preamble.frame) * ss_new.(solved_new)) =
+    let frame = (list_as_vprop pst.remaining_ctxt * preamble.frame) * ss_new.(pst.solved) in
     let k_pure
       : continuation_elaborator
           pst.pg frame
           pst.pg (frame * (tm_pure t_ss)) =
-      k_intro_pure _ _ (E d) d_valid frame in
-
+      k_intro_pure _ _ d d_valid frame in
     // some *s
     let veq
       : vprop_equiv pst.pg
-          (((list_as_vprop pst.remaining_ctxt * preamble.frame) * pst.ss.(pst.solved)) * tm_pure t_ss)
-          ((list_as_vprop pst.remaining_ctxt * preamble.frame) * (tm_pure t_ss * pst.ss.(pst.solved))) =
+          (((list_as_vprop pst.remaining_ctxt * preamble.frame) * ss_new.(pst.solved)) * tm_pure t_ss)
+          ((list_as_vprop pst.remaining_ctxt * preamble.frame) * (tm_pure t_ss * ss_new.(pst.solved))) =
       magic () in
-    
+
     // need lemmas in Prover.Subst
-    assume (tm_pure pst.ss.(t) * pst.ss.(pst.solved) ==
-            pst.ss.(tm_pure t * pst.solved));
-    
+    assume (tm_pure ss_new.(t) * ss_new.(pst.solved) ==
+            ss_new.(tm_pure t * pst.solved));
+
     let k_pure : continuation_elaborator
-      pst.pg ((list_as_vprop pst.remaining_ctxt * preamble.frame) * pst.ss.(pst.solved))
-      pst.pg ((list_as_vprop pst.remaining_ctxt * preamble.frame) * pst.ss.(solved_new)) =
+      pst.pg ((list_as_vprop pst.remaining_ctxt * preamble.frame) * ss_new.(pst.solved))
+      pst.pg ((list_as_vprop pst.remaining_ctxt * preamble.frame) * ss_new.(solved_new)) =
 
       k_elab_equiv k_pure (VE_Refl _ _) veq in
 
-    k_elab_trans pst.k k_pure in
-  
+
+    let k_pst : continuation_elaborator
+      preamble.g0 (preamble.ctxt * preamble.frame)
+      pst.pg ((list_as_vprop pst.remaining_ctxt * preamble.frame) * pst.ss.(pst.solved)) = pst.k in
+
+    assume (pst.ss.(pst.solved) == ss_new.(pst.solved));
+    let k_pst : continuation_elaborator
+      preamble.g0 (preamble.ctxt * preamble.frame)
+      pst.pg ((list_as_vprop pst.remaining_ctxt * preamble.frame) * ss_new.(pst.solved)) = coerce_eq k_pst () in
+
+    k_elab_trans k_pst k_pure in
+
   let goals_inv
     : vprop_equiv (push_env pst.pg pst.uvs)
                   preamble.goals
@@ -135,20 +196,35 @@ let intro_pure (#preamble:_) (pst:prover_state preamble)
                   (list_as_vprop unsolved_new * solved_new) =
     VE_Trans _ _ _ _ goals_inv veq in
 
-  // needs lemmas for term forms in Prover.Subst
-  assume (pst.ss.(solved_new) == tm_star (tm_pure (pst.ss.(t))) pst.ss.(pst.solved));
-  // pst.ss.(t) is well-typed in pst.pg, we checked above
-  assume (freevars (pst.ss.(t)) `Set.subset` dom pst.pg);
+  assume (freevars ss_new.(solved_new) `Set.subset` dom pst.pg);
 
-  assert (freevars pst.ss.(solved_new) `Set.subset` dom pst.pg);
-
-  let pst_new : prover_state preamble = { pst with solved = solved_new;
+  let pst_new : prover_state preamble = { pst with ss = ss_new;
+                                                   solved = solved_new;
                                                    unsolved = unsolved_new;
                                                    k;
                                                    goals_inv;
                                                    solved_inv = () } in
 
   Some pst_new
+
+
+
+  
+
+  // // needs lemmas for term forms in Prover.Subst
+  // assume (pst.ss.(solved_new) == tm_star (tm_pure (pst.ss.(t))) pst.ss.(pst.solved));
+  // // pst.ss.(t) is well-typed in pst.pg, we checked above
+  // assume (freevars (pst.ss.(t)) `Set.subset` dom pst.pg);
+
+  // assert (freevars pst.ss.(solved_new) `Set.subset` dom pst.pg);
+
+  // let pst_new : prover_state preamble = { pst with solved = solved_new;
+  //                                                  unsolved = unsolved_new;
+  //                                                  k;
+  //                                                  goals_inv;
+  //                                                  solved_inv = () } in
+
+  // Some pst_new
 
 // // // there will be some side conditions related to the typings
 // // let k_intro_exists (#g:env) (#u:universe) (#b:binder) (#p:vprop)
