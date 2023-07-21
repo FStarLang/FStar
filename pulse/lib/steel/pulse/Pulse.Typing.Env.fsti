@@ -105,6 +105,8 @@ val push_env_assoc (g1 g2 g3:env)
   : Lemma (requires disjoint g1 g2 /\ disjoint g2 g3 /\ disjoint g3 g1)
           (ensures push_env g1 (push_env g2 g3) == push_env (push_env g1 g2) g3)
 
+val check_disjoint (g:env) (s:Set.set var) : b:bool { b ==> Set.disjoint s (dom g)}
+
 // removes the binding that was added first
 // leftmost when we write env on paper
 val remove_binding (g:env { Cons? (bindings g) })

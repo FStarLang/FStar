@@ -110,6 +110,10 @@ let push_env_assoc g1 g2 g3 =
   L.append_assoc g3.bs g2.bs g1.bs;
   assert (equal (push_env g1 (push_env g2 g3)) (push_env (push_env g1 g2) g3))
 
+let check_disjoint g s =
+  admit ();
+  not (L.existsb (fun (x, _) -> Set.mem x s) g.bs)
+
 let rec remove_binding_aux (g:env)
   (prefix:list (var & typ))
   (prefix_names:list ppname { List.length prefix == List.length prefix_names})
