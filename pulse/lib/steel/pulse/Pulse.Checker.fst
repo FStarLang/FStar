@@ -502,6 +502,10 @@ let rec check' : bool -> check_t =
     | Tm_WithLocal _ ->
       WithLocal.check_withlocal g t pre pre_typing post_hint (check' true)
 
+    | Tm_Par _ ->
+      Par.check_par allow_inst g t pre pre_typing post_hint frame_pre check'
+
+
     | Tm_IntroPure _ -> 
       Pulse.Checker.IntroPure.check_intro_pure g t pre pre_typing post_hint
 
@@ -522,8 +526,6 @@ let rec check' : bool -> check_t =
   // (| x, t, pre'', g2, k_elab_trans k_elim_pure k |)
 
 
-      // | Tm_Par _ ->
-      //   Par.check_par allow_inst g t pre pre_typing post_hint frame_pre check'
 
 
     // with

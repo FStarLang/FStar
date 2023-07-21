@@ -12,20 +12,29 @@ open Pulse.Steel.Wrapper
 #push-options "--using_facts_from 'Prims FStar.Pervasives FStar.UInt FStar.UInt32 FStar.Ghost Pulse.Steel.Wrapper CustomSyntax'"
 #push-options "--ide_id_info_off"
 
-// A test for rewrite
-let mpts_to (r:ref U32.t) (n:erased U32.t) : vprop = pts_to r full_perm n
 
 ```pulse
-fn rewrite_test (r:ref U32.t)
-                (#n:erased U32.t)
-   requires (mpts_to r n)
-   ensures  (mpts_to r 1ul)
+fn test_par (r1 r2:ref U32.t)
+            (#n1 #n2:erased U32.t)
+  requires 
+    (pts_to r1 full_perm n1 `star`
+     pts_to r2 full_perm n2)
+  ensures
+    (pts_to r1 full_perm 1ul `star`
+     pts_to r2 full_perm 1ul)
 {
-  rewrite (mpts_to r n) 
-       as (pts_to r full_perm n);
-  r := 1ul;
-  rewrite (pts_to r full_perm 1ul)
-       as (mpts_to r 1ul)
+  parallel
+  requires (pts_to r1 full_perm n1)
+       and (pts_to r2 full_perm n2)
+  ensures  (pts_to r1 full_perm 1ul)    
+       and (pts_to r2 full_perm 1ul)
+  {
+     r1 := 1ul
+  }
+  {
+     r2 := 1ul
+  };
+  ()
 }
 ```
 
