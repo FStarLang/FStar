@@ -280,7 +280,7 @@ let rec sum_spec (n:nat) : nat =
 let zero : nat = 0
 
 //
-// THIS FAILS (SEE NEXT EXAMPLE ALSO)
+// THIS FAILS (IMPLICIT IS GHOST EXPECTED TOT)
 //
 
 // ```pulse
@@ -324,35 +324,30 @@ let zero : nat = 0
 // }
 // ```
 
-//
-// ALSO FAILS
-// SAME REASON, uvars in eq2 props
-//
-
-// ```pulse
-// fn sum2 (r:ref nat) (n:nat)
-//    requires exists i. pts_to r full_perm i
-//    ensures pts_to r full_perm (sum_spec n)
-// {
-//    let mut i = zero;
-//    let mut sum = zero;
-//    while (let m = !i; (m <> n))
-//    invariant b . exists m s.
-//      pts_to i full_perm m  **
-//      pts_to sum full_perm s **
-//      pure (s == sum_spec m /\ b == (m <> n))
-//    {
-//      let m = !i;
-//      let s = !sum;
-//      i := (m + 1);
-//      sum := s + m + 1;
-//      ()
-//    };
-//    let s = !sum;
-//    r := s;
-//    ()
-// }
-// ```
+```pulse
+fn sum2 (r:ref nat) (n:nat)
+   requires exists i. pts_to r full_perm i
+   ensures pts_to r full_perm (sum_spec n)
+{
+   let mut i = zero;
+   let mut sum = zero;
+   while (let m = !i; (m <> n))
+   invariant b . exists m s.
+     pts_to i full_perm m  **
+     pts_to sum full_perm s **
+     pure (s == sum_spec m /\ b == (m <> n))
+   {
+     let m = !i;
+     let s = !sum;
+     i := (m + 1);
+     sum := s + m + 1;
+     ()
+   };
+   let s = !sum;
+   r := s;
+   ()
+}
+```
 
 //
 // FAILS: refl_contains_uvar, unsupported reflection term
