@@ -1207,9 +1207,9 @@ let uu___is_Non_informative_total_arrow uu___ uu___1 =
   match uu___1 with | Non_informative_total_arrow _ -> true | _ -> false
 let uu___is_Non_informative_ghost_arrow uu___ uu___1 =
   match uu___1 with | Non_informative_ghost_arrow _ -> true | _ -> false
-type ('bnds, 'pat) bindings_ok_for_pat = Obj.t
-type ('bs, 'br) bindings_ok_for_branch = Obj.t
-type ('bss, 'brs) bindings_ok_for_branch_N = Obj.t
+type ('bnds, 'pat, 'uuuuu) bindings_ok_for_pat = Obj.t
+type ('g, 'bs, 'br) bindings_ok_for_branch = Obj.t
+type ('g, 'bss, 'brs) bindings_ok_for_branch_N = Obj.t
 let (binding_to_namedv :
   FStar_Reflection_V2_Data.binding -> FStar_Reflection_Types.namedv) =
   fun b ->
