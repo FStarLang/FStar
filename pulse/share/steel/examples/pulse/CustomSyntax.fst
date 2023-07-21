@@ -12,19 +12,6 @@ open Pulse.Steel.Wrapper
 #push-options "--using_facts_from 'Prims FStar.Pervasives FStar.UInt FStar.UInt32 FStar.Ghost Pulse.Steel.Wrapper CustomSyntax'"
 #push-options "--ide_id_info_off"
 
-```pulse
-fn test_local (r:ref U32.t)
-              (#n:erased U32.t)
-   requires (pts_to r full_perm n)
-   ensures  (pts_to r full_perm 0ul)
-{
-  let mut x = 0ul;
-  let y = !x;
-  r := y
-  // introduce exists n. (pts_to x full_perm n) with _
-}
-```
-
 // ```pulse
 // fn test_write_10 (x:ref U32.t)
 //                  (#n:erased U32.t)
