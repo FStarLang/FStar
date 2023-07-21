@@ -1,6 +1,9 @@
 module Pulse.Syntax.Printer
 open FStar.Printf
 open Pulse.Syntax.Base
+
+module L = FStar.List.Tot
+
 module T = FStar.Tactics.V2
 module Un = FStar.Sealed
 module R = FStar.Reflection.V2
@@ -246,7 +249,10 @@ let rec st_term_to_string' (level:string) (t:st_term)
       (st_term_to_string' level t)
 
     | Tm_ProofHintWithBinders { binders; v; t} ->
-      sprintf "assert %s in\n%s"
+      sprintf "assert %s%s in\n%s"
+        (if L.length binders = 0 then ""
+         else let s = L.fold_left (fun s _b -> Printf.sprintf "%s _" s) "" binders in
+              Printf.sprintf "%s." s)
         (term_to_string v)
         (st_term_to_string' level t)
 

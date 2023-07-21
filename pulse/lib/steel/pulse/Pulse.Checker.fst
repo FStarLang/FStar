@@ -309,6 +309,60 @@ let default_binder_annot = {
 //     let res = check g'' (protect st) ctxt'' ctxt'_typing post_hint true in
 //     elab_k post_hint (elab_k' post_hint res)
 
+let rec gen_names_for_unknowns (g:env) (t:term) (ws:list term)
+  : T.Tac (list (nvar & term) &  // new names with their types
+           term &  // opened vprop                                             
+           list term)  // new list of witnesses with _ replaced with corresponding new names
+  = match ws with
+    | [] -> [], t, []
+    | w::ws ->
+      match t.t with
+      | Tm_ExistsSL _ b body ->
+        let xopt, w, g =
+          match w.t with
+          | Tm_Unknown ->
+            let x = fresh g in
+            Some x,
+            tm_var {nm_index=x;nm_ppname=b.binder_ppname},
+            push_binding g x b.binder_ppname b.binder_ty
+          | _ -> None, w, g in
+        let t : term = open_term' body w 0 in
+        let new_names, t, ws = gen_names_for_unknowns g t ws in
+        (match xopt with
+         | Some x ->
+           ((b.binder_ppname, x), b.binder_ty)::new_names,
+           t,
+           w::ws
+         | None -> new_names, t, w::ws)
+      | _ -> fail g (Some t.range) "intro exists with non-existential"
+
+let instantiate_unknown_witnesses (g:env) (t:st_term { Tm_IntroExists? t.term })
+  : T.Tac (option st_term) =
+
+  let Tm_IntroExists { erased; p; witnesses=ws; should_check } = t.term in
+
+  let new_names, opened_p, new_ws = gen_names_for_unknowns g p ws in
+  match new_names with
+  | [] -> None
+  | _ ->
+    let e2 = {t with term=Tm_IntroExists {erased; p; witnesses=new_ws; should_check}} in
+    let e1 =
+      let hint_type = ASSERT in
+      let binders = [] in
+      let v = opened_p in
+      {term=Tm_ProofHintWithBinders { hint_type;binders;v;t=e2 }; range=t.range} in
+    
+    let t = L.fold_right (fun new_name (e:st_term { Tm_ProofHintWithBinders? e.term }) ->
+      let (ppname, x), ty = new_name in
+      let e = close_st_term' e x 0 in
+      match e.term with
+      | Tm_ProofHintWithBinders {hint_type;binders;v;t} ->
+        let new_binder = {binder_ty=ty; binder_ppname=ppname} in
+        let t' = Tm_ProofHintWithBinders {hint_type;binders=new_binder::binders;v;t} in
+        {e with term=t'}
+    ) new_names e1 in
+    Some t
+
 let rec transform_to_unary_intro_exists (g:env) (t:term) (ws:list term)
   : T.Tac st_term =
   
@@ -378,12 +432,18 @@ let rec check' : bool -> check_t =
       Exists.check_elim_exists g t pre pre_typing post_hint
 
     | Tm_IntroExists { p; witnesses } ->
-      (match witnesses with
-       | [] -> fail g (Some t.range) "intro exists with empty witnesses"
-       | [_] -> Exists.check_intro_exists_either g t None pre pre_typing post_hint
-       | _ ->
-         let t = transform_to_unary_intro_exists g p witnesses in
-         check' true g pre pre_typing post_hint t)
+      (match instantiate_unknown_witnesses g t with
+       | Some t ->
+        //  fail g None
+        //    (Printf.sprintf "\n\nAfter inst. wits: %s\n\n" (P.st_term_to_string t));
+         check' true g pre pre_typing post_hint t
+       | None ->
+         match witnesses with
+         | [] -> fail g (Some t.range) "intro exists with empty witnesses"
+         | [_] -> Exists.check_intro_exists_either g t None pre pre_typing post_hint
+         | _ ->
+           let t = transform_to_unary_intro_exists g p witnesses in
+           check' true g pre pre_typing post_hint t)
       // let should_infer_witnesses =
       //   match witnesses with
       //   | [w] -> (
