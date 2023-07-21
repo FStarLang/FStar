@@ -12,33 +12,6 @@ open Pulse.Steel.Wrapper
 #push-options "--using_facts_from 'Prims FStar.Pervasives FStar.UInt FStar.UInt32 FStar.Ghost Pulse.Steel.Wrapper CustomSyntax'"
 #push-options "--ide_id_info_off"
 
-
-```pulse
-fn test_par (r1 r2:ref U32.t)
-            (#n1 #n2:erased U32.t)
-  requires 
-    (pts_to r1 full_perm n1 `star`
-     pts_to r2 full_perm n2)
-  ensures
-    (pts_to r1 full_perm 1ul `star`
-     pts_to r2 full_perm 1ul)
-{
-  parallel
-  requires (pts_to r1 full_perm n1)
-       and (pts_to r2 full_perm n2)
-  ensures  (pts_to r1 full_perm 1ul)    
-       and (pts_to r2 full_perm 1ul)
-  {
-     r1 := 1ul
-  }
-  {
-     r2 := 1ul
-  };
-  ()
-}
-```
-
-
 // ```pulse
 // fn test_write_10 (x:ref U32.t)
 //                  (#n:erased U32.t)
@@ -198,40 +171,37 @@ fn test_par (r1 r2:ref U32.t)
 // }
 // ```
 
-// //
-// // THIS FAILS
-// //
-// // Probably, a pure vprop is left in the prover with
-// //   a uvar
-// // But the pure prop is of the form ?u == e
-// //
 
-// // ```pulse
-// // fn while_count2 (r:ref U32.t)
-// //   requires exists (n:U32.t). (pts_to r full_perm n)
-// //   ensures (pts_to r full_perm 10ul)
-// // {
-// //   open FStar.UInt32;
-// //   while (let x = !r; (x <> 10ul))
-// //   invariant b. 
-// //     exists n. (pts_to r full_perm n `star`
-// //           pure (b == (n <> 10ul)))
-// //   {
-// //     let x = !r;
-// //     if (x <^ 10ul)
-// //     {
-// //       r := x +^ 1ul; 
-// //       ()
-// //     }
-// //     else
-// //     {
-// //       r := x -^ 1ul;
-// //       ()
-// //     }
-// //   };
-// //   ()
-// // }
-// // ```
+// THIS FAILS
+
+// Probably, a pure vprop is left in the prover with
+//   a uvar
+// But the pure prop is of the form ?u == e
+
+
+```pulse
+fn while_count2 (r:ref U32.t)
+  requires exists (n:U32.t). (pts_to r full_perm n)
+  ensures (pts_to r full_perm 10ul)
+{
+  open FStar.UInt32;
+  while (let x = !r; (x <> 10ul))
+  invariant b. 
+    exists n. (pts_to r full_perm n `star`
+          pure (b == (n <> 10ul)))
+  {
+    let x = !r;
+    if (x <^ 10ul)
+    {
+      r := x +^ 1ul
+    }
+    else
+    {
+      r := x -^ 1ul
+    }
+  }
+}
+```
 
 
 // // ```pulse
