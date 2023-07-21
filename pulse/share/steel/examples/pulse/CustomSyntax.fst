@@ -31,8 +31,7 @@ fn test_read (r:ref U32.t)
    returns x : U32.t
    ensures pts_to r p x
 {
-  let x = !r;
-  x
+  !r
 }
 ```
 
@@ -153,7 +152,7 @@ fn while_test_alt (r:ref U32.t)
     exists n. (pts_to r full_perm n `star`
               pred false)
 {
-  while (let x = read_pred(); x)
+  while (read_pred ())
   invariant b . exists n. (pts_to r full_perm n `star` pred b)
   {
     ()
@@ -187,16 +186,13 @@ fn while_count2 (r:ref U32.t)
     let x = !r;
     if (x <^ 10ul)
     {
-      r := x +^ 1ul; 
-      ()
+      r := x +^ 1ul
     }
     else
     {
-      r := x -^ 1ul;
-      ()
+      r := x -^ 1ul
     }
-  };
-  ()
+  }
 }
 ```
 
@@ -251,8 +247,7 @@ fn test_local (r:ref U32.t)
 {
   let mut x = 0ul;
   let y = !x;
-  r := y;
-  introduce exists n. (pts_to x full_perm n) with _
+  r := y
 }
 ```
 
@@ -269,12 +264,10 @@ fn count_local (r:ref int) (n:int)
      pure (b == (m <> n)))
   {
     let m = !i;
-    i := m + 1;
-    ()
+    i := m + 1
   };
   let x = !i;
-  r := x;
-  introduce exists m. (pts_to i full_perm m) with _
+  r := x
 }
 ```
 
@@ -286,7 +279,7 @@ let rec sum_spec (n:nat) : nat =
 let zero : nat = 0
 
 //
-// THIS FAILS
+// THIS FAILS (SEE NEXT EXAMPLE ALSO)
 //
 
 // ```pulse
