@@ -20,10 +20,10 @@ let (let?) (f:option 'a) (g:'a -> option 'b) : option 'b =
 //           [SMTPat (Some? ((let?) x f))]
 //   = ()
 
-let rec for_all_dec (top:'a) (f : (x:'b{x << top} -> bool)) (l : list 'b{l << top}) : bool =
+let rec for_all_dec (top:'a) (l : list 'b{l << top}) (f : (x:'b{x << l} -> bool)) : bool =
   match l with
   | [] -> true
-  | x::xs -> f x && for_all_dec top f xs
+  | x::xs -> f x && for_all_dec top xs f
 
 let rec map_dec (top:'a) (l : list 'b{l << top}) (f : (x:'b{x << l} -> 'c)) : list 'c =
   match l with

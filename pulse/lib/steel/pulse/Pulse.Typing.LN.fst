@@ -89,6 +89,10 @@ let open_term_ln_opt' (t:option term) (x:term) (i:index)
     | None -> ()
     | Some t -> open_term_ln' t x i
 
+// aux
+let __brs_of (t:st_term{Tm_Match? t.term}) : list branch =
+  let Tm_Match {brs} = t.term in
+  brs
 
 let rec open_term_ln_list' (t:list term) (x:term) (i:index)
   : Lemma
@@ -139,8 +143,9 @@ let rec open_st_term_ln' (e:st_term)
     | Tm_Match {sc;returns_;brs} ->
       open_term_ln' sc x i;
       open_term_ln_opt' returns_ x i;
-      // TODO: this is pretty cumbersome, but should not be conceptually hard
-      admit()
+      assert (__brs_of e == brs);
+      open_branches_ln' e brs x i;
+      ()
 
     | Tm_IntroPure { p }
     | Tm_ElimExists { p } ->
@@ -183,6 +188,17 @@ let rec open_st_term_ln' (e:st_term)
       let n = L.length binders in
       open_term_ln' v x (i + n);
       open_st_term_ln' t x (i + n)
+
+// The Tm_Match? and __brs_of conditions are to prove that the ln_branches' below
+// satisfies the termination refinment.
+and open_branches_ln' (t:st_term{Tm_Match? t.term}) (brs:list branch{brs << t /\ __brs_of t == brs}) (x:term) (i:index)
+  : Lemma 
+    (requires (
+      assert (subst_branches t [DT i x] brs == __brs_of (subst_st_term t [DT i x])); // hint
+      ln_branches' (open_st_term' t x i) (subst_branches t [DT i x] brs) (i - 1)))
+    (ensures ln_branches' t brs i)
+    (decreases brs)
+  = admit ()
 
 let open_term_ln (e:term) (v:var)
   : Lemma 

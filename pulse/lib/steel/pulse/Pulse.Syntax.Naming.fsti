@@ -205,7 +205,7 @@ let rec ln_st' (t:st_term) (i:int)
     | Tm_Match {sc; returns_; brs } ->
       ln' sc i &&
       ln_opt' returns_ i &&
-      for_all_dec t (ln_branch i) brs
+      ln_branches' t brs i
 
     | Tm_IntroPure { p }
     | Tm_ElimExists { p } ->
@@ -249,7 +249,7 @@ let rec ln_st' (t:st_term) (i:int)
       ln' v (i + n) &&
       ln_st' t (i + n)
 
-and ln_branch (i:int) (b : pattern & st_term) : Tot bool (decreases b) =
+and ln_branch' (b : pattern & st_term) (i:int) : Tot bool (decreases b) =
   let (p, e) = b in
   match p with
   | Pat_Cons fv l -> ln_st' e (i + length l)
@@ -257,6 +257,9 @@ and ln_branch (i:int) (b : pattern & st_term) : Tot bool (decreases b) =
   | Pat_Var _ -> ln_st' e (i+1)
   | Pat_Dot_Term None -> true
   | Pat_Dot_Term (Some e) -> false // FIXME come back to this
+
+and ln_branches' (t:st_term) (brs : list branch{brs << t}) (i:int) : Tot bool (decreases brs) =
+  for_all_dec t brs (fun b -> ln_branch' b i)
 
 let ln (t:term) = ln' t (-1)
 let ln_st (t:st_term) = ln_st' t (-1)
