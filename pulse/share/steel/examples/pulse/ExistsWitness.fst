@@ -9,9 +9,6 @@ open Pulse.Steel.Wrapper
 //This example illustrates how to get your "hands" on an existential witness
 //Using the `with ... assert` construct
 
-// prepare Z3
-let _ = assert (hasEq nat)
-
 ```pulse
 fn get_witness (x:R.ref int) (#p:perm) (#y:Ghost.erased int)
 requires R.pts_to x p y
@@ -69,8 +66,7 @@ ensures emp
     with (v0 v1:erased _).
     assert (R.pts_to x0 p0 v0 ** R.pts_to x1 p1 v1);
     drop (R.pts_to x0 p0 v0);
-    drop (R.pts_to x1 p1 v1);
-    ()
+    drop (R.pts_to x1 p1 v1)
 }
 ```
 
@@ -83,8 +79,7 @@ ensures emp
     with v0 v1.
     assert R.pts_to x0 p0 v0 ** R.pts_to x1 p1 v1;
     drop (R.pts_to x0 p0 v0);
-    drop (R.pts_to x1 p1 v1);
-    ()
+    drop (R.pts_to x1 p1 v1)
 }
 ```
 
@@ -99,8 +94,7 @@ ensures emp
     with v1.
     assert R.pts_to x1 p1 v1;
     drop (R.pts_to x0 p0 v0);
-    drop (R.pts_to x1 p1 v1);
-    ()
+    drop (R.pts_to x1 p1 v1)
 }
 ```
 
@@ -113,7 +107,6 @@ ensures emp
     with p0 p1 v0 v1.
     assert R.pts_to x0 p0 v0 ** R.pts_to x1 p1 v1;
     drop (R.pts_to x0 p0 v0);
-    drop (R.pts_to x1 p1 v1);
-    ()
+    drop (R.pts_to x1 p1 v1)
 }
 ```
