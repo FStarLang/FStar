@@ -502,6 +502,9 @@ let rec check' : bool -> check_t =
     | Tm_WithLocal _ ->
       WithLocal.check_withlocal g t pre pre_typing post_hint (check' true)
 
+    | Tm_IntroPure _ -> 
+      Pulse.Checker.IntroPure.check_intro_pure g t pre pre_typing post_hint
+
     | _ -> T.fail "Checker form not implemented"
   in
 
@@ -512,8 +515,6 @@ let rec check' : bool -> check_t =
 
   // (| x, t, pre'', g2, k_elab_trans k_elim_pure k |)
 
-      // | Tm_IntroPure _ -> 
-      //   Pulse.Checker.IntroPure.check_intro_pure g t pre pre_typing post_hint frame_pre
 
       // | Tm_Admit _ ->
       //   Admit.check_admit g t pre pre_typing post_hint frame_pre
