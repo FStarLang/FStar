@@ -89,10 +89,12 @@ let rec lemma_map_opt_dec_len #a #b #z (top:z) (f : (x:a{x << top}) -> option b)
 //   = Classical.forall_intro (Classical.move_requires (__lemma_map_opt_index f xs ys))
 
 
-let dec_index #a (top:'z) (l : list a{l << top}) (i : nat{i < L.length l})
+let rec dec_index #a (top:'z) (l : list a{l << top}) (i : nat{i < L.length l})
 : Lemma (l `L.index` i << top)
         [SMTPat (l `L.index` i << top)]
-= admit()
+= match l, i with
+  | _, 0 -> ()
+  | _::l, _ -> dec_index top l (i-1)
 
 
 
