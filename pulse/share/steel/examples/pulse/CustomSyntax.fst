@@ -13,12 +13,15 @@ open Pulse.Steel.Wrapper
 #push-options "--ide_id_info_off"
 
 ```pulse
-fn test (x:ref U32.t)
-  requires exists n. pts_to x full_perm n
-  ensures pts_to x full_perm 0ul
+fn test_local (r:ref U32.t)
+              (#n:erased U32.t)
+   requires (pts_to r full_perm n)
+   ensures  (pts_to r full_perm 0ul)
 {
-  let y = 0ul;
-  x := y
+  let mut x = 0ul;
+  let y = !x;
+  r := y
+  // introduce exists n. (pts_to x full_perm n) with _
 }
 ```
 

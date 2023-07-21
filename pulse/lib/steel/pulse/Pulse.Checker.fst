@@ -499,6 +499,9 @@ let rec check' : bool -> check_t =
     | Tm_ProofHintWithBinders _ ->
       Pulse.Checker.AssertWithBinders.check g t pre pre_typing post_hint (check' true)
 
+    | Tm_WithLocal _ ->
+      WithLocal.check_withlocal g t pre pre_typing post_hint (check' true)
+
     | _ -> T.fail "Checker form not implemented"
   in
 
@@ -517,9 +520,6 @@ let rec check' : bool -> check_t =
 
       // | Tm_Par _ ->
       //   Par.check_par allow_inst g t pre pre_typing post_hint frame_pre check'
-
-      // | Tm_WithLocal _ ->
-      //   WithLocal.check_withlocal allow_inst g t pre pre_typing post_hint frame_pre check'
 
       // | Tm_Rewrite _ ->
       //   Rewrite.check_rewrite g t pre pre_typing post_hint frame_pre
