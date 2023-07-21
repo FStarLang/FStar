@@ -466,8 +466,8 @@ let rec check' : bool -> check_t =
     | Tm_Bind _ ->
       check_bind g t pre pre_typing post_hint (check' true)
 
-      // | Tm_TotBind _ ->
-      //   check_tot_bind g t pre pre_typing post_hint frame_pre (check' true)
+    | Tm_TotBind _ ->
+      check_tot_bind g t pre pre_typing post_hint (check' true)
 
     | Tm_If { b; then_=e1; else_=e2; post=post_if } ->
       let post =

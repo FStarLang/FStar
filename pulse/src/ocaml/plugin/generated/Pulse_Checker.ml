@@ -651,6 +651,13 @@ let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
                                                     (Pulse_Checker_Bind.check_bind
                                                        g1 t pre () post_hint
                                                        (check' true)))
+                                           | Pulse_Syntax_Base.Tm_TotBind
+                                               uu___1 ->
+                                               Obj.magic
+                                                 (Obj.repr
+                                                    (Pulse_Checker_Bind.check_tot_bind
+                                                       g1 t pre () post_hint
+                                                       (check' true)))
                                            | Pulse_Syntax_Base.Tm_If
                                                { Pulse_Syntax_Base.b1 = b;
                                                  Pulse_Syntax_Base.then_ = e1;
