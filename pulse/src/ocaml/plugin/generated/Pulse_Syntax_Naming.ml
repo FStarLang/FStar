@@ -246,9 +246,7 @@ let rec (ln_st' : Pulse_Syntax_Base.st_term -> Prims.int -> Prims.bool) =
       | Pulse_Syntax_Base.Tm_Match
           { Pulse_Syntax_Base.sc = sc; Pulse_Syntax_Base.returns_ = returns_;
             Pulse_Syntax_Base.brs = brs;_}
-          ->
-          ((ln' sc i) && (ln_opt' returns_ i)) &&
-            (Pulse_Common.for_all_dec t (ln_branch i) brs)
+          -> ((ln' sc i) && (ln_opt' returns_ i)) && (ln_branches' t brs i)
       | Pulse_Syntax_Base.Tm_IntroPure
           { Pulse_Syntax_Base.p = p;
             Pulse_Syntax_Base.should_check = uu___;_}
@@ -302,12 +300,12 @@ let rec (ln_st' : Pulse_Syntax_Base.st_term -> Prims.int -> Prims.bool) =
           ->
           let n = FStar_List_Tot_Base.length binders in
           (ln' v (i + n)) && (ln_st' t1 (i + n))
-and (ln_branch :
-  Prims.int ->
-    (Pulse_Syntax_Base.pattern * Pulse_Syntax_Base.st_term) -> Prims.bool)
+and (ln_branch' :
+  (Pulse_Syntax_Base.pattern * Pulse_Syntax_Base.st_term) ->
+    Prims.int -> Prims.bool)
   =
-  fun i ->
-    fun b ->
+  fun b ->
+    fun i ->
       let uu___ = b in
       match uu___ with
       | (p, e) ->
@@ -317,9 +315,16 @@ and (ln_branch :
            | Pulse_Syntax_Base.Pat_Constant uu___1 -> ln_st' e i
            | Pulse_Syntax_Base.Pat_Var uu___1 -> ln_st' e (i + Prims.int_one)
            | Pulse_Syntax_Base.Pat_Dot_Term (FStar_Pervasives_Native.None) ->
-               true
+               ln_st' e i
            | Pulse_Syntax_Base.Pat_Dot_Term (FStar_Pervasives_Native.Some e1)
                -> false)
+and (ln_branches' :
+  Pulse_Syntax_Base.st_term ->
+    Pulse_Syntax_Base.branch Prims.list -> Prims.int -> Prims.bool)
+  =
+  fun t ->
+    fun brs ->
+      fun i -> Pulse_Common.for_all_dec t brs (fun b -> ln_branch' b i)
 let (ln : Pulse_Syntax_Base.term -> Prims.bool) =
   fun t -> ln' t (Prims.of_int (-1))
 let (ln_st : Pulse_Syntax_Base.st_term -> Prims.bool) =

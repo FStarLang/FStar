@@ -11,11 +11,11 @@ let op_let_Question :
       | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
       | FStar_Pervasives_Native.Some x -> g x
 let rec for_all_dec :
-  'a 'b . 'a -> ('b -> Prims.bool) -> 'b Prims.list -> Prims.bool =
+  'a 'b . 'a -> 'b Prims.list -> ('b -> Prims.bool) -> Prims.bool =
   fun top ->
-    fun f ->
-      fun l ->
-        match l with | [] -> true | x::xs -> (f x) && (for_all_dec top f xs)
+    fun l ->
+      fun f ->
+        match l with | [] -> true | x::xs -> (f x) && (for_all_dec top xs f)
 let rec map_dec :
   'a 'b 'c . 'a -> 'b Prims.list -> ('b -> 'c) -> 'c Prims.list =
   fun top ->
