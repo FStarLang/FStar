@@ -122,6 +122,7 @@ fn if_example (r:ref U32.t)
 }
 ```
 
+// FAILS, GHOST?
 
 // ```pulse
 // ghost
