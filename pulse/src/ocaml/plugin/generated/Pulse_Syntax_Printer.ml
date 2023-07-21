@@ -2948,8 +2948,8 @@ let (tag_of_comp :
                    (FStar_Sealed.seal
                       (Obj.magic
                          (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
-                            (Prims.of_int (299)) (Prims.of_int (31))
-                            (Prims.of_int (299)) (Prims.of_int (49)))))
+                            (Prims.of_int (298)) (Prims.of_int (31))
+                            (Prims.of_int (298)) (Prims.of_int (49)))))
                    (FStar_Sealed.seal
                       (Obj.magic
                          (FStar_Range.mk_range "prims.fst"
@@ -2967,8 +2967,8 @@ let (tag_of_comp :
                    (FStar_Sealed.seal
                       (Obj.magic
                          (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
-                            (Prims.of_int (301)) (Prims.of_int (30))
-                            (Prims.of_int (301)) (Prims.of_int (48)))))
+                            (Prims.of_int (300)) (Prims.of_int (30))
+                            (Prims.of_int (300)) (Prims.of_int (48)))))
                    (FStar_Sealed.seal
                       (Obj.magic
                          (FStar_Range.mk_range "prims.fst"
