@@ -503,8 +503,7 @@ let rec check' : bool -> check_t =
       WithLocal.check_withlocal g t pre pre_typing post_hint (check' true)
 
     | Tm_Par _ ->
-      Par.check_par allow_inst g t pre pre_typing post_hint frame_pre check'
-
+      Par.check_par allow_inst g t pre pre_typing post_hint (check' true)
 
     | Tm_IntroPure _ -> 
       Pulse.Checker.IntroPure.check_intro_pure g t pre pre_typing post_hint
