@@ -255,7 +255,7 @@ and ln_branch' (b : pattern & st_term) (i:int) : Tot bool (decreases b) =
   | Pat_Cons fv l -> ln_st' e (i + length l)
   | Pat_Constant _ -> ln_st' e i
   | Pat_Var _ -> ln_st' e (i+1)
-  | Pat_Dot_Term None -> true
+  | Pat_Dot_Term None -> ln_st' e i
   | Pat_Dot_Term (Some e) -> false // FIXME come back to this
 
 and ln_branches' (t:st_term) (brs : list branch{brs << t}) (i:int) : Tot bool (decreases brs) =

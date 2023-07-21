@@ -198,7 +198,23 @@ and open_branches_ln' (t:st_term{Tm_Match? t.term}) (brs:list branch{brs << t /\
       ln_branches' (open_st_term' t x i) (subst_branches t [DT i x] brs) (i - 1)))
     (ensures ln_branches' t brs i)
     (decreases brs)
-  = admit ()
+  = match brs with
+    | [] -> ()
+    | br::brs ->
+      assume (ln_branch' (subst_branch [DT i x] br) (i - 1)); // Should be immediate. Unfold
+      open_branch_ln' br x i;
+      admit ()
+
+and open_branch_ln' (br : branch) (x:term) (i:index)
+  : Lemma
+    (requires ln_branch' (subst_branch [DT i x] br) (i - 1))
+    (ensures ln_branch' br i)
+  = let (p, e) = br in
+    match p with
+    | Pat_Constant _ -> open_st_term_ln' e x i
+    | Pat_Dot_Term _ -> open_st_term_ln' e x i
+    | Pat_Var v -> open_st_term_ln' e x (i+1)
+    | Pat_Cons _ subpats -> open_st_term_ln' e x (i + L.length subpats)
 
 let open_term_ln (e:term) (v:var)
   : Lemma 
