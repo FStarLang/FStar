@@ -56,27 +56,68 @@ let k_intro_pure (g:env) (p:term)
 
   k post_hint (| t1, c1, d1 |)
 
-let is_eq2_uvar (g:env) (uvs:env) (t:term)
-  : option (uv:var { uv `Set.mem` dom uvs } &
-            t:term { freevars t `Set.subset` dom g }) =
+module R = FStar.Reflection.V2
+
+// let is_eq2 (t:R.term) : option (R.term & R.term) =
+//   let head, args = R.collect_app_ln t in
+//   match R.inspect_ln head, args with
+//   | R.Tv_FVar fv, [_; (a1, _); (a2, _)]
+//   | R.Tv_UInst fv _, [_; (a1, _); (a2, _)] -> 
+//     let l = R.inspect_fv fv in
+//     if l = ["Pulse"; "Steel"; "Wrapper"; "eq2_prop"] ||
+//        l = ["Prims"; "eq2"]
+//     then Some (a1, a2)
+//     else None
+//   | _ -> None
+
+let is_eq2_uvar (uvs:env) (t:term)
+  : option (uv:var { uv `Set.mem` freevars t } & term) =
   
   match is_eq2 t with
   | None -> None
   | Some (l, r) ->
     match is_var l with
     | Some nm ->
-      if Set.mem nm.nm_index (dom uvs) && true  // very very sketchy, we should check that r is closed in g
-      then let _ = assume (freevars r `Set.subset` dom g) in
-           Some (| nm.nm_index, r |)
+      if Set.mem nm.nm_index (dom uvs)
+      then Some (| nm.nm_index, r |)
       else None
     | None ->
       match is_var r with
       | Some nm ->
-        if Set.mem nm.nm_index (dom uvs) && true  // same comment as above
-        then let _ = assume (freevars l `Set.subset` dom g) in
-             Some (| nm.nm_index, l |)
+        if Set.mem nm.nm_index (dom uvs)
+        then Some (| nm.nm_index, l |)
         else None
       | _ -> None
+
+module RF = FStar.Reflection.V2.Formula
+let rec try_collect_substs (uvs:env) (t:term)
+  : T.Tac (ss:PS.ss_t { PS.dom ss `Set.subset` freevars t }) =
+  assume (PS.dom PS.empty == Set.empty);
+  match t.t with
+  | Tm_FStar rt ->
+    let f = RF.term_as_formula' rt in
+    begin
+      match f with
+      | RF.And rt0 rt1 ->
+        assume (not_tv_unknown rt0 /\ not_tv_unknown rt1);
+        let ss0 = try_collect_substs uvs (tm_fstar rt0 FStar.Range.range_0) in
+        let ss1 = try_collect_substs uvs (tm_fstar rt1 FStar.Range.range_0) in
+        if PS.check_disjoint ss0 ss1
+        then let r = PS.push_ss ss0 ss1 in
+             assume (PS.dom r `Set.subset` freevars t);
+             r
+        else PS.empty
+      | _ ->
+        match is_eq2_uvar uvs t with
+        | Some (| uv, e |) ->
+          assume (~ (uv `Set.mem` (PS.dom PS.empty)));
+          let r = PS.push PS.empty uv e in
+          assume (PS.dom r `Set.subset` freevars t);
+          r
+        | None -> PS.empty
+    end
+
+  | _ -> PS.empty
 
 let intro_pure (#preamble:_) (pst:prover_state preamble)
   (t:term)
@@ -91,36 +132,48 @@ let intro_pure (#preamble:_) (pst:prover_state preamble)
       (P.term_to_string t_ss)
       (env_to_string pst.uvs));
 
-  let (| ss_new, t_ss, d, d_valid |) : ss_new:PS.ss_t { ss_new `ss_extends` pst.ss } &
-                                       t_ss:term { t_ss == ss_new.(t) } &
-                                       tot_typing pst.pg t_ss tm_prop &
-                                       prop_validity pst.pg t_ss =
-    match is_eq2_uvar pst.pg pst.uvs t_ss with
-    | Some (| uv, e |) ->
-      // uv is a freevar in t_ss,
-      //   which is obtained by applying pst.ss to t
-      // so uv can't possibly in the domain of pst.ss
-      // or it could be a check?
-      assume (~ (uv `Set.mem` (PS.dom pst.ss)));
-      assume (~ (PS.contains PS.empty uv));
-      let ss_uv = PS.push PS.empty uv e in
-      let t_ss_new = ss_uv.(t_ss) in
-      assume (Set.disjoint (PS.dom ss_uv) (PS.dom pst.ss));
-      let ss_new = PS.push_ss pst.ss ss_uv in
-      assume (t_ss_new == ss_new.(t));
-      // we know this is refl, can we avoid this call?
-      let token = check_prop_validity pst.pg t_ss_new (magic ()) in
-      (| ss_new,
-         t_ss_new,
-         magic (),
-         token |)
-    | None ->
-      //
-      // we need to check that t is closed in pst.pg
-      // this is one way
-      //
-      let d = core_check_term_with_expected_type pst.pg t_ss tm_prop in
-      (| pst.ss, t_ss, E d, check_prop_validity pst.pg t_ss (E d) |) in
+
+  let ss' = try_collect_substs pst.uvs t_ss in
+  assume (PS.dom pst.ss `Set.disjoint` PS.dom ss');
+  let ss_new = PS.push_ss pst.ss ss' in
+  assume (ss_new `ss_extends` pst.ss);
+
+  let t_ss = ss_new.(t) in
+  let d =
+    let d = core_check_term_with_expected_type pst.pg t_ss tm_prop in 
+    E d in
+  let d_valid = check_prop_validity pst.pg t_ss d in
+
+  // let (| ss_new, t_ss, d, d_valid |) : ss_new:PS.ss_t { ss_new `ss_extends` pst.ss } &
+  //                                      t_ss:term { t_ss == ss_new.(t) } &
+  //                                      tot_typing pst.pg t_ss tm_prop &
+  //                                      prop_validity pst.pg t_ss =
+  //   match is_eq2_uvar pst.pg pst.uvs t_ss with
+  //   | Some (| uv, e |) ->
+  //     // uv is a freevar in t_ss,
+  //     //   which is obtained by applying pst.ss to t
+  //     // so uv can't possibly in the domain of pst.ss
+  //     // or it could be a check?
+  //     assume (~ (uv `Set.mem` (PS.dom pst.ss)));
+  //     assume (~ (PS.contains PS.empty uv));
+  //     let ss_uv = PS.push PS.empty uv e in
+  //     let t_ss_new = ss_uv.(t_ss) in
+  //     assume (Set.disjoint (PS.dom ss_uv) (PS.dom pst.ss));
+  //     let ss_new = PS.push_ss pst.ss ss_uv in
+  //     assume (t_ss_new == ss_new.(t));
+  //     // we know this is refl, can we avoid this call?
+  //     let token = check_prop_validity pst.pg t_ss_new (magic ()) in
+  //     (| ss_new,
+  //        t_ss_new,
+  //        magic (),
+  //        token |)
+  //   | None ->
+  //     //
+  //     // we need to check that t is closed in pst.pg
+  //     // this is one way
+  //     //
+  //     let d = core_check_term_with_expected_type pst.pg t_ss tm_prop in
+  //     (| pst.ss, t_ss, E d, check_prop_validity pst.pg t_ss (E d) |) in
 
   let x = fresh (push_env pst.pg pst.uvs) in
 

@@ -26,6 +26,8 @@ val push (ss:ss_t) (x:var { ~ (contains ss x) }) (t:term) : ss_t
 
 val push_ss (ss1:ss_t) (ss2:ss_t { Set.disjoint (dom ss1) (dom ss2) }) : ss_t
 
+val check_disjoint (ss1 ss2:ss_t) : b:bool { b ==> Set.disjoint (dom ss1) (dom ss2) }
+
 val push_as_map (ss1 ss2:ss_t)
   : Lemma (requires Set.disjoint (dom ss1) (dom ss2))
           (ensures as_map (push_ss ss1 ss2) == Map.concat (as_map ss1) (as_map ss2))

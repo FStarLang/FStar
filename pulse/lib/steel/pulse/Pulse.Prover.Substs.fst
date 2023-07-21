@@ -78,6 +78,10 @@ let rec push_ss (ss1:ss_t) (ss2:ss_t { Set.disjoint (dom ss1) (dom ss2) })
   | x::tl ->
     push_ss (push ss1 x (Map.sel ss2.m x)) (tail ss2)
 
+let check_disjoint ss1 ss2 =
+  admit ();
+  not (L.existsb (fun v1 -> L.mem v1 ss2.l) ss1.l)
+
 #push-options "--warn_error -271"
 let push_as_map (ss1 ss2:ss_t)
   : Lemma (requires Set.disjoint (dom ss1) (dom ss2))
