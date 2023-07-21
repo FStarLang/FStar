@@ -61,6 +61,16 @@ val continuation_elaborator_with_bind (#g:env) (ctxt:term)
              g                                (tm_star ctxt (comp_pre c1))
              (push_binding g x ppname_default (comp_res c1)) (tm_star (open_term (comp_post c1) x) ctxt))
 
+val continuation_elaborator_with_tot_bind (#g:env) (#ctxt:term)
+  (ctxt_typing:tot_typing g ctxt tm_vprop)
+  (#e1:term)
+  (#t1:term)
+  (e1_typing:tot_typing g e1 t1)
+  (x:var { None? (lookup g x) })
+  : T.Tac (continuation_elaborator
+           g ctxt
+           (push_binding g x ppname_default t1) ctxt)
+
 val check_equiv_emp (g:env) (vp:term)
   : option (vprop_equiv g vp tm_emp)
 

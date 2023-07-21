@@ -258,7 +258,6 @@ let rec st_term_to_string' (level:string) (t:st_term)
 
 let st_term_to_string t = st_term_to_string' "" t
 
-
 let tag_of_term (t:term) =
   match t.t with
   | Tm_Emp -> "Tm_Emp"

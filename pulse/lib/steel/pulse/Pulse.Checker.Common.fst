@@ -278,6 +278,54 @@ let continuation_elaborator_with_bind (#g:env) (ctxt:term)
   k
 #pop-options
 
+module LN = Pulse.Typing.LN
+#push-options "--z3rlimit_factor 4 --fuel 1 --ifuel 1"
+let continuation_elaborator_with_tot_bind (#g:env) (#ctxt:term)
+  (ctxt_typing:tot_typing g ctxt tm_vprop)
+  (#e1:term)
+  (#t1:term)
+  (e1_typing:tot_typing g e1 t1)
+  (x:var { None? (lookup g x) })
+  : T.Tac (continuation_elaborator
+           g ctxt
+           (push_binding g x ppname_default t1) ctxt) =
+
+  fun post_hint (| e2, c2, d2 |) ->
+
+  if not (stateful_comp c2)
+  then fail g (Some e2.range) "Tm_TotBind: e2 is not a stateful computation";
+
+  let e2_closed = close_st_term e2 x in
+  assume (open_st_term (close_st_term e2 x) x == e2);
+
+  let e = wr (Tm_TotBind {head=e1;body=e2_closed}) in
+  let c = open_comp_with (close_comp c2 x) e1 in
+  // we just closed
+  assume (~ (x `Set.mem` freevars_st e2_closed));
+  let d : st_typing g e c =
+    T_TotBind g e1 e2_closed t1 c2 x e1_typing d2 in
+  let _ =
+    match post_hint with
+    | None -> ()
+    | Some post_hint ->
+      //
+      // The post_hint is well-typed in g
+      // so it should not have x free
+      //
+      // c2 matches post hint, so it should also not have x free
+      // so closing with x, and opening with e1 should be identity
+      //
+      assume (comp_post c == comp_post c2 /\
+              comp_res c == comp_res c2 /\
+              comp_u c == comp_u c2) in
+
+  FV.tot_typing_freevars ctxt_typing;
+  close_with_non_freevar ctxt x 0;
+  LN.tot_typing_ln ctxt_typing;
+  open_with_gt_ln ctxt (-1) e1 0;
+
+  (| e, c, d |)
+
 let rec check_equiv_emp (g:env) (vp:term)
   : option (vprop_equiv g vp tm_emp)
   = match vp.t with
