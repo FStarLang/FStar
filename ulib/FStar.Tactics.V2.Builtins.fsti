@@ -488,7 +488,10 @@ val match_complete_token (g:env) (sc:term) (t:typ) (pats:list pattern) (bnds:lis
 
 // Returns elaborated patterns, the bindings for each one, and a token
 val check_match_complete (g:env) (sc:term) (t:typ) (pats:list pattern)
-  : Tac (option (pats_bnds:(list pattern & list (list binding)){match_complete_token g sc t (fst pats_bnds) (snd pats_bnds)}))
+  : Tac (option (pats_bnds:(list pattern & list (list binding))
+                           {match_complete_token g sc t (fst pats_bnds) (snd pats_bnds)
+                            /\ List.Tot.length (fst pats_bnds) == List.Tot.length (snd pats_bnds)
+                            /\ List.Tot.length (fst pats_bnds) == List.Tot.length pats}))
 
 //
 // Instantiate implicits in t

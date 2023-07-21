@@ -354,7 +354,6 @@ let rec subst_term (t:term) (ss:subst)
 
     | Tv_Refine b f ->
       let b = subst_binder b ss in
-      assume (binder_is_simple b); // trivial
       pack_ln (Tv_Refine b (subst_term f (shift_subst ss)))
 
     | Tv_Uvar j c ->
@@ -362,7 +361,6 @@ let rec subst_term (t:term) (ss:subst)
       
     | Tv_Let recf attrs b def body ->
       let b = subst_binder b ss in
-      assume (binder_is_simple b); // trivial
       pack_ln (Tv_Let recf 
                       (subst_terms attrs ss)
                       b
@@ -395,7 +393,7 @@ let rec subst_term (t:term) (ss:subst)
                              b)
 
 and subst_binder (b:binder) (ss:subst)
-  : Tot binder (decreases b)
+  : Tot (b':binder{binder_is_simple b ==> binder_is_simple b'}) (decreases b)
   = let bndr  = inspect_binder b in
     pack_binder {
       ppname = bndr.ppname;
@@ -425,7 +423,8 @@ and subst_comp (c:comp) (ss:subst)
                        (subst_terms decrs ss))
 
 and subst_terms (ts:list term) (ss:subst)
-  : Tot (list term) (decreases ts)
+  : Tot (ts':list term{Nil? ts ==> Nil? ts'}) // property useful for subst_binder
+        (decreases ts)
   = match ts with
     | [] -> []
     | t::ts -> subst_term t ss :: subst_terms ts ss
@@ -1089,17 +1088,16 @@ type non_informative : term -> Type0 =
     t1:term ->
     non_informative (mk_arrow_ct t0 q (T.E_Ghost, t1))
 
-// assumed
-val bindings_ok_for_pat : list R.binding -> pattern -> Type0
+val bindings_ok_for_pat : env -> list R.binding -> pattern -> Type0
 
 val bindings_ok_pat_constant :
-  c:R.vconst -> Lemma (bindings_ok_for_pat [] (Pat_Constant c))
+  g:env -> c:R.vconst -> Lemma (bindings_ok_for_pat g [] (Pat_Constant c))
 
-let bindings_ok_for_branch (bs : list R.binding) (br : branch) : Type0 =
-  bindings_ok_for_pat bs (fst br)
+let bindings_ok_for_branch (g:env) (bs : list R.binding) (br : branch) : Type0 =
+  bindings_ok_for_pat g bs (fst br)
 
-let bindings_ok_for_branch_N (bss : list (list R.binding)) (brs : list branch) =
-  zip2prop bindings_ok_for_branch bss brs
+let bindings_ok_for_branch_N (g:env) (bss : list (list R.binding)) (brs : list branch) =
+  zip2prop (bindings_ok_for_branch g) bss brs
 
 let binding_to_namedv (b:R.binding) : Tot namedv =
   pack_namedv {
@@ -1284,7 +1282,6 @@ type typing : env -> term -> comp_typ -> Type0 =
      typing g sc (eff, sc_ty) ->
      branches:list branch ->
      ty:comp_typ ->
-     // TODO: bnds shouldn't really be here, but on each branch_typin
      bnds:list (list R.binding) ->
      complet : match_is_complete g sc sc_ty (List.Tot.map fst branches) bnds -> // complete patterns
      branches_typing g sc_u sc_ty sc ty branches bnds -> // each branch has proper type
@@ -1429,7 +1426,7 @@ and branches_typing (g:env) (sc_u:universe) (sc_ty:typ) (sc:term) (rty:comp_typ)
   | BT_S :
 
     br : branch ->
-    bnds : list R.binding{bindings_ok_for_branch bnds br} ->
+    bnds : list R.binding ->
     pf : branch_typing g sc_u sc_ty sc rty br bnds ->
 
     rest_br : list branch ->
@@ -1442,7 +1439,7 @@ and branch_typing (g:env) (sc_u:universe) (sc_ty:typ) (sc:term) (rty:comp_typ)
 =
   | BO :
     pat : pattern ->
-    bnds : list R.binding{bindings_ok_for_pat bnds pat} ->
+    bnds : list R.binding{bindings_ok_for_pat g bnds pat} ->
     hyp_var:var{None? (lookup_bvar (extend_env_l g (refl_bindings_to_bindings bnds)) hyp_var)} ->
 
     body:term ->
@@ -1775,8 +1772,8 @@ let mkif
 : typing g (mk_if scrutinee then_ else_) (eff, ty)
 = let brt = (Pat_Constant C_True, then_) in
   let bre = (Pat_Constant C_False, else_) in
-  bindings_ok_pat_constant C_True;
-  bindings_ok_pat_constant C_False;
+  bindings_ok_pat_constant g C_True;
+  bindings_ok_pat_constant g C_False;
   let brty () : branches_typing g u_zero bool_ty scrutinee (eff,ty) [brt; bre] [[]; []] =
     BT_S (Pat_Constant C_True, then_) []
          (BO (Pat_Constant C_True) [] hyp then_ () tt)
