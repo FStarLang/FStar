@@ -8,6 +8,26 @@ module Set = FStar.Set
 a constructor from field values, and a destructor to field values for
 each field. This may be necessary for recursive structs *)
 
+let set_def
+  (#t: eqtype)
+  (s: FStar.Set.set t)
+  (x: t)
+: Tot bool
+= FStar.Set.mem x s
+
+noextract
+let nonempty_set (t: eqtype) =
+  (s: Set.set t { exists x . set_def s x == true })
+
+noextract
+let set_snoc // for associativity reasons
+(#t: eqtype) (q: FStar.Set.set t) (a: t) : Pure (nonempty_set t)
+  (requires True)
+  (ensures (fun s ->
+    (forall (x: t). {:pattern FStar.Set.mem x s} FStar.Set.mem x s == (x = a || FStar.Set.mem x q))
+  ))
+= q `FStar.Set.union` FStar.Set.singleton a
+
 [@@noextract_to "krml"]
 let field_t (s: Set.set string) : Tot eqtype =
   (f: string { Set.mem f s })

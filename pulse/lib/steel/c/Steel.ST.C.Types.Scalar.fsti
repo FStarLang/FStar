@@ -59,6 +59,27 @@ let mk_fraction_full_scalar (#t: Type) (v: t) : Lemma
   [SMTPat (mk_scalar v)]
 = ()
 
+val get_scalar_value
+  (#t: Type)
+  (c: scalar_t t)
+: GTot (option t)
+
+val get_scalar_value_mk_fraction_mk_scalar
+  (#t: Type)
+  (c: t)
+  (p: perm)
+: Lemma
+  (get_scalar_value (mk_fraction (scalar t) (mk_scalar c) p) == Some c)
+  [SMTPat (get_scalar_value (mk_fraction (scalar t) (mk_scalar c) p))]
+
+let get_scalar_value_mk_scalar
+  (#t: Type)
+  (c: t)
+: Lemma
+  (get_scalar_value (mk_scalar c) == Some c)
+  [SMTPat (get_scalar_value (mk_scalar c))]
+= ()
+
 inline_for_extraction [@@noextract_to "krml"]
 let read (#t: Type) (#v: Ghost.erased (scalar_t t)) (r: ref (scalar t)) : ST t
   (pts_to r v)

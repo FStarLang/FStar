@@ -129,6 +129,13 @@ type comp =
 
 let comp_st = c:comp {not (C_Tot? c) }
 
+noeq
+type pattern =
+  | Pat_Cons     : fv -> list (pattern & bool) -> pattern
+  | Pat_Constant : constant -> pattern
+  | Pat_Var      : RT.pp_name_t -> pattern
+  | Pat_Dot_Term : option term -> pattern
+
 type ctag =
   | STT
   | STT_Atomic
@@ -173,6 +180,11 @@ type st_term' =
       then_:st_term;
       else_:st_term;
       post:option vprop;
+    }
+  | Tm_Match {
+      sc:term;
+      returns_:option vprop;
+      brs: list branch;
     }
   | Tm_IntroPure {
       p:term;
@@ -231,6 +243,8 @@ and st_term = {
     term : st_term';
     range : range
 } 
+
+and branch = pattern & st_term
 
 let null_binder (t:term) : binder =
   {binder_ty=t;binder_ppname=ppname_default}

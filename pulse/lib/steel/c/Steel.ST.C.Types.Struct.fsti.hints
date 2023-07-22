@@ -25,7 +25,7 @@
         "token_correspondence_Steel.ST.C.Types.Fields.__proj__Mkfield_description_t__item__fd_type"
       ],
       0,
-      "67166e8ea225e16e961bbc29e674c1fd"
+      "8257513eceb4e78834f3118a1d334337"
     ],
     [
       "Steel.ST.C.Types.Struct.struct_get_field_unknown",
@@ -38,7 +38,7 @@
         "refinement_interpretation_Tm_refine_8ffab201a92126dfbeb11a4ac5daf7ca"
       ],
       0,
-      "72989bcdb52422b6758d50247e38beba"
+      "c424e92831816c5a8d733e27b0720586"
     ],
     [
       "Steel.ST.C.Types.Struct.struct_get_field_uninitialized",
@@ -51,7 +51,7 @@
         "refinement_interpretation_Tm_refine_8ffab201a92126dfbeb11a4ac5daf7ca"
       ],
       0,
-      "9038ecb7f056324369c38230b66e45c3"
+      "0f068ff1a4b9e51cb2bdccb5ceff4957"
     ],
     [
       "Steel.ST.C.Types.Struct.has_struct_field",
@@ -64,7 +64,7 @@
         "refinement_interpretation_Tm_refine_8ffab201a92126dfbeb11a4ac5daf7ca"
       ],
       0,
-      "f2e43f7a5d6fb15960b44269dd34ab59"
+      "611b4cb8b6ab74e80577c72b811b55fa"
     ],
     [
       "Steel.ST.C.Types.Struct.has_struct_field_dup",
@@ -77,7 +77,7 @@
         "refinement_interpretation_Tm_refine_8ffab201a92126dfbeb11a4ac5daf7ca"
       ],
       0,
-      "4436deb09af3a148c25d95b404117320"
+      "bca3c0366374230ff2c2d7d6d401510a"
     ],
     [
       "Steel.ST.C.Types.Struct.has_struct_field_inj",
@@ -90,7 +90,7 @@
         "refinement_interpretation_Tm_refine_8ffab201a92126dfbeb11a4ac5daf7ca"
       ],
       0,
-      "1edbba9e918373a4d0f5553176c06f3b"
+      "ce0090b50c6c04aaa4514dda6f0b3d39"
     ],
     [
       "Steel.ST.C.Types.Struct.has_struct_field_equiv_from",
@@ -103,7 +103,7 @@
         "refinement_interpretation_Tm_refine_8ffab201a92126dfbeb11a4ac5daf7ca"
       ],
       0,
-      "c1cb9626af56d2cca7ac4057fe89ae07"
+      "6eb08c111c1ddc7d3c779c7a730c5e54"
     ],
     [
       "Steel.ST.C.Types.Struct.has_struct_field_equiv_to",
@@ -116,7 +116,7 @@
         "refinement_interpretation_Tm_refine_8ffab201a92126dfbeb11a4ac5daf7ca"
       ],
       0,
-      "4f296c2a7611bc42f3ff76615e4a840d"
+      "891b5a1c71de39ebe5f5640f06fa3437"
     ],
     [
       "Steel.ST.C.Types.Struct.ghost_struct_field_focus",
@@ -129,7 +129,7 @@
         "refinement_interpretation_Tm_refine_8ffab201a92126dfbeb11a4ac5daf7ca"
       ],
       0,
-      "2e838a200ab4eca6504dc2c6cb9f181b"
+      "9f521a3739ab905d50c3ddabf81724c8"
     ],
     [
       "Steel.ST.C.Types.Struct.ghost_struct_field",
@@ -142,7 +142,7 @@
         "refinement_interpretation_Tm_refine_8ffab201a92126dfbeb11a4ac5daf7ca"
       ],
       0,
-      "4b2d0c4592b1bd724b5ed0ba99d0ed64"
+      "0a0ab822bd0fb70b0913d516d9b6f67b"
     ],
     [
       "Steel.ST.C.Types.Struct.struct_field0",
@@ -158,7 +158,7 @@
         "refinement_interpretation_Tm_refine_ec100545d23e6c4ccf5a284615168133"
       ],
       0,
-      "e550176e6b96dc5e5d305c1f18a12a02"
+      "665ec04116d716e373425fc39960944f"
     ],
     [
       "Steel.ST.C.Types.Struct.struct_field",
@@ -176,7 +176,7 @@
         "string_inversion"
       ],
       0,
-      "ee64033d595cd1ce614168cda6a7676c"
+      "2315fa1bb2eb48e7b1096d2c0a359eaa"
     ],
     [
       "Steel.ST.C.Types.Struct.struct_field",
@@ -194,7 +194,7 @@
         "token_correspondence_Steel.ST.C.Types.Fields.__proj__Mkfield_description_t__item__fd_type"
       ],
       0,
-      "bf77fbb6929bcd929e44866f03466feb"
+      "7f1ff2d50ac384ba9a5d4bb55f8ada40"
     ],
     [
       "Steel.ST.C.Types.Struct.unstruct_field",
@@ -207,7 +207,7 @@
         "refinement_interpretation_Tm_refine_8ffab201a92126dfbeb11a4ac5daf7ca"
       ],
       0,
-      "cb6e86fdd6b88188a7d03631e005a669"
+      "9e86b8b1a6cd9df56a27a255298c7639"
     ],
     [
       "Steel.ST.C.Types.Struct.unstruct_field_alt",
@@ -220,7 +220,7 @@
         "refinement_interpretation_Tm_refine_8ffab201a92126dfbeb11a4ac5daf7ca"
       ],
       0,
-      "0d15cb2eb737e209b175c74a605e6cf7"
+      "7b86e372531696df0efdd9562e2d7a03"
     ],
     [
       "Steel.ST.C.Types.Struct.unstruct_field_alt",
@@ -243,7 +243,7 @@
         "typing_Steel.ST.C.Types.Struct.struct_t0"
       ],
       0,
-      "b6dc33692789d1f6f6a63869390a4a7b"
+      "fc27b115df847779f1f43f96b0df0862"
     ],
     [
       "Steel.ST.C.Types.Struct.fractionable_struct",
@@ -255,7 +255,7 @@
         "refinement_interpretation_Tm_refine_8ffab201a92126dfbeb11a4ac5daf7ca"
       ],
       0,
-      "30bfaf9f519ca1aa07d9d26a0d859c55"
+      "924de72e103d9dac5e01f8f01cf208f7"
     ],
     [
       "Steel.ST.C.Types.Struct.mk_fraction_struct",
@@ -270,7 +270,7 @@
         "refinement_interpretation_Tm_refine_8ffab201a92126dfbeb11a4ac5daf7ca"
       ],
       0,
-      "479c50452239cbf61b012c8f5a253575"
+      "ddf21852316cd37f29db12e02f4d0748"
     ],
     [
       "Steel.ST.C.Types.Struct.full_struct",
@@ -282,7 +282,7 @@
         "refinement_interpretation_Tm_refine_8ffab201a92126dfbeb11a4ac5daf7ca"
       ],
       0,
-      "b4357caff33c7ebeec37ff0f36a1936c"
+      "5115aa5c923beac091fc32d50606cd6e"
     ]
   ]
 ]

@@ -1,4 +1,5 @@
 module Pulse.Typing
+
 module RT = FStar.Reflection.Typing
 module R = FStar.Reflection.V2
 open Pulse.Reflection.Util
@@ -16,6 +17,7 @@ let debug_log (level:string)  (g:env) (f: unit -> T.Tac string) : T.Tac unit =
 
 let tm_unit = tm_fvar (as_fv unit_lid)
 let tm_bool = tm_fvar (as_fv bool_lid)
+let tm_int  = tm_fvar (as_fv int_lid)
 let tm_true = tm_constant R.C_True
 let tm_false = tm_constant R.C_False
 
@@ -42,6 +44,13 @@ let mk_eq2 (u:universe)
   = tm_pureapp
          (tm_pureapp (tm_pureapp (tm_uinst (as_fv R.eq2_qn) [u]) (Some Implicit) t)
                      None e0) None e1
+
+let mk_sq_eq2 (u:universe)
+           (t:term)
+           (e0 e1:term) 
+  : term
+  = let eq = mk_eq2 u t e0 e1 in
+    (tm_pureapp (tm_uinst (as_fv R.squash_qn) [u]) None eq)
 
 let mk_eq2_prop (u:universe) (t:term) (e0 e1:term)
   : term
@@ -91,6 +100,25 @@ let extend_env_l (f:R.env) (g:env_bindings) : R.env =
      g
      f
 let elab_env (e:env) : R.env = extend_env_l (fstar_env e) (bindings e)
+
+
+(*
+ * If I call this fresh, I get:
+ *     Pulse.Typing.fst(545,0-546,20): (Error 162) The qualifier list "[assume]" is not permissible for this element: definitions cannot be assumed or marked with equality qualifiers
+ * What!?!? Oh.. there's a fresh in Pulse.Typing.Env, which is *included*...
+ *)
+let freshv (g:env) (x:var) : prop =
+  None? (lookup g x)
+
+let rec all_fresh (g:env) (xs:list binding) : Tot prop (decreases xs) =
+  match xs with
+  | [] -> True
+  | x::xs -> freshv g (fst x) /\ all_fresh (push_binding g (fst x) ppname_default (snd x)) xs
+
+let rec push_bindings (g:env) (bs:list binding{all_fresh g bs}) : Tot (g':env{env_extends g' g}) (decreases bs) =
+  match bs with
+  | [] -> g
+  | (x,t)::bs -> push_bindings (push_binding g x ppname_default t) bs
 
 let elab_push_binding (g:env) (x:var { ~ (Set.mem x (dom g)) }) (t:typ)
   : Lemma (elab_env (push_binding g x ppname_default t) ==
@@ -515,6 +543,16 @@ type st_comp_typing : env -> st_comp -> Type =
       tot_typing (push_binding g x ppname_default st.res) (open_term st.post x) tm_vprop ->
       st_comp_typing g st
 
+let tr_binding (vt : var & typ) : Tot R.binding =
+  let v, t = vt in
+  { 
+    uniq = v;
+    sort = elab_term t;
+    ppname = ppname_default.name;
+ }
+
+let tr_bindings = L.map tr_binding
+
 [@@ no_auto_projectors]
 noeq
 type comp_typing : env -> comp -> universe -> Type =
@@ -549,6 +587,15 @@ type comp_typing : env -> comp -> universe -> Type =
 
 let prop_validity (g:env) (t:term) =
   FTB.prop_validity_token (elab_env g) (elab_term t)
+
+val readback_binding : R.binding -> binding
+let readback_binding b =
+  assume (host_term == R.term); // fixme! expose this fact
+  match readback_ty b.sort with
+  | Some sort -> (b.uniq, sort)
+  | None ->
+    let sort : term = {t=Tm_FStar b.sort; range=T.range_of_term b.sort} in
+    (b.uniq, sort)
 
 [@@ no_auto_projectors]
 noeq
@@ -648,6 +695,19 @@ type st_typing : env -> st_term -> comp -> Type =
       st_typing (push_binding g hyp ppname_default (mk_eq2 u0 tm_bool b tm_false)) e2 c ->
       my_erased (comp_typing g c uc) ->
       st_typing g (wr (Tm_If { b; then_=e1; else_=e2; post=None })) c
+
+  | T_Match :
+      g:env ->
+      sc_u:universe ->
+      sc_ty:typ ->
+      sc:term ->
+      tot_typing g sc_ty (tm_type sc_u) ->
+      tot_typing g sc sc_ty ->
+      c:comp_st ->
+      brs:list (pattern & st_term) ->
+      brs_typing g sc_u sc_ty sc brs c ->
+      pats_complete g sc sc_ty (L.map (fun (p, _) -> elab_pat p) brs) ->
+      st_typing g (wr (Tm_Match {sc; returns_=None; brs})) c
 
   | T_Frame:
       g:env ->
@@ -778,6 +838,52 @@ type st_typing : env -> st_term -> comp -> Type =
       st_typing g (wr (Tm_Admit { ctag=c; u=s.u; typ=s.res; post=None }))
                   (comp_admit c s)
 
+and pats_complete : env -> term -> typ -> list R.pattern -> Type0 =
+  // just check the elaborated term with the core tc
+  | PC_Elab :
+    g:env ->
+    sc:term ->
+    sc_ty:typ ->
+    pats:list R.pattern ->
+    bnds:list (list R.binding) ->
+    RT.match_is_complete (elab_env g) (elab_term sc) (elab_term sc_ty) pats bnds ->
+    pats_complete g sc sc_ty pats
+
+and brs_typing (g:env) (sc_u:universe) (sc_ty:typ) (sc:term) : list branch -> comp_st -> Type =
+  | TBRS_0 :
+      c:comp_st ->
+      brs_typing g sc_u sc_ty sc [] c
+
+  | TBRS_1 :
+      c:comp_st ->
+      p:pattern ->
+      e:st_term ->
+      br_typing g sc_u sc_ty sc p e c ->
+      rest:list branch ->
+      brs_typing g sc_u sc_ty sc rest c ->
+      brs_typing g sc_u sc_ty sc ((p,e)::rest) c
+
+and br_typing : env -> universe -> typ -> term -> pattern -> st_term -> comp_st -> Type =
+  | TBR :
+      g:env ->
+      sc_u : universe ->
+      sc_ty : typ ->
+      sc:term ->
+      c:comp_st ->
+      p:pattern ->
+      e:st_term ->
+      bs:(list R.binding){RT.bindings_ok_for_pat (fstar_env g) bs (elab_pat p)} ->
+      _ : squash (all_fresh g (L.map readback_binding bs)) ->
+      _ : squash (Some? (RT.elaborate_pat (elab_pat p) bs)) ->
+      _ : squash (~(R.Tv_Unknown? (R.inspect_ln (fst (Some?.v (RT.elaborate_pat (elab_pat p) bs)))))) -> // should be provable from defn of elaborate_pat
+      hyp:var {freshv (push_bindings g (L.map readback_binding bs)) hyp} ->
+      st_typing (
+         push_binding (push_bindings g (L.map readback_binding bs))
+              hyp
+              ({name=Sealed.seal "branch equality"; range=FStar.Range.range_0})
+              (mk_sq_eq2 sc_u sc_ty sc (tm_fstar (fst (Some?.v (RT.elaborate_pat (elab_pat p) bs))) Range.range_0))
+         ) e c ->
+      br_typing g sc_u sc_ty sc p (close_st_term_n e (L.map fst (L.map readback_binding bs))) c
 
 (* this requires some metatheory on FStar.Reflection.Typing
 

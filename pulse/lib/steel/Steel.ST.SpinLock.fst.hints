@@ -36,7 +36,7 @@
         "typing_FStar.UInt32.t", "typing_Prims.pow2"
       ],
       0,
-      "ce08c4e9d9546010793f051eae3541ac"
+      "93dec372cc01b909faab78e3aaf5918d"
     ],
     [
       "Steel.ST.SpinLock.acquire_loop_cond",
@@ -64,7 +64,7 @@
         "typing_Tm_abs_d716b89c7122244f867c074692bc6a31"
       ],
       0,
-      "585f9f8d317b74506e7b4df4abb33207"
+      "6dde22b6c66b54271e84b0fbe7d1114b"
     ],
     [
       "Steel.ST.SpinLock.acquire",
@@ -80,7 +80,7 @@
         "token_correspondence_Steel.ST.SpinLock.acquire_loop_inv"
       ],
       0,
-      "27d37f7de4a88fb9019c20e93d7356e3"
+      "207eeb7bbe59ccfdcfd3cb757372e0b6"
     ],
     [
       "Steel.ST.SpinLock.release_core",
@@ -92,7 +92,7 @@
         "refinement_interpretation_Tm_refine_de1985a880ca8a3ebec6498be5265747"
       ],
       0,
-      "c240613398a71847e23dd3b507087df1"
+      "c68e066e4f4b1bb50521d4ad69773325"
     ],
     [
       "Steel.ST.SpinLock.release",
@@ -124,7 +124,7 @@
         "typing_Tm_abs_d716b89c7122244f867c074692bc6a31"
       ],
       0,
-      "da60cd8d0fdd8cfa031c1f616acf7bbd"
+      "2ab70f60137987803bc66a8e2be48be9"
     ]
   ]
 ]

@@ -22,6 +22,7 @@ module Metatheory = Pulse.Typing.Metatheory
 
 module Abs = Pulse.Checker.Abs
 module If = Pulse.Checker.If
+module Match = Pulse.Checker.Match
 module WithLocal = Pulse.Checker.WithLocal
 module While = Pulse.Checker.While
 module STApp = Pulse.Checker.STApp
@@ -509,6 +510,30 @@ let rec check' : bool -> check_t =
 
     | Tm_While _ ->
       While.check_while g t pre pre_typing post_hint (check' true)
+
+    // | Tm_Match {sc;returns_=post_match;brs} ->
+    //   // TODO : dedup
+    //   let post =
+    //     match post_match, post_hint with
+    //     | None, Some p -> p
+    //     | Some p, None ->
+    //       Checker.Common.intro_post_hint g None p
+    //     | Some p, Some q ->
+    //       Pulse.Typing.Env.fail g (Some t.range)
+    //         (Printf.sprintf
+    //            "Multiple annotated postconditions---remove one of them.\n\
+    //             The context expects the postcondition %s,\n\
+    //             but this conditional was annotated with postcondition %s"
+    //             (P.term_to_string (q <: post_hint_t).post)
+    //             (P.term_to_string p))
+    //     | _, _ ->
+    //       Pulse.Typing.Env.fail g (Some t.range)
+    //         (Printf.sprintf
+    //            "Pulse cannot yet infer a postcondition for a non-tail conditional statement;\n\
+    //             Either annotate this `if` with `returns` clause; or rewrite your code to use a tail conditional")
+    //   in
+    //   let (| t, c, d |) = Match.check_match g sc brs pre pre_typing post (check' true) in
+    //   ( (| t, c, d |) <: checker_result_t g pre post_hint)
 
     | Tm_ProofHintWithBinders _ ->
       Pulse.Checker.AssertWithBinders.check g t pre pre_typing post_hint (check' true)

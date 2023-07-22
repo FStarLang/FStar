@@ -27,7 +27,7 @@ let union_field_type
   (field: union_field_t fd)
 : Tot Type0
 = match field with
-  | None -> scalar_t unit
+  | None -> scalar_t (squash False)
   | Some f -> fd.fd_type f
 
 [@@noextract_to "krml"] // proof-only
@@ -37,7 +37,7 @@ let union_field_typedef
   (field: union_field_t fd)
 : Tot (typedef (union_field_type fd field))
 = match field with
-  | None -> scalar unit
+  | None -> scalar (squash False)
   | Some f -> fd.fd_typedef f
 
 [@@noextract_to "krml"] // proof-only
@@ -143,7 +143,7 @@ let union_uninitialized
   (requires True)
   (ensures (fun y -> exclusive (union_pcm tn n fields) y /\ p_refine (union_pcm tn n fields) y))
 = let y : union_t0 tn n fields =
-    U.field_to_union_f (union_field_pcm fields) None (scalar unit).uninitialized
+    U.field_to_union_f (union_field_pcm fields) None (scalar (squash False)).uninitialized
   in
   U.exclusive_union_intro (union_field_pcm fields) y None;
   y
