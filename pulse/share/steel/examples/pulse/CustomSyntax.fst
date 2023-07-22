@@ -124,17 +124,17 @@ fn if_example (r:ref U32.t)
 
 // FAILS, GHOST?
 
-```pulse
-ghost
-fn elim_intro_exists2 (r:ref U32.t)
-   requires 
-     exists n. pts_to r full_perm n
-   ensures 
-     exists n. pts_to r full_perm n
-{
-  introduce exists n. pts_to r full_perm n with _
-}
-```
+// ```pulse
+// ghost
+// fn elim_intro_exists2 (r:ref U32.t)
+//    requires 
+//      exists n. pts_to r full_perm n
+//    ensures 
+//      exists n. pts_to r full_perm n
+// {
+//   introduce exists n. pts_to r full_perm n with _
+// }
+// ```
 
 
 assume
@@ -279,50 +279,46 @@ let rec sum_spec (n:nat) : nat =
  
 let zero : nat = 0
 
-//
-// THIS FAILS (IMPLICIT IS GHOST EXPECTED TOT)
-//
-
-// ```pulse
-// fn sum (r:ref nat) (n:nat)
-//    requires exists i. (pts_to r full_perm i)
-//    ensures (pts_to r full_perm (sum_spec n))
-// {
-//    let mut i = zero;
-//    let mut sum = zero;
-//    introduce exists b m s. (
-//      pts_to i full_perm m `star`
-//      pts_to sum full_perm s `star`
-//      pure (s == sum_spec m /\
-//            b == (m <> n)))
-//    with (zero <> n);
+```pulse
+fn sum (r:ref nat) (n:nat)
+   requires exists i. (pts_to r full_perm i)
+   ensures (pts_to r full_perm (sum_spec n))
+{
+   let mut i = zero;
+   let mut sum = zero;
+   introduce exists b m s. (
+     pts_to i full_perm m `star`
+     pts_to sum full_perm s `star`
+     pure (s == sum_spec m /\
+           b == (m <> n)))
+   with (zero <> n);
         
-//    while (let m = !i; (m <> n))
-//    invariant b . exists m s. (
-//      pts_to i full_perm m `star`
-//      pts_to sum full_perm s `star`
-//      pure (s == sum_spec m /\
-//            b == (m <> n)))
-//    {
-//      let m = !i;
-//      let s = !sum;
-//      i := (m + 1);
-//      sum := s + m + 1;
-//      introduce exists b m s. (
-//        pts_to i full_perm m `star`
-//        pts_to sum full_perm s `star`
-//        pure (s == sum_spec m /\
-//              b == (m <> n)))
-//      with (m + 1 <> n)
-//    };
-//    let s = !sum;
-//    r := s;
-//    introduce exists m. (pts_to i full_perm m) 
-//    with _;
-//    introduce exists s. (pts_to sum full_perm s)
-//    with _
-// }
-// ```
+   while (let m = !i; (m <> n))
+   invariant b . exists m s. (
+     pts_to i full_perm m `star`
+     pts_to sum full_perm s `star`
+     pure (s == sum_spec m /\
+           b == (m <> n)))
+   {
+     let m = !i;
+     let s = !sum;
+     i := (m + 1);
+     sum := s + m + 1;
+     introduce exists b m s. (
+       pts_to i full_perm m `star`
+       pts_to sum full_perm s `star`
+       pure (s == sum_spec m /\
+             b == (m <> n)))
+     with (m + 1 <> n)
+   };
+   let s = !sum;
+   r := s;
+   introduce exists m. (pts_to i full_perm m) 
+   with _;
+   introduce exists s. (pts_to sum full_perm s)
+   with _
+}
+```
 
 ```pulse
 fn sum2 (r:ref nat) (n:nat)
