@@ -1,5 +1,5 @@
 [
-  "…\u000e\u0004~‹\u000b\u0015o?\u0016\tŒp\r7ô",
+  "ÒÖêœ@¨⁄ç¡_\f,û!Äc",
   [
     [
       "Pulse.Soundness.STEquiv.stt_vprop_equiv_closing",
@@ -253,6 +253,7 @@
         "typing_Pulse.Syntax.Base.comp_u",
         "typing_Pulse.Syntax.Base.ppname_default",
         "typing_Pulse.Syntax.Base.tm_vprop",
+        "typing_Pulse.Syntax.Base.uu___is_C_Tot",
         "typing_Pulse.Syntax.Base.v_as_nv",
         "typing_Pulse.Syntax.Pure.tm_type", "typing_Pulse.Typing.Env.as_map",
         "typing_Pulse.Typing.Env.bindings",
@@ -264,7 +265,7 @@
         "typing_tok_Pulse.Syntax.Base.Implicit@tok"
       ],
       0,
-      "93e70b3d2a526ba653ee487742f7ac0e"
+      "e58ed8dbc70c7678b54fa6039bcf38e6"
     ]
   ]
 ]

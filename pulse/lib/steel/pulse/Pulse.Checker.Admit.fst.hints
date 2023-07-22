@@ -1,5 +1,5 @@
 [
-  "?ÙP/ÔÛ| i3\u0007þeyyÁ",
+  "Èõ&Ú‡DèQæåÆ]ý¸dµ",
   [
     [
       "Pulse.Checker.Admit.post_hint_compatible",
@@ -11,7 +11,7 @@
         "lemma_FStar.Pervasives.invertOption"
       ],
       0,
-      "fe6e3099234e8818e81e3317395f6a15"
+      "cd70e6b115c922a20848f40b3f291616"
     ],
     [
       "Pulse.Checker.Admit.check_admit",
@@ -33,13 +33,9 @@
         "constructor_distinct_Pulse.Syntax.Base.C_STAtomic",
         "constructor_distinct_Pulse.Syntax.Base.C_STGhost",
         "constructor_distinct_Pulse.Syntax.Base.STT",
-        "constructor_distinct_Pulse.Syntax.Base.STT_Atomic",
         "constructor_distinct_Pulse.Syntax.Base.Tm_Admit",
         "data_elim_Pulse.Typing.Mkpost_hint_t",
         "disc_equation_FStar.Pervasives.Native.None",
-        "disc_equation_Pulse.Syntax.Base.C_ST",
-        "disc_equation_Pulse.Syntax.Base.C_STAtomic",
-        "disc_equation_Pulse.Syntax.Base.C_STGhost",
         "disc_equation_Pulse.Syntax.Base.C_Tot",
         "disc_equation_Pulse.Syntax.Base.Tm_Admit",
         "equation_FStar.Pervasives.Native.fst",
@@ -47,13 +43,7 @@
         "equation_FStar.Reflection.V2.Data.var", "equation_Prims.eqtype",
         "equation_Prims.nat",
         "equation_Pulse.Checker.Admit.post_hint_compatible",
-        "equation_Pulse.Syntax.Base.comp_post",
-        "equation_Pulse.Syntax.Base.comp_pre",
-        "equation_Pulse.Syntax.Base.comp_res",
-        "equation_Pulse.Syntax.Base.comp_u",
-        "equation_Pulse.Syntax.Base.index",
-        "equation_Pulse.Syntax.Base.stateful_comp",
-        "equation_Pulse.Syntax.Base.typ",
+        "equation_Pulse.Syntax.Base.index", "equation_Pulse.Syntax.Base.typ",
         "equation_Pulse.Syntax.Base.v_as_nv",
         "equation_Pulse.Syntax.Base.var",
         "equation_Pulse.Syntax.Naming.close_term",
@@ -65,7 +55,6 @@
         "equation_Pulse.Typing.Env.lookup",
         "equation_Pulse.Typing.FV.set_minus",
         "equation_Pulse.Typing.comp_admit",
-        "equation_Pulse.Typing.comp_post_matches_hint",
         "equation_Pulse.Typing.fresh_wrt",
         "equation_Pulse.Typing.post_hint_for_env_p",
         "equation_Pulse.Typing.post_hint_opt",
@@ -84,8 +73,8 @@
         "lemma_FStar.Set.mem_complement", "lemma_FStar.Set.mem_intersect",
         "lemma_FStar.Set.mem_singleton",
         "lemma_Pulse.Typing.FV.freevars_close_term",
-        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_BarBar",
-        "primitive_Prims.op_Equality", "primitive_Prims.op_Negation",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Negation",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "proj_equation_FStar.Pervasives.Native.Some_v",
@@ -113,18 +102,12 @@
         "projection_inverse_FStar.Tactics.Result.Success_ps",
         "projection_inverse_FStar.Tactics.Result.Success_v",
         "projection_inverse_Prims.Mkdtuple2__1",
-        "projection_inverse_Pulse.Syntax.Base.C_STAtomic__0",
-        "projection_inverse_Pulse.Syntax.Base.C_STAtomic__1",
-        "projection_inverse_Pulse.Syntax.Base.C_STGhost__0",
-        "projection_inverse_Pulse.Syntax.Base.C_STGhost__1",
-        "projection_inverse_Pulse.Syntax.Base.C_ST__0",
         "projection_inverse_Pulse.Syntax.Base.Mkst_comp_post",
         "projection_inverse_Pulse.Syntax.Base.Mkst_comp_pre",
         "projection_inverse_Pulse.Syntax.Base.Mkst_comp_res",
         "projection_inverse_Pulse.Syntax.Base.Mkst_comp_u",
         "projection_inverse_Pulse.Syntax.Base.Tm_Admit__0",
         "refinement_interpretation_Tm_refine_0e05a441736ee1a990510e8440d3b4d7",
-        "refinement_interpretation_Tm_refine_1c5e7105979a7231f04ad65b46c30b69",
         "refinement_interpretation_Tm_refine_262f039a938fc14ac016e995f8cd074e",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
@@ -140,7 +123,7 @@
         "typing_Pulse.Typing.Env.fstar_env"
       ],
       0,
-      "8b24c521cfd8f8e484e38e7f3d9c5ff5"
+      "6315cfe278e5a44354e9e94db822ddf0"
     ]
   ]
 ]

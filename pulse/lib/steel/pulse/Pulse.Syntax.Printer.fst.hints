@@ -1,5 +1,5 @@
 [
-  "3J.%๒ะ๗ด\u0015Iองทห๋",
+  "ชแวํฐiึLÝำฃ7S<",
   [
     [
       "Pulse.Syntax.Printer.universe_to_string",
@@ -21,7 +21,7 @@
         "typing_FStar.Reflection.V2.Builtins.inspect_universe"
       ],
       0,
-      "7f223d2be21c9d36d346054d67ca4db2"
+      "6c80a070980f2adc8e9c6ba97e7f540b"
     ],
     [
       "Pulse.Syntax.Printer.univ_to_string",
@@ -128,7 +128,6 @@
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "Pulse.Syntax.Base_pretyping_f0a71477fd567f96c0f87dffa5cea230",
         "bool_inversion", "bool_typing",
-        "constructor_distinct_FStar.Tactics.Result.Failed",
         "constructor_distinct_FStar.Tactics.Result.Success",
         "constructor_distinct_Pulse.Syntax.Base.STT",
         "data_elim_Pulse.Syntax.Base.Mkst_term___Tm_IntroExists__payload",
@@ -146,7 +145,6 @@
         "disc_equation_Pulse.Syntax.Base.Tm_Match",
         "disc_equation_Pulse.Syntax.Base.Tm_Par",
         "disc_equation_Pulse.Syntax.Base.Tm_ProofHintWithBinders",
-        "disc_equation_Pulse.Syntax.Base.Tm_Protect",
         "disc_equation_Pulse.Syntax.Base.Tm_Return",
         "disc_equation_Pulse.Syntax.Base.Tm_Rewrite",
         "disc_equation_Pulse.Syntax.Base.Tm_STApp",
@@ -164,17 +162,13 @@
         "proj_equation_Pulse.Syntax.Base.Mkst_term_term",
         "proj_equation_Pulse.Syntax.Base.Tm_IntroExists__0",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.Tactics.Result.Failed_a",
-        "projection_inverse_FStar.Tactics.Result.Failed_exn",
-        "projection_inverse_FStar.Tactics.Result.Failed_ps",
         "projection_inverse_FStar.Tactics.Result.Success_a",
         "projection_inverse_FStar.Tactics.Result.Success_ps",
         "projection_inverse_FStar.Tactics.Result.Success_v",
-        "typing_Pulse.Syntax.Base.__proj__Mkst_term__item__term",
-        "typing_Pulse.Syntax.Base.uu___is_Tm_Admit"
+        "typing_Pulse.Syntax.Base.__proj__Mkst_term__item__term"
       ],
       0,
-      "b3de7d776243179ed748a5901d316f3c"
+      "4ca75bd887f159e448eb534ed5a2fa4f"
     ],
     [
       "Pulse.Syntax.Printer.st_term_to_string'",
@@ -231,7 +225,6 @@
         "disc_equation_Pulse.Syntax.Base.Tm_Match",
         "disc_equation_Pulse.Syntax.Base.Tm_Par",
         "disc_equation_Pulse.Syntax.Base.Tm_ProofHintWithBinders",
-        "disc_equation_Pulse.Syntax.Base.Tm_Protect",
         "disc_equation_Pulse.Syntax.Base.Tm_Return",
         "disc_equation_Pulse.Syntax.Base.Tm_Rewrite",
         "disc_equation_Pulse.Syntax.Base.Tm_STApp",
@@ -244,7 +237,7 @@
         "typing_Pulse.Syntax.Base.__proj__Mkst_term__item__term"
       ],
       0,
-      "6b98248508ef72661ece9e25844c656f"
+      "283f63c2541e07cc88af14bb1692ce1b"
     ],
     [
       "Pulse.Syntax.Printer.tag_of_comp",
@@ -263,7 +256,7 @@
         "projection_inverse_BoxBool_proj_0", "string_typing"
       ],
       0,
-      "89dab05a58081998e1a0631ab5c887ce"
+      "eb611b8acc7ce9175c13e5fc5bfba193"
     ],
     [
       "Pulse.Syntax.Printer.print_st_head",
@@ -275,7 +268,6 @@
         "Pulse.Syntax.Base_pretyping_01e6cbbfeab3ba416b144f2c9223a2d4",
         "binder_x_01e6cbbfeab3ba416b144f2c9223a2d4_0",
         "data_elim_Pulse.Syntax.Base.Mkst_term",
-        "data_elim_Pulse.Syntax.Base.Tm_Protect",
         "data_elim_Pulse.Syntax.Base.Tm_Return",
         "data_elim_Pulse.Syntax.Base.Tm_STApp",
         "disc_equation_Pulse.Syntax.Base.Tm_Abs",
@@ -288,7 +280,6 @@
         "disc_equation_Pulse.Syntax.Base.Tm_Match",
         "disc_equation_Pulse.Syntax.Base.Tm_Par",
         "disc_equation_Pulse.Syntax.Base.Tm_ProofHintWithBinders",
-        "disc_equation_Pulse.Syntax.Base.Tm_Protect",
         "disc_equation_Pulse.Syntax.Base.Tm_Return",
         "disc_equation_Pulse.Syntax.Base.Tm_Rewrite",
         "disc_equation_Pulse.Syntax.Base.Tm_STApp",
@@ -297,26 +288,21 @@
         "disc_equation_Pulse.Syntax.Base.Tm_WithLocal",
         "fuel_guarded_inversion_Pulse.Syntax.Base.st_term",
         "fuel_guarded_inversion_Pulse.Syntax.Base.st_term_",
-        "fuel_guarded_inversion_Pulse.Syntax.Base.st_term___Tm_Protect__payload",
         "fuel_guarded_inversion_Pulse.Syntax.Base.st_term___Tm_Return__payload",
-        "proj_equation_Pulse.Syntax.Base.Mkst_term___Tm_Protect__payload_t",
         "proj_equation_Pulse.Syntax.Base.Mkst_term___Tm_Return__payload_term",
         "proj_equation_Pulse.Syntax.Base.Mkst_term_term",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Pulse.Syntax.Base.Tm_Protect__0",
         "projection_inverse_Pulse.Syntax.Base.Tm_Return__0",
         "projection_inverse_Pulse.Syntax.Base.Tm_STApp__0",
         "subterm_ordering_Pulse.Syntax.Base.Mkst_term",
-        "subterm_ordering_Pulse.Syntax.Base.Mkst_term___Tm_Protect__payload",
         "subterm_ordering_Pulse.Syntax.Base.Mkst_term___Tm_Return__payload",
         "subterm_ordering_Pulse.Syntax.Base.Mkst_term___Tm_STApp__payload",
-        "subterm_ordering_Pulse.Syntax.Base.Tm_Protect",
         "subterm_ordering_Pulse.Syntax.Base.Tm_Return",
         "subterm_ordering_Pulse.Syntax.Base.Tm_STApp",
         "typing_Pulse.Syntax.Base.__proj__Mkst_term__item__term"
       ],
       0,
-      "8ebfe6d456e66c309cb152b0802584bb"
+      "29bfa818a6425ed0c0191598575c385a"
     ],
     [
       "Pulse.Syntax.Printer.print_skel",
@@ -330,7 +316,6 @@
         "data_elim_Pulse.Syntax.Base.Mkst_term",
         "data_elim_Pulse.Syntax.Base.Tm_Abs",
         "data_elim_Pulse.Syntax.Base.Tm_Bind",
-        "data_elim_Pulse.Syntax.Base.Tm_Protect",
         "data_elim_Pulse.Syntax.Base.Tm_TotBind",
         "disc_equation_Pulse.Syntax.Base.Tm_Abs",
         "disc_equation_Pulse.Syntax.Base.Tm_Admit",
@@ -342,7 +327,6 @@
         "disc_equation_Pulse.Syntax.Base.Tm_Match",
         "disc_equation_Pulse.Syntax.Base.Tm_Par",
         "disc_equation_Pulse.Syntax.Base.Tm_ProofHintWithBinders",
-        "disc_equation_Pulse.Syntax.Base.Tm_Protect",
         "disc_equation_Pulse.Syntax.Base.Tm_Return",
         "disc_equation_Pulse.Syntax.Base.Tm_Rewrite",
         "disc_equation_Pulse.Syntax.Base.Tm_STApp",
@@ -354,21 +338,18 @@
         "proj_equation_Pulse.Syntax.Base.Mkst_term_term",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Pulse.Syntax.Base.Tm_Bind__0",
-        "projection_inverse_Pulse.Syntax.Base.Tm_Protect__0",
         "projection_inverse_Pulse.Syntax.Base.Tm_TotBind__0",
         "subterm_ordering_Pulse.Syntax.Base.Mkst_term",
         "subterm_ordering_Pulse.Syntax.Base.Mkst_term___Tm_Abs__payload",
         "subterm_ordering_Pulse.Syntax.Base.Mkst_term___Tm_Bind__payload",
-        "subterm_ordering_Pulse.Syntax.Base.Mkst_term___Tm_Protect__payload",
         "subterm_ordering_Pulse.Syntax.Base.Mkst_term___Tm_TotBind__payload",
         "subterm_ordering_Pulse.Syntax.Base.Tm_Abs",
         "subterm_ordering_Pulse.Syntax.Base.Tm_Bind",
-        "subterm_ordering_Pulse.Syntax.Base.Tm_Protect",
         "subterm_ordering_Pulse.Syntax.Base.Tm_TotBind",
         "typing_Pulse.Syntax.Base.__proj__Mkst_term__item__term"
       ],
       0,
-      "c487ff876ddecf3527c1c7209b335d51"
+      "864f4df6ddb371b65bad0e215043ead6"
     ]
   ]
 ]

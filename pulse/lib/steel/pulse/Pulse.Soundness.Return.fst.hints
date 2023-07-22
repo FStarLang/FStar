@@ -25,7 +25,7 @@
         "Pulse.Syntax.Base_pretyping_0b425ab385a56835d52cd71c18622a32",
         "Pulse.Syntax.Base_pretyping_adc52787535d21bdc2731720d86e99a8",
         "Pulse.Syntax.Naming_interpretation_Tm_arrow_22833073b0372c4937c72763a2a36c80",
-        "bool_inversion", "bool_typing",
+        "bool_inversion",
         "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "constructor_distinct_FStar.Reflection.V2.Data.Tv_Var",
@@ -318,7 +318,7 @@
         "typing_tok_Pulse.Syntax.Base.Implicit@tok"
       ],
       0,
-      "40ac54e19b4f07d9941c1107629b244b"
+      "4d1eaee40435f294e4687f7d4ae58b24"
     ]
   ]
 ]

@@ -1,5 +1,5 @@
 [
-  "\u001b’sž¦o„¿–j¿Ë©h×†",
+  "‹\b$êÝ¬¸3&‹qã!„Õ¼",
   [
     [
       "Pulse.Checker.Return.check_return",
@@ -24,21 +24,15 @@
         "constructor_distinct_Pulse.Syntax.Base.Tm_Return",
         "data_elim_Pulse.Syntax.Base.Mkst_term",
         "disc_equation_FStar.Pervasives.Native.None",
-        "disc_equation_Pulse.Syntax.Base.C_ST",
-        "disc_equation_Pulse.Syntax.Base.C_STAtomic",
-        "disc_equation_Pulse.Syntax.Base.C_STGhost",
         "disc_equation_Pulse.Syntax.Base.C_Tot",
         "disc_equation_Pulse.Syntax.Base.Tm_Return",
         "equation_FStar.Pervasives.Native.fst", "equation_FStar.Range.range",
         "equation_FStar.Reflection.Typing.fstar_top_env",
         "equation_FStar.Reflection.V2.Data.var", "equation_Prims.eqtype",
         "equation_Prims.nat", "equation_Pulse.Checker.Pure.push_context",
-        "equation_Pulse.Syntax.Base.comp_st",
         "equation_Pulse.Syntax.Base.index",
         "equation_Pulse.Syntax.Base.ppname_default",
-        "equation_Pulse.Syntax.Base.range",
-        "equation_Pulse.Syntax.Base.stateful_comp",
-        "equation_Pulse.Syntax.Base.typ",
+        "equation_Pulse.Syntax.Base.range", "equation_Pulse.Syntax.Base.typ",
         "equation_Pulse.Syntax.Base.v_as_nv",
         "equation_Pulse.Syntax.Base.var",
         "equation_Pulse.Syntax.Naming.close_term",
@@ -53,7 +47,6 @@
         "equation_Pulse.Typing.post_hint_for_env_p",
         "equation_Pulse.Typing.post_hint_opt",
         "fuel_guarded_inversion_FStar.Tactics.Result.__result",
-        "fuel_guarded_inversion_Pulse.Syntax.Base.comp",
         "fuel_guarded_inversion_Pulse.Syntax.Base.ctag",
         "fuel_guarded_inversion_Pulse.Syntax.Base.st_term",
         "function_token_typing_Prims.__cache_version_number__",
@@ -67,8 +60,8 @@
         "lemma_FStar.Set.mem_singleton",
         "lemma_Pulse.Syntax.Base.range_singleton",
         "lemma_Pulse.Typing.FV.freevars_close_term",
-        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_BarBar",
-        "primitive_Prims.op_Equality", "primitive_Prims.op_Negation",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Negation",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Some_v",
         "proj_equation_Pulse.Syntax.Base.Mkst_term_range",
@@ -95,7 +88,6 @@
         "refinement_interpretation_Tm_refine_262f039a938fc14ac016e995f8cd074e",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_78cf9fabb706bab7e54de904b7db9d2a",
         "refinement_interpretation_Tm_refine_7f3ad0958305f2921bfac06f466396ae",
         "refinement_interpretation_Tm_refine_8c22aa61a47c16d0229ef090894097c8",
         "refinement_interpretation_Tm_refine_b1f6ffdbdc319e94b21425d60dda23d2",
@@ -110,6 +102,7 @@
         "typing_Pulse.Syntax.Base.__proj__Mkst_term__item__range",
         "typing_Pulse.Syntax.Base.ppname_default",
         "typing_Pulse.Syntax.Naming.close_term",
+        "typing_Pulse.Syntax.Naming.close_term_",
         "typing_Pulse.Syntax.Naming.freevars",
         "typing_Pulse.Syntax.Naming.open_term",
         "typing_Pulse.Typing.Env.as_map", "typing_Pulse.Typing.Env.dom",
@@ -118,7 +111,7 @@
         "typing_Pulse.Typing.__proj__Mkpost_hint_t__item__post"
       ],
       0,
-      "aab5f68cc06846664acb997c6773cf1f"
+      "2de3d4c4416669b23b7290c92adb97c8"
     ]
   ]
 ]

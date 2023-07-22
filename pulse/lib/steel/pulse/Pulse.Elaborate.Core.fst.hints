@@ -20,7 +20,7 @@
         "typing_Pulse.Syntax.Base.uu___is_C_STAtomic"
       ],
       0,
-      "1d2c7c806e0541362775eb7c975dc4a1"
+      "96ca678983b09ff974e8b41e35c38553"
     ],
     [
       "Pulse.Elaborate.Core.elab_sub",
@@ -144,7 +144,7 @@
         "binder_x_0401a96b6205c6354bafd83b7f4a3e6d_3",
         "binder_x_1ad99e5433effa849e32ef9adfa111a0_0",
         "binder_x_b015b044c5bf00a3dd3df9fa711c87dd_2", "bool_inversion",
-        "bool_typing", "constructor_distinct_FStar.Pervasives.Native.Some",
+        "constructor_distinct_FStar.Pervasives.Native.Some",
         "constructor_distinct_Pulse.Typing.T_Bind",
         "constructor_distinct_Pulse.Typing.T_Equiv",
         "constructor_distinct_Pulse.Typing.T_Frame",
@@ -291,6 +291,7 @@
         "typing_Pulse.Syntax.Base.uu___is_C_ST",
         "typing_Pulse.Typing.Env.as_map",
         "typing_Pulse.Typing.uu___is_T_Par",
+        "typing_Pulse.Typing.uu___is_T_STApp",
         "typing_Pulse.Typing.uu___is_T_WithLocal"
       ],
       0,
@@ -318,6 +319,7 @@
         "equation_FStar.Reflection.V2.Data.var",
         "equation_FStar.Sealed.Inhabited.is_sealed", "equation_Prims.nat",
         "equation_Prims.squash", "equation_Pulse.Syntax.Base.as_fv",
+        "equation_Pulse.Syntax.Base.comp_st",
         "equation_Pulse.Syntax.Base.not_tv_unknown",
         "equation_Pulse.Syntax.Base.range", "equation_Pulse.Syntax.Base.typ",
         "equation_Pulse.Syntax.Base.var", "equation_Pulse.Typing.Env.dom",
@@ -330,6 +332,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
         "refinement_interpretation_Tm_refine_31f0431eec32a7971b33471ec380e558",
         "refinement_interpretation_Tm_refine_5f4e815ddfeb3d0c9882ff3a1fb18eac",
+        "refinement_interpretation_Tm_refine_78cf9fabb706bab7e54de904b7db9d2a",
         "refinement_interpretation_Tm_refine_7ad5682d990eaec6510764d663af54de",
         "refinement_interpretation_Tm_refine_8c22aa61a47c16d0229ef090894097c8",
         "subterm_ordering_Pulse.Typing.TBR", "true_interp",
@@ -337,7 +340,9 @@
         "typing_FStar.Reflection.Const.squash_qn",
         "typing_FStar.Reflection.V2.Data.var",
         "typing_Pulse.Syntax.Base.__proj__Mkfv__item__fv_range",
-        "typing_Pulse.Syntax.Base.as_fv", "typing_Pulse.Typing.Env.as_map"
+        "typing_Pulse.Syntax.Base.as_fv",
+        "typing_Pulse.Syntax.Base.uu___is_C_Tot",
+        "typing_Pulse.Typing.Env.as_map"
       ],
       0,
       "d83a479107909e2db1869c08d4a1f0a7"

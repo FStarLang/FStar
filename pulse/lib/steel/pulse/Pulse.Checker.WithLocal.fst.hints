@@ -1,5 +1,5 @@
 [
-  "ù:\u000eŸ)/øá\u0018\u001b±k\\nàW",
+  "∏Ÿ@\u0000KKÈ∞H_{›öµdÄ",
   [
     [
       "Pulse.Checker.WithLocal.extend_post_hint_for_local",
@@ -14,7 +14,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "6043a9285ce9692cc21f9d80f6f5196a"
+      "2abee043b53cc945aceaf6c399230b69"
     ],
     [
       "Pulse.Checker.WithLocal.with_local_pre_typing",
@@ -29,20 +29,19 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "fa6fbebcd7e6d05d4bafcfadfda5087d"
+      "cdfd5ec68b898489c13d541681c42d42"
     ],
     [
       "Pulse.Checker.WithLocal.check_withlocal",
       1,
-      2,
+      0,
       1,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Pulse.Syntax.Naming.freevars_st.fuel_instrumented",
-        "@fuel_irrelevance_Pulse.Syntax.Naming.freevars_st.fuel_instrumented",
         "@query", "Prims_pretyping_ce036b6b736ef4e0bc3a9ff132a12aed",
         "Pulse.Syntax.Base_pretyping_fe09dc1e796799f4bac0760e63f30d40",
-        "bool_inversion",
+        "bool_inversion", "bool_typing",
         "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "constructor_distinct_FStar.Tactics.Result.Failed",
@@ -52,6 +51,7 @@
         "data_elim_Pulse.Syntax.Base.C_ST",
         "data_elim_Pulse.Syntax.Base.Mkbinder",
         "data_elim_Pulse.Syntax.Base.Mkppname",
+        "data_elim_Pulse.Typing.Mkpost_hint_t",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_Pulse.Syntax.Base.C_ST",
         "disc_equation_Pulse.Syntax.Base.C_STAtomic",
@@ -79,6 +79,7 @@
         "equation_Pulse.Syntax.Naming.open_st_term",
         "equation_Pulse.Syntax.Pure.null_var",
         "equation_Pulse.Syntax.Pure.term_of_nvar",
+        "equation_Pulse.Syntax.Pure.tm_type",
         "equation_Pulse.Syntax.Pure.u0", "equation_Pulse.Typing.Env.dom",
         "equation_Pulse.Typing.Env.env_extends",
         "equation_Pulse.Typing.Env.extends_with",
@@ -86,7 +87,6 @@
         "equation_Pulse.Typing.FV.set_minus",
         "equation_Pulse.Typing.comp_post_matches_hint",
         "equation_Pulse.Typing.comp_withlocal_body",
-        "equation_Pulse.Typing.comp_withlocal_body_pre",
         "equation_Pulse.Typing.elab_env", "equation_Pulse.Typing.fresh_wrt",
         "equation_Pulse.Typing.mk_ref",
         "equation_Pulse.Typing.post_hint_for_env",
@@ -98,6 +98,7 @@
         "fuel_guarded_inversion_Pulse.Syntax.Base.st_comp",
         "fuel_guarded_inversion_Pulse.Syntax.Base.st_term",
         "fuel_guarded_inversion_Pulse.Syntax.Base.term",
+        "fuel_guarded_inversion_Pulse.Typing.post_hint_t",
         "function_token_typing_Prims.__cache_version_number__",
         "function_token_typing_Prims.int",
         "function_token_typing_Prims.string",
@@ -123,7 +124,6 @@
         "proj_equation_Pulse.Syntax.Base.Mkbinder_binder_ppname",
         "proj_equation_Pulse.Syntax.Base.Mknm_nm_ppname",
         "proj_equation_Pulse.Syntax.Base.Mkppname_name",
-        "proj_equation_Pulse.Syntax.Base.Mkppname_range",
         "proj_equation_Pulse.Syntax.Base.Mkst_comp_post",
         "proj_equation_Pulse.Syntax.Base.Mkst_comp_pre",
         "proj_equation_Pulse.Syntax.Base.Mkst_comp_res",
@@ -178,10 +178,10 @@
         "typing_Pulse.Checker.WithLocal.extend_post_hint_for_local",
         "typing_Pulse.Syntax.Base.__proj__Mkbinder__item__binder_ppname",
         "typing_Pulse.Syntax.Base.__proj__Mkppname__item__name",
-        "typing_Pulse.Syntax.Base.__proj__Mkppname__item__range",
         "typing_Pulse.Syntax.Base.__proj__Mkst_term__item__range",
         "typing_Pulse.Syntax.Base.eq_univ",
         "typing_Pulse.Syntax.Base.ppname_default",
+        "typing_Pulse.Syntax.Base.uu___is_C_ST",
         "typing_Pulse.Syntax.Naming.close_st_term",
         "typing_Pulse.Syntax.Naming.freevars_st",
         "typing_Pulse.Syntax.Pure.u0", "typing_Pulse.Typing.Env.as_map",
@@ -193,7 +193,7 @@
         "typing_Pulse.Typing.mk_ref"
       ],
       0,
-      "385c4552707e0146411208cc2cba5085"
+      "4e72594677c0817090880c18565755b9"
     ]
   ]
 ]

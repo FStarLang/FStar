@@ -1,1 +1,56 @@
-[ "l\u0017øR∞…zSπô˚]G$\u001aù", [] ]
+[
+  "ö.]“\u000er\\b‘¥E\u001b€Îjª",
+  [
+    [
+      "Pulse.Prover.prove",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "3ee8a9df7e506e9e509a4db7946df0b5"
+    ],
+    [
+      "Pulse.Prover.try_frame_pre_uvs",
+      1,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.None_a"
+      ],
+      0,
+      "75087dac8a5e4b88b7ae38e6c8dd7da4"
+    ],
+    [
+      "Pulse.Prover.try_frame_pre",
+      1,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.None_a"
+      ],
+      0,
+      "6f5dbc6f0c63e15c1274632b3a344783"
+    ],
+    [
+      "Pulse.Prover.repack",
+      1,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.None_a"
+      ],
+      0,
+      "3387abe28b7cf2bd1ed2818926e6f3c3"
+    ]
+  ]
+]

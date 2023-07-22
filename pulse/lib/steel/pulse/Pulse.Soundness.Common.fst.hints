@@ -46,7 +46,7 @@
         "typing_Tm_abs_9de830881eb0b7299cb605b2cfe97562"
       ],
       0,
-      "73b7979500e22bcbc76323bc789e5127"
+      "19b2a0d2998039e6aa98ee4302f35068"
     ],
     [
       "Pulse.Soundness.Common.elab_term_opt",
@@ -281,6 +281,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_f327b3b66854e57c59289f8c259581e7",
         "typing_FStar.Map.contains", "typing_FStar.Reflection.V2.Data.var",
+        "typing_FStar.Set.mem", "typing_Pulse.Syntax.Naming.freevars_st",
         "typing_Pulse.Typing.Env.as_map"
       ],
       0,

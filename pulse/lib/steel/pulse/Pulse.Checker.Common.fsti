@@ -22,8 +22,6 @@ val intro_post_hint (g:env) (ret_ty:option term) (post:term)
 val post_hint_from_comp_typing (#g:env) (#c:comp_st) (ct:Metatheory.comp_typing_u g c)
   : post_hint_for_env g
 
-// exception Framing_failure of Pulse.Checker.Framing.framing_failure
-
 type continuation_elaborator
   (g:env)                         (ctxt:vprop)
   (g':env { g' `env_extends` g }) (ctxt':vprop) =

@@ -1,5 +1,5 @@
 [
-  "¤9‰HûhnÃ\"¶Ó'6ı",
+  "\u0006«e\u0017z”®š”•+óGÅ<É",
   [
     [
       "Pulse.Checker.IntroPure.check_prop",
@@ -31,7 +31,7 @@
         "typing_Pulse.Syntax.Base.__proj__Mkterm__item__range"
       ],
       0,
-      "a1709c140c674fc9b0c87acfdf201513"
+      "4b43a7c456bfd7a0835024d3fe8da47a"
     ],
     [
       "Pulse.Checker.IntroPure.check_intro_pure",
@@ -40,38 +40,18 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "constructor_distinct_FStar.Pervasives.Native.Some",
-        "constructor_distinct_FStar.Tactics.Result.Failed",
-        "constructor_distinct_FStar.Tactics.Result.Success",
+        "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_Pulse.Syntax.Base.C_STGhost",
         "disc_equation_FStar.Pervasives.Native.None",
-        "disc_equation_Pulse.Syntax.Base.C_ST",
-        "disc_equation_Pulse.Syntax.Base.C_STAtomic",
-        "disc_equation_Pulse.Syntax.Base.C_STGhost",
         "disc_equation_Pulse.Syntax.Base.C_Tot",
-        "equation_FStar.Reflection.Typing.fstar_top_env",
-        "equation_Pulse.Syntax.Base.comp_st",
-        "equation_Pulse.Syntax.Base.stateful_comp",
         "equation_Pulse.Typing.comp_intro_pure",
         "fuel_guarded_inversion_FStar.Tactics.Result.__result",
-        "fuel_guarded_inversion_Pulse.Syntax.Base.comp",
-        "function_token_typing_Prims.__cache_version_number__",
-        "int_inversion", "primitive_Prims.op_BarBar",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.Tactics.Result.Failed_a",
-        "projection_inverse_FStar.Tactics.Result.Failed_exn",
-        "projection_inverse_FStar.Tactics.Result.Failed_ps",
-        "projection_inverse_FStar.Tactics.Result.Success_a",
-        "projection_inverse_FStar.Tactics.Result.Success_ps",
-        "projection_inverse_FStar.Tactics.Result.Success_v",
-        "projection_inverse_Prims.Mkdtuple2__1",
-        "refinement_interpretation_Tm_refine_262f039a938fc14ac016e995f8cd074e",
-        "refinement_interpretation_Tm_refine_78cf9fabb706bab7e54de904b7db9d2a",
-        "refinement_interpretation_Tm_refine_8cde4c154bce2e51e85181a96461d048",
-        "typing_Pulse.Typing.Env.fstar_env"
+        "projection_inverse_FStar.Pervasives.Native.None_a",
+        "refinement_interpretation_Tm_refine_8cde4c154bce2e51e85181a96461d048"
       ],
       0,
-      "c196524933b3964597c441668fad7951"
+      "4ee316e9604cf1b9366a91ce2633a459"
     ]
   ]
 ]

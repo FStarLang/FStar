@@ -1,5 +1,5 @@
 [
-  "C\u007f\u0012WŠ\nh™ã‰³„ä£à\b",
+  "ù\u0003¹ý‡\\0–ü¶(üŸN(N",
   [
     [
       "Pulse.Prover.ElimExists.mk",
@@ -80,7 +80,16 @@
         "typing_Pulse.Typing.Env.as_map", "typing_Pulse.Typing.Env.fstar_env"
       ],
       0,
-      "aeda4fea86193935cf6966306279a461"
+      "922bd2847d234d815b811c83d6fd7343"
+    ],
+    [
+      "Pulse.Prover.ElimExists.elim_exists_frame",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "83be139e9411113e8fdab94000210689"
     ],
     [
       "Pulse.Prover.ElimExists.elim_exists",
@@ -105,7 +114,7 @@
         "typing_Pulse.Typing.Env.mk_env"
       ],
       0,
-      "9ee9064b5c36848073fd2597218759da"
+      "c1b0c184e1b28c57dc2240d4ca7725af"
     ],
     [
       "Pulse.Prover.ElimExists.elim_exists_pst",
@@ -113,8 +122,12 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Pulse.Typing.Combinators.vprop_as_list.fuel_instrumented",
+        "@query", "bool_inversion",
         "data_elim_Pulse.Prover.Common.Mkprover_state",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "equation_FStar.Reflection.Typing.fstar_top_env",
         "equation_FStar.Reflection.V2.Data.var",
         "equation_FStar.Set.disjoint", "equation_FStar.Set.subset",
         "equation_Prims.nat", "equation_Prims.squash",
@@ -126,13 +139,14 @@
         "equation_Pulse.Typing.Env.dom",
         "equation_Pulse.Typing.Env.env_extends",
         "equation_Pulse.Typing.Env.extends_with",
+        "equation_with_fuel_Pulse.Typing.Combinators.vprop_as_list.fuel_instrumented",
         "fuel_guarded_inversion_FStar.Tactics.Result.__result",
         "fuel_guarded_inversion_Pulse.Prover.Common.prover_state",
         "fuel_guarded_inversion_Pulse.Syntax.Base.term",
-        "kinding_Pulse.Syntax.Base.term@tok",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "kinding_Pulse.Syntax.Base.term@tok",
         "lemma_FStar.Map.lemma_ContainsDom",
         "lemma_FStar.Map.lemma_InDomConcat",
-        "lemma_FStar.Set.disjoint_not_in_both",
         "lemma_FStar.Set.lemma_equal_elim",
         "lemma_FStar.Set.lemma_equal_intro", "lemma_FStar.Set.mem_empty",
         "lemma_FStar.Set.mem_intersect", "lemma_FStar.Set.mem_subset",
@@ -150,6 +164,7 @@
         "projection_inverse_Pulse.Prover.Common.Mkprover_state_ss",
         "projection_inverse_Pulse.Prover.Common.Mkprover_state_unsolved",
         "projection_inverse_Pulse.Prover.Common.Mkprover_state_uvs",
+        "refinement_interpretation_Tm_refine_262f039a938fc14ac016e995f8cd074e",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
         "refinement_interpretation_Tm_refine_34ce9adf426312b96cc2291b06f4b387",
         "refinement_interpretation_Tm_refine_530c8dba59115f16314c44e7c3c4f062",
@@ -165,10 +180,11 @@
         "typing_Pulse.Prover.Common.op_Array_Access",
         "typing_Pulse.Syntax.Naming.freevars",
         "typing_Pulse.Typing.Env.as_map", "typing_Pulse.Typing.Env.dom",
+        "typing_Pulse.Typing.Env.fstar_env",
         "typing_Pulse.Typing.Env.push_env"
       ],
       0,
-      "090b0e4f97444a4aeaa12a19d520a07d"
+      "33e1ab0f42f741f0ed1fb3841c7b82a0"
     ]
   ]
 ]

@@ -7,7 +7,6 @@ open Pulse.Typing
 open Pulse.Checker.Common
 open Pulse.Typing.Combinators
 open Pulse.Typing.Metatheory
-open Pulse.Checker.Framing
 open Pulse.Checker.VPropEquiv
 
 module T = FStar.Tactics
@@ -57,7 +56,6 @@ let rec canon_right_aux (g:env) (vps:list vprop) (f:vprop -> T.Tac bool)
     end
 
 module VP = Pulse.Checker.VPropEquiv
-module F = Pulse.Checker.Framing
 
 let canon_right (#g:env) (#ctxt:term) (#frame:term)
   (ctxt_frame_typing:tot_typing g (tm_star ctxt frame) tm_vprop)

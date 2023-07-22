@@ -11,7 +11,6 @@ open Pulse.Prover
 
 module P = Pulse.Syntax.Printer
 module FV = Pulse.Typing.FV
-module Framing = Pulse.Checker.Framing
 module Metatheory = Pulse.Typing.Metatheory
 module RU = Pulse.RuntimeUtils
 
@@ -102,35 +101,3 @@ let check_while
                           Annotated type = %s\n"
                           (P.comp_to_string cond_comp)
                           (P.comp_to_string (comp_while_cond nm inv)))
-
-
-
-//   if RU.debug_at_level (fstar_env g) "inference"
-//   then (
-//     T.print (Printf.sprintf "Checking precondition of while loop: %s\n" (P.term_to_string ex_inv))
-//   );
-//   match Framing.check_frameable pre_typing ex_inv with
-//   | Inr f -> T.raise (Framing_failure f)
-//   | Inl framing_token ->
-//         if eq_comp cond_comp (comp_while_cond nm inv)
-//         then begin
-//           if eq_comp body_comp (comp_while_body nm inv)
-//           then let d = T_While g inv cond body inv_typing cond_typing body_typing in
-//                let (| c, st_d |) = Framing.apply_frame pre_typing d framing_token in
-//                repack (| c, st_d |) post_hint
-//           else 
-//             fail g None
-//               (Printf.sprintf "Could not prove the inferred type of the while body matches the annotation\n\
-//                                      Inferred type = %s\n\
-//                                      Annotated type = %s\n"
-//                                      (P.comp_to_string body_comp)
-//                                      (P.comp_to_string (comp_while_body nm inv)))
-//       end
-//       else fail g None 
-// (Printf.sprintf "Could not prove that the inferred type of the while condition matches the annotation\n\
-//                                  Inferred type = %s\n\
-//                                  Annotated type = %s\n"
-//                                  (P.comp_to_string cond_comp)
-//                                  (P.comp_to_string (comp_while_cond nm inv)))
-//                 end
-//      | _ -> fail g None "Typechecked invariant is not an exists"

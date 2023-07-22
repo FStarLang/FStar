@@ -11,7 +11,6 @@ module L = FStar.List.Tot
 module PC = Pulse.Checker.Pure
 module P = Pulse.Syntax.Printer
 module N = Pulse.Syntax.Naming 
-module Inf = Pulse.Checker.Inference
 module Prover = Pulse.Prover
 module RT = FStar.Reflection.Typing
 module RU = Pulse.RuntimeUtils
@@ -213,7 +212,7 @@ let check
 //     let lhs, rhs = prepare_goal hint_type g v in
 //     let uvs, lhs, rhs = instantiate_names_with_uvars nvars lhs rhs in
 //     debug_log g (fun _ -> Printf.sprintf "Trying to solve %s \nagainst context %s" (P.term_to_string lhs) (P.term_to_string pre));
-//     let solution = Pulse.Checker.Inference.try_inst_uvs_in_goal g pre lhs in
+//     let solution = Inf.try_inst_uvs_in_goal g pre lhs in
 //     match Inf.unsolved solution uvs with
 //     | Some uvs ->
 //       fail g (Some st.range) 

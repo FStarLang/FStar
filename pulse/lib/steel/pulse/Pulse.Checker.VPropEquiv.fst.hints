@@ -1,70 +1,6 @@
 [
-  "ÇÈAÛÏ9õd∫^»∆‹Ì}s",
+  "Ò„\b¬õIçJ‰\u000fÚ±ÊØ)¬",
   [
-    [
-      "Pulse.Checker.VPropEquiv.vprop_equiv_typing",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "binder_x_40f47b036cc24e11c7ed578f0b141555_1",
-        "binder_x_40f47b036cc24e11c7ed578f0b141555_2",
-        "binder_x_4aac6b0850125a17ce56a01cff360133_3",
-        "data_elim_Pulse.Typing.VE_Assoc", "data_elim_Pulse.Typing.VE_Comm",
-        "data_elim_Pulse.Typing.VE_Ctxt", "data_elim_Pulse.Typing.VE_Ext",
-        "data_elim_Pulse.Typing.VE_Refl", "data_elim_Pulse.Typing.VE_Sym",
-        "data_elim_Pulse.Typing.VE_Trans", "data_elim_Pulse.Typing.VE_Unit",
-        "disc_equation_Pulse.Typing.VE_Assoc",
-        "disc_equation_Pulse.Typing.VE_Comm",
-        "disc_equation_Pulse.Typing.VE_Ctxt",
-        "disc_equation_Pulse.Typing.VE_Ext",
-        "disc_equation_Pulse.Typing.VE_Refl",
-        "disc_equation_Pulse.Typing.VE_Sym",
-        "disc_equation_Pulse.Typing.VE_Trans",
-        "disc_equation_Pulse.Typing.VE_Unit",
-        "fuel_guarded_inversion_Pulse.Syntax.Base.term",
-        "fuel_guarded_inversion_Pulse.Typing.vprop_equiv",
-        "projection_inverse_BoxBool_proj_0",
-        "subterm_ordering_Pulse.Typing.VE_Ctxt",
-        "subterm_ordering_Pulse.Typing.VE_Sym",
-        "subterm_ordering_Pulse.Typing.VE_Trans"
-      ],
-      0,
-      "262d38283fdd0516bac49bab8a52d8fa"
-    ],
-    [
-      "Pulse.Checker.VPropEquiv.vprop_as_list",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "binder_x_40f47b036cc24e11c7ed578f0b141555_0",
-        "fuel_guarded_inversion_Pulse.Syntax.Base.term",
-        "proj_equation_Pulse.Syntax.Base.Mkterm_t",
-        "subterm_ordering_Pulse.Syntax.Base.Mkterm",
-        "subterm_ordering_Pulse.Syntax.Base.Tm_Star",
-        "typing_Pulse.Syntax.Base.__proj__Mkterm__item__t"
-      ],
-      0,
-      "8cfd4059c183f1c55cdbd66fccf978b3"
-    ],
-    [
-      "Pulse.Checker.VPropEquiv.list_as_vprop",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "binder_x_ce31d037e7efe7dd857e44eb91ef874d_0",
-        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list",
-        "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
-      ],
-      0,
-      "1df97d672de0230d52cb209192d85371"
-    ],
     [
       "Pulse.Checker.VPropEquiv.list_as_vprop_append",
       1,
@@ -73,16 +9,16 @@
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.append.fuel_instrumented",
-        "@fuel_correspondence_Pulse.Checker.VPropEquiv.list_as_vprop.fuel_instrumented",
+        "@fuel_correspondence_Pulse.Typing.Combinators.list_as_vprop.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.append.fuel_instrumented",
-        "@fuel_irrelevance_Pulse.Checker.VPropEquiv.list_as_vprop.fuel_instrumented",
+        "@fuel_irrelevance_Pulse.Typing.Combinators.list_as_vprop.fuel_instrumented",
         "@query", "binder_x_ce31d037e7efe7dd857e44eb91ef874d_1",
         "binder_x_ce31d037e7efe7dd857e44eb91ef874d_2",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equation_FStar.List.Tot.Base.op_At",
         "equation_with_fuel_FStar.List.Tot.Base.append.fuel_instrumented",
-        "equation_with_fuel_Pulse.Checker.VPropEquiv.list_as_vprop.fuel_instrumented",
+        "equation_with_fuel_Pulse.Typing.Combinators.list_as_vprop.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list",
         "kinding_Pulse.Syntax.Base.term@tok",
         "projection_inverse_BoxBool_proj_0",
@@ -92,7 +28,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.List.Tot.Base.op_At"
       ],
       0,
-      "105e9cf078ed343bc1294823d9ffd453"
+      "5a916039f9a68fd8f80ebdcdcc7a63b7"
     ],
     [
       "Pulse.Checker.VPropEquiv.list_as_vprop_assoc",
@@ -101,7 +37,7 @@
       1,
       [ "@query" ],
       0,
-      "57985c5633e122288769fd74a793e86d"
+      "05ace2bd67ee70c2e8dadd6292fd8b5b"
     ],
     [
       "Pulse.Checker.VPropEquiv.vprop_list_equiv",
@@ -110,9 +46,9 @@
       1,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_Pulse.Checker.VPropEquiv.list_as_vprop.fuel_instrumented",
-        "@fuel_correspondence_Pulse.Checker.VPropEquiv.vprop_as_list.fuel_instrumented",
-        "@fuel_irrelevance_Pulse.Checker.VPropEquiv.vprop_as_list.fuel_instrumented",
+        "@fuel_correspondence_Pulse.Typing.Combinators.list_as_vprop.fuel_instrumented",
+        "@fuel_correspondence_Pulse.Typing.Combinators.vprop_as_list.fuel_instrumented",
+        "@fuel_irrelevance_Pulse.Typing.Combinators.vprop_as_list.fuel_instrumented",
         "@query", "binder_x_40f47b036cc24e11c7ed578f0b141555_1",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
         "constructor_distinct_Pulse.Syntax.Base.Tm_Emp",
@@ -128,8 +64,8 @@
         "equation_Pulse.Syntax.Base.tm_emp",
         "equation_Pulse.Syntax.Base.tm_star",
         "equation_Pulse.Syntax.Base.with_range",
-        "equation_with_fuel_Pulse.Checker.VPropEquiv.list_as_vprop.fuel_instrumented",
-        "equation_with_fuel_Pulse.Checker.VPropEquiv.vprop_as_list.fuel_instrumented",
+        "equation_with_fuel_Pulse.Typing.Combinators.list_as_vprop.fuel_instrumented",
+        "equation_with_fuel_Pulse.Typing.Combinators.vprop_as_list.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list",
         "fuel_guarded_inversion_Pulse.Syntax.Base.term",
         "kinding_Pulse.Syntax.Base.term@tok",
@@ -144,13 +80,13 @@
         "refinement_interpretation_Tm_refine_8c22aa61a47c16d0229ef090894097c8",
         "subterm_ordering_Pulse.Syntax.Base.Mkterm",
         "subterm_ordering_Pulse.Syntax.Base.Tm_Star",
-        "typing_Pulse.Checker.VPropEquiv.vprop_as_list",
         "typing_Pulse.RuntimeUtils.union_ranges",
         "typing_Pulse.Syntax.Base.__proj__Mkterm__item__range",
-        "typing_Pulse.Syntax.Base.__proj__Mkterm__item__t"
+        "typing_Pulse.Syntax.Base.__proj__Mkterm__item__t",
+        "typing_Pulse.Typing.Combinators.vprop_as_list"
       ],
       0,
-      "9fc8a1422895cfe7dae54744377f283a"
+      "6f850f006b400350f4542b4a27097797"
     ],
     [
       "Pulse.Checker.VPropEquiv.vprop_equiv_split_frame",
@@ -163,7 +99,7 @@
         "fuel_guarded_inversion_Pulse.Syntax.Base.term"
       ],
       0,
-      "ff1194134bb7ed12378deb7d4f5080c7"
+      "5b04a0fc9e9add2b785c00c9996515d9"
     ]
   ]
 ]
