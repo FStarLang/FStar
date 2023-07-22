@@ -532,7 +532,8 @@ let rec check' : bool -> check_t =
                "Pulse cannot yet infer a postcondition for a non-tail conditional statement;\n\
                 Either annotate this `if` with `returns` clause; or rewrite your code to use a tail conditional")
       in
-      Match.check_match g sc brs pre pre_typing post (check' true)
+      let (| x, ty, pre', g1, k |) = Match.check_match g sc brs pre pre_typing post (check' true) in
+      (| x, ty, pre', g1, k |)
 
     | Tm_ProofHintWithBinders _ ->
       Pulse.Checker.AssertWithBinders.check g t pre pre_typing post_hint (check' true)

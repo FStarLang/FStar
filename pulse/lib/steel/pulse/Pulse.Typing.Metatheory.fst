@@ -265,6 +265,8 @@ let rec st_typing_weakening g g' t c d g1
                   e2 c = d_e2 in
 
     T_If _ b e1 e2 c uc hyp (magic ()) d_e1 d_e2 (magic ())
+  
+  | T_Match _ sc_u sc_ty sc d_sc_ty d_sc c brs d_brs d_pats_complete -> magic ()
 
   | T_Frame _ e c frame _ d_e ->
     T_Frame _ e c frame (magic ()) (st_typing_weakening g g' e c d_e g1)
@@ -544,6 +546,8 @@ let rec st_typing_subst g x t g' #e e_typing #e1 #c1 e1_typing
            (coerce_eq (st_typing_subst g x t (push_binding g' hyp ppname_default (mk_eq2 u0 tm_bool b tm_true)) e_typing d_e1) ())
            (coerce_eq (st_typing_subst g x t (push_binding g' hyp ppname_default (mk_eq2 u0 tm_bool b tm_false)) e_typing d_e2) ())
            (magic ())
+
+  | T_Match _ _ _ _ _ _ _ _ _ _ -> magic ()
 
   | T_Frame _ e c frame _ d_e ->
     T_Frame _ (subst_st_term e ss)

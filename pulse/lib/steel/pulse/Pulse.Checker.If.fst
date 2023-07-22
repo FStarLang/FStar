@@ -11,7 +11,7 @@ open Pulse.Checker.Common
 module Metatheory = Pulse.Typing.Metatheory
 module FV = Pulse.Typing.FV
 
-#push-options "--z3rlimit_factor 8 --fuel 0 --ifuel 1"
+#push-options "--z3rlimit_factor 10 --fuel 0 --ifuel 1"
 let rec combine_if_branches
   (g_then:env)
   (e_then:st_term)
