@@ -150,9 +150,6 @@ let rec close_open_inverse_st'  (t:st_term)
       close_open_inverse' typ x i;
       close_open_inverse_opt' post x (i + 1)
 
-    | Tm_Protect { t } ->
-      close_open_inverse_st' t x i
-    
     | Tm_ProofHintWithBinders { binders; v; t} ->
       let n = L.length binders in
       close_open_inverse' v x (i + n);

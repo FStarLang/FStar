@@ -114,8 +114,6 @@ let rec freevars_st (t:st_term)
       Set.union (freevars typ)
                 (freevars_term_opt post)
 
-    | Tm_Protect { t } -> freevars_st t
-
     | Tm_ProofHintWithBinders { binders; v; t } ->
       Set.union (freevars v) (freevars_st t)
 and freevars_branches (t:list (pattern & st_term)) : Set.set var =
@@ -240,9 +238,6 @@ let rec ln_st' (t:st_term) (i:int)
     | Tm_Admit { typ; post } ->
       ln' typ i &&
       ln_opt' post (i + 1)
-
-    | Tm_Protect { t } ->
-      ln_st' t i
 
     | Tm_ProofHintWithBinders { binders; v; t } ->
       let n = L.length binders in
@@ -456,9 +451,6 @@ let rec subst_st_term (t:st_term) (ss:subst)
                  u; 
                  typ=subst_term typ ss;
                  post=subst_term_opt post (shift_subst ss) }
-
-    | Tm_Protect { t } ->
-      Tm_Protect { t = subst_st_term t ss }
 
     | Tm_ProofHintWithBinders { hint_type; binders; v; t} ->
       let n = L.length binders in

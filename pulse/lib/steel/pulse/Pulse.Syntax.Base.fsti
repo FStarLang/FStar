@@ -228,10 +228,6 @@ type st_term' =
       typ:term;
       post:option term;
     }
-  | Tm_Protect {
-      //Wrap a term to indicate that no proof-automation heuristics should be applied
-      t:st_term;
-    }
   | Tm_ProofHintWithBinders { // assert (R.pts_to x ?p ?v) in body
       hint_type:proof_hint_type;
       binders:list binder;

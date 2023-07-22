@@ -220,10 +220,6 @@ let rec eq_st_term (t1 t2:st_term)
       eq_univ u1 u2 &&
       eq_tm t1 t2 &&
       eq_tm_opt post1 post2
-
-    | Tm_Protect { t = t1 },
-      Tm_Protect { t = t2 } ->
-      eq_st_term t1 t2
       
     | Tm_ProofHintWithBinders { hint_type=ht1; binders=bs1; t=t1; v=v1 },
       Tm_ProofHintWithBinders { hint_type=ht2; binders=bs2; t=t2; v=v2 } ->

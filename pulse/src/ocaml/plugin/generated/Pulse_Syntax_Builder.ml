@@ -209,8 +209,6 @@ let (tm_admit :
               Pulse_Syntax_Base.typ = typ;
               Pulse_Syntax_Base.post3 = post
             }
-let (tm_protect : Pulse_Syntax_Base.st_term -> Pulse_Syntax_Base.st_term') =
-  fun t -> Pulse_Syntax_Base.Tm_Protect { Pulse_Syntax_Base.t3 = t }
 let (with_range :
   Pulse_Syntax_Base.st_term' ->
     Pulse_Syntax_Base.range -> Pulse_Syntax_Base.st_term)
@@ -230,5 +228,5 @@ let (tm_assert_with_binders :
             Pulse_Syntax_Base.hint_type = Pulse_Syntax_Base.ASSERT;
             Pulse_Syntax_Base.binders = bs;
             Pulse_Syntax_Base.v = v;
-            Pulse_Syntax_Base.t4 = t
+            Pulse_Syntax_Base.t3 = t
           }

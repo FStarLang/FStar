@@ -132,8 +132,6 @@ let is_tm_intro_exists (s:st_term) : bool =
   | Tm_IntroExists _ -> true
   | _ -> false
 
-let tm_protect (s:st_term) : st_term = PSB.(with_range (tm_protect s) s.range2)
-
 let trans_ns = function
   | None -> None
   | Some l -> Some (List.map FStar_Ident.string_of_lid l)
@@ -148,7 +146,7 @@ let tm_proof_hint_with_binders (ht:PulseSugar.hint_type) (binders: binder list) 
   PSB.(with_range (Tm_ProofHintWithBinders { hint_type=trans_hint_type ht;
                                             binders;
                                             v=p;
-                                            t4=s }) r)
+                                            t3=s }) r)
 
 let tm_par p1 p2 q1 q2 b1 b2 r : st_term =
   PSB.(with_range (tm_par p1 b1 q1 p2 b2 q2) r)

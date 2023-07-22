@@ -282,8 +282,6 @@ let mk_totbind b s1 s2 r : SW.st_term =
   SW.tm_totbind b s1 s2 r
 
 let mk_bind b s1 s2 r : SW.st_term = 
-  // if SW.is_tm_intro_exists s1
-  // then SW.tm_bind b (SW.tm_protect s1) (SW.tm_protect s2) r
   SW.tm_bind b s1 s2 r
 
 let explicit_rvalues (env:env_t) (s:Sugar.stmt)

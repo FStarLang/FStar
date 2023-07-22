@@ -432,8 +432,6 @@ let rec check' : bool -> check_t =
     let g = push_context (P.tag_of_st_term t) t.range g in
     // try 
     match t.term with
-    | Tm_Protect _ -> T.fail "Protect should have been removed"
-
     | Tm_Return _ ->
       Return.check_return g t pre pre_typing post_hint
     

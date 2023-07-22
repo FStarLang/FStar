@@ -299,14 +299,12 @@ and st_term'__Tm_Admit__payload =
   u1: universe ;
   typ: term ;
   post3: term FStar_Pervasives_Native.option }
-and st_term'__Tm_Protect__payload = {
-  t3: st_term }
 and st_term'__Tm_ProofHintWithBinders__payload =
   {
   hint_type: proof_hint_type ;
   binders: binder Prims.list ;
   v: vprop ;
-  t4: st_term }
+  t3: st_term }
 and st_term' =
   | Tm_Return of st_term'__Tm_Return__payload 
   | Tm_Abs of st_term'__Tm_Abs__payload 
@@ -323,7 +321,6 @@ and st_term' =
   | Tm_WithLocal of st_term'__Tm_WithLocal__payload 
   | Tm_Rewrite of st_term'__Tm_Rewrite__payload 
   | Tm_Admit of st_term'__Tm_Admit__payload 
-  | Tm_Protect of st_term'__Tm_Protect__payload 
   | Tm_ProofHintWithBinders of st_term'__Tm_ProofHintWithBinders__payload 
 and st_term = {
   term1: st_term' ;
@@ -354,8 +351,6 @@ let uu___is_Tm_Rewrite uu___ =
   match uu___ with | Tm_Rewrite _ -> true | _ -> false
 let uu___is_Tm_Admit uu___ =
   match uu___ with | Tm_Admit _ -> true | _ -> false
-let uu___is_Tm_Protect uu___ =
-  match uu___ with | Tm_Protect _ -> true | _ -> false
 let uu___is_Tm_ProofHintWithBinders uu___ =
   match uu___ with | Tm_ProofHintWithBinders _ -> true | _ -> false
 type branch = (pattern * st_term)
@@ -558,12 +553,10 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
          { ctag1 = c2; u1 = u2; typ = t21; post3 = post2;_}) ->
           (((c1 = c2) && (eq_univ u1 u2)) && (eq_tm t11 t21)) &&
             (eq_tm_opt post1 post2)
-      | (Tm_Protect { t3 = t11;_}, Tm_Protect { t3 = t21;_}) ->
-          eq_st_term t11 t21
       | (Tm_ProofHintWithBinders
-         { hint_type = ht1; binders = bs1; v = v1; t4 = t11;_},
+         { hint_type = ht1; binders = bs1; v = v1; t3 = t11;_},
          Tm_ProofHintWithBinders
-         { hint_type = ht2; binders = bs2; v = v2; t4 = t21;_}) ->
+         { hint_type = ht2; binders = bs2; v = v2; t3 = t21;_}) ->
           (((ht1 = ht2) && (eq_list eq_binder bs1 bs2)) && (eq_tm v1 v2)) &&
             (eq_st_term t11 t21)
       | uu___ -> false

@@ -611,7 +611,7 @@ let (check :
                           { Pulse_Syntax_Base.hint_type = hint_type;
                             Pulse_Syntax_Base.binders = bs;
                             Pulse_Syntax_Base.v = v;
-                            Pulse_Syntax_Base.t4 = body;_}
+                            Pulse_Syntax_Base.t3 = body;_}
                           ->
                           (match hint_type with
                            | Pulse_Syntax_Base.ASSERT ->
