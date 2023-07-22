@@ -363,6 +363,16 @@ let instantiate_unknown_witnesses (g:env) (t:st_term { Tm_IntroExists? t.term })
     ) new_names e1 in
     Some t
 
+let maybe_intro_exists_erased (t:st_term { Exists.intro_exists_witness_singleton t })
+  : t':st_term { Exists.intro_exists_witness_singleton t' } =
+
+  let Tm_IntroExists { erased; p; witnesses=[w]; should_check } = t.term in
+  match unreveal w with
+  | Some w ->
+    let t' = Tm_IntroExists {erased=true;p;witnesses=[w];should_check} in
+    {t with term=t'}
+  | _ -> t
+
 let rec transform_to_unary_intro_exists (g:env) (t:term) (ws:list term)
   : T.Tac st_term =
   
@@ -378,9 +388,12 @@ let rec transform_to_unary_intro_exists (g:env) (t:term) (ws:list term)
     | Tm_ExistsSL u b body ->
       let body = subst_term body [ DT 0 w ] in
       let st = transform_to_unary_intro_exists g body ws in
+      // w is the witness
+      let intro = wr (Tm_IntroExists {erased=true;p=t;witnesses=[w];should_check}) in
       wr (Tm_Bind {binder=null_binder tm_unit;
-                   head=st;
-                   body=wr (Tm_IntroExists {erased=false;p=t;witnesses=[w];should_check})})
+                      head=st;
+                      body= intro})
+
     | _ -> fail g (Some t.range) "intro exists with non-existential"
 
 #push-options "--z3rlimit_factor 4 --fuel 0 --ifuel 1"
@@ -393,11 +406,11 @@ let rec check' : bool -> check_t =
       (t:st_term) ->
 
   // let open T in
-  // T.print (Printf.sprintf "At %s: allow_inst: %s, context: %s, term: %s\n"
-  //            (T.range_to_string t.range)
-  //            (string_of_bool allow_inst)
-  //            (Pulse.Syntax.Printer.term_to_string pre)
-  //            (Pulse.Syntax.Printer.st_term_to_string t));
+  T.print (Printf.sprintf "At %s: allow_inst: %s, context: %s, term: %s\n"
+             (T.range_to_string t.range)
+             (string_of_bool allow_inst)
+             (Pulse.Syntax.Printer.term_to_string pre0)
+             (Pulse.Syntax.Printer.st_term_to_string t));
 
   // if not (Tm_Protect? t.term) && frame_pre
   // then elim_then_check pre_typing t post_hint (check' allow_inst)
@@ -440,7 +453,8 @@ let rec check' : bool -> check_t =
        | None ->
          match witnesses with
          | [] -> fail g (Some t.range) "intro exists with empty witnesses"
-         | [_] -> Exists.check_intro_exists_either g t None pre pre_typing post_hint
+         | [_] ->
+           Exists.check_intro_exists_either g (maybe_intro_exists_erased t) None pre pre_typing post_hint
          | _ ->
            let t = transform_to_unary_intro_exists g p witnesses in
            check' true g pre pre_typing post_hint t)

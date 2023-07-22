@@ -215,7 +215,7 @@ let unreveal (t:term) : option term =
     (match is_pure_app head with
      | Some (head, Some Implicit, _) ->
        (match is_fvar head with
-        | Some (l, []) ->
+        | Some (l, _) ->
           if l = ["FStar"; "Ghost"; "reveal"]
           then Some arg
           else None
