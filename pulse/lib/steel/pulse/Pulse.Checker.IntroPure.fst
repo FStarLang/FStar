@@ -32,7 +32,7 @@ let check_intro_pure
 
   : T.Tac (checker_result_t g pre post_hint) =
 
-  let Tm_IntroPure { p } = t.term in
+  let Tm_IntroPure { p; should_check } = t.term in
   let (| p, p_typing |) = check_prop g p in
   let pv = check_prop_validity g p p_typing in
   let st_typing = T_IntroPure _ _ p_typing pv in

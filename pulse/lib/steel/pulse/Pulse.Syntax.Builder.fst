@@ -13,7 +13,7 @@ let tm_totbind _binder head body = Tm_TotBind { head; body }
 let tm_if b then_ else_ post = Tm_If { b; then_; else_; post }
 let tm_match sc returns_ brs = Tm_Match {sc; returns_; brs}
 let tm_elim_exists p = Tm_ElimExists { p }
-let tm_intro_exists erased p witnesses = Tm_IntroExists { erased; p; witnesses }
+let tm_intro_exists erased p witnesses = Tm_IntroExists { erased; p; witnesses; should_check=should_check_true }
 let tm_while invariant condition condition_var body = Tm_While { invariant; condition; condition_var; body }
 let tm_par pre1 body1 post1 pre2 body2 post2 = Tm_Par { pre1; body1; post1; pre2; body2; post2 }
 let tm_with_local binder initializer body = Tm_WithLocal { binder; initializer; body }
