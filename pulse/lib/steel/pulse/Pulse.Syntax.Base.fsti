@@ -55,10 +55,6 @@ type nm = {
 type qualifier =
   | Implicit
 
-let should_check_t = FStar.Sealed.Inhabited.sealed false
-let should_check_true : should_check_t = FStar.Sealed.Inhabited.seal true
-let should_check_false : should_check_t = FStar.Sealed.Inhabited.seal false
-
 noeq
 type fv = {
   fv_name : R.name;
@@ -188,7 +184,6 @@ type st_term' =
     }
   | Tm_IntroPure {
       p:term;
-      should_check:should_check_t;
     }
   | Tm_ElimExists {
       p:vprop;
@@ -197,7 +192,6 @@ type st_term' =
       erased:bool;
       p:vprop;
       witnesses:list term;
-      should_check:should_check_t;
     }
   | Tm_While {
       invariant:term;

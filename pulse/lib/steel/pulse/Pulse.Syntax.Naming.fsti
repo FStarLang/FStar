@@ -411,17 +411,16 @@ let rec subst_st_term (t:st_term) (ss:subst)
                  returns_ = subst_term_opt returns_ ss;
                  brs = subst_branches t ss brs }
 
-    | Tm_IntroPure { p; should_check } ->
-      Tm_IntroPure { p = subst_term p ss; should_check }
+    | Tm_IntroPure { p } ->
+      Tm_IntroPure { p = subst_term p ss }
 
     | Tm_ElimExists { p } ->
       Tm_ElimExists { p = subst_term p ss }
       
-    | Tm_IntroExists { erased; p; witnesses; should_check } ->
+    | Tm_IntroExists { erased; p; witnesses } ->
       Tm_IntroExists { erased; 
                        p = subst_term p ss;
-                       witnesses = subst_term_list witnesses ss;
-                       should_check }                             
+                       witnesses = subst_term_list witnesses ss }                             
 
     | Tm_While { invariant; condition; body; condition_var } ->
       Tm_While { invariant = subst_term invariant (shift_subst ss);

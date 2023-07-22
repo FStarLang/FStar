@@ -1895,10 +1895,7 @@ let rec (st_term_to_string' :
                        (fun uu___2 ->
                           FStar_Tactics_Effect.lift_div_tac
                             (fun uu___3 -> uu___2 uu___1)))) uu___1)
-      | Pulse_Syntax_Base.Tm_IntroPure
-          { Pulse_Syntax_Base.p = p;
-            Pulse_Syntax_Base.should_check = uu___;_}
-          ->
+      | Pulse_Syntax_Base.Tm_IntroPure { Pulse_Syntax_Base.p = p;_} ->
           FStar_Tactics_Effect.tac_bind
             (FStar_Sealed.seal
                (Obj.magic
@@ -1911,13 +1908,13 @@ let rec (st_term_to_string' :
                      (Prims.of_int (19)) (Prims.of_int (590))
                      (Prims.of_int (31)))))
             (Obj.magic (term_to_string' (indent level) p))
-            (fun uu___1 ->
+            (fun uu___ ->
                FStar_Tactics_Effect.lift_div_tac
-                 (fun uu___2 ->
+                 (fun uu___1 ->
                     Prims.strcat
                       (Prims.strcat "introduce pure (\n"
                          (Prims.strcat (indent level) ""))
-                      (Prims.strcat uu___1 ")")))
+                      (Prims.strcat uu___ ")")))
       | Pulse_Syntax_Base.Tm_ElimExists { Pulse_Syntax_Base.p1 = p;_} ->
           FStar_Tactics_Effect.tac_bind
             (FStar_Sealed.seal
@@ -1936,8 +1933,7 @@ let rec (st_term_to_string' :
                     Prims.strcat "elim_exists " (Prims.strcat uu___ "")))
       | Pulse_Syntax_Base.Tm_IntroExists
           { Pulse_Syntax_Base.erased = false; Pulse_Syntax_Base.p2 = p;
-            Pulse_Syntax_Base.witnesses = witnesses;
-            Pulse_Syntax_Base.should_check1 = uu___;_}
+            Pulse_Syntax_Base.witnesses = witnesses;_}
           ->
           FStar_Tactics_Effect.tac_bind
             (FStar_Sealed.seal
@@ -1951,8 +1947,8 @@ let rec (st_term_to_string' :
                      (Prims.of_int (196)) (Prims.of_int (6))
                      (Prims.of_int (200)) (Prims.of_int (43)))))
             (Obj.magic (term_list_to_string " " witnesses))
-            (fun uu___1 ->
-               (fun uu___1 ->
+            (fun uu___ ->
+               (fun uu___ ->
                   Obj.magic
                     (FStar_Tactics_Effect.tac_bind
                        (FStar_Sealed.seal
@@ -2001,9 +1997,9 @@ let rec (st_term_to_string' :
                                             (Prims.of_int (44)))))
                                    (Obj.magic
                                       (term_to_string' (indent level) p))
-                                   (fun uu___2 ->
+                                   (fun uu___1 ->
                                       FStar_Tactics_Effect.lift_div_tac
-                                        (fun uu___3 ->
+                                        (fun uu___2 ->
                                            fun x ->
                                              fun x1 ->
                                                Prims.strcat
@@ -2014,20 +2010,19 @@ let rec (st_term_to_string' :
                                                           (Prims.strcat
                                                              (indent level)
                                                              ""))
-                                                       (Prims.strcat uu___2
+                                                       (Prims.strcat uu___1
                                                           "\n"))
                                                     (Prims.strcat x "with "))
                                                  (Prims.strcat x1 "")))))
-                             (fun uu___2 ->
+                             (fun uu___1 ->
                                 FStar_Tactics_Effect.lift_div_tac
-                                  (fun uu___3 -> uu___2 level))))
-                       (fun uu___2 ->
+                                  (fun uu___2 -> uu___1 level))))
+                       (fun uu___1 ->
                           FStar_Tactics_Effect.lift_div_tac
-                            (fun uu___3 -> uu___2 uu___1)))) uu___1)
+                            (fun uu___2 -> uu___1 uu___)))) uu___)
       | Pulse_Syntax_Base.Tm_IntroExists
           { Pulse_Syntax_Base.erased = true; Pulse_Syntax_Base.p2 = p;
-            Pulse_Syntax_Base.witnesses = witnesses;
-            Pulse_Syntax_Base.should_check1 = uu___;_}
+            Pulse_Syntax_Base.witnesses = witnesses;_}
           ->
           FStar_Tactics_Effect.tac_bind
             (FStar_Sealed.seal
@@ -2041,8 +2036,8 @@ let rec (st_term_to_string' :
                      (Prims.of_int (203)) (Prims.of_int (6))
                      (Prims.of_int (207)) (Prims.of_int (43)))))
             (Obj.magic (term_list_to_string " " witnesses))
-            (fun uu___1 ->
-               (fun uu___1 ->
+            (fun uu___ ->
+               (fun uu___ ->
                   Obj.magic
                     (FStar_Tactics_Effect.tac_bind
                        (FStar_Sealed.seal
@@ -2091,9 +2086,9 @@ let rec (st_term_to_string' :
                                             (Prims.of_int (44)))))
                                    (Obj.magic
                                       (term_to_string' (indent level) p))
-                                   (fun uu___2 ->
+                                   (fun uu___1 ->
                                       FStar_Tactics_Effect.lift_div_tac
-                                        (fun uu___3 ->
+                                        (fun uu___2 ->
                                            fun x ->
                                              fun x1 ->
                                                Prims.strcat
@@ -2104,16 +2099,16 @@ let rec (st_term_to_string' :
                                                           (Prims.strcat
                                                              (indent level)
                                                              ""))
-                                                       (Prims.strcat uu___2
+                                                       (Prims.strcat uu___1
                                                           "\n"))
                                                     (Prims.strcat x "with "))
                                                  (Prims.strcat x1 "")))))
-                             (fun uu___2 ->
+                             (fun uu___1 ->
                                 FStar_Tactics_Effect.lift_div_tac
-                                  (fun uu___3 -> uu___2 level))))
-                       (fun uu___2 ->
+                                  (fun uu___2 -> uu___1 level))))
+                       (fun uu___1 ->
                           FStar_Tactics_Effect.lift_div_tac
-                            (fun uu___3 -> uu___2 uu___1)))) uu___1)
+                            (fun uu___2 -> uu___1 uu___)))) uu___)
       | Pulse_Syntax_Base.Tm_While
           { Pulse_Syntax_Base.invariant = invariant;
             Pulse_Syntax_Base.condition = condition;
