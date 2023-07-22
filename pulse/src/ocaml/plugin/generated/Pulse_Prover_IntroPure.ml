@@ -21,21 +21,17 @@ let (k_intro_pure :
                  (Obj.magic
                     (FStar_Range.mk_range "Pulse.Prover.IntroPure.fst"
                        (Prims.of_int (24)) (Prims.of_int (10))
-                       (Prims.of_int (24)) (Prims.of_int (63)))))
+                       (Prims.of_int (24)) (Prims.of_int (31)))))
               (FStar_Sealed.seal
                  (Obj.magic
                     (FStar_Range.mk_range "Pulse.Prover.IntroPure.fst"
-                       (Prims.of_int (24)) (Prims.of_int (66))
+                       (Prims.of_int (24)) (Prims.of_int (34))
                        (Prims.of_int (57)) (Prims.of_int (30)))))
               (FStar_Tactics_Effect.lift_div_tac
                  (fun uu___ ->
                     Pulse_Typing.wr
                       (Pulse_Syntax_Base.Tm_IntroPure
-                         {
-                           Pulse_Syntax_Base.p = p;
-                           Pulse_Syntax_Base.should_check =
-                             Pulse_Syntax_Base.should_check_true
-                         })))
+                         { Pulse_Syntax_Base.p = p })))
               (fun uu___ ->
                  (fun t ->
                     Obj.magic

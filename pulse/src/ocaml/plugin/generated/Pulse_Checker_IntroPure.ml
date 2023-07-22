@@ -63,8 +63,8 @@ let (check_intro_pure :
               (FStar_Sealed.seal
                  (Obj.magic
                     (FStar_Range.mk_range "Pulse.Checker.IntroPure.fst"
-                       (Prims.of_int (35)) (Prims.of_int (41))
-                       (Prims.of_int (35)) (Prims.of_int (47)))))
+                       (Prims.of_int (35)) (Prims.of_int (27))
+                       (Prims.of_int (35)) (Prims.of_int (33)))))
               (FStar_Sealed.seal
                  (Obj.magic
                     (FStar_Range.mk_range "Pulse.Checker.IntroPure.fst"
@@ -76,9 +76,7 @@ let (check_intro_pure :
                  (fun uu___ ->
                     match uu___ with
                     | Pulse_Syntax_Base.Tm_IntroPure
-                        { Pulse_Syntax_Base.p = p;
-                          Pulse_Syntax_Base.should_check = should_check;_}
-                        ->
+                        { Pulse_Syntax_Base.p = p;_} ->
                         Obj.magic
                           (FStar_Tactics_Effect.tac_bind
                              (FStar_Sealed.seal
@@ -91,7 +89,7 @@ let (check_intro_pure :
                                 (Obj.magic
                                    (FStar_Range.mk_range
                                       "Pulse.Checker.IntroPure.fst"
-                                      (Prims.of_int (35)) (Prims.of_int (50))
+                                      (Prims.of_int (35)) (Prims.of_int (36))
                                       (Prims.of_int (39)) (Prims.of_int (63)))))
                              (Obj.magic (check_prop g p))
                              (fun uu___1 ->
@@ -170,10 +168,7 @@ let (check_intro_pure :
                                                                     (Pulse_Syntax_Base.Tm_IntroPure
                                                                     {
                                                                     Pulse_Syntax_Base.p
-                                                                    = p1;
-                                                                    Pulse_Syntax_Base.should_check
-                                                                    =
-                                                                    Pulse_Syntax_Base.should_check_true
+                                                                    = p1
                                                                     }))
                                                                     (Pulse_Typing.comp_intro_pure
                                                                     p1)

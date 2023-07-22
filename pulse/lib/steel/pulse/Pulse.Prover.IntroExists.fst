@@ -25,8 +25,7 @@ let k_intro_exists (#g:env) (#u:universe) (#b:binder) (#p:vprop)
   
   let t = wr (Tm_IntroExists { erased = false;
                                p = tm_exists_sl u b p;
-                               witnesses = [e];
-                               should_check = should_check_true }) in
+                               witnesses = [e] }) in
 
   let c = comp_intro_exists u b p e in
 

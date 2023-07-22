@@ -340,13 +340,13 @@ let rec gen_names_for_unknowns (g:env) (t:term) (ws:list term)
 let instantiate_unknown_witnesses (g:env) (t:st_term { Tm_IntroExists? t.term })
   : T.Tac (option st_term) =
 
-  let Tm_IntroExists { erased; p; witnesses=ws; should_check } = t.term in
+  let Tm_IntroExists { erased; p; witnesses=ws } = t.term in
 
   let new_names, opened_p, new_ws = gen_names_for_unknowns g p ws in
   match new_names with
   | [] -> None
   | _ ->
-    let e2 = {t with term=Tm_IntroExists {erased; p; witnesses=new_ws; should_check}} in
+    let e2 = {t with term=Tm_IntroExists {erased; p; witnesses=new_ws}} in
     let e1 =
       let hint_type = ASSERT in
       let binders = [] in
@@ -367,22 +367,21 @@ let instantiate_unknown_witnesses (g:env) (t:st_term { Tm_IntroExists? t.term })
 let maybe_intro_exists_erased (t:st_term { Exists.intro_exists_witness_singleton t })
   : t':st_term { Exists.intro_exists_witness_singleton t' } =
 
-  let Tm_IntroExists { erased; p; witnesses=[w]; should_check } = t.term in
+  let Tm_IntroExists { erased; p; witnesses=[w] } = t.term in
   match unreveal w with
   | Some w ->
-    let t' = Tm_IntroExists {erased=true;p;witnesses=[w];should_check} in
+    let t' = Tm_IntroExists {erased=true;p;witnesses=[w]} in
     {t with term=t'}
   | _ -> t
 
 let rec transform_to_unary_intro_exists (g:env) (t:term) (ws:list term)
   : T.Tac st_term =
   
-  let should_check = should_check_false in
   match ws with
   | [] -> fail g (Some t.range) "intro exists with empty witnesses"
   | [w] ->
     if Tm_ExistsSL? t.t
-    then wr (Tm_IntroExists {erased=false;p=t;witnesses=[w];should_check})
+    then wr (Tm_IntroExists {erased=false;p=t;witnesses=[w]})
     else fail g (Some t.range) "intro exists with non-existential"
   | w::ws ->
     match t.t with
@@ -390,7 +389,7 @@ let rec transform_to_unary_intro_exists (g:env) (t:term) (ws:list term)
       let body = subst_term body [ DT 0 w ] in
       let st = transform_to_unary_intro_exists g body ws in
       // w is the witness
-      let intro = wr (Tm_IntroExists {erased=true;p=t;witnesses=[w];should_check}) in
+      let intro = wr (Tm_IntroExists {erased=true;p=t;witnesses=[w]}) in
       wr (Tm_Bind {binder=null_binder tm_unit;
                       head=st;
                       body= intro})
