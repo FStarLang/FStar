@@ -137,11 +137,11 @@ let rec check' : bool -> check_t =
       (post_hint:post_hint_opt g0)
       (t:st_term) ->
 
-  T.print (Printf.sprintf "At %s: allow_inst: %s, context: %s, term: %s\n"
-             (T.range_to_string t.range)
-             (string_of_bool allow_inst)
-             (Pulse.Syntax.Printer.term_to_string pre0)
-             (Pulse.Syntax.Printer.st_term_to_string t));
+  // T.print (Printf.sprintf "At %s: allow_inst: %s, context: %s, term: %s\n"
+  //            (T.range_to_string t.range)
+  //            (string_of_bool allow_inst)
+  //            (Pulse.Syntax.Printer.term_to_string pre0)
+  //            (Pulse.Syntax.Printer.st_term_to_string t));
 
   let (| g, pre, pre_typing, k_elim_pure |) =
     Pulse.Prover.ElimPure.elim_pure pre0_typing in

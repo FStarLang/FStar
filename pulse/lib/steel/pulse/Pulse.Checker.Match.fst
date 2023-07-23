@@ -226,7 +226,7 @@ let check_branch
     fail g (Some e.range) "Failed to elab pattern into term";
   if (R.Tv_Unknown? (R.inspect_ln (fst (Some?.v elab_p)))) then
     fail g (Some e.range) "should not happen: pattern elaborated to Tv_Unknown";
-  T.print ("Elaborated pattern = " ^ T.term_to_string (fst (Some?.v elab_p)));
+  // T.print ("Elaborated pattern = " ^ T.term_to_string (fst (Some?.v elab_p)));
   let eq_typ = mk_sq_eq2 sc_u sc_ty sc (tm_fstar (fst (Some?.v elab_p)) Range.range_0) in
   let g' = push_binding g' hyp_var ({name = Sealed.seal "branch equality"; range = Range.range_0 }) eq_typ in
   let e = open_st_term_bs e pulse_bs in
