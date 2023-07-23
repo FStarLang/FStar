@@ -160,6 +160,16 @@ let rec prover
         | Some pst -> prover pst  // a little wasteful?
 #pop-options
 
+let rec get_q_at_hd (g:env) (l:list vprop) (q:vprop { L.existsb (fun v -> eq_tm v q) l })
+  : l':list vprop &
+    vprop_equiv g (list_as_vprop l) (q * list_as_vprop l') =
+
+  match l with
+  | hd::tl ->
+    if eq_tm hd q then (| tl, magic () |)
+    else let (| tl', _ |) = get_q_at_hd g tl q in
+         (| hd::tl', magic () |)
+
 #push-options "--z3rlimit_factor 4"
 let prove
   (#g:env) (#ctxt:vprop) (ctxt_typing:vprop_typing g ctxt)
@@ -175,53 +185,68 @@ let prove
     Printf.sprintf "\nEnter top-level prove with ctxt: %s\ngoals: %s\n"
       (P.term_to_string ctxt) (P.term_to_string goals));
 
-  let ctxt_frame_typing : vprop_typing g (ctxt * tm_emp) = magic () in
-  let preamble = {
-    g0 = g;
-    ctxt;
-    frame = tm_emp;
-    ctxt_frame_typing;
-    goals;
-  } in
-  assume (list_as_vprop (vprop_as_list ctxt) == ctxt);
-  assume ((PS.empty).(tm_emp) == tm_emp);
-  let pst0 : prover_state preamble = {
-    pg = g;
-    remaining_ctxt = vprop_as_list ctxt;
-    remaining_ctxt_frame_typing = ctxt_frame_typing;
-    uvs = uvs;
-    ss = PS.empty;
-    solved = tm_emp;
-    unsolved = vprop_as_list goals;
-    k = k_elab_equiv (k_elab_unit g ctxt) (magic ()) (magic ());
-    goals_inv = magic ();
-    solved_inv = ()
-  } in
+  let ctxt_l = vprop_as_list ctxt in
 
-  let pst = prover pst0 in
+  if Nil? (bindings uvs) && L.existsb (fun v -> eq_tm v goals) ctxt_l
+  then begin
+    let (| l', d_eq |) = get_q_at_hd g ctxt_l goals in
+    let g1 = g in
+    let nts : PS.nt_substs = [] in
+    let remaining_ctxt = list_as_vprop l' in
+    let k : continuation_elaborator g ctxt g1 ctxt = k_elab_unit g ctxt in
+    assume (list_as_vprop (vprop_as_list ctxt) == ctxt);
+    let d_eq
+      : vprop_equiv g ctxt ((PS.nt_subst_term goals nts) * remaining_ctxt) = coerce_eq d_eq () in
+    (| g1, nts, remaining_ctxt, k_elab_equiv k (VE_Refl _ _) d_eq |)
+  end
+  else
+    let ctxt_frame_typing : vprop_typing g (ctxt * tm_emp) = magic () in
+    let preamble = {
+      g0 = g;
+      ctxt;
+      frame = tm_emp;
+      ctxt_frame_typing;
+      goals;
+    } in
+    assume (list_as_vprop (vprop_as_list ctxt) == ctxt);
+    assume ((PS.empty).(tm_emp) == tm_emp);
+    let pst0 : prover_state preamble = {
+      pg = g;
+      remaining_ctxt = vprop_as_list ctxt;
+      remaining_ctxt_frame_typing = ctxt_frame_typing;
+      uvs = uvs;
+      ss = PS.empty;
+      solved = tm_emp;
+      unsolved = vprop_as_list goals;
+      k = k_elab_equiv (k_elab_unit g ctxt) (magic ()) (magic ());
+      goals_inv = magic ();
+      solved_inv = ()
+    } in
 
-  let ropt = PS.ss_to_nt_substs pst.pg pst.uvs pst.ss in
+    let pst = prover pst0 in
 
-  if None? ropt then fail pst.pg None "prove: ss not well-typed";
-  let Some nts = ropt in
-  let nts_uvs = PS.well_typed_nt_substs_prefix pst.pg pst.uvs nts uvs in
-  let k
-    : continuation_elaborator
-        g (ctxt * tm_emp)
-        pst.pg ((list_as_vprop pst.remaining_ctxt * tm_emp) * (PS.nt_subst_term pst.solved nts)) = pst.k in
-  // admit ()
-  let goals_inv
-    : vprop_equiv (push_env pst.pg pst.uvs) goals (list_as_vprop [] * pst.solved) = pst.goals_inv in
-  let goals_inv
-    : vprop_equiv pst.pg (PS.nt_subst_term goals nts) (PS.nt_subst_term (list_as_vprop [] * pst.solved) nts) =
-    PS.vprop_equiv_nt_substs_derived pst.pg pst.uvs goals_inv nts in
+    let ropt = PS.ss_to_nt_substs pst.pg pst.uvs pst.ss in
+
+    if None? ropt then fail pst.pg None "prove: ss not well-typed";
+    let Some nts = ropt in
+    let nts_uvs = PS.well_typed_nt_substs_prefix pst.pg pst.uvs nts uvs in
+    let k
+      : continuation_elaborator
+          g (ctxt * tm_emp)
+          pst.pg ((list_as_vprop pst.remaining_ctxt * tm_emp) * (PS.nt_subst_term pst.solved nts)) = pst.k in
+    // admit ()
+    let goals_inv
+      : vprop_equiv (push_env pst.pg pst.uvs) goals (list_as_vprop [] * pst.solved) = pst.goals_inv in
+    let goals_inv
+      : vprop_equiv pst.pg (PS.nt_subst_term goals nts) (PS.nt_subst_term (list_as_vprop [] * pst.solved) nts) =
+      PS.vprop_equiv_nt_substs_derived pst.pg pst.uvs goals_inv nts in
   
-  // goals is well-typed in initial g + uvs
-  // so any of the remaining uvs in pst.uvs should not be in goals
-  // so we can drop their substitutions from the tail of nts
-  assume (PS.nt_subst_term goals nts == PS.nt_subst_term goals nts_uvs);
+    // goals is well-typed in initial g + uvs
+    // so any of the remaining uvs in pst.uvs should not be in goals
+    // so we can drop their substitutions from the tail of nts
+    assume (PS.nt_subst_term goals nts == PS.nt_subst_term goals nts_uvs);
 
-  (| pst.pg, nts_uvs, list_as_vprop pst.remaining_ctxt, k_elab_equiv k (magic ()) (magic ()) |)
+    (| pst.pg, nts_uvs, list_as_vprop pst.remaining_ctxt, k_elab_equiv k (magic ()) (magic ()) |)
 #pop-options
 
 #push-options "--z3rlimit_factor 4 --fuel 1 --ifuel 1"

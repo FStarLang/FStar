@@ -43,7 +43,8 @@ fn test_read (r:ref U32.t)
    returns x : U32.t
    ensures pts_to r p x
 {
-  !r
+  let x = !r;
+  x
 }
 ```
 
