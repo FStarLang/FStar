@@ -203,6 +203,12 @@ let (uu___is_STT_Atomic : ctag -> Prims.bool) =
   fun projectee -> match projectee with | STT_Atomic -> true | uu___ -> false
 let (uu___is_STT_Ghost : ctag -> Prims.bool) =
   fun projectee -> match projectee with | STT_Ghost -> true | uu___ -> false
+let (ctag_of_comp_st : comp_st -> ctag) =
+  fun c ->
+    match c with
+    | C_ST uu___ -> STT
+    | C_STAtomic (uu___, uu___1) -> STT_Atomic
+    | C_STGhost (uu___, uu___1) -> STT_Ghost
 type proof_hint_type =
   | ASSERT 
   | FOLD of Prims.string Prims.list FStar_Pervasives_Native.option 

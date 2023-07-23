@@ -865,7 +865,7 @@ let rec (check_abs :
                                                                     (Prims.of_int (89))
                                                                     (Prims.of_int (14))
                                                                     (Prims.of_int (89))
-                                                                    (Prims.of_int (105)))))
+                                                                    (Prims.of_int (132)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -879,6 +879,9 @@ let rec (check_abs :
                                                                     (Pulse_Checker_Pure.push_context
                                                                     "post_hint_typing"
                                                                     range g')
+                                                                    (FStar_Pervasives_Native.Some
+                                                                    (Pulse_Syntax_Base.ctag_of_comp_st
+                                                                    c))
                                                                     ret_ty
                                                                     post))
                                                                     (fun

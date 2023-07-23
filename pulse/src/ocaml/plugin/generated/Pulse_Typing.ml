@@ -959,6 +959,7 @@ let uu___is_TBR uu___6 uu___5 uu___4 uu___3 uu___2 uu___1 uu___ uu___7 =
 type post_hint_t =
   {
   g: Pulse_Typing_Env.env ;
+  ctag_hint: Pulse_Syntax_Base.ctag FStar_Pervasives_Native.option ;
   ret_ty: Pulse_Syntax_Base.term ;
   u: Pulse_Syntax_Base.universe ;
   ty_typing: unit ;
@@ -967,23 +968,28 @@ type post_hint_t =
 let (__proj__Mkpost_hint_t__item__g : post_hint_t -> Pulse_Typing_Env.env) =
   fun projectee ->
     match projectee with
-    | { g; ret_ty; u; ty_typing; post; post_typing;_} -> g
+    | { g; ctag_hint; ret_ty; u; ty_typing; post; post_typing;_} -> g
+let (__proj__Mkpost_hint_t__item__ctag_hint :
+  post_hint_t -> Pulse_Syntax_Base.ctag FStar_Pervasives_Native.option) =
+  fun projectee ->
+    match projectee with
+    | { g; ctag_hint; ret_ty; u; ty_typing; post; post_typing;_} -> ctag_hint
 let (__proj__Mkpost_hint_t__item__ret_ty :
   post_hint_t -> Pulse_Syntax_Base.term) =
   fun projectee ->
     match projectee with
-    | { g; ret_ty; u; ty_typing; post; post_typing;_} -> ret_ty
+    | { g; ctag_hint; ret_ty; u; ty_typing; post; post_typing;_} -> ret_ty
 let (__proj__Mkpost_hint_t__item__u :
   post_hint_t -> Pulse_Syntax_Base.universe) =
   fun projectee ->
     match projectee with
-    | { g; ret_ty; u; ty_typing; post; post_typing;_} -> u
+    | { g; ctag_hint; ret_ty; u; ty_typing; post; post_typing;_} -> u
 
 let (__proj__Mkpost_hint_t__item__post :
   post_hint_t -> Pulse_Syntax_Base.term) =
   fun projectee ->
     match projectee with
-    | { g; ret_ty; u; ty_typing; post; post_typing;_} -> post
+    | { g; ctag_hint; ret_ty; u; ty_typing; post; post_typing;_} -> post
 type ('g, 'p) post_hint_for_env_p = unit
 type 'g post_hint_for_env = post_hint_t
 type 'g post_hint_opt = post_hint_t FStar_Pervasives_Native.option

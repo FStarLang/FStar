@@ -910,6 +910,7 @@ let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
                                                                     (Pulse_Checker_Common.intro_post_hint
                                                                     g1
                                                                     FStar_Pervasives_Native.None
+                                                                    FStar_Pervasives_Native.None
                                                                     p))
                                                                    | 
                                                                    (FStar_Pervasives_Native.Some
@@ -1150,6 +1151,7 @@ let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
                                                                     (Obj.repr
                                                                     (Pulse_Checker_Common.intro_post_hint
                                                                     g1
+                                                                    FStar_Pervasives_Native.None
                                                                     FStar_Pervasives_Native.None
                                                                     p))
                                                                    | 

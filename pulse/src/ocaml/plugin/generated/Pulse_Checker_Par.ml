@@ -127,18 +127,19 @@ let (check_par :
                                                                     (Prims.of_int (35))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (35))
-                                                                    (Prims.of_int (47)))))
+                                                                    (Prims.of_int (52)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Par.fst"
                                                                     (Prims.of_int (35))
-                                                                    (Prims.of_int (50))
+                                                                    (Prims.of_int (55))
                                                                     (Prims.of_int (58))
                                                                     (Prims.of_int (50)))))
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Common.intro_post_hint
                                                                     g1
+                                                                    FStar_Pervasives_Native.None
                                                                     FStar_Pervasives_Native.None
                                                                     postL))
                                                                     (fun
@@ -161,7 +162,7 @@ let (check_par :
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Par.fst"
                                                                     (Prims.of_int (35))
-                                                                    (Prims.of_int (50))
+                                                                    (Prims.of_int (55))
                                                                     (Prims.of_int (58))
                                                                     (Prims.of_int (50)))))
                                                                     (Obj.magic
@@ -250,18 +251,19 @@ let (check_par :
                                                                     (Prims.of_int (45))
                                                                     (Prims.of_int (21))
                                                                     (Prims.of_int (45))
-                                                                    (Prims.of_int (49)))))
+                                                                    (Prims.of_int (54)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Par.fst"
                                                                     (Prims.of_int (45))
-                                                                    (Prims.of_int (52))
+                                                                    (Prims.of_int (57))
                                                                     (Prims.of_int (57))
                                                                     (Prims.of_int (52)))))
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Common.intro_post_hint
                                                                     g1
+                                                                    FStar_Pervasives_Native.None
                                                                     FStar_Pervasives_Native.None
                                                                     postR))
                                                                     (fun
@@ -284,7 +286,7 @@ let (check_par :
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Par.fst"
                                                                     (Prims.of_int (45))
-                                                                    (Prims.of_int (52))
+                                                                    (Prims.of_int (57))
                                                                     (Prims.of_int (57))
                                                                     (Prims.of_int (52)))))
                                                                     (Obj.magic

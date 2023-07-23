@@ -11,6 +11,7 @@ let (extend_post_hint_for_local :
         fun x ->
           {
             Pulse_Typing.g = (p.Pulse_Typing.g);
+            Pulse_Typing.ctag_hint = (p.Pulse_Typing.ctag_hint);
             Pulse_Typing.ret_ty = (p.Pulse_Typing.ret_ty);
             Pulse_Typing.u = (p.Pulse_Typing.u);
             Pulse_Typing.ty_typing = ();
