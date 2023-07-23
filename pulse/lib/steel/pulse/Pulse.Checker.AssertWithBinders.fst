@@ -132,26 +132,27 @@ let rec open_binders (g:env) (bs:list binder) (uvs:env { disjoint uvs g }) (v:te
 //   | Some x -> x
 //   | None -> T.fail msg
 
-// let unfold_defs (g:env) (defs:option (list string)) (t:R.term) 
-//   : T.Tac term
-//   = let head, _ = T.collect_app t in
-//     match R.inspect_ln head with
-//     | R.Tv_FVar fv
-//     | R.Tv_UInst fv _ -> (
-//         let head = String.concat "." (R.inspect_fv fv) in
-//         let fully = 
-//           match defs with
-//           | Some defs -> defs
-//           | None -> []
-//         in
-//         let rt = RU.unfold_def (fstar_env g) head fully t in
-//         let rt = option_must rt "Unexpected: reduction produced an ill-formed term" in
-//         let ty = option_must (readback_ty rt) "Unexpected: unable to readback unfolded term" in
-//         debug_log g (fun _ -> Printf.sprintf "Unfolded %s to F* term %s and readback as %s" (T.term_to_string t) (T.term_to_string rt) (P.term_to_string ty));
-//         ty
-//       )
-//     | _ ->
-//       fail g (Some (RU.range_of_term t)) (Printf.sprintf "Cannot unfold %s" (T.term_to_string t))
+let unfold_defs (g:env) (defs:option (list string)) (t:term) 
+  : T.Tac term
+  = let t = elab_term t in
+    let head, _ = T.collect_app t in
+    match R.inspect_ln head with
+    | R.Tv_FVar fv
+    | R.Tv_UInst fv _ -> (
+        let head = String.concat "." (R.inspect_fv fv) in
+        let fully = 
+          match defs with
+          | Some defs -> defs
+          | None -> []
+        in
+        let rt = RU.unfold_def (fstar_env g) head fully t in
+        let rt = option_must rt "Unexpected: reduction produced an ill-formed term" in
+        let ty = option_must (readback_ty rt) "Unexpected: unable to readback unfolded term" in
+        debug_log g (fun _ -> Printf.sprintf "Unfolded %s to F* term %s and readback as %s" (T.term_to_string t) (T.term_to_string rt) (P.term_to_string ty));
+        ty
+      )
+    | _ ->
+      fail g (Some (RU.range_of_term t)) (Printf.sprintf "Cannot unfold %s" (T.term_to_string t))
     
 // let prepare_goal hint_type g (v:R.term) : T.Tac (term & term) = 
 //   match hint_type with
@@ -165,19 +166,16 @@ let rec open_binders (g:env) (bs:list binder) (uvs:env { disjoint uvs g }) (v:te
 //     unfold_defs g ns v,
 //     option_must (readback_ty v) "Failed to readback elaborated assertion"
 
-// let check_unfoldable g hint_type (v:term) : T.Tac unit = 
-//   match hint_type with
-//   | ASSERT -> ()
-//   | FOLD _ 
-//   | UNFOLD _ ->
-//     match v.t with
-//     | Tm_FStar _ -> ()
-//     | _ -> 
-//      fail g 
-//         (Some v.range)
-//         (Printf.sprintf "`fold` and `unfold` expect a single user-defined predicate as an argument, \
-//                           but %s is a primitive term that cannot be folded or unfolded"
-//                           (P.term_to_string v))
+let check_unfoldable g (v:term) : T.Tac unit = 
+  match v.t with
+  | Tm_FStar _ -> ()
+  | _ -> 
+   fail g 
+      (Some v.range)
+      (Printf.sprintf "`fold` and `unfold` expect a single user-defined predicate as an argument, \
+                        but %s is a primitive term that cannot be folded or unfolded"
+                        (P.term_to_string v))
+
 module PS = Pulse.Prover.Substs
 let check
   (g:env)
@@ -202,8 +200,29 @@ let check
     (| x, x_ty, pre'', g2, k_elab_trans k_frame k |)
 
   | _ ->
-    fail g (Some st.range)
-      (Printf.sprintf "non-assert proof hints are not yet supported")
+    check_unfoldable g v;
+    match bs with
+    | _::_ ->
+      fail g (Some st.range)
+        (Printf.sprintf "binders in fold and unfold are not yet supported")
+    | [] ->
+      let v, _ = PC.instantiate_term_implicits g v in
+      let lhs, rhs =
+        match hint_type with      
+        | UNFOLD _ ->
+          v,
+          unfold_defs g None v
+        | FOLD ns -> 
+          unfold_defs g ns v,
+          v in
+      let rw = { term = Tm_Rewrite { t1 = lhs;
+                                     t2 = rhs };
+                 range = st.range } in
+      let st = { term = Tm_Bind { binder = as_binder (tm_fstar (`unit) st.range);
+                                  head = rw; body };
+                 range = st.range } in
+      check g pre pre_typing post_hint st
+      
 
 //   : T.Tac (checker_result_t g pre post_hint frame_pre)
 //   = let Tm_ProofHintWithBinders { hint_type; binders; v; t=body } = st.term in
