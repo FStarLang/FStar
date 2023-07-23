@@ -19,8 +19,8 @@ fn unfold_test (r:ref U32.t) (n:erased U32.t)
   requires folded_pts_to r n
   ensures folded_pts_to r n
 {
-  unfold (folded_pts_to r n);
-  fold (folded_pts_to r n)
+  with n. unfold (folded_pts_to r n);
+  with n. fold (folded_pts_to r n)
 }
 ```
 

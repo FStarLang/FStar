@@ -8,7 +8,6 @@ module R = Steel.ST.Reference
 open Pulse.Steel.Wrapper
 module GR = Steel.ST.GhostReference
 
-[@@expect_failure]
 ```pulse
 fn increment (x:GR.ref int) (#n:erased int)
     requires GR.pts_to x full_perm n
@@ -21,7 +20,7 @@ fn increment (x:GR.ref int) (#n:erased int)
 
 ```pulse
 ghost
-fn increment (x:GR.ref int) (#n:erased int)
+fn incrementg (x:GR.ref int) (#n:erased int)
     requires GR.pts_to x full_perm n
     ensures GR.pts_to x full_perm (n + 1)
 {
