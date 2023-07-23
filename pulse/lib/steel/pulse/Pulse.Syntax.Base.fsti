@@ -137,6 +137,12 @@ type ctag =
   | STT_Atomic
   | STT_Ghost
 
+let ctag_of_comp_st (c:comp_st) : ctag =
+  match c with
+  | C_ST _ -> STT
+  | C_STAtomic _ _ -> STT_Atomic
+  | C_STGhost _ _ -> STT_Ghost
+
 type proof_hint_type =
   | ASSERT
   | FOLD of option (list string)

@@ -36,7 +36,7 @@ let post_typing_as_abstraction (#g:env) (#x:var) (#ty:term) (#t:term { fresh_wrt
   : FStar.Ghost.erased (RT.tot_typing (elab_env g) (mk_abs ty t) (mk_arrow ty tm_vprop))                                 
   = admit()
 
-let intro_post_hint g ret_ty_opt post =
+let intro_post_hint g ctag_opt ret_ty_opt post =
   let x = fresh g in
   let ret_ty = 
       match ret_ty_opt with
@@ -49,13 +49,15 @@ let intro_post_hint g ret_ty_opt post =
   let post' = close_term post x in
   Pulse.Typing.FV.freevars_close_term post x 0;
   assume (open_term post' x == post);
-  { g; ret_ty; u; ty_typing; post=post'; post_typing=post_typing_as_abstraction #_ #_ #_ #post' post_typing }
+  { g; ctag_hint=ctag_opt; ret_ty; u; ty_typing; post=post'; post_typing=post_typing_as_abstraction #_ #_ #_ #post' post_typing }
 
 let post_hint_from_comp_typing #g #c ct = 
   let st_comp_typing = Metatheory.comp_typing_inversion ct in
   let (| ty_typing, pre_typing, x, post_typing |) = Metatheory.st_comp_typing_inversion st_comp_typing in
   let p : post_hint_t = 
-    { g; ret_ty = comp_res c; u=comp_u c; 
+    { g;
+      ctag_hint = Some (ctag_of_comp_st c);
+      ret_ty = comp_res c; u=comp_u c; 
       ty_typing=ty_typing;
       post=comp_post c;
       post_typing=post_typing_as_abstraction post_typing }
@@ -365,12 +367,16 @@ let return_in_ctxt (g:env) (y:var) (u:universe) (ty:term) (ctxt:vprop)
 
   let x = fresh g in
   assume (~ (x `Set.mem` freevars post_hint.post));
-  let d = T_Return g STT false u ty (null_var y) post_hint.post x ty_typing
+  let ctag =
+    match post_hint.ctag_hint with
+    | None -> STT
+    | Some ctag -> ctag in
+  let d = T_Return g ctag false u ty (null_var y) post_hint.post x ty_typing
     (magic ())  // that null_var y is well typed at ty in g, we know since lookup g y == Some ty
     (magic ())  // typing of (open post x) in (g, x) ... post_hint is well-typed, so should get
   in
-  let t = wr (Tm_Return {ctag=STT;insert_eq=false;term=null_var y}) in
-  let c = comp_return STT false u ty (null_var y) post_hint.post x in
+  let t = wr (Tm_Return {ctag=ctag;insert_eq=false;term=null_var y}) in
+  let c = comp_return ctag false u ty (null_var y) post_hint.post x in
   let d : st_typing g t c = d in
 
   let _ :squash (comp_pre c == ctxt /\ comp_post_matches_hint c (Some post_hint)) =

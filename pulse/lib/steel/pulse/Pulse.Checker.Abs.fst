@@ -86,7 +86,7 @@ let rec check_abs
         | Some post ->
           let post_hint_typing
             : post_hint_t
-            = Pulse.Checker.Common.intro_post_hint (push_context "post_hint_typing" range g') ret_ty post
+            = Pulse.Checker.Common.intro_post_hint (push_context "post_hint_typing" range g') (Some (ctag_of_comp_st c)) ret_ty post
           in
           Some post_hint_typing
       in

@@ -32,7 +32,7 @@ let check_par
   let (| preR, preR_typing |) =
     check_term_with_expected_type g preR tm_vprop in
 
-  let postL_hint = intro_post_hint g None postL in
+  let postL_hint = intro_post_hint g None None postL in
 
   let (| eL, cL, eL_typing |) =
     let r = 
@@ -42,7 +42,7 @@ let check_par
   if C_ST? cL
   then
     let cL_typing = MT.st_typing_correctness eL_typing in
-    let postR_hint = intro_post_hint g None postR in
+    let postR_hint = intro_post_hint g None None postR in
     let (| eR, cR, eR_typing |) =
       let r = 
         check g preR (E preR_typing) (Some postR_hint) eR  in

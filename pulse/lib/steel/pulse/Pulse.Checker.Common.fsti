@@ -16,7 +16,7 @@ val format_failed_goal (g:env) (ctxt:list term) (goal:list term) : T.Tac string
 // let mk_abs ty t = RT.(mk_abs (elab_term ty) T.Q_Explicit (elab_term t))
 // let mk_arrow ty t = RT.mk_arrow (elab_term ty) T.Q_Explicit (elab_term t)
 
-val intro_post_hint (g:env) (ret_ty:option term) (post:term)
+val intro_post_hint (g:env) (ctag_opt:option ctag) (ret_ty:option term) (post:term)
   : T.Tac (post_hint_for_env g)
 
 val post_hint_from_comp_typing (#g:env) (#c:comp_st) (ct:Metatheory.comp_typing_u g c)

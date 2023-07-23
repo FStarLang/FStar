@@ -935,6 +935,7 @@ let emp_typing (#g:_)
 noeq
 type post_hint_t = {
   g:env;
+  ctag_hint:option ctag;
   ret_ty:term;
   u:universe;
   ty_typing:universe_of g ret_ty u;
