@@ -12,6 +12,18 @@ open Pulse.Steel.Wrapper
 #push-options "--using_facts_from 'Prims FStar.Pervasives FStar.UInt FStar.UInt32 FStar.Ghost Pulse.Steel.Wrapper CustomSyntax'"
 #push-options "--ide_id_info_off"
 
+let folded_pts_to (r:ref U32.t) (n:erased U32.t) : vprop = pts_to r full_perm n
+
+```pulse
+fn unfold_test (r:ref U32.t) (n:erased U32.t)
+  requires folded_pts_to r n
+  ensures folded_pts_to r n
+{
+  unfold (folded_pts_to r n);
+  fold (folded_pts_to r n)
+}
+```
+
 ```pulse
 fn test_write_10 (x:ref U32.t)
                  (#n:erased U32.t)
