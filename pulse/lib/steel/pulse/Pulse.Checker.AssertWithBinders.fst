@@ -127,6 +127,14 @@ let rec open_binders (g:env) (bs:list binder) (uvs:env { disjoint uvs g }) (v:te
     let body = subst_st_term body (shift_subst_n (L.length bs) ss) in
     open_binders g bs (push_binding uvs x b.binder_ppname b.binder_ty) v body
 
+let close_binders (bs:list (var & typ)) (t:term) : term =
+  let r = L.fold_right (fun (x, _) (n, t) ->
+    let ss = [ ND x 0 ] in
+    n + 1,
+    subst_term t (shift_subst_n n ss)
+  ) bs (0, t) in
+  snd r
+
 // let option_must (f:option 'a) (msg:string) : T.Tac 'a =
 //   match f with
 //   | Some x -> x
@@ -153,7 +161,7 @@ let unfold_defs (g:env) (defs:option (list string)) (t:term)
       )
     | _ ->
       fail g (Some (RU.range_of_term t)) (Printf.sprintf "Cannot unfold %s" (T.term_to_string t))
-    
+
 // let prepare_goal hint_type g (v:R.term) : T.Tac (term & term) = 
 //   match hint_type with
 //   | ASSERT -> 
@@ -189,10 +197,13 @@ let check
 
   let Tm_ProofHintWithBinders { hint_type; binders=bs; v; t=body } = st.term in
 
+  let bs = infer_binder_types g bs v in
+
+  let (| uvs, v_opened, body_opened |) = open_binders g bs (mk_env (fstar_env g)) v body in
+
   match hint_type with
   | ASSERT ->
-    let bs = infer_binder_types g bs v in
-    let (| uvs, v, body |) = open_binders g bs (mk_env (fstar_env g)) v body in
+    let v, body = v_opened, body_opened in
     let (| v, d |) = PC.check_vprop (push_env g uvs) v in
     let (| g1, nts, pre', k_frame |) = Prover.prove pre_typing uvs d in
     let (| x, x_ty, pre'', g2, k |) =
@@ -201,27 +212,66 @@ let check
 
   | _ ->
     check_unfoldable g v;
-    match bs with
-    | _::_ ->
-      fail g (Some st.range)
-        (Printf.sprintf "binders in fold and unfold are not yet supported")
-    | [] ->
-      let v, _ = PC.instantiate_term_implicits g v in
-      let lhs, rhs =
-        match hint_type with      
-        | UNFOLD _ ->
-          v,
-          unfold_defs g None v
-        | FOLD ns -> 
-          unfold_defs g ns v,
-          v in
-      let rw = { term = Tm_Rewrite { t1 = lhs;
-                                     t2 = rhs };
-                 range = st.range } in
-      let st = { term = Tm_Bind { binder = as_binder (tm_fstar (`unit) st.range);
-                                  head = rw; body };
-                 range = st.range } in
-      check g pre pre_typing post_hint st
+    let v_opened, _ = PC.instantiate_term_implicits (push_env g uvs) v_opened in
+    let lhs, rhs =
+      match hint_type with      
+      | UNFOLD _ ->
+        v_opened,
+        unfold_defs (push_env g uvs) None v_opened
+      | FOLD ns -> 
+        unfold_defs (push_env g uvs) ns v_opened,
+        v_opened in
+    let uvs_bs = L.rev (bindings uvs) in
+    let lhs, rhs = close_binders uvs_bs lhs, close_binders uvs_bs rhs in
+    let rw = { term = Tm_Rewrite { t1 = lhs;
+                                   t2 = rhs };
+               range = st.range } in
+    let st = { term = Tm_Bind { binder = as_binder (tm_fstar (`unit) st.range);
+                                head = rw; body };
+               range = st.range } in
+
+    let st =
+      match bs with
+      | [] -> st
+      | _ ->
+        { term = Tm_ProofHintWithBinders { hint_type = ASSERT;
+                                           binders = bs;
+                                           v = lhs;
+                                           t = st };
+          range = st.range } in
+    check g pre pre_typing post_hint st
+      
+
+
+    // match bs with
+    // | _::_ ->
+    //   let st_wo_binders =
+    //     { term = Tm_ProofHintWithBinders {hint_type; binders=[]; v; t=body };
+    //       range = st.range } in
+    //   let assert_tm =
+    //     { term = Tm_ProofHintWithBinders { hint_type = ASSERT;
+    //                                        binders = bs;
+    //                                        v = v;
+    //                                        t = st_wo_binders };
+    //       range = st.range } in
+    //   check g pre pre_typing post_hint assert_tm
+    // | [] ->
+    //   let v, _ = PC.instantiate_term_implicits g v in
+    //   let lhs, rhs =
+    //     match hint_type with      
+    //     | UNFOLD _ ->
+    //       v,
+    //       unfold_defs g None v
+    //     | FOLD ns -> 
+    //       unfold_defs g ns v,
+    //       v in
+    //   let rw = { term = Tm_Rewrite { t1 = lhs;
+    //                                  t2 = rhs };
+    //              range = st.range } in
+    //   let st = { term = Tm_Bind { binder = as_binder (tm_fstar (`unit) st.range);
+    //                               head = rw; body };
+    //              range = st.range } in
+    //   check g pre pre_typing post_hint st
       
 
 //   : T.Tac (checker_result_t g pre post_hint frame_pre)
