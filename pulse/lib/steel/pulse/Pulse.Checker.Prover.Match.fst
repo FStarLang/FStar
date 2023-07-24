@@ -5,7 +5,8 @@ open Pulse.Typing
 open Pulse.Typing.Combinators
 open Pulse.Typing.Metatheory
 open Pulse.Checker.VPropEquiv
-open Pulse.Checker.Prover.Common
+open Pulse.Checker.Prover.Base
+open Pulse.Checker.Prover.Util
 
 module L = FStar.List.Tot
 module R = FStar.Reflection.V2

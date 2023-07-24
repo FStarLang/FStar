@@ -273,7 +273,7 @@ let (k_intro_exists :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___2 ->
-                                                                    Pulse_Checker_Prover_Common.st_typing_weakening
+                                                                    Pulse_Typing_Metatheory.st_typing_weakening
                                                                     g
                                                                     empty_env
                                                                     t1 c1 d11
@@ -294,7 +294,7 @@ let (k_intro_exists :
                                                                     Pulse_Syntax_Base.ppname_default
                                                                     (Pulse_Syntax_Base.comp_res
                                                                     c))
-                                                                    (Pulse_Checker_Prover_Common.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
                                                                     frame
                                                                     (Pulse_Syntax_Naming.subst_term
                                                                     p
@@ -302,7 +302,7 @@ let (k_intro_exists :
                                                                     Pulse_Syntax_Naming.DT
                                                                     (Prims.int_zero,
                                                                     e)]))
-                                                                    (Pulse_Checker_Prover_Common.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
                                                                     frame
                                                                     (Pulse_Syntax_Naming.subst_term
                                                                     p
@@ -310,7 +310,7 @@ let (k_intro_exists :
                                                                     Pulse_Syntax_Naming.DT
                                                                     (Prims.int_zero,
                                                                     e)]))
-                                                                    (Pulse_Checker_Prover_Common.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
                                                                     (Pulse_Syntax_Base.tm_exists_sl
                                                                     u b p)
                                                                     frame)
@@ -330,15 +330,15 @@ let (k_intro_exists :
                                                             uu___))) uu___)))
                                       uu___))) uu___)
 let (intro_exists :
-  Pulse_Checker_Prover_Common.preamble ->
-    unit Pulse_Checker_Prover_Common.prover_state ->
+  Pulse_Checker_Prover_Base.preamble ->
+    unit Pulse_Checker_Prover_Base.prover_state ->
       Pulse_Syntax_Base.universe ->
         Pulse_Syntax_Base.binder ->
           Pulse_Syntax_Base.vprop ->
             Pulse_Syntax_Base.vprop Prims.list ->
               unit ->
-                Pulse_Checker_Prover_Common.prover_t ->
-                  (unit Pulse_Checker_Prover_Common.prover_state, unit)
+                Pulse_Checker_Prover_Base.prover_t ->
+                  (unit Pulse_Checker_Prover_Base.prover_state, unit)
                     FStar_Tactics_Effect.tac_repr)
   =
   fun preamble ->
@@ -366,8 +366,8 @@ let (intro_exists :
                        (fun uu___1 ->
                           Pulse_Typing_Env.fresh
                             (Pulse_Typing_Env.push_env
-                               pst.Pulse_Checker_Prover_Common.pg
-                               pst.Pulse_Checker_Prover_Common.uvs)))
+                               pst.Pulse_Checker_Prover_Base.pg
+                               pst.Pulse_Checker_Prover_Base.uvs)))
                     (fun uu___1 ->
                        (fun x ->
                           Obj.magic
@@ -414,25 +414,25 @@ let (intro_exists :
                                           (FStar_Tactics_Effect.lift_div_tac
                                              (fun uu___1 ->
                                                 {
-                                                  Pulse_Checker_Prover_Common.g0
+                                                  Pulse_Checker_Prover_Base.g0
                                                     =
-                                                    (pst.Pulse_Checker_Prover_Common.pg);
-                                                  Pulse_Checker_Prover_Common.ctxt
+                                                    (pst.Pulse_Checker_Prover_Base.pg);
+                                                  Pulse_Checker_Prover_Base.ctxt
                                                     =
                                                     (Pulse_Typing_Combinators.list_as_vprop
-                                                       pst.Pulse_Checker_Prover_Common.remaining_ctxt);
-                                                  Pulse_Checker_Prover_Common.frame
+                                                       pst.Pulse_Checker_Prover_Base.remaining_ctxt);
+                                                  Pulse_Checker_Prover_Base.frame
                                                     =
-                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                       preamble.Pulse_Checker_Prover_Common.frame
-                                                       (Pulse_Checker_Prover_Common.op_Array_Access
-                                                          pst.Pulse_Checker_Prover_Common.ss
-                                                          pst.Pulse_Checker_Prover_Common.solved));
-                                                  Pulse_Checker_Prover_Common.ctxt_frame_typing
+                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                       preamble.Pulse_Checker_Prover_Base.frame
+                                                       (Pulse_Checker_Prover_Base.op_Array_Access
+                                                          pst.Pulse_Checker_Prover_Base.ss
+                                                          pst.Pulse_Checker_Prover_Base.solved));
+                                                  Pulse_Checker_Prover_Base.ctxt_frame_typing
                                                     = ();
-                                                  Pulse_Checker_Prover_Common.goals
+                                                  Pulse_Checker_Prover_Base.goals
                                                     =
-                                                    (Pulse_Checker_Prover_Common.op_Star
+                                                    (Pulse_Checker_Prover_Base.op_Star
                                                        (Pulse_Syntax_Naming.open_term_nv
                                                           body px)
                                                        (Pulse_Typing_Combinators.list_as_vprop
@@ -462,31 +462,31 @@ let (intro_exists :
                                                         (fun uu___1 ->
                                                            coerce_eq
                                                              (Pulse_Checker_Base.k_elab_equiv
-                                                                preamble_sub.Pulse_Checker_Prover_Common.g0
-                                                                preamble_sub.Pulse_Checker_Prover_Common.g0
-                                                                (Pulse_Checker_Prover_Common.op_Star
-                                                                   preamble_sub.Pulse_Checker_Prover_Common.ctxt
-                                                                   preamble_sub.Pulse_Checker_Prover_Common.frame)
-                                                                (Pulse_Checker_Prover_Common.op_Star
-                                                                   preamble_sub.Pulse_Checker_Prover_Common.ctxt
-                                                                   preamble_sub.Pulse_Checker_Prover_Common.frame)
-                                                                (Pulse_Checker_Prover_Common.op_Star
-                                                                   preamble_sub.Pulse_Checker_Prover_Common.ctxt
-                                                                   preamble_sub.Pulse_Checker_Prover_Common.frame)
-                                                                (Pulse_Checker_Prover_Common.op_Star
-                                                                   (Pulse_Checker_Prover_Common.op_Star
+                                                                preamble_sub.Pulse_Checker_Prover_Base.g0
+                                                                preamble_sub.Pulse_Checker_Prover_Base.g0
+                                                                (Pulse_Checker_Prover_Base.op_Star
+                                                                   preamble_sub.Pulse_Checker_Prover_Base.ctxt
+                                                                   preamble_sub.Pulse_Checker_Prover_Base.frame)
+                                                                (Pulse_Checker_Prover_Base.op_Star
+                                                                   preamble_sub.Pulse_Checker_Prover_Base.ctxt
+                                                                   preamble_sub.Pulse_Checker_Prover_Base.frame)
+                                                                (Pulse_Checker_Prover_Base.op_Star
+                                                                   preamble_sub.Pulse_Checker_Prover_Base.ctxt
+                                                                   preamble_sub.Pulse_Checker_Prover_Base.frame)
+                                                                (Pulse_Checker_Prover_Base.op_Star
+                                                                   (Pulse_Checker_Prover_Base.op_Star
                                                                     (Pulse_Typing_Combinators.list_as_vprop
                                                                     (Pulse_Typing_Combinators.vprop_as_list
-                                                                    preamble_sub.Pulse_Checker_Prover_Common.ctxt))
-                                                                    preamble_sub.Pulse_Checker_Prover_Common.frame)
-                                                                   (Pulse_Checker_Prover_Common.op_Array_Access
-                                                                    pst.Pulse_Checker_Prover_Common.ss
+                                                                    preamble_sub.Pulse_Checker_Prover_Base.ctxt))
+                                                                    preamble_sub.Pulse_Checker_Prover_Base.frame)
+                                                                   (Pulse_Checker_Prover_Base.op_Array_Access
+                                                                    pst.Pulse_Checker_Prover_Base.ss
                                                                     Pulse_Syntax_Base.tm_emp))
                                                                 (Pulse_Checker_Base.k_elab_unit
-                                                                   preamble_sub.Pulse_Checker_Prover_Common.g0
-                                                                   (Pulse_Checker_Prover_Common.op_Star
-                                                                    preamble_sub.Pulse_Checker_Prover_Common.ctxt
-                                                                    preamble_sub.Pulse_Checker_Prover_Common.frame))
+                                                                   preamble_sub.Pulse_Checker_Prover_Base.g0
+                                                                   (Pulse_Checker_Prover_Base.op_Star
+                                                                    preamble_sub.Pulse_Checker_Prover_Base.ctxt
+                                                                    preamble_sub.Pulse_Checker_Prover_Base.frame))
                                                                 () ()) ()))
                                                      (fun uu___1 ->
                                                         (fun k_sub ->
@@ -512,40 +512,40 @@ let (intro_exists :
                                                                    (fun
                                                                     uu___1 ->
                                                                     {
-                                                                    Pulse_Checker_Prover_Common.pg
+                                                                    Pulse_Checker_Prover_Base.pg
                                                                     =
-                                                                    (pst.Pulse_Checker_Prover_Common.pg);
-                                                                    Pulse_Checker_Prover_Common.remaining_ctxt
+                                                                    (pst.Pulse_Checker_Prover_Base.pg);
+                                                                    Pulse_Checker_Prover_Base.remaining_ctxt
                                                                     =
                                                                     (Pulse_Typing_Combinators.vprop_as_list
-                                                                    preamble_sub.Pulse_Checker_Prover_Common.ctxt);
-                                                                    Pulse_Checker_Prover_Common.remaining_ctxt_frame_typing
+                                                                    preamble_sub.Pulse_Checker_Prover_Base.ctxt);
+                                                                    Pulse_Checker_Prover_Base.remaining_ctxt_frame_typing
                                                                     = ();
-                                                                    Pulse_Checker_Prover_Common.uvs
+                                                                    Pulse_Checker_Prover_Base.uvs
                                                                     =
                                                                     (Pulse_Typing_Env.push_binding
-                                                                    pst.Pulse_Checker_Prover_Common.uvs
+                                                                    pst.Pulse_Checker_Prover_Base.uvs
                                                                     x
                                                                     b.Pulse_Syntax_Base.binder_ppname
                                                                     b.Pulse_Syntax_Base.binder_ty);
-                                                                    Pulse_Checker_Prover_Common.ss
+                                                                    Pulse_Checker_Prover_Base.ss
                                                                     =
-                                                                    (pst.Pulse_Checker_Prover_Common.ss);
-                                                                    Pulse_Checker_Prover_Common.solved
+                                                                    (pst.Pulse_Checker_Prover_Base.ss);
+                                                                    Pulse_Checker_Prover_Base.solved
                                                                     =
                                                                     Pulse_Syntax_Base.tm_emp;
-                                                                    Pulse_Checker_Prover_Common.unsolved
+                                                                    Pulse_Checker_Prover_Base.unsolved
                                                                     =
                                                                     (FStar_List_Tot_Base.append
                                                                     (Pulse_Typing_Combinators.vprop_as_list
                                                                     (Pulse_Syntax_Naming.open_term_nv
                                                                     body px))
                                                                     unsolved');
-                                                                    Pulse_Checker_Prover_Common.k
+                                                                    Pulse_Checker_Prover_Base.k
                                                                     = k_sub;
-                                                                    Pulse_Checker_Prover_Common.goals_inv
+                                                                    Pulse_Checker_Prover_Base.goals_inv
                                                                     = ();
-                                                                    Pulse_Checker_Prover_Common.solved_inv
+                                                                    Pulse_Checker_Prover_Base.solved_inv
                                                                     = ()
                                                                     }))
                                                                 (fun uu___1
@@ -627,9 +627,9 @@ let (intro_exists :
                                                                     (Prims.of_int (6)))))
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Prover_Substs.ss_to_nt_substs
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.pg
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.uvs
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.ss))
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.pg
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.uvs
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.ss))
                                                                     (fun
                                                                     uu___1 ->
                                                                     (fun ropt
@@ -659,7 +659,7 @@ let (intro_exists :
                                                                     Obj.magic
                                                                     (Obj.repr
                                                                     (Pulse_Typing_Env.fail
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.pg
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.pg
                                                                     FStar_Pervasives_Native.None
                                                                     "intro exists ss not well-typed"))
                                                                     else
@@ -806,7 +806,7 @@ let (intro_exists :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___3 ->
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.k))
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.k))
                                                                     (fun
                                                                     uu___3 ->
                                                                     (fun
@@ -833,30 +833,30 @@ let (intro_exists :
                                                                     (fun
                                                                     uu___3 ->
                                                                     Pulse_Checker_Base.k_elab_equiv
-                                                                    preamble_sub.Pulse_Checker_Prover_Common.g0
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.pg
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    preamble_sub.Pulse_Checker_Prover_Common.ctxt
-                                                                    preamble_sub.Pulse_Checker_Prover_Common.frame)
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    preamble_sub.Pulse_Checker_Prover_Common.ctxt
-                                                                    preamble_sub.Pulse_Checker_Prover_Common.frame)
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    (Pulse_Checker_Prover_Common.op_Star
+                                                                    preamble_sub.Pulse_Checker_Prover_Base.g0
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.pg
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    preamble_sub.Pulse_Checker_Prover_Base.ctxt
+                                                                    preamble_sub.Pulse_Checker_Prover_Base.frame)
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    preamble_sub.Pulse_Checker_Prover_Base.ctxt
+                                                                    preamble_sub.Pulse_Checker_Prover_Base.frame)
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
                                                                     (Pulse_Typing_Combinators.list_as_vprop
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.remaining_ctxt)
-                                                                    preamble_sub.Pulse_Checker_Prover_Common.frame)
-                                                                    (Pulse_Checker_Prover_Common.op_Array_Access
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.ss
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.solved))
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    (Pulse_Checker_Prover_Common.op_Star
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.remaining_ctxt)
+                                                                    preamble_sub.Pulse_Checker_Prover_Base.frame)
+                                                                    (Pulse_Checker_Prover_Base.op_Array_Access
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.ss
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.solved))
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
                                                                     (Pulse_Typing_Combinators.list_as_vprop
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.remaining_ctxt)
-                                                                    preamble_sub.Pulse_Checker_Prover_Common.frame)
-                                                                    (Pulse_Checker_Prover_Common.op_Array_Access
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.ss
-                                                                    preamble_sub.Pulse_Checker_Prover_Common.goals))
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.remaining_ctxt)
+                                                                    preamble_sub.Pulse_Checker_Prover_Base.frame)
+                                                                    (Pulse_Checker_Prover_Base.op_Array_Access
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.ss
+                                                                    preamble_sub.Pulse_Checker_Prover_Base.goals))
                                                                     k_sub1 ()
                                                                     ()))
                                                                     (fun
@@ -911,8 +911,8 @@ let (intro_exists :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___3 ->
-                                                                    Pulse_Checker_Prover_Common.op_Array_Access
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.ss
+                                                                    Pulse_Checker_Prover_Base.op_Array_Access
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.ss
                                                                     (Pulse_Syntax_Pure.null_var
                                                                     x)))
                                                                     (fun
@@ -969,45 +969,45 @@ let (intro_exists :
                                                                     (fun
                                                                     uu___3 ->
                                                                     Pulse_Checker_Base.k_elab_equiv
-                                                                    preamble_sub.Pulse_Checker_Prover_Common.g0
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.pg
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    preamble_sub.Pulse_Checker_Prover_Common.ctxt
-                                                                    preamble_sub.Pulse_Checker_Prover_Common.frame)
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    preamble_sub.Pulse_Checker_Prover_Common.ctxt
-                                                                    preamble_sub.Pulse_Checker_Prover_Common.frame)
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    (Pulse_Checker_Prover_Common.op_Star
+                                                                    preamble_sub.Pulse_Checker_Prover_Base.g0
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.pg
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    preamble_sub.Pulse_Checker_Prover_Base.ctxt
+                                                                    preamble_sub.Pulse_Checker_Prover_Base.frame)
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    preamble_sub.Pulse_Checker_Prover_Base.ctxt
+                                                                    preamble_sub.Pulse_Checker_Prover_Base.frame)
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
                                                                     (Pulse_Typing_Combinators.list_as_vprop
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.remaining_ctxt)
-                                                                    preamble_sub.Pulse_Checker_Prover_Common.frame)
-                                                                    (Pulse_Checker_Prover_Common.op_Star
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.remaining_ctxt)
+                                                                    preamble_sub.Pulse_Checker_Prover_Base.frame)
+                                                                    (Pulse_Checker_Prover_Base.op_Star
                                                                     (Pulse_Syntax_Naming.subst_term
-                                                                    (Pulse_Checker_Prover_Common.op_Array_Access
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.ss
+                                                                    (Pulse_Checker_Prover_Base.op_Array_Access
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.ss
                                                                     body)
                                                                     [
                                                                     Pulse_Syntax_Naming.DT
                                                                     (Prims.int_zero,
                                                                     witness)])
-                                                                    (Pulse_Checker_Prover_Common.op_Array_Access
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.ss
+                                                                    (Pulse_Checker_Prover_Base.op_Array_Access
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.ss
                                                                     (Pulse_Typing_Combinators.list_as_vprop
                                                                     unsolved'))))
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    (Pulse_Checker_Prover_Common.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
                                                                     (Pulse_Typing_Combinators.list_as_vprop
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.remaining_ctxt)
-                                                                    preamble_sub.Pulse_Checker_Prover_Common.frame)
-                                                                    (Pulse_Checker_Prover_Common.op_Array_Access
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.ss
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.remaining_ctxt)
+                                                                    preamble_sub.Pulse_Checker_Prover_Base.frame)
+                                                                    (Pulse_Checker_Prover_Base.op_Array_Access
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.ss
                                                                     (Pulse_Typing_Combinators.list_as_vprop
                                                                     unsolved')))
                                                                     (Pulse_Syntax_Naming.subst_term
-                                                                    (Pulse_Checker_Prover_Common.op_Array_Access
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.ss
+                                                                    (Pulse_Checker_Prover_Base.op_Array_Access
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.ss
                                                                     body)
                                                                     [
                                                                     Pulse_Syntax_Naming.DT
@@ -1039,22 +1039,22 @@ let (intro_exists :
                                                                     (Prims.of_int (26)))))
                                                                     (Obj.magic
                                                                     (k_intro_exists
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.pg
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.pg
                                                                     u
                                                                     (Pulse_Checker_Prover_Substs.nt_subst_binder
                                                                     b nt)
-                                                                    (Pulse_Checker_Prover_Common.op_Array_Access
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.ss
+                                                                    (Pulse_Checker_Prover_Base.op_Array_Access
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.ss
                                                                     body) ()
                                                                     witness
                                                                     ()
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    (Pulse_Checker_Prover_Common.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
                                                                     (Pulse_Typing_Combinators.list_as_vprop
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.remaining_ctxt)
-                                                                    preamble_sub.Pulse_Checker_Prover_Common.frame)
-                                                                    (Pulse_Checker_Prover_Common.op_Array_Access
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.ss
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.remaining_ctxt)
+                                                                    preamble_sub.Pulse_Checker_Prover_Base.frame)
+                                                                    (Pulse_Checker_Prover_Base.op_Array_Access
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.ss
                                                                     (Pulse_Typing_Combinators.list_as_vprop
                                                                     unsolved')))
                                                                     ()))
@@ -1065,201 +1065,201 @@ let (intro_exists :
                                                                     (fun
                                                                     uu___3 ->
                                                                     {
-                                                                    Pulse_Checker_Prover_Common.pg
+                                                                    Pulse_Checker_Prover_Base.pg
                                                                     =
-                                                                    (pst_sub1.Pulse_Checker_Prover_Common.pg);
-                                                                    Pulse_Checker_Prover_Common.remaining_ctxt
+                                                                    (pst_sub1.Pulse_Checker_Prover_Base.pg);
+                                                                    Pulse_Checker_Prover_Base.remaining_ctxt
                                                                     =
-                                                                    (pst_sub1.Pulse_Checker_Prover_Common.remaining_ctxt);
-                                                                    Pulse_Checker_Prover_Common.remaining_ctxt_frame_typing
+                                                                    (pst_sub1.Pulse_Checker_Prover_Base.remaining_ctxt);
+                                                                    Pulse_Checker_Prover_Base.remaining_ctxt_frame_typing
                                                                     = ();
-                                                                    Pulse_Checker_Prover_Common.uvs
+                                                                    Pulse_Checker_Prover_Base.uvs
                                                                     =
-                                                                    (pst_sub1.Pulse_Checker_Prover_Common.uvs);
-                                                                    Pulse_Checker_Prover_Common.ss
+                                                                    (pst_sub1.Pulse_Checker_Prover_Base.uvs);
+                                                                    Pulse_Checker_Prover_Base.ss
                                                                     =
-                                                                    (pst_sub1.Pulse_Checker_Prover_Common.ss);
-                                                                    Pulse_Checker_Prover_Common.solved
+                                                                    (pst_sub1.Pulse_Checker_Prover_Base.ss);
+                                                                    Pulse_Checker_Prover_Base.solved
                                                                     =
-                                                                    (preamble.Pulse_Checker_Prover_Common.goals);
-                                                                    Pulse_Checker_Prover_Common.unsolved
+                                                                    (preamble.Pulse_Checker_Prover_Base.goals);
+                                                                    Pulse_Checker_Prover_Base.unsolved
                                                                     = [];
-                                                                    Pulse_Checker_Prover_Common.k
+                                                                    Pulse_Checker_Prover_Base.k
                                                                     =
                                                                     (Pulse_Checker_Base.k_elab_equiv
-                                                                    preamble.Pulse_Checker_Prover_Common.g0
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.pg
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    preamble.Pulse_Checker_Prover_Common.ctxt
-                                                                    preamble.Pulse_Checker_Prover_Common.frame)
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    preamble.Pulse_Checker_Prover_Common.ctxt
-                                                                    preamble.Pulse_Checker_Prover_Common.frame)
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    (Pulse_Checker_Prover_Common.op_Star
+                                                                    preamble.Pulse_Checker_Prover_Base.g0
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.pg
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    preamble.Pulse_Checker_Prover_Base.ctxt
+                                                                    preamble.Pulse_Checker_Prover_Base.frame)
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    preamble.Pulse_Checker_Prover_Base.ctxt
+                                                                    preamble.Pulse_Checker_Prover_Base.frame)
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
                                                                     (Pulse_Typing_Combinators.list_as_vprop
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.remaining_ctxt)
-                                                                    preamble.Pulse_Checker_Prover_Common.frame)
-                                                                    (Pulse_Checker_Prover_Common.op_Array_Access
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.ss
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    pst.Pulse_Checker_Prover_Common.solved
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.remaining_ctxt)
+                                                                    preamble.Pulse_Checker_Prover_Base.frame)
+                                                                    (Pulse_Checker_Prover_Base.op_Array_Access
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.ss
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    pst.Pulse_Checker_Prover_Base.solved
                                                                     (Pulse_Typing_Combinators.list_as_vprop
-                                                                    pst.Pulse_Checker_Prover_Common.unsolved))))
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    (Pulse_Checker_Prover_Common.op_Star
+                                                                    pst.Pulse_Checker_Prover_Base.unsolved))))
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
                                                                     (Pulse_Typing_Combinators.list_as_vprop
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.remaining_ctxt)
-                                                                    preamble.Pulse_Checker_Prover_Common.frame)
-                                                                    (Pulse_Checker_Prover_Common.op_Array_Access
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.ss
-                                                                    preamble.Pulse_Checker_Prover_Common.goals))
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.remaining_ctxt)
+                                                                    preamble.Pulse_Checker_Prover_Base.frame)
+                                                                    (Pulse_Checker_Prover_Base.op_Array_Access
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.ss
+                                                                    preamble.Pulse_Checker_Prover_Base.goals))
                                                                     (Pulse_Checker_Base.k_elab_trans
-                                                                    preamble.Pulse_Checker_Prover_Common.g0
-                                                                    (Pulse_Checker_Prover_Common.__proj__Mkprover_state__item__pg
+                                                                    preamble.Pulse_Checker_Prover_Base.g0
+                                                                    (Pulse_Checker_Prover_Base.__proj__Mkprover_state__item__pg
                                                                     preamble
                                                                     pst)
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.pg
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    preamble.Pulse_Checker_Prover_Common.ctxt
-                                                                    preamble.Pulse_Checker_Prover_Common.frame)
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    (Pulse_Checker_Prover_Common.op_Star
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.pg
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    preamble.Pulse_Checker_Prover_Base.ctxt
+                                                                    preamble.Pulse_Checker_Prover_Base.frame)
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
                                                                     (Pulse_Typing_Combinators.list_as_vprop
-                                                                    (Pulse_Checker_Prover_Common.__proj__Mkprover_state__item__remaining_ctxt
+                                                                    (Pulse_Checker_Prover_Base.__proj__Mkprover_state__item__remaining_ctxt
                                                                     preamble
                                                                     pst))
-                                                                    preamble.Pulse_Checker_Prover_Common.frame)
-                                                                    (Pulse_Checker_Prover_Common.op_Array_Access
-                                                                    (Pulse_Checker_Prover_Common.__proj__Mkprover_state__item__ss
+                                                                    preamble.Pulse_Checker_Prover_Base.frame)
+                                                                    (Pulse_Checker_Prover_Base.op_Array_Access
+                                                                    (Pulse_Checker_Prover_Base.__proj__Mkprover_state__item__ss
                                                                     preamble
                                                                     pst)
-                                                                    (Pulse_Checker_Prover_Common.__proj__Mkprover_state__item__solved
+                                                                    (Pulse_Checker_Prover_Base.__proj__Mkprover_state__item__solved
                                                                     preamble
                                                                     pst)))
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    (Pulse_Checker_Prover_Common.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
                                                                     (Pulse_Typing_Combinators.list_as_vprop
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.remaining_ctxt)
-                                                                    preamble.Pulse_Checker_Prover_Common.frame)
-                                                                    (Pulse_Checker_Prover_Common.op_Array_Access
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.ss
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    pst.Pulse_Checker_Prover_Common.solved
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.remaining_ctxt)
+                                                                    preamble.Pulse_Checker_Prover_Base.frame)
+                                                                    (Pulse_Checker_Prover_Base.op_Array_Access
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.ss
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    pst.Pulse_Checker_Prover_Base.solved
                                                                     (Pulse_Typing_Combinators.list_as_vprop
-                                                                    pst.Pulse_Checker_Prover_Common.unsolved))))
-                                                                    pst.Pulse_Checker_Prover_Common.k
+                                                                    pst.Pulse_Checker_Prover_Base.unsolved))))
+                                                                    pst.Pulse_Checker_Prover_Base.k
                                                                     (Pulse_Checker_Base.k_elab_equiv
-                                                                    pst.Pulse_Checker_Prover_Common.pg
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.pg
-                                                                    (Pulse_Checker_Prover_Common.op_Star
+                                                                    pst.Pulse_Checker_Prover_Base.pg
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.pg
+                                                                    (Pulse_Checker_Prover_Base.op_Star
                                                                     (Pulse_Typing_Combinators.list_as_vprop
-                                                                    pst.Pulse_Checker_Prover_Common.remaining_ctxt)
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    preamble.Pulse_Checker_Prover_Common.frame
-                                                                    (Pulse_Checker_Prover_Common.op_Array_Access
-                                                                    pst.Pulse_Checker_Prover_Common.ss
-                                                                    pst.Pulse_Checker_Prover_Common.solved)))
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    (Pulse_Checker_Prover_Common.op_Star
+                                                                    pst.Pulse_Checker_Prover_Base.remaining_ctxt)
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    preamble.Pulse_Checker_Prover_Base.frame
+                                                                    (Pulse_Checker_Prover_Base.op_Array_Access
+                                                                    pst.Pulse_Checker_Prover_Base.ss
+                                                                    pst.Pulse_Checker_Prover_Base.solved)))
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
                                                                     (Pulse_Typing_Combinators.list_as_vprop
-                                                                    pst.Pulse_Checker_Prover_Common.remaining_ctxt)
-                                                                    preamble.Pulse_Checker_Prover_Common.frame)
-                                                                    (Pulse_Checker_Prover_Common.op_Array_Access
-                                                                    pst.Pulse_Checker_Prover_Common.ss
-                                                                    pst.Pulse_Checker_Prover_Common.solved))
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    (Pulse_Checker_Prover_Common.op_Star
+                                                                    pst.Pulse_Checker_Prover_Base.remaining_ctxt)
+                                                                    preamble.Pulse_Checker_Prover_Base.frame)
+                                                                    (Pulse_Checker_Prover_Base.op_Array_Access
+                                                                    pst.Pulse_Checker_Prover_Base.ss
+                                                                    pst.Pulse_Checker_Prover_Base.solved))
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
                                                                     (Pulse_Typing_Combinators.list_as_vprop
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.remaining_ctxt)
-                                                                    preamble.Pulse_Checker_Prover_Common.frame)
-                                                                    (Pulse_Checker_Prover_Common.op_Array_Access
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.ss
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    pst.Pulse_Checker_Prover_Common.solved
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.remaining_ctxt)
+                                                                    preamble.Pulse_Checker_Prover_Base.frame)
+                                                                    (Pulse_Checker_Prover_Base.op_Array_Access
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.ss
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    pst.Pulse_Checker_Prover_Base.solved
                                                                     (Pulse_Typing_Combinators.list_as_vprop
-                                                                    pst.Pulse_Checker_Prover_Common.unsolved))))
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    (Pulse_Checker_Prover_Common.op_Star
+                                                                    pst.Pulse_Checker_Prover_Base.unsolved))))
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
                                                                     (Pulse_Typing_Combinators.list_as_vprop
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.remaining_ctxt)
-                                                                    preamble.Pulse_Checker_Prover_Common.frame)
-                                                                    (Pulse_Checker_Prover_Common.op_Array_Access
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.ss
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    pst.Pulse_Checker_Prover_Common.solved
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.remaining_ctxt)
+                                                                    preamble.Pulse_Checker_Prover_Base.frame)
+                                                                    (Pulse_Checker_Prover_Base.op_Array_Access
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.ss
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    pst.Pulse_Checker_Prover_Base.solved
                                                                     (Pulse_Typing_Combinators.list_as_vprop
-                                                                    pst.Pulse_Checker_Prover_Common.unsolved))))
+                                                                    pst.Pulse_Checker_Prover_Base.unsolved))))
                                                                     (coerce_eq
                                                                     (Pulse_Checker_Base.k_elab_equiv
-                                                                    preamble_sub.Pulse_Checker_Prover_Common.g0
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.pg
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    preamble_sub.Pulse_Checker_Prover_Common.ctxt
-                                                                    preamble_sub.Pulse_Checker_Prover_Common.frame)
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    preamble_sub.Pulse_Checker_Prover_Common.ctxt
-                                                                    preamble_sub.Pulse_Checker_Prover_Common.frame)
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    (Pulse_Checker_Prover_Common.op_Star
+                                                                    preamble_sub.Pulse_Checker_Prover_Base.g0
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.pg
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    preamble_sub.Pulse_Checker_Prover_Base.ctxt
+                                                                    preamble_sub.Pulse_Checker_Prover_Base.frame)
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    preamble_sub.Pulse_Checker_Prover_Base.ctxt
+                                                                    preamble_sub.Pulse_Checker_Prover_Base.frame)
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
                                                                     (Pulse_Typing_Combinators.list_as_vprop
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.remaining_ctxt)
-                                                                    preamble.Pulse_Checker_Prover_Common.frame)
-                                                                    (Pulse_Checker_Prover_Common.op_Array_Access
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.ss
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    pst.Pulse_Checker_Prover_Common.solved
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.remaining_ctxt)
+                                                                    preamble.Pulse_Checker_Prover_Base.frame)
+                                                                    (Pulse_Checker_Prover_Base.op_Array_Access
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.ss
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    pst.Pulse_Checker_Prover_Base.solved
                                                                     (Pulse_Syntax_Base.tm_exists_sl
                                                                     u b body))
                                                                     (Pulse_Typing_Combinators.list_as_vprop
                                                                     unsolved'))))
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    (Pulse_Checker_Prover_Common.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
                                                                     (Pulse_Typing_Combinators.list_as_vprop
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.remaining_ctxt)
-                                                                    preamble.Pulse_Checker_Prover_Common.frame)
-                                                                    (Pulse_Checker_Prover_Common.op_Array_Access
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.ss
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    pst.Pulse_Checker_Prover_Common.solved
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.remaining_ctxt)
+                                                                    preamble.Pulse_Checker_Prover_Base.frame)
+                                                                    (Pulse_Checker_Prover_Base.op_Array_Access
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.ss
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    pst.Pulse_Checker_Prover_Base.solved
                                                                     (Pulse_Typing_Combinators.list_as_vprop
-                                                                    pst.Pulse_Checker_Prover_Common.unsolved))))
+                                                                    pst.Pulse_Checker_Prover_Base.unsolved))))
                                                                     (Pulse_Checker_Base.k_elab_trans
-                                                                    preamble_sub.Pulse_Checker_Prover_Common.g0
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.pg
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.pg
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    preamble_sub.Pulse_Checker_Prover_Common.ctxt
-                                                                    preamble_sub.Pulse_Checker_Prover_Common.frame)
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    (Pulse_Checker_Prover_Common.op_Star
+                                                                    preamble_sub.Pulse_Checker_Prover_Base.g0
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.pg
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.pg
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    preamble_sub.Pulse_Checker_Prover_Base.ctxt
+                                                                    preamble_sub.Pulse_Checker_Prover_Base.frame)
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
                                                                     (Pulse_Typing_Combinators.list_as_vprop
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.remaining_ctxt)
-                                                                    preamble_sub.Pulse_Checker_Prover_Common.frame)
-                                                                    (Pulse_Checker_Prover_Common.op_Array_Access
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.ss
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.remaining_ctxt)
+                                                                    preamble_sub.Pulse_Checker_Prover_Base.frame)
+                                                                    (Pulse_Checker_Prover_Base.op_Array_Access
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.ss
                                                                     (Pulse_Typing_Combinators.list_as_vprop
                                                                     unsolved')))
                                                                     (Pulse_Syntax_Naming.subst_term
-                                                                    (Pulse_Checker_Prover_Common.op_Array_Access
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.ss
+                                                                    (Pulse_Checker_Prover_Base.op_Array_Access
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.ss
                                                                     body)
                                                                     [
                                                                     Pulse_Syntax_Naming.DT
                                                                     (Prims.int_zero,
                                                                     witness)]))
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    (Pulse_Checker_Prover_Common.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
                                                                     (Pulse_Typing_Combinators.list_as_vprop
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.remaining_ctxt)
-                                                                    preamble.Pulse_Checker_Prover_Common.frame)
-                                                                    (Pulse_Checker_Prover_Common.op_Array_Access
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.ss
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    pst.Pulse_Checker_Prover_Common.solved
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.remaining_ctxt)
+                                                                    preamble.Pulse_Checker_Prover_Base.frame)
+                                                                    (Pulse_Checker_Prover_Base.op_Array_Access
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.ss
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    pst.Pulse_Checker_Prover_Base.solved
                                                                     (Pulse_Syntax_Base.tm_exists_sl
                                                                     u b body))
                                                                     (Pulse_Typing_Combinators.list_as_vprop
@@ -1267,78 +1267,78 @@ let (intro_exists :
                                                                     k_sub5
                                                                     (coerce_eq
                                                                     (Pulse_Checker_Base.k_elab_equiv
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.pg
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.pg
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    (Pulse_Checker_Prover_Common.op_Star
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.pg
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.pg
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
                                                                     (Pulse_Typing_Combinators.list_as_vprop
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.remaining_ctxt)
-                                                                    preamble_sub.Pulse_Checker_Prover_Common.frame)
-                                                                    (Pulse_Checker_Prover_Common.op_Array_Access
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.ss
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.remaining_ctxt)
+                                                                    preamble_sub.Pulse_Checker_Prover_Base.frame)
+                                                                    (Pulse_Checker_Prover_Base.op_Array_Access
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.ss
                                                                     (Pulse_Typing_Combinators.list_as_vprop
                                                                     unsolved')))
                                                                     (Pulse_Syntax_Naming.subst_term
-                                                                    (Pulse_Checker_Prover_Common.op_Array_Access
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.ss
+                                                                    (Pulse_Checker_Prover_Base.op_Array_Access
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.ss
                                                                     body)
                                                                     [
                                                                     Pulse_Syntax_Naming.DT
                                                                     (Prims.int_zero,
                                                                     witness)]))
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    (Pulse_Checker_Prover_Common.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
                                                                     (Pulse_Typing_Combinators.list_as_vprop
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.remaining_ctxt)
-                                                                    preamble_sub.Pulse_Checker_Prover_Common.frame)
-                                                                    (Pulse_Checker_Prover_Common.op_Array_Access
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.ss
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.remaining_ctxt)
+                                                                    preamble_sub.Pulse_Checker_Prover_Base.frame)
+                                                                    (Pulse_Checker_Prover_Base.op_Array_Access
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.ss
                                                                     (Pulse_Typing_Combinators.list_as_vprop
                                                                     unsolved')))
                                                                     (Pulse_Syntax_Naming.subst_term
-                                                                    (Pulse_Checker_Prover_Common.op_Array_Access
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.ss
+                                                                    (Pulse_Checker_Prover_Base.op_Array_Access
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.ss
                                                                     body)
                                                                     [
                                                                     Pulse_Syntax_Naming.DT
                                                                     (Prims.int_zero,
                                                                     witness)]))
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    (Pulse_Checker_Prover_Common.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
                                                                     (Pulse_Typing_Combinators.list_as_vprop
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.remaining_ctxt)
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    preamble.Pulse_Checker_Prover_Common.frame
-                                                                    (Pulse_Checker_Prover_Common.op_Array_Access
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.ss
-                                                                    pst.Pulse_Checker_Prover_Common.solved)))
-                                                                    (Pulse_Checker_Prover_Common.op_Array_Access
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.ss
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.remaining_ctxt)
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    preamble.Pulse_Checker_Prover_Base.frame
+                                                                    (Pulse_Checker_Prover_Base.op_Array_Access
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.ss
+                                                                    pst.Pulse_Checker_Prover_Base.solved)))
+                                                                    (Pulse_Checker_Prover_Base.op_Array_Access
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.ss
                                                                     (Pulse_Typing_Combinators.list_as_vprop
                                                                     unsolved')))
-                                                                    (Pulse_Checker_Prover_Common.op_Array_Access
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.ss
+                                                                    (Pulse_Checker_Prover_Base.op_Array_Access
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.ss
                                                                     (Pulse_Syntax_Base.tm_exists_sl
                                                                     u b body)))
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    (Pulse_Checker_Prover_Common.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
                                                                     (Pulse_Typing_Combinators.list_as_vprop
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.remaining_ctxt)
-                                                                    preamble.Pulse_Checker_Prover_Common.frame)
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    (Pulse_Checker_Prover_Common.op_Array_Access
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.ss
-                                                                    pst.Pulse_Checker_Prover_Common.solved)
-                                                                    (Pulse_Checker_Prover_Common.op_Array_Access
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.ss
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.remaining_ctxt)
+                                                                    preamble.Pulse_Checker_Prover_Base.frame)
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Array_Access
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.ss
+                                                                    pst.Pulse_Checker_Prover_Base.solved)
+                                                                    (Pulse_Checker_Prover_Base.op_Array_Access
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.ss
                                                                     (Pulse_Syntax_Base.tm_exists_sl
                                                                     u b body)))
-                                                                    (Pulse_Checker_Prover_Common.op_Array_Access
-                                                                    pst_sub1.Pulse_Checker_Prover_Common.ss
+                                                                    (Pulse_Checker_Prover_Base.op_Array_Access
+                                                                    pst_sub1.Pulse_Checker_Prover_Base.ss
                                                                     (Pulse_Typing_Combinators.list_as_vprop
                                                                     unsolved'))))
                                                                     (coerce_eq
@@ -1348,9 +1348,9 @@ let (intro_exists :
                                                                     ()) ())
                                                                     () ()))
                                                                     () ());
-                                                                    Pulse_Checker_Prover_Common.goals_inv
+                                                                    Pulse_Checker_Prover_Base.goals_inv
                                                                     = ();
-                                                                    Pulse_Checker_Prover_Common.solved_inv
+                                                                    Pulse_Checker_Prover_Base.solved_inv
                                                                     = ()
                                                                     }))))
                                                                     uu___3)))

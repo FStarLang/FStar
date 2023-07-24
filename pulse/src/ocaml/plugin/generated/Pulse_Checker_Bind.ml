@@ -29,7 +29,7 @@ let (check_bind :
                          (Prims.of_int (106)) (Prims.of_int (2))
                          (Prims.of_int (119)) (Prims.of_int (32)))))
                 (Obj.magic
-                   (Pulse_Checker_Prover_Common.debug_prover g
+                   (Pulse_Checker_Prover_Util.debug_prover g
                       (fun uu___ ->
                          FStar_Tactics_Effect.tac_bind
                            (FStar_Sealed.seal

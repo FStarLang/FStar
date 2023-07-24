@@ -1,19 +1,12 @@
-module Pulse.Checker.Prover.Common
-
-module T = FStar.Tactics
+module Pulse.Checker.Prover.Base
 
 open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Base
 open Pulse.Typing.Combinators
-open Pulse.Typing.Metatheory
-open Pulse.Checker.VPropEquiv
 
-module T = FStar.Tactics
-
-module Metatheory = Pulse.Typing.Metatheory
+module T = FStar.Tactics.V2
 module PS = Pulse.Checker.Prover.Substs
-
 
 let rec list_as_vprop' (vp:vprop) (fvps:list vprop)
   : Tot vprop (decreases fvps) =

@@ -2,89 +2,84 @@ open Prims
 let coerce_eq : 'a 'b . 'a -> unit -> 'b =
   fun uu___1 -> fun uu___ -> (fun x -> fun uu___ -> Obj.magic x) uu___1 uu___
 let (unsolved_equiv_pst :
-  Pulse_Checker_Prover_Common.preamble ->
-    unit Pulse_Checker_Prover_Common.prover_state ->
+  Pulse_Checker_Prover_Base.preamble ->
+    unit Pulse_Checker_Prover_Base.prover_state ->
       Pulse_Syntax_Base.vprop Prims.list ->
-        unit -> unit Pulse_Checker_Prover_Common.prover_state)
+        unit -> unit Pulse_Checker_Prover_Base.prover_state)
   =
   fun preamble ->
     fun pst ->
       fun unsolved' ->
         fun d ->
           {
-            Pulse_Checker_Prover_Common.pg =
-              (pst.Pulse_Checker_Prover_Common.pg);
-            Pulse_Checker_Prover_Common.remaining_ctxt =
-              (pst.Pulse_Checker_Prover_Common.remaining_ctxt);
-            Pulse_Checker_Prover_Common.remaining_ctxt_frame_typing = ();
-            Pulse_Checker_Prover_Common.uvs =
-              (pst.Pulse_Checker_Prover_Common.uvs);
-            Pulse_Checker_Prover_Common.ss =
-              (pst.Pulse_Checker_Prover_Common.ss);
-            Pulse_Checker_Prover_Common.solved =
-              (pst.Pulse_Checker_Prover_Common.solved);
-            Pulse_Checker_Prover_Common.unsolved = unsolved';
-            Pulse_Checker_Prover_Common.k =
-              (pst.Pulse_Checker_Prover_Common.k);
-            Pulse_Checker_Prover_Common.goals_inv = ();
-            Pulse_Checker_Prover_Common.solved_inv = ()
+            Pulse_Checker_Prover_Base.pg = (pst.Pulse_Checker_Prover_Base.pg);
+            Pulse_Checker_Prover_Base.remaining_ctxt =
+              (pst.Pulse_Checker_Prover_Base.remaining_ctxt);
+            Pulse_Checker_Prover_Base.remaining_ctxt_frame_typing = ();
+            Pulse_Checker_Prover_Base.uvs =
+              (pst.Pulse_Checker_Prover_Base.uvs);
+            Pulse_Checker_Prover_Base.ss = (pst.Pulse_Checker_Prover_Base.ss);
+            Pulse_Checker_Prover_Base.solved =
+              (pst.Pulse_Checker_Prover_Base.solved);
+            Pulse_Checker_Prover_Base.unsolved = unsolved';
+            Pulse_Checker_Prover_Base.k = (pst.Pulse_Checker_Prover_Base.k);
+            Pulse_Checker_Prover_Base.goals_inv = ();
+            Pulse_Checker_Prover_Base.solved_inv = ()
           }
 let (remaining_ctxt_equiv_pst :
-  Pulse_Checker_Prover_Common.preamble ->
-    unit Pulse_Checker_Prover_Common.prover_state ->
+  Pulse_Checker_Prover_Base.preamble ->
+    unit Pulse_Checker_Prover_Base.prover_state ->
       Pulse_Syntax_Base.vprop Prims.list ->
-        unit -> unit Pulse_Checker_Prover_Common.prover_state)
+        unit -> unit Pulse_Checker_Prover_Base.prover_state)
   =
   fun preamble ->
     fun pst ->
       fun remaining_ctxt' ->
         fun d ->
           {
-            Pulse_Checker_Prover_Common.pg =
-              (pst.Pulse_Checker_Prover_Common.pg);
-            Pulse_Checker_Prover_Common.remaining_ctxt = remaining_ctxt';
-            Pulse_Checker_Prover_Common.remaining_ctxt_frame_typing = ();
-            Pulse_Checker_Prover_Common.uvs =
-              (pst.Pulse_Checker_Prover_Common.uvs);
-            Pulse_Checker_Prover_Common.ss =
-              (pst.Pulse_Checker_Prover_Common.ss);
-            Pulse_Checker_Prover_Common.solved =
-              (pst.Pulse_Checker_Prover_Common.solved);
-            Pulse_Checker_Prover_Common.unsolved =
-              (pst.Pulse_Checker_Prover_Common.unsolved);
-            Pulse_Checker_Prover_Common.k =
+            Pulse_Checker_Prover_Base.pg = (pst.Pulse_Checker_Prover_Base.pg);
+            Pulse_Checker_Prover_Base.remaining_ctxt = remaining_ctxt';
+            Pulse_Checker_Prover_Base.remaining_ctxt_frame_typing = ();
+            Pulse_Checker_Prover_Base.uvs =
+              (pst.Pulse_Checker_Prover_Base.uvs);
+            Pulse_Checker_Prover_Base.ss = (pst.Pulse_Checker_Prover_Base.ss);
+            Pulse_Checker_Prover_Base.solved =
+              (pst.Pulse_Checker_Prover_Base.solved);
+            Pulse_Checker_Prover_Base.unsolved =
+              (pst.Pulse_Checker_Prover_Base.unsolved);
+            Pulse_Checker_Prover_Base.k =
               (Pulse_Checker_Base.k_elab_equiv
-                 preamble.Pulse_Checker_Prover_Common.g0
-                 (Pulse_Checker_Prover_Common.__proj__Mkprover_state__item__pg
+                 preamble.Pulse_Checker_Prover_Base.g0
+                 (Pulse_Checker_Prover_Base.__proj__Mkprover_state__item__pg
                     preamble pst)
-                 (Pulse_Checker_Prover_Common.op_Star
-                    preamble.Pulse_Checker_Prover_Common.ctxt
-                    preamble.Pulse_Checker_Prover_Common.frame)
-                 (Pulse_Checker_Prover_Common.op_Star
-                    preamble.Pulse_Checker_Prover_Common.ctxt
-                    preamble.Pulse_Checker_Prover_Common.frame)
-                 (Pulse_Checker_Prover_Common.op_Star
-                    (Pulse_Checker_Prover_Common.op_Star
+                 (Pulse_Checker_Prover_Base.op_Star
+                    preamble.Pulse_Checker_Prover_Base.ctxt
+                    preamble.Pulse_Checker_Prover_Base.frame)
+                 (Pulse_Checker_Prover_Base.op_Star
+                    preamble.Pulse_Checker_Prover_Base.ctxt
+                    preamble.Pulse_Checker_Prover_Base.frame)
+                 (Pulse_Checker_Prover_Base.op_Star
+                    (Pulse_Checker_Prover_Base.op_Star
                        (Pulse_Typing_Combinators.list_as_vprop
-                          (Pulse_Checker_Prover_Common.__proj__Mkprover_state__item__remaining_ctxt
+                          (Pulse_Checker_Prover_Base.__proj__Mkprover_state__item__remaining_ctxt
                              preamble pst))
-                       preamble.Pulse_Checker_Prover_Common.frame)
-                    (Pulse_Checker_Prover_Common.op_Array_Access
-                       (Pulse_Checker_Prover_Common.__proj__Mkprover_state__item__ss
+                       preamble.Pulse_Checker_Prover_Base.frame)
+                    (Pulse_Checker_Prover_Base.op_Array_Access
+                       (Pulse_Checker_Prover_Base.__proj__Mkprover_state__item__ss
                           preamble pst)
-                       (Pulse_Checker_Prover_Common.__proj__Mkprover_state__item__solved
+                       (Pulse_Checker_Prover_Base.__proj__Mkprover_state__item__solved
                           preamble pst)))
-                 (Pulse_Checker_Prover_Common.op_Star
-                    (Pulse_Checker_Prover_Common.op_Star
+                 (Pulse_Checker_Prover_Base.op_Star
+                    (Pulse_Checker_Prover_Base.op_Star
                        (Pulse_Typing_Combinators.list_as_vprop
                           remaining_ctxt')
-                       preamble.Pulse_Checker_Prover_Common.frame)
-                    (Pulse_Checker_Prover_Common.op_Array_Access
-                       pst.Pulse_Checker_Prover_Common.ss
-                       pst.Pulse_Checker_Prover_Common.solved))
-                 pst.Pulse_Checker_Prover_Common.k () ());
-            Pulse_Checker_Prover_Common.goals_inv = ();
-            Pulse_Checker_Prover_Common.solved_inv = ()
+                       preamble.Pulse_Checker_Prover_Base.frame)
+                    (Pulse_Checker_Prover_Base.op_Array_Access
+                       pst.Pulse_Checker_Prover_Base.ss
+                       pst.Pulse_Checker_Prover_Base.solved))
+                 pst.Pulse_Checker_Prover_Base.k () ());
+            Pulse_Checker_Prover_Base.goals_inv = ();
+            Pulse_Checker_Prover_Base.solved_inv = ()
           }
 let rec (collect_exists :
   Pulse_Typing_Env.env ->
@@ -125,13 +120,13 @@ let rec (collect_pures :
                 | uu___2 ->
                     FStar_Pervasives.Mkdtuple3 (pures, (hd :: rest), ())))
 let rec (match_q :
-  Pulse_Checker_Prover_Common.preamble ->
-    unit Pulse_Checker_Prover_Common.prover_state ->
+  Pulse_Checker_Prover_Base.preamble ->
+    unit Pulse_Checker_Prover_Base.prover_state ->
       Pulse_Syntax_Base.vprop ->
         Pulse_Syntax_Base.vprop Prims.list ->
           unit ->
             Prims.nat ->
-              (unit Pulse_Checker_Prover_Common.prover_state
+              (unit Pulse_Checker_Prover_Base.prover_state
                  FStar_Pervasives_Native.option,
                 unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -149,7 +144,7 @@ let rec (match_q :
                          fun i ->
                            if
                              (FStar_List_Tot_Base.length
-                                pst.Pulse_Checker_Prover_Common.remaining_ctxt)
+                                pst.Pulse_Checker_Prover_Base.remaining_ctxt)
                                = Prims.int_zero
                            then
                              Obj.magic
@@ -163,7 +158,7 @@ let rec (match_q :
                                   (if
                                      i =
                                        (FStar_List_Tot_Base.length
-                                          pst.Pulse_Checker_Prover_Common.remaining_ctxt)
+                                          pst.Pulse_Checker_Prover_Base.remaining_ctxt)
                                    then
                                      Obj.repr
                                        (FStar_Tactics_Effect.lift_div_tac
@@ -191,7 +186,7 @@ let rec (match_q :
                                           (FStar_Tactics_Effect.lift_div_tac
                                              (fun uu___3 ->
                                                 FStar_List_Tot_Base.hd
-                                                  pst.Pulse_Checker_Prover_Common.remaining_ctxt))
+                                                  pst.Pulse_Checker_Prover_Base.remaining_ctxt))
                                           (fun uu___3 ->
                                              (fun p ->
                                                 Obj.magic
@@ -216,7 +211,7 @@ let rec (match_q :
                                                         (Pulse_Checker_Prover_Match.match_step
                                                            preamble pst p
                                                            (FStar_List_Tot_Base.tl
-                                                              pst.Pulse_Checker_Prover_Common.remaining_ctxt)
+                                                              pst.Pulse_Checker_Prover_Base.remaining_ctxt)
                                                            q unsolved' ()))
                                                      (fun uu___3 ->
                                                         (fun pst_opt ->
@@ -261,10 +256,10 @@ let rec (match_q :
                                                                     pst
                                                                     (FStar_List_Tot_Base.op_At
                                                                     (FStar_List_Tot_Base.tl
-                                                                    pst.Pulse_Checker_Prover_Common.remaining_ctxt)
+                                                                    pst.Pulse_Checker_Prover_Base.remaining_ctxt)
                                                                     [
                                                                     FStar_List_Tot_Base.hd
-                                                                    pst.Pulse_Checker_Prover_Common.remaining_ctxt])
+                                                                    pst.Pulse_Checker_Prover_Base.remaining_ctxt])
                                                                     ()))
                                                                     (fun
                                                                     uu___3 ->
@@ -282,16 +277,16 @@ let rec (match_q :
                                                           uu___3))) uu___3)))))
                 uu___5 uu___4 uu___3 uu___2 uu___1 uu___
 let rec (prove_pures :
-  Pulse_Checker_Prover_Common.preamble ->
-    unit Pulse_Checker_Prover_Common.prover_state ->
-      (unit Pulse_Checker_Prover_Common.prover_state, unit)
+  Pulse_Checker_Prover_Base.preamble ->
+    unit Pulse_Checker_Prover_Base.prover_state ->
+      (unit Pulse_Checker_Prover_Base.prover_state, unit)
         FStar_Tactics_Effect.tac_repr)
   =
   fun uu___1 ->
     fun uu___ ->
       (fun preamble ->
          fun pst ->
-           match pst.Pulse_Checker_Prover_Common.unsolved with
+           match pst.Pulse_Checker_Prover_Base.unsolved with
            | [] ->
                Obj.magic
                  (Obj.repr
@@ -368,7 +363,7 @@ let rec (prove_pures :
                                          (fun uu___1 ->
                                             Obj.magic
                                               (Pulse_Typing_Env.fail
-                                                 pst.Pulse_Checker_Prover_Common.pg
+                                                 pst.Pulse_Checker_Prover_Base.pg
                                                  FStar_Pervasives_Native.None
                                                  uu___1)) uu___1))
                              | FStar_Pervasives_Native.Some pst1 ->
@@ -397,13 +392,13 @@ let rec (prove_pures :
            | uu___ ->
                Obj.magic
                  (Obj.repr
-                    (Pulse_Typing_Env.fail pst.Pulse_Checker_Prover_Common.pg
+                    (Pulse_Typing_Env.fail pst.Pulse_Checker_Prover_Base.pg
                        FStar_Pervasives_Native.None "prove_pures: not a pure")))
         uu___1 uu___
 let rec (prover :
-  Pulse_Checker_Prover_Common.preamble ->
-    unit Pulse_Checker_Prover_Common.prover_state ->
-      (unit Pulse_Checker_Prover_Common.prover_state, unit)
+  Pulse_Checker_Prover_Base.preamble ->
+    unit Pulse_Checker_Prover_Base.prover_state ->
+      (unit Pulse_Checker_Prover_Base.prover_state, unit)
         FStar_Tactics_Effect.tac_repr)
   =
   fun preamble ->
@@ -420,8 +415,8 @@ let rec (prover :
                  (Prims.of_int (121)) (Prims.of_int (2)) (Prims.of_int (160))
                  (Prims.of_int (32)))))
         (Obj.magic
-           (Pulse_Checker_Prover_Common.debug_prover
-              pst0.Pulse_Checker_Prover_Common.pg
+           (Pulse_Checker_Prover_Util.debug_prover
+              pst0.Pulse_Checker_Prover_Base.pg
               (fun uu___ ->
                  FStar_Tactics_Effect.tac_bind
                    (FStar_Sealed.seal
@@ -437,7 +432,7 @@ let rec (prover :
                    (Obj.magic
                       (Pulse_Syntax_Printer.term_to_string
                          (Pulse_Typing_Combinators.list_as_vprop
-                            pst0.Pulse_Checker_Prover_Common.unsolved)))
+                            pst0.Pulse_Checker_Prover_Base.unsolved)))
                    (fun uu___1 ->
                       (fun uu___1 ->
                          Obj.magic
@@ -479,7 +474,7 @@ let rec (prover :
                                     (Obj.magic
                                        (Pulse_Syntax_Printer.term_to_string
                                           (Pulse_Typing_Combinators.list_as_vprop
-                                             pst0.Pulse_Checker_Prover_Common.remaining_ctxt)))
+                                             pst0.Pulse_Checker_Prover_Base.remaining_ctxt)))
                                     (fun uu___2 ->
                                        FStar_Tactics_Effect.lift_div_tac
                                          (fun uu___3 ->
@@ -495,7 +490,7 @@ let rec (prover :
                                    (fun uu___3 -> uu___2 uu___1)))) uu___1))))
         (fun uu___ ->
            (fun uu___ ->
-              match pst0.Pulse_Checker_Prover_Common.unsolved with
+              match pst0.Pulse_Checker_Prover_Base.unsolved with
               | [] ->
                   Obj.magic
                     (Obj.repr
@@ -541,8 +536,8 @@ let rec (prover :
                                               (Prims.of_int (160))
                                               (Prims.of_int (32)))))
                                      (Obj.magic
-                                        (Pulse_Checker_Prover_Common.debug_prover
-                                           pst.Pulse_Checker_Prover_Common.pg
+                                        (Pulse_Checker_Prover_Util.debug_prover
+                                           pst.Pulse_Checker_Prover_Base.pg
                                            (fun uu___2 ->
                                               FStar_Tactics_Effect.tac_bind
                                                 (FStar_Sealed.seal
@@ -564,7 +559,7 @@ let rec (prover :
                                                 (Obj.magic
                                                    (Pulse_Syntax_Printer.term_to_string
                                                       (Pulse_Typing_Combinators.list_as_vprop
-                                                         pst.Pulse_Checker_Prover_Common.remaining_ctxt)))
+                                                         pst.Pulse_Checker_Prover_Base.remaining_ctxt)))
                                                 (fun uu___3 ->
                                                    FStar_Tactics_Effect.lift_div_tac
                                                      (fun uu___4 ->
@@ -616,8 +611,8 @@ let rec (prover :
                                                                     (Prims.of_int (160))
                                                                     (Prims.of_int (32)))))
                                                            (Obj.magic
-                                                              (Pulse_Checker_Prover_Common.debug_prover
-                                                                 pst1.Pulse_Checker_Prover_Common.pg
+                                                              (Pulse_Checker_Prover_Util.debug_prover
+                                                                 pst1.Pulse_Checker_Prover_Base.pg
                                                                  (fun uu___3
                                                                     ->
                                                                     FStar_Tactics_Effect.tac_bind
@@ -640,7 +635,7 @@ let rec (prover :
                                                                     (Obj.magic
                                                                     (Pulse_Syntax_Printer.term_to_string
                                                                     (Pulse_Typing_Combinators.list_as_vprop
-                                                                    pst1.Pulse_Checker_Prover_Common.remaining_ctxt)))
+                                                                    pst1.Pulse_Checker_Prover_Base.remaining_ctxt)))
                                                                     (fun
                                                                     uu___4 ->
                                                                     FStar_Tactics_Effect.lift_div_tac
@@ -676,9 +671,9 @@ let rec (prover :
                                                                     uu___4 ->
                                                                     collect_exists
                                                                     (Pulse_Typing_Env.push_env
-                                                                    pst1.Pulse_Checker_Prover_Common.pg
-                                                                    pst1.Pulse_Checker_Prover_Common.uvs)
-                                                                    pst1.Pulse_Checker_Prover_Common.unsolved))
+                                                                    pst1.Pulse_Checker_Prover_Base.pg
+                                                                    pst1.Pulse_Checker_Prover_Base.uvs)
+                                                                    pst1.Pulse_Checker_Prover_Base.unsolved))
                                                                     (fun
                                                                     uu___4 ->
                                                                     (fun
@@ -709,8 +704,8 @@ let rec (prover :
                                                                     (Prims.of_int (160))
                                                                     (Prims.of_int (32)))))
                                                                     (Obj.magic
-                                                                    (Pulse_Checker_Prover_Common.debug_prover
-                                                                    pst1.Pulse_Checker_Prover_Common.pg
+                                                                    (Pulse_Checker_Prover_Util.debug_prover
+                                                                    pst1.Pulse_Checker_Prover_Base.pg
                                                                     (fun
                                                                     uu___5 ->
                                                                     FStar_Tactics_Effect.tac_bind
@@ -854,8 +849,8 @@ let rec (prover :
                                                                     (Prims.of_int (160))
                                                                     (Prims.of_int (32)))))
                                                                     (Obj.magic
-                                                                    (Pulse_Checker_Prover_Common.debug_prover
-                                                                    pst2.Pulse_Checker_Prover_Common.pg
+                                                                    (Pulse_Checker_Prover_Util.debug_prover
+                                                                    pst2.Pulse_Checker_Prover_Base.pg
                                                                     (fun
                                                                     uu___6 ->
                                                                     FStar_Tactics_Effect.tac_bind
@@ -878,7 +873,7 @@ let rec (prover :
                                                                     (Obj.magic
                                                                     (Pulse_Syntax_Printer.term_to_string
                                                                     (Pulse_Typing_Combinators.list_as_vprop
-                                                                    pst2.Pulse_Checker_Prover_Common.unsolved)))
+                                                                    pst2.Pulse_Checker_Prover_Base.unsolved)))
                                                                     (fun
                                                                     uu___7 ->
                                                                     FStar_Tactics_Effect.lift_div_tac
@@ -894,7 +889,7 @@ let rec (prover :
                                                                     (fun
                                                                     uu___6 ->
                                                                     match 
-                                                                    pst2.Pulse_Checker_Prover_Common.unsolved
+                                                                    pst2.Pulse_Checker_Prover_Base.unsolved
                                                                     with
                                                                     | 
                                                                     {
@@ -938,9 +933,9 @@ let rec (prover :
                                                                     uu___8 ->
                                                                     collect_pures
                                                                     (Pulse_Typing_Env.push_env
-                                                                    pst2.Pulse_Checker_Prover_Common.pg
-                                                                    pst2.Pulse_Checker_Prover_Common.uvs)
-                                                                    pst2.Pulse_Checker_Prover_Common.unsolved))
+                                                                    pst2.Pulse_Checker_Prover_Base.pg
+                                                                    pst2.Pulse_Checker_Prover_Base.uvs)
+                                                                    pst2.Pulse_Checker_Prover_Base.unsolved))
                                                                     (fun
                                                                     uu___8 ->
                                                                     (fun
@@ -984,7 +979,7 @@ let rec (prover :
                                                                     (fun pst3
                                                                     ->
                                                                     match 
-                                                                    pst3.Pulse_Checker_Prover_Common.unsolved
+                                                                    pst3.Pulse_Checker_Prover_Base.unsolved
                                                                     with
                                                                     | 
                                                                     {
@@ -1037,7 +1032,7 @@ let rec (prover :
                                                                     ->
                                                                     Obj.magic
                                                                     (Pulse_Typing_Env.fail
-                                                                    pst3.Pulse_Checker_Prover_Common.pg
+                                                                    pst3.Pulse_Checker_Prover_Base.pg
                                                                     FStar_Pervasives_Native.None
                                                                     "cannot match a vprop")
                                                                     | 
@@ -1107,7 +1102,7 @@ let (prove :
                          (Prims.of_int (186)) (Prims.of_int (56))
                          (Prims.of_int (249)) (Prims.of_int (97)))))
                 (Obj.magic
-                   (Pulse_Checker_Prover_Common.debug_prover g
+                   (Pulse_Checker_Prover_Util.debug_prover g
                       (fun uu___ ->
                          FStar_Tactics_Effect.tac_bind
                            (FStar_Sealed.seal
@@ -1224,7 +1219,7 @@ let (prove :
                                                          l'),
                                                       (Pulse_Checker_Base.k_elab_equiv
                                                          g g ctxt ctxt ctxt
-                                                         (Pulse_Checker_Prover_Common.op_Star
+                                                         (Pulse_Checker_Prover_Base.op_Star
                                                             (Pulse_Checker_Prover_Substs.nt_subst_term
                                                                goals [])
                                                             (Pulse_Typing_Combinators.list_as_vprop
@@ -1276,16 +1271,16 @@ let (prove :
                                                       (FStar_Tactics_Effect.lift_div_tac
                                                          (fun uu___2 ->
                                                             {
-                                                              Pulse_Checker_Prover_Common.g0
+                                                              Pulse_Checker_Prover_Base.g0
                                                                 = g;
-                                                              Pulse_Checker_Prover_Common.ctxt
+                                                              Pulse_Checker_Prover_Base.ctxt
                                                                 = ctxt;
-                                                              Pulse_Checker_Prover_Common.frame
+                                                              Pulse_Checker_Prover_Base.frame
                                                                 =
                                                                 Pulse_Syntax_Base.tm_emp;
-                                                              Pulse_Checker_Prover_Common.ctxt_frame_typing
+                                                              Pulse_Checker_Prover_Base.ctxt_frame_typing
                                                                 = ();
-                                                              Pulse_Checker_Prover_Common.goals
+                                                              Pulse_Checker_Prover_Base.goals
                                                                 = goals
                                                             }))
                                                       (fun uu___2 ->
@@ -1315,49 +1310,49 @@ let (prove :
                                                                     fun
                                                                     uu___2 ->
                                                                     {
-                                                                    Pulse_Checker_Prover_Common.pg
+                                                                    Pulse_Checker_Prover_Base.pg
                                                                     = g;
-                                                                    Pulse_Checker_Prover_Common.remaining_ctxt
+                                                                    Pulse_Checker_Prover_Base.remaining_ctxt
                                                                     =
                                                                     (Pulse_Typing_Combinators.vprop_as_list
                                                                     ctxt);
-                                                                    Pulse_Checker_Prover_Common.remaining_ctxt_frame_typing
+                                                                    Pulse_Checker_Prover_Base.remaining_ctxt_frame_typing
                                                                     = ();
-                                                                    Pulse_Checker_Prover_Common.uvs
+                                                                    Pulse_Checker_Prover_Base.uvs
                                                                     = uvs;
-                                                                    Pulse_Checker_Prover_Common.ss
+                                                                    Pulse_Checker_Prover_Base.ss
                                                                     =
                                                                     Pulse_Checker_Prover_Substs.empty;
-                                                                    Pulse_Checker_Prover_Common.solved
+                                                                    Pulse_Checker_Prover_Base.solved
                                                                     =
                                                                     Pulse_Syntax_Base.tm_emp;
-                                                                    Pulse_Checker_Prover_Common.unsolved
+                                                                    Pulse_Checker_Prover_Base.unsolved
                                                                     =
                                                                     (Pulse_Typing_Combinators.vprop_as_list
                                                                     goals);
-                                                                    Pulse_Checker_Prover_Common.k
+                                                                    Pulse_Checker_Prover_Base.k
                                                                     =
                                                                     (Pulse_Checker_Base.k_elab_equiv
                                                                     g g ctxt
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    preamble.Pulse_Checker_Prover_Common.ctxt
-                                                                    preamble.Pulse_Checker_Prover_Common.frame)
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    preamble.Pulse_Checker_Prover_Base.ctxt
+                                                                    preamble.Pulse_Checker_Prover_Base.frame)
                                                                     ctxt
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    (Pulse_Checker_Prover_Common.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
                                                                     (Pulse_Typing_Combinators.list_as_vprop
                                                                     (Pulse_Typing_Combinators.vprop_as_list
                                                                     ctxt))
-                                                                    preamble.Pulse_Checker_Prover_Common.frame)
-                                                                    (Pulse_Checker_Prover_Common.op_Array_Access
+                                                                    preamble.Pulse_Checker_Prover_Base.frame)
+                                                                    (Pulse_Checker_Prover_Base.op_Array_Access
                                                                     Pulse_Checker_Prover_Substs.empty
                                                                     Pulse_Syntax_Base.tm_emp))
                                                                     (Pulse_Checker_Base.k_elab_unit
                                                                     g ctxt)
                                                                     () ());
-                                                                    Pulse_Checker_Prover_Common.goals_inv
+                                                                    Pulse_Checker_Prover_Base.goals_inv
                                                                     = ();
-                                                                    Pulse_Checker_Prover_Common.solved_inv
+                                                                    Pulse_Checker_Prover_Base.solved_inv
                                                                     = ()
                                                                     }))
                                                                  (fun uu___2
@@ -1410,9 +1405,9 @@ let (prove :
                                                                     (Prims.of_int (97)))))
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Prover_Substs.ss_to_nt_substs
-                                                                    pst.Pulse_Checker_Prover_Common.pg
-                                                                    pst.Pulse_Checker_Prover_Common.uvs
-                                                                    pst.Pulse_Checker_Prover_Common.ss))
+                                                                    pst.Pulse_Checker_Prover_Base.pg
+                                                                    pst.Pulse_Checker_Prover_Base.uvs
+                                                                    pst.Pulse_Checker_Prover_Base.ss))
                                                                     (fun
                                                                     uu___2 ->
                                                                     (fun ropt
@@ -1442,7 +1437,7 @@ let (prove :
                                                                     Obj.magic
                                                                     (Obj.repr
                                                                     (Pulse_Typing_Env.fail
-                                                                    pst.Pulse_Checker_Prover_Common.pg
+                                                                    pst.Pulse_Checker_Prover_Base.pg
                                                                     FStar_Pervasives_Native.None
                                                                     "prove: ss not well-typed"))
                                                                     else
@@ -1463,38 +1458,38 @@ let (prove :
                                                                     FStar_Pervasives_Native.Some
                                                                     nts ->
                                                                     FStar_Pervasives.Mkdtuple4
-                                                                    ((pst.Pulse_Checker_Prover_Common.pg),
+                                                                    ((pst.Pulse_Checker_Prover_Base.pg),
                                                                     (Pulse_Checker_Prover_Substs.well_typed_nt_substs_prefix
-                                                                    pst.Pulse_Checker_Prover_Common.pg
-                                                                    pst.Pulse_Checker_Prover_Common.uvs
+                                                                    pst.Pulse_Checker_Prover_Base.pg
+                                                                    pst.Pulse_Checker_Prover_Base.uvs
                                                                     nts uvs),
                                                                     (Pulse_Typing_Combinators.list_as_vprop
-                                                                    pst.Pulse_Checker_Prover_Common.remaining_ctxt),
+                                                                    pst.Pulse_Checker_Prover_Base.remaining_ctxt),
                                                                     (Pulse_Checker_Base.k_elab_equiv
                                                                     g
-                                                                    pst.Pulse_Checker_Prover_Common.pg
-                                                                    (Pulse_Checker_Prover_Common.op_Star
+                                                                    pst.Pulse_Checker_Prover_Base.pg
+                                                                    (Pulse_Checker_Prover_Base.op_Star
                                                                     ctxt
                                                                     Pulse_Syntax_Base.tm_emp)
                                                                     ctxt
-                                                                    (Pulse_Checker_Prover_Common.op_Star
-                                                                    (Pulse_Checker_Prover_Common.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
                                                                     (Pulse_Typing_Combinators.list_as_vprop
-                                                                    pst.Pulse_Checker_Prover_Common.remaining_ctxt)
+                                                                    pst.Pulse_Checker_Prover_Base.remaining_ctxt)
                                                                     Pulse_Syntax_Base.tm_emp)
                                                                     (Pulse_Checker_Prover_Substs.nt_subst_term
-                                                                    pst.Pulse_Checker_Prover_Common.solved
+                                                                    pst.Pulse_Checker_Prover_Base.solved
                                                                     nts))
-                                                                    (Pulse_Checker_Prover_Common.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
                                                                     (Pulse_Checker_Prover_Substs.nt_subst_term
                                                                     goals
                                                                     (Pulse_Checker_Prover_Substs.well_typed_nt_substs_prefix
-                                                                    pst.Pulse_Checker_Prover_Common.pg
-                                                                    pst.Pulse_Checker_Prover_Common.uvs
+                                                                    pst.Pulse_Checker_Prover_Base.pg
+                                                                    pst.Pulse_Checker_Prover_Base.uvs
                                                                     nts uvs))
                                                                     (Pulse_Typing_Combinators.list_as_vprop
-                                                                    pst.Pulse_Checker_Prover_Common.remaining_ctxt))
-                                                                    pst.Pulse_Checker_Prover_Common.k
+                                                                    pst.Pulse_Checker_Prover_Base.remaining_ctxt))
+                                                                    pst.Pulse_Checker_Prover_Base.k
                                                                     () ()))))))
                                                                     uu___2)))
                                                                     uu___2)))
@@ -1557,7 +1552,7 @@ let (try_frame_pre_uvs :
                                           (Prims.of_int (27)))))
                                  (FStar_Tactics_Effect.lift_div_tac
                                     (fun uu___1 ->
-                                       Pulse_Checker_Prover_Common.st_typing_weakening
+                                       Pulse_Typing_Metatheory.st_typing_weakening
                                          g uvs t c d g1))
                                  (fun uu___1 ->
                                     (fun d1 ->
@@ -1769,7 +1764,7 @@ let (try_frame_pre_uvs :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___1 ->
-                                                                    Pulse_Checker_Prover_Common.op_Star
+                                                                    Pulse_Checker_Prover_Base.op_Star
                                                                     (Pulse_Syntax_Naming.open_term_nv
                                                                     (Pulse_Syntax_Base.comp_post
                                                                     c1)
@@ -1801,7 +1796,7 @@ let (try_frame_pre_uvs :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___1 ->
-                                                                    Pulse_Checker_Prover_Common.st_typing_weakening_standard
+                                                                    Pulse_Checker_Prover_Util.st_typing_weakening_standard
                                                                     g1 t1 c1
                                                                     d2 g1))
                                                                     (fun
@@ -1843,7 +1838,7 @@ let (try_frame_pre_uvs :
                                                                     (Pulse_Checker_Base.k_elab_trans
                                                                     g g1 g2
                                                                     ctxt
-                                                                    (Pulse_Checker_Prover_Common.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
                                                                     (Pulse_Syntax_Base.comp_pre
                                                                     c1)
                                                                     remaining_ctxt)
@@ -1851,7 +1846,7 @@ let (try_frame_pre_uvs :
                                                                     k_frame1
                                                                     (Pulse_Checker_Base.k_elab_equiv
                                                                     g1 g2
-                                                                    (Pulse_Checker_Prover_Common.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
                                                                     remaining_ctxt
                                                                     (Pulse_Syntax_Base.comp_pre
                                                                     c1))
@@ -2118,7 +2113,7 @@ let (repack :
                                                                     g2 g3
                                                                     ctxt'
                                                                     ctxt'
-                                                                    (Pulse_Checker_Prover_Common.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
                                                                     post_hint_opened
                                                                     remaining_ctxt)
                                                                     post_hint_opened

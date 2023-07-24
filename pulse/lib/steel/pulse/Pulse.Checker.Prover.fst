@@ -8,7 +8,7 @@ open Pulse.Typing.Combinators
 open Pulse.Checker.Base
 open Pulse.Typing.Metatheory
 open Pulse.Checker.VPropEquiv
-open Pulse.Checker.Prover.Common
+open Pulse.Checker.Prover.Base
 
 module ElimExists = Pulse.Checker.Prover.ElimExists
 module ElimPure =  Pulse.Checker.Prover.ElimPure

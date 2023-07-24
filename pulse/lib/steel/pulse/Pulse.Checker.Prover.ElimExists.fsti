@@ -4,7 +4,7 @@ open Pulse.Syntax
 open Pulse.Typing
 
 open Pulse.Checker.Base
-open Pulse.Checker.Prover.Common
+open Pulse.Checker.Prover.Base
 
 module T = FStar.Tactics.V2
 

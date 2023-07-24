@@ -1610,7 +1610,7 @@ let (check :
                                                                     (Pulse_Checker_Base.k_elab_trans
                                                                     g g1 g2
                                                                     pre
-                                                                    (Pulse_Checker_Prover_Common.op_Star
+                                                                    (Pulse_Checker_Prover_Base.op_Star
                                                                     (Pulse_Checker_Prover_Substs.nt_subst_term
                                                                     v2 nts)
                                                                     pre')

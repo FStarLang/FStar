@@ -8,7 +8,7 @@ module T = FStar.Tactics.V2
 
 open Pulse.Checker.VPropEquiv
 
-open Pulse.Checker.Prover.Common
+open Pulse.Checker.Prover.Base
 
 let should_elim_exists (v:vprop) : T.Tac bool =
   match v.t with

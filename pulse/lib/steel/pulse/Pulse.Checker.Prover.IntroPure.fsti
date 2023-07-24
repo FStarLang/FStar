@@ -4,7 +4,7 @@ module T = FStar.Tactics
 
 open Pulse.Syntax
 open Pulse.Typing
-open Pulse.Checker.Prover.Common
+open Pulse.Checker.Prover.Base
 
 val intro_pure (#preamble:_) (pst:prover_state preamble)
   (t:term)

@@ -5,9 +5,12 @@ module T = FStar.Tactics.V2
 open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Base
-open Pulse.Checker.Prover.Common
+open Pulse.Checker.Prover.Base
 
 module PS = Pulse.Checker.Prover.Substs
+
+include Pulse.Checker.Prover.Base
+include Pulse.Checker.Prover.Util
 
 val prove
   (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_vprop)
