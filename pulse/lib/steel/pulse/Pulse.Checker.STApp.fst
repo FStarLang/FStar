@@ -1,19 +1,17 @@
 module Pulse.Checker.STApp
 
-module T = FStar.Tactics.V2
-module RT = FStar.Reflection.Typing
-
 open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Pure
 open Pulse.Checker.Base
-open Pulse.Checker.Prover
+
+module T = FStar.Tactics.V2
+module RT = FStar.Reflection.Typing
+module FV = Pulse.Typing.FV
 module RU = Pulse.RuntimeUtils
 module P = Pulse.Syntax.Printer
-
 module Prover = Pulse.Checker.Prover
 
-module FV = Pulse.Typing.FV
 let debug_log (g:env) (f:unit -> T.Tac unit) : T.Tac unit = if RU.debug_at_level (fstar_env g) "st_app" then f () else ()
 
 let canon_comp (c:comp_st) : comp_st = 
@@ -81,12 +79,12 @@ let instantaite_implicits (g:env) (t:st_term { Tm_STApp? t.term })
     | _ -> fail g None "instantiate_implicits in stapp, unexpected term"
 
 #push-options "--z3rlimit_factor 4 --fuel 1 --ifuel 1"
-let check_stapp
+let check
   (g0:env)
-  (t:st_term { Tm_STApp? t.term })
   (ctxt:vprop)
   (ctxt_typing:tot_typing g0 ctxt tm_vprop)
   (post_hint:post_hint_opt g0)
+  (t:st_term { Tm_STApp? t.term })
   : T.Tac (checker_result_t g0 ctxt post_hint) =
 
   let g0 = push_context "st_app" t.range g0 in
@@ -126,7 +124,7 @@ let check_stapp
         let c = (canon_comp (open_comp_with comp_typ arg)) in
         let d : st_typing g t c = d in
 
-        repack (try_frame_pre_uvs ctxt_typing uvs d) post_hint t.range
+        Prover.repack (Prover.try_frame_pre_uvs ctxt_typing uvs d) post_hint t.range
       | _ ->
         fail g (Some t.range) "Expected an effectful application; got a pure term (could it be partially applied by mistake?)"
     else fail g (Some t.range) (Printf.sprintf "Unexpected qualifier in head type %s of stateful application: head = %s, arg = %s"

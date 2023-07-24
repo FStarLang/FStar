@@ -1,19 +1,23 @@
 module Pulse.Checker.AssertWithBinders
 
-module T = FStar.Tactics.V2
-module R = FStar.Reflection.V2
+
 open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Base
 open Pulse.Elaborate.Pure
 open Pulse.Typing.Env
+
 module L = FStar.List.Tot
+module T = FStar.Tactics.V2
+module R = FStar.Reflection.V2
 module PC = Pulse.Checker.Pure
 module P = Pulse.Syntax.Printer
-module N = Pulse.Syntax.Naming 
+module N = Pulse.Syntax.Naming
+module PS = Pulse.Checker.Prover.Substs
 module Prover = Pulse.Checker.Prover
-module RT = FStar.Reflection.Typing
+
 module RU = Pulse.RuntimeUtils
+
 let is_host_term (t:R.term) = not (R.Tv_Unknown? (R.inspect_ln t))
 
 let debug_log = Pulse.Typing.debug_log "with_binders"
@@ -120,13 +124,12 @@ let check_unfoldable g (v:term) : T.Tac unit =
                         but %s is a primitive term that cannot be folded or unfolded"
                         (P.term_to_string v))
 
-module PS = Pulse.Checker.Prover.Substs
 let check
   (g:env)
-  (st:st_term { Tm_ProofHintWithBinders? st.term })
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
+  (st:st_term { Tm_ProofHintWithBinders? st.term })
   (check:check_t)
 
   : T.Tac (checker_result_t g pre post_hint) =

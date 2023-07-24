@@ -1,15 +1,14 @@
 module Pulse.Checker.If
 
-module T = FStar.Tactics.V2
-module RT = FStar.Reflection.Typing
-
 open Pulse.Syntax
 open Pulse.Typing
+open Pulse.Typing.Combinators
 open Pulse.Checker.Pure
 open Pulse.Checker.Base
+open Pulse.Checker.Prover
 
+module T = FStar.Tactics.V2
 module Metatheory = Pulse.Typing.Metatheory
-module FV = Pulse.Typing.FV
 
 #push-options "--z3rlimit_factor 10 --fuel 0 --ifuel 1"
 let rec combine_if_branches
@@ -72,17 +71,14 @@ let rec combine_if_branches
   else fail g None "Cannot combine then and else branches (different st_comp)"
 #pop-options
 
-open Pulse.Typing.Combinators
-open Pulse.Checker.Prover.Base
-
 #push-options "--z3rlimit_factor 4 --fuel 0 --ifuel 1"
-let check_if
+let check
   (g:env)
-  (b:term)
-  (e1 e2:st_term)
   (pre:term)
   (pre_typing: tot_typing g pre tm_vprop)
   (post_hint:post_hint_for_env g)
+  (b:term)
+  (e1 e2:st_term)
   (check:check_t)
   : T.Tac (checker_result_t g pre (Some post_hint)) =
   
@@ -137,20 +133,3 @@ let check_if
     (| _, c, T_If g b e1 e2 c _ hyp (E b_typing) e1_typing e2_typing (E c_typing) |) in
 
   checker_result_for_st_typing d
-
-  // let x = fresh g in
-
-  // let g' = push_binding g x ppname_default (comp_res c) in
-  // let pre' = open_term_nv (comp_post c) (ppname_default, x) in
-  // let k
-  //   : continuation_elaborator
-  //       g (tm_emp * comp_pre c)
-  //       g' (pre' * tm_emp) =
-  //   continuation_elaborator_with_bind tm_emp d (magic ()) x in
-  // let k
-  //   : continuation_elaborator g (comp_pre c) g' pre' =
-  //   k_elab_equiv k (magic ()) (magic ()) in
-
-  // assert (g' `env_extends` g);
-
-  // (| x, comp_res c, pre', g', k |)

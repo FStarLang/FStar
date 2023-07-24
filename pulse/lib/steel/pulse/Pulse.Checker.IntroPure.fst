@@ -1,14 +1,11 @@
 module Pulse.Checker.IntroPure
 
-module T = FStar.Tactics.V2
-
 open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Base
 open Pulse.Checker.Prover
 
-module FTB = FStar.Tactics.Builtins
-
+module T = FStar.Tactics.V2
 
 let check_prop (g:env) (p:term) 
   : T.Tac (p:term & tot_typing g p tm_prop) =
@@ -23,12 +20,12 @@ let check_prop (g:env) (p:term)
 let check_prop_validity (g:env) (p:term) (typing:tot_typing g p tm_prop): T.Tac (prop_validity g p) =
     Pulse.Checker.Pure.check_prop_validity g p typing
 
-let check_intro_pure
+let check
   (g:env)
-  (t:st_term { Tm_IntroPure? t.term })
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
+  (t:st_term { Tm_IntroPure? t.term })
 
   : T.Tac (checker_result_t g pre post_hint) =
 

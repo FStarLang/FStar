@@ -1,16 +1,16 @@
 module Pulse.Checker.Match
 
-module T = FStar.Tactics.V2
-module L = FStar.List.Tot.Base
-module R = FStar.Reflection.V2
-module RT = FStar.Reflection.Typing
-
 open Pulse.Common
 open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Pure
 open Pulse.Checker.Base
 open Pulse.Checker.Prover
+
+module T = FStar.Tactics.V2
+module L = FStar.List.Tot.Base
+module R = FStar.Reflection.V2
+module RT = FStar.Reflection.Typing
 
 let rec readback_pat (p : R.pattern) : option pattern =
   match p with
@@ -290,13 +290,13 @@ let check_branches
   in
   (| brs, c0, d |)
 
-let check_match
+let check
         (g:env)
-        (sc:term)
-        (brs:list branch)
         (pre:term)
         (pre_typing: tot_typing g pre tm_vprop)
         (post_hint:post_hint_for_env g)
+        (sc:term)
+        (brs:list branch)
         (check:check_t)
   : T.Tac (checker_result_t g pre (Some post_hint))
   =

@@ -1,7 +1,6 @@
 module Pulse.Checker.Abs
 
 module T = FStar.Tactics.V2
-module RT = FStar.Reflection.Typing
 
 open Pulse.Syntax
 open Pulse.Typing
@@ -66,12 +65,6 @@ let rec check_abs
         match c with
         | C_Tot _ ->
           fail g (Some body.range) "Tm_Abs in case of st term, C_Tot annotation" 
-          // tm_emp, None, None
-
-        // | C_Tot ty ->
-        //   tm_emp,
-        //   Some (open_term_nv ty px),
-        //   None
 
         | _ -> 
           open_term_nv (comp_pre c) px,

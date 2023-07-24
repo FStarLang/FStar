@@ -21,6 +21,7 @@ module Metatheory = Pulse.Typing.Metatheory
 
 module Abs = Pulse.Checker.Abs
 module If = Pulse.Checker.If
+module Bind = Pulse.Checker.Bind
 module Match = Pulse.Checker.Match
 module WithLocal = Pulse.Checker.WithLocal
 module While = Pulse.Checker.While
@@ -129,13 +130,12 @@ let rec transform_to_unary_intro_exists (g:env) (t:term) (ws:list term)
     | _ -> fail g (Some t.range) "intro exists with non-existential"
 
 #push-options "--z3rlimit_factor 4 --fuel 0 --ifuel 1"
-let rec check' : bool -> check_t =
-  fun (allow_inst:bool)
-      (g0:env)
-      (pre0:term)
-      (pre0_typing: tot_typing g0 pre0 tm_vprop)
-      (post_hint:post_hint_opt g0)
-      (t:st_term) ->
+let rec check
+  (g0:env)
+  (pre0:term)
+  (pre0_typing: tot_typing g0 pre0 tm_vprop)
+  (post_hint:post_hint_opt g0)
+  (t:st_term) : T.Tac (checker_result_t g0 pre0 post_hint) =
 
   // T.print (Printf.sprintf "At %s: allow_inst: %s, context: %s, term: %s\n"
   //            (T.range_to_string t.range)
@@ -150,33 +150,33 @@ let rec check' : bool -> check_t =
     let g = push_context (P.tag_of_st_term t) t.range g in
     match t.term with
     | Tm_Return _ ->
-      Return.check_return g t pre pre_typing post_hint
+      Return.check g pre pre_typing post_hint t
     
     | Tm_Abs _ -> T.fail "Tm_Abs check should not have been called in the checker"
 
     | Tm_STApp _ ->
-      STApp.check_stapp g t pre pre_typing post_hint
+      STApp.check g pre pre_typing post_hint t
 
     | Tm_ElimExists _ ->
-      Exists.check_elim_exists g t pre pre_typing post_hint
+      Exists.check_elim_exists g pre pre_typing post_hint t
 
     | Tm_IntroExists { p; witnesses } ->
       (match instantiate_unknown_witnesses g t with
        | Some t ->
-         check' true g pre pre_typing post_hint t
+         check g pre pre_typing post_hint t
        | None ->
          match witnesses with
          | [] -> fail g (Some t.range) "intro exists with empty witnesses"
          | [_] ->
-           Exists.check_intro_exists_either g (maybe_intro_exists_erased t) None pre pre_typing post_hint
+           Exists.check_intro_exists g pre pre_typing post_hint (maybe_intro_exists_erased t) None 
          | _ ->
            let t = transform_to_unary_intro_exists g p witnesses in
-           check' true g pre pre_typing post_hint t)
+           check g pre pre_typing post_hint t)
     | Tm_Bind _ ->
-      check_bind g t pre pre_typing post_hint (check' true)
+      Bind.check_bind g pre pre_typing post_hint t check
 
     | Tm_TotBind _ ->
-      check_tot_bind g t pre pre_typing post_hint (check' true)
+      Bind.check_tot_bind g pre pre_typing post_hint t check
 
     | Tm_If { b; then_=e1; else_=e2; post=post_if } ->
       let post =
@@ -199,11 +199,11 @@ let rec check' : bool -> check_t =
                 Either annotate this `if` with `returns` clause; or rewrite your code to use a tail conditional")
       in
       let (| x, t, pre', g1, k |) : checker_result_t g pre (Some post) =
-        If.check_if g b e1 e2 pre pre_typing post (check' true) in
+        If.check g pre pre_typing post b e1 e2 check in
       (| x, t, pre', g1, k |)
 
     | Tm_While _ ->
-      While.check_while g t pre pre_typing post_hint (check' true)
+      While.check g pre pre_typing post_hint t check
 
     | Tm_Match {sc;returns_=post_match;brs} ->
       // TODO : dedup
@@ -226,32 +226,29 @@ let rec check' : bool -> check_t =
                "Pulse cannot yet infer a postcondition for a non-tail conditional statement;\n\
                 Either annotate this `if` with `returns` clause; or rewrite your code to use a tail conditional")
       in
-      let (| x, ty, pre', g1, k |) = Match.check_match g sc brs pre pre_typing post (check' true) in
+      let (| x, ty, pre', g1, k |) = Match.check g pre pre_typing post sc brs check in
       (| x, ty, pre', g1, k |)
 
     | Tm_ProofHintWithBinders _ ->
-      Pulse.Checker.AssertWithBinders.check g t pre pre_typing post_hint (check' true)
+      Pulse.Checker.AssertWithBinders.check g pre pre_typing post_hint t check
 
     | Tm_WithLocal _ ->
-      WithLocal.check_withlocal g t pre pre_typing post_hint (check' true)
+      WithLocal.check g pre pre_typing post_hint t check
 
     | Tm_Par _ ->
-      Par.check_par allow_inst g t pre pre_typing post_hint (check' true)
+      Par.check g pre pre_typing post_hint t check
 
     | Tm_IntroPure _ -> 
-      Pulse.Checker.IntroPure.check_intro_pure g t pre pre_typing post_hint
+      Pulse.Checker.IntroPure.check g pre pre_typing post_hint t
 
     | Tm_Admit _ ->
-      Admit.check_admit g t pre pre_typing post_hint
+      Admit.check g pre pre_typing post_hint t
 
     | Tm_Rewrite _ ->
-      Rewrite.check_rewrite g t pre pre_typing post_hint
+      Rewrite.check g pre pre_typing post_hint t
 
     | _ -> T.fail "Checker form not implemented"
   in
 
   let (| x, t, pre', g1, k |) = r in
   (| x, t, pre', g1, k_elab_trans k_elim_pure k |)
-
-
-let check = check' true

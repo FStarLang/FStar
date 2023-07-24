@@ -1,18 +1,14 @@
 module Pulse.Checker.Comp
 
-module T = FStar.Tactics.V2
-module RT = FStar.Reflection.Typing
-
 open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Pure
-open Pulse.Checker.Base
 
-module FV = Pulse.Typing.FV
+module T = FStar.Tactics.V2
 
-let check_comp (g:env) 
-               (c:comp_st)
-               (pre_typing:tot_typing g (comp_pre c) tm_vprop)
+let check (g:env) 
+          (c:comp_st)
+          (pre_typing:tot_typing g (comp_pre c) tm_vprop)
   : T.Tac (comp_typing g c (comp_u c))
   = let check_st_comp (st:st_comp { comp_u c == st.u /\
                                     comp_pre c == st.pre /\

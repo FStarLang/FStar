@@ -8,10 +8,10 @@ open Pulse.Checker.Base
 
 val check_elim_exists
   (g:env)
-  (t:st_term{Tm_ElimExists? t.term})
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
+  (t:st_term{Tm_ElimExists? t.term})
   : T.Tac (checker_result_t g pre post_hint)
 
 let intro_exists_witness_singleton (st:st_term)  = 
@@ -23,11 +23,11 @@ let intro_exists_vprop (st:st_term { Tm_IntroExists? st.term })  =
   match st.term with
   | Tm_IntroExists { p } -> p
 
-val check_intro_exists_either
+val check_intro_exists
   (g:env)
-  (st:st_term { intro_exists_witness_singleton st })
-  (vprop_typing: option (tot_typing g (intro_exists_vprop st) tm_vprop))
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
+  (st:st_term { intro_exists_witness_singleton st })
+  (vprop_typing: option (tot_typing g (intro_exists_vprop st) tm_vprop))
   : T.Tac (checker_result_t g pre post_hint)

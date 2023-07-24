@@ -1,18 +1,14 @@
 module Pulse.Checker.While
 
-module T = FStar.Tactics.V2
-module RT = FStar.Reflection.Typing
-
 open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Pure
 open Pulse.Checker.Base
 open Pulse.Checker.Prover
 
+module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
-module FV = Pulse.Typing.FV
 module Metatheory = Pulse.Typing.Metatheory
-module RU = Pulse.RuntimeUtils
 
 let while_cond_comp_typing (#g:env) (u:universe) (x:ppname) (ty:term) (inv_body:term)
                            (inv_typing:tot_typing g (tm_exists_sl u (as_binder ty) inv_body) tm_vprop)
@@ -25,12 +21,12 @@ let while_body_comp_typing (#g:env) (u:universe) (x:ppname) (ty:term) (inv_body:
   = Metatheory.admit_comp_typing g (comp_while_body x inv_body)
 
 #push-options "--fuel 0 --ifuel 1 --z3rlimit_factor 4"
-let check_while
+let check
   (g:env)
-  (t:st_term{Tm_While? t.term})
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
+  (t:st_term{Tm_While? t.term})
   (check:check_t)
   : T.Tac (checker_result_t g pre post_hint) =
 
@@ -95,7 +91,7 @@ let check_while
                            (P.comp_to_string body_comp)
                            (P.comp_to_string (comp_while_body nm inv)))
   end
-  else fail g None 
+  else fail g None
          (Printf.sprintf "Could not prove that the inferred type of the while condition matches the annotation\n\
                           Inferred type = %s\n\
                           Annotated type = %s\n"

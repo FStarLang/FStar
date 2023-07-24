@@ -1251,24 +1251,24 @@ let (check_branches :
                                                                     uu___4)))
                                                        uu___3))) uu___1)))
                              uu___)
-let (check_match :
+let (check :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
-      Pulse_Syntax_Base.branch Prims.list ->
-        Pulse_Syntax_Base.term ->
-          unit ->
-            unit Pulse_Typing.post_hint_for_env ->
+      unit ->
+        unit Pulse_Typing.post_hint_for_env ->
+          Pulse_Syntax_Base.term ->
+            Pulse_Syntax_Base.branch Prims.list ->
               Pulse_Checker_Base.check_t ->
                 ((unit, unit, unit) Pulse_Checker_Base.checker_result_t,
                   unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
-    fun sc ->
-      fun brs ->
-        fun pre ->
-          fun pre_typing ->
-            fun post_hint ->
-              fun check ->
+    fun pre ->
+      fun pre_typing ->
+        fun post_hint ->
+          fun sc ->
+            fun brs ->
+              fun check1 ->
                 FStar_Tactics_Effect.tac_bind
                   (FStar_Sealed.seal
                      (Obj.magic
@@ -1653,7 +1653,7 @@ let (check_match :
                                                                     (check_branches
                                                                     g pre ()
                                                                     post_hint
-                                                                    check
+                                                                    check1
                                                                     sc_u
                                                                     sc_ty sc1
                                                                     brs1

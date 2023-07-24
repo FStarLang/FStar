@@ -6,9 +6,6 @@ open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Typing.Combinators
 open Pulse.Checker.Base
-open Pulse.Typing.Metatheory
-open Pulse.Checker.VPropEquiv
-open Pulse.Checker.Prover.Base
 
 module ElimExists = Pulse.Checker.Prover.ElimExists
 module ElimPure =  Pulse.Checker.Prover.ElimPure
@@ -16,8 +13,8 @@ module Match = Pulse.Checker.Prover.Match
 module IntroExists = Pulse.Checker.Prover.IntroExists
 module IntroPure = Pulse.Checker.Prover.IntroPure
 
+module L = FStar.List.Tot
 module T = FStar.Tactics.V2
-
 module P = Pulse.Syntax.Printer
 module PS = Pulse.Checker.Prover.Substs
 
@@ -61,8 +58,6 @@ let rec collect_pures (g:env) (l:list vprop)
     | Tm_Pure _ -> (| hd::pures, rest, magic () |)
     | _ -> (| pures, hd::rest, magic () |)
 
-
-module L = FStar.List.Tot
 let move_hd_end (g:env) (l:list vprop { Cons? l })
   : vprop_equiv g (list_as_vprop l) (list_as_vprop (L.tl l @ [L.hd l])) = magic ()
 
@@ -261,7 +256,7 @@ let try_frame_pre_uvs (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_v
   // assert (nts == []);
 
   let d : st_typing (push_env g1 uvs) t c =
-    st_typing_weakening g uvs t c d g1 in
+    Pulse.Checker.Prover.Util.st_typing_weakening g uvs t c d g1 in
 
   assert (comp_pre (PS.nt_subst_comp c nts) == PS.nt_subst_term (comp_pre c) nts);
   let t = PS.nt_subst_st_term t nts in

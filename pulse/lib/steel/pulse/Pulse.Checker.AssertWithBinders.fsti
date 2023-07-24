@@ -8,10 +8,10 @@ open Pulse.Checker.Base
 
 val check
   (g:env)
-  (st:st_term { Tm_ProofHintWithBinders? st.term })
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
+  (st:st_term { Tm_ProofHintWithBinders? st.term })
   (check:check_t)
   : T.Tac (checker_result_t g pre post_hint)
 

@@ -1,15 +1,12 @@
 module Pulse.Checker.Admit
 
 module T = FStar.Tactics.V2
-module RT = FStar.Reflection.Typing
 
 open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Pure
 open Pulse.Checker.Base
 open Pulse.Checker.Prover
-
-module FV = Pulse.Typing.FV
 
 let post_hint_compatible (p:option post_hint_t) (x:var) (t:term) (u:universe) (post:vprop) =
   match p with
@@ -19,13 +16,12 @@ let post_hint_compatible (p:option post_hint_t) (x:var) (t:term) (u:universe) (p
     p.u == u /\
     p.ret_ty == t
 
-// #push-options "--z3rlimit_factor 4"
-let check_admit
+let check
   (g:env)
-  (t:st_term { Tm_Admit? t.term })
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
+  (t:st_term { Tm_Admit? t.term })
 
   : T.Tac (checker_result_t g pre post_hint) =
 

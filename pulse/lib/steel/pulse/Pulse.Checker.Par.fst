@@ -1,8 +1,5 @@
 module Pulse.Checker.Par
 
-module T = FStar.Tactics.V2
-module RT = FStar.Reflection.Typing
-
 open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Pure
@@ -10,17 +7,16 @@ open Pulse.Checker.Base
 open Pulse.Checker.Prover
 open Pulse.Checker.Comp
 
-module FV = Pulse.Typing.FV
+module T = FStar.Tactics.V2
+module RT = FStar.Reflection.Typing
 module MT = Pulse.Typing.Metatheory
 
-// #push-options "--fuel 0 --ifuel 1 --z3rlimit_factor 2"
-let check_par
-  (allow_inst:bool)
+let check
   (g:env)
-  (t:st_term{Tm_Par? t.term})
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
+  (t:st_term{Tm_Par? t.term})
   (check:check_t)
   : T.Tac (checker_result_t g pre post_hint) =
 

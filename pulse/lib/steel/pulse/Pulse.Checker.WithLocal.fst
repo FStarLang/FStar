@@ -1,14 +1,11 @@
 module Pulse.Checker.WithLocal
 
-module T = FStar.Tactics.V2
-module RT = FStar.Reflection.Typing
-
 open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Pure
 open Pulse.Checker.Base
 
-module FV = Pulse.Typing.FV
+module T = FStar.Tactics.V2
 
 let extend_post_hint_for_local (g:env) (p:post_hint_for_env g)
                                (init_t:term) (x:var { ~ (Set.mem x (dom g)) })
@@ -24,12 +21,12 @@ let with_local_pre_typing (#g:env) (#pre:term) (pre_typing:tot_typing g pre tm_v
   = admit()
 
 #push-options "--z3rlimit_factor 4 --fuel 0 --ifuel 1"
-let check_withlocal
+let check
   (g:env)
-  (t:st_term { Tm_WithLocal? t.term })
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
+  (t:st_term { Tm_WithLocal? t.term })
   (check:check_t)
   : T.Tac (checker_result_t g pre post_hint) =
 
@@ -84,21 +81,3 @@ let check_withlocal
           checker_result_for_st_typing (| _, _, d |)
 
   else fail g None "Allocating a local variable: init type is not universe zero"
-
-
-//                 assume (open_st_term (close_st_term opened_body x) x == opened_body);
-//                 let c = C_ST {u=comp_u c_body;res=comp_res c_body;pre;post=post.post} in
-//                 let c_typing =
-//                     let post_typing_rec = post_hint_typing g post x in
-//                     intro_comp_typing g c pre_typing post_typing_rec.ty_typing x post_typing_rec.post_typing
-//                 in
-//                 let d = T_WithLocal g init body init_t c x
-//                                     (E init_typing)
-//                                     init_t_typing
-//                                     c_typing
-//                                     body_typing 
-//                 in
-//                 (| _, _, d |)
-//          )
-//   else fail g None "Allocating a local variable: init type is not universe zero"
-// #pop-options

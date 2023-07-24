@@ -1,17 +1,14 @@
 module Pulse.Checker.Exists
 
-module T = FStar.Tactics.V2
-module RT = FStar.Reflection.Typing
-
 open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Typing.Combinators
 open Pulse.Checker.Pure
 open Pulse.Checker.Base
-open Pulse.Checker.VPropEquiv
 
 open Pulse.Checker.Prover
 
+module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
 module FV = Pulse.Typing.FV
 
@@ -29,10 +26,10 @@ let terms_to_string (t:list term)
 
 let check_elim_exists
   (g:env)
-  (t:st_term{Tm_ElimExists? t.term})
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
+  (t:st_term{Tm_ElimExists? t.term})
   : T.Tac (checker_result_t g pre post_hint) =
 
   let Tm_ElimExists { p = t } = t.term in
@@ -75,12 +72,12 @@ let is_intro_exists_erased (st:st_term) =
 
 let check_intro_exists_erased
   (g:env)
-  (st:st_term { intro_exists_witness_singleton st /\
-                is_intro_exists_erased st })
-  (vprop_typing: option (tot_typing g (intro_exists_vprop st) tm_vprop))
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
+  (st:st_term { intro_exists_witness_singleton st /\
+                is_intro_exists_erased st })
+  (vprop_typing: option (tot_typing g (intro_exists_vprop st) tm_vprop))
   : T.Tac (checker_result_t g pre post_hint) =
 
   let Tm_IntroExists { p=t; witnesses=[e] } = st.term in
@@ -102,14 +99,14 @@ let check_intro_exists_erased
   let d = T_IntroExistsErased g u b p e ty_typing t_typing (E e_typing) in
   repack (try_frame_pre pre_typing d) post_hint (t <: term).range
 
-let check_intro_exists
+let check_intro_exists_non_erased
   (g:env)
-  (st:st_term { intro_exists_witness_singleton st /\
-                not (is_intro_exists_erased st) })
-  (vprop_typing: option (tot_typing g (intro_exists_vprop st) tm_vprop))
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
+  (st:st_term { intro_exists_witness_singleton st /\
+                not (is_intro_exists_erased st) })
+  (vprop_typing: option (tot_typing g (intro_exists_vprop st) tm_vprop))
   : T.Tac (checker_result_t g pre post_hint) =
 
   let Tm_IntroExists { p=t; witnesses=[witness] } = st.term in
@@ -132,16 +129,16 @@ let check_intro_exists
   let (| c, d |) : (c:_ & st_typing g _ c) = (| _, d |) in
   repack (try_frame_pre pre_typing d) post_hint (t <: term).range
 
-let check_intro_exists_either
+let check_intro_exists
   (g:env)
-  (st:st_term { intro_exists_witness_singleton st })
-  (vprop_typing: option (tot_typing g (intro_exists_vprop st) tm_vprop))
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
+  (st:st_term { intro_exists_witness_singleton st })
+  (vprop_typing: option (tot_typing g (intro_exists_vprop st) tm_vprop))
+
   : T.Tac (checker_result_t g pre post_hint) = 
   
   if is_intro_exists_erased st
-  then check_intro_exists_erased g st vprop_typing pre pre_typing post_hint
-  else check_intro_exists g st vprop_typing pre pre_typing post_hint
-  
+  then check_intro_exists_erased g pre pre_typing post_hint st vprop_typing
+  else check_intro_exists_non_erased g pre pre_typing post_hint st vprop_typing 
