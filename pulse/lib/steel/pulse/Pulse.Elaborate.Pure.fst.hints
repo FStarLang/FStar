@@ -1,5 +1,5 @@
 [
-  "®\r—\u0005\u0001\u0019—æÍ!ßÕ\u0013[kP",
+  "o\u001d∫51J61\u0002Ã´A\u000f†Å¶",
   [
     [
       "Pulse.Elaborate.Pure.op_let_Bang",
@@ -8,7 +8,7 @@
       1,
       [ "@query", "lemma_FStar.Pervasives.invertOption" ],
       0,
-      "9f3e9c27ad2e1163d46a6c1e0798141a"
+      "b60a348666f05c278d04c1045d25b483"
     ],
     [
       "Pulse.Elaborate.Pure.elab_qual",
@@ -20,7 +20,7 @@
         "lemma_FStar.Pervasives.invertOption"
       ],
       0,
-      "87e6f6893d89e7d1709d7366ae6e1c7e"
+      "101c16e1cf725459a7c5bb97fcd44cc8"
     ],
     [
       "Pulse.Elaborate.Pure.elab_term",
@@ -62,7 +62,49 @@
         "typing_Pulse.Syntax.Base.__proj__Mkterm__item__t"
       ],
       0,
-      "6148d7b7ac10f099dc95314a4a38aaab"
+      "c1c72ab6364246112ed1b402450599e6"
+    ],
+    [
+      "Pulse.Elaborate.Pure.elab_pat",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Pervasives.Native_pretyping_b53dbd183c526bc5d0f20d7b966ae125",
+        "Prims_pretyping_ce036b6b736ef4e0bc3a9ff132a12aed",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "Pulse.Syntax.Base_pretyping_be189e4f396d5337499ee0c3708ca7f2",
+        "binder_x_be189e4f396d5337499ee0c3708ca7f2_0", "bool_typing",
+        "data_elim_Pulse.Syntax.Base.Pat_Dot_Term",
+        "disc_equation_Pulse.Syntax.Base.Pat_Cons",
+        "disc_equation_Pulse.Syntax.Base.Pat_Constant",
+        "disc_equation_Pulse.Syntax.Base.Pat_Dot_Term",
+        "disc_equation_Pulse.Syntax.Base.Pat_Var",
+        "equation_FStar.Sealed.Inhabited.is_sealed",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "fuel_guarded_inversion_Pulse.Syntax.Base.pattern",
+        "kinding_Pulse.Syntax.Base.term@tok",
+        "lemma_FStar.Pervasives.invertOption",
+        "proj_equation_Pulse.Syntax.Base.Pat_Dot_Term__0",
+        "projection_inverse_BoxBool_proj_0", "string_typing",
+        "subterm_ordering_Pulse.Syntax.Base.Pat_Cons", "true_interp"
+      ],
+      0,
+      "47f26a175450a19e3dce37987c67d30f"
+    ],
+    [
+      "Pulse.Elaborate.Pure.elab_pat",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_ae7c08334e415556da5d81a8e08db0b1_0",
+        "subterm_ordering_FStar.Pervasives.Native.Mktuple2"
+      ],
+      0,
+      "078589a6cdd1019b68af25d4df11d4ad"
     ],
     [
       "Pulse.Elaborate.Pure.elab_comp",
@@ -79,7 +121,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "62c66f20ab7b3cc44e7bea7ec2d27669"
+      "32b32ce9d47e70c66b81057bef43fb0b"
     ],
     [
       "Pulse.Elaborate.Pure.elab_stt_equiv",
@@ -94,7 +136,7 @@
         "refinement_interpretation_Tm_refine_d79470205dca7f56c9b5a5da9d23b961"
       ],
       0,
-      "395dab8d3c1f199994ec14583d3ebcae"
+      "bc183fac11264299347f1042dca61d1b"
     ],
     [
       "Pulse.Elaborate.Pure.elab_stt_equiv",
@@ -126,7 +168,7 @@
         "typing_Pulse.Syntax.Base.uu___is_C_ST"
       ],
       0,
-      "e827fd465cd43d2ed1ebecefa83c4b87"
+      "8617b4d554c70fd34a975047603f055f"
     ],
     [
       "Pulse.Elaborate.Pure.elab_statomic_equiv",
@@ -141,7 +183,7 @@
         "refinement_interpretation_Tm_refine_13d5b859272356b5c25fbc5503eba342"
       ],
       0,
-      "efbe5cc98839ef2fb9b9223768c5aabf"
+      "ce72362e4e651f0e724ec81dfea79e7c"
     ],
     [
       "Pulse.Elaborate.Pure.elab_statomic_equiv",
@@ -173,7 +215,7 @@
         "refinement_interpretation_Tm_refine_13d5b859272356b5c25fbc5503eba342"
       ],
       0,
-      "c9cdcf5751b63bd40d844c3d36e322c4"
+      "b8900fd54e5ab6ad56e7100976753970"
     ],
     [
       "Pulse.Elaborate.Pure.elab_stghost_equiv",
@@ -188,7 +230,7 @@
         "refinement_interpretation_Tm_refine_dc14c56dc5eae6acd747c5a527061f28"
       ],
       0,
-      "2155b9f8fa0df9572fb1ad38359258ff"
+      "8fadc99426727846d88d6bc93efd270b"
     ],
     [
       "Pulse.Elaborate.Pure.elab_stghost_equiv",
@@ -220,7 +262,7 @@
         "refinement_interpretation_Tm_refine_dc14c56dc5eae6acd747c5a527061f28"
       ],
       0,
-      "6a321e87578e99b94c892e437437d60b"
+      "ac029b5352a011a7e11b34979140c2a1"
     ]
   ]
 ]

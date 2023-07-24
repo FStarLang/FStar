@@ -45,7 +45,16 @@ val mk_comp (pre:term) (ret:binder) (post:term) : comp
 val ghost_comp (inames:term) (pre:term) (ret:binder) (post:term) : comp
 val atomic_comp (inames:term) (pre:term) (ret:binder) (post:term) : comp
 
+new val constant : Type0
+val inspect_const : FStar.Const.sconst -> constant
+
+new val pattern : Type0
+val pat_var (ppname:string) (_:range) : pattern
+val pat_constant (c:constant) (_:range) : pattern
+val pat_cons (head:fv) (ps:list pattern) (_:range) : pattern
+
 new val st_term : Type0
+type branch = pattern & st_term
 val tm_return (t:term) (_:range) : st_term
 val tm_ghost_return (t:term) (_:range) : st_term
 val tm_abs (b:binder) (q:option qualifier) (_:comp) (body:st_term) (_:range) : st_term
@@ -55,6 +64,7 @@ val tm_totbind (x:binder) (e1:term) (e2:st_term) (_:range) : st_term
 val tm_let_mut (x:binder) (v:term) (k:st_term) (_:range) : st_term
 val tm_while (head:st_term) (invariant: (ident & vprop)) (body:st_term) (_:range) : st_term 
 val tm_if (head:term) (returns_annot:option vprop) (then_ else_:st_term) (_:range) : st_term
+val tm_match (head:term) (returns_:option vprop) (brs:list branch) (_:range) : st_term
 val tm_intro_exists (erased:bool) (vp:vprop) (witnesses:list term) (_:range) : st_term
 val is_tm_intro_exists (x:st_term) : bool
 val tm_protect (s:st_term) : st_term
@@ -65,6 +75,7 @@ val tm_proof_hint_with_binders (_:PulseSugar.hint_type) (_:list binder) (t:term)
 val close_binders (bs:list binder) (xs:list var) : list binder
 val close_term (t:term) (v:var) : term
 val close_st_term (t:st_term) (v:var) : st_term
+val close_st_term_n (t:st_term) (vs:list var) : st_term
 val close_comp (t:comp) (v:var) : comp
 val comp_pre (c:comp) : term
 val comp_res (c:comp) : term

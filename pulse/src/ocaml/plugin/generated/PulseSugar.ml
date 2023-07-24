@@ -167,7 +167,7 @@ and stmt'__If__payload =
 and stmt'__Match__payload =
   {
   head2: FStar_Parser_AST.term ;
-  returns_annot: computation_type FStar_Pervasives_Native.option ;
+  returns_annot: vprop FStar_Pervasives_Native.option ;
   branches: (FStar_Parser_AST.pattern * stmt) Prims.list }
 and stmt'__While__payload =
   {
@@ -271,7 +271,7 @@ let (__proj__Mkstmt'__Match__payload__item__head :
   fun projectee ->
     match projectee with | { head2 = head; returns_annot; branches;_} -> head
 let (__proj__Mkstmt'__Match__payload__item__returns_annot :
-  stmt'__Match__payload -> computation_type FStar_Pervasives_Native.option) =
+  stmt'__Match__payload -> vprop FStar_Pervasives_Native.option) =
   fun projectee ->
     match projectee with
     | { head2 = head; returns_annot; branches;_} -> returns_annot
@@ -493,7 +493,7 @@ let (mk_if :
         fun else_opt -> If { head1 = head; join_vprop; then_; else_opt }
 let (mk_match :
   FStar_Parser_AST.term ->
-    computation_type FStar_Pervasives_Native.option ->
+    vprop FStar_Pervasives_Native.option ->
       (FStar_Parser_AST.pattern * stmt) Prims.list -> stmt')
   =
   fun head ->

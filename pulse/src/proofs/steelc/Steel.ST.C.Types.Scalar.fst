@@ -100,6 +100,16 @@ let read0
   pts_to_intro_rewrite r r' _;
   return v0
 
+let get_scalar_value
+  c
+= match c with
+  | Some (Some v, _) -> Some v
+  | _ -> None
+
+let get_scalar_value_mk_fraction_mk_scalar
+  c p
+= ()
+
 let write
   #t #v r v'
 = rewrite (pts_to r _) (pts_to0 r (Ghost.reveal v));

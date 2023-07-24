@@ -1,5 +1,5 @@
 [
-  "@C«\u0015!δ~8«\u0015·8t`z",
+  "·\\7\u0001Uακ&Δ=3—€\u0019",
   [
     [
       "Steel.ST.C.Types.Scalar.mk_scalar_fractionable",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "dc611909250c9b4067ab4cc156f9acb2"
+      "dbfa625c2189760f74ff7e2ae01ef44e"
     ],
     [
       "Steel.ST.C.Types.Scalar.mk_scalar_inj",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "b35a33d68f117b4d5a3ee1f46105730f"
+      "54e0f5dc8e581a586f5d4b139f15ebe1"
     ],
     [
       "Steel.ST.C.Types.Scalar.scalar_unique",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "63dcc00ebb31020daa6dbc318eaa90c1"
+      "2a97f5abbb116ae7d34ff12c7d114ebf"
     ],
     [
       "Steel.ST.C.Types.Scalar.read0",
@@ -35,7 +35,7 @@
       1,
       [ "@query" ],
       0,
-      "0ada5ba994cfb9666a7e3842ec8c4d44"
+      "ab8530d6c5d6e18124a79249dc02983a"
     ],
     [
       "Steel.ST.C.Types.Scalar.mk_fraction_full_scalar",
@@ -51,7 +51,30 @@
         "typing_Steel.ST.C.Types.Scalar.scalar_t"
       ],
       0,
-      "c892265d945ed1b2ac98581847b6546c"
+      "a61d5229e5f6701ac21d405530c4fdac"
+    ],
+    [
+      "Steel.ST.C.Types.Scalar.get_scalar_value_mk_fraction_mk_scalar",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "4a478789e4625ffbc0afc76eaafd09d5"
+    ],
+    [
+      "Steel.ST.C.Types.Scalar.get_scalar_value_mk_scalar",
+      1,
+      2,
+      1,
+      [
+        "@query",
+        "lemma_Steel.ST.C.Types.Scalar.get_scalar_value_mk_fraction_mk_scalar",
+        "lemma_Steel.ST.C.Types.Scalar.mk_fraction_full_scalar",
+        "typing_Steel.FractionalPermission.full_perm"
+      ],
+      0,
+      "e228141202ec76295626bc20b7d5a5ab"
     ],
     [
       "Steel.ST.C.Types.Scalar.read",
@@ -67,7 +90,7 @@
         "typing_Steel.ST.C.Types.Scalar.mk_scalar"
       ],
       0,
-      "c159930d9ae9ec33573221de4afa10ad"
+      "555f2db6c95bb0a3d676dce58cec3ffc"
     ],
     [
       "Steel.ST.C.Types.Scalar.read",
@@ -82,7 +105,7 @@
         "typing_Steel.ST.C.Types.Scalar.mk_scalar"
       ],
       0,
-      "6c5ea3579c1919e4f442c5dbf0c21a19"
+      "c281fe238976322bce8b2f8fe69731da"
     ],
     [
       "Steel.ST.C.Types.Scalar.read",
@@ -97,7 +120,7 @@
         "typing_Steel.ST.C.Types.Scalar.mk_scalar"
       ],
       0,
-      "6c5ea3579c1919e4f442c5dbf0c21a19"
+      "c281fe238976322bce8b2f8fe69731da"
     ],
     [
       "Steel.ST.C.Types.Scalar.read",
@@ -113,7 +136,7 @@
         "typing_Steel.ST.C.Types.Scalar.mk_scalar"
       ],
       0,
-      "1c4746f704214d84c580510b3b158205"
+      "1765ca86badb06aa5e09af5808ab20ab"
     ],
     [
       "Steel.ST.C.Types.Scalar.read",
@@ -129,7 +152,7 @@
         "typing_Steel.ST.C.Types.Scalar.mk_scalar"
       ],
       0,
-      "1c4746f704214d84c580510b3b158205"
+      "1765ca86badb06aa5e09af5808ab20ab"
     ],
     [
       "Steel.ST.C.Types.Scalar.read",
@@ -145,7 +168,7 @@
         "typing_Steel.ST.C.Types.Scalar.mk_scalar"
       ],
       0,
-      "1c4746f704214d84c580510b3b158205"
+      "1765ca86badb06aa5e09af5808ab20ab"
     ],
     [
       "Steel.ST.C.Types.Scalar.read",
@@ -161,7 +184,7 @@
         "typing_Steel.ST.C.Types.Scalar.mk_scalar"
       ],
       0,
-      "1c4746f704214d84c580510b3b158205"
+      "1765ca86badb06aa5e09af5808ab20ab"
     ],
     [
       "Steel.ST.C.Types.Scalar.read",
@@ -177,7 +200,7 @@
         "typing_Steel.ST.C.Types.Scalar.mk_scalar"
       ],
       0,
-      "1c4746f704214d84c580510b3b158205"
+      "1765ca86badb06aa5e09af5808ab20ab"
     ],
     [
       "Steel.ST.C.Types.Scalar.read",
@@ -193,7 +216,7 @@
         "typing_Steel.ST.C.Types.Scalar.mk_scalar"
       ],
       0,
-      "1c4746f704214d84c580510b3b158205"
+      "1765ca86badb06aa5e09af5808ab20ab"
     ],
     [
       "Steel.ST.C.Types.Scalar.read",
@@ -209,7 +232,7 @@
         "typing_Steel.ST.C.Types.Scalar.mk_scalar"
       ],
       0,
-      "1c4746f704214d84c580510b3b158205"
+      "1765ca86badb06aa5e09af5808ab20ab"
     ],
     [
       "Steel.ST.C.Types.Scalar.read",
@@ -225,7 +248,7 @@
         "typing_Steel.ST.C.Types.Scalar.mk_scalar"
       ],
       0,
-      "1c4746f704214d84c580510b3b158205"
+      "1765ca86badb06aa5e09af5808ab20ab"
     ],
     [
       "Steel.ST.C.Types.Scalar.read",
@@ -241,7 +264,7 @@
         "typing_Steel.ST.C.Types.Scalar.mk_scalar"
       ],
       0,
-      "1c4746f704214d84c580510b3b158205"
+      "1765ca86badb06aa5e09af5808ab20ab"
     ],
     [
       "Steel.ST.C.Types.Scalar.read",
@@ -257,7 +280,7 @@
         "typing_Steel.ST.C.Types.Scalar.mk_scalar"
       ],
       0,
-      "1c4746f704214d84c580510b3b158205"
+      "1765ca86badb06aa5e09af5808ab20ab"
     ],
     [
       "Steel.ST.C.Types.Scalar.read",
@@ -272,7 +295,7 @@
         "typing_Steel.ST.C.Types.Scalar.mk_scalar"
       ],
       0,
-      "6c5ea3579c1919e4f442c5dbf0c21a19"
+      "c281fe238976322bce8b2f8fe69731da"
     ],
     [
       "Steel.ST.C.Types.Scalar.read",
@@ -291,7 +314,7 @@
         "typing_Steel.ST.C.Types.Scalar.scalar_t"
       ],
       0,
-      "716d78c3ad08dcd742dd5668cb0ced46"
+      "f1719b313421702af9ad7327f171507c"
     ],
     [
       "Steel.ST.C.Types.Scalar.write",
@@ -300,7 +323,7 @@
       1,
       [ "@query" ],
       0,
-      "6e23c0ef27be0349803b2ac593b03244"
+      "d8f63befac361a6e69a6bc06225b6568"
     ]
   ]
 ]
