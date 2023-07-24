@@ -315,6 +315,8 @@ let u64_diff_wrap a b = ()
 val sub_mod_wrap1_ok : a:t -> b:t -> Lemma
   (requires (v a - v b < 0 /\ U64.v a.low < U64.v b.low))
   (ensures (v (sub_mod_impl a b) = v a - v b + pow2 128))
+
+#push-options "--retry 10"
 let sub_mod_wrap1_ok a b =
     // carry == 1 and subtraction in low wraps
     let l = U64.sub_mod a.low b.low in
@@ -327,6 +329,7 @@ let sub_mod_wrap1_ok a b =
       u64_diff_wrap a.high b.high;
       ()
     end
+#pop-options
 
 let sum_lt (a1 a2 b1 b2:nat) : Lemma
   (requires (a1 + a2 < b1 + b2 /\ a1 >= b1))
