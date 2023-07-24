@@ -7223,7 +7223,6 @@ let (rollback_env : Prims.int FStar_Pervasives_Native.option -> unit) =
 let (init : FStar_TypeChecker_Env.env -> unit) =
   fun tcenv ->
     init_env tcenv;
-    FStar_SMTEncoding_Z3.init ();
     FStar_SMTEncoding_Z3.giveZ3 [FStar_SMTEncoding_Term.DefPrelude]
 let (snapshot :
   Prims.string -> (FStar_TypeChecker_Env.solver_depth_t * unit)) =

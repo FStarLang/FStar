@@ -1817,35 +1817,46 @@ type solver_cfg =
   smtopt: Prims.string Prims.list ;
   facts: (Prims.string Prims.list * Prims.bool) Prims.list ;
   valid_intro: Prims.bool ;
-  valid_elim: Prims.bool }
+  valid_elim: Prims.bool ;
+  z3version: Prims.string }
 let (__proj__Mksolver_cfg__item__seed : solver_cfg -> Prims.int) =
   fun projectee ->
     match projectee with
-    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim;_} -> seed
+    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;_} ->
+        seed
 let (__proj__Mksolver_cfg__item__cliopt :
   solver_cfg -> Prims.string Prims.list) =
   fun projectee ->
     match projectee with
-    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim;_} -> cliopt
+    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;_} ->
+        cliopt
 let (__proj__Mksolver_cfg__item__smtopt :
   solver_cfg -> Prims.string Prims.list) =
   fun projectee ->
     match projectee with
-    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim;_} -> smtopt
+    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;_} ->
+        smtopt
 let (__proj__Mksolver_cfg__item__facts :
   solver_cfg -> (Prims.string Prims.list * Prims.bool) Prims.list) =
   fun projectee ->
     match projectee with
-    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim;_} -> facts
+    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;_} ->
+        facts
 let (__proj__Mksolver_cfg__item__valid_intro : solver_cfg -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim;_} ->
+    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;_} ->
         valid_intro
 let (__proj__Mksolver_cfg__item__valid_elim : solver_cfg -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim;_} -> valid_elim
+    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;_} ->
+        valid_elim
+let (__proj__Mksolver_cfg__item__z3version : solver_cfg -> Prims.string) =
+  fun projectee ->
+    match projectee with
+    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;_} ->
+        z3version
 let (_last_cfg :
   solver_cfg FStar_Pervasives_Native.option FStar_Compiler_Effect.ref) =
   FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None
@@ -1856,13 +1867,15 @@ let (get_cfg : FStar_TypeChecker_Env.env -> solver_cfg) =
     let uu___2 = FStar_Options.z3_smtopt () in
     let uu___3 = FStar_Options.smtencoding_valid_intro () in
     let uu___4 = FStar_Options.smtencoding_valid_elim () in
+    let uu___5 = FStar_Options.z3_version () in
     {
       seed = uu___;
       cliopt = uu___1;
       smtopt = uu___2;
       facts = (env.FStar_TypeChecker_Env.proof_ns);
       valid_intro = uu___3;
-      valid_elim = uu___4
+      valid_elim = uu___4;
+      z3version = uu___5
     }
 let (save_cfg : FStar_TypeChecker_Env.env -> unit) =
   fun env ->
@@ -2154,7 +2167,7 @@ let (solver : FStar_TypeChecker_Env.solver_t) =
     FStar_TypeChecker_Env.handle_smt_goal = (fun e -> fun g -> [(e, g)]);
     FStar_TypeChecker_Env.solve = solve;
     FStar_TypeChecker_Env.solve_sync = solve_sync_bool;
-    FStar_TypeChecker_Env.finish = FStar_SMTEncoding_Z3.finish;
+    FStar_TypeChecker_Env.finish = (fun uu___ -> ());
     FStar_TypeChecker_Env.refresh = FStar_SMTEncoding_Z3.refresh
   }
 let (dummy : FStar_TypeChecker_Env.solver_t) =

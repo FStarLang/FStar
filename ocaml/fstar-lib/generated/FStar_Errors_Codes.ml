@@ -372,6 +372,8 @@ type raw_error =
   | Error_InternalQualifier 
   | Warning_NameEscape 
   | Warning_UnexpectedZ3Stderr 
+  | Warning_SolverMismatch 
+  | Warning_SolverVersionMismatch 
 let (uu___is_Error_DependencyAnalysisFailed : raw_error -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -1909,6 +1911,14 @@ let (uu___is_Warning_UnexpectedZ3Stderr : raw_error -> Prims.bool) =
     match projectee with
     | Warning_UnexpectedZ3Stderr -> true
     | uu___ -> false
+let (uu___is_Warning_SolverMismatch : raw_error -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Warning_SolverMismatch -> true | uu___ -> false
+let (uu___is_Warning_SolverVersionMismatch : raw_error -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | Warning_SolverVersionMismatch -> true
+    | uu___ -> false
 type error_setting = (raw_error * error_flag * Prims.int)
 let (default_settings : error_setting Prims.list) =
   [(Error_DependencyAnalysisFailed, CAlwaysError, Prims.int_zero);
@@ -2272,4 +2282,6 @@ let (default_settings : error_setting Prims.list) =
   (Error_PluginDynlink, CError, (Prims.of_int (353)));
   (Error_InternalQualifier, CAlwaysError, (Prims.of_int (354)));
   (Warning_NameEscape, CWarning, (Prims.of_int (355)));
-  (Warning_UnexpectedZ3Stderr, CWarning, (Prims.of_int (356)))]
+  (Warning_UnexpectedZ3Stderr, CWarning, (Prims.of_int (356)));
+  (Warning_SolverMismatch, CError, (Prims.of_int (357)));
+  (Warning_SolverVersionMismatch, CError, (Prims.of_int (358)))]
