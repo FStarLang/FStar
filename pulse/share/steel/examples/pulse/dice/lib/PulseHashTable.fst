@@ -27,10 +27,7 @@ let models (s:pht_sig) (pht:pht s) (ht:ht s) : vprop
 let coerce_nat (n:int{n>=0}) : nat = n
 let coerce_us (n:nat) : US.t = assume (US.fits n); US.uint_to_t n
 
-(*
-(* 
-  See FIXME comments for current debugging status
-*)
+
 #set-options "--split_queries no"
 
 let insert_loop_inv_def (#s:pht_sig) (b:bool)
@@ -163,10 +160,7 @@ fn insert (#s:pht_sig) (#pht:(p:pht s{not_full p.repr}))
 }
 ```
 
-(* 
-  Basic implementation of delete expected to fail, working out the kinks 
-  should follow easily after I get insert working
-*)
+
 [@@expect_failure]
 ```pulse
 fn delete (#s:pht_sig) (#pht:pht s) 
@@ -178,38 +172,44 @@ fn delete (#s:pht_sig) (#pht:pht s)
   let a = ht.contents;
   let cidx = canonical_index k sz;
   let mut off = 0;
-  while (let voff = !off; (voff <= sz)) (* include the case voff=sz *)
-  invariant b. exists (voff:nat). (
-    R.pts_to off full_perm voff **
-    pure (
-      voff >= 0 /\ voff <= sz /\
-      // walk pht.repr cidx k off == lookup_repr pht.repr k /\
-      // strong_all_used_not_by #s #sz pht.repr cidx voff k /\
-      b == (voff <= sz)
-    )
-  )
+
+  while (let voff = !off; let vcont = !cont; (voff <= sz && vcont = true))
+  invariant b. insert_loop_inv b pht ht off cont k v // FIXME: delete loop invar
   {
-    let voff = !off;
-    if (voff = sz) {
-    return () (* element is not in the table *)
-    } else {
-    let idx = (cidx+voff)%sz;
-    let c = A.index ht.contents idx;
-    match c {
-      Used k' v' -> { if (k' = k) {
-        op_Array_Assignment ht.contents idx Zombie;
-        return ()
-      }}
-      Clean -> { return () (* element is not in the table *) }
-      Zombie -> { noop() }
-    };
-    off := voff - 1;
+    if (off=sz) {
     ()
-  }}
+    } else {
+    let voff = !off;
+    let idx = coerce_us ((cidx+voff)%sz);
+    assume_ (pure (US.v idx < pht.sz)); // FIXME: can prove based on modulo calc above
+    let c = op_Array_Index ht.contents #full_perm #pht.repr idx;
+    match c {
+      Used k' v' -> { 
+        if (k' = k) {
+          op_Array_Assignment ht.contents idx Zombie;
+          cont := false;
+          ()
+        } else {
+          off := voff + 1;
+          ()
+        } 
+      }
+      Clean -> {
+        cont := false;
+        ()
+      }
+      Zombie -> { 
+        off := voff + 1;
+        () 
+      }
+    };};}
+    fold (models s (PHT.delete pht k) ht);
+    ()
 }
 ```
-*)
 
+
+[@@expect_failure]
 ```pulse
 fn lookup (#s:pht_sig) (#pht:(p:pht s{not_full p.repr})) 
           (ht:ht s) (k:s.keyt)
@@ -246,16 +246,23 @@ fn lookup (#s:pht_sig) (#pht:(p:pht s{not_full p.repr}))
       assume_ (pure (US.v idx < pht.sz)); // FIXME: can prove based on modulo calc above
       let c = op_Array_Index ht.contents #full_perm #pht.repr idx;
       match c {
-        Used k' v' -> { if (k' = k) {
-          cont := false;
-          ret := Some v';
-          ()
-        }}
+        Used k' v' -> { 
+          if (k' = k) {
+            cont := false;
+            ret := Some v';
+            ()
+          } else {
+            off := voff + 1;
+            () 
+          }}
         Clean -> { 
           cont := false;
           ()
          }
-        Zombie -> { admit() }
+        Zombie -> { 
+          off := voff + 1;
+          () 
+         }
       };
     };
   };
