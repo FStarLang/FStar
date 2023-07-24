@@ -2120,6 +2120,7 @@ let get_vconfig () =
     z3rlimit                                  = get_z3rlimit ();
     z3rlimit_factor                           = get_z3rlimit_factor ();
     z3seed                                    = get_z3seed ();
+    z3version                                 = get_z3version ();
     trivial_pre_for_unannotated_effectful_fns = get_trivial_pre_for_unannotated_effectful_fns ();
     reuse_hint_for                            = get_reuse_hint_for ();
   }
