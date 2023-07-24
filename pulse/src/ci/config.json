@@ -1,7 +1,7 @@
 {
     "RepoVersions" : {
         "fstar": "master",
-        "karamel" : "protz_anonymous_unions"
+        "karamel" : "master"
     },
     "NotificationChannel" : "#steel-build"
 }
