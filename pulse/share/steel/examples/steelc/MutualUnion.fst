@@ -22,7 +22,7 @@ type test_union_OK = union_t "MutualUnion.test_union_OK" (
        field_description_nil))
      )
 
-(* The following SHOULD extract to something like:
+(* The following extracts to something like:
 <<
 
 typedef struct MutualUnion_test_struct_s MutualUnion_test_struct;
@@ -31,74 +31,70 @@ typedef union {
   uint32_t as_u32;
   MutualUnion_test_struct *as_ptr;
 }
-MutualUnion_test_union_FAIL;
+MutualUnion_test_union1_OK;
 
 typedef struct MutualUnion_test_struct_s
 {
   bool tag;
-  MutualUnion_test_union_FAIL payload;
+  MutualUnion_test_union1_OK payload;
 }
 MutualUnion_test_struct;
 
 >>
-But right now, KaRaMel generates the struct before the union, so the generated C code fails to compile.
 *)
 noeq
-type test_union_FAIL = union_t "MutualUnion.test_union_FAIL" (
+type test_union1_OK = union_t "MutualUnion.test_union1_OK" (
        field_description_cons "as_u32" (scalar U32.t) (
        field_description_cons "as_ptr" (scalar (ptr_gen test_struct)) (
        field_description_nil))
      )
 and test_struct = {
   tag: bool;
-  payload: test_union_FAIL;
+  payload: test_union1_OK;
 }
 
 #push-options "--__no_positivity"
 
-(* The following SHOULD extract to something like:
+(* The following extracts to something like:
 <<
 
-typedef union MutualUnion_test_union2_FAIL_u MutualUnion_test_union2_FAIL;
+typedef union MutualUnion_test_union2_OK_u MutualUnion_test_union2_OK;
 
 typedef struct MutualUnion_test_struct2_before_s {
   bool tag;
-  MutualUnion_test_union2_FAIL *payload;
+  MutualUnion_test_union2_OK *payload;
 } MutualUnion_test_struct2_before;
 
 typedef struct MutualUnion_test_struct2_after_s MutualUnion_test_struct2_after;
 
-typedef union MutualUnion_test_union2_FAIL_u {
+typedef union MutualUnion_test_union2_OK_u {
   MutualUnion_test_struct2_before as_struct;
   MutualUnion_test_struct2_after *as_ptr;
 }
-MutualUnion_test_union2_FAIL;
+MutualUnion_test_union2_OK;
 
 typedef struct MutualUnion_test_struct2_after_s
 {
   bool tag;
-  MutualUnion_test_union2_FAIL payload;
+  MutualUnion_test_union2_OK payload;
 }
 MutualUnion_test_struct2_after;
 
 >>
-But right now, KaRaMel generates struct2_after before the union, and
-does not generate any forward declaration for union2, so the generated
-C code fails to compile.
 *)
 noeq
 type test_struct2_before = {
   tag: bool;
-  payload: ptr_gen test_union2_FAIL;
+  payload: ptr_gen test_union2_OK;
 }
-and test_union2_FAIL = union_t "MutualUnion.test_union2_FAIL" (
+and test_union2_OK = union_t "MutualUnion.test_union2_OK" (
        field_description_cons "as_struct" (scalar test_struct2_before (* TODO TR: solve positivity issue here, independently of extraction *)) (
        field_description_cons "as_ptr" (scalar (ptr_gen test_struct2_after)) (
        field_description_nil))
      )
 and test_struct2_after = {
   tag: bool;
-  payload: test_union2_FAIL;
+  payload: test_union2_OK;
 }
 
 #pop-options
