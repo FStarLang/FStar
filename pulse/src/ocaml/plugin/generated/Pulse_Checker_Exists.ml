@@ -444,7 +444,7 @@ let (check_elim_exists :
                                                                     (Prims.of_int (68))
                                                                     (Prims.of_int (60)))))
                                                                     (Obj.magic
-                                                                    (Pulse_Prover.try_frame_pre
+                                                                    (Pulse_Checker_Prover.try_frame_pre
                                                                     g pre ()
                                                                     (Pulse_Typing.wr
                                                                     (Pulse_Syntax_Base.Tm_ElimExists
@@ -465,7 +465,7 @@ let (check_elim_exists :
                                                                     (fun
                                                                     uu___7 ->
                                                                     Obj.magic
-                                                                    (Pulse_Prover.repack
+                                                                    (Pulse_Checker_Prover.repack
                                                                     g pre
                                                                     uu___7
                                                                     post_hint
@@ -762,7 +762,7 @@ let (check_intro_exists_erased :
                                                                     (Prims.of_int (103))
                                                                     (Prims.of_int (65)))))
                                                                     (Obj.magic
-                                                                    (Pulse_Prover.try_frame_pre
+                                                                    (Pulse_Checker_Prover.try_frame_pre
                                                                     g pre ()
                                                                     (Pulse_Typing.wr
                                                                     (Pulse_Syntax_Base.Tm_IntroExists
@@ -784,7 +784,7 @@ let (check_intro_exists_erased :
                                                                     (fun
                                                                     uu___8 ->
                                                                     Obj.magic
-                                                                    (Pulse_Prover.repack
+                                                                    (Pulse_Checker_Prover.repack
                                                                     g pre
                                                                     uu___8
                                                                     post_hint
@@ -1110,7 +1110,7 @@ let (check_intro_exists :
                                                                     (Prims.of_int (133))
                                                                     (Prims.of_int (65)))))
                                                                     (Obj.magic
-                                                                    (Pulse_Prover.try_frame_pre
+                                                                    (Pulse_Checker_Prover.try_frame_pre
                                                                     g pre ()
                                                                     (Pulse_Typing.wr
                                                                     (Pulse_Syntax_Base.Tm_IntroExists
@@ -1132,7 +1132,7 @@ let (check_intro_exists :
                                                                     uu___10
                                                                     ->
                                                                     Obj.magic
-                                                                    (Pulse_Prover.repack
+                                                                    (Pulse_Checker_Prover.repack
                                                                     g pre
                                                                     uu___10
                                                                     post_hint

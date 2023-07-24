@@ -1,11 +1,11 @@
-module Pulse.Prover.Match
+module Pulse.Checker.Prover.Match
 
 open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Typing.Combinators
 open Pulse.Typing.Metatheory
 open Pulse.Checker.VPropEquiv
-open Pulse.Prover.Common
+open Pulse.Checker.Prover.Common
 
 module L = FStar.List.Tot
 module R = FStar.Reflection.V2
@@ -14,7 +14,7 @@ module T = FStar.Tactics.V2
 
 module RUtil = Pulse.Reflection.Util
 module P = Pulse.Syntax.Printer
-module PS = Pulse.Prover.Substs
+module PS = Pulse.Checker.Prover.Substs
 
 let equational (t:term) : bool =
   match t.t with

@@ -1,4 +1,4 @@
-module Pulse.Prover.Substs
+module Pulse.Checker.Prover.Substs
 
 open FStar.List.Tot
 

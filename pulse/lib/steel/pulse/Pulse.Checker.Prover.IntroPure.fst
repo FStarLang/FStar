@@ -1,4 +1,4 @@
-module Pulse.Prover.IntroPure
+module Pulse.Checker.Prover.IntroPure
 
 open Pulse.Syntax
 open Pulse.Typing
@@ -6,12 +6,12 @@ open Pulse.Typing.Combinators
 open Pulse.Typing.Metatheory
 open Pulse.Checker.Pure
 open Pulse.Checker.VPropEquiv
-open Pulse.Prover.Common
+open Pulse.Checker.Prover.Common
 open Pulse.Checker.Base
 
 module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
-module PS = Pulse.Prover.Substs
+module PS = Pulse.Checker.Prover.Substs
 
 let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y == x} = x
 

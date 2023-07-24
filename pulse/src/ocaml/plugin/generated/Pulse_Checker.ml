@@ -455,13 +455,14 @@ let rec (check' : Prims.bool -> Pulse_Checker_Base.check_t) =
                    (Obj.magic
                       (FStar_Range.mk_range "Pulse.Checker.fst"
                          (Prims.of_int (147)) (Prims.of_int (4))
-                         (Prims.of_int (147)) (Prims.of_int (47)))))
+                         (Prims.of_int (147)) (Prims.of_int (55)))))
                 (FStar_Sealed.seal
                    (Obj.magic
                       (FStar_Range.mk_range "Pulse.Checker.fst"
                          (Prims.of_int (138)) (Prims.of_int (20))
                          (Prims.of_int (254)) (Prims.of_int (50)))))
-                (Obj.magic (Pulse_Prover_ElimPure.elim_pure g0 pre0 ()))
+                (Obj.magic
+                   (Pulse_Checker_Prover_ElimPure.elim_pure g0 pre0 ()))
                 (fun uu___ ->
                    (fun uu___ ->
                       match uu___ with

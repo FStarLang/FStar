@@ -1,10 +1,10 @@
-module Pulse.Prover.IntroExists
+module Pulse.Checker.Prover.IntroExists
 
 module T = FStar.Tactics
 
 open Pulse.Syntax
 open Pulse.Typing
-open Pulse.Prover.Common
+open Pulse.Checker.Prover.Common
 
 val intro_exists (#preamble:_) (pst:prover_state preamble)
   (u:universe) (b:binder) (body:vprop)

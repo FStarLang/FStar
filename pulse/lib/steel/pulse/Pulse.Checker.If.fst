@@ -73,7 +73,7 @@ let rec combine_if_branches
 #pop-options
 
 open Pulse.Typing.Combinators
-open Pulse.Prover.Common
+open Pulse.Checker.Prover.Common
 
 #push-options "--z3rlimit_factor 4 --fuel 0 --ifuel 1"
 let check_if

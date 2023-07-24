@@ -1,4 +1,4 @@
-module Pulse.Prover.ElimPure
+module Pulse.Checker.Prover.ElimPure
 
 module RT = FStar.Reflection.Typing
 module R = FStar.Reflection.V2
@@ -13,7 +13,7 @@ open Pulse.Typing
 open Pulse.Typing.Combinators
 module Metatheory = Pulse.Typing.Metatheory
 open Pulse.Reflection.Util
-open Pulse.Prover.Common
+open Pulse.Checker.Prover.Common
 
 let elim_pure_head =
     let elim_pure_explicit_lid = mk_steel_wrapper_lid "elim_pure_explicit" in

@@ -30,7 +30,7 @@ let main' (t:st_term) (pre:term) (g:RT.fstar_top_env)
            | Tm_Abs _ ->
              let (| t, c, t_typing |) = Pulse.Checker.Abs.check_abs g t Pulse.Checker.check in
              //  let (| t, c, t_typing |) = check g t pre pre_typing None true in
-             Pulse.Prover.Common.debug_prover g
+             Pulse.Checker.Prover.Common.debug_prover g
                (fun _ -> Printf.sprintf "\ncheck call returned in main with:\n%s\n"
                          (P.st_term_to_string t));
              let refl_e = elab_st_typing t_typing in

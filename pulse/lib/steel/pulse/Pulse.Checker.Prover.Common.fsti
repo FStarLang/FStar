@@ -1,4 +1,4 @@
-module Pulse.Prover.Common
+module Pulse.Checker.Prover.Common
 
 open Pulse.Syntax
 open Pulse.Typing
@@ -9,7 +9,7 @@ open Pulse.Checker.VPropEquiv
 
 module T = FStar.Tactics.V2
 
-module PS = Pulse.Prover.Substs
+module PS = Pulse.Checker.Prover.Substs
 
 let vprop_typing (g:env) (t:term) = tot_typing g t tm_vprop
 

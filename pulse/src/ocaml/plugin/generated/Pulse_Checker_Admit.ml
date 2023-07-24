@@ -420,7 +420,7 @@ let (check_admit :
                                                                     (Prims.of_int (72))
                                                                     (Prims.of_int (55)))))
                                                                     (Obj.magic
-                                                                    (Pulse_Prover.try_frame_pre
+                                                                    (Pulse_Checker_Prover.try_frame_pre
                                                                     g pre ()
                                                                     (Pulse_Typing.wr
                                                                     (Pulse_Syntax_Base.Tm_Admit
@@ -444,7 +444,7 @@ let (check_admit :
                                                                     (fun
                                                                     uu___3 ->
                                                                     Obj.magic
-                                                                    (Pulse_Prover.repack
+                                                                    (Pulse_Checker_Prover.repack
                                                                     g pre
                                                                     uu___3
                                                                     post_hint

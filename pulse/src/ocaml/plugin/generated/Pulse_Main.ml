@@ -204,7 +204,7 @@ let (main' :
                                                                     (Prims.of_int (39))
                                                                     (Prims.of_int (29)))))
                                                                     (Obj.magic
-                                                                    (Pulse_Prover_Common.debug_prover
+                                                                    (Pulse_Checker_Prover_Common.debug_prover
                                                                     g1
                                                                     (fun
                                                                     uu___4 ->

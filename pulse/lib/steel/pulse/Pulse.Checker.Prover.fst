@@ -1,4 +1,4 @@
-module Pulse.Prover
+module Pulse.Checker.Prover
 
 open FStar.List.Tot
 
@@ -8,18 +8,18 @@ open Pulse.Typing.Combinators
 open Pulse.Checker.Base
 open Pulse.Typing.Metatheory
 open Pulse.Checker.VPropEquiv
-open Pulse.Prover.Common
+open Pulse.Checker.Prover.Common
 
-module ElimExists = Pulse.Prover.ElimExists
-module ElimPure =  Pulse.Prover.ElimPure
-module Match = Pulse.Prover.Match
-module IntroExists = Pulse.Prover.IntroExists
-module IntroPure = Pulse.Prover.IntroPure
+module ElimExists = Pulse.Checker.Prover.ElimExists
+module ElimPure =  Pulse.Checker.Prover.ElimPure
+module Match = Pulse.Checker.Prover.Match
+module IntroExists = Pulse.Checker.Prover.IntroExists
+module IntroPure = Pulse.Checker.Prover.IntroPure
 
 module T = FStar.Tactics.V2
 
 module P = Pulse.Syntax.Printer
-module PS = Pulse.Prover.Substs
+module PS = Pulse.Checker.Prover.Substs
 
 let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y == x} = x
 

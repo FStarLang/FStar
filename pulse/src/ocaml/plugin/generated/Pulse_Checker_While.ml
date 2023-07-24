@@ -703,7 +703,7 @@ let (check_while :
                                                                     (Prims.of_int (90))
                                                                     (Prims.of_int (59)))))
                                                                     (Obj.magic
-                                                                    (Pulse_Prover.try_frame_pre
+                                                                    (Pulse_Checker_Prover.try_frame_pre
                                                                     g pre ()
                                                                     (Pulse_Typing.wr
                                                                     (Pulse_Syntax_Base.Tm_While
@@ -726,7 +726,7 @@ let (check_while :
                                                                     (fun
                                                                     uu___9 ->
                                                                     Obj.magic
-                                                                    (Pulse_Prover.repack
+                                                                    (Pulse_Checker_Prover.repack
                                                                     g pre
                                                                     uu___9
                                                                     post_hint

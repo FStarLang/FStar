@@ -551,7 +551,7 @@ let (check_rewrite :
                                                                     (Prims.of_int (45))
                                                                     (Prims.of_int (54)))))
                                                                     (Obj.magic
-                                                                    (Pulse_Prover.try_frame_pre
+                                                                    (Pulse_Checker_Prover.try_frame_pre
                                                                     g pre ()
                                                                     (Pulse_Typing.wr
                                                                     (Pulse_Syntax_Base.Tm_Rewrite
@@ -568,7 +568,7 @@ let (check_rewrite :
                                                                     (fun
                                                                     uu___3 ->
                                                                     Obj.magic
-                                                                    (Pulse_Prover.repack
+                                                                    (Pulse_Checker_Prover.repack
                                                                     g pre
                                                                     uu___3
                                                                     post_hint

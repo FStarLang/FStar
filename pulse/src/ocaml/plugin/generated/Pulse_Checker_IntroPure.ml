@@ -162,7 +162,7 @@ let (check_intro_pure :
                                                                     (Prims.of_int (39))
                                                                     (Prims.of_int (63)))))
                                                                   (Obj.magic
-                                                                    (Pulse_Prover.try_frame_pre
+                                                                    (Pulse_Checker_Prover.try_frame_pre
                                                                     g pre ()
                                                                     (Pulse_Typing.wr
                                                                     (Pulse_Syntax_Base.Tm_IntroPure
@@ -178,7 +178,7 @@ let (check_intro_pure :
                                                                     (fun
                                                                     uu___2 ->
                                                                     Obj.magic
-                                                                    (Pulse_Prover.repack
+                                                                    (Pulse_Checker_Prover.repack
                                                                     g pre
                                                                     uu___2
                                                                     post_hint

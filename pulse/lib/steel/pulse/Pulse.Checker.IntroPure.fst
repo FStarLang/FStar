@@ -5,7 +5,7 @@ module T = FStar.Tactics.V2
 open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Base
-open Pulse.Prover
+open Pulse.Checker.Prover
 
 module FTB = FStar.Tactics.Builtins
 

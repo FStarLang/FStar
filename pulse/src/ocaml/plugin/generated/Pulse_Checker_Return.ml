@@ -423,7 +423,7 @@ let (check_return :
                                                                     (Prims.of_int (63))
                                                                     (Prims.of_int (56)))))
                                                                     (Obj.magic
-                                                                    (Pulse_Prover.try_frame_pre
+                                                                    (Pulse_Checker_Prover.try_frame_pre
                                                                     g ctxt ()
                                                                     (Pulse_Typing.wr
                                                                     (Pulse_Syntax_Base.Tm_Return
@@ -445,7 +445,7 @@ let (check_return :
                                                                     (fun
                                                                     uu___5 ->
                                                                     Obj.magic
-                                                                    (Pulse_Prover.repack
+                                                                    (Pulse_Checker_Prover.repack
                                                                     g ctxt
                                                                     uu___5
                                                                     post_hint

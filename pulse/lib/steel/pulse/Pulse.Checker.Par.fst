@@ -7,7 +7,7 @@ open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Pure
 open Pulse.Checker.Base
-open Pulse.Prover
+open Pulse.Checker.Prover
 open Pulse.Checker.Comp
 
 module FV = Pulse.Typing.FV

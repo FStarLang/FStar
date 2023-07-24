@@ -1,4 +1,4 @@
-module Pulse.Prover.Common
+module Pulse.Checker.Prover.Common
 
 module T = FStar.Tactics
 
@@ -12,7 +12,7 @@ open Pulse.Checker.VPropEquiv
 module T = FStar.Tactics
 
 module Metatheory = Pulse.Typing.Metatheory
-module PS = Pulse.Prover.Substs
+module PS = Pulse.Checker.Prover.Substs
 
 
 let rec list_as_vprop' (vp:vprop) (fvps:list vprop)

@@ -87,9 +87,9 @@ let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y == x} = x
 //            c:comp_st &
 //            st_typing (push_env g uvs) t c) = magic ()
 
-module PS = Pulse.Prover.Substs
-open Pulse.Prover.Common
-open Pulse.Prover
+module PS = Pulse.Checker.Prover.Substs
+open Pulse.Checker.Prover.Common
+open Pulse.Checker.Prover
 #push-options "--z3rlimit_factor 4 --fuel 1 --ifuel 1"
 let check_bind
   (g:env)

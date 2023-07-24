@@ -10,7 +10,7 @@ open Pulse.Checker.Pure
 open Pulse.Checker.Base
 open Pulse.Checker.VPropEquiv
 
-open Pulse.Prover
+open Pulse.Checker.Prover
 
 module P = Pulse.Syntax.Printer
 module FV = Pulse.Typing.FV

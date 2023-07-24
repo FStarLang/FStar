@@ -1,15 +1,15 @@
-module Pulse.Prover.IntroExists
+module Pulse.Checker.Prover.IntroExists
 
 open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Typing.Combinators
 open Pulse.Typing.Metatheory
 open Pulse.Checker.VPropEquiv
-open Pulse.Prover.Common
+open Pulse.Checker.Prover.Common
 open Pulse.Checker.Base
 
 module T = FStar.Tactics.V2
-module PS = Pulse.Prover.Substs
+module PS = Pulse.Checker.Prover.Substs
 
 let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y == x} = x
 

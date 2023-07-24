@@ -11,7 +11,7 @@ module L = FStar.List.Tot
 module PC = Pulse.Checker.Pure
 module P = Pulse.Syntax.Printer
 module N = Pulse.Syntax.Naming 
-module Prover = Pulse.Prover
+module Prover = Pulse.Checker.Prover
 module RT = FStar.Reflection.Typing
 module RU = Pulse.RuntimeUtils
 let is_host_term (t:R.term) = not (R.Tv_Unknown? (R.inspect_ln t))
@@ -120,7 +120,7 @@ let check_unfoldable g (v:term) : T.Tac unit =
                         but %s is a primitive term that cannot be folded or unfolded"
                         (P.term_to_string v))
 
-module PS = Pulse.Prover.Substs
+module PS = Pulse.Checker.Prover.Substs
 let check
   (g:env)
   (st:st_term { Tm_ProofHintWithBinders? st.term })

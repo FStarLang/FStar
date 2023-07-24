@@ -1548,7 +1548,7 @@ let (check :
                                                                     (Prims.of_int (147))
                                                                     (Prims.of_int (52)))))
                                                                     (Obj.magic
-                                                                    (Pulse_Prover.prove
+                                                                    (Pulse_Checker_Prover.prove
                                                                     g pre ()
                                                                     uvs v2 ()))
                                                                     (fun
@@ -1585,11 +1585,11 @@ let (check :
                                                                     (check1
                                                                     g1
                                                                     (Pulse_Syntax_Base.tm_star
-                                                                    (Pulse_Prover_Substs.nt_subst_term
+                                                                    (Pulse_Checker_Prover_Substs.nt_subst_term
                                                                     v2 nts)
                                                                     pre') ()
                                                                     post_hint
-                                                                    (Pulse_Prover_Substs.nt_subst_st_term
+                                                                    (Pulse_Checker_Prover_Substs.nt_subst_st_term
                                                                     body1 nts)))
                                                                     (fun
                                                                     uu___5 ->
@@ -1610,8 +1610,8 @@ let (check :
                                                                     (Pulse_Checker_Base.k_elab_trans
                                                                     g g1 g2
                                                                     pre
-                                                                    (Pulse_Prover_Common.op_Star
-                                                                    (Pulse_Prover_Substs.nt_subst_term
+                                                                    (Pulse_Checker_Prover_Common.op_Star
+                                                                    (Pulse_Checker_Prover_Substs.nt_subst_term
                                                                     v2 nts)
                                                                     pre')
                                                                     pre''

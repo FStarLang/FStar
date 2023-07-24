@@ -982,7 +982,7 @@ let (check_stapp :
                                                                     (Prims.of_int (129))
                                                                     (Prims.of_int (70)))))
                                                                     (Obj.magic
-                                                                    (Pulse_Prover.try_frame_pre_uvs
+                                                                    (Pulse_Checker_Prover.try_frame_pre_uvs
                                                                     g0 ctxt
                                                                     () uvs t2
                                                                     c d2))
@@ -991,7 +991,7 @@ let (check_stapp :
                                                                     (fun
                                                                     uu___6 ->
                                                                     Obj.magic
-                                                                    (Pulse_Prover.repack
+                                                                    (Pulse_Checker_Prover.repack
                                                                     g0 ctxt
                                                                     uu___6
                                                                     post_hint
@@ -1186,7 +1186,7 @@ let (check_stapp :
                                                                     (Prims.of_int (129))
                                                                     (Prims.of_int (70)))))
                                                                     (Obj.magic
-                                                                    (Pulse_Prover.try_frame_pre_uvs
+                                                                    (Pulse_Checker_Prover.try_frame_pre_uvs
                                                                     g0 ctxt
                                                                     () uvs t2
                                                                     c d2))
@@ -1195,7 +1195,7 @@ let (check_stapp :
                                                                     (fun
                                                                     uu___7 ->
                                                                     Obj.magic
-                                                                    (Pulse_Prover.repack
+                                                                    (Pulse_Checker_Prover.repack
                                                                     g0 ctxt
                                                                     uu___7
                                                                     post_hint
@@ -1390,7 +1390,7 @@ let (check_stapp :
                                                                     (Prims.of_int (129))
                                                                     (Prims.of_int (70)))))
                                                                     (Obj.magic
-                                                                    (Pulse_Prover.try_frame_pre_uvs
+                                                                    (Pulse_Checker_Prover.try_frame_pre_uvs
                                                                     g0 ctxt
                                                                     () uvs t2
                                                                     c d2))
@@ -1399,7 +1399,7 @@ let (check_stapp :
                                                                     (fun
                                                                     uu___7 ->
                                                                     Obj.magic
-                                                                    (Pulse_Prover.repack
+                                                                    (Pulse_Checker_Prover.repack
                                                                     g0 ctxt
                                                                     uu___7
                                                                     post_hint

@@ -1,10 +1,10 @@
-module Pulse.Prover.ElimExists
+module Pulse.Checker.Prover.ElimExists
 
 open Pulse.Syntax
 open Pulse.Typing
 
 open Pulse.Checker.Base
-open Pulse.Prover.Common
+open Pulse.Checker.Prover.Common
 
 module T = FStar.Tactics.V2
 

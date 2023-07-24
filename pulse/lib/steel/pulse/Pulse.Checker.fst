@@ -30,8 +30,8 @@ module Par = Pulse.Checker.Par
 module Admit = Pulse.Checker.Admit
 module Return = Pulse.Checker.Return
 module Rewrite = Pulse.Checker.Rewrite
-module ElimPure = Pulse.Prover.ElimPure
-module ElimExists = Pulse.Prover.ElimExists
+module ElimPure = Pulse.Checker.Prover.ElimPure
+module ElimExists = Pulse.Checker.Prover.ElimExists
 
 let terms_to_string (t:list term)
   : T.Tac string 
@@ -144,7 +144,7 @@ let rec check' : bool -> check_t =
   //            (Pulse.Syntax.Printer.st_term_to_string t));
 
   let (| g, pre, pre_typing, k_elim_pure |) =
-    Pulse.Prover.ElimPure.elim_pure pre0_typing in
+    Pulse.Checker.Prover.ElimPure.elim_pure pre0_typing in
 
   let r : checker_result_t g pre post_hint =
     let g = push_context (P.tag_of_st_term t) t.range g in

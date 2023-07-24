@@ -1,10 +1,10 @@
-module Pulse.Prover.IntroPure
+module Pulse.Checker.Prover.IntroPure
 
 module T = FStar.Tactics
 
 open Pulse.Syntax
 open Pulse.Typing
-open Pulse.Prover.Common
+open Pulse.Checker.Prover.Common
 
 val intro_pure (#preamble:_) (pst:prover_state preamble)
   (t:term)

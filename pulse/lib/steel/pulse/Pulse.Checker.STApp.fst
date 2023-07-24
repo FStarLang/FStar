@@ -7,11 +7,11 @@ open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Pure
 open Pulse.Checker.Base
-open Pulse.Prover
+open Pulse.Checker.Prover
 module RU = Pulse.RuntimeUtils
 module P = Pulse.Syntax.Printer
 
-module Prover = Pulse.Prover
+module Prover = Pulse.Checker.Prover
 
 module FV = Pulse.Typing.FV
 let debug_log (g:env) (f:unit -> T.Tac unit) : T.Tac unit = if RU.debug_at_level (fstar_env g) "st_app" then f () else ()
