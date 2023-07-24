@@ -1,5 +1,5 @@
 [
-  "õ¬jÞE\u0005Æ†¾ÑR ÀG\u0007œ",
+  "ô‹Ðý!I¢\u0019YX”\u001f±¯ó§",
   [
     [
       "Pulse.Checker.gen_names_for_unknowns",
@@ -20,7 +20,7 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "0ac281aa08645bec53c4a69a8758071d"
+      "f85ae6d017deb29697ece8aee5fd985b"
     ],
     [
       "Pulse.Checker.instantiate_unknown_witnesses",
@@ -97,7 +97,7 @@
       "e29afb3908a717e578f7c08e49454047"
     ],
     [
-      "Pulse.Checker.check'",
+      "Pulse.Checker.check",
       1,
       0,
       1,
@@ -111,42 +111,25 @@
         "constructor_distinct_FStar.Tactics.Result.Failed",
         "constructor_distinct_FStar.Tactics.Result.Success",
         "constructor_distinct_Prims.Nil",
-        "constructor_distinct_Pulse.Syntax.Base.Tm_Admit",
-        "constructor_distinct_Pulse.Syntax.Base.Tm_ElimExists",
-        "constructor_distinct_Pulse.Syntax.Base.Tm_If",
         "constructor_distinct_Pulse.Syntax.Base.Tm_IntroExists",
-        "constructor_distinct_Pulse.Syntax.Base.Tm_Match",
-        "constructor_distinct_Pulse.Syntax.Base.Tm_Par",
-        "constructor_distinct_Pulse.Syntax.Base.Tm_ProofHintWithBinders",
-        "constructor_distinct_Pulse.Syntax.Base.Tm_Rewrite",
-        "constructor_distinct_Pulse.Syntax.Base.Tm_While",
-        "constructor_distinct_Pulse.Syntax.Base.Tm_WithLocal",
         "data_elim_FStar.Pervasives.Native.Some",
         "data_elim_FStar.Tactics.Result.Success",
         "data_elim_Pulse.Syntax.Base.Mkst_term",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
-        "disc_equation_Prims.Nil", "disc_equation_Pulse.Syntax.Base.Tm_Abs",
-        "disc_equation_Pulse.Syntax.Base.Tm_Bind",
-        "disc_equation_Pulse.Syntax.Base.Tm_ElimExists",
-        "disc_equation_Pulse.Syntax.Base.Tm_If",
+        "disc_equation_Prims.Nil",
         "disc_equation_Pulse.Syntax.Base.Tm_IntroExists",
-        "disc_equation_Pulse.Syntax.Base.Tm_Match",
         "disc_equation_Pulse.Syntax.Base.Tm_Return",
-        "disc_equation_Pulse.Syntax.Base.Tm_STApp",
-        "disc_equation_Pulse.Syntax.Base.Tm_TotBind",
-        "disc_equation_Pulse.Syntax.Base.Tm_While",
         "equation_FStar.Range.range",
         "equation_FStar.Reflection.Typing.fstar_top_env",
         "equation_Prims.nat",
         "equation_Pulse.Checker.Base.checker_res_matches_post_hint",
         "equation_Pulse.Checker.Base.checker_result_t",
-        "equation_Pulse.Checker.Base.x_t_ctxt_match_post_hint",
         "equation_Pulse.Checker.Exists.intro_exists_witness_singleton",
         "equation_Pulse.Checker.Pure.push_context",
         "equation_Pulse.Checker.maybe_intro_exists_erased",
-        "equation_Pulse.Syntax.Base.range", "equation_Pulse.Syntax.Base.typ",
-        "equation_Pulse.Syntax.Base.var", "equation_Pulse.Syntax.Base.vprop",
+        "equation_Pulse.Syntax.Base.range", "equation_Pulse.Syntax.Base.var",
+        "equation_Pulse.Syntax.Base.vprop",
         "equation_Pulse.Typing.Env.env_extends",
         "equation_Pulse.Typing.Env.extends_with",
         "equation_Pulse.Typing.post_hint_for_env",
@@ -157,7 +140,6 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result",
         "fuel_guarded_inversion_Prims.list",
         "fuel_guarded_inversion_Pulse.Syntax.Base.st_term",
-        "fuel_guarded_inversion_Pulse.Syntax.Base.st_term_",
         "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "kinding_Pulse.Syntax.Base.st_term@tok",
         "kinding_Pulse.Syntax.Base.term@tok",
@@ -196,7 +178,8 @@
         "projection_inverse_Pulse.Syntax.Base.Tm_IntroExists__0",
         "refinement_interpretation_Tm_refine_0e7cec6ed8f6e8567fd60faa69f1ee6b",
         "refinement_interpretation_Tm_refine_262f039a938fc14ac016e995f8cd074e",
-        "refinement_interpretation_Tm_refine_41b260ff8f186e12f10a1172442ba00d",
+        "refinement_interpretation_Tm_refine_4267d4c6afa07f3ba4570d839b7b0991",
+        "refinement_interpretation_Tm_refine_6d8ee78207eb8c69f5e44f08014b2ba6",
         "refinement_interpretation_Tm_refine_6e8e5238aadfc712ef5fa6bc6310c384",
         "refinement_interpretation_Tm_refine_7ad5682d990eaec6510764d663af54de",
         "refinement_interpretation_Tm_refine_7f3ad0958305f2921bfac06f466396ae",
@@ -204,17 +187,15 @@
         "refinement_interpretation_Tm_refine_ba488b4f12660f6fd23fa65ec4b4a4ff",
         "refinement_interpretation_Tm_refine_be0cb453a33d53da6ab9f91ceafd841d",
         "refinement_interpretation_Tm_refine_eed994d15518279ab75d745192d0d368",
-        "refinement_interpretation_Tm_refine_f641a7d86278b9594e676bf53245eace",
         "string_typing", "typing_Pulse.Checker.Pure.push_context",
         "typing_Pulse.Syntax.Base.__proj__Mkst_term__item__range",
-        "typing_Pulse.Syntax.Base.__proj__Mkst_term__item__term",
         "typing_Pulse.Syntax.Printer.tag_of_st_term",
         "typing_Pulse.Typing.Env.fstar_env",
         "typing_Pulse.Typing.Env.push_context",
         "typing_Pulse.Typing.__proj__Mkpost_hint_t__item__g"
       ],
       0,
-      "d3659e44ab78d1da8f153d5d26beba62"
+      "730fe3f1d7819e3a1b0d6a09cb6b776f"
     ]
   ]
 ]

@@ -248,6 +248,25 @@
       "8ce2f290b0081d401a1ebc1ef62712a3"
     ],
     [
+      "Pulse.Syntax.Base.ctag_of_comp_st",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_Pulse.Syntax.Base.C_ST",
+        "disc_equation_Pulse.Syntax.Base.C_STAtomic",
+        "disc_equation_Pulse.Syntax.Base.C_STGhost",
+        "disc_equation_Pulse.Syntax.Base.C_Tot",
+        "equation_Pulse.Syntax.Base.comp_st",
+        "fuel_guarded_inversion_Pulse.Syntax.Base.comp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_78cf9fabb706bab7e54de904b7db9d2a"
+      ],
+      0,
+      "a2df455a6e0b9b50b4e093112319f128"
+    ],
+    [
       "Pulse.Syntax.Base.proof_hint_type",
       1,
       2,
@@ -261,7 +280,7 @@
         "typing_FStar.Reflection.Types.name"
       ],
       0,
-      "8ac1974702dace683057c0c256c1bf3c"
+      "d2a12e1888205a25a1d805da221e0e06"
     ],
     [
       "Pulse.Syntax.Base.__proj__FOLD__item___0",
@@ -273,7 +292,7 @@
         "refinement_interpretation_Tm_refine_f02de02470d5e55219e650c427644816"
       ],
       0,
-      "489ef0b7576787eb60d846f6e7139bfd"
+      "c1466da93054fb4488f312ddaeaffb92"
     ],
     [
       "Pulse.Syntax.Base.__proj__UNFOLD__item___0",
@@ -294,7 +313,7 @@
       1,
       [ "@query" ],
       0,
-      "b2a88c8a8fda308feb7d5879a5a00f02"
+      "d777a4916fde0f4ba7e2a6b3b5736e1f"
     ],
     [
       "Pulse.Syntax.Base.eq_tm",

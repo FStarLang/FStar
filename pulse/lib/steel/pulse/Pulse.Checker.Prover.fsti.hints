@@ -1,0 +1,56 @@
+[
+  "ŸèÖ²ŒµhÅœ\u0011Nü*Q¼Ú",
+  [
+    [
+      "Pulse.Checker.Prover.prove",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b77c51c71d3bf1d9e80d9ee3de1421c8"
+    ],
+    [
+      "Pulse.Checker.Prover.try_frame_pre_uvs",
+      1,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.None_a"
+      ],
+      0,
+      "825da332748fbb6c1ed792ca83ecf24f"
+    ],
+    [
+      "Pulse.Checker.Prover.try_frame_pre",
+      1,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.None_a"
+      ],
+      0,
+      "385160c1ccc0e1278675c841fcd7a2f2"
+    ],
+    [
+      "Pulse.Checker.Prover.repack",
+      1,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.None_a"
+      ],
+      0,
+      "c2863c9219bdb60189422de9796f8b0d"
+    ]
+  ]
+]

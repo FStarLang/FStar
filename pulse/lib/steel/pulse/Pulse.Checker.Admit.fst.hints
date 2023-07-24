@@ -1,5 +1,5 @@
 [
-  "Èõ&Ú‡DèQæåÆ]ı¸dµ",
+  "ĞæLzpŒÚ\u007f0\r|kÈ²\u001f",
   [
     [
       "Pulse.Checker.Admit.post_hint_compatible",
@@ -11,10 +11,10 @@
         "lemma_FStar.Pervasives.invertOption"
       ],
       0,
-      "cd70e6b115c922a20848f40b3f291616"
+      "3bd7c950f7ea9004a5f6eec1ac143e79"
     ],
     [
-      "Pulse.Checker.Admit.check_admit",
+      "Pulse.Checker.Admit.check",
       1,
       2,
       1,
@@ -123,7 +123,7 @@
         "typing_Pulse.Typing.Env.fstar_env"
       ],
       0,
-      "6315cfe278e5a44354e9e94db822ddf0"
+      "aa5544803dcd5a35cb45892a02c3e128"
     ]
   ]
 ]

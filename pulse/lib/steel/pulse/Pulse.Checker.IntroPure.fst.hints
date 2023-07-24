@@ -1,5 +1,5 @@
 [
-  "\u0006ซe\u0017z”ฎ”•+๓Gล<ษ",
+  "ณ\u0005็\"=ใฺÿ&าย\u001d\u000ey’",
   [
     [
       "Pulse.Checker.IntroPure.check_prop",
@@ -31,10 +31,10 @@
         "typing_Pulse.Syntax.Base.__proj__Mkterm__item__range"
       ],
       0,
-      "4b43a7c456bfd7a0835024d3fe8da47a"
+      "926fe94c7d975d61639c07da38f97976"
     ],
     [
-      "Pulse.Checker.IntroPure.check_intro_pure",
+      "Pulse.Checker.IntroPure.check",
       1,
       2,
       1,
@@ -51,7 +51,7 @@
         "refinement_interpretation_Tm_refine_8cde4c154bce2e51e85181a96461d048"
       ],
       0,
-      "4ee316e9604cf1b9366a91ce2633a459"
+      "995bd1711d62b2428bb0ca9f76713695"
     ]
   ]
 ]

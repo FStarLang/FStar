@@ -1,5 +1,5 @@
 [
-  "\u0017«}µw\u000fè(ﬁ7Ô!\u000e4+`",
+  "W\u000b†\u00040ûπ‰Ñ—mñ¿\u0006â\"",
   [
     [
       "Pulse.Checker.If.combine_if_branches",
@@ -114,10 +114,10 @@
         "typing_tok_Pulse.Syntax.Base.Implicit@tok"
       ],
       0,
-      "2e2912b6087dd65ad856dd9af6f29b4c"
+      "5f0932bc2bff6223881b745c2250446b"
     ],
     [
-      "Pulse.Checker.If.check_if",
+      "Pulse.Checker.If.check",
       1,
       0,
       1,
@@ -129,10 +129,10 @@
         "refinement_interpretation_Tm_refine_6e8e5238aadfc712ef5fa6bc6310c384"
       ],
       0,
-      "1ad48bc52a625da81e276b1c5a4b1535"
+      "a58210dc0aa47f168c2ac1e590438646"
     ],
     [
-      "Pulse.Checker.If.check_if",
+      "Pulse.Checker.If.check",
       2,
       0,
       1,
@@ -223,7 +223,7 @@
         "typing_Pulse.Typing.mk_eq2", "typing_Pulse.Typing.tm_bool"
       ],
       0,
-      "24452097947a297915134f8f4ee75f17"
+      "e9b2235295bd31d7aeac4846536d4f18"
     ]
   ]
 ]

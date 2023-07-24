@@ -57,7 +57,7 @@ let k_intro_exists (#g:env) (#u:universe) (#b:binder) (#p:vprop)
   assert (equal (push_env (push_binding g x ppname_default (comp_res c)) empty_env)
                 (push_binding g x ppname_default (comp_res c)));
   let d1 : st_typing (push_binding g x ppname_default (comp_res c)) t1 c1 =
-    st_typing_weakening
+    Pulse.Checker.Prover.Util.st_typing_weakening
       g
       empty_env
       t1 c1 d1
