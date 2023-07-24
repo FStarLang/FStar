@@ -1787,7 +1787,6 @@ let rollback_env depth = FStar.Common.rollback pop_env last_env depth
 
 let init tcenv =
     init_env tcenv;
-    Z3.init ();
     Z3.giveZ3 [DefPrelude]
 let snapshot msg = BU.atomically (fun () ->
     let env_depth, () = snapshot_env () in

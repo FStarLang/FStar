@@ -1286,7 +1286,7 @@ let solver = {
 
     solve=solve;
     solve_sync=solve_sync_bool;
-    finish=Z3.finish;
+    finish=(fun () -> ());
     refresh=Z3.refresh;
 }
 

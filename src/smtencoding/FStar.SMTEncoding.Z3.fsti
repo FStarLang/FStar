@@ -49,7 +49,6 @@ type query_log = {
 }
 
 val status_string_and_errors : z3status -> string * error_labels
-val set_z3_options : string -> unit
 val giveZ3 : list decl -> unit
 
 val ask: r:Range.range
@@ -63,9 +62,7 @@ val ask: r:Range.range
        -> z3result
 
 val refresh: unit -> unit
-val finish: unit -> unit
 val mk_fresh_scope: unit -> scope_t
-val init : unit -> unit
 val push : msg:string -> unit
 val pop : msg:string -> unit
 val snapshot : msg:string -> (int * unit)
