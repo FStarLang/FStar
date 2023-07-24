@@ -2467,8 +2467,9 @@ let (get_vconfig : unit -> FStar_VConfig.vconfig) =
       let uu___23 = get_z3rlimit () in
       let uu___24 = get_z3rlimit_factor () in
       let uu___25 = get_z3seed () in
-      let uu___26 = get_trivial_pre_for_unannotated_effectful_fns () in
-      let uu___27 = get_reuse_hint_for () in
+      let uu___26 = get_z3version () in
+      let uu___27 = get_trivial_pre_for_unannotated_effectful_fns () in
+      let uu___28 = get_reuse_hint_for () in
       {
         FStar_VConfig.initial_fuel = uu___1;
         FStar_VConfig.max_fuel = uu___2;
@@ -2495,8 +2496,9 @@ let (get_vconfig : unit -> FStar_VConfig.vconfig) =
         FStar_VConfig.z3rlimit = uu___23;
         FStar_VConfig.z3rlimit_factor = uu___24;
         FStar_VConfig.z3seed = uu___25;
-        FStar_VConfig.trivial_pre_for_unannotated_effectful_fns = uu___26;
-        FStar_VConfig.reuse_hint_for = uu___27
+        FStar_VConfig.z3version = uu___26;
+        FStar_VConfig.trivial_pre_for_unannotated_effectful_fns = uu___27;
+        FStar_VConfig.reuse_hint_for = uu___28
       } in
     vcfg
 let (set_vconfig : FStar_VConfig.vconfig -> unit) =
