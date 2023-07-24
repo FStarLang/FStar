@@ -205,6 +205,7 @@ val start_process: string -> string -> list string -> (string -> bool) -> proc
 val ask_process: proc -> string -> (*err_handler:*)(unit -> string) -> (*stderr_handler:*)(string -> unit) -> string
 val kill_process: proc -> unit
 val kill_all: unit -> unit
+val proc_prog : proc -> string
 
 val get_file_extension: string -> string
 val is_path_absolute: string -> bool

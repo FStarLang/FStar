@@ -93,6 +93,7 @@ type proc =
      mutable killed : bool;
      stop_marker: (string -> bool) option;
      id : string;
+     prog : string;
      start_time : time}
 
 let all_procs : (proc list) ref = ref []
@@ -142,7 +143,9 @@ let start_process'
   Unix.close stdin_r;
   Unix.close stdout_w;
   Unix.close stderr_w;
-  let proc = { pid = pid; id = prog ^ ":" ^ id;
+  let proc = { pid = pid;
+               id = prog ^ ":" ^ id;
+               prog = prog;
                inc = Unix.in_channel_of_descr stdout_r;
                errc = Unix.in_channel_of_descr stderr_r;
                outc = Unix.out_channel_of_descr stdin_w;
@@ -185,6 +188,8 @@ let kill_process (p: proc) =
 
 let kill_all () =
   BatList.iter kill_process !all_procs
+
+let proc_prog (p:proc) : string = p.prog
 
 let process_read_all_output (p: proc) =
   (* Pass cleanup:false because kill_process closes both fds already. *)
