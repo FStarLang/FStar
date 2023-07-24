@@ -129,7 +129,7 @@ let (canon_right :
             ->
             ((Pulse_Syntax_Base.term, unit,
                (unit, unit, unit, unit)
-                 Pulse_Checker_Common.continuation_elaborator)
+                 Pulse_Checker_Base.continuation_elaborator)
                FStar_Pervasives.dtuple3,
               unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -161,7 +161,7 @@ let (canon_right :
                             ((list_as_vprop'
                                 (Pulse_Typing_Combinators.list_as_vprop vps')
                                 pures), (),
-                              (Pulse_Checker_Common.k_elab_equiv g g
+                              (Pulse_Checker_Base.k_elab_equiv g g
                                  (Pulse_Syntax_Base.tm_star ctxt frame)
                                  (Pulse_Syntax_Base.tm_star ctxt frame)
                                  (Pulse_Syntax_Base.tm_star ctxt frame)
@@ -169,7 +169,7 @@ let (canon_right :
                                     (list_as_vprop'
                                        (Pulse_Typing_Combinators.list_as_vprop
                                           vps') pures) frame)
-                                 (Pulse_Checker_Common.k_elab_unit g
+                                 (Pulse_Checker_Base.k_elab_unit g
                                     (Pulse_Syntax_Base.tm_star ctxt frame))
                                  () ()))))
 let (elim_one :
@@ -186,7 +186,7 @@ let (elim_one :
                       ((Pulse_Typing_Env.env, Pulse_Syntax_Base.term, 
                          unit,
                          (unit, unit, unit, unit)
-                           Pulse_Checker_Common.continuation_elaborator)
+                           Pulse_Checker_Base.continuation_elaborator)
                          FStar_Pervasives.dtuple4,
                         unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -257,7 +257,7 @@ let (elim_one :
                                                        (Prims.of_int (108))
                                                        (Prims.of_int (40)))))
                                               (Obj.magic
-                                                 (Pulse_Checker_Common.continuation_elaborator_with_bind
+                                                 (Pulse_Checker_Base.continuation_elaborator_with_bind
                                                     g
                                                     (Pulse_Syntax_Base.tm_star
                                                        ctxt frame) c1 e1
@@ -277,7 +277,7 @@ let (elim_one :
                                                                 (Pulse_Syntax_Base.v_as_nv
                                                                    x)) ctxt),
                                                           (),
-                                                          (Pulse_Checker_Common.k_elab_equiv
+                                                          (Pulse_Checker_Base.k_elab_equiv
                                                              g
                                                              (Pulse_Typing_Env.push_binding
                                                                 g x nx
@@ -322,7 +322,7 @@ let rec (elim_all :
                 ((Prims.bool * (Pulse_Typing_Env.env, Pulse_Syntax_Base.term,
                    unit,
                    (unit, unit, unit, unit)
-                     Pulse_Checker_Common.continuation_elaborator)
+                     Pulse_Checker_Base.continuation_elaborator)
                    FStar_Pervasives.dtuple4),
                   unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -509,7 +509,7 @@ let rec (elim_all :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___4 ->
-                                                                    Pulse_Checker_Common.k_elab_equiv
+                                                                    Pulse_Checker_Base.k_elab_equiv
                                                                     g g'
                                                                     (Pulse_Syntax_Base.tm_star
                                                                     (Pulse_Syntax_Base.tm_star
@@ -573,7 +573,7 @@ let rec (elim_all :
                                                                     (g'',
                                                                     ctxt'',
                                                                     (),
-                                                                    (Pulse_Checker_Common.k_elab_trans
+                                                                    (Pulse_Checker_Base.k_elab_trans
                                                                     g g' g''
                                                                     (Pulse_Syntax_Base.tm_star
                                                                     (Pulse_Syntax_Base.tm_star
@@ -601,7 +601,7 @@ let rec (elim_all :
                                                                     (FStar_Pervasives.Mkdtuple4
                                                                     (g, ctxt,
                                                                     (),
-                                                                    (Pulse_Checker_Common.k_elab_unit
+                                                                    (Pulse_Checker_Base.k_elab_unit
                                                                     g
                                                                     (Pulse_Syntax_Base.tm_star
                                                                     ctxt
@@ -617,7 +617,7 @@ let rec (elim_all :
                                                                     (FStar_Pervasives.Mkdtuple4
                                                                     (g, ctxt,
                                                                     (),
-                                                                    (Pulse_Checker_Common.k_elab_unit
+                                                                    (Pulse_Checker_Base.k_elab_unit
                                                                     g
                                                                     (Pulse_Syntax_Base.tm_star
                                                                     ctxt
@@ -631,7 +631,7 @@ let rec (elim_all :
                                               (false,
                                                 (FStar_Pervasives.Mkdtuple4
                                                    (g, ctxt, (),
-                                                     (Pulse_Checker_Common.k_elab_unit
+                                                     (Pulse_Checker_Base.k_elab_unit
                                                         g
                                                         (Pulse_Syntax_Base.tm_star
                                                            ctxt frame)))))))))
@@ -649,7 +649,7 @@ let (add_elims_aux :
                 ((Prims.bool * (Pulse_Typing_Env.env, Pulse_Syntax_Base.term,
                    unit,
                    (unit, unit, unit, unit)
-                     Pulse_Checker_Common.continuation_elaborator)
+                     Pulse_Checker_Base.continuation_elaborator)
                    FStar_Pervasives.dtuple4),
                   unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -708,7 +708,7 @@ let (add_elims_aux :
                                              (progress,
                                                (FStar_Pervasives.Mkdtuple4
                                                   (g', ctxt'', (),
-                                                    (Pulse_Checker_Common.k_elab_trans
+                                                    (Pulse_Checker_Base.k_elab_trans
                                                        g g g'
                                                        (Pulse_Syntax_Base.tm_star
                                                           ctxt frame)
@@ -729,7 +729,7 @@ let rec (add_elims :
               Pulse_Typing_Env.env ->
                 ((Pulse_Typing_Env.env, Pulse_Syntax_Base.term, unit,
                    (unit, unit, unit, unit)
-                     Pulse_Checker_Common.continuation_elaborator)
+                     Pulse_Checker_Base.continuation_elaborator)
                    FStar_Pervasives.dtuple4,
                   unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -826,7 +826,7 @@ let rec (add_elims :
                                                                    (g'',
                                                                     ctxt'',
                                                                     (),
-                                                                    (Pulse_Checker_Common.k_elab_trans
+                                                                    (Pulse_Checker_Base.k_elab_trans
                                                                     g g' g''
                                                                     (Pulse_Syntax_Base.tm_star
                                                                     ctxt
@@ -880,7 +880,7 @@ type 'preamble1 prover_state =
   ss: Pulse_Prover_Substs.ss_t ;
   solved: Pulse_Syntax_Base.vprop ;
   unsolved: Pulse_Syntax_Base.vprop Prims.list ;
-  k: (unit, unit, unit, unit) Pulse_Checker_Common.continuation_elaborator ;
+  k: (unit, unit, unit, unit) Pulse_Checker_Base.continuation_elaborator ;
   goals_inv: unit ;
   solved_inv: unit }
 let (__proj__Mkprover_state__item__pg :
@@ -929,7 +929,7 @@ let (__proj__Mkprover_state__item__unsolved :
 let (__proj__Mkprover_state__item__k :
   preamble ->
     unit prover_state ->
-      (unit, unit, unit, unit) Pulse_Checker_Common.continuation_elaborator)
+      (unit, unit, unit, unit) Pulse_Checker_Base.continuation_elaborator)
   =
   fun preamble1 ->
     fun projectee ->

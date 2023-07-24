@@ -375,7 +375,7 @@ let (check_branch :
     Pulse_Syntax_Base.term ->
       unit ->
         unit Pulse_Typing.post_hint_for_env ->
-          Pulse_Checker_Common.check_t ->
+          Pulse_Checker_Base.check_t ->
             Pulse_Syntax_Base.universe ->
               Pulse_Syntax_Base.typ ->
                 Pulse_Syntax_Base.term ->
@@ -809,7 +809,7 @@ let (check_branch :
                                                                     uu___2 ->
                                                                     (fun r ->
                                                                     Obj.magic
-                                                                    (Pulse_Checker_Common.apply_checker_result_k
+                                                                    (Pulse_Checker_Base.apply_checker_result_k
                                                                     g'1 pre
                                                                     post_hint
                                                                     r))
@@ -899,7 +899,7 @@ let (check_branches :
     Pulse_Syntax_Base.term ->
       unit ->
         unit Pulse_Typing.post_hint_for_env ->
-          Pulse_Checker_Common.check_t ->
+          Pulse_Checker_Base.check_t ->
             Pulse_Syntax_Base.universe ->
               Pulse_Syntax_Base.typ ->
                 Pulse_Syntax_Base.term ->
@@ -1258,8 +1258,8 @@ let (check_match :
         Pulse_Syntax_Base.term ->
           unit ->
             unit Pulse_Typing.post_hint_for_env ->
-              Pulse_Checker_Common.check_t ->
-                ((unit, unit, unit) Pulse_Checker_Common.checker_result_t,
+              Pulse_Checker_Base.check_t ->
+                ((unit, unit, unit) Pulse_Checker_Base.checker_result_t,
                   unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
@@ -1703,7 +1703,7 @@ let (check_match :
                                                                     uu___5 ->
                                                                     (fun d ->
                                                                     Obj.magic
-                                                                    (Pulse_Checker_Common.checker_result_for_st_typing
+                                                                    (Pulse_Checker_Base.checker_result_for_st_typing
                                                                     g pre
                                                                     (FStar_Pervasives_Native.Some
                                                                     post_hint)

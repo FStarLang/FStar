@@ -2386,7 +2386,7 @@ let (match_step :
                                                         Pulse_Prover_Common.k
                                                           =
                                                           (coerce_eq
-                                                             (Pulse_Checker_Common.k_elab_equiv
+                                                             (Pulse_Checker_Base.k_elab_equiv
                                                                 preamble.Pulse_Prover_Common.g0
                                                                 pst.Pulse_Prover_Common.pg
                                                                 (Pulse_Prover_Common.op_Star

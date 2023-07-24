@@ -6,7 +6,7 @@ open Pulse.Typing.Combinators
 open Pulse.Typing.Metatheory
 open Pulse.Checker.VPropEquiv
 open Pulse.Prover.Common
-open Pulse.Checker.Common
+open Pulse.Checker.Base
 
 module T = FStar.Tactics.V2
 module PS = Pulse.Prover.Substs

@@ -6,8 +6,8 @@ let (check_par :
         Pulse_Syntax_Base.term ->
           unit ->
             unit Pulse_Typing.post_hint_opt ->
-              Pulse_Checker_Common.check_t ->
-                ((unit, unit, unit) Pulse_Checker_Common.checker_result_t,
+              Pulse_Checker_Base.check_t ->
+                ((unit, unit, unit) Pulse_Checker_Base.checker_result_t,
                   unit) FStar_Tactics_Effect.tac_repr)
   =
   fun allow_inst ->
@@ -137,7 +137,7 @@ let (check_par :
                                                                     (Prims.of_int (58))
                                                                     (Prims.of_int (50)))))
                                                                     (Obj.magic
-                                                                    (Pulse_Checker_Common.intro_post_hint
+                                                                    (Pulse_Checker_Base.intro_post_hint
                                                                     g1
                                                                     FStar_Pervasives_Native.None
                                                                     FStar_Pervasives_Native.None
@@ -193,7 +193,7 @@ let (check_par :
                                                                     uu___3 ->
                                                                     (fun r ->
                                                                     Obj.magic
-                                                                    (Pulse_Checker_Common.apply_checker_result_k
+                                                                    (Pulse_Checker_Base.apply_checker_result_k
                                                                     g1 preL1
                                                                     postL_hint
                                                                     r))
@@ -261,7 +261,7 @@ let (check_par :
                                                                     (Prims.of_int (57))
                                                                     (Prims.of_int (52)))))
                                                                     (Obj.magic
-                                                                    (Pulse_Checker_Common.intro_post_hint
+                                                                    (Pulse_Checker_Base.intro_post_hint
                                                                     g1
                                                                     FStar_Pervasives_Native.None
                                                                     FStar_Pervasives_Native.None
@@ -317,7 +317,7 @@ let (check_par :
                                                                     uu___4 ->
                                                                     (fun r ->
                                                                     Obj.magic
-                                                                    (Pulse_Checker_Common.apply_checker_result_k
+                                                                    (Pulse_Checker_Base.apply_checker_result_k
                                                                     g1 preR1
                                                                     postR_hint
                                                                     r))

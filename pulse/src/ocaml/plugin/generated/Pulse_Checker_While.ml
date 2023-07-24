@@ -37,8 +37,8 @@ let (check_while :
       Pulse_Syntax_Base.term ->
         unit ->
           unit Pulse_Typing.post_hint_opt ->
-            Pulse_Checker_Common.check_t ->
-              ((unit, unit, unit) Pulse_Checker_Common.checker_result_t,
+            Pulse_Checker_Base.check_t ->
+              ((unit, unit, unit) Pulse_Checker_Base.checker_result_t, 
                 unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
@@ -358,7 +358,7 @@ let (check_while :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___6 ->
-                                                                    Pulse_Checker_Common.post_hint_from_comp_typing
+                                                                    Pulse_Checker_Base.post_hint_from_comp_typing
                                                                     (Pulse_Checker_Pure.push_context
                                                                     "invariant"
                                                                     (Pulse_Syntax_Base.term_range
@@ -424,7 +424,7 @@ let (check_while :
                                                                     uu___6 ->
                                                                     (fun r ->
                                                                     Obj.magic
-                                                                    (Pulse_Checker_Common.apply_checker_result_k
+                                                                    (Pulse_Checker_Base.apply_checker_result_k
                                                                     (Pulse_Checker_Pure.push_context
                                                                     "while condition"
                                                                     cond.Pulse_Syntax_Base.range2
@@ -557,7 +557,7 @@ let (check_while :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___8 ->
-                                                                    Pulse_Checker_Common.post_hint_from_comp_typing
+                                                                    Pulse_Checker_Base.post_hint_from_comp_typing
                                                                     (Pulse_Checker_Pure.push_context
                                                                     "invariant"
                                                                     (Pulse_Syntax_Base.term_range
@@ -623,7 +623,7 @@ let (check_while :
                                                                     uu___8 ->
                                                                     (fun r ->
                                                                     Obj.magic
-                                                                    (Pulse_Checker_Common.apply_checker_result_k
+                                                                    (Pulse_Checker_Base.apply_checker_result_k
                                                                     (Pulse_Checker_Pure.push_context
                                                                     "while body"
                                                                     body.Pulse_Syntax_Base.range2

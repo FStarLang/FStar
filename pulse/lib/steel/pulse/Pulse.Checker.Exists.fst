@@ -7,7 +7,7 @@ open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Typing.Combinators
 open Pulse.Checker.Pure
-open Pulse.Checker.Common
+open Pulse.Checker.Base
 open Pulse.Checker.VPropEquiv
 
 open Pulse.Prover

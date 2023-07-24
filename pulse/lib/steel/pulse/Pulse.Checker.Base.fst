@@ -1,4 +1,5 @@
-module Pulse.Checker.Common
+module Pulse.Checker.Base
+
 module T = FStar.Tactics.V2
 module RT = FStar.Reflection.Typing
 module Metatheory = Pulse.Typing.Metatheory
@@ -31,8 +32,9 @@ let format_failed_goal (g:env) (ctxt:list term) (goal:list term) =
 let mk_arrow ty t = RT.mk_arrow (elab_term ty) T.Q_Explicit (elab_term t)
 let mk_abs ty t = RT.(mk_abs (elab_term ty) T.Q_Explicit (elab_term t))
 
-let post_typing_as_abstraction (#g:env) (#x:var) (#ty:term) (#t:term { fresh_wrt x g (freevars t) })
-                               (_:tot_typing (push_binding g x ppname_default ty) (open_term t x) tm_vprop)
+let post_typing_as_abstraction
+  (#g:env) (#x:var) (#ty:term) (#t:term { fresh_wrt x g (freevars t) })
+  (_:tot_typing (push_binding g x ppname_default ty) (open_term t x) tm_vprop)
   : FStar.Ghost.erased (RT.tot_typing (elab_env g) (mk_abs ty t) (mk_arrow ty tm_vprop))                                 
   = admit()
 
@@ -357,7 +359,7 @@ let intro_comp_typing (g:env)
 
 let return_in_ctxt (g:env) (y:var) (u:universe) (ty:term) (ctxt:vprop)
   (ty_typing:universe_of g ty u)
-  (post_hint0:post_hint_opt g { Some? post_hint0 /\ x_t_ctxt_match_post_hint g post_hint0 y ty ctxt})
+  (post_hint0:post_hint_opt g { Some? post_hint0 /\ checker_res_matches_post_hint g post_hint0 y ty ctxt})
 
   : Pure (st_typing_in_ctxt g ctxt post_hint0)
          (requires lookup g y == Some ty)

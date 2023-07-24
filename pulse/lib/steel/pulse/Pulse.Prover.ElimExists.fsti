@@ -3,7 +3,7 @@ module Pulse.Prover.ElimExists
 open Pulse.Syntax
 open Pulse.Typing
 
-open Pulse.Checker.Common
+open Pulse.Checker.Base
 open Pulse.Prover.Common
 
 module T = FStar.Tactics.V2

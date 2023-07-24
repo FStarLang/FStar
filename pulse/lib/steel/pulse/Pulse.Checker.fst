@@ -11,7 +11,7 @@ open Pulse.Typing.Combinators
 open Pulse.Checker.Pure
 open Pulse.Checker.Bind
 open Pulse.Checker.VPropEquiv
-open Pulse.Checker.Common
+open Pulse.Checker.Base
 
 module P = Pulse.Syntax.Printer
 module RTB = FStar.Tactics.Builtins
@@ -183,7 +183,7 @@ let rec check' : bool -> check_t =
         match post_if, post_hint with
         | None, Some p -> p
         | Some p, None ->
-            Checker.Common.intro_post_hint g None None p
+            Checker.Base.intro_post_hint g None None p
         | Some p, Some q ->
           Pulse.Typing.Env.fail g (Some t.range) 
             (Printf.sprintf 
@@ -211,7 +211,7 @@ let rec check' : bool -> check_t =
         match post_match, post_hint with
         | None, Some p -> p
         | Some p, None ->
-          Checker.Common.intro_post_hint g None None p
+          Checker.Base.intro_post_hint g None None p
         | Some p, Some q ->
           Pulse.Typing.Env.fail g (Some t.range)
             (Printf.sprintf

@@ -43,7 +43,7 @@ let (remaining_ctxt_equiv_pst :
             Pulse_Prover_Common.solved = (pst.Pulse_Prover_Common.solved);
             Pulse_Prover_Common.unsolved = (pst.Pulse_Prover_Common.unsolved);
             Pulse_Prover_Common.k =
-              (Pulse_Checker_Common.k_elab_equiv
+              (Pulse_Checker_Base.k_elab_equiv
                  preamble.Pulse_Prover_Common.g0
                  (Pulse_Prover_Common.__proj__Mkprover_state__item__pg
                     preamble pst)
@@ -1067,7 +1067,7 @@ let (prove :
               ((Pulse_Typing_Env.env, Pulse_Prover_Substs.nt_substs,
                  Pulse_Syntax_Base.vprop,
                  (unit, unit, unit, unit)
-                   Pulse_Checker_Common.continuation_elaborator)
+                   Pulse_Checker_Base.continuation_elaborator)
                  FStar_Pervasives.dtuple4,
                 unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -1200,14 +1200,14 @@ let (prove :
                                                     (g, [],
                                                       (Pulse_Typing_Combinators.list_as_vprop
                                                          l'),
-                                                      (Pulse_Checker_Common.k_elab_equiv
+                                                      (Pulse_Checker_Base.k_elab_equiv
                                                          g g ctxt ctxt ctxt
                                                          (Pulse_Prover_Common.op_Star
                                                             (Pulse_Prover_Substs.nt_subst_term
                                                                goals [])
                                                             (Pulse_Typing_Combinators.list_as_vprop
                                                                l'))
-                                                         (Pulse_Checker_Common.k_elab_unit
+                                                         (Pulse_Checker_Base.k_elab_unit
                                                             g ctxt) () ())))))
                                  else
                                    Obj.magic
@@ -1315,7 +1315,7 @@ let (prove :
                                                                     goals);
                                                                     Pulse_Prover_Common.k
                                                                     =
-                                                                    (Pulse_Checker_Common.k_elab_equiv
+                                                                    (Pulse_Checker_Base.k_elab_equiv
                                                                     g g ctxt
                                                                     (Pulse_Prover_Common.op_Star
                                                                     preamble.Pulse_Prover_Common.ctxt
@@ -1330,7 +1330,7 @@ let (prove :
                                                                     (Pulse_Prover_Common.op_Array_Access
                                                                     Pulse_Prover_Substs.empty
                                                                     Pulse_Syntax_Base.tm_emp))
-                                                                    (Pulse_Checker_Common.k_elab_unit
+                                                                    (Pulse_Checker_Base.k_elab_unit
                                                                     g ctxt)
                                                                     () ());
                                                                     Pulse_Prover_Common.goals_inv
@@ -1448,7 +1448,7 @@ let (prove :
                                                                     nts uvs),
                                                                     (Pulse_Typing_Combinators.list_as_vprop
                                                                     pst.Pulse_Prover_Common.remaining_ctxt),
-                                                                    (Pulse_Checker_Common.k_elab_equiv
+                                                                    (Pulse_Checker_Base.k_elab_equiv
                                                                     g
                                                                     pst.Pulse_Prover_Common.pg
                                                                     (Pulse_Prover_Common.op_Star
@@ -1487,7 +1487,7 @@ let (try_frame_pre_uvs :
           Pulse_Syntax_Base.st_term ->
             Pulse_Syntax_Base.comp_st ->
               (unit, unit, unit) Pulse_Typing.st_typing ->
-                ((unit, unit, unit) Pulse_Checker_Common.checker_result_t,
+                ((unit, unit, unit) Pulse_Checker_Base.checker_result_t,
                   unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
@@ -1805,7 +1805,7 @@ let (try_frame_pre_uvs :
                                                                     (Prims.of_int (295))
                                                                     (Prims.of_int (27)))))
                                                                     (Obj.magic
-                                                                    (Pulse_Checker_Common.continuation_elaborator_with_bind
+                                                                    (Pulse_Checker_Base.continuation_elaborator_with_bind
                                                                     g1
                                                                     remaining_ctxt
                                                                     c1 t1 d3
@@ -1818,7 +1818,7 @@ let (try_frame_pre_uvs :
                                                                     (x, ty,
                                                                     ctxt',
                                                                     g2,
-                                                                    (Pulse_Checker_Common.k_elab_trans
+                                                                    (Pulse_Checker_Base.k_elab_trans
                                                                     g g1 g2
                                                                     ctxt
                                                                     (Pulse_Prover_Common.op_Star
@@ -1827,7 +1827,7 @@ let (try_frame_pre_uvs :
                                                                     remaining_ctxt)
                                                                     ctxt'
                                                                     k_frame1
-                                                                    (Pulse_Checker_Common.k_elab_equiv
+                                                                    (Pulse_Checker_Base.k_elab_equiv
                                                                     g1 g2
                                                                     (Pulse_Prover_Common.op_Star
                                                                     remaining_ctxt
@@ -1856,7 +1856,7 @@ let (try_frame_pre :
         Pulse_Syntax_Base.st_term ->
           Pulse_Syntax_Base.comp_st ->
             (unit, unit, unit) Pulse_Typing.st_typing ->
-              ((unit, unit, unit) Pulse_Checker_Common.checker_result_t,
+              ((unit, unit, unit) Pulse_Checker_Base.checker_result_t, 
                 unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
@@ -1886,10 +1886,10 @@ let (try_frame_pre :
 let (repack :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.vprop ->
-      (unit, unit, unit) Pulse_Checker_Common.checker_result_t ->
+      (unit, unit, unit) Pulse_Checker_Base.checker_result_t ->
         unit Pulse_Typing.post_hint_opt ->
           Pulse_Syntax_Base.range ->
-            ((unit, unit, unit) Pulse_Checker_Common.checker_result_t, 
+            ((unit, unit, unit) Pulse_Checker_Base.checker_result_t, 
               unit) FStar_Tactics_Effect.tac_repr)
   =
   fun uu___4 ->
@@ -2060,7 +2060,7 @@ let (repack :
                                                                     k_post1
                                                                     ->
                                                                     match 
-                                                                    Pulse_Checker_Common.check_equiv_emp
+                                                                    Pulse_Checker_Base.check_equiv_emp
                                                                     g3
                                                                     remaining_ctxt
                                                                     with
@@ -2086,13 +2086,13 @@ let (repack :
                                                                     (x, ty,
                                                                     post_hint_opened,
                                                                     g3,
-                                                                    (Pulse_Checker_Common.k_elab_trans
+                                                                    (Pulse_Checker_Base.k_elab_trans
                                                                     g g2 g3
                                                                     ctxt
                                                                     ctxt'
                                                                     post_hint_opened
                                                                     k
-                                                                    (Pulse_Checker_Common.k_elab_equiv
+                                                                    (Pulse_Checker_Base.k_elab_equiv
                                                                     g2 g3
                                                                     ctxt'
                                                                     ctxt'

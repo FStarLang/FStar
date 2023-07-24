@@ -5,7 +5,7 @@ let (check_return :
       Pulse_Syntax_Base.term ->
         unit ->
           unit Pulse_Typing.post_hint_opt ->
-            ((unit, unit, unit) Pulse_Checker_Common.checker_result_t, 
+            ((unit, unit, unit) Pulse_Checker_Base.checker_result_t, 
               unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->

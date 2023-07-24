@@ -367,7 +367,7 @@ let (check_effect_annotation :
 let rec (check_abs :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.st_term ->
-      Pulse_Checker_Common.check_t ->
+      Pulse_Checker_Base.check_t ->
         ((Pulse_Syntax_Base.st_term, Pulse_Syntax_Base.comp,
            (unit, unit, unit) Pulse_Typing.st_typing)
            FStar_Pervasives.dtuple3,
@@ -865,7 +865,7 @@ let rec (check_abs :
                                                                     (Prims.of_int (89))
                                                                     (Prims.of_int (14))
                                                                     (Prims.of_int (89))
-                                                                    (Prims.of_int (132)))))
+                                                                    (Prims.of_int (130)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -875,7 +875,7 @@ let rec (check_abs :
                                                                     (Prims.of_int (91))
                                                                     (Prims.of_int (31)))))
                                                                     (Obj.magic
-                                                                    (Pulse_Checker_Common.intro_post_hint
+                                                                    (Pulse_Checker_Base.intro_post_hint
                                                                     (Pulse_Checker_Pure.push_context
                                                                     "post_hint_typing"
                                                                     range g')
@@ -941,7 +941,7 @@ let rec (check_abs :
                                                                     (Prims.of_int (106))
                                                                     (Prims.of_int (29)))))
                                                                     (Obj.magic
-                                                                    (Pulse_Checker_Common.apply_checker_result_k
+                                                                    (Pulse_Checker_Base.apply_checker_result_k
                                                                     g'
                                                                     pre_opened1
                                                                     (FStar_Pervasives_Native.__proj__Some__item__v

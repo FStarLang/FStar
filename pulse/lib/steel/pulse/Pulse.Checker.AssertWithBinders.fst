@@ -4,7 +4,7 @@ module T = FStar.Tactics.V2
 module R = FStar.Reflection.V2
 open Pulse.Syntax
 open Pulse.Typing
-open Pulse.Checker.Common
+open Pulse.Checker.Base
 open Pulse.Elaborate.Pure
 open Pulse.Typing.Env
 module L = FStar.List.Tot

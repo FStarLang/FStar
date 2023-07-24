@@ -12,7 +12,7 @@ let (k_intro_exists :
                 Pulse_Syntax_Base.vprop ->
                   unit ->
                     ((unit, unit, unit, unit)
-                       Pulse_Checker_Common.continuation_elaborator,
+                       Pulse_Checker_Base.continuation_elaborator,
                       unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
@@ -140,7 +140,7 @@ let (k_intro_exists :
                                                                     (Prims.of_int (66))
                                                                     (Prims.of_int (30)))))
                                                                   (Obj.magic
-                                                                    (Pulse_Checker_Common.continuation_elaborator_with_bind
+                                                                    (Pulse_Checker_Base.continuation_elaborator_with_bind
                                                                     g frame
                                                                     (Pulse_Typing.comp_intro_exists
                                                                     u b p e)
@@ -287,7 +287,7 @@ let (k_intro_exists :
                                                                     (fun d12
                                                                     ->
                                                                     Obj.magic
-                                                                    (Pulse_Checker_Common.k_elab_equiv
+                                                                    (Pulse_Checker_Base.k_elab_equiv
                                                                     g
                                                                     (Pulse_Typing_Env.push_binding
                                                                     g x
@@ -457,7 +457,7 @@ let (intro_exists :
                                                      (FStar_Tactics_Effect.lift_div_tac
                                                         (fun uu___1 ->
                                                            coerce_eq
-                                                             (Pulse_Checker_Common.k_elab_equiv
+                                                             (Pulse_Checker_Base.k_elab_equiv
                                                                 preamble_sub.Pulse_Prover_Common.g0
                                                                 preamble_sub.Pulse_Prover_Common.g0
                                                                 (Pulse_Prover_Common.op_Star
@@ -478,7 +478,7 @@ let (intro_exists :
                                                                    (Pulse_Prover_Common.op_Array_Access
                                                                     pst.Pulse_Prover_Common.ss
                                                                     Pulse_Syntax_Base.tm_emp))
-                                                                (Pulse_Checker_Common.k_elab_unit
+                                                                (Pulse_Checker_Base.k_elab_unit
                                                                    preamble_sub.Pulse_Prover_Common.g0
                                                                    (Pulse_Prover_Common.op_Star
                                                                     preamble_sub.Pulse_Prover_Common.ctxt
@@ -828,7 +828,7 @@ let (intro_exists :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___3 ->
-                                                                    Pulse_Checker_Common.k_elab_equiv
+                                                                    Pulse_Checker_Base.k_elab_equiv
                                                                     preamble_sub.Pulse_Prover_Common.g0
                                                                     pst_sub1.Pulse_Prover_Common.pg
                                                                     (Pulse_Prover_Common.op_Star
@@ -964,7 +964,7 @@ let (intro_exists :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___3 ->
-                                                                    Pulse_Checker_Common.k_elab_equiv
+                                                                    Pulse_Checker_Base.k_elab_equiv
                                                                     preamble_sub.Pulse_Prover_Common.g0
                                                                     pst_sub1.Pulse_Prover_Common.pg
                                                                     (Pulse_Prover_Common.op_Star
@@ -1082,7 +1082,7 @@ let (intro_exists :
                                                                     = [];
                                                                     Pulse_Prover_Common.k
                                                                     =
-                                                                    (Pulse_Checker_Common.k_elab_equiv
+                                                                    (Pulse_Checker_Base.k_elab_equiv
                                                                     preamble.Pulse_Prover_Common.g0
                                                                     pst_sub1.Pulse_Prover_Common.pg
                                                                     (Pulse_Prover_Common.op_Star
@@ -1110,7 +1110,7 @@ let (intro_exists :
                                                                     (Pulse_Prover_Common.op_Array_Access
                                                                     pst_sub1.Pulse_Prover_Common.ss
                                                                     preamble.Pulse_Prover_Common.goals))
-                                                                    (Pulse_Checker_Common.k_elab_trans
+                                                                    (Pulse_Checker_Base.k_elab_trans
                                                                     preamble.Pulse_Prover_Common.g0
                                                                     (Pulse_Prover_Common.__proj__Mkprover_state__item__pg
                                                                     preamble
@@ -1145,7 +1145,7 @@ let (intro_exists :
                                                                     (Pulse_Typing_Combinators.list_as_vprop
                                                                     pst.Pulse_Prover_Common.unsolved))))
                                                                     pst.Pulse_Prover_Common.k
-                                                                    (Pulse_Checker_Common.k_elab_equiv
+                                                                    (Pulse_Checker_Base.k_elab_equiv
                                                                     pst.Pulse_Prover_Common.pg
                                                                     pst_sub1.Pulse_Prover_Common.pg
                                                                     (Pulse_Prover_Common.op_Star
@@ -1187,7 +1187,7 @@ let (intro_exists :
                                                                     (Pulse_Typing_Combinators.list_as_vprop
                                                                     pst.Pulse_Prover_Common.unsolved))))
                                                                     (coerce_eq
-                                                                    (Pulse_Checker_Common.k_elab_equiv
+                                                                    (Pulse_Checker_Base.k_elab_equiv
                                                                     preamble_sub.Pulse_Prover_Common.g0
                                                                     pst_sub1.Pulse_Prover_Common.pg
                                                                     (Pulse_Prover_Common.op_Star
@@ -1221,7 +1221,7 @@ let (intro_exists :
                                                                     pst.Pulse_Prover_Common.solved
                                                                     (Pulse_Typing_Combinators.list_as_vprop
                                                                     pst.Pulse_Prover_Common.unsolved))))
-                                                                    (Pulse_Checker_Common.k_elab_trans
+                                                                    (Pulse_Checker_Base.k_elab_trans
                                                                     preamble_sub.Pulse_Prover_Common.g0
                                                                     pst_sub1.Pulse_Prover_Common.pg
                                                                     pst_sub1.Pulse_Prover_Common.pg
@@ -1262,7 +1262,7 @@ let (intro_exists :
                                                                     unsolved'))))
                                                                     k_sub5
                                                                     (coerce_eq
-                                                                    (Pulse_Checker_Common.k_elab_equiv
+                                                                    (Pulse_Checker_Base.k_elab_equiv
                                                                     pst_sub1.Pulse_Prover_Common.pg
                                                                     pst_sub1.Pulse_Prover_Common.pg
                                                                     (Pulse_Prover_Common.op_Star

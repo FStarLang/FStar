@@ -6,7 +6,7 @@ module RT = FStar.Reflection.Typing
 open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Pure
-open Pulse.Checker.Common
+open Pulse.Checker.Base
 open Pulse.Prover
 
 module P = Pulse.Syntax.Printer
@@ -116,7 +116,7 @@ let check_return
 //   let post = close_term post_opened x in
 //   let d = T_Return g c use_eq u ty t post x uty (E d) post_typing in
 //   if frame_pre
-//   then repack (Pulse.Checker.Common.try_frame_pre pre_typing d) post_hint
+//   then repack (Pulse.Checker.Base.try_frame_pre pre_typing d) post_hint
 //   else if Some? post_hint
 //   then T.fail "check_return frame_pre is false but post_hint is set, bailing"
 //   else (| _, _, d |)

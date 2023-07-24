@@ -27,7 +27,7 @@ let (check_elim_exists :
       Pulse_Syntax_Base.term ->
         unit ->
           unit Pulse_Typing.post_hint_opt ->
-            ((unit, unit, unit) Pulse_Checker_Common.checker_result_t, 
+            ((unit, unit, unit) Pulse_Checker_Base.checker_result_t, 
               unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
@@ -515,7 +515,7 @@ let (check_intro_exists_erased :
         Pulse_Syntax_Base.term ->
           unit ->
             unit Pulse_Typing.post_hint_opt ->
-              ((unit, unit, unit) Pulse_Checker_Common.checker_result_t,
+              ((unit, unit, unit) Pulse_Checker_Base.checker_result_t, 
                 unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
@@ -802,7 +802,7 @@ let (check_intro_exists :
         Pulse_Syntax_Base.term ->
           unit ->
             unit Pulse_Typing.post_hint_opt ->
-              ((unit, unit, unit) Pulse_Checker_Common.checker_result_t,
+              ((unit, unit, unit) Pulse_Checker_Base.checker_result_t, 
                 unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
@@ -1152,7 +1152,7 @@ let (check_intro_exists_either :
         Pulse_Syntax_Base.term ->
           unit ->
             unit Pulse_Typing.post_hint_opt ->
-              ((unit, unit, unit) Pulse_Checker_Common.checker_result_t,
+              ((unit, unit, unit) Pulse_Checker_Base.checker_result_t, 
                 unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->

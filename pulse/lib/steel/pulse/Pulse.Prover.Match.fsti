@@ -5,7 +5,7 @@ module T = FStar.Tactics
 open Pulse.Syntax
 open Pulse.Typing
 
-open Pulse.Checker.Common
+open Pulse.Checker.Base
 open Pulse.Prover.Common
 
 val match_step (#preamble:preamble) (pst:prover_state preamble)

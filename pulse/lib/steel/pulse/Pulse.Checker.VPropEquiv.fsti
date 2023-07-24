@@ -6,7 +6,7 @@ open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Typing.Combinators
 
-open Pulse.Checker.Common
+open Pulse.Checker.Base
 
 let canon_vprop (vp:term)
   : term

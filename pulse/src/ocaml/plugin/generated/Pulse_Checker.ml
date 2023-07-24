@@ -443,7 +443,7 @@ let rec (transform_to_unary_intro_exists :
                                   (t.Pulse_Syntax_Base.range1))
                                "intro exists with non-existential"))) uu___2
           uu___1 uu___
-let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
+let rec (check' : Prims.bool -> Pulse_Checker_Base.check_t) =
   fun allow_inst ->
     fun g0 ->
       fun pre0 ->
@@ -694,7 +694,7 @@ let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
                                                             ->
                                                             Obj.magic
                                                               (Obj.repr
-                                                                 (Pulse_Checker_Common.intro_post_hint
+                                                                 (Pulse_Checker_Base.intro_post_hint
                                                                     g1
                                                                     FStar_Pervasives_Native.None
                                                                     FStar_Pervasives_Native.None
@@ -928,7 +928,7 @@ let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
                                                             ->
                                                             Obj.magic
                                                               (Obj.repr
-                                                                 (Pulse_Checker_Common.intro_post_hint
+                                                                 (Pulse_Checker_Base.intro_post_hint
                                                                     g1
                                                                     FStar_Pervasives_Native.None
                                                                     FStar_Pervasives_Native.None
@@ -1165,7 +1165,7 @@ let rec (check' : Prims.bool -> Pulse_Checker_Common.check_t) =
                                            (x, t1, pre', g1, k) ->
                                            FStar_Pervasives.Mkdtuple5
                                              (x, t1, pre', g1,
-                                               (Pulse_Checker_Common.k_elab_trans
+                                               (Pulse_Checker_Base.k_elab_trans
                                                   g0 g g1 pre0 pre pre'
                                                   k_elim_pure k)))))) uu___)
-let (check : Pulse_Checker_Common.check_t) = check' true
+let (check : Pulse_Checker_Base.check_t) = check' true

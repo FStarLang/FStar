@@ -363,8 +363,8 @@ let (check_if :
           Pulse_Syntax_Base.term ->
             unit ->
               unit Pulse_Typing.post_hint_for_env ->
-                Pulse_Checker_Common.check_t ->
-                  ((unit, unit, unit) Pulse_Checker_Common.checker_result_t,
+                Pulse_Checker_Base.check_t ->
+                  ((unit, unit, unit) Pulse_Checker_Base.checker_result_t,
                     unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
@@ -597,7 +597,7 @@ let (check_if :
                                                                     (Prims.of_int (115))
                                                                     (Prims.of_int (23)))))
                                                                     (Obj.magic
-                                                                    (Pulse_Checker_Common.apply_checker_result_k
+                                                                    (Pulse_Checker_Base.apply_checker_result_k
                                                                     g_with_eq1
                                                                     pre
                                                                     post_hint
@@ -873,7 +873,7 @@ let (check_if :
                                                                     post_typing
                                                                     ->
                                                                     Obj.magic
-                                                                    (Pulse_Checker_Common.intro_comp_typing
+                                                                    (Pulse_Checker_Base.intro_comp_typing
                                                                     g c () ()
                                                                     x ()))
                                                                     uu___6)))
@@ -932,7 +932,7 @@ let (check_if :
                                                                     uu___4 ->
                                                                     (fun d ->
                                                                     Obj.magic
-                                                                    (Pulse_Checker_Common.checker_result_for_st_typing
+                                                                    (Pulse_Checker_Base.checker_result_for_st_typing
                                                                     g pre
                                                                     (FStar_Pervasives_Native.Some
                                                                     post_hint)

@@ -9,7 +9,7 @@ open Pulse.Common
 open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Pure
-open Pulse.Checker.Common
+open Pulse.Checker.Base
 open Pulse.Prover
 
 let rec readback_pat (p : R.pattern) : option pattern =

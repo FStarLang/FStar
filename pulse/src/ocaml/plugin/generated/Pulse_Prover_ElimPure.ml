@@ -117,7 +117,7 @@ let (elim_pure_frame :
           Pulse_Typing_Env.env ->
             ((Pulse_Typing_Env.env, Pulse_Syntax_Base.term, unit,
                (unit, unit, unit, unit)
-                 Pulse_Checker_Common.continuation_elaborator)
+                 Pulse_Checker_Base.continuation_elaborator)
                FStar_Pervasives.dtuple4,
               unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -133,7 +133,7 @@ let (elim_pure :
       unit ->
         ((Pulse_Typing_Env.env, Pulse_Syntax_Base.term, unit,
            (unit, unit, unit, unit)
-             Pulse_Checker_Common.continuation_elaborator)
+             Pulse_Checker_Base.continuation_elaborator)
            FStar_Pervasives.dtuple4,
           unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -178,7 +178,7 @@ let (elim_pure :
                                  (g', ctxt', ctxt'_emp_typing, k) ->
                                  FStar_Pervasives.Mkdtuple4
                                    (g', ctxt', (),
-                                     (Pulse_Checker_Common.k_elab_equiv g g'
+                                     (Pulse_Checker_Base.k_elab_equiv g g'
                                         (Pulse_Prover_Common.op_Star ctxt
                                            Pulse_Syntax_Base.tm_emp) ctxt
                                         (Pulse_Prover_Common.op_Star ctxt'
@@ -229,7 +229,7 @@ let (elim_pure_pst :
                       Pulse_Prover_Common.unsolved =
                         (pst.Pulse_Prover_Common.unsolved);
                       Pulse_Prover_Common.k =
-                        (Pulse_Checker_Common.k_elab_trans
+                        (Pulse_Checker_Base.k_elab_trans
                            preamble.Pulse_Prover_Common.g0
                            (Pulse_Prover_Common.__proj__Mkprover_state__item__pg
                               preamble pst) g'
@@ -254,7 +254,7 @@ let (elim_pure_pst :
                                  pst.Pulse_Prover_Common.ss
                                  pst.Pulse_Prover_Common.solved))
                            pst.Pulse_Prover_Common.k
-                           (Pulse_Checker_Common.k_elab_equiv
+                           (Pulse_Checker_Base.k_elab_equiv
                               pst.Pulse_Prover_Common.pg g'
                               (Pulse_Prover_Common.op_Star
                                  (Pulse_Typing_Combinators.list_as_vprop

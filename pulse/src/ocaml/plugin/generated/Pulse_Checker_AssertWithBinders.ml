@@ -1376,8 +1376,8 @@ let (check :
       Pulse_Syntax_Base.term ->
         unit ->
           unit Pulse_Typing.post_hint_opt ->
-            Pulse_Checker_Common.check_t ->
-              ((unit, unit, unit) Pulse_Checker_Common.checker_result_t,
+            Pulse_Checker_Base.check_t ->
+              ((unit, unit, unit) Pulse_Checker_Base.checker_result_t, 
                 unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
@@ -1607,7 +1607,7 @@ let (check :
                                                                     (x, x_ty,
                                                                     pre'',
                                                                     g2,
-                                                                    (Pulse_Checker_Common.k_elab_trans
+                                                                    (Pulse_Checker_Base.k_elab_trans
                                                                     g g1 g2
                                                                     pre
                                                                     (Pulse_Prover_Common.op_Star

@@ -41,7 +41,7 @@
         "equation_FStar.Reflection.V2.Data.var",
         "equation_FStar.Set.disjoint", "equation_Prims.eqtype",
         "equation_Prims.nat",
-        "equation_Pulse.Checker.Common.continuation_elaborator",
+        "equation_Pulse.Checker.Base.continuation_elaborator",
         "equation_Pulse.Syntax.Base.comp_post",
         "equation_Pulse.Syntax.Base.comp_pre",
         "equation_Pulse.Syntax.Base.nvar",

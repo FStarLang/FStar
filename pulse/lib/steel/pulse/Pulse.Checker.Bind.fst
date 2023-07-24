@@ -8,7 +8,7 @@ open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Typing.Combinators
-open Pulse.Checker.Common
+open Pulse.Checker.Base
 open Pulse.Checker.Pure
 module FV = Pulse.Typing.FV
 module LN = Pulse.Typing.LN

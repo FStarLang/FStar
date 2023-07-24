@@ -1,4 +1,5 @@
-module Pulse.Checker.Common
+module Pulse.Checker.Base
+
 module RT = FStar.Reflection.Typing
 module R = FStar.Reflection.V2
 module L = FStar.List.Tot
@@ -12,9 +13,6 @@ module RU = Pulse.RuntimeUtils
 module Metatheory = Pulse.Typing.Metatheory
 
 val format_failed_goal (g:env) (ctxt:list term) (goal:list term) : T.Tac string
-
-// let mk_abs ty t = RT.(mk_abs (elab_term ty) T.Q_Explicit (elab_term t))
-// let mk_arrow ty t = RT.mk_arrow (elab_term ty) T.Q_Explicit (elab_term t)
 
 val intro_post_hint (g:env) (ctag_opt:option ctag) (ret_ty:option term) (post:term)
   : T.Tac (post_hint_for_env g)
@@ -72,22 +70,23 @@ val continuation_elaborator_with_tot_bind (#g:env) (#ctxt:term)
 val check_equiv_emp (g:env) (vp:term)
   : option (vprop_equiv g vp tm_emp)
 
-let x_t_ctxt_match_post_hint
+let checker_res_matches_post_hint
   (g:env)
   (post_hint:post_hint_opt g)
-  (x:var) (t:term) (ctxt:vprop) =
+  (x:var) (t:term) (ctxt':vprop) =
 
   match post_hint with
   | None -> True
   | Some post_hint ->
     t == post_hint.ret_ty /\
-    ctxt == open_term post_hint.post x
+    ctxt' == open_term post_hint.post x
 
-let checker_res_matches_post_hint
-  (g:env)
-  (post_hint:post_hint_opt g)
-  (x:var) (t:term) (ctxt':vprop) = x_t_ctxt_match_post_hint g post_hint x t ctxt'
-
+//
+// x is the variable in which the result of the checked computation is bound
+// t is the type of the checked computation
+//
+// TODO: return ctxt' typing so that the continuation can use it
+//
 type checker_result_t (g:env) (ctxt:vprop) (post_hint:post_hint_opt g) =
   x:var &
   t:term &
@@ -118,5 +117,3 @@ val apply_checker_result_k (#g:env) (#ctxt:vprop) (#post_hint:post_hint_for_env 
 val checker_result_for_st_typing (#g:env) (#ctxt:vprop) (#post_hint:post_hint_opt g)
   (d:st_typing_in_ctxt g ctxt post_hint)
   : T.Tac (checker_result_t g ctxt post_hint)
-
-

@@ -6,7 +6,7 @@ module RT = FStar.Reflection.Typing
 open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Pure
-open Pulse.Checker.Common
+open Pulse.Checker.Base
 open Pulse.Prover
 
 module P = Pulse.Syntax.Printer

@@ -4,7 +4,7 @@ module T = FStar.Tactics.V2
 
 open Pulse.Syntax
 open Pulse.Typing
-open Pulse.Checker.Common
+open Pulse.Checker.Base
 
 val check_elim_exists
   (g:env)

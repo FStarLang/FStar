@@ -5,7 +5,7 @@ open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Typing.Combinators
-open Pulse.Checker.Common
+open Pulse.Checker.Base
 open Pulse.Typing.Metatheory
 open Pulse.Checker.VPropEquiv
 open Pulse.Prover.Common

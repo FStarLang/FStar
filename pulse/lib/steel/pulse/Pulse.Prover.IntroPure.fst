@@ -7,7 +7,7 @@ open Pulse.Typing.Metatheory
 open Pulse.Checker.Pure
 open Pulse.Checker.VPropEquiv
 open Pulse.Prover.Common
-open Pulse.Checker.Common
+open Pulse.Checker.Base
 
 module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
