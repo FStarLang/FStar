@@ -27,7 +27,6 @@ let models (s:pht_sig) (pht:pht s) (ht:ht s) : vprop
 let coerce_nat (n:int{n>=0}) : nat = n
 let coerce_us (n:nat) : US.t = assume (US.fits n); US.uint_to_t n
 
-// [@@expect_failure]
 ```pulse
 fn lookup (#s:pht_sig) (#pht:(p:pht s{not_full p.repr}))  
           (ht:ht s) (k:s.keyt)
@@ -66,18 +65,27 @@ fn lookup (#s:pht_sig) (#pht:(p:pht s{not_full p.repr}))
           if (k' = k) {
             cont := false;
             write ret (Some v') #None;
-            admit()
+            fold (models s pht ht);
+            // FIXME: prove lookup result
+            assume_ (pure (Some v' == PHT.lookup pht k));
+            ()
           } else {
             off := voff + 1;
-            admit() 
+            fold (models s pht ht);
+            ()
           }}
-        Clean -> { 
+        Clean -> {
           cont := false;
-          admit()
+          fold (models s pht ht);
+          // FIXME: prove lookup result
+          assume_ (pure (None #(s.valt) == PHT.lookup pht k));
+          assert_ (R.pts_to ret full_perm (PHT.lookup pht k)); // need this assert
+          ()
          }
         Zombie -> { 
           off := voff + 1;
-          admit() 
+          fold (models s pht ht);
+          ()
          }
       };
     };
@@ -88,7 +96,6 @@ fn lookup (#s:pht_sig) (#pht:(p:pht s{not_full p.repr}))
 }
 ```
 
-[@@expect_failure]
 ```pulse
 fn insert (#s:pht_sig) (#pht:(p:pht s{not_full p.repr})) 
           (ht:ht s) (k:s.keyt) (v:s.valt)
@@ -125,16 +132,25 @@ fn insert (#s:pht_sig) (#pht:(p:pht s{not_full p.repr}))
           if (k' = k) {
             op_Array_Assignment ht.contents idx (mk_used_cell k v);
             cont := false;
-            admit()
+            // FIXME: prove seq upd
+            assume_ (pure ((PHT.insert pht k v).repr `Seq.equal` 
+              Seq.upd pht.repr (US.v idx) (mk_used_cell k v))); 
+            fold (models s (PHT.insert pht k v) ht);
+            ()
           } else {
             off := voff + 1;
-            admit()
+            fold (models s pht ht);
+            ()
           } 
         }
         Clean -> {
           op_Array_Assignment ht.contents idx (mk_used_cell k v);
           cont := false;
-          admit()
+          // FIXME: prove seq upd
+          assume_ (pure ((PHT.insert pht k v).repr `Seq.equal` 
+            Seq.upd pht.repr (US.v idx) (mk_used_cell k v)));
+          fold (models s (PHT.insert pht k v) ht);
+          ()
         }
         Zombie -> {
           fold (models s pht ht);
@@ -145,12 +161,19 @@ fn insert (#s:pht_sig) (#pht:(p:pht s{not_full p.repr}))
               op_Array_Assignment ht.contents (coerce_us (snd p)) Zombie;
               op_Array_Assignment ht.contents idx (mk_used_cell k v);
               cont := false;
-              admit()
+              // FIXME: prove seq upd
+              assume_ (pure ((PHT.insert pht k v).repr `Seq.equal` 
+                Seq.upd (Seq.upd pht.repr (US.v (coerce_us (snd p))) Zombie) (US.v idx) (mk_used_cell k v)));
+              fold (models s (PHT.insert pht k v) ht);
+              ()
             }
             None -> { 
               op_Array_Assignment ht.contents idx (mk_used_cell k v); 
               cont := false;
-              admit()
+              // FIXME: prove seq upd
+              assume_ (pure ((PHT.insert pht k v).repr `Seq.equal` Seq.upd pht.repr (US.v idx) (mk_used_cell k v)));
+              fold (models s (PHT.insert pht k v) ht);
+              ()
             }
           };
         }
@@ -188,30 +211,37 @@ fn delete (#s:pht_sig) (#pht:pht s)
     if (voff=sz) {
       ()
     } else {
-      admit()
-      // let idx = coerce_us ((cidx+voff)%sz);
-      // assume_ (pure (US.v idx < pht.sz)); // FIXME: can prove based on modulo calc above
-      // let c = op_Array_Index ht.contents #full_perm #pht.repr idx;
-      // match c {
-      //   Used k' v' -> { 
-      //     if (k' = k) {
-      //       op_Array_Assignment ht.contents idx Zombie;
-      //       cont := false;
-      //       ()
-      //     } else {
-      //       off := voff + 1;
-      //       ()
-      //     } 
-      //   }
-      //   Clean -> {
-      //     cont := false;
-      //     ()
-      //   }
-      //   Zombie -> { 
-      //     off := voff + 1;
-      //     () 
-      //   }
-      // };
+      unfold (models s pht ht);
+      let idx = coerce_us ((cidx+voff)%sz);
+      let c = op_Array_Index ht.contents #full_perm #pht.repr idx;
+      match c {
+        Used k' v' -> { 
+          if (k' = k) {
+            op_Array_Assignment ht.contents idx Zombie;
+            cont := false;
+            // FIXME: prove seq upd
+            assume_ (pure (Seq.upd pht.repr (US.v idx) Zombie `Seq.equal` (PHT.delete pht k).repr));
+            fold (models s (PHT.delete pht k) ht);
+            ()
+          } else {
+            off := voff + 1;
+            fold (models s pht ht);
+            ()
+          } 
+        }
+        Clean -> {
+          cont := false;
+          // FIXME: prove equality
+          assume_ (pure (pht == (PHT.delete pht k)));
+          fold (models s (PHT.delete pht k) ht);
+          ()
+        }
+        Zombie -> { 
+          off := voff + 1;
+          fold (models s pht ht);
+          () 
+        }
+      };
     };
   }
 }
