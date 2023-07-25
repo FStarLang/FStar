@@ -137,15 +137,13 @@ let k_elab_equiv_continutation (#g1:env) (#g2:env { g2 `env_extends` g1 }) (#ctx
       (| tm_emp, emp_typing, d |)
   in
   let (| st, c, st_d |) = res in
-  if not (stateful_comp c) then k post_hint (| st, c, st_d |)
-  else
-    let (| _, pre_typing, _, _ |) =
-      Metatheory.(st_comp_typing_inversion (comp_typing_inversion (st_typing_correctness st_d))) in
-    let (| c', st_d' |) =
-      apply_frame (vprop_equiv_typing_bk pre_typing d) st_d framing_token in
-    assert (comp_post c' == tm_star (comp_post c) tm_emp);
-    let st_d' = simplify_post st_d' (comp_post c) in
-    k post_hint (| st, _, st_d' |)
+  let (| _, pre_typing, _, _ |) =
+    Metatheory.(st_comp_typing_inversion (comp_typing_inversion (st_typing_correctness st_d))) in
+  let (| c', st_d' |) =
+    apply_frame (vprop_equiv_typing_bk pre_typing d) st_d framing_token in
+  assert (comp_post c' == tm_star (comp_post c) tm_emp);
+  let st_d' = simplify_post st_d' (comp_post c) in
+  k post_hint (| st, _, st_d' |)
 #pop-options
 
 let vprop_equiv_typing_fwd (#g:env) (#ctxt:_) (ctxt_typing:tot_typing g ctxt tm_vprop)
@@ -167,19 +165,18 @@ let k_elab_equiv_prefix
   in
   let res = k post_hint res in
   let (| st, c, st_d |) = res in
-  if not (stateful_comp c) then (| st, c, st_d |)
-  else let (| _, pre_typing, _, _ |) =
-         Metatheory.(st_comp_typing_inversion (comp_typing_inversion (st_typing_correctness st_d))) in
-       let (| c', st_d' |) =
-         apply_frame
-           (vprop_equiv_typing_fwd pre_typing d)
-           st_d
-           framing_token in
-        simplify_lemma c c' post_hint;
-        let c''  = comp_st_with_post c' (comp_post c) in
-        let st_d' : st_typing g1 st c'' = simplify_post st_d' (comp_post c) in
-        let res : st_typing_in_ctxt g1 ctxt2 post_hint = (| st, c'', st_d' |) in
-        res
+  let (| _, pre_typing, _, _ |) =
+    Metatheory.(st_comp_typing_inversion (comp_typing_inversion (st_typing_correctness st_d))) in
+  let (| c', st_d' |) =
+    apply_frame
+      (vprop_equiv_typing_fwd pre_typing d)
+      st_d
+      framing_token in
+  simplify_lemma c c' post_hint;
+  let c''  = comp_st_with_post c' (comp_post c) in
+  let st_d' : st_typing g1 st c'' = simplify_post st_d' (comp_post c) in
+  let res : st_typing_in_ctxt g1 ctxt2 post_hint = (| st, c'', st_d' |) in
+  res
 #pop-options
 
 let k_elab_equiv
@@ -226,42 +223,34 @@ let continuation_elaborator_with_bind (#g:env) (ctxt:term)
   let k : continuation_elaborator g (tm_star ctxt pre1) g' (tm_star post1_opened ctxt) =
     fun post_hint res ->
     let (| e2, c2, e2_typing |) = res in
-    if not (stateful_comp c2) // || None? post_hint
-    then fail g' (Some e2.range)
-           (Printf.sprintf "bind elaborator: continuation term %s is not stateful (c: %s)"
-              (P.st_term_to_string e2)
-              (P.comp_to_string c2))
+    let e2_typing : st_typing g' e2 c2 = e2_typing in
+    let e2_closed = close_st_term e2 x in
+    assume (open_st_term e2_closed x == e2);
+    assert (comp_pre c1 == (tm_star ctxt pre1));
+    assert (comp_post c1 == tm_star post1 ctxt);
+    assert (comp_pre c2 == tm_star post1_opened ctxt);
+    assert (open_term (comp_post c1) x == tm_star post1_opened (open_term ctxt x));
+    // ctxt is well-typed, hence ln
+    assume (open_term ctxt x == ctxt);
+    assert (open_term (comp_post c1) x == comp_pre c2);
+    // we closed e2 with x
+    assume (~ (x `Set.mem` freevars_st e2_closed));
+    if x `Set.mem` freevars (comp_post c2)
+    then fail g' None "Impossible: freevar clash when constructing continuation elaborator for bind, please file a bug-report"
     else (
-      let e2_typing : st_typing g' e2 c2 = e2_typing in
-      let e2_closed = close_st_term e2 x in
-      assume (open_st_term e2_closed x == e2);
-      assert (comp_pre c1 == (tm_star ctxt pre1));
-      assert (comp_post c1 == tm_star post1 ctxt);
-      assert (comp_pre c2 == tm_star post1_opened ctxt);
-      assert (open_term (comp_post c1) x == tm_star post1_opened (open_term ctxt x));
-      // ctxt is well-typed, hence ln
-      assume (open_term ctxt x == ctxt);
-      assert (open_term (comp_post c1) x == comp_pre c2);
-      // we closed e2 with x
-      assume (~ (x `Set.mem` freevars_st e2_closed));
-      if x `Set.mem` freevars (comp_post c2)
-      then fail g' None "Impossible: freevar clash when constructing continuation elaborator for bind, please file a bug-report"
-      else (
-        let t_typing, post_typing =
-          Pulse.Typing.Combinators.bind_res_and_post_typing g (st_comp_of_comp c2) x post_hint in
-        let (| e, c, e_typing |) =
-          Pulse.Typing.Combinators.mk_bind
-            g (tm_star ctxt pre1) 
-            e1 e2_closed c1 c2 (v_as_nv x) e1_typing
-            u_of_1 
-            e2_typing
-            t_typing
-            post_typing
-        in
-        (| e, c, e_typing |)
-      )
+      let t_typing, post_typing =
+        Pulse.Typing.Combinators.bind_res_and_post_typing g (st_comp_of_comp c2) x post_hint in
+      let (| e, c, e_typing |) =
+        Pulse.Typing.Combinators.mk_bind
+          g (tm_star ctxt pre1) 
+          e1 e2_closed c1 c2 (v_as_nv x) e1_typing
+          u_of_1 
+          e2_typing
+          t_typing
+          post_typing
+      in
+      (| e, c, e_typing |)
     )
-
   in
   k
 #pop-options
@@ -279,12 +268,6 @@ let continuation_elaborator_with_tot_bind (#g:env) (#ctxt:term)
            (push_binding g x ppname_default t1) ctxt) =
 
   fun post_hint (| e2, c2, d2 |) ->
-
-  if not (stateful_comp c2)
-  then fail g (Some e2.range)
-           (Printf.sprintf "tot bind elaborator: continuation term %s is not stateful (c: %s)"
-              (P.st_term_to_string e2)
-              (P.comp_to_string c2));
 
   let e2_closed = close_st_term e2 x in
   assume (open_st_term (close_st_term e2 x) x == e2);
@@ -416,12 +399,6 @@ let checker_result_for_st_typing (#g:env) (#ctxt:vprop) (#post_hint:post_hint_op
 
   let (| t, c, d |) = d in
  
-  if not (stateful_comp c)
-  then fail g None
-         (Printf.sprintf "checker_result_for_st_typing: input term %s is not stateful (c: %s)"
-            (P.st_term_to_string t)
-            (P.comp_to_string c));
-
   let x = fresh g in
 
   let g' = push_binding g x ppname_default (comp_res c) in

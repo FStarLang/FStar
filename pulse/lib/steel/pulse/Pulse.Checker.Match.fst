@@ -236,8 +236,6 @@ let check_branch
   let (| e, c, e_d |) =
     let r = check g' pre pre_typing (Some post_hint) e in
     apply_checker_result_k r in
-  if not (stateful_comp c) then
-    fail g (Some e.range) "Branch computation is not stateful";
   let br_d : br_typing g sc_u sc_ty sc p (close_st_term_n e (L.map fst pulse_bs)) c = TBR g sc_u sc_ty sc c p e bs () () () hyp_var e_d in
   (| p, close_st_term_n e (L.map fst pulse_bs), c, br_d |)
 

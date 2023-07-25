@@ -77,7 +77,7 @@ val apply_frame (#g:env)
 
 type st_typing_in_ctxt (g:env) (ctxt:vprop) (post_hint:post_hint_opt g) =
   t:st_term &
-  c:comp { stateful_comp c ==> (comp_pre c == ctxt /\ comp_post_matches_hint c post_hint) } &
+  c:comp_st { comp_pre c == ctxt /\ comp_post_matches_hint c post_hint } &
   st_typing g t c
 
 let rec vprop_as_list (vp:term)

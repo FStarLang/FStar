@@ -107,7 +107,7 @@ let check
 
   let check_branch (eq_v:term) (br:st_term) (is_then:bool)
     : T.Tac (br:st_term { ~(hyp `Set.mem` freevars_st br) } &
-             c:comp { stateful_comp c /\ comp_pre c == pre /\ comp_post_matches_hint c (Some post_hint)} &
+             c:comp_st { comp_pre c == pre /\ comp_post_matches_hint c (Some post_hint)} &
              st_typing (g_with_eq eq_v) br c) =
     let g_with_eq = g_with_eq eq_v in
     let pre_typing = 
@@ -123,12 +123,8 @@ let check
     if hyp `Set.mem` freevars_st br
     then fail g (Some br.range)
            (Printf.sprintf "check_if: branch hypothesis is in freevars of checked %s branch" br_name)
-    else if not (stateful_comp c)
-    then fail g (Some br.range)
-           (Printf.sprintf "check_if: %s branch does not have a stateful computation type (c: %s)"
-              br_name (P.comp_to_string c))
     else (| br, c, d |)
-  in 
+  in
 
   let (| e1, c1, e1_typing |) = check_branch tm_true e1 true in
   let (| e2, c2, e2_typing |) = check_branch tm_false e2 false in    
