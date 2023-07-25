@@ -300,6 +300,9 @@ let check
         (check:check_t)
   : T.Tac (checker_result_t g pre (Some post_hint))
   =
+
+  let g = Pulse.Typing.Env.push_context_no_range g "check_match" in
+
   let sc_range = sc.range in // save range, it gets lost otherwise
   let orig_brs = brs in
   let nbr = L.length brs in

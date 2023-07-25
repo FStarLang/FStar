@@ -577,13 +577,13 @@ let rec (unify :
               (FStar_Sealed.seal
                  (Obj.magic
                     (FStar_Range.mk_range "Pulse.Checker.Prover.Match.fst"
-                       (Prims.of_int (231)) (Prims.of_int (4))
-                       (Prims.of_int (232)) (Prims.of_int (18)))))
+                       (Prims.of_int (201)) (Prims.of_int (4))
+                       (Prims.of_int (202)) (Prims.of_int (18)))))
               (FStar_Sealed.seal
                  (Obj.magic
                     (FStar_Range.mk_range "Pulse.Checker.Prover.Match.fst"
-                       (Prims.of_int (233)) (Prims.of_int (4))
-                       (Prims.of_int (341)) (Prims.of_int (27)))))
+                       (Prims.of_int (203)) (Prims.of_int (4))
+                       (Prims.of_int (311)) (Prims.of_int (27)))))
               (FStar_Tactics_Effect.lift_div_tac
                  (fun uu___ ->
                     fun g1 ->
@@ -597,14 +597,14 @@ let rec (unify :
                             (Obj.magic
                                (FStar_Range.mk_range
                                   "Pulse.Checker.Prover.Match.fst"
-                                  (Prims.of_int (235)) (Prims.of_int (11))
-                                  (Prims.of_int (235)) (Prims.of_int (12)))))
+                                  (Prims.of_int (205)) (Prims.of_int (11))
+                                  (Prims.of_int (205)) (Prims.of_int (12)))))
                          (FStar_Sealed.seal
                             (Obj.magic
                                (FStar_Range.mk_range
                                   "Pulse.Checker.Prover.Match.fst"
-                                  (Prims.of_int (235)) (Prims.of_int (15))
-                                  (Prims.of_int (341)) (Prims.of_int (27)))))
+                                  (Prims.of_int (205)) (Prims.of_int (15))
+                                  (Prims.of_int (311)) (Prims.of_int (27)))))
                          (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> q))
                          (fun uu___ ->
                             (fun q0 ->
@@ -614,17 +614,17 @@ let rec (unify :
                                        (Obj.magic
                                           (FStar_Range.mk_range
                                              "Pulse.Checker.Prover.Match.fst"
-                                             (Prims.of_int (236))
+                                             (Prims.of_int (206))
                                              (Prims.of_int (10))
-                                             (Prims.of_int (236))
+                                             (Prims.of_int (206))
                                              (Prims.of_int (16)))))
                                     (FStar_Sealed.seal
                                        (Obj.magic
                                           (FStar_Range.mk_range
                                              "Pulse.Checker.Prover.Match.fst"
-                                             (Prims.of_int (239))
+                                             (Prims.of_int (209))
                                              (Prims.of_int (2))
-                                             (Prims.of_int (341))
+                                             (Prims.of_int (311))
                                              (Prims.of_int (27)))))
                                     (FStar_Tactics_Effect.lift_div_tac
                                        (fun uu___ ->
@@ -638,17 +638,17 @@ let rec (unify :
                                                   (Obj.magic
                                                      (FStar_Range.mk_range
                                                         "Pulse.Checker.Prover.Match.fst"
-                                                        (Prims.of_int (239))
+                                                        (Prims.of_int (209))
                                                         (Prims.of_int (2))
-                                                        (Prims.of_int (240))
+                                                        (Prims.of_int (210))
                                                         (Prims.of_int (93)))))
                                                (FStar_Sealed.seal
                                                   (Obj.magic
                                                      (FStar_Range.mk_range
                                                         "Pulse.Checker.Prover.Match.fst"
-                                                        (Prims.of_int (242))
+                                                        (Prims.of_int (212))
                                                         (Prims.of_int (2))
-                                                        (Prims.of_int (341))
+                                                        (Prims.of_int (311))
                                                         (Prims.of_int (27)))))
                                                (Obj.magic
                                                   (Pulse_Checker_Prover_Util.debug_prover
@@ -659,17 +659,17 @@ let rec (unify :
                                                              (Obj.magic
                                                                 (FStar_Range.mk_range
                                                                    "Pulse.Checker.Prover.Match.fst"
-                                                                   (Prims.of_int (240))
+                                                                   (Prims.of_int (210))
                                                                    (Prims.of_int (72))
-                                                                   (Prims.of_int (240))
+                                                                   (Prims.of_int (210))
                                                                    (Prims.of_int (92)))))
                                                           (FStar_Sealed.seal
                                                              (Obj.magic
                                                                 (FStar_Range.mk_range
                                                                    "Pulse.Checker.Prover.Match.fst"
-                                                                   (Prims.of_int (240))
+                                                                   (Prims.of_int (210))
                                                                    (Prims.of_int (4))
-                                                                   (Prims.of_int (240))
+                                                                   (Prims.of_int (210))
                                                                    (Prims.of_int (92)))))
                                                           (Obj.magic
                                                              (Pulse_Syntax_Printer.term_to_string
@@ -682,17 +682,17 @@ let rec (unify :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (240))
+                                                                    (Prims.of_int (210))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (240))
+                                                                    (Prims.of_int (210))
                                                                     (Prims.of_int (92)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (240))
+                                                                    (Prims.of_int (210))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (240))
+                                                                    (Prims.of_int (210))
                                                                     (Prims.of_int (92)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -700,9 +700,9 @@ let rec (unify :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (240))
+                                                                    (Prims.of_int (210))
                                                                     (Prims.of_int (51))
-                                                                    (Prims.of_int (240))
+                                                                    (Prims.of_int (210))
                                                                     (Prims.of_int (71)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
@@ -749,17 +749,17 @@ let rec (unify :
                                                                (Obj.magic
                                                                   (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (244))
+                                                                    (Prims.of_int (214))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (245))
+                                                                    (Prims.of_int (215))
                                                                     (Prims.of_int (102)))))
                                                             (FStar_Sealed.seal
                                                                (Obj.magic
                                                                   (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (248))
+                                                                    (Prims.of_int (218))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (248))
+                                                                    (Prims.of_int (218))
                                                                     (Prims.of_int (33)))))
                                                             (Obj.magic
                                                                (Pulse_Checker_Prover_Util.debug_prover
@@ -771,17 +771,17 @@ let rec (unify :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (245))
+                                                                    (Prims.of_int (215))
                                                                     (Prims.of_int (81))
-                                                                    (Prims.of_int (245))
+                                                                    (Prims.of_int (215))
                                                                     (Prims.of_int (101)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (245))
+                                                                    (Prims.of_int (215))
                                                                     (Prims.of_int (6))
-                                                                    (Prims.of_int (245))
+                                                                    (Prims.of_int (215))
                                                                     (Prims.of_int (101)))))
                                                                     (Obj.magic
                                                                     (Pulse_Syntax_Printer.term_to_string
@@ -796,17 +796,17 @@ let rec (unify :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (245))
+                                                                    (Prims.of_int (215))
                                                                     (Prims.of_int (6))
-                                                                    (Prims.of_int (245))
+                                                                    (Prims.of_int (215))
                                                                     (Prims.of_int (101)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (245))
+                                                                    (Prims.of_int (215))
                                                                     (Prims.of_int (6))
-                                                                    (Prims.of_int (245))
+                                                                    (Prims.of_int (215))
                                                                     (Prims.of_int (101)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -814,9 +814,9 @@ let rec (unify :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (245))
+                                                                    (Prims.of_int (215))
                                                                     (Prims.of_int (60))
-                                                                    (Prims.of_int (245))
+                                                                    (Prims.of_int (215))
                                                                     (Prims.of_int (80)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
@@ -871,17 +871,17 @@ let rec (unify :
                                                                (Obj.magic
                                                                   (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (250))
+                                                                    (Prims.of_int (220))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (250))
+                                                                    (Prims.of_int (220))
                                                                     (Prims.of_int (37)))))
                                                             (FStar_Sealed.seal
                                                                (Obj.magic
                                                                   (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (250))
+                                                                    (Prims.of_int (220))
                                                                     (Prims.of_int (7))
-                                                                    (Prims.of_int (341))
+                                                                    (Prims.of_int (311))
                                                                     (Prims.of_int (27)))))
                                                             (Obj.magic
                                                                (FStar_Tactics_Effect.tac_bind
@@ -889,17 +889,17 @@ let rec (unify :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (250))
+                                                                    (Prims.of_int (220))
                                                                     (Prims.of_int (14))
-                                                                    (Prims.of_int (250))
+                                                                    (Prims.of_int (220))
                                                                     (Prims.of_int (37)))))
                                                                   (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (250))
+                                                                    (Prims.of_int (220))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (250))
+                                                                    (Prims.of_int (220))
                                                                     (Prims.of_int (37)))))
                                                                   (Obj.magic
                                                                     (contains_uvar
@@ -922,17 +922,17 @@ let rec (unify :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (252))
+                                                                    (Prims.of_int (222))
                                                                     (Prims.of_int (7))
-                                                                    (Prims.of_int (252))
+                                                                    (Prims.of_int (222))
                                                                     (Prims.of_int (38)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (252))
+                                                                    (Prims.of_int (222))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (267))
+                                                                    (Prims.of_int (237))
                                                                     (Prims.of_int (13)))))
                                                                     (Obj.magic
                                                                     (eligible_for_smt_equality
@@ -949,17 +949,17 @@ let rec (unify :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (254))
+                                                                    (Prims.of_int (224))
                                                                     (Prims.of_int (11))
-                                                                    (Prims.of_int (255))
+                                                                    (Prims.of_int (225))
                                                                     (Prims.of_int (146)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (257))
+                                                                    (Prims.of_int (227))
                                                                     (Prims.of_int (62))
-                                                                    (Prims.of_int (262))
+                                                                    (Prims.of_int (232))
                                                                     (Prims.of_int (26)))))
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Prover_Util.debug_prover
@@ -971,17 +971,17 @@ let rec (unify :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (255))
+                                                                    (Prims.of_int (225))
                                                                     (Prims.of_int (125))
-                                                                    (Prims.of_int (255))
+                                                                    (Prims.of_int (225))
                                                                     (Prims.of_int (145)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (255))
+                                                                    (Prims.of_int (225))
                                                                     (Prims.of_int (13))
-                                                                    (Prims.of_int (255))
+                                                                    (Prims.of_int (225))
                                                                     (Prims.of_int (145)))))
                                                                     (Obj.magic
                                                                     (Pulse_Syntax_Printer.term_to_string
@@ -996,17 +996,17 @@ let rec (unify :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (255))
+                                                                    (Prims.of_int (225))
                                                                     (Prims.of_int (13))
-                                                                    (Prims.of_int (255))
+                                                                    (Prims.of_int (225))
                                                                     (Prims.of_int (145)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (255))
+                                                                    (Prims.of_int (225))
                                                                     (Prims.of_int (13))
-                                                                    (Prims.of_int (255))
+                                                                    (Prims.of_int (225))
                                                                     (Prims.of_int (145)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -1014,9 +1014,9 @@ let rec (unify :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (255))
+                                                                    (Prims.of_int (225))
                                                                     (Prims.of_int (104))
-                                                                    (Prims.of_int (255))
+                                                                    (Prims.of_int (225))
                                                                     (Prims.of_int (124)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
@@ -1062,17 +1062,17 @@ let rec (unify :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (258))
+                                                                    (Prims.of_int (228))
                                                                     (Prims.of_int (18))
-                                                                    (Prims.of_int (258))
+                                                                    (Prims.of_int (228))
                                                                     (Prims.of_int (29)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (258))
+                                                                    (Prims.of_int (228))
                                                                     (Prims.of_int (32))
-                                                                    (Prims.of_int (262))
+                                                                    (Prims.of_int (232))
                                                                     (Prims.of_int (26)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -1089,17 +1089,17 @@ let rec (unify :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (259))
+                                                                    (Prims.of_int (229))
                                                                     (Prims.of_int (18))
-                                                                    (Prims.of_int (259))
+                                                                    (Prims.of_int (229))
                                                                     (Prims.of_int (29)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (260))
+                                                                    (Prims.of_int (230))
                                                                     (Prims.of_int (9))
-                                                                    (Prims.of_int (262))
+                                                                    (Prims.of_int (232))
                                                                     (Prims.of_int (26)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -1116,17 +1116,17 @@ let rec (unify :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (260))
+                                                                    (Prims.of_int (230))
                                                                     (Prims.of_int (15))
-                                                                    (Prims.of_int (260))
+                                                                    (Prims.of_int (230))
                                                                     (Prims.of_int (47)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (260))
+                                                                    (Prims.of_int (230))
                                                                     (Prims.of_int (9))
-                                                                    (Prims.of_int (262))
+                                                                    (Prims.of_int (232))
                                                                     (Prims.of_int (26)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_V2_Builtins.check_equiv
@@ -1166,17 +1166,17 @@ let rec (unify :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (264))
+                                                                    (Prims.of_int (234))
                                                                     (Prims.of_int (11))
-                                                                    (Prims.of_int (265))
+                                                                    (Prims.of_int (235))
                                                                     (Prims.of_int (150)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (267))
+                                                                    (Prims.of_int (237))
                                                                     (Prims.of_int (9))
-                                                                    (Prims.of_int (267))
+                                                                    (Prims.of_int (237))
                                                                     (Prims.of_int (13)))))
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Prover_Util.debug_prover
@@ -1188,17 +1188,17 @@ let rec (unify :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (265))
+                                                                    (Prims.of_int (235))
                                                                     (Prims.of_int (129))
-                                                                    (Prims.of_int (265))
+                                                                    (Prims.of_int (235))
                                                                     (Prims.of_int (149)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (265))
+                                                                    (Prims.of_int (235))
                                                                     (Prims.of_int (13))
-                                                                    (Prims.of_int (265))
+                                                                    (Prims.of_int (235))
                                                                     (Prims.of_int (149)))))
                                                                     (Obj.magic
                                                                     (Pulse_Syntax_Printer.term_to_string
@@ -1213,17 +1213,17 @@ let rec (unify :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (265))
+                                                                    (Prims.of_int (235))
                                                                     (Prims.of_int (13))
-                                                                    (Prims.of_int (265))
+                                                                    (Prims.of_int (235))
                                                                     (Prims.of_int (149)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (265))
+                                                                    (Prims.of_int (235))
                                                                     (Prims.of_int (13))
-                                                                    (Prims.of_int (265))
+                                                                    (Prims.of_int (235))
                                                                     (Prims.of_int (149)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -1231,9 +1231,9 @@ let rec (unify :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (265))
+                                                                    (Prims.of_int (235))
                                                                     (Prims.of_int (108))
-                                                                    (Prims.of_int (265))
+                                                                    (Prims.of_int (235))
                                                                     (Prims.of_int (128)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
@@ -1296,17 +1296,17 @@ let rec (unify :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (271))
+                                                                    (Prims.of_int (241))
                                                                     (Prims.of_int (9))
-                                                                    (Prims.of_int (272))
+                                                                    (Prims.of_int (242))
                                                                     (Prims.of_int (151)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (272))
+                                                                    (Prims.of_int (242))
                                                                     (Prims.of_int (152))
-                                                                    (Prims.of_int (289))
+                                                                    (Prims.of_int (259))
                                                                     (Prims.of_int (18)))))
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Prover_Util.debug_prover
@@ -1318,17 +1318,17 @@ let rec (unify :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (272))
+                                                                    (Prims.of_int (242))
                                                                     (Prims.of_int (130))
-                                                                    (Prims.of_int (272))
+                                                                    (Prims.of_int (242))
                                                                     (Prims.of_int (150)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (272))
+                                                                    (Prims.of_int (242))
                                                                     (Prims.of_int (13))
-                                                                    (Prims.of_int (272))
+                                                                    (Prims.of_int (242))
                                                                     (Prims.of_int (150)))))
                                                                     (Obj.magic
                                                                     (Pulse_Syntax_Printer.term_to_string
@@ -1343,17 +1343,17 @@ let rec (unify :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (272))
+                                                                    (Prims.of_int (242))
                                                                     (Prims.of_int (13))
-                                                                    (Prims.of_int (272))
+                                                                    (Prims.of_int (242))
                                                                     (Prims.of_int (150)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (272))
+                                                                    (Prims.of_int (242))
                                                                     (Prims.of_int (13))
-                                                                    (Prims.of_int (272))
+                                                                    (Prims.of_int (242))
                                                                     (Prims.of_int (150)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -1361,9 +1361,9 @@ let rec (unify :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (272))
+                                                                    (Prims.of_int (242))
                                                                     (Prims.of_int (109))
-                                                                    (Prims.of_int (272))
+                                                                    (Prims.of_int (242))
                                                                     (Prims.of_int (129)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
@@ -1409,17 +1409,17 @@ let rec (unify :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (273))
+                                                                    (Prims.of_int (243))
                                                                     (Prims.of_int (17))
-                                                                    (Prims.of_int (273))
+                                                                    (Prims.of_int (243))
                                                                     (Prims.of_int (31)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (276))
+                                                                    (Prims.of_int (246))
                                                                     (Prims.of_int (54))
-                                                                    (Prims.of_int (289))
+                                                                    (Prims.of_int (259))
                                                                     (Prims.of_int (18)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -1435,17 +1435,17 @@ let rec (unify :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (277))
+                                                                    (Prims.of_int (247))
                                                                     (Prims.of_int (22))
-                                                                    (Prims.of_int (277))
+                                                                    (Prims.of_int (247))
                                                                     (Prims.of_int (42)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (280))
+                                                                    (Prims.of_int (250))
                                                                     (Prims.of_int (59))
-                                                                    (Prims.of_int (289))
+                                                                    (Prims.of_int (259))
                                                                     (Prims.of_int (18)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -1463,17 +1463,17 @@ let rec (unify :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (281))
+                                                                    (Prims.of_int (251))
                                                                     (Prims.of_int (19))
-                                                                    (Prims.of_int (281))
+                                                                    (Prims.of_int (251))
                                                                     (Prims.of_int (39)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (284))
+                                                                    (Prims.of_int (254))
                                                                     (Prims.of_int (54))
-                                                                    (Prims.of_int (289))
+                                                                    (Prims.of_int (259))
                                                                     (Prims.of_int (18)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -1490,17 +1490,17 @@ let rec (unify :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (285))
+                                                                    (Prims.of_int (255))
                                                                     (Prims.of_int (20))
-                                                                    (Prims.of_int (285))
+                                                                    (Prims.of_int (255))
                                                                     (Prims.of_int (91)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (284))
+                                                                    (Prims.of_int (254))
                                                                     (Prims.of_int (54))
-                                                                    (Prims.of_int (289))
+                                                                    (Prims.of_int (259))
                                                                     (Prims.of_int (18)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_V2_Builtins.check_equiv
@@ -1559,17 +1559,17 @@ let rec (unify :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (293))
+                                                                    (Prims.of_int (263))
                                                                     (Prims.of_int (11))
-                                                                    (Prims.of_int (294))
+                                                                    (Prims.of_int (264))
                                                                     (Prims.of_int (124)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (305))
+                                                                    (Prims.of_int (275))
                                                                     (Prims.of_int (11))
-                                                                    (Prims.of_int (305))
+                                                                    (Prims.of_int (275))
                                                                     (Prims.of_int (41)))))
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Prover_Util.debug_prover
@@ -1581,17 +1581,17 @@ let rec (unify :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (294))
+                                                                    (Prims.of_int (264))
                                                                     (Prims.of_int (103))
-                                                                    (Prims.of_int (294))
+                                                                    (Prims.of_int (264))
                                                                     (Prims.of_int (123)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (294))
+                                                                    (Prims.of_int (264))
                                                                     (Prims.of_int (13))
-                                                                    (Prims.of_int (294))
+                                                                    (Prims.of_int (264))
                                                                     (Prims.of_int (123)))))
                                                                     (Obj.magic
                                                                     (Pulse_Syntax_Printer.term_to_string
@@ -1606,17 +1606,17 @@ let rec (unify :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (294))
+                                                                    (Prims.of_int (264))
                                                                     (Prims.of_int (13))
-                                                                    (Prims.of_int (294))
+                                                                    (Prims.of_int (264))
                                                                     (Prims.of_int (123)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (294))
+                                                                    (Prims.of_int (264))
                                                                     (Prims.of_int (13))
-                                                                    (Prims.of_int (294))
+                                                                    (Prims.of_int (264))
                                                                     (Prims.of_int (123)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -1624,9 +1624,9 @@ let rec (unify :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (294))
+                                                                    (Prims.of_int (264))
                                                                     (Prims.of_int (82))
-                                                                    (Prims.of_int (294))
+                                                                    (Prims.of_int (264))
                                                                     (Prims.of_int (102)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
@@ -1697,17 +1697,17 @@ let rec (unify :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (309))
+                                                                    (Prims.of_int (279))
                                                                     (Prims.of_int (13))
-                                                                    (Prims.of_int (310))
+                                                                    (Prims.of_int (280))
                                                                     (Prims.of_int (127)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (310))
+                                                                    (Prims.of_int (280))
                                                                     (Prims.of_int (128))
-                                                                    (Prims.of_int (318))
+                                                                    (Prims.of_int (288))
                                                                     (Prims.of_int (29)))))
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Prover_Util.debug_prover
@@ -1719,17 +1719,17 @@ let rec (unify :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (310))
+                                                                    (Prims.of_int (280))
                                                                     (Prims.of_int (106))
-                                                                    (Prims.of_int (310))
+                                                                    (Prims.of_int (280))
                                                                     (Prims.of_int (126)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (310))
+                                                                    (Prims.of_int (280))
                                                                     (Prims.of_int (15))
-                                                                    (Prims.of_int (310))
+                                                                    (Prims.of_int (280))
                                                                     (Prims.of_int (126)))))
                                                                     (Obj.magic
                                                                     (Pulse_Syntax_Printer.term_to_string
@@ -1744,17 +1744,17 @@ let rec (unify :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (310))
+                                                                    (Prims.of_int (280))
                                                                     (Prims.of_int (15))
-                                                                    (Prims.of_int (310))
+                                                                    (Prims.of_int (280))
                                                                     (Prims.of_int (126)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (310))
+                                                                    (Prims.of_int (280))
                                                                     (Prims.of_int (15))
-                                                                    (Prims.of_int (310))
+                                                                    (Prims.of_int (280))
                                                                     (Prims.of_int (126)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -1762,9 +1762,9 @@ let rec (unify :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (310))
+                                                                    (Prims.of_int (280))
                                                                     (Prims.of_int (85))
-                                                                    (Prims.of_int (310))
+                                                                    (Prims.of_int (280))
                                                                     (Prims.of_int (105)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
@@ -1810,17 +1810,17 @@ let rec (unify :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (311))
+                                                                    (Prims.of_int (281))
                                                                     (Prims.of_int (21))
-                                                                    (Prims.of_int (311))
+                                                                    (Prims.of_int (281))
                                                                     (Prims.of_int (41)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (312))
+                                                                    (Prims.of_int (282))
                                                                     (Prims.of_int (13))
-                                                                    (Prims.of_int (318))
+                                                                    (Prims.of_int (288))
                                                                     (Prims.of_int (29)))))
                                                                     (Obj.magic
                                                                     (unify g
@@ -1881,17 +1881,17 @@ let rec (unify :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (323))
+                                                                    (Prims.of_int (293))
                                                                     (Prims.of_int (15))
-                                                                    (Prims.of_int (324))
+                                                                    (Prims.of_int (294))
                                                                     (Prims.of_int (125)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (326))
+                                                                    (Prims.of_int (296))
                                                                     (Prims.of_int (15))
-                                                                    (Prims.of_int (340))
+                                                                    (Prims.of_int (310))
                                                                     (Prims.of_int (18)))))
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Prover_Util.debug_prover
@@ -1903,17 +1903,17 @@ let rec (unify :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (324))
+                                                                    (Prims.of_int (294))
                                                                     (Prims.of_int (104))
-                                                                    (Prims.of_int (324))
+                                                                    (Prims.of_int (294))
                                                                     (Prims.of_int (124)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (324))
+                                                                    (Prims.of_int (294))
                                                                     (Prims.of_int (17))
-                                                                    (Prims.of_int (324))
+                                                                    (Prims.of_int (294))
                                                                     (Prims.of_int (124)))))
                                                                     (Obj.magic
                                                                     (Pulse_Syntax_Printer.term_to_string
@@ -1928,17 +1928,17 @@ let rec (unify :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (324))
+                                                                    (Prims.of_int (294))
                                                                     (Prims.of_int (17))
-                                                                    (Prims.of_int (324))
+                                                                    (Prims.of_int (294))
                                                                     (Prims.of_int (124)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (324))
+                                                                    (Prims.of_int (294))
                                                                     (Prims.of_int (17))
-                                                                    (Prims.of_int (324))
+                                                                    (Prims.of_int (294))
                                                                     (Prims.of_int (124)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -1946,9 +1946,9 @@ let rec (unify :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (324))
+                                                                    (Prims.of_int (294))
                                                                     (Prims.of_int (83))
-                                                                    (Prims.of_int (324))
+                                                                    (Prims.of_int (294))
                                                                     (Prims.of_int (103)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
@@ -2011,17 +2011,17 @@ let rec (unify :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (328))
+                                                                    (Prims.of_int (298))
                                                                     (Prims.of_int (25))
-                                                                    (Prims.of_int (328))
+                                                                    (Prims.of_int (298))
                                                                     (Prims.of_int (53)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (329))
+                                                                    (Prims.of_int (299))
                                                                     (Prims.of_int (17))
-                                                                    (Prims.of_int (339))
+                                                                    (Prims.of_int (309))
                                                                     (Prims.of_int (28)))))
                                                                     (Obj.magic
                                                                     (unify g
@@ -2047,17 +2047,17 @@ let rec (unify :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (331))
+                                                                    (Prims.of_int (301))
                                                                     (Prims.of_int (27))
-                                                                    (Prims.of_int (331))
+                                                                    (Prims.of_int (301))
                                                                     (Prims.of_int (54)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (332))
+                                                                    (Prims.of_int (302))
                                                                     (Prims.of_int (19))
-                                                                    (Prims.of_int (338))
+                                                                    (Prims.of_int (308))
                                                                     (Prims.of_int (32)))))
                                                                     (Obj.magic
                                                                     (unify g
@@ -2134,13 +2134,13 @@ let (try_match_pq :
             (FStar_Sealed.seal
                (Obj.magic
                   (FStar_Range.mk_range "Pulse.Checker.Prover.Match.fst"
-                     (Prims.of_int (347)) (Prims.of_int (10))
-                     (Prims.of_int (347)) (Prims.of_int (34)))))
+                     (Prims.of_int (317)) (Prims.of_int (10))
+                     (Prims.of_int (317)) (Prims.of_int (34)))))
             (FStar_Sealed.seal
                (Obj.magic
                   (FStar_Range.mk_range "Pulse.Checker.Prover.Match.fst"
-                     (Prims.of_int (348)) (Prims.of_int (2))
-                     (Prims.of_int (352)) (Prims.of_int (27)))))
+                     (Prims.of_int (318)) (Prims.of_int (2))
+                     (Prims.of_int (322)) (Prims.of_int (27)))))
             (Obj.magic (unify g uvs p q Pulse_Checker_Prover_Substs.empty))
             (fun r ->
                FStar_Tactics_Effect.lift_div_tac
@@ -2178,14 +2178,14 @@ let (match_step :
                      (Obj.magic
                         (FStar_Range.mk_range
                            "Pulse.Checker.Prover.Match.fst"
-                           (Prims.of_int (363)) (Prims.of_int (11))
-                           (Prims.of_int (363)) (Prims.of_int (21)))))
+                           (Prims.of_int (333)) (Prims.of_int (11))
+                           (Prims.of_int (333)) (Prims.of_int (21)))))
                   (FStar_Sealed.seal
                      (Obj.magic
                         (FStar_Range.mk_range
                            "Pulse.Checker.Prover.Match.fst"
-                           (Prims.of_int (364)) (Prims.of_int (52))
-                           (Prims.of_int (427)) (Prims.of_int (11)))))
+                           (Prims.of_int (334)) (Prims.of_int (52))
+                           (Prims.of_int (397)) (Prims.of_int (11)))))
                   (FStar_Tactics_Effect.lift_div_tac
                      (fun uu___1 ->
                         Pulse_Checker_Prover_Base.op_Array_Access
@@ -2198,16 +2198,16 @@ let (match_step :
                                 (Obj.magic
                                    (FStar_Range.mk_range
                                       "Pulse.Checker.Prover.Match.fst"
-                                      (Prims.of_int (366))
+                                      (Prims.of_int (336))
                                       (Prims.of_int (11))
-                                      (Prims.of_int (366))
+                                      (Prims.of_int (336))
                                       (Prims.of_int (45)))))
                              (FStar_Sealed.seal
                                 (Obj.magic
                                    (FStar_Range.mk_range
                                       "Pulse.Checker.Prover.Match.fst"
-                                      (Prims.of_int (368)) Prims.int_zero
-                                      (Prims.of_int (427))
+                                      (Prims.of_int (338)) Prims.int_zero
+                                      (Prims.of_int (397))
                                       (Prims.of_int (11)))))
                              (Obj.magic
                                 (try_match_pq
@@ -2221,17 +2221,17 @@ let (match_step :
                                            (Obj.magic
                                               (FStar_Range.mk_range
                                                  "Pulse.Checker.Prover.Match.fst"
-                                                 (Prims.of_int (368))
+                                                 (Prims.of_int (338))
                                                  Prims.int_zero
-                                                 (Prims.of_int (370))
+                                                 (Prims.of_int (340))
                                                  (Prims.of_int (92)))))
                                         (FStar_Sealed.seal
                                            (Obj.magic
                                               (FStar_Range.mk_range
                                                  "Pulse.Checker.Prover.Match.fst"
-                                                 (Prims.of_int (372))
+                                                 (Prims.of_int (342))
                                                  Prims.int_zero
-                                                 (Prims.of_int (427))
+                                                 (Prims.of_int (397))
                                                  (Prims.of_int (11)))))
                                         (Obj.magic
                                            (Pulse_Checker_Prover_Util.debug_prover
@@ -2242,17 +2242,17 @@ let (match_step :
                                                       (Obj.magic
                                                          (FStar_Range.mk_range
                                                             "Pulse.Checker.Prover.Match.fst"
-                                                            (Prims.of_int (369))
+                                                            (Prims.of_int (339))
                                                             (Prims.of_int (2))
-                                                            (Prims.of_int (370))
+                                                            (Prims.of_int (340))
                                                             (Prims.of_int (91)))))
                                                    (FStar_Sealed.seal
                                                       (Obj.magic
                                                          (FStar_Range.mk_range
                                                             "Pulse.Checker.Prover.Match.fst"
-                                                            (Prims.of_int (369))
+                                                            (Prims.of_int (339))
                                                             (Prims.of_int (2))
-                                                            (Prims.of_int (370))
+                                                            (Prims.of_int (340))
                                                             (Prims.of_int (91)))))
                                                    (Obj.magic
                                                       (FStar_Tactics_Effect.tac_bind
@@ -2260,17 +2260,17 @@ let (match_step :
                                                             (Obj.magic
                                                                (FStar_Range.mk_range
                                                                   "Pulse.Checker.Prover.Match.fst"
-                                                                  (Prims.of_int (370))
+                                                                  (Prims.of_int (340))
                                                                   (Prims.of_int (25))
-                                                                  (Prims.of_int (370))
+                                                                  (Prims.of_int (340))
                                                                   (Prims.of_int (48)))))
                                                          (FStar_Sealed.seal
                                                             (Obj.magic
                                                                (FStar_Range.mk_range
                                                                   "Pulse.Checker.Prover.Match.fst"
-                                                                  (Prims.of_int (369))
+                                                                  (Prims.of_int (339))
                                                                   (Prims.of_int (2))
-                                                                  (Prims.of_int (370))
+                                                                  (Prims.of_int (340))
                                                                   (Prims.of_int (91)))))
                                                          (Obj.magic
                                                             (Pulse_Syntax_Printer.term_to_string
@@ -2284,18 +2284,18 @@ let (match_step :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (369))
+                                                                    (Prims.of_int (339))
                                                                     (Prims.of_int (2))
-                                                                    (Prims.of_int (370))
+                                                                    (Prims.of_int (340))
                                                                     (Prims.of_int (91)))))
                                                                     (
                                                                     FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (369))
+                                                                    (Prims.of_int (339))
                                                                     (Prims.of_int (2))
-                                                                    (Prims.of_int (370))
+                                                                    (Prims.of_int (340))
                                                                     (Prims.of_int (91)))))
                                                                     (
                                                                     Obj.magic
@@ -2304,9 +2304,9 @@ let (match_step :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Match.fst"
-                                                                    (Prims.of_int (370))
+                                                                    (Prims.of_int (340))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (370))
+                                                                    (Prims.of_int (340))
                                                                     (Prims.of_int (24)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic

@@ -38,13 +38,17 @@ let check
   in
 
   if not (Tm_ExistsSL? ex_inv.t)
-  then fail g None "Typechecked invariant is not an exists";
+  then fail g (Some t.range)
+         (Printf.sprintf "check_while: typechecked invariant %s is not an existential"
+            (P.term_to_string ex_inv));
 
   let Tm_ExistsSL u {binder_ppname=nm; binder_ty=ty} inv = ex_inv.t in
 
   if not (eq_tm ty tm_bool) ||
      not (eq_univ u u0)
-  then fail g (Some nm.range) "While loop invariant exists but its witness type is not bool";
+  then fail g (Some nm.range)
+         (Printf.sprintf "While loop invariant exists but its witness type is %s, expected bool"
+            (P.term_to_string ty));
 
   let while_cond_comp_typing = while_cond_comp_typing u nm ty inv inv_typing in
   let (| res_typing, cond_pre_typing, x, post_typing |) =

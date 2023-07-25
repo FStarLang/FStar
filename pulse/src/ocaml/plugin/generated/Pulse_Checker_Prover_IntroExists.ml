@@ -643,13 +643,13 @@ let (intro_exists :
                                                                     (Prims.of_int (119))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (119))
-                                                                    (Prims.of_int (74)))))
+                                                                    (Prims.of_int (111)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
                                                                     (Prims.of_int (119))
-                                                                    (Prims.of_int (75))
+                                                                    (Prims.of_int (112))
                                                                     (Prims.of_int (314))
                                                                     (Prims.of_int (6)))))
                                                                     (if
@@ -661,7 +661,7 @@ let (intro_exists :
                                                                     (Pulse_Typing_Env.fail
                                                                     pst_sub1.Pulse_Checker_Prover_Base.pg
                                                                     FStar_Pervasives_Native.None
-                                                                    "intro exists ss not well-typed"))
+                                                                    "resulted substitution after intro exists protocol is not well-typed"))
                                                                     else
                                                                     Obj.magic
                                                                     (Obj.repr
@@ -688,7 +688,7 @@ let (intro_exists :
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
                                                                     (Prims.of_int (119))
-                                                                    (Prims.of_int (75))
+                                                                    (Prims.of_int (112))
                                                                     (Prims.of_int (314))
                                                                     (Prims.of_int (6)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac

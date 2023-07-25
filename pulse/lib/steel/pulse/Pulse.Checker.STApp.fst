@@ -56,7 +56,12 @@ let rec intro_uvars_for_logical_implicits (g:env) (uvs:env { disjoint uvs g }) (
        | C_Tot ty ->
          intro_uvars_for_logical_implicits g uvs' (tm_pureapp t (Some Implicit) (null_var x)) ty
     end
-  | _ -> fail g None "intro_uvars_for_logical_implicits in stapp, unexpected type"
+  | _ ->
+    fail g None
+      (Printf.sprintf "check_stapp.intro_uvars_for_logical_implicits: expected an arrow type,\
+                       with an implicit parameter, found: %s"
+         (P.term_to_string ty))
+
 
 let instantaite_implicits (g:env) (t:st_term { Tm_STApp? t.term })
   : T.Tac (uvs : env &
@@ -76,7 +81,10 @@ let instantaite_implicits (g:env) (t:st_term { Tm_STApp? t.term })
     | Some (head, q, arg) ->
       let uvs = mk_env (fstar_env g) in
       (| uvs, push_env g uvs, {term=Tm_STApp {head;arg_qual=q;arg}; range=t.range} |)
-    | _ -> fail g None "instantiate_implicits in stapp, unexpected term"
+    | _ ->
+      fail g (Some t.range)
+        (Printf.sprintf "check_stapp.instantiate_implicits: expected an application term, found: %s"
+           (P.term_to_string t))
 
 #push-options "--z3rlimit_factor 4 --fuel 1 --ifuel 1"
 let check

@@ -49,7 +49,9 @@ let check
         // we already checked for the return type
         let post : post_hint_t = post in
         if x `Set.mem` (freevars post.post)
-        then fail g None "Unexpected variable clash in return"
+        then fail g None
+               ("check_return: unexpected variable clash in return post,\
+                 please file a bug report")
         else 
          let ty_rec = post_hint_typing g post x in
          (| open_term_nv post.post px, ty_rec.post_typing |)

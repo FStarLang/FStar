@@ -8,6 +8,7 @@ open Pulse.Checker.Prover
 open Pulse.Checker.Comp
 
 module T = FStar.Tactics.V2
+module P = Pulse.Syntax.Printer
 module RT = FStar.Reflection.Typing
 module MT = Pulse.Typing.Metatheory
 
@@ -50,5 +51,7 @@ let check
       let x = fresh g in
       let d = T_Par _ _ _ _ _ x cL_typing cR_typing eL_typing eR_typing in
       prove_post_hint (try_frame_pre pre_typing d) post_hint t.range
-    else fail g (Some eR.range) "par: cR is not stt"
-  else fail g (Some eL.range) "par: cL is not stt"
+    else fail g (Some eR.range)
+           (Printf.sprintf "check_par: right computation is not stt (%s)" (P.comp_to_string cR))
+  else fail g (Some eL.range)
+           (Printf.sprintf "check_par: left computation is not stt (%s)" (P.comp_to_string cL))

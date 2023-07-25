@@ -6,6 +6,7 @@ open Pulse.Checker.Pure
 open Pulse.Checker.Base
 
 module T = FStar.Tactics.V2
+module P = Pulse.Syntax.Printer
 
 let extend_post_hint_for_local (g:env) (p:post_hint_for_env g)
                                (init_t:term) (x:var { ~ (Set.mem x (dom g)) })
@@ -54,7 +55,8 @@ let check
         | None -> fail g None "Allocating a mutable local variable expects an annotated post-condition"
       in
       if x `Set.mem` freevars post.post
-      then fail g None "Unexpected name clash in with_local"
+      then fail g None "Impossible! check_withlocal: unexpected name clash in with_local,\
+                        please file a bug-report"
       else
         let body_post = extend_post_hint_for_local g post init_t x in
         let (| opened_body, c_body, body_typing |) =
@@ -64,7 +66,9 @@ let check
         // Checking post equality here to match the typing rule
         // 
         if not (C_ST? c_body)
-        then fail g (Some body.range) "withlocal: body is not stt or postcondition mismatch"
+        then fail g (Some body.range)
+               (Printf.sprintf "check_withlocal: body computation type %s is not ST"
+                  (P.comp_to_string c_body))
         else
           let body = close_st_term opened_body x in
           assume (open_st_term (close_st_term opened_body x) x == opened_body);
@@ -80,4 +84,7 @@ let check
             body_typing in
           checker_result_for_st_typing (| _, _, d |)
 
-  else fail g None "Allocating a local variable: init type is not universe zero"
+  else fail g (Some t.range)
+         (Printf.sprintf "check_withlocal: allocating a local variable: type %s is not universe zero (computed %s)"
+            (P.term_to_string init)
+            (P.univ_to_string init_u))

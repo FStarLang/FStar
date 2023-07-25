@@ -116,7 +116,7 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
                   preamble_sub.goals
                   (list_as_vprop [] * pst_sub.solved) = pst_sub.goals_inv in
   let ropt = PS.ss_to_nt_substs pst_sub.pg pst_sub.uvs pst_sub.ss in
-  if None? ropt then fail pst_sub.pg None "intro exists ss not well-typed";
+  if None? ropt then fail pst_sub.pg None "resulted substitution after intro exists protocol is not well-typed";
   // if not (PS.check_well_typedness pst_sub.pg pst_sub.uvs pst_sub.ss)
   // then fail pst_sub.pg None "intro exists ss not well-typed";
   let Some nt = ropt in

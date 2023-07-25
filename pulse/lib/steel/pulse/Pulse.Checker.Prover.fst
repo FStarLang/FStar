@@ -92,14 +92,18 @@ let rec prove_pures #preamble (pst:prover_state preamble)
   | {t=Tm_Pure p}::unsolved' ->
     let pst_opt = IntroPure.intro_pure pst p unsolved' () in
     (match pst_opt with
-     | None -> fail pst.pg None (Printf.sprintf "cannot prove pure %s\n" (P.term_to_string p))
+     | None ->
+       fail pst.pg None (Printf.sprintf "prover error: cannot prove pure %s\n" (P.term_to_string p))
      | Some pst1 ->
        let pst2 = prove_pures pst1 in
        assert (pst1 `pst_extends` pst);
        assert (pst2 `pst_extends` pst1);
        assert (pst2 `pst_extends` pst);
        pst2)
-  | _ -> fail pst.pg None "prove_pures: not a pure"
+  | _ ->
+    fail pst.pg None
+      (Printf.sprintf "Impossible! prover.prove_pures: %s is not a pure, please file a bug-report"
+         (P.term_to_string (L.hd pst.unsolved)))
 
 #push-options "--z3rlimit_factor 4"
 let rec prover

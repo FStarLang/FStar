@@ -156,21 +156,6 @@ let refl_uvar (t:R.term) (uvs:env) : option var =
     if contains uvs n then Some n else None
   | _ -> None
 
-// let rec refl_contains_uvar (t:R.term) (uvs:env) (g:env) : T.Tac bool =
-//   let open R in
-//   match inspect_ln t with
-//   | Tv_Var _ -> Some? (refl_uvar t uvs)
-//   | Tv_BVar _
-//   | Tv_FVar _
-//   | Tv_UInst _ _
-//   | Tv_Const _
-//   | Tv_Type _ -> false
-//   | Tv_App hd (arg, _) ->
-//     let b = refl_contains_uvar hd uvs g in
-//     if b then true
-//     else refl_contains_uvar arg uvs g
-//   | _ -> fail g None "refl_contains_uvar: unsupported reflection term"
-
 let is_uvar (t:term) (uvs:env) : option var =
   match t.t with
   | Tm_FStar t -> refl_uvar t uvs
@@ -178,21 +163,6 @@ let is_uvar (t:term) (uvs:env) : option var =
 
 let contains_uvar (t:term) (uvs:env) (g:env) : T.Tac bool =
   not (check_disjoint uvs (freevars t))
-
-  // match t.t with
-  // | Tm_Emp -> false
-  // | Tm_Pure p -> contains_uvar p uvs g
-  // | Tm_Star t1 t2
-  // | Tm_ExistsSL _ {binder_ty=t1} t2
-  // | Tm_ForallSL _ {binder_ty=t1} t2 ->
-  //   let b = contains_uvar t1 uvs g in
-  //   if b then true
-  //   else contains_uvar t2 uvs g
-  // | Tm_VProp
-  // | Tm_Inames
-  // | Tm_EmpInames -> false
-  // | Tm_FStar t -> refl_contains_uvar t uvs g
-  // | Tm_Unknown -> false
 
 let is_reveal_uvar (t:term) (uvs:env) : option (universe & term & var) =
   match is_pure_app t with
