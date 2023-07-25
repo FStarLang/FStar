@@ -1778,7 +1778,7 @@ let (try_frame_pre_uvs :
                                       "Pulse.Checker.Prover.fst"
                                       (Prims.of_int (269)) (Prims.of_int (4))
                                       (Prims.of_int (269))
-                                      (Prims.of_int (50)))))
+                                      (Prims.of_int (56)))))
                              (FStar_Sealed.seal
                                 (Obj.magic
                                    (FStar_Range.mk_range
@@ -1788,7 +1788,7 @@ let (try_frame_pre_uvs :
                                       (Prims.of_int (304))
                                       (Prims.of_int (27)))))
                              (Obj.magic
-                                (prove g ctxt () uvs
+                                (prove g1 ctxt () uvs
                                    (Pulse_Syntax_Base.comp_pre c) ()))
                              (fun uu___ ->
                                 (fun uu___ ->

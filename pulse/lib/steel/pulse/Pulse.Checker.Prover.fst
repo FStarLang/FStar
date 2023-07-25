@@ -266,7 +266,7 @@ let try_frame_pre_uvs (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_v
   let g = push_context g "try_frame_pre" t.range in
 
   let (| g1, nts, remaining_ctxt, k_frame |) =
-    prove ctxt_typing uvs #(comp_pre c) (magic ()) in
+    prove #g #_ ctxt_typing uvs #(comp_pre c) (magic ()) in
   // assert (nts == []);
 
   let d : st_typing (push_env g1 uvs) t c =
