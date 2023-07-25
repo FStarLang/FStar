@@ -128,7 +128,7 @@ let check
         let d : st_typing _ _ (open_comp_with comp_typ arg) =
           T_STApp g head formal qual comp_typ arg (E dhead) (E darg) in
         let d = canonicalize_st_typing d in
-        let t = wr (Tm_STApp {head; arg_qual=qual; arg}) in
+        let t = { term = Tm_STApp {head; arg_qual=qual; arg}; range } in
         let c = (canon_comp (open_comp_with comp_typ arg)) in
         let d : st_typing g t c = d in
 

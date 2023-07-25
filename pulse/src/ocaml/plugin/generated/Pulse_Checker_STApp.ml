@@ -976,21 +976,23 @@ let (check :
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.STApp.fst"
                                                                     (Prims.of_int (131))
-                                                                    (Prims.of_int (16))
+                                                                    (Prims.of_int (18))
                                                                     (Prims.of_int (131))
-                                                                    (Prims.of_int (56)))))
+                                                                    (Prims.of_int (67)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.STApp.fst"
                                                                     (Prims.of_int (131))
-                                                                    (Prims.of_int (59))
+                                                                    (Prims.of_int (72))
                                                                     (Prims.of_int (135))
                                                                     (Prims.of_int (93)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___6 ->
-                                                                    Pulse_Typing.wr
+                                                                    {
+                                                                    Pulse_Syntax_Base.term1
+                                                                    =
                                                                     (Pulse_Syntax_Base.Tm_STApp
                                                                     {
                                                                     Pulse_Syntax_Base.head
@@ -999,7 +1001,10 @@ let (check :
                                                                     = qual;
                                                                     Pulse_Syntax_Base.arg
                                                                     = arg1
-                                                                    })))
+                                                                    });
+                                                                    Pulse_Syntax_Base.range2
+                                                                    = range
+                                                                    }))
                                                                     (fun
                                                                     uu___6 ->
                                                                     (fun t2
@@ -1180,21 +1185,23 @@ let (check :
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.STApp.fst"
                                                                     (Prims.of_int (131))
-                                                                    (Prims.of_int (16))
+                                                                    (Prims.of_int (18))
                                                                     (Prims.of_int (131))
-                                                                    (Prims.of_int (56)))))
+                                                                    (Prims.of_int (67)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.STApp.fst"
                                                                     (Prims.of_int (131))
-                                                                    (Prims.of_int (59))
+                                                                    (Prims.of_int (72))
                                                                     (Prims.of_int (135))
                                                                     (Prims.of_int (93)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___7 ->
-                                                                    Pulse_Typing.wr
+                                                                    {
+                                                                    Pulse_Syntax_Base.term1
+                                                                    =
                                                                     (Pulse_Syntax_Base.Tm_STApp
                                                                     {
                                                                     Pulse_Syntax_Base.head
@@ -1203,7 +1210,10 @@ let (check :
                                                                     = qual;
                                                                     Pulse_Syntax_Base.arg
                                                                     = arg1
-                                                                    })))
+                                                                    });
+                                                                    Pulse_Syntax_Base.range2
+                                                                    = range
+                                                                    }))
                                                                     (fun
                                                                     uu___7 ->
                                                                     (fun t2
@@ -1384,21 +1394,23 @@ let (check :
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.STApp.fst"
                                                                     (Prims.of_int (131))
-                                                                    (Prims.of_int (16))
+                                                                    (Prims.of_int (18))
                                                                     (Prims.of_int (131))
-                                                                    (Prims.of_int (56)))))
+                                                                    (Prims.of_int (67)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.STApp.fst"
                                                                     (Prims.of_int (131))
-                                                                    (Prims.of_int (59))
+                                                                    (Prims.of_int (72))
                                                                     (Prims.of_int (135))
                                                                     (Prims.of_int (93)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___7 ->
-                                                                    Pulse_Typing.wr
+                                                                    {
+                                                                    Pulse_Syntax_Base.term1
+                                                                    =
                                                                     (Pulse_Syntax_Base.Tm_STApp
                                                                     {
                                                                     Pulse_Syntax_Base.head
@@ -1407,7 +1419,10 @@ let (check :
                                                                     = qual;
                                                                     Pulse_Syntax_Base.arg
                                                                     = arg1
-                                                                    })))
+                                                                    });
+                                                                    Pulse_Syntax_Base.range2
+                                                                    = range
+                                                                    }))
                                                                     (fun
                                                                     uu___7 ->
                                                                     (fun t2
