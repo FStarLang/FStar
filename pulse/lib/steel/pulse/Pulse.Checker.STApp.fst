@@ -124,7 +124,7 @@ let check
         let c = (canon_comp (open_comp_with comp_typ arg)) in
         let d : st_typing g t c = d in
 
-        Prover.repack (Prover.try_frame_pre_uvs ctxt_typing uvs d) post_hint t.range
+        Prover.prove_post_hint (Prover.try_frame_pre_uvs ctxt_typing uvs d) post_hint t.range
       | _ ->
         fail g (Some t.range) "Expected an effectful application; got a pure term (could it be partially applied by mistake?)"
     else fail g (Some t.range) (Printf.sprintf "Unexpected qualifier in head type %s of stateful application: head = %s, arg = %s"

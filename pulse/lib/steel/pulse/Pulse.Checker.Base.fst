@@ -227,7 +227,10 @@ let continuation_elaborator_with_bind (#g:env) (ctxt:term)
     fun post_hint res ->
     let (| e2, c2, e2_typing |) = res in
     if not (stateful_comp c2) // || None? post_hint
-    then T.fail "Unexpected non-stateful comp in continuation elaborate"
+    then fail g' (Some e2.range)
+           (Printf.sprintf "bind elaborator: continuation term %s is not stateful (c: %s)"
+              (P.st_term_to_string e2)
+              (P.comp_to_string c2))
     else (
       let e2_typing : st_typing g' e2 c2 = e2_typing in
       let e2_closed = close_st_term e2 x in
@@ -242,7 +245,7 @@ let continuation_elaborator_with_bind (#g:env) (ctxt:term)
       // we closed e2 with x
       assume (~ (x `Set.mem` freevars_st e2_closed));
       if x `Set.mem` freevars (comp_post c2)
-      then T.fail "Impossible"
+      then fail g' None "Impossible: freevar clash when constructing continuation elaborator for bind, please file a bug-report"
       else (
         let t_typing, post_typing =
           Pulse.Typing.Combinators.bind_res_and_post_typing g (st_comp_of_comp c2) x post_hint in
@@ -278,7 +281,10 @@ let continuation_elaborator_with_tot_bind (#g:env) (#ctxt:term)
   fun post_hint (| e2, c2, d2 |) ->
 
   if not (stateful_comp c2)
-  then fail g (Some e2.range) "Tm_TotBind: e2 is not a stateful computation";
+  then fail g (Some e2.range)
+           (Printf.sprintf "tot bind elaborator: continuation term %s is not stateful (c: %s)"
+              (P.st_term_to_string e2)
+              (P.comp_to_string c2));
 
   let e2_closed = close_st_term e2 x in
   assume (open_st_term (close_st_term e2 x) x == e2);
@@ -348,13 +354,13 @@ let intro_comp_typing (g:env)
       let stc = intro_st_comp_typing st in
       let (| ty, i_typing |) = CP.core_check_term g i in
       if not (eq_tm ty tm_inames)
-      then fail g None "Ill-typed inames"
+      then fail g None (Printf.sprintf "ill-typed inames term %s" (P.term_to_string i))
       else CT_STAtomic _ _ _ (E i_typing) stc
     | C_STGhost i st -> 
       let stc = intro_st_comp_typing st in
       let (| ty, i_typing |) = CP.core_check_term g i in
       if not (eq_tm ty tm_inames)
-      then fail g None "Ill-typed inames"
+      then fail g None (Printf.sprintf "ill-typed inames term %s" (P.term_to_string i))
       else CT_STGhost _ _ _ (E i_typing) stc
 
 let return_in_ctxt (g:env) (y:var) (u:universe) (ty:term) (ctxt:vprop)
@@ -411,8 +417,10 @@ let checker_result_for_st_typing (#g:env) (#ctxt:vprop) (#post_hint:post_hint_op
   let (| t, c, d |) = d in
  
   if not (stateful_comp c)
-  then fail g None "checker_result_for_st_typing: not a stateful comp";
-
+  then fail g None
+         (Printf.sprintf "checker_result_for_st_typing: input term %s is not stateful (c: %s)"
+            (P.st_term_to_string t)
+            (P.comp_to_string c));
 
   let x = fresh g in
 

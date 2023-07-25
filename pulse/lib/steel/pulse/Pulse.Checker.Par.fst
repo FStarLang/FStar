@@ -49,6 +49,6 @@ let check
       let cR_typing = MT.st_typing_correctness eR_typing in
       let x = fresh g in
       let d = T_Par _ _ _ _ _ x cL_typing cR_typing eL_typing eR_typing in
-      repack (try_frame_pre pre_typing d) post_hint t.range
+      prove_post_hint (try_frame_pre pre_typing d) post_hint t.range
     else fail g (Some eR.range) "par: cR is not stt"
   else fail g (Some eL.range) "par: cL is not stt"

@@ -64,7 +64,8 @@ let rec check_abs
       let pre_opened, ret_ty, post_hint_body = 
         match c with
         | C_Tot _ ->
-          fail g (Some body.range) "Tm_Abs in case of st term, C_Tot annotation" 
+          fail g (Some body.range)
+            "Unexpected error: found a total computation annotation on a top-level function" 
 
         | _ -> 
           open_term_nv (comp_pre c) px,
@@ -75,7 +76,7 @@ let rec check_abs
       let pre = close_term pre_opened x in
       let post : post_hint_opt g' =
         match post_hint_body with
-        | None -> fail g (Some body.range) "Tm_Abs without a post hint, bailing"
+        | None -> fail g (Some body.range) "Top-level functions must be annotated with pre and post conditions"
         | Some post ->
           let post_hint_typing
             : post_hint_t

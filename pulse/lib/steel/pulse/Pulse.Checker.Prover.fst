@@ -151,7 +151,14 @@ let rec prover
       | q::tl ->
         let pst_opt = match_q pst q tl () 0 in
         match pst_opt with
-        | None -> fail pst.pg None "cannot match a vprop"
+        | None ->
+          let msg = Printf.sprintf
+            "cannot prove vprop %s in the context: %s\n(the prover was started with goal %s and initial context %s)"
+            (P.term_to_string q)
+            (P.term_to_string (list_as_vprop pst.remaining_ctxt))
+            (P.term_to_string preamble.goals)
+            (P.term_to_string preamble.ctxt) in
+          fail pst.pg None msg
         | Some pst -> prover pst  // a little wasteful?
 #pop-options
 
@@ -222,7 +229,8 @@ let prove
 
     let ropt = PS.ss_to_nt_substs pst.pg pst.uvs pst.ss in
 
-    if None? ropt then fail pst.pg None "prove: ss not well-typed";
+    if None? ropt
+    then fail pst.pg None "prover error: ill-typed substitutions";
     let Some nts = ropt in
     let nts_uvs = PS.well_typed_nt_substs_prefix pst.pg pst.uvs nts uvs in
     let k
@@ -250,6 +258,8 @@ let try_frame_pre_uvs (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_v
   (#t:st_term) (#c:comp_st) (d:st_typing (push_env g uvs) t c)
 
   : T.Tac (checker_result_t g ctxt None) =
+
+  let g = push_context g "try_frame_pre" t.range in
 
   let (| g1, nts, remaining_ctxt, k_frame |) =
     prove ctxt_typing uvs #(comp_pre c) (magic ()) in
@@ -299,12 +309,14 @@ let try_frame_pre (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_vprop
   assert (equal g (push_env g uvs));
   try_frame_pre_uvs ctxt_typing uvs d
 
-let repack (#g:env) (#ctxt:vprop)
+let prove_post_hint (#g:env) (#ctxt:vprop)
   (r:checker_result_t g ctxt None)
   (post_hint:post_hint_opt g)
   (rng:range)
   
   : T.Tac (checker_result_t g ctxt post_hint) =
+
+  let g = push_context g "prove_post_hint" rng in
 
   match post_hint with
   | None -> r
@@ -315,7 +327,11 @@ let repack (#g:env) (#ctxt:vprop)
 
     // TODO: subtyping
     if not (eq_tm ty post_hint.ret_ty)
-    then fail g (Some rng) (Printf.sprintf "result type is not the same in stapp")
+    then fail g (Some rng)
+           (Printf.sprintf "error in proving post hint:\
+                            comp return type %s does not match the post hint %s"
+              (P.term_to_string ty)
+              (P.term_to_string post_hint.ret_ty))
     else if eq_tm post_hint_opened ctxt'
     then (| x, ty, post_hint_opened, g2, k |)
     else
@@ -328,7 +344,11 @@ let repack (#g:env) (#ctxt:vprop)
         coerce_eq k_post () in
 
       match check_equiv_emp g3 remaining_ctxt with
-      | None -> fail g (Some rng) (Printf.sprintf "cannot match post hint in st app")
+      | None -> 
+        fail g (Some rng)
+          (Printf.sprintf "error in proving post hint:\
+                           comp post contains extra vprops not matched in the post hint: %s\n"
+             (P.term_to_string remaining_ctxt))
       | Some d ->
         let k_post
           : continuation_elaborator g2 ctxt' g3 post_hint_opened =

@@ -39,7 +39,7 @@
       "385160c1ccc0e1278675c841fcd7a2f2"
     ],
     [
-      "Pulse.Checker.Prover.repack",
+      "Pulse.Checker.Prover.prove_post_hint",
       1,
       2,
       1,

@@ -991,7 +991,7 @@ let (continuation_elaborator_with_bind :
                                                                 "Pulse.Checker.Base.fst"
                                                                 (Prims.of_int (227))
                                                                 (Prims.of_int (24))
-                                                                (Prims.of_int (260))
+                                                                (Prims.of_int (263))
                                                                 (Prims.of_int (5)))))
                                                        (FStar_Tactics_Effect.lift_div_tac
                                                           (fun uu___3 -> res))
@@ -1009,28 +1009,142 @@ let (continuation_elaborator_with_bind :
                                                                     c2)
                                                                  then
                                                                    Obj.magic
-                                                                    (Obj.repr
-                                                                    (FStar_Tactics_V2_Derived.fail
-                                                                    "Unexpected non-stateful comp in continuation elaborate"))
-                                                                 else
-                                                                   Obj.magic
-                                                                    (Obj.repr
+                                                                    (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "Pulse.Checker.Base.fst"
+                                                                    (Prims.of_int (231))
+                                                                    (Prims.of_int (11))
+                                                                    (Prims.of_int (233))
+                                                                    (Prims.of_int (36)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "Pulse.Checker.Base.fst"
+                                                                    (Prims.of_int (230))
+                                                                    (Prims.of_int (9))
+                                                                    (Prims.of_int (233))
+                                                                    (Prims.of_int (36)))))
+                                                                    (Obj.magic
+                                                                    (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "Pulse.Checker.Base.fst"
+                                                                    (Prims.of_int (233))
+                                                                    (Prims.of_int (14))
+                                                                    (Prims.of_int (233))
+                                                                    (Prims.of_int (35)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "Pulse.Checker.Base.fst"
+                                                                    (Prims.of_int (231))
+                                                                    (Prims.of_int (11))
+                                                                    (Prims.of_int (233))
+                                                                    (Prims.of_int (36)))))
+                                                                    (Obj.magic
+                                                                    (Pulse_Syntax_Printer.comp_to_string
+                                                                    c2))
+                                                                    (fun
+                                                                    uu___4 ->
+                                                                    (fun
+                                                                    uu___4 ->
+                                                                    Obj.magic
+                                                                    (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "Pulse.Checker.Base.fst"
+                                                                    (Prims.of_int (231))
+                                                                    (Prims.of_int (11))
+                                                                    (Prims.of_int (233))
+                                                                    (Prims.of_int (36)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "Pulse.Checker.Base.fst"
+                                                                    (Prims.of_int (231))
+                                                                    (Prims.of_int (11))
+                                                                    (Prims.of_int (233))
+                                                                    (Prims.of_int (36)))))
+                                                                    (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Base.fst"
                                                                     (Prims.of_int (232))
-                                                                    (Prims.of_int (43))
+                                                                    (Prims.of_int (14))
                                                                     (Prims.of_int (232))
+                                                                    (Prims.of_int (38)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Printf.fst"
+                                                                    (Prims.of_int (121))
+                                                                    (Prims.of_int (8))
+                                                                    (Prims.of_int (123))
+                                                                    (Prims.of_int (44)))))
+                                                                    (Obj.magic
+                                                                    (Pulse_Syntax_Printer.st_term_to_string
+                                                                    e2))
+                                                                    (fun
+                                                                    uu___5 ->
+                                                                    FStar_Tactics_Effect.lift_div_tac
+                                                                    (fun
+                                                                    uu___6 ->
+                                                                    fun x1 ->
+                                                                    Prims.strcat
+                                                                    (Prims.strcat
+                                                                    "bind elaborator: continuation term "
+                                                                    (Prims.strcat
+                                                                    uu___5
+                                                                    " is not stateful (c: "))
+                                                                    (Prims.strcat
+                                                                    x1 ")")))))
+                                                                    (fun
+                                                                    uu___5 ->
+                                                                    FStar_Tactics_Effect.lift_div_tac
+                                                                    (fun
+                                                                    uu___6 ->
+                                                                    uu___5
+                                                                    uu___4))))
+                                                                    uu___4)))
+                                                                    (fun
+                                                                    uu___4 ->
+                                                                    (fun
+                                                                    uu___4 ->
+                                                                    Obj.magic
+                                                                    (Pulse_Typing_Env.fail
+                                                                    (Pulse_Typing_Env.push_binding
+                                                                    g x
+                                                                    Pulse_Syntax_Base.ppname_default
+                                                                    (Pulse_Syntax_Base.comp_res
+                                                                    c1))
+                                                                    (FStar_Pervasives_Native.Some
+                                                                    (e2.Pulse_Syntax_Base.range2))
+                                                                    uu___4))
+                                                                    uu___4))
+                                                                 else
+                                                                   Obj.magic
+                                                                    (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "Pulse.Checker.Base.fst"
+                                                                    (Prims.of_int (235))
+                                                                    (Prims.of_int (43))
+                                                                    (Prims.of_int (235))
                                                                     (Prims.of_int (52)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Base.fst"
-                                                                    (Prims.of_int (232))
+                                                                    (Prims.of_int (235))
                                                                     (Prims.of_int (55))
-                                                                    (Prims.of_int (259))
+                                                                    (Prims.of_int (262))
                                                                     (Prims.of_int (7)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -1047,17 +1161,17 @@ let (continuation_elaborator_with_bind :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Base.fst"
-                                                                    (Prims.of_int (233))
+                                                                    (Prims.of_int (236))
                                                                     (Prims.of_int (22))
-                                                                    (Prims.of_int (233))
+                                                                    (Prims.of_int (236))
                                                                     (Prims.of_int (40)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Base.fst"
-                                                                    (Prims.of_int (244))
+                                                                    (Prims.of_int (247))
                                                                     (Prims.of_int (6))
-                                                                    (Prims.of_int (259))
+                                                                    (Prims.of_int (262))
                                                                     (Prims.of_int (7)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -1077,28 +1191,32 @@ let (continuation_elaborator_with_bind :
                                                                     c2))
                                                                     then
                                                                     Obj.magic
-                                                                    (Obj.repr
-                                                                    (FStar_Tactics_V2_Derived.fail
-                                                                    "Impossible"))
+                                                                    (Pulse_Typing_Env.fail
+                                                                    (Pulse_Typing_Env.push_binding
+                                                                    g x
+                                                                    Pulse_Syntax_Base.ppname_default
+                                                                    (Pulse_Syntax_Base.comp_res
+                                                                    c1))
+                                                                    FStar_Pervasives_Native.None
+                                                                    "Impossible: freevar clash when constructing continuation elaborator for bind, please file a bug-report")
                                                                     else
                                                                     Obj.magic
-                                                                    (Obj.repr
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Base.fst"
-                                                                    (Prims.of_int (248))
+                                                                    (Prims.of_int (251))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (248))
+                                                                    (Prims.of_int (251))
                                                                     (Prims.of_int (94)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Base.fst"
-                                                                    (Prims.of_int (246))
+                                                                    (Prims.of_int (249))
                                                                     (Prims.of_int (11))
-                                                                    (Prims.of_int (259))
+                                                                    (Prims.of_int (262))
                                                                     (Prims.of_int (7)))))
                                                                     (Obj.magic
                                                                     (Pulse_Typing_Combinators.bind_res_and_post_typing
@@ -1122,17 +1240,17 @@ let (continuation_elaborator_with_bind :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Base.fst"
-                                                                    (Prims.of_int (250))
+                                                                    (Prims.of_int (253))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (256))
+                                                                    (Prims.of_int (259))
                                                                     (Prims.of_int (23)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Base.fst"
-                                                                    (Prims.of_int (248))
+                                                                    (Prims.of_int (251))
                                                                     (Prims.of_int (97))
-                                                                    (Prims.of_int (258))
+                                                                    (Prims.of_int (261))
                                                                     (Prims.of_int (28)))))
                                                                     (Obj.magic
                                                                     (Pulse_Typing_Combinators.mk_bind
@@ -1164,9 +1282,9 @@ let (continuation_elaborator_with_bind :
                                                                     FStar_Pervasives.Mkdtuple3
                                                                     (e, c,
                                                                     e_typing)))))
-                                                                    uu___6))))
+                                                                    uu___6)))
                                                                     uu___5)))
-                                                                    uu___5))))
+                                                                    uu___5)))
                                                             uu___3))))))
                   uu___6 uu___5 uu___4 uu___3 uu___2 uu___1 uu___
 let (continuation_elaborator_with_tot_bind :
@@ -1207,17 +1325,17 @@ let (continuation_elaborator_with_tot_bind :
                                                     (Obj.magic
                                                        (FStar_Range.mk_range
                                                           "Pulse.Checker.Base.fst"
-                                                          (Prims.of_int (280))
+                                                          (Prims.of_int (283))
                                                           (Prims.of_int (2))
-                                                          (Prims.of_int (281))
-                                                          (Prims.of_int (76)))))
+                                                          (Prims.of_int (287))
+                                                          (Prims.of_int (36)))))
                                                  (FStar_Sealed.seal
                                                     (Obj.magic
                                                        (FStar_Range.mk_range
                                                           "Pulse.Checker.Base.fst"
-                                                          (Prims.of_int (312))
+                                                          (Prims.of_int (318))
                                                           (Prims.of_int (2))
-                                                          (Prims.of_int (312))
+                                                          (Prims.of_int (318))
                                                           (Prims.of_int (15)))))
                                                  (if
                                                     Prims.op_Negation
@@ -1226,11 +1344,119 @@ let (continuation_elaborator_with_tot_bind :
                                                   then
                                                     Obj.magic
                                                       (Obj.repr
-                                                         (Pulse_Typing_Env.fail
-                                                            g
-                                                            (FStar_Pervasives_Native.Some
-                                                               (e2.Pulse_Syntax_Base.range2))
-                                                            "Tm_TotBind: e2 is not a stateful computation"))
+                                                         (FStar_Tactics_Effect.tac_bind
+                                                            (FStar_Sealed.seal
+                                                               (Obj.magic
+                                                                  (FStar_Range.mk_range
+                                                                    "Pulse.Checker.Base.fst"
+                                                                    (Prims.of_int (285))
+                                                                    (Prims.of_int (11))
+                                                                    (Prims.of_int (287))
+                                                                    (Prims.of_int (36)))))
+                                                            (FStar_Sealed.seal
+                                                               (Obj.magic
+                                                                  (FStar_Range.mk_range
+                                                                    "Pulse.Checker.Base.fst"
+                                                                    (Prims.of_int (284))
+                                                                    (Prims.of_int (7))
+                                                                    (Prims.of_int (287))
+                                                                    (Prims.of_int (36)))))
+                                                            (Obj.magic
+                                                               (FStar_Tactics_Effect.tac_bind
+                                                                  (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "Pulse.Checker.Base.fst"
+                                                                    (Prims.of_int (287))
+                                                                    (Prims.of_int (14))
+                                                                    (Prims.of_int (287))
+                                                                    (Prims.of_int (35)))))
+                                                                  (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "Pulse.Checker.Base.fst"
+                                                                    (Prims.of_int (285))
+                                                                    (Prims.of_int (11))
+                                                                    (Prims.of_int (287))
+                                                                    (Prims.of_int (36)))))
+                                                                  (Obj.magic
+                                                                    (Pulse_Syntax_Printer.comp_to_string
+                                                                    c2))
+                                                                  (fun uu___2
+                                                                    ->
+                                                                    (fun
+                                                                    uu___2 ->
+                                                                    Obj.magic
+                                                                    (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "Pulse.Checker.Base.fst"
+                                                                    (Prims.of_int (285))
+                                                                    (Prims.of_int (11))
+                                                                    (Prims.of_int (287))
+                                                                    (Prims.of_int (36)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "Pulse.Checker.Base.fst"
+                                                                    (Prims.of_int (285))
+                                                                    (Prims.of_int (11))
+                                                                    (Prims.of_int (287))
+                                                                    (Prims.of_int (36)))))
+                                                                    (Obj.magic
+                                                                    (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "Pulse.Checker.Base.fst"
+                                                                    (Prims.of_int (286))
+                                                                    (Prims.of_int (14))
+                                                                    (Prims.of_int (286))
+                                                                    (Prims.of_int (38)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Printf.fst"
+                                                                    (Prims.of_int (121))
+                                                                    (Prims.of_int (8))
+                                                                    (Prims.of_int (123))
+                                                                    (Prims.of_int (44)))))
+                                                                    (Obj.magic
+                                                                    (Pulse_Syntax_Printer.st_term_to_string
+                                                                    e2))
+                                                                    (fun
+                                                                    uu___3 ->
+                                                                    FStar_Tactics_Effect.lift_div_tac
+                                                                    (fun
+                                                                    uu___4 ->
+                                                                    fun x1 ->
+                                                                    Prims.strcat
+                                                                    (Prims.strcat
+                                                                    "tot bind elaborator: continuation term "
+                                                                    (Prims.strcat
+                                                                    uu___3
+                                                                    " is not stateful (c: "))
+                                                                    (Prims.strcat
+                                                                    x1 ")")))))
+                                                                    (fun
+                                                                    uu___3 ->
+                                                                    FStar_Tactics_Effect.lift_div_tac
+                                                                    (fun
+                                                                    uu___4 ->
+                                                                    uu___3
+                                                                    uu___2))))
+                                                                    uu___2)))
+                                                            (fun uu___2 ->
+                                                               (fun uu___2 ->
+                                                                  Obj.magic
+                                                                    (
+                                                                    Pulse_Typing_Env.fail
+                                                                    g
+                                                                    (FStar_Pervasives_Native.Some
+                                                                    (e2.Pulse_Syntax_Base.range2))
+                                                                    uu___2))
+                                                                 uu___2)))
                                                   else
                                                     Obj.magic
                                                       (Obj.repr
@@ -1307,13 +1533,13 @@ let (intro_comp_typing :
                 (FStar_Sealed.seal
                    (Obj.magic
                       (FStar_Range.mk_range "Pulse.Checker.Base.fst"
-                         (Prims.of_int (341)) (Prims.of_int (8))
-                         (Prims.of_int (341)) (Prims.of_int (52)))))
+                         (Prims.of_int (347)) (Prims.of_int (8))
+                         (Prims.of_int (347)) (Prims.of_int (52)))))
                 (FStar_Sealed.seal
                    (Obj.magic
                       (FStar_Range.mk_range "Pulse.Checker.Base.fst"
-                         (Prims.of_int (343)) (Prims.of_int (4))
-                         (Prims.of_int (358)) (Prims.of_int (44)))))
+                         (Prims.of_int (349)) (Prims.of_int (4))
+                         (Prims.of_int (364)) (Prims.of_int (44)))))
                 (FStar_Tactics_Effect.lift_div_tac
                    (fun uu___1 ->
                       fun uu___ ->
@@ -1334,17 +1560,17 @@ let (intro_comp_typing :
                                   (Obj.magic
                                      (FStar_Range.mk_range
                                         "Pulse.Checker.Base.fst"
-                                        (Prims.of_int (345))
+                                        (Prims.of_int (351))
                                         (Prims.of_int (16))
-                                        (Prims.of_int (345))
+                                        (Prims.of_int (351))
                                         (Prims.of_int (39)))))
                                (FStar_Sealed.seal
                                   (Obj.magic
                                      (FStar_Range.mk_range
                                         "Pulse.Checker.Base.fst"
-                                        (Prims.of_int (346))
+                                        (Prims.of_int (352))
                                         (Prims.of_int (6))
-                                        (Prims.of_int (346))
+                                        (Prims.of_int (352))
                                         (Prims.of_int (19)))))
                                (Obj.magic (intro_st_comp_typing st))
                                (fun stc ->
@@ -1352,75 +1578,6 @@ let (intro_comp_typing :
                                     (fun uu___ ->
                                        Pulse_Typing.CT_ST (g, st, stc))))
                       | Pulse_Syntax_Base.C_STAtomic (i, st) ->
-                          Obj.magic
-                            (FStar_Tactics_Effect.tac_bind
-                               (FStar_Sealed.seal
-                                  (Obj.magic
-                                     (FStar_Range.mk_range
-                                        "Pulse.Checker.Base.fst"
-                                        (Prims.of_int (348))
-                                        (Prims.of_int (16))
-                                        (Prims.of_int (348))
-                                        (Prims.of_int (39)))))
-                               (FStar_Sealed.seal
-                                  (Obj.magic
-                                     (FStar_Range.mk_range
-                                        "Pulse.Checker.Base.fst"
-                                        (Prims.of_int (348))
-                                        (Prims.of_int (42))
-                                        (Prims.of_int (352))
-                                        (Prims.of_int (45)))))
-                               (Obj.magic (intro_st_comp_typing st))
-                               (fun uu___ ->
-                                  (fun stc ->
-                                     Obj.magic
-                                       (FStar_Tactics_Effect.tac_bind
-                                          (FStar_Sealed.seal
-                                             (Obj.magic
-                                                (FStar_Range.mk_range
-                                                   "Pulse.Checker.Base.fst"
-                                                   (Prims.of_int (349))
-                                                   (Prims.of_int (31))
-                                                   (Prims.of_int (349))
-                                                   (Prims.of_int (53)))))
-                                          (FStar_Sealed.seal
-                                             (Obj.magic
-                                                (FStar_Range.mk_range
-                                                   "Pulse.Checker.Base.fst"
-                                                   (Prims.of_int (348))
-                                                   (Prims.of_int (42))
-                                                   (Prims.of_int (352))
-                                                   (Prims.of_int (45)))))
-                                          (Obj.magic
-                                             (Pulse_Checker_Pure.core_check_term
-                                                g i))
-                                          (fun uu___ ->
-                                             (fun uu___ ->
-                                                match uu___ with
-                                                | Prims.Mkdtuple2
-                                                    (ty, i_typing) ->
-                                                    if
-                                                      Prims.op_Negation
-                                                        (Pulse_Syntax_Base.eq_tm
-                                                           ty
-                                                           Pulse_Syntax_Base.tm_inames)
-                                                    then
-                                                      Obj.magic
-                                                        (Obj.repr
-                                                           (Pulse_Typing_Env.fail
-                                                              g
-                                                              FStar_Pervasives_Native.None
-                                                              "Ill-typed inames"))
-                                                    else
-                                                      Obj.magic
-                                                        (Obj.repr
-                                                           (FStar_Tactics_Effect.lift_div_tac
-                                                              (fun uu___2 ->
-                                                                 Pulse_Typing.CT_STAtomic
-                                                                   (g, i, st,
-                                                                    (), stc)))))
-                                               uu___))) uu___))
-                      | Pulse_Syntax_Base.C_STGhost (i, st) ->
                           Obj.magic
                             (FStar_Tactics_Effect.tac_bind
                                (FStar_Sealed.seal
@@ -1438,7 +1595,7 @@ let (intro_comp_typing :
                                         (Prims.of_int (354))
                                         (Prims.of_int (42))
                                         (Prims.of_int (358))
-                                        (Prims.of_int (44)))))
+                                        (Prims.of_int (45)))))
                                (Obj.magic (intro_st_comp_typing st))
                                (fun uu___ ->
                                   (fun stc ->
@@ -1459,6 +1616,133 @@ let (intro_comp_typing :
                                                    (Prims.of_int (354))
                                                    (Prims.of_int (42))
                                                    (Prims.of_int (358))
+                                                   (Prims.of_int (45)))))
+                                          (Obj.magic
+                                             (Pulse_Checker_Pure.core_check_term
+                                                g i))
+                                          (fun uu___ ->
+                                             (fun uu___ ->
+                                                match uu___ with
+                                                | Prims.Mkdtuple2
+                                                    (ty, i_typing) ->
+                                                    if
+                                                      Prims.op_Negation
+                                                        (Pulse_Syntax_Base.eq_tm
+                                                           ty
+                                                           Pulse_Syntax_Base.tm_inames)
+                                                    then
+                                                      Obj.magic
+                                                        (Obj.repr
+                                                           (FStar_Tactics_Effect.tac_bind
+                                                              (FStar_Sealed.seal
+                                                                 (Obj.magic
+                                                                    (
+                                                                    FStar_Range.mk_range
+                                                                    "Pulse.Checker.Base.fst"
+                                                                    (Prims.of_int (357))
+                                                                    (Prims.of_int (23))
+                                                                    (Prims.of_int (357))
+                                                                    (Prims.of_int (87)))))
+                                                              (FStar_Sealed.seal
+                                                                 (Obj.magic
+                                                                    (
+                                                                    FStar_Range.mk_range
+                                                                    "Pulse.Checker.Base.fst"
+                                                                    (Prims.of_int (357))
+                                                                    (Prims.of_int (11))
+                                                                    (Prims.of_int (357))
+                                                                    (Prims.of_int (87)))))
+                                                              (Obj.magic
+                                                                 (FStar_Tactics_Effect.tac_bind
+                                                                    (
+                                                                    FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "Pulse.Checker.Base.fst"
+                                                                    (Prims.of_int (357))
+                                                                    (Prims.of_int (66))
+                                                                    (Prims.of_int (357))
+                                                                    (Prims.of_int (86)))))
+                                                                    (
+                                                                    FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "prims.fst"
+                                                                    (Prims.of_int (590))
+                                                                    (Prims.of_int (19))
+                                                                    (Prims.of_int (590))
+                                                                    (Prims.of_int (31)))))
+                                                                    (
+                                                                    Obj.magic
+                                                                    (Pulse_Syntax_Printer.term_to_string
+                                                                    i))
+                                                                    (
+                                                                    fun
+                                                                    uu___1 ->
+                                                                    FStar_Tactics_Effect.lift_div_tac
+                                                                    (fun
+                                                                    uu___2 ->
+                                                                    Prims.strcat
+                                                                    "ill-typed inames term "
+                                                                    (Prims.strcat
+                                                                    uu___1 "")))))
+                                                              (fun uu___1 ->
+                                                                 (fun uu___1
+                                                                    ->
+                                                                    Obj.magic
+                                                                    (Pulse_Typing_Env.fail
+                                                                    g
+                                                                    FStar_Pervasives_Native.None
+                                                                    uu___1))
+                                                                   uu___1)))
+                                                    else
+                                                      Obj.magic
+                                                        (Obj.repr
+                                                           (FStar_Tactics_Effect.lift_div_tac
+                                                              (fun uu___2 ->
+                                                                 Pulse_Typing.CT_STAtomic
+                                                                   (g, i, st,
+                                                                    (), stc)))))
+                                               uu___))) uu___))
+                      | Pulse_Syntax_Base.C_STGhost (i, st) ->
+                          Obj.magic
+                            (FStar_Tactics_Effect.tac_bind
+                               (FStar_Sealed.seal
+                                  (Obj.magic
+                                     (FStar_Range.mk_range
+                                        "Pulse.Checker.Base.fst"
+                                        (Prims.of_int (360))
+                                        (Prims.of_int (16))
+                                        (Prims.of_int (360))
+                                        (Prims.of_int (39)))))
+                               (FStar_Sealed.seal
+                                  (Obj.magic
+                                     (FStar_Range.mk_range
+                                        "Pulse.Checker.Base.fst"
+                                        (Prims.of_int (360))
+                                        (Prims.of_int (42))
+                                        (Prims.of_int (364))
+                                        (Prims.of_int (44)))))
+                               (Obj.magic (intro_st_comp_typing st))
+                               (fun uu___ ->
+                                  (fun stc ->
+                                     Obj.magic
+                                       (FStar_Tactics_Effect.tac_bind
+                                          (FStar_Sealed.seal
+                                             (Obj.magic
+                                                (FStar_Range.mk_range
+                                                   "Pulse.Checker.Base.fst"
+                                                   (Prims.of_int (361))
+                                                   (Prims.of_int (31))
+                                                   (Prims.of_int (361))
+                                                   (Prims.of_int (53)))))
+                                          (FStar_Sealed.seal
+                                             (Obj.magic
+                                                (FStar_Range.mk_range
+                                                   "Pulse.Checker.Base.fst"
+                                                   (Prims.of_int (360))
+                                                   (Prims.of_int (42))
+                                                   (Prims.of_int (364))
                                                    (Prims.of_int (44)))))
                                           (Obj.magic
                                              (Pulse_Checker_Pure.core_check_term
@@ -1476,10 +1760,68 @@ let (intro_comp_typing :
                                                     then
                                                       Obj.magic
                                                         (Obj.repr
-                                                           (Pulse_Typing_Env.fail
-                                                              g
-                                                              FStar_Pervasives_Native.None
-                                                              "Ill-typed inames"))
+                                                           (FStar_Tactics_Effect.tac_bind
+                                                              (FStar_Sealed.seal
+                                                                 (Obj.magic
+                                                                    (
+                                                                    FStar_Range.mk_range
+                                                                    "Pulse.Checker.Base.fst"
+                                                                    (Prims.of_int (363))
+                                                                    (Prims.of_int (23))
+                                                                    (Prims.of_int (363))
+                                                                    (Prims.of_int (87)))))
+                                                              (FStar_Sealed.seal
+                                                                 (Obj.magic
+                                                                    (
+                                                                    FStar_Range.mk_range
+                                                                    "Pulse.Checker.Base.fst"
+                                                                    (Prims.of_int (363))
+                                                                    (Prims.of_int (11))
+                                                                    (Prims.of_int (363))
+                                                                    (Prims.of_int (87)))))
+                                                              (Obj.magic
+                                                                 (FStar_Tactics_Effect.tac_bind
+                                                                    (
+                                                                    FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "Pulse.Checker.Base.fst"
+                                                                    (Prims.of_int (363))
+                                                                    (Prims.of_int (66))
+                                                                    (Prims.of_int (363))
+                                                                    (Prims.of_int (86)))))
+                                                                    (
+                                                                    FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "prims.fst"
+                                                                    (Prims.of_int (590))
+                                                                    (Prims.of_int (19))
+                                                                    (Prims.of_int (590))
+                                                                    (Prims.of_int (31)))))
+                                                                    (
+                                                                    Obj.magic
+                                                                    (Pulse_Syntax_Printer.term_to_string
+                                                                    i))
+                                                                    (
+                                                                    fun
+                                                                    uu___1 ->
+                                                                    FStar_Tactics_Effect.lift_div_tac
+                                                                    (fun
+                                                                    uu___2 ->
+                                                                    Prims.strcat
+                                                                    "ill-typed inames term "
+                                                                    (Prims.strcat
+                                                                    uu___1 "")))))
+                                                              (fun uu___1 ->
+                                                                 (fun uu___1
+                                                                    ->
+                                                                    Obj.magic
+                                                                    (Pulse_Typing_Env.fail
+                                                                    g
+                                                                    FStar_Pervasives_Native.None
+                                                                    uu___1))
+                                                                   uu___1)))
                                                     else
                                                       Obj.magic
                                                         (Obj.repr
@@ -1549,13 +1891,13 @@ let (apply_checker_result_k :
             (FStar_Sealed.seal
                (Obj.magic
                   (FStar_Range.mk_range "Pulse.Checker.Base.fst"
-                     (Prims.of_int (397)) (Prims.of_int (35))
-                     (Prims.of_int (397)) (Prims.of_int (36)))))
+                     (Prims.of_int (403)) (Prims.of_int (35))
+                     (Prims.of_int (403)) (Prims.of_int (36)))))
             (FStar_Sealed.seal
                (Obj.magic
                   (FStar_Range.mk_range "Pulse.Checker.Base.fst"
-                     (Prims.of_int (394)) (Prims.of_int (55))
-                     (Prims.of_int (404)) (Prims.of_int (22)))))
+                     (Prims.of_int (400)) (Prims.of_int (55))
+                     (Prims.of_int (410)) (Prims.of_int (22)))))
             (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> r))
             (fun uu___ ->
                (fun uu___ ->
@@ -1567,14 +1909,14 @@ let (apply_checker_result_k :
                               (Obj.magic
                                  (FStar_Range.mk_range
                                     "Pulse.Checker.Base.fst"
-                                    (Prims.of_int (399)) (Prims.of_int (29))
-                                    (Prims.of_int (399)) (Prims.of_int (70)))))
+                                    (Prims.of_int (405)) (Prims.of_int (29))
+                                    (Prims.of_int (405)) (Prims.of_int (70)))))
                            (FStar_Sealed.seal
                               (Obj.magic
                                  (FStar_Range.mk_range
                                     "Pulse.Checker.Base.fst"
-                                    (Prims.of_int (397)) (Prims.of_int (39))
-                                    (Prims.of_int (404)) (Prims.of_int (22)))))
+                                    (Prims.of_int (403)) (Prims.of_int (39))
+                                    (Prims.of_int (410)) (Prims.of_int (22)))))
                            (Obj.magic
                               (Pulse_Checker_Pure.check_universe g1 ty_y))
                            (fun uu___1 ->
@@ -1587,17 +1929,17 @@ let (apply_checker_result_k :
                                              (Obj.magic
                                                 (FStar_Range.mk_range
                                                    "Pulse.Checker.Base.fst"
-                                                   (Prims.of_int (402))
+                                                   (Prims.of_int (408))
                                                    (Prims.of_int (4))
-                                                   (Prims.of_int (402))
+                                                   (Prims.of_int (408))
                                                    (Prims.of_int (64)))))
                                           (FStar_Sealed.seal
                                              (Obj.magic
                                                 (FStar_Range.mk_range
                                                    "Pulse.Checker.Base.fst"
-                                                   (Prims.of_int (404))
+                                                   (Prims.of_int (410))
                                                    (Prims.of_int (2))
-                                                   (Prims.of_int (404))
+                                                   (Prims.of_int (410))
                                                    (Prims.of_int (22)))))
                                           (FStar_Tactics_Effect.lift_div_tac
                                              (fun uu___2 ->
@@ -1628,13 +1970,13 @@ let (checker_result_for_st_typing :
             (FStar_Sealed.seal
                (Obj.magic
                   (FStar_Range.mk_range "Pulse.Checker.Base.fst"
-                     (Prims.of_int (411)) (Prims.of_int (22))
-                     (Prims.of_int (411)) (Prims.of_int (23)))))
+                     (Prims.of_int (417)) (Prims.of_int (22))
+                     (Prims.of_int (417)) (Prims.of_int (23)))))
             (FStar_Sealed.seal
                (Obj.magic
                   (FStar_Range.mk_range "Pulse.Checker.Base.fst"
-                     (Prims.of_int (409)) (Prims.of_int (47))
-                     (Prims.of_int (437)) (Prims.of_int (35)))))
+                     (Prims.of_int (415)) (Prims.of_int (47))
+                     (Prims.of_int (445)) (Prims.of_int (35)))))
             (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> d))
             (fun uu___ ->
                (fun uu___ ->
@@ -1646,23 +1988,123 @@ let (checker_result_for_st_typing :
                               (Obj.magic
                                  (FStar_Range.mk_range
                                     "Pulse.Checker.Base.fst"
-                                    (Prims.of_int (413)) (Prims.of_int (2))
-                                    (Prims.of_int (414)) (Prims.of_int (70)))))
+                                    (Prims.of_int (419)) (Prims.of_int (2))
+                                    (Prims.of_int (423)) (Prims.of_int (33)))))
                            (FStar_Sealed.seal
                               (Obj.magic
                                  (FStar_Range.mk_range
                                     "Pulse.Checker.Base.fst"
-                                    (Prims.of_int (414)) (Prims.of_int (71))
-                                    (Prims.of_int (437)) (Prims.of_int (35)))))
+                                    (Prims.of_int (423)) (Prims.of_int (34))
+                                    (Prims.of_int (445)) (Prims.of_int (35)))))
                            (if
                               Prims.op_Negation
                                 (Pulse_Syntax_Base.stateful_comp c)
                             then
                               Obj.magic
                                 (Obj.repr
-                                   (Pulse_Typing_Env.fail g
-                                      FStar_Pervasives_Native.None
-                                      "checker_result_for_st_typing: not a stateful comp"))
+                                   (FStar_Tactics_Effect.tac_bind
+                                      (FStar_Sealed.seal
+                                         (Obj.magic
+                                            (FStar_Range.mk_range
+                                               "Pulse.Checker.Base.fst"
+                                               (Prims.of_int (421))
+                                               (Prims.of_int (9))
+                                               (Prims.of_int (423))
+                                               (Prims.of_int (33)))))
+                                      (FStar_Sealed.seal
+                                         (Obj.magic
+                                            (FStar_Range.mk_range
+                                               "Pulse.Checker.Base.fst"
+                                               (Prims.of_int (420))
+                                               (Prims.of_int (7))
+                                               (Prims.of_int (423))
+                                               (Prims.of_int (33)))))
+                                      (Obj.magic
+                                         (FStar_Tactics_Effect.tac_bind
+                                            (FStar_Sealed.seal
+                                               (Obj.magic
+                                                  (FStar_Range.mk_range
+                                                     "Pulse.Checker.Base.fst"
+                                                     (Prims.of_int (423))
+                                                     (Prims.of_int (12))
+                                                     (Prims.of_int (423))
+                                                     (Prims.of_int (32)))))
+                                            (FStar_Sealed.seal
+                                               (Obj.magic
+                                                  (FStar_Range.mk_range
+                                                     "Pulse.Checker.Base.fst"
+                                                     (Prims.of_int (421))
+                                                     (Prims.of_int (9))
+                                                     (Prims.of_int (423))
+                                                     (Prims.of_int (33)))))
+                                            (Obj.magic
+                                               (Pulse_Syntax_Printer.comp_to_string
+                                                  c))
+                                            (fun uu___1 ->
+                                               (fun uu___1 ->
+                                                  Obj.magic
+                                                    (FStar_Tactics_Effect.tac_bind
+                                                       (FStar_Sealed.seal
+                                                          (Obj.magic
+                                                             (FStar_Range.mk_range
+                                                                "Pulse.Checker.Base.fst"
+                                                                (Prims.of_int (421))
+                                                                (Prims.of_int (9))
+                                                                (Prims.of_int (423))
+                                                                (Prims.of_int (33)))))
+                                                       (FStar_Sealed.seal
+                                                          (Obj.magic
+                                                             (FStar_Range.mk_range
+                                                                "Pulse.Checker.Base.fst"
+                                                                (Prims.of_int (421))
+                                                                (Prims.of_int (9))
+                                                                (Prims.of_int (423))
+                                                                (Prims.of_int (33)))))
+                                                       (Obj.magic
+                                                          (FStar_Tactics_Effect.tac_bind
+                                                             (FStar_Sealed.seal
+                                                                (Obj.magic
+                                                                   (FStar_Range.mk_range
+                                                                    "Pulse.Checker.Base.fst"
+                                                                    (Prims.of_int (422))
+                                                                    (Prims.of_int (12))
+                                                                    (Prims.of_int (422))
+                                                                    (Prims.of_int (35)))))
+                                                             (FStar_Sealed.seal
+                                                                (Obj.magic
+                                                                   (FStar_Range.mk_range
+                                                                    "FStar.Printf.fst"
+                                                                    (Prims.of_int (121))
+                                                                    (Prims.of_int (8))
+                                                                    (Prims.of_int (123))
+                                                                    (Prims.of_int (44)))))
+                                                             (Obj.magic
+                                                                (Pulse_Syntax_Printer.st_term_to_string
+                                                                   t))
+                                                             (fun uu___2 ->
+                                                                FStar_Tactics_Effect.lift_div_tac
+                                                                  (fun uu___3
+                                                                    ->
+                                                                    fun x ->
+                                                                    Prims.strcat
+                                                                    (Prims.strcat
+                                                                    "checker_result_for_st_typing: input term "
+                                                                    (Prims.strcat
+                                                                    uu___2
+                                                                    " is not stateful (c: "))
+                                                                    (Prims.strcat
+                                                                    x ")")))))
+                                                       (fun uu___2 ->
+                                                          FStar_Tactics_Effect.lift_div_tac
+                                                            (fun uu___3 ->
+                                                               uu___2 uu___1))))
+                                                 uu___1)))
+                                      (fun uu___1 ->
+                                         (fun uu___1 ->
+                                            Obj.magic
+                                              (Pulse_Typing_Env.fail g
+                                                 FStar_Pervasives_Native.None
+                                                 uu___1)) uu___1)))
                             else
                               Obj.magic
                                 (Obj.repr
@@ -1676,17 +2118,17 @@ let (checker_result_for_st_typing :
                                          (Obj.magic
                                             (FStar_Range.mk_range
                                                "Pulse.Checker.Base.fst"
-                                               (Prims.of_int (417))
+                                               (Prims.of_int (425))
                                                (Prims.of_int (10))
-                                               (Prims.of_int (417))
+                                               (Prims.of_int (425))
                                                (Prims.of_int (17)))))
                                       (FStar_Sealed.seal
                                          (Obj.magic
                                             (FStar_Range.mk_range
                                                "Pulse.Checker.Base.fst"
-                                               (Prims.of_int (417))
+                                               (Prims.of_int (425))
                                                (Prims.of_int (20))
-                                               (Prims.of_int (437))
+                                               (Prims.of_int (445))
                                                (Prims.of_int (35)))))
                                       (FStar_Tactics_Effect.lift_div_tac
                                          (fun uu___2 ->
@@ -1699,17 +2141,17 @@ let (checker_result_for_st_typing :
                                                     (Obj.magic
                                                        (FStar_Range.mk_range
                                                           "Pulse.Checker.Base.fst"
-                                                          (Prims.of_int (419))
+                                                          (Prims.of_int (427))
                                                           (Prims.of_int (11))
-                                                          (Prims.of_int (419))
+                                                          (Prims.of_int (427))
                                                           (Prims.of_int (55)))))
                                                  (FStar_Sealed.seal
                                                     (Obj.magic
                                                        (FStar_Range.mk_range
                                                           "Pulse.Checker.Base.fst"
-                                                          (Prims.of_int (419))
+                                                          (Prims.of_int (427))
                                                           (Prims.of_int (58))
-                                                          (Prims.of_int (437))
+                                                          (Prims.of_int (445))
                                                           (Prims.of_int (35)))))
                                                  (FStar_Tactics_Effect.lift_div_tac
                                                     (fun uu___2 ->
@@ -1726,17 +2168,17 @@ let (checker_result_for_st_typing :
                                                                (Obj.magic
                                                                   (FStar_Range.mk_range
                                                                     "Pulse.Checker.Base.fst"
-                                                                    (Prims.of_int (420))
+                                                                    (Prims.of_int (428))
                                                                     (Prims.of_int (14))
-                                                                    (Prims.of_int (420))
+                                                                    (Prims.of_int (428))
                                                                     (Prims.of_int (60)))))
                                                             (FStar_Sealed.seal
                                                                (Obj.magic
                                                                   (FStar_Range.mk_range
                                                                     "Pulse.Checker.Base.fst"
-                                                                    (Prims.of_int (420))
+                                                                    (Prims.of_int (428))
                                                                     (Prims.of_int (63))
-                                                                    (Prims.of_int (437))
+                                                                    (Prims.of_int (445))
                                                                     (Prims.of_int (35)))))
                                                             (FStar_Tactics_Effect.lift_div_tac
                                                                (fun uu___2 ->
@@ -1755,17 +2197,17 @@ let (checker_result_for_st_typing :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Base.fst"
-                                                                    (Prims.of_int (425))
+                                                                    (Prims.of_int (433))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (425))
+                                                                    (Prims.of_int (433))
                                                                     (Prims.of_int (59)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Base.fst"
-                                                                    (Prims.of_int (437))
+                                                                    (Prims.of_int (445))
                                                                     (Prims.of_int (2))
-                                                                    (Prims.of_int (437))
+                                                                    (Prims.of_int (445))
                                                                     (Prims.of_int (35)))))
                                                                     (Obj.magic
                                                                     (continuation_elaborator_with_bind

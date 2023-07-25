@@ -32,7 +32,9 @@ let rec refl_abs_binders (t:R.term) (acc:list binder) : T.Tac (list binder) =
   match inspect_ln t with
   | Tv_Abs b body ->
     let {sort; ppname} = R.inspect_binder b in
-    let sort = option_must (readback_ty sort) "Failed to readback elaborated binder in peel_off" in
+    let sort = option_must (readback_ty sort)
+      (Printf.sprintf "Failed to readback elaborated binder sort %s in refl_abs_binders"
+         (T.term_to_string sort)) in
     refl_abs_binders body
      ({ binder_ty = sort; binder_ppname = mk_ppname ppname (RU.range_of_term t) }::acc)
   | _ -> L.rev acc  
@@ -44,7 +46,9 @@ let infer_binder_types (g:env) (bs:list binder) (v:vprop)
   | _ ->
     let tv = elab_term v in
     if not (is_host_term tv)
-    then fail g (Some v.range) (Printf.sprintf "Cannot infer type of %s" (P.term_to_string v));
+    then fail g (Some v.range)
+           (Printf.sprintf "assert.infer_binder_types: elaborated %s to %s, which failed the host term check"
+              (P.term_to_string v) (T.term_to_string tv));
     let as_binder (b:binder) : R.binder =
       let open R in
       let bv : binder_view = 
@@ -65,7 +69,7 @@ let infer_binder_types (g:env) (bs:list binder) (v:vprop)
     let inst_abstraction, _ = PC.instantiate_term_implicits g (tm_fstar abstraction v.range) in
     match inst_abstraction.t with
     | Tm_FStar t -> refl_abs_binders t []
-    | _ -> T.fail "Impossible: Instantiated abstraction is not embedded F* term"
+    | _ -> T.fail "Impossible: instantiated abstraction is not embedded F* term, please file a bug-report"
 
 let rec open_binders (g:env) (bs:list binder) (uvs:env { disjoint uvs g }) (v:term) (body:st_term)
   : T.Tac (uvs:env { disjoint uvs g } & term & st_term) =
@@ -106,13 +110,16 @@ let unfold_defs (g:env) (defs:option (list string)) (t:term)
           | None -> []
         in
         let rt = RU.unfold_def (fstar_env g) head fully t in
-        let rt = option_must rt "Unexpected: reduction produced an ill-formed term" in
-        let ty = option_must (readback_ty rt) "Unexpected: unable to readback unfolded term" in
+        let rt = option_must rt
+          (Printf.sprintf "unfolding %s returned None" (T.term_to_string t)) in
+        let ty = option_must (readback_ty rt)
+          (Printf.sprintf "error in reading back the unfolded term %s" (T.term_to_string rt)) in
         debug_log g (fun _ -> Printf.sprintf "Unfolded %s to F* term %s and readback as %s" (T.term_to_string t) (T.term_to_string rt) (P.term_to_string ty));
         ty
       )
     | _ ->
-      fail g (Some (RU.range_of_term t)) (Printf.sprintf "Cannot unfold %s" (T.term_to_string t))
+      fail g (Some (RU.range_of_term t))
+        (Printf.sprintf "Cannot unfold %s, the head is not an fvar" (T.term_to_string t))
 
 let check_unfoldable g (v:term) : T.Tac unit = 
   match v.t with
@@ -133,6 +140,8 @@ let check
   (check:check_t)
 
   : T.Tac (checker_result_t g pre post_hint) =
+
+  let g = push_context g "check_assert" st.range in
 
   let Tm_ProofHintWithBinders { hint_type; binders=bs; v; t=body } = st.term in
 

@@ -83,7 +83,7 @@ let check
     if eq_comp body_comp (comp_while_body nm inv)
     then
       let d = T_While g inv cond body inv_typing cond_typing body_typing in
-      repack (try_frame_pre pre_typing d) post_hint t.range
+      prove_post_hint (try_frame_pre pre_typing d) post_hint t.range
     else fail g None
           (Printf.sprintf "Could not prove the inferred type of the while body matches the annotation\n\
                            Inferred type = %s\n\

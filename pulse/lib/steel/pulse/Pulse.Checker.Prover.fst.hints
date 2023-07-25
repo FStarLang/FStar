@@ -698,7 +698,7 @@
       "bb6d864f66858cb3ea0bf9e357d910d9"
     ],
     [
-      "Pulse.Checker.Prover.repack",
+      "Pulse.Checker.Prover.prove_post_hint",
       1,
       2,
       1,
@@ -712,7 +712,7 @@
       "c2863c9219bdb60189422de9796f8b0d"
     ],
     [
-      "Pulse.Checker.Prover.repack",
+      "Pulse.Checker.Prover.prove_post_hint",
       2,
       2,
       1,
@@ -726,7 +726,7 @@
       "26fe3caa40cb5c05247389edc48c277e"
     ],
     [
-      "Pulse.Checker.Prover.repack",
+      "Pulse.Checker.Prover.prove_post_hint",
       3,
       2,
       1,

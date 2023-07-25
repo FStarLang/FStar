@@ -23,7 +23,7 @@ let (check :
                  (Obj.magic
                     (FStar_Range.mk_range "Pulse.Checker.Rewrite.fst"
                        (Prims.of_int (21)) (Prims.of_int (51))
-                       (Prims.of_int (43)) (Prims.of_int (54)))))
+                       (Prims.of_int (43)) (Prims.of_int (63)))))
               (FStar_Tactics_Effect.lift_div_tac
                  (fun uu___ ->
                     Pulse_Checker_Pure.push_context "check_rewrite"
@@ -43,7 +43,7 @@ let (check :
                                (FStar_Range.mk_range
                                   "Pulse.Checker.Rewrite.fst"
                                   (Prims.of_int (21)) (Prims.of_int (51))
-                                  (Prims.of_int (43)) (Prims.of_int (54)))))
+                                  (Prims.of_int (43)) (Prims.of_int (63)))))
                          (FStar_Tactics_Effect.lift_div_tac
                             (fun uu___ -> t.Pulse_Syntax_Base.term1))
                          (fun uu___ ->
@@ -70,7 +70,7 @@ let (check :
                                                  (Prims.of_int (22))
                                                  (Prims.of_int (41))
                                                  (Prims.of_int (43))
-                                                 (Prims.of_int (54)))))
+                                                 (Prims.of_int (63)))))
                                         (Obj.magic
                                            (Pulse_Checker_Pure.check_vprop g1
                                               p))
@@ -96,7 +96,7 @@ let (check :
                                                                 (Prims.of_int (23))
                                                                 (Prims.of_int (44))
                                                                 (Prims.of_int (43))
-                                                                (Prims.of_int (54)))))
+                                                                (Prims.of_int (63)))))
                                                        (Obj.magic
                                                           (Pulse_Checker_Pure.check_vprop
                                                              g1 q))
@@ -125,7 +125,7 @@ let (check :
                                                                     (Prims.of_int (41))
                                                                     (Prims.of_int (33))
                                                                     (Prims.of_int (43))
-                                                                    (Prims.of_int (54)))))
+                                                                    (Prims.of_int (63)))))
                                                                     (if
                                                                     Pulse_Syntax_Base.eq_tm
                                                                     p1 q1
@@ -521,7 +521,7 @@ let (check :
                                                                     (Prims.of_int (43))
                                                                     Prims.int_one
                                                                     (Prims.of_int (43))
-                                                                    (Prims.of_int (54)))))
+                                                                    (Prims.of_int (63)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___3 ->
@@ -539,9 +539,9 @@ let (check :
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Rewrite.fst"
                                                                     (Prims.of_int (43))
-                                                                    (Prims.of_int (8))
+                                                                    (Prims.of_int (17))
                                                                     (Prims.of_int (43))
-                                                                    (Prims.of_int (36)))))
+                                                                    (Prims.of_int (45)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -549,7 +549,7 @@ let (check :
                                                                     (Prims.of_int (43))
                                                                     Prims.int_one
                                                                     (Prims.of_int (43))
-                                                                    (Prims.of_int (54)))))
+                                                                    (Prims.of_int (63)))))
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Prover.try_frame_pre
                                                                     g pre ()
@@ -568,7 +568,7 @@ let (check :
                                                                     (fun
                                                                     uu___3 ->
                                                                     Obj.magic
-                                                                    (Pulse_Checker_Prover.repack
+                                                                    (Pulse_Checker_Prover.prove_post_hint
                                                                     g pre
                                                                     uu___3
                                                                     post_hint

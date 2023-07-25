@@ -32,7 +32,7 @@ val try_frame_pre (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_vprop
 
   : T.Tac (checker_result_t g ctxt None)
 
-val repack (#g:env) (#ctxt:vprop)
+val prove_post_hint (#g:env) (#ctxt:vprop)
   (r:checker_result_t g ctxt None)
   (post_hint:post_hint_opt g)
   (rng:range)

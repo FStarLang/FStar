@@ -33,4 +33,4 @@ let check
   let (| p, p_typing |) = check_prop g p in
   let pv = check_prop_validity g p p_typing in
   let st_typing = T_IntroPure _ _ p_typing pv in
-  repack (try_frame_pre pre_typing st_typing) post_hint t.range
+  prove_post_hint (try_frame_pre pre_typing st_typing) post_hint t.range

@@ -62,7 +62,7 @@ let check_elim_exists
   if eq_univ u u'
   then let x = fresh g in
        let d = T_ElimExists g u ty p x ty_typing t_typing in
-       repack (try_frame_pre pre_typing d) post_hint t.range
+       prove_post_hint (try_frame_pre pre_typing d) post_hint t.range
   else fail g None "Universe checking failed in elim_exists"
 
 let is_intro_exists_erased (st:st_term) = 
@@ -97,7 +97,7 @@ let check_intro_exists_erased
   let (| e, e_typing |) = 
     check_term_with_expected_type g e (mk_erased u b.binder_ty) in
   let d = T_IntroExistsErased g u b p e ty_typing t_typing (E e_typing) in
-  repack (try_frame_pre pre_typing d) post_hint (t <: term).range
+  prove_post_hint (try_frame_pre pre_typing d) post_hint (t <: term).range
 
 let check_intro_exists_non_erased
   (g:env)
@@ -127,7 +127,7 @@ let check_intro_exists_non_erased
     check_term_with_expected_type g witness b.binder_ty in
   let d = T_IntroExists g u b p witness ty_typing t_typing (E witness_typing) in
   let (| c, d |) : (c:_ & st_typing g _ c) = (| _, d |) in
-  repack (try_frame_pre pre_typing d) post_hint (t <: term).range
+  prove_post_hint (try_frame_pre pre_typing d) post_hint (t <: term).range
 
 let check_intro_exists
   (g:env)

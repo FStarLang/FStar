@@ -69,7 +69,7 @@ let (check :
                  (Obj.magic
                     (FStar_Range.mk_range "Pulse.Checker.IntroPure.fst"
                        (Prims.of_int (30)) (Prims.of_int (46))
-                       (Prims.of_int (36)) (Prims.of_int (63)))))
+                       (Prims.of_int (36)) (Prims.of_int (72)))))
               (FStar_Tactics_Effect.lift_div_tac
                  (fun uu___ -> t.Pulse_Syntax_Base.term1))
               (fun uu___ ->
@@ -90,7 +90,7 @@ let (check :
                                    (FStar_Range.mk_range
                                       "Pulse.Checker.IntroPure.fst"
                                       (Prims.of_int (32)) (Prims.of_int (36))
-                                      (Prims.of_int (36)) (Prims.of_int (63)))))
+                                      (Prims.of_int (36)) (Prims.of_int (72)))))
                              (Obj.magic (check_prop g p))
                              (fun uu___1 ->
                                 (fun uu___1 ->
@@ -113,7 +113,7 @@ let (check :
                                                      (Prims.of_int (34))
                                                      (Prims.of_int (46))
                                                      (Prims.of_int (36))
-                                                     (Prims.of_int (63)))))
+                                                     (Prims.of_int (72)))))
                                             (Obj.magic
                                                (check_prop_validity g p1 ()))
                                             (fun uu___2 ->
@@ -135,7 +135,7 @@ let (check :
                                                                 (Prims.of_int (36))
                                                                 (Prims.of_int (2))
                                                                 (Prims.of_int (36))
-                                                                (Prims.of_int (63)))))
+                                                                (Prims.of_int (72)))))
                                                        (FStar_Tactics_Effect.lift_div_tac
                                                           (fun uu___2 ->
                                                              Pulse_Typing.T_IntroPure
@@ -150,9 +150,9 @@ let (check :
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.IntroPure.fst"
                                                                     (Prims.of_int (36))
-                                                                    (Prims.of_int (9))
+                                                                    (Prims.of_int (18))
                                                                     (Prims.of_int (36))
-                                                                    (Prims.of_int (45)))))
+                                                                    (Prims.of_int (54)))))
                                                                   (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -160,7 +160,7 @@ let (check :
                                                                     (Prims.of_int (36))
                                                                     (Prims.of_int (2))
                                                                     (Prims.of_int (36))
-                                                                    (Prims.of_int (63)))))
+                                                                    (Prims.of_int (72)))))
                                                                   (Obj.magic
                                                                     (Pulse_Checker_Prover.try_frame_pre
                                                                     g pre ()
@@ -178,7 +178,7 @@ let (check :
                                                                     (fun
                                                                     uu___2 ->
                                                                     Obj.magic
-                                                                    (Pulse_Checker_Prover.repack
+                                                                    (Pulse_Checker_Prover.prove_post_hint
                                                                     g pre
                                                                     uu___2
                                                                     post_hint

@@ -57,4 +57,4 @@ let check
   assume (open_term (close_term post_opened x) x == post_opened);
   let post = close_term post_opened x in
   let d = T_Return g c use_eq u ty t post x uty (E d) post_typing in
-  repack (try_frame_pre ctxt_typing d) post_hint t.range
+  prove_post_hint (try_frame_pre ctxt_typing d) post_hint t.range
