@@ -182,7 +182,7 @@ let prove
 
   let ctxt_l = vprop_as_list ctxt in
 
-  if Nil? (bindings uvs) && L.existsb (fun v -> eq_tm v goals) ctxt_l
+  if false && Nil? (bindings uvs) && L.existsb (fun v -> eq_tm v goals) ctxt_l
   then begin
     let (| l', d_eq |) = get_q_at_hd g ctxt_l goals in
     let g1 = g in
