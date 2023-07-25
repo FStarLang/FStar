@@ -24,11 +24,13 @@ let check_bind
   (check:check_t)
   : T.Tac (checker_result_t g ctxt post_hint) =
 
+  let g = Pulse.Typing.Env.push_context g "check_bind" t.range in
+
   debug_prover g (fun _ ->
     Printf.sprintf "checking bind:\n%s\n" (P.st_term_to_string t));
  
   if None? post_hint
-  then fail g (Some t.range) "check_bind: post_hint is None, bailing (t:\n%s\n)";
+  then fail g (Some t.range) "check_bind: post hint is not set, please add an annotation";
 
   let Tm_Bind { binder; head=e1; body=e2} = t.term in
 
@@ -51,8 +53,10 @@ let check_tot_bind
   (check:check_t)
   : T.Tac (checker_result_t g pre post_hint) =
 
+  let g = Pulse.Typing.Env.push_context g "check_bind" t.range in
+
   if None? post_hint
-  then fail g (Some t.range) "check_tot_bind: post_hint is None, bailing (t:\n%s\n)";
+  then fail g (Some t.range) "check_tot_bind: post hint is not set, please add an annotation";
 
   let Tm_TotBind { head=e1; body=e2 } = t.term in
   let (| e1, u1, t1, _t1_typing, e1_typing |) = check_term_and_type g e1 in

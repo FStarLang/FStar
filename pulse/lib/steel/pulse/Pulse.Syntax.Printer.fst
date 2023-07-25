@@ -82,6 +82,11 @@ let binder_to_string (b:binder)
             (T.unseal b.binder_ppname.name)
             (term_to_string b.binder_ty)
 
+let ctag_to_string = function
+  | STT -> "ST"
+  | STT_Atomic -> "STAtomic"
+  | STT_Ghost -> "STGhost"
+
 let comp_to_string (c:comp)
   : T.Tac string
   = match c with

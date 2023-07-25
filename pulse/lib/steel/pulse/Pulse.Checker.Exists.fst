@@ -32,6 +32,8 @@ let check_elim_exists
   (t:st_term{Tm_ElimExists? t.term})
   : T.Tac (checker_result_t g pre post_hint) =
 
+  let g = Pulse.Typing.Env.push_context g "check_elim_exists" t.range in
+
   let Tm_ElimExists { p = t } = t.term in
   let (| t, t_typing |) : (t:term & tot_typing g t tm_vprop ) = 
     match t.t with
@@ -44,7 +46,7 @@ let check_elim_exists
         assume (one `List.Tot.memP` ts);
         (| one, vprop_as_list_typing pre_typing one |) //shouldn't need to check this again
       | _ -> 
-        fail g None 
+        fail g (Some t.range)
           (Printf.sprintf "Could not decide which exists term to eliminate: choices are\n%s"
              (terms_to_string exist_tms))
       )
@@ -54,7 +56,9 @@ let check_elim_exists
   in
 
   if not (Tm_ExistsSL? t.t)
-  then fail g None "elim_exists argument not a Tm_ExistsSL";
+  then fail g (Some t.range)
+         (Printf.sprintf "check_elim_exists: elim_exists argument %s not an existential"
+            (P.term_to_string t));
 
   let Tm_ExistsSL u { binder_ty=ty } p = t.t in
 
@@ -63,7 +67,9 @@ let check_elim_exists
   then let x = fresh g in
        let d = T_ElimExists g u ty p x ty_typing t_typing in
        prove_post_hint (try_frame_pre pre_typing d) post_hint t.range
-  else fail g None "Universe checking failed in elim_exists"
+  else fail g (Some t.range)
+         (Printf.sprintf "check_elim_exists: universe checking failed, computed %s, expected %s"
+            (P.univ_to_string u') (P.univ_to_string u))
 
 let is_intro_exists_erased (st:st_term) = 
   match st.term with
@@ -80,6 +86,8 @@ let check_intro_exists_erased
   (vprop_typing: option (tot_typing g (intro_exists_vprop st) tm_vprop))
   : T.Tac (checker_result_t g pre post_hint) =
 
+  let g = Pulse.Typing.Env.push_context g "check_intro_exists_erased" st.range in
+
   let Tm_IntroExists { p=t; witnesses=[e] } = st.term in
   let (| t, t_typing |) = 
     match vprop_typing with
@@ -88,7 +96,9 @@ let check_intro_exists_erased
   in
 
   if not (Tm_ExistsSL? (t <: term).t)  // why this ascription?
-  then fail g None "elim_exists argument not a Tm_ExistsSL";
+  then fail g (Some st.range)
+         (Printf.sprintf "check_intro_exists_erased: vprop %s is not an existential"
+            (P.term_to_string t));
 
   let Tm_ExistsSL u b p = (t <: term).t in
 
@@ -109,6 +119,8 @@ let check_intro_exists_non_erased
   (vprop_typing: option (tot_typing g (intro_exists_vprop st) tm_vprop))
   : T.Tac (checker_result_t g pre post_hint) =
 
+  let g = Pulse.Typing.Env.push_context g "check_intro_exists_non_erased" st.range in
+
   let Tm_IntroExists { p=t; witnesses=[witness] } = st.term in
   let (| t, t_typing |) =
     match vprop_typing with
@@ -117,7 +129,9 @@ let check_intro_exists_non_erased
   in
 
   if not (Tm_ExistsSL? (t <: term).t)
-  then fail g None "elim_exists argument not a Tm_ExistsSL";
+  then fail g (Some st.range)
+         (Printf.sprintf "check_intro_exists_non_erased: vprop %s is not an existential"
+            (P.term_to_string t));
 
   let Tm_ExistsSL u b p = (t <: term).t in
 
