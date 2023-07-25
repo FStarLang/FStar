@@ -262,6 +262,17 @@ let extends_with_push (g1 g2 g3:env)
   assert (equal (push_binding g1 x n t)
                 (push_env g2 (push_binding g3 x n t)))
 
+#push-options "--admit_smt_queries true"
+let rec subst_env (en:env) (ss:subst)
+  : en':env { fstar_env en == fstar_env en' /\
+              dom en == dom en' } =
+  match bindings en with
+  | [] -> en
+  | _ ->
+    let x, t, en = remove_latest_binding en in
+    push_binding (subst_env en ss) x ppname_default (subst_term t ss) 
+#pop-options
+
 let push_context g ctx r = { g with ctxt = Pulse.RuntimeUtils.extend_context ctx (Some r) g.ctxt }
 let push_context_no_range g ctx = { g with ctxt = Pulse.RuntimeUtils.extend_context ctx None g.ctxt }
 

@@ -58,6 +58,8 @@ val mk_env_dom (f:RT.fstar_top_env)
 val push_binding (g:env) (x:var { ~ (Set.mem x (dom g)) }) (n:ppname) (t:typ)
   : g':env { fstar_env g' == fstar_env g }
 
+let singleton_env (f:_) (x:var) (t:typ) = push_binding (mk_env f) x ppname_default t
+
 let push_binding_def (g:env) (x:var { ~ (Set.mem x (dom g)) }) (t:typ)
   = push_binding g x ppname_default t
 
@@ -80,6 +82,9 @@ let contains (g:env) (x:var) = Map.contains (as_map g) x
 let disjoint (g1 g2:env) =
   fstar_env g1 == fstar_env g2 /\
   Set.disjoint (dom g1) (dom g2)
+
+let pairwise_disjoint (g g' g'':env) =
+  disjoint g g' /\ disjoint g' g'' /\ disjoint g g''
 
 let disjoint_dom (g1 g2:env)
   : Lemma (requires disjoint g1 g2)
@@ -159,6 +164,10 @@ val extends_with_push (g1 g2 g3:env)
           [SMTPat (extends_with g1 g2 g3);
            SMTPat (push_binding g1 x n t);
            SMTPat (push_binding g3 x n t)]
+
+val subst_env (en:env) (ss:subst)
+  : en':env { fstar_env en == fstar_env en' /\
+              dom en == dom en' }
 
 val push_context (g:env) (ctx:string) (r:range) : g':env { g' == g }
 val push_context_no_range (g:env) (ctx:string) : g':env { g' == g }

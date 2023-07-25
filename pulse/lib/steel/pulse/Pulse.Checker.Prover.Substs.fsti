@@ -5,7 +5,6 @@ open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Typing.Env
 open Pulse.Typing
-open Pulse.Typing.Metatheory
 
 module L = FStar.List.Tot
 module T = FStar.Tactics
@@ -137,11 +136,18 @@ val ss_nt_subst (g:env) (uvs:env) (ss:ss_t) (nts:nt_substs)
              (forall (s:st_comp). nt_subst_st_comp s nts == ss_st_comp s ss))
           [SMTPat (well_typed_nt_substs g uvs nts); SMTPat (is_permutation nts ss)]
 
+
 val st_typing_nt_substs
   (g:env) (uvs:env) (g':env { pairwise_disjoint g uvs g' })
   (#t:st_term) (#c:comp_st) (t_typing:st_typing (push_env g (push_env uvs g')) t c)
   (ss:nt_substs { well_typed_nt_substs g uvs ss })
 : st_typing (push_env g (nt_subst_env g' ss)) (nt_subst_st_term t ss) (nt_subst_comp c ss)
+
+val st_typing_subst (g:env) (uvs:env { disjoint uvs g }) (t:st_term) (c:comp_st)
+  (d:st_typing (push_env g uvs) t c)
+  (ss:ss_t)
+
+  : T.Tac (option (st_typing g (ss_st_term t ss) (ss_comp c ss)))
 
 val st_typing_nt_substs_derived
   (g:env) (uvs:env { disjoint uvs g })

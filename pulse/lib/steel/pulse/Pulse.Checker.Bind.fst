@@ -75,7 +75,7 @@ let check_tot_bind
   let px = v_as_nv x in
   let g' = push_binding g x (fst px) t1 in
   let pre_typing' : tot_typing g' pre tm_vprop =
-    Metatheory.tot_typing_weakening x t1 pre_typing in
+    Metatheory.tot_typing_weakening_single pre_typing x t1 in
   let r = check g' pre pre_typing' post_hint (open_st_term_nv e2 px) in
   let d = apply_checker_result_k #_ #_ #(Some?.v post_hint) r in
   let d = k post_hint d in

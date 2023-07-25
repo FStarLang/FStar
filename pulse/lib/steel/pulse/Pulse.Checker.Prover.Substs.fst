@@ -5,11 +5,10 @@ open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Typing.Env
 open Pulse.Typing
-open Pulse.Typing.Metatheory
 
 module L = FStar.List.Tot
-
 module Env = Pulse.Typing.Env
+module Metatheory = Pulse.Typing.Metatheory
 
 let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b {y == x} = x
 
@@ -315,7 +314,7 @@ let rec st_typing_nt_substs
       : st_typing (push_env g (subst_env (push_env uvs_rest g') [ NT x e ]))
                   (subst_st_term t [ NT x e ])
                   (subst_comp c [ NT x e ])
-      = st_typing_subst g x ty (push_env uvs_rest g') e_typing t_typing in
+      = Metatheory.st_typing_subst g x ty (push_env uvs_rest g') e_typing t_typing in
 
     assume (subst_env (push_env uvs_rest g') [ NT x e ] ==
             push_env (subst_env uvs_rest [ NT x e ]) (subst_env g' [ NT x e ]));
@@ -324,6 +323,23 @@ let rec st_typing_nt_substs
       (subst_env uvs_rest [ NT x e ])
       (subst_env g' [ NT x e ])
       t_typing nts_rest
+
+
+let st_typing_subst (g:env) (uvs:env { disjoint uvs g }) (t:st_term) (c:comp_st)
+  (d:st_typing (push_env g uvs) t c)
+  (ss:ss_t)
+
+  : T.Tac (option (st_typing g (ss_st_term t ss) (ss_comp c ss))) =
+
+  let nts_opt = ss_to_nt_substs g uvs ss in
+  match nts_opt with
+  | None -> None
+  | Some nts ->
+    let g' = mk_env (fstar_env g) in
+    assert (equal (push_env uvs g') uvs);
+    let d = st_typing_nt_substs g uvs g' d nts in
+    assume (equal (push_env g (nt_subst_env g' nts)) g);
+    Some d
 
 let st_typing_nt_substs_derived
   (g:env) (uvs:env { disjoint uvs g })

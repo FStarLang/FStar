@@ -111,9 +111,10 @@ let check
              st_typing (g_with_eq eq_v) br c) =
     let g_with_eq = g_with_eq eq_v in
     let pre_typing = 
-      Metatheory.tot_typing_weakening hyp 
-                                      (mk_eq2 u0 tm_bool b eq_v)
-                                      pre_typing
+      Metatheory.tot_typing_weakening_single
+        pre_typing
+        hyp 
+        (mk_eq2 u0 tm_bool b eq_v)
     in
     let r = check g_with_eq pre pre_typing (Some post_hint) br in
     let (| br, c, d |) = apply_checker_result_k r in

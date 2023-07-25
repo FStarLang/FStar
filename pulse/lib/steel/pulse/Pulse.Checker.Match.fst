@@ -165,7 +165,7 @@ let rec tot_typing_weakening_n bs d =
   match bs with
   | [] -> d
   | (x,t)::bs ->
-    let d = Pulse.Typing.Metatheory.tot_typing_weakening x t d in
+    let d = Pulse.Typing.Metatheory.tot_typing_weakening_single d x t in
     tot_typing_weakening_n bs d
 
 let samepat (b1 b2 : branch) : prop = fst b1 == fst b2
@@ -231,7 +231,7 @@ let check_branch
   let g' = push_binding g' hyp_var ({name = Sealed.seal "branch equality"; range = Range.range_0 }) eq_typ in
   let e = open_st_term_bs e pulse_bs in
   let pre_typing = tot_typing_weakening_n pulse_bs pre_typing in // weaken w/ binders
-  let pre_typing = Pulse.Typing.Metatheory.tot_typing_weakening hyp_var eq_typ pre_typing in // weaken w/ branch eq
+  let pre_typing = Pulse.Typing.Metatheory.tot_typing_weakening_single pre_typing hyp_var eq_typ in // weaken w/ branch eq
 
   let (| e, c, e_d |) =
     let r = check g' pre pre_typing (Some post_hint) e in

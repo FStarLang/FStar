@@ -272,7 +272,7 @@ let try_frame_pre_uvs (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_v
   // assert (nts == []);
 
   let d : st_typing (push_env g1 uvs) t c =
-    Pulse.Checker.Prover.Util.st_typing_weakening g uvs t c d g1 in
+    Metatheory.st_typing_weakening g uvs t c d g1 in
 
   assert (comp_pre (PS.nt_subst_comp c nts) == PS.nt_subst_term (comp_pre c) nts);
   let t = PS.nt_subst_st_term t nts in
@@ -289,7 +289,7 @@ let try_frame_pre_uvs (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_v
   assert (g2 `env_extends` g1);
   let ctxt' = (open_term_nv (comp_post c) (ppname_default, x) * remaining_ctxt) in
 
-  let d : st_typing g1 t c = st_typing_weakening_standard d g1 in
+  let d : st_typing g1 t c = Metatheory.st_typing_weakening_standard d g1 in
 
   let k
     : continuation_elaborator g1 (remaining_ctxt * comp_pre c)
@@ -309,7 +309,7 @@ let try_frame_pre_uvs (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_v
 
   let d_ty
     : universe_of g2 ty (comp_u c) =
-    Metatheory.tot_typing_weakening x (comp_res c) comp_res_typing_in_g1 in
+    Metatheory.tot_typing_weakening_single comp_res_typing_in_g1 x (comp_res c) in
 
   assume (~ (x `Set.mem` freevars (comp_post c)));
   let d_post
