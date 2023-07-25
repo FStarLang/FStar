@@ -126,7 +126,7 @@ let rec (ss_env : Pulse_Typing_Env.env -> ss_t -> Pulse_Typing_Env.env) =
       | [] -> g
       | y::tl ->
           ss_env
-            (Pulse_Typing_Metatheory.subst_env g
+            (Pulse_Typing_Env.subst_env g
                [Pulse_Syntax_Naming.NT (y, (FStar_Map.sel ss.m y))])
             (tail ss)
 type nt_substs = Pulse_Syntax_Naming.subst_elt Prims.list
@@ -168,8 +168,7 @@ let (nt_subst_env :
     fun ss ->
       let g' =
         FStar_List_Tot_Base.fold_left
-          (fun g1 -> fun elt -> Pulse_Typing_Metatheory.subst_env g1 [elt]) g
-          ss in
+          (fun g1 -> fun elt -> Pulse_Typing_Env.subst_env g1 [elt]) g ss in
       g'
 type ('g, 'uvs, 'nts) well_typed_nt_substs = Obj.t
 type ('nts, 'ss) is_permutation = Obj.t
@@ -203,14 +202,14 @@ let rec (ss_to_nt_substs :
                               (Obj.magic
                                  (FStar_Range.mk_range
                                     "Pulse.Checker.Prover.Substs.fst"
-                                    (Prims.of_int (255)) (Prims.of_int (26))
-                                    (Prims.of_int (255)) (Prims.of_int (44)))))
+                                    (Prims.of_int (254)) (Prims.of_int (26))
+                                    (Prims.of_int (254)) (Prims.of_int (44)))))
                            (FStar_Sealed.seal
                               (Obj.magic
                                  (FStar_Range.mk_range
                                     "Pulse.Checker.Prover.Substs.fst"
-                                    (Prims.of_int (254)) (Prims.of_int (8))
-                                    (Prims.of_int (268)) (Prims.of_int (13)))))
+                                    (Prims.of_int (253)) (Prims.of_int (8))
+                                    (Prims.of_int (267)) (Prims.of_int (13)))))
                            (FStar_Tactics_Effect.lift_div_tac
                               (fun uu___1 ->
                                  Pulse_Typing_Env.remove_binding uvs))
@@ -227,17 +226,17 @@ let rec (ss_to_nt_substs :
                                                   (Obj.magic
                                                      (FStar_Range.mk_range
                                                         "Pulse.Checker.Prover.Substs.fst"
-                                                        (Prims.of_int (257))
+                                                        (Prims.of_int (256))
                                                         (Prims.of_int (17))
-                                                        (Prims.of_int (257))
+                                                        (Prims.of_int (256))
                                                         (Prims.of_int (31)))))
                                                (FStar_Sealed.seal
                                                   (Obj.magic
                                                      (FStar_Range.mk_range
                                                         "Pulse.Checker.Prover.Substs.fst"
-                                                        (Prims.of_int (257))
+                                                        (Prims.of_int (256))
                                                         (Prims.of_int (34))
-                                                        (Prims.of_int (267))
+                                                        (Prims.of_int (266))
                                                         (Prims.of_int (19)))))
                                                (FStar_Tactics_Effect.lift_div_tac
                                                   (fun uu___2 ->
@@ -250,17 +249,17 @@ let rec (ss_to_nt_substs :
                                                              (Obj.magic
                                                                 (FStar_Range.mk_range
                                                                    "Pulse.Checker.Prover.Substs.fst"
-                                                                   (Prims.of_int (258))
+                                                                   (Prims.of_int (257))
                                                                    (Prims.of_int (37))
-                                                                   (Prims.of_int (258))
+                                                                   (Prims.of_int (257))
                                                                    (Prims.of_int (45)))))
                                                           (FStar_Sealed.seal
                                                              (Obj.magic
                                                                 (FStar_Range.mk_range
                                                                    "Pulse.Checker.Prover.Substs.fst"
-                                                                   (Prims.of_int (259))
+                                                                   (Prims.of_int (258))
                                                                    (Prims.of_int (48))
-                                                                   (Prims.of_int (267))
+                                                                   (Prims.of_int (266))
                                                                    (Prims.of_int (19)))))
                                                           (FStar_Tactics_Effect.lift_div_tac
                                                              (fun uu___2 ->
@@ -273,22 +272,22 @@ let rec (ss_to_nt_substs :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Substs.fst"
-                                                                    (Prims.of_int (261))
+                                                                    (Prims.of_int (260))
                                                                     (Prims.of_int (11))
-                                                                    (Prims.of_int (262))
+                                                                    (Prims.of_int (261))
                                                                     (Prims.of_int (82)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.Substs.fst"
-                                                                    (Prims.of_int (263))
+                                                                    (Prims.of_int (262))
                                                                     (Prims.of_int (9))
-                                                                    (Prims.of_int (267))
+                                                                    (Prims.of_int (266))
                                                                     (Prims.of_int (19)))))
                                                                     (Obj.magic
                                                                     (ss_to_nt_substs
                                                                     g
-                                                                    (Pulse_Typing_Metatheory.subst_env
+                                                                    (Pulse_Typing_Env.subst_env
                                                                     rest_uvs
                                                                     [
                                                                     Pulse_Syntax_Naming.NT
@@ -353,9 +352,9 @@ let rec (well_typed_nt_substs_prefix :
                          | (Pulse_Syntax_Naming.NT (y, e))::nts_rest ->
                              (Pulse_Syntax_Naming.NT (y, e)) ::
                              (well_typed_nt_substs_prefix g
-                                (Pulse_Typing_Metatheory.subst_env rest_uvs
+                                (Pulse_Typing_Env.subst_env rest_uvs
                                    [Pulse_Syntax_Naming.NT (y, e)]) nts_rest
-                                (Pulse_Typing_Metatheory.subst_env rest_uvs1
+                                (Pulse_Typing_Env.subst_env rest_uvs1
                                    [Pulse_Syntax_Naming.NT (y, e)])))))
 let rec (st_typing_nt_substs :
   Pulse_Typing_Env.env ->
@@ -384,19 +383,60 @@ let rec (st_typing_nt_substs :
                           | (Pulse_Syntax_Naming.NT (uu___3, e))::nts_rest ->
                               let t_typing1 = coerce_eq t_typing () in
                               let t_typing2 =
-                                Pulse_Typing_Metatheory.st_typing_subst g x
-                                  ty (Pulse_Typing_Env.push_env uvs_rest g')
-                                  e () t c t_typing1 in
+                                Pulse_Typing_Metatheory_Base.st_typing_subst
+                                  g x ty
+                                  (Pulse_Typing_Env.push_env uvs_rest g') e
+                                  () t c t_typing1 in
                               st_typing_nt_substs g
-                                (Pulse_Typing_Metatheory.subst_env uvs_rest
+                                (Pulse_Typing_Env.subst_env uvs_rest
                                    [Pulse_Syntax_Naming.NT (x, e)])
-                                (Pulse_Typing_Metatheory.subst_env g'
+                                (Pulse_Typing_Env.subst_env g'
                                    [Pulse_Syntax_Naming.NT (x, e)])
                                 (Pulse_Syntax_Naming.subst_st_term t
                                    [Pulse_Syntax_Naming.NT (x, e)])
                                 (Pulse_Syntax_Naming.subst_comp c
                                    [Pulse_Syntax_Naming.NT (x, e)]) t_typing2
                                 nts_rest))
+let (st_typing_subst :
+  Pulse_Typing_Env.env ->
+    Pulse_Typing_Env.env ->
+      Pulse_Syntax_Base.st_term ->
+        Pulse_Syntax_Base.comp_st ->
+          (unit, unit, unit) Pulse_Typing.st_typing ->
+            ss_t ->
+              ((unit, unit, unit) Pulse_Typing.st_typing
+                 FStar_Pervasives_Native.option,
+                unit) FStar_Tactics_Effect.tac_repr)
+  =
+  fun g ->
+    fun uvs ->
+      fun t ->
+        fun c ->
+          fun d ->
+            fun ss ->
+              FStar_Tactics_Effect.tac_bind
+                (FStar_Sealed.seal
+                   (Obj.magic
+                      (FStar_Range.mk_range "Pulse.Checker.Prover.Substs.fst"
+                         (Prims.of_int (334)) (Prims.of_int (16))
+                         (Prims.of_int (334)) (Prims.of_int (40)))))
+                (FStar_Sealed.seal
+                   (Obj.magic
+                      (FStar_Range.mk_range "Pulse.Checker.Prover.Substs.fst"
+                         (Prims.of_int (335)) (Prims.of_int (2))
+                         (Prims.of_int (342)) (Prims.of_int (10)))))
+                (Obj.magic (ss_to_nt_substs g uvs ss))
+                (fun nts_opt ->
+                   FStar_Tactics_Effect.lift_div_tac
+                     (fun uu___ ->
+                        match nts_opt with
+                        | FStar_Pervasives_Native.None ->
+                            FStar_Pervasives_Native.None
+                        | FStar_Pervasives_Native.Some nts ->
+                            FStar_Pervasives_Native.Some
+                              (st_typing_nt_substs g uvs
+                                 (Pulse_Typing_Env.mk_env
+                                    (Pulse_Typing_Env.fstar_env g)) t c d nts)))
 let (st_typing_nt_substs_derived :
   Pulse_Typing_Env.env ->
     Pulse_Typing_Env.env ->

@@ -456,16 +456,16 @@ let (intro_post_hint :
 let (post_hint_from_comp_typing :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.comp_st ->
-      (unit, unit) Pulse_Typing_Metatheory.comp_typing_u ->
+      (unit, unit) Pulse_Typing_Metatheory_Base.comp_typing_u ->
         unit Pulse_Typing.post_hint_for_env)
   =
   fun g ->
     fun c ->
       fun ct ->
         let st_comp_typing =
-          Pulse_Typing_Metatheory.comp_typing_inversion g c ct in
+          Pulse_Typing_Metatheory_Base.comp_typing_inversion g c ct in
         let uu___ =
-          Pulse_Typing_Metatheory.st_comp_typing_inversion g
+          Pulse_Typing_Metatheory_Base.st_comp_typing_inversion g
             (Pulse_Syntax_Base.st_comp_of_comp c) st_comp_typing in
         match uu___ with
         | FStar_Pervasives.Mkdtuple4 (ty_typing, pre_typing, x, post_typing)
@@ -586,10 +586,11 @@ let (st_equiv_post :
             fun veq ->
               let c' = comp_st_with_post c post in
               let uu___ =
-                Pulse_Typing_Metatheory.st_comp_typing_inversion g
+                Pulse_Typing_Metatheory_Base.st_comp_typing_inversion g
                   (Pulse_Syntax_Base.st_comp_of_comp c)
-                  (Pulse_Typing_Metatheory.comp_typing_inversion g c
-                     (Pulse_Typing_Metatheory.st_typing_correctness g t c d)) in
+                  (Pulse_Typing_Metatheory_Base.comp_typing_inversion g c
+                     (Pulse_Typing_Metatheory_Base.st_typing_correctness g t
+                        c d)) in
               match uu___ with
               | FStar_Pervasives.Mkdtuple4 (u_of, pre_typing, x, post_typing)
                   ->
@@ -687,13 +688,13 @@ let (k_elab_equiv_continutation :
                                                          (Prims.of_int (32)))))
                                                 (FStar_Tactics_Effect.lift_div_tac
                                                    (fun uu___1 ->
-                                                      Pulse_Typing_Metatheory.st_comp_typing_inversion
+                                                      Pulse_Typing_Metatheory_Base.st_comp_typing_inversion
                                                         g2
                                                         (Pulse_Syntax_Base.st_comp_of_comp
                                                            c)
-                                                        (Pulse_Typing_Metatheory.comp_typing_inversion
+                                                        (Pulse_Typing_Metatheory_Base.comp_typing_inversion
                                                            g2 c
-                                                           (Pulse_Typing_Metatheory.st_typing_correctness
+                                                           (Pulse_Typing_Metatheory_Base.st_typing_correctness
                                                               g2 st c st_d))))
                                                 (fun uu___1 ->
                                                    (fun uu___1 ->
@@ -842,13 +843,13 @@ let (k_elab_equiv_prefix :
                                          match res1 with
                                          | FStar_Pervasives.Mkdtuple3
                                              (st, c, st_d) ->
-                                             (match Pulse_Typing_Metatheory.st_comp_typing_inversion
+                                             (match Pulse_Typing_Metatheory_Base.st_comp_typing_inversion
                                                       g1
                                                       (Pulse_Syntax_Base.st_comp_of_comp
                                                          c)
-                                                      (Pulse_Typing_Metatheory.comp_typing_inversion
+                                                      (Pulse_Typing_Metatheory_Base.comp_typing_inversion
                                                          g1 c
-                                                         (Pulse_Typing_Metatheory.st_typing_correctness
+                                                         (Pulse_Typing_Metatheory_Base.st_typing_correctness
                                                             g1 st c st_d))
                                               with
                                               | FStar_Pervasives.Mkdtuple4
@@ -936,13 +937,13 @@ let (continuation_elaborator_with_bind :
                                                   (ctxt, (), ()))
                                        with
                                        | Prims.Mkdtuple2 (c11, e1_typing1) ->
-                                           (match Pulse_Typing_Metatheory.st_comp_typing_inversion
+                                           (match Pulse_Typing_Metatheory_Base.st_comp_typing_inversion
                                                     g
                                                     (Pulse_Syntax_Base.st_comp_of_comp
                                                        c11)
-                                                    (Pulse_Typing_Metatheory.comp_typing_inversion
+                                                    (Pulse_Typing_Metatheory_Base.comp_typing_inversion
                                                        g c11
-                                                       (Pulse_Typing_Metatheory.st_typing_correctness
+                                                       (Pulse_Typing_Metatheory_Base.st_typing_correctness
                                                           g e1 c11 e1_typing1))
                                             with
                                             | FStar_Pervasives.Mkdtuple4
@@ -1798,13 +1799,13 @@ let (checker_result_for_st_typing :
                                                                  (fun uu___1
                                                                     ->
                                                                     match 
-                                                                    Pulse_Typing_Metatheory.st_comp_typing_inversion_cofinite
+                                                                    Pulse_Typing_Metatheory_Base.st_comp_typing_inversion_cofinite
                                                                     g
                                                                     (Pulse_Syntax_Base.st_comp_of_comp
                                                                     c)
-                                                                    (Pulse_Typing_Metatheory.comp_typing_inversion
+                                                                    (Pulse_Typing_Metatheory_Base.comp_typing_inversion
                                                                     g c
-                                                                    (Pulse_Typing_Metatheory.st_typing_correctness
+                                                                    (Pulse_Typing_Metatheory_Base.st_typing_correctness
                                                                     g t c d1))
                                                                     with
                                                                     | 

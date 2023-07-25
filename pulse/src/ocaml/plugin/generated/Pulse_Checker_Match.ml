@@ -744,13 +744,13 @@ let (check_branch :
                                                                     (Prims.of_int (234))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (234))
-                                                                    (Prims.of_int (89)))))
+                                                                    (Prims.of_int (96)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Match.fst"
                                                                     (Prims.of_int (234))
-                                                                    (Prims.of_int (92))
+                                                                    (Prims.of_int (99))
                                                                     (Prims.of_int (240))
                                                                     (Prims.of_int (58)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
@@ -777,7 +777,7 @@ let (check_branch :
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Match.fst"
                                                                     (Prims.of_int (234))
-                                                                    (Prims.of_int (92))
+                                                                    (Prims.of_int (99))
                                                                     (Prims.of_int (240))
                                                                     (Prims.of_int (58)))))
                                                                     (Obj.magic

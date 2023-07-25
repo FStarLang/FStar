@@ -1160,7 +1160,7 @@ let (apply_frame :
                       Pulse_Typing.T_Frame (g, t, c, frame, (), t_typing) in
                     let c' = Pulse_Typing.add_frame c frame in
                     let c'_typing =
-                      Pulse_Typing_Metatheory.st_typing_correctness g t
+                      Pulse_Typing_Metatheory_Base.st_typing_correctness g t
                         (Pulse_Typing.add_frame c frame) t_typing1 in
                     let s' = Pulse_Syntax_Base.st_comp_of_comp c' in
                     let s'' =
@@ -1172,10 +1172,10 @@ let (apply_frame :
                       } in
                     let c'' = Pulse_Syntax_Base.with_st_comp c' s'' in
                     let st_typing =
-                      Pulse_Typing_Metatheory.comp_typing_inversion g
+                      Pulse_Typing_Metatheory_Base.comp_typing_inversion g
                         (Pulse_Typing.add_frame c frame) c'_typing in
                     let uu___1 =
-                      Pulse_Typing_Metatheory.st_comp_typing_inversion g
+                      Pulse_Typing_Metatheory_Base.st_comp_typing_inversion g
                         (Pulse_Syntax_Base.st_comp_of_comp
                            (Pulse_Typing.add_frame c frame)) st_typing in
                     (match uu___1 with

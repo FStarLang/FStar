@@ -860,7 +860,7 @@ let (check_intro_exists_erased :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___5 ->
-                                                                    Pulse_Typing_Metatheory.tm_exists_inversion
+                                                                    Pulse_Typing_Metatheory_Base.tm_exists_inversion
                                                                     g1 u
                                                                     b.Pulse_Syntax_Base.binder_ty
                                                                     p ()
@@ -1244,7 +1244,7 @@ let (check_intro_exists_non_erased :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___5 ->
-                                                                    Pulse_Typing_Metatheory.tm_exists_inversion
+                                                                    Pulse_Typing_Metatheory_Base.tm_exists_inversion
                                                                     g1 u
                                                                     b.Pulse_Syntax_Base.binder_ty
                                                                     p ()

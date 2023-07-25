@@ -233,7 +233,7 @@ let (check :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___4 ->
-                                                                    Pulse_Typing_Metatheory.st_typing_correctness
+                                                                    Pulse_Typing_Metatheory_Base.st_typing_correctness
                                                                     g1 eL1 cL
                                                                     eL_typing))
                                                                     (fun
@@ -363,7 +363,7 @@ let (check :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___5 ->
-                                                                    Pulse_Typing_Metatheory.st_typing_correctness
+                                                                    Pulse_Typing_Metatheory_Base.st_typing_correctness
                                                                     g1 eR1 cR
                                                                     eR_typing))
                                                                     (fun

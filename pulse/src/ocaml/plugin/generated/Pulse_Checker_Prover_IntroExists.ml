@@ -273,7 +273,7 @@ let (k_intro_exists :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___2 ->
-                                                                    Pulse_Checker_Prover_Util.st_typing_weakening
+                                                                    Pulse_Typing_Metatheory.st_typing_weakening
                                                                     g
                                                                     empty_env
                                                                     t1 c1 d11

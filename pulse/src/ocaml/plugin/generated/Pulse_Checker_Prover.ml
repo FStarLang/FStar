@@ -1804,7 +1804,7 @@ let (try_frame_pre_uvs :
                                                      (Prims.of_int (275))
                                                      (Prims.of_int (4))
                                                      (Prims.of_int (275))
-                                                     (Prims.of_int (64)))))
+                                                     (Prims.of_int (49)))))
                                             (FStar_Sealed.seal
                                                (Obj.magic
                                                   (FStar_Range.mk_range
@@ -1815,7 +1815,7 @@ let (try_frame_pre_uvs :
                                                      (Prims.of_int (65)))))
                                             (FStar_Tactics_Effect.lift_div_tac
                                                (fun uu___1 ->
-                                                  Pulse_Checker_Prover_Util.st_typing_weakening
+                                                  Pulse_Typing_Metatheory.st_typing_weakening
                                                     g1 uvs t c d g11))
                                             (fun uu___1 ->
                                                (fun d1 ->
@@ -2050,19 +2050,19 @@ let (try_frame_pre_uvs :
                                                                     (Prims.of_int (292))
                                                                     (Prims.of_int (29))
                                                                     (Prims.of_int (292))
-                                                                    (Prims.of_int (62)))))
+                                                                    (Prims.of_int (73)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.fst"
                                                                     (Prims.of_int (292))
-                                                                    (Prims.of_int (65))
+                                                                    (Prims.of_int (76))
                                                                     (Prims.of_int (324))
                                                                     (Prims.of_int (65)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___1 ->
-                                                                    Pulse_Checker_Prover_Util.st_typing_weakening_standard
+                                                                    Pulse_Typing_Metatheory.st_typing_weakening_standard
                                                                     g11 t1 c1
                                                                     d2 g11))
                                                                     (fun
@@ -2098,13 +2098,13 @@ let (try_frame_pre_uvs :
                                                                     (fun
                                                                     uu___1 ->
                                                                     match 
-                                                                    Pulse_Typing_Metatheory.st_comp_typing_inversion_cofinite
+                                                                    Pulse_Typing_Metatheory_Base.st_comp_typing_inversion_cofinite
                                                                     g11
                                                                     (Pulse_Syntax_Base.st_comp_of_comp
                                                                     c1)
-                                                                    (Pulse_Typing_Metatheory.comp_typing_inversion
+                                                                    (Pulse_Typing_Metatheory_Base.comp_typing_inversion
                                                                     g11 c1
-                                                                    (Pulse_Typing_Metatheory.st_typing_correctness
+                                                                    (Pulse_Typing_Metatheory_Base.st_typing_correctness
                                                                     g11 t1 c1
                                                                     d3))
                                                                     with

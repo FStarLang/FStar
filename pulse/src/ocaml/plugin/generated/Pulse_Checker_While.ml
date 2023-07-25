@@ -5,7 +5,7 @@ let (while_cond_comp_typing :
       Pulse_Syntax_Base.ppname ->
         Pulse_Syntax_Base.term ->
           Pulse_Syntax_Base.term ->
-            unit -> (unit, unit) Pulse_Typing_Metatheory.comp_typing_u)
+            unit -> (unit, unit) Pulse_Typing_Metatheory_Base.comp_typing_u)
   =
   fun g ->
     fun u ->
@@ -13,7 +13,7 @@ let (while_cond_comp_typing :
         fun ty ->
           fun inv_body ->
             fun inv_typing ->
-              Pulse_Typing_Metatheory.admit_comp_typing g
+              Pulse_Typing_Metatheory_Base.admit_comp_typing g
                 (Pulse_Typing.comp_while_cond x inv_body)
 let (while_body_comp_typing :
   Pulse_Typing_Env.env ->
@@ -21,7 +21,7 @@ let (while_body_comp_typing :
       Pulse_Syntax_Base.ppname ->
         Pulse_Syntax_Base.term ->
           Pulse_Syntax_Base.term ->
-            unit -> (unit, unit) Pulse_Typing_Metatheory.comp_typing_u)
+            unit -> (unit, unit) Pulse_Typing_Metatheory_Base.comp_typing_u)
   =
   fun g ->
     fun u ->
@@ -29,7 +29,7 @@ let (while_body_comp_typing :
         fun ty ->
           fun inv_body ->
             fun inv_typing ->
-              Pulse_Typing_Metatheory.admit_comp_typing g
+              Pulse_Typing_Metatheory_Base.admit_comp_typing g
                 (Pulse_Typing.comp_while_body x inv_body)
 let (check :
   Pulse_Typing_Env.env ->
@@ -421,7 +421,7 @@ let (check :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___5 ->
-                                                                    Pulse_Typing_Metatheory.st_comp_typing_inversion
+                                                                    Pulse_Typing_Metatheory_Base.st_comp_typing_inversion
                                                                     (Pulse_Checker_Pure.push_context
                                                                     "invariant"
                                                                     (Pulse_Syntax_Base.term_range
@@ -429,7 +429,7 @@ let (check :
                                                                     (Pulse_Syntax_Base.st_comp_of_comp
                                                                     (Pulse_Typing.comp_while_cond
                                                                     nm inv1))
-                                                                    (Pulse_Typing_Metatheory.comp_typing_inversion
+                                                                    (Pulse_Typing_Metatheory_Base.comp_typing_inversion
                                                                     (Pulse_Checker_Pure.push_context
                                                                     "invariant"
                                                                     (Pulse_Syntax_Base.term_range
@@ -620,7 +620,7 @@ let (check :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___7 ->
-                                                                    Pulse_Typing_Metatheory.st_comp_typing_inversion
+                                                                    Pulse_Typing_Metatheory_Base.st_comp_typing_inversion
                                                                     (Pulse_Checker_Pure.push_context
                                                                     "invariant"
                                                                     (Pulse_Syntax_Base.term_range
@@ -628,7 +628,7 @@ let (check :
                                                                     (Pulse_Syntax_Base.st_comp_of_comp
                                                                     (Pulse_Typing.comp_while_body
                                                                     nm inv1))
-                                                                    (Pulse_Typing_Metatheory.comp_typing_inversion
+                                                                    (Pulse_Typing_Metatheory_Base.comp_typing_inversion
                                                                     (Pulse_Checker_Pure.push_context
                                                                     "invariant"
                                                                     (Pulse_Syntax_Base.term_range
