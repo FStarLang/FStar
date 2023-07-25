@@ -1190,7 +1190,7 @@ let (apply_frame :
                                t_typing1, st_equiv) in
                          Prims.Mkdtuple2 (c'', t_typing2))
 type ('g, 'ctxt, 'postuhint) st_typing_in_ctxt =
-  (Pulse_Syntax_Base.st_term, Pulse_Syntax_Base.comp,
+  (Pulse_Syntax_Base.st_term, Pulse_Syntax_Base.comp_st,
     (unit, unit, unit) Pulse_Typing.st_typing) FStar_Pervasives.dtuple3
 let rec (vprop_as_list :
   Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term Prims.list) =
