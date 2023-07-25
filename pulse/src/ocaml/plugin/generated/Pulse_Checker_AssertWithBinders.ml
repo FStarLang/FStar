@@ -1953,13 +1953,14 @@ let (check :
                                                                     pre'',
                                                                     g2,
                                                                     (Pulse_Checker_Base.k_elab_trans
-                                                                    g g11 g2
-                                                                    pre
+                                                                    g g11
+                                                                    x_ty pre
                                                                     (Pulse_Checker_Prover_Base.op_Star
                                                                     (Pulse_Checker_Prover_Substs.nt_subst_term
                                                                     v2 nts)
                                                                     pre')
-                                                                    pre''
+                                                                    (FStar_Pervasives.dfst
+                                                                    g2)
                                                                     k_frame k))))))
                                                                     uu___4)))
                                                                     uu___3)))

@@ -1130,9 +1130,10 @@ let rec (check : Pulse_Checker_Base.check_t) =
                                   (fun uu___1 ->
                                      match r with
                                      | FStar_Pervasives.Mkdtuple5
-                                         (x, t1, pre', g1, k) ->
+                                         (x, g1, t1, pre', k) ->
                                          FStar_Pervasives.Mkdtuple5
-                                           (x, t1, pre', g1,
+                                           (x, g1, t1, pre',
                                              (Pulse_Checker_Base.k_elab_trans
-                                                g0 g g1 pre0 pre pre'
+                                                g0 g g1 pre0 pre
+                                                (FStar_Pervasives.dfst pre')
                                                 k_elim_pure k)))))) uu___)
