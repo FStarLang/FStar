@@ -532,6 +532,8 @@ let rec eq_decl' (d1 d2:decl') : bool =
     is_typed1 = is_typed2 &&
     eq_list eq_ident is1 is2 &&
     eq_term t1 t2
+  | DeclSyntaxExtension (s1, t1, _, _), DeclSyntaxExtension (s2, t2, _, _) ->
+    s1 = s2 && t1 = t2
   | _ -> false
 
 and eq_effect_decl (t1 t2: effect_decl) =
