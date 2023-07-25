@@ -34,11 +34,10 @@ let check_bind
 
   let Tm_Bind { binder; head=e1; body=e2} = t.term in
 
-  let (| x, ty, ctxt', g1, k1 |) =
+  let (| x, g1, _, (| ctxt', ctxt'_typing |), k1 |) =
     check g ctxt ctxt_typing None e1 in
-  
   let r =
-    check g1 ctxt' (magic ()) post_hint (open_st_term_nv e2 (binder.binder_ppname, x)) in
+    check g1 ctxt' ctxt'_typing post_hint (open_st_term_nv e2 (binder.binder_ppname, x)) in
   let d : st_typing_in_ctxt g1 ctxt' post_hint = apply_checker_result_k #_ #_ #(Some?.v post_hint) r in
   let d : st_typing_in_ctxt g ctxt post_hint = k1 post_hint d in
 

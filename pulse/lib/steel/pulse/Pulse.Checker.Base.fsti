@@ -81,18 +81,29 @@ let checker_res_matches_post_hint
     t == post_hint.ret_ty /\
     ctxt' == open_term post_hint.post x
 
+let checker_result_inv (g:env) (post_hint:post_hint_opt g)
+  (x:var)
+  (g1:env)
+  (t:(u:universe & t:term & universe_of g1 t u))
+  (ctxt':(ctxt':vprop & tot_typing g1 ctxt' tm_vprop)) =
+
+  let (| _, t, _ |) = t in
+  let (| ctxt', _ |) = ctxt' in
+  checker_res_matches_post_hint g post_hint x t ctxt' /\
+  lookup g1 x == Some t
+
 //
 // x is the variable in which the result of the checked computation is bound
 // t is the type of the checked computation
 //
-// TODO: return ctxt' typing so that the continuation can use it
-//
 type checker_result_t (g:env) (ctxt:vprop) (post_hint:post_hint_opt g) =
   x:var &
-  t:term &
-  ctxt':vprop { checker_res_matches_post_hint g post_hint x t ctxt' } &
-  g1:env { g1 `env_extends` g /\ lookup g1 x == Some t } &
-  continuation_elaborator g ctxt g1 ctxt'
+  g1:env { g1 `env_extends` g } &
+  t:(u:universe & t:typ & universe_of g1 t u) &
+  ctxt':(ctxt':vprop & tot_typing g1 ctxt' tm_vprop) &
+  k:continuation_elaborator g ctxt g1 (dfst ctxt') {
+    checker_result_inv g post_hint x g1 t ctxt'
+  }
 
 type check_t =
   g:env ->

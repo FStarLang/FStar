@@ -7,16 +7,18 @@ open Pulse.Typing
 open Pulse.Typing.Combinators
 open Pulse.Checker.Base
 
+
+module L = FStar.List.Tot
+module T = FStar.Tactics.V2
+module P = Pulse.Syntax.Printer
+module Metatheory = Pulse.Typing.Metatheory
+module PS = Pulse.Checker.Prover.Substs
 module ElimExists = Pulse.Checker.Prover.ElimExists
 module ElimPure =  Pulse.Checker.Prover.ElimPure
 module Match = Pulse.Checker.Prover.Match
 module IntroExists = Pulse.Checker.Prover.IntroExists
 module IntroPure = Pulse.Checker.Prover.IntroPure
 
-module L = FStar.List.Tot
-module T = FStar.Tactics.V2
-module P = Pulse.Syntax.Printer
-module PS = Pulse.Checker.Prover.Substs
 
 let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y == x} = x
 
@@ -256,7 +258,7 @@ let prove
     (| pst.pg, nts_uvs, list_as_vprop pst.remaining_ctxt, k_elab_equiv k (magic ()) (magic ()) |)
 #pop-options
 
-#push-options "--z3rlimit_factor 4 --fuel 1 --ifuel 1"
+#push-options "--z3rlimit_factor 8 --fuel 1 --ifuel 1"
 let try_frame_pre_uvs (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_vprop)
   (uvs:env { disjoint g uvs })
   (#t:st_term) (#c:comp_st) (d:st_typing (push_env g uvs) t c)
@@ -301,7 +303,25 @@ let try_frame_pre_uvs (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_v
 
   let k = k_elab_trans k_frame k in
 
-  (| x, ty, ctxt', g2, k |)
+  let comp_res_typing_in_g1, _, f =
+    Metatheory.st_comp_typing_inversion_cofinite
+      (Metatheory.comp_typing_inversion (Metatheory.st_typing_correctness d)) in
+
+  let d_ty
+    : universe_of g2 ty (comp_u c) =
+    Metatheory.tot_typing_weakening x (comp_res c) comp_res_typing_in_g1 in
+
+  assume (~ (x `Set.mem` freevars (comp_post c)));
+  let d_post
+    : vprop_typing g2 (open_term_nv (comp_post c) (ppname_default, x)) =
+    f x in
+
+  // the magic is for the ctxt' typing
+  // see d_post for post typing
+  // then the remaining_ctxt typing should come from the prover state
+  //   TODO: add it there
+  // and then ctxt' is just their `*`
+  (| x, g2, (| comp_u c, ty, d_ty |), (| ctxt', magic () |), k |)
 #pop-options
 
 let try_frame_pre (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_vprop)
@@ -325,7 +345,7 @@ let prove_post_hint (#g:env) (#ctxt:vprop)
   match post_hint with
   | None -> r
   | Some post_hint ->
-    let (| x, ty, ctxt', g2, k |) = r in
+    let (| x, g2, (| u_ty, ty, ty_typing |), (| ctxt', ctxt'_typing |), k |) = r in
 
     let post_hint_opened = open_term_nv post_hint.post (ppname_default, x) in
 
@@ -337,10 +357,10 @@ let prove_post_hint (#g:env) (#ctxt:vprop)
               (P.term_to_string ty)
               (P.term_to_string post_hint.ret_ty))
     else if eq_tm post_hint_opened ctxt'
-    then (| x, ty, post_hint_opened, g2, k |)
+    then (| x, g2, (| u_ty, ty, ty_typing |), (| ctxt', ctxt'_typing |), k |)
     else
       let (| g3, nts, remaining_ctxt, k_post |) =
-        prove #g2 #ctxt' (magic ()) (mk_env (fstar_env g2)) #post_hint_opened (magic ()) in
+        prove #g2 #ctxt' ctxt'_typing (mk_env (fstar_env g2)) #post_hint_opened (magic ()) in
           
       assert (nts == []);
       let k_post
@@ -357,4 +377,12 @@ let prove_post_hint (#g:env) (#ctxt:vprop)
         let k_post
           : continuation_elaborator g2 ctxt' g3 post_hint_opened =
           k_elab_equiv k_post (VE_Refl _ _) (magic ()) in
-        (| x, ty, post_hint_opened, g3, k_elab_trans k k_post |)
+        //
+        // for the typing of ty in g3,
+        // we have typing of ty in g2 above, and g3 `env_extends` g2
+        //
+        //
+        // for the typing of post_hint_opened,
+        // again post_hint is well-typed in g, and g3 `env_extends` g
+        //
+        (| x, g3, (| u_ty, ty, magic () |), (| post_hint_opened, magic () |), k_elab_trans k k_post |)

@@ -250,5 +250,5 @@ let rec check
     | _ -> T.fail "Checker form not implemented"
   in
 
-  let (| x, t, pre', g1, k |) = r in
-  (| x, t, pre', g1, k_elab_trans k_elim_pure k |)
+  let (| x, g1, t, pre', k |) = r in
+  (| x, g1, t, pre', k_elab_trans k_elim_pure k |)

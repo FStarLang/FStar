@@ -383,7 +383,7 @@ let apply_checker_result_k (#g:env) (#ctxt:vprop) (#post_hint:post_hint_for_env 
   : T.Tac (st_typing_in_ctxt g ctxt (Some post_hint)) =
 
   // TODO: FIXME add to checker result type?
-  let (| y, ty_y, pre', g1, k |) = r in
+  let (| y, g1, (| u_ty, ty_y, d_ty_y |), (| pre', _ |), k |) = r in
 
   let (| u_ty_y, d_ty_y |) = Pulse.Checker.Pure.check_universe g1 ty_y in
 
@@ -419,5 +419,12 @@ let checker_result_for_st_typing (#g:env) (#ctxt:vprop) (#post_hint:post_hint_op
 
   assert (g' `env_extends` g);
 
-  (| x, comp_res c, ctxt', g', k |)
+  let comp_res_typing, _, f =
+    Metatheory.(st_comp_typing_inversion_cofinite (comp_typing_inversion (st_typing_correctness d))) in
+
+  // magic is the typing of comp_res in g'
+  // weaken comp_res_typing
+
+  assume (~ (x `Set.mem` freevars (comp_post c)));
+  (| x, g', (| comp_u c, comp_res c, magic () |), (| ctxt', f x |), k |)
 #pop-options
