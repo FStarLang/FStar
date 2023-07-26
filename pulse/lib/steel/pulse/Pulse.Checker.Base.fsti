@@ -52,20 +52,22 @@ val continuation_elaborator_with_bind (#g:env) (ctxt:term)
   (#e1:st_term)
   (e1_typing:st_typing g e1 c1)
   (ctxt_pre1_typing:tot_typing g (tm_star ctxt (comp_pre c1)) tm_vprop)
-  (x:var { None? (lookup g x) })
+  (x:nvar { None? (lookup g (snd x)) })
   : T.Tac (continuation_elaborator
-             g                                (tm_star ctxt (comp_pre c1))
-             (push_binding g x ppname_default (comp_res c1)) (tm_star (open_term (comp_post c1) x) ctxt))
+             g
+             (tm_star ctxt (comp_pre c1))
+             (push_binding g (snd x) (fst x) (comp_res c1))
+             (tm_star (open_term (comp_post c1) (snd x)) ctxt))
 
 val continuation_elaborator_with_tot_bind (#g:env) (#ctxt:term)
   (ctxt_typing:tot_typing g ctxt tm_vprop)
   (#e1:term)
   (#t1:term)
   (e1_typing:tot_typing g e1 t1)
-  (x:var { None? (lookup g x) })
+  (x:nvar { None? (lookup g (snd x)) })
   : T.Tac (continuation_elaborator
            g ctxt
-           (push_binding g x ppname_default t1) ctxt)
+           (push_binding g (snd x) ppname_default t1) ctxt)
 
 val check_equiv_emp (g:env) (vp:term)
   : option (vprop_equiv g vp tm_emp)
@@ -110,6 +112,7 @@ type check_t =
   ctxt:vprop ->
   ctxt_typing:tot_typing g ctxt tm_vprop ->
   post_hint:post_hint_opt g ->
+  res_ppname:ppname ->
   t:st_term ->
   T.Tac (checker_result_t g ctxt post_hint)
   
@@ -127,4 +130,5 @@ val apply_checker_result_k (#g:env) (#ctxt:vprop) (#post_hint:post_hint_for_env 
 
 val checker_result_for_st_typing (#g:env) (#ctxt:vprop) (#post_hint:post_hint_opt g)
   (d:st_typing_in_ctxt g ctxt post_hint)
+  (ppname:ppname)
   : T.Tac (checker_result_t g ctxt post_hint)

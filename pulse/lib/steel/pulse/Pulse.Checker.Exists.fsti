@@ -11,6 +11,7 @@ val check_elim_exists
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
+  (res_ppname:ppname)
   (t:st_term{Tm_ElimExists? t.term})
   : T.Tac (checker_result_t g pre post_hint)
 
@@ -28,6 +29,7 @@ val check_intro_exists
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
+  (res_ppname:ppname)
   (st:st_term { intro_exists_witness_singleton st })
   (vprop_typing: option (tot_typing g (intro_exists_vprop st) tm_vprop))
   : T.Tac (checker_result_t g pre post_hint)

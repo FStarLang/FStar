@@ -24,11 +24,13 @@ val prove
 val try_frame_pre_uvs (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_vprop)
   (uvs:env { disjoint g uvs })
   (#t:st_term) (#c:comp_st) (d:st_typing (push_env g uvs) t c)
+  (res_ppname:ppname)
 
   : T.Tac (checker_result_t g ctxt None)
 
 val try_frame_pre (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_vprop)
   (#t:st_term) (#c:comp_st) (d:st_typing g t c)
+  (res_ppname:ppname)
 
   : T.Tac (checker_result_t g ctxt None)
 

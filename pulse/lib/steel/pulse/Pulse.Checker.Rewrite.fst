@@ -14,6 +14,7 @@ let check
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
+  (res_ppname:ppname)
   (t:st_term{Tm_Rewrite? t.term})
 
   : T.Tac (checker_result_t g pre post_hint) =
@@ -40,4 +41,4 @@ let check
            | Some token ->
             VE_Ext g p q token in
 	let d = T_Rewrite _ p q p_typing equiv_p_q in
-	prove_post_hint (try_frame_pre pre_typing d) post_hint t.range
+	prove_post_hint (try_frame_pre pre_typing d res_ppname) post_hint t.range

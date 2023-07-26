@@ -234,7 +234,7 @@ let check_branch
   let pre_typing = Pulse.Typing.Metatheory.tot_typing_weakening_single pre_typing hyp_var eq_typ in // weaken w/ branch eq
 
   let (| e, c, e_d |) =
-    let r = check g' pre pre_typing (Some post_hint) e in
+    let r = check g' pre pre_typing (Some post_hint) (mk_ppname_no_range "_br") e in
     apply_checker_result_k r in
   let br_d : br_typing g sc_u sc_ty sc p (close_st_term_n e (L.map fst pulse_bs)) c = TBR g sc_u sc_ty sc c p e bs () () () hyp_var e_d in
   (| p, close_st_term_n e (L.map fst pulse_bs), c, br_d |)
@@ -293,6 +293,7 @@ let check
         (pre:term)
         (pre_typing: tot_typing g pre tm_vprop)
         (post_hint:post_hint_for_env g)
+        (res_ppname:ppname)
         (sc:term)
         (brs:list branch)
         (check:check_t)
@@ -347,4 +348,4 @@ let check
   assume (L.map (fun (p, _) -> elab_pat p) brs == elab_pats');
 
   let d = T_Match g sc_u sc_ty sc sc_ty_typing (E sc_typing) c brs brs_d complete_d in
-  checker_result_for_st_typing (| _, _, d |)
+  checker_result_for_st_typing (| _, _, d |) res_ppname

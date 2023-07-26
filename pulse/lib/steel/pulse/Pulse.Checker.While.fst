@@ -26,6 +26,7 @@ let check
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
+  (res_ppname:ppname)
   (t:st_term{Tm_While? t.term})
   (check:check_t)
   : T.Tac (checker_result_t g pre post_hint) =
@@ -64,6 +65,7 @@ let check
       (comp_pre (comp_while_cond nm inv))
       cond_pre_typing
       (Some while_cond_hint)
+      (mk_ppname_no_range "_while_c")
       cond in
     apply_checker_result_k r
   in
@@ -82,12 +84,13 @@ let check
         (comp_pre (comp_while_body nm inv))
         body_pre_typing
         (Some while_post_hint)
+        (mk_ppname_no_range "_while_b")
         body in
       apply_checker_result_k r in
     if eq_comp body_comp (comp_while_body nm inv)
     then
       let d = T_While g inv cond body inv_typing cond_typing body_typing in
-      prove_post_hint (try_frame_pre pre_typing d) post_hint t.range
+      prove_post_hint (try_frame_pre pre_typing d res_ppname) post_hint t.range
     else fail g None
           (Printf.sprintf "Could not prove the inferred type of the while body matches the annotation\n\
                            Inferred type = %s\n\

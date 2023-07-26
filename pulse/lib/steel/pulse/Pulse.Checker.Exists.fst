@@ -29,6 +29,7 @@ let check_elim_exists
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
+  (res_ppname:ppname)
   (t:st_term{Tm_ElimExists? t.term})
   : T.Tac (checker_result_t g pre post_hint) =
 
@@ -66,7 +67,7 @@ let check_elim_exists
   if eq_univ u u'
   then let x = fresh g in
        let d = T_ElimExists g u ty p x ty_typing t_typing in
-       prove_post_hint (try_frame_pre pre_typing d) post_hint t.range
+       prove_post_hint (try_frame_pre pre_typing d res_ppname) post_hint t.range
   else fail g (Some t.range)
          (Printf.sprintf "check_elim_exists: universe checking failed, computed %s, expected %s"
             (P.univ_to_string u') (P.univ_to_string u))
@@ -81,6 +82,7 @@ let check_intro_exists_erased
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
+  (res_ppname:ppname)
   (st:st_term { intro_exists_witness_singleton st /\
                 is_intro_exists_erased st })
   (vprop_typing: option (tot_typing g (intro_exists_vprop st) tm_vprop))
@@ -107,13 +109,14 @@ let check_intro_exists_erased
   let (| e, e_typing |) = 
     check_term_with_expected_type g e (mk_erased u b.binder_ty) in
   let d = T_IntroExistsErased g u b p e ty_typing t_typing (E e_typing) in
-  prove_post_hint (try_frame_pre pre_typing d) post_hint (t <: term).range
+  prove_post_hint (try_frame_pre pre_typing d res_ppname) post_hint (t <: term).range
 
 let check_intro_exists_non_erased
   (g:env)
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
+  (res_ppname:ppname)
   (st:st_term { intro_exists_witness_singleton st /\
                 not (is_intro_exists_erased st) })
   (vprop_typing: option (tot_typing g (intro_exists_vprop st) tm_vprop))
@@ -141,18 +144,19 @@ let check_intro_exists_non_erased
     check_term_with_expected_type g witness b.binder_ty in
   let d = T_IntroExists g u b p witness ty_typing t_typing (E witness_typing) in
   let (| c, d |) : (c:_ & st_typing g _ c) = (| _, d |) in
-  prove_post_hint (try_frame_pre pre_typing d) post_hint (t <: term).range
+  prove_post_hint (try_frame_pre pre_typing d res_ppname) post_hint (t <: term).range
 
 let check_intro_exists
   (g:env)
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
+  (res_ppname:ppname)
   (st:st_term { intro_exists_witness_singleton st })
   (vprop_typing: option (tot_typing g (intro_exists_vprop st) tm_vprop))
 
   : T.Tac (checker_result_t g pre post_hint) = 
   
   if is_intro_exists_erased st
-  then check_intro_exists_erased g pre pre_typing post_hint st vprop_typing
-  else check_intro_exists_non_erased g pre pre_typing post_hint st vprop_typing 
+  then check_intro_exists_erased g pre pre_typing post_hint res_ppname st vprop_typing
+  else check_intro_exists_non_erased g pre pre_typing post_hint res_ppname st vprop_typing 

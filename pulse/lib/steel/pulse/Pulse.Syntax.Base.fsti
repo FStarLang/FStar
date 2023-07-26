@@ -40,6 +40,11 @@ let mk_ppname (name:RT.pp_name_t) (range:FStar.Range.range) : ppname = {
     range = range
 }
 
+let mk_ppname_no_range (s:string) : ppname = {
+  name = FStar.Sealed.seal s;
+  range = FStar.Range.range_0;
+}
+
 noeq
 type bv = {
   bv_index  : index;

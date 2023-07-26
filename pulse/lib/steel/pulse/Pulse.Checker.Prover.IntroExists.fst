@@ -37,11 +37,12 @@ let k_intro_exists (#g:env) (#u:universe) (#b:binder) (#p:vprop)
   let x = fresh g in
   assume (open_term (comp_post c) x == comp_post c);
 
+  let ppname = mk_ppname_no_range "_pintroe" in
   let k
     : continuation_elaborator
         g (frame * subst_term p [ DT 0 e ])
         (push_binding g x ppname_default (comp_res c)) (tm_exists_sl u b p * frame) =
-    continuation_elaborator_with_bind frame t_typing (magic ()) x in
+    continuation_elaborator_with_bind frame t_typing (magic ()) (ppname, x) in
 
   let k
     : continuation_elaborator

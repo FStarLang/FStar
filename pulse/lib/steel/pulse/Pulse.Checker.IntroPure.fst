@@ -32,6 +32,7 @@ let check
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
+  (res_ppname:ppname)
   (t:st_term { Tm_IntroPure? t.term })
 
   : T.Tac (checker_result_t g pre post_hint) =
@@ -42,4 +43,4 @@ let check
   let (| p, p_typing |) = check_prop g p in
   let pv = check_prop_validity g p p_typing in
   let st_typing = T_IntroPure _ _ p_typing pv in
-  prove_post_hint (try_frame_pre pre_typing st_typing) post_hint t.range
+  prove_post_hint (try_frame_pre pre_typing st_typing res_ppname) post_hint t.range

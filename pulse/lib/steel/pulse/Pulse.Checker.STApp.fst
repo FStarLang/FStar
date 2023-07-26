@@ -92,6 +92,7 @@ let check
   (ctxt:vprop)
   (ctxt_typing:tot_typing g0 ctxt tm_vprop)
   (post_hint:post_hint_opt g0)
+  (res_ppname:ppname)
   (t:st_term { Tm_STApp? t.term })
   : T.Tac (checker_result_t g0 ctxt post_hint) =
 
@@ -132,7 +133,7 @@ let check
         let c = (canon_comp (open_comp_with comp_typ arg)) in
         let d : st_typing g t c = d in
 
-        Prover.prove_post_hint (Prover.try_frame_pre_uvs ctxt_typing uvs d) post_hint t.range
+        Prover.prove_post_hint (Prover.try_frame_pre_uvs ctxt_typing uvs d res_ppname) post_hint t.range
       | _ ->
         fail g (Some t.range) "Expected an effectful application; got a pure term (could it be partially applied by mistake?)"
     else fail g (Some t.range) (Printf.sprintf "Unexpected qualifier in head type %s of stateful application: head = %s, arg = %s"

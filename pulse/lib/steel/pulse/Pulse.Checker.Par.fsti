@@ -11,6 +11,7 @@ val check
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
+  (res_ppname:ppname)
   (t:st_term{Tm_Par? t.term})
   (check:check_t)
 

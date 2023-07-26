@@ -27,6 +27,7 @@ let check
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
+  (res_ppname:ppname)
   (t:st_term { Tm_WithLocal? t.term })
   (check:check_t)
   : T.Tac (checker_result_t g pre post_hint) =
@@ -60,7 +61,8 @@ let check
       else
         let body_post = extend_post_hint_for_local g post init_t x in
         let (| opened_body, c_body, body_typing |) =
-          let r = check g_extended body_pre body_pre_typing (Some body_post) (open_st_term_nv body px) in
+          let r =
+            check g_extended body_pre body_pre_typing (Some body_post) binder.binder_ppname (open_st_term_nv body px) in
           apply_checker_result_k r in
         //
         // Checking post equality here to match the typing rule
@@ -82,7 +84,7 @@ let check
             init_t_typing
             c_typing
             body_typing in
-          checker_result_for_st_typing (| _, _, d |)
+          checker_result_for_st_typing (| _, _, d |) res_ppname
 
   else fail g (Some t.range)
          (Printf.sprintf "check_withlocal: allocating a local variable: type %s is not universe zero (computed %s)"

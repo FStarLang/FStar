@@ -89,6 +89,7 @@ let check
   (pre:term)
   (pre_typing: tot_typing g pre tm_vprop)
   (post_hint:post_hint_for_env g)
+  (res_ppname:ppname)
   (b:term)
   (e1 e2:st_term)
   (check:check_t)
@@ -102,7 +103,7 @@ let check
   let post = post_hint.post in
   let hyp = fresh g in
   let g_with_eq (eq_v:term) =
-    push_binding g hyp ppname_default (mk_eq2 u0 tm_bool b eq_v)
+    push_binding g hyp (mk_ppname_no_range "_if_hyp") (mk_eq2 u0 tm_bool b eq_v)
   in
 
   let check_branch (eq_v:term) (br:st_term) (is_then:bool)
@@ -116,7 +117,7 @@ let check
         hyp 
         (mk_eq2 u0 tm_bool b eq_v)
     in
-    let r = check g_with_eq pre pre_typing (Some post_hint) br in
+    let r = check g_with_eq pre pre_typing (Some post_hint) (mk_ppname_no_range "_if_br") br in
     let (| br, c, d |) = apply_checker_result_k r in
 
     let br_name = if is_then then "then" else "else" in
@@ -152,4 +153,4 @@ let check
   let d : st_typing_in_ctxt g pre (Some post_hint) =
     (| _, c, T_If g b e1 e2 c _ hyp (E b_typing) e1_typing e2_typing (E c_typing) |) in
 
-  checker_result_for_st_typing d
+  checker_result_for_st_typing d res_ppname

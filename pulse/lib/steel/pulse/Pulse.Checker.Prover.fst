@@ -262,6 +262,7 @@ let prove
 let try_frame_pre_uvs (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_vprop)
   (uvs:env { disjoint g uvs })
   (#t:st_term) (#c:comp_st) (d:st_typing (push_env g uvs) t c)
+  (res_ppname:ppname)
 
   : T.Tac (checker_result_t g ctxt None) =
 
@@ -285,16 +286,16 @@ let try_frame_pre_uvs (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_v
 
   let x = fresh g1 in
   let ty = comp_res c in
-  let g2 = push_binding g1 x ppname_default ty in
+  let g2 = push_binding g1 x res_ppname ty in
   assert (g2 `env_extends` g1);
-  let ctxt' = (open_term_nv (comp_post c) (ppname_default, x) * remaining_ctxt) in
+  let ctxt' = (open_term_nv (comp_post c) (res_ppname, x) * remaining_ctxt) in
 
   let d : st_typing g1 t c = Metatheory.st_typing_weakening_standard d g1 in
 
   let k
     : continuation_elaborator g1 (remaining_ctxt * comp_pre c)
                               g2 ctxt' =
-    continuation_elaborator_with_bind remaining_ctxt d (magic ()) x in
+    continuation_elaborator_with_bind remaining_ctxt d (magic ()) (res_ppname, x) in
 
   let k
     : continuation_elaborator g1 (comp_pre c * remaining_ctxt)
@@ -313,7 +314,7 @@ let try_frame_pre_uvs (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_v
 
   assume (~ (x `Set.mem` freevars (comp_post c)));
   let d_post
-    : vprop_typing g2 (open_term_nv (comp_post c) (ppname_default, x)) =
+    : vprop_typing g2 (open_term_nv (comp_post c) (res_ppname, x)) =
     f x in
 
   // the magic is for the ctxt' typing
@@ -325,13 +326,13 @@ let try_frame_pre_uvs (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_v
 #pop-options
 
 let try_frame_pre (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_vprop)
-  (#t:st_term) (#c:comp_st) (d:st_typing g t c)
+  (#t:st_term) (#c:comp_st) (d:st_typing g t c) (res_ppname:ppname)
 
   : T.Tac (checker_result_t g ctxt None) =
 
   let uvs = mk_env (fstar_env g) in
   assert (equal g (push_env g uvs));
-  try_frame_pre_uvs ctxt_typing uvs d
+  try_frame_pre_uvs ctxt_typing uvs d res_ppname
 
 let prove_post_hint (#g:env) (#ctxt:vprop)
   (r:checker_result_t g ctxt None)
@@ -347,7 +348,8 @@ let prove_post_hint (#g:env) (#ctxt:vprop)
   | Some post_hint ->
     let (| x, g2, (| u_ty, ty, ty_typing |), (| ctxt', ctxt'_typing |), k |) = r in
 
-    let post_hint_opened = open_term_nv post_hint.post (ppname_default, x) in
+    let ppname = mk_ppname_no_range "_posth" in
+    let post_hint_opened = open_term_nv post_hint.post (ppname, x) in
 
     // TODO: subtyping
     if not (eq_tm ty post_hint.ret_ty)

@@ -31,10 +31,11 @@ let k_intro_pure (g:env) (p:term)
   // p is well-typed in g, so it does not have x free
   assume (open_term p x == p);
 
+  let ppname = mk_ppname_no_range "_pintrop" in
   let k : continuation_elaborator
             g (frame * tm_emp)
             (push_binding g x ppname_default tm_unit) (tm_pure p * frame) =
-    continuation_elaborator_with_bind frame d (magic ()) x in
+    continuation_elaborator_with_bind frame d (magic ()) (ppname, x) in
 
   let k : continuation_elaborator
             g frame

@@ -11,6 +11,7 @@ val check
   (pre:term)
   (pre_typing: tot_typing g pre tm_vprop)
   (post_hint:post_hint_for_env g)
+  (res_ppname:ppname)
   (b:term)
   (e1 e2:st_term)
   (check:check_t)

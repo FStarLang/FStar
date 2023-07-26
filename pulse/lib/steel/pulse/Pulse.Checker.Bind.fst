@@ -20,6 +20,7 @@ let check_bind
   (ctxt:vprop)
   (ctxt_typing:tot_typing g ctxt tm_vprop)
   (post_hint:post_hint_opt g)
+  (res_ppname:ppname)
   (t:st_term {Tm_Bind? t.term})
   (check:check_t)
   : T.Tac (checker_result_t g ctxt post_hint) =
@@ -35,19 +36,20 @@ let check_bind
   let Tm_Bind { binder; head=e1; body=e2} = t.term in
 
   let (| x, g1, _, (| ctxt', ctxt'_typing |), k1 |) =
-    check g ctxt ctxt_typing None e1 in
+    check g ctxt ctxt_typing None binder.binder_ppname e1 in
   let r =
-    check g1 ctxt' ctxt'_typing post_hint (open_st_term_nv e2 (binder.binder_ppname, x)) in
+    check g1 ctxt' ctxt'_typing post_hint (mk_ppname_no_range "_bind_c") (open_st_term_nv e2 (binder.binder_ppname, x)) in
   let d : st_typing_in_ctxt g1 ctxt' post_hint = apply_checker_result_k #_ #_ #(Some?.v post_hint) r in
   let d : st_typing_in_ctxt g ctxt post_hint = k1 post_hint d in
 
-  checker_result_for_st_typing d
+  checker_result_for_st_typing d res_ppname
 
 let check_tot_bind
   (g:env)
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
+  (res_ppname:ppname)
   (t:st_term { Tm_TotBind? t.term })
   (check:check_t)
   : T.Tac (checker_result_t g pre post_hint) =
@@ -70,13 +72,13 @@ let check_tot_bind
 
   let x = fresh g in
 
-  let k = continuation_elaborator_with_tot_bind pre_typing (E e1_typing) x in
+  let k = continuation_elaborator_with_tot_bind pre_typing (E e1_typing) (ppname_default, x) in
 
   let px = v_as_nv x in
   let g' = push_binding g x (fst px) t1 in
   let pre_typing' : tot_typing g' pre tm_vprop =
     Metatheory.tot_typing_weakening_single pre_typing x t1 in
-  let r = check g' pre pre_typing' post_hint (open_st_term_nv e2 px) in
+  let r = check g' pre pre_typing' post_hint (mk_ppname_no_range "_tbind_c") (open_st_term_nv e2 px) in
   let d = apply_checker_result_k #_ #_ #(Some?.v post_hint) r in
   let d = k post_hint d in
-  checker_result_for_st_typing d
+  checker_result_for_st_typing d res_ppname

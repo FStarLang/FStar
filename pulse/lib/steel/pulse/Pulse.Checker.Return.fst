@@ -14,6 +14,7 @@ let check
   (ctxt:term)
   (ctxt_typing:tot_typing g ctxt tm_vprop)
   (post_hint:post_hint_opt g)
+  (res_ppname:ppname)
   (st:st_term { Tm_Return? st.term })
   : T.Tac (checker_result_t g ctxt post_hint) =
   
@@ -38,7 +39,7 @@ let check
   in
   
   let x = fresh g in
-  let px = v_as_nv x in
+  let px = res_ppname, x in
   let (| post_opened, post_typing |) : t:term & tot_typing (push_binding g x (fst px) ty)  t tm_vprop =
       match post_hint with
       | None -> 
@@ -59,4 +60,4 @@ let check
   assume (open_term (close_term post_opened x) x == post_opened);
   let post = close_term post_opened x in
   let d = T_Return g c use_eq u ty t post x uty (E d) post_typing in
-  prove_post_hint (try_frame_pre ctxt_typing d) post_hint t.range
+  prove_post_hint (try_frame_pre ctxt_typing d res_ppname) post_hint t.range

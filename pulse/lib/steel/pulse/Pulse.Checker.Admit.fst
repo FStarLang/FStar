@@ -23,6 +23,7 @@ let check
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
+  (res_ppname:ppname)
   (t:st_term { Tm_Admit? t.term })
 
   : T.Tac (checker_result_t g pre post_hint) =
@@ -74,4 +75,4 @@ let check
 
   assume (open_term (close_term post_opened x) x == post_opened);
   let d = T_Admit _ _ c (STC _ s x t_typing pre_typing post_typing) in
-  prove_post_hint (try_frame_pre pre_typing d) post_hint t.range
+  prove_post_hint (try_frame_pre pre_typing d res_ppname) post_hint t.range

@@ -198,10 +198,12 @@ let continuation_elaborator_with_bind (#g:env) (ctxt:term)
   (#e1:st_term)
   (e1_typing:st_typing g e1 c1)
   (ctxt_pre1_typing:tot_typing g (tm_star ctxt (comp_pre c1)) tm_vprop)
-  (x:var { None? (lookup g x) })
+  (x:nvar { None? (lookup g (snd x)) })
   : T.Tac (continuation_elaborator
-             g (tm_star ctxt (comp_pre c1))
-             (push_binding g x ppname_default (comp_res c1)) (tm_star (open_term (comp_post c1) x) ctxt)) =
+             g
+             (tm_star ctxt (comp_pre c1))
+             (push_binding g (snd x) (fst x) (comp_res c1))
+             (tm_star (open_term (comp_post c1) (snd x)) ctxt)) =
 
   let pre1 = comp_pre c1 in
   let res1 = comp_res c1 in
@@ -217,7 +219,8 @@ let continuation_elaborator_with_bind (#g:env) (ctxt:term)
   let (| u_of_1, pre_typing, _, _ |) =
     Metatheory.(st_comp_typing_inversion (comp_typing_inversion (st_typing_correctness e1_typing))) in
   let b = res1 in
-  let g' = push_binding g x ppname_default b in
+  let ppname, x = x in
+  let g' = push_binding g x ppname b in
   
   let post1_opened = open_term_nv post1 (v_as_nv x) in
   let k : continuation_elaborator g (tm_star ctxt pre1) g' (tm_star post1_opened ctxt) =
@@ -243,7 +246,7 @@ let continuation_elaborator_with_bind (#g:env) (ctxt:term)
       let (| e, c, e_typing |) =
         Pulse.Typing.Combinators.mk_bind
           g (tm_star ctxt pre1) 
-          e1 e2_closed c1 c2 (v_as_nv x) e1_typing
+          e1 e2_closed c1 c2 (ppname, x) e1_typing
           u_of_1 
           e2_typing
           t_typing
@@ -262,13 +265,14 @@ let continuation_elaborator_with_tot_bind (#g:env) (#ctxt:term)
   (#e1:term)
   (#t1:term)
   (e1_typing:tot_typing g e1 t1)
-  (x:var { None? (lookup g x) })
+  (x:nvar { None? (lookup g (snd x)) })
   : T.Tac (continuation_elaborator
            g ctxt
-           (push_binding g x ppname_default t1) ctxt) =
+           (push_binding g (snd x) (fst x) t1) ctxt) =
 
+  assert ((push_binding g (snd x) (fst x) t1) `env_extends` g);
   fun post_hint (| e2, c2, d2 |) ->
-
+  let ppname, x = x in
   let e2_closed = close_st_term e2 x in
   assume (open_st_term (close_st_term e2 x) x == e2);
 
@@ -278,6 +282,7 @@ let continuation_elaborator_with_tot_bind (#g:env) (#ctxt:term)
   assume (~ (x `Set.mem` freevars_st e2_closed));
   let d : st_typing g e c =
     T_TotBind g e1 e2_closed t1 c2 x e1_typing d2 in
+  
   let _ =
     match post_hint with
     | None -> ()
@@ -395,19 +400,20 @@ let apply_checker_result_k (#g:env) (#ctxt:vprop) (#post_hint:post_hint_for_env 
 #push-options "--z3rlimit_factor 2 --fuel 0 --ifuel 1"
 let checker_result_for_st_typing (#g:env) (#ctxt:vprop) (#post_hint:post_hint_opt g)
   (d:st_typing_in_ctxt g ctxt post_hint)
+  (ppname:ppname)
   : T.Tac (checker_result_t g ctxt post_hint) =
 
   let (| t, c, d |) = d in
  
   let x = fresh g in
 
-  let g' = push_binding g x ppname_default (comp_res c) in
-  let ctxt' = open_term_nv (comp_post c) (ppname_default, x) in
+  let g' = push_binding g x ppname (comp_res c) in
+  let ctxt' = open_term_nv (comp_post c) (ppname, x) in
   let k
     : continuation_elaborator
         g (tm_star tm_emp (comp_pre c))
         g' (tm_star ctxt' tm_emp) =
-    continuation_elaborator_with_bind tm_emp d (magic ()) x in
+    continuation_elaborator_with_bind tm_emp d (magic ()) (ppname, x) in
   let k
     : continuation_elaborator g (comp_pre c) g' ctxt' =
     k_elab_equiv k (magic ()) (magic ()) in

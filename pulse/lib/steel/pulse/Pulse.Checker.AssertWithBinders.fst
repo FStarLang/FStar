@@ -136,6 +136,7 @@ let check
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
+  (res_ppname:ppname)
   (st:st_term { Tm_ProofHintWithBinders? st.term })
   (check:check_t)
 
@@ -155,7 +156,7 @@ let check
     let (| v, d |) = PC.check_vprop (push_env g uvs) v in
     let (| g1, nts, pre', k_frame |) = Prover.prove pre_typing uvs d in
     let (| x, x_ty, pre'', g2, k |) =
-      check g1 (tm_star (PS.nt_subst_term v nts) pre') (magic ()) post_hint (PS.nt_subst_st_term body nts) in
+      check g1 (tm_star (PS.nt_subst_term v nts) pre') (magic ()) post_hint res_ppname (PS.nt_subst_st_term body nts) in
     (| x, x_ty, pre'', g2, k_elab_trans k_frame k |)
 
   | _ ->
@@ -187,4 +188,4 @@ let check
                                            v = lhs;
                                            t = st };
           range = st.range } in
-    check g pre pre_typing post_hint st
+    check g pre pre_typing post_hint res_ppname st

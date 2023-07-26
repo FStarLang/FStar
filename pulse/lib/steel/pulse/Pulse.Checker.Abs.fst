@@ -85,7 +85,7 @@ let rec check_abs
           Some post_hint_typing
       in
 
-      let r  = check g' pre_opened pre_typing post body_opened  in
+      let r  = check g' pre_opened pre_typing post (mk_ppname_no_range "_fret") body_opened  in
       let (| body, c_body, body_typing |) : st_typing_in_ctxt g' pre_opened post =
         apply_checker_result_k #_ #_ #(Some?.v post) r in
 
