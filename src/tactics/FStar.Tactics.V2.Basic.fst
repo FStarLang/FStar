@@ -2101,6 +2101,8 @@ let refl_typing_builtin_wrapper (f:unit -> 'a) : tac (option 'a & issues) =
       }) in
       [issue], None
   in
+  let! ps = get in
+  Env.promote_id_info ps.main_context (FStar.TypeChecker.Tc.compress_and_norm ps.main_context);
   UF.rollback tx;
   if List.length errs > 0
   then ret (None, errs)

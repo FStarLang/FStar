@@ -94,6 +94,29 @@ let (deep_compress :
              let uu___3 = compress1_u allow_uvars in
              FStar_Syntax_Visit.visit_term_univs uu___2 uu___3 in
            uu___1 tm)
+let (deep_compress_if_no_uvars :
+  FStar_Syntax_Syntax.term ->
+    FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
+  =
+  fun tm ->
+    FStar_Errors.with_ctx "While deep-compressing a term"
+      (fun uu___ ->
+         try
+           (fun uu___1 ->
+              match () with
+              | () ->
+                  let uu___2 =
+                    let uu___3 =
+                      let uu___4 = compress1_t false in
+                      let uu___5 = compress1_u false in
+                      FStar_Syntax_Visit.visit_term_univs uu___4 uu___5 in
+                    uu___3 tm in
+                  FStar_Pervasives_Native.Some uu___2) ()
+         with
+         | FStar_Errors.Err
+             (FStar_Errors_Codes.Error_UnexpectedUnresolvedUvar, uu___2,
+              uu___3)
+             -> FStar_Pervasives_Native.None)
 let (deep_compress_se :
   Prims.bool -> FStar_Syntax_Syntax.sigelt -> FStar_Syntax_Syntax.sigelt) =
   fun allow_uvars ->

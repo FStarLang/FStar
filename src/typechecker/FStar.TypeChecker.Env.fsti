@@ -287,7 +287,7 @@ val get_range      : env -> Range.range
 val insert_bv_info : env -> bv -> typ -> unit
 val insert_fv_info : env -> fv -> typ -> unit
 val toggle_id_info : env -> bool -> unit
-val promote_id_info : env -> (typ -> typ) -> unit
+val promote_id_info : env -> (typ -> option typ) -> unit
 
 (* Querying identifiers *)
 val lid_exists             : env -> lident -> bool
