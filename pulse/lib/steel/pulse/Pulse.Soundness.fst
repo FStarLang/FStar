@@ -273,6 +273,12 @@ let rec soundness (g:stt_env)
       in
       if_soundness _ _ _ d soundness ct_soundness
 
+    | T_Match _ _ _ _ _ _ _ _ _ _->
+      let ct_soundness g c uc (d':_ {d' << d}) =
+        Comp.comp_typing_soundness g c uc d'
+      in
+      Pulse.Soundness.Match.match_soundness _ _ _ d soundness ct_soundness
+
     | T_IntroPure _ _ _ _  ->
       admit()
       

@@ -29,6 +29,7 @@
         "data_elim_FStar.Reflection.Typing.T_FVar",
         "data_elim_FStar.Reflection.Typing.T_If",
         "data_elim_FStar.Reflection.Typing.T_Let",
+        "data_elim_FStar.Reflection.Typing.T_Match",
         "data_elim_FStar.Reflection.Typing.T_PropIrrelevance",
         "data_elim_FStar.Reflection.Typing.T_Refine",
         "data_elim_FStar.Reflection.Typing.T_Sub",
@@ -143,7 +144,7 @@
         "typing_tok_Pulse.Syntax.Base.Implicit@tok"
       ],
       0,
-      "fb7bceb777c76b1f05e62d10d18ecbc4"
+      "624cb7e21398709374450808ce065323"
     ],
     [
       "Pulse.Soundness.Comp.comp_typing_soundness",
@@ -230,7 +231,7 @@
         "typing_Pulse.Typing.Env.fstar_env"
       ],
       0,
-      "dc387b93dfe298ba06588d325098eeee"
+      "a3e542a04867bbbbc9cdfe32e637c79a"
     ]
   ]
 ]

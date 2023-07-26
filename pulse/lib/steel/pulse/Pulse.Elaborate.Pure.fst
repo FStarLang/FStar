@@ -58,7 +58,26 @@ let rec elab_term (top:term)
 
     | Tm_FStar t ->
       w t
-  
+      
+
+let rec elab_pat (p:pattern) : Tot R.pattern =
+  let elab_fv (f:fv) : R.fv =
+    R.pack_fv f.fv_name
+  in
+  match p with
+  | Pat_Constant c -> R.Pat_Constant c
+  | Pat_Var v -> R.Pat_Var (Sealed.seal R.(pack_ln Tv_Unknown)) v
+  | Pat_Cons fv vs ->
+    R.Pat_Cons (elab_fv fv) None (Pulse.Common.map_dec p vs elab_sub_pat)
+  | Pat_Dot_Term None ->
+    R.Pat_Dot_Term None
+  | Pat_Dot_Term (Some t) ->
+    R.Pat_Dot_Term (Some (elab_term t))
+and elab_sub_pat (pi : pattern & bool) : R.pattern & bool =
+  let (p, i) = pi in
+  elab_pat p, i
+
+let elab_pats (ps:list pattern) : Tot (list R.pattern) = L.map elab_pat ps
 
 let elab_st_comp (c:st_comp)
   : R.universe & R.term & R.term & R.term

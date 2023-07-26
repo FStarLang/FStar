@@ -113,9 +113,9 @@ pulseStmtNoSeq:
     { PulseSugar.mk_let_binding q i typOpt (Some tm) }
   | LBRACE s=pulseStmt RBRACE
     { PulseSugar.mk_block s }
-  | IF tm=appTermNoRecordExp vp=option(returnsVprop) LBRACE th=pulseStmt RBRACE e=option(elseBlock)
+  | IF tm=appTermNoRecordExp vp=option(ensuresVprop) LBRACE th=pulseStmt RBRACE e=option(elseBlock)
     { PulseSugar.mk_if tm vp th e }
-  | MATCH tm=appTermNoRecordExp c=option(returnsAnnot) LBRACE brs=list(pulseMatchBranch) RBRACE
+  | MATCH tm=appTermNoRecordExp c=option(ensuresVprop) LBRACE brs=list(pulseMatchBranch) RBRACE
     { PulseSugar.mk_match tm c brs }
   | WHILE LPAREN tm=pulseStmt RPAREN INVARIANT i=lident DOT v=pulseVprop LBRACE body=pulseStmt RBRACE
     { PulseSugar.mk_while tm i v body }
@@ -144,17 +144,12 @@ withBindersOpt:
     { List.flatten bs }
   | { [] }
 
-%inline
-returnsAnnot:
-  | RETURNS s=pulseComputationType
-    { s }
-
-returnsVprop:
-  | RETURNS s=pulseVprop
+ensuresVprop:
+  | ENSURES s=pulseVprop
     { s }
 
 pulseMatchBranch:
-  | LBRACE pat=pulsePattern RARROW e=pulseStmt RBRACE
+  | pat=pulsePattern RARROW LBRACE e=pulseStmt RBRACE
     { (pat, e) }
 
 pulsePattern:

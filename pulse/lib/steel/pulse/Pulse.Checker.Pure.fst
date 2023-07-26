@@ -92,9 +92,9 @@ let ill_typed_term (t:term) (expected_typ:option term) (got_typ:option term)=
   | None, _ ->
     Printf.sprintf "Ill-typed term: %s" (P.term_to_string t)   
   | Some ty, None ->
-    Printf.sprintf "Expected term of type %s; got %s" (P.term_to_string ty) (P.term_to_string t)
+    Printf.sprintf "Expected term of type %s; got term %s" (P.term_to_string ty) (P.term_to_string t)
   | Some ty, Some ty' ->
-    Printf.sprintf "Expected term of type %s; got %s of type %s" 
+    Printf.sprintf "Expected term of type %s; got term %s of type %s" 
                    (P.term_to_string ty)
                    (P.term_to_string t)
                    (P.term_to_string ty')

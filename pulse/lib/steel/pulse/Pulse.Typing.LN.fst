@@ -23,7 +23,6 @@ val elab_ln_inverse (e:term)
     (requires RT.ln (elab_term e))
     (ensures ln e)
 
-
 assume
 val open_term_ln_host' (t:host_term) (x:R.term) (i:index)
   : Lemma 
@@ -90,6 +89,10 @@ let open_term_ln_opt' (t:option term) (x:term) (i:index)
     | None -> ()
     | Some t -> open_term_ln' t x i
 
+// aux
+let __brs_of (t:st_term{Tm_Match? t.term}) : list branch =
+  let Tm_Match {brs} = t.term in
+  brs
 
 let rec open_term_ln_list' (t:list term) (x:term) (i:index)
   : Lemma
@@ -137,6 +140,13 @@ let rec open_st_term_ln' (e:st_term)
       open_st_term_ln' else_ x i;          
       open_term_ln_opt' post x (i + 1)
 
+    | Tm_Match {sc;returns_;brs} ->
+      open_term_ln' sc x i;
+      open_term_ln_opt' returns_ x i;
+      assert (__brs_of e == brs);
+      open_branches_ln' e brs x i;
+      ()
+
     | Tm_IntroPure { p }
     | Tm_ElimExists { p } ->
       open_term_ln' p x i
@@ -178,7 +188,34 @@ let rec open_st_term_ln' (e:st_term)
       let n = L.length binders in
       open_term_ln' v x (i + n);
       open_st_term_ln' t x (i + n)
-      
+
+// The Tm_Match? and __brs_of conditions are to prove that the ln_branches' below
+// satisfies the termination refinment.
+and open_branches_ln' (t:st_term{Tm_Match? t.term}) (brs:list branch{brs << t /\ __brs_of t == brs}) (x:term) (i:index)
+  : Lemma 
+    (requires (
+      assert (subst_branches t [DT i x] brs == __brs_of (subst_st_term t [DT i x])); // hint
+      ln_branches' (open_st_term' t x i) (subst_branches t [DT i x] brs) (i - 1)))
+    (ensures ln_branches' t brs i)
+    (decreases brs)
+  = match brs with
+    | [] -> ()
+    | br::brs ->
+      assume (ln_branch' (subst_branch [DT i x] br) (i - 1)); // Should be immediate. Unfold
+      open_branch_ln' br x i;
+      admit ()
+
+and open_branch_ln' (br : branch) (x:term) (i:index)
+  : Lemma
+    (requires ln_branch' (subst_branch [DT i x] br) (i - 1))
+    (ensures ln_branch' br i)
+  = let (p, e) = br in
+    match p with
+    | Pat_Constant _ -> open_st_term_ln' e x i
+    | Pat_Dot_Term _ -> open_st_term_ln' e x i
+    | Pat_Var v -> open_st_term_ln' e x (i+1)
+    | Pat_Cons _ subpats -> open_st_term_ln' e x (i + L.length subpats)
+
 let open_term_ln (e:term) (v:var)
   : Lemma 
     (requires ln (open_term e v))
@@ -295,6 +332,9 @@ let rec ln_weakening_st (t:st_term) (i j:int)
       ln_weakening_st then_ i j;    
       ln_weakening_st else_ i j;          
       ln_weakening_opt post (i + 1) (j + 1)
+
+    | Tm_Match _ ->
+      admit ()
 
     | Tm_STApp { head; arg } ->
       ln_weakening head i j;
@@ -457,6 +497,9 @@ let rec open_term_ln_inv_st' (t:st_term)
       open_term_ln_inv_st' else_ x i;          
       open_term_ln_inv_opt' post x (i + 1)      
 
+    | Tm_Match _ ->
+      admit ()
+
     | Tm_Bind { binder; head; body } ->
       open_term_ln_inv' binder.binder_ty x i;
       open_term_ln_inv_st' head x i;
@@ -611,6 +654,9 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
       close_st_term_ln' then_ x i;    
       close_st_term_ln' else_ x i;          
       close_term_ln_opt' post x (i + 1)      
+
+    | Tm_Match _ ->
+      admit ()
 
     | Tm_Bind { binder; head; body } ->
       close_term_ln' binder.binder_ty x i;
@@ -841,6 +887,10 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       tot_typing_ln tb;
       st_typing_ln d1;
       st_typing_ln d2
+
+    | T_Match _ _ _ sc _ scd c _ _ _ ->
+      tot_typing_ln scd;
+      admit ()
 
     | T_Frame _ _ _ _ df dc ->
       tot_typing_ln df;

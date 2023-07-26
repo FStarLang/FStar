@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_d74b6a7f77ebc0b8edb3fd222db8b4ac"
       ],
       0,
-      "7348db2a21180eaf3d65fbeee77c6af1"
+      "edb22972911fa9115f4fac78a6ae7783"
     ],
     [
       "Steel.ST.C.Types.Array.mk_base_array_index",
@@ -30,7 +30,7 @@
         "typing_FStar.SizeT.t"
       ],
       0,
-      "4b5cacac6c4b367358e4af2017614cad"
+      "4db485e8b9bd79d403fe61ee4309b4f9"
     ],
     [
       "Steel.ST.C.Types.Array.mk_base_array_inj",
@@ -59,7 +59,7 @@
         "typing_FStar.SizeT.v"
       ],
       0,
-      "d0a5ba1d47bb0d9241105959f1fb8139"
+      "b867ab186a141f08c5366f33720120d3"
     ],
     [
       "Steel.ST.C.Types.Array.base_array_mk_fraction",
@@ -68,7 +68,7 @@
       1,
       [ "@query", "lemma_Steel.ST.C.Types.Array.base_array_fractionable" ],
       0,
-      "1bf0df5a19af10bbe18a5510f71b8cc3"
+      "5831d4f39602d8c13750b87d8acc1219"
     ],
     [
       "Steel.ST.C.Types.Array.has_array_ref_base",
@@ -88,7 +88,7 @@
         "typing_Steel.ST.C.Types.Array.g_array_ptr_is_null"
       ],
       0,
-      "d747bcf7e8a2a58275249be699403813"
+      "9aaedf47d609b13780b12f8768af5e17"
     ],
     [
       "Steel.ST.C.Types.Array.has_array_ref_base_inj",
@@ -108,7 +108,7 @@
         "typing_Steel.ST.C.Types.Array.g_array_ptr_is_null"
       ],
       0,
-      "6800e66bad9194ac430e76659bb60de1"
+      "0ab6e193e668aef329ebe9f987e0da8b"
     ],
     [
       "Steel.ST.C.Types.Array.array_ref_base_offset_inj",
@@ -130,7 +130,7 @@
         "typing_Steel.ST.C.Types.Array.g_array_ptr_is_null"
       ],
       0,
-      "8623d7acb5694e3149d4db2e8a8a24f7"
+      "a981b3d783172f77817dc73f90cc9229"
     ],
     [
       "Steel.ST.C.Types.Array.array_len_of",
@@ -142,7 +142,7 @@
         "projection_inverse_Prims.Mkdtuple2__1"
       ],
       0,
-      "09e2a78c56133dd99bd988660a4591fb"
+      "d3eaeb69e29e10807347dbb14ed6411c"
     ],
     [
       "Steel.ST.C.Types.Array.array_ref_of",
@@ -156,7 +156,7 @@
         "refinement_interpretation_Tm_refine_7b1ce5c8fc8fa090c8019f184ba76e79"
       ],
       0,
-      "38ce42467c05de1a4f16c22a8bd353de"
+      "abc7cbf7c1a680adf96d737b0f1b86e9"
     ],
     [
       "Steel.ST.C.Types.Array.mk_array",
@@ -172,7 +172,7 @@
         "refinement_interpretation_Tm_refine_3ddb24cc6da0f897967004efe0d480e6"
       ],
       0,
-      "b96adca630469d91ece8d2c91176bb7c"
+      "b8769b68b3b3ea73428b9fd07149ced7"
     ],
     [
       "Steel.ST.C.Types.Array.array_pts_to_or_null",
@@ -181,7 +181,7 @@
       1,
       [ "@MaxIFuel_assumption", "@query", "bool_inversion" ],
       0,
-      "3e7adfb177c0529c528df33bcc39aa12"
+      "062db5cd56d2d321d46c12099de04c9f"
     ],
     [
       "Steel.ST.C.Types.Array.array_is_null",
@@ -200,7 +200,7 @@
         "projection_inverse_Prims.Mkdtuple2__1"
       ],
       0,
-      "efc68b7f5d4ad97d65be63332dc03364"
+      "bad6bf6c94f7c727ee1eb18960cd80bc"
     ],
     [
       "Steel.ST.C.Types.Array.has_array_of_base",
@@ -218,7 +218,7 @@
         "refinement_interpretation_Tm_refine_b6a4c67928abc73ff244dc6d1b34a148"
       ],
       0,
-      "ba068bed1b6c972e9b13adb537d77204"
+      "a13f58f444c6dee1805b6da180cd25a3"
     ],
     [
       "Steel.ST.C.Types.Array.has_array_of_base_inj",
@@ -244,7 +244,7 @@
         "typing_FStar.SizeT.t"
       ],
       0,
-      "44149e47f3d7a84fbbb0ca8eb0d3a070"
+      "dd72dbe397fa5160344eb74be02e034e"
     ],
     [
       "Steel.ST.C.Types.Array.seq_of_base_array",
@@ -263,7 +263,7 @@
         "refinement_interpretation_Tm_refine_c1424615841f28cac7fc34e92b7ff33c"
       ],
       0,
-      "68664417abf3e43e07f3a3e7e1342f92"
+      "2a827f5ba9d99443569abf5c60747801"
     ],
     [
       "Steel.ST.C.Types.Array.array_of_base",
@@ -293,7 +293,7 @@
         "typing_Steel.ST.C.Types.Array.array"
       ],
       0,
-      "4815e9dd1247d568616598c59372abf3"
+      "cb926c1e1385b78914f110e12cdaef13"
     ],
     [
       "Steel.ST.C.Types.Array.freeable_or_null_array",
@@ -302,7 +302,7 @@
       1,
       [ "@MaxIFuel_assumption", "@query", "bool_inversion" ],
       0,
-      "63faa0b0cfaede2435548f5538265a4d"
+      "14d329b0337b1260951cf0e729ae7077"
     ],
     [
       "Steel.ST.C.Types.Array.array_alloc",
@@ -336,7 +336,7 @@
         "typing_Steel.ST.C.Types.Base.uninitialized"
       ],
       0,
-      "a3b68535c5831bdb2e4d0e0a46b0d710"
+      "a7bcedddce45e4c12d0f1d1ebfe199f3"
     ],
     [
       "Steel.ST.C.Types.Array.full_seq_seq_of_base_array",
@@ -376,7 +376,7 @@
         "typing_Tm_abs_42800ca5de0058f9013e44b07edaeaa0"
       ],
       0,
-      "f4738d99d5a048ecae037869a2956c6a"
+      "d6aa453e3b23a8bfcdd1cfaca1158080"
     ],
     [
       "Steel.ST.C.Types.Array.array_ref_free",
@@ -393,7 +393,7 @@
         "refinement_interpretation_Tm_refine_3ddb24cc6da0f897967004efe0d480e6"
       ],
       0,
-      "3c6eba45621efa731893ae3a52579d07"
+      "eac58076c4c9f3d64f34924dea1b4cbd"
     ],
     [
       "Steel.ST.C.Types.Array.array_free",
@@ -413,7 +413,7 @@
         "refinement_interpretation_Tm_refine_7b1ce5c8fc8fa090c8019f184ba76e79"
       ],
       0,
-      "e8f6e188a31785db49c378e82d393571"
+      "9dccad6bbdc612352080a6bf04159749"
     ],
     [
       "Steel.ST.C.Types.Array.has_array_cell_has_base_array_cell",
@@ -437,7 +437,7 @@
         "typing_Steel.ST.C.Types.Array.g_array_ptr_is_null"
       ],
       0,
-      "e09fcd59b82a670f6a677440a764b3b8"
+      "3d2d42a9125a7f5c62407292cfc7bda1"
     ],
     [
       "Steel.ST.C.Types.Array.has_base_array_cell_has_array_cell",
@@ -461,7 +461,7 @@
         "typing_Steel.ST.C.Types.Array.g_array_ptr_is_null"
       ],
       0,
-      "b474e4c0e9e55b13e833ba90c2c2167b"
+      "2a0c30bbe3b08a54d5d53c2458706ad4"
     ],
     [
       "Steel.ST.C.Types.Array.ghost_array_cell_focus",
@@ -473,7 +473,7 @@
         "refinement_interpretation_Tm_refine_0c484fdd39bb54a8aef282a71371e789"
       ],
       0,
-      "ce8ce67f9d10e1c8e3128f7e909e4ca0"
+      "6ccc8387be3b3838e2d5d8e5bca9bb28"
     ],
     [
       "Steel.ST.C.Types.Array.ghost_array_cell",
@@ -485,7 +485,7 @@
         "refinement_interpretation_Tm_refine_5b00774d7c86e371f6974669f81e96ab"
       ],
       0,
-      "899522b17fd725202d2dbc0fd60618a6"
+      "36b75ccaecebb420049dd7430bb2e338"
     ],
     [
       "Steel.ST.C.Types.Array.array_ref_cell",
@@ -503,7 +503,7 @@
         "refinement_interpretation_Tm_refine_81f291e245be100b466d3b7aa144e85b"
       ],
       0,
-      "ca822669fd8ebfde587fe5e05ad20882"
+      "9df679e72ce2443e103c916b6ddd1c83"
     ],
     [
       "Steel.ST.C.Types.Array.array_cell",
@@ -515,7 +515,7 @@
         "refinement_interpretation_Tm_refine_8181a35c1d5583df779156248445e55d"
       ],
       0,
-      "dc814cfd422d1c4847a8bb8c761cc47e"
+      "979addb8c674fa6ed4d8b818672cf5fa"
     ],
     [
       "Steel.ST.C.Types.Array.array_cell",
@@ -527,7 +527,7 @@
         "refinement_interpretation_Tm_refine_8181a35c1d5583df779156248445e55d"
       ],
       0,
-      "dc814cfd422d1c4847a8bb8c761cc47e"
+      "bfa086ddaf94932c31a876e6690fa228"
     ],
     [
       "Steel.ST.C.Types.Array.array_cell",
@@ -539,7 +539,7 @@
         "refinement_interpretation_Tm_refine_8181a35c1d5583df779156248445e55d"
       ],
       0,
-      "faa1f478e41cf56e563c902c1146096c"
+      "7ce6db84780f513a228e6267b8142f74"
     ],
     [
       "Steel.ST.C.Types.Array.array_cell",
@@ -551,7 +551,7 @@
         "refinement_interpretation_Tm_refine_8181a35c1d5583df779156248445e55d"
       ],
       0,
-      "faa1f478e41cf56e563c902c1146096c"
+      "7ce6db84780f513a228e6267b8142f74"
     ],
     [
       "Steel.ST.C.Types.Array.array_cell",
@@ -563,7 +563,7 @@
         "refinement_interpretation_Tm_refine_8181a35c1d5583df779156248445e55d"
       ],
       0,
-      "e336ea8f707777db4274bedc71805062"
+      "b560cbe259cd00aa58edaac0185db524"
     ],
     [
       "Steel.ST.C.Types.Array.array_cell",
@@ -575,7 +575,7 @@
         "refinement_interpretation_Tm_refine_8181a35c1d5583df779156248445e55d"
       ],
       0,
-      "e336ea8f707777db4274bedc71805062"
+      "b560cbe259cd00aa58edaac0185db524"
     ],
     [
       "Steel.ST.C.Types.Array.array_cell",
@@ -597,7 +597,7 @@
         "refinement_interpretation_Tm_refine_8181a35c1d5583df779156248445e55d"
       ],
       0,
-      "314f1c339ca034b4103ce9d2661098c3"
+      "5973086f767548dadea267e78c505801"
     ],
     [
       "Steel.ST.C.Types.Array.unarray_cell",
@@ -609,7 +609,7 @@
         "refinement_interpretation_Tm_refine_0c484fdd39bb54a8aef282a71371e789"
       ],
       0,
-      "e3ff07ef9da36806e6f97124ac966609"
+      "03a2682907f3a67ee327643a1524c07b"
     ],
     [
       "Steel.ST.C.Types.Array.array_ref_shift",
@@ -629,7 +629,7 @@
         "typing_Steel.ST.C.Types.Array.g_array_ptr_is_null"
       ],
       0,
-      "f353d5cdc3211a3eded823bb942b75cb"
+      "01a56a4bb8e0636b67ef174e9fe7d0df"
     ],
     [
       "Steel.ST.C.Types.Array.array_ref_shift_zero",
@@ -645,7 +645,7 @@
         "typing_Steel.ST.C.Types.Array.array_ref_offset"
       ],
       0,
-      "5b171a91a12c2a6a3b1509cfa384975a"
+      "f483a35bb8e52d101a9b689303f85657"
     ],
     [
       "Steel.ST.C.Types.Array.array_ref_shift_assoc",
@@ -668,7 +668,7 @@
         "typing_Steel.ST.C.Types.Array.array_ref_offset"
       ],
       0,
-      "dff5e4492ecfe7741410218236792afe"
+      "8ffb0b3a7be62a2752984bce10d5a5bc"
     ],
     [
       "Steel.ST.C.Types.Array.array_split_l",
@@ -694,7 +694,7 @@
         "typing_Steel.ST.C.Types.Array.array_ref_offset"
       ],
       0,
-      "2ffd5b0b2a455610760228cb85434f9b"
+      "58648d45e4424a13d65c3c37a5fc18af"
     ],
     [
       "Steel.ST.C.Types.Array.array_split_r",
@@ -721,11 +721,13 @@
         "refinement_interpretation_Tm_refine_7345e45a081c530b535520410af62181",
         "refinement_interpretation_Tm_refine_7b1ce5c8fc8fa090c8019f184ba76e79",
         "refinement_interpretation_Tm_refine_7df43cb9feb536df62477b7b30ce1682",
+        "refinement_interpretation_Tm_refine_da1f66110703d25999037bf1f6421850",
         "typing_FStar.SizeT.add", "typing_FStar.SizeT.v",
+        "typing_Steel.ST.C.Types.Array.array_ref_base_size",
         "typing_Steel.ST.C.Types.Array.array_ref_offset"
       ],
       0,
-      "67a8e5033f54211cb64037f98621605b"
+      "5318247502eaa48b42d802dda44f1f6b"
     ],
     [
       "Steel.ST.C.Types.Array.ghost_array_split",
@@ -740,7 +742,7 @@
         "refinement_interpretation_Tm_refine_937caa657545e8274db2079e1e9283bb"
       ],
       0,
-      "d55e154e972ef612554169517129e8a6"
+      "15b6ade15f0199ce21fdaa270cddac39"
     ],
     [
       "Steel.ST.C.Types.Array.array_ref_split_post",
@@ -754,7 +756,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "b143788aaf93f05264566e600e069700"
+      "f6df0660fc7a34d0ebf1fffdbd38446c"
     ],
     [
       "Steel.ST.C.Types.Array.array_ref_split",
@@ -770,7 +772,7 @@
         "refinement_interpretation_Tm_refine_0cdf5bc6a077874e3af36cf15b3b711d"
       ],
       0,
-      "a307865cf0a67b40f08512badee97910"
+      "9eef66e0d42ba52ffdce5cf31c203de5"
     ],
     [
       "Steel.ST.C.Types.Array.array_split",
@@ -779,7 +781,7 @@
       1,
       [ "@query", "equation_Steel.ST.C.Types.Array.array_length" ],
       0,
-      "134dfcdf308a6652a82b14864e7b84cb"
+      "927e308a99ac7e3ef24085a55498960f"
     ],
     [
       "Steel.ST.C.Types.Array.array_split",
@@ -788,7 +790,7 @@
       1,
       [ "@query", "equation_Steel.ST.C.Types.Array.array_length" ],
       0,
-      "134dfcdf308a6652a82b14864e7b84cb"
+      "cb7f0572560d40b286a3468b39bfbc31"
     ],
     [
       "Steel.ST.C.Types.Array.array_split",
@@ -797,7 +799,7 @@
       1,
       [ "@query", "equation_Steel.ST.C.Types.Array.array_length" ],
       0,
-      "6b863557b04aa701a75cef7edff152e0"
+      "7098fc38aee532a45201080264b52b30"
     ],
     [
       "Steel.ST.C.Types.Array.array_split",
@@ -806,7 +808,7 @@
       1,
       [ "@query", "equation_Steel.ST.C.Types.Array.array_length" ],
       0,
-      "6b863557b04aa701a75cef7edff152e0"
+      "7098fc38aee532a45201080264b52b30"
     ],
     [
       "Steel.ST.C.Types.Array.array_split",
@@ -815,7 +817,7 @@
       1,
       [ "@query", "equation_Steel.ST.C.Types.Array.array_length" ],
       0,
-      "5b0bc9e3a6fdf345145a5c25f0851bad"
+      "bb3a771977022793b275d82a66cb6efc"
     ],
     [
       "Steel.ST.C.Types.Array.array_split",
@@ -824,7 +826,7 @@
       1,
       [ "@query", "equation_Steel.ST.C.Types.Array.array_length" ],
       0,
-      "5b0bc9e3a6fdf345145a5c25f0851bad"
+      "bb3a771977022793b275d82a66cb6efc"
     ],
     [
       "Steel.ST.C.Types.Array.array_split",
@@ -833,7 +835,7 @@
       1,
       [ "@query", "equation_Steel.ST.C.Types.Array.array_length" ],
       0,
-      "ef3f8f051a8db086e5cf61b2da1651b9"
+      "ccb30f10108ca7c77d162c12e39ff8a9"
     ],
     [
       "Steel.ST.C.Types.Array.array_split",
@@ -842,7 +844,7 @@
       1,
       [ "@query", "equation_Steel.ST.C.Types.Array.array_length" ],
       0,
-      "ef3f8f051a8db086e5cf61b2da1651b9"
+      "ccb30f10108ca7c77d162c12e39ff8a9"
     ],
     [
       "Steel.ST.C.Types.Array.array_split",
@@ -851,7 +853,7 @@
       1,
       [ "@query", "equation_Steel.ST.C.Types.Array.array_length" ],
       0,
-      "668308b5e98eff91acf495234e5af3f7"
+      "e11ca925224d99638b987eb691e3141e"
     ],
     [
       "Steel.ST.C.Types.Array.array_split",
@@ -860,7 +862,7 @@
       1,
       [ "@query", "equation_Steel.ST.C.Types.Array.array_length" ],
       0,
-      "668308b5e98eff91acf495234e5af3f7"
+      "e11ca925224d99638b987eb691e3141e"
     ],
     [
       "Steel.ST.C.Types.Array.array_split",
@@ -869,7 +871,7 @@
       1,
       [ "@query", "equation_Steel.ST.C.Types.Array.array_length" ],
       0,
-      "8a1bc7137c88673cbbc74eccdefdd61e"
+      "13b504620761ea7e773accc1805263e7"
     ],
     [
       "Steel.ST.C.Types.Array.array_split",
@@ -878,7 +880,7 @@
       1,
       [ "@query", "equation_Steel.ST.C.Types.Array.array_length" ],
       0,
-      "8a1bc7137c88673cbbc74eccdefdd61e"
+      "13b504620761ea7e773accc1805263e7"
     ],
     [
       "Steel.ST.C.Types.Array.array_split",
@@ -921,7 +923,7 @@
         "typing_Steel.ST.C.Types.Array.array_split_r"
       ],
       0,
-      "8124fefc91cb753900f5d74d08876743"
+      "5f7f3168ec13da8251bae3d7a0c84014"
     ],
     [
       "Steel.ST.C.Types.Array.array_join",
@@ -930,7 +932,7 @@
       1,
       [ "@query" ],
       0,
-      "d77ee13aae2954d4027313a19ec84a38"
+      "cf5ef49933b79820ddcc00d211f4faea"
     ],
     [
       "Steel.ST.C.Types.Array.mk_fraction_seq",
@@ -943,7 +945,7 @@
         "refinement_interpretation_Tm_refine_d83f8da8ef6c1cb9f71d1465c1bb1c55"
       ],
       0,
-      "14fa710d3bce83add179bbfd803c853c"
+      "9a5ecb570efa8d9d846904364fd0ffd6"
     ],
     [
       "Steel.ST.C.Types.Array.mk_fraction_seq_full",
@@ -972,7 +974,7 @@
         "typing_Tm_abs_39a5c2e35ce78bab67e740bc8229353c"
       ],
       0,
-      "8222dbdd86ec969ad9b9598eff6c82a9"
+      "77b69d0e1912cdc6e8f8721f02c953bb"
     ],
     [
       "Steel.ST.C.Types.Array.mk_fraction_seq_split_gen",
@@ -984,7 +986,7 @@
         "refinement_interpretation_Tm_refine_4f89c2c4471071044571ada7ba65bc7e"
       ],
       0,
-      "165ba456e571fe196ad24f163f33012a"
+      "28bacd4bf67ef9634c15f646c7371105"
     ],
     [
       "Steel.ST.C.Types.Array.mk_fraction_seq_split",
@@ -1001,7 +1003,7 @@
         "typing_FStar.Seq.Base.seq"
       ],
       0,
-      "aa7f899bab56270b81e22b8ee0221c98"
+      "efaa9e09023f3cb0f144934a727e1898"
     ],
     [
       "Steel.ST.C.Types.Array.mk_fraction_seq_join",
@@ -1013,7 +1015,7 @@
         "refinement_interpretation_Tm_refine_4f89c2c4471071044571ada7ba65bc7e"
       ],
       0,
-      "4098af6ebdc8767396b4633e4506aa6b"
+      "f60694093762287eeaf372f8b66225a2"
     ],
     [
       "Steel.ST.C.Types.Array.array_fractional_permissions_theorem",
@@ -1025,7 +1027,7 @@
         "refinement_interpretation_Tm_refine_4f89c2c4471071044571ada7ba65bc7e"
       ],
       0,
-      "bf410fce363c4293adf7d8ef947c68d6"
+      "bc602863f942bde587647523c2640b04"
     ],
     [
       "Steel.ST.C.Types.Array.fractionable_seq_seq_of_base_array",
@@ -1066,7 +1068,7 @@
         "typing_Tm_abs_42800ca5de0058f9013e44b07edaeaa0"
       ],
       0,
-      "b28512561b6370da28ae448d7cca7429"
+      "30e7f683ae93e3b44a7f574ec9d2cb68"
     ],
     [
       "Steel.ST.C.Types.Array.array_blit_post",
@@ -1084,7 +1086,7 @@
         "typing_FStar.SizeT.v"
       ],
       0,
-      "a3a66e3fefdaed672870a15d8480cab4"
+      "1832759f0b5911a66867d40dca128ed1"
     ],
     [
       "Steel.ST.C.Types.Array.array_blit_ptr",
@@ -1096,7 +1098,7 @@
         "refinement_interpretation_Tm_refine_1debbf990a0c808e676da02d31cda4c3"
       ],
       0,
-      "6c2d9fa858b11add46a110793de9ad21"
+      "14e4dec66f851ec6db9c57627f927ed3"
     ],
     [
       "Steel.ST.C.Types.Array.array_blit",
@@ -1119,7 +1121,7 @@
         "refinement_interpretation_Tm_refine_7b1ce5c8fc8fa090c8019f184ba76e79"
       ],
       0,
-      "fe41d03e4ff2a2cf74090ec4c1708dc4"
+      "a4668a611855175bbc97760a4d96263b"
     ],
     [
       "Steel.ST.C.Types.Array.array_memcpy",
@@ -1149,7 +1151,7 @@
         "typing_FStar.SizeT.v", "typing_Steel.ST.C.Types.Array.array_length"
       ],
       0,
-      "15bdc0f173adba44f5ec3af79b6aadf7"
+      "5e8813177b11bceb6789927e3316ff30"
     ]
   ]
 ]

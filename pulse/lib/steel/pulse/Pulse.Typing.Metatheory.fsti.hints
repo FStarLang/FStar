@@ -1,5 +1,5 @@
 [
-  "≤\b∑~^\u007fe≠DÂ¬ˇ±Æ÷.",
+  "ø-ø>Vï“¢)Cê’èƒ#ê",
   [
     [
       "Pulse.Typing.Metatheory.comp_typing_u",
@@ -19,7 +19,7 @@
         "refinement_interpretation_Tm_refine_78cf9fabb706bab7e54de904b7db9d2a"
       ],
       0,
-      "9efcf0f6735af97c38f29032a89ba2ec"
+      "fc14b04a5c6ad7377456f4cd2ab16795"
     ],
     [
       "Pulse.Typing.Metatheory.comp_typing_inversion",
@@ -39,37 +39,7 @@
         "refinement_interpretation_Tm_refine_78cf9fabb706bab7e54de904b7db9d2a"
       ],
       0,
-      "042c555ea4fb428f88f7cd49eb3a77e2"
-    ],
-    [
-      "Pulse.Typing.Metatheory.fresh_wrt",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.nat", "equation_Pulse.Syntax.Base.var",
-        "function_token_typing_Prims.int",
-        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0,
-      "cdeabd0651ae91cfa5cfc9a2479bcfb0"
-    ],
-    [
-      "Pulse.Typing.Metatheory.fresh_wrt",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.nat", "equation_Pulse.Syntax.Base.var",
-        "function_token_typing_Prims.int",
-        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0,
-      "1b8a9c64f28c104b22e2b643229a394e"
+      "5ab99c4ac0af08422d88aaef00843707"
     ],
     [
       "Pulse.Typing.Metatheory.st_comp_typing_inversion_cofinite",
@@ -83,16 +53,16 @@
         "equation_FStar.Reflection.V2.Data.var", "equation_Prims.nat",
         "equation_Pulse.Syntax.Base.typ", "equation_Pulse.Syntax.Base.var",
         "equation_Pulse.Typing.Env.dom", "equation_Pulse.Typing.Env.lookup",
-        "equation_Pulse.Typing.Metatheory.fresh_wrt",
+        "equation_Pulse.Typing.fresh_wrt",
         "kinding_Pulse.Syntax.Base.term@tok",
         "lemma_FStar.Map.lemma_ContainsDom",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_df4c639aa9a827ee3d5d909cba8bbb01",
+        "refinement_interpretation_Tm_refine_c66fdd97364ac13701a9ea2a206028a8",
         "typing_FStar.Reflection.V2.Data.var", "typing_FStar.Set.mem",
         "typing_Pulse.Typing.Env.as_map", "typing_Pulse.Typing.Env.dom"
       ],
       0,
-      "2fe7ed8584705506e0a2ce17ca90dd1a"
+      "5d5e7594596379280b2bd365dded2d48"
     ],
     [
       "Pulse.Typing.Metatheory.st_comp_typing_inversion",
@@ -106,16 +76,16 @@
         "equation_FStar.Reflection.V2.Data.var", "equation_Prims.nat",
         "equation_Pulse.Syntax.Base.typ", "equation_Pulse.Syntax.Base.var",
         "equation_Pulse.Typing.Env.dom", "equation_Pulse.Typing.Env.lookup",
-        "equation_Pulse.Typing.Metatheory.fresh_wrt",
+        "equation_Pulse.Typing.fresh_wrt",
         "kinding_Pulse.Syntax.Base.term@tok",
         "lemma_FStar.Map.lemma_ContainsDom",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_df4c639aa9a827ee3d5d909cba8bbb01",
+        "refinement_interpretation_Tm_refine_c66fdd97364ac13701a9ea2a206028a8",
         "typing_FStar.Reflection.V2.Data.var", "typing_FStar.Set.mem",
         "typing_Pulse.Typing.Env.as_map", "typing_Pulse.Typing.Env.dom"
       ],
       0,
-      "6d2d133b07c5f93b7188faed66e393cf"
+      "b27b4126daebb5ea01effba7aa6912b8"
     ],
     [
       "Pulse.Typing.Metatheory.tm_exists_inversion",
@@ -129,16 +99,16 @@
         "equation_FStar.Reflection.V2.Data.var", "equation_Prims.nat",
         "equation_Pulse.Syntax.Base.typ", "equation_Pulse.Syntax.Base.var",
         "equation_Pulse.Typing.Env.dom", "equation_Pulse.Typing.Env.lookup",
-        "equation_Pulse.Typing.Metatheory.fresh_wrt",
+        "equation_Pulse.Typing.fresh_wrt",
         "kinding_Pulse.Syntax.Base.term@tok",
         "lemma_FStar.Map.lemma_ContainsDom",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_f89852bbf8989ad7c1e4dbaeb25e36e0",
+        "refinement_interpretation_Tm_refine_5decb6aa26ec21455bdbf1ef967a5856",
         "typing_FStar.Reflection.V2.Data.var", "typing_FStar.Set.mem",
         "typing_Pulse.Typing.Env.as_map", "typing_Pulse.Typing.Env.dom"
       ],
       0,
-      "2bcc36fa93897f76fa75f75f02cbefe2"
+      "788dc67acbbd2c8f53e86a069bcda036"
     ],
     [
       "Pulse.Typing.Metatheory.tot_typing_weakening",
@@ -153,19 +123,18 @@
         "equation_Prims.nat", "equation_Pulse.Syntax.Base.typ",
         "equation_Pulse.Syntax.Base.var", "equation_Pulse.Typing.Env.dom",
         "equation_Pulse.Typing.Env.lookup",
-        "equation_Pulse.Typing.Metatheory.fresh_wrt",
-        "function_token_typing_Prims.int",
+        "equation_Pulse.Typing.fresh_wrt", "function_token_typing_Prims.int",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "kinding_Pulse.Syntax.Base.term@tok",
         "lemma_FStar.Map.lemma_ContainsDom",
         "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_356d7afdfe093fa68350ffe4fb20df1e",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_f8102de3d07173f2476af6ab14722b53",
         "typing_FStar.Reflection.V2.Data.var", "typing_FStar.Set.mem",
         "typing_Pulse.Typing.Env.as_map", "typing_Pulse.Typing.Env.dom"
       ],
       0,
-      "48bfa3a3a98b649740a4885e8245742a"
+      "19499076a776cd1a3f0486bc3b4caaad"
     ],
     [
       "Pulse.Typing.Metatheory.pure_typing_inversion",
@@ -193,7 +162,7 @@
         "typing_Pulse.Syntax.Base.tm_vprop"
       ],
       0,
-      "175d588ebb5c18ad71b7138829c59257"
+      "7a4651690b38bb056f1d4ee211e2d617"
     ],
     [
       "Pulse.Typing.Metatheory.comp_st_with_post",
@@ -224,7 +193,7 @@
         "refinement_interpretation_Tm_refine_78cf9fabb706bab7e54de904b7db9d2a"
       ],
       0,
-      "3094d33b4541320d572b4405fb2b7a57"
+      "1754ba3f8776e76f6a61731c9df87731"
     ],
     [
       "Pulse.Typing.Metatheory.comp_st_with_pre",
@@ -246,70 +215,73 @@
         "refinement_interpretation_Tm_refine_78cf9fabb706bab7e54de904b7db9d2a"
       ],
       0,
-      "904bce665dfe1d74d5952311bae3223b"
+      "615dd9ff35c89df193f5c24479e37e21"
     ],
     [
-      "Pulse.Typing.Metatheory.vprop_equiv_x",
+      "Pulse.Typing.Metatheory.st_typing_weakening",
       1,
       2,
       1,
       [
         "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "constructor_distinct_FStar.Pervasives.Native.Some",
-        "disc_equation_FStar.Pervasives.Native.None",
-        "equation_FStar.Reflection.V2.Data.var", "equation_Prims.nat",
+        "equation_FStar.Reflection.V2.Data.var",
+        "equation_FStar.Set.disjoint", "equation_Prims.nat",
         "equation_Pulse.Syntax.Base.typ", "equation_Pulse.Syntax.Base.var",
-        "equation_Pulse.Typing.Env.dom", "equation_Pulse.Typing.Env.lookup",
-        "equation_Pulse.Typing.Metatheory.fresh_wrt",
-        "kinding_Pulse.Syntax.Base.term@tok",
+        "equation_Pulse.Typing.Env.disjoint",
+        "equation_Pulse.Typing.Env.dom",
+        "equation_Pulse.Typing.Metatheory.pairwise_disjoint",
+        "int_inversion", "kinding_Pulse.Syntax.Base.term@tok",
         "lemma_FStar.Map.lemma_ContainsDom",
+        "lemma_FStar.Map.lemma_InDomConcat",
+        "lemma_FStar.Set.lemma_equal_elim",
+        "lemma_FStar.Set.lemma_equal_intro", "lemma_FStar.Set.mem_empty",
+        "lemma_FStar.Set.mem_intersect",
+        "lemma_Pulse.Typing.Env.push_env_as_map",
+        "lemma_Pulse.Typing.Env.push_env_fstar_env",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_BarBar",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_f89852bbf8989ad7c1e4dbaeb25e36e0",
-        "typing_FStar.Reflection.V2.Data.var", "typing_FStar.Set.mem",
+        "refinement_interpretation_Tm_refine_478810302d3261f456fa9b0eb16ba8e8",
+        "refinement_interpretation_Tm_refine_530c8dba59115f16314c44e7c3c4f062",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "typing_FStar.Reflection.V2.Data.var", "typing_FStar.Set.empty",
+        "typing_FStar.Set.intersect", "typing_FStar.Set.mem",
         "typing_Pulse.Typing.Env.as_map", "typing_Pulse.Typing.Env.dom"
       ],
       0,
-      "82d50cafac97387b8678a3f30845a8e7"
+      "aa729e06fe17586a5769b39d653b69f7"
     ],
     [
-      "Pulse.Typing.Metatheory.st_typing_equiv_post",
+      "Pulse.Typing.Metatheory.veq_weakening",
       1,
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "disc_equation_Pulse.Syntax.Base.C_ST",
-        "disc_equation_Pulse.Syntax.Base.C_STAtomic",
-        "disc_equation_Pulse.Syntax.Base.C_STGhost",
-        "disc_equation_Pulse.Syntax.Base.C_Tot",
-        "equation_Pulse.Syntax.Base.comp_st",
-        "equation_Pulse.Syntax.Base.stateful_comp",
-        "fuel_guarded_inversion_Pulse.Syntax.Base.comp",
-        "primitive_Prims.op_BarBar", "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_78cf9fabb706bab7e54de904b7db9d2a"
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "equation_FStar.Reflection.V2.Data.var",
+        "equation_FStar.Set.disjoint", "equation_Prims.nat",
+        "equation_Pulse.Syntax.Base.typ", "equation_Pulse.Syntax.Base.var",
+        "equation_Pulse.Typing.Env.disjoint",
+        "equation_Pulse.Typing.Env.dom",
+        "equation_Pulse.Typing.Metatheory.pairwise_disjoint",
+        "int_inversion", "kinding_Pulse.Syntax.Base.term@tok",
+        "lemma_FStar.Map.lemma_ContainsDom",
+        "lemma_FStar.Map.lemma_InDomConcat",
+        "lemma_FStar.Set.lemma_equal_elim",
+        "lemma_FStar.Set.lemma_equal_intro", "lemma_FStar.Set.mem_empty",
+        "lemma_FStar.Set.mem_intersect",
+        "lemma_Pulse.Typing.Env.push_env_as_map",
+        "lemma_Pulse.Typing.Env.push_env_fstar_env",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_BarBar",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_478810302d3261f456fa9b0eb16ba8e8",
+        "refinement_interpretation_Tm_refine_530c8dba59115f16314c44e7c3c4f062",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "typing_FStar.Reflection.V2.Data.var", "typing_FStar.Set.empty",
+        "typing_FStar.Set.intersect", "typing_FStar.Set.mem",
+        "typing_Pulse.Typing.Env.as_map", "typing_Pulse.Typing.Env.dom"
       ],
       0,
-      "cea03465cb26fb81209d36c1536554b9"
-    ],
-    [
-      "Pulse.Typing.Metatheory.st_typing_equiv_pre",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "disc_equation_Pulse.Syntax.Base.C_ST",
-        "disc_equation_Pulse.Syntax.Base.C_STAtomic",
-        "disc_equation_Pulse.Syntax.Base.C_STGhost",
-        "disc_equation_Pulse.Syntax.Base.C_Tot",
-        "equation_Pulse.Syntax.Base.comp_st",
-        "equation_Pulse.Syntax.Base.stateful_comp",
-        "fuel_guarded_inversion_Pulse.Syntax.Base.comp",
-        "primitive_Prims.op_BarBar", "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_78cf9fabb706bab7e54de904b7db9d2a"
-      ],
-      0,
-      "bba6b104e795ed2bec44023df266f6aa"
+      "8122d56501f567eb12106c95b11f0be0"
     ],
     [
       "Pulse.Typing.Metatheory.singleton_env",
@@ -323,7 +295,7 @@
         "typing_FStar.Reflection.V2.Data.var"
       ],
       0,
-      "1f48783f055f393d04d78a5ff2115846"
+      "6f440ae7cc1d76b0dee82d84cbea23d1"
     ],
     [
       "Pulse.Typing.Metatheory.subst_env",
@@ -338,7 +310,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "e8d59a9481fa52c88bcba1b9b6d7dce9"
+      "3f34c911b195009d59bf0f5810a2dccb"
     ],
     [
       "Pulse.Typing.Metatheory.st_typing_subst",
@@ -376,7 +348,7 @@
         "typing_Pulse.Typing.Metatheory.singleton_env"
       ],
       0,
-      "faac155242d28285c77f37ac55d3d892"
+      "d4cbc07157d9009d5cb5518a0b788c9c"
     ],
     [
       "Pulse.Typing.Metatheory.st_typing_subst",
@@ -392,7 +364,61 @@
         "refinement_interpretation_Tm_refine_d0cbf185f53471ab94597d0f4191e07f"
       ],
       0,
-      "a317ae709d3f2cb4eb52be1476085cb5"
+      "81c54fd13c73cab83f75f9a4b30caa4a"
+    ],
+    [
+      "Pulse.Typing.Metatheory.vprop_equiv_subst",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "equation_FStar.Reflection.V2.Data.var",
+        "equation_FStar.Set.disjoint", "equation_Prims.nat",
+        "equation_Pulse.Syntax.Base.typ", "equation_Pulse.Syntax.Base.var",
+        "equation_Pulse.Typing.Env.disjoint",
+        "equation_Pulse.Typing.Env.dom",
+        "equation_Pulse.Typing.Metatheory.pairwise_disjoint",
+        "equation_Pulse.Typing.Metatheory.singleton_env",
+        "fuel_guarded_inversion_Pulse.Syntax.Base.term", "int_inversion",
+        "kinding_Pulse.Syntax.Base.term@tok",
+        "lemma_FStar.Map.lemma_ContainsDom",
+        "lemma_FStar.Map.lemma_InDomConcat",
+        "lemma_FStar.Set.lemma_equal_elim",
+        "lemma_FStar.Set.lemma_equal_intro", "lemma_FStar.Set.mem_empty",
+        "lemma_FStar.Set.mem_intersect", "lemma_Pulse.Typing.Env.mk_env_dom",
+        "lemma_Pulse.Typing.Env.push_env_as_map",
+        "lemma_Pulse.Typing.Env.push_env_fstar_env",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_BarBar",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_530c8dba59115f16314c44e7c3c4f062",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_5640c3b1e6dbb4f6537716200df8bd14",
+        "refinement_interpretation_Tm_refine_d0cbf185f53471ab94597d0f4191e07f",
+        "typing_FStar.Reflection.V2.Data.var", "typing_FStar.Set.empty",
+        "typing_FStar.Set.intersect", "typing_FStar.Set.mem",
+        "typing_Pulse.Typing.Env.as_map", "typing_Pulse.Typing.Env.dom",
+        "typing_Pulse.Typing.Env.fstar_env",
+        "typing_Pulse.Typing.Metatheory.singleton_env"
+      ],
+      0,
+      "ac9f94d892af32315a0badfae95d1855"
+    ],
+    [
+      "Pulse.Typing.Metatheory.vprop_equiv_subst",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "equation_Pulse.Syntax.Base.var",
+        "equation_Pulse.Typing.Env.disjoint",
+        "equation_Pulse.Typing.Metatheory.pairwise_disjoint",
+        "equation_Pulse.Typing.Metatheory.singleton_env",
+        "refinement_interpretation_Tm_refine_d0cbf185f53471ab94597d0f4191e07f"
+      ],
+      0,
+      "96e2864565aa229ecdac0907f982f991"
     ]
   ]
 ]
