@@ -63,7 +63,7 @@ let rec walk_get_idx #s #sz (repr : repr_t s sz) (idx:nat) (k:s.keyt) (off:nat{o
     walk_get_idx repr idx k (off + 1)
 
 // perform a walk from idx but do not return idx' where k was found
-let walk #s #sz (repr : repr_t s sz) (idx:nat) (k : s.keyt) (off:nat{off <= sz}) : option s.valt 
+let walk (#s : pht_sig) #sz (repr : repr_t s sz) (idx:nat) (k : s.keyt) (off:nat{off <= sz}) : option s.valt 
   = match walk_get_idx repr idx k off with 
     | Some (v,_) -> Some v
     | _ -> None
