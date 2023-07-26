@@ -60,14 +60,15 @@ let check
   in
 
   let (| cond, cond_comp, cond_typing |) =
+    let ppname = mk_ppname_no_range "_while_c" in
     let r = check
-      (push_context "while condition" cond.range g)
+      (push_context "check_while_condition" cond.range g)
       (comp_pre (comp_while_cond nm inv))
       cond_pre_typing
       (Some while_cond_hint)
-      (mk_ppname_no_range "_while_c")
+      ppname
       cond in
-    apply_checker_result_k r
+    apply_checker_result_k r ppname
   in
   if eq_comp cond_comp (comp_while_cond nm inv)
   then begin
@@ -79,14 +80,15 @@ let check
       post_hint_from_comp_typing while_body_comp_typing
     in
     let (| body, body_comp, body_typing |) =
+      let ppname = mk_ppname_no_range "_while_b" in
       let r = check
-        (push_context "while body" body.range g)
+        (push_context "check_while_body" body.range g)
         (comp_pre (comp_while_body nm inv))
         body_pre_typing
         (Some while_post_hint)
-        (mk_ppname_no_range "_while_b")
+        ppname
         body in
-      apply_checker_result_k r in
+      apply_checker_result_k r ppname in
     if eq_comp body_comp (comp_while_body nm inv)
     then
       let d = T_While g inv cond body inv_typing cond_typing body_typing in

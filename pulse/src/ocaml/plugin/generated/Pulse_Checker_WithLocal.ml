@@ -478,7 +478,7 @@ let (check :
                                                                     (Prims.of_int (63))
                                                                     (Prims.of_int (52))
                                                                     (Prims.of_int (66))
-                                                                    (Prims.of_int (34)))))
+                                                                    (Prims.of_int (55)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -504,7 +504,7 @@ let (check :
                                                                     (Prims.of_int (66))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (66))
-                                                                    (Prims.of_int (34)))))
+                                                                    (Prims.of_int (55)))))
                                                                     (Obj.magic
                                                                     (check1
                                                                     g_extended
@@ -523,7 +523,8 @@ let (check :
                                                                     g_extended
                                                                     body_pre
                                                                     body_post
-                                                                    r))
+                                                                    r
+                                                                    binder.Pulse_Syntax_Base.binder_ppname))
                                                                     uu___4)))
                                                                     (fun
                                                                     uu___4 ->

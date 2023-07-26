@@ -117,8 +117,12 @@ let check
         hyp 
         (mk_eq2 u0 tm_bool b eq_v)
     in
-    let r = check g_with_eq pre pre_typing (Some post_hint) (mk_ppname_no_range "_if_br") br in
-    let (| br, c, d |) = apply_checker_result_k r in
+    
+    let (| br, c, d |) =
+      let ppname = mk_ppname_no_range "_if_br" in
+      let r =
+        check g_with_eq pre pre_typing (Some post_hint) ppname br in
+      apply_checker_result_k r ppname in
 
     let br_name = if is_then then "then" else "else" in
 

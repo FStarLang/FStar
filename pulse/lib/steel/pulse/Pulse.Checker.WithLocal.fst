@@ -63,7 +63,7 @@ let check
         let (| opened_body, c_body, body_typing |) =
           let r =
             check g_extended body_pre body_pre_typing (Some body_post) binder.binder_ppname (open_st_term_nv body px) in
-          apply_checker_result_k r in
+          apply_checker_result_k r binder.binder_ppname in
         //
         // Checking post equality here to match the typing rule
         // 

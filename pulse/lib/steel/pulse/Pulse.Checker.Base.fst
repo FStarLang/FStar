@@ -351,7 +351,7 @@ let intro_comp_typing (g:env)
       then fail g None (Printf.sprintf "ill-typed inames term %s" (P.term_to_string i))
       else CT_STGhost _ _ _ (E i_typing) stc
 
-let return_in_ctxt (g:env) (y:var) (u:universe) (ty:term) (ctxt:vprop)
+let return_in_ctxt (g:env) (y:var) (y_ppname:ppname) (u:universe) (ty:term) (ctxt:vprop)
   (ty_typing:universe_of g ty u)
   (post_hint0:post_hint_opt g { Some? post_hint0 /\ checker_res_matches_post_hint g post_hint0 y ty ctxt})
 
@@ -367,12 +367,13 @@ let return_in_ctxt (g:env) (y:var) (u:universe) (ty:term) (ctxt:vprop)
     match post_hint.ctag_hint with
     | None -> STT
     | Some ctag -> ctag in
-  let d = T_Return g ctag false u ty (null_var y) post_hint.post x ty_typing
+  let y_tm = tm_var {nm_index=y;nm_ppname=y_ppname} in
+  let d = T_Return g ctag false u ty y_tm post_hint.post x ty_typing
     (magic ())  // that null_var y is well typed at ty in g, we know since lookup g y == Some ty
     (magic ())  // typing of (open post x) in (g, x) ... post_hint is well-typed, so should get
   in
-  let t = wr (Tm_Return {ctag=ctag;insert_eq=false;term=null_var y}) in
-  let c = comp_return ctag false u ty (null_var y) post_hint.post x in
+  let t = wr (Tm_Return {ctag=ctag;insert_eq=false;term=y_tm}) in
+  let c = comp_return ctag false u ty y_tm post_hint.post x in
   let d : st_typing g t c = d in
 
   let _ :squash (comp_pre c == ctxt /\ comp_post_matches_hint c (Some post_hint)) =
@@ -385,6 +386,7 @@ let return_in_ctxt (g:env) (y:var) (u:universe) (ty:term) (ctxt:vprop)
 
 let apply_checker_result_k (#g:env) (#ctxt:vprop) (#post_hint:post_hint_for_env g)
   (r:checker_result_t g ctxt (Some post_hint))
+  (res_ppname:ppname)
   : T.Tac (st_typing_in_ctxt g ctxt (Some post_hint)) =
 
   // TODO: FIXME add to checker result type?
@@ -393,7 +395,7 @@ let apply_checker_result_k (#g:env) (#ctxt:vprop) (#post_hint:post_hint_for_env 
   let (| u_ty_y, d_ty_y |) = Pulse.Checker.Pure.check_universe g1 ty_y in
 
   let d : st_typing_in_ctxt g1 pre' (Some post_hint) =
-    return_in_ctxt g1 y u_ty_y ty_y pre' d_ty_y (Some post_hint) in
+    return_in_ctxt g1 y res_ppname u_ty_y ty_y pre' d_ty_y (Some post_hint) in
 
   k (Some post_hint) d
 

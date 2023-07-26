@@ -126,6 +126,7 @@ val intro_comp_typing (g:env)
 
 val apply_checker_result_k (#g:env) (#ctxt:vprop) (#post_hint:post_hint_for_env g)
   (r:checker_result_t g ctxt (Some post_hint))
+  (res_ppname:ppname)
   : T.Tac (st_typing_in_ctxt g ctxt (Some post_hint))
 
 val checker_result_for_st_typing (#g:env) (#ctxt:vprop) (#post_hint:post_hint_opt g)

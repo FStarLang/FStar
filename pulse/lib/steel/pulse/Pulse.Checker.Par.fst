@@ -33,18 +33,20 @@ let check
   let postL_hint = intro_post_hint g None None postL in
 
   let (| eL, cL, eL_typing |) =
+    let ppname = mk_ppname_no_range "_par_l" in
     let r = 
-      check g preL (E preL_typing) (Some postL_hint) (mk_ppname_no_range "_par_l") eL in
-    apply_checker_result_k r in
+      check g preL (E preL_typing) (Some postL_hint) ppname eL in
+    apply_checker_result_k r ppname in
 
   if C_ST? cL
   then
     let cL_typing = MT.st_typing_correctness eL_typing in
     let postR_hint = intro_post_hint g None None postR in
     let (| eR, cR, eR_typing |) =
-      let r = 
-        check g preR (E preR_typing) (Some postR_hint) (mk_ppname_no_range "_par_r") eR  in
-      apply_checker_result_k r in
+      let ppname = mk_ppname_no_range "_par_r" in
+      let r =
+        check g preR (E preR_typing) (Some postR_hint) ppname eR  in
+      apply_checker_result_k r ppname in
 
     if C_ST? cR && eq_univ (comp_u cL) (comp_u cR)
     then

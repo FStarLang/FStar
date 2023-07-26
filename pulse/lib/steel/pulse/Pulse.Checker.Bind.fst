@@ -37,9 +37,11 @@ let check_bind
 
   let (| x, g1, _, (| ctxt', ctxt'_typing |), k1 |) =
     check g ctxt ctxt_typing None binder.binder_ppname e1 in
-  let r =
-    check g1 ctxt' ctxt'_typing post_hint (mk_ppname_no_range "_bind_c") (open_st_term_nv e2 (binder.binder_ppname, x)) in
-  let d : st_typing_in_ctxt g1 ctxt' post_hint = apply_checker_result_k #_ #_ #(Some?.v post_hint) r in
+  let d : st_typing_in_ctxt g1 ctxt' post_hint =
+    let ppname = mk_ppname_no_range "_bind_c" in
+    let r =
+      check g1 ctxt' ctxt'_typing post_hint ppname (open_st_term_nv e2 (binder.binder_ppname, x)) in
+      apply_checker_result_k #_ #_ #(Some?.v post_hint) r ppname in
   let d : st_typing_in_ctxt g ctxt post_hint = k1 post_hint d in
 
   checker_result_for_st_typing d res_ppname
@@ -78,7 +80,9 @@ let check_tot_bind
   let g' = push_binding g x (fst px) t1 in
   let pre_typing' : tot_typing g' pre tm_vprop =
     Metatheory.tot_typing_weakening_single pre_typing x t1 in
-  let r = check g' pre pre_typing' post_hint (mk_ppname_no_range "_tbind_c") (open_st_term_nv e2 px) in
-  let d = apply_checker_result_k #_ #_ #(Some?.v post_hint) r in
+  let d =
+    let ppname = mk_ppname_no_range "_tbind_c" in
+    let r = check g' pre pre_typing' post_hint ppname (open_st_term_nv e2 px) in
+    apply_checker_result_k #_ #_ #(Some?.v post_hint) r ppname in
   let d = k post_hint d in
   checker_result_for_st_typing d res_ppname
