@@ -1,5 +1,5 @@
 [
-  "кс╟э░i╓МПL▌╙г7S<",
+  "#▄XеяАМ&П;╡|▀√ое",
   [
     [
       "Pulse.Syntax.Printer.universe_to_string",
@@ -21,7 +21,7 @@
         "typing_FStar.Reflection.V2.Builtins.inspect_universe"
       ],
       0,
-      "991d302b48aa953c252fa41ad83bec5d"
+      "b3e8a17005de6ea1a903322553d56195"
     ],
     [
       "Pulse.Syntax.Printer.univ_to_string",
@@ -87,6 +87,22 @@
       "d31cbd3b9a8ba67870614a7275cab386"
     ],
     [
+      "Pulse.Syntax.Printer.ctag_to_string",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_Pulse.Syntax.Base.STT",
+        "disc_equation_Pulse.Syntax.Base.STT_Atomic",
+        "disc_equation_Pulse.Syntax.Base.STT_Ghost",
+        "fuel_guarded_inversion_Pulse.Syntax.Base.ctag",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "6b02eea266efcb18c1f9686c25282ee4"
+    ],
+    [
       "Pulse.Syntax.Printer.comp_to_string",
       1,
       2,
@@ -103,7 +119,7 @@
         "projection_inverse_BoxBool_proj_0", "string_typing"
       ],
       0,
-      "4e86e5572f49a3b4249a1c51cbfbb9eb"
+      "18d6125b244426a4c390f4caead02d00"
     ],
     [
       "Pulse.Syntax.Printer.term_opt_to_string",
@@ -168,7 +184,7 @@
         "typing_Pulse.Syntax.Base.__proj__Mkst_term__item__term"
       ],
       0,
-      "4ca75bd887f159e448eb534ed5a2fa4f"
+      "ef932732105363abeba79862760f758e"
     ],
     [
       "Pulse.Syntax.Printer.st_term_to_string'",
@@ -237,7 +253,7 @@
         "typing_Pulse.Syntax.Base.__proj__Mkst_term__item__term"
       ],
       0,
-      "283f63c2541e07cc88af14bb1692ce1b"
+      "30188921b5f3c08dc6e0483f51569678"
     ],
     [
       "Pulse.Syntax.Printer.tag_of_comp",
@@ -256,7 +272,7 @@
         "projection_inverse_BoxBool_proj_0", "string_typing"
       ],
       0,
-      "eb611b8acc7ce9175c13e5fc5bfba193"
+      "2ba54512348ce5944431965ee5c805e5"
     ],
     [
       "Pulse.Syntax.Printer.print_st_head",
@@ -349,7 +365,7 @@
         "typing_Pulse.Syntax.Base.__proj__Mkst_term__item__term"
       ],
       0,
-      "864f4df6ddb371b65bad0e215043ead6"
+      "56ff58477a5d8a2994dfef84c0d82708"
     ]
   ]
 ]

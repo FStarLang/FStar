@@ -1,5 +1,5 @@
 [
-  "$âõ~·Ñé†lk¨M”ðth",
+  "Ê±h\u001a\u000bŒm}ßú\u0016\t\u001e\u000fš(",
   [
     [
       "Pulse.Typing.Combinators.mk_bind",
@@ -24,7 +24,7 @@
         "refinement_interpretation_Tm_refine_c3db93a75dbfff93223215a880c044ae"
       ],
       0,
-      "2a5da2441936a621c69f47f9e813e9ec"
+      "333378589454f4d53a828ec06d1f8bf3"
     ],
     [
       "Pulse.Typing.Combinators.bind_res_and_post_typing",
@@ -77,15 +77,19 @@
       2,
       1,
       [
-        "@query", "disc_equation_Pulse.Syntax.Base.C_ST",
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_Pulse.Syntax.Base.C_ST",
         "disc_equation_Pulse.Syntax.Base.C_STAtomic",
         "disc_equation_Pulse.Syntax.Base.C_STGhost",
         "disc_equation_Pulse.Syntax.Base.C_Tot",
+        "equation_Pulse.Syntax.Base.comp_st",
         "equation_Pulse.Syntax.Base.stateful_comp",
-        "primitive_Prims.op_BarBar", "projection_inverse_BoxBool_proj_0"
+        "fuel_guarded_inversion_Pulse.Syntax.Base.comp",
+        "primitive_Prims.op_BarBar", "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_78cf9fabb706bab7e54de904b7db9d2a"
       ],
       0,
-      "15befd2c80c705e53e605fac0c3472c0"
+      "01f5330de3aa1eba607b0f3375183198"
     ],
     [
       "Pulse.Typing.Combinators.vprop_as_list",
@@ -102,7 +106,7 @@
         "typing_Pulse.Syntax.Base.__proj__Mkterm__item__t"
       ],
       0,
-      "73d387574dec4d8190390f1a9df89245"
+      "e5dd7a04680fae17436d8800ba00c44b"
     ],
     [
       "Pulse.Typing.Combinators.list_as_vprop",

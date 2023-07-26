@@ -31,7 +31,7 @@
         "subterm_ordering_Pulse.Typing.VE_Trans"
       ],
       0,
-      "e9eca75cdb4e48ce7620a8e942e1189f"
+      "859ea77a78966a2d869cc5154a4da92d"
     ],
     [
       "Pulse.Typing.Combinators.mk_bind",
@@ -406,10 +406,10 @@
         "typing_Pulse.Syntax.Base.stateful_comp",
         "typing_Pulse.Syntax.Naming.freevars",
         "typing_Pulse.Typing.Env.as_map", "typing_Pulse.Typing.Env.dom",
-        "typing_Pulse.Typing.Metatheory.st_comp_typing_inversion"
+        "typing_Pulse.Typing.Metatheory.Base.st_comp_typing_inversion"
       ],
       0,
-      "e662de8f78ca2b2a45ff0c40e42516c5"
+      "a03258934f96b7023f6e51010fe9e738"
     ],
     [
       "Pulse.Typing.Combinators.st_typing_in_ctxt",
@@ -417,15 +417,19 @@
       2,
       1,
       [
-        "@query", "disc_equation_Pulse.Syntax.Base.C_ST",
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_Pulse.Syntax.Base.C_ST",
         "disc_equation_Pulse.Syntax.Base.C_STAtomic",
         "disc_equation_Pulse.Syntax.Base.C_STGhost",
         "disc_equation_Pulse.Syntax.Base.C_Tot",
+        "equation_Pulse.Syntax.Base.comp_st",
         "equation_Pulse.Syntax.Base.stateful_comp",
-        "primitive_Prims.op_BarBar", "projection_inverse_BoxBool_proj_0"
+        "fuel_guarded_inversion_Pulse.Syntax.Base.comp",
+        "primitive_Prims.op_BarBar", "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_78cf9fabb706bab7e54de904b7db9d2a"
       ],
       0,
-      "c8c441c97729fd2009a746112a914d18"
+      "78ab3e65865f41ce01a26a7d98bcb368"
     ],
     [
       "Pulse.Typing.Combinators.vprop_as_list",
@@ -442,7 +446,7 @@
         "typing_Pulse.Syntax.Base.__proj__Mkterm__item__t"
       ],
       0,
-      "73d387574dec4d8190390f1a9df89245"
+      "e5dd7a04680fae17436d8800ba00c44b"
     ],
     [
       "Pulse.Typing.Combinators.list_as_vprop",

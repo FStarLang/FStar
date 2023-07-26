@@ -1,5 +1,5 @@
 [
-  "µtﬁn9≥U∆L\u001fZc\u001e◊\u000e>",
+  "jõR\u0005ºñèhÂˇ\u0004∂*€ìz",
   [
     [
       "Pulse.Checker.Abs.check_effect_annotation",
@@ -13,7 +13,7 @@
         "string_typing"
       ],
       0,
-      "35e023a0fc1fe95626112d8357759639"
+      "e3ed564cdb21aa89d1f311e001c5aa9a"
     ],
     [
       "Pulse.Checker.Abs.check_abs",
@@ -48,6 +48,7 @@
         "equation_FStar.Sealed.Inhabited.sealed",
         "equation_FStar.Sealed.Inhabited.sealed_", "equation_Prims.eqtype",
         "equation_Prims.nat", "equation_Pulse.Checker.Pure.push_context",
+        "equation_Pulse.Syntax.Base.comp_st",
         "equation_Pulse.Syntax.Base.index",
         "equation_Pulse.Syntax.Base.nvar",
         "equation_Pulse.Syntax.Base.ppname_default",
@@ -115,6 +116,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_6c182d6f9819de8b46a7a4d39f909d33",
         "refinement_interpretation_Tm_refine_6e8e5238aadfc712ef5fa6bc6310c384",
+        "refinement_interpretation_Tm_refine_78cf9fabb706bab7e54de904b7db9d2a",
         "refinement_interpretation_Tm_refine_7f3ad0958305f2921bfac06f466396ae",
         "refinement_interpretation_Tm_refine_8c22aa61a47c16d0229ef090894097c8",
         "refinement_interpretation_Tm_refine_ba488b4f12660f6fd23fa65ec4b4a4ff",
@@ -136,7 +138,7 @@
         "typing_Pulse.Typing.Env.push_binding"
       ],
       0,
-      "85aa26bf0c11aef9fef5b754dfc2e923"
+      "b392d6b9fe11f6e3b5eb6649a0773099"
     ]
   ]
 ]

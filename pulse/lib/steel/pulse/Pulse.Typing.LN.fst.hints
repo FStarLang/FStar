@@ -14,7 +14,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "547e6b155961ee65d5f8da49a686087c"
+      "912e2bb7027811a27b90403637906123"
     ],
     [
       "Pulse.Typing.LN.open_term_ln'",
@@ -1515,7 +1515,6 @@
         "@fuel_irrelevance_Pulse.Syntax.Naming.subst_st_term.fuel_instrumented",
         "@query",
         "FStar.Ghost_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
-        "FStar.List.Tot.Base_interpretation_Tm_arrow_28431dcf5044bcdd56dbe625f9e3df4e",
         "Pulse.Syntax.Base_pretyping_01e6cbbfeab3ba416b144f2c9223a2d4",
         "Pulse.Syntax.Naming_interpretation_Tm_arrow_c0d5e1c4dd22f0fc7f6b9bbecbfa2056",
         "binder_x_01e6cbbfeab3ba416b144f2c9223a2d4_0",
@@ -1588,13 +1587,12 @@
         "equation_with_fuel_Pulse.Syntax.Naming.subst_st_term.fuel_instrumented",
         "fuel_guarded_inversion_Pulse.Syntax.Base.st_term",
         "fuel_guarded_inversion_Pulse.Syntax.Base.term",
-        "function_token_typing_FStar.List.Tot.Base.map",
         "function_token_typing_Pulse.Syntax.Naming.shift_subst_elt",
         "int_inversion", "int_typing",
         "kinding_Pulse.Syntax.Base.binder@tok",
         "kinding_Pulse.Syntax.Naming.subst_elt@tok",
-        "lemma_Pulse.Typing.LN.ln_weakening", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Subtraction",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_Subtraction",
         "proj_equation_Pulse.Syntax.Base.Mkbinder_binder_ty",
         "proj_equation_Pulse.Syntax.Base.Mkst_term_term",
         "projection_inverse_BoxBool_proj_0",
@@ -1693,7 +1691,6 @@
         "token_correspondence_Pulse.Syntax.Naming.ln_st_.fuel_instrumented",
         "token_correspondence_Pulse.Syntax.Naming.shift_subst_elt",
         "token_correspondence_Pulse.Syntax.Naming.shift_subst_n",
-        "token_correspondence_Pulse.Syntax.Naming.subst_st_term.fuel_instrumented",
         "typing_FStar.List.Tot.Base.length",
         "typing_Pulse.Syntax.Base.__proj__Mkbinder__item__binder_ty",
         "typing_Pulse.Syntax.Base.__proj__Mkst_term__item__term",
@@ -2259,7 +2256,7 @@
         "typing_Pulse.Syntax.Naming.ln_c"
       ],
       0,
-      "c776aca6d4aa345ae3726140f58ae599"
+      "4eb44e8c7e316a3252fed613f6882e5a"
     ],
     [
       "Pulse.Typing.LN.tot_typing_ln",
@@ -3298,7 +3295,7 @@
         "unit_typing"
       ],
       0,
-      "b25712383aae006043569fc5afc7dc9d"
+      "1c197766e58cea202cbef0d52e621cc5"
     ]
   ]
 ]

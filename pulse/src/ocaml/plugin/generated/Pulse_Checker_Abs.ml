@@ -905,19 +905,21 @@ let rec (check_abs :
                                                                     (Prims.of_int (88))
                                                                     (Prims.of_int (15))
                                                                     (Prims.of_int (88))
-                                                                    (Prims.of_int (62)))))
+                                                                    (Prims.of_int (91)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
                                                                     (Prims.of_int (88))
-                                                                    (Prims.of_int (66))
+                                                                    (Prims.of_int (95))
                                                                     (Prims.of_int (100))
                                                                     (Prims.of_int (29)))))
                                                                     (Obj.magic
                                                                     (check g'
                                                                     pre_opened1
                                                                     () post
+                                                                    (Pulse_Syntax_Base.mk_ppname_no_range
+                                                                    "_fret")
                                                                     body_opened))
                                                                     (fun
                                                                     uu___7 ->
@@ -937,7 +939,7 @@ let rec (check_abs :
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
                                                                     (Prims.of_int (88))
-                                                                    (Prims.of_int (66))
+                                                                    (Prims.of_int (95))
                                                                     (Prims.of_int (100))
                                                                     (Prims.of_int (29)))))
                                                                     (Obj.magic

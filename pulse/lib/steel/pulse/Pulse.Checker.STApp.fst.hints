@@ -1,5 +1,5 @@
 [
-  "≥ΩÏä\u001b\u0001q˚y∞¥îc4lû",
+  "\nzØ¿\u0006/¿}è°ΩÕˆ∞Åg",
   [
     [
       "Pulse.Checker.STApp.canon_comp",
@@ -23,7 +23,7 @@
         "typing_Pulse.Readback.readback_comp"
       ],
       0,
-      "05f019acc0209bed8ef8e5d7d862f324"
+      "4f0ead0077f34ea40e1178b237bbd8e7"
     ],
     [
       "Pulse.Checker.STApp.canonicalize_st_typing",
@@ -85,7 +85,8 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ce036b6b736ef4e0bc3a9ff132a12aed", "bool_inversion",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "constructor_distinct_Pulse.Syntax.Base.Tm_STApp",
         "data_elim_Pulse.Syntax.Base.Mkbinder",
@@ -103,6 +104,7 @@
         "equation_Pulse.Typing.Env.disjoint",
         "equation_Pulse.Typing.Env.dom",
         "equation_Pulse.Typing.Env.extends_with",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
         "fuel_guarded_inversion_Pulse.Syntax.Base.binder",
         "fuel_guarded_inversion_Pulse.Syntax.Base.comp",
         "fuel_guarded_inversion_Pulse.Syntax.Base.term",
@@ -122,8 +124,6 @@
         "proj_equation_Pulse.Syntax.Base.Mkbinder_binder_ty",
         "proj_equation_Pulse.Syntax.Base.Mkst_term_term",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.Pervasives.Native.Some_a",
-        "projection_inverse_FStar.Pervasives.Native.Some_v",
         "projection_inverse_Pulse.Syntax.Base.Mkst_term_term",
         "projection_inverse_Pulse.Syntax.Base.Tm_STApp__0",
         "refinement_interpretation_Tm_refine_0e05a441736ee1a990510e8440d3b4d7",
@@ -133,16 +133,16 @@
         "refinement_interpretation_Tm_refine_484fe0819d1383a2c20d94ae027baa5f",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_de1d02ad66483edc481b70db20a6b9af",
-        "typing_FStar.Map.contains", "typing_FStar.Reflection.V2.Data.var",
-        "typing_FStar.Set.empty", "typing_FStar.Set.intersect",
-        "typing_FStar.Set.mem",
+        "string_typing", "typing_FStar.Map.contains",
+        "typing_FStar.Reflection.V2.Data.var", "typing_FStar.Set.empty",
+        "typing_FStar.Set.intersect", "typing_FStar.Set.mem",
         "typing_Pulse.Syntax.Base.__proj__Mkbinder__item__binder_ty",
         "typing_Pulse.Syntax.Base.ppname_default",
         "typing_Pulse.Typing.Env.as_map", "typing_Pulse.Typing.Env.dom",
         "typing_Pulse.Typing.Env.fstar_env"
       ],
       0,
-      "fd47f212310ef870d7faa06198159316"
+      "006f12e7db00ecd299ea28364768085a"
     ],
     [
       "Pulse.Checker.STApp.instantaite_implicits",
@@ -151,6 +151,7 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ce036b6b736ef4e0bc3a9ff132a12aed",
         "Pulse.Syntax.Base_pretyping_0b425ab385a56835d52cd71c18622a32",
         "bool_inversion", "constructor_distinct_Pulse.Syntax.Base.Tm_STApp",
         "disc_equation_FStar.Pervasives.Native.Some",
@@ -172,13 +173,14 @@
         "projection_inverse_Pulse.Syntax.Base.Tm_STApp__0",
         "refinement_interpretation_Tm_refine_216a0d577fe6866b7566aea51095c305",
         "refinement_interpretation_Tm_refine_484fe0819d1383a2c20d94ae027baa5f",
-        "typing_FStar.Reflection.V2.Data.var", "typing_FStar.Set.empty",
-        "typing_FStar.Set.intersect", "typing_FStar.Set.mem",
-        "typing_Pulse.Typing.Env.dom", "typing_Pulse.Typing.Env.fstar_env",
+        "string_typing", "typing_FStar.Reflection.V2.Data.var",
+        "typing_FStar.Set.empty", "typing_FStar.Set.intersect",
+        "typing_FStar.Set.mem", "typing_Pulse.Typing.Env.dom",
+        "typing_Pulse.Typing.Env.fstar_env",
         "typing_tok_Pulse.Syntax.Base.Implicit@tok"
       ],
       0,
-      "23bb0671ea4f4e399d45e842ba768ac7"
+      "5d31e5031960f32d5017e4282b4aa376"
     ],
     [
       "Pulse.Checker.STApp.check",
@@ -202,22 +204,25 @@
         "equality_tok_Pulse.Syntax.Base.Implicit@tok",
         "equation_FStar.Reflection.Typing.pp_name_t",
         "equation_Prims.eqtype", "equation_Pulse.Checker.Pure.push_context",
+        "equation_Pulse.Syntax.Base.range",
         "equation_Pulse.Syntax.Naming.open_comp_",
         "equation_Pulse.Syntax.Naming.open_comp_with",
         "equation_Pulse.Syntax.Naming.subst_comp",
         "equation_Pulse.Syntax.Pure.tm_arrow",
         "equation_Pulse.Typing.Env.extends_with",
-        "equation_Pulse.Typing.as_binder",
+        "equation_Pulse.Typing.as_binder", "equation_Pulse.Typing.wr",
         "fuel_guarded_inversion_FStar.Tactics.Result.__result",
         "fuel_guarded_inversion_Pulse.Syntax.Base.comp",
         "fuel_guarded_inversion_Pulse.Syntax.Base.st_term",
         "function_token_typing_Prims.string",
         "kinding_Pulse.Syntax.Base.qualifier@tok",
         "lemma_FStar.Sealed.Inhabited.sealed_singleton",
+        "lemma_Pulse.Syntax.Base.range_singleton",
         "primitive_Prims.op_Equality",
         "proj_equation_Pulse.Syntax.Base.Mkbinder_binder_ppname",
         "proj_equation_Pulse.Syntax.Base.Mkbinder_binder_ty",
         "proj_equation_Pulse.Syntax.Base.Mkppname_name",
+        "proj_equation_Pulse.Syntax.Base.Mkst_term_range",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple3__2",
@@ -229,6 +234,7 @@
         "refinement_interpretation_Tm_refine_216a0d577fe6866b7566aea51095c305",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_7f3ad0958305f2921bfac06f466396ae",
+        "refinement_interpretation_Tm_refine_8c22aa61a47c16d0229ef090894097c8",
         "refinement_interpretation_Tm_refine_c6ef4092b649a72c5716798791f93ffe",
         "string_typing", "typing_Pulse.Checker.Pure.push_context",
         "typing_Pulse.Syntax.Base.__proj__Mkppname__item__name",
@@ -237,7 +243,7 @@
         "typing_tok_Pulse.Syntax.Base.Implicit@tok"
       ],
       0,
-      "eb8fcb1d5e633693170a9c7a74847f82"
+      "6981db68fd969ba669a690614e514da2"
     ]
   ]
 ]

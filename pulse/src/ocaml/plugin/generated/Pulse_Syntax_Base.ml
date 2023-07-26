@@ -18,6 +18,8 @@ let (ppname_default : ppname) =
 let (mk_ppname :
   FStar_Reflection_Typing.pp_name_t -> FStar_Range.range -> ppname) =
   fun name -> fun range1 -> { name; range = range1 }
+let (mk_ppname_no_range : Prims.string -> ppname) =
+  fun s -> { name = (FStar_Sealed.seal s); range = FStar_Range.range_0 }
 type bv = {
   bv_index: index ;
   bv_ppname: ppname }

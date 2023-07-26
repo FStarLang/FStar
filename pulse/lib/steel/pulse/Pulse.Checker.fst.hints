@@ -1,5 +1,5 @@
 [
-  "ô‹Ðý!I¢\u0019YX”\u001f±¯ó§",
+  "SÍ\u0014D€\u001b™\u001e º›\u0017ù¨eD",
   [
     [
       "Pulse.Checker.gen_names_for_unknowns",
@@ -20,7 +20,7 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "f85ae6d017deb29697ece8aee5fd985b"
+      "3d77b4e736eded51d39024ec25ace24b"
     ],
     [
       "Pulse.Checker.instantiate_unknown_witnesses",
@@ -120,10 +120,11 @@
         "disc_equation_Prims.Nil",
         "disc_equation_Pulse.Syntax.Base.Tm_IntroExists",
         "disc_equation_Pulse.Syntax.Base.Tm_Return",
-        "equation_FStar.Range.range",
+        "equation_FStar.Pervasives.dfst", "equation_FStar.Range.range",
         "equation_FStar.Reflection.Typing.fstar_top_env",
         "equation_Prims.nat",
         "equation_Pulse.Checker.Base.checker_res_matches_post_hint",
+        "equation_Pulse.Checker.Base.checker_result_inv",
         "equation_Pulse.Checker.Base.checker_result_t",
         "equation_Pulse.Checker.Exists.intro_exists_witness_singleton",
         "equation_Pulse.Checker.Pure.push_context",
@@ -138,6 +139,7 @@
         "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "fuel_guarded_inversion_FStar.Pervasives.dtuple5",
         "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "fuel_guarded_inversion_Prims.dtuple2",
         "fuel_guarded_inversion_Prims.list",
         "fuel_guarded_inversion_Pulse.Syntax.Base.st_term",
         "function_token_typing_Prims.__cache_version_number__",
@@ -150,7 +152,7 @@
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "proj_equation_FStar.Pervasives.Native.Some_v",
-        "proj_equation_Prims.Cons_tl",
+        "proj_equation_Prims.Cons_tl", "proj_equation_Prims.Mkdtuple2__1",
         "proj_equation_Pulse.Syntax.Base.Mkst_term_range",
         "proj_equation_Pulse.Syntax.Base.Mkst_term_term",
         "proj_equation_Pulse.Typing.Mkpost_hint_t_g",
@@ -160,6 +162,7 @@
         "projection_inverse_FStar.Pervasives.Mkdtuple5__3",
         "projection_inverse_FStar.Pervasives.Mkdtuple5__4",
         "projection_inverse_FStar.Pervasives.Mkdtuple5__5",
+        "projection_inverse_FStar.Pervasives.Mkdtuple5_b",
         "projection_inverse_FStar.Pervasives.Mkdtuple5_c",
         "projection_inverse_FStar.Pervasives.Mkdtuple5_d",
         "projection_inverse_FStar.Pervasives.Mkdtuple5_e",
@@ -176,16 +179,15 @@
         "projection_inverse_Pulse.Syntax.Base.Mkst_term___Tm_IntroExists__payload_witnesses",
         "projection_inverse_Pulse.Syntax.Base.Mkst_term_term",
         "projection_inverse_Pulse.Syntax.Base.Tm_IntroExists__0",
-        "refinement_interpretation_Tm_refine_0e7cec6ed8f6e8567fd60faa69f1ee6b",
         "refinement_interpretation_Tm_refine_262f039a938fc14ac016e995f8cd074e",
-        "refinement_interpretation_Tm_refine_4267d4c6afa07f3ba4570d839b7b0991",
-        "refinement_interpretation_Tm_refine_6d8ee78207eb8c69f5e44f08014b2ba6",
+        "refinement_interpretation_Tm_refine_562bee4b22524a77a83f0b80bb888777",
         "refinement_interpretation_Tm_refine_6e8e5238aadfc712ef5fa6bc6310c384",
         "refinement_interpretation_Tm_refine_7ad5682d990eaec6510764d663af54de",
         "refinement_interpretation_Tm_refine_7f3ad0958305f2921bfac06f466396ae",
         "refinement_interpretation_Tm_refine_8c22aa61a47c16d0229ef090894097c8",
+        "refinement_interpretation_Tm_refine_a8b89c35fa28900a81d627ef3d7cb576",
+        "refinement_interpretation_Tm_refine_b0ea3495ff282f69439c9d1354d6b870",
         "refinement_interpretation_Tm_refine_ba488b4f12660f6fd23fa65ec4b4a4ff",
-        "refinement_interpretation_Tm_refine_be0cb453a33d53da6ab9f91ceafd841d",
         "refinement_interpretation_Tm_refine_eed994d15518279ab75d745192d0d368",
         "string_typing", "typing_Pulse.Checker.Pure.push_context",
         "typing_Pulse.Syntax.Base.__proj__Mkst_term__item__range",
@@ -195,7 +197,7 @@
         "typing_Pulse.Typing.__proj__Mkpost_hint_t__item__g"
       ],
       0,
-      "730fe3f1d7819e3a1b0d6a09cb6b776f"
+      "8c19aedf6d12b33ca29d24bfd5a578fb"
     ]
   ]
 ]

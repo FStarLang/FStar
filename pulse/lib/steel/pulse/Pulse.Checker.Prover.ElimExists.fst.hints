@@ -80,7 +80,7 @@
         "typing_Pulse.Typing.Env.as_map", "typing_Pulse.Typing.Env.fstar_env"
       ],
       0,
-      "330f4c3c17c0773b8dbe9d900000f194"
+      "e8a180715e83f4d8bac3ebc5d8e3f188"
     ],
     [
       "Pulse.Checker.Prover.ElimExists.elim_exists_frame",
@@ -184,7 +184,7 @@
         "typing_Pulse.Typing.Env.push_env"
       ],
       0,
-      "8b5380a8fed634929bda2324af1dd574"
+      "850e0a0a824d86d62b4864ca6561d03f"
     ]
   ]
 ]

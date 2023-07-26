@@ -1,5 +1,5 @@
 [
-  "*-\u001bÕ’ïC\u0013èœ)\b>\u001f\u001dæ",
+  "¼›î¾v5_<’¹%wŸÁ[å",
   [
     [
       "Pulse.Checker.AssertWithBinders.option_must",
@@ -8,7 +8,7 @@
       1,
       [ "@query", "lemma_FStar.Pervasives.invertOption" ],
       0,
-      "ebb3e7478db6b3278a09d981bf96431c"
+      "223601c56f746132bd21e5bdb42bfa1b"
     ],
     [
       "Pulse.Checker.AssertWithBinders.refl_abs_binders",
@@ -18,12 +18,20 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ce036b6b736ef4e0bc3a9ff132a12aed",
+        "constructor_distinct_FStar.Tactics.Result.Failed",
+        "constructor_distinct_FStar.Tactics.Result.Success",
         "equation_FStar.Sealed.Inhabited.is_sealed",
         "fuel_guarded_inversion_FStar.Tactics.Result.__result",
-        "string_typing", "true_interp"
+        "projection_inverse_FStar.Tactics.Result.Failed_a",
+        "projection_inverse_FStar.Tactics.Result.Failed_exn",
+        "projection_inverse_FStar.Tactics.Result.Failed_ps",
+        "projection_inverse_FStar.Tactics.Result.Success_a",
+        "projection_inverse_FStar.Tactics.Result.Success_ps",
+        "projection_inverse_FStar.Tactics.Result.Success_v", "string_typing",
+        "true_interp"
       ],
       0,
-      "0adc76f14300d9b954fe51db69b64517"
+      "15b3120f0dc57ee5bfead3be7616d0e5"
     ],
     [
       "Pulse.Checker.AssertWithBinders.infer_binder_types",
@@ -78,7 +86,7 @@
         "typing_tok_FStar.Reflection.V2.Data.Q_Explicit@tok"
       ],
       0,
-      "3ecd2bec4058f5b9a86f8173732126c2"
+      "c1aedee9309bebe7c96b357c0b495da1"
     ],
     [
       "Pulse.Checker.AssertWithBinders.open_binders",
@@ -134,7 +142,7 @@
         "typing_Pulse.Typing.Env.fstar_env"
       ],
       0,
-      "a1f922564db0ab0d5f5d0ee635b838f7"
+      "a0c40b167498c1b0be38918dff6b69a2"
     ],
     [
       "Pulse.Checker.AssertWithBinders.close_binders",
@@ -157,12 +165,18 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ce036b6b736ef4e0bc3a9ff132a12aed",
+        "constructor_distinct_FStar.Pervasives.Native.None",
+        "constructor_distinct_FStar.Pervasives.Native.Some",
+        "constructor_distinct_FStar.Tactics.Result.Failed",
         "constructor_distinct_FStar.Tactics.Result.Success",
         "equation_Prims.eqtype",
         "equation_Pulse.Syntax.Base.range_singleton_trigger",
         "fuel_guarded_inversion_FStar.Tactics.Result.__result",
         "function_token_typing_Prims.string", "kinding_Prims.list@tok",
         "lemma_FStar.Pervasives.invertOption",
+        "projection_inverse_FStar.Tactics.Result.Failed_a",
+        "projection_inverse_FStar.Tactics.Result.Failed_exn",
+        "projection_inverse_FStar.Tactics.Result.Failed_ps",
         "projection_inverse_FStar.Tactics.Result.Success_a",
         "projection_inverse_FStar.Tactics.Result.Success_ps",
         "projection_inverse_FStar.Tactics.Result.Success_v",
@@ -170,7 +184,7 @@
         "string_typing"
       ],
       0,
-      "1a62ee8ce2a47156dcb65222bb5458ab"
+      "f09e54dd66c1f55c55a09afb285920cb"
     ],
     [
       "Pulse.Checker.AssertWithBinders.check_unfoldable",
@@ -214,19 +228,20 @@
         "equation_FStar.Reflection.V2.Data.var",
         "equation_FStar.Set.disjoint", "equation_Prims.nat",
         "equation_Pulse.Checker.Base.checker_res_matches_post_hint",
+        "equation_Pulse.Checker.Base.checker_result_inv",
         "equation_Pulse.Syntax.Base.not_tv_unknown",
         "equation_Pulse.Syntax.Base.typ", "equation_Pulse.Syntax.Base.var",
         "equation_Pulse.Typing.Env.disjoint",
         "equation_Pulse.Typing.Env.dom",
-        "equation_Pulse.Typing.Env.env_extends",
-        "equation_Pulse.Typing.Env.extends_with",
         "equation_Pulse.Typing.post_hint_for_env_p",
         "equation_Pulse.Typing.post_hint_opt",
         "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "fuel_guarded_inversion_FStar.Tactics.Result.__result",
         "fuel_guarded_inversion_Pulse.Syntax.Base.proof_hint_type",
+        "fuel_guarded_inversion_Pulse.Syntax.Base.st_term",
         "function_token_typing_Prims.__cache_version_number__",
-        "int_inversion", "kinding_Pulse.Typing.post_hint_t@tok",
+        "int_inversion", "kinding_Pulse.Syntax.Base.term@tok",
+        "kinding_Pulse.Typing.post_hint_t@tok",
         "lemma_FStar.Pervasives.invertOption",
         "lemma_FStar.Reflection.Typing.inspect_pack",
         "lemma_FStar.Set.lemma_equal_elim",
@@ -235,6 +250,7 @@
         "lemma_Pulse.Typing.Env.env_extends_trans",
         "lemma_Pulse.Typing.Env.mk_env_dom", "primitive_Prims.op_AmpAmp",
         "proj_equation_FStar.Pervasives.Native.Some_v",
+        "proj_equation_Prims.Mkdtuple2__1",
         "proj_equation_Pulse.Typing.Mkpost_hint_t_g",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Tactics.Result.Failed_a",
@@ -244,22 +260,26 @@
         "projection_inverse_FStar.Tactics.Result.Success_ps",
         "projection_inverse_FStar.Tactics.Result.Success_v",
         "projection_inverse_Pulse.Syntax.Base.Tm_ProofHintWithBinders__0",
-        "refinement_interpretation_Tm_refine_0e7cec6ed8f6e8567fd60faa69f1ee6b",
+        "refinement_interpretation_Tm_refine_22829e142fee025de3f65b2dd8597285",
         "refinement_interpretation_Tm_refine_262f039a938fc14ac016e995f8cd074e",
-        "refinement_interpretation_Tm_refine_30687c6bbf76a4ea67eae131536eafd7",
+        "refinement_interpretation_Tm_refine_7ad5682d990eaec6510764d663af54de",
         "refinement_interpretation_Tm_refine_ba488b4f12660f6fd23fa65ec4b4a4ff",
         "refinement_interpretation_Tm_refine_bf49085558242af8c310020a9c32bdc7",
+        "refinement_interpretation_Tm_refine_c368f222d3b510422f50624ef34643bf",
         "refinement_interpretation_Tm_refine_dd3396f06b5a01f3df9ed905e57d2aab",
-        "refinement_interpretation_Tm_refine_de1d02ad66483edc481b70db20a6b9af",
+        "refinement_interpretation_Tm_refine_eed994d15518279ab75d745192d0d368",
+        "string_typing", "typing_FStar.Map.domain",
         "typing_FStar.Reflection.Typing.unit_fv",
         "typing_FStar.Reflection.V2.Data.var", "typing_FStar.Set.empty",
         "typing_FStar.Set.intersect", "typing_FStar.Set.mem",
-        "typing_Pulse.Typing.Env.dom", "typing_Pulse.Typing.Env.fstar_env",
-        "typing_Pulse.Typing.Env.mk_env",
+        "typing_Pulse.Syntax.Base.__proj__Mkst_term__item__range",
+        "typing_Pulse.Typing.Env.as_map", "typing_Pulse.Typing.Env.dom",
+        "typing_Pulse.Typing.Env.fstar_env",
+        "typing_Pulse.Typing.Env.push_context",
         "typing_Pulse.Typing.__proj__Mkpost_hint_t__item__g"
       ],
       0,
-      "a56a99ca49f6a093f034d5d278aadf37"
+      "c6f591576fce77169b45becce2f77642"
     ]
   ]
 ]
