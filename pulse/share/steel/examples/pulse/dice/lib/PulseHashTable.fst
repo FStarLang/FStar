@@ -66,9 +66,9 @@ fn lookup (#s:pht_sig) (#pht:(p:pht s{not_full p.repr}))
   {
     let voff = !off;
     if (voff = sz) {
-      // FIXME: need to set cont to false
-      // cont := false;
-      // assume_ (R.pts_to ret full_perm (PHT.lookup pht k));
+      cont := false;
+      assert_ (R.pts_to ret full_perm None);
+      assume_ (pure (lookup_repr_index pht.repr k == None)); // FIXME: similar to Clean case
       ()
     } else {
       let idx = (cidx+voff)%sz;
