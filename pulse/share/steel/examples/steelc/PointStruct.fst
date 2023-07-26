@@ -40,14 +40,14 @@ let swap_struct (p: ref point) (v: Ghost.erased (typeof point))
       struct_get_field v' "x" == struct_get_field v "y" /\
       struct_get_field v' "y" == struct_get_field v "x"
     )
-= let px = struct_field p "x" in
-  let py = struct_field p "y" in
+= let px = struct_field p "x" () in
+  let py = struct_field p "y" () in
   let x = read px in
   let y = read py in
   write px y;
   write py x;
-  unstruct_field p "x" px;
-  unstruct_field p "y" py;
+  let _ = unstruct_field p "x" px in
+  let _ = unstruct_field p "y" py in
   drop (has_struct_field _ _ px);
   drop (has_struct_field _ _ _);
   return _

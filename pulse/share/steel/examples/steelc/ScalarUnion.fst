@@ -46,9 +46,9 @@ val switch_to_u16
 #push-options "--fuel 0 --print_bound_var_types"
 
 let switch_to_u16 p x =
-  let p16 = union_switch_field  p "as_u16" in
+  let p16 = union_switch_field p "as_u16" () in
   write p16 x;
-  ununion_field p "as_u16" _;
+  let _ = ununion_field p "as_u16" _ in
   drop (has_union_field _ _ _);
   return ()
 
@@ -71,8 +71,8 @@ val zero_u32_of_union (#v: Ghost.erased u32_or_u16_t) (p: ref u32_or_u16)
     (ensures fun _ -> True)
 
 let zero_u32_of_union #v p =
-  let q = union_field p "as_u32" in
+  let q = union_field p "as_u32" () in
   zero_u32_ref q;
-  ununion_field p "as_u32" _;
+  let _ = ununion_field p "as_u32" _ in
   drop (has_union_field _ _ _);
   return ()

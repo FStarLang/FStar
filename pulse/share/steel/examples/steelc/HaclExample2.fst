@@ -110,10 +110,10 @@ let test
     (fun v' -> p `pts_to` v')
     (full comp v)
     (fun v' -> full comp v')
-= let q = p `struct_field` "limbs" in
+= let q = struct_field p "limbs" #_ #(base_array0 five (scalar U64.t) 5sz) () in
   let a = array_of_base q in
-  let r = p `struct_field` "precomp" in
-  let _ = vpattern_replace_erased (pts_to p) in // FIXME: WHY WHY WHY?
+  let r = struct_field p "precomp" #_ #(base_array0 twenty (scalar U64.t) 20sz) () in
+  let _ = vpattern_replace (pts_to p) in // FIXME: WHY WHY WHY?
   let b = array_of_base r in
   let _ = do_something_with_limbs a in
   let _ = do_something_with_precomp b in
