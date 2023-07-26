@@ -128,13 +128,13 @@ let push
   end else begin
     rewrite (pts_to_or_null _ _) (pts_to c (uninitialized cell));
     rewrite (freeable_or_null c) (freeable c);
-    let p_tl = pllist_get p in
-    let c_hd = struct_field c "hd" in
-    let c_tl = struct_field c "tl" in
+    let p_tl : void_ptr = pllist_get p in // type ascription necessary to avoid C compiler warning -Wincompatible-pointer-types
+    let c_hd = struct_field c "hd" () in
+    let c_tl = struct_field c "tl" () in
     write c_hd a;
     write c_tl p_tl;
-    unstruct_field c "tl" c_tl;
-    unstruct_field c "hd" c_hd;
+    let _ = unstruct_field c "tl" c_tl in
+    let _ = unstruct_field c "hd" c_hd in
     intro_llist_cons c p_tl a l;
     pllist_put p c;
     drop (has_struct_field c "hd" _);
@@ -154,13 +154,13 @@ let pop
 = rewrite (pllist p l) (pllist p (List.Tot.hd l :: List.Tot.tl l));
   let c = pllist_get p in
   let _ = elim_llist_cons c (List.Tot.hd l) (List.Tot.tl l) in
-  let c_hd = struct_field c "hd" in
-  let c_tl = struct_field c "tl" in
+  let c_hd = struct_field c "hd" () in
+  let c_tl = struct_field c "tl" () in
   let res = read c_hd in
-  let p_tl = read c_tl in
+  let p_tl : void_ptr = read c_tl in // type ascription necessary to avoid C compiler warning -Wincompatible-pointer-types
   vpattern_rewrite (fun x -> llist x _) p_tl;
-  unstruct_field c "tl" c_tl;
-  unstruct_field c "hd" c_hd;
+  let _ = unstruct_field c "tl" c_tl in
+  let _ = unstruct_field c "hd" c_hd in
   free c;
   pllist_put p p_tl;
   drop (has_struct_field c "hd" _);

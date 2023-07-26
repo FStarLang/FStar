@@ -185,8 +185,30 @@ val has_union_field
   (#fields: field_description_t tf)
   (r: ref (union0 tn n fields))
   (field: field_t fields)
-  (r': ref (fields.fd_typedef field))
+  (#t': Type0)
+  (#td': typedef t')
+  (r': ref td')
 : Tot vprop
+
+val has_union_field_prop
+  (#opened: _)
+  (#tn: Type0)
+  (#tf: Type0)
+  (#n: string)
+  (#fields: field_description_t tf)
+  (r: ref (union0 tn n fields))
+  (field: field_t fields)
+  (#t': Type0)
+  (#td': typedef t')
+  (r': ref td')
+: STGhost unit opened
+    (has_union_field r field r')
+    (fun _ -> has_union_field r field r')
+    True
+    (fun _ ->
+      t' == fields.fd_type field /\
+      td' == fields.fd_typedef field
+    )
 
 val has_union_field_dup
   (#opened: _)
@@ -196,7 +218,9 @@ val has_union_field_dup
   (#fields: nonempty_field_description_t tf)
   (r: ref (union0 tn n fields))
   (field: field_t fields)
-  (r': ref (fields.fd_typedef field))
+  (#t': Type0)
+  (#td': typedef t')
+  (r': ref td')
 : STGhostT unit opened
     (has_union_field r field r')
     (fun _ -> has_union_field r field r' `star` has_union_field r field r')
@@ -209,10 +233,15 @@ val has_union_field_inj
   (#fields: nonempty_field_description_t tf)
   (r: ref (union0 tn n fields))
   (field: field_t fields)
-  (r1 r2: ref (fields.fd_typedef field))
-: STGhostT unit opened
+  (#t1: Type0)
+  (#td1: typedef t1)
+  (r1: ref td1)
+  (#t2: Type0)
+  (#td2: typedef t2)
+  (r2: ref td2)
+: STGhostT (squash (t1 == t2 /\ td1 == td2)) opened
     (has_union_field r field r1 `star` has_union_field r field r2)
-    (fun _ -> has_union_field r field r1 `star` has_union_field r field r2 `star` ref_equiv r1 r2)
+    (fun _ -> has_union_field r field r1 `star` has_union_field r field r2 `star` ref_equiv r1 (coerce_eq () r2))
 
 val has_union_field_equiv_from
   (#opened: _)
@@ -222,7 +251,9 @@ val has_union_field_equiv_from
   (#fields: nonempty_field_description_t tf)
   (r1 r2: ref (union0 tn n fields))
   (field: field_t fields)
-  (r': ref (fields.fd_typedef field))
+  (#t': Type0)
+  (#td': typedef t')
+  (r': ref td')
 : STGhostT unit opened
     (has_union_field r1 field r' `star` ref_equiv r1 r2)
     (fun _ -> has_union_field r2 field r' `star` ref_equiv r1 r2)
@@ -235,7 +266,9 @@ val has_union_field_equiv_to
   (#fields: nonempty_field_description_t tf)
   (r: ref (union0 tn n fields))
   (field: field_t fields)
-  (r1 r2: ref (fields.fd_typedef field))
+  (#t': Type0)
+  (#td': typedef t')
+  (r1 r2: ref td')
 : STGhostT unit opened
     (has_union_field r field r1 `star` ref_equiv r1 r2)
     (fun _ -> has_union_field r field r2 `star` ref_equiv r1 r2)
@@ -249,10 +282,15 @@ val ghost_union_field_focus
   (#v: Ghost.erased (union_t0 tn n fields))
   (r: ref (union0 tn n fields))
   (field: field_t fields {union_get_case v == Some field})
-  (r': ref (fields.fd_typedef field))
-: STGhostT unit opened
+  (#t': Type0)
+  (#td': typedef t')
+  (r': ref td')
+: STGhostT (squash (
+      t' == fields.fd_type field /\
+      td' == fields.fd_typedef field
+  )) opened
     (has_union_field r field r' `star` pts_to r v)
-    (fun _ -> has_union_field r field r' `star` pts_to r' (union_get_field v field))
+    (fun _ -> has_union_field r field r' `star` pts_to r' (Ghost.hide (coerce_eq () (union_get_field v field))))
 
 val ghost_union_field
   (#opened: _)
@@ -283,7 +321,25 @@ val union_field0
   })
 : STT (ref td')
     (pts_to r v)
+    (fun r' -> has_union_field r field r' `star` pts_to r' (Ghost.hide (coerce_eq () (union_get_field v field))))
+
+inline_for_extraction [@@noextract_to "krml"]
+let union_field1
+  (#tn: Type0)
+  (#tf: Type0)
+  (t': Type0)
+  (#n: string)
+  (#fields: field_description_t tf)
+  (#v: Ghost.erased (union_t0 tn n fields))
+  (r: ref (union0 tn n fields))
+  (field: field_t fields {union_get_case v == Some field})
+  (td': typedef t')
+  (sq_t': squash (t' ==  fields.fd_type field))
+  (sq_td': squash (td' == fields.fd_typedef field))
+: STT (ref td')
+    (pts_to r v)
     (fun r' -> has_union_field r field r' `star` pts_to r' (union_get_field v field))
+= union_field0 t' r field td'
 
 inline_for_extraction [@@noextract_to "krml"] // primitive
 let union_field
@@ -294,14 +350,19 @@ let union_field
   (#v: Ghost.erased (union_t0 tn n fields))
   (r: ref (union0 tn n fields))
   (field: field_t fields {union_get_case v == Some field})
-: STT (ref #(norm norm_field_steps (fields.fd_type field)) (fields.fd_typedef field))
+  (#t': Type0)
+  (#td': typedef t')
+  (# [ norm_fields () ] sq_t': squash (t' ==  fields.fd_type field))
+  (# [ norm_fields () ] sq_td': squash (td' == fields.fd_typedef field))
+  ()
+: STT (ref td')
     (pts_to r v)
-    (fun r' -> has_union_field r field r' `star` pts_to #(norm norm_field_steps (fields.fd_type field)) r' (union_get_field v field))
+    (fun r' -> has_union_field r field r' `star` pts_to r' (union_get_field v field))
 = union_field0
-    (norm norm_field_steps (fields.fd_type field))
+    t'
     r
     field
-    (fields.fd_typedef field)
+    td'
 
 val ununion_field
   (#opened: _)
@@ -311,11 +372,44 @@ val ununion_field
   (#fields: field_description_t tf)
   (r: ref (union0 tn n fields))
   (field: field_t fields)
-  (#v': Ghost.erased (fields.fd_type field))
-  (r': ref (fields.fd_typedef field))
-: STGhostT unit opened
+  (#t': Type0)
+  (#td': typedef t')
+  (#v': Ghost.erased t')
+  (r': ref td')
+: STGhost (Ghost.erased (union_t0 tn n fields)) opened
     (has_union_field r field r' `star` pts_to r' v')
-    (fun _ -> has_union_field r field r' `star` pts_to r (union_set_field tn n fields field v'))
+    (fun res -> has_union_field r field r' `star` pts_to r res)
+    True
+    (fun res ->
+      t' == fields.fd_type field /\
+      td' == fields.fd_typedef field /\
+      Ghost.reveal res == union_set_field tn n fields field (coerce_eq () (Ghost.reveal v'))
+    )
+
+let ununion_field_and_drop
+  (#opened: _)
+  (#tn: Type0)
+  (#tf: Type0)
+  (#n: string)
+  (#fields: field_description_t tf)
+  (r: ref (union0 tn n fields))
+  (field: field_t fields)
+  (#t': Type0)
+  (#td': typedef t')
+  (#v': Ghost.erased t')
+  (r': ref td')
+: STGhost (Ghost.erased (union_t0 tn n fields)) opened
+    (has_union_field r field r' `star` pts_to r' v')
+    (fun res -> pts_to r res)
+    True
+    (fun res ->
+      t' == fields.fd_type field /\
+      td' == fields.fd_typedef field /\
+      Ghost.reveal res == union_set_field tn n fields field (coerce_eq () (Ghost.reveal v'))
+    )
+= let res = ununion_field r field r' in
+  drop (has_union_field _ _ _);
+  res
 
 // NOTE: we DO NOT support preservation of struct prefixes
 
@@ -335,9 +429,29 @@ val union_switch_field0
   })
 : ST (ref td') // need to write the pcm carrier value, so this cannot be Ghost or Atomic
     (pts_to r v)
-    (fun r' -> has_union_field r field r' `star` pts_to r' (uninitialized (fields.fd_typedef field)))
+    (fun r' -> has_union_field r field r' `star` pts_to r' (uninitialized td'))
     (full (union0 tn n fields) v)
     (fun r' -> True)
+
+inline_for_extraction [@@noextract_to "krml"]
+let union_switch_field1
+  (#tn: Type0)
+  (#tf: Type0)
+  (t': Type0)
+  (#n: string)
+  (#fields: field_description_t tf)
+  (#v: Ghost.erased (union_t0 tn n fields))
+  (r: ref (union0 tn n fields))
+  (field: field_t fields)
+  (td': typedef t')
+  (sq_t': squash (t' ==  fields.fd_type field))
+  (sq_td': squash (td' == fields.fd_typedef field))
+: ST (ref td') // need to write the pcm carrier value, so this cannot be Ghost or Atomic
+    (pts_to r v)
+    (fun r' -> has_union_field r field r' `star` pts_to r' (uninitialized td'))
+    (full (union0 tn n fields) v)
+    (fun r' -> True)
+= union_switch_field0 t' r field td'
 
 inline_for_extraction [@@noextract_to "krml"]
 let union_switch_field
@@ -348,13 +462,18 @@ let union_switch_field
   (#v: Ghost.erased (union_t0 tn n fields))
   (r: ref (union0 tn n fields))
   (field: field_t fields)
-: ST (ref #(norm norm_field_steps (fields.fd_type field)) (fields.fd_typedef field)) // need to write the pcm carrier value, so this cannot be Ghost or Atomic
+  (#t': Type0)
+  (#td': typedef t')
+  (# [ norm_fields () ] sq_t': squash (t' ==  fields.fd_type field))
+  (# [ norm_fields () ] sq_td': squash (td' == fields.fd_typedef field))
+  ()
+: ST (ref td') // need to write the pcm carrier value, so this cannot be Ghost or Atomic
     (pts_to r v)
-    (fun r' -> has_union_field r field r' `star` pts_to #(norm norm_field_steps (fields.fd_type field)) r' (uninitialized (fields.fd_typedef field)))
+    (fun r' -> has_union_field r field r' `star` pts_to r' (uninitialized td'))
     (full (union0 tn n fields) v)
     (fun r' -> True)
 = union_switch_field0
-    (norm norm_field_steps (fields.fd_type field))
+    t'
     r
     field
-    (fields.fd_typedef field)
+    td'

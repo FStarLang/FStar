@@ -3,6 +3,11 @@ include Steel.ST.C.Types.Base
 open Steel.C.Typestring
 open Steel.ST.Util
 
+[@@noextract_to "krml"] // tactic
+let norm_fields () : FStar.Tactics.Tac unit =
+  FStar.Tactics.norm [delta_attr [`%norm_field_attr]; iota; zeta; primops];
+  FStar.Tactics.trefl ()
+
 [@@noextract_to "krml"] // primitive
 val field_t_nil: Type0
 [@@noextract_to "krml"] // primitive

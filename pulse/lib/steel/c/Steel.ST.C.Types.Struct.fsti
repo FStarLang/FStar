@@ -120,8 +120,30 @@ val has_struct_field
   (#fields: nonempty_field_description_t tf)
   (r: ref (struct0 tn n fields))
   (field: field_t fields)
-  (r': ref (fields.fd_typedef field))
+  (#t': Type0)
+  (#td': typedef t')
+  (r': ref td')
 : Tot vprop
+
+val has_struct_field_prop
+  (#opened: _)
+  (#tn: Type0)
+  (#tf: Type0)
+  (#n: string)
+  (#fields: nonempty_field_description_t tf)
+  (r: ref (struct0 tn n fields))
+  (field: field_t fields)
+  (#t': Type0)
+  (#td': typedef t')
+  (r': ref td')
+: STGhost unit opened
+    (has_struct_field r field r')
+    (fun _ -> has_struct_field r field r')
+    True
+    (fun _ ->
+      t' == fields.fd_type field /\
+      td' == fields.fd_typedef field
+    )
 
 val has_struct_field_dup
   (#opened: _)
@@ -131,7 +153,9 @@ val has_struct_field_dup
   (#fields: nonempty_field_description_t tf)
   (r: ref (struct0 tn n fields))
   (field: field_t fields)
-  (r': ref (fields.fd_typedef field))
+  (#t': Type0)
+  (#td': typedef t')
+  (r': ref td')
 : STGhostT unit opened
     (has_struct_field r field r')
     (fun _ -> has_struct_field r field r' `star` has_struct_field r field r')
@@ -144,10 +168,15 @@ val has_struct_field_inj
   (#fields: nonempty_field_description_t tf)
   (r: ref (struct0 tn n fields))
   (field: field_t fields)
-  (r1 r2: ref (fields.fd_typedef field))
-: STGhostT unit opened
+  (#t1: Type0)
+  (#td1: typedef t1)
+  (r1: ref td1)
+  (#t2: Type0)
+  (#td2: typedef t2)
+  (r2: ref td2)
+: STGhostT (squash (t1 == t2 /\ td1 == td2)) opened
     (has_struct_field r field r1 `star` has_struct_field r field r2)
-    (fun _ -> has_struct_field r field r1 `star` has_struct_field r field r2 `star` ref_equiv r1 r2)
+    (fun _ -> has_struct_field r field r1 `star` has_struct_field r field r2 `star` ref_equiv r1 (coerce_eq () r2))
 
 val has_struct_field_equiv_from
   (#opened: _)
@@ -157,7 +186,9 @@ val has_struct_field_equiv_from
   (#fields: nonempty_field_description_t tf)
   (r1: ref (struct0 tn n fields))
   (field: field_t fields)
-  (r': ref (fields.fd_typedef field))
+  (#t': Type0)
+  (#td': typedef t')
+  (r': ref td')
   (r2: ref (struct0 tn n fields))
 : STGhostT unit opened
     (ref_equiv r1 r2 `star` has_struct_field r1 field r')
@@ -171,8 +202,9 @@ val has_struct_field_equiv_to
   (#fields: nonempty_field_description_t tf)
   (r: ref (struct0 tn n fields))
   (field: field_t fields)
-  (r1': ref (fields.fd_typedef field))
-  (r2': ref (fields.fd_typedef field))
+  (#t': Type0)
+  (#td': typedef t')
+  (r1' r2': ref td')
 : STGhostT unit opened
     (ref_equiv r1' r2' `star` has_struct_field r field r1')
     (fun _ -> ref_equiv r1' r2' `star` has_struct_field r field r2')
@@ -186,10 +218,15 @@ val ghost_struct_field_focus
   (#v: Ghost.erased (struct_t0 tn n fields))
   (r: ref (struct0 tn n fields))
   (field: field_t fields)
-  (r': ref (fields.fd_typedef field))
-: STGhostT unit opened
+  (#t': Type0)
+  (#td': typedef t')
+  (r': ref td')
+: STGhostT (squash (
+      t' == fields.fd_type field /\
+      td' == fields.fd_typedef field
+  )) opened
     (has_struct_field r field r' `star` pts_to r v)
-    (fun _ -> has_struct_field r field r' `star` pts_to r (struct_set_field field (unknown (fields.fd_typedef field)) v) `star` pts_to r' (struct_get_field v field))
+    (fun _ -> has_struct_field r field r' `star` pts_to r (struct_set_field field (unknown (fields.fd_typedef field)) v) `star` pts_to r' (Ghost.hide (coerce_eq () (struct_get_field v field))))
 
 val ghost_struct_field
   (#opened: _)
@@ -220,7 +257,26 @@ val struct_field0
   })
 : STT (ref td')
     (pts_to r v)
+    (fun r' -> pts_to r (struct_set_field field (unknown (fields.fd_typedef field)) v) `star` pts_to r' (Ghost.hide (coerce_eq () (struct_get_field v field))) `star` has_struct_field r field r')
+
+inline_for_extraction
+[@@noextract_to "krml"] // primitive
+let struct_field1
+  (#tn: Type0)
+  (#tf: Type0)
+  (t': Type0)
+  (#n: string)
+  (#fields: nonempty_field_description_t tf)
+  (#v: Ghost.erased (struct_t0 tn n fields))
+  (r: ref (struct0 tn n fields))
+  (field: field_t fields)
+  (td': typedef t')
+  (sq_t': squash (t' ==  fields.fd_type field))
+  (sq_td': squash (td' == fields.fd_typedef field))
+: STT (ref td')
+    (pts_to r v)
     (fun r' -> pts_to r (struct_set_field field (unknown (fields.fd_typedef field)) v) `star` pts_to r' (struct_get_field v field) `star` has_struct_field r field r')
+= struct_field0 t' r field td'
 
 inline_for_extraction [@@noextract_to "krml"] // primitive
 let struct_field
@@ -231,14 +287,19 @@ let struct_field
   (#v: Ghost.erased (struct_t0 tn n fields))
   (r: ref (struct0 tn n fields))
   (field: field_t fields)
-: STT (ref #(norm norm_field_steps (fields.fd_type field)) (fields.fd_typedef field))
+  (#t': Type0)
+  (#td': typedef t')
+  (# [ norm_fields () ] sq_t': squash (t' ==  fields.fd_type field))
+  (# [ norm_fields () ] sq_td': squash (td' == fields.fd_typedef field))
+  ()
+: STT (ref td')
     (pts_to r v)
-    (fun r' -> pts_to r (struct_set_field field (unknown (fields.fd_typedef field)) v) `star` pts_to #(norm norm_field_steps (fields.fd_type field)) r' (struct_get_field v field) `star` has_struct_field r field r')
+    (fun r' -> pts_to r (struct_set_field field (unknown (fields.fd_typedef field)) v) `star` pts_to r' (struct_get_field v field) `star` has_struct_field r field r')
 = struct_field0
-    (norm norm_field_steps (fields.fd_type field))
+    t'
     r
     field
-    (fields.fd_typedef field)
+    td'
 
 val unstruct_field
   (#opened: _)
@@ -249,15 +310,49 @@ val unstruct_field
   (#v: Ghost.erased (struct_t0 tn n fields))
   (r: ref (struct0 tn n fields))
   (field: field_t fields)
-  (#v': Ghost.erased (fields.fd_type field))
-  (r': ref (fields.fd_typedef field))
-: STGhost unit opened
+  (#t': Type0)
+  (#td': typedef t')
+  (#v': Ghost.erased t')
+  (r': ref td')
+: STGhost (Ghost.erased (struct_t0 tn n fields)) opened
     (has_struct_field r field r' `star` pts_to r v `star` pts_to r' v')
-    (fun _ -> has_struct_field r field r' `star` pts_to r (struct_set_field field v' v))
+    (fun res -> has_struct_field r field r' `star` pts_to r res)
     (
       struct_get_field v field == unknown (fields.fd_typedef field)
     )
-    (fun _ -> True)
+    (fun res ->
+      t' == fields.fd_type field /\
+      td' == fields.fd_typedef field /\
+      Ghost.reveal res == struct_set_field field (coerce_eq () (Ghost.reveal v')) v
+    )
+
+let unstruct_field_and_drop
+  (#opened: _)
+  (#tn: Type0)
+  (#tf: Type0)
+  (#n: string)
+  (#fields: nonempty_field_description_t tf)
+  (#v: Ghost.erased (struct_t0 tn n fields))
+  (r: ref (struct0 tn n fields))
+  (field: field_t fields)
+  (#t': Type0)
+  (#td': typedef t')
+  (#v': Ghost.erased t')
+  (r': ref td')
+: STGhost (Ghost.erased (struct_t0 tn n fields)) opened
+    (has_struct_field r field r' `star` pts_to r v `star` pts_to r' v')
+    (fun res -> pts_to r res)
+    (
+      struct_get_field v field == unknown (fields.fd_typedef field)
+    )
+    (fun res ->
+      t' == fields.fd_type field /\
+      td' == fields.fd_typedef field /\
+      Ghost.reveal res == struct_set_field field (coerce_eq () (Ghost.reveal v')) v
+    )
+= let res = unstruct_field r field r' in
+  drop (has_struct_field _ _ _);
+  res
 
 let unstruct_field_alt
   (#opened: _)
@@ -279,8 +374,7 @@ let unstruct_field_alt
     (fun s' -> 
       Ghost.reveal s' == struct_set_field field v' v
     )
-= unstruct_field r field r';
-  _
+= unstruct_field r field r'
 
 val fractionable_struct
   (#tn: Type0)
