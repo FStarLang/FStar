@@ -4618,6 +4618,28 @@ let (add_sigelt_to_env :
                   FStar_TypeChecker_Env.add_polymonadic_subcomp env1 m n
                     uu___3
               | uu___2 -> env1))
+let (compress_and_norm :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.typ ->
+      FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option)
+  =
+  fun env ->
+    fun t ->
+      let uu___ = FStar_Syntax_Compress.deep_compress_if_no_uvars t in
+      match uu___ with
+      | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
+      | FStar_Pervasives_Native.Some t1 ->
+          let uu___1 =
+            FStar_TypeChecker_Normalize.normalize
+              [FStar_TypeChecker_Env.AllowUnboundUniverses;
+              FStar_TypeChecker_Env.CheckNoUvars;
+              FStar_TypeChecker_Env.Beta;
+              FStar_TypeChecker_Env.DoNotUnfoldPureLets;
+              FStar_TypeChecker_Env.CompressUvars;
+              FStar_TypeChecker_Env.Exclude FStar_TypeChecker_Env.Zeta;
+              FStar_TypeChecker_Env.Exclude FStar_TypeChecker_Env.Iota;
+              FStar_TypeChecker_Env.NoFullNorm] env t1 in
+          FStar_Pervasives_Native.Some uu___1
 let (tc_decls :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.sigelt Prims.list ->
@@ -4695,38 +4717,8 @@ let (tc_decls :
                                    uu___9
                                else ());
                               FStar_TypeChecker_Normalize.elim_uvars env2 se1)) in
-                    ((let uu___8 =
-                        let uu___9 =
-                          let uu___10 =
-                            FStar_TypeChecker_Env.current_module env2 in
-                          FStar_Ident.string_of_lid uu___10 in
-                        FStar_Pervasives_Native.Some uu___9 in
-                      FStar_Profiling.profile
-                        (fun uu___9 ->
-                           FStar_TypeChecker_Env.promote_id_info env2
-                             (fun t ->
-                                (let uu___11 =
-                                   FStar_TypeChecker_Env.debug env2
-                                     (FStar_Options.Other "UF") in
-                                 if uu___11
-                                 then
-                                   let uu___12 =
-                                     FStar_Syntax_Print.term_to_string t in
-                                   FStar_Compiler_Util.print1
-                                     "check uvars %s\n" uu___12
-                                 else ());
-                                FStar_TypeChecker_Normalize.normalize
-                                  [FStar_TypeChecker_Env.AllowUnboundUniverses;
-                                  FStar_TypeChecker_Env.CheckNoUvars;
-                                  FStar_TypeChecker_Env.Beta;
-                                  FStar_TypeChecker_Env.DoNotUnfoldPureLets;
-                                  FStar_TypeChecker_Env.CompressUvars;
-                                  FStar_TypeChecker_Env.Exclude
-                                    FStar_TypeChecker_Env.Zeta;
-                                  FStar_TypeChecker_Env.Exclude
-                                    FStar_TypeChecker_Env.Iota;
-                                  FStar_TypeChecker_Env.NoFullNorm] env2 t))
-                        uu___8 "FStar.TypeChecker.Tc.chec_uvars");
+                    (FStar_TypeChecker_Env.promote_id_info env2
+                       (compress_and_norm env2);
                      (let ses'2 =
                         FStar_Compiler_Effect.op_Bar_Greater ses'1
                           (FStar_Compiler_List.map
@@ -4804,7 +4796,7 @@ let (tc_decls :
                ([], env) ses) in
       match uu___ with
       | (ses1, env1) -> ((FStar_Compiler_List.rev_append ses1 []), env1)
-let (uu___901 : unit) =
+let (uu___904 : unit) =
   FStar_Compiler_Effect.op_Colon_Equals tc_decls_knot
     (FStar_Pervasives_Native.Some tc_decls)
 let (snapshot_context :

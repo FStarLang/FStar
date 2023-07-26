@@ -6811,10 +6811,17 @@ let refl_typing_builtin_wrapper :
           ([issue], FStar_Pervasives_Native.None) in
     match uu___ with
     | (errs, r) ->
-        (FStar_Syntax_Unionfind.rollback tx;
-         if (FStar_Compiler_List.length errs) > Prims.int_zero
-         then FStar_Tactics_Monad.ret (FStar_Pervasives_Native.None, errs)
-         else FStar_Tactics_Monad.ret (r, errs))
+        FStar_Tactics_Monad.op_let_Bang FStar_Tactics_Monad.get
+          (fun ps ->
+             FStar_TypeChecker_Env.promote_id_info
+               ps.FStar_Tactics_Types.main_context
+               (FStar_TypeChecker_Tc.compress_and_norm
+                  ps.FStar_Tactics_Types.main_context);
+             FStar_Syntax_Unionfind.rollback tx;
+             if (FStar_Compiler_List.length errs) > Prims.int_zero
+             then
+               FStar_Tactics_Monad.ret (FStar_Pervasives_Native.None, errs)
+             else FStar_Tactics_Monad.ret (r, errs))
 let (no_uvars_in_term : FStar_Syntax_Syntax.term -> Prims.bool) =
   fun t ->
     (let uu___ =
