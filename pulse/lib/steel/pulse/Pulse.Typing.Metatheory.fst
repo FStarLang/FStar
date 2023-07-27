@@ -5,7 +5,13 @@ open Pulse.Typing
 
 module T = FStar.Tactics.V2
 
-let tot_typing_weakening_single _ _ _ = admit ()
+let tot_typing_weakening_single #g #t #ty d x x_t =
+  let g1 = singleton_env (fstar_env g) x x_t in
+  let g' = mk_env (fstar_env g) in
+  assert (equal (push_env g g') g);
+  assert (equal (push_env (push_env g g1) g') (push_env g g1));
+  assert (equal (push_env g g1) (push_binding g x ppname_default x_t));
+  tot_typing_weakening g g' t ty d g1
 
 let st_typing_weakening
   (g:env) (g':env { disjoint g g' })

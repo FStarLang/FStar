@@ -42,18 +42,6 @@ val tot_typing_weakening
   (g1:env { pairwise_disjoint g g1 g' })
   : tot_typing (push_env (push_env g g1) g') t ty
 
-// let comp_st_with_post (c:comp_st) (post:term) : c':comp_st { st_comp_of_comp c' == ({ st_comp_of_comp c with post} <: st_comp) } =
-//   match c with
-//   | C_ST st -> C_ST { st with post }
-//   | C_STGhost i st -> C_STGhost i { st with post }
-//   | C_STAtomic i st -> C_STAtomic i {st with post}
-
-// let comp_st_with_pre (c:comp_st) (pre:term) : comp_st =
-//   match c with
-//   | C_ST st -> C_ST { st with pre }
-//   | C_STGhost i st -> C_STGhost i { st with pre }
-//   | C_STAtomic i st -> C_STAtomic i {st with pre }
-
 val st_typing_weakening
   (g:env) (g':env { disjoint g g' })
   (t:st_term) (c:comp) (_:st_typing (push_env g g') t c)
