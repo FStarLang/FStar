@@ -3,6 +3,7 @@ module Pulse.Soundness.Rewrite
 open Pulse.Syntax
 open Pulse.Reflection.Util
 open Pulse.Typing
+open Pulse.Typing.Combinators
 open Pulse.Elaborate.Pure
 open Pulse.Elaborate.Core
 open Pulse.Soundness.Common

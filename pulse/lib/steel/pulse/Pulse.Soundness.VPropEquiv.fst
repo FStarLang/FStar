@@ -8,6 +8,7 @@ open Pulse.Syntax
 open Pulse.Reflection.Util
 open Pulse.Elaborate.Pure
 open Pulse.Typing
+open Pulse.Typing.Combinators
 open Pulse.Elaborate
 open Pulse.Soundness.Common
 open Pulse.Checker.VPropEquiv

@@ -181,9 +181,6 @@ let rec open_st_term_ln' (e:st_term)
       open_term_ln' typ x i;
       open_term_ln_opt' post x (i + 1)
 
-    | Tm_Protect { t } ->
-      open_st_term_ln' t x i
-
     | Tm_ProofHintWithBinders { binders; v; t } ->
       let n = L.length binders in
       open_term_ln' v x (i + n);
@@ -374,9 +371,6 @@ let rec ln_weakening_st (t:st_term) (i j:int)
       ln_weakening typ i j;
       ln_weakening_opt post (i + 1) (j + 1)
       
-    | Tm_Protect { t } ->
-      ln_weakening_st t i j
-
     | Tm_ProofHintWithBinders { binders; v; t } ->
       let n = L.length binders in
       ln_weakening v (i + n) (j + n);
@@ -539,9 +533,6 @@ let rec open_term_ln_inv_st' (t:st_term)
       open_term_ln_inv' typ x i;
       open_term_ln_inv_opt' post x (i + 1)
 
-    | Tm_Protect { t } ->
-      open_term_ln_inv_st' t x i
-
     | Tm_ProofHintWithBinders { binders; v; t } ->
       let n = L.length binders in
       open_term_ln_inv' v x (i + n);
@@ -697,9 +688,6 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
       close_term_ln' typ x i;
       close_term_ln_opt' post x (i + 1)
 
-    | Tm_Protect { t } ->
-      close_st_term_ln' t x i
-    
     | Tm_ProofHintWithBinders { binders; v; t } ->
       let n = L.length binders in
       close_term_ln' v x (i + n);

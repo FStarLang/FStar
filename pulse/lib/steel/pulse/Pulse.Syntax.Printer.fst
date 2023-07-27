@@ -1,6 +1,9 @@
 module Pulse.Syntax.Printer
 open FStar.Printf
 open Pulse.Syntax.Base
+
+module L = FStar.List.Tot
+
 module T = FStar.Tactics.V2
 module Un = FStar.Sealed
 module R = FStar.Reflection.V2
@@ -79,6 +82,11 @@ let binder_to_string (b:binder)
             (T.unseal b.binder_ppname.name)
             (term_to_string b.binder_ty)
 
+let ctag_to_string = function
+  | STT -> "ST"
+  | STT_Atomic -> "STAtomic"
+  | STT_Ghost -> "STGhost"
+
 let comp_to_string (c:comp)
   : T.Tac string
   = match c with
@@ -135,18 +143,18 @@ let rec st_term_to_string' (level:string) (t:st_term)
         (term_to_string arg)
         
     | Tm_Bind { binder; head; body } ->
-      if T.unseal binder.binder_ppname.name = "_"
-      then sprintf "%s;\n%s%s" 
-                   (st_term_to_string' level head)
-                   level
-                   (st_term_to_string' level body)                   
-      else (
+      // if T.unseal binder.binder_ppname.name = "_"
+      // then sprintf "%s;\n%s%s" 
+      //              (st_term_to_string' level head)
+      //              level
+      //              (st_term_to_string' level body)                   
+      // else (
         sprintf "let %s = %s;\n%s%s"
           (binder_to_string binder)      
           (st_term_to_string' level head)
           level
           (st_term_to_string' level body)
-      )
+      // )
 
     | Tm_TotBind { head; body } ->
       sprintf "let tot _ = %s;\n%s%s"
@@ -245,13 +253,11 @@ let rec st_term_to_string' (level:string) (t:st_term)
          | None -> ""
          | Some post -> sprintf " %s" (term_to_string post))
 
-    | Tm_Protect { t } ->
-      sprintf "Protect(\n%s%s)"
-      level
-      (st_term_to_string' level t)
-
     | Tm_ProofHintWithBinders { binders; v; t} ->
-      sprintf "assert %s in\n%s"
+      sprintf "assert %s%s in\n%s"
+        (if L.length binders = 0 then ""
+         else let s = L.fold_left (fun s _b -> Printf.sprintf "%s _" s) "" binders in
+              Printf.sprintf "%s." s)
         (term_to_string v)
         (st_term_to_string' level t)
 
@@ -265,7 +271,6 @@ and branch_to_string br : T.Tac _ =
   st_term_to_string' "" e
 
 let st_term_to_string t = st_term_to_string' "" t
-
 
 let tag_of_term (t:term) =
   match t.t with
@@ -297,7 +302,6 @@ let tag_of_st_term (t:st_term) =
   | Tm_WithLocal _ -> "Tm_WithLocal"
   | Tm_Rewrite _ -> "Tm_Rewrite"
   | Tm_Admit _ -> "Tm_Admit"
-  | Tm_Protect _ -> "Tm_Protect"
   | Tm_ProofHintWithBinders _ -> "Tm_ProofHintWithBinders"
 
 let tag_of_comp (c:comp) : T.Tac string =
@@ -313,7 +317,6 @@ let rec print_st_head (t:st_term)
   : Tot string (decreases t) =
   match t.term with
   | Tm_Abs _  -> "Abs"
-  | Tm_Protect p -> print_st_head p.t
   | Tm_Return p -> print_head p.term
   | Tm_Bind _ -> "Bind"
   | Tm_TotBind _ -> "TotBind"
@@ -340,7 +343,6 @@ and print_head (t:term) =
 let rec print_skel (t:st_term) = 
   match t.term with
   | Tm_Abs { body }  -> Printf.sprintf "(fun _ -> %s)" (print_skel body)
-  | Tm_Protect { t=p } -> Printf.sprintf "(Protect %s)" (print_skel p)
   | Tm_Return { term = p } -> print_head p
   | Tm_Bind { head=e1; body=e2 } -> Printf.sprintf "(Bind %s %s)" (print_skel e1) (print_skel e2)
   | Tm_TotBind { body=e2 } -> Printf.sprintf "(TotBind _ %s)" (print_skel e2)

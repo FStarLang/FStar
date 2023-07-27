@@ -114,8 +114,6 @@ let rec freevars_st (t:st_term)
       Set.union (freevars typ)
                 (freevars_term_opt post)
 
-    | Tm_Protect { t } -> freevars_st t
-
     | Tm_ProofHintWithBinders { binders; v; t } ->
       Set.union (freevars v) (freevars_st t)
 and freevars_branches (t:list (pattern & st_term)) : Set.set var =
@@ -240,9 +238,6 @@ let rec ln_st' (t:st_term) (i:int)
     | Tm_Admit { typ; post } ->
       ln' typ i &&
       ln_opt' post (i + 1)
-
-    | Tm_Protect { t } ->
-      ln_st' t i
 
     | Tm_ProofHintWithBinders { binders; v; t } ->
       let n = L.length binders in
@@ -416,17 +411,16 @@ let rec subst_st_term (t:st_term) (ss:subst)
                  returns_ = subst_term_opt returns_ ss;
                  brs = subst_branches t ss brs }
 
-    | Tm_IntroPure { p; should_check } ->
-      Tm_IntroPure { p = subst_term p ss; should_check }
+    | Tm_IntroPure { p } ->
+      Tm_IntroPure { p = subst_term p ss }
 
     | Tm_ElimExists { p } ->
       Tm_ElimExists { p = subst_term p ss }
       
-    | Tm_IntroExists { erased; p; witnesses; should_check } ->
+    | Tm_IntroExists { erased; p; witnesses } ->
       Tm_IntroExists { erased; 
                        p = subst_term p ss;
-                       witnesses = subst_term_list witnesses ss;
-                       should_check }                             
+                       witnesses = subst_term_list witnesses ss }                             
 
     | Tm_While { invariant; condition; body; condition_var } ->
       Tm_While { invariant = subst_term invariant (shift_subst ss);
@@ -456,9 +450,6 @@ let rec subst_st_term (t:st_term) (ss:subst)
                  u; 
                  typ=subst_term typ ss;
                  post=subst_term_opt post (shift_subst ss) }
-
-    | Tm_Protect { t } ->
-      Tm_Protect { t = subst_st_term t ss }
 
     | Tm_ProofHintWithBinders { hint_type; binders; v; t} ->
       let n = L.length binders in

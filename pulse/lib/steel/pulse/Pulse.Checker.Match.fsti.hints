@@ -1,1 +1,20 @@
-[ "#©; ý1$ábÌ˜o\u0002*ˆñ", [] ]
+[
+  "“-âIè(R&0íCôYWr½",
+  [
+    [
+      "Pulse.Checker.Match.check",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_Pulse.Typing.post_hint_for_env",
+        "proj_equation_FStar.Pervasives.Native.Some_v",
+        "projection_inverse_FStar.Pervasives.Native.Some_v",
+        "refinement_interpretation_Tm_refine_6e8e5238aadfc712ef5fa6bc6310c384"
+      ],
+      0,
+      "ef1ca511aa98a304fe0656e34d4a419e"
+    ]
+  ]
+]

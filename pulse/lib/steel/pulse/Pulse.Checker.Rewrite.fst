@@ -1,22 +1,24 @@
 module Pulse.Checker.Rewrite
 
-module T = FStar.Tactics.V2
-module RT = FStar.Reflection.Typing
-
 open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Pure
-open Pulse.Checker.Common
-module P = Pulse.Syntax.Printer
-module FV = Pulse.Typing.FV
+open Pulse.Checker.Base
+open Pulse.Checker.Prover
 
-let check_rewrite
+module T = FStar.Tactics.V2
+module P = Pulse.Syntax.Printer
+
+let check
   (g:env)
-  (t:st_term{Tm_Rewrite? t.term})
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
+  (res_ppname:ppname)
+  (t:st_term{Tm_Rewrite? t.term})
+
   : T.Tac (checker_result_t g pre post_hint) =
+
   let g = push_context "check_rewrite" t.range g in
   let Tm_Rewrite {t1=p; t2=q} = t.term in
   let (| p, p_typing |) = check_vprop g p in
@@ -38,5 +40,5 @@ let check_rewrite
                            (T.term_to_string elab_q))
            | Some token ->
             VE_Ext g p q token in
-	     let d = T_Rewrite _ p q p_typing equiv_p_q in
-	     repack (Pulse.Checker.Common.try_frame_pre pre_typing d) post_hint
+	let d = T_Rewrite _ p q p_typing equiv_p_q in
+	prove_post_hint (try_frame_pre pre_typing d res_ppname) post_hint t.range

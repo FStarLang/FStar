@@ -23,10 +23,11 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_f327b3b66854e57c59289f8c259581e7",
         "typing_FStar.Map.contains", "typing_FStar.Reflection.V2.Data.var",
+        "typing_FStar.Set.mem", "typing_Pulse.Syntax.Naming.freevars_st",
         "typing_Pulse.Typing.Env.as_map"
       ],
       0,
-      "a513b4cf1ed166f6b56115e8ca321670"
+      "342a9485605a674f888760af3e53cb96"
     ],
     [
       "Pulse.Soundness.WithLocal.mk_t_abs",

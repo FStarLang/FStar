@@ -18,6 +18,8 @@ let (ppname_default : ppname) =
 let (mk_ppname :
   FStar_Reflection_Typing.pp_name_t -> FStar_Range.range -> ppname) =
   fun name -> fun range1 -> { name; range = range1 }
+let (mk_ppname_no_range : Prims.string -> ppname) =
+  fun s -> { name = (FStar_Sealed.seal s); range = FStar_Range.range_0 }
 type bv = {
   bv_index: index ;
   bv_ppname: ppname }
@@ -39,11 +41,6 @@ let (__proj__Mknm__item__nm_ppname : nm -> ppname) =
 type qualifier =
   | Implicit 
 let (uu___is_Implicit : qualifier -> Prims.bool) = fun projectee -> true
-type should_check_t = (Prims.bool, unit) FStar_Sealed_Inhabited.sealed
-let (should_check_true : should_check_t) =
-  FStar_Sealed_Inhabited.seal false true
-let (should_check_false : should_check_t) =
-  FStar_Sealed_Inhabited.seal false false
 type fv = {
   fv_name: FStar_Reflection_Types.name ;
   fv_range: range }
@@ -208,6 +205,12 @@ let (uu___is_STT_Atomic : ctag -> Prims.bool) =
   fun projectee -> match projectee with | STT_Atomic -> true | uu___ -> false
 let (uu___is_STT_Ghost : ctag -> Prims.bool) =
   fun projectee -> match projectee with | STT_Ghost -> true | uu___ -> false
+let (ctag_of_comp_st : comp_st -> ctag) =
+  fun c ->
+    match c with
+    | C_ST uu___ -> STT
+    | C_STAtomic (uu___, uu___1) -> STT_Atomic
+    | C_STGhost (uu___, uu___1) -> STT_Ghost
 type proof_hint_type =
   | ASSERT 
   | FOLD of Prims.string Prims.list FStar_Pervasives_Native.option 
@@ -259,18 +262,15 @@ and st_term'__Tm_Match__payload =
   sc: term ;
   returns_: vprop FStar_Pervasives_Native.option ;
   brs: (pattern * st_term) Prims.list }
-and st_term'__Tm_IntroPure__payload =
-  {
-  p: term ;
-  should_check: should_check_t }
+and st_term'__Tm_IntroPure__payload = {
+  p: term }
 and st_term'__Tm_ElimExists__payload = {
   p1: vprop }
 and st_term'__Tm_IntroExists__payload =
   {
   erased: Prims.bool ;
   p2: vprop ;
-  witnesses: term Prims.list ;
-  should_check1: should_check_t }
+  witnesses: term Prims.list }
 and st_term'__Tm_While__payload =
   {
   invariant: term ;
@@ -299,14 +299,12 @@ and st_term'__Tm_Admit__payload =
   u1: universe ;
   typ: term ;
   post3: term FStar_Pervasives_Native.option }
-and st_term'__Tm_Protect__payload = {
-  t3: st_term }
 and st_term'__Tm_ProofHintWithBinders__payload =
   {
   hint_type: proof_hint_type ;
   binders: binder Prims.list ;
   v: vprop ;
-  t4: st_term }
+  t3: st_term }
 and st_term' =
   | Tm_Return of st_term'__Tm_Return__payload 
   | Tm_Abs of st_term'__Tm_Abs__payload 
@@ -323,7 +321,6 @@ and st_term' =
   | Tm_WithLocal of st_term'__Tm_WithLocal__payload 
   | Tm_Rewrite of st_term'__Tm_Rewrite__payload 
   | Tm_Admit of st_term'__Tm_Admit__payload 
-  | Tm_Protect of st_term'__Tm_Protect__payload 
   | Tm_ProofHintWithBinders of st_term'__Tm_ProofHintWithBinders__payload 
 and st_term = {
   term1: st_term' ;
@@ -354,8 +351,6 @@ let uu___is_Tm_Rewrite uu___ =
   match uu___ with | Tm_Rewrite _ -> true | _ -> false
 let uu___is_Tm_Admit uu___ =
   match uu___ with | Tm_Admit _ -> true | _ -> false
-let uu___is_Tm_Protect uu___ =
-  match uu___ with | Tm_Protect _ -> true | _ -> false
 let uu___is_Tm_ProofHintWithBinders uu___ =
   match uu___ with | Tm_ProofHintWithBinders _ -> true | _ -> false
 type branch = (pattern * st_term)
@@ -510,12 +505,9 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
       | (Tm_TotBind { head2 = t11; body2 = k1;_}, Tm_TotBind
          { head2 = t21; body2 = k2;_}) ->
           (eq_tm t11 t21) && (eq_st_term k1 k2)
-      | (Tm_IntroPure { p = p1; should_check = uu___;_}, Tm_IntroPure
-         { p = p2; should_check = uu___1;_}) -> eq_tm p1 p2
-      | (Tm_IntroExists
-         { erased = b1; p2 = p1; witnesses = l1; should_check1 = uu___;_},
-         Tm_IntroExists
-         { erased = b2; p2; witnesses = l2; should_check1 = uu___1;_}) ->
+      | (Tm_IntroPure { p = p1;_}, Tm_IntroPure { p = p2;_}) -> eq_tm p1 p2
+      | (Tm_IntroExists { erased = b1; p2 = p1; witnesses = l1;_},
+         Tm_IntroExists { erased = b2; p2; witnesses = l2;_}) ->
           ((b1 = b2) && (eq_tm p1 p2)) && (eq_tm_list l1 l2)
       | (Tm_ElimExists { p1;_}, Tm_ElimExists { p1 = p2;_}) -> eq_tm p1 p2
       | (Tm_If { b1 = g1; then_ = ethen1; else_ = eelse1; post1 = p1;_},
@@ -558,12 +550,10 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
          { ctag1 = c2; u1 = u2; typ = t21; post3 = post2;_}) ->
           (((c1 = c2) && (eq_univ u1 u2)) && (eq_tm t11 t21)) &&
             (eq_tm_opt post1 post2)
-      | (Tm_Protect { t3 = t11;_}, Tm_Protect { t3 = t21;_}) ->
-          eq_st_term t11 t21
       | (Tm_ProofHintWithBinders
-         { hint_type = ht1; binders = bs1; v = v1; t4 = t11;_},
+         { hint_type = ht1; binders = bs1; v = v1; t3 = t11;_},
          Tm_ProofHintWithBinders
-         { hint_type = ht2; binders = bs2; v = v2; t4 = t21;_}) ->
+         { hint_type = ht2; binders = bs2; v = v2; t3 = t21;_}) ->
           (((ht1 = ht2) && (eq_list eq_binder bs1 bs2)) && (eq_tm v1 v2)) &&
             (eq_st_term t11 t21)
       | uu___ -> false

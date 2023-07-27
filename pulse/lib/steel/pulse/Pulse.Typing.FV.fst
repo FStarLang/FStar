@@ -157,9 +157,6 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
       freevars_close_term' typ x i;
       freevars_close_term_opt' post x (i + 1)
 
-    | Tm_Protect { t } ->
-      freevars_close_st_term' t x i
-
     | Tm_ProofHintWithBinders { binders; v; t } ->
       let n = L.length binders in
       freevars_close_term' v x (i + n);

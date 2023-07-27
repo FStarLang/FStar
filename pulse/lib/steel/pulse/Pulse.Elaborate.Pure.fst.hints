@@ -8,7 +8,7 @@
       1,
       [ "@query", "lemma_FStar.Pervasives.invertOption" ],
       0,
-      "b60a348666f05c278d04c1045d25b483"
+      "1581d9d3adc7c3fecfb5c9bd707c5379"
     ],
     [
       "Pulse.Elaborate.Pure.elab_qual",
@@ -75,7 +75,7 @@
         "Prims_pretyping_ce036b6b736ef4e0bc3a9ff132a12aed",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "Pulse.Syntax.Base_pretyping_be189e4f396d5337499ee0c3708ca7f2",
-        "binder_x_be189e4f396d5337499ee0c3708ca7f2_0", "bool_typing",
+        "binder_x_be189e4f396d5337499ee0c3708ca7f2_0",
         "data_elim_Pulse.Syntax.Base.Pat_Dot_Term",
         "disc_equation_Pulse.Syntax.Base.Pat_Cons",
         "disc_equation_Pulse.Syntax.Base.Pat_Constant",
@@ -88,7 +88,8 @@
         "lemma_FStar.Pervasives.invertOption",
         "proj_equation_Pulse.Syntax.Base.Pat_Dot_Term__0",
         "projection_inverse_BoxBool_proj_0", "string_typing",
-        "subterm_ordering_Pulse.Syntax.Base.Pat_Cons", "true_interp"
+        "subterm_ordering_Pulse.Syntax.Base.Pat_Cons", "true_interp",
+        "typing_Pulse.Syntax.Base.uu___is_Pat_Constant"
       ],
       0,
       "47f26a175450a19e3dce37987c67d30f"

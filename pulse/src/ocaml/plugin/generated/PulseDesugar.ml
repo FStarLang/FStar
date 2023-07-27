@@ -637,17 +637,7 @@ let (mk_bind :
       PulseSyntaxWrapper.st_term ->
         PulseSyntaxWrapper.range -> PulseSyntaxWrapper.st_term)
   =
-  fun b ->
-    fun s1 ->
-      fun s2 ->
-        fun r ->
-          let uu___ = PulseSyntaxWrapper.is_tm_intro_exists s1 in
-          if uu___
-          then
-            let uu___1 = PulseSyntaxWrapper.tm_protect s1 in
-            let uu___2 = PulseSyntaxWrapper.tm_protect s2 in
-            PulseSyntaxWrapper.tm_bind b uu___1 uu___2 r
-          else PulseSyntaxWrapper.tm_bind b s1 s2 r
+  fun b -> fun s1 -> fun s2 -> fun r -> PulseSyntaxWrapper.tm_bind b s1 s2 r
 let (explicit_rvalues : env_t -> PulseSugar.stmt -> PulseSugar.stmt) =
   fun env -> fun s -> s
 type qual = PulseSyntaxWrapper.qualifier FStar_Pervasives_Native.option

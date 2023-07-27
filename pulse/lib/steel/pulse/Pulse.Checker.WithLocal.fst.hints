@@ -1,5 +1,5 @@
 [
-  "ù:\u000eŸ)/øá\u0018\u001b±k\\nàW",
+  "\u0016\u001f„|Z\\˚Z!€óS¿:_É",
   [
     [
       "Pulse.Checker.WithLocal.extend_post_hint_for_local",
@@ -14,7 +14,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "6043a9285ce9692cc21f9d80f6f5196a"
+      "a3e75bab11ed7a39d651a2c3f74459ea"
     ],
     [
       "Pulse.Checker.WithLocal.with_local_pre_typing",
@@ -29,17 +29,16 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "fa6fbebcd7e6d05d4bafcfadfda5087d"
+      "f4d8c12170c6a0c31d68ff52dae9acea"
     ],
     [
-      "Pulse.Checker.WithLocal.check_withlocal",
+      "Pulse.Checker.WithLocal.check",
       1,
-      2,
+      0,
       1,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Pulse.Syntax.Naming.freevars_st.fuel_instrumented",
-        "@fuel_irrelevance_Pulse.Syntax.Naming.freevars_st.fuel_instrumented",
         "@query", "Prims_pretyping_ce036b6b736ef4e0bc3a9ff132a12aed",
         "Pulse.Syntax.Base_pretyping_fe09dc1e796799f4bac0760e63f30d40",
         "bool_inversion",
@@ -52,6 +51,7 @@
         "data_elim_Pulse.Syntax.Base.C_ST",
         "data_elim_Pulse.Syntax.Base.Mkbinder",
         "data_elim_Pulse.Syntax.Base.Mkppname",
+        "data_elim_Pulse.Typing.Mkpost_hint_t",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_Pulse.Syntax.Base.C_ST",
         "disc_equation_Pulse.Syntax.Base.C_STAtomic",
@@ -68,6 +68,7 @@
         "equation_Pulse.Syntax.Base.comp_post",
         "equation_Pulse.Syntax.Base.comp_pre",
         "equation_Pulse.Syntax.Base.comp_res",
+        "equation_Pulse.Syntax.Base.comp_st",
         "equation_Pulse.Syntax.Base.comp_u",
         "equation_Pulse.Syntax.Base.index",
         "equation_Pulse.Syntax.Base.ppname_default",
@@ -79,14 +80,12 @@
         "equation_Pulse.Syntax.Naming.open_st_term",
         "equation_Pulse.Syntax.Pure.null_var",
         "equation_Pulse.Syntax.Pure.term_of_nvar",
+        "equation_Pulse.Syntax.Pure.tm_type",
         "equation_Pulse.Syntax.Pure.u0", "equation_Pulse.Typing.Env.dom",
-        "equation_Pulse.Typing.Env.env_extends",
-        "equation_Pulse.Typing.Env.extends_with",
         "equation_Pulse.Typing.Env.lookup",
         "equation_Pulse.Typing.FV.set_minus",
         "equation_Pulse.Typing.comp_post_matches_hint",
         "equation_Pulse.Typing.comp_withlocal_body",
-        "equation_Pulse.Typing.comp_withlocal_body_pre",
         "equation_Pulse.Typing.elab_env", "equation_Pulse.Typing.fresh_wrt",
         "equation_Pulse.Typing.mk_ref",
         "equation_Pulse.Typing.post_hint_for_env",
@@ -94,10 +93,12 @@
         "equation_Pulse.Typing.post_hint_opt",
         "fuel_guarded_inversion_FStar.Tactics.Result.__result",
         "fuel_guarded_inversion_Pulse.Syntax.Base.binder",
+        "fuel_guarded_inversion_Pulse.Syntax.Base.comp",
         "fuel_guarded_inversion_Pulse.Syntax.Base.ppname",
         "fuel_guarded_inversion_Pulse.Syntax.Base.st_comp",
         "fuel_guarded_inversion_Pulse.Syntax.Base.st_term",
         "fuel_guarded_inversion_Pulse.Syntax.Base.term",
+        "fuel_guarded_inversion_Pulse.Typing.post_hint_t",
         "function_token_typing_Prims.__cache_version_number__",
         "function_token_typing_Prims.int",
         "function_token_typing_Prims.string",
@@ -105,14 +106,12 @@
         "int_typing", "kinding_Pulse.Syntax.Base.term@tok",
         "kinding_Pulse.Typing.post_hint_t@tok",
         "lemma_FStar.Map.lemma_ContainsDom",
-        "lemma_FStar.Map.lemma_InDomConcat",
         "lemma_FStar.Pervasives.invertOption",
         "lemma_FStar.Sealed.Inhabited.sealed_singleton",
         "lemma_FStar.Set.mem_complement", "lemma_FStar.Set.mem_intersect",
         "lemma_FStar.Set.mem_singleton",
         "lemma_Pulse.Syntax.Base.range_singleton",
         "lemma_Pulse.Typing.Env.push_binding_bs",
-        "lemma_Pulse.Typing.Env.push_env_as_map",
         "lemma_Pulse.Typing.FV.freevars_close_st_term",
         "lemma_Pulse.Typing.post_hint_for_env_extends",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_BarBar",
@@ -123,7 +122,6 @@
         "proj_equation_Pulse.Syntax.Base.Mkbinder_binder_ppname",
         "proj_equation_Pulse.Syntax.Base.Mknm_nm_ppname",
         "proj_equation_Pulse.Syntax.Base.Mkppname_name",
-        "proj_equation_Pulse.Syntax.Base.Mkppname_range",
         "proj_equation_Pulse.Syntax.Base.Mkst_comp_post",
         "proj_equation_Pulse.Syntax.Base.Mkst_comp_pre",
         "proj_equation_Pulse.Syntax.Base.Mkst_comp_res",
@@ -158,10 +156,11 @@
         "projection_inverse_Pulse.Typing.Mkpost_hint_t_u",
         "refinement_interpretation_Tm_refine_262f039a938fc14ac016e995f8cd074e",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_460ca66dc5107a4a4bd5bf4443e1a214",
         "refinement_interpretation_Tm_refine_484fe0819d1383a2c20d94ae027baa5f",
+        "refinement_interpretation_Tm_refine_4a35837bb22dd5d80593cba92d284990",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_6e8e5238aadfc712ef5fa6bc6310c384",
+        "refinement_interpretation_Tm_refine_78cf9fabb706bab7e54de904b7db9d2a",
         "refinement_interpretation_Tm_refine_7f3ad0958305f2921bfac06f466396ae",
         "refinement_interpretation_Tm_refine_8c22aa61a47c16d0229ef090894097c8",
         "refinement_interpretation_Tm_refine_a8346b95ba5a8f04395122ae3c6a0150",
@@ -171,14 +170,12 @@
         "refinement_interpretation_Tm_refine_f0ac051651fa0e095f1b2c1241fd6a3f",
         "string_typing",
         "token_correspondence_Pulse.Syntax.Naming.freevars_st.fuel_instrumented",
-        "typing_FStar.Map.contains", "typing_FStar.Reflection.V2.Data.var",
-        "typing_FStar.Set.complement", "typing_FStar.Set.mem",
-        "typing_FStar.Set.singleton",
+        "typing_FStar.Reflection.V2.Data.var", "typing_FStar.Set.complement",
+        "typing_FStar.Set.mem", "typing_FStar.Set.singleton",
         "typing_Pulse.Checker.Pure.push_context",
         "typing_Pulse.Checker.WithLocal.extend_post_hint_for_local",
         "typing_Pulse.Syntax.Base.__proj__Mkbinder__item__binder_ppname",
         "typing_Pulse.Syntax.Base.__proj__Mkppname__item__name",
-        "typing_Pulse.Syntax.Base.__proj__Mkppname__item__range",
         "typing_Pulse.Syntax.Base.__proj__Mkst_term__item__range",
         "typing_Pulse.Syntax.Base.eq_univ",
         "typing_Pulse.Syntax.Base.ppname_default",
@@ -188,12 +185,10 @@
         "typing_Pulse.Typing.Env.dom", "typing_Pulse.Typing.Env.fresh",
         "typing_Pulse.Typing.Env.fstar_env",
         "typing_Pulse.Typing.Env.push_binding",
-        "typing_Pulse.Typing.Env.push_context",
-        "typing_Pulse.Typing.__proj__Mkpost_hint_t__item__g",
-        "typing_Pulse.Typing.mk_ref"
+        "typing_Pulse.Typing.Env.push_context", "typing_Pulse.Typing.mk_ref"
       ],
       0,
-      "385c4552707e0146411208cc2cba5085"
+      "aba63061f6645ace26b942fe67526805"
     ]
   ]
 ]

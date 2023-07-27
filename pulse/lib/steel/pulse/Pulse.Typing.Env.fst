@@ -110,6 +110,10 @@ let push_env_assoc g1 g2 g3 =
   L.append_assoc g3.bs g2.bs g1.bs;
   assert (equal (push_env g1 (push_env g2 g3)) (push_env (push_env g1 g2) g3))
 
+let check_disjoint g s =
+  admit ();
+  not (L.existsb (fun (x, _) -> Set.mem x s) g.bs)
+
 let rec remove_binding_aux (g:env)
   (prefix:list (var & typ))
   (prefix_names:list ppname { List.length prefix == List.length prefix_names})
@@ -258,6 +262,17 @@ let extends_with_push (g1 g2 g3:env)
   assert (equal (push_binding g1 x n t)
                 (push_env g2 (push_binding g3 x n t)))
 
+#push-options "--admit_smt_queries true"
+let rec subst_env (en:env) (ss:subst)
+  : en':env { fstar_env en == fstar_env en' /\
+              dom en == dom en' } =
+  match bindings en with
+  | [] -> en
+  | _ ->
+    let x, t, en = remove_latest_binding en in
+    push_binding (subst_env en ss) x ppname_default (subst_term t ss) 
+#pop-options
+
 let push_context g ctx r = { g with ctxt = Pulse.RuntimeUtils.extend_context ctx (Some r) g.ctxt }
 let push_context_no_range g ctx = { g with ctxt = Pulse.RuntimeUtils.extend_context ctx None g.ctxt }
 
@@ -316,8 +331,8 @@ let print_issues (g:env)
    = String.concat "\n" (T.map (print_issue g) i)
 
 let env_to_string (e:env) : T.Tac string =
-  let bs = T.map
-    (fun ((_, t), x) -> Printf.sprintf "%s : %s" (T.unseal x.name) (Pulse.Syntax.Printer.term_to_string t))
+  let bs = T.map #((var & _) & _) #_
+    (fun ((n, t), x) -> Printf.sprintf "%s#%d : %s" (T.unseal x.name) n (Pulse.Syntax.Printer.term_to_string t))
     (T.zip e.bs e.names) in
   String.concat "\n  " bs
 

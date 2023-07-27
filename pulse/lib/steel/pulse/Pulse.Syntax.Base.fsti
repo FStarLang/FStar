@@ -40,6 +40,11 @@ let mk_ppname (name:RT.pp_name_t) (range:FStar.Range.range) : ppname = {
     range = range
 }
 
+let mk_ppname_no_range (s:string) : ppname = {
+  name = FStar.Sealed.seal s;
+  range = FStar.Range.range_0;
+}
+
 noeq
 type bv = {
   bv_index  : index;
@@ -54,10 +59,6 @@ type nm = {
 
 type qualifier =
   | Implicit
-
-let should_check_t = FStar.Sealed.Inhabited.sealed false
-let should_check_true : should_check_t = FStar.Sealed.Inhabited.seal true
-let should_check_false : should_check_t = FStar.Sealed.Inhabited.seal false
 
 noeq
 type fv = {
@@ -141,6 +142,12 @@ type ctag =
   | STT_Atomic
   | STT_Ghost
 
+let ctag_of_comp_st (c:comp_st) : ctag =
+  match c with
+  | C_ST _ -> STT
+  | C_STAtomic _ _ -> STT_Atomic
+  | C_STGhost _ _ -> STT_Ghost
+
 type proof_hint_type =
   | ASSERT
   | FOLD of option (list string)
@@ -188,7 +195,6 @@ type st_term' =
     }
   | Tm_IntroPure {
       p:term;
-      should_check:should_check_t;
     }
   | Tm_ElimExists {
       p:vprop;
@@ -197,7 +203,6 @@ type st_term' =
       erased:bool;
       p:vprop;
       witnesses:list term;
-      should_check:should_check_t;
     }
   | Tm_While {
       invariant:term;
@@ -227,10 +232,6 @@ type st_term' =
       u:universe;
       typ:term;
       post:option term;
-    }
-  | Tm_Protect {
-      //Wrap a term to indicate that no proof-automation heuristics should be applied
-      t:st_term;
     }
   | Tm_ProofHintWithBinders { // assert (R.pts_to x ?p ?v) in body
       hint_type:proof_hint_type;

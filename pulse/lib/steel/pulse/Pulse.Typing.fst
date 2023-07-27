@@ -732,7 +732,7 @@ type st_typing : env -> st_term -> comp -> Type =
       p:term ->
       tot_typing g p tm_prop ->
       prop_validity g p -> 
-      st_typing g (wr (Tm_IntroPure { p; should_check=should_check_true }))
+      st_typing g (wr (Tm_IntroPure { p }))
                   (comp_intro_pure p)
 
   | T_ElimExists:
@@ -757,8 +757,7 @@ type st_typing : env -> st_term -> comp -> Type =
       tot_typing g e b.binder_ty ->
       st_typing g (wr (Tm_IntroExists { erased = false;
                                         p = tm_exists_sl u b p;
-                                        witnesses= [e];
-                                        should_check=should_check_true }))
+                                        witnesses= [e] }))
                   (comp_intro_exists u b p e)
       
   | T_IntroExistsErased:
@@ -772,8 +771,7 @@ type st_typing : env -> st_term -> comp -> Type =
       tot_typing g e (mk_erased u b.binder_ty)  ->
       st_typing g (wr (Tm_IntroExists { erased = true;
                                         p = tm_exists_sl u b p;
-                                        witnesses= [e];
-                                        should_check=should_check_true }))
+                                        witnesses= [e] }))
                   (comp_intro_exists_erased u b p e)
 
   | T_While:
@@ -937,6 +935,7 @@ let emp_typing (#g:_)
 noeq
 type post_hint_t = {
   g:env;
+  ctag_hint:option ctag;
   ret_ty:term;
   u:universe;
   ty_typing:universe_of g ret_ty u;

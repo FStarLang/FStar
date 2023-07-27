@@ -1,27 +1,27 @@
 module Pulse.Checker.Bind
-module RT = FStar.Reflection.Typing
-module R = FStar.Reflection.V2
-module L = FStar.List.Tot
-module T = FStar.Tactics.V2
-open FStar.List.Tot
-open Pulse.Syntax
-open Pulse.Elaborate.Pure
-open Pulse.Typing
-open Pulse.Checker.Common
 
-val check_bind (g:env)
-               (t:st_term{Tm_Bind? t.term})
-               (pre:term)
-               (pre_typing:tot_typing g pre tm_vprop)
-               (post_hint:post_hint_opt g)               
-               (check:check_t)
+module T = FStar.Tactics.V2
+
+open Pulse.Syntax
+open Pulse.Typing
+open Pulse.Checker.Base
+
+val check_bind
+  (g:env)
+  (pre:term)
+  (pre_typing:tot_typing g pre tm_vprop)
+  (post_hint:post_hint_opt g)
+  (res_ppname:ppname)
+  (t:st_term{Tm_Bind? t.term})
+  (check:check_t)
   : T.Tac (checker_result_t g pre post_hint)
 
 val check_tot_bind
   (g:env)
-  (t:st_term{Tm_TotBind? t.term})
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
+  (res_ppname:ppname)
+  (t:st_term { Tm_TotBind? t.term })
   (check:check_t)
   : T.Tac (checker_result_t g pre post_hint)

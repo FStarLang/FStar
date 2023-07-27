@@ -1,15 +1,16 @@
 module Pulse.Checker.Match
 
-module T = FStar.Tactics.V2
-module L = FStar.List.Tot.Base
-module R = FStar.Reflection.V2
-module RT = FStar.Reflection.Typing
-
 open Pulse.Common
 open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Pure
-open Pulse.Checker.Common
+open Pulse.Checker.Base
+open Pulse.Checker.Prover
+
+module T = FStar.Tactics.V2
+module L = FStar.List.Tot.Base
+module R = FStar.Reflection.V2
+module RT = FStar.Reflection.Typing
 
 let rec readback_pat (p : R.pattern) : option pattern =
   match p with
@@ -164,7 +165,7 @@ let rec tot_typing_weakening_n bs d =
   match bs with
   | [] -> d
   | (x,t)::bs ->
-    let d = Pulse.Typing.Metatheory.tot_typing_weakening x t d in
+    let d = Pulse.Typing.Metatheory.tot_typing_weakening_single d x t in
     tot_typing_weakening_n bs d
 
 let samepat (b1 b2 : branch) : prop = fst b1 == fst b2
@@ -225,15 +226,17 @@ let check_branch
     fail g (Some e.range) "Failed to elab pattern into term";
   if (R.Tv_Unknown? (R.inspect_ln (fst (Some?.v elab_p)))) then
     fail g (Some e.range) "should not happen: pattern elaborated to Tv_Unknown";
-  T.print ("Elaborated pattern = " ^ T.term_to_string (fst (Some?.v elab_p)));
+  // T.print ("Elaborated pattern = " ^ T.term_to_string (fst (Some?.v elab_p)));
   let eq_typ = mk_sq_eq2 sc_u sc_ty sc (tm_fstar (fst (Some?.v elab_p)) Range.range_0) in
   let g' = push_binding g' hyp_var ({name = Sealed.seal "branch equality"; range = Range.range_0 }) eq_typ in
   let e = open_st_term_bs e pulse_bs in
   let pre_typing = tot_typing_weakening_n pulse_bs pre_typing in // weaken w/ binders
-  let pre_typing = Pulse.Typing.Metatheory.tot_typing_weakening hyp_var eq_typ pre_typing in // weaken w/ branch eq
-  let (| e, c, e_d |) = check g' e pre pre_typing (Some post_hint) in
-  if not (stateful_comp c) then
-    fail g (Some e.range) "Branch computation is not stateful";
+  let pre_typing = Pulse.Typing.Metatheory.tot_typing_weakening_single pre_typing hyp_var eq_typ in // weaken w/ branch eq
+
+  let (| e, c, e_d |) =
+    let ppname = mk_ppname_no_range "_br" in
+    let r = check g' pre pre_typing (Some post_hint) ppname e in
+    apply_checker_result_k r ppname in
   let br_d : br_typing g sc_u sc_ty sc p (close_st_term_n e (L.map fst pulse_bs)) c = TBR g sc_u sc_ty sc c p e bs () () () hyp_var e_d in
   (| p, close_st_term_n e (L.map fst pulse_bs), c, br_d |)
 
@@ -286,16 +289,20 @@ let check_branches
   in
   (| brs, c0, d |)
 
-let check_match
+let check
         (g:env)
-        (sc:term)
-        (brs:list branch)
         (pre:term)
         (pre_typing: tot_typing g pre tm_vprop)
         (post_hint:post_hint_for_env g)
+        (res_ppname:ppname)
+        (sc:term)
+        (brs:list branch)
         (check:check_t)
   : T.Tac (checker_result_t g pre (Some post_hint))
   =
+
+  let g = Pulse.Typing.Env.push_context_no_range g "check_match" in
+
   let sc_range = sc.range in // save range, it gets lost otherwise
   let orig_brs = brs in
   let nbr = L.length brs in
@@ -341,6 +348,5 @@ let check_match
   (* Provable *)
   assume (L.map (fun (p, _) -> elab_pat p) brs == elab_pats');
 
-  (| _,
-     c,
-     T_Match g sc_u sc_ty sc sc_ty_typing (E sc_typing) c brs brs_d complete_d |)
+  let d = T_Match g sc_u sc_ty sc sc_ty_typing (E sc_typing) c brs brs_d complete_d in
+  checker_result_for_st_typing (| _, _, d |) res_ppname

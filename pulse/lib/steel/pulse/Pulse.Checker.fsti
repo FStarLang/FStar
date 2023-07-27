@@ -7,6 +7,6 @@ open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Elaborate.Pure
 open Pulse.Typing
-open Pulse.Checker.Common
+open Pulse.Checker.Base
 
 val check : check_t

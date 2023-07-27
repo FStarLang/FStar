@@ -1,25 +1,24 @@
 module Pulse.Checker.Return
 
-module T = FStar.Tactics.V2
-module RT = FStar.Reflection.Typing
-
 open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Pure
-open Pulse.Checker.Common
+open Pulse.Checker.Base
+open Pulse.Checker.Prover
 
+module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
-module FV = Pulse.Typing.FV
+module Metatheory = Pulse.Typing.Metatheory
 
-#push-options "--query_stats --z3rlimit_factor 2"
-let check_return
-  (allow_inst:bool)
+let check
   (g:env)
-  (st:st_term{Tm_Return? st.term})
-  (pre:term)
-  (pre_typing:tot_typing g pre tm_vprop)
+  (ctxt:term)
+  (ctxt_typing:tot_typing g ctxt tm_vprop)
   (post_hint:post_hint_opt g)
-  : T.Tac (checker_result_t g pre post_hint) =
+  (res_ppname:ppname)
+  (st:st_term { Tm_Return? st.term })
+  : T.Tac (checker_result_t g ctxt post_hint) =
+  
   let g = push_context "check_return" st.range g in
   let Tm_Return {ctag=c; insert_eq=use_eq; term=t} = st.term in
   let (| t, u, ty, uty, d |) :
@@ -35,12 +34,13 @@ let check_return
       assert (g `env_extends` post.g);
       let ty_typing : universe_of post.g post.ret_ty post.u =
         post.ty_typing in
-      // weakening of post.g to g
-      let ty_typing : universe_of g post.ret_ty post.u = magic () in
+      let ty_typing : universe_of g post.ret_ty post.u =
+        Metatheory.tot_typing_weakening_standard post.g post.ty_typing g in
       (| t, post.u, post.ret_ty, ty_typing, d |)
   in
+  
   let x = fresh g in
-  let px = v_as_nv x in
+  let px = res_ppname, x in
   let (| post_opened, post_typing |) : t:term & tot_typing (push_binding g x (fst px) ty)  t tm_vprop =
       match post_hint with
       | None -> 
@@ -51,7 +51,9 @@ let check_return
         // we already checked for the return type
         let post : post_hint_t = post in
         if x `Set.mem` (freevars post.post)
-        then fail g None "Unexpected variable clash in return"
+        then fail g None
+               ("check_return: unexpected variable clash in return post,\
+                 please file a bug report")
         else 
          let ty_rec = post_hint_typing g post x in
          (| open_term_nv post.post px, ty_rec.post_typing |)
@@ -59,4 +61,4 @@ let check_return
   assume (open_term (close_term post_opened x) x == post_opened);
   let post = close_term post_opened x in
   let d = T_Return g c use_eq u ty t post x uty (E d) post_typing in
-  repack (Pulse.Checker.Common.try_frame_pre pre_typing d) post_hint
+  prove_post_hint (try_frame_pre ctxt_typing d res_ppname) post_hint t.range

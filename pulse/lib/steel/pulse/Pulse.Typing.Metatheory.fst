@@ -1,55 +1,92 @@
 module Pulse.Typing.Metatheory
+
 open Pulse.Syntax
-open Pulse.Syntax.Naming
 open Pulse.Typing
 
-let admit_st_comp_typing (g:env) (st:st_comp) 
-  : st_comp_typing g st
-  = admit(); 
-    STC g st (fresh g) (admit()) (admit()) (admit())
+module T = FStar.Tactics.V2
 
-let admit_comp_typing (g:env) (c:comp_st)
-  : comp_typing_u g c
-  = match c with
-    | C_ST st ->
-      CT_ST g st (admit_st_comp_typing g st)
-    | C_STAtomic inames st ->
-      CT_STAtomic g inames st (admit()) (admit_st_comp_typing g st)
-    | C_STGhost inames st ->
-      CT_STGhost g inames st (admit()) (admit_st_comp_typing g st)      
+let tot_typing_weakening_single #g #t #ty d x x_t =
+  let g1 = singleton_env (fstar_env g) x x_t in
+  let g' = mk_env (fstar_env g) in
+  assert (equal (push_env g g') g);
+  assert (equal (push_env (push_env g g1) g') (push_env g g1));
+  assert (equal (push_env g g1) (push_binding g x ppname_default x_t));
+  tot_typing_weakening g g' t ty d g1
 
-let st_typing_correctness (#g:env) (#t:st_term) (#c:comp_st) 
-                          (_:st_typing g t c)
-  : comp_typing_u g c
-  = admit_comp_typing g c
-    
-let add_frame_well_typed (#g:env) (#c:comp_st) (ct:comp_typing_u g c)
-                         (#f:term) (ft:tot_typing g f tm_vprop)
-  : comp_typing_u g (add_frame c f)
-  = admit_comp_typing _ _
+let tot_typing_weakening_standard g #t #ty d g2 =
+  let g1 = diff g2 g in
+  let g' = mk_env (fstar_env g) in
+  assert (equal (push_env g g1) g2);
+  assert (equal (push_env g g') g);
+  assert (equal (push_env (push_env g g1) g') g2);
+  tot_typing_weakening g g' t ty d g1
 
-let comp_typing_inversion #g #c ct = 
-  match ct with
-  | CT_ST _ _ st
-  | CT_STAtomic _ _ _ _ st 
-  | CT_STGhost _ _ _ _ st   -> st
+let st_typing_weakening
+  (g:env) (g':env { disjoint g g' })
+  (t:st_term) (c:comp) (d:st_typing (push_env g g') t c)
+  (g1:env { g1 `env_extends` g /\ disjoint g1 g' })
+  : st_typing (push_env g1 g') t c =
 
-let st_comp_typing_inversion_cofinite (#g:env) (#st:_) (ct:st_comp_typing g st) = 
-  admit(), admit(), (fun _ -> admit())
+  let g2 = diff g1 g in
+  let d = st_typing_weakening g g' t c d g2 in
+  assert (equal (push_env (push_env g g2) g') (push_env g1 g'));
+  d
 
-let st_comp_typing_inversion (#g:env) (#st:_) (ct:st_comp_typing g st) = 
-  let STC g st x ty pre post = ct in
-  (| ty, pre, x, post |)
+let st_typing_weakening_standard
+  (#g:env) (#t:st_term) (#c:comp) (d:st_typing g t c)
+  (g1:env { g1 `env_extends` g })
+  : st_typing g1 t c =
 
-let tm_exists_inversion (#g:env) (#u:universe) (#ty:term) (#p:term) 
-                        (_:tot_typing g (tm_exists_sl u (as_binder ty) p) tm_vprop)
-                        (x:var { fresh_wrt x g (freevars p) } )
-  : universe_of g ty u &
-    tot_typing (push_binding g x ppname_default ty) p tm_vprop
-  = admit(), admit()
+  let g' = mk_env (fstar_env g) in
+  assert (equal (push_env g g') g);
+  let d = st_typing_weakening g g' t c d g1 in
+  assert (equal (push_env g1 g') g1);
+  d
 
-let tot_typing_weakening #g #t #ty x b d = admit()
+let st_typing_weakening_end
+  (g:env) (g':env { disjoint g g' })
+  (t:st_term) (c:comp) (d:st_typing (push_env g g') t c)
+  (g'':env { g'' `env_extends` g' /\ disjoint g'' g })
+  : st_typing (push_env g g'') t c =
 
-let pure_typing_inversion (#g:env) (#p:term) (_:tot_typing g (tm_pure p) tm_vprop)
-   : tot_typing g p (tm_fstar FStar.Reflection.Typing.tm_prop Range.range_0)
-   = admit()
+  let g2 = diff g'' g' in
+  let emp_env = mk_env (fstar_env g) in
+  assert (equal (push_env g g')
+                (push_env (push_env g g') emp_env));
+  let d
+    : st_typing (push_env (push_env (push_env g g') g2) emp_env) _ _
+    = Pulse.Typing.Metatheory.Base.st_typing_weakening (push_env g g') emp_env t c (coerce_eq () d) g2 in
+  assert (equal (push_env (push_env (push_env g g') g2) emp_env)
+                (push_env (push_env g g') g2));
+  push_env_assoc g g' g2;
+  assert (equal (push_env (push_env g g') g2)
+                (push_env g (push_env g' g2)));
+  assert (equal (push_env g (push_env g' g2))
+                (push_env g g''));
+  coerce_eq () d
+
+let veq_weakening
+  (g:env) (g':env { disjoint g g' })
+  (#v1 #v2:vprop) (d:vprop_equiv (push_env g g') v1 v2)
+  (g1:env { g1 `env_extends` g /\ disjoint g1 g' })
+  : vprop_equiv (push_env g1 g') v1 v2 =
+
+  let g2 = diff g1 g in
+  let d = Pulse.Typing.Metatheory.Base.veq_weakening g g' d g2 in
+  assert (equal (push_env (push_env g g2) g') (push_env g1 g'));
+  d
+
+let veq_weakening_end g g' #v1 #v2 d g'' =
+  let g2 = diff g'' g' in
+  let emp_env = mk_env (fstar_env g) in
+  assert (equal (push_env g g')
+                (push_env (push_env g g') emp_env));
+  let d = Pulse.Typing.Metatheory.Base.veq_weakening (push_env g g') emp_env #v1 #v2(coerce_eq () d) g2 in
+  assert (equal (push_env (push_env (push_env g g') g2) emp_env)
+                (push_env (push_env g g') g2));
+  push_env_assoc g g' g2;
+  assert (equal (push_env (push_env g g') g2)
+                (push_env g (push_env g' g2)));
+  assert (equal (push_env g (push_env g' g2))
+                (push_env g g''));
+  coerce_eq () d

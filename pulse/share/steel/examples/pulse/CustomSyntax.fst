@@ -12,6 +12,21 @@ open Pulse.Steel.Wrapper
 #push-options "--using_facts_from 'Prims FStar.Pervasives FStar.UInt FStar.UInt32 FStar.Ghost Pulse.Steel.Wrapper CustomSyntax'"
 #push-options "--ide_id_info_off"
 
+assume val p : vprop
+assume val g : unit -> stt unit emp (fun _ -> p)
+
+let folded_pts_to (r:ref U32.t) (n:erased U32.t) : vprop = pts_to r full_perm n
+
+```pulse
+fn unfold_test (r:ref U32.t) (n:erased U32.t)
+  requires folded_pts_to r n
+  ensures folded_pts_to r n
+{
+  with n. unfold (folded_pts_to r n);
+  with n. fold (folded_pts_to r n)
+}
+```
+
 ```pulse
 fn test_write_10 (x:ref U32.t)
                  (#n:erased U32.t)
@@ -31,8 +46,7 @@ fn test_read (r:ref U32.t)
    returns x : U32.t
    ensures pts_to r p x
 {
-  let x = !r;
-  x
+  !r
 }
 ```
 
@@ -123,7 +137,6 @@ fn if_example (r:ref U32.t)
 }
 ```
 
-
 ```pulse
 ghost
 fn elim_intro_exists2 (r:ref U32.t)
@@ -135,7 +148,6 @@ fn elim_intro_exists2 (r:ref U32.t)
   introduce exists n. pts_to r full_perm n with _
 }
 ```
-
 
 assume
 val pred (b:bool) : vprop
@@ -153,7 +165,7 @@ fn while_test_alt (r:ref U32.t)
     exists n. (pts_to r full_perm n `star`
               pred false)
 {
-  while (let x = read_pred(); x)
+  while (read_pred ())
   invariant b . exists n. (pts_to r full_perm n `star` pred b)
   {
     ()
@@ -187,16 +199,13 @@ fn while_count2 (r:ref U32.t)
     let x = !r;
     if (x <^ 10ul)
     {
-      r := x +^ 1ul; 
-      ()
+      r := x +^ 1ul
     }
     else
     {
-      r := x -^ 1ul;
-      ()
+      r := x -^ 1ul
     }
-  };
-  ()
+  }
 }
 ```
 
@@ -251,8 +260,7 @@ fn test_local (r:ref U32.t)
 {
   let mut x = 0ul;
   let y = !x;
-  r := y;
-  introduce exists n. (pts_to x full_perm n) with _
+  r := y
 }
 ```
 
@@ -269,12 +277,10 @@ fn count_local (r:ref int) (n:int)
      pure (b == (m <> n)))
   {
     let m = !i;
-    i := m + 1;
-    ()
+    i := m + 1
   };
   let x = !i;
-  r := x;
-  introduce exists m. (pts_to i full_perm m) with _
+  r := x
 }
 ```
 

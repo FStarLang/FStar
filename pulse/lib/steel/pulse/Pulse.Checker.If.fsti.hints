@@ -1,1 +1,20 @@
-[ "h.2oùXAˆURÄGiPBÍ", [] ]
+[
+  "\u0006ß•=eCp\u000b:d⁄õﬁ\u00071¡",
+  [
+    [
+      "Pulse.Checker.If.check",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_Pulse.Typing.post_hint_for_env",
+        "proj_equation_FStar.Pervasives.Native.Some_v",
+        "projection_inverse_FStar.Pervasives.Native.Some_v",
+        "refinement_interpretation_Tm_refine_6e8e5238aadfc712ef5fa6bc6310c384"
+      ],
+      0,
+      "eaddd3d566a9c5e55c916b61233cf651"
+    ]
+  ]
+]

@@ -373,7 +373,7 @@ let (unreveal :
               (Pulse_Syntax_Base.Implicit), uu___)
              ->
              (match is_fvar head1 with
-              | FStar_Pervasives_Native.Some (l, []) ->
+              | FStar_Pervasives_Native.Some (l, uu___1) ->
                   if l = ["FStar"; "Ghost"; "reveal"]
                   then FStar_Pervasives_Native.Some arg
                   else FStar_Pervasives_Native.None

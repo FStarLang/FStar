@@ -1,14 +1,14 @@
 module Pulse.Checker.Admit
 
 module T = FStar.Tactics.V2
-module RT = FStar.Reflection.Typing
 
 open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Pure
-open Pulse.Checker.Common
+open Pulse.Checker.Base
+open Pulse.Checker.Prover
 
-module FV = Pulse.Typing.FV
+module P = Pulse.Syntax.Printer
 
 let post_hint_compatible (p:option post_hint_t) (x:var) (t:term) (u:universe) (post:vprop) =
   match p with
@@ -18,15 +18,20 @@ let post_hint_compatible (p:option post_hint_t) (x:var) (t:term) (u:universe) (p
     p.u == u /\
     p.ret_ty == t
 
-#push-options "--z3rlimit_factor 4"
-let check_admit
+let check
   (g:env)
-  (t:st_term{Tm_Admit? t.term})
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
+  (res_ppname:ppname)
+  (t:st_term { Tm_Admit? t.term })
+
   : T.Tac (checker_result_t g pre post_hint) =
+
+  let g = Pulse.Typing.Env.push_context g "check_admit" t.range in
+
   let Tm_Admit { ctag = c; typ=t; post } = t.term in
+
   let x = fresh g in
   let px = v_as_nv x in
   let res
@@ -36,9 +41,14 @@ let check_admit
        post:vprop { post_hint_compatible post_hint x t u post } &
        tot_typing (push_binding g x (fst px) t) post tm_vprop)
     = match post, post_hint with
-      | None, None
-      | Some _, Some _ ->
-        fail g None "T_Admit: either no post or two posts"
+      | None, None ->
+        fail g None "could not find a post annotation on admit, please add one"
+
+      | Some post1, Some post2 ->
+        fail g None
+          (Printf.sprintf "found two post annotations on admit: %s and %s, please remove one"
+             (P.term_to_string post1)
+             (P.term_to_string post2.post))
       
       | Some post, _ ->
         let (| u, t_typing |) = check_universe g t in    
@@ -51,7 +61,7 @@ let check_admit
       | _, Some post ->
         let post : post_hint_t = post in
         if x `Set.mem` freevars post.post
-        then fail g None "Unexpected freevar clash in Tm_Admit"
+        then fail g None "Impossible: unexpected freevar clash in Tm_Admit, please file a bug-report"
         else (
           let post_typing_rec = post_hint_typing g post x in
           let post_opened = open_term_nv post.post px in              
@@ -64,9 +74,5 @@ let check_admit
   let s : st_comp = {u;res=t;pre;post} in
 
   assume (open_term (close_term post_opened x) x == post_opened);
-  (|
-     _, //Tm_Admit c u t None,
-     comp_admit c s,
-     T_Admit _ _ c (STC _ s x t_typing pre_typing post_typing)
-  |)
-#pop-options
+  let d = T_Admit _ _ c (STC _ s x t_typing pre_typing post_typing) in
+  prove_post_hint (try_frame_pre pre_typing d res_ppname) post_hint t.range

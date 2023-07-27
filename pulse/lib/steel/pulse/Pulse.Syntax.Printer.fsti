@@ -9,6 +9,7 @@ val univ_to_string (u:universe) : string
 val qual_to_string (q:option qualifier) : string
 val term_to_string (t:term) : T.Tac string
 val binder_to_string (b:binder) : T.Tac string
+val ctag_to_string (c:ctag) : string
 val comp_to_string (c:comp) : T.Tac string
 val term_list_to_string (sep:string) (t:list term): T.Tac string
 val st_term_to_string (t:st_term) : T.Tac string
