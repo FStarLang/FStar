@@ -117,11 +117,16 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
     : vprop_equiv (push_env pst_sub.pg pst_sub.uvs)
                   preamble_sub.goals
                   (list_as_vprop [] * pst_sub.solved) = pst_sub.goals_inv in
-  let ropt = PS.ss_to_nt_substs pst_sub.pg pst_sub.uvs pst_sub.ss in
-  if None? ropt then fail pst_sub.pg None "resulted substitution after intro exists protocol is not well-typed";
-  // if not (PS.check_well_typedness pst_sub.pg pst_sub.uvs pst_sub.ss)
-  // then fail pst_sub.pg None "intro exists ss not well-typed";
-  let Some nt = ropt in
+  let nt : nts:PS.nt_substs { PS.well_typed_nt_substs pst_sub.pg pst_sub.uvs nts /\
+                              PS.is_permutation nts pst_sub.ss } =
+    let r = PS.ss_to_nt_substs pst_sub.pg pst_sub.uvs pst_sub.ss in
+    match r with
+    | Inr msg ->
+      fail pst_sub.pg None
+        (Printf.sprintf
+           "resulted substitution after intro exists protocol is not well-typed: %s"
+           msg)
+    | Inl nt -> nt in
   assert (PS.well_typed_nt_substs pst_sub.pg pst_sub.uvs nt);
   let pst_sub_goals_inv
     : vprop_equiv pst_sub.pg

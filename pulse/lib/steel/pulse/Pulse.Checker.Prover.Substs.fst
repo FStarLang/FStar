@@ -242,29 +242,39 @@ let rec is_permutation (nts:nt_substs) (ss:ss_t) : Type0 =
   | _ -> False
 
 let rec ss_to_nt_substs (g:env) (uvs:env) (ss:ss_t)
-  : T.Tac (option (nts:nt_substs { well_typed_nt_substs g uvs nts /\
-                                   is_permutation nts ss })) =
-  
+  : T.Tac (either (nts:nt_substs { well_typed_nt_substs g uvs nts /\
+                                   is_permutation nts ss })
+                  string) =
+
+  let g = push_context g "ss_to_nt_substs" (range_of_env g) in
   match bindings uvs with
   | [] ->
     (match ss.l with
-     | [] -> Some []
-     | _ -> None)
+     | [] -> Inl []
+     | x::_ ->
+       Inr (Printf.sprintf "extra uvars in the substitutions collected by the prover, e.g._#%d" x))
   | _ ->
     let x, ty, rest_uvs = remove_binding uvs in
     if Map.contains ss.m x
     then let t = Map.sel ss.m x in
-         let d : tot_typing g t ty = magic () in
+         //
+         // TODO: WE SHOULD FIX IT SOON
+         //       SOME OF THESE WITNESSED MAY BE GHOST
+         //       WE NEED TO SUPPORT GHOST PROPERLY
+         //
+         let d : tot_typing g t ty = admit () in
+          //  let d = Pulse.Checker.Pure.core_check_term_with_expected_type g t ty in
+          //  E d in
          let _ = FStar.Squash.return_squash d in
          let nts_opt =
            ss_to_nt_substs g (subst_env rest_uvs [ NT x t ]) {l=remove_l ss.l x;
                                                               m=remove_map ss.m x} in
          match nts_opt with
-         | None -> None
-         | Some nts ->
+         | Inr e -> Inr e
+         | Inl nts ->
            let nts : nts:nt_substs { well_typed_nt_substs g uvs nts } = (NT x t)::nts in
-           Some nts
-    else None
+           Inl nts
+    else Inr (Printf.sprintf "prover could not prove uvar _#%d" x)
 
 let rec well_typed_nt_substs_prefix (g:env) (uvs:env) (nts:nt_substs)
   (uvs1:env)
@@ -325,21 +335,21 @@ let rec st_typing_nt_substs
       t_typing nts_rest
 
 
-let st_typing_subst (g:env) (uvs:env { disjoint uvs g }) (t:st_term) (c:comp_st)
-  (d:st_typing (push_env g uvs) t c)
-  (ss:ss_t)
+// let st_typing_subst (g:env) (uvs:env { disjoint uvs g }) (t:st_term) (c:comp_st)
+//   (d:st_typing (push_env g uvs) t c)
+//   (ss:ss_t)
 
-  : T.Tac (option (st_typing g (ss_st_term t ss) (ss_comp c ss))) =
+//   : T.Tac (option (st_typing g (ss_st_term t ss) (ss_comp c ss))) =
 
-  let nts_opt = ss_to_nt_substs g uvs ss in
-  match nts_opt with
-  | None -> None
-  | Some nts ->
-    let g' = mk_env (fstar_env g) in
-    assert (equal (push_env uvs g') uvs);
-    let d = st_typing_nt_substs g uvs g' d nts in
-    assume (equal (push_env g (nt_subst_env g' nts)) g);
-    Some d
+//   let nts_opt = ss_to_nt_substs g uvs ss in
+//   match nts_opt with
+//   | Inr e -> None
+//   | Some nts ->
+//     let g' = mk_env (fstar_env g) in
+//     assert (equal (push_env uvs g') uvs);
+//     let d = st_typing_nt_substs g uvs g' d nts in
+//     assume (equal (push_env g (nt_subst_env g' nts)) g);
+//     Some d
 
 let st_typing_nt_substs_derived
   (g:env) (uvs:env { disjoint uvs g })

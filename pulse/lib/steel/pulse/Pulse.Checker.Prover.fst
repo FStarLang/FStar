@@ -233,11 +233,14 @@ let prove
 
     let pst = prover pst0 in
 
-    let ropt = PS.ss_to_nt_substs pst.pg pst.uvs pst.ss in
-
-    if None? ropt
-    then fail pst.pg None "prover error: ill-typed substitutions";
-    let Some nts = ropt in
+    let nts : nts:PS.nt_substs { PS.well_typed_nt_substs pst.pg pst.uvs nts /\
+                                 PS.is_permutation nts pst.ss } =
+      let r = PS.ss_to_nt_substs pst.pg pst.uvs pst.ss in
+      match r with
+      | Inr msg ->
+        fail pst.pg None
+          (Printf.sprintf "prover error: ill-typed substitutions (%s)" msg)
+      | Inl nts -> nts in
     let nts_uvs = PS.well_typed_nt_substs_prefix pst.pg pst.uvs nts uvs in
     let k
       : continuation_elaborator

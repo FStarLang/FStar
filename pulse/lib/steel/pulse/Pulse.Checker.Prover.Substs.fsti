@@ -117,8 +117,9 @@ let rec well_typed_nt_substs (g:env) (uvs:env) (nts:nt_substs)
 val is_permutation (nts:nt_substs) (ss:ss_t) : Type0
 
 val ss_to_nt_substs (g:env) (uvs:env) (ss:ss_t)
-  : T.Tac (option (nts:nt_substs { well_typed_nt_substs g uvs nts /\
-                                   is_permutation nts ss }))
+  : T.Tac (either (nts:nt_substs { well_typed_nt_substs g uvs nts /\
+                                   is_permutation nts ss })
+                  string)
 
 val well_typed_nt_substs_prefix (g:env) (uvs:env) (nts:nt_substs)
   (uvs1:env)
@@ -143,11 +144,11 @@ val st_typing_nt_substs
   (ss:nt_substs { well_typed_nt_substs g uvs ss })
 : st_typing (push_env g (nt_subst_env g' ss)) (nt_subst_st_term t ss) (nt_subst_comp c ss)
 
-val st_typing_subst (g:env) (uvs:env { disjoint uvs g }) (t:st_term) (c:comp_st)
-  (d:st_typing (push_env g uvs) t c)
-  (ss:ss_t)
+// val st_typing_subst (g:env) (uvs:env { disjoint uvs g }) (t:st_term) (c:comp_st)
+//   (d:st_typing (push_env g uvs) t c)
+//   (ss:ss_t)
 
-  : T.Tac (option (st_typing g (ss_st_term t ss) (ss_comp c ss)))
+//   : T.Tac (option (st_typing g (ss_st_term t ss) (ss_comp c ss)))
 
 val st_typing_nt_substs_derived
   (g:env) (uvs:env { disjoint uvs g })
