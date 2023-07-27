@@ -1,5 +1,6 @@
 open Prims
 
+
 let (st_typing_weakening :
   Pulse_Typing_Env.env ->
     Pulse_Typing_Env.env ->
