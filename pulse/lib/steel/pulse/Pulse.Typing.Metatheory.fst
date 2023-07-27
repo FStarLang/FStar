@@ -75,3 +75,18 @@ let veq_weakening
   let d = Pulse.Typing.Metatheory.Base.veq_weakening g g' d g2 in
   assert (equal (push_env (push_env g g2) g') (push_env g1 g'));
   d
+
+let veq_weakening_end g g' #v1 #v2 d g'' =
+  let g2 = diff g'' g' in
+  let emp_env = mk_env (fstar_env g) in
+  assert (equal (push_env g g')
+                (push_env (push_env g g') emp_env));
+  let d = Pulse.Typing.Metatheory.Base.veq_weakening (push_env g g') emp_env #v1 #v2(coerce_eq () d) g2 in
+  assert (equal (push_env (push_env (push_env g g') g2) emp_env)
+                (push_env (push_env g g') g2));
+  push_env_assoc g g' g2;
+  assert (equal (push_env (push_env g g') g2)
+                (push_env g (push_env g' g2)));
+  assert (equal (push_env g (push_env g' g2))
+                (push_env g g''));
+  coerce_eq () d

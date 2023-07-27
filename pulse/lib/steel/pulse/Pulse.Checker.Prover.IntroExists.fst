@@ -10,6 +10,7 @@ open Pulse.Checker.Base
 
 module T = FStar.Tactics.V2
 module PS = Pulse.Checker.Prover.Substs
+module Metatheory = Pulse.Typing.Metatheory
 
 let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y == x} = x
 
@@ -66,7 +67,7 @@ let k_intro_exists (#g:env) (#u:universe) (#b:binder) (#p:vprop)
 
   k post_hint (| t1, c1, d1 |)
 
-#push-options "--z3rlimit_factor 4 --ifuel 1 --fuel 1"
+#push-options "--z3rlimit_factor 8 --ifuel 1 --fuel 1"
 let intro_exists (#preamble:_) (pst:prover_state preamble)
   (u:universe) (b:binder) (body:vprop)
   (unsolved':list vprop)
@@ -283,7 +284,10 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
   let goals_inv
     : vprop_equiv (push_env pst_sub.pg pst_sub.uvs)
                   preamble.goals
-                  (pst.solved * list_as_vprop pst.unsolved) = magic () in
+                  (pst.solved * list_as_vprop pst.unsolved) =
+    let d = Metatheory.veq_weakening pst.pg pst.uvs goals_inv pst_sub.pg in
+    let d = Metatheory.veq_weakening_end pst_sub.pg pst.uvs d pst_sub.uvs in
+    VE_Trans _ _ _ _ d (VE_Comm _ _ _) in
 
   let goals_inv
     : vprop_equiv pst_sub.pg

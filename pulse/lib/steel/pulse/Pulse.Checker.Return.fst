@@ -8,6 +8,7 @@ open Pulse.Checker.Prover
 
 module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
+module Metatheory = Pulse.Typing.Metatheory
 
 let check
   (g:env)
@@ -33,8 +34,8 @@ let check
       assert (g `env_extends` post.g);
       let ty_typing : universe_of post.g post.ret_ty post.u =
         post.ty_typing in
-      // weakening of post.g to g
-      let ty_typing : universe_of g post.ret_ty post.u = magic () in
+      let ty_typing : universe_of g post.ret_ty post.u =
+        Metatheory.tot_typing_weakening_standard post.g post.ty_typing g in
       (| t, post.u, post.ret_ty, ty_typing, d |)
   in
   
