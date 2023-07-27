@@ -67,7 +67,7 @@ let k_intro_exists (#g:env) (#u:universe) (#b:binder) (#p:vprop)
 
   k post_hint (| t1, c1, d1 |)
 
-#push-options "--z3rlimit_factor 8 --ifuel 1 --fuel 1"
+#push-options "--z3rlimit_factor 8 --ifuel 2 --fuel 1"
 let intro_exists (#preamble:_) (pst:prover_state preamble)
   (u:universe) (b:binder) (body:vprop)
   (unsolved':list vprop)
