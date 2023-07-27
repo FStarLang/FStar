@@ -381,7 +381,11 @@ let rec (st_typing_weakening :
               | Pulse_Typing.T_Match
                   (uu___, sc_u, sc_ty, sc, d_sc_ty, d_sc, c1, brs, d_brs,
                    d_pats_complete)
-                  -> Prims.magic ()
+                  ->
+                  Pulse_Typing.T_Match
+                    ((Pulse_Typing_Env.push_env
+                        (Pulse_Typing_Env.push_env g g1) g'), sc_u, sc_ty,
+                      sc, (), (), c1, brs, d_brs, d_pats_complete)
               | Pulse_Typing.T_Frame (uu___, e, c1, frame, uu___1, d_e) ->
                   Pulse_Typing.T_Frame
                     ((Pulse_Typing_Env.push_env
