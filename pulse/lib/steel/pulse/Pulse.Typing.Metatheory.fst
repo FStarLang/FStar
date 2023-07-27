@@ -13,6 +13,14 @@ let tot_typing_weakening_single #g #t #ty d x x_t =
   assert (equal (push_env g g1) (push_binding g x ppname_default x_t));
   tot_typing_weakening g g' t ty d g1
 
+let tot_typing_weakening_standard g #t #ty d g2 =
+  let g1 = diff g2 g in
+  let g' = mk_env (fstar_env g) in
+  assert (equal (push_env g g1) g2);
+  assert (equal (push_env g g') g);
+  assert (equal (push_env (push_env g g1) g') g2);
+  tot_typing_weakening g g' t ty d g1
+
 let st_typing_weakening
   (g:env) (g':env { disjoint g g' })
   (t:st_term) (c:comp) (d:st_typing (push_env g g') t c)

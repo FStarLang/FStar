@@ -12,6 +12,11 @@ val tot_typing_weakening_single (#g:env) (#t #ty:term)
 
   : tot_typing (push_binding g x ppname_default x_t) t ty
 
+val tot_typing_weakening_standard (g:env)
+  (#t #ty:term) (d:tot_typing g t ty)
+  (g1:env { g1 `env_extends` g })
+  : tot_typing g1 t ty
+
 val st_typing_weakening
   (g:env) (g':env { disjoint g g' })
   (t:st_term) (c:comp) (d:st_typing (push_env g g') t c)
