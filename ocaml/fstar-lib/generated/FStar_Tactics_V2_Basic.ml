@@ -7580,6 +7580,49 @@ let (refl_check_prop_validity :
              [uu___4] in
            (FStar_Pervasives_Native.None, uu___3) in
          FStar_Tactics_Monad.ret uu___2)
+let (refl_check_type_erasable :
+  env ->
+    FStar_Syntax_Syntax.typ ->
+      (unit FStar_Pervasives_Native.option * issues) FStar_Tactics_Monad.tac)
+  =
+  fun g ->
+    fun e ->
+      let uu___ = (no_uvars_in_g g) && (no_uvars_in_term e) in
+      if uu___
+      then
+        refl_typing_builtin_wrapper
+          (fun uu___1 ->
+             dbg_refl g
+               (fun uu___3 ->
+                  let uu___4 = FStar_Syntax_Print.term_to_string e in
+                  FStar_Compiler_Util.format1
+                    "refl_check_type_erasable: %s\n" uu___4);
+             (let b = FStar_TypeChecker_Util.must_erase_for_extraction g e in
+              dbg_refl g
+                (fun uu___4 ->
+                   let uu___5 = FStar_Compiler_Util.string_of_bool b in
+                   FStar_Compiler_Util.format1
+                     "refl_check_type_erasable: %s\n" uu___5);
+              if b
+              then ()
+              else
+                (let uu___5 =
+                   let uu___6 =
+                     let uu___7 = FStar_Syntax_Print.term_to_string e in
+                     FStar_Compiler_Util.format1
+                       "refl_check_type_erasable failed on %s" uu___7 in
+                   (FStar_Errors_Codes.Fatal_IllTyped, uu___6) in
+                 FStar_Errors.raise_error uu___5
+                   FStar_Compiler_Range_Type.dummyRange)))
+      else
+        (let uu___2 =
+           let uu___3 =
+             let uu___4 =
+               let uu___5 = FStar_TypeChecker_Env.get_range g in
+               unexpected_uvars_issue uu___5 in
+             [uu___4] in
+           (FStar_Pervasives_Native.None, uu___3) in
+         FStar_Tactics_Monad.ret uu___2)
 let (refl_check_match_complete :
   env ->
     FStar_Syntax_Syntax.term ->
@@ -7708,7 +7751,7 @@ let (refl_instantiate_implicits :
                     "refl_instantiate_implicits: %s\n" uu___4);
              dbg_refl g
                (fun uu___4 -> "refl_instantiate_implicits: starting tc {\n");
-             (let must_tot = true in
+             (let must_tot = false in
               let g1 =
                 {
                   FStar_TypeChecker_Env.solver =

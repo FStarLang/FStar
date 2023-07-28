@@ -142,6 +142,7 @@ let check_match_complete         = from_tac_4 B.refl_check_match_complete
 let tc_term                      = from_tac_3 B.refl_tc_term
 let universe_of                  = from_tac_2 B.refl_universe_of
 let check_prop_validity          = from_tac_2 B.refl_check_prop_validity
+let check_type_erasable          = from_tac_2 B.refl_check_type_erasable
 let instantiate_implicits        = from_tac_2 B.refl_instantiate_implicits
 let maybe_relate_after_unfolding = from_tac_3 B.refl_maybe_relate_after_unfolding
 let maybe_unfold_head            = from_tac_2 B.refl_maybe_unfold_head

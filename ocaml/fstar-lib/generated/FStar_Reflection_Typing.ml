@@ -1292,6 +1292,10 @@ type ('dummyV0, 'dummyV1, 'dummyV2) typing =
   FStar_Reflection_Types.term * FStar_Reflection_Types.binder *
   FStar_Reflection_Types.term * FStar_Tactics_Types.tot_or_ghost * (unit,
   unit, unit) typing * (unit, unit, unit) typing 
+  | T_Erasable_App of FStar_Reflection_Types.env *
+  FStar_Reflection_Types.term * FStar_Reflection_Types.term *
+  FStar_Reflection_Types.binder * FStar_Reflection_Types.term * (unit, 
+  unit, unit) typing * unit * (unit, unit, unit) typing 
   | T_Let of FStar_Reflection_Types.env * FStar_Reflection_V2_Data.var *
   FStar_Reflection_Types.term * FStar_Reflection_Types.typ *
   FStar_Reflection_Types.term * FStar_Reflection_Types.typ *
@@ -1398,6 +1402,8 @@ let uu___is_T_Abs uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_Abs _ -> true | _ -> false
 let uu___is_T_App uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_App _ -> true | _ -> false
+let uu___is_T_Erasable_App uu___2 uu___1 uu___ uu___3 =
+  match uu___3 with | T_Erasable_App _ -> true | _ -> false
 let uu___is_T_Let uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_Let _ -> true | _ -> false
 let uu___is_T_Arrow uu___2 uu___1 uu___ uu___3 =
