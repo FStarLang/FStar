@@ -1,12 +1,12 @@
-all: verify verify-bug-reports verify-lib
+all: verify verify-bug-reports verify-dice
 
 .PHONY: verify-bug-reports
 verify-bug-reports:
 	$(MAKE) -C bug-reports verify
 
-.PHONY: verify-lib
-verify-lib:
-	$(MAKE) -C lib verify
+.PHONY: verify-dice
+verify-dice:
+	$(MAKE) -C dice verify
 
 # assuming share/steel/examples/pulse
 STEEL_HOME ?= ../../../..
