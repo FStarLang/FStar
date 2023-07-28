@@ -2324,6 +2324,19 @@ let refl_check_prop_validity (g:env) (e:term) : tac (option unit & issues) =
            {Env.trivial_guard with guard_f=NonTrivial e})
   else ret (None, [unexpected_uvars_issue (Env.get_range g)])
 
+let refl_check_type_erasable (g:env) (e:typ) : tac (option unit & issues) =
+  if no_uvars_in_g g && no_uvars_in_term e
+  then refl_typing_builtin_wrapper (fun _ ->
+    dbg_refl g (fun _ ->
+      BU.format1 "refl_check_type_erasable: %s\n" (Print.term_to_string e));
+    let b = TcUtil.must_erase_for_extraction g e in
+    dbg_refl g (fun _ -> BU.format1 "refl_check_type_erasable: %s\n" (string_of_bool b));
+    if b then ()
+    else Errors.raise_error (Errors.Fatal_IllTyped,
+                             BU.format1 "refl_check_type_erasable failed on %s" (Print.term_to_string e)) Range.dummyRange
+  )
+  else ret (None, [unexpected_uvars_issue (Env.get_range g)])
+
 let refl_check_match_complete (g:env) (sc:term) (scty:typ) (pats : list RD.pattern)
 : tac (option (list RD.pattern & list (list RD.binding)))
 =
@@ -2363,7 +2376,8 @@ let refl_instantiate_implicits (g:env) (e:term) : tac (option (term & typ) & iss
     dbg_refl g (fun _ ->
       BU.format1 "refl_instantiate_implicits: %s\n" (Print.term_to_string e));
     dbg_refl g (fun _ -> "refl_instantiate_implicits: starting tc {\n");
-    let must_tot = true in
+    // we are only instantiating implicits, so allow ghost
+    let must_tot = false in
     let g = {g with instantiate_imp=false; phase1=true; lax=true} in
     let e, t, guard = g.typeof_tot_or_gtot_term g e must_tot in
     Rel.force_trivial_guard g guard;

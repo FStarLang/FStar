@@ -482,6 +482,9 @@ type prop_validity_token (g:env) (t:term) =
 val check_prop_validity (g:env) (t:term)
   : Tac (option (prop_validity_token g t) & issues)
 
+val check_type_erasable (g:env) (t:typ)
+  : Tac (option (erasable_token g t) & issues)
+
 // Can't immediately move to FStar.Tactics.Types since pattern is not in scope there
 val match_complete_token (g:env) (sc:term) (t:typ) (pats:list pattern) (bnds:list (list binding))
   : Type0

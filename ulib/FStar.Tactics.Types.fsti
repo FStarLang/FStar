@@ -75,4 +75,5 @@ type tot_or_ghost =
 val subtyping_token (g:env) (t0 t1:typ) : Type0
 val equiv_token (g:env) (t0 t1:typ) : Type0
 val typing_token (g:env) (e:term) (c:tot_or_ghost & typ) : Type0
+val erasable_token (g:env) (t:typ) : Type0
 let issues = list FStar.Issue.issue
