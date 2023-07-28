@@ -1193,6 +1193,18 @@ type typing : env -> term -> comp_typ -> Type0 =
      typing g (pack_ln (Tv_App e1 (e2, binder_qual x)))
               (eff, open_with t e2)
 
+  | T_Erasable_App:
+    g:env ->
+    e1:term ->
+    e2:term ->
+    x:binder ->
+    t:term ->
+    typing g e1 (T.E_Total, pack_ln (Tv_Arrow x (mk_comp (T.E_Total, t)))) ->
+    squash (T.erasable_token g (pack_ln (Tv_Arrow x (mk_comp (T.E_Total, t))))) ->
+    typing g e2 (T.E_Ghost, binder_sort x) ->
+    typing g (pack_ln (Tv_App e1 (e2, binder_qual x)))
+             (T.E_Total, open_with t e2)
+
   | T_Let:
      g:env ->
      x:var { None? (lookup_bvar g x) } ->
