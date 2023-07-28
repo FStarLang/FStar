@@ -482,100 +482,108 @@ let not_full #s #sz (r:repr_t s sz) : Type0 =
 
 #set-options "--split_queries always"
 
+let rec insert_repr_walk #s #sz (#spec : erased (spec_t s)) 
+  (repr : repr_t s sz{pht_models s sz spec repr /\ not_full repr}) (k : s.keyt) (v : s.valt) 
+  (off:nat{off <= sz}) (cidx:nat{cidx = canonical_index k sz})
+  (_ : squash (strong_all_used_not_by repr cidx off k))
+  (_ : squash (walk repr cidx k off == lookup_repr repr k))
+  : Tot (repr':repr_t s sz{pht_models s sz (spec ++ (k,v)) repr'})
+        (decreases sz - off)
+  = if off = sz then (
+      // Impossible! table was not full
+      let aux (i:nat{i < sz}) : Lemma (Used? (repr @@ i)) =
+        assert (all_used_not_by repr cidx sz k);
+        let off = (i - cidx) % sz in
+        calc (==) {
+          (cidx + off) % sz;
+          == {}
+          (cidx + ((i - cidx) % sz)) % sz;
+          == { Math.Lemmas.modulo_lemma cidx sz }
+          (cidx % sz + ((i - cidx) % sz)) % sz;
+          == { Math.Lemmas.modulo_distributivity cidx (i-cidx) sz }
+          i % sz;
+          == { Math.Lemmas.modulo_lemma i sz }
+          i;
+        };
+        assert (Used? (repr @@ i));
+        ()
+      in
+      Classical.forall_intro aux;
+      unreachable ()
+    )
+    else
+    let idx = (cidx+off) % sz in
+    match repr @@ idx with
+    | Used k' v' ->
+      if k = k'
+      then begin
+        (**)lemma_used_upd spec repr off k v v';
+        upd_ repr idx k v
+      end else begin
+        assert (all_used_not_by repr cidx (off+1) k);
+        insert_repr_walk #s #sz #spec repr k v (off+1) cidx () ()
+      end
+    
+    | Clean ->
+      (**)lemma_clean_upd spec repr off k v;
+      upd_ repr idx k v
+    
+    | Zombie ->
+      match lookup_repr_index repr k with 
+        | Some (v_old,i) -> (
+          (**)lemma_del spec repr i k v_old;
+          // Don't need these asserts
+          let cidx = canonical_index k sz in
+          assert (all_used_not_by repr cidx off k);
+          // GM: Removing this assert, not needed now it seems
+          //assert (if idx >= cidx then i > idx || i <= cidx else i > idx /\ i <= cidx);
+          assert (all_used_not_by (del_ repr i) cidx off k);
+          (**)lemma_zombie_upd (spec -- k) (del_ repr i) off k v;
+          upd_ (del_ repr i) idx k v
+        )
+        | None -> (
+          (**)lemma_zombie_upd spec repr off k v;
+          upd_ repr idx k v
+        )
+
 let insert_repr #s #sz (#spec : erased (spec_t s)) (repr : repr_t s sz{pht_models s sz spec repr}) (k : s.keyt) (v : s.valt)
 : Pure (r':repr_t s sz{pht_models s sz (spec ++ (k,v)) r'})
        (requires not_full repr)
        (ensures fun _ -> True)
 = let cidx = canonical_index k sz in
-  let rec walk_ (off:nat{off <= sz}) (_ : squash (strong_all_used_not_by repr cidx off k))
-                                     (_ : squash (walk repr cidx k off == lookup_repr repr k))
-    : Tot (repr':repr_t s sz{pht_models s sz (spec ++ (k,v)) repr'})
-          (decreases sz - off)
-    = if off = sz then (
-        // Impossible! table was not full
-        let aux (i:nat{i < sz}) : Lemma (Used? (repr @@ i)) =
-          assert (all_used_not_by repr cidx sz k);
-          let off = (i - cidx) % sz in
-          calc (==) {
-            (cidx + off) % sz;
-            == {}
-            (cidx + ((i - cidx) % sz)) % sz;
-            == { Math.Lemmas.modulo_lemma cidx sz }
-            (cidx % sz + ((i - cidx) % sz)) % sz;
-            == { Math.Lemmas.modulo_distributivity cidx (i-cidx) sz }
-            i % sz;
-            == { Math.Lemmas.modulo_lemma i sz }
-            i;
-          };
-          assert (Used? (repr @@ i));
-          ()
-        in
-        Classical.forall_intro aux;
-        unreachable ()
-      )
-      else
-      let idx = (cidx+off) % sz in
-      match repr @@ idx with
-      | Used k' v' ->
-        if k = k'
-        then begin
-          (**)lemma_used_upd spec repr off k v v';
-          upd_ repr idx k v
-        end else begin
-          assert (all_used_not_by repr cidx (off+1) k);
-          walk_ (off+1) () ()
-        end
-      | Clean ->
-        (**)lemma_clean_upd spec repr off k v;
-        upd_ repr idx k v
-      | Zombie ->
-        match lookup_repr_index repr k with 
-          | Some (v_old,i) -> (
-            (**)lemma_del spec repr i k v_old;
-            // Don't need these asserts
-            let cidx = canonical_index k sz in
-            assert (all_used_not_by repr cidx off k);
-            // GM: Removing this assert, not needed now it seems
-            //assert (if idx >= cidx then i > idx || i <= cidx else i > idx /\ i <= cidx);
-            assert (all_used_not_by (del_ repr i) cidx off k);
-            (**)lemma_zombie_upd (spec -- k) (del_ repr i) off k v;
-            upd_ (del_ repr i) idx k v
-          )
-          | None -> (
-            (**)lemma_zombie_upd spec repr off k v;
-            upd_ repr idx k v
-          )
-  in
-  let res = walk_ 0 () () in
+  let res = insert_repr_walk #s #sz #spec repr k v 0 cidx () () in
   res
+
+let rec delete_repr_walk #s #sz (#spec : erased (spec_t s)) 
+  (repr : repr_t s sz{pht_models s sz spec repr}) (k : s.keyt)
+  (off:nat{off <= sz}) (cidx:nat{cidx = canonical_index k sz})
+  (_ : squash (all_used_not_by repr cidx off k))
+  (_ : squash (walk repr cidx k off == lookup_repr repr k))
+  : Tot (repr':repr_t s sz{pht_models s sz (spec -- k) repr'})
+        (decreases sz - off)
+  = if off = sz then
+    repr // If we reach this, the element was not in the table
+    else
+    let idx = (cidx+off) % sz in
+    match repr @@ idx with
+    | Used k' v' ->
+      if k = k'
+      then begin
+        (**)lemma_del spec repr idx k v';
+        del_ repr idx
+      end else begin
+        assert (all_used_not_by repr cidx (off+1) k);
+        delete_repr_walk #s #sz #spec repr k (off+1) cidx () ()
+      end
+
+    | Clean -> repr
+
+    | Zombie -> delete_repr_walk #s #sz #spec repr k (off+1) cidx () ()
 
 let delete_repr #s #sz (#spec : erased (spec_t s)) (repr : repr_t s sz{pht_models s sz spec repr}) (k : s.keyt)
 : r':repr_t s sz{pht_models s sz (spec -- k) r'}
 = let cidx = canonical_index k sz in
-  let rec walk_ (off:nat{off <= sz}) (_ : squash (all_used_not_by repr cidx off k))
-                                     (_ : squash (walk repr cidx k off == lookup_repr repr k))
-    : Tot (repr':repr_t s sz{pht_models s sz (spec -- k) repr'})
-          (decreases sz - off)
-    = if off = sz then
-      repr // If we reach this, the element was not in the table
-      else
-      let idx = (cidx+off) % sz in
-      match repr @@ idx with
-      | Used k' v' ->
-        if k = k'
-        then begin
-          (**)lemma_del spec repr idx k v';
-          del_ repr idx
-        end else begin
-          assert (all_used_not_by repr cidx (off+1) k);
-          walk_ (off+1) () ()
-        end
-
-      | Clean -> repr
-
-      | Zombie -> walk_ (off+1) () ()
-  in
-  let res = walk_ 0 () () in
+  let res = delete_repr_walk #s #sz #spec repr k 0 cidx () () in
   res
 
 // TODO: This states we can only insert on a non-full table,
@@ -602,3 +610,7 @@ let lookup #s (ht : pht s) (k : s.keyt)
 =
   lookup_repr ht.repr k
 
+let lookup_index #s (ht : pht s) (k : s.keyt)
+: o:(option (s.valt & nat))
+=
+  lookup_repr_index ht.repr k

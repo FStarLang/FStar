@@ -233,16 +233,40 @@ let op_Array_Access
   (a: A.array t)
   (i: US.t)
   (#s: Ghost.erased (Seq.seq t))
-  (#p: perm) = admit()
+  (#p: perm) 
+= admit()
 
 let op_Array_Assignment
   (#t: Type)
   (a: A.array t)
   (i: US.t)
   (v: t)
-  (#s: Ghost.erased (Seq.seq t) {US.v i < Seq.length s}) = admit()
+  (#s: Ghost.erased (Seq.seq t) {US.v i < Seq.length s}) 
+= admit()
 
-let op_Array_Index = admit ()
+let op_Array_Assignment_nat
+  (#t: Type)
+  (a: A.array t)
+  (i: nat)
+  (v: t)
+  (#s: Ghost.erased (Seq.seq t) {i < Seq.length s})
+= admit()
+
+let op_Array_Index
+  (#t: Type)
+  (a: A.array t)
+  (#p: perm)
+  (#s: Ghost.erased (Seq.seq t))
+  (i: US.t{ US.v i < Seq.length s })
+= admit()
+
+let op_Array_Index_nat
+  (#t: Type)
+  (a: A.array t)
+  (#p: perm)
+  (#s: Ghost.erased (Seq.seq t))
+  (i: nat{ i < Seq.length s })
+= admit()
 
 let free_array
       (#elt: Type)
