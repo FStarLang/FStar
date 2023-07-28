@@ -1,4 +1,4 @@
-module LinearScanHashTable
+module LinearProbeHashTable
 
 let unreachable #a (_:squash False) : a =
   coerce_eq () 42

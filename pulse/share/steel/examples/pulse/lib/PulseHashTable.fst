@@ -10,8 +10,8 @@ module R = Steel.ST.Reference
 module US = FStar.SizeT
 module U8 = FStar.UInt8
 module LK = Steel.ST.SpinLock
-module PHT = LinearScanHashTable
-open LinearScanHashTable
+module PHT = LinearProbeHashTable
+open LinearProbeHashTable
 
 noeq
 type ht (s : pht_sig) = {
