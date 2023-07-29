@@ -148,6 +148,7 @@ let initial_env deps
     failhard=false;
     nosynth=false;
     uvar_subtyping=true;
+    intactics=false;
 
     tc_term=tc_term;
     typeof_tot_or_gtot_term=typeof_tot_or_gtot_term;
@@ -161,7 +162,7 @@ let initial_env deps
     universe_of=universe_of;
     teq_nosmt_force=teq_nosmt_force;
     subtype_nosmt_force=subtype_nosmt_force;
-    qtbl_name_and_index=BU.smap_create 10, None;  //10?
+    qtbl_name_and_index=None, BU.smap_create 10;
     normalized_eff_names=BU.smap_create 20;  //20?
     fv_delta_depths = BU.smap_create 50;
     proof_ns = Options.using_facts_from ();
@@ -215,7 +216,7 @@ let push_stack env =
               attrtab=BU.smap_copy (attrtab env);
               gamma_cache=BU.smap_copy (gamma_cache env);
               identifier_info=BU.mk_ref !env.identifier_info;
-              qtbl_name_and_index=BU.smap_copy (env.qtbl_name_and_index |> fst), env.qtbl_name_and_index |> snd;
+              qtbl_name_and_index=env.qtbl_name_and_index |> fst, BU.smap_copy (env.qtbl_name_and_index |> snd);
               normalized_eff_names=BU.smap_copy env.normalized_eff_names;
               fv_delta_depths=BU.smap_copy env.fv_delta_depths;
               strict_args_tab=BU.smap_copy env.strict_args_tab;
@@ -259,19 +260,19 @@ let pop env msg = rollback env.solver msg None
 let incr_query_index env =
   let qix = peek_query_indices () in
   match env.qtbl_name_and_index with
-  | _, None -> env
-  | tbl, Some (l, n) ->
+  | None, _ -> env
+  | Some (l, typ, n), tbl ->
     match qix |> List.tryFind (fun (m, _) -> Ident.lid_equals l m) with
     | None ->
       let next = n + 1 in
       add_query_index (l, next);
       BU.smap_add tbl (string_of_lid l) next;
-      {env with qtbl_name_and_index=tbl, Some (l, next)}
+      {env with qtbl_name_and_index=Some (l, typ, next), tbl}
     | Some (_, m) ->
       let next = m + 1 in
       add_query_index (l, next);
       BU.smap_add tbl (string_of_lid l) next;
-      {env with qtbl_name_and_index=tbl, Some (l, next)}
+      {env with qtbl_name_and_index=Some (l, typ, next), tbl}
 
 ////////////////////////////////////////////////////////////
 // Checking the per-module debug level and position info  //
@@ -390,7 +391,7 @@ let lookup_qname env (lid:lident) : qninfo =
                 Some (Inl (us, t), Ident.range_of_lid l)
               | _ -> None))
             (fun () -> BU.find_map env.gamma_sig (function
-              | (_, { sigel = Sig_bundle(ses, _) }) ->
+              | (_, { sigel = Sig_bundle {ses} }) ->
                   BU.find_map ses (fun se ->
                     if lids_of_sigelt se |> BU.for_some (lid_equals lid)
                     then cache (Inr (se, None), U.range_of_sigelt se)
@@ -432,7 +433,7 @@ let add_se_to_attrtab env se =
                 | _ -> ()) se.sigattrs
 
 let rec add_sigelt env se = match se.sigel with
-    | Sig_bundle(ses, _) -> add_sigelts env ses
+    | Sig_bundle {ses} -> add_sigelts env ses
     | _ ->
       let lids = lids_of_sigelt se in
       List.iter (fun l -> BU.smap_add (sigtab env) (string_of_lid l) se) lids;
@@ -457,10 +458,10 @@ let lookup_type_of_let us_opt se lid =
       | Some us -> inst_tscheme_with ts us
     in
     match se.sigel with
-    | Sig_let((_, [lb]), _) ->
+    | Sig_let {lbs=(_, [lb])} ->
       Some (inst_tscheme (lb.lbunivs, lb.lbtyp), S.range_of_lbname lb.lbname)
 
-    | Sig_let((_, lbs), _) ->
+    | Sig_let {lbs=(_, lbs)} ->
         BU.find_map lbs (fun lb -> match lb.lbname with
           | Inl _ -> failwith "impossible"
           | Inr fv ->
@@ -491,7 +492,7 @@ let effect_signature (us_opt:option universes) (se:sigelt) rng : option ((univer
 
     Some (inst_ts us_opt sig_ts, se.sigrng)
 
-  | Sig_effect_abbrev (lid, us, binders, _, _) ->
+  | Sig_effect_abbrev {lid; us; bs=binders} ->
     Some (inst_ts us_opt (us, U.arrow binders (mk_Total teff)), se.sigrng)
 
   | _ -> None
@@ -507,23 +508,23 @@ let try_lookup_lid_aux us_opt env lid =
     | Inl t ->
       Some (t, rng)
 
-    | Inr ({sigel = Sig_datacon(_, uvs, t, _, _, _) }, None) ->
+    | Inr ({sigel = Sig_datacon {us=uvs; t} }, None) ->
       Some (inst_tscheme (uvs, t), rng)
 
-    | Inr ({sigel = Sig_declare_typ (l, uvs, t); sigquals=qs }, None) ->
+    | Inr ({sigel = Sig_declare_typ {lid=l; us=uvs; t}; sigquals=qs }, None) ->
       if in_cur_mod env l = Yes
       then if qs |> List.contains Assumption || env.is_iface
            then Some (inst_tscheme (uvs, t), rng)
            else None
       else Some (inst_tscheme (uvs, t), rng)
 
-    | Inr ({sigel = Sig_inductive_typ (lid, uvs, tps, _, k, _, _) }, None) ->
+    | Inr ({sigel = Sig_inductive_typ {lid; us=uvs; params=tps; t=k} }, None) ->
       begin match tps with
         | [] -> Some (inst_tscheme (uvs, k), rng)
         | _ ->  Some (inst_tscheme (uvs, U.flat_arrow tps (mk_Total k)), rng)
       end
 
-    | Inr ({sigel = Sig_inductive_typ (lid, uvs, tps, _, k, _, _) }, Some us) ->
+    | Inr ({sigel = Sig_inductive_typ {lid; us=uvs; params=tps; t=k} }, Some us) ->
       begin match tps with
         | [] -> Some (inst_tscheme_with (uvs, k) us, rng)
         | _ ->  Some (inst_tscheme_with (uvs, U.flat_arrow tps (mk_Total k)) us, rng)
@@ -616,36 +617,36 @@ let lookup_univ env x =
 let try_lookup_val_decl env lid =
   //QUESTION: Why does this not inst_tscheme?
   match lookup_qname env lid with
-    | Some (Inr ({ sigel = Sig_declare_typ(_, uvs, t); sigquals = q }, None), _) ->
+    | Some (Inr ({ sigel = Sig_declare_typ {us=uvs; t}; sigquals = q }, None), _) ->
       Some ((uvs, Subst.set_use_range (range_of_lid lid) t),q)
     | _ -> None
 
 let lookup_val_decl env lid =
   match lookup_qname env lid with
-    | Some (Inr ({ sigel = Sig_declare_typ(_, uvs, t) }, None), _) ->
+    | Some (Inr ({ sigel = Sig_declare_typ {us=uvs; t} }, None), _) ->
       inst_tscheme_with_range (range_of_lid lid) (uvs, t)
     | _ -> raise_error (name_not_found lid) (range_of_lid lid)
 
 let lookup_datacon env lid =
   match lookup_qname env lid with
-    | Some (Inr ({ sigel = Sig_datacon (_, uvs, t, _, _, _) }, None), _) ->
+    | Some (Inr ({ sigel = Sig_datacon {us=uvs; t} }, None), _) ->
       inst_tscheme_with_range (range_of_lid lid) (uvs, t)
     | _ -> raise_error (name_not_found lid) (range_of_lid lid)
 
 let lookup_and_inst_datacon env us lid =
   match lookup_qname env lid with
-    | Some (Inr ({ sigel = Sig_datacon (_, uvs, t, _, _, _) }, None), _) ->
+    | Some (Inr ({ sigel = Sig_datacon {us=uvs; t} }, None), _) ->
       inst_tscheme_with (uvs, t) us |> snd
     | _ -> raise_error (name_not_found lid) (range_of_lid lid)
 
 let datacons_of_typ env lid =
   match lookup_qname env lid with
-    | Some (Inr ({ sigel = Sig_inductive_typ(_, _, _, _, _, _, dcs) }, _), _) -> true, dcs
+    | Some (Inr ({ sigel = Sig_inductive_typ {ds=dcs} }, _), _) -> true, dcs
     | _ -> false, []
 
 let typ_of_datacon env lid =
   match lookup_qname env lid with
-    | Some (Inr ({ sigel = Sig_datacon (_, _, _, l, _, _) }, _), _) -> l
+    | Some (Inr ({ sigel = Sig_datacon {ty_lid=l} }, _), _) -> l
     | _ -> failwith (BU.format1 "Not a datacon: %s" (Print.lid_to_string lid))
 
 let lookup_definition_qninfo_aux rec_ok delta_levels lid (qninfo : qninfo) =
@@ -655,7 +656,7 @@ let lookup_definition_qninfo_aux rec_ok delta_levels lid (qninfo : qninfo) =
   match qninfo with
   | Some (Inr (se, None), _) ->
     begin match se.sigel with
-      | Sig_let((is_rec, lbs), _)
+      | Sig_let {lbs=(is_rec, lbs)}
         when visible se.sigquals
           && (not is_rec || rec_ok) ->
           BU.find_map lbs (fun lb ->
@@ -686,11 +687,11 @@ let delta_depth_of_qninfo_lid lid (qn:qninfo) : option delta_depth =
       | Sig_bundle _
       | Sig_datacon _ -> Some (Delta_constant_at_level 0)
       | Sig_declare_typ _ -> Some (FStar.Syntax.DsEnv.delta_depth_of_declaration lid se.sigquals)
-      | Sig_let ((_,lbs), _) ->
+      | Sig_let {lbs=(_,lbs)} ->
           BU.find_map lbs (fun lb ->
               let fv = right lb.lbname in
               if fv_eq_lid fv lid
-              then Some fv.fv_delta
+              then fv.fv_delta
               else None)
 
       | Sig_fail _
@@ -706,14 +707,50 @@ let delta_depth_of_qninfo_lid lid (qn:qninfo) : option delta_depth =
       | Sig_polymonadic_subcomp _ -> None
 
 
+//
+// For the following prims symbols,
+//   delta depth is handled specially
+// Instead of looking it up in the env,
+//   we  return as is set in the input fv.fv_delta
+// No principled reason, for backward compatibility
+//
+let prims_dd_lids = [
+  Const.and_lid;
+  Const.or_lid;
+  Const.imp_lid;
+  Const.iff_lid;
+  Const.true_lid;
+  Const.false_lid;
+  Const.not_lid;
+  Const.b2t_lid;
+  Const.eq2_lid;
+  Const.eq3_lid;
+  Const.op_Eq;
+  Const.op_LT;
+  Const.op_LTE;
+  Const.op_GT;
+  Const.op_GTE;
+  Const.forall_lid;
+  Const.exists_lid;
+  Const.haseq_lid;
+  Const.op_And;
+  Const.op_Or;
+  Const.op_Negation;
+]
+
+let is_prims_dd_lid (l:lident) =
+  List.existsb (fun l0 -> lid_equals l l0) prims_dd_lids
+
 let delta_depth_of_qninfo (fv:fv) (qn:qninfo) : option delta_depth =
-    let lid = fv.fv_name.v in
-    if nsstr lid = "Prims" then Some fv.fv_delta //NS delta: too many special cases in existing code
-    else delta_depth_of_qninfo_lid lid qn
+  let lid = fv.fv_name.v in
+  if is_prims_dd_lid lid && Some? fv.fv_delta
+  then fv.fv_delta //NS delta: too many special cases in existing code
+  else delta_depth_of_qninfo_lid lid qn
 
 let delta_depth_of_fv env fv =
   let lid = fv.fv_name.v in
-  if nsstr lid = "Prims" then fv.fv_delta //NS delta: too many special cases in existing code for prims; FIXME!
+  if is_prims_dd_lid lid && Some? fv.fv_delta
+  then fv.fv_delta |> must
   else
     //try cache
     (string_of_lid lid) |> BU.smap_try_find env.fv_delta_depths |> (fun d_opt ->
@@ -722,11 +759,11 @@ let delta_depth_of_fv env fv =
         match delta_depth_of_qninfo fv (lookup_qname env fv.fv_name.v) with
         | None -> failwith (BU.format1 "Delta depth not found for %s" (FStar.Syntax.Print.fv_to_string fv))
         | Some d ->
-          if d <> fv.fv_delta
+          if Some? fv.fv_delta && d <> Some?.v fv.fv_delta
           && Options.debug_any()
           then BU.print3 "WARNING WARNING WARNING fv=%s, delta_depth=%s, env.delta_depth=%s\n"
                          (Print.fv_to_string fv)
-                         (Print.delta_depth_to_string fv.fv_delta)
+                         (Print.delta_depth_to_string (Some?.v fv.fv_delta))
                          (Print.delta_depth_to_string d);
           BU.smap_add env.fv_delta_depths (string_of_lid lid) d;
           d)
@@ -816,7 +853,7 @@ let lookup_effect_lid env (ftv:lident) : typ =
 
 let lookup_effect_abbrev env (univ_insts:universes) lid0 =
   match lookup_qname env lid0 with
-    | Some (Inr ({ sigel = Sig_effect_abbrev (lid, univs, binders, c, _); sigquals = quals }, None), _) ->
+    | Some (Inr ({ sigel = Sig_effect_abbrev {lid; us=univs; bs=binders; comp=c}; sigquals = quals }, None), _) ->
       let lid = Ident.set_lid_range lid (Range.set_use_range (Ident.range_of_lid lid) (Range.use_range (Ident.range_of_lid lid0))) in
       if quals |> BU.for_some (function Irreducible -> true | _ -> false)
       then None
@@ -834,7 +871,7 @@ let lookup_effect_abbrev env (univ_insts:universes) lid0 =
              | _ -> let _, t = inst_tscheme_with (univs, U.arrow binders c) insts in
                     let t = Subst.set_use_range (range_of_lid lid) t in
                     begin match (Subst.compress t).n with
-                        | Tm_arrow(binders, c) ->
+                        | Tm_arrow {bs=binders; comp=c} ->
                           Some (binders, c)
                         | _ -> failwith "Impossible"
                     end
@@ -865,7 +902,7 @@ let is_erasable_effect env l =
   l
   |> norm_eff_name env
   |> (fun l -> lid_equals l Const.effect_GHOST_lid ||
-           S.lid_as_fv l (Delta_constant_at_level 0) None
+           S.lid_as_fv l None
            |> fv_has_erasable_attr env)
 
 let rec non_informative env t =
@@ -876,9 +913,9 @@ let rec non_informative env t =
       || fv_eq_lid fv Const.squash_lid
       || fv_eq_lid fv Const.erased_lid
       || fv_has_erasable_attr env fv
-    | Tm_app(head, _) -> non_informative env head
+    | Tm_app {hd=head} -> non_informative env head
     | Tm_uinst (t, _) -> non_informative env t
-    | Tm_arrow(_, c) ->
+    | Tm_arrow {comp=c} ->
       (is_pure_or_ghost_comp c && non_informative env (comp_result c))
       || is_erasable_effect env (comp_effect_name c)
     | _ -> false
@@ -886,7 +923,7 @@ let rec non_informative env t =
 let num_effect_indices env name r =
   let sig_t = name |> lookup_effect_lid env |> SS.compress in
   match sig_t.n with
-  | Tm_arrow (_a::bs, _) -> List.length bs
+  | Tm_arrow {bs=_a::bs} -> List.length bs
   | _ ->
     raise_error (Errors.Fatal_UnexpectedSignatureForMonad,
       BU.format2 "Signature for %s not an arrow (%s)" (Ident.string_of_lid name)
@@ -904,7 +941,7 @@ let lookup_projector env lid i =
     let fail () = failwith (BU.format2 "Impossible: projecting field #%s from constructor %s is undefined" (BU.string_of_int i) (Print.lid_to_string lid)) in
     let _, t = lookup_datacon env lid in
     match (compress t).n with
-        | Tm_arrow(binders, _) ->
+        | Tm_arrow {bs=binders} ->
           if ((i < 0) || i >= List.length binders) //this has to be within bounds!
           then fail ()
           else let b = List.nth binders i in
@@ -913,13 +950,13 @@ let lookup_projector env lid i =
 
 let is_projector env (l:lident) : bool =
     match lookup_qname env l with
-        | Some (Inr ({ sigel = Sig_declare_typ(_, _, _); sigquals=quals }, _), _) ->
+        | Some (Inr ({ sigel = Sig_declare_typ _; sigquals=quals }, _), _) ->
           BU.for_some (function Projector _ -> true | _ -> false) quals
         | _ -> false
 
 let is_datacon env lid =
   match lookup_qname env lid with
-    | Some (Inr ({ sigel = Sig_datacon (_, _, _, _, _, _) }, _), _) -> true
+    | Some (Inr ({ sigel = Sig_datacon _ }, _), _) -> true
     | _ -> false
 
 let is_record env lid =
@@ -930,7 +967,7 @@ let is_record env lid =
 
 let qninfo_is_action (qninfo : qninfo) =
     match qninfo with
-        | Some (Inr ({ sigel = Sig_let(_, _); sigquals = quals }, _), _) ->
+        | Some (Inr ({ sigel = Sig_let _; sigquals = quals }, _), _) ->
             BU.for_some (function Action _ -> true | _ -> false) quals
         | _ -> false
 
@@ -958,10 +995,10 @@ let is_interpreted =
     fun (env:env) head ->
         match (U.un_uinst head).n with
         | Tm_fvar fv ->
-            (match fv.fv_delta with
+          BU.for_some (Ident.lid_equals fv.fv_name.v) interpreted_symbols ||
+            (match delta_depth_of_fv env fv with
              | Delta_equational_at_level _ -> true
-             | _ -> false) ||
-            BU.for_some (Ident.lid_equals fv.fv_name.v) interpreted_symbols
+             | _ -> false)
         | _ -> false
 
 let is_irreducible env l =
@@ -988,14 +1025,14 @@ let is_type_constructor env lid =
 
 let num_inductive_ty_params env lid =
   match lookup_qname env lid with
-  | Some (Inr ({ sigel = Sig_inductive_typ (_, _, tps, _, _, _, _) }, _), _) ->
+  | Some (Inr ({ sigel = Sig_inductive_typ {params=tps} }, _), _) ->
     Some (List.length tps)
   | _ ->
     None
 
 let num_inductive_uniform_ty_params env lid =
   match lookup_qname env lid with
-  | Some (Inr ({ sigel = Sig_inductive_typ (_, _, _, num_uniform, _, _, _) }, _), _) ->
+  | Some (Inr ({ sigel = Sig_inductive_typ {num_uniform_params=num_uniform} }, _), _) ->
     (
       match num_uniform with
       | None ->
@@ -1094,7 +1131,7 @@ let wp_sig_aux decls m =
     let _, s = md.signature |> U.effect_sig_ts |> inst_tscheme in
     let s = Subst.compress s in
     match md.binders, s.n with
-      | [], Tm_arrow([b; wp_b], c) when (is_teff (comp_result c)) -> b.binder_bv, wp_b.binder_bv.sort
+      | [], Tm_arrow {bs=[b; wp_b]; comp=c} when (is_teff (comp_result c)) -> b.binder_bv, wp_b.binder_bv.sort
       | _ -> failwith "Impossible"
 
 let wp_signature env m = wp_sig_aux env.effects.decls m
@@ -1229,7 +1266,7 @@ let effect_repr_aux only_reifiable env c u_res =
       let res_typ = c.result_typ in
       let repr = inst_effect_fun_with [u_res] env ed ts in
       check_partial_application effect_name c.effect_args;
-      Some (S.mk (Tm_app (repr, ((res_typ |> S.as_arg)::c.effect_args))) (get_range env))
+      Some (S.mk (Tm_app {hd=repr; args=((res_typ |> S.as_arg)::c.effect_args)}) (get_range env))
 
 let effect_repr env c u_res : option term = effect_repr_aux false env c u_res
 
@@ -1270,7 +1307,7 @@ let is_reifiable_comp (env:env) (c:S.comp) : bool =
 
 let is_reifiable_function (env:env) (t:S.term) : bool =
     match (compress t).n with
-    | Tm_arrow (_, c) -> is_reifiable_comp env c
+    | Tm_arrow {comp=c} -> is_reifiable_comp env c
     | _ -> false
 
 let reify_comp env c u_c : term =
@@ -1784,7 +1821,7 @@ let too_early_in_prims env =
 
 let apply_guard g e = match g.guard_f with
   | Trivial -> g
-  | NonTrivial f -> {g with guard_f=NonTrivial <| mk (Tm_app(f, [as_arg e])) f.pos}
+  | NonTrivial f -> {g with guard_f=NonTrivial <| mk (Tm_app {hd=f; args=[as_arg e]}) f.pos}
 
 let map_guard g map = match g.guard_f with
   | Trivial -> g
@@ -1949,7 +1986,7 @@ let fvar_of_nonqual_lid env lid =
         | None -> failwith "Unexpected no delta_depth"
         | Some dd -> dd
     in
-    fvar lid dd None
+    fvar lid None
 
 let split_smt_query (e:env) (q:term) 
   : option (list (env & term))

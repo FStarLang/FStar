@@ -127,7 +127,7 @@ val id_info_table_empty : id_info_table
 val id_info_insert_bv : id_info_table -> bv -> typ -> id_info_table
 val id_info_insert_fv : id_info_table -> fv -> typ -> id_info_table
 val id_info_toggle    : id_info_table -> bool -> id_info_table
-val id_info_promote   : id_info_table -> (typ -> typ) -> id_info_table
+val id_info_promote   : id_info_table -> (typ -> option typ) -> id_info_table
 val id_info_at_pos    : id_info_table -> string -> int -> int -> option identifier_info
 
 // Reason, term and uvar, and (rough) position where it is introduced

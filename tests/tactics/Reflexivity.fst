@@ -1,6 +1,6 @@
 module Reflexivity
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let _ = assert (1 = 1)   by trefl ()
 let _ = assert (1 == 1)  by trefl ()

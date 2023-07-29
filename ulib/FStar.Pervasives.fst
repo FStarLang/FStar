@@ -185,3 +185,5 @@ let no_subtyping = ()
 let admit_termination = ()
 
 let singleton #_ x = x
+
+let coercion = ()

@@ -16,12 +16,12 @@
 module SL.AutoTactic
 
 open FStar.Algebra.CommMonoid
-open FStar.Tactics
-module T = FStar.Tactics
+open FStar.Tactics.V2
+module T = FStar.Tactics.V2
 
 open FStar.Tactics.PatternMatching
 open FStar.Tactics.CanonCommMonoid
-open FStar.Reflection
+open FStar.Reflection.V2
 open FStar.List
 
 open SL.Base
@@ -255,7 +255,7 @@ let destruct_and (b:binder) : Tac (binder * binder) =
 
 let canon_binder_mem_eq (b:binder) : Tac unit =
     ddump "canon_binder_mem_eq before";
-    norm_binder_type [delta_only [`%mem_eq]] b;
+    norm_binding_type [delta_only [`%mem_eq]] b;
     binder_retype b;
     focus (fun () ->
         apply_lemma (`__lem_eq_sides);
@@ -609,7 +609,7 @@ let prelude' () : Tac unit =
   //now we are at the small footprint style wp
   //we should full norm it, so that we can get our hands on the m0 == ..., i.e. the footprint of the command
   let user_annot = implies_intro() in
-  norm_binder_type [primops; iota; delta; zeta] user_annot;
+  norm_binding_type [primops; iota; delta; zeta] user_annot;
   and_elim (binder_to_term user_annot);
   clear user_annot;
 

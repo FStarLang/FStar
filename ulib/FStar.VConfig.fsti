@@ -50,3 +50,7 @@ type vconfig = {
   trivial_pre_for_unannotated_effectful_fns : bool;
   reuse_hint_for                            : option string;
 }
+
+(** Marker to check a sigelt with a particular vconfig *)
+irreducible
+let check_with (vcfg : vconfig) : unit = ()

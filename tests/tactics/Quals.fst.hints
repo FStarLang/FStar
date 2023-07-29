@@ -1,6 +1,19 @@
 [
-  "\u0018aÜ\f้\u0010þTชนฮ_m๙๘",
+  "-\u0002ๆฌ\u0019แ<ป\u001a_'์dj–",
   [
+    [
+      "Quals.tau",
+      1,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_FStar.Tactics.NamedView.Sg_Let",
+        "disc_equation_FStar.Tactics.NamedView.Unk",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "b9e2ffdefdeb6fe0cb9b75753b40e82d"
+    ],
     [
       "Quals.test_sp1",
       1,
@@ -27,10 +40,10 @@
         "projection_inverse_FStar.Tactics.Result.Success_ps",
         "projection_inverse_FStar.Tactics.Result.Success_v",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "string_typing", "typing_FStar.Reflection.Builtins.lookup_typ"
+        "string_typing", "typing_FStar.Reflection.V2.Builtins.lookup_typ"
       ],
       0,
-      "42125875003472669e11020fb2419ad2"
+      "b2a2d42f09c0e058d5ba4da36b4f7d55"
     ],
     [
       "Quals.test_sp1",
@@ -59,10 +72,10 @@
         "projection_inverse_FStar.Tactics.Result.Success_v",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "string_typing", "true_interp",
-        "typing_FStar.Reflection.Builtins.lookup_typ"
+        "typing_FStar.Reflection.V2.Builtins.lookup_typ"
       ],
       0,
-      "ffc30ca2323f32679918c356db81f62d"
+      "8ab1a887c8c4b9aaa33f76c49d602028"
     ]
   ]
 ]

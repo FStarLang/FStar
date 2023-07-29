@@ -1,6 +1,6 @@
 module Bug2806b
 
-open FStar.Reflection
+open FStar.Reflection.V2
 
 let non_fun #a #b (f : a -> b) (x y : a) (fx fy : b) :
   Lemma (requires f x == fx /\ f y == fy /\ x == y)

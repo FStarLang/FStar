@@ -15,7 +15,7 @@
 *)
 module ReifiedTc
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 type mint = int
 type state = mint * mint

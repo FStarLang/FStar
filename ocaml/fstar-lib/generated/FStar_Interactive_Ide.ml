@@ -1229,7 +1229,7 @@ let run_segment :
               let uu___2 =
                 let uu___3 =
                   FStar_Compiler_Range_Ops.json_of_def_range
-                    (FStar_Parser_AST.decl_drange decl) in
+                    decl.FStar_Parser_AST.drange in
                 ("def_range", uu___3) in
               [uu___2] in
             FStar_Json.JsonAssoc uu___1 in
@@ -1545,6 +1545,8 @@ let (run_push_without_deps :
                FStar_TypeChecker_Env.nosynth = flag;
                FStar_TypeChecker_Env.uvar_subtyping =
                  (uu___.FStar_TypeChecker_Env.uvar_subtyping);
+               FStar_TypeChecker_Env.intactics =
+                 (uu___.FStar_TypeChecker_Env.intactics);
                FStar_TypeChecker_Env.tc_term =
                  (uu___.FStar_TypeChecker_Env.tc_term);
                FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
@@ -2160,15 +2162,17 @@ let run_with_parsed_and_tc_term :
               match ses with
               | {
                   FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_let
-                    ((uu___,
-                      { FStar_Syntax_Syntax.lbname = uu___1;
-                        FStar_Syntax_Syntax.lbunivs = univs;
-                        FStar_Syntax_Syntax.lbtyp = uu___2;
-                        FStar_Syntax_Syntax.lbeff = uu___3;
-                        FStar_Syntax_Syntax.lbdef = def;
-                        FStar_Syntax_Syntax.lbattrs = uu___4;
-                        FStar_Syntax_Syntax.lbpos = uu___5;_}::[]),
-                     uu___6);
+                    {
+                      FStar_Syntax_Syntax.lbs1 =
+                        (uu___,
+                         { FStar_Syntax_Syntax.lbname = uu___1;
+                           FStar_Syntax_Syntax.lbunivs = univs;
+                           FStar_Syntax_Syntax.lbtyp = uu___2;
+                           FStar_Syntax_Syntax.lbeff = uu___3;
+                           FStar_Syntax_Syntax.lbdef = def;
+                           FStar_Syntax_Syntax.lbattrs = uu___4;
+                           FStar_Syntax_Syntax.lbpos = uu___5;_}::[]);
+                      FStar_Syntax_Syntax.lids1 = uu___6;_};
                   FStar_Syntax_Syntax.sigrng = uu___7;
                   FStar_Syntax_Syntax.sigquals = uu___8;
                   FStar_Syntax_Syntax.sigmeta = uu___9;

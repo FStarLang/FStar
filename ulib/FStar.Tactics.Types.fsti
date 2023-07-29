@@ -70,3 +70,9 @@ type unfold_side =
 type tot_or_ghost =
   | E_Total
   | E_Ghost
+
+(* Typing reflection *)
+val subtyping_token (g:env) (t0 t1:typ) : Type0
+val equiv_token (g:env) (t0 t1:typ) : Type0
+val typing_token (g:env) (e:term) (c:tot_or_ghost & typ) : Type0
+let issues = list FStar.Issue.issue

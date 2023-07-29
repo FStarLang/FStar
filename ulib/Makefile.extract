@@ -37,15 +37,22 @@ $(DEPENDRSP):
 $(DEPEND): $(DEPENDRSP)
 	$(call msg, "DEPEND")
 	$(Q)mkdir -p .cache
-	$(Q)$(MY_FSTAR) --dep full $(EXTRACT_MODULES) $(addprefix --include , $(INCLUDE_PATHS)) @$(DEPENDRSP) > $@
+	$(Q)$(MY_FSTAR) --dep full $(EXTRACT_MODULES) $(addprefix --include , $(INCLUDE_PATHS)) @$(DEPENDRSP) --output_deps_to $@
 
 dep.graph: $(DEPENDRSP)
-	$(Q)$(MY_FSTAR) --dep graph $(EXTRACT_MODULES) $(addprefix --include , $(INCLUDE_PATHS)) @$(DEPENDRSP)
+	$(Q)$(MY_FSTAR) --dep graph $(EXTRACT_MODULES) $(addprefix --include , $(INCLUDE_PATHS)) @$(DEPENDRSP) --output_deps_to $@
 
 depgraph.pdf: dep.graph
 	$(Q)$(FSTAR_HOME)/.scripts/simpl_graph.py dep.graph > dep_simpl.graph
 	$(call msg, "DOT", $@)
 	$(Q)dot -Tpdf -o $@ dep_simpl.graph
+
+# make depgraph-FStar.Tactics.fst.pdf to get a dep graph of FStar.Tactics.fst downwards
+depgraph-%.pdf:
+	$(Q)$(MY_FSTAR) --dep graph $(EXTRACT_MODULES) $(addprefix --include , $(INCLUDE_PATHS)) $* --output_deps_to $@.graph
+	$(Q)$(FSTAR_HOME)/.scripts/simpl_graph.py $@.graph > $@.graph.simpl
+	$(call msg, "DOT", $@)
+	$(Q)dot -Tpdf -o $@ $@.graph.simpl
 
 depend.extract: $(DEPEND)
 

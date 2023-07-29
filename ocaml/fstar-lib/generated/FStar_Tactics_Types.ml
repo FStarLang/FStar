@@ -269,6 +269,8 @@ let (goal_of_implicit :
           FStar_TypeChecker_Env.nosynth = (env.FStar_TypeChecker_Env.nosynth);
           FStar_TypeChecker_Env.uvar_subtyping =
             (env.FStar_TypeChecker_Env.uvar_subtyping);
+          FStar_TypeChecker_Env.intactics =
+            (env.FStar_TypeChecker_Env.intactics);
           FStar_TypeChecker_Env.tc_term = (env.FStar_TypeChecker_Env.tc_term);
           FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
             (env.FStar_TypeChecker_Env.typeof_tot_or_gtot_term);
@@ -484,3 +486,8 @@ let (uu___is_E_Total : tot_or_ghost -> Prims.bool) =
   fun projectee -> match projectee with | E_Total -> true | uu___ -> false
 let (uu___is_E_Ghost : tot_or_ghost -> Prims.bool) =
   fun projectee -> match projectee with | E_Ghost -> true | uu___ -> false
+type ('g, 't0, 't1) subtyping_token = unit
+type ('g, 't0, 't1) equiv_token = unit
+type ('g, 'e, 'c) typing_token = unit
+type ('g, 'sc, 't, 'pats) match_complete_token = unit
+type issues = FStar_Issue.issue Prims.list

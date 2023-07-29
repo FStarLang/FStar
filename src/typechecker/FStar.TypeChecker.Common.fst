@@ -112,23 +112,24 @@ let id_info__insert ty_map db info =
       | Inr _ ->
         ty_map info.identifier_ty
       | Inl x ->
-        // BU.print1 "id_info__insert: %s\n"
-        //           (print_identifier_info info);
         ty_map info.identifier_ty
     in
-    let info = { info with identifier_range = use_range;
-                           identifier_ty = id_ty } in
+    match id_ty with
+    | None -> db
+    | Some id_ty ->
+      let info = { info with identifier_range = use_range;
+                             identifier_ty = id_ty } in
 
-    let fn = file_of_range use_range in
-    let start = start_of_range use_range in
-    let row, col = line_of_pos start, col_of_pos start in
+      let fn = file_of_range use_range in
+      let start = start_of_range use_range in
+      let row, col = line_of_pos start, col_of_pos start in
 
-    let rows = BU.psmap_find_default db fn (BU.pimap_empty ()) in
-    let cols = BU.pimap_find_default rows row [] in
+      let rows = BU.psmap_find_default db fn (BU.pimap_empty ()) in
+      let cols = BU.pimap_find_default rows row [] in
 
-    insert_col_info col info cols
-    |> BU.pimap_add rows row
-    |> BU.psmap_add db fn
+      insert_col_info col info cols
+      |> BU.pimap_add rows row
+      |> BU.psmap_add db fn
 
 let id_info_insert table id ty range =
     let info = { identifier = id; identifier_ty = ty; identifier_range = range} in
@@ -390,7 +391,7 @@ let simplify (debug:bool) (tm:term) : term =
         (* Trying to be efficient, but just checking if they all agree *)
         (* Note, if we wanted to do this for any term instead of just True/False
          * we need to open the terms *)
-        | Tm_match (_, _, br::brs, _) ->
+        | Tm_match {brs=br::brs} ->
             let (_, _, e) = br in
             let r = begin match simp_t e with
             | None -> None
@@ -426,7 +427,7 @@ let simplify (debug:bool) (tm:term) : term =
     let rec clearly_inhabited (ty : typ) : bool =
         match (U.unmeta ty).n with
         | Tm_uinst (t, _) -> clearly_inhabited t
-        | Tm_arrow (_, c) -> clearly_inhabited (U.comp_result c)
+        | Tm_arrow {comp=c} -> clearly_inhabited (U.comp_result c)
         | Tm_fvar fv ->
             let l = S.lid_of_fv fv in
                (Ident.lid_equals l PC.int_lid)
@@ -437,8 +438,8 @@ let simplify (debug:bool) (tm:term) : term =
     in
     let simplify arg = (simp_t (fst arg), arg) in
     match (SS.compress tm).n with
-    | Tm_app({n=Tm_uinst({n=Tm_fvar fv}, _)}, args)
-    | Tm_app({n=Tm_fvar fv}, args) ->
+    | Tm_app {hd={n=Tm_uinst({n=Tm_fvar fv}, _)}; args}
+    | Tm_app {hd={n=Tm_fvar fv}; args} ->
       if S.fv_eq_lid fv PC.and_lid
       then match args |> List.map simplify with
            | [(Some true, _); (_, (arg, _))]
@@ -488,7 +489,7 @@ let simplify (debug:bool) (tm:term) : term =
            (* Simplify ∀x. True to True *)
            | [(t, _)] ->
              begin match (SS.compress t).n with
-                   | Tm_abs([_], body, _) ->
+                   | Tm_abs {bs=[_]; body} ->
                      (match simp_t body with
                      | Some true -> w U.t_true
                      | _ -> tm)
@@ -497,7 +498,7 @@ let simplify (debug:bool) (tm:term) : term =
            (* Simplify ∀x. True to True, and ∀x. False to False, if the domain is not empty *)
            | [(ty, Some ({ aqual_implicit = true })); (t, _)] ->
              begin match (SS.compress t).n with
-                   | Tm_abs([_], body, _) ->
+                   | Tm_abs {bs=[_]; body} ->
                      (match simp_t body with
                      | Some true -> w U.t_true
                      | Some false when clearly_inhabited ty -> w U.t_false
@@ -510,7 +511,7 @@ let simplify (debug:bool) (tm:term) : term =
            (* Simplify ∃x. False to False *)
            | [(t, _)] ->
              begin match (SS.compress t).n with
-                   | Tm_abs([_], body, _) ->
+                   | Tm_abs {bs=[_]; body} ->
                      (match simp_t body with
                      | Some false -> w U.t_false
                      | _ -> tm)
@@ -519,7 +520,7 @@ let simplify (debug:bool) (tm:term) : term =
            (* Simplify ∃x. False to False and ∃x. True to True, if the domain is not empty *)
            | [(ty, Some ({ aqual_implicit = true })); (t, _)] ->
              begin match (SS.compress t).n with
-                   | Tm_abs([_], body, _) ->
+                   | Tm_abs {bs=[_]; body} ->
                      (match simp_t body with
                      | Some false -> w U.t_false
                      | Some true when clearly_inhabited ty -> w U.t_true
@@ -559,7 +560,7 @@ let simplify (debug:bool) (tm:term) : term =
                 //get the hasEq term itself
                 let haseq_tm =
                   match (SS.compress tm).n with
-                  | Tm_app (hd, _) -> hd
+                  | Tm_app {hd} -> hd
                   | _ -> failwith "Impossible! We have already checked that this is a Tm_app"
                 in
                 //and apply it to the unrefined type
@@ -585,7 +586,7 @@ let simplify (debug:bool) (tm:term) : term =
         | _ ->
              tm
       end
-    | Tm_refine (bv, t) ->
+    | Tm_refine {b=bv; phi=t} ->
         begin match simp_t t with
         | Some true -> bv.sort
         | Some false -> tm

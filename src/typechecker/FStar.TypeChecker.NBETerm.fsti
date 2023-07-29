@@ -251,6 +251,7 @@ val embed_as : embedding 'a -> ('a -> 'b) -> ('b -> 'a) -> option t -> embedding
 
 val embed   : embedding 'a -> nbe_cbs -> 'a -> t
 val unembed : embedding 'a -> nbe_cbs -> t -> option 'a
+val lazy_unembed_lazy_kind (#a:Type) (k:lazy_kind) (x:t) : option a
 val type_of : embedding 'a -> t
 
 val e_bool   : embedding bool
@@ -261,8 +262,9 @@ val e_unit   : embedding unit
 val e_any    : embedding t
 val mk_any_emb : t -> embedding t
 val e_range  : embedding Range.range
+val e_issue  : embedding FStar.Errors.issue
 val e_vconfig  : embedding vconfig
-val e_norm_step : embedding Syntax.Embeddings.norm_step
+val e_norm_step : embedding Pervasives.norm_step
 val e_list   : embedding 'a -> embedding (list 'a)
 val e_option : embedding 'a -> embedding (option 'a)
 val e_tuple2 : embedding 'a -> embedding 'b -> embedding ('a * 'b)
@@ -271,6 +273,9 @@ val e_either : embedding 'a -> embedding 'b -> embedding (either 'a 'b)
 val e_sealed : embedding 'a -> embedding 'a
 val e_string_list : embedding (list string)
 val e_arrow : embedding 'a -> embedding 'b -> embedding ('a -> 'b)
+
+(* Unconditionally fails raising an exception when called *)
+val e_unsupported : #a:Type -> embedding a
 
 (* Arity specific raw_embeddings of arrows; used to generate top-level
    registrations of compiled functions in FStar.Extraction.ML.Util *)

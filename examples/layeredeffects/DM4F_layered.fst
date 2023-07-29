@@ -19,7 +19,7 @@ module DM4F_layered
 (* Same as DM4F, but layered over a layered PURE *)
 open DM4F_Utils
 open ID2
-open FStar.Tactics
+open FStar.Tactics.V2
 
 (* Simulating state effect in DM4F, hopefully doable by a tactic. *)
 
@@ -78,8 +78,8 @@ let bind (a:Type) (b:Type) (st:Type0)
   (f : (x:a -> repr b st (wp_f x)))
 : repr b st (bind_wp wp_c wp_f)
    by (explode ();
-       let w = nth_binder 3 in
-       apply_lemma (`(wp_squash_lem (`#w)));
+       let w = nth_var 3 in
+       apply_lemma (`(wp_squash_lem (`#(binding_to_term w))));
        dump "")
 = fun s0 ->
       let (y, s1) = c s0 in

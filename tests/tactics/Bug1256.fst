@@ -15,13 +15,13 @@
 *)
 module Bug1256
 
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.Squash
 
 let ddump m = if debugging () then dump m
 
 let my_cut (t:term) : Tac unit =
-    let qq = pack (Tv_FVar (pack_fv ["FStar";"Tactics";"Derived";"__cut"])) in
+    let qq = pack (Tv_FVar (pack_fv ["FStar";"Tactics";"V2";"Derived";"__cut"])) in
     let tt = pack (Tv_App qq (t, Q_Explicit)) in
     apply tt
 
@@ -34,16 +34,16 @@ let test (p:(unit -> Type0)) (q:(unit -> Type0))
          by (let eq = implies_intro () in
              let h = implies_intro () in
              ddump "A";
-             my_cut (type_of_binder h);
+             my_cut h.sort;
              ddump "B";
              rewrite eq;
              norm [];
              ddump "C";
              let hh = intro () in
              apply (`return_squash);
-             exact (pack (Tv_Var (bv_of_binder hh)));
+             exact (pack (Tv_Var (binding_to_namedv hh)));
              ddump "D";
-             exact (pack (Tv_Var (bv_of_binder h))) )
+             exact (pack (Tv_Var (binding_to_namedv h))) )
 
 [@@expect_failure]
 let test2 (post:(unit -> Type0))
@@ -66,7 +66,7 @@ let test3 (p:(unit -> Type0)) (q:(unit -> Type0))
          by (let eq = implies_intro () in
              let h = implies_intro () in
              ddump "A";
-             my_cut (type_of_binder h);
+             my_cut h.sort;
              ddump "B";
              rewrite eq;
              norm [];
@@ -74,9 +74,9 @@ let test3 (p:(unit -> Type0)) (q:(unit -> Type0))
              let hh = intro () in
              apply (`return_squash);
              ddump "D";
-             exact (pack (Tv_Var (bv_of_binder hh)));
+             exact (pack (Tv_Var (binding_to_namedv hh)));
              ddump "E";
-             exact (pack (Tv_Var (bv_of_binder h)))
+             exact (pack (Tv_Var (binding_to_namedv h)))
              )
 
 let test4 (post:(unit -> Type0))
@@ -84,13 +84,13 @@ let test4 (post:(unit -> Type0))
          by (let eq = implies_intro () in
              let h = implies_intro () in
              ddump "A";
-             my_cut (type_of_binder h);
+             my_cut h.sort;
              ddump "B";
              rewrite eq;
              norm [];
              ddump "C";
              let hh = intro () in
              apply (`return_squash);
-             exact (pack (Tv_Var (bv_of_binder hh)));
-             exact (pack (Tv_Var (bv_of_binder h)));
+             exact (pack (Tv_Var (binding_to_namedv hh)));
+             exact (pack (Tv_Var (binding_to_namedv h)));
              ())

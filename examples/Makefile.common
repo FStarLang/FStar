@@ -71,8 +71,7 @@ MY_FSTAR=$(RUNLIM) $(VERBOSE_FSTAR) $(SIL)
 # the dependency analysis failed.
 #--------------------------------------------------------------------------------
 .depend: $(FSTAR_FILES)
-	$(Q)$(MY_FSTAR) --dep full $(FSTAR_FILES) > ._depend
-	mv ._depend .depend
+	$(Q)$(MY_FSTAR) --dep full $(FSTAR_FILES) --output_deps_to $@
 
 depend: .depend
 

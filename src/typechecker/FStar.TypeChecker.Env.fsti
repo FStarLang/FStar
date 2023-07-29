@@ -180,6 +180,7 @@ and env = {
   failhard       :bool;                         (* don't try to carry on after a typechecking error *)
   nosynth        :bool;                         (* don't run synth tactics *)
   uvar_subtyping :bool;
+  intactics      :bool;                         (* we are currently running a tactic *)
 
   tc_term :env -> term -> term * lcomp * guard_t; (* typechecker callback; G |- e : C <== g *)
   typeof_tot_or_gtot_term :env -> term -> must_tot -> term * typ * guard_t; (* typechecker callback; G |- e : (G)Tot t <== g *)
@@ -187,7 +188,9 @@ and env = {
   typeof_well_typed_tot_or_gtot_term :env -> term -> must_tot -> typ * guard_t; (* typechecker callback, uses fast path, with a fallback on the slow path *)
   teq_nosmt_force: env -> term -> term -> bool;        (* callback to the unifier *)
   subtype_nosmt_force: env -> term -> term -> bool;    (* callback to the unifier *)
-  qtbl_name_and_index:BU.smap int * option (lident*int);    (* the top-level term we're currently processing and the nth query for it, in addition we maintain a counter for query index per lid *)
+  qtbl_name_and_index: option (lident & typ & int) & BU.smap int;
+     (* ^ the top-level term we're currently processing, its type, and the query counter for it,
+       in addition we maintain a counter for query index per lid *)
   normalized_eff_names:BU.smap lident;           (* cache for normalized effect name, used to be captured in the function norm_eff_name, which made it harder to roll back etc. *)
   fv_delta_depths:BU.smap delta_depth;           (* cache for fv delta depths, its preferable to use Env.delta_depth_of_fv, soon fv.delta_depth should be removed *)
   proof_ns       :proof_namespace;                (* the current names that will be encoded to SMT (a.k.a. hint db) *)
@@ -284,7 +287,7 @@ val get_range      : env -> Range.range
 val insert_bv_info : env -> bv -> typ -> unit
 val insert_fv_info : env -> fv -> typ -> unit
 val toggle_id_info : env -> bool -> unit
-val promote_id_info : env -> (typ -> typ) -> unit
+val promote_id_info : env -> (typ -> option typ) -> unit
 
 (* Querying identifiers *)
 val lid_exists             : env -> lident -> bool

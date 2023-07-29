@@ -15,7 +15,7 @@
 *)
 module Goals
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 (* A sanity check that we cannot trick the engine into dropping VCs *)
 

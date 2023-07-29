@@ -3,15 +3,15 @@ let (term_eq :
   FStar_Reflection_Types.term ->
     FStar_Reflection_Types.term ->
       (Prims.bool, unit) FStar_Tactics_Effect.tac_repr)
-  = FStar_Tactics_Builtins.term_eq_old
+  = FStar_Tactics_V1_Builtins.term_eq_old
 type meta_info = unit
 let (focus_on_term : meta_info) =
   Obj.magic (fun uu___ -> failwith "Not yet implemented:focus_on_term")
 let (end_proof : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
-    FStar_Tactics_Builtins.tadmit_t
-      (FStar_Reflection_Builtins.pack_ln
-         (FStar_Reflection_Data.Tv_Const FStar_Reflection_Data.C_Unit))
+    FStar_Tactics_V1_Builtins.tadmit_t
+      (FStar_Reflection_V2_Builtins.pack_ln
+         (FStar_Reflection_V2_Data.Tv_Const FStar_Reflection_V2_Data.C_Unit))
 let (unsquash_equality :
   FStar_Reflection_Types.term ->
     ((FStar_Reflection_Types.term * FStar_Reflection_Types.term)
@@ -20,19 +20,23 @@ let (unsquash_equality :
   =
   fun t ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
-         (Prims.of_int (33)) (Prims.of_int (14)) (Prims.of_int (33))
-         (Prims.of_int (31)))
-      (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
-         (Prims.of_int (33)) (Prims.of_int (8)) (Prims.of_int (35))
-         (Prims.of_int (13)))
-      (Obj.magic (FStar_Reflection_Formula.term_as_formula t))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
+               (Prims.of_int (29)) (Prims.of_int (14)) (Prims.of_int (29))
+               (Prims.of_int (31)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
+               (Prims.of_int (29)) (Prims.of_int (8)) (Prims.of_int (31))
+               (Prims.of_int (13)))))
+      (Obj.magic (FStar_Reflection_V1_Formula.term_as_formula t))
       (fun uu___ ->
          FStar_Tactics_Effect.lift_div_tac
            (fun uu___1 ->
               match uu___ with
-              | FStar_Reflection_Formula.Comp
-                  (FStar_Reflection_Formula.Eq uu___2, l, r) ->
+              | FStar_Reflection_V1_Formula.Comp
+                  (FStar_Reflection_V1_Formula.Eq uu___2, l, r) ->
                   FStar_Pervasives_Native.Some (l, r)
               | uu___2 -> FStar_Pervasives_Native.None))
 let (pp_explore :
@@ -48,72 +52,94 @@ let (pp_explore :
         fun f ->
           fun x ->
             FStar_Tactics_Effect.tac_bind
-              (FStar_Range.mk_range
-                 "FStar.InteractiveHelpers.PostProcess.fst"
-                 (Prims.of_int (44)) (Prims.of_int (10)) (Prims.of_int (44))
-                 (Prims.of_int (21)))
-              (FStar_Range.mk_range
-                 "FStar.InteractiveHelpers.PostProcess.fst"
-                 (Prims.of_int (44)) (Prims.of_int (24)) (Prims.of_int (45))
-                 (Prims.of_int (23)))
-              (Obj.magic (FStar_Tactics_Derived.cur_goal ()))
+              (FStar_Sealed.seal
+                 (Obj.magic
+                    (FStar_Range.mk_range
+                       "FStar.InteractiveHelpers.PostProcess.fst"
+                       (Prims.of_int (40)) (Prims.of_int (10))
+                       (Prims.of_int (40)) (Prims.of_int (21)))))
+              (FStar_Sealed.seal
+                 (Obj.magic
+                    (FStar_Range.mk_range
+                       "FStar.InteractiveHelpers.PostProcess.fst"
+                       (Prims.of_int (40)) (Prims.of_int (24))
+                       (Prims.of_int (51)) (Prims.of_int (5)))))
+              (Obj.magic (FStar_Tactics_V1_Derived.cur_goal ()))
               (fun uu___ ->
                  (fun g ->
                     Obj.magic
                       (FStar_Tactics_Effect.tac_bind
-                         (FStar_Range.mk_range
-                            "FStar.InteractiveHelpers.PostProcess.fst"
-                            (Prims.of_int (45)) (Prims.of_int (10))
-                            (Prims.of_int (45)) (Prims.of_int (20)))
-                         (FStar_Range.mk_range
-                            "FStar.InteractiveHelpers.PostProcess.fst"
-                            (Prims.of_int (46)) (Prims.of_int (2))
-                            (Prims.of_int (55)) (Prims.of_int (5)))
-                         (Obj.magic (FStar_Tactics_Derived.cur_env ()))
+                         (FStar_Sealed.seal
+                            (Obj.magic
+                               (FStar_Range.mk_range
+                                  "FStar.InteractiveHelpers.PostProcess.fst"
+                                  (Prims.of_int (41)) (Prims.of_int (10))
+                                  (Prims.of_int (41)) (Prims.of_int (20)))))
+                         (FStar_Sealed.seal
+                            (Obj.magic
+                               (FStar_Range.mk_range
+                                  "FStar.InteractiveHelpers.PostProcess.fst"
+                                  (Prims.of_int (42)) (Prims.of_int (2))
+                                  (Prims.of_int (51)) (Prims.of_int (5)))))
+                         (Obj.magic (FStar_Tactics_V1_Derived.cur_env ()))
                          (fun uu___ ->
                             (fun e ->
                                Obj.magic
                                  (FStar_Tactics_Effect.tac_bind
-                                    (FStar_Range.mk_range
-                                       "FStar.InteractiveHelpers.PostProcess.fst"
-                                       (Prims.of_int (46)) (Prims.of_int (2))
-                                       (Prims.of_int (46))
-                                       (Prims.of_int (55)))
-                                    (FStar_Range.mk_range
-                                       "FStar.InteractiveHelpers.PostProcess.fst"
-                                       (Prims.of_int (47)) (Prims.of_int (8))
-                                       (Prims.of_int (54))
-                                       (Prims.of_int (52)))
+                                    (FStar_Sealed.seal
+                                       (Obj.magic
+                                          (FStar_Range.mk_range
+                                             "FStar.InteractiveHelpers.PostProcess.fst"
+                                             (Prims.of_int (42))
+                                             (Prims.of_int (2))
+                                             (Prims.of_int (42))
+                                             (Prims.of_int (55)))))
+                                    (FStar_Sealed.seal
+                                       (Obj.magic
+                                          (FStar_Range.mk_range
+                                             "FStar.InteractiveHelpers.PostProcess.fst"
+                                             (Prims.of_int (43))
+                                             (Prims.of_int (8))
+                                             (Prims.of_int (50))
+                                             (Prims.of_int (52)))))
                                     (Obj.magic
                                        (FStar_Tactics_Effect.tac_bind
-                                          (FStar_Range.mk_range
-                                             "FStar.InteractiveHelpers.PostProcess.fst"
-                                             (Prims.of_int (46))
-                                             (Prims.of_int (16))
-                                             (Prims.of_int (46))
-                                             (Prims.of_int (55)))
-                                          (FStar_Range.mk_range
-                                             "FStar.InteractiveHelpers.PostProcess.fst"
-                                             (Prims.of_int (46))
-                                             (Prims.of_int (2))
-                                             (Prims.of_int (46))
-                                             (Prims.of_int (55)))
-                                          (Obj.magic
-                                             (FStar_Tactics_Effect.tac_bind
+                                          (FStar_Sealed.seal
+                                             (Obj.magic
                                                 (FStar_Range.mk_range
                                                    "FStar.InteractiveHelpers.PostProcess.fst"
-                                                   (Prims.of_int (46))
-                                                   (Prims.of_int (38))
-                                                   (Prims.of_int (46))
-                                                   (Prims.of_int (54)))
+                                                   (Prims.of_int (42))
+                                                   (Prims.of_int (16))
+                                                   (Prims.of_int (42))
+                                                   (Prims.of_int (55)))))
+                                          (FStar_Sealed.seal
+                                             (Obj.magic
                                                 (FStar_Range.mk_range
-                                                   "prims.fst"
-                                                   (Prims.of_int (590))
-                                                   (Prims.of_int (19))
-                                                   (Prims.of_int (590))
-                                                   (Prims.of_int (31)))
+                                                   "FStar.InteractiveHelpers.PostProcess.fst"
+                                                   (Prims.of_int (42))
+                                                   (Prims.of_int (2))
+                                                   (Prims.of_int (42))
+                                                   (Prims.of_int (55)))))
+                                          (Obj.magic
+                                             (FStar_Tactics_Effect.tac_bind
+                                                (FStar_Sealed.seal
+                                                   (Obj.magic
+                                                      (FStar_Range.mk_range
+                                                         "FStar.InteractiveHelpers.PostProcess.fst"
+                                                         (Prims.of_int (42))
+                                                         (Prims.of_int (38))
+                                                         (Prims.of_int (42))
+                                                         (Prims.of_int (54)))))
+                                                (FStar_Sealed.seal
+                                                   (Obj.magic
+                                                      (FStar_Range.mk_range
+                                                         "prims.fst"
+                                                         (Prims.of_int (590))
+                                                         (Prims.of_int (19))
+                                                         (Prims.of_int (590))
+                                                         (Prims.of_int (31)))))
                                                 (Obj.magic
-                                                   (FStar_Tactics_Builtins.term_to_string
+                                                   (FStar_Tactics_V1_Builtins.term_to_string
                                                       g))
                                                 (fun uu___ ->
                                                    FStar_Tactics_Effect.lift_div_tac
@@ -130,18 +156,22 @@ let (pp_explore :
                                        (fun uu___ ->
                                           Obj.magic
                                             (FStar_Tactics_Effect.tac_bind
-                                               (FStar_Range.mk_range
-                                                  "FStar.InteractiveHelpers.PostProcess.fst"
-                                                  (Prims.of_int (47))
-                                                  (Prims.of_int (14))
-                                                  (Prims.of_int (47))
-                                                  (Prims.of_int (33)))
-                                               (FStar_Range.mk_range
-                                                  "FStar.InteractiveHelpers.PostProcess.fst"
-                                                  (Prims.of_int (47))
-                                                  (Prims.of_int (8))
-                                                  (Prims.of_int (54))
-                                                  (Prims.of_int (52)))
+                                               (FStar_Sealed.seal
+                                                  (Obj.magic
+                                                     (FStar_Range.mk_range
+                                                        "FStar.InteractiveHelpers.PostProcess.fst"
+                                                        (Prims.of_int (43))
+                                                        (Prims.of_int (14))
+                                                        (Prims.of_int (43))
+                                                        (Prims.of_int (33)))))
+                                               (FStar_Sealed.seal
+                                                  (Obj.magic
+                                                     (FStar_Range.mk_range
+                                                        "FStar.InteractiveHelpers.PostProcess.fst"
+                                                        (Prims.of_int (43))
+                                                        (Prims.of_int (8))
+                                                        (Prims.of_int (50))
+                                                        (Prims.of_int (52)))))
                                                (Obj.magic
                                                   (unsquash_equality g))
                                                (fun uu___1 ->
@@ -151,18 +181,24 @@ let (pp_explore :
                                                          (l, uu___2) ->
                                                          Obj.magic
                                                            (FStar_Tactics_Effect.tac_bind
-                                                              (FStar_Range.mk_range
-                                                                 "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                 (Prims.of_int (49))
-                                                                 (Prims.of_int (12))
-                                                                 (Prims.of_int (49))
-                                                                 (Prims.of_int (36)))
-                                                              (FStar_Range.mk_range
-                                                                 "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                 (Prims.of_int (49))
-                                                                 (Prims.of_int (39))
-                                                                 (Prims.of_int (50))
-                                                                 (Prims.of_int (31)))
+                                                              (FStar_Sealed.seal
+                                                                 (Obj.magic
+                                                                    (
+                                                                    FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (45))
+                                                                    (Prims.of_int (12))
+                                                                    (Prims.of_int (45))
+                                                                    (Prims.of_int (36)))))
+                                                              (FStar_Sealed.seal
+                                                                 (Obj.magic
+                                                                    (
+                                                                    FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (45))
+                                                                    (Prims.of_int (39))
+                                                                    (Prims.of_int (49))
+                                                                    (Prims.of_int (16)))))
                                                               (Obj.magic
                                                                  (FStar_InteractiveHelpers_ExploreTerm.safe_typ_or_comp
                                                                     dbg e l))
@@ -170,18 +206,22 @@ let (pp_explore :
                                                                  (fun c ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (50))
+                                                                    (Prims.of_int (46))
                                                                     (Prims.of_int (13))
-                                                                    (Prims.of_int (50))
-                                                                    (Prims.of_int (28)))
+                                                                    (Prims.of_int (46))
+                                                                    (Prims.of_int (28)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (51))
+                                                                    (Prims.of_int (47))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (53))
-                                                                    (Prims.of_int (16)))
+                                                                    (Prims.of_int (49))
+                                                                    (Prims.of_int (16)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___3 ->
@@ -193,48 +233,60 @@ let (pp_explore :
                                                                     ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (51))
+                                                                    (Prims.of_int (47))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (51))
-                                                                    (Prims.of_int (68)))
+                                                                    (Prims.of_int (47))
+                                                                    (Prims.of_int (68)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (51))
+                                                                    (Prims.of_int (47))
                                                                     (Prims.of_int (69))
-                                                                    (Prims.of_int (52))
-                                                                    (Prims.of_int (52)))
+                                                                    (Prims.of_int (49))
+                                                                    (Prims.of_int (16)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (51))
+                                                                    (Prims.of_int (47))
                                                                     (Prims.of_int (18))
-                                                                    (Prims.of_int (51))
-                                                                    (Prims.of_int (68)))
+                                                                    (Prims.of_int (47))
+                                                                    (Prims.of_int (68)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (51))
+                                                                    (Prims.of_int (47))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (51))
-                                                                    (Prims.of_int (68)))
+                                                                    (Prims.of_int (47))
+                                                                    (Prims.of_int (68)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (47))
                                                                     (Prims.of_int (51))
-                                                                    (Prims.of_int (51))
-                                                                    (Prims.of_int (51))
-                                                                    (Prims.of_int (67)))
+                                                                    (Prims.of_int (47))
+                                                                    (Prims.of_int (67)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_Builtins.term_to_string
+                                                                    (FStar_Tactics_V1_Builtins.term_to_string
                                                                     l))
                                                                     (fun
                                                                     uu___3 ->
@@ -259,18 +311,22 @@ let (pp_explore :
                                                                     uu___3 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (52))
+                                                                    (Prims.of_int (48))
                                                                     (Prims.of_int (12))
-                                                                    (Prims.of_int (52))
-                                                                    (Prims.of_int (49)))
+                                                                    (Prims.of_int (48))
+                                                                    (Prims.of_int (49)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (53))
+                                                                    (Prims.of_int (49))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (53))
-                                                                    (Prims.of_int (16)))
+                                                                    (Prims.of_int (49))
+                                                                    (Prims.of_int (16)))))
                                                                     (Obj.magic
                                                                     (FStar_InteractiveHelpers_ExploreTerm.explore_term
                                                                     dbg dfs
@@ -297,12 +353,16 @@ let (pp_explore_print_goal :
   unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
-         (Prims.of_int (63)) (Prims.of_int (4)) (Prims.of_int (63))
-         (Prims.of_int (35)))
-      (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
-         (Prims.of_int (65)) (Prims.of_int (2)) (Prims.of_int (65))
-         (Prims.of_int (28)))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
+               (Prims.of_int (59)) (Prims.of_int (4)) (Prims.of_int (59))
+               (Prims.of_int (35)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
+               (Prims.of_int (61)) (Prims.of_int (2)) (Prims.of_int (61))
+               (Prims.of_int (28)))))
       (FStar_Tactics_Effect.lift_div_tac
          (fun uu___1 ->
             (fun uu___1 ->
@@ -328,7 +388,7 @@ let (is_focus_on_term :
        Obj.magic
          (FStar_Tactics_Effect.lift_div_tac
             (fun uu___ ->
-               FStar_Reflection_Derived.is_fvar t
+               FStar_Reflection_V1_Derived.is_fvar t
                  "FStar.InteractiveHelpers.PostProcess.focus_on_term")))
       uu___
 let (term_is_assert_or_assume :
@@ -338,20 +398,25 @@ let (term_is_assert_or_assume :
   =
   fun t ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
-         (Prims.of_int (76)) (Prims.of_int (8)) (Prims.of_int (76))
-         (Prims.of_int (17)))
-      (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
-         (Prims.of_int (76)) (Prims.of_int (2)) (Prims.of_int (81))
-         (Prims.of_int (13))) (Obj.magic (FStar_Tactics_Builtins.inspect t))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
+               (Prims.of_int (72)) (Prims.of_int (8)) (Prims.of_int (72))
+               (Prims.of_int (17)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
+               (Prims.of_int (72)) (Prims.of_int (2)) (Prims.of_int (77))
+               (Prims.of_int (13)))))
+      (Obj.magic (FStar_Tactics_V1_Builtins.inspect t))
       (fun uu___ ->
          FStar_Tactics_Effect.lift_div_tac
            (fun uu___1 ->
               match uu___ with
-              | FStar_Reflection_Data.Tv_App
-                  (hd, (a, FStar_Reflection_Data.Q_Explicit)) ->
+              | FStar_Reflection_V1_Data.Tv_App
+                  (hd, (a, FStar_Reflection_V1_Data.Q_Explicit)) ->
                   if
-                    FStar_Reflection_Derived.is_any_fvar a
+                    FStar_Reflection_V1_Derived.is_any_fvar a
                       ["Prims._assert";
                       "FStar.Pervasives.assert_norm";
                       "Prims._assume"]
@@ -359,26 +424,30 @@ let (term_is_assert_or_assume :
                   else FStar_Pervasives_Native.None
               | uu___2 -> FStar_Pervasives_Native.None))
 let (is_focused_term :
-  FStar_Reflection_Data.term_view ->
+  FStar_Reflection_V1_Data.term_view ->
     (FStar_Reflection_Types.term FStar_Pervasives_Native.option, unit)
       FStar_Tactics_Effect.tac_repr)
   =
   fun uu___ ->
     (fun tv ->
        match tv with
-       | FStar_Reflection_Data.Tv_Let (recf, attrs, uu___, uu___1, def, body)
-           ->
+       | FStar_Reflection_V1_Data.Tv_Let
+           (recf, attrs, uu___, uu___1, def, body) ->
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.tac_bind
-                   (FStar_Range.mk_range
-                      "FStar.InteractiveHelpers.PostProcess.fst"
-                      (Prims.of_int (89)) (Prims.of_int (7))
-                      (Prims.of_int (89)) (Prims.of_int (27)))
-                   (FStar_Range.mk_range
-                      "FStar.InteractiveHelpers.PostProcess.fst"
-                      (Prims.of_int (89)) (Prims.of_int (4))
-                      (Prims.of_int (89)) (Prims.of_int (52)))
+                   (FStar_Sealed.seal
+                      (Obj.magic
+                         (FStar_Range.mk_range
+                            "FStar.InteractiveHelpers.PostProcess.fst"
+                            (Prims.of_int (85)) (Prims.of_int (7))
+                            (Prims.of_int (85)) (Prims.of_int (27)))))
+                   (FStar_Sealed.seal
+                      (Obj.magic
+                         (FStar_Range.mk_range
+                            "FStar.InteractiveHelpers.PostProcess.fst"
+                            (Prims.of_int (85)) (Prims.of_int (4))
+                            (Prims.of_int (85)) (Prims.of_int (52)))))
                    (Obj.magic (is_focus_on_term def))
                    (fun uu___2 ->
                       FStar_Tactics_Effect.lift_div_tac
@@ -395,7 +464,7 @@ type 'a exploration_result =
   {
   ge: FStar_InteractiveHelpers_Base.genv ;
   parents:
-    (FStar_InteractiveHelpers_Base.genv * FStar_Reflection_Data.term_view)
+    (FStar_InteractiveHelpers_Base.genv * FStar_Reflection_V1_Data.term_view)
       Prims.list
     ;
   tgt_comp:
@@ -410,8 +479,8 @@ let __proj__Mkexploration_result__item__ge :
 let __proj__Mkexploration_result__item__parents :
   'a .
     'a exploration_result ->
-      (FStar_InteractiveHelpers_Base.genv * FStar_Reflection_Data.term_view)
-        Prims.list
+      (FStar_InteractiveHelpers_Base.genv *
+        FStar_Reflection_V1_Data.term_view) Prims.list
   =
   fun projectee ->
     match projectee with | { ge; parents; tgt_comp; res;_} -> parents
@@ -432,7 +501,7 @@ let mk_exploration_result :
     unit ->
       FStar_InteractiveHelpers_Base.genv ->
         (FStar_InteractiveHelpers_Base.genv *
-          FStar_Reflection_Data.term_view) Prims.list ->
+          FStar_Reflection_V1_Data.term_view) Prims.list ->
           FStar_InteractiveHelpers_ExploreTerm.typ_or_comp
             FStar_Pervasives_Native.option ->
             'uuuuu -> 'uuuuu exploration_result
@@ -446,11 +515,11 @@ let mk_exploration_result :
             }
 type 'a pred_explorer =
   FStar_InteractiveHelpers_Base.genv ->
-    (FStar_InteractiveHelpers_Base.genv * FStar_Reflection_Data.term_view)
+    (FStar_InteractiveHelpers_Base.genv * FStar_Reflection_V1_Data.term_view)
       Prims.list ->
       FStar_InteractiveHelpers_ExploreTerm.typ_or_comp
         FStar_Pervasives_Native.option ->
-        FStar_Reflection_Data.term_view ->
+        FStar_Reflection_V1_Data.term_view ->
           ('a FStar_Pervasives_Native.option, unit)
             FStar_Tactics_Effect.tac_repr
 let find_predicated_term_explorer :
@@ -468,14 +537,18 @@ let find_predicated_term_explorer :
             fun opt_c ->
               fun t ->
                 FStar_Tactics_Effect.tac_bind
-                  (FStar_Range.mk_range
-                     "FStar.InteractiveHelpers.PostProcess.fst"
-                     (Prims.of_int (108)) (Prims.of_int (2))
-                     (Prims.of_int (108)) (Prims.of_int (77)))
-                  (FStar_Range.mk_range
-                     "FStar.InteractiveHelpers.PostProcess.fst"
-                     (Prims.of_int (109)) (Prims.of_int (2))
-                     (Prims.of_int (115)) (Prims.of_int (26)))
+                  (FStar_Sealed.seal
+                     (Obj.magic
+                        (FStar_Range.mk_range
+                           "FStar.InteractiveHelpers.PostProcess.fst"
+                           (Prims.of_int (104)) (Prims.of_int (2))
+                           (Prims.of_int (104)) (Prims.of_int (77)))))
+                  (FStar_Sealed.seal
+                     (Obj.magic
+                        (FStar_Range.mk_range
+                           "FStar.InteractiveHelpers.PostProcess.fst"
+                           (Prims.of_int (105)) (Prims.of_int (2))
+                           (Prims.of_int (111)) (Prims.of_int (26)))))
                   (if FStar_Pervasives_Native.uu___is_Some acc
                    then
                      Obj.magic
@@ -491,59 +564,76 @@ let find_predicated_term_explorer :
                      (fun uu___ ->
                         Obj.magic
                           (FStar_Tactics_Effect.tac_bind
-                             (FStar_Range.mk_range
-                                "FStar.InteractiveHelpers.PostProcess.fst"
-                                (Prims.of_int (109)) (Prims.of_int (2))
-                                (Prims.of_int (112)) (Prims.of_int (7)))
-                             (FStar_Range.mk_range
-                                "FStar.InteractiveHelpers.PostProcess.fst"
-                                (Prims.of_int (113)) (Prims.of_int (2))
-                                (Prims.of_int (115)) (Prims.of_int (26)))
+                             (FStar_Sealed.seal
+                                (Obj.magic
+                                   (FStar_Range.mk_range
+                                      "FStar.InteractiveHelpers.PostProcess.fst"
+                                      (Prims.of_int (105)) (Prims.of_int (2))
+                                      (Prims.of_int (108)) (Prims.of_int (7)))))
+                             (FStar_Sealed.seal
+                                (Obj.magic
+                                   (FStar_Range.mk_range
+                                      "FStar.InteractiveHelpers.PostProcess.fst"
+                                      (Prims.of_int (109)) (Prims.of_int (2))
+                                      (Prims.of_int (111))
+                                      (Prims.of_int (26)))))
                              (if dbg
                               then
                                 Obj.magic
                                   (Obj.repr
                                      (FStar_Tactics_Effect.tac_bind
-                                        (FStar_Range.mk_range
-                                           "FStar.InteractiveHelpers.PostProcess.fst"
-                                           (Prims.of_int (111))
-                                           (Prims.of_int (10))
-                                           (Prims.of_int (111))
-                                           (Prims.of_int (96)))
-                                        (FStar_Range.mk_range
-                                           "FStar.InteractiveHelpers.PostProcess.fst"
-                                           (Prims.of_int (111))
-                                           (Prims.of_int (4))
-                                           (Prims.of_int (111))
-                                           (Prims.of_int (96)))
-                                        (Obj.magic
-                                           (FStar_Tactics_Effect.tac_bind
+                                        (FStar_Sealed.seal
+                                           (Obj.magic
                                               (FStar_Range.mk_range
                                                  "FStar.InteractiveHelpers.PostProcess.fst"
-                                                 (Prims.of_int (111))
-                                                 (Prims.of_int (47))
-                                                 (Prims.of_int (111))
-                                                 (Prims.of_int (95)))
+                                                 (Prims.of_int (107))
+                                                 (Prims.of_int (10))
+                                                 (Prims.of_int (107))
+                                                 (Prims.of_int (96)))))
+                                        (FStar_Sealed.seal
+                                           (Obj.magic
                                               (FStar_Range.mk_range
-                                                 "prims.fst"
-                                                 (Prims.of_int (590))
-                                                 (Prims.of_int (19))
-                                                 (Prims.of_int (590))
-                                                 (Prims.of_int (31)))
+                                                 "FStar.InteractiveHelpers.PostProcess.fst"
+                                                 (Prims.of_int (107))
+                                                 (Prims.of_int (4))
+                                                 (Prims.of_int (107))
+                                                 (Prims.of_int (96)))))
+                                        (Obj.magic
+                                           (FStar_Tactics_Effect.tac_bind
+                                              (FStar_Sealed.seal
+                                                 (Obj.magic
+                                                    (FStar_Range.mk_range
+                                                       "FStar.InteractiveHelpers.PostProcess.fst"
+                                                       (Prims.of_int (107))
+                                                       (Prims.of_int (47))
+                                                       (Prims.of_int (107))
+                                                       (Prims.of_int (95)))))
+                                              (FStar_Sealed.seal
+                                                 (Obj.magic
+                                                    (FStar_Range.mk_range
+                                                       "prims.fst"
+                                                       (Prims.of_int (590))
+                                                       (Prims.of_int (19))
+                                                       (Prims.of_int (590))
+                                                       (Prims.of_int (31)))))
                                               (Obj.magic
                                                  (FStar_Tactics_Effect.tac_bind
-                                                    (FStar_Range.mk_range
-                                                       "FStar.InteractiveHelpers.PostProcess.fst"
-                                                       (Prims.of_int (111))
-                                                       (Prims.of_int (47))
-                                                       (Prims.of_int (111))
-                                                       (Prims.of_int (68)))
-                                                    (FStar_Range.mk_range
-                                                       "FStar.InteractiveHelpers.PostProcess.fst"
-                                                       (Prims.of_int (111))
-                                                       (Prims.of_int (47))
-                                                       (Prims.of_int (111))
-                                                       (Prims.of_int (95)))
+                                                    (FStar_Sealed.seal
+                                                       (Obj.magic
+                                                          (FStar_Range.mk_range
+                                                             "FStar.InteractiveHelpers.PostProcess.fst"
+                                                             (Prims.of_int (107))
+                                                             (Prims.of_int (47))
+                                                             (Prims.of_int (107))
+                                                             (Prims.of_int (68)))))
+                                                    (FStar_Sealed.seal
+                                                       (Obj.magic
+                                                          (FStar_Range.mk_range
+                                                             "FStar.InteractiveHelpers.PostProcess.fst"
+                                                             (Prims.of_int (107))
+                                                             (Prims.of_int (47))
+                                                             (Prims.of_int (107))
+                                                             (Prims.of_int (95)))))
                                                     (Obj.magic
                                                        (FStar_InteractiveHelpers_Base.term_view_construct
                                                           t))
@@ -551,55 +641,67 @@ let find_predicated_term_explorer :
                                                        (fun uu___1 ->
                                                           Obj.magic
                                                             (FStar_Tactics_Effect.tac_bind
-                                                               (FStar_Range.mk_range
-                                                                  "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                  (Prims.of_int (111))
-                                                                  (Prims.of_int (71))
-                                                                  (Prims.of_int (111))
-                                                                  (Prims.of_int (95)))
-                                                               (FStar_Range.mk_range
-                                                                  "prims.fst"
-                                                                  (Prims.of_int (590))
-                                                                  (Prims.of_int (19))
-                                                                  (Prims.of_int (590))
-                                                                  (Prims.of_int (31)))
-                                                               (Obj.magic
-                                                                  (FStar_Tactics_Effect.tac_bind
+                                                               (FStar_Sealed.seal
+                                                                  (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (111))
-                                                                    (Prims.of_int (79))
-                                                                    (Prims.of_int (111))
-                                                                    (Prims.of_int (95)))
+                                                                    (Prims.of_int (107))
+                                                                    (Prims.of_int (71))
+                                                                    (Prims.of_int (107))
+                                                                    (Prims.of_int (95)))))
+                                                               (FStar_Sealed.seal
+                                                                  (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
+                                                               (Obj.magic
+                                                                  (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (107))
+                                                                    (Prims.of_int (79))
+                                                                    (Prims.of_int (107))
+                                                                    (Prims.of_int (95)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "prims.fst"
+                                                                    (Prims.of_int (590))
+                                                                    (Prims.of_int (19))
+                                                                    (Prims.of_int (590))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (107))
-                                                                    (Prims.of_int (62))
-                                                                    (Prims.of_int (107))
-                                                                    (Prims.of_int (63)))
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (111))
-                                                                    (Prims.of_int (79))
-                                                                    (Prims.of_int (111))
-                                                                    (Prims.of_int (95)))
+                                                                    (FStar_Sealed.seal
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_Builtins.pack
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (103))
+                                                                    (Prims.of_int (62))
+                                                                    (Prims.of_int (103))
+                                                                    (Prims.of_int (63)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (107))
+                                                                    (Prims.of_int (79))
+                                                                    (Prims.of_int (107))
+                                                                    (Prims.of_int (95)))))
+                                                                    (Obj.magic
+                                                                    (FStar_Tactics_V1_Builtins.pack
                                                                     t))
                                                                     (fun
                                                                     uu___2 ->
                                                                     (fun
                                                                     uu___2 ->
                                                                     Obj.magic
-                                                                    (FStar_Tactics_Builtins.term_to_string
+                                                                    (FStar_Tactics_V1_Builtins.term_to_string
                                                                     uu___2))
                                                                     uu___2)))
                                                                     (fun
@@ -628,7 +730,7 @@ let find_predicated_term_explorer :
                                         (fun uu___1 ->
                                            (fun uu___1 ->
                                               Obj.magic
-                                                (FStar_Tactics_Builtins.print
+                                                (FStar_Tactics_V1_Builtins.print
                                                    uu___1)) uu___1)))
                               else
                                 Obj.magic
@@ -639,18 +741,22 @@ let find_predicated_term_explorer :
                                 (fun uu___1 ->
                                    Obj.magic
                                      (FStar_Tactics_Effect.tac_bind
-                                        (FStar_Range.mk_range
-                                           "FStar.InteractiveHelpers.PostProcess.fst"
-                                           (Prims.of_int (113))
-                                           (Prims.of_int (8))
-                                           (Prims.of_int (113))
-                                           (Prims.of_int (26)))
-                                        (FStar_Range.mk_range
-                                           "FStar.InteractiveHelpers.PostProcess.fst"
-                                           (Prims.of_int (113))
-                                           (Prims.of_int (2))
-                                           (Prims.of_int (115))
-                                           (Prims.of_int (26)))
+                                        (FStar_Sealed.seal
+                                           (Obj.magic
+                                              (FStar_Range.mk_range
+                                                 "FStar.InteractiveHelpers.PostProcess.fst"
+                                                 (Prims.of_int (109))
+                                                 (Prims.of_int (8))
+                                                 (Prims.of_int (109))
+                                                 (Prims.of_int (26)))))
+                                        (FStar_Sealed.seal
+                                           (Obj.magic
+                                              (FStar_Range.mk_range
+                                                 "FStar.InteractiveHelpers.PostProcess.fst"
+                                                 (Prims.of_int (109))
+                                                 (Prims.of_int (2))
+                                                 (Prims.of_int (111))
+                                                 (Prims.of_int (26)))))
                                         (Obj.magic (pred ge pl opt_c t))
                                         (fun uu___2 ->
                                            FStar_Tactics_Effect.lift_div_tac
@@ -675,7 +781,7 @@ let find_predicated_term :
         Prims.bool ->
           FStar_InteractiveHelpers_Base.genv ->
             (FStar_InteractiveHelpers_Base.genv *
-              FStar_Reflection_Data.term_view) Prims.list ->
+              FStar_Reflection_V1_Data.term_view) Prims.list ->
               FStar_InteractiveHelpers_ExploreTerm.typ_or_comp
                 FStar_Pervasives_Native.option ->
                 FStar_Reflection_Types.term ->
@@ -690,14 +796,18 @@ let find_predicated_term :
             fun opt_c ->
               fun t ->
                 FStar_Tactics_Effect.tac_bind
-                  (FStar_Range.mk_range
-                     "FStar.InteractiveHelpers.PostProcess.fst"
-                     (Prims.of_int (122)) (Prims.of_int (6))
-                     (Prims.of_int (124)) (Prims.of_int (39)))
-                  (FStar_Range.mk_range
-                     "FStar.InteractiveHelpers.PostProcess.fst"
-                     (Prims.of_int (122)) (Prims.of_int (2))
-                     (Prims.of_int (124)) (Prims.of_int (39)))
+                  (FStar_Sealed.seal
+                     (Obj.magic
+                        (FStar_Range.mk_range
+                           "FStar.InteractiveHelpers.PostProcess.fst"
+                           (Prims.of_int (118)) (Prims.of_int (6))
+                           (Prims.of_int (120)) (Prims.of_int (39)))))
+                  (FStar_Sealed.seal
+                     (Obj.magic
+                        (FStar_Range.mk_range
+                           "FStar.InteractiveHelpers.PostProcess.fst"
+                           (Prims.of_int (118)) (Prims.of_int (2))
+                           (Prims.of_int (120)) (Prims.of_int (39)))))
                   (Obj.magic
                      (FStar_InteractiveHelpers_ExploreTerm.explore_term dbg
                         dfs ()
@@ -714,7 +824,7 @@ let (find_focused_term :
     Prims.bool ->
       FStar_InteractiveHelpers_Base.genv ->
         (FStar_InteractiveHelpers_Base.genv *
-          FStar_Reflection_Data.term_view) Prims.list ->
+          FStar_Reflection_V1_Data.term_view) Prims.list ->
           FStar_InteractiveHelpers_ExploreTerm.typ_or_comp
             FStar_Pervasives_Native.option ->
             FStar_Reflection_Types.term ->
@@ -737,62 +847,88 @@ let (find_focused_term_in_current_goal :
   =
   fun dbg ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
-         (Prims.of_int (138)) (Prims.of_int (10)) (Prims.of_int (138))
-         (Prims.of_int (21)))
-      (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
-         (Prims.of_int (138)) (Prims.of_int (24)) (Prims.of_int (139))
-         (Prims.of_int (23))) (Obj.magic (FStar_Tactics_Derived.cur_goal ()))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
+               (Prims.of_int (134)) (Prims.of_int (10)) (Prims.of_int (134))
+               (Prims.of_int (21)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
+               (Prims.of_int (134)) (Prims.of_int (24)) (Prims.of_int (151))
+               (Prims.of_int (5)))))
+      (Obj.magic (FStar_Tactics_V1_Derived.cur_goal ()))
       (fun uu___ ->
          (fun g ->
             Obj.magic
               (FStar_Tactics_Effect.tac_bind
-                 (FStar_Range.mk_range
-                    "FStar.InteractiveHelpers.PostProcess.fst"
-                    (Prims.of_int (139)) (Prims.of_int (10))
-                    (Prims.of_int (139)) (Prims.of_int (20)))
-                 (FStar_Range.mk_range
-                    "FStar.InteractiveHelpers.PostProcess.fst"
-                    (Prims.of_int (140)) (Prims.of_int (2))
-                    (Prims.of_int (155)) (Prims.of_int (5)))
-                 (Obj.magic (FStar_Tactics_Derived.cur_env ()))
+                 (FStar_Sealed.seal
+                    (Obj.magic
+                       (FStar_Range.mk_range
+                          "FStar.InteractiveHelpers.PostProcess.fst"
+                          (Prims.of_int (135)) (Prims.of_int (10))
+                          (Prims.of_int (135)) (Prims.of_int (20)))))
+                 (FStar_Sealed.seal
+                    (Obj.magic
+                       (FStar_Range.mk_range
+                          "FStar.InteractiveHelpers.PostProcess.fst"
+                          (Prims.of_int (136)) (Prims.of_int (2))
+                          (Prims.of_int (151)) (Prims.of_int (5)))))
+                 (Obj.magic (FStar_Tactics_V1_Derived.cur_env ()))
                  (fun uu___ ->
                     (fun e ->
                        Obj.magic
                          (FStar_Tactics_Effect.tac_bind
-                            (FStar_Range.mk_range
-                               "FStar.InteractiveHelpers.PostProcess.fst"
-                               (Prims.of_int (140)) (Prims.of_int (2))
-                               (Prims.of_int (140)) (Prims.of_int (80)))
-                            (FStar_Range.mk_range
-                               "FStar.InteractiveHelpers.PostProcess.fst"
-                               (Prims.of_int (141)) (Prims.of_int (8))
-                               (Prims.of_int (154)) (Prims.of_int (75)))
+                            (FStar_Sealed.seal
+                               (Obj.magic
+                                  (FStar_Range.mk_range
+                                     "FStar.InteractiveHelpers.PostProcess.fst"
+                                     (Prims.of_int (136)) (Prims.of_int (2))
+                                     (Prims.of_int (136)) (Prims.of_int (80)))))
+                            (FStar_Sealed.seal
+                               (Obj.magic
+                                  (FStar_Range.mk_range
+                                     "FStar.InteractiveHelpers.PostProcess.fst"
+                                     (Prims.of_int (137)) (Prims.of_int (8))
+                                     (Prims.of_int (150)) (Prims.of_int (75)))))
                             (Obj.magic
                                (FStar_Tactics_Effect.tac_bind
-                                  (FStar_Range.mk_range
-                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                     (Prims.of_int (140)) (Prims.of_int (16))
-                                     (Prims.of_int (140)) (Prims.of_int (80)))
-                                  (FStar_Range.mk_range
-                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                     (Prims.of_int (140)) (Prims.of_int (2))
-                                     (Prims.of_int (140)) (Prims.of_int (80)))
-                                  (Obj.magic
-                                     (FStar_Tactics_Effect.tac_bind
+                                  (FStar_Sealed.seal
+                                     (Obj.magic
                                         (FStar_Range.mk_range
                                            "FStar.InteractiveHelpers.PostProcess.fst"
-                                           (Prims.of_int (140))
-                                           (Prims.of_int (63))
-                                           (Prims.of_int (140))
-                                           (Prims.of_int (79)))
-                                        (FStar_Range.mk_range "prims.fst"
-                                           (Prims.of_int (590))
-                                           (Prims.of_int (19))
-                                           (Prims.of_int (590))
-                                           (Prims.of_int (31)))
+                                           (Prims.of_int (136))
+                                           (Prims.of_int (16))
+                                           (Prims.of_int (136))
+                                           (Prims.of_int (80)))))
+                                  (FStar_Sealed.seal
+                                     (Obj.magic
+                                        (FStar_Range.mk_range
+                                           "FStar.InteractiveHelpers.PostProcess.fst"
+                                           (Prims.of_int (136))
+                                           (Prims.of_int (2))
+                                           (Prims.of_int (136))
+                                           (Prims.of_int (80)))))
+                                  (Obj.magic
+                                     (FStar_Tactics_Effect.tac_bind
+                                        (FStar_Sealed.seal
+                                           (Obj.magic
+                                              (FStar_Range.mk_range
+                                                 "FStar.InteractiveHelpers.PostProcess.fst"
+                                                 (Prims.of_int (136))
+                                                 (Prims.of_int (63))
+                                                 (Prims.of_int (136))
+                                                 (Prims.of_int (79)))))
+                                        (FStar_Sealed.seal
+                                           (Obj.magic
+                                              (FStar_Range.mk_range
+                                                 "prims.fst"
+                                                 (Prims.of_int (590))
+                                                 (Prims.of_int (19))
+                                                 (Prims.of_int (590))
+                                                 (Prims.of_int (31)))))
                                         (Obj.magic
-                                           (FStar_Tactics_Builtins.term_to_string
+                                           (FStar_Tactics_V1_Builtins.term_to_string
                                               g))
                                         (fun uu___ ->
                                            FStar_Tactics_Effect.lift_div_tac
@@ -809,18 +945,22 @@ let (find_focused_term_in_current_goal :
                                (fun uu___ ->
                                   Obj.magic
                                     (FStar_Tactics_Effect.tac_bind
-                                       (FStar_Range.mk_range
-                                          "FStar.InteractiveHelpers.PostProcess.fst"
-                                          (Prims.of_int (141))
-                                          (Prims.of_int (14))
-                                          (Prims.of_int (141))
-                                          (Prims.of_int (33)))
-                                       (FStar_Range.mk_range
-                                          "FStar.InteractiveHelpers.PostProcess.fst"
-                                          (Prims.of_int (141))
-                                          (Prims.of_int (8))
-                                          (Prims.of_int (154))
-                                          (Prims.of_int (75)))
+                                       (FStar_Sealed.seal
+                                          (Obj.magic
+                                             (FStar_Range.mk_range
+                                                "FStar.InteractiveHelpers.PostProcess.fst"
+                                                (Prims.of_int (137))
+                                                (Prims.of_int (14))
+                                                (Prims.of_int (137))
+                                                (Prims.of_int (33)))))
+                                       (FStar_Sealed.seal
+                                          (Obj.magic
+                                             (FStar_Range.mk_range
+                                                "FStar.InteractiveHelpers.PostProcess.fst"
+                                                (Prims.of_int (137))
+                                                (Prims.of_int (8))
+                                                (Prims.of_int (150))
+                                                (Prims.of_int (75)))))
                                        (Obj.magic (unsquash_equality g))
                                        (fun uu___1 ->
                                           (fun uu___1 ->
@@ -829,18 +969,22 @@ let (find_focused_term_in_current_goal :
                                                  (l, uu___2) ->
                                                  Obj.magic
                                                    (FStar_Tactics_Effect.tac_bind
-                                                      (FStar_Range.mk_range
-                                                         "FStar.InteractiveHelpers.PostProcess.fst"
-                                                         (Prims.of_int (143))
-                                                         (Prims.of_int (12))
-                                                         (Prims.of_int (143))
-                                                         (Prims.of_int (36)))
-                                                      (FStar_Range.mk_range
-                                                         "FStar.InteractiveHelpers.PostProcess.fst"
-                                                         (Prims.of_int (143))
-                                                         (Prims.of_int (39))
-                                                         (Prims.of_int (144))
-                                                         (Prims.of_int (31)))
+                                                      (FStar_Sealed.seal
+                                                         (Obj.magic
+                                                            (FStar_Range.mk_range
+                                                               "FStar.InteractiveHelpers.PostProcess.fst"
+                                                               (Prims.of_int (139))
+                                                               (Prims.of_int (12))
+                                                               (Prims.of_int (139))
+                                                               (Prims.of_int (36)))))
+                                                      (FStar_Sealed.seal
+                                                         (Obj.magic
+                                                            (FStar_Range.mk_range
+                                                               "FStar.InteractiveHelpers.PostProcess.fst"
+                                                               (Prims.of_int (139))
+                                                               (Prims.of_int (39))
+                                                               (Prims.of_int (149))
+                                                               (Prims.of_int (7)))))
                                                       (Obj.magic
                                                          (FStar_InteractiveHelpers_ExploreTerm.safe_typ_or_comp
                                                             dbg e l))
@@ -848,18 +992,24 @@ let (find_focused_term_in_current_goal :
                                                          (fun c ->
                                                             Obj.magic
                                                               (FStar_Tactics_Effect.tac_bind
-                                                                 (FStar_Range.mk_range
+                                                                 (FStar_Sealed.seal
+                                                                    (
+                                                                    Obj.magic
+                                                                    (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (144))
+                                                                    (Prims.of_int (140))
                                                                     (Prims.of_int (13))
-                                                                    (Prims.of_int (144))
-                                                                    (Prims.of_int (28)))
-                                                                 (FStar_Range.mk_range
+                                                                    (Prims.of_int (140))
+                                                                    (Prims.of_int (28)))))
+                                                                 (FStar_Sealed.seal
+                                                                    (
+                                                                    Obj.magic
+                                                                    (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (145))
+                                                                    (Prims.of_int (141))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (153))
-                                                                    (Prims.of_int (7)))
+                                                                    (Prims.of_int (149))
+                                                                    (Prims.of_int (7)))))
                                                                  (FStar_Tactics_Effect.lift_div_tac
                                                                     (
                                                                     fun
@@ -872,48 +1022,60 @@ let (find_focused_term_in_current_goal :
                                                                     ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (145))
+                                                                    (Prims.of_int (141))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (145))
-                                                                    (Prims.of_int (68)))
+                                                                    (Prims.of_int (141))
+                                                                    (Prims.of_int (68)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (146))
+                                                                    (Prims.of_int (142))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (152))
-                                                                    (Prims.of_int (32)))
+                                                                    (Prims.of_int (148))
+                                                                    (Prims.of_int (32)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (145))
+                                                                    (Prims.of_int (141))
                                                                     (Prims.of_int (18))
-                                                                    (Prims.of_int (145))
-                                                                    (Prims.of_int (68)))
+                                                                    (Prims.of_int (141))
+                                                                    (Prims.of_int (68)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (145))
+                                                                    (Prims.of_int (141))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (145))
-                                                                    (Prims.of_int (68)))
+                                                                    (Prims.of_int (141))
+                                                                    (Prims.of_int (68)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (145))
+                                                                    (Prims.of_int (141))
                                                                     (Prims.of_int (51))
-                                                                    (Prims.of_int (145))
-                                                                    (Prims.of_int (67)))
+                                                                    (Prims.of_int (141))
+                                                                    (Prims.of_int (67)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_Builtins.term_to_string
+                                                                    (FStar_Tactics_V1_Builtins.term_to_string
                                                                     l))
                                                                     (fun
                                                                     uu___3 ->
@@ -938,18 +1100,22 @@ let (find_focused_term_in_current_goal :
                                                                     uu___3 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (146))
+                                                                    (Prims.of_int (142))
                                                                     (Prims.of_int (16))
-                                                                    (Prims.of_int (146))
-                                                                    (Prims.of_int (52)))
+                                                                    (Prims.of_int (142))
+                                                                    (Prims.of_int (52)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (146))
+                                                                    (Prims.of_int (142))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (152))
-                                                                    (Prims.of_int (32)))
+                                                                    (Prims.of_int (148))
+                                                                    (Prims.of_int (32)))))
                                                                     (Obj.magic
                                                                     (find_focused_term
                                                                     dbg true
@@ -965,48 +1131,60 @@ let (find_focused_term_in_current_goal :
                                                                     res ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (148))
+                                                                    (Prims.of_int (144))
                                                                     (Prims.of_int (6))
-                                                                    (Prims.of_int (148))
-                                                                    (Prims.of_int (73)))
+                                                                    (Prims.of_int (144))
+                                                                    (Prims.of_int (73)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (147))
+                                                                    (Prims.of_int (143))
                                                                     (Prims.of_int (11))
-                                                                    (Prims.of_int (147))
-                                                                    (Prims.of_int (14)))
+                                                                    (Prims.of_int (143))
+                                                                    (Prims.of_int (14)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (148))
+                                                                    (Prims.of_int (144))
                                                                     (Prims.of_int (20))
-                                                                    (Prims.of_int (148))
-                                                                    (Prims.of_int (73)))
+                                                                    (Prims.of_int (144))
+                                                                    (Prims.of_int (73)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (148))
+                                                                    (Prims.of_int (144))
                                                                     (Prims.of_int (6))
-                                                                    (Prims.of_int (148))
-                                                                    (Prims.of_int (73)))
+                                                                    (Prims.of_int (144))
+                                                                    (Prims.of_int (73)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (148))
+                                                                    (Prims.of_int (144))
                                                                     (Prims.of_int (50))
-                                                                    (Prims.of_int (148))
-                                                                    (Prims.of_int (72)))
+                                                                    (Prims.of_int (144))
+                                                                    (Prims.of_int (72)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_Builtins.term_to_string
+                                                                    (FStar_Tactics_V1_Builtins.term_to_string
                                                                     res.res))
                                                                     (fun
                                                                     uu___5 ->
@@ -1036,34 +1214,42 @@ let (find_focused_term_in_current_goal :
                                                                     ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (151))
+                                                                    (Prims.of_int (147))
                                                                     (Prims.of_int (12))
-                                                                    (Prims.of_int (152))
-                                                                    (Prims.of_int (32)))
+                                                                    (Prims.of_int (148))
+                                                                    (Prims.of_int (32)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (151))
+                                                                    (Prims.of_int (147))
                                                                     (Prims.of_int (6))
-                                                                    (Prims.of_int (152))
-                                                                    (Prims.of_int (32)))
+                                                                    (Prims.of_int (148))
+                                                                    (Prims.of_int (32)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (152))
+                                                                    (Prims.of_int (148))
                                                                     (Prims.of_int (15))
-                                                                    (Prims.of_int (152))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (148))
+                                                                    (Prims.of_int (31)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_Builtins.term_to_string
+                                                                    (FStar_Tactics_V1_Builtins.term_to_string
                                                                     g))
                                                                     (fun
                                                                     uu___5 ->
@@ -1097,12 +1283,16 @@ let (find_focused_assert_in_current_goal :
   =
   fun dbg ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
-         (Prims.of_int (160)) (Prims.of_int (2)) (Prims.of_int (160))
-         (Prims.of_int (58)))
-      (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
-         (Prims.of_int (160)) (Prims.of_int (59)) (Prims.of_int (161))
-         (Prims.of_int (52)))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
+               (Prims.of_int (156)) (Prims.of_int (2)) (Prims.of_int (156))
+               (Prims.of_int (58)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
+               (Prims.of_int (156)) (Prims.of_int (59)) (Prims.of_int (170))
+               (Prims.of_int (5)))))
       (Obj.magic
          (FStar_InteractiveHelpers_Base.print_dbg dbg
             "[> find_focused_assert_in_current_goal"))
@@ -1110,52 +1300,73 @@ let (find_focused_assert_in_current_goal :
          (fun uu___ ->
             Obj.magic
               (FStar_Tactics_Effect.tac_bind
-                 (FStar_Range.mk_range
-                    "FStar.InteractiveHelpers.PostProcess.fst"
-                    (Prims.of_int (161)) (Prims.of_int (12))
-                    (Prims.of_int (161)) (Prims.of_int (49)))
-                 (FStar_Range.mk_range
-                    "FStar.InteractiveHelpers.PostProcess.fst"
-                    (Prims.of_int (162)) (Prims.of_int (2))
-                    (Prims.of_int (174)) (Prims.of_int (5)))
+                 (FStar_Sealed.seal
+                    (Obj.magic
+                       (FStar_Range.mk_range
+                          "FStar.InteractiveHelpers.PostProcess.fst"
+                          (Prims.of_int (157)) (Prims.of_int (12))
+                          (Prims.of_int (157)) (Prims.of_int (49)))))
+                 (FStar_Sealed.seal
+                    (Obj.magic
+                       (FStar_Range.mk_range
+                          "FStar.InteractiveHelpers.PostProcess.fst"
+                          (Prims.of_int (158)) (Prims.of_int (2))
+                          (Prims.of_int (170)) (Prims.of_int (5)))))
                  (Obj.magic (find_focused_term_in_current_goal dbg))
                  (fun uu___1 ->
                     (fun res ->
                        Obj.magic
                          (FStar_Tactics_Effect.tac_bind
-                            (FStar_Range.mk_range
-                               "FStar.InteractiveHelpers.PostProcess.fst"
-                               (Prims.of_int (162)) (Prims.of_int (2))
-                               (Prims.of_int (162)) (Prims.of_int (69)))
-                            (FStar_Range.mk_range
-                               "FStar.InteractiveHelpers.PostProcess.fst"
-                               (Prims.of_int (162)) (Prims.of_int (70))
-                               (Prims.of_int (170)) (Prims.of_int (4)))
+                            (FStar_Sealed.seal
+                               (Obj.magic
+                                  (FStar_Range.mk_range
+                                     "FStar.InteractiveHelpers.PostProcess.fst"
+                                     (Prims.of_int (158)) (Prims.of_int (2))
+                                     (Prims.of_int (158)) (Prims.of_int (69)))))
+                            (FStar_Sealed.seal
+                               (Obj.magic
+                                  (FStar_Range.mk_range
+                                     "FStar.InteractiveHelpers.PostProcess.fst"
+                                     (Prims.of_int (158)) (Prims.of_int (70))
+                                     (Prims.of_int (170)) (Prims.of_int (5)))))
                             (Obj.magic
                                (FStar_Tactics_Effect.tac_bind
-                                  (FStar_Range.mk_range
-                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                     (Prims.of_int (162)) (Prims.of_int (16))
-                                     (Prims.of_int (162)) (Prims.of_int (69)))
-                                  (FStar_Range.mk_range
-                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                     (Prims.of_int (162)) (Prims.of_int (2))
-                                     (Prims.of_int (162)) (Prims.of_int (69)))
-                                  (Obj.magic
-                                     (FStar_Tactics_Effect.tac_bind
+                                  (FStar_Sealed.seal
+                                     (Obj.magic
                                         (FStar_Range.mk_range
                                            "FStar.InteractiveHelpers.PostProcess.fst"
-                                           (Prims.of_int (162))
-                                           (Prims.of_int (46))
-                                           (Prims.of_int (162))
-                                           (Prims.of_int (68)))
-                                        (FStar_Range.mk_range "prims.fst"
-                                           (Prims.of_int (590))
-                                           (Prims.of_int (19))
-                                           (Prims.of_int (590))
-                                           (Prims.of_int (31)))
+                                           (Prims.of_int (158))
+                                           (Prims.of_int (16))
+                                           (Prims.of_int (158))
+                                           (Prims.of_int (69)))))
+                                  (FStar_Sealed.seal
+                                     (Obj.magic
+                                        (FStar_Range.mk_range
+                                           "FStar.InteractiveHelpers.PostProcess.fst"
+                                           (Prims.of_int (158))
+                                           (Prims.of_int (2))
+                                           (Prims.of_int (158))
+                                           (Prims.of_int (69)))))
+                                  (Obj.magic
+                                     (FStar_Tactics_Effect.tac_bind
+                                        (FStar_Sealed.seal
+                                           (Obj.magic
+                                              (FStar_Range.mk_range
+                                                 "FStar.InteractiveHelpers.PostProcess.fst"
+                                                 (Prims.of_int (158))
+                                                 (Prims.of_int (46))
+                                                 (Prims.of_int (158))
+                                                 (Prims.of_int (68)))))
+                                        (FStar_Sealed.seal
+                                           (Obj.magic
+                                              (FStar_Range.mk_range
+                                                 "prims.fst"
+                                                 (Prims.of_int (590))
+                                                 (Prims.of_int (19))
+                                                 (Prims.of_int (590))
+                                                 (Prims.of_int (31)))))
                                         (Obj.magic
-                                           (FStar_Tactics_Builtins.term_to_string
+                                           (FStar_Tactics_V1_Builtins.term_to_string
                                               res.res))
                                         (fun uu___1 ->
                                            FStar_Tactics_Effect.lift_div_tac
@@ -1172,57 +1383,69 @@ let (find_focused_assert_in_current_goal :
                                (fun uu___1 ->
                                   Obj.magic
                                     (FStar_Tactics_Effect.tac_bind
-                                       (FStar_Range.mk_range
-                                          "FStar.InteractiveHelpers.PostProcess.fst"
-                                          (Prims.of_int (165))
-                                          (Prims.of_int (4))
-                                          (Prims.of_int (169))
-                                          (Prims.of_int (14)))
-                                       (FStar_Range.mk_range
-                                          "FStar.InteractiveHelpers.PostProcess.fst"
-                                          (Prims.of_int (171))
-                                          (Prims.of_int (8))
-                                          (Prims.of_int (173))
-                                          (Prims.of_int (38)))
+                                       (FStar_Sealed.seal
+                                          (Obj.magic
+                                             (FStar_Range.mk_range
+                                                "FStar.InteractiveHelpers.PostProcess.fst"
+                                                (Prims.of_int (161))
+                                                (Prims.of_int (4))
+                                                (Prims.of_int (165))
+                                                (Prims.of_int (14)))))
+                                       (FStar_Sealed.seal
+                                          (Obj.magic
+                                             (FStar_Range.mk_range
+                                                "FStar.InteractiveHelpers.PostProcess.fst"
+                                                (Prims.of_int (167))
+                                                (Prims.of_int (8))
+                                                (Prims.of_int (169))
+                                                (Prims.of_int (38)))))
                                        (Obj.magic
                                           (FStar_Tactics_Effect.tac_bind
-                                             (FStar_Range.mk_range
-                                                "FStar.InteractiveHelpers.PostProcess.fst"
-                                                (Prims.of_int (165))
-                                                (Prims.of_int (10))
-                                                (Prims.of_int (165))
-                                                (Prims.of_int (25)))
-                                             (FStar_Range.mk_range
-                                                "FStar.InteractiveHelpers.PostProcess.fst"
-                                                (Prims.of_int (165))
-                                                (Prims.of_int (4))
-                                                (Prims.of_int (169))
-                                                (Prims.of_int (14)))
+                                             (FStar_Sealed.seal
+                                                (Obj.magic
+                                                   (FStar_Range.mk_range
+                                                      "FStar.InteractiveHelpers.PostProcess.fst"
+                                                      (Prims.of_int (161))
+                                                      (Prims.of_int (10))
+                                                      (Prims.of_int (161))
+                                                      (Prims.of_int (25)))))
+                                             (FStar_Sealed.seal
+                                                (Obj.magic
+                                                   (FStar_Range.mk_range
+                                                      "FStar.InteractiveHelpers.PostProcess.fst"
+                                                      (Prims.of_int (161))
+                                                      (Prims.of_int (4))
+                                                      (Prims.of_int (165))
+                                                      (Prims.of_int (14)))))
                                              (Obj.magic
-                                                (FStar_Tactics_Builtins.inspect
+                                                (FStar_Tactics_V1_Builtins.inspect
                                                    res.res))
                                              (fun uu___2 ->
                                                 (fun uu___2 ->
                                                    match uu___2 with
-                                                   | FStar_Reflection_Data.Tv_Let
+                                                   | FStar_Reflection_V1_Data.Tv_Let
                                                        (uu___3, uu___4, bv0,
                                                         ty, fterm, uu___5)
                                                        ->
                                                        Obj.magic
                                                          (Obj.repr
                                                             (FStar_Tactics_Effect.tac_bind
-                                                               (FStar_Range.mk_range
-                                                                  "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                  (Prims.of_int (167))
-                                                                  (Prims.of_int (16))
-                                                                  (Prims.of_int (167))
-                                                                  (Prims.of_int (53)))
-                                                               (FStar_Range.mk_range
-                                                                  "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                  (Prims.of_int (168))
-                                                                  (Prims.of_int (6))
-                                                                  (Prims.of_int (168))
-                                                                  (Prims.of_int (42)))
+                                                               (FStar_Sealed.seal
+                                                                  (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (163))
+                                                                    (Prims.of_int (16))
+                                                                    (Prims.of_int (163))
+                                                                    (Prims.of_int (53)))))
+                                                               (FStar_Sealed.seal
+                                                                  (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (164))
+                                                                    (Prims.of_int (6))
+                                                                    (Prims.of_int (164))
+                                                                    (Prims.of_int (42)))))
                                                                (Obj.magic
                                                                   (FStar_InteractiveHelpers_Base.genv_push_bv
                                                                     res.ge
@@ -1255,18 +1478,22 @@ let (find_focused_assert_in_current_goal :
                                           (fun res' ->
                                              Obj.magic
                                                (FStar_Tactics_Effect.tac_bind
-                                                  (FStar_Range.mk_range
-                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                     (Prims.of_int (171))
-                                                     (Prims.of_int (14))
-                                                     (Prims.of_int (171))
-                                                     (Prims.of_int (47)))
-                                                  (FStar_Range.mk_range
-                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                     (Prims.of_int (171))
-                                                     (Prims.of_int (8))
-                                                     (Prims.of_int (173))
-                                                     (Prims.of_int (38)))
+                                                  (FStar_Sealed.seal
+                                                     (Obj.magic
+                                                        (FStar_Range.mk_range
+                                                           "FStar.InteractiveHelpers.PostProcess.fst"
+                                                           (Prims.of_int (167))
+                                                           (Prims.of_int (14))
+                                                           (Prims.of_int (167))
+                                                           (Prims.of_int (47)))))
+                                                  (FStar_Sealed.seal
+                                                     (Obj.magic
+                                                        (FStar_Range.mk_range
+                                                           "FStar.InteractiveHelpers.PostProcess.fst"
+                                                           (Prims.of_int (167))
+                                                           (Prims.of_int (8))
+                                                           (Prims.of_int (169))
+                                                           (Prims.of_int (38)))))
                                                   (Obj.magic
                                                      (term_is_assert_or_assume
                                                         res'.res))
@@ -1279,36 +1506,44 @@ let (find_focused_assert_in_current_goal :
                                                               (Obj.repr
                                                                  (FStar_Tactics_Effect.tac_bind
                                                                     (
-                                                                    FStar_Range.mk_range
+                                                                    FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (172))
+                                                                    (Prims.of_int (168))
                                                                     (Prims.of_int (18))
-                                                                    (Prims.of_int (172))
-                                                                    (Prims.of_int (144)))
+                                                                    (Prims.of_int (168))
+                                                                    (Prims.of_int (144)))))
                                                                     (
-                                                                    FStar_Range.mk_range
+                                                                    FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (172))
+                                                                    (Prims.of_int (168))
                                                                     (Prims.of_int (12))
-                                                                    (Prims.of_int (172))
-                                                                    (Prims.of_int (144)))
+                                                                    (Prims.of_int (168))
+                                                                    (Prims.of_int (144)))))
                                                                     (
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (172))
+                                                                    (Prims.of_int (168))
                                                                     (Prims.of_int (121))
-                                                                    (Prims.of_int (172))
-                                                                    (Prims.of_int (143)))
+                                                                    (Prims.of_int (168))
+                                                                    (Prims.of_int (143)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_Builtins.term_to_string
+                                                                    (FStar_Tactics_V1_Builtins.term_to_string
                                                                     res.res))
                                                                     (fun
                                                                     uu___3 ->
@@ -1359,107 +1594,141 @@ let (analyze_effectful_term :
       fun with_gpost ->
         fun res ->
           FStar_Tactics_Effect.tac_bind
-            (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
-               (Prims.of_int (190)) (Prims.of_int (11)) (Prims.of_int (190))
-               (Prims.of_int (17)))
-            (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
-               (Prims.of_int (190)) (Prims.of_int (20)) (Prims.of_int (191))
-               (Prims.of_int (29)))
+            (FStar_Sealed.seal
+               (Obj.magic
+                  (FStar_Range.mk_range
+                     "FStar.InteractiveHelpers.PostProcess.fst"
+                     (Prims.of_int (186)) (Prims.of_int (11))
+                     (Prims.of_int (186)) (Prims.of_int (17)))))
+            (FStar_Sealed.seal
+               (Obj.magic
+                  (FStar_Range.mk_range
+                     "FStar.InteractiveHelpers.PostProcess.fst"
+                     (Prims.of_int (186)) (Prims.of_int (20))
+                     (Prims.of_int (243)) (Prims.of_int (30)))))
             (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> res.ge))
             (fun uu___ ->
                (fun ge ->
                   Obj.magic
                     (FStar_Tactics_Effect.tac_bind
-                       (FStar_Range.mk_range
-                          "FStar.InteractiveHelpers.PostProcess.fst"
-                          (Prims.of_int (191)) (Prims.of_int (14))
-                          (Prims.of_int (191)) (Prims.of_int (26)))
-                       (FStar_Range.mk_range
-                          "FStar.InteractiveHelpers.PostProcess.fst"
-                          (Prims.of_int (191)) (Prims.of_int (29))
-                          (Prims.of_int (223)) (Prims.of_int (4)))
+                       (FStar_Sealed.seal
+                          (Obj.magic
+                             (FStar_Range.mk_range
+                                "FStar.InteractiveHelpers.PostProcess.fst"
+                                (Prims.of_int (187)) (Prims.of_int (14))
+                                (Prims.of_int (187)) (Prims.of_int (26)))))
+                       (FStar_Sealed.seal
+                          (Obj.magic
+                             (FStar_Range.mk_range
+                                "FStar.InteractiveHelpers.PostProcess.fst"
+                                (Prims.of_int (187)) (Prims.of_int (29))
+                                (Prims.of_int (243)) (Prims.of_int (30)))))
                        (FStar_Tactics_Effect.lift_div_tac
                           (fun uu___ -> res.tgt_comp))
                        (fun uu___ ->
                           (fun opt_c ->
                              Obj.magic
                                (FStar_Tactics_Effect.tac_bind
-                                  (FStar_Range.mk_range
-                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                     (Prims.of_int (194)) (Prims.of_int (10))
-                                     (Prims.of_int (221)) (Prims.of_int (82)))
-                                  (FStar_Range.mk_range
-                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                     (Prims.of_int (191)) (Prims.of_int (29))
-                                     (Prims.of_int (223)) (Prims.of_int (4)))
+                                  (FStar_Sealed.seal
+                                     (Obj.magic
+                                        (FStar_Range.mk_range
+                                           "FStar.InteractiveHelpers.PostProcess.fst"
+                                           (Prims.of_int (190))
+                                           (Prims.of_int (10))
+                                           (Prims.of_int (217))
+                                           (Prims.of_int (82)))))
+                                  (FStar_Sealed.seal
+                                     (Obj.magic
+                                        (FStar_Range.mk_range
+                                           "FStar.InteractiveHelpers.PostProcess.fst"
+                                           (Prims.of_int (187))
+                                           (Prims.of_int (29))
+                                           (Prims.of_int (243))
+                                           (Prims.of_int (30)))))
                                   (Obj.magic
                                      (FStar_Tactics_Effect.tac_bind
-                                        (FStar_Range.mk_range
-                                           "FStar.InteractiveHelpers.PostProcess.fst"
-                                           (Prims.of_int (194))
-                                           (Prims.of_int (16))
-                                           (Prims.of_int (194))
-                                           (Prims.of_int (31)))
-                                        (FStar_Range.mk_range
-                                           "FStar.InteractiveHelpers.PostProcess.fst"
-                                           (Prims.of_int (194))
-                                           (Prims.of_int (10))
-                                           (Prims.of_int (221))
-                                           (Prims.of_int (82)))
+                                        (FStar_Sealed.seal
+                                           (Obj.magic
+                                              (FStar_Range.mk_range
+                                                 "FStar.InteractiveHelpers.PostProcess.fst"
+                                                 (Prims.of_int (190))
+                                                 (Prims.of_int (16))
+                                                 (Prims.of_int (190))
+                                                 (Prims.of_int (31)))))
+                                        (FStar_Sealed.seal
+                                           (Obj.magic
+                                              (FStar_Range.mk_range
+                                                 "FStar.InteractiveHelpers.PostProcess.fst"
+                                                 (Prims.of_int (190))
+                                                 (Prims.of_int (10))
+                                                 (Prims.of_int (217))
+                                                 (Prims.of_int (82)))))
                                         (Obj.magic
-                                           (FStar_Tactics_Builtins.inspect
+                                           (FStar_Tactics_V1_Builtins.inspect
                                               res.res))
                                         (fun uu___ ->
                                            (fun uu___ ->
                                               match uu___ with
-                                              | FStar_Reflection_Data.Tv_Let
+                                              | FStar_Reflection_V1_Data.Tv_Let
                                                   (uu___1, uu___2, bv0, ty,
                                                    fterm, uu___3)
                                                   ->
                                                   Obj.magic
                                                     (FStar_Tactics_Effect.tac_bind
-                                                       (FStar_Range.mk_range
-                                                          "FStar.InteractiveHelpers.PostProcess.fst"
-                                                          (Prims.of_int (201))
-                                                          (Prims.of_int (6))
-                                                          (Prims.of_int (201))
-                                                          (Prims.of_int (63)))
-                                                       (FStar_Range.mk_range
-                                                          "FStar.InteractiveHelpers.PostProcess.fst"
-                                                          (Prims.of_int (201))
-                                                          (Prims.of_int (64))
-                                                          (Prims.of_int (206))
-                                                          (Prims.of_int (8)))
+                                                       (FStar_Sealed.seal
+                                                          (Obj.magic
+                                                             (FStar_Range.mk_range
+                                                                "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                (Prims.of_int (197))
+                                                                (Prims.of_int (6))
+                                                                (Prims.of_int (197))
+                                                                (Prims.of_int (63)))))
+                                                       (FStar_Sealed.seal
+                                                          (Obj.magic
+                                                             (FStar_Range.mk_range
+                                                                "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                (Prims.of_int (197))
+                                                                (Prims.of_int (64))
+                                                                (Prims.of_int (216))
+                                                                (Prims.of_int (69)))))
                                                        (Obj.magic
                                                           (FStar_Tactics_Effect.tac_bind
-                                                             (FStar_Range.mk_range
-                                                                "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                (Prims.of_int (201))
-                                                                (Prims.of_int (20))
-                                                                (Prims.of_int (201))
-                                                                (Prims.of_int (63)))
-                                                             (FStar_Range.mk_range
-                                                                "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                (Prims.of_int (201))
-                                                                (Prims.of_int (6))
-                                                                (Prims.of_int (201))
-                                                                (Prims.of_int (63)))
-                                                             (Obj.magic
-                                                                (FStar_Tactics_Effect.tac_bind
+                                                             (FStar_Sealed.seal
+                                                                (Obj.magic
                                                                    (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (201))
-                                                                    (Prims.of_int (42))
-                                                                    (Prims.of_int (201))
-                                                                    (Prims.of_int (62)))
+                                                                    (Prims.of_int (197))
+                                                                    (Prims.of_int (20))
+                                                                    (Prims.of_int (197))
+                                                                    (Prims.of_int (63)))))
+                                                             (FStar_Sealed.seal
+                                                                (Obj.magic
                                                                    (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (197))
+                                                                    (Prims.of_int (6))
+                                                                    (Prims.of_int (197))
+                                                                    (Prims.of_int (63)))))
+                                                             (Obj.magic
+                                                                (FStar_Tactics_Effect.tac_bind
+                                                                   (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (197))
+                                                                    (Prims.of_int (42))
+                                                                    (Prims.of_int (197))
+                                                                    (Prims.of_int (62)))))
+                                                                   (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                    (Obj.magic
-                                                                    (FStar_Tactics_Builtins.term_to_string
+                                                                    (FStar_Tactics_V1_Builtins.term_to_string
                                                                     fterm))
                                                                    (fun
                                                                     uu___4 ->
@@ -1481,48 +1750,60 @@ let (analyze_effectful_term :
                                                           (fun uu___4 ->
                                                              Obj.magic
                                                                (FStar_Tactics_Effect.tac_bind
-                                                                  (FStar_Range.mk_range
+                                                                  (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (203))
+                                                                    (Prims.of_int (199))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (205))
-                                                                    (Prims.of_int (41)))
-                                                                  (FStar_Range.mk_range
+                                                                    (Prims.of_int (201))
+                                                                    (Prims.of_int (41)))))
+                                                                  (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (206))
+                                                                    (Prims.of_int (202))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (207))
-                                                                    (Prims.of_int (52)))
+                                                                    (Prims.of_int (216))
+                                                                    (Prims.of_int (69)))))
                                                                   (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (203))
+                                                                    (Prims.of_int (199))
                                                                     (Prims.of_int (14))
-                                                                    (Prims.of_int (203))
-                                                                    (Prims.of_int (52)))
+                                                                    (Prims.of_int (199))
+                                                                    (Prims.of_int (52)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (203))
+                                                                    (Prims.of_int (199))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (205))
-                                                                    (Prims.of_int (41)))
+                                                                    (Prims.of_int (201))
+                                                                    (Prims.of_int (41)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (203))
-                                                                    (Prims.of_int (36))
-                                                                    (Prims.of_int (203))
-                                                                    (Prims.of_int (52)))
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (203))
-                                                                    (Prims.of_int (14))
-                                                                    (Prims.of_int (203))
-                                                                    (Prims.of_int (52)))
+                                                                    (FStar_Sealed.seal
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_Derived.name_of_bv
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (199))
+                                                                    (Prims.of_int (36))
+                                                                    (Prims.of_int (199))
+                                                                    (Prims.of_int (52)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (199))
+                                                                    (Prims.of_int (14))
+                                                                    (Prims.of_int (199))
+                                                                    (Prims.of_int (52)))))
+                                                                    (Obj.magic
+                                                                    (FStar_Tactics_V1_Derived.name_of_bv
                                                                     bv0))
                                                                     (fun
                                                                     uu___5 ->
@@ -1558,18 +1839,22 @@ let (analyze_effectful_term :
                                                                     ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (207))
+                                                                    (Prims.of_int (203))
                                                                     (Prims.of_int (16))
-                                                                    (Prims.of_int (207))
-                                                                    (Prims.of_int (49)))
+                                                                    (Prims.of_int (203))
+                                                                    (Prims.of_int (49)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (207))
+                                                                    (Prims.of_int (203))
                                                                     (Prims.of_int (52))
-                                                                    (Prims.of_int (218))
-                                                                    (Prims.of_int (8)))
+                                                                    (Prims.of_int (216))
+                                                                    (Prims.of_int (69)))))
                                                                     (Obj.magic
                                                                     (FStar_InteractiveHelpers_Base.genv_push_bv
                                                                     ge bv0 ty
@@ -1581,36 +1866,44 @@ let (analyze_effectful_term :
                                                                     ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (212))
+                                                                    (Prims.of_int (208))
                                                                     (Prims.of_int (27))
                                                                     (Prims.of_int (213))
-                                                                    (Prims.of_int (36)))
+                                                                    (Prims.of_int (21)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (207))
+                                                                    (Prims.of_int (203))
                                                                     (Prims.of_int (52))
-                                                                    (Prims.of_int (218))
-                                                                    (Prims.of_int (8)))
+                                                                    (Prims.of_int (216))
+                                                                    (Prims.of_int (69)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (213))
+                                                                    (Prims.of_int (209))
                                                                     (Prims.of_int (19))
-                                                                    (Prims.of_int (213))
-                                                                    (Prims.of_int (33)))
+                                                                    (Prims.of_int (209))
+                                                                    (Prims.of_int (33)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (213))
+                                                                    (Prims.of_int (209))
                                                                     (Prims.of_int (36))
-                                                                    (Prims.of_int (214))
-                                                                    (Prims.of_int (80)))
+                                                                    (Prims.of_int (213))
+                                                                    (Prims.of_int (21)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___5 ->
-                                                                    FStar_Reflection_Builtins.inspect_bv
+                                                                    FStar_Reflection_V1_Builtins.inspect_bv
                                                                     bv0))
                                                                     (fun
                                                                     uu___5 ->
@@ -1618,46 +1911,58 @@ let (analyze_effectful_term :
                                                                     ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (214))
+                                                                    (Prims.of_int (210))
                                                                     (Prims.of_int (16))
-                                                                    (Prims.of_int (214))
-                                                                    (Prims.of_int (77)))
+                                                                    (Prims.of_int (210))
+                                                                    (Prims.of_int (77)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (215))
+                                                                    (Prims.of_int (211))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (217))
-                                                                    (Prims.of_int (21)))
+                                                                    (Prims.of_int (213))
+                                                                    (Prims.of_int (21)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (214))
+                                                                    (Prims.of_int (210))
                                                                     (Prims.of_int (30))
-                                                                    (Prims.of_int (214))
-                                                                    (Prims.of_int (77)))
+                                                                    (Prims.of_int (210))
+                                                                    (Prims.of_int (77)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (214))
+                                                                    (Prims.of_int (210))
                                                                     (Prims.of_int (16))
-                                                                    (Prims.of_int (214))
-                                                                    (Prims.of_int (77)))
+                                                                    (Prims.of_int (210))
+                                                                    (Prims.of_int (77)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (214))
+                                                                    (Prims.of_int (210))
                                                                     (Prims.of_int (59))
-                                                                    (Prims.of_int (214))
-                                                                    (Prims.of_int (76)))
+                                                                    (Prims.of_int (210))
+                                                                    (Prims.of_int (76)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
                                                                     (FStar_InteractiveHelpers_Base.abv_to_string
                                                                     bv0))
@@ -1684,35 +1989,43 @@ let (analyze_effectful_term :
                                                                     uu___5 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (215))
+                                                                    (Prims.of_int (211))
                                                                     (Prims.of_int (11))
-                                                                    (Prims.of_int (215))
-                                                                    (Prims.of_int (42)))
+                                                                    (Prims.of_int (211))
+                                                                    (Prims.of_int (42)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (215))
+                                                                    (Prims.of_int (211))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (217))
-                                                                    (Prims.of_int (21)))
+                                                                    (Prims.of_int (213))
+                                                                    (Prims.of_int (21)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (215))
-                                                                    (Prims.of_int (11))
-                                                                    (Prims.of_int (215))
-                                                                    (Prims.of_int (32)))
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (215))
-                                                                    (Prims.of_int (11))
-                                                                    (Prims.of_int (215))
-                                                                    (Prims.of_int (42)))
+                                                                    (FStar_Sealed.seal
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_Builtins.unseal
-                                                                    bvv0.FStar_Reflection_Data.bv_ppname))
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (211))
+                                                                    (Prims.of_int (11))
+                                                                    (Prims.of_int (211))
+                                                                    (Prims.of_int (32)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (211))
+                                                                    (Prims.of_int (11))
+                                                                    (Prims.of_int (211))
+                                                                    (Prims.of_int (42)))))
+                                                                    (Obj.magic
+                                                                    (FStar_Tactics_Unseal.unseal
+                                                                    bvv0.FStar_Reflection_V1_Data.bv_ppname))
                                                                     (fun
                                                                     uu___6 ->
                                                                     FStar_Tactics_Effect.lift_div_tac
@@ -1753,18 +2066,22 @@ let (analyze_effectful_term :
                                                                     bv1) ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (218))
+                                                                    (Prims.of_int (214))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (219))
-                                                                    (Prims.of_int (56)))
+                                                                    (Prims.of_int (216))
+                                                                    (Prims.of_int (69)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (218))
+                                                                    (Prims.of_int (214))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (219))
-                                                                    (Prims.of_int (56)))
+                                                                    (Prims.of_int (216))
+                                                                    (Prims.of_int (69)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___6 ->
@@ -1775,18 +2092,22 @@ let (analyze_effectful_term :
                                                                     ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (219))
+                                                                    (Prims.of_int (215))
                                                                     (Prims.of_int (17))
-                                                                    (Prims.of_int (219))
-                                                                    (Prims.of_int (53)))
+                                                                    (Prims.of_int (215))
+                                                                    (Prims.of_int (53)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (220))
+                                                                    (Prims.of_int (216))
                                                                     (Prims.of_int (6))
-                                                                    (Prims.of_int (220))
-                                                                    (Prims.of_int (69)))
+                                                                    (Prims.of_int (216))
+                                                                    (Prims.of_int (69)))))
                                                                     (Obj.magic
                                                                     (FStar_InteractiveHelpers_Effectful.compute_eterm_info
                                                                     dbg
@@ -1812,18 +2133,22 @@ let (analyze_effectful_term :
                                               | uu___1 ->
                                                   Obj.magic
                                                     (FStar_Tactics_Effect.tac_bind
-                                                       (FStar_Range.mk_range
-                                                          "FStar.InteractiveHelpers.PostProcess.fst"
-                                                          (Prims.of_int (221))
-                                                          (Prims.of_int (25))
-                                                          (Prims.of_int (221))
-                                                          (Prims.of_int (62)))
-                                                       (FStar_Range.mk_range
-                                                          "FStar.InteractiveHelpers.PostProcess.fst"
-                                                          (Prims.of_int (221))
-                                                          (Prims.of_int (11))
-                                                          (Prims.of_int (221))
-                                                          (Prims.of_int (82)))
+                                                       (FStar_Sealed.seal
+                                                          (Obj.magic
+                                                             (FStar_Range.mk_range
+                                                                "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                (Prims.of_int (217))
+                                                                (Prims.of_int (25))
+                                                                (Prims.of_int (217))
+                                                                (Prims.of_int (62)))))
+                                                       (FStar_Sealed.seal
+                                                          (Obj.magic
+                                                             (FStar_Range.mk_range
+                                                                "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                (Prims.of_int (217))
+                                                                (Prims.of_int (11))
+                                                                (Prims.of_int (217))
+                                                                (Prims.of_int (82)))))
                                                        (Obj.magic
                                                           (FStar_InteractiveHelpers_Effectful.compute_eterm_info
                                                              dbg
@@ -1846,46 +2171,58 @@ let (analyze_effectful_term :
                                            shadowed_bv, is_let) ->
                                             Obj.magic
                                               (FStar_Tactics_Effect.tac_bind
-                                                 (FStar_Range.mk_range
-                                                    "FStar.InteractiveHelpers.PostProcess.fst"
-                                                    (Prims.of_int (224))
-                                                    (Prims.of_int (2))
-                                                    (Prims.of_int (224))
-                                                    (Prims.of_int (79)))
-                                                 (FStar_Range.mk_range
-                                                    "FStar.InteractiveHelpers.PostProcess.fst"
-                                                    (Prims.of_int (225))
-                                                    (Prims.of_int (2))
-                                                    (Prims.of_int (247))
-                                                    (Prims.of_int (30)))
+                                                 (FStar_Sealed.seal
+                                                    (Obj.magic
+                                                       (FStar_Range.mk_range
+                                                          "FStar.InteractiveHelpers.PostProcess.fst"
+                                                          (Prims.of_int (220))
+                                                          (Prims.of_int (2))
+                                                          (Prims.of_int (220))
+                                                          (Prims.of_int (79)))))
+                                                 (FStar_Sealed.seal
+                                                    (Obj.magic
+                                                       (FStar_Range.mk_range
+                                                          "FStar.InteractiveHelpers.PostProcess.fst"
+                                                          (Prims.of_int (221))
+                                                          (Prims.of_int (2))
+                                                          (Prims.of_int (243))
+                                                          (Prims.of_int (30)))))
                                                  (Obj.magic
                                                     (FStar_Tactics_Effect.tac_bind
-                                                       (FStar_Range.mk_range
-                                                          "FStar.InteractiveHelpers.PostProcess.fst"
-                                                          (Prims.of_int (224))
-                                                          (Prims.of_int (16))
-                                                          (Prims.of_int (224))
-                                                          (Prims.of_int (79)))
-                                                       (FStar_Range.mk_range
-                                                          "FStar.InteractiveHelpers.PostProcess.fst"
-                                                          (Prims.of_int (224))
-                                                          (Prims.of_int (2))
-                                                          (Prims.of_int (224))
-                                                          (Prims.of_int (79)))
-                                                       (Obj.magic
-                                                          (FStar_Tactics_Effect.tac_bind
+                                                       (FStar_Sealed.seal
+                                                          (Obj.magic
                                                              (FStar_Range.mk_range
                                                                 "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                (Prims.of_int (224))
-                                                                (Prims.of_int (51))
-                                                                (Prims.of_int (224))
-                                                                (Prims.of_int (78)))
+                                                                (Prims.of_int (220))
+                                                                (Prims.of_int (16))
+                                                                (Prims.of_int (220))
+                                                                (Prims.of_int (79)))))
+                                                       (FStar_Sealed.seal
+                                                          (Obj.magic
                                                              (FStar_Range.mk_range
-                                                                "prims.fst"
-                                                                (Prims.of_int (590))
-                                                                (Prims.of_int (19))
-                                                                (Prims.of_int (590))
-                                                                (Prims.of_int (31)))
+                                                                "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                (Prims.of_int (220))
+                                                                (Prims.of_int (2))
+                                                                (Prims.of_int (220))
+                                                                (Prims.of_int (79)))))
+                                                       (Obj.magic
+                                                          (FStar_Tactics_Effect.tac_bind
+                                                             (FStar_Sealed.seal
+                                                                (Obj.magic
+                                                                   (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (220))
+                                                                    (Prims.of_int (51))
+                                                                    (Prims.of_int (220))
+                                                                    (Prims.of_int (78)))))
+                                                             (FStar_Sealed.seal
+                                                                (Obj.magic
+                                                                   (FStar_Range.mk_range
+                                                                    "prims.fst"
+                                                                    (Prims.of_int (590))
+                                                                    (Prims.of_int (19))
+                                                                    (Prims.of_int (590))
+                                                                    (Prims.of_int (31)))))
                                                              (Obj.magic
                                                                 (FStar_InteractiveHelpers_Base.term_construct
                                                                    studied_term))
@@ -1906,46 +2243,58 @@ let (analyze_effectful_term :
                                                     (fun uu___1 ->
                                                        Obj.magic
                                                          (FStar_Tactics_Effect.tac_bind
-                                                            (FStar_Range.mk_range
-                                                               "FStar.InteractiveHelpers.PostProcess.fst"
-                                                               (Prims.of_int (225))
-                                                               (Prims.of_int (2))
-                                                               (Prims.of_int (225))
-                                                               (Prims.of_int (94)))
-                                                            (FStar_Range.mk_range
-                                                               "FStar.InteractiveHelpers.PostProcess.fst"
-                                                               (Prims.of_int (225))
-                                                               (Prims.of_int (95))
-                                                               (Prims.of_int (229))
-                                                               (Prims.of_int (66)))
+                                                            (FStar_Sealed.seal
+                                                               (Obj.magic
+                                                                  (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (221))
+                                                                    (Prims.of_int (2))
+                                                                    (Prims.of_int (221))
+                                                                    (Prims.of_int (94)))))
+                                                            (FStar_Sealed.seal
+                                                               (Obj.magic
+                                                                  (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (221))
+                                                                    (Prims.of_int (95))
+                                                                    (Prims.of_int (243))
+                                                                    (Prims.of_int (30)))))
                                                             (Obj.magic
                                                                (FStar_Tactics_Effect.tac_bind
-                                                                  (FStar_Range.mk_range
-                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (225))
-                                                                    (Prims.of_int (16))
-                                                                    (Prims.of_int (225))
-                                                                    (Prims.of_int (94)))
-                                                                  (FStar_Range.mk_range
-                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (225))
-                                                                    (Prims.of_int (2))
-                                                                    (Prims.of_int (225))
-                                                                    (Prims.of_int (94)))
-                                                                  (Obj.magic
-                                                                    (FStar_Tactics_Effect.tac_bind
+                                                                  (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (225))
+                                                                    (Prims.of_int (221))
+                                                                    (Prims.of_int (16))
+                                                                    (Prims.of_int (221))
+                                                                    (Prims.of_int (94)))))
+                                                                  (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (221))
+                                                                    (Prims.of_int (2))
+                                                                    (Prims.of_int (221))
+                                                                    (Prims.of_int (94)))))
+                                                                  (Obj.magic
+                                                                    (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (221))
                                                                     (Prims.of_int (75))
-                                                                    (Prims.of_int (225))
-                                                                    (Prims.of_int (93)))
+                                                                    (Prims.of_int (221))
+                                                                    (Prims.of_int (93)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
                                                                     (FStar_InteractiveHelpers_Base.genv_to_string
                                                                     ge1))
@@ -1971,32 +2320,40 @@ let (analyze_effectful_term :
                                                                   Obj.magic
                                                                     (
                                                                     FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (229))
+                                                                    (Prims.of_int (225))
                                                                     (Prims.of_int (18))
-                                                                    (Prims.of_int (229))
-                                                                    (Prims.of_int (63)))
+                                                                    (Prims.of_int (225))
+                                                                    (Prims.of_int (63)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (229))
+                                                                    (Prims.of_int (225))
                                                                     (Prims.of_int (66))
-                                                                    (Prims.of_int (232))
-                                                                    (Prims.of_int (63)))
+                                                                    (Prims.of_int (243))
+                                                                    (Prims.of_int (30)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (229))
+                                                                    (Prims.of_int (225))
                                                                     (Prims.of_int (24))
-                                                                    (Prims.of_int (229))
-                                                                    (Prims.of_int (63)))
+                                                                    (Prims.of_int (225))
+                                                                    (Prims.of_int (63)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (229))
+                                                                    (Prims.of_int (225))
                                                                     (Prims.of_int (18))
-                                                                    (Prims.of_int (229))
-                                                                    (Prims.of_int (63)))
+                                                                    (Prims.of_int (225))
+                                                                    (Prims.of_int (63)))))
                                                                     (Obj.magic
                                                                     (term_is_assert_or_assume
                                                                     studied_term))
@@ -2014,23 +2371,27 @@ let (analyze_effectful_term :
                                                                     ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (232))
+                                                                    (Prims.of_int (228))
                                                                     (Prims.of_int (16))
-                                                                    (Prims.of_int (232))
-                                                                    (Prims.of_int (60)))
+                                                                    (Prims.of_int (228))
+                                                                    (Prims.of_int (60)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (232))
+                                                                    (Prims.of_int (228))
                                                                     (Prims.of_int (63))
-                                                                    (Prims.of_int (233))
-                                                                    (Prims.of_int (47)))
+                                                                    (Prims.of_int (243))
+                                                                    (Prims.of_int (30)))))
                                                                     (Obj.magic
                                                                     (FStar_InteractiveHelpers_Base.opt_tapply
                                                                     (fun x ->
-                                                                    FStar_Tactics_Builtins.pack
-                                                                    (FStar_Reflection_Data.Tv_Var
+                                                                    FStar_Tactics_V1_Builtins.pack
+                                                                    (FStar_Reflection_V1_Data.Tv_Var
                                                                     x))
                                                                     ret_bv))
                                                                     (fun
@@ -2040,18 +2401,22 @@ let (analyze_effectful_term :
                                                                     ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (233))
+                                                                    (Prims.of_int (229))
                                                                     (Prims.of_int (16))
-                                                                    (Prims.of_int (233))
-                                                                    (Prims.of_int (44)))
+                                                                    (Prims.of_int (229))
+                                                                    (Prims.of_int (44)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (233))
+                                                                    (Prims.of_int (229))
                                                                     (Prims.of_int (47))
-                                                                    (Prims.of_int (236))
-                                                                    (Prims.of_int (71)))
+                                                                    (Prims.of_int (243))
+                                                                    (Prims.of_int (30)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___3 ->
@@ -2065,18 +2430,22 @@ let (analyze_effectful_term :
                                                                     ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (235))
+                                                                    (Prims.of_int (231))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (236))
-                                                                    (Prims.of_int (68)))
+                                                                    (Prims.of_int (232))
+                                                                    (Prims.of_int (68)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (233))
+                                                                    (Prims.of_int (229))
                                                                     (Prims.of_int (47))
-                                                                    (Prims.of_int (236))
-                                                                    (Prims.of_int (71)))
+                                                                    (Prims.of_int (243))
+                                                                    (Prims.of_int (30)))))
                                                                     (Obj.magic
                                                                     (FStar_InteractiveHelpers_Effectful.eterm_info_to_assertions
                                                                     dbg
@@ -2103,18 +2472,22 @@ let (analyze_effectful_term :
                                                                     ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (238))
+                                                                    (Prims.of_int (234))
                                                                     (Prims.of_int (16))
-                                                                    (Prims.of_int (238))
-                                                                    (Prims.of_int (71)))
+                                                                    (Prims.of_int (234))
+                                                                    (Prims.of_int (71)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (238))
+                                                                    (Prims.of_int (234))
                                                                     (Prims.of_int (74))
-                                                                    (Prims.of_int (240))
-                                                                    (Prims.of_int (89)))
+                                                                    (Prims.of_int (243))
+                                                                    (Prims.of_int (30)))))
                                                                     (Obj.magic
                                                                     (FStar_InteractiveHelpers_Propositions.simp_filter_assertions
                                                                     ge2.FStar_InteractiveHelpers_Base.env
@@ -2127,18 +2500,22 @@ let (analyze_effectful_term :
                                                                     ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (240))
+                                                                    (Prims.of_int (236))
                                                                     (Prims.of_int (21))
-                                                                    (Prims.of_int (240))
-                                                                    (Prims.of_int (86)))
+                                                                    (Prims.of_int (236))
+                                                                    (Prims.of_int (86)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (238))
+                                                                    (Prims.of_int (234))
                                                                     (Prims.of_int (74))
-                                                                    (Prims.of_int (240))
-                                                                    (Prims.of_int (89)))
+                                                                    (Prims.of_int (243))
+                                                                    (Prims.of_int (30)))))
                                                                     (Obj.magic
                                                                     (FStar_InteractiveHelpers_Output.subst_shadowed_with_abs_in_assertions
                                                                     dbg ge2
@@ -2156,18 +2533,22 @@ let (analyze_effectful_term :
                                                                     ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (239))
+                                                                    (Prims.of_int (4))
+                                                                    (Prims.of_int (240))
+                                                                    (Prims.of_int (70)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
                                                                     (Prims.of_int (243))
-                                                                    (Prims.of_int (4))
-                                                                    (Prims.of_int (244))
-                                                                    (Prims.of_int (70)))
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (247))
                                                                     (Prims.of_int (2))
-                                                                    (Prims.of_int (247))
-                                                                    (Prims.of_int (30)))
+                                                                    (Prims.of_int (243))
+                                                                    (Prims.of_int (30)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___5 ->
@@ -2208,32 +2589,44 @@ let (pp_analyze_effectful_term :
     fun with_gpre ->
       fun with_gpost ->
         fun uu___ ->
-          FStar_Tactics_Derived.try_with
+          FStar_Tactics_V1_Derived.try_with
             (fun uu___1 ->
                match () with
                | () ->
                    FStar_Tactics_Effect.tac_bind
-                     (FStar_Range.mk_range
-                        "FStar.InteractiveHelpers.PostProcess.fst"
-                        (Prims.of_int (253)) (Prims.of_int (14))
-                        (Prims.of_int (253)) (Prims.of_int (51)))
-                     (FStar_Range.mk_range
-                        "FStar.InteractiveHelpers.PostProcess.fst"
-                        (Prims.of_int (254)) (Prims.of_int (4))
-                        (Prims.of_int (255)) (Prims.of_int (16)))
+                     (FStar_Sealed.seal
+                        (Obj.magic
+                           (FStar_Range.mk_range
+                              "FStar.InteractiveHelpers.PostProcess.fst"
+                              (Prims.of_int (249)) (Prims.of_int (14))
+                              (Prims.of_int (249)) (Prims.of_int (51)))))
+                     (FStar_Sealed.seal
+                        (Obj.magic
+                           (FStar_Range.mk_range
+                              "FStar.InteractiveHelpers.PostProcess.fst"
+                              (Prims.of_int (250)) (Prims.of_int (4))
+                              (Prims.of_int (251)) (Prims.of_int (16)))))
                      (Obj.magic (find_focused_term_in_current_goal dbg))
                      (fun uu___2 ->
                         (fun res ->
                            Obj.magic
                              (FStar_Tactics_Effect.tac_bind
-                                (FStar_Range.mk_range
-                                   "FStar.InteractiveHelpers.PostProcess.fst"
-                                   (Prims.of_int (254)) (Prims.of_int (4))
-                                   (Prims.of_int (254)) (Prims.of_int (55)))
-                                (FStar_Range.mk_range
-                                   "FStar.InteractiveHelpers.PostProcess.fst"
-                                   (Prims.of_int (255)) (Prims.of_int (4))
-                                   (Prims.of_int (255)) (Prims.of_int (16)))
+                                (FStar_Sealed.seal
+                                   (Obj.magic
+                                      (FStar_Range.mk_range
+                                         "FStar.InteractiveHelpers.PostProcess.fst"
+                                         (Prims.of_int (250))
+                                         (Prims.of_int (4))
+                                         (Prims.of_int (250))
+                                         (Prims.of_int (55)))))
+                                (FStar_Sealed.seal
+                                   (Obj.magic
+                                      (FStar_Range.mk_range
+                                         "FStar.InteractiveHelpers.PostProcess.fst"
+                                         (Prims.of_int (251))
+                                         (Prims.of_int (4))
+                                         (Prims.of_int (251))
+                                         (Prims.of_int (16)))))
                                 (Obj.magic
                                    (analyze_effectful_term dbg with_gpre
                                       with_gpost res))
@@ -2247,14 +2640,22 @@ let (pp_analyze_effectful_term :
                       Obj.magic
                         (Obj.repr
                            (FStar_Tactics_Effect.tac_bind
-                              (FStar_Range.mk_range
-                                 "FStar.InteractiveHelpers.PostProcess.fst"
-                                 (Prims.of_int (256)) (Prims.of_int (29))
-                                 (Prims.of_int (256)) (Prims.of_int (49)))
-                              (FStar_Range.mk_range
-                                 "FStar.InteractiveHelpers.PostProcess.fst"
-                                 (Prims.of_int (256)) (Prims.of_int (51))
-                                 (Prims.of_int (256)) (Prims.of_int (63)))
+                              (FStar_Sealed.seal
+                                 (Obj.magic
+                                    (FStar_Range.mk_range
+                                       "FStar.InteractiveHelpers.PostProcess.fst"
+                                       (Prims.of_int (252))
+                                       (Prims.of_int (29))
+                                       (Prims.of_int (252))
+                                       (Prims.of_int (49)))))
+                              (FStar_Sealed.seal
+                                 (Obj.magic
+                                    (FStar_Range.mk_range
+                                       "FStar.InteractiveHelpers.PostProcess.fst"
+                                       (Prims.of_int (252))
+                                       (Prims.of_int (51))
+                                       (Prims.of_int (252))
+                                       (Prims.of_int (63)))))
                               (Obj.magic
                                  (FStar_InteractiveHelpers_Output.printout_failure
                                     msg))
@@ -2271,7 +2672,7 @@ let _ =
     (fun psc ->
        fun ncb ->
          fun args ->
-           FStar_Tactics_InterpFuns.mk_tactic_interpretation_4
+           FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_4
              (FStar_Tactics_Native.from_tactic_4 pp_analyze_effectful_term)
              FStar_Syntax_Embeddings.e_bool FStar_Syntax_Embeddings.e_bool
              FStar_Syntax_Embeddings.e_bool FStar_Syntax_Embeddings.e_unit
@@ -2282,34 +2683,43 @@ let (remove_b2t :
   =
   fun t ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
-         (Prims.of_int (272)) (Prims.of_int (8)) (Prims.of_int (272))
-         (Prims.of_int (17)))
-      (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
-         (Prims.of_int (272)) (Prims.of_int (2)) (Prims.of_int (279))
-         (Prims.of_int (10))) (Obj.magic (FStar_Tactics_Builtins.inspect t))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
+               (Prims.of_int (268)) (Prims.of_int (8)) (Prims.of_int (268))
+               (Prims.of_int (17)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
+               (Prims.of_int (268)) (Prims.of_int (2)) (Prims.of_int (275))
+               (Prims.of_int (10)))))
+      (Obj.magic (FStar_Tactics_V1_Builtins.inspect t))
       (fun uu___ ->
          (fun uu___ ->
             match uu___ with
-            | FStar_Reflection_Data.Tv_App
-                (hd, (a, FStar_Reflection_Data.Q_Explicit)) ->
+            | FStar_Reflection_V1_Data.Tv_App
+                (hd, (a, FStar_Reflection_V1_Data.Q_Explicit)) ->
                 Obj.magic
                   (Obj.repr
                      (FStar_Tactics_Effect.tac_bind
-                        (FStar_Range.mk_range
-                           "FStar.InteractiveHelpers.PostProcess.fst"
-                           (Prims.of_int (274)) (Prims.of_int (16))
-                           (Prims.of_int (274)) (Prims.of_int (26)))
-                        (FStar_Range.mk_range
-                           "FStar.InteractiveHelpers.PostProcess.fst"
-                           (Prims.of_int (274)) (Prims.of_int (10))
-                           (Prims.of_int (277)) (Prims.of_int (12)))
-                        (Obj.magic (FStar_Tactics_Builtins.inspect hd))
+                        (FStar_Sealed.seal
+                           (Obj.magic
+                              (FStar_Range.mk_range
+                                 "FStar.InteractiveHelpers.PostProcess.fst"
+                                 (Prims.of_int (270)) (Prims.of_int (16))
+                                 (Prims.of_int (270)) (Prims.of_int (26)))))
+                        (FStar_Sealed.seal
+                           (Obj.magic
+                              (FStar_Range.mk_range
+                                 "FStar.InteractiveHelpers.PostProcess.fst"
+                                 (Prims.of_int (270)) (Prims.of_int (10))
+                                 (Prims.of_int (273)) (Prims.of_int (12)))))
+                        (Obj.magic (FStar_Tactics_V1_Builtins.inspect hd))
                         (fun uu___1 ->
                            FStar_Tactics_Effect.lift_div_tac
                              (fun uu___2 ->
                                 match uu___1 with
-                                | FStar_Reflection_Data.Tv_FVar fv ->
+                                | FStar_Reflection_V1_Data.Tv_FVar fv ->
                                     if
                                       FStar_InteractiveHelpers_Base.fv_eq_name
                                         fv FStar_Reflection_Const.b2t_qn
@@ -2329,62 +2739,76 @@ let (is_conjunction :
   =
   fun t ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
-         (Prims.of_int (285)) (Prims.of_int (10)) (Prims.of_int (285))
-         (Prims.of_int (22)))
-      (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
-         (Prims.of_int (285)) (Prims.of_int (25)) (Prims.of_int (286))
-         (Prims.of_int (35))) (Obj.magic (remove_b2t t))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
+               (Prims.of_int (281)) (Prims.of_int (10)) (Prims.of_int (281))
+               (Prims.of_int (22)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
+               (Prims.of_int (281)) (Prims.of_int (25)) (Prims.of_int (292))
+               (Prims.of_int (13))))) (Obj.magic (remove_b2t t))
       (fun uu___ ->
          (fun t1 ->
             Obj.magic
               (FStar_Tactics_Effect.tac_bind
-                 (FStar_Range.mk_range
-                    "FStar.InteractiveHelpers.PostProcess.fst"
-                    (Prims.of_int (286)) (Prims.of_int (19))
-                    (Prims.of_int (286)) (Prims.of_int (32)))
-                 (FStar_Range.mk_range
-                    "FStar.InteractiveHelpers.PostProcess.fst"
-                    (Prims.of_int (285)) (Prims.of_int (25))
-                    (Prims.of_int (286)) (Prims.of_int (35)))
-                 (Obj.magic (FStar_Tactics_SyntaxHelpers.collect_app t1))
+                 (FStar_Sealed.seal
+                    (Obj.magic
+                       (FStar_Range.mk_range
+                          "FStar.InteractiveHelpers.PostProcess.fst"
+                          (Prims.of_int (282)) (Prims.of_int (19))
+                          (Prims.of_int (282)) (Prims.of_int (32)))))
+                 (FStar_Sealed.seal
+                    (Obj.magic
+                       (FStar_Range.mk_range
+                          "FStar.InteractiveHelpers.PostProcess.fst"
+                          (Prims.of_int (281)) (Prims.of_int (25))
+                          (Prims.of_int (292)) (Prims.of_int (13)))))
+                 (Obj.magic (FStar_Tactics_V1_SyntaxHelpers.collect_app t1))
                  (fun uu___ ->
                     (fun uu___ ->
                        match uu___ with
                        | (hd, params) ->
                            (match params with
-                            | (x, FStar_Reflection_Data.Q_Explicit)::
-                                (y, FStar_Reflection_Data.Q_Explicit)::[] ->
+                            | (x, FStar_Reflection_V1_Data.Q_Explicit)::
+                                (y, FStar_Reflection_V1_Data.Q_Explicit)::[]
+                                ->
                                 Obj.magic
                                   (Obj.repr
                                      (FStar_Tactics_Effect.tac_bind
-                                        (FStar_Range.mk_range
-                                           "FStar.InteractiveHelpers.PostProcess.fst"
-                                           (Prims.of_int (289))
-                                           (Prims.of_int (16))
-                                           (Prims.of_int (289))
-                                           (Prims.of_int (26)))
-                                        (FStar_Range.mk_range
-                                           "FStar.InteractiveHelpers.PostProcess.fst"
-                                           (Prims.of_int (289))
-                                           (Prims.of_int (10))
-                                           (Prims.of_int (294))
-                                           (Prims.of_int (15)))
+                                        (FStar_Sealed.seal
+                                           (Obj.magic
+                                              (FStar_Range.mk_range
+                                                 "FStar.InteractiveHelpers.PostProcess.fst"
+                                                 (Prims.of_int (285))
+                                                 (Prims.of_int (16))
+                                                 (Prims.of_int (285))
+                                                 (Prims.of_int (26)))))
+                                        (FStar_Sealed.seal
+                                           (Obj.magic
+                                              (FStar_Range.mk_range
+                                                 "FStar.InteractiveHelpers.PostProcess.fst"
+                                                 (Prims.of_int (285))
+                                                 (Prims.of_int (10))
+                                                 (Prims.of_int (290))
+                                                 (Prims.of_int (15)))))
                                         (Obj.magic
-                                           (FStar_Tactics_Builtins.inspect hd))
+                                           (FStar_Tactics_V1_Builtins.inspect
+                                              hd))
                                         (fun uu___1 ->
                                            FStar_Tactics_Effect.lift_div_tac
                                              (fun uu___2 ->
                                                 match uu___1 with
-                                                | FStar_Reflection_Data.Tv_FVar
+                                                | FStar_Reflection_V1_Data.Tv_FVar
                                                     fv ->
                                                     if
-                                                      ((FStar_Reflection_Builtins.inspect_fv
+                                                      ((FStar_Reflection_V1_Builtins.inspect_fv
                                                           fv)
                                                          =
                                                          FStar_Reflection_Const.and_qn)
                                                         ||
-                                                        ((FStar_Reflection_Builtins.inspect_fv
+                                                        ((FStar_Reflection_V1_Builtins.inspect_fv
                                                             fv)
                                                            =
                                                            ["Prims";
@@ -2412,12 +2836,18 @@ let rec (_split_conjunctions :
   fun ls ->
     fun t ->
       FStar_Tactics_Effect.tac_bind
-        (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
-           (Prims.of_int (301)) (Prims.of_int (8)) (Prims.of_int (301))
-           (Prims.of_int (24)))
-        (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
-           (Prims.of_int (301)) (Prims.of_int (2)) (Prims.of_int (306))
-           (Prims.of_int (7))) (Obj.magic (is_conjunction t))
+        (FStar_Sealed.seal
+           (Obj.magic
+              (FStar_Range.mk_range
+                 "FStar.InteractiveHelpers.PostProcess.fst"
+                 (Prims.of_int (297)) (Prims.of_int (8)) (Prims.of_int (297))
+                 (Prims.of_int (24)))))
+        (FStar_Sealed.seal
+           (Obj.magic
+              (FStar_Range.mk_range
+                 "FStar.InteractiveHelpers.PostProcess.fst"
+                 (Prims.of_int (297)) (Prims.of_int (2)) (Prims.of_int (302))
+                 (Prims.of_int (7))))) (Obj.magic (is_conjunction t))
         (fun uu___ ->
            (fun uu___ ->
               match uu___ with
@@ -2430,31 +2860,39 @@ let rec (_split_conjunctions :
                   Obj.magic
                     (Obj.repr
                        (FStar_Tactics_Effect.tac_bind
-                          (FStar_Range.mk_range
-                             "FStar.InteractiveHelpers.PostProcess.fst"
-                             (Prims.of_int (304)) (Prims.of_int (14))
-                             (Prims.of_int (304)) (Prims.of_int (38)))
-                          (FStar_Range.mk_range
-                             "FStar.InteractiveHelpers.PostProcess.fst"
-                             (Prims.of_int (304)) (Prims.of_int (41))
-                             (Prims.of_int (305)) (Prims.of_int (42)))
+                          (FStar_Sealed.seal
+                             (Obj.magic
+                                (FStar_Range.mk_range
+                                   "FStar.InteractiveHelpers.PostProcess.fst"
+                                   (Prims.of_int (300)) (Prims.of_int (14))
+                                   (Prims.of_int (300)) (Prims.of_int (38)))))
+                          (FStar_Sealed.seal
+                             (Obj.magic
+                                (FStar_Range.mk_range
+                                   "FStar.InteractiveHelpers.PostProcess.fst"
+                                   (Prims.of_int (300)) (Prims.of_int (41))
+                                   (Prims.of_int (302)) (Prims.of_int (7)))))
                           (Obj.magic (_split_conjunctions ls r))
                           (fun uu___1 ->
                              (fun ls1 ->
                                 Obj.magic
                                   (FStar_Tactics_Effect.tac_bind
-                                     (FStar_Range.mk_range
-                                        "FStar.InteractiveHelpers.PostProcess.fst"
-                                        (Prims.of_int (305))
-                                        (Prims.of_int (14))
-                                        (Prims.of_int (305))
-                                        (Prims.of_int (39)))
-                                     (FStar_Range.mk_range
-                                        "FStar.InteractiveHelpers.PostProcess.fst"
-                                        (Prims.of_int (305))
-                                        (Prims.of_int (8))
-                                        (Prims.of_int (305))
-                                        (Prims.of_int (11)))
+                                     (FStar_Sealed.seal
+                                        (Obj.magic
+                                           (FStar_Range.mk_range
+                                              "FStar.InteractiveHelpers.PostProcess.fst"
+                                              (Prims.of_int (301))
+                                              (Prims.of_int (14))
+                                              (Prims.of_int (301))
+                                              (Prims.of_int (39)))))
+                                     (FStar_Sealed.seal
+                                        (Obj.magic
+                                           (FStar_Range.mk_range
+                                              "FStar.InteractiveHelpers.PostProcess.fst"
+                                              (Prims.of_int (301))
+                                              (Prims.of_int (8))
+                                              (Prims.of_int (301))
+                                              (Prims.of_int (11)))))
                                      (Obj.magic (_split_conjunctions ls1 l))
                                      (fun ls2 ->
                                         FStar_Tactics_Effect.lift_div_tac
@@ -2474,43 +2912,65 @@ let (split_conjunctions_under_match :
   fun dbg ->
     fun t ->
       FStar_Tactics_Effect.tac_bind
-        (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
-           (Prims.of_int (320)) (Prims.of_int (11)) (Prims.of_int (320))
-           (Prims.of_int (23)))
-        (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
-           (Prims.of_int (321)) (Prims.of_int (2)) (Prims.of_int (328))
-           (Prims.of_int (7))) (Obj.magic (remove_b2t t))
+        (FStar_Sealed.seal
+           (Obj.magic
+              (FStar_Range.mk_range
+                 "FStar.InteractiveHelpers.PostProcess.fst"
+                 (Prims.of_int (316)) (Prims.of_int (11))
+                 (Prims.of_int (316)) (Prims.of_int (23)))))
+        (FStar_Sealed.seal
+           (Obj.magic
+              (FStar_Range.mk_range
+                 "FStar.InteractiveHelpers.PostProcess.fst"
+                 (Prims.of_int (317)) (Prims.of_int (2)) (Prims.of_int (324))
+                 (Prims.of_int (7))))) (Obj.magic (remove_b2t t))
         (fun uu___ ->
            (fun t1 ->
               Obj.magic
                 (FStar_Tactics_Effect.tac_bind
-                   (FStar_Range.mk_range
-                      "FStar.InteractiveHelpers.PostProcess.fst"
-                      (Prims.of_int (321)) (Prims.of_int (2))
-                      (Prims.of_int (321)) (Prims.of_int (75)))
-                   (FStar_Range.mk_range
-                      "FStar.InteractiveHelpers.PostProcess.fst"
-                      (Prims.of_int (322)) (Prims.of_int (2))
-                      (Prims.of_int (328)) (Prims.of_int (7)))
+                   (FStar_Sealed.seal
+                      (Obj.magic
+                         (FStar_Range.mk_range
+                            "FStar.InteractiveHelpers.PostProcess.fst"
+                            (Prims.of_int (317)) (Prims.of_int (2))
+                            (Prims.of_int (317)) (Prims.of_int (75)))))
+                   (FStar_Sealed.seal
+                      (Obj.magic
+                         (FStar_Range.mk_range
+                            "FStar.InteractiveHelpers.PostProcess.fst"
+                            (Prims.of_int (318)) (Prims.of_int (2))
+                            (Prims.of_int (324)) (Prims.of_int (7)))))
                    (Obj.magic
                       (FStar_Tactics_Effect.tac_bind
-                         (FStar_Range.mk_range
-                            "FStar.InteractiveHelpers.PostProcess.fst"
-                            (Prims.of_int (321)) (Prims.of_int (16))
-                            (Prims.of_int (321)) (Prims.of_int (75)))
-                         (FStar_Range.mk_range
-                            "FStar.InteractiveHelpers.PostProcess.fst"
-                            (Prims.of_int (321)) (Prims.of_int (2))
-                            (Prims.of_int (321)) (Prims.of_int (75)))
-                         (Obj.magic
-                            (FStar_Tactics_Effect.tac_bind
+                         (FStar_Sealed.seal
+                            (Obj.magic
                                (FStar_Range.mk_range
                                   "FStar.InteractiveHelpers.PostProcess.fst"
-                                  (Prims.of_int (321)) (Prims.of_int (57))
-                                  (Prims.of_int (321)) (Prims.of_int (74)))
-                               (FStar_Range.mk_range "prims.fst"
-                                  (Prims.of_int (590)) (Prims.of_int (19))
-                                  (Prims.of_int (590)) (Prims.of_int (31)))
+                                  (Prims.of_int (317)) (Prims.of_int (16))
+                                  (Prims.of_int (317)) (Prims.of_int (75)))))
+                         (FStar_Sealed.seal
+                            (Obj.magic
+                               (FStar_Range.mk_range
+                                  "FStar.InteractiveHelpers.PostProcess.fst"
+                                  (Prims.of_int (317)) (Prims.of_int (2))
+                                  (Prims.of_int (317)) (Prims.of_int (75)))))
+                         (Obj.magic
+                            (FStar_Tactics_Effect.tac_bind
+                               (FStar_Sealed.seal
+                                  (Obj.magic
+                                     (FStar_Range.mk_range
+                                        "FStar.InteractiveHelpers.PostProcess.fst"
+                                        (Prims.of_int (317))
+                                        (Prims.of_int (57))
+                                        (Prims.of_int (317))
+                                        (Prims.of_int (74)))))
+                               (FStar_Sealed.seal
+                                  (Obj.magic
+                                     (FStar_Range.mk_range "prims.fst"
+                                        (Prims.of_int (590))
+                                        (Prims.of_int (19))
+                                        (Prims.of_int (590))
+                                        (Prims.of_int (31)))))
                                (Obj.magic
                                   (FStar_InteractiveHelpers_Base.term_construct
                                      t1))
@@ -2529,35 +2989,48 @@ let (split_conjunctions_under_match :
                       (fun uu___ ->
                          Obj.magic
                            (FStar_Tactics_Effect.tac_bind
-                              (FStar_Range.mk_range
-                                 "FStar.InteractiveHelpers.PostProcess.fst"
-                                 (Prims.of_int (322)) (Prims.of_int (8))
-                                 (Prims.of_int (322)) (Prims.of_int (18)))
-                              (FStar_Range.mk_range
-                                 "FStar.InteractiveHelpers.PostProcess.fst"
-                                 (Prims.of_int (322)) (Prims.of_int (2))
-                                 (Prims.of_int (328)) (Prims.of_int (7)))
-                              (Obj.magic (FStar_Tactics_Builtins.inspect t1))
+                              (FStar_Sealed.seal
+                                 (Obj.magic
+                                    (FStar_Range.mk_range
+                                       "FStar.InteractiveHelpers.PostProcess.fst"
+                                       (Prims.of_int (318))
+                                       (Prims.of_int (8))
+                                       (Prims.of_int (318))
+                                       (Prims.of_int (18)))))
+                              (FStar_Sealed.seal
+                                 (Obj.magic
+                                    (FStar_Range.mk_range
+                                       "FStar.InteractiveHelpers.PostProcess.fst"
+                                       (Prims.of_int (318))
+                                       (Prims.of_int (2))
+                                       (Prims.of_int (324))
+                                       (Prims.of_int (7)))))
+                              (Obj.magic
+                                 (FStar_Tactics_V1_Builtins.inspect t1))
                               (fun uu___1 ->
                                  (fun uu___1 ->
                                     match uu___1 with
-                                    | FStar_Reflection_Data.Tv_Match
+                                    | FStar_Reflection_V1_Data.Tv_Match
                                         (scrut, ret_opt, (pat, br)::[]) ->
                                         Obj.magic
                                           (Obj.repr
                                              (FStar_Tactics_Effect.tac_bind
-                                                (FStar_Range.mk_range
-                                                   "FStar.InteractiveHelpers.PostProcess.fst"
-                                                   (Prims.of_int (324))
-                                                   (Prims.of_int (13))
-                                                   (Prims.of_int (324))
-                                                   (Prims.of_int (34)))
-                                                (FStar_Range.mk_range
-                                                   "FStar.InteractiveHelpers.PostProcess.fst"
-                                                   (Prims.of_int (325))
-                                                   (Prims.of_int (4))
-                                                   (Prims.of_int (325))
-                                                   (Prims.of_int (62)))
+                                                (FStar_Sealed.seal
+                                                   (Obj.magic
+                                                      (FStar_Range.mk_range
+                                                         "FStar.InteractiveHelpers.PostProcess.fst"
+                                                         (Prims.of_int (320))
+                                                         (Prims.of_int (13))
+                                                         (Prims.of_int (320))
+                                                         (Prims.of_int (34)))))
+                                                (FStar_Sealed.seal
+                                                   (Obj.magic
+                                                      (FStar_Range.mk_range
+                                                         "FStar.InteractiveHelpers.PostProcess.fst"
+                                                         (Prims.of_int (321))
+                                                         (Prims.of_int (4))
+                                                         (Prims.of_int (321))
+                                                         (Prims.of_int (62)))))
                                                 (Obj.magic
                                                    (split_conjunctions br))
                                                 (fun uu___2 ->
@@ -2565,8 +3038,8 @@ let (split_conjunctions_under_match :
                                                       Obj.magic
                                                         (FStar_Tactics_Util.map
                                                            (fun x ->
-                                                              FStar_Tactics_Builtins.pack
-                                                                (FStar_Reflection_Data.Tv_Match
+                                                              FStar_Tactics_V1_Builtins.pack
+                                                                (FStar_Reflection_V1_Data.Tv_Match
                                                                    (scrut,
                                                                     ret_opt,
                                                                     [
@@ -2586,27 +3059,37 @@ let (split_assert_conjs :
   fun dbg ->
     fun res ->
       FStar_Tactics_Effect.tac_bind
-        (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
-           (Prims.of_int (332)) (Prims.of_int (12)) (Prims.of_int (332))
-           (Prims.of_int (18)))
-        (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
-           (Prims.of_int (332)) (Prims.of_int (21)) (Prims.of_int (334))
-           (Prims.of_int (59)))
+        (FStar_Sealed.seal
+           (Obj.magic
+              (FStar_Range.mk_range
+                 "FStar.InteractiveHelpers.PostProcess.fst"
+                 (Prims.of_int (328)) (Prims.of_int (12))
+                 (Prims.of_int (328)) (Prims.of_int (18)))))
+        (FStar_Sealed.seal
+           (Obj.magic
+              (FStar_Range.mk_range
+                 "FStar.InteractiveHelpers.PostProcess.fst"
+                 (Prims.of_int (328)) (Prims.of_int (21))
+                 (Prims.of_int (343)) (Prims.of_int (30)))))
         (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> res.ge))
         (fun uu___ ->
            (fun ge0 ->
               Obj.magic
                 (FStar_Tactics_Effect.tac_bind
-                   (FStar_Range.mk_range
-                      "FStar.InteractiveHelpers.PostProcess.fst"
-                      (Prims.of_int (334)) (Prims.of_int (10))
-                      (Prims.of_int (334)) (Prims.of_int (56)))
-                   (FStar_Range.mk_range
-                      "FStar.InteractiveHelpers.PostProcess.fst"
-                      (Prims.of_int (334)) (Prims.of_int (59))
-                      (Prims.of_int (336)) (Prims.of_int (37)))
+                   (FStar_Sealed.seal
+                      (Obj.magic
+                         (FStar_Range.mk_range
+                            "FStar.InteractiveHelpers.PostProcess.fst"
+                            (Prims.of_int (330)) (Prims.of_int (10))
+                            (Prims.of_int (330)) (Prims.of_int (56)))))
+                   (FStar_Sealed.seal
+                      (Obj.magic
+                         (FStar_Range.mk_range
+                            "FStar.InteractiveHelpers.PostProcess.fst"
+                            (Prims.of_int (330)) (Prims.of_int (59))
+                            (Prims.of_int (343)) (Prims.of_int (30)))))
                    (Obj.magic
-                      (FStar_Tactics_Builtins.norm_term_env
+                      (FStar_Tactics_V1_Builtins.norm_term_env
                          ge0.FStar_InteractiveHelpers_Base.env
                          FStar_InteractiveHelpers_Propositions.simpl_norm_steps
                          res.res))
@@ -2614,31 +3097,43 @@ let (split_assert_conjs :
                       (fun t ->
                          Obj.magic
                            (FStar_Tactics_Effect.tac_bind
-                              (FStar_Range.mk_range
-                                 "FStar.InteractiveHelpers.PostProcess.fst"
-                                 (Prims.of_int (336)) (Prims.of_int (14))
-                                 (Prims.of_int (336)) (Prims.of_int (34)))
-                              (FStar_Range.mk_range
-                                 "FStar.InteractiveHelpers.PostProcess.fst"
-                                 (Prims.of_int (336)) (Prims.of_int (37))
-                                 (Prims.of_int (344)) (Prims.of_int (4)))
+                              (FStar_Sealed.seal
+                                 (Obj.magic
+                                    (FStar_Range.mk_range
+                                       "FStar.InteractiveHelpers.PostProcess.fst"
+                                       (Prims.of_int (332))
+                                       (Prims.of_int (14))
+                                       (Prims.of_int (332))
+                                       (Prims.of_int (34)))))
+                              (FStar_Sealed.seal
+                                 (Obj.magic
+                                    (FStar_Range.mk_range
+                                       "FStar.InteractiveHelpers.PostProcess.fst"
+                                       (Prims.of_int (332))
+                                       (Prims.of_int (37))
+                                       (Prims.of_int (343))
+                                       (Prims.of_int (30)))))
                               (Obj.magic (split_conjunctions t))
                               (fun uu___ ->
                                  (fun conjs ->
                                     Obj.magic
                                       (FStar_Tactics_Effect.tac_bind
-                                         (FStar_Range.mk_range
-                                            "FStar.InteractiveHelpers.PostProcess.fst"
-                                            (Prims.of_int (342))
-                                            (Prims.of_int (4))
-                                            (Prims.of_int (343))
-                                            (Prims.of_int (14)))
-                                         (FStar_Range.mk_range
-                                            "FStar.InteractiveHelpers.PostProcess.fst"
-                                            (Prims.of_int (344))
-                                            (Prims.of_int (4))
-                                            (Prims.of_int (345))
-                                            (Prims.of_int (41)))
+                                         (FStar_Sealed.seal
+                                            (Obj.magic
+                                               (FStar_Range.mk_range
+                                                  "FStar.InteractiveHelpers.PostProcess.fst"
+                                                  (Prims.of_int (338))
+                                                  (Prims.of_int (4))
+                                                  (Prims.of_int (339))
+                                                  (Prims.of_int (14)))))
+                                         (FStar_Sealed.seal
+                                            (Obj.magic
+                                               (FStar_Range.mk_range
+                                                  "FStar.InteractiveHelpers.PostProcess.fst"
+                                                  (Prims.of_int (340))
+                                                  (Prims.of_int (4))
+                                                  (Prims.of_int (343))
+                                                  (Prims.of_int (30)))))
                                          (if
                                             (FStar_List_Tot_Base.length conjs)
                                               = Prims.int_one
@@ -2656,18 +3151,22 @@ let (split_assert_conjs :
                                             (fun conjs1 ->
                                                Obj.magic
                                                  (FStar_Tactics_Effect.tac_bind
-                                                    (FStar_Range.mk_range
-                                                       "FStar.InteractiveHelpers.PostProcess.fst"
-                                                       (Prims.of_int (345))
-                                                       (Prims.of_int (16))
-                                                       (Prims.of_int (345))
-                                                       (Prims.of_int (38)))
-                                                    (FStar_Range.mk_range
-                                                       "FStar.InteractiveHelpers.PostProcess.fst"
-                                                       (Prims.of_int (347))
-                                                       (Prims.of_int (2))
-                                                       (Prims.of_int (347))
-                                                       (Prims.of_int (30)))
+                                                    (FStar_Sealed.seal
+                                                       (Obj.magic
+                                                          (FStar_Range.mk_range
+                                                             "FStar.InteractiveHelpers.PostProcess.fst"
+                                                             (Prims.of_int (341))
+                                                             (Prims.of_int (16))
+                                                             (Prims.of_int (341))
+                                                             (Prims.of_int (38)))))
+                                                    (FStar_Sealed.seal
+                                                       (Obj.magic
+                                                          (FStar_Range.mk_range
+                                                             "FStar.InteractiveHelpers.PostProcess.fst"
+                                                             (Prims.of_int (343))
+                                                             (Prims.of_int (2))
+                                                             (Prims.of_int (343))
+                                                             (Prims.of_int (30)))))
                                                     (FStar_Tactics_Effect.lift_div_tac
                                                        (fun uu___ ->
                                                           FStar_InteractiveHelpers_Propositions.mk_assertions
@@ -2683,32 +3182,40 @@ let (pp_split_assert_conjs :
   Prims.bool -> unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun dbg ->
     fun uu___ ->
-      FStar_Tactics_Derived.try_with
+      FStar_Tactics_V1_Derived.try_with
         (fun uu___1 ->
            match () with
            | () ->
                FStar_Tactics_Effect.tac_bind
-                 (FStar_Range.mk_range
-                    "FStar.InteractiveHelpers.PostProcess.fst"
-                    (Prims.of_int (353)) (Prims.of_int (14))
-                    (Prims.of_int (353)) (Prims.of_int (53)))
-                 (FStar_Range.mk_range
-                    "FStar.InteractiveHelpers.PostProcess.fst"
-                    (Prims.of_int (354)) (Prims.of_int (4))
-                    (Prims.of_int (355)) (Prims.of_int (16)))
+                 (FStar_Sealed.seal
+                    (Obj.magic
+                       (FStar_Range.mk_range
+                          "FStar.InteractiveHelpers.PostProcess.fst"
+                          (Prims.of_int (349)) (Prims.of_int (14))
+                          (Prims.of_int (349)) (Prims.of_int (53)))))
+                 (FStar_Sealed.seal
+                    (Obj.magic
+                       (FStar_Range.mk_range
+                          "FStar.InteractiveHelpers.PostProcess.fst"
+                          (Prims.of_int (350)) (Prims.of_int (4))
+                          (Prims.of_int (351)) (Prims.of_int (16)))))
                  (Obj.magic (find_focused_assert_in_current_goal dbg))
                  (fun uu___2 ->
                     (fun res ->
                        Obj.magic
                          (FStar_Tactics_Effect.tac_bind
-                            (FStar_Range.mk_range
-                               "FStar.InteractiveHelpers.PostProcess.fst"
-                               (Prims.of_int (354)) (Prims.of_int (4))
-                               (Prims.of_int (354)) (Prims.of_int (30)))
-                            (FStar_Range.mk_range
-                               "FStar.InteractiveHelpers.PostProcess.fst"
-                               (Prims.of_int (355)) (Prims.of_int (4))
-                               (Prims.of_int (355)) (Prims.of_int (16)))
+                            (FStar_Sealed.seal
+                               (Obj.magic
+                                  (FStar_Range.mk_range
+                                     "FStar.InteractiveHelpers.PostProcess.fst"
+                                     (Prims.of_int (350)) (Prims.of_int (4))
+                                     (Prims.of_int (350)) (Prims.of_int (30)))))
+                            (FStar_Sealed.seal
+                               (Obj.magic
+                                  (FStar_Range.mk_range
+                                     "FStar.InteractiveHelpers.PostProcess.fst"
+                                     (Prims.of_int (351)) (Prims.of_int (4))
+                                     (Prims.of_int (351)) (Prims.of_int (16)))))
                             (Obj.magic (split_assert_conjs dbg res))
                             (fun uu___2 ->
                                (fun uu___2 -> Obj.magic (end_proof ()))
@@ -2720,14 +3227,18 @@ let (pp_split_assert_conjs :
                   Obj.magic
                     (Obj.repr
                        (FStar_Tactics_Effect.tac_bind
-                          (FStar_Range.mk_range
-                             "FStar.InteractiveHelpers.PostProcess.fst"
-                             (Prims.of_int (356)) (Prims.of_int (29))
-                             (Prims.of_int (356)) (Prims.of_int (49)))
-                          (FStar_Range.mk_range
-                             "FStar.InteractiveHelpers.PostProcess.fst"
-                             (Prims.of_int (356)) (Prims.of_int (51))
-                             (Prims.of_int (356)) (Prims.of_int (63)))
+                          (FStar_Sealed.seal
+                             (Obj.magic
+                                (FStar_Range.mk_range
+                                   "FStar.InteractiveHelpers.PostProcess.fst"
+                                   (Prims.of_int (352)) (Prims.of_int (29))
+                                   (Prims.of_int (352)) (Prims.of_int (49)))))
+                          (FStar_Sealed.seal
+                             (Obj.magic
+                                (FStar_Range.mk_range
+                                   "FStar.InteractiveHelpers.PostProcess.fst"
+                                   (Prims.of_int (352)) (Prims.of_int (51))
+                                   (Prims.of_int (352)) (Prims.of_int (63)))))
                           (Obj.magic
                              (FStar_InteractiveHelpers_Output.printout_failure
                                 msg))
@@ -2742,7 +3253,7 @@ let _ =
     (fun psc ->
        fun ncb ->
          fun args ->
-           FStar_Tactics_InterpFuns.mk_tactic_interpretation_2
+           FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_2
              (FStar_Tactics_Native.from_tactic_2 pp_split_assert_conjs)
              FStar_Syntax_Embeddings.e_bool FStar_Syntax_Embeddings.e_unit
              FStar_Syntax_Embeddings.e_unit psc ncb args)
@@ -2776,45 +3287,68 @@ let (is_eq :
   fun dbg ->
     fun t ->
       FStar_Tactics_Effect.tac_bind
-        (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
-           (Prims.of_int (377)) (Prims.of_int (10)) (Prims.of_int (377))
-           (Prims.of_int (22)))
-        (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
-           (Prims.of_int (378)) (Prims.of_int (2)) (Prims.of_int (397))
-           (Prims.of_int (13))) (Obj.magic (remove_b2t t))
+        (FStar_Sealed.seal
+           (Obj.magic
+              (FStar_Range.mk_range
+                 "FStar.InteractiveHelpers.PostProcess.fst"
+                 (Prims.of_int (373)) (Prims.of_int (10))
+                 (Prims.of_int (373)) (Prims.of_int (22)))))
+        (FStar_Sealed.seal
+           (Obj.magic
+              (FStar_Range.mk_range
+                 "FStar.InteractiveHelpers.PostProcess.fst"
+                 (Prims.of_int (374)) (Prims.of_int (2)) (Prims.of_int (393))
+                 (Prims.of_int (13))))) (Obj.magic (remove_b2t t))
         (fun uu___ ->
            (fun t1 ->
               Obj.magic
                 (FStar_Tactics_Effect.tac_bind
-                   (FStar_Range.mk_range
-                      "FStar.InteractiveHelpers.PostProcess.fst"
-                      (Prims.of_int (378)) (Prims.of_int (2))
-                      (Prims.of_int (378)) (Prims.of_int (49)))
-                   (FStar_Range.mk_range
-                      "FStar.InteractiveHelpers.PostProcess.fst"
-                      (Prims.of_int (378)) (Prims.of_int (50))
-                      (Prims.of_int (379)) (Prims.of_int (35)))
+                   (FStar_Sealed.seal
+                      (Obj.magic
+                         (FStar_Range.mk_range
+                            "FStar.InteractiveHelpers.PostProcess.fst"
+                            (Prims.of_int (374)) (Prims.of_int (2))
+                            (Prims.of_int (374)) (Prims.of_int (49)))))
+                   (FStar_Sealed.seal
+                      (Obj.magic
+                         (FStar_Range.mk_range
+                            "FStar.InteractiveHelpers.PostProcess.fst"
+                            (Prims.of_int (374)) (Prims.of_int (50))
+                            (Prims.of_int (393)) (Prims.of_int (13)))))
                    (Obj.magic
                       (FStar_Tactics_Effect.tac_bind
-                         (FStar_Range.mk_range
-                            "FStar.InteractiveHelpers.PostProcess.fst"
-                            (Prims.of_int (378)) (Prims.of_int (16))
-                            (Prims.of_int (378)) (Prims.of_int (49)))
-                         (FStar_Range.mk_range
-                            "FStar.InteractiveHelpers.PostProcess.fst"
-                            (Prims.of_int (378)) (Prims.of_int (2))
-                            (Prims.of_int (378)) (Prims.of_int (49)))
-                         (Obj.magic
-                            (FStar_Tactics_Effect.tac_bind
+                         (FStar_Sealed.seal
+                            (Obj.magic
                                (FStar_Range.mk_range
                                   "FStar.InteractiveHelpers.PostProcess.fst"
-                                  (Prims.of_int (378)) (Prims.of_int (32))
-                                  (Prims.of_int (378)) (Prims.of_int (48)))
-                               (FStar_Range.mk_range "prims.fst"
-                                  (Prims.of_int (590)) (Prims.of_int (19))
-                                  (Prims.of_int (590)) (Prims.of_int (31)))
+                                  (Prims.of_int (374)) (Prims.of_int (16))
+                                  (Prims.of_int (374)) (Prims.of_int (49)))))
+                         (FStar_Sealed.seal
+                            (Obj.magic
+                               (FStar_Range.mk_range
+                                  "FStar.InteractiveHelpers.PostProcess.fst"
+                                  (Prims.of_int (374)) (Prims.of_int (2))
+                                  (Prims.of_int (374)) (Prims.of_int (49)))))
+                         (Obj.magic
+                            (FStar_Tactics_Effect.tac_bind
+                               (FStar_Sealed.seal
+                                  (Obj.magic
+                                     (FStar_Range.mk_range
+                                        "FStar.InteractiveHelpers.PostProcess.fst"
+                                        (Prims.of_int (374))
+                                        (Prims.of_int (32))
+                                        (Prims.of_int (374))
+                                        (Prims.of_int (48)))))
+                               (FStar_Sealed.seal
+                                  (Obj.magic
+                                     (FStar_Range.mk_range "prims.fst"
+                                        (Prims.of_int (590))
+                                        (Prims.of_int (19))
+                                        (Prims.of_int (590))
+                                        (Prims.of_int (31)))))
                                (Obj.magic
-                                  (FStar_Tactics_Builtins.term_to_string t1))
+                                  (FStar_Tactics_V1_Builtins.term_to_string
+                                     t1))
                                (fun uu___ ->
                                   FStar_Tactics_Effect.lift_div_tac
                                     (fun uu___1 ->
@@ -2828,64 +3362,85 @@ let (is_eq :
                       (fun uu___ ->
                          Obj.magic
                            (FStar_Tactics_Effect.tac_bind
-                              (FStar_Range.mk_range
-                                 "FStar.InteractiveHelpers.PostProcess.fst"
-                                 (Prims.of_int (379)) (Prims.of_int (19))
-                                 (Prims.of_int (379)) (Prims.of_int (32)))
-                              (FStar_Range.mk_range
-                                 "FStar.InteractiveHelpers.PostProcess.fst"
-                                 (Prims.of_int (378)) (Prims.of_int (50))
-                                 (Prims.of_int (379)) (Prims.of_int (35)))
+                              (FStar_Sealed.seal
+                                 (Obj.magic
+                                    (FStar_Range.mk_range
+                                       "FStar.InteractiveHelpers.PostProcess.fst"
+                                       (Prims.of_int (375))
+                                       (Prims.of_int (19))
+                                       (Prims.of_int (375))
+                                       (Prims.of_int (32)))))
+                              (FStar_Sealed.seal
+                                 (Obj.magic
+                                    (FStar_Range.mk_range
+                                       "FStar.InteractiveHelpers.PostProcess.fst"
+                                       (Prims.of_int (374))
+                                       (Prims.of_int (50))
+                                       (Prims.of_int (393))
+                                       (Prims.of_int (13)))))
                               (Obj.magic
-                                 (FStar_Tactics_SyntaxHelpers.collect_app t1))
+                                 (FStar_Tactics_V1_SyntaxHelpers.collect_app
+                                    t1))
                               (fun uu___1 ->
                                  (fun uu___1 ->
                                     match uu___1 with
                                     | (hd, params) ->
                                         Obj.magic
                                           (FStar_Tactics_Effect.tac_bind
-                                             (FStar_Range.mk_range
-                                                "FStar.InteractiveHelpers.PostProcess.fst"
-                                                (Prims.of_int (380))
-                                                (Prims.of_int (2))
-                                                (Prims.of_int (380))
-                                                (Prims.of_int (47)))
-                                             (FStar_Range.mk_range
-                                                "FStar.InteractiveHelpers.PostProcess.fst"
-                                                (Prims.of_int (381))
-                                                (Prims.of_int (2))
-                                                (Prims.of_int (397))
-                                                (Prims.of_int (13)))
+                                             (FStar_Sealed.seal
+                                                (Obj.magic
+                                                   (FStar_Range.mk_range
+                                                      "FStar.InteractiveHelpers.PostProcess.fst"
+                                                      (Prims.of_int (376))
+                                                      (Prims.of_int (2))
+                                                      (Prims.of_int (376))
+                                                      (Prims.of_int (47)))))
+                                             (FStar_Sealed.seal
+                                                (Obj.magic
+                                                   (FStar_Range.mk_range
+                                                      "FStar.InteractiveHelpers.PostProcess.fst"
+                                                      (Prims.of_int (377))
+                                                      (Prims.of_int (2))
+                                                      (Prims.of_int (393))
+                                                      (Prims.of_int (13)))))
                                              (Obj.magic
                                                 (FStar_Tactics_Effect.tac_bind
-                                                   (FStar_Range.mk_range
-                                                      "FStar.InteractiveHelpers.PostProcess.fst"
-                                                      (Prims.of_int (380))
-                                                      (Prims.of_int (16))
-                                                      (Prims.of_int (380))
-                                                      (Prims.of_int (47)))
-                                                   (FStar_Range.mk_range
-                                                      "FStar.InteractiveHelpers.PostProcess.fst"
-                                                      (Prims.of_int (380))
-                                                      (Prims.of_int (2))
-                                                      (Prims.of_int (380))
-                                                      (Prims.of_int (47)))
-                                                   (Obj.magic
-                                                      (FStar_Tactics_Effect.tac_bind
+                                                   (FStar_Sealed.seal
+                                                      (Obj.magic
                                                          (FStar_Range.mk_range
                                                             "FStar.InteractiveHelpers.PostProcess.fst"
-                                                            (Prims.of_int (380))
-                                                            (Prims.of_int (29))
-                                                            (Prims.of_int (380))
-                                                            (Prims.of_int (46)))
+                                                            (Prims.of_int (376))
+                                                            (Prims.of_int (16))
+                                                            (Prims.of_int (376))
+                                                            (Prims.of_int (47)))))
+                                                   (FStar_Sealed.seal
+                                                      (Obj.magic
                                                          (FStar_Range.mk_range
-                                                            "prims.fst"
-                                                            (Prims.of_int (590))
-                                                            (Prims.of_int (19))
-                                                            (Prims.of_int (590))
-                                                            (Prims.of_int (31)))
+                                                            "FStar.InteractiveHelpers.PostProcess.fst"
+                                                            (Prims.of_int (376))
+                                                            (Prims.of_int (2))
+                                                            (Prims.of_int (376))
+                                                            (Prims.of_int (47)))))
+                                                   (Obj.magic
+                                                      (FStar_Tactics_Effect.tac_bind
+                                                         (FStar_Sealed.seal
+                                                            (Obj.magic
+                                                               (FStar_Range.mk_range
+                                                                  "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                  (Prims.of_int (376))
+                                                                  (Prims.of_int (29))
+                                                                  (Prims.of_int (376))
+                                                                  (Prims.of_int (46)))))
+                                                         (FStar_Sealed.seal
+                                                            (Obj.magic
+                                                               (FStar_Range.mk_range
+                                                                  "prims.fst"
+                                                                  (Prims.of_int (590))
+                                                                  (Prims.of_int (19))
+                                                                  (Prims.of_int (590))
+                                                                  (Prims.of_int (31)))))
                                                          (Obj.magic
-                                                            (FStar_Tactics_Builtins.term_to_string
+                                                            (FStar_Tactics_V1_Builtins.term_to_string
                                                                hd))
                                                          (fun uu___2 ->
                                                             FStar_Tactics_Effect.lift_div_tac
@@ -2903,48 +3458,62 @@ let (is_eq :
                                                 (fun uu___2 ->
                                                    Obj.magic
                                                      (FStar_Tactics_Effect.tac_bind
-                                                        (FStar_Range.mk_range
-                                                           "FStar.InteractiveHelpers.PostProcess.fst"
-                                                           (Prims.of_int (381))
-                                                           (Prims.of_int (2))
-                                                           (Prims.of_int (381))
-                                                           (Prims.of_int (92)))
-                                                        (FStar_Range.mk_range
-                                                           "FStar.InteractiveHelpers.PostProcess.fst"
-                                                           (Prims.of_int (382))
-                                                           (Prims.of_int (2))
-                                                           (Prims.of_int (397))
-                                                           (Prims.of_int (13)))
+                                                        (FStar_Sealed.seal
+                                                           (Obj.magic
+                                                              (FStar_Range.mk_range
+                                                                 "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                 (Prims.of_int (377))
+                                                                 (Prims.of_int (2))
+                                                                 (Prims.of_int (377))
+                                                                 (Prims.of_int (92)))))
+                                                        (FStar_Sealed.seal
+                                                           (Obj.magic
+                                                              (FStar_Range.mk_range
+                                                                 "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                 (Prims.of_int (378))
+                                                                 (Prims.of_int (2))
+                                                                 (Prims.of_int (393))
+                                                                 (Prims.of_int (13)))))
                                                         (Obj.magic
                                                            (FStar_Tactics_Effect.tac_bind
-                                                              (FStar_Range.mk_range
-                                                                 "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                 (Prims.of_int (381))
-                                                                 (Prims.of_int (16))
-                                                                 (Prims.of_int (381))
-                                                                 (Prims.of_int (92)))
-                                                              (FStar_Range.mk_range
-                                                                 "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                 (Prims.of_int (381))
-                                                                 (Prims.of_int (2))
-                                                                 (Prims.of_int (381))
-                                                                 (Prims.of_int (92)))
-                                                              (Obj.magic
-                                                                 (FStar_Tactics_Effect.tac_bind
+                                                              (FStar_Sealed.seal
+                                                                 (Obj.magic
                                                                     (
                                                                     FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (381))
-                                                                    (Prims.of_int (37))
-                                                                    (Prims.of_int (381))
-                                                                    (Prims.of_int (91)))
+                                                                    (Prims.of_int (377))
+                                                                    (Prims.of_int (16))
+                                                                    (Prims.of_int (377))
+                                                                    (Prims.of_int (92)))))
+                                                              (FStar_Sealed.seal
+                                                                 (Obj.magic
                                                                     (
                                                                     FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (377))
+                                                                    (Prims.of_int (2))
+                                                                    (Prims.of_int (377))
+                                                                    (Prims.of_int (92)))))
+                                                              (Obj.magic
+                                                                 (FStar_Tactics_Effect.tac_bind
+                                                                    (
+                                                                    FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (377))
+                                                                    (Prims.of_int (37))
+                                                                    (Prims.of_int (377))
+                                                                    (Prims.of_int (91)))))
+                                                                    (
+                                                                    FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (
                                                                     Obj.magic
                                                                     (FStar_InteractiveHelpers_Base.list_to_string
@@ -2954,7 +3523,7 @@ let (is_eq :
                                                                     with
                                                                     | 
                                                                     (x, y) ->
-                                                                    FStar_Tactics_Builtins.term_to_string
+                                                                    FStar_Tactics_V1_Builtins.term_to_string
                                                                     x) params))
                                                                     (
                                                                     fun
@@ -2977,20 +3546,24 @@ let (is_eq :
                                                            (fun uu___3 ->
                                                               Obj.magic
                                                                 (FStar_Tactics_Effect.tac_bind
-                                                                   (FStar_Range.mk_range
+                                                                   (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (382))
+                                                                    (Prims.of_int (378))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (382))
-                                                                    (Prims.of_int (18)))
-                                                                   (FStar_Range.mk_range
+                                                                    (Prims.of_int (378))
+                                                                    (Prims.of_int (18)))))
+                                                                   (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (382))
+                                                                    (Prims.of_int (378))
                                                                     (Prims.of_int (2))
-                                                                    (Prims.of_int (397))
-                                                                    (Prims.of_int (13)))
+                                                                    (Prims.of_int (393))
+                                                                    (Prims.of_int (13)))))
                                                                    (Obj.magic
-                                                                    (FStar_Tactics_Builtins.inspect
+                                                                    (FStar_Tactics_V1_Builtins.inspect
                                                                     hd))
                                                                    (fun
                                                                     uu___4 ->
@@ -3000,20 +3573,20 @@ let (is_eq :
                                                                     match uu___4
                                                                     with
                                                                     | 
-                                                                    FStar_Reflection_Data.Tv_FVar
+                                                                    FStar_Reflection_V1_Data.Tv_FVar
                                                                     fv ->
                                                                     (match params
                                                                     with
                                                                     | 
                                                                     (a,
-                                                                    FStar_Reflection_Data.Q_Implicit)::
+                                                                    FStar_Reflection_V1_Data.Q_Implicit)::
                                                                     (x,
-                                                                    FStar_Reflection_Data.Q_Explicit)::
+                                                                    FStar_Reflection_V1_Data.Q_Explicit)::
                                                                     (y,
-                                                                    FStar_Reflection_Data.Q_Explicit)::[]
+                                                                    FStar_Reflection_V1_Data.Q_Explicit)::[]
                                                                     ->
                                                                     if
-                                                                    FStar_Reflection_Derived.is_any_fvar
+                                                                    FStar_Reflection_V1_Derived.is_any_fvar
                                                                     a
                                                                     ["Prims.op_Equality";
                                                                     "Prims.equals";
@@ -3024,7 +3597,7 @@ let (is_eq :
                                                                     a), x, y)
                                                                     else
                                                                     if
-                                                                    FStar_Reflection_Derived.is_any_fvar
+                                                                    FStar_Reflection_V1_Derived.is_any_fvar
                                                                     a
                                                                     ["Prims.eq2";
                                                                     "Prims.op_Equals_Equals"]
@@ -3036,16 +3609,16 @@ let (is_eq :
                                                                     FStar_Pervasives_Native.None
                                                                     | 
                                                                     (a,
-                                                                    FStar_Reflection_Data.Q_Implicit)::
+                                                                    FStar_Reflection_V1_Data.Q_Implicit)::
                                                                     (b,
-                                                                    FStar_Reflection_Data.Q_Implicit)::
+                                                                    FStar_Reflection_V1_Data.Q_Implicit)::
                                                                     (x,
-                                                                    FStar_Reflection_Data.Q_Explicit)::
+                                                                    FStar_Reflection_V1_Data.Q_Explicit)::
                                                                     (y,
-                                                                    FStar_Reflection_Data.Q_Explicit)::[]
+                                                                    FStar_Reflection_V1_Data.Q_Explicit)::[]
                                                                     ->
                                                                     if
-                                                                    FStar_Reflection_Derived.is_fvar
+                                                                    FStar_Reflection_V1_Derived.is_fvar
                                                                     a
                                                                     "Prims.op_Equals_Equals_Equals"
                                                                     then
@@ -3073,34 +3646,34 @@ let (mk_eq :
       fun t2 ->
         match k with
         | Eq_Dec ty ->
-            FStar_Reflection_Derived.mk_app
-              (FStar_Reflection_Builtins.pack_ln
-                 (FStar_Reflection_Data.Tv_FVar
-                    (FStar_Reflection_Builtins.pack_fv
+            FStar_Reflection_V1_Derived.mk_app
+              (FStar_Reflection_V2_Builtins.pack_ln
+                 (FStar_Reflection_V2_Data.Tv_FVar
+                    (FStar_Reflection_V2_Builtins.pack_fv
                        ["Prims"; "op_Equality"])))
-              [(ty, FStar_Reflection_Data.Q_Implicit);
-              (t1, FStar_Reflection_Data.Q_Explicit);
-              (t2, FStar_Reflection_Data.Q_Explicit)]
+              [(ty, FStar_Reflection_V1_Data.Q_Implicit);
+              (t1, FStar_Reflection_V1_Data.Q_Explicit);
+              (t2, FStar_Reflection_V1_Data.Q_Explicit)]
         | Eq_Undec ty ->
-            FStar_Reflection_Derived.mk_app
-              (FStar_Reflection_Builtins.pack_ln
-                 (FStar_Reflection_Data.Tv_FVar
-                    (FStar_Reflection_Builtins.pack_fv ["Prims"; "eq2"])))
-              [(ty, FStar_Reflection_Data.Q_Implicit);
-              (t1, FStar_Reflection_Data.Q_Explicit);
-              (t2, FStar_Reflection_Data.Q_Explicit)]
+            FStar_Reflection_V1_Derived.mk_app
+              (FStar_Reflection_V2_Builtins.pack_ln
+                 (FStar_Reflection_V2_Data.Tv_FVar
+                    (FStar_Reflection_V2_Builtins.pack_fv ["Prims"; "eq2"])))
+              [(ty, FStar_Reflection_V1_Data.Q_Implicit);
+              (t1, FStar_Reflection_V1_Data.Q_Explicit);
+              (t2, FStar_Reflection_V1_Data.Q_Explicit)]
         | Eq_Hetero (ty1, ty2) ->
-            FStar_Reflection_Derived.mk_app
-              (FStar_Reflection_Builtins.pack_ln
-                 (FStar_Reflection_Data.Tv_FVar
-                    (FStar_Reflection_Builtins.pack_fv
+            FStar_Reflection_V1_Derived.mk_app
+              (FStar_Reflection_V2_Builtins.pack_ln
+                 (FStar_Reflection_V2_Data.Tv_FVar
+                    (FStar_Reflection_V2_Builtins.pack_fv
                        ["Prims"; "op_Equals_Equals_Equals"])))
-              [(ty1, FStar_Reflection_Data.Q_Implicit);
-              (ty2, FStar_Reflection_Data.Q_Implicit);
-              (t1, FStar_Reflection_Data.Q_Explicit);
-              (t2, FStar_Reflection_Data.Q_Explicit)]
+              [(ty1, FStar_Reflection_V1_Data.Q_Implicit);
+              (ty2, FStar_Reflection_V1_Data.Q_Implicit);
+              (t1, FStar_Reflection_V1_Data.Q_Explicit);
+              (t2, FStar_Reflection_V1_Data.Q_Explicit)]
 let (formula_construct :
-  FStar_Reflection_Formula.formula ->
+  FStar_Reflection_V1_Formula.formula ->
     (Prims.string, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun uu___ ->
@@ -3109,25 +3682,26 @@ let (formula_construct :
          (FStar_Tactics_Effect.lift_div_tac
             (fun uu___ ->
                match f with
-               | FStar_Reflection_Formula.True_ -> "True_"
-               | FStar_Reflection_Formula.False_ -> "False_"
-               | FStar_Reflection_Formula.Comp (uu___1, uu___2, uu___3) ->
+               | FStar_Reflection_V1_Formula.True_ -> "True_"
+               | FStar_Reflection_V1_Formula.False_ -> "False_"
+               | FStar_Reflection_V1_Formula.Comp (uu___1, uu___2, uu___3) ->
                    "Comp"
-               | FStar_Reflection_Formula.And (uu___1, uu___2) -> "And"
-               | FStar_Reflection_Formula.Or (uu___1, uu___2) -> "Or"
-               | FStar_Reflection_Formula.Not uu___1 -> "Not"
-               | FStar_Reflection_Formula.Implies (uu___1, uu___2) ->
+               | FStar_Reflection_V1_Formula.And (uu___1, uu___2) -> "And"
+               | FStar_Reflection_V1_Formula.Or (uu___1, uu___2) -> "Or"
+               | FStar_Reflection_V1_Formula.Not uu___1 -> "Not"
+               | FStar_Reflection_V1_Formula.Implies (uu___1, uu___2) ->
                    "Implies"
-               | FStar_Reflection_Formula.Iff (uu___1, uu___2) -> "Iff"
-               | FStar_Reflection_Formula.Forall (uu___1, uu___2, uu___3) ->
-                   "Forall"
-               | FStar_Reflection_Formula.Exists (uu___1, uu___2, uu___3) ->
-                   "Exists"
-               | FStar_Reflection_Formula.App (uu___1, uu___2) -> "Apply"
-               | FStar_Reflection_Formula.Name uu___1 -> "Name"
-               | FStar_Reflection_Formula.FV uu___1 -> "FV"
-               | FStar_Reflection_Formula.IntLit uu___1 -> "IntLit"
-               | FStar_Reflection_Formula.F_Unknown -> "F_Unknown"))) uu___
+               | FStar_Reflection_V1_Formula.Iff (uu___1, uu___2) -> "Iff"
+               | FStar_Reflection_V1_Formula.Forall (uu___1, uu___2, uu___3)
+                   -> "Forall"
+               | FStar_Reflection_V1_Formula.Exists (uu___1, uu___2, uu___3)
+                   -> "Exists"
+               | FStar_Reflection_V1_Formula.App (uu___1, uu___2) -> "Apply"
+               | FStar_Reflection_V1_Formula.Name uu___1 -> "Name"
+               | FStar_Reflection_V1_Formula.FV uu___1 -> "FV"
+               | FStar_Reflection_V1_Formula.IntLit uu___1 -> "IntLit"
+               | FStar_Reflection_V1_Formula.F_Unknown -> "F_Unknown")))
+      uu___
 let (is_equality_for_term :
   Prims.bool ->
     FStar_Reflection_Types.term ->
@@ -3139,85 +3713,119 @@ let (is_equality_for_term :
     fun tm ->
       fun p ->
         FStar_Tactics_Effect.tac_bind
-          (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
-             (Prims.of_int (433)) (Prims.of_int (2)) (Prims.of_int (435))
-             (Prims.of_int (49)))
-          (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
-             (Prims.of_int (435)) (Prims.of_int (50)) (Prims.of_int (443))
-             (Prims.of_int (4)))
+          (FStar_Sealed.seal
+             (Obj.magic
+                (FStar_Range.mk_range
+                   "FStar.InteractiveHelpers.PostProcess.fst"
+                   (Prims.of_int (429)) (Prims.of_int (2))
+                   (Prims.of_int (431)) (Prims.of_int (49)))))
+          (FStar_Sealed.seal
+             (Obj.magic
+                (FStar_Range.mk_range
+                   "FStar.InteractiveHelpers.PostProcess.fst"
+                   (Prims.of_int (431)) (Prims.of_int (50))
+                   (Prims.of_int (455)) (Prims.of_int (8)))))
           (Obj.magic
              (FStar_Tactics_Effect.tac_bind
-                (FStar_Range.mk_range
-                   "FStar.InteractiveHelpers.PostProcess.fst"
-                   (Prims.of_int (433)) (Prims.of_int (16))
-                   (Prims.of_int (435)) (Prims.of_int (49)))
-                (FStar_Range.mk_range
-                   "FStar.InteractiveHelpers.PostProcess.fst"
-                   (Prims.of_int (433)) (Prims.of_int (2))
-                   (Prims.of_int (435)) (Prims.of_int (49)))
-                (Obj.magic
-                   (FStar_Tactics_Effect.tac_bind
+                (FStar_Sealed.seal
+                   (Obj.magic
                       (FStar_Range.mk_range
                          "FStar.InteractiveHelpers.PostProcess.fst"
-                         (Prims.of_int (434)) (Prims.of_int (17))
-                         (Prims.of_int (435)) (Prims.of_int (48)))
-                      (FStar_Range.mk_range "prims.fst" (Prims.of_int (590))
-                         (Prims.of_int (19)) (Prims.of_int (590))
-                         (Prims.of_int (31)))
-                      (Obj.magic
-                         (FStar_Tactics_Effect.tac_bind
+                         (Prims.of_int (429)) (Prims.of_int (16))
+                         (Prims.of_int (431)) (Prims.of_int (49)))))
+                (FStar_Sealed.seal
+                   (Obj.magic
+                      (FStar_Range.mk_range
+                         "FStar.InteractiveHelpers.PostProcess.fst"
+                         (Prims.of_int (429)) (Prims.of_int (2))
+                         (Prims.of_int (431)) (Prims.of_int (49)))))
+                (Obj.magic
+                   (FStar_Tactics_Effect.tac_bind
+                      (FStar_Sealed.seal
+                         (Obj.magic
                             (FStar_Range.mk_range
                                "FStar.InteractiveHelpers.PostProcess.fst"
-                               (Prims.of_int (434)) (Prims.of_int (32))
-                               (Prims.of_int (435)) (Prims.of_int (48)))
+                               (Prims.of_int (430)) (Prims.of_int (17))
+                               (Prims.of_int (431)) (Prims.of_int (48)))))
+                      (FStar_Sealed.seal
+                         (Obj.magic
                             (FStar_Range.mk_range "prims.fst"
                                (Prims.of_int (590)) (Prims.of_int (19))
-                               (Prims.of_int (590)) (Prims.of_int (31)))
+                               (Prims.of_int (590)) (Prims.of_int (31)))))
+                      (Obj.magic
+                         (FStar_Tactics_Effect.tac_bind
+                            (FStar_Sealed.seal
+                               (Obj.magic
+                                  (FStar_Range.mk_range
+                                     "FStar.InteractiveHelpers.PostProcess.fst"
+                                     (Prims.of_int (430)) (Prims.of_int (32))
+                                     (Prims.of_int (431)) (Prims.of_int (48)))))
+                            (FStar_Sealed.seal
+                               (Obj.magic
+                                  (FStar_Range.mk_range "prims.fst"
+                                     (Prims.of_int (590)) (Prims.of_int (19))
+                                     (Prims.of_int (590)) (Prims.of_int (31)))))
                             (Obj.magic
                                (FStar_Tactics_Effect.tac_bind
-                                  (FStar_Range.mk_range
-                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                     (Prims.of_int (434)) (Prims.of_int (32))
-                                     (Prims.of_int (434)) (Prims.of_int (49)))
-                                  (FStar_Range.mk_range
-                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                     (Prims.of_int (434)) (Prims.of_int (32))
-                                     (Prims.of_int (435)) (Prims.of_int (48)))
+                                  (FStar_Sealed.seal
+                                     (Obj.magic
+                                        (FStar_Range.mk_range
+                                           "FStar.InteractiveHelpers.PostProcess.fst"
+                                           (Prims.of_int (430))
+                                           (Prims.of_int (32))
+                                           (Prims.of_int (430))
+                                           (Prims.of_int (49)))))
+                                  (FStar_Sealed.seal
+                                     (Obj.magic
+                                        (FStar_Range.mk_range
+                                           "FStar.InteractiveHelpers.PostProcess.fst"
+                                           (Prims.of_int (430))
+                                           (Prims.of_int (32))
+                                           (Prims.of_int (431))
+                                           (Prims.of_int (48)))))
                                   (Obj.magic
-                                     (FStar_Tactics_Builtins.term_to_string
+                                     (FStar_Tactics_V1_Builtins.term_to_string
                                         tm))
                                   (fun uu___ ->
                                      (fun uu___ ->
                                         Obj.magic
                                           (FStar_Tactics_Effect.tac_bind
-                                             (FStar_Range.mk_range
-                                                "FStar.InteractiveHelpers.PostProcess.fst"
-                                                (Prims.of_int (435))
-                                                (Prims.of_int (17))
-                                                (Prims.of_int (435))
-                                                (Prims.of_int (48)))
-                                             (FStar_Range.mk_range
-                                                "prims.fst"
-                                                (Prims.of_int (590))
-                                                (Prims.of_int (19))
-                                                (Prims.of_int (590))
-                                                (Prims.of_int (31)))
-                                             (Obj.magic
-                                                (FStar_Tactics_Effect.tac_bind
+                                             (FStar_Sealed.seal
+                                                (Obj.magic
                                                    (FStar_Range.mk_range
                                                       "FStar.InteractiveHelpers.PostProcess.fst"
-                                                      (Prims.of_int (435))
-                                                      (Prims.of_int (32))
-                                                      (Prims.of_int (435))
-                                                      (Prims.of_int (48)))
+                                                      (Prims.of_int (431))
+                                                      (Prims.of_int (17))
+                                                      (Prims.of_int (431))
+                                                      (Prims.of_int (48)))))
+                                             (FStar_Sealed.seal
+                                                (Obj.magic
                                                    (FStar_Range.mk_range
                                                       "prims.fst"
                                                       (Prims.of_int (590))
                                                       (Prims.of_int (19))
                                                       (Prims.of_int (590))
-                                                      (Prims.of_int (31)))
+                                                      (Prims.of_int (31)))))
+                                             (Obj.magic
+                                                (FStar_Tactics_Effect.tac_bind
+                                                   (FStar_Sealed.seal
+                                                      (Obj.magic
+                                                         (FStar_Range.mk_range
+                                                            "FStar.InteractiveHelpers.PostProcess.fst"
+                                                            (Prims.of_int (431))
+                                                            (Prims.of_int (32))
+                                                            (Prims.of_int (431))
+                                                            (Prims.of_int (48)))))
+                                                   (FStar_Sealed.seal
+                                                      (Obj.magic
+                                                         (FStar_Range.mk_range
+                                                            "prims.fst"
+                                                            (Prims.of_int (590))
+                                                            (Prims.of_int (19))
+                                                            (Prims.of_int (590))
+                                                            (Prims.of_int (31)))))
                                                    (Obj.magic
-                                                      (FStar_Tactics_Builtins.term_to_string
+                                                      (FStar_Tactics_V1_Builtins.term_to_string
                                                          p))
                                                    (fun uu___1 ->
                                                       FStar_Tactics_Effect.lift_div_tac
@@ -3247,52 +3855,64 @@ let (is_equality_for_term :
              (fun uu___ ->
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
-                     (FStar_Range.mk_range
-                        "FStar.InteractiveHelpers.PostProcess.fst"
-                        (Prims.of_int (439)) (Prims.of_int (4))
-                        (Prims.of_int (442)) (Prims.of_int (38)))
-                     (FStar_Range.mk_range
-                        "FStar.InteractiveHelpers.PostProcess.fst"
-                        (Prims.of_int (444)) (Prims.of_int (2))
-                        (Prims.of_int (459)) (Prims.of_int (8)))
+                     (FStar_Sealed.seal
+                        (Obj.magic
+                           (FStar_Range.mk_range
+                              "FStar.InteractiveHelpers.PostProcess.fst"
+                              (Prims.of_int (435)) (Prims.of_int (4))
+                              (Prims.of_int (438)) (Prims.of_int (38)))))
+                     (FStar_Sealed.seal
+                        (Obj.magic
+                           (FStar_Range.mk_range
+                              "FStar.InteractiveHelpers.PostProcess.fst"
+                              (Prims.of_int (440)) (Prims.of_int (2))
+                              (Prims.of_int (455)) (Prims.of_int (8)))))
                      (Obj.magic
                         (FStar_Tactics_Effect.tac_bind
-                           (FStar_Range.mk_range
-                              "FStar.InteractiveHelpers.PostProcess.fst"
-                              (Prims.of_int (439)) (Prims.of_int (10))
-                              (Prims.of_int (439)) (Prims.of_int (20)))
-                           (FStar_Range.mk_range
-                              "FStar.InteractiveHelpers.PostProcess.fst"
-                              (Prims.of_int (439)) (Prims.of_int (4))
-                              (Prims.of_int (442)) (Prims.of_int (38)))
-                           (Obj.magic (FStar_Tactics_Builtins.inspect tm))
+                           (FStar_Sealed.seal
+                              (Obj.magic
+                                 (FStar_Range.mk_range
+                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                    (Prims.of_int (435)) (Prims.of_int (10))
+                                    (Prims.of_int (435)) (Prims.of_int (20)))))
+                           (FStar_Sealed.seal
+                              (Obj.magic
+                                 (FStar_Range.mk_range
+                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                    (Prims.of_int (435)) (Prims.of_int (4))
+                                    (Prims.of_int (438)) (Prims.of_int (38)))))
+                           (Obj.magic (FStar_Tactics_V1_Builtins.inspect tm))
                            (fun uu___1 ->
                               FStar_Tactics_Effect.lift_div_tac
                                 (fun uu___2 ->
                                    match uu___1 with
-                                   | FStar_Reflection_Data.Tv_Var bv ->
+                                   | FStar_Reflection_V1_Data.Tv_Var bv ->
                                        (fun tm' ->
                                           FStar_Tactics_Effect.tac_bind
-                                            (FStar_Range.mk_range
-                                               "FStar.InteractiveHelpers.PostProcess.fst"
-                                               (Prims.of_int (441))
-                                               (Prims.of_int (24))
-                                               (Prims.of_int (441))
-                                               (Prims.of_int (35)))
-                                            (FStar_Range.mk_range
-                                               "FStar.InteractiveHelpers.PostProcess.fst"
-                                               (Prims.of_int (441))
-                                               (Prims.of_int (18))
-                                               (Prims.of_int (441))
-                                               (Prims.of_int (82)))
+                                            (FStar_Sealed.seal
+                                               (Obj.magic
+                                                  (FStar_Range.mk_range
+                                                     "FStar.InteractiveHelpers.PostProcess.fst"
+                                                     (Prims.of_int (437))
+                                                     (Prims.of_int (24))
+                                                     (Prims.of_int (437))
+                                                     (Prims.of_int (35)))))
+                                            (FStar_Sealed.seal
+                                               (Obj.magic
+                                                  (FStar_Range.mk_range
+                                                     "FStar.InteractiveHelpers.PostProcess.fst"
+                                                     (Prims.of_int (437))
+                                                     (Prims.of_int (18))
+                                                     (Prims.of_int (437))
+                                                     (Prims.of_int (82)))))
                                             (Obj.magic
-                                               (FStar_Tactics_Builtins.inspect
+                                               (FStar_Tactics_V1_Builtins.inspect
                                                   tm'))
                                             (fun uu___3 ->
                                                FStar_Tactics_Effect.lift_div_tac
                                                  (fun uu___4 ->
                                                     match uu___3 with
-                                                    | FStar_Reflection_Data.Tv_Var
+                                                    | FStar_Reflection_V1_Data.Tv_Var
                                                         bv' ->
                                                         FStar_InteractiveHelpers_Base.bv_eq
                                                           bv bv'
@@ -3302,14 +3922,22 @@ let (is_equality_for_term :
                         (fun check_eq ->
                            Obj.magic
                              (FStar_Tactics_Effect.tac_bind
-                                (FStar_Range.mk_range
-                                   "FStar.InteractiveHelpers.PostProcess.fst"
-                                   (Prims.of_int (444)) (Prims.of_int (8))
-                                   (Prims.of_int (444)) (Prims.of_int (19)))
-                                (FStar_Range.mk_range
-                                   "FStar.InteractiveHelpers.PostProcess.fst"
-                                   (Prims.of_int (444)) (Prims.of_int (2))
-                                   (Prims.of_int (459)) (Prims.of_int (8)))
+                                (FStar_Sealed.seal
+                                   (Obj.magic
+                                      (FStar_Range.mk_range
+                                         "FStar.InteractiveHelpers.PostProcess.fst"
+                                         (Prims.of_int (440))
+                                         (Prims.of_int (8))
+                                         (Prims.of_int (440))
+                                         (Prims.of_int (19)))))
+                                (FStar_Sealed.seal
+                                   (Obj.magic
+                                      (FStar_Range.mk_range
+                                         "FStar.InteractiveHelpers.PostProcess.fst"
+                                         (Prims.of_int (440))
+                                         (Prims.of_int (2))
+                                         (Prims.of_int (455))
+                                         (Prims.of_int (8)))))
                                 (Obj.magic (is_eq dbg p))
                                 (fun uu___1 ->
                                    (fun uu___1 ->
@@ -3318,63 +3946,81 @@ let (is_equality_for_term :
                                           (ekind, l, r) ->
                                           Obj.magic
                                             (FStar_Tactics_Effect.tac_bind
-                                               (FStar_Range.mk_range
-                                                  "FStar.InteractiveHelpers.PostProcess.fst"
-                                                  (Prims.of_int (448))
-                                                  (Prims.of_int (4))
-                                                  (Prims.of_int (448))
-                                                  (Prims.of_int (80)))
-                                               (FStar_Range.mk_range
-                                                  "FStar.InteractiveHelpers.PostProcess.fst"
-                                                  (Prims.of_int (449))
-                                                  (Prims.of_int (4))
-                                                  (Prims.of_int (456))
-                                                  (Prims.of_int (13)))
+                                               (FStar_Sealed.seal
+                                                  (Obj.magic
+                                                     (FStar_Range.mk_range
+                                                        "FStar.InteractiveHelpers.PostProcess.fst"
+                                                        (Prims.of_int (444))
+                                                        (Prims.of_int (4))
+                                                        (Prims.of_int (444))
+                                                        (Prims.of_int (80)))))
+                                               (FStar_Sealed.seal
+                                                  (Obj.magic
+                                                     (FStar_Range.mk_range
+                                                        "FStar.InteractiveHelpers.PostProcess.fst"
+                                                        (Prims.of_int (445))
+                                                        (Prims.of_int (4))
+                                                        (Prims.of_int (452))
+                                                        (Prims.of_int (13)))))
                                                (Obj.magic
                                                   (FStar_Tactics_Effect.tac_bind
-                                                     (FStar_Range.mk_range
-                                                        "FStar.InteractiveHelpers.PostProcess.fst"
-                                                        (Prims.of_int (448))
-                                                        (Prims.of_int (18))
-                                                        (Prims.of_int (448))
-                                                        (Prims.of_int (80)))
-                                                     (FStar_Range.mk_range
-                                                        "FStar.InteractiveHelpers.PostProcess.fst"
-                                                        (Prims.of_int (448))
-                                                        (Prims.of_int (4))
-                                                        (Prims.of_int (448))
-                                                        (Prims.of_int (80)))
-                                                     (Obj.magic
-                                                        (FStar_Tactics_Effect.tac_bind
+                                                     (FStar_Sealed.seal
+                                                        (Obj.magic
                                                            (FStar_Range.mk_range
                                                               "FStar.InteractiveHelpers.PostProcess.fst"
-                                                              (Prims.of_int (448))
-                                                              (Prims.of_int (36))
-                                                              (Prims.of_int (448))
-                                                              (Prims.of_int (79)))
+                                                              (Prims.of_int (444))
+                                                              (Prims.of_int (18))
+                                                              (Prims.of_int (444))
+                                                              (Prims.of_int (80)))))
+                                                     (FStar_Sealed.seal
+                                                        (Obj.magic
                                                            (FStar_Range.mk_range
-                                                              "prims.fst"
-                                                              (Prims.of_int (590))
-                                                              (Prims.of_int (19))
-                                                              (Prims.of_int (590))
-                                                              (Prims.of_int (31)))
+                                                              "FStar.InteractiveHelpers.PostProcess.fst"
+                                                              (Prims.of_int (444))
+                                                              (Prims.of_int (4))
+                                                              (Prims.of_int (444))
+                                                              (Prims.of_int (80)))))
+                                                     (Obj.magic
+                                                        (FStar_Tactics_Effect.tac_bind
+                                                           (FStar_Sealed.seal
+                                                              (Obj.magic
+                                                                 (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (444))
+                                                                    (Prims.of_int (36))
+                                                                    (Prims.of_int (444))
+                                                                    (Prims.of_int (79)))))
+                                                           (FStar_Sealed.seal
+                                                              (Obj.magic
+                                                                 (FStar_Range.mk_range
+                                                                    "prims.fst"
+                                                                    (Prims.of_int (590))
+                                                                    (Prims.of_int (19))
+                                                                    (Prims.of_int (590))
+                                                                    (Prims.of_int (31)))))
                                                            (Obj.magic
                                                               (FStar_Tactics_Effect.tac_bind
-                                                                 (FStar_Range.mk_range
+                                                                 (FStar_Sealed.seal
+                                                                    (
+                                                                    Obj.magic
+                                                                    (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (448))
+                                                                    (Prims.of_int (444))
                                                                     (Prims.of_int (36))
-                                                                    (Prims.of_int (448))
-                                                                    (Prims.of_int (52)))
-                                                                 (FStar_Range.mk_range
+                                                                    (Prims.of_int (444))
+                                                                    (Prims.of_int (52)))))
+                                                                 (FStar_Sealed.seal
+                                                                    (
+                                                                    Obj.magic
+                                                                    (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (448))
+                                                                    (Prims.of_int (444))
                                                                     (Prims.of_int (36))
-                                                                    (Prims.of_int (448))
-                                                                    (Prims.of_int (79)))
+                                                                    (Prims.of_int (444))
+                                                                    (Prims.of_int (79)))))
                                                                  (Obj.magic
                                                                     (
-                                                                    FStar_Tactics_Builtins.term_to_string
+                                                                    FStar_Tactics_V1_Builtins.term_to_string
                                                                     l))
                                                                  (fun uu___2
                                                                     ->
@@ -3382,34 +4028,42 @@ let (is_equality_for_term :
                                                                     uu___2 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (448))
+                                                                    (Prims.of_int (444))
                                                                     (Prims.of_int (55))
-                                                                    (Prims.of_int (448))
-                                                                    (Prims.of_int (79)))
+                                                                    (Prims.of_int (444))
+                                                                    (Prims.of_int (79)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (448))
+                                                                    (Prims.of_int (444))
                                                                     (Prims.of_int (63))
-                                                                    (Prims.of_int (448))
-                                                                    (Prims.of_int (79)))
+                                                                    (Prims.of_int (444))
+                                                                    (Prims.of_int (79)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_Builtins.term_to_string
+                                                                    (FStar_Tactics_V1_Builtins.term_to_string
                                                                     r))
                                                                     (fun
                                                                     uu___3 ->
@@ -3449,18 +4103,22 @@ let (is_equality_for_term :
                                                      then
                                                        Obj.magic
                                                          (FStar_Tactics_Effect.tac_bind
-                                                            (FStar_Range.mk_range
-                                                               "FStar.InteractiveHelpers.PostProcess.fst"
-                                                               (Prims.of_int (451))
-                                                               (Prims.of_int (6))
-                                                               (Prims.of_int (451))
-                                                               (Prims.of_int (53)))
-                                                            (FStar_Range.mk_range
-                                                               "FStar.InteractiveHelpers.PostProcess.fst"
-                                                               (Prims.of_int (452))
-                                                               (Prims.of_int (6))
-                                                               (Prims.of_int (452))
-                                                               (Prims.of_int (10)))
+                                                            (FStar_Sealed.seal
+                                                               (Obj.magic
+                                                                  (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (447))
+                                                                    (Prims.of_int (6))
+                                                                    (Prims.of_int (447))
+                                                                    (Prims.of_int (53)))))
+                                                            (FStar_Sealed.seal
+                                                               (Obj.magic
+                                                                  (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (448))
+                                                                    (Prims.of_int (6))
+                                                                    (Prims.of_int (448))
+                                                                    (Prims.of_int (10)))))
                                                             (Obj.magic
                                                                (FStar_InteractiveHelpers_Base.print_dbg
                                                                   dbg
@@ -3473,18 +4131,22 @@ let (is_equality_for_term :
                                                      else
                                                        Obj.magic
                                                          (FStar_Tactics_Effect.tac_bind
-                                                            (FStar_Range.mk_range
-                                                               "FStar.InteractiveHelpers.PostProcess.fst"
-                                                               (Prims.of_int (454))
-                                                               (Prims.of_int (12))
-                                                               (Prims.of_int (454))
-                                                               (Prims.of_int (22)))
-                                                            (FStar_Range.mk_range
-                                                               "FStar.InteractiveHelpers.PostProcess.fst"
-                                                               (Prims.of_int (454))
-                                                               (Prims.of_int (9))
-                                                               (Prims.of_int (456))
-                                                               (Prims.of_int (13)))
+                                                            (FStar_Sealed.seal
+                                                               (Obj.magic
+                                                                  (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (450))
+                                                                    (Prims.of_int (12))
+                                                                    (Prims.of_int (450))
+                                                                    (Prims.of_int (22)))))
+                                                            (FStar_Sealed.seal
+                                                               (Obj.magic
+                                                                  (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (450))
+                                                                    (Prims.of_int (9))
+                                                                    (Prims.of_int (452))
+                                                                    (Prims.of_int (13)))))
                                                             (Obj.magic
                                                                (check_eq l))
                                                             (fun uu___4 ->
@@ -3502,18 +4164,22 @@ let (is_equality_for_term :
                                                                     Obj.magic
                                                                     (Obj.repr
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (455))
+                                                                    (Prims.of_int (451))
                                                                     (Prims.of_int (12))
-                                                                    (Prims.of_int (455))
-                                                                    (Prims.of_int (22)))
+                                                                    (Prims.of_int (451))
+                                                                    (Prims.of_int (22)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (455))
+                                                                    (Prims.of_int (451))
                                                                     (Prims.of_int (9))
-                                                                    (Prims.of_int (456))
-                                                                    (Prims.of_int (13)))
+                                                                    (Prims.of_int (452))
+                                                                    (Prims.of_int (13)))))
                                                                     (Obj.magic
                                                                     (check_eq
                                                                     r))
@@ -3533,18 +4199,22 @@ let (is_equality_for_term :
                                       | uu___2 ->
                                           Obj.magic
                                             (FStar_Tactics_Effect.tac_bind
-                                               (FStar_Range.mk_range
-                                                  "FStar.InteractiveHelpers.PostProcess.fst"
-                                                  (Prims.of_int (458))
-                                                  (Prims.of_int (4))
-                                                  (Prims.of_int (458))
-                                                  (Prims.of_int (34)))
-                                               (FStar_Range.mk_range
-                                                  "FStar.InteractiveHelpers.PostProcess.fst"
-                                                  (Prims.of_int (459))
-                                                  (Prims.of_int (4))
-                                                  (Prims.of_int (459))
-                                                  (Prims.of_int (8)))
+                                               (FStar_Sealed.seal
+                                                  (Obj.magic
+                                                     (FStar_Range.mk_range
+                                                        "FStar.InteractiveHelpers.PostProcess.fst"
+                                                        (Prims.of_int (454))
+                                                        (Prims.of_int (4))
+                                                        (Prims.of_int (454))
+                                                        (Prims.of_int (34)))))
+                                               (FStar_Sealed.seal
+                                                  (Obj.magic
+                                                     (FStar_Range.mk_range
+                                                        "FStar.InteractiveHelpers.PostProcess.fst"
+                                                        (Prims.of_int (455))
+                                                        (Prims.of_int (4))
+                                                        (Prims.of_int (455))
+                                                        (Prims.of_int (8)))))
                                                (Obj.magic
                                                   (FStar_InteractiveHelpers_Base.print_dbg
                                                      dbg "Term is not eq"))
@@ -3564,85 +4234,119 @@ let (find_subequality :
     fun tm ->
       fun p ->
         FStar_Tactics_Effect.tac_bind
-          (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
-             (Prims.of_int (463)) (Prims.of_int (2)) (Prims.of_int (465))
-             (Prims.of_int (50)))
-          (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
-             (Prims.of_int (465)) (Prims.of_int (51)) (Prims.of_int (466))
-             (Prims.of_int (41)))
+          (FStar_Sealed.seal
+             (Obj.magic
+                (FStar_Range.mk_range
+                   "FStar.InteractiveHelpers.PostProcess.fst"
+                   (Prims.of_int (459)) (Prims.of_int (2))
+                   (Prims.of_int (461)) (Prims.of_int (50)))))
+          (FStar_Sealed.seal
+             (Obj.magic
+                (FStar_Range.mk_range
+                   "FStar.InteractiveHelpers.PostProcess.fst"
+                   (Prims.of_int (461)) (Prims.of_int (51))
+                   (Prims.of_int (464)) (Prims.of_int (49)))))
           (Obj.magic
              (FStar_Tactics_Effect.tac_bind
-                (FStar_Range.mk_range
-                   "FStar.InteractiveHelpers.PostProcess.fst"
-                   (Prims.of_int (463)) (Prims.of_int (16))
-                   (Prims.of_int (465)) (Prims.of_int (50)))
-                (FStar_Range.mk_range
-                   "FStar.InteractiveHelpers.PostProcess.fst"
-                   (Prims.of_int (463)) (Prims.of_int (2))
-                   (Prims.of_int (465)) (Prims.of_int (50)))
-                (Obj.magic
-                   (FStar_Tactics_Effect.tac_bind
+                (FStar_Sealed.seal
+                   (Obj.magic
                       (FStar_Range.mk_range
                          "FStar.InteractiveHelpers.PostProcess.fst"
-                         (Prims.of_int (464)) (Prims.of_int (17))
-                         (Prims.of_int (465)) (Prims.of_int (49)))
-                      (FStar_Range.mk_range "prims.fst" (Prims.of_int (590))
-                         (Prims.of_int (19)) (Prims.of_int (590))
-                         (Prims.of_int (31)))
-                      (Obj.magic
-                         (FStar_Tactics_Effect.tac_bind
+                         (Prims.of_int (459)) (Prims.of_int (16))
+                         (Prims.of_int (461)) (Prims.of_int (50)))))
+                (FStar_Sealed.seal
+                   (Obj.magic
+                      (FStar_Range.mk_range
+                         "FStar.InteractiveHelpers.PostProcess.fst"
+                         (Prims.of_int (459)) (Prims.of_int (2))
+                         (Prims.of_int (461)) (Prims.of_int (50)))))
+                (Obj.magic
+                   (FStar_Tactics_Effect.tac_bind
+                      (FStar_Sealed.seal
+                         (Obj.magic
                             (FStar_Range.mk_range
                                "FStar.InteractiveHelpers.PostProcess.fst"
-                               (Prims.of_int (464)) (Prims.of_int (33))
-                               (Prims.of_int (465)) (Prims.of_int (49)))
+                               (Prims.of_int (460)) (Prims.of_int (17))
+                               (Prims.of_int (461)) (Prims.of_int (49)))))
+                      (FStar_Sealed.seal
+                         (Obj.magic
                             (FStar_Range.mk_range "prims.fst"
                                (Prims.of_int (590)) (Prims.of_int (19))
-                               (Prims.of_int (590)) (Prims.of_int (31)))
+                               (Prims.of_int (590)) (Prims.of_int (31)))))
+                      (Obj.magic
+                         (FStar_Tactics_Effect.tac_bind
+                            (FStar_Sealed.seal
+                               (Obj.magic
+                                  (FStar_Range.mk_range
+                                     "FStar.InteractiveHelpers.PostProcess.fst"
+                                     (Prims.of_int (460)) (Prims.of_int (33))
+                                     (Prims.of_int (461)) (Prims.of_int (49)))))
+                            (FStar_Sealed.seal
+                               (Obj.magic
+                                  (FStar_Range.mk_range "prims.fst"
+                                     (Prims.of_int (590)) (Prims.of_int (19))
+                                     (Prims.of_int (590)) (Prims.of_int (31)))))
                             (Obj.magic
                                (FStar_Tactics_Effect.tac_bind
-                                  (FStar_Range.mk_range
-                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                     (Prims.of_int (464)) (Prims.of_int (33))
-                                     (Prims.of_int (464)) (Prims.of_int (50)))
-                                  (FStar_Range.mk_range
-                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                     (Prims.of_int (464)) (Prims.of_int (33))
-                                     (Prims.of_int (465)) (Prims.of_int (49)))
+                                  (FStar_Sealed.seal
+                                     (Obj.magic
+                                        (FStar_Range.mk_range
+                                           "FStar.InteractiveHelpers.PostProcess.fst"
+                                           (Prims.of_int (460))
+                                           (Prims.of_int (33))
+                                           (Prims.of_int (460))
+                                           (Prims.of_int (50)))))
+                                  (FStar_Sealed.seal
+                                     (Obj.magic
+                                        (FStar_Range.mk_range
+                                           "FStar.InteractiveHelpers.PostProcess.fst"
+                                           (Prims.of_int (460))
+                                           (Prims.of_int (33))
+                                           (Prims.of_int (461))
+                                           (Prims.of_int (49)))))
                                   (Obj.magic
-                                     (FStar_Tactics_Builtins.term_to_string
+                                     (FStar_Tactics_V1_Builtins.term_to_string
                                         tm))
                                   (fun uu___ ->
                                      (fun uu___ ->
                                         Obj.magic
                                           (FStar_Tactics_Effect.tac_bind
-                                             (FStar_Range.mk_range
-                                                "FStar.InteractiveHelpers.PostProcess.fst"
-                                                (Prims.of_int (465))
-                                                (Prims.of_int (17))
-                                                (Prims.of_int (465))
-                                                (Prims.of_int (49)))
-                                             (FStar_Range.mk_range
-                                                "prims.fst"
-                                                (Prims.of_int (590))
-                                                (Prims.of_int (19))
-                                                (Prims.of_int (590))
-                                                (Prims.of_int (31)))
-                                             (Obj.magic
-                                                (FStar_Tactics_Effect.tac_bind
+                                             (FStar_Sealed.seal
+                                                (Obj.magic
                                                    (FStar_Range.mk_range
                                                       "FStar.InteractiveHelpers.PostProcess.fst"
-                                                      (Prims.of_int (465))
-                                                      (Prims.of_int (33))
-                                                      (Prims.of_int (465))
-                                                      (Prims.of_int (49)))
+                                                      (Prims.of_int (461))
+                                                      (Prims.of_int (17))
+                                                      (Prims.of_int (461))
+                                                      (Prims.of_int (49)))))
+                                             (FStar_Sealed.seal
+                                                (Obj.magic
                                                    (FStar_Range.mk_range
                                                       "prims.fst"
                                                       (Prims.of_int (590))
                                                       (Prims.of_int (19))
                                                       (Prims.of_int (590))
-                                                      (Prims.of_int (31)))
+                                                      (Prims.of_int (31)))))
+                                             (Obj.magic
+                                                (FStar_Tactics_Effect.tac_bind
+                                                   (FStar_Sealed.seal
+                                                      (Obj.magic
+                                                         (FStar_Range.mk_range
+                                                            "FStar.InteractiveHelpers.PostProcess.fst"
+                                                            (Prims.of_int (461))
+                                                            (Prims.of_int (33))
+                                                            (Prims.of_int (461))
+                                                            (Prims.of_int (49)))))
+                                                   (FStar_Sealed.seal
+                                                      (Obj.magic
+                                                         (FStar_Range.mk_range
+                                                            "prims.fst"
+                                                            (Prims.of_int (590))
+                                                            (Prims.of_int (19))
+                                                            (Prims.of_int (590))
+                                                            (Prims.of_int (31)))))
                                                    (Obj.magic
-                                                      (FStar_Tactics_Builtins.term_to_string
+                                                      (FStar_Tactics_V1_Builtins.term_to_string
                                                          p))
                                                    (fun uu___1 ->
                                                       FStar_Tactics_Effect.lift_div_tac
@@ -3672,57 +4376,78 @@ let (find_subequality :
              (fun uu___ ->
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
-                     (FStar_Range.mk_range
-                        "FStar.InteractiveHelpers.PostProcess.fst"
-                        (Prims.of_int (466)) (Prims.of_int (18))
-                        (Prims.of_int (466)) (Prims.of_int (38)))
-                     (FStar_Range.mk_range
-                        "FStar.InteractiveHelpers.PostProcess.fst"
-                        (Prims.of_int (467)) (Prims.of_int (2))
-                        (Prims.of_int (468)) (Prims.of_int (49)))
+                     (FStar_Sealed.seal
+                        (Obj.magic
+                           (FStar_Range.mk_range
+                              "FStar.InteractiveHelpers.PostProcess.fst"
+                              (Prims.of_int (462)) (Prims.of_int (18))
+                              (Prims.of_int (462)) (Prims.of_int (38)))))
+                     (FStar_Sealed.seal
+                        (Obj.magic
+                           (FStar_Range.mk_range
+                              "FStar.InteractiveHelpers.PostProcess.fst"
+                              (Prims.of_int (463)) (Prims.of_int (2))
+                              (Prims.of_int (464)) (Prims.of_int (49)))))
                      (Obj.magic (split_conjunctions p))
                      (fun uu___1 ->
                         (fun conjuncts ->
                            Obj.magic
                              (FStar_Tactics_Effect.tac_bind
-                                (FStar_Range.mk_range
-                                   "FStar.InteractiveHelpers.PostProcess.fst"
-                                   (Prims.of_int (467)) (Prims.of_int (2))
-                                   (Prims.of_int (467)) (Prims.of_int (74)))
-                                (FStar_Range.mk_range
-                                   "FStar.InteractiveHelpers.PostProcess.fst"
-                                   (Prims.of_int (468)) (Prims.of_int (2))
-                                   (Prims.of_int (468)) (Prims.of_int (49)))
+                                (FStar_Sealed.seal
+                                   (Obj.magic
+                                      (FStar_Range.mk_range
+                                         "FStar.InteractiveHelpers.PostProcess.fst"
+                                         (Prims.of_int (463))
+                                         (Prims.of_int (2))
+                                         (Prims.of_int (463))
+                                         (Prims.of_int (74)))))
+                                (FStar_Sealed.seal
+                                   (Obj.magic
+                                      (FStar_Range.mk_range
+                                         "FStar.InteractiveHelpers.PostProcess.fst"
+                                         (Prims.of_int (464))
+                                         (Prims.of_int (2))
+                                         (Prims.of_int (464))
+                                         (Prims.of_int (49)))))
                                 (Obj.magic
                                    (FStar_Tactics_Effect.tac_bind
-                                      (FStar_Range.mk_range
-                                         "FStar.InteractiveHelpers.PostProcess.fst"
-                                         (Prims.of_int (467))
-                                         (Prims.of_int (16))
-                                         (Prims.of_int (467))
-                                         (Prims.of_int (74)))
-                                      (FStar_Range.mk_range
-                                         "FStar.InteractiveHelpers.PostProcess.fst"
-                                         (Prims.of_int (467))
-                                         (Prims.of_int (2))
-                                         (Prims.of_int (467))
-                                         (Prims.of_int (74)))
-                                      (Obj.magic
-                                         (FStar_Tactics_Effect.tac_bind
+                                      (FStar_Sealed.seal
+                                         (Obj.magic
                                             (FStar_Range.mk_range
                                                "FStar.InteractiveHelpers.PostProcess.fst"
-                                               (Prims.of_int (467))
-                                               (Prims.of_int (34))
-                                               (Prims.of_int (467))
-                                               (Prims.of_int (73)))
-                                            (FStar_Range.mk_range "prims.fst"
-                                               (Prims.of_int (590))
-                                               (Prims.of_int (19))
-                                               (Prims.of_int (590))
-                                               (Prims.of_int (31)))
+                                               (Prims.of_int (463))
+                                               (Prims.of_int (16))
+                                               (Prims.of_int (463))
+                                               (Prims.of_int (74)))))
+                                      (FStar_Sealed.seal
+                                         (Obj.magic
+                                            (FStar_Range.mk_range
+                                               "FStar.InteractiveHelpers.PostProcess.fst"
+                                               (Prims.of_int (463))
+                                               (Prims.of_int (2))
+                                               (Prims.of_int (463))
+                                               (Prims.of_int (74)))))
+                                      (Obj.magic
+                                         (FStar_Tactics_Effect.tac_bind
+                                            (FStar_Sealed.seal
+                                               (Obj.magic
+                                                  (FStar_Range.mk_range
+                                                     "FStar.InteractiveHelpers.PostProcess.fst"
+                                                     (Prims.of_int (463))
+                                                     (Prims.of_int (34))
+                                                     (Prims.of_int (463))
+                                                     (Prims.of_int (73)))))
+                                            (FStar_Sealed.seal
+                                               (Obj.magic
+                                                  (FStar_Range.mk_range
+                                                     "prims.fst"
+                                                     (Prims.of_int (590))
+                                                     (Prims.of_int (19))
+                                                     (Prims.of_int (590))
+                                                     (Prims.of_int (31)))))
                                             (Obj.magic
                                                (FStar_InteractiveHelpers_Base.list_to_string
-                                                  FStar_Tactics_Builtins.term_to_string
+                                                  FStar_Tactics_V1_Builtins.term_to_string
                                                   conjuncts))
                                             (fun uu___1 ->
                                                FStar_Tactics_Effect.lift_div_tac
@@ -3749,8 +4474,8 @@ let (find_equality_from_post :
           FStar_Reflection_Types.typ ->
             FStar_Reflection_Types.term ->
               FStar_InteractiveHelpers_Effectful.effect_info ->
-                FStar_Reflection_Data.term_view Prims.list ->
-                  FStar_Reflection_Data.term_view Prims.list ->
+                FStar_Reflection_V1_Data.term_view Prims.list ->
+                  FStar_Reflection_V1_Data.term_view Prims.list ->
                     ((FStar_InteractiveHelpers_Base.genv *
                        FStar_Reflection_Types.term
                        FStar_Pervasives_Native.option),
@@ -3766,14 +4491,18 @@ let (find_equality_from_post :
                 fun parents ->
                   fun children ->
                     FStar_Tactics_Effect.tac_bind
-                      (FStar_Range.mk_range
-                         "FStar.InteractiveHelpers.PostProcess.fst"
-                         (Prims.of_int (475)) (Prims.of_int (2))
-                         (Prims.of_int (475)) (Prims.of_int (44)))
-                      (FStar_Range.mk_range
-                         "FStar.InteractiveHelpers.PostProcess.fst"
-                         (Prims.of_int (475)) (Prims.of_int (45))
-                         (Prims.of_int (476)) (Prims.of_int (49)))
+                      (FStar_Sealed.seal
+                         (Obj.magic
+                            (FStar_Range.mk_range
+                               "FStar.InteractiveHelpers.PostProcess.fst"
+                               (Prims.of_int (471)) (Prims.of_int (2))
+                               (Prims.of_int (471)) (Prims.of_int (44)))))
+                      (FStar_Sealed.seal
+                         (Obj.magic
+                            (FStar_Range.mk_range
+                               "FStar.InteractiveHelpers.PostProcess.fst"
+                               (Prims.of_int (471)) (Prims.of_int (45))
+                               (Prims.of_int (489)) (Prims.of_int (27)))))
                       (Obj.magic
                          (FStar_InteractiveHelpers_Base.print_dbg dbg
                             "[> find_equality_from_post"))
@@ -3781,14 +4510,22 @@ let (find_equality_from_post :
                          (fun uu___ ->
                             Obj.magic
                               (FStar_Tactics_Effect.tac_bind
-                                 (FStar_Range.mk_range
-                                    "FStar.InteractiveHelpers.PostProcess.fst"
-                                    (Prims.of_int (476)) (Prims.of_int (14))
-                                    (Prims.of_int (476)) (Prims.of_int (46)))
-                                 (FStar_Range.mk_range
-                                    "FStar.InteractiveHelpers.PostProcess.fst"
-                                    (Prims.of_int (476)) (Prims.of_int (49))
-                                    (Prims.of_int (481)) (Prims.of_int (4)))
+                                 (FStar_Sealed.seal
+                                    (Obj.magic
+                                       (FStar_Range.mk_range
+                                          "FStar.InteractiveHelpers.PostProcess.fst"
+                                          (Prims.of_int (472))
+                                          (Prims.of_int (14))
+                                          (Prims.of_int (472))
+                                          (Prims.of_int (46)))))
+                                 (FStar_Sealed.seal
+                                    (Obj.magic
+                                       (FStar_Range.mk_range
+                                          "FStar.InteractiveHelpers.PostProcess.fst"
+                                          (Prims.of_int (472))
+                                          (Prims.of_int (49))
+                                          (Prims.of_int (489))
+                                          (Prims.of_int (27)))))
                                  (Obj.magic
                                     (FStar_InteractiveHelpers_ExploreTerm.get_type_info_from_type
                                        let_bvty))
@@ -3796,25 +4533,29 @@ let (find_equality_from_post :
                                     (fun tinfo ->
                                        Obj.magic
                                          (FStar_Tactics_Effect.tac_bind
-                                            (FStar_Range.mk_range
-                                               "FStar.InteractiveHelpers.PostProcess.fst"
-                                               (Prims.of_int (479))
-                                               (Prims.of_int (4))
-                                               (Prims.of_int (480))
-                                               (Prims.of_int (78)))
-                                            (FStar_Range.mk_range
-                                               "FStar.InteractiveHelpers.PostProcess.fst"
-                                               (Prims.of_int (476))
-                                               (Prims.of_int (49))
-                                               (Prims.of_int (481))
-                                               (Prims.of_int (4)))
+                                            (FStar_Sealed.seal
+                                               (Obj.magic
+                                                  (FStar_Range.mk_range
+                                                     "FStar.InteractiveHelpers.PostProcess.fst"
+                                                     (Prims.of_int (475))
+                                                     (Prims.of_int (4))
+                                                     (Prims.of_int (476))
+                                                     (Prims.of_int (78)))))
+                                            (FStar_Sealed.seal
+                                               (Obj.magic
+                                                  (FStar_Range.mk_range
+                                                     "FStar.InteractiveHelpers.PostProcess.fst"
+                                                     (Prims.of_int (472))
+                                                     (Prims.of_int (49))
+                                                     (Prims.of_int (489))
+                                                     (Prims.of_int (27)))))
                                             (Obj.magic
                                                (FStar_InteractiveHelpers_Effectful.pre_post_to_propositions
                                                   dbg ge0
                                                   einfo.FStar_InteractiveHelpers_Effectful.ei_type
                                                   ret_value
                                                   (FStar_Pervasives_Native.Some
-                                                     (FStar_Reflection_Derived.mk_binder
+                                                     (FStar_Reflection_V1_Derived.mk_binder
                                                         let_bv let_bvty))
                                                   tinfo
                                                   einfo.FStar_InteractiveHelpers_Effectful.ei_pre
@@ -3827,50 +4568,64 @@ let (find_equality_from_post :
                                                       ->
                                                       Obj.magic
                                                         (FStar_Tactics_Effect.tac_bind
-                                                           (FStar_Range.mk_range
-                                                              "FStar.InteractiveHelpers.PostProcess.fst"
-                                                              (Prims.of_int (482))
-                                                              (Prims.of_int (2))
-                                                              (Prims.of_int (482))
-                                                              (Prims.of_int (79)))
-                                                           (FStar_Range.mk_range
-                                                              "FStar.InteractiveHelpers.PostProcess.fst"
-                                                              (Prims.of_int (482))
-                                                              (Prims.of_int (80))
-                                                              (Prims.of_int (488))
-                                                              (Prims.of_int (4)))
+                                                           (FStar_Sealed.seal
+                                                              (Obj.magic
+                                                                 (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (478))
+                                                                    (Prims.of_int (2))
+                                                                    (Prims.of_int (478))
+                                                                    (Prims.of_int (79)))))
+                                                           (FStar_Sealed.seal
+                                                              (Obj.magic
+                                                                 (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (478))
+                                                                    (Prims.of_int (80))
+                                                                    (Prims.of_int (489))
+                                                                    (Prims.of_int (27)))))
                                                            (Obj.magic
                                                               (FStar_Tactics_Effect.tac_bind
-                                                                 (FStar_Range.mk_range
+                                                                 (FStar_Sealed.seal
+                                                                    (
+                                                                    Obj.magic
+                                                                    (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (482))
+                                                                    (Prims.of_int (478))
                                                                     (Prims.of_int (16))
-                                                                    (Prims.of_int (482))
-                                                                    (Prims.of_int (79)))
-                                                                 (FStar_Range.mk_range
+                                                                    (Prims.of_int (478))
+                                                                    (Prims.of_int (79)))))
+                                                                 (FStar_Sealed.seal
+                                                                    (
+                                                                    Obj.magic
+                                                                    (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (482))
+                                                                    (Prims.of_int (478))
                                                                     (Prims.of_int (2))
-                                                                    (Prims.of_int (482))
-                                                                    (Prims.of_int (79)))
+                                                                    (Prims.of_int (478))
+                                                                    (Prims.of_int (79)))))
                                                                  (Obj.magic
                                                                     (
                                                                     FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (482))
+                                                                    (Prims.of_int (478))
                                                                     (Prims.of_int (37))
-                                                                    (Prims.of_int (482))
-                                                                    (Prims.of_int (78)))
+                                                                    (Prims.of_int (478))
+                                                                    (Prims.of_int (78)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
                                                                     (FStar_InteractiveHelpers_Base.option_to_string
-                                                                    FStar_Tactics_Builtins.term_to_string
+                                                                    FStar_Tactics_V1_Builtins.term_to_string
                                                                     post_prop))
                                                                     (fun
                                                                     uu___3 ->
@@ -3893,18 +4648,22 @@ let (find_equality_from_post :
                                                               (fun uu___3 ->
                                                                  Obj.magic
                                                                    (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (485))
+                                                                    (Prims.of_int (481))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (487))
-                                                                    (Prims.of_int (41)))
+                                                                    (Prims.of_int (483))
+                                                                    (Prims.of_int (41)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (491))
+                                                                    (Prims.of_int (487))
                                                                     (Prims.of_int (2))
-                                                                    (Prims.of_int (493))
-                                                                    (Prims.of_int (27)))
+                                                                    (Prims.of_int (489))
+                                                                    (Prims.of_int (27)))))
                                                                     (match post_prop
                                                                     with
                                                                     | 
@@ -3948,8 +4707,8 @@ let rec (find_context_equality_aux :
     FStar_InteractiveHelpers_Base.genv ->
       FStar_Reflection_Types.term ->
         FStar_Reflection_Types.bv FStar_Pervasives_Native.option ->
-          FStar_Reflection_Data.term_view Prims.list ->
-            FStar_Reflection_Data.term_view Prims.list ->
+          FStar_Reflection_V1_Data.term_view Prims.list ->
+            FStar_Reflection_V1_Data.term_view Prims.list ->
               ((FStar_InteractiveHelpers_Base.genv *
                  FStar_Reflection_Types.term FStar_Pervasives_Native.option),
                 unit) FStar_Tactics_Effect.tac_repr)
@@ -3977,145 +4736,181 @@ let rec (find_context_equality_aux :
                                Obj.magic
                                  (Obj.repr
                                     (FStar_Tactics_Effect.tac_bind
-                                       (FStar_Range.mk_range
-                                          "FStar.InteractiveHelpers.PostProcess.fst"
-                                          (Prims.of_int (512))
-                                          (Prims.of_int (4))
-                                          (Prims.of_int (514))
-                                          (Prims.of_int (52)))
-                                       (FStar_Range.mk_range
-                                          "FStar.InteractiveHelpers.PostProcess.fst"
-                                          (Prims.of_int (516))
-                                          (Prims.of_int (4))
-                                          (Prims.of_int (539))
-                                          (Prims.of_int (79)))
-                                       (Obj.magic
-                                          (FStar_Tactics_Effect.tac_bind
+                                       (FStar_Sealed.seal
+                                          (Obj.magic
                                              (FStar_Range.mk_range
                                                 "FStar.InteractiveHelpers.PostProcess.fst"
-                                                (Prims.of_int (512))
-                                                (Prims.of_int (18))
-                                                (Prims.of_int (514))
-                                                (Prims.of_int (52)))
+                                                (Prims.of_int (508))
+                                                (Prims.of_int (4))
+                                                (Prims.of_int (510))
+                                                (Prims.of_int (52)))))
+                                       (FStar_Sealed.seal
+                                          (Obj.magic
                                              (FStar_Range.mk_range
                                                 "FStar.InteractiveHelpers.PostProcess.fst"
                                                 (Prims.of_int (512))
                                                 (Prims.of_int (4))
-                                                (Prims.of_int (514))
-                                                (Prims.of_int (52)))
-                                             (Obj.magic
-                                                (FStar_Tactics_Effect.tac_bind
+                                                (Prims.of_int (535))
+                                                (Prims.of_int (79)))))
+                                       (Obj.magic
+                                          (FStar_Tactics_Effect.tac_bind
+                                             (FStar_Sealed.seal
+                                                (Obj.magic
                                                    (FStar_Range.mk_range
                                                       "FStar.InteractiveHelpers.PostProcess.fst"
-                                                      (Prims.of_int (513))
-                                                      (Prims.of_int (19))
-                                                      (Prims.of_int (514))
-                                                      (Prims.of_int (51)))
+                                                      (Prims.of_int (508))
+                                                      (Prims.of_int (18))
+                                                      (Prims.of_int (510))
+                                                      (Prims.of_int (52)))))
+                                             (FStar_Sealed.seal
+                                                (Obj.magic
                                                    (FStar_Range.mk_range
-                                                      "prims.fst"
-                                                      (Prims.of_int (590))
-                                                      (Prims.of_int (19))
-                                                      (Prims.of_int (590))
-                                                      (Prims.of_int (31)))
-                                                   (Obj.magic
-                                                      (FStar_Tactics_Effect.tac_bind
+                                                      "FStar.InteractiveHelpers.PostProcess.fst"
+                                                      (Prims.of_int (508))
+                                                      (Prims.of_int (4))
+                                                      (Prims.of_int (510))
+                                                      (Prims.of_int (52)))))
+                                             (Obj.magic
+                                                (FStar_Tactics_Effect.tac_bind
+                                                   (FStar_Sealed.seal
+                                                      (Obj.magic
                                                          (FStar_Range.mk_range
                                                             "FStar.InteractiveHelpers.PostProcess.fst"
-                                                            (Prims.of_int (513))
-                                                            (Prims.of_int (34))
-                                                            (Prims.of_int (514))
-                                                            (Prims.of_int (51)))
+                                                            (Prims.of_int (509))
+                                                            (Prims.of_int (19))
+                                                            (Prims.of_int (510))
+                                                            (Prims.of_int (51)))))
+                                                   (FStar_Sealed.seal
+                                                      (Obj.magic
                                                          (FStar_Range.mk_range
                                                             "prims.fst"
                                                             (Prims.of_int (590))
                                                             (Prims.of_int (19))
                                                             (Prims.of_int (590))
-                                                            (Prims.of_int (31)))
+                                                            (Prims.of_int (31)))))
+                                                   (Obj.magic
+                                                      (FStar_Tactics_Effect.tac_bind
+                                                         (FStar_Sealed.seal
+                                                            (Obj.magic
+                                                               (FStar_Range.mk_range
+                                                                  "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                  (Prims.of_int (509))
+                                                                  (Prims.of_int (34))
+                                                                  (Prims.of_int (510))
+                                                                  (Prims.of_int (51)))))
+                                                         (FStar_Sealed.seal
+                                                            (Obj.magic
+                                                               (FStar_Range.mk_range
+                                                                  "prims.fst"
+                                                                  (Prims.of_int (590))
+                                                                  (Prims.of_int (19))
+                                                                  (Prims.of_int (590))
+                                                                  (Prims.of_int (31)))))
                                                          (Obj.magic
                                                             (FStar_Tactics_Effect.tac_bind
-                                                               (FStar_Range.mk_range
-                                                                  "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                  (Prims.of_int (513))
-                                                                  (Prims.of_int (34))
-                                                                  (Prims.of_int (513))
-                                                                  (Prims.of_int (51)))
-                                                               (FStar_Range.mk_range
-                                                                  "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                  (Prims.of_int (513))
-                                                                  (Prims.of_int (34))
-                                                                  (Prims.of_int (514))
-                                                                  (Prims.of_int (51)))
+                                                               (FStar_Sealed.seal
+                                                                  (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (509))
+                                                                    (Prims.of_int (34))
+                                                                    (Prims.of_int (509))
+                                                                    (Prims.of_int (51)))))
+                                                               (FStar_Sealed.seal
+                                                                  (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (509))
+                                                                    (Prims.of_int (34))
+                                                                    (Prims.of_int (510))
+                                                                    (Prims.of_int (51)))))
                                                                (Obj.magic
-                                                                  (FStar_Tactics_Builtins.term_to_string
+                                                                  (FStar_Tactics_V1_Builtins.term_to_string
                                                                     tm))
                                                                (fun uu___ ->
                                                                   (fun uu___
                                                                     ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (513))
+                                                                    (Prims.of_int (509))
                                                                     (Prims.of_int (54))
-                                                                    (Prims.of_int (514))
-                                                                    (Prims.of_int (51)))
+                                                                    (Prims.of_int (510))
+                                                                    (Prims.of_int (51)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (514))
+                                                                    (Prims.of_int (510))
                                                                     (Prims.of_int (19))
-                                                                    (Prims.of_int (514))
-                                                                    (Prims.of_int (51)))
+                                                                    (Prims.of_int (510))
+                                                                    (Prims.of_int (51)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (514))
+                                                                    (Prims.of_int (510))
                                                                     (Prims.of_int (34))
-                                                                    (Prims.of_int (514))
-                                                                    (Prims.of_int (51)))
+                                                                    (Prims.of_int (510))
+                                                                    (Prims.of_int (51)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (511))
+                                                                    (Prims.of_int (507))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (511))
-                                                                    (Prims.of_int (6)))
+                                                                    (Prims.of_int (507))
+                                                                    (Prims.of_int (6)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (514))
+                                                                    (Prims.of_int (510))
                                                                     (Prims.of_int (34))
-                                                                    (Prims.of_int (514))
-                                                                    (Prims.of_int (51)))
+                                                                    (Prims.of_int (510))
+                                                                    (Prims.of_int (51)))))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_Builtins.pack
+                                                                    (FStar_Tactics_V1_Builtins.pack
                                                                     tv))
                                                                     (fun
                                                                     uu___1 ->
                                                                     (fun
                                                                     uu___1 ->
                                                                     Obj.magic
-                                                                    (FStar_Tactics_Builtins.term_to_string
+                                                                    (FStar_Tactics_V1_Builtins.term_to_string
                                                                     uu___1))
                                                                     uu___1)))
                                                                     (fun
@@ -4163,24 +4958,28 @@ let rec (find_context_equality_aux :
                                        (fun uu___ ->
                                           (fun uu___ ->
                                              match tv with
-                                             | FStar_Reflection_Data.Tv_Let
+                                             | FStar_Reflection_V1_Data.Tv_Let
                                                  (uu___1, uu___2, bv', ty,
                                                   def, uu___3)
                                                  ->
                                                  Obj.magic
                                                    (FStar_Tactics_Effect.tac_bind
-                                                      (FStar_Range.mk_range
-                                                         "FStar.InteractiveHelpers.PostProcess.fst"
-                                                         (Prims.of_int (518))
-                                                         (Prims.of_int (6))
-                                                         (Prims.of_int (518))
-                                                         (Prims.of_int (31)))
-                                                      (FStar_Range.mk_range
-                                                         "FStar.InteractiveHelpers.PostProcess.fst"
-                                                         (Prims.of_int (518))
-                                                         (Prims.of_int (32))
-                                                         (Prims.of_int (519))
-                                                         (Prims.of_int (57)))
+                                                      (FStar_Sealed.seal
+                                                         (Obj.magic
+                                                            (FStar_Range.mk_range
+                                                               "FStar.InteractiveHelpers.PostProcess.fst"
+                                                               (Prims.of_int (514))
+                                                               (Prims.of_int (6))
+                                                               (Prims.of_int (514))
+                                                               (Prims.of_int (31)))))
+                                                      (FStar_Sealed.seal
+                                                         (Obj.magic
+                                                            (FStar_Range.mk_range
+                                                               "FStar.InteractiveHelpers.PostProcess.fst"
+                                                               (Prims.of_int (514))
+                                                               (Prims.of_int (32))
+                                                               (Prims.of_int (534))
+                                                               (Prims.of_int (11)))))
                                                       (Obj.magic
                                                          (FStar_InteractiveHelpers_Base.print_dbg
                                                             dbg "Is Tv_Let"))
@@ -4188,18 +4987,24 @@ let rec (find_context_equality_aux :
                                                          (fun uu___4 ->
                                                             Obj.magic
                                                               (FStar_Tactics_Effect.tac_bind
-                                                                 (FStar_Range.mk_range
+                                                                 (FStar_Sealed.seal
+                                                                    (
+                                                                    Obj.magic
+                                                                    (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (519))
+                                                                    (Prims.of_int (515))
                                                                     (Prims.of_int (20))
-                                                                    (Prims.of_int (519))
-                                                                    (Prims.of_int (54)))
-                                                                 (FStar_Range.mk_range
+                                                                    (Prims.of_int (515))
+                                                                    (Prims.of_int (54)))))
+                                                                 (FStar_Sealed.seal
+                                                                    (
+                                                                    Obj.magic
+                                                                    (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (519))
+                                                                    (Prims.of_int (515))
                                                                     (Prims.of_int (57))
-                                                                    (Prims.of_int (520))
-                                                                    (Prims.of_int (34)))
+                                                                    (Prims.of_int (534))
+                                                                    (Prims.of_int (11)))))
                                                                  (Obj.magic
                                                                     (
                                                                     FStar_InteractiveHelpers_Effectful.compute_eterm_info
@@ -4213,18 +5018,22 @@ let rec (find_context_equality_aux :
                                                                     ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (520))
+                                                                    (Prims.of_int (516))
                                                                     (Prims.of_int (18))
-                                                                    (Prims.of_int (520))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (516))
+                                                                    (Prims.of_int (31)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (520))
+                                                                    (Prims.of_int (516))
                                                                     (Prims.of_int (34))
-                                                                    (Prims.of_int (530))
-                                                                    (Prims.of_int (8)))
+                                                                    (Prims.of_int (534))
+                                                                    (Prims.of_int (11)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___5 ->
@@ -4235,18 +5044,22 @@ let rec (find_context_equality_aux :
                                                                     einfo ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (523))
+                                                                    (Prims.of_int (8))
+                                                                    (Prims.of_int (525))
+                                                                    (Prims.of_int (23)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
                                                                     (Prims.of_int (527))
-                                                                    (Prims.of_int (8))
-                                                                    (Prims.of_int (529))
-                                                                    (Prims.of_int (23)))
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (531))
                                                                     (Prims.of_int (6))
-                                                                    (Prims.of_int (538))
-                                                                    (Prims.of_int (11)))
+                                                                    (Prims.of_int (534))
+                                                                    (Prims.of_int (11)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___5 ->
@@ -4283,21 +5096,25 @@ let rec (find_context_equality_aux :
                                                                     Obj.magic
                                                                     (Obj.repr
                                                                     (FStar_Tactics_Effect.tac_bind
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (533))
-                                                                    (Prims.of_int (24))
-                                                                    (Prims.of_int (533))
-                                                                    (Prims.of_int (41)))
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (534))
-                                                                    (Prims.of_int (14))
-                                                                    (Prims.of_int (537))
-                                                                    (Prims.of_int (90)))
+                                                                    (FStar_Sealed.seal
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_Builtins.pack
-                                                                    (FStar_Reflection_Data.Tv_Var
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (529))
+                                                                    (Prims.of_int (24))
+                                                                    (Prims.of_int (529))
+                                                                    (Prims.of_int (41)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (530))
+                                                                    (Prims.of_int (14))
+                                                                    (Prims.of_int (533))
+                                                                    (Prims.of_int (90)))))
+                                                                    (Obj.magic
+                                                                    (FStar_Tactics_V1_Builtins.pack
+                                                                    (FStar_Reflection_V1_Data.Tv_Var
                                                                     bv')))
                                                                     (fun
                                                                     uu___6 ->
@@ -4306,18 +5123,22 @@ let rec (find_context_equality_aux :
                                                                     ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (534))
+                                                                    (Prims.of_int (530))
                                                                     (Prims.of_int (20))
-                                                                    (Prims.of_int (535))
-                                                                    (Prims.of_int (66)))
+                                                                    (Prims.of_int (531))
+                                                                    (Prims.of_int (66)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (534))
+                                                                    (Prims.of_int (530))
                                                                     (Prims.of_int (14))
-                                                                    (Prims.of_int (537))
-                                                                    (Prims.of_int (90)))
+                                                                    (Prims.of_int (533))
+                                                                    (Prims.of_int (90)))))
                                                                     (Obj.magic
                                                                     (find_equality_from_post
                                                                     dbg ge0
@@ -4373,8 +5194,8 @@ let (find_context_equality :
   Prims.bool ->
     FStar_InteractiveHelpers_Base.genv ->
       FStar_Reflection_Types.term ->
-        FStar_Reflection_Data.term_view Prims.list ->
-          FStar_Reflection_Data.term_view Prims.list ->
+        FStar_Reflection_V1_Data.term_view Prims.list ->
+          FStar_Reflection_V1_Data.term_view Prims.list ->
             ((FStar_InteractiveHelpers_Base.genv *
                FStar_Reflection_Types.term FStar_Pervasives_Native.option),
               unit) FStar_Tactics_Effect.tac_repr)
@@ -4385,30 +5206,38 @@ let (find_context_equality :
         fun parents ->
           fun children ->
             FStar_Tactics_Effect.tac_bind
-              (FStar_Range.mk_range
-                 "FStar.InteractiveHelpers.PostProcess.fst"
-                 (Prims.of_int (543)) (Prims.of_int (4)) (Prims.of_int (545))
-                 (Prims.of_int (15)))
-              (FStar_Range.mk_range
-                 "FStar.InteractiveHelpers.PostProcess.fst"
-                 (Prims.of_int (547)) (Prims.of_int (2)) (Prims.of_int (547))
-                 (Prims.of_int (62)))
+              (FStar_Sealed.seal
+                 (Obj.magic
+                    (FStar_Range.mk_range
+                       "FStar.InteractiveHelpers.PostProcess.fst"
+                       (Prims.of_int (539)) (Prims.of_int (4))
+                       (Prims.of_int (541)) (Prims.of_int (15)))))
+              (FStar_Sealed.seal
+                 (Obj.magic
+                    (FStar_Range.mk_range
+                       "FStar.InteractiveHelpers.PostProcess.fst"
+                       (Prims.of_int (543)) (Prims.of_int (2))
+                       (Prims.of_int (543)) (Prims.of_int (62)))))
               (Obj.magic
                  (FStar_Tactics_Effect.tac_bind
-                    (FStar_Range.mk_range
-                       "FStar.InteractiveHelpers.PostProcess.fst"
-                       (Prims.of_int (543)) (Prims.of_int (10))
-                       (Prims.of_int (543)) (Prims.of_int (20)))
-                    (FStar_Range.mk_range
-                       "FStar.InteractiveHelpers.PostProcess.fst"
-                       (Prims.of_int (543)) (Prims.of_int (4))
-                       (Prims.of_int (545)) (Prims.of_int (15)))
-                    (Obj.magic (FStar_Tactics_Builtins.inspect tm))
+                    (FStar_Sealed.seal
+                       (Obj.magic
+                          (FStar_Range.mk_range
+                             "FStar.InteractiveHelpers.PostProcess.fst"
+                             (Prims.of_int (539)) (Prims.of_int (10))
+                             (Prims.of_int (539)) (Prims.of_int (20)))))
+                    (FStar_Sealed.seal
+                       (Obj.magic
+                          (FStar_Range.mk_range
+                             "FStar.InteractiveHelpers.PostProcess.fst"
+                             (Prims.of_int (539)) (Prims.of_int (4))
+                             (Prims.of_int (541)) (Prims.of_int (15)))))
+                    (Obj.magic (FStar_Tactics_V1_Builtins.inspect tm))
                     (fun uu___ ->
                        FStar_Tactics_Effect.lift_div_tac
                          (fun uu___1 ->
                             match uu___ with
-                            | FStar_Reflection_Data.Tv_Var bv ->
+                            | FStar_Reflection_V1_Data.Tv_Var bv ->
                                 FStar_Pervasives_Native.Some bv
                             | uu___2 -> FStar_Pervasives_Native.None))))
               (fun uu___ ->
@@ -4428,12 +5257,19 @@ let rec (replace_term_in :
       fun to_term ->
         fun tm ->
           FStar_Tactics_Effect.tac_bind
-            (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
-               (Prims.of_int (552)) (Prims.of_int (5)) (Prims.of_int (552))
-               (Prims.of_int (25)))
-            (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
-               (Prims.of_int (552)) (Prims.of_int (2)) (Prims.of_int (596))
-               (Prims.of_int (6))) (Obj.magic (term_eq from_term tm))
+            (FStar_Sealed.seal
+               (Obj.magic
+                  (FStar_Range.mk_range
+                     "FStar.InteractiveHelpers.PostProcess.fst"
+                     (Prims.of_int (548)) (Prims.of_int (5))
+                     (Prims.of_int (548)) (Prims.of_int (25)))))
+            (FStar_Sealed.seal
+               (Obj.magic
+                  (FStar_Range.mk_range
+                     "FStar.InteractiveHelpers.PostProcess.fst"
+                     (Prims.of_int (548)) (Prims.of_int (2))
+                     (Prims.of_int (592)) (Prims.of_int (6)))))
+            (Obj.magic (term_eq from_term tm))
             (fun uu___ ->
                (fun uu___ ->
                   if uu___
@@ -4446,50 +5282,60 @@ let rec (replace_term_in :
                     Obj.magic
                       (Obj.repr
                          (FStar_Tactics_Effect.tac_bind
-                            (FStar_Range.mk_range
-                               "FStar.InteractiveHelpers.PostProcess.fst"
-                               (Prims.of_int (553)) (Prims.of_int (8))
-                               (Prims.of_int (553)) (Prims.of_int (18)))
-                            (FStar_Range.mk_range
-                               "FStar.InteractiveHelpers.PostProcess.fst"
-                               (Prims.of_int (553)) (Prims.of_int (2))
-                               (Prims.of_int (596)) (Prims.of_int (6)))
-                            (Obj.magic (FStar_Tactics_Builtins.inspect tm))
+                            (FStar_Sealed.seal
+                               (Obj.magic
+                                  (FStar_Range.mk_range
+                                     "FStar.InteractiveHelpers.PostProcess.fst"
+                                     (Prims.of_int (549)) (Prims.of_int (8))
+                                     (Prims.of_int (549)) (Prims.of_int (18)))))
+                            (FStar_Sealed.seal
+                               (Obj.magic
+                                  (FStar_Range.mk_range
+                                     "FStar.InteractiveHelpers.PostProcess.fst"
+                                     (Prims.of_int (549)) (Prims.of_int (2))
+                                     (Prims.of_int (592)) (Prims.of_int (6)))))
+                            (Obj.magic (FStar_Tactics_V1_Builtins.inspect tm))
                             (fun uu___2 ->
                                (fun uu___2 ->
                                   match uu___2 with
-                                  | FStar_Reflection_Data.Tv_Var uu___3 ->
+                                  | FStar_Reflection_V1_Data.Tv_Var uu___3 ->
                                       Obj.magic
                                         (Obj.repr
                                            (FStar_Tactics_Effect.lift_div_tac
                                               (fun uu___4 -> tm)))
-                                  | FStar_Reflection_Data.Tv_BVar uu___3 ->
+                                  | FStar_Reflection_V1_Data.Tv_BVar uu___3
+                                      ->
                                       Obj.magic
                                         (Obj.repr
                                            (FStar_Tactics_Effect.lift_div_tac
                                               (fun uu___4 -> tm)))
-                                  | FStar_Reflection_Data.Tv_FVar uu___3 ->
+                                  | FStar_Reflection_V1_Data.Tv_FVar uu___3
+                                      ->
                                       Obj.magic
                                         (Obj.repr
                                            (FStar_Tactics_Effect.lift_div_tac
                                               (fun uu___4 -> tm)))
-                                  | FStar_Reflection_Data.Tv_App
+                                  | FStar_Reflection_V1_Data.Tv_App
                                       (hd, (a, qual)) ->
                                       Obj.magic
                                         (Obj.repr
                                            (FStar_Tactics_Effect.tac_bind
-                                              (FStar_Range.mk_range
-                                                 "FStar.InteractiveHelpers.PostProcess.fst"
-                                                 (Prims.of_int (556))
-                                                 (Prims.of_int (13))
-                                                 (Prims.of_int (556))
-                                                 (Prims.of_int (52)))
-                                              (FStar_Range.mk_range
-                                                 "FStar.InteractiveHelpers.PostProcess.fst"
-                                                 (Prims.of_int (556))
-                                                 (Prims.of_int (55))
-                                                 (Prims.of_int (557))
-                                                 (Prims.of_int (57)))
+                                              (FStar_Sealed.seal
+                                                 (Obj.magic
+                                                    (FStar_Range.mk_range
+                                                       "FStar.InteractiveHelpers.PostProcess.fst"
+                                                       (Prims.of_int (552))
+                                                       (Prims.of_int (13))
+                                                       (Prims.of_int (552))
+                                                       (Prims.of_int (52)))))
+                                              (FStar_Sealed.seal
+                                                 (Obj.magic
+                                                    (FStar_Range.mk_range
+                                                       "FStar.InteractiveHelpers.PostProcess.fst"
+                                                       (Prims.of_int (552))
+                                                       (Prims.of_int (55))
+                                                       (Prims.of_int (554))
+                                                       (Prims.of_int (32)))))
                                               (Obj.magic
                                                  (replace_term_in dbg
                                                     from_term to_term a))
@@ -4497,18 +5343,22 @@ let rec (replace_term_in :
                                                  (fun a' ->
                                                     Obj.magic
                                                       (FStar_Tactics_Effect.tac_bind
-                                                         (FStar_Range.mk_range
-                                                            "FStar.InteractiveHelpers.PostProcess.fst"
-                                                            (Prims.of_int (557))
-                                                            (Prims.of_int (14))
-                                                            (Prims.of_int (557))
-                                                            (Prims.of_int (54)))
-                                                         (FStar_Range.mk_range
-                                                            "FStar.InteractiveHelpers.PostProcess.fst"
-                                                            (Prims.of_int (558))
-                                                            (Prims.of_int (4))
-                                                            (Prims.of_int (558))
-                                                            (Prims.of_int (32)))
+                                                         (FStar_Sealed.seal
+                                                            (Obj.magic
+                                                               (FStar_Range.mk_range
+                                                                  "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                  (Prims.of_int (553))
+                                                                  (Prims.of_int (14))
+                                                                  (Prims.of_int (553))
+                                                                  (Prims.of_int (54)))))
+                                                         (FStar_Sealed.seal
+                                                            (Obj.magic
+                                                               (FStar_Range.mk_range
+                                                                  "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                  (Prims.of_int (554))
+                                                                  (Prims.of_int (4))
+                                                                  (Prims.of_int (554))
+                                                                  (Prims.of_int (32)))))
                                                          (Obj.magic
                                                             (replace_term_in
                                                                dbg from_term
@@ -4516,69 +5366,78 @@ let rec (replace_term_in :
                                                          (fun uu___3 ->
                                                             (fun hd' ->
                                                                Obj.magic
-                                                                 (FStar_Tactics_Builtins.pack
+                                                                 (FStar_Tactics_V1_Builtins.pack
                                                                     (
-                                                                    FStar_Reflection_Data.Tv_App
+                                                                    FStar_Reflection_V1_Data.Tv_App
                                                                     (hd',
                                                                     (a',
                                                                     qual)))))
                                                               uu___3)))
                                                    uu___3)))
-                                  | FStar_Reflection_Data.Tv_Abs (br, body)
-                                      ->
+                                  | FStar_Reflection_V1_Data.Tv_Abs
+                                      (br, body) ->
                                       Obj.magic
                                         (Obj.repr
                                            (FStar_Tactics_Effect.tac_bind
-                                              (FStar_Range.mk_range
-                                                 "FStar.InteractiveHelpers.PostProcess.fst"
-                                                 (Prims.of_int (560))
-                                                 (Prims.of_int (16))
-                                                 (Prims.of_int (560))
-                                                 (Prims.of_int (58)))
-                                              (FStar_Range.mk_range
-                                                 "FStar.InteractiveHelpers.PostProcess.fst"
-                                                 (Prims.of_int (561))
-                                                 (Prims.of_int (4))
-                                                 (Prims.of_int (561))
-                                                 (Prims.of_int (26)))
+                                              (FStar_Sealed.seal
+                                                 (Obj.magic
+                                                    (FStar_Range.mk_range
+                                                       "FStar.InteractiveHelpers.PostProcess.fst"
+                                                       (Prims.of_int (556))
+                                                       (Prims.of_int (16))
+                                                       (Prims.of_int (556))
+                                                       (Prims.of_int (58)))))
+                                              (FStar_Sealed.seal
+                                                 (Obj.magic
+                                                    (FStar_Range.mk_range
+                                                       "FStar.InteractiveHelpers.PostProcess.fst"
+                                                       (Prims.of_int (557))
+                                                       (Prims.of_int (4))
+                                                       (Prims.of_int (557))
+                                                       (Prims.of_int (26)))))
                                               (Obj.magic
                                                  (replace_term_in dbg
                                                     from_term to_term body))
                                               (fun uu___3 ->
                                                  (fun body' ->
                                                     Obj.magic
-                                                      (FStar_Tactics_Builtins.pack
-                                                         (FStar_Reflection_Data.Tv_Abs
+                                                      (FStar_Tactics_V1_Builtins.pack
+                                                         (FStar_Reflection_V1_Data.Tv_Abs
                                                             (br, body'))))
                                                    uu___3)))
-                                  | FStar_Reflection_Data.Tv_Arrow (br, c0)
-                                      ->
+                                  | FStar_Reflection_V1_Data.Tv_Arrow
+                                      (br, c0) ->
                                       Obj.magic
                                         (Obj.repr
                                            (FStar_Tactics_Effect.lift_div_tac
                                               (fun uu___3 -> tm)))
-                                  | FStar_Reflection_Data.Tv_Type uu___3 ->
+                                  | FStar_Reflection_V1_Data.Tv_Type uu___3
+                                      ->
                                       Obj.magic
                                         (Obj.repr
                                            (FStar_Tactics_Effect.lift_div_tac
                                               (fun uu___4 -> tm)))
-                                  | FStar_Reflection_Data.Tv_Refine
+                                  | FStar_Reflection_V1_Data.Tv_Refine
                                       (bv, sort, ref) ->
                                       Obj.magic
                                         (Obj.repr
                                            (FStar_Tactics_Effect.tac_bind
-                                              (FStar_Range.mk_range
-                                                 "FStar.InteractiveHelpers.PostProcess.fst"
-                                                 (Prims.of_int (565))
-                                                 (Prims.of_int (16))
-                                                 (Prims.of_int (565))
-                                                 (Prims.of_int (58)))
-                                              (FStar_Range.mk_range
-                                                 "FStar.InteractiveHelpers.PostProcess.fst"
-                                                 (Prims.of_int (565))
-                                                 (Prims.of_int (61))
-                                                 (Prims.of_int (566))
-                                                 (Prims.of_int (59)))
+                                              (FStar_Sealed.seal
+                                                 (Obj.magic
+                                                    (FStar_Range.mk_range
+                                                       "FStar.InteractiveHelpers.PostProcess.fst"
+                                                       (Prims.of_int (561))
+                                                       (Prims.of_int (16))
+                                                       (Prims.of_int (561))
+                                                       (Prims.of_int (58)))))
+                                              (FStar_Sealed.seal
+                                                 (Obj.magic
+                                                    (FStar_Range.mk_range
+                                                       "FStar.InteractiveHelpers.PostProcess.fst"
+                                                       (Prims.of_int (561))
+                                                       (Prims.of_int (61))
+                                                       (Prims.of_int (563))
+                                                       (Prims.of_int (34)))))
                                               (Obj.magic
                                                  (replace_term_in dbg
                                                     from_term to_term sort))
@@ -4586,18 +5445,22 @@ let rec (replace_term_in :
                                                  (fun sort' ->
                                                     Obj.magic
                                                       (FStar_Tactics_Effect.tac_bind
-                                                         (FStar_Range.mk_range
-                                                            "FStar.InteractiveHelpers.PostProcess.fst"
-                                                            (Prims.of_int (566))
-                                                            (Prims.of_int (15))
-                                                            (Prims.of_int (566))
-                                                            (Prims.of_int (56)))
-                                                         (FStar_Range.mk_range
-                                                            "FStar.InteractiveHelpers.PostProcess.fst"
-                                                            (Prims.of_int (567))
-                                                            (Prims.of_int (4))
-                                                            (Prims.of_int (567))
-                                                            (Prims.of_int (34)))
+                                                         (FStar_Sealed.seal
+                                                            (Obj.magic
+                                                               (FStar_Range.mk_range
+                                                                  "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                  (Prims.of_int (562))
+                                                                  (Prims.of_int (15))
+                                                                  (Prims.of_int (562))
+                                                                  (Prims.of_int (56)))))
+                                                         (FStar_Sealed.seal
+                                                            (Obj.magic
+                                                               (FStar_Range.mk_range
+                                                                  "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                  (Prims.of_int (563))
+                                                                  (Prims.of_int (4))
+                                                                  (Prims.of_int (563))
+                                                                  (Prims.of_int (34)))))
                                                          (Obj.magic
                                                             (replace_term_in
                                                                dbg from_term
@@ -4605,42 +5468,47 @@ let rec (replace_term_in :
                                                          (fun uu___3 ->
                                                             (fun ref' ->
                                                                Obj.magic
-                                                                 (FStar_Tactics_Builtins.pack
+                                                                 (FStar_Tactics_V1_Builtins.pack
                                                                     (
-                                                                    FStar_Reflection_Data.Tv_Refine
+                                                                    FStar_Reflection_V1_Data.Tv_Refine
                                                                     (bv,
                                                                     sort',
                                                                     ref'))))
                                                               uu___3)))
                                                    uu___3)))
-                                  | FStar_Reflection_Data.Tv_Const uu___3 ->
+                                  | FStar_Reflection_V1_Data.Tv_Const uu___3
+                                      ->
                                       Obj.magic
                                         (Obj.repr
                                            (FStar_Tactics_Effect.lift_div_tac
                                               (fun uu___4 -> tm)))
-                                  | FStar_Reflection_Data.Tv_Uvar
+                                  | FStar_Reflection_V1_Data.Tv_Uvar
                                       (uu___3, uu___4) ->
                                       Obj.magic
                                         (Obj.repr
                                            (FStar_Tactics_Effect.lift_div_tac
                                               (fun uu___5 -> tm)))
-                                  | FStar_Reflection_Data.Tv_Let
+                                  | FStar_Reflection_V1_Data.Tv_Let
                                       (recf, attrs, bv, ty, def, body) ->
                                       Obj.magic
                                         (Obj.repr
                                            (FStar_Tactics_Effect.tac_bind
-                                              (FStar_Range.mk_range
-                                                 "FStar.InteractiveHelpers.PostProcess.fst"
-                                                 (Prims.of_int (573))
-                                                 (Prims.of_int (15))
-                                                 (Prims.of_int (573))
-                                                 (Prims.of_int (56)))
-                                              (FStar_Range.mk_range
-                                                 "FStar.InteractiveHelpers.PostProcess.fst"
-                                                 (Prims.of_int (573))
-                                                 (Prims.of_int (59))
-                                                 (Prims.of_int (574))
-                                                 (Prims.of_int (61)))
+                                              (FStar_Sealed.seal
+                                                 (Obj.magic
+                                                    (FStar_Range.mk_range
+                                                       "FStar.InteractiveHelpers.PostProcess.fst"
+                                                       (Prims.of_int (569))
+                                                       (Prims.of_int (15))
+                                                       (Prims.of_int (569))
+                                                       (Prims.of_int (56)))))
+                                              (FStar_Sealed.seal
+                                                 (Obj.magic
+                                                    (FStar_Range.mk_range
+                                                       "FStar.InteractiveHelpers.PostProcess.fst"
+                                                       (Prims.of_int (569))
+                                                       (Prims.of_int (59))
+                                                       (Prims.of_int (571))
+                                                       (Prims.of_int (45)))))
                                               (Obj.magic
                                                  (replace_term_in dbg
                                                     from_term to_term def))
@@ -4648,18 +5516,22 @@ let rec (replace_term_in :
                                                  (fun def' ->
                                                     Obj.magic
                                                       (FStar_Tactics_Effect.tac_bind
-                                                         (FStar_Range.mk_range
-                                                            "FStar.InteractiveHelpers.PostProcess.fst"
-                                                            (Prims.of_int (574))
-                                                            (Prims.of_int (16))
-                                                            (Prims.of_int (574))
-                                                            (Prims.of_int (58)))
-                                                         (FStar_Range.mk_range
-                                                            "FStar.InteractiveHelpers.PostProcess.fst"
-                                                            (Prims.of_int (575))
-                                                            (Prims.of_int (4))
-                                                            (Prims.of_int (575))
-                                                            (Prims.of_int (45)))
+                                                         (FStar_Sealed.seal
+                                                            (Obj.magic
+                                                               (FStar_Range.mk_range
+                                                                  "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                  (Prims.of_int (570))
+                                                                  (Prims.of_int (16))
+                                                                  (Prims.of_int (570))
+                                                                  (Prims.of_int (58)))))
+                                                         (FStar_Sealed.seal
+                                                            (Obj.magic
+                                                               (FStar_Range.mk_range
+                                                                  "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                  (Prims.of_int (571))
+                                                                  (Prims.of_int (4))
+                                                                  (Prims.of_int (571))
+                                                                  (Prims.of_int (45)))))
                                                          (Obj.magic
                                                             (replace_term_in
                                                                dbg from_term
@@ -4667,9 +5539,9 @@ let rec (replace_term_in :
                                                          (fun uu___3 ->
                                                             (fun body' ->
                                                                Obj.magic
-                                                                 (FStar_Tactics_Builtins.pack
+                                                                 (FStar_Tactics_V1_Builtins.pack
                                                                     (
-                                                                    FStar_Reflection_Data.Tv_Let
+                                                                    FStar_Reflection_V1_Data.Tv_Let
                                                                     (recf,
                                                                     attrs,
                                                                     bv, ty,
@@ -4677,39 +5549,47 @@ let rec (replace_term_in :
                                                                     body'))))
                                                               uu___3)))
                                                    uu___3)))
-                                  | FStar_Reflection_Data.Tv_Match
+                                  | FStar_Reflection_V1_Data.Tv_Match
                                       (scrutinee, ret_opt, branches) ->
                                       Obj.magic
                                         (Obj.repr
                                            (FStar_Tactics_Effect.tac_bind
-                                              (FStar_Range.mk_range
-                                                 "FStar.InteractiveHelpers.PostProcess.fst"
-                                                 (Prims.of_int (578))
-                                                 (Prims.of_int (51))
-                                                 (Prims.of_int (580))
-                                                 (Prims.of_int (27)))
-                                              (FStar_Range.mk_range
-                                                 "FStar.InteractiveHelpers.PostProcess.fst"
-                                                 (Prims.of_int (583))
-                                                 (Prims.of_int (6))
-                                                 (Prims.of_int (584))
-                                                 (Prims.of_int (71)))
+                                              (FStar_Sealed.seal
+                                                 (Obj.magic
+                                                    (FStar_Range.mk_range
+                                                       "FStar.InteractiveHelpers.PostProcess.fst"
+                                                       (Prims.of_int (574))
+                                                       (Prims.of_int (51))
+                                                       (Prims.of_int (578))
+                                                       (Prims.of_int (18)))))
+                                              (FStar_Sealed.seal
+                                                 (Obj.magic
+                                                    (FStar_Range.mk_range
+                                                       "FStar.InteractiveHelpers.PostProcess.fst"
+                                                       (Prims.of_int (579))
+                                                       (Prims.of_int (6))
+                                                       (Prims.of_int (582))
+                                                       (Prims.of_int (48)))))
                                               (FStar_Tactics_Effect.lift_div_tac
                                                  (fun uu___3 ->
                                                     fun br ->
                                                       FStar_Tactics_Effect.tac_bind
-                                                        (FStar_Range.mk_range
-                                                           "FStar.InteractiveHelpers.PostProcess.fst"
-                                                           (Prims.of_int (580))
-                                                           (Prims.of_int (22))
-                                                           (Prims.of_int (580))
-                                                           (Prims.of_int (24)))
-                                                        (FStar_Range.mk_range
-                                                           "FStar.InteractiveHelpers.PostProcess.fst"
-                                                           (Prims.of_int (578))
-                                                           (Prims.of_int (51))
-                                                           (Prims.of_int (580))
-                                                           (Prims.of_int (27)))
+                                                        (FStar_Sealed.seal
+                                                           (Obj.magic
+                                                              (FStar_Range.mk_range
+                                                                 "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                 (Prims.of_int (576))
+                                                                 (Prims.of_int (22))
+                                                                 (Prims.of_int (576))
+                                                                 (Prims.of_int (24)))))
+                                                        (FStar_Sealed.seal
+                                                           (Obj.magic
+                                                              (FStar_Range.mk_range
+                                                                 "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                 (Prims.of_int (574))
+                                                                 (Prims.of_int (51))
+                                                                 (Prims.of_int (578))
+                                                                 (Prims.of_int (18)))))
                                                         (FStar_Tactics_Effect.lift_div_tac
                                                            (fun uu___4 -> br))
                                                         (fun uu___4 ->
@@ -4721,18 +5601,22 @@ let rec (replace_term_in :
                                                                   Obj.magic
                                                                     (
                                                                     FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (581))
+                                                                    (Prims.of_int (577))
                                                                     (Prims.of_int (18))
-                                                                    (Prims.of_int (581))
-                                                                    (Prims.of_int (60)))
+                                                                    (Prims.of_int (577))
+                                                                    (Prims.of_int (60)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (582))
+                                                                    (Prims.of_int (578))
                                                                     (Prims.of_int (6))
-                                                                    (Prims.of_int (582))
-                                                                    (Prims.of_int (18)))
+                                                                    (Prims.of_int (578))
+                                                                    (Prims.of_int (18)))))
                                                                     (Obj.magic
                                                                     (replace_term_in
                                                                     dbg
@@ -4751,18 +5635,22 @@ let rec (replace_term_in :
                                                  (fun explore_branch ->
                                                     Obj.magic
                                                       (FStar_Tactics_Effect.tac_bind
-                                                         (FStar_Range.mk_range
-                                                            "FStar.InteractiveHelpers.PostProcess.fst"
-                                                            (Prims.of_int (584))
-                                                            (Prims.of_int (21))
-                                                            (Prims.of_int (584))
-                                                            (Prims.of_int (68)))
-                                                         (FStar_Range.mk_range
-                                                            "FStar.InteractiveHelpers.PostProcess.fst"
-                                                            (Prims.of_int (584))
-                                                            (Prims.of_int (71))
-                                                            (Prims.of_int (585))
-                                                            (Prims.of_int (50)))
+                                                         (FStar_Sealed.seal
+                                                            (Obj.magic
+                                                               (FStar_Range.mk_range
+                                                                  "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                  (Prims.of_int (580))
+                                                                  (Prims.of_int (21))
+                                                                  (Prims.of_int (580))
+                                                                  (Prims.of_int (68)))))
+                                                         (FStar_Sealed.seal
+                                                            (Obj.magic
+                                                               (FStar_Range.mk_range
+                                                                  "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                  (Prims.of_int (580))
+                                                                  (Prims.of_int (71))
+                                                                  (Prims.of_int (582))
+                                                                  (Prims.of_int (48)))))
                                                          (Obj.magic
                                                             (replace_term_in
                                                                dbg from_term
@@ -4774,19 +5662,23 @@ let rec (replace_term_in :
                                                                Obj.magic
                                                                  (FStar_Tactics_Effect.tac_bind
                                                                     (
-                                                                    FStar_Range.mk_range
+                                                                    FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (585))
+                                                                    (Prims.of_int (581))
                                                                     (Prims.of_int (20))
-                                                                    (Prims.of_int (585))
-                                                                    (Prims.of_int (47)))
+                                                                    (Prims.of_int (581))
+                                                                    (Prims.of_int (47)))))
                                                                     (
-                                                                    FStar_Range.mk_range
+                                                                    FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (586))
+                                                                    (Prims.of_int (582))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (586))
-                                                                    (Prims.of_int (48)))
+                                                                    (Prims.of_int (582))
+                                                                    (Prims.of_int (48)))))
                                                                     (
                                                                     Obj.magic
                                                                     (FStar_Tactics_Util.map
@@ -4799,31 +5691,35 @@ let rec (replace_term_in :
                                                                     branches'
                                                                     ->
                                                                     Obj.magic
-                                                                    (FStar_Tactics_Builtins.pack
-                                                                    (FStar_Reflection_Data.Tv_Match
+                                                                    (FStar_Tactics_V1_Builtins.pack
+                                                                    (FStar_Reflection_V1_Data.Tv_Match
                                                                     (scrutinee',
                                                                     ret_opt,
                                                                     branches'))))
                                                                     uu___3)))
                                                               uu___3)))
                                                    uu___3)))
-                                  | FStar_Reflection_Data.Tv_AscribedT
+                                  | FStar_Reflection_V1_Data.Tv_AscribedT
                                       (e, ty, tac, use_eq) ->
                                       Obj.magic
                                         (Obj.repr
                                            (FStar_Tactics_Effect.tac_bind
-                                              (FStar_Range.mk_range
-                                                 "FStar.InteractiveHelpers.PostProcess.fst"
-                                                 (Prims.of_int (588))
-                                                 (Prims.of_int (13))
-                                                 (Prims.of_int (588))
-                                                 (Prims.of_int (52)))
-                                              (FStar_Range.mk_range
-                                                 "FStar.InteractiveHelpers.PostProcess.fst"
-                                                 (Prims.of_int (588))
-                                                 (Prims.of_int (55))
-                                                 (Prims.of_int (589))
-                                                 (Prims.of_int (57)))
+                                              (FStar_Sealed.seal
+                                                 (Obj.magic
+                                                    (FStar_Range.mk_range
+                                                       "FStar.InteractiveHelpers.PostProcess.fst"
+                                                       (Prims.of_int (584))
+                                                       (Prims.of_int (13))
+                                                       (Prims.of_int (584))
+                                                       (Prims.of_int (52)))))
+                                              (FStar_Sealed.seal
+                                                 (Obj.magic
+                                                    (FStar_Range.mk_range
+                                                       "FStar.InteractiveHelpers.PostProcess.fst"
+                                                       (Prims.of_int (584))
+                                                       (Prims.of_int (55))
+                                                       (Prims.of_int (586))
+                                                       (Prims.of_int (41)))))
                                               (Obj.magic
                                                  (replace_term_in dbg
                                                     from_term to_term e))
@@ -4831,18 +5727,22 @@ let rec (replace_term_in :
                                                  (fun e' ->
                                                     Obj.magic
                                                       (FStar_Tactics_Effect.tac_bind
-                                                         (FStar_Range.mk_range
-                                                            "FStar.InteractiveHelpers.PostProcess.fst"
-                                                            (Prims.of_int (589))
-                                                            (Prims.of_int (14))
-                                                            (Prims.of_int (589))
-                                                            (Prims.of_int (54)))
-                                                         (FStar_Range.mk_range
-                                                            "FStar.InteractiveHelpers.PostProcess.fst"
-                                                            (Prims.of_int (590))
-                                                            (Prims.of_int (4))
-                                                            (Prims.of_int (590))
-                                                            (Prims.of_int (41)))
+                                                         (FStar_Sealed.seal
+                                                            (Obj.magic
+                                                               (FStar_Range.mk_range
+                                                                  "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                  (Prims.of_int (585))
+                                                                  (Prims.of_int (14))
+                                                                  (Prims.of_int (585))
+                                                                  (Prims.of_int (54)))))
+                                                         (FStar_Sealed.seal
+                                                            (Obj.magic
+                                                               (FStar_Range.mk_range
+                                                                  "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                  (Prims.of_int (586))
+                                                                  (Prims.of_int (4))
+                                                                  (Prims.of_int (586))
+                                                                  (Prims.of_int (41)))))
                                                          (Obj.magic
                                                             (replace_term_in
                                                                dbg from_term
@@ -4850,39 +5750,43 @@ let rec (replace_term_in :
                                                          (fun uu___3 ->
                                                             (fun ty' ->
                                                                Obj.magic
-                                                                 (FStar_Tactics_Builtins.pack
+                                                                 (FStar_Tactics_V1_Builtins.pack
                                                                     (
-                                                                    FStar_Reflection_Data.Tv_AscribedT
+                                                                    FStar_Reflection_V1_Data.Tv_AscribedT
                                                                     (e', ty',
                                                                     tac,
                                                                     use_eq))))
                                                               uu___3)))
                                                    uu___3)))
-                                  | FStar_Reflection_Data.Tv_AscribedC
+                                  | FStar_Reflection_V1_Data.Tv_AscribedC
                                       (e, c, tac, use_eq) ->
                                       Obj.magic
                                         (Obj.repr
                                            (FStar_Tactics_Effect.tac_bind
-                                              (FStar_Range.mk_range
-                                                 "FStar.InteractiveHelpers.PostProcess.fst"
-                                                 (Prims.of_int (592))
-                                                 (Prims.of_int (13))
-                                                 (Prims.of_int (592))
-                                                 (Prims.of_int (52)))
-                                              (FStar_Range.mk_range
-                                                 "FStar.InteractiveHelpers.PostProcess.fst"
-                                                 (Prims.of_int (593))
-                                                 (Prims.of_int (4))
-                                                 (Prims.of_int (593))
-                                                 (Prims.of_int (39)))
+                                              (FStar_Sealed.seal
+                                                 (Obj.magic
+                                                    (FStar_Range.mk_range
+                                                       "FStar.InteractiveHelpers.PostProcess.fst"
+                                                       (Prims.of_int (588))
+                                                       (Prims.of_int (13))
+                                                       (Prims.of_int (588))
+                                                       (Prims.of_int (52)))))
+                                              (FStar_Sealed.seal
+                                                 (Obj.magic
+                                                    (FStar_Range.mk_range
+                                                       "FStar.InteractiveHelpers.PostProcess.fst"
+                                                       (Prims.of_int (589))
+                                                       (Prims.of_int (4))
+                                                       (Prims.of_int (589))
+                                                       (Prims.of_int (39)))))
                                               (Obj.magic
                                                  (replace_term_in dbg
                                                     from_term to_term e))
                                               (fun uu___3 ->
                                                  (fun e' ->
                                                     Obj.magic
-                                                      (FStar_Tactics_Builtins.pack
-                                                         (FStar_Reflection_Data.Tv_AscribedC
+                                                      (FStar_Tactics_V1_Builtins.pack
+                                                         (FStar_Reflection_V1_Data.Tv_AscribedC
                                                             (e', c, tac,
                                                               use_eq))))
                                                    uu___3)))
@@ -4898,19 +5802,24 @@ let rec (strip_implicit_parameters :
   =
   fun tm ->
     FStar_Tactics_Effect.tac_bind
-      (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
-         (Prims.of_int (600)) (Prims.of_int (8)) (Prims.of_int (600))
-         (Prims.of_int (18)))
-      (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
-         (Prims.of_int (600)) (Prims.of_int (2)) (Prims.of_int (603))
-         (Prims.of_int (11))) (Obj.magic (FStar_Tactics_Builtins.inspect tm))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
+               (Prims.of_int (596)) (Prims.of_int (8)) (Prims.of_int (596))
+               (Prims.of_int (18)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
+               (Prims.of_int (596)) (Prims.of_int (2)) (Prims.of_int (599))
+               (Prims.of_int (11)))))
+      (Obj.magic (FStar_Tactics_V1_Builtins.inspect tm))
       (fun uu___ ->
          (fun uu___ ->
             match uu___ with
-            | FStar_Reflection_Data.Tv_App (hd, (a, qualif)) ->
+            | FStar_Reflection_V1_Data.Tv_App (hd, (a, qualif)) ->
                 Obj.magic
                   (Obj.repr
-                     (if FStar_Reflection_Data.uu___is_Q_Implicit qualif
+                     (if FStar_Reflection_V1_Data.uu___is_Q_Implicit qualif
                       then Obj.repr (strip_implicit_parameters hd)
                       else
                         Obj.repr
@@ -4929,33 +5838,47 @@ let (unfold_in_assert_or_assume :
   fun dbg ->
     fun ares ->
       FStar_Tactics_Effect.tac_bind
-        (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
-           (Prims.of_int (607)) (Prims.of_int (2)) (Prims.of_int (607))
-           (Prims.of_int (78)))
-        (FStar_Range.mk_range "FStar.InteractiveHelpers.PostProcess.fst"
-           (Prims.of_int (607)) (Prims.of_int (79)) (Prims.of_int (612))
-           (Prims.of_int (4)))
+        (FStar_Sealed.seal
+           (Obj.magic
+              (FStar_Range.mk_range
+                 "FStar.InteractiveHelpers.PostProcess.fst"
+                 (Prims.of_int (603)) (Prims.of_int (2)) (Prims.of_int (603))
+                 (Prims.of_int (78)))))
+        (FStar_Sealed.seal
+           (Obj.magic
+              (FStar_Range.mk_range
+                 "FStar.InteractiveHelpers.PostProcess.fst"
+                 (Prims.of_int (603)) (Prims.of_int (79))
+                 (Prims.of_int (737)) (Prims.of_int (30)))))
         (Obj.magic
            (FStar_Tactics_Effect.tac_bind
-              (FStar_Range.mk_range
-                 "FStar.InteractiveHelpers.PostProcess.fst"
-                 (Prims.of_int (607)) (Prims.of_int (16))
-                 (Prims.of_int (607)) (Prims.of_int (78)))
-              (FStar_Range.mk_range
-                 "FStar.InteractiveHelpers.PostProcess.fst"
-                 (Prims.of_int (607)) (Prims.of_int (2)) (Prims.of_int (607))
-                 (Prims.of_int (78)))
-              (Obj.magic
-                 (FStar_Tactics_Effect.tac_bind
+              (FStar_Sealed.seal
+                 (Obj.magic
                     (FStar_Range.mk_range
                        "FStar.InteractiveHelpers.PostProcess.fst"
-                       (Prims.of_int (607)) (Prims.of_int (54))
-                       (Prims.of_int (607)) (Prims.of_int (77)))
-                    (FStar_Range.mk_range "prims.fst" (Prims.of_int (590))
-                       (Prims.of_int (19)) (Prims.of_int (590))
-                       (Prims.of_int (31)))
+                       (Prims.of_int (603)) (Prims.of_int (16))
+                       (Prims.of_int (603)) (Prims.of_int (78)))))
+              (FStar_Sealed.seal
+                 (Obj.magic
+                    (FStar_Range.mk_range
+                       "FStar.InteractiveHelpers.PostProcess.fst"
+                       (Prims.of_int (603)) (Prims.of_int (2))
+                       (Prims.of_int (603)) (Prims.of_int (78)))))
+              (Obj.magic
+                 (FStar_Tactics_Effect.tac_bind
+                    (FStar_Sealed.seal
+                       (Obj.magic
+                          (FStar_Range.mk_range
+                             "FStar.InteractiveHelpers.PostProcess.fst"
+                             (Prims.of_int (603)) (Prims.of_int (54))
+                             (Prims.of_int (603)) (Prims.of_int (77)))))
+                    (FStar_Sealed.seal
+                       (Obj.magic
+                          (FStar_Range.mk_range "prims.fst"
+                             (Prims.of_int (590)) (Prims.of_int (19))
+                             (Prims.of_int (590)) (Prims.of_int (31)))))
                     (Obj.magic
-                       (FStar_Tactics_Builtins.term_to_string ares.res))
+                       (FStar_Tactics_V1_Builtins.term_to_string ares.res))
                     (fun uu___ ->
                        FStar_Tactics_Effect.lift_div_tac
                          (fun uu___1 ->
@@ -4970,14 +5893,18 @@ let (unfold_in_assert_or_assume :
            (fun uu___ ->
               Obj.magic
                 (FStar_Tactics_Effect.tac_bind
-                   (FStar_Range.mk_range
-                      "FStar.InteractiveHelpers.PostProcess.fst"
-                      (Prims.of_int (611)) (Prims.of_int (4))
-                      (Prims.of_int (611)) (Prims.of_int (68)))
-                   (FStar_Range.mk_range
-                      "FStar.InteractiveHelpers.PostProcess.fst"
-                      (Prims.of_int (612)) (Prims.of_int (4))
-                      (Prims.of_int (618)) (Prims.of_int (4)))
+                   (FStar_Sealed.seal
+                      (Obj.magic
+                         (FStar_Range.mk_range
+                            "FStar.InteractiveHelpers.PostProcess.fst"
+                            (Prims.of_int (607)) (Prims.of_int (4))
+                            (Prims.of_int (607)) (Prims.of_int (68)))))
+                   (FStar_Sealed.seal
+                      (Obj.magic
+                         (FStar_Range.mk_range
+                            "FStar.InteractiveHelpers.PostProcess.fst"
+                            (Prims.of_int (608)) (Prims.of_int (4))
+                            (Prims.of_int (737)) (Prims.of_int (30)))))
                    (FStar_Tactics_Effect.lift_div_tac
                       (fun uu___1 ->
                          fun t ->
@@ -4987,30 +5914,42 @@ let (unfold_in_assert_or_assume :
                       (fun find_focused_in_term ->
                          Obj.magic
                            (FStar_Tactics_Effect.tac_bind
-                              (FStar_Range.mk_range
-                                 "FStar.InteractiveHelpers.PostProcess.fst"
-                                 (Prims.of_int (614)) (Prims.of_int (4))
-                                 (Prims.of_int (617)) (Prims.of_int (93)))
-                              (FStar_Range.mk_range
-                                 "FStar.InteractiveHelpers.PostProcess.fst"
-                                 (Prims.of_int (618)) (Prims.of_int (4))
-                                 (Prims.of_int (656)) (Prims.of_int (4)))
+                              (FStar_Sealed.seal
+                                 (Obj.magic
+                                    (FStar_Range.mk_range
+                                       "FStar.InteractiveHelpers.PostProcess.fst"
+                                       (Prims.of_int (610))
+                                       (Prims.of_int (4))
+                                       (Prims.of_int (613))
+                                       (Prims.of_int (93)))))
+                              (FStar_Sealed.seal
+                                 (Obj.magic
+                                    (FStar_Range.mk_range
+                                       "FStar.InteractiveHelpers.PostProcess.fst"
+                                       (Prims.of_int (614))
+                                       (Prims.of_int (4))
+                                       (Prims.of_int (737))
+                                       (Prims.of_int (30)))))
                               (FStar_Tactics_Effect.lift_div_tac
                                  (fun uu___1 ->
                                     fun uu___2 ->
                                       FStar_Tactics_Effect.tac_bind
-                                        (FStar_Range.mk_range
-                                           "FStar.InteractiveHelpers.PostProcess.fst"
-                                           (Prims.of_int (614))
-                                           (Prims.of_int (10))
-                                           (Prims.of_int (614))
-                                           (Prims.of_int (39)))
-                                        (FStar_Range.mk_range
-                                           "FStar.InteractiveHelpers.PostProcess.fst"
-                                           (Prims.of_int (614))
-                                           (Prims.of_int (4))
-                                           (Prims.of_int (617))
-                                           (Prims.of_int (93)))
+                                        (FStar_Sealed.seal
+                                           (Obj.magic
+                                              (FStar_Range.mk_range
+                                                 "FStar.InteractiveHelpers.PostProcess.fst"
+                                                 (Prims.of_int (610))
+                                                 (Prims.of_int (10))
+                                                 (Prims.of_int (610))
+                                                 (Prims.of_int (39)))))
+                                        (FStar_Sealed.seal
+                                           (Obj.magic
+                                              (FStar_Range.mk_range
+                                                 "FStar.InteractiveHelpers.PostProcess.fst"
+                                                 (Prims.of_int (610))
+                                                 (Prims.of_int (4))
+                                                 (Prims.of_int (613))
+                                                 (Prims.of_int (93)))))
                                         (Obj.magic
                                            (find_focused_in_term ares.res))
                                         (fun uu___3 ->
@@ -5044,62 +5983,78 @@ let (unfold_in_assert_or_assume :
                                  (fun find_in_whole_term ->
                                     Obj.magic
                                       (FStar_Tactics_Effect.tac_bind
-                                         (FStar_Range.mk_range
-                                            "FStar.InteractiveHelpers.PostProcess.fst"
-                                            (Prims.of_int (627))
-                                            (Prims.of_int (69))
-                                            (Prims.of_int (628))
-                                            (Prims.of_int (70)))
-                                         (FStar_Range.mk_range
-                                            "FStar.InteractiveHelpers.PostProcess.fst"
-                                            (Prims.of_int (618))
-                                            (Prims.of_int (4))
-                                            (Prims.of_int (656))
-                                            (Prims.of_int (4)))
+                                         (FStar_Sealed.seal
+                                            (Obj.magic
+                                               (FStar_Range.mk_range
+                                                  "FStar.InteractiveHelpers.PostProcess.fst"
+                                                  (Prims.of_int (623))
+                                                  (Prims.of_int (69))
+                                                  (Prims.of_int (651))
+                                                  (Prims.of_int (27)))))
+                                         (FStar_Sealed.seal
+                                            (Obj.magic
+                                               (FStar_Range.mk_range
+                                                  "FStar.InteractiveHelpers.PostProcess.fst"
+                                                  (Prims.of_int (614))
+                                                  (Prims.of_int (4))
+                                                  (Prims.of_int (737))
+                                                  (Prims.of_int (30)))))
                                          (Obj.magic
                                             (FStar_Tactics_Effect.tac_bind
-                                               (FStar_Range.mk_range
-                                                  "FStar.InteractiveHelpers.PostProcess.fst"
-                                                  (Prims.of_int (628))
-                                                  (Prims.of_int (12))
-                                                  (Prims.of_int (628))
-                                                  (Prims.of_int (67)))
-                                               (FStar_Range.mk_range
-                                                  "FStar.InteractiveHelpers.PostProcess.fst"
-                                                  (Prims.of_int (629))
-                                                  (Prims.of_int (4))
-                                                  (Prims.of_int (655))
-                                                  (Prims.of_int (27)))
+                                               (FStar_Sealed.seal
+                                                  (Obj.magic
+                                                     (FStar_Range.mk_range
+                                                        "FStar.InteractiveHelpers.PostProcess.fst"
+                                                        (Prims.of_int (624))
+                                                        (Prims.of_int (12))
+                                                        (Prims.of_int (624))
+                                                        (Prims.of_int (67)))))
+                                               (FStar_Sealed.seal
+                                                  (Obj.magic
+                                                     (FStar_Range.mk_range
+                                                        "FStar.InteractiveHelpers.PostProcess.fst"
+                                                        (Prims.of_int (625))
+                                                        (Prims.of_int (4))
+                                                        (Prims.of_int (651))
+                                                        (Prims.of_int (27)))))
                                                (Obj.magic
                                                   (FStar_Tactics_Effect.tac_bind
-                                                     (FStar_Range.mk_range
-                                                        "FStar.InteractiveHelpers.PostProcess.fst"
-                                                        (Prims.of_int (628))
-                                                        (Prims.of_int (26))
-                                                        (Prims.of_int (628))
-                                                        (Prims.of_int (67)))
-                                                     (FStar_Range.mk_range
-                                                        "FStar.InteractiveHelpers.PostProcess.fst"
-                                                        (Prims.of_int (628))
-                                                        (Prims.of_int (12))
-                                                        (Prims.of_int (628))
-                                                        (Prims.of_int (67)))
-                                                     (Obj.magic
-                                                        (FStar_Tactics_Effect.tac_bind
+                                                     (FStar_Sealed.seal
+                                                        (Obj.magic
                                                            (FStar_Range.mk_range
                                                               "FStar.InteractiveHelpers.PostProcess.fst"
-                                                              (Prims.of_int (628))
-                                                              (Prims.of_int (43))
-                                                              (Prims.of_int (628))
-                                                              (Prims.of_int (66)))
+                                                              (Prims.of_int (624))
+                                                              (Prims.of_int (26))
+                                                              (Prims.of_int (624))
+                                                              (Prims.of_int (67)))))
+                                                     (FStar_Sealed.seal
+                                                        (Obj.magic
                                                            (FStar_Range.mk_range
-                                                              "prims.fst"
-                                                              (Prims.of_int (590))
-                                                              (Prims.of_int (19))
-                                                              (Prims.of_int (590))
-                                                              (Prims.of_int (31)))
+                                                              "FStar.InteractiveHelpers.PostProcess.fst"
+                                                              (Prims.of_int (624))
+                                                              (Prims.of_int (12))
+                                                              (Prims.of_int (624))
+                                                              (Prims.of_int (67)))))
+                                                     (Obj.magic
+                                                        (FStar_Tactics_Effect.tac_bind
+                                                           (FStar_Sealed.seal
+                                                              (Obj.magic
+                                                                 (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (624))
+                                                                    (Prims.of_int (43))
+                                                                    (Prims.of_int (624))
+                                                                    (Prims.of_int (66)))))
+                                                           (FStar_Sealed.seal
+                                                              (Obj.magic
+                                                                 (FStar_Range.mk_range
+                                                                    "prims.fst"
+                                                                    (Prims.of_int (590))
+                                                                    (Prims.of_int (19))
+                                                                    (Prims.of_int (590))
+                                                                    (Prims.of_int (31)))))
                                                            (Obj.magic
-                                                              (FStar_Tactics_Builtins.term_to_string
+                                                              (FStar_Tactics_V1_Builtins.term_to_string
                                                                  ares.res))
                                                            (fun uu___1 ->
                                                               FStar_Tactics_Effect.lift_div_tac
@@ -5118,18 +6073,22 @@ let (unfold_in_assert_or_assume :
                                                   (fun uu___1 ->
                                                      Obj.magic
                                                        (FStar_Tactics_Effect.tac_bind
-                                                          (FStar_Range.mk_range
-                                                             "FStar.InteractiveHelpers.PostProcess.fst"
-                                                             (Prims.of_int (629))
-                                                             (Prims.of_int (10))
-                                                             (Prims.of_int (629))
-                                                             (Prims.of_int (28)))
-                                                          (FStar_Range.mk_range
-                                                             "FStar.InteractiveHelpers.PostProcess.fst"
-                                                             (Prims.of_int (629))
-                                                             (Prims.of_int (4))
-                                                             (Prims.of_int (655))
-                                                             (Prims.of_int (27)))
+                                                          (FStar_Sealed.seal
+                                                             (Obj.magic
+                                                                (FStar_Range.mk_range
+                                                                   "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                   (Prims.of_int (625))
+                                                                   (Prims.of_int (10))
+                                                                   (Prims.of_int (625))
+                                                                   (Prims.of_int (28)))))
+                                                          (FStar_Sealed.seal
+                                                             (Obj.magic
+                                                                (FStar_Range.mk_range
+                                                                   "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                   (Prims.of_int (625))
+                                                                   (Prims.of_int (4))
+                                                                   (Prims.of_int (651))
+                                                                   (Prims.of_int (27)))))
                                                           (Obj.magic
                                                              (is_eq dbg
                                                                 ares.res))
@@ -5142,18 +6101,22 @@ let (unfold_in_assert_or_assume :
                                                                     r) ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (631))
+                                                                    (Prims.of_int (627))
                                                                     (Prims.of_int (6))
-                                                                    (Prims.of_int (631))
-                                                                    (Prims.of_int (50)))
+                                                                    (Prims.of_int (627))
+                                                                    (Prims.of_int (50)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (632))
+                                                                    (Prims.of_int (628))
                                                                     (Prims.of_int (12))
-                                                                    (Prims.of_int (651))
-                                                                    (Prims.of_int (11)))
+                                                                    (Prims.of_int (647))
+                                                                    (Prims.of_int (11)))))
                                                                     (Obj.magic
                                                                     (FStar_InteractiveHelpers_Base.print_dbg
                                                                     dbg
@@ -5164,18 +6127,22 @@ let (unfold_in_assert_or_assume :
                                                                     uu___3 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (632))
+                                                                    (Prims.of_int (628))
                                                                     (Prims.of_int (18))
-                                                                    (Prims.of_int (632))
-                                                                    (Prims.of_int (40)))
+                                                                    (Prims.of_int (628))
+                                                                    (Prims.of_int (40)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (632))
+                                                                    (Prims.of_int (628))
                                                                     (Prims.of_int (12))
-                                                                    (Prims.of_int (651))
-                                                                    (Prims.of_int (11)))
+                                                                    (Prims.of_int (647))
+                                                                    (Prims.of_int (11)))))
                                                                     (Obj.magic
                                                                     (find_focused_in_term
                                                                     l))
@@ -5190,76 +6157,96 @@ let (unfold_in_assert_or_assume :
                                                                     res ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (634))
+                                                                    (Prims.of_int (630))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (637))
-                                                                    (Prims.of_int (64)))
+                                                                    (Prims.of_int (633))
+                                                                    (Prims.of_int (64)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (639))
+                                                                    (Prims.of_int (635))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (639))
-                                                                    (Prims.of_int (29)))
+                                                                    (Prims.of_int (635))
+                                                                    (Prims.of_int (29)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (634))
+                                                                    (Prims.of_int (630))
                                                                     (Prims.of_int (22))
-                                                                    (Prims.of_int (637))
-                                                                    (Prims.of_int (64)))
+                                                                    (Prims.of_int (633))
+                                                                    (Prims.of_int (64)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (634))
+                                                                    (Prims.of_int (630))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (637))
-                                                                    (Prims.of_int (64)))
+                                                                    (Prims.of_int (633))
+                                                                    (Prims.of_int (64)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (635))
+                                                                    (Prims.of_int (631))
                                                                     (Prims.of_int (23))
-                                                                    (Prims.of_int (637))
-                                                                    (Prims.of_int (63)))
+                                                                    (Prims.of_int (633))
+                                                                    (Prims.of_int (63)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (635))
+                                                                    (Prims.of_int (631))
                                                                     (Prims.of_int (41))
-                                                                    (Prims.of_int (637))
-                                                                    (Prims.of_int (63)))
+                                                                    (Prims.of_int (633))
+                                                                    (Prims.of_int (63)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (635))
-                                                                    (Prims.of_int (41))
-                                                                    (Prims.of_int (635))
-                                                                    (Prims.of_int (57)))
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (635))
-                                                                    (Prims.of_int (41))
-                                                                    (Prims.of_int (637))
-                                                                    (Prims.of_int (63)))
+                                                                    (FStar_Sealed.seal
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_Builtins.term_to_string
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (631))
+                                                                    (Prims.of_int (41))
+                                                                    (Prims.of_int (631))
+                                                                    (Prims.of_int (57)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (631))
+                                                                    (Prims.of_int (41))
+                                                                    (Prims.of_int (633))
+                                                                    (Prims.of_int (63)))))
+                                                                    (Obj.magic
+                                                                    (FStar_Tactics_V1_Builtins.term_to_string
                                                                     l))
                                                                     (fun
                                                                     uu___5 ->
@@ -5267,48 +6254,60 @@ let (unfold_in_assert_or_assume :
                                                                     uu___5 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (636))
+                                                                    (Prims.of_int (632))
                                                                     (Prims.of_int (23))
-                                                                    (Prims.of_int (637))
-                                                                    (Prims.of_int (63)))
+                                                                    (Prims.of_int (633))
+                                                                    (Prims.of_int (63)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (636))
+                                                                    (Prims.of_int (632))
                                                                     (Prims.of_int (41))
-                                                                    (Prims.of_int (637))
-                                                                    (Prims.of_int (63)))
+                                                                    (Prims.of_int (633))
+                                                                    (Prims.of_int (63)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (636))
-                                                                    (Prims.of_int (41))
-                                                                    (Prims.of_int (636))
-                                                                    (Prims.of_int (57)))
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (636))
-                                                                    (Prims.of_int (41))
-                                                                    (Prims.of_int (637))
-                                                                    (Prims.of_int (63)))
+                                                                    (FStar_Sealed.seal
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_Builtins.term_to_string
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (632))
+                                                                    (Prims.of_int (41))
+                                                                    (Prims.of_int (632))
+                                                                    (Prims.of_int (57)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (632))
+                                                                    (Prims.of_int (41))
+                                                                    (Prims.of_int (633))
+                                                                    (Prims.of_int (63)))))
+                                                                    (Obj.magic
+                                                                    (FStar_Tactics_V1_Builtins.term_to_string
                                                                     r))
                                                                     (fun
                                                                     uu___6 ->
@@ -5316,34 +6315,42 @@ let (unfold_in_assert_or_assume :
                                                                     uu___6 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (637))
+                                                                    (Prims.of_int (633))
                                                                     (Prims.of_int (23))
-                                                                    (Prims.of_int (637))
-                                                                    (Prims.of_int (63)))
+                                                                    (Prims.of_int (633))
+                                                                    (Prims.of_int (63)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (637))
+                                                                    (Prims.of_int (633))
                                                                     (Prims.of_int (41))
-                                                                    (Prims.of_int (637))
-                                                                    (Prims.of_int (63)))
+                                                                    (Prims.of_int (633))
+                                                                    (Prims.of_int (63)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_Builtins.term_to_string
+                                                                    (FStar_Tactics_V1_Builtins.term_to_string
                                                                     res.res))
                                                                     (fun
                                                                     uu___7 ->
@@ -5426,18 +6433,22 @@ let (unfold_in_assert_or_assume :
                                                                     ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (641))
+                                                                    (Prims.of_int (637))
                                                                     (Prims.of_int (20))
-                                                                    (Prims.of_int (641))
-                                                                    (Prims.of_int (42)))
+                                                                    (Prims.of_int (637))
+                                                                    (Prims.of_int (42)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (641))
+                                                                    (Prims.of_int (637))
                                                                     (Prims.of_int (14))
-                                                                    (Prims.of_int (650))
-                                                                    (Prims.of_int (89)))
+                                                                    (Prims.of_int (646))
+                                                                    (Prims.of_int (89)))))
                                                                     (Obj.magic
                                                                     (find_focused_in_term
                                                                     r))
@@ -5452,76 +6463,96 @@ let (unfold_in_assert_or_assume :
                                                                     res ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (643))
+                                                                    (Prims.of_int (639))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (646))
-                                                                    (Prims.of_int (58)))
+                                                                    (Prims.of_int (642))
+                                                                    (Prims.of_int (58)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (648))
+                                                                    (Prims.of_int (644))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (648))
-                                                                    (Prims.of_int (32)))
+                                                                    (Prims.of_int (644))
+                                                                    (Prims.of_int (32)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (643))
+                                                                    (Prims.of_int (639))
                                                                     (Prims.of_int (24))
-                                                                    (Prims.of_int (646))
-                                                                    (Prims.of_int (58)))
+                                                                    (Prims.of_int (642))
+                                                                    (Prims.of_int (58)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (643))
+                                                                    (Prims.of_int (639))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (646))
-                                                                    (Prims.of_int (58)))
+                                                                    (Prims.of_int (642))
+                                                                    (Prims.of_int (58)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (644))
+                                                                    (Prims.of_int (640))
                                                                     (Prims.of_int (17))
-                                                                    (Prims.of_int (646))
-                                                                    (Prims.of_int (57)))
+                                                                    (Prims.of_int (642))
+                                                                    (Prims.of_int (57)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (644))
+                                                                    (Prims.of_int (640))
                                                                     (Prims.of_int (35))
-                                                                    (Prims.of_int (646))
-                                                                    (Prims.of_int (57)))
+                                                                    (Prims.of_int (642))
+                                                                    (Prims.of_int (57)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (644))
-                                                                    (Prims.of_int (35))
-                                                                    (Prims.of_int (644))
-                                                                    (Prims.of_int (51)))
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (644))
-                                                                    (Prims.of_int (35))
-                                                                    (Prims.of_int (646))
-                                                                    (Prims.of_int (57)))
+                                                                    (FStar_Sealed.seal
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_Builtins.term_to_string
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (640))
+                                                                    (Prims.of_int (35))
+                                                                    (Prims.of_int (640))
+                                                                    (Prims.of_int (51)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (640))
+                                                                    (Prims.of_int (35))
+                                                                    (Prims.of_int (642))
+                                                                    (Prims.of_int (57)))))
+                                                                    (Obj.magic
+                                                                    (FStar_Tactics_V1_Builtins.term_to_string
                                                                     l))
                                                                     (fun
                                                                     uu___6 ->
@@ -5529,48 +6560,60 @@ let (unfold_in_assert_or_assume :
                                                                     uu___6 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (645))
+                                                                    (Prims.of_int (641))
                                                                     (Prims.of_int (17))
-                                                                    (Prims.of_int (646))
-                                                                    (Prims.of_int (57)))
+                                                                    (Prims.of_int (642))
+                                                                    (Prims.of_int (57)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (645))
+                                                                    (Prims.of_int (641))
                                                                     (Prims.of_int (35))
-                                                                    (Prims.of_int (646))
-                                                                    (Prims.of_int (57)))
+                                                                    (Prims.of_int (642))
+                                                                    (Prims.of_int (57)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (645))
-                                                                    (Prims.of_int (35))
-                                                                    (Prims.of_int (645))
-                                                                    (Prims.of_int (51)))
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (645))
-                                                                    (Prims.of_int (35))
-                                                                    (Prims.of_int (646))
-                                                                    (Prims.of_int (57)))
+                                                                    (FStar_Sealed.seal
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_Builtins.term_to_string
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (641))
+                                                                    (Prims.of_int (35))
+                                                                    (Prims.of_int (641))
+                                                                    (Prims.of_int (51)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (641))
+                                                                    (Prims.of_int (35))
+                                                                    (Prims.of_int (642))
+                                                                    (Prims.of_int (57)))))
+                                                                    (Obj.magic
+                                                                    (FStar_Tactics_V1_Builtins.term_to_string
                                                                     r))
                                                                     (fun
                                                                     uu___7 ->
@@ -5578,34 +6621,42 @@ let (unfold_in_assert_or_assume :
                                                                     uu___7 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (646))
+                                                                    (Prims.of_int (642))
                                                                     (Prims.of_int (17))
-                                                                    (Prims.of_int (646))
-                                                                    (Prims.of_int (57)))
+                                                                    (Prims.of_int (642))
+                                                                    (Prims.of_int (57)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (646))
+                                                                    (Prims.of_int (642))
                                                                     (Prims.of_int (35))
-                                                                    (Prims.of_int (646))
-                                                                    (Prims.of_int (57)))
+                                                                    (Prims.of_int (642))
+                                                                    (Prims.of_int (57)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_Builtins.term_to_string
+                                                                    (FStar_Tactics_V1_Builtins.term_to_string
                                                                     res.res))
                                                                     (fun
                                                                     uu___8 ->
@@ -5696,18 +6747,22 @@ let (unfold_in_assert_or_assume :
                                                                     ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (654))
+                                                                    (Prims.of_int (650))
                                                                     (Prims.of_int (6))
-                                                                    (Prims.of_int (654))
-                                                                    (Prims.of_int (54)))
+                                                                    (Prims.of_int (650))
+                                                                    (Prims.of_int (54)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (655))
+                                                                    (Prims.of_int (651))
                                                                     (Prims.of_int (6))
-                                                                    (Prims.of_int (655))
-                                                                    (Prims.of_int (27)))
+                                                                    (Prims.of_int (651))
+                                                                    (Prims.of_int (27)))))
                                                                     (Obj.magic
                                                                     (FStar_InteractiveHelpers_Base.print_dbg
                                                                     dbg
@@ -5729,18 +6784,22 @@ let (unfold_in_assert_or_assume :
                                                   insert_before) ->
                                                    Obj.magic
                                                      (FStar_Tactics_Effect.tac_bind
-                                                        (FStar_Range.mk_range
-                                                           "FStar.InteractiveHelpers.PostProcess.fst"
-                                                           (Prims.of_int (657))
-                                                           (Prims.of_int (2))
-                                                           (Prims.of_int (741))
-                                                           (Prims.of_int (30)))
-                                                        (FStar_Range.mk_range
-                                                           "FStar.InteractiveHelpers.PostProcess.fst"
-                                                           (Prims.of_int (657))
-                                                           (Prims.of_int (2))
-                                                           (Prims.of_int (741))
-                                                           (Prims.of_int (30)))
+                                                        (FStar_Sealed.seal
+                                                           (Obj.magic
+                                                              (FStar_Range.mk_range
+                                                                 "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                 (Prims.of_int (653))
+                                                                 (Prims.of_int (2))
+                                                                 (Prims.of_int (737))
+                                                                 (Prims.of_int (30)))))
+                                                        (FStar_Sealed.seal
+                                                           (Obj.magic
+                                                              (FStar_Range.mk_range
+                                                                 "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                 (Prims.of_int (653))
+                                                                 (Prims.of_int (2))
+                                                                 (Prims.of_int (737))
+                                                                 (Prims.of_int (30)))))
                                                         (FStar_Tactics_Effect.lift_div_tac
                                                            (fun uu___2 ->
                                                               rebuild))
@@ -5748,76 +6807,96 @@ let (unfold_in_assert_or_assume :
                                                            (fun rebuild1 ->
                                                               Obj.magic
                                                                 (FStar_Tactics_Effect.tac_bind
-                                                                   (FStar_Range.mk_range
+                                                                   (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (657))
+                                                                    (Prims.of_int (653))
                                                                     (Prims.of_int (2))
-                                                                    (Prims.of_int (659))
-                                                                    (Prims.of_int (65)))
-                                                                   (FStar_Range.mk_range
+                                                                    (Prims.of_int (655))
+                                                                    (Prims.of_int (65)))))
+                                                                   (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (659))
+                                                                    (Prims.of_int (655))
                                                                     (Prims.of_int (66))
-                                                                    (Prims.of_int (661))
-                                                                    (Prims.of_int (39)))
+                                                                    (Prims.of_int (737))
+                                                                    (Prims.of_int (30)))))
                                                                    (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (657))
+                                                                    (Prims.of_int (653))
                                                                     (Prims.of_int (16))
-                                                                    (Prims.of_int (659))
-                                                                    (Prims.of_int (65)))
+                                                                    (Prims.of_int (655))
+                                                                    (Prims.of_int (65)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (657))
+                                                                    (Prims.of_int (653))
                                                                     (Prims.of_int (2))
-                                                                    (Prims.of_int (659))
-                                                                    (Prims.of_int (65)))
+                                                                    (Prims.of_int (655))
+                                                                    (Prims.of_int (65)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (658))
+                                                                    (Prims.of_int (654))
                                                                     (Prims.of_int (17))
-                                                                    (Prims.of_int (659))
-                                                                    (Prims.of_int (64)))
+                                                                    (Prims.of_int (655))
+                                                                    (Prims.of_int (64)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (658))
+                                                                    (Prims.of_int (654))
                                                                     (Prims.of_int (33))
-                                                                    (Prims.of_int (659))
-                                                                    (Prims.of_int (64)))
+                                                                    (Prims.of_int (655))
+                                                                    (Prims.of_int (64)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (658))
-                                                                    (Prims.of_int (33))
-                                                                    (Prims.of_int (658))
-                                                                    (Prims.of_int (55)))
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (658))
-                                                                    (Prims.of_int (33))
-                                                                    (Prims.of_int (659))
-                                                                    (Prims.of_int (64)))
+                                                                    (FStar_Sealed.seal
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_Builtins.term_to_string
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (654))
+                                                                    (Prims.of_int (33))
+                                                                    (Prims.of_int (654))
+                                                                    (Prims.of_int (55)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (654))
+                                                                    (Prims.of_int (33))
+                                                                    (Prims.of_int (655))
+                                                                    (Prims.of_int (64)))))
+                                                                    (Obj.magic
+                                                                    (FStar_Tactics_V1_Builtins.term_to_string
                                                                     subterm))
                                                                     (fun
                                                                     uu___2 ->
@@ -5825,48 +6904,60 @@ let (unfold_in_assert_or_assume :
                                                                     uu___2 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (658))
+                                                                    (Prims.of_int (654))
                                                                     (Prims.of_int (58))
-                                                                    (Prims.of_int (659))
-                                                                    (Prims.of_int (64)))
+                                                                    (Prims.of_int (655))
+                                                                    (Prims.of_int (64)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (659))
+                                                                    (Prims.of_int (655))
                                                                     (Prims.of_int (17))
-                                                                    (Prims.of_int (659))
-                                                                    (Prims.of_int (64)))
+                                                                    (Prims.of_int (655))
+                                                                    (Prims.of_int (64)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (659))
+                                                                    (Prims.of_int (655))
                                                                     (Prims.of_int (38))
-                                                                    (Prims.of_int (659))
-                                                                    (Prims.of_int (64)))
+                                                                    (Prims.of_int (655))
+                                                                    (Prims.of_int (64)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_Builtins.term_to_string
+                                                                    (FStar_Tactics_V1_Builtins.term_to_string
                                                                     unf_res.res))
                                                                     (fun
                                                                     uu___3 ->
@@ -5924,20 +7015,24 @@ let (unfold_in_assert_or_assume :
                                                                     uu___2 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (661))
-                                                                    (Prims.of_int (17))
-                                                                    (Prims.of_int (661))
-                                                                    (Prims.of_int (36)))
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (661))
-                                                                    (Prims.of_int (39))
-                                                                    (Prims.of_int (703))
-                                                                    (Prims.of_int (4)))
+                                                                    (FStar_Sealed.seal
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_Builtins.inspect
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (657))
+                                                                    (Prims.of_int (17))
+                                                                    (Prims.of_int (657))
+                                                                    (Prims.of_int (36)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (657))
+                                                                    (Prims.of_int (39))
+                                                                    (Prims.of_int (737))
+                                                                    (Prims.of_int (30)))))
+                                                                    (Obj.magic
+                                                                    (FStar_Tactics_V1_Builtins.inspect
                                                                     unf_res.res))
                                                                     (fun
                                                                     uu___3 ->
@@ -5946,43 +7041,51 @@ let (unfold_in_assert_or_assume :
                                                                     ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (663))
+                                                                    (Prims.of_int (659))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (702))
-                                                                    (Prims.of_int (19)))
+                                                                    (Prims.of_int (698))
+                                                                    (Prims.of_int (19)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (661))
+                                                                    (Prims.of_int (657))
                                                                     (Prims.of_int (39))
-                                                                    (Prims.of_int (703))
-                                                                    (Prims.of_int (4)))
+                                                                    (Prims.of_int (737))
+                                                                    (Prims.of_int (30)))))
                                                                     (match res_view
                                                                     with
                                                                     | 
-                                                                    FStar_Reflection_Data.Tv_FVar
+                                                                    FStar_Reflection_V1_Data.Tv_FVar
                                                                     fv ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (665))
+                                                                    (Prims.of_int (661))
                                                                     (Prims.of_int (6))
-                                                                    (Prims.of_int (665))
-                                                                    (Prims.of_int (80)))
+                                                                    (Prims.of_int (661))
+                                                                    (Prims.of_int (80)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (665))
+                                                                    (Prims.of_int (661))
                                                                     (Prims.of_int (81))
-                                                                    (Prims.of_int (667))
-                                                                    (Prims.of_int (49)))
+                                                                    (Prims.of_int (666))
+                                                                    (Prims.of_int (28)))))
                                                                     (Obj.magic
                                                                     (FStar_InteractiveHelpers_Base.print_dbg
                                                                     dbg
                                                                     (Prims.strcat
                                                                     "The focused term is a top identifier: "
-                                                                    (FStar_Reflection_Derived.fv_to_string
+                                                                    (FStar_Reflection_V1_Derived.fv_to_string
                                                                     fv))))
                                                                     (fun
                                                                     uu___3 ->
@@ -5990,23 +7093,27 @@ let (unfold_in_assert_or_assume :
                                                                     uu___3 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (667))
+                                                                    (Prims.of_int (663))
                                                                     (Prims.of_int (18))
-                                                                    (Prims.of_int (667))
-                                                                    (Prims.of_int (46)))
+                                                                    (Prims.of_int (663))
+                                                                    (Prims.of_int (46)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (667))
+                                                                    (Prims.of_int (663))
                                                                     (Prims.of_int (49))
-                                                                    (Prims.of_int (668))
-                                                                    (Prims.of_int (84)))
+                                                                    (Prims.of_int (666))
+                                                                    (Prims.of_int (28)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___4 ->
-                                                                    FStar_Reflection_Derived.flatten_name
-                                                                    (FStar_Reflection_Builtins.inspect_fv
+                                                                    FStar_Reflection_V1_Derived.flatten_name
+                                                                    (FStar_Reflection_V1_Builtins.inspect_fv
                                                                     fv)))
                                                                     (fun
                                                                     uu___4 ->
@@ -6014,20 +7121,24 @@ let (unfold_in_assert_or_assume :
                                                                     fname ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (668))
-                                                                    (Prims.of_int (21))
-                                                                    (Prims.of_int (668))
-                                                                    (Prims.of_int (81)))
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (669))
-                                                                    (Prims.of_int (6))
-                                                                    (Prims.of_int (670))
-                                                                    (Prims.of_int (28)))
+                                                                    (FStar_Sealed.seal
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_Builtins.norm_term_env
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (664))
+                                                                    (Prims.of_int (21))
+                                                                    (Prims.of_int (664))
+                                                                    (Prims.of_int (81)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (665))
+                                                                    (Prims.of_int (6))
+                                                                    (Prims.of_int (666))
+                                                                    (Prims.of_int (28)))))
+                                                                    (Obj.magic
+                                                                    (FStar_Tactics_V1_Builtins.norm_term_env
                                                                     (ares.ge).FStar_InteractiveHelpers_Base.env
                                                                     [
                                                                     FStar_Pervasives.delta_only
@@ -6041,48 +7152,60 @@ let (unfold_in_assert_or_assume :
                                                                     ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (669))
+                                                                    (Prims.of_int (665))
                                                                     (Prims.of_int (6))
-                                                                    (Prims.of_int (669))
-                                                                    (Prims.of_int (70)))
+                                                                    (Prims.of_int (665))
+                                                                    (Prims.of_int (70)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (670))
+                                                                    (Prims.of_int (666))
                                                                     (Prims.of_int (6))
-                                                                    (Prims.of_int (670))
-                                                                    (Prims.of_int (28)))
+                                                                    (Prims.of_int (666))
+                                                                    (Prims.of_int (28)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (669))
+                                                                    (Prims.of_int (665))
                                                                     (Prims.of_int (20))
-                                                                    (Prims.of_int (669))
-                                                                    (Prims.of_int (70)))
+                                                                    (Prims.of_int (665))
+                                                                    (Prims.of_int (70)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (669))
+                                                                    (Prims.of_int (665))
                                                                     (Prims.of_int (6))
-                                                                    (Prims.of_int (669))
-                                                                    (Prims.of_int (70)))
+                                                                    (Prims.of_int (665))
+                                                                    (Prims.of_int (70)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (669))
+                                                                    (Prims.of_int (665))
                                                                     (Prims.of_int (46))
-                                                                    (Prims.of_int (669))
-                                                                    (Prims.of_int (69)))
+                                                                    (Prims.of_int (665))
+                                                                    (Prims.of_int (69)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_Builtins.term_to_string
+                                                                    (FStar_Tactics_V1_Builtins.term_to_string
                                                                     subterm'))
                                                                     (fun
                                                                     uu___4 ->
@@ -6116,18 +7239,22 @@ let (unfold_in_assert_or_assume :
                                                                     uu___3 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (675))
+                                                                    (Prims.of_int (671))
                                                                     (Prims.of_int (20))
-                                                                    (Prims.of_int (675))
-                                                                    (Prims.of_int (49)))
+                                                                    (Prims.of_int (671))
+                                                                    (Prims.of_int (49)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (675))
+                                                                    (Prims.of_int (671))
                                                                     (Prims.of_int (52))
-                                                                    (Prims.of_int (687))
-                                                                    (Prims.of_int (8)))
+                                                                    (Prims.of_int (698))
+                                                                    (Prims.of_int (19)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___4 ->
@@ -6141,67 +7268,83 @@ let (unfold_in_assert_or_assume :
                                                                     ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (677))
+                                                                    (Prims.of_int (673))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (686))
-                                                                    (Prims.of_int (14)))
+                                                                    (Prims.of_int (682))
+                                                                    (Prims.of_int (14)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (687))
+                                                                    (Prims.of_int (683))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (688))
-                                                                    (Prims.of_int (82)))
+                                                                    (Prims.of_int (698))
+                                                                    (Prims.of_int (19)))))
                                                                     (match res_view
                                                                     with
                                                                     | 
-                                                                    FStar_Reflection_Data.Tv_Var
+                                                                    FStar_Reflection_V1_Data.Tv_Var
                                                                     bv ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (679))
+                                                                    (Prims.of_int (675))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (679))
-                                                                    (Prims.of_int (84)))
+                                                                    (Prims.of_int (675))
+                                                                    (Prims.of_int (84)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (681))
+                                                                    (Prims.of_int (677))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (683))
-                                                                    (Prims.of_int (39)))
+                                                                    (Prims.of_int (679))
+                                                                    (Prims.of_int (39)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (679))
+                                                                    (Prims.of_int (675))
                                                                     (Prims.of_int (24))
-                                                                    (Prims.of_int (679))
-                                                                    (Prims.of_int (84)))
+                                                                    (Prims.of_int (675))
+                                                                    (Prims.of_int (84)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (679))
+                                                                    (Prims.of_int (675))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (679))
-                                                                    (Prims.of_int (84)))
+                                                                    (Prims.of_int (675))
+                                                                    (Prims.of_int (84)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (679))
+                                                                    (Prims.of_int (675))
                                                                     (Prims.of_int (68))
-                                                                    (Prims.of_int (679))
-                                                                    (Prims.of_int (83)))
+                                                                    (Prims.of_int (675))
+                                                                    (Prims.of_int (83)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_Derived.bv_to_string
+                                                                    (FStar_Tactics_V1_Derived.bv_to_string
                                                                     bv))
                                                                     (fun
                                                                     uu___4 ->
@@ -6226,18 +7369,22 @@ let (unfold_in_assert_or_assume :
                                                                     uu___4 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (681))
+                                                                    (Prims.of_int (677))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (682))
-                                                                    (Prims.of_int (106)))
+                                                                    (Prims.of_int (678))
+                                                                    (Prims.of_int (106)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (683))
+                                                                    (Prims.of_int (679))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (683))
-                                                                    (Prims.of_int (39)))
+                                                                    (Prims.of_int (679))
+                                                                    (Prims.of_int (39)))))
                                                                     (if
                                                                     Prims.op_Negation
                                                                     (FStar_Pervasives_Native.uu___is_Some
@@ -6263,55 +7410,67 @@ let (unfold_in_assert_or_assume :
                                                                     uu___6 ->
                                                                     FStar_Pervasives_Native.Some
                                                                     (bv,
-                                                                    (FStar_Reflection_Builtins.pack_ln
-                                                                    FStar_Reflection_Data.Tv_Unknown))))))
+                                                                    (FStar_Reflection_V2_Builtins.pack_ln
+                                                                    FStar_Reflection_V2_Data.Tv_Unknown))))))
                                                                     uu___4))
                                                                     | 
                                                                     uu___4 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (685))
+                                                                    (Prims.of_int (681))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (685))
-                                                                    (Prims.of_int (96)))
+                                                                    (Prims.of_int (681))
+                                                                    (Prims.of_int (96)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (686))
+                                                                    (Prims.of_int (682))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (686))
-                                                                    (Prims.of_int (14)))
+                                                                    (Prims.of_int (682))
+                                                                    (Prims.of_int (14)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (685))
+                                                                    (Prims.of_int (681))
                                                                     (Prims.of_int (24))
-                                                                    (Prims.of_int (685))
-                                                                    (Prims.of_int (96)))
+                                                                    (Prims.of_int (681))
+                                                                    (Prims.of_int (96)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (685))
+                                                                    (Prims.of_int (681))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (685))
-                                                                    (Prims.of_int (96)))
+                                                                    (Prims.of_int (681))
+                                                                    (Prims.of_int (96)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (685))
+                                                                    (Prims.of_int (681))
                                                                     (Prims.of_int (69))
-                                                                    (Prims.of_int (685))
-                                                                    (Prims.of_int (95)))
+                                                                    (Prims.of_int (681))
+                                                                    (Prims.of_int (95)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_Builtins.term_to_string
+                                                                    (FStar_Tactics_V1_Builtins.term_to_string
                                                                     unf_res.res))
                                                                     (fun
                                                                     uu___5 ->
@@ -6343,18 +7502,22 @@ let (unfold_in_assert_or_assume :
                                                                     ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (688))
+                                                                    (Prims.of_int (684))
                                                                     (Prims.of_int (23))
-                                                                    (Prims.of_int (688))
-                                                                    (Prims.of_int (79)))
+                                                                    (Prims.of_int (684))
+                                                                    (Prims.of_int (79)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (687))
+                                                                    (Prims.of_int (683))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (688))
-                                                                    (Prims.of_int (82)))
+                                                                    (Prims.of_int (698))
+                                                                    (Prims.of_int (19)))))
                                                                     (Obj.magic
                                                                     (find_context_equality
                                                                     dbg
@@ -6373,18 +7536,22 @@ let (unfold_in_assert_or_assume :
                                                                     eq_tm) ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (691))
+                                                                    (Prims.of_int (687))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (693))
-                                                                    (Prims.of_int (19)))
+                                                                    (Prims.of_int (689))
+                                                                    (Prims.of_int (19)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (694))
+                                                                    (Prims.of_int (690))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (701))
-                                                                    (Prims.of_int (8)))
+                                                                    (Prims.of_int (698))
+                                                                    (Prims.of_int (19)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___5 ->
@@ -6405,18 +7572,22 @@ let (unfold_in_assert_or_assume :
                                                                     ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (697))
+                                                                    (Prims.of_int (693))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (700))
-                                                                    (Prims.of_int (19)))
+                                                                    (Prims.of_int (696))
+                                                                    (Prims.of_int (19)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (702))
+                                                                    (Prims.of_int (698))
                                                                     (Prims.of_int (6))
-                                                                    (Prims.of_int (702))
-                                                                    (Prims.of_int (19)))
+                                                                    (Prims.of_int (698))
+                                                                    (Prims.of_int (19)))))
                                                                     (match 
                                                                     (opt_bvty,
                                                                     opt_eq_tm)
@@ -6430,18 +7601,22 @@ let (unfold_in_assert_or_assume :
                                                                     Obj.magic
                                                                     (Obj.repr
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (698))
+                                                                    (Prims.of_int (694))
                                                                     (Prims.of_int (40))
-                                                                    (Prims.of_int (698))
-                                                                    (Prims.of_int (85)))
+                                                                    (Prims.of_int (694))
+                                                                    (Prims.of_int (85)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (698))
+                                                                    (Prims.of_int (694))
                                                                     (Prims.of_int (35))
-                                                                    (Prims.of_int (698))
-                                                                    (Prims.of_int (85)))
+                                                                    (Prims.of_int (694))
+                                                                    (Prims.of_int (85)))))
                                                                     (Obj.magic
                                                                     (FStar_InteractiveHelpers_Base.apply_subst
                                                                     ge1.FStar_InteractiveHelpers_Base.env
@@ -6464,18 +7639,22 @@ let (unfold_in_assert_or_assume :
                                                                     Obj.magic
                                                                     (Obj.repr
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (699))
+                                                                    (Prims.of_int (695))
                                                                     (Prims.of_int (35))
-                                                                    (Prims.of_int (699))
-                                                                    (Prims.of_int (82)))
+                                                                    (Prims.of_int (695))
+                                                                    (Prims.of_int (82)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (699))
+                                                                    (Prims.of_int (695))
                                                                     (Prims.of_int (30))
-                                                                    (Prims.of_int (699))
-                                                                    (Prims.of_int (82)))
+                                                                    (Prims.of_int (695))
+                                                                    (Prims.of_int (82)))))
                                                                     (Obj.magic
                                                                     (replace_term_in
                                                                     dbg
@@ -6521,18 +7700,22 @@ let (unfold_in_assert_or_assume :
                                                                     ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (713))
+                                                                    (Prims.of_int (709))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (729))
-                                                                    (Prims.of_int (9)))
+                                                                    (Prims.of_int (725))
+                                                                    (Prims.of_int (9)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (703))
+                                                                    (Prims.of_int (699))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (730))
-                                                                    (Prims.of_int (4)))
+                                                                    (Prims.of_int (737))
+                                                                    (Prims.of_int (30)))))
                                                                     (match opt_unf_tm
                                                                     with
                                                                     | 
@@ -6551,32 +7734,40 @@ let (unfold_in_assert_or_assume :
                                                                     Obj.magic
                                                                     (Obj.repr
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (716))
+                                                                    (Prims.of_int (712))
                                                                     (Prims.of_int (18))
-                                                                    (Prims.of_int (716))
-                                                                    (Prims.of_int (65)))
+                                                                    (Prims.of_int (712))
+                                                                    (Prims.of_int (65)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (716))
+                                                                    (Prims.of_int (712))
                                                                     (Prims.of_int (12))
-                                                                    (Prims.of_int (728))
-                                                                    (Prims.of_int (42)))
+                                                                    (Prims.of_int (724))
+                                                                    (Prims.of_int (42)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (716))
+                                                                    (Prims.of_int (712))
                                                                     (Prims.of_int (26))
-                                                                    (Prims.of_int (716))
-                                                                    (Prims.of_int (65)))
+                                                                    (Prims.of_int (712))
+                                                                    (Prims.of_int (65)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (716))
+                                                                    (Prims.of_int (712))
                                                                     (Prims.of_int (18))
-                                                                    (Prims.of_int (716))
-                                                                    (Prims.of_int (65)))
+                                                                    (Prims.of_int (712))
+                                                                    (Prims.of_int (65)))))
                                                                     (Obj.magic
                                                                     (strip_implicit_parameters
                                                                     unf_res.res))
@@ -6585,7 +7776,7 @@ let (unfold_in_assert_or_assume :
                                                                     (fun
                                                                     uu___4 ->
                                                                     Obj.magic
-                                                                    (FStar_Tactics_Builtins.inspect
+                                                                    (FStar_Tactics_V1_Builtins.inspect
                                                                     uu___4))
                                                                     uu___4)))
                                                                     (fun
@@ -6595,28 +7786,32 @@ let (unfold_in_assert_or_assume :
                                                                     match uu___4
                                                                     with
                                                                     | 
-                                                                    FStar_Reflection_Data.Tv_FVar
+                                                                    FStar_Reflection_V1_Data.Tv_FVar
                                                                     fv ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (718))
+                                                                    (Prims.of_int (714))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (719))
-                                                                    (Prims.of_int (41)))
+                                                                    (Prims.of_int (715))
+                                                                    (Prims.of_int (41)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (719))
+                                                                    (Prims.of_int (715))
                                                                     (Prims.of_int (42))
-                                                                    (Prims.of_int (721))
-                                                                    (Prims.of_int (51)))
+                                                                    (Prims.of_int (720))
+                                                                    (Prims.of_int (21)))))
                                                                     (Obj.magic
                                                                     (FStar_InteractiveHelpers_Base.print_dbg
                                                                     dbg
                                                                     (Prims.strcat
                                                                     "The focused term is a top identifier with implicit parameters: "
-                                                                    (FStar_Reflection_Derived.fv_to_string
+                                                                    (FStar_Reflection_V1_Derived.fv_to_string
                                                                     fv))))
                                                                     (fun
                                                                     uu___5 ->
@@ -6624,23 +7819,27 @@ let (unfold_in_assert_or_assume :
                                                                     uu___5 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (721))
+                                                                    (Prims.of_int (717))
                                                                     (Prims.of_int (20))
-                                                                    (Prims.of_int (721))
-                                                                    (Prims.of_int (48)))
+                                                                    (Prims.of_int (717))
+                                                                    (Prims.of_int (48)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (721))
+                                                                    (Prims.of_int (717))
                                                                     (Prims.of_int (51))
-                                                                    (Prims.of_int (722))
-                                                                    (Prims.of_int (82)))
+                                                                    (Prims.of_int (720))
+                                                                    (Prims.of_int (21)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___6 ->
-                                                                    FStar_Reflection_Derived.flatten_name
-                                                                    (FStar_Reflection_Builtins.inspect_fv
+                                                                    FStar_Reflection_V1_Derived.flatten_name
+                                                                    (FStar_Reflection_V1_Builtins.inspect_fv
                                                                     fv)))
                                                                     (fun
                                                                     uu___6 ->
@@ -6648,20 +7847,24 @@ let (unfold_in_assert_or_assume :
                                                                     fname ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (722))
-                                                                    (Prims.of_int (23))
-                                                                    (Prims.of_int (722))
-                                                                    (Prims.of_int (79)))
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (723))
-                                                                    (Prims.of_int (8))
-                                                                    (Prims.of_int (724))
-                                                                    (Prims.of_int (21)))
+                                                                    (FStar_Sealed.seal
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_Builtins.norm_term_env
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (718))
+                                                                    (Prims.of_int (23))
+                                                                    (Prims.of_int (718))
+                                                                    (Prims.of_int (79)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (719))
+                                                                    (Prims.of_int (8))
+                                                                    (Prims.of_int (720))
+                                                                    (Prims.of_int (21)))))
+                                                                    (Obj.magic
+                                                                    (FStar_Tactics_V1_Builtins.norm_term_env
                                                                     ge1.FStar_InteractiveHelpers_Base.env
                                                                     [
                                                                     FStar_Pervasives.delta_only
@@ -6675,48 +7878,60 @@ let (unfold_in_assert_or_assume :
                                                                     ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (723))
+                                                                    (Prims.of_int (719))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (723))
-                                                                    (Prims.of_int (72)))
+                                                                    (Prims.of_int (719))
+                                                                    (Prims.of_int (72)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (724))
+                                                                    (Prims.of_int (720))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (724))
-                                                                    (Prims.of_int (21)))
+                                                                    (Prims.of_int (720))
+                                                                    (Prims.of_int (21)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (723))
+                                                                    (Prims.of_int (719))
                                                                     (Prims.of_int (22))
-                                                                    (Prims.of_int (723))
-                                                                    (Prims.of_int (72)))
+                                                                    (Prims.of_int (719))
+                                                                    (Prims.of_int (72)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (723))
+                                                                    (Prims.of_int (719))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (723))
-                                                                    (Prims.of_int (72)))
+                                                                    (Prims.of_int (719))
+                                                                    (Prims.of_int (72)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (723))
+                                                                    (Prims.of_int (719))
                                                                     (Prims.of_int (48))
-                                                                    (Prims.of_int (723))
-                                                                    (Prims.of_int (71)))
+                                                                    (Prims.of_int (719))
+                                                                    (Prims.of_int (71)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_Builtins.term_to_string
+                                                                    (FStar_Tactics_V1_Builtins.term_to_string
                                                                     subterm'))
                                                                     (fun
                                                                     uu___6 ->
@@ -6749,48 +7964,60 @@ let (unfold_in_assert_or_assume :
                                                                     uu___5 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (726))
+                                                                    (Prims.of_int (722))
                                                                     (Prims.of_int (14))
-                                                                    (Prims.of_int (728))
-                                                                    (Prims.of_int (42)))
+                                                                    (Prims.of_int (724))
+                                                                    (Prims.of_int (42)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (726))
+                                                                    (Prims.of_int (722))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (728))
-                                                                    (Prims.of_int (42)))
+                                                                    (Prims.of_int (724))
+                                                                    (Prims.of_int (42)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (727))
+                                                                    (Prims.of_int (723))
                                                                     (Prims.of_int (15))
-                                                                    (Prims.of_int (728))
-                                                                    (Prims.of_int (41)))
+                                                                    (Prims.of_int (724))
+                                                                    (Prims.of_int (41)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (728))
+                                                                    (Prims.of_int (724))
                                                                     (Prims.of_int (15))
-                                                                    (Prims.of_int (728))
-                                                                    (Prims.of_int (41)))
+                                                                    (Prims.of_int (724))
+                                                                    (Prims.of_int (41)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_Builtins.term_to_string
+                                                                    (FStar_Tactics_V1_Builtins.term_to_string
                                                                     unf_res.res))
                                                                     (fun
                                                                     uu___6 ->
@@ -6829,18 +8056,22 @@ let (unfold_in_assert_or_assume :
                                                                     ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (732))
+                                                                    (Prims.of_int (728))
                                                                     (Prims.of_int (21))
-                                                                    (Prims.of_int (732))
-                                                                    (Prims.of_int (35)))
+                                                                    (Prims.of_int (728))
+                                                                    (Prims.of_int (35)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (732))
+                                                                    (Prims.of_int (728))
                                                                     (Prims.of_int (38))
-                                                                    (Prims.of_int (733))
-                                                                    (Prims.of_int (54)))
+                                                                    (Prims.of_int (737))
+                                                                    (Prims.of_int (30)))))
                                                                     (Obj.magic
                                                                     (rebuild1
                                                                     unf_tm))
@@ -6851,18 +8082,22 @@ let (unfold_in_assert_or_assume :
                                                                     ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (733))
+                                                                    (Prims.of_int (729))
                                                                     (Prims.of_int (21))
-                                                                    (Prims.of_int (733))
-                                                                    (Prims.of_int (51)))
+                                                                    (Prims.of_int (729))
+                                                                    (Prims.of_int (51)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (734))
+                                                                    (Prims.of_int (730))
                                                                     (Prims.of_int (2))
-                                                                    (Prims.of_int (741))
-                                                                    (Prims.of_int (30)))
+                                                                    (Prims.of_int (737))
+                                                                    (Prims.of_int (30)))))
                                                                     (Obj.magic
                                                                     (FStar_InteractiveHelpers_Base.prettify_term
                                                                     dbg
@@ -6874,48 +8109,60 @@ let (unfold_in_assert_or_assume :
                                                                     ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (734))
+                                                                    (Prims.of_int (730))
                                                                     (Prims.of_int (2))
-                                                                    (Prims.of_int (734))
-                                                                    (Prims.of_int (71)))
+                                                                    (Prims.of_int (730))
+                                                                    (Prims.of_int (71)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (734))
+                                                                    (Prims.of_int (730))
                                                                     (Prims.of_int (72))
                                                                     (Prims.of_int (737))
-                                                                    (Prims.of_int (4)))
+                                                                    (Prims.of_int (30)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (734))
+                                                                    (Prims.of_int (730))
                                                                     (Prims.of_int (16))
-                                                                    (Prims.of_int (734))
-                                                                    (Prims.of_int (71)))
+                                                                    (Prims.of_int (730))
+                                                                    (Prims.of_int (71)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (734))
+                                                                    (Prims.of_int (730))
                                                                     (Prims.of_int (2))
-                                                                    (Prims.of_int (734))
-                                                                    (Prims.of_int (71)))
+                                                                    (Prims.of_int (730))
+                                                                    (Prims.of_int (71)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (734))
+                                                                    (Prims.of_int (730))
                                                                     (Prims.of_int (43))
-                                                                    (Prims.of_int (734))
-                                                                    (Prims.of_int (70)))
+                                                                    (Prims.of_int (730))
+                                                                    (Prims.of_int (70)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
                                                                     (Prims.of_int (590))
                                                                     (Prims.of_int (19))
                                                                     (Prims.of_int (590))
-                                                                    (Prims.of_int (31)))
+                                                                    (Prims.of_int (31)))))
                                                                     (Obj.magic
-                                                                    (FStar_Tactics_Builtins.term_to_string
+                                                                    (FStar_Tactics_V1_Builtins.term_to_string
                                                                     final_assert1))
                                                                     (fun
                                                                     uu___5 ->
@@ -6940,18 +8187,22 @@ let (unfold_in_assert_or_assume :
                                                                     uu___5 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (736))
+                                                                    (Prims.of_int (732))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (736))
-                                                                    (Prims.of_int (94)))
+                                                                    (Prims.of_int (732))
+                                                                    (Prims.of_int (94)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
+                                                                    (Prims.of_int (733))
+                                                                    (Prims.of_int (4))
                                                                     (Prims.of_int (737))
-                                                                    (Prims.of_int (4))
-                                                                    (Prims.of_int (739))
-                                                                    (Prims.of_int (82)))
+                                                                    (Prims.of_int (30)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___6 ->
@@ -6972,18 +8223,22 @@ let (unfold_in_assert_or_assume :
                                                                     ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (739))
+                                                                    (Prims.of_int (735))
                                                                     (Prims.of_int (21))
-                                                                    (Prims.of_int (739))
-                                                                    (Prims.of_int (79)))
+                                                                    (Prims.of_int (735))
+                                                                    (Prims.of_int (79)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.PostProcess.fst"
-                                                                    (Prims.of_int (737))
+                                                                    (Prims.of_int (733))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (739))
-                                                                    (Prims.of_int (82)))
+                                                                    (Prims.of_int (737))
+                                                                    (Prims.of_int (30)))))
                                                                     (Obj.magic
                                                                     (FStar_InteractiveHelpers_Output.subst_shadowed_with_abs_in_assertions
                                                                     dbg ge2
@@ -7018,32 +8273,40 @@ let (pp_unfold_in_assert_or_assume :
   Prims.bool -> unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun dbg ->
     fun uu___ ->
-      FStar_Tactics_Derived.try_with
+      FStar_Tactics_V1_Derived.try_with
         (fun uu___1 ->
            match () with
            | () ->
                FStar_Tactics_Effect.tac_bind
-                 (FStar_Range.mk_range
-                    "FStar.InteractiveHelpers.PostProcess.fst"
-                    (Prims.of_int (747)) (Prims.of_int (14))
-                    (Prims.of_int (747)) (Prims.of_int (53)))
-                 (FStar_Range.mk_range
-                    "FStar.InteractiveHelpers.PostProcess.fst"
-                    (Prims.of_int (748)) (Prims.of_int (4))
-                    (Prims.of_int (749)) (Prims.of_int (16)))
+                 (FStar_Sealed.seal
+                    (Obj.magic
+                       (FStar_Range.mk_range
+                          "FStar.InteractiveHelpers.PostProcess.fst"
+                          (Prims.of_int (743)) (Prims.of_int (14))
+                          (Prims.of_int (743)) (Prims.of_int (53)))))
+                 (FStar_Sealed.seal
+                    (Obj.magic
+                       (FStar_Range.mk_range
+                          "FStar.InteractiveHelpers.PostProcess.fst"
+                          (Prims.of_int (744)) (Prims.of_int (4))
+                          (Prims.of_int (745)) (Prims.of_int (16)))))
                  (Obj.magic (find_focused_assert_in_current_goal dbg))
                  (fun uu___2 ->
                     (fun res ->
                        Obj.magic
                          (FStar_Tactics_Effect.tac_bind
-                            (FStar_Range.mk_range
-                               "FStar.InteractiveHelpers.PostProcess.fst"
-                               (Prims.of_int (748)) (Prims.of_int (4))
-                               (Prims.of_int (748)) (Prims.of_int (38)))
-                            (FStar_Range.mk_range
-                               "FStar.InteractiveHelpers.PostProcess.fst"
-                               (Prims.of_int (749)) (Prims.of_int (4))
-                               (Prims.of_int (749)) (Prims.of_int (16)))
+                            (FStar_Sealed.seal
+                               (Obj.magic
+                                  (FStar_Range.mk_range
+                                     "FStar.InteractiveHelpers.PostProcess.fst"
+                                     (Prims.of_int (744)) (Prims.of_int (4))
+                                     (Prims.of_int (744)) (Prims.of_int (38)))))
+                            (FStar_Sealed.seal
+                               (Obj.magic
+                                  (FStar_Range.mk_range
+                                     "FStar.InteractiveHelpers.PostProcess.fst"
+                                     (Prims.of_int (745)) (Prims.of_int (4))
+                                     (Prims.of_int (745)) (Prims.of_int (16)))))
                             (Obj.magic (unfold_in_assert_or_assume dbg res))
                             (fun uu___2 ->
                                (fun uu___2 -> Obj.magic (end_proof ()))
@@ -7055,14 +8318,18 @@ let (pp_unfold_in_assert_or_assume :
                   Obj.magic
                     (Obj.repr
                        (FStar_Tactics_Effect.tac_bind
-                          (FStar_Range.mk_range
-                             "FStar.InteractiveHelpers.PostProcess.fst"
-                             (Prims.of_int (750)) (Prims.of_int (29))
-                             (Prims.of_int (750)) (Prims.of_int (49)))
-                          (FStar_Range.mk_range
-                             "FStar.InteractiveHelpers.PostProcess.fst"
-                             (Prims.of_int (750)) (Prims.of_int (51))
-                             (Prims.of_int (750)) (Prims.of_int (63)))
+                          (FStar_Sealed.seal
+                             (Obj.magic
+                                (FStar_Range.mk_range
+                                   "FStar.InteractiveHelpers.PostProcess.fst"
+                                   (Prims.of_int (746)) (Prims.of_int (29))
+                                   (Prims.of_int (746)) (Prims.of_int (49)))))
+                          (FStar_Sealed.seal
+                             (Obj.magic
+                                (FStar_Range.mk_range
+                                   "FStar.InteractiveHelpers.PostProcess.fst"
+                                   (Prims.of_int (746)) (Prims.of_int (51))
+                                   (Prims.of_int (746)) (Prims.of_int (63)))))
                           (Obj.magic
                              (FStar_InteractiveHelpers_Output.printout_failure
                                 msg))
@@ -7077,7 +8344,7 @@ let _ =
     (fun psc ->
        fun ncb ->
          fun args ->
-           FStar_Tactics_InterpFuns.mk_tactic_interpretation_2
+           FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_2
              (FStar_Tactics_Native.from_tactic_2
                 pp_unfold_in_assert_or_assume) FStar_Syntax_Embeddings.e_bool
              FStar_Syntax_Embeddings.e_unit FStar_Syntax_Embeddings.e_unit

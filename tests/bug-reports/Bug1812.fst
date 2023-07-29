@@ -3,7 +3,7 @@ module Bug1812
 let op_any_word o = 1 // any identifier fitting the pattern `op_*_*` works
 let t = op_any_word
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let _ =
     assert True

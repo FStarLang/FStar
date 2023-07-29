@@ -1,0 +1,149 @@
+[
+  "z\u001aRkø®‡> ›\në¡‡Ùú",
+  [
+    [
+      "FStar.Stubs.Syntax.Syntax.__proj__DB__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_a60c1955d846f28c14f0dccba675d567"
+      ],
+      0,
+      "eccd148836232c5d8fa7845ff42f6696"
+    ],
+    [
+      "FStar.Stubs.Syntax.Syntax.__proj__DB__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_a60c1955d846f28c14f0dccba675d567"
+      ],
+      0,
+      "c2eced7fe709aea883c6235b7c2d4ad8"
+    ],
+    [
+      "FStar.Stubs.Syntax.Syntax.__proj__DT__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_ae77d74f5b6921008dc31af9e75a50f5"
+      ],
+      0,
+      "f09643282e9333a8b8376ad669325774"
+    ],
+    [
+      "FStar.Stubs.Syntax.Syntax.__proj__DT__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_ae77d74f5b6921008dc31af9e75a50f5"
+      ],
+      0,
+      "7564b6dbc60981aad10f86e3d70aea99"
+    ],
+    [
+      "FStar.Stubs.Syntax.Syntax.__proj__NM__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0267269f45d6fd12cdc74fb6d004d04b"
+      ],
+      0,
+      "407c8401d2045b7c0dcc7856900cf320"
+    ],
+    [
+      "FStar.Stubs.Syntax.Syntax.__proj__NM__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0267269f45d6fd12cdc74fb6d004d04b"
+      ],
+      0,
+      "ad8188f4100d6faae664740bfd6d3880"
+    ],
+    [
+      "FStar.Stubs.Syntax.Syntax.__proj__NT__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_99c151968ce40534e3fb9a4c963b1a19"
+      ],
+      0,
+      "75a5166a0926ce865496448da21f99cb"
+    ],
+    [
+      "FStar.Stubs.Syntax.Syntax.__proj__NT__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_99c151968ce40534e3fb9a4c963b1a19"
+      ],
+      0,
+      "47d10fa26270068ee352d34b5dfcc3c7"
+    ],
+    [
+      "FStar.Stubs.Syntax.Syntax.__proj__UN__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_7f643c5eb6d5b9ca17fe4c5e0fdbe65e"
+      ],
+      0,
+      "be2db4d4c91546ebc633a4d8e5ad5d54"
+    ],
+    [
+      "FStar.Stubs.Syntax.Syntax.__proj__UN__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_7f643c5eb6d5b9ca17fe4c5e0fdbe65e"
+      ],
+      0,
+      "db840c76d0e51cda4e9a306b178106e3"
+    ],
+    [
+      "FStar.Stubs.Syntax.Syntax.__proj__UD__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_c8eb10759a737b8258f5bbb6f7ed1381"
+      ],
+      0,
+      "4b8194759918fe6753fbf5b32ccea0f2"
+    ],
+    [
+      "FStar.Stubs.Syntax.Syntax.__proj__UD__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_c8eb10759a737b8258f5bbb6f7ed1381"
+      ],
+      0,
+      "103079665da21707139a27960a108cd0"
+    ]
+  ]
+]

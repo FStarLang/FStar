@@ -1,5 +1,5 @@
 [
-  "szw“zß\u001clT\u0001]ê/°Y¤",
+  "\r¯É.g\bgÿ]’ƒË‘â‰_",
   [
     [
       "Funcs.f0",
@@ -19,7 +19,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "3131fa9a0f3dfdec35dbcab1e56939b2"
+      "c560ea76b1f1946c811e12799f556aed"
     ],
     [
       "Funcs.f",
@@ -34,7 +34,7 @@
         "token_correspondence_Prims.pure_wp_monotonic0"
       ],
       0,
-      "e1a50c9e15ed535c5fd8b8cf95a8d4ef"
+      "7543286779d8f6337f71eb42ac1c5c1a"
     ],
     [
       "Funcs.nest_1",
@@ -49,7 +49,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "bf73326aad90d157731caca1ce56e795"
+      "ecfd57287f6cc0fa41ef9dc9d39c2bcb"
     ],
     [
       "Funcs.concatlemma",
@@ -79,7 +79,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.List.Tot.Base.op_At"
       ],
       0,
-      "77fe1395b49ae200cbae2a72be416c39"
+      "b52dbe00d275ff46a4cb33904a158e92"
     ],
     [
       "Funcs.concatmaplemma",
@@ -113,7 +113,37 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.List.Tot.Base.concatMap"
       ],
       0,
-      "2a7381e181f179bf9cb6f4c28046bc72"
+      "97c1edb5b57ff10ee690cc8f504c6844"
+    ],
+    [
+      "Funcs.test_rec_arity",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_f537159ed795b314b4e58c260361ae86_0", "bool_inversion"
+      ],
+      0,
+      "4f04842cbfd493a556343c334164d0e4"
+    ],
+    [
+      "Funcs.add_n",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0", "equation_Prims.nat",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "int_typing", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "090e06aade015ecf35f18dcf61261f15"
     ]
   ]
 ]

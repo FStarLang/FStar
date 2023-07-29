@@ -1,6 +1,6 @@
 module MetaArgs
 
-open FStar.Tactics
+open FStar.Tactics.V2
 let sometac () : Tac unit = exact (`42)
 
 let diag (x: int) (#[exact (quote x)] y: int) : tuple2 int int = (x, y)

@@ -1,9 +1,9 @@
 module Bug2169
 
 open FStar.List.Tot
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.FunctionalExtensionality
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 
 open FStar.Monotonic.Pure
 

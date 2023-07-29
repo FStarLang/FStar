@@ -253,7 +253,7 @@ let log_size
   ))))
 = f_sz _ (fun _ r _ -> Some r) (fun _ -> None)
 
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 
 let tfail (#a: Type) (s: Prims.string) : T.Tac a =
   T.debug ("Tactic failure: " ^ s);

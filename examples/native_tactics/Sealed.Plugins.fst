@@ -1,6 +1,6 @@
 module Sealed.Plugins
 open FStar.Sealed
-open FStar.Tactics
+open FStar.Tactics.V2
 
 [@@plugin]
 let use_seal (s:sealed int) : Tac int = unseal s + 1

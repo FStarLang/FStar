@@ -587,6 +587,9 @@ let rec (eq_decl' :
          FStar_Parser_AST.Splice (is_typed2, is2, t2)) ->
           ((is_typed1 = is_typed2) && (eq_list eq_ident is1 is2)) &&
             (eq_term t1 t2)
+      | (FStar_Parser_AST.DeclSyntaxExtension (s1, t1, uu___, uu___1),
+         FStar_Parser_AST.DeclSyntaxExtension (s2, t2, uu___2, uu___3)) ->
+          (s1 = s2) && (t1 = t2)
       | uu___ -> false
 and (eq_effect_decl :
   FStar_Parser_AST.effect_decl -> FStar_Parser_AST.effect_decl -> Prims.bool)
@@ -1060,7 +1063,7 @@ type extension_parser =
   open_namespaces_and_abbreviations ->
     Prims.string ->
       FStar_Compiler_Range_Type.range ->
-        (error_message, FStar_Parser_AST.decl') FStar_Pervasives.either
+        (error_message, FStar_Parser_AST.decl) FStar_Pervasives.either
 let (extension_parser_table : extension_parser FStar_Compiler_Util.smap) =
   FStar_Compiler_Util.smap_create (Prims.of_int (20))
 let (register_extension_parser : Prims.string -> extension_parser -> unit) =

@@ -3,13 +3,13 @@ module ND
 (* An effect for (demonic) nondeterminism via lists. *)
 
 open FStar.List.Tot
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.Calc
 
 open FStar.FunctionalExtensionality
 module F = FStar.FunctionalExtensionality
 module W = FStar.WellFounded
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 
 // m is a monad. In this particular example, lists
 val m (a : Type u#a) : Type u#a

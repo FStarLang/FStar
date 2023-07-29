@@ -1,5 +1,5 @@
 [
-  "®7È=6\u0003}\u0005|/|gK|u\\",
+  "Iê¡\u0005\\.9þæÕ\u001f\u0010\u0007ÎpI",
   [
     [
       "Bug1299.should_fail",
@@ -13,7 +13,7 @@
         "lemma_FStar.Pervasives.invertOption"
       ],
       0,
-      "df1f1e28d1362b53fb1a3d9b5f4e67ee"
+      "cbfeaec5304b1f92011853bcabc43f40"
     ],
     [
       "Bug1299.test",
@@ -28,7 +28,7 @@
         "function_token_typing_FStar.Pervasives.pattern", "string_typing"
       ],
       0,
-      "0651b270db4b01140efda4887d5ef13e"
+      "84e26530294f90e332310115d5145da1"
     ]
   ]
 ]

@@ -11,7 +11,7 @@
         "assumption_OPLSS.MAC.log_entry__uu___haseq"
       ],
       0,
-      "6e246a7f456c9c462ee7fe25762dcf8d"
+      "a951a5eadb438a0b2d120a789d7f398c"
     ],
     [
       "OPLSS.AE.__proj__Key__item__enc",
@@ -23,7 +23,7 @@
         "assumption_OPLSS.MAC.log_entry__uu___haseq"
       ],
       0,
-      "d6a247eb416164b35a06e147c9dc76da"
+      "ac8a2ea1b59b84e66dd9d5538a2c56fc"
     ],
     [
       "OPLSS.AE.__proj__Key__item__enc",
@@ -37,7 +37,7 @@
         "projection_inverse_OPLSS.AE.Key_mac"
       ],
       0,
-      "d2b91f28595fb4f328cdfeac083b1e10"
+      "e87434f8b9a29b4716097ea8195731fe"
     ],
     [
       "OPLSS.AE.ae_cipher",
@@ -58,7 +58,7 @@
         "typing_FStar.UInt8.t"
       ],
       0,
-      "8c3cdf9c480c14d720ad767273f586ee"
+      "67de12afba60da55c738873c11ce98bb"
     ],
     [
       "OPLSS.AE.footprint",
@@ -70,7 +70,7 @@
         "assumption_OPLSS.MAC.log_entry__uu___haseq"
       ],
       0,
-      "8d6047becc84e6e671f394ecdaae4ae7"
+      "e09d6f3bde994655cf001220d25a6164"
     ],
     [
       "OPLSS.AE.mac_only_cpa_ciphers",
@@ -103,7 +103,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "721f947e313941361930c080f5a786ca"
+      "c684c333d8a711e18783ecd602da894f"
     ],
     [
       "OPLSS.AE.mac_only_cpa_ciphers_snoc",
@@ -130,7 +130,7 @@
         "typing_FStar.Seq.Properties.snoc"
       ],
       0,
-      "9c8bd70cb8b2f7975a6e882290ff1e54"
+      "15e2bb5b932b548d84d36d2b998ba60a"
     ],
     [
       "OPLSS.AE.mac_only_cpa_ciphers_mem",
@@ -142,7 +142,7 @@
         "assumption_OPLSS.MAC.log_entry__uu___haseq"
       ],
       0,
-      "76f4c0a81c7c2e57f63a4edd20adb3b7"
+      "1725764466fdece2a09e3c6d166e4d13"
     ],
     [
       "OPLSS.AE.mac_only_cpa_ciphers_mem",
@@ -205,22 +205,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "02a4b5e3e75cc63a0301720decb54839"
-    ],
-    [
-      "OPLSS.AE.invariant",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_and",
-        "equation_Prims.l_imp", "equation_Prims.squash",
-        "equation_Prims.subtype_of",
-        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
-      ],
-      0,
-      "feeda5e06c4b4f5b4f5346af511f98d1"
+      "cb7bd7532437877eaaba1942ea865a3b"
     ],
     [
       "OPLSS.AE.composite_log",
@@ -234,7 +219,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "1ad4a8c1b2fdc5de906e65534e0bc4b6"
+      "ef14d646ed46046af08c6f4f6f80cf3f"
     ],
     [
       "OPLSS.AE.composite_log",
@@ -285,7 +270,7 @@
         "typing_OPLSS.AE.composite_log_entry", "well-founded-ordering-on-nat"
       ],
       0,
-      "52ae5e4d70c9ba4517b782875cb0c624"
+      "7896ea4931d95242219286acc41fe10a"
     ],
     [
       "OPLSS.AE.composite_log_snoc",
@@ -322,7 +307,7 @@
         "typing_FStar.Seq.Properties.snoc"
       ],
       0,
-      "891586fd91974412885f721e467fe129"
+      "f712f7d5d51ca07d049230c5d0ee6747"
     ],
     [
       "OPLSS.AE.ae_log",
@@ -338,7 +323,7 @@
         "refinement_interpretation_Tm_refine_26b146ce0ad10e022d31a0a58fdaede3"
       ],
       0,
-      "bee78635e5ae1c820cc76534031f7e87"
+      "b1e3dc124badf2bc39d653f21a99f98c"
     ],
     [
       "OPLSS.AE.invert_invariant_aux",
@@ -360,7 +345,7 @@
         "typing_OPLSS.AE.ae_cipher", "typing_OPLSS.Plain.plain"
       ],
       0,
-      "75d7c4aa18431b476a854dd55815bb59"
+      "73570d1bcf24583066a3a7ad8234f463"
     ],
     [
       "OPLSS.AE.invert_invariant_aux",
@@ -463,7 +448,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "c7a1e941b0539012f987452a928eed00"
+      "d065f8d13f61c3a91830a217ef6eb698"
     ],
     [
       "OPLSS.AE.invert_invariant",
@@ -498,7 +483,7 @@
         "typing_OPLSS.Plain.plain"
       ],
       0,
-      "47ea02d0707c562de98ef87c40132585"
+      "f3c72f4eab3d9bd1c8d0927361afc372"
     ],
     [
       "OPLSS.AE.keygen",
@@ -507,7 +492,7 @@
       1,
       [ "@query" ],
       0,
-      "b54c8c42aebcc365c78a339caf841c9b"
+      "1d9f3141b11031844b806917afc8f684"
     ],
     [
       "OPLSS.AE.keygen",
@@ -588,7 +573,7 @@
         "typing_OPLSS.MAC.__proj__Key__item__log", "typing_OPLSS.MAC.log"
       ],
       0,
-      "5f0b9ec463e4c60221b18fb252f1bd11"
+      "f2011d405a6c7aa46d97f319edb51e12"
     ],
     [
       "OPLSS.AE.encrypt",
@@ -600,7 +585,7 @@
         "refinement_interpretation_Tm_refine_3f1b87c09f7098a0819cfcc4bd9d0f3f"
       ],
       0,
-      "c321385a6bca7d5ec3ebde92d29f7b4d"
+      "867eea62788e860f249dd37ae96c6cf4"
     ],
     [
       "OPLSS.AE.encrypt",
@@ -703,7 +688,7 @@
         "typing_OPLSS.MAC.__proj__Key__item__log", "typing_OPLSS.MAC.log"
       ],
       0,
-      "f6a54fabf22aebed856edfb65c26aa89"
+      "ed3675b002936cd2893554f987123ce2"
     ],
     [
       "OPLSS.AE.decrypt",
@@ -722,7 +707,7 @@
         "typing_OPLSS.AE.ae_cipher", "typing_OPLSS.Plain.plain"
       ],
       0,
-      "e08d94a905abee9c46441fe1c4dd29be"
+      "2eee10214f8694046e2c37d3d1e34a70"
     ],
     [
       "OPLSS.AE.decrypt",
@@ -775,7 +760,7 @@
         "typing_OPLSS.Ideal.pre_ind_cpa", "typing_OPLSS.Plain.plain"
       ],
       0,
-      "43f9b12dc0807aebcabb9bee314c8844"
+      "847fe3a390c72b831b56fa10dddf6947"
     ]
   ]
 ]

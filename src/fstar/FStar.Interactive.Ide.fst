@@ -547,7 +547,7 @@ let run_segment (st: repl_state) (code: string) =
       ((QueryNOK, JsonList errors), Inl st)
     | Some decls ->
       let json_of_decl decl =
-        JsonAssoc [("def_range", json_of_def_range (Parser.AST.decl_drange decl))] in
+        JsonAssoc [("def_range", json_of_def_range decl.Parser.AST.drange)] in
       let js_decls =
         JsonList <| List.map json_of_decl decls in
       ((QueryOK, JsonAssoc [("decls", js_decls)]), Inl st)
@@ -844,7 +844,7 @@ let run_with_parsed_and_tc_term st term line column continuation =
 
   let find_let_body ses =
     match ses with
-    | [{ SS.sigel = SS.Sig_let((_, [{ SS.lbunivs = univs; SS.lbdef = def }]), _) }] ->
+    | [{ SS.sigel = SS.Sig_let {lbs=(_, [{ SS.lbunivs = univs; SS.lbdef = def }])} }] ->
       Some (univs, def)
     | _ -> None in
 

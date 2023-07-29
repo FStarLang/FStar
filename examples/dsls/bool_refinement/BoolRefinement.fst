@@ -1,6 +1,6 @@
 module BoolRefinement
-module T = FStar.Tactics
-module R = FStar.Reflection
+module T = FStar.Tactics.V2
+module R = FStar.Reflection.V2
 module L = FStar.List.Tot
 open FStar.List.Tot
 #push-options "--z3cliopt 'smt.qi.eager_threshold=100' --z3cliopt 'smt.arith.nl=false'"
@@ -182,6 +182,7 @@ let rec close_exp_ln (e:src_exp) (v:var) (n:nat)
     | ELam _ e -> close_exp_ln e v (n + 1)
     | EApp e1 e2 -> close_exp_ln e1 v n; close_exp_ln e2 v n
 
+#push-options "--z3rlimit 15"
 let rec open_exp_freevars (e:src_exp) (v:var) (n:nat)
   : Lemma ((freevars e `Set.subset` freevars (open_exp' e v n))  /\
            (freevars (open_exp' e v n) `Set.subset` (freevars e `Set.union` Set.singleton v)))
@@ -199,7 +200,8 @@ let rec open_exp_freevars (e:src_exp) (v:var) (n:nat)
       open_exp_freevars e2 v n
     | ELam t e ->
       open_exp_freevars e v (n + 1)
-      
+#pop-options
+
 let minus (s:Set.set 'a) (x:'a) = Set.intersect s (Set.complement (Set.singleton x))
 
 let rec close_exp_freevars (m:int) (e:src_exp { ln' e m } ) (v:var) (n:nat)
@@ -309,14 +311,13 @@ let rec elab_exp (e:src_exp)
       R.pack_ln (Tv_BVar bv)
       
     | EVar n ->
-      // tun because type does not matter at a use site
-      let bv = R.pack_bv (RT.make_bv n) in
-      R.pack_ln (Tv_Var bv)
+      let namedv = R.pack_namedv (RT.make_namedv n) in
+      R.pack_ln (Tv_Var namedv)
 
     | ELam t e ->
       let t = elab_ty t in
       let e = elab_exp e in
-      R.pack_ln (Tv_Abs (RT.mk_binder RT.pp_name_default 0 t R.Q_Explicit) e)
+      R.pack_ln (Tv_Abs (RT.mk_simple_binder RT.pp_name_default t) e)
              
     | EApp e1 e2 ->
       let e1 = elab_exp e1 in
@@ -341,14 +342,15 @@ and elab_ty (t:src_ty)
       let t2 = elab_ty t2 in
       R.pack_ln 
         (R.Tv_Arrow 
-          (RT.mk_binder RT.pp_name_default 0 t1 R.Q_Explicit)
+          (RT.mk_simple_binder RT.pp_name_default t1)
           (RT.mk_total t2)) //.pack_comp (C_Total t2 u_unk [])))
           
     | TRefineBool e ->
       let e = elab_exp e in
+      let b : R.simple_binder = RT.mk_simple_binder RT.pp_name_default RT.bool_ty in
       let bv = R.pack_bv (RT.make_bv 0) in
       let refinement = r_b2t (R.pack_ln (Tv_App e (R.pack_ln (Tv_BVar bv), Q_Explicit))) in
-      R.pack_ln (Tv_Refine bv RT.bool_ty refinement)
+      R.pack_ln (Tv_Refine b refinement)
 
 let elab_eqn (e1 e2:src_exp)
   : R.term
@@ -487,7 +489,7 @@ and t_height #f (#g:src_env) (#t:s_ty) (d:src_ty_ok f g t)
     | OK_TArrow _ _ _ d0 d1 -> max (t_height d0) (t_height d1) + 1
     | OK_TRefine _ _ d -> height d + 1
 
-module FTB = FStar.Tactics.Builtins
+module FTB = FStar.Tactics.V2.Builtins
 
 let check_sub_typing (f:RT.fstar_top_env)
                      (sg:src_env)
@@ -497,7 +499,7 @@ let check_sub_typing (f:RT.fstar_top_env)
     else let t0' = elab_ty t0 in
          let t1' = elab_ty t1 in
          let f' = extend_env_l f sg in
-         let token_opt = FTB.check_subtyping f' t0' t1' in
+         let token_opt, _issues = FTB.check_subtyping f' t0' t1' in
          match token_opt with
          | None -> T.fail "Not subtypes"
          | Some token ->
@@ -603,51 +605,55 @@ let rec extend_env_l_lookup_bvar (g:R.env) (sg:src_env) (x:var)
     | hd :: tl -> extend_env_l_lookup_bvar g tl x
 
 //key lemma about src types: Their elaborations are closed
+#push-options "--z3rlimit_factor 4 --fuel 8 --ifuel 2"
 let rec src_refinements_are_closed_core
                        (n:nat)
                        (e:src_exp {ln' e (n - 1) && closed e}) 
-                       (x:RT.open_or_close)
-  : Lemma (ensures RT.open_or_close_term' (elab_exp e) x n == elab_exp e)
+                       (elt:RT.subst_elt)
+  : Lemma (ensures RT.subst_term (elab_exp e) (RT.shift_subst_n n [elt]) ==
+                   elab_exp e)
           (decreases e)
   = match e with
     | EBool _ -> ()
     | EBVar _ -> ()
     | EApp e1 e2 ->
-      src_refinements_are_closed_core n e1 x;
-      src_refinements_are_closed_core n e2 x
+      src_refinements_are_closed_core n e1 elt;
+      src_refinements_are_closed_core n e2 elt
     | EIf b e1 e2 ->
-      src_refinements_are_closed_core n b x;    
-      src_refinements_are_closed_core n e1 x;
-      src_refinements_are_closed_core n e2 x    
+      src_refinements_are_closed_core n b elt;    
+      src_refinements_are_closed_core n e1 elt;
+      src_refinements_are_closed_core n e2 elt
     | ELam t e1 ->
-      src_types_are_closed_core t x n;
-      src_refinements_are_closed_core (n + 1) e1 x          
-and src_types_are_closed_core (ty:s_ty) (x:RT.open_or_close) (n:nat)
-  : Lemma (ensures RT.open_or_close_term' (elab_ty ty) x n == elab_ty ty)
+      src_types_are_closed_core t elt n;
+      src_refinements_are_closed_core (n + 1) e1 elt
+and src_types_are_closed_core (ty:s_ty) (elt:RT.subst_elt) (n:nat)
+  : Lemma (ensures RT.subst_term (elab_ty ty) (RT.shift_subst_n n [elt]) ==
+                   elab_ty ty)
           (decreases ty)
   = match ty with
     | TBool -> ()
     | TArrow t1 t2 ->
-      src_types_are_closed_core t1 x n;
-      src_types_are_closed_core t2 x (n + 1)
+      src_types_are_closed_core t1 elt n;
+      src_types_are_closed_core t2 elt (n + 1)
     | TRefineBool e ->
       assert (ln e);
       assert (closed e);
       ln_weaker e (-1) n;
-      src_refinements_are_closed_core (n + 1) e x
+      src_refinements_are_closed_core (n + 1) e elt
+#pop-options
 
 let src_refinements_are_closed (e:src_exp {ln e && closed e}) 
-                               (x:RT.open_or_close)
-  : Lemma (ensures RT.open_or_close_term' (elab_exp e) x 0 == elab_exp e)
+                               (elt:RT.subst_elt)
+  : Lemma (ensures RT.subst_term (elab_exp e) [elt] == elab_exp e)
           (decreases e)
  =  ln_weaker e (-1) 0;
-    src_refinements_are_closed_core 0 e x
+    src_refinements_are_closed_core 0 e elt
  
 
 #push-options "--query_stats --fuel 8 --ifuel 2 --z3rlimit_factor 2"
 let rec elab_open_commute' (n:nat) (e:src_exp { ln' e n }) (x:var) 
   : Lemma (ensures
-              RT.open_or_close_term' (elab_exp e) (RT.open_with_var x) n ==
+              RT.subst_term (elab_exp e) (RT.open_with_var x n) ==
               elab_exp (open_exp' e x n))
           (decreases e)
   = match e with
@@ -662,26 +668,25 @@ let rec elab_open_commute' (n:nat) (e:src_exp { ln' e n }) (x:var)
       elab_open_commute' n e1 x;
       elab_open_commute' n e2 x;
       let opening = RT.open_with_var x in
-      assert (RT.open_or_close_term' (elab_exp e) opening n ==
-              R.(pack_ln (Tv_Match (RT.open_or_close_term' (elab_exp b) opening n)
+      assert (RT.subst_term (elab_exp e) (opening n) ==
+              R.(pack_ln (Tv_Match (RT.subst_term (elab_exp b) (opening n))
                                   None
-                                  [(Pat_Constant C_True, RT.open_or_close_term' (elab_exp e1) opening n);
-                                   (Pat_Constant C_False, RT.open_or_close_term' (elab_exp e2) opening n)])))
+                                  [(Pat_Constant C_True, RT.subst_term (elab_exp e1) (opening n));
+                                   (Pat_Constant C_False, RT.subst_term (elab_exp e2) (opening n))])))
     | ELam t e ->
       calc (==) {
         elab_exp (open_exp' (ELam t e) x n);
       (==) {}
         elab_exp (ELam t (open_exp' e x (n + 1)));      
       (==) {  }
-        R.(pack_ln (Tv_Abs (RT.as_binder 0 (elab_ty t)) (elab_exp (open_exp' e x (n + 1)))));
+        R.(pack_ln (Tv_Abs (RT.mk_simple_binder RT.pp_name_default (elab_ty t)) (elab_exp (open_exp' e x (n + 1)))));
       (==) { elab_open_commute' (n + 1) e x } 
-        R.(pack_ln (Tv_Abs (RT.as_binder 0 (elab_ty t))
-                           (RT.open_or_close_term' (elab_exp e) RT.(open_with_var x) (n + 1))));
-      (==) { src_types_are_closed_core t (RT.open_with_var x) n }
-        RT.open_or_close_term'
-          R.(pack_ln (Tv_Abs (RT.as_binder 0 (elab_ty t)) (elab_exp e)))
-          RT.(open_with_var x)           
-          n;
+        R.(pack_ln (Tv_Abs (RT.mk_simple_binder RT.pp_name_default (elab_ty t))
+                           (RT.subst_term (elab_exp e) RT.(open_with_var x (n + 1)))));
+      (==) { src_types_are_closed_core t (RT.open_with_var_elt x n) 0 }
+        RT.subst_term
+          R.(pack_ln (Tv_Abs (RT.mk_simple_binder RT.pp_name_default (elab_ty t)) (elab_exp e)))
+          RT.(open_with_var x n);    
       }
 #pop-options
 
@@ -695,19 +700,19 @@ let elab_open_commute (e:src_exp { ln' e 0 }) (x:var)
 let src_types_are_closed1 (ty:s_ty) (v:R.term)
   : Lemma (RT.open_with (elab_ty ty) v == elab_ty ty)
           [SMTPat (RT.open_with (elab_ty ty) v)]
-  = src_types_are_closed_core ty (RT.OpenWith v) 0;
+  = src_types_are_closed_core ty (RT.DT 0 v) 0;
     RT.open_with_spec (elab_ty ty) v
 
 let src_types_are_closed2 (ty:s_ty) (x:R.var)
   : Lemma (RT.close_term (elab_ty ty) x == elab_ty ty)
           [SMTPat (RT.close_term (elab_ty ty) x)]
-  = src_types_are_closed_core ty (RT.CloseVar x) 0;
+  = src_types_are_closed_core ty (RT.ND x 0) 0;
     RT.close_term_spec (elab_ty ty) x
 
 let src_types_are_closed3 (ty:s_ty) (x:R.var)
   : Lemma (RT.open_term (elab_ty ty) x == elab_ty ty)
           [SMTPat (RT.open_term (elab_ty ty) x)]
-  = src_types_are_closed_core ty (RT.open_with_var x) 0;
+  = src_types_are_closed_core ty (RT.open_with_var_elt x 0) 0;
     RT.open_term_spec (elab_ty ty) x
 
 let b2t_typing (g:RT.fstar_env) (t:R.term) (dt:RT.tot_typing g t RT.bool_ty)
@@ -828,7 +833,7 @@ let rec rename_open' (x y:var)
     | EIf b e1 e2 ->
       rename_open' x y b n;    
       rename_open' x y e1 n;
-      rename_open' x y e2 n         
+      rename_open' x y e2 n
     | ELam t e ->
       rename_open' x y e (n + 1)
 
@@ -940,10 +945,14 @@ let rec as_bindings_rename_env_append (sg sg':src_env) (x y:var)
   = match sg with
     | [] -> ()
     | hd::tl -> as_bindings_rename_env_append tl sg' x y
+
+let rt_rename (x y:var) : RT.subst_elt =
+  RT.NT x (RT.var_as_term y)
+
 #push-options "--query_stats --fuel 8 --ifuel 4 --z3rlimit_factor 10"
 let rec rename_elab_commute_core (m:int) (e:src_exp { ln' e m } ) (x y:var) (n:nat)
   : Lemma 
-    (ensures RT.open_or_close_term' (elab_exp e) (RT.Rename x y) n ==
+    (ensures RT.subst_term (elab_exp e) (RT.shift_subst_n n [rt_rename x y]) ==
              elab_exp (rename e x y))
     (decreases e)
   = match e with
@@ -958,7 +967,7 @@ let rec rename_elab_commute_core (m:int) (e:src_exp { ln' e m } ) (x y:var) (n:n
       rename_elab_commute_core m e0 x y n;
       rename_elab_commute_core m e1 x y n
     | ELam t e ->
-      src_types_are_closed_core t (RT.Rename x y) n;
+      src_types_are_closed_core t (rt_rename x y) n;
       rename_elab_commute_core (m + 1) e x y (n + 1)
 #pop-options    
 let rename_elab_commute (e:s_exp) (x y:var)
@@ -983,7 +992,7 @@ let rename_as_bindings_commute_1 (b:either s_ty src_eqn) (x y:var)
   = match b with
     | Inl t ->
       assert (rename_binding b x y == Inl t);
-      src_types_are_closed_core t (RT.Rename x y) 0;
+      src_types_are_closed_core t (rt_rename x y) 0;
       RT.rename_spec (elab_ty t) x y
     | Inr (e0, e1) -> 
       calc (==) {
@@ -1046,7 +1055,7 @@ let core_subtyping_renaming
       (==) { as_bindings_append sg' ((x,b)::sg) }
         RT.extend_env_l f ((as_bindings sg')@(x, elab_binding b)::as_bindings sg);      
       };
-      let tok : squash (FTB.subtyping_token
+      let tok : squash (T.subtyping_token
                           (RT.extend_env_l f ((as_bindings sg')@(x, elab_binding b)::as_bindings sg))
                           (elab_ty t0)
                           (elab_ty t1))
@@ -1059,16 +1068,16 @@ let core_subtyping_renaming
       lookup_append_inverse sg sg' y;      
       assert (None? (RT.lookup_bvar (RT.extend_env_l f ((as_bindings sg')@as_bindings sg)) x));
       assert (None? (RT.lookup_bvar (RT.extend_env_l f ((as_bindings sg')@as_bindings sg)) y));      
-      let tok : squash (FTB.subtyping_token
+      let tok : squash (T.subtyping_token
                           (RT.extend_env_l f (RT.rename_bindings (as_bindings sg') x y@(y, elab_binding b)::as_bindings sg))
                           (RT.rename (elab_ty t0) x y)
                           (RT.rename (elab_ty t1) x y))
           = FStar.Squash.map_squash tok (RT.subtyping_token_renaming f _ _ _ y _ _ _) in
       RT.rename_spec (elab_ty t0) x y; 
       RT.rename_spec (elab_ty t1) x y;       
-      src_types_are_closed_core t0 (RT.Rename x y) 0;
-      src_types_are_closed_core t1 (RT.Rename x y) 0;      
-      let tok : squash (FTB.subtyping_token
+      src_types_are_closed_core t0 (rt_rename x y) 0;
+      src_types_are_closed_core t1 (rt_rename x y) 0;      
+      let tok : squash (T.subtyping_token
                           (RT.extend_env_l f (RT.rename_bindings (as_bindings sg') x y@(y, elab_binding b)::as_bindings sg))
                           (elab_ty t0)
                           (elab_ty t1))
@@ -1076,7 +1085,7 @@ let core_subtyping_renaming
       rename_as_bindings_commute sg' x y;
       assert (RT.rename_bindings (as_bindings sg') x y ==
               as_bindings (rename_env sg' x y));
-      let tok : squash (FTB.subtyping_token
+      let tok : squash (T.subtyping_token
                           (RT.extend_env_l f (as_bindings (rename_env sg' x y)@(y, elab_binding b)::as_bindings sg))
                           (elab_ty t0)
                           (elab_ty t1))
@@ -1090,7 +1099,7 @@ let core_subtyping_renaming
       (==) {extend_env_equiv f ((rename_env sg' x y)@(y,b)::sg) }
         extend_env_l f ((rename_env sg' x y)@(y, b)::sg);      
       };
-      let tok : squash (FTB.subtyping_token
+      let tok : squash (T.subtyping_token
                           (extend_env_l f ((rename_env sg' x y)@(y, b)::sg))
                           (elab_ty t0)
                           (elab_ty t1))
@@ -1269,7 +1278,7 @@ let sub_typing_weakening #f (sg sg':src_env)
         
       | RT.Rel_subtyping_token _ _ _ tok ->
         let tok
-          : squash (FTB.subtyping_token 
+          : squash (T.subtyping_token
                       (extend_env_l f (sg'@sg))
                       (elab_ty t1)
                       (elab_ty t2))
@@ -1285,7 +1294,7 @@ let sub_typing_weakening #f (sg sg':src_env)
         lookup_append_inverse sg sg' x;
         extend_env_l_lookup_bvar f (sg'@sg) x;
         let tok
-          : squash (FTB.subtyping_token 
+          : squash (T.subtyping_token
                       (RT.extend_env_l f (as_bindings sg'@(x, elab_binding b)::as_bindings sg))
                       (elab_ty t1)
                       (elab_ty t2))
@@ -1299,7 +1308,7 @@ let sub_typing_weakening #f (sg sg':src_env)
            extend_env_l f (sg'@(x, b)::sg);        
         };
         let tok
-          : squash (FTB.subtyping_token 
+          : squash (T.subtyping_token
                       (extend_env_l f (sg'@(x,b)::sg))
                       (elab_ty t1)
                       (elab_ty t2))
@@ -1431,10 +1440,6 @@ let bv_as_arg (x:R.bv)
   = let open R in
     pack_ln (Tv_BVar x), Q_Explicit
 
-let var_as_arg (x:R.bv)
-  = let open R in
-    pack_ln (Tv_Var x), Q_Explicit
-
 let apply (e:R.term) (x:_)
   : R.term
   = let open R in
@@ -1444,7 +1449,8 @@ let mk_refine (e:R.term)
   : R.term 
   = let open R in
     let ref = apply e (bv_as_arg bv0) in
-    pack_ln (Tv_Refine bv0 RT.bool_ty (r_b2t ref))
+    let b = RT.mk_simple_binder RT.pp_name_default RT.bool_ty in
+    pack_ln (Tv_Refine b (r_b2t ref))
 
 #push-options "--fuel 4"
 let apply_refinement_closed (e:src_exp { ln e && closed e })
@@ -1456,13 +1462,13 @@ let apply_refinement_closed (e:src_exp { ln e && closed e })
     calc (==) {
       RT.open_term (r_b2t (apply (elab_exp e) (bv_as_arg bv0))) x;
      (==) { RT.open_term_spec (r_b2t (apply (elab_exp e) (bv_as_arg bv0))) x }
-      RT.open_or_close_term' (r_b2t (apply (elab_exp e) (bv_as_arg bv0))) (RT.open_with_var x) 0;
+      RT.subst_term (r_b2t (apply (elab_exp e) (bv_as_arg bv0))) (RT.open_with_var x 0);
      (==) {  }
-      r_b2t (apply (RT.open_or_close_term' (elab_exp e) (RT.open_with_var x) 0)
-                   (RT.open_or_close_term' R.(pack_ln (Tv_BVar bv0)) (RT.open_with_var x) 0, R.Q_Explicit));
-     (==) { src_refinements_are_closed_core 0 e (RT.open_with_var x) }
+      r_b2t (apply (RT.subst_term (elab_exp e) (RT.open_with_var x 0))
+                   (RT.subst_term R.(pack_ln (Tv_BVar bv0)) (RT.open_with_var x 0), R.Q_Explicit));
+     (==) { src_refinements_are_closed_core 0 e (RT.open_with_var_elt x 0) }
        r_b2t (apply (elab_exp e)
-                    (RT.open_or_close_term' R.(pack_ln (Tv_BVar bv0)) (RT.open_with_var x) 0, R.Q_Explicit));
+                    (RT.subst_term R.(pack_ln (Tv_BVar bv0)) (RT.open_with_var x 0), R.Q_Explicit));
      (==) { assume (RT.tun == RT.bool_ty) }  //obviously a false assumption; but these bv_sorts need to go!
        r_b2t (apply (elab_exp e) (RT.var_as_term x, R.Q_Explicit));
      }
@@ -1525,7 +1531,7 @@ let rec soundness (#f:RT.fstar_top_env)
       RT.T_Const _ _ _ RT.CT_False
 
     | T_Var _ x ->
-      RT.T_Var _ (R.pack_bv (RT.make_bv x))
+      RT.T_Var _ (R.pack_namedv (RT.make_namedv x))
 
     | T_Lam _ t e t' x dt de ->
       let de : RT.tot_typing (extend_env_l f ((x,Inl t)::sg))
@@ -1634,7 +1640,7 @@ and src_ty_ok_soundness (#f:RT.fstar_top_env)
        : RT.tot_typing (RT.extend_env (extend_env_l f sg) x RT.bool_ty)
                        arg_x
                        RT.bool_ty
-       = RT.T_Var _ (RT.var_as_bv x)
+       = RT.T_Var _ (RT.var_as_namedv x)
      in
      let refinement = apply (elab_exp e) (arg_x, R.Q_Explicit) in
      let dr : RT.tot_typing (RT.extend_env (extend_env_l f sg) x RT.bool_ty)
@@ -1643,7 +1649,7 @@ and src_ty_ok_soundness (#f:RT.fstar_top_env)
             = RT.T_App (RT.extend_env (extend_env_l f sg) x RT.bool_ty)
                        (elab_exp e)
                        (arg_x)
-                       (RT.as_binder 0 RT.bool_ty)
+                       (RT.mk_simple_binder RT.pp_name_default RT.bool_ty)
                        RT.bool_ty
                        _
                        de

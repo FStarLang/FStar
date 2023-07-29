@@ -1,6 +1,6 @@
 module STLC.Infer
-module T = FStar.Tactics
-module R = FStar.Reflection
+module T = FStar.Tactics.V2
+module R = FStar.Reflection.V2
 module L = FStar.List.Tot
 module RT = FStar.Reflection.Typing
 open STLC.Core
@@ -77,25 +77,25 @@ let rec infer (g:R.env)
 let is_fv (t:R.term) (n:R.name)
   : T.Tac bool
   = match T.inspect t with
-    | R.Tv_FVar fv ->
-      R.inspect_fv fv = n
+    | T.Tv_FVar fv ->
+      T.inspect_fv fv = n
     | _ -> false
    
 let rec read_back (g:R.env) (t:R.term)
   : T.Tac stlc_ty
   = let tt = T.inspect t in
     match tt with
-    | R.Tv_Uvar _ _ -> 
+    | T.Tv_Uvar _ _ ->
       if T.unify_env g t (`TUnit)
       then read_back g t
       else T.fail "Impossible: Unresolved uvar must be unifiable with TUnit"
       
-    | R.Tv_FVar _ ->
+    | T.Tv_FVar _ ->
       if is_fv t ["STLC"; "Core"; "TUnit"]
       then TUnit
       else T.fail "Got an FV of type stlc_ty, but it is not a TUnit"
 
-    | R.Tv_App _ _ ->
+    | T.Tv_App _ _ ->
       begin
       let head, args = T.collect_app t in
       if not (is_fv head ["STLC"; "Core"; "TArrow"])

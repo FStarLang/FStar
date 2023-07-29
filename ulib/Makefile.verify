@@ -1,6 +1,9 @@
 .PHONY: verify-core verify-extra
 
 # List the files that should be verified by verify-extra and verify-all
+# NOTE: Only use files that are extracted+linked into the library,
+# or they will anyway be verified when extracting it. Currently, legacy/
+# is the only subdirectory that does not go into fstar.lib.
 EXTRA=legacy/FStar.Pointer.Base.fst
 
 # List the files that should NOT be verified at all
@@ -41,7 +44,6 @@ include gmake/Makefile.tmpl
 	@echo --use_hints --hint_info
 
 # bumping the rlimit for these files
-%FStar.ModifiesGen.fst.checked: OTHERFLAGS+=--z3rlimit_factor 8
 %LowStar.Monotonic.Buffer.fst.checked: OTHERFLAGS+=--z3rlimit_factor 4
 
 #turn off 271 (pattern uses theory symbols warning), to be fixed soon

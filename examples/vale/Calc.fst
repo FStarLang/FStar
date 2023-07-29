@@ -15,7 +15,7 @@
 *)
 module Calc
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 (* This file contains advanced Kung Fu. Edit at your own peril *)
 

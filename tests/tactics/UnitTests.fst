@@ -15,7 +15,7 @@
 *)
 module UnitTests
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let _ = assert True by trivial ()
 let _ = assert (1 + 1 = 2) by trivial ()

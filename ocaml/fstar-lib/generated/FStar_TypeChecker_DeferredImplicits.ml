@@ -342,12 +342,14 @@ let solve_goals_with_tac :
             (fun uu___1 ->
                let resolve_tac =
                  match tac.FStar_Syntax_Syntax.sigel with
-                 | FStar_Syntax_Syntax.Sig_let (uu___2, lid::[]) ->
+                 | FStar_Syntax_Syntax.Sig_let
+                     { FStar_Syntax_Syntax.lbs1 = uu___2;
+                       FStar_Syntax_Syntax.lids1 = lid::[];_}
+                     ->
                      let qn = FStar_TypeChecker_Env.lookup_qname env lid in
                      let fv =
                        FStar_Syntax_Syntax.lid_as_fv lid
-                         (FStar_Syntax_Syntax.Delta_constant_at_level
-                            Prims.int_zero) FStar_Pervasives_Native.None in
+                         FStar_Pervasives_Native.None in
                      let dd =
                        let uu___3 =
                          FStar_TypeChecker_Env.delta_depth_of_qninfo fv qn in
@@ -357,7 +359,7 @@ let solve_goals_with_tac :
                            failwith "Expected a dd" in
                      let term =
                        let uu___3 =
-                         FStar_Syntax_Syntax.lid_as_fv lid dd
+                         FStar_Syntax_Syntax.lid_as_fv lid
                            FStar_Pervasives_Native.None in
                        FStar_Syntax_Syntax.fv_to_tm uu___3 in
                      term
@@ -414,6 +416,8 @@ let solve_goals_with_tac :
                      (env.FStar_TypeChecker_Env.nosynth);
                    FStar_TypeChecker_Env.uvar_subtyping =
                      (env.FStar_TypeChecker_Env.uvar_subtyping);
+                   FStar_TypeChecker_Env.intactics =
+                     (env.FStar_TypeChecker_Env.intactics);
                    FStar_TypeChecker_Env.tc_term =
                      (env.FStar_TypeChecker_Env.tc_term);
                    FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
@@ -540,6 +544,8 @@ let (solve_deferred_to_tactic_goals :
                                (env1.FStar_TypeChecker_Env.nosynth);
                              FStar_TypeChecker_Env.uvar_subtyping =
                                (env1.FStar_TypeChecker_Env.uvar_subtyping);
+                             FStar_TypeChecker_Env.intactics =
+                               (env1.FStar_TypeChecker_Env.intactics);
                              FStar_TypeChecker_Env.tc_term =
                                (env1.FStar_TypeChecker_Env.tc_term);
                              FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
@@ -643,6 +649,8 @@ let (solve_deferred_to_tactic_goals :
                                (env2.FStar_TypeChecker_Env.nosynth);
                              FStar_TypeChecker_Env.uvar_subtyping =
                                (env2.FStar_TypeChecker_Env.uvar_subtyping);
+                             FStar_TypeChecker_Env.intactics =
+                               (env2.FStar_TypeChecker_Env.intactics);
                              FStar_TypeChecker_Env.tc_term =
                                (env2.FStar_TypeChecker_Env.tc_term);
                              FStar_TypeChecker_Env.typeof_tot_or_gtot_term =

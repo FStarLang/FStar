@@ -22,7 +22,7 @@ open X64.Vale.StrongPost_i
 open X64.Poly1305.Spec_s
 open X64.Poly1305.Math_i
 open Opaque_i
-open FStar.Tactics
+open FStar.Tactics.V2
 
 val va_transparent_code_poly1305_multiply : va_dummy:unit -> Tot va_code
 let va_transparent_code_poly1305_multiply () =

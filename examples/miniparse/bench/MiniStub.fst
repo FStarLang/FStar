@@ -17,7 +17,7 @@ module __MODULE__
 open MiniParse.Spec.TEnum
 open MiniParse.Tac.Impl
 
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 
 #reset-options "--z3rlimit 1 --z3rlimit_factor __FACTOR__ --z3seed __SEED__"
 #set-options "--hint_info"

@@ -59,7 +59,10 @@ let (primitive_projector_by_pos :
               let uu___3 = FStar_Syntax_Subst.compress t in
               uu___3.FStar_Syntax_Syntax.n in
             (match uu___2 with
-             | FStar_Syntax_Syntax.Tm_arrow (bs, c) ->
+             | FStar_Syntax_Syntax.Tm_arrow
+                 { FStar_Syntax_Syntax.bs1 = bs;
+                   FStar_Syntax_Syntax.comp = c;_}
+                 ->
                  let uu___3 = FStar_Syntax_Subst.open_comp bs c in
                  (match uu___3 with
                   | (binders, uu___4) ->

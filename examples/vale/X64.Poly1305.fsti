@@ -22,7 +22,7 @@ open X64.Vale.StrongPost_i
 open X64.Poly1305.Spec_s
 open X64.Poly1305.Math_i
 open Opaque_i
-open FStar.Tactics
+open FStar.Tactics.V2
 
 unfold let n = nat64_max
 

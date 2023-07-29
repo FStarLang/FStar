@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module Bane.Test
-open FStar.Tactics
+open FStar.Tactics.V2
 open Bane.Lib
 
 let test =

@@ -88,11 +88,13 @@ let (head_normal :
           FStar_Compiler_Effect.op_Bar_Greater uu___
             FStar_Compiler_Option.isNone
       | FStar_Syntax_Syntax.Tm_app
-          ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv;
-             FStar_Syntax_Syntax.pos = uu___;
-             FStar_Syntax_Syntax.vars = uu___1;
-             FStar_Syntax_Syntax.hash_code = uu___2;_},
-           uu___3)
+          {
+            FStar_Syntax_Syntax.hd =
+              { FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv;
+                FStar_Syntax_Syntax.pos = uu___;
+                FStar_Syntax_Syntax.vars = uu___1;
+                FStar_Syntax_Syntax.hash_code = uu___2;_};
+            FStar_Syntax_Syntax.args = uu___3;_}
           ->
           let uu___4 =
             FStar_TypeChecker_Env.lookup_definition
@@ -111,7 +113,10 @@ let (head_redex :
         uu___1.FStar_Syntax_Syntax.n in
       match uu___ with
       | FStar_Syntax_Syntax.Tm_abs
-          (uu___1, uu___2, FStar_Pervasives_Native.Some rc) ->
+          { FStar_Syntax_Syntax.bs = uu___1;
+            FStar_Syntax_Syntax.body = uu___2;
+            FStar_Syntax_Syntax.rc_opt = FStar_Pervasives_Native.Some rc;_}
+          ->
           ((FStar_Ident.lid_equals rc.FStar_Syntax_Syntax.residual_effect
               FStar_Parser_Const.effect_Tot_lid)
              ||
@@ -215,7 +220,7 @@ let (trivial_post : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
     let uu___ = let uu___1 = FStar_Syntax_Syntax.null_binder t in [uu___1] in
     let uu___1 =
       FStar_Syntax_Syntax.fvar FStar_Parser_Const.true_lid
-        FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
+        FStar_Pervasives_Native.None in
     FStar_Syntax_Util.abs uu___ uu___1 FStar_Pervasives_Native.None
 let (mk_Apply :
   FStar_SMTEncoding_Term.term ->
@@ -498,9 +503,11 @@ let rec (curried_arrow_formals_comp :
   fun k ->
     let k1 = FStar_Syntax_Subst.compress k in
     match k1.FStar_Syntax_Syntax.n with
-    | FStar_Syntax_Syntax.Tm_arrow (bs, c) ->
+    | FStar_Syntax_Syntax.Tm_arrow
+        { FStar_Syntax_Syntax.bs1 = bs; FStar_Syntax_Syntax.comp = c;_} ->
         FStar_Syntax_Subst.open_comp bs c
-    | FStar_Syntax_Syntax.Tm_refine (bv, uu___) ->
+    | FStar_Syntax_Syntax.Tm_refine
+        { FStar_Syntax_Syntax.b = bv; FStar_Syntax_Syntax.phi = uu___;_} ->
         let uu___1 = curried_arrow_formals_comp bv.FStar_Syntax_Syntax.sort in
         (match uu___1 with
          | (args, res) ->
@@ -1227,7 +1234,10 @@ and (encode_term :
               FStar_Compiler_Util.format1
                 "Impossible: locally nameless; got %s" uu___3 in
             failwith uu___2
-        | FStar_Syntax_Syntax.Tm_ascribed (t2, (k, uu___2, uu___3), uu___4)
+        | FStar_Syntax_Syntax.Tm_ascribed
+            { FStar_Syntax_Syntax.tm = t2;
+              FStar_Syntax_Syntax.asc = (k, uu___2, uu___3);
+              FStar_Syntax_Syntax.eff_opt = uu___4;_}
             ->
             let uu___5 =
               match k with
@@ -1239,11 +1249,11 @@ and (encode_term :
         | FStar_Syntax_Syntax.Tm_quoted (qt, uu___2) ->
             let tv =
               let uu___3 =
-                let uu___4 = FStar_Reflection_Basic.inspect_ln qt in
-                FStar_Syntax_Embeddings.embed
-                  FStar_Reflection_Embeddings.e_term_view uu___4 in
+                let uu___4 = FStar_Reflection_V2_Builtins.inspect_ln qt in
+                FStar_Syntax_Embeddings_Base.embed
+                  FStar_Reflection_V2_Embeddings.e_term_view uu___4 in
               uu___3 t1.FStar_Syntax_Syntax.pos FStar_Pervasives_Native.None
-                FStar_Syntax_Embeddings.id_norm_cb in
+                FStar_Syntax_Embeddings_Base.id_norm_cb in
             ((let uu___4 =
                 FStar_Compiler_Effect.op_Less_Bar
                   (FStar_TypeChecker_Env.debug
@@ -1260,11 +1270,14 @@ and (encode_term :
                 let uu___4 =
                   let uu___5 = FStar_Syntax_Syntax.as_arg tv in [uu___5] in
                 FStar_Syntax_Util.mk_app
-                  (FStar_Reflection_Constants.refl_constant_term
-                     FStar_Reflection_Constants.fstar_refl_pack_ln) uu___4 in
+                  (FStar_Reflection_V2_Constants.refl_constant_term
+                     FStar_Reflection_V2_Constants.fstar_refl_pack_ln) uu___4 in
               encode_term t2 env))
         | FStar_Syntax_Syntax.Tm_meta
-            (t2, FStar_Syntax_Syntax.Meta_pattern uu___2) ->
+            { FStar_Syntax_Syntax.tm2 = t2;
+              FStar_Syntax_Syntax.meta = FStar_Syntax_Syntax.Meta_pattern
+                uu___2;_}
+            ->
             encode_term t2
               {
                 FStar_SMTEncoding_Env.bvar_bindings =
@@ -1288,7 +1301,10 @@ and (encode_term :
                 FStar_SMTEncoding_Env.global_cache =
                   (env.FStar_SMTEncoding_Env.global_cache)
               }
-        | FStar_Syntax_Syntax.Tm_meta (t2, uu___2) -> encode_term t2 env
+        | FStar_Syntax_Syntax.Tm_meta
+            { FStar_Syntax_Syntax.tm2 = t2;
+              FStar_Syntax_Syntax.meta = uu___2;_}
+            -> encode_term t2 env
         | FStar_Syntax_Syntax.Tm_name x ->
             let t2 = FStar_SMTEncoding_Env.lookup_term_var env x in (t2, [])
         | FStar_Syntax_Syntax.Tm_fvar v ->
@@ -1361,7 +1377,10 @@ and (encode_term :
             (FStar_SMTEncoding_Term.mk_Term_type, [])
         | FStar_Syntax_Syntax.Tm_uinst (t2, uu___2) -> encode_term t2 env
         | FStar_Syntax_Syntax.Tm_constant c -> encode_const c env
-        | FStar_Syntax_Syntax.Tm_arrow (binders, c) ->
+        | FStar_Syntax_Syntax.Tm_arrow
+            { FStar_Syntax_Syntax.bs1 = binders;
+              FStar_Syntax_Syntax.comp = c;_}
+            ->
             let module_name = env.FStar_SMTEncoding_Env.current_module_name in
             let uu___2 = FStar_Syntax_Subst.open_comp binders c in
             (match uu___2 with
@@ -1439,6 +1458,8 @@ and (encode_term :
                               (uu___6.FStar_TypeChecker_Env.nosynth);
                             FStar_TypeChecker_Env.uvar_subtyping =
                               (uu___6.FStar_TypeChecker_Env.uvar_subtyping);
+                            FStar_TypeChecker_Env.intactics =
+                              (uu___6.FStar_TypeChecker_Env.intactics);
                             FStar_TypeChecker_Env.tc_term =
                               (uu___6.FStar_TypeChecker_Env.tc_term);
                             FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
@@ -1824,7 +1845,8 @@ and (encode_term :
               match uu___4 with
               | {
                   FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_refine
-                    (x, f);
+                    { FStar_Syntax_Syntax.b = x;
+                      FStar_Syntax_Syntax.phi = f;_};
                   FStar_Syntax_Syntax.pos = uu___5;
                   FStar_Syntax_Syntax.vars = uu___6;
                   FStar_Syntax_Syntax.hash_code = uu___7;_} ->
@@ -2669,16 +2691,18 @@ and (encode_term :
                                           uu___9 FStar_Pervasives_Native.snd in
                                       FStar_Pervasives_Native.Some uu___8
                                   | FStar_Syntax_Syntax.Tm_ascribed
-                                      (uu___8,
-                                       (FStar_Pervasives.Inl t2, uu___9,
-                                        uu___10),
-                                       uu___11)
+                                      { FStar_Syntax_Syntax.tm = uu___8;
+                                        FStar_Syntax_Syntax.asc =
+                                          (FStar_Pervasives.Inl t2, uu___9,
+                                           uu___10);
+                                        FStar_Syntax_Syntax.eff_opt = uu___11;_}
                                       -> FStar_Pervasives_Native.Some t2
                                   | FStar_Syntax_Syntax.Tm_ascribed
-                                      (uu___8,
-                                       (FStar_Pervasives.Inr c, uu___9,
-                                        uu___10),
-                                       uu___11)
+                                      { FStar_Syntax_Syntax.tm = uu___8;
+                                        FStar_Syntax_Syntax.asc =
+                                          (FStar_Pervasives.Inr c, uu___9,
+                                           uu___10);
+                                        FStar_Syntax_Syntax.eff_opt = uu___11;_}
                                       ->
                                       FStar_Pervasives_Native.Some
                                         (FStar_Syntax_Util.comp_result c)
@@ -2801,7 +2825,10 @@ and (encode_term :
                                                 else
                                                   encode_partial_app
                                                     FStar_Pervasives_Native.None))))))))
-        | FStar_Syntax_Syntax.Tm_abs (bs, body, lopt) ->
+        | FStar_Syntax_Syntax.Tm_abs
+            { FStar_Syntax_Syntax.bs = bs; FStar_Syntax_Syntax.body = body;
+              FStar_Syntax_Syntax.rc_opt = lopt;_}
+            ->
             let uu___2 = FStar_Syntax_Subst.open_term' bs body in
             (match uu___2 with
              | (bs1, body1, opening) ->
@@ -3117,30 +3144,40 @@ and (encode_term :
                                                   decls uu___12 in
                                               (f, uu___11)))))))))
         | FStar_Syntax_Syntax.Tm_let
-            ((uu___2,
-              { FStar_Syntax_Syntax.lbname = FStar_Pervasives.Inr uu___3;
-                FStar_Syntax_Syntax.lbunivs = uu___4;
-                FStar_Syntax_Syntax.lbtyp = uu___5;
-                FStar_Syntax_Syntax.lbeff = uu___6;
-                FStar_Syntax_Syntax.lbdef = uu___7;
-                FStar_Syntax_Syntax.lbattrs = uu___8;
-                FStar_Syntax_Syntax.lbpos = uu___9;_}::uu___10),
-             uu___11)
+            {
+              FStar_Syntax_Syntax.lbs =
+                (uu___2,
+                 { FStar_Syntax_Syntax.lbname = FStar_Pervasives.Inr uu___3;
+                   FStar_Syntax_Syntax.lbunivs = uu___4;
+                   FStar_Syntax_Syntax.lbtyp = uu___5;
+                   FStar_Syntax_Syntax.lbeff = uu___6;
+                   FStar_Syntax_Syntax.lbdef = uu___7;
+                   FStar_Syntax_Syntax.lbattrs = uu___8;
+                   FStar_Syntax_Syntax.lbpos = uu___9;_}::uu___10);
+              FStar_Syntax_Syntax.body1 = uu___11;_}
             -> failwith "Impossible: already handled by encoding of Sig_let"
         | FStar_Syntax_Syntax.Tm_let
-            ((false,
-              { FStar_Syntax_Syntax.lbname = FStar_Pervasives.Inl x;
-                FStar_Syntax_Syntax.lbunivs = uu___2;
-                FStar_Syntax_Syntax.lbtyp = t11;
-                FStar_Syntax_Syntax.lbeff = uu___3;
-                FStar_Syntax_Syntax.lbdef = e1;
-                FStar_Syntax_Syntax.lbattrs = uu___4;
-                FStar_Syntax_Syntax.lbpos = uu___5;_}::[]),
-             e2)
+            {
+              FStar_Syntax_Syntax.lbs =
+                (false,
+                 { FStar_Syntax_Syntax.lbname = FStar_Pervasives.Inl x;
+                   FStar_Syntax_Syntax.lbunivs = uu___2;
+                   FStar_Syntax_Syntax.lbtyp = t11;
+                   FStar_Syntax_Syntax.lbeff = uu___3;
+                   FStar_Syntax_Syntax.lbdef = e1;
+                   FStar_Syntax_Syntax.lbattrs = uu___4;
+                   FStar_Syntax_Syntax.lbpos = uu___5;_}::[]);
+              FStar_Syntax_Syntax.body1 = e2;_}
             -> encode_let x t11 e1 e2 env encode_term
-        | FStar_Syntax_Syntax.Tm_let ((false, uu___2::uu___3), uu___4) ->
+        | FStar_Syntax_Syntax.Tm_let
+            { FStar_Syntax_Syntax.lbs = (false, uu___2::uu___3);
+              FStar_Syntax_Syntax.body1 = uu___4;_}
+            ->
             failwith "Impossible: non-recursive let with multiple bindings"
-        | FStar_Syntax_Syntax.Tm_let ((uu___2, lbs), uu___3) ->
+        | FStar_Syntax_Syntax.Tm_let
+            { FStar_Syntax_Syntax.lbs = (uu___2, lbs);
+              FStar_Syntax_Syntax.body1 = uu___3;_}
+            ->
             let names =
               FStar_Compiler_Effect.op_Bar_Greater lbs
                 (FStar_Compiler_List.map
@@ -3162,7 +3199,12 @@ and (encode_term :
                           (uu___11, uu___12))) in
             FStar_Compiler_Effect.raise
               (FStar_SMTEncoding_Env.Inner_let_rec names)
-        | FStar_Syntax_Syntax.Tm_match (e, uu___2, pats, uu___3) ->
+        | FStar_Syntax_Syntax.Tm_match
+            { FStar_Syntax_Syntax.scrutinee = e;
+              FStar_Syntax_Syntax.ret_opt = uu___2;
+              FStar_Syntax_Syntax.brs = pats;
+              FStar_Syntax_Syntax.rc_opt1 = uu___3;_}
+            ->
             encode_match e pats FStar_SMTEncoding_Term.mk_Term_unit env
               encode_term))
 and (encode_let :
@@ -3714,7 +3756,10 @@ and (encode_formula :
       let rec fallback phi1 =
         match phi1.FStar_Syntax_Syntax.n with
         | FStar_Syntax_Syntax.Tm_meta
-            (phi', FStar_Syntax_Syntax.Meta_labeled (msg, r, b)) ->
+            { FStar_Syntax_Syntax.tm2 = phi';
+              FStar_Syntax_Syntax.meta = FStar_Syntax_Syntax.Meta_labeled
+                (msg, r, b);_}
+            ->
             let uu___ = encode_formula phi' env in
             (match uu___ with
              | (phi2, decls) ->
@@ -3725,25 +3770,35 @@ and (encode_formula :
         | FStar_Syntax_Syntax.Tm_meta uu___ ->
             let uu___1 = FStar_Syntax_Util.unmeta phi1 in
             encode_formula uu___1 env
-        | FStar_Syntax_Syntax.Tm_match (e, uu___, pats, uu___1) ->
+        | FStar_Syntax_Syntax.Tm_match
+            { FStar_Syntax_Syntax.scrutinee = e;
+              FStar_Syntax_Syntax.ret_opt = uu___;
+              FStar_Syntax_Syntax.brs = pats;
+              FStar_Syntax_Syntax.rc_opt1 = uu___1;_}
+            ->
             let uu___2 =
               encode_match e pats FStar_SMTEncoding_Term.mkUnreachable env
                 encode_formula in
             (match uu___2 with | (t, decls) -> (t, decls))
         | FStar_Syntax_Syntax.Tm_let
-            ((false,
-              { FStar_Syntax_Syntax.lbname = FStar_Pervasives.Inl x;
-                FStar_Syntax_Syntax.lbunivs = uu___;
-                FStar_Syntax_Syntax.lbtyp = t1;
-                FStar_Syntax_Syntax.lbeff = uu___1;
-                FStar_Syntax_Syntax.lbdef = e1;
-                FStar_Syntax_Syntax.lbattrs = uu___2;
-                FStar_Syntax_Syntax.lbpos = uu___3;_}::[]),
-             e2)
+            {
+              FStar_Syntax_Syntax.lbs =
+                (false,
+                 { FStar_Syntax_Syntax.lbname = FStar_Pervasives.Inl x;
+                   FStar_Syntax_Syntax.lbunivs = uu___;
+                   FStar_Syntax_Syntax.lbtyp = t1;
+                   FStar_Syntax_Syntax.lbeff = uu___1;
+                   FStar_Syntax_Syntax.lbdef = e1;
+                   FStar_Syntax_Syntax.lbattrs = uu___2;
+                   FStar_Syntax_Syntax.lbpos = uu___3;_}::[]);
+              FStar_Syntax_Syntax.body1 = e2;_}
             ->
             let uu___4 = encode_let x t1 e1 e2 env encode_formula in
             (match uu___4 with | (t, decls) -> (t, decls))
-        | FStar_Syntax_Syntax.Tm_app (head, args) ->
+        | FStar_Syntax_Syntax.Tm_app
+            { FStar_Syntax_Syntax.hd = head;
+              FStar_Syntax_Syntax.args = args;_}
+            ->
             let head1 = FStar_Syntax_Util.un_uinst head in
             (match ((head1.FStar_Syntax_Syntax.n), args) with
              | (FStar_Syntax_Syntax.Tm_fvar fv,
@@ -3797,15 +3852,13 @@ and (encode_formula :
                  ->
                  let uu___3 =
                    let uu___4 =
-                     let uu___5 =
-                       FStar_Syntax_Embeddings.unembed
-                         FStar_Syntax_Embeddings.e_range r in
-                     uu___5 false FStar_Syntax_Embeddings.id_norm_cb in
+                     FStar_Syntax_Embeddings_Base.try_unembed
+                       FStar_Syntax_Embeddings.e_range r
+                       FStar_Syntax_Embeddings_Base.id_norm_cb in
                    let uu___5 =
-                     let uu___6 =
-                       FStar_Syntax_Embeddings.unembed
-                         FStar_Syntax_Embeddings.e_string msg in
-                     uu___6 false FStar_Syntax_Embeddings.id_norm_cb in
+                     FStar_Syntax_Embeddings_Base.try_unembed
+                       FStar_Syntax_Embeddings.e_string msg
+                       FStar_Syntax_Embeddings_Base.id_norm_cb in
                    (uu___4, uu___5) in
                  (match uu___3 with
                   | (FStar_Pervasives_Native.Some r1,
@@ -3813,19 +3866,25 @@ and (encode_formula :
                       let phi3 =
                         FStar_Syntax_Syntax.mk
                           (FStar_Syntax_Syntax.Tm_meta
-                             (phi2,
-                               (FStar_Syntax_Syntax.Meta_labeled
-                                  (s, r1, false)))) r1 in
+                             {
+                               FStar_Syntax_Syntax.tm2 = phi2;
+                               FStar_Syntax_Syntax.meta =
+                                 (FStar_Syntax_Syntax.Meta_labeled
+                                    (s, r1, false))
+                             }) r1 in
                       fallback phi3
                   | (FStar_Pervasives_Native.None,
                      FStar_Pervasives_Native.Some s) ->
                       let phi3 =
                         FStar_Syntax_Syntax.mk
                           (FStar_Syntax_Syntax.Tm_meta
-                             (phi2,
-                               (FStar_Syntax_Syntax.Meta_labeled
-                                  (s, (phi2.FStar_Syntax_Syntax.pos), false))))
-                          phi2.FStar_Syntax_Syntax.pos in
+                             {
+                               FStar_Syntax_Syntax.tm2 = phi2;
+                               FStar_Syntax_Syntax.meta =
+                                 (FStar_Syntax_Syntax.Meta_labeled
+                                    (s, (phi2.FStar_Syntax_Syntax.pos),
+                                      false))
+                             }) phi2.FStar_Syntax_Syntax.pos in
                       fallback phi3
                   | uu___4 -> fallback phi2)
              | (FStar_Syntax_Syntax.Tm_fvar fv, (t, uu___)::[]) when

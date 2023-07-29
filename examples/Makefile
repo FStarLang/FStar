@@ -5,16 +5,18 @@ include Makefile.include
 # These examples are excluded since the binary package can't verify
 # them.
 
+# Scheduling these first as some files take very long.
+ALL_EXAMPLE_DIRS += layeredeffects
+ALL_EXAMPLE_DIRS += dsls
+ALL_EXAMPLE_DIRS += data_structures
+
 ALL_EXAMPLE_DIRS += algorithms
 ALL_EXAMPLE_DIRS += calc
 ALL_EXAMPLE_DIRS += crypto
-ALL_EXAMPLE_DIRS += data_structures
 ALL_EXAMPLE_DIRS += demos
 ALL_EXAMPLE_DIRS += doublylinkedlist
-ALL_EXAMPLE_DIRS += dsls
 ALL_EXAMPLE_DIRS += generic
 ALL_EXAMPLE_DIRS += indexed_effects
-ALL_EXAMPLE_DIRS += layeredeffects
 ALL_EXAMPLE_DIRS += low-mitls-experiments
 ALL_EXAMPLE_DIRS += maths
 ALL_EXAMPLE_DIRS += metatheory

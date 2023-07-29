@@ -248,7 +248,7 @@ let parse fn =
         in
         match d with
         | Inl None -> List.rev decls, None
-        | Inl (Some d) -> 
+        | Inl (Some (d, snap_opt)) -> 
           (* The parser may advance the lexer beyond the decls last token.
              E.g., in `let f x = 0 let g = 1`, we will have parsed the decl for `f`
                    but the lexer will have advanced to `let ^ g ...` since the
@@ -257,20 +257,21 @@ let parse fn =
                    requires such lookahead to complete a production.
           *)
           let end_pos =
-              rollback lexbuf;
-              current_pos lexbuf
+            let _ = 
+              match snap_opt with
+              | None -> 
+                rollback lexbuf
+              | Some p -> 
+                restore_snapshot lexbuf p
+            in
+            current_pos lexbuf
           in
           let raw_contents = contents_at d.drange in
-          (*
           if FStar_Options.debug_any()
-          then (
-            FStar_Compiler_Util.print4 "Parsed decl@%s=%s\nRaw contents@%s=%s\n"
-              (FStar_Compiler_Range.string_of_def_range d.drange)
-              (FStar_Parser_AST.decl_to_string d)
-              (FStar_Compiler_Range.string_of_def_range raw_contents.range)
-              raw_contents.code
-          );
-          *)
+          then 
+            FStar_Compiler_Util.print2 "At range %s, got code\n%s\n"
+              (FStar_Compiler_Range.string_of_range raw_contents.range)
+              (raw_contents.code);
           parse ((d, raw_contents)::decls)
         | Inr err -> List.rev decls, Some err
       in

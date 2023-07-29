@@ -27,8 +27,8 @@ open FStar.Syntax.Embeddings
 open FStar.TypeChecker.Env
 open FStar.TypeChecker.Common
 open FStar.Tactics.Types
-open FStar.Tactics.Basic
-open FStar.Tactics.Interpreter
+open FStar.Tactics.V1.Interpreter
+open FStar.Tactics.V2.Interpreter
 
 module BU      = FStar.Compiler.Util
 module Range   = FStar.Compiler.Range
@@ -44,7 +44,10 @@ module Env     = FStar.TypeChecker.Env
 module TcUtil  = FStar.TypeChecker.Util
 module TcRel   = FStar.TypeChecker.Rel
 module TcTerm  = FStar.TypeChecker.TcTerm
-module RE      = FStar.Reflection.Embeddings
+
+(* We only use the _abstract_ embeddings from this module,
+hence there is no v1/v2 distinction. *)
+module RE      = FStar.Reflection.V2.Embeddings
 
 let run_tactic_on_typ
         (rng_tac : Range.range) (rng_goal : Range.range)
@@ -53,7 +56,7 @@ let run_tactic_on_typ
                     * term // witness
                     =
     let rng = range_of_rng (use_range rng_goal) (use_range rng_tac) in
-    let ps, w = proofstate_of_goal_ty rng env typ in
+    let ps, w = FStar.Tactics.V2.Basic.proofstate_of_goal_ty rng env typ in
     let tactic_already_typed = false in
     let gs, _res = run_tactic_on_ps rng_tac rng_goal false e_unit () e_unit tactic tactic_already_typed ps in
     gs, w
@@ -63,7 +66,7 @@ let run_tactic_on_all_implicits
         (tactic:term) (env:Env.env) (imps:Env.implicits)
     : list goal // remaining goals
     =
-    let ps, _ = proofstate_of_all_implicits rng_goal env imps in
+    let ps, _ = FStar.Tactics.V2.Basic.proofstate_of_all_implicits rng_goal env imps in
     let tactic_already_typed = false in
     let goals, () =
       run_tactic_on_ps
@@ -212,10 +215,10 @@ let rec traverse (f: pol -> Env.env -> term -> tres) (pol:pol) (e:Env.env) (t:te
         | Tm_uinst (t,us) -> let tr = traverse f pol e t in
                              comb1 (fun t' -> Tm_uinst (t', us)) tr
 
-        | Tm_meta (t, m) -> let tr = traverse f pol e t in
-                            comb1 (fun t' -> Tm_meta (t', m)) tr
+        | Tm_meta {tm=t; meta=m} -> let tr = traverse f pol e t in
+                            comb1 (fun t' -> Tm_meta {tm=t'; meta=m}) tr
 
-        | Tm_app ({ n = Tm_fvar fv }, [(p,_); (q,_)]) when S.fv_eq_lid fv PC.imp_lid ->
+        | Tm_app {hd={ n = Tm_fvar fv }; args=[(p,_); (q,_)]} when S.fv_eq_lid fv PC.imp_lid ->
                // ==> is specialized to U_zero
                let x = S.new_bv None p in
                let r1 = traverse f (flip pol)  e                p in
@@ -227,7 +230,7 @@ let rec traverse (f: pol -> Env.env -> term -> tres) (pol:pol) (e:Env.env) (t:te
         (* of p and q *)
         (* then we return (in general) (p- ==> q+) /\ (q- ==> p+) *)
         (* But if neither side ran tactics, we just keep p <==> q *)
-        | Tm_app ({ n = Tm_fvar fv }, [(p,_); (q,_)]) when S.fv_eq_lid fv PC.iff_lid ->
+        | Tm_app {hd={ n = Tm_fvar fv }; args=[(p,_); (q,_)]} when S.fv_eq_lid fv PC.iff_lid ->
                // <==> is specialized to U_zero
                let xp = S.new_bv None p in
                let xq = S.new_bv None q in
@@ -244,15 +247,15 @@ let rec traverse (f: pol -> Env.env -> term -> tres) (pol:pol) (e:Env.env) (t:te
                   Simplified (t.n, gs1@gs2)
                end
 
-        | Tm_app (hd, args) ->
+        | Tm_app {hd; args} ->
                 let r0 = traverse f pol e hd in
                 let r1 = List.fold_right (fun (a, q) r ->
                                               let r' = traverse f pol e a in
                                               comb2 (fun a args -> (a, q)::args) r' r)
                                                  args (tpure []) in
-                comb2 (fun hd args -> Tm_app (hd, args)) r0 r1
+                comb2 (fun hd args -> Tm_app {hd; args}) r0 r1
 
-        | Tm_abs (bs, t, k) ->
+        | Tm_abs {bs; body=t; rc_opt=k} ->
                 // TODO: traverse k?
                 let bs, topen = SS.open_term bs t in
                 let e' = Env.push_binders e bs in
@@ -265,12 +268,12 @@ let rec traverse (f: pol -> Env.env -> term -> tres) (pol:pol) (e:Env.env) (t:te
                 let rt = traverse f pol e' topen in
                 comb2 (fun bs t -> (U.abs bs t k).n) rbs rt
 
-        | Tm_ascribed (t, asc, ef) ->
+        | Tm_ascribed {tm=t;asc;eff_opt=ef} ->
             // TODO: traverse the types?
-            comb1 (fun t -> Tm_ascribed (t, asc, ef)) (traverse f pol e t)
+            comb1 (fun t -> Tm_ascribed {tm=t; asc; eff_opt=ef}) (traverse f pol e t)
 
-        | Tm_match (sc, asc_opt, brs, lopt) ->  //AR: not traversing the return annotation
-            comb2 (fun sc brs -> Tm_match (sc, asc_opt, brs, lopt))
+        | Tm_match {scrutinee=sc; ret_opt=asc_opt; brs; rc_opt=lopt} ->  //AR: not traversing the return annotation
+            comb2 (fun sc brs -> Tm_match {scrutinee=sc; ret_opt=asc_opt; brs; rc_opt=lopt})
                   (traverse f pol e sc)
                   (comb_list (List.map (fun br -> let (pat, w, exp) = SS.open_branch br in
                                                   let bvs = S.pat_bvs pat in
@@ -387,7 +390,7 @@ let rec traverse_for_spinoff
         let label_goal (env, t) =
             let t =
               match (SS.compress t).n, label_ctx with
-              | Tm_meta(_, Meta_labeled _), _ -> t
+              | Tm_meta {meta=Meta_labeled _}, _ -> t
               | _, Some (msg, r) -> TcUtil.label msg r t
               | _ -> t
             in
@@ -458,7 +461,7 @@ let rec traverse_for_spinoff
         if pol <> StrictlyPositive then None
         else (
           match (SS.compress t).n with
-          | Tm_match (sc, asc_opt, brs, lopt) ->  //AR: not traversing the return annotation
+          | Tm_match {scrutinee=sc; ret_opt=asc_opt; brs; rc_opt=lopt} ->  //AR: not traversing the return annotation
             let rec rewrite_branches path_condition branches =
               match branches with
               | [] -> Inr (U.mk_imp path_condition U.t_false)
@@ -522,26 +525,26 @@ let rec traverse_for_spinoff
             let tr = traverse pol e t in
             comb1 (fun t' -> Tm_uinst (t', us)) tr
 
-          | Tm_meta (t, Meta_labeled(msg, r, _)) ->
+          | Tm_meta {tm=t; meta=Meta_labeled(msg, r, _)} ->
             let tr = traverse_ctx pol (msg, r) e t in
-            comb1 (fun t' -> Tm_meta (t', Meta_labeled(msg, r, false))) tr
+            comb1 (fun t' -> Tm_meta {tm=t'; meta=Meta_labeled(msg, r, false)}) tr
 
-          | Tm_meta (t, m) ->
+          | Tm_meta {tm=t; meta=m} ->
             let tr = traverse pol e t in
-            comb1 (fun t' -> Tm_meta (t', m)) tr
+            comb1 (fun t' -> Tm_meta {tm=t'; meta=m}) tr
 
-          | Tm_ascribed (t, asc, ef) ->
+          | Tm_ascribed {tm=t; asc; eff_opt=ef} ->
             // TODO: traverse the types?
-            comb1 (fun t -> Tm_ascribed (t, asc, ef)) (traverse pol e t)
+            comb1 (fun t -> Tm_ascribed {tm=t; asc; eff_opt=ef}) (traverse pol e t)
 
-          | Tm_app ({ n = Tm_fvar fv }, [(p,_); (q,_)]) when S.fv_eq_lid fv PC.imp_lid ->
+          | Tm_app {hd={ n = Tm_fvar fv }; args=[(p,_); (q,_)]} when S.fv_eq_lid fv PC.imp_lid ->
                  // ==> is specialized to U_zero
             let x = S.new_bv None p in
             let r1 = traverse (flip pol)  e                p in
             let r2 = traverse       pol  (Env.push_bv e x) q in
             comb2 (fun l r -> (U.mk_imp l r).n) r1 r2
 
-          | Tm_app (hd, args) ->
+          | Tm_app {hd; args} ->
             begin
             match (U.un_uinst hd).n, args with
             | Tm_fvar fv, [(t, Some aq0); (body, aq)]
@@ -552,7 +555,7 @@ let rec traverse_for_spinoff
                 let rt = traverse (flip pol) e t in
                 let rbody = traverse pol e body in
                 let rargs = comb2 (fun t body -> [(t, Some aq0); (body, aq)]) rt rbody in
-                comb2 (fun hd args -> Tm_app (hd, args)) r0 rargs
+                comb2 (fun hd args -> Tm_app {hd; args}) r0 rargs
 
             | _ ->
                 let r0 = traverse pol e hd in
@@ -578,12 +581,12 @@ let rec traverse_for_spinoff
                          U.t_true.n
 
                        | _ ->
-                         let t' = Tm_app (hd, args) in
+                         let t' = Tm_app {hd; args} in
                          t')
                     r0 r1                  
             end
 
-          | Tm_abs (bs, t, k) ->
+          | Tm_abs {bs; body=t; rc_opt=k} ->
                 // TODO: traverse k?
                 let bs, topen = SS.open_term bs t in
                 let e' = Env.push_binders e bs in
@@ -689,7 +692,7 @@ let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
   Errors.with_ctx "While synthesizing term with a tactic" (fun () ->
     // Don't run the tactic (and end with a magic) when nosynth is set, cf. issue #73 in fstar-mode.el
     if env.nosynth
-    then mk_Tm_app (TcUtil.fvar_const env PC.magic_lid) [S.as_arg U.exp_unit] typ.pos
+    then mk_Tm_app (TcUtil.fvar_env env PC.magic_lid) [S.as_arg U.exp_unit] typ.pos
     else begin
     tacdbg := Env.debug env (O.Other "Tac");
 
@@ -778,15 +781,15 @@ let handle_smt_goal env goal =
          we retrieve the corresponding term  *)
       let tau =
         match tac.sigel with
-        | Sig_let (_, [lid]) ->
+        | Sig_let {lids=[lid]} ->
           let qn = Env.lookup_qname env lid in
-          let fv = S.lid_as_fv lid (Delta_constant_at_level 0) None in
+          let fv = S.lid_as_fv lid None in
           let dd =
             match Env.delta_depth_of_qninfo fv qn with
             | Some dd -> dd
             | None -> failwith "Expected a dd"
           in
-          S.fv_to_tm (S.lid_as_fv lid dd None)
+          S.fv_to_tm (S.lid_as_fv lid None)
         | _ -> failwith "Resolve_tac not found"
       in
 
@@ -824,7 +827,7 @@ let splice (env:Env.env) (is_typed:bool) (lids:list Ident.lident) (tau:term) (rn
 
     TcRel.force_trivial_guard env g;
 
-    let ps = proofstate_of_goals tau.pos env [] [] in
+    let ps = FStar.Tactics.V2.Basic.proofstate_of_goals tau.pos env [] [] in
     let tactic_already_typed = true in
     let gs, sigelts =
       if is_typed
@@ -838,7 +841,7 @@ let splice (env:Env.env) (is_typed:bool) (lids:list Ident.lident) (tau:term) (rn
           ps in
 
         let lb = U.mk_letbinding
-          (Inr (S.lid_as_fv (List.hd lids) (Delta_constant_at_level 1) None))
+          (Inr (S.lid_as_fv (List.hd lids) None))
           []  // no universe polymorphism yet
           t
           PC.effect_Tot_lid  // only Tot top-level effect so far
@@ -847,7 +850,7 @@ let splice (env:Env.env) (is_typed:bool) (lids:list Ident.lident) (tau:term) (rn
           rng in
 
         gs,
-        [{sigel = S.Sig_let ((false, [lb]), lids);  // false ==> non-recursive
+        [{sigel = S.Sig_let {lbs=(false, [lb]); lids};  // false ==> non-recursive
           sigrng = rng;
           sigquals = [S.Visible_default];  // default visibility
           sigmeta = S.default_sigmeta;
@@ -857,6 +860,19 @@ let splice (env:Env.env) (is_typed:bool) (lids:list Ident.lident) (tau:term) (rn
       else run_tactic_on_ps tau.pos tau.pos false
              e_unit ()
              (e_list RE.e_sigelt) tau tactic_already_typed ps in
+
+      // set delta depths in the sigelts fvs
+      let sigelts =
+        let set_lb_dd lb =
+          let {lbname=Inr fv; lbdef} = lb in
+          {lb with lbname=Inr {fv with fv_delta=U.incr_delta_qualifier lbdef
+                                                |> Some}} in
+        List.map (fun se ->
+          match se.sigel with
+          | Sig_let {lbs=(is_rec, lbs); lids} ->
+            {se with sigel=Sig_let {lbs=(is_rec, List.map set_lb_dd lbs); lids}}
+          | _ -> se
+        ) sigelts in
 
     // Check that all goals left are irrelevant. We don't need to check their
     // validity, as we will typecheck the witness independently.
@@ -920,7 +936,7 @@ let mpreprocess (env:Env.env) (tau:term) (tm:term) : term =
   Errors.with_ctx "While preprocessing a definition with a tactic" (fun () ->
     if env.nosynth then tm else begin
     tacdbg := Env.debug env (O.Other "Tac");
-    let ps = proofstate_of_goals tm.pos env [] [] in
+    let ps = FStar.Tactics.V2.Basic.proofstate_of_goals tm.pos env [] [] in
     let tactic_already_typed = false in
     let gs, tm = run_tactic_on_ps tau.pos tm.pos false RE.e_term tm RE.e_term tau tactic_already_typed ps in
     tm

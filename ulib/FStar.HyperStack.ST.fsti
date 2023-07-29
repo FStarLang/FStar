@@ -17,7 +17,6 @@ module FStar.HyperStack.ST
 
 open FStar.HyperStack
 
-module W  = FStar.Monotonic.Witnessed
 module HS = FStar.HyperStack
 
 open FStar.Preorder

@@ -1,5 +1,5 @@
 [
-  "ŸY¡ÿ¦sN¼N\u001at\u0005G\u0014¤Þ",
+  "e9]$øý;>¹ˆšiæ‘±\u0004",
   [
     [
       "EnvSquash.test",
@@ -12,7 +12,6 @@
         "constructor_distinct_FStar.Tactics.Result.Success",
         "disc_equation_FStar.Tactics.Result.Failed",
         "disc_equation_Prims.Cons",
-        "equation_FStar.Reflection.Types.binders",
         "fuel_guarded_inversion_FStar.Tactics.Result.__result",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Tactics.Result.Failed_a",
@@ -23,7 +22,7 @@
         "projection_inverse_FStar.Tactics.Result.Success_v"
       ],
       0,
-      "879fd2bdf2978d6afcf526e43ab7d850"
+      "a2b14c2a25d9355d0195b3bea47ceb11"
     ],
     [
       "EnvSquash.test",
@@ -36,7 +35,6 @@
         "constructor_distinct_FStar.Tactics.Result.Success",
         "disc_equation_FStar.Tactics.Result.Failed",
         "disc_equation_Prims.Cons",
-        "equation_FStar.Reflection.Types.binders",
         "fuel_guarded_inversion_FStar.Tactics.Result.__result",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Tactics.Result.Failed_a",
@@ -47,7 +45,7 @@
         "projection_inverse_FStar.Tactics.Result.Success_v", "true_interp"
       ],
       0,
-      "7d01257a292b201f3051d9fa9491c7b2"
+      "5cd23c1d9488990d738cd27032e12d5a"
     ]
   ]
 ]

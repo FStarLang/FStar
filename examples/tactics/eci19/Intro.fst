@@ -4,7 +4,7 @@ module Intro
 really to teach you how to use it. That's what the next files are for! *)
 
 (* We always need this module to use Meta-F* *)
-open FStar.Tactics
+open FStar.Tactics.V2
 
 
 (*
@@ -110,8 +110,8 @@ let constr (a b : prop) : Lemma (a ==> b ==> b /\ a) =
       by (let ha = implies_intro () in
           let hb = implies_intro () in
           split ();
-          hyp hb;
-          hyp ha;
+          hyp (binding_to_namedv hb);
+          hyp (binding_to_namedv ha);
           qed ())
 
 (* Exercise: inspect the intermediate proof states to understand the
@@ -288,17 +288,17 @@ metaprogram that constructs an addition function for any amount of
 arguments.
 *)
 
-let rec __run (bs:binders) : Tac unit =
-  match inspect (cur_goal ()) with
-  | Tv_Arrow _ _ ->
-    let b = intro () in
-    __run (b::bs)
-  | _ ->
-    iter (fun b -> apply (`(+));
-                exact (binder_to_term b)) bs;
-    exact (`0)
-
 let make_add () : Tac unit =
+  let rec __run (bs:list binding) : Tac unit =
+    match inspect (cur_goal ()) with
+    | Tv_Arrow _ _ ->
+      let b = intro () in
+      __run (b::bs)
+    | _ ->
+      iter (fun b -> apply (`(+));
+                     exact (binding_to_term b)) bs;
+      exact (`0)
+  in
   __run []
 
 let add_2 : a:int -> b:int -> Tot int = _ by (make_add ())

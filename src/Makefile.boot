@@ -29,13 +29,13 @@ OUTPUT_DIRECTORY_FOR = $(if $(findstring FStar_Tests_,$(1)),$(DUNE_SNAPSHOT)/fst
 EXTRACT_NAMESPACES=FStar.Extraction FStar.Parser		\
 		   FStar.Reflection FStar.SMTEncoding FStar.Syntax	\
 		   FStar.Tactics FStar.Tests FStar.ToSyntax		\
-		   FStar.TypeChecker FStar.Profiling
+		   FStar.TypeChecker FStar.Profiling FStar.Compiler
 
 # Except some files that want to extract are not within a particularly
 # specific namespace. So, we mention extracting those explicitly.
 # TODO: Do we really need this anymore? Which (implementation) modules
 # from src/basic are *not* extracted?
-EXTRACT_MODULES=FStar.Pervasives FStar.Common FStar.Compiler.Range FStar.Thunk		\
+EXTRACT_MODULES=FStar.Pervasives FStar.Common FStar.Thunk		\
 		FStar.VConfig FStar.Options FStar.Ident FStar.Errors FStar.Errors.Codes FStar.Const	\
 		FStar.Order FStar.Dependencies		\
 		FStar.Interactive.CompletionTable			\
@@ -44,14 +44,13 @@ EXTRACT_MODULES=FStar.Pervasives FStar.Common FStar.Compiler.Range FStar.Thunk		
 		FStar.Interactive.Ide FStar.Interactive.Ide.Types       \
 		FStar.Interactive.Incremental FStar.Interactive.Legacy	\
 		FStar.CheckedFiles FStar.Universal FStar.Prettyprint    \
-		FStar.Main FStar.Compiler.List FStar.Compiler.Option    \
-		FStar.Compiler.Dyn FStar.Json FStar.Compiler.Range.Type \
-		FStar.Compiler.Range.Ops FStar.GenSym
+		FStar.Main FStar.Json FStar.GenSym
 
 # And there are a few specific files that should not be extracted at
 # all, despite being in one of the EXTRACT_NAMESPACES
 NO_EXTRACT=FStar.Tactics.Native FStar.Tactics.Load	\
-	   FStar.Extraction.ML.PrintML FStar.Compiler.List
+	   FStar.Extraction.ML.PrintML FStar.Compiler.List \
+	   FStar.Compiler.Effect
 
 EXTRACT = $(addprefix --extract_module , $(EXTRACT_MODULES))		\
 	  $(addprefix --extract_namespace , $(EXTRACT_NAMESPACES))	\
@@ -94,7 +93,8 @@ EXTRACT = $(addprefix --extract_module , $(EXTRACT_MODULES))		\
 		fstar/FStar.Main.fst		\
 		tests/FStar.Tests.Test.fst	\
 		--odir $(OUTPUT_DIRECTORY)	\
-		$(EXTRACT)			> ._depend
+		$(EXTRACT)			\
+		--output_deps_to ._depend
 	@# We've generated deps for everything into fstar-lib/generated.
 	@# Here we fix up the .depend file to move tests out of the library.
 	$(Q)$(SED) 's,fstar-lib/generated/FStar_Test,fstar-tests/generated/FStar_Test,g' <._depend >.depend
@@ -107,7 +107,8 @@ dep.graph:
 		fstar/FStar.Main.fst		\
 		tests/FStar.Tests.Test.fst	\
 		--odir $(OUTPUT_DIRECTORY)	\
-		$(EXTRACT)
+		$(EXTRACT)			\
+		--output_deps_to dep.graph
 
 depgraph.pdf: dep.graph
 	$(Q)$(FSTAR_HOME)/.scripts/simpl_graph.py dep.graph > dep_simpl.graph

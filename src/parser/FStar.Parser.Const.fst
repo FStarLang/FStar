@@ -182,6 +182,7 @@ let op_Modulus         = pconst "op_Modulus"
 let op_And             = pconst "op_AmpAmp"
 let op_Or              = pconst "op_BarBar"
 let op_Negation        = pconst "op_Negation"
+let subtype_of_lid     = pconst "subtype_of"
 
 let real_const  s        = p2l ["FStar";"Real";s]
 let real_op_LT           = real_const "op_Less_Dot"
@@ -295,7 +296,8 @@ let hide   = p2l ["FStar"; "Ghost"; "hide"]
 
 (* FStar.Range *)
 let labeled_lid    = p2l ["FStar"; "Range"; "labeled"]
-let range_lid      = p2l ["FStar"; "Range"; "range"]
+let __range_lid    = p2l ["FStar"; "Range"; "__range"]
+let range_lid      = p2l ["FStar"; "Range"; "range"] (* this is a sealed version of the above *)
 let range_0        = p2l ["FStar"; "Range"; "range_0"]
 
 let guard_free     = pconst "guard_free"
@@ -462,11 +464,9 @@ let is_name (lid:lident) =
   let c = U.char_at (string_of_id (ident_of_lid lid)) 0 in
   U.is_upper c
 
-(* tactic constants *)
-let inspect        = p2l ["FStar"; "Tactics"; "Builtins"; "inspect"]
-let pack           = p2l ["FStar"; "Tactics"; "Builtins"; "pack"]
-let binder_to_term = p2l ["FStar"; "Tactics"; "Derived"; "binder_to_term"]
+let term_view_lid  = p2l ["FStar"; "Reflection"; "V1"; "Data"; "term_view"]
 
+(* tactic constants *)
 let fstar_tactics_lid' s : lid = FStar.Ident.lid_of_path (["FStar"; "Tactics"]@s) FStar.Compiler.Range.dummyRange
 let fstar_tactics_lid  s = fstar_tactics_lid' [s]
 let tac_lid = fstar_tactics_lid' ["Effect"; "tac"]
@@ -495,11 +495,11 @@ let postprocess_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_with"]
 let preprocess_with = p2l ["FStar"; "Tactics"; "Effect"; "preprocess_with"]
 let postprocess_extr_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_for_extraction_with"]
 let term_lid       = p2l ["FStar"; "Reflection"; "Types"; "term"]
-let term_view_lid  = p2l ["FStar"; "Reflection"; "Data"; "term_view"]
-let decls_lid      = p2l ["FStar"; "Reflection"; "Data"; "decls"]
 let ctx_uvar_and_subst_lid = p2l ["FStar"; "Reflection"; "Types"; "ctx_uvar_and_subst"]
 let universe_uvar_lid      = p2l ["FStar"; "Reflection"; "Types"; "universe_uvar"]
-let check_with_lid = lid_of_path (["FStar"; "Reflection"; "Builtins"; "check_with"]) FStar.Compiler.Range.dummyRange
+let check_with_lid = lid_of_path (["FStar"; "VConfig"; "check_with"]) FStar.Compiler.Range.dummyRange
+
+let decls_lid      = p2l ["FStar"; "Reflection"; "Types"; "decls"]
 
 // meta dsl constants
 let dsl_typing_builtin s = lid_of_path (["FStar"; "Reflection"; "Typing"; "Builtins"]@[s]) FStar.Compiler.Range.dummyRange
@@ -553,4 +553,6 @@ let fext_on_dom_g_lid = fext_lid "on_dom_g"
 
 let sealed_lid      = p2l ["FStar"; "Sealed"; "sealed"]
 let seal_lid        = p2l ["FStar"; "Sealed"; "seal"]
-let unseal_lid      = p2l ["FStar"; "Tactics"; "Builtins"; "unseal"]
+let unseal_lid      = p2l ["FStar"; "Tactics"; "Unseal"; "unseal"]
+
+let issue_lid = p2l ["FStar"; "Issue"; "issue"]

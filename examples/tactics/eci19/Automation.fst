@@ -1,6 +1,6 @@
 module Automation
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 (*
 As you have seen, doing constructive proofs by hand can get tedious. We

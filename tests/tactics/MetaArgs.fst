@@ -15,7 +15,7 @@
 *)
 module MetaArgs
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 (* Quick test for a meta arg *)
 let test1 (#[exact (`42)] i : int) : int = i

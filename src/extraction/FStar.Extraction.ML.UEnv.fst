@@ -246,6 +246,16 @@ let is_fv_type g fv =
     is_type_name g fv ||
     g.tydefs |> BU.for_some (fun tydef -> fv_eq fv tydef.tydef_fv)
 
+let no_fstar_stubs_ns (ns : list mlsymbol) : list mlsymbol =
+  match ns with
+  | "FStar"::"Stubs"::rest -> "FStar"::rest
+  | _ -> ns
+
+let no_fstar_stubs (p : mlpath) : mlpath =
+  let ns, id = p in
+  let ns = no_fstar_stubs_ns ns in
+  ns, id
+
 (** Find the ML counterpart of an F* record field identifier
 
     - F* Record field names are pairs of a fully qualified *type* name
@@ -362,7 +372,9 @@ let find_uniq ml_ident_map root_name is_local_type_variable =
 
 (** The ML namespace corresponding to an F* qualified name
     is just all the identifiers in the F* namespace (as strings) *)
-let mlns_of_lid (x:lident) = List.map string_of_id (ns_of_lid x)
+let mlns_of_lid (x:lident) =
+  List.map string_of_id (ns_of_lid x) |> no_fstar_stubs_ns
+
 
 (**** Extending context with identifiers *)
 
@@ -533,7 +545,7 @@ let extend_with_monad_op_name g (ed:Syntax.eff_decl) nm ts =
     (* Extract bind and return of effects as (unqualified) projectors of that effect, *)
     (* same as for actions. However, extracted code should not make explicit use of them. *)
     let lid = U.mk_field_projector_name_from_ident ed.mname (id_of_text nm) in
-    let g, mlid, exp_b = extend_fv g (lid_as_fv lid delta_constant None) ts false in
+    let g, mlid, exp_b = extend_fv g (lid_as_fv lid None) ts false in
     let mlp = mlns_of_lid lid, mlid in
     mlp, lid, exp_b, g
 
@@ -543,7 +555,7 @@ let extend_with_action_name g (ed:Syntax.eff_decl) (a:Syntax.action) ts =
     let nm = string_of_id (ident_of_lid a.action_name) in
     let module_name = ns_of_lid ed.mname in
     let lid = Ident.lid_of_ids (module_name@[Ident.id_of_text nm]) in
-    let g, mlid, exp_b = extend_fv g (lid_as_fv lid delta_constant None) ts false in
+    let g, mlid, exp_b = extend_fv g (lid_as_fv lid None) ts false in
     let mlp = mlns_of_lid lid, mlid in
     mlp, lid, exp_b, g
 
@@ -569,6 +581,7 @@ let extend_record_field_name g (type_name, fn) =
     let name, fieldname_map = find_uniq g.env_fieldname_map (string_of_id fn) false in
     let ns = mlns_of_lid type_name in
     let mlp = ns, name in
+    let mlp = no_fstar_stubs mlp in
     let g = { g with env_fieldname_map = fieldname_map;
                      mlpath_of_fieldname = BU.psmap_add g.mlpath_of_fieldname (string_of_lid key) mlp }
     in
@@ -617,6 +630,6 @@ let new_uenv (e:TypeChecker.Env.env)
     let a = "'a" in
     let failwith_ty = ([a], MLTY_Fun(MLTY_Named([], (["Prims"], "string")), E_IMPURE, MLTY_Var a)) in
     let g, _, _ =
-        extend_lb env (Inr (lid_as_fv (Const.failwith_lid()) delta_constant None)) tun failwith_ty false
+        extend_lb env (Inr (lid_as_fv (Const.failwith_lid()) None)) tun failwith_ty false
     in
     g

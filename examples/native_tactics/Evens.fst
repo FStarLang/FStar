@@ -25,7 +25,7 @@ type even : unary_nat -> Type =
 let rec nat2unary (n: nat) : unary_nat = 
   if n = 0 then U0  else US (nat2unary (n - 1))
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let even0 () : Lemma (even U0) = ()
 let evenSSn (n: unary_nat) : 

@@ -1,6 +1,6 @@
 module Bug1866
 open FStar.List.Tot
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let rec not_do_much e: Tac term =
   match inspect e with
@@ -26,10 +26,10 @@ let rec not_do_much e: Tac term =
       let branches = zip pats es in
       pack (Tv_Match scrut ret_opt branches)
 
-  | Tv_Let r attrs bv ty e1 e2 ->
+  | Tv_Let r attrs bv e1 e2 ->
       let e1 = not_do_much e1 in
       let e2 = not_do_much e2 in
-      let e = pack (Tv_Let r attrs bv ty e1 e2) in
+      let e = pack (Tv_Let r attrs bv e1 e2) in
       e
 
   | Tv_AscribedT e t tac use_eq ->
@@ -45,7 +45,7 @@ let rec not_do_much e: Tac term =
   | Tv_Arrow _ _
   | Tv_Type _
   | Tv_Uvar _ _
-  | Tv_Refine _ _ _
+  | Tv_Refine _ _
   | Tv_Unsupp
   | Tv_Unknown ->
       // Looks like we ended up visiting a type argument of an application.
@@ -79,18 +79,17 @@ let traverse (name:string) : Tac decls =
   let d = lookup_typ (top_env ()) nm in
   let d = match d with Some d -> d | None -> fail "0" in
   let d, us = match inspect_sigelt d with
-    | Sg_Let _ lbs -> begin
+    | Sg_Let {lbs} -> begin
       let {lb_fv=_;lb_us=us;lb_typ=typ;lb_def=d} =
-                          lookup_lb_view lbs nm in d, us
+                          lookup_lb lbs nm in d, us
     end
     | _ -> fail "1"
   in
   let name = pack_fv (cur_module () @ [ "test_" ^ name ]) in
   let r = not_do_much d in
   (* dump ("r = " ^ term_to_string r); *)
-  let lbv = {lb_fv=name;lb_us=us;lb_typ=(pack Tv_Unknown);lb_def=r} in
-  let lb = pack_lb lbv in
-  let s = pack_sigelt (Sg_Let false [lb]) in
+  let lb = {lb_fv=name;lb_us=us;lb_typ=(pack Tv_Unknown);lb_def=r} in
+  let s = pack_sigelt (Sg_Let {isrec=false; lbs=[lb]}) in
   [s]
 
 %splice[test_base0](traverse "base0")

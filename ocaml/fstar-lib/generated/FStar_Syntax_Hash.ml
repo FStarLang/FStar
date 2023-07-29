@@ -126,7 +126,10 @@ and (hash_term' : FStar_Syntax_Syntax.term -> FStar_Hash.hash_code mm) =
     | FStar_Syntax_Syntax.Tm_type u ->
         let uu___1 = of_int (Prims.of_int (17)) in
         let uu___2 = hash_universe u in mix uu___1 uu___2
-    | FStar_Syntax_Syntax.Tm_abs (bs, t1, rcopt) ->
+    | FStar_Syntax_Syntax.Tm_abs
+        { FStar_Syntax_Syntax.bs = bs; FStar_Syntax_Syntax.body = t1;
+          FStar_Syntax_Syntax.rc_opt = rcopt;_}
+        ->
         let uu___1 = of_int (Prims.of_int (19)) in
         let uu___2 =
           let uu___3 = hash_list hash_binder bs in
@@ -135,25 +138,33 @@ and (hash_term' : FStar_Syntax_Syntax.term -> FStar_Hash.hash_code mm) =
             let uu___6 = hash_option hash_rc rcopt in mix uu___5 uu___6 in
           mix uu___3 uu___4 in
         mix uu___1 uu___2
-    | FStar_Syntax_Syntax.Tm_arrow (bs, c) ->
+    | FStar_Syntax_Syntax.Tm_arrow
+        { FStar_Syntax_Syntax.bs1 = bs; FStar_Syntax_Syntax.comp = c;_} ->
         let uu___1 = of_int (Prims.of_int (23)) in
         let uu___2 =
           let uu___3 = hash_list hash_binder bs in
           let uu___4 = hash_comp c in mix uu___3 uu___4 in
         mix uu___1 uu___2
-    | FStar_Syntax_Syntax.Tm_refine (b, t1) ->
+    | FStar_Syntax_Syntax.Tm_refine
+        { FStar_Syntax_Syntax.b = b; FStar_Syntax_Syntax.phi = t1;_} ->
         let uu___1 = of_int (Prims.of_int (29)) in
         let uu___2 =
           let uu___3 = hash_bv b in
           let uu___4 = hash_term t1 in mix uu___3 uu___4 in
         mix uu___1 uu___2
-    | FStar_Syntax_Syntax.Tm_app (t1, args) ->
+    | FStar_Syntax_Syntax.Tm_app
+        { FStar_Syntax_Syntax.hd = t1; FStar_Syntax_Syntax.args = args;_} ->
         let uu___1 = of_int (Prims.of_int (31)) in
         let uu___2 =
           let uu___3 = hash_term t1 in
           let uu___4 = hash_list hash_arg args in mix uu___3 uu___4 in
         mix uu___1 uu___2
-    | FStar_Syntax_Syntax.Tm_match (t1, asc_opt, branches, rcopt) ->
+    | FStar_Syntax_Syntax.Tm_match
+        { FStar_Syntax_Syntax.scrutinee = t1;
+          FStar_Syntax_Syntax.ret_opt = asc_opt;
+          FStar_Syntax_Syntax.brs = branches;
+          FStar_Syntax_Syntax.rc_opt1 = rcopt;_}
+        ->
         let uu___1 = of_int (Prims.of_int (37)) in
         let uu___2 =
           let uu___3 = hash_option hash_match_returns asc_opt in
@@ -165,7 +176,10 @@ and (hash_term' : FStar_Syntax_Syntax.term -> FStar_Hash.hash_code mm) =
             let uu___6 = hash_option hash_rc rcopt in mix uu___5 uu___6 in
           mix uu___3 uu___4 in
         mix uu___1 uu___2
-    | FStar_Syntax_Syntax.Tm_ascribed (t1, a, lopt) ->
+    | FStar_Syntax_Syntax.Tm_ascribed
+        { FStar_Syntax_Syntax.tm = t1; FStar_Syntax_Syntax.asc = a;
+          FStar_Syntax_Syntax.eff_opt = lopt;_}
+        ->
         let uu___1 = of_int (Prims.of_int (43)) in
         let uu___2 =
           let uu___3 = hash_term t1 in
@@ -174,13 +188,19 @@ and (hash_term' : FStar_Syntax_Syntax.term -> FStar_Hash.hash_code mm) =
             let uu___6 = hash_option hash_lid lopt in mix uu___5 uu___6 in
           mix uu___3 uu___4 in
         mix uu___1 uu___2
-    | FStar_Syntax_Syntax.Tm_let ((false, lb::[]), t1) ->
+    | FStar_Syntax_Syntax.Tm_let
+        { FStar_Syntax_Syntax.lbs = (false, lb::[]);
+          FStar_Syntax_Syntax.body1 = t1;_}
+        ->
         let uu___1 = of_int (Prims.of_int (47)) in
         let uu___2 =
           let uu___3 = hash_lb lb in
           let uu___4 = hash_term t1 in mix uu___3 uu___4 in
         mix uu___1 uu___2
-    | FStar_Syntax_Syntax.Tm_let ((uu___1, lbs), t1) ->
+    | FStar_Syntax_Syntax.Tm_let
+        { FStar_Syntax_Syntax.lbs = (uu___1, lbs);
+          FStar_Syntax_Syntax.body1 = t1;_}
+        ->
         let uu___2 = of_int (Prims.of_int (51)) in
         let uu___3 =
           let uu___4 = hash_list hash_lb lbs in
@@ -189,7 +209,8 @@ and (hash_term' : FStar_Syntax_Syntax.term -> FStar_Hash.hash_code mm) =
     | FStar_Syntax_Syntax.Tm_uvar uv ->
         let uu___1 = of_int (Prims.of_int (53)) in
         let uu___2 = hash_uvar uv in mix uu___1 uu___2
-    | FStar_Syntax_Syntax.Tm_meta (t1, m) ->
+    | FStar_Syntax_Syntax.Tm_meta
+        { FStar_Syntax_Syntax.tm2 = t1; FStar_Syntax_Syntax.meta = m;_} ->
         let uu___1 = of_int (Prims.of_int (61)) in
         let uu___2 =
           let uu___3 = hash_term t1 in
@@ -710,39 +731,82 @@ let rec (equal_term :
                   FStar_Syntax_Syntax.Tm_constant c2) -> equal_constant c1 c2
                | (FStar_Syntax_Syntax.Tm_type u1, FStar_Syntax_Syntax.Tm_type
                   u2) -> equal_universe u1 u2
-               | (FStar_Syntax_Syntax.Tm_abs (bs1, t11, rc1),
-                  FStar_Syntax_Syntax.Tm_abs (bs2, t21, rc2)) ->
+               | (FStar_Syntax_Syntax.Tm_abs
+                  { FStar_Syntax_Syntax.bs = bs1;
+                    FStar_Syntax_Syntax.body = t11;
+                    FStar_Syntax_Syntax.rc_opt = rc1;_},
+                  FStar_Syntax_Syntax.Tm_abs
+                  { FStar_Syntax_Syntax.bs = bs2;
+                    FStar_Syntax_Syntax.body = t21;
+                    FStar_Syntax_Syntax.rc_opt = rc2;_})
+                   ->
                    ((equal_list equal_binder bs1 bs2) && (equal_term t11 t21))
                      && (equal_opt equal_rc rc1 rc2)
-               | (FStar_Syntax_Syntax.Tm_arrow (bs1, c1),
-                  FStar_Syntax_Syntax.Tm_arrow (bs2, c2)) ->
-                   (equal_list equal_binder bs1 bs2) && (equal_comp c1 c2)
-               | (FStar_Syntax_Syntax.Tm_refine (b1, t11),
-                  FStar_Syntax_Syntax.Tm_refine (b2, t21)) ->
-                   (equal_bv b1 b2) && (equal_term t11 t21)
-               | (FStar_Syntax_Syntax.Tm_app (t11, as1),
-                  FStar_Syntax_Syntax.Tm_app (t21, as2)) ->
-                   (equal_term t11 t21) && (equal_list equal_arg as1 as2)
-               | (FStar_Syntax_Syntax.Tm_match (t11, asc_opt1, bs1, ropt1),
-                  FStar_Syntax_Syntax.Tm_match (t21, asc_opt2, bs2, ropt2))
+               | (FStar_Syntax_Syntax.Tm_arrow
+                  { FStar_Syntax_Syntax.bs1 = bs1;
+                    FStar_Syntax_Syntax.comp = c1;_},
+                  FStar_Syntax_Syntax.Tm_arrow
+                  { FStar_Syntax_Syntax.bs1 = bs2;
+                    FStar_Syntax_Syntax.comp = c2;_})
+                   -> (equal_list equal_binder bs1 bs2) && (equal_comp c1 c2)
+               | (FStar_Syntax_Syntax.Tm_refine
+                  { FStar_Syntax_Syntax.b = b1;
+                    FStar_Syntax_Syntax.phi = t11;_},
+                  FStar_Syntax_Syntax.Tm_refine
+                  { FStar_Syntax_Syntax.b = b2;
+                    FStar_Syntax_Syntax.phi = t21;_})
+                   -> (equal_bv b1 b2) && (equal_term t11 t21)
+               | (FStar_Syntax_Syntax.Tm_app
+                  { FStar_Syntax_Syntax.hd = t11;
+                    FStar_Syntax_Syntax.args = as1;_},
+                  FStar_Syntax_Syntax.Tm_app
+                  { FStar_Syntax_Syntax.hd = t21;
+                    FStar_Syntax_Syntax.args = as2;_})
+                   -> (equal_term t11 t21) && (equal_list equal_arg as1 as2)
+               | (FStar_Syntax_Syntax.Tm_match
+                  { FStar_Syntax_Syntax.scrutinee = t11;
+                    FStar_Syntax_Syntax.ret_opt = asc_opt1;
+                    FStar_Syntax_Syntax.brs = bs1;
+                    FStar_Syntax_Syntax.rc_opt1 = ropt1;_},
+                  FStar_Syntax_Syntax.Tm_match
+                  { FStar_Syntax_Syntax.scrutinee = t21;
+                    FStar_Syntax_Syntax.ret_opt = asc_opt2;
+                    FStar_Syntax_Syntax.brs = bs2;
+                    FStar_Syntax_Syntax.rc_opt1 = ropt2;_})
                    ->
                    (((equal_term t11 t21) &&
                        (equal_opt equal_match_returns asc_opt1 asc_opt2))
                       && (equal_list equal_branch bs1 bs2))
                      && (equal_opt equal_rc ropt1 ropt2)
-               | (FStar_Syntax_Syntax.Tm_ascribed (t11, a1, l1),
-                  FStar_Syntax_Syntax.Tm_ascribed (t21, a2, l2)) ->
+               | (FStar_Syntax_Syntax.Tm_ascribed
+                  { FStar_Syntax_Syntax.tm = t11;
+                    FStar_Syntax_Syntax.asc = a1;
+                    FStar_Syntax_Syntax.eff_opt = l1;_},
+                  FStar_Syntax_Syntax.Tm_ascribed
+                  { FStar_Syntax_Syntax.tm = t21;
+                    FStar_Syntax_Syntax.asc = a2;
+                    FStar_Syntax_Syntax.eff_opt = l2;_})
+                   ->
                    ((equal_term t11 t21) && (equal_ascription a1 a2)) &&
                      (equal_opt FStar_Ident.lid_equals l1 l2)
-               | (FStar_Syntax_Syntax.Tm_let ((r1, lbs1), t11),
-                  FStar_Syntax_Syntax.Tm_let ((r2, lbs2), t21)) ->
+               | (FStar_Syntax_Syntax.Tm_let
+                  { FStar_Syntax_Syntax.lbs = (r1, lbs1);
+                    FStar_Syntax_Syntax.body1 = t11;_},
+                  FStar_Syntax_Syntax.Tm_let
+                  { FStar_Syntax_Syntax.lbs = (r2, lbs2);
+                    FStar_Syntax_Syntax.body1 = t21;_})
+                   ->
                    ((r1 = r2) && (equal_list equal_letbinding lbs1 lbs2)) &&
                      (equal_term t11 t21)
                | (FStar_Syntax_Syntax.Tm_uvar u1, FStar_Syntax_Syntax.Tm_uvar
                   u2) -> equal_uvar u1 u2
-               | (FStar_Syntax_Syntax.Tm_meta (t11, m1),
-                  FStar_Syntax_Syntax.Tm_meta (t21, m2)) ->
-                   (equal_term t11 t21) && (equal_meta m1 m2)
+               | (FStar_Syntax_Syntax.Tm_meta
+                  { FStar_Syntax_Syntax.tm2 = t11;
+                    FStar_Syntax_Syntax.meta = m1;_},
+                  FStar_Syntax_Syntax.Tm_meta
+                  { FStar_Syntax_Syntax.tm2 = t21;
+                    FStar_Syntax_Syntax.meta = m2;_})
+                   -> (equal_term t11 t21) && (equal_meta m1 m2)
                | (FStar_Syntax_Syntax.Tm_lazy l1, FStar_Syntax_Syntax.Tm_lazy
                   l2) -> equal_lazyinfo l1 l2
                | (FStar_Syntax_Syntax.Tm_quoted (t11, q1),

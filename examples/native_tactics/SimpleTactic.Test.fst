@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module SimpleTactic.Test
-open FStar.Tactics
+open FStar.Tactics.V2
 open SimpleTactic
 let go () =
   assert (id 1000 = 1000) by test ()

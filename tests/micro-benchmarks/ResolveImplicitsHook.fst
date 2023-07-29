@@ -1,6 +1,6 @@
 module ResolveImplicitsHook
-open FStar.Tactics
-module T = FStar.Tactics
+open FStar.Tactics.V2
+module T = FStar.Tactics.V2
 irreducible
 let marker : unit = ()
 

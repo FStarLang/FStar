@@ -1,6 +1,6 @@
 module LatticeSpec
 
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.List.Tot
 
 // GM: Force a type equality by SMT

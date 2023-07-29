@@ -1,7 +1,7 @@
 module TestImmutableArray
 module IA = FStar.ImmutableArray
 module L = FStar.List.Tot
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let test1 () = IA.of_list [0;1;2]
 

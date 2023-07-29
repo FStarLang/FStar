@@ -1,7 +1,7 @@
 module Bug2132
 
-module T = FStar.Tactics
-open FStar.Tactics
+module T = FStar.Tactics.V2
+open FStar.Tactics.V2
 open FStar.Universe
 
 (* t1 and t2 generalized at any type, so this
