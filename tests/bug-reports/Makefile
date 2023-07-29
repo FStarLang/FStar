@@ -2,6 +2,8 @@ FSTAR_HOME=../..
 include $(FSTAR_HOME)/examples/Makefile.include
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
 
+OTHERFLAGS+=--warn_error +240
+
 all: verify iverify not-verify extract
 
 ##################
