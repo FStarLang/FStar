@@ -4,7 +4,7 @@ NegativeTests.ShortCircuiting.fst(21,16-21,33): (Error 19) Subtyping check faile
 >> Got issues: [
 NegativeTests.ShortCircuiting.fst(25,11-25,36): (Error 19) assertion failed; The SMT solver could not prove the query. Use --query_stats for more details. (see also prims.fst(430,90-430,102))
 >>]
-NegativeTests.ShortCircuiting.fst(19,4-19,7): (Warning 240) Admitting NegativeTests.ShortCircuiting.bad without a definition
-NegativeTests.ShortCircuiting.fst(23,4-23,6): (Warning 240) Admitting NegativeTests.ShortCircuiting.ff without a definition
+NegativeTests.ShortCircuiting.fst(19,4-19,7): (Warning 240) NegativeTests.ShortCircuiting.bad is declared but no definition was found; add an 'assume' if this is intentional
+NegativeTests.ShortCircuiting.fst(23,4-23,6): (Warning 240) NegativeTests.ShortCircuiting.ff is declared but no definition was found; add an 'assume' if this is intentional
 Verified module: NegativeTests.ShortCircuiting
 All verification conditions discharged successfully

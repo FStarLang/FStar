@@ -1,6 +1,6 @@
 >> Got issues: [
-ArgsAndQuals.fst(25,16-25,18): (Error 91) Inconsistent implicit argument annotation on argument uu___#182
+ArgsAndQuals.fst(25,16-25,18): (Error 91) Inconsistent implicit argument annotation on argument uu___#74
 >>]
-ArgsAndQuals.fst(23,4-23,9): (Warning 240) Admitting ArgsAndQuals.test1 without a definition
+ArgsAndQuals.fst(23,4-23,9): (Warning 240) ArgsAndQuals.test1 is declared but no definition was found; add an 'assume' if this is intentional
 Verified module: ArgsAndQuals
 All verification conditions discharged successfully

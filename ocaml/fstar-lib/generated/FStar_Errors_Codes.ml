@@ -255,7 +255,7 @@ type raw_error =
   | Fatal_WhenClauseNotSupported 
   | Unused01 
   | Warning_AddImplicitAssumeNewQualifier 
-  | Warning_AdmitWithoutDefinition 
+  | Error_AdmitWithoutDefinition 
   | Warning_CachedFile 
   | Warning_DefinitionNotTranslated 
   | Warning_DependencyFound 
@@ -1430,10 +1430,10 @@ let (uu___is_Warning_AddImplicitAssumeNewQualifier : raw_error -> Prims.bool)
     match projectee with
     | Warning_AddImplicitAssumeNewQualifier -> true
     | uu___ -> false
-let (uu___is_Warning_AdmitWithoutDefinition : raw_error -> Prims.bool) =
+let (uu___is_Error_AdmitWithoutDefinition : raw_error -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | Warning_AdmitWithoutDefinition -> true
+    | Error_AdmitWithoutDefinition -> true
     | uu___ -> false
 let (uu___is_Warning_CachedFile : raw_error -> Prims.bool) =
   fun projectee ->
@@ -2155,7 +2155,7 @@ let (default_settings : error_setting Prims.list) =
   (Unused01, CFatal, (Prims.of_int (237)));
   (Warning_PluginNotImplemented, CError, (Prims.of_int (238)));
   (Warning_AddImplicitAssumeNewQualifier, CWarning, (Prims.of_int (239)));
-  (Warning_AdmitWithoutDefinition, CWarning, (Prims.of_int (240)));
+  (Error_AdmitWithoutDefinition, CError, (Prims.of_int (240)));
   (Warning_CachedFile, CWarning, (Prims.of_int (241)));
   (Warning_DefinitionNotTranslated, CWarning, (Prims.of_int (242)));
   (Warning_DependencyFound, CWarning, (Prims.of_int (243)));

@@ -7,7 +7,7 @@ NegativeTests.False.fst(30,18-30,41): (Error 12) Expected type "Prims.l_True \/ 
 NegativeTests.False.fst(30,42-30,66): (Error 12) Expected type "Prims.l_True \/ Prims.l_True"; but "Prims.Right Prims.T" has type "Prims.sum Prims.l_True (*?u6*) _"
 NegativeTests.False.fst(30,42-30,66): (Error 12) Expected type "Prims.l_True \/ Prims.l_True"; but "Prims.Right Prims.T" has type "Prims.sum Prims.l_True Prims.trivial"
 >>]
-NegativeTests.False.fst(21,4-21,7): (Warning 240) Admitting NegativeTests.False.bar without a definition
-NegativeTests.False.fst(28,4-28,10): (Warning 240) Admitting NegativeTests.False.absurd without a definition
+NegativeTests.False.fst(21,4-21,7): (Warning 240) NegativeTests.False.bar is declared but no definition was found; add an 'assume' if this is intentional
+NegativeTests.False.fst(28,4-28,10): (Warning 240) NegativeTests.False.absurd is declared but no definition was found; add an 'assume' if this is intentional
 Verified module: NegativeTests.False
 All verification conditions discharged successfully

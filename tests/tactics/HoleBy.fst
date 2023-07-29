@@ -31,6 +31,7 @@ val lem2 : (x:int) -> (y:int) -> Lemma (x + y == y + x)
 let lem2 x y =
     () <: _ by smt ()
 
+#push-options "--warn_error +240"
 val lem3 : (x:int) -> (y:int) -> Lemma (x + y == y + x)
 [@@(expect_failure [228])]
 let lem3 x y =

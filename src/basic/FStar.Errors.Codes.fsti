@@ -266,7 +266,7 @@ type raw_error =
   | Fatal_WhenClauseNotSupported
   | Unused01
   | Warning_AddImplicitAssumeNewQualifier
-  | Warning_AdmitWithoutDefinition
+  | Error_AdmitWithoutDefinition
   | Warning_CachedFile
   | Warning_DefinitionNotTranslated
   | Warning_DependencyFound
