@@ -1,4 +1,5 @@
 module Universes
+#push-options "--warn_error -240" //some defs are expected to fail
 
 //SNIPPET_START: ty$
 let ty : Type = Type
