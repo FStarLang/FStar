@@ -70,7 +70,7 @@ fn pulse_lookup_index (#s:pht_sig) (#pht:(p:pht s{not_full p.repr}))
       assert (R.pts_to ret full_perm None);
     } else {
       let idx = modulo_us sz cidx voff;
-      let c = op_Array_Index_nat ht.contents #full_perm #pht.repr (US.v idx); 
+      let c = op_Array_Index ht.contents idx; 
       match c {
         Used k' v' -> {
           if (k' = k) {
@@ -152,7 +152,7 @@ fn insert (#s:pht_sig) (#pht:(p:pht s{not_full p.repr}))
       assert (A.pts_to ht.contents full_perm pht.repr);
     } else {
       let idx = modulo_us sz cidx voff;
-      let c = op_Array_Index ht.contents #full_perm #pht.repr idx;
+      let c = op_Array_Index ht.contents idx #full_perm #pht.repr;
       match c {
         Used k' v' -> { 
           if (k' = k) {
@@ -232,7 +232,7 @@ fn delete (#s:pht_sig) (#pht:pht s)
       assert (A.pts_to ht.contents full_perm pht.repr);
     } else {
       let idx = modulo_us sz cidx voff;
-      let c = op_Array_Index ht.contents #full_perm #pht.repr idx;
+      let c = op_Array_Index ht.contents idx #full_perm #pht.repr;
       match c {
         Used k' v' -> { 
           if (k' = k) {
