@@ -2824,7 +2824,7 @@ let mk_typ_abbrev env d lid uvs typars kopt t lids quals rng =
       sigattrs = U.deduplicate_terms (val_attrs @ attrs);
       sigopts = None; }
 
-let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
+let rec desugar_tycon env (d: AST.decl) (d_attrs:list S.term) quals tcs : (env_t * sigelts) =
   let rng = d.drange in
   let tycon_id = function
     | TyconAbstract(id, _, _)
@@ -2912,7 +2912,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
                  sigquals = quals;
                  sigrng = rng;
                  sigmeta = default_sigmeta;
-                 sigattrs = [];
+                 sigattrs = d_attrs;
                  sigopts = None } in
       let _env, _ = Env.push_top_level_rec_binding _env id S.delta_constant in
       let _env2, _ = Env.push_top_level_rec_binding _env' id S.delta_constant in
@@ -3005,7 +3005,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
     | [TyconRecord _] ->
       let trec = List.hd tcs in
       let t, fs = tycon_record_as_variant trec in
-      desugar_tycon env d (RecordType (ids_of_lid (current_module env), fs)::quals) [t]
+      desugar_tycon env d d_attrs (RecordType (ids_of_lid (current_module env), fs)::quals) [t]
 
     |  _::_ ->
       let env0 = env in
@@ -3054,7 +3054,6 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
           let env_tps, tps = push_tparams env tpars in
           let data_tpars = List.map (fun tp -> { tp with S.binder_qual = Some (S.Implicit true) }) tps in
           let tot_tconstr = mk_tot tconstr in
-          let attrs = List.map (desugar_term env) d.attrs in
           let val_attrs = Env.lookup_letbinding_quals_and_attrs env0 tname |> snd in
           let constrNames, constrs = List.split <|
               (constrs |> List.map (fun (id, payload, cons_attrs) ->
@@ -3079,7 +3078,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
                                             sigquals = quals;
                                             sigrng = rng;
                                             sigmeta = default_sigmeta  ;
-                                            sigattrs = U.deduplicate_terms (val_attrs @ attrs @ map (desugar_term env) cons_attrs);
+                                            sigattrs = U.deduplicate_terms (val_attrs @ d_attrs @ map (desugar_term env) cons_attrs);
                                             sigopts = None; }))))
           in
           if Options.debug_at_level_no_module (Options.Other "attrs")
@@ -3087,7 +3086,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
             BU.print3 "Adding attributes to type %s: val_attrs=[@@%s] attrs=[@@%s]\n" 
               (string_of_lid tname)
               (String.concat ", " (List.map Print.term_to_string val_attrs))
-              (String.concat ", " (List.map Print.term_to_string attrs))
+              (String.concat ", " (List.map Print.term_to_string d_attrs))
           );
           ([], { sigel = Sig_inductive_typ {lid=tname;
                                             us=univs;
@@ -3099,7 +3098,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
                                  sigquals = tname_quals;
                                  sigrng = rng;
                                  sigmeta = default_sigmeta  ;
-                                 sigattrs = U.deduplicate_terms (val_attrs @ attrs);
+                                 sigattrs = U.deduplicate_terms (val_attrs @ d_attrs);
                                  sigopts = None; })::constrs
         | _ -> failwith "impossible")
       in
@@ -3451,7 +3450,7 @@ let rec desugar_effect env d (d_attrs:list S.term) (quals: qualifiers) (is_layer
     let env = push_reflect_effect env qualifiers mname d.drange in
     env, [se]
 
-and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
+and desugar_redefine_effect env d d_attrs trans_qual quals eff_name eff_binders defn =
     let env0 = env in
     let env = Env.enter_monad_scope env eff_name in
     let env, binders = desugar_binders env eff_binders in
@@ -3514,7 +3513,7 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
         sigquals = List.map (trans_qual (Some mname)) quals;
         sigrng = d.drange;
         sigmeta = default_sigmeta  ;
-        sigattrs = [];
+        sigattrs = d_attrs;
         sigopts = None; }
     in
     let monad_env = env in
@@ -3656,7 +3655,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
             | _ -> raise_error (Errors.Error_BadClassDecl, "Ill-formed `class` declaration: definition must be a record type") d.drange
         else quals
     in
-    let env, ses = desugar_tycon env d (List.map (trans_qual None) quals) tcs in
+    let env, ses = desugar_tycon env d d_attrs (List.map (trans_qual None) quals) tcs in
     if Options.debug_at_level_no_module (Options.Other "attrs")
     then (
       BU.print2 "Desugared tycon from {%s} to {%s}\n"
@@ -3968,7 +3967,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
 
   | NewEffect (RedefineEffect(eff_name, eff_binders, defn)) ->
     let quals = d.quals in
-    desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn
+    desugar_redefine_effect env d d_attrs trans_qual quals eff_name eff_binders defn
 
   | NewEffect (DefineEffect(eff_name, eff_binders, eff_typ, eff_decls)) ->
     let quals = d.quals in
