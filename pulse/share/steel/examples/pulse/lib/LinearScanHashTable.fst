@@ -24,14 +24,14 @@ type pht_sig = {
 // Pure view of the hash table
 type spec_t (s : pht_sig) = s.keyt -> option s.valt
 
-let lookup_spec (#s:pht_sig) (spec:spec_t s) (k : s.keyt) : option s.valt =
+let lookup_spec (#s:pht_sig) (spec:spec_t s) (k:s.keyt) : option s.valt =
   spec k
 
-type repr_t (s : pht_sig) (sz : pos) =
+type repr_t (s:pht_sig) (sz:pos) =
   Seq.lseq (cell s.keyt s.valt) sz
-  
-let canonical_index #s (k : s.keyt) (sz : pos) : n:nat{n < sz} =
-  (s.hashf k) % sz
+
+let canonical_index (#s:pht_sig) (k:s.keyt) (sz:pos) : n:nat{n<sz} =
+  s.hashf k % sz
 
 let (@@) = Seq.index
 
@@ -616,10 +616,8 @@ let lookup_index #s (ht : pht s) (k : s.keyt)
 =
   lookup_repr_index ht.repr k
 
-type bound_us = n:US.t{US.fits (US.v n)}
-
 let lookup_index_us #s (ht : pht s) (k : s.keyt)
-: o:(option (s.valt & bound_us))
+: o:(option (s.valt & US.t))
 =
   let o = lookup_repr_index ht.repr k in
   match o with

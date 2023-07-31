@@ -12,6 +12,7 @@ class bounded_int (t:eqtype) = {
     op_Subtraction : (x:t -> y:t -> Pure t (requires fits (v x - v y)) (ensures fun z -> v z == v x - v y));
     ( < ) : (x:t -> y:t -> b:bool { b = (v x < v y)});
     ( <= ) : (x:t -> y:t -> b:bool { b = (v x <= v y)});
+    ( % ) : (x:t -> y:t -> Pure t (requires v y > 0 /\ fits (v x % v y)) (ensures fun z -> v z == v x % v y));
     [@@@TC.no_method]
     properties: squash (
       (forall (x:t). {:pattern v x} fits (v x)) 
@@ -27,6 +28,7 @@ instance bounded_int_int : bounded_int int = {
     op_Subtraction = (fun x y -> Prims.op_Subtraction x y);
     ( < ) = (fun x y -> Prims.op_LessThan x y);
     ( <= ) = (fun x y -> Prims.op_LessThanOrEqual x y);
+    ( % ) = (fun x y -> Prims.op_Modulus x y);
     properties = ()
 }
 
@@ -50,6 +52,7 @@ instance bounded_int_u32 : bounded_int FStar.UInt32.t = {
     op_Subtraction = (fun x y -> FStar.UInt32.sub x y);
     ( < ) = FStar.UInt32.(fun x y -> x <^ y);
     ( <= ) = FStar.UInt32.(fun x y -> x <=^ y);
+    ( % ) = FStar.UInt32.(fun x y -> x %^ y);
     properties = ()
 }
 
@@ -75,6 +78,7 @@ instance bounded_int_nat : bounded_int nat = {
     op_Subtraction = (fun x y -> Prims.op_Subtraction x y); //can't write ( - ), it doesn't parse
     ( < ) = (fun x y -> Prims.op_LessThan x y);
     ( <= ) = (fun x y -> Prims.op_LessThanOrEqual x y);
+    ( % ) = (fun x y -> Prims.op_Modulus x y);
     properties = ()
 }
 //with an instance for nat this works
@@ -91,6 +95,7 @@ instance bounded_int_size_t : bounded_int FStar.SizeT.t = {
     op_Subtraction = (fun x y -> FStar.SizeT.sub x y);
     ( < ) = (fun x y -> FStar.SizeT.(x <^ y));
     ( <= ) = (fun x y -> FStar.SizeT.(x <=^ y));
+    ( % ) = (fun x y -> FStar.SizeT.(x %^ y));
     properties = ();
 }
 

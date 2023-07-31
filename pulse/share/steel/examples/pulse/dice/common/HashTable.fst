@@ -9,44 +9,31 @@ module A = Steel.ST.Array
 module L = Steel.ST.SpinLock
 module US = FStar.SizeT
 module U32 = FStar.UInt32
+open LinearScanHashTable
+open PulseHashTable
 
-// Hash table types 
+let mk_pht_sig keyt valt hashf = { keyt; valt; hashf }
 
-noeq
-type cell (kt:eqtype) (vt:Type0) =
-  | Clean
-  | Zombie
-  | Used : k:kt -> v:vt -> cell kt vt
+let mk_ht (#s:pht_sig) (sz:pos_us) (contents:A.larray (cell s.keyt s.valt) (US.v sz))
+  : ht_t s
+  = { sz; contents; }
 
-noeq
-type ht_sig = {
-  sz : pos;
-  kt : eqtype;
-  vt : Type0;
-  hashf : kt -> nat;
-}
+let ht_perm (s:pht_sig) (ht: ht_t s) : vprop
+  = exists_ (fun s -> A.pts_to ht.contents full_perm s)
 
-let mk_ht_sig sz kt vt hashf = { sz; kt; vt; hashf }
-
-noeq
-type ht_t (s:ht_sig) = {
-  contents : A.larray (cell s.kt s.vt) s.sz;
-}
-
-// check out ephemeral ht itf
-type ht_ref_t (s:ht_sig) = r:R.ref (ht_t s) & L.lock (exists_ (fun ht -> R.pts_to r full_perm ht))
+type locked_ht_t (s:pht_sig) (pht:pht s) = ht:ht_t s & L.lock (models s ht pht)
 
 // Hash table interface
 
-assume val new_table (#s:ht_sig) : ht_t s
+assume val new_table (#s:pht_sig) : ht_t s
 
-assume val store (#s:ht_sig) (ht:ht_t s) (k:s.kt) (v:s.vt) : unit
+assume val store (#s:pht_sig) (ht:ht_t s) (k:s.keyt) (v:s.valt) : unit
 
-assume val get (#s:ht_sig) (ht:ht_t s) (k:s.kt) : s.vt
+assume val get (#s:pht_sig) (ht:ht_t s) (k:s.keyt) : s.valt
 
-assume val delete (#s:ht_sig) (ht:ht_t s) (k:s.kt) : unit
+assume val delete (#s:pht_sig) (ht:ht_t s) (k:s.keyt) : unit
 
-assume val destroy (#s:ht_sig) (ht:ht_t s) : unit
+assume val destroy (#s:pht_sig) (ht:ht_t s) : unit
 
 // Session ID types
 

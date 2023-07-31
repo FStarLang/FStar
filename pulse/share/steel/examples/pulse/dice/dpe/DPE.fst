@@ -13,7 +13,8 @@ module U8 = FStar.UInt8
 module U32 = FStar.UInt32
 open Array
 open HashTable
-module PHT = PulseHashTable
+open LinearScanHashTable
+open PulseHashTable
 open HACL
 open X509
 open EngineTypes
@@ -93,26 +94,35 @@ let record_perm (t_rec:record_t) (t_rep:repr_t) : vprop =
 (* ----------- GLOBAL STATE ----------- *)
 
 assume val dpe_hashf : nat -> nat
-assume val sht_len : pos
-assume val cht_len : pos
-let cht_sig : ht_sig = mk_ht_sig cht_len nat locked_context_t dpe_hashf 
-let sht_sig : ht_sig = mk_ht_sig sht_len nat (ht_ref_t cht_sig) dpe_hashf 
+assume val sht_len : pos_us
+assume val cht_len : pos_us
+let cht_sig : pht_sig = mk_pht_sig nat locked_context_t dpe_hashf 
+let sht_sig : pht_sig = mk_pht_sig nat (locked_ht_t cht_sig) dpe_hashf 
 
 // A table whose permission is stored in the lock 
 
 ```pulse
-fn alloc_ht (#s:ht_sig)
+fn alloc_ht (#s:pht_sig) (l:pos_us)
   requires emp
-  returns _:ht_ref_t s
+  returns _:locked_ht_t s
   ensures emp
 {
-  let ht = new_table #s;
-  let ht_ref = W.alloc #(ht_t s) ht;
-  let lk = W.new_lock (exists_ (fun _ht -> R.pts_to ht_ref full_perm _ht));
-  ((| ht_ref, lk |) <: ht_ref_t s)
+  let contents = new_array #(cell s.keyt s.valt) Clean l;
+  let ht = mk_ht l contents;
+  let pht = 
+// FIXME: pulse can't prove equality in the following two rewrites 
+// has something to do with not unwrapping the existential
+  // rewrite (exists_ (fun s -> A.pts_to contents full_perm s))
+  //   as (exists_ (fun s -> A.pts_to ht.contents full_perm s));
+  drop_ (exists_ (fun s -> A.pts_to contents full_perm s));
+  assume_ (exists_ (fun s -> A.pts_to ht.contents full_perm s));
+  rewrite (exists_ (fun s -> A.pts_to ht.contents full_perm s))
+    as (ht_perm s ht);
+  let lk = W.new_lock (ht_perm s ht);
+  ((| ht, lk |) <: locked_ht_t s)
 }
 ```
-let sht_ref : ht_ref_t sht_sig = alloc_ht #sht_sig ()
+let locked_sht : locked_ht_t sht_sig = alloc_ht #sht_sig sht_len ()
 
 // A number that tracks the next session ID
 
@@ -145,20 +155,20 @@ fn open_session (_:unit)
 {
   let cht_ref = alloc_ht #cht_sig;
 
-  let l_sid = dsnd sid_ref;
-  let l_sht = dsnd sht_ref;
+  let sid_lk = dsnd sid_ref;
+  let sht_lk = dsnd locked_sht;
+  let sht = dfst locked_sht;
 
-  W.acquire #(exists_ (fun n -> R.pts_to (dfst sid_ref) full_perm n)) l_sid;
-  W.acquire #(exists_ (fun n -> R.pts_to (dfst sht_ref) full_perm n)) l_sht;
+  W.acquire #(exists_ (fun n -> R.pts_to (dfst sid_ref) full_perm n)) sid_lk;
+  W.acquire #(ht_perm sht_sig sht) sht_lk;
   
   let sid = !(dfst sid_ref);
-  let sht = !(dfst sht_ref);
 
-  store sht sid cht_ref;
+  insert sht sid cht_ref;
   dfst sid_ref := sid + 1;
 
-  W.release #(exists_ (fun n -> R.pts_to (dfst sid_ref) full_perm n)) l_sid;
-  W.release #(exists_ (fun n -> R.pts_to (dfst sht_ref) full_perm n)) l_sht;
+  W.release #(exists_ (fun n -> R.pts_to (dfst sid_ref) full_perm n)) sid_lk;
+  W.release #(ht_perm sht_sig (dfst sht_lk)) sht_lk;
   ()
 }
 ```
@@ -174,21 +184,21 @@ fn close_session (sid:nat)
   requires emp
   ensures emp
 {
-  let l_sht = dsnd sht_ref;
-  W.acquire #(exists_ (fun n -> R.pts_to (dfst sht_ref) full_perm n)) l_sht;
-  let sht = !(dfst sht_ref);
+  let sht_lk = dsnd locked_sht;
+  W.acquire #(exists_ (fun n -> R.pts_to (dfst locked_sht) full_perm n)) sht_lk;
+  let sht = !(dfst locked_sht);
 
   let cht_ref = get sht sid;
 
-  let l_cht = dsnd cht_ref;
-  W.acquire #(exists_ (fun n -> R.pts_to (dfst cht_ref) full_perm n)) l_cht;
+  let cht_lk = dsnd cht_ref;
+  W.acquire #(exists_ (fun n -> R.pts_to (dfst cht_ref) full_perm n)) cht_lk;
   let cht = !(dfst cht_ref);
 
   destroy cht;
-  W.release #(exists_ (fun n -> R.pts_to (dfst cht_ref) full_perm n)) l_cht;
+  W.release #(exists_ (fun n -> R.pts_to (dfst cht_ref) full_perm n)) cht_lk;
 
   delete sht sid;
-  W.release #(exists_ (fun n -> R.pts_to (dfst sht_ref) full_perm n)) l_sht;
+  W.release #(exists_ (fun n -> R.pts_to (dfst locked_sht) full_perm n)) sht_lk;
 }
 ```
 
@@ -342,20 +352,20 @@ fn initialize_context (sid:nat) (uds:A.larray U8.t (US.v uds_len))
   let locked_context = init_engine_ctxt uds;
   let ctxt_hndl = prng ();
 
-  let l_sht = dsnd sht_ref;
-  W.acquire #(exists_ (fun n -> R.pts_to (dfst sht_ref) full_perm n)) l_sht;
-  let sht = !(dfst sht_ref);
+  let sht_lk = dsnd locked_sht;
+  W.acquire #(exists_ (fun n -> R.pts_to (dfst locked_sht) full_perm n)) sht_lk;
+  let sht = !(dfst locked_sht);
 
   let cht_ref = get sht sid;
 
-  let l_cht = dsnd cht_ref;
-  W.acquire #(exists_ (fun n -> R.pts_to (dfst cht_ref) full_perm n)) l_cht;
+  let cht_lk = dsnd cht_ref;
+  W.acquire #(exists_ (fun n -> R.pts_to (dfst cht_ref) full_perm n)) cht_lk;
   let cht = !(dfst cht_ref);
 
   store cht ctxt_hndl locked_context;
 
-  W.release #(exists_ (fun n -> R.pts_to (dfst cht_ref) full_perm n)) l_cht;
-  W.release #(exists_ (fun n -> R.pts_to (dfst sht_ref) full_perm n)) l_sht;
+  W.release #(exists_ (fun n -> R.pts_to (dfst cht_ref) full_perm n)) cht_lk;
+  W.release #(exists_ (fun n -> R.pts_to (dfst locked_sht) full_perm n)) sht_lk;
   
   ctxt_hndl
 }
@@ -376,14 +386,14 @@ fn derive_child (sid:nat) (ctxt_hndl:nat) (record:record_t) (repr:repr_t)
 {
   let new_ctxt_hndl = prng ();
 
-  let l_sht = dsnd sht_ref;
-  W.acquire #(exists_ (fun n -> R.pts_to (dfst sht_ref) full_perm n)) l_sht;
-  let sht = !(dfst sht_ref);
+  let sht_lk = dsnd locked_sht;
+  W.acquire #(exists_ (fun n -> R.pts_to (dfst locked_sht) full_perm n)) sht_lk;
+  let sht = !(dfst locked_sht);
 
   let cht_ref = get sht sid;
 
-  let l_cht = dsnd cht_ref;
-  W.acquire #(exists_ (fun n -> R.pts_to (dfst cht_ref) full_perm n)) l_cht;
+  let cht_lk = dsnd cht_ref;
+  W.acquire #(exists_ (fun n -> R.pts_to (dfst cht_ref) full_perm n)) cht_lk;
   let cht = !(dfst cht_ref);
 
   let locked_ctxt = get cht ctxt_hndl;
@@ -422,8 +432,8 @@ fn derive_child (sid:nat) (ctxt_hndl:nat) (record:record_t) (repr:repr_t)
 
         rewrite (engine_record_perm r r0) as (record_perm record repr);
 
-        W.release #(exists_ (fun n -> R.pts_to (dfst cht_ref) full_perm n)) l_cht;
-        W.release #(exists_ (fun n -> R.pts_to (dfst sht_ref) full_perm n)) l_sht;
+        W.release #(exists_ (fun n -> R.pts_to (dfst cht_ref) full_perm n)) cht_lk;
+        W.release #(exists_ (fun n -> R.pts_to (dfst locked_sht) full_perm n)) sht_lk;
 
         new_ctxt_hndl
       }
@@ -433,8 +443,8 @@ fn derive_child (sid:nat) (ctxt_hndl:nat) (record:record_t) (repr:repr_t)
         disable_uds ();
         free_array ctxt.uds;
 
-        W.release #(exists_ (fun n -> R.pts_to (dfst cht_ref) full_perm n)) l_cht;
-        W.release #(exists_ (fun n -> R.pts_to (dfst sht_ref) full_perm n)) l_sht;
+        W.release #(exists_ (fun n -> R.pts_to (dfst cht_ref) full_perm n)) cht_lk;
+        W.release #(exists_ (fun n -> R.pts_to (dfst locked_sht) full_perm n)) sht_lk;
         0
       }}
     }
@@ -444,8 +454,8 @@ fn derive_child (sid:nat) (ctxt_hndl:nat) (record:record_t) (repr:repr_t)
       disable_uds ();
       free_array ctxt.uds;
 
-      W.release #(exists_ (fun n -> R.pts_to (dfst cht_ref) full_perm n)) l_cht;
-      W.release #(exists_ (fun n -> R.pts_to (dfst sht_ref) full_perm n)) l_sht;
+      W.release #(exists_ (fun n -> R.pts_to (dfst cht_ref) full_perm n)) cht_lk;
+      W.release #(exists_ (fun n -> R.pts_to (dfst locked_sht) full_perm n)) sht_lk;
       0
     }}
   }
@@ -510,8 +520,8 @@ fn derive_child (sid:nat) (ctxt_hndl:nat) (record:record_t) (repr:repr_t)
 
         rewrite (l0_record_perm r r0) as (record_perm record repr);
 
-        W.release #(exists_ (fun n -> R.pts_to (dfst cht_ref) full_perm n)) l_cht;
-        W.release #(exists_ (fun n -> R.pts_to (dfst sht_ref) full_perm n)) l_sht;
+        W.release #(exists_ (fun n -> R.pts_to (dfst cht_ref) full_perm n)) cht_lk;
+        W.release #(exists_ (fun n -> R.pts_to (dfst locked_sht) full_perm n)) sht_lk;
 
         new_ctxt_hndl
       }
@@ -520,8 +530,8 @@ fn derive_child (sid:nat) (ctxt_hndl:nat) (record:record_t) (repr:repr_t)
         zeroize_array dice_digest_len ctxt.cdi;
         free_array ctxt.cdi;
 
-        W.release #(exists_ (fun n -> R.pts_to (dfst cht_ref) full_perm n)) l_cht;
-        W.release #(exists_ (fun n -> R.pts_to (dfst sht_ref) full_perm n)) l_sht;
+        W.release #(exists_ (fun n -> R.pts_to (dfst cht_ref) full_perm n)) cht_lk;
+        W.release #(exists_ (fun n -> R.pts_to (dfst locked_sht) full_perm n)) sht_lk;
         0
       }}
     }
@@ -530,16 +540,16 @@ fn derive_child (sid:nat) (ctxt_hndl:nat) (record:record_t) (repr:repr_t)
       zeroize_array dice_digest_len ctxt.cdi;
       free_array ctxt.cdi;
 
-      W.release #(exists_ (fun n -> R.pts_to (dfst cht_ref) full_perm n)) l_cht;
-      W.release #(exists_ (fun n -> R.pts_to (dfst sht_ref) full_perm n)) l_sht;
+      W.release #(exists_ (fun n -> R.pts_to (dfst cht_ref) full_perm n)) cht_lk;
+      W.release #(exists_ (fun n -> R.pts_to (dfst locked_sht) full_perm n)) sht_lk;
       0
     }}
   }
   _ -> { 
     // ERROR - bad invocation of DeriveChild
     W.release #(context_perm cur_ctxt) ctxt_lk;
-    W.release #(exists_ (fun n -> R.pts_to (dfst cht_ref) full_perm n)) l_cht;
-    W.release #(exists_ (fun n -> R.pts_to (dfst sht_ref) full_perm n)) l_sht;
+    W.release #(exists_ (fun n -> R.pts_to (dfst cht_ref) full_perm n)) cht_lk;
+    W.release #(exists_ (fun n -> R.pts_to (dfst locked_sht) full_perm n)) sht_lk;
     0
   }}
 }
