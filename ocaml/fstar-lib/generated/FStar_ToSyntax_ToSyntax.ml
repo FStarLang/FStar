@@ -7591,11 +7591,10 @@ let (parse_attr_with_list :
                   | (a1, uu___2)::[] ->
                       let uu___3 =
                         let uu___4 =
-                          let uu___5 =
-                            FStar_Syntax_Embeddings.e_list
-                              FStar_Syntax_Embeddings.e_int in
-                          FStar_Syntax_Embeddings.unembed uu___5 a1 in
-                        uu___4 true FStar_Syntax_Embeddings.id_norm_cb in
+                          FStar_Syntax_Embeddings.e_list
+                            FStar_Syntax_Embeddings.e_int in
+                        FStar_Syntax_Embeddings_Base.unembed uu___4 a1
+                          FStar_Syntax_Embeddings_Base.id_norm_cb in
                       (match uu___3 with
                        | FStar_Pervasives_Native.Some es ->
                            let uu___4 =
@@ -7732,7 +7731,7 @@ let rec (desugar_effect :
                               if is_layered
                               then
                                 FStar_Compiler_List.op_At rr_members
-                                  ["subcomp"; "if_then_else"]
+                                  ["subcomp"; "if_then_else"; "close"]
                               else
                                 FStar_Compiler_List.op_At rr_members
                                   ["return_wp";
@@ -7982,6 +7981,12 @@ let rec (desugar_effect :
                                                    name_of_eff_decl decl in
                                                  uu___6 = "if_then_else")
                                               eff_decls in
+                                          let has_close =
+                                            FStar_Compiler_List.existsb
+                                              (fun decl ->
+                                                 let uu___6 =
+                                                   name_of_eff_decl decl in
+                                                 uu___6 = "close") eff_decls in
                                           let to_comb uu___6 =
                                             match uu___6 with
                                             | (us, t) ->
@@ -8130,6 +8135,18 @@ let rec (desugar_effect :
                                                       (dummy_tscheme,
                                                         dummy_tscheme,
                                                         FStar_Pervasives_Native.None) in
+                                                  let uu___14 =
+                                                    if has_close
+                                                    then
+                                                      let uu___15 =
+                                                        let uu___16 =
+                                                          lookup "close" in
+                                                        (uu___16,
+                                                          dummy_tscheme) in
+                                                      FStar_Pervasives_Native.Some
+                                                        uu___15
+                                                    else
+                                                      FStar_Pervasives_Native.None in
                                                   {
                                                     FStar_Syntax_Syntax.l_repr
                                                       = uu___9;
@@ -8140,7 +8157,9 @@ let rec (desugar_effect :
                                                     FStar_Syntax_Syntax.l_subcomp
                                                       = uu___12;
                                                     FStar_Syntax_Syntax.l_if_then_else
-                                                      = uu___13
+                                                      = uu___13;
+                                                    FStar_Syntax_Syntax.l_close
+                                                      = uu___14
                                                   } in
                                                 FStar_Syntax_Syntax.Layered_eff
                                                   uu___8 in
@@ -9661,29 +9680,29 @@ and (desugar_decl_core :
                 FStar_Syntax_Syntax.sigopts = FStar_Pervasives_Native.None
               } in
             let env1 = FStar_Syntax_DsEnv.push_sigelt env se in (env1, [se])
-        | FStar_Parser_AST.DeclSyntaxExtension (extension_name, code, range)
-            ->
+        | FStar_Parser_AST.DeclSyntaxExtension
+            (extension_name, code, uu___, range) ->
             let extension_parser =
               FStar_Parser_AST_Util.lookup_extension_parser extension_name in
             (match extension_parser with
              | FStar_Pervasives_Native.None ->
-                 let uu___ =
-                   let uu___1 =
+                 let uu___1 =
+                   let uu___2 =
                      FStar_Compiler_Util.format1
                        "Unknown syntax extension %s" extension_name in
-                   (FStar_Errors_Codes.Fatal_SyntaxError, uu___1) in
-                 FStar_Errors.raise_error uu___ range
+                   (FStar_Errors_Codes.Fatal_SyntaxError, uu___2) in
+                 FStar_Errors.raise_error uu___1 range
              | FStar_Pervasives_Native.Some parser ->
                  let opens =
-                   let uu___ =
+                   let uu___1 =
                      FStar_Syntax_DsEnv.open_modules_and_namespaces env in
-                   let uu___1 = FStar_Syntax_DsEnv.module_abbrevs env in
+                   let uu___2 = FStar_Syntax_DsEnv.module_abbrevs env in
                    {
-                     FStar_Parser_AST_Util.open_namespaces = uu___;
-                     FStar_Parser_AST_Util.module_abbreviations = uu___1
+                     FStar_Parser_AST_Util.open_namespaces = uu___1;
+                     FStar_Parser_AST_Util.module_abbreviations = uu___2
                    } in
-                 let uu___ = parser opens code range in
-                 (match uu___ with
+                 let uu___1 = parser opens code range in
+                 (match uu___1 with
                   | FStar_Pervasives.Inl error ->
                       FStar_Errors.raise_error
                         (FStar_Errors_Codes.Fatal_SyntaxError,
