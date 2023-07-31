@@ -12,28 +12,36 @@ module U32 = FStar.UInt32
 open LinearScanHashTable
 open PulseHashTable
 
-let mk_pht_sig keyt valt hashf = { keyt; valt; hashf }
+let mk_pht_sig_us keyt valt hashf : pht_sig_us = { keyt; valt; hashf }
 
-let mk_ht (#s:pht_sig) (sz:pos_us) (contents:A.larray (cell s.keyt s.valt) (US.v sz))
+let mk_ht (#s:pht_sig_us) (sz:pos_us) (contents:A.larray (cell s.keyt s.valt) (US.v sz))
   : ht_t s
   = { sz; contents; }
 
-let ht_perm (s:pht_sig) (ht: ht_t s) : vprop
-  = exists_ (fun s -> A.pts_to ht.contents full_perm s)
+let mk_init_pht (#s:pht_sig_us) (sz:pos_us)
+  : pht_t (s_to_ps s)
+  = 
+  { sz = US.v sz;
+    spec = (fun (k:s.keyt) -> None);
+    repr = Seq.create (US.v sz) Clean;
+    inv = (); }
 
-type locked_ht_t (s:pht_sig) (pht:pht s) = ht:ht_t s & L.lock (models s ht pht)
+let ht_perm (s:pht_sig_us) (ht: ht_t s) : vprop
+  = exists_ (fun (pht:pht_t (s_to_ps s)) -> models s ht pht)
+
+type locked_ht_t (s:pht_sig_us) = ht:ht_t s & L.lock (ht_perm s ht)
 
 // Hash table interface
 
-assume val new_table (#s:pht_sig) : ht_t s
+assume val new_table (#s:pht_sig_us) : ht_t s
 
-assume val store (#s:pht_sig) (ht:ht_t s) (k:s.keyt) (v:s.valt) : unit
+assume val store (#s:pht_sig_us) (ht:ht_t s) (k:s.keyt) (v:s.valt) : unit
 
-assume val get (#s:pht_sig) (ht:ht_t s) (k:s.keyt) : s.valt
+assume val get (#s:pht_sig_us) (ht:ht_t s) (k:s.keyt) : s.valt
 
-assume val delete (#s:pht_sig) (ht:ht_t s) (k:s.keyt) : unit
+assume val delete (#s:pht_sig_us) (ht:ht_t s) (k:s.keyt) : unit
 
-assume val destroy (#s:pht_sig) (ht:ht_t s) : unit
+assume val destroy (#s:pht_sig_us) (ht:ht_t s) : unit
 
 // Session ID types
 

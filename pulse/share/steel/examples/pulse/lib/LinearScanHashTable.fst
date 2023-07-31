@@ -110,7 +110,7 @@ type pht_models (s : pht_sig) (sz : pos)
 
 (* This is the main hash table type *)
 noeq
-type pht (s : pht_sig) = {
+type pht_t (s : pht_sig) = {
   sz : pos;
   // spec is the pure, very high-level view of the hash table
   // as a partial map from keys to values. We mark it erased
@@ -592,31 +592,31 @@ let delete_repr #s #sz (#spec : erased (spec_t s)) (repr : repr_t s sz{pht_model
 // so it's stronger than it should be. This is anyway perhaps not important
 // for this pure implementation, as the Pulse implementation could always
 // keep one cell free and trivially satisfy this invariant.
-let insert #s (ht : pht s{not_full ht.repr}) (k : s.keyt) (v : s.valt)
-: ht':(pht s){ht'.spec == Ghost.hide (ht.spec ++ (k,v)) }
+let insert #s (ht : pht_t s{not_full ht.repr}) (k : s.keyt) (v : s.valt)
+: ht':(pht_t s){ht'.spec == Ghost.hide (ht.spec ++ (k,v)) }
 =
   { ht with spec = Ghost.hide (ht.spec ++ (k,v));
             repr = insert_repr #_ #_ #ht.spec ht.repr k v;
             inv = () }
 
-let delete #s (ht : pht s) (k : s.keyt)
-: ht':(pht s){ht'.spec == Ghost.hide (ht.spec -- k) }
+let delete #s (ht : pht_t s) (k : s.keyt)
+: ht':(pht_t s){ht'.spec == Ghost.hide (ht.spec -- k) }
 =
   { ht with spec = Ghost.hide (ht.spec -- k);
             repr = delete_repr #_ #_ #ht.spec ht.repr k;
             inv = () }
 
-let lookup #s (ht : pht s) (k : s.keyt)
+let lookup #s (ht : pht_t s) (k : s.keyt)
 : o:(option s.valt){o == lookup_spec ht.spec k}
 =
   lookup_repr ht.repr k
 
-let lookup_index #s (ht : pht s) (k : s.keyt)
+let lookup_index #s (ht : pht_t s) (k : s.keyt)
 : o:(option (s.valt & nat))
 =
   lookup_repr_index ht.repr k
 
-let lookup_index_us #s (ht : pht s) (k : s.keyt)
+let lookup_index_us #s (ht : pht_t s) (k : s.keyt)
 : o:(option (s.valt & US.t))
 =
   let o = lookup_repr_index ht.repr k in

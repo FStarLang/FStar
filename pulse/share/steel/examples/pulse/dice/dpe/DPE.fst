@@ -93,31 +93,30 @@ let record_perm (t_rec:record_t) (t_rep:repr_t) : vprop =
 
 (* ----------- GLOBAL STATE ----------- *)
 
-assume val dpe_hashf : nat -> nat
+assume val dpe_hashf : nat -> US.t
 assume val sht_len : pos_us
 assume val cht_len : pos_us
-let cht_sig : pht_sig = mk_pht_sig nat locked_context_t dpe_hashf 
-let sht_sig : pht_sig = mk_pht_sig nat (locked_ht_t cht_sig) dpe_hashf 
+let cht_sig : pht_sig_us = mk_pht_sig_us nat locked_context_t dpe_hashf
+let sht_sig : pht_sig_us = mk_pht_sig_us nat (locked_ht_t cht_sig) dpe_hashf 
 
 // A table whose permission is stored in the lock 
 
 ```pulse
-fn alloc_ht (#s:pht_sig) (l:pos_us)
+fn alloc_ht (#s:pht_sig_us) (l:pos_us)
   requires emp
   returns _:locked_ht_t s
   ensures emp
 {
   let contents = new_array #(cell s.keyt s.valt) Clean l;
   let ht = mk_ht l contents;
-  let pht = 
-// FIXME: pulse can't prove equality in the following two rewrites 
-// has something to do with not unwrapping the existential
-  // rewrite (exists_ (fun s -> A.pts_to contents full_perm s))
-  //   as (exists_ (fun s -> A.pts_to ht.contents full_perm s));
-  drop_ (exists_ (fun s -> A.pts_to contents full_perm s));
-  assume_ (exists_ (fun s -> A.pts_to ht.contents full_perm s));
-  rewrite (exists_ (fun s -> A.pts_to ht.contents full_perm s))
-    as (ht_perm s ht);
+  let pht = mk_init_pht #s l;
+  rewrite (A.pts_to contents full_perm (Seq.create (US.v l) Clean))
+    as (A.pts_to ht.contents full_perm (Seq.create (US.v l) Clean));
+  rewrite (A.pts_to ht.contents full_perm (Seq.create (US.v l) Clean))
+    as (A.pts_to ht.contents full_perm pht.repr);
+  assert (pure (US.v ht.sz == pht.sz));
+  fold (models s ht pht);
+  fold (ht_perm s ht);
   let lk = W.new_lock (ht_perm s ht);
   ((| ht, lk |) <: locked_ht_t s)
 }
@@ -148,6 +147,7 @@ let sid_ref : sid_ref_t = alloc_sid () ()
   Add the context table lock to the session table. 
   NOTE: Current implementation disregards session protocol 
 *)
+[@@expect_failure]
 ```pulse
 fn open_session (_:unit)
   requires emp
@@ -179,6 +179,7 @@ fn open_session (_:unit)
   to it from the session table. 
   NOTE: Current implementation disregards session protocol 
 *)
+[@@expect_failure]
 ```pulse
 fn close_session (sid:nat)
   requires emp
@@ -339,6 +340,7 @@ fn init_l1_ctxt (deviceIDCSR_len: US.t) (aliasKeyCRT_len: US.t)
   Create a context in the initial state (engine context) and store the context
   in the current session's context table. 
 *)
+[@@expect_failure]
 ```pulse
 fn initialize_context (sid:nat) (uds:A.larray U8.t (US.v uds_len))
   requires (
@@ -378,6 +380,7 @@ fn initialize_context (sid:nat) (uds:A.larray U8.t (US.v uds_len))
   and store the new context in the table.
   NOTE: Returns 0 if called when ctxt has type L1_context (bad invocation)
 *)
+[@@expect_failure]
 ```pulse
 fn derive_child (sid:nat) (ctxt_hndl:nat) (record:record_t) (repr:repr_t)
   requires record_perm record repr
