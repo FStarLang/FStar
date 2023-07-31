@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "9dd7493a14d8fce9340640383ee7e302"
+      "f22a93f293bb7c1201b00163c82093a3"
     ],
     [
       "Part2.STLC.Strong.__proj__TArr__item___0",
@@ -20,7 +20,7 @@
         "refinement_interpretation_Tm_refine_4faf72fc220af6b4aa4f13e2362c455a"
       ],
       0,
-      "a1440179357f1bad8f55bd16bb434797"
+      "196781f25eccbb5a6e20c67cf982cc25"
     ],
     [
       "Part2.STLC.Strong.__proj__TArr__item___1",
@@ -32,7 +32,7 @@
         "refinement_interpretation_Tm_refine_4faf72fc220af6b4aa4f13e2362c455a"
       ],
       0,
-      "cec9472064f467e217a7fc50a3e1615f"
+      "8c01180e38ebeb8213d8fbfbebf5b2dc"
     ],
     [
       "Part2.STLC.Strong.exp",
@@ -48,7 +48,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "87b122fce842e76d546eac875264c191"
+      "f9d8cb910a4444d158f99a61036a4b54"
     ],
     [
       "Part2.STLC.Strong.__proj__EVar__item___0",
@@ -60,7 +60,7 @@
         "refinement_interpretation_Tm_refine_742b50733fa05442ab6437ee6eaed6b6"
       ],
       0,
-      "94263ba8b10b457b17da8801e57431be"
+      "0d6f7986dbbb135d414d1faf73d85876"
     ],
     [
       "Part2.STLC.Strong.__proj__ELam__item___0",
@@ -72,7 +72,7 @@
         "refinement_interpretation_Tm_refine_cf7d6ae9fa5cbfbf3db1ba59319d2ccd"
       ],
       0,
-      "8ae2f797f5612da67cb715ff74e754c7"
+      "418fa83d6407e75fddfdda25a756207f"
     ],
     [
       "Part2.STLC.Strong.__proj__ELam__item___1",
@@ -84,7 +84,7 @@
         "refinement_interpretation_Tm_refine_cf7d6ae9fa5cbfbf3db1ba59319d2ccd"
       ],
       0,
-      "f831a5e171988175f5c6f24e48f3d747"
+      "053ff58188739dcc600bbc7f60d31f29"
     ],
     [
       "Part2.STLC.Strong.__proj__EApp__item___0",
@@ -96,7 +96,7 @@
         "refinement_interpretation_Tm_refine_6d0f2e8e5b709c353027c6975eec4c48"
       ],
       0,
-      "9e9d1cd5bd2e1e2706808a12b26183e0"
+      "33be266bd9cf30942211a14ebb3243c3"
     ],
     [
       "Part2.STLC.Strong.__proj__EApp__item___1",
@@ -108,7 +108,7 @@
         "refinement_interpretation_Tm_refine_6d0f2e8e5b709c353027c6975eec4c48"
       ],
       0,
-      "3f25babd33bcb8f37c90a1f0f0572f26"
+      "dd4093d7e4a379c6ac6df0a446471a60"
     ],
     [
       "Part2.STLC.Strong.sub_inc",
@@ -122,7 +122,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "c688ce8a528569bb2a2cbfd29f8a5867"
+      "5cbdabc7390179dbbae6a1eefc764ea4"
     ],
     [
       "Part2.STLC.Strong.sub_inc",
@@ -136,7 +136,7 @@
         "projection_inverse_Part2.STLC.Strong.EVar__0"
       ],
       0,
-      "247f81edfc9a555c3920c479a40fbb93"
+      "da85a93fcf1bb05f1062fe1552c114cd"
     ],
     [
       "Part2.STLC.Strong.subst",
@@ -180,7 +180,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "f82036f971198a4012e6b19efab14001"
+      "2a9c04b8c092de7651c845e4d86176ed"
     ],
     [
       "Part2.STLC.Strong.subst",
@@ -219,7 +219,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "be9eda4a60fcf20107561f49f80db4f5"
+      "d5e338c20ca9d5ad67f479a29c6b1ca2"
     ],
     [
       "Part2.STLC.Strong.sub_beta",
@@ -243,7 +243,7 @@
         "typing_Part2.STLC.Strong.uu___is_EVar"
       ],
       0,
-      "fa8693365f180bcca3981bbffc4770f7"
+      "9cd4194dd2648d2a28263b583c17a91d"
     ],
     [
       "Part2.STLC.Strong.step",
@@ -255,7 +255,7 @@
         "assumption_Part2.STLC.Strong.typ__uu___haseq"
       ],
       0,
-      "722ca5fcf87a476638d98148cac3998b"
+      "29793c17c392a7f65db1f403a9943aea"
     ],
     [
       "Part2.STLC.Strong.__proj__SBeta__item__t",
@@ -267,7 +267,7 @@
         "refinement_interpretation_Tm_refine_ca23994725d9ce902aeaba28b7af8cad"
       ],
       0,
-      "64fc99f62dba9cefd97dd03de7ee2948"
+      "92552e040d4f53789b4f14227c259463"
     ],
     [
       "Part2.STLC.Strong.__proj__SBeta__item__e1",
@@ -279,7 +279,7 @@
         "refinement_interpretation_Tm_refine_ca23994725d9ce902aeaba28b7af8cad"
       ],
       0,
-      "36fe21e275e24a6fafa820c6adb594a2"
+      "fed05d8b819c281df581b30a53ab637b"
     ],
     [
       "Part2.STLC.Strong.__proj__SBeta__item__e2",
@@ -291,7 +291,7 @@
         "refinement_interpretation_Tm_refine_ca23994725d9ce902aeaba28b7af8cad"
       ],
       0,
-      "00b4b235a1e1c1928523084fc5260a64"
+      "7f54f9137a56a357a814a032627192a3"
     ],
     [
       "Part2.STLC.Strong.__proj__SApp1__item__e1",
@@ -303,7 +303,7 @@
         "refinement_interpretation_Tm_refine_779fdeff8fcea23fc7e95f902f467d5b"
       ],
       0,
-      "349c84e7bd0f66c85f0ede1f675b608b"
+      "bd79c7894e19ab74ce510015a068f54a"
     ],
     [
       "Part2.STLC.Strong.__proj__SApp1__item__e2",
@@ -315,7 +315,7 @@
         "refinement_interpretation_Tm_refine_779fdeff8fcea23fc7e95f902f467d5b"
       ],
       0,
-      "20656d5c75c820043b3094983d6523e2"
+      "a4ed4b8454aa3370518925b63d854335"
     ],
     [
       "Part2.STLC.Strong.__proj__SApp1__item__e1'",
@@ -327,7 +327,7 @@
         "refinement_interpretation_Tm_refine_779fdeff8fcea23fc7e95f902f467d5b"
       ],
       0,
-      "79f9e0cf3dca0fa5c8c03041f43f7b32"
+      "1d87a5bbd141b2928dfd3673556884d3"
     ],
     [
       "Part2.STLC.Strong.__proj__SApp1__item__hst",
@@ -344,7 +344,7 @@
         "refinement_interpretation_Tm_refine_779fdeff8fcea23fc7e95f902f467d5b"
       ],
       0,
-      "ebe02b83e150df8a15b2ac4404af940f"
+      "e48c01bc89ac0eb036edd70d276d65cd"
     ],
     [
       "Part2.STLC.Strong.__proj__SApp2__item__e1",
@@ -356,7 +356,7 @@
         "refinement_interpretation_Tm_refine_e8cf4b171d794af2db90e6e88d25a3c0"
       ],
       0,
-      "fc0eab69f5460801a550a4f52267e411"
+      "6bfe9274738c8d21b6b465640c9abd9e"
     ],
     [
       "Part2.STLC.Strong.__proj__SApp2__item__e2",
@@ -368,7 +368,7 @@
         "refinement_interpretation_Tm_refine_e8cf4b171d794af2db90e6e88d25a3c0"
       ],
       0,
-      "32359483162de63290c06f1c4e615559"
+      "3922c33f8e0402c03717d902dfe9f8eb"
     ],
     [
       "Part2.STLC.Strong.__proj__SApp2__item__e2'",
@@ -380,7 +380,7 @@
         "refinement_interpretation_Tm_refine_e8cf4b171d794af2db90e6e88d25a3c0"
       ],
       0,
-      "3f56bbdd3da88247d8d08c019e00c83c"
+      "d27c46ddce7a7d471088d06de32abccf"
     ],
     [
       "Part2.STLC.Strong.__proj__SApp2__item__hst",
@@ -397,7 +397,7 @@
         "refinement_interpretation_Tm_refine_e8cf4b171d794af2db90e6e88d25a3c0"
       ],
       0,
-      "3f4b89a3acefd238b1b75f230b68a80a"
+      "1599983c46482c688b0831c02b9ecaf4"
     ],
     [
       "Part2.STLC.Strong.__proj__STrans__item__e0",
@@ -409,7 +409,7 @@
         "refinement_interpretation_Tm_refine_49abf8b4f4c9613107a609faa5e25d6d"
       ],
       0,
-      "d7d5014661611cea5787d6d32f0b34f8"
+      "0739759f68b201ff1137e9e39ebf4c87"
     ],
     [
       "Part2.STLC.Strong.__proj__STrans__item__e1",
@@ -421,7 +421,7 @@
         "refinement_interpretation_Tm_refine_49abf8b4f4c9613107a609faa5e25d6d"
       ],
       0,
-      "aeafbe3f3f35421fd16ffa615c864840"
+      "597997fb57f38e982d0d54fb8e9d0bac"
     ],
     [
       "Part2.STLC.Strong.__proj__STrans__item__e2",
@@ -433,7 +433,7 @@
         "refinement_interpretation_Tm_refine_49abf8b4f4c9613107a609faa5e25d6d"
       ],
       0,
-      "229d0f7333d2039e2e6521a03cbb852f"
+      "57686e3610b98b9f4c5d9b39e121a205"
     ],
     [
       "Part2.STLC.Strong.__proj__STrans__item___3",
@@ -450,7 +450,7 @@
         "refinement_interpretation_Tm_refine_49abf8b4f4c9613107a609faa5e25d6d"
       ],
       0,
-      "9850e86513d56acc088e21d06ca226f1"
+      "f7acd04c54267f5118669d92b217e40d"
     ],
     [
       "Part2.STLC.Strong.__proj__STrans__item___4",
@@ -467,7 +467,7 @@
         "refinement_interpretation_Tm_refine_49abf8b4f4c9613107a609faa5e25d6d"
       ],
       0,
-      "621c71d22ec2d3aa2e6d624cf08ac24c"
+      "9d3b708499ddf363959645d7807935a4"
     ],
     [
       "Part2.STLC.Strong.__proj__SStrong__item__t",
@@ -479,7 +479,7 @@
         "refinement_interpretation_Tm_refine_85b6992cee5cc899b55c9a2d758c632e"
       ],
       0,
-      "2d9fd7dfb9d987d8e15348e07fa2b2dc"
+      "80032cda3f24578f34c90666d84a9094"
     ],
     [
       "Part2.STLC.Strong.__proj__SStrong__item__e",
@@ -491,7 +491,7 @@
         "refinement_interpretation_Tm_refine_85b6992cee5cc899b55c9a2d758c632e"
       ],
       0,
-      "424be27aef5b031e91d64861276b5a4c"
+      "9e99d436224fbd02821941366f112901"
     ],
     [
       "Part2.STLC.Strong.__proj__SStrong__item__e'",
@@ -503,7 +503,7 @@
         "refinement_interpretation_Tm_refine_85b6992cee5cc899b55c9a2d758c632e"
       ],
       0,
-      "022b393c7d509e9bce4da3770ca50da3"
+      "5e6c777a4e39ebf460c84779d6a1249d"
     ],
     [
       "Part2.STLC.Strong.__proj__SStrong__item___3",
@@ -520,7 +520,7 @@
         "refinement_interpretation_Tm_refine_85b6992cee5cc899b55c9a2d758c632e"
       ],
       0,
-      "f95624f6881f404ee90451e0b2fb2336"
+      "1d54ca8d46f3bf993955fe2fadad0495"
     ],
     [
       "Part2.STLC.Strong.extend",
@@ -534,7 +534,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "3ac738628fb18874b27734fe04d7eaf9"
+      "b83368c4dc0e5ec51342d61efe7e0c35"
     ],
     [
       "Part2.STLC.Strong.typing",
@@ -546,7 +546,7 @@
         "refinement_interpretation_Tm_refine_5db658b85aed6a6ef24606f996283f4b"
       ],
       0,
-      "9a4ae41bdf2b6042ee3d44c82b14657c"
+      "46669455614463753ded0f2ae9cbd405"
     ],
     [
       "Part2.STLC.Strong.__proj__TyUnit__item__g",
@@ -558,7 +558,7 @@
         "refinement_interpretation_Tm_refine_9d5e4dbb5240843bca927cecf2759f85"
       ],
       0,
-      "84d9fa5b64169e2f728292a386a4fa4a"
+      "371e5885c212e070900ddc7e0d1443e1"
     ],
     [
       "Part2.STLC.Strong.__proj__TyVar__item__g",
@@ -570,7 +570,7 @@
         "refinement_interpretation_Tm_refine_3f1606275c7d863d12b6b6a5f9729ce8"
       ],
       0,
-      "e757ae12227819756573a10ce2287239"
+      "40b8ff841411669b26d4decf3ce16781"
     ],
     [
       "Part2.STLC.Strong.__proj__TyVar__item__x",
@@ -583,7 +583,7 @@
         "refinement_interpretation_Tm_refine_3f1606275c7d863d12b6b6a5f9729ce8"
       ],
       0,
-      "6aa4b3fe0e4e5fdf30e14a4066d0baa3"
+      "f8f60a389232a5ce3127ae092266e5ba"
     ],
     [
       "Part2.STLC.Strong.__proj__TyLam__item__g",
@@ -595,7 +595,7 @@
         "refinement_interpretation_Tm_refine_c9db19bb908273b913f1e5db606b949f"
       ],
       0,
-      "fa1674bba6b47c528e64803c4abdb13e"
+      "2a38afae3dc17c986c981ddb02b0f4fd"
     ],
     [
       "Part2.STLC.Strong.__proj__TyLam__item__t",
@@ -607,7 +607,7 @@
         "refinement_interpretation_Tm_refine_c9db19bb908273b913f1e5db606b949f"
       ],
       0,
-      "9dbedb0628fe2e779a2ef2cb6a893acd"
+      "f64624ffce31e2fbbfce7ade6e5e3f86"
     ],
     [
       "Part2.STLC.Strong.__proj__TyLam__item__e1",
@@ -619,7 +619,7 @@
         "refinement_interpretation_Tm_refine_c9db19bb908273b913f1e5db606b949f"
       ],
       0,
-      "e937e871ae2f2538813c507bf7cdbff1"
+      "728512f4179ae57f35d43429fd2b2e6d"
     ],
     [
       "Part2.STLC.Strong.__proj__TyLam__item__t'",
@@ -631,7 +631,7 @@
         "refinement_interpretation_Tm_refine_c9db19bb908273b913f1e5db606b949f"
       ],
       0,
-      "faecf06b78458f3b24c5cd5c9d1eb570"
+      "163b365bb313b39544365a96c90ea9db"
     ],
     [
       "Part2.STLC.Strong.__proj__TyLam__item__hbody",
@@ -652,7 +652,7 @@
         "refinement_interpretation_Tm_refine_c9db19bb908273b913f1e5db606b949f"
       ],
       0,
-      "1f4dea6138ae04f62a322bf767c9b41f"
+      "9e620998d72a427baf05ea4da39167d5"
     ],
     [
       "Part2.STLC.Strong.__proj__TyApp__item__g",
@@ -664,7 +664,7 @@
         "refinement_interpretation_Tm_refine_2169754fe4d56c2731acd33acc0ef019"
       ],
       0,
-      "b765953e59a10f0b320a18868deab97f"
+      "ce01d5f556f17f4cc337f57e680401c8"
     ],
     [
       "Part2.STLC.Strong.__proj__TyApp__item__e1",
@@ -676,7 +676,7 @@
         "refinement_interpretation_Tm_refine_2169754fe4d56c2731acd33acc0ef019"
       ],
       0,
-      "16cbc571e30a2d87f45fb7af4c2bd6af"
+      "86c07ff85e550577813be44bf9ca6db9"
     ],
     [
       "Part2.STLC.Strong.__proj__TyApp__item__e2",
@@ -688,7 +688,7 @@
         "refinement_interpretation_Tm_refine_2169754fe4d56c2731acd33acc0ef019"
       ],
       0,
-      "44d18fc2788b60637eb2a5f3298a8a66"
+      "ad066b9e68a95446baadecb93329e7bd"
     ],
     [
       "Part2.STLC.Strong.__proj__TyApp__item__t11",
@@ -700,7 +700,7 @@
         "refinement_interpretation_Tm_refine_2169754fe4d56c2731acd33acc0ef019"
       ],
       0,
-      "8ed08a060d26ff6752b4d37934c8bda2"
+      "7290361080d3573eed1befd2d60380ce"
     ],
     [
       "Part2.STLC.Strong.__proj__TyApp__item__t12",
@@ -712,7 +712,7 @@
         "refinement_interpretation_Tm_refine_2169754fe4d56c2731acd33acc0ef019"
       ],
       0,
-      "cb191bfce76586f4c00d1c0907b6c202"
+      "f28f73a77df93ee77e6f2d7500895bd8"
     ],
     [
       "Part2.STLC.Strong.__proj__TyApp__item__h1",
@@ -733,7 +733,7 @@
         "refinement_interpretation_Tm_refine_2169754fe4d56c2731acd33acc0ef019"
       ],
       0,
-      "606caa6a2091495774f433da8b5057b9"
+      "7e8a4edfcc5e82008b849f656b497c98"
     ],
     [
       "Part2.STLC.Strong.__proj__TyApp__item__h2",
@@ -752,7 +752,7 @@
         "refinement_interpretation_Tm_refine_2169754fe4d56c2731acd33acc0ef019"
       ],
       0,
-      "09a0e9774993440fbbc3d1c81d6cdc88"
+      "816eb0db1aeec04afd98499b96756bbe"
     ],
     [
       "Part2.STLC.Strong.progress",
@@ -801,7 +801,7 @@
         "typing_tok_Part2.STLC.Strong.TUnit@tok"
       ],
       0,
-      "8fa893ced7c650b85d2c108f53a86832"
+      "2376e6fd42f08539bf878d9a49ad3578"
     ],
     [
       "Part2.STLC.Strong.subst_typing",
@@ -813,7 +813,7 @@
         "refinement_interpretation_Tm_refine_5db658b85aed6a6ef24606f996283f4b"
       ],
       0,
-      "e566760add94bb75e4f297666b93d8e7"
+      "0c39889f4b5eda10055012f2f783954d"
     ],
     [
       "Part2.STLC.Strong.substitution",
@@ -912,7 +912,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "431e6b3f117ce1e8184b41853b72e140"
+      "a4aa7cff0b115adb06e2c3a8efdd12f9"
     ],
     [
       "Part2.STLC.Strong.substitution_beta",
@@ -943,7 +943,7 @@
         "typing_tok_Part2.STLC.Strong.TUnit@tok"
       ],
       0,
-      "33701a174d9a32be47d6143f2fcdeb01"
+      "3bba28e06e3250045c20409e1aa5a0fc"
     ],
     [
       "Part2.STLC.Strong.preservation",
@@ -1020,7 +1020,7 @@
         "subterm_ordering_Part2.STLC.Strong.STrans"
       ],
       0,
-      "496217ff5ab3df6dca2768c037d2fbc8"
+      "30c81ed1d9917ce0b1608003ae35ec6a"
     ]
   ]
 ]

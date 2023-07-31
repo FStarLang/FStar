@@ -513,7 +513,7 @@ let hard_coded_dependencies full_filename =
 
   (* The core libraries do not have any implicit dependencies *)
   if List.mem (module_name_of_file filename) (core_modules ()) then []
-  else match (namespace_of_module (lowercase_module_name full_filename)) with
+  else match namespace_of_module (module_name_of_file full_filename) with
        | None -> implicit_ns_deps @ implicit_module_deps
          (*
           * AR: we open FStar, and then ns
@@ -1667,8 +1667,21 @@ let print_full (outc : out_channel) (deps:deps) : unit =
         pr "\n\n"
     in
     let keys = deps_keys deps.dep_graph in
+    let no_fstar_stubs_file (s:string) : string =
+      (* If the original filename begins with FStar.Stubs, then remove that,
+      consistent with what extraction will actually do. *)
+      let s1 = "FStar.Stubs." in
+      let s2 = "FStar." in
+      let l1 = String.length s1 in
+      if String.length s >= l1 && String.substring s 0 l1 = s1 then
+        s2 ^ String.substring s l1 (String.length s - l1)
+      else
+        s
+    in
     let output_file ext fst_file =
-        let ml_base_name = replace_chars (Option.get (check_and_strip_suffix (BU.basename fst_file))) '.' "_" in
+        let basename = Option.get (check_and_strip_suffix (BU.basename fst_file)) in
+        let basename = no_fstar_stubs_file basename in
+        let ml_base_name = replace_chars basename '.' "_" in
         Options.prepend_output_dir (ml_base_name ^ ext)
     in
     let norm_path s = replace_chars (replace_chars s '\\' "/") ' ' "\\ " in

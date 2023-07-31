@@ -15,5 +15,5 @@
 *)
 module Embeddings.Test
 
-open FStar.Tactics
+open FStar.Tactics.V2
 open Embeddings

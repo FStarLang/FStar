@@ -45,7 +45,7 @@
         "typing_FStar.List.Tot.Base.mem", "typing_IntSort.sorted"
       ],
       0,
-      "9c6e47a05f6862c08ee75b287cf7a21c"
+      "3f39397b01f2537fef09869ade487947"
     ],
     [
       "InsertionSort.insert_implicit",
@@ -88,7 +88,7 @@
         "typing_IntSort.sorted"
       ],
       0,
-      "38db0d9133fc9110cae46f4eee8d4bc6"
+      "92cd160f2ca771cf1fd2c6d7509a481c"
     ],
     [
       "InsertionSort.sort",
@@ -124,7 +124,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "f782e5d16238f64d54f393b68fa76535"
+      "b09b64eed6ad416b94c6fc1b6f433d5a"
     ]
   ]
 ]

@@ -15,7 +15,7 @@
 *)
 module Clear
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 assume val phi : Type
 assume val psi : Type
@@ -37,8 +37,8 @@ let l1 (x : bool) (y : int) (z : unit) =
 
 let clear_all_of_type (t : typ) : Tac unit =
     let e = cur_env () in
-    let bs = binders_of_env e in
-    let _ = map (fun b -> if term_eq (type_of_binder b) t
+    let bs = vars_of_env e in
+    let _ = map (fun b -> if term_eq (type_of_binding b) t
                           then clear b
                           else ())
          // We need to traverse the list backwards, to clear rightmost
@@ -49,12 +49,12 @@ let clear_all_of_type (t : typ) : Tac unit =
 
 [@@plugin]
 let tau2 = fun () -> let e = cur_env () in
-                       let n = List.length (binders_of_env e) in
+                       let n = List.length (vars_of_env e) in
                        let u = `int in
                        clear_all_of_type u;
                        let e = cur_env () in
                        // We're removing two binders
-                       guard (List.length (binders_of_env e) = n - 2)
+                       guard (List.length (vars_of_env e) = n - 2)
 
 let l2 (x : int) (y : bool) (z : int) =
     assert (phi ==> (psi ==> xi)) by tau2 ()

@@ -130,6 +130,12 @@ let tac_subcomp (a:Type)
          (ensures fun _ -> True)
   = f
 
+let tac_close (a b:Type)
+  (wp_f:b -> tac_wp_t a)
+  (f:(x:b -> tac_repr a (wp_f x))) =
+
+  tac_repr a (fun ps post -> forall (x:b). wp_f x ps post)
+
 /// default effect is Tac : meaning, unannotated TAC functions will be
 ///                         typed as Tac a
 ///
@@ -144,9 +150,9 @@ effect {
          return=tac_return;
          bind=tac_bind;
          if_then_else=tac_if_then_else;
-         subcomp=tac_subcomp }
+         subcomp=tac_subcomp;
+         close = tac_close }
 }
-
 
 (* Hoare variant *)
 effect TacH (a:Type) (pre : proofstate -> Tot Type0) (post : proofstate -> __result a -> Tot Type0) =

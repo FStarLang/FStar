@@ -468,10 +468,12 @@ let unlazy_emb t =
         end
     | _ -> t
 
+(* NOTE: Lazy_embedding compares false to itself, by design. *)
 let eq_lazy_kind k k' =
     match k, k' with
      | BadLazy, BadLazy
      | Lazy_bv, Lazy_bv
+     | Lazy_namedv, Lazy_namedv
      | Lazy_binder, Lazy_binder
      | Lazy_optionstate, Lazy_optionstate
      | Lazy_fvar, Lazy_fvar
@@ -481,14 +483,21 @@ let eq_lazy_kind k k' =
      | Lazy_goal, Lazy_goal
      | Lazy_sigelt, Lazy_sigelt
      | Lazy_letbinding, Lazy_letbinding
-     | Lazy_uvar, Lazy_uvar -> true
-     | Lazy_issue, Lazy_issue -> true
-     | _ -> false
+     | Lazy_uvar, Lazy_uvar
+     | Lazy_universe, Lazy_universe
+     | Lazy_universe_uvar, Lazy_universe_uvar
+     | Lazy_issue, Lazy_issue
+     | Lazy_ident, Lazy_ident
+       -> true
+     | Lazy_embedding _, _
+     | _, Lazy_embedding _ -> false
+     | _ -> failwith "FIXME! eq_lazy_kind must be complete"
 
 let lazy_kind_to_string k = 
     match k with
     | BadLazy -> "BadLazy"
     | Lazy_bv -> "Lazy_bv"
+    | Lazy_namedv -> "Lazy_namedv"
     | Lazy_binder -> "Lazy_binder"
     | Lazy_optionstate -> "Lazy_optionstate"
     | Lazy_fvar -> "Lazy_fvar"
@@ -499,8 +508,12 @@ let lazy_kind_to_string k =
     | Lazy_sigelt -> "Lazy_sigelt"
     | Lazy_letbinding -> "Lazy_letbinding"
     | Lazy_uvar -> "Lazy_uvar"
+    | Lazy_universe -> "Lazy_universe"
+    | Lazy_universe_uvar -> "Lazy_universe_uvar"
     | Lazy_issue -> "Lazy_issue"
-    | _ -> "Unknown"
+    | Lazy_ident -> "Lazy_ident"
+    | Lazy_embedding _ -> "Lazy_embedding _"
+     | _ -> failwith "FIXME! lazy_kind_to_string must be complete"
 
 let unlazy_as_t k t =
     match (compress t).n with
@@ -517,7 +530,7 @@ let mk_lazy (t : 'a) (typ : typ) (k : lazy_kind) (r : option range) : term =
     let i = {
         lkind = k;
         blob  = mkdyn t;
-        ltyp   = typ;
+        ltyp  = typ;
         rng   = rng;
       } in
     mk (Tm_lazy i) rng
@@ -2375,13 +2388,20 @@ let apply_layered_eff_combinators (f:tscheme -> tscheme) (combs:layered_eff_comb
     l_return = map2 combs.l_return;
     l_bind = map3 combs.l_bind;
     l_subcomp = map3 combs.l_subcomp;
-    l_if_then_else = map3 combs.l_if_then_else }
+    l_if_then_else = map3 combs.l_if_then_else;
+    l_close = map_option map2 combs.l_close; }
 
 let apply_eff_combinators (f:tscheme -> tscheme) (combs:eff_combinators) : eff_combinators =
   match combs with
   | Primitive_eff combs -> Primitive_eff (apply_wp_eff_combinators f combs)
   | DM4F_eff combs -> DM4F_eff (apply_wp_eff_combinators f combs)
   | Layered_eff combs -> Layered_eff (apply_layered_eff_combinators f combs)
+
+let get_layered_close_combinator (ed:eff_decl) : option tscheme =
+  match ed.combinators with
+  | Layered_eff {l_close=None} -> None
+  | Layered_eff {l_close=Some (ts, _)} -> Some ts
+  | _ -> None
 
 let get_wp_close_combinator (ed:eff_decl) : option tscheme =
   match ed.combinators with

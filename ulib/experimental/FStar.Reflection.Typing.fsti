@@ -28,12 +28,38 @@ module FStar.Reflection.Typing
   *)
 
 open FStar.List.Tot
-open FStar.Reflection
-
+open FStar.Reflection.V2
 module L = FStar.List.Tot
-module R = FStar.Reflection
-module T = FStar.Tactics
-module FTB = FStar.Tactics.Builtins
+module R = FStar.Reflection.V2
+module T = FStar.Tactics.V2
+module RD = FStar.Reflection.V2.Data
+
+(* MOVE to some helper module *)
+let rec fold_left_dec #a #b
+  (acc : a)
+  (l : list b)
+  (f : a -> (x:b{x << l}) -> a)
+  : Tot a (decreases l)
+  =
+  match l with
+  | [] -> acc
+  | x::xs -> fold_left_dec (f acc x) xs f
+
+let rec map_dec #a #b
+  (l : list a)
+  (f : (x:a{x << l}) -> b)
+  : Tot (list b) (decreases l)
+  =
+  match l with
+  | [] -> []
+  | x::xs -> f x :: map_dec xs f
+
+let rec zip2prop #a #b (f : a -> b -> Type0) (xs : list a) (ys : list b) : Type0 =
+  match xs, ys with
+  | [], [] -> True
+  | x::xx, y::yy -> f x y /\ zip2prop f xx yy
+  | _ -> False
+(* / MOVE *)
 
 val inspect_pack (t:R.term_view)
   : Lemma (ensures R.(inspect_ln (pack_ln t) == t))
@@ -44,6 +70,14 @@ val pack_inspect (t:R.term)
           (ensures R.(pack_ln (inspect_ln t) == t))
           [SMTPat R.(pack_ln (inspect_ln t))]
   
+val inspect_pack_namedv (t:R.namedv_view)
+  : Lemma (ensures R.(inspect_namedv (pack_namedv t) == t))
+          [SMTPat R.(inspect_namedv (pack_namedv t))]
+
+val pack_inspect_namedv (t:R.namedv)
+  : Lemma (ensures R.(pack_namedv (inspect_namedv t) == t))
+          [SMTPat R.(pack_namedv (inspect_namedv t))]
+
 val inspect_pack_bv (t:R.bv_view)
   : Lemma (ensures R.(inspect_bv (pack_bv t) == t))
           [SMTPat R.(inspect_bv (pack_bv t))]
@@ -60,30 +94,30 @@ val pack_inspect_binder (t:R.binder)
    : Lemma (ensures (R.pack_binder (R.inspect_binder t) == t))
            [SMTPat (R.pack_binder (R.inspect_binder t))]
   
+val inspect_pack_comp (t:R.comp_view)
+  : Lemma (ensures (R.inspect_comp (R.pack_comp t) == t))
+          [SMTPat (R.inspect_comp (R.pack_comp t))]
+
 val pack_inspect_comp (t:R.comp)
   : Lemma (ensures (R.pack_comp (R.inspect_comp t) == t))
           [SMTPat (R.pack_comp (R.inspect_comp t))]
   
-val inspect_pack_comp (t:R.comp_view)
-  : Lemma (ensures (R.inspect_comp (R.pack_comp t) == t))
-          [SMTPat (R.inspect_comp (R.pack_comp t))]
+val inspect_pack_fv (nm:R.name)
+  : Lemma (ensures R.inspect_fv (R.pack_fv nm) == nm)
+          [SMTPat (R.inspect_fv (R.pack_fv nm))]
 
 val pack_inspect_fv (fv:R.fv)
   : Lemma (ensures R.pack_fv (R.inspect_fv fv) == fv)
           [SMTPat (R.pack_fv (R.inspect_fv fv))]
 
-val inspect_pack_fv (nm:R.name)
-  : Lemma (ensures R.inspect_fv (R.pack_fv nm) == nm)
-          [SMTPat (R.inspect_fv (R.pack_fv nm))]
+val inspect_pack_universe (u:R.universe_view)
+  : Lemma (ensures R.inspect_universe (R.pack_universe u) == u)
+          [SMTPat (R.inspect_universe (R.pack_universe u))]
 
 val pack_inspect_universe (u:R.universe)
   : Lemma (requires ~(Uv_Unk? (inspect_universe u)))
           (ensures R.pack_universe (R.inspect_universe u) == u)
           [SMTPat (R.pack_universe (R.inspect_universe u))]
-
-val inspect_pack_universe (u:R.universe_view)
-  : Lemma (ensures R.inspect_universe (R.pack_universe u) == u)
-          [SMTPat (R.inspect_universe (R.pack_universe u))]
 
 val lookup_bvar (e:env) (x:int) : option term
 
@@ -95,16 +129,32 @@ let pp_name_t = FStar.Sealed.Inhabited.sealed "x"
 let pp_name_default : pp_name_t = FStar.Sealed.Inhabited.seal "x"
 let seal_pp_name x : pp_name_t = FStar.Sealed.Inhabited.seal x
 
-let mk_binder (pp_name:pp_name_t) (x:var) (ty:term) (q:aqualv)
+let tun = pack_ln Tv_Unknown
+
+let sort_t = FStar.Sealed.Inhabited.sealed tun
+let sort_default : sort_t = FStar.Sealed.Inhabited.seal tun
+let seal_sort x : sort_t = FStar.Sealed.Inhabited.seal x
+
+let mk_binder (pp_name:pp_name_t) (ty:term) (q:aqualv) : binder
   = pack_binder
-      { binder_bv=pack_bv ({bv_ppname=pp_name;
-                            bv_index=x});
-        binder_qual=q;
-        binder_attrs=[];
-        binder_sort=ty}
+      { ppname = pp_name;
+        qual   = q;
+        attrs  = [];
+        sort   = ty}
+
+let mk_simple_binder (pp_name:pp_name_t) (ty:term) : simple_binder
+  = pack_binder
+      { ppname = pp_name;
+        qual   = Q_Explicit;
+        attrs  = [];
+        sort   = ty}
 
 let extend_env (e:env) (x:var) (ty:term) : env =
-  R.push_binder e (mk_binder (seal_pp_name "x") x ty Q_Explicit)
+  R.push_binding e ({
+    ppname = seal_pp_name "x";
+    uniq   = x;
+    sort   = ty;
+  })
   
 val lookup_bvar_extend_env (g:env) (x y:var) (ty:term)
   : Lemma 
@@ -119,25 +169,19 @@ val lookup_fvar_extend_env (g:env) (x:fv) (us:universes) (y:var) (ty:term)
     (ensures lookup_fvar_uinst (extend_env g y ty) x us == lookup_fvar_uinst g x us)
     [SMTPat (lookup_fvar_uinst (extend_env g y ty) x us)]
 
-let as_binder (x:var) (ty:term) =
-  mk_binder (seal_pp_name "x") x ty Q_Explicit
-
 let bv_index (x:bv)
   : var
-  = (inspect_bv x).bv_index
+  = (inspect_bv x).index
+
+let namedv_uniq (x:namedv)
+  : var
+  = (inspect_namedv x).uniq
 
 let binder_sort (b:binder) =
-  (inspect_binder b).binder_sort
+  (inspect_binder b).sort
 
 let binder_qual (b:binder) =
-  let { binder_qual = q } = inspect_binder b in q
-
-let tun = pack_ln Tv_Unknown
-
-let make_bv (n:nat) = {
-  bv_ppname = pp_name_default;
-  bv_index = n;
-}
+  let { qual = q } = inspect_binder b in q
 
 noeq
 type subst_elt =
@@ -156,9 +200,9 @@ let shift_subst_n (n:nat) = L.map (shift_subst_elt n)
 
 let shift_subst = shift_subst_n 1
 
-let maybe_index_of_term (x:term) =
+let maybe_uniq_of_term (x:term) =
   match inspect_ln x with
-  | Tv_Var bv -> Some (bv_index bv)
+  | Tv_Var namedv -> Some (namedv_uniq namedv)
   | _ -> None
 
 let rec find_matching_subst_elt_bv (s:subst) (bv:bv) : option subst_elt =
@@ -173,42 +217,80 @@ let rec find_matching_subst_elt_bv (s:subst) (bv:bv) : option subst_elt =
 let subst_db (bv:bv) (s:subst) : term =
   match find_matching_subst_elt_bv s bv with
   | Some (DT _ t) ->
-    (match maybe_index_of_term t with
+    (match maybe_uniq_of_term t with
      | None -> t
      | Some k ->
        //if we're substituting a name j for a name k, retain the pp_name of j
-       pack_ln (Tv_Var (pack_bv { inspect_bv bv with bv_index = k })))
+       let v : namedv = pack_namedv {
+         sort = (inspect_bv bv).sort;
+         ppname = (inspect_bv bv).ppname;
+         uniq = k;
+       } in
+       pack_ln (Tv_Var v))
   | _ -> pack_ln (Tv_BVar bv)
 
-let rec find_matching_subst_elt_var (s:subst) (bv:bv) : option subst_elt =
+let rec find_matching_subst_elt_var (s:subst) (v:namedv) : option subst_elt =
   match s with
   | [] -> None
   | (NT y _)::rest 
   | (ND y _)::rest ->
-    if y = bv_index bv
+    if y = namedv_uniq v
     then Some (L.hd s)
-    else find_matching_subst_elt_var rest bv
-  | _::rest -> find_matching_subst_elt_var rest bv
+    else find_matching_subst_elt_var rest v
+  | _::rest -> find_matching_subst_elt_var rest v
 
-let subst_var (bv:bv) (s:subst) : term =
-  match find_matching_subst_elt_var s bv with
+let subst_var (v:namedv) (s:subst) : term =
+  match find_matching_subst_elt_var s v with
   | Some (NT _ t) ->
-    (match maybe_index_of_term t with
+    (match maybe_uniq_of_term t with
      | None -> t
      | Some k ->
-       pack_ln (Tv_Var (pack_bv { inspect_bv bv with bv_index = k })))
+       pack_ln (Tv_Var (pack_namedv { inspect_namedv v with uniq = k })))
   | Some (ND _ i) ->
-    pack_ln (Tv_BVar (pack_bv { inspect_bv bv with bv_index = i }))
-  | _ -> pack_ln (Tv_Var bv)
+    let bv = pack_bv {
+      sort = (inspect_namedv v).sort;
+      ppname = (inspect_namedv v).ppname;
+      index = i;
+    } in
+    pack_ln (Tv_BVar bv)
+  | _ -> pack_ln (Tv_Var v)
 
-let make_bv_with_name (s:pp_name_t) (n:nat) = {
-  bv_ppname = s;
-  bv_index = n;
+let make_bv (n:nat) : bv_view = {
+  ppname = pp_name_default;
+  index = n;
+  sort = sort_default;
 }
-let var_as_bv (v:nat) = pack_bv (make_bv v)
-let var_as_term (v:var) = pack_ln (Tv_Var (var_as_bv v))
+let make_bv_with_name (s:pp_name_t) (n:nat) : bv_view = {
+  ppname = s;
+  index  = n;
+  sort   = sort_default;
+}
 
-let binder_of_t_q t q = mk_binder pp_name_default 0 t q
+
+let var_as_bv (v:nat) = pack_bv (make_bv v)
+
+let make_namedv (n:nat) : namedv_view = {
+  ppname = pp_name_default;
+  uniq   = n;
+  sort   = sort_default;
+}
+
+let make_namedv_with_name (s:pp_name_t) (n:nat) : namedv_view = {
+  ppname = s;
+  uniq   = n;
+  sort   = sort_default;
+}
+
+let var_as_namedv (v:nat) : namedv =
+  pack_namedv {
+    uniq = v;
+    sort = sort_default;
+    ppname = pp_name_default;
+  }
+
+let var_as_term (v:var) = pack_ln (Tv_Var (var_as_namedv v))
+
+let binder_of_t_q t q = mk_binder pp_name_default t q
 let mk_abs ty qual t : R.term =  R.pack_ln (R.Tv_Abs (binder_of_t_q ty qual) t)
 let mk_total t = pack_comp (C_Total t)
 let mk_ghost t = pack_comp (C_GTotal t)
@@ -218,10 +300,10 @@ let mk_ghost_arrow ty qual t : R.term =
   R.pack_ln (R.Tv_Arrow (binder_of_t_q ty qual) (mk_ghost t))
 let bound_var i : R.term = R.pack_ln (R.Tv_BVar (R.pack_bv (make_bv i)))
 let mk_let ppname (e1 t1 e2:R.term) =
-  R.pack_ln (R.Tv_Let false [] (R.pack_bv (make_bv_with_name ppname 0)) t1 e1 e2)
+  R.pack_ln (R.Tv_Let false [] (mk_simple_binder ppname t1) e1 e2)
 
 let open_with_var_elt (x:var) (i:nat) : subst_elt =
-  DT i (pack_ln (Tv_Var (var_as_bv x)))
+  DT i (pack_ln (Tv_Var (var_as_namedv x)))
 let open_with_var (x:var) (i:nat) : subst = [open_with_var_elt x i]
 
 val subst_ctx_uvar_and_subst (c:ctx_uvar_and_subst) (ss:subst) 
@@ -244,8 +326,8 @@ and binder_offset_pattern (p:pattern)
 
     | Pat_Var _ _ -> 1
 
-    | Pat_Cons fv us pats -> 
-      binder_offset_patterns pats
+    | Pat_Cons head univs subpats ->
+      binder_offset_patterns subpats
 
 let rec subst_term (t:term) (ss:subst)
   : Tot term (decreases t)
@@ -270,18 +352,18 @@ let rec subst_term (t:term) (ss:subst)
       let b' = subst_binder b ss in
       pack_ln (Tv_Arrow b' (subst_comp c (shift_subst ss)))      
 
-    | Tv_Refine bv sort f ->
-      pack_ln (Tv_Refine bv (subst_term sort ss)
-                            (subst_term f (shift_subst ss)))
+    | Tv_Refine b f ->
+      let b = subst_binder b ss in
+      pack_ln (Tv_Refine b (subst_term f (shift_subst ss)))
 
     | Tv_Uvar j c ->
       pack_ln (Tv_Uvar j (subst_ctx_uvar_and_subst c ss))
       
-    | Tv_Let recf attrs bv ty def body ->
+    | Tv_Let recf attrs b def body ->
+      let b = subst_binder b ss in
       pack_ln (Tv_Let recf 
                       (subst_terms attrs ss)
-                      bv
-                      (subst_term ty ss)
+                      b
                       (if recf 
                        then subst_term def (shift_subst ss)
                        else subst_term def ss)
@@ -311,12 +393,14 @@ let rec subst_term (t:term) (ss:subst)
                              b)
 
 and subst_binder (b:binder) (ss:subst)
-  : Tot binder (decreases b)
+  : Tot (b':binder{binder_is_simple b ==> binder_is_simple b'}) (decreases b)
   = let bndr  = inspect_binder b in
-    pack_binder {binder_bv=bndr.binder_bv;
-                 binder_qual=bndr.binder_qual;
-                 binder_attrs=subst_terms bndr.binder_attrs ss;
-                 binder_sort=subst_term bndr.binder_sort ss}
+    pack_binder {
+      ppname = bndr.ppname;
+      qual   = bndr.qual;
+      attrs  = subst_terms bndr.attrs ss;
+      sort   = subst_term bndr.sort ss
+    }
 
 and subst_comp (c:comp) (ss:subst)
   : Tot comp (decreases c)
@@ -339,7 +423,8 @@ and subst_comp (c:comp) (ss:subst)
                        (subst_terms decrs ss))
 
 and subst_terms (ts:list term) (ss:subst)
-  : Tot (list term) (decreases ts)
+  : Tot (ts':list term{Nil? ts ==> Nil? ts'}) // property useful for subst_binder
+        (decreases ts)
   = match ts with
     | [] -> []
     | t::ts -> subst_term t ss :: subst_terms ts ss
@@ -371,8 +456,8 @@ and subst_pattern (p:pattern) (ss:subst)
       let pats = subst_patterns pats ss in
       Pat_Cons fv us pats
 
-    | Pat_Var bv st ->
-      Pat_Var bv st
+    | Pat_Var bv s ->
+      Pat_Var bv s
 
     | Pat_Dot_Term topt ->
       Pat_Dot_Term (match topt with
@@ -438,6 +523,10 @@ val bv_index_of_make_bv (n:nat)
   : Lemma (ensures bv_index (pack_bv (make_bv n)) == n)
           [SMTPat (bv_index (pack_bv (make_bv n)))]
 
+val namedv_uniq_of_make_namedv (n:nat)
+  : Lemma (ensures namedv_uniq (pack_namedv (make_namedv n)) == n)
+          [SMTPat (namedv_uniq (pack_namedv (make_namedv n)))]
+
 let constant_as_term (v:vconst) = pack_ln (Tv_Const v)
 let unit_exp = constant_as_term C_Unit
 let unit_fv = pack_fv unit_lid
@@ -467,7 +556,7 @@ let eq2 (u:universe) (t v0 v1:term)
 
 let b2t_lid : R.name = ["Prims"; "b2t"]
 let b2t_fv : R.fv = R.pack_fv b2t_lid
-let b2t_ty : R.term = R.(pack_ln (Tv_Arrow (as_binder 0 bool_ty) (mk_total (tm_type u_zero))))
+let b2t_ty : R.term = R.pack_ln (R.Tv_Arrow (mk_binder (seal "x") bool_ty Q_Explicit) (mk_total (tm_type u_zero)))
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -488,7 +577,7 @@ let rec freevars (e:term)
     | Tv_Unsupp
     | Tv_BVar _ -> Set.empty
 
-    | Tv_Var x -> Set.singleton (bv_index x)
+    | Tv_Var x -> Set.singleton (namedv_uniq x)
        
     | Tv_App e1 (e2, _) ->
       Set.union (freevars e1) (freevars e2)
@@ -499,13 +588,13 @@ let rec freevars (e:term)
     | Tv_Arrow b c ->
       Set.union (freevars_binder b) (freevars_comp c)
 
-    | Tv_Refine bv sort f ->
-       freevars sort `Set.union`
+    | Tv_Refine b f ->
+       freevars (binder_sort b) `Set.union`
        freevars f
       
-    | Tv_Let recf attrs bv ty def body ->
+    | Tv_Let recf attrs b def body ->
       freevars_terms attrs `Set.union`
-      freevars ty `Set.union`
+      freevars (binder_sort b) `Set.union`
       freevars def `Set.union`
       freevars body
 
@@ -566,9 +655,8 @@ and freevars_terms (ts:list term)
 and freevars_binder (b:binder)
   : Tot (Set.set var) (decreases b)
   = let bndr  = inspect_binder b in
-    freevars bndr.binder_sort `Set.union`
-    freevars_terms bndr.binder_attrs 
-    
+    freevars bndr.sort `Set.union`
+    freevars_terms bndr.attrs 
 
 and freevars_pattern (p:pattern) 
   : Tot (Set.set var) (decreases p)
@@ -576,10 +664,10 @@ and freevars_pattern (p:pattern)
     | Pat_Constant _ ->
       Set.empty
 
-    | Pat_Cons fv us pats -> 
-      freevars_patterns pats
+    | Pat_Cons head univs subpats ->
+      freevars_patterns subpats
       
-    | Pat_Var bv _ -> Set.empty
+    | Pat_Var bv s -> Set.empty
 
     | Pat_Dot_Term topt ->
       freevars_opt topt freevars
@@ -637,16 +725,16 @@ let rec ln' (e:term) (n:int)
       ln'_binder b n &&
       ln'_comp c (n + 1)
 
-    | Tv_Refine bv sort f ->
-      ln' sort n &&
+    | Tv_Refine b f ->
+      ln'_binder b n &&
       ln' f (n + 1)
 
     | Tv_Uvar _ _ ->
       false
       
-    | Tv_Let recf attrs bv ty def body ->
+    | Tv_Let recf attrs b def body ->
       ln'_terms attrs n &&
-      ln' ty n &&
+      ln'_binder b n &&
       (if recf then ln' def (n + 1) else ln' def n) &&
       ln' body (n + 1)
 
@@ -698,8 +786,8 @@ and ln'_args (ts:list argv) (i:int)
 and ln'_binder (b:binder) (n:int)
   : Tot bool (decreases b)
   = let bndr  = inspect_binder b in
-    ln' bndr.binder_sort n &&
-    ln'_terms bndr.binder_attrs n
+    ln' bndr.sort n &&
+    ln'_terms bndr.attrs n
 
 and ln'_terms (ts:list term) (n:int)
   : Tot bool (decreases ts)
@@ -724,10 +812,10 @@ and ln'_pattern (p:pattern) (i:int)
   = match p with
     | Pat_Constant _ -> true
 
-    | Pat_Cons fv us pats -> 
-      ln'_patterns pats i
+    | Pat_Cons head univs subpats ->
+      ln'_patterns subpats i
       
-    | Pat_Var bv _ -> true
+    | Pat_Var bv s -> true
 
     | Pat_Dot_Term topt ->
       (match topt with
@@ -893,7 +981,7 @@ and univ_leq : universe -> universe -> Type0 =
     univ_leq u (u_max u v)
 
 let mk_if (scrutinee then_ else_:R.term) : R.term =
-  pack_ln (Tv_Match scrutinee None [(Pat_Constant C_True, then_); 
+  pack_ln (Tv_Match scrutinee None [(Pat_Constant C_True, then_);
                                     (Pat_Constant C_False, else_)])
 
 
@@ -926,6 +1014,16 @@ type relation =
   | R_Eq
   | R_Sub
 
+let binding = var & term
+let bindings = list binding
+let rename_bindings bs x y = FStar.List.Tot.map (fun (v, t) -> (v, rename t x y)) bs
+
+let rec extend_env_l (g:env) (bs:bindings)
+  : env
+  = match bs with
+    | [] -> g
+    | (x,t)::bs -> extend_env (extend_env_l g bs) x t
+
 //
 // TODO: support for erasable attribute
 //
@@ -936,6 +1034,24 @@ let is_non_informative_name (l:name) : bool =
 
 let is_non_informative_fv (f:fv) : bool =
   is_non_informative_name (inspect_fv f)
+
+let rec __close_term_vs (i:nat) (vs : list var) (t : term) : Tot term (decreases vs) =
+  match vs with
+  | [] -> t
+  | v::vs ->
+    subst_term (__close_term_vs (i+1) vs t) [ND v i]
+
+let close_term_vs (vs : list var) (t : term) : term =
+  __close_term_vs 0 vs t
+
+let close_term_bs (bs : list binding) (t : term) : term =
+  close_term_vs (List.Tot.map fst bs) t
+
+let bindings_to_refl_bindings (bs : list binding) : list R.binding =
+  L.map (fun (v, ty) -> {uniq=v; sort=ty; ppname = pp_name_default}) bs
+
+let refl_bindings_to_bindings (bs : list R.binding) : list binding =
+  L.map (fun b -> b.uniq, b.sort) bs
 
 [@@ no_auto_projectors]
 noeq
@@ -971,7 +1087,49 @@ type non_informative : term -> Type0 =
     q:aqualv ->
     t1:term ->
     non_informative (mk_arrow_ct t0 q (T.E_Ghost, t1))
-    
+
+val bindings_ok_for_pat : env -> list R.binding -> pattern -> Type0
+
+val bindings_ok_pat_constant :
+  g:env -> c:R.vconst -> Lemma (bindings_ok_for_pat g [] (Pat_Constant c))
+
+let bindings_ok_for_branch (g:env) (bs : list R.binding) (br : branch) : Type0 =
+  bindings_ok_for_pat g bs (fst br)
+
+let bindings_ok_for_branch_N (g:env) (bss : list (list R.binding)) (brs : list branch) =
+  zip2prop (bindings_ok_for_branch g) bss brs
+
+let binding_to_namedv (b:R.binding) : Tot namedv =
+  pack_namedv {
+    RD.uniq   = b.uniq;
+    RD.sort   = seal b.sort;
+    RD.ppname = b.ppname;
+  }
+
+(* Elaborates the p pattern into a term, using the bs bindings for the
+pattern variables. The resulting term is properly scoped only on an
+environment which contains all of bs. See for instance the branch_typing
+judg. Returns an option, since this can fail if e.g. there are not
+enough bindings, and returns the list of unused binders as well, which
+should be empty if the list of binding was indeed ok. *)
+let rec elaborate_pat (p : pattern) (bs : list R.binding) : Tot (option (term & list R.binding)) (decreases p) =
+  match p, bs with
+  | Pat_Constant c, _ -> Some (pack_ln (Tv_Const c), bs)
+  | Pat_Cons fv univs subpats, bs ->
+    let head = pack_ln (Tv_FVar fv) in
+    fold_left_dec
+      (Some (head, bs))
+      subpats
+      (fun st pi ->
+        let (p,i) = pi in
+        match st with | None -> None | Some (head, bs) ->
+          match elaborate_pat p bs with | None -> None | Some (t, bs') -> Some (pack_ln (Tv_App head (t, (if i then Q_Implicit else Q_Explicit))), bs'))
+
+  | Pat_Var _ _, b::bs ->
+    Some (pack_ln (Tv_Var (binding_to_namedv b)), bs)
+  | Pat_Dot_Term (Some t), _ -> Some (t, bs)
+  | Pat_Dot_Term None, _ -> None
+  | _ -> None
 
 [@@ no_auto_projectors]
 noeq
@@ -980,13 +1138,13 @@ type typing : env -> term -> comp_typ -> Type0 =
     g:env ->
     e:term ->
     c:comp_typ ->
-    squash (FTB.typing_token g e c) ->
+    squash (T.typing_token g e c) ->
     typing g e c
 
   | T_Var : 
      g:env ->
-     x:bv { Some? (lookup_bvar g (bv_index x)) } ->
-     typing g (pack_ln (Tv_Var x)) (T.E_Total, Some?.v (lookup_bvar g (bv_index x)))
+     x:namedv { Some? (lookup_bvar g (namedv_uniq x)) } ->
+     typing g (pack_ln (Tv_Var x)) (T.E_Total, Some?.v (lookup_bvar g (namedv_uniq x)))
 
   | T_FVar :
      g:env ->
@@ -1018,9 +1176,9 @@ type typing : env -> term -> comp_typ -> Type0 =
      ty_eff:T.tot_or_ghost ->
      typing g ty (ty_eff, tm_type u) ->
      typing (extend_env g x ty) (open_term body x) body_c ->
-     typing g (pack_ln (Tv_Abs (mk_binder pp_name 0 ty q) body))
+     typing g (pack_ln (Tv_Abs (mk_binder pp_name ty q) body))
               (T.E_Total,
-               pack_ln (Tv_Arrow (mk_binder pp_name 0 ty q)
+               pack_ln (Tv_Arrow (mk_binder pp_name ty q)
                                  (mk_comp (close_comp_typ body_c x))))
 
   | T_App :
@@ -1062,7 +1220,7 @@ type typing : env -> term -> comp_typ -> Type0 =
      t2_eff:T.tot_or_ghost ->
      typing g t1 (t1_eff, tm_type u1) ->
      typing (extend_env g x t1) (open_term t2 x) (t2_eff, tm_type u2) ->
-     typing g (pack_ln (Tv_Arrow (mk_binder pp_name 0 t1 q) (mk_comp (eff, t2))))
+     typing g (pack_ln (Tv_Arrow (mk_binder pp_name t1 q) (mk_comp (eff, t2))))
               (T.E_Total, tm_type (u_max u1 u2))
 
   | T_Refine:
@@ -1076,7 +1234,7 @@ type typing : env -> term -> comp_typ -> Type0 =
      e_eff:T.tot_or_ghost ->
      typing g t (t_eff, tm_type u1) ->
      typing (extend_env g x t) (open_term e x) (e_eff, tm_type u2) ->
-     typing g (pack_ln (Tv_Refine (pack_bv (make_bv 0)) t e)) (T.E_Total, tm_type u1)
+     typing g (pack_ln (Tv_Refine (mk_simple_binder pp_name_default t) e)) (T.E_Total, tm_type u1)
 
   | T_PropIrrelevance:
      g:env -> 
@@ -1113,15 +1271,21 @@ type typing : env -> term -> comp_typ -> Type0 =
      typing g ty (ty_eff, tm_type u_ty) -> //typedness of ty cannot rely on hyp
      typing g (mk_if scrutinee then_ else_) (eff, ty)
 
-  // | T_Match: 
-  //    g:env ->
-  //    scrutinee:term ->
-  //    i_ty:term ->
-  //    branches:list branch ->
-  //    ty:term ->
-  //    typing g scrutinee i_ty ->
-  //    branches_typing g scrutinee i_ty branches ty ->
-  //    typing g (pack_ln (Tv_Match scrutinee None branches)) ty
+  | T_Match:
+     g:env ->
+     sc_u : universe ->
+     sc_ty : typ ->
+     sc : term ->
+     ty_eff:T.tot_or_ghost ->
+     typing g sc_ty (ty_eff, tm_type sc_u) ->
+     eff:T.tot_or_ghost ->
+     typing g sc (eff, sc_ty) ->
+     branches:list branch ->
+     ty:comp_typ ->
+     bnds:list (list R.binding) ->
+     complet : match_is_complete g sc sc_ty (List.Tot.map fst branches) bnds -> // complete patterns
+     branches_typing g sc_u sc_ty sc ty branches bnds -> // each branch has proper type
+     typing g (pack_ln (Tv_Match sc None branches)) ty
 
 and related : env -> term -> relation -> term -> Type0 =
   | Rel_equiv:
@@ -1136,7 +1300,7 @@ and related : env -> term -> relation -> term -> Type0 =
     g:env ->
     t0:term ->
     t1:term ->
-    squash (FTB.subtyping_token g t0 t1) ->
+    squash (T.subtyping_token g t0 t1) ->
     related g t0 R_Sub t1
 
   | Rel_arrow:
@@ -1217,7 +1381,7 @@ and equiv : env -> term -> term -> Type0 =
     g:env ->
     t0:term ->
     t1:term ->
-    squash (FTB.equiv_token g t0 t1) ->
+    squash (T.equiv_token g t0 t1) ->
     equiv g t0 t1
 
   | EQ_Ctxt:
@@ -1249,7 +1413,57 @@ and related_comp : env -> comp_typ -> relation -> comp_typ -> Type0 =
     non_informative t ->
     related_comp g (T.E_Ghost, t) R_Sub (T.E_Total, t)
 
-// and branches_typing : env -> term -> term -> list branch -> term -> Type0 =
+and branches_typing (g:env) (sc_u:universe) (sc_ty:typ) (sc:term) (rty:comp_typ)
+  : (brs:list branch) -> (bnds : list (list R.binding)) -> Type0
+=
+  (* This judgement only enforces that branch_typing holds for every
+  element of brs and its respective bnds (which must have the same
+  length). *)
+
+  | BT_Nil :
+    branches_typing g sc_u sc_ty sc rty [] []
+
+  | BT_S :
+
+    br : branch ->
+    bnds : list R.binding ->
+    pf : branch_typing g sc_u sc_ty sc rty br bnds ->
+
+    rest_br : list branch ->
+    rest_bnds : list (list R.binding) ->
+    rest : branches_typing g sc_u sc_ty sc rty rest_br rest_bnds ->
+    branches_typing g sc_u sc_ty sc rty (br :: rest_br) (bnds :: rest_bnds)
+
+and branch_typing (g:env) (sc_u:universe) (sc_ty:typ) (sc:term) (rty:comp_typ)
+  : (br : branch) -> (bnds : list R.binding) -> Type0
+=
+  | BO :
+    pat : pattern ->
+    bnds : list R.binding{bindings_ok_for_pat g bnds pat} ->
+    hyp_var:var{None? (lookup_bvar (extend_env_l g (refl_bindings_to_bindings bnds)) hyp_var)} ->
+
+    body:term ->
+
+    _ : squash (Some? (elaborate_pat pat bnds)) ->
+
+    typing (extend_env
+            (extend_env_l g (refl_bindings_to_bindings bnds))
+             hyp_var (eq2 sc_u sc_ty sc (fst (Some?.v (elaborate_pat pat bnds))))
+           )
+           body rty ->
+
+    branch_typing g sc_u sc_ty sc rty
+       (pat, close_term_bs (refl_bindings_to_bindings bnds) body)
+       bnds
+
+and match_is_complete : env -> term -> typ -> list pattern -> list (list R.binding) -> Type0 =
+  | MC_Tok :
+    env:_ ->
+    sc:_ ->
+    ty:_ ->
+    pats:_ ->
+    bnds:_ ->
+    squash (T.match_complete_token env sc ty pats bnds) -> match_is_complete env sc ty pats bnds
 
 and sub_typing (g:env) (t1 t2:term) = related g t1 R_Sub t2
 
@@ -1259,15 +1473,6 @@ type tot_typing (g:env) (e:term) (t:term) = typing g e (T.E_Total, t)
 
 type ghost_typing (g:env) (e:term) (t:term) = typing g e (T.E_Ghost, t)
 
-let bindings = list (var & term)
-let rename_bindings bs x y = FStar.List.Tot.map (fun (v, t) -> (v, rename t x y)) bs
-
-let rec extend_env_l (g:env) (bs:bindings) 
-  : env
-  = match bs with
-    | [] -> g
-    | (x,t)::bs -> extend_env (extend_env_l g bs) x t
-
 val subtyping_token_renaming (g:env)
                              (bs0:bindings)
                              (bs1:bindings)
@@ -1275,10 +1480,10 @@ val subtyping_token_renaming (g:env)
                              (y:var { None? (lookup_bvar (extend_env_l g (bs1@bs0)) y) })
                              (t:term)
                              (t0 t1:term)
-                             (d:FTB.subtyping_token (extend_env_l g (bs1@(x,t)::bs0)) t0 t1)
-  : FTB.subtyping_token (extend_env_l g (rename_bindings bs1 x y@(y,t)::bs0))
-                        (rename t0 x y)
-                        (rename t1 x y)
+                             (d:T.subtyping_token (extend_env_l g (bs1@(x,t)::bs0)) t0 t1)
+  : T.subtyping_token (extend_env_l g (rename_bindings bs1 x y@(y,t)::bs0))
+                      (rename t0 x y)
+                      (rename t1 x y)
 
 val subtyping_token_weakening (g:env)
                               (bs0:bindings)
@@ -1286,8 +1491,8 @@ val subtyping_token_weakening (g:env)
                               (x:var { None? (lookup_bvar (extend_env_l g (bs1@bs0)) x) })
                               (t:term)
                               (t0 t1:term)
-                              (d:FTB.subtyping_token (extend_env_l g (bs1@bs0)) t0 t1)
-  : FTB.subtyping_token (extend_env_l g (bs1@(x,t)::bs0)) t0 t1
+                              (d:T.subtyping_token (extend_env_l g (bs1@bs0)) t0 t1)
+  : T.subtyping_token (extend_env_l g (bs1@(x,t)::bs0)) t0 t1
 
 let simplify_umax (#g:R.env) (#t:R.term) (#u:R.universe)
                   (d:typing g t (T.E_Total, tm_type (u_max u u)))
@@ -1540,3 +1745,45 @@ type fstar_top_env = g:fstar_env {
 //
 
 type dsl_tac_t = g:fstar_top_env -> T.Tac (r:(R.term & R.typ){typing g (fst r) (T.E_Total, snd r)})
+
+val if_complete_match (g:env) (t:term)
+  : T.match_complete_token g t bool_ty [
+       Pat_Constant C_True;
+       Pat_Constant C_False;
+    ] [[]; []]
+
+// Derived rule for if
+
+
+let mkif
+    (g:fstar_env)
+    (scrutinee:term)
+    (then_:term)
+    (else_:term)
+    (ty:term)
+    (u_ty:universe)
+    (hyp:var { None? (lookup_bvar g hyp) /\ ~(hyp `Set.mem` (freevars then_ `Set.union` freevars else_)) })
+    (eff:T.tot_or_ghost)
+    (ty_eff:T.tot_or_ghost)
+    (ts : typing g scrutinee (eff, bool_ty))
+    (tt : typing (extend_env g hyp (eq2 (pack_universe Uv_Zero) bool_ty scrutinee true_bool)) then_ (eff, ty))
+    (te : typing (extend_env g hyp (eq2 (pack_universe Uv_Zero) bool_ty scrutinee false_bool)) else_ (eff, ty))
+    (tr : typing g ty (ty_eff, tm_type u_ty))
+: typing g (mk_if scrutinee then_ else_) (eff, ty)
+= let brt = (Pat_Constant C_True, then_) in
+  let bre = (Pat_Constant C_False, else_) in
+  bindings_ok_pat_constant g C_True;
+  bindings_ok_pat_constant g C_False;
+  let brty () : branches_typing g u_zero bool_ty scrutinee (eff,ty) [brt; bre] [[]; []] =
+    BT_S (Pat_Constant C_True, then_) []
+         (BO (Pat_Constant C_True) [] hyp then_ () tt)
+         _ _ (
+      BT_S (Pat_Constant C_False, else_) []
+           (BO (Pat_Constant C_False) [] hyp else_ () te)
+           _ _
+        BT_Nil)
+  in
+  T_Match g u_zero bool_ty scrutinee T.E_Total (T_FVar g bool_fv) eff ts [brt; bre] (eff, ty)
+    [[]; []]
+    (MC_Tok g scrutinee bool_ty _ _ (Squash.return_squash (if_complete_match g scrutinee)))
+    (brty ())

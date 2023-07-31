@@ -15,7 +15,7 @@
 *)
 module Wild
 
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.Classical
 
 let id x = x

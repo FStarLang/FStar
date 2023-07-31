@@ -15,7 +15,7 @@
 *)
 module Postprocess
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 assume val foo : int -> int
 assume val lem : unit -> Lemma (foo 1 == foo 2)

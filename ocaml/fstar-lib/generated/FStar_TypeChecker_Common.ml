@@ -323,7 +323,9 @@ let (print_identifier_info : identifier_info -> Prims.string) =
     let uu___2 = FStar_Syntax_Print.term_to_string info.identifier_ty in
     FStar_Compiler_Util.format3 "id info { %s, %s : %s}" uu___ uu___1 uu___2
 let (id_info__insert :
-  (FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ) ->
+  (FStar_Syntax_Syntax.typ ->
+     FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option)
+    ->
     (Prims.int * identifier_info) Prims.list FStar_Compiler_Util.pimap
       FStar_Compiler_Util.psmap ->
       identifier_info ->
@@ -341,30 +343,34 @@ let (id_info__insert :
           match info.identifier with
           | FStar_Pervasives.Inr uu___ -> ty_map info.identifier_ty
           | FStar_Pervasives.Inl x -> ty_map info.identifier_ty in
-        let info1 =
-          {
-            identifier = (info.identifier);
-            identifier_ty = id_ty;
-            identifier_range = use_range
-          } in
-        let fn = FStar_Compiler_Range_Ops.file_of_range use_range in
-        let start = FStar_Compiler_Range_Ops.start_of_range use_range in
-        let uu___ =
-          let uu___1 = FStar_Compiler_Range_Ops.line_of_pos start in
-          let uu___2 = FStar_Compiler_Range_Ops.col_of_pos start in
-          (uu___1, uu___2) in
-        match uu___ with
-        | (row, col) ->
-            let rows =
-              let uu___1 = FStar_Compiler_Util.pimap_empty () in
-              FStar_Compiler_Util.psmap_find_default db fn uu___1 in
-            let cols = FStar_Compiler_Util.pimap_find_default rows row [] in
-            let uu___1 =
-              let uu___2 = insert_col_info col info1 cols in
-              FStar_Compiler_Effect.op_Bar_Greater uu___2
-                (FStar_Compiler_Util.pimap_add rows row) in
-            FStar_Compiler_Effect.op_Bar_Greater uu___1
-              (FStar_Compiler_Util.psmap_add db fn)
+        match id_ty with
+        | FStar_Pervasives_Native.None -> db
+        | FStar_Pervasives_Native.Some id_ty1 ->
+            let info1 =
+              {
+                identifier = (info.identifier);
+                identifier_ty = id_ty1;
+                identifier_range = use_range
+              } in
+            let fn = FStar_Compiler_Range_Ops.file_of_range use_range in
+            let start = FStar_Compiler_Range_Ops.start_of_range use_range in
+            let uu___ =
+              let uu___1 = FStar_Compiler_Range_Ops.line_of_pos start in
+              let uu___2 = FStar_Compiler_Range_Ops.col_of_pos start in
+              (uu___1, uu___2) in
+            (match uu___ with
+             | (row, col) ->
+                 let rows =
+                   let uu___1 = FStar_Compiler_Util.pimap_empty () in
+                   FStar_Compiler_Util.psmap_find_default db fn uu___1 in
+                 let cols =
+                   FStar_Compiler_Util.pimap_find_default rows row [] in
+                 let uu___1 =
+                   let uu___2 = insert_col_info col info1 cols in
+                   FStar_Compiler_Effect.op_Bar_Greater uu___2
+                     (FStar_Compiler_Util.pimap_add rows row) in
+                 FStar_Compiler_Effect.op_Bar_Greater uu___1
+                   (FStar_Compiler_Util.psmap_add db fn))
 let (id_info_insert :
   id_info_table ->
     (FStar_Syntax_Syntax.bv, FStar_Syntax_Syntax.fv) FStar_Pervasives.either
@@ -417,7 +423,9 @@ let (id_info_toggle : id_info_table -> Prims.bool -> id_info_table) =
       }
 let (id_info_promote :
   id_info_table ->
-    (FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ) -> id_info_table)
+    (FStar_Syntax_Syntax.typ ->
+       FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option)
+      -> id_info_table)
   =
   fun table ->
     fun ty_map ->

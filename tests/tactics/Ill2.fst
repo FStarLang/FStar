@@ -15,7 +15,7 @@
 *)
 module Ill2
 
-open FStar.Tactics
+open FStar.Tactics.V2
 assume val f : term -> int
 
 [@@(expect_failure [228])]

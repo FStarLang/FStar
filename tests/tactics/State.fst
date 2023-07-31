@@ -15,7 +15,7 @@
 *)
 module State
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let x : int = synth (fun () -> lset "myint" 1;
                                let y : int = lget "myint" in

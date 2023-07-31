@@ -2816,9 +2816,9 @@ let (check_admits :
                                  let uu___6 =
                                    let uu___7 = FStar_Ident.string_of_lid l in
                                    FStar_Compiler_Util.format1
-                                     "Admitting %s without a definition"
+                                     "%s is declared but no definition was found; add an 'assume' if this is intentional"
                                      uu___7 in
-                                 (FStar_Errors_Codes.Warning_AdmitWithoutDefinition,
+                                 (FStar_Errors_Codes.Error_AdmitWithoutDefinition,
                                    uu___6) in
                                FStar_Errors.log_issue uu___4 uu___5
                              else ());
@@ -2844,43 +2844,7 @@ let (check_admits :
                              ::
                              lids)))
                   | uu___ -> lids) []) in
-      let uu___ =
-        FStar_Compiler_Effect.op_Bar_Greater
-          m.FStar_Syntax_Syntax.declarations
-          (FStar_Compiler_List.map
-             (fun s ->
-                match s.FStar_Syntax_Syntax.sigel with
-                | FStar_Syntax_Syntax.Sig_declare_typ
-                    { FStar_Syntax_Syntax.lid2 = lid;
-                      FStar_Syntax_Syntax.us2 = uu___1;
-                      FStar_Syntax_Syntax.t2 = uu___2;_}
-                    when
-                    FStar_Compiler_List.existsb
-                      (fun l -> FStar_Ident.lid_equals l lid)
-                      admitted_sig_lids
-                    ->
-                    {
-                      FStar_Syntax_Syntax.sigel =
-                        (s.FStar_Syntax_Syntax.sigel);
-                      FStar_Syntax_Syntax.sigrng =
-                        (s.FStar_Syntax_Syntax.sigrng);
-                      FStar_Syntax_Syntax.sigquals =
-                        (FStar_Syntax_Syntax.Assumption ::
-                        (s.FStar_Syntax_Syntax.sigquals));
-                      FStar_Syntax_Syntax.sigmeta =
-                        (s.FStar_Syntax_Syntax.sigmeta);
-                      FStar_Syntax_Syntax.sigattrs =
-                        (s.FStar_Syntax_Syntax.sigattrs);
-                      FStar_Syntax_Syntax.sigopts =
-                        (s.FStar_Syntax_Syntax.sigopts)
-                    }
-                | uu___1 -> s)) in
-      {
-        FStar_Syntax_Syntax.name = (m.FStar_Syntax_Syntax.name);
-        FStar_Syntax_Syntax.declarations = uu___;
-        FStar_Syntax_Syntax.is_interface =
-          (m.FStar_Syntax_Syntax.is_interface)
-      }
+      m
 let (finish : env -> FStar_Syntax_Syntax.modul -> env) =
   fun env1 ->
     fun modul ->

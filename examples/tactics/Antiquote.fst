@@ -15,7 +15,7 @@
 *)
 module Antiquote
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let _ = assert True
             by (let tm = (`(1 + `@(1))) in

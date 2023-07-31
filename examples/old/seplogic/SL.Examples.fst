@@ -87,7 +87,7 @@ val alloc (#a:Type) (v:a)
 (*** End effect definition ***)
 
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 (*** command specific lemmas ***)
 

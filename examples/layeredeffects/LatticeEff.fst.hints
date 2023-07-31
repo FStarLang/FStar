@@ -1,5 +1,5 @@
 [
-  "Mx¨\u0014¼ô©ƒú5\u000ef}E \u000f",
+  "×F`q5*Ì\u0003NÛòÙ‡€Éû",
   [
     [
       "LatticeEff.coerce",
@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_754b00004f4a881ff74d076ab276dfe1"
       ],
       0,
-      "e01f8f2edd9f9ad5b3d93f2c08d9b3c5"
+      "d794f4ffb2a7f3a1f30dc77bcb410871"
     ],
     [
       "LatticeEff.interp",
@@ -20,7 +20,7 @@
       1,
       [ "@query", "assumption_LatticeEff.eff_label__uu___haseq" ],
       0,
-      "932c86aa51427b954b9832298bdcef2b"
+      "67ec970c72a3917d9349d6108e2673c3"
     ],
     [
       "LatticeEff.interp_at",
@@ -65,7 +65,7 @@
         "typing_FStar.List.Tot.Base.mem", "typing_FStar.List.Tot.Base.op_At"
       ],
       0,
-      "f450305dcdc18d39b79c414f4ef653cd"
+      "cb38b4cbe5c6cc4a09b9e500494cdf9d"
     ],
     [
       "LatticeEff.sublist",
@@ -74,7 +74,7 @@
       1,
       [ "@query", "assumption_LatticeEff.eff_label__uu___haseq" ],
       0,
-      "84a33b28b66117e8af4300530fdccee9"
+      "03e72596ad58049225ccfaea772b59d6"
     ],
     [
       "LatticeEff.sublist_refl",
@@ -83,7 +83,7 @@
       1,
       [ "@query", "equation_LatticeEff.sublist" ],
       0,
-      "0685b7641ae0d2bceb1b67819fe87116"
+      "1ae0d3475e0b3badab2aaa2ef5b142f3"
     ],
     [
       "LatticeEff.interp_sublist",
@@ -117,7 +117,7 @@
         "typing_FStar.List.Tot.Base.mem"
       ],
       0,
-      "ddfd3a81946baec20502ab2087e6898c"
+      "5955b136640ed8a3da908abc37d33318"
     ],
     [
       "LatticeEff.sublist_at",
@@ -153,7 +153,7 @@
         "typing_FStar.List.Tot.Base.mem", "typing_FStar.List.Tot.Base.op_At"
       ],
       0,
-      "5cfabfba8502348e5d9a731a93e200a4"
+      "285ad5bacd22410aa4152196b818831c"
     ],
     [
       "LatticeEff.return",
@@ -173,7 +173,7 @@
         "token_correspondence_LatticeEff.wpof2"
       ],
       0,
-      "26b1d94601f47fe0e772302784e4f109"
+      "4be80d9e89d373a7917eae809ebd79ab"
     ],
     [
       "LatticeEff.bind",
@@ -222,7 +222,7 @@
         "typing_tok_LatticeEff.WR@tok"
       ],
       0,
-      "8f6c5451b0f891a6d343bf86041b226a"
+      "f946992cd5dd3d5130fa3d542eb55976"
     ],
     [
       "LatticeEff.subcomp",
@@ -250,7 +250,7 @@
         "typing_tok_LatticeEff.EXN@tok", "typing_tok_LatticeEff.WR@tok"
       ],
       0,
-      "b56dac42efe5a25ab826d9cb3b041739"
+      "80ab443998dcfc1713bddf04fa5d27a8"
     ],
     [
       "LatticeEff.EFF",
@@ -259,7 +259,7 @@
       1,
       [ "@query", "lemma_LatticeEff.sublist_at" ],
       0,
-      "052caf7d7c4e24484d0a0f76bd3dbc75"
+      "ec5252ab2a21180a671e899bc093c980"
     ],
     [
       "LatticeEff.EFF",
@@ -268,7 +268,7 @@
       1,
       [ "@query", "lemma_LatticeEff.sublist_at" ],
       0,
-      "3dfccc2229317c13499bfdaec153aa4c"
+      "14ac92f19fb9c67ef3b1d68d062ed0d3"
     ],
     [
       "LatticeEff.EFF",
@@ -277,7 +277,7 @@
       1,
       [ "@query", "lemma_LatticeEff.sublist_at" ],
       0,
-      "6b06cd6db14f85fc4d51ee18c2fac106"
+      "69daa2961911e9993c1e4f9261d09584"
     ],
     [
       "LatticeEff.lift_pure_eff",
@@ -308,16 +308,16 @@
         "typing_Tm_abs_5e34897418ce4950a4effcc8c159cf53"
       ],
       0,
-      "63e5908933d3c47c81c741ecaca6779a"
+      "461da87221b3febbf1c68690358d87d1"
     ],
     [
-      "LatticeEff.8789",
+      "LatticeEff.28985",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "d25b3c17896a94bde19f04ed87bf3e88"
+      "ace7dc27705c77ba6220075d2b17357c"
     ],
     [
       "LatticeEff.get",
@@ -338,7 +338,7 @@
         "token_correspondence_LatticeEff.wpof2"
       ],
       0,
-      "6e63a7f521bcd9fd4490da80c9df3108"
+      "aa7c1b55c1f601a5a2ff21a4c2059636"
     ],
     [
       "LatticeEff.op_Bang",
@@ -363,7 +363,7 @@
         "typing_FStar.Monotonic.Heap.sel"
       ],
       0,
-      "6862517ccd0ff80a2a2985831e6e96df"
+      "00056d0151603b4d60f29a0fe057c896"
     ],
     [
       "LatticeEff.op_Colon_Equals",
@@ -405,7 +405,7 @@
         "typing_tok_LatticeEff.WR@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "aa8f7effe3ac7563cacdd2dc716968cb"
+      "58f1246ad51847eb78ae686776db21e0"
     ],
     [
       "LatticeEff.put",
@@ -444,7 +444,7 @@
         "typing_tok_LatticeEff.WR@tok", "unit_typing"
       ],
       0,
-      "81d35db0071a3bd6db6c38d812c85092"
+      "4e5e8de1553cf8f11d2e5d517ed7ac43"
     ],
     [
       "LatticeEff.raise",
@@ -475,7 +475,7 @@
         "typing_tok_LatticeEff.EXN@tok"
       ],
       0,
-      "29ceb79a67c772d0ddc6624eda56c595"
+      "95a8bcab58a6d551d3a579bbdb8bce82"
     ],
     [
       "LatticeEff.test0",
@@ -499,7 +499,7 @@
         "unit_typing"
       ],
       0,
-      "066130ffab4d4692f3c4064f56d46dbc"
+      "33b7a608bcb420255c075918ebe40586"
     ],
     [
       "LatticeEff.test1",
@@ -527,7 +527,7 @@
         "typing_tok_LatticeEff.WR@tok", "unit_typing"
       ],
       0,
-      "049657d37bb4df91113f575cca412568"
+      "286ba518955ccf6b6d0f21ea60d1d36a"
     ],
     [
       "LatticeEff.sublist_at_self",
@@ -540,7 +540,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "033a493f9b8753b268b642f15e7f4d59"
+      "e5bd2e3016b330051bc73624058e2eab"
     ],
     [
       "LatticeEff.labpoly",
@@ -553,7 +553,7 @@
         "lemma_LatticeEff.sublist_at_self"
       ],
       0,
-      "5de3ab866fd32338accfef666649ba1c"
+      "d709096b12baf8200b9bf6ad1f2dd6b0"
     ],
     [
       "LatticeEff.catch",
@@ -590,7 +590,7 @@
         "typing_tok_LatticeEff.EXN@tok", "typing_tok_LatticeEff.WR@tok"
       ],
       0,
-      "a0fe99a68b6e65b7f9cc00e996bb1394"
+      "9020121085f0d7e81d1d0df181835038"
     ],
     [
       "LatticeEff.g",
@@ -613,7 +613,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "894c3877dcfe17aec89cc483aabfd0cb"
+      "c8c9a8f55df00ebd460f9ae03a282062"
     ],
     [
       "LatticeEff.test_catch",
@@ -642,7 +642,7 @@
         "unit_typing"
       ],
       0,
-      "07edd1cd47687b3881e6e4bf9b9a126b"
+      "db40482386bcfe5da9ad87129efd7fa3"
     ]
   ]
 ]

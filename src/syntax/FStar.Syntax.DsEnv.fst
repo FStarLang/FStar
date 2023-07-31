@@ -1111,21 +1111,15 @@ let check_admits env m =
           | _ ->
             if not (Options.interactive ()) then
               FStar.Errors.log_issue (range_of_lid l)
-                (Errors.Warning_AdmitWithoutDefinition, (BU.format1 "Admitting %s without a definition" (Ident.string_of_lid l)));
+                (Errors.Error_AdmitWithoutDefinition, (BU.format1 "%s is declared but no definition was found; add an 'assume' if this is intentional" (Ident.string_of_lid l)));
             let quals = Assumption :: se.sigquals in
             BU.smap_add (sigmap env) (string_of_lid l) ({ se with sigquals = quals }, false);
             l::lids
         end
       | _ -> lids) []
   in
-  //slap on the Assumption qualifier to module declarations that were admitted
-  //the code above does it just for the sigelts in env
-  { m with declarations = m.declarations |> List.map (fun s ->
-      match s.sigel with
-      | Sig_declare_typ {lid} when List.existsb (fun l -> lid_equals l lid) admitted_sig_lids -> { s with sigquals = Assumption::s.sigquals }
-      | _ -> s
-    ) }
-
+  m
+  
 let finish env modul =
   modul.declarations |> List.iter (fun se ->
     let quals = se.sigquals in

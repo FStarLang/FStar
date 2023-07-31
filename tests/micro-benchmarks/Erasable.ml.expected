@@ -1,6 +1,4 @@
 open Prims
-type e_nat_2 = unit
-type e_nat_3 = unit
 type e_unit_5 = unit
 type ('a, 'uuuuu) repr = 'a
 let return : 'a . 'a -> ('a, unit) repr = fun x -> x

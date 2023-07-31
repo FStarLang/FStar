@@ -1,6 +1,6 @@
 module Bug2155
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let f (x:int) = [normalize_term x; x]
 

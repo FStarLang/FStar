@@ -1,5 +1,21 @@
 >> Got issues: [
 WPExtensionality.fst(118,3-118,34): (Error 19) assertion failed; The SMT solver could not prove the query. Use --query_stats for more details. (see also prims.fst(430,90-430,102))
 >>]
+WPExtensionality.fst(25,2-25,8): (Warning 288) FStar.Reflection.V2.Builtins.term_eq is deprecated: Use FStar.Reflection.V2.TermEq.term_eq (see also FStar.Reflection.V2.Builtins.fsti(149,0-149,48))
+WPExtensionality.fst(30,13-30,20): (Warning 288) FStar.Reflection.V2.Builtins.term_eq is deprecated: Use FStar.Reflection.V2.TermEq.term_eq (see also FStar.Reflection.V2.Builtins.fsti(149,0-149,48))
+WPExtensionality.fst(36,2-36,8): (Warning 288) FStar.Reflection.V2.Builtins.term_eq is deprecated: Use FStar.Reflection.V2.TermEq.term_eq (see also FStar.Reflection.V2.Builtins.fsti(149,0-149,48))
+WPExtensionality.fst(41,13-41,20): (Warning 288) FStar.Reflection.V2.Builtins.term_eq is deprecated: Use FStar.Reflection.V2.TermEq.term_eq (see also FStar.Reflection.V2.Builtins.fsti(149,0-149,48))
+WPExtensionality.fst(47,2-47,8): (Warning 288) FStar.Reflection.V2.Builtins.term_eq is deprecated: Use FStar.Reflection.V2.TermEq.term_eq (see also FStar.Reflection.V2.Builtins.fsti(149,0-149,48))
+WPExtensionality.fst(53,13-53,20): (Warning 288) FStar.Reflection.V2.Builtins.term_eq is deprecated: Use FStar.Reflection.V2.TermEq.term_eq (see also FStar.Reflection.V2.Builtins.fsti(149,0-149,48))
+WPExtensionality.fst(59,2-59,8): (Warning 288) FStar.Reflection.V2.Builtins.term_eq is deprecated: Use FStar.Reflection.V2.TermEq.term_eq (see also FStar.Reflection.V2.Builtins.fsti(149,0-149,48))
+WPExtensionality.fst(65,13-65,20): (Warning 288) FStar.Reflection.V2.Builtins.term_eq is deprecated: Use FStar.Reflection.V2.TermEq.term_eq (see also FStar.Reflection.V2.Builtins.fsti(149,0-149,48))
+WPExtensionality.fst(71,2-71,8): (Warning 288) FStar.Reflection.V2.Builtins.term_eq is deprecated: Use FStar.Reflection.V2.TermEq.term_eq (see also FStar.Reflection.V2.Builtins.fsti(149,0-149,48))
+WPExtensionality.fst(76,13-76,20): (Warning 288) FStar.Reflection.V2.Builtins.term_eq is deprecated: Use FStar.Reflection.V2.TermEq.term_eq (see also FStar.Reflection.V2.Builtins.fsti(149,0-149,48))
+WPExtensionality.fst(82,2-82,8): (Warning 288) FStar.Reflection.V2.Builtins.term_eq is deprecated: Use FStar.Reflection.V2.TermEq.term_eq (see also FStar.Reflection.V2.Builtins.fsti(149,0-149,48))
+WPExtensionality.fst(87,13-87,20): (Warning 288) FStar.Reflection.V2.Builtins.term_eq is deprecated: Use FStar.Reflection.V2.TermEq.term_eq (see also FStar.Reflection.V2.Builtins.fsti(149,0-149,48))
+WPExtensionality.fst(93,2-93,8): (Warning 288) FStar.Reflection.V2.Builtins.term_eq is deprecated: Use FStar.Reflection.V2.TermEq.term_eq (see also FStar.Reflection.V2.Builtins.fsti(149,0-149,48))
+WPExtensionality.fst(99,13-99,20): (Warning 288) FStar.Reflection.V2.Builtins.term_eq is deprecated: Use FStar.Reflection.V2.TermEq.term_eq (see also FStar.Reflection.V2.Builtins.fsti(149,0-149,48))
+WPExtensionality.fst(105,2-105,8): (Warning 288) FStar.Reflection.V2.Builtins.term_eq is deprecated: Use FStar.Reflection.V2.TermEq.term_eq (see also FStar.Reflection.V2.Builtins.fsti(149,0-149,48))
+WPExtensionality.fst(111,13-111,20): (Warning 288) FStar.Reflection.V2.Builtins.term_eq is deprecated: Use FStar.Reflection.V2.TermEq.term_eq (see also FStar.Reflection.V2.Builtins.fsti(149,0-149,48))
 Verified module: WPExtensionality
 All verification conditions discharged successfully

@@ -31,10 +31,10 @@ NegativeTests.Neg.fst(59,0-60,17): (Error 309) Type annotation _: Type0{Negative
 >> Got issues: [
 NegativeTests.Neg.fst(63,0-63,32): (Error 309) Type annotation _: Type{Prims.l_False} for inductive NegativeTests.Neg.t2 is not Type or eqtype, or it is eqtype but contains noeq/unopteq qualifiers
 >>]
-NegativeTests.Neg.fst(18,4-18,5): (Warning 240) Admitting NegativeTests.Neg.x without a definition
-NegativeTests.Neg.fst(22,4-22,5): (Warning 240) Admitting NegativeTests.Neg.y without a definition
-NegativeTests.Neg.fst(36,4-36,27): (Warning 240) Admitting NegativeTests.Neg.test_precondition_label without a definition
-NegativeTests.Neg.fst(40,4-40,28): (Warning 240) Admitting NegativeTests.Neg.test_postcondition_label without a definition
-NegativeTests.Neg.fst(44,4-44,17): (Warning 240) Admitting NegativeTests.Neg.bad_projector without a definition
+NegativeTests.Neg.fst(18,4-18,5): (Warning 240) NegativeTests.Neg.x is declared but no definition was found; add an 'assume' if this is intentional
+NegativeTests.Neg.fst(22,4-22,5): (Warning 240) NegativeTests.Neg.y is declared but no definition was found; add an 'assume' if this is intentional
+NegativeTests.Neg.fst(36,4-36,27): (Warning 240) NegativeTests.Neg.test_precondition_label is declared but no definition was found; add an 'assume' if this is intentional
+NegativeTests.Neg.fst(40,4-40,28): (Warning 240) NegativeTests.Neg.test_postcondition_label is declared but no definition was found; add an 'assume' if this is intentional
+NegativeTests.Neg.fst(44,4-44,17): (Warning 240) NegativeTests.Neg.bad_projector is declared but no definition was found; add an 'assume' if this is intentional
 Verified module: NegativeTests.Neg
 All verification conditions discharged successfully

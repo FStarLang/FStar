@@ -17,8 +17,8 @@ type ('a,'b) tuple2 = 'a * 'b[@@deriving yojson,show]
 let fst = Stdlib.fst
 let snd = Stdlib.snd
 
-let __proj__Mktuple2__1 = fst
-let __proj__Mktuple2__2 = snd
+let __proj__Mktuple2__item___1 = fst
+let __proj__Mktuple2__item___2 = snd
 
 type ('a,'b,'c) tuple3 =
  'a* 'b* 'c

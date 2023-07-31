@@ -70,7 +70,7 @@ let test11 () : ST unit (fun p m -> m == emp /\ p () emp) [] by (sl_auto ()) =
 let non_neg_inv (r:ref int) : memory -> Type0 =
   fun m -> exists v. v >= 0 /\ mem_eq (m == r |> v)
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let take_and_incr (r:ref int) (l : lock [ii r] (fun m -> non_neg_inv r m)) : ST unit (fun p m -> m == emp /\ p () emp) [] by (sl_auto ()) =
   acquire l;

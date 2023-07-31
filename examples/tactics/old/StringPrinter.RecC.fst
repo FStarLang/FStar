@@ -294,7 +294,7 @@ let do_while_st
 
 #reset-options
 
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 
 let do_while_tm () : T.Tac T.term = quote (fun #a -> do_while #a)
 

@@ -1297,7 +1297,7 @@ let (closure_as_term :
         FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
   = fun cfg -> fun env1 -> fun t -> non_tail_inline_closure_env cfg env1 t
 let (unembed_binder_knot :
-  FStar_Syntax_Syntax.binder FStar_Syntax_Embeddings.embedding
+  FStar_Syntax_Syntax.binder FStar_Syntax_Embeddings_Base.embedding
     FStar_Pervasives_Native.option FStar_Compiler_Effect.ref)
   = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None
 let (unembed_binder :
@@ -1308,8 +1308,8 @@ let (unembed_binder :
     let uu___ = FStar_Compiler_Effect.op_Bang unembed_binder_knot in
     match uu___ with
     | FStar_Pervasives_Native.Some e ->
-        let uu___1 = FStar_Syntax_Embeddings.unembed e t in
-        uu___1 false FStar_Syntax_Embeddings.id_norm_cb
+        FStar_Syntax_Embeddings_Base.try_unembed e t
+          FStar_Syntax_Embeddings_Base.id_norm_cb
     | FStar_Pervasives_Native.None ->
         (FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos
            (FStar_Errors_Codes.Warning_UnembedBinderKnot,
@@ -1387,7 +1387,7 @@ let (mk_psc_subst :
                              b_for_x :: subst1)
                   | uu___1 -> subst)) env1 []
 let (reduce_primops :
-  FStar_Syntax_Embeddings.norm_cb ->
+  FStar_Syntax_Embeddings_Base.norm_cb ->
     FStar_TypeChecker_Cfg.cfg ->
       (FStar_Syntax_Syntax.binder FStar_Pervasives_Native.option * closure)
         Prims.list ->
@@ -1554,7 +1554,7 @@ let (reduce_primops :
                              | uu___4 -> tm))
                        | uu___3 -> tm)))
 let (reduce_equality :
-  FStar_Syntax_Embeddings.norm_cb ->
+  FStar_Syntax_Embeddings_Base.norm_cb ->
     FStar_TypeChecker_Cfg.cfg ->
       (FStar_Syntax_Syntax.binder FStar_Pervasives_Native.option * closure)
         Prims.list ->
@@ -2677,7 +2677,10 @@ let (should_unfold :
                      "Unexpected unfolding result: %s" uu___3 in
                  FStar_Compiler_Effect.op_Less_Bar failwith uu___2 in
            (let uu___2 =
-              (((cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_tac
+              ((((cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_tac
+                   &&
+                   (let uu___3 = FStar_Options.no_plugins () in
+                    Prims.op_Negation uu___3))
                   && (r <> Should_unfold_no))
                  &&
                  (FStar_Compiler_Util.for_some
@@ -5888,8 +5891,8 @@ and (maybe_simplify :
                 else "NOT ") uu___1 uu___2)
           else ();
           tm'
-and (norm_cb : FStar_TypeChecker_Cfg.cfg -> FStar_Syntax_Embeddings.norm_cb)
-  =
+and (norm_cb :
+  FStar_TypeChecker_Cfg.cfg -> FStar_Syntax_Embeddings_Base.norm_cb) =
   fun cfg ->
     fun uu___ ->
       match uu___ with
@@ -8926,6 +8929,8 @@ let (eta_expand :
                                     (env1.FStar_TypeChecker_Env.nosynth);
                                   FStar_TypeChecker_Env.uvar_subtyping =
                                     (env1.FStar_TypeChecker_Env.uvar_subtyping);
+                                  FStar_TypeChecker_Env.intactics =
+                                    (env1.FStar_TypeChecker_Env.intactics);
                                   FStar_TypeChecker_Env.tc_term =
                                     (env1.FStar_TypeChecker_Env.tc_term);
                                   FStar_TypeChecker_Env.typeof_tot_or_gtot_term
@@ -9038,6 +9043,8 @@ let (eta_expand :
                             (env1.FStar_TypeChecker_Env.nosynth);
                           FStar_TypeChecker_Env.uvar_subtyping =
                             (env1.FStar_TypeChecker_Env.uvar_subtyping);
+                          FStar_TypeChecker_Env.intactics =
+                            (env1.FStar_TypeChecker_Env.intactics);
                           FStar_TypeChecker_Env.tc_term =
                             (env1.FStar_TypeChecker_Env.tc_term);
                           FStar_TypeChecker_Env.typeof_tot_or_gtot_term =

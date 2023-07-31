@@ -22,6 +22,8 @@ module EMB = FStar.Syntax.Embeddings
 module Z = FStar.BigInt
 module NBE = FStar.TypeChecker.NBETerm
 
+friend FStar.Pervasives (* to expose norm_step *)
+
 let steps_to_string f =
   let format_opt (f:'a -> string) (o:option 'a) =
     match o with
@@ -246,7 +248,7 @@ let log_nbe cfg f =
 let embed_simple (emb:EMB.embedding 'a) (r:Range.range) (x:'a) : term =
     EMB.embed emb x r None EMB.id_norm_cb
 let try_unembed_simple (emb:EMB.embedding 'a) (x:term) : option 'a =
-    EMB.unembed emb x false EMB.id_norm_cb
+    EMB.try_unembed emb x EMB.id_norm_cb
 let built_in_primitive_steps : prim_step_set =
     let arg_as_int    (a:arg) = fst a |> try_unembed_simple EMB.e_int in
     let arg_as_bool   (a:arg) = fst a |> try_unembed_simple EMB.e_bool in
@@ -1188,7 +1190,7 @@ let built_in_primitive_steps : prim_step_set =
     let issue_ops =
         let mk_lid l = PC.p2l ["FStar"; "Issue"; l] in
         let arg_as_issue (x:arg) : option issue =
-            EMB.(unembed e_issue (fst x) false id_norm_cb)
+            EMB.(try_unembed e_issue (fst x) id_norm_cb)
         in
         let option_int_as_option_z oi = 
           match oi with
@@ -1463,28 +1465,28 @@ let should_reduce_local_let cfg lb =
          not (cfg.steps.pure_subterms_within_computations)
 
 let translate_norm_step = function
-    | EMB.Zeta ->    [Zeta]
-    | EMB.ZetaFull -> [ZetaFull]
-    | EMB.Iota ->    [Iota]
-    | EMB.Delta ->   [UnfoldUntil delta_constant]
-    | EMB.Simpl ->   [Simplify]
-    | EMB.Weak ->    [Weak]
-    | EMB.HNF  ->    [HNF]
-    | EMB.Primops -> [Primops]
-    | EMB.Reify ->   [Reify]
-    | EMB.UnfoldOnly names ->
+    | Pervasives.Zeta ->    [Zeta]
+    | Pervasives.ZetaFull -> [ZetaFull]
+    | Pervasives.Iota ->    [Iota]
+    | Pervasives.Delta ->   [UnfoldUntil delta_constant]
+    | Pervasives.Simpl ->   [Simplify]
+    | Pervasives.Weak ->    [Weak]
+    | Pervasives.HNF  ->    [HNF]
+    | Pervasives.Primops -> [Primops]
+    | Pervasives.Reify ->   [Reify]
+    | Pervasives.UnfoldOnly names ->
         [UnfoldUntil delta_constant; UnfoldOnly (List.map I.lid_of_str names)]
-    | EMB.UnfoldFully names ->
+    | Pervasives.UnfoldFully names ->
         [UnfoldUntil delta_constant; UnfoldFully (List.map I.lid_of_str names)]
-    | EMB.UnfoldAttr names ->
+    | Pervasives.UnfoldAttr names ->
         [UnfoldUntil delta_constant; UnfoldAttr (List.map I.lid_of_str names)]
-    | EMB.UnfoldQual names ->
+    | Pervasives.UnfoldQual names ->
         [UnfoldUntil delta_constant; UnfoldQual names]
-    | EMB.UnfoldNamespace names ->
+    | Pervasives.UnfoldNamespace names ->
         [UnfoldUntil delta_constant; UnfoldNamespace names]
-    | EMB.Unascribe -> [Unascribe]
-    | EMB.NBE -> [NBE]
-    | EMB.Unmeta -> [Unmeta]
+    | Pervasives.Unascribe -> [Unascribe]
+    | Pervasives.NBE -> [NBE]
+    | Pervasives.Unmeta -> [Unmeta]
 
 let translate_norm_steps s =
     let s = List.concatMap translate_norm_step s in

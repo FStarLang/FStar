@@ -189,6 +189,12 @@ let lemma_swap_permutes_aux #_ s i j x =
   end
 #pop-options  
 
+let append_permutations #a s1 s2 s1' s2' =
+  (
+    lemma_append_count s1 s2;
+    lemma_append_count s1' s2'
+  )
+
 let lemma_swap_permutes #a s i j
   = FStar.Classical.forall_intro
                     #a

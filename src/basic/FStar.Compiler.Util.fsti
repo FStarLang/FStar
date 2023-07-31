@@ -132,6 +132,7 @@ val colorize: string -> (string * string) -> string
 val colorize_bold: string -> string
 val colorize_red: string -> string
 val colorize_cyan: string -> string
+val colorize_green: string -> string
 
 
 type out_channel
@@ -140,6 +141,7 @@ val stderr: out_channel
 val stdout: out_channel
 
 val open_file_for_writing : string -> out_channel
+val open_file_for_appending : string -> out_channel
 val close_out_channel : out_channel -> unit
 
 val flush: out_channel -> unit

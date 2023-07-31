@@ -4,7 +4,7 @@ open FStar.Calc
 module FE = FStar.FunctionalExtensionality
 module F = FStar.FunctionalExtensionality
 module W = FStar.WellFounded
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 module ID5 = ID5
 open Alg
 

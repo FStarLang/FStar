@@ -1,6 +1,6 @@
 module InspectEffComp
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 open FStar.Monotonic.Pure
 

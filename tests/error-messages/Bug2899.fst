@@ -1,6 +1,6 @@
 module Bug2899
 
-open FStar.Tactics
+open FStar.Tactics.V2
 #set-options "--warn_error -266" // failed unembeddings
 
 [@@expect_failure [228]]

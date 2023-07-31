@@ -28,15 +28,15 @@ NegativeTests.Termination.fst(89,29-89,31): (Error 19) Could not prove terminati
 >> Got issues: [
 NegativeTests.Termination.fst(96,20-96,26): (Error 19) Could not prove termination of this recursive call; The SMT solver could not prove the query. Use --query_stats for more details. (see also NegativeTests.Termination.fst(94,2-96,26))
 >>]
-NegativeTests.Termination.fst(18,4-18,9): (Warning 240) Admitting NegativeTests.Termination.bug15 without a definition
-NegativeTests.Termination.fst(23,4-23,18): (Warning 240) Admitting NegativeTests.Termination.repeat_diverge without a definition
-NegativeTests.Termination.fst(31,4-31,17): (Warning 240) Admitting NegativeTests.Termination.ackermann_bad without a definition
-NegativeTests.Termination.fst(38,4-38,14): (Warning 240) Admitting NegativeTests.Termination.length_bad without a definition
-NegativeTests.Termination.fst(50,4-50,18): (Warning 240) Admitting NegativeTests.Termination.strangeZeroBad without a definition
-NegativeTests.Termination.fst(61,4-61,6): (Warning 240) Admitting NegativeTests.Termination.t1 without a definition
-NegativeTests.Termination.fst(69,4-69,8): (Warning 240) Admitting NegativeTests.Termination.plus without a definition
-NegativeTests.Termination.fst(77,4-77,9): (Warning 240) Admitting NegativeTests.Termination.plus' without a definition
-NegativeTests.Termination.fst(84,4-84,9): (Warning 240) Admitting NegativeTests.Termination.minus without a definition
-NegativeTests.Termination.fst(91,4-91,7): (Warning 240) Admitting NegativeTests.Termination.xxx without a definition
+NegativeTests.Termination.fst(18,4-18,9): (Warning 240) NegativeTests.Termination.bug15 is declared but no definition was found; add an 'assume' if this is intentional
+NegativeTests.Termination.fst(23,4-23,18): (Warning 240) NegativeTests.Termination.repeat_diverge is declared but no definition was found; add an 'assume' if this is intentional
+NegativeTests.Termination.fst(31,4-31,17): (Warning 240) NegativeTests.Termination.ackermann_bad is declared but no definition was found; add an 'assume' if this is intentional
+NegativeTests.Termination.fst(38,4-38,14): (Warning 240) NegativeTests.Termination.length_bad is declared but no definition was found; add an 'assume' if this is intentional
+NegativeTests.Termination.fst(50,4-50,18): (Warning 240) NegativeTests.Termination.strangeZeroBad is declared but no definition was found; add an 'assume' if this is intentional
+NegativeTests.Termination.fst(61,4-61,6): (Warning 240) NegativeTests.Termination.t1 is declared but no definition was found; add an 'assume' if this is intentional
+NegativeTests.Termination.fst(69,4-69,8): (Warning 240) NegativeTests.Termination.plus is declared but no definition was found; add an 'assume' if this is intentional
+NegativeTests.Termination.fst(77,4-77,9): (Warning 240) NegativeTests.Termination.plus' is declared but no definition was found; add an 'assume' if this is intentional
+NegativeTests.Termination.fst(84,4-84,9): (Warning 240) NegativeTests.Termination.minus is declared but no definition was found; add an 'assume' if this is intentional
+NegativeTests.Termination.fst(91,4-91,7): (Warning 240) NegativeTests.Termination.xxx is declared but no definition was found; add an 'assume' if this is intentional
 Verified module: NegativeTests.Termination
 All verification conditions discharged successfully

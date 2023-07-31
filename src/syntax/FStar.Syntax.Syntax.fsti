@@ -344,7 +344,8 @@ and letbindings = bool * list letbinding        (* let recs may have more than o
 and subst_ts = list (list subst_elt)            (* A composition of parallel substitutions *)
              * maybe_set_use_range              (* and a maybe range update, Some r, to set the use_range of subterms to r.def_range *)
 and subst_elt =
-   | DB of int * bv                            (* DB i t: replace a bound variable with index i with name bv                 *)
+   | DB of int * bv                            (* DB i bv: replace a bound variable with index i with name bv                 *)
+   | DT of int * term                          (* DT i t: replace a bound variable with index i for term *)
    | NM of bv  * int                           (* NM x i: replace a local name with a bound variable i                       *)
    | NT of bv  * term                          (* NT x t: replace a local name with a term t                                 *)
    | UN of int * universe                      (* UN u v: replace universes variable u with universe term v                  *)
@@ -395,6 +396,7 @@ and lazyinfo = {
 and lazy_kind =
   | BadLazy
   | Lazy_bv
+  | Lazy_namedv
   | Lazy_binder
   | Lazy_optionstate
   | Lazy_fvar
@@ -409,6 +411,7 @@ and lazy_kind =
   | Lazy_universe
   | Lazy_universe_uvar
   | Lazy_issue
+  | Lazy_ident
 and binding =
   | Binding_var      of bv
   | Binding_lid      of lident * (univ_names * typ)
@@ -553,6 +556,10 @@ type wp_eff_combinators = {
  *
  * Additionally, bind, subcomp, and if_then_else have a combinator kind,
  *   this is also set to None in desugaring and set during typechecking the effect
+ *
+ * The close combinator is optional
+ *   If it is not provided as part of the effect declaration,
+ *   the typechecker also does not synthesize it (unlike if-then-else and subcomp)
  *)
 type layered_eff_combinators = {
   l_repr         : (tscheme * tscheme);
@@ -560,6 +567,7 @@ type layered_eff_combinators = {
   l_bind         : (tscheme * tscheme * option indexed_effect_combinator_kind);
   l_subcomp      : (tscheme * tscheme * option indexed_effect_combinator_kind);
   l_if_then_else : (tscheme * tscheme * option indexed_effect_combinator_kind);
+  l_close        : option (tscheme * tscheme)
 }
 
 type eff_combinators =
@@ -846,6 +854,7 @@ val t_real          : term
 val t_float         : term
 val t_char          : term
 val t_range         : term
+val t___range       : term
 val t_vconfig       : term
 val t_norm_step     : term
 val t_term          : term

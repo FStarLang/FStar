@@ -31,23 +31,22 @@ open FStar.Extraction.ML.Util
 open FStar.Syntax.Syntax
 open FStar.Errors
 
-module Code = FStar.Extraction.ML.Code
-module BU = FStar.Compiler.Util
-module S  = FStar.Syntax.Syntax
-module SS = FStar.Syntax.Subst
-module U  = FStar.Syntax.Util
-module N  = FStar.TypeChecker.Normalize
-module PC = FStar.Parser.Const
-module TcEnv = FStar.TypeChecker.Env
+module BU     = FStar.Compiler.Util
+module Code   = FStar.Extraction.ML.Code
+module EMB    = FStar.Syntax.Embeddings
+module Env    = FStar.TypeChecker.Env
+module N      = FStar.TypeChecker.Normalize
+module PC     = FStar.Parser.Const
+module RC     = FStar.Reflection.V2.Constants
+module RD     = FStar.Reflection.V2.Data
+module RE     = FStar.Reflection.V2.Embeddings
+module R      = FStar.Reflection.V2.Builtins
+module S      = FStar.Syntax.Syntax
+module SS     = FStar.Syntax.Subst
+module TcEnv  = FStar.TypeChecker.Env
 module TcTerm = FStar.TypeChecker.TcTerm
 module TcUtil = FStar.TypeChecker.Util
-module R  = FStar.Reflection.Basic
-module RD = FStar.Reflection.Data
-module EMB = FStar.Syntax.Embeddings
-module RE = FStar.Reflection.Embeddings
-module Env = FStar.TypeChecker.Env
-
-module RC = FStar.Reflection.Constants
+module U      = FStar.Syntax.Util
 
 exception Un_extractable
 
@@ -856,6 +855,7 @@ let resugar_pat g q p = match p with
           | Some (Record_ctor (ty, fns)) ->
               let path = List.map string_of_id (ns_of_lid ty) in
               let fs = record_fields g ty fns pats in
+              let path = no_fstar_stubs_ns path in
               MLP_Record(path, fs)
           | _ -> p
       end
@@ -1102,6 +1102,7 @@ let maybe_eta_data_and_project_record (g:uenv) (qual : option fv_qual) (residual
       | MLE_CTor(_, args), Some (Record_ctor(tyname, fields)) ->
         let path = List.map string_of_id (ns_of_lid tyname) in
         let fields = record_fields g tyname fields args in
+        let path = no_fstar_stubs_ns path in
         with_ty e.mlty <| MLE_Record(path, fields)
       | _ -> e
      in

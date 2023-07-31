@@ -1,6 +1,6 @@
 module Sealed.Plugins.Test
 open FStar.Sealed
-open FStar.Tactics
+open FStar.Tactics.V2
 open Sealed.Plugins
 
 let test0 = assert True by (let res = use_seal (seal 17) in

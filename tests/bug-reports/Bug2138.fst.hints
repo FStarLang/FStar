@@ -1,5 +1,5 @@
 [
-  "#\u0006;“ã55\u001e—ÙƒÕ¢Ð\u001e\u001e",
+  "Ã\td\u0002ÕÓEg€J ƒb\u001co¶",
   [
     [
       "Bug2138.x",
@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Bug2138.t1__uu___haseq" ],
       0,
-      "aa2fe940be62e1ab00b39d73df07b733"
+      "e3e8681daaae2c547d64f6bdcb55e460"
     ],
     [
       "Bug2138.y",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "assumption_Bug2138.t1__uu___haseq" ],
       0,
-      "f1268697645e3d5d6141c7dec51e66a0"
+      "f74abee7a9813a663efbe568777219fc"
     ]
   ]
 ]

@@ -1,5 +1,5 @@
 [
-  "(\u0005Y1\u0017„”≈\u001aòŒ\u0000VA,‘",
+  "Ω\u0000ó5nÕdäÁ£sä\u0015s∆∏",
   [
     [
       "CanonCommSemiring.Test.test1_calc",
@@ -8,7 +8,7 @@
       0,
       [ "@query" ],
       0,
-      "33b4dbf257000b176a5c63578cc28c16"
+      "bd7c46da09789173ca952c3467159310"
     ],
     [
       "CanonCommSemiring.Test.ring",
@@ -99,6 +99,7 @@
         "primitive_Prims.op_Modulus", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_c1f37b2c75b7890a493fd5df08ddc7ef",
+        "typing_CanonCommSemiring.Test.op_Plus_Percent",
         "typing_CanonCommSemiring.Test.zero"
       ],
       0,
@@ -135,7 +136,7 @@
         "equation_CanonCommSemiring.Test.op_Plus_Percent",
         "equation_CanonCommSemiring.Test.prime",
         "equation_CanonCommSemiring.Test.ring", "equation_Prims.nat",
-        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
+        "int_inversion", "primitive_Prims.op_Addition",
         "primitive_Prims.op_Modulus", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_c1f37b2c75b7890a493fd5df08ddc7ef",

@@ -1,7 +1,6 @@
 open FStar_Compiler_Range
 open FStar_Tactics_Types
 open FStar_Tactics_Result
-open FStar_Tactics_Basic
 open FStar_Tactics_Monad
 open FStar_Syntax_Syntax
 
@@ -18,7 +17,7 @@ type 'a __tac = FStar_Tactics_Types.proofstate -> 'a __result
 
 let r = dummyRange
 
-type itac = FStar_TypeChecker_Cfg.psc -> FStar_Syntax_Embeddings.norm_cb -> args -> term option
+type itac = FStar_TypeChecker_Cfg.psc -> FStar_Syntax_Embeddings_Base.norm_cb -> args -> term option
 type nbe_itac =  NBETerm.nbe_cbs -> NBETerm.args -> NBETerm.t option
 
 type native_primitive_step =
@@ -50,7 +49,8 @@ let register_plugin (s: string) (arity: Prims.int) (t: itac) (n:nbe_itac) =
           }
     in
     FStar_TypeChecker_Cfg.register_plugin step;
-    perr1 "Registered plugin %s\n" s
+    (* perr1 "Registered plugin %s\n" s; *)
+    ()
 
 let register_tactic (s: string) (arity: Prims.int) (t: itac)=
     let step =
@@ -59,14 +59,15 @@ let register_tactic (s: string) (arity: Prims.int) (t: itac)=
           strong_reduction_ok=true;
           tactic=t } in
     compiled_tactics := step :: !compiled_tactics;
-    perr1 "Registered tactic %s\n" s
+    (* perr1 "Registered tactic %s\n" s; *)
+    ()
 
 let bump (f : 'b -> 'c) (g : 'a -> 'b) : 'a -> 'c =
     fun x -> f (g x)
 
 let from_tactic_0 (tau: 'b __tac) : 'b tac =
     (fun (ps: proofstate) ->
-        perr "Entering native tactic\n";
+        (* perr "Entering native tactic\n"; *)
         tau ps) |> mk_tac
 
 let from_tactic_1  t = bump from_tactic_0  t

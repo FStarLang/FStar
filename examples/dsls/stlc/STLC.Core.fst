@@ -1,6 +1,6 @@
 module STLC.Core
-module T = FStar.Tactics
-module R = FStar.Reflection
+module T = FStar.Tactics.V2
+module R = FStar.Reflection.V2
 module L = FStar.List.Tot
 module RT = FStar.Reflection.Typing
 
@@ -148,33 +148,23 @@ let rec fresh (e:list (var & 'a))
   : var
   = match e with
     | [] -> 0
-    | hd :: tl -> 
+    | hd :: tl ->
       max (fresh tl) (fst hd) + 1
+
+let _ = assert (fresh [1,();2,();3,();4,()] == 8) // odd.. but ok
 
 let rec fresh_not_mem (e:list (var & 'a)) (elt: (var & 'a))
   : Lemma (ensures L.memP elt e ==> fresh e > fst elt)
   = match e with
     | [] -> ()
     | hd :: tl -> fresh_not_mem tl elt
-  
-let rec lookup_mem (e:list (var & 'a)) (x:var)
+
+let lookup_mem (e:list (var & 'a)) (x:var)
   : Lemma
     (requires Some? (lookup e x))
     (ensures exists elt. L.memP elt e /\ fst elt == x)
-  = match e with
-    | [] -> ()
-    | hd :: tl -> 
-      match lookup tl x with
-      | None -> assert (L.memP hd e)
-      | _ -> 
-        lookup_mem tl x;
-        eliminate exists elt. L.memP elt tl /\ fst elt == x
-        returns _
-        with _ . ( 
-          introduce exists elt. L.memP elt e /\ fst elt == x
-          with elt
-          and ()
-        )
+  = let Some y = lookup e x in
+    List.Tot.Properties.assoc_memP_some x y e
 
 let fresh_is_fresh (e:list (var & 'a))
   : Lemma (None? (lookup e (fresh e)))
@@ -301,7 +291,7 @@ let rec elab_ty (t:stlc_ty)
 
       R.pack_ln 
         (R.Tv_Arrow
-          (RT.mk_binder RT.pp_name_default 0 t1 R.Q_Explicit)
+          (RT.mk_simple_binder RT.pp_name_default t1)
           (R.pack_comp (C_Total t2)))
   
 let rec elab_exp (e:stlc_exp)
@@ -316,14 +306,13 @@ let rec elab_exp (e:stlc_exp)
       R.pack_ln (Tv_BVar bv)
       
     | EVar n ->
-      // tun because type does not matter at a use site
-      let bv = R.pack_bv (RT.make_bv n) in
+      let bv = R.pack_namedv (RT.make_namedv n) in
       R.pack_ln (Tv_Var bv)
 
     | ELam t e ->
       let t = elab_ty t in
       let e = elab_exp e in
-      R.pack_ln (Tv_Abs (RT.mk_binder RT.pp_name_default 0 t R.Q_Explicit) e)
+      R.pack_ln (Tv_Abs (RT.mk_simple_binder RT.pp_name_default t) e)
              
     | EApp e1 e2 ->
       let e1 = elab_exp e1 in
@@ -405,13 +394,13 @@ let rec elab_open_commute' (e:stlc_exp) (x:var) (n:nat)
       (==) {}
         elab_exp (ELam t (open_exp' e x (n + 1)));      
       (==) {  }
-        R.(pack_ln (Tv_Abs (RT.as_binder 0 (elab_ty t)) (elab_exp (open_exp' e x (n + 1)))));
+        R.(pack_ln (Tv_Abs (RT.mk_simple_binder RT.pp_name_default (elab_ty t)) (elab_exp (open_exp' e x (n + 1)))));
       (==) { elab_open_commute' e x (n + 1) } 
-        R.(pack_ln (Tv_Abs (RT.as_binder 0 (elab_ty t))
+        R.(pack_ln (Tv_Abs (RT.mk_simple_binder RT.pp_name_default (elab_ty t))
                            (RT.subst_term (elab_exp e) RT.(open_with_var x (n + 1)))));
       (==) { stlc_types_are_closed_core t (RT.open_with_var x n) }
         RT.subst_term
-          R.(pack_ln (Tv_Abs (RT.as_binder 0 (elab_ty t)) (elab_exp e)))
+          R.(pack_ln (Tv_Abs (RT.mk_simple_binder RT.pp_name_default (elab_ty t)) (elab_exp e)))
           RT.(open_with_var x n);
       }
 
@@ -483,7 +472,7 @@ let rec soundness (#sg:stlc_env)
       RT.T_Const _ _ _ RT.CT_Unit
 
     | T_Var _ x ->
-      RT.T_Var _ (R.pack_bv (RT.make_bv x))
+      RT.T_Var _ (R.pack_namedv (RT.make_namedv x))
 
     | T_Lam _ t e t' x de ->
       let de : RT.tot_typing (extend_env_l g ((x,t)::sg))
@@ -557,8 +546,6 @@ let main (src:stlc_exp) : RT.dsl_tac_t =
   else T.fail "Not locally nameless"
 
 (***** Tests *****)
-
-#set-options "--ugly"
 
 %splice_t[foo] (main (ELam TUnit (EBVar 0)))
 

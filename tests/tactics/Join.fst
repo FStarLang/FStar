@@ -15,7 +15,7 @@
 *)
 module Join
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 val p16 : x:int -> Lemma (x == 16 ==> pow2 x == 65536) [SMTPat (pow2 x)]
 let p16 _ = assert_norm (pow2 16 == 65536)

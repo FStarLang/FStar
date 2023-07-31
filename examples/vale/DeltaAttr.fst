@@ -15,7 +15,7 @@
 *)
 module DeltaAttr
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 irreducible let myattr = ()
 irreducible let otherattr = ()

@@ -1,9 +1,9 @@
 module Param
 
 open FStar.List
-open FStar.Tactics
+open FStar.Tactics.V2
 
-type bvmap = list (bv & (binder & binder & binder))
+type bvmap = list (namedv & (binder & binder & binder))
 let fvmap =  list (fv * fv)
 
 noeq
@@ -38,17 +38,17 @@ let fresh_binder_named (nm:string) (t:typ) : Tac binder =
   // useful?
   //let n = fresh () in
   //let nm = nm ^ "_" ^ string_of_int n in
-  Tactics.fresh_binder_named nm t
+  Tactics.V2.fresh_binder_named nm t
 
 let app_binders (t:term) (bs:list binder) : Tac term =
-  mk_e_app t (Tactics.map binder_to_term bs)
+  mk_e_app t (List.Tot.map binder_to_term bs)
 
-let push_bv_to_state (bv:bv) (b0 b1 b2 : binder) (s:param_state) : param_state =
-  { s with bvmap = (bv, (b0, b1, b2)) :: s.bvmap }
+let push_var_to_state (v:namedv) (b0 b1 b2 : binder) (s:param_state) : param_state =
+  { s with bvmap = (v, (b0, b1, b2)) :: s.bvmap }
 
 exception NotARecFV
 exception Unsupported of string
-exception NotFoundBV of bv
+exception NotFoundBV of namedv
 exception NotFoundFV of fv
 
 let lookup_rec_fv (s:param_state) (f:fv) : Tac fv =
@@ -64,24 +64,24 @@ let lookup_rec_fv (s:param_state) (f:fv) : Tac fv =
 let push_fv (f1 f2 : fv) (s:param_state) : param_state =
  { s with recs = (f1,f2)::s.recs }
 
-let lookup (s:param_state) (bv:bv) : Tac (binder & binder & binder) =
+let lookup (s:param_state) (v:namedv) : Tac (binder & binder & binder) =
   let rec aux (bvm : bvmap) : Tac (binder & binder & binder) =
     match bvm with
     | [] ->
-      raise (NotFoundBV bv)
-    | (bv', r)::tl ->
-      if compare_bv bv bv' = Order.Eq
+      raise (NotFoundBV v)
+    | (v', r)::tl ->
+      if (inspect_namedv v).uniq = (inspect_namedv v').uniq
       then r
       else aux tl
   in
   aux s.bvmap
 
 let replace_var (s:param_state) (b:bool) (t:term) : Tac term =
-  match inspect_ln t with
-  | Tv_Var bv ->
+  match inspect t with
+  | Tv_Var v ->
     begin try
-      let (x, y, _) = lookup s bv in
-      let bv = if b then (inspect_binder y).binder_bv else (inspect_binder x).binder_bv in
+      let (x, y, _) = lookup s v in
+      let bv = binder_to_namedv (if b then y else x) in
       pack (Tv_Var bv)
     with
     (* Maybe we traversed a binder and there are variables not in the state.
@@ -106,8 +106,7 @@ let string_param = param_of_eqtype string
 
 
 let binder_set_qual (b:binder) (q:aqualv) : Tac binder =
-  let bview = inspect_binder b in
-  pack_binder {bview with binder_qual=q}
+  {b with qual=q}
 
 let admit_param : #a0:Type -> #a1:Type -> (#aR: (a0 -> a1 -> Type0)) ->
                   u1:unit -> u2:unit -> unit_param u1 u2 ->
@@ -131,11 +130,12 @@ let rec param' (s:param_state) (t:term) : Tac term =
     begin match inspect_comp c with
     | C_Total t2 ->
       let (s', (bx0, bx1, bxR)) = push_binder b s in
-      let q = (inspect_binder b).binder_qual in
+      let q = b.qual in
 
       let bf0 = fresh_binder_named "f0" (replace_by s false t) in
       let bf1 = fresh_binder_named "f1" (replace_by s true t) in
-      let res = `((`#(param' s' t2)) (`#(tapp q bf0 bx0)) (`#(tapp q bf1 bx1))) in
+      let b2t = binder_to_term in
+      let res = `((`#(param' s' t2)) (`#(tapp q (b2t bf0) (b2t bx0))) (`#(tapp q (b2t bf1) (b2t bx1)))) in
       tabs bf0 (tabs bf1 (mk_tot_arr [bx0; bx1; bxR] res))
     | _ -> raise (Unsupported "effects")
     end
@@ -212,7 +212,7 @@ and param_pat (s:param_state) (p : pattern) : Tac (param_state & (pattern & patt
   in
   //dump ("param_pat of " ^ term_to_string (quote p));
   match p with
-  | Pat_Cons fv us pats ->
+  | Pat_Cons {head=fv; univs=us; subpats=pats} ->
     let fv' = param_fv s fv in
     let (s', (pats0, pats1, patsr)) =
       fold_left (fun (s, (pats0, pats1, patsr)) (p, i) ->
@@ -229,15 +229,16 @@ and param_pat (s:param_state) (p : pattern) : Tac (param_state & (pattern & patt
     let pats0 = List.Tot.rev pats0 in
     let pats1 = List.Tot.rev pats1 in
     let patsr = List.Tot.rev patsr in
-    (s', (Pat_Cons fv us pats0,
-          Pat_Cons fv us pats1,
-          Pat_Cons fv' us patsr))
+    (s', (Pat_Cons {head=fv;  univs=us; subpats=pats0},
+          Pat_Cons {head=fv;  univs=us; subpats=pats1},
+          Pat_Cons {head=fv'; univs=us; subpats=patsr}))
 
-  | Pat_Var bv sort ->
-    let (s', (b0, b1, bR)) = push_binder (mk_binder bv (unseal sort)) s in
-    (s', (Pat_Var (bv_of_binder b0) (Sealed.seal (binder_sort b0)),
-          Pat_Var (bv_of_binder b1) (Sealed.seal (binder_sort b1)),
-          Pat_Var (bv_of_binder bR) (Sealed.seal (binder_sort bR))))
+  | Pat_Var {v; sort} ->
+    let b = namedv_to_binder v (unseal sort) in
+    let (s', (b0, b1, bR)) = push_binder b s in
+    (s', (Pat_Var {v=binder_to_namedv b0; sort = Sealed.seal (binder_sort b0)},
+          Pat_Var {v=binder_to_namedv b1; sort = Sealed.seal (binder_sort b1)},
+          Pat_Var {v=binder_to_namedv bR; sort = Sealed.seal (binder_sort bR)}))
 
   | Pat_Dot_Term t ->
     fail "no dot pats"
@@ -247,10 +248,10 @@ and param_pat (s:param_state) (p : pattern) : Tac (param_state & (pattern & patt
     //      Pat_Dot_Term (bv_of_binder bR) (param' s' t)))
 
   | Pat_Constant c ->
-    let b = fresh_bv_named "cR" in
+    let b = fresh_binder_named "cR" (`_) in
     (s, (Pat_Constant c,
          Pat_Constant c,
-         Pat_Var b (seal (`_))))
+         Pat_Var {v=binder_to_namedv b; sort=seal (`_)}))
 
 and param_br (s:param_state) (br : branch) : Tac branch =
   let (pat, t) = br in
@@ -258,21 +259,20 @@ and param_br (s:param_state) (br : branch) : Tac branch =
   (pat', param' s' t)
 
 and push_binder (b:binder) (s:param_state) : Tac (param_state & (binder & binder & binder)) =
-  let bv = (inspect_binder b).binder_bv in
-  let q = (inspect_binder b).binder_qual in
-  let typ = (inspect_binder b).binder_sort in
-  let name = (inspect_bv bv).bv_ppname in
-  let decor (s : sealed string) (t : string) : Tac string = (unseal s ^ t) in
+  let q = b.qual in
+  let typ = b.sort in
+  let name = unseal b.ppname in
+  let decor (s : string) (t : string) : Tac string = (s ^ t) in
   let bx0 = fresh_binder_named (decor name "0") (replace_by s false typ) in
   let bx1 = fresh_binder_named (decor name "1") (replace_by s true typ) in
-  let bxr = fresh_binder_named (decor name "R") (`(`#(param' s typ)) (`#bx0) (`#bx1)) in
+  let bxr = fresh_binder_named (decor name "R") (`(`#(param' s typ)) (`#(binder_to_term bx0)) (`#(binder_to_term bx1))) in
 
   (* respect implicits *)
   let bx0 = binder_set_qual bx0 q in
   let bx1 = binder_set_qual bx1 q in
   let bxr = binder_set_qual bxr q in
 
-  let s = push_bv_to_state bv bx0 bx1 bxr s in
+  let s = push_var_to_state (binder_to_namedv b) bx0 bx1 bxr s in
   (s, (bx0, bx1, bxr))
 
 let init_param_state : param_state = {
@@ -286,9 +286,10 @@ let param (t:term) : Tac term =
   //dump ("res = " ^ term_to_string t);
   t
 
-let fv_to_tm (f:fv) : Tac term = Tv_FVar f
+let fv_to_tm (f:fv) : Tac term = pack (Tv_FVar f)
 
 let param_ctor (nm_ty:name) (s:param_state) (c:ctor) : Tac ctor =
+  (* dump ("ctor0: " ^ term_to_string (quote c)); *)
   let nm, ty = c in
   let nm' = cur_module () @ [last nm ^ "_param"] in
   let bs, c = collect_arr_bs ty in
@@ -312,18 +313,19 @@ let param_ctor (nm_ty:name) (s:param_state) (c:ctor) : Tac ctor =
   let ty' = mk_tot_arr bs cod in
 
   let r = (nm', ty') in
-  //dump ("param_ctor : " ^ term_to_string (quote r));
+  (* dump ("ctor1: " ^ term_to_string (quote r)); *)
   r
 
 //let absN (bs : list binder) (t : term) : Tac term =
 //  Tactics.Util.fold_right (fun b t -> tabs b t) bs t
 
-let param_inductive (se:sigelt{Sg_Inductive? (inspect_sigelt se)}) (fv0 fv1 : fv) : Tac decls =
+let param_inductive (se:sigelt) (fv0 fv1 : fv) : Tac decls =
   match inspect_sigelt se with
-  | Sg_Inductive nm us params typ ctors ->
+  | Sg_Inductive {nm; univs; params; typ; ctors} ->
+    (* dump ("typ = " ^ term_to_string typ); *)
     let s = push_fv fv0 fv1 init_param_state in
     let orig = app_binders (fv_to_tm (pack_fv nm)) params in
-    //dump ("orig = " ^ term_to_string orig);
+    (* dump ("orig = " ^ term_to_string orig); *)
     let (s, param_bs) =
         fold_left (fun (s, bvs) b -> let (s, (bx0, bx1, bxr)) = push_binder b s in
                                   //dump ("bx0 = " ^ term_to_string (quote bx0));
@@ -334,19 +336,19 @@ let param_inductive (se:sigelt{Sg_Inductive? (inspect_sigelt se)}) (fv0 fv1 : fv
     let param_bs = List.Tot.rev param_bs in
     //Tactics.Util.iter (fun bv -> dump ("param bv = " ^ binder_to_string bv)) param_bs;
     let typ = mk_e_app (param' s typ) [replace_by s false orig; replace_by s true orig] in
-    let ctors = Tactics.map (param_ctor nm s) ctors in
-    let se = Sg_Inductive (inspect_fv fv1) us param_bs typ ctors in
-    //dump ("param_ind : " ^ term_to_string (quote se));
+    (* dump ("new typ = " ^ term_to_string typ); *)
+    let ctors = Tactics.V2.map (param_ctor nm s) ctors in
+    let se = Sg_Inductive {nm=inspect_fv fv1; univs; params=param_bs; typ; ctors} in
+    (* dump ("param_ind : " ^ term_to_string (quote se)); *)
     [pack_sigelt se]
+  | _ -> fail ""
 
-let param_letbinding (se:sigelt{Sg_Let? (inspect_sigelt se)}) (fv0 fv1 : fv) : Tac decls =
+let param_letbinding (se:sigelt) (fv0 fv1 : fv) : Tac decls =
   match inspect_sigelt se with
-  | Sg_Let r [lb] ->
-    let lbv = inspect_lb lb in
-    let rrr = param lbv.lb_typ in
+  | Sg_Let {isrec=r; lbs=[lb]} ->
+    let rrr = param lb.lb_typ in
     let expected_typ = norm_term [] (mk_e_app rrr [fv_to_tm fv0; fv_to_tm fv0]) in
-    let se' = Sg_Let r [pack_lb {lb_fv=fv1; lb_us=lbv.lb_us ; lb_typ=expected_typ; lb_def= (param lbv.lb_def)}]
-    in
+    let se' = Sg_Let {isrec=r; lbs=[{lb_fv=fv1; lb_us=lb.lb_us ; lb_typ=expected_typ; lb_def= (param lb.lb_def)}]} in
     [pack_sigelt se']
   | _ -> fail "no mutual recursion"
 
@@ -358,8 +360,8 @@ let paramd (nm:string) : Tac decls =
   match se with | None -> fail "param_letbinding: not found" | Some se ->
   let decls =
    match inspect_sigelt se with
-   | Sg_Let _ _  -> param_letbinding se fv0 fv1
-   | Sg_Inductive _ _ _ _ _ -> param_inductive se fv0 fv1
+   | Sg_Let _ -> param_letbinding se fv0 fv1
+   | Sg_Inductive _ -> param_inductive se fv0 fv1
    | _ -> fail "paramd: unsupported sigelt"
   in
   //dump ("returning : " ^ term_to_string (quote decls));
@@ -392,8 +394,12 @@ let snd (#a #b : Type0) (p : a & b) : b =
   match p with
   | Mktuple2 x y -> y <: b
 
+#set-options "--print_bound_var_types --print_universes"
+
 %splice[tuple2_param] (paramd (`%tuple2))
+
 %splice[fst_param] (paramd (`%fst))
+
 %splice[snd_param] (paramd (`%snd))
 
 

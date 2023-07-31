@@ -698,7 +698,7 @@ defined as shown below in ``prims.fst``:
 .. code-block:: fstar
 
    effect Pure (a:Type) (req:Type0) (ens:a -> Type0) =
-          PURE a (fun post -> req /\ (forall x. ens x /\ post x))
+          PURE a (fun post -> req /\ (forall x. ens x ==> post x))
 
 The signature of ``Pure`` is ``Pure a req ens``, where ``req`` is the
 precondition and ``ens:a -> Type0`` is the postcondition. Using

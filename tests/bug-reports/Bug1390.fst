@@ -15,7 +15,7 @@
 *)
 module Bug1390
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let taketot (f : unit -> Tot unit) : unit = ()
 let takegtot (f : unit -> GTot unit) : unit = ()

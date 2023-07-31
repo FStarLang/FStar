@@ -15,14 +15,16 @@
 *)
 module Simplifier
 
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.Tactics.Simplifier
 
 let goal_is_true () : Tac unit =
     let g = cur_goal () in
     match term_as_formula g with
     | True_ -> trivial ()
-    | _ -> fail "not syntactically true"
+    | r ->
+      dump ("not syntactically true " ^ term_to_string (quote r));
+      fail ("not syntactically true " ^ term_to_string (quote r))
 
 let test_simplify () : Tac unit =
     simplify ();

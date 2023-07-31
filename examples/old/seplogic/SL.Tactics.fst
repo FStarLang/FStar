@@ -17,7 +17,7 @@ module SL.Tactics
 
 open FStar.SL.Heap
 open Lang
-open FStar.Tactics
+open FStar.Tactics.V2
 
 (*
  * Separation logic tactics for manipulating wps of the deeply embedded languages of Lang

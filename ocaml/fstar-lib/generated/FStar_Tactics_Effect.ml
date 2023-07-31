@@ -41,6 +41,7 @@ type ('a, 'wputhen, 'wpuelse, 'f, 'g, 'b) tac_if_then_else =
 let tac_subcomp :
   'a 'wpuf 'wpug . ('a, 'wpuf) tac_repr -> ('a, 'wpug) tac_repr =
   fun uu___ -> (fun f -> Obj.magic f) uu___
+type ('a, 'b, 'wpuf, 'f) tac_close = ('a, unit) tac_repr
 let __proj__TAC__item__return = tac_return
 let __proj__TAC__item__bind = tac_bind
 type ('a, 'wp, 'uuuuu, 'uuuuu1) lift_div_tac_wp = 'wp

@@ -1408,7 +1408,7 @@ let modifies_strengthen' #al #c l #r0 #a0 al0 h h' alocs =
     end
     else begin
       assert (loc_disjoint (loc_union l (loc_addresses true r0 (Set.singleton a0))) (loc_of_aloc b))
-          by (let open FStar.Tactics.Builtins in
+          by (let open FStar.Tactics.V2.Builtins in
               let open FStar.Tactics.SMT in
               set_rlimit 64;
               set_options "--z3cliopt 'smt.qi.eager_threshold=5'";
@@ -1496,10 +1496,12 @@ let loc_addresses_unused_in #al c r a h = ()
 
 let loc_addresses_not_unused_in #al c r a h = ()
 
+#push-options "--z3rlimit 15"
 let loc_unused_in_not_unused_in_disjoint #al c h =
   assert (Ghost.reveal (Loc?.aux (loc_unused_in c h)) `loc_aux_disjoint` Ghost.reveal (Loc?.aux (loc_not_unused_in c h)));
   assert_spinoff (loc_disjoint #al #c (loc_unused_in #al c h)
                                       (loc_not_unused_in #al c h))
+#pop-options
 
 #push-options "--z3cliopt 'smt.qi.eager_threshold=100'"
 let not_live_region_loc_not_unused_in_disjoint #al c h0 r
@@ -1791,6 +1793,7 @@ let union_loc_of_loc_addresses #al c b preserve_liveness r n =
 let union_loc_of_loc_regions #al c b preserve_liveness r =
   assert (loc_equal #_ #(cls_union c) (union_loc_of_loc c b (loc_regions #_ #(c b) preserve_liveness r)) (loc_regions #_ #(cls_union c) preserve_liveness r))
 
+#push-options "--z3rlimit 15"
 let union_loc_of_loc_includes_intro
   (#al: (bool -> HS.rid -> nat -> Tot Type))
   (c: ((b: bool) -> Tot (cls (al b))))
@@ -1811,6 +1814,7 @@ let union_loc_of_loc_includes_intro
   let doml = aloc_domain (cls_union c) (Loc?.regions larger) (Loc?.live_addrs larger) in
   let doms = aloc_domain (cls_union c) (Loc?.regions smaller) (Loc?.live_addrs smaller) in
   assert (doml `loc_aux_includes` doms)
+#pop-options
 
 #push-options "--fuel 0 --ifuel 0 --z3rlimit 50 --z3cliopt 'smt.qi.eager_threshold=1'"
 let union_loc_of_loc_includes_elim
@@ -1871,12 +1875,12 @@ let union_loc_of_loc_includes_elim
     (GSet.mem x auxs /\ GSet.mem x.addr (addrs_of_loc_weak smaller x.region)) ==>
     GSet.mem x (GSet.union auxl doml)
   ) by (
-    let open FStar.Tactics.Builtins in
+    let open FStar.Tactics.V2.Builtins in
     set_options "--z3cliopt 'smt.qi.eager_threshold=1'";
     ()
   );
   assert (larger `loc_includes'` smaller) by (
-    let open FStar.Tactics.Builtins in
+    let open FStar.Tactics.V2.Builtins in
     let open FStar.Tactics.SMT in
     set_rlimit 75;
     set_options "--z3cliopt 'smt.qi.eager_threshold=1'";
@@ -1926,7 +1930,7 @@ let union_loc_of_loc_disjoint_intro
     xs.addr `GSet.mem` addrs_of_loc smaller xs.region /\
     aloc_disjoint xl xs
   )) by (
-    let open FStar.Tactics.Builtins in
+    let open FStar.Tactics.V2.Builtins in
     let open FStar.Tactics.SMT in
     set_rlimit 64;
     set_options "--z3cliopt 'smt.qi.eager_threshold=1'";
@@ -2148,7 +2152,7 @@ let raise_loc_addresses #al #c preserve_liveness r a =
 let raise_loc_regions #al #c preserve_liveness r =
   assert (raise_loc u#x u#y (loc_regions #_ #c preserve_liveness r) `loc_equal` loc_regions preserve_liveness r)
 
-#push-options "--z3cliopt 'smt.qi.eager_threshold=100'"
+#push-options "--z3rlimit 15 --z3cliopt 'smt.qi.eager_threshold=100'"
 let raise_loc_includes #al #c l1 l2 =
   let l1' = raise_loc l1 in
   let l2' = raise_loc l2 in

@@ -1545,6 +1545,8 @@ let (run_push_without_deps :
                FStar_TypeChecker_Env.nosynth = flag;
                FStar_TypeChecker_Env.uvar_subtyping =
                  (uu___.FStar_TypeChecker_Env.uvar_subtyping);
+               FStar_TypeChecker_Env.intactics =
+                 (uu___.FStar_TypeChecker_Env.intactics);
                FStar_TypeChecker_Env.tc_term =
                  (uu___.FStar_TypeChecker_Env.tc_term);
                FStar_TypeChecker_Env.typeof_tot_or_gtot_term =

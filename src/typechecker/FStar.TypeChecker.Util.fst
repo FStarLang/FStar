@@ -689,10 +689,82 @@ let close_wp_lcomp env bvs (lc:lcomp) : lcomp =
     (close_wp_comp env bvs)
     (fun g -> g |> Env.close_guard env bs |> close_guard_implicits env false bs)
 
+//
+// Apply substitutive close combinator for indexed effects
+//
+// The effect indices binders in the close combinator are arrows,
+//   so we abstract b_bv on the effect args for the substitutions
+//
+let substitutive_indexed_close_substs (env:env)
+  (close_bs:binders)
+  (a:typ)
+  (b_bv:bv)
+  (ct_args:args)
+  (num_effect_params:int)
+  (r:Range.range)
+
+  : list subst_elt =
+  
+  let debug = Env.debug env <| Options.Other "LayeredEffectsApp" in
+
+  // go through the binders bs and aggregate substitutions
+  let close_bs, subst =
+    let a_b::b_b::close_bs = close_bs in
+    close_bs, [NT (a_b.binder_bv, a); NT (b_b.binder_bv, b_bv.sort)] in
+  
+  let close_bs, subst, ct_args =
+    let eff_params_bs, close_bs = List.splitAt num_effect_params close_bs in
+    let ct_eff_params_args, ct_args = List.splitAt num_effect_params ct_args in
+    close_bs,
+    (subst@
+     List.map2 (fun b (arg, _) -> NT (b.binder_bv, arg)) eff_params_bs ct_eff_params_args),
+    ct_args in
+
+  let close_bs, _ = List.splitAt (List.length close_bs - 1) close_bs in
+  List.fold_left2 (fun ss b (ct_arg, _) ->
+    ss@[NT (b.binder_bv, U.abs [b_bv |> S.mk_binder] ct_arg None)]
+  ) subst close_bs ct_args
+
+//
+// The caller ensures that the effect has the close combinator defined
+//
+let close_layered_comp_with_combinator (env:env) (bvs:list bv) (c:comp) : comp =
+  let r = c.pos in
+  
+  let env_bvs = Env.push_bvs env bvs in
+  let ct = Env.unfold_effect_abbrev env_bvs c in
+  let ed = Env.get_effect_decl env_bvs ct.effect_name in
+  let num_effect_params =
+    match ed.signature with
+    | Layered_eff_sig (n, _) -> n
+    | _ -> raise_error (Errors.Fatal_UnexpectedEffect,
+                        "mk_indexed_close called with a non-indexed effect") r in
+  let close_ts = U.get_layered_close_combinator ed |> must in
+  let effect_args = List.fold_right (fun x args ->
+    let u_a = List.hd ct.comp_univs in
+    let u_b = env.universe_of env_bvs x.sort in
+    let _, close_t = Env.inst_tscheme_with close_ts [u_a; u_b] in
+    let close_bs, close_body, _ = U.abs_formals close_t in
+    let ss = substitutive_indexed_close_substs
+      env_bvs close_bs ct.result_typ x args num_effect_params r in
+    match (SS.compress (SS.subst ss close_body)).n with
+    | Tm_app { args = _::args} -> args
+    | _ -> raise_error (Errors.Fatal_UnexpectedEffect,
+                        "Unexpected close combinator shape") r
+  ) bvs ct.effect_args in
+  S.mk_Comp {ct with effect_args}
+
+let close_layered_lcomp_with_combinator env bvs lc =
+  let bs = bvs |> List.map S.mk_binder in
+  lc |>
+  TcComm.apply_lcomp
+    (close_layered_comp_with_combinator env bvs)
+    (fun g -> g |> Env.close_guard env bs |> close_guard_implicits env false bs)
+
 (*
- * Closing of layered computations happens via substitution
+ * Closing of layered computations via substitution
  *)
-let close_layered_lcomp env bvs tms (lc:lcomp) =
+let close_layered_lcomp_with_substitutions env bvs tms (lc:lcomp) =
   let bs = bvs |> List.map S.mk_binder in
   let substs = List.map2 (fun bv tm ->
     NT (bv, tm)
@@ -2221,16 +2293,15 @@ let maybe_monadic env e c t =
 
 let coerce_with (env:Env.env)
                 (e : term) (lc : lcomp) // original term and its computation type
-                (ty : typ) // new result typ
                 (f : lident) // coercion
                 (us : universes) (eargs : args) // extra arguments to coertion
-                (mkcomp : term -> comp)
+                (comp2 : comp) // new result computation type
                 : term * lcomp =
     match Env.try_lookup_lid env f with
     | Some _ ->
         if Env.debug env (Options.Other "Coercions") then
             BU.print1 "Coercing with %s!\n" (Ident.string_of_lid f);
-        let lc2 = TcComm.lcomp_of_comp <| mkcomp ty in
+        let lc2 = TcComm.lcomp_of_comp <| comp2 in
         let lc_res = bind e.pos env (Some e) lc (None, lc2) in
         let coercion = S.fvar (Ident.set_lid_range f e.pos) None in
         let coercion = S.mk_Tm_uinst coercion us in
@@ -2247,7 +2318,7 @@ let coerce_with (env:Env.env)
           else let x = S.new_bv (Some e.pos) lc.res_typ in
                let e2 = mk_Tm_app coercion (eargs@[x |> S.bv_to_name |> S.as_arg]) e.pos in
                let e = maybe_lift env e lc.eff_name lc_res.eff_name lc.res_typ in
-               let e2 = maybe_lift (Env.push_bv env x) e2 lc2.eff_name lc_res.eff_name ty in
+               let e2 = maybe_lift (Env.push_bv env x) e2 lc2.eff_name lc_res.eff_name lc2.res_typ in
                let lb = U.mk_letbinding (Inl x) [] lc.res_typ lc_res.eff_name e [] e.pos in
                let e = mk (Tm_let {lbs=(false, [lb]); body=SS.close [S.mk_binder x] e2}) e.pos in
                maybe_monadic env e lc_res.eff_name lc_res.res_typ in
@@ -2323,99 +2394,100 @@ let rec check_erased (env:Env.env) (t:term) : isErased =
   (*      | No -> "No"); *)
   r
 
+let rec first_opt (f : 'a -> option 'b) (xs : list 'a) : option 'b =
+  match xs with
+  | [] -> None
+  | x::xs -> BU.catch_opt (f x) (fun () -> first_opt f xs)
+
+let find_coercion (env:Env.env) (checked: lcomp) (exp_t: typ) : option (lid & comp) = // returns coercion and new comp type
+ Errors.with_ctx "find_coercion" (fun () ->
+  let is_type t =
+      let t = N.unfold_whnf env t in
+      let t = U.unrefine t in (* mostly to catch `prop` too *)
+      match (SS.compress t).n with
+      | Tm_type _ -> true
+      | _ -> false
+  in
+  let in_scope lid = Some? (Env.try_lookup_lid env lid) in
+  let res_typ = U.unrefine checked.res_typ in
+  let head, args = U.head_and_args res_typ in
+  match (U.un_uinst head).n, args with
+  (* b2t is primitive... for now *)
+  | Tm_fvar fv, [] when S.fv_eq_lid fv C.bool_lid && is_type exp_t ->
+    Some (C.b2t_lid, S.mk_Total U.ktype0)
+
+  (* attributes *)
+  |  _ ->
+    let (let?) = BU.bind_opt in
+    let candidates = Env.lookup_attr env "FStar.Pervasives.coercion" in
+    if Cons? candidates then begin
+      candidates |> first_opt (fun se ->
+        let? name, typ =
+          match se.sigel with
+          | Sig_let {lbs=(_,[lb])} -> Some (S.lid_of_fv (BU.right lb.lbname), lb.lbtyp)
+          | Sig_declare_typ {lid; t} -> Some (lid, t)
+          | _ -> None
+        in
+        (* Errors.diag checked.res_typ.pos *)
+        (*   (BU.format2 "considering candidate %s of typ %s" (Print.sigelt_to_string_short se) (Print.term_to_string typ)); *)
+        let bs, c = U.arrow_formals_comp typ in
+        if List.length bs <> 1 then None else
+        let [b] = bs in
+        let c_checked  = N.unfold_whnf env (U.comp_result c) in
+        let c_expected = N.unfold_whnf env exp_t in
+        let b_expected = N.unfold_whnf env b.binder_bv.sort in
+        let b_checked  = N.unfold_whnf env checked.res_typ in
+        if U.term_eq b_checked b_expected && U.term_eq c_checked c_expected
+        then Some (name, c)
+        else None
+      )
+    end else None
+
+  | _ -> None
+)
+
 let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : term * lcomp * guard_t =
-    let should_coerce =
-        env.phase1
-      || env.lax
-      || Options.lax ()
-    in
-    if not should_coerce
-    then (e, lc, Env.trivial_guard)
-    else
-    let is_t_term t =
-        let t = N.unfold_whnf env t in
-        match (SS.compress t).n with
-        | Tm_fvar fv -> S.fv_eq_lid fv C.term_lid
-        | _ -> false
-    in
-    let is_t_term_view t =
-        let t = N.unfold_whnf env t in
-        match (SS.compress t).n with
-        | Tm_fvar fv -> S.fv_eq_lid fv C.term_view_lid
-        | _ -> false
-    in
-    let is_type t =
-        let t = N.unfold_whnf env t in
-        let t = U.unrefine t in (* mostly to catch `prop` too *)
-        match (SS.compress t).n with
-        | Tm_type _ -> true
-        | _ -> false
-    in
-    let res_typ = U.unrefine lc.res_typ in
-    let head, args = U.head_and_args res_typ in
-    if Env.debug env (Options.Other "Coercions") then
+  let should_coerce =
+      env.phase1
+    || env.lax
+    || Options.lax ()
+  in
+  if not should_coerce
+  then (e, lc, Env.trivial_guard)
+  else
+    let _ = if Env.debug env (Options.Other "Coercions") then
             BU.print4 "(%s) Trying to coerce %s from type (%s) to type (%s)\n"
                     (Range.string_of_range e.pos)
                     (Print.term_to_string e)
-                    (Print.term_to_string res_typ)
-                    (Print.term_to_string exp_t);
-
-    let mk_erased u t =
-      U.mk_app
-        (S.mk_Tm_uinst (fvar_env env C.erased_lid) [u])
-        [S.as_arg t]
+                    (Print.term_to_string lc.res_typ)
+                    (Print.term_to_string exp_t)
     in
-    match (U.un_uinst head).n, args with
-    | Tm_fvar fv, [] when S.fv_eq_lid fv C.bool_lid && is_type exp_t ->
-        let e, lc = coerce_with env e lc U.ktype0 C.b2t_lid [] [] S.mk_Total in
-        e, lc, Env.trivial_guard
+    match find_coercion env lc exp_t with
+    | Some (f, c) ->
+      let e, lc = coerce_with env e lc f [] [] c in
+      e, lc, Env.trivial_guard // explain
+    | None ->
+      (* TODO: also coercions? it's trickier for sure *)
+      match check_erased env lc.res_typ, check_erased env exp_t with
+      | No, Yes ty ->
+          begin
+          let u = env.universe_of env ty in
+          match Rel.get_subtyping_predicate env lc.res_typ ty with
+          | None ->
+            e, lc, Env.trivial_guard
+          | Some g ->
+            let g = Env.apply_guard g e in
+            let e, lc = coerce_with env e lc C.hide [u] [S.iarg ty] (S.mk_Total exp_t) in
+            e, lc, g
+          end
 
-
-    | Tm_fvar fv, [] when S.fv_eq_lid fv C.term_lid && is_t_term_view exp_t ->
-        let e, lc = coerce_with env e lc S.t_term_view C.inspect [] [] S.mk_Tac in
-        e, lc, Env.trivial_guard
-
-    | Tm_fvar fv, [] when S.fv_eq_lid fv C.term_view_lid && is_t_term exp_t ->
-        let e, lc = coerce_with env e lc S.t_term C.pack [] [] S.mk_Tac in
-        e, lc, Env.trivial_guard
-
-    | Tm_fvar fv, [] when S.fv_eq_lid fv C.binder_lid && is_t_term exp_t ->
-        let e, lc = coerce_with env e lc S.t_term C.binder_to_term [] [] S.mk_Tac in
-        e, lc, Env.trivial_guard
-
-    | _ ->
-    match check_erased env res_typ, check_erased env exp_t with
-    | No, Yes ty ->
-        begin
-        let u = env.universe_of env ty in
-        match Rel.get_subtyping_predicate env res_typ ty with
-        | None ->
+      | Yes ty, No ->
+          let u = env.universe_of env ty in
+          let e, lc = coerce_with env e lc C.reveal [u] [S.iarg ty] (S.mk_GTotal ty) in
           e, lc, Env.trivial_guard
-        | Some g ->
-          let g = Env.apply_guard g e in
-          let e, lc = coerce_with env e lc exp_t C.hide [u] [S.iarg ty] S.mk_Total in
-          e, lc, g
-        end
 
-    | Yes ty, No ->
-        let u = env.universe_of env ty in
-        let e, lc = coerce_with env e lc ty C.reveal [u] [S.iarg ty] S.mk_GTotal in
+      | _ ->
         e, lc, Env.trivial_guard
-
-    | _ ->
-      e, lc, Env.trivial_guard
-
-(* Coerces regardless of expected type if a view exists, useful for matches *)
-(* Returns `None` if no coercion was applied. *)
-let coerce_views (env:Env.env) (e:term) (lc:lcomp) : option (term * lcomp) =
-    let rt = lc.res_typ in
-    let rt = U.unrefine rt in
-    let hd, args = U.head_and_args rt in
-    match (SS.compress hd).n, args with
-    | Tm_fvar fv, [] when S.fv_eq_lid fv C.term_lid ->
-        Some <| coerce_with env e lc S.t_term_view C.inspect [] [] S.mk_Tac
-    | _ ->
-        None
 
 let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) (use_eq:bool) : term * lcomp * guard_t =
   if Env.debug env Options.High then
