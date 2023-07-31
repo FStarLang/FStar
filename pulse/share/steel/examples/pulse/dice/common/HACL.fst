@@ -10,8 +10,18 @@ module A = Steel.ST.Array
 module T = FStar.Tactics
 module US = FStar.SizeT
 module U8 = FStar.UInt8
+module U32 = FStar.UInt32
+open Array 
 
-let elseq (a:Type) (l:nat) = s:Ghost.erased (Seq.seq a) { Seq.length s == l }
+let v32us : US.t = 32sz
+
+let coerce (l:US.t) (s:erased (elseq U8.t l)) : erased (Seq.seq U8.t)
+  = let s_ = reveal s in 
+    hide s_
+
+let coerce_refined (l:US.t) (s:erased (Seq.seq U8.t){Seq.length (reveal s) == US.v l}) : erased (elseq U8.t l)
+  = let s_ = reveal s in 
+    hide s_
 
 (* a tiny model of HACL* hashes *)
 
@@ -49,12 +59,11 @@ val spec_hash
 
 assume
 val hacl_hash (alg:alg_t)
-              (src:A.array U8.t) 
-              (src_len: hashable_len { US.v src_len == A.length src })
+              (src_len: hashable_len)
+              (src:A.larray U8.t (US.v src_len))
               (dst:A.larray U8.t (US.v (digest_len alg)))
               (#psrc:perm)
-              (#src_seq:Ghost.erased (Seq.seq U8.t))
-              (#dst_seq:Ghost.erased (Seq.seq U8.t))
+              (#src_seq #dst_seq:erased (Seq.seq U8.t))
   : stt unit
     (A.pts_to dst full_perm dst_seq `star`
      A.pts_to src psrc src_seq)
@@ -77,9 +86,9 @@ val hacl_hmac (alg:alg_t)
               (msg:A.array U8.t)
               (msg_len: hashable_len { US.v msg_len == A.length msg })
               (#pkey #pmsg:perm)
-              (#dst_seq:Ghost.erased (Seq.seq U8.t))
-              (#key_seq:Ghost.erased (Seq.seq U8.t))
-              (#msg_seq:Ghost.erased (Seq.seq U8.t))
+              (#dst_seq:erased (Seq.seq U8.t))
+              (#key_seq:erased (Seq.seq U8.t))
+              (#msg_seq:erased (Seq.seq U8.t))
   : stt unit
     (A.pts_to dst full_perm dst_seq `star`
      A.pts_to key pkey key_seq `star`
@@ -94,12 +103,13 @@ val spec_ed25519_verify (pubk hdr sig:Seq.seq U8.t) : prop
 
 assume
 val ed25519_verify 
-  (pubk:A.larray U8.t 32)
+  (pubk:A.larray U8.t (US.v v32us))
   (hdr:A.array U8.t)
   (hdr_len:signable_len { US.v hdr_len == A.length hdr })
   (sig:A.larray U8.t 64)
   (#ppubk #phdr #psig:perm)
-  (#pubk_seq #hdr_seq #sig_seq:Ghost.erased (Seq.seq U8.t))
+  (#pubk_seq:erased (elseq U8.t v32us))
+  (#hdr_seq #sig_seq:erased (Seq.seq U8.t))
   : stt bool
     (A.pts_to pubk ppubk pubk_seq `star`
      A.pts_to hdr phdr hdr_seq `star`
@@ -116,11 +126,13 @@ val spec_ed25519_sign (privk msg:Seq.seq U8.t) : Seq.seq U8.t
 assume
 val ed25519_sign 
   (buf:A.array U8.t)
-  (privk:A.array U8.t)
+  (privk:A.larray U8.t (US.v v32us))
   (len:US.t)
-  (msg:A.array U8.t)
+  (msg:A.larray U8.t (US.v len))
   (#pprivk #pmsg:perm)
-  (#buf0 #privk_seq #msg_seq:Ghost.erased (Seq.seq U8.t))
+  (#buf0:erased (Seq.seq U8.t))
+  (#privk_seq:erased (elseq U8.t v32us))
+  (#msg_seq:erased (elseq U8.t len))
   : stt unit
     (A.pts_to buf full_perm buf0 `star`
      A.pts_to privk pprivk privk_seq `star`
@@ -136,7 +148,7 @@ val ed25519_sign
 assume
 val dice_hash_alg : alg_t
 
-let dice_digest_len : US.t = digest_len dice_hash_alg
+let dice_digest_len : hashable_len = assume (is_hashable_len (digest_len dice_hash_alg)); digest_len dice_hash_alg
 
 assume 
 val dice_digest_len_is_hashable 
@@ -148,4 +160,4 @@ val dice_digest_len_is_hkdf_ikm
 
 assume
 val is_hashable_len_32
-  : is_hashable_len 32sz
+  : is_hashable_len v32us

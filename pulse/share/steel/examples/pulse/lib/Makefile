@@ -1,6 +1,6 @@
 all: verify
 
-# assuming share/steel/examples/pulse/bug-reports
+# assuming share/steel/examples/pulse/lib
 STEEL_HOME ?= ../../../../..
 
 FSTAR_OPTIONS = --include $(STEEL_HOME)/lib/steel/pulse

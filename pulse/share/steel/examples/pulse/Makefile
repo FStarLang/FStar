@@ -1,4 +1,8 @@
-all: verify verify-bug-reports verify-dice
+all: verify verify-lib verify-bug-reports verify-dice
+
+.PHONY: verify-lib
+verify-lib:
+	$(MAKE) -C lib verify
 
 .PHONY: verify-bug-reports
 verify-bug-reports:
