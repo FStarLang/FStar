@@ -3568,7 +3568,7 @@ and desugar_decl_maybe_fail_attr env (d: decl): (env_t * sigelts) =
                    sigquals = [];
                    sigrng = d.drange;
                    sigmeta = default_sigmeta;
-                   sigattrs = [];
+                   sigattrs = attrs;
                    sigopts = None; } in
         env0, [se]
 

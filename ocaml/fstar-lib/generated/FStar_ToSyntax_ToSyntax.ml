@@ -8659,7 +8659,7 @@ and (desugar_decl_maybe_fail_attr :
                           FStar_Syntax_Syntax.sigquals = [];
                           FStar_Syntax_Syntax.sigmeta =
                             FStar_Syntax_Syntax.default_sigmeta;
-                          FStar_Syntax_Syntax.sigattrs = [];
+                          FStar_Syntax_Syntax.sigattrs = attrs;
                           FStar_Syntax_Syntax.sigopts =
                             FStar_Pervasives_Native.None
                         } in
