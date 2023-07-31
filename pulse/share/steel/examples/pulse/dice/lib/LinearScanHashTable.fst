@@ -1,4 +1,5 @@
 module LinearScanHashTable
+module US = FStar.SizeT
 
 let unreachable #a (_:squash False) : a =
   coerce_eq () 42
@@ -118,7 +119,7 @@ type pht (s : pht_sig) = {
   // somehow? Does it also get erased? (I think so, but double check)
   spec : Ghost.erased (spec_t s);
   repr : Seq.lseq (cell s.keyt s.valt) sz;
-  inv : squash (pht_models s sz spec repr);
+  inv : squash (pht_models s sz spec repr /\ US.fits sz);
 }
   
 let upd_ #s #sz (repr : repr_t s sz) idx k v : repr_t s sz =
@@ -614,3 +615,13 @@ let lookup_index #s (ht : pht s) (k : s.keyt)
 : o:(option (s.valt & nat))
 =
   lookup_repr_index ht.repr k
+
+type bound_us = n:US.t{US.fits (US.v n)}
+
+let lookup_index_us #s (ht : pht s) (k : s.keyt)
+: o:(option (s.valt & bound_us))
+=
+  let o = lookup_repr_index ht.repr k in
+  match o with
+  | Some (v,i) -> Some (v, US.uint_to_t i)
+  | None -> None
