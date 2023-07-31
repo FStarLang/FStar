@@ -67,36 +67,37 @@ fn pulse_lookup_index (#s:pht_sig) (#pht:(p:pht s{not_full p.repr}))
     let voff = !off;
     if (voff = sz) {
       cont := false;
-      assert_ (R.pts_to ret full_perm None);
-      assert_ (pure (walk_get_idx pht.repr (US.v cidx) k (US.v voff) == None));
+      assert (R.pts_to ret full_perm None);
     } else {
       let idx = modulo_us sz cidx voff;
-      let c = op_Array_Index_nat ht.contents #full_perm #pht.repr (US.v idx);
+      let c = op_Array_Index_nat ht.contents #full_perm #pht.repr (US.v idx); 
       match c {
         Used k' v' -> {
           if (k' = k) {
             cont := false;
             write ret (Some (v',idx)) #None;
-            assert_ (pure (pht.repr @@ US.v idx == Used k' v'));
-            assert_ (pure (lookup_repr_index pht.repr k == Some (v', US.v idx)));
+            assert (pure (pht.repr @@ US.v idx == Used k' v'));
+            assert (pure (lookup_repr_index pht.repr k == Some (v', US.v idx)));
           } else {
             off := voff + 1sz;
-            assert_ (pure (walk_get_idx pht.repr (US.v cidx) k (US.v voff) == walk_get_idx pht.repr (US.v cidx) k (US.v (voff+1sz))));
+            assert (pure (walk_get_idx pht.repr (US.v cidx) k (US.v voff) 
+              == walk_get_idx pht.repr (US.v cidx) k (US.v (voff+1sz))));
           }}
         Clean -> {
           cont := false;
-          assert_ (pure (walk_get_idx pht.repr (US.v cidx) k (US.v voff) == None));
-          assert_ (R.pts_to ret full_perm (PHT.lookup_index_us pht k));
+          assert (pure (walk_get_idx pht.repr (US.v cidx) k (US.v voff) == None));
+          assert (R.pts_to ret full_perm (PHT.lookup_index_us pht k));
          }
         Zombie -> {
           off := voff + 1sz;
-          assert_ (pure (walk_get_idx pht.repr (US.v cidx) k (US.v voff) == walk_get_idx pht.repr (US.v cidx) k (US.v (voff+1sz))));
+          assert (pure (walk_get_idx pht.repr (US.v cidx) k (US.v voff) 
+            == walk_get_idx pht.repr (US.v cidx) k (US.v (voff+1sz))));
          }
       };
     };
   };
   fold (models s ht pht);
-  assert_ (R.pts_to ret full_perm (PHT.lookup_index_us pht k));
+  assert (R.pts_to ret full_perm (PHT.lookup_index_us pht k));
   let o = !ret;
   o
 }
@@ -148,7 +149,7 @@ fn insert (#s:pht_sig) (#pht:(p:pht s{not_full p.repr}))
     let voff = !off;
     if (voff = sz) {
       cont := false;
-      assert_ (A.pts_to ht.contents full_perm pht.repr);
+      assert (A.pts_to ht.contents full_perm pht.repr);
     } else {
       let idx = modulo_us sz cidx voff;
       let c = op_Array_Index ht.contents #full_perm #pht.repr idx;
@@ -157,7 +158,7 @@ fn insert (#s:pht_sig) (#pht:(p:pht s{not_full p.repr}))
           if (k' = k) {
             op_Array_Assignment ht.contents idx (mk_used_cell k v);
             cont := false;
-            assert_ (pure (insert_repr #s #pht.sz #pht.spec pht.repr k v `Seq.equal` 
+            assert (pure (insert_repr #s #pht.sz #pht.spec pht.repr k v `Seq.equal` 
               Seq.upd pht.repr (US.v idx) (mk_used_cell k v))); 
           } else {
             off := voff + 1sz;
@@ -166,7 +167,7 @@ fn insert (#s:pht_sig) (#pht:(p:pht s{not_full p.repr}))
         Clean -> {
           op_Array_Assignment ht.contents idx (mk_used_cell k v);
           cont := false;
-          assert_ (pure (insert_repr #s #pht.sz #pht.spec pht.repr k v `Seq.equal` 
+          assert (pure (insert_repr #s #pht.sz #pht.spec pht.repr k v `Seq.equal` 
             Seq.upd pht.repr (US.v idx) (mk_used_cell k v)));
         }
         Zombie -> {
@@ -178,13 +179,14 @@ fn insert (#s:pht_sig) (#pht:(p:pht s{not_full p.repr}))
               op_Array_Assignment ht.contents (snd p) Zombie;
               op_Array_Assignment ht.contents idx (mk_used_cell k v);
               cont := false;
-              assert_ (pure (insert_repr #s #pht.sz #pht.spec pht.repr k v `Seq.equal` 
+              assert (pure (insert_repr #s #pht.sz #pht.spec pht.repr k v `Seq.equal` 
                 Seq.upd (Seq.upd pht.repr (US.v (snd p)) Zombie) (US.v idx) (mk_used_cell k v)));
             }
             None -> { 
               op_Array_Assignment ht.contents idx (mk_used_cell k v); 
               cont := false;
-              assert_ (pure (insert_repr #s #pht.sz #pht.spec pht.repr k v `Seq.equal` Seq.upd pht.repr (US.v idx) (mk_used_cell k v)));
+              assert (pure (insert_repr #s #pht.sz #pht.spec pht.repr k v 
+                `Seq.equal` Seq.upd pht.repr (US.v idx) (mk_used_cell k v)));
             }
           };
         }
@@ -219,31 +221,33 @@ fn delete (#s:pht_sig) (#pht:pht s)
       voff <= sz /\
       all_used_not_by pht.repr (US.v cidx) (US.v voff) k /\
       walk pht.repr (US.v cidx) k (US.v voff) == lookup_repr pht.repr k /\
-      delete_repr_walk #s #pht.sz #pht.spec pht.repr k (US.v voff) (US.v cidx) () () == delete_repr #s #pht.sz #pht.spec pht.repr k /\
+      delete_repr_walk #s #pht.sz #pht.spec pht.repr k (US.v voff) (US.v cidx) () () 
+        == delete_repr #s #pht.sz #pht.spec pht.repr k /\
       b == (voff <= sz && vcont = true)
     ))
   {
     let voff = !off;
     if (voff = sz) {
       cont := false;
-      assert_ (A.pts_to ht.contents full_perm pht.repr);
+      assert (A.pts_to ht.contents full_perm pht.repr);
     } else {
       let idx = modulo_us sz cidx voff;
       let c = op_Array_Index ht.contents #full_perm #pht.repr idx;
       match c {
         Used k' v' -> { 
           if (k' = k) {
-            op_Array_Assignment ht.contents idx Zombie #pht.repr;
+            op_Array_Assignment ht.contents idx Zombie;
             cont := false;
-            assert_ (pure (pht.repr @@ US.v idx == Used k v'));
-            assert_ (pure (Seq.upd pht.repr (US.v idx) Zombie `Seq.equal` (PHT.delete pht k).repr));
+            assert (pure (pht.repr @@ US.v idx == Used k v'));
+            assert (pure (Seq.upd pht.repr (US.v idx) Zombie 
+              `Seq.equal` (PHT.delete pht k).repr));
           } else {
             off := voff + 1sz;
           } 
         }
         Clean -> {
           cont := false;
-          assert_ (pure (pht.repr == (PHT.delete pht k).repr));
+          assert (pure (pht.repr == (PHT.delete pht k).repr));
         }
         Zombie -> { 
           off := voff + 1sz;
