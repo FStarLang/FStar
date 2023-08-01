@@ -8,6 +8,9 @@ MAKEFLAGS += --no-builtin-rules
 
 .PHONY: clean boot ocaml
 
+all:
+	$(error src/Makefile: Need to specify a rule)
+
 clean: clean-ocaml
 
 # --------------------------------------------------------------------
