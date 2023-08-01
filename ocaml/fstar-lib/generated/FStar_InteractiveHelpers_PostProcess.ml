@@ -2673,6 +2673,7 @@ let _ =
        fun ncb ->
          fun args ->
            FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_4
+             "FStar.InteractiveHelpers.PostProcess.pp_analyze_effectful_term (plugin)"
              (FStar_Tactics_Native.from_tactic_4 pp_analyze_effectful_term)
              FStar_Syntax_Embeddings.e_bool FStar_Syntax_Embeddings.e_bool
              FStar_Syntax_Embeddings.e_bool FStar_Syntax_Embeddings.e_unit
@@ -3254,6 +3255,7 @@ let _ =
        fun ncb ->
          fun args ->
            FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_2
+             "FStar.InteractiveHelpers.PostProcess.pp_split_assert_conjs (plugin)"
              (FStar_Tactics_Native.from_tactic_2 pp_split_assert_conjs)
              FStar_Syntax_Embeddings.e_bool FStar_Syntax_Embeddings.e_unit
              FStar_Syntax_Embeddings.e_unit psc ncb args)
@@ -8345,6 +8347,7 @@ let _ =
        fun ncb ->
          fun args ->
            FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_2
+             "FStar.InteractiveHelpers.PostProcess.pp_unfold_in_assert_or_assume (plugin)"
              (FStar_Tactics_Native.from_tactic_2
                 pp_unfold_in_assert_or_assume) FStar_Syntax_Embeddings.e_bool
              FStar_Syntax_Embeddings.e_unit FStar_Syntax_Embeddings.e_unit

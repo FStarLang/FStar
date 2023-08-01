@@ -2044,26 +2044,52 @@ let (splice :
                                               (se.FStar_Syntax_Syntax.sigopts)
                                           }
                                       | uu___7 -> se) sigelts in
-                               ((let uu___8 =
-                                   FStar_Compiler_List.existsML
-                                     (fun g1 ->
-                                        let uu___9 =
-                                          let uu___10 =
-                                            let uu___11 =
-                                              FStar_Tactics_Types.goal_env g1 in
-                                            let uu___12 =
-                                              FStar_Tactics_Types.goal_type
-                                                g1 in
-                                            getprop uu___11 uu___12 in
-                                          FStar_Compiler_Option.isSome
-                                            uu___10 in
-                                        Prims.op_Negation uu___9) gs in
-                                 if uu___8
-                                 then
-                                   FStar_Errors.raise_error
-                                     (FStar_Errors_Codes.Fatal_OpenGoalsInSynthesis,
-                                       "splice left open goals") rng
-                                 else ());
+                               (FStar_Compiler_List.iter
+                                  (fun g1 ->
+                                     let uu___8 =
+                                       let uu___9 =
+                                         FStar_Tactics_Types.goal_env g1 in
+                                       let uu___10 =
+                                         FStar_Tactics_Types.goal_type g1 in
+                                       getprop uu___9 uu___10 in
+                                     match uu___8 with
+                                     | FStar_Pervasives_Native.Some vc ->
+                                         ((let uu___10 =
+                                             FStar_Compiler_Effect.op_Bang
+                                               FStar_Tactics_V2_Interpreter.tacdbg in
+                                           if uu___10
+                                           then
+                                             let uu___11 =
+                                               FStar_Syntax_Print.term_to_string
+                                                 vc in
+                                             FStar_Compiler_Util.print1
+                                               "Splice left a goal: %s\n"
+                                               uu___11
+                                           else ());
+                                          (let guard =
+                                             {
+                                               FStar_TypeChecker_Common.guard_f
+                                                 =
+                                                 (FStar_TypeChecker_Common.NonTrivial
+                                                    vc);
+                                               FStar_TypeChecker_Common.deferred_to_tac
+                                                 = [];
+                                               FStar_TypeChecker_Common.deferred
+                                                 = [];
+                                               FStar_TypeChecker_Common.univ_ineqs
+                                                 = ([], []);
+                                               FStar_TypeChecker_Common.implicits
+                                                 = []
+                                             } in
+                                           let uu___10 =
+                                             FStar_Tactics_Types.goal_env g1 in
+                                           FStar_TypeChecker_Rel.force_trivial_guard
+                                             uu___10 guard))
+                                     | FStar_Pervasives_Native.None ->
+                                         FStar_Errors.raise_error
+                                           (FStar_Errors_Codes.Fatal_OpenGoalsInSynthesis,
+                                             "splice left open goals") rng)
+                                  gs;
                                 (let lids' =
                                    FStar_Compiler_List.collect
                                      FStar_Syntax_Util.lids_of_sigelt
