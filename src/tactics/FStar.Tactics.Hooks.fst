@@ -876,15 +876,25 @@ let splice (env:Env.env) (is_typed:bool) (lids:list Ident.lident) (tau:term) (rn
       ) sigelts
     in
 
-    // Check that all goals left are irrelevant. We don't need to check their
-    // validity, as we will typecheck the witness independently.
-
+    // Check that all goals left are irrelevant and solve them.
     // TODO: Do not retypecheck and do just like `synth`. But that's hard.. what to do for inductives,
     // for instance? We would need to reflect *all* of F* static semantics into Meta-F*, and
     // that is a ton of work.
-
-    if List.existsML (fun g -> not (Option.isSome (getprop (goal_env g) (goal_type g)))) gs
-        then Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "splice left open goals") rng;
+    List.iter (fun g ->
+        match getprop (goal_env g) (goal_type g) with
+        | Some vc ->
+            begin
+            if !tacdbg then
+              BU.print1 "Splice left a goal: %s\n" (Print.term_to_string vc);
+            let guard = { guard_f = NonTrivial vc
+                        ; deferred_to_tac = []
+                        ; deferred = []
+                        ; univ_ineqs = [], []
+                        ; implicits = [] } in
+            TcRel.force_trivial_guard (goal_env g) guard
+            end
+        | None ->
+            Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "splice left open goals") rng) gs;
 
     let lids' = List.collect U.lids_of_sigelt sigelts in
     List.iter (fun lid ->
