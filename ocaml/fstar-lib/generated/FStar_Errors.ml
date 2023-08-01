@@ -519,6 +519,52 @@ let (diag : FStar_Compiler_Range_Type.range -> Prims.string -> unit) =
           (mk_issue EInfo (FStar_Pervasives_Native.Some r) msg
              FStar_Pervasives_Native.None [])
       else ()
+let (diag0 : Prims.string -> unit) =
+  fun msg ->
+    let uu___ = FStar_Options.debug_any () in
+    if uu___
+    then
+      add_one
+        (mk_issue EInfo FStar_Pervasives_Native.None msg
+           FStar_Pervasives_Native.None [])
+    else ()
+let (diag1 : Prims.string -> Prims.string -> unit) =
+  fun f ->
+    fun a -> let uu___ = FStar_Compiler_Util.format1 f a in diag0 uu___
+let (diag2 : Prims.string -> Prims.string -> Prims.string -> unit) =
+  fun f ->
+    fun a ->
+      fun b -> let uu___ = FStar_Compiler_Util.format2 f a b in diag0 uu___
+let (diag3 :
+  Prims.string -> Prims.string -> Prims.string -> Prims.string -> unit) =
+  fun f ->
+    fun a ->
+      fun b ->
+        fun c ->
+          let uu___ = FStar_Compiler_Util.format3 f a b c in diag0 uu___
+let (diag4 :
+  Prims.string ->
+    Prims.string -> Prims.string -> Prims.string -> Prims.string -> unit)
+  =
+  fun f ->
+    fun a ->
+      fun b ->
+        fun c ->
+          fun d ->
+            let uu___ = FStar_Compiler_Util.format4 f a b c d in diag0 uu___
+let (diag5 :
+  Prims.string ->
+    Prims.string ->
+      Prims.string -> Prims.string -> Prims.string -> Prims.string -> unit)
+  =
+  fun f ->
+    fun a ->
+      fun b ->
+        fun c ->
+          fun d ->
+            fun e ->
+              let uu___ = FStar_Compiler_Util.format5 f a b c d e in
+              diag0 uu___
 let (warn_unsafe_options :
   FStar_Compiler_Range_Type.range FStar_Pervasives_Native.option ->
     Prims.string -> unit)
@@ -548,7 +594,7 @@ let (set_option_warning_callback_range :
   FStar_Compiler_Range_Type.range FStar_Pervasives_Native.option -> unit) =
   fun ropt ->
     FStar_Options.set_option_warning_callback (warn_unsafe_options ropt)
-let (uu___299 :
+let (uu___342 :
   (((Prims.string -> FStar_Errors_Codes.error_setting Prims.list) -> unit) *
     (unit -> FStar_Errors_Codes.error_setting Prims.list)))
   =
@@ -594,10 +640,10 @@ let (uu___299 :
   (set_callbacks, get_error_flags)
 let (t_set_parse_warn_error :
   (Prims.string -> FStar_Errors_Codes.error_setting Prims.list) -> unit) =
-  match uu___299 with
+  match uu___342 with
   | (t_set_parse_warn_error1, error_flags) -> t_set_parse_warn_error1
 let (error_flags : unit -> FStar_Errors_Codes.error_setting Prims.list) =
-  match uu___299 with
+  match uu___342 with
   | (t_set_parse_warn_error1, error_flags1) -> error_flags1
 let (set_parse_warn_error :
   (Prims.string -> FStar_Errors_Codes.error_setting Prims.list) -> unit) =
