@@ -2805,7 +2805,7 @@ let mk_data_projector_names iquals env se : list sigelt =
 let mk_typ_abbrev env d lid uvs typars kopt t lids quals rng =
     (* fetch attributes here to support `deprecated`, just as for
      * TopLevelLet (see comment there) *)
-    let attrs = List.map (desugar_term env) d.attrs in
+    let attrs = U.deduplicate_terms (List.map (desugar_term env) d.attrs) in
     let val_attrs = Env.lookup_letbinding_quals_and_attrs env lid |> snd in
     let dd = incr_delta_qualifier t in
     let lb = {
@@ -3552,7 +3552,7 @@ and desugar_decl_maybe_fail_attr env (d: decl): (env_t * sigelts) =
    * If it does, check that the errors match as we normally do.
    * If it doesn't fail, leave it alone! The typechecker will check the failure. *)
   let env, sigelts =
-    let attrs = List.map (desugar_term env) d.attrs in
+    let attrs = U.deduplicate_terms (List.map (desugar_term env) d.attrs) in
     match get_fail_attr false attrs with
     | Some (expected_errs, lax) ->
       let d = { d with attrs = [] } in
@@ -3604,7 +3604,6 @@ and desugar_decl env (d:decl) :(env_t * sigelts) =
 
 and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
   let trans_qual = trans_qual d.drange in
-  let desugar_attrs d = d_attrs in
   match d.d with
   | Pragma p ->
     let p = trans_pragma p in
@@ -3613,7 +3612,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
                sigquals = [];
                sigrng = d.drange;
                sigmeta = default_sigmeta;
-               sigattrs = desugar_attrs d;
+               sigattrs = d_attrs;
                sigopts = None; } in
     env, [se]
 
@@ -3746,7 +3745,10 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
                  { se with sigel = Sig_bundle {ses; lids} }
 
                | Sig_inductive_typ _ ->
-                 { se with sigattrs = S.fvar_with_dd FStar.Parser.Const.tcclass_lid S.delta_constant None :: se.sigattrs }
+                 { se 
+                  with sigattrs = U.deduplicate_terms
+                                    (S.fvar_with_dd FStar.Parser.Const.tcclass_lid S.delta_constant None
+                                      :: se.sigattrs) }
 
                | _ -> se
              in
@@ -3791,7 +3793,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
           in
           (* Propagate top-level attrs to each lb. The lb.lbattrs field should be empty,
            * but just being safe here. *)
-          let top_attrs = desugar_attrs d in
+          let top_attrs = d_attrs in
           let lbs =
             let (isrec, lbs0) = lbs in
             let lbs0 = lbs0 |> List.map (fun lb -> { lb with lbattrs = U.deduplicate_terms (lb.lbattrs @ val_attrs @ top_attrs) }) in
@@ -3915,7 +3917,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
             sigquals = [S.Assumption];
             sigrng = d.drange;
             sigmeta = default_sigmeta  ;
-            sigattrs = desugar_attrs d;
+            sigattrs = d_attrs;
             sigopts = None; }]
 
   | Val(id, t) ->
@@ -3931,7 +3933,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
                sigquals = List.map (trans_qual None) quals;
                sigrng = d.drange;
                sigmeta = default_sigmeta  ;
-               sigattrs = desugar_attrs d ;
+               sigattrs = d_attrs;
                sigopts = None; } in
     let env = push_sigelt env se in
     env, [se]
@@ -3946,7 +3948,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
     in
     let l = qualify env id in
     let qual = [ExceptionConstructor] in
-    let top_attrs = desugar_attrs d in
+    let top_attrs = d_attrs in
     let se = { sigel = Sig_datacon {lid=l;us=[];t;ty_lid=C.exn_lid;num_ty_params=0;mutuals=[C.exn_lid]};
                sigquals = qual;
                sigrng = d.drange;
@@ -3983,7 +3985,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
   | SubEffect l ->
     let src_ed = lookup_effect_lid env l.msource d.drange in
     let dst_ed = lookup_effect_lid env l.mdest d.drange in
-    let top_attrs = desugar_attrs d in
+    let top_attrs = d_attrs in
     if not (U.is_layered src_ed || U.is_layered dst_ed)
     then let lift_wp, lift = match l.lift_op with
            | NonReifiableLift t -> Some ([],desugar_term env t), None
@@ -4024,7 +4026,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
     let m = lookup_effect_lid env m_eff d.drange in
     let n = lookup_effect_lid env n_eff d.drange in
     let p = lookup_effect_lid env p_eff d.drange in
-    let top_attrs = desugar_attrs d in
+    let top_attrs = d_attrs in
     env, [{
       sigel = Sig_polymonadic_bind {
         m_lid=m.mname;
@@ -4042,7 +4044,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
   | Polymonadic_subcomp (m_eff, n_eff, subcomp) ->
     let m = lookup_effect_lid env m_eff d.drange in
     let n = lookup_effect_lid env n_eff d.drange in
-    let top_attrs = desugar_attrs d in    
+    let top_attrs = d_attrs in    
     env, [{
       sigel = Sig_polymonadic_subcomp {
         m_lid=m.mname;
@@ -4058,7 +4060,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
 
   | Splice (is_typed, ids, t) ->
     let t = desugar_term env t in
-    let top_attrs = desugar_attrs d in    
+    let top_attrs = d_attrs in    
     let se = { sigel = Sig_splice {is_typed; lids=List.map (qualify env) ids; tac=t};
                sigquals = List.map (trans_qual None) d.quals;
                sigrng = d.drange;

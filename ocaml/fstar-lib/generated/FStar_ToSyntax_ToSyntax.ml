@@ -6370,8 +6370,10 @@ let (mk_typ_abbrev :
                   fun quals ->
                     fun rng ->
                       let attrs =
-                        FStar_Compiler_List.map (desugar_term env)
-                          d.FStar_Parser_AST.attrs in
+                        let uu___ =
+                          FStar_Compiler_List.map (desugar_term env)
+                            d.FStar_Parser_AST.attrs in
+                        FStar_Syntax_Util.deduplicate_terms uu___ in
                       let val_attrs =
                         let uu___ =
                           FStar_Syntax_DsEnv.lookup_letbinding_quals_and_attrs
@@ -8608,7 +8610,10 @@ and (desugar_decl_maybe_fail_attr :
           FStar_Pervasives_Native.snd in
       let uu___ =
         let attrs =
-          FStar_Compiler_List.map (desugar_term env) d.FStar_Parser_AST.attrs in
+          let uu___1 =
+            FStar_Compiler_List.map (desugar_term env)
+              d.FStar_Parser_AST.attrs in
+          FStar_Syntax_Util.deduplicate_terms uu___1 in
         let uu___1 = get_fail_attr false attrs in
         match uu___1 with
         | FStar_Pervasives_Native.Some (expected_errs, lax) ->
@@ -8727,7 +8732,6 @@ and (desugar_decl_core :
     fun d_attrs ->
       fun d ->
         let trans_qual1 = trans_qual d.FStar_Parser_AST.drange in
-        let desugar_attrs d1 = d_attrs in
         match d.FStar_Parser_AST.d with
         | FStar_Parser_AST.Pragma p ->
             let p1 = trans_pragma p in
@@ -8740,7 +8744,7 @@ and (desugar_decl_core :
                   FStar_Syntax_Syntax.sigquals = [];
                   FStar_Syntax_Syntax.sigmeta =
                     FStar_Syntax_Syntax.default_sigmeta;
-                  FStar_Syntax_Syntax.sigattrs = (desugar_attrs d);
+                  FStar_Syntax_Syntax.sigattrs = d_attrs;
                   FStar_Syntax_Syntax.sigopts = FStar_Pervasives_Native.None
                 } in
               (env, [se])))
@@ -9027,11 +9031,13 @@ and (desugar_decl_core :
                          | FStar_Syntax_Syntax.Sig_inductive_typ uu___3 ->
                              let uu___4 =
                                let uu___5 =
-                                 FStar_Syntax_Syntax.fvar_with_dd
-                                   FStar_Parser_Const.tcclass_lid
-                                   FStar_Syntax_Syntax.delta_constant
-                                   FStar_Pervasives_Native.None in
-                               uu___5 :: (se.FStar_Syntax_Syntax.sigattrs) in
+                                 let uu___6 =
+                                   FStar_Syntax_Syntax.fvar_with_dd
+                                     FStar_Parser_Const.tcclass_lid
+                                     FStar_Syntax_Syntax.delta_constant
+                                     FStar_Pervasives_Native.None in
+                                 uu___6 :: (se.FStar_Syntax_Syntax.sigattrs) in
+                               FStar_Syntax_Util.deduplicate_terms uu___5 in
                              {
                                FStar_Syntax_Syntax.sigel =
                                  (se.FStar_Syntax_Syntax.sigel);
@@ -9146,7 +9152,7 @@ and (desugar_decl_core :
                                                 ats)))) fvs ([], []) in
                          (match uu___4 with
                           | (val_quals, val_attrs) ->
-                              let top_attrs = desugar_attrs d in
+                              let top_attrs = d_attrs in
                               let lbs1 =
                                 let uu___5 = lbs in
                                 match uu___5 with
@@ -9402,7 +9408,7 @@ and (desugar_decl_core :
                    [FStar_Syntax_Syntax.Assumption];
                  FStar_Syntax_Syntax.sigmeta =
                    FStar_Syntax_Syntax.default_sigmeta;
-                 FStar_Syntax_Syntax.sigattrs = (desugar_attrs d);
+                 FStar_Syntax_Syntax.sigattrs = d_attrs;
                  FStar_Syntax_Syntax.sigopts = FStar_Pervasives_Native.None
                }])
         | FStar_Parser_AST.Val (id, t) ->
@@ -9430,7 +9436,7 @@ and (desugar_decl_core :
                 FStar_Syntax_Syntax.sigquals = uu___;
                 FStar_Syntax_Syntax.sigmeta =
                   FStar_Syntax_Syntax.default_sigmeta;
-                FStar_Syntax_Syntax.sigattrs = (desugar_attrs d);
+                FStar_Syntax_Syntax.sigattrs = d_attrs;
                 FStar_Syntax_Syntax.sigopts = FStar_Pervasives_Native.None
               } in
             let env1 = FStar_Syntax_DsEnv.push_sigelt env se in (env1, [se])
@@ -9456,7 +9462,7 @@ and (desugar_decl_core :
                   FStar_Syntax_Util.arrow uu___ uu___1 in
             let l = FStar_Syntax_DsEnv.qualify env id in
             let qual = [FStar_Syntax_Syntax.ExceptionConstructor] in
-            let top_attrs = desugar_attrs d in
+            let top_attrs = d_attrs in
             let se =
               {
                 FStar_Syntax_Syntax.sigel =
@@ -9526,7 +9532,7 @@ and (desugar_decl_core :
             let dst_ed =
               lookup_effect_lid env l.FStar_Parser_AST.mdest
                 d.FStar_Parser_AST.drange in
-            let top_attrs = desugar_attrs d in
+            let top_attrs = d_attrs in
             let uu___ =
               let uu___1 =
                 (FStar_Syntax_Util.is_layered src_ed) ||
@@ -9623,7 +9629,7 @@ and (desugar_decl_core :
             let m = lookup_effect_lid env m_eff d.FStar_Parser_AST.drange in
             let n = lookup_effect_lid env n_eff d.FStar_Parser_AST.drange in
             let p = lookup_effect_lid env p_eff d.FStar_Parser_AST.drange in
-            let top_attrs = desugar_attrs d in
+            let top_attrs = d_attrs in
             let uu___ =
               let uu___1 =
                 let uu___2 =
@@ -9657,7 +9663,7 @@ and (desugar_decl_core :
         | FStar_Parser_AST.Polymonadic_subcomp (m_eff, n_eff, subcomp) ->
             let m = lookup_effect_lid env m_eff d.FStar_Parser_AST.drange in
             let n = lookup_effect_lid env n_eff d.FStar_Parser_AST.drange in
-            let top_attrs = desugar_attrs d in
+            let top_attrs = d_attrs in
             let uu___ =
               let uu___1 =
                 let uu___2 =
@@ -9689,7 +9695,7 @@ and (desugar_decl_core :
             (env, uu___)
         | FStar_Parser_AST.Splice (is_typed, ids, t) ->
             let t1 = desugar_term env t in
-            let top_attrs = desugar_attrs d in
+            let top_attrs = d_attrs in
             let se =
               let uu___ =
                 let uu___1 =

@@ -78,4 +78,4 @@ let map_flatten f l = flatten (map f l)
 
 let span = BatList.span
 
-let deduplicate (f:'a -> 'a -> bool) (l:'a list) : 'a list = BatList.unique_hash ~eq:f l
+let deduplicate (f:'a -> 'a -> bool) (l:'a list) : 'a list = BatList.unique ~eq:f l
