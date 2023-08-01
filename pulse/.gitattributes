@@ -1,0 +1,4 @@
+/src/ocaml/*/generated/*.ml -diff -merge
+/src/ocaml/*/generated/*.ml linguist-generated=true
+*.hints -diff -merge
+*.hints linguist-generated=true
