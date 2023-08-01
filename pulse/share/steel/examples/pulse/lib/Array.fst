@@ -9,6 +9,7 @@ open FStar.Ghost
 open Pulse.Steel.Wrapper
 module US = FStar.SizeT
 module U8 = FStar.UInt8
+open Pulse.Class.BoundedIntegers
 
 let elseq (a:Type) (l:US.t) = s:Seq.seq a{ Seq.length s == US.v l }
 
@@ -32,7 +33,7 @@ fn compare (#t:eqtype) (l:US.t) (a1 a2:A.larray t (US.v l))
 {
   let mut i = 0sz;
   while (let vi = !i; 
-    if US.(vi <^ l) { 
+    if (vi < l) { 
       let v1 = op_Array_Access a1 vi #(coerce l s1) #p1; 
       let v2 = op_Array_Access a2 vi #(coerce l s2) #p2; 
       (v1 = v2) } 
@@ -42,14 +43,14 @@ fn compare (#t:eqtype) (l:US.t) (a1 a2:A.larray t (US.v l))
     A.pts_to a1 p1 s1 **
     A.pts_to a2 p2 s2 **
     pure (
-      US.v vi <= US.v l /\
-      (b == (US.(vi <^ l) && Seq.index s1 (US.v vi) = Seq.index s2 (US.v vi))) /\
+      vi <= l /\
+      (b == (vi < l && Seq.index s1 (US.v vi) = Seq.index s2 (US.v vi))) /\
       (forall (i:nat). i < US.v vi ==> Seq.index s1 i == Seq.index s2 i)
     )
   )
   {
     let vi = !i; 
-    i := US.(vi +^ 1sz);
+    i := vi + 1sz;
     ()
   };
   let vi = !i;
@@ -76,14 +77,14 @@ fn memcpy (#t:eqtype) (l:US.t) (src dst:A.larray t (US.v l))
   )
 {
   let mut i = 0sz;
-  while (let vi = !i; US.(vi <^ l) )
+  while (let vi = !i; (vi < l) )
   invariant b. exists (vi:US.t) (s:elseq t l). ( 
     R.pts_to i full_perm vi **
     A.pts_to src p src0 **
     A.pts_to dst full_perm s **
     pure (
-      US.v vi <= US.v l /\
-      (b == (US.(vi <^ l))) /\
+      vi <= l /\
+      (b == (vi < l)) /\
       (forall (i:nat). i < US.v vi ==> Seq.index src0 i == Seq.index s i)
     )
   )
@@ -92,7 +93,7 @@ fn memcpy (#t:eqtype) (l:US.t) (src dst:A.larray t (US.v l))
     let x = op_Array_Access src vi #(coerce l src0) #p;
     with s. assert (A.pts_to dst full_perm s);
     op_Array_Assignment dst vi x #(coerce l s);
-    i := US.(vi +^ 1sz);
+    i := vi + 1sz;
     ()
   };
   with s. assert (A.pts_to dst full_perm s);
@@ -111,19 +112,19 @@ fn fill_array (#t:Type0) (l:US.t) (a:(a:A.array t{ US.v l == A.length a })) (v:t
   )
 {
    let mut i = 0sz;
-   while (let vi = !i; US.(vi <^ l))
+   while (let vi = !i; (vi < l))
    invariant b. exists (s:Seq.seq t) (vi:US.t). ( 
       A.pts_to a full_perm s **
       R.pts_to i full_perm vi **
-      pure ((b == US.(vi <^ l)) /\
-            US.v vi <= US.v l /\
+      pure ((b == (vi < l)) /\
+            vi <= l /\
             Seq.length s == A.length a /\
             (forall (i:nat). i < US.v vi ==> Seq.index s i == v))
    )
    {
       let vi = !i; 
       (a.(vi) <- v);
-      i := US.(vi +^ 1sz);
+      i := vi + 1sz;
       ()
    };
    ()
