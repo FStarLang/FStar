@@ -78,6 +78,7 @@ let stderr = Stdlib.stderr
 let stdout = Stdlib.stdout
 
 let open_file_for_writing (fn : string) = Stdlib.open_out_bin fn
+let open_file_for_appending (fn : string) = Stdlib.open_out_gen [Open_append; Open_wronly; Open_creat; Open_binary] 0o644 fn
 let close_out_channel (c : out_channel) = Stdlib.close_out c
 
 let flush (c:out_channel) : unit = Stdlib.flush c
@@ -265,9 +266,13 @@ let run_process (id: string) (prog: string) (args: string list) (stdin: string o
   let p = start_process' id prog args None in
   (match stdin with
    | None -> ()
-   | Some str -> output_string p.outc str);
-  flush p.outc;
-  close_out p.outc;
+   | Some str ->
+     try output_string p.outc str with
+     | Sys_error _ -> () (* FIXME: check for "Broken pipe". In that case this is fine, process must have finished without reading input *)
+     | e -> raise e
+  );
+  (try flush p.outc with | _ -> ()); (* only _attempt_ to flush, so we don't get an exception if the process is finished *)
+  (try close_out p.outc with | _ -> ()); (* idem *)
   let s = process_read_all_output p in
   kill_process p;
   s
@@ -539,6 +544,11 @@ let colorize_red s =
 let colorize_cyan s =
   match stdout_isatty () with
   | Some true -> format3 "%s%s%s" "\x1b[36;1m" s "\x1b[0m"
+  | _ -> s
+
+let colorize_green s =
+  match stdout_isatty () with
+  | Some true -> format3 "%s%s%s" "\x1b[32;1m" s "\x1b[0m"
   | _ -> s
 
 let pr  = Printf.printf

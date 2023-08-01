@@ -1,0 +1,29 @@
+[
+  "cñd-ha²OC_ÒºÐ²K@",
+  [
+    [
+      "FStar.Printable.printable_option",
+      1,
+      2,
+      1,
+      [ "@query", "lemma_FStar.Pervasives.invertOption" ],
+      0,
+      "c2cdaa0ccc829e89a90988afb932490a"
+    ],
+    [
+      "FStar.Printable.printable_either",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Pervasives.Inl",
+        "disc_equation_FStar.Pervasives.Inr",
+        "fuel_guarded_inversion_FStar.Pervasives.either",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "f38f0d4ea668bd112c640bc8d8c5569b"
+    ]
+  ]
+]

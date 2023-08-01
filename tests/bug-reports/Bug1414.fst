@@ -15,7 +15,7 @@
 *)
 module Bug1414
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let constant (t:term) : Tac unit = exact (norm_term [primops; delta; iota; zeta] t)
 

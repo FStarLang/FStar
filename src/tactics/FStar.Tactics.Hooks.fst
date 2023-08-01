@@ -27,8 +27,8 @@ open FStar.Syntax.Embeddings
 open FStar.TypeChecker.Env
 open FStar.TypeChecker.Common
 open FStar.Tactics.Types
-open FStar.Tactics.Basic
-open FStar.Tactics.Interpreter
+open FStar.Tactics.V1.Interpreter
+open FStar.Tactics.V2.Interpreter
 
 module BU      = FStar.Compiler.Util
 module Range   = FStar.Compiler.Range
@@ -44,7 +44,10 @@ module Env     = FStar.TypeChecker.Env
 module TcUtil  = FStar.TypeChecker.Util
 module TcRel   = FStar.TypeChecker.Rel
 module TcTerm  = FStar.TypeChecker.TcTerm
-module RE      = FStar.Reflection.Embeddings
+
+(* We only use the _abstract_ embeddings from this module,
+hence there is no v1/v2 distinction. *)
+module RE      = FStar.Reflection.V2.Embeddings
 
 let run_tactic_on_typ
         (rng_tac : Range.range) (rng_goal : Range.range)
@@ -53,7 +56,7 @@ let run_tactic_on_typ
                     * term // witness
                     =
     let rng = range_of_rng (use_range rng_goal) (use_range rng_tac) in
-    let ps, w = proofstate_of_goal_ty rng env typ in
+    let ps, w = FStar.Tactics.V2.Basic.proofstate_of_goal_ty rng env typ in
     let tactic_already_typed = false in
     let gs, _res = run_tactic_on_ps rng_tac rng_goal false e_unit () e_unit tactic tactic_already_typed ps in
     gs, w
@@ -63,7 +66,7 @@ let run_tactic_on_all_implicits
         (tactic:term) (env:Env.env) (imps:Env.implicits)
     : list goal // remaining goals
     =
-    let ps, _ = proofstate_of_all_implicits rng_goal env imps in
+    let ps, _ = FStar.Tactics.V2.Basic.proofstate_of_all_implicits rng_goal env imps in
     let tactic_already_typed = false in
     let goals, () =
       run_tactic_on_ps
@@ -824,7 +827,7 @@ let splice (env:Env.env) (is_typed:bool) (lids:list Ident.lident) (tau:term) (rn
 
     TcRel.force_trivial_guard env g;
 
-    let ps = proofstate_of_goals tau.pos env [] [] in
+    let ps = FStar.Tactics.V2.Basic.proofstate_of_goals tau.pos env [] [] in
     let tactic_already_typed = true in
     let gs, sigelts =
       if is_typed
@@ -933,7 +936,7 @@ let mpreprocess (env:Env.env) (tau:term) (tm:term) : term =
   Errors.with_ctx "While preprocessing a definition with a tactic" (fun () ->
     if env.nosynth then tm else begin
     tacdbg := Env.debug env (O.Other "Tac");
-    let ps = proofstate_of_goals tm.pos env [] [] in
+    let ps = FStar.Tactics.V2.Basic.proofstate_of_goals tm.pos env [] [] in
     let tactic_already_typed = false in
     let gs, tm = run_tactic_on_ps tau.pos tm.pos false RE.e_term tm RE.e_term tau tactic_already_typed ps in
     tm

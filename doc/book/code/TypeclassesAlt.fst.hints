@@ -2,26 +2,13 @@
   "ØØø<€\u0012\u0010t³Â\u001d,O«I",
   [
     [
-      "TypeclassesAlt.fits",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_and",
-        "equation_Prims.squash", "equation_Prims.subtype_of",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
-      ],
-      0,
-      "4ec97a627166001b9f1d156f4151b94f"
-    ],
-    [
       "TypeclassesAlt.bounded_unsigned_int",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "ed55e1adb69c331910f20579e56e47fc"
+      "fd28ea14b9fcfd40f360f5fabd501a8e"
     ],
     [
       "TypeclassesAlt.__proj__Mkbounded_unsigned_int__item__properties",
@@ -30,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "2ce1f46a3ee5f411cc0a756419953606"
+      "55c005b342388e91e336e2b6951ad469"
     ],
     [
       "TypeclassesAlt.__proj__Mkbounded_unsigned_int__item__properties",
@@ -39,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "cec5f3fd722c95808b698263885576c6"
+      "c0af179eb3a12166a6aa2cf2ce43f3cf"
     ],
     [
       "TypeclassesAlt.ok",
@@ -50,14 +37,16 @@
         "@MaxIFuel_assumption", "@query", "equation_TypeclassesAlt.as_nat",
         "equation_TypeclassesAlt.bound",
         "fuel_guarded_inversion_TypeclassesAlt.bounded_unsigned_int",
-        "interpretation_Tm_abs_59ebfd4ec54c587e9da54126b0f8911b",
-        "interpretation_Tm_abs_7fc4d5347d6a319847ec98a713621098",
+        "interpretation_Tm_abs_41bb09c674e93e3a48d87ef068e9eb30",
+        "interpretation_Tm_abs_dc0c893800c6f61c0dce3fdcc71cbe56",
+        "proj_equation_TypeclassesAlt.Mkbounded_unsigned_int_as_nat",
+        "proj_equation_TypeclassesAlt.Mkbounded_unsigned_int_bound",
         "token_correspondence_TypeclassesAlt.__proj__Mkbounded_unsigned_int__item__as_nat",
         "token_correspondence_TypeclassesAlt.as_nat",
         "token_correspondence_TypeclassesAlt.bound"
       ],
       0,
-      "46572185560c100b1672c0381df60a94"
+      "1970ba854c33266ae2e351051543028e"
     ],
     [
       "TypeclassesAlt.op_Plus_Hat",
@@ -69,9 +58,12 @@
         "equation_TypeclassesAlt.bound", "equation_TypeclassesAlt.from_nat",
         "equation_TypeclassesAlt.ok",
         "fuel_guarded_inversion_TypeclassesAlt.bounded_unsigned_int",
-        "interpretation_Tm_abs_59ebfd4ec54c587e9da54126b0f8911b",
-        "interpretation_Tm_abs_7fc4d5347d6a319847ec98a713621098",
-        "interpretation_Tm_abs_ed8cb77ba19e45adfd0d2cb6d3121c56",
+        "interpretation_Tm_abs_41bb09c674e93e3a48d87ef068e9eb30",
+        "interpretation_Tm_abs_a04a9ae6caf3701eb9bfa6884ffef318",
+        "interpretation_Tm_abs_dc0c893800c6f61c0dce3fdcc71cbe56",
+        "proj_equation_TypeclassesAlt.Mkbounded_unsigned_int_as_nat",
+        "proj_equation_TypeclassesAlt.Mkbounded_unsigned_int_bound",
+        "proj_equation_TypeclassesAlt.Mkbounded_unsigned_int_from_nat",
         "token_correspondence_TypeclassesAlt.as_nat",
         "token_correspondence_TypeclassesAlt.bound",
         "token_correspondence_TypeclassesAlt.fits",
@@ -79,7 +71,7 @@
         "token_correspondence_TypeclassesAlt.ok"
       ],
       0,
-      "4de48c35d336140a5768dcbfef0944e7"
+      "c580e48ae3e96591a0ee176627fa211c"
     ],
     [
       "TypeclassesAlt.op_Subtraction_Hat",
@@ -91,9 +83,12 @@
         "equation_TypeclassesAlt.bound", "equation_TypeclassesAlt.from_nat",
         "equation_TypeclassesAlt.ok",
         "fuel_guarded_inversion_TypeclassesAlt.bounded_unsigned_int",
-        "interpretation_Tm_abs_59ebfd4ec54c587e9da54126b0f8911b",
-        "interpretation_Tm_abs_7fc4d5347d6a319847ec98a713621098",
-        "interpretation_Tm_abs_ed8cb77ba19e45adfd0d2cb6d3121c56",
+        "interpretation_Tm_abs_41bb09c674e93e3a48d87ef068e9eb30",
+        "interpretation_Tm_abs_a04a9ae6caf3701eb9bfa6884ffef318",
+        "interpretation_Tm_abs_dc0c893800c6f61c0dce3fdcc71cbe56",
+        "proj_equation_TypeclassesAlt.Mkbounded_unsigned_int_as_nat",
+        "proj_equation_TypeclassesAlt.Mkbounded_unsigned_int_bound",
+        "proj_equation_TypeclassesAlt.Mkbounded_unsigned_int_from_nat",
         "token_correspondence_TypeclassesAlt.as_nat",
         "token_correspondence_TypeclassesAlt.bound",
         "token_correspondence_TypeclassesAlt.fits",
@@ -101,7 +96,7 @@
         "token_correspondence_TypeclassesAlt.ok"
       ],
       0,
-      "49a2e3b64b5533c77c38058d25ee9a0f"
+      "7b44d57a793cf068d2adc3a2d9328605"
     ],
     [
       "TypeclassesAlt.op_Star_Hat",
@@ -113,9 +108,12 @@
         "equation_TypeclassesAlt.bound", "equation_TypeclassesAlt.from_nat",
         "equation_TypeclassesAlt.ok",
         "fuel_guarded_inversion_TypeclassesAlt.bounded_unsigned_int",
-        "interpretation_Tm_abs_59ebfd4ec54c587e9da54126b0f8911b",
-        "interpretation_Tm_abs_7fc4d5347d6a319847ec98a713621098",
-        "interpretation_Tm_abs_ed8cb77ba19e45adfd0d2cb6d3121c56",
+        "interpretation_Tm_abs_41bb09c674e93e3a48d87ef068e9eb30",
+        "interpretation_Tm_abs_a04a9ae6caf3701eb9bfa6884ffef318",
+        "interpretation_Tm_abs_dc0c893800c6f61c0dce3fdcc71cbe56",
+        "proj_equation_TypeclassesAlt.Mkbounded_unsigned_int_as_nat",
+        "proj_equation_TypeclassesAlt.Mkbounded_unsigned_int_bound",
+        "proj_equation_TypeclassesAlt.Mkbounded_unsigned_int_from_nat",
         "token_correspondence_TypeclassesAlt.as_nat",
         "token_correspondence_TypeclassesAlt.bound",
         "token_correspondence_TypeclassesAlt.fits",
@@ -123,7 +121,7 @@
         "token_correspondence_TypeclassesAlt.ok"
       ],
       0,
-      "e1a8f80b6cce18045edcc7e9334c443d"
+      "47cad2fc79386aa63c9a19a2167f60f6"
     ],
     [
       "TypeclassesAlt.u32_instance",
@@ -167,7 +165,7 @@
         "typing_FStar.UInt32.sub", "typing_FStar.UInt32.v"
       ],
       0,
-      "c63f84da955a75c8e1db7366cd8af2e4"
+      "d5635a2a9a9409a466de8577600926e9"
     ],
     [
       "TypeclassesAlt.u64_instance",
@@ -211,7 +209,7 @@
         "typing_FStar.UInt64.sub", "typing_FStar.UInt64.v"
       ],
       0,
-      "33c90c1d59350a411c04e5598bf0a75d"
+      "cd0126bf4c6a72f2f25898b50e280770"
     ],
     [
       "TypeclassesAlt.bounded_unsigned_int_eq",
@@ -225,16 +223,14 @@
         "equation_Prims.nat", "equation_TypeclassesAlt.lt",
         "fuel_guarded_inversion_TypeclassesAlt.bounded_unsigned_int",
         "int_inversion",
-        "interpretation_Tm_abs_03c7e19e4c708e02a198b636caabb2cd",
-        "primitive_Prims.op_Negation",
-        "proj_equation_TypeclassesAlt.Mkbounded_unsigned_int_lt",
-        "projection_inverse_BoxBool_proj_0",
+        "interpretation_Tm_abs_4353ded811b2bc4a31a4a230b0a4bd22",
+        "primitive_Prims.op_Negation", "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_8869caffb2e39082e0ed96689001e161",
         "token_correspondence_TypeclassesAlt.lt"
       ],
       0,
-      "d897ea104e1331abcf6c50aff1d9cf47"
+      "e4629e6a8a232139ee1cd71f878f76bc"
     ],
     [
       "TypeclassesAlt.test32",
@@ -245,8 +241,9 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Prims.pow2.fuel_instrumented",
         "@fuel_irrelevance_Prims.pow2.fuel_instrumented", "@query",
+        "TypeclassesAlt_interpretation_Tm_arrow_1b6d5700d19e269214362a600eabbf86",
         "TypeclassesAlt_interpretation_Tm_arrow_1eea001dc988a6a52767d18e2341e80f",
-        "TypeclassesAlt_interpretation_Tm_arrow_89b5bd37a1831a1815c2db5fdcb7395c",
+        "TypeclassesAlt_interpretation_Tm_arrow_763794115f83c9249d08c75540c77370",
         "b2t_def", "bool_inversion", "bool_typing",
         "data_elim_TypeclassesAlt.Mkbounded_unsigned_int",
         "data_elim_TypeclassesAlt.Mkeq", "equation_FStar.UInt.fits",
@@ -265,21 +262,17 @@
         "function_token_typing_FStar.UInt32.uint_to_t",
         "function_token_typing_FStar.UInt32.v", "int_inversion",
         "int_typing",
-        "interpretation_Tm_abs_03c7e19e4c708e02a198b636caabb2cd",
+        "interpretation_Tm_abs_41bb09c674e93e3a48d87ef068e9eb30",
+        "interpretation_Tm_abs_4353ded811b2bc4a31a4a230b0a4bd22",
         "interpretation_Tm_abs_446576731a8898dec12769aef9257757",
-        "interpretation_Tm_abs_59ebfd4ec54c587e9da54126b0f8911b",
-        "interpretation_Tm_abs_7fc4d5347d6a319847ec98a713621098",
+        "interpretation_Tm_abs_8ed289b1dc7e2ceb656120e67e98559e",
         "interpretation_Tm_abs_90425ba3fec46b21836bc2944e516798",
-        "interpretation_Tm_abs_de5ad13c64f11d93a013cd0101182cf4",
+        "interpretation_Tm_abs_dc0c893800c6f61c0dce3fdcc71cbe56",
         "lemma_FStar.UInt.pow2_values", "lemma_FStar.UInt32.vu_inv",
         "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
         "primitive_Prims.op_BarBar", "primitive_Prims.op_LessThan",
         "primitive_Prims.op_LessThanOrEqual", "primitive_Prims.op_Negation",
         "primitive_Prims.op_Subtraction",
-        "proj_equation_TypeclassesAlt.Mkbounded_unsigned_int_as_nat",
-        "proj_equation_TypeclassesAlt.Mkbounded_unsigned_int_bound",
-        "proj_equation_TypeclassesAlt.Mkbounded_unsigned_int_lt",
-        "proj_equation_TypeclassesAlt.Mkeq_eq_op",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_TypeclassesAlt.Mkbounded_unsigned_int_as_nat",
@@ -288,9 +281,9 @@
         "projection_inverse_TypeclassesAlt.Mkeq_eq_op",
         "refinement_interpretation_Tm_refine_0ea1fba779ad5718e28476faeef94d56",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_46cadb0df2bb46c0f3fa396bebe83b21",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_8869caffb2e39082e0ed96689001e161",
+        "refinement_interpretation_Tm_refine_a0c83da74d12c18b89f1234f7b9acf62",
         "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
         "refinement_interpretation_Tm_refine_fa140d52f3bac57f4df6416af4a17111",
         "token_correspondence_FStar.UInt32.lt",
@@ -302,14 +295,12 @@
         "token_correspondence_TypeclassesAlt.fits",
         "token_correspondence_TypeclassesAlt.lt",
         "token_correspondence_TypeclassesAlt.ok", "typing_FStar.UInt32.t",
-        "typing_FStar.UInt32.uint_to_t",
-        "typing_Tm_abs_446576731a8898dec12769aef9257757",
-        "typing_TypeclassesAlt.__proj__Mkbounded_unsigned_int__item__bound",
+        "typing_FStar.UInt32.uint_to_t", "typing_TypeclassesAlt.bound",
         "typing_TypeclassesAlt.bounded_unsigned_int_eq",
         "typing_TypeclassesAlt.u32_instance"
       ],
       0,
-      "bba4be4fb61fe91902a52ca0b1e67825"
+      "9c1ae9ebbba4d125fc243f5af30fda11"
     ],
     [
       "TypeclassesAlt.test64",
@@ -320,8 +311,9 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Prims.pow2.fuel_instrumented",
         "@fuel_irrelevance_Prims.pow2.fuel_instrumented", "@query",
+        "TypeclassesAlt_interpretation_Tm_arrow_1b6d5700d19e269214362a600eabbf86",
         "TypeclassesAlt_interpretation_Tm_arrow_1eea001dc988a6a52767d18e2341e80f",
-        "TypeclassesAlt_interpretation_Tm_arrow_ae1c94836c7ac7a2c00c3cdc4d20fe28",
+        "TypeclassesAlt_interpretation_Tm_arrow_763794115f83c9249d08c75540c77370",
         "b2t_def", "bool_inversion", "bool_typing",
         "data_elim_TypeclassesAlt.Mkbounded_unsigned_int",
         "data_elim_TypeclassesAlt.Mkeq", "equation_FStar.UInt.fits",
@@ -340,21 +332,17 @@
         "function_token_typing_FStar.UInt64.uint_to_t",
         "function_token_typing_FStar.UInt64.v", "int_inversion",
         "int_typing",
-        "interpretation_Tm_abs_03c7e19e4c708e02a198b636caabb2cd",
-        "interpretation_Tm_abs_59ebfd4ec54c587e9da54126b0f8911b",
-        "interpretation_Tm_abs_7fc4d5347d6a319847ec98a713621098",
+        "interpretation_Tm_abs_41bb09c674e93e3a48d87ef068e9eb30",
+        "interpretation_Tm_abs_4353ded811b2bc4a31a4a230b0a4bd22",
+        "interpretation_Tm_abs_8ed289b1dc7e2ceb656120e67e98559e",
         "interpretation_Tm_abs_90425ba3fec46b21836bc2944e516798",
         "interpretation_Tm_abs_ad6081024c14bdae20ce85b5cbdef6bd",
-        "interpretation_Tm_abs_de5ad13c64f11d93a013cd0101182cf4",
+        "interpretation_Tm_abs_dc0c893800c6f61c0dce3fdcc71cbe56",
         "lemma_FStar.UInt.pow2_values", "lemma_FStar.UInt64.vu_inv",
         "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
         "primitive_Prims.op_BarBar", "primitive_Prims.op_LessThan",
         "primitive_Prims.op_LessThanOrEqual", "primitive_Prims.op_Negation",
         "primitive_Prims.op_Subtraction",
-        "proj_equation_TypeclassesAlt.Mkbounded_unsigned_int_as_nat",
-        "proj_equation_TypeclassesAlt.Mkbounded_unsigned_int_bound",
-        "proj_equation_TypeclassesAlt.Mkbounded_unsigned_int_lt",
-        "proj_equation_TypeclassesAlt.Mkeq_eq_op",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_TypeclassesAlt.Mkbounded_unsigned_int_as_nat",
@@ -365,8 +353,8 @@
         "refinement_interpretation_Tm_refine_48c1b5b4c02ad49f0760911a9d4b1fb4",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_8869caffb2e39082e0ed96689001e161",
+        "refinement_interpretation_Tm_refine_a0c83da74d12c18b89f1234f7b9acf62",
         "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
-        "refinement_interpretation_Tm_refine_f46c9ea6c6f9a7549512227d7126b1a7",
         "refinement_interpretation_Tm_refine_fa140d52f3bac57f4df6416af4a17111",
         "token_correspondence_FStar.UInt64.lt",
         "token_correspondence_FStar.UInt64.v",
@@ -377,14 +365,12 @@
         "token_correspondence_TypeclassesAlt.fits",
         "token_correspondence_TypeclassesAlt.lt",
         "token_correspondence_TypeclassesAlt.ok", "typing_FStar.UInt64.t",
-        "typing_FStar.UInt64.uint_to_t",
-        "typing_Tm_abs_ad6081024c14bdae20ce85b5cbdef6bd",
-        "typing_TypeclassesAlt.__proj__Mkbounded_unsigned_int__item__bound",
+        "typing_FStar.UInt64.uint_to_t", "typing_TypeclassesAlt.bound",
         "typing_TypeclassesAlt.bounded_unsigned_int_eq",
         "typing_TypeclassesAlt.u64_instance"
       ],
       0,
-      "255d98276f474eb84d92771fc96f186e"
+      "2f20e9eb95dc659624c59fe06cde051c"
     ],
     [
       "TypeclassesAlt.try_add",
@@ -395,6 +381,8 @@
         "@MaxIFuel_assumption", "@query",
         "FStar.UInt32_pretyping_2ab3c8ba2d08b0172817fc70b5994868",
         "TypeclassesAlt_interpretation_Tm_arrow_1eea001dc988a6a52767d18e2341e80f",
+        "TypeclassesAlt_interpretation_Tm_arrow_423815157aa28d8cb2d865ce645c4df0",
+        "TypeclassesAlt_interpretation_Tm_arrow_763794115f83c9249d08c75540c77370",
         "data_elim_TypeclassesAlt.Mkbounded_unsigned_int",
         "equation_Prims.eqtype", "equation_Prims.nat",
         "equation_TypeclassesAlt.as_nat", "equation_TypeclassesAlt.bound",
@@ -407,22 +395,17 @@
         "equation_TypeclassesAlt.op_Subtraction_Hat",
         "equation_TypeclassesAlt.sub",
         "equation_TypeclassesAlt.u32_instance",
-        "interpretation_Tm_abs_03c7e19e4c708e02a198b636caabb2cd",
-        "interpretation_Tm_abs_59ebfd4ec54c587e9da54126b0f8911b",
-        "interpretation_Tm_abs_7ab0986c35653c1ec2115cb668f32f4a",
-        "interpretation_Tm_abs_7fc4d5347d6a319847ec98a713621098",
+        "function_token_typing_TypeclassesAlt.bound",
+        "interpretation_Tm_abs_41bb09c674e93e3a48d87ef068e9eb30",
+        "interpretation_Tm_abs_4353ded811b2bc4a31a4a230b0a4bd22",
+        "interpretation_Tm_abs_8ed289b1dc7e2ceb656120e67e98559e",
         "interpretation_Tm_abs_90425ba3fec46b21836bc2944e516798",
-        "interpretation_Tm_abs_de5ad13c64f11d93a013cd0101182cf4",
-        "interpretation_Tm_abs_ed8cb77ba19e45adfd0d2cb6d3121c56",
+        "interpretation_Tm_abs_a04a9ae6caf3701eb9bfa6884ffef318",
+        "interpretation_Tm_abs_ca15d2be7b11f53f9b734c2aa677b1dd",
+        "interpretation_Tm_abs_dc0c893800c6f61c0dce3fdcc71cbe56",
         "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
         "primitive_Prims.op_BarBar", "primitive_Prims.op_Negation",
         "primitive_Prims.op_Subtraction",
-        "proj_equation_TypeclassesAlt.Mkbounded_unsigned_int_as_nat",
-        "proj_equation_TypeclassesAlt.Mkbounded_unsigned_int_bound",
-        "proj_equation_TypeclassesAlt.Mkbounded_unsigned_int_from_nat",
-        "proj_equation_TypeclassesAlt.Mkbounded_unsigned_int_lt",
-        "proj_equation_TypeclassesAlt.Mkbounded_unsigned_int_sub",
-        "proj_equation_TypeclassesAlt.Mkeq_eq_op",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_TypeclassesAlt.Mkbounded_unsigned_int_as_nat",
@@ -434,9 +417,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_8869caffb2e39082e0ed96689001e161",
-        "token_correspondence_FStar.UInt32.v",
         "token_correspondence_Prims.op_Addition",
-        "token_correspondence_Prims.op_Subtraction",
         "token_correspondence_TypeclassesAlt.as_nat",
         "token_correspondence_TypeclassesAlt.bound",
         "token_correspondence_TypeclassesAlt.eq_op",
@@ -445,11 +426,10 @@
         "token_correspondence_TypeclassesAlt.lt",
         "token_correspondence_TypeclassesAlt.ok",
         "token_correspondence_TypeclassesAlt.sub", "typing_FStar.UInt32.t",
-        "typing_TypeclassesAlt.__proj__Mkbounded_unsigned_int__item__bound",
         "typing_TypeclassesAlt.u32_instance"
       ],
       0,
-      "83eb0353a2f7f3129dfb2d533b5648a5"
+      "e4c826866cd369416a9cdd5d82c6d840"
     ],
     [
       "TypeclassesAlt.sum",
@@ -459,6 +439,8 @@
       [
         "@MaxIFuel_assumption", "@query",
         "TypeclassesAlt_interpretation_Tm_arrow_1eea001dc988a6a52767d18e2341e80f",
+        "TypeclassesAlt_interpretation_Tm_arrow_423815157aa28d8cb2d865ce645c4df0",
+        "TypeclassesAlt_interpretation_Tm_arrow_763794115f83c9249d08c75540c77370",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "data_elim_TypeclassesAlt.Mkbounded_unsigned_int",
         "disc_equation_FStar.Pervasives.Native.Some", "equation_Prims.nat",
@@ -472,23 +454,18 @@
         "equation_TypeclassesAlt.op_Subtraction_Hat",
         "equation_TypeclassesAlt.sub",
         "fuel_guarded_inversion_TypeclassesAlt.bounded_unsigned_int",
-        "int_inversion",
-        "interpretation_Tm_abs_03c7e19e4c708e02a198b636caabb2cd",
-        "interpretation_Tm_abs_59ebfd4ec54c587e9da54126b0f8911b",
-        "interpretation_Tm_abs_7ab0986c35653c1ec2115cb668f32f4a",
-        "interpretation_Tm_abs_7fc4d5347d6a319847ec98a713621098",
+        "function_token_typing_TypeclassesAlt.bound", "int_inversion",
+        "int_typing",
+        "interpretation_Tm_abs_41bb09c674e93e3a48d87ef068e9eb30",
+        "interpretation_Tm_abs_4353ded811b2bc4a31a4a230b0a4bd22",
+        "interpretation_Tm_abs_8ed289b1dc7e2ceb656120e67e98559e",
         "interpretation_Tm_abs_90425ba3fec46b21836bc2944e516798",
-        "interpretation_Tm_abs_de5ad13c64f11d93a013cd0101182cf4",
-        "interpretation_Tm_abs_ed8cb77ba19e45adfd0d2cb6d3121c56",
+        "interpretation_Tm_abs_a04a9ae6caf3701eb9bfa6884ffef318",
+        "interpretation_Tm_abs_ca15d2be7b11f53f9b734c2aa677b1dd",
+        "interpretation_Tm_abs_dc0c893800c6f61c0dce3fdcc71cbe56",
         "lemma_FStar.Pervasives.invertOption", "primitive_Prims.op_Addition",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_BarBar",
         "primitive_Prims.op_Negation", "primitive_Prims.op_Subtraction",
-        "proj_equation_TypeclassesAlt.Mkbounded_unsigned_int_as_nat",
-        "proj_equation_TypeclassesAlt.Mkbounded_unsigned_int_bound",
-        "proj_equation_TypeclassesAlt.Mkbounded_unsigned_int_from_nat",
-        "proj_equation_TypeclassesAlt.Mkbounded_unsigned_int_lt",
-        "proj_equation_TypeclassesAlt.Mkbounded_unsigned_int_sub",
-        "proj_equation_TypeclassesAlt.Mkeq_eq_op",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
@@ -505,11 +482,10 @@
         "token_correspondence_TypeclassesAlt.from_nat",
         "token_correspondence_TypeclassesAlt.lt",
         "token_correspondence_TypeclassesAlt.ok",
-        "token_correspondence_TypeclassesAlt.sub",
-        "typing_TypeclassesAlt.__proj__Mkbounded_unsigned_int__item__bound"
+        "token_correspondence_TypeclassesAlt.sub"
       ],
       0,
-      "e42a3231b0b73e993a89226fb0f31c66"
+      "96398e9b10d9a72cf7c7c2e28aa370e5"
     ]
   ]
 ]

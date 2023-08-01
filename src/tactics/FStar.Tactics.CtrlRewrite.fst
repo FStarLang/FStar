@@ -21,12 +21,11 @@ open FStar.Compiler.Effect
 open FStar.Compiler.List
 open FStar.Compiler
 open FStar.Compiler.Util
-open FStar.Reflection.Data
-open FStar.Reflection.Basic
+open FStar.Reflection.V2.Data
+open FStar.Reflection.V2.Builtins
 open FStar.Tactics.Result
 open FStar.TypeChecker.Common
 open FStar.TypeChecker.Env
-open FStar.Tactics.Basic
 open FStar.Tactics.Types
 open FStar.Tactics.Monad
 open FStar.Tactics.Common
@@ -113,7 +112,7 @@ let __do_rewrite
     let! ut, uvar_t =
       new_uvar "do_rewrite.rhs" env typ 
                should_check
-               (goal_typedness_deps g0)
+               (FStar.Tactics.V2.Basic.goal_typedness_deps g0)
                (rangeof g0)
     in
     if_verbose (fun () ->
@@ -125,7 +124,8 @@ let __do_rewrite
                       env
                       (U.mk_eq2 (env.universe_of env typ) typ tm ut)
                       None ;!
-    focus rewriter ;!
+    (* v1 and v2 match *)
+    FStar.Tactics.V2.Basic.focus rewriter ;!
     // Try to get rid of all the unification lambdas
     let ut = N.reduce_uvar_solutions env ut in
     if_verbose (fun () ->
@@ -423,6 +423,6 @@ let ctrl_rewrite
         BU.print1 "ctrl_rewrite seems to have succeded with %s\n" (Print.term_to_string gt')) ;!
 
     push_goals gs ;!
-    let g = goal_with_type g gt' in
+    let g = V2.Basic.goal_with_type g gt' in
     add_goals [g]
     )

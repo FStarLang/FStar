@@ -558,12 +558,16 @@ let (on_sub_layered_eff_combinators :
       let uu___4 =
         on_tuple3 f_tscheme1 f_tscheme1 id
           lecs.FStar_Syntax_Syntax.l_if_then_else in
+      let uu___5 =
+        FStar_Compiler_Util.map_option (on_tuple2 f_tscheme1 f_tscheme1)
+          lecs.FStar_Syntax_Syntax.l_close in
       {
         FStar_Syntax_Syntax.l_repr = uu___;
         FStar_Syntax_Syntax.l_return = uu___1;
         FStar_Syntax_Syntax.l_bind = uu___2;
         FStar_Syntax_Syntax.l_subcomp = uu___3;
-        FStar_Syntax_Syntax.l_if_then_else = uu___4
+        FStar_Syntax_Syntax.l_if_then_else = uu___4;
+        FStar_Syntax_Syntax.l_close = uu___5
       }
 let (on_sub_combinators :
   vfs_t ->

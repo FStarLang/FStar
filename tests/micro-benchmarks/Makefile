@@ -1,5 +1,5 @@
 FSTAR_HOME=../..
-
+OTHERFLAGS+=--warn_error +240
 FSTAR_FILES = $(wildcard *.fst)
 
 all: verify-all ns-resolution
@@ -18,7 +18,7 @@ verify-all: $(CACHE_DIR) $(addsuffix .checked, $(addprefix $(CACHE_DIR)/, $(FSTA
 $(CACHE_DIR)/MustEraseForExtraction.fst.checked: OTHERFLAGS += --warn_error @318
 
 %.ml: %.fst
-	$(FSTAR) --codegen OCaml --extract $(subst .ml,, $@) $^
+	$(FSTAR) $(OTHERFLAGS) --codegen OCaml --extract $(subst .ml,, $@) $^
 
 %.ml-cmp: %.ml %.ml.expected
 	diff -u --strip-trailing-cr $< $<.expected

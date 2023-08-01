@@ -5,7 +5,7 @@ module ST = FStar.HyperStack.ST
 module B = LowStar.Buffer
 
 open FStar.List
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.Mul
 
 /// Some dummy functions used for the tutorial for the FStar.FStar.InteractiveHelpers functions

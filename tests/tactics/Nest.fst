@@ -17,7 +17,7 @@ module Nest
 
 (* This is simply testing that #1065.2 doesn't pop back up again *)
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let _ = assert (3 == 3)
             by (pointwise (fun () -> pointwise trefl; trefl ()))

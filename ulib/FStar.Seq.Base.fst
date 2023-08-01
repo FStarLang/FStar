@@ -124,7 +124,12 @@ let rec lemma_index_upd1' (#a:Type) (s:seq a) (n:nat{n < length s}) (v:a)
   : Lemma
     (requires True)
     (ensures (index (upd s n v) n == v)) (decreases (length s))
-= if n = 0 then () else lemma_index_upd1' #a (tl s) (n - 1) v
+= if n = 0
+  then ()
+  else begin
+    lemma_index_upd1' #a (tl s) (n - 1) v;
+    assert (index (upd (tl s) (n-1) v) (n-1) == v)
+  end
 
 let lemma_index_upd1 = lemma_index_upd1'
 

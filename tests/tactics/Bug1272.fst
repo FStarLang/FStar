@@ -15,7 +15,7 @@
 *)
 module Bug1272
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 #set-options "--admit_smt_queries true"
 

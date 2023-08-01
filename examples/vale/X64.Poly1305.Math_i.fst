@@ -15,7 +15,7 @@
 *)
 module X64.Poly1305.Math_i
 
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.Tactics.Canon
 open FStar.Math.Lemmas
 open FStar.Math.Lib

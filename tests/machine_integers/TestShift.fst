@@ -4,7 +4,7 @@ open FStar.All
 open FStar.IO
 open FStar.Int.Cast
 open FStar.Int.Cast.Full
-open FStar.Tactics
+open FStar.Tactics.V2
 
 module I8   = FStar.Int8
 module I16  = FStar.Int16

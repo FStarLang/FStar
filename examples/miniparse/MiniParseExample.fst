@@ -17,7 +17,7 @@ module MiniParseExample
 open MiniParse.Spec.TEnum
 open MiniParse.Tac.Impl
 
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 
 // #set-options "--no_smt"
 

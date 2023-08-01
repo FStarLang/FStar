@@ -361,6 +361,7 @@ and unresolved_constructor =
   uc_fields: FStar_Ident.lident Prims.list }
 and subst_elt =
   | DB of (Prims.int * bv) 
+  | DT of (Prims.int * term' syntax) 
   | NM of (bv * Prims.int) 
   | NT of (bv * term' syntax) 
   | UN of (Prims.int * universe) 
@@ -400,6 +401,7 @@ and lazyinfo =
 and lazy_kind =
   | BadLazy 
   | Lazy_bv 
+  | Lazy_namedv 
   | Lazy_binder 
   | Lazy_optionstate 
   | Lazy_fvar 
@@ -414,6 +416,7 @@ and lazy_kind =
   | Lazy_universe 
   | Lazy_universe_uvar 
   | Lazy_issue 
+  | Lazy_ident 
 and binding =
   | Binding_var of bv 
   | Binding_lid of (FStar_Ident.lident * (univ_names * term' syntax)) 
@@ -925,6 +928,10 @@ let (uu___is_DB : subst_elt -> Prims.bool) =
   fun projectee -> match projectee with | DB _0 -> true | uu___ -> false
 let (__proj__DB__item___0 : subst_elt -> (Prims.int * bv)) =
   fun projectee -> match projectee with | DB _0 -> _0
+let (uu___is_DT : subst_elt -> Prims.bool) =
+  fun projectee -> match projectee with | DT _0 -> true | uu___ -> false
+let (__proj__DT__item___0 : subst_elt -> (Prims.int * term' syntax)) =
+  fun projectee -> match projectee with | DT _0 -> _0
 let (uu___is_NM : subst_elt -> Prims.bool) =
   fun projectee -> match projectee with | NM _0 -> true | uu___ -> false
 let (__proj__NM__item___0 : subst_elt -> (bv * Prims.int)) =
@@ -1022,6 +1029,9 @@ let (uu___is_BadLazy : lazy_kind -> Prims.bool) =
   fun projectee -> match projectee with | BadLazy -> true | uu___ -> false
 let (uu___is_Lazy_bv : lazy_kind -> Prims.bool) =
   fun projectee -> match projectee with | Lazy_bv -> true | uu___ -> false
+let (uu___is_Lazy_namedv : lazy_kind -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Lazy_namedv -> true | uu___ -> false
 let (uu___is_Lazy_binder : lazy_kind -> Prims.bool) =
   fun projectee ->
     match projectee with | Lazy_binder -> true | uu___ -> false
@@ -1061,6 +1071,8 @@ let (uu___is_Lazy_universe_uvar : lazy_kind -> Prims.bool) =
     match projectee with | Lazy_universe_uvar -> true | uu___ -> false
 let (uu___is_Lazy_issue : lazy_kind -> Prims.bool) =
   fun projectee -> match projectee with | Lazy_issue -> true | uu___ -> false
+let (uu___is_Lazy_ident : lazy_kind -> Prims.bool) =
+  fun projectee -> match projectee with | Lazy_ident -> true | uu___ -> false
 let (uu___is_Binding_var : binding -> Prims.bool) =
   fun projectee ->
     match projectee with | Binding_var _0 -> true | uu___ -> false
@@ -1474,17 +1486,20 @@ type layered_eff_combinators =
   l_if_then_else:
     (tscheme * tscheme * indexed_effect_combinator_kind
       FStar_Pervasives_Native.option)
-    }
+    ;
+  l_close: (tscheme * tscheme) FStar_Pervasives_Native.option }
 let (__proj__Mklayered_eff_combinators__item__l_repr :
   layered_eff_combinators -> (tscheme * tscheme)) =
   fun projectee ->
     match projectee with
-    | { l_repr; l_return; l_bind; l_subcomp; l_if_then_else;_} -> l_repr
+    | { l_repr; l_return; l_bind; l_subcomp; l_if_then_else; l_close;_} ->
+        l_repr
 let (__proj__Mklayered_eff_combinators__item__l_return :
   layered_eff_combinators -> (tscheme * tscheme)) =
   fun projectee ->
     match projectee with
-    | { l_repr; l_return; l_bind; l_subcomp; l_if_then_else;_} -> l_return
+    | { l_repr; l_return; l_bind; l_subcomp; l_if_then_else; l_close;_} ->
+        l_return
 let (__proj__Mklayered_eff_combinators__item__l_bind :
   layered_eff_combinators ->
     (tscheme * tscheme * indexed_effect_combinator_kind
@@ -1492,7 +1507,8 @@ let (__proj__Mklayered_eff_combinators__item__l_bind :
   =
   fun projectee ->
     match projectee with
-    | { l_repr; l_return; l_bind; l_subcomp; l_if_then_else;_} -> l_bind
+    | { l_repr; l_return; l_bind; l_subcomp; l_if_then_else; l_close;_} ->
+        l_bind
 let (__proj__Mklayered_eff_combinators__item__l_subcomp :
   layered_eff_combinators ->
     (tscheme * tscheme * indexed_effect_combinator_kind
@@ -1500,7 +1516,8 @@ let (__proj__Mklayered_eff_combinators__item__l_subcomp :
   =
   fun projectee ->
     match projectee with
-    | { l_repr; l_return; l_bind; l_subcomp; l_if_then_else;_} -> l_subcomp
+    | { l_repr; l_return; l_bind; l_subcomp; l_if_then_else; l_close;_} ->
+        l_subcomp
 let (__proj__Mklayered_eff_combinators__item__l_if_then_else :
   layered_eff_combinators ->
     (tscheme * tscheme * indexed_effect_combinator_kind
@@ -1508,8 +1525,16 @@ let (__proj__Mklayered_eff_combinators__item__l_if_then_else :
   =
   fun projectee ->
     match projectee with
-    | { l_repr; l_return; l_bind; l_subcomp; l_if_then_else;_} ->
+    | { l_repr; l_return; l_bind; l_subcomp; l_if_then_else; l_close;_} ->
         l_if_then_else
+let (__proj__Mklayered_eff_combinators__item__l_close :
+  layered_eff_combinators ->
+    (tscheme * tscheme) FStar_Pervasives_Native.option)
+  =
+  fun projectee ->
+    match projectee with
+    | { l_repr; l_return; l_bind; l_subcomp; l_if_then_else; l_close;_} ->
+        l_close
 type eff_combinators =
   | Primitive_eff of wp_eff_combinators 
   | DM4F_eff of wp_eff_combinators 
@@ -2597,6 +2622,7 @@ let (t_real : term) = tconst FStar_Parser_Const.real_lid
 let (t_float : term) = tconst FStar_Parser_Const.float_lid
 let (t_char : term) = tabbrev FStar_Parser_Const.char_lid
 let (t_range : term) = tconst FStar_Parser_Const.range_lid
+let (t___range : term) = tconst FStar_Parser_Const.__range_lid
 let (t_vconfig : term) = tconst FStar_Parser_Const.vconfig_lid
 let (t_term : term) = tconst FStar_Parser_Const.term_lid
 let (t_term_view : term) = tabbrev FStar_Parser_Const.term_view_lid

@@ -16,7 +16,7 @@
 module Neg
 
 open FStar.ST
-open FStar.Tactics
+open FStar.Tactics.V2
 
 assume val __phi: Type
 assume val __psi: Type

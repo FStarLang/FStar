@@ -1,6 +1,6 @@
 module Bug2849a
 
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 
 let visit_terms (t: T.term): T.Tac unit =
   let rec tm (t: T.term): T.Tac unit = match T.inspect_unascribe t with

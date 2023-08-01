@@ -1,6 +1,6 @@
 module DependentBoolRefinement
-module T = FStar.Tactics
-module R = FStar.Reflection
+module T = FStar.Tactics.V2
+module R = FStar.Reflection.V2
 open FStar.List.Tot
 module L = FStar.List.Tot
 #push-options "--z3cliopt 'smt.qi.eager_threshold=100' --z3cliopt 'smt.arith.nl=false'"
@@ -211,7 +211,7 @@ module RT = FStar.Reflection.Typing
 
 let b2t_lid : R.name = ["Prims"; "b2t"]
 let b2t_fv : R.fv = R.pack_fv b2t_lid
-let b2t_ty : R.term = R.(pack_ln (Tv_Arrow (RT.as_binder 0 RT.bool_ty) (RT.mk_total (RT.tm_type RT.u_zero))))
+let b2t_ty : R.term = R.(pack_ln (Tv_Arrow (RT.mk_simple_binder RT.pp_name_default RT.bool_ty) (RT.mk_total (RT.tm_type RT.u_zero))))
 let r_b2t (t:R.term) 
   : R.term 
   = R.(pack_ln (Tv_App (pack_ln (Tv_FVar b2t_fv)) (t, Q_Explicit)))
@@ -231,13 +231,13 @@ let rec elab_exp (e:src_exp)
       R.pack_ln (Tv_BVar bv)
       
     | EVar n ->
-      let bv = R.pack_bv (RT.make_bv n) in
-      R.pack_ln (Tv_Var bv)
+      let v = R.pack_namedv (RT.make_namedv n) in
+      R.pack_ln (Tv_Var v)
 
     | ELam t e ->
       let t = elab_ty t in
       let e = elab_exp e in
-      R.pack_ln (Tv_Abs (RT.as_binder 0 t) e)
+      R.pack_ln (Tv_Abs (RT.mk_simple_binder RT.pp_name_default t) e)
              
     | EApp e1 e2 ->
       let e1 = elab_exp e1 in
@@ -262,14 +262,15 @@ and elab_ty (t:src_ty)
       let t2 = elab_ty t2 in
       R.pack_ln 
         (R.Tv_Arrow 
-          (RT.as_binder 0 t1)
+          (RT.mk_simple_binder RT.pp_name_default t1)
           (RT.mk_total t2)) //(R.pack_comp (C_Total t2 [])))
           
     | TRefineBool e ->
       let e = elab_exp e in
+      let b = RT.mk_simple_binder RT.pp_name_default RT.bool_ty in
       let bv = R.pack_bv (RT.make_bv 0) in
       let refinement = r_b2t e in
-      R.pack_ln (Tv_Refine bv RT.bool_ty refinement)
+      R.pack_ln (Tv_Refine b refinement)
 
 let rec freevars_elab_exp (e:src_exp)
   : Lemma (freevars e `Set.equal` RT.freevars (elab_exp e))
@@ -580,7 +581,7 @@ let rec extend_env_l_lookup_bvar (g:R.env) (sg:src_env) (x:var)
 #push-options "--query_stats --fuel 8 --ifuel 2 --z3rlimit_factor 2"
 let rec elab_open_commute' (n:nat) (e:src_exp) (x:src_exp) 
   : Lemma (ensures
-              RT.open_or_close_term' (elab_exp e) (RT.OpenWith (elab_exp x)) n ==
+              RT.subst_term (elab_exp e) [ RT.DT n (elab_exp x) ] ==
               elab_exp (open_exp' e x n))
           (decreases e)
   = match e with
@@ -601,7 +602,7 @@ let rec elab_open_commute' (n:nat) (e:src_exp) (x:src_exp)
 and elab_ty_open_commute' (n:nat) (e:src_ty) (x:src_exp)
   : Lemma
     (ensures
-      RT.open_or_close_term' (elab_ty e) (RT.OpenWith (elab_exp x)) n ==
+      RT.subst_term (elab_ty e) [ RT.DT n (elab_exp x) ] ==
       elab_ty (open_ty' e x n))
     (decreases e)
   = match e with
@@ -645,10 +646,10 @@ let subtyping_soundness #f (#sg:src_env) (#t0 #t1:src_ty) (ds:sub_typing f sg t0
     | S_Refl _ _ -> RT.Rel_equiv _ _ _ _ (RT.EQ_Refl _ _)
     | S_ELab _ _ _ d -> d
 
-#push-options "--query_stats --fuel 8 --ifuel 2 --z3rlimit_factor 2"
+#push-options "--query_stats --fuel 8 --ifuel 2 --z3rlimit_factor 4"
 let rec elab_close_commute' (n:nat) (e:src_exp) (x:var)
   : Lemma (ensures
-              RT.open_or_close_term' (elab_exp e) (RT.CloseVar x) n ==
+              RT.subst_term (elab_exp e) [ RT.ND x n ] ==
               elab_exp (close_exp' e x n))
           (decreases e)
   = match e with
@@ -669,7 +670,7 @@ let rec elab_close_commute' (n:nat) (e:src_exp) (x:var)
 and elab_ty_close_commute' (n:nat) (e:src_ty) (x:var)
   : Lemma
     (ensures
-      RT.open_or_close_term' (elab_ty e) (RT.CloseVar x) n ==
+      RT.subst_term (elab_ty e) [ RT.ND x n ] ==
       elab_ty (close_ty' e x n))
     (decreases e)
   = match e with
@@ -723,7 +724,7 @@ let rec soundness (#f:fstar_top_env)
       RT.T_Const _ _ _ RT.CT_False
 
     | T_Var _ x ->
-      RT.T_Var _ (R.pack_bv (RT.make_bv x))
+      RT.T_Var _ (R.pack_namedv (RT.make_namedv x))
 
     | T_Lam _ t e t' x dt de ->
       let de : RT.tot_typing (extend_env_l f ((x,Inl t)::sg))
@@ -743,11 +744,11 @@ let rec soundness (#f:fstar_top_env)
       in
       let dd
         : RT.tot_typing (extend_env_l f sg)
-                        (R.pack_ln (R.Tv_Abs (RT.as_binder 0 (elab_ty t)) (elab_exp e)))
+                        (R.pack_ln (R.Tv_Abs (RT.mk_simple_binder RT.pp_name_default (elab_ty t)) (elab_exp e)))
                         (elab_ty (TArrow t (close_ty t' x)))
         = RT.close_term_spec (elab_ty t') x;
           assert (elab_ty (close_ty t' x) ==
-                  RT.open_or_close_term' (elab_ty t') (RT.CloseVar x) 0);
+                  RT.subst_term (elab_ty t') [ RT.ND x 0 ]);
           RT.T_Abs (extend_env_l f sg)
                    x
                    (elab_ty t) 

@@ -1,6 +1,6 @@
 module Instantiate
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 assume val pred : int -> Type0
 

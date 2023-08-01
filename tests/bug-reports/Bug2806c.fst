@@ -1,19 +1,19 @@
 module Bug2806c
 
-open FStar.Tactics
+open FStar.Tactics.V2
+module R = FStar.Reflection.V2
 
-let dom (t:term{exists b c. inspect_ln t == Tv_Arrow b c}) =
+let dom (t:term{exists b c. inspect_ln t == R.Tv_Arrow b c}) : R.binder =
   match inspect_ln t with
-  | Tv_Arrow b _ -> bv_of_binder b
+  | R.Tv_Arrow b _ -> b
 
-let name (t:term{Tv_Arrow? (inspect_ln t)}) : Tac string =
-  assert (Tv_Arrow? (inspect_ln t));
-  let b : bv = dom t in
-  let bv : bv_view = inspect_bv b in
-  name_of_bv b
+let name (t:term{R.Tv_Arrow? (inspect_ln t)}) : Tac string =
+  assert (R.Tv_Arrow? (inspect_ln t));
+  let b : R.binder = dom t in
+  unseal (inspect_binder b).ppname
 
-let t1 : (t:term{Tv_Arrow? (inspect_ln t)}) = (`(x:int -> int))
-let t2 : (t:term{Tv_Arrow? (inspect_ln t)}) = (`(y:int -> int))
+let t1 : (t:term{R.Tv_Arrow? (inspect_ln t)}) = (`(x:int -> int))
+let t2 : (t:term{R.Tv_Arrow? (inspect_ln t)}) = (`(y:int -> int))
 
 //
 // name_of_bv is no longer Tot,
@@ -22,4 +22,6 @@ let t2 : (t:term{Tv_Arrow? (inspect_ln t)}) = (`(y:int -> int))
 [@@expect_failure]
 let falso () : Lemma False =
   assert (t1 == t2) by (compute ());
-  assert_norm (name t1 =!= name t2)
+  let n1 = name t1 in
+  let n2 = name t2 in
+  assert_norm (n1 =!= n2)

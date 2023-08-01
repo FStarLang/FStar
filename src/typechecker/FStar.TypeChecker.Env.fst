@@ -148,6 +148,7 @@ let initial_env deps
     failhard=false;
     nosynth=false;
     uvar_subtyping=true;
+    intactics=false;
 
     tc_term=tc_term;
     typeof_tot_or_gtot_term=typeof_tot_or_gtot_term;
@@ -161,7 +162,7 @@ let initial_env deps
     universe_of=universe_of;
     teq_nosmt_force=teq_nosmt_force;
     subtype_nosmt_force=subtype_nosmt_force;
-    qtbl_name_and_index=BU.smap_create 10, None;  //10?
+    qtbl_name_and_index=None, BU.smap_create 10;
     normalized_eff_names=BU.smap_create 20;  //20?
     fv_delta_depths = BU.smap_create 50;
     proof_ns = Options.using_facts_from ();
@@ -215,7 +216,7 @@ let push_stack env =
               attrtab=BU.smap_copy (attrtab env);
               gamma_cache=BU.smap_copy (gamma_cache env);
               identifier_info=BU.mk_ref !env.identifier_info;
-              qtbl_name_and_index=BU.smap_copy (env.qtbl_name_and_index |> fst), env.qtbl_name_and_index |> snd;
+              qtbl_name_and_index=env.qtbl_name_and_index |> fst, BU.smap_copy (env.qtbl_name_and_index |> snd);
               normalized_eff_names=BU.smap_copy env.normalized_eff_names;
               fv_delta_depths=BU.smap_copy env.fv_delta_depths;
               strict_args_tab=BU.smap_copy env.strict_args_tab;
@@ -259,19 +260,19 @@ let pop env msg = rollback env.solver msg None
 let incr_query_index env =
   let qix = peek_query_indices () in
   match env.qtbl_name_and_index with
-  | _, None -> env
-  | tbl, Some (l, n) ->
+  | None, _ -> env
+  | Some (l, typ, n), tbl ->
     match qix |> List.tryFind (fun (m, _) -> Ident.lid_equals l m) with
     | None ->
       let next = n + 1 in
       add_query_index (l, next);
       BU.smap_add tbl (string_of_lid l) next;
-      {env with qtbl_name_and_index=tbl, Some (l, next)}
+      {env with qtbl_name_and_index=Some (l, typ, next), tbl}
     | Some (_, m) ->
       let next = m + 1 in
       add_query_index (l, next);
       BU.smap_add tbl (string_of_lid l) next;
-      {env with qtbl_name_and_index=tbl, Some (l, next)}
+      {env with qtbl_name_and_index=Some (l, typ, next), tbl}
 
 ////////////////////////////////////////////////////////////
 // Checking the per-module debug level and position info  //

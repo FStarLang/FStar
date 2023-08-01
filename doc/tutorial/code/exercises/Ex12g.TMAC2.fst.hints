@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "ec00a8b77b8a3845905aea52d95bd061"
+      "6925c515bc61b132b015f2a8136c06ad"
     ],
     [
       "Ex12g.TMAC2.bspec1",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "bc71fda05c362b48a8288e0c817890cb"
+      "ae5f1fe71c2056b805ee75b6b684ff65"
     ],
     [
       "Ex12g.TMAC2.keygen",
@@ -40,7 +40,7 @@
         "typing_Ex12.BMAC.keygen"
       ],
       0,
-      "4b7109279ff4e1eb1e26d487091e591a"
+      "21fe2ebe666ccf735115bf4e92ab3755"
     ]
   ]
 ]

@@ -1,5 +1,5 @@
 [
-  "|ÚÔ9\u0014ˇD£\t]3\u0016fÿ{%",
+  "¿O\r\u0005fSEﬁaoÌvœ ‚M",
   [
     [
       "Neg.c3",
@@ -13,7 +13,7 @@
         "true_interp"
       ],
       0,
-      "bd4b324e05f12bd1c2e59335b10ee5db"
+      "f195588c6866536ffd66ad5b9cef6295"
     ],
     [
       "Neg.c3",
@@ -22,7 +22,7 @@
       1,
       [ "@query", "equation_Neg.xi" ],
       0,
-      "6d560518c4984723134b21a678470a58"
+      "df31dfcc07f67fa5b10e14eee3a2399e"
     ]
   ]
 ]

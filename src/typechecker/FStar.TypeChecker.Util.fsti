@@ -102,8 +102,9 @@ val strengthen_precondition: (option (unit -> string) -> env -> term -> lcomp ->
 val weaken_guard: guard_formula -> guard_formula -> guard_formula
 val weaken_precondition: env -> lcomp -> guard_formula -> lcomp
 val maybe_assume_result_eq_pure_term: env -> term -> lcomp -> lcomp
+val close_layered_lcomp_with_combinator: env -> list bv -> lcomp -> lcomp
 val close_wp_lcomp: env -> list bv -> lcomp -> lcomp
-val close_layered_lcomp: env -> list bv -> list term -> lcomp -> lcomp
+val close_layered_lcomp_with_substitutions: env -> list bv -> list term -> lcomp -> lcomp
 val pure_or_ghost_pre_and_post: env -> comp -> (option typ * typ)
 
 //
@@ -129,7 +130,6 @@ val check_has_type_maybe_coerce : env -> term -> lcomp -> typ -> bool -> term * 
 val check_top_level: env -> guard_t -> lcomp -> bool*comp
 
 val maybe_coerce_lc : env -> term -> lcomp -> typ -> term * lcomp * guard_t
-val coerce_views    : env -> term -> lcomp -> option (term * lcomp)
 
 //misc.
 val label: string -> Range.range -> typ -> typ

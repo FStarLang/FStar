@@ -15,7 +15,7 @@
 *)
 module LeftToRight
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 assume val a : int
 assume val b : int

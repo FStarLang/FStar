@@ -15,6 +15,6 @@
 *)
 module NatPos
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let n : nat = synth_by_tactic (fun () -> exact (quote 1))

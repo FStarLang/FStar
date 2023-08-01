@@ -302,6 +302,7 @@ let (defaults : (Prims.string * option_val) Prims.list) =
   ("extract_namespace", (List []));
   ("full_context_dependency", (Bool true));
   ("hide_uvar_nums", (Bool false));
+  ("hint_hook", Unset);
   ("hint_info", (Bool false));
   ("hint_dir", Unset);
   ("hint_file", Unset);
@@ -515,6 +516,8 @@ let (get_force : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "force" as_bool
 let (get_hide_uvar_nums : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "hide_uvar_nums" as_bool
+let (get_hint_hook : unit -> Prims.string FStar_Pervasives_Native.option) =
+  fun uu___ -> lookup_opt "hint_hook" (as_option as_string)
 let (get_hint_info : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "hint_info" as_bool
 let (get_hint_dir : unit -> Prims.string FStar_Pervasives_Native.option) =
@@ -968,7 +971,7 @@ let (interp_quake_arg : Prims.string -> (Prims.int * Prims.int * Prims.bool))
           let uu___ = ios f1 in let uu___1 = ios f2 in (uu___, uu___1, true)
         else failwith "unexpected value for --quake"
     | uu___ -> failwith "unexpected value for --quake"
-let (uu___448 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
+let (uu___449 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
   =
   let cb = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None in
   let set1 f =
@@ -980,11 +983,11 @@ let (uu___448 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
     | FStar_Pervasives_Native.Some f -> f msg in
   (set1, call)
 let (set_option_warning_callback_aux : (Prims.string -> unit) -> unit) =
-  match uu___448 with
+  match uu___449 with
   | (set_option_warning_callback_aux1, option_warning_callback) ->
       set_option_warning_callback_aux1
 let (option_warning_callback : Prims.string -> unit) =
-  match uu___448 with
+  match uu___449 with
   | (set_option_warning_callback_aux1, option_warning_callback1) ->
       option_warning_callback1
 let (set_option_warning_callback : (Prims.string -> unit) -> unit) =
@@ -1088,6 +1091,8 @@ let rec (specs_with_types :
       "Read/write hints to  dir/module_name.hints (instead of placing hint-file alongside source file)");
     (FStar_Getopt.noshort, "hint_file", (PathStr "path"),
       "Read/write hints to  path (instead of module-specific hints files; overrides hint_dir)");
+    (FStar_Getopt.noshort, "hint_hook", (SimpleStr "command"),
+      "Use <command> to generate hints for definitions which do not have them. The command will\n\treceive a JSON representation of the query, the type of the top-level definition involved,\n\tand the full SMT theory, and must output a comma separated list\n\tof facts to be used.");
     (FStar_Getopt.noshort, "hint_info", (Const (Bool true)),
       "Print information regarding hints (deprecated; use --query_stats instead)");
     (FStar_Getopt.noshort, "in", (Const (Bool true)),
@@ -1337,7 +1342,7 @@ let rec (specs_with_types :
               then option_warning_callback "__no_positivity"
               else ())), (Const (Bool true)))),
       "Don't check positivity of inductive types");
-    (FStar_Getopt.noshort, "warn_error", (Accumulated (SimpleStr "")),
+    (FStar_Getopt.noshort, "warn_error", (ReverseAccumulated (SimpleStr "")),
       "The [-warn_error] option follows the OCaml syntax, namely:\n\t\t- [r] is a range of warnings (either a number [n], or a range [n..n])\n\t\t- [-r] silences range [r]\n\t\t- [+r] enables range [r]\n\t\t- [@r] makes range [r] fatal.");
     (FStar_Getopt.noshort, "use_nbe", BoolStr,
       "Use normalization by evaluation as the default normalization strategy (default 'false')");
@@ -1487,7 +1492,7 @@ let (settable_specs :
     (FStar_Compiler_List.filter
        (fun uu___ ->
           match uu___ with | (uu___1, x, uu___2, uu___3) -> settable x))
-let (uu___639 :
+let (uu___640 :
   (((unit -> FStar_Getopt.parse_cmdline_res) -> unit) *
     (unit -> FStar_Getopt.parse_cmdline_res)))
   =
@@ -1504,11 +1509,11 @@ let (uu___639 :
   (set1, call)
 let (set_error_flags_callback_aux :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
-  match uu___639 with
+  match uu___640 with
   | (set_error_flags_callback_aux1, set_error_flags) ->
       set_error_flags_callback_aux1
 let (set_error_flags : unit -> FStar_Getopt.parse_cmdline_res) =
-  match uu___639 with
+  match uu___640 with
   | (set_error_flags_callback_aux1, set_error_flags1) -> set_error_flags1
 let (set_error_flags_callback :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
@@ -1907,6 +1912,8 @@ let (force : unit -> Prims.bool) = fun uu___ -> get_force ()
 let (full_context_dependency : unit -> Prims.bool) = fun uu___ -> true
 let (hide_uvar_nums : unit -> Prims.bool) =
   fun uu___ -> get_hide_uvar_nums ()
+let (hint_hook : unit -> Prims.string FStar_Pervasives_Native.option) =
+  fun uu___ -> get_hint_hook ()
 let (hint_info : unit -> Prims.bool) =
   fun uu___ -> (get_hint_info ()) || (get_query_stats ())
 let (hint_dir : unit -> Prims.string FStar_Pervasives_Native.option) =

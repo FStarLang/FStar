@@ -13,7 +13,14 @@ let (disentangle_abbrevs_from_bundle :
         fun rng ->
           let sigattrs =
             FStar_Compiler_List.collect
-              (fun s -> s.FStar_Syntax_Syntax.sigattrs) sigelts in
+              (fun s ->
+                 match s.FStar_Syntax_Syntax.sigel with
+                 | FStar_Syntax_Syntax.Sig_inductive_typ uu___ ->
+                     s.FStar_Syntax_Syntax.sigattrs
+                 | FStar_Syntax_Syntax.Sig_let uu___ ->
+                     s.FStar_Syntax_Syntax.sigattrs
+                 | uu___ -> []) sigelts in
+          let sigattrs1 = FStar_Syntax_Util.deduplicate_terms sigattrs in
           let type_abbrev_sigelts =
             FStar_Compiler_Effect.op_Bar_Greater sigelts
               (FStar_Compiler_List.collect
@@ -51,7 +58,7 @@ let (disentangle_abbrevs_from_bundle :
                  FStar_Syntax_Syntax.sigquals = quals;
                  FStar_Syntax_Syntax.sigmeta =
                    FStar_Syntax_Syntax.default_sigmeta;
-                 FStar_Syntax_Syntax.sigattrs = sigattrs;
+                 FStar_Syntax_Syntax.sigattrs = sigattrs1;
                  FStar_Syntax_Syntax.sigopts = FStar_Pervasives_Native.None
                }, [])
           | uu___ ->
@@ -426,7 +433,7 @@ let (disentangle_abbrevs_from_bundle :
                   FStar_Syntax_Syntax.sigquals = quals;
                   FStar_Syntax_Syntax.sigmeta =
                     FStar_Syntax_Syntax.default_sigmeta;
-                  FStar_Syntax_Syntax.sigattrs = sigattrs;
+                  FStar_Syntax_Syntax.sigattrs = sigattrs1;
                   FStar_Syntax_Syntax.sigopts = FStar_Pervasives_Native.None
                 } in
               (new_bundle, unfolded_type_abbrevs)

@@ -15,7 +15,7 @@
 *)
 module X64.Poly1305.Bitvectors_i
 open FStar.BV
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.Tactics.Derived
 open FStar.Tactics.BV
 open FStar.Mul

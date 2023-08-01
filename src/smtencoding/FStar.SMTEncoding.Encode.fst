@@ -15,10 +15,10 @@
 *)
 module FStar.SMTEncoding.Encode
 open Prims
+open FStar
 open FStar.Pervasives
 open FStar.Compiler.Effect
 open FStar.Compiler.List
-open FStar
 open FStar.Compiler
 open FStar.TypeChecker.Env
 open FStar.Syntax
@@ -29,23 +29,18 @@ open FStar.Ident
 open FStar.Const
 open FStar.SMTEncoding
 open FStar.SMTEncoding.Util
-module S = FStar.Syntax.Syntax
-module SS = FStar.Syntax.Subst
-module UF = FStar.Syntax.Unionfind
-module N = FStar.TypeChecker.Normalize
-module BU = FStar.Compiler.Util
-module U = FStar.Syntax.Util
-module TcUtil = FStar.TypeChecker.Util
-module Const = FStar.Parser.Const
-module R  = FStar.Reflection.Basic
-module RD = FStar.Reflection.Data
-module EMB = FStar.Syntax.Embeddings
-module RE = FStar.Reflection.Embeddings
 open FStar.SMTEncoding.Env
 open FStar.SMTEncoding.EncodeTerm
-open FStar.Parser
 
-module Env = FStar.TypeChecker.Env
+module BU     = FStar.Compiler.Util
+module Const  = FStar.Parser.Const
+module Env    = FStar.TypeChecker.Env
+module N      = FStar.TypeChecker.Normalize
+module S      = FStar.Syntax.Syntax
+module SS     = FStar.Syntax.Subst
+module TcUtil = FStar.TypeChecker.Util
+module UF     = FStar.Syntax.Unionfind
+module U      = FStar.Syntax.Util
 
 let norm_before_encoding env t =
     let steps = [Env.Eager_unfolding;

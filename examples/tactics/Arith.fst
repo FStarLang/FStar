@@ -17,7 +17,7 @@ module Arith
 
 //
 
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.Tactics.Arith
 open FStar.List
 open FStar.Mul

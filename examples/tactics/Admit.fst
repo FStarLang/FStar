@@ -15,7 +15,7 @@
 *)
 module Admit
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 val l : x:int -> y:int -> squash (x + y == x + x)
 let l x y = admit_dump ()

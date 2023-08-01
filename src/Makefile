@@ -8,6 +8,9 @@ MAKEFLAGS += --no-builtin-rules
 
 .PHONY: clean boot ocaml
 
+all:
+	$(error src/Makefile: Need to specify a rule)
+
 clean: clean-ocaml
 
 # --------------------------------------------------------------------
@@ -34,38 +37,50 @@ clean-ocaml: clean_boot
 # Testing
 # --------------------------------------------------------------------
 
+.PHONY: ocaml-unit-tests
 ocaml-unit-tests:
 	$(BIN)/fstar_tests.exe
 
+.PHONY: ulib-in-fsharp
 ulib-in-fsharp:
 	$(MAKE) -C ../ulib ulib-in-fsharp
 
-# Getting parallelism from this target
 .PHONY: uregressions
 uregressions: ulib-extra tutorial utests uexamples
 
-# Getting parallelism from this target as well
 # This is a hook for nightly builds (on Linux)
 # But, at the moment, it tests the same files as get tested on every push
 # We may add more nightly tests here in the future
 .PHONY: uregressions-ulong
 uregressions-ulong: uregressions
 
+.PHONY: ulib-extra
 ulib-extra:
 	+$(MAKE) -C ../ulib extra
 
+.PHONY: tutorial
 tutorial:
 	+$(MAKE) -C ../doc/tutorial regressions
 	+$(MAKE) -C ../doc/book/code
 
+.PHONY: utests
 utests:
 	+$(MAKE) -C ../tests all
 
-uexamples:
+.PHONY: uexamples
+uexamples: examples-all native_tactics-all semiring-all
+
+.PHONY: examples-all
+examples-all:
 	+$(MAKE) -C ../examples all
+
+.PHONY: native_tactics-all
+native_tactics-all:
 	+$(MAKE) -C ../examples native_tactics.all
+
+.PHONY: semiring-all
+semiring-all:
 	+$(MAKE) -C ../examples semiring.all
 
 ctags:
 	ctags --exclude=boot_fsts --exclude=boot_fstis --exclude=ocaml-output -R .
-

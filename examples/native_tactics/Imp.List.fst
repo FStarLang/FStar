@@ -221,7 +221,7 @@ let x_times_42 x : prog = [
 
 // //--------------------------------------------------------------------------------
 
-// // open FStar.Tactics
+// // open FStar.Tactics.V2
 // // open FStar.Tactics.CanonCommSemiring
 // // open FStar.Algebra.CommMonoid
 

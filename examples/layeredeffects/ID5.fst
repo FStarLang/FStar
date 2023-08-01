@@ -114,7 +114,7 @@ effect Id (a:Type) (pre:Type0) (post:a->Type0) =
 
 effect I (a:Type) = Id a True (fun _ -> True)
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let lift_pure_nd (a:Type) (wp:wp a) (f:unit -> PURE a wp) :
   Pure (repr a wp) (requires True)

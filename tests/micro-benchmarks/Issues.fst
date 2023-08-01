@@ -1,6 +1,6 @@
 module Issues
 open FStar.Issue
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 // (* This test exercises the reflection of FStar.Issue *)
 
 let print_issue (i:issue) : string = message_of_issue i

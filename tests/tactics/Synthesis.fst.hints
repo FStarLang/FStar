@@ -1,5 +1,5 @@
 [
-  "7ÒÆQ;„¶√∞ê\u0002ô@{‰˜",
+  "$ÁÀ¸‡›&P|\nö®yì_",
   [
     [
       "Synthesis.uu___1",
@@ -8,7 +8,7 @@
       1,
       [ "@query", "equation_Synthesis.a" ],
       0,
-      "0668f29cc2df7e6704f2684b1e848c1b"
+      "8e4a2e482c899d1da53611b0039294c9"
     ],
     [
       "Synthesis.uu___8",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "equation_Synthesis.f8" ],
       0,
-      "f83451489b09e8fa6511ad4d880d1c3d"
+      "2b55e3452f3ef6e75d102257a9ac5217"
     ],
     [
       "Synthesis.uu___18",
@@ -26,16 +26,7 @@
       1,
       [ "@query", "equation_Synthesis.fn8" ],
       0,
-      "f942e208320be1144cfe14c9a980ed89"
-    ],
-    [
-      "Synthesis.uu___26",
-      1,
-      2,
-      1,
-      [ "@query", "equation_Synthesis.iszero" ],
-      0,
-      "4bb15847af485ca0df57fcc58d42893d"
+      "d166752d35397b2838313c8ba8c6d34d"
     ],
     [
       "Synthesis.uu___27",
@@ -44,10 +35,19 @@
       1,
       [ "@query", "equation_Synthesis.iszero" ],
       0,
-      "4eb3bdb40026416d0f3e890583eb01e4"
+      "61fa965b74c2f92d9b3f8715c14cbf15"
     ],
     [
       "Synthesis.uu___28",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Synthesis.iszero" ],
+      0,
+      "0b49feb88d497c8190d6964099073cf6"
+    ],
+    [
+      "Synthesis.uu___29",
       1,
       2,
       1,
@@ -56,16 +56,16 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "0a6fa932f40095d7fd0f9fb7ed175edd"
+      "b05e109b827a12e6b072b95300c5f5b3"
     ],
     [
-      "Synthesis.uu___42",
+      "Synthesis.uu___43",
       1,
       2,
       1,
       [ "@query", "equation_Synthesis.f2" ],
       0,
-      "504e84901a6e1ba7729140d9a9e7d438"
+      "f3470baa30ac9eccbbcfb1cbc961e18e"
     ],
     [
       "Synthesis.f3",
@@ -83,16 +83,16 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "73f16560983e04e55a966dc35150bdc1"
+      "9e3839a7824be11b2e437bddb6c8bc2e"
     ],
     [
-      "Synthesis.uu___56",
+      "Synthesis.uu___57",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "60c0876746290ab7c291f4a2c6a494cf"
+      "7c10a1ae33df0509f434fb50b5d43f7e"
     ]
   ]
 ]

@@ -1184,3 +1184,5 @@ unfold let eqtype_as_type (a:eqtype) : Type = a
     along a provable equality (as in the body of this
     function). Occasionally, you may need to apply this explicitly *)
 let coerce_eq (#a:Type) (#b:Type) (_:squash (a == b)) (x:a) : b = x
+
+val coercion : unit

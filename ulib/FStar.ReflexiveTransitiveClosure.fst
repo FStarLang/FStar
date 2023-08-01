@@ -15,7 +15,7 @@
 *)
 module FStar.ReflexiveTransitiveClosure
 
-open FStar.Tactics
+open FStar.Tactics.V2
 #set-options "--max_ifuel 1 --max_fuel 0"
 
 noeq
@@ -68,7 +68,7 @@ let closure_step #a r x y =
   let q : squash (r x y)  = () in
   assert (squash (r x y) ==> closure r x y) by
     (let xy = implies_intro () in
-     let xy : squash (r x y) = unquote xy in
+     let xy : squash (r x y) = unquote (binding_to_term xy) in
      squash_intro ();
      mapply (`Step);
      assumption())
@@ -149,13 +149,13 @@ let stable_on_closure #a r p hr =
   assert (forall x y. p x ==> closure r x y ==> p y) by
     (let x = forall_intro () in
      let y = forall_intro () in
-     let x : a = unquote x in
-     let y : a = unquote y in
+     let x : a = unquote (binding_to_term x) in
+     let y : a = unquote (binding_to_term y) in
      let px = implies_intro () in
      mapply (`squash_implies_to_arrow);
      mapply (`FStar.Squash.return_squash);
      apply (`squash_double_arrow);
      mapply (`FStar.Squash.return_squash);
      let xy = intro () in
-     let xy : _closure r x y = unquote xy in
+     let xy : _closure r x y = unquote (binding_to_term xy) in
      exact (quote (_stable_on_closure r p hr x y xy (Squash.get_proof _))))

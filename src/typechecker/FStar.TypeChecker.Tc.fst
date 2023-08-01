@@ -50,20 +50,34 @@ module EMB = FStar.Syntax.Embeddings
 module ToSyntax = FStar.ToSyntax.ToSyntax
 module O = FStar.Options
 
+let sigelt_typ (se:sigelt) : option typ =
+  match se.sigel with
+  | Sig_inductive_typ {t}
+  | Sig_datacon {t}
+  | Sig_declare_typ {t} -> Some t
+
+  | Sig_let {lbs=(_, lb::_)} ->
+    Some lb.lbtyp
+
+  | _ ->
+    None
+
 //set the name of the query so that we can correlate hints to source program fragments
 let set_hint_correlator env se =
     //if the tbl has a counter for lid, we use that, else we start from 0
     //this is useful when we verify the extracted interface alongside
-    let tbl = env.qtbl_name_and_index |> fst in
+    let tbl = env.qtbl_name_and_index |> snd in
     let get_n lid =
       let n_opt = BU.smap_try_find tbl (string_of_lid lid) in
       if is_some n_opt then n_opt |> must else 0
     in
 
+    let typ = match sigelt_typ se with | Some t -> t | _ -> S.tun in
+
     match Options.reuse_hint_for () with
     | Some l ->
       let lid = Ident.lid_add_suffix (Env.current_module env) l in
-      {env with qtbl_name_and_index=tbl, Some (lid, get_n lid)}
+      {env with qtbl_name_and_index=Some (lid, typ, get_n lid), tbl}
 
     | None ->
       let lids = U.lids_of_sigelt se in
@@ -71,7 +85,7 @@ let set_hint_correlator env se =
             | [] -> Ident.lid_add_suffix (Env.current_module env)
                                          (GenSym.next_id () |> BU.string_of_int) // GM: Should we really touch the gensym?
             | l::_ -> l in
-      {env with qtbl_name_and_index=tbl, Some (lid, get_n lid)}
+      {env with qtbl_name_and_index=Some (lid, typ, get_n lid), tbl}
 
 let log env = (Options.log_types()) &&  not(lid_equals PC.prims_lid (Env.current_module env))
 
@@ -317,7 +331,7 @@ let proc_check_with (attrs:list attribute) (kont : unit -> 'a) : 'a =
   match U.get_attribute PC.check_with_lid attrs with
   | None -> kont ()
   | Some [(a, None)] ->
-    match EMB.unembed EMB.e_vconfig a true EMB.id_norm_cb with
+    match EMB.unembed EMB.e_vconfig a EMB.id_norm_cb with
     | None -> failwith "nah"
     | Some vcfg ->
     Options.with_saved_options (fun () ->
@@ -530,6 +544,14 @@ let tc_sig_let env r se lbs lids : list sigelt * list sigelt * Env.env =
         let lbdef = Env.postprocess env tau lbtyp lbdef in
         let lbdef = SS.close_univ_vars univnames lbdef in
         { lb with lbdef = lbdef }
+    in
+    let env' =
+        match (SS.compress e).n with
+        | Tm_let {lbs} ->
+          let se = { se with sigel = Sig_let {lbs; lids} } in
+          set_hint_correlator env' se
+        | _ ->
+          failwith "no way, not a let?"
     in
     let r =
         //We already generalized phase1; don't need to generalize again
@@ -1003,6 +1025,23 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : Env.env =
 
     | _ -> env
 
+(* This function is called when promoting entries in the id info table.
+   If t has no dangling uvars, it is normalized and promoted,
+   otherwise discarded *)
+let compress_and_norm env t = 
+    match Compress.deep_compress_if_no_uvars t with
+    | None -> None //if dangling uvars, then just drop this entry
+    | Some t ->  //otherwise, normalize and promote
+      Some (
+        N.normalize
+               [Env.AllowUnboundUniverses; //this is allowed, since we're reducing types that appear deep within some arbitrary context
+                Env.CheckNoUvars;
+                Env.Beta; Env.DoNotUnfoldPureLets; Env.CompressUvars;
+                Env.Exclude Env.Zeta; Env.Exclude Env.Iota; Env.NoFullNorm]
+              env
+              t
+      )
+
 let tc_decls env ses =
   let rec process_one_decl (ses, env) se =
     (* If emacs is peeking, and debugging is on, don't do anything,
@@ -1033,21 +1072,8 @@ let tc_decls env ses =
         then BU.print1 "About to elim vars from (elaborated) %s\n" (Print.sigelt_to_string se);
         N.elim_uvars env se) in
 
-    Profiling.profile 
-      (fun () ->
-        Env.promote_id_info env (fun t ->
-          if Env.debug env (Options.Other "UF")
-          then BU.print1 "check uvars %s\n" (Print.term_to_string t);
-          N.normalize
-               [Env.AllowUnboundUniverses; //this is allowed, since we're reducing types that appear deep within some arbitrary context
-                Env.CheckNoUvars;
-                Env.Beta; Env.DoNotUnfoldPureLets; Env.CompressUvars;
-                Env.Exclude Env.Zeta; Env.Exclude Env.Iota; Env.NoFullNorm]
-              env
-              t))
-        (Some (Ident.string_of_lid (Env.current_module env)))
-        "FStar.TypeChecker.Tc.chec_uvars"; //update the id_info table after having removed their uvars
-
+    Env.promote_id_info env (compress_and_norm env);
+          
     // Compress all checked sigelts
     let ses' = ses' |> List.map (Compress.deep_compress_se false) in
 
@@ -1075,7 +1101,7 @@ let tc_decls env ses =
     let r =
       Profiling.profile
                  (fun () -> process_one_decl acc se)
-                 (Some (Ident.string_of_lid (Env.current_module env)))
+                 (Some (Print.sigelt_to_string_short se))
                  "FStar.TypeChecker.Tc.process_one_decl"
       // ^ See a special case for this phase in FStar.Options. --timing
       // enables it.
@@ -1139,7 +1165,7 @@ let finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) 
   let env = Env.finish_module en m in
 
   //we can clear the lid to query index table
-  env.qtbl_name_and_index |> fst |> BU.smap_clear;
+  env.qtbl_name_and_index |> snd |> BU.smap_clear;
 
   //pop BUT ignore the old env
   pop_context env ("Ending modul " ^ string_of_lid m.name) |> ignore;

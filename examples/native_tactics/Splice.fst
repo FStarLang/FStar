@@ -15,7 +15,7 @@
 *)
 module Splice
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let make_x_42 () : Tac decls =
     (* The let binds are needed due to the Tac effect *)

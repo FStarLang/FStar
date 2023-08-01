@@ -1,6 +1,6 @@
 module Bug2045
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let ff () : Dv string = ""
 

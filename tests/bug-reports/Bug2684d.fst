@@ -1,6 +1,6 @@
 module Bug2684d
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 val f : (#[exact (`1)] _ : int) -> Type0
 let f #_ = unit

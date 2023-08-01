@@ -344,8 +344,9 @@ let (tc_data :
                                     FStar_TypeChecker_Normalize.whnf_steps
                                     [FStar_TypeChecker_Env.AllowUnboundUniverses])
                                  env2 t1 in
+                             let t3 = FStar_Syntax_Util.canon_arrow t2 in
                              let uu___4 =
-                               let uu___5 = FStar_Syntax_Subst.compress t2 in
+                               let uu___5 = FStar_Syntax_Subst.compress t3 in
                                uu___5.FStar_Syntax_Syntax.n in
                              match uu___4 with
                              | FStar_Syntax_Syntax.Tm_arrow
@@ -356,13 +357,13 @@ let (tc_data :
                                    FStar_Compiler_Util.first_N ntps bs in
                                  (match uu___5 with
                                   | (uu___6, bs') ->
-                                      let t3 =
+                                      let t4 =
                                         FStar_Syntax_Syntax.mk
                                           (FStar_Syntax_Syntax.Tm_arrow
                                              {
                                                FStar_Syntax_Syntax.bs1 = bs';
                                                FStar_Syntax_Syntax.comp = res
-                                             }) t2.FStar_Syntax_Syntax.pos in
+                                             }) t3.FStar_Syntax_Syntax.pos in
                                       let subst =
                                         FStar_Compiler_Effect.op_Bar_Greater
                                           tps
@@ -386,7 +387,7 @@ let (tc_data :
                                                                i)), x))) in
                                       let uu___7 =
                                         let uu___8 =
-                                          FStar_Syntax_Subst.subst subst t3 in
+                                          FStar_Syntax_Subst.subst subst t4 in
                                         FStar_Syntax_Util.arrow_formals_comp
                                           uu___8 in
                                       (match uu___7 with
@@ -409,7 +410,7 @@ let (tc_data :
                                                 (FStar_Errors_Codes.Fatal_UnexpectedConstructorType,
                                                   "Constructors cannot have effects")
                                                 uu___10)))
-                             | uu___5 -> ([], t2) in
+                             | uu___5 -> ([], t3) in
                            (match uu___3 with
                             | (arguments, result) ->
                                 ((let uu___5 =
@@ -3134,8 +3135,32 @@ let (mk_discriminator_and_indexed_projectors :
                                                 else [decl; impl])))) in
                             FStar_Compiler_Effect.op_Bar_Greater uu___
                               FStar_Compiler_List.flatten in
-                          FStar_Compiler_List.op_At discriminator_ses
-                            projectors_ses
+                          let no_plugin se =
+                            let not_plugin_attr t =
+                              let h = FStar_Syntax_Util.head_of t in
+                              let uu___ =
+                                FStar_Syntax_Util.is_fvar
+                                  FStar_Parser_Const.plugin_attr h in
+                              Prims.op_Negation uu___ in
+                            let uu___ =
+                              FStar_Compiler_List.filter not_plugin_attr
+                                se.FStar_Syntax_Syntax.sigattrs in
+                            {
+                              FStar_Syntax_Syntax.sigel =
+                                (se.FStar_Syntax_Syntax.sigel);
+                              FStar_Syntax_Syntax.sigrng =
+                                (se.FStar_Syntax_Syntax.sigrng);
+                              FStar_Syntax_Syntax.sigquals =
+                                (se.FStar_Syntax_Syntax.sigquals);
+                              FStar_Syntax_Syntax.sigmeta =
+                                (se.FStar_Syntax_Syntax.sigmeta);
+                              FStar_Syntax_Syntax.sigattrs = uu___;
+                              FStar_Syntax_Syntax.sigopts =
+                                (se.FStar_Syntax_Syntax.sigopts)
+                            } in
+                          FStar_Compiler_List.map no_plugin
+                            (FStar_Compiler_List.op_At discriminator_ses
+                               projectors_ses)
 let (mk_data_operations :
   FStar_Syntax_Syntax.qualifier Prims.list ->
     FStar_Syntax_Syntax.attribute Prims.list ->

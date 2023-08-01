@@ -15,10 +15,6 @@
 *)
 module FStar.Reflection
 
-include FStar.Reflection.Types
-include FStar.Reflection.Data
-include FStar.Reflection.Builtins
-include FStar.Reflection.Derived
-include FStar.Reflection.Derived.Lemmas
-include FStar.Reflection.Const
-include FStar.Reflection.Compare
+(* This switch currently points to V1. Ask for V2 explicitly by
+importing FStar.Reflection.V2 *)
+include FStar.Reflection.V1

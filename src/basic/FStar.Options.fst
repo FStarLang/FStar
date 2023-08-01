@@ -169,6 +169,7 @@ let defaults =
       ("extract_namespace"            , List []);
       ("full_context_dependency"      , Bool true);
       ("hide_uvar_nums"               , Bool false);
+      ("hint_hook"                    , Unset);
       ("hint_info"                    , Bool false);
       ("hint_dir"                     , Unset);
       ("hint_file"                    , Unset);
@@ -356,6 +357,7 @@ let get_extract_module          ()      = lookup_opt "extract_module"           
 let get_extract_namespace       ()      = lookup_opt "extract_namespace"        (as_list as_string)
 let get_force                   ()      = lookup_opt "force"                    as_bool
 let get_hide_uvar_nums          ()      = lookup_opt "hide_uvar_nums"           as_bool
+let get_hint_hook               ()      = lookup_opt "hint_hook"                (as_option as_string)
 let get_hint_info               ()      = lookup_opt "hint_info"                as_bool
 let get_hint_dir                ()      = lookup_opt "hint_dir"                 (as_option as_string)
 let get_hint_file               ()      = lookup_opt "hint_file"                (as_option as_string)
@@ -797,6 +799,14 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * string) 
          "hint_file",
          PathStr "path",
         "Read/write hints to  path (instead of module-specific hints files; overrides hint_dir)");
+
+       ( noshort,
+        "hint_hook",
+        SimpleStr "command",
+        "Use <command> to generate hints for definitions which do not have them. The command will\n\t\
+         receive a JSON representation of the query, the type of the top-level definition involved,\n\t\
+         and the full SMT theory, and must output a comma separated list\n\t\
+         of facts to be used.");
 
        ( noshort,
         "hint_info",
@@ -1283,7 +1293,7 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * string) 
 
         ( noshort,
         "warn_error",
-        Accumulated (SimpleStr ("")),
+        ReverseAccumulated (SimpleStr ("")),
         "The [-warn_error] option follows the OCaml syntax, namely:\n\t\t\
          - [r] is a range of warnings (either a number [n], or a range [n..n])\n\t\t\
          - [-r] silences range [r]\n\t\t\
@@ -1727,6 +1737,7 @@ let expose_interfaces            () = get_expose_interfaces          ()
 let force                        () = get_force                       ()
 let full_context_dependency      () = true
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
+let hint_hook                    () = get_hint_hook                   ()
 let hint_info                    () = get_hint_info                   ()
                                     || get_query_stats                ()
 let hint_dir                     () = get_hint_dir                    ()

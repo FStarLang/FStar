@@ -32,7 +32,7 @@ let quantifier_as_lemma (#a:Type) (#b: a -> Type)
     : Lemma (b x)
     = ()
 
-open FStar.Tactics.Builtins
+open FStar.Tactics.V2.Builtins
 open FStar.Reflection.Types
 open FStar.Tactics.Types
 open FStar.Tactics.Effect

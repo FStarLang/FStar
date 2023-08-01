@@ -1,5 +1,5 @@
 [
-  "ÂR¶åÏ-ıÉ˜˝loåHÖπ",
+  "É¿≤\u0000¥Æ¶ç·≈∞OU\u0006œ,",
   [
     [
       "Bug2229.test_ghost",
@@ -8,7 +8,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "7ab698d0b99303db0db176511766f91e"
+      "8358c00f96ba9fd878952d71172224f8"
     ],
     [
       "Bug2229.test_pure_gtot",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "1cd3e5b23d54529f2ab8ee20c93fd063"
+      "d89230b4afac3db73dee58f8cc5bb8f0"
     ],
     [
       "Bug2229.test_pure",
@@ -26,7 +26,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "925eb35643f2e6cbc06748025d40fedf"
+      "78287d0fe3dc8dfba23a190330218b06"
     ],
     [
       "Bug2229.test_gtot_pure",
@@ -35,7 +35,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "e7152223366242b6cf7ed67360b54911"
+      "f39accba1f60a2462a3a76bc4d8677eb"
     ]
   ]
 ]

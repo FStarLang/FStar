@@ -2,6 +2,8 @@ FSTAR_HOME=../..
 include $(FSTAR_HOME)/examples/Makefile.include
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
 
+OTHERFLAGS+=--warn_error +240
+
 all: verify iverify not-verify extract
 
 ##################
@@ -50,7 +52,8 @@ SHOULD_VERIFY_CLOSED=Bug022.fst Bug024.fst Bug025.fst Bug026.fst Bug026b.fst Bug
   Bug2635.fst Bug2637.fst Bug2641.fst Bug1486.fst PropProofs.fst \
   Bug2684a.fst Bug2684b.fst Bug2684c.fst Bug2684d.fst Bug2659b.fst\
   Bug2756.fst MutualRecPositivity.fst Bug2806a.fst Bug2806b.fst Bug2806c.fst Bug2806d.fst Bug2809.fst\
-  Bug2849a.fst Bug2849b.fst Bug2045.fst Bug2876.fst Bug2882.fst Bug2895.fst Bug2894.fst
+  Bug2849a.fst Bug2849b.fst Bug2045.fst Bug2876.fst Bug2882.fst Bug2895.fst Bug2894.fst \
+	Bug2415.fst
 
 SHOULD_VERIFY_INTERFACE_CLOSED=Bug771.fsti Bug771b.fsti
 SHOULD_VERIFY_AND_WARN_CLOSED=Bug016.fst

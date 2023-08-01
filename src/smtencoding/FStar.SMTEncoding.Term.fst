@@ -693,7 +693,7 @@ let termToSmt
           let pats_str =
             match pats with
             | [[]]
-            | [] -> ";;no pats"
+            | [] -> if print_ranges then ";;no pats" else ""
             | _ ->
               pats
               |> List.map (fun pats ->

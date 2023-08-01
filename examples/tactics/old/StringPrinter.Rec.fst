@@ -16,7 +16,7 @@
 module StringPrinter.Rec
 include StringPrinter.Base
 
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 
 module Ca = FStar.Int.Cast
 module U32 = FStar.UInt32
@@ -197,7 +197,7 @@ let mk_do_while (#t: Type) (x: t) : T.Tac unit =
       | Some s ->
         begin match T.inspect_sigelt s with
         | T.Sg_Let true lbs ->
-          let lb = T.lookup_lb_view lbs n in
+          let lb = T.lookup_lb lbs n in
           let ty, tm = T.(lb.lb_typ, lb.lb_def) in
           begin match T.inspect ty with
           | T.Tv_Arrow tin' tout' ->

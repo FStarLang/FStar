@@ -1,6 +1,6 @@
 module Bug2475
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 // Some dumb function and dumb lemmas
 let f_inv_unsquash (#a:Type0) (f:(a -> a)) = ((forall (x:a). f (f x) == x))

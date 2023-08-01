@@ -1229,7 +1229,7 @@ let run_segment :
               let uu___2 =
                 let uu___3 =
                   FStar_Compiler_Range_Ops.json_of_def_range
-                    (FStar_Parser_AST.decl_drange decl) in
+                    decl.FStar_Parser_AST.drange in
                 ("def_range", uu___3) in
               [uu___2] in
             FStar_Json.JsonAssoc uu___1 in
@@ -1545,6 +1545,8 @@ let (run_push_without_deps :
                FStar_TypeChecker_Env.nosynth = flag;
                FStar_TypeChecker_Env.uvar_subtyping =
                  (uu___.FStar_TypeChecker_Env.uvar_subtyping);
+               FStar_TypeChecker_Env.intactics =
+                 (uu___.FStar_TypeChecker_Env.intactics);
                FStar_TypeChecker_Env.tc_term =
                  (uu___.FStar_TypeChecker_Env.tc_term);
                FStar_TypeChecker_Env.typeof_tot_or_gtot_term =

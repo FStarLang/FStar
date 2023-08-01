@@ -15,7 +15,7 @@
 *)
 module EExists
 
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.Classical
 open FStar.Squash
 
@@ -29,7 +29,7 @@ let f1 =
   assert (exists x. x == 42 ==> x + 1 == 43)
       by (eexists unit (fun _ ->
           let b = implies_intro() in
-          let _ = tcut (mk_e_app (pack_fv' squash_qn) [type_of_binder b]) in
+          let _ = tcut (mk_e_app (pack_fv' squash_qn) [b.sort]) in
           flip();
           trefl();
           norm [primops]; trefl()))
@@ -38,7 +38,7 @@ let f1 =
 let foo () : Tac unit =
             eexists unit (fun _ ->
             let b = implies_intro() in
-            (match term_as_formula' (type_of_binder b) with
+            (match term_as_formula' b.sort with
             | Comp (Eq (Some t)) x y ->
               (match inspect x, inspect y with
               | Tv_Uvar _ _, _ | _, Tv_Uvar _ _ ->

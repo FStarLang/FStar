@@ -139,6 +139,7 @@ let tc_data (env:env_t) (tcs : list (sigelt * universe))
 
          let arguments, result =
             let t = N.normalize (N.whnf_steps @ [Env.AllowUnboundUniverses]) env t in  //AR: allow unbounded universes, since we haven't typechecked t yet
+            let t = U.canon_arrow t in
             match (SS.compress t).n with
                 | Tm_arrow {bs; comp=res} ->
                   //the type of each datacon is already a function with the type params as arguments
@@ -1100,7 +1101,17 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
               then BU.print1 "Implementation of a projector %s\n"  (Print.sigelt_to_string impl);
               if no_decl then [impl] else [decl;impl]) |> List.flatten
     in
-    discriminator_ses @ projectors_ses
+    (* We remove the plugin attribute from these generated definitions.
+    We do not want to pay an embedding/unembedding to use them, and we don't
+    want warning about unfolding something that is a plugin *)
+    let no_plugin (se:sigelt) : sigelt =
+      let not_plugin_attr (t:term) : bool =
+        let h = U.head_of t in
+        not (U.is_fvar C.plugin_attr h)
+      in
+      { se with sigattrs = List.filter not_plugin_attr se.sigattrs }
+    in
+    List.map no_plugin (discriminator_ses @ projectors_ses)
 
 let mk_data_operations iquals attrs env tcs se =
   match se.sigel with

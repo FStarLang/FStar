@@ -417,9 +417,14 @@ let check_aqual (a0 a1:aqual)
     | Some ({aqual_implicit=b0}), Some ({aqual_implicit=b1}) ->
       if b0 = b1
       then return ()
-      else fail "Unequal arg qualifiers"
+      else fail (BU.format2 "Unequal arg qualifiers: lhs implicit=%s and rhs implicit=%s"
+                    (string_of_bool b0) (string_of_bool b1))
+    | None, Some { aqual_implicit=false }
+    | Some { aqual_implicit=false }, None ->
+      return ()
     | _ ->
-      fail "Unequal arg qualifiers"
+      fail (BU.format2 "Unequal arg qualifiers: lhs %s and rhs %s"
+              (P.aqual_to_string a0) (P.aqual_to_string a1))
 
 let check_positivity_qual (rel:relation) (p0 p1:option positivity_qualifier)
   : result unit
@@ -820,13 +825,16 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
       : option (term & term)
       = maybe_unfold_side (which_side_to_unfold t0 t1) t0 t1
     in
+    let emit_guard t0 t1 =
+       let! _, t_typ = check' g t0 in
+       let! u = universe_of g t_typ in
+       guard (U.mk_eq2 u t_typ t0 t1)
+    in
     let fallback t0 t1 =
       if guard_ok
       then if equatable g t0
             || equatable g t1
-           then let! _, t_typ = check' g t0 in
-                let! u = universe_of g t_typ in
-                guard (U.mk_eq2 u t_typ t0 t1)
+           then emit_guard t0 t1
            else err ()
       else err ()
     in
@@ -997,10 +1005,28 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
         if not (head_matches && List.length args0 = List.length args1)
         then maybe_unfold_and_retry t0 t1
         else (
-          handle_with
-            (check_relation g EQUALITY head0 head1 ;!
-             check_relation_args g EQUALITY args0 args1)
-            (fun _ -> maybe_unfold_side_and_retry Both t0 t1)
+          (* If we're proving equality, SMT queries are ok, and either head
+             is equatable:
+              - first try proving equality structurally, without a guard.
+              - if that fails, then emit an SMT query
+             This is designed to be able to prove things like `v.v1 == u.v1`
+             first by trying to unify `v` and `u` and if it fails
+             then prove `v.v1 == u.v1` *)
+          let compare_head_and_args () =
+            handle_with
+              (check_relation g EQUALITY head0 head1 ;!
+               check_relation_args g EQUALITY args0 args1)
+              (fun _ -> maybe_unfold_side_and_retry Both t0 t1)
+          in
+          if guard_ok &&
+            (rel=EQUALITY) && 
+            (equatable g t0 || equatable g t1)
+          then (
+            handle_with 
+              (no_guard (compare_head_and_args ()))
+              (fun _ -> emit_guard t0 t1)
+          )
+          else compare_head_and_args ()
         )
 
       | Tm_abs {bs=b0::b1::bs; body; rc_opt=ropt}, _ ->

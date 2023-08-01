@@ -15,7 +15,7 @@
 *)
 module ApplyLemma
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 assume val p : Type0
 assume val q : Type0

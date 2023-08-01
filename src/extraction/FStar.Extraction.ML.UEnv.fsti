@@ -217,3 +217,6 @@ val extend_with_module_name :
 
 (** Mark exiting a module scope *)
 val exit_module : uenv -> uenv
+
+val no_fstar_stubs : mlpath -> mlpath
+val no_fstar_stubs_ns : list mlsymbol -> list mlsymbol

@@ -1,5 +1,5 @@
 [
-  "\t¢$oÀÞ÷~³»Ç\u0014¼†\u001d\u001a",
+  "\u001dQ¾Ãàº\\±·û\u0017Fþ9Z'",
   [
     [
       "MiniParseExample2.__proj__U__item___0",
@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_fb807a479aa69c50ca430264cffc40b0"
       ],
       0,
-      "f3c88b6edde43d962a00064b07b69f4c"
+      "bd0bc6ef27f6033bb5e3a4a427cc18b0"
     ],
     [
       "MiniParseExample2.c3",
@@ -20,8 +20,7 @@
       1,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_Prims.pow2.fuel_instrumented",
-        "@fuel_irrelevance_Prims.pow2.fuel_instrumented", "@query",
+        "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
         "MiniParseExample2_pretyping_ceb38713929ce0ad4653241d7f1fb55b",
         "b2t_def", "bool_inversion", "bool_typing",
         "constructor_distinct_MiniParseExample2.X",
@@ -51,10 +50,10 @@
         "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
         "token_correspondence_MiniParseExample2.imp0",
         "token_correspondence_Prims.pow2.fuel_instrumented",
-        "typing_FStar.UInt16.v", "unit_inversion"
+        "typing_FStar.UInt16.v", "typing_Prims.pow2", "unit_inversion"
       ],
       0,
-      "eedd896758a11a7eb583349f392213bb"
+      "1116f9f17d8024e5da5e3c28e3d50ba2"
     ],
     [
       "MiniParseExample2.c2",
@@ -96,7 +95,7 @@
         "typing_FStar.UInt16.v", "typing_Prims.pow2", "unit_inversion"
       ],
       0,
-      "201d46e3f2812b4ff678a31342292fe6"
+      "dc9b705ed5d2a6e9959a81a9b705ef3d"
     ],
     [
       "MiniParseExample2.c1",
@@ -138,7 +137,7 @@
         "typing_FStar.UInt16.v", "unit_inversion"
       ],
       0,
-      "82f8de903560c636d8f93d69e5c64c41"
+      "7cb62d38321960285c2aacdb3f3e74de"
     ],
     [
       "MiniParseExample2.c0",
@@ -187,7 +186,7 @@
         "typing_Tm_abs_35bcacdf8473daf7c8ccd0dc21ac615e", "unit_typing"
       ],
       0,
-      "e3b3642dfdb05dcaa1d78e04a54ecc2a"
+      "3f96bf0dabd3377c4b0e0c2743ae1aaa"
     ]
   ]
 ]

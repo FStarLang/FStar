@@ -831,8 +831,32 @@ let (check_aqual :
          FStar_Pervasives_Native.Some
          { FStar_Syntax_Syntax.aqual_implicit = b1;
            FStar_Syntax_Syntax.aqual_attributes = uu___1;_})
-          -> if b0 = b1 then return () else fail "Unequal arg qualifiers"
-      | uu___ -> fail "Unequal arg qualifiers"
+          ->
+          if b0 = b1
+          then return ()
+          else
+            (let uu___3 =
+               let uu___4 = FStar_Compiler_Util.string_of_bool b0 in
+               let uu___5 = FStar_Compiler_Util.string_of_bool b1 in
+               FStar_Compiler_Util.format2
+                 "Unequal arg qualifiers: lhs implicit=%s and rhs implicit=%s"
+                 uu___4 uu___5 in
+             fail uu___3)
+      | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.Some
+         { FStar_Syntax_Syntax.aqual_implicit = false;
+           FStar_Syntax_Syntax.aqual_attributes = uu___;_})
+          -> return ()
+      | (FStar_Pervasives_Native.Some
+         { FStar_Syntax_Syntax.aqual_implicit = false;
+           FStar_Syntax_Syntax.aqual_attributes = uu___;_},
+         FStar_Pervasives_Native.None) -> return ()
+      | uu___ ->
+          let uu___1 =
+            let uu___2 = FStar_Syntax_Print.aqual_to_string a0 in
+            let uu___3 = FStar_Syntax_Print.aqual_to_string a1 in
+            FStar_Compiler_Util.format2
+              "Unequal arg qualifiers: lhs %s and rhs %s" uu___2 uu___3 in
+          fail uu___1
 let (check_positivity_qual :
   relation ->
     FStar_Syntax_Syntax.positivity_qualifier FStar_Pervasives_Native.option
@@ -1541,25 +1565,23 @@ let rec (check_relation :
                let maybe_unfold t01 t11 =
                  let uu___1 = which_side_to_unfold t01 t11 in
                  maybe_unfold_side uu___1 t01 t11 in
+               let emit_guard t01 t11 =
+                 let uu___1 = check' g t01 in
+                 op_let_Bang uu___1
+                   (fun uu___2 ->
+                      match uu___2 with
+                      | (uu___3, t_typ) ->
+                          let uu___4 = universe_of g t_typ in
+                          op_let_Bang uu___4
+                            (fun u ->
+                               let uu___5 =
+                                 FStar_Syntax_Util.mk_eq2 u t_typ t01 t11 in
+                               guard uu___5)) in
                let fallback t01 t11 =
                  if guard_ok
                  then
                    let uu___1 = (equatable g t01) || (equatable g t11) in
-                   (if uu___1
-                    then
-                      let uu___2 = check' g t01 in
-                      op_let_Bang uu___2
-                        (fun uu___3 ->
-                           match uu___3 with
-                           | (uu___4, t_typ) ->
-                               let uu___5 = universe_of g t_typ in
-                               op_let_Bang uu___5
-                                 (fun u ->
-                                    let uu___6 =
-                                      FStar_Syntax_Util.mk_eq2 u t_typ t01
-                                        t11 in
-                                    guard uu___6))
-                    else err ())
+                   (if uu___1 then emit_guard t01 t11 else err ())
                  else err () in
                let maybe_unfold_side_and_retry side1 t01 t11 =
                  let uu___1 = maybe_unfold_side side1 t01 t11 in
@@ -1940,17 +1962,31 @@ let rec (check_relation :
                                           (FStar_Compiler_List.length args1)))
                                 then maybe_unfold_and_retry t01 t11
                                 else
-                                  (let uu___8 =
+                                  (let compare_head_and_args uu___8 =
                                      let uu___9 =
-                                       check_relation1 g EQUALITY head0 head1 in
-                                     op_let_Bang uu___9
+                                       let uu___10 =
+                                         check_relation1 g EQUALITY head0
+                                           head1 in
+                                       op_let_Bang uu___10
+                                         (fun uu___11 ->
+                                            check_relation_args g EQUALITY
+                                              args0 args1) in
+                                     handle_with uu___9
                                        (fun uu___10 ->
-                                          check_relation_args g EQUALITY
-                                            args0 args1) in
-                                   handle_with uu___8
-                                     (fun uu___9 ->
-                                        maybe_unfold_side_and_retry Both t01
-                                          t11))))
+                                          maybe_unfold_side_and_retry Both
+                                            t01 t11) in
+                                   let uu___8 =
+                                     (guard_ok && (rel = EQUALITY)) &&
+                                       ((equatable g t01) ||
+                                          (equatable g t11)) in
+                                   if uu___8
+                                   then
+                                     let uu___9 =
+                                       let uu___10 = compare_head_and_args () in
+                                       no_guard uu___10 in
+                                     handle_with uu___9
+                                       (fun uu___10 -> emit_guard t01 t11)
+                                   else compare_head_and_args ())))
                   | (FStar_Syntax_Syntax.Tm_fvar uu___3, uu___4) ->
                       let head_matches1 = head_matches t01 t11 in
                       let uu___5 =
@@ -1968,17 +2004,31 @@ let rec (check_relation :
                                           (FStar_Compiler_List.length args1)))
                                 then maybe_unfold_and_retry t01 t11
                                 else
-                                  (let uu___8 =
+                                  (let compare_head_and_args uu___8 =
                                      let uu___9 =
-                                       check_relation1 g EQUALITY head0 head1 in
-                                     op_let_Bang uu___9
+                                       let uu___10 =
+                                         check_relation1 g EQUALITY head0
+                                           head1 in
+                                       op_let_Bang uu___10
+                                         (fun uu___11 ->
+                                            check_relation_args g EQUALITY
+                                              args0 args1) in
+                                     handle_with uu___9
                                        (fun uu___10 ->
-                                          check_relation_args g EQUALITY
-                                            args0 args1) in
-                                   handle_with uu___8
-                                     (fun uu___9 ->
-                                        maybe_unfold_side_and_retry Both t01
-                                          t11))))
+                                          maybe_unfold_side_and_retry Both
+                                            t01 t11) in
+                                   let uu___8 =
+                                     (guard_ok && (rel = EQUALITY)) &&
+                                       ((equatable g t01) ||
+                                          (equatable g t11)) in
+                                   if uu___8
+                                   then
+                                     let uu___9 =
+                                       let uu___10 = compare_head_and_args () in
+                                       no_guard uu___10 in
+                                     handle_with uu___9
+                                       (fun uu___10 -> emit_guard t01 t11)
+                                   else compare_head_and_args ())))
                   | (FStar_Syntax_Syntax.Tm_app uu___3, uu___4) ->
                       let head_matches1 = head_matches t01 t11 in
                       let uu___5 =
@@ -1996,17 +2046,31 @@ let rec (check_relation :
                                           (FStar_Compiler_List.length args1)))
                                 then maybe_unfold_and_retry t01 t11
                                 else
-                                  (let uu___8 =
+                                  (let compare_head_and_args uu___8 =
                                      let uu___9 =
-                                       check_relation1 g EQUALITY head0 head1 in
-                                     op_let_Bang uu___9
+                                       let uu___10 =
+                                         check_relation1 g EQUALITY head0
+                                           head1 in
+                                       op_let_Bang uu___10
+                                         (fun uu___11 ->
+                                            check_relation_args g EQUALITY
+                                              args0 args1) in
+                                     handle_with uu___9
                                        (fun uu___10 ->
-                                          check_relation_args g EQUALITY
-                                            args0 args1) in
-                                   handle_with uu___8
-                                     (fun uu___9 ->
-                                        maybe_unfold_side_and_retry Both t01
-                                          t11))))
+                                          maybe_unfold_side_and_retry Both
+                                            t01 t11) in
+                                   let uu___8 =
+                                     (guard_ok && (rel = EQUALITY)) &&
+                                       ((equatable g t01) ||
+                                          (equatable g t11)) in
+                                   if uu___8
+                                   then
+                                     let uu___9 =
+                                       let uu___10 = compare_head_and_args () in
+                                       no_guard uu___10 in
+                                     handle_with uu___9
+                                       (fun uu___10 -> emit_guard t01 t11)
+                                   else compare_head_and_args ())))
                   | (uu___3, FStar_Syntax_Syntax.Tm_uinst uu___4) ->
                       let head_matches1 = head_matches t01 t11 in
                       let uu___5 =
@@ -2024,17 +2088,31 @@ let rec (check_relation :
                                           (FStar_Compiler_List.length args1)))
                                 then maybe_unfold_and_retry t01 t11
                                 else
-                                  (let uu___8 =
+                                  (let compare_head_and_args uu___8 =
                                      let uu___9 =
-                                       check_relation1 g EQUALITY head0 head1 in
-                                     op_let_Bang uu___9
+                                       let uu___10 =
+                                         check_relation1 g EQUALITY head0
+                                           head1 in
+                                       op_let_Bang uu___10
+                                         (fun uu___11 ->
+                                            check_relation_args g EQUALITY
+                                              args0 args1) in
+                                     handle_with uu___9
                                        (fun uu___10 ->
-                                          check_relation_args g EQUALITY
-                                            args0 args1) in
-                                   handle_with uu___8
-                                     (fun uu___9 ->
-                                        maybe_unfold_side_and_retry Both t01
-                                          t11))))
+                                          maybe_unfold_side_and_retry Both
+                                            t01 t11) in
+                                   let uu___8 =
+                                     (guard_ok && (rel = EQUALITY)) &&
+                                       ((equatable g t01) ||
+                                          (equatable g t11)) in
+                                   if uu___8
+                                   then
+                                     let uu___9 =
+                                       let uu___10 = compare_head_and_args () in
+                                       no_guard uu___10 in
+                                     handle_with uu___9
+                                       (fun uu___10 -> emit_guard t01 t11)
+                                   else compare_head_and_args ())))
                   | (uu___3, FStar_Syntax_Syntax.Tm_fvar uu___4) ->
                       let head_matches1 = head_matches t01 t11 in
                       let uu___5 =
@@ -2052,17 +2130,31 @@ let rec (check_relation :
                                           (FStar_Compiler_List.length args1)))
                                 then maybe_unfold_and_retry t01 t11
                                 else
-                                  (let uu___8 =
+                                  (let compare_head_and_args uu___8 =
                                      let uu___9 =
-                                       check_relation1 g EQUALITY head0 head1 in
-                                     op_let_Bang uu___9
+                                       let uu___10 =
+                                         check_relation1 g EQUALITY head0
+                                           head1 in
+                                       op_let_Bang uu___10
+                                         (fun uu___11 ->
+                                            check_relation_args g EQUALITY
+                                              args0 args1) in
+                                     handle_with uu___9
                                        (fun uu___10 ->
-                                          check_relation_args g EQUALITY
-                                            args0 args1) in
-                                   handle_with uu___8
-                                     (fun uu___9 ->
-                                        maybe_unfold_side_and_retry Both t01
-                                          t11))))
+                                          maybe_unfold_side_and_retry Both
+                                            t01 t11) in
+                                   let uu___8 =
+                                     (guard_ok && (rel = EQUALITY)) &&
+                                       ((equatable g t01) ||
+                                          (equatable g t11)) in
+                                   if uu___8
+                                   then
+                                     let uu___9 =
+                                       let uu___10 = compare_head_and_args () in
+                                       no_guard uu___10 in
+                                     handle_with uu___9
+                                       (fun uu___10 -> emit_guard t01 t11)
+                                   else compare_head_and_args ())))
                   | (uu___3, FStar_Syntax_Syntax.Tm_app uu___4) ->
                       let head_matches1 = head_matches t01 t11 in
                       let uu___5 =
@@ -2080,17 +2172,31 @@ let rec (check_relation :
                                           (FStar_Compiler_List.length args1)))
                                 then maybe_unfold_and_retry t01 t11
                                 else
-                                  (let uu___8 =
+                                  (let compare_head_and_args uu___8 =
                                      let uu___9 =
-                                       check_relation1 g EQUALITY head0 head1 in
-                                     op_let_Bang uu___9
+                                       let uu___10 =
+                                         check_relation1 g EQUALITY head0
+                                           head1 in
+                                       op_let_Bang uu___10
+                                         (fun uu___11 ->
+                                            check_relation_args g EQUALITY
+                                              args0 args1) in
+                                     handle_with uu___9
                                        (fun uu___10 ->
-                                          check_relation_args g EQUALITY
-                                            args0 args1) in
-                                   handle_with uu___8
-                                     (fun uu___9 ->
-                                        maybe_unfold_side_and_retry Both t01
-                                          t11))))
+                                          maybe_unfold_side_and_retry Both
+                                            t01 t11) in
+                                   let uu___8 =
+                                     (guard_ok && (rel = EQUALITY)) &&
+                                       ((equatable g t01) ||
+                                          (equatable g t11)) in
+                                   if uu___8
+                                   then
+                                     let uu___9 =
+                                       let uu___10 = compare_head_and_args () in
+                                       no_guard uu___10 in
+                                     handle_with uu___9
+                                       (fun uu___10 -> emit_guard t01 t11)
+                                   else compare_head_and_args ())))
                   | (FStar_Syntax_Syntax.Tm_abs
                      { FStar_Syntax_Syntax.bs = b0::b1::bs;
                        FStar_Syntax_Syntax.body = body;

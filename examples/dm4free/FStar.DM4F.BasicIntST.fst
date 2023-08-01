@@ -51,7 +51,7 @@ total reifiable reflectable new_effect {
 }
 
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 
 //Re-define bind_elab with implicit parameters for easier use
