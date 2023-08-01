@@ -277,6 +277,16 @@ let diag r msg =
   if Options.debug_any()
   then add_one (mk_issue EInfo (Some r) msg None [])
 
+let diag0 msg =
+  if Options.debug_any()
+  then add_one (mk_issue EInfo None msg None [])
+
+let diag1 f a         = diag0 (BU.format1 f a)
+let diag2 f a b       = diag0 (BU.format2 f a b)
+let diag3 f a b c     = diag0 (BU.format3 f a b c)
+let diag4 f a b c d   = diag0 (BU.format4 f a b c d)
+let diag5 f a b c d e = diag0 (BU.format5 f a b c d e)
+
 let warn_unsafe_options rng_opt msg =
   match Options.report_assumes () with
   | Some "warn" ->
