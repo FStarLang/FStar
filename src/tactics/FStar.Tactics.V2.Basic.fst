@@ -1564,8 +1564,6 @@ let join_goals g1 g2 : tac goal =
       | Allow_untyped reason1, Allow_untyped _ -> Some (Allow_untyped reason1)
       | _ -> None
     in
-    set_solution g1 U.exp_unit ;!
-    set_solution g2 U.exp_unit ;!
 
     let ng = U.mk_conj t1 t2 in
     let nenv = { goal_env g1 with gamma = List.rev gamma } in
@@ -1574,6 +1572,8 @@ let join_goals g1 g2 : tac goal =
                          (goal_to_string_verbose g1)
                          (goal_to_string_verbose g2)
                          (goal_to_string_verbose goal)) ;!
+    set_solution g1 U.exp_unit ;!
+    set_solution g2 U.exp_unit ;!
     ret goal
 
 let join () : tac unit =
