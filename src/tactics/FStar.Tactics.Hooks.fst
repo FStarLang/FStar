@@ -859,20 +859,22 @@ let splice (env:Env.env) (is_typed:bool) (lids:list Ident.lident) (tau:term) (rn
       end
       else run_tactic_on_ps tau.pos tau.pos false
              e_unit ()
-             (e_list RE.e_sigelt) tau tactic_already_typed ps in
+             (e_list RE.e_sigelt) tau tactic_already_typed ps
+    in
 
-      // set delta depths in the sigelts fvs
-      let sigelts =
-        let set_lb_dd lb =
-          let {lbname=Inr fv; lbdef} = lb in
-          {lb with lbname=Inr {fv with fv_delta=U.incr_delta_qualifier lbdef
-                                                |> Some}} in
-        List.map (fun se ->
-          match se.sigel with
-          | Sig_let {lbs=(is_rec, lbs); lids} ->
-            {se with sigel=Sig_let {lbs=(is_rec, List.map set_lb_dd lbs); lids}}
-          | _ -> se
-        ) sigelts in
+    // set delta depths in the sigelts fvs
+    let sigelts =
+      let set_lb_dd lb =
+        let {lbname=Inr fv; lbdef} = lb in
+        {lb with lbname=Inr {fv with fv_delta=U.incr_delta_qualifier lbdef
+                                              |> Some}} in
+      List.map (fun se ->
+        match se.sigel with
+        | Sig_let {lbs=(is_rec, lbs); lids} ->
+          {se with sigel=Sig_let {lbs=(is_rec, List.map set_lb_dd lbs); lids}}
+        | _ -> se
+      ) sigelts
+    in
 
     // Check that all goals left are irrelevant. We don't need to check their
     // validity, as we will typecheck the witness independently.
