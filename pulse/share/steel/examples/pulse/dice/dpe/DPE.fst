@@ -26,7 +26,7 @@ open Pulse.Class.BoundedIntegers
 
 friend Pulse.Steel.Wrapper
 
-(* L1 Context -- to be moved *)
+(* L1 Context -- no dedicated L1 logic, so there's no good place for this to live *)
 
 noeq
 type l1_context = { deviceID_priv: A.larray U8.t (US.v v32us);
@@ -149,42 +149,6 @@ let sid_ref : sid_ref_t = alloc_sid () ()
 
 
 (* ----------- IMPLEMENTATION ----------- *)
-
-```pulse
-fn not_full (#s:pht_sig_us) (#pht:erased (pht_t (s_to_ps s))) (ht:ht_t s)
-  requires models s ht pht
-  returns b:bool
-  ensures models s ht pht ** 
-          pure (b ==> LSHT.not_full #(s_to_ps s) #(pht_sz pht) pht.repr)
-{
-  let mut i = 0sz;
-  unfold (models s ht pht);
-
-  while (let vi = !i;  
-    if (vi < ht.sz) { 
-      let c = op_Array_Index ht.contents vi #full_perm #pht.repr; 
-      (Used? c) 
-    } else { false })
-  invariant b. exists (vi:US.t). (
-    A.pts_to ht.contents full_perm pht.repr **
-    R.pts_to i full_perm vi **
-    pure (
-      US.v ht.sz == pht_sz pht /\
-      vi <= ht.sz /\
-      (b == (vi < ht.sz && Used? (pht.repr @@ (US.v vi)))) /\
-      (forall (i:nat). i < US.v vi ==> Used? (pht.repr @@ i))
-    )
-  )
-  {
-    let vi = !i;
-    i := vi + 1sz;
-  };
-  let vi = !i;
-  let res = vi < ht.sz;
-  fold (models s ht pht);
-  res
-}
-```
 
 (*
   OpenSession: Part of DPE API 

@@ -155,7 +155,7 @@ fn lookup (#s:pht_sig_us)
 
 ```pulse
 fn insert (#s:pht_sig_us)
-          (#pht:(p:erased (pht_t (s_to_ps s)){not_full p.repr}))
+          (#pht:(p:erased (pht_t (s_to_ps s)){PHT.not_full p.repr}))
           (ht:ht_t s) (k:s.keyt) (v:s.valt)
   requires models s ht pht
   ensures  models s ht (PHT.insert pht k v)
@@ -292,5 +292,41 @@ fn delete (#s:pht_sig_us)
     };
   };
   fold (models s ht (PHT.delete pht k));
+}
+```
+
+```pulse
+fn not_full (#s:pht_sig_us) (#pht:erased (pht_t (s_to_ps s))) (ht:ht_t s)
+  requires models s ht pht
+  returns b:bool
+  ensures models s ht pht ** 
+          pure (b ==> PHT.not_full #(s_to_ps s) #(pht_sz pht) pht.repr)
+{
+  let mut i = 0sz;
+  unfold (models s ht pht);
+
+  while (let vi = !i;  
+    if (vi < ht.sz) { 
+      let c = op_Array_Index ht.contents vi #full_perm #pht.repr; 
+      (Used? c) 
+    } else { false })
+  invariant b. exists (vi:US.t). (
+    A.pts_to ht.contents full_perm pht.repr **
+    R.pts_to i full_perm vi **
+    pure (
+      US.v ht.sz == pht_sz pht /\
+      vi <= ht.sz /\
+      (b == (vi < ht.sz && Used? (pht.repr @@ (US.v vi)))) /\
+      (forall (i:nat). i < US.v vi ==> Used? (pht.repr @@ i))
+    )
+  )
+  {
+    let vi = !i;
+    i := vi + 1sz;
+  };
+  let vi = !i;
+  let res = vi < ht.sz;
+  fold (models s ht pht);
+  res
 }
 ```
