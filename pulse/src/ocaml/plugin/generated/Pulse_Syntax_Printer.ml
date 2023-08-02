@@ -672,7 +672,7 @@ let (comp_to_string :
                                                         Prims.strcat
                                                           (Prims.strcat
                                                              (Prims.strcat
-                                                                "ST "
+                                                                "stt "
                                                                 (Prims.strcat
                                                                    uu___2
                                                                    " (requires\n"))
@@ -823,7 +823,7 @@ let (comp_to_string :
                                                                     (Prims.strcat
                                                                     (Prims.strcat
                                                                     (Prims.strcat
-                                                                    "STAtomic "
+                                                                    "stt_atomic "
                                                                     (Prims.strcat
                                                                     uu___3
                                                                     " "))
@@ -983,7 +983,7 @@ let (comp_to_string :
                                                                     (Prims.strcat
                                                                     (Prims.strcat
                                                                     (Prims.strcat
-                                                                    "STGhost "
+                                                                    "stt_atomic "
                                                                     (Prims.strcat
                                                                     uu___3
                                                                     " "))
