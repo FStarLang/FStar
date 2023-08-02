@@ -1,0 +1,74 @@
+FSTAR_HOME ?= $(realpath $(dir $(shell which fstar.exe))/..)
+STEEL_HOME ?= ../../../..
+
+
+# List the files that should be verified by verify-extra and verify-all
+EXTRA=
+
+# List the files that should NOT be verified at all
+FLAKY=
+
+# List additional directories for the include path
+SRC_DIRS ?=
+
+# List the files that should be verified by verify-core and verify-all
+# Those files are the roots from where all dependencies are computed
+FSTAR_FILES ?=
+
+# Uncomment the definition of PROFILE below, if you want some basic
+# profiling of F* runs It will report the time spent
+# on typechecking your file And the time spent in SMT, which is
+# included in the total typechecking time
+
+# PROFILE=--profile YOUR_FILE --profile_component 'FStar.Universal.tc_source_file FStar.SMTEncoding'
+
+OTHERFLAGS+=$(PROFILE)
+
+# Backward compatibility with pre typed indexed effects (see F* PR 2760)
+OTHERFLAGS+=
+
+WARN_ERROR=
+
+SMT_OPTIONS?=
+OTHERFLAGS+=$(WARN_ERROR) $(SMT_OPTIONS)
+ALREADY_CACHED_LIST ?= Prims,FStar,Steel,Pulse,-Pulse.Lib
+ALREADY_CACHED = --already_cached $(ALREADY_CACHED_LIST)
+
+# A place to put all build artifacts
+OUTPUT_DIRECTORY ?= _output
+CACHE_DIRECTORY = $(OUTPUT_DIRECTORY)/cache
+
+INCLUDE_PATHS+=$(OUTPUT_DIRECTORY) $(SRC_DIRS) $(STEEL_HOME)/lib/steel $(STEEL_HOME)/lib/steel/pulse
+
+FSTAR_OPTIONS=--odir $(OUTPUT_DIRECTORY) \
+		 $(OTHERFLAGS) \
+		 --cache_dir $(CACHE_DIRECTORY) \
+	         $(addprefix --include , $(INCLUDE_PATHS)) \
+		 --cache_checked_modules \
+		 --cmi \
+                 --load_cmxs steel
+
+FSTAR=$(FSTAR_HOME)/bin/fstar.exe $(FSTAR_OPTIONS) $(ALREADY_CACHED)
+
+.depend: $(FSTAR_FILES)
+	mkdir -p $(CACHE_DIRECTORY)
+	$(FSTAR) $(FSTAR_DEP_OPTIONS) --dep full $(notdir $(FSTAR_FILES)) > .depend.aux
+	mv .depend.aux .depend
+
+depend: .depend
+
+include .depend
+
+
+# a.fst(i).checked is the binary, checked version of a.fst(i)
+$(CACHE_DIRECTORY)/%.checked:
+	$(FSTAR) $<
+	touch -c $@
+
+
+verify: $(ALL_CHECKED_FILES)
+
+%.fst-in %.fsti-in:
+	@echo $(FSTAR_OPTIONS)
+
+.PHONY: verify clean depend all
