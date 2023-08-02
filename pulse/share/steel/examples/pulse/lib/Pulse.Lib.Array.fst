@@ -1,4 +1,4 @@
-module Array
+module Pulse.Lib.Array
 module A = Steel.ST.Array
 module R = Steel.ST.Reference
 module PM = Pulse.Main
