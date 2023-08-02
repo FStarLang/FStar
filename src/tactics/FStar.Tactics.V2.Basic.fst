@@ -1538,6 +1538,13 @@ let longest_prefix (f : 'a -> 'a -> bool) (l1 : list 'a) (l2 : list 'a) : list '
     let pr, t1, t2 = aux [] l1 l2 in
     List.rev pr, t1, t2
 
+let eq_binding b1 b2 =
+    match b1, b2 with
+    | _ -> false
+    | S.Binding_var bv1, Binding_var bv2 -> bv_eq bv1 bv2 && U.term_eq bv1.sort bv2.sort
+    | S.Binding_lid (lid1, _), Binding_lid (lid2, _) -> lid_equals lid1 lid2
+    | S.Binding_univ u1, Binding_univ u2 -> ident_equals u1 u2
+    | _ -> false
 
 // fix universes
 let join_goals g1 g2 : tac goal =
@@ -1554,7 +1561,7 @@ let join_goals g1 g2 : tac goal =
 
     let gamma1 = g1.goal_ctx_uvar.ctx_uvar_gamma in
     let gamma2 = g2.goal_ctx_uvar.ctx_uvar_gamma in
-    let gamma, r1, r2 = longest_prefix S.eq_binding (List.rev gamma1) (List.rev gamma2) in
+    let gamma, r1, r2 = longest_prefix eq_binding (List.rev gamma1) (List.rev gamma2) in
 
     let t1 = close_forall_no_univs (Env.binders_of_bindings (List.rev r1)) phi1 in
     let t2 = close_forall_no_univs (Env.binders_of_bindings (List.rev r2)) phi2 in
