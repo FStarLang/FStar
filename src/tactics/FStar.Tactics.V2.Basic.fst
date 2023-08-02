@@ -1524,14 +1524,14 @@ let dup () : tac unit =
   add_irrelevant_goal g "dup equation" env t_eq (Some goal_sc) ;!
   add_goals [g']
 
-// longest_prefix f l1 l2 = (p, r1, r2) ==> l1 = p@r1 /\ l2 = p@r2
+// longest_prefix f l1 l2 = (p, r1, r2) ==> l1 = p@r1 /\ l2 = p@r2 ;   and p is maximal
 let longest_prefix (f : 'a -> 'a -> bool) (l1 : list 'a) (l2 : list 'a) : list 'a * list 'a * list 'a =
     let rec aux acc l1 l2 =
         match l1, l2 with
         | x::xs, y::ys ->
             if f x y
             then aux (x::acc) xs ys
-            else acc, xs, ys
+            else acc, x::xs, y::ys
         | _ ->
             acc, l1, l2
     in
