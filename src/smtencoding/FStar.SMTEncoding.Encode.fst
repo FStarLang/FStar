@@ -1908,7 +1908,7 @@ let encode_modul_from_cache tcenv tcmod (decls, fvbs) =
     if Env.debug tcenv Options.Medium then BU.print1 "Done encoding externals from cache for %s\n" name
 
 open FStar.SMTEncoding.Z3
-let encode_query use_env_msg tcenv q
+let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
   : list decl  //prelude, translation of  tcenv
   * list ErrorReporting.label //labels in the query
   * decl        //the query itself
