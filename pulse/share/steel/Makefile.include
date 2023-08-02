@@ -36,8 +36,8 @@ endif
 export OCAMLPATH
 
 FSTAR_FILES += $(filter-out $(EXCLUDE_FILES),$(wildcard *.fst *.fsti))
-
-FSTAR_OPTIONS += $(OTHERFLAGS) --cmi --cache_checked_modules --warn_error @241 --already_cached 'Prims,FStar,LowStar,Steel,C' --include $(STEEL_HOME)/lib/steel --load_cmxs steel
+ADDITIONAL_INCLUDES ?= 
+FSTAR_OPTIONS += $(OTHERFLAGS) --cmi --cache_checked_modules --warn_error @241 --already_cached 'Prims,FStar,LowStar,Steel,C' --include $(STEEL_HOME)/lib/steel $(ADDITIONAL_INCLUDES) --load_cmxs steel
 
 COMPAT_INDEXED_EFFECTS?=--compat_pre_typed_indexed_effects
 
