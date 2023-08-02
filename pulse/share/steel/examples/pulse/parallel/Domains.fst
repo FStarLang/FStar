@@ -7,6 +7,7 @@ open Steel.Effect.Common
 module R = Steel.ST.Reference
 module HR = Steel.ST.HigherReference
 
+(*
 assume val domain : a:Type0 -> (a -> vprop) -> Type0
 // should contain (at least):
 // 1. the reference where we will put the result
@@ -15,6 +16,7 @@ assume val domain : a:Type0 -> (a -> vprop) -> Type0
 assume val joinable :
   #a:Type0 -> #post:(a -> vprop) ->
   domain a post -> vprop
+*)
 
 open Steel.Memory
 open Steel.ST.Effect
@@ -41,7 +43,6 @@ let task_elem = (
 
 let task_queue: Type u#1 = list task_elem
 
-unfold
 let inv_task_queue
   (q: HR.ref task_queue) // the task queue
   (c: R.ref int) // a counter of how many tasks are currently being performed
@@ -124,7 +125,7 @@ let mk_pure_handler #a (p: a -> prop) (r: R.ref (option a)) (l: Lock.lock (exist
 = (| r, l |)
 
 ```pulse
-fn spawn_emp
+fn spawn_emp'
   (#a:Type0)
   //(#post : (a -> vprop))
   (#q: HR.ref task_queue) (#c: R.ref int)
@@ -153,6 +154,8 @@ fn spawn_emp
 }
 ```
 
+let spawn_emp = spawn_emp'
+
 assume val share (#a:Type0) (r:R.ref a) (#v:a) (#p:perm)
   : stt unit
       (R.pts_to r p v)
@@ -167,98 +170,6 @@ assume val gather (#a:Type0) (r:R.ref a) (#x0 #x1:a) (#p0 #p1:perm)
 
 let half = half_perm full_perm
 
-let resourceful_res #a post = (x:a & Lock.lock (post x))
-
-let unit_stt a pre post = (unit -> stt a pre post)
-
-let exec_unit_stt #a #pre #post
-  (f : unit_stt a pre post)
-: stt a pre post
-= f ()
-
-let mk_resourceful_res #a #post (x: a) (l: Lock.lock (post x)):
-  resourceful_res post
-= (| x, l |)
-
-#set-options "--debug Domains --debug_level st_app --print_implicits --print_universes --print_full_names"
-
-```pulse
-fn lockify_vprops
-  (#a:Type0)
-  (#pre: vprop)
-  (#post : (a -> vprop))
-  //(#q: HR.ref task_queue) (#c: R.ref int)
-  //(l: Lock.lock (inv_task_queue q c))
-  //(f : (unit -> (stt a pre post)))
-  (f: unit_stt a pre post)
-  (lpre: Lock.lock pre)
-  requires emp
-  returns res: (resourceful_res post)
-    //x:a & Lock.lock (post x))
-  ensures pure (true)
-{
-  acquire lpre;
-  // we own the pre
-  let x = exec_unit_stt f;
-  // we own post x
-  let l = new_lock (post x);
-  let res = mk_resourceful_res x l;
-  res
-}
-```
-
-(*
-let lockify_vprops_unit #a #pre (#post: a -> vprop)
-  (f: unit_stt a pre post) (lpre: Lock.lock pre):
-  unit_emp_stt_pure_pure (resourceful_res post) (fun _ -> true)
-= admit()
-*)
-
-let maybe_sat_vprop #a (p: a -> vprop) (x: option a)
-  = match x with
-  | None -> emp
-  | Some x -> p x
-
-let handler (#a: Type0) (post: a -> vprop)
-  = pure_handler #(resourceful_res post) (fun (_: resourceful_res post) -> true)
- //= (res: R.ref (option a) & Lock.lock (exists_ (fun v -> R.pts_to res full_perm v `star` maybe_sat_vprop #a post v)))
-
-(*
-let unpurify_handler #a (#post: a -> vprop)
-  (h: pure_handler #(resourceful_res post) (fun (_: resourceful_res post) -> true)):
-  handler #a post
-= admit()
-*)
-
-// let resourceful_res #a post = (x:a & Lock.lock (post x))
-// let pure_handler #a (post: a -> prop)
-//  = (res: R.ref (option a) & Lock.lock (exists_ (fun v -> R.pts_to res full_perm v `star` pure (maybe_sat post v))))
-
-//#push-options "--admit_smt_queries true"
-
-// Expected term of type unit_emp_stt_pure_pure u#0 (handler #a1 post3) (fun _ -> b2t true); got term fun _ -> lockify_vprops #a1 #pre2 #post3 f7 lpre8
-
-let typed_id a (x:a): a = x
-
-```pulse
-fn spawn
-  (#a:Type0)
-  (#pre: vprop)
-  (#post : (a -> vprop))
-  (#q: HR.ref task_queue) (#c: R.ref int)
-  (l: Lock.lock (inv_task_queue q c))
-  (f : (unit -> (stt a pre post)))
- requires pre
- returns r: handler post
- // let's think about what we return
- ensures emp
-{
-  // we create a lock for the precondition
-  let lpre = new_lock pre;
-  let h = spawn_emp #(resourceful_res post) #q #c (fun _ -> true) l (fun _ -> lockify_vprops f lpre); //(fun _ -> lockify_vprops f lpre);
-  h
-}
-```
 
 assume val free_ref (#a:Type) (r: R.ref a)
  //(x:a)
@@ -269,7 +180,7 @@ assume val free_ref (#a:Type) (r: R.ref a)
 
 
 ```pulse
-fn join_emp
+fn join_emp'
   (#a:Type0)
   (#post: (a -> prop))
   (#q: HR.ref task_queue) (#c: R.ref int)
@@ -288,8 +199,7 @@ fn join_emp
     let new_res = !h._1;
     r := new_res;
     release h._2;
-    //if None? res then
-     // do_one_task();
+    // TODO: if None? res then check whether the task we're waiting on is in the queue
     ()
   };
   let res = !r;
@@ -297,6 +207,9 @@ fn join_emp
   Some?.v res
 }
 ```
+
+let join_emp = join_emp'
+
 
 let len (q: task_queue): nat
 = List.Tot.length q
@@ -399,15 +312,12 @@ fn worker (#q: HR.ref task_queue) (#c: R.ref int) (l: Lock.lock (inv_task_queue 
 let empty_task_queue: task_queue = []
 
 ```pulse
-fn begin_par_block_pulse (#a: Type0)
-  //(#pre :vprop) (#post: (a -> vprop))
-  (post: (a -> (prop)))
-  //(main_block: (unit -> stt a pre post))
-  //(main_block: (unit -> (stt a emp (fun x -> (pure (p x))))))
+fn par_block_pulse_emp' (#a: Type0)
+  (#post: (a -> (prop)))
   (main_block: (unit_emp_stt_pure_pure a post))
   requires emp
-  returns res: (res:a{post res})
-  ensures emp
+  returns res: a
+  ensures pure (post res)
 {
 
   // creating queue, counter, and the lock
@@ -438,6 +348,144 @@ fn begin_par_block_pulse (#a: Type0)
 }
 ```
 
+let par_block_pulse_emp = par_block_pulse_emp'
+
+
+
+
+
+
+
+// Using the previous interface to have resourceful tasks
+
+let resourceful_res #a post = (x:a & Lock.lock (post x))
+
+let unit_stt a pre post = (unit -> stt a pre post)
+
+let exec_unit_stt #a #pre #post
+  (f : unit_stt a pre post)
+: stt a pre post
+= f ()
+
+let mk_resourceful_res #a #post (x: a) (l: Lock.lock (post x)):
+  resourceful_res post
+= (| x, l |)
+
+#set-options "--debug Domains --debug_level st_app --print_implicits --print_universes --print_full_names"
+
+```pulse
+fn lockify_vprops
+  (#a:Type0)
+  (#pre: vprop)
+  (#post : (a -> vprop))
+  //(#q: HR.ref task_queue) (#c: R.ref int)
+  //(l: Lock.lock (inv_task_queue q c))
+  //(f : (unit -> (stt a pre post)))
+  (f: unit_stt a pre post)
+  (lpre: Lock.lock pre)
+  requires emp
+  returns res: (resourceful_res post)
+    //x:a & Lock.lock (post x))
+  ensures pure (true)
+{
+  acquire lpre;
+  // we own the pre
+  let x = exec_unit_stt f;
+  // we own post x
+  let l = new_lock (post x);
+  let res = mk_resourceful_res x l;
+  res
+}
+```
+
+let maybe_sat_vprop #a (p: a -> vprop) (x: option a)
+  = match x with
+  | None -> emp
+  | Some x -> p x
+
+let handler (#a: Type0) (post: a -> vprop)
+  = pure_handler #(resourceful_res post) (fun (_: resourceful_res post) -> true)
+
+```pulse
+fn spawn'
+  (#a:Type0)
+  (#pre: vprop)
+  (#post : (a -> vprop))
+  (#q: HR.ref task_queue) (#c: R.ref int)
+  (l: Lock.lock (inv_task_queue q c))
+  (f : (unit -> (stt a pre post)))
+ requires pre
+ returns r: handler post
+ // let's think about what we return
+ ensures emp
+{
+  // we create a lock for the precondition
+  let lpre = new_lock pre;
+  let h = spawn_emp #(resourceful_res post) #q #c (fun _ -> true) l (fun _ -> lockify_vprops f lpre); //(fun _ -> lockify_vprops f lpre);
+  h
+}
+```
+
+let spawn = spawn'
+
+```pulse
+fn join'
+  (#a:Type0)
+  (#post: (a -> vprop))
+  (#q: HR.ref task_queue) (#c: R.ref int)
+  (l: Lock.lock (inv_task_queue q c))
+  (h: handler post)
+ requires emp
+ returns res: a
+ ensures post res
+{
+  let x = join_emp l h;
+  // x has type resourceful_res pot = (x:a & Lock.lock (post x))
+  acquire x._2;
+  x._1
+}
+```
+
+let join = join'
+
+```pulse
+fn par_block_pulse' (#a: Type0) (#pre: vprop)
+  (#post: (a -> vprop))
+  (main_block: (unit -> (stt a pre post)))
+  requires pre
+  returns res: a
+  ensures post res
+{
+
+  // creating queue, counter, and the lock
+  let work_queue = higher_alloc empty_task_queue;
+  let counter = alloc 0;
+  fold (inv_task_queue work_queue counter);
+  assert (inv_task_queue work_queue counter);
+  let lock = new_lock (inv_task_queue work_queue counter);
+
+  // adding the main task to the queue
+  let main_handler = spawn #_ #_ #_ #work_queue #counter lock main_block;
+  //let pure_handler #a (post: a -> prop)
+  //= (res: R.ref (option a) & Lock.lock (exists_ (fun v -> R.pts_to res full_perm v `star` pure (maybe_sat post v))))
+
+  parallel
+    requires (emp) and (emp)
+    ensures (emp) and (emp)
+  {
+    worker lock
+  }
+  {
+    worker lock
+  };
+
+  // joining main task
+  let res = join lock main_handler;
+  res
+}
+```
+
+let par_block_pulse = par_block_pulse'
 
 
 
@@ -446,16 +494,7 @@ fn begin_par_block_pulse (#a: Type0)
 
 
 
-
-
-
-
-
-
-
-
-
-
+(*
 assume val spawn_model :
  (#a:Type0) -> (#pre : vprop) -> (#post : (a -> vprop)) ->
  ($f : (unit -> stt a pre post)) ->
@@ -662,3 +701,4 @@ fn pfib (n:nat)
   }
 }
 ```
+*)
