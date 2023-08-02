@@ -138,7 +138,10 @@ fn engine_main (cdi:cdi_t) (uds:A.larray U8.t (US.v uds_len)) (record:engine_rec
     A.pts_to uds full_perm (Seq.create (US.v uds_len) 0uy) **
     exists (c1:elseq U8.t dice_digest_len). (
       A.pts_to cdi full_perm c1 **
-      pure (r = DICE_SUCCESS ==> l0_is_authentic repr /\ cdi_functional_correctness c1 repr)
+      pure (
+        A.is_full_array cdi /\
+        r = DICE_SUCCESS ==> l0_is_authentic repr /\ cdi_functional_correctness c1 repr
+      )
   ))
 {
   let b = authenticate_l0_image record;

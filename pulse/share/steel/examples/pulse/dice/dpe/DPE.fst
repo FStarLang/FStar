@@ -193,6 +193,91 @@ fn open_session (_:unit)
 }
 ```
 
+(*
+  DestroyContext: Part of DPE API 
+  Destroy the context pointed to by the handle by freeing the
+  arrays in the context (zeroize the UDS, if applicable).
+  NOTE: Current implementation disregards session protocol 
+*)
+```pulse
+fn destroy_context (sid:nat) (ctxt_hndl:nat)
+  requires emp
+  ensures emp
+{
+  let sht = dfst locked_sht;
+  let sht_lk = dsnd locked_sht;
+  W.acquire #(ht_perm sht_sig sht) sht_lk;
+
+  unfold (ht_perm sht_sig sht);
+  with spht. assert (models sht_sig sht spht);
+
+  let opt_locked_cht = PHT.lookup #sht_sig #spht sht sid;
+
+  match opt_locked_cht {
+  Some locked_cht -> {
+    let cht = dfst locked_cht;
+    let cht_lk = dsnd locked_cht;
+    W.acquire #(ht_perm cht_sig cht) cht_lk;
+
+    unfold (ht_perm cht_sig cht);
+    with cpht0. assert (models cht_sig cht cpht0);
+
+    let opt_locked_ctxt = PHT.lookup #cht_sig #cpht0 cht ctxt_hndl;
+    match opt_locked_ctxt {
+    Some locked_ctxt -> {
+      let ctxt = dfst locked_ctxt;
+      let ctxt_lk = dsnd locked_ctxt;
+      W.acquire #(context_perm ctxt) ctxt_lk;
+      match ctxt {
+        Engine_context c -> {
+          rewrite (context_perm ctxt) as (engine_context_perm c);
+          unfold (engine_context_perm c);
+          zeroize_array uds_len c.uds #uds_bytes;
+          disable_uds ();
+          free_array c.uds;
+          fold (ht_perm cht_sig cht);
+          fold (ht_perm sht_sig sht);
+          W.release #(ht_perm cht_sig cht) cht_lk;
+          W.release #(ht_perm sht_sig sht) sht_lk;
+        }
+        L0_context c -> {
+          rewrite (context_perm ctxt) as (l0_context_perm c);
+          unfold (l0_context_perm c);
+          free_array c.cdi;
+          fold (ht_perm cht_sig cht);
+          fold (ht_perm sht_sig sht);
+          W.release #(ht_perm cht_sig cht) cht_lk;
+          W.release #(ht_perm sht_sig sht) sht_lk;
+        }
+        L1_context c -> {
+          rewrite (context_perm ctxt) as (l1_context_perm c);
+          unfold (l1_context_perm c);
+          free_array c.deviceID_priv;
+          free_array c.deviceID_pub;
+          free_array c.aliasKey_priv;
+          free_array c.aliasKey_pub;
+          free_array c.aliasKeyCRT;
+          free_array c.deviceIDCSR;
+          fold (ht_perm cht_sig cht);
+          fold (ht_perm sht_sig sht);
+          W.release #(ht_perm cht_sig cht) cht_lk;
+          W.release #(ht_perm sht_sig sht) sht_lk;
+      }}}
+    None -> {
+      // ERROR - bad context handle
+      fold (ht_perm cht_sig cht);
+      fold (ht_perm sht_sig sht);
+      W.release #(ht_perm cht_sig cht) cht_lk;
+      W.release #(ht_perm sht_sig sht) sht_lk;
+    }}}
+  None -> {
+    // ERROR - bad session ID
+    fold (ht_perm sht_sig sht);
+    W.release #(ht_perm sht_sig sht) sht_lk;
+  }}
+}
+```
+
 ```pulse
 fn destroy_cht (ht:ht_t cht_sig)
   requires ht_perm cht_sig ht
@@ -326,23 +411,19 @@ fn init_engine_ctxt (uds:A.larray U8.t (US.v uds_len))
 ```
 
 ```pulse
-fn init_l0_ctxt (cdi:A.larray U8.t (US.v dice_digest_len))
-  requires exists (s:elseq U8.t dice_digest_len). 
+fn init_l0_ctxt (cdi:A.larray U8.t (US.v dice_digest_len)) (#s:erased (elseq U8.t dice_digest_len))
+  requires //exists (s:elseq U8.t dice_digest_len). 
     A.pts_to cdi full_perm s **
     pure (A.is_full_array cdi)
   returns _:locked_context_t
-  ensures exists (s:elseq U8.t dice_digest_len). 
+  ensures //exists (s:elseq U8.t dice_digest_len). 
     A.pts_to cdi full_perm s
 {
   let cdi_buf = new_array 0uy dice_digest_len;
   memcpy dice_digest_len cdi cdi_buf;
   let l0_context = mk_l0_context cdi_buf;
-// FIXME: pulse can't prove equality in the following two rewrites 
-// has something to do with not unwrapping the existential
-  // rewrite (exists_ (fun s -> A.pts_to cdi_buf full_perm s)) 
-  //   as (exists_ (fun s -> A.pts_to l0_context.cdi full_perm s)); 
-  drop_ (exists_ (fun (s:elseq U8.t dice_digest_len) -> A.pts_to cdi_buf full_perm s));
-  assume_ (exists_ (fun (s:elseq U8.t dice_digest_len) -> A.pts_to l0_context.cdi full_perm s));
+  rewrite (A.pts_to cdi_buf full_perm s)
+    as (A.pts_to l0_context.cdi full_perm s);
   fold (l0_context_perm l0_context);
   let ctxt = mk_l0_context_t l0_context;
   rewrite (l0_context_perm l0_context) as (context_perm ctxt);
@@ -358,20 +439,23 @@ fn init_l1_ctxt (deviceIDCSR_len: US.t) (aliasKeyCRT_len: US.t)
                 (deviceID_priv: A.larray U8.t (US.v v32us)) (deviceID_pub: A.larray U8.t (US.v v32us))
                 (aliasKey_priv: A.larray U8.t (US.v v32us)) (aliasKey_pub: A.larray U8.t (US.v v32us)) 
                 (deviceIDCSR: A.larray U8.t (US.v deviceIDCSR_len)) (aliasKeyCRT: A.larray U8.t (US.v aliasKeyCRT_len))
-  requires exists (s1:elseq U8.t v32us). A.pts_to deviceID_priv full_perm s1 ** 
-           exists (s2:elseq U8.t v32us). A.pts_to deviceID_pub full_perm s2 ** 
-           exists (s3:elseq U8.t v32us). A.pts_to aliasKey_priv full_perm s3 ** 
-           exists (s4:elseq U8.t v32us). A.pts_to aliasKey_pub full_perm s4 ** 
-           exists (s5:erased (elseq U8.t deviceIDCSR_len)). A.pts_to deviceIDCSR full_perm s5 **
-           exists (s6:erased (elseq U8.t aliasKeyCRT_len)). A.pts_to aliasKeyCRT full_perm s6
+                (#s1 s2 s3 s4: erased (elseq U8.t v32us)) 
+                (#s5:erased (elseq U8.t deviceIDCSR_len))
+                (#s6:erased (elseq U8.t aliasKeyCRT_len))
+  requires A.pts_to deviceID_priv full_perm s1 ** 
+           A.pts_to deviceID_pub full_perm s2 ** 
+           A.pts_to aliasKey_priv full_perm s3 ** 
+           A.pts_to aliasKey_pub full_perm s4 ** 
+           A.pts_to deviceIDCSR full_perm s5 **
+           A.pts_to aliasKeyCRT full_perm s6
   returns _:locked_context_t
   ensures 
-    exists s. A.pts_to deviceID_priv full_perm s ** 
-    exists s. A.pts_to deviceID_pub full_perm s **
-    exists s. A.pts_to aliasKey_priv full_perm s ** 
-    exists s. A.pts_to aliasKey_pub full_perm s ** 
-    exists s. A.pts_to deviceIDCSR full_perm s **
-    exists s. A.pts_to aliasKeyCRT full_perm s
+    A.pts_to deviceID_priv full_perm s1 ** 
+    A.pts_to deviceID_pub full_perm s2 **
+    A.pts_to aliasKey_priv full_perm s3 ** 
+    A.pts_to aliasKey_pub full_perm s4 ** 
+    A.pts_to deviceIDCSR full_perm s5 **
+    A.pts_to aliasKeyCRT full_perm s6
 {
   let deviceID_pub_buf = new_array 0uy v32us;
   let deviceID_priv_buf = new_array 0uy v32us;
@@ -387,32 +471,18 @@ fn init_l1_ctxt (deviceIDCSR_len: US.t) (aliasKeyCRT_len: US.t)
   memcpy aliasKeyCRT_len aliasKeyCRT aliasKeyCRT_buf;
 
   let l1_context = mk_l1_context deviceID_priv_buf deviceID_pub_buf aliasKey_priv_buf aliasKey_pub_buf aliasKeyCRT_buf deviceIDCSR_buf;
-// FIXME: pulse can't prove equality in the following two rewrites 
-// has something to do with not unwrapping the existential
-  // rewrite (exists_ (fun s -> A.pts_to deviceID_priv_buf full_perm s) `star`
-  //        exists_ (fun s -> A.pts_to deviceID_pub_buf full_perm s) `star`
-  //        exists_ (fun s -> A.pts_to aliasKey_priv_buf full_perm s) `star`
-  //        exists_ (fun s -> A.pts_to aliasKey_pub_buf full_perm s) `star`
-  //        exists_ (fun s -> A.pts_to aliasKeyCRT_buf full_perm s) `star`
-  //        exists_ (fun s -> A.pts_to deviceIDCSR_buf full_perm s))
-  //   as (exists_ (fun s -> A.pts_to l1_context.deviceID_priv full_perm s) `star`
-  //       exists_ (fun s -> A.pts_to l1_context.deviceID_pub full_perm s) `star`
-  //       exists_ (fun s -> A.pts_to l1_context.aliasKey_priv full_perm s) `star`
-  //       exists_ (fun s -> A.pts_to l1_context.aliasKey_pub full_perm s) `star`
-  //       exists_ (fun s -> A.pts_to l1_context.aliasKeyCRT full_perm s) `star`
-  //       exists_ (fun s -> A.pts_to l1_context.deviceIDCSR full_perm s));
-  drop_ (exists_ (fun s -> A.pts_to deviceID_priv_buf full_perm s) `star`
-         exists_ (fun s -> A.pts_to deviceID_pub_buf full_perm s) `star`
-         exists_ (fun s -> A.pts_to aliasKey_priv_buf full_perm s) `star`
-         exists_ (fun s -> A.pts_to aliasKey_pub_buf full_perm s) `star`
-         exists_ (fun s -> A.pts_to aliasKeyCRT_buf full_perm s) `star`
-         exists_ (fun s -> A.pts_to deviceIDCSR_buf full_perm s));
-  assume_ (exists_ (fun s -> A.pts_to l1_context.deviceID_priv full_perm s) `star`
-           exists_ (fun s -> A.pts_to l1_context.deviceID_pub full_perm s) `star`
-           exists_ (fun s -> A.pts_to l1_context.aliasKey_priv full_perm s) `star`
-           exists_ (fun s -> A.pts_to l1_context.aliasKey_pub full_perm s) `star`
-           exists_ (fun s -> A.pts_to l1_context.aliasKeyCRT full_perm s) `star`
-           exists_ (fun s -> A.pts_to l1_context.deviceIDCSR full_perm s));
+  rewrite (A.pts_to deviceID_priv_buf full_perm s1 `star`
+           A.pts_to deviceID_pub_buf full_perm s2 `star`
+           A.pts_to aliasKey_priv_buf full_perm s3 `star`
+           A.pts_to aliasKey_pub_buf full_perm s4 `star`
+           A.pts_to deviceIDCSR_buf full_perm s5 `star`
+           A.pts_to aliasKeyCRT_buf full_perm s6)
+       as (A.pts_to l1_context.deviceID_priv full_perm s1`star`
+           A.pts_to l1_context.deviceID_pub full_perm s2 `star`
+           A.pts_to l1_context.aliasKey_priv full_perm s3 `star`
+           A.pts_to l1_context.aliasKey_pub full_perm s4 `star`
+           A.pts_to l1_context.deviceIDCSR full_perm s5 `star`
+           A.pts_to l1_context.aliasKeyCRT full_perm s6);
   fold (l1_context_perm l1_context);
   let ctxt = mk_l1_context_t l1_context;
   rewrite (l1_context_perm l1_context) as (context_perm ctxt);
@@ -490,7 +560,7 @@ fn initialize_context (sid:nat) (uds:A.larray U8.t (US.v uds_len))
   Execute the DICE layer associated with the current context and produce a 
   new context. Destroy the current context in the current session's context table 
   and store the new context in the table.
-  NOTE: Returns 0 if called when ctxt has type L1_context (bad invocation)
+  NOTE: Returns 0 upon error
 *)
 ```pulse
 fn derive_child (sid:nat) (ctxt_hndl:nat) (record:record_t) (repr:repr_t)
@@ -540,40 +610,49 @@ fn derive_child (sid:nat) (ctxt_hndl:nat) (record:record_t) (repr:repr_t)
           rewrite (record_perm record repr) as (engine_record_perm r r0); 
 
           let cdi = new_array 0uy dice_digest_len;
-          EngineCore.engine_main cdi c.uds r; // FIXME: match on dice return type
+          let ret = EngineCore.engine_main cdi c.uds r;
+          with s. assert (A.pts_to cdi full_perm s);
           free_array c.uds;
 
-          let new_locked_context = init_l0_ctxt cdi;
-          with s. assert (A.pts_to cdi full_perm s);
-          free_array cdi #(coerce dice_digest_len s);
-          
-          PHT.delete #cht_sig #cpht0 cht ctxt_hndl;
-          with cpht1. assert (models cht_sig cht cpht1);
-          let b = not_full #cht_sig #cpht1 cht;
+          match ret {
+          DICE_SUCCESS -> {
+            let new_locked_context = init_l0_ctxt cdi;
+            free_array cdi #(coerce dice_digest_len s);
+            
+            PHT.delete #cht_sig #cpht0 cht ctxt_hndl;
+            with cpht1. assert (models cht_sig cht cpht1);
+            let b = not_full #cht_sig #cpht1 cht;
 
-          if b {
-            PHT.insert #cht_sig #cpht1 cht new_ctxt_hndl new_locked_context; 
+            if b {
+              PHT.insert #cht_sig #cpht1 cht new_ctxt_hndl new_locked_context; 
 
+              rewrite (engine_record_perm r r0) as (record_perm record repr);
+              fold (ht_perm sht_sig sht);
+              fold (ht_perm cht_sig cht);
+              W.release #(ht_perm sht_sig sht) sht_lk;
+              W.release #(ht_perm cht_sig cht) cht_lk;
+
+              new_ctxt_hndl
+            } else {
+              // ERROR -- table full
+              rewrite (engine_record_perm r r0) as (record_perm record repr);
+              fold (ht_perm sht_sig sht);
+              fold (ht_perm cht_sig cht);
+              W.release #(ht_perm sht_sig sht) sht_lk;
+              W.release #(ht_perm cht_sig cht) cht_lk;
+
+              new_ctxt_hndl
+          }}
+          DICE_ERROR -> {
+            // ERROR -- DICE engine failed
+            free_array cdi #(coerce dice_digest_len s);
             rewrite (engine_record_perm r r0) as (record_perm record repr);
-
             fold (ht_perm sht_sig sht);
             fold (ht_perm cht_sig cht);
             W.release #(ht_perm sht_sig sht) sht_lk;
             W.release #(ht_perm cht_sig cht) cht_lk;
-
-            new_ctxt_hndl
-          } else {
-            // ERROR -- table full
-            rewrite (engine_record_perm r r0) as (record_perm record repr);
-
-            fold (ht_perm sht_sig sht);
-            fold (ht_perm cht_sig cht);
-            W.release #(ht_perm sht_sig sht) sht_lk;
-            W.release #(ht_perm cht_sig cht) cht_lk;
-
-            new_ctxt_hndl
-          }
-        }
+            0
+          }}}
         _ -> {
           // ERROR - repr should have type (Egnine_repr r0)
           zeroize_array uds_len c.uds #uds_bytes;
@@ -600,7 +679,7 @@ fn derive_child (sid:nat) (ctxt_hndl:nat) (record:record_t) (repr:repr_t)
         0
       }}
     }
-    L0_context c -> {    
+    L0_context c -> {
       // NOTE: we won't eventually release l0_context_perm because we won't 
       // own it anymore -- we will free the cdi array
       rewrite (context_perm ctxt) as (l0_context_perm c);
@@ -705,7 +784,7 @@ fn derive_child (sid:nat) (ctxt_hndl:nat) (record:record_t) (repr:repr_t)
       }}
     }
     _ -> { 
-      // ERROR - bad invocation of DeriveChild
+      // ERROR - cannot invoke DeriveChild with L1 context
       fold (ht_perm sht_sig sht);
       fold (ht_perm cht_sig cht);
       W.release #(context_perm ctxt) ctxt_lk;
@@ -714,7 +793,7 @@ fn derive_child (sid:nat) (ctxt_hndl:nat) (record:record_t) (repr:repr_t)
       0
     }}}
     None -> { 
-    // ERROR -- cannot invoke DeriveChild with L1 context
+    // ERROR - bad context handle
     fold (ht_perm sht_sig sht);
     fold (ht_perm cht_sig cht);
     W.release #(ht_perm sht_sig sht) sht_lk;
