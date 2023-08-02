@@ -77,7 +77,7 @@ let init_once () : unit =
                 solver
                 Const.prims_lid
                 NBE.normalize_for_unit_test
-                FStar.Universal.core_check 
+                FStar.Universal.core_check
   in
   env.solver.init env;
   let dsenv, prims_mod = parse_mod (Options.prims()) (DsEnv.empty_env FStar.Parser.Dep.empty_deps) in
@@ -133,7 +133,7 @@ let pars s =
           then BU.print_string msg
           else BU.print2 "%s: %s\n" (FStar.Compiler.Range.string_of_range r) msg;
           exit 1
-    
+
         | e when not ((Options.trace_error())) -> raise e
 
 let tc' s =
@@ -175,10 +175,10 @@ let pars_and_tc_fragment (s:string) =
     with
         | e when not ((Options.trace_error())) -> raise e
 
-let test_hashes () = 
+let test_hashes () =
   FStar.Main.process_args () |> ignore; //set options
   let _ = pars_and_tc_fragment "type unary_nat = | U0 | US of unary_nat" in
-  let test_one_hash (n:int) = 
+  let test_one_hash (n:int) =
     let rec aux n =
       if n = 0 then "U0"
       else "(US " ^ aux (n - 1) ^ ")"
@@ -189,61 +189,98 @@ let test_hashes () =
               (string_of_int n)
               (FStar.Hash.string_of_hash_code hc)
   in
-  let rec aux (n:int) = 
+  let rec aux (n:int) =
     if n = 0 then ()
     else (test_one_hash n; aux (n - 1))
   in
   aux 100;
   Options.init()
-  
+
+
 let parse_incremental_decls () =
-  let source = 
+  let source0 =
     "module Demo\n\
      let f x = match x with | Some x -> true | None -> false\n\
      let test y = if Some? y then f y else true\n\
      ```pulse\n\
      fn f() {}\n\
      ```\n\
+     ```pulse\n\
+     fn g() {}\n\
+     ```\n\
      let something = more\n\
      let >< junk"
   in
-  let open FStar.Parser.ParseIt in
-  let input = Incremental { frag_fname = "Demo.fst";
-                            frag_text = source;
-                            frag_line = 1;
-                            frag_col = 0 } in
-  let open FStar.Compiler.Range in
-  match parse input with
-  | IncrementalFragment (decls, _, parse_err) -> (
-      let _ = match parse_err with
-      | None -> 
-        failwith "Incremental parsing failed: Expected syntax error at (8, 6), got no error"
-      | Some (_, _, rng) ->
-        let p = start_of_range rng in
-        if line_of_pos p = 8 && col_of_pos p = 6
-        then ()
-        else failwith (format2 "Incremental parsing failed: Expected syntax error at (8, 6), got error at (%s, %s)"
-                               (string_of_int (line_of_pos p))
-                               (string_of_int (col_of_pos p)))
-      in
-      match decls with
-      | [d0;d1;d2;d3;d4] -> ()
-      | _ -> failwith (format1 "Incremental parsing failed; expected 5 decls got %s\n"
-                              (string_of_int (List.length decls)))
-      )
-      
+  let source1 =
+    "module Demo\n\
+     let f x = match x with | Some x -> true | None -> false\n\
+     let test y = if Some? y then f y else true\n\
+     ```pulse\n\
+     fn f() {}\n\
+     ```\n\n\
+     ```pulse\n\
+     fn g() {}\n\
+     ```\n\
+     let something = more\n\
+     let >< junk"
+  in
 
-  | ParseError (code, message, range) ->
-      let msg = 
+  let open FStar.Parser.ParseIt in
+  let input0 = Incremental { frag_fname = "Demo.fst";
+                             frag_text = source0;
+                             frag_line = 1;
+                             frag_col = 0 } in
+  let input1 = Incremental { frag_fname = "Demo.fst";
+                             frag_text = source1;
+                             frag_line = 1;
+                             frag_col = 0 } in
+  let open FStar.Compiler.Range in
+  match parse input0, parse input1 with
+  | IncrementalFragment (decls0, _, parse_err0),
+    IncrementalFragment (decls1, _, parse_err1) -> (
+      let check_range r l c =
+          let p = start_of_range r in
+          if line_of_pos p = l && col_of_pos p = c
+          then ()
+          else failwith (format4 "Incremental parsing failed: Expected syntax error at (%s, %s), got error at (%s, %s)"
+                                 (string_of_int l)
+                                 (string_of_int c)
+                                 (string_of_int (line_of_pos p))
+                                 (string_of_int (col_of_pos p)))
+      in
+      let _ =
+        match parse_err0, parse_err1 with
+        | None, _ ->
+          failwith "Incremental parsing failed: Expected syntax error at (8, 6), got no error"
+        | _, None ->
+          failwith "Incremental parsing failed: Expected syntax error at (9, 6), got no error"
+        | Some (_, _, rng0), Some (_, _, rng1)  ->
+          check_range rng0 11 6;
+          check_range rng1 12 6
+      in
+      match decls0, decls1 with
+      | [d0;d1;d2;d3;d4;d5],
+        [e0;e1;e2;e3;e4;e5] ->
+        let open FStar.Parser.AST.Util in
+        if List.forall2 (fun (x, _) (y, _) -> eq_decl x y) decls0 decls1
+        then ()
+        else (
+          failwith ("Incremental parsing failed; unexpected change in a decl")
+        )
+      | _ -> failwith (format2 "Incremental parsing failed; expected 6 decls got %s and %s\n"
+                              (string_of_int (List.length decls0))
+                              (string_of_int (List.length decls1)))
+      )
+
+
+  | ParseError (code, message, range), _
+  | _, ParseError (code, message, range) ->
+      let msg =
         format2 "Incremental parsing failed: Syntax error @ %s: %s"
                 (Range.string_of_range range)
                 message
       in
       failwith msg
-      
-  | ASTFragment _
-  | Term _ ->
-      failwith "Incremental parsing failed: Unexpected output"
 
-    
-    
+  | _ ->
+      failwith "Incremental parsing failed: Unexpected output"

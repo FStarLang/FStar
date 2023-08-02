@@ -5343,3 +5343,9 @@ let (is_binder_unused : FStar_Syntax_Syntax.binder -> Prims.bool) =
   fun b ->
     b.FStar_Syntax_Syntax.binder_positivity =
       (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.BinderUnused)
+let (deduplicate_terms :
+  FStar_Syntax_Syntax.term Prims.list -> FStar_Syntax_Syntax.term Prims.list)
+  =
+  fun l ->
+    FStar_Compiler_List.deduplicate
+      (fun x -> fun y -> let uu___ = eq_tm x y in uu___ = Equal) l

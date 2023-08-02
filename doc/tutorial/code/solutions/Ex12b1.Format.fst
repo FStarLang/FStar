@@ -95,18 +95,21 @@ let response s t =
    functions---they just return messages---so these three lemmas are
    sufficient *)
 
+assume
 val req_resp_distinct:
   s:string -> s':string16 -> t':string ->
   Lemma (requires True)
         (ensures (request s <> response s' t'))
         [SMTPat (request s); SMTPat (response s' t')]
 
+assume
 val req_injective:
   s0:string -> s1:string ->
   Lemma (requires (b2t (Seq.eq (request s0) (request s1))))
         (ensures  (s0==s1))
         (*[SMTPat (request s0); SMTPat (request s1)]*)
 
+assume
 val resp_injective:
   s0:string16 -> t0:string -> s1:string16 -> t1:string ->
   Lemma (requires (b2t (Seq.eq (response s0 t0) (response s1 t1))))

@@ -474,6 +474,9 @@ let errors_to_report (settings : query_settings) : list Errors.error =
 let report_errors qry_settings =
     FStar.Errors.add_errors (errors_to_report qry_settings)
 
+(* Translation from F* rlimit to Z3 rlimit *)
+let rlimit_conversion_factor = 544656
+
 let query_info settings z3result =
     let process_unsat_core (core:unsat_core) =
         (* A generic accumulator of unique strings,
@@ -615,7 +618,7 @@ let query_info settings z3result =
                 BU.string_of_int z3result.z3result_time;
                 BU.string_of_int settings.query_fuel;
                 BU.string_of_int settings.query_ifuel;
-                BU.string_of_int settings.query_rlimit;
+                BU.string_of_int (settings.query_rlimit / rlimit_conversion_factor);
                 stats
              ];
         if Options.print_z3_statistics () then process_unsat_core core;
@@ -751,9 +754,8 @@ let make_solver_configs
             | Some (q, _typ, n), _ -> Ident.string_of_lid q, n
         in
         let rlimit =
-            Prims.op_Multiply
-                (Options.z3_rlimit_factor ())
-                (Prims.op_Multiply (Options.z3_rlimit ()) 544656)
+            let open FStar.Mul in
+            Options.z3_rlimit_factor () * Options.z3_rlimit () * rlimit_conversion_factor
         in
         let next_hint = get_hint_for qname index in
         let default_settings = {

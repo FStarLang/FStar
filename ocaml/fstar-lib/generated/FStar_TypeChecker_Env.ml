@@ -2361,7 +2361,11 @@ let (insert_fv_info :
           FStar_TypeChecker_Common.id_info_insert_fv uu___1 fv ty in
         FStar_Compiler_Effect.op_Colon_Equals env1.identifier_info uu___
 let (promote_id_info :
-  env -> (FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ) -> unit) =
+  env ->
+    (FStar_Syntax_Syntax.typ ->
+       FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option)
+      -> unit)
+  =
   fun env1 ->
     fun ty_map ->
       let uu___ =

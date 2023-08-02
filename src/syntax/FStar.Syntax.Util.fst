@@ -2579,3 +2579,6 @@ let is_binder_strictly_positive (b:binder) =
 
 let is_binder_unused (b:binder) =
   b.binder_positivity = Some BinderUnused
+
+let deduplicate_terms (l:list term) = 
+  FStar.Compiler.List.deduplicate (fun x y -> eq_tm x y = Equal) l

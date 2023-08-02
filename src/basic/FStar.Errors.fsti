@@ -80,6 +80,13 @@ val set_handler : error_handler -> unit
 val get_ctx : unit -> list string
 val diag : Range.range -> string -> unit
 
+val diag0 : string -> unit
+val diag1 : string -> string -> unit
+val diag2 : string -> string -> string -> unit
+val diag3 : string -> string -> string -> string -> unit
+val diag4 : string -> string -> string -> string -> string -> unit
+val diag5 : string -> string -> string -> string -> string -> string -> unit
+
 val set_option_warning_callback_range : ropt:option FStar.Compiler.Range.range -> unit
 val set_parse_warn_error : (string -> list error_setting) -> unit
 

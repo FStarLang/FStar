@@ -587,6 +587,9 @@ let rec (eq_decl' :
          FStar_Parser_AST.Splice (is_typed2, is2, t2)) ->
           ((is_typed1 = is_typed2) && (eq_list eq_ident is1 is2)) &&
             (eq_term t1 t2)
+      | (FStar_Parser_AST.DeclSyntaxExtension (s1, t1, uu___, uu___1),
+         FStar_Parser_AST.DeclSyntaxExtension (s2, t2, uu___2, uu___3)) ->
+          (s1 = s2) && (t1 = t2)
       | uu___ -> false
 and (eq_effect_decl :
   FStar_Parser_AST.effect_decl -> FStar_Parser_AST.effect_decl -> Prims.bool)

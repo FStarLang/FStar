@@ -513,7 +513,7 @@ let hard_coded_dependencies full_filename =
 
   (* The core libraries do not have any implicit dependencies *)
   if List.mem (module_name_of_file filename) (core_modules ()) then []
-  else match (namespace_of_module (lowercase_module_name full_filename)) with
+  else match namespace_of_module (module_name_of_file full_filename) with
        | None -> implicit_ns_deps @ implicit_module_deps
          (*
           * AR: we open FStar, and then ns

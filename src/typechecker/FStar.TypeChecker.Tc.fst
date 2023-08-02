@@ -1025,6 +1025,23 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : Env.env =
 
     | _ -> env
 
+(* This function is called when promoting entries in the id info table.
+   If t has no dangling uvars, it is normalized and promoted,
+   otherwise discarded *)
+let compress_and_norm env t = 
+    match Compress.deep_compress_if_no_uvars t with
+    | None -> None //if dangling uvars, then just drop this entry
+    | Some t ->  //otherwise, normalize and promote
+      Some (
+        N.normalize
+               [Env.AllowUnboundUniverses; //this is allowed, since we're reducing types that appear deep within some arbitrary context
+                Env.CheckNoUvars;
+                Env.Beta; Env.DoNotUnfoldPureLets; Env.CompressUvars;
+                Env.Exclude Env.Zeta; Env.Exclude Env.Iota; Env.NoFullNorm]
+              env
+              t
+      )
+
 let tc_decls env ses =
   let rec process_one_decl (ses, env) se =
     (* If emacs is peeking, and debugging is on, don't do anything,
@@ -1055,21 +1072,8 @@ let tc_decls env ses =
         then BU.print1 "About to elim vars from (elaborated) %s\n" (Print.sigelt_to_string se);
         N.elim_uvars env se) in
 
-    Profiling.profile 
-      (fun () ->
-        Env.promote_id_info env (fun t ->
-          if Env.debug env (Options.Other "UF")
-          then BU.print1 "check uvars %s\n" (Print.term_to_string t);
-          N.normalize
-               [Env.AllowUnboundUniverses; //this is allowed, since we're reducing types that appear deep within some arbitrary context
-                Env.CheckNoUvars;
-                Env.Beta; Env.DoNotUnfoldPureLets; Env.CompressUvars;
-                Env.Exclude Env.Zeta; Env.Exclude Env.Iota; Env.NoFullNorm]
-              env
-              t))
-        (Some (Ident.string_of_lid (Env.current_module env)))
-        "FStar.TypeChecker.Tc.chec_uvars"; //update the id_info table after having removed their uvars
-
+    Env.promote_id_info env (compress_and_norm env);
+          
     // Compress all checked sigelts
     let ses' = ses' |> List.map (Compress.deep_compress_se false) in
 

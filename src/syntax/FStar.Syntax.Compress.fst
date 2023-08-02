@@ -71,6 +71,17 @@ let deep_compress (allow_uvars:bool) (tm : term) : term =
       tm
   )
 
+let deep_compress_if_no_uvars (tm : term) : option term =
+  Err.with_ctx ("While deep-compressing a term") (fun () ->
+    try 
+      Some (Visit.visit_term_univs
+              (compress1_t false)
+              (compress1_u false)
+              tm)
+    with
+    | FStar.Errors.Err (Err.Error_UnexpectedUnresolvedUvar, _, _) -> None
+  )
+
 let deep_compress_se (allow_uvars:bool) (se : sigelt) : sigelt =
   Err.with_ctx (format1 "While deep-compressing %s" (Syntax.Print.sigelt_to_string_short se)) (fun () ->
     Visit.visit_sigelt

@@ -1,0 +1,29 @@
+{
+  "name": "F* minimal devcontainer",
+  "build": {
+    "dockerfile": "minimal.Dockerfile"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "FStarLang.fstar-vscode-assistant"
+      ]
+    }
+  },
+  "remoteEnv": {
+    "FSTAR_DEVCONTAINER": "minimal"
+    // ^ We just set this in case we ever need to distinguish
+    // we are running in a codespace.
+  },
+  // Runs only once when container is prepared
+  "onCreateCommand": {
+    "link_to_home_bin" : "ln -s $(realpath bin/fstar.exe) ~/bin/fstar.exe"
+  },
+  // Runs periodically and/or when content of repo changes
+  "updateContentCommand": {
+    "make": "bash -i .devcontainer/onUpdate.sh"
+  },
+  // These run only when the container is assigned to a user
+  "postCreateCommand": {
+  }
+}

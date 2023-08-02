@@ -98,3 +98,6 @@ nubuild.progress
 
 # Nuget packages
 nuget/
+
+# devcontainer temp files
+/.devcontainer_build.log

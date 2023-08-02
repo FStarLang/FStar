@@ -7,8 +7,8 @@ NegativeTests.Set.fst(33,9-33,67): (Error 19) assertion failed; The SMT solver c
 >> Got issues: [
 NegativeTests.Set.fst(38,9-38,52): (Error 19) assertion failed; The SMT solver could not prove the query. Use --query_stats for more details.
 >>]
-NegativeTests.Set.fst(25,4-25,16): (Warning 240) Admitting NegativeTests.Set.should_fail1 without a definition
-NegativeTests.Set.fst(30,4-30,16): (Warning 240) Admitting NegativeTests.Set.should_fail2 without a definition
-NegativeTests.Set.fst(35,4-35,16): (Warning 240) Admitting NegativeTests.Set.should_fail3 without a definition
+NegativeTests.Set.fst(25,4-25,16): (Warning 240) NegativeTests.Set.should_fail1 is declared but no definition was found; add an 'assume' if this is intentional
+NegativeTests.Set.fst(30,4-30,16): (Warning 240) NegativeTests.Set.should_fail2 is declared but no definition was found; add an 'assume' if this is intentional
+NegativeTests.Set.fst(35,4-35,16): (Warning 240) NegativeTests.Set.should_fail3 is declared but no definition was found; add an 'assume' if this is intentional
 Verified module: NegativeTests.Set
 All verification conditions discharged successfully

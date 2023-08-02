@@ -112,23 +112,24 @@ let id_info__insert ty_map db info =
       | Inr _ ->
         ty_map info.identifier_ty
       | Inl x ->
-        // BU.print1 "id_info__insert: %s\n"
-        //           (print_identifier_info info);
         ty_map info.identifier_ty
     in
-    let info = { info with identifier_range = use_range;
-                           identifier_ty = id_ty } in
+    match id_ty with
+    | None -> db
+    | Some id_ty ->
+      let info = { info with identifier_range = use_range;
+                             identifier_ty = id_ty } in
 
-    let fn = file_of_range use_range in
-    let start = start_of_range use_range in
-    let row, col = line_of_pos start, col_of_pos start in
+      let fn = file_of_range use_range in
+      let start = start_of_range use_range in
+      let row, col = line_of_pos start, col_of_pos start in
 
-    let rows = BU.psmap_find_default db fn (BU.pimap_empty ()) in
-    let cols = BU.pimap_find_default rows row [] in
+      let rows = BU.psmap_find_default db fn (BU.pimap_empty ()) in
+      let cols = BU.pimap_find_default rows row [] in
 
-    insert_col_info col info cols
-    |> BU.pimap_add rows row
-    |> BU.psmap_add db fn
+      insert_col_info col info cols
+      |> BU.pimap_add rows row
+      |> BU.psmap_add db fn
 
 let id_info_insert table id ty range =
     let info = { identifier = id; identifier_ty = ty; identifier_range = range} in

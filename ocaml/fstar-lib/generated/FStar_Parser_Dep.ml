@@ -901,7 +901,7 @@ let (hard_coded_dependencies :
     then []
     else
       (let uu___2 =
-         let uu___3 = lowercase_module_name full_filename in
+         let uu___3 = module_name_of_file full_filename in
          namespace_of_module uu___3 in
        match uu___2 with
        | FStar_Pervasives_Native.None ->
