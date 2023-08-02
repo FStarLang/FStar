@@ -359,6 +359,15 @@ val op_Array_Assignment
     (requires A.pts_to a full_perm s)
     (ensures fun res -> A.pts_to a full_perm (Seq.upd s (US.v i) v))
 
+val op_Array_Index
+  (#t: Type)
+  (a: A.array t)
+  (i: US.t)
+  (#p: perm)
+  (#s: Ghost.erased (Seq.seq t){US.v i < Seq.length s})
+: stt t
+    (requires A.pts_to a p s)
+    (ensures fun res -> A.pts_to a p s `star` pure (res == Seq.index s (US.v i)))
 
 val free_array
       (#elt: Type)
@@ -443,3 +452,9 @@ val with_local
 
 val assert_ (p:vprop)
   : stt_ghost unit emp_inames p (fun _ -> p)
+
+val assume_ (p:vprop)
+  : stt_ghost unit emp_inames emp (fun _ -> p)
+
+val drop_ (p:vprop) 
+  : stt_ghost unit emp_inames p (fun _ -> emp)

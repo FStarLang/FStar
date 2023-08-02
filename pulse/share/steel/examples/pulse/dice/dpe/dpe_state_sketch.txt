@@ -1,0 +1,64 @@
+type init_state = {
+  uds : array u8
+}
+
+let init_state_perm (st:init_state) : vprop = exists s. pts_to st.uds s
+
+type state_1 = {
+  uds       : array u8;
+
+	f_hash   : array u8;
+  f_binary : array u8
+
+  cdi       : array u8;
+}
+
+let state_1_perm (st:state_1) : vprop =
+  exists uds_s f_hash_s f_binary_s cdi_s.
+
+  pts_to st.uds uds_s *
+  pts_to st.f_hash f_hash_s *
+  pts_to st.f_binary f_binary_s *
+  pts_to st.cdi cdi_s *
+
+  pure (f_hash_s == hash f_binary_s /\
+        cdi_s == hmac (uds_s, f_hash_s))
+
+type state =
+  | Init   : init_state -> state
+  | State1 : state_1 -> state
+
+type state_vp (s:state) : vprop =
+  match state with
+  | Init st -> init_st_perm st
+  | State1 st -> state_1_perm st
+
+
+type ctxt_tbl_entry = s:state & lock (state_vp s)
+
+type ctxt_tbl = Hashtbl.t ctxt_id ctxt_tbl_entry
+
+type session_tbl_entry = t:ctxt_tbl & lock (ctxt_tbl_permission t)
+
+type session_tbl = Hashtbl.t session_id session_tbl_entry
+
+type global_st = t:session_tbl & lock (session_tbl_permission t)
+
+
+s:state
+p:state_vp s
+
+match s with
+| Init st ->
+  rewrite (state_vp s) (init_st_perm st);
+| State1 st ->
+  rewrite (state_vp s) (state_1_perm st)
+
+
+Same on the input side:
+
+derive_child (inp:t) (requires perm inp) (...) =
+  match t with
+  | DiceEngineInput r ->
+    rewrite (perm inp) (...);
+    ...

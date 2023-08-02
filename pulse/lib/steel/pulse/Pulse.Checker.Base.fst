@@ -87,6 +87,28 @@ let comp_st_with_post (c:comp_st) (post:term)
 let ve_unit_r g (p:term) : vprop_equiv g (tm_star p tm_emp) p = 
   VE_Trans _ _ _ _ (VE_Comm _ _ _) (VE_Unit _ _)
 
+let st_equiv_trans (#g:env) (#c0 #c1 #c2:comp) (d01:st_equiv g c0 c1) (d12:st_equiv g c1 c2)
+  : option (st_equiv g c0 c2)
+  = let ST_VPropEquiv _f _c0 _c1 x c0_pre_typing c0_res_typing c0_post_typing eq_pre_01 eq_post_01 = d01 in
+    let ST_VPropEquiv _f _c1 _c2 y c1_pre_typing c1_res_typing c1_post_typing eq_pre_12 eq_post_12 = d12 in
+    if x = y 
+    then Some (
+          ST_VPropEquiv g c0 c2 x c0_pre_typing c0_res_typing c0_post_typing 
+            (VE_Trans _ _ _ _ eq_pre_01 eq_pre_12)
+            (VE_Trans _ _ _ _ eq_post_01 eq_post_12)
+    )
+    else None
+
+let t_equiv #g #st #c (d:st_typing g st c) (#c':comp) (eq:st_equiv g c c')
+  : st_typing g st c'
+  = match d with
+    | T_Equiv _ _ _ _ d0 eq' -> (
+        match st_equiv_trans eq' eq with
+        | None -> T_Equiv _ _ _ _ d eq
+        | Some eq'' -> T_Equiv _ _ _ _ d0 eq''
+    )
+    | _ -> T_Equiv _ _ _ _ d eq
+
 let st_equiv_post (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
                   (post:term { freevars post `Set.subset` freevars (comp_post c)})
                   (veq: (x:var { fresh_wrt x g (freevars (comp_post c)) } ->
@@ -94,13 +116,15 @@ let st_equiv_post (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
                                      (open_term (comp_post c) x)
                                      (open_term post x)))
   : st_typing g t (comp_st_with_post c post)
-  = let c' = comp_st_with_post c post in
-    let (| u_of, pre_typing, x, post_typing |) = Metatheory.(st_comp_typing_inversion (comp_typing_inversion (st_typing_correctness d))) in
-    let veq = veq x in
-    let st_equiv : st_equiv g c c' =
-        ST_VPropEquiv g c c' x pre_typing u_of post_typing (VE_Refl _ _) veq
-    in
-    T_Equiv _ _ _ _ d st_equiv
+  = if eq_tm post (comp_post c) then d
+    else
+      let c' = comp_st_with_post c post in
+      let (| u_of, pre_typing, x, post_typing |) = Metatheory.(st_comp_typing_inversion (comp_typing_inversion (st_typing_correctness d))) in
+      let veq = veq x in
+      let st_equiv : st_equiv g c c' =
+          ST_VPropEquiv g c c' x pre_typing u_of post_typing (VE_Refl _ _) veq
+      in
+      t_equiv d st_equiv
 
 let simplify_post (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
                   (post:term { comp_post c == tm_star post tm_emp})
@@ -124,26 +148,39 @@ let vprop_equiv_typing_bk (#g:env) (#ctxt:_) (ctxt_typing:tot_typing g ctxt tm_v
   = let _, bk = vprop_equiv_typing d in
     bk ctxt_typing
 
+let comp_with_pre (c:comp_st) (pre:term) =
+  match c with
+  | C_ST st -> C_ST { st with pre }
+  | C_STGhost i st -> C_STGhost i { st with pre }
+  | C_STAtomic i st -> C_STAtomic i {st with pre}
 
-#push-options "--z3rlimit_factor 4 --ifuel 1 --fuel 0"
-let k_elab_equiv_continutation (#g1:env) (#g2:env { g2 `env_extends` g1 }) (#ctxt #ctxt1 #ctxt2:term)
+
+let st_equiv_pre (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
+                 (pre:term)
+                 (veq: vprop_equiv g (comp_pre c) pre)
+  : st_typing g t (comp_with_pre c pre)
+  = if eq_tm pre (comp_pre c) then d
+    else
+      let c' = comp_with_pre c pre in
+      let (| u_of, pre_typing, x, post_typing |) =
+        Metatheory.(st_comp_typing_inversion (comp_typing_inversion (st_typing_correctness d))) in
+      let st_equiv : st_equiv g c c' =
+          ST_VPropEquiv g c c' x pre_typing u_of post_typing veq (VE_Refl _ _)
+      in
+      t_equiv d st_equiv
+
+
+#push-options "--z3rlimit_factor 4 --ifuel 2 --fuel 0"
+let k_elab_equiv_continuation (#g1:env) (#g2:env { g2 `env_extends` g1 }) (#ctxt #ctxt1 #ctxt2:term)
   (k:continuation_elaborator g1 ctxt g2 ctxt1)
   (d:vprop_equiv g2 ctxt1 ctxt2)
   : continuation_elaborator g1 ctxt g2 ctxt2 =
   fun post_hint res ->
-  let framing_token : frame_for_req_in_ctxt g2 ctxt1 ctxt2 =
-    let d : vprop_equiv g2 (tm_star ctxt2 tm_emp) ctxt1 = 
-      VE_Trans _ _ _ _ (VE_Comm _ _ _) (VE_Trans _ _ _ _ (VE_Unit _ _) (VE_Sym _ _ _ d)) in
-      (| tm_emp, emp_typing, d |)
-  in
-  let (| st, c, st_d |) = res in
-  let (| _, pre_typing, _, _ |) =
-    Metatheory.(st_comp_typing_inversion (comp_typing_inversion (st_typing_correctness st_d))) in
-  let (| c', st_d' |) =
-    apply_frame (vprop_equiv_typing_bk pre_typing d) st_d framing_token in
-  assert (comp_post c' == tm_star (comp_post c) tm_emp);
-  let st_d' = simplify_post st_d' (comp_post c) in
-  k post_hint (| st, _, st_d' |)
+    let (| st, c, st_d |) = res in
+    let st_d : st_typing g2 st c = st_d in
+    assert (comp_pre c == ctxt2);
+    let st_d' : st_typing g2 st (comp_with_pre c ctxt1) = st_equiv_pre st_d _ (VE_Sym _ _ _ d) in
+    k post_hint (| st, _, st_d' |)
 #pop-options
 
 let vprop_equiv_typing_fwd (#g:env) (#ctxt:_) (ctxt_typing:tot_typing g ctxt tm_vprop)
@@ -165,19 +202,9 @@ let k_elab_equiv_prefix
   in
   let res = k post_hint res in
   let (| st, c, st_d |) = res in
-  let (| _, pre_typing, _, _ |) =
-    Metatheory.(st_comp_typing_inversion (comp_typing_inversion (st_typing_correctness st_d))) in
-  let (| c', st_d' |) =
-    apply_frame
-      (vprop_equiv_typing_fwd pre_typing d)
-      st_d
-      framing_token in
-  simplify_lemma c c' post_hint;
-  let c''  = comp_st_with_post c' (comp_post c) in
-  let st_d' : st_typing g1 st c'' = simplify_post st_d' (comp_post c) in
-  let res : st_typing_in_ctxt g1 ctxt2 post_hint = (| st, c'', st_d' |) in
-  res
-#pop-options
+  assert (comp_pre c == ctxt1);
+  (| _, _, st_equiv_pre st_d _ d |)
+ #pop-options
 
 let k_elab_equiv
   (#g1:env) (#g2:env { g2 `env_extends` g1 }) (#ctxt1 #ctxt1' #ctxt2 #ctxt2':term)                 
@@ -187,7 +214,7 @@ let k_elab_equiv
   : continuation_elaborator g1 ctxt1' g2 ctxt2' =
   
   let k : continuation_elaborator g1 ctxt1 g2 ctxt2' =
-    k_elab_equiv_continutation k d2 in
+    k_elab_equiv_continuation k d2 in
   let k : continuation_elaborator g1 ctxt1' g2 ctxt2' =
     k_elab_equiv_prefix k d1 in
   k

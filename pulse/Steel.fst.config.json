@@ -10,7 +10,10 @@
     "share/steel/examples/pulse",
     "share/steel/examples/pulse/bug-reports",
     "share/steel/examples/pulse/dice",
-    "share/steel/examples/pulse/dice/lib",
-    "share/steel/examples/pulse/dice/common"
+    "share/steel/examples/pulse/dice/dpe",
+    "share/steel/examples/pulse/dice/l0",
+    "share/steel/examples/pulse/dice/engine",
+    "share/steel/examples/pulse/dice/common",
+    "share/steel/examples/pulse/lib"
   ]
 }

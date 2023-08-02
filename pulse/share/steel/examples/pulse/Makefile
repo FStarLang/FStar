@@ -1,18 +1,10 @@
-all: verify verify-bug-reports verify-dice
+STEEL_HOME=../../../..
+INCLUDE_DIRS=bug-reports lib dice/common dice/dpe dice/engine dice/l0
+CACHE_DIR=.cache
+SRC_DIRS=$(addprefix $(STEEL_HOME)/share/steel/examples/pulse/, $(INCLUDE_DIRS))
+FSTAR_FILES=$(wildcard $(addsuffix /*fst, $(SRC_DIRS))) $(wildcard $(addsuffix /*fsti, $(SRC_DIRS)))
 
-.PHONY: verify-bug-reports
-verify-bug-reports:
-	$(MAKE) -C bug-reports verify
+all: verify
 
-.PHONY: verify-dice
-verify-dice:
-	$(MAKE) -C dice verify
 
-# assuming share/steel/examples/pulse
-STEEL_HOME ?= ../../../..
-
-FSTAR_OPTIONS = --include $(STEEL_HOME)/lib/steel/pulse
-
-COMPAT_INDEXED_EFFECTS=
-
-include $(STEEL_HOME)/share/steel/Makefile.include
+include Makefile.pulse.common

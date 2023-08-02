@@ -233,14 +233,24 @@ let op_Array_Access
   (a: A.array t)
   (i: US.t)
   (#s: Ghost.erased (Seq.seq t))
-  (#p: perm) = admit()
+  (#p: perm) 
+= admit()
 
 let op_Array_Assignment
   (#t: Type)
   (a: A.array t)
   (i: US.t)
   (v: t)
-  (#s: Ghost.erased (Seq.seq t) {US.v i < Seq.length s}) = admit()
+  (#s: Ghost.erased (Seq.seq t) {US.v i < Seq.length s}) 
+= admit()
+
+let op_Array_Index
+  (#t: Type)
+  (a: A.array t)
+  (i: US.t)
+  (#p: perm)
+  (#s: Ghost.erased (Seq.seq t){US.v i < Seq.length s})
+= admit()
 
 let free_array
       (#elt: Type)
@@ -296,3 +306,5 @@ let with_local #a init #pre #ret_t #post body =
   fun _ -> R.with_local init (fun x -> body x ())
 
 let assert_ (p:vprop) = fun _ -> noop()
+let assume_ (p:vprop) = fun _ -> admit_()
+let drop_ (p:vprop) = fun _ -> drop p

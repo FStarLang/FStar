@@ -9,55 +9,70 @@ type 't bounded_int =
   op_Subtraction: 't -> 't -> 't ;
   op_Less: 't -> 't -> Prims.bool ;
   op_Less_Equals: 't -> 't -> Prims.bool ;
+  op_Percent: 't -> 't -> 't ;
   properties: unit }
 let __proj__Mkbounded_int__item__op_Plus :
   't . 't bounded_int -> 't -> 't -> 't =
   fun projectee ->
     match projectee with
     | { fits; v; u; op_Plus; op_Subtraction; op_Less; op_Less_Equals;
-        properties;_} -> op_Plus
+        op_Percent; properties;_} -> op_Plus
 let __proj__Mkbounded_int__item__op_Subtraction :
   't . 't bounded_int -> 't -> 't -> 't =
   fun projectee ->
     match projectee with
     | { fits; v; u; op_Plus; op_Subtraction; op_Less; op_Less_Equals;
-        properties;_} -> op_Subtraction
+        op_Percent; properties;_} -> op_Subtraction
 let __proj__Mkbounded_int__item__op_Less :
   't . 't bounded_int -> 't -> 't -> Prims.bool =
   fun projectee ->
     match projectee with
     | { fits; v; u; op_Plus; op_Subtraction; op_Less; op_Less_Equals;
-        properties;_} -> op_Less
+        op_Percent; properties;_} -> op_Less
 let __proj__Mkbounded_int__item__op_Less_Equals :
   't . 't bounded_int -> 't -> 't -> Prims.bool =
   fun projectee ->
     match projectee with
     | { fits; v; u; op_Plus; op_Subtraction; op_Less; op_Less_Equals;
-        properties;_} -> op_Less_Equals
+        op_Percent; properties;_} -> op_Less_Equals
+let __proj__Mkbounded_int__item__op_Percent :
+  't . 't bounded_int -> 't -> 't -> 't =
+  fun projectee ->
+    match projectee with
+    | { fits; v; u; op_Plus; op_Subtraction; op_Less; op_Less_Equals;
+        op_Percent; properties;_} -> op_Percent
 type ('t, 'projectee, 'uuuuu) fits = Obj.t
 let op_Plus : 't . 't bounded_int -> 't -> 't -> 't =
   fun projectee ->
     match projectee with
     | { fits = fits1; v; u; op_Plus = op_Plus1; op_Subtraction; op_Less;
-        op_Less_Equals; properties;_} -> op_Plus1
+        op_Less_Equals; op_Percent; properties;_} -> op_Plus1
 let op_Subtraction : 't . 't bounded_int -> 't -> 't -> 't =
   fun projectee ->
     match projectee with
     | { fits = fits1; v; u; op_Plus = op_Plus1;
         op_Subtraction = op_Subtraction1; op_Less; op_Less_Equals;
-        properties;_} -> op_Subtraction1
+        op_Percent; properties;_} -> op_Subtraction1
 let op_Less : 't . 't bounded_int -> 't -> 't -> Prims.bool =
   fun projectee ->
     match projectee with
     | { fits = fits1; v; u; op_Plus = op_Plus1;
         op_Subtraction = op_Subtraction1; op_Less = op_Less1; op_Less_Equals;
-        properties;_} -> op_Less1
+        op_Percent; properties;_} -> op_Less1
 let op_Less_Equals : 't . 't bounded_int -> 't -> 't -> Prims.bool =
   fun projectee ->
     match projectee with
     | { fits = fits1; v; u; op_Plus = op_Plus1;
         op_Subtraction = op_Subtraction1; op_Less = op_Less1;
-        op_Less_Equals = op_Less_Equals1; properties;_} -> op_Less_Equals1
+        op_Less_Equals = op_Less_Equals1; op_Percent; properties;_} ->
+        op_Less_Equals1
+let op_Percent : 't . 't bounded_int -> 't -> 't -> 't =
+  fun projectee ->
+    match projectee with
+    | { fits = fits1; v; u; op_Plus = op_Plus1;
+        op_Subtraction = op_Subtraction1; op_Less = op_Less1;
+        op_Less_Equals = op_Less_Equals1; op_Percent = op_Percent1;
+        properties;_} -> op_Percent1
 let (bounded_int_int : Prims.int bounded_int) =
   {
     fits = ();
@@ -67,6 +82,7 @@ let (bounded_int_int : Prims.int bounded_int) =
     op_Subtraction = (fun x -> fun y -> x - y);
     op_Less = (fun x -> fun y -> x < y);
     op_Less_Equals = (fun x -> fun y -> x <= y);
+    op_Percent = (fun x -> fun y -> x mod y);
     properties = ()
   }
 type ('t, 'c, 'op, 'x, 'y) ok = Obj.t
@@ -85,6 +101,7 @@ let (bounded_int_u32 : FStar_UInt32.t bounded_int) =
     op_Subtraction = (fun x -> fun y -> FStar_UInt32.sub x y);
     op_Less = (fun x -> fun y -> FStar_UInt32.lt x y);
     op_Less_Equals = (fun x -> fun y -> FStar_UInt32.lte x y);
+    op_Percent = (fun x -> fun y -> FStar_UInt32.rem x y);
     properties = ()
   }
 let (add_u32 : FStar_UInt32.t -> FStar_UInt32.t -> FStar_UInt32.t) =
@@ -103,6 +120,7 @@ let (bounded_int_nat : Prims.nat bounded_int) =
     op_Subtraction = (fun x -> fun y -> x - y);
     op_Less = (fun x -> fun y -> x < y);
     op_Less_Equals = (fun x -> fun y -> x <= y);
+    op_Percent = (fun x -> fun y -> x mod y);
     properties = ()
   }
 let (add_nat : Prims.nat -> Prims.nat -> Prims.nat) =
@@ -116,6 +134,7 @@ let (bounded_int_size_t : FStar_SizeT.t bounded_int) =
     op_Subtraction = (fun x -> fun y -> FStar_SizeT.sub x y);
     op_Less = (fun x -> fun y -> FStar_SizeT.lt x y);
     op_Less_Equals = (fun x -> fun y -> FStar_SizeT.lte x y);
+    op_Percent = (fun x -> fun y -> FStar_SizeT.rem x y);
     properties = ()
   }
 let (size_t_plus_one : FStar_SizeT.t -> FStar_SizeT.t) =

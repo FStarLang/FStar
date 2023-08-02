@@ -94,20 +94,20 @@ let comp_to_string (c:comp)
       sprintf "Tot %s" (term_to_string t)
       
     | C_ST s ->
-      sprintf "ST %s (requires\n%s) (ensures\n%s)"
+      sprintf "stt %s (requires\n%s) (ensures\n%s)"
               (term_to_string s.res)
               (term_to_string s.pre)
               (term_to_string s.post)
 
     | C_STAtomic inames s ->
-      sprintf "STAtomic %s %s (requires\n%s) (ensures\n%s)"
+      sprintf "stt_atomic %s %s (requires\n%s) (ensures\n%s)"
               (term_to_string inames)
               (term_to_string s.res)
               (term_to_string s.pre)
               (term_to_string s.post)
 
     | C_STGhost inames s ->
-      sprintf "STGhost %s %s (requires\n%s) (ensures\n%s)"
+      sprintf "stt_atomic %s %s (requires\n%s) (ensures\n%s)"
               (term_to_string inames)
               (term_to_string s.res)
               (term_to_string s.pre)

@@ -1,0 +1,65 @@
+; CDDL specification of DPE DeriveChild input arguments
+
+digest-len = uint
+
+engine-record = {
+  uds                  => bytes,
+  l0-image-header-size => uint,
+  l0-image-header      => bytes .size l0-image-header-size,
+  l0-image-header-sig  => bytes .size 64,
+  l0-binary-size       => uint,
+  l0-binary            => bytes .size l0-binary-size,
+  l0-binary-hash       => bytes .size digest-len,
+  l0-image-auth-pubkey => bytes .size 32
+}
+
+device-idcsr-ingredients = {
+  ku        => uint,
+  version   => uint,
+  s-common  => text,
+  s-org     => text,
+  s-country => text
+}
+
+aliaskeycrt-ingredients = {
+  version      => uint,
+  serialNumber => uint,
+  i-common     => text,
+  i-org        => text,
+  i-country    => text,
+  notBefore    => uint,
+  notAfter     => uint,
+  s-common     => text,
+  s-org        => text,
+  s-country    => text,
+  ku           => uint,
+  l0-version   => uint
+}
+
+l0-record = {
+  cdi                     => bytes .size 32,
+  fwid                    => bytes .size 32,
+  deviceID-label-len      => uint,
+  deviceID-label          => bytes .size deviceID-label-len,
+  aliasKey-label-len      => uint,
+  aliasKey-label          => bytes .size aliasKey-label-len,
+  deviceIDCSR-ingredients => device-idcsr-ingredients,
+  aliasKeyCRT-ingredients => aliaskeycrt-ingredients
+}
+
+derive-child-input-args = {
+ ? &(context-handle: 1) => bytes,
+ ? &(retain-parent-context: 2) => bool, ; Default = false
+ ? &(allow-child-to-derive: 3) => bool, ; Default = true
+ ? &(create-certificate: 4) => bool, ; Default = true
+ ? &(new-session-initiator-handshake: 5) => bytes,
+ ? &(new-session-is-migratable: 6) => bool, ; Default = false
+ ? &(input-data: 7) => engine-record / l0-record,
+ ? &(internal-inputs: 8) => [* $internal-input-type],
+ * &(tstr: uint) => any
+}
+
+$internal-input-type /= &(
+ dpe-info: 1,
+ dpe-dice: 2,
+)

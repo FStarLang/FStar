@@ -13,6 +13,12 @@ open Pulse.Soundness
 module RU = Pulse.RuntimeUtils
 module P = Pulse.Syntax.Printer
 
+
+let debug_main g (s: unit -> T.Tac string) : T.Tac unit =
+  if RU.debug_at_level (fstar_env g) "pulse.main"
+  then T.print (s ())
+  else ()
+  
 let main' (t:st_term) (pre:term) (g:RT.fstar_top_env)
   : T.Tac (r:(R.term & R.typ){RT.tot_typing g (fst r) (snd r)})
   = 
@@ -33,8 +39,12 @@ let main' (t:st_term) (pre:term) (g:RT.fstar_top_env)
              Pulse.Checker.Prover.debug_prover g
                (fun _ -> Printf.sprintf "\ncheck call returned in main with:\n%s\n"
                          (P.st_term_to_string t));
-             let refl_e = elab_st_typing t_typing in
+             debug_main g
+               (fun _ -> Printf.sprintf "\nchecker call returned in main with:\n%s\nderivation=%s\n"
+                         (P.st_term_to_string t)
+                         (Pulse.Typing.Printer.print_st_typing t_typing));
              let refl_t = elab_comp c in
+             let refl_e = elab_st_typing t_typing in
              soundness_lemma g t c t_typing;
              (refl_e, refl_t)
            | _ -> fail g (Some t.range) "main: top-level term not a Tm_Abs"
