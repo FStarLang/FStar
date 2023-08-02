@@ -436,10 +436,8 @@ fn l0_main
             aliasKeyCRT_len aliasKeyCRT1 aliasKey_pub1
       )))
 {
-  unfold l0_record_perm record repr;
+  unfold (l0_record_perm record repr);
 
-  // let deviceID_pub = new_array 0uy v32us;
-  // let deviceID_priv = new_array 0uy v32us;
   derive_DeviceID dice_hash_alg 
     deviceID_pub deviceID_priv cdi 
     record.deviceID_label_len record.deviceID_label

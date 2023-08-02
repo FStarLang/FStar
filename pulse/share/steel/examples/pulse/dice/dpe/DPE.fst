@@ -19,97 +19,19 @@ module LSHT = LinearScanHashTable
 open HACL
 open X509
 open EngineTypes
-open L0Types
 open EngineCore
 open L0Core
+open L0Types
 open Pulse.Class.BoundedIntegers
 
 friend Pulse.Steel.Wrapper
 
-(* L1 Context -- no dedicated L1 logic, so there's no good place for this to live *)
-
-noeq
-type l1_context = { deviceID_priv: A.larray U8.t (US.v v32us);
-                    deviceID_pub: A.larray U8.t (US.v v32us);
-                    aliasKey_priv: A.larray U8.t (US.v v32us);
-                    aliasKey_pub: A.larray U8.t (US.v v32us);
-                    aliasKeyCRT: A.array U8.t;
-                    deviceIDCSR: A.array U8.t; }
-
-let l1_context_perm (c:l1_context)
-  : vprop
-  = exists_ (fun s -> A.pts_to c.deviceID_priv full_perm s) `star`
-    exists_ (fun s -> A.pts_to c.deviceID_pub full_perm s) `star`
-    exists_ (fun s -> A.pts_to c.aliasKey_priv full_perm s) `star`
-    exists_ (fun s -> A.pts_to c.aliasKey_pub full_perm s) `star`
-    exists_ (fun s -> A.pts_to c.aliasKeyCRT full_perm s) `star`
-    exists_ (fun s -> A.pts_to c.deviceIDCSR full_perm s) `star`
-    pure (
-      A.is_full_array c.deviceID_priv /\
-      A.is_full_array c.deviceID_pub /\
-      A.is_full_array c.aliasKey_priv /\
-      A.is_full_array c.aliasKey_pub /\
-      A.is_full_array c.aliasKeyCRT /\
-      A.is_full_array c.deviceIDCSR
-    )
-
-let mk_l1_context deviceID_priv deviceID_pub aliasKey_priv aliasKey_pub aliasKeyCRT deviceIDCSR 
-  = { deviceID_priv; deviceID_pub; aliasKey_priv; aliasKey_pub; aliasKeyCRT; deviceIDCSR }
-
-(* Context *)
-noeq
-type context_t = 
-  | Engine_context : c:engine_context -> context_t
-  | L0_context     : c:l0_context -> context_t
-  | L1_context     : c:l1_context -> context_t
-
-let context_perm (t:context_t) : vprop = 
-  match t with
-  | Engine_context c -> engine_context_perm c
-  | L0_context c -> l0_context_perm c
-  | L1_context c -> l1_context_perm c
-
-let mk_engine_context_t engine_context = Engine_context engine_context
-let mk_l0_context_t l0_context = L0_context l0_context
-let mk_l1_context_t l1_context = L1_context l1_context
-
-let locked_context_t = c:context_t & L.lock (context_perm c)
-
-
-(* Record *)
-noeq
-type record_t =
-  | Engine_record : r:engine_record_t -> record_t
-  | L0_record     : r:l0_record_t -> record_t
-
-noeq
-type repr_t = 
-  | Engine_repr : r:engine_record_repr -> repr_t
-  | L0_repr     : r:l0_record_repr -> repr_t
-
-let record_perm (t_rec:record_t) (t_rep:repr_t) : vprop = 
-  match t_rec with
-  | Engine_record r -> (
-    match t_rep with 
-    | Engine_repr r0 -> engine_record_perm r r0
-    | _ -> pure(false)
-  )
-  | L0_record r -> (
-    match t_rep with
-    | L0_repr r0 -> l0_record_perm r r0
-    | _ -> pure(false)
-  )
 
 (* ----------- GLOBAL STATE ----------- *)
 
-type sid_ref_t = r:R.ref nat & L.lock (exists_ (fun n -> R.pts_to r full_perm n))
-assume val get (#s:pht_sig_us) (ht:ht_t s) (k:s.keyt) : s.valt
-
-assume val dpe_hashf : nat -> US.t
-assume val sht_len : pos_us
-assume val cht_len : pos_us
-let cht_sig : pht_sig_us = mk_pht_sig_us nat locked_context_t dpe_hashf
-let sht_sig : pht_sig_us = mk_pht_sig_us nat (locked_ht_t cht_sig) dpe_hashf 
+let dpe_hashf : nat -> US.t = admit()
+let sht_len : pos_us = admit()
+let cht_len : pos_us = admit()
 
 // A table whose permission is stored in the lock 
 
@@ -381,7 +303,7 @@ fn close_session (sid:nat)
 ```
 
 // TODO: 
-assume val prng (_:unit) : nat
+let prng (_:unit) : nat = admit()
 
 ```pulse
 fn init_engine_ctxt (uds:A.larray U8.t (US.v uds_len))
@@ -411,12 +333,12 @@ fn init_engine_ctxt (uds:A.larray U8.t (US.v uds_len))
 ```
 
 ```pulse
-fn init_l0_ctxt (cdi:A.larray U8.t (US.v dice_digest_len)) (#s:erased (elseq U8.t dice_digest_len))
-  requires //exists (s:elseq U8.t dice_digest_len). 
+fn _init_l0_ctxt (cdi:A.larray U8.t (US.v dice_digest_len)) (#s:erased (elseq U8.t dice_digest_len))
+  requires 
     A.pts_to cdi full_perm s **
     pure (A.is_full_array cdi)
   returns _:locked_context_t
-  ensures //exists (s:elseq U8.t dice_digest_len). 
+  ensures 
     A.pts_to cdi full_perm s
 {
   let cdi_buf = new_array 0uy dice_digest_len;
@@ -431,15 +353,16 @@ fn init_l0_ctxt (cdi:A.larray U8.t (US.v dice_digest_len)) (#s:erased (elseq U8.
   ((| ctxt, ctxt_lk |) <: locked_context_t)
 }
 ```
+let init_l0_ctxt cdi #s = _init_l0_ctxt cdi #s
 
 assume val coerce_seq_create (l:US.t) (s:(Seq.seq U8.t){s == Seq.create (US.v l) 0uy}) : elseq U8.t l
 
 ```pulse
-fn init_l1_ctxt (deviceIDCSR_len: US.t) (aliasKeyCRT_len: US.t) 
+fn _init_l1_ctxt (deviceIDCSR_len: US.t) (aliasKeyCRT_len: US.t) 
                 (deviceID_priv: A.larray U8.t (US.v v32us)) (deviceID_pub: A.larray U8.t (US.v v32us))
                 (aliasKey_priv: A.larray U8.t (US.v v32us)) (aliasKey_pub: A.larray U8.t (US.v v32us)) 
                 (deviceIDCSR: A.larray U8.t (US.v deviceIDCSR_len)) (aliasKeyCRT: A.larray U8.t (US.v aliasKeyCRT_len))
-                (#s1 s2 s3 s4: erased (elseq U8.t v32us)) 
+                (#s1 #s2 #s3 #s4: erased (elseq U8.t v32us)) 
                 (#s5:erased (elseq U8.t deviceIDCSR_len))
                 (#s6:erased (elseq U8.t aliasKeyCRT_len))
   requires A.pts_to deviceID_priv full_perm s1 ** 
@@ -490,7 +413,10 @@ fn init_l1_ctxt (deviceIDCSR_len: US.t) (aliasKeyCRT_len: US.t)
   ((| ctxt, ctxt_lk |) <: locked_context_t)
 }
 ```
-
+let init_l1_ctxt deviceIDCSR_len aliasKeyCRT_len deviceID_priv deviceID_pub
+  aliasKey_priv aliasKey_pub deviceIDCSR aliasKeyCRT #s1 #s2 #s3 #s4 #s5 #s6
+  = _init_l1_ctxt deviceIDCSR_len aliasKeyCRT_len deviceID_priv deviceID_pub
+    aliasKey_priv aliasKey_pub deviceIDCSR aliasKeyCRT #s1 #s2 #s3 #s4 #s5 #s6
 (*
   InitializeContext: Part of DPE API 
   Create a context in the initial state (engine context) and store the context
@@ -555,256 +481,4 @@ fn initialize_context (sid:nat) (uds:A.larray U8.t (US.v uds_len))
 }
 ```
 
-(*
-  DeriveChild: Part of DPE API 
-  Execute the DICE layer associated with the current context and produce a 
-  new context. Destroy the current context in the current session's context table 
-  and store the new context in the table.
-  NOTE: Returns 0 upon error
-*)
-```pulse
-fn derive_child (sid:nat) (ctxt_hndl:nat) (record:record_t) (repr:repr_t)
-  requires record_perm record repr
-  returns _:nat
-  ensures record_perm record repr
-{
-  let new_ctxt_hndl = prng ();
 
-  let sht = dfst locked_sht;
-  let sht_lk = dsnd locked_sht;
-  W.acquire #(ht_perm sht_sig sht) sht_lk;
-
-  unfold (ht_perm sht_sig sht);
-  with spht. assert (models sht_sig sht spht);
-
-  let opt_locked_cht = PHT.lookup #sht_sig #spht sht sid;
-
-  match opt_locked_cht {
-  Some locked_cht -> {
-    let cht = dfst locked_cht;
-    let cht_lk = dsnd locked_cht;
-    W.acquire #(ht_perm cht_sig cht) cht_lk;
-
-    unfold (ht_perm cht_sig cht);
-    with cpht0. assert (models cht_sig cht cpht0);
-
-    let opt_locked_ctxt = PHT.lookup #cht_sig #cpht0 cht ctxt_hndl;
-
-    match opt_locked_ctxt {
-    Some locked_ctxt -> {
-    let ctxt = dfst locked_ctxt;
-    let ctxt_lk = dsnd locked_ctxt;
-    W.acquire #(context_perm ctxt) ctxt_lk;
-
-    match ctxt {
-    Engine_context c -> {
-      // NOTE: we won't eventually release engine_context_perm because we won't 
-      // own it anymore -- we will disable the uds and free the uds array
-      rewrite (context_perm ctxt) as (engine_context_perm c);
-      unfold (engine_context_perm c);
-
-      match record {
-      Engine_record r -> {
-        match repr {
-        Engine_repr r0 -> {       
-          rewrite (record_perm record repr) as (engine_record_perm r r0); 
-
-          let cdi = new_array 0uy dice_digest_len;
-          let ret = EngineCore.engine_main cdi c.uds r;
-          with s. assert (A.pts_to cdi full_perm s);
-          free_array c.uds;
-
-          match ret {
-          DICE_SUCCESS -> {
-            let new_locked_context = init_l0_ctxt cdi;
-            free_array cdi #(coerce dice_digest_len s);
-            
-            PHT.delete #cht_sig #cpht0 cht ctxt_hndl;
-            with cpht1. assert (models cht_sig cht cpht1);
-            let b = not_full #cht_sig #cpht1 cht;
-
-            if b {
-              PHT.insert #cht_sig #cpht1 cht new_ctxt_hndl new_locked_context; 
-
-              rewrite (engine_record_perm r r0) as (record_perm record repr);
-              fold (ht_perm sht_sig sht);
-              fold (ht_perm cht_sig cht);
-              W.release #(ht_perm sht_sig sht) sht_lk;
-              W.release #(ht_perm cht_sig cht) cht_lk;
-
-              new_ctxt_hndl
-            } else {
-              // ERROR -- table full
-              rewrite (engine_record_perm r r0) as (record_perm record repr);
-              fold (ht_perm sht_sig sht);
-              fold (ht_perm cht_sig cht);
-              W.release #(ht_perm sht_sig sht) sht_lk;
-              W.release #(ht_perm cht_sig cht) cht_lk;
-
-              new_ctxt_hndl
-          }}
-          DICE_ERROR -> {
-            // ERROR -- DICE engine failed
-            free_array cdi #(coerce dice_digest_len s);
-            rewrite (engine_record_perm r r0) as (record_perm record repr);
-            fold (ht_perm sht_sig sht);
-            fold (ht_perm cht_sig cht);
-            W.release #(ht_perm sht_sig sht) sht_lk;
-            W.release #(ht_perm cht_sig cht) cht_lk;
-            0
-          }}}
-        _ -> {
-          // ERROR - repr should have type (Egnine_repr r0)
-          zeroize_array uds_len c.uds #uds_bytes;
-          disable_uds ();
-          free_array c.uds;
-
-          fold (ht_perm sht_sig sht);
-          fold (ht_perm cht_sig cht);
-          W.release #(ht_perm sht_sig sht) sht_lk;
-          W.release #(ht_perm cht_sig cht) cht_lk;
-          0
-        }}
-      }
-      _ -> {
-        // ERROR - record should have type (Engine_record r)
-        zeroize_array uds_len c.uds;
-        disable_uds ();
-        free_array c.uds;
-
-        fold (ht_perm sht_sig sht);
-        fold (ht_perm cht_sig cht);
-        W.release #(ht_perm sht_sig sht) sht_lk;
-        W.release #(ht_perm cht_sig cht) cht_lk;
-        0
-      }}
-    }
-    L0_context c -> {
-      // NOTE: we won't eventually release l0_context_perm because we won't 
-      // own it anymore -- we will free the cdi array
-      rewrite (context_perm ctxt) as (l0_context_perm c);
-      unfold (l0_context_perm c);
-
-      with s. assert (A.pts_to c.cdi full_perm s);
-
-      match record {
-      L0_record r -> {
-        match repr {
-        L0_repr r0 -> {
-          let idcsr_ing = r.deviceIDCSR_ingredients;
-          let akcrt_ing = r.aliasKeyCRT_ingredients;
-
-          let deviceIDCRI_len = len_of_deviceIDCRI  idcsr_ing.version idcsr_ing.s_common 
-                                                    idcsr_ing.s_org idcsr_ing.s_country;
-          let aliasKeyTBS_len = len_of_aliasKeyTBS  akcrt_ing.serialNumber akcrt_ing.i_common 
-                                                    akcrt_ing.i_org akcrt_ing.i_country 
-                                                    akcrt_ing.s_common akcrt_ing.s_org 
-                                                    akcrt_ing.s_country akcrt_ing.l0_version;
-          let deviceIDCSR_len = length_of_deviceIDCSR deviceIDCRI_len;
-          let aliasKeyCRT_len = length_of_aliasKeyCRT aliasKeyTBS_len;
-
-          let deviceID_pub = new_array 0uy v32us;
-          let deviceID_priv = new_array 0uy v32us;
-          let aliasKey_pub = new_array 0uy v32us;
-          let aliasKey_priv = new_array 0uy v32us;
-          let deviceIDCSR = new_array 0uy deviceIDCSR_len;
-          let aliasKeyCRT = new_array 0uy aliasKeyCRT_len;
-
-          rewrite (record_perm record repr) as (l0_record_perm r r0); 
-
-          assume_ (pure(valid_hkdf_ikm_len (digest_len dice_hash_alg)));
-          
-          L0Core.l0_main  c.cdi deviceID_pub deviceID_priv 
-                          aliasKey_pub aliasKey_priv 
-                          aliasKeyTBS_len aliasKeyCRT_len aliasKeyCRT 
-                          deviceIDCRI_len deviceIDCSR_len deviceIDCSR r;
-          free_array c.cdi;
-
-          with (s1:elseq U8.t v32us). assert (A.pts_to aliasKey_priv full_perm s1);
-          let new_locked_context = init_l1_ctxt deviceIDCSR_len aliasKeyCRT_len 
-                                                deviceID_priv deviceID_pub
-                                                aliasKey_priv aliasKey_pub 
-                                                deviceIDCSR aliasKeyCRT;
-          free_array deviceID_pub;
-          free_array deviceID_priv;
-          free_array aliasKey_pub;
-          free_array aliasKey_priv;
-          free_array deviceIDCSR;
-          free_array aliasKeyCRT;
-          
-          PHT.delete #cht_sig #cpht0 cht ctxt_hndl;
-          with cpht1. assert (models cht_sig cht cpht1);
-          let b = not_full #cht_sig #cpht1 cht;
-
-          if b {
-            PHT.insert #cht_sig #cpht1 cht new_ctxt_hndl new_locked_context;
-
-            rewrite (l0_record_perm r r0) as (record_perm record repr);
-
-            fold (ht_perm sht_sig sht);
-            fold (ht_perm cht_sig cht);
-            W.release #(ht_perm sht_sig sht) sht_lk;
-            W.release #(ht_perm cht_sig cht) cht_lk;
-
-            new_ctxt_hndl
-          } else {
-            // ERROR -- table full
-            rewrite (l0_record_perm r r0) as (record_perm record repr);
-
-            fold (ht_perm sht_sig sht);
-            fold (ht_perm cht_sig cht);
-            W.release #(ht_perm sht_sig sht) sht_lk;
-            W.release #(ht_perm cht_sig cht) cht_lk;
-
-            new_ctxt_hndl
-          }
-        }
-        _ -> {
-          // ERROR - repr should have type (L0_repr r0)
-          zeroize_array dice_digest_len c.cdi;
-          free_array c.cdi;
-
-          fold (ht_perm sht_sig sht);
-          fold (ht_perm cht_sig cht);
-          W.release #(ht_perm sht_sig sht) sht_lk;
-          W.release #(ht_perm cht_sig cht) cht_lk;
-          0
-        }}
-      }
-      _ -> {
-        // ERROR - record should have type (L0_record r)
-        zeroize_array dice_digest_len c.cdi;
-        free_array c.cdi;
-
-        fold (ht_perm sht_sig sht);
-        fold (ht_perm cht_sig cht);
-        W.release #(ht_perm sht_sig sht) sht_lk;
-        W.release #(ht_perm cht_sig cht) cht_lk;
-        0
-      }}
-    }
-    _ -> { 
-      // ERROR - cannot invoke DeriveChild with L1 context
-      fold (ht_perm sht_sig sht);
-      fold (ht_perm cht_sig cht);
-      W.release #(context_perm ctxt) ctxt_lk;
-      W.release #(ht_perm sht_sig sht) sht_lk;
-      W.release #(ht_perm cht_sig cht) cht_lk;
-      0
-    }}}
-    None -> { 
-    // ERROR - bad context handle
-    fold (ht_perm sht_sig sht);
-    fold (ht_perm cht_sig cht);
-    W.release #(ht_perm sht_sig sht) sht_lk;
-    W.release #(ht_perm cht_sig cht) cht_lk;
-    0
-    }}}
-  None -> { 
-  // ERROR - bad session ID
-  fold (ht_perm sht_sig sht);
-  W.release #(ht_perm sht_sig sht) sht_lk;
-  0
-  }}
-}
-```
