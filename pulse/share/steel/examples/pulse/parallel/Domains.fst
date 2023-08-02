@@ -24,8 +24,15 @@ open Steel.ST.Util
 
 module Lock = Steel.ST.SpinLock
 
-let unit_emp_stt_pure_pure a p
-  = unit -> stt a emp (fun x -> pure (p x))
+(*
+noeq
+type par_env = | ParEnv : list task -> par_env
+and task = | Task : (R.ref par_env -> stt nat emp (fun _ -> emp)) -> task
+*)
+
+//let unit_emp_stt_pure_pure a p
+//  = unit -> stt a emp (fun x -> pure (p x))
+  // depends negatively on par_env
 
 let maybe_sat #a (p: a -> prop) (x: option a)
   = match x with
@@ -40,8 +47,10 @@ let task_elem = (
   & r: R.ref (option a) // the reference where we put the result of the computation
   & Lock.lock (exists_ (fun v -> R.pts_to r full_perm v `star` pure (maybe_sat p v)))
 )
+// depends negatively on par_env
 
 let task_queue: Type u#1 = list task_elem
+// depends negatively on par_env
 
 let inv_task_queue
   (q: HR.ref task_queue) // the task queue
@@ -50,6 +59,21 @@ let inv_task_queue
 = (exists_ (fun vq -> exists_ (fun vc ->
     HR.pts_to q full_perm vq `star`
     R.pts_to c full_perm vc)))
+// depends postivitely on task_queue
+// depends negatively on par_env
+
+let par_env = (q: HR.ref task_queue & c: R.ref int & Lock.lock (inv_task_queue q c))
+// if lock depends positively on the vprop
+// then it depends negatively
+
+let get_queue (p: par_env): HR.ref task_queue
+  = p._1
+
+let get_counter (p: par_env): R.ref int
+  = p._2
+
+let get_lock (p: par_env): Lock.lock (inv_task_queue (get_queue p) (get_counter p))
+  = p._3
 
 let create_task_elem #a p f r l: task_elem
   = (| a, p, f, r, l |)
@@ -89,26 +113,28 @@ let enqueue (t: task_elem) (q: task_queue): task_queue
 
 ```pulse
 fn acquire_queue_lock
-  (#q: HR.ref task_queue) (#c: R.ref int)
-  (l: Lock.lock (inv_task_queue q c))
+  (p: par_env)
+  //(#q: HR.ref task_queue) (#c: R.ref int)
+  //(l: Lock.lock (inv_task_queue q c))
   requires emp
-  ensures (exists vq vc. HR.pts_to q full_perm vq ** R.pts_to c full_perm vc)
+  ensures (exists vq vc. HR.pts_to (get_queue p) full_perm vq ** R.pts_to (get_counter p) full_perm vc)
 {
-  acquire l;
-  unfold (inv_task_queue q c);
+  acquire (get_lock p);
+  unfold (inv_task_queue (get_queue p) (get_counter p));
   ()
 }
 ```
 
 ```pulse
 fn release_queue_lock
-  (#q: HR.ref task_queue) (#c: R.ref int)
-  (l: Lock.lock (inv_task_queue q c))
-  requires (exists vq vc. HR.pts_to q full_perm vq ** R.pts_to c full_perm vc)
+  //(#q: HR.ref task_queue) (#c: R.ref int)
+  //(l: Lock.lock (inv_task_queue q c))
+  (p: par_env)
+  requires (exists vq vc. HR.pts_to (get_queue p) full_perm vq ** R.pts_to (get_counter p) full_perm vc)
   ensures emp
 {
-  fold (inv_task_queue q c);
-  release l;
+  fold (inv_task_queue (get_queue p) (get_counter p));
+  release (get_lock p);
   ()
 }
 ```
@@ -128,10 +154,11 @@ let mk_pure_handler #a (p: a -> prop) (r: R.ref (option a)) (l: Lock.lock (exist
 fn spawn_emp'
   (#a:Type0)
   //(#post : (a -> vprop))
-  (#q: HR.ref task_queue) (#c: R.ref int)
+  //(#q: HR.ref task_queue) (#c: R.ref int)
+  (p: par_env) // par_env'
   (post: (a -> prop))
-  (l: Lock.lock (inv_task_queue q c))
-  (f : unit_emp_stt_pure_pure a post)
+  //(l: Lock.lock (inv_task_queue q c))
+  (f : (par_env -> unit_emp_stt_pure_pure a post))
  requires emp // requires prop?
  returns r: pure_handler post //(res: R.ref (option a) & Lock.lock (exists_ (fun v -> R.pts_to res full_perm v `star` pure (maybe_sat post v))))
   //Lock.lock
@@ -139,15 +166,15 @@ fn spawn_emp'
 {
   let res = alloc #(option a) None;
   let l_res = new_lock (exists_ (fun v -> R.pts_to res full_perm v `star` pure (maybe_sat post v)));
-  let task = create_task_elem #a post f res l_res;
+  let task = create_task_elem #a post (f p) res l_res;
 
-  acquire_queue_lock l;
+  acquire_queue_lock p;
 
-  with vq. assert (HR.pts_to q full_perm vq);
-  let vq = higher_read #_ #full_perm #vq q;
-  higher_write #_ #vq q (enqueue task vq);
+  with vq. assert (HR.pts_to (get_queue p) full_perm vq);
+  let vq = higher_read #_ #full_perm #vq (get_queue p);
+  higher_write #_ #vq (get_queue p) (enqueue task vq);
 
-  release_queue_lock l;
+  release_queue_lock p;
 
   let r = mk_pure_handler post res l_res;
   r
@@ -183,8 +210,9 @@ assume val free_ref (#a:Type) (r: R.ref a)
 fn join_emp'
   (#a:Type0)
   (#post: (a -> prop))
-  (#q: HR.ref task_queue) (#c: R.ref int)
-  (l: Lock.lock (inv_task_queue q c))
+  //(#q: HR.ref task_queue) (#c: R.ref int)
+  //(l: Lock.lock (inv_task_queue q c))
+  //(p: par_env)
   (h: pure_handler post)
  requires emp
  returns res: a
@@ -250,20 +278,21 @@ fn write_res (t: task_elem) (res: t._1)
 ```
 
 ```pulse
-fn decrease_counter (#q: HR.ref task_queue) (#c: R.ref int) (l: Lock.lock (inv_task_queue q c))
+fn decrease_counter (p: par_env)// (#q: HR.ref task_queue) (#c: R.ref int) (l: Lock.lock (inv_task_queue q c))
   requires emp
   ensures emp
 {
-  acquire_queue_lock l;
-  let vc = !c;
-  c := vc - 1;
-  release_queue_lock l;
+  acquire_queue_lock p;
+  let vc = !(get_counter p);
+  (get_counter p) := vc - 1;
+  release_queue_lock p;
   ()
 }
 ```
 
 ```pulse
-fn worker (#q: HR.ref task_queue) (#c: R.ref int) (l: Lock.lock (inv_task_queue q c))
+fn worker' //(#q: HR.ref task_queue) (#c: R.ref int) (l: Lock.lock (inv_task_queue q c))
+  (p: par_env)
   requires emp
   ensures emp
 {
@@ -273,20 +302,20 @@ fn worker (#q: HR.ref task_queue) (#c: R.ref int) (l: Lock.lock (inv_task_queue 
   while (let working = !r_working; working)
     invariant b. (exists w. R.pts_to r_working full_perm w ** pure (b == w))
   {
-    acquire_queue_lock l;
+    acquire_queue_lock p;
 
-    with vq. assert (HR.pts_to q full_perm vq);
-    let vq = higher_read #_ #full_perm #vq q;
-    let vc = !c;
+    with vq. assert (HR.pts_to (get_queue p) full_perm vq);
+    let vq = higher_read #_ #full_perm #vq (get_queue p);
+    let vc = !(get_counter p);
 
     // We check whether there's a task in the queue
     if (len vq > 0) {
       // 1. pop the task and increase counter
-      let p = pop vq;
-      c := vc + 1;
-      higher_write #_ #vq q (p._2);
-      release_queue_lock l;
-      let task = p._1;
+      let pair = pop vq;
+      (get_counter p) := vc + 1;
+      higher_write #_ #vq (get_queue p) (pair._2);
+      release_queue_lock p;
+      let task = pair._1;
 
       // 2. perform the task
       let res = perform_task task; // (task._3) (); // Actually performing the task
@@ -295,11 +324,11 @@ fn worker (#q: HR.ref task_queue) (#c: R.ref int) (l: Lock.lock (inv_task_queue 
       write_res task res;
 
       // 4. decrease counter
-      decrease_counter l;
+      decrease_counter p;
       ()
     }
     else {
-      release_queue_lock l;
+      release_queue_lock p;
       r_working := (vc > 0); // we continue working if and only if some task is still running...
       ()
     }
@@ -308,50 +337,62 @@ fn worker (#q: HR.ref task_queue) (#c: R.ref int) (l: Lock.lock (inv_task_queue 
   ()
 }
 ```
+let worker = worker'
 
 let empty_task_queue: task_queue = []
 
-```pulse
-fn par_block_pulse_emp' (#a: Type0)
-  (#post: (a -> (prop)))
-  (main_block: (unit_emp_stt_pure_pure a post))
-  requires emp
-  returns res: a
-  ensures pure (post res)
-{
+let mk_par_env q c l: par_env = (| q, c, l |)
 
-  // creating queue, counter, and the lock
+```pulse
+fn init_par_env' (_: unit)
+  requires emp
+  returns p: par_env
+  ensures emp
+{
+  // creating parallel env
   let work_queue = higher_alloc empty_task_queue;
   let counter = alloc 0;
   fold (inv_task_queue work_queue counter);
   assert (inv_task_queue work_queue counter);
   let lock = new_lock (inv_task_queue work_queue counter);
+  let p = mk_par_env work_queue counter lock;
+  p
+}
+```
 
+let init_par_env = init_par_env'
+
+let typed_id a (x:a): a = x
+
+```pulse
+fn par_block_pulse_emp' (#a: Type0)
+  (#post: (a -> (prop)))
+  (main_block: (par_env -> (unit_emp_stt_pure_pure a post)))
+  requires emp
+  returns res: a
+  ensures pure (post res)
+{
+  let p = init_par_env ();
   // adding the main task to the queue
-  let main_pure_handler = spawn_emp #_ #work_queue #counter post lock main_block;
-  //let pure_handler #a (post: a -> prop)
-  //= (res: R.ref (option a) & Lock.lock (exists_ (fun v -> R.pts_to res full_perm v `star` pure (maybe_sat post v))))
+  let main_pure_handler = spawn_emp p post main_block;
 
   parallel
     requires (emp) and (emp)
     ensures (emp) and (emp)
   {
-    worker lock
+    worker p
   }
   {
-    worker lock
+    worker p
   };
 
   // joining main task
-  let res = join_emp lock main_pure_handler;
+  let res = join_emp' #a #post main_pure_handler; // needs more typing info, from interface
   res
 }
 ```
 
 let par_block_pulse_emp = par_block_pulse_emp'
-
-
-
 
 
 
@@ -381,8 +422,10 @@ fn lockify_vprops
   //(#q: HR.ref task_queue) (#c: R.ref int)
   //(l: Lock.lock (inv_task_queue q c))
   //(f : (unit -> (stt a pre post)))
-  (f: unit_stt a pre post)
+  (f: (par_env -> unit_stt a pre post))
   (lpre: Lock.lock pre)
+  (p: par_env)
+  (_: unit)
   requires emp
   returns res: (resourceful_res post)
     //x:a & Lock.lock (post x))
@@ -390,7 +433,7 @@ fn lockify_vprops
 {
   acquire lpre;
   // we own the pre
-  let x = exec_unit_stt f;
+  let x = exec_unit_stt (f p);
   // we own post x
   let l = new_lock (post x);
   let res = mk_resourceful_res x l;
@@ -411,9 +454,10 @@ fn spawn'
   (#a:Type0)
   (#pre: vprop)
   (#post : (a -> vprop))
-  (#q: HR.ref task_queue) (#c: R.ref int)
-  (l: Lock.lock (inv_task_queue q c))
-  (f : (unit -> (stt a pre post)))
+  //(#q: HR.ref task_queue) (#c: R.ref int)
+  //(l: Lock.lock (inv_task_queue q c))
+  (p: par_env)
+  (f : (par_env -> unit -> stt a pre post))
  requires pre
  returns r: handler post
  // let's think about what we return
@@ -421,284 +465,111 @@ fn spawn'
 {
   // we create a lock for the precondition
   let lpre = new_lock pre;
-  let h = spawn_emp #(resourceful_res post) #q #c (fun _ -> true) l (fun _ -> lockify_vprops f lpre); //(fun _ -> lockify_vprops f lpre);
+  let h = spawn_emp #(resourceful_res post) p (fun _ -> true) (lockify_vprops f lpre); //(fun _ -> lockify_vprops f lpre);
   h
 }
 ```
 
-let spawn = spawn'
+let spawn #a #pre #post = spawn' #a #pre #post
 
 ```pulse
 fn join'
   (#a:Type0)
   (#post: (a -> vprop))
-  (#q: HR.ref task_queue) (#c: R.ref int)
-  (l: Lock.lock (inv_task_queue q c))
+  //(#q: HR.ref task_queue) (#c: R.ref int)
+  //(l: Lock.lock (inv_task_queue q c))
   (h: handler post)
  requires emp
  returns res: a
  ensures post res
 {
-  let x = join_emp l h;
+  let x = join_emp h;
   // x has type resourceful_res pot = (x:a & Lock.lock (post x))
   acquire x._2;
   x._1
 }
 ```
 
-let join = join'
+let join #a #post = join' #a #post
 
 ```pulse
 fn par_block_pulse' (#a: Type0) (#pre: vprop)
   (#post: (a -> vprop))
-  (main_block: (unit -> (stt a pre post)))
+  (main_block: (par_env -> unit -> (stt a pre post)))
   requires pre
   returns res: a
   ensures post res
 {
-
-  // creating queue, counter, and the lock
-  let work_queue = higher_alloc empty_task_queue;
-  let counter = alloc 0;
-  fold (inv_task_queue work_queue counter);
-  assert (inv_task_queue work_queue counter);
-  let lock = new_lock (inv_task_queue work_queue counter);
-
+  let p = init_par_env ();
   // adding the main task to the queue
-  let main_handler = spawn #_ #_ #_ #work_queue #counter lock main_block;
-  //let pure_handler #a (post: a -> prop)
-  //= (res: R.ref (option a) & Lock.lock (exists_ (fun v -> R.pts_to res full_perm v `star` pure (maybe_sat post v))))
+  let main_handler = spawn p main_block;
 
   parallel
     requires (emp) and (emp)
     ensures (emp) and (emp)
   {
-    worker lock
+    worker p
   }
   {
-    worker lock
+    worker p
   };
 
   // joining main task
-  let res = join lock main_handler;
+  let res = join main_handler; // needs more typing info, from interface
   res
 }
 ```
 
-let par_block_pulse = par_block_pulse'
+let par_block_pulse #a #pre #post = par_block_pulse' #a #pre #post
 
-
-
-
-
-
-
-
-(*
-assume val spawn_model :
- (#a:Type0) -> (#pre : vprop) -> (#post : (a -> vprop)) ->
- ($f : (unit -> stt a pre post)) ->
- stt (domain a post) pre (fun dom -> joinable dom)
-
-assume val join_model :
-  (#a:Type0) -> (#post : (a -> vprop)) ->
-  d:domain a post ->
-  stt a (joinable d) post
-  
-assume val in_parallel_section : vprop
-
-// invariant on task_queue?
-// monotonocity? can be enforced with a witness token
-// pure post?
-assume val begin_par_block_model :
-  #a:_ -> #pre:_ -> #post:_ ->
-  n:nat ->
-  (unit -> stt a (in_parallel_section `star` pre) post) ->
-  // ^ can maybe take a "blockid" identfying the thread pool?
-  // not now at least, since we won't have unscoped sections yet
-  stt a pre post
-
-
-let inv_queue r: vprop
- = (exists_ (fun q -> HR.pts_to r full_perm q))
-
-#push-options "--z3rlimit 40"
-
-
-let rec nth (q: task_queue) (i: nat{i < len q}): task_elem
-= match q with
-| t::q' -> if i = 0 then t else nth q' (i - 1)
-
-assume val assume_prop (p: prop): stt unit emp (fun _ -> pure p)
-
-let get_task (task: task_elem): (a:Type & (unit -> stt a emp (fun _ -> emp)))
-= let (| a, task, _ |) = task in (| a, task |)
-
-assume val replace_elem (q: task_queue) (i: nat) (t: task_elem): task_queue
-
-```pulse
-fn begin_par_block_pulse_aux (#a: Type0)
-  (#pre :vprop) (#post: (a -> vprop))
-  (main_block: (unit -> stt a pre post))
-  requires emp
-  ensures emp
+```pulse 
+fn double (#n: nat) (r:R.ref nat)
+  requires R.pts_to r full_perm n
+  returns res:nat
+  ensures R.pts_to r full_perm n ** pure (res = n + n)
 {
-  let r = higher_alloc empty_task_queue; //([]) in //: R.ref task_queue = magic() in
-  let index_task = alloc 0; // points to the next available task
-  let lock = new_lock (exists_ (fun q -> exists_ (fun i_task ->
-    HR.pts_to r full_perm q `star`
-    R.pts_to index_task full_perm i_task `star`
-    pure (i_task >= 0 /\ available_from q i_task)
-    )));
-  parallel
-    requires (emp) and (emp)
-    ensures (emp) and (emp)
-  {
-    let x = main_block ();
-    () // main thread
-  }
-  {
-    parallel
-      requires (emp) and (emp)
-      ensures (emp) and (emp)
-    {
-      while (true)
-        invariant tr. emp ** pure (tr == true)
-      {
-        acquire lock;
-        let i_task = !index_task;
-        with q. assert (HR.pts_to r full_perm q);
-        let vq = higher_read #_ #full_perm #q r;
-        //let perform_task = i_task < len vq;
-        if (i_task < len vq)
-        {
-          // get the task
-          let task = nth vq i_task;
-          // increase index
-          index_task := i_task + 1;
-
-          assume_prop (available_from vq (i_task + 1));
-          release lock;
-
-          let to_perform = get_task task;
-          let res = (to_perform._2) (); // Actually performing the task
-
-          // Finally, we put the result of the task in the queue
-          let new_task = Mkdtuple3 task._1 task._2 (Done res);
-          acquire lock;
-
-          // Step 2: perform task
-          //let (| a, actual_task, _ |) = task;
-
-
-          release lock;
-          ()
-        }
-        else {
-          release lock;
-          ()
-        }
-      };
-      () // worker
-    }
-    {
-      () // worker
-    };
-    ()
-  };
-  admit()
+  let vr = !r;
+  let x = vr + vr;
+  x
 }
 ```
 
-  (*
-  Code:
-  let q: task_queue = [] in
-  let l = new_lock in
-  parallel (
-    parallel (
-      ...
-    )
-  )
-  (
-    parallel (
-      ...
-    )
-  )
-  *)
-
- (*
- let pure_handler: domain a post = spawn (fun () -> ...)
- consumes precondition
- returns token
-the precondition goes into the lock for this particular location...
-1) We acquire the *main* lock
-2) We add one task to the shared list
---> we need to add
-- the actual task (unit -> stt ...)
-- the lock (Lock.lock p, where p is a vprop)
-- some value that says whether the task is
-  1. available
-  2. ongoing
-  3. finished (with result...)
-We allocate a new lock
- *)
-
-
-  // begin_par_block 16 (fun () ->
-  //   let th1 = spawn(..) in
-  //   let th2 = spawn(..) in  
-  //   join th1 + join th2
-  // )
-
-let rec fib0 (n:nat) : nat =
-  if n < 2 then n
-  else fib0 (n-1) + fib0 (n-2)
-
-// ```pulse
-// fn pth (n:pos) (_:unit)
-//   requires emp
-//   returns r:(r:nat{r == fib0 (n-1)})
-//   ensures emp
-
-//   // With this version:
-//   //    returns r:nat
-//   //    ensures pure (r == fib0 (n-1))
-//   // We get:
-//   //    cannot prove vprop pure (eq2 (fib0 (op_Subtraction n 1)) (fib0 (op_Subtraction n 1))) in the context: emp
-//   //    (the prover was started with goal pure (eq2 (fib0 (op_Subtraction n 1)) (fib0 (op_Subtraction n 1))) and initial context emp)
-// {
-//   let r = fib0 (n-1);
-//   r
-// }
-// ```
+let promote_seq #a #pre #post
+  (f: stt a pre post)
+: par_env -> unit -> stt a pre post
+= (fun _ -> fun _ -> f)
 
 ```pulse
-fn sfib (n:nat)
-  requires emp
-  returns r:(r:nat{r == fib0 n})
-  ensures emp
+fn add_double (#na #nb: nat) (a b: R.ref nat)
+  (p: par_env)
+  (_: unit)
+  requires R.pts_to a full_perm na ** R.pts_to b full_perm nb
+  returns res:nat
+  ensures R.pts_to b full_perm nb ** pure (res = na + na + nb + nb)
 {
-  admit()
+  let aa_t = spawn p (promote_seq (double #na a));
+  let bb_t = spawn p (promote_seq (double #nb b));
+  let aa = join aa_t;
+  let bb = join bb_t;
+  let x = aa + bb;
+  free_ref a;
+  x
 }
 ```
 
 ```pulse
-fn pfib (n:nat)
-  (cb : (n:nat -> stt (r:nat{r == fib0 n}) emp (fun _ -> emp))) // callback as we don't have recursion
+fn par_add_double
+  (a b: nat)
   requires emp
-  returns r:(r:nat{r == fib0 n})
-  ensures emp
+  returns r:nat
+  //returns r:nat
+  ensures pure (r = a + a + b + b)
 {
-  if (n < 20) {
-    let r = sfib n;
-    r
-  } else {
-    let r_th = spawn (fun () -> cb (n-1));
-    let l = sfib (n-2);
-    let r = join r_th;
-    let res = l+r;
-    res
-  }
+  let a' = alloc a;
+  let b' = alloc b;
+  let f = typed_id (unit -> nat) (fun _ -> 0);
+  let x = par_block_pulse' (add_double #a #b a' b');
+  free_ref b';
+  x
 }
 ```
-*)
