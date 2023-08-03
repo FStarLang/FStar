@@ -8,6 +8,11 @@ open Steel.ST.Util
 open Steel.ST.Loops
 module T = FStar.Tactics
 
+let vprop = vprop
+
+[@@"__reduce__"; "__steel_reduce__"]
+let emp = emp
+
 [@@"__reduce__"; "__steel_reduce__"]
 let op_Star_Star = star
 
@@ -16,6 +21,10 @@ let star_def (_:unit)
   = assert ( ( ** ) == star )
         by (T.trefl())
 
+[@@"__reduce__"; "__steel_reduce__"]
+let pure = pure
+[@@"__reduce__"; "__steel_reduce__"]
+let exists_ = exists_
 
 let vprop_equiv (p q:vprop) = squash (equiv p q)
 let vprop_post_equiv (#t:Type u#a) (p q: t -> vprop) = forall x. vprop_equiv (p x) (q x)
@@ -73,6 +82,7 @@ let vprop_equiv_cong (p1 p2 p3 p4:vprop)
 
 let vprop_equiv_ext p1 p2 _ = equiv_refl p1
 
+let iname = iname
 let emp_inames = Ghost.hide Set.empty
 
 inline_for_extraction
@@ -230,7 +240,7 @@ let rewrite p q _ = fun _ -> rewrite_equiv p q
 let elim_pure_explicit p = fun _ -> elim_pure p
 let elim_pure _ #p = fun _ -> elim_pure p
 
-let intro_pure p _ = fun _ -> intro_pure p
+let intro_pure p _ = fun _ -> let x = intro_pure p in x
 
 let elim_exists #a p = fun _ -> elim_exists ()
 
@@ -240,7 +250,16 @@ let intro_exists_erased #a p e = intro_exists p (reveal e)
 
 let while_loop inv cond body = fun _ -> while_loop inv cond body
 
-let stt_ghost_reveal a x = fun _ -> noop (); reveal x
+#push-options "--print_full_names"
+val stt_ghost_reveal_aux (a:Type) (x:erased a)
+  : stt_ghost a emp_inames Steel.ST.Util.emp (fun y -> Steel.ST.Util.pure (reveal x == y))
+let stt_ghost_reveal_aux a x = fun _ ->
+  noop(); reveal x
+
+
+let stt_ghost_reveal a x = 
+  fun _ -> 
+    let y = stt_ghost_reveal_aux a x () in y
 
 let stt_admit _ _ _ = admit ()
 let stt_atomic_admit _ _ _ = admit ()
@@ -274,28 +293,29 @@ let stt_par #aL #aR #preL #postL #preR #postR
              (postL (fst x) ** postR (snd x));
      Steel.ST.Util.return x
 
-let with_local #a init #pre #ret_t #post body =
-  fun _ -> 
-    let body (r:R.ref a) 
-      : STT ret_t
-        (pre `star` R.pts_to r full_perm init)
-        (fun v -> post v `star` exists_ (R.pts_to r full_perm))
-      = Steel.ST.Util.rewrite
-                (pre `star` R.pts_to r full_perm init)
-                (pre ** R.pts_to r full_perm init);
-        let v = body r () in
-        Steel.ST.Util.rewrite
-                (post v ** exists_ (R.pts_to r full_perm))
-                (post v `star` exists_ (R.pts_to r full_perm));
-        Steel.ST.Util.return v
-    in
-    let v = R.with_local init body in
-    Steel.ST.Util.return v    
+// let with_local #a init #pre #ret_t #post body =
+//   fun _ -> 
+//     let body (r:R.ref a) 
+//       : STT ret_t
+//         (pre `star` R.pts_to r full_perm init)
+//         (fun v -> post v `star` exists_ (R.pts_to r full_perm))
+//       = Steel.ST.Util.rewrite
+//                 (pre `star` R.pts_to r full_perm init)
+//                 (pre ** R.pts_to r full_perm init);
+//         let v = body r () in
+//         Steel.ST.Util.rewrite
+//                 (post v ** exists_ (R.pts_to r full_perm))
+//                 (post v `star` exists_ (R.pts_to r full_perm));
+//         Steel.ST.Util.return v
+//     in
+//     let v = R.with_local init body in
+//     Steel.ST.Util.return v    
     
     
 
 let assert_ (p:vprop) = fun _ -> noop()
 
 let assume_ (p:vprop) = fun _ -> admit_()
-let drop_ (p:vprop) = fun _ -> drop p
+let drop_ (p:vprop) = fun _ -> let x = drop p in x 
+
 

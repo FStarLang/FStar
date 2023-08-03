@@ -1,24 +1,19 @@
 module Pulse.Steel.Wrapper
-
-open Steel.ST.Effect
-open Steel.Memory
-open Steel.ST.Util
+open FStar.Ghost
 module U32 = FStar.UInt32
 module G = FStar.Ghost
-module A = Steel.ST.Array
-module R = Steel.ST.Reference
-module GR = Steel.ST.GhostReference
-module Lock = Steel.ST.SpinLock
-module US = FStar.SizeT
 
 (***** begin vprop_equiv *****)
 
 #set-options "--print_implicits --ugly --print_universes"
 
-val ( ** ) (p q:vprop) : vprop
+[@@erasable]
+val vprop : Type u#2
 
-val star_def (_:unit)
-  : Lemma ( ( ** ) == star )
+val emp : vprop
+val ( ** ) (p q:vprop) : vprop
+val pure (p:prop) : vprop
+val exists_ (#a:Type) (p:a -> vprop) : vprop
 
 val vprop_equiv (p q:vprop) : prop
 val vprop_post_equiv (#t:Type u#a) (p q: t -> vprop) : prop
@@ -62,7 +57,8 @@ val vprop_equiv_ext (p1 p2:vprop) (_:p1 == p2)
 (***** end vprop_equiv *****)
 
 (***** begin computation types and combinators *****)
-
+val iname : eqtype
+let inames = erased (FStar.Set.set iname)
 val emp_inames : inames
 
 (* stt a pre post: The type of a pulse computation
@@ -73,14 +69,14 @@ val emp_inames : inames
 inline_for_extraction
 val stt (a:Type u#a) (pre:vprop) (post:a -> vprop) : Type0
 
-(* Coercions for use by libraries that are exposing Steel.ST primitives to Pulse *)
-val mk_stt (#a:Type u#a) (#pre:vprop) (#post:a -> vprop)
-           (f: (unit -> STT a pre post))
-  : stt a pre post
+// (* Coercions for use by libraries that are exposing Steel.ST primitives to Pulse *)
+// val mk_stt (#a:Type u#a) (#pre:vprop) (#post:a -> vprop)
+//            (f: (unit -> STT a pre post))
+//   : stt a pre post
 
-val reveal_stt (#a:Type u#a) (#pre:vprop) (#post:a -> vprop)
-               (f: stt a pre post)
-  : unit -> STT a pre post
+// val reveal_stt (#a:Type u#a) (#pre:vprop) (#post:a -> vprop)
+//                (f: stt a pre post)
+//   : unit -> STT a pre post
 
 (* stt_atomic a opened pre post: The type of a pulse computation
    that when run in a state satisfying `pre`
@@ -91,13 +87,13 @@ val reveal_stt (#a:Type u#a) (#pre:vprop) (#post:a -> vprop)
 inline_for_extraction
 val stt_atomic (a:Type u#a) (opened:inames) (pre:vprop) (post:a -> vprop) : Type u#(max 2 a)
 
-val mk_stt_atomic (#a:Type u#a) (#opened:inames) (#pre:vprop) (#post:a -> vprop)
-                  (f: (unit -> STAtomicT a opened pre post))
-  : stt_atomic a opened pre post
+// val mk_stt_atomic (#a:Type u#a) (#opened:inames) (#pre:vprop) (#post:a -> vprop)
+//                   (f: (unit -> STAtomicT a opened pre post))
+//   : stt_atomic a opened pre post
 
-val reveal_stt_atomic (#a:Type u#a) (#opened:inames) (#pre:vprop) (#post:a -> vprop)
-                      (f:stt_atomic a opened pre post)
-  : unit -> STAtomicT a opened pre post
+// val reveal_stt_atomic (#a:Type u#a) (#opened:inames) (#pre:vprop) (#post:a -> vprop)
+//                       (f:stt_atomic a opened pre post)
+//   : unit -> STAtomicT a opened pre post
 
 (* stt_ghost a opened pre post: The type of a pulse computation
    that when run in a state satisfying `pre`
@@ -108,13 +104,13 @@ val reveal_stt_atomic (#a:Type u#a) (#opened:inames) (#pre:vprop) (#post:a -> vp
 inline_for_extraction
 val stt_ghost (a:Type u#a) (opened:inames) (pre:vprop) (post:a -> vprop) : Type u#(max 2 a)
 
-val mk_stt_ghost (#a:Type u#a) (#opened:inames) (#pre:vprop) (#post:a -> vprop)
-                 (f: (unit -> STGhostT a opened pre post))
-  : stt_ghost a opened pre post
+// val mk_stt_ghost (#a:Type u#a) (#opened:inames) (#pre:vprop) (#post:a -> vprop)
+//                  (f: (unit -> STGhostT a opened pre post))
+//   : stt_ghost a opened pre post
 
-val reveal_stt_ghost (#a:Type u#a) (#opened:inames) (#pre:vprop) (#post:a -> vprop)
-                     (f:stt_ghost a opened pre post)
-  : unit -> STGhostT a opened pre post
+// val reveal_stt_ghost (#a:Type u#a) (#opened:inames) (#pre:vprop) (#post:a -> vprop)
+//                      (f:stt_ghost a opened pre post)
+//   : unit -> STGhostT a opened pre post
 
 //
 // the returns should probably move to atomic,
@@ -465,15 +461,6 @@ val stt_par
         (preL ** preR)
         (fun x -> postL (fst x) ** postR (snd x))
 
-val with_local
-  (#a:Type0)
-  (init:a)
-  (#pre:vprop)
-  (#ret_t:Type)
-  (#post:ret_t -> vprop)
-  (body:(r:R.ref a) -> stt ret_t (pre ** R.pts_to r full_perm init)
-                                 (fun v -> post v ** exists_ (R.pts_to r full_perm)))
-  : stt ret_t pre post
 
 val assert_ (p:vprop)
   : stt_ghost unit emp_inames p (fun _ -> p)
