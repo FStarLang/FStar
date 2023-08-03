@@ -1283,6 +1283,7 @@ let _ =
        fun ncb ->
          fun args ->
            FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_2
+             "FStar.Tactics.CanonCommMonoidSimple.Equiv.canon_monoid (plugin)"
              (FStar_Tactics_Native.from_tactic_2 canon_monoid)
              FStar_Reflection_V2_Embeddings.e_term
              FStar_Reflection_V2_Embeddings.e_term

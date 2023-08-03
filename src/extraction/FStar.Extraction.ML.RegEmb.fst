@@ -529,6 +529,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
             let ncb = str_to_name "ncb" in
             let all_args = str_to_name "args" in
             let args =
+                [mk <| MLE_Const (MLC_String (Ident.string_of_lid fv_lid ^ " (plugin)"))] @
                 [tac_fun] @
                 arg_unembeddings @
                 [res_embedding;

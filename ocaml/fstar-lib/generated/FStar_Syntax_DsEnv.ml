@@ -2627,20 +2627,24 @@ let (push_namespace : env -> FStar_Ident.lident -> env) =
         let uu___1 = resolve_module_name env1 ns false in
         match uu___1 with
         | FStar_Pervasives_Native.None ->
-            let modules = env1.modules in
+            let module_names =
+              FStar_Compiler_List.map FStar_Pervasives_Native.fst
+                env1.modules in
+            let module_names1 =
+              match env1.curmodule with
+              | FStar_Pervasives_Native.None -> module_names
+              | FStar_Pervasives_Native.Some l -> l :: module_names in
             let uu___2 =
-              FStar_Compiler_Effect.op_Bar_Greater modules
+              FStar_Compiler_Effect.op_Bar_Greater module_names1
                 (FStar_Compiler_Util.for_some
-                   (fun uu___3 ->
-                      match uu___3 with
-                      | (m, uu___4) ->
-                          let uu___5 =
-                            let uu___6 = FStar_Ident.string_of_lid m in
-                            Prims.op_Hat uu___6 "." in
-                          let uu___6 =
-                            let uu___7 = FStar_Ident.string_of_lid ns in
-                            Prims.op_Hat uu___7 "." in
-                          FStar_Compiler_Util.starts_with uu___5 uu___6)) in
+                   (fun m ->
+                      let uu___3 =
+                        let uu___4 = FStar_Ident.string_of_lid m in
+                        Prims.op_Hat uu___4 "." in
+                      let uu___4 =
+                        let uu___5 = FStar_Ident.string_of_lid ns in
+                        Prims.op_Hat uu___5 "." in
+                      FStar_Compiler_Util.starts_with uu___3 uu___4)) in
             if uu___2
             then (ns, Open_namespace)
             else

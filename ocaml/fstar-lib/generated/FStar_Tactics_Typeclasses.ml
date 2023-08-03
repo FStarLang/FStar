@@ -455,6 +455,7 @@ let _ =
        fun ncb ->
          fun args ->
            FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_1
+             "FStar.Tactics.Typeclasses.tcresolve (plugin)"
              (FStar_Tactics_Native.from_tactic_1 tcresolve)
              FStar_Syntax_Embeddings.e_unit FStar_Syntax_Embeddings.e_unit
              psc ncb args)
@@ -1901,6 +1902,7 @@ let _ =
        fun ncb ->
          fun args ->
            FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_1
+             "FStar.Tactics.Typeclasses.mk_class (plugin)"
              (FStar_Tactics_Native.from_tactic_1 mk_class)
              FStar_Syntax_Embeddings.e_string
              (FStar_Syntax_Embeddings.e_list

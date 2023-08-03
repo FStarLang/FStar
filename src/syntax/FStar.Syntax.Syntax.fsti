@@ -733,8 +733,6 @@ val new_id_set: unit -> set ident
 val new_fv_set: unit -> set lident
 val new_universe_names_set: unit -> set univ_name
 
-val eq_binding : binding -> binding -> bool
-
 val mod_name: modul -> lident
 
 type path = list string

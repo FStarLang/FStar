@@ -1037,15 +1037,27 @@ let push_sigelt_force env se = push_sigelt' false env se
 
 let push_namespace env ns =
   (* namespace resolution disabled, but module abbrevs enabled *)
-  let (ns', kd) = match resolve_module_name env ns false with
-  | None ->
-     let modules = env.modules in
-     if modules |> BU.for_some (fun (m, _) ->
-      BU.starts_with (Ident.string_of_lid m ^ ".") (Ident.string_of_lid ns ^ "."))
-     then (ns, Open_namespace)
-     else raise_error (Errors.Fatal_NameSpaceNotFound, (BU.format1 "Namespace %s cannot be found" (Ident.string_of_lid ns))) ( Ident.range_of_lid ns)
-  | Some ns' ->
-     (ns', Open_module)
+  let (ns', kd) =
+    match resolve_module_name env ns false with
+    | None -> (
+      let module_names = List.map fst env.modules in
+      let module_names =
+        match env.curmodule with
+        | None -> module_names
+        | Some l -> l::module_names
+      in
+      if module_names |>
+         BU.for_some
+           (fun m ->
+             BU.starts_with (Ident.string_of_lid m ^ ".")
+                            (Ident.string_of_lid ns ^ "."))
+      then (ns, Open_namespace)
+      else raise_error (Errors.Fatal_NameSpaceNotFound, 
+                        BU.format1 "Namespace %s cannot be found" (Ident.string_of_lid ns))
+                        (Ident.range_of_lid ns)
+    )
+    | Some ns' ->
+      (ns', Open_module)
   in
      env.ds_hooks.ds_push_open_hook env (ns', kd);
      push_scope_mod env (Open_module_or_namespace (ns', kd))

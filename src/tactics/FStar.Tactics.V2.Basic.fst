@@ -1524,20 +1524,27 @@ let dup () : tac unit =
   add_irrelevant_goal g "dup equation" env t_eq (Some goal_sc) ;!
   add_goals [g']
 
-// longest_prefix f l1 l2 = (p, r1, r2) ==> l1 = p@r1 /\ l2 = p@r2
+// longest_prefix f l1 l2 = (p, r1, r2) ==> l1 = p@r1 /\ l2 = p@r2 ;   and p is maximal
 let longest_prefix (f : 'a -> 'a -> bool) (l1 : list 'a) (l2 : list 'a) : list 'a * list 'a * list 'a =
     let rec aux acc l1 l2 =
         match l1, l2 with
         | x::xs, y::ys ->
             if f x y
             then aux (x::acc) xs ys
-            else acc, xs, ys
+            else acc, x::xs, y::ys
         | _ ->
             acc, l1, l2
     in
     let pr, t1, t2 = aux [] l1 l2 in
     List.rev pr, t1, t2
 
+let eq_binding b1 b2 =
+    match b1, b2 with
+    | _ -> false
+    | S.Binding_var bv1, Binding_var bv2 -> bv_eq bv1 bv2 && U.term_eq bv1.sort bv2.sort
+    | S.Binding_lid (lid1, _), Binding_lid (lid2, _) -> lid_equals lid1 lid2
+    | S.Binding_univ u1, Binding_univ u2 -> ident_equals u1 u2
+    | _ -> false
 
 // fix universes
 let join_goals g1 g2 : tac goal =
@@ -1554,7 +1561,7 @@ let join_goals g1 g2 : tac goal =
 
     let gamma1 = g1.goal_ctx_uvar.ctx_uvar_gamma in
     let gamma2 = g2.goal_ctx_uvar.ctx_uvar_gamma in
-    let gamma, r1, r2 = longest_prefix S.eq_binding (List.rev gamma1) (List.rev gamma2) in
+    let gamma, r1, r2 = longest_prefix eq_binding (List.rev gamma1) (List.rev gamma2) in
 
     let t1 = close_forall_no_univs (Env.binders_of_bindings (List.rev r1)) phi1 in
     let t2 = close_forall_no_univs (Env.binders_of_bindings (List.rev r2)) phi2 in
@@ -1564,8 +1571,6 @@ let join_goals g1 g2 : tac goal =
       | Allow_untyped reason1, Allow_untyped _ -> Some (Allow_untyped reason1)
       | _ -> None
     in
-    set_solution g1 U.exp_unit ;!
-    set_solution g2 U.exp_unit ;!
 
     let ng = U.mk_conj t1 t2 in
     let nenv = { goal_env g1 with gamma = List.rev gamma } in
@@ -1574,6 +1579,8 @@ let join_goals g1 g2 : tac goal =
                          (goal_to_string_verbose g1)
                          (goal_to_string_verbose g2)
                          (goal_to_string_verbose goal)) ;!
+    set_solution g1 U.exp_unit ;!
+    set_solution g2 U.exp_unit ;!
     ret goal
 
 let join () : tac unit =
@@ -1966,7 +1973,7 @@ let t_commute_applied_match () : tac unit = wrap_err "t_commute_applied_match" <
           U.comp_result c)}) in
       let l' = mk (Tm_match {scrutinee=e;ret_opt=asc_opt;brs=brs';rc_opt=lopt'}) l.pos in
       let must_tot = true in
-      match! do_unify_maybe_guards false must_tot (goal_env g) l' r with
+      begin match! do_unify_maybe_guards false must_tot (goal_env g) l' r with
       | None -> fail "discharging the equality failed"
       | Some guard ->
         if Env.is_trivial_guard_formula guard
@@ -1976,6 +1983,7 @@ let t_commute_applied_match () : tac unit = wrap_err "t_commute_applied_match" <
           solve g U.exp_unit
         )
         else failwith "internal error: _t_refl: guard is not trivial"
+      end
     | _ ->
       fail "lhs is not a match"
     end
