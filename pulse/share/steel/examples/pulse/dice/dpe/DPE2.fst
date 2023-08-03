@@ -1,27 +1,21 @@
 module DPE2
-open Pulse.Main
-open FStar.Ghost
-open Steel.ST.Util
-open Steel.FractionalPermission
-open Pulse.Steel.Wrapper
-module W = Pulse.Steel.Wrapper
-module L = Steel.ST.SpinLock
-module A = Steel.ST.Array
-module R = Steel.ST.Reference
-module US = FStar.SizeT
-module U8 = FStar.UInt8
-module U32 = FStar.UInt32
-open Array
-open LinearScanHashTable
-open PulseHashTable
-module PHT = PulseHashTable
-module LSHT = LinearScanHashTable
+open Pulse.Lib.Pervasives
 open HACL
 open X509
 open EngineTypes
 open EngineCore
 open L0Types
 open L0Core
+module L = Pulse.Lib.SpinLock
+module A = Pulse.Lib.Array
+module R = Pulse.Lib.Reference
+module US = FStar.SizeT
+module U8 = FStar.UInt8
+module U32 = FStar.UInt32
+open LinearScanHashTable
+open PulseHashTable
+module PHT = PulseHashTable
+module LSHT = LinearScanHashTable
 open Pulse.Class.BoundedIntegers
 open DPE
 
@@ -42,7 +36,7 @@ fn derive_child (sid:nat) (ctxt_hndl:nat) (record:record_t) (repr:repr_t)
 
   let sht = dfst locked_sht;
   let sht_lk = dsnd locked_sht;
-  W.acquire #(ht_perm sht_sig sht) sht_lk;
+  L.acquire #(ht_perm sht_sig sht) sht_lk;
 
   unfold (ht_perm sht_sig sht);
   with spht. assert (models sht_sig sht spht);
@@ -53,7 +47,7 @@ fn derive_child (sid:nat) (ctxt_hndl:nat) (record:record_t) (repr:repr_t)
   Some locked_cht -> {
     let cht = dfst locked_cht;
     let cht_lk = dsnd locked_cht;
-    W.acquire #(ht_perm cht_sig cht) cht_lk;
+    L.acquire #(ht_perm cht_sig cht) cht_lk;
 
     unfold (ht_perm cht_sig cht);
     with cpht0. assert (models cht_sig cht cpht0);
@@ -64,7 +58,7 @@ fn derive_child (sid:nat) (ctxt_hndl:nat) (record:record_t) (repr:repr_t)
     Some locked_ctxt -> {
     let ctxt = dfst locked_ctxt;
     let ctxt_lk = dsnd locked_ctxt;
-    W.acquire #(context_perm ctxt) ctxt_lk;
+    L.acquire #(context_perm ctxt) ctxt_lk;
 
     match ctxt {
     Engine_context c -> {
@@ -79,15 +73,15 @@ fn derive_child (sid:nat) (ctxt_hndl:nat) (record:record_t) (repr:repr_t)
         Engine_repr r0 -> {       
           rewrite (record_perm record repr) as (engine_record_perm r r0); 
 
-          let cdi = new_array 0uy dice_digest_len;
+          let cdi = A.alloc 0uy dice_digest_len;
           let ret = EngineCore.engine_main cdi c.uds r;
           with s. assert (A.pts_to cdi full_perm s);
-          free_array c.uds;
+          A.free c.uds;
 
           match ret {
           DICE_SUCCESS -> {
             let new_locked_context = init_l0_ctxt cdi;
-            free_array cdi #(coerce dice_digest_len s);
+            A.free cdi #(coerce dice_digest_len s);
             
             PHT.delete #cht_sig #cpht0 cht ctxt_hndl;
             with cpht1. assert (models cht_sig cht cpht1);
@@ -99,8 +93,8 @@ fn derive_child (sid:nat) (ctxt_hndl:nat) (record:record_t) (repr:repr_t)
               rewrite (engine_record_perm r r0) as (record_perm record repr);
               fold (ht_perm sht_sig sht);
               fold (ht_perm cht_sig cht);
-              W.release #(ht_perm sht_sig sht) sht_lk;
-              W.release #(ht_perm cht_sig cht) cht_lk;
+              L.release #(ht_perm sht_sig sht) sht_lk;
+              L.release #(ht_perm cht_sig cht) cht_lk;
 
               new_ctxt_hndl
             } else {
@@ -108,44 +102,44 @@ fn derive_child (sid:nat) (ctxt_hndl:nat) (record:record_t) (repr:repr_t)
               rewrite (engine_record_perm r r0) as (record_perm record repr);
               fold (ht_perm sht_sig sht);
               fold (ht_perm cht_sig cht);
-              W.release #(ht_perm sht_sig sht) sht_lk;
-              W.release #(ht_perm cht_sig cht) cht_lk;
+              L.release #(ht_perm sht_sig sht) sht_lk;
+              L.release #(ht_perm cht_sig cht) cht_lk;
 
               new_ctxt_hndl
           }}
           DICE_ERROR -> {
             // ERROR -- DICE engine failed
-            free_array cdi #(coerce dice_digest_len s);
+            A.free cdi #(coerce dice_digest_len s);
             rewrite (engine_record_perm r r0) as (record_perm record repr);
             fold (ht_perm sht_sig sht);
             fold (ht_perm cht_sig cht);
-            W.release #(ht_perm sht_sig sht) sht_lk;
-            W.release #(ht_perm cht_sig cht) cht_lk;
+            L.release #(ht_perm sht_sig sht) sht_lk;
+            L.release #(ht_perm cht_sig cht) cht_lk;
             0
           }}}
         _ -> {
           // ERROR - repr should have type (Egnine_repr r0)
-          zeroize_array uds_len c.uds #uds_bytes;
+          A.zeroize uds_len c.uds #uds_bytes;
           disable_uds ();
-          free_array c.uds;
+          A.free c.uds;
 
           fold (ht_perm sht_sig sht);
           fold (ht_perm cht_sig cht);
-          W.release #(ht_perm sht_sig sht) sht_lk;
-          W.release #(ht_perm cht_sig cht) cht_lk;
+          L.release #(ht_perm sht_sig sht) sht_lk;
+          L.release #(ht_perm cht_sig cht) cht_lk;
           0
         }}
       }
       _ -> {
         // ERROR - record should have type (Engine_record r)
-        zeroize_array uds_len c.uds;
+        A.zeroize uds_len c.uds;
         disable_uds ();
-        free_array c.uds;
+        A.free c.uds;
 
         fold (ht_perm sht_sig sht);
         fold (ht_perm cht_sig cht);
-        W.release #(ht_perm sht_sig sht) sht_lk;
-        W.release #(ht_perm cht_sig cht) cht_lk;
+        L.release #(ht_perm sht_sig sht) sht_lk;
+        L.release #(ht_perm cht_sig cht) cht_lk;
         0
       }}
     }
@@ -173,12 +167,12 @@ fn derive_child (sid:nat) (ctxt_hndl:nat) (record:record_t) (repr:repr_t)
           let deviceIDCSR_len = length_of_deviceIDCSR deviceIDCRI_len;
           let aliasKeyCRT_len = length_of_aliasKeyCRT aliasKeyTBS_len;
 
-          let deviceID_pub = new_array 0uy v32us;
-          let deviceID_priv = new_array 0uy v32us;
-          let aliasKey_pub = new_array 0uy v32us;
-          let aliasKey_priv = new_array 0uy v32us;
-          let deviceIDCSR = new_array 0uy deviceIDCSR_len;
-          let aliasKeyCRT = new_array 0uy aliasKeyCRT_len;
+          let deviceID_pub = A.alloc 0uy v32us;
+          let deviceID_priv = A.alloc 0uy v32us;
+          let aliasKey_pub = A.alloc 0uy v32us;
+          let aliasKey_priv = A.alloc 0uy v32us;
+          let deviceIDCSR = A.alloc 0uy deviceIDCSR_len;
+          let aliasKeyCRT = A.alloc 0uy aliasKeyCRT_len;
 
           rewrite (record_perm record repr) as (l0_record_perm r r0); 
 
@@ -188,19 +182,19 @@ fn derive_child (sid:nat) (ctxt_hndl:nat) (record:record_t) (repr:repr_t)
                           aliasKey_pub aliasKey_priv 
                           aliasKeyTBS_len aliasKeyCRT_len aliasKeyCRT 
                           deviceIDCRI_len deviceIDCSR_len deviceIDCSR r;
-          free_array c.cdi;
+          A.free c.cdi;
 
           with (s1:elseq U8.t v32us). assert (A.pts_to aliasKey_priv full_perm s1);
           let new_locked_context = init_l1_ctxt deviceIDCSR_len aliasKeyCRT_len 
                                                 deviceID_priv deviceID_pub
                                                 aliasKey_priv aliasKey_pub 
                                                 deviceIDCSR aliasKeyCRT;
-          free_array deviceID_pub;
-          free_array deviceID_priv;
-          free_array aliasKey_pub;
-          free_array aliasKey_priv;
-          free_array deviceIDCSR;
-          free_array aliasKeyCRT;
+          A.free deviceID_pub;
+          A.free deviceID_priv;
+          A.free aliasKey_pub;
+          A.free aliasKey_priv;
+          A.free deviceIDCSR;
+          A.free aliasKeyCRT;
           
           PHT.delete #cht_sig #cpht0 cht ctxt_hndl;
           with cpht1. assert (models cht_sig cht cpht1);
@@ -213,8 +207,8 @@ fn derive_child (sid:nat) (ctxt_hndl:nat) (record:record_t) (repr:repr_t)
 
             fold (ht_perm sht_sig sht);
             fold (ht_perm cht_sig cht);
-            W.release #(ht_perm sht_sig sht) sht_lk;
-            W.release #(ht_perm cht_sig cht) cht_lk;
+            L.release #(ht_perm sht_sig sht) sht_lk;
+            L.release #(ht_perm cht_sig cht) cht_lk;
 
             new_ctxt_hndl
           } else {
@@ -223,33 +217,33 @@ fn derive_child (sid:nat) (ctxt_hndl:nat) (record:record_t) (repr:repr_t)
 
             fold (ht_perm sht_sig sht);
             fold (ht_perm cht_sig cht);
-            W.release #(ht_perm sht_sig sht) sht_lk;
-            W.release #(ht_perm cht_sig cht) cht_lk;
+            L.release #(ht_perm sht_sig sht) sht_lk;
+            L.release #(ht_perm cht_sig cht) cht_lk;
 
             new_ctxt_hndl
           }
         }
         _ -> {
           // ERROR - repr should have type (L0_repr r0)
-          zeroize_array dice_digest_len c.cdi;
-          free_array c.cdi;
+          A.zeroize dice_digest_len c.cdi;
+          A.free c.cdi;
 
           fold (ht_perm sht_sig sht);
           fold (ht_perm cht_sig cht);
-          W.release #(ht_perm sht_sig sht) sht_lk;
-          W.release #(ht_perm cht_sig cht) cht_lk;
+          L.release #(ht_perm sht_sig sht) sht_lk;
+          L.release #(ht_perm cht_sig cht) cht_lk;
           0
         }}
       }
       _ -> {
         // ERROR - record should have type (L0_record r)
-        zeroize_array dice_digest_len c.cdi;
-        free_array c.cdi;
+        A.zeroize dice_digest_len c.cdi;
+        A.free c.cdi;
 
         fold (ht_perm sht_sig sht);
         fold (ht_perm cht_sig cht);
-        W.release #(ht_perm sht_sig sht) sht_lk;
-        W.release #(ht_perm cht_sig cht) cht_lk;
+        L.release #(ht_perm sht_sig sht) sht_lk;
+        L.release #(ht_perm cht_sig cht) cht_lk;
         0
       }}
     }
@@ -257,23 +251,23 @@ fn derive_child (sid:nat) (ctxt_hndl:nat) (record:record_t) (repr:repr_t)
       // ERROR - cannot invoke DeriveChild with L1 context
       fold (ht_perm sht_sig sht);
       fold (ht_perm cht_sig cht);
-      W.release #(context_perm ctxt) ctxt_lk;
-      W.release #(ht_perm sht_sig sht) sht_lk;
-      W.release #(ht_perm cht_sig cht) cht_lk;
+      L.release #(context_perm ctxt) ctxt_lk;
+      L.release #(ht_perm sht_sig sht) sht_lk;
+      L.release #(ht_perm cht_sig cht) cht_lk;
       0
     }}}
     None -> { 
     // ERROR - bad context handle
     fold (ht_perm sht_sig sht);
     fold (ht_perm cht_sig cht);
-    W.release #(ht_perm sht_sig sht) sht_lk;
-    W.release #(ht_perm cht_sig cht) cht_lk;
+    L.release #(ht_perm sht_sig sht) sht_lk;
+    L.release #(ht_perm cht_sig cht) cht_lk;
     0
     }}}
   None -> { 
   // ERROR - bad session ID
   fold (ht_perm sht_sig sht);
-  W.release #(ht_perm sht_sig sht) sht_lk;
+  L.release #(ht_perm sht_sig sht) sht_lk;
   0
   }}
 }

@@ -1,16 +1,9 @@
 module EngineCore
-open Pulse.Main
-open Pulse.Steel.Wrapper
-open Steel.ST.Util 
-open Steel.ST.Array
-open Steel.FractionalPermission
-open FStar.Ghost
-module R = Steel.ST.Reference
-module A = Steel.ST.Array
-module T = FStar.Tactics
+open Pulse.Lib.Pervasives
+module R = Pulse.Lib.Reference
+module A = Pulse.Lib.Array
 module US = FStar.SizeT
 module U8 = FStar.UInt8
-open Array
 open EngineTypes
 open HACL
 
@@ -51,11 +44,11 @@ fn authenticate_l0_image (record:engine_record_t) (#repr:Ghost.erased engine_rec
   
   let mut b = false;
   if valid_header_sig {
-    let hash_buf = new_array 0uy dice_digest_len;
+    let hash_buf = A.alloc 0uy dice_digest_len;
     hacl_hash dice_hash_alg record.l0_binary_size record.l0_binary hash_buf;
     let res = compare dice_digest_len hash_buf record.l0_binary_hash;
     with s. assert (A.pts_to hash_buf full_perm s);
-    free_array hash_buf #(coerce dice_digest_len s);
+    A.free hash_buf #(coerce dice_digest_len s);
     fold engine_record_perm record repr;
     res
   } else {
@@ -78,8 +71,8 @@ assume
 val read_uds (uds:A.larray U8.t (US.v uds_len))
              (#s:Ghost.erased (Seq.seq U8.t))
   : stt unit 
-      (A.pts_to uds full_perm s `star` uds_is_enabled)
-      (fun _ -> A.pts_to uds full_perm uds_bytes `star` uds_is_enabled)
+      (A.pts_to uds full_perm s ** uds_is_enabled)
+      (fun _ -> A.pts_to uds full_perm uds_bytes ** uds_is_enabled)
 
 ```pulse
 fn compute_cdi (cdi:cdi_t) (uds:A.larray U8.t (US.v uds_len)) (record:engine_record_t) 
@@ -100,8 +93,8 @@ fn compute_cdi (cdi:cdi_t) (uds:A.larray U8.t (US.v uds_len)) (record:engine_rec
       pure (cdi_functional_correctness c1 repr))
   )
 {
-    let uds_digest = new_array 0uy dice_digest_len;
-    let l0_digest = new_array 0uy dice_digest_len;
+    let uds_digest = A.alloc 0uy dice_digest_len;
+    let l0_digest = A.alloc 0uy dice_digest_len;
     hacl_hash dice_hash_alg uds_len uds uds_digest #full_perm #(coerce uds_len uds_bytes);
 
     unfold engine_record_perm record repr;
@@ -114,9 +107,9 @@ fn compute_cdi (cdi:cdi_t) (uds:A.larray U8.t (US.v uds_len)) (record:engine_rec
       uds_digest dice_digest_len
       l0_digest dice_digest_len;
 
-    free_array l0_digest;
-    free_array uds_digest;
-    // free_array uds;
+    A.free l0_digest;
+    A.free uds_digest;
+    // A.free uds;
     ()
 }
 ```
@@ -149,13 +142,13 @@ fn engine_main (cdi:cdi_t) (uds:A.larray U8.t (US.v uds_len)) (record:engine_rec
   {
     compute_cdi cdi uds record #repr #(coerce dice_digest_len c0);
     with s. assert (A.pts_to uds full_perm s);
-    zeroize_array uds_len uds #(coerce_refined uds_len s);
+    A.zeroize uds_len uds #(coerce_refined uds_len s);
     disable_uds();
     DICE_SUCCESS
   }
   else
   {
-    zeroize_array uds_len uds #uds_bytes;
+    A.zeroize uds_len uds #uds_bytes;
     disable_uds ();
     DICE_ERROR
   }
