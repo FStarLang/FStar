@@ -75,12 +75,14 @@ let sid_ref : sid_ref_t = alloc_sid () ()
 (*
   OpenSession: Part of DPE API 
   Create a context table and context table lock for the new session. 
-  Add the context table lock to the session table. 
+  Add the context table lock to the session table. Return boolean
+  indicating success. 
   NOTE: Current implementation disregards session protocol 
 *)
 ```pulse
 fn open_session (_:unit)
   requires emp
+  returns b:bool
   ensures emp
 {
   let cht = alloc_ht #cht_sig cht_len;
@@ -100,17 +102,28 @@ fn open_session (_:unit)
   let b = not_full #sht_sig #pht sht;
 
   if b {
-    PHT.insert #sht_sig #pht sht sid cht;
-    dfst sid_ref := sid + 1;
-
-    fold (ht_perm sht_sig sht);
-    W.release #(exists_ (fun n -> R.pts_to (dfst sid_ref) full_perm n)) sid_lk;
-    W.release #(ht_perm sht_sig sht) sht_lk;
+    let r = PHT.insert #sht_sig #pht sht sid cht;
+    if r {
+      assert (PHT.models sht_sig sht (LSHT.insert pht sid cht));
+      dfst sid_ref := sid + 1;
+      fold (ht_perm sht_sig sht);
+      W.release #(exists_ (fun n -> R.pts_to (dfst sid_ref) full_perm n)) sid_lk;
+      W.release #(ht_perm sht_sig sht) sht_lk;
+      true
+    } else {
+      // ERROR - insert failed
+      assert (PHT.models sht_sig sht pht);
+      fold (ht_perm sht_sig sht);
+      W.release #(exists_ (fun n -> R.pts_to (dfst sid_ref) full_perm n)) sid_lk;
+      W.release #(ht_perm sht_sig sht) sht_lk;
+      false
+    }
   } else {
-    // ERROR -- table full
+    // ERROR - table full
     fold (ht_perm sht_sig sht);
     W.release #(exists_ (fun n -> R.pts_to (dfst sid_ref) full_perm n)) sid_lk;
     W.release #(ht_perm sht_sig sht) sht_lk;
+    false
   }
 }
 ```
@@ -118,12 +131,14 @@ fn open_session (_:unit)
 (*
   DestroyContext: Part of DPE API 
   Destroy the context pointed to by the handle by freeing the
-  arrays in the context (zeroize the UDS, if applicable).
+  arrays in the context (zeroize the UDS, if applicable). Return
+  boolean indicating success. 
   NOTE: Current implementation disregards session protocol 
 *)
 ```pulse
 fn destroy_context (sid:nat) (ctxt_hndl:nat)
   requires emp
+  returns b:bool
   ensures emp
 {
   let sht = dfst locked_sht;
@@ -133,70 +148,92 @@ fn destroy_context (sid:nat) (ctxt_hndl:nat)
   unfold (ht_perm sht_sig sht);
   with spht. assert (models sht_sig sht spht);
 
-  let opt_locked_cht = PHT.lookup #sht_sig #spht sht sid;
+  let res = PHT.lookup #sht_sig #spht sht sid;
+  if (fst res) {
+    let opt_locked_cht = snd res;
+    match opt_locked_cht {
+    Some locked_cht -> {
+      let cht = dfst locked_cht;
+      let cht_lk = dsnd locked_cht;
+      W.acquire #(ht_perm cht_sig cht) cht_lk;
 
-  match opt_locked_cht {
-  Some locked_cht -> {
-    let cht = dfst locked_cht;
-    let cht_lk = dsnd locked_cht;
-    W.acquire #(ht_perm cht_sig cht) cht_lk;
+      unfold (ht_perm cht_sig cht);
+      with cpht0. assert (models cht_sig cht cpht0);
 
-    unfold (ht_perm cht_sig cht);
-    with cpht0. assert (models cht_sig cht cpht0);
-
-    let opt_locked_ctxt = PHT.lookup #cht_sig #cpht0 cht ctxt_hndl;
-    match opt_locked_ctxt {
-    Some locked_ctxt -> {
-      let ctxt = dfst locked_ctxt;
-      let ctxt_lk = dsnd locked_ctxt;
-      W.acquire #(context_perm ctxt) ctxt_lk;
-      match ctxt {
-        Engine_context c -> {
-          rewrite (context_perm ctxt) as (engine_context_perm c);
-          unfold (engine_context_perm c);
-          zeroize_array uds_len c.uds #uds_bytes;
-          disable_uds ();
-          free_array c.uds;
+      let res = PHT.lookup #cht_sig #cpht0 cht ctxt_hndl;
+      if (fst res) {
+        let opt_locked_ctxt = snd res;
+        match opt_locked_ctxt {
+        Some locked_ctxt -> {
+          let ctxt = dfst locked_ctxt;
+          let ctxt_lk = dsnd locked_ctxt;
+          W.acquire #(context_perm ctxt) ctxt_lk;
+          match ctxt {
+            Engine_context c -> {
+              rewrite (context_perm ctxt) as (engine_context_perm c);
+              unfold (engine_context_perm c);
+              zeroize_array uds_len c.uds #uds_bytes;
+              disable_uds ();
+              free_array c.uds;
+              fold (ht_perm cht_sig cht);
+              fold (ht_perm sht_sig sht);
+              W.release #(ht_perm cht_sig cht) cht_lk;
+              W.release #(ht_perm sht_sig sht) sht_lk;
+              true
+            }
+            L0_context c -> {
+              rewrite (context_perm ctxt) as (l0_context_perm c);
+              unfold (l0_context_perm c);
+              free_array c.cdi;
+              fold (ht_perm cht_sig cht);
+              fold (ht_perm sht_sig sht);
+              W.release #(ht_perm cht_sig cht) cht_lk;
+              W.release #(ht_perm sht_sig sht) sht_lk;
+              true
+            }
+            L1_context c -> {
+              rewrite (context_perm ctxt) as (l1_context_perm c);
+              unfold (l1_context_perm c);
+              free_array c.deviceID_priv;
+              free_array c.deviceID_pub;
+              free_array c.aliasKey_priv;
+              free_array c.aliasKey_pub;
+              free_array c.aliasKeyCRT;
+              free_array c.deviceIDCSR;
+              fold (ht_perm cht_sig cht);
+              fold (ht_perm sht_sig sht);
+              W.release #(ht_perm cht_sig cht) cht_lk;
+              W.release #(ht_perm sht_sig sht) sht_lk;
+              true
+          }}}
+        None -> {
+          // ERROR - bad context handle
           fold (ht_perm cht_sig cht);
           fold (ht_perm sht_sig sht);
           W.release #(ht_perm cht_sig cht) cht_lk;
           W.release #(ht_perm sht_sig sht) sht_lk;
-        }
-        L0_context c -> {
-          rewrite (context_perm ctxt) as (l0_context_perm c);
-          unfold (l0_context_perm c);
-          free_array c.cdi;
-          fold (ht_perm cht_sig cht);
-          fold (ht_perm sht_sig sht);
-          W.release #(ht_perm cht_sig cht) cht_lk;
-          W.release #(ht_perm sht_sig sht) sht_lk;
-        }
-        L1_context c -> {
-          rewrite (context_perm ctxt) as (l1_context_perm c);
-          unfold (l1_context_perm c);
-          free_array c.deviceID_priv;
-          free_array c.deviceID_pub;
-          free_array c.aliasKey_priv;
-          free_array c.aliasKey_pub;
-          free_array c.aliasKeyCRT;
-          free_array c.deviceIDCSR;
-          fold (ht_perm cht_sig cht);
-          fold (ht_perm sht_sig sht);
-          W.release #(ht_perm cht_sig cht) cht_lk;
-          W.release #(ht_perm sht_sig sht) sht_lk;
-      }}}
+          false
+        }}
+      } else {
+        // ERROR - lookup failed
+        fold (ht_perm cht_sig cht);
+        fold (ht_perm sht_sig sht);
+        W.release #(ht_perm cht_sig cht) cht_lk;
+        W.release #(ht_perm sht_sig sht) sht_lk;
+        false
+      }}
     None -> {
-      // ERROR - bad context handle
-      fold (ht_perm cht_sig cht);
+      // ERROR - bad session ID
       fold (ht_perm sht_sig sht);
-      W.release #(ht_perm cht_sig cht) cht_lk;
       W.release #(ht_perm sht_sig sht) sht_lk;
-    }}}
-  None -> {
-    // ERROR - bad session ID
+      false
+    }}
+  } else {
+    // ERROR - lookup failed
     fold (ht_perm sht_sig sht);
     W.release #(ht_perm sht_sig sht) sht_lk;
-  }}
+    false
+  }
 }
 ```
 
@@ -265,12 +302,13 @@ fn destroy_cht (ht:ht_t cht_sig)
 (* 
   CloseSession: Part of DPE API 
   Destroy the context table for the session and remove the reference
-  to it from the session table. 
+  to it from the session table. Return boolean indicating success. 
   NOTE: Current implementation disregards session protocol 
 *)
 ```pulse
 fn close_session (sid:nat)
   requires emp
+  returns b:bool
   ensures emp
 {
   let sht = dfst locked_sht;
@@ -280,25 +318,42 @@ fn close_session (sid:nat)
   unfold (ht_perm sht_sig sht);
   with pht. assert (models sht_sig sht pht);
 
-  let opt_locked_cht = PHT.lookup #sht_sig #pht sht sid;
-
-  match opt_locked_cht {
-  Some locked_cht -> { 
-    let cht = dfst locked_cht;
-    let cht_lk = dsnd locked_cht;
-    // Note: We don't release this lock because we give up permission
-    // on the cht when we free its entries by calling destroy_cht
-    W.acquire #(ht_perm cht_sig cht) cht_lk;
-    destroy_cht cht;
-    PHT.delete #sht_sig #pht sht sid;
+  let res = PHT.lookup #sht_sig #pht sht sid;
+  if (fst res) {
+    let opt_locked_cht = snd res;
+    match opt_locked_cht {
+    Some locked_cht -> { 
+      let cht = dfst locked_cht;
+      let cht_lk = dsnd locked_cht;
+      // Note: We don't release this lock because we give up permission
+      // on the cht when we free its entries by calling destroy_cht
+      W.acquire #(ht_perm cht_sig cht) cht_lk;
+      destroy_cht cht;
+      let b = PHT.delete #sht_sig #pht sht sid;
+      if b {
+        assert (models sht_sig sht (LSHT.delete pht sid));
+        fold (ht_perm sht_sig sht);
+        W.release #(ht_perm sht_sig sht) sht_lk;
+        b
+      } else {
+        assert (models sht_sig sht pht);
+        fold (ht_perm sht_sig sht);
+        W.release #(ht_perm sht_sig sht) sht_lk;
+        b
+      }
+    }
+    None -> {
+      // ERROR - bad session ID
+      fold (ht_perm sht_sig sht);
+      W.release #(ht_perm sht_sig sht) sht_lk;
+      false
+    }}
+  } else {
+    // ERROR - lookup failed
     fold (ht_perm sht_sig sht);
     W.release #(ht_perm sht_sig sht) sht_lk;
+    false
   }
-  None -> {
-    // ERROR -- bad session ID
-    fold (ht_perm sht_sig sht);
-    W.release #(ht_perm sht_sig sht) sht_lk;
-  }}
 }
 ```
 
@@ -420,7 +475,8 @@ let init_l1_ctxt deviceIDCSR_len aliasKeyCRT_len deviceID_priv deviceID_pub
 (*
   InitializeContext: Part of DPE API 
   Create a context in the initial state (engine context) and store the context
-  in the current session's context table. 
+  in the current session's context table. Return the context handle upon
+  success and 0 upon failure. 
 *)
 ```pulse
 fn initialize_context (sid:nat) (uds:A.larray U8.t (US.v uds_len))
@@ -442,43 +498,55 @@ fn initialize_context (sid:nat) (uds:A.larray U8.t (US.v uds_len))
   unfold (ht_perm sht_sig sht);
   with spht. assert (models sht_sig sht spht);
 
-  let opt_locked_cht = PHT.lookup #sht_sig #spht sht sid;
+  let res = PHT.lookup #sht_sig #spht sht sid;
+  if (fst res) {
+    let opt_locked_cht = snd res;
+    match opt_locked_cht {
+    Some locked_cht -> {
+      let cht = dfst locked_cht;
+      let cht_lk = dsnd locked_cht;
+      W.acquire #(ht_perm cht_sig cht) cht_lk;
 
-  match opt_locked_cht {
-  Some locked_cht -> {
-    let cht = dfst locked_cht;
-    let cht_lk = dsnd locked_cht;
-    W.acquire #(ht_perm cht_sig cht) cht_lk;
-
-    unfold (ht_perm cht_sig cht);
-    with cpht. assert (models cht_sig cht cpht);
-    let b = not_full #cht_sig #cpht cht;
-
-    if b {
-      PHT.insert #cht_sig #cpht cht ctxt_hndl locked_context;
-
+      unfold (ht_perm cht_sig cht);
+      with cpht. assert (models cht_sig cht cpht);
+      let b = not_full #cht_sig #cpht cht;
+      if b {
+        let r = PHT.insert #cht_sig #cpht cht ctxt_hndl locked_context;
+        if r {
+          assert (models cht_sig cht (LSHT.insert cpht ctxt_hndl locked_context));
+          fold (ht_perm sht_sig sht);
+          fold (ht_perm cht_sig cht);
+          W.release #(ht_perm sht_sig sht) sht_lk;
+          W.release #(ht_perm cht_sig cht) cht_lk;
+          ctxt_hndl
+        } else {
+          // ERROR - insert failed
+          assert (models cht_sig cht cpht);
+          fold (ht_perm sht_sig sht);
+          fold (ht_perm cht_sig cht);
+          W.release #(ht_perm sht_sig sht) sht_lk;
+          W.release #(ht_perm cht_sig cht) cht_lk;  
+          0        
+        }
+      } else {
+        // ERROR - table full
+        fold (ht_perm sht_sig sht);
+        fold (ht_perm cht_sig cht);
+        W.release #(ht_perm sht_sig sht) sht_lk;
+        W.release #(ht_perm cht_sig cht) cht_lk;
+        ctxt_hndl 
+      }}
+    None -> {
+      // ERROR - bad session ID
       fold (ht_perm sht_sig sht);
-      fold (ht_perm cht_sig cht);
       W.release #(ht_perm sht_sig sht) sht_lk;
-      W.release #(ht_perm cht_sig cht) cht_lk;
-      
-      ctxt_hndl
-    } else {
-      // ERROR -- table full
-      fold (ht_perm sht_sig sht);
-      fold (ht_perm cht_sig cht);
-      W.release #(ht_perm sht_sig sht) sht_lk;
-      W.release #(ht_perm cht_sig cht) cht_lk;
-      
-      ctxt_hndl 
+      0
     }}
-  None -> {
-    // ERROR -- bad session ID
+  } else {
+    // ERROR - lookup failed
     fold (ht_perm sht_sig sht);
     W.release #(ht_perm sht_sig sht) sht_lk;
     0
-  }}
+  }
 }
 ```
-
-

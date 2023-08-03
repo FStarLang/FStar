@@ -53,41 +53,37 @@ let models (s:pht_sig_us) (ht:ht_t s) (pht:pht_t (s_to_ps s)) : vprop
   )
 
 let ht_perm (s:pht_sig_us) (ht: ht_t s) : vprop
-  = exists_ (fun (pht:pht_t (s_to_ps s)) -> models s ht pht) // FIXME: this is erasing the pht
+  = exists_ (fun (pht:pht_t (s_to_ps s)) -> models s ht pht)
 
 type locked_ht_t (s:pht_sig_us) = ht:ht_t s & LK.lock (ht_perm s ht)
-
-let canonical_index_us (#s:pht_sig_us) (k:s.keyt) (sz:pos_us) 
-  : US.t = s.hashf k % sz
-
-let modulo_us (v1 v2:US.t) (m:pos_us) (_:squash(US.fits (US.v v1 + US.v v2)))
-  : US.t 
-  = (v1 + v2) % m
 
 let pht_sz #s (pht:pht_t s) : pos = pht.sz
 
 
-
 val lookup (#s:pht_sig_us)
-          (#pht:erased (pht_t (s_to_ps s)))
-          (ht:ht_t s) (k:s.keyt)
-  : stt (o:option s.valt{o == PHT.lookup pht k})
+           (#pht:erased (pht_t (s_to_ps s)))
+           (ht:ht_t s) (k:s.keyt)
+  : stt (bool & option s.valt)
     (models s ht pht)
-    (fun _ -> models s ht pht)
+    (fun p -> models s ht pht `star` pure ( fst p ==> (snd p) == PHT.lookup pht k ))
 
 val insert (#s:pht_sig_us)
           (#pht:(p:erased (pht_t (s_to_ps s)){PHT.not_full p.repr}))
           (ht:ht_t s) (k:s.keyt) (v:s.valt)
-  : stt unit 
+  : stt bool 
     (models s ht pht)
-    (fun _ -> models s ht (PHT.insert pht k v))
+    (fun b -> match b with 
+              | true -> models s ht (PHT.insert pht k v)
+              | false -> models s ht pht)
 
 val delete (#s:pht_sig_us)
           (#pht:erased (pht_t (s_to_ps s)))
           (ht:ht_t s) (k:s.keyt)
-  : stt unit
+  : stt bool
     (models s ht pht)
-    (fun _ -> models s ht (PHT.delete pht k))
+    (fun b -> match b with 
+              | true -> models s ht (PHT.delete pht k)
+              | false -> models s ht pht)
 
 val not_full (#s:pht_sig_us) (#pht:erased (pht_t (s_to_ps s))) (ht:ht_t s)
   : stt bool
