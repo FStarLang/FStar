@@ -381,6 +381,11 @@ let rec iter_tac : 'a . ('a -> unit tac) -> 'a Prims.list -> unit tac =
       | [] -> ret ()
       | hd::tl ->
           let uu___ = f hd in op_let_Bang uu___ (fun uu___1 -> iter_tac f tl)
+exception Bad of Prims.string 
+let (uu___is_Bad : Prims.exn -> Prims.bool) =
+  fun projectee -> match projectee with | Bad uu___ -> true | uu___ -> false
+let (__proj__Bad__item__uu___ : Prims.exn -> Prims.string) =
+  fun projectee -> match projectee with | Bad uu___ -> uu___
 let (nwarn : Prims.int FStar_Compiler_Effect.ref) =
   FStar_Compiler_Util.mk_ref Prims.int_zero
 let (check_valid_goal : FStar_Tactics_Types.goal -> unit) =
@@ -388,47 +393,73 @@ let (check_valid_goal : FStar_Tactics_Types.goal -> unit) =
     let uu___ = FStar_Options.defensive () in
     if uu___
     then
-      let b = true in
-      let env = FStar_Tactics_Types.goal_env g in
-      let b1 =
-        b &&
-          (let uu___1 = FStar_Tactics_Types.goal_witness g in
-           FStar_TypeChecker_Env.closed env uu___1) in
-      let b2 =
-        b1 &&
-          (let uu___1 = FStar_Tactics_Types.goal_type g in
-           FStar_TypeChecker_Env.closed env uu___1) in
-      let rec aux b3 e =
-        let uu___1 = FStar_TypeChecker_Env.pop_bv e in
-        match uu___1 with
-        | FStar_Pervasives_Native.None -> b3
-        | FStar_Pervasives_Native.Some (bv, e1) ->
-            let b4 =
-              b3 &&
-                (FStar_TypeChecker_Env.closed e1 bv.FStar_Syntax_Syntax.sort) in
-            aux b4 e1 in
-      let uu___1 =
-        (let uu___2 = aux b2 env in Prims.op_Negation uu___2) &&
-          (let uu___2 = FStar_Compiler_Effect.op_Bang nwarn in
-           uu___2 < (Prims.of_int (5))) in
-      (if uu___1
-       then
-         ((let uu___3 =
-             let uu___4 = FStar_Tactics_Types.goal_type g in
-             uu___4.FStar_Syntax_Syntax.pos in
-           let uu___4 =
-             let uu___5 =
-               let uu___6 = FStar_Tactics_Printing.goal_to_string_verbose g in
-               FStar_Compiler_Util.format1
-                 "The following goal is ill-formed. Keeping calm and carrying on...\n<%s>\n\n"
-                 uu___6 in
-             (FStar_Errors_Codes.Warning_IllFormedGoal, uu___5) in
-           FStar_Errors.log_issue uu___3 uu___4);
-          (let uu___3 =
-             let uu___4 = FStar_Compiler_Effect.op_Bang nwarn in
-             uu___4 + Prims.int_one in
-           FStar_Compiler_Effect.op_Colon_Equals nwarn uu___3))
-       else ())
+      try
+        (fun uu___1 ->
+           match () with
+           | () ->
+               let env = FStar_Tactics_Types.goal_env g in
+               ((let uu___3 =
+                   let uu___4 =
+                     let uu___5 = FStar_Tactics_Types.goal_witness g in
+                     FStar_TypeChecker_Env.closed env uu___5 in
+                   Prims.op_Negation uu___4 in
+                 if uu___3
+                 then FStar_Compiler_Effect.raise (Bad "witness")
+                 else ());
+                (let uu___4 =
+                   let uu___5 =
+                     let uu___6 = FStar_Tactics_Types.goal_type g in
+                     FStar_TypeChecker_Env.closed env uu___6 in
+                   Prims.op_Negation uu___5 in
+                 if uu___4
+                 then FStar_Compiler_Effect.raise (Bad "goal type")
+                 else ());
+                (let rec aux e =
+                   let uu___4 = FStar_TypeChecker_Env.pop_bv e in
+                   match uu___4 with
+                   | FStar_Pervasives_Native.None -> ()
+                   | FStar_Pervasives_Native.Some (bv, e1) ->
+                       ((let uu___6 =
+                           let uu___7 =
+                             FStar_TypeChecker_Env.closed e1
+                               bv.FStar_Syntax_Syntax.sort in
+                           Prims.op_Negation uu___7 in
+                         if uu___6
+                         then
+                           let uu___7 =
+                             let uu___8 =
+                               let uu___9 =
+                                 FStar_Syntax_Print.bv_to_string bv in
+                               Prims.op_Hat "bv: " uu___9 in
+                             Bad uu___8 in
+                           FStar_Compiler_Effect.raise uu___7
+                         else ());
+                        aux e1) in
+                 aux env))) ()
+      with
+      | Bad culprit ->
+          let uu___2 =
+            let uu___3 = FStar_Compiler_Effect.op_Bang nwarn in
+            uu___3 < (Prims.of_int (5)) in
+          (if uu___2
+           then
+             ((let uu___4 =
+                 let uu___5 = FStar_Tactics_Types.goal_type g in
+                 uu___5.FStar_Syntax_Syntax.pos in
+               let uu___5 =
+                 let uu___6 =
+                   let uu___7 =
+                     FStar_Tactics_Printing.goal_to_string_verbose g in
+                   FStar_Compiler_Util.format2
+                     "The following goal is ill-formed (%s). Keeping calm and carrying on...\n<%s>\n\n"
+                     culprit uu___7 in
+                 (FStar_Errors_Codes.Warning_IllFormedGoal, uu___6) in
+               FStar_Errors.log_issue uu___4 uu___5);
+              (let uu___4 =
+                 let uu___5 = FStar_Compiler_Effect.op_Bang nwarn in
+                 uu___5 + Prims.int_one in
+               FStar_Compiler_Effect.op_Colon_Equals nwarn uu___4))
+           else ())
     else ()
 let (check_valid_goals : FStar_Tactics_Types.goal Prims.list -> unit) =
   fun gs ->

@@ -1616,10 +1616,28 @@ let (interpret_plugin_as_term_fun :
                                      let ncb = str_to_name "ncb" in
                                      let all_args = str_to_name "args" in
                                      let args =
-                                       FStar_Compiler_List.op_At [tac_fun]
-                                         (FStar_Compiler_List.op_At
-                                            arg_unembeddings
-                                            [res_embedding; psc; ncb]) in
+                                       let uu___6 =
+                                         let uu___7 =
+                                           let uu___8 =
+                                             let uu___9 =
+                                               let uu___10 =
+                                                 let uu___11 =
+                                                   FStar_Ident.string_of_lid
+                                                     fv_lid1 in
+                                                 Prims.op_Hat uu___11
+                                                   " (plugin)" in
+                                               FStar_Extraction_ML_Syntax.MLC_String
+                                                 uu___10 in
+                                             FStar_Extraction_ML_Syntax.MLE_Const
+                                               uu___9 in
+                                           FStar_Compiler_Effect.op_Less_Bar
+                                             mk uu___8 in
+                                         [uu___7] in
+                                       FStar_Compiler_List.op_At uu___6
+                                         (FStar_Compiler_List.op_At [tac_fun]
+                                            (FStar_Compiler_List.op_At
+                                               arg_unembeddings
+                                               [res_embedding; psc; ncb])) in
                                      let tabs =
                                        match tvar_names with
                                        | [] ->
