@@ -23,6 +23,7 @@ type pht_sig_us = {
   hashf : keyt -> US.t;
 }
 let mk_pht_sig_us keyt valt hashf : pht_sig_us = { keyt; valt; hashf }
+let mk_used_cell k v = Used k v
 
 noeq
 type ht_t (s : pht_sig_us) = {

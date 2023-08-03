@@ -12,8 +12,6 @@ type cell (kt : Type) (vt : Type) =
   | Zombie
   | Used : k:kt -> v:vt -> cell kt vt
 
-let mk_used_cell k v = Used k v
-
 noeq
 type pht_sig = {
   keyt : eqtype;
