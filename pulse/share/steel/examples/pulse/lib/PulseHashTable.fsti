@@ -17,7 +17,7 @@ type pht_sig_us = {
   hashf : keyt -> US.t;
 }
 let mk_pht_sig_us keyt valt hashf : pht_sig_us = { keyt; valt; hashf }
-let mk_used_cell k v = Used k v
+let mk_used_cell #a #b (k:a) (v:b) = Used k v
 
 noeq
 type ht_t (s : pht_sig_us) = {
@@ -58,23 +58,22 @@ val lookup (#s:pht_sig_us)
     (models s ht pht)
     (fun p -> models s ht pht ** pure ( fst p ==> (snd p) == PHT.lookup pht k ))
 
+let maybe_update (b:bool) (s:pht_sig_us) (ht:ht_t s) (pht pht':pht_t (s_to_ps s)) =
+  if b then models s ht pht' else models s ht pht
+
 val insert (#s:pht_sig_us)
           (#pht:(p:erased (pht_t (s_to_ps s)){PHT.not_full p.repr}))
           (ht:ht_t s) (k:s.keyt) (v:s.valt)
   : stt bool 
     (models s ht pht)
-    (fun b -> match b with 
-              | true -> models s ht (PHT.insert pht k v)
-              | false -> models s ht pht)
+    (fun b -> maybe_update b s ht pht (PHT.insert pht k v))
 
 val delete (#s:pht_sig_us)
           (#pht:erased (pht_t (s_to_ps s)))
           (ht:ht_t s) (k:s.keyt)
   : stt bool
     (models s ht pht)
-    (fun b -> match b with 
-              | true -> models s ht (PHT.delete pht k)
-              | false -> models s ht pht)
+    (fun b -> maybe_update b s ht pht (PHT.delete pht k))
 
 val not_full (#s:pht_sig_us) (#pht:erased (pht_t (s_to_ps s))) (ht:ht_t s)
   : stt bool

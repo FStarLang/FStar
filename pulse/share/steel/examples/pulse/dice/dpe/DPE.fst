@@ -78,6 +78,7 @@ fn open_session (_:unit)
 
   if b {
     let r = PHT.insert #sht_sig #pht sht sid cht;
+    with pht'. unfold (maybe_update r sht_sig sht pht pht');
     if r {
       assert (PHT.models sht_sig sht (LSHT.insert pht sid cht));
       dfst sid_ref := sid + 1;
@@ -286,6 +287,7 @@ fn close_session (sid:nat)
       L.acquire #(exists_ (fun pht -> models cht_sig cht pht)) cht_lk;
       destroy_cht cht;
       let b = PHT.delete #sht_sig #pht sht sid;
+      with pht'. unfold (maybe_update b sht_sig sht pht pht');
       if b {
         assert (models sht_sig sht (LSHT.delete pht sid));
         L.release #(exists_ (fun pht -> models sht_sig sht pht)) sht_lk;
@@ -462,6 +464,7 @@ fn initialize_context (sid:nat) (uds:A.larray U8.t (US.v uds_len))
       let b = not_full #cht_sig #cpht cht;
       if b {
         let r = PHT.insert #cht_sig #cpht cht ctxt_hndl locked_context;
+        with cpht'. unfold (maybe_update r cht_sig cht cpht cpht');
         if r {
           assert (models cht_sig cht (LSHT.insert cpht ctxt_hndl locked_context));
           L.release #(exists_ (fun pht -> models sht_sig sht pht)) sht_lk;
