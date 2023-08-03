@@ -1,12 +1,7 @@
 module DPEPseudo
-open Pulse.Main
-open Pulse.Steel.Wrapper
-open FStar.Ghost
-open Steel.ST.Util 
-open Steel.ST.Array
-open Steel.FractionalPermission
-module A = Steel.ST.Array
-module R = Steel.ST.Reference
+open Pulse.Lib.Pervasives
+module A = Pulse.Lib.Array
+module R = Pulse.Lib.Reference
 module US = FStar.SizeT
 module U8 = FStar.UInt8
 module U32 = FStar.UInt32

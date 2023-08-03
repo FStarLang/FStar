@@ -1,12 +1,6 @@
 module Fibonacci
-module T = FStar.Tactics
-module PM = Pulse.Main
-open Steel.ST.Util 
-open Steel.ST.Reference
-open Steel.FractionalPermission
-open FStar.Ghost
+open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
-open Pulse.Steel.Wrapper
 
 let rec fib (n:nat) : nat =
   if n <= 1 then 1

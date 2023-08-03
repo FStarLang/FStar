@@ -1,11 +1,7 @@
 module RecordWithRefs
-module PM = Pulse.Main
-open Steel.ST.Util
-open Steel.ST.Reference
-open FStar.Ghost
+open Pulse.Lib.Pervasives
 module U8 = FStar.UInt8
-module R = Steel.ST.Reference
-open Pulse.Steel.Wrapper
+module R = Pulse.Lib.Reference
 
 noeq
 type u8_pair = {
@@ -21,7 +17,7 @@ let snd (p:u8_pair_repr) : U8.t =
   let (_, x) = p in x
   
 let u8_pair_pred (p:u8_pair) (v:u8_pair_repr) : vprop = 
-    R.pts_to p.a full_perm (fst v) `star`
+    R.pts_to p.a full_perm (fst v) **
     R.pts_to p.b full_perm (snd v)
 
 
@@ -29,7 +25,7 @@ let u8_pair_pred (p:u8_pair) (v:u8_pair_repr) : vprop =
 ghost
 fn fold_u8_pair_pred (x:u8_pair) (#u #v:erased U8.t)
   requires
-    R.pts_to x.a full_perm u `star`
+    R.pts_to x.a full_perm u **
     R.pts_to x.b full_perm v
   ensures
     u8_pair_pred x (reveal u, reveal v)

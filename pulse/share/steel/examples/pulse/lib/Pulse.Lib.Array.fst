@@ -102,7 +102,7 @@ fn memcpy_ (#t:eqtype) (l:US.t) (src dst:larray t (US.v l))
 let memcpy = memcpy_
 
 ```pulse
-fn fill_array_ (#t:Type0) (l:US.t) (a:(a:array t{ US.v l == A.length a })) (v:t)
+fn fill_ (#t:Type0) (l:US.t) (a:(a:array t{ US.v l == A.length a })) (v:t)
                (#s:Ghost.erased (elseq t l))
   requires (A.pts_to a full_perm s)
   ensures exists (s:Seq.seq t). (
@@ -129,10 +129,10 @@ fn fill_array_ (#t:Type0) (l:US.t) (a:(a:array t{ US.v l == A.length a })) (v:t)
    ()
 }
 ```
-let fill_array = fill_array_
+let fill = fill_
 
 ```pulse
-fn zeroize_array_ (l:US.t) (a:(a:A.array U8.t{ US.v l == A.length a }))
+fn zeroize_ (l:US.t) (a:(a:A.array U8.t{ US.v l == A.length a }))
                  (#s:Ghost.erased (elseq U8.t l))
   requires A.pts_to a full_perm s
   ensures exists (s:Seq.seq U8.t). (
@@ -140,7 +140,7 @@ fn zeroize_array_ (l:US.t) (a:(a:A.array U8.t{ US.v l == A.length a }))
     pure (s `Seq.equal` Seq.create (US.v l) 0uy)
   )
 {
-  fill_array l a 0uy
+  fill l a 0uy
 }
 ```
-let zeroize_array = zeroize_array_
+let zeroize = zeroize_

@@ -12,14 +12,14 @@ val alloc (#a:Type) (x:a)
   : stt_ghost (ref a) emp_inames emp (fun r -> pts_to r full_perm x)
   
 val ( ! ) (#a:Type) (r:ref a) (#n:erased a) (#p:perm)
-  : stt_ghost a emp_inames
+  : stt_ghost (erased a) emp_inames
         (pts_to r p n)
-        (fun x -> pts_to r p x ** pure (reveal n == x))
+        (fun x -> pts_to r p x ** pure (n == x))
 
-val ( := ) (#a:Type) (r:ref a) (x:a) (#n:erased a)
+val ( := ) (#a:Type) (r:ref a) (x:erased a) (#n:erased a)
   : stt_ghost unit emp_inames
         (pts_to r full_perm n) 
-        (fun _ -> pts_to r full_perm (hide x))
+        (fun _ -> pts_to r full_perm x)
 
 val free (#a:Type) (r:ref a) (#n:erased a)
   : stt_ghost unit emp_inames (pts_to r full_perm n) (fun _ -> emp)

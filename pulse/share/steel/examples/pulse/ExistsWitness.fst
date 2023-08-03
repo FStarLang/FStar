@@ -1,11 +1,7 @@
 module ExistsWitness
-module PM = Pulse.Main
-open Steel.ST.Util
-open Steel.ST.Reference
-open FStar.Ghost
+open Pulse.Lib.Pervasives
 module U8 = FStar.UInt8
-module R = Steel.ST.Reference
-open Pulse.Steel.Wrapper
+module R = Pulse.Lib.Reference
 //This example illustrates how to get your "hands" on an existential witness
 //Using the `with ... assert` construct
 

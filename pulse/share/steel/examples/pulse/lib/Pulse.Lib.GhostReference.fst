@@ -20,16 +20,16 @@ let alloc' (#a:Type) (x:a)
 let alloc #a = alloc' #a
 
 let read (#a:Type) (r:ref a) (#n:erased a) (#p:perm)
-  : stt_ghost a emp_inames
+  : stt_ghost (erased a) emp_inames
         (R.pts_to r p n)
-        (fun x -> R.pts_to r p x `S.star` S.pure (reveal n == x))
+        (fun x -> R.pts_to r p x `S.star` S.pure (n == x))
   = fun _ ->
         let v = R.read r in
          v
 let ( ! ) #a = read #a
 
-let ( := ) (#a:Type) (r:ref a) (x:a) (#n:erased a)
-    = fun _ -> R.write r x
+let ( := ) (#a:Type) (r:ref a) (x:erased a) (#n:erased a)
+    = fun _ -> R.write r x; ()
 
 let free #a r #n = fun _ -> R.free r; ()
 

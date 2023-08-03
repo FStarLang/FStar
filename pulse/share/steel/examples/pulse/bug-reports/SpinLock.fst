@@ -1,11 +1,7 @@
 module SpinLock
-open Pulse.Main
-open Pulse.Steel.Wrapper
-open FStar.Ghost
-open Steel.ST.Util
-open Steel.FractionalPermission
-module R = Steel.ST.Reference
-#push-options "--ide_id_info_off"
+open Pulse.Lib.Pervasives
+module R = Pulse.Lib.Reference
+open Pulse.Lib.SpinLock
 
 ```pulse
 fn lock_ref (r:R.ref int) (#v_:Ghost.erased int)
