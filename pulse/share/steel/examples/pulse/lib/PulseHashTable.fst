@@ -178,29 +178,27 @@ fn _insert (#s:pht_sig_us)
     } else {
       let o = add_us cidx voff;
       match o {
-      Some v -> {
-        let idx = v % ht.sz;
+      Some vv -> {
+        let idx = (vv % ht.sz <: US.t);
         let c = op_Array_Access ht.contents idx #full_perm #pht.repr;
         match c {
         Used k' v' -> { 
           if (k' = k) {
             assert (A.pts_to ht.contents full_perm pht.repr);
             assert (pure ( US.v idx < Seq.length pht.repr));
-            admit()
-            // op_Array_Assignment ht.contents idx (mk_used_cell k v);
-            // cont := false;
-            // assert (pure (insert_repr #(s_to_ps s) #(pht_sz pht) #pht.spec pht.repr k v `Seq.equal` 
-            //   Seq.upd pht.repr (US.v idx) (mk_used_cell k v))); 
+            ((ht.contents).(idx) <- (mk_used_cell k v));
+            cont := false;
+            assert (pure (insert_repr #(s_to_ps s) #(pht_sz pht) #pht.spec pht.repr k v `Seq.equal` 
+                          Seq.upd pht.repr (US.v idx) (mk_used_cell k v))); 
           } else {
             off := voff + 1sz;
           } 
         }
         Clean -> {
-          admit()
-          // op_Array_Assignment ht.contents idx (mk_used_cell k v);
-          // cont := false;
-          // assert (pure (insert_repr #(s_to_ps s) #(pht_sz pht) #pht.spec pht.repr k v `Seq.equal` 
-          //   Seq.upd pht.repr (US.v idx) (mk_used_cell k v)));
+          ((ht.contents).(idx) <- (mk_used_cell k v));
+          cont := false;
+          assert (pure (insert_repr #(s_to_ps s) #(pht_sz pht) #pht.spec pht.repr k v `Seq.equal` 
+                  Seq.upd pht.repr (US.v idx) (mk_used_cell k v)));
         }
         Zombie -> {
           fold (models s ht pht);
@@ -210,19 +208,17 @@ fn _insert (#s:pht_sig_us)
             let o = snd res;
             match o {
               Some p -> {
-                op_Array_Assignment ht.contents (snd p) Zombie;
-                admit()
-                // op_Array_Assignment ht.contents idx (mk_used_cell k v);
-                // cont := false;
-                // assert (pure (insert_repr #(s_to_ps s) #(pht_sz pht) #pht.spec pht.repr k v `Seq.equal` 
-                //   Seq.upd (Seq.upd pht.repr (US.v (snd p)) Zombie) (US.v idx) (mk_used_cell k v)));
+                ((ht.contents).(snd p) <- Zombie);
+                ((ht.contents).(idx) <- (mk_used_cell k v));
+                cont := false;
+                assert (pure (insert_repr #(s_to_ps s) #(pht_sz pht) #pht.spec pht.repr k v `Seq.equal` 
+                              Seq.upd (Seq.upd pht.repr (US.v (snd p)) Zombie) (US.v idx) (mk_used_cell k v)));
               }
               None -> { 
-                admit()
-                // op_Array_Assignment ht.contents idx (mk_used_cell k v); 
-                // cont := false;
-                // assert (pure (insert_repr #(s_to_ps s) #(pht_sz pht) #pht.spec pht.repr k v 
-                //   `Seq.equal` Seq.upd pht.repr (US.v idx) (mk_used_cell k v)));
+                ((ht.contents).(idx) <- (mk_used_cell k v)); 
+                cont := false;
+                assert (pure (insert_repr #(s_to_ps s) #(pht_sz pht) #pht.spec pht.repr k v `Seq.equal`
+                              Seq.upd pht.repr (US.v idx) (mk_used_cell k v)));
               }
           }} else {
             // ERROR - lookup failed

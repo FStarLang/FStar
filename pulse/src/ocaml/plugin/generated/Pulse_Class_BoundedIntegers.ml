@@ -125,6 +125,19 @@ let (bounded_int_nat : Prims.nat bounded_int) =
   }
 let (add_nat : Prims.nat -> Prims.nat -> Prims.nat) =
   fun x -> fun y -> op_Plus bounded_int_nat x y
+let (pos_as_int : Prims.pos -> Prims.int) = fun x -> x
+let (bounded_int_pos : Prims.pos bounded_int) =
+  {
+    fits = ();
+    v = ();
+    u = ();
+    op_Plus = (fun x -> fun y -> x + y);
+    op_Subtraction = (fun x -> fun y -> x - y);
+    op_Less = (fun x -> fun y -> x < y);
+    op_Less_Equals = (fun x -> fun y -> x <= y);
+    op_Percent = (fun x -> fun y -> x mod y);
+    properties = ()
+  }
 let (bounded_int_size_t : FStar_SizeT.t bounded_int) =
   {
     fits = ();
