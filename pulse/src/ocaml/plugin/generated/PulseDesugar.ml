@@ -289,20 +289,21 @@ let (r_ : FStar_Compiler_Range_Type.range) =
   FStar_Compiler_Range_Type.dummyRange
 let (admit_lid : FStar_Ident.lident) =
   FStar_Ident.lid_of_path ["Prims"; "admit"] r_
-let (star_lid : FStar_Ident.lident) =
-  FStar_Ident.lid_of_path ["Steel"; "Effect"; "Common"; "star"] r_
-let (emp_lid : FStar_Ident.lident) =
-  FStar_Ident.lid_of_path ["Steel"; "Effect"; "Common"; "emp"] r_
-let (pure_lid : FStar_Ident.lident) =
-  FStar_Ident.lid_of_path ["Steel"; "ST"; "Util"; "pure"] r_
-let (stt_lid : FStar_Ident.lident) =
-  FStar_Ident.lid_of_path ["Pulse"; "Steel"; "Wrapper"; "stt"] r_
-let (assign_lid : FStar_Ident.lident) =
-  FStar_Ident.lid_of_path ["Pulse"; "Steel"; "Wrapper"; "write"] r_
-let (stt_ghost_lid : FStar_Ident.lident) =
-  FStar_Ident.lid_of_path ["Pulse"; "Steel"; "Wrapper"; "stt_ghost"] r_
-let (stt_atomic_lid : FStar_Ident.lident) =
-  FStar_Ident.lid_of_path ["Pulse"; "Steel"; "Wrapper"; "stt_atomic"] r_
+let (pulse_lib_core_lid : Prims.string -> FStar_Ident.lident) =
+  fun l ->
+    FStar_Ident.lid_of_path
+      (FStar_List_Tot_Base.op_At ["Pulse"; "Lib"; "Core"] [l]) r_
+let (pulse_lib_ref_lid : Prims.string -> FStar_Ident.lident) =
+  fun l ->
+    FStar_Ident.lid_of_path
+      (FStar_List_Tot_Base.op_At ["Pulse"; "Lib"; "Reference"] [l]) r_
+let (star_lid : FStar_Ident.lident) = pulse_lib_core_lid "op_Star_Star"
+let (emp_lid : FStar_Ident.lident) = pulse_lib_core_lid "emp"
+let (pure_lid : FStar_Ident.lident) = pulse_lib_core_lid "pure"
+let (stt_lid : FStar_Ident.lident) = pulse_lib_core_lid "stt"
+let (assign_lid : FStar_Ident.lident) = pulse_lib_ref_lid "op_Colon_Equals"
+let (stt_ghost_lid : FStar_Ident.lident) = pulse_lib_core_lid "stt_ghost"
+let (stt_atomic_lid : FStar_Ident.lident) = pulse_lib_core_lid "stt_atomic"
 let (stapp_assignment :
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.term ->

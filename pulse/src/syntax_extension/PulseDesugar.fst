@@ -81,13 +81,16 @@ let desugar_const (c:FStar.Const.sconst) : SW.constant =
 
 let r_ = FStar.Compiler.Range.dummyRange
 let admit_lid = Ident.lid_of_path ["Prims"; "admit"] r_
-let star_lid = Ident.lid_of_path ["Steel"; "Effect"; "Common"; "star"] r_
-let emp_lid = Ident.lid_of_path ["Steel"; "Effect"; "Common"; "emp"] r_
-let pure_lid = Ident.lid_of_path ["Steel"; "ST"; "Util"; "pure"] r_
-let stt_lid = Ident.lid_of_path ["Pulse"; "Steel"; "Wrapper"; "stt"] r_
-let assign_lid = Ident.lid_of_path ["Pulse"; "Steel"; "Wrapper"; "write"] r_
-let stt_ghost_lid = Ident.lid_of_path ["Pulse"; "Steel"; "Wrapper"; "stt_ghost"] r_
-let stt_atomic_lid = Ident.lid_of_path ["Pulse"; "Steel"; "Wrapper"; "stt_atomic"] r_
+open FStar.List.Tot
+let pulse_lib_core_lid l = Ident.lid_of_path (["Pulse"; "Lib"; "Core"]@[l]) r_
+let pulse_lib_ref_lid l = Ident.lid_of_path (["Pulse"; "Lib"; "Reference"]@[l]) r_
+let star_lid = pulse_lib_core_lid "op_Star_Star"
+let emp_lid = pulse_lib_core_lid "emp"
+let pure_lid = pulse_lib_core_lid "pure"
+let stt_lid = pulse_lib_core_lid "stt"
+let assign_lid = pulse_lib_ref_lid "op_Colon_Equals"
+let stt_ghost_lid = pulse_lib_core_lid "stt_ghost"
+let stt_atomic_lid = pulse_lib_core_lid "stt_atomic"
 let stapp_assignment (lhs rhs:S.term) (r:_)
   : SW.st_term
   = let head_fv = S.lid_as_fv assign_lid None in

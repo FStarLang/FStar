@@ -218,7 +218,7 @@ let (intro_pure_tm : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.st_term) =
              (Pulse_Syntax_Pure.tm_pureapp
                 (Pulse_Syntax_Pure.tm_fvar
                    (Pulse_Syntax_Base.as_fv
-                      (Pulse_Reflection_Util.mk_steel_wrapper_lid
+                      (Pulse_Reflection_Util.mk_pulse_lib_core_lid
                          "intro_pure"))) FStar_Pervasives_Native.None p);
            Pulse_Syntax_Base.arg_qual = FStar_Pervasives_Native.None;
            Pulse_Syntax_Base.arg =
@@ -367,7 +367,7 @@ let rec (elab_st_typing :
                 Pulse_Syntax_Pure.tm_pureapp
                   (Pulse_Syntax_Pure.tm_fvar
                      (Pulse_Syntax_Base.as_fv
-                        (Pulse_Reflection_Util.mk_steel_wrapper_lid
+                        (Pulse_Reflection_Util.mk_pulse_lib_core_lid
                            "intro_pure"))) FStar_Pervasives_Native.None p in
               let arg =
                 FStar_Reflection_V2_Builtins.pack_ln

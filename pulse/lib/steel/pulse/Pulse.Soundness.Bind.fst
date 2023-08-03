@@ -117,7 +117,7 @@ let elab_bind_typing (g:stt_env)
     let rg = elab_env g in
     let u1 = comp_u c1 in
     let u2 = comp_u c2 in
-    let bind_lid = mk_steel_wrapper_lid "bind_stt" in
+    let bind_lid = mk_pulse_lib_core_lid "bind_stt" in
     let bind_fv = R.pack_fv bind_lid in
     let head = R.pack_ln (R.Tv_UInst bind_fv [u1;u2]) in
     assume (RT.lookup_fvar_uinst rg bind_fv [u1; u2] == Some (bind_type u1 u2));

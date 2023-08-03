@@ -171,7 +171,7 @@ let (mk_eq2_prop :
                (Pulse_Syntax_Pure.tm_pureapp
                   (Pulse_Syntax_Pure.tm_uinst
                      (Pulse_Syntax_Base.as_fv
-                        (Pulse_Reflection_Util.mk_steel_wrapper_lid
+                        (Pulse_Reflection_Util.mk_pulse_lib_core_lid
                            "eq2_prop")) [u])
                   (FStar_Pervasives_Native.Some Pulse_Syntax_Base.Implicit) t)
                FStar_Pervasives_Native.None e0) FStar_Pervasives_Native.None

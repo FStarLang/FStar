@@ -258,7 +258,7 @@ let frame_type (u:R.universe) =
 
 (** Type of sub_stt **)
 
-let stt_vprop_post_equiv_fv = R.pack_fv (mk_steel_wrapper_lid "vprop_post_equiv")
+let stt_vprop_post_equiv_fv = R.pack_fv (mk_pulse_lib_core_lid "vprop_post_equiv")
 let stt_vprop_post_equiv_univ_inst u = R.pack_ln (R.Tv_UInst stt_vprop_post_equiv_fv [u])
 let stt_vprop_post_equiv (u:R.universe) (t t1 t2:R.term) = 
   R.mk_app (stt_vprop_post_equiv_univ_inst u) 
