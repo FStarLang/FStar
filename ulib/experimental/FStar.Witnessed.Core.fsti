@@ -10,7 +10,7 @@ let stable (state:Type u#a)
 
 val witnessed (state:Type u#a)
               (rel:P.preorder state)
-              (p:s_predicate state)
+              ([@@@unused] p:s_predicate state)
   : Type0
 
 val witnessed_proof_irrelevant 
