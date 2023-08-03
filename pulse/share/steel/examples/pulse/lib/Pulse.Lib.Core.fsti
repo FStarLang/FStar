@@ -1,4 +1,4 @@
-module Pulse.Steel.Wrapper
+module Pulse.Lib.Core
 open FStar.Ghost
 module U32 = FStar.UInt32
 module G = FStar.Ghost
@@ -69,15 +69,6 @@ val emp_inames : inames
 inline_for_extraction
 val stt (a:Type u#a) (pre:vprop) (post:a -> vprop) : Type0
 
-// (* Coercions for use by libraries that are exposing Steel.ST primitives to Pulse *)
-// val mk_stt (#a:Type u#a) (#pre:vprop) (#post:a -> vprop)
-//            (f: (unit -> STT a pre post))
-//   : stt a pre post
-
-// val reveal_stt (#a:Type u#a) (#pre:vprop) (#post:a -> vprop)
-//                (f: stt a pre post)
-//   : unit -> STT a pre post
-
 (* stt_atomic a opened pre post: The type of a pulse computation
    that when run in a state satisfying `pre`
    takes a single concrete atomic step
@@ -87,14 +78,6 @@ val stt (a:Type u#a) (pre:vprop) (post:a -> vprop) : Type0
 inline_for_extraction
 val stt_atomic (a:Type u#a) (opened:inames) (pre:vprop) (post:a -> vprop) : Type u#(max 2 a)
 
-// val mk_stt_atomic (#a:Type u#a) (#opened:inames) (#pre:vprop) (#post:a -> vprop)
-//                   (f: (unit -> STAtomicT a opened pre post))
-//   : stt_atomic a opened pre post
-
-// val reveal_stt_atomic (#a:Type u#a) (#opened:inames) (#pre:vprop) (#post:a -> vprop)
-//                       (f:stt_atomic a opened pre post)
-//   : unit -> STAtomicT a opened pre post
-
 (* stt_ghost a opened pre post: The type of a pulse computation
    that when run in a state satisfying `pre`
    takes a single ghost atomic step (i.e. a step that does not modify the heap, and does not get extracted)
@@ -103,14 +86,6 @@ val stt_atomic (a:Type u#a) (opened:inames) (pre:vprop) (post:a -> vprop) : Type
    such that the final state satisfies `post x` *)
 inline_for_extraction
 val stt_ghost (a:Type u#a) (opened:inames) (pre:vprop) (post:a -> vprop) : Type u#(max 2 a)
-
-// val mk_stt_ghost (#a:Type u#a) (#opened:inames) (#pre:vprop) (#post:a -> vprop)
-//                  (f: (unit -> STGhostT a opened pre post))
-//   : stt_ghost a opened pre post
-
-// val reveal_stt_ghost (#a:Type u#a) (#opened:inames) (#pre:vprop) (#post:a -> vprop)
-//                      (f:stt_ghost a opened pre post)
-//   : unit -> STGhostT a opened pre post
 
 //
 // the returns should probably move to atomic,
@@ -264,152 +239,6 @@ val rewrite (p:vprop) (q:vprop) (_:vprop_equiv p q)
 
 
 open FStar.Ghost
-
-// (***** begin ref *****)
-
-// val alloc (#a:Type) (x:a)
-//   : stt (R.ref a) emp (fun r -> R.pts_to r full_perm x)
-  
-// val read (#a:Type) (r:R.ref a) (#n:erased a) (#p:perm)
-//   : stt a
-//         (R.pts_to r p n)
-//         (fun x -> R.pts_to r p x ** pure (reveal n == x))
-
-// let ( ! ) (#a:Type) (r:R.ref a) (#n:erased a) (#p:perm)
-//   : stt a (R.pts_to r p n)
-//           (fun x -> R.pts_to r p x **
-//                     pure (reveal n == x)) =
-//   read #a r #n #p
-
-// val write (#a:Type) (r:R.ref a) (x:a) (#n:erased a)
-//   : stt unit
-//         (R.pts_to r full_perm n) 
-//         (fun _ -> R.pts_to r full_perm (hide x))
-
-// let ( := ) (#a:Type) (r:R.ref a) (x:a) (#n:erased a)
-//   : stt unit (R.pts_to r full_perm n) (fun _ -> R.pts_to r full_perm (hide x)) =
-//   write #a r x #n
-
-// val read_atomic (r:R.ref U32.t) (#n:erased U32.t) (#p:perm)
-//   : stt_atomic U32.t emp_inames
-//                (R.pts_to r p n)
-//                (fun x -> R.pts_to r p n ** pure (reveal n == x))
-
-// val write_atomic (r:R.ref U32.t) (x:U32.t) (#n:erased U32.t)
-//   : stt_atomic unit emp_inames
-//         (R.pts_to r full_perm n) 
-//         (fun _ -> R.pts_to r full_perm (hide x))
-
-// (***** end ref *****)
-
-// (***** begin ghost ref ******)
-
-
-// val galloc (#a:Type0) (x:erased a)
-//   : stt_ghost (GR.ref a) emp_inames emp (fun r -> GR.pts_to r full_perm x)
-
-// val gread (#a:Type0) (r:GR.ref a) (#v:erased a) (#p:perm)
-//   : stt_ghost (erased a) emp_inames
-//       (GR.pts_to r p v)
-//       (fun x -> GR.pts_to r p x ** pure (v == x))
-
-// val gwrite (#a:Type0) (r:GR.ref a) (x:erased a) (#v:erased a)
-//   : stt_ghost unit emp_inames
-//       (GR.pts_to r full_perm v)
-//       (fun _ -> GR.pts_to r full_perm x)
-
-// val gshare (#a:Type0) (r:GR.ref a) (#v:erased a) (#p:perm)
-//   : stt_ghost unit emp_inames
-//       (GR.pts_to r p v)
-//       (fun _ ->
-//        GR.pts_to r (half_perm p) v **
-//        GR.pts_to r (half_perm p) v)
-
-// val ggather (#a:Type0) (r:GR.ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
-//   : stt_ghost unit emp_inames
-//       (GR.pts_to r p0 x0 ** GR.pts_to r p1 x1)
-//       (fun _ -> GR.pts_to r (sum_perm p0 p1) x0 ** pure (x0 == x1))
-
-// val gfree (#a:Type0) (r:GR.ref a) (#v:erased a)
-//   : stt_ghost unit emp_inames
-//       (GR.pts_to r full_perm v)
-//       (fun _ -> emp)
-
-// (***** end ghost ref *****)
-
-// (***** begin array ******)
-
-// val new_array
-//   (#elt: Type)
-//   (x: elt)
-//   (n: US.t)
-// : stt (A.array elt) 
-//      (requires emp)
-//      (ensures fun a ->
-//         A.pts_to a full_perm (Seq.create (US.v n) x) **
-//         pure (A.length a == US.v n /\ A.is_full_array a))
-
-// (* 
-//    a: array int |- 
-//     { A.pts a q sq }
-//       index a 0ul : #s -> #p -> stt t (A.pts_to a p s ** ...) (...)
-// *)
-// val op_Array_Access
-//   (#t: Type)
-//   (a: A.array t)
-//   (i: US.t)
-//   (#s: Ghost.erased (Seq.seq t))
-//   (#p: perm)
-// : stt t
-//     (requires
-//       A.pts_to a p s **
-//       pure (US.v i < A.length a \/ US.v i < Seq.length s))
-//     (ensures fun res ->
-//       A.pts_to a p s **
-//       pure (Seq.length s == A.length a /\
-//             US.v i < Seq.length s /\
-//             res == Seq.index s (US.v i)))
-
-// val op_Array_Assignment
-//   (#t: Type)
-//   (a: A.array t)
-//   (i: US.t)
-//   (v: t)
-//   (#s: Ghost.erased (Seq.seq t) {US.v i < Seq.length s})
-// : stt unit
-//     (requires A.pts_to a full_perm s)
-//     (ensures fun res -> A.pts_to a full_perm (Seq.upd s (US.v i) v))
-
-// val op_Array_Index
-//   (#t: Type)
-//   (a: A.array t)
-//   (i: US.t)
-//   (#p: perm)
-//   (#s: Ghost.erased (Seq.seq t){US.v i < Seq.length s})
-// : stt t
-//     (requires A.pts_to a p s)
-//     (ensures fun res -> A.pts_to a p s `star` pure (res == Seq.index s (US.v i)))
-
-// val free_array
-//       (#elt: Type)
-//       (a: A.array elt)
-//       (#s: Ghost.erased (Seq.seq elt))
-// : stt unit
-//     (A.pts_to a full_perm s ** pure (A.is_full_array a))
-//     (fun _ -> emp)
-
-// (***** begin spinlock *****)
-
-
-// val new_lock (p:vprop) : stt (Lock.lock p) p (fun _ -> emp)
-
-// val acquire (#p:vprop) (l:Lock.lock p)
-//   : stt unit emp (fun _ -> p)
-
-// val release (#p:vprop) (l:Lock.lock p)
-//   : stt unit p (fun _ -> emp)
-
-// (***** end spinlock *****)
 
 val elim_pure_explicit (p:prop)
   : stt_ghost (squash p) emp_inames

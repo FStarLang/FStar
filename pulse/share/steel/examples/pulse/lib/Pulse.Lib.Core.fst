@@ -1,4 +1,4 @@
-module Pulse.Steel.Wrapper
+module Pulse.Lib.Core
 
 open Steel.ST.Effect
 open Steel.ST.Effect.Atomic
