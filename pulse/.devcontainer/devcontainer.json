@@ -1,0 +1,25 @@
+{
+  "name": "Steel devcontainer",
+  "build": {
+    "dockerfile": "minimal.Dockerfile"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "FStarLang.fstar-vscode-assistant"
+      ]
+    }
+  },
+  "remoteEnv": {
+  },
+  // Runs only once when container is prepared
+  "onCreateCommand": {
+  },
+  // Runs periodically and/or when content of repo changes
+  "updateContentCommand": {
+    "build_plugin": "make ocaml -j$(nproc)"
+  },
+  // These run only when the container is assigned to a user
+  "postCreateCommand": {
+  }
+}
