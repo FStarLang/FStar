@@ -1,7 +1,5 @@
 module Test.Namespace
-open Pulse.Steel.Wrapper
-open Pulse.Main
-open Steel.ST.Util
+open Pulse.Lib.Pervasives
 
 ```pulse
 fn test (_:unit)

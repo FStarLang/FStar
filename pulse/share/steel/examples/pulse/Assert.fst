@@ -1,10 +1,5 @@
 module Assert
-module PM = Pulse.Main
-open Steel.ST.Util 
-open Steel.ST.Reference
-open Steel.FractionalPermission
-open FStar.Ghost
-open Pulse.Steel.Wrapper
+open Pulse.Lib.Pervasives
 
 ```pulse
 fn test_assert (r0 r1: ref nat)

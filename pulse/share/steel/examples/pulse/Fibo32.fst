@@ -1,12 +1,7 @@
 module Fibo32
-module T = FStar.Tactics
-module PM = Pulse.Main
-open Steel.ST.Util 
-open Steel.ST.Reference
-open Steel.FractionalPermission
-open FStar.Ghost
+open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
-open Pulse.Steel.Wrapper
+#push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
 
 let rec fib (n:nat) : nat =
   if n <= 1 then 1
@@ -20,8 +15,7 @@ let rec fib_mono (n:nat) (m:nat { m <= n})
 
 open Pulse.Class.BoundedIntegers
 
-#push-options "--using_facts_from 'Prims FStar.Pervasives FStar.Ghost FStar.UInt FStar.UInt32 Pulse.Class.BoundedIntegers Fibo32'"
-#push-options "--ide_id_info_off"
+
 ```pulse
 fn fibo32 (k:U32.t) (_:squash(0ul < k /\ fits #U32.t (fib (v k))))
   requires emp
@@ -33,9 +27,9 @@ fn fibo32 (k:U32.t) (_:squash(0ul < k /\ fits #U32.t (fib (v k))))
   let mut ctr = 1ul;
   while (let vctr = !ctr; (vctr < k))
   invariant b . exists vi vj vctr. (
-     pts_to i full_perm vi `star`
-     pts_to j full_perm vj `star`
-     pts_to ctr full_perm vctr `star`     
+     pts_to i full_perm vi **
+     pts_to j full_perm vj **
+     pts_to ctr full_perm vctr **     
      pure (1ul <= vctr /\
            vctr <= k /\
            fib (v vctr - 1) == v vi/\

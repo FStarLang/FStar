@@ -1,15 +1,10 @@
 module PulseHashTable
-module PM = Pulse.Main
-open Steel.ST.Array
-open Steel.FractionalPermission
-open Steel.ST.Util
-open FStar.Ghost
-open Pulse.Steel.Wrapper
-module A = Steel.ST.Array
-module R = Steel.ST.Reference
+open Pulse.Lib.Pervasives
+module A = Pulse.Lib.Array
+module R = Pulse.Lib.Reference
 module US = FStar.SizeT
 module U8 = FStar.UInt8
-module LK = Steel.ST.SpinLock
+module LK = Pulse.Lib.SpinLock
 module PHT = LinearScanHashTable
 open LinearScanHashTable
 open Pulse.Class.BoundedIntegers
@@ -52,12 +47,12 @@ fn pulse_lookup_index (#s:pht_sig_us)
       assert (R.pts_to ret full_perm None);
     } else {
       let idx = modulo_us cidx voff ht.sz ();
-      let c = op_Array_Index ht.contents idx; 
+      let c = (ht.contents).(idx); 
       match c {
         Used k' v' -> {
           if (k' = k) {
             cont := false;
-            write ret (Some (v',idx)) #None;
+            (op_Colon_Equals ret (Some (v',idx)) #None);
             assert (pure (pht.repr @@ US.v idx == Used k' v'));
             assert (pure (lookup_repr_index pht.repr k == Some (v', US.v idx)));
           } else {
@@ -137,7 +132,7 @@ fn _insert (#s:pht_sig_us)
       assert (A.pts_to ht.contents full_perm pht.repr);
     } else {
       let idx = modulo_us cidx voff ht.sz ();
-      let c = op_Array_Index ht.contents idx #full_perm #pht.repr;
+      let c = op_Array_Access ht.contents idx #full_perm #pht.repr;
       match c {
         Used k' v' -> { 
           if (k' = k) {
@@ -218,7 +213,7 @@ fn _delete (#s:pht_sig_us)
       assert (A.pts_to ht.contents full_perm pht.repr);
     } else {
       let idx = modulo_us cidx voff ht.sz ();
-      let c = op_Array_Index ht.contents idx #full_perm #pht.repr;
+      let c = op_Array_Access ht.contents idx #full_perm #pht.repr;
       match c {
         Used k' v' -> { 
           if (k' = k) {
@@ -258,7 +253,7 @@ fn _not_full (#s:pht_sig_us) (#pht:erased (pht_t (s_to_ps s))) (ht:ht_t s)
 
   while (let vi = !i;  
     if (vi < ht.sz) { 
-      let c = op_Array_Index ht.contents vi #full_perm #pht.repr; 
+      let c = op_Array_Access ht.contents vi #full_perm #pht.repr; 
       (Used? c) 
     } else { false })
   invariant b. exists (vi:US.t). (

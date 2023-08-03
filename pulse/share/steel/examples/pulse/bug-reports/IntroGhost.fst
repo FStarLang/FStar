@@ -1,11 +1,6 @@
 module IntroGhost
-module PM = Pulse.Main
-open Steel.ST.Array
-open Steel.FractionalPermission
-open Steel.ST.Util
-open FStar.Ghost
-open Pulse.Steel.Wrapper
-module R = Steel.ST.Reference
+open Pulse.Lib.Pervasives
+module R = Pulse.Lib.Reference
 
 (* 
   invariant pattern makes the condition var b 
@@ -15,7 +10,7 @@ module R = Steel.ST.Reference
 *)
 let my_inv (b:bool) (r:R.ref int) : vprop
   = exists_ (fun v -> 
-      R.pts_to r full_perm v `star` 
+      R.pts_to r full_perm v ** 
       pure ( b == (v = 0) )
     )
 
@@ -77,7 +72,7 @@ fn exists_with_witness_introduces_ghost (r:R.ref int)
   introduce exists b. (my_inv b r) with true; // this is OK but then we lose access
                                               // to witness b=true
 
-  assert_ (my_inv true r); // FAILS
+  assert (my_inv true r); // FAILS
   unfold (my_inv true r);
   ()
 }
@@ -100,7 +95,7 @@ fn with_assert_OK (r:R.ref int)
                                // to witness b=true because with...assert... 
                                // puts b=true into the typing context
 
-  assert_ (my_inv true r);
+  assert (my_inv true r);
   unfold (my_inv true r);
   ()
 }

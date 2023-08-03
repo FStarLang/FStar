@@ -22,19 +22,13 @@
   * Author: N. Swamy
   *)
 module ZetaHashAccumulator
-module T = FStar.Tactics
-module PM = Pulse.Main
-open Steel.ST.Util 
-open Steel.ST.Reference
-open Steel.FractionalPermission
-open FStar.Ghost
+open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
 module U8 = FStar.UInt8
 module SZ = FStar.SizeT
-module A = Steel.ST.Array
+module A = Pulse.Lib.Array
 module U64 = FStar.UInt64
 module Cast = FStar.Int.Cast
-open Pulse.Steel.Wrapper
 #push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
 #push-options "--fuel 0 --ifuel 0"
 
@@ -127,9 +121,9 @@ val blake2b:
   -> #p:perm
   -> #sd:Ghost.erased (Seq.seq U8.t) { Seq.length sd == SZ.v ll}
   -> stt unit
-    (A.pts_to output full_perm sout `star` A.pts_to d p sd)
+    (A.pts_to output full_perm sout ** A.pts_to d p sd)
     (λ _ → A.pts_to output full_perm (blake_spec (Seq.slice sd 0 (SZ.v ll)))
-           `star`
+           **
            A.pts_to d p sd)
 
 // We don't yet expose a free on references in Pulse.Steel.Wrapper
@@ -149,7 +143,7 @@ assume
 val array_pts_to_len (#t:Type0) (a:A.array t) (#p:perm) (#x:Seq.seq t)
     : stt_ghost unit emp_inames
           (A.pts_to a p x)
-          (fun _ -> A.pts_to a p x `star` pure (A.length a == Seq.length x))
+          (fun _ -> A.pts_to a p x ** pure (A.length a == Seq.length x))
 
 // Note, writing it this way fails. Can't admit in ghost?? 
 // ```pulse
@@ -212,9 +206,9 @@ let mk_ha_core acc ctr = { acc; ctr }
 // the counter hasn't overflowed yet.
 let ha_val_core (core:ha_core) (h:hash_value_t) 
   : vprop
-  = A.pts_to core.acc full_perm (fst h) `star`
+  = A.pts_to core.acc full_perm (fst h) **
     exists_ (λ (n:U32.t) →
-      pure (U32.v n == snd h) `star`
+      pure (U32.v n == snd h) **
       pts_to core.ctr full_perm n)
 
 // Working with records and representation predicates involves a bit of boilerplate
@@ -277,8 +271,8 @@ let mk_ha core tmp dummy = { core; tmp; dummy }
 
 // A representation predicate for ha, encapsulating an ha_val_core
 let ha_val (h:ha) (s:hash_value_t) =
-  ha_val_core h.core s `star`
-  exists_ (fun s -> A.pts_to h.tmp full_perm s) `star`
+  ha_val_core h.core s **
+  exists_ (fun s -> A.pts_to h.tmp full_perm s) **
   A.pts_to h.dummy full_perm (Seq.create 1 0uy)
 
 // A ghost function to package up a ha_val predicate
@@ -340,10 +334,10 @@ fn create (_:unit)
     returns h:ha
     ensures ha_val h initial_hash
 {  
-    let acc = new_array 0uy 32sz;
+    let acc = A.alloc 0uy 32sz;
     let ctr = alloc 0ul;
-    let tmp = new_array 0uy 32sz;
-    let dummy = new_array 0uy 1sz;
+    let tmp = A.alloc 0uy 32sz;
+    let dummy = A.alloc 0uy 1sz;
     package acc ctr tmp dummy
 }
 ```
@@ -357,9 +351,9 @@ fn reclaim (s:ha) (#h:hash_value_t)
     unfold (ha_val s h);
     unfold (ha_val_core s.core h);
     free s.core.ctr;
-    free_array s.core.acc;
-    free_array s.tmp;
-    free_array s.dummy
+    A.free s.core.acc;
+    A.free s.tmp;
+    A.free s.dummy
 }
 ```
 

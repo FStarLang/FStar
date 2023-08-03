@@ -55,7 +55,7 @@ let mk_sq_eq2 (u:universe)
 let mk_eq2_prop (u:universe) (t:term) (e0 e1:term)
   : term
   = tm_pureapp
-         (tm_pureapp (tm_pureapp (tm_uinst (as_fv (mk_steel_wrapper_lid "eq2_prop")) [u]) (Some Implicit) t)
+         (tm_pureapp (tm_pureapp (tm_uinst (as_fv (mk_pulse_lib_core_lid "eq2_prop")) [u]) (Some Implicit) t)
                      None e0) None e1
 
 let mk_vprop_eq (e0 e1:term) : term =

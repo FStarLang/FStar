@@ -1,14 +1,9 @@
 module JoinIf
-module PM = Pulse.Main
-open Steel.ST.Util 
-open Steel.ST.Array
-open Steel.FractionalPermission
-open FStar.Ghost
+open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
-open Pulse.Steel.Wrapper
-module A = Steel.ST.Array
+module A = Pulse.Lib.Array
 module US = FStar.SizeT
-module R = Steel.ST.Reference
+module R = Pulse.Lib.Reference
 open FStar.UInt32
 
 let sorted (s0 s:Seq.seq U32.t) =

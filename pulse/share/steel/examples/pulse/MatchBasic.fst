@@ -1,12 +1,5 @@
 module MatchBasic
-
-module T = FStar.Tactics
-module PM = Pulse.Main
-open Steel.ST.Util
-open Steel.ST.Reference
-open Steel.FractionalPermission
-open FStar.Ghost
-open Pulse.Steel.Wrapper
+open Pulse.Lib.Pervasives
 
 ```pulse
 fn test1 (n:nat)
@@ -149,7 +142,7 @@ fn incomplete (xs : list int)
 ```
 
 ```pulse
-fn partial_complete (xs : (xs:list int{List.length xs == 0}))
+fn partial_complete (xs : (xs:list int{List.Tot.length xs == 0}))
   requires emp
   returns r:int
   ensures emp

@@ -1,20 +1,13 @@
 module X509
-open Pulse.Main
-open Pulse.Steel.Wrapper
-open Steel.ST.Util 
-open Steel.ST.Array
-open Steel.FractionalPermission
-open FStar.Ghost
-module R = Steel.ST.Reference
-module A = Steel.ST.Array
-module T = FStar.Tactics
+open Pulse.Lib.Pervasives
+module R = Pulse.Lib.Reference
+module A = Pulse.Lib.Array
 module US = FStar.SizeT
 module U8 = FStar.UInt8
 module U32 = FStar.UInt32
 open HACL
 open L0Types
 open L0Crypto
-open Array
 
 assume
 val valid_deviceIDCSR_ingredients (len: US.t) : prop
@@ -114,7 +107,7 @@ val spec_serialize_aliasKeyCRT
   (aliasKeyCRT: aliasKeyCRT_t aliasKeyTBS_len)
   : elseq U8.t aliasKeyCRT_len
 
-assume
+assume  
 val serialize_aliasKeyCRT
   (aliasKeyTBS_len: US.t)
   (aliasKeyCRT: aliasKeyCRT_t aliasKeyTBS_len)
@@ -145,11 +138,11 @@ val x509_get_deviceIDCSR
   (#buf_perm #sig_perm:perm)
   (#buf:erased (elseq U8.t deviceIDCRI_len)) (#sig:erased (Seq.seq U8.t))
   : stt (deviceIDCSR_t deviceIDCRI_len)
-    (A.pts_to deviceIDCRI_buf buf_perm buf `star`
+    (A.pts_to deviceIDCRI_buf buf_perm buf **
      A.pts_to deviceIDCRI_sig sig_perm sig)
      (fun res -> 
-        A.pts_to deviceIDCRI_buf buf_perm buf `star`
-        A.pts_to deviceIDCRI_sig sig_perm sig `star`
+        A.pts_to deviceIDCRI_buf buf_perm buf **
+        A.pts_to deviceIDCRI_sig sig_perm sig **
         pure (res == spec_x509_get_deviceIDCSR 
                       deviceIDCRI_len 
                       buf sig))
@@ -177,7 +170,7 @@ val x509_get_deviceIDCRI
   : stt deviceIDCRI_t
     (A.pts_to deviceID_pub pub_perm deviceID_pub0)
     (fun res -> 
-      A.pts_to deviceID_pub pub_perm deviceID_pub0 `star`
+      A.pts_to deviceID_pub pub_perm deviceID_pub0 **
       pure (res == spec_x509_get_deviceIDCRI 
                     version s_common 
                     s_org s_country 
@@ -200,13 +193,13 @@ val x509_get_aliasKeyTBS
   (#fwid0:erased (Seq.seq U8.t))
   (#deviceID0 #aliasKey0:erased (elseq U8.t v32us))
   : stt aliasKeyTBS_t
-  (A.pts_to fwid fwid_perm fwid0 `star`
-   A.pts_to deviceID_pub deviceID_perm deviceID0 `star`
+  (A.pts_to fwid fwid_perm fwid0 **
+   A.pts_to deviceID_pub deviceID_perm deviceID0 **
    A.pts_to aliasKey_pub aliasKey_perm aliasKey0)
   (fun res ->
-    A.pts_to fwid fwid_perm fwid0 `star`
-    A.pts_to deviceID_pub deviceID_perm deviceID0 `star`
-    A.pts_to aliasKey_pub aliasKey_perm aliasKey0 `star`
+    A.pts_to fwid fwid_perm fwid0 **
+    A.pts_to deviceID_pub deviceID_perm deviceID0 **
+    A.pts_to aliasKey_pub aliasKey_perm aliasKey0 **
     pure (res == spec_x509_get_aliasKeyTBS 
                   aliasKeyCRT_ingredients 
                   fwid0 deviceID0 aliasKey0))
@@ -226,11 +219,11 @@ val x509_get_aliasKeyCRT
   (#buf_perm #sig_perm:perm)
   (#buf:erased (elseq U8.t aliasKeyTBS_len)) (#sig:erased (Seq.seq U8.t))
   : stt (aliasKeyCRT_t aliasKeyTBS_len)
-    (A.pts_to aliasKeyTBS_buf buf_perm buf `star`
+    (A.pts_to aliasKeyTBS_buf buf_perm buf **
      A.pts_to aliasKeyTBS_sig sig_perm sig)
      (fun res -> 
-        A.pts_to aliasKeyTBS_buf buf_perm buf `star`
-        A.pts_to aliasKeyTBS_sig sig_perm sig `star`
+        A.pts_to aliasKeyTBS_buf buf_perm buf **
+        A.pts_to aliasKeyTBS_sig sig_perm sig **
         pure (res == spec_x509_get_aliasKeyCRT 
                       aliasKeyTBS_len 
                       buf sig))
