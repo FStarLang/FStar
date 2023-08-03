@@ -2186,15 +2186,6 @@ let (order_univ_name : univ_name -> univ_name -> Prims.int) =
       FStar_String.compare uu___ uu___1
 let (new_universe_names_set : unit -> univ_name FStar_Compiler_Util.set) =
   fun uu___ -> FStar_Compiler_Util.new_set order_univ_name
-let (eq_binding : binding -> binding -> Prims.bool) =
-  fun b1 ->
-    fun b2 ->
-      match (b1, b2) with
-      | (Binding_var bv1, Binding_var bv2) -> bv_eq bv1 bv2
-      | (Binding_lid (lid1, uu___), Binding_lid (lid2, uu___1)) ->
-          FStar_Ident.lid_equals lid1 lid2
-      | (Binding_univ u1, Binding_univ u2) -> FStar_Ident.ident_equals u1 u2
-      | uu___ -> false
 type path = Prims.string Prims.list
 type subst_t = subst_elt Prims.list
 let (no_names : freenames) = new_bv_set ()

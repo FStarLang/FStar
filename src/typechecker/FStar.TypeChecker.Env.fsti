@@ -158,7 +158,7 @@ and env = {
   curmodule      :lident;                       (* Name of this module *)
   gamma          :list binding;                (* Local typing environment *)
   gamma_sig      :list sig_binding;            (* and signature elements *)
-  gamma_cache    :FStar.Compiler.Util.smap cached_elt;  (* Memo table for the local environment *)
+  gamma_cache    :FStar.Compiler.Util.smap cached_elt;  (* Memo table for the global gamma_sig environment *)
   modules        :list modul;                  (* already fully type checked modules *)
   expected_typ   :option (typ * bool);         (* type expected by the context *)
                                                 (* a true bool will check for type equality (else subtyping) *)

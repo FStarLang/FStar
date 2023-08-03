@@ -4492,6 +4492,23 @@ let longest_prefix :
         let uu___ = aux [] l1 l2 in
         match uu___ with
         | (pr, t1, t2) -> ((FStar_Compiler_List.rev pr), t1, t2)
+let (eq_binding :
+  FStar_Syntax_Syntax.binding -> FStar_Syntax_Syntax.binding -> Prims.bool) =
+  fun b1 ->
+    fun b2 ->
+      match (b1, b2) with
+      | (FStar_Syntax_Syntax.Binding_var bv1, FStar_Syntax_Syntax.Binding_var
+         bv2) ->
+          (FStar_Syntax_Syntax.bv_eq bv1 bv2) &&
+            (FStar_Syntax_Util.term_eq bv1.FStar_Syntax_Syntax.sort
+               bv2.FStar_Syntax_Syntax.sort)
+      | (FStar_Syntax_Syntax.Binding_lid (lid1, uu___),
+         FStar_Syntax_Syntax.Binding_lid (lid2, uu___1)) ->
+          FStar_Ident.lid_equals lid1 lid2
+      | (FStar_Syntax_Syntax.Binding_univ u1,
+         FStar_Syntax_Syntax.Binding_univ u2) ->
+          FStar_Ident.ident_equals u1 u2
+      | uu___ -> false
 let (join_goals :
   FStar_Tactics_Types.goal ->
     FStar_Tactics_Types.goal ->
@@ -4520,8 +4537,7 @@ let (join_goals :
                let gamma2 =
                  (g2.FStar_Tactics_Types.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_gamma in
                let uu___2 =
-                 longest_prefix FStar_Syntax_Syntax.eq_binding
-                   (FStar_Compiler_List.rev gamma1)
+                 longest_prefix eq_binding (FStar_Compiler_List.rev gamma1)
                    (FStar_Compiler_List.rev gamma2) in
                (match uu___2 with
                 | (gamma, r1, r2) ->
