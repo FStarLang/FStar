@@ -1,15 +1,7 @@
 module CustomSyntax
-module T = FStar.Tactics
-module PM = Pulse.Main
-open Steel.ST.Util 
-open Steel.ST.Reference
-open Steel.FractionalPermission
-open FStar.Ghost
+open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
-open Pulse.Steel.Wrapper
-
-
-#push-options "--using_facts_from 'Prims FStar.Pervasives FStar.UInt FStar.UInt32 FStar.Ghost Pulse.Steel.Wrapper CustomSyntax'"
+#push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
 #push-options "--ide_id_info_off"
 
 assume val p : vprop
@@ -259,7 +251,7 @@ fn test_local (r:ref U32.t)
    ensures  (pts_to r full_perm 0ul)
 {
   let mut x = 0ul;
-  let y = !x;
+  let y = Pulse.Lib.Reference.op_Bang x;
   r := y
 }
 ```

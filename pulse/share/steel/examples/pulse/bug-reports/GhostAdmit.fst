@@ -1,11 +1,6 @@
 module GhostAdmit
-module T = FStar.Tactics
-module PM = Pulse.Main
-open Steel.ST.Util
-open Steel.FractionalPermission
-open FStar.Ghost
-module A = Steel.ST.Array
-open Pulse.Steel.Wrapper
+open Pulse.Lib.Pervasives
+module A = Pulse.Lib.Array
 // Note, writing it this way fails. Can't admit in ghost?? 
 
 [@@expect_failure]

@@ -138,9 +138,8 @@ let rec check
   (res_ppname:ppname)
   (t:st_term) : T.Tac (checker_result_t g0 pre0 post_hint) =
 
-  // T.print (Printf.sprintf "At %s: allow_inst: %s, context: %s, term: %s\n"
+  // T.print (Printf.sprintf "At %s: context: %s, term: %s\n"
   //            (T.range_to_string t.range)
-  //            (string_of_bool allow_inst)
   //            (Pulse.Syntax.Printer.term_to_string pre0)
   //            (Pulse.Syntax.Printer.st_term_to_string t));
 

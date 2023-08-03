@@ -532,6 +532,7 @@ let _ =
        fun ncb ->
          fun args ->
            FStar_Tactics_V2_InterpFuns.mk_tactic_interpretation_7
+             "Pulse.Main.check_pulse (plugin)"
              (FStar_Tactics_Native.from_tactic_7 check_pulse)
              (FStar_Syntax_Embeddings.e_list FStar_Syntax_Embeddings.e_string)
              (FStar_Syntax_Embeddings.e_list

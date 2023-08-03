@@ -1,11 +1,6 @@
 module AuxPredicate
-module PM = Pulse.Main
-open Steel.ST.Array
-open Steel.FractionalPermission
-open Steel.ST.Util
-open FStar.Ghost
-open Pulse.Steel.Wrapper
-module R = Steel.ST.Reference
+open Pulse.Lib.Pervasives
+module R = Pulse.Lib.Reference
 
 (* This example illustrates how to work with auxiliary predicates.
    The style is quite explicit, with folds and unfolds.
@@ -16,7 +11,7 @@ module R = Steel.ST.Reference
 // writing Pulse syntax for vprops in predicates 
 let my_inv (b:bool) (r:R.ref int) : vprop
   = exists_ (fun v -> 
-      R.pts_to r full_perm v `star` 
+      R.pts_to r full_perm v ** 
       pure ( (v==0 \/ v == 1) /\ b == (v = 0) )
     )
 

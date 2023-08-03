@@ -1,7 +1,5 @@
 module PartialApp
-module PM = Pulse.Main
-open Steel.ST.Util 
-open Pulse.Steel.Wrapper
+open Pulse.Lib.Pervasives
 
 ```pulse
 fn my_fn (#t:Type0) (x y:t) 

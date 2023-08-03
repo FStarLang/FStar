@@ -1,14 +1,8 @@
 module L0Core
-open Pulse.Main
-open Pulse.Steel.Wrapper
+open Pulse.Lib.Pervasives
 open Pulse.Class.BoundedIntegers
-open Steel.ST.Util 
-open Steel.ST.Array
-open Steel.FractionalPermission
-open FStar.Ghost
-module R = Steel.ST.Reference
-module A = Steel.ST.Array
-module T = FStar.Tactics
+module R = Pulse.Lib.Reference
+module A = Pulse.Lib.Array
 module US = FStar.SizeT
 module U8 = FStar.UInt8
 module U32 = FStar.UInt32
@@ -16,7 +10,6 @@ open L0Types
 open L0Crypto
 open X509
 open HACL
-open Array
 
 (* l0 helpers *)
 
@@ -113,7 +106,7 @@ fn sign_and_finalize_deviceIDCSR
               _cri_buf)))
     ))
 {
-  let deviceIDCRI_sig = new_array 0uy deviceIDCRI_len;
+  let deviceIDCRI_sig = A.alloc 0uy deviceIDCRI_len;
 
   ed25519_sign deviceIDCRI_sig deviceID_priv deviceIDCRI_len deviceIDCRI_buf;
 
@@ -124,7 +117,7 @@ fn sign_and_finalize_deviceIDCSR
                     
   serialize_deviceIDCSR deviceIDCRI_len deviceIDCSR deviceIDCSR_len deviceIDCSR_buf;
 
-  free_array deviceIDCRI_sig;
+  A.free deviceIDCRI_sig;
   ()
 }
 ```
@@ -236,7 +229,7 @@ fn sign_and_finalize_aliasKeyCRT
               _tbs_buf)))
     ))
 {
-  let aliasKeyTBS_sig = new_array 0uy aliasKeyTBS_len;
+  let aliasKeyTBS_sig = A.alloc 0uy aliasKeyTBS_len;
 
   ed25519_sign aliasKeyTBS_sig deviceID_priv aliasKeyTBS_len aliasKeyTBS_buf;
 
@@ -247,7 +240,7 @@ fn sign_and_finalize_aliasKeyCRT
                     
   serialize_aliasKeyCRT aliasKeyTBS_len aliasKeyCRT aliasKeyCRT_len aliasKeyCRT_buf;
 
-  free_array aliasKeyTBS_sig;
+  A.free aliasKeyTBS_sig;
   ()
 }
 ```
@@ -447,11 +440,11 @@ fn l0_main
     aliasKey_pub aliasKey_priv cdi 
     record.fwid record.aliasKey_label_len record.aliasKey_label;
   
-  let authKeyID = new_array 0uy dice_digest_len;
+  let authKeyID = A.alloc 0uy dice_digest_len;
   derive_AuthKeyID dice_hash_alg
     authKeyID deviceID_pub;
 
-  let deviceIDCRI = new_array 0uy deviceIDCRI_len;
+  let deviceIDCRI = A.alloc 0uy deviceIDCRI_len;
   create_deviceIDCRI deviceID_pub
     deviceIDCRI_len deviceIDCRI
     record.deviceIDCSR_ingredients;
@@ -461,7 +454,7 @@ fn l0_main
     deviceIDCSR_len deviceIDCSR
     record.deviceIDCSR_ingredients;
 
-  let aliasKeyTBS = new_array 0uy aliasKeyTBS_len;
+  let aliasKeyTBS = A.alloc 0uy aliasKeyTBS_len;
   create_aliasKeyTBS record.fwid authKeyID
     deviceID_pub aliasKey_pub
     aliasKeyTBS_len aliasKeyTBS
@@ -476,15 +469,14 @@ fn l0_main
   // with s2. assert (A.pts_to deviceID_priv full_perm s2);
   with s3. assert (A.pts_to deviceIDCRI full_perm s3);
   with s4. assert (A.pts_to aliasKeyTBS full_perm s4);
-  // free_array deviceID_pub #(coerce v32us s1);
-  // free_array deviceID_priv #(coerce v32us s2);
-  free_array authKeyID;
-  free_array deviceIDCRI #(coerce deviceIDCRI_len s3);
-  free_array aliasKeyTBS #(coerce aliasKeyTBS_len s4);
+  // A.free deviceID_pub #(coerce v32us s1);
+  // A.free deviceID_priv #(coerce v32us s2);
+  A.free authKeyID;
+  A.free deviceIDCRI #(coerce deviceIDCRI_len s3);
+  A.free aliasKeyTBS #(coerce aliasKeyTBS_len s4);
 
   fold l0_record_perm record repr;
 
-  zeroize_array dice_digest_len cdi #cdi0;
-  ()
+  A.zeroize dice_digest_len cdi #cdi0;
 }
 ```

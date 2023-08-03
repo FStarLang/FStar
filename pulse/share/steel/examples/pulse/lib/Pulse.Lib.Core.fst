@@ -1,4 +1,4 @@
-module Pulse.Steel.Wrapper
+module Pulse.Lib.Core
 
 open Steel.ST.Effect
 open Steel.ST.Effect.Atomic
@@ -6,6 +6,25 @@ open Steel.ST.Effect.Ghost
 open Steel.Memory
 open Steel.ST.Util
 open Steel.ST.Loops
+module T = FStar.Tactics
+
+let vprop = vprop
+
+[@@"__reduce__"; "__steel_reduce__"]
+let emp = emp
+
+[@@"__reduce__"; "__steel_reduce__"]
+let op_Star_Star = star
+
+let star_def (_:unit)
+  : Lemma ( ( ** ) == star )
+  = assert ( ( ** ) == star )
+        by (T.trefl())
+
+[@@"__reduce__"; "__steel_reduce__"]
+let pure = pure
+[@@"__reduce__"; "__steel_reduce__"]
+let exists_ = exists_
 
 let vprop_equiv (p q:vprop) = squash (equiv p q)
 let vprop_post_equiv (#t:Type u#a) (p q: t -> vprop) = forall x. vprop_equiv (p x) (q x)
@@ -44,41 +63,59 @@ let vprop_equiv_trans (v0 v1 v2:vprop) (_:vprop_equiv v0 v1) (_:vprop_equiv v1 v
   = equiv_trans v0 v1 v2
 
 let vprop_equiv_unit (x:vprop)
-  : vprop_equiv (emp `star` x) x
+  : vprop_equiv (emp ** x) x
   = cm_identity x
 
 let vprop_equiv_comm (p1 p2:vprop)
-  : vprop_equiv (p1 `star` p2) (p2 `star` p1)
+  : vprop_equiv (p1 ** p2) (p2 ** p1)
   = star_commutative p1 p2
 
 let vprop_equiv_assoc (p1 p2 p3:vprop)
-  : vprop_equiv ((p1 `star` p2) `star` p3) (p1 `star` (p2 `star` p3))
+  : vprop_equiv ((p1 ** p2) ** p3) (p1 ** (p2 ** p3))
   = star_associative p1 p2 p3
 
 let vprop_equiv_cong (p1 p2 p3 p4:vprop)
                      (_: vprop_equiv p1 p3)
                      (_: vprop_equiv p2 p4)
-  : vprop_equiv (p1 `star` p2) (p3 `star` p4)
+  : vprop_equiv (p1 ** p2) (p3 ** p4)
   = star_congruence p1 p2 p3 p4
 
 let vprop_equiv_ext p1 p2 _ = equiv_refl p1
 
+let iname = iname
 let emp_inames = Ghost.hide Set.empty
 
 inline_for_extraction
 type stt (a:Type u#a) (pre:vprop) (post:a -> vprop) = unit -> STT a pre post
 
+let mk_stt #a #pre #post e = e
+
+let reveal_stt #a #pre #post e = e
+
 inline_for_extraction
 type stt_atomic (a:Type u#a) (opened:inames) (pre:vprop) (post:a -> vprop) =
   unit -> STAtomicT a opened pre post
 
+let mk_stt_atomic #a #opened #pre #post e = e
+
+let reveal_stt_atomic #a #opened #pre #post e = e
+ 
 inline_for_extraction
 type stt_ghost (a:Type u#a) (opened:inames) (pre:vprop) (post:a -> vprop) =
   unit -> STGhostT a opened pre post
 
+let mk_stt_ghost #a #opened #pre #post e = e
+
+let reveal_stt_ghost #a #opened #pre #post e = e
+
 inline_for_extraction
 let return_stt (#a:Type u#a) (x:a) (p:a -> vprop) =
-  fun _ -> return x
+  fun _ ->
+    intro_pure (x == x);
+    rewrite (p x `star` pure (x == x))
+            (p x ** pure (x == x));
+    return x
+    
 
 inline_for_extraction
 let return (#a:Type u#a) (x:a) (p:a -> vprop) =
@@ -132,10 +169,26 @@ let lift_stt_ghost #a #opened #pre #post e reveal_a =
 
 inline_for_extraction
 let frame_stt (#a:Type u#a) (#pre:vprop) (#post:a -> vprop) (frame:vprop) (e:stt a pre post)
-  : stt a (pre `star` frame) (fun x -> post x `star` frame) =
-  fun _ -> e ()
-let frame_stt_atomic #a #opened #pre #post frame e = fun _ -> e ()
-let frame_stt_ghost #a #opened #pre #post frame e = fun _ -> e ()
+  : stt a (pre ** frame) (fun x -> post x ** frame) =
+  fun _ ->
+    rewrite (pre ** frame) (pre `star` frame);
+    let x = e () in
+    rewrite (post x `star` frame) (post x ** frame);
+    Steel.ST.Util.return x
+    
+let frame_stt_atomic #a #opened #pre #post frame e = 
+  fun _ -> 
+    rewrite (pre ** frame) (pre `star` frame);
+    let x = e () in
+    rewrite (post x `star` frame) (post x ** frame);
+    Steel.ST.Util.return x    
+    
+let frame_stt_ghost #a #opened #pre #post frame e = 
+  fun _ -> 
+    rewrite (pre ** frame) (pre `star` frame);
+    let x = e () in
+    rewrite (post x `star` frame) (post x ** frame);
+    x    
 
 inline_for_extraction
 let sub_stt (#a:Type u#a)
@@ -183,89 +236,11 @@ let sub_stt_ghost #a #opened #pre1 pre2 #post1 post2 pf1 pf2 e =
 
 let rewrite p q _ = fun _ -> rewrite_equiv p q
 
-module R = Steel.ST.Reference
-open Steel.ST.Util
-
-let alloc #a x = 
-  fun _ -> let x = R.alloc x in return x
-  
-let read #a r #n #p =
-  fun _ ->
-  let x = R.read r in
-  return x
-
-let write #a r x #n
-  = fun _ ->
-    let _ = R.write r x in
-    rewrite _ (R.pts_to r full_perm (hide x))
-
-let read_atomic r #n #p =
-  fun _ ->
-  let x = R.atomic_read_u32 r in
-  intro_pure (eq2_prop (reveal n) x);
-  return x
-
-let write_atomic r x #n = fun _ ->
-  R.atomic_write_u32 #_ #n r x
-
-module GR = Steel.ST.GhostReference
-
-let galloc x = fun _ -> GR.alloc x
-let gread r = fun _ -> let x = GR.read r in x
-let gwrite r x = fun _ -> GR.write r x
-let gshare r = fun _ -> GR.share r
-let ggather r = fun _ -> let _ = GR.gather r in ()
-let gfree r = fun _ -> GR.free r
-
-//Arrays
-
-let new_array
-  (#elt: Type)
-  (x: elt)
-  (n: US.t) = admit()
-(* 
-   a: array int |- 
-    { A.pts a q sq }
-      index a 0ul : #s -> #p -> stt t (A.pts_to a p s `star` ...) (...)
-*)
-let op_Array_Access
-  (#t: Type)
-  (a: A.array t)
-  (i: US.t)
-  (#s: Ghost.erased (Seq.seq t))
-  (#p: perm) 
-= admit()
-
-let op_Array_Assignment
-  (#t: Type)
-  (a: A.array t)
-  (i: US.t)
-  (v: t)
-  (#s: Ghost.erased (Seq.seq t) {US.v i < Seq.length s}) 
-= admit()
-
-let op_Array_Index
-  (#t: Type)
-  (a: A.array t)
-  (i: US.t)
-  (#p: perm)
-  (#s: Ghost.erased (Seq.seq t){US.v i < Seq.length s})
-= admit()
-
-let free_array
-      (#elt: Type)
-      (a: A.array elt) = admit()
-
-module Lock = Steel.ST.SpinLock
-
-let new_lock p = fun _ -> Lock.new_lock p
-let acquire l = fun _ -> Lock.acquire l
-let release l = fun _ -> Lock.release l
 
 let elim_pure_explicit p = fun _ -> elim_pure p
 let elim_pure _ #p = fun _ -> elim_pure p
 
-let intro_pure p _ = fun _ -> intro_pure p
+let intro_pure p _ = fun _ -> let x = intro_pure p in x
 
 let elim_exists #a p = fun _ -> elim_exists ()
 
@@ -275,7 +250,16 @@ let intro_exists_erased #a p e = intro_exists p (reveal e)
 
 let while_loop inv cond body = fun _ -> while_loop inv cond body
 
-let stt_ghost_reveal a x = fun _ -> noop (); reveal x
+#push-options "--print_full_names"
+val stt_ghost_reveal_aux (a:Type) (x:erased a)
+  : stt_ghost a emp_inames Steel.ST.Util.emp (fun y -> Steel.ST.Util.pure (reveal x == y))
+let stt_ghost_reveal_aux a x = fun _ ->
+  noop(); reveal x
+
+
+let stt_ghost_reveal a x = 
+  fun _ -> 
+    let y = stt_ghost_reveal_aux a x () in y
 
 let stt_admit _ _ _ = admit ()
 let stt_atomic_admit _ _ _ = admit ()
@@ -300,11 +284,38 @@ let ghost_app2 (#a:Type) (#b:a -> Type) (#p:a -> vprop) (#q: (x:a -> b x -> vpro
   : stt_ghost (b (reveal y)) emp_inames (p (reveal y)) (q (reveal y))
   = ghost_app f y (fun _ -> stt_ghost_ni)
 
-let stt_par f g = fun _ -> par  f g
+let stt_par #aL #aR #preL #postL #preR #postR
+            f g
+  = fun _ -> 
+     Steel.ST.Util.rewrite (preL ** preR) (preL `star` preR);
+     let x = par f g in
+     Steel.ST.Util.rewrite (postL (fst x) `star` postR (snd x))
+             (postL (fst x) ** postR (snd x));
+     Steel.ST.Util.return x
 
-let with_local #a init #pre #ret_t #post body =
-  fun _ -> R.with_local init (fun x -> body x ())
+// let with_local #a init #pre #ret_t #post body =
+//   fun _ -> 
+//     let body (r:R.ref a) 
+//       : STT ret_t
+//         (pre `star` R.pts_to r full_perm init)
+//         (fun v -> post v `star` exists_ (R.pts_to r full_perm))
+//       = Steel.ST.Util.rewrite
+//                 (pre `star` R.pts_to r full_perm init)
+//                 (pre ** R.pts_to r full_perm init);
+//         let v = body r () in
+//         Steel.ST.Util.rewrite
+//                 (post v ** exists_ (R.pts_to r full_perm))
+//                 (post v `star` exists_ (R.pts_to r full_perm));
+//         Steel.ST.Util.return v
+//     in
+//     let v = R.with_local init body in
+//     Steel.ST.Util.return v    
+    
+    
 
 let assert_ (p:vprop) = fun _ -> noop()
+
 let assume_ (p:vprop) = fun _ -> admit_()
-let drop_ (p:vprop) = fun _ -> drop p
+let drop_ (p:vprop) = fun _ -> let x = drop p in x 
+
+

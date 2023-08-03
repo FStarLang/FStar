@@ -1,7 +1,7 @@
 open Prims
 let (elim_pure_head : Pulse_Syntax_Base.term) =
   let elim_pure_explicit_lid =
-    Pulse_Reflection_Util.mk_steel_wrapper_lid "elim_pure_explicit" in
+    Pulse_Reflection_Util.mk_pulse_lib_core_lid "elim_pure_explicit" in
   Pulse_Syntax_Pure.tm_fvar (Pulse_Syntax_Base.as_fv elim_pure_explicit_lid)
 let (elim_pure_head_ty : FStar_Reflection_Types.term) =
   let squash_p =

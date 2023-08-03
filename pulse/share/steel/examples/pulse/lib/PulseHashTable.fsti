@@ -1,15 +1,9 @@
 module PulseHashTable
-module PM = Pulse.Main
-open Steel.ST.Array
-open Steel.FractionalPermission
-open Steel.ST.Util
-open FStar.Ghost
-open Pulse.Steel.Wrapper
-module A = Steel.ST.Array
-module R = Steel.ST.Reference
+open Pulse.Lib.Pervasives
+module A = Pulse.Lib.Array
 module US = FStar.SizeT
 module U8 = FStar.UInt8
-module LK = Steel.ST.SpinLock
+module LK = Pulse.Lib.SpinLock
 module PHT = LinearScanHashTable
 open LinearScanHashTable
 open Pulse.Class.BoundedIntegers
@@ -47,7 +41,7 @@ let mk_init_pht (#s:pht_sig_us) (sz:pos_us)
     inv = (); }
 
 let models (s:pht_sig_us) (ht:ht_t s) (pht:pht_t (s_to_ps s)) : vprop
-= A.pts_to ht.contents full_perm pht.repr `star`
+= A.pts_to ht.contents full_perm pht.repr **
   pure (
     US.v ht.sz == pht.sz /\
     A.is_full_array ht.contents
@@ -66,7 +60,7 @@ val lookup (#s:pht_sig_us)
            (ht:ht_t s) (k:s.keyt)
   : stt (bool & option s.valt)
     (models s ht pht)
-    (fun p -> models s ht pht `star` pure ( fst p ==> (snd p) == PHT.lookup pht k ))
+    (fun p -> models s ht pht ** pure ( fst p ==> (snd p) == PHT.lookup pht k ))
 
 val insert (#s:pht_sig_us)
           (#pht:(p:erased (pht_t (s_to_ps s)){PHT.not_full p.repr}))
@@ -90,5 +84,5 @@ val not_full (#s:pht_sig_us) (#pht:erased (pht_t (s_to_ps s))) (ht:ht_t s)
   : stt bool
     (models s ht pht)
     (fun b -> 
-      models s ht pht `star` 
+      models s ht pht ** 
       pure (b ==> PHT.not_full #(s_to_ps s) #(pht_sz pht) pht.repr))

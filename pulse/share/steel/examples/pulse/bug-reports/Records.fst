@@ -1,11 +1,7 @@
 module Records
-open Steel.FractionalPermission
-open FStar.Ghost
-open Pulse.Steel.Wrapper
-open Steel.ST.Util 
-module R = Steel.ST.Reference
+open Pulse.Lib.Pervasives
+module R = Pulse.Lib.Reference
 module U8 = FStar.UInt8
-module PM = Pulse.Main
 
 (* test record mutation and permissions for records of byte refs *)
 
@@ -22,7 +18,7 @@ type rec_repr = {
 
 let rec_perm (r:rec2) (v:rec_repr)
   : vprop
-  = R.pts_to r.r1 full_perm v.v1 `star`
+  = R.pts_to r.r1 full_perm v.v1 **
     R.pts_to r.r2 full_perm v.v2
 
 //Using record syntax directly in Pulse vprops
@@ -104,10 +100,10 @@ fn unfold_and_fold_manually (r:rec2) (#v:Ghost.erased rec_repr)
   ensures exists (v_:rec_repr) . rec_perm r v_
 {
   rewrite (rec_perm r v)
-    as (R.pts_to r.r1 full_perm v.v1 `star`
+    as (R.pts_to r.r1 full_perm v.v1 **
         R.pts_to r.r2 full_perm v.v2);
 
-  rewrite (R.pts_to r.r1 full_perm v.v1 `star`
+  rewrite (R.pts_to r.r1 full_perm v.v1 **
            R.pts_to r.r2 full_perm v.v2)
     as (rec_perm r v);
   
@@ -125,14 +121,14 @@ fn explicit_unfold_witness_taking_and_fold (r:rec2) (#v:Ghost.erased rec_repr)
   ensures exists (v_:rec_repr) . rec_perm r v_
 {
   rewrite (rec_perm r v)
-    as (R.pts_to r.r1 full_perm v.v1 `star`
+    as (R.pts_to r.r1 full_perm v.v1 **
         R.pts_to r.r2 full_perm v.v2);
 
   r.r2 := 0uy;
   let v2_ = get_witness(r.r2);
 
 
-  rewrite (R.pts_to r.r1 full_perm v.v1 `star`
+  rewrite (R.pts_to r.r1 full_perm v.v1 **
            R.pts_to r.r2 full_perm v2_)
     as    (rec_perm r (rec_repr_with_v2 v v2_));
   ()
@@ -145,13 +141,13 @@ fn explicit_unfold_slightly_better_witness_taking_and_fold (r:rec2) (#v:Ghost.er
   ensures exists (v_:rec_repr) . rec_perm r v_
 {
   rewrite (rec_perm r v)
-    as (R.pts_to r.r1 full_perm v.v1 `star`
+    as (R.pts_to r.r1 full_perm v.v1 **
         R.pts_to r.r2 full_perm v.v2);
 
   r.r2 := 0uy;
   with v2_. assert (R.pts_to r.r2 full_perm v2_);
 
-  rewrite (R.pts_to r.r1 full_perm v.v1 `star`
+  rewrite (R.pts_to r.r1 full_perm v.v1 **
            R.pts_to r.r2 full_perm v2_)
     as    (rec_perm r (rec_repr_with_v2 v v2_));
 

@@ -1,8 +1,5 @@
 module ValsInScope
-module T = FStar.Tactics
-module PM = Pulse.Main
-open Steel.ST.Util
-open Pulse.Steel.Wrapper
+open Pulse.Lib.Pervasives
 
 assume
 val some_stt_val (_:unit)

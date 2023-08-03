@@ -119,7 +119,7 @@ let intro_pure_tm (p:term) =
   let open Pulse.Reflection.Util in
   wr (Tm_STApp
         { head =
-            tm_pureapp (tm_fvar (as_fv (mk_steel_wrapper_lid "intro_pure")))
+            tm_pureapp (tm_fvar (as_fv (mk_pulse_lib_core_lid "intro_pure")))
                        None
                        p;
           arg_qual = None;
@@ -196,7 +196,7 @@ let rec elab_st_typing (#g:env)
 
     | T_IntroPure _ p _ _ ->
       let head = 
-        tm_pureapp (tm_fvar (as_fv (mk_steel_wrapper_lid "intro_pure")))
+        tm_pureapp (tm_fvar (as_fv (mk_pulse_lib_core_lid "intro_pure")))
                        None
                        p
       in

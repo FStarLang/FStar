@@ -1,16 +1,10 @@
 module L0Types
-open Pulse.Steel.Wrapper
-open Steel.ST.Util 
-open Steel.ST.Array
-open Steel.FractionalPermission
-open FStar.Ghost
-module R = Steel.ST.Reference
-module A = Steel.ST.Array
-module T = FStar.Tactics
+open Pulse.Lib.Pervasives
+module R = Pulse.Lib.Reference
+module A = Pulse.Lib.Array
 module US = FStar.SizeT
 module U8 = FStar.UInt8
 module U32 = FStar.UInt32
-open Array
 open HACL
 
 val x509_version_t : Type0
@@ -29,7 +23,7 @@ noeq
 type l0_context = { cdi: A.larray U8.t (US.v dice_digest_len); }
 
 let l0_context_perm (c:l0_context) : vprop
-  = exists_ (fun (s:elseq U8.t dice_digest_len) -> A.pts_to c.cdi full_perm s) `star`
+  = exists_ (fun (s:elseq U8.t dice_digest_len) -> A.pts_to c.cdi full_perm s) **
     pure (A.is_full_array c.cdi)
 
 let mk_l0_context cdi : l0_context = {cdi}
@@ -81,9 +75,9 @@ let mk_l0_repr fwid deviceID_label aliasKey_label
   = {fwid; deviceID_label; aliasKey_label}
 
 let l0_record_perm (record:l0_record_t) (repr:l0_record_repr) : vprop =
-  A.pts_to record.fwid full_perm repr.fwid `star`
-  A.pts_to record.deviceID_label full_perm repr.deviceID_label `star`
-  A.pts_to record.aliasKey_label full_perm repr.aliasKey_label `star`
+  A.pts_to record.fwid full_perm repr.fwid **
+  A.pts_to record.deviceID_label full_perm repr.deviceID_label **
+  A.pts_to record.aliasKey_label full_perm repr.aliasKey_label **
   pure (
     valid_hkdf_lbl_len record.deviceID_label_len /\
     valid_hkdf_lbl_len record.aliasKey_label_len

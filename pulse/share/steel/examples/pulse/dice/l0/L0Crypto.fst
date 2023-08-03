@@ -1,18 +1,11 @@
 module L0Crypto
-open Pulse.Main
-open Pulse.Steel.Wrapper
+open Pulse.Lib.Pervasives
 open Pulse.Class.BoundedIntegers
-open Steel.ST.Util 
-open Steel.ST.Array
-open Steel.FractionalPermission
-open FStar.Ghost
-module R = Steel.ST.Reference
-module A = Steel.ST.Array
-module T = FStar.Tactics
+module R = Pulse.Lib.Reference
+module A = Pulse.Lib.Array
 module US = FStar.SizeT
 module U8 = FStar.UInt8
 module U32 = FStar.UInt32
-open Array
 open HACL
 open L0Types
 
@@ -105,7 +98,7 @@ fn derive_DeviceID
       ))
   )
 {
-  let cdigest = new_array 0uy (digest_len alg);
+  let cdigest = A.alloc 0uy (digest_len alg);
   hacl_hash alg dice_digest_len cdi cdigest;
 
   derive_key_pair
@@ -113,8 +106,7 @@ fn derive_DeviceID
     (digest_len alg) cdigest
     deviceID_label_len deviceID_label;
 
-  free_array cdigest;
-  ()
+  A.free cdigest;
 }
 ```
 
@@ -167,8 +159,8 @@ fn derive_AliasKey
       ))
   )
 {
-  let cdigest = new_array 0uy (digest_len alg);
-  let adigest = new_array 0uy (digest_len alg);
+  let cdigest = A.alloc 0uy (digest_len alg);
+  let adigest = A.alloc 0uy (digest_len alg);
 
   hacl_hash alg dice_digest_len cdi cdigest;
   is_hashable_len_32;
@@ -179,9 +171,8 @@ fn derive_AliasKey
     (digest_len alg) adigest
     aliasKey_label_len aliasKey_label;
 
-  free_array cdigest;
-  free_array adigest;
-  ()
+  A.free cdigest;
+  A.free adigest;
 }
 ```
 
@@ -212,6 +203,5 @@ fn derive_AuthKeyID
 {
   is_hashable_len_32;
   hacl_hash alg v32us deviceID_pub authKeyID #full_perm #(coerce v32us deviceID_pub0);
-  ()
 }
 ```
