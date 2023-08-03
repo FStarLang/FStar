@@ -24,7 +24,7 @@ let read (#a:Type) (r:ref a) (#n:erased a) (#p:perm)
         S.return v
 
 module T = FStar.Tactics
-let ( ! ) #a = coerce_eq ( _ by (T.trefl())) (read #a)
+let ( ! ) #a = read #a
 
 let ( := ) (#a:Type) (r:ref a) (x:a) (#n:erased a)
   : stt unit
@@ -48,7 +48,7 @@ let read_atomic_alt (r:ref U32.t) (#n:erased U32.t) (#p:perm)
       S.intro_pure (reveal n == x);
       S.return x
 
-let read_atomic = coerce_eq (_ by (T.trefl())) read_atomic_alt
+let read_atomic = read_atomic_alt
 
 let write_atomic (r:ref U32.t) (x:U32.t) (#n:erased U32.t)
   : stt_atomic unit emp_inames
