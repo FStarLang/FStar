@@ -29,28 +29,9 @@ let sht_len : pos_us = admit()
 let cht_len : pos_us = admit()
 
 // A table whose permission is stored in the lock 
-
-```pulse
-fn alloc_ht (#s:pht_sig_us) (l:pos_us)
-  requires emp
-  returns _:locked_ht_t s
-  ensures emp
-{
-  let contents = A.alloc #(cell s.keyt s.valt) Clean l;
-  let ht = mk_ht l contents;
-  let pht = mk_init_pht #s l;
-  rewrite (A.pts_to contents full_perm (Seq.create (US.v l) Clean))
-    as (A.pts_to ht.contents full_perm pht.repr);
-  fold (models s ht pht);
-  fold (ht_perm s ht);
-  let lk = L.new_lock (ht_perm s ht);
-  ((| ht, lk |) <: locked_ht_t s)
-}
-```
-let locked_sht : locked_ht_t sht_sig = run_stt(alloc_ht #sht_sig sht_len)
+let locked_sht : locked_ht_t sht_sig = run_stt(alloc_locked #sht_sig sht_len)
 
 // A number that tracks the next session ID
-
 ```pulse
 fn alloc_sid (_:unit)
   requires emp
@@ -80,18 +61,17 @@ fn open_session (_:unit)
   returns b:bool
   ensures emp
 {
-  let cht = alloc_ht #cht_sig cht_len;
+  let cht = alloc_locked #cht_sig cht_len;
 
   let sht = dfst locked_sht;
   let sht_lk = dsnd locked_sht;
   let sid_lk = dsnd sid_ref;
 
   L.acquire #(exists_ (fun n -> R.pts_to (dfst sid_ref) full_perm n)) sid_lk;
-  L.acquire #(ht_perm sht_sig sht) sht_lk;
+  L.acquire #(exists_ (fun pht -> models sht_sig sht pht)) sht_lk;
 
   let sid = !(dfst sid_ref);
 
-  unfold (ht_perm sht_sig sht);
   with pht. assert (models sht_sig sht pht);
 
   let b = not_full #sht_sig #pht sht;
@@ -101,23 +81,20 @@ fn open_session (_:unit)
     if r {
       assert (PHT.models sht_sig sht (LSHT.insert pht sid cht));
       dfst sid_ref := sid + 1;
-      fold (ht_perm sht_sig sht);
       L.release #(exists_ (fun n -> R.pts_to (dfst sid_ref) full_perm n)) sid_lk;
-      L.release #(ht_perm sht_sig sht) sht_lk;
+      L.release #(exists_ (fun pht -> models sht_sig sht pht)) sht_lk;
       true
     } else {
       // ERROR - insert failed
       assert (PHT.models sht_sig sht pht);
-      fold (ht_perm sht_sig sht);
       L.release #(exists_ (fun n -> R.pts_to (dfst sid_ref) full_perm n)) sid_lk;
-      L.release #(ht_perm sht_sig sht) sht_lk;
+      L.release #(exists_ (fun pht -> models sht_sig sht pht)) sht_lk;
       false
     }
   } else {
     // ERROR - table full
-    fold (ht_perm sht_sig sht);
     L.release #(exists_ (fun n -> R.pts_to (dfst sid_ref) full_perm n)) sid_lk;
-    L.release #(ht_perm sht_sig sht) sht_lk;
+    L.release #(exists_ (fun pht -> models sht_sig sht pht)) sht_lk;
     false
   }
 }
@@ -138,9 +115,8 @@ fn destroy_context (sid:nat) (ctxt_hndl:nat)
 {
   let sht = dfst locked_sht;
   let sht_lk = dsnd locked_sht;
-  L.acquire #(ht_perm sht_sig sht) sht_lk;
+  L.acquire #(exists_ (fun pht -> models sht_sig sht pht)) sht_lk;
 
-  unfold (ht_perm sht_sig sht);
   with spht. assert (models sht_sig sht spht);
 
   let res = PHT.lookup #sht_sig #spht sht sid;
@@ -150,9 +126,8 @@ fn destroy_context (sid:nat) (ctxt_hndl:nat)
     Some locked_cht -> {
       let cht = dfst locked_cht;
       let cht_lk = dsnd locked_cht;
-      L.acquire #(ht_perm cht_sig cht) cht_lk;
+      L.acquire #(exists_ (fun pht -> models cht_sig cht pht)) cht_lk;
 
-      unfold (ht_perm cht_sig cht);
       with cpht0. assert (models cht_sig cht cpht0);
 
       let res = PHT.lookup #cht_sig #cpht0 cht ctxt_hndl;
@@ -170,20 +145,16 @@ fn destroy_context (sid:nat) (ctxt_hndl:nat)
               zeroize uds_len c.uds #uds_bytes;
               disable_uds ();
               A.free c.uds;
-              fold (ht_perm cht_sig cht);
-              fold (ht_perm sht_sig sht);
-              L.release #(ht_perm cht_sig cht) cht_lk;
-              L.release #(ht_perm sht_sig sht) sht_lk;
+              L.release #(exists_ (fun pht -> models cht_sig cht pht)) cht_lk;
+              L.release #(exists_ (fun pht -> models sht_sig sht pht)) sht_lk;
               true
             }
             L0_context c -> {
               rewrite (context_perm ctxt) as (l0_context_perm c);
               unfold (l0_context_perm c);
               A.free c.cdi;
-              fold (ht_perm cht_sig cht);
-              fold (ht_perm sht_sig sht);
-              L.release #(ht_perm cht_sig cht) cht_lk;
-              L.release #(ht_perm sht_sig sht) sht_lk;
+              L.release #(exists_ (fun pht -> models cht_sig cht pht)) cht_lk;
+              L.release #(exists_ (fun pht -> models sht_sig sht pht)) sht_lk;
               true
             }
             L1_context c -> {
@@ -195,38 +166,30 @@ fn destroy_context (sid:nat) (ctxt_hndl:nat)
               A.free c.aliasKey_pub;
               A.free c.aliasKeyCRT;
               A.free c.deviceIDCSR;
-              fold (ht_perm cht_sig cht);
-              fold (ht_perm sht_sig sht);
-              L.release #(ht_perm cht_sig cht) cht_lk;
-              L.release #(ht_perm sht_sig sht) sht_lk;
+              L.release #(exists_ (fun pht -> models cht_sig cht pht)) cht_lk;
+              L.release #(exists_ (fun pht -> models sht_sig sht pht)) sht_lk;
               true
           }}}
         None -> {
           // ERROR - bad context handle
-          fold (ht_perm cht_sig cht);
-          fold (ht_perm sht_sig sht);
-          L.release #(ht_perm cht_sig cht) cht_lk;
-          L.release #(ht_perm sht_sig sht) sht_lk;
+          L.release #(exists_ (fun pht -> models cht_sig cht pht)) cht_lk;
+          L.release #(exists_ (fun pht -> models sht_sig sht pht)) sht_lk;
           false
         }}
       } else {
         // ERROR - lookup failed
-        fold (ht_perm cht_sig cht);
-        fold (ht_perm sht_sig sht);
-        L.release #(ht_perm cht_sig cht) cht_lk;
-        L.release #(ht_perm sht_sig sht) sht_lk;
+        L.release #(exists_ (fun pht -> models cht_sig cht pht)) cht_lk;
+        L.release #(exists_ (fun pht -> models sht_sig sht pht)) sht_lk;
         false
       }}
     None -> {
       // ERROR - bad session ID
-      fold (ht_perm sht_sig sht);
-      L.release #(ht_perm sht_sig sht) sht_lk;
+      L.release #(exists_ (fun pht -> models sht_sig sht pht)) sht_lk;
       false
     }}
   } else {
     // ERROR - lookup failed
-    fold (ht_perm sht_sig sht);
-    L.release #(ht_perm sht_sig sht) sht_lk;
+    L.release #(exists_ (fun pht -> models sht_sig sht pht)) sht_lk;
     false
   }
 }
@@ -234,12 +197,11 @@ fn destroy_context (sid:nat) (ctxt_hndl:nat)
 
 ```pulse
 fn destroy_cht (ht:ht_t cht_sig)
-  requires ht_perm cht_sig ht
+  requires exists pht. models cht_sig cht pht
   ensures emp
 {
   let mut off = 0sz;
 
-  unfold (ht_perm cht_sig ht);
   with pht. assert (models cht_sig ht pht);
   unfold (models cht_sig ht pht);
 
@@ -308,9 +270,8 @@ fn close_session (sid:nat)
 {
   let sht = dfst locked_sht;
   let sht_lk = dsnd locked_sht;
-  L.acquire #(ht_perm sht_sig sht) sht_lk;
+  L.acquire #(exists_ (fun pht -> models sht_sig sht pht)) sht_lk;
 
-  unfold (ht_perm sht_sig sht);
   with pht. assert (models sht_sig sht pht);
 
   let res = PHT.lookup #sht_sig #pht sht sid;
@@ -322,31 +283,27 @@ fn close_session (sid:nat)
       let cht_lk = dsnd locked_cht;
       // Note: We don't release this lock because we give up permission
       // on the cht when we free its entries by calling destroy_cht
-      L.acquire #(ht_perm cht_sig cht) cht_lk;
+      L.acquire #(exists_ (fun pht -> models cht_sig cht pht)) cht_lk;
       destroy_cht cht;
       let b = PHT.delete #sht_sig #pht sht sid;
       if b {
         assert (models sht_sig sht (LSHT.delete pht sid));
-        fold (ht_perm sht_sig sht);
-        L.release #(ht_perm sht_sig sht) sht_lk;
+        L.release #(exists_ (fun pht -> models sht_sig sht pht)) sht_lk;
         b
       } else {
         assert (models sht_sig sht pht);
-        fold (ht_perm sht_sig sht);
-        L.release #(ht_perm sht_sig sht) sht_lk;
+        L.release #(exists_ (fun pht -> models sht_sig sht pht)) sht_lk;
         b
       }
     }
     None -> {
       // ERROR - bad session ID
-      fold (ht_perm sht_sig sht);
-      L.release #(ht_perm sht_sig sht) sht_lk;
+      L.release #(exists_ (fun pht -> models sht_sig sht pht)) sht_lk;
       false
     }}
   } else {
     // ERROR - lookup failed
-    fold (ht_perm sht_sig sht);
-    L.release #(ht_perm sht_sig sht) sht_lk;
+    L.release #(exists_ (fun pht -> models sht_sig sht pht)) sht_lk;
     false
   }
 }
@@ -488,9 +445,8 @@ fn initialize_context (sid:nat) (uds:A.larray U8.t (US.v uds_len))
 
   let sht = dfst locked_sht;
   let sht_lk = dsnd locked_sht;
-  L.acquire #(ht_perm sht_sig sht) sht_lk;
+  L.acquire #(exists_ (fun pht -> models sht_sig sht pht)) sht_lk;
 
-  unfold (ht_perm sht_sig sht);
   with spht. assert (models sht_sig sht spht);
 
   let res = PHT.lookup #sht_sig #spht sht sid;
@@ -500,47 +456,38 @@ fn initialize_context (sid:nat) (uds:A.larray U8.t (US.v uds_len))
     Some locked_cht -> {
       let cht = dfst locked_cht;
       let cht_lk = dsnd locked_cht;
-      L.acquire #(ht_perm cht_sig cht) cht_lk;
+      L.acquire #(exists_ (fun pht -> models cht_sig cht pht)) cht_lk;
 
-      unfold (ht_perm cht_sig cht);
       with cpht. assert (models cht_sig cht cpht);
       let b = not_full #cht_sig #cpht cht;
       if b {
         let r = PHT.insert #cht_sig #cpht cht ctxt_hndl locked_context;
         if r {
           assert (models cht_sig cht (LSHT.insert cpht ctxt_hndl locked_context));
-          fold (ht_perm sht_sig sht);
-          fold (ht_perm cht_sig cht);
-          L.release #(ht_perm sht_sig sht) sht_lk;
-          L.release #(ht_perm cht_sig cht) cht_lk;
+          L.release #(exists_ (fun pht -> models sht_sig sht pht)) sht_lk;
+          L.release #(exists_ (fun pht -> models cht_sig cht pht)) cht_lk;
           ctxt_hndl
         } else {
           // ERROR - insert failed
           assert (models cht_sig cht cpht);
-          fold (ht_perm sht_sig sht);
-          fold (ht_perm cht_sig cht);
-          L.release #(ht_perm sht_sig sht) sht_lk;
-          L.release #(ht_perm cht_sig cht) cht_lk;  
+          L.release #(exists_ (fun pht -> models sht_sig sht pht)) sht_lk;
+          L.release #(exists_ (fun pht -> models cht_sig cht pht)) cht_lk;  
           0        
         }
       } else {
         // ERROR - table full
-        fold (ht_perm sht_sig sht);
-        fold (ht_perm cht_sig cht);
-        L.release #(ht_perm sht_sig sht) sht_lk;
-        L.release #(ht_perm cht_sig cht) cht_lk;
+        L.release #(exists_ (fun pht -> models sht_sig sht pht)) sht_lk;
+        L.release #(exists_ (fun pht -> models cht_sig cht pht)) cht_lk;
         ctxt_hndl 
       }}
     None -> {
       // ERROR - bad session ID
-      fold (ht_perm sht_sig sht);
-      L.release #(ht_perm sht_sig sht) sht_lk;
+      L.release #(exists_ (fun pht -> models sht_sig sht pht)) sht_lk;
       0
     }}
   } else {
     // ERROR - lookup failed
-    fold (ht_perm sht_sig sht);
-    L.release #(ht_perm sht_sig sht) sht_lk;
+    L.release #(exists_ (fun pht -> models sht_sig sht pht)) sht_lk;
     0
   }
 }

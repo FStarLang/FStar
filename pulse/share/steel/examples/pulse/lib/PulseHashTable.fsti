@@ -40,20 +40,16 @@ let mk_init_pht (#s:pht_sig_us) (sz:pos_us)
     repr = Seq.create (US.v sz) Clean;
     inv = (); }
 
-let models (s:pht_sig_us) (ht:ht_t s) (pht:pht_t (s_to_ps s)) : vprop
-= A.pts_to ht.contents full_perm pht.repr **
-  pure (
-    US.v ht.sz == pht.sz /\
-    A.is_full_array ht.contents
-  )
+val models (s:pht_sig_us) (ht:ht_t s) (pht:pht_t (s_to_ps s)) : vprop
 
-let ht_perm (s:pht_sig_us) (ht: ht_t s) : vprop
-  = exists_ (fun (pht:pht_t (s_to_ps s)) -> models s ht pht)
-
-type locked_ht_t (s:pht_sig_us) = ht:ht_t s & LK.lock (ht_perm s ht)
+type locked_ht_t (s:pht_sig_us) = ht:ht_t s & LK.lock (exists_ (fun pht -> models s ht pht))
 
 let pht_sz #s (pht:pht_t s) : pos = pht.sz
 
+
+
+val alloc_locked (#s:pht_sig_us) (l:pos_us)
+  : stt (locked_ht_t s) emp (fun _ -> emp)
 
 val lookup (#s:pht_sig_us)
            (#pht:erased (pht_t (s_to_ps s)))

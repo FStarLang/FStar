@@ -12,6 +12,13 @@ open Pulse.Class.BoundedIntegers
 
 #push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
 
+let models (s:pht_sig_us) (ht:ht_t s) (pht:pht_t (s_to_ps s)) : vprop
+= A.pts_to ht.contents full_perm pht.repr **
+  pure (
+    US.v ht.sz == pht.sz /\
+    A.is_full_array ht.contents
+  )
+
 let canonical_index_us (#s:pht_sig_us) (k:s.keyt) (sz:pos_us) 
   : US.t = s.hashf k % sz
 
@@ -19,25 +26,24 @@ let modulo_us (v1 v2:US.t) (m:pos_us) (_:squash(US.fits (US.v v1 + US.v v2)))
   : US.t 
   = (v1 + v2) % m
 
+
 ```pulse
-fn add_us (v1 v2:US.t) 
+fn _alloc_locked (#s:pht_sig_us) (l:pos_us)
   requires emp
-  returns o:option US.t
-  ensures pure ( match o with
-    | Some v -> US.v v = US.v v1 + US.v v2 /\ US.fits (US.v v)
-    | None -> true )
+  returns _:locked_ht_t s
+  ensures emp
 {
-  admit()
-  // let b = pow2 U64.n - US.v v1 > US.v v2;
-  // if b {
-  //   assert (fits (US.v v1 + US.v v2));
-  //   let v = v1 + v2;
-  //   Some v
-  // } else {
-  //   None
-  // }
+  let contents = A.alloc #(cell s.keyt s.valt) Clean l;
+  let ht = mk_ht l contents;
+  let pht = mk_init_pht #s l;
+  rewrite (A.pts_to contents full_perm (Seq.create (US.v l) Clean))
+    as (A.pts_to ht.contents full_perm pht.repr);
+  fold (models s ht pht);
+  let lk = LK.new_lock (exists_ (fun pht -> models s ht pht));
+  ((| ht, lk |) <: locked_ht_t s)
 }
 ```
+let alloc_locked #s l = _alloc_locked #s l;
 
 ```pulse
 fn pulse_lookup_index (#s:pht_sig_us)
@@ -76,7 +82,7 @@ fn pulse_lookup_index (#s:pht_sig_us)
       cont := false;
       assert (R.pts_to ret full_perm None);
     } else {
-      let o = add_us cidx voff;
+      let o = US.safe_add cidx voff;
       match o {
       Some v -> {
       let idx = v % ht.sz;
@@ -178,19 +184,18 @@ fn _insert (#s:pht_sig_us)
     } else {
       let o = add_us cidx voff;
       match o {
-      Some v -> {
-        let idx = v % ht.sz;
+      Some s -> {
+        let idx = s % ht.sz;
         let c = op_Array_Access ht.contents idx #full_perm #pht.repr;
         match c {
         Used k' v' -> { 
           if (k' = k) {
             assert (A.pts_to ht.contents full_perm pht.repr);
             assert (pure ( US.v idx < Seq.length pht.repr));
-            admit()
-            // op_Array_Assignment ht.contents idx (mk_used_cell k v);
-            // cont := false;
-            // assert (pure (insert_repr #(s_to_ps s) #(pht_sz pht) #pht.spec pht.repr k v `Seq.equal` 
-            //   Seq.upd pht.repr (US.v idx) (mk_used_cell k v))); 
+            op_Array_Assignment ht.contents idx (mk_used_cell k v);
+            cont := false;
+            assert (pure (insert_repr #(s_to_ps s) #(pht_sz pht) #pht.spec pht.repr k v `Seq.equal` 
+              Seq.upd pht.repr (US.v idx) (mk_used_cell k v))); 
           } else {
             off := voff + 1sz;
           } 
