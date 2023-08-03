@@ -47,6 +47,7 @@ type vconfig = {
   z3rlimit                                  : int;
   z3rlimit_factor                           : int;
   z3seed                                    : int;
+  z3version                                 : string;
   trivial_pre_for_unannotated_effectful_fns : bool;
   reuse_hint_for                            : option string;
 }

@@ -783,6 +783,7 @@ let e_vconfig =
                    S.as_arg (embed e_fsint             vcfg.z3rlimit                                  rng None norm);
                    S.as_arg (embed e_fsint             vcfg.z3rlimit_factor                           rng None norm);
                    S.as_arg (embed e_fsint             vcfg.z3seed                                    rng None norm);
+                   S.as_arg (embed e_string            vcfg.z3version                                 rng None norm);
                    S.as_arg (embed e_bool              vcfg.trivial_pre_for_unannotated_effectful_fns rng None norm);
                    S.as_arg (embed (e_option e_string) vcfg.reuse_hint_for                            rng None norm);
                   ]
@@ -818,6 +819,7 @@ let e_vconfig =
             (z3rlimit, _);
             (z3rlimit_factor, _);
             (z3seed, _);
+            (z3version, _);
             (trivial_pre_for_unannotated_effectful_fns, _);
             (reuse_hint_for, _)
             ] when S.fv_eq_lid fv PC.mkvconfig_lid ->
@@ -846,6 +848,7 @@ let e_vconfig =
                   BU.bind_opt (try_unembed e_fsint             z3rlimit norm) (fun z3rlimit ->
                   BU.bind_opt (try_unembed e_fsint             z3rlimit_factor norm) (fun z3rlimit_factor ->
                   BU.bind_opt (try_unembed e_fsint             z3seed norm) (fun z3seed ->
+                  BU.bind_opt (try_unembed e_string            z3version norm) (fun z3version ->
                   BU.bind_opt (try_unembed e_bool              trivial_pre_for_unannotated_effectful_fns norm) (fun trivial_pre_for_unannotated_effectful_fns ->
                   BU.bind_opt (try_unembed (e_option e_string) reuse_hint_for norm) (fun reuse_hint_for ->
                   Some ({
@@ -874,9 +877,10 @@ let e_vconfig =
                     z3rlimit = z3rlimit;
                     z3rlimit_factor = z3rlimit_factor;
                     z3seed = z3seed;
+                    z3version = z3version;
                     trivial_pre_for_unannotated_effectful_fns = trivial_pre_for_unannotated_effectful_fns;
                     reuse_hint_for = reuse_hint_for;
-                  }))))))))))))))))))))))))))))
+                  })))))))))))))))))))))))))))))
         | _ ->
           None
     in
