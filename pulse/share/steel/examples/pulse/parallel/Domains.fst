@@ -449,6 +449,35 @@ let maybe_sat_vprop #a (p: a -> vprop) (x: option a)
 let handler (#a: Type0) (post: a -> vprop)
   = pure_handler #(resourceful_res post) (fun (_: resourceful_res post) -> true)
 
+(*
+// let's get rid? of the lock
+// and use invariants instead
+
+let pure_handler #a (post: a -> prop)
+  = (res: R.ref (option a) & Lock.lock (exists_ (fun v -> R.pts_to res full_perm v `star` pure (maybe_sat post v))))
+
+let resourceful_res #a post = (x:a & Lock.lock (post x))
+
+let handler (#a: Type0) (post: a -> vprop)
+  = pure_handler #(resourceful_res post) (fun (_: resourceful_res post) -> true)
+
+handler, now:
+- reference to option (result and lock with the postcondition)
+- lock with full permission over this full reference
+
+what we want:
+- ref bool: done?
+- ref bool: resources claimed?
+- lock (invariant, really) with
+- 1/2 done * 1/2 claimed * (done ==> 1/2 ref_res)
+* (done && !claimed ==> post x)
+
+The other 1/2 of done is in the end in finished...
+The other 1/2 of claimed is in promise or joined (with false)
+The other half of ref_res is ???
+*)
+
+
 ```pulse
 fn spawn'
   (#a:Type0)
@@ -567,9 +596,24 @@ fn par_add_double
 {
   let a' = alloc a;
   let b' = alloc b;
-  let f = typed_id (unit -> nat) (fun _ -> 0);
   let x = par_block_pulse' (add_double #a #b a' b');
   free_ref b';
   x
 }
 ```
+
+let combine_posts #a #b
+  (post1: a -> vprop) (post2: b -> vprop)
+: (a & b) -> vprop
+= (fun r -> post1 r._1 `star` post2 r._2)
+
+(*
+TODO:
+- Define promise list (vprop)
+- Function that takes a list of elems of some type,
+and returns a
+
+e.g.,
+[int, unit, nat]
+f: 
+*)

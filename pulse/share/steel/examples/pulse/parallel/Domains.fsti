@@ -60,6 +60,11 @@ val spawn
   (p: par_env)
   (f : (par_env -> unit -> stt a pre post))
 : stt (handler post) pre (fun _ -> emp)
+// alt: stt (handler post) pre (fun _ -> joinable p post)
+// maybe joinable also needs handler
+
+// (joinable p post) can be converted to (promise p post)
+// bind_promises
 
 val join
   (#a:Type0)
