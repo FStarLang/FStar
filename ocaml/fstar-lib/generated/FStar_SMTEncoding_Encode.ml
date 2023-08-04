@@ -7741,7 +7741,20 @@ let (encode_query :
                                                  uu___11 in
                                              FStar_SMTEncoding_Term.Caption
                                                uu___10 in
-                                           [uu___9]
+                                           let uu___10 =
+                                             let uu___11 =
+                                               let uu___12 =
+                                                 let uu___13 =
+                                                   let uu___14 =
+                                                     FStar_Errors.get_ctx () in
+                                                   FStar_String.concat "\n"
+                                                     uu___14 in
+                                                 Prims.op_Hat "Context: "
+                                                   uu___13 in
+                                               FStar_SMTEncoding_Term.Caption
+                                                 uu___12 in
+                                             [uu___11] in
+                                           uu___9 :: uu___10
                                          else [] in
                                        let query_prelude =
                                          let uu___8 =

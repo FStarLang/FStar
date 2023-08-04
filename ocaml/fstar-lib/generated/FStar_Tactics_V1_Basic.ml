@@ -498,10 +498,10 @@ let (proc_guard' :
                                       FStar_Tactics_Monad.mlog
                                         (fun uu___4 ->
                                            let uu___5 =
-                                             FStar_TypeChecker_Rel.guard_to_string
-                                               e g in
+                                             FStar_Syntax_Print.term_to_string
+                                               f in
                                            FStar_Compiler_Util.print2
-                                             "Sending guard (%s:%s) to SMT goal\n"
+                                             "Pushing guard (%s:%s) as SMT goal\n"
                                              reason uu___5)
                                         (fun uu___4 ->
                                            let uu___5 =
@@ -512,6 +512,19 @@ let (proc_guard' :
                                              (fun g1 ->
                                                 FStar_Tactics_Monad.push_smt_goals
                                                   [g1]))
+                                  | FStar_Tactics_Types.SMTSync ->
+                                      FStar_Tactics_Monad.mlog
+                                        (fun uu___4 ->
+                                           let uu___5 =
+                                             FStar_Syntax_Print.term_to_string
+                                               f in
+                                           FStar_Compiler_Util.print2
+                                             "Sending guard (%s:%s) to SMT Synchronously\n"
+                                             reason uu___5)
+                                        (fun uu___4 ->
+                                           FStar_TypeChecker_Rel.force_trivial_guard
+                                             e g;
+                                           FStar_Tactics_Monad.ret ())
                                   | FStar_Tactics_Types.Force ->
                                       FStar_Tactics_Monad.mlog
                                         (fun uu___4 ->

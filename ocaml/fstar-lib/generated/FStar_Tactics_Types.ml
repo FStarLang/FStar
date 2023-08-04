@@ -33,12 +33,15 @@ let (__proj__Mkgoal__item__label : goal -> Prims.string) =
 type guard_policy =
   | Goal 
   | SMT 
+  | SMTSync 
   | Force 
   | Drop 
 let (uu___is_Goal : guard_policy -> Prims.bool) =
   fun projectee -> match projectee with | Goal -> true | uu___ -> false
 let (uu___is_SMT : guard_policy -> Prims.bool) =
   fun projectee -> match projectee with | SMT -> true | uu___ -> false
+let (uu___is_SMTSync : guard_policy -> Prims.bool) =
+  fun projectee -> match projectee with | SMTSync -> true | uu___ -> false
 let (uu___is_Force : guard_policy -> Prims.bool) =
   fun projectee -> match projectee with | Force -> true | uu___ -> false
 let (uu___is_Drop : guard_policy -> Prims.bool) =
