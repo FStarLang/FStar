@@ -1,4 +1,4 @@
-module LinearScanHashTable
+module LinearProbeHashTable
 module US = FStar.SizeT
 
 let unreachable #a (_:squash False) : a =

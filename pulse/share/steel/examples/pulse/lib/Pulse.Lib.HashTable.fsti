@@ -3,8 +3,8 @@ open Pulse.Lib.Pervasives
 module A = Pulse.Lib.Array
 module US = FStar.SizeT
 module U8 = FStar.UInt8
-module PHT = LinearScanHashTable
-open LinearScanHashTable
+module PHT = LinearProbeHashTable
+open LinearProbeHashTable
 open Pulse.Class.BoundedIntegers
 
 type pos_us = n:US.t{US.v n > 0}
@@ -43,12 +43,14 @@ val models (s:pht_sig_us) (ht:ht_t s) (pht:pht_t (s_to_ps s)) : vprop
 
 let pht_sz #s (pht:pht_t s) : pos = pht.sz
 
-let destroy_val_fn_t (t:Type0) : Type = v:t -> stt unit emp (fun _ -> emp) 
+let destroy_fn_t (t:Type0) : Type = v:t -> stt unit emp (fun _ -> emp) 
 
 val alloc (#s:pht_sig_us) (l:pos_us)
   : stt (ht_t s) emp (fun ht -> exists_ (fun pht -> models s ht pht))
 
-val dealloc (#s:pht_sig_us) (ht:ht_t s) (l:pos_us) (destroy_val:destroy_val_fn_t s.valt)
+val dealloc (#s:pht_sig_us) (ht:ht_t s) (l:pos_us) 
+  (destroy_val:destroy_fn_t s.valt)
+  (destroy_key:destroy_fn_t s.keyt)
   : stt unit (requires exists_ (fun pht -> models s ht pht))
              (ensures fun _ -> emp)
 

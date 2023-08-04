@@ -12,10 +12,7 @@ module R = Pulse.Lib.Reference
 module US = FStar.SizeT
 module U8 = FStar.UInt8
 module U32 = FStar.UInt32
-open LinearScanHashTable
 open Pulse.Lib.HashTable
-module PHT = Pulse.Lib.HashTable
-module LSHT = LinearScanHashTable
 
 (* Engine Context *)
 noeq
