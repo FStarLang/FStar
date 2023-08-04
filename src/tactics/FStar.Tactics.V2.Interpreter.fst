@@ -796,7 +796,8 @@ let run_tactic_on_ps'
 
         if !tacdbg then
             do_dump_proofstate ps "at the finish line";
-        (ps.goals@ps.smt_goals, ret)
+
+        (remaining_smt_goals, ret)
 
     | Failed (e, ps) ->
         do_dump_proofstate ps "at the time of failure";
