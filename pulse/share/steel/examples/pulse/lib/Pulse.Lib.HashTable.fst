@@ -6,6 +6,7 @@ module US = FStar.SizeT
 module U8 = FStar.UInt8
 module U64 = FStar.UInt64
 module PHT = FStar.HashTable
+open FStar.SizeT.Util
 open Pulse.Class.BoundedIntegers
 
 #push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
@@ -123,7 +124,7 @@ fn pulse_lookup_index (#s:pht_sig_us)
       cont := false;
       assert (R.pts_to ret full_perm None);
     } else {
-      let o = US.safe_add cidx voff;
+      let o = safe_add cidx voff;
       match o {
       Some v -> {
       let idx = v % ht.sz;
@@ -226,7 +227,7 @@ fn _insert (#s:pht_sig_us)
       cont := false;
       assert (A.pts_to ht.contents full_perm pht.repr);
     } else {
-      let o = US.safe_add cidx voff;
+      let o = safe_add cidx voff;
       match o {
       Some vv -> {
         let idx = (vv % ht.sz <: US.t);
@@ -333,7 +334,7 @@ fn _delete (#s:pht_sig_us)
       cont := false;
       assert (A.pts_to ht.contents full_perm pht.repr);
     } else {
-      let o = US.safe_add cidx voff;
+      let o = safe_add cidx voff;
       match o {
       Some v -> {
         let idx = v % ht.sz;
