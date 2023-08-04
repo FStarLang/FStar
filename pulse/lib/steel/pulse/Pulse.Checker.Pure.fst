@@ -103,7 +103,7 @@ let instantiate_term_implicits (g:env) (t0:term) =
   let f = elab_env g in
   let rt = elab_term t0 in
   let topt, issues = catch_all (fun _ -> rtb_instantiate_implicits g f rt) in
-  FStar.Tactics.log_issues issues;
+  T.log_issues issues;
   match topt with
   | None -> 
     fail g (Some t0.range)
