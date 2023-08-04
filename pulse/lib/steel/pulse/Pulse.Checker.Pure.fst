@@ -22,12 +22,12 @@ let debug (g:env) (msg: unit -> T.Tac string) =
 
 let rtb_core_check_term g f e =
   debug g (fun _ -> Printf.sprintf "Calling core_check_term on %s" (T.term_to_string e));
-  let res = RTB.core_compute_term_type f e E_Total in
+  let res = RTB.core_compute_term_type2 f e in
   res
 
 let rtb_tc_term g f e =
   debug g (fun _ -> Printf.sprintf "Calling tc_term on %s" (T.term_to_string e));
-  let res = RTB.tc_term f e E_Total in
+  let res = RTB.tc_term2 f e in
   res
 
 let rtb_universe_of g f e =
@@ -143,9 +143,11 @@ let tc_meta_callback g (f:R.env) (e:R.term)
       match catch_all (fun _ -> rtb_tc_term g f e) with
       | None, issues ->
         None, issues
-      | Some (e, t), issues ->
-        Some (| e, t, RT.T_Token _ _ _ (FStar.Squash.get_proof _) |), 
-        issues
+      | Some (e, (eff, t)), issues ->
+        if eff = E_Ghost
+        then T.fail (Printf.sprintf "tc_meta_callback: ghost %s" (T.term_to_string e))
+        else Some (| e, t, RT.T_Token _ _ _ (FStar.Squash.get_proof _) |), 
+             issues
     in
     res
 
@@ -218,8 +220,9 @@ let tc_with_core g (f:R.env) (e:R.term)
   = let ropt, issues = catch_all (fun _ -> rtb_core_check_term (push_context g "tc_with_core" (range_of_term e)) f e) in
     match ropt with
     | None -> None, issues
-    | Some (t) ->
-      Some (| t, RT.T_Token _ _ _ (FStar.Squash.get_proof _) |), issues
+    | Some (eff, t) ->
+      if eff = E_Ghost then T.fail "tc_with_core: ghost"
+      else Some (| t, RT.T_Token _ _ _ (FStar.Squash.get_proof _) |), issues
 
 let core_check_term (g:env) (t:term)
   : T.Tac (ty:term &
