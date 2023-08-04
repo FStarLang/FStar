@@ -103,13 +103,6 @@ val fits_lte (x y: nat) : Lemma
 
 (** Non-overflowing arithmetic operations *)
 
-val safe_add (x y: t) : Pure (option t)
-  (requires (fits (v x)) /\ (fits (v y)))
-  (ensures fun o -> 
-    match o with
-    | Some z -> fits (v x + v y) /\ v z == v x + v y
-    | None -> true)
-
 val add (x y: t) : Pure t
   (requires (fits (v x + v y)))
   (ensures (fun z -> v z == v x + v y))
