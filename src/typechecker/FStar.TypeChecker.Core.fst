@@ -193,14 +193,10 @@ let print_error_short (err:error) = snd err
 
 let result a = context -> either (success a) error
 
-type effect_label =
-  | E_TOTAL
-  | E_GHOST
-
 type hash_entry = {
    he_term:term;
    he_gamma:list binding;
-   he_res:success (effect_label & typ);
+   he_res:success (tot_or_ghost & typ);
 }
 module THT = FStar.Syntax.TermHashTable
 type tc_table = THT.hashtable hash_entry
@@ -221,7 +217,7 @@ let reset_cache_stats () =
     cache_stats := { hits = 0; misses = 0 }
 let report_cache_stats () = !cache_stats
 let clear_memo_table () = THT.clear table
-let insert (g:env) (e:term) (res:success (effect_label & typ)) =
+let insert (g:env) (e:term) (res:success (tot_or_ghost & typ)) =
     let entry = {
        he_term = e;
        he_gamma = g.tcenv.gamma;
@@ -305,7 +301,7 @@ let is_type (g:env) (t:term)
         (fun _ -> aux (U.unrefine (N.unfold_whnf g.tcenv t))))
 
 let rec is_arrow (g:env) (t:term)
-  : result (binder & effect_label & typ)
+  : result (binder & tot_or_ghost & typ)
   = let rec aux t =
         match (Subst.compress t).n with
         | Tm_arrow {bs=[x]; comp=c} ->
@@ -314,8 +310,8 @@ let rec is_arrow (g:env) (t:term)
             let g, x, c = open_comp g x c in
             let eff =
               if U.is_total_comp c
-              then E_TOTAL
-              else E_GHOST
+              then E_Total
+              else E_Ghost
             in
             return (x, eff, U.comp_result c)
           else (
@@ -323,9 +319,9 @@ let rec is_arrow (g:env) (t:term)
               let Comp ct = c.n in
               if Ident.lid_equals ct.effect_name PC.effect_Pure_lid  ||
                  Ident.lid_equals ct.effect_name PC.effect_Lemma_lid
-              then Some E_TOTAL
+              then Some E_Total
               else if Ident.lid_equals ct.effect_name PC.effect_Ghost_lid
-              then Some E_GHOST
+              then Some E_Ghost
               else None
             in
             (* Turn   x:t -> Pure/Ghost t' pre post
@@ -355,7 +351,7 @@ let rec is_arrow (g:env) (t:term)
         | Tm_arrow {bs=x::xs; comp=c} ->
           let t = S.mk (Tm_arrow {bs=xs; comp=c}) t.pos in
           let g, x, t = open_term g x t in
-          return (x, E_TOTAL, t)
+          return (x, E_Total, t)
 
         | Tm_refine {b=x} ->
           is_arrow g x.sort
@@ -564,7 +560,7 @@ let curry_application hd arg args p =
     t
 
 
-let lookup (g:env) (e:term) : result (effect_label & typ) =
+let lookup (g:env) (e:term) : result (tot_or_ghost & typ) =
    match THT.lookup e table with
    | None ->
      record_cache_miss ();
@@ -645,30 +641,30 @@ let non_informative g t
   : bool
   = N.non_info_norm g.tcenv t
 
-let as_comp (g:env) (et: (effect_label & typ))
+let as_comp (g:env) (et: (tot_or_ghost & typ))
   : comp
   = match et with
-    | E_TOTAL, t -> S.mk_Total t
-    | E_GHOST, t ->
+    | E_Total, t -> S.mk_Total t
+    | E_Ghost, t ->
       if non_informative g t
       then S.mk_Total t
       else S.mk_GTotal t
 
-let comp_as_effect_label_and_type (c:comp)
-  : option (effect_label & typ)
+let comp_as_tot_or_ghost_and_type (c:comp)
+  : option (tot_or_ghost & typ)
   = if U.is_total_comp c
-    then Some (E_TOTAL, U.comp_result c)
+    then Some (E_Total, U.comp_result c)
     else if U.is_tot_or_gtot_comp c
-    then Some (E_GHOST, U.comp_result c)
+    then Some (E_Ghost, U.comp_result c)
     else None
 
 let join_eff e0 e1 =
   match e0, e1 with
-  | E_GHOST, _
-  | _, E_GHOST -> E_GHOST
-  | _ -> E_TOTAL
+  | E_Ghost, _
+  | _, E_Ghost -> E_Ghost
+  | _ -> E_Total
 
-let join_eff_l es = List.Tot.fold_right join_eff es E_TOTAL
+let join_eff_l es = List.Tot.fold_right join_eff es E_Total
 
 let guard_not_allowed
   : result bool
@@ -1122,9 +1118,9 @@ and check_relation_comp (g:env) rel (c0 c1:comp)
   : result unit
   = let destruct_comp c =
         if U.is_total_comp c
-        then Some (E_TOTAL, U.comp_result c)
+        then Some (E_Total, U.comp_result c)
         else if U.is_tot_or_gtot_comp c
-        then Some (E_GHOST, U.comp_result c)
+        then Some (E_Ghost, U.comp_result c)
         else None
     in
     match destruct_comp c0, destruct_comp c1 with
@@ -1152,11 +1148,11 @@ and check_relation_comp (g:env) rel (c0 c1:comp)
         )
       )
 
-    | Some (E_TOTAL, t0), Some (_, t1)
-    | Some (E_GHOST, t0), Some (E_GHOST, t1) ->
+    | Some (E_Total, t0), Some (_, t1)
+    | Some (E_Ghost, t0), Some (E_Ghost, t1) ->
       check_relation g rel t0 t1
 
-    | Some (E_GHOST, t0), Some (E_TOTAL, t1) ->
+    | Some (E_Ghost, t0), Some (E_Total, t1) ->
       if non_informative g t1
       then check_relation g rel t0 t1
       else fail "Expected a Total computation, but got Ghost"
@@ -1175,7 +1171,7 @@ and check_subtype (g:env) (e:option term) (t0 t1:typ)
       "FStar.TypeChecker.Core.check_subtype"
 
 and memo_check (g:env) (e:term)
-  : result (effect_label & typ)
+  : result (tot_or_ghost & typ)
   = let check_then_memo g e ctx =
       let r = check' g e ctx in
       match r with
@@ -1217,25 +1213,25 @@ and memo_check (g:env) (e:term)
       )
 
 and check (msg:string) (g:env) (e:term)
-  : result (effect_label & typ)
+  : result (tot_or_ghost & typ)
   = with_context msg (Some (CtxTerm e)) (fun _ -> memo_check g e)
 
 (*  G |- e : Tot t | pre *)
 and check' (g:env) (e:term)
-  : result (effect_label & typ) =
+  : result (tot_or_ghost & typ) =
   let e = Subst.compress e in
   match e.n with
   | Tm_lazy ({lkind=Lazy_embedding _}) ->
     check' g (U.unlazy e)
 
   | Tm_lazy i ->
-    return (E_TOTAL, i.ltyp)
+    return (E_Total, i.ltyp)
 
   | Tm_meta {tm=t} ->
     memo_check g t
 
   | Tm_uvar (uv, s) ->
-    return (E_TOTAL, Subst.subst' s (U.ctx_uvar_typ uv))
+    return (E_Total, Subst.subst' s (U.ctx_uvar_typ uv))
 
   | Tm_name x ->
     begin
@@ -1243,14 +1239,14 @@ and check' (g:env) (e:term)
     | None ->
       fail (BU.format1 "Variable not found: %s" (P.bv_to_string x))
     | Some (t, _) ->
-      return (E_TOTAL, t)
+      return (E_Total, t)
     end
 
   | Tm_fvar f ->
     begin
     match Env.try_lookup_lid g.tcenv f.fv_name.v with
     | Some (([], t), _) ->
-      return (E_TOTAL, t)
+      return (E_Total, t)
 
     | _ -> //no implicit universe instantiation allowed
       fail "Missing universes instantiation"
@@ -1263,7 +1259,7 @@ and check' (g:env) (e:term)
       fail (BU.format1 "Top-level name not found: %s" (Ident.string_of_lid f.fv_name.v))
 
     | Some (t, _) ->
-      return (E_TOTAL, t)
+      return (E_Total, t)
     end
 
   | Tm_constant c ->
@@ -1278,11 +1274,11 @@ and check' (g:env) (e:term)
 
     | _ ->
       let t = FStar.TypeChecker.TcTerm.tc_constant g.tcenv e.pos c in
-      return (E_TOTAL, t)
+      return (E_Total, t)
     end
 
   | Tm_type u ->
-    return (E_TOTAL, mk_type (U_succ u))
+    return (E_Total, mk_type (U_succ u))
 
   | Tm_refine {b=x; phi} ->
     let! _, t = check "refinement head" g x.sort in
@@ -1291,7 +1287,7 @@ and check' (g:env) (e:term)
     with_binders [x] [u] (
       let! _, t' = check "refinement formula" g' phi in
       is_type g' t';!
-      return (E_TOTAL, t)
+      return (E_Total, t)
     )
 
   | Tm_abs {bs=xs; body} ->
@@ -1299,7 +1295,7 @@ and check' (g:env) (e:term)
     let! us = with_context "abs binders" None (fun _ -> check_binders g xs) in
     with_binders xs us (
       let! t = check "abs body" g' body in
-      return (E_TOTAL, U.arrow xs (as_comp g t))
+      return (E_Total, U.arrow xs (as_comp g t))
     )
 
   | Tm_arrow {bs=xs; comp=c} ->
@@ -1307,7 +1303,7 @@ and check' (g:env) (e:term)
     let! us = with_context "arrow binders" None (fun _ -> check_binders g xs) in
     with_binders xs us (
       let! u = with_context "arrow comp" None (fun _ -> check_comp g' c) in
-      return (E_TOTAL, mk_type (S.U_max (u::us)))
+      return (E_Total, mk_type (S.U_max (u::us)))
     )
 
   | Tm_app _ -> (
@@ -1358,7 +1354,7 @@ and check' (g:env) (e:term)
       let! _ = with_context "ascription comp" None (fun _ -> check_comp g c) in
       let c_e = as_comp g (eff, te) in
       check_relation_comp g (SUBTYPING (Some e)) c_e c;!
-      let Some (eff, t) = comp_as_effect_label_and_type c in
+      let Some (eff, t) = comp_as_tot_or_ghost_and_type c in
       return (eff, t)
     )
     else fail (BU.format1 "Effect ascriptions are not fully handled yet: %s" (P.comp_to_string c))
@@ -1388,7 +1384,7 @@ and check' (g:env) (e:term)
     let rec check_branches path_condition
                            branch_typ_opt
                            branches
-      : result (effect_label & typ)
+      : result (tot_or_ghost & typ)
       = match branches with
         | [] ->
           (match branch_typ_opt with
@@ -1445,7 +1441,7 @@ and check' (g:env) (e:term)
         match rc_opt with
         | Some ({ residual_typ = Some t }) ->
           with_context "residual type" (Some (CtxTerm t)) (fun _ -> universe_of g t) ;!
-          return (Some (E_TOTAL, t))
+          return (Some (E_Total, t))
 
         | _ ->
           return None
@@ -1470,8 +1466,8 @@ and check' (g:env) (e:term)
     let! _u_ty = is_type g_as_x returns_ty_t in
     let rec check_branches (path_condition: S.term)
                            (branches: list S.branch)
-                           (acc_eff: effect_label)
-      : result effect_label
+                           (acc_eff: tot_or_ghost)
+      : result tot_or_ghost
       = match branches with
         | [] ->
           (match boolean_negation_simp path_condition with
@@ -1517,7 +1513,7 @@ and check' (g:env) (e:term)
           | _ ->
             check_branches next_path_condition rest eff_br in
 
-    let! eff = check_branches U.exp_true_bool branches E_TOTAL in
+    let! eff = check_branches U.exp_true_bool branches E_Total in
     let ty = Subst.subst [NT(as_x.binder_bv, sc)] returns_ty in
     return (eff, ty)
 
@@ -1782,14 +1778,14 @@ let initial_env g gh =
     should_read_cache = true }
 
 let check_term_top g e topt (must_tot:bool) (gh:option guard_handler_t)
-  : result (option (effect_label & typ))
+  : result (option (tot_or_ghost & typ))
   = let g = initial_env g gh in
     let! eff_te = check "top" g e in
     match topt with
     | None -> return (Some eff_te)
     | Some t ->
       let target_comp =
-        if must_tot || fst eff_te = E_TOTAL
+        if must_tot || fst eff_te = E_Total
         then S.mk_Total t
         else S.mk_GTotal t
       in

@@ -2187,15 +2187,15 @@ let refl_check_subtyping (g:env) (t0 t1:typ) : tac (option unit & issues) =
 let refl_check_equiv (g:env) (t0 t1:typ) : tac (option unit & issues) =
   refl_check_relation g t0 t1 Equality
 
-let to_must_tot (eff:tot_or_ghost) : bool =
+let to_must_tot (eff:Core.tot_or_ghost) : bool =
   match eff with
-  | E_Total -> true
-  | E_Ghost -> false
+  | Core.E_Total -> true
+  | Core.E_Ghost -> false
 
 let refl_norm_type (g:env) (t:typ) : typ =
   N.normalize [Env.Beta; Env.Exclude Zeta] g t
 
-let refl_core_compute_term_type (g:env) (e:term) (eff:tot_or_ghost) : tac (option typ & issues) =
+let refl_core_compute_term_type (g:env) (e:term) (eff:Core.tot_or_ghost) : tac (option typ & issues) =
   if no_uvars_in_g g &&
      no_uvars_in_term e
   then refl_typing_builtin_wrapper (fun _ ->
@@ -2219,7 +2219,7 @@ let refl_core_compute_term_type (g:env) (e:term) (eff:tot_or_ghost) : tac (optio
            Errors.raise_error (Errors.Fatal_IllTyped, "core_compute_term_type failed: " ^ (Core.print_error err)) Range.dummyRange)
   else ret (None, [unexpected_uvars_issue (Env.get_range g)])
 
-let refl_core_check_term (g:env) (e:term) (t:typ) (eff:tot_or_ghost)
+let refl_core_check_term (g:env) (e:term) (t:typ) (eff:Core.tot_or_ghost)
   : tac (option unit & issues) =
 
   if no_uvars_in_g g &&
@@ -2243,7 +2243,7 @@ let refl_core_check_term (g:env) (e:term) (t:typ) (eff:tot_or_ghost)
            Errors.raise_error (Errors.Fatal_IllTyped, "refl_core_check_term failed: " ^ (Core.print_error err)) Range.dummyRange)
   else ret (None, [unexpected_uvars_issue (Env.get_range g)])
 
-let refl_tc_term (g:env) (e:term) (eff:tot_or_ghost) : tac (option (term & typ) & issues) =
+let refl_tc_term (g:env) (e:term) (eff:Core.tot_or_ghost) : tac (option (term & typ) & issues) =
   if no_uvars_in_g g &&
      no_uvars_in_term e
   then refl_typing_builtin_wrapper (fun _ ->

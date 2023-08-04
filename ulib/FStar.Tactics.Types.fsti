@@ -17,6 +17,7 @@ module FStar.Tactics.Types
 
 open FStar.Reflection.Types
 include FStar.Tactics.Common
+include FStar.Stubs.TypeChecker.Core
 
 assume new type proofstate
 assume new type goal
@@ -64,13 +65,6 @@ type unfold_side =
   | Right
   | Both
   | Neither
-
-//
-// Used in the reflection typing judgment
-//
-type tot_or_ghost =
-  | E_Total
-  | E_Ghost
 
 (* Typing reflection *)
 val subtyping_token (g:env) (t0 t1:typ) : Type0

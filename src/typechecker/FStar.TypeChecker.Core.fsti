@@ -6,6 +6,10 @@ module S = FStar.Syntax.Syntax
 module R = FStar.Compiler.Range
 module U = FStar.Syntax.Util
 
+type tot_or_ghost = 
+  | E_Total
+  | E_Ghost
+
 val clear_memo_table (_:unit)
   : unit
 
