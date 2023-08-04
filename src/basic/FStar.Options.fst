@@ -258,6 +258,7 @@ let defaults =
       ("z3seed"                       , Int 0);
       ("z3cliopt"                     , List []);
       ("z3smtopt"                     , List []);
+      ("z3version"                    , String "4.8.5");
       ("__no_positivity"              , Bool false);
       ("__tactics_nbe"                , Bool false);
       ("warn_error"                   , List []);
@@ -319,6 +320,7 @@ let set_verification_options o =
     "z3rlimit";
     "z3rlimit_factor";
     "z3seed";
+    "z3version";
     "trivial_pre_for_unannotated_effectful_fns";
   ] in
   List.iter (fun k -> set_option k (Util.smap_try_find o k |> Util.must)) verifopts
@@ -441,6 +443,7 @@ let get_z3refresh               ()      = lookup_opt "z3refresh"                
 let get_z3rlimit                ()      = lookup_opt "z3rlimit"                 as_int
 let get_z3rlimit_factor         ()      = lookup_opt "z3rlimit_factor"          as_int
 let get_z3seed                  ()      = lookup_opt "z3seed"                   as_int
+let get_z3version               ()      = lookup_opt "z3version"                as_string
 let get_no_positivity           ()      = lookup_opt "__no_positivity"          as_bool
 let get_warn_error              ()      = lookup_opt "warn_error"               (as_list as_string)
 let get_use_nbe                 ()      = lookup_opt "use_nbe"                  as_bool
@@ -1287,6 +1290,11 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * string) 
         "Set the Z3 random seed (default 0)");
 
        ( noshort,
+        "z3version",
+        SimpleStr "version",
+        "Set the version of Z3 that is to be used. Default: 4.8.5");
+
+       ( noshort,
         "__no_positivity",
         WithSideEffect ((fun _ -> if warn_unsafe then option_warning_callback "__no_positivity"), Const (Bool true)),
         "Don't check positivity of inductive types");
@@ -1440,6 +1448,7 @@ let settable = function
     | "z3rlimit"
     | "z3rlimit_factor"
     | "z3seed"
+    | "z3version"
     | "trivial_pre_for_unannotated_effectful_fns"
     | "profile_group_by_decl"
     | "profile_component"
@@ -1800,6 +1809,7 @@ let retry                        () = get_retry                       ()
 let reuse_hint_for               () = get_reuse_hint_for              ()
 let report_assumes               () = get_report_assumes              ()
 let silent                       () = get_silent                      ()
+let smt                          () = get_smt                         ()
 let smtencoding_elim_box         () = get_smtencoding_elim_box        ()
 let smtencoding_nl_arith_native  () = get_smtencoding_nl_arith_repr () = "native"
 let smtencoding_nl_arith_wrapped () = get_smtencoding_nl_arith_repr () = "wrapped"
@@ -1839,15 +1849,13 @@ let using_facts_from             () =
     | Some ns -> parse_settings ns
 let warn_default_effects         () = get_warn_default_effects        ()
 let warn_error                   () = String.concat " " (get_warn_error())
-let z3_exe                       () = match get_smt () with
-                                    | None -> Platform.exe "z3"
-                                    | Some s -> s
 let z3_cliopt                    () = get_z3cliopt                    ()
 let z3_smtopt                    () = get_z3smtopt                    ()
 let z3_refresh                   () = get_z3refresh                   ()
 let z3_rlimit                    () = get_z3rlimit                    ()
 let z3_rlimit_factor             () = get_z3rlimit_factor             ()
 let z3_seed                      () = get_z3seed                      ()
+let z3_version                   () = get_z3version                   ()
 let no_positivity                () = get_no_positivity               ()
 let use_nbe                      () = get_use_nbe                     ()
 let use_nbe_for_extraction       () = get_use_nbe_for_extraction      ()
@@ -2112,6 +2120,7 @@ let get_vconfig () =
     z3rlimit                                  = get_z3rlimit ();
     z3rlimit_factor                           = get_z3rlimit_factor ();
     z3seed                                    = get_z3seed ();
+    z3version                                 = get_z3version ();
     trivial_pre_for_unannotated_effectful_fns = get_trivial_pre_for_unannotated_effectful_fns ();
     reuse_hint_for                            = get_reuse_hint_for ();
   }

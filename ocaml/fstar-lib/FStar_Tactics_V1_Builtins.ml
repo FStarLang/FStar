@@ -142,10 +142,3 @@ let ctrl_rewrite
     (t2 : unit -> unit __tac)
   : unit __tac
   = from_tac_3 CTRW.ctrl_rewrite d (to_tac_1 t1) (to_tac_0 (t2 ()))
-
-let log_issues (i:FStar_Issue.issue list)
-  : unit __tac
-  = fun ps ->
-       FStar_Errors.add_many i;
-       FStar_Tactics_Result.Success ((), ps)
-

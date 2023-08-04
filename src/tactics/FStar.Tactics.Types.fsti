@@ -48,6 +48,7 @@ type goal = {
 type guard_policy =
     | Goal
     | SMT
+    | SMTSync
     | Force
     | Drop // unsound
 

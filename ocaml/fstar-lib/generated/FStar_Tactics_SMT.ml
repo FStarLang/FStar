@@ -89,6 +89,8 @@ let (smt_sync' :
                            FStar_VConfig.z3rlimit_factor =
                              (vcfg.FStar_VConfig.z3rlimit_factor);
                            FStar_VConfig.z3seed = (vcfg.FStar_VConfig.z3seed);
+                           FStar_VConfig.z3version =
+                             (vcfg.FStar_VConfig.z3version);
                            FStar_VConfig.trivial_pre_for_unannotated_effectful_fns
                              =
                              (vcfg.FStar_VConfig.trivial_pre_for_unannotated_effectful_fns);
@@ -183,6 +185,8 @@ let (set_rlimit : Prims.int -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                       FStar_VConfig.z3rlimit_factor =
                         (uu___.FStar_VConfig.z3rlimit_factor);
                       FStar_VConfig.z3seed = (uu___.FStar_VConfig.z3seed);
+                      FStar_VConfig.z3version =
+                        (uu___.FStar_VConfig.z3version);
                       FStar_VConfig.trivial_pre_for_unannotated_effectful_fns
                         =
                         (uu___.FStar_VConfig.trivial_pre_for_unannotated_effectful_fns);
@@ -324,6 +328,8 @@ let (set_initial_fuel :
                       FStar_VConfig.z3rlimit_factor =
                         (uu___.FStar_VConfig.z3rlimit_factor);
                       FStar_VConfig.z3seed = (uu___.FStar_VConfig.z3seed);
+                      FStar_VConfig.z3version =
+                        (uu___.FStar_VConfig.z3version);
                       FStar_VConfig.trivial_pre_for_unannotated_effectful_fns
                         =
                         (uu___.FStar_VConfig.trivial_pre_for_unannotated_effectful_fns);
@@ -401,6 +407,8 @@ let (set_initial_ifuel :
                       FStar_VConfig.z3rlimit_factor =
                         (uu___.FStar_VConfig.z3rlimit_factor);
                       FStar_VConfig.z3seed = (uu___.FStar_VConfig.z3seed);
+                      FStar_VConfig.z3version =
+                        (uu___.FStar_VConfig.z3version);
                       FStar_VConfig.trivial_pre_for_unannotated_effectful_fns
                         =
                         (uu___.FStar_VConfig.trivial_pre_for_unannotated_effectful_fns);
@@ -479,6 +487,8 @@ let (set_max_fuel : Prims.int -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                       FStar_VConfig.z3rlimit_factor =
                         (uu___.FStar_VConfig.z3rlimit_factor);
                       FStar_VConfig.z3seed = (uu___.FStar_VConfig.z3seed);
+                      FStar_VConfig.z3version =
+                        (uu___.FStar_VConfig.z3version);
                       FStar_VConfig.trivial_pre_for_unannotated_effectful_fns
                         =
                         (uu___.FStar_VConfig.trivial_pre_for_unannotated_effectful_fns);
@@ -556,6 +566,8 @@ let (set_max_ifuel : Prims.int -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                       FStar_VConfig.z3rlimit_factor =
                         (uu___.FStar_VConfig.z3rlimit_factor);
                       FStar_VConfig.z3seed = (uu___.FStar_VConfig.z3seed);
+                      FStar_VConfig.z3version =
+                        (uu___.FStar_VConfig.z3version);
                       FStar_VConfig.trivial_pre_for_unannotated_effectful_fns
                         =
                         (uu___.FStar_VConfig.trivial_pre_for_unannotated_effectful_fns);
@@ -632,6 +644,8 @@ let (set_fuel : Prims.int -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                       FStar_VConfig.z3rlimit_factor =
                         (uu___.FStar_VConfig.z3rlimit_factor);
                       FStar_VConfig.z3seed = (uu___.FStar_VConfig.z3seed);
+                      FStar_VConfig.z3version =
+                        (uu___.FStar_VConfig.z3version);
                       FStar_VConfig.trivial_pre_for_unannotated_effectful_fns
                         =
                         (uu___.FStar_VConfig.trivial_pre_for_unannotated_effectful_fns);
@@ -707,6 +721,8 @@ let (set_ifuel : Prims.int -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                       FStar_VConfig.z3rlimit_factor =
                         (uu___.FStar_VConfig.z3rlimit_factor);
                       FStar_VConfig.z3seed = (uu___.FStar_VConfig.z3seed);
+                      FStar_VConfig.z3version =
+                        (uu___.FStar_VConfig.z3version);
                       FStar_VConfig.trivial_pre_for_unannotated_effectful_fns
                         =
                         (uu___.FStar_VConfig.trivial_pre_for_unannotated_effectful_fns);

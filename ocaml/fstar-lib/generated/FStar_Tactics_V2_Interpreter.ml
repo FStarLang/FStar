@@ -3070,9 +3070,7 @@ let run_tactic_on_ps' :
                                  FStar_Tactics_Printing.do_dump_proofstate
                                    ps2 "at the finish line"
                                else ());
-                              ((FStar_Compiler_List.op_At
-                                  ps2.FStar_Tactics_Types.goals
-                                  ps2.FStar_Tactics_Types.smt_goals), ret))))
+                              (remaining_smt_goals, ret))))
                        | FStar_Tactics_Result.Failed (e, ps2) ->
                            (FStar_Tactics_Printing.do_dump_proofstate ps2
                               "at the time of failure";

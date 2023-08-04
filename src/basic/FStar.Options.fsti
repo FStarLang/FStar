@@ -201,6 +201,7 @@ val should_check_file           : string  -> bool (* Should check this file, lax
 val should_verify               : string  -> bool (* Should check this module with verification enabled. *)
 val should_verify_file          : string  -> bool (* Should check this file with verification enabled. *)
 val silent                      : unit    -> bool
+val smt                         : unit    -> option string
 val smtencoding_elim_box        : unit    -> bool
 val smtencoding_nl_arith_default: unit    -> bool
 val smtencoding_nl_arith_wrapped: unit    -> bool
@@ -230,13 +231,13 @@ val use_tactics                 : unit    -> bool
 val using_facts_from            : unit    -> list (list string * bool)
 val warn_default_effects        : unit    -> bool
 val with_saved_options          : (unit -> 'a) -> 'a
-val z3_exe                      : unit    -> string
 val z3_cliopt                   : unit    -> list string
 val z3_smtopt                   : unit    -> list string
 val z3_refresh                  : unit    -> bool
 val z3_rlimit                   : unit    -> int
 val z3_rlimit_factor            : unit    -> int
 val z3_seed                     : unit    -> int
+val z3_version                  : unit    -> string
 val no_positivity               : unit    -> bool
 val warn_error                  : unit    -> string
 val set_error_flags_callback    : ((unit  -> parse_cmdline_res) -> unit)
