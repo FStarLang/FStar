@@ -146,7 +146,7 @@ fn _insert (#s:pht_sig_us)
           (ht:ht_t s) (k:s.keyt) (v:s.valt)
   requires models s ht pht
   returns b:bool
-  ensures `@(if b then models s ht (PHT.insert pht k v) else models s ht pht)
+  ensures maybe_update b s ht pht (PHT.insert pht k v)
 {
   let cidx = canonical_index_us k ht.sz;
   let mut off = 0sz;
@@ -232,14 +232,16 @@ fn _insert (#s:pht_sig_us)
   let verr = !err;
   if verr {
     fold (models s ht pht);
+    fold (maybe_update false s ht pht (PHT.insert pht k v));
     false
   } else {
     fold (models s ht (PHT.insert pht k v));
+    fold (maybe_update true s ht pht (PHT.insert pht k v));
     true
   }
 }
 ```
-let insert #s #pht ht k v = _insert #s #pht ht k v
+let insert = _insert
 
 ```pulse
 fn _delete (#s:pht_sig_us)
@@ -247,7 +249,7 @@ fn _delete (#s:pht_sig_us)
           (ht:ht_t s) (k:s.keyt)
   requires models s ht pht
   returns b:bool
-  ensures `@(if b then models s ht (PHT.delete pht k) else models s ht pht)
+  ensures maybe_update b s ht pht (PHT.delete pht k)
 {
   let cidx = canonical_index_us k ht.sz;
   let mut off = 0sz;
@@ -302,9 +304,10 @@ fn _delete (#s:pht_sig_us)
         }
       }
     }
-    None -> { false }}}
+    None -> { admit(); (* this case needs some work *) }}}
   };
   fold (models s ht (PHT.delete pht k));
+  fold (maybe_update true s ht pht (PHT.delete pht k));
   true
 }
 ```
@@ -342,7 +345,7 @@ fn _not_full (#s:pht_sig_us) (#pht:erased (pht_t (s_to_ps s))) (ht:ht_t s)
   };
   let vi = !i;
   let res = vi < ht.sz;
-  fold (models s ht pht);
+  fold (models s ht pht);  
   res
 }
 ```

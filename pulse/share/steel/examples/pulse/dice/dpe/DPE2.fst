@@ -86,11 +86,13 @@ fn derive_child (sid:nat) (ctxt_hndl:nat) (record:record_t) (repr:repr_t)
                 A.free cdi #(coerce dice_digest_len s);
                 
                 let d = PHT.delete #cht_sig #cpht cht ctxt_hndl;
+                with cpht'. unfold (maybe_update d cht_sig cht cpht cpht');
                 if d {
                   assert (models cht_sig cht (LSHT.delete cpht ctxt_hndl));
                   let b = not_full #cht_sig #(LSHT.delete cpht ctxt_hndl) cht;
                   if b {
                     let i = PHT.insert #cht_sig #(LSHT.delete cpht ctxt_hndl) cht new_ctxt_hndl new_locked_context; 
+                    with x y. unfold (maybe_update i cht_sig cht x y);
                     if i {
                       assert (models cht_sig cht (LSHT.insert (LSHT.delete cpht ctxt_hndl) new_ctxt_hndl new_locked_context));
                       rewrite (engine_record_perm r r0) as (record_perm record repr);
@@ -216,11 +218,13 @@ fn derive_child (sid:nat) (ctxt_hndl:nat) (record:record_t) (repr:repr_t)
               A.free aliasKeyCRT;
               
               let d = PHT.delete #cht_sig #cpht cht ctxt_hndl;
+              with x y. unfold (maybe_update d cht_sig cht x y);
               if d {
                 assert (models cht_sig cht (LSHT.delete cpht ctxt_hndl));
                 let b = not_full #cht_sig #(LSHT.delete cpht ctxt_hndl) cht;
                 if b {
                   let i = PHT.insert #cht_sig #(LSHT.delete cpht ctxt_hndl) cht new_ctxt_hndl new_locked_context;
+                  with x y. unfold (maybe_update i cht_sig cht x y);
                   if i {
                     assert (models cht_sig cht (LSHT.insert (LSHT.delete cpht ctxt_hndl) new_ctxt_hndl new_locked_context));
                     rewrite (l0_record_perm r r0) as (record_perm record repr);
