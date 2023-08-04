@@ -178,7 +178,7 @@ let (rtb_core_check_term :
                               (Prims.of_int (25)) (Prims.of_int (9)))))
                      (Obj.magic
                         (FStar_Tactics_V2_Builtins.core_compute_term_type f e
-                           FStar_Tactics_Types.E_Total))
+                           FStar_TypeChecker_Core.E_Total))
                      (fun res ->
                         FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> res))))
                uu___)
@@ -240,7 +240,7 @@ let (rtb_tc_term :
                               (Prims.of_int (30)) (Prims.of_int (9)))))
                      (Obj.magic
                         (FStar_Tactics_V2_Builtins.tc_term f e
-                           FStar_Tactics_Types.E_Total))
+                           FStar_TypeChecker_Core.E_Total))
                      (fun res ->
                         FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> res))))
                uu___)
@@ -619,7 +619,7 @@ let (rtb_core_check_term_at_type :
                                 (Prims.of_int (56)) (Prims.of_int (9)))))
                        (Obj.magic
                           (FStar_Tactics_V2_Builtins.core_check_term f e t
-                             FStar_Tactics_Types.E_Total))
+                             FStar_TypeChecker_Core.E_Total))
                        (fun res ->
                           FStar_Tactics_Effect.lift_div_tac
                             (fun uu___1 -> res)))) uu___)
@@ -1472,7 +1472,7 @@ let (tc_meta_callback :
                                    (e1, t,
                                      (FStar_Reflection_Typing.T_Token
                                         (f, e1,
-                                          (FStar_Tactics_Types.E_Total, t),
+                                          (FStar_TypeChecker_Core.E_Total, t),
                                           ()))))), issues)))))
           (fun res -> FStar_Tactics_Effect.lift_div_tac (fun uu___ -> res))
 let (check_term :
@@ -2256,7 +2256,7 @@ let (check_term_with_expected_type :
                                                                     (e1,
                                                                     (FStar_Reflection_Typing.T_Token
                                                                     (fg, re,
-                                                                    (FStar_Tactics_Types.E_Total,
+                                                                    (FStar_TypeChecker_Core.E_Total,
                                                                     rt), ())))))))
                                                                     uu___3)))
                                                                uu___2)))
@@ -2306,7 +2306,7 @@ let (tc_with_core :
                                   (t,
                                     (FStar_Reflection_Typing.T_Token
                                        (f, e,
-                                         (FStar_Tactics_Types.E_Total, t),
+                                         (FStar_TypeChecker_Core.E_Total, t),
                                          ()))))), issues))))
 let (core_check_term :
   Pulse_Typing_Env.env ->
@@ -2658,7 +2658,7 @@ let (core_check_term_with_expected_type :
                                                                     g),
                                                                     (Pulse_Elaborate_Pure.elab_term
                                                                     e),
-                                                                    (FStar_Tactics_Types.E_Total,
+                                                                    (FStar_TypeChecker_Core.E_Total,
                                                                     (Pulse_Elaborate_Pure.elab_term
                                                                     t)), ())))))
                                                                uu___1)))
