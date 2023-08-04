@@ -1,16 +1,6 @@
 module Domains
 
-open Pulse.Main
-open Pulse.Steel.Wrapper
-open Steel.Effect.Common
-
-module R = Steel.ST.Reference
-module HR = Steel.ST.HigherReference
-open Steel.Memory
-open Steel.ST.Effect
-open Steel.ST.Util
-
-module Lock = Steel.ST.SpinLock
+open Pulse.Lib.Pervasives
 
 let unit_emp_stt_pure_pure a p
   = unit -> stt a emp (fun x -> pure (p x))
