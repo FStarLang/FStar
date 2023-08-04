@@ -66,6 +66,11 @@ let sizet_to_uint32 x = FStar.Int.Cast.uint64_to_uint32 x
 let fits_lte x y = ()
 
 #push-options "--z3rlimit 20"
+let safe_add x y = 
+  let z = v x + v y in
+  if z < pow2 16
+    then Some (uint_to_t z)
+    else None
 let add x y = U64.add x y
 let sub x y = U64.sub x y
 let mul x y = U64.mul x y
