@@ -4,7 +4,6 @@ module A = Pulse.Lib.Array
 module R = Pulse.Lib.Reference
 module US = FStar.SizeT
 module U8 = FStar.UInt8
-module LK = Pulse.Lib.SpinLock
 module U64 = FStar.UInt64
 module PHT = LinearScanHashTable
 open LinearScanHashTable
@@ -28,10 +27,10 @@ let modulo_us (v1 v2:US.t) (m:pos_us) (_:squash(US.fits (US.v v1 + US.v v2)))
 
 
 ```pulse
-fn _alloc_locked (#s:pht_sig_us) (l:pos_us)
+fn _alloc (#s:pht_sig_us) (l:pos_us)
   requires emp
-  returns _:locked_ht_t s
-  ensures emp
+  returns ht:ht_t s
+  ensures exists pht. models s ht pht
 {
   let contents = A.alloc #(cell s.keyt s.valt) Clean l;
   let ht = mk_ht l contents;
@@ -39,11 +38,10 @@ fn _alloc_locked (#s:pht_sig_us) (l:pos_us)
   rewrite (A.pts_to contents full_perm (Seq.create (US.v l) Clean))
     as (A.pts_to ht.contents full_perm pht.repr);
   fold (models s ht pht);
-  let lk = LK.new_lock (exists_ (fun pht -> models s ht pht));
-  ((| ht, lk |) <: locked_ht_t s)
+  ht
 }
 ```
-let alloc_locked #s l = _alloc_locked #s l
+let alloc #s l = _alloc #s l
 
 ```pulse
 fn _dealloc (#s:pht_sig_us) (ht:ht_t s) (l:pos_us) (destroy_val:destroy_val_fn_t s.valt)

@@ -76,6 +76,8 @@ type repr_t =
 
 val record_perm (t_rec:record_t) (t_rep:repr_t) : vprop
 
+
+type locked_ht_t (s:pht_sig_us) = ht:ht_t s & L.lock (exists_ (fun pht -> models s ht pht))
 type sid_ref_t = r:R.ref nat & L.lock (exists_ (fun n -> R.pts_to r full_perm n))
 
 val dpe_hashf : nat -> US.t

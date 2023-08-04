@@ -3,7 +3,6 @@ open Pulse.Lib.Pervasives
 module A = Pulse.Lib.Array
 module US = FStar.SizeT
 module U8 = FStar.UInt8
-module LK = Pulse.Lib.SpinLock
 module PHT = LinearScanHashTable
 open LinearScanHashTable
 open Pulse.Class.BoundedIntegers
@@ -42,15 +41,12 @@ let mk_init_pht (#s:pht_sig_us) (sz:pos_us)
 
 val models (s:pht_sig_us) (ht:ht_t s) (pht:pht_t (s_to_ps s)) : vprop
 
-type locked_ht_t (s:pht_sig_us) = ht:ht_t s & LK.lock (exists_ (fun pht -> models s ht pht))
-
 let pht_sz #s (pht:pht_t s) : pos = pht.sz
 
 let destroy_val_fn_t (t:Type0) : Type = v:t -> stt unit emp (fun _ -> emp) 
 
-
-val alloc_locked (#s:pht_sig_us) (l:pos_us)
-  : stt (locked_ht_t s) emp (fun _ -> emp)
+val alloc (#s:pht_sig_us) (l:pos_us)
+  : stt (ht_t s) emp (fun ht -> exists_ (fun pht -> models s ht pht))
 
 val dealloc (#s:pht_sig_us) (ht:ht_t s) (l:pos_us) (destroy_val:destroy_val_fn_t s.valt)
   : stt unit (requires exists_ (fun pht -> models s ht pht))

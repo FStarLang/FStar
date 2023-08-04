@@ -72,8 +72,19 @@ let dpe_hashf : nat -> US.t = admit()
 let sht_len : pos_us = admit()
 let cht_len : pos_us = admit()
 
-// A table whose permission is stored in the lock 
-let locked_sht : locked_ht_t sht_sig = run_stt(alloc_locked #sht_sig sht_len)
+// A table whose permission is stored in the lock
+```pulse
+fn alloc_ht (#s:pht_sig_us) (l:pos_us)
+  requires emp
+  returns _:locked_ht_t s
+  ensures emp
+{
+  let ht = alloc #s l;
+  let lk = L.new_lock (exists_ (fun pht -> models s ht pht));
+  ((| ht, lk |) <: locked_ht_t s)
+}
+```
+let locked_sht : locked_ht_t sht_sig = run_stt(alloc_ht #sht_sig sht_len)
 
 // A number that tracks the next session ID
 ```pulse
@@ -82,7 +93,7 @@ fn alloc_sid (_:unit)
   returns _:sid_ref_t
   ensures emp
 {
-  let sid_ref = alloc #nat 0;
+  let sid_ref = R.alloc #nat 0;
   let lk = L.new_lock (exists_ (fun n -> R.pts_to sid_ref full_perm n));
   ((| sid_ref, lk |) <: sid_ref_t)
 }
@@ -105,7 +116,7 @@ fn open_session (_:unit)
   returns b:bool
   ensures emp
 {
-  let cht = alloc_locked #cht_sig cht_len;
+  let cht = alloc_ht #cht_sig cht_len;
 
   let sht = dfst locked_sht;
   let sht_lk = dsnd locked_sht;
@@ -145,103 +156,8 @@ fn open_session (_:unit)
 }
 ```
 
-(*
-  DestroyContext: Part of DPE API 
-  Destroy the context pointed to by the handle by freeing the
-  arrays in the context (zeroize the UDS, if applicable). Return
-  boolean indicating success. 
-  NOTE: Current implementation disregards session protocol 
-*)
-```pulse
-fn destroy_context (sid:nat) (ctxt_hndl:nat)
-  requires emp
-  returns b:bool
-  ensures emp
-{
-  let sht = dfst locked_sht;
-  let sht_lk = dsnd locked_sht;
-  L.acquire #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
-
-  with spht. assert (models sht_sig sht spht);
-
-  let res = PHT.lookup #sht_sig #spht sht sid;
-  if (fst res) {
-    let opt_locked_cht = snd res;
-    match opt_locked_cht {
-    Some locked_cht -> {
-      let cht = dfst locked_cht;
-      let cht_lk = dsnd locked_cht;
-      L.acquire #(exists_ (fun pht -> models cht_sig (dfst locked_cht) pht)) cht_lk;
-
-      with cpht0. assert (models cht_sig cht cpht0);
-
-      let res = PHT.lookup #cht_sig #cpht0 cht ctxt_hndl;
-      if (fst res) {
-        let opt_locked_ctxt = snd res;
-        match opt_locked_ctxt {
-        Some locked_ctxt -> {
-          let ctxt = dfst locked_ctxt;
-          let ctxt_lk = dsnd locked_ctxt;
-          L.acquire #(context_perm ctxt) ctxt_lk;
-          match ctxt {
-            Engine_context c -> {
-              rewrite (context_perm ctxt) as (engine_context_perm c);
-              unfold (engine_context_perm c);
-              zeroize uds_len c.uds #uds_bytes;
-              disable_uds ();
-              A.free c.uds;
-              L.release #(exists_ (fun pht -> models cht_sig (dfst locked_cht) pht)) cht_lk;
-              L.release #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
-              true
-            }
-            L0_context c -> {
-              rewrite (context_perm ctxt) as (l0_context_perm c);
-              unfold (l0_context_perm c);
-              A.free c.cdi;
-              L.release #(exists_ (fun pht -> models cht_sig (dfst locked_cht) pht)) cht_lk;
-              L.release #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
-              true
-            }
-            L1_context c -> {
-              rewrite (context_perm ctxt) as (l1_context_perm c);
-              unfold (l1_context_perm c);
-              A.free c.deviceID_priv;
-              A.free c.deviceID_pub;
-              A.free c.aliasKey_priv;
-              A.free c.aliasKey_pub;
-              A.free c.aliasKeyCRT;
-              A.free c.deviceIDCSR;
-              L.release #(exists_ (fun pht -> models cht_sig (dfst locked_cht) pht)) cht_lk;
-              L.release #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
-              true
-          }}}
-        None -> {
-          // ERROR - bad context handle
-          L.release #(exists_ (fun pht -> models cht_sig (dfst locked_cht) pht)) cht_lk;
-          L.release #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
-          false
-        }}
-      } else {
-        // ERROR - lookup failed
-        L.release #(exists_ (fun pht -> models cht_sig (dfst locked_cht) pht)) cht_lk;
-        L.release #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
-        false
-      }}
-    None -> {
-      // ERROR - bad session ID
-      L.release #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
-      false
-    }}
-  } else {
-    // ERROR - lookup failed
-    L.release #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
-    false
-  }
-}
-```
-
 ```pulse 
-fn destroy_ctxt (locked_ctxt:locked_context_t)
+fn destroy_locked_ctxt (locked_ctxt:locked_context_t)
   requires emp
   ensures emp
 {
@@ -275,12 +191,76 @@ fn destroy_ctxt (locked_ctxt:locked_context_t)
 }
 ```
 
+(*
+  DestroyContext: Part of DPE API 
+  Destroy the context pointed to by the handle by freeing the
+  arrays in the context (zeroize the UDS, if applicable). Return
+  boolean indicating success. 
+  NOTE: Current implementation disregards session protocol 
+*)
+```pulse
+fn destroy_context (sid:nat) (ctxt_hndl:nat)
+  requires emp
+  returns b:bool
+  ensures emp
+{
+  let sht = dfst locked_sht;
+  let sht_lk = dsnd locked_sht;
+  L.acquire #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
+
+  with spht. assert (models sht_sig sht spht);
+
+  let res = PHT.lookup #sht_sig #spht sht sid;
+  if (fst res) {
+    let opt_locked_cht = snd res;
+    match opt_locked_cht {
+    Some locked_cht -> {
+      let cht = dfst locked_cht;
+      let cht_lk = dsnd locked_cht;
+      L.acquire #(exists_ (fun pht -> models cht_sig (dfst locked_cht) pht)) cht_lk;
+      with cpht0. assert (models cht_sig cht cpht0);
+
+      let res = PHT.lookup #cht_sig #cpht0 cht ctxt_hndl;
+      if (fst res) {
+        let opt_locked_ctxt = snd res;
+        match opt_locked_ctxt {
+        Some locked_ctxt -> {
+          destroy_locked_ctxt locked_ctxt;
+          L.release #(exists_ (fun pht -> models cht_sig (dfst locked_cht) pht)) cht_lk;
+          L.release #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
+          true
+        }
+        None -> {
+          // ERROR - bad context handle
+          L.release #(exists_ (fun pht -> models cht_sig (dfst locked_cht) pht)) cht_lk;
+          L.release #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
+          false
+        }}
+      } else {
+        // ERROR - lookup failed
+        L.release #(exists_ (fun pht -> models cht_sig (dfst locked_cht) pht)) cht_lk;
+        L.release #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
+        false
+      }}
+    None -> {
+      // ERROR - bad session ID
+      L.release #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
+      false
+    }}
+  } else {
+    // ERROR - lookup failed
+    L.release #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
+    false
+  }
+}
+```
+
 ```pulse
 fn destroy_cht (ht:ht_t cht_sig)
   requires exists pht. models cht_sig ht pht
   ensures emp
 {
-  dealloc #cht_sig ht cht_len destroy_ctxt;
+  dealloc #cht_sig ht cht_len destroy_locked_ctxt;
 }
 ```
 
