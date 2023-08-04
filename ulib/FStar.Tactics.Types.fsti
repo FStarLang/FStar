@@ -60,12 +60,6 @@ type guard_policy =
     | Force     // Force guards without SMT
     | Drop      // Drop guards, clearly unsound! careful!
 
-type unfold_side =
-  | Left
-  | Right
-  | Both
-  | Neither
-
 (* Typing reflection *)
 val subtyping_token (g:env) (t0 t1:typ) : Type0
 val equiv_token (g:env) (t0 t1:typ) : Type0

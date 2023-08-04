@@ -119,12 +119,6 @@ val check_goal_solved  : goal -> bool
 val get_phi            : goal -> option term
 val is_irrelevant      : goal -> bool
 
-type unfold_side =
-  | Left
-  | Right
-  | Both
-  | Neither
-
 (*** These are here for userspace, the library has an interface into this module. *)
 (* Typing reflection *)
 val subtyping_token (g:env) (t0 t1:typ) : Type0
