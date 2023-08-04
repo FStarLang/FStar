@@ -261,10 +261,15 @@ let proc_guard' (simplify:bool) (reason:string) (e : env) (g : guard_t) (sc_opt:
         let! g = goal_of_guard reason e f sc_opt rng in
         push_goals [g])
 
-    | SMT ->
-        mlog (fun () -> BU.print2 "Sending guard (%s:%s) to SMT goal\n" reason (Rel.guard_to_string e g)) (fun () ->
+      | SMT ->
+        mlog (fun () -> BU.print2 "Pushing guard (%s:%s) as SMT goal\n" reason (Print.term_to_string f)) (fun () ->
         let! g = goal_of_guard reason e f sc_opt rng in
         push_smt_goals [g])
+
+      | SMTSync ->
+        mlog (fun () -> BU.print2 "Sending guard (%s:%s) to SMT Synchronously\n" reason (Print.term_to_string f)) (fun () ->
+        Rel.force_trivial_guard e g;
+        ret ())
 
     | Force ->
         mlog (fun () -> BU.print2 "Forcing guard (%s:%s)\n" reason (Rel.guard_to_string e g)) (fun () ->

@@ -83,6 +83,8 @@ let (fstar_tactics_tot_or_ghost_EGhost : tac_constant) =
 let (fstar_tactics_guard_policy : tac_constant) =
   fstar_tactics_const ["Types"; "guard_policy"]
 let (fstar_tactics_SMT : tac_constant) = fstar_tactics_data ["Types"; "SMT"]
+let (fstar_tactics_SMTSync : tac_constant) =
+  fstar_tactics_data ["Types"; "SMTSync"]
 let (fstar_tactics_Goal : tac_constant) =
   fstar_tactics_data ["Types"; "Goal"]
 let (fstar_tactics_Drop : tac_constant) =
@@ -831,6 +833,7 @@ let (e_guard_policy :
   let embed_guard_policy rng p =
     match p with
     | FStar_Tactics_Types.SMT -> fstar_tactics_SMT.t
+    | FStar_Tactics_Types.SMTSync -> fstar_tactics_SMTSync.t
     | FStar_Tactics_Types.Goal -> fstar_tactics_Goal.t
     | FStar_Tactics_Types.Force -> fstar_tactics_Force.t
     | FStar_Tactics_Types.Drop -> fstar_tactics_Drop.t in
@@ -842,6 +845,9 @@ let (e_guard_policy :
     | FStar_Syntax_Syntax.Tm_fvar fv when
         FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_SMT.lid ->
         FStar_Pervasives_Native.Some FStar_Tactics_Types.SMT
+    | FStar_Syntax_Syntax.Tm_fvar fv when
+        FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_SMTSync.lid ->
+        FStar_Pervasives_Native.Some FStar_Tactics_Types.SMTSync
     | FStar_Syntax_Syntax.Tm_fvar fv when
         FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_Goal.lid ->
         FStar_Pervasives_Native.Some FStar_Tactics_Types.Goal
@@ -858,6 +864,8 @@ let (e_guard_policy_nbe :
   let embed_guard_policy cb p =
     match p with
     | FStar_Tactics_Types.SMT -> mkConstruct fstar_tactics_SMT.fv [] []
+    | FStar_Tactics_Types.SMTSync ->
+        mkConstruct fstar_tactics_SMTSync.fv [] []
     | FStar_Tactics_Types.Goal -> mkConstruct fstar_tactics_Goal.fv [] []
     | FStar_Tactics_Types.Force -> mkConstruct fstar_tactics_Force.fv [] []
     | FStar_Tactics_Types.Drop -> mkConstruct fstar_tactics_Drop.fv [] [] in
@@ -867,6 +875,9 @@ let (e_guard_policy_nbe :
     | FStar_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
         FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_SMT.lid ->
         FStar_Pervasives_Native.Some FStar_Tactics_Types.SMT
+    | FStar_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
+        FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_SMTSync.lid ->
+        FStar_Pervasives_Native.Some FStar_Tactics_Types.SMTSync
     | FStar_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
         FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_Goal.lid ->
         FStar_Pervasives_Native.Some FStar_Tactics_Types.Goal

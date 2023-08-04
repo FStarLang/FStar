@@ -2040,28 +2040,44 @@ let (split_and_solve :
     fun use_env_msg ->
       fun tcenv ->
         fun q ->
-          let goals =
-            let uu___ = FStar_TypeChecker_Env.split_smt_query tcenv q in
-            match uu___ with
-            | FStar_Pervasives_Native.None ->
-                failwith "Impossible: split_query callback is not set"
-            | FStar_Pervasives_Native.Some goals1 -> goals1 in
-          FStar_Compiler_Effect.op_Bar_Greater goals
-            (FStar_Compiler_List.iter
-               (fun uu___1 ->
-                  match uu___1 with
-                  | (env, goal) ->
-                      do_solve false retrying use_env_msg env goal));
-          (let uu___1 =
-             (let uu___2 = FStar_Errors.get_err_count () in
-              uu___2 = Prims.int_zero) && retrying in
-           if uu___1
-           then
-             FStar_TypeChecker_Err.log_issue tcenv
-               tcenv.FStar_TypeChecker_Env.range
-               (FStar_Errors_Codes.Warning_SplitAndRetryQueries,
-                 "The verification condition succeeded after splitting it to localize potential errors, although the original non-split verification condition failed. If you want to rely on splitting queries for verifying your program please use the '--split_queries always' option rather than relying on it implicitly.")
-           else ())
+          let uu___ = FStar_Options.query_stats () in
+          if uu___
+          then
+            let range =
+              let uu___1 =
+                let uu___2 =
+                  let uu___3 = FStar_TypeChecker_Env.get_range tcenv in
+                  FStar_Compiler_Range_Ops.string_of_range uu___3 in
+                Prims.op_Hat uu___2 ")" in
+              Prims.op_Hat "(" uu___1 in
+            (FStar_Compiler_Util.print2
+               "%s\tQuery-stats splitting query because %s\n" range
+               (if retrying
+                then "retrying failed query"
+                else "--split_queries is always");
+             (let goals =
+                let uu___2 = FStar_TypeChecker_Env.split_smt_query tcenv q in
+                match uu___2 with
+                | FStar_Pervasives_Native.None ->
+                    failwith "Impossible: split_query callback is not set"
+                | FStar_Pervasives_Native.Some goals1 -> goals1 in
+              FStar_Compiler_Effect.op_Bar_Greater goals
+                (FStar_Compiler_List.iter
+                   (fun uu___3 ->
+                      match uu___3 with
+                      | (env, goal) ->
+                          do_solve false retrying use_env_msg env goal));
+              (let uu___3 =
+                 (let uu___4 = FStar_Errors.get_err_count () in
+                  uu___4 = Prims.int_zero) && retrying in
+               if uu___3
+               then
+                 FStar_TypeChecker_Err.log_issue tcenv
+                   tcenv.FStar_TypeChecker_Env.range
+                   (FStar_Errors_Codes.Warning_SplitAndRetryQueries,
+                     "The verification condition succeeded after splitting it to localize potential errors, although the original non-split verification condition failed. If you want to rely on splitting queries for verifying your program please use the '--split_queries always' option rather than relying on it implicitly.")
+               else ())))
+          else ()
 let disable_quake_for : 'a . (unit -> 'a) -> 'a =
   fun f ->
     FStar_Options.with_saved_options

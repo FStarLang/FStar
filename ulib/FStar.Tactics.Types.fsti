@@ -53,10 +53,11 @@ type ctrl_flag =
     | Abort
 
 type guard_policy =
-    | SMT
-    | Goal
-    | Force
-    | Drop // unsound! careful!
+    | Goal      // Add guards as (normal) goals
+    | SMT       // Add guards as SMT goals
+    | SMTSync   // Send guards to SMT immediately, will *log* errors (not raise) if anything fails
+    | Force     // Force guards without SMT
+    | Drop      // Drop guards, clearly unsound! careful!
 
 type unfold_side =
   | Left
