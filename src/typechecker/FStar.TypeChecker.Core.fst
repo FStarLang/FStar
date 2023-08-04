@@ -1786,7 +1786,15 @@ let check_term_top g e topt (must_tot:bool) (gh:option guard_handler_t)
   = let g = initial_env g gh in
     let! eff_te = check "top" g e in
     match topt with
-    | None -> return (Some eff_te)
+    | None ->
+      // check expected effect
+      if must_tot
+      then let eff, t = eff_te in 
+           if eff = E_GHOST &&
+              not (non_informative g t)
+           then fail "expected total effect, found ghost"
+           else return (Some (E_TOTAL, t))
+      else return (Some eff_te)
     | Some t ->
       let target_comp =
         if must_tot || fst eff_te = E_TOTAL
