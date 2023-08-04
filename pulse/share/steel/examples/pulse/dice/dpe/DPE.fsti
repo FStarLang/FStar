@@ -26,22 +26,7 @@ type l1_context = { deviceID_priv: A.larray U8.t (US.v v32us);
                     aliasKeyCRT: A.array U8.t;
                     deviceIDCSR: A.array U8.t; }
 
-let l1_context_perm (c:l1_context)
-  : vprop
-  = exists_ (fun s -> A.pts_to c.deviceID_priv full_perm s) **
-    exists_ (fun s -> A.pts_to c.deviceID_pub full_perm s) **
-    exists_ (fun s -> A.pts_to c.aliasKey_priv full_perm s) **
-    exists_ (fun s -> A.pts_to c.aliasKey_pub full_perm s) **
-    exists_ (fun s -> A.pts_to c.aliasKeyCRT full_perm s) **
-    exists_ (fun s -> A.pts_to c.deviceIDCSR full_perm s) **
-    pure (
-      A.is_full_array c.deviceID_priv /\
-      A.is_full_array c.deviceID_pub /\
-      A.is_full_array c.aliasKey_priv /\
-      A.is_full_array c.aliasKey_pub /\
-      A.is_full_array c.aliasKeyCRT /\
-      A.is_full_array c.deviceIDCSR
-    )
+val l1_context_perm (c:l1_context) : vprop
 
 let mk_l1_context deviceID_priv deviceID_pub aliasKey_priv aliasKey_pub aliasKeyCRT deviceIDCSR 
   = { deviceID_priv; deviceID_pub; aliasKey_priv; aliasKey_pub; aliasKeyCRT; deviceIDCSR }
@@ -53,11 +38,7 @@ type context_t =
   | L0_context     : c:l0_context -> context_t
   | L1_context     : c:l1_context -> context_t
 
-let context_perm (t:context_t) : vprop = 
-  match t with
-  | Engine_context c -> engine_context_perm c
-  | L0_context c -> l0_context_perm c
-  | L1_context c -> l1_context_perm c
+val context_perm (t:context_t) : vprop
 
 let mk_engine_context_t engine_context = Engine_context engine_context
 let mk_l0_context_t l0_context = L0_context l0_context
@@ -77,18 +58,7 @@ type repr_t =
   | Engine_repr : r:engine_record_repr -> repr_t
   | L0_repr     : r:l0_record_repr -> repr_t
 
-let record_perm (t_rec:record_t) (t_rep:repr_t) : vprop = 
-  match t_rec with
-  | Engine_record r -> (
-    match t_rep with 
-    | Engine_repr r0 -> engine_record_perm r r0
-    | _ -> pure(false)
-  )
-  | L0_record r -> (
-    match t_rep with
-    | L0_repr r0 -> l0_record_perm r r0
-    | _ -> pure(false)
-  )
+val record_perm (t_rec:record_t) (t_rep:repr_t) : vprop
 
 type sid_ref_t = r:R.ref nat & L.lock (exists_ (fun n -> R.pts_to r full_perm n))
 

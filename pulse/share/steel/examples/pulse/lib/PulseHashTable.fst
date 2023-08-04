@@ -43,7 +43,45 @@ fn _alloc_locked (#s:pht_sig_us) (l:pos_us)
   ((| ht, lk |) <: locked_ht_t s)
 }
 ```
-// let alloc_locked #s l = _alloc_locked #s l;
+let alloc_locked #s l = _alloc_locked #s l
+
+```pulse
+fn _dealloc (#s:pht_sig_us) (ht:ht_t s) (l:pos_us) (destroy_val:destroy_val_fn_t s.valt)
+  requires exists pht. models s ht pht
+  ensures emp
+{
+  let mut off = 0sz;
+
+  with pht. assert (models s ht pht);
+  unfold (models s ht pht);
+
+  while (let voff = !off; (voff < ht.sz))
+  invariant b. exists (voff:US.t). (
+    A.pts_to ht.contents full_perm pht.repr **
+    R.pts_to off full_perm voff **
+    pure (
+      US.v ht.sz == pht.sz /\
+      voff <= ht.sz /\
+      b == (voff < ht.sz)
+    )
+  )
+  {
+    let voff = !off;
+    let c = (ht.contents).(voff);
+    match c {
+      Used k v -> {
+        // TODO: destroy key as well
+        destroy_val v;
+      }
+      _ -> {
+        off := voff + 1sz;
+      }
+    }
+  };
+  A.free ht.contents;
+}
+```
+let dealloc #s ht l destroy_val = _dealloc #s ht l destroy_val
 
 ```pulse
 fn pulse_lookup_index (#s:pht_sig_us)
