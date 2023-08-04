@@ -6971,11 +6971,11 @@ let (refl_check_equiv :
         (unit FStar_Pervasives_Native.option * issues)
           FStar_Tactics_Monad.tac)
   = fun g -> fun t0 -> fun t1 -> refl_check_relation g t0 t1 Equality
-let (to_must_tot : FStar_Tactics_Types.tot_or_ghost -> Prims.bool) =
+let (to_must_tot : FStar_TypeChecker_Core.tot_or_ghost -> Prims.bool) =
   fun eff ->
     match eff with
-    | FStar_Tactics_Types.E_Total -> true
-    | FStar_Tactics_Types.E_Ghost -> false
+    | FStar_TypeChecker_Core.E_Total -> true
+    | FStar_TypeChecker_Core.E_Ghost -> false
 let (refl_norm_type :
   env -> FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ) =
   fun g ->
@@ -6986,7 +6986,7 @@ let (refl_norm_type :
 let (refl_core_compute_term_type :
   env ->
     FStar_Syntax_Syntax.term ->
-      FStar_Tactics_Types.tot_or_ghost ->
+      FStar_TypeChecker_Core.tot_or_ghost ->
         (FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option * issues)
           FStar_Tactics_Monad.tac)
   =
@@ -7060,7 +7060,7 @@ let (refl_core_check_term :
   env ->
     FStar_Syntax_Syntax.term ->
       FStar_Syntax_Syntax.typ ->
-        FStar_Tactics_Types.tot_or_ghost ->
+        FStar_TypeChecker_Core.tot_or_ghost ->
           (unit FStar_Pervasives_Native.option * issues)
             FStar_Tactics_Monad.tac)
   =
@@ -7144,7 +7144,7 @@ let (refl_core_check_term :
 let (refl_tc_term :
   env ->
     FStar_Syntax_Syntax.term ->
-      FStar_Tactics_Types.tot_or_ghost ->
+      FStar_TypeChecker_Core.tot_or_ghost ->
         ((FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.typ)
           FStar_Pervasives_Native.option * issues) FStar_Tactics_Monad.tac)
   =

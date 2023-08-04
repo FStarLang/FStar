@@ -38,6 +38,22 @@ let (fstar_tactics_const : Prims.string Prims.list -> tac_constant) =
     let uu___ = FStar_Syntax_Syntax.fvconst lid in
     let uu___1 = FStar_Syntax_Syntax.tconst lid in
     { lid; fv = uu___; t = uu___1 }
+let (fstar_tc_core_lid : Prims.string -> FStar_Ident.lid) =
+  fun s ->
+    FStar_Ident.lid_of_path
+      (FStar_Compiler_List.op_At ["FStar"; "Stubs"; "TypeChecker"; "Core"]
+         [s]) FStar_Compiler_Range_Type.dummyRange
+let (fstar_tc_core_data : Prims.string -> tac_constant) =
+  fun s ->
+    let lid = fstar_tc_core_lid s in
+    let uu___ = lid_as_data_fv lid in
+    let uu___1 = lid_as_data_tm lid in { lid; fv = uu___; t = uu___1 }
+let (fstar_tc_core_const : Prims.string -> tac_constant) =
+  fun s ->
+    let lid = fstar_tc_core_lid s in
+    let uu___ = FStar_Syntax_Syntax.fvconst lid in
+    let uu___1 = FStar_Syntax_Syntax.tconst lid in
+    { lid; fv = uu___; t = uu___1 }
 let (fstar_tactics_proofstate : tac_constant) =
   fstar_tactics_const ["Types"; "proofstate"]
 let (fstar_tactics_goal : tac_constant) =
@@ -74,12 +90,12 @@ let (fstar_tactics_unfold_side_Both : tac_constant) =
   fstar_tactics_data ["Types"; "Both"]
 let (fstar_tactics_unfold_side_Neither : tac_constant) =
   fstar_tactics_data ["Types"; "Neither"]
-let (fstar_tactics_tot_or_ghost : tac_constant) =
-  fstar_tactics_const ["Types"; "tot_or_ghost"]
-let (fstar_tactics_tot_or_ghost_ETotal : tac_constant) =
-  fstar_tactics_data ["Types"; "E_Total"]
-let (fstar_tactics_tot_or_ghost_EGhost : tac_constant) =
-  fstar_tactics_data ["Types"; "E_Ghost"]
+let (fstar_tc_core_tot_or_ghost : tac_constant) =
+  fstar_tc_core_const "tot_or_ghost"
+let (fstar_tc_core_tot_or_ghost_ETotal : tac_constant) =
+  fstar_tc_core_data "E_Total"
+let (fstar_tc_core_tot_or_ghost_EGhost : tac_constant) =
+  fstar_tc_core_data "E_Ghost"
 let (fstar_tactics_guard_policy : tac_constant) =
   fstar_tactics_const ["Types"; "guard_policy"]
 let (fstar_tactics_SMT : tac_constant) = fstar_tactics_data ["Types"; "SMT"]
@@ -766,11 +782,12 @@ let (e_unfold_side_nbe :
     FStar_TypeChecker_NBETerm.emb_typ = uu___1
   }
 let (e_tot_or_ghost :
-  FStar_Tactics_Types.tot_or_ghost FStar_Syntax_Embeddings_Base.embedding) =
+  FStar_TypeChecker_Core.tot_or_ghost FStar_Syntax_Embeddings_Base.embedding)
+  =
   let embed_tot_or_ghost rng s =
     match s with
-    | FStar_Tactics_Types.E_Total -> fstar_tactics_tot_or_ghost_ETotal.t
-    | FStar_Tactics_Types.E_Ghost -> fstar_tactics_tot_or_ghost_EGhost.t in
+    | FStar_TypeChecker_Core.E_Total -> fstar_tc_core_tot_or_ghost_ETotal.t
+    | FStar_TypeChecker_Core.E_Ghost -> fstar_tc_core_tot_or_ghost_EGhost.t in
   let unembed_tot_or_ghost t =
     let uu___ =
       let uu___1 = FStar_Syntax_Subst.compress t in
@@ -778,33 +795,33 @@ let (e_tot_or_ghost :
     match uu___ with
     | FStar_Syntax_Syntax.Tm_fvar fv when
         FStar_Syntax_Syntax.fv_eq_lid fv
-          fstar_tactics_tot_or_ghost_ETotal.lid
-        -> FStar_Pervasives_Native.Some FStar_Tactics_Types.E_Total
+          fstar_tc_core_tot_or_ghost_ETotal.lid
+        -> FStar_Pervasives_Native.Some FStar_TypeChecker_Core.E_Total
     | FStar_Syntax_Syntax.Tm_fvar fv when
         FStar_Syntax_Syntax.fv_eq_lid fv
-          fstar_tactics_tot_or_ghost_EGhost.lid
-        -> FStar_Pervasives_Native.Some FStar_Tactics_Types.E_Ghost
+          fstar_tc_core_tot_or_ghost_EGhost.lid
+        -> FStar_Pervasives_Native.Some FStar_TypeChecker_Core.E_Ghost
     | uu___1 -> FStar_Pervasives_Native.None in
-  mk_emb embed_tot_or_ghost unembed_tot_or_ghost fstar_tactics_tot_or_ghost.t
+  mk_emb embed_tot_or_ghost unembed_tot_or_ghost fstar_tc_core_tot_or_ghost.t
 let (e_tot_or_ghost_nbe :
-  FStar_Tactics_Types.tot_or_ghost FStar_TypeChecker_NBETerm.embedding) =
+  FStar_TypeChecker_Core.tot_or_ghost FStar_TypeChecker_NBETerm.embedding) =
   let embed_tot_or_ghost cb res =
     match res with
-    | FStar_Tactics_Types.E_Total ->
-        mkConstruct fstar_tactics_tot_or_ghost_ETotal.fv [] []
-    | FStar_Tactics_Types.E_Ghost ->
-        mkConstruct fstar_tactics_tot_or_ghost_EGhost.fv [] [] in
+    | FStar_TypeChecker_Core.E_Total ->
+        mkConstruct fstar_tc_core_tot_or_ghost_ETotal.fv [] []
+    | FStar_TypeChecker_Core.E_Ghost ->
+        mkConstruct fstar_tc_core_tot_or_ghost_EGhost.fv [] [] in
   let unembed_tot_or_ghost cb t =
     let uu___ = FStar_TypeChecker_NBETerm.nbe_t_of_t t in
     match uu___ with
     | FStar_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
         FStar_Syntax_Syntax.fv_eq_lid fv
-          fstar_tactics_tot_or_ghost_ETotal.lid
-        -> FStar_Pervasives_Native.Some FStar_Tactics_Types.E_Total
+          fstar_tc_core_tot_or_ghost_ETotal.lid
+        -> FStar_Pervasives_Native.Some FStar_TypeChecker_Core.E_Total
     | FStar_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
         FStar_Syntax_Syntax.fv_eq_lid fv
-          fstar_tactics_tot_or_ghost_EGhost.lid
-        -> FStar_Pervasives_Native.Some FStar_Tactics_Types.E_Ghost
+          fstar_tc_core_tot_or_ghost_EGhost.lid
+        -> FStar_Pervasives_Native.Some FStar_TypeChecker_Core.E_Ghost
     | uu___1 ->
         ((let uu___3 =
             FStar_Compiler_Effect.op_Bang FStar_Options.debug_embedding in
@@ -820,8 +837,8 @@ let (e_tot_or_ghost_nbe :
               uu___4
           else ());
          FStar_Pervasives_Native.None) in
-  let uu___ = mkFV fstar_tactics_tot_or_ghost.fv [] [] in
-  let uu___1 = fv_as_emb_typ fstar_tactics_tot_or_ghost.fv in
+  let uu___ = mkFV fstar_tc_core_tot_or_ghost.fv [] [] in
+  let uu___1 = fv_as_emb_typ fstar_tc_core_tot_or_ghost.fv in
   {
     FStar_TypeChecker_NBETerm.em = embed_tot_or_ghost;
     FStar_TypeChecker_NBETerm.un = unembed_tot_or_ghost;
