@@ -7,7 +7,7 @@ open Pulse.Syntax
 module L = FStar.List.Tot
 
 module RT = FStar.Reflection.Typing
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 
 type binding = var & typ
 type env_bindings = list binding

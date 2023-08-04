@@ -325,7 +325,7 @@ let (ctxt_elt_to_string :
                          (FStar_Range.mk_range "prims.fst"
                             (Prims.of_int (590)) (Prims.of_int (19))
                             (Prims.of_int (590)) (Prims.of_int (31)))))
-                   (Obj.magic (FStar_Tactics_V1_Builtins.range_to_string r))
+                   (Obj.magic (FStar_Tactics_V2_Builtins.range_to_string r))
                    (fun uu___ ->
                       FStar_Tactics_Effect.lift_div_tac
                         (fun uu___1 ->
@@ -489,7 +489,7 @@ let (print_issue :
                      | FStar_Pervasives_Native.Some r ->
                          Obj.magic
                            (Obj.repr
-                              (FStar_Tactics_V1_Builtins.range_to_string r)))
+                              (FStar_Tactics_V2_Builtins.range_to_string r)))
                   uu___1 uu___))
         (fun uu___ ->
            (fun range_opt_to_string ->
@@ -940,7 +940,7 @@ let fail :
                                          (Prims.of_int (349))
                                          (Prims.of_int (2))
                                          (Prims.of_int (349))
-                                         (Prims.of_int (34)))))
+                                         (Prims.of_int (22)))))
                                 (FStar_Sealed.seal
                                    (Obj.magic
                                       (FStar_Range.mk_range
@@ -950,8 +950,8 @@ let fail :
                                          (Prims.of_int (350))
                                          (Prims.of_int (31)))))
                                 (Obj.magic
-                                   (FStar_Tactics_V1_Builtins.log_issues
+                                   (FStar_Tactics_V2_Builtins.log_issues
                                       [issue]))
                                 (fun uu___ ->
-                                   FStar_Tactics_V1_Derived.fail
+                                   FStar_Tactics_V2_Derived.fail
                                      "Pulse checker failed"))) uu___))) uu___)
