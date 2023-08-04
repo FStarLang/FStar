@@ -13,7 +13,7 @@ module US = FStar.SizeT
 module U8 = FStar.UInt8
 module U32 = FStar.UInt32
 module HT = Pulse.Lib.HashTable
-module PHT = LinearProbeHashTable
+module PHT = FStar.HashTable
 open Pulse.Class.BoundedIntegers
 
 assume
