@@ -7,7 +7,6 @@ module U8 = FStar.UInt8
 module U32 = FStar.UInt32
 open HACL
 open L0Types
-open L0Crypto
 
 assume
 val valid_deviceIDCSR_ingredients (len: US.t) : prop

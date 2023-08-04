@@ -1,4 +1,4 @@
-module PulseHashTable
+module Pulse.Lib.HashTable
 open Pulse.Lib.Pervasives
 module A = Pulse.Lib.Array
 module R = Pulse.Lib.Reference

@@ -13,11 +13,27 @@ module US = FStar.SizeT
 module U8 = FStar.UInt8
 module U32 = FStar.UInt32
 open LinearScanHashTable
-open PulseHashTable
-module PHT = PulseHashTable
+open Pulse.Lib.HashTable
+module PHT = Pulse.Lib.HashTable
 module LSHT = LinearScanHashTable
 
-(* L1 Context -- no dedicated L1 logic, so there's no good place for this to live *)
+(* Engine Context *)
+noeq
+type engine_context = { uds: A.larray U8.t (US.v uds_len); }
+
+val engine_context_perm (c:engine_context) : vprop
+
+let mk_engine_context uds : engine_context = {uds}
+
+(* L0 Context *)
+noeq
+type l0_context = { cdi: A.larray U8.t (US.v dice_digest_len); }
+
+val l0_context_perm (c:l0_context) : vprop
+
+let mk_l0_context cdi : l0_context = {cdi}
+
+(* L1 Context *)
 noeq
 type l1_context = { deviceID_priv: A.larray U8.t (US.v v32us);
                     deviceID_pub: A.larray U8.t (US.v v32us);

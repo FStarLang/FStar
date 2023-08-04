@@ -13,13 +13,22 @@ module US = FStar.SizeT
 module U8 = FStar.UInt8
 module U32 = FStar.UInt32
 open LinearScanHashTable
-open PulseHashTable
-module PHT = PulseHashTable
+open Pulse.Lib.HashTable
+module PHT = Pulse.Lib.HashTable
 module LSHT = LinearScanHashTable
 open Pulse.Class.BoundedIntegers
 
 assume
 val run_stt (#a:Type) (#post:a -> vprop) (f:stt a emp post) : a
+
+let engine_context_perm (c:engine_context) : vprop
+  = A.pts_to c.uds full_perm uds_bytes ** 
+    uds_is_enabled **
+    pure (A.is_full_array c.uds)
+
+let l0_context_perm (c:l0_context) : vprop
+  = exists_ (fun (s:elseq U8.t dice_digest_len) -> A.pts_to c.cdi full_perm s) **
+    pure (A.is_full_array c.cdi)
 
 let l1_context_perm (c:l1_context)
   : vprop
