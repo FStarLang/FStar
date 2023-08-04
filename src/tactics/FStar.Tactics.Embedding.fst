@@ -98,6 +98,7 @@ let fstar_tactics_tot_or_ghost_EGhost = fstar_tactics_data ["Types"; "E_Ghost"]
 
 let fstar_tactics_guard_policy  = fstar_tactics_const ["Types"; "guard_policy"]
 let fstar_tactics_SMT           = fstar_tactics_data  ["Types"; "SMT"]
+let fstar_tactics_SMTSync       = fstar_tactics_data  ["Types"; "SMTSync"]
 let fstar_tactics_Goal          = fstar_tactics_data  ["Types"; "Goal"]
 let fstar_tactics_Drop          = fstar_tactics_data  ["Types"; "Drop"]
 let fstar_tactics_Force         = fstar_tactics_data  ["Types"; "Force"]
@@ -476,6 +477,7 @@ let e_guard_policy =
     let embed_guard_policy (rng:Range.range) (p : guard_policy) : term =
         match p with
         | SMT   -> fstar_tactics_SMT.t
+        | SMTSync -> fstar_tactics_SMTSync.t
         | Goal  -> fstar_tactics_Goal.t
         | Force -> fstar_tactics_Force.t
         | Drop  -> fstar_tactics_Drop.t
@@ -483,6 +485,7 @@ let e_guard_policy =
     let unembed_guard_policy (t : term) : option guard_policy =
         match (SS.compress t).n with
         | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_SMT.lid   -> Some SMT
+        | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_SMTSync.lid   -> Some SMTSync
         | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_Goal.lid  -> Some Goal
         | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_Force.lid -> Some Force
         | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_Drop.lid  -> Some Drop
@@ -494,6 +497,7 @@ let e_guard_policy_nbe  =
     let embed_guard_policy cb (p:guard_policy) : NBET.t =
         match p with
         | SMT   -> mkConstruct fstar_tactics_SMT.fv [] []
+        | SMTSync -> mkConstruct fstar_tactics_SMTSync.fv [] []
         | Goal  -> mkConstruct fstar_tactics_Goal.fv [] []
         | Force -> mkConstruct fstar_tactics_Force.fv [] []
         | Drop  -> mkConstruct fstar_tactics_Drop.fv [] []
@@ -501,6 +505,7 @@ let e_guard_policy_nbe  =
     let unembed_guard_policy cb (t:NBET.t) : option guard_policy =
         match NBETerm.nbe_t_of_t t with
         | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_SMT.lid   -> Some SMT
+        | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_SMTSync.lid -> Some SMTSync
         | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_Goal.lid  -> Some Goal
         | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_Force.lid -> Some Force
         | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_Drop.lid  -> Some Drop

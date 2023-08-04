@@ -231,6 +231,45 @@ let with_policy pol (t : tac 'a) : tac 'a =
     bind (set_guard_policy old_pol) (fun () ->
     ret r))))
 
+let proc_guard_formula
+  (reason:string) (e : env) (f : term) (sc_opt : option should_check_uvar)
+  (rng:Range.range)
+: tac unit
+= let! ps = get in
+  match ps.guard_policy with
+  | Drop ->
+    // should somehow taint the state instead of just printing a warning
+    Err.log_issue e.range
+        (Errors.Warning_TacAdmit, BU.format1 "Tactics admitted guard <%s>\n\n"
+                    (Print.term_to_string f));
+    ret ()
+
+  | Goal ->
+    mlog (fun () -> BU.print2 "Making guard (%s:%s) into a goal\n" reason (Print.term_to_string f)) (fun () ->
+    let! g = goal_of_guard reason e f sc_opt rng in
+    push_goals [g])
+
+  | SMT ->
+    mlog (fun () -> BU.print2 "Pushing guard (%s:%s) as SMT goal\n" reason (Print.term_to_string f)) (fun () ->
+    let! g = goal_of_guard reason e f sc_opt rng in
+    push_smt_goals [g])
+
+  | SMTSync ->
+    mlog (fun () -> BU.print2 "Sending guard (%s:%s) to SMT Synchronously\n" reason (Print.term_to_string f)) (fun () ->
+    let g = { Env.trivial_guard with guard_f = NonTrivial f } in
+    Rel.force_trivial_guard e g;
+    ret ())
+
+  | Force ->
+    mlog (fun () -> BU.print2 "Forcing guard (%s:%s)\n" reason (Print.term_to_string f)) (fun () ->
+    let g = { Env.trivial_guard with guard_f = NonTrivial f } in
+    try if not (Env.is_trivial <| Rel.discharge_guard_no_smt e g)
+        then fail1 "Forcing the guard failed (%s)" reason
+        else ret ()
+    with
+    | _ -> mlog (fun () -> BU.print1 "guard = %s\n" (Print.term_to_string f)) (fun () ->
+           fail1 "Forcing the guard failed (%s)" reason))
+
 let proc_guard' (simplify:bool) (reason:string) (e : env) (g : guard_t) (sc_opt:option should_check_uvar) (rng:Range.range) : tac unit =
     mlog (fun () ->
         BU.print2 "Processing guard (%s:%s)\n" reason (Rel.guard_to_string e g)) (fun () ->
@@ -251,35 +290,7 @@ let proc_guard' (simplify:bool) (reason:string) (e : env) (g : guard_t) (sc_opt:
     match guard_f with
     | TcComm.Trivial -> ret ()
     | TcComm.NonTrivial f ->
-      let! ps = get in
-      match ps.guard_policy with
-      | Drop ->
-        // should somehow taint the state instead of just printing a warning
-        Err.log_issue e.range
-            (Errors.Warning_TacAdmit, BU.format1 "Tactics admitted guard <%s>\n\n"
-                        (Rel.guard_to_string e g));
-        ret ()
-
-      | Goal ->
-        mlog (fun () -> BU.print2 "Making guard (%s:%s) into a goal\n" reason (Rel.guard_to_string e g)) (fun () ->
-        let! g = goal_of_guard reason e f sc_opt rng in
-        push_goals [g])
-
-    | SMT ->
-        mlog (fun () -> BU.print2 "Sending guard (%s:%s) to SMT goal\n" reason (Rel.guard_to_string e g)) (fun () ->
-        let! g = goal_of_guard reason e f sc_opt rng in
-        push_smt_goals [g])
-
-    | Force ->
-        mlog (fun () -> BU.print2 "Forcing guard (%s:%s)\n" reason (Rel.guard_to_string e g)) (fun () ->
-        try if not (Env.is_trivial <| Rel.discharge_guard_no_smt e g)
-            then
-                mlog (fun () -> BU.print1 "guard = %s\n" (Rel.guard_to_string e g)) (fun () ->
-                fail1 "Forcing the guard failed (%s)" reason)
-            else ret ()
-        with
-        | _ -> mlog (fun () -> BU.print1 "guard = %s\n" (Rel.guard_to_string e g)) (fun () ->
-               fail1 "Forcing the guard failed (%s)" reason)))
+      proc_guard_formula reason e f sc_opt rng)
 
 let proc_guard = proc_guard' true
 
