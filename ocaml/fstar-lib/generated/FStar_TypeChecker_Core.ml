@@ -4281,7 +4281,21 @@ let (check_term_top :
               (fun eff_te ->
                  match topt with
                  | FStar_Pervasives_Native.None ->
-                     return (FStar_Pervasives_Native.Some eff_te)
+                     if must_tot
+                     then
+                       let uu___1 = eff_te in
+                       (match uu___1 with
+                        | (eff, t) ->
+                            let uu___2 =
+                              (eff = E_GHOST) &&
+                                (let uu___3 = non_informative g1 t in
+                                 Prims.op_Negation uu___3) in
+                            if uu___2
+                            then fail "expected total effect, found ghost"
+                            else
+                              return
+                                (FStar_Pervasives_Native.Some (E_TOTAL, t)))
+                     else return (FStar_Pervasives_Native.Some eff_te)
                  | FStar_Pervasives_Native.Some t ->
                      let target_comp =
                        if
