@@ -4500,30 +4500,29 @@ let (check_term :
 let (compute_term_type_handle_guards :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
-      Prims.bool ->
-        (FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.typ -> Prims.bool)
-          -> (FStar_Syntax_Syntax.typ, error) FStar_Pervasives.either)
+      (FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.typ -> Prims.bool) ->
+        ((tot_or_ghost * FStar_Syntax_Syntax.typ), error)
+          FStar_Pervasives.either)
   =
   fun g ->
     fun e ->
-      fun must_tot ->
-        fun gh ->
-          let e1 = FStar_Syntax_Compress.deep_compress true e in
-          let uu___ =
-            check_term_top_gh g e1 FStar_Pervasives_Native.None must_tot
-              (FStar_Pervasives_Native.Some gh) in
-          match uu___ with
-          | FStar_Pervasives.Inl
-              (FStar_Pervasives_Native.Some (uu___1, t),
-               FStar_Pervasives_Native.None)
-              -> FStar_Pervasives.Inl t
-          | FStar_Pervasives.Inl (FStar_Pervasives_Native.None, uu___1) ->
-              failwith "Impossible: Success must return some effect and type"
-          | FStar_Pervasives.Inl
-              (uu___1, FStar_Pervasives_Native.Some uu___2) ->
-              failwith
-                "Impossible: All guards should have been handled already"
-          | FStar_Pervasives.Inr err -> FStar_Pervasives.Inr err
+      fun gh ->
+        let e1 = FStar_Syntax_Compress.deep_compress true e in
+        let must_tot = false in
+        let uu___ =
+          check_term_top_gh g e1 FStar_Pervasives_Native.None must_tot
+            (FStar_Pervasives_Native.Some gh) in
+        match uu___ with
+        | FStar_Pervasives.Inl
+            (FStar_Pervasives_Native.Some r, FStar_Pervasives_Native.None) ->
+            FStar_Pervasives.Inl r
+        | FStar_Pervasives.Inl (FStar_Pervasives_Native.None, uu___1) ->
+            failwith "Impossible: Success must return some effect and type"
+        | FStar_Pervasives.Inl (uu___1, FStar_Pervasives_Native.Some uu___2)
+            ->
+            failwith
+              "Impossible: All guards should have been handled already"
+        | FStar_Pervasives.Inr err -> FStar_Pervasives.Inr err
 let (open_binders_in_term :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.binders ->

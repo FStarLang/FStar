@@ -1404,10 +1404,10 @@ let _t_trefl (allow_guards:bool) (l : term) (r : term) : tac unit =
           // Note, from well-typedness of the goal, we already know ?u.ty <: ty
           let check_uvar_subtype u t =
             let env = { goal_env g with gamma = g.goal_ctx_uvar.ctx_uvar_gamma } in
-            match Core.compute_term_type_handle_guards env t false (fun _ _ -> true)
+            match Core.compute_term_type_handle_guards env t (fun _ _ -> true)
             with
             | Inr _ -> false
-            | Inl t_ty -> (
+            | Inl (_, t_ty) -> (  // ignoring the effect, ghost is ok
               match Core.check_term_subtyping env ty t_ty with
               | Inl None -> //unconditional subtype
                 mark_uvar_as_already_checked u;

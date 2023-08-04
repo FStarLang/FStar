@@ -28,9 +28,9 @@ val maybe_relate_after_unfolding (g:Env.env) (t0 t1:term) : side
 val check_term (g:Env.env) (e:term) (t:typ) (must_tot:bool)
   : either (option typ) error
 
-val compute_term_type_handle_guards (g:Env.env) (e:term) (must_tot:bool)
+val compute_term_type_handle_guards (g:Env.env) (e:term)
                                     (discharge_guard: Env.env -> typ -> bool)
-  : either typ error
+  : either (tot_or_ghost & typ) error
 
 val open_binders_in_term (g:Env.env) (bs:binders) (t:term)
   : Env.env & binders & term

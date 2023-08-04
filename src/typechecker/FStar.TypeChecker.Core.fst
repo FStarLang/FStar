@@ -1888,10 +1888,11 @@ let check_term g e t must_tot =
   | Inl (_, g) -> Inl g
   | Inr err -> Inr err
 
-let compute_term_type_handle_guards g e must_tot gh =
+let compute_term_type_handle_guards g e gh =
   let e = FStar.Syntax.Compress.deep_compress true e in
+  let must_tot = false in
   match check_term_top_gh g e None must_tot (Some gh) with
-  | Inl (Some (_, t), None) -> Inl t
+  | Inl (Some r, None) -> Inl r
   | Inl (None, _) -> failwith "Impossible: Success must return some effect and type"
   | Inl (_, Some _) -> failwith "Impossible: All guards should have been handled already"
   | Inr err -> Inr err

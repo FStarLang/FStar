@@ -464,6 +464,10 @@ let ret_t (a:Type) = option a & issues
 val core_compute_term_type (g:env) (e:term) (eff:tot_or_ghost)
   : Tac (ret_t (t:typ{typing_token g e (eff, t)}))
 
+val core_compute_term_type2 (g:env) (e:term)
+  : Tac (ret_t (r:(tot_or_ghost & typ){typing_token g e r}))
+
+
 //
 // Check that e:t using the core typechecker
 //
@@ -475,6 +479,9 @@ val core_check_term (g:env) (e:term) (t:typ) (eff:tot_or_ghost)
 //
 val tc_term (g:env) (e:term) (eff:tot_or_ghost)
   : Tac (ret_t (r:(term & typ){typing_token g (fst r) (eff, snd r)}))
+
+val tc_term2 (g:env) (e:term)
+  : Tac (ret_t (r:(term & (tot_or_ghost & typ)){typing_token g (fst r) (snd r)}))
 
 val universe_of (g:env) (e:term)
   : Tac (ret_t (u:universe{typing_token g e (E_Total, pack_ln (Tv_Type u))}))
