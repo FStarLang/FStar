@@ -1064,7 +1064,7 @@ let (instantiate_term_implicits :
                                                       (Prims.of_int (106))
                                                       (Prims.of_int (2))
                                                       (Prims.of_int (106))
-                                                      (Prims.of_int (33)))))
+                                                      (Prims.of_int (21)))))
                                              (FStar_Sealed.seal
                                                 (Obj.magic
                                                    (FStar_Range.mk_range
@@ -1074,7 +1074,7 @@ let (instantiate_term_implicits :
                                                       (Prims.of_int (120))
                                                       (Prims.of_int (49)))))
                                              (Obj.magic
-                                                (FStar_Tactics_V1_Builtins.log_issues
+                                                (FStar_Tactics_V2_Builtins.log_issues
                                                    issues))
                                              (fun uu___1 ->
                                                 (fun uu___1 ->
