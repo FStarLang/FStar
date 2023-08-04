@@ -2800,7 +2800,7 @@ let (get_non_informative_witness :
                                  FStar_Pervasives_Native.Some
                                    (Pulse_Syntax_Pure.tm_fvar
                                       (Pulse_Syntax_Base.as_fv
-                                         (Pulse_Reflection_Util.mk_steel_wrapper_lid
+                                         (Pulse_Reflection_Util.mk_pulse_lib_core_lid
                                             "unit_non_informative")))
                                else
                                  if l = FStar_Reflection_Const.prop_qn
@@ -2808,7 +2808,7 @@ let (get_non_informative_witness :
                                    FStar_Pervasives_Native.Some
                                      (Pulse_Syntax_Pure.tm_fvar
                                         (Pulse_Syntax_Base.as_fv
-                                           (Pulse_Reflection_Util.mk_steel_wrapper_lid
+                                           (Pulse_Reflection_Util.mk_pulse_lib_core_lid
                                               "prop_non_informative")))
                                  else
                                    if
@@ -2821,7 +2821,7 @@ let (get_non_informative_witness :
                                        (Pulse_Syntax_Pure.tm_pureapp
                                           (Pulse_Syntax_Pure.tm_uinst
                                              (Pulse_Syntax_Base.as_fv
-                                                (Pulse_Reflection_Util.mk_steel_wrapper_lid
+                                                (Pulse_Reflection_Util.mk_pulse_lib_core_lid
                                                    "squash_non_informative"))
                                              us) FStar_Pervasives_Native.None
                                           (FStar_Pervasives_Native.__proj__Some__item__v
@@ -2837,7 +2837,7 @@ let (get_non_informative_witness :
                                          (Pulse_Syntax_Pure.tm_pureapp
                                             (Pulse_Syntax_Pure.tm_uinst
                                                (Pulse_Syntax_Base.as_fv
-                                                  (Pulse_Reflection_Util.mk_steel_wrapper_lid
+                                                  (Pulse_Reflection_Util.mk_pulse_lib_core_lid
                                                      "erased_non_informative"))
                                                us)
                                             FStar_Pervasives_Native.None

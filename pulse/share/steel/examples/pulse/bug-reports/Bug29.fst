@@ -1,14 +1,7 @@
 module Bug29
-module T = FStar.Tactics
-module PM = Pulse.Main
-open Steel.ST.Util 
-open Steel.ST.Reference
-open Steel.FractionalPermission
-open FStar.Ghost
+open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
-open Pulse.Steel.Wrapper
-module R = Steel.ST.Reference
-#push-options "--ide_id_info_off"
+module R = Pulse.Lib.Reference
 
 ```pulse
 fn test_assert (x y: R.ref int) (#v:erased int)
@@ -34,7 +27,7 @@ ensures
     R.pts_to x full_perm v **
     R.pts_to y full_perm v 
 {
-  assert_ (R.pts_to x full_perm v `star` R.pts_to y full_perm v);
+  assert_ (R.pts_to x full_perm v ** R.pts_to y full_perm v);
   ()
 }
 ```

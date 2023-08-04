@@ -283,7 +283,7 @@ let (frame_type :
       (FStar_Reflection_Typing.close_term (frame_type_t u t) var)
 let (stt_vprop_post_equiv_fv : FStar_Reflection_Types.fv) =
   FStar_Reflection_V2_Builtins.pack_fv
-    (Pulse_Reflection_Util.mk_steel_wrapper_lid "vprop_post_equiv")
+    (Pulse_Reflection_Util.mk_pulse_lib_core_lid "vprop_post_equiv")
 let (stt_vprop_post_equiv_univ_inst :
   FStar_Reflection_Types.universe -> FStar_Reflection_Types.term) =
   fun u ->

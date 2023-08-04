@@ -1,12 +1,7 @@
 module ExistsSyntax
-module T = FStar.Tactics
-module PM = Pulse.Main
-open Steel.ST.Util
-open Pulse.Steel.Wrapper
-open Steel.ST.Reference
-open FStar.Ghost
+open Pulse.Lib.Pervasives
 module U8 = FStar.UInt8
-module R = Steel.ST.Reference
+module R = Pulse.Lib.Reference
 
 ```pulse
 fn some_function (r0:ref U8.t) (r1:ref U8.t) (#s:erased U8.t)

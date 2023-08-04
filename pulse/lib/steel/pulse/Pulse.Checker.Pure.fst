@@ -279,17 +279,17 @@ let get_non_informative_witness g u t
       match ropt with
       | Some (l, us, _, arg_opt) ->
         if l = R.unit_lid
-        then Some (tm_fvar (as_fv (mk_steel_wrapper_lid "unit_non_informative")))
+        then Some (tm_fvar (as_fv (mk_pulse_lib_core_lid "unit_non_informative")))
         else if l = R.prop_qn
-        then Some (tm_fvar (as_fv (mk_steel_wrapper_lid "prop_non_informative")))
+        then Some (tm_fvar (as_fv (mk_pulse_lib_core_lid "prop_non_informative")))
         else if l = R.squash_qn && Some? arg_opt
         then Some (tm_pureapp
-                     (tm_uinst (as_fv (mk_steel_wrapper_lid "squash_non_informative")) us)
+                     (tm_uinst (as_fv (mk_pulse_lib_core_lid "squash_non_informative")) us)
                      None
                      (Some?.v arg_opt))
         else if l = erased_lid && Some? arg_opt
         then Some (tm_pureapp
-                     (tm_uinst (as_fv (mk_steel_wrapper_lid "erased_non_informative")) us)
+                     (tm_uinst (as_fv (mk_pulse_lib_core_lid "erased_non_informative")) us)
                      None
                      (Some?.v arg_opt))
         else None

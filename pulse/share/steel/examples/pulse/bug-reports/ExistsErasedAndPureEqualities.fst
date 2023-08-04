@@ -1,10 +1,6 @@
 module ExistsErasedAndPureEqualities
-open Pulse.Steel.Wrapper
-module R = Steel.ST.Reference
-module PM = Pulse.Main
-open FStar.Ghost
-open Steel.ST.Util 
-open Pulse.Steel.Wrapper
+open Pulse.Lib.Pervasives
+module R = Pulse.Lib.Reference
 
 assume
 val some_pred (x:R.ref int) (v:int) : vprop

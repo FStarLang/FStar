@@ -1,9 +1,6 @@
 module UnfoldPure
-open Pulse.Steel.Wrapper
+open Pulse.Lib.Pervasives
 module US = FStar.SizeT
-module PM = Pulse.Main
-open Steel.ST.Util 
-open Pulse.Steel.Wrapper
 
 //Some examples illustrating how Pulse eliminates pure predicates
 //automatically, but requires vprops to be explicitly unfolded

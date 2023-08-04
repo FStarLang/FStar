@@ -16,12 +16,12 @@ open Pulse.Reflection.Util
 open Pulse.Checker.Prover.Base
 
 let elim_pure_head =
-    let elim_pure_explicit_lid = mk_steel_wrapper_lid "elim_pure_explicit" in
+    let elim_pure_explicit_lid = mk_pulse_lib_core_lid "elim_pure_explicit" in
     tm_fvar (as_fv elim_pure_explicit_lid)
 
 let elim_pure_head_ty = 
-    let open Pulse.Steel.Wrapper in
-    let open Steel.Effect.Common in
+    // let open Pulse.Steel.Wrapper in
+    // let open Steel.Effect.Common in
     let squash_p = mk_squash u0 (RT.bound_var 0) in
     let pure_p = mk_pure (RT.bound_var 0) in
     let post =

@@ -1,4 +1,7 @@
 open Prims
+let (pulse_lib_core : Prims.string Prims.list) = ["Pulse"; "Lib"; "Core"]
+let (mk_pulse_lib_core_lid : Prims.string -> Prims.string Prims.list) =
+  fun s -> FStar_List_Tot_Base.op_At pulse_lib_core [s]
 let (tun : FStar_Reflection_Types.term) =
   FStar_Reflection_V2_Builtins.pack_ln FStar_Reflection_V2_Data.Tv_Unknown
 let (unit_lid : Prims.string Prims.list) = FStar_Reflection_Const.unit_lid
@@ -7,8 +10,7 @@ let (int_lid : Prims.string Prims.list) = FStar_Reflection_Const.int_lid
 let (erased_lid : Prims.string Prims.list) = ["FStar"; "Ghost"; "erased"]
 let (hide_lid : Prims.string Prims.list) = ["FStar"; "Ghost"; "hide"]
 let (reveal_lid : Prims.string Prims.list) = ["FStar"; "Ghost"; "reveal"]
-let (vprop_lid : Prims.string Prims.list) =
-  ["Steel"; "Effect"; "Common"; "vprop"]
+let (vprop_lid : Prims.string Prims.list) = mk_pulse_lib_core_lid "vprop"
 let (vprop_fv : FStar_Reflection_Types.fv) =
   FStar_Reflection_V2_Builtins.pack_fv vprop_lid
 let (vprop_tm : FStar_Reflection_Types.term) =
@@ -112,11 +114,10 @@ let (true_tm : FStar_Reflection_Types.term) =
 let (false_tm : FStar_Reflection_Types.term) =
   FStar_Reflection_V2_Builtins.pack_ln
     (FStar_Reflection_V2_Data.Tv_Const FStar_Reflection_V2_Data.C_False)
-let (emp_lid : Prims.string Prims.list) =
-  ["Steel"; "Effect"; "Common"; "emp"]
-let (inames_lid : Prims.string Prims.list) = ["Steel"; "Memory"; "inames"]
+let (emp_lid : Prims.string Prims.list) = mk_pulse_lib_core_lid "emp"
+let (inames_lid : Prims.string Prims.list) = mk_pulse_lib_core_lid "inames"
 let (star_lid : Prims.string Prims.list) =
-  ["Steel"; "Effect"; "Common"; "star"]
+  mk_pulse_lib_core_lid "op_Star_Star"
 let (mk_star :
   FStar_Reflection_Types.term ->
     FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
@@ -134,11 +135,9 @@ let (mk_star :
       FStar_Reflection_V2_Builtins.pack_ln
         (FStar_Reflection_V2_Data.Tv_App
            (t1, (r, FStar_Reflection_V2_Data.Q_Explicit)))
-let (pure_lid : Prims.string Prims.list) = ["Steel"; "ST"; "Util"; "pure"]
-let (exists_lid : Prims.string Prims.list) =
-  ["Steel"; "ST"; "Util"; "exists_"]
-let (forall_lid : Prims.string Prims.list) =
-  ["Steel"; "ST"; "Util"; "forall_"]
+let (pure_lid : Prims.string Prims.list) = mk_pulse_lib_core_lid "pure"
+let (exists_lid : Prims.string Prims.list) = mk_pulse_lib_core_lid "exists_"
+let (forall_lid : Prims.string Prims.list) = mk_pulse_lib_core_lid "forall_"
 let (args_of :
   FStar_Reflection_Types.term Prims.list ->
     (FStar_Reflection_Types.term * FStar_Reflection_V2_Data.aqualv)
@@ -158,9 +157,10 @@ let (mk_pure : FStar_Reflection_Types.term -> FStar_Reflection_Types.term) =
          (t, (p, FStar_Reflection_V2_Data.Q_Explicit)))
 let (uzero : FStar_Reflection_Types.universe) =
   FStar_Reflection_V2_Builtins.pack_universe FStar_Reflection_V2_Data.Uv_Zero
-let (steel_wrapper : Prims.string Prims.list) = ["Pulse"; "Steel"; "Wrapper"]
-let (mk_steel_wrapper_lid : Prims.string -> Prims.string Prims.list) =
-  fun s -> FStar_List_Tot_Base.op_At steel_wrapper [s]
+let (pulse_lib_reference : Prims.string Prims.list) =
+  ["Pulse"; "Lib"; "Reference"]
+let (mk_pulse_lib_reference_lid : Prims.string -> Prims.string Prims.list) =
+  fun s -> FStar_List_Tot_Base.op_At pulse_lib_reference [s]
 let (mk_squash :
   FStar_Reflection_Types.universe ->
     FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
@@ -189,7 +189,7 @@ let (mk_eq2 :
             FStar_Reflection_V2_Builtins.pack_ln
               (FStar_Reflection_V2_Data.Tv_UInst
                  ((FStar_Reflection_V2_Builtins.pack_fv
-                     (mk_steel_wrapper_lid "eq2_prop")), [u])) in
+                     (mk_pulse_lib_core_lid "eq2_prop")), [u])) in
           let t1 =
             FStar_Reflection_V2_Builtins.pack_ln
               (FStar_Reflection_V2_Data.Tv_App
@@ -202,7 +202,7 @@ let (mk_eq2 :
             (FStar_Reflection_V2_Data.Tv_App
                (t2, (e2, FStar_Reflection_V2_Data.Q_Explicit)))
 let (stt_admit_lid : Prims.string Prims.list) =
-  mk_steel_wrapper_lid "stt_admit"
+  mk_pulse_lib_core_lid "stt_admit"
 let (mk_stt_admit :
   FStar_Reflection_Types.universe ->
     FStar_Reflection_Types.term ->
@@ -229,7 +229,7 @@ let (mk_stt_admit :
             (FStar_Reflection_V2_Data.Tv_App
                (t3, (post, FStar_Reflection_V2_Data.Q_Explicit)))
 let (stt_atomic_admit_lid : Prims.string Prims.list) =
-  mk_steel_wrapper_lid "stt_atomic_admit"
+  mk_pulse_lib_core_lid "stt_atomic_admit"
 let (mk_stt_atomic_admit :
   FStar_Reflection_Types.universe ->
     FStar_Reflection_Types.term ->
@@ -257,7 +257,7 @@ let (mk_stt_atomic_admit :
             (FStar_Reflection_V2_Data.Tv_App
                (t3, (post, FStar_Reflection_V2_Data.Q_Explicit)))
 let (stt_ghost_admit_lid : Prims.string Prims.list) =
-  mk_steel_wrapper_lid "stt_ghost_admit"
+  mk_pulse_lib_core_lid "stt_ghost_admit"
 let (mk_stt_ghost_admit :
   FStar_Reflection_Types.universe ->
     FStar_Reflection_Types.term ->
@@ -285,10 +285,10 @@ let (mk_stt_ghost_admit :
             (FStar_Reflection_V2_Data.Tv_App
                (t3, (post, FStar_Reflection_V2_Data.Q_Explicit)))
 let (emp_inames_lid : Prims.string Prims.list) =
-  mk_steel_wrapper_lid "emp_inames"
+  mk_pulse_lib_core_lid "emp_inames"
 let (elim_pure_lid : Prims.string Prims.list) =
-  mk_steel_wrapper_lid "elim_pure"
-let (stt_lid : Prims.string Prims.list) = mk_steel_wrapper_lid "stt"
+  mk_pulse_lib_core_lid "elim_pure"
+let (stt_lid : Prims.string Prims.list) = mk_pulse_lib_core_lid "stt"
 let (stt_fv : FStar_Reflection_Types.fv) =
   FStar_Reflection_V2_Builtins.pack_fv stt_lid
 let (stt_tm : FStar_Reflection_Types.term) =
@@ -319,7 +319,7 @@ let (mk_stt_comp :
             (FStar_Reflection_V2_Data.Tv_App
                (t2, (post, FStar_Reflection_V2_Data.Q_Explicit)))
 let (stt_atomic_lid : Prims.string Prims.list) =
-  mk_steel_wrapper_lid "stt_atomic"
+  mk_pulse_lib_core_lid "stt_atomic"
 let (stt_atomic_fv : FStar_Reflection_Types.fv) =
   FStar_Reflection_V2_Builtins.pack_fv stt_atomic_lid
 let (stt_atomic_tm : FStar_Reflection_Types.term) =
@@ -356,7 +356,7 @@ let (mk_stt_atomic_comp :
               (FStar_Reflection_V2_Data.Tv_App
                  (t3, (post, FStar_Reflection_V2_Data.Q_Explicit)))
 let (stt_ghost_lid : Prims.string Prims.list) =
-  mk_steel_wrapper_lid "stt_ghost"
+  mk_pulse_lib_core_lid "stt_ghost"
 let (stt_ghost_fv : FStar_Reflection_Types.fv) =
   FStar_Reflection_V2_Builtins.pack_fv stt_ghost_lid
 let (stt_ghost_tm : FStar_Reflection_Types.term) =
@@ -544,11 +544,11 @@ let (mk_reveal :
           (FStar_Reflection_V2_Data.Tv_App
              (hd1, (e, FStar_Reflection_V2_Data.Q_Explicit)))
 let (elim_exists_lid : Prims.string Prims.list) =
-  mk_steel_wrapper_lid "elim_exists"
+  mk_pulse_lib_core_lid "elim_exists"
 let (intro_exists_lid : Prims.string Prims.list) =
-  mk_steel_wrapper_lid "intro_exists"
+  mk_pulse_lib_core_lid "intro_exists"
 let (intro_exists_erased_lid : Prims.string Prims.list) =
-  mk_steel_wrapper_lid "intro_exists_erased"
+  mk_pulse_lib_core_lid "intro_exists_erased"
 let (mk_exists :
   FStar_Reflection_Types.universe ->
     FStar_Reflection_Types.term ->
@@ -658,7 +658,8 @@ let (mk_intro_exists_erased :
           FStar_Reflection_V2_Builtins.pack_ln
             (FStar_Reflection_V2_Data.Tv_App
                (t2, (e, FStar_Reflection_V2_Data.Q_Explicit)))
-let (while_lid : Prims.string Prims.list) = mk_steel_wrapper_lid "while_loop"
+let (while_lid : Prims.string Prims.list) =
+  mk_pulse_lib_core_lid "while_loop"
 let (mk_while :
   FStar_Reflection_Types.term ->
     FStar_Reflection_Types.term ->
@@ -722,7 +723,7 @@ let (emp_inames_tm : FStar_Reflection_Types.term) =
     (FStar_Reflection_V2_Data.Tv_FVar
        (FStar_Reflection_V2_Builtins.pack_fv emp_inames_lid))
 let (non_informative_witness_lid : Prims.string Prims.list) =
-  mk_steel_wrapper_lid "non_informative_witness"
+  mk_pulse_lib_core_lid "non_informative_witness"
 let (non_informative_witness_rt :
   FStar_Reflection_Types.universe ->
     FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
@@ -740,7 +741,7 @@ let (non_informative_witness_rt :
              (t, (a, FStar_Reflection_V2_Data.Q_Explicit))) in
       t1
 let (stt_vprop_equiv_fv : FStar_Reflection_Types.fv) =
-  FStar_Reflection_V2_Builtins.pack_fv (mk_steel_wrapper_lid "vprop_equiv")
+  FStar_Reflection_V2_Builtins.pack_fv (mk_pulse_lib_core_lid "vprop_equiv")
 let (stt_vprop_equiv_tm : FStar_Reflection_Types.term) =
   FStar_Reflection_V2_Builtins.pack_ln
     (FStar_Reflection_V2_Data.Tv_FVar stt_vprop_equiv_fv)
@@ -758,17 +759,17 @@ let (stt_vprop_equiv :
         (FStar_Reflection_V2_Data.Tv_App
            (t, (t2, FStar_Reflection_V2_Data.Q_Explicit)))
 let (return_stt_lid : Prims.string Prims.list) =
-  mk_steel_wrapper_lid "return_stt"
+  mk_pulse_lib_core_lid "return_stt"
 let (return_stt_noeq_lid : Prims.string Prims.list) =
-  mk_steel_wrapper_lid "return"
+  mk_pulse_lib_core_lid "return"
 let (return_stt_atomic_lid : Prims.string Prims.list) =
-  mk_steel_wrapper_lid "return_stt_atomic"
+  mk_pulse_lib_core_lid "return_stt_atomic"
 let (return_stt_atomic_noeq_lid : Prims.string Prims.list) =
-  mk_steel_wrapper_lid "return_stt_atomic_noeq"
+  mk_pulse_lib_core_lid "return_stt_atomic_noeq"
 let (return_stt_ghost_lid : Prims.string Prims.list) =
-  mk_steel_wrapper_lid "return_stt_ghost"
+  mk_pulse_lib_core_lid "return_stt_ghost"
 let (return_stt_ghost_noeq_lid : Prims.string Prims.list) =
-  mk_steel_wrapper_lid "return_stt_ghost_noeq"
+  mk_pulse_lib_core_lid "return_stt_ghost_noeq"
 let (mk_stt_return :
   FStar_Reflection_Types.universe ->
     FStar_Reflection_Types.term ->
@@ -936,7 +937,7 @@ let (mk_lift_atomic_stt :
       fun pre ->
         fun post ->
           fun e ->
-            let lid = mk_steel_wrapper_lid "lift_stt_atomic" in
+            let lid = mk_pulse_lib_core_lid "lift_stt_atomic" in
             let t =
               FStar_Reflection_V2_Builtins.pack_ln
                 (FStar_Reflection_V2_Data.Tv_UInst
@@ -972,7 +973,7 @@ let (mk_lift_ghost_atomic :
           fun post ->
             fun e ->
               fun reveal_a ->
-                let lid = mk_steel_wrapper_lid "lift_stt_ghost" in
+                let lid = mk_pulse_lib_core_lid "lift_stt_ghost" in
                 let t =
                   FStar_Reflection_V2_Builtins.pack_ln
                     (FStar_Reflection_V2_Data.Tv_UInst
@@ -1020,7 +1021,7 @@ let (mk_bind_stt :
               fun post2 ->
                 fun t1 ->
                   fun t2 ->
-                    let bind_lid = mk_steel_wrapper_lid "bind_stt" in
+                    let bind_lid = mk_pulse_lib_core_lid "bind_stt" in
                     let head =
                       FStar_Reflection_V2_Builtins.pack_ln
                         (FStar_Reflection_V2_Data.Tv_UInst
@@ -1066,7 +1067,7 @@ let (mk_bind_ghost :
                 fun post2 ->
                   fun e1 ->
                     fun e2 ->
-                      let bind_lid = mk_steel_wrapper_lid "bind_sttg" in
+                      let bind_lid = mk_pulse_lib_core_lid "bind_sttg" in
                       let t =
                         FStar_Reflection_V2_Builtins.pack_ln
                           (FStar_Reflection_V2_Data.Tv_UInst
@@ -1133,7 +1134,7 @@ let (mk_bind_ghost_atomic :
                     fun e2 ->
                       fun reveal_a ->
                         let bind_lid =
-                          mk_steel_wrapper_lid "bind_stt_ghost_atomic" in
+                          mk_pulse_lib_core_lid "bind_stt_ghost_atomic" in
                         let t =
                           FStar_Reflection_V2_Builtins.pack_ln
                             (FStar_Reflection_V2_Data.Tv_UInst
@@ -1209,7 +1210,7 @@ let (mk_bind_atomic_ghost :
                     fun e2 ->
                       fun reveal_b ->
                         let bind_lid =
-                          mk_steel_wrapper_lid "bind_stt_atomic_ghost" in
+                          mk_pulse_lib_core_lid "bind_stt_atomic_ghost" in
                         let t =
                           FStar_Reflection_V2_Builtins.pack_ln
                             (FStar_Reflection_V2_Data.Tv_UInst
@@ -1273,7 +1274,7 @@ let (mk_frame_stt :
         fun post ->
           fun frame ->
             fun t ->
-              let frame_lid = mk_steel_wrapper_lid "frame_stt" in
+              let frame_lid = mk_pulse_lib_core_lid "frame_stt" in
               let frame_fv = FStar_Reflection_V2_Builtins.pack_fv frame_lid in
               let frame_univ_inst u1 =
                 FStar_Reflection_V2_Builtins.pack_ln
@@ -1306,7 +1307,7 @@ let (mk_frame_stt_atomic :
           fun post ->
             fun frame ->
               fun e ->
-                let lid = mk_steel_wrapper_lid "frame_stt_atomic" in
+                let lid = mk_pulse_lib_core_lid "frame_stt_atomic" in
                 let t =
                   FStar_Reflection_V2_Builtins.pack_ln
                     (FStar_Reflection_V2_Data.Tv_UInst
@@ -1350,7 +1351,7 @@ let (mk_frame_stt_ghost :
           fun post ->
             fun frame ->
               fun e ->
-                let lid = mk_steel_wrapper_lid "frame_stt_ghost" in
+                let lid = mk_pulse_lib_core_lid "frame_stt_ghost" in
                 let t =
                   FStar_Reflection_V2_Builtins.pack_ln
                     (FStar_Reflection_V2_Data.Tv_UInst
@@ -1394,7 +1395,7 @@ let (mk_sub_stt :
           fun post1 ->
             fun post2 ->
               fun t ->
-                let subsumption_lid = mk_steel_wrapper_lid "sub_stt" in
+                let subsumption_lid = mk_pulse_lib_core_lid "sub_stt" in
                 let subsumption_fv =
                   FStar_Reflection_V2_Builtins.pack_fv subsumption_lid in
                 let subsumption_univ_inst u1 =
@@ -1443,7 +1444,7 @@ let (mk_sub_stt_atomic :
             fun post1 ->
               fun post2 ->
                 fun e ->
-                  let lid = mk_steel_wrapper_lid "sub_stt_atomic" in
+                  let lid = mk_pulse_lib_core_lid "sub_stt_atomic" in
                   let t =
                     FStar_Reflection_V2_Builtins.pack_ln
                       (FStar_Reflection_V2_Data.Tv_UInst
@@ -1509,7 +1510,7 @@ let (mk_sub_stt_ghost :
             fun post1 ->
               fun post2 ->
                 fun e ->
-                  let lid = mk_steel_wrapper_lid "sub_stt_ghost" in
+                  let lid = mk_pulse_lib_core_lid "sub_stt_ghost" in
                   let t =
                     FStar_Reflection_V2_Builtins.pack_ln
                       (FStar_Reflection_V2_Data.Tv_UInst
@@ -1577,7 +1578,7 @@ let (mk_par :
               fun postR ->
                 fun eL ->
                   fun eR ->
-                    let lid = mk_steel_wrapper_lid "stt_par" in
+                    let lid = mk_pulse_lib_core_lid "stt_par" in
                     let t =
                       FStar_Reflection_V2_Builtins.pack_ln
                         (FStar_Reflection_V2_Data.Tv_UInst
@@ -1623,7 +1624,7 @@ let (mk_rewrite :
         FStar_Reflection_V2_Builtins.pack_ln
           (FStar_Reflection_V2_Data.Tv_FVar
              (FStar_Reflection_V2_Builtins.pack_fv
-                (mk_steel_wrapper_lid "rewrite"))) in
+                (mk_pulse_lib_core_lid "rewrite"))) in
       let t1 =
         FStar_Reflection_V2_Builtins.pack_ln
           (FStar_Reflection_V2_Data.Tv_App
@@ -1655,7 +1656,7 @@ let (mk_withlocal :
           fun ret_t ->
             fun post ->
               fun body ->
-                let lid = mk_steel_wrapper_lid "with_local" in
+                let lid = mk_pulse_lib_reference_lid "with_local" in
                 let t =
                   FStar_Reflection_V2_Builtins.pack_ln
                     (FStar_Reflection_V2_Data.Tv_UInst
@@ -1757,9 +1758,9 @@ let (mk_stt_ghost_comp_equiv :
             fun post1 ->
               fun pre2 ->
                 fun post2 -> fun pre_eq -> fun post_eq -> Prims.admit ()
-let (ref_lid : Prims.string Prims.list) = ["Steel"; "ST"; "Reference"; "ref"]
+let (ref_lid : Prims.string Prims.list) = mk_pulse_lib_reference_lid "ref"
 let (pts_to_lid : Prims.string Prims.list) =
-  ["Steel"; "ST"; "Reference"; "pts_to"]
+  mk_pulse_lib_reference_lid "pts_to"
 let (full_perm_lid : Prims.string Prims.list) =
   ["Steel"; "FractionalPermission"; "full_perm"]
 let (mk_ref : FStar_Reflection_Types.term -> FStar_Reflection_Types.term) =
