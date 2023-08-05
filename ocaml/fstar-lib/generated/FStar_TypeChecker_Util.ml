@@ -5425,6 +5425,31 @@ let (maybe_coerce_lc :
                    | (e1, lc1) ->
                        (e1, lc1, FStar_TypeChecker_Env.trivial_guard))
               | FStar_Pervasives_Native.None ->
+                  let strip_hide_or_reveal e1 hide_or_reveal =
+                    let uu___3 = FStar_Syntax_Util.leftmost_head_and_args e1 in
+                    match uu___3 with
+                    | (hd, args) ->
+                        let uu___4 =
+                          let uu___5 =
+                            let uu___6 = FStar_Syntax_Subst.compress hd in
+                            uu___6.FStar_Syntax_Syntax.n in
+                          (uu___5, args) in
+                        (match uu___4 with
+                         | (FStar_Syntax_Syntax.Tm_uinst (hd1, uu___5),
+                            (uu___6, aq_t)::(e2, aq_e)::[]) when
+                             (((FStar_Syntax_Util.is_fvar hide_or_reveal hd1)
+                                 &&
+                                 (FStar_Pervasives_Native.uu___is_Some aq_t))
+                                &&
+                                (FStar_Pervasives_Native.__proj__Some__item__v
+                                   aq_t).FStar_Syntax_Syntax.aqual_implicit)
+                               &&
+                               ((aq_e = FStar_Pervasives_Native.None) ||
+                                  (Prims.op_Negation
+                                     (FStar_Pervasives_Native.__proj__Some__item__v
+                                        aq_e).FStar_Syntax_Syntax.aqual_implicit))
+                             -> FStar_Pervasives_Native.Some e2
+                         | uu___5 -> FStar_Pervasives_Native.None) in
                   let uu___3 =
                     let uu___4 =
                       check_erased env lc.FStar_TypeChecker_Common.res_typ in
@@ -5447,7 +5472,14 @@ let (maybe_coerce_lc :
                               let uu___7 = FStar_Syntax_Syntax.mk_Total exp_t in
                               coerce_with env e lc FStar_Parser_Const.hide
                                 [u] uu___6 uu___7 in
-                            (match uu___5 with | (e1, lc1) -> (e1, lc1, g1)))
+                            (match uu___5 with
+                             | (e_hide, lc1) ->
+                                 let e_hide1 =
+                                   let uu___6 =
+                                     strip_hide_or_reveal e
+                                       FStar_Parser_Const.reveal in
+                                   FStar_Compiler_Util.dflt e_hide uu___6 in
+                                 (e_hide1, lc1, g1)))
                    | (Yes ty, No) ->
                        let u = env.FStar_TypeChecker_Env.universe_of env ty in
                        let uu___4 =
@@ -5458,8 +5490,14 @@ let (maybe_coerce_lc :
                          coerce_with env e lc FStar_Parser_Const.reveal 
                            [u] uu___5 uu___6 in
                        (match uu___4 with
-                        | (e1, lc1) ->
-                            (e1, lc1, FStar_TypeChecker_Env.trivial_guard))
+                        | (e_reveal, lc1) ->
+                            let e_reveal1 =
+                              let uu___5 =
+                                strip_hide_or_reveal e
+                                  FStar_Parser_Const.hide in
+                              FStar_Compiler_Util.dflt e_reveal uu___5 in
+                            (e_reveal1, lc1,
+                              FStar_TypeChecker_Env.trivial_guard))
                    | uu___4 -> (e, lc, FStar_TypeChecker_Env.trivial_guard))))
 let (weaken_result_typ :
   FStar_TypeChecker_Env.env ->
