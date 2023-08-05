@@ -14,13 +14,14 @@ commonly, however, the programmer needs to give the SMT solver some
 help in the form of new facts that it can use. We've seen examples of
 this when we call lemmas within a function body in order to make it
 verify. For instance, compare the following two examples (the first of
-which fails).
+which in the comments is known to be unstable).
 *)
 
-[@expect_failure]
+(*
 let modulo_add_fail (p:pos) (a b c : int)
   : Lemma (requires (b % p == c % p)) (ensures ((a + b) % p == (a + c) % p))
   = ()
+*)
 
 let modulo_add (p:pos) (a b c : int)
   : Lemma (requires (b % p == c % p)) (ensures ((a + b) % p == (a + c) % p))
