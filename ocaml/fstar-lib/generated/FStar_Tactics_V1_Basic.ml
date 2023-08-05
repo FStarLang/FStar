@@ -4500,7 +4500,9 @@ let longest_prefix :
           match (l11, l21) with
           | (x::xs, y::ys) ->
               let uu___ = f x y in
-              if uu___ then aux (x :: acc) xs ys else (acc, xs, ys)
+              if uu___
+              then aux (x :: acc) xs ys
+              else (acc, (x :: xs), (y :: ys))
           | uu___ -> (acc, l11, l21) in
         let uu___ = aux [] l1 l2 in
         match uu___ with
