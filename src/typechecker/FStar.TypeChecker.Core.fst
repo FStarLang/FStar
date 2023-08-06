@@ -826,7 +826,7 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
       = maybe_unfold_side (which_side_to_unfold t0 t1) t0 t1
     in
     let emit_guard t0 t1 =
-       let! _, t_typ = check' g t0 in
+       let! _, t_typ = do_check g t0 in
        let! u = universe_of g t_typ in
        guard (U.mk_eq2 u t_typ t0 t1)
     in
@@ -1177,7 +1177,7 @@ and check_subtype (g:env) (e:option term) (t0 t1:typ)
 and memo_check (g:env) (e:term)
   : result (effect_label & typ)
   = let check_then_memo g e ctx =
-      let r = check' g e ctx in
+      let r = do_check_and_promote g e ctx in
       match r with
       | Inl (res, None) ->
         insert g e (res, None);
@@ -1220,13 +1220,22 @@ and check (msg:string) (g:env) (e:term)
   : result (effect_label & typ)
   = with_context msg (Some (CtxTerm e)) (fun _ -> memo_check g e)
 
+and do_check_and_promote (g:env) (e:term)
+  : result (effect_label & typ)
+  = let! (eff, t) = do_check g e in
+    let eff =
+      match eff with
+      | E_TOTAL -> E_TOTAL
+      | E_GHOST -> if non_informative g t then E_TOTAL else E_GHOST in
+    return (eff, t)
+
 (*  G |- e : Tot t | pre *)
-and check' (g:env) (e:term)
+and do_check (g:env) (e:term)
   : result (effect_label & typ) =
   let e = Subst.compress e in
   match e.n with
   | Tm_lazy ({lkind=Lazy_embedding _}) ->
-    check' g (U.unlazy e)
+    do_check g (U.unlazy e)
 
   | Tm_lazy i ->
     return (E_TOTAL, i.ltyp)
