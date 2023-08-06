@@ -388,7 +388,7 @@ let join
   (a2: Ghost.erased (array elt))
 : STAtomicBase (array elt) false opened Unobservable
     (pts_to a1 p x1 `star` pts_to a2 p x2)
-    (fun res -> pts_to res p ((Ghost.reveal x1) `Seq.append` (Ghost.reveal x2)))
+    (fun res -> pts_to res p (x1 `Seq.append` x2))
     (adjacent a1 a2)
     (fun res -> merge_into a1 a2 res)
 = let _ : squash (adjacent a1 a2) = () in
