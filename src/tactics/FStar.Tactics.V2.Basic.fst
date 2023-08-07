@@ -2106,7 +2106,26 @@ let dbg_refl (g:env) (msg:unit -> string) =
   then BU.print_string (msg ())
 
 let issues = list Errors.issue
-let refl_typing_builtin_wrapper (f:unit -> 'a) : tac (option 'a & issues) =
+
+let rec iter (f : 'a -> tac unit) (xs : list 'a) : tac unit =
+  match xs with
+  | [] -> ret ()
+  | x::xs ->
+    f x;!
+    iter f xs
+
+let refl_typing_guard (e:env) (g:typ) : tac unit =
+  let reason = "refl_typing_guard" in
+  proc_guard_formula "refl_typing_guard" e g None Range.dummyRange
+
+let uncurry f (x, y) = f x y
+
+let __refl_typing_builtin_wrapper (f:unit -> 'a & list (env & typ)) : tac (option 'a & issues) =
+  (* We ALWAYS rollback the state. This wrapper is meant to ensure that
+  the UF graph is not affected by whatever we are wrapping. This means
+  any returned term must be deeply-compressed. The guards are compressed by
+  this wrapper, and handled according to the guard policy, so no action is needed
+  in the wrapped function `f`. *)
   let tx = UF.new_transaction () in
   let errs, r =
     try Errors.catch_errors_and_ignore_rest f
@@ -2120,12 +2139,51 @@ let refl_typing_builtin_wrapper (f:unit -> 'a) : tac (option 'a & issues) =
       }) in
       [issue], None
   in
+
+  (* Deep compress the guards since we are about to roll back the UF.
+  The caller will discharge them if needed. *)
+  let gs =
+    if Some? r then
+      List.map (fun (e,g) -> e, SC.deep_compress false g) (snd (Some?.v r))
+    else
+      []
+  in
+
+  (* If r is Some, extract the result, that's what we return *)
+  let r = BU.map_opt r fst in
+
+  (* Compress the id info table. *)
   let! ps = get in
   Env.promote_id_info ps.main_context (FStar.TypeChecker.Tc.compress_and_norm ps.main_context);
+
   UF.rollback tx;
+
+  (* Make sure to return None if any error was logged. *)
   if List.length errs > 0
   then ret (None, errs)
-  else ret (r, errs)
+  else (
+    iter (uncurry refl_typing_guard) gs;!
+    ret (r, errs)
+  )
+
+(* This runs the tactic `f` in the current proofstate, and returns an
+Inl if any error was raised or logged by the execution. Returns Inr with
+the result otherwise. It only advances the proofstate on a success. *)
+let catch_all (f : tac 'a) : tac (either issues 'a) =
+  mk_tac (fun ps ->
+    match Errors.catch_errors_and_ignore_rest (fun () -> Tactics.Monad.run f ps) with
+    | [], Some (Success (v, ps')) -> Success (Inr v, ps')
+    | errs, _ -> Success (Inl errs, ps))
+
+(* A *second* wrapper for typing builtin primitives. The wrapper
+above (__refl_typing_builtin_wrapper) is meant to catch errors in the
+execution of the primitive we are calling. This second is meant to catch
+errors in the tactic execution, e.g. those related to discharging the
+guards if a synchronous mode (SMTSync/Force) was used. *)
+let refl_typing_builtin_wrapper (f:unit -> 'a & list (env & typ)) : tac (option 'a & issues) =
+  match! catch_all (__refl_typing_builtin_wrapper f) with
+  | Inl errs -> ret (None, errs)
+  | Inr r -> ret r
 
 let no_uvars_in_term (t:term) : bool =
   t |> Free.uvars |> BU.set_is_empty &&
@@ -2170,10 +2228,10 @@ let refl_check_relation (g:env) (t0 t1:typ) (rel:relation)
          match f g t0 t1 with
          | Inl None ->
            dbg_refl g (fun _ -> "refl_check_relation: succeeded (no guard)");
-           ()
+           ((), [])
          | Inl (Some guard_f) ->
-           Rel.force_trivial_guard g {Env.trivial_guard with guard_f=NonTrivial guard_f};
-           dbg_refl g (fun _ -> "refl_check_relation: succeeded")
+           dbg_refl g (fun _ -> "refl_check_relation: succeeded");
+           ((), [(g, guard_f)])
          | Inr err ->
            dbg_refl g (fun _ -> BU.format1 "refl_check_relation failed: %s\n" (Core.print_error err));
            Errors.raise_error (Errors.Fatal_IllTyped, "check_relation failed: " ^ (Core.print_error err)) Range.dummyRange)
@@ -2202,10 +2260,13 @@ let refl_core_compute_term_type (g:env) (e:term) (eff:tot_or_ghost) : tac (optio
          dbg_refl g (fun _ ->
            BU.format1 "refl_core_compute_term_type: %s\n" (Print.term_to_string e));
          let must_tot = to_must_tot eff in
+         let guards : ref (list (env & typ)) = BU.mk_ref [] in
          let gh = fun g guard ->
-           Rel.force_trivial_guard g
-             {Env.trivial_guard with guard_f = NonTrivial guard};
-           true in
+           (* FIXME: this is kinda ugly, we store all the guards
+           in a local ref and fetch them at the end. *)
+           guards := (g, guard) :: !guards;
+           true
+         in
          match Core.compute_term_type_handle_guards g e must_tot gh with
          | Inl t ->
            let t = refl_norm_type g t in
@@ -2213,7 +2274,7 @@ let refl_core_compute_term_type (g:env) (e:term) (eff:tot_or_ghost) : tac (optio
              BU.format2 "refl_core_compute_term_type for %s computed type %s\n"
                (Print.term_to_string e)
                (Print.term_to_string t));
-           t
+           (t, !guards)
          | Inr err ->
            dbg_refl g (fun _ -> BU.format1 "refl_core_compute_term_type: %s\n" (Core.print_error err));
            Errors.raise_error (Errors.Fatal_IllTyped, "core_compute_term_type failed: " ^ (Core.print_error err)) Range.dummyRange)
@@ -2233,11 +2294,10 @@ let refl_core_check_term (g:env) (e:term) (t:typ) (eff:tot_or_ghost)
          match Core.check_term g e t must_tot with
          | Inl None ->
            dbg_refl g (fun _ -> "refl_core_check_term: succeeded with no guard\n");
-           ret ()
+           ((), [])
          | Inl (Some guard) ->
            dbg_refl g (fun _ -> "refl_core_check_term: succeeded with guard\n");
-           Rel.force_trivial_guard g {Env.trivial_guard with guard_f=NonTrivial guard};
-           ret ()
+           ((), [(g, guard)])
          | Inr err ->
            dbg_refl g (fun _ -> BU.format1 "refl_core_check_term failed: %s\n" (Core.print_error err));
            Errors.raise_error (Errors.Fatal_IllTyped, "refl_core_check_term failed: " ^ (Core.print_error err)) Range.dummyRange)
@@ -2275,10 +2335,12 @@ let refl_tc_term (g:env) (e:term) (eff:tot_or_ghost) : tac (option (term & typ) 
      dbg_refl g (fun _ ->
        BU.format1 "} finished tc with e = %s\n"
          (Print.term_to_string e));
+     let guards : ref (list (env & typ)) = BU.mk_ref [] in
      let gh = fun g guard ->
-        Rel.force_trivial_guard g
-          {Env.trivial_guard with guard_f = NonTrivial guard};
-        true in
+       (* collect guards and return them *)
+       guards := (g, guard) :: !guards;
+       true
+     in
      match Core.compute_term_type_handle_guards g e must_tot gh with
      | Inl t ->
         let t = refl_norm_type g t in
@@ -2286,7 +2348,7 @@ let refl_tc_term (g:env) (e:term) (eff:tot_or_ghost) : tac (option (term & typ) 
           BU.format2 "refl_tc_term for %s computed type %s\n"
             (Print.term_to_string e)
             (Print.term_to_string t));
-        e, t
+        ((e, t), !guards)
      | Inr err ->
         dbg_refl g (fun _ -> BU.format1 "refl_tc_term failed: %s\n" (Core.print_error err));
         Errors.raise_error (Errors.Fatal_IllTyped, "tc_term callback failed: " ^ Core.print_error err) e.pos
@@ -2309,11 +2371,9 @@ let refl_universe_of (g:env) (e:term) : tac (option universe & issues) =
          let t, u = U.type_u () in
          let must_tot = false in
          match Core.check_term g e t must_tot with
-         | Inl None -> check_univ_var_resolved u
+         | Inl None -> (check_univ_var_resolved u, [])
          | Inl (Some guard) ->
-           Rel.force_trivial_guard g
-             {Env.trivial_guard with guard_f=NonTrivial guard};
-           check_univ_var_resolved u
+           (check_univ_var_resolved u, [(g, guard)])
          | Inr err ->
            let msg = BU.format1 "refl_universe_of failed: %s\n" (Core.print_error err) in
            dbg_refl g (fun _ -> msg);
@@ -2339,8 +2399,8 @@ let refl_check_prop_validity (g:env) (e:term) : tac (option unit & issues) =
              dbg_refl g (fun _ -> msg);
              Errors.raise_error (Errors.Fatal_IllTyped, msg) Range.dummyRange
          in
-         Rel.force_trivial_guard g
-           {Env.trivial_guard with guard_f=NonTrivial e})
+         ((), [(g, e)])
+       )
   else ret (None, [unexpected_uvars_issue (Env.get_range g)])
 
 let refl_check_match_complete (g:env) (sc:term) (scty:typ) (pats : list RD.pattern)
@@ -2385,6 +2445,9 @@ let refl_instantiate_implicits (g:env) (e:term) : tac (option (term & typ) & iss
     let must_tot = true in
     let g = {g with instantiate_imp=false; phase1=true; lax=true} in
     let e, t, guard = g.typeof_tot_or_gtot_term g e must_tot in
+    (* We force this guard here, and do not delay it, since we
+    will return this term and it MUST be compressed. We could
+    split the logical part away and return that, though. *)
     Rel.force_trivial_guard g guard;
     let e = SC.deep_compress false e in
     let t = t |> refl_norm_type g |> SC.deep_compress false in
@@ -2392,7 +2455,8 @@ let refl_instantiate_implicits (g:env) (e:term) : tac (option (term & typ) & iss
       BU.format2 "} finished tc with e = %s and t = %s\n"
         (Print.term_to_string e)
         (Print.term_to_string t));
-    (e, t))
+    ((e, t), [])
+  )
   else ret (None, [unexpected_uvars_issue (Env.get_range g)])
 
 let refl_maybe_relate_after_unfolding (g:env) (t0 t1:typ)
@@ -2410,7 +2474,7 @@ let refl_maybe_relate_after_unfolding (g:env) (t0 t1:typ)
          dbg_refl g (fun _ ->
            BU.format1 "} returning side: %s\n"
              (Core.side_to_string s));
-         s)
+         s, [])
   else ret (None, [unexpected_uvars_issue (Env.get_range g)])
 
 let refl_maybe_unfold_head (g:env) (e:term) : tac (option term & issues) =
@@ -2430,7 +2494,7 @@ let refl_maybe_unfold_head (g:env) (e:term) : tac (option term & issues) =
                              BU.format1
                                "Could not unfold head: %s\n"
                                (Print.term_to_string e)) e.pos
-    else eopt |> must)
+    else (eopt |> must, []))
   else ret (None, [unexpected_uvars_issue (Env.get_range g)])
 
 let push_open_namespace (e:env) (ns:list string) =
