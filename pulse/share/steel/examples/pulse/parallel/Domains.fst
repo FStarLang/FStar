@@ -400,11 +400,10 @@ let resourceful_res #a post = (x:a & Lock.lock (post x))
 
 let unit_stt a pre post = (unit -> stt a pre post)
 
-// FIXME: eta expansion makes the proof fail, but needed for now in pulse
 let exec_unit_stt #a #pre #post
   (f : unit_stt a pre post)
 : stt a pre (fun y -> post y)
-= admit(); f ()
+= sub_stt _ _ (vprop_equiv_refl _) (intro_vprop_post_equiv _ _ (fun _ -> vprop_equiv_refl _)) (f ())
 
 let mk_resourceful_res #a #post (x: a) (l: Lock.lock (post x)):
   resourceful_res post
