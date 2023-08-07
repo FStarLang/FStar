@@ -1217,12 +1217,12 @@ and check (msg:string) (g:env) (e:term)
   = with_context msg (Some (CtxTerm e)) (fun _ -> memo_check g e)
 
 and do_check_and_promote (g:env) (e:term)
-  : result (effect_label & typ)
+  : result (tot_or_ghost & typ)
   = let! (eff, t) = do_check g e in
     let eff =
       match eff with
-      | E_TOTAL -> E_TOTAL
-      | E_GHOST -> if non_informative g t then E_TOTAL else E_GHOST in
+      | E_Total -> E_Total
+      | E_Ghost -> if non_informative g t then E_Total else E_Ghost in
     return (eff, t)
 
 (*  G |- e : Tot t | pre *)
@@ -1795,10 +1795,10 @@ let check_term_top g e topt (must_tot:bool) (gh:option guard_handler_t)
       // check expected effect
       if must_tot
       then let eff, t = eff_te in 
-           if eff = E_GHOST &&
+           if eff = E_Ghost &&
               not (non_informative g t)
            then fail "expected total effect, found ghost"
-           else return (Some (E_TOTAL, t))
+           else return (Some (E_Total, t))
       else return (Some eff_te)
     | Some t ->
       let target_comp =
