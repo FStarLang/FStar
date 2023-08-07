@@ -102,7 +102,7 @@ let check
   let (| uvs, g, t |) = instantaite_implicits g0 t in
 
   let Tm_STApp { head; arg_qual=qual; arg } = t.term in
-  let (| head, ty_head, dhead |) = check_term g head in
+  let (| head, ty_head, dhead |) = check_tot_term g head in
   debug_log g (fun _ ->
     T.print (Printf.sprintf "st_app: head = %s, ty_head = %s\n"
                (P.term_to_string head)
@@ -120,14 +120,14 @@ let check
     
     if qual = bqual
     then
-      let (| arg, darg |) = check_term_with_expected_type g arg formal in
+      let (| arg, darg |) = check_tot_term_with_expected_type g arg formal in
       match comp_typ with
       | C_ST res
       | C_STAtomic _ res
       | C_STGhost _ res ->
         // This is a real ST application
         let d : st_typing _ _ (open_comp_with comp_typ arg) =
-          T_STApp g head formal qual comp_typ arg (E dhead) (E darg) in
+          T_STApp g head formal qual comp_typ arg dhead darg in
         let d = canonicalize_st_typing d in
         let t = { term = Tm_STApp {head; arg_qual=qual; arg}; range } in
         let c = (canon_comp (open_comp_with comp_typ arg)) in

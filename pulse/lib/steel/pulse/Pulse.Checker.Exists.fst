@@ -107,8 +107,8 @@ let check_intro_exists_erased
   Pulse.Typing.FV.tot_typing_freevars t_typing;
   let ty_typing, _ = Metatheory.tm_exists_inversion #g #u #b.binder_ty #p t_typing (fresh g) in
   let (| e, e_typing |) = 
-    check_term_with_expected_type g e (mk_erased u b.binder_ty) in
-  let d = T_IntroExistsErased g u b p e ty_typing t_typing (E e_typing) in
+    check_tot_term_with_expected_type g e (mk_erased u b.binder_ty) in
+  let d = T_IntroExistsErased g u b p e ty_typing t_typing e_typing in
   prove_post_hint (try_frame_pre pre_typing d res_ppname) post_hint (t <: term).range
 
 let check_intro_exists_non_erased
@@ -141,8 +141,8 @@ let check_intro_exists_non_erased
   Pulse.Typing.FV.tot_typing_freevars t_typing;
   let ty_typing, _ = Metatheory.tm_exists_inversion #g #u #b.binder_ty #p t_typing (fresh g) in
   let (| witness, witness_typing |) = 
-    check_term_with_expected_type g witness b.binder_ty in
-  let d = T_IntroExists g u b p witness ty_typing t_typing (E witness_typing) in
+    check_tot_term_with_expected_type g witness b.binder_ty in
+  let d = T_IntroExists g u b p witness ty_typing t_typing witness_typing in
   let (| c, d |) : (c:_ & st_typing g _ c) = (| _, d |) in
   prove_post_hint (try_frame_pre pre_typing d res_ppname) post_hint (t <: term).range
 
