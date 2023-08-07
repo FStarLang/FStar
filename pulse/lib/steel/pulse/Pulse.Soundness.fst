@@ -235,8 +235,7 @@ let rec soundness (g:stt_env)
       : GTot (RT.tot_typing (elab_env g)
                 (mk_abs_with_name ppname.name (elab_term ty) (elab_qual q) (RT.close_term (elab_st_typing body_typing) x))
                 (elab_term (tm_arrow {binder_ty=ty;binder_ppname=ppname} q (close_comp c x))))
-      = let E t_typing = t_typing in
-        let r_t_typing = tot_typing_soundness (E t_typing) in
+      = let r_t_typing = tot_typing_soundness t_typing in
         let r_body_typing = soundness _ _ _ body_typing in
         mk_t_abs g #_ #_ #_ #t_typing ppname r_t_typing r_body_typing
     in

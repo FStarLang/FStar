@@ -168,7 +168,7 @@ let check_term (g:env) (t:term)
       match readback_ty rt, readback_ty ty' with
       | None, _ -> fail g (Some t.range) (readback_failure rt)
       | _, None -> fail g (Some t.range) (readback_failure ty')
-      | Some t, Some ty -> (| t, eff, ty, tok |)
+      | Some t, Some ty -> (| t, eff, ty, E tok |)
 
 
 let check_term_and_type (g:env) (t:term)
@@ -190,7 +190,7 @@ let check_term_and_type (g:env) (t:term)
       | _, None -> fail g (Some t.range) (readback_failure ty')
       | Some t, Some ty -> 
         let (| u, uty |) = check_universe g ty in
-        (| t, eff, ty, (| u, uty |), tok |)
+        (| t, eff, ty, (| u, uty |), E tok |)
 
 let check_term_with_expected_type (g:env) (e:term) (eff:T.tot_or_ghost) (t:term)
   : T.Tac (e:term & typing g e eff t) =
@@ -210,7 +210,7 @@ let check_term_with_expected_type (g:env) (e:term) (eff:T.tot_or_ghost) (t:term)
   match topt with
   | None ->
     fail g (Some e.range) (ill_typed_term e (Some t) None)
-  | Some tok -> (| e, RT.T_Token _ _ _ (FStar.Squash.return_squash tok) |)
+  | Some tok -> (| e, E (RT.T_Token _ _ _ (FStar.Squash.return_squash tok)) |)
 
 let tc_with_core g (f:R.env) (e:R.term) 
   : T.Tac (option (eff:T.tot_or_ghost & t:R.term & RT.typing f e (eff, t)) & issues)
@@ -236,7 +236,7 @@ let core_check_term (g:env) (t:term)
         | None ->
           fail g (Some t.range) (readback_failure ty')
         | Some ty -> 
-          (| eff, ty, tok |)
+          (| eff, ty, E tok |)
 
 let core_check_term_with_expected_type g e eff t =
   let fg = elab_env g in
@@ -251,23 +251,21 @@ let core_check_term_with_expected_type g e eff t =
   match topt with
   | None ->
     fail g (Some e.range) (ill_typed_term e (Some t) None)
-  | Some tok -> RT.T_Token _ _ _ (FStar.Squash.return_squash tok)
+  | Some tok -> E (RT.T_Token _ _ _ (FStar.Squash.return_squash tok))
 
 let check_vprop (g:env)
                 (t:term)
   : T.Tac (t:term & tot_typing g t tm_vprop) =
-  let (| t, t_typing |) =
-    check_term_with_expected_type (push_context_no_range g "check_vprop") t T.E_Total tm_vprop in
-  (| t, E t_typing |)
+  check_term_with_expected_type (push_context_no_range g "check_vprop") t T.E_Total tm_vprop
 
 
 let check_vprop_with_core (g:env)
                           (t:term)
   : T.Tac (tot_typing g t tm_vprop) =
 
-  let t_typing = core_check_term_with_expected_type
-    (push_context_no_range g "check_vprop_with_core") t T.E_Total tm_vprop in
-  E t_typing
+  core_check_term_with_expected_type
+    (push_context_no_range g "check_vprop_with_core") t T.E_Total tm_vprop
+
   
 let get_non_informative_witness g u t
   : T.Tac (non_informative_t g u t)
@@ -299,13 +297,11 @@ let get_non_informative_witness g u t
     match eopt with
     | None -> err ()
     | Some e ->
-      let (| x, y |) =
-        check_term_with_expected_type
-          (push_context_no_range g "get_noninformative_witness")
-          e
-          T.E_Total
-          (non_informative_witness_t u t) in
-      (|x, E y|)
+      check_term_with_expected_type
+        (push_context_no_range g "get_noninformative_witness")
+        e
+        T.E_Total
+        (non_informative_witness_t u t)
 
 let check_prop_validity (g:env) (p:term) (_:tot_typing g p tm_prop)
   : T.Tac (Pulse.Typing.prop_validity g p)
@@ -324,24 +320,24 @@ let fail_expected_tot_found_ghost (g:env) (t:term) =
 
 let check_tot_term g t =
   let (| t, eff, ty, t_typing |) = check_term g t in
-  if eff = T.E_Total then (| t, ty, E t_typing |)
+  if eff = T.E_Total then (| t, ty, t_typing |)
   else fail_expected_tot_found_ghost g t
 
 let check_tot_term_and_type g t =
   let (| t, eff, ty, (| u, ty_typing |), t_typing |) = check_term_and_type g t in
-  if eff = T.E_Total then (| t, u, ty, ty_typing, E t_typing |)
+  if eff = T.E_Total then (| t, u, ty, ty_typing, t_typing |)
   else fail_expected_tot_found_ghost g t
 
 let check_tot_term_with_expected_type g e t =
-  let (| e, d |) = check_term_with_expected_type g e T.E_Total t in
-  (| e, E d |)
+  check_term_with_expected_type g e T.E_Total t
+
 
 let core_check_tot_term g t =
   let (| eff, ty, d |) = core_check_term g t in
-  if eff = T.E_Total then (| ty, E d |)
+  if eff = T.E_Total then (| ty, d |)
   else fail_expected_tot_found_ghost g t
 
 let core_check_tot_term_with_expected_type g e t =
-  let d = core_check_term_with_expected_type g e T.E_Total t in
-  E d
+  core_check_term_with_expected_type g e T.E_Total t
+
 

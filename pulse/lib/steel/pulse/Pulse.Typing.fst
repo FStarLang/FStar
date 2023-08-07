@@ -441,13 +441,13 @@ noeq
 type my_erased (a:Type) = | E of a
 
 let typing (g:env) (e:term) (eff:T.tot_or_ghost) (t:term) =
-  RT.typing (elab_env g) (elab_term e) (eff, elab_term t)
+  my_erased (RT.typing (elab_env g) (elab_term e) (eff, elab_term t))
 
 let tot_typing (g:env) (e:term) (t:term) =
-  my_erased (typing g e T.E_Total t)
+  typing g e T.E_Total t
 
 let ghost_typing (g:env) (e:term) (t:typ) =
-  my_erased (typing g e T.E_Ghost t)
+  typing g e T.E_Ghost t
 
 let universe_of (g:env) (t:term) (u:universe) =
   tot_typing g t (tm_type u)
