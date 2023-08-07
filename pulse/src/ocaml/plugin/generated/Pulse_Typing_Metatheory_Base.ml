@@ -351,6 +351,21 @@ let rec (st_typing_weakening :
                     ((Pulse_Typing_Env.push_env
                         (Pulse_Typing_Env.push_env g g1) g'), e1, e2, t1, c2,
                       x, (), d_e24)
+              | Pulse_Typing.T_GhostBind
+                  (uu___, e1, e2, t1, c2, x, uu___1, d_e2, uu___2) ->
+                  let d_e21 = d_e2 in
+                  let d_e22 = d_e21 in
+                  let d_e23 =
+                    st_typing_weakening g
+                      (Pulse_Typing_Env.push_binding g' x
+                         Pulse_Syntax_Base.ppname_default t1)
+                      (Pulse_Syntax_Naming.open_st_term_nv e2
+                         (Pulse_Syntax_Base.v_as_nv x)) c2 d_e22 g1 in
+                  let d_e24 = d_e23 in
+                  Pulse_Typing.T_GhostBind
+                    ((Pulse_Typing_Env.push_env
+                        (Pulse_Typing_Env.push_env g g1) g'), e1, e2, t1, c2,
+                      x, (), d_e24, (Prims.magic ()))
               | Pulse_Typing.T_If
                   (uu___, b, e1, e2, c1, uc, hyp, uu___1, d_e1, d_e2, uu___2)
                   ->
@@ -838,6 +853,23 @@ let rec (st_typing_subst :
                                   (Pulse_Syntax_Naming.open_st_term_nv e2
                                      (Pulse_Syntax_Base.v_as_nv y)) c2 d_e2)
                                ()))
+                    | Pulse_Typing.T_GhostBind
+                        (uu___, e11, e2, t1, c2, y, uu___1, d_e2, uu___2) ->
+                        Pulse_Typing.T_GhostBind
+                          ((Pulse_Typing_Env.push_env g
+                              (Pulse_Typing_Env.subst_env g' (nt x e))),
+                            (Pulse_Syntax_Naming.subst_term e11 ss),
+                            (Pulse_Syntax_Naming.subst_st_term e2 ss),
+                            (Pulse_Syntax_Naming.subst_term t1 ss),
+                            (Pulse_Syntax_Naming.subst_comp c2 ss), y, (),
+                            (coerce_eq
+                               (st_typing_subst g x t
+                                  (Pulse_Typing_Env.push_binding g' y
+                                     Pulse_Syntax_Base.ppname_default t1) e
+                                  ()
+                                  (Pulse_Syntax_Naming.open_st_term_nv e2
+                                     (Pulse_Syntax_Base.v_as_nv y)) c2 d_e2)
+                               ()), (Prims.magic ()))
                     | Pulse_Typing.T_If
                         (uu___, b, e11, e2, c, uc, hyp, uu___1, d_e1, d_e2,
                          uu___2)

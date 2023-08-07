@@ -3098,3 +3098,50 @@ let (core_check_tot_term_with_expected_type :
       fun t ->
         core_check_term_with_expected_type g e FStar_TypeChecker_Core.E_Total
           t
+let (is_non_informative :
+  Pulse_Typing_Env.env ->
+    Pulse_Syntax_Base.comp ->
+      ((unit, unit) FStar_Tactics_Types.non_informative_token
+         FStar_Pervasives_Native.option,
+        unit) FStar_Tactics_Effect.tac_repr)
+  =
+  fun g ->
+    fun c ->
+      FStar_Tactics_Effect.tac_bind
+        (FStar_Sealed.seal
+           (Obj.magic
+              (FStar_Range.mk_range "Pulse.Checker.Pure.fst"
+                 (Prims.of_int (344)) (Prims.of_int (21))
+                 (Prims.of_int (344)) (Prims.of_int (89)))))
+        (FStar_Sealed.seal
+           (Obj.magic
+              (FStar_Range.mk_range "Pulse.Checker.Pure.fst"
+                 (Prims.of_int (343)) (Prims.of_int (28))
+                 (Prims.of_int (346)) (Prims.of_int (6)))))
+        (Obj.magic
+           (catch_all
+              (fun uu___ ->
+                 FStar_Tactics_V2_Builtins.is_non_informative
+                   (Pulse_Typing.elab_env g)
+                   (Pulse_Elaborate_Pure.elab_comp c))))
+        (fun uu___ ->
+           (fun uu___ ->
+              match uu___ with
+              | (ropt, issues) ->
+                  Obj.magic
+                    (FStar_Tactics_Effect.tac_bind
+                       (FStar_Sealed.seal
+                          (Obj.magic
+                             (FStar_Range.mk_range "Pulse.Checker.Pure.fst"
+                                (Prims.of_int (345)) (Prims.of_int (2))
+                                (Prims.of_int (345)) (Prims.of_int (21)))))
+                       (FStar_Sealed.seal
+                          (Obj.magic
+                             (FStar_Range.mk_range "Pulse.Checker.Pure.fst"
+                                (Prims.of_int (344)) (Prims.of_int (6))
+                                (Prims.of_int (344)) (Prims.of_int (10)))))
+                       (Obj.magic
+                          (FStar_Tactics_V2_Builtins.log_issues issues))
+                       (fun uu___1 ->
+                          FStar_Tactics_Effect.lift_div_tac
+                            (fun uu___2 -> ropt)))) uu___)

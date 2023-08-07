@@ -322,6 +322,19 @@ let rec (elab_st_typing :
               FStar_Reflection_Typing.mk_let
                 FStar_Reflection_Typing.pp_name_default re1 rt1
                 (FStar_Reflection_Typing.close_term re2 x)
+          | Pulse_Typing.T_GhostBind
+              (uu___, e1, e2, t1, uu___1, x, uu___2, e2_typing, uu___3) ->
+              let re1 = Pulse_Elaborate_Pure.elab_term e1 in
+              let rt1 = Pulse_Elaborate_Pure.elab_term t1 in
+              let re2 =
+                elab_st_typing
+                  (Pulse_Typing_Env.push_binding uu___ x
+                     Pulse_Syntax_Base.ppname_default t1)
+                  (Pulse_Syntax_Naming.open_st_term_nv e2
+                     (Pulse_Syntax_Base.v_as_nv x)) uu___1 e2_typing in
+              FStar_Reflection_Typing.mk_let
+                FStar_Reflection_Typing.pp_name_default re1 rt1
+                (FStar_Reflection_Typing.close_term re2 x)
           | Pulse_Typing.T_Frame
               (uu___, uu___1, c1, frame, _frame_typing, e_typing) ->
               let e = elab_st_typing uu___ uu___1 c1 e_typing in
