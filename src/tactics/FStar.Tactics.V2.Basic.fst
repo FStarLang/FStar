@@ -2296,7 +2296,7 @@ let refl_tc_term (g:env) (e:term) : tac (option (term & (Core.tot_or_ghost & typ
     //
     let e =
       let g = {g with phase1 = true; lax = true} in
-      let must_tot = true in
+      let must_tot = false in
       let e, _, guard = g.typeof_tot_or_gtot_term g e must_tot in
       Rel.force_trivial_guard g guard;
       e in
@@ -2415,7 +2415,7 @@ let refl_instantiate_implicits (g:env) (e:term) : tac (option (term & typ) & iss
     dbg_refl g (fun _ ->
       BU.format1 "refl_instantiate_implicits: %s\n" (Print.term_to_string e));
     dbg_refl g (fun _ -> "refl_instantiate_implicits: starting tc {\n");
-    let must_tot = true in
+    let must_tot = false in
     let g = {g with instantiate_imp=false; phase1=true; lax=true} in
     let e, t, guard = g.typeof_tot_or_gtot_term g e must_tot in
     Rel.force_trivial_guard g guard;
