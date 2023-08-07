@@ -84,6 +84,7 @@ val stt_atomic (a:Type u#a) (opened:inames) (pre:vprop) (post:a -> vprop) : Type
    while relying on the ghost invariant names in `opened` 
    and returns `x:a`
    such that the final state satisfies `post x` *)
+[@@ erasable]
 inline_for_extraction
 val stt_ghost (a:Type u#a) (opened:inames) (pre:vprop) (post:a -> vprop) : Type u#(max 2 a)
 
