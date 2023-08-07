@@ -1506,7 +1506,7 @@ let longest_prefix (f : 'a -> 'a -> bool) (l1 : list 'a) (l2 : list 'a) : list '
         | x::xs, y::ys ->
             if f x y
             then aux (x::acc) xs ys
-            else acc, xs, ys
+            else acc, x::xs, y::ys
         | _ ->
             acc, l1, l2
     in
