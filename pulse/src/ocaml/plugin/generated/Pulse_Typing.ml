@@ -711,8 +711,7 @@ let (comp_admit :
           Pulse_Syntax_Base.C_STAtomic (Pulse_Syntax_Base.tm_emp_inames, s)
       | Pulse_Syntax_Base.STT_Ghost ->
           Pulse_Syntax_Base.C_STGhost (Pulse_Syntax_Base.tm_emp_inames, s)
-type ('g, 'e, 'eff, 't) typing =
-  (unit, unit, unit) FStar_Reflection_Typing.typing
+type ('g, 'e, 'eff, 't) typing = unit
 type ('g, 'e, 't) tot_typing = unit
 type ('g, 'e, 't) ghost_typing = unit
 type ('g, 't, 'u) universe_of = unit
