@@ -121,6 +121,7 @@ val is_irrelevant      : goal -> bool
 
 (*** These are here for userspace, the library has an interface into this module. *)
 (* Typing reflection *)
+val non_informative_token (g:env) (t:typ) : Type0
 val subtyping_token (g:env) (t0 t1:typ) : Type0
 val equiv_token (g:env) (t0 t1:typ) : Type0
 val typing_token (g:env) (e:term) (c:Core.tot_or_ghost & typ) : Type0

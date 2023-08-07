@@ -448,15 +448,17 @@ val free_uvars : term -> Tac (list int)
 
 (** TODO: maybe the equiv APIs should require typing of the arguments? *)
 
-val check_subtyping (g:env) (t0 t1:typ)
-  : Tac (option (subtyping_token g t0 t1) & issues)
-
-val check_equiv (g:env) (t0 t1:typ)
-  : Tac (option (equiv_token g t0 t1) & issues)
-
 unfold
 let ret_t (a:Type) = option a & issues
 
+val is_non_informative (g:env) (t:typ)
+  : Tac (ret_t (non_informative_token g t))
+
+val check_subtyping (g:env) (t0 t1:typ)
+  : Tac (ret_t (subtyping_token g t0 t1))
+
+val check_equiv (g:env) (t0 t1:typ)
+  : Tac (ret_t (equiv_token g t0 t1))
 
 //
 // Compute the type of e using the core typechecker

@@ -637,9 +637,11 @@ let rec iter2 (xs ys:list 'a) (f: 'a -> 'a -> 'b -> result 'b) (b:'b)
       iter2 xs ys f b
     | _ -> fail "Lists of differing length"
 
+let is_non_informative g t = N.non_info_norm g t
+
 let non_informative g t
   : bool
-  = N.non_info_norm g.tcenv t
+  = is_non_informative g.tcenv t
 
 let as_comp (g:env) (et: (tot_or_ghost & typ))
   : comp

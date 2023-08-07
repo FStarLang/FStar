@@ -125,6 +125,7 @@ val free_uvars             : term -> tac (list Z.t)
 
 (***** Callbacks for the meta DSL framework *****)
 let issues = list FStar.Errors.issue
+val refl_is_non_informative           : env -> typ -> tac (option unit & issues)
 val refl_check_subtyping              : env -> typ -> typ -> tac (option unit & issues)
 val refl_check_equiv                  : env -> typ -> typ -> tac (option unit & issues)
 val refl_core_compute_term_type       : env -> term -> tac (option (Core.tot_or_ghost & typ) & issues)

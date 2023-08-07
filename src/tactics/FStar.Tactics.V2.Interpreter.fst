@@ -603,6 +603,10 @@ let () =
 
       // reflection typechecker callbacks (part of the DSL framework)
 
+      mk_tac_step_2 0 "is_non_informative"
+        refl_is_non_informative RE.e_env RE.e_term (e_tuple2 (e_option e_unit) (e_list e_issue))
+        refl_is_non_informative NRE.e_env NRE.e_term NBET.(e_tuple2 (e_option e_unit) (e_list e_issue));
+
       mk_tac_step_3 0 "check_subtyping"
         refl_check_subtyping RE.e_env RE.e_term RE.e_term (e_tuple2 (e_option e_unit) (e_list e_issue))
         refl_check_subtyping NRE.e_env NRE.e_term NRE.e_term NBET.(e_tuple2 (e_option e_unit) (e_list e_issue));

@@ -2151,6 +2151,23 @@ let unexpected_uvars_issue r =
   } in
   i
 
+let refl_is_non_informative (g:env) (t:typ) : tac (option unit & issues) =
+  if no_uvars_in_g g &&
+     no_uvars_in_term t
+  then refl_typing_builtin_wrapper (fun _ ->
+         dbg_refl g (fun _ ->
+           BU.format1 "refl_is_non_informative: %s\n"
+             (Print.term_to_string t));
+         let b = Core.is_non_informative g t in
+         dbg_refl g (fun _ -> BU.format1 "refl_is_non_informative: returned %s"
+                                (string_of_bool b));
+         if b then ()
+         else Errors.raise_error (Errors.Fatal_UnexpectedTerm,
+                "is_non_informative returned false ") Range.dummyRange)
+  else (
+    ret (None, [unexpected_uvars_issue (Env.get_range g)])
+  )
+
 let refl_check_relation (g:env) (t0 t1:typ) (rel:relation)
   : tac (option unit * issues) =
 

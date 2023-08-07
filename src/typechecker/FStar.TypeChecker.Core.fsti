@@ -25,6 +25,8 @@ val side_to_string : side -> string
 
 val maybe_relate_after_unfolding (g:Env.env) (t0 t1:term) : side
 
+val is_non_informative (g:Env.env) (t:typ) : bool
+
 val check_term (g:Env.env) (e:term) (t:typ) (must_tot:bool)
   : either (option typ) error
 
