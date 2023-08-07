@@ -141,7 +141,7 @@ let (main' :
                                                (Prims.of_int (32))
                                                (Prims.of_int (38))
                                                (Prims.of_int (32))
-                                               (Prims.of_int (73)))))
+                                               (Prims.of_int (77)))))
                                       (FStar_Sealed.seal
                                          (Obj.magic
                                             (FStar_Range.mk_range
@@ -151,8 +151,8 @@ let (main' :
                                                (Prims.of_int (51))
                                                (Prims.of_int (81)))))
                                       (Obj.magic
-                                         (Pulse_Checker_Pure.check_term g1
-                                            pre))
+                                         (Pulse_Checker_Pure.check_tot_term
+                                            g1 pre))
                                       (fun uu___1 ->
                                          (fun uu___1 ->
                                             match uu___1 with
@@ -171,7 +171,7 @@ let (main' :
                                                                 (Prims.of_int (34))
                                                                 (Prims.of_int (56))
                                                                 (Prims.of_int (34))
-                                                                (Prims.of_int (68)))))
+                                                                (Prims.of_int (66)))))
                                                        (FStar_Sealed.seal
                                                           (Obj.magic
                                                              (FStar_Range.mk_range

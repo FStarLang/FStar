@@ -77,7 +77,7 @@ let (check :
                                           (match post_hint with
                                            | FStar_Pervasives_Native.None ->
                                                Obj.magic
-                                                 (Pulse_Checker_Pure.check_term_and_type
+                                                 (Pulse_Checker_Pure.check_tot_term_and_type
                                                     g1 t)
                                            | FStar_Pervasives_Native.Some
                                                post ->
@@ -90,7 +90,7 @@ let (check :
                                                              (Prims.of_int (33))
                                                              (Prims.of_int (23))
                                                              (Prims.of_int (33))
-                                                             (Prims.of_int (68)))))
+                                                             (Prims.of_int (72)))))
                                                     (FStar_Sealed.seal
                                                        (Obj.magic
                                                           (FStar_Range.mk_range
@@ -100,7 +100,7 @@ let (check :
                                                              (Prims.of_int (39))
                                                              (Prims.of_int (48)))))
                                                     (Obj.magic
-                                                       (Pulse_Checker_Pure.check_term_with_expected_type
+                                                       (Pulse_Checker_Pure.check_tot_term_with_expected_type
                                                           g1 t
                                                           post.Pulse_Typing.ret_ty))
                                                     (fun uu___1 ->
@@ -115,7 +115,7 @@ let (check :
                                                                     post.Pulse_Typing.u),
                                                                     (
                                                                     post.Pulse_Typing.ret_ty),
-                                                                    (), d)))))
+                                                                    (), ())))))
                                           (fun uu___1 ->
                                              (fun uu___1 ->
                                                 match uu___1 with
@@ -233,7 +233,7 @@ let (check :
                                                                     (Prims.of_int (47))
                                                                     (Prims.of_int (26))
                                                                     (Prims.of_int (47))
-                                                                    (Prims.of_int (102)))))
+                                                                    (Prims.of_int (106)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -241,9 +241,9 @@ let (check :
                                                                     (Prims.of_int (46))
                                                                     (Prims.of_int (15))
                                                                     (Prims.of_int (48))
-                                                                    (Prims.of_int (21)))))
+                                                                    (Prims.of_int (19)))))
                                                                     (Obj.magic
-                                                                    (Pulse_Checker_Pure.check_term_with_expected_type
+                                                                    (Pulse_Checker_Pure.check_tot_term_with_expected_type
                                                                     (Pulse_Typing_Env.push_binding
                                                                     g1 x
                                                                     (FStar_Pervasives_Native.fst
@@ -389,7 +389,7 @@ let (check :
                                                                     (Prims.of_int (63))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (63))
-                                                                    (Prims.of_int (65)))))
+                                                                    (Prims.of_int (61)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range

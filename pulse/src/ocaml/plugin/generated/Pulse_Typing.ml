@@ -711,9 +711,10 @@ let (comp_admit :
           Pulse_Syntax_Base.C_STAtomic (Pulse_Syntax_Base.tm_emp_inames, s)
       | Pulse_Syntax_Base.STT_Ghost ->
           Pulse_Syntax_Base.C_STGhost (Pulse_Syntax_Base.tm_emp_inames, s)
-type ('g, 'e, 't) typing =
-  (unit, unit, unit) FStar_Reflection_Typing.tot_typing
+type ('g, 'e, 'eff, 't) typing =
+  (unit, unit, unit) FStar_Reflection_Typing.typing
 type ('g, 'e, 't) tot_typing = unit
+type ('g, 'e, 't) ghost_typing = unit
 type ('g, 't, 'u) universe_of = unit
 type ('g, 'u, 't) non_informative_t =
   (Pulse_Syntax_Base.term, unit) Prims.dtuple2
@@ -845,6 +846,9 @@ type ('dummyV0, 'dummyV1, 'dummyV2) st_typing =
   Pulse_Syntax_Base.st_term * Pulse_Syntax_Base.term *
   Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.var * unit * (unit, unit,
   unit) st_typing 
+  | T_GhostBind of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
+  Pulse_Syntax_Base.st_term * Pulse_Syntax_Base.term * Pulse_Syntax_Base.comp
+  * Pulse_Syntax_Base.var * unit * (unit, unit, unit) st_typing 
   | T_If of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
   Pulse_Syntax_Base.st_term * Pulse_Syntax_Base.st_term *
   Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.universe *
@@ -918,6 +922,8 @@ let uu___is_T_Bind uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_Bind _ -> true | _ -> false
 let uu___is_T_TotBind uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_TotBind _ -> true | _ -> false
+let uu___is_T_GhostBind uu___2 uu___1 uu___ uu___3 =
+  match uu___3 with | T_GhostBind _ -> true | _ -> false
 let uu___is_T_If uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_If _ -> true | _ -> false
 let uu___is_T_Match uu___2 uu___1 uu___ uu___3 =

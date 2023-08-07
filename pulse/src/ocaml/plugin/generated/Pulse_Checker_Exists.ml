@@ -887,7 +887,7 @@ let (check_intro_exists_erased :
                                                                     (Prims.of_int (110))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (110))
-                                                                    (Prims.of_int (63)))))
+                                                                    (Prims.of_int (67)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -897,7 +897,7 @@ let (check_intro_exists_erased :
                                                                     (Prims.of_int (112))
                                                                     (Prims.of_int (85)))))
                                                                     (Obj.magic
-                                                                    (Pulse_Checker_Pure.check_term_with_expected_type
+                                                                    (Pulse_Checker_Pure.check_tot_term_with_expected_type
                                                                     g1 e
                                                                     (Pulse_Typing.mk_erased
                                                                     u
@@ -922,7 +922,7 @@ let (check_intro_exists_erased :
                                                                     (Prims.of_int (111))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (111))
-                                                                    (Prims.of_int (71)))))
+                                                                    (Prims.of_int (67)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -1269,7 +1269,7 @@ let (check_intro_exists_non_erased :
                                                                     (Prims.of_int (144))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (144))
-                                                                    (Prims.of_int (55)))))
+                                                                    (Prims.of_int (59)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -1279,7 +1279,7 @@ let (check_intro_exists_non_erased :
                                                                     (Prims.of_int (147))
                                                                     (Prims.of_int (85)))))
                                                                     (Obj.magic
-                                                                    (Pulse_Checker_Pure.check_term_with_expected_type
+                                                                    (Pulse_Checker_Pure.check_tot_term_with_expected_type
                                                                     g1
                                                                     witness
                                                                     b.Pulse_Syntax_Base.binder_ty))
@@ -1303,13 +1303,13 @@ let (check_intro_exists_non_erased :
                                                                     (Prims.of_int (145))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (145))
-                                                                    (Prims.of_int (77)))))
+                                                                    (Prims.of_int (73)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
                                                                     (Prims.of_int (145))
-                                                                    (Prims.of_int (80))
+                                                                    (Prims.of_int (76))
                                                                     (Prims.of_int (147))
                                                                     (Prims.of_int (85)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
@@ -1339,7 +1339,7 @@ let (check_intro_exists_non_erased :
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
                                                                     (Prims.of_int (145))
-                                                                    (Prims.of_int (80))
+                                                                    (Prims.of_int (76))
                                                                     (Prims.of_int (147))
                                                                     (Prims.of_int (85)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
