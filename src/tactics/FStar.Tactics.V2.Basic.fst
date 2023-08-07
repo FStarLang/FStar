@@ -2107,13 +2107,6 @@ let dbg_refl (g:env) (msg:unit -> string) =
 
 let issues = list Errors.issue
 
-let rec iter (f : 'a -> tac unit) (xs : list 'a) : tac unit =
-  match xs with
-  | [] -> ret ()
-  | x::xs ->
-    f x;!
-    iter f xs
-
 let refl_typing_guard (e:env) (g:typ) : tac unit =
   let reason = "refl_typing_guard" in
   proc_guard_formula "refl_typing_guard" e g None Range.dummyRange
@@ -2144,7 +2137,8 @@ let __refl_typing_builtin_wrapper (f:unit -> 'a & list (env & typ)) : tac (optio
   The caller will discharge them if needed. *)
   let gs =
     if Some? r then
-      List.map (fun (e,g) -> e, SC.deep_compress false g) (snd (Some?.v r))
+      let allow_uvars = false in
+      List.map (fun (e,g) -> e, SC.deep_compress allow_uvars g) (snd (Some?.v r))
     else
       []
   in
@@ -2162,7 +2156,7 @@ let __refl_typing_builtin_wrapper (f:unit -> 'a & list (env & typ)) : tac (optio
   if List.length errs > 0
   then ret (None, errs)
   else (
-    iter (uncurry refl_typing_guard) gs;!
+    iter_tac (uncurry refl_typing_guard) gs;!
     ret (r, errs)
   )
 
@@ -2446,8 +2440,8 @@ let refl_instantiate_implicits (g:env) (e:term) : tac (option (term & typ) & iss
     let g = {g with instantiate_imp=false; phase1=true; lax=true} in
     let e, t, guard = g.typeof_tot_or_gtot_term g e must_tot in
     (* We force this guard here, and do not delay it, since we
-    will return this term and it MUST be compressed. We could
-    split the logical part away and return that, though. *)
+    will return this term and it MUST be compressed. It's logical
+    part should be trivial too, as we only lax-typechecked the term. *)
     Rel.force_trivial_guard g guard;
     let e = SC.deep_compress false e in
     let t = t |> refl_norm_type g |> SC.deep_compress false in
