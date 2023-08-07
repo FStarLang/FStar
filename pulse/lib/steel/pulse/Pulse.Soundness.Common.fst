@@ -48,7 +48,14 @@ let tot_typing_soundness (#g:env)
                          (#t:term)
                          (d:tot_typing g e t)
   : GTot (RT.tot_typing (elab_env g) (elab_term e) (elab_term t))
-         (decreases d)
+  = let E d = d in
+    d
+
+let ghost_typing_soundness (#g:env)
+                           (#e:term)
+                           (#t:term)
+                           (d:ghost_typing g e t)
+  : GTot (RT.ghost_typing (elab_env g) (elab_term e) (elab_term t))
   = let E d = d in
     d
 
