@@ -12,10 +12,10 @@ open Pulse.Typing
 //
 module T = FStar.Tactics.V2
 
-let well_typed_terms_are_ln (g:R.env) (e:R.term) (t:R.term) (d:RT.tot_typing g e t)
+let well_typed_terms_are_ln (g:R.env) (e:R.term) (t:R.term) (#eff:_) (d:RT.typing g e (eff, t))
   : Lemma (ensures RT.ln e /\ RT.ln t) =
 
-  RT.well_typed_terms_are_ln g e (T.E_Total, t) d
+  RT.well_typed_terms_are_ln g e (eff, t) d
 
 assume
 val elab_ln_inverse (e:term)
@@ -707,15 +707,23 @@ let lift_comp_ln #g #c1 #c2 (d:lift_comp g c1 c2)
     (ensures ln_c c2)    
   = ()
 
-let tot_typing_ln (#g:_) (#e:_) (#t:_)
-                  (d:tot_typing g e t)
+let tot_or_ghost_typing_ln
+  (#g:_) (#e:_) (#t:_) (#eff:_)
+  (d:typing g e eff t)
   : Lemma 
     (ensures ln e /\ ln t)
   = let E dt = d in
     well_typed_terms_are_ln _ _ _ dt;
     elab_ln_inverse e;
     elab_ln_inverse t
-  
+
+let tot_typing_ln
+  (#g:_) (#e:_) (#t:_)
+  (d:tot_typing g e t)
+  : Lemma 
+    (ensures ln e /\ ln t)
+  = tot_or_ghost_typing_ln d
+
 let rec vprop_equiv_ln (#g:_) (#t0 #t1:_) (v:vprop_equiv g t0 t1)
   : Lemma (ensures ln t0 <==> ln t1)
           (decreases v)
@@ -734,8 +742,8 @@ let rec vprop_equiv_ln (#g:_) (#t0 #t1:_) (v:vprop_equiv g t0 t1)
     | VE_Assoc g t0 t1 t2 -> ()
     | VE_Ext g t0 t1 token ->
       let d0, d1 = vprop_eq_typing_inversion _ _ _ token in
-      tot_typing_ln d0;
-      tot_typing_ln d1
+      tot_or_ghost_typing_ln d0;
+      tot_or_ghost_typing_ln d1
 
 let st_equiv_ln #g #c1 #c2 (d:st_equiv g c1 c2)
   : Lemma 
@@ -757,23 +765,23 @@ let st_comp_typing_ln (#g:_) (#st:_) (d:st_comp_typing g st)
   : Lemma (ensures ln_st_comp st (-1)) =
   
   let STC _ {post} x res_typing pre_typing post_typing = d in
-  tot_typing_ln res_typing;
-  tot_typing_ln pre_typing;
-  tot_typing_ln post_typing;
+  tot_or_ghost_typing_ln res_typing;
+  tot_or_ghost_typing_ln pre_typing;
+  tot_or_ghost_typing_ln post_typing;
   open_term_ln' post (null_var x) 0
 
 let comp_typing_ln (#g:_) (#c:_) (#u:_) (d:comp_typing g c u)
   : Lemma (ensures ln_c c) =
 
   match d with
-  | CT_Tot _ _ _ t_typing -> tot_typing_ln t_typing
+  | CT_Tot _ _ _ t_typing -> tot_or_ghost_typing_ln t_typing
   | CT_ST _ _ st_typing -> st_comp_typing_ln st_typing
   | CT_STAtomic _ _ _ inames_typing st_typing
   | CT_STGhost _ _ _ inames_typing st_typing ->
-    tot_typing_ln inames_typing;
+    tot_or_ghost_typing_ln inames_typing;
     st_comp_typing_ln st_typing
 
-let st_typing_ln_tot_bind #g #t #c (d:st_typing g t c{T_TotBind? d})
+let st_typing_ln_tot_or_ghost_bind #g #t #c (d:st_typing g t c { T_TotBind? d \/ T_GhostBind? d })
   (typing_ln:
      (#g:env ->
       #e:st_term ->
@@ -782,12 +790,14 @@ let st_typing_ln_tot_bind #g #t #c (d:st_typing g t c{T_TotBind? d})
       Lemma (ensures ln_st e /\ ln_c c)))
   : Lemma (ensures ln_st t /\ ln_c c) =
 
-  let T_TotBind _ e1 e2 _ c2 x e1_typing e2_typing = d in
-  tot_typing_ln e1_typing;
-  typing_ln e2_typing;
-  open_st_term_ln e2 x;
-  close_comp_ln' c2 x 0;
-  open_comp_ln_inv' (close_comp c2 x) e1 0
+  match d with
+  | T_TotBind _ e1 e2 _ c2 x e1_typing e2_typing
+  | T_GhostBind _ e1 e2 _ c2 x e1_typing e2_typing _ ->
+    tot_or_ghost_typing_ln e1_typing;
+    typing_ln e2_typing;
+    open_st_term_ln e2 x;
+    close_comp_ln' c2 x 0;
+    open_comp_ln_inv' (close_comp c2 x) e1 0
 #pop-options
 
 let ln_mk_reveal (u:universe) (t:term) (e:term) (n:int)
@@ -822,7 +832,7 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
     (decreases d)
   = match d with
     | T_Abs _g x _q ty _u body c dt db ->
-      tot_typing_ln dt;
+      tot_or_ghost_typing_ln dt;
       st_typing_ln db;
       open_st_term_ln body x;
       close_comp_ln c x;
@@ -831,8 +841,8 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
 
 
     | T_STApp _ _ _ _ res arg st at ->
-      tot_typing_ln st;
-      tot_typing_ln at;
+      tot_or_ghost_typing_ln st;
+      tot_or_ghost_typing_ln at;
       // We have RT.ln' (elab_comp res),
       //   from that we need to derive the following
       assume (ln_c' res 0);
@@ -844,9 +854,9 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       lift_comp_ln l
 
     | T_Return _ c use_eq u t e post x t_typing e_typing post_typing ->
-      tot_typing_ln t_typing;
-      tot_typing_ln e_typing;
-      tot_typing_ln post_typing;
+      tot_or_ghost_typing_ln t_typing;
+      tot_or_ghost_typing_ln e_typing;
+      tot_or_ghost_typing_ln post_typing;
       open_term_ln' post (term_of_no_name_var x) 0;
       open_term_ln_inv' post e 0;
       if not use_eq
@@ -862,34 +872,35 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
 
     | T_Bind _ _ e2 _ _ _ x _ d1 dc1 d2 bc ->
       st_typing_ln d1;
-      tot_typing_ln dc1;
+      tot_or_ghost_typing_ln dc1;
       st_typing_ln d2;
       open_st_term_ln e2 x;
       bind_comp_ln bc
 
 
-    | T_TotBind _ e1 e2 _ c2 x e1_typing e2_typing ->
-      st_typing_ln_tot_bind d st_typing_ln
+    | T_TotBind _ _ _ _ _ _ _ _
+    | T_GhostBind _ _ _ _ _ _ _ _ _ ->
+      st_typing_ln_tot_or_ghost_bind d st_typing_ln
 
     | T_If _ _ _ _ _ _ _ tb d1 d2 _ ->
-      tot_typing_ln tb;
+      tot_or_ghost_typing_ln tb;
       st_typing_ln d1;
       st_typing_ln d2
 
     | T_Match _ _ _ sc _ scd c _ _ _ ->
-      tot_typing_ln scd;
+      tot_or_ghost_typing_ln scd;
       admit ()
 
     | T_Frame _ _ _ _ df dc ->
-      tot_typing_ln df;
+      tot_or_ghost_typing_ln df;
       st_typing_ln dc
 
     | T_IntroPure _ _ t _ ->
-      tot_typing_ln t
+      tot_or_ghost_typing_ln t
 
     | T_ElimExists _ u t p x dt dv ->
-      tot_typing_ln dt;
-      tot_typing_ln dv;
+      tot_or_ghost_typing_ln dt;
+      tot_or_ghost_typing_ln dv;
       let x_tm = tm_var {nm_index=x;nm_ppname=ppname_default} in
       ln_mk_reveal u t x_tm (-1);
       open_term_ln_inv' p (Pulse.Typing.mk_reveal u t x_tm) 0;
@@ -897,15 +908,15 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
 
 
     | T_IntroExists _ u t p e dt dv dw ->
-      tot_typing_ln dt;
-      tot_typing_ln dv;
-      tot_typing_ln dw;
+      tot_or_ghost_typing_ln dt;
+      tot_or_ghost_typing_ln dv;
+      tot_or_ghost_typing_ln dw;
       open_term_ln_inv' p e 0
 
     | T_IntroExistsErased _ u b p e dt dv dw ->
-      tot_typing_ln dt;
-      tot_typing_ln dv;
-      tot_typing_ln dw;
+      tot_or_ghost_typing_ln dt;
+      tot_or_ghost_typing_ln dv;
+      tot_or_ghost_typing_ln dw;
       ln_mk_reveal u b.binder_ty e (-1);
       open_term_ln_inv' p (Pulse.Typing.mk_reveal u b.binder_ty e) 0
 
@@ -914,7 +925,7 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       st_equiv_ln deq
 
     | T_While _ inv _ _ inv_typing cond_typing body_typing ->
-      tot_typing_ln inv_typing;
+      tot_or_ghost_typing_ln inv_typing;
       st_typing_ln cond_typing;
       st_typing_ln body_typing;
       open_term_ln_inv' inv tm_false 0
@@ -934,20 +945,20 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       close_term_ln' (open_term' (comp_post cR) (Pulse.Typing.mk_snd u u aL aR x_tm) 0) x 0
 
     | T_Rewrite _ _ _ p_typing equiv_p_q ->
-      tot_typing_ln p_typing;
+      tot_or_ghost_typing_ln p_typing;
       vprop_equiv_ln equiv_p_q
 
     | T_WithLocal g init body init_t c x init_typing init_t_typing c_typing body_typing ->
-      tot_typing_ln init_typing;
+      tot_or_ghost_typing_ln init_typing;
       st_typing_ln body_typing;
       open_st_term_ln' body (null_var x) 0;
       comp_typing_ln c_typing;
-      tot_typing_ln init_t_typing;
+      tot_or_ghost_typing_ln init_t_typing;
       ln_mk_ref init_t (-1)
 
     | T_Admit _ s _ (STC _ _ x t_typing pre_typing post_typing) ->
-      tot_typing_ln t_typing;
-      tot_typing_ln pre_typing;
-      tot_typing_ln post_typing;
+      tot_or_ghost_typing_ln t_typing;
+      tot_or_ghost_typing_ln pre_typing;
+      tot_or_ghost_typing_ln post_typing;
       open_term_ln' s.post (term_of_no_name_var x) 0
 #pop-options

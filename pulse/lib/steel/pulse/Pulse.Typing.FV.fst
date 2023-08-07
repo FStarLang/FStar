@@ -174,8 +174,8 @@ let contains_r (g:R.env) (x:var) = Some? (RT.lookup_bvar g x)
 let vars_of_env_r (g:R.env) = Set.intension (contains_r g)
 
 assume
-val refl_typing_freevars (#g:R.env) (#e:R.term) (#t:R.term) 
-                         (_:RT.tot_typing g e t)
+val refl_typing_freevars (#g:R.env) (#e:R.term) (#t:R.term) (#eff:_) 
+                         (_:RT.typing g e (eff, t))
   : Lemma 
     (ensures RT.freevars e `Set.subset` (vars_of_env_r g) /\
              RT.freevars t `Set.subset` (vars_of_env_r g))
@@ -208,8 +208,9 @@ val freevars_open_comp (c:comp) (x:term) (i:index)
     [SMTPat (freevars_comp (open_comp' c x i))]
 
 #push-options "--fuel 2 --ifuel 2"
-let tot_typing_freevars (#g:_) (#t:_) (#ty:_)
-                        (d:tot_typing g t ty)
+let tot_or_ghost_typing_freevars
+  (#g:_) (#t:_) (#ty:_) (#eff:_)
+  (d:typing g t eff ty)
   : Lemma 
     (ensures freevars t `Set.subset` vars_of_env g /\
              freevars ty `Set.subset` vars_of_env g)
@@ -218,6 +219,14 @@ let tot_typing_freevars (#g:_) (#t:_) (#ty:_)
     let E d = d in
     refl_typing_freevars d;
     assert (vars_of_env_r (elab_env g) `Set.equal` (vars_of_env g))
+
+let tot_typing_freevars
+  (#g:_) (#t:_) (#ty:_)
+  (d:tot_typing g t ty)
+  : Lemma 
+    (ensures freevars t `Set.subset` vars_of_env g /\
+             freevars ty `Set.subset` vars_of_env g)
+  = tot_or_ghost_typing_freevars d
 
 let bind_comp_freevars (#g:_) (#x:_) (#c1 #c2 #c:_)
                        (d:bind_comp g x c1 c2 c)
@@ -228,7 +237,7 @@ let bind_comp_freevars (#g:_) (#x:_) (#c1 #c2 #c:_)
   = match d with
     | Bind_comp _ _ _ _ dt _ _ 
     | Bind_comp_ghost_l _ _ _ _ _ dt _ _ 
-    | Bind_comp_ghost_r _ _ _ _ _ dt _ _  -> tot_typing_freevars dt
+    | Bind_comp_ghost_r _ _ _ _ _ dt _ _  -> tot_or_ghost_typing_freevars dt
 
 let rec vprop_equiv_freevars (#g:_) (#t0 #t1:_) (v:vprop_equiv g t0 t1)
   : Lemma (ensures (freevars t0 `Set.subset` vars_of_env g) <==>
@@ -249,8 +258,8 @@ let rec vprop_equiv_freevars (#g:_) (#t0 #t1:_) (v:vprop_equiv g t0 t1)
     | VE_Assoc g t0 t1 t2 -> ()
     | VE_Ext g t0 t1 token ->
       let d0, d1 = vprop_eq_typing_inversion _ _ _ token in
-      tot_typing_freevars d0;
-      tot_typing_freevars d1
+      tot_or_ghost_typing_freevars d0;
+      tot_or_ghost_typing_freevars d1
 
 let st_equiv_freevars #g (#c1 #c2:_)
                       (d:st_equiv g c1 c2)
@@ -275,9 +284,9 @@ let st_comp_typing_freevars #g #st (d:st_comp_typing g st)
     (ensures freevars_st_comp st `Set.subset` vars_of_env g)
     (decreases d)
   = let STC _ _ x dt pre post = d in
-    tot_typing_freevars dt;
-    tot_typing_freevars pre;
-    tot_typing_freevars post
+    tot_or_ghost_typing_freevars dt;
+    tot_or_ghost_typing_freevars pre;
+    tot_or_ghost_typing_freevars post
 
 let comp_typing_freevars  (#g:_) (#c:_) (#u:_)
                           (d:comp_typing g c u)
@@ -286,17 +295,17 @@ let comp_typing_freevars  (#g:_) (#c:_) (#u:_)
     (decreases d)
   = match d with
     | CT_Tot _ _ _ dt ->
-      tot_typing_freevars dt
+      tot_or_ghost_typing_freevars dt
 
     | CT_ST _ _ dst -> 
       st_comp_typing_freevars dst
 
     | CT_STAtomic _ _ _ it dst -> 
-      tot_typing_freevars it;
+      tot_or_ghost_typing_freevars it;
       st_comp_typing_freevars dst
 
     | CT_STGhost _ _ _ it dst -> 
-      tot_typing_freevars it;
+      tot_or_ghost_typing_freevars it;
       st_comp_typing_freevars dst
 
 let freevars_open_st_term_inv (e:st_term) 
@@ -369,22 +378,22 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
 
  = match d with
    | T_Abs _  x q ty _ body cres dt db ->
-     tot_typing_freevars dt;
+     tot_or_ghost_typing_freevars dt;
      st_typing_freevars db;
      freevars_close_comp cres x 0;
      freevars_open_st_term_inv body x;
      freevars_tm_arrow ty q (close_comp cres x)
 
    | T_STApp _ head ty q res arg st at ->
-     tot_typing_freevars st;
-     tot_typing_freevars at;
+     tot_or_ghost_typing_freevars st;
+     tot_or_ghost_typing_freevars at;
      freevars_open_comp res arg 0;
      freevars_tm_arrow (as_binder ty) q res
    
    | T_Return _ c use_eq u t e post x t_typing e_typing post_typing ->
-     tot_typing_freevars t_typing;
-     tot_typing_freevars e_typing;
-     tot_typing_freevars post_typing;
+     tot_or_ghost_typing_freevars t_typing;
+     tot_or_ghost_typing_freevars e_typing;
+     tot_or_ghost_typing_freevars post_typing;
      let post_maybe_eq =
        if use_eq
        then let post = open_term' post (null_var x) 0 in
@@ -405,13 +414,14 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
 
    | T_Bind _ e1 e2 _ _ _ x c d1 dc1 d2 bc ->
      st_typing_freevars d1;
-     tot_typing_freevars dc1;
+     tot_or_ghost_typing_freevars dc1;
      st_typing_freevars d2;
      bind_comp_freevars bc;
      freevars_open_st_term_inv e2 x
 
-   | T_TotBind _ e1 e2 _ c2 x e1_typing e2_typing ->
-     tot_typing_freevars e1_typing;
+   | T_TotBind _ e1 e2 _ c2 x e1_typing e2_typing
+   | T_GhostBind _ e1 e2 _ c2 x e1_typing e2_typing _ ->
+     tot_or_ghost_typing_freevars e1_typing;
      st_typing_freevars e2_typing;
      freevars_open_st_term_inv e2 x;
      freevars_close_comp c2 x 0
@@ -425,7 +435,7 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
         (freevars_st e2 `Set.union` freevars_term_opt None));
      (Set.equal) {}
        (freevars _b `Set.union` (freevars_st e1 `Set.union` freevars_st e2));
-     (Set.subset) { tot_typing_freevars tb }
+     (Set.subset) { tot_or_ghost_typing_freevars tb }
        (vars_of_env g `Set.union` (freevars_st e1 `Set.union` freevars_st e2));
      (Set.subset) { st_typing_freevars d1 ; st_typing_freevars d2 }
        vars_of_env g;
@@ -436,16 +446,16 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
       admit ()
 
    | T_Frame _ _ _ _ df dc ->
-     tot_typing_freevars df;
+     tot_or_ghost_typing_freevars df;
      st_typing_freevars dc
 
    | T_IntroPure _ p prop_typing _ ->
-     tot_typing_freevars prop_typing
+     tot_or_ghost_typing_freevars prop_typing
 
    | T_ElimExists _ u t p x dt dv ->
      let x_tm = tm_var {nm_index=x;nm_ppname=ppname_default} in
-     tot_typing_freevars dt;
-     tot_typing_freevars dv;
+     tot_or_ghost_typing_freevars dt;
+     tot_or_ghost_typing_freevars dv;
      freevars_mk_reveal u t x_tm;
      assert (Set.equal (freevars (Pulse.Typing.mk_reveal u t x_tm))
                        (Set.union (freevars t) (Set.singleton x)));
@@ -466,9 +476,9 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
 
 
    | T_IntroExists _ u b p w dt dv dw ->
-     tot_typing_freevars dt;
-     tot_typing_freevars dv;
-     tot_typing_freevars dw;
+     tot_or_ghost_typing_freevars dt;
+     tot_or_ghost_typing_freevars dv;
+     tot_or_ghost_typing_freevars dw;
      assert (freevars_st t `Set.subset` vars_of_env g);
      calc (Set.subset) {
         freevars_comp c;
@@ -490,9 +500,9 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
      }
 
    | T_IntroExistsErased _ u b p w dt dv dw ->
-     tot_typing_freevars dt;
-     tot_typing_freevars dv;
-     tot_typing_freevars dw;
+     tot_or_ghost_typing_freevars dt;
+     tot_or_ghost_typing_freevars dv;
+     tot_or_ghost_typing_freevars dw;
      assert (freevars_st t `Set.subset` vars_of_env g);
      freevars_mk_reveal u b.binder_ty w;
      calc (Set.subset) {
@@ -519,7 +529,7 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
      st_equiv_freevars deq
 
    | T_While _ inv _ _ inv_typing cond_typing body_typing ->
-     tot_typing_freevars inv_typing;
+     tot_or_ghost_typing_freevars inv_typing;
      st_typing_freevars cond_typing;
      st_typing_freevars body_typing;
      assert (freevars tm_false `Set.equal` Set.empty);
@@ -544,21 +554,21 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
 
 
    | T_Rewrite _ _ _ p_typing equiv_p_q ->
-     tot_typing_freevars p_typing;
+     tot_or_ghost_typing_freevars p_typing;
      vprop_equiv_freevars equiv_p_q
 
 
    | T_WithLocal _ init body init_t c x init_typing u_typing c_typing body_typing ->
-     tot_typing_freevars init_typing;
+     tot_or_ghost_typing_freevars init_typing;
      st_typing_freevars body_typing;
      freevars_open_st_term_inv body x;
      comp_typing_freevars c_typing;
-     tot_typing_freevars u_typing;
+     tot_or_ghost_typing_freevars u_typing;
      freevars_ref init_t
 
    | T_Admit _ s _ (STC _ _ x t_typing pre_typing post_typing) ->
-     tot_typing_freevars t_typing;
-     tot_typing_freevars pre_typing;
-     tot_typing_freevars post_typing;
+     tot_or_ghost_typing_freevars t_typing;
+     tot_or_ghost_typing_freevars pre_typing;
+     tot_or_ghost_typing_freevars post_typing;
      freevars_open_term s.post (term_of_no_name_var x) 0
 #pop-options //takes about 12s

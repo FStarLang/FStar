@@ -246,8 +246,6 @@ let rec soundness (g:stt_env)
     | T_Frame _ _ _ _ _ _ ->
       frame_soundness _ _ _ d soundness
 
-    // | T_Tot _ _ _ d -> tot_typing_soundness d
-
     | T_Abs _ x q ty u body c t_typing body_typing ->
       mk_t_abs q ppname_default t_typing body_typing    
 
@@ -259,6 +257,9 @@ let rec soundness (g:stt_env)
 
     | T_TotBind _ _ _ _ _ _ _ _ ->
       Bind.tot_bind_typing d soundness
+
+    | T_GhostBind _ _ _ _ _ _ _ _ _ ->
+      Bind.ghost_bind_typing d soundness
 
     | T_Equiv _ _ _ _ _ _ ->
       stequiv_soundness _ _ _ d soundness
