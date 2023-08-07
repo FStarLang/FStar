@@ -22,12 +22,12 @@ let debug (g:env) (msg: unit -> T.Tac string) =
 
 let rtb_core_check_term g f e =
   debug g (fun _ -> Printf.sprintf "Calling core_check_term on %s" (T.term_to_string e));
-  let res = RTB.core_compute_term_type2 f e in
+  let res = RTB.core_compute_term_type f e in
   res
 
 let rtb_tc_term g f e =
   debug g (fun _ -> Printf.sprintf "Calling tc_term on %s" (T.term_to_string e));
-  let res = RTB.tc_term2 f e in
+  let res = RTB.tc_term f e in
   res
 
 let rtb_universe_of g f e =

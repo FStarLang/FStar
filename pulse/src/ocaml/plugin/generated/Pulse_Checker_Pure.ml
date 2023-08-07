@@ -170,15 +170,14 @@ let (rtb_core_check_term :
                         (Obj.magic
                            (FStar_Range.mk_range "Pulse.Checker.Pure.fst"
                               (Prims.of_int (25)) (Prims.of_int (12))
-                              (Prims.of_int (25)) (Prims.of_int (43)))))
+                              (Prims.of_int (25)) (Prims.of_int (42)))))
                      (FStar_Sealed.seal
                         (Obj.magic
                            (FStar_Range.mk_range "Pulse.Checker.Pure.fst"
                               (Prims.of_int (25)) (Prims.of_int (6))
                               (Prims.of_int (25)) (Prims.of_int (9)))))
                      (Obj.magic
-                        (FStar_Tactics_V2_Builtins.core_compute_term_type2 f
-                           e))
+                        (FStar_Tactics_V2_Builtins.core_compute_term_type f e))
                      (fun res ->
                         FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> res))))
                uu___)
@@ -233,13 +232,13 @@ let (rtb_tc_term :
                         (Obj.magic
                            (FStar_Range.mk_range "Pulse.Checker.Pure.fst"
                               (Prims.of_int (30)) (Prims.of_int (12))
-                              (Prims.of_int (30)) (Prims.of_int (28)))))
+                              (Prims.of_int (30)) (Prims.of_int (27)))))
                      (FStar_Sealed.seal
                         (Obj.magic
                            (FStar_Range.mk_range "Pulse.Checker.Pure.fst"
                               (Prims.of_int (30)) (Prims.of_int (6))
                               (Prims.of_int (30)) (Prims.of_int (9)))))
-                     (Obj.magic (FStar_Tactics_V2_Builtins.tc_term2 f e))
+                     (Obj.magic (FStar_Tactics_V2_Builtins.tc_term f e))
                      (fun res ->
                         FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> res))))
                uu___)
