@@ -142,13 +142,13 @@ fn engine_main (cdi:cdi_t) (uds:A.larray U8.t (US.v uds_len)) (record:engine_rec
   {
     compute_cdi cdi uds record #repr #(coerce dice_digest_len c0);
     with s. assert (A.pts_to uds full_perm s);
-    A.zeroize uds_len uds #(coerce_refined uds_len s);
+    A.zeroize uds_len uds;
     disable_uds();
     DICE_SUCCESS
   }
   else
   {
-    A.zeroize uds_len uds #uds_bytes;
+    A.zeroize uds_len uds;
     disable_uds ();
     DICE_ERROR
   }
