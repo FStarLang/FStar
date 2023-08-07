@@ -145,7 +145,8 @@ let tc_meta_callback g (f:R.env) (e:R.term)
         None, issues
       | Some (e, (eff, t)), issues ->
         if eff = E_Ghost
-        then T.fail (Printf.sprintf "tc_meta_callback: ghost %s" (T.term_to_string e))
+        then fail g (Some (range_of_term e))
+               (Printf.sprintf "tc_term: expected total term, found ghost %s" (T.term_to_string e))
         else Some (| e, t, RT.T_Token _ _ _ (FStar.Squash.get_proof _) |), 
              issues
     in
@@ -221,7 +222,9 @@ let tc_with_core g (f:R.env) (e:R.term)
     match ropt with
     | None -> None, issues
     | Some (eff, t) ->
-      if eff = E_Ghost then T.fail "tc_with_core: ghost"
+      if eff = E_Ghost
+      then fail g (Some (range_of_term e))
+             (Printf.sprintf "tc_with_core, expected total term, found ghost: %s" (T.term_to_string e))
       else Some (| t, RT.T_Token _ _ _ (FStar.Squash.get_proof _) |), issues
 
 let core_check_term (g:env) (t:term)
