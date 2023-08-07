@@ -136,12 +136,13 @@ let free_uvars              = from_tac_1 "B.free_uvars" B.free_uvars
 type ('env, 't) prop_validity_token = unit
 type ('env, 'sc, 't, 'pats, 'bnds) match_complete_token = unit
 
+let is_non_informative           = from_tac_2 "B.refl_is_non_informative" B.refl_is_non_informative
 let check_subtyping              = from_tac_3 "B.refl_check_subtyping" B.refl_check_subtyping
 let check_equiv                  = from_tac_3 "B.refl_check_equiv" B.refl_check_equiv
-let core_compute_term_type       = from_tac_2 "B.refl_core_compute_term_type2" B.refl_core_compute_term_type
+let core_compute_term_type       = from_tac_2 "B.refl_core_compute_term_type" B.refl_core_compute_term_type
 let core_check_term              = from_tac_4 "B.refl_core_check_term" B.refl_core_check_term
 let check_match_complete         = from_tac_4 "B.refl_check_match_complete" B.refl_check_match_complete
-let tc_term                      = from_tac_2 "B.refl_tc_term2" B.refl_tc_term
+let tc_term                      = from_tac_2 "B.refl_tc_term" B.refl_tc_term
 let universe_of                  = from_tac_2 "B.refl_universe_of" B.refl_universe_of
 let check_prop_validity          = from_tac_2 "B.refl_check_prop_validity" B.refl_check_prop_validity
 let instantiate_implicits        = from_tac_2 "B.refl_instantiate_implicits" B.refl_instantiate_implicits

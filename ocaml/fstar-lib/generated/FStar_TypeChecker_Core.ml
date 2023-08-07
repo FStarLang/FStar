@@ -1297,8 +1297,11 @@ let rec iter2 :
               let uu___ = f x y b1 in
               op_let_Bang uu___ (fun b2 -> iter2 xs1 ys1 f b2)
           | uu___ -> fail "Lists of differing length"
-let (non_informative : env -> FStar_Syntax_Syntax.term -> Prims.bool) =
-  fun g -> fun t -> FStar_TypeChecker_Normalize.non_info_norm g.tcenv t
+let (is_non_informative :
+  FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.typ -> Prims.bool) =
+  fun g -> fun t -> FStar_TypeChecker_Normalize.non_info_norm g t
+let (non_informative : env -> FStar_Syntax_Syntax.typ -> Prims.bool) =
+  fun g -> fun t -> is_non_informative g.tcenv t
 let (as_comp :
   env -> (tot_or_ghost * FStar_Syntax_Syntax.typ) -> FStar_Syntax_Syntax.comp)
   =

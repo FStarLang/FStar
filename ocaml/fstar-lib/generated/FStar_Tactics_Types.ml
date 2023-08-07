@@ -469,6 +469,7 @@ let (get_phi :
     FStar_Syntax_Util.un_squash uu___
 let (is_irrelevant : goal -> Prims.bool) =
   fun g -> let uu___ = get_phi g in FStar_Compiler_Option.isSome uu___
+type ('g, 't) non_informative_token = unit
 type ('g, 't0, 't1) subtyping_token = unit
 type ('g, 't0, 't1) equiv_token = unit
 type ('g, 'e, 'c) typing_token = unit

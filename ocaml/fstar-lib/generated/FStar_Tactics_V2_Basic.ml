@@ -6880,6 +6880,45 @@ let (unexpected_uvars_issue :
         FStar_Errors.issue_ctx = []
       } in
     i
+let (refl_is_non_informative :
+  env ->
+    FStar_Syntax_Syntax.typ ->
+      (unit FStar_Pervasives_Native.option * issues) FStar_Tactics_Monad.tac)
+  =
+  fun g ->
+    fun t ->
+      let uu___ = (no_uvars_in_g g) && (no_uvars_in_term t) in
+      if uu___
+      then
+        refl_typing_builtin_wrapper
+          (fun uu___1 ->
+             dbg_refl g
+               (fun uu___3 ->
+                  let uu___4 = FStar_Syntax_Print.term_to_string t in
+                  FStar_Compiler_Util.format1 "refl_is_non_informative: %s\n"
+                    uu___4);
+             (let b = FStar_TypeChecker_Core.is_non_informative g t in
+              dbg_refl g
+                (fun uu___4 ->
+                   let uu___5 = FStar_Compiler_Util.string_of_bool b in
+                   FStar_Compiler_Util.format1
+                     "refl_is_non_informative: returned %s" uu___5);
+              if b
+              then ()
+              else
+                FStar_Errors.raise_error
+                  (FStar_Errors_Codes.Fatal_UnexpectedTerm,
+                    "is_non_informative returned false ")
+                  FStar_Compiler_Range_Type.dummyRange))
+      else
+        (let uu___2 =
+           let uu___3 =
+             let uu___4 =
+               let uu___5 = FStar_TypeChecker_Env.get_range g in
+               unexpected_uvars_issue uu___5 in
+             [uu___4] in
+           (FStar_Pervasives_Native.None, uu___3) in
+         FStar_Tactics_Monad.ret uu___2)
 let (refl_check_relation :
   env ->
     FStar_Syntax_Syntax.typ ->
