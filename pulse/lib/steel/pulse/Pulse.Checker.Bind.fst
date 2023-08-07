@@ -62,7 +62,8 @@ let check_tot_bind
   then fail g (Some t.range) "check_tot_bind: post hint is not set, please add an annotation";
 
   let Tm_TotBind { head=e1; body=e2 } = t.term in
-  let (| e1, u1, t1, _t1_typing, e1_typing |) = check_tot_term_and_type g e1 in
+  let (| e1, eff1, t1, (| u1, _t1_typing |), e1_typing |) =
+    check_term_and_type g e1 in
   let t1 =
     let b = {binder_ty=t1;binder_ppname=ppname_default} in
     let eq_tm = mk_eq2 u1 t1 (null_bvar 0) e1 in
@@ -70,11 +71,11 @@ let check_tot_bind
 
   // THIS IS WASTEFUL, CHECKING e1 MULTIPLE TIMES
   let (| e1, e1_typing |) =
-    check_tot_term_with_expected_type g e1 t1 in
+    check_term_with_expected_type g e1 eff1 t1 in
 
   let x = fresh g in
 
-  let k = continuation_elaborator_with_tot_bind pre_typing e1_typing (ppname_default, x) in
+  let k = continuation_elaborator_with_let pre_typing e1_typing (ppname_default, x) in
 
   let px = v_as_nv x in
   let g' = push_binding g x (fst px) t1 in

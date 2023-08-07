@@ -340,4 +340,7 @@ let core_check_tot_term g t =
 let core_check_tot_term_with_expected_type g e t =
   core_check_term_with_expected_type g e T.E_Total t
 
-
+let is_non_informative g c = 
+  let ropt, issues = catch_all (fun _ -> T.is_non_informative (elab_env g) (elab_comp c)) in
+  T.log_issues issues;
+  ropt

@@ -78,3 +78,7 @@ val core_check_tot_term (g:env) (t:term)
 
 val core_check_tot_term_with_expected_type (g:env) (e:term) (t:typ)
   : T.Tac (tot_typing g e t)
+
+val is_non_informative (g:env) (c:comp)
+  : T.Tac (option (T.non_informative_token (elab_env g) (elab_comp c)))
+
