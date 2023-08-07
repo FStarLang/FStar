@@ -1065,7 +1065,7 @@ type non_informative : term -> Type0 =
     non_informative (pack_ln (Tv_FVar x))
   
   | Non_informative_uinst:
-    x:fv ->
+    x:fv{is_non_informative_fv x} ->
     us:list universe ->
     non_informative (pack_ln (Tv_UInst x us))
 
