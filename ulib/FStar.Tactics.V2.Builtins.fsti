@@ -461,8 +461,8 @@ let ret_t (a:Type) = option a & issues
 //
 // Compute the type of e using the core typechecker
 //
-val core_compute_term_type (g:env) (e:term) (eff:tot_or_ghost)
-  : Tac (ret_t (t:typ{typing_token g e (eff, t)}))
+val core_compute_term_type (g:env) (e:term)
+  : Tac (ret_t (r:(tot_or_ghost & typ){typing_token g e r}))
 
 val core_compute_term_type2 (g:env) (e:term)
   : Tac (ret_t (r:(tot_or_ghost & typ){typing_token g e r}))
@@ -477,8 +477,8 @@ val core_check_term (g:env) (e:term) (t:typ) (eff:tot_or_ghost)
 //
 // Instantiate the implicits in e and compute its type
 //
-val tc_term (g:env) (e:term) (eff:tot_or_ghost)
-  : Tac (ret_t (r:(term & typ){typing_token g (fst r) (eff, snd r)}))
+val tc_term (g:env) (e:term)
+  : Tac (ret_t (r:(term & (tot_or_ghost & typ)){typing_token g (fst r) (snd r)}))
 
 val tc_term2 (g:env) (e:term)
   : Tac (ret_t (r:(term & (tot_or_ghost & typ)){typing_token g (fst r) (snd r)}))

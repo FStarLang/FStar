@@ -2195,30 +2195,6 @@ let to_must_tot (eff:Core.tot_or_ghost) : bool =
 let refl_norm_type (g:env) (t:typ) : typ =
   N.normalize [Env.Beta; Env.Exclude Zeta] g t
 
-let refl_core_compute_term_type (g:env) (e:term) (eff:Core.tot_or_ghost) : tac (option typ & issues) =
-  if no_uvars_in_g g &&
-     no_uvars_in_term e
-  then refl_typing_builtin_wrapper (fun _ ->
-         dbg_refl g (fun _ ->
-           BU.format1 "refl_core_compute_term_type: %s\n" (Print.term_to_string e));
-         let must_tot = to_must_tot eff in
-         let gh = fun g guard ->
-           Rel.force_trivial_guard g
-             {Env.trivial_guard with guard_f = NonTrivial guard};
-           true in
-         match Core.compute_term_type_handle_guards g e gh with
-         | Inl (_, t) ->
-           let t = refl_norm_type g t in
-           dbg_refl g (fun _ ->
-             BU.format2 "refl_core_compute_term_type for %s computed type %s\n"
-               (Print.term_to_string e)
-               (Print.term_to_string t));
-           t
-         | Inr err ->
-           dbg_refl g (fun _ -> BU.format1 "refl_core_compute_term_type: %s\n" (Core.print_error err));
-           Errors.raise_error (Errors.Fatal_IllTyped, "core_compute_term_type failed: " ^ (Core.print_error err)) Range.dummyRange)
-  else ret (None, [unexpected_uvars_issue (Env.get_range g)])
-
 let maybe_promote (g:env) (eff:Core.tot_or_ghost) (t:typ) : (Core.tot_or_ghost & typ) =
   let open FStar.TypeChecker.Core in
   match eff with
@@ -2233,6 +2209,30 @@ let maybe_promote (g:env) (eff:Core.tot_or_ghost) (t:typ) : (Core.tot_or_ghost &
         (Errors.Fatal_UnexpectedTerm,
          BU.format1 "core.maybe_promote: a non tot/ghost computation %s"
            (FStar.Syntax.Print.comp_to_string c)) Range.dummyRange
+
+let refl_core_compute_term_type (g:env) (e:term) : tac (option (Core.tot_or_ghost & typ) & issues) =
+  if no_uvars_in_g g &&
+     no_uvars_in_term e
+  then refl_typing_builtin_wrapper (fun _ ->
+         dbg_refl g (fun _ ->
+           BU.format1 "refl_core_compute_term_type: %s\n" (Print.term_to_string e));
+         let gh = fun g guard ->
+           Rel.force_trivial_guard g
+             {Env.trivial_guard with guard_f = NonTrivial guard};
+           true in
+         match Core.compute_term_type_handle_guards g e gh with
+         | Inl (eff, t) ->
+           let eff, t = maybe_promote g eff t in
+           let t = refl_norm_type g t in
+           dbg_refl g (fun _ ->
+             BU.format2 "refl_core_compute_term_type for %s computed type %s\n"
+               (Print.term_to_string e)
+               (Print.term_to_string t));
+           eff, t
+         | Inr err ->
+           dbg_refl g (fun _ -> BU.format1 "refl_core_compute_term_type: %s\n" (Core.print_error err));
+           Errors.raise_error (Errors.Fatal_IllTyped, "core_compute_term_type failed: " ^ (Core.print_error err)) Range.dummyRange)
+  else ret (None, [unexpected_uvars_issue (Env.get_range g)])
 
 let refl_core_compute_term_type2 (g:env) (e:term) : tac (option (Core.tot_or_ghost & typ) & issues) =
   if no_uvars_in_g g &&
@@ -2282,14 +2282,13 @@ let refl_core_check_term (g:env) (e:term) (t:typ) (eff:Core.tot_or_ghost)
            Errors.raise_error (Errors.Fatal_IllTyped, "refl_core_check_term failed: " ^ (Core.print_error err)) Range.dummyRange)
   else ret (None, [unexpected_uvars_issue (Env.get_range g)])
 
-let refl_tc_term (g:env) (e:term) (eff:Core.tot_or_ghost) : tac (option (term & typ) & issues) =
+let refl_tc_term (g:env) (e:term) : tac (option (term & (Core.tot_or_ghost & typ)) & issues) =
   if no_uvars_in_g g &&
      no_uvars_in_term e
   then refl_typing_builtin_wrapper (fun _ ->
     dbg_refl g (fun _ ->
       BU.format1 "refl_tc_term: %s\n" (Print.term_to_string e));
     dbg_refl g (fun _ -> "refl_tc_term: starting tc {\n");
-    let must_tot = to_must_tot eff in
     //
     // we don't instantiate implicits at the end of e
     // it is unlikely that we will be able to resolve them,
@@ -2304,6 +2303,7 @@ let refl_tc_term (g:env) (e:term) (eff:Core.tot_or_ghost) : tac (option (term & 
     //
     let e =
       let g = {g with phase1 = true; lax = true} in
+      let must_tot = true in
       let e, _, guard = g.typeof_tot_or_gtot_term g e must_tot in
       Rel.force_trivial_guard g guard;
       e in
@@ -2319,16 +2319,17 @@ let refl_tc_term (g:env) (e:term) (eff:Core.tot_or_ghost) : tac (option (term & 
           {Env.trivial_guard with guard_f = NonTrivial guard};
         true in
      match Core.compute_term_type_handle_guards g e gh with
-     | Inl (_, t) ->
-        let t = refl_norm_type g t in
-        dbg_refl g (fun _ ->
-          BU.format2 "refl_tc_term for %s computed type %s\n"
-            (Print.term_to_string e)
-            (Print.term_to_string t));
-        e, t
+     | Inl (eff, t) ->
+       let eff, t = maybe_promote g eff t in
+       let t = refl_norm_type g t in
+       dbg_refl g (fun _ ->
+         BU.format2 "refl_tc_term for %s computed type %s\n"
+           (Print.term_to_string e)
+           (Print.term_to_string t));
+       e, (eff, t)
      | Inr err ->
-        dbg_refl g (fun _ -> BU.format1 "refl_tc_term failed: %s\n" (Core.print_error err));
-        Errors.raise_error (Errors.Fatal_IllTyped, "tc_term callback failed: " ^ Core.print_error err) e.pos
+       dbg_refl g (fun _ -> BU.format1 "refl_tc_term failed: %s\n" (Core.print_error err));
+       Errors.raise_error (Errors.Fatal_IllTyped, "tc_term callback failed: " ^ Core.print_error err) e.pos
     end
     with
     | Errors.Error (Errors.Error_UnexpectedUnresolvedUvar, _, _, _) ->
