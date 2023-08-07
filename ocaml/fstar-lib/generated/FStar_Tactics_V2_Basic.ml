@@ -6797,18 +6797,6 @@ let (dbg_refl : env -> (unit -> Prims.string) -> unit) =
       then let uu___1 = msg () in FStar_Compiler_Util.print_string uu___1
       else ()
 type issues = FStar_Errors.issue Prims.list
-let rec iter :
-  'a .
-    ('a -> unit FStar_Tactics_Monad.tac) ->
-      'a Prims.list -> unit FStar_Tactics_Monad.tac
-  =
-  fun f ->
-    fun xs ->
-      match xs with
-      | [] -> FStar_Tactics_Monad.ret ()
-      | x::xs1 ->
-          let uu___ = f x in
-          FStar_Tactics_Monad.op_let_Bang uu___ (fun uu___1 -> iter f xs1)
 let (refl_typing_guard :
   env -> FStar_Syntax_Syntax.typ -> unit FStar_Tactics_Monad.tac) =
   fun e ->
@@ -6851,11 +6839,13 @@ let __refl_typing_builtin_wrapper :
         let gs =
           if FStar_Pervasives_Native.uu___is_Some r
           then
+            let allow_uvars = false in
             FStar_Compiler_List.map
               (fun uu___1 ->
                  match uu___1 with
                  | (e, g) ->
-                     let uu___2 = FStar_Syntax_Compress.deep_compress false g in
+                     let uu___2 =
+                       FStar_Syntax_Compress.deep_compress allow_uvars g in
                      (e, uu___2))
               (FStar_Pervasives_Native.snd
                  (FStar_Pervasives_Native.__proj__Some__item__v r))
@@ -6872,7 +6862,8 @@ let __refl_typing_builtin_wrapper :
              then
                FStar_Tactics_Monad.ret (FStar_Pervasives_Native.None, errs)
              else
-               (let uu___4 = iter (uncurry refl_typing_guard) gs in
+               (let uu___4 =
+                  FStar_Tactics_Monad.iter_tac (uncurry refl_typing_guard) gs in
                 FStar_Tactics_Monad.op_let_Bang uu___4
                   (fun uu___5 -> FStar_Tactics_Monad.ret (r1, errs))))
 let catch_all :
