@@ -7438,7 +7438,7 @@ let (refl_tc_term :
                     FStar_TypeChecker_Env.core_check =
                       (g1.FStar_TypeChecker_Env.core_check)
                   } in
-                let must_tot = true in
+                let must_tot = false in
                 let uu___4 =
                   g2.FStar_TypeChecker_Env.typeof_tot_or_gtot_term g2 e
                     must_tot in
@@ -7794,7 +7794,7 @@ let (refl_instantiate_implicits :
                     "refl_instantiate_implicits: %s\n" uu___4);
              dbg_refl g
                (fun uu___4 -> "refl_instantiate_implicits: starting tc {\n");
-             (let must_tot = true in
+             (let must_tot = false in
               let g1 =
                 {
                   FStar_TypeChecker_Env.solver =
