@@ -191,130 +191,77 @@ let is_reveal (t:term) : bool =
   | _ -> false
 
 module RT = FStar.Reflection.Typing
-let rec unify (g:env) (uvs:env { disjoint uvs g})
-  (p q:term) (ss:PS.ss_t)
-  : T.Tac (option (ss':PS.ss_t { ss' `ss_extends` ss /\
-                                 PS.dom ss' `Set.subset` freevars q } &
-                   RT.equiv (elab_env g) (elab_term p) (elab_term ss'.(q)))) =
 
-  let rt_equiv g t1 t2 : RT.equiv g t1 t2 =
-    assume (t1 == t2);
-    RT.EQ_Refl _ _
-  in
-
-  let q0 = q in
-  let q = ss.(q) in
-  assume (freevars q `Set.disjoint` PS.dom ss);
-
-  debug_prover g (fun _ ->
-    Printf.sprintf "prover.match trying %s =?= %s" (P.term_to_string p) (P.term_to_string q));
-
-  if eq_tm p q
-  then begin
-    debug_prover g (fun _ ->
-      Printf.sprintf "prover.match trying %s =?= %s, eq_tm" (P.term_to_string p) (P.term_to_string q));
-
-    assume (PS.dom ss `Set.subset` freevars q);
-    Some (| ss, RT.EQ_Refl _ _ |)
-  end
-  else if not (contains_uvar q uvs g)
-  then begin
-    if eligible_for_smt_equality g p q
-    then let _ =
-           debug_prover g (fun _ ->
-             Printf.sprintf "prover.match trying %s =?= %s, not eq_tm, q has no uvar, eligible for smt" (P.term_to_string p) (P.term_to_string q))
-         in
-         let _ = assume (PS.dom ss `Set.subset` freevars q) in
-         let v0 = elab_term p in
-         let v1 = elab_term q in
-         match T.check_equiv (elab_env g) v0 v1 with
-         | Some token, _ -> Some (| ss, RT.EQ_Token _ _ _ (FStar.Squash.return_squash token) |)
-         | None, _ -> None
-    else let _ =
-           debug_prover g (fun _ ->
-             Printf.sprintf "prover.match trying %s =?= %s, not eq_tm, q has no uvar, not eligible for smt" (P.term_to_string p) (P.term_to_string q))
-         in
-         None
-  end
-  else match is_reveal_uvar q uvs, is_reveal p with
-       | Some (u, ty, n), false ->
-         debug_prover g (fun _ ->
-             Printf.sprintf "prover.match trying %s =?= %s, not eq_tm, q is reveal of uvar, p is not reveal" (P.term_to_string p) (P.term_to_string q));
-         let w = mk_hide u ty p in
-         assume (Set.mem n (dom uvs));
+let rec try_solve_uvars (g:env) (uvs:env { disjoint uvs g })
+  (p q:term)
+  : T.Tac (ss:PS.ss_t { PS.dom ss `Set.subset` freevars q }) =
+  
+  assume (Set.equal (PS.dom PS.empty) Set.empty);
+  
+  if not (contains_uvar q uvs g)
+  then PS.empty
+  else begin
+    match is_reveal_uvar q uvs, is_reveal p with
+    | Some (u, ty, n), false ->
+      let w = mk_hide u ty p in
+      assume (~ (PS.contains PS.empty n));
+      let ss = PS.push PS.empty n w in
+      assume (n `Set.mem` freevars q);
+      assume (Set.equal (PS.dom ss) (Set.singleton n));
+      ss
+     | _ ->
+       match is_uvar q uvs with
+       | Some n ->
+         let w = p in
          assume (~ (PS.contains PS.empty n));
-         assume (Set.disjoint (freevars w) (dom uvs));
-         let ss_new = PS.push PS.empty n w in
+         let ss = PS.push PS.empty n w in
          assume (n `Set.mem` freevars q);
-         assume (Set.equal (PS.dom ss_new) (Set.singleton n));
-         assert (Set.disjoint (PS.dom ss_new) (PS.dom ss));
-         let ss' = PS.push_ss ss ss_new in
-         assume (ss' `ss_extends` ss);
-         assume (ss'.(q0) == w);
-         assume (PS.dom ss' `Set.subset` freevars q0);  // they are actually equal
-         let b, _ = T.check_equiv (elab_env g) (elab_term (mk_reveal u ty w)) (elab_term p) in
-         if Some? b
-         then let d : RT.equiv (elab_env g) (elab_term p) (elab_term ss'.(q0)) = rt_equiv _ _ _ in
-              Some (| ss', d |)
-         else None
+         assume (Set.equal (PS.dom ss) (Set.singleton n));
+         ss
        | _ ->
-         match is_uvar q uvs with
-         | Some n ->
-           debug_prover g (fun _ ->
-             Printf.sprintf "prover.match trying %s =?= %s, not eq_tm, q is uvar" (P.term_to_string p) (P.term_to_string q));
-           assume (Set.mem n (dom uvs));
-           assume (~ (PS.contains PS.empty n));
-           assume (Set.disjoint (freevars p) (dom uvs));
-           let ss_new = PS.push PS.empty n p in
-           assume (n `Set.mem` freevars q);
-           assume (Set.equal (PS.dom ss_new) (Set.singleton n));
-           assert (Set.disjoint (PS.dom ss_new) (PS.dom ss));
-           let ss' = PS.push_ss ss ss_new in
-           assume (PS.dom ss' `Set.subset` freevars q0);  // again equal
-           assume (ss'.(q0) == p);
-           Some (| ss', RT.EQ_Refl _ _ |)
-         | _ ->
-           match p.t, q.t with
-           | Tm_Pure p1, Tm_Pure q1 ->
-             debug_prover g (fun _ ->
-               Printf.sprintf "prover.match trying %s =?= %s, both p and q are pure" (P.term_to_string p) (P.term_to_string q));
-             let r = unify g uvs p1 q1 ss in
-             (match r with
-              | Some (| ss', _ |) ->
-                assume (Set.subset (PS.dom ss') (freevars q0));
-                let ss' : ss':PS.ss_t { ss' `ss_extends` ss /\
-                                        PS.dom ss' `Set.subset` freevars q0 } = ss' in
-                Some (| ss', rt_equiv _ _ _ |)
-              | None -> None)
+         match p.t, q.t with
+         | Tm_Pure p1, Tm_Pure q1 -> try_solve_uvars g uvs p1 q1
 
-           | _, _ ->
-             match is_pure_app p, is_pure_app q with
-             | Some (head_p, qual_p, arg_p), Some (head_q, qual_q, arg_q) ->
-               debug_prover g (fun _ ->
-                 Printf.sprintf "prover.match trying %s =?= %s, both are pure app" (P.term_to_string p) (P.term_to_string q));
+         | _, _ ->
+           match is_pure_app p, is_pure_app q with
+           | Some (head_p, qual_p, arg_p), Some (head_q, qual_q, arg_q) ->
+            let ss_head = try_solve_uvars g uvs head_p head_q in
+            let ss_arg = try_solve_uvars g uvs arg_p arg_q in
+            if PS.check_disjoint ss_head ss_arg  // TODO: should implement a better compose
+            then begin
+              let ss = PS.push_ss ss_head ss_arg in
+              assume (Set.equal (PS.dom ss) (Set.union (PS.dom ss_head) (PS.dom ss_arg)));
+              assume ((Set.union (freevars head_q) (freevars arg_q)) `Set.subset` freevars q);
+              ss
+            end
+            else PS.empty
+           | _, _ -> PS.empty
+  end
 
-               if not (qual_p = qual_q) then None
-               else begin
-                 let r = unify g uvs head_p head_q ss in
-                 match r with
-                 | Some (| ss', _ |) ->
-                   let r = unify g uvs arg_p arg_q ss' in
-                   (match r with
-                    | Some (| ss', _|) ->
-                      admit ();
-                      let ss' : ss':PS.ss_t { ss' `ss_extends` ss /\
-                                              PS.dom ss' `Set.subset` freevars q0 } = ss' in
-                      Some (| ss', rt_equiv _ _ _ |)
-                    | _ -> None)
-                 | _ -> None
-               end
-             | _, _ -> None
+let unify (g:env) (uvs:env { disjoint uvs g})
+  (p q:term)
+  : T.Tac (option (ss:PS.ss_t { PS.dom ss `Set.subset` freevars q } &
+                   RT.equiv (elab_env g) (elab_term p) (elab_term ss.(q)))) =
+
+  let ss = try_solve_uvars g uvs p q in
+  let q = ss.(q) in
+  if eq_tm p q
+  then Some (| ss, RT.EQ_Refl _ _ |)
+  else if contains_uvar q uvs g
+  then None
+  else if eligible_for_smt_equality g p q
+  then let v0 = elab_term p in
+       let v1 = elab_term q in
+       match T.check_equiv (elab_env g) v0 v1 with
+       | Some token, _ -> Some (| ss, RT.EQ_Token _ _ _ (FStar.Squash.return_squash token) |)
+       | None, _ -> None
+  else None
 
 let try_match_pq (g:env) (uvs:env { disjoint uvs g}) (p q:vprop)
   : T.Tac (option (ss:PS.ss_t { PS.dom ss `Set.subset` freevars q } &
                    vprop_equiv g p ss.(q))) =
 
-  let r = unify g uvs p q PS.empty in
+  let r = unify g uvs p q in
   match r with
   | None -> None
   | Some (| ss, _ |) ->
