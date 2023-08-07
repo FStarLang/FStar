@@ -440,21 +440,23 @@ let comp_admit (c:ctag) (s:st_comp) : comp =
 noeq
 type my_erased (a:Type) = | E of a
 
-
-let typing (g:env) (e:term) (t:term) =
-    RT.tot_typing (elab_env g) (elab_term e) (elab_term t)
+let typing (g:env) (e:term) (eff:T.tot_or_ghost) (t:term) =
+  RT.typing (elab_env g) (elab_term e) (eff, elab_term t)
 
 let tot_typing (g:env) (e:term) (t:term) =
-    my_erased (typing g e t)
+  my_erased (typing g e T.E_Total t)
+
+let ghost_typing (g:env) (e:term) (t:typ) =
+  my_erased (typing g e T.E_Ghost t)
 
 let universe_of (g:env) (t:term) (u:universe) =
-    tot_typing g t (tm_type u)
+  tot_typing g t (tm_type u)
 
 let non_informative_t (g:env) (u:universe) (t:term) =
-    w:term & tot_typing g w (non_informative_witness_t u t)
+  w:term & tot_typing g w (non_informative_witness_t u t)
 
 let non_informative_c (g:env) (c:comp_st) =
-    non_informative_t g (comp_u c) (comp_res c)
+  non_informative_t g (comp_u c) (comp_res c)
 
 let as_binder t = { binder_ty = t; binder_ppname = ppname_default }
 
@@ -673,7 +675,19 @@ type st_typing : env -> st_term -> comp -> Type =
       tot_typing g e1 t1 ->
       st_typing (push_binding g x ppname_default t1) (open_st_term_nv e2 (v_as_nv x)) c2 ->
       st_typing g (wr (Tm_TotBind { head = e1; body = e2 }))
-                    (open_comp_with (close_comp c2 x) e1)
+                  (open_comp_with (close_comp c2 x) e1)
+
+  | T_GhostBind:
+    g:env ->
+    e1:term ->
+    e2:st_term ->
+    t1:term ->
+    c2:comp {C_STGhost? c2} ->
+    x:var { None? (lookup g x) /\ ~ (x `Set.mem` freevars_st e2) } ->
+    ghost_typing g e1 t1 ->
+    st_typing (push_binding g x ppname_default t1) (open_st_term_nv e2 (v_as_nv x)) c2 ->
+    st_typing g (wr (Tm_TotBind { head = e1; body = e2 }))
+                (open_comp_with (close_comp c2 x) e1)
 
   | T_If:
       g:env ->
