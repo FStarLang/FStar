@@ -626,6 +626,21 @@ type st_typing : env -> st_term -> comp -> Type =
       st_typing g (wr (Tm_STApp {head; arg_qual=q; arg}))
                   (open_comp_with res arg)
 
+  | T_STGhostApp:
+      g:env ->
+      head:term ->
+      ty:term ->
+      q:option qualifier ->
+      res:comp_st ->
+      arg:term ->
+      x:var { None? (lookup g x) /\ ~ (x `Set.mem` freevars_comp res) } ->
+      tot_typing g head (tm_arrow (as_binder ty) q res) ->
+      RT.non_informative (elab_env (push_binding g x ppname_default ty))
+                         (elab_comp (open_comp_with res (null_var x))) ->
+      ghost_typing g arg ty ->
+      st_typing g (wr (Tm_STApp {head; arg_qual=q; arg}))
+                  (open_comp_with res arg)
+
   | T_Return:
       g:env ->
       c:ctag ->
@@ -678,17 +693,17 @@ type st_typing : env -> st_term -> comp -> Type =
                   (open_comp_with (close_comp c2 x) e1)
 
   | T_GhostBind:
-    g:env ->
-    e1:term ->
-    e2:st_term ->
-    t1:term ->
-    c2:comp_st ->
-    x:var { None? (lookup g x) /\ ~ (x `Set.mem` freevars_st e2) } ->
-    ghost_typing g e1 t1 ->
-    st_typing (push_binding g x ppname_default t1) (open_st_term_nv e2 (v_as_nv x)) c2 ->
-    RT.non_informative (elab_env (push_binding g x ppname_default t1)) (elab_comp c2) ->
-    st_typing g (wr (Tm_TotBind { head = e1; body = e2 }))
-                (open_comp_with (close_comp c2 x) e1)
+      g:env ->
+      e1:term ->
+      e2:st_term ->
+      t1:term ->
+      c2:comp_st ->
+      x:var { None? (lookup g x) /\ ~ (x `Set.mem` freevars_st e2) } ->
+      ghost_typing g e1 t1 ->
+      st_typing (push_binding g x ppname_default t1) (open_st_term_nv e2 (v_as_nv x)) c2 ->
+      RT.non_informative (elab_env (push_binding g x ppname_default t1)) (elab_comp c2) ->
+      st_typing g (wr (Tm_TotBind { head = e1; body = e2 }))
+                  (open_comp_with (close_comp c2 x) e1)
 
   | T_If:
       g:env ->
