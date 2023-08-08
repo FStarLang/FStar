@@ -136,13 +136,11 @@ let ret (s:S.term) = SW.(tm_return (as_term s) s.pos)
 type stapp_or_return_t =
   | STTerm : SW.st_term -> stapp_or_return_t
   | Return : S.term -> stapp_or_return_t
-  | GhostReturn : S.term -> stapp_or_return_t
 
 let st_term_of_stapp_or_return (t:stapp_or_return_t) : SW.st_term =
   match t with
   | STTerm t -> t
   | Return t -> ret t
-  | GhostReturn t -> SW.(tm_ghost_return (as_term t) t.pos)
 
 let stapp_or_return (env:env_t) (s:S.term)
   : stapp_or_return_t
