@@ -118,9 +118,6 @@ let check
       T.print (Printf.sprintf "st_app, readback comp as %s\n"
                  (P.comp_to_string comp_typ)));
     
-    // assert (ty_head ==
-    //         tm_arrow ({binder_ty=formal;binder_ppname=ppname}) bqual comp_typ);
-    
     let allow_ghost = C_STGhost? comp_typ in
     if (not allow_ghost) &&
        eff_head = T.E_Ghost
@@ -150,6 +147,9 @@ let check
           then fail g (Some t.range)
                  ("Unexpected clash of variable names, please file a bug-report");
 
+          //
+          // This will always succeed, is there a way to avoid this?
+          //
           let d_non_info =
             let token =
               is_non_informative (push_binding g x ppname_default formal)

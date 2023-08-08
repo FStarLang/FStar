@@ -208,6 +208,19 @@ let tot_bind_typing #g #t #c d soundness =
 
   RT.T_Let _ x re1 rt1 (RT.close_term re2 x) (elab_comp c2) T.E_Total RT.pp_name_default re1_typing re2_typing
 
+//
+// We have G |- e1 : Ghost t    -- (1)
+//         G,x:t |- e2 : Total c2    -- (2)
+//         G, x:t |- non_informative c2    -- (3)
+//
+// The idea is to lift (2) to Ghost c2,
+//   apply the reflection typing rule T_Let with ghost effect,
+//   so that we will have the final computation type as Ghost (subst [NT x e1] c2)
+//
+// And then use the non-informative (3) to promote Ghost to Total
+//
+// Requires an application of substitution lemma for the non-informative judgment (in the RT world)
+//
 let ghost_bind_typing #g #t #c d soundness =
   let T_GhostBind _ e1 e2 t1 c2 x e1_typing e2_typing d_non_info = d in
 

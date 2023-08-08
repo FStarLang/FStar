@@ -100,6 +100,16 @@ let stapp_soundness
                  r_head_typing
                  r_arg_typing
 
+//
+// We have G |- head : Ghost (x:t -> Total res)    -- (1)
+//         G |- arg : Ghost t    -- (2)
+//         G,x:t |- non_informative (open res x)    -- (3)
+//
+// We first lift (1) to G |- head : Ghost (x:t -> Ghost res)
+// Then apply T_App in reflection typing to derive
+// G |- head arg : Ghost (open res arg)    -- (4)
+// and then promote (4) to Total using a substitution lemma on (3)
+//
 let stghostapp_soundness
   (g:stt_env)
   (t:st_term)

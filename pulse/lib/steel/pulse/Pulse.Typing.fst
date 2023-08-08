@@ -637,6 +637,14 @@ type st_typing : env -> st_term -> comp -> Type =
       st_typing g (wr (Tm_STApp {head; arg_qual=q; arg}))
                   (open_comp_with res arg)
 
+    //
+    // this rule requires a non-informative judgment
+    // for C_STGhost, this will always be the case
+    // however, when doing the soundness proof,
+    //   we cannot call into the reflection API to get the token
+    // may be there is another way to make it so that we can get this once-and-for-all
+    //   for C_STGhost
+    //
   | T_STGhostApp:
       g:env ->
       head:term ->
@@ -703,7 +711,7 @@ type st_typing : env -> st_term -> comp -> Type =
       st_typing g (wr (Tm_TotBind { head = e1; body = e2 }))
                   (open_comp_with (close_comp c2 x) e1)
 
-  | T_GhostBind:
+  | T_GhostBind:  // see the comment on T_STGhostApp regarding the non-informative judgment
       g:env ->
       e1:term ->
       e2:st_term ->
