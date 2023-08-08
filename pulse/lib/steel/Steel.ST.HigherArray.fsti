@@ -395,7 +395,7 @@ let join
   ghost_join a1 a2 ();
   let res = merge a1 a2 in
   rewrite
-    (pts_to (merge a1 (Ghost.reveal a2)) p (x1 `Seq.append` x2))
+    (pts_to (merge a1 (Ghost.hide (Ghost.reveal a2))) p (x1 `Seq.append` x2))
     (pts_to res p (x1 `Seq.append` x2));
   return res
 
