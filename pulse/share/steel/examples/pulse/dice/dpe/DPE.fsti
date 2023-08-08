@@ -15,42 +15,35 @@ module U32 = FStar.UInt32
 open Pulse.Lib.HashTable
 
 
-// hook this up to convert between wire format to pulse record
-// demo engine and l0 rec type
+// A record_t is passed from the caller to DeriveChild with any data necessary
+// for DeriveChild to execute. 
+// TODO: The input from the caller is given in wire format, so we need to 
+// add a step parsing the input from, e.g. CBOR, into a record_t
 
-(* Record *)
-noeq
-type record_t =
-  | Engine_record : r:engine_record_t -> record_t
-  | L0_record     : r:l0_record_t -> record_t
+val record_t : Type0
 
-noeq
-type repr_t = 
-  | Engine_repr : r:engine_record_repr -> repr_t
-  | L0_repr     : r:l0_record_repr -> repr_t
+val repr_t : Type0 
 
 val record_perm (t_rec:record_t) (t_rep:repr_t) : vprop
 
+val ctxt_hndl_t : eqtype
 
-
-
-
+val sid_t : eqtype
 
 // return a session id 
-// use machine integers for sids and ctxt_hndl -- maybe make these abstract types
-val open_session (_:unit) : stt bool emp (fun _ -> emp)
+val open_session (_:unit) : stt (option sid_t) emp (fun _ -> emp)
 
-val destroy_context (sid:nat) (ctxt_hndl:nat) : stt bool emp (fun _ -> emp)
+val destroy_context (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) : stt bool emp (fun _ -> emp)
 
-val close_session (sid:nat) : stt bool emp (fun _ -> emp)
+val close_session (sid:sid_t) : stt bool emp (fun _ -> emp)
 
-// FIXME: dont need full perm on uds
-val initialize_context (sid:nat) (uds:A.larray U8.t (US.v uds_len))
-  : stt nat (A.pts_to uds full_perm uds_bytes ** 
-             uds_is_enabled **
-             pure (A.is_full_array uds))
-            (fun _ -> A.pts_to uds full_perm uds_bytes)
+val initialize_context (sid:sid_t) (uds:A.larray U8.t (US.v uds_len)) (#p:perm)
+  : stt (option ctxt_hndl_t) 
+        (A.pts_to uds p uds_bytes ** 
+         uds_is_enabled)
+        (fun _ -> A.pts_to uds p uds_bytes)
 
-val derive_child (sid:nat) (ctxt_hndl:nat) (record:record_t) (#repr:erased repr_t)
-  : stt nat (record_perm record repr) 
-            (fun _ -> record_perm record repr)
+val derive_child (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t) (#repr:erased repr_t)
+  : stt (option ctxt_hndl_t) 
+        (record_perm record repr) 
+        (fun _ -> record_perm record repr)

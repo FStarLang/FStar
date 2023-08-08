@@ -391,8 +391,7 @@ fn l0_main
     A.pts_to deviceIDCSR full_perm deviceIDCSR0 **
     pure (
       deviceIDCSR_pre record.deviceIDCSR_ingredients deviceIDCRI_len deviceIDCSR_len /\
-      aliasKeyCRT_pre record.aliasKeyCRT_ingredients aliasKeyTBS_len aliasKeyCRT_len /\
-      valid_hkdf_ikm_len (digest_len dice_hash_alg)
+      aliasKeyCRT_pre record.aliasKeyCRT_ingredients aliasKeyTBS_len aliasKeyCRT_len
     ))
   ensures (
       l0_record_perm record repr **
@@ -423,6 +422,9 @@ fn l0_main
       )))
 {
   unfold (l0_record_perm record repr);
+
+  // assume_ (pure(valid_hkdf_ikm_len (digest_len dice_hash_alg)));
+  dice_digest_len_is_hkdf_ikm;
 
   derive_DeviceID dice_hash_alg 
     deviceID_pub deviceID_priv cdi 
