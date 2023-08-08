@@ -20,15 +20,6 @@ val aliasKeyTBS_t : Type0
 val aliasKeyCRT_t (len: US.t) : Type0
 
 noeq
-type l0_context = { cdi: A.larray U8.t (US.v dice_digest_len); }
-
-let l0_context_perm (c:l0_context) : vprop
-  = exists_ (fun (s:elseq U8.t dice_digest_len) -> A.pts_to c.cdi full_perm s) **
-    pure (A.is_full_array c.cdi)
-
-let mk_l0_context cdi : l0_context = {cdi}
-
-noeq
 type deviceIDCSR_ingredients_t = {
   ku        : U32.t;
   version   : x509_version_t;

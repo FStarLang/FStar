@@ -1,13 +1,12 @@
-module PulseHashTable
+module Pulse.Lib.HashTable
 open Pulse.Lib.Pervasives
 module A = Pulse.Lib.Array
 module R = Pulse.Lib.Reference
 module US = FStar.SizeT
 module U8 = FStar.UInt8
-module LK = Pulse.Lib.SpinLock
 module U64 = FStar.UInt64
-module PHT = LinearScanHashTable
-open LinearScanHashTable
+module PHT = FStar.HashTable
+open FStar.SizeT.Util
 open Pulse.Class.BoundedIntegers
 
 #push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
@@ -28,10 +27,10 @@ let modulo_us (v1 v2:US.t) (m:pos_us) (_:squash(US.fits (US.v v1 + US.v v2)))
 
 
 ```pulse
-fn _alloc_locked (#s:pht_sig_us) (l:pos_us)
+fn _alloc (#s:pht_sig_us) (l:pos_us)
   requires emp
-  returns _:locked_ht_t s
-  ensures emp
+  returns ht:ht_t s
+  ensures exists pht. models s ht pht
 {
   let contents = A.alloc #(cell s.keyt s.valt) Clean l;
   let ht = mk_ht l contents;
@@ -39,14 +38,19 @@ fn _alloc_locked (#s:pht_sig_us) (l:pos_us)
   rewrite (A.pts_to contents full_perm (Seq.create (US.v l) Clean))
     as (A.pts_to ht.contents full_perm pht.repr);
   fold (models s ht pht);
-  let lk = LK.new_lock (exists_ (fun pht -> models s ht pht));
-  ((| ht, lk |) <: locked_ht_t s)
+  ht
 }
 ```
-let alloc_locked #s l = _alloc_locked #s l
+let alloc #s l = _alloc #s l
+
+let perform (#a:Type0) (#b:Type0) (f:  (a -> stt b emp (fun _ -> emp))) (x:a) 
+  : stt b emp (fun _ -> emp)
+  = f x
 
 ```pulse
-fn _dealloc (#s:pht_sig_us) (ht:ht_t s) (l:pos_us) (destroy_val:destroy_val_fn_t s.valt)
+fn _dealloc (#s:pht_sig_us) (ht:ht_t s) (l:pos_us) 
+  (destroy_val:destroy_fn_t s.valt)
+  (destroy_key:destroy_fn_t s.keyt)
   requires exists pht. models s ht pht
   ensures emp
 {
@@ -70,8 +74,8 @@ fn _dealloc (#s:pht_sig_us) (ht:ht_t s) (l:pos_us) (destroy_val:destroy_val_fn_t
     let c = (ht.contents).(voff);
     match c {
       Used k v -> {
-        // TODO: destroy key as well
-        destroy_val v;
+        perform destroy_val v;
+        perform destroy_key k;
       }
       _ -> {
         off := voff + 1sz;
@@ -120,7 +124,7 @@ fn pulse_lookup_index (#s:pht_sig_us)
       cont := false;
       assert (R.pts_to ret full_perm None);
     } else {
-      let o = US.safe_add cidx voff;
+      let o = safe_add cidx voff;
       match o {
       Some v -> {
       let idx = v % ht.sz;
@@ -223,7 +227,7 @@ fn _insert (#s:pht_sig_us)
       cont := false;
       assert (A.pts_to ht.contents full_perm pht.repr);
     } else {
-      let o = US.safe_add cidx voff;
+      let o = safe_add cidx voff;
       match o {
       Some vv -> {
         let idx = (vv % ht.sz <: US.t);
@@ -330,7 +334,7 @@ fn _delete (#s:pht_sig_us)
       cont := false;
       assert (A.pts_to ht.contents full_perm pht.repr);
     } else {
-      let o = US.safe_add cidx voff;
+      let o = safe_add cidx voff;
       match o {
       Some v -> {
         let idx = v % ht.sz;

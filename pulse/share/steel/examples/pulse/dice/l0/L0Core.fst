@@ -11,8 +11,6 @@ open L0Crypto
 open X509
 open HACL
 
-(* l0 helpers *)
-
 ```pulse
 fn create_deviceIDCRI
   (deviceID_pub: A.larray U8.t (US.v v32us))
@@ -57,7 +55,6 @@ fn create_deviceIDCRI
                       deviceIDCSR_ingredients.ku
                       deviceID_pub;
   serialize_deviceIDCRI deviceIDCRI deviceIDCRI_len deviceIDCRI_buf;
-  ()
 }
 ```
 
@@ -118,7 +115,6 @@ fn sign_and_finalize_deviceIDCSR
   serialize_deviceIDCSR deviceIDCRI_len deviceIDCSR deviceIDCSR_len deviceIDCSR_buf;
 
   A.free deviceIDCRI_sig;
-  ()
 }
 ```
 
@@ -176,11 +172,9 @@ fn create_aliasKeyTBS
                       aliasKey_pub;
 
   serialize_aliasKeyTBS aliasKeyTBS aliasKeyTBS_len aliasKeyTBS_buf;
-  ()
 }
 ```
 
-// TODO: don't need full perm on all of these
 ```pulse
 fn sign_and_finalize_aliasKeyCRT
   (deviceID_priv: A.larray U8.t (US.v v32us))
@@ -241,7 +235,6 @@ fn sign_and_finalize_aliasKeyCRT
   serialize_aliasKeyCRT aliasKeyTBS_len aliasKeyCRT aliasKeyCRT_len aliasKeyCRT_buf;
 
   A.free aliasKeyTBS_sig;
-  ()
 }
 ```
 
