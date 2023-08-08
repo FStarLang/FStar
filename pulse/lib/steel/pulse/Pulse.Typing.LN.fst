@@ -839,8 +839,8 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       Pulse.Elaborate.elab_ln ty.binder_ty (-1);
       Pulse.Elaborate.elab_ln_comp (close_comp c x) 0
 
-
-    | T_STApp _ _ _ _ res arg st at ->
+    | T_STApp _ _ _ _ res arg st at
+    | T_STGhostApp _ _ _ _ res arg _ st _ at ->
       tot_or_ghost_typing_ln st;
       tot_or_ghost_typing_ln at;
       // We have RT.ln' (elab_comp res),

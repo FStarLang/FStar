@@ -11,7 +11,7 @@ module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
 module Metatheory = Pulse.Typing.Metatheory
 
-#push-options "--z3rlimit_factor 10 --fuel 0 --ifuel 1"
+#push-options "--z3rlimit_factor 12 --fuel 0 --ifuel 1"
 let rec combine_if_branches
   (g_then:env)
   (e_then:st_term)

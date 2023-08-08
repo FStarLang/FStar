@@ -384,7 +384,8 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
      freevars_open_st_term_inv body x;
      freevars_tm_arrow ty q (close_comp cres x)
 
-   | T_STApp _ head ty q res arg st at ->
+   | T_STApp _ head ty q res arg st at
+   | T_STGhostApp _ head ty q res arg _ st _ at ->
      tot_or_ghost_typing_freevars st;
      tot_or_ghost_typing_freevars at;
      freevars_open_comp res arg 0;

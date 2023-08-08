@@ -323,6 +323,9 @@ let rec soundness (g:stt_env)
     | T_STApp _ _ _ _ _ _ _ _ ->
       stapp_soundness _ _ _ d soundness
 
+    | T_STGhostApp _ _ _ _ _ _ _ _ _ _ ->
+      stghostapp_soundness _ _ _ d soundness
+
     | T_Bind _ _e1 _e2 _c1 _c2 _b _x _c _e1_typing _t_typing _e2_typing _bc ->
       bind_soundness d soundness mk_t_abs
 
