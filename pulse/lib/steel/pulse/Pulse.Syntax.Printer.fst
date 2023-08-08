@@ -7,6 +7,12 @@ module L = FStar.List.Tot
 module T = FStar.Tactics.V2
 module Un = FStar.Sealed
 module R = FStar.Reflection.V2
+
+let tot_or_ghost_to_string = function
+  | T.E_Total -> "total"
+  | T.E_Ghost -> "ghost"
+
+
 let name_to_string (f:R.name) = String.concat "." f
 
 let dbg_printing : bool = true

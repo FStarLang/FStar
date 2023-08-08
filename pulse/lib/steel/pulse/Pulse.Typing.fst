@@ -449,6 +449,14 @@ let tot_typing (g:env) (e:term) (t:term) =
 let ghost_typing (g:env) (e:term) (t:typ) =
   typing g e T.E_Ghost t
 
+let lift_typing_to_ghost_typing (#g:env) (#e:term) (#eff:T.tot_or_ghost) (#t:term)
+  (d:typing g e eff t)
+  : ghost_typing g e t =
+  if eff = T.E_Ghost
+  then d
+  else let E d = d in
+       E (RT.T_Sub _ _ _ _ d (RT.Relc_total_ghost _ _))
+
 let universe_of (g:env) (t:term) (u:universe) =
   tot_typing g t (tm_type u)
 

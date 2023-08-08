@@ -102,10 +102,13 @@ let check
   let (| uvs, g, t |) = instantaite_implicits g0 t in
 
   let Tm_STApp { head; arg_qual=qual; arg } = t.term in
-  let (| head, ty_head, dhead |) = check_tot_term g head in
+
+  let (| head, eff_head, ty_head, dhead |) = check_term g head in
+
   debug_log g (fun _ ->
-    T.print (Printf.sprintf "st_app: head = %s, ty_head = %s\n"
+    T.print (Printf.sprintf "st_app: head = %s, eff_head: %s, ty_head = %s\n"
                (P.term_to_string head)
+               (P.tot_or_ghost_to_string eff_head)
                (P.term_to_string ty_head)));
     
   match is_arrow ty_head with
@@ -115,31 +118,71 @@ let check
       T.print (Printf.sprintf "st_app, readback comp as %s\n"
                  (P.comp_to_string comp_typ)));
     
-    assert (ty_head ==
-            tm_arrow ({binder_ty=formal;binder_ppname=ppname}) bqual comp_typ);
+    // assert (ty_head ==
+    //         tm_arrow ({binder_ty=formal;binder_ppname=ppname}) bqual comp_typ);
     
+    let allow_ghost = C_STGhost? comp_typ in
+    if (not allow_ghost) &&
+       eff_head = T.E_Ghost
+    then fail g (Some t.range)
+           (Printf.sprintf "head term %s is ghost, but the arrow comp is not STGhost"
+              (P.term_to_string head));
+
     if qual = bqual
     then
-      let (| arg, darg |) = check_tot_term_with_expected_type g arg formal in
-      match comp_typ with
-      | C_ST res
-      | C_STAtomic _ res
-      | C_STGhost _ res ->
-        // This is a real ST application
-        let d : st_typing _ _ (open_comp_with comp_typ arg) =
-          T_STApp g head formal qual comp_typ arg dhead darg in
-        let d = canonicalize_st_typing d in
-        let t = { term = Tm_STApp {head; arg_qual=qual; arg}; range } in
-        let c = (canon_comp (open_comp_with comp_typ arg)) in
-        let d : st_typing g t c = d in
+      let eff_arg = if allow_ghost then T.E_Ghost else T.E_Total in
+      let (| arg, darg |) = check_term_with_expected_type g arg eff_arg formal in
+      let (| t, c, d |) : (t:st_term & c:comp_st & st_typing g t c) =
+        match comp_typ with
+        | C_ST res
+        | C_STAtomic _ res ->
+          // ST application
+          let d : st_typing _ _ (open_comp_with comp_typ arg) =
+            T_STApp g head formal qual comp_typ arg dhead darg in
+          let d = canonicalize_st_typing d in
+          let t = { term = Tm_STApp {head; arg_qual=qual; arg}; range } in
+          let c = (canon_comp (open_comp_with comp_typ arg)) in
+          (| t, c, d |)
+        | C_STGhost _ res ->
+          // get the non-informative witness
+          let x = fresh g in
+          if x `Set.mem` freevars_comp (comp_typ)
+          then fail g (Some t.range)
+                 ("Unexpected clash of variable names, please file a bug-report");
+
+          let d_non_info =
+            let token =
+              is_non_informative (push_binding g x ppname_default formal)
+                                 (open_comp_with comp_typ (null_var x)) in
+            match token with
+            | None ->
+              fail g (Some t.range)
+                (Printf.sprintf "Unexpected non-informative result for %s" (P.comp_to_string comp_typ))
+            | Some token ->
+              RT.Non_informative_token _ _
+                (FStar.Squash.return_squash token) in
+
+          let d : st_typing _ _ (open_comp_with comp_typ arg) =
+            T_STGhostApp g head formal qual comp_typ arg x
+              (lift_typing_to_ghost_typing dhead)
+              d_non_info
+              (lift_typing_to_ghost_typing darg) in
+          let d = canonicalize_st_typing d in
+          let t = { term = Tm_STApp {head; arg_qual=qual; arg}; range } in
+          let c = (canon_comp (open_comp_with comp_typ arg)) in
+          (| t, c, d |)
+        | _ ->
+          fail g (Some t.range)
+            "Expected an effectful application; got a pure term (could it be partially applied by mistake?)" in
+
 
         Prover.prove_post_hint (Prover.try_frame_pre_uvs ctxt_typing uvs d res_ppname) post_hint t.range
-      | _ ->
-        fail g (Some t.range) "Expected an effectful application; got a pure term (could it be partially applied by mistake?)"
+
     else fail g (Some t.range) (Printf.sprintf "Unexpected qualifier in head type %s of stateful application: head = %s, arg = %s"
                 (P.term_to_string ty_head)
                 (P.term_to_string head)
                 (P.term_to_string arg))
+
 
   | _ -> fail g (Some t.range) (Printf.sprintf "Unexpected head type in impure application: %s" (P.term_to_string ty_head))
 #pop-options
