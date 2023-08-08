@@ -443,12 +443,6 @@ let rec (st_typing_weakening :
                     ((Pulse_Typing_Env.push_env
                         (Pulse_Typing_Env.push_env g g1) g'), u, b, p, e, (),
                       (), ())
-              | Pulse_Typing.T_IntroExistsErased
-                  (uu___, u, b, p, e, uu___1, uu___2, uu___3) ->
-                  Pulse_Typing.T_IntroExistsErased
-                    ((Pulse_Typing_Env.push_env
-                        (Pulse_Typing_Env.push_env g g1) g'), u, b, p, e, (),
-                      (), ())
               | Pulse_Typing.T_While
                   (uu___, inv, cond, body, uu___1, cond_typing, body_typing)
                   ->
@@ -962,15 +956,6 @@ let rec (st_typing_subst :
                     | Pulse_Typing.T_IntroExists
                         (uu___, u, b, p, e2, uu___1, uu___2, uu___3) ->
                         Pulse_Typing.T_IntroExists
-                          ((Pulse_Typing_Env.push_env g
-                              (Pulse_Typing_Env.subst_env g' (nt x e))), u,
-                            (Pulse_Syntax_Naming.subst_binder b ss),
-                            (Pulse_Syntax_Naming.subst_term p ss),
-                            (Pulse_Syntax_Naming.subst_term e2 ss), (), (),
-                            ())
-                    | Pulse_Typing.T_IntroExistsErased
-                        (uu___, u, b, p, e2, uu___1, uu___2, uu___3) ->
-                        Pulse_Typing.T_IntroExistsErased
                           ((Pulse_Typing_Env.push_env g
                               (Pulse_Typing_Env.subst_env g' (nt x e))), u,
                             (Pulse_Syntax_Naming.subst_binder b ss),

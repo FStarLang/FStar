@@ -415,16 +415,6 @@ let rec (elab_st_typing :
               Pulse_Reflection_Util.mk_intro_exists ru rt
                 (Pulse_Reflection_Util.mk_abs rt
                    FStar_Reflection_V2_Data.Q_Explicit rp) re
-          | Pulse_Typing.T_IntroExistsErased
-              (uu___, u, b, p, e, uu___1, uu___2, uu___3) ->
-              let ru = u in
-              let rt =
-                Pulse_Elaborate_Pure.elab_term b.Pulse_Syntax_Base.binder_ty in
-              let rp = Pulse_Elaborate_Pure.elab_term p in
-              let re = Pulse_Elaborate_Pure.elab_term e in
-              Pulse_Reflection_Util.mk_intro_exists_erased ru rt
-                (Pulse_Reflection_Util.mk_abs rt
-                   FStar_Reflection_V2_Data.Q_Explicit rp) re
           | Pulse_Typing.T_While
               (uu___, inv, uu___1, uu___2, uu___3, cond_typing, body_typing)
               ->

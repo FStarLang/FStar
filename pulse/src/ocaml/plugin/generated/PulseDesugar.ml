@@ -854,8 +854,8 @@ let rec (desugar_stmt :
                     op_let_Question uu___2
                       (fun witnesses1 ->
                          let uu___3 =
-                           PulseSyntaxWrapper.tm_intro_exists false vp
-                             witnesses1 s.PulseSugar.range1 in
+                           PulseSyntaxWrapper.tm_intro_exists vp witnesses1
+                             s.PulseSugar.range1 in
                          return uu___3)))
       | PulseSugar.Parallel
           { PulseSugar.p1 = p1; PulseSugar.p2 = p2; PulseSugar.q1 = q1;

@@ -65,7 +65,7 @@ val tm_let_mut (x:binder) (v:term) (k:st_term) (_:range) : st_term
 val tm_while (head:st_term) (invariant: (ident & vprop)) (body:st_term) (_:range) : st_term 
 val tm_if (head:term) (returns_annot:option vprop) (then_ else_:st_term) (_:range) : st_term
 val tm_match (head:term) (returns_:option vprop) (brs:list branch) (_:range) : st_term
-val tm_intro_exists (erased:bool) (vp:vprop) (witnesses:list term) (_:range) : st_term
+val tm_intro_exists (vp:vprop) (witnesses:list term) (_:range) : st_term
 val is_tm_intro_exists (x:st_term) : bool
 val tm_protect (s:st_term) : st_term
 val tm_par (p1:term) (p2:term) (q1:term) (q2:term) (b1:st_term) (b2:st_term) (_:range) : st_term
