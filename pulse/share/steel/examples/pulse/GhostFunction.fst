@@ -40,3 +40,24 @@ fn incrementg (x:GR.ref int) (#n:erased int)
    (x := (v + 1))
 }
 ```
+
+```pulse
+ghost
+fn test_gtot_app_f (x:GR.ref int) (y:int)
+  requires GR.pts_to x full_perm 0
+  ensures GR.pts_to x full_perm y
+{
+  open GR;
+  (x := y)
+}
+```
+
+```pulse
+ghost
+fn test_gtot_app (x:GR.ref int)
+  requires GR.pts_to x full_perm 0
+  ensures GR.pts_to x full_perm (f 0)
+{
+  test_gtot_app_f x (f 0)
+}
+```
