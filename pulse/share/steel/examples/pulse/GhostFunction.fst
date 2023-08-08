@@ -6,6 +6,9 @@ module GR = Pulse.Lib.GhostReference
 
 assume val f (x:int) : GTot int
 
+//
+// calling GTot functions in ghost functions is ok
+//
 ```pulse
 ghost
 fn test_gtot (x:GR.ref int)
@@ -52,6 +55,9 @@ fn test_gtot_app_f (x:GR.ref int) (y:int)
 }
 ```
 
+//
+// ghost arguments to STGhost functions are ok
+//
 ```pulse
 ghost
 fn test_gtot_app (x:GR.ref int)
