@@ -2264,21 +2264,6 @@ let to_must_tot (eff:Core.tot_or_ghost) : bool =
 let refl_norm_type (g:env) (t:typ) : typ =
   N.normalize [Env.Beta; Env.Exclude Zeta] g t
 
-let maybe_promote (g:env) (eff:Core.tot_or_ghost) (t:typ) : (Core.tot_or_ghost & typ) =
-  let open FStar.TypeChecker.Core in
-  match eff with
-  | E_Total -> eff, t
-  | E_Ghost ->
-    let c = t |> mk_GTotal |> N.maybe_ghost_to_pure g in
-    match c.n with
-    | Total t -> E_Total, t
-    | GTotal t -> E_Ghost, t
-    | _ ->
-      Errors.raise_error
-        (Errors.Fatal_UnexpectedTerm,
-         BU.format1 "core.maybe_promote: a non tot/ghost computation %s"
-           (FStar.Syntax.Print.comp_to_string c)) Range.dummyRange
-
 let refl_core_compute_term_type (g:env) (e:term) : tac (option (Core.tot_or_ghost & typ) & issues) =
   if no_uvars_in_g g &&
      no_uvars_in_term e
@@ -2349,6 +2334,10 @@ let refl_tc_term (g:env) (e:term) : tac (option (term & (Core.tot_or_ghost & typ
     //
     let e =
       let g = {g with phase1 = true; lax = true} in
+      //
+      // AR: we are lax checking to infer implicits,
+      //     ghost is ok
+      //
       let must_tot = false in
       let e, _, guard = g.typeof_tot_or_gtot_term g e must_tot in
       Rel.force_trivial_guard g guard;
@@ -2467,6 +2456,7 @@ let refl_instantiate_implicits (g:env) (e:term) : tac (option (term & typ) & iss
     dbg_refl g (fun _ ->
       BU.format1 "refl_instantiate_implicits: %s\n" (Print.term_to_string e));
     dbg_refl g (fun _ -> "refl_instantiate_implicits: starting tc {\n");
+    // AR: ghost is ok for instantiating implicits
     let must_tot = false in
     let g = {g with instantiate_imp=false; phase1=true; lax=true} in
     let e, t, guard = g.typeof_tot_or_gtot_term g e must_tot in
