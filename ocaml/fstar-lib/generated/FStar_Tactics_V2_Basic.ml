@@ -7072,39 +7072,6 @@ let (refl_norm_type :
       FStar_TypeChecker_Normalize.normalize
         [FStar_TypeChecker_Env.Beta;
         FStar_TypeChecker_Env.Exclude FStar_TypeChecker_Env.Zeta] g t
-let (maybe_promote :
-  env ->
-    FStar_TypeChecker_Core.tot_or_ghost ->
-      FStar_Syntax_Syntax.typ ->
-        (FStar_TypeChecker_Core.tot_or_ghost * FStar_Syntax_Syntax.typ))
-  =
-  fun g ->
-    fun eff ->
-      fun t ->
-        match eff with
-        | FStar_TypeChecker_Core.E_Total -> (eff, t)
-        | FStar_TypeChecker_Core.E_Ghost ->
-            let c =
-              let uu___ =
-                FStar_Compiler_Effect.op_Bar_Greater t
-                  FStar_Syntax_Syntax.mk_GTotal in
-              FStar_Compiler_Effect.op_Bar_Greater uu___
-                (FStar_TypeChecker_Normalize.maybe_ghost_to_pure g) in
-            (match c.FStar_Syntax_Syntax.n with
-             | FStar_Syntax_Syntax.Total t1 ->
-                 (FStar_TypeChecker_Core.E_Total, t1)
-             | FStar_Syntax_Syntax.GTotal t1 ->
-                 (FStar_TypeChecker_Core.E_Ghost, t1)
-             | uu___ ->
-                 let uu___1 =
-                   let uu___2 =
-                     let uu___3 = FStar_Syntax_Print.comp_to_string c in
-                     FStar_Compiler_Util.format1
-                       "core.maybe_promote: a non tot/ghost computation %s"
-                       uu___3 in
-                   (FStar_Errors_Codes.Fatal_UnexpectedTerm, uu___2) in
-                 FStar_Errors.raise_error uu___1
-                   FStar_Compiler_Range_Type.dummyRange)
 let (refl_core_compute_term_type :
   env ->
     FStar_Syntax_Syntax.term ->
