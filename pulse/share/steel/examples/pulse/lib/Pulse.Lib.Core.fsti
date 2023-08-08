@@ -100,6 +100,14 @@ inline_for_extraction
 val return (#a:Type u#a) (x:a) (p:a -> vprop)
   : stt a (p x) p
 
+inline_for_extraction
+val return_stt_ghost (#a:Type u#a) (x:a) (p:a -> vprop)
+  : stt_ghost a emp_inames (p x) (fun r -> p r ** pure (r == x))
+
+inline_for_extraction
+val return_stt_ghost_noeq (#a:Type u#a) (x:a) (p:a -> vprop)
+  : stt_ghost a emp_inames (p x) p
+
 // Return in ghost?
 
 inline_for_extraction
@@ -301,3 +309,5 @@ val assume_ (p:vprop)
 val drop_ (p:vprop) 
   : stt_ghost unit emp_inames p (fun _ -> emp)
 
+val elim_false (a:Type) (p:a -> vprop)
+  : stt_ghost a emp_inames (pure False) p
