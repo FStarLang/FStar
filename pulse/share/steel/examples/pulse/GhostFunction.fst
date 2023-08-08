@@ -8,13 +8,13 @@ assume val f (x:int) : GTot int
 
 ```pulse
 ghost
-fn incr (x:GR.ref int)
+fn test_gtot (x:GR.ref int)
   requires GR.pts_to x full_perm 0
   ensures GR.pts_to x full_perm (f 0)
 {
   open GR;
   let y = f 0;
-  x := y
+  (x := y)
 }
 ```
 
