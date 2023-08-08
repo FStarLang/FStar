@@ -634,7 +634,7 @@ type st_typing : env -> st_term -> comp -> Type =
       res:comp_st ->
       arg:term ->
       x:var { None? (lookup g x) /\ ~ (x `Set.mem` freevars_comp res) } ->
-      tot_typing g head (tm_arrow (as_binder ty) q res) ->
+      ghost_typing g head (tm_arrow (as_binder ty) q res) ->
       RT.non_informative (elab_env (push_binding g x ppname_default ty))
                          (elab_comp (open_comp_with res (null_var x))) ->
       ghost_typing g arg ty ->

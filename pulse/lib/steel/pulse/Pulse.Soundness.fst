@@ -115,8 +115,8 @@ let stghostapp_soundness
   let head_t = tm_arrow r_binder q res in
   let r_head_t = mk_arrow_with_name ppname_default.name (elab_term formal, elab_qual q)
                                                         (elab_comp res) in
-  let r_head_typing : RT.tot_typing _ r_head r_head_t
-    = tot_typing_soundness head_typing in
+  let r_head_typing : RT.ghost_typing _ r_head r_head_t
+    = ghost_typing_soundness head_typing in
   let r_arg_typing = ghost_typing_soundness arg_typing in
   
   assume (elab_env (push_binding g x ppname_default formal) ==
@@ -151,11 +151,8 @@ let stghostapp_soundness
         RT.R_Sub x (RT.Rel_equiv _ _ _ _ (RT.EQ_Refl _ _))
         d_rel_comp in
 
-  let r_head_typing : RT.tot_typing _ r_head r_head_t_ghost =
-    RT.T_Sub _ _ _ _ r_head_typing (RT.Relc_typ _ _ _ T.E_Total _ d_rel_t_arrow) in
-
   let r_head_typing : RT.ghost_typing _ r_head r_head_t_ghost =
-    RT.T_Sub _ _ _ _ r_head_typing (RT.Relc_total_ghost _ _) in
+    RT.T_Sub _ _ _ _ r_head_typing (RT.Relc_typ _ _ _ T.E_Ghost _ d_rel_t_arrow) in
 
   let d : RT.typing (elab_env g) (elab_st_typing d) (T.E_Ghost, elab_comp (open_comp_with res arg)) =
     RT.T_App _ _ _ (binder_of_t_q_s (elab_term formal) (elab_qual q) RT.pp_name_default)
