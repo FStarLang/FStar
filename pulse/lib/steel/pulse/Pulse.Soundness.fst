@@ -161,9 +161,11 @@ let stghostapp_soundness
       r_head_typing
       r_arg_typing in
 
+  let E d_non_info = d_non_info in
   let d_non_info
     : RT.non_informative (elab_env (push_binding g x ppname_default formal))
-                         (elab_comp (open_comp_with res (null_var x))) = d_non_info in
+                         (elab_comp (open_comp_with res (null_var x))) =
+    d_non_info in
 
   // TODO: substitution lemma in RT for non_informative judgment
   let d_non_info

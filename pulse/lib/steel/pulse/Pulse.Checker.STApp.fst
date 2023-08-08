@@ -165,7 +165,7 @@ let check
           let d : st_typing _ _ (open_comp_with comp_typ arg) =
             T_STGhostApp g head formal qual comp_typ arg x
               (lift_typing_to_ghost_typing dhead)
-              d_non_info
+              (E d_non_info)
               (lift_typing_to_ghost_typing darg) in
           let d = canonicalize_st_typing d in
           let t = { term = Tm_STApp {head; arg_qual=qual; arg}; range } in

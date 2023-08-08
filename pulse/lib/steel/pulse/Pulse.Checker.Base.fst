@@ -325,7 +325,8 @@ let continuation_elaborator_with_let (#g:env) (#ctxt:term)
                 (P.comp_to_string c2))
          | Some token ->
            let token = FStar.Squash.return_squash token in
-           T_GhostBind g e1 e2_closed t1 c2 x e1_typing d2 (RT.Non_informative_token _ _ token) in
+           T_GhostBind g e1 e2_closed t1 c2 x e1_typing d2
+             (E (RT.Non_informative_token _ _ token)) in
   let _ =
     match post_hint with
     | None -> ()

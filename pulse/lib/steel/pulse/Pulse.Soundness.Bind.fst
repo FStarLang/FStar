@@ -243,6 +243,7 @@ let ghost_bind_typing #g #t #c d soundness =
     RT.T_Let _ x re1 rt1 (RT.close_term re2 x) (elab_comp c2) T.E_Ghost RT.pp_name_default re1_typing re2_typing
   in
 
+  let E d_non_info = d_non_info in
   let d_non_info
     : RT.non_informative (elab_env g_x) (elab_comp c2) = d_non_info in
 

@@ -607,6 +607,9 @@ let readback_binding b =
     let sort : term = {t=Tm_FStar b.sort; range=T.range_of_term b.sort} in
     (b.uniq, sort)
 
+let non_informative (g:env) (c:comp) =
+  my_erased (RT.non_informative (elab_env g) (elab_comp c))
+
 [@@ no_auto_projectors]
 noeq
 type st_typing : env -> st_term -> comp -> Type =
@@ -643,8 +646,8 @@ type st_typing : env -> st_term -> comp -> Type =
       arg:term ->
       x:var { None? (lookup g x) /\ ~ (x `Set.mem` freevars_comp res) } ->
       ghost_typing g head (tm_arrow (as_binder ty) q res) ->
-      RT.non_informative (elab_env (push_binding g x ppname_default ty))
-                         (elab_comp (open_comp_with res (null_var x))) ->
+      non_informative (push_binding g x ppname_default ty)
+                      (open_comp_with res (null_var x)) ->
       ghost_typing g arg ty ->
       st_typing g (wr (Tm_STApp {head; arg_qual=q; arg}))
                   (open_comp_with res arg)
@@ -709,7 +712,7 @@ type st_typing : env -> st_term -> comp -> Type =
       x:var { None? (lookup g x) /\ ~ (x `Set.mem` freevars_st e2) } ->
       ghost_typing g e1 t1 ->
       st_typing (push_binding g x ppname_default t1) (open_st_term_nv e2 (v_as_nv x)) c2 ->
-      RT.non_informative (elab_env (push_binding g x ppname_default t1)) (elab_comp c2) ->
+      non_informative (push_binding g x ppname_default t1) c2 ->
       st_typing g (wr (Tm_TotBind { head = e1; body = e2 }))
                   (open_comp_with (close_comp c2 x) e1)
 
