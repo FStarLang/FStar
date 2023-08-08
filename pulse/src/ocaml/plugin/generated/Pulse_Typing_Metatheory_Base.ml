@@ -298,6 +298,18 @@ let rec (st_typing_weakening :
                     ((Pulse_Typing_Env.push_env
                         (Pulse_Typing_Env.push_env g g1) g'), head, ty, q,
                       res, arg, (), ())
+              | Pulse_Typing.T_STGhostApp
+                  (uu___, head, ty, q, res, arg, uu___1, uu___2, uu___3,
+                   uu___4)
+                  ->
+                  let x =
+                    Pulse_Typing_Env.fresh
+                      (Pulse_Typing_Env.push_env
+                         (Pulse_Typing_Env.push_env g g1) g') in
+                  Pulse_Typing.T_STGhostApp
+                    ((Pulse_Typing_Env.push_env
+                        (Pulse_Typing_Env.push_env g g1) g'), head, ty, q,
+                      res, arg, x, (), (Prims.magic ()), ())
               | Pulse_Typing.T_Return
                   (uu___, c1, use_eq, u, t1, e, post, x_old, uu___1, uu___2,
                    uu___3)
@@ -791,6 +803,18 @@ let rec (st_typing_subst :
                             (Pulse_Syntax_Naming.subst_term ty ss), q,
                             (Pulse_Syntax_Naming.subst_comp res ss),
                             (Pulse_Syntax_Naming.subst_term arg ss), (), ())
+                    | Pulse_Typing.T_STGhostApp
+                        (uu___, head, ty, q, res, arg, x1, uu___1, uu___2,
+                         uu___3)
+                        ->
+                        Pulse_Typing.T_STGhostApp
+                          ((Pulse_Typing_Env.push_env g
+                              (Pulse_Typing_Env.subst_env g' (nt x e))),
+                            (Pulse_Syntax_Naming.subst_term head ss),
+                            (Pulse_Syntax_Naming.subst_term ty ss), q,
+                            (Pulse_Syntax_Naming.subst_comp res ss),
+                            (Pulse_Syntax_Naming.subst_term arg ss), x1, (),
+                            (Prims.magic ()), ())
                     | Pulse_Typing.T_Return
                         (uu___, c, use_eq, u, t1, e2, post, x1, uu___1,
                          uu___2, uu___3)

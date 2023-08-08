@@ -256,8 +256,14 @@ let rec (elab_st_typing :
                 (Pulse_Elaborate_Pure.elab_qual qual)
                 (FStar_Reflection_Typing.close_term body1 x)
           | Pulse_Typing.T_STApp
-              (uu___, head, _formal, qual, _res, arg, head_typing,
-               arg_typing)
+              (uu___, head, uu___1, qual, uu___2, arg, uu___3, uu___4) ->
+              let head1 = Pulse_Elaborate_Pure.elab_term head in
+              let arg1 = Pulse_Elaborate_Pure.elab_term arg in
+              FStar_Reflection_V2_Derived.mk_app head1
+                [(arg1, (Pulse_Elaborate_Pure.elab_qual qual))]
+          | Pulse_Typing.T_STGhostApp
+              (uu___, head, uu___1, qual, uu___2, arg, uu___3, uu___4,
+               uu___5, uu___6)
               ->
               let head1 = Pulse_Elaborate_Pure.elab_term head in
               let arg1 = Pulse_Elaborate_Pure.elab_term arg in

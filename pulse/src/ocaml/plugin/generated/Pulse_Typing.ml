@@ -714,6 +714,7 @@ let (comp_admit :
 type ('g, 'e, 'eff, 't) typing = unit
 type ('g, 'e, 't) tot_typing = unit
 type ('g, 'e, 't) ghost_typing = unit
+
 type ('g, 't, 'u) universe_of = unit
 type ('g, 'u, 't) non_informative_t =
   (Pulse_Syntax_Base.term, unit) Prims.dtuple2
@@ -828,6 +829,11 @@ type ('dummyV0, 'dummyV1, 'dummyV2) st_typing =
   Pulse_Syntax_Base.term * Pulse_Syntax_Base.qualifier
   FStar_Pervasives_Native.option * Pulse_Syntax_Base.comp_st *
   Pulse_Syntax_Base.term * unit * unit 
+  | T_STGhostApp of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
+  Pulse_Syntax_Base.term * Pulse_Syntax_Base.qualifier
+  FStar_Pervasives_Native.option * Pulse_Syntax_Base.comp_st *
+  Pulse_Syntax_Base.term * Pulse_Syntax_Base.var * unit * (unit, unit)
+  FStar_Reflection_Typing.non_informative * unit 
   | T_Return of Pulse_Typing_Env.env * Pulse_Syntax_Base.ctag * Prims.bool *
   Pulse_Syntax_Base.universe * Pulse_Syntax_Base.term *
   Pulse_Syntax_Base.term * Pulse_Syntax_Base.term * Pulse_Syntax_Base.var *
@@ -914,6 +920,8 @@ let uu___is_T_Abs uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_Abs _ -> true | _ -> false
 let uu___is_T_STApp uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_STApp _ -> true | _ -> false
+let uu___is_T_STGhostApp uu___2 uu___1 uu___ uu___3 =
+  match uu___3 with | T_STGhostApp _ -> true | _ -> false
 let uu___is_T_Return uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_Return _ -> true | _ -> false
 let uu___is_T_Lift uu___2 uu___1 uu___ uu___3 =
