@@ -24,13 +24,12 @@ let k_intro_exists (#g:env) (#u:universe) (#b:binder) (#p:vprop)
   : T.Tac (continuation_elaborator g (frame * subst_term p [ DT 0 e ])
                                    g (frame * tm_exists_sl u b p)) =
   
-  let t = wr (Tm_IntroExists { erased = false;
-                               p = tm_exists_sl u b p;
+  let t = wr (Tm_IntroExists { p = tm_exists_sl u b p;
                                witnesses = [e] }) in
 
   let c = comp_intro_exists u b p e in
 
-  let t_typing = T_IntroExists g u b p e (magic ()) ex_typing e_typing in
+  let t_typing = T_IntroExists g u b p e (magic ()) ex_typing (lift_typing_to_ghost_typing e_typing) in
 
   assert (comp_pre c == subst_term p [ DT 0 e ]);
   assert (comp_post c == tm_exists_sl u b p);

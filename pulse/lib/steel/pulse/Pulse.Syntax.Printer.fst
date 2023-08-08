@@ -203,15 +203,8 @@ let rec st_term_to_string' (level:string) (t:st_term)
       sprintf "elim_exists %s"
         (term_to_string p)
 
-    | Tm_IntroExists { erased=false; p; witnesses } ->
+    | Tm_IntroExists { p; witnesses } ->
       sprintf "introduce\n%s%s\n%swith %s"
-        (indent level)
-        (term_to_string' (indent level) p)
-        level
-        (term_list_to_string " " witnesses)
-
-    | Tm_IntroExists { erased=true; p; witnesses } ->
-      sprintf "introduce (erased)\n%s%s\n%swith %s"
         (indent level)
         (term_to_string' (indent level) p)
         level

@@ -200,7 +200,6 @@ type st_term' =
       p:vprop;
     }
   | Tm_IntroExists {
-      erased:bool;
       p:vprop;
       witnesses:list term;
     }

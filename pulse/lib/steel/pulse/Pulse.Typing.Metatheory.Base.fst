@@ -325,9 +325,6 @@ let rec st_typing_weakening g g' t c d g1
   | T_IntroExists _ u b p e _ _ _ ->
     T_IntroExists _ u b p e (magic ()) (magic ()) (magic ())
 
-  | T_IntroExistsErased _ u b p e _ _ _ ->
-    T_IntroExistsErased _ u b p e (magic ()) (magic ()) (magic ())
-
   | T_While _ inv cond body _ cond_typing body_typing ->
     T_While _ inv cond body (magic ())
       (st_typing_weakening g g' cond (comp_while_cond ppname_default inv) cond_typing g1)
@@ -631,14 +628,6 @@ let rec st_typing_subst g x t g' #e e_typing #e1 #c1 e1_typing
                       (magic ())
                       (magic ())
                       (magic ())
-
-  | T_IntroExistsErased _ u b p e _ _ _ ->
-    T_IntroExistsErased _ u (subst_binder b ss)
-                            (subst_term p ss)
-                            (subst_term e ss)
-                            (magic ())
-                            (magic ())
-                            (magic ())
 
   | T_While _ inv cond body _ cond_typing body_typing ->
     T_While _ (subst_term inv ss)

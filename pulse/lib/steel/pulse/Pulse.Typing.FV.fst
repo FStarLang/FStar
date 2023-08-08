@@ -500,31 +500,6 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
          freevars p);
      }
 
-   | T_IntroExistsErased _ u b p w dt dv dw ->
-     tot_or_ghost_typing_freevars dt;
-     tot_or_ghost_typing_freevars dv;
-     tot_or_ghost_typing_freevars dw;
-     assert (freevars_st t `Set.subset` vars_of_env g);
-     freevars_mk_reveal u b.binder_ty w;
-     calc (Set.subset) {
-        freevars_comp c;
-      (Set.equal) {}
-        freevars_comp (comp_intro_exists_erased u b p w);
-      (Set.equal) {}
-        freevars tm_emp_inames `Set.union`
-        (freevars tm_unit `Set.union`
-        (freevars (open_term' p (Pulse.Typing.mk_reveal u b.binder_ty w) 0) `Set.union`
-         freevars (tm_exists_sl u b p)));
-      (Set.equal) {} 
-        (freevars (open_term' p (Pulse.Typing.mk_reveal u b.binder_ty w) 0) `Set.union`
-         freevars (tm_exists_sl u b p));
-      (Set.subset) { freevars_open_term p (Pulse.Typing.mk_reveal u b.binder_ty w) 0 }
-        (freevars p `Set.union` 
-         freevars w `Set.union`
-         freevars_st t `Set.union`
-         freevars p);
-     }
-
    | T_Equiv _ _ _ _ d2 deq ->
      st_typing_freevars d2;
      st_equiv_freevars deq
