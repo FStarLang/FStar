@@ -309,7 +309,7 @@ let rec (st_typing_weakening :
                   Pulse_Typing.T_STGhostApp
                     ((Pulse_Typing_Env.push_env
                         (Pulse_Typing_Env.push_env g g1) g'), head, ty, q,
-                      res, arg, x, (), (Prims.magic ()), ())
+                      res, arg, x, (), (), ())
               | Pulse_Typing.T_Return
                   (uu___, c1, use_eq, u, t1, e, post, x_old, uu___1, uu___2,
                    uu___3)
@@ -377,7 +377,7 @@ let rec (st_typing_weakening :
                   Pulse_Typing.T_GhostBind
                     ((Pulse_Typing_Env.push_env
                         (Pulse_Typing_Env.push_env g g1) g'), e1, e2, t1, c2,
-                      x, (), d_e24, (Prims.magic ()))
+                      x, (), d_e24, ())
               | Pulse_Typing.T_If
                   (uu___, b, e1, e2, c1, uc, hyp, uu___1, d_e1, d_e2, uu___2)
                   ->
@@ -814,7 +814,7 @@ let rec (st_typing_subst :
                             (Pulse_Syntax_Naming.subst_term ty ss), q,
                             (Pulse_Syntax_Naming.subst_comp res ss),
                             (Pulse_Syntax_Naming.subst_term arg ss), x1, (),
-                            (Prims.magic ()), ())
+                            (), ())
                     | Pulse_Typing.T_Return
                         (uu___, c, use_eq, u, t1, e2, post, x1, uu___1,
                          uu___2, uu___3)
@@ -893,7 +893,7 @@ let rec (st_typing_subst :
                                   ()
                                   (Pulse_Syntax_Naming.open_st_term_nv e2
                                      (Pulse_Syntax_Base.v_as_nv y)) c2 d_e2)
-                               ()), (Prims.magic ()))
+                               ()), ())
                     | Pulse_Typing.T_If
                         (uu___, b, e11, e2, c, uc, hyp, uu___1, d_e1, d_e2,
                          uu___2)

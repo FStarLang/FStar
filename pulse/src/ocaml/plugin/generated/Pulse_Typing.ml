@@ -819,6 +819,7 @@ let (readback_binding :
                  b.FStar_Reflection_V2_Data.sort3)
           } in
         ((b.FStar_Reflection_V2_Data.uniq1), sort)
+type ('g, 'c) non_informative = unit
 type ('dummyV0, 'dummyV1, 'dummyV2) st_typing =
   | T_Abs of Pulse_Typing_Env.env * Pulse_Syntax_Base.var *
   Pulse_Syntax_Base.qualifier FStar_Pervasives_Native.option *
@@ -832,8 +833,7 @@ type ('dummyV0, 'dummyV1, 'dummyV2) st_typing =
   | T_STGhostApp of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
   Pulse_Syntax_Base.term * Pulse_Syntax_Base.qualifier
   FStar_Pervasives_Native.option * Pulse_Syntax_Base.comp_st *
-  Pulse_Syntax_Base.term * Pulse_Syntax_Base.var * unit * (unit, unit)
-  FStar_Reflection_Typing.non_informative * unit 
+  Pulse_Syntax_Base.term * Pulse_Syntax_Base.var * unit * unit * unit 
   | T_Return of Pulse_Typing_Env.env * Pulse_Syntax_Base.ctag * Prims.bool *
   Pulse_Syntax_Base.universe * Pulse_Syntax_Base.term *
   Pulse_Syntax_Base.term * Pulse_Syntax_Base.term * Pulse_Syntax_Base.var *
@@ -854,7 +854,7 @@ type ('dummyV0, 'dummyV1, 'dummyV2) st_typing =
   | T_GhostBind of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
   Pulse_Syntax_Base.st_term * Pulse_Syntax_Base.term *
   Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.var * unit * (unit, unit,
-  unit) st_typing * (unit, unit) FStar_Reflection_Typing.non_informative 
+  unit) st_typing * unit 
   | T_If of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
   Pulse_Syntax_Base.st_term * Pulse_Syntax_Base.st_term *
   Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.universe *

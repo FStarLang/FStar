@@ -1470,8 +1470,7 @@ let (check :
                                                                     qual,
                                                                     comp_typ,
                                                                     arg1, x,
-                                                                    (),
-                                                                    d_non_info,
+                                                                    (), (),
                                                                     ()))))))))
                                                                     uu___8)))
                                                                     uu___8)))
