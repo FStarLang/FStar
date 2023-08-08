@@ -2467,7 +2467,20 @@ let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : term * lcomp * guard_
       let e, lc = coerce_with env e lc f [] [] c in
       e, lc, Env.trivial_guard // explain
     | None ->
-      (* TODO: also coercions? it's trickier for sure *)
+      
+      (* TODO: hide/reveal also coercions? it's trickier for sure *)
+
+      let strip_hide_or_reveal (e:term) (hide_or_reveal:lident) : option term =
+        let hd, args = U.leftmost_head_and_args e in
+        match (SS.compress hd).n, args with
+        | Tm_uinst (hd, _), [(_, aq_t); (e, aq_e)]
+          when U.is_fvar hide_or_reveal hd &&
+               Some? aq_t && (Some?.v aq_t).aqual_implicit &&
+               (aq_e = None || not (Some?.v aq_e).aqual_implicit) ->
+          Some e
+        | _ -> None
+      in
+
       match check_erased env lc.res_typ, check_erased env exp_t with
       | No, Yes ty ->
           begin
@@ -2477,14 +2490,23 @@ let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : term * lcomp * guard_
             e, lc, Env.trivial_guard
           | Some g ->
             let g = Env.apply_guard g e in
-            let e, lc = coerce_with env e lc C.hide [u] [S.iarg ty] (S.mk_Total exp_t) in
-            e, lc, g
+            let e_hide, lc = coerce_with env e lc C.hide [u] [S.iarg ty] (S.mk_Total exp_t) in
+            //
+            // AR: an optimization to see if input e is a reveal e',
+            //     we can just take e', rather than hide (reveal e') 
+            //
+            //     we still let coerce_with happen just above,
+            //     since it has logic to compute the correct lc
+            //  
+            let e_hide = BU.dflt e_hide (strip_hide_or_reveal e C.reveal) in
+            e_hide, lc, g
           end
 
       | Yes ty, No ->
-          let u = env.universe_of env ty in
-          let e, lc = coerce_with env e lc C.reveal [u] [S.iarg ty] (S.mk_GTotal ty) in
-          e, lc, Env.trivial_guard
+        let u = env.universe_of env ty in
+        let e_reveal, lc = coerce_with env e lc C.reveal [u] [S.iarg ty] (S.mk_GTotal ty) in
+        let e_reveal = BU.dflt e_reveal (strip_hide_or_reveal e C.hide) in
+        e_reveal, lc, Env.trivial_guard
 
       | _ ->
         e, lc, Env.trivial_guard

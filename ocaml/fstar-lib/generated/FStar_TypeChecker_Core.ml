@@ -1566,7 +1566,7 @@ let rec (check_relation :
                  let uu___1 = which_side_to_unfold t01 t11 in
                  maybe_unfold_side uu___1 t01 t11 in
                let emit_guard t01 t11 =
-                 let uu___1 = check' g t01 in
+                 let uu___1 = do_check g t01 in
                  op_let_Bang uu___1
                    (fun uu___2 ->
                       match uu___2 with
@@ -2607,7 +2607,7 @@ and (memo_check :
   fun g ->
     fun e ->
       let check_then_memo g1 e1 ctx =
-        let r = let uu___ = check' g1 e1 in uu___ ctx in
+        let r = let uu___ = do_check_and_promote g1 e1 in uu___ ctx in
         match r with
         | FStar_Pervasives.Inl (res, FStar_Pervasives_Native.None) ->
             (insert g1 e1 (res, FStar_Pervasives_Native.None); r)
@@ -2660,7 +2660,26 @@ and (check :
       fun e ->
         with_context msg (FStar_Pervasives_Native.Some (CtxTerm e))
           (fun uu___ -> memo_check g e)
-and (check' :
+and (do_check_and_promote :
+  env ->
+    FStar_Syntax_Syntax.term ->
+      (effect_label * FStar_Syntax_Syntax.typ) result)
+  =
+  fun g ->
+    fun e ->
+      let uu___ = do_check g e in
+      op_let_Bang uu___
+        (fun uu___1 ->
+           match uu___1 with
+           | (eff, t) ->
+               let eff1 =
+                 match eff with
+                 | E_TOTAL -> E_TOTAL
+                 | E_GHOST ->
+                     let uu___2 = non_informative g t in
+                     if uu___2 then E_TOTAL else E_GHOST in
+               return (eff1, t))
+and (do_check :
   env ->
     FStar_Syntax_Syntax.term ->
       (effect_label * FStar_Syntax_Syntax.typ) result)
@@ -2675,7 +2694,7 @@ and (check' :
               uu___1;
             FStar_Syntax_Syntax.ltyp = uu___2;
             FStar_Syntax_Syntax.rng = uu___3;_}
-          -> let uu___4 = FStar_Syntax_Util.unlazy e1 in check' g uu___4
+          -> let uu___4 = FStar_Syntax_Util.unlazy e1 in do_check g uu___4
       | FStar_Syntax_Syntax.Tm_lazy i ->
           return (E_TOTAL, (i.FStar_Syntax_Syntax.ltyp))
       | FStar_Syntax_Syntax.Tm_meta
@@ -4281,7 +4300,21 @@ let (check_term_top :
               (fun eff_te ->
                  match topt with
                  | FStar_Pervasives_Native.None ->
-                     return (FStar_Pervasives_Native.Some eff_te)
+                     if must_tot
+                     then
+                       let uu___1 = eff_te in
+                       (match uu___1 with
+                        | (eff, t) ->
+                            let uu___2 =
+                              (eff = E_GHOST) &&
+                                (let uu___3 = non_informative g1 t in
+                                 Prims.op_Negation uu___3) in
+                            if uu___2
+                            then fail "expected total effect, found ghost"
+                            else
+                              return
+                                (FStar_Pervasives_Native.Some (E_TOTAL, t)))
+                     else return (FStar_Pervasives_Native.Some eff_te)
                  | FStar_Pervasives_Native.Some t ->
                      let target_comp =
                        if
