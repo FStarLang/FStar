@@ -6797,9 +6797,20 @@ let (dbg_refl : env -> (unit -> Prims.string) -> unit) =
       then let uu___1 = msg () in FStar_Compiler_Util.print_string uu___1
       else ()
 type issues = FStar_Errors.issue Prims.list
-let refl_typing_builtin_wrapper :
+let (refl_typing_guard :
+  env -> FStar_Syntax_Syntax.typ -> unit FStar_Tactics_Monad.tac) =
+  fun e ->
+    fun g ->
+      let reason = "refl_typing_guard" in
+      proc_guard_formula "refl_typing_guard" e g FStar_Pervasives_Native.None
+        FStar_Compiler_Range_Type.dummyRange
+let uncurry :
+  'uuuuu 'uuuuu1 'uuuuu2 .
+    ('uuuuu -> 'uuuuu1 -> 'uuuuu2) -> ('uuuuu * 'uuuuu1) -> 'uuuuu2
+  = fun f -> fun uu___ -> match uu___ with | (x, y) -> f x y
+let __refl_typing_builtin_wrapper :
   'a .
-    (unit -> 'a) ->
+    (unit -> ('a * (env * FStar_Syntax_Syntax.typ) Prims.list)) ->
       ('a FStar_Pervasives_Native.option * issues) FStar_Tactics_Monad.tac
   =
   fun f ->
@@ -6825,6 +6836,21 @@ let refl_typing_builtin_wrapper :
           ([issue], FStar_Pervasives_Native.None) in
     match uu___ with
     | (errs, r) ->
+        let gs =
+          if FStar_Pervasives_Native.uu___is_Some r
+          then
+            let allow_uvars = false in
+            FStar_Compiler_List.map
+              (fun uu___1 ->
+                 match uu___1 with
+                 | (e, g) ->
+                     let uu___2 =
+                       FStar_Syntax_Compress.deep_compress allow_uvars g in
+                     (e, uu___2))
+              (FStar_Pervasives_Native.snd
+                 (FStar_Pervasives_Native.__proj__Some__item__v r))
+          else [] in
+        let r1 = FStar_Compiler_Util.map_opt r FStar_Pervasives_Native.fst in
         FStar_Tactics_Monad.op_let_Bang FStar_Tactics_Monad.get
           (fun ps ->
              FStar_TypeChecker_Env.promote_id_info
@@ -6835,7 +6861,42 @@ let refl_typing_builtin_wrapper :
              if (FStar_Compiler_List.length errs) > Prims.int_zero
              then
                FStar_Tactics_Monad.ret (FStar_Pervasives_Native.None, errs)
-             else FStar_Tactics_Monad.ret (r, errs))
+             else
+               (let uu___4 =
+                  FStar_Tactics_Monad.iter_tac (uncurry refl_typing_guard) gs in
+                FStar_Tactics_Monad.op_let_Bang uu___4
+                  (fun uu___5 -> FStar_Tactics_Monad.ret (r1, errs))))
+let catch_all :
+  'a .
+    'a FStar_Tactics_Monad.tac ->
+      (issues, 'a) FStar_Pervasives.either FStar_Tactics_Monad.tac
+  =
+  fun f ->
+    FStar_Tactics_Monad.mk_tac
+      (fun ps ->
+         let uu___ =
+           FStar_Errors.catch_errors_and_ignore_rest
+             (fun uu___1 -> FStar_Tactics_Monad.run f ps) in
+         match uu___ with
+         | ([], FStar_Pervasives_Native.Some (FStar_Tactics_Result.Success
+            (v, ps'))) ->
+             FStar_Tactics_Result.Success ((FStar_Pervasives.Inr v), ps')
+         | (errs, uu___1) ->
+             FStar_Tactics_Result.Success ((FStar_Pervasives.Inl errs), ps))
+let refl_typing_builtin_wrapper :
+  'a .
+    (unit -> ('a * (env * FStar_Syntax_Syntax.typ) Prims.list)) ->
+      ('a FStar_Pervasives_Native.option * issues) FStar_Tactics_Monad.tac
+  =
+  fun f ->
+    let uu___ =
+      let uu___1 = __refl_typing_builtin_wrapper f in catch_all uu___1 in
+    FStar_Tactics_Monad.op_let_Bang uu___
+      (fun uu___1 ->
+         match uu___1 with
+         | FStar_Pervasives.Inl errs ->
+             FStar_Tactics_Monad.ret (FStar_Pervasives_Native.None, errs)
+         | FStar_Pervasives.Inr r -> FStar_Tactics_Monad.ret r)
 let (no_uvars_in_term : FStar_Syntax_Syntax.term -> Prims.bool) =
   fun t ->
     (let uu___ =
@@ -6904,7 +6965,7 @@ let (refl_is_non_informative :
                    FStar_Compiler_Util.format1
                      "refl_is_non_informative: returned %s" uu___5);
               if b
-              then ()
+              then ((), [])
               else
                 FStar_Errors.raise_error
                   (FStar_Errors_Codes.Fatal_UnexpectedTerm,
@@ -6952,26 +7013,15 @@ let (refl_check_relation :
                   let uu___3 = f g t0 t1 in
                   match uu___3 with
                   | FStar_Pervasives.Inl (FStar_Pervasives_Native.None) ->
-                      dbg_refl g
-                        (fun uu___5 ->
-                           "refl_check_relation: succeeded (no guard)")
+                      (dbg_refl g
+                         (fun uu___5 ->
+                            "refl_check_relation: succeeded (no guard)");
+                       ((), []))
                   | FStar_Pervasives.Inl (FStar_Pervasives_Native.Some
                       guard_f) ->
-                      (FStar_TypeChecker_Rel.force_trivial_guard g
-                         {
-                           FStar_TypeChecker_Common.guard_f =
-                             (FStar_TypeChecker_Common.NonTrivial guard_f);
-                           FStar_TypeChecker_Common.deferred_to_tac =
-                             (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.deferred_to_tac);
-                           FStar_TypeChecker_Common.deferred =
-                             (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.deferred);
-                           FStar_TypeChecker_Common.univ_ineqs =
-                             (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.univ_ineqs);
-                           FStar_TypeChecker_Common.implicits =
-                             (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.implicits)
-                         };
-                       dbg_refl g
-                         (fun uu___5 -> "refl_check_relation: succeeded"))
+                      (dbg_refl g
+                         (fun uu___5 -> "refl_check_relation: succeeded");
+                       ((), [(g, guard_f)]))
                   | FStar_Pervasives.Inr err ->
                       (dbg_refl g
                          (fun uu___5 ->
@@ -7073,38 +7123,27 @@ let (refl_core_compute_term_type :
                   let uu___4 = FStar_Syntax_Print.term_to_string e in
                   FStar_Compiler_Util.format1
                     "refl_core_compute_term_type: %s\n" uu___4);
-             (let gh g1 guard =
-                FStar_TypeChecker_Rel.force_trivial_guard g1
-                  {
-                    FStar_TypeChecker_Common.guard_f =
-                      (FStar_TypeChecker_Common.NonTrivial guard);
-                    FStar_TypeChecker_Common.deferred_to_tac =
-                      (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.deferred_to_tac);
-                    FStar_TypeChecker_Common.deferred =
-                      (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.deferred);
-                    FStar_TypeChecker_Common.univ_ineqs =
-                      (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.univ_ineqs);
-                    FStar_TypeChecker_Common.implicits =
-                      (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.implicits)
-                  };
+             (let guards = FStar_Compiler_Util.mk_ref [] in
+              let gh g1 guard =
+                (let uu___4 =
+                   let uu___5 = FStar_Compiler_Effect.op_Bang guards in
+                   (g1, guard) :: uu___5 in
+                 FStar_Compiler_Effect.op_Colon_Equals guards uu___4);
                 true in
               let uu___3 =
                 FStar_TypeChecker_Core.compute_term_type_handle_guards g e gh in
               match uu___3 with
               | FStar_Pervasives.Inl (eff, t) ->
-                  let uu___4 = maybe_promote g eff t in
-                  (match uu___4 with
-                   | (eff1, t1) ->
-                       let t2 = refl_norm_type g t1 in
-                       (dbg_refl g
-                          (fun uu___6 ->
-                             let uu___7 = FStar_Syntax_Print.term_to_string e in
-                             let uu___8 =
-                               FStar_Syntax_Print.term_to_string t2 in
-                             FStar_Compiler_Util.format2
-                               "refl_core_compute_term_type for %s computed type %s\n"
-                               uu___7 uu___8);
-                        (eff1, t2)))
+                  let t1 = refl_norm_type g t in
+                  (dbg_refl g
+                     (fun uu___5 ->
+                        let uu___6 = FStar_Syntax_Print.term_to_string e in
+                        let uu___7 = FStar_Syntax_Print.term_to_string t1 in
+                        FStar_Compiler_Util.format2
+                          "refl_core_compute_term_type for %s computed type %s\n"
+                          uu___6 uu___7);
+                   (let uu___5 = FStar_Compiler_Effect.op_Bang guards in
+                    ((eff, t1), uu___5)))
               | FStar_Pervasives.Inr err ->
                   (dbg_refl g
                      (fun uu___5 ->
@@ -7144,74 +7183,55 @@ let (refl_core_check_term :
               (no_uvars_in_term t) in
           if uu___
           then
-            Obj.magic
-              (Obj.repr
-                 (refl_typing_builtin_wrapper
-                    (fun uu___1 ->
-                       dbg_refl g
-                         (fun uu___3 ->
-                            let uu___4 = FStar_Syntax_Print.term_to_string e in
-                            let uu___5 = FStar_Syntax_Print.term_to_string t in
-                            FStar_Compiler_Util.format2
-                              "refl_core_check_term: term: %s, type: %s\n"
-                              uu___4 uu___5);
-                       (let must_tot = to_must_tot eff in
-                        let uu___3 =
-                          FStar_TypeChecker_Core.check_term g e t must_tot in
-                        match uu___3 with
-                        | FStar_Pervasives.Inl (FStar_Pervasives_Native.None)
-                            ->
-                            (dbg_refl g
-                               (fun uu___5 ->
-                                  "refl_core_check_term: succeeded with no guard\n");
-                             FStar_Tactics_Monad.ret ())
-                        | FStar_Pervasives.Inl (FStar_Pervasives_Native.Some
-                            guard) ->
-                            (dbg_refl g
-                               (fun uu___5 ->
-                                  "refl_core_check_term: succeeded with guard\n");
-                             FStar_TypeChecker_Rel.force_trivial_guard g
-                               {
-                                 FStar_TypeChecker_Common.guard_f =
-                                   (FStar_TypeChecker_Common.NonTrivial guard);
-                                 FStar_TypeChecker_Common.deferred_to_tac =
-                                   (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.deferred_to_tac);
-                                 FStar_TypeChecker_Common.deferred =
-                                   (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.deferred);
-                                 FStar_TypeChecker_Common.univ_ineqs =
-                                   (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.univ_ineqs);
-                                 FStar_TypeChecker_Common.implicits =
-                                   (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.implicits)
-                               };
-                             FStar_Tactics_Monad.ret ())
-                        | FStar_Pervasives.Inr err ->
-                            (dbg_refl g
-                               (fun uu___5 ->
-                                  let uu___6 =
-                                    FStar_TypeChecker_Core.print_error err in
-                                  FStar_Compiler_Util.format1
-                                    "refl_core_check_term failed: %s\n"
-                                    uu___6);
-                             (let uu___5 =
-                                let uu___6 =
-                                  let uu___7 =
-                                    FStar_TypeChecker_Core.print_error err in
-                                  Prims.op_Hat
-                                    "refl_core_check_term failed: " uu___7 in
-                                (FStar_Errors_Codes.Fatal_IllTyped, uu___6) in
-                              FStar_Errors.raise_error uu___5
-                                FStar_Compiler_Range_Type.dummyRange))))))
+            refl_typing_builtin_wrapper
+              (fun uu___1 ->
+                 dbg_refl g
+                   (fun uu___3 ->
+                      let uu___4 = FStar_Syntax_Print.term_to_string e in
+                      let uu___5 = FStar_Syntax_Print.term_to_string t in
+                      FStar_Compiler_Util.format2
+                        "refl_core_check_term: term: %s, type: %s\n" uu___4
+                        uu___5);
+                 (let must_tot = to_must_tot eff in
+                  let uu___3 =
+                    FStar_TypeChecker_Core.check_term g e t must_tot in
+                  match uu___3 with
+                  | FStar_Pervasives.Inl (FStar_Pervasives_Native.None) ->
+                      (dbg_refl g
+                         (fun uu___5 ->
+                            "refl_core_check_term: succeeded with no guard\n");
+                       ((), []))
+                  | FStar_Pervasives.Inl (FStar_Pervasives_Native.Some guard)
+                      ->
+                      (dbg_refl g
+                         (fun uu___5 ->
+                            "refl_core_check_term: succeeded with guard\n");
+                       ((), [(g, guard)]))
+                  | FStar_Pervasives.Inr err ->
+                      (dbg_refl g
+                         (fun uu___5 ->
+                            let uu___6 =
+                              FStar_TypeChecker_Core.print_error err in
+                            FStar_Compiler_Util.format1
+                              "refl_core_check_term failed: %s\n" uu___6);
+                       (let uu___5 =
+                          let uu___6 =
+                            let uu___7 =
+                              FStar_TypeChecker_Core.print_error err in
+                            Prims.op_Hat "refl_core_check_term failed: "
+                              uu___7 in
+                          (FStar_Errors_Codes.Fatal_IllTyped, uu___6) in
+                        FStar_Errors.raise_error uu___5
+                          FStar_Compiler_Range_Type.dummyRange))))
           else
-            Obj.magic
-              (Obj.repr
-                 (let uu___2 =
-                    let uu___3 =
-                      let uu___4 =
-                        let uu___5 = FStar_TypeChecker_Env.get_range g in
-                        unexpected_uvars_issue uu___5 in
-                      [uu___4] in
-                    (FStar_Pervasives_Native.None, uu___3) in
-                  FStar_Tactics_Monad.ret uu___2))
+            (let uu___2 =
+               let uu___3 =
+                 let uu___4 =
+                   let uu___5 = FStar_TypeChecker_Env.get_range g in
+                   unexpected_uvars_issue uu___5 in
+                 [uu___4] in
+               (FStar_Pervasives_Native.None, uu___3) in
+             FStar_Tactics_Monad.ret uu___2)
 let (refl_tc_term :
   env ->
     FStar_Syntax_Syntax.term ->
@@ -7456,42 +7476,33 @@ let (refl_tc_term :
                                FStar_Syntax_Print.term_to_string e2 in
                              FStar_Compiler_Util.format1
                                "} finished tc with e = %s\n" uu___7);
-                        (let gh g2 guard =
-                           FStar_TypeChecker_Rel.force_trivial_guard g2
-                             {
-                               FStar_TypeChecker_Common.guard_f =
-                                 (FStar_TypeChecker_Common.NonTrivial guard);
-                               FStar_TypeChecker_Common.deferred_to_tac =
-                                 (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.deferred_to_tac);
-                               FStar_TypeChecker_Common.deferred =
-                                 (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.deferred);
-                               FStar_TypeChecker_Common.univ_ineqs =
-                                 (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.univ_ineqs);
-                               FStar_TypeChecker_Common.implicits =
-                                 (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.implicits)
-                             };
+                        (let guards = FStar_Compiler_Util.mk_ref [] in
+                         let gh g2 guard =
+                           (let uu___7 =
+                              let uu___8 =
+                                FStar_Compiler_Effect.op_Bang guards in
+                              (g2, guard) :: uu___8 in
+                            FStar_Compiler_Effect.op_Colon_Equals guards
+                              uu___7);
                            true in
                          let uu___6 =
                            FStar_TypeChecker_Core.compute_term_type_handle_guards
                              g1 e2 gh in
                          match uu___6 with
                          | FStar_Pervasives.Inl (eff, t) ->
-                             let uu___7 = maybe_promote g1 eff t in
-                             (match uu___7 with
-                              | (eff1, t1) ->
-                                  let t2 = refl_norm_type g1 t1 in
-                                  (dbg_refl g1
-                                     (fun uu___9 ->
-                                        let uu___10 =
-                                          FStar_Syntax_Print.term_to_string
-                                            e2 in
-                                        let uu___11 =
-                                          FStar_Syntax_Print.term_to_string
-                                            t2 in
-                                        FStar_Compiler_Util.format2
-                                          "refl_tc_term for %s computed type %s\n"
-                                          uu___10 uu___11);
-                                   (e2, (eff1, t2))))
+                             let t1 = refl_norm_type g1 t in
+                             (dbg_refl g1
+                                (fun uu___8 ->
+                                   let uu___9 =
+                                     FStar_Syntax_Print.term_to_string e2 in
+                                   let uu___10 =
+                                     FStar_Syntax_Print.term_to_string t1 in
+                                   FStar_Compiler_Util.format2
+                                     "refl_tc_term for %s computed type %s\n"
+                                     uu___9 uu___10);
+                              (let uu___8 =
+                                 FStar_Compiler_Effect.op_Bang guards in
+                               ((e2, (eff, t1)), uu___8)))
                          | FStar_Pervasives.Inr err ->
                              (dbg_refl g1
                                 (fun uu___8 ->
@@ -7556,23 +7567,11 @@ let (refl_universe_of :
                    FStar_TypeChecker_Core.check_term g e t must_tot in
                  (match uu___3 with
                   | FStar_Pervasives.Inl (FStar_Pervasives_Native.None) ->
-                      check_univ_var_resolved u
+                      let uu___4 = check_univ_var_resolved u in (uu___4, [])
                   | FStar_Pervasives.Inl (FStar_Pervasives_Native.Some guard)
                       ->
-                      (FStar_TypeChecker_Rel.force_trivial_guard g
-                         {
-                           FStar_TypeChecker_Common.guard_f =
-                             (FStar_TypeChecker_Common.NonTrivial guard);
-                           FStar_TypeChecker_Common.deferred_to_tac =
-                             (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.deferred_to_tac);
-                           FStar_TypeChecker_Common.deferred =
-                             (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.deferred);
-                           FStar_TypeChecker_Common.univ_ineqs =
-                             (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.univ_ineqs);
-                           FStar_TypeChecker_Common.implicits =
-                             (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.implicits)
-                         };
-                       check_univ_var_resolved u)
+                      let uu___4 = check_univ_var_resolved u in
+                      (uu___4, [(g, guard)])
                   | FStar_Pervasives.Inr err ->
                       let msg =
                         let uu___4 = FStar_TypeChecker_Core.print_error err in
@@ -7644,19 +7643,7 @@ let (refl_check_prop_validity :
                     FStar_Errors.raise_error
                       (FStar_Errors_Codes.Fatal_IllTyped, msg)
                       FStar_Compiler_Range_Type.dummyRange));
-              FStar_TypeChecker_Rel.force_trivial_guard g
-                {
-                  FStar_TypeChecker_Common.guard_f =
-                    (FStar_TypeChecker_Common.NonTrivial e);
-                  FStar_TypeChecker_Common.deferred_to_tac =
-                    (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.deferred_to_tac);
-                  FStar_TypeChecker_Common.deferred =
-                    (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.deferred);
-                  FStar_TypeChecker_Common.univ_ineqs =
-                    (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.univ_ineqs);
-                  FStar_TypeChecker_Common.implicits =
-                    (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.implicits)
-                }))
+              ((), [(g, e)])))
       else
         (let uu___2 =
            let uu___3 =
@@ -7916,7 +7903,7 @@ let (refl_instantiate_implicits :
                          FStar_Compiler_Util.format2
                            "} finished tc with e = %s and t = %s\n" uu___8
                            uu___9);
-                    (e2, t1)))))
+                    ((e2, t1), [])))))
       else
         (let uu___2 =
            let uu___3 =
@@ -7957,7 +7944,7 @@ let (refl_maybe_relate_after_unfolding :
                      let uu___5 = FStar_TypeChecker_Core.side_to_string s in
                      FStar_Compiler_Util.format1 "} returning side: %s\n"
                        uu___5);
-                s))
+                (s, [])))
         else
           (let uu___2 =
              let uu___3 =
@@ -8004,8 +7991,10 @@ let (refl_maybe_unfold_head :
                    (FStar_Errors_Codes.Fatal_UnexpectedTerm, uu___5) in
                  FStar_Errors.raise_error uu___4 e.FStar_Syntax_Syntax.pos)
               else
-                FStar_Compiler_Effect.op_Bar_Greater eopt
-                  FStar_Compiler_Util.must))
+                (let uu___5 =
+                   FStar_Compiler_Effect.op_Bar_Greater eopt
+                     FStar_Compiler_Util.must in
+                 (uu___5, []))))
       else
         (let uu___2 =
            let uu___3 =
