@@ -1,6 +1,6 @@
 open Prims
 type ('p, 'x, 't, 'u, 'post) post_hint_compatible = Obj.t
-let (check :
+let (check_core :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
       unit ->
@@ -607,3 +607,68 @@ let (check :
                                                                     uu___2)))
                                                           uu___2))) uu___2)))
                                 uu___))) uu___)
+let (check :
+  Pulse_Typing_Env.env ->
+    Pulse_Syntax_Base.term ->
+      unit ->
+        unit Pulse_Typing.post_hint_opt ->
+          Pulse_Syntax_Base.ppname ->
+            Pulse_Syntax_Base.st_term ->
+              ((unit, unit, unit) Pulse_Checker_Base.checker_result_t, 
+                unit) FStar_Tactics_Effect.tac_repr)
+  =
+  fun g ->
+    fun pre ->
+      fun pre_typing ->
+        fun post_hint ->
+          fun res_ppname ->
+            fun t ->
+              FStar_Tactics_Effect.tac_bind
+                (FStar_Sealed.seal
+                   (Obj.magic
+                      (FStar_Range.mk_range "Pulse.Checker.Admit.fst"
+                         (Prims.of_int (89)) (Prims.of_int (21))
+                         (Prims.of_int (89)) (Prims.of_int (27)))))
+                (FStar_Sealed.seal
+                   (Obj.magic
+                      (FStar_Range.mk_range "Pulse.Checker.Admit.fst"
+                         (Prims.of_int (89)) (Prims.of_int (3))
+                         (Prims.of_int (94)) (Prims.of_int (56)))))
+                (FStar_Tactics_Effect.lift_div_tac
+                   (fun uu___ -> t.Pulse_Syntax_Base.term1))
+                (fun uu___ ->
+                   (fun uu___ ->
+                      match uu___ with
+                      | Pulse_Syntax_Base.Tm_Admit r ->
+                          (match post_hint with
+                           | FStar_Pervasives_Native.Some
+                               { Pulse_Typing.g = uu___1;
+                                 Pulse_Typing.ctag_hint =
+                                   FStar_Pervasives_Native.Some ct;
+                                 Pulse_Typing.ret_ty = uu___2;
+                                 Pulse_Typing.u = uu___3;
+                                 Pulse_Typing.ty_typing = uu___4;
+                                 Pulse_Typing.post = uu___5;
+                                 Pulse_Typing.post_typing = uu___6;_}
+                               ->
+                               Obj.magic
+                                 (check_core g pre () post_hint res_ppname
+                                    {
+                                      Pulse_Syntax_Base.term1 =
+                                        (Pulse_Syntax_Base.Tm_Admit
+                                           {
+                                             Pulse_Syntax_Base.ctag1 = ct;
+                                             Pulse_Syntax_Base.u1 =
+                                               (r.Pulse_Syntax_Base.u1);
+                                             Pulse_Syntax_Base.typ =
+                                               (r.Pulse_Syntax_Base.typ);
+                                             Pulse_Syntax_Base.post3 =
+                                               (r.Pulse_Syntax_Base.post3)
+                                           });
+                                      Pulse_Syntax_Base.range2 =
+                                        (t.Pulse_Syntax_Base.range2)
+                                    })
+                           | uu___1 ->
+                               Obj.magic
+                                 (check_core g pre () post_hint res_ppname t)))
+                     uu___)

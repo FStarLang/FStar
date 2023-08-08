@@ -52,7 +52,7 @@ FSTAR=$(FSTAR_HOME)/bin/fstar.exe $(FSTAR_OPTIONS) $(ALREADY_CACHED)
 
 .depend: $(FSTAR_FILES)
 	mkdir -p $(CACHE_DIRECTORY)
-	$(FSTAR) $(FSTAR_DEP_OPTIONS) --dep full $(notdir $(FSTAR_FILES)) > .depend.aux
+	$(FSTAR) $(FSTAR_DEP_OPTIONS) --dep full $(notdir $(FSTAR_FILES)) --output_deps_to .depend.aux
 	mv .depend.aux .depend
 
 depend: .depend
