@@ -14002,44 +14002,45 @@ let (discharge_guard' :
                                               else ()
                                           | FStar_TypeChecker_Common.NonTrivial
                                               goal1 ->
-                                              (FStar_Options.push ();
-                                               FStar_Options.set opts;
-                                               if debug1
-                                               then
-                                                 (let uu___15 =
-                                                    FStar_TypeChecker_Env.get_range
-                                                      env1 in
-                                                  let uu___16 =
-                                                    let uu___17 =
-                                                      FStar_Syntax_Print.term_to_string
-                                                        goal1 in
-                                                    let uu___18 =
-                                                      FStar_TypeChecker_Env.string_of_proof_ns
-                                                        env1 in
-                                                    FStar_Compiler_Util.format2
-                                                      "Trying to solve:\n> %s\nWith proof_ns:\n %s\n"
-                                                      uu___17 uu___18 in
-                                                  FStar_Errors.diag uu___15
-                                                    uu___16)
-                                               else ();
-                                               if debug1
-                                               then
-                                                 (let uu___16 =
-                                                    FStar_TypeChecker_Env.get_range
-                                                      env1 in
-                                                  let uu___17 =
-                                                    let uu___18 =
-                                                      FStar_Syntax_Print.term_to_string
-                                                        goal1 in
-                                                    FStar_Compiler_Util.format1
-                                                      "Before calling solver VC=\n%s\n"
-                                                      uu___18 in
-                                                  FStar_Errors.diag uu___16
-                                                    uu___17)
-                                               else ();
-                                               (env1.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.solve
-                                                 use_env_range_msg env1 goal1;
-                                               FStar_Options.pop ())))));
+                                              FStar_Options.with_saved_options
+                                                (fun uu___12 ->
+                                                   FStar_Options.set opts;
+                                                   if debug1
+                                                   then
+                                                     (let uu___15 =
+                                                        FStar_TypeChecker_Env.get_range
+                                                          env1 in
+                                                      let uu___16 =
+                                                        let uu___17 =
+                                                          FStar_Syntax_Print.term_to_string
+                                                            goal1 in
+                                                        let uu___18 =
+                                                          FStar_TypeChecker_Env.string_of_proof_ns
+                                                            env1 in
+                                                        FStar_Compiler_Util.format2
+                                                          "Trying to solve:\n> %s\nWith proof_ns:\n %s\n"
+                                                          uu___17 uu___18 in
+                                                      FStar_Errors.diag
+                                                        uu___15 uu___16)
+                                                   else ();
+                                                   if debug1
+                                                   then
+                                                     (let uu___16 =
+                                                        FStar_TypeChecker_Env.get_range
+                                                          env1 in
+                                                      let uu___17 =
+                                                        let uu___18 =
+                                                          FStar_Syntax_Print.term_to_string
+                                                            goal1 in
+                                                        FStar_Compiler_Util.format1
+                                                          "Before calling solver VC=\n%s\n"
+                                                          uu___18 in
+                                                      FStar_Errors.diag
+                                                        uu___16 uu___17)
+                                                   else ();
+                                                   (env1.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.solve
+                                                     use_env_range_msg env1
+                                                     goal1)))));
                             FStar_Pervasives_Native.Some ret_g))))))
 let (discharge_guard_no_smt :
   FStar_TypeChecker_Env.env ->
