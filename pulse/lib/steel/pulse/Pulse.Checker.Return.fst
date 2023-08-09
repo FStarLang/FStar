@@ -10,7 +10,7 @@ module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
 module Metatheory = Pulse.Typing.Metatheory
 
-let check
+let check_core
   (g:env)
   (ctxt:term)
   (ctxt_typing:tot_typing g ctxt tm_vprop)
@@ -62,3 +62,19 @@ let check
   let post = close_term post_opened x in
   let d = T_Return g c use_eq u ty t post x uty (E d) post_typing in
   prove_post_hint (try_frame_pre ctxt_typing d res_ppname) post_hint t.range
+
+let check
+  (g:env)
+  (ctxt:term)
+  (ctxt_typing:tot_typing g ctxt tm_vprop)
+  (post_hint:post_hint_opt g)
+  (res_ppname:ppname)
+  (st:st_term { Tm_Return? st.term })
+  : T.Tac (checker_result_t g ctxt post_hint)
+  = match post_hint, st.term with
+    | Some { ctag_hint = Some ct }, Tm_Return f ->
+      if ct = f.ctag
+      then check_core g ctxt ctxt_typing post_hint res_ppname st
+      else let st = { st with term = Tm_Return { f with ctag=ct }} in
+           check_core g ctxt ctxt_typing post_hint res_ppname st
+    | _ ->  check_core g ctxt ctxt_typing post_hint res_ppname st

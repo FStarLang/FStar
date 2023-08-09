@@ -1,4 +1,4 @@
-module SpinLock
+module Bug.SpinLock
 open Pulse.Lib.Pervasives
 module R = Pulse.Lib.Reference
 open Pulse.Lib.SpinLock

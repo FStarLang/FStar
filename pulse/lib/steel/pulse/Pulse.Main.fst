@@ -50,7 +50,14 @@ let main' (t:st_term) (pre:term) (g:RT.fstar_top_env)
            | _ -> fail g (Some t.range) "main: top-level term not a Tm_Abs"
       else fail g (Some t.range) "pulse main: cannot typecheck pre at type vprop"
 
-let main t pre : RT.dsl_tac_t = main' t pre
+let main t pre : RT.dsl_tac_t =
+ fun g ->
+  (* Solve all reflection guards as soon as they appear.
+  This is the default F* behavior, at least until
+    https://github.com/FStarLang/FStar/pull/3011
+  is merged. *)
+  set_guard_policy SMTSync;
+  main' t pre g
   
 [@@plugin]
 let check_pulse (namespaces:list string)
