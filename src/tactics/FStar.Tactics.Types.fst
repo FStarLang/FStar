@@ -36,6 +36,7 @@ let goal_env g = g.goal_main_env
 let goal_witness g =
     FStar.Syntax.Syntax.mk (Tm_uvar (g.goal_ctx_uvar, ([], NoUseRange))) Range.dummyRange
 let goal_type g = U.ctx_uvar_typ g.goal_ctx_uvar
+let goal_opts g = g.opts
 
 let goal_with_env g env : goal =
     let c = g.goal_ctx_uvar in
