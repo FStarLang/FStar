@@ -65,6 +65,7 @@ type l0_record_repr = {
 let mk_l0_repr fwid deviceID_label aliasKey_label
   = {fwid; deviceID_label; aliasKey_label}
 
+// don't need full perm
 let l0_record_perm (record:l0_record_t) (repr:l0_record_repr) : vprop =
   A.pts_to record.fwid full_perm repr.fwid **
   A.pts_to record.deviceID_label full_perm repr.deviceID_label **

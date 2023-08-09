@@ -25,7 +25,6 @@ type engine_context = { uds: A.larray U8.t (US.v uds_len); }
 
 let engine_context_perm (c:engine_context) : vprop
   = A.pts_to c.uds full_perm uds_bytes ** 
-    uds_is_enabled **
     pure (A.is_full_array c.uds)
 
 let mk_engine_context uds : engine_context = {uds}
@@ -200,14 +199,13 @@ let locked_sid : locked_sid_t = run_stt(alloc_sid ())
   NOTE: Current implementation disregards session protocol 
 *)
 ```pulse
-fn _open_session (_:unit)
+fn open_session' (_:unit)
   requires emp
   returns _:option sid_t
   ensures emp
 {
   let cht = alloc_ht #cht_sig cht_len;
 
-  let sht = dfst locked_sht;
   let sht_lk = dsnd locked_sht;
   let sid_lk = dsnd locked_sid;
 
@@ -216,22 +214,22 @@ fn _open_session (_:unit)
 
   let sid = !(dfst locked_sid);
 
-  with pht. assert (models sht_sig sht pht);
+  with pht. assert (models sht_sig (dfst locked_sht) pht);
 
-  let b = not_full #sht_sig #pht sht;
+  let b = not_full #sht_sig #pht (dfst locked_sht);
 
   if b {
-    let r = HT.insert #sht_sig #pht sht sid cht;
-    with pht'. unfold (maybe_update r sht_sig sht pht pht');
+    let r = HT.insert #sht_sig #pht (dfst locked_sht) sid cht;
+    with pht'. unfold (maybe_update r sht_sig (dfst locked_sht) pht pht');
     if r {
-      assert (HT.models sht_sig sht (PHT.insert pht sid cht));
+      assert (HT.models sht_sig (dfst locked_sht) (PHT.insert pht sid cht));
       // dfst locked_sid := sid + 1ul; // FIXME: check whether sum fits into a U32
       L.release #(exists_ (fun n -> R.pts_to (dfst locked_sid) full_perm n)) sid_lk;
       L.release #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
       Some sid
     } else {
       // ERROR - insert failed
-      assert (HT.models sht_sig sht pht);
+      assert (HT.models sht_sig (dfst locked_sht) pht);
       L.release #(exists_ (fun n -> R.pts_to (dfst locked_sid) full_perm n)) sid_lk;
       L.release #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
       None #sid_t
@@ -244,7 +242,51 @@ fn _open_session (_:unit)
   }
 }
 ```
-let open_session () = _open_session ()
+let open_session = open_session'
+
+assume
+val drop (p:vprop)
+    : stt unit p (fun _ -> emp)
+```pulse
+fn disable_uds (_:unit) 
+    requires uds_is_enabled
+    ensures emp
+{
+    drop uds_is_enabled
+}
+```
+
+```pulse 
+fn destroy_ctxt (ctxt:context_t)
+  requires context_perm ctxt
+  ensures emp
+{
+  match ctxt {
+  Engine_context c -> {
+    rewrite (context_perm ctxt) as (engine_context_perm c);
+    unfold (engine_context_perm c);
+    A.zeroize uds_len c.uds;
+    A.free c.uds;
+  }
+  L0_context c -> {
+    rewrite (context_perm ctxt) as (l0_context_perm c);
+    unfold (l0_context_perm c);
+    with s. assert (A.pts_to c.cdi full_perm s);
+    A.zeroize dice_digest_len c.cdi;
+    A.free c.cdi;
+  }
+  L1_context c -> {
+    rewrite (context_perm ctxt) as (l1_context_perm c);
+    unfold (l1_context_perm c);
+    A.free c.deviceID_priv;
+    A.free c.deviceID_pub;
+    A.free c.aliasKey_priv;
+    A.free c.aliasKey_pub;
+    A.free c.aliasKeyCRT;
+    A.free c.deviceIDCSR;
+  }}
+}
+```
 
 ```pulse 
 fn destroy_locked_ctxt (locked_ctxt:locked_context_t)
@@ -254,30 +296,7 @@ fn destroy_locked_ctxt (locked_ctxt:locked_context_t)
   let ctxt = dfst locked_ctxt;
   let ctxt_lk = dsnd locked_ctxt;
   L.acquire #(context_perm ctxt) ctxt_lk;
-  match ctxt {
-    Engine_context c -> {
-      rewrite (context_perm ctxt) as (engine_context_perm c);
-      unfold (engine_context_perm c);
-      A.zeroize uds_len c.uds #uds_bytes;
-      disable_uds ();
-      A.free c.uds;
-    }
-    L0_context c -> {
-      rewrite (context_perm ctxt) as (l0_context_perm c);
-      unfold (l0_context_perm c);
-      A.free c.cdi;
-    }
-    L1_context c -> {
-      rewrite (context_perm ctxt) as (l1_context_perm c);
-      unfold (l1_context_perm c);
-      A.free c.deviceID_priv;
-      A.free c.deviceID_pub;
-      A.free c.aliasKey_priv;
-      A.free c.aliasKey_pub;
-      A.free c.aliasKeyCRT;
-      A.free c.deviceIDCSR;
-    }
-  }
+  destroy_ctxt ctxt;
 }
 ```
 
@@ -289,28 +308,26 @@ fn destroy_locked_ctxt (locked_ctxt:locked_context_t)
   NOTE: Current implementation disregards session protocol 
 *)
 ```pulse
-fn _destroy_context (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
+fn destroy_context' (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
   requires emp
   returns b:bool
   ensures emp
 {
-  let sht = dfst locked_sht;
   let sht_lk = dsnd locked_sht;
   L.acquire #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
 
-  with spht. assert (models sht_sig sht spht);
+  with spht. assert (models sht_sig (dfst locked_sht) spht);
 
-  let res = HT.lookup #sht_sig #spht sht sid;
+  let res = HT.lookup #sht_sig #spht (dfst locked_sht) sid;
   if (fst res) {
     let opt_locked_cht = snd res;
     match opt_locked_cht {
     Some locked_cht -> {
-      let cht = dfst locked_cht;
       let cht_lk = dsnd locked_cht;
       L.acquire #(exists_ (fun pht -> models cht_sig (dfst locked_cht) pht)) cht_lk;
-      with cpht0. assert (models cht_sig cht cpht0);
+      with cpht0. assert (models cht_sig (dfst locked_cht) cpht0);
 
-      let res = HT.lookup #cht_sig #cpht0 cht ctxt_hndl;
+      let res = HT.lookup #cht_sig #cpht0 (dfst locked_cht) ctxt_hndl;
       if (fst res) {
         let opt_locked_ctxt = snd res;
         match opt_locked_ctxt {
@@ -344,7 +361,7 @@ fn _destroy_context (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
   }
 }
 ```
-let destroy_context sid ctxt_hndl = _destroy_context sid ctxt_hndl
+let destroy_context = destroy_context'
 
 ```pulse
 fn ctxt_hndl_do_nothing (k:ctxt_hndl_t)
@@ -362,36 +379,34 @@ fn ctxt_hndl_do_nothing (k:ctxt_hndl_t)
   NOTE: Current implementation disregards session protocol 
 *)
 ```pulse
-fn _close_session (sid:sid_t)
+fn close_session' (sid:sid_t)
   requires emp
   returns b:bool
   ensures emp
 {
-  let sht = dfst locked_sht;
   let sht_lk = dsnd locked_sht;
   L.acquire #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
 
-  with pht. assert (models sht_sig sht pht);
+  with pht. assert (models sht_sig (dfst locked_sht) pht);
 
-  let res = HT.lookup #sht_sig #pht sht sid;
+  let res = HT.lookup #sht_sig #pht (dfst locked_sht) sid;
   if (fst res) {
     let opt_locked_cht = snd res;
     match opt_locked_cht {
     Some locked_cht -> { 
-      let cht = dfst locked_cht;
       let cht_lk = dsnd locked_cht;
       // Note: We don't release this lock because we give up permission
       // on the cht when we deallocate it
       L.acquire #(exists_ (fun pht -> models cht_sig (dfst locked_cht) pht)) cht_lk;
-      dealloc #cht_sig cht cht_len destroy_locked_ctxt ctxt_hndl_do_nothing;
-      let b = HT.delete #sht_sig #pht sht sid;
-      with pht'. unfold (maybe_update b sht_sig sht pht pht');
+      dealloc #cht_sig (dfst locked_cht) cht_len destroy_locked_ctxt ctxt_hndl_do_nothing;
+      let b = HT.delete #sht_sig #pht (dfst locked_sht) sid;
+      with pht'. unfold (maybe_update b sht_sig (dfst locked_sht) pht pht');
       if b {
-        assert (models sht_sig sht (PHT.delete pht sid));
+        assert (models sht_sig (dfst locked_sht) (PHT.delete pht sid));
         L.release #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
         b
       } else {
-        assert (models sht_sig sht pht);
+        assert (models sht_sig (dfst locked_sht) pht);
         L.release #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
         b
       }
@@ -408,7 +423,7 @@ fn _close_session (sid:sid_t)
   }
 }
 ```
-let close_session sid = _close_session sid
+let close_session = close_session'
 
 // TODO: 
 let prng (_:unit) : U32.t = admit()
@@ -422,6 +437,7 @@ fn init_engine_ctxt (uds:A.larray U8.t (US.v uds_len)) (#p:perm)
 {
   let uds_buf = A.alloc 0uy uds_len;
   memcpy uds_len uds uds_buf;
+  disable_uds ();
   let engine_context = mk_engine_context uds_buf;
 
   rewrite (A.pts_to uds_buf full_perm uds_bytes) 
@@ -439,15 +455,16 @@ fn init_engine_ctxt (uds:A.larray U8.t (US.v uds_len)) (#p:perm)
 
 ```pulse
 fn _init_l0_ctxt (cdi:A.larray U8.t (US.v dice_digest_len)) (#s:erased (elseq U8.t dice_digest_len))
-  requires 
-    A.pts_to cdi full_perm s **
-    pure (A.is_full_array cdi)
+  requires A.pts_to cdi full_perm s
+        ** pure (A.is_full_array cdi)
   returns _:locked_context_t
-  ensures 
-    A.pts_to cdi full_perm s
+  ensures emp
 {
   let cdi_buf = A.alloc 0uy dice_digest_len;
   memcpy dice_digest_len cdi cdi_buf;
+  A.zeroize dice_digest_len cdi;
+  A.free cdi;
+
   let l0_context = mk_l0_context cdi_buf;
   rewrite (A.pts_to cdi_buf full_perm s)
     as (A.pts_to l0_context.cdi full_perm s);
@@ -522,6 +539,7 @@ let init_l1_ctxt deviceIDCSR_len aliasKeyCRT_len deviceID_priv deviceID_pub
   aliasKey_priv aliasKey_pub deviceIDCSR aliasKeyCRT #s1 #s2 #s3 #s4 #s5 #s6
   = _init_l1_ctxt deviceIDCSR_len aliasKeyCRT_len deviceID_priv deviceID_pub
     aliasKey_priv aliasKey_pub deviceIDCSR aliasKeyCRT #s1 #s2 #s3 #s4 #s5 #s6
+
 (*
   InitializeContext: Part of DPE API 
   Create a context in the initial state (engine context) and store the context
@@ -529,7 +547,7 @@ let init_l1_ctxt deviceIDCSR_len aliasKeyCRT_len deviceID_priv deviceID_pub
   success and None upon failure. 
 *)
 ```pulse
-fn _initialize_context (sid:sid_t) (uds:A.larray U8.t (US.v uds_len)) (#p:perm)
+fn initialize_context' (sid:sid_t) (uds:A.larray U8.t (US.v uds_len)) (#p:perm)
   requires A.pts_to uds p uds_bytes
         ** uds_is_enabled
   returns _:option ctxt_hndl_t
@@ -538,34 +556,32 @@ fn _initialize_context (sid:sid_t) (uds:A.larray U8.t (US.v uds_len)) (#p:perm)
   let locked_context = init_engine_ctxt uds;
   let ctxt_hndl = prng ();
 
-  let sht = dfst locked_sht;
   let sht_lk = dsnd locked_sht;
   L.acquire #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
 
-  with spht. assert (models sht_sig sht spht);
+  with spht. assert (models sht_sig (dfst locked_sht) spht);
 
-  let res = HT.lookup #sht_sig #spht sht sid;
+  let res = HT.lookup #sht_sig #spht (dfst locked_sht) sid;
   if (fst res) {
     let opt_locked_cht = snd res;
     match opt_locked_cht {
     Some locked_cht -> {
-      let cht = dfst locked_cht;
       let cht_lk = dsnd locked_cht;
       L.acquire #(exists_ (fun pht -> models cht_sig (dfst locked_cht) pht)) cht_lk;
 
-      with cpht. assert (models cht_sig cht cpht);
-      let b = not_full #cht_sig #cpht cht;
+      with cpht. assert (models cht_sig (dfst locked_cht) cpht);
+      let b = not_full #cht_sig #cpht (dfst locked_cht);
       if b {
-        let r = HT.insert #cht_sig #cpht cht ctxt_hndl locked_context;
-        with cpht'. unfold (maybe_update r cht_sig cht cpht cpht');
+        let r = HT.insert #cht_sig #cpht (dfst locked_cht) ctxt_hndl locked_context;
+        with cpht'. unfold (maybe_update r cht_sig (dfst locked_cht) cpht cpht');
         if r {
-          assert (models cht_sig cht (PHT.insert cpht ctxt_hndl locked_context));
+          assert (models cht_sig (dfst locked_cht) (PHT.insert cpht ctxt_hndl locked_context));
           L.release #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
           L.release #(exists_ (fun pht -> models cht_sig (dfst locked_cht) pht)) cht_lk;
           Some ctxt_hndl
         } else {
           // ERROR - insert failed
-          assert (models cht_sig cht cpht);
+          assert (models cht_sig (dfst locked_cht) cpht);
           L.release #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
           L.release #(exists_ (fun pht -> models cht_sig (dfst locked_cht) pht)) cht_lk;  
           None #ctxt_hndl_t     
@@ -588,7 +604,7 @@ fn _initialize_context (sid:sid_t) (uds:A.larray U8.t (US.v uds_len)) (#p:perm)
   }
 }
 ```
-let initialize_context sid uds = _initialize_context sid uds
+let initialize_context = initialize_context'
 
 (*
   DeriveChild: Part of DPE API 
@@ -598,29 +614,27 @@ let initialize_context sid uds = _initialize_context sid uds
   success and None upon failure. 
 *)
 ```pulse
-fn _derive_child (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t) (#repr:erased repr_t)
+fn derive_child' (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t) (#repr:erased repr_t)
   requires record_perm record repr
   returns _:option ctxt_hndl_t
   ensures record_perm record repr
 {
   let new_ctxt_hndl = prng ();
 
-  let sht = dfst locked_sht;
   let sht_lk = dsnd locked_sht;
   L.acquire #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
-  with spht. assert (models sht_sig sht spht);
+  with spht. assert (models sht_sig (dfst locked_sht) spht);
 
-  let res = HT.lookup #sht_sig #spht sht sid;
+  let res = HT.lookup #sht_sig #spht (dfst locked_sht) sid;
   if (fst res) {
     let opt_locked_cht = snd res;
     match opt_locked_cht {
     Some locked_cht -> {
-      let cht = dfst locked_cht;
       let cht_lk = dsnd locked_cht;
       L.acquire #(exists_ (fun pht -> models cht_sig (dfst locked_cht) pht)) cht_lk;
-      with cpht. assert (models cht_sig cht cpht);
+      with cpht. assert (models cht_sig (dfst locked_cht) cpht);
 
-      let r = HT.lookup #cht_sig #cpht cht ctxt_hndl;
+      let r = HT.lookup #cht_sig #cpht (dfst locked_cht) ctxt_hndl;
       if (fst r) {
         let opt_locked_ctxt = snd r;
         match opt_locked_ctxt {
@@ -639,34 +653,37 @@ fn _derive_child (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t) (#repr:er
           match record {
           Engine_record r -> {
             let r0 = get_engine_record_perm record repr; 
+            rewrite (engine_record_perm (Engine_record?.r record) r0)
+              as (engine_record_perm r r0);
             
             let cdi = A.alloc 0uy dice_digest_len;
             let ret = EngineCore.engine_main cdi c.uds r;
             with s. assert (A.pts_to cdi full_perm s);
-            A.free c.uds;
+            fold (engine_context_perm c);
+            rewrite (engine_context_perm c) as (context_perm ctxt);
+            destroy_ctxt ctxt;
 
             match ret {
             DICE_SUCCESS -> {
               let new_locked_context = init_l0_ctxt cdi;
-              A.free cdi #(coerce dice_digest_len s);
               
-              let d = HT.delete #cht_sig #cpht cht ctxt_hndl;
-              with cpht'. unfold (maybe_update d cht_sig cht cpht cpht');
+              let d = HT.delete #cht_sig #cpht (dfst locked_cht) ctxt_hndl;
+              with cpht'. unfold (maybe_update d cht_sig (dfst locked_cht) cpht cpht');
               if d {
-                assert (models cht_sig cht (PHT.delete cpht ctxt_hndl));
-                let b = not_full #cht_sig #(PHT.delete cpht ctxt_hndl) cht;
+                assert (models cht_sig (dfst locked_cht) (PHT.delete cpht ctxt_hndl));
+                let b = not_full #cht_sig #(PHT.delete cpht ctxt_hndl) (dfst locked_cht);
                 if b {
-                  let i = HT.insert #cht_sig #(PHT.delete cpht ctxt_hndl) cht new_ctxt_hndl new_locked_context; 
-                  with x y. unfold (maybe_update i cht_sig cht x y);
+                  let i = HT.insert #cht_sig #(PHT.delete cpht ctxt_hndl) (dfst locked_cht) new_ctxt_hndl new_locked_context; 
+                  with x y. unfold (maybe_update i cht_sig (dfst locked_cht) x y);
                   if i {
-                    assert (models cht_sig cht (PHT.insert (PHT.delete cpht ctxt_hndl) new_ctxt_hndl new_locked_context));
+                    assert (models cht_sig (dfst locked_cht) (PHT.insert (PHT.delete cpht ctxt_hndl) new_ctxt_hndl new_locked_context));
                     rewrite (engine_record_perm r r0) as (record_perm record repr);
                     L.release #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
                     L.release #(exists_ (fun pht -> models cht_sig (dfst locked_cht) pht)) cht_lk;
                     Some new_ctxt_hndl
                   } else {
                     // ERROR - insert failed
-                    assert (models cht_sig cht (PHT.delete cpht ctxt_hndl));
+                    assert (models cht_sig (dfst locked_cht) (PHT.delete cpht ctxt_hndl));
                     rewrite (engine_record_perm r r0) as (record_perm record repr);
                     L.release #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
                     L.release #(exists_ (fun pht -> models cht_sig (dfst locked_cht) pht)) cht_lk;
@@ -679,7 +696,7 @@ fn _derive_child (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t) (#repr:er
                   None #ctxt_hndl_t
               }} else {
                 // ERROR - delete failed
-                assert (models cht_sig cht cpht);
+                assert (models cht_sig (dfst locked_cht) cpht);
                 rewrite (engine_record_perm r r0) as (record_perm record repr);
                 L.release #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
                 L.release #(exists_ (fun pht -> models cht_sig (dfst locked_cht) pht)) cht_lk;
@@ -687,7 +704,8 @@ fn _derive_child (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t) (#repr:er
               }}
             DICE_ERROR -> {
               // ERROR - DICE engine failed
-              A.free cdi #(coerce dice_digest_len s);
+              A.zeroize dice_digest_len cdi;
+              A.free cdi;
               rewrite (engine_record_perm r r0) as (record_perm record repr);
               L.release #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
               L.release #(exists_ (fun pht -> models cht_sig (dfst locked_cht) pht)) cht_lk;
@@ -695,9 +713,9 @@ fn _derive_child (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t) (#repr:er
             }}}
           _ -> {
             // ERROR - record should have type (Engine_record r)
-            zeroize uds_len c.uds;
-            disable_uds ();
-            A.free c.uds;
+            fold (engine_context_perm c);
+            rewrite (engine_context_perm c) as (context_perm ctxt);
+            destroy_ctxt ctxt;
             L.release #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
             L.release #(exists_ (fun pht -> models cht_sig (dfst locked_cht) pht)) cht_lk;
             None #ctxt_hndl_t
@@ -713,7 +731,10 @@ fn _derive_child (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t) (#repr:er
 
           match record {
           L0_record r -> {
-            let r0 = get_l0_record_perm record repr; 
+            let r0 = get_l0_record_perm record repr;
+            rewrite (l0_record_perm (L0_record?.r record) r0)
+              as (l0_record_perm r r0);
+
             let idcsr_ing = r.deviceIDCSR_ingredients;
             let akcrt_ing = r.aliasKeyCRT_ingredients;
 
@@ -737,7 +758,9 @@ fn _derive_child (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t) (#repr:er
                             aliasKey_pub aliasKey_priv 
                             aliasKeyTBS_len aliasKeyCRT_len aliasKeyCRT 
                             deviceIDCRI_len deviceIDCSR_len deviceIDCSR r;
-            A.free c.cdi;
+            fold (l0_context_perm c);
+            rewrite (l0_context_perm c) as (context_perm ctxt);
+            destroy_ctxt ctxt;
 
             with (s1:elseq U8.t v32us). assert (A.pts_to aliasKey_priv full_perm s1);
             let new_locked_context = init_l1_ctxt deviceIDCSR_len aliasKeyCRT_len 
@@ -751,23 +774,23 @@ fn _derive_child (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t) (#repr:er
             A.free deviceIDCSR;
             A.free aliasKeyCRT;
             
-            let d = HT.delete #cht_sig #cpht cht ctxt_hndl;
-            with x y. unfold (maybe_update d cht_sig cht x y);
+            let d = HT.delete #cht_sig #cpht (dfst locked_cht) ctxt_hndl;
+            with x y. unfold (maybe_update d cht_sig (dfst locked_cht) x y);
             if d {
-              assert (models cht_sig cht (PHT.delete cpht ctxt_hndl));
-              let b = not_full #cht_sig #(PHT.delete cpht ctxt_hndl) cht;
+              assert (models cht_sig (dfst locked_cht) (PHT.delete cpht ctxt_hndl));
+              let b = not_full #cht_sig #(PHT.delete cpht ctxt_hndl) (dfst locked_cht);
               if b {
-                let i = HT.insert #cht_sig #(PHT.delete cpht ctxt_hndl) cht new_ctxt_hndl new_locked_context;
-                with x y. unfold (maybe_update i cht_sig cht x y);
+                let i = HT.insert #cht_sig #(PHT.delete cpht ctxt_hndl) (dfst locked_cht) new_ctxt_hndl new_locked_context;
+                with x y. unfold (maybe_update i cht_sig (dfst locked_cht) x y);
                 if i {
-                  assert (models cht_sig cht (PHT.insert (PHT.delete cpht ctxt_hndl) new_ctxt_hndl new_locked_context));
+                  assert (models cht_sig (dfst locked_cht) (PHT.insert (PHT.delete cpht ctxt_hndl) new_ctxt_hndl new_locked_context));
                   rewrite (l0_record_perm r r0) as (record_perm record repr);
                   L.release #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
                   L.release #(exists_ (fun pht -> models cht_sig (dfst locked_cht) pht)) cht_lk;
                   Some new_ctxt_hndl
                 } else {
                   // ERROR - insert failed
-                  assert (models cht_sig cht (PHT.delete cpht ctxt_hndl));
+                  assert (models cht_sig (dfst locked_cht) (PHT.delete cpht ctxt_hndl));
                   rewrite (l0_record_perm r r0) as (record_perm record repr);
                   L.release #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
                   L.release #(exists_ (fun pht -> models cht_sig (dfst locked_cht) pht)) cht_lk;
@@ -780,7 +803,7 @@ fn _derive_child (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t) (#repr:er
                 None #ctxt_hndl_t
             }} else {
               // ERROR - delete failed
-              assert (models cht_sig cht cpht);
+              assert (models cht_sig (dfst locked_cht) cpht);
               rewrite (l0_record_perm r r0) as (record_perm record repr);
               L.release #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
               L.release #(exists_ (fun pht -> models cht_sig (dfst locked_cht) pht)) cht_lk;
@@ -788,8 +811,9 @@ fn _derive_child (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t) (#repr:er
             }}
           _ -> {
             // ERROR - record should have type (L0_record r)
-            zeroize dice_digest_len c.cdi;
-            A.free c.cdi;
+            fold (l0_context_perm c);
+            rewrite (l0_context_perm c) as (context_perm ctxt);
+            destroy_ctxt ctxt;
             L.release #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
             L.release #(exists_ (fun pht -> models cht_sig (dfst locked_cht) pht)) cht_lk;
             None #ctxt_hndl_t
@@ -826,5 +850,4 @@ fn _derive_child (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t) (#repr:er
   }
 }
 ```
-let derive_child sid ctxt_hndl record #repr 
- = _derive_child sid ctxt_hndl record #repr
+let derive_child = derive_child'

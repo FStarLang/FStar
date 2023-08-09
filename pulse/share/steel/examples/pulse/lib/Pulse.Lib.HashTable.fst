@@ -27,7 +27,7 @@ let modulo_us (v1 v2:US.t) (m:pos_us) (_:squash(US.fits (US.v v1 + US.v v2)))
 
 
 ```pulse
-fn _alloc (#s:pht_sig_us) (l:pos_us)
+fn alloc' (#s:pht_sig_us) (l:pos_us)
   requires emp
   returns ht:ht_t s
   ensures exists pht. models s ht pht
@@ -41,14 +41,14 @@ fn _alloc (#s:pht_sig_us) (l:pos_us)
   ht
 }
 ```
-let alloc #s l = _alloc #s l
+let alloc = alloc'
 
 let perform (#a:Type0) (#b:Type0) (f:  (a -> stt b emp (fun _ -> emp))) (x:a) 
   : stt b emp (fun _ -> emp)
   = f x
 
 ```pulse
-fn _dealloc (#s:pht_sig_us) (ht:ht_t s) (l:pos_us) 
+fn dealloc' (#s:pht_sig_us) (ht:ht_t s) (l:pos_us) 
   (destroy_val:destroy_fn_t s.valt)
   (destroy_key:destroy_fn_t s.keyt)
   requires exists pht. models s ht pht
@@ -85,7 +85,7 @@ fn _dealloc (#s:pht_sig_us) (ht:ht_t s) (l:pos_us)
   A.free ht.contents;
 }
 ```
-let dealloc #s ht l destroy_val = _dealloc #s ht l destroy_val
+let dealloc = dealloc'
 
 ```pulse
 fn pulse_lookup_index (#s:pht_sig_us)
@@ -170,9 +170,9 @@ fn pulse_lookup_index (#s:pht_sig_us)
 ```
 
 ```pulse
-fn _lookup (#s:pht_sig_us)
-          (#pht:erased (pht_t (s_to_ps s)))
-          (ht:ht_t s) (k:s.keyt)
+fn lookup' (#s:pht_sig_us)
+           (#pht:erased (pht_t (s_to_ps s)))
+           (ht:ht_t s) (k:s.keyt)
   requires models s ht pht
   returns  p:bool & option s.valt
   ensures  models s ht pht ** 
@@ -189,12 +189,12 @@ fn _lookup (#s:pht_sig_us)
   }
 }
 ```
-let lookup #s #pht ht k = _lookup #s #pht ht k
+let lookup = lookup'
 
 ```pulse
-fn _insert (#s:pht_sig_us)
-          (#pht:(p:erased (pht_t (s_to_ps s)){PHT.not_full p.repr}))
-          (ht:ht_t s) (k:s.keyt) (v:s.valt)
+fn insert' (#s:pht_sig_us)
+           (#pht:(p:erased (pht_t (s_to_ps s)){PHT.not_full p.repr}))
+           (ht:ht_t s) (k:s.keyt) (v:s.valt)
   requires models s ht pht
   returns b:bool
   ensures maybe_update b s ht pht (PHT.insert pht k v)
@@ -295,12 +295,12 @@ fn _insert (#s:pht_sig_us)
   }
 }
 ```
-let insert = _insert
+let insert = insert'
 
 ```pulse
-fn _delete (#s:pht_sig_us)
-          (#pht:erased (pht_t (s_to_ps s)))
-          (ht:ht_t s) (k:s.keyt)
+fn delete' (#s:pht_sig_us)
+           (#pht:erased (pht_t (s_to_ps s)))
+           (ht:ht_t s) (k:s.keyt)
   requires models s ht pht
   returns b:bool
   ensures maybe_update b s ht pht (PHT.delete pht k)
@@ -377,11 +377,11 @@ fn _delete (#s:pht_sig_us)
   }
 }
 ```
-let delete #s #pht ht k = _delete #s #pht ht k
+let delete = delete'
 
 
 ```pulse
-fn _not_full (#s:pht_sig_us) (#pht:erased (pht_t (s_to_ps s))) (ht:ht_t s)
+fn not_full' (#s:pht_sig_us) (#pht:erased (pht_t (s_to_ps s))) (ht:ht_t s)
   requires models s ht pht
   returns b:bool
   ensures models s ht pht ** 
@@ -415,4 +415,4 @@ fn _not_full (#s:pht_sig_us) (#pht:erased (pht_t (s_to_ps s))) (ht:ht_t s)
   res
 }
 ```
-let not_full #s #pht ht = _not_full #s #pht ht
+let not_full = not_full'
