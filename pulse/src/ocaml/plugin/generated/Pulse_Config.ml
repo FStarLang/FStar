@@ -1,2 +1,2 @@
 open Prims
-let (join_goals : Prims.bool) = true
+let (join_goals : Prims.bool) = false
