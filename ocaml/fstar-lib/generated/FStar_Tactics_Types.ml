@@ -154,6 +154,7 @@ let (goal_witness : goal -> FStar_Syntax_Syntax.term) =
       FStar_Compiler_Range_Type.dummyRange
 let (goal_type : goal -> FStar_Syntax_Syntax.term) =
   fun g -> FStar_Syntax_Util.ctx_uvar_typ g.goal_ctx_uvar
+let (goal_opts : goal -> FStar_Options.optionstate) = fun g -> g.opts
 let (goal_with_env : goal -> FStar_TypeChecker_Env.env -> goal) =
   fun g ->
     fun env ->

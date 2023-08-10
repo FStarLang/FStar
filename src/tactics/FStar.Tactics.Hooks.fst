@@ -330,7 +330,7 @@ let preprocess (env:Env.env) (goal:term) : list (Env.env * term * O.optionstate)
                     else "Could not prove goal #" ^ string_of_int n ^ " (" ^ get_label g ^ ")"
                  in
                  let gt' = TcUtil.label label  goal.pos phi in
-                 (n+1, (goal_env g, gt', g.opts)::gs)) s gs in
+                 (n+1, (goal_env g, gt', goal_opts g)::gs)) s gs in
     let (_, gs) = s in
     let gs = List.rev gs in (* Return new VCs in same order as goals *)
     // Use default opts for main goal
@@ -735,6 +735,7 @@ let solve_implicits (env:Env.env) (tau:term) (imps:Env.implicits) : unit =
     Options.with_saved_options (fun () ->
       let _ = Options.set_options "--no_tactics" in
       gs |> List.iter (fun g ->
+        Options.set (goal_opts g);
         match getprop (goal_env g) (goal_type g) with
         | Some vc ->
           begin
@@ -877,10 +878,9 @@ let splice (env:Env.env) (is_typed:bool) (lids:list Ident.lident) (tau:term) (rn
     in
 
     // Check that all goals left are irrelevant and solve them.
-    // TODO: Do not retypecheck and do just like `synth`. But that's hard.. what to do for inductives,
-    // for instance? We would need to reflect *all* of F* static semantics into Meta-F*, and
-    // that is a ton of work.
-    List.iter (fun g ->
+    Options.with_saved_options (fun () ->
+      List.iter (fun g ->
+        Options.set (goal_opts g);
         match getprop (goal_env g) (goal_type g) with
         | Some vc ->
             begin
@@ -891,10 +891,10 @@ let splice (env:Env.env) (is_typed:bool) (lids:list Ident.lident) (tau:term) (rn
                         ; deferred = []
                         ; univ_ineqs = [], []
                         ; implicits = [] } in
-            TcRel.force_trivial_guard (goal_env g) guard
+              TcRel.force_trivial_guard (goal_env g) guard
             end
         | None ->
-            Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "splice left open goals") rng) gs;
+            Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "splice left open goals") rng) gs);
 
     let lids' = List.collect U.lids_of_sigelt sigelts in
     List.iter (fun lid ->

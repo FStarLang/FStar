@@ -90,6 +90,7 @@ val set_ps_psc : Cfg.psc -> proofstate -> proofstate
 val goal_env: goal -> env
 val goal_witness: goal -> term
 val goal_type: goal -> term
+val goal_opts: goal -> Options.optionstate
 val goal_with_env: goal -> env -> goal
 val is_guard : goal -> bool
 
