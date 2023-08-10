@@ -2092,22 +2092,28 @@ let (do_solve_maybe_split :
   fun use_env_msg ->
     fun tcenv ->
       fun q ->
-        let uu___ = FStar_Options.split_queries () in
-        match uu___ with
-        | FStar_Options.No -> do_solve false false use_env_msg tcenv q
-        | FStar_Options.OnFailure ->
-            let can_split =
-              let uu___1 =
-                let uu___2 = FStar_Options.quake_hi () in
-                uu___2 > Prims.int_one in
-              Prims.op_Negation uu___1 in
-            (try
-               (fun uu___1 ->
-                  match () with
-                  | () -> do_solve can_split false use_env_msg tcenv q) ()
-             with
-             | SplitQueryAndRetry -> split_and_solve true use_env_msg tcenv q)
-        | FStar_Options.Always -> split_and_solve false use_env_msg tcenv q
+        let uu___ = FStar_Options.admit_smt_queries () in
+        if uu___
+        then ()
+        else
+          (let uu___2 = FStar_Options.split_queries () in
+           match uu___2 with
+           | FStar_Options.No -> do_solve false false use_env_msg tcenv q
+           | FStar_Options.OnFailure ->
+               let can_split =
+                 let uu___3 =
+                   let uu___4 = FStar_Options.quake_hi () in
+                   uu___4 > Prims.int_one in
+                 Prims.op_Negation uu___3 in
+               (try
+                  (fun uu___3 ->
+                     match () with
+                     | () -> do_solve can_split false use_env_msg tcenv q) ()
+                with
+                | SplitQueryAndRetry ->
+                    split_and_solve true use_env_msg tcenv q)
+           | FStar_Options.Always ->
+               split_and_solve false use_env_msg tcenv q)
 let (solve :
   (unit -> Prims.string) FStar_Pervasives_Native.option ->
     FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> unit)
