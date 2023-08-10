@@ -1,3 +1,3 @@
 module Pulse.Config
 
-let join_goals : bool = true
+let join_goals : bool = false
