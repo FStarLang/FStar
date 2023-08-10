@@ -4,6 +4,7 @@
  (public_name fstar.exe)
  (libraries
     fstar_lib
+    memtrace
  )
  (link_flags "-linkall")
  (modes (native exe))
