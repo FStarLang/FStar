@@ -58,4 +58,4 @@ val load_module_from_cache: (uenv -> string -> option tc_result)
 val store_module_to_cache: uenv -> file_name:string -> Dep.parsing_data -> tc_result -> unit
 
 val unsafe_raw_load_checked_file (checked_file_name:string)
-  : option (list string & tc_result)
+  : option (FStar.Parser.Dep.parsing_data & list string & tc_result)
