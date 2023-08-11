@@ -6,7 +6,6 @@ module US = FStar.SizeT
 module U8 = FStar.UInt8
 module U64 = FStar.UInt64
 module PHT = FStar.HashTable
-open FStar.SizeT.Util
 open Pulse.Class.BoundedIntegers
 
 #push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
@@ -18,12 +17,12 @@ let models (s:pht_sig_us) (ht:ht_t s) (pht:pht_t (s_to_ps s)) : vprop
     A.is_full_array ht.contents
   )
 
-let canonical_index_us (#s:pht_sig_us) (k:s.keyt) (sz:pos_us) 
-  : US.t = s.hashf k % sz
+// let canonical_index_us (#s:pht_sig_us) (k:s.keyt) (sz:pos_us) 
+//   : US.t = s.hashf k % sz
 
-let modulo_us (v1 v2:US.t) (m:pos_us) (_:squash(US.fits (US.v v1 + US.v v2)))
-  : US.t 
-  = (v1 + v2) % m
+// let modulo_us (v1 v2:US.t) (m:pos_us) (_:squash(US.fits (US.v v1 + US.v v2)))
+//   : US.t 
+//   = (v1 + v2) % m
 
 
 ```pulse
@@ -96,7 +95,9 @@ fn pulse_lookup_index (#s:pht_sig_us)
   ensures  models s ht pht ** 
            pure ( fst p ==> (snd p) == PHT.lookup_index_us pht k )
 {
-  let cidx = canonical_index_us k ht.sz;
+  let opt_cidx = s.hashf k `safe_mod` ht.sz;
+  match opt_cidx {
+  Some cidx -> {
   let mut off = 0sz;
   let mut cont = true;
   let mut err = false;
@@ -124,10 +125,10 @@ fn pulse_lookup_index (#s:pht_sig_us)
       cont := false;
       assert (R.pts_to ret full_perm None);
     } else {
-      let o = safe_add cidx voff;
-      match o {
-      Some v -> {
-      let idx = v % ht.sz;
+      let opt_sum = cidx `safe_add` voff;
+      match opt_sum {
+      Some sum -> {
+      let idx = sum % ht.sz;
         let c = op_Array_Access ht.contents idx; 
         match c {
         Used k' v' -> {
@@ -165,7 +166,10 @@ fn pulse_lookup_index (#s:pht_sig_us)
   } else {
     assert (R.pts_to ret full_perm (PHT.lookup_index_us pht k));
     (true,o)
-  }
+  }}
+  None -> {
+    (false,None #(s.valt & US.t))
+  }}
 }
 ```
 
@@ -199,7 +203,9 @@ fn insert' (#s:pht_sig_us)
   returns b:bool
   ensures maybe_update b s ht pht (PHT.insert pht k v)
 {
-  let cidx = canonical_index_us k ht.sz;
+  let opt_cidx = s.hashf k `safe_mod` ht.sz;
+  match opt_cidx {
+  Some cidx -> {
   let mut off = 0sz;
   let mut cont = true;
   let mut err = false;
@@ -227,10 +233,10 @@ fn insert' (#s:pht_sig_us)
       cont := false;
       assert (A.pts_to ht.contents full_perm pht.repr);
     } else {
-      let o = safe_add cidx voff;
-      match o {
-      Some vv -> {
-        let idx = (vv % ht.sz <: US.t);
+      let opt_sum = cidx `safe_add` voff;
+      match opt_sum {
+      Some sum -> {
+        let idx = sum % ht.sz;
         let c = op_Array_Access ht.contents idx #full_perm #pht.repr;
         match c {
         Used k' v' -> { 
@@ -292,7 +298,11 @@ fn insert' (#s:pht_sig_us)
     fold (models s ht (PHT.insert pht k v));
     fold (maybe_update true s ht pht (PHT.insert pht k v));
     true
-  }
+  }}
+  None -> {
+    fold (maybe_update false s ht pht (PHT.insert pht k v));
+    false
+  }}
 }
 ```
 let insert = insert'
@@ -305,7 +315,9 @@ fn delete' (#s:pht_sig_us)
   returns b:bool
   ensures maybe_update b s ht pht (PHT.delete pht k)
 {
-  let cidx = canonical_index_us k ht.sz;
+  let opt_cidx = s.hashf k `safe_mod` ht.sz;
+  match opt_cidx {
+  Some cidx -> {
   let mut off = 0sz;
   let mut cont = true;
   let mut err = false;
@@ -334,10 +346,10 @@ fn delete' (#s:pht_sig_us)
       cont := false;
       assert (A.pts_to ht.contents full_perm pht.repr);
     } else {
-      let o = safe_add cidx voff;
-      match o {
-      Some v -> {
-        let idx = v % ht.sz;
+      let opt_sum = cidx `safe_add` voff;
+      match opt_sum {
+      Some sum -> {
+        let idx = sum % ht.sz;
         let c = op_Array_Access ht.contents idx #full_perm #pht.repr;
         match c {
         Used k' v' -> { 
@@ -375,6 +387,11 @@ fn delete' (#s:pht_sig_us)
     fold (maybe_update true s ht pht (PHT.delete pht k));
     true
   }
+  }
+  None -> {
+    fold (maybe_update false s ht pht (PHT.delete pht k));
+    false
+  }}
 }
 ```
 let delete = delete'

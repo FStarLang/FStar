@@ -33,6 +33,7 @@ let mk_engine_context uds : engine_context = {uds}
 noeq
 type l0_context = { cdi: A.larray U8.t (US.v dice_digest_len); }
 
+// FIXME: lost cdi_functional_correctness! 
 let l0_context_perm (c:l0_context) : vprop
   = exists_ (fun (s:elseq U8.t dice_digest_len) -> A.pts_to c.cdi full_perm s) **
     pure (A.is_full_array c.cdi)
@@ -48,6 +49,7 @@ type l1_context = { deviceID_priv: A.larray U8.t (US.v v32us);
                     aliasKeyCRT: A.array U8.t;
                     deviceIDCSR: A.array U8.t; }
 
+// FIXME: lost functoinal correctness! 
 let l1_context_perm (c:l1_context)
   : vprop
   = exists_ (fun s -> A.pts_to c.deviceID_priv full_perm s) **
@@ -590,7 +592,7 @@ fn initialize_context' (sid:sid_t) (uds:A.larray U8.t (US.v uds_len)) (#p:perm)
         // ERROR - table full
         L.release #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
         L.release #(exists_ (fun pht -> models cht_sig (dfst locked_cht) pht)) cht_lk;
-        Some ctxt_hndl 
+        None #ctxt_hndl_t
       }}
     None -> {
       // ERROR - bad session ID
@@ -605,6 +607,94 @@ fn initialize_context' (sid:sid_t) (uds:A.larray U8.t (US.v uds_len)) (#p:perm)
 }
 ```
 let initialize_context = initialize_context'
+
+(*
+  RotateContextHandle: Part of DPE API 
+  Invalidate the current context handle and replace it with a new context
+  handle. Return the context handle upon success and None upon failure.
+*)
+```pulse
+fn rotate_context_handle' (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
+  requires emp
+  returns _:option ctxt_hndl_t
+  ensures emp
+{
+  let new_ctxt_hndl = prng ();
+
+  let sht_lk = dsnd locked_sht;
+  L.acquire #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
+  with spht. assert (models sht_sig (dfst locked_sht) spht);
+
+  let res = HT.lookup #sht_sig #spht (dfst locked_sht) sid;
+  if (fst res) {
+    let opt_locked_cht = snd res;
+    match opt_locked_cht {
+    Some locked_cht -> {
+      let cht_lk = dsnd locked_cht;
+      L.acquire #(exists_ (fun pht -> models cht_sig (dfst locked_cht) pht)) cht_lk;
+      with cpht. assert (models cht_sig (dfst locked_cht) cpht);
+      let r = HT.lookup #cht_sig #cpht (dfst locked_cht) ctxt_hndl;
+      if (fst r) {
+        let opt_locked_ctxt = snd r;
+        match opt_locked_ctxt {
+        Some locked_context -> {
+          let b = not_full #cht_sig #cpht (dfst locked_cht);
+          if b {
+            let r = HT.insert #cht_sig #cpht (dfst locked_cht) new_ctxt_hndl locked_context;
+            with cpht'. unfold (maybe_update r cht_sig (dfst locked_cht) cpht cpht'); // FIXME: why doesn't this work if we explicitly specify cpht and cpht'
+            if r {
+              assert (models cht_sig (dfst locked_cht) (PHT.insert cpht new_ctxt_hndl locked_context));
+              let d = HT.delete #cht_sig #(PHT.insert cpht new_ctxt_hndl locked_context) (dfst locked_cht) ctxt_hndl;
+              with x y. unfold (maybe_update d cht_sig (dfst locked_cht) x y); 
+              if d {
+                assert (models cht_sig (dfst locked_cht) (PHT.delete (PHT.insert cpht new_ctxt_hndl locked_context) ctxt_hndl));
+                L.release #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
+                L.release #(exists_ (fun pht -> models cht_sig (dfst locked_cht) pht)) cht_lk;
+                Some new_ctxt_hndl
+              } else {
+                // ERROR - delete failed
+                assert (models cht_sig (dfst locked_cht) (PHT.insert cpht new_ctxt_hndl locked_context));
+                L.release #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
+                L.release #(exists_ (fun pht -> models cht_sig (dfst locked_cht) pht)) cht_lk;
+                None #ctxt_hndl_t
+              }
+            } else {
+              // ERROR - insert failed
+              assert (models cht_sig (dfst locked_cht) cpht);
+              L.release #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
+              L.release #(exists_ (fun pht -> models cht_sig (dfst locked_cht) pht)) cht_lk;  
+              None #ctxt_hndl_t
+          }} else {
+              // ERROR - table full
+              L.release #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
+              L.release #(exists_ (fun pht -> models cht_sig (dfst locked_cht) pht)) cht_lk;
+              None #ctxt_hndl_t
+          }}
+        None -> {
+          // ERROR - bad context handle
+          L.release #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
+          L.release #(exists_ (fun pht -> models cht_sig (dfst locked_cht) pht)) cht_lk;
+          None #ctxt_hndl_t 
+        }}
+      } else {
+        // ERROR - lookup failed
+        L.release #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
+        L.release #(exists_ (fun pht -> models cht_sig (dfst locked_cht) pht)) cht_lk;
+        None #ctxt_hndl_t 
+      }}
+    None -> {
+      // ERROR - lookup context table failed
+      L.release #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
+      None #ctxt_hndl_t 
+    }}
+  } else {
+    // ERROR - lookup context table failed
+    L.release #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
+    None #ctxt_hndl_t 
+  }
+}
+```
+let rotate_context_handle = rotate_context_handle'
 
 (*
   DeriveChild: Part of DPE API 
@@ -689,7 +779,7 @@ fn derive_child' (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t) (#repr:er
                     L.release #(exists_ (fun pht -> models cht_sig (dfst locked_cht) pht)) cht_lk;
                     None #ctxt_hndl_t
                 }} else {
-                  // ERROR -- table full
+                  // ERROR - table full
                   rewrite (engine_record_perm r r0) as (record_perm record repr);
                   L.release #(exists_ (fun pht -> models sht_sig (dfst locked_sht) pht)) sht_lk;
                   L.release #(exists_ (fun pht -> models cht_sig (dfst locked_cht) pht)) cht_lk;

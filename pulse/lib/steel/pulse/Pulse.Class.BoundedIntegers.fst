@@ -52,7 +52,7 @@ class bounded_unsigned (t:eqtype) = {
 instance bounded_from_bounded_unsigned (t:eqtype) (c:bounded_unsigned t) : bounded_int t = c.base
 
 let safe_add (#t:eqtype) {| c: bounded_unsigned t |} (x y : t)
-  : o:option t { Some? o ==>  v (Some?.v o) == v x + v y } 
+  : o:option t { Some? o ==> v (Some?.v o) == v x + v y } 
   = if c.static_max_bound
     then (
       assert ( x <= max_bound);
@@ -70,6 +70,17 @@ let safe_add (#t:eqtype) {| c: bounded_unsigned t |} (x y : t)
       else None
     )
 
+let safe_mod (#t:eqtype) {| c: bounded_unsigned t |} (x : t) (y : t)
+  : Pure (option t)
+         (requires v y > 0)
+         (ensures fun o -> Some? o ==> v (Some?.v o) == v x % v y)
+  = if c.static_max_bound
+    then Some (x % y)
+    else (
+      if y <= max_bound
+      then Some (x % y)
+      else None
+    )
 
 let ok (#t:eqtype) {| c:bounded_int t |} (op: int -> int -> int) (x y:t) =
     c.fits (op (v x) (v y))
@@ -158,6 +169,13 @@ instance bounded_int_size_t : bounded_int FStar.SizeT.t = {
     ( <= ) = (fun x y -> FStar.SizeT.(x <=^ y));
     ( % ) = (fun x y -> FStar.SizeT.(x %^ y));
     properties = ();
+}
+
+instance bounded_unsigned_size_t : bounded_unsigned FStar.SizeT.t = {
+  base = TC.solve;
+  max_bound = 0xffffsz;
+  static_max_bound = false;
+  properties = ()
 }
 
 //we know that size_t can hold at least 2^16

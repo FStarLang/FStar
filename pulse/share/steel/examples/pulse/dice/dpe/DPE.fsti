@@ -15,11 +15,6 @@ module U32 = FStar.UInt32
 open Pulse.Lib.HashTable
 
 
-// A record_t is passed from the caller to DeriveChild with any data necessary
-// for DeriveChild to execute. 
-// TODO: The input from the caller is given in wire format, so we need to 
-// add a step parsing the input from, e.g. CBOR, into a record_t
-
 val record_t : Type0
 
 val repr_t : Type0 
@@ -41,6 +36,8 @@ val initialize_context (sid:sid_t) (uds:A.larray U8.t (US.v uds_len)) (#p:perm)
         (A.pts_to uds p uds_bytes ** 
          uds_is_enabled)
         (fun _ -> A.pts_to uds p uds_bytes)
+
+val rotate_context_handle (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) : stt (option ctxt_hndl_t) emp (fun _ -> emp)
 
 val derive_child (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t) (#repr:erased repr_t)
   : stt (option ctxt_hndl_t) 
