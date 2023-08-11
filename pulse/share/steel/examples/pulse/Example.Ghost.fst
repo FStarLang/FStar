@@ -14,6 +14,31 @@ fn test_elim_false (a:Type0) (p:(a -> vprop))
 }
 ```
 
+```pulse
+ghost
+fn elim_false_alt (a:Type0) (p:(a -> vprop))
+    requires pure False
+    returns x:a
+    ensures p x
+{
+    let x = FStar.Pervasives.false_elim #a ();
+    rewrite emp as (p x);
+    x
+}
+```
+
+
+```pulse
+ghost
+fn test_elim_false_alt (a:Type0) (p:(a -> vprop))
+    requires pure False
+    returns x:a
+    ensures p x
+{
+    elim_false_alt a p;
+}
+```
+
 // You can return anything in Ghost, it doesn't have to be non-informative
 ```pulse
 ghost
@@ -50,3 +75,42 @@ fn use_admit (t:Type0) (p:vprop)
     admit()
 }
 ```
+
+assume
+val p : vprop
+assume
+val q : vprop
+assume
+val r : vprop
+
+```pulse
+ghost
+fn p_q (_:unit)
+requires p
+ensures q
+{
+    admit()
+}
+```
+
+```pulse
+ghost
+fn q_r (_:unit)
+requires q
+ensures r
+{
+    admit()
+}
+```
+
+```pulse
+ghost
+fn p_r (_:unit)
+requires p
+ensures r
+{
+   p_q();
+   q_r();
+}
+```
+
