@@ -96,7 +96,8 @@ let rec close_open_inverse_st'  (t:st_term)
       close_open_inverse_st' head x i;
       close_open_inverse_st' body x (i + 1)
 
-    | Tm_TotBind { head; body } ->
+    | Tm_TotBind { binder; head; body } ->
+      close_open_inverse' binder.binder_ty x i;
       close_open_inverse' head x i;
       close_open_inverse_st' body x (i + 1)
 

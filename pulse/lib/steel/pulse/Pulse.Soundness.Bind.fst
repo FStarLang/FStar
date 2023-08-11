@@ -181,7 +181,7 @@ let elab_bind_ghost_r_typing g c1 c2 c x r1 r1_typing r2 r2_typing bc t2_typing 
   admit ()
 
 let tot_bind_typing #g #t #c d soundness =
-  let T_TotBind _ e1 e2 t1 c2 x e1_typing e2_typing = d in
+  let T_TotBind _ e1 e2 t1 c2 b x e1_typing e2_typing = d in
 
   let g_x = push_binding g x ppname_default t1 in
 
@@ -222,7 +222,7 @@ let tot_bind_typing #g #t #c d soundness =
 // Requires an application of substitution lemma for the non-informative judgment (in the RT world)
 //
 let ghost_bind_typing #g #t #c d soundness =
-  let T_GhostBind _ e1 e2 t1 c2 x e1_typing e2_typing d_non_info = d in
+  let T_GhostBind _ e1 e2 t1 c2 _ x e1_typing e2_typing d_non_info = d in
 
   let g_x = push_binding g x ppname_default t1 in
 
