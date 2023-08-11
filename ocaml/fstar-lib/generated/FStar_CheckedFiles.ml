@@ -591,7 +591,8 @@ let (store_module_to_cache :
           else ()
 let (unsafe_raw_load_checked_file :
   Prims.string ->
-    (Prims.string Prims.list * tc_result) FStar_Pervasives_Native.option)
+    (FStar_Parser_Dep.parsing_data * Prims.string Prims.list * tc_result)
+      FStar_Pervasives_Native.option)
   =
   fun checked_fn ->
     let entry = FStar_Compiler_Util.load_2values_from_file checked_fn in
@@ -600,6 +601,6 @@ let (unsafe_raw_load_checked_file :
         let uu___ =
           let uu___1 =
             FStar_Compiler_List.map FStar_Pervasives_Native.fst s2.deps_dig in
-          (uu___1, (s2.tc_res)) in
+          ((s1.parsing_data), uu___1, (s2.tc_res)) in
         FStar_Pervasives_Native.Some uu___
     | uu___ -> FStar_Pervasives_Native.None
