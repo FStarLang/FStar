@@ -491,6 +491,51 @@ let intro_h_exists #a x p m = H.intro_h_exists x p (heap_of_mem m)
 
 let elim_h_exists (#a:_) (p:a -> slprop) (m:mem) = H.elim_h_exists p (heap_of_mem m)
 
+let intro_h_forall (#a:_) (p:a -> slprop) (m:mem) = H.intro_h_forall p (heap_of_mem m)
+
+let elim_h_forall (#a:_) (p:a -> slprop) (m:mem) (x:a) = H.elim_h_forall p (heap_of_mem m) x
+
+let intro_h_and (p q: slprop) (m:mem) = H.intro_h_and p q (heap_of_mem m)
+
+let elim_h_and (p q: slprop) (m:mem) = H.elim_h_and p q (heap_of_mem m)
+
+let intro_h_or_left (p q: slprop) (m:mem) = H.intro_h_or_left p q (heap_of_mem m)
+
+let intro_h_or_right (p q: slprop) (m:mem) = H.intro_h_or_right p q (heap_of_mem m)
+
+let elim_h_or (p q: slprop) (m:mem) = H.elim_h_or p q (heap_of_mem m)
+
+let intro_wand (p1 p2: slprop u#a) (m:mem) = 
+  introduce 
+    (forall m1. m `disjoint` m1 /\ interp p1 m1 ==> interp p2 (join m m1))
+    ==> interp (wand p1 p2) m
+  with _. (
+    assert (forall m1. m `disjoint` m1 /\ interp p1 m1 ==> interp p2 (join m m1));
+    H.intro_wand p1 p2 (heap_of_mem m);
+    let h = heap_of_mem m in
+    assert ((forall h1. h `H.disjoint` h1 /\ H.interp p1 h1 ==> H.interp p2 (H.join h h1))
+      ==> H.interp (wand p1 p2) h);
+    introduce forall h1. (h `H.disjoint` h1 /\ H.interp p1 h1 ==> H.interp p2 (H.join h h1))
+    with (
+      introduce (h `H.disjoint` h1 /\ H.interp p1 h1) ==> H.interp p2 (H.join h h1)
+      with _. (
+        assert (h `H.disjoint` h1);
+        let m1 = {
+          ctr = m.ctr;
+          heap = h1;
+          locks = m.locks
+        }
+        in assert (m `disjoint` m1)
+      )
+    )
+  )
+
+(** Eliminating a wand by proving a heap that satisfies the LHS **)
+let elim_wand (p1 p2: slprop u#a) (m:mem) (m1:mem) = H.elim_wand p1 p2 (heap_of_mem m) (heap_of_mem m1)
+
+
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // Preorders and effects
 ////////////////////////////////////////////////////////////////////////////////
