@@ -9,8 +9,7 @@ module T = FStar.Tactics
 let ref = R.ref
 
 [@@"__reduce__"; "__steel_reduce__"]
-let pts_to = R.pts_to
-
+let pts_to #a (r:ref a) (#[exact (`full_perm)] p:perm) (v:a) = R.pts_to r p v
 
 let alloc' (#a:Type) (x:a)
   : stt_ghost (ref a) emp_inames S.emp (fun r -> R.pts_to r full_perm x)
