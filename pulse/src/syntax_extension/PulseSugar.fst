@@ -62,6 +62,12 @@ type stmt' =
       value:A.term;
     }
 
+  | ArrayAssignment {
+      arr:A.term;
+      index:A.term;
+      value:A.term;
+    }
+
   | LetBinding {
       qualifier: option mut_or_ref;
       id:ident;
@@ -151,6 +157,7 @@ let mk_comp tag precondition return_name return_type postcondition range =
 let mk_vprop_exists binders body = VPropExists { binders; body }
 let mk_expr e = Expr { e }
 let mk_assignment id value = Assignment { lhs=id; value }
+let mk_array_assignment arr index value = ArrayAssignment { arr; index; value }
 let mk_let_binding qualifier id typ init = LetBinding { qualifier; id; typ; init }
 let mk_block stmt = Block { stmt }
 let mk_if head join_vprop then_ else_opt = If { head; join_vprop; then_; else_opt }

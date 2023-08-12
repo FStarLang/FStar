@@ -92,12 +92,18 @@ let assign_lid = pulse_lib_ref_lid "op_Colon_Equals"
 let stt_ghost_lid = pulse_lib_core_lid "stt_ghost"
 let stt_atomic_lid = pulse_lib_core_lid "stt_atomic"
 let op_colon_equals_lid r = Ident.lid_of_path ["op_Colon_Equals"] r
-let stapp_assignment assign_lid (lhs rhs:S.term) (r:_)
+let op_array_assignment_lid r = Ident.lid_of_path ["op_Array_Assignment"] r
+let stapp_assignment assign_lid (args:list S.term) (last_arg:S.term) (r:_)
   : SW.st_term
   = let head_fv = S.lid_as_fv assign_lid None in
     let head = S.fv_to_tm head_fv in
-    let app = S.mk_Tm_app head [(lhs, None)] lhs.pos in
-    SW.(tm_st_app (tm_expr app r) None (as_term rhs) r)
+    let app = 
+      L.fold_left 
+        (fun head (arg:S.term) ->
+          S.mk_Tm_app head [(arg, None)] arg.pos)
+        head args
+    in
+    SW.(tm_st_app (tm_expr app r) None (as_term last_arg) r)
 
 let resolve_lid (env:env_t) (lid:lident)
   : err lident
@@ -337,7 +343,14 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
       let? lhs = tosyntax env lhs in
       let? rhs = tosyntax env value in
       let? assignment_lid = resolve_lid env (op_colon_equals_lid s.range) in
-      return (stapp_assignment assignment_lid lhs rhs s.range)
+      return (stapp_assignment assignment_lid [lhs] rhs s.range)
+
+    | ArrayAssignment { arr; index; value } ->
+      let? arr = tosyntax env arr in
+      let? index = tosyntax env index in
+      let? value = tosyntax env value in      
+      let? array_assignment_lid = resolve_lid env (op_array_assignment_lid s.range) in
+      return (stapp_assignment array_assignment_lid [arr;index] value s.range)
     
     | Sequence { s1={s=Open l}; s2 } ->
       let env = push_namespace env l in
