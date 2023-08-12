@@ -5010,20 +5010,19 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option g
                         () // do nothing
 
                     | NonTrivial goal ->
-                        FStar.Options.push ();
+                      Options.with_saved_options (fun () ->
                         FStar.Options.set opts;
-                        if debug
-                        then Errors.diag (Env.get_range env)
-                                         (BU.format2 "Trying to solve:\n> %s\nWith proof_ns:\n %s\n"
+                        if debug then
+                          Errors.diag (Env.get_range env)
+                                      (BU.format2 "Trying to solve:\n> %s\nWith proof_ns:\n %s\n"
                                                  (Print.term_to_string goal)
                                                  (Env.string_of_proof_ns env));
-                        if debug
-                        then Errors.diag (Env.get_range env)
-                                         (BU.format1 "Before calling solver VC=\n%s\n" (Print.term_to_string goal));
-                        let res = env.solver.solve use_env_range_msg env goal in
-                        FStar.Options.pop ();
-                        res
-                        )
+                        if debug then
+                          Errors.diag (Env.get_range env)
+                                      (BU.format1 "Before calling solver VC=\n%s\n" (Print.term_to_string goal));
+                        env.solver.solve use_env_range_msg env goal
+                      )
+                   )
           in
           Some ret_g
 
