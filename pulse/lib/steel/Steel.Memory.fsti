@@ -350,6 +350,43 @@ val intro_h_exists (#a:_) (x:a) (p:a -> slprop) (m:mem)
 val elim_h_exists (#a:_) (p:a -> slprop) (m:mem)
   : Lemma (interp (h_exists p) m ==> (exists x. interp (p x) m))
 
+(** Introducing [h_forall] by proving all cases *)
+val intro_h_forall (#a:_) (p:a -> slprop) (m:mem)
+  : Lemma ((forall x. interp (p x) m) ==> interp (h_forall p) m)
+
+(** Eliminate a universal by instantiating it. *)
+val elim_h_forall (#a:_) (p:a -> slprop) (m:mem) (x:a)
+  : Lemma (interp (h_forall p) m ==> interp (p x) m)
+
+(** Introducing [h_and] by proving both sides *)
+val intro_h_and (p q: slprop) (m:mem)
+  : Lemma (interp p m /\ interp q m ==> interp (h_and p q) m)
+
+val elim_h_and (p q: slprop) (m:mem)
+  : Lemma (interp (h_and p q) m ==> (interp p m /\ interp q m))
+
+(** Introducing [h_or] by proving one side *)
+val intro_h_or_left (p q: slprop) (m:mem)
+  : Lemma (interp p m ==> interp (h_or p q) m)
+
+val intro_h_or_right (p q: slprop) (m:mem)
+  : Lemma (interp q m ==> interp (h_or p q) m)
+
+val elim_h_or (p q: slprop) (m:mem)
+  : Lemma (interp (h_or p q) m ==> (interp p m \/ interp q m))
+
+val intro_wand (p1 p2: slprop u#a) (m:mem)
+  : Lemma ((forall m1. m `disjoint` m1 /\ interp p1 m1 ==> interp p2 (join m m1))
+  ==> interp (wand p1 p2) m)
+
+(** Eliminating a wand by proving a heap that satisfies the LHS **)
+val elim_wand (p1 p2: slprop u#a) (m:mem) (m1:mem)
+  : Lemma ((interp (wand p1 p2) m /\ m `disjoint` m1 /\ interp p1 m1)
+    ==> interp p2 (join m m1))
+
+
+
+
 (**** Actions *)
 
 /// Note, at this point, using the NMSTTotal effect constrains the mem to be
