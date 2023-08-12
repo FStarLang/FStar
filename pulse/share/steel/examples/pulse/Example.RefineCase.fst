@@ -37,7 +37,6 @@ fn elim_false (#a:Type0) (p: (a -> vprop))
 ```
 
 //can't reveal in a match scrutinee yet
-[@@expect_failure]
 ```pulse
 ghost
 fn refine (x:ref int) (v:erased t_rep)
@@ -45,26 +44,27 @@ fn refine (x:ref int) (v:erased t_rep)
   returns i:erased int
   ensures pts_to x full_perm i ** pure (v == AR i)
 {
-   match reveal v {
+   let u = reveal v;
+   match u {
     AR i -> {
       rewrite (t_perm (A x) v)
           as  (pts_to x full_perm i);
-      i
+      hide i
     }
     BR b -> {
       rewrite (t_perm (A x) v)
           as  (pure False);
-      elim_false (pts_to x full_perm)
+      let x = elim_false #int (pts_to x full_perm);
+      hide x
     }
   }
 }
 ```
 
-//Need this indirection
-
+//Or this style
 ```pulse
 ghost
-fn refine (x:ref int) (v:t_rep)
+fn refine_alt (x:ref int) (v:t_rep)
   requires t_perm (A x) v
   returns i:int
   ensures pts_to x full_perm i ** pure (v == AR i)
@@ -92,7 +92,7 @@ fn refine_ghost (x:ref int) (v:erased t_rep)
   returns i:erased int
   ensures pts_to x full_perm i ** pure (v == AR i)
 {
-   let r = refine x v;
+   let r = refine_alt x v;
    hide r
 }
 ```
