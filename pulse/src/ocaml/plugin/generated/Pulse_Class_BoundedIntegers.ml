@@ -85,6 +85,64 @@ let (bounded_int_int : Prims.int bounded_int) =
     op_Percent = (fun x -> fun y -> x mod y);
     properties = ()
   }
+type 't bounded_unsigned =
+  {
+  base: 't bounded_int ;
+  max_bound: 't ;
+  static_max_bound: Prims.bool ;
+  properties1: unit }
+let __proj__Mkbounded_unsigned__item__base :
+  't . 't bounded_unsigned -> 't bounded_int =
+  fun projectee ->
+    match projectee with
+    | { base; max_bound; static_max_bound; properties1 = properties;_} ->
+        base
+let __proj__Mkbounded_unsigned__item__max_bound :
+  't . 't bounded_unsigned -> 't =
+  fun projectee ->
+    match projectee with
+    | { base; max_bound; static_max_bound; properties1 = properties;_} ->
+        max_bound
+let __proj__Mkbounded_unsigned__item__static_max_bound :
+  't . 't bounded_unsigned -> Prims.bool =
+  fun projectee ->
+    match projectee with
+    | { base; max_bound; static_max_bound; properties1 = properties;_} ->
+        static_max_bound
+let max_bound : 't . 't bounded_unsigned -> 't =
+  fun projectee ->
+    match projectee with
+    | { base; max_bound = max_bound1; static_max_bound;
+        properties1 = properties;_} -> max_bound1
+let bounded_from_bounded_unsigned :
+  't . 't bounded_unsigned -> 't bounded_int = fun c -> c.base
+let safe_add :
+  't . 't bounded_unsigned -> 't -> 't -> 't FStar_Pervasives_Native.option =
+  fun c ->
+    fun x ->
+      fun y ->
+        if c.static_max_bound
+        then
+          (if
+             op_Less_Equals (bounded_from_bounded_unsigned c) y
+               (op_Subtraction (bounded_from_bounded_unsigned c)
+                  (max_bound c) x)
+           then
+             FStar_Pervasives_Native.Some
+               (op_Plus (bounded_from_bounded_unsigned c) x y)
+           else FStar_Pervasives_Native.None)
+        else
+          if op_Less_Equals (bounded_from_bounded_unsigned c) x (max_bound c)
+          then
+            (if
+               op_Less_Equals (bounded_from_bounded_unsigned c) y
+                 (op_Subtraction (bounded_from_bounded_unsigned c)
+                    (max_bound c) x)
+             then
+               FStar_Pervasives_Native.Some
+                 (op_Plus (bounded_from_bounded_unsigned c) x y)
+             else FStar_Pervasives_Native.None)
+          else FStar_Pervasives_Native.None
 type ('t, 'c, 'op, 'x, 'y) ok = Obj.t
 let add : 't . 't bounded_int -> 't -> 't -> 't =
   fun uu___ -> fun x -> fun y -> op_Plus uu___ x y
@@ -103,6 +161,13 @@ let (bounded_int_u32 : FStar_UInt32.t bounded_int) =
     op_Less_Equals = (fun x -> fun y -> FStar_UInt32.lte x y);
     op_Percent = (fun x -> fun y -> FStar_UInt32.rem x y);
     properties = ()
+  }
+let (bounded_unsigned_u32 : FStar_UInt32.t bounded_unsigned) =
+  {
+    base = bounded_int_u32;
+    max_bound = (Stdint.Uint32.of_string "0xffffffff");
+    static_max_bound = true;
+    properties1 = ()
   }
 let (add_u32 : FStar_UInt32.t -> FStar_UInt32.t -> FStar_UInt32.t) =
   fun x -> fun y -> op_Plus bounded_int_u32 x y

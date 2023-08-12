@@ -711,9 +711,10 @@ let (comp_admit :
           Pulse_Syntax_Base.C_STAtomic (Pulse_Syntax_Base.tm_emp_inames, s)
       | Pulse_Syntax_Base.STT_Ghost ->
           Pulse_Syntax_Base.C_STGhost (Pulse_Syntax_Base.tm_emp_inames, s)
-type ('g, 'e, 't) typing =
-  (unit, unit, unit) FStar_Reflection_Typing.tot_typing
+type ('g, 'e, 'eff, 't) typing = unit
 type ('g, 'e, 't) tot_typing = unit
+type ('g, 'e, 't) ghost_typing = unit
+
 type ('g, 't, 'u) universe_of = unit
 type ('g, 'u, 't) non_informative_t =
   (Pulse_Syntax_Base.term, unit) Prims.dtuple2
@@ -818,6 +819,7 @@ let (readback_binding :
                  b.FStar_Reflection_V2_Data.sort3)
           } in
         ((b.FStar_Reflection_V2_Data.uniq1), sort)
+type ('g, 'c) non_informative = unit
 type ('dummyV0, 'dummyV1, 'dummyV2) st_typing =
   | T_Abs of Pulse_Typing_Env.env * Pulse_Syntax_Base.var *
   Pulse_Syntax_Base.qualifier FStar_Pervasives_Native.option *
@@ -828,6 +830,10 @@ type ('dummyV0, 'dummyV1, 'dummyV2) st_typing =
   Pulse_Syntax_Base.term * Pulse_Syntax_Base.qualifier
   FStar_Pervasives_Native.option * Pulse_Syntax_Base.comp_st *
   Pulse_Syntax_Base.term * unit * unit 
+  | T_STGhostApp of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
+  Pulse_Syntax_Base.term * Pulse_Syntax_Base.qualifier
+  FStar_Pervasives_Native.option * Pulse_Syntax_Base.comp_st *
+  Pulse_Syntax_Base.term * Pulse_Syntax_Base.var * unit * unit * unit 
   | T_Return of Pulse_Typing_Env.env * Pulse_Syntax_Base.ctag * Prims.bool *
   Pulse_Syntax_Base.universe * Pulse_Syntax_Base.term *
   Pulse_Syntax_Base.term * Pulse_Syntax_Base.term * Pulse_Syntax_Base.var *
@@ -845,6 +851,10 @@ type ('dummyV0, 'dummyV1, 'dummyV2) st_typing =
   Pulse_Syntax_Base.st_term * Pulse_Syntax_Base.term *
   Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.var * unit * (unit, unit,
   unit) st_typing 
+  | T_GhostBind of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
+  Pulse_Syntax_Base.st_term * Pulse_Syntax_Base.term *
+  Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.var * unit * (unit, unit,
+  unit) st_typing * unit 
   | T_If of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
   Pulse_Syntax_Base.st_term * Pulse_Syntax_Base.st_term *
   Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.universe *
@@ -869,9 +879,6 @@ type ('dummyV0, 'dummyV1, 'dummyV2) st_typing =
   | T_IntroExists of Pulse_Typing_Env.env * Pulse_Syntax_Base.universe *
   Pulse_Syntax_Base.binder * Pulse_Syntax_Base.term * Pulse_Syntax_Base.term
   * unit * unit * unit 
-  | T_IntroExistsErased of Pulse_Typing_Env.env * Pulse_Syntax_Base.universe
-  * Pulse_Syntax_Base.binder * Pulse_Syntax_Base.term *
-  Pulse_Syntax_Base.term * unit * unit * unit 
   | T_While of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
   Pulse_Syntax_Base.st_term * Pulse_Syntax_Base.st_term * unit * (unit, 
   unit, unit) st_typing * (unit, unit, unit) st_typing 
@@ -910,6 +917,8 @@ let uu___is_T_Abs uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_Abs _ -> true | _ -> false
 let uu___is_T_STApp uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_STApp _ -> true | _ -> false
+let uu___is_T_STGhostApp uu___2 uu___1 uu___ uu___3 =
+  match uu___3 with | T_STGhostApp _ -> true | _ -> false
 let uu___is_T_Return uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_Return _ -> true | _ -> false
 let uu___is_T_Lift uu___2 uu___1 uu___ uu___3 =
@@ -918,6 +927,8 @@ let uu___is_T_Bind uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_Bind _ -> true | _ -> false
 let uu___is_T_TotBind uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_TotBind _ -> true | _ -> false
+let uu___is_T_GhostBind uu___2 uu___1 uu___ uu___3 =
+  match uu___3 with | T_GhostBind _ -> true | _ -> false
 let uu___is_T_If uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_If _ -> true | _ -> false
 let uu___is_T_Match uu___2 uu___1 uu___ uu___3 =
@@ -932,8 +943,6 @@ let uu___is_T_ElimExists uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_ElimExists _ -> true | _ -> false
 let uu___is_T_IntroExists uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_IntroExists _ -> true | _ -> false
-let uu___is_T_IntroExistsErased uu___2 uu___1 uu___ uu___3 =
-  match uu___3 with | T_IntroExistsErased _ -> true | _ -> false
 let uu___is_T_While uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_While _ -> true | _ -> false
 let uu___is_T_Par uu___2 uu___1 uu___ uu___3 =

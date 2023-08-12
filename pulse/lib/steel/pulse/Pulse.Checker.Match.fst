@@ -307,7 +307,7 @@ let check
   let orig_brs = brs in
   let nbr = L.length brs in
 
-  let (| sc, sc_u, sc_ty, sc_ty_typing, sc_typing |) = check_term_and_type g sc in
+  let (| sc, sc_u, sc_ty, sc_ty_typing, sc_typing |) = check_tot_term_and_type g sc in
   let elab_pats = L.map elab_pat (L.map fst brs) in
 
   assertby (L.length elab_pats == L.length brs) (fun () ->
@@ -348,5 +348,5 @@ let check
   (* Provable *)
   assume (L.map (fun (p, _) -> elab_pat p) brs == elab_pats');
 
-  let d = T_Match g sc_u sc_ty sc sc_ty_typing (E sc_typing) c brs brs_d complete_d in
+  let d = T_Match g sc_u sc_ty sc sc_ty_typing sc_typing c brs brs_d complete_d in
   checker_result_for_st_typing (| _, _, d |) res_ppname

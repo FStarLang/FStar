@@ -178,7 +178,7 @@ type st_term' =
       head:st_term;
       body:st_term;
     }
-  | Tm_TotBind {
+  | Tm_TotBind {  // tot here means non-stateful, head could also be ghost, we should rename it
       head:term;
       body:st_term;
     } 
@@ -200,7 +200,6 @@ type st_term' =
       p:vprop;
     }
   | Tm_IntroExists {
-      erased:bool;
       p:vprop;
       witnesses:list term;
     }

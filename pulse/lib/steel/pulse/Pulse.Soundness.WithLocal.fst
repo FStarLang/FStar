@@ -8,6 +8,7 @@ open Pulse.Elaborate
 open Pulse.Soundness.Common
 
 module R = FStar.Reflection.V2
+module T = FStar.Tactics.V2
 
 module PReflUtil = Pulse.Reflection.Util
 module WT = Pulse.Steel.Wrapper.Typing
@@ -16,7 +17,7 @@ module FV = Pulse.Typing.FV
 
 let mk_t_abs (g:env)
              (#ty:term)
-             (t_typing:typing g ty (tm_type u_zero))
+             (t_typing:typing g ty T.E_Total (tm_type u_zero))
              (ppname:ppname)
              (r_t_typing:RT.tot_typing (elab_env g)
                                        (elab_term ty)
@@ -73,7 +74,7 @@ let withlocal_soundness #g #t #c d soundness =
                     elab_body_comp =
     soundness _ _ _ body_typing in
 
-  let ref_init_t_typing : typing g (mk_ref init_t) (tm_type u0) =
+  let ref_init_t_typing : typing g (mk_ref init_t) T.E_Total (tm_type u0) =
     magic () in
 
   let rref_init_t_typing

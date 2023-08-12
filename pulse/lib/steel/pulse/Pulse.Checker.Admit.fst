@@ -54,9 +54,9 @@ let check_core
         let (| u, t_typing |) = check_universe g t in    
         let post_opened = open_term_nv post px in      
         let (| post, post_typing |) = 
-            check_term_with_expected_type (push_binding g x (fst px) t) post_opened tm_vprop
+            check_tot_term_with_expected_type (push_binding g x (fst px) t) post_opened tm_vprop
         in
-        (| t, u, t_typing, post, E post_typing |)
+        (| t, u, t_typing, post, post_typing |)
 
       | _, Some post ->
         let post : post_hint_t = post in
