@@ -263,7 +263,7 @@ let sorted (s0 s:Seq.seq U32.t) =
 
 
 open FStar.UInt32
-#push-options "--query_stats"
+#push-options "--query_stats --z3rlimit 50"
 
 ```pulse
 fn sort3 (a:array U32.t)
