@@ -336,15 +336,16 @@ let env_to_string (e:env) : T.Tac string =
     (T.zip e.bs e.names) in
   String.concat "\n  " bs
 
-let fail (#a:Type) (g:env) (r:option range) (msg:string) =
-  let r = 
+let get_range (g:env) (r:option range) : T.Tac range =
     match r with
     | None -> range_of_env g
     | Some r -> 
       if RU.is_range_zero r
       then range_of_env g
       else r
-  in
+
+let fail (#a:Type) (g:env) (r:option range) (msg:string) =
+  let r = get_range g r in
   let issue = FStar.Issue.mk_issue "Error" msg (Some r) None (ctxt_to_list g) in
   T.log_issues [issue];
   T.fail "Pulse checker failed"

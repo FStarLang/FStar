@@ -102,6 +102,7 @@ let ill_typed_term (t:term) (expected_typ:option term) (got_typ:option term)=
 let instantiate_term_implicits (g:env) (t0:term) =
   let f = elab_env g in
   let rt = elab_term t0 in
+  let f = RU.env_set_range f (Pulse.Typing.Env.get_range g (Some t0.range)) in
   let topt, issues = catch_all (fun _ -> rtb_instantiate_implicits g f rt) in
   T.log_issues issues;
   match topt with
