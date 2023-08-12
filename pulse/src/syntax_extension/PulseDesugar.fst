@@ -91,19 +91,13 @@ let stt_lid = pulse_lib_core_lid "stt"
 let assign_lid = pulse_lib_ref_lid "op_Colon_Equals"
 let stt_ghost_lid = pulse_lib_core_lid "stt_ghost"
 let stt_atomic_lid = pulse_lib_core_lid "stt_atomic"
-let stapp_assignment (lhs rhs:S.term) (r:_)
+let op_colon_equals_lid r = Ident.lid_of_path ["op_Colon_Equals"] r
+let stapp_assignment assign_lid (lhs rhs:S.term) (r:_)
   : SW.st_term
   = let head_fv = S.lid_as_fv assign_lid None in
     let head = S.fv_to_tm head_fv in
     let app = S.mk_Tm_app head [(lhs, None)] lhs.pos in
     SW.(tm_st_app (tm_expr app r) None (as_term rhs) r)
-
-
-let resolve_name (env:env_t) (id:ident)
-  : err S.term
-  = match D.try_lookup_id env.tcenv.dsenv id with
-    | None -> fail "Name not found" (Ident.range_of_id id)
-    | Some t -> return t
 
 let resolve_lid (env:env_t) (lid:lident)
   : err lident
@@ -341,8 +335,9 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
 
     | Assignment { lhs; value } ->
       let? lhs = tosyntax env lhs in
-      let? value = tosyntax env value in
-      return (stapp_assignment lhs value s.range)
+      let? rhs = tosyntax env value in
+      let? assignment_lid = resolve_lid env (op_colon_equals_lid s.range) in
+      return (stapp_assignment assignment_lid lhs rhs s.range)
     
     | Sequence { s1={s=Open l}; s2 } ->
       let env = push_namespace env l in

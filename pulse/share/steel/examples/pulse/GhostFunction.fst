@@ -17,7 +17,7 @@ fn test_gtot (x:GR.ref int)
 {
   open GR;
   let y = f 0;
-  (x := y)
+  x := y
 }
 ```
 
@@ -28,7 +28,7 @@ fn increment (x:GR.ref int) (#n:erased int)
 {  
    open GR;
    let v = !x;
-   (x := (v + 1));
+   x := (v + 1);
 }
 ```
 
@@ -40,7 +40,7 @@ fn incrementg (x:GR.ref int) (#n:erased int)
 {
    open GR;
    let v = !x;
-   (x := (v + 1))
+   x := (v + 1)
 }
 ```
 
@@ -51,7 +51,7 @@ fn test_gtot_app_f (x:GR.ref int) (y:int)
   ensures GR.pts_to x full_perm y
 {
   open GR;
-  (x := y)
+  x := y
 }
 ```
 
