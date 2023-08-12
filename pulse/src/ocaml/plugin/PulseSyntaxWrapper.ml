@@ -124,8 +124,8 @@ let tm_if (head:term) (returns_annot:vprop option) (then_:st_term) (else_:st_ter
 let tm_match (sc:term) (returns_:vprop option) (brs:branch list) r : st_term =
   PSB.(with_range (tm_match sc returns_ brs) r)
 
-let tm_intro_exists (erased:bool) (p:vprop) (witnesses:term list) r : st_term =
-  PSB.(with_range (tm_intro_exists erased p witnesses) r)
+let tm_intro_exists (p:vprop) (witnesses:term list) r : st_term =
+  PSB.(with_range (tm_intro_exists p witnesses) r)
 
 let is_tm_intro_exists (s:st_term) : bool =
   match s.term1 with

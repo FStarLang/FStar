@@ -440,21 +440,31 @@ let comp_admit (c:ctag) (s:st_comp) : comp =
 noeq
 type my_erased (a:Type) = | E of a
 
-
-let typing (g:env) (e:term) (t:term) =
-    RT.tot_typing (elab_env g) (elab_term e) (elab_term t)
+let typing (g:env) (e:term) (eff:T.tot_or_ghost) (t:term) =
+  my_erased (RT.typing (elab_env g) (elab_term e) (eff, elab_term t))
 
 let tot_typing (g:env) (e:term) (t:term) =
-    my_erased (typing g e t)
+  typing g e T.E_Total t
+
+let ghost_typing (g:env) (e:term) (t:typ) =
+  typing g e T.E_Ghost t
+
+let lift_typing_to_ghost_typing (#g:env) (#e:term) (#eff:T.tot_or_ghost) (#t:term)
+  (d:typing g e eff t)
+  : ghost_typing g e t =
+  if eff = T.E_Ghost
+  then d
+  else let E d = d in
+       E (RT.T_Sub _ _ _ _ d (RT.Relc_total_ghost _ _))
 
 let universe_of (g:env) (t:term) (u:universe) =
-    tot_typing g t (tm_type u)
+  tot_typing g t (tm_type u)
 
 let non_informative_t (g:env) (u:universe) (t:term) =
-    w:term & tot_typing g w (non_informative_witness_t u t)
+  w:term & tot_typing g w (non_informative_witness_t u t)
 
 let non_informative_c (g:env) (c:comp_st) =
-    non_informative_t g (comp_u c) (comp_res c)
+  non_informative_t g (comp_u c) (comp_res c)
 
 let as_binder t = { binder_ty = t; binder_ppname = ppname_default }
 
@@ -597,6 +607,9 @@ let readback_binding b =
     let sort : term = {t=Tm_FStar b.sort; range=T.range_of_term b.sort} in
     (b.uniq, sort)
 
+let non_informative (g:env) (c:comp) =
+  my_erased (RT.non_informative (elab_env g) (elab_comp c))
+
 [@@ no_auto_projectors]
 noeq
 type st_typing : env -> st_term -> comp -> Type =
@@ -621,6 +634,29 @@ type st_typing : env -> st_term -> comp -> Type =
       arg:term ->
       tot_typing g head (tm_arrow (as_binder ty) q res) ->
       tot_typing g arg ty ->
+      st_typing g (wr (Tm_STApp {head; arg_qual=q; arg}))
+                  (open_comp_with res arg)
+
+    //
+    // this rule requires a non-informative judgment
+    // for C_STGhost, this will always be the case
+    // however, when doing the soundness proof,
+    //   we cannot call into the reflection API to get the token
+    // may be there is another way to make it so that we can get this once-and-for-all
+    //   for C_STGhost
+    //
+  | T_STGhostApp:
+      g:env ->
+      head:term ->
+      ty:term ->
+      q:option qualifier ->
+      res:comp_st ->
+      arg:term ->
+      x:var { None? (lookup g x) /\ ~ (x `Set.mem` freevars_comp res) } ->
+      ghost_typing g head (tm_arrow (as_binder ty) q res) ->
+      non_informative (push_binding g x ppname_default ty)
+                      (open_comp_with res (null_var x)) ->
+      ghost_typing g arg ty ->
       st_typing g (wr (Tm_STApp {head; arg_qual=q; arg}))
                   (open_comp_with res arg)
 
@@ -673,7 +709,20 @@ type st_typing : env -> st_term -> comp -> Type =
       tot_typing g e1 t1 ->
       st_typing (push_binding g x ppname_default t1) (open_st_term_nv e2 (v_as_nv x)) c2 ->
       st_typing g (wr (Tm_TotBind { head = e1; body = e2 }))
-                    (open_comp_with (close_comp c2 x) e1)
+                  (open_comp_with (close_comp c2 x) e1)
+
+  | T_GhostBind:  // see the comment on T_STGhostApp regarding the non-informative judgment
+      g:env ->
+      e1:term ->
+      e2:st_term ->
+      t1:term ->
+      c2:comp_st ->
+      x:var { None? (lookup g x) /\ ~ (x `Set.mem` freevars_st e2) } ->
+      ghost_typing g e1 t1 ->
+      st_typing (push_binding g x ppname_default t1) (open_st_term_nv e2 (v_as_nv x)) c2 ->
+      non_informative (push_binding g x ppname_default t1) c2 ->
+      st_typing g (wr (Tm_TotBind { head = e1; body = e2 }))
+                  (open_comp_with (close_comp c2 x) e1)
 
   | T_If:
       g:env ->
@@ -754,25 +803,10 @@ type st_typing : env -> st_term -> comp -> Type =
       e:term ->
       tot_typing g b.binder_ty (tm_type u) ->
       tot_typing g (tm_exists_sl u b p) tm_vprop ->
-      tot_typing g e b.binder_ty ->
-      st_typing g (wr (Tm_IntroExists { erased = false;
-                                        p = tm_exists_sl u b p;
+      ghost_typing g e b.binder_ty ->
+      st_typing g (wr (Tm_IntroExists { p = tm_exists_sl u b p;
                                         witnesses= [e] }))
                   (comp_intro_exists u b p e)
-      
-  | T_IntroExistsErased:
-      g:env ->
-      u:universe ->
-      b:binder ->
-      p:term ->
-      e:term ->
-      tot_typing g b.binder_ty (tm_type u) ->
-      tot_typing g (tm_exists_sl u b p) tm_vprop ->
-      tot_typing g e (mk_erased u b.binder_ty)  ->
-      st_typing g (wr (Tm_IntroExists { erased = true;
-                                        p = tm_exists_sl u b p;
-                                        witnesses= [e] }))
-                  (comp_intro_exists_erased u b p e)
 
   | T_While:
       g:env ->

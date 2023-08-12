@@ -104,7 +104,7 @@ let rec (freevars_st :
     | Pulse_Syntax_Base.Tm_ElimExists { Pulse_Syntax_Base.p1 = p;_} ->
         freevars p
     | Pulse_Syntax_Base.Tm_IntroExists
-        { Pulse_Syntax_Base.erased = uu___; Pulse_Syntax_Base.p2 = p;
+        { Pulse_Syntax_Base.p2 = p;
           Pulse_Syntax_Base.witnesses = witnesses;_}
         -> FStar_Set.union (freevars p) (freevars_list witnesses)
     | Pulse_Syntax_Base.Tm_While
@@ -248,7 +248,7 @@ let rec (ln_st' : Pulse_Syntax_Base.st_term -> Prims.int -> Prims.bool) =
       | Pulse_Syntax_Base.Tm_ElimExists { Pulse_Syntax_Base.p1 = p;_} ->
           ln' p i
       | Pulse_Syntax_Base.Tm_IntroExists
-          { Pulse_Syntax_Base.erased = uu___; Pulse_Syntax_Base.p2 = p;
+          { Pulse_Syntax_Base.p2 = p;
             Pulse_Syntax_Base.witnesses = witnesses;_}
           -> (ln' p i) && (ln_list' witnesses i)
       | Pulse_Syntax_Base.Tm_While
@@ -600,12 +600,11 @@ let rec (subst_st_term :
             Pulse_Syntax_Base.Tm_ElimExists
               { Pulse_Syntax_Base.p1 = (subst_term p ss) }
         | Pulse_Syntax_Base.Tm_IntroExists
-            { Pulse_Syntax_Base.erased = erased; Pulse_Syntax_Base.p2 = p;
+            { Pulse_Syntax_Base.p2 = p;
               Pulse_Syntax_Base.witnesses = witnesses;_}
             ->
             Pulse_Syntax_Base.Tm_IntroExists
               {
-                Pulse_Syntax_Base.erased = erased;
                 Pulse_Syntax_Base.p2 = (subst_term p ss);
                 Pulse_Syntax_Base.witnesses = (subst_term_list witnesses ss)
               }

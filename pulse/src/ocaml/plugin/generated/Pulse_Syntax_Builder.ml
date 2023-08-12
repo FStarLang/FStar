@@ -114,19 +114,13 @@ let (tm_match :
 let (tm_elim_exists : Pulse_Syntax_Base.vprop -> Pulse_Syntax_Base.st_term')
   = fun p -> Pulse_Syntax_Base.Tm_ElimExists { Pulse_Syntax_Base.p1 = p }
 let (tm_intro_exists :
-  Prims.bool ->
-    Pulse_Syntax_Base.vprop ->
-      Pulse_Syntax_Base.term Prims.list -> Pulse_Syntax_Base.st_term')
+  Pulse_Syntax_Base.vprop ->
+    Pulse_Syntax_Base.term Prims.list -> Pulse_Syntax_Base.st_term')
   =
-  fun erased ->
-    fun p ->
-      fun witnesses ->
-        Pulse_Syntax_Base.Tm_IntroExists
-          {
-            Pulse_Syntax_Base.erased = erased;
-            Pulse_Syntax_Base.p2 = p;
-            Pulse_Syntax_Base.witnesses = witnesses
-          }
+  fun p ->
+    fun witnesses ->
+      Pulse_Syntax_Base.Tm_IntroExists
+        { Pulse_Syntax_Base.p2 = p; Pulse_Syntax_Base.witnesses = witnesses }
 let (tm_while :
   Pulse_Syntax_Base.term ->
     Pulse_Syntax_Base.st_term ->

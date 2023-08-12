@@ -417,9 +417,8 @@ let rec subst_st_term (t:st_term) (ss:subst)
     | Tm_ElimExists { p } ->
       Tm_ElimExists { p = subst_term p ss }
       
-    | Tm_IntroExists { erased; p; witnesses } ->
-      Tm_IntroExists { erased; 
-                       p = subst_term p ss;
+    | Tm_IntroExists { p; witnesses } ->
+      Tm_IntroExists { p = subst_term p ss;
                        witnesses = subst_term_list witnesses ss }                             
 
     | Tm_While { invariant; condition; body; condition_var } ->

@@ -405,7 +405,7 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
       | VPropExists _ ->
         let? vp = desugar_vprop env vprop in
         let? witnesses = map_err (desugar_term env) witnesses in
-        return (SW.tm_intro_exists false vp witnesses s.range)
+        return (SW.tm_intro_exists vp witnesses s.range)
     )
 
 

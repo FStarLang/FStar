@@ -729,7 +729,7 @@ let (check :
                                           (Prims.of_int (101))
                                           (Prims.of_int (4))
                                           (Prims.of_int (101))
-                                          (Prims.of_int (45)))))
+                                          (Prims.of_int (49)))))
                                  (FStar_Sealed.seal
                                     (Obj.magic
                                        (FStar_Range.mk_range
@@ -739,7 +739,7 @@ let (check :
                                           (Prims.of_int (160))
                                           (Prims.of_int (43)))))
                                  (Obj.magic
-                                    (Pulse_Checker_Pure.check_term_with_expected_type
+                                    (Pulse_Checker_Pure.check_tot_term_with_expected_type
                                        g1 b Pulse_Typing.tm_bool))
                                  (fun uu___ ->
                                     (fun uu___ ->
@@ -1559,7 +1559,7 @@ let (check :
                                                                     (Prims.of_int (158))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (158))
-                                                                    (Prims.of_int (84)))))
+                                                                    (Prims.of_int (80)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range

@@ -30,9 +30,9 @@ let main' (t:st_term) (pre:term) (g:RT.fstar_top_env)
       then (
         T.print (Printf.sprintf "About to check pulse term:\n%s\n" (P.st_term_to_string t))
       );
-      let (| pre, ty, pre_typing |) = Pulse.Checker.Pure.check_term g pre in
+      let (| pre, ty, pre_typing |) = Pulse.Checker.Pure.check_tot_term g pre in
       if eq_tm ty tm_vprop
-      then let pre_typing : tot_typing g pre tm_vprop = E pre_typing in
+      then let pre_typing : tot_typing g pre tm_vprop = pre_typing in
            match t.term with
            | Tm_Abs _ ->
              let (| t, c, t_typing |) = Pulse.Checker.Abs.check_abs g t Pulse.Checker.check in

@@ -256,8 +256,14 @@ let rec (elab_st_typing :
                 (Pulse_Elaborate_Pure.elab_qual qual)
                 (FStar_Reflection_Typing.close_term body1 x)
           | Pulse_Typing.T_STApp
-              (uu___, head, _formal, qual, _res, arg, head_typing,
-               arg_typing)
+              (uu___, head, uu___1, qual, uu___2, arg, uu___3, uu___4) ->
+              let head1 = Pulse_Elaborate_Pure.elab_term head in
+              let arg1 = Pulse_Elaborate_Pure.elab_term arg in
+              FStar_Reflection_V2_Derived.mk_app head1
+                [(arg1, (Pulse_Elaborate_Pure.elab_qual qual))]
+          | Pulse_Typing.T_STGhostApp
+              (uu___, head, uu___1, qual, uu___2, arg, uu___3, uu___4,
+               uu___5, uu___6)
               ->
               let head1 = Pulse_Elaborate_Pure.elab_term head in
               let arg1 = Pulse_Elaborate_Pure.elab_term arg in
@@ -311,6 +317,19 @@ let rec (elab_st_typing :
                    (FStar_Reflection_Typing.close_term e21 x))
           | Pulse_Typing.T_TotBind
               (uu___, e1, e2, t1, uu___1, x, uu___2, e2_typing) ->
+              let re1 = Pulse_Elaborate_Pure.elab_term e1 in
+              let rt1 = Pulse_Elaborate_Pure.elab_term t1 in
+              let re2 =
+                elab_st_typing
+                  (Pulse_Typing_Env.push_binding uu___ x
+                     Pulse_Syntax_Base.ppname_default t1)
+                  (Pulse_Syntax_Naming.open_st_term_nv e2
+                     (Pulse_Syntax_Base.v_as_nv x)) uu___1 e2_typing in
+              FStar_Reflection_Typing.mk_let
+                FStar_Reflection_Typing.pp_name_default re1 rt1
+                (FStar_Reflection_Typing.close_term re2 x)
+          | Pulse_Typing.T_GhostBind
+              (uu___, e1, e2, t1, uu___1, x, uu___2, e2_typing, uu___3) ->
               let re1 = Pulse_Elaborate_Pure.elab_term e1 in
               let rt1 = Pulse_Elaborate_Pure.elab_term t1 in
               let re2 =
@@ -394,16 +413,6 @@ let rec (elab_st_typing :
               let rp = Pulse_Elaborate_Pure.elab_term p in
               let re = Pulse_Elaborate_Pure.elab_term e in
               Pulse_Reflection_Util.mk_intro_exists ru rt
-                (Pulse_Reflection_Util.mk_abs rt
-                   FStar_Reflection_V2_Data.Q_Explicit rp) re
-          | Pulse_Typing.T_IntroExistsErased
-              (uu___, u, b, p, e, uu___1, uu___2, uu___3) ->
-              let ru = u in
-              let rt =
-                Pulse_Elaborate_Pure.elab_term b.Pulse_Syntax_Base.binder_ty in
-              let rp = Pulse_Elaborate_Pure.elab_term p in
-              let re = Pulse_Elaborate_Pure.elab_term e in
-              Pulse_Reflection_Util.mk_intro_exists_erased ru rt
                 (Pulse_Reflection_Util.mk_abs rt
                    FStar_Reflection_V2_Data.Q_Explicit rp) re
           | Pulse_Typing.T_While

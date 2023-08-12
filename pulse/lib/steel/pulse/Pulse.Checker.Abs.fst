@@ -42,7 +42,7 @@ let rec check_abs
   | Tm_Abs { b = {binder_ty=t;binder_ppname=ppname}; q=qual; ascription=c; body } -> //pre=pre_hint; body; ret_ty; post=post_hint_body } ->
 
     (*  (fun (x:t) -> {pre_hint} body : t { post_hint } *)
-    let (| t, _, _ |) = check_term g t in //elaborate it first
+    let (| t, _, _ |) = check_tot_term g t in //elaborate it first
     let (| u, t_typing |) = check_universe g t in //then check that its universe ... We could collapse the two calls
     let x = fresh g in
     let px = ppname, x in

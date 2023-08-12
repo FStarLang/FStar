@@ -72,53 +72,13 @@ let check_elim_exists
          (Printf.sprintf "check_elim_exists: universe checking failed, computed %s, expected %s"
             (P.univ_to_string u') (P.univ_to_string u))
 
-let is_intro_exists_erased (st:st_term) = 
-  match st.term with
-  | Tm_IntroExists { erased } -> erased
-  | _ -> false
-
-let check_intro_exists_erased
+let check_intro_exists
   (g:env)
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
-  (st:st_term { intro_exists_witness_singleton st /\
-                is_intro_exists_erased st })
-  (vprop_typing: option (tot_typing g (intro_exists_vprop st) tm_vprop))
-  : T.Tac (checker_result_t g pre post_hint) =
-
-  let g = Pulse.Typing.Env.push_context g "check_intro_exists_erased" st.range in
-
-  let Tm_IntroExists { p=t; witnesses=[e] } = st.term in
-  let (| t, t_typing |) = 
-    match vprop_typing with
-    | Some typing -> (| t, typing |)
-    | _ -> check_vprop g t
-  in
-
-  if not (Tm_ExistsSL? (t <: term).t)  // why this ascription?
-  then fail g (Some st.range)
-         (Printf.sprintf "check_intro_exists_erased: vprop %s is not an existential"
-            (P.term_to_string t));
-
-  let Tm_ExistsSL u b p = (t <: term).t in
-
-  Pulse.Typing.FV.tot_typing_freevars t_typing;
-  let ty_typing, _ = Metatheory.tm_exists_inversion #g #u #b.binder_ty #p t_typing (fresh g) in
-  let (| e, e_typing |) = 
-    check_term_with_expected_type g e (mk_erased u b.binder_ty) in
-  let d = T_IntroExistsErased g u b p e ty_typing t_typing (E e_typing) in
-  prove_post_hint (try_frame_pre pre_typing d res_ppname) post_hint (t <: term).range
-
-let check_intro_exists_non_erased
-  (g:env)
-  (pre:term)
-  (pre_typing:tot_typing g pre tm_vprop)
-  (post_hint:post_hint_opt g)
-  (res_ppname:ppname)
-  (st:st_term { intro_exists_witness_singleton st /\
-                not (is_intro_exists_erased st) })
+  (st:st_term { intro_exists_witness_singleton st })
   (vprop_typing: option (tot_typing g (intro_exists_vprop st) tm_vprop))
   : T.Tac (checker_result_t g pre post_hint) =
 
@@ -141,22 +101,7 @@ let check_intro_exists_non_erased
   Pulse.Typing.FV.tot_typing_freevars t_typing;
   let ty_typing, _ = Metatheory.tm_exists_inversion #g #u #b.binder_ty #p t_typing (fresh g) in
   let (| witness, witness_typing |) = 
-    check_term_with_expected_type g witness b.binder_ty in
-  let d = T_IntroExists g u b p witness ty_typing t_typing (E witness_typing) in
+    check_term_with_expected_type g witness T.E_Ghost b.binder_ty in
+  let d = T_IntroExists g u b p witness ty_typing t_typing witness_typing in
   let (| c, d |) : (c:_ & st_typing g _ c) = (| _, d |) in
   prove_post_hint (try_frame_pre pre_typing d res_ppname) post_hint (t <: term).range
-
-let check_intro_exists
-  (g:env)
-  (pre:term)
-  (pre_typing:tot_typing g pre tm_vprop)
-  (post_hint:post_hint_opt g)
-  (res_ppname:ppname)
-  (st:st_term { intro_exists_witness_singleton st })
-  (vprop_typing: option (tot_typing g (intro_exists_vprop st) tm_vprop))
-
-  : T.Tac (checker_result_t g pre post_hint) = 
-  
-  if is_intro_exists_erased st
-  then check_intro_exists_erased g pre pre_typing post_hint res_ppname st vprop_typing
-  else check_intro_exists_non_erased g pre pre_typing post_hint res_ppname st vprop_typing 
