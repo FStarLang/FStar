@@ -41,7 +41,7 @@ let aliasKeyCRT_pre
     valid_aliasKeyCRT_ingredients aliasKeyTBS_len /\
     aliasKeyCRT_len == length_of_aliasKeyCRT aliasKeyTBS_len
 
-val aliasKey_post 
+val aliasKey_functional_correctness 
   (alg:alg_t)
   (dig_len:hkdf_ikm_len)
   (cdi:Seq.seq U8.t)
@@ -52,7 +52,7 @@ val aliasKey_post
   (aliasKey_priv:elseq U8.t v32us)
   : prop
 
-val deviceIDCSR_post
+val deviceIDCSR_functional_correctness
   (alg:alg_t)
   (dig_len:hkdf_ikm_len)
   (cdi: Seq.seq U8.t)
@@ -63,7 +63,7 @@ val deviceIDCSR_post
   (deviceIDCSR_buf: elseq U8.t deviceIDCSR_len)
   : prop
 
-val aliasKeyCRT_post
+val aliasKeyCRT_functional_correctness
   (alg:alg_t)
   (dig_len:hkdf_ikm_len)
   (cdi:Seq.seq U8.t)
@@ -122,15 +122,15 @@ val l0_main
                 A.pts_to deviceIDCSR full_perm deviceIDCSR1 **
                 pure (
                   valid_hkdf_ikm_len dice_digest_len /\
-                  aliasKey_post
+                  aliasKey_functional_correctness
                     dice_hash_alg dice_digest_len cdi0 repr.fwid
                     record.aliasKey_label_len repr.aliasKey_label 
                     aliasKey_pub1 aliasKey_priv1 /\
-                  deviceIDCSR_post 
+                  deviceIDCSR_functional_correctness 
                     dice_hash_alg dice_digest_len cdi0
                     record.deviceID_label_len repr.deviceID_label record.deviceIDCSR_ingredients 
                     deviceIDCSR_len deviceIDCSR1 /\       
-                  aliasKeyCRT_post 
+                  aliasKeyCRT_functional_correctness 
                     dice_hash_alg dice_digest_len cdi0 repr.fwid
                     record.deviceID_label_len repr.deviceID_label record.aliasKeyCRT_ingredients 
                     aliasKeyCRT_len aliasKeyCRT1 aliasKey_pub1))))))))

@@ -240,35 +240,11 @@ fn sign_and_finalize_aliasKeyCRT
 
 (* pre / post conditions for l0 *)
 
-// let deviceIDCSR_pre deviceIDCSR deviceIDCRI_len deviceIDCSR_len
-//   = deviceIDCRI_len == len_of_deviceIDCRI
-//                         deviceIDCSR.version
-//                         deviceIDCSR.s_common
-//                         deviceIDCSR.s_org
-//                         deviceIDCSR.s_country /\
-//     0 < US.v deviceIDCRI_len /\ 
-//     valid_deviceIDCSR_ingredients deviceIDCRI_len /\
-//     deviceIDCSR_len == length_of_deviceIDCSR deviceIDCRI_len
-
-// let aliasKeyCRT_pre aliasKeyCRT aliasKeyTBS_len aliasKeyCRT_len
-//   = aliasKeyTBS_len == len_of_aliasKeyTBS
-//                         aliasKeyCRT.serialNumber
-//                         aliasKeyCRT.i_common
-//                         aliasKeyCRT.i_org
-//                         aliasKeyCRT.i_country
-//                         aliasKeyCRT.s_common
-//                         aliasKeyCRT.s_org
-//                         aliasKeyCRT.s_country
-//                         aliasKeyCRT.l0_version /\
-//     0 < US.v aliasKeyTBS_len /\ 
-//     valid_aliasKeyCRT_ingredients aliasKeyTBS_len /\
-//     aliasKeyCRT_len == length_of_aliasKeyCRT aliasKeyTBS_len
-
-let aliasKey_post alg dig_len cdi fwid aliasKey_label_len aliasKey_label 
+let aliasKey_functional_correctness alg dig_len cdi fwid aliasKey_label_len aliasKey_label 
                   aliasKey_pub aliasKey_priv 
   = (aliasKey_pub, aliasKey_priv) == derive_AliasKey_spec alg dig_len cdi fwid aliasKey_label_len aliasKey_label
 
-let deviceIDCSR_post alg dig_len cdi deviceID_label_len deviceID_label 
+let deviceIDCSR_functional_correctness alg dig_len cdi deviceID_label_len deviceID_label 
                     deviceIDCSR_ingredients deviceIDCSR_len deviceIDCSR_buf
   = let (deviceID_pub, deviceID_priv) = (derive_DeviceID_spec alg dig_len cdi deviceID_label_len deviceID_label) in 
     let deviceIDCRI_len = len_of_deviceIDCRI 
@@ -296,7 +272,7 @@ let deviceIDCSR_post alg dig_len cdi deviceID_label_len deviceID_label
             deviceID_priv
             deviceIDCRI_buf)))
 
-let aliasKeyCRT_post alg dig_len cdi fwid deviceID_label_len deviceID_label
+let aliasKeyCRT_functional_correctness alg dig_len cdi fwid deviceID_label_len deviceID_label
                      aliasKeyCRT_ingredients aliasKeyCRT_len aliasKeyCRT_buf aliasKey_pub
   = let (deviceID_pub, deviceID_priv) = (derive_DeviceID_spec alg dig_len cdi deviceID_label_len deviceID_label) in 
     let authKeyID = derive_AuthKeyID_spec alg deviceID_pub in
@@ -374,15 +350,15 @@ fn l0_main'
         A.pts_to deviceIDCSR full_perm deviceIDCSR1 **
         pure (
           valid_hkdf_ikm_len dice_digest_len /\
-          aliasKey_post
+          aliasKey_functional_correctness
             dice_hash_alg dice_digest_len cdi0 repr.fwid
             record.aliasKey_label_len repr.aliasKey_label 
             aliasKey_pub1 aliasKey_priv1 /\
-          deviceIDCSR_post 
+          deviceIDCSR_functional_correctness 
             dice_hash_alg dice_digest_len cdi0
             record.deviceID_label_len repr.deviceID_label record.deviceIDCSR_ingredients 
             deviceIDCSR_len deviceIDCSR1 /\       
-          aliasKeyCRT_post 
+          aliasKeyCRT_functional_correctness 
             dice_hash_alg dice_digest_len cdi0 repr.fwid
             record.deviceID_label_len repr.deviceID_label record.aliasKeyCRT_ingredients 
             aliasKeyCRT_len aliasKeyCRT1 aliasKey_pub1
