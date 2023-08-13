@@ -25,9 +25,9 @@ fn fibo32 (k:(n:U32.t { 0 < U32.v n  /\ fib (U32.v n) < pow2 32 }))
   let mut ctr = 1ul;
   while (let vctr = !ctr; U32.(vctr <^ k))
   invariant b . exists vi vj vctr. (
-     pts_to i vi `star`
-     pts_to j vj `star`
-     pts_to ctr vctr `star`     
+     pts_to i vi **
+     pts_to j vj **
+     pts_to ctr vctr **     
      pure (1 <= U32.v vctr /\
            U32.v vctr <= U32.v k /\
            fib (U32.v vctr - 1) == U32.v vi/\
@@ -61,9 +61,9 @@ fn fibo (n:pos)
   let mut ctr = 1;
   while (let vctr = !ctr; (vctr < n))
   invariant b . exists vi vj vctr. (
-     pts_to i vi `star`
-     pts_to j vj `star`
-     pts_to ctr vctr `star`     
+     pts_to i vi **
+     pts_to j vj **
+     pts_to ctr vctr **     
      pure (1 <= vctr /\
            vctr <= n /\
            vi == fib (vctr - 1) /\
@@ -95,9 +95,9 @@ fn fibo2 (n:pos)
   let mut ctr = ( 1 <: pos );
   while (let vctr = !ctr; (vctr < n))
   invariant b . exists vi vj vctr. (
-     pts_to i vi `star`
-     pts_to j vj `star`
-     pts_to ctr vctr `star`     
+     pts_to i vi **
+     pts_to j vj **
+     pts_to ctr vctr **     
      pure (1 <= vctr /\
            vctr <= n /\
            vi == fib (vctr - 1) /\
@@ -129,9 +129,9 @@ fn fibo3 (n:pos)
   let mut ctr = ( 1 <: pos );
   while (let vctr = !ctr; (vctr < n))
   invariant b . exists vi vj vctr. (
-     pts_to i vi `star`
-     pts_to j vj `star`
-     pts_to ctr vctr `star`     
+     pts_to i vi **
+     pts_to j vj **
+     pts_to ctr vctr **     
      pure (1 <= vctr /\
            vctr <= n /\
            vi == fib (vctr - 1) /\

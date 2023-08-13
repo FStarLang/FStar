@@ -112,7 +112,7 @@ inline_for_extraction
 let return_stt (#a:Type u#a) (x:a) (p:a -> vprop) =
   fun _ ->
     intro_pure (x == x);
-    rewrite (p x `star` pure (x == x))
+    rewrite (p x ** pure (x == x))
             (p x ** pure (x == x));
     return x
     
@@ -126,7 +126,7 @@ inline_for_extraction
 let return_stt_ghost (#a:Type u#a) (x:a) (p:a -> vprop) =
   fun _ ->
     intro_pure (x == x);
-    rewrite (p x `star` pure (x == x))
+    rewrite (p x ** pure (x == x))
             (p x ** pure (x == x));
     x
 
@@ -186,23 +186,23 @@ inline_for_extraction
 let frame_stt (#a:Type u#a) (#pre:vprop) (#post:a -> vprop) (frame:vprop) (e:stt a pre post)
   : stt a (pre ** frame) (fun x -> post x ** frame) =
   fun _ ->
-    rewrite (pre ** frame) (pre `star` frame);
+    rewrite (pre ** frame) (pre ** frame);
     let x = e () in
-    rewrite (post x `star` frame) (post x ** frame);
+    rewrite (post x ** frame) (post x ** frame);
     Steel.ST.Util.return x
     
 let frame_stt_atomic #a #opened #pre #post frame e = 
   fun _ -> 
-    rewrite (pre ** frame) (pre `star` frame);
+    rewrite (pre ** frame) (pre ** frame);
     let x = e () in
-    rewrite (post x `star` frame) (post x ** frame);
+    rewrite (post x ** frame) (post x ** frame);
     Steel.ST.Util.return x    
     
 let frame_stt_ghost #a #opened #pre #post frame e = 
   fun _ -> 
-    rewrite (pre ** frame) (pre `star` frame);
+    rewrite (pre ** frame) (pre ** frame);
     let x = e () in
-    rewrite (post x `star` frame) (post x ** frame);
+    rewrite (post x ** frame) (post x ** frame);
     x    
 
 inline_for_extraction
@@ -302,9 +302,9 @@ let ghost_app2 (#a:Type) (#b:a -> Type) (#p:a -> vprop) (#q: (x:a -> b x -> vpro
 let stt_par #aL #aR #preL #postL #preR #postR
             f g
   = fun _ -> 
-     Steel.ST.Util.rewrite (preL ** preR) (preL `star` preR);
+     Steel.ST.Util.rewrite (preL ** preR) (preL ** preR);
      let x = par f g in
-     Steel.ST.Util.rewrite (postL (fst x) `star` postR (snd x))
+     Steel.ST.Util.rewrite (postL (fst x) ** postR (snd x))
              (postL (fst x) ** postR (snd x));
      Steel.ST.Util.return x
 
@@ -312,15 +312,15 @@ let stt_par #aL #aR #preL #postL #preR #postR
 //   fun _ -> 
 //     let body (r:R.ref a) 
 //       : STT ret_t
-//         (pre `star` R.pts_to r init)
-//         (fun v -> post v `star` exists_ (R.pts_to r))
+//         (pre ** R.pts_to r init)
+//         (fun v -> post v ** exists_ (R.pts_to r))
 //       = Steel.ST.Util.rewrite
-//                 (pre `star` R.pts_to r init)
+//                 (pre ** R.pts_to r init)
 //                 (pre ** R.pts_to r init);
 //         let v = body r () in
 //         Steel.ST.Util.rewrite
 //                 (post v ** exists_ (R.pts_to r))
-//                 (post v `star` exists_ (R.pts_to r));
+//                 (post v ** exists_ (R.pts_to r));
 //         Steel.ST.Util.return v
 //     in
 //     let v = R.with_local init body in

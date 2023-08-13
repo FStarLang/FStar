@@ -18,7 +18,7 @@ let alloc #a x =
 let read (#a:Type) (r:ref a) (#n:erased a) (#p:perm)
   : stt a
         (HR.pts_to r p n)
-        (fun x -> HR.pts_to r p x `star` S.pure (reveal n == x))
+        (fun x -> HR.pts_to r p x ** S.pure (reveal n == x))
   = fun _ ->
         let v = HR.read r in
         S.return v
@@ -43,15 +43,15 @@ let with_local #a init #pre #ret_t #post body =
   fun _ ->
     let body (r:ref a)
       : STT ret_t
-        (pre `star` HR.pts_to r init)
-        (fun v -> post v `star` exists_ (HR.pts_to r))
+        (pre ** HR.pts_to r init)
+        (fun v -> post v ** exists_ (HR.pts_to r))
       = S.rewrite
-                (pre `star` HR.pts_to r init)
+                (pre ** HR.pts_to r init)
                 (pre ** HR.pts_to r init);
         let v = body r () in
         S.rewrite
                 (post v ** exists_ (HR.pts_to r))
-                (post v `star` exists_ (HR.pts_to r));
+                (post v ** exists_ (HR.pts_to r));
         S.return v
     in
     let v = HR.with_local init body in
