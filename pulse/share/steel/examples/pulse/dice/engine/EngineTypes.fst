@@ -24,7 +24,7 @@ noeq
 type engine_context = { uds: A.larray U8.t (US.v uds_len); }
 
 let engine_context_perm (c:engine_context) : vprop
-  = A.pts_to c.uds full_perm uds_bytes ** 
+  = A.pts_to c.uds uds_bytes ** 
     uds_is_enabled **
     pure (A.is_full_array c.uds)
 
@@ -57,8 +57,8 @@ let mk_engine_repr  l0_image_header_size l0_image_header l0_image_header_sig
 
 let engine_record_perm (record:engine_record_t) (repr:engine_record_repr) 
   : vprop = 
-  A.pts_to record.l0_image_header full_perm repr.l0_image_header **
-  A.pts_to record.l0_image_header_sig full_perm repr.l0_image_header_sig **
-  A.pts_to record.l0_binary full_perm repr.l0_binary **
-  A.pts_to record.l0_binary_hash full_perm repr.l0_binary_hash **
-  A.pts_to record.l0_image_auth_pubkey full_perm repr.l0_image_auth_pubkey
+  A.pts_to record.l0_image_header repr.l0_image_header **
+  A.pts_to record.l0_image_header_sig repr.l0_image_header_sig **
+  A.pts_to record.l0_binary repr.l0_binary **
+  A.pts_to record.l0_binary_hash repr.l0_binary_hash **
+  A.pts_to record.l0_image_auth_pubkey repr.l0_image_auth_pubkey

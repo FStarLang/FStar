@@ -28,10 +28,10 @@ fn pulse_lookup_index (#s:pht_sig_us)
 
   while (let voff = !off; let vcont = !cont; (voff <= ht.sz && vcont = true)) 
   invariant b. exists (voff:US.t) (vcont:bool). (
-    A.pts_to ht.contents full_perm pht.repr **
-    R.pts_to off full_perm voff **
-    R.pts_to cont full_perm vcont **
-    R.pts_to ret full_perm (if vcont then None else (PHT.lookup_index_us pht k)) **
+    A.pts_to ht.contents pht.repr **
+    R.pts_to off voff **
+    R.pts_to cont vcont **
+    R.pts_to ret (if vcont then None else (PHT.lookup_index_us pht k)) **
     pure (
       US.v ht.sz == pht_sz pht /\
       voff <= ht.sz /\
@@ -44,7 +44,7 @@ fn pulse_lookup_index (#s:pht_sig_us)
     assume_ (pure (US.fits (US.v cidx + US.v voff)));
     if (voff = ht.sz) {
       cont := false;
-      assert (R.pts_to ret full_perm None);
+      assert (R.pts_to ret None);
     } else {
       let idx = modulo_us cidx voff ht.sz ();
       let c = (ht.contents).(idx); 
@@ -63,7 +63,7 @@ fn pulse_lookup_index (#s:pht_sig_us)
         Clean -> {
           cont := false;
           assert (pure (walk_get_idx pht.repr (US.v cidx) k (US.v voff) == None));
-          assert (R.pts_to ret full_perm (PHT.lookup_index_us pht k));
+          assert (R.pts_to ret (PHT.lookup_index_us pht k));
          }
         Zombie -> {
           off := voff + 1sz;
@@ -74,7 +74,7 @@ fn pulse_lookup_index (#s:pht_sig_us)
     };
   };
   fold (models s ht pht);
-  assert (R.pts_to ret full_perm (PHT.lookup_index_us pht k));
+  assert (R.pts_to ret (PHT.lookup_index_us pht k));
   let o = !ret;
   o
 }
@@ -112,9 +112,9 @@ fn _insert (#s:pht_sig_us)
 
   while (let voff = !off; let vcont = !cont; (voff <= ht.sz && vcont = true)) 
   invariant b. exists (voff:US.t) (vcont:bool). (
-    R.pts_to off full_perm voff **
-    R.pts_to cont full_perm vcont **
-    A.pts_to ht.contents full_perm (if vcont then pht.repr else (PHT.insert pht k v).repr) **
+    R.pts_to off voff **
+    R.pts_to cont vcont **
+    A.pts_to ht.contents (if vcont then pht.repr else (PHT.insert pht k v).repr) **
     pure (
       US.v ht.sz == pht_sz pht /\
       voff <= ht.sz /\
@@ -129,7 +129,7 @@ fn _insert (#s:pht_sig_us)
     assume_ (pure (US.fits (US.v cidx + US.v voff)));
     if (voff = ht.sz) {
       cont := false;
-      assert (A.pts_to ht.contents full_perm pht.repr);
+      assert (A.pts_to ht.contents pht.repr);
     } else {
       let idx = modulo_us cidx voff ht.sz ();
       let c = op_Array_Access ht.contents idx #full_perm #pht.repr;
@@ -193,9 +193,9 @@ fn _delete (#s:pht_sig_us)
 
   while (let voff = !off; let vcont = !cont; (voff <= ht.sz && vcont = true))
   invariant b. exists (voff:US.t) (vcont:bool). (
-    R.pts_to off full_perm voff **
-    R.pts_to cont full_perm vcont **
-    A.pts_to ht.contents full_perm (if vcont then pht.repr else (PHT.delete pht k).repr) **
+    R.pts_to off voff **
+    R.pts_to cont vcont **
+    A.pts_to ht.contents (if vcont then pht.repr else (PHT.delete pht k).repr) **
     pure (
       US.v ht.sz == pht_sz pht /\
       voff <= ht.sz /\
@@ -210,7 +210,7 @@ fn _delete (#s:pht_sig_us)
     assume_ (pure (US.fits (US.v cidx + US.v voff)));
     if (voff = ht.sz) {
       cont := false;
-      assert (A.pts_to ht.contents full_perm pht.repr);
+      assert (A.pts_to ht.contents pht.repr);
     } else {
       let idx = modulo_us cidx voff ht.sz ();
       let c = op_Array_Access ht.contents idx #full_perm #pht.repr;
@@ -257,8 +257,8 @@ fn _not_full (#s:pht_sig_us) (#pht:erased (pht_t (s_to_ps s))) (ht:ht_t s)
       (Used? c) 
     } else { false })
   invariant b. exists (vi:US.t). (
-    A.pts_to ht.contents full_perm pht.repr **
-    R.pts_to i full_perm vi **
+    A.pts_to ht.contents pht.repr **
+    R.pts_to i vi **
     pure (
       US.v ht.sz == pht_sz pht /\
       vi <= ht.sz /\

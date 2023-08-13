@@ -14,12 +14,12 @@ let t_perm (x:t) (v:t_rep) : vprop =
     match x with
     | A r -> (
       match v with
-      | AR i -> pts_to r full_perm i
+      | AR i -> pts_to r i
       | _ -> pure False
     )
     | B r -> (
       match v with
-      | BR b -> pts_to r full_perm b
+      | BR b -> pts_to r b
       | _ -> pure False
     )
 
@@ -42,19 +42,19 @@ ghost
 fn refine (x:ref int) (v:erased t_rep)
   requires t_perm (A x) v
   returns i:erased int
-  ensures pts_to x full_perm i ** pure (v == AR i)
+  ensures pts_to x i ** pure (v == AR i)
 {
    let u = reveal v;
    match u {
     AR i -> {
       rewrite (t_perm (A x) v)
-          as  (pts_to x full_perm i);
+          as  (pts_to x i);
       hide i
     }
     BR b -> {
       rewrite (t_perm (A x) v)
           as  (pure False);
-      let x = elim_false #int (pts_to x full_perm);
+      let x = elim_false #int (pts_to x);
       hide x
     }
   }
@@ -67,18 +67,18 @@ ghost
 fn refine_alt (x:ref int) (v:t_rep)
   requires t_perm (A x) v
   returns i:int
-  ensures pts_to x full_perm i ** pure (v == AR i)
+  ensures pts_to x i ** pure (v == AR i)
 {
    match v {
     AR i -> {
       rewrite (t_perm (A x) v)
-          as  (pts_to x full_perm i);
+          as  (pts_to x i);
       i
     }
     BR b -> {
       rewrite (t_perm (A x) v)
           as  (pure False);
-      elim_false (pts_to x full_perm)
+      elim_false (pts_to x)
     }
   }
 }
@@ -90,7 +90,7 @@ ghost
 fn refine_ghost (x:ref int) (v:erased t_rep)
   requires t_perm (A x) v
   returns i:erased int
-  ensures pts_to x full_perm i ** pure (v == AR i)
+  ensures pts_to x i ** pure (v == AR i)
 {
    let r = refine_alt x v;
    hide r
@@ -102,5 +102,5 @@ fn refine_ghost (x:ref int) (v:erased t_rep)
 // val refine_ghost (x:ref int) (v:erased t_rep)
 //   : stt_ghost (erased int) emp_inames
 //     (requires t_perm (A x) v)
-//     (ensures (fun i -> pts_to x full_perm i ** pure (reveal v == AR i)))
+//     (ensures (fun i -> pts_to x i ** pure (reveal v == AR i)))
     

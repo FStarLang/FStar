@@ -56,8 +56,8 @@ val serialize_deviceIDCRI
   (deviceIDCRI_buf: A.larray U8.t (US.v deviceIDCRI_len))
   (#deviceIDCRI_buf0: erased (elseq U8.t deviceIDCRI_len))
   : stt unit
-    (A.pts_to deviceIDCRI_buf full_perm deviceIDCRI_buf0)
-    (fun _ -> A.pts_to deviceIDCRI_buf full_perm (spec_serialize_deviceIDCRI 
+    (A.pts_to deviceIDCRI_buf deviceIDCRI_buf0)
+    (fun _ -> A.pts_to deviceIDCRI_buf (spec_serialize_deviceIDCRI 
                                                     deviceIDCRI 
                                                     deviceIDCRI_len))
 
@@ -76,8 +76,8 @@ val serialize_deviceIDCSR
   (deviceIDCSR_buf: A.larray U8.t (US.v deviceIDCSR_len))
   (#_buf:erased (elseq U8.t deviceIDCSR_len))
   : stt unit
-    (A.pts_to deviceIDCSR_buf full_perm _buf)
-    (fun _ -> A.pts_to deviceIDCSR_buf full_perm (spec_serialize_deviceIDCSR 
+    (A.pts_to deviceIDCSR_buf _buf)
+    (fun _ -> A.pts_to deviceIDCSR_buf (spec_serialize_deviceIDCSR 
                                                     deviceIDCRI_len 
                                                     deviceIDCSR_len 
                                                     deviceIDCSR))
@@ -95,8 +95,8 @@ val serialize_aliasKeyTBS
   (aliasKeyTBS_buf: A.larray U8.t (US.v aliasKeyTBS_len))
   (#aliasKeyTBS_buf0: erased (elseq U8.t aliasKeyTBS_len))
   : stt unit
-    (A.pts_to aliasKeyTBS_buf full_perm aliasKeyTBS_buf0)
-    (fun _ -> A.pts_to aliasKeyTBS_buf full_perm (spec_serialize_aliasKeyTBS 
+    (A.pts_to aliasKeyTBS_buf aliasKeyTBS_buf0)
+    (fun _ -> A.pts_to aliasKeyTBS_buf (spec_serialize_aliasKeyTBS 
                                                    aliasKeyTBS 
                                                    aliasKeyTBS_len))
 
@@ -115,8 +115,8 @@ val serialize_aliasKeyCRT
   (aliasKeyCRT_buf: A.larray U8.t (US.v aliasKeyCRT_len))
   (#_buf:erased (elseq U8.t aliasKeyCRT_len))
   : stt unit
-    (A.pts_to aliasKeyCRT_buf full_perm _buf)
-    (fun _ -> A.pts_to aliasKeyCRT_buf full_perm (spec_serialize_aliasKeyCRT 
+    (A.pts_to aliasKeyCRT_buf _buf)
+    (fun _ -> A.pts_to aliasKeyCRT_buf (spec_serialize_aliasKeyCRT 
                                                     aliasKeyTBS_len 
                                                     aliasKeyCRT_len 
                                                     aliasKeyCRT))

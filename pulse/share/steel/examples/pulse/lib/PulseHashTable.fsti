@@ -40,7 +40,7 @@ let mk_init_pht (#s:pht_sig_us) (sz:pos_us)
     inv = (); }
 
 let models (s:pht_sig_us) (ht:ht_t s) (pht:pht_t (s_to_ps s)) : vprop
-= A.pts_to ht.contents full_perm pht.repr **
+= A.pts_to ht.contents pht.repr **
   pure (
     US.v ht.sz == pht.sz /\
     A.is_full_array ht.contents

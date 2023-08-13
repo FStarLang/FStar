@@ -27,7 +27,7 @@ fn init_dpe ()
   let session_tbl = (new_table);
 
   (* the following should be GLOBAL state *)
-  let session_tbl_lock = new_lock (exists s. A.pts_to session_tbl full_perm s); 
+  let session_tbl_lock = new_lock (exists s. A.pts_to session_tbl s); 
   let session_id_ctr = R.ref US.t;
   session_id_ctr := 0;
 }
@@ -39,7 +39,7 @@ fn init_dpe ()
 fn OpenSession ()
 {
   let ctxt_tbl = (new_table);
-  let ctxt_tbl_lock = new_lock (exists s. A.pts_to ctxt_tbl full_perm s);
+  let ctxt_tbl_lock = new_lock (exists s. A.pts_to ctxt_tbl s);
   
   let cur_session = !session_id_ctr;
   let session_tbl = acquire session_tbl_lock;
@@ -55,7 +55,7 @@ fn OpenSession ()
 fn CloseSession ()
 {
   let ctxt_tbl = (new_table);
-  let ctxt_tbl_lock = new_lock (exists s. A.pts_to ctxt_tbl full_perm s);
+  let ctxt_tbl_lock = new_lock (exists s. A.pts_to ctxt_tbl s);
   
   let cur_session = !session_id_ctr;
   let session_tbl = acquire session_tbl_lock;

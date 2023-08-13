@@ -28,8 +28,8 @@ let ( ! ) #a = read #a
 
 let ( := ) (#a:Type) (r:ref a) (x:a) (#n:erased a)
   : stt unit
-        (pts_to r full_perm n)
-        (fun _ -> pts_to r full_perm (hide x))
+        (pts_to r n)
+        (fun _ -> pts_to r (hide x))
    = fun _ ->
         HR.write r x;
         S.return ()
@@ -43,15 +43,15 @@ let with_local #a init #pre #ret_t #post body =
   fun _ ->
     let body (r:ref a)
       : STT ret_t
-        (pre `star` HR.pts_to r full_perm init)
-        (fun v -> post v `star` exists_ (HR.pts_to r full_perm))
+        (pre `star` HR.pts_to r init)
+        (fun v -> post v `star` exists_ (HR.pts_to r))
       = S.rewrite
-                (pre `star` HR.pts_to r full_perm init)
-                (pre ** HR.pts_to r full_perm init);
+                (pre `star` HR.pts_to r init)
+                (pre ** HR.pts_to r init);
         let v = body r () in
         S.rewrite
-                (post v ** exists_ (HR.pts_to r full_perm))
-                (post v `star` exists_ (HR.pts_to r full_perm));
+                (post v ** exists_ (HR.pts_to r))
+                (post v `star` exists_ (HR.pts_to r));
         S.return v
     in
     let v = HR.with_local init body in

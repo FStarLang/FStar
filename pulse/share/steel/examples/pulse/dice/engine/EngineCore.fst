@@ -47,7 +47,7 @@ fn authenticate_l0_image (record:engine_record_t) (#repr:Ghost.erased engine_rec
     let hash_buf = A.alloc 0uy dice_digest_len;
     hacl_hash dice_hash_alg record.l0_binary_size record.l0_binary hash_buf;
     let res = compare dice_digest_len hash_buf record.l0_binary_hash;
-    with s. assert (A.pts_to hash_buf full_perm s);
+    with s. assert (A.pts_to hash_buf s);
     A.free hash_buf #(coerce dice_digest_len s);
     fold engine_record_perm record repr;
     res
@@ -71,8 +71,8 @@ assume
 val read_uds (uds:A.larray U8.t (US.v uds_len))
              (#s:Ghost.erased (Seq.seq U8.t))
   : stt unit 
-      (A.pts_to uds full_perm s ** uds_is_enabled)
-      (fun _ -> A.pts_to uds full_perm uds_bytes ** uds_is_enabled)
+      (A.pts_to uds s ** uds_is_enabled)
+      (fun _ -> A.pts_to uds uds_bytes ** uds_is_enabled)
 
 ```pulse
 fn compute_cdi (cdi:cdi_t) (uds:A.larray U8.t (US.v uds_len)) (record:engine_record_t) 
@@ -80,16 +80,16 @@ fn compute_cdi (cdi:cdi_t) (uds:A.larray U8.t (US.v uds_len)) (record:engine_rec
                (#c0:Ghost.erased (Seq.seq U8.t))
   requires (
     uds_is_enabled **
-    A.pts_to uds full_perm uds_bytes **
-    A.pts_to cdi full_perm c0 **
+    A.pts_to uds uds_bytes **
+    A.pts_to cdi c0 **
     engine_record_perm record repr (* should CDI only be computed on authentic l0 images? *)
   )
   ensures (
     uds_is_enabled **
     engine_record_perm record repr **
-    A.pts_to uds full_perm uds_bytes **
+    A.pts_to uds uds_bytes **
     exists (c1:Seq.seq U8.t). (
-      A.pts_to cdi full_perm c1 **
+      A.pts_to cdi c1 **
       pure (cdi_functional_correctness c1 repr))
   )
 {
@@ -121,16 +121,16 @@ fn engine_main (cdi:cdi_t) (uds:A.larray U8.t (US.v uds_len)) (record:engine_rec
                (#repr:Ghost.erased engine_record_repr)
   requires (
     uds_is_enabled **
-    A.pts_to uds full_perm uds_bytes **
-    A.pts_to cdi full_perm c0 **
+    A.pts_to uds uds_bytes **
+    A.pts_to cdi c0 **
     engine_record_perm record repr
   )
   returns r:dice_return_code
   ensures (
     engine_record_perm record repr **
-    A.pts_to uds full_perm (Seq.create (US.v uds_len) 0uy) **
+    A.pts_to uds (Seq.create (US.v uds_len) 0uy) **
     exists (c1:elseq U8.t dice_digest_len). (
-      A.pts_to cdi full_perm c1 **
+      A.pts_to cdi c1 **
       pure (
         A.is_full_array cdi /\
         r = DICE_SUCCESS ==> l0_is_authentic repr /\ cdi_functional_correctness c1 repr
@@ -141,7 +141,7 @@ fn engine_main (cdi:cdi_t) (uds:A.larray U8.t (US.v uds_len)) (record:engine_rec
   if b 
   {
     compute_cdi cdi uds record #repr #(coerce dice_digest_len c0);
-    with s. assert (A.pts_to uds full_perm s);
+    with s. assert (A.pts_to uds s);
     A.zeroize uds_len uds;
     disable_uds();
     DICE_SUCCESS

@@ -39,8 +39,8 @@ fn alloc_ht (#s:pht_sig_us) (l:pos_us)
   let contents = A.alloc #(cell s.keyt s.valt) Clean l;
   let ht = mk_ht l contents;
   let pht = mk_init_pht #s l;
-  rewrite (A.pts_to contents full_perm (Seq.create (US.v l) Clean))
-    as (A.pts_to ht.contents full_perm pht.repr);
+  rewrite (A.pts_to contents (Seq.create (US.v l) Clean))
+    as (A.pts_to ht.contents pht.repr);
   fold (models s ht pht);
   fold (ht_perm s ht);
   let lk = L.new_lock (ht_perm s ht);
@@ -58,7 +58,7 @@ fn alloc_sid (_:unit)
   ensures emp
 {
   let sid_ref = alloc #nat 0;
-  let lk = L.new_lock (exists_ (fun n -> R.pts_to sid_ref full_perm n));
+  let lk = L.new_lock (exists_ (fun n -> R.pts_to sid_ref n));
   ((| sid_ref, lk |) <: sid_ref_t)
 }
 ```
@@ -84,7 +84,7 @@ fn open_session (_:unit)
   let sht_lk = dsnd locked_sht;
   let sid_lk = dsnd sid_ref;
 
-  L.acquire #(exists_ (fun n -> R.pts_to (dfst sid_ref) full_perm n)) sid_lk;
+  L.acquire #(exists_ (fun n -> R.pts_to (dfst sid_ref) n)) sid_lk;
   L.acquire #(ht_perm sht_sig sht) sht_lk;
 
   let sid = !(dfst sid_ref);
@@ -99,12 +99,12 @@ fn open_session (_:unit)
     dfst sid_ref := sid + 1;
 
     fold (ht_perm sht_sig sht);
-    L.release #(exists_ (fun n -> R.pts_to (dfst sid_ref) full_perm n)) sid_lk;
+    L.release #(exists_ (fun n -> R.pts_to (dfst sid_ref) n)) sid_lk;
     L.release #(ht_perm sht_sig sht) sht_lk;
   } else {
     // ERROR -- table full
     fold (ht_perm sht_sig sht);
-    L.release #(exists_ (fun n -> R.pts_to (dfst sid_ref) full_perm n)) sid_lk;
+    L.release #(exists_ (fun n -> R.pts_to (dfst sid_ref) n)) sid_lk;
     L.release #(ht_perm sht_sig sht) sht_lk;
   }
 }
@@ -208,8 +208,8 @@ fn destroy_cht (ht:ht_t cht_sig)
 
   while (let voff = !off; (voff < ht.sz))
   invariant b. exists (voff:US.t). (
-    A.pts_to ht.contents full_perm pht.repr **
-    R.pts_to off full_perm voff **
+    A.pts_to ht.contents pht.repr **
+    R.pts_to off voff **
     pure (
       US.v ht.sz == pht.sz /\
       voff <= ht.sz /\
@@ -303,19 +303,19 @@ let prng (_:unit) : nat = admit()
 ```pulse
 fn init_engine_ctxt (uds:A.larray U8.t (US.v uds_len))
   requires (
-    A.pts_to uds full_perm uds_bytes **
+    A.pts_to uds uds_bytes **
     uds_is_enabled **
     pure (A.is_full_array uds)
   )
   returns _:locked_context_t
-  ensures A.pts_to uds full_perm uds_bytes
+  ensures A.pts_to uds uds_bytes
 {
   let uds_buf = A.alloc 0uy uds_len;
   memcpy uds_len uds uds_buf;
   let engine_context = mk_engine_context uds_buf;
 
-  rewrite (A.pts_to uds_buf full_perm uds_bytes) 
-    as (A.pts_to engine_context.uds full_perm uds_bytes);
+  rewrite (A.pts_to uds_buf uds_bytes) 
+    as (A.pts_to engine_context.uds uds_bytes);
   fold (engine_context_perm engine_context);
 
   let ctxt = mk_engine_context_t engine_context;
@@ -330,17 +330,17 @@ fn init_engine_ctxt (uds:A.larray U8.t (US.v uds_len))
 ```pulse
 fn _init_l0_ctxt (cdi:A.larray U8.t (US.v dice_digest_len)) (#s:erased (elseq U8.t dice_digest_len))
   requires 
-    A.pts_to cdi full_perm s **
+    A.pts_to cdi s **
     pure (A.is_full_array cdi)
   returns _:locked_context_t
   ensures 
-    A.pts_to cdi full_perm s
+    A.pts_to cdi s
 {
   let cdi_buf = A.alloc 0uy dice_digest_len;
   memcpy dice_digest_len cdi cdi_buf;
   let l0_context = mk_l0_context cdi_buf;
-  rewrite (A.pts_to cdi_buf full_perm s)
-    as (A.pts_to l0_context.cdi full_perm s);
+  rewrite (A.pts_to cdi_buf s)
+    as (A.pts_to l0_context.cdi s);
   fold (l0_context_perm l0_context);
   let ctxt = mk_l0_context_t l0_context;
   rewrite (l0_context_perm l0_context) as (context_perm ctxt);
@@ -360,20 +360,20 @@ fn _init_l1_ctxt (deviceIDCSR_len: US.t) (aliasKeyCRT_len: US.t)
                 (#s1 #s2 #s3 #s4: erased (elseq U8.t v32us)) 
                 (#s5:erased (elseq U8.t deviceIDCSR_len))
                 (#s6:erased (elseq U8.t aliasKeyCRT_len))
-  requires A.pts_to deviceID_priv full_perm s1 ** 
-           A.pts_to deviceID_pub full_perm s2 ** 
-           A.pts_to aliasKey_priv full_perm s3 ** 
-           A.pts_to aliasKey_pub full_perm s4 ** 
-           A.pts_to deviceIDCSR full_perm s5 **
-           A.pts_to aliasKeyCRT full_perm s6
+  requires A.pts_to deviceID_priv s1 ** 
+           A.pts_to deviceID_pub s2 ** 
+           A.pts_to aliasKey_priv s3 ** 
+           A.pts_to aliasKey_pub s4 ** 
+           A.pts_to deviceIDCSR s5 **
+           A.pts_to aliasKeyCRT s6
   returns _:locked_context_t
   ensures 
-    A.pts_to deviceID_priv full_perm s1 ** 
-    A.pts_to deviceID_pub full_perm s2 **
-    A.pts_to aliasKey_priv full_perm s3 ** 
-    A.pts_to aliasKey_pub full_perm s4 ** 
-    A.pts_to deviceIDCSR full_perm s5 **
-    A.pts_to aliasKeyCRT full_perm s6
+    A.pts_to deviceID_priv s1 ** 
+    A.pts_to deviceID_pub s2 **
+    A.pts_to aliasKey_priv s3 ** 
+    A.pts_to aliasKey_pub s4 ** 
+    A.pts_to deviceIDCSR s5 **
+    A.pts_to aliasKeyCRT s6
 {
   let deviceID_pub_buf = A.alloc 0uy v32us;
   let deviceID_priv_buf = A.alloc 0uy v32us;
@@ -389,18 +389,18 @@ fn _init_l1_ctxt (deviceIDCSR_len: US.t) (aliasKeyCRT_len: US.t)
   memcpy aliasKeyCRT_len aliasKeyCRT aliasKeyCRT_buf;
 
   let l1_context = mk_l1_context deviceID_priv_buf deviceID_pub_buf aliasKey_priv_buf aliasKey_pub_buf aliasKeyCRT_buf deviceIDCSR_buf;
-  rewrite (A.pts_to deviceID_priv_buf full_perm s1 `star`
-           A.pts_to deviceID_pub_buf full_perm s2 `star`
-           A.pts_to aliasKey_priv_buf full_perm s3 `star`
-           A.pts_to aliasKey_pub_buf full_perm s4 `star`
-           A.pts_to deviceIDCSR_buf full_perm s5 `star`
-           A.pts_to aliasKeyCRT_buf full_perm s6)
-       as (A.pts_to l1_context.deviceID_priv full_perm s1`star`
-           A.pts_to l1_context.deviceID_pub full_perm s2 `star`
-           A.pts_to l1_context.aliasKey_priv full_perm s3 `star`
-           A.pts_to l1_context.aliasKey_pub full_perm s4 `star`
-           A.pts_to l1_context.deviceIDCSR full_perm s5 `star`
-           A.pts_to l1_context.aliasKeyCRT full_perm s6);
+  rewrite (A.pts_to deviceID_priv_buf s1 `star`
+           A.pts_to deviceID_pub_buf s2 `star`
+           A.pts_to aliasKey_priv_buf s3 `star`
+           A.pts_to aliasKey_pub_buf s4 `star`
+           A.pts_to deviceIDCSR_buf s5 `star`
+           A.pts_to aliasKeyCRT_buf s6)
+       as (A.pts_to l1_context.deviceID_priv s1`star`
+           A.pts_to l1_context.deviceID_pub s2 `star`
+           A.pts_to l1_context.aliasKey_priv s3 `star`
+           A.pts_to l1_context.aliasKey_pub s4 `star`
+           A.pts_to l1_context.deviceIDCSR s5 `star`
+           A.pts_to l1_context.aliasKeyCRT s6);
   fold (l1_context_perm l1_context);
   let ctxt = mk_l1_context_t l1_context;
   rewrite (l1_context_perm l1_context) as (context_perm ctxt);
@@ -420,12 +420,12 @@ let init_l1_ctxt deviceIDCSR_len aliasKeyCRT_len deviceID_priv deviceID_pub
 ```pulse
 fn initialize_context (sid:nat) (uds:A.larray U8.t (US.v uds_len))
   requires (
-    A.pts_to uds full_perm uds_bytes ** 
+    A.pts_to uds uds_bytes ** 
     uds_is_enabled **
     pure (A.is_full_array uds)
   )
   returns _:nat
-  ensures A.pts_to uds full_perm uds_bytes
+  ensures A.pts_to uds uds_bytes
 {
   let locked_context = init_engine_ctxt uds;
   let ctxt_hndl = prng ();

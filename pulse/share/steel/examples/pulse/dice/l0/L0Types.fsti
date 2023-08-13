@@ -23,7 +23,7 @@ noeq
 type l0_context = { cdi: A.larray U8.t (US.v dice_digest_len); }
 
 let l0_context_perm (c:l0_context) : vprop
-  = exists_ (fun (s:elseq U8.t dice_digest_len) -> A.pts_to c.cdi full_perm s) **
+  = exists_ (fun (s:elseq U8.t dice_digest_len) -> A.pts_to c.cdi s) **
     pure (A.is_full_array c.cdi)
 
 let mk_l0_context cdi : l0_context = {cdi}
@@ -75,9 +75,9 @@ let mk_l0_repr fwid deviceID_label aliasKey_label
   = {fwid; deviceID_label; aliasKey_label}
 
 let l0_record_perm (record:l0_record_t) (repr:l0_record_repr) : vprop =
-  A.pts_to record.fwid full_perm repr.fwid **
-  A.pts_to record.deviceID_label full_perm repr.deviceID_label **
-  A.pts_to record.aliasKey_label full_perm repr.aliasKey_label **
+  A.pts_to record.fwid repr.fwid **
+  A.pts_to record.deviceID_label repr.deviceID_label **
+  A.pts_to record.aliasKey_label repr.aliasKey_label **
   pure (
     valid_hkdf_lbl_len record.deviceID_label_len /\
     valid_hkdf_lbl_len record.aliasKey_label_len

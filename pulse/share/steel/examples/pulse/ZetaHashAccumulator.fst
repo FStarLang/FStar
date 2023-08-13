@@ -121,8 +121,8 @@ val blake2b:
   -> #p:perm
   -> #sd:Ghost.erased (Seq.seq U8.t) { Seq.length sd == SZ.v ll}
   -> stt unit
-    (A.pts_to output full_perm sout ** A.pts_to d p sd)
-    (λ _ → A.pts_to output full_perm (blake_spec (Seq.slice sd 0 (SZ.v ll)))
+    (A.pts_to output sout ** A.pts_to d p sd)
+    (λ _ → A.pts_to output (blake_spec (Seq.slice sd 0 (SZ.v ll)))
            **
            A.pts_to d p sd)
 
@@ -130,7 +130,7 @@ val blake2b:
 // That's just an oversight. So assuming it here for now.
 ```pulse
 fn free (#t:Type0) (r:ref t) (#v:erased t)
-    requires pts_to r full_perm v
+    requires pts_to r v
     ensures emp
 {
     admit()
@@ -206,10 +206,10 @@ let mk_ha_core acc ctr = { acc; ctr }
 // the counter hasn't overflowed yet.
 let ha_val_core (core:ha_core) (h:hash_value_t) 
   : vprop
-  = A.pts_to core.acc full_perm (fst h) **
+  = A.pts_to core.acc (fst h) **
     exists_ (λ (n:U32.t) →
       pure (U32.v n == snd h) **
-      pts_to core.ctr full_perm n)
+      pts_to core.ctr n)
 
 // Working with records and representation predicates involves a bit of boilerplate
 // This ghost function packages up permission on the fields of a ha_core into
@@ -218,8 +218,8 @@ let ha_val_core (core:ha_core) (h:hash_value_t)
 ghost
 fn fold_ha_val_core (h:ha_core) (#acc:Seq.lseq U8.t 32) (#n:U32.t)
   requires
-   A.pts_to h.acc full_perm acc **
-   pts_to h.ctr full_perm n
+   A.pts_to h.acc acc **
+   pts_to h.ctr n
   ensures
    ha_val_core h (acc, U32.v n)
 {
@@ -233,8 +233,8 @@ fn fold_ha_val_core (h:ha_core) (#acc:Seq.lseq U8.t 32) (#n:U32.t)
 fn package_core (acc:hash_value_buf) (ctr:ref U32.t) 
                 (#vacc:erased (Seq.lseq U8.t 32))
                 (#vctr:erased U32.t)          
-  requires A.pts_to acc full_perm vacc **
-           pts_to ctr full_perm vctr 
+  requires A.pts_to acc vacc **
+           pts_to ctr vctr 
   returns h:ha_core
   ensures ha_val_core h (reveal vacc, U32.v vctr) **
           pure (h == mk_ha_core acc ctr)
@@ -243,10 +243,10 @@ fn package_core (acc:hash_value_buf) (ctr:ref U32.t)
    // It would be nice to have a "rename" primitive
    // So we could write something like
    // rename acc as core.acc, ctr as core.ctr;
-   rewrite (A.pts_to acc full_perm vacc)
-        as  (A.pts_to core.acc full_perm vacc);    
-   rewrite (pts_to ctr full_perm vctr)
-        as  (pts_to core.ctr full_perm vctr);
+   rewrite (A.pts_to acc vacc)
+        as  (A.pts_to core.acc vacc);    
+   rewrite (pts_to ctr vctr)
+        as  (pts_to core.ctr vctr);
    fold_ha_val_core core;
    core
 }
@@ -272,8 +272,8 @@ let mk_ha core tmp dummy = { core; tmp; dummy }
 // A representation predicate for ha, encapsulating an ha_val_core
 let ha_val (h:ha) (s:hash_value_t) =
   ha_val_core h.core s **
-  exists_ (fun s -> A.pts_to h.tmp full_perm s) **
-  A.pts_to h.dummy full_perm (Seq.create 1 0uy)
+  exists_ (fun s -> A.pts_to h.tmp s) **
+  A.pts_to h.dummy (Seq.create 1 0uy)
 
 // A ghost function to package up a ha_val predicate
 // If we were generating this automatically and inserting folds also in the prover,
@@ -283,10 +283,10 @@ let ha_val (h:ha) (s:hash_value_t) =
 ghost
 fn fold_ha_val (h:ha) (#acc:Seq.lseq U8.t 32) (#s:Seq.lseq U8.t 32) (#n:U32.t)
   requires
-   A.pts_to h.core.acc full_perm acc **
-   pts_to h.core.ctr full_perm n **
-   A.pts_to h.tmp full_perm s **
-   A.pts_to h.dummy full_perm (Seq.create 1 0uy)
+   A.pts_to h.core.acc acc **
+   pts_to h.core.ctr n **
+   A.pts_to h.tmp s **
+   A.pts_to h.dummy (Seq.create 1 0uy)
   ensures
    ha_val h (acc, U32.v n)
 {
@@ -303,23 +303,23 @@ fn package (acc:hash_value_buf) (ctr:ref U32.t) (tmp:hash_value_buf) (dummy:dumm
            (#vacc:erased (Seq.lseq U8.t 32))
            (#vctr:erased U32.t)
            (#vtmp:erased (Seq.lseq U8.t 32))
-  requires A.pts_to acc full_perm vacc **
-           pts_to ctr full_perm vctr **
-           A.pts_to tmp full_perm vtmp **
-           A.pts_to dummy full_perm (Seq.create 1 0uy)
+  requires A.pts_to acc vacc **
+           pts_to ctr vctr **
+           A.pts_to tmp vtmp **
+           A.pts_to dummy (Seq.create 1 0uy)
   returns h:ha
   ensures ha_val h (reveal vacc, U32.v vctr) **
           pure (h == mk_ha (mk_ha_core acc ctr) tmp dummy)
 {
    let ha = mk_ha (mk_ha_core acc ctr) tmp dummy;
-   rewrite (A.pts_to acc full_perm vacc)
-        as  (A.pts_to ha.core.acc full_perm vacc);    
-   rewrite (pts_to ctr full_perm vctr)
-        as  (pts_to ha.core.ctr full_perm vctr);
-   rewrite (A.pts_to tmp full_perm vtmp)
-        as  (A.pts_to ha.tmp full_perm vtmp);
-   rewrite (A.pts_to dummy full_perm (Seq.create 1 0uy))
-        as  (A.pts_to ha.dummy full_perm (Seq.create 1 0uy));
+   rewrite (A.pts_to acc vacc)
+        as  (A.pts_to ha.core.acc vacc);    
+   rewrite (pts_to ctr vctr)
+        as  (pts_to ha.core.ctr vctr);
+   rewrite (A.pts_to tmp vtmp)
+        as  (A.pts_to ha.tmp vtmp);
+   rewrite (A.pts_to dummy (Seq.create 1 0uy))
+        as  (A.pts_to ha.dummy (Seq.create 1 0uy));
    fold_ha_val ha;
    ha
 }
@@ -373,11 +373,11 @@ fn reclaim (s:ha) (#h:hash_value_t)
 fn aggregate_raw_hashes (b1 b2: hash_value_buf)
                         (#s1 #s2:raw_hash_value_t)
   requires 
-    A.pts_to b1 full_perm s1 **
-    A.pts_to b2 full_perm s2
+    A.pts_to b1 s1 **
+    A.pts_to b2 s2
   ensures
-    A.pts_to b1 full_perm (xor_bytes s1 s2) **
-    A.pts_to b2 full_perm s2
+    A.pts_to b1 (xor_bytes s1 s2) **
+    A.pts_to b2 s2
 {
     let mut i = 0sz;
     array_pts_to_len b1;
@@ -386,9 +386,9 @@ fn aggregate_raw_hashes (b1 b2: hash_value_buf)
     while (let vi = !i; SZ.(vi <^ 32sz))
     invariant b.
         exists (wi:SZ.t). //trying to add refinements here messes it up
-            pts_to i full_perm wi **
-            A.pts_to b1 full_perm (xor_bytes_pfx s1 s2 (SZ.v wi)) **
-            A.pts_to b2 full_perm s2 **
+            pts_to i wi **
+            A.pts_to b1 (xor_bytes_pfx s1 s2 (SZ.v wi)) **
+            A.pts_to b2 s2 **
             pure (b == SZ.(wi <^ 32sz))
     {
       let vi = !i;
@@ -504,14 +504,14 @@ fn add (ha:ha) (input:hashable_buffer) (l:SZ.t)
    // rename ha'.acc as ha.tmp
    // Or, at least, `with w. rewrite ... `
    // Rather than having to write an assert and then a rewrite
-   with w. assert (A.pts_to ha'.acc full_perm w);
-   rewrite (A.pts_to ha'.acc full_perm w)
-        as (A.pts_to ha.tmp full_perm w); 
+   with w. assert (A.pts_to ha'.acc w);
+   rewrite (A.pts_to ha'.acc w)
+        as (A.pts_to ha.tmp w); 
    with w. unfold (ha_val_core ha.core w);
    fold_ha_val ha;
-   with w. assert (pts_to ha'.ctr full_perm w);
-   rewrite (pts_to ha'.ctr full_perm w)
-        as (pts_to ctr full_perm w);
+   with w. assert (pts_to ha'.ctr w);
+   rewrite (pts_to ha'.ctr w)
+        as (pts_to ctr w);
    v
 }
 ```

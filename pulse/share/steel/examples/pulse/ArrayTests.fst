@@ -26,7 +26,7 @@ fn compare (#t:eqtype) (l:US.t) (a1 a2:A.larray t (US.v l))
   let mut i = 0sz;
   while (let vi = !i; if US.(vi <^ l) { let v1 = a1.(vi); let v2 = a2.(vi); (v1 = v2) } else { false } )
   invariant b. exists (vi:US.t). ( 
-    R.pts_to i full_perm vi **
+    R.pts_to i vi **
     A.pts_to a1 p1 s1 **
     A.pts_to a2 p2 s2 **
     pure (
@@ -49,18 +49,18 @@ fn compare (#t:eqtype) (l:US.t) (a1 a2:A.larray t (US.v l))
 ```pulse
 fn fill_array (#t:Type0) (l:US.t) (a:(a:A.array t{ US.v l == A.length a })) (v:t)
               (#s:(s:Ghost.erased (Seq.seq t) { Seq.length s == US.v l }))
-   requires (A.pts_to a full_perm s)
+   requires (A.pts_to a s)
    ensures 
       exists (s:Seq.seq t). (
-         A.pts_to a full_perm s **
+         A.pts_to a s **
          pure (s `Seq.equal` Seq.create (US.v l) v)
       )
 {
    let mut i = 0sz;
    while (let vi = !i; US.(vi <^ l))
    invariant b. exists (s:Seq.seq t) (vi:US.t). ( 
-      A.pts_to a full_perm s **
-      R.pts_to i full_perm vi **
+      A.pts_to a s **
+      R.pts_to i vi **
       pure ((b == US.(vi <^ l)) /\
             US.v vi <= US.v l /\
             Seq.length s == A.length a /\
@@ -81,7 +81,7 @@ fn array_of_zeroes (n:US.t)
    requires emp
    returns a: array U32.t
    ensures (
-    A.pts_to a full_perm (Seq.create (US.v n) 0ul) **
+    A.pts_to a (Seq.create (US.v n) 0ul) **
     pure (is_full_array a /\ A.length a == US.v n)
   )
 {
@@ -248,9 +248,9 @@ fn read_at_offset_refine_post2 (a:array U32.t) (i:US.t) (#p:perm) (#s:Ghost.eras
 ```pulse
 fn write_at_offset (#t:Type0) (a:array t) (i:US.t) (v:t)
                    (#s:(s:Ghost.erased (Seq.seq t) {US.v i < Seq.length s}))
-   requires (A.pts_to a full_perm s)
+   requires (A.pts_to a s)
    ensures (
-      A.pts_to a full_perm (Seq.upd s (US.v i) v)
+      A.pts_to a (Seq.upd s (US.v i) v)
    )
 {
    a.(i) <- v
@@ -268,10 +268,10 @@ open FStar.UInt32
 ```pulse
 fn sort3 (a:array U32.t)
          (#s:(s:Ghost.erased (Seq.seq U32.t) {Seq.length s == 3}))
-   requires (A.pts_to a full_perm s)
+   requires (A.pts_to a s)
    ensures 
       exists s'. (
-         A.pts_to a full_perm s' **
+         A.pts_to a s' **
          pure (sorted s s')
       )
 {
@@ -328,10 +328,10 @@ fn sort3 (a:array U32.t)
 ```pulse
 fn sort3_alt (a:array U32.t)
              (#s:(s:Ghost.erased (Seq.seq U32.t) {Seq.length s == 3}))
-   requires (A.pts_to a full_perm s)
+   requires (A.pts_to a s)
    ensures 
       exists s'. (
-         A.pts_to a full_perm s' **
+         A.pts_to a s' **
          pure (sorted s s')
       )
 {
