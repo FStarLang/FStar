@@ -190,6 +190,15 @@ let str_of_parsing_data = function
   | Mk_pd l ->
     l |> List.fold_left (fun s elt -> s ^ "; " ^ (elt |> str_of_parsing_data_elt)) ""
 
+let friends (p:parsing_data) : list lident =
+  let Mk_pd p = p in
+  List.collect
+    (function
+      | P_dep (true, l) -> [l]
+      | _ -> [])
+    p
+
+
 let parsing_data_elt_eq (e1:parsing_data_elt) (e2:parsing_data_elt) =
   match e1, e2 with
   | P_begin_module l1, P_begin_module l2 -> lid_equals l1 l2
@@ -751,9 +760,9 @@ let collect_one
   let data_from_cache = filename |> get_parsing_data_from_cache in
 
   if data_from_cache |> is_some then begin  //we found the parsing data in the checked file
-    if Options.debug_at_level_no_module (Options.Other "Dep") then
-      BU.print1 "Reading the parsing data for %s from its checked file\n" filename;
     let deps, has_inline_for_extraction, mo_roots = from_parsing_data (data_from_cache |> must) original_map filename in
+    if Options.debug_at_level_no_module (Options.Other "Dep") then
+      BU.print2 "Reading the parsing data for %s from its checked file .. found [%s]\n" filename (List.map dep_to_string deps |> String.concat ", ");
     data_from_cache |> must,
     deps, has_inline_for_extraction, mo_roots
   end

@@ -194,7 +194,7 @@ let (register_goal : FStar_Tactics_Types.goal -> unit) =
                  (let goal_ty = FStar_Syntax_Util.ctx_uvar_typ uv in
                   let uu___8 =
                     FStar_TypeChecker_Core.compute_term_type_handle_guards
-                      env1 goal_ty false (fun uu___9 -> fun uu___10 -> true) in
+                      env1 goal_ty (fun uu___9 -> fun uu___10 -> true) in
                   match uu___8 with
                   | FStar_Pervasives.Inl uu___9 -> ()
                   | FStar_Pervasives.Inr err ->

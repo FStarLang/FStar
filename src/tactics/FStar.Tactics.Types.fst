@@ -112,8 +112,9 @@ let get_phi (g:goal) : option term =
 let is_irrelevant (g:goal) : bool =
     Option.isSome (get_phi g)
 
+let non_informative_token (g:env) (t:typ) = unit
 let subtyping_token (g:env) (t0 t1:typ) = unit
 let equiv_token (g:env) (t0 t1:typ) = unit
-let typing_token (g:env) (e:term) (c:tot_or_ghost & typ) = unit
+let typing_token (g:env) (e:term) (c:Core.tot_or_ghost & typ) = unit
 let match_complete_token (g:env) (sc:term) (t:typ) (pats:list pattern) = unit
 let issues = list FStar.Issue.issue
