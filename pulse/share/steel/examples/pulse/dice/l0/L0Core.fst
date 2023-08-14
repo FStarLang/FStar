@@ -317,15 +317,15 @@ fn l0_main'
   (deviceIDCSR_len:US.t)
   (deviceIDCSR: A.larray U8.t (US.v deviceIDCSR_len))
   (record: l0_record_t)
-  (#repr: erased l0_record_repr)
-  (#p:perm)
+  (#repr: erased l0_record_repr_t)
   (#cdi0:erased (elseq U8.t dice_digest_len))
   (#deviceID_pub0 #deviceID_priv0 #aliasKey_pub0 #aliasKey_priv0:erased (elseq U8.t v32us)) 
   (#aliasKeyCRT0: elseq U8.t aliasKeyCRT_len)
   (#deviceIDCSR0: elseq U8.t deviceIDCSR_len)
+  (#cdi_perm #p:perm)
   requires (
-    l0_record_perm record repr **
-    A.pts_to cdi p cdi0 **
+    l0_record_perm record repr p **
+    A.pts_to cdi cdi_perm cdi0 **
     A.pts_to deviceID_pub full_perm deviceID_pub0 **
     A.pts_to deviceID_priv full_perm deviceID_priv0 **
     A.pts_to aliasKey_pub full_perm aliasKey_pub0 **
@@ -337,8 +337,8 @@ fn l0_main'
       aliasKeyCRT_pre record.aliasKeyCRT_ingredients aliasKeyTBS_len aliasKeyCRT_len
     ))
   ensures (
-      l0_record_perm record repr **
-      A.pts_to cdi p cdi0 **
+      l0_record_perm record repr p **
+      A.pts_to cdi cdi_perm cdi0 **
       exists (deviceID_pub1 deviceID_priv1 aliasKey_pub1 aliasKey_priv1:elseq U8.t v32us) 
              (aliasKeyCRT1:elseq U8.t aliasKeyCRT_len)
              (deviceIDCSR1:elseq U8.t deviceIDCSR_len). (
@@ -364,13 +364,13 @@ fn l0_main'
             aliasKeyCRT_len aliasKeyCRT1 aliasKey_pub1
       )))
 {
-  unfold (l0_record_perm record repr);
+  unfold (l0_record_perm record repr p);
   dice_digest_len_is_hkdf_ikm;
 
   derive_DeviceID dice_hash_alg 
     deviceID_pub deviceID_priv cdi 
     record.deviceID_label_len record.deviceID_label
-    #p #(coerce dice_digest_len cdi0);
+    #(coerce dice_digest_len cdi0);
 
   derive_AliasKey dice_hash_alg
     aliasKey_pub aliasKey_priv cdi 
@@ -408,7 +408,7 @@ fn l0_main'
   A.free deviceIDCRI #(coerce deviceIDCRI_len s3);
   A.free aliasKeyTBS #(coerce aliasKeyTBS_len s4);
 
-  fold l0_record_perm record repr;
+  fold l0_record_perm record repr p;
 }
 ```
 let l0_main = l0_main'

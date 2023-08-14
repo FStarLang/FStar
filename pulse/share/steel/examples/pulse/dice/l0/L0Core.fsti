@@ -89,14 +89,14 @@ val l0_main
   (deviceIDCSR_len:SZ.t)
   (deviceIDCSR: A.larray U8.t (SZ.v deviceIDCSR_len))
   (record: l0_record_t)
-  (#repr: erased l0_record_repr)
-  (#p:perm)
+  (#repr: erased l0_record_repr_t)
   (#cdi0:erased (elseq U8.t dice_digest_len))
   (#deviceID_pub0 #deviceID_priv0 #aliasKey_pub0 #aliasKey_priv0:erased (elseq U8.t v32us)) 
   (#aliasKeyCRT0: elseq U8.t aliasKeyCRT_len)
   (#deviceIDCSR0: elseq U8.t deviceIDCSR_len)
-  : stt unit (l0_record_perm record repr **
-              A.pts_to cdi p cdi0 **
+  (#cdi_perm #p:perm)
+  : stt unit (l0_record_perm record repr p **
+              A.pts_to cdi cdi_perm cdi0 **
               A.pts_to deviceID_pub full_perm deviceID_pub0 **
               A.pts_to deviceID_priv full_perm deviceID_priv0 **
               A.pts_to aliasKey_pub full_perm aliasKey_pub0 **
@@ -106,8 +106,8 @@ val l0_main
               pure (deviceIDCSR_pre record.deviceIDCSR_ingredients deviceIDCRI_len deviceIDCSR_len
                  /\ aliasKeyCRT_pre record.aliasKeyCRT_ingredients aliasKeyTBS_len aliasKeyCRT_len))
              (fun _ -> 
-              l0_record_perm record repr **
-              A.pts_to cdi p cdi0 **
+              l0_record_perm record repr p **
+              A.pts_to cdi cdi_perm cdi0 **
               exists_ (fun (deviceID_pub1:elseq U8.t v32us) ->
               exists_ (fun (deviceID_priv1:elseq U8.t v32us) -> 
               exists_ (fun (aliasKey_pub1:elseq U8.t v32us) ->

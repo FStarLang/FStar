@@ -68,20 +68,20 @@ val derive_DeviceID
   (cdi:A.larray U8.t (US.v dice_digest_len))
   (deviceID_label_len:hkdf_lbl_len)
   (deviceID_label:A.larray U8.t (US.v deviceID_label_len))
-  (#p:perm)
   (#cdi0 #deviceID_label0:erased (Seq.seq U8.t))
   (#deviceID_pub0 #deviceID_priv0:erased (elseq U8.t v32us))
+  (#cdi_perm #p:perm)
   : stt unit
   (requires (
-    A.pts_to cdi p cdi0 **
-    A.pts_to deviceID_label full_perm deviceID_label0 **
+    A.pts_to cdi cdi_perm cdi0 **
+    A.pts_to deviceID_label p deviceID_label0 **
     A.pts_to deviceID_pub full_perm deviceID_pub0 **
     A.pts_to deviceID_priv full_perm deviceID_priv0 **
     pure (valid_hkdf_ikm_len (digest_len alg))
   ))
   (ensures (fun _ ->
-    A.pts_to cdi p cdi0 **
-    A.pts_to deviceID_label full_perm deviceID_label0 **
+    A.pts_to cdi cdi_perm cdi0 **
+    A.pts_to deviceID_label p deviceID_label0 **
     (exists_ (fun (deviceID_pub1:elseq U8.t v32us) ->
      exists_ (fun (deviceID_priv1:elseq U8.t v32us) ->
         A.pts_to deviceID_pub full_perm deviceID_pub1 **
@@ -116,22 +116,22 @@ val derive_AliasKey
   (fwid: A.larray U8.t (US.v v32us))
   (aliasKey_label_len: hkdf_lbl_len)
   (aliasKey_label: A.larray U8.t (US.v aliasKey_label_len))
-  (#p:perm)
   (#cdi0 #fwid0 #aliasKey_label0:erased (Seq.seq U8.t))
   (#aliasKey_pub0 #aliasKey_priv0:erased (elseq U8.t v32us))
+  (#cdi_perm #p:perm)
  : stt unit
   (requires (
-    A.pts_to cdi p cdi0 **
-    A.pts_to fwid full_perm fwid0 **
-    A.pts_to aliasKey_label full_perm aliasKey_label0 **
+    A.pts_to cdi cdi_perm cdi0 **
+    A.pts_to fwid p fwid0 **
+    A.pts_to aliasKey_label p aliasKey_label0 **
     A.pts_to aliasKey_pub full_perm aliasKey_pub0 **
     A.pts_to aliasKey_priv full_perm aliasKey_priv0 **
     pure (is_hashable_len (digest_len alg) /\ valid_hkdf_ikm_len (digest_len alg))
   ))
   (ensures (fun _ ->
-    A.pts_to cdi p cdi0 **
-    A.pts_to fwid full_perm fwid0 **
-    A.pts_to aliasKey_label full_perm aliasKey_label0 **
+    A.pts_to cdi cdi_perm cdi0 **
+    A.pts_to fwid p fwid0 **
+    A.pts_to aliasKey_label p aliasKey_label0 **
     (exists_ (fun (aliasKey_pub1:elseq U8.t v32us) ->
      exists_ (fun (aliasKey_priv1:elseq U8.t v32us) ->
         A.pts_to aliasKey_pub full_perm aliasKey_pub1 **

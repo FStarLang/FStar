@@ -87,47 +87,27 @@ type profile_descriptor_t = {
 }
 
 let mk_profile_descriptor 
-  name dpe_spec_version max_message_size uses_multi_part_messages
-  supports_concurrent_operations supports_encrypted_sessions supports_derived_sessions
-  max_sessions session_protocol supports_session_sync session_sync_policy
-  session_migration_protocol supports_default_context supports_context_handles
-  max_contexts_per_session max_context_handle_size supports_auto_init
-  supports_simulation supports_attestation supports_sealing supports_get_profile
-  supports_open_session supports_close_session supports_sync_session
-  supports_export_session supports_import_session supports_init_context
-  supports_certify_key supports_sign supports_seal supports_unseal 
-  supports_sealing_public supports_rotate_context_handle dice_derivation
-  asymmetric_derivation symmetric_derivation supports_any_label supported_labels
-  initial_derivation input_format supports_internal_inputs supports_internal_dpe_info
-  supports_internal_dpe_dice internal_dpe_info_type internal_dpe_dice_type
-  internal_inputs supports_certificates max_certificate_size max_certificate_chain_size
-  appends_more_certificates supports_certificate_policies supports_policy_identity_init 
-  supports_policy_identity_loc supports_policy_attest_init supports_policy_attest_loc 
-  supports_policy_assert_init supports_policy_assert_loc certificate_policies 
-  supports_eca_certificates eca_certificate_format leaf_certificate_format public_key_format 
-  supports_external_key to_be_signed_format signature_format supports_symmetric_sign 
-  supports_asymmetric_unseal supports_unseal_policy unseal_policy_format
+  name dpe_spec_version max_message_size uses_multi_part_messages supports_concurrent_operations supports_encrypted_sessions supports_derived_sessions
+  max_sessions session_protocol supports_session_sync session_sync_policy session_migration_protocol supports_default_context supports_context_handles
+  max_contexts_per_session max_context_handle_size supports_auto_init supports_simulation supports_attestation supports_sealing supports_get_profile
+  supports_open_session supports_close_session supports_sync_session supports_export_session supports_import_session supports_init_context
+  supports_certify_key supports_sign supports_seal supports_unseal  supports_sealing_public supports_rotate_context_handle dice_derivation
+  asymmetric_derivation symmetric_derivation supports_any_label supported_labels initial_derivation input_format supports_internal_inputs supports_internal_dpe_info
+  supports_internal_dpe_dice internal_dpe_info_type internal_dpe_dice_type internal_inputs supports_certificates max_certificate_size max_certificate_chain_size
+  appends_more_certificates supports_certificate_policies supports_policy_identity_init supports_policy_identity_loc supports_policy_attest_init supports_policy_attest_loc 
+  supports_policy_assert_init supports_policy_assert_loc certificate_policies supports_eca_certificates eca_certificate_format leaf_certificate_format public_key_format 
+  supports_external_key to_be_signed_format signature_format supports_symmetric_sign supports_asymmetric_unseal supports_unseal_policy unseal_policy_format
 : profile_descriptor_t
-= {name; dpe_spec_version; max_message_size; uses_multi_part_messages;
-  supports_concurrent_operations; supports_encrypted_sessions; supports_derived_sessions;
-  max_sessions; session_protocol; supports_session_sync; session_sync_policy;
-  session_migration_protocol; supports_default_context; supports_context_handles;
-  max_contexts_per_session; max_context_handle_size; supports_auto_init;
-  supports_simulation; supports_attestation; supports_sealing; supports_get_profile;
-  supports_open_session; supports_close_session; supports_sync_session;
-  supports_export_session; supports_import_session; supports_init_context;
-  supports_certify_key; supports_sign; supports_seal; supports_unseal; 
-  supports_sealing_public; supports_rotate_context_handle; dice_derivation;
-  asymmetric_derivation; symmetric_derivation; supports_any_label; supported_labels;
-  initial_derivation; input_format; supports_internal_inputs; supports_internal_dpe_info;
-  supports_internal_dpe_dice; internal_dpe_info_type; internal_dpe_dice_type;
-  internal_inputs; supports_certificates; max_certificate_size; max_certificate_chain_size; 
-  appends_more_certificates; supports_certificate_policies; supports_policy_identity_init; 
-  supports_policy_identity_loc; supports_policy_attest_init; supports_policy_attest_loc; 
-  supports_policy_assert_init; supports_policy_assert_loc; certificate_policies; 
-  supports_eca_certificates; eca_certificate_format; leaf_certificate_format; public_key_format; 
-  supports_external_key; to_be_signed_format; signature_format; supports_symmetric_sign; 
-  supports_asymmetric_unseal; supports_unseal_policy; unseal_policy_format;}
+= {name; dpe_spec_version; max_message_size; uses_multi_part_messages; supports_concurrent_operations; supports_encrypted_sessions; supports_derived_sessions;
+  max_sessions; session_protocol; supports_session_sync; session_sync_policy; session_migration_protocol; supports_default_context; supports_context_handles;
+  max_contexts_per_session; max_context_handle_size; supports_auto_init; supports_simulation; supports_attestation; supports_sealing; supports_get_profile;
+  supports_open_session; supports_close_session; supports_sync_session; supports_export_session; supports_import_session; supports_init_context;
+  supports_certify_key; supports_sign; supports_seal; supports_unseal; supports_sealing_public; supports_rotate_context_handle; dice_derivation;
+  asymmetric_derivation; symmetric_derivation; supports_any_label; supported_labels; initial_derivation; input_format; supports_internal_inputs; supports_internal_dpe_info;
+  supports_internal_dpe_dice; internal_dpe_info_type; internal_dpe_dice_type; internal_inputs; supports_certificates; max_certificate_size; max_certificate_chain_size; 
+  appends_more_certificates; supports_certificate_policies; supports_policy_identity_init; supports_policy_identity_loc; supports_policy_attest_init; supports_policy_attest_loc; 
+  supports_policy_assert_init; supports_policy_assert_loc; certificate_policies; supports_eca_certificates; eca_certificate_format; leaf_certificate_format; public_key_format; 
+  supports_external_key; to_be_signed_format; signature_format; supports_symmetric_sign; supports_asymmetric_unseal; supports_unseal_policy; unseal_policy_format;}
 
 (* Engine Context *)
 noeq
@@ -178,7 +158,7 @@ type l1_context_t = { deviceID_priv: A.larray U8.t (SZ.v v32us);
 
 let mk_l1_context_t deviceID_priv deviceID_pub aliasKey_priv aliasKey_pub aliasKeyCRT deviceIDCSR 
 : l1_context_t
-= { deviceID_priv; deviceID_pub; aliasKey_priv; aliasKey_pub; aliasKeyCRT; deviceIDCSR }
+= {deviceID_priv; deviceID_pub; aliasKey_priv; aliasKey_pub; aliasKeyCRT; deviceIDCSR}
 
 noeq
 type l1_context_repr_t = {
@@ -193,7 +173,7 @@ type l1_context_repr_t = {
   deviceIDCSR_len:SZ.t;
   deviceIDCSR:elseq U8.t deviceIDCSR_len;
   cdi:elseq U8.t dice_digest_len;
-  repr:l0_record_repr;
+  repr:l0_record_repr_t;
   deviceIDCSR_ingredients: deviceIDCSR_ingredients_t;
   aliasKeyCRT_ingredients: aliasKeyCRT_ingredients_t;
 }
@@ -210,7 +190,7 @@ let mk_l1_context_repr_t
   (deviceIDCSR_len:erased SZ.t)
   (deviceIDCSR:erased (elseq U8.t deviceIDCSR_len))
   (cdi:erased (elseq U8.t dice_digest_len))
-  (repr:erased l0_record_repr)
+  (repr:erased l0_record_repr_t)
   (deviceIDCSR_ingredients:erased deviceIDCSR_ingredients_t)
   (aliasKeyCRT_ingredients:erased aliasKeyCRT_ingredients_t)
 : erased l1_context_repr_t 
@@ -226,29 +206,27 @@ let l1_context_perm (c:l1_context_t) (r:l1_context_repr_t)
     A.pts_to c.aliasKey_pub full_perm r.aliasKey_pub **
     A.pts_to c.aliasKeyCRT full_perm r.aliasKeyCRT **
     A.pts_to c.deviceIDCSR full_perm r.deviceIDCSR **
-    pure (
-      valid_hkdf_ikm_len dice_digest_len /\
-      aliasKey_functional_correctness
-        dice_hash_alg dice_digest_len r.cdi r.repr.fwid
-        r.aliasKey_label_len r.repr.aliasKey_label 
-        r.aliasKey_pub r.aliasKey_priv /\
-      deviceIDCSR_functional_correctness 
-        dice_hash_alg dice_digest_len r.cdi
-        r.deviceID_label_len r.repr.deviceID_label r.deviceIDCSR_ingredients 
-        r.deviceIDCSR_len r.deviceIDCSR /\       
-      aliasKeyCRT_functional_correctness 
-        dice_hash_alg dice_digest_len r.cdi r.repr.fwid
-        r.deviceID_label_len r.repr.deviceID_label r.aliasKeyCRT_ingredients 
-        r.aliasKeyCRT_len r.aliasKeyCRT r.aliasKey_pub /\
-      A.is_full_array c.deviceID_priv /\
-      A.is_full_array c.deviceID_pub /\
-      A.is_full_array c.aliasKey_priv /\
-      A.is_full_array c.aliasKey_pub /\
-      A.is_full_array c.aliasKeyCRT /\
-      A.is_full_array c.deviceIDCSR
-    )  
+    pure (valid_hkdf_ikm_len dice_digest_len
+       /\ aliasKey_functional_correctness
+            dice_hash_alg dice_digest_len r.cdi r.repr.fwid
+            r.aliasKey_label_len r.repr.aliasKey_label 
+            r.aliasKey_pub r.aliasKey_priv
+       /\ deviceIDCSR_functional_correctness 
+            dice_hash_alg dice_digest_len r.cdi
+            r.deviceID_label_len r.repr.deviceID_label r.deviceIDCSR_ingredients 
+            r.deviceIDCSR_len r.deviceIDCSR       
+       /\ aliasKeyCRT_functional_correctness 
+            dice_hash_alg dice_digest_len r.cdi r.repr.fwid
+            r.deviceID_label_len r.repr.deviceID_label r.aliasKeyCRT_ingredients 
+            r.aliasKeyCRT_len r.aliasKeyCRT r.aliasKey_pub
+       /\ A.is_full_array c.deviceID_priv
+       /\ A.is_full_array c.deviceID_pub
+       /\ A.is_full_array c.aliasKey_priv
+       /\ A.is_full_array c.aliasKey_pub
+       /\ A.is_full_array c.aliasKeyCRT
+       /\ A.is_full_array c.deviceIDCSR)  
 
-(* Generic Context *)    // this is called an enumeration
+(* Generic Context *)
 noeq
 type context_t = 
   | Engine_context : c:engine_context_t -> context_t
@@ -284,17 +262,78 @@ let context_perm (context:context_t) (repr:context_repr_t): vprop =
     | _ -> pure False
   )
 
-val get_l0_context_perm (context:context_t{L0_context? context}) (repr:erased context_repr_t)
-  : stt_ghost (erased l0_context_repr_t) emp_inames
-              (context_perm context repr)
-              (fun r -> l0_context_perm (L0_context?.c context) r
-                      ** pure(reveal repr == L0_context_repr r))
+```pulse
+ghost
+fn elim_false (#a:Type0) (p: (a -> vprop))
+    requires pure False
+    returns x:a
+    ensures p x
+{
+    let x = false_elim #a ();
+    rewrite emp as (p x);
+    x
+}
+```
 
-val get_l1_context_perm (context:context_t{L1_context? context}) (repr:erased context_repr_t)
-  : stt_ghost (erased l1_context_repr_t) emp_inames
-              (context_perm context repr)
-              (fun r -> l1_context_perm (L1_context?.c context) r
-                      ** pure(reveal repr == L1_context_repr r))
+```pulse
+ghost
+fn get_l0_context_perm (r:l0_context_t) (repr':erased context_repr_t)
+  requires context_perm (L0_context r) repr'
+  returns r0:erased l0_context_repr_t
+  ensures l0_context_perm r r0 ** pure (reveal repr' == L0_context_repr r0)
+{
+  let repr = reveal repr';
+  match repr {
+    Engine_context_repr -> {
+      rewrite (context_perm (L0_context r) repr)
+          as  (pure False);
+      let x = elim_false (l0_context_perm r);
+      hide x
+    }
+    L0_context_repr r0 -> {
+      rewrite (context_perm (L0_context r) repr)
+          as  (l0_context_perm r r0);
+      hide r0
+    }
+    L1_context_repr _ -> {
+      rewrite (context_perm (L0_context r) repr)
+          as  (pure False);
+      let x = elim_false (l0_context_perm r);
+      hide x
+    }
+  }
+}
+```
+
+```pulse
+ghost
+fn get_l1_context_perm (r:l1_context_t) (repr':erased context_repr_t)
+  requires context_perm (L1_context r) repr'
+  returns r0:erased l1_context_repr_t
+  ensures l1_context_perm r r0 ** pure (reveal repr' == L1_context_repr r0)
+{
+  let repr = reveal repr';
+  match repr {
+    Engine_context_repr -> {
+      rewrite (context_perm (L1_context r) repr)
+          as  (pure False);
+      let x = elim_false (l1_context_perm r);
+      hide x
+    }
+    L0_context_repr _ -> {
+      rewrite (context_perm (L1_context r) repr)
+          as  (pure False);
+      let x = elim_false (l1_context_perm r);
+      hide x
+    }
+    L1_context_repr r0 -> {
+      rewrite (context_perm (L1_context r) repr)
+          as  (l1_context_perm r r0);
+      hide r0
+    }
+  }
+}
+```
 
 // In the implmentation, we store contexts as values in a global hash table
 // so we need a way to store and retrieve permission on the context. We do this
@@ -312,74 +351,70 @@ type record_t =
 noeq
 type repr_t = 
   | Engine_repr : r:engine_record_repr -> repr_t
-  | L0_repr     : r:l0_record_repr -> repr_t
+  | L0_repr     : r:l0_record_repr_t -> repr_t
 
-let record_perm (record:record_t) (repr:repr_t) : vprop = 
+let record_perm (record:record_t) (repr:repr_t) (p:perm) : vprop = 
   match record with
   | Engine_record r -> (
     match repr with 
-    | Engine_repr r0 -> engine_record_perm r r0
+    | Engine_repr r0 -> engine_record_perm r r0 p
     | _ -> pure False
   )
   | L0_record r -> (
     match repr with
-    | L0_repr r0 -> l0_record_perm r r0
+    | L0_repr r0 -> l0_record_perm r r0 p
     | _ -> pure False
   )
 
+
 ```pulse
 ghost
-fn elim_false (#a:Type0) (p: (a -> vprop))
-    requires pure False
-    returns x:a
-    ensures p x
+fn get_engine_record_perm (r:engine_record_t) (repr':erased repr_t) (p:perm)
+  requires record_perm (Engine_record r) repr' p
+  returns r0:erased engine_record_repr
+  ensures engine_record_perm r r0 p ** pure (reveal repr' == Engine_repr r0)
 {
-    let x = false_elim #a ();
-    rewrite emp as (p x);
-    x
+  let repr = reveal repr';
+  match repr {
+    Engine_repr r0 -> {
+      admit()
+      // rewrite (record_perm (Engine_record r) repr p)
+      //     as  (engine_record_perm r r0 p);
+      // hide r0
+    }
+    L0_repr _ -> {
+      admit()
+      // rewrite (record_perm (Engine_record r) repr p)
+      //     as  (pure False);
+      // let x = elim_false (engine_record_perm r p);
+      // hide x
+    }
+  }
 }
 ```
-// ```pulse
-// ghost
-// fn get_engine_record_perm_ (r:engine_record_t) (repr:repr_t)
-//   requires record_perm (Engine_record r) repr
-//   returns r0:engine_record_repr
-//   ensures engine_record_perm r r0 ** pure (repr == Engine_repr r0)
-// {
-//    match repr {
-//     Engine_repr r0 -> {
-//       rewrite (record_perm (Engine_record r) repr)
-//           as  (engine_record_perm r r0);
-//       r0
-//     }
-//     _ -> {
-//       rewrite (record_perm (Engine_record r) repr)
-//           as  (pure False);
-//       elim_false (engine_record_perm r)
-//     }
-//   }
-// }
-// ```
-// ```pulse
-// ghost
-// fn get_engine_record_perm (r:engine_record_t) (repr:erased repr_t)
-//   requires record_perm (Engine_record r) repr
-//   returns r0:erased engine_record_repr
-//   ensures engine_record_perm r r0 ** pure (reveal repr == Engine_repr r0)
-// {
-//   let r = get_engine_record_perm_ r repr;
-//   hide r
-// }
-// ```
 
-val get_engine_record_perm (record:record_t{Engine_record? record}) (repr:erased repr_t)
-  : stt_ghost (erased engine_record_repr) emp_inames
-              (record_perm record repr)
-              (fun r0 -> engine_record_perm (Engine_record?.r record) r0 
-                      ** pure(reveal repr == Engine_repr r0))
-
-val get_l0_record_perm (record:record_t{L0_record? record}) (repr:erased repr_t)
-  : stt_ghost (erased l0_record_repr) emp_inames
-              (record_perm record repr)
-              (fun r0 -> l0_record_perm (L0_record?.r record) r0 
-                      ** pure(reveal repr == L0_repr r0))
+```pulse
+ghost
+fn get_l0_record_perm (r:l0_record_t) (repr':erased repr_t) (p:perm)
+  requires record_perm (L0_record r) repr' p
+  returns r0:erased l0_record_repr_t
+  ensures l0_record_perm r r0 p ** pure (reveal repr' == L0_repr r0)
+{
+  let repr = reveal repr';
+  match repr {
+    Engine_repr _ -> {
+      admit()
+      // rewrite (record_perm (L0_record r) repr p)
+      //     as  (pure False);
+      // let x = elim_false (l0_record_perm r);
+      // hide x
+    }
+    L0_repr r0 -> {
+      admit()
+      // rewrite (record_perm (L0_record r) repr p)
+      //     as  (l0_record_perm r r0 p);
+      // hide r0
+    }
+  }
+}
+```

@@ -44,6 +44,7 @@ type aliasKeyCRT_ingredients_t = {
   l0_version    : U32.t;
 }
 
+(* Record *)
 noeq
 type l0_record_t = {
   fwid: A.larray U8.t (US.v v32us);
@@ -56,7 +57,7 @@ type l0_record_t = {
 }
 
 noeq
-type l0_record_repr = {
+type l0_record_repr_t = {
   fwid: Seq.seq U8.t;
   deviceID_label: Seq.seq U8.t;
   aliasKey_label: Seq.seq U8.t;
@@ -66,10 +67,10 @@ let mk_l0_repr fwid deviceID_label aliasKey_label
   = {fwid; deviceID_label; aliasKey_label}
 
 // don't need full perm
-let l0_record_perm (record:l0_record_t) (repr:l0_record_repr) : vprop =
-  A.pts_to record.fwid full_perm repr.fwid **
-  A.pts_to record.deviceID_label full_perm repr.deviceID_label **
-  A.pts_to record.aliasKey_label full_perm repr.aliasKey_label **
+let l0_record_perm (record:l0_record_t) (repr:l0_record_repr_t) (p:perm) : vprop =
+  A.pts_to record.fwid p repr.fwid **
+  A.pts_to record.deviceID_label p repr.deviceID_label **
+  A.pts_to record.aliasKey_label p repr.aliasKey_label **
   pure (
     valid_hkdf_lbl_len record.deviceID_label_len /\
     valid_hkdf_lbl_len record.aliasKey_label_len

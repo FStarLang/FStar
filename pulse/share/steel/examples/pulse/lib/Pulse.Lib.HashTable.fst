@@ -17,14 +17,6 @@ let models (s:pht_sig_us) (ht:ht_t s) (pht:pht_t (s_to_ps s)) : vprop
     A.is_full_array ht.contents
   )
 
-// let canonical_index_us (#s:pht_sig_us) (k:s.keyt) (sz:pos_us) 
-//   : SZ.t = s.hashf k % sz
-
-// let modulo_us (v1 v2:SZ.t) (m:pos_us) (_:squash(SZ.fits (SZ.v v1 + SZ.v v2)))
-//   : SZ.t 
-//   = (v1 + v2) % m
-
-
 ```pulse
 fn alloc' (#s:pht_sig_us) (l:pos_us)
   requires emp

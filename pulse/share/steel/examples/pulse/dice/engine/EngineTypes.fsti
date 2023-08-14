@@ -41,10 +41,10 @@ let mk_engine_repr  l0_image_header_size l0_image_header l0_image_header_sig
   = {l0_image_header_size; l0_image_header; l0_image_header_sig;
      l0_binary_size; l0_binary; l0_binary_hash; l0_image_auth_pubkey}
 
-let engine_record_perm (record:engine_record_t) (repr:engine_record_repr) 
+let engine_record_perm (record:engine_record_t) (repr:engine_record_repr) (p:perm)
   : vprop = 
-  A.pts_to record.l0_image_header full_perm repr.l0_image_header **
-  A.pts_to record.l0_image_header_sig full_perm repr.l0_image_header_sig **
-  A.pts_to record.l0_binary full_perm repr.l0_binary **
-  A.pts_to record.l0_binary_hash full_perm repr.l0_binary_hash **
-  A.pts_to record.l0_image_auth_pubkey full_perm repr.l0_image_auth_pubkey
+  A.pts_to record.l0_image_header p repr.l0_image_header **
+  A.pts_to record.l0_image_header_sig p repr.l0_image_header_sig **
+  A.pts_to record.l0_binary p repr.l0_binary **
+  A.pts_to record.l0_binary_hash p repr.l0_binary_hash **
+  A.pts_to record.l0_image_auth_pubkey p repr.l0_image_auth_pubkey

@@ -19,6 +19,8 @@ val ctxt_hndl_t : eqtype
 
 val sid_t : eqtype
 
+
+
 val get_profile (_:unit) : stt profile_descriptor_t emp (fun _ -> emp)
 
 val open_session (_:unit) : stt (option sid_t) emp (fun _ -> emp)
@@ -35,7 +37,7 @@ val initialize_context (sid:sid_t) (uds:A.larray U8.t (US.v uds_len)) (#p:perm)
 
 val rotate_context_handle (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) : stt (option ctxt_hndl_t) emp (fun _ -> emp)
 
-val derive_child (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t) (#repr:erased repr_t)
+val derive_child (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t) (#repr:erased repr_t) (#p:perm)
   : stt (option ctxt_hndl_t) 
-        (record_perm record repr) 
-        (fun _ -> record_perm record repr)
+        (record_perm record repr p)
+        (fun _ -> record_perm record repr p)
