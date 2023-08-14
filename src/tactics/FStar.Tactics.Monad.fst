@@ -84,9 +84,9 @@ let register_goal (g:goal) =
                      (BU.string_of_int i)
                      (Print.ctx_uvar_to_string uv);
     let goal_ty = U.ctx_uvar_typ uv in
-    match FStar.TypeChecker.Core.compute_term_type_handle_guards env goal_ty false (fun _ _ -> true) 
+    match FStar.TypeChecker.Core.compute_term_type_handle_guards env goal_ty (fun _ _ -> true) 
     with
-    | Inl _ -> ()
+    | Inl _ -> ()  // ghost is ok
     | Inr err ->
       let msg = 
           BU.format2 "Failed to check initial tactic goal %s because %s"

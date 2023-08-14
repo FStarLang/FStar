@@ -1220,6 +1220,9 @@ let disable_quake_for (f : unit -> 'a) : 'a =
 (* Split queries if needed according to --split_queries option. Note:
 sync SMT queries do not pass via this function. *)
 let do_solve_maybe_split use_env_msg tcenv q : unit =
+  (* If we are admiting queries, don't do anything, and bail out
+  right now to save time/memory *)
+  if Options.admit_smt_queries () then () else begin
     match Options.split_queries () with
     | Options.No -> do_solve false false use_env_msg tcenv q
     | Options.OnFailure ->
@@ -1234,7 +1237,7 @@ let do_solve_maybe_split use_env_msg tcenv q : unit =
     | Options.Always ->
       (* Set retrying=false so queries go through the full config list, etc. *)
       split_and_solve false use_env_msg tcenv q
-
+  end
 (* Attempt to discharge a VC through the SMT solver. Will
 automatically retry increasing fuel as needed, and perform quake testing
 (repeating the query to make sure it is robust). This function will
