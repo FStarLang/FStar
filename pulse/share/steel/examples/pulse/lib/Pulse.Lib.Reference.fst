@@ -18,7 +18,7 @@ let alloc #a x =
 let read (#a:Type) (r:ref a) (#n:erased a) (#p:perm)
   : stt a
         (R.pts_to r p n)
-        (fun x -> R.pts_to r p x ** S.pure (reveal n == x))
+        (fun x -> R.pts_to r p x `star` S.pure (reveal n == x))
   = fun _ ->
         let v = R.read r in
         S.return v
@@ -42,7 +42,7 @@ let free #a (r:ref a) (#n:erased a)
 let read_atomic_alt (r:ref U32.t) (#n:erased U32.t) (#p:perm)
  : stt_atomic U32.t emp_inames
     (R.pts_to r p n)
-    (fun x -> R.pts_to r p n ** S.pure (reveal n == x))
+    (fun x -> R.pts_to r p n `star` S.pure (reveal n == x))
   = fun _ ->
       let x = R.atomic_read_u32 r in
       S.intro_pure (reveal n == x);
@@ -62,15 +62,15 @@ let with_local #a init #pre #ret_t #post body =
   fun _ -> 
     let body (r:R.ref a) 
       : STT ret_t
-        (pre ** R.pts_to r init)
-        (fun v -> post v ** exists_ (R.pts_to r))
+        (pre `star` R.pts_to r init)
+        (fun v -> post v `star` exists_ (R.pts_to r))
       = S.rewrite
-                (pre ** R.pts_to r init)
+                (pre `star` R.pts_to r init)
                 (pre ** R.pts_to r init);
         let v = body r () in
         S.assert_ (post v ** exists_ (pts_to #a r #full_perm));
         S.rewrite (post v ** exists_ (pts_to #a r #full_perm))
-                  (post v ** exists_ (pts_to #a r #full_perm));
+                  (post v `star` exists_ (pts_to #a r #full_perm));
         let w = S.elim_exists () in
         S.rewrite (pts_to #a r #full_perm w)
                   (R.pts_to #a r w);

@@ -389,17 +389,17 @@ fn _init_l1_ctxt (deviceIDCSR_len: US.t) (aliasKeyCRT_len: US.t)
   memcpy aliasKeyCRT_len aliasKeyCRT aliasKeyCRT_buf;
 
   let l1_context = mk_l1_context deviceID_priv_buf deviceID_pub_buf aliasKey_priv_buf aliasKey_pub_buf aliasKeyCRT_buf deviceIDCSR_buf;
-  rewrite (A.pts_to deviceID_priv_buf s1 **
-           A.pts_to deviceID_pub_buf s2 **
-           A.pts_to aliasKey_priv_buf s3 **
-           A.pts_to aliasKey_pub_buf s4 **
-           A.pts_to deviceIDCSR_buf s5 **
+  rewrite (A.pts_to deviceID_priv_buf s1 `star`
+           A.pts_to deviceID_pub_buf s2 `star`
+           A.pts_to aliasKey_priv_buf s3 `star`
+           A.pts_to aliasKey_pub_buf s4 `star`
+           A.pts_to deviceIDCSR_buf s5 `star`
            A.pts_to aliasKeyCRT_buf s6)
-       as (A.pts_to l1_context.deviceID_priv s1**
-           A.pts_to l1_context.deviceID_pub s2 **
-           A.pts_to l1_context.aliasKey_priv s3 **
-           A.pts_to l1_context.aliasKey_pub s4 **
-           A.pts_to l1_context.deviceIDCSR s5 **
+       as (A.pts_to l1_context.deviceID_priv s1`star`
+           A.pts_to l1_context.deviceID_pub s2 `star`
+           A.pts_to l1_context.aliasKey_priv s3 `star`
+           A.pts_to l1_context.aliasKey_pub s4 `star`
+           A.pts_to l1_context.deviceIDCSR s5 `star`
            A.pts_to l1_context.aliasKeyCRT s6);
   fold (l1_context_perm l1_context);
   let ctxt = mk_l1_context_t l1_context;
