@@ -52,8 +52,8 @@ let read_atomic = read_atomic_alt
 
 let write_atomic (r:ref U32.t) (x:U32.t) (#n:erased U32.t)
   : stt_atomic unit emp_inames
-    (R.pts_to r n)
-    (fun _ -> R.pts_to r (hide x))
+    (R.pts_to r full_perm n)
+    (fun _ -> R.pts_to r full_perm (hide x))
   = fun _ ->
       R.atomic_write_u32 r x;
       S.return ()
@@ -62,19 +62,19 @@ let with_local #a init #pre #ret_t #post body =
   fun _ -> 
     let body (r:R.ref a) 
       : STT ret_t
-        (pre `star` R.pts_to r init)
-        (fun v -> post v `star` exists_ (R.pts_to r))
+        (pre `star` R.pts_to r full_perm init)
+        (fun v -> post v `star` exists_ (R.pts_to r full_perm))
       = S.rewrite
-                (pre `star` R.pts_to r init)
-                (pre ** R.pts_to r init);
+                (pre `star` R.pts_to r full_perm init)
+                (pre ** R.pts_to r full_perm init);
         let v = body r () in
         S.assert_ (post v ** exists_ (pts_to #a r #full_perm));
         S.rewrite (post v ** exists_ (pts_to #a r #full_perm))
                   (post v `star` exists_ (pts_to #a r #full_perm));
         let w = S.elim_exists () in
         S.rewrite (pts_to #a r #full_perm w)
-                  (R.pts_to #a r w);
-        S.intro_exists_erased w (R.pts_to #a r);
+                  (R.pts_to #a r full_perm w);
+        S.intro_exists_erased w (R.pts_to #a r full_perm);
         S.return v
     in
     let v = R.with_local init body in

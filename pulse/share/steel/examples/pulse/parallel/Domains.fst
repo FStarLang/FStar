@@ -91,8 +91,8 @@ val higher_read (#a:Type)
          (#v:Ghost.erased a)
          (r:HR.ref a)
   : stt a
-      (HR.pts_to r p v)
-      (fun x -> HR.pts_to r p v ** pure (x == Ghost.reveal v))
+      (HR.pts_to r #p v)
+      (fun x -> HR.pts_to r #p v ** pure (x == Ghost.reveal v))
       //(requires true)
 //      (ensures fun x -> x == Ghost.reveal v)
 
@@ -182,15 +182,15 @@ let spawn_emp = spawn_emp'
 
 assume val share (#a:Type0) (r:ref a) (#v:a) (#p:perm)
   : stt unit
-      (pts_to r p v)
+      (pts_to r #p v)
       (fun _ ->
-       pts_to r (half_perm p) v **
-       pts_to r (half_perm p) v)
+       pts_to r #(half_perm p) v **
+       pts_to r #(half_perm p) v)
 
 assume val gather (#a:Type0) (r:ref a) (#x0 #x1:a) (#p0 #p1:perm)
   : stt unit
-      (pts_to r p0 x0 ** pts_to r p1 x1)
-      (fun _ -> pts_to r (sum_perm p0 p1) x0 ** pure (x0 == x1))
+      (pts_to r #p0 x0 ** pts_to r #p1 x1)
+      (fun _ -> pts_to r #(sum_perm p0 p1) x0 ** pure (x0 == x1))
 
 let half = half_perm
 

@@ -5,7 +5,6 @@ module Prf = Steel.ST.GenArraySwap.Proof
 module SZ = FStar.SizeT
 module A = Pulse.Lib.Array
 module R = Pulse.Lib.Reference
-#set-options "--ide_id_info_off"
 #push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection' --fuel 2 --ifuel 1"
 #restart-solver
 
@@ -116,9 +115,9 @@ assume val get_array_pts_to (#t: Type0) (#p: perm) (#s: Ghost.erased (Seq.seq t)
 
 ```pulse
 fn get_array_pts_to (#t: Type0) (a: A.array t) (#p: perm) (#s: Ghost.erased (Seq.seq t))
-  requires (A.pts_to a p s)
+  requires A.pts_to a #p s
   returns s': Ghost.erased (Seq.seq t)
-  ensures (A.pts_to a p s ** pure (s' == s))
+  ensures A.pts_to a #p s ** pure (s' == s)
   {
     s
   }
@@ -126,9 +125,9 @@ fn get_array_pts_to (#t: Type0) (a: A.array t) (#p: perm) (#s: Ghost.erased (Seq
 
 ```pulse
 fn get_pts_to (#t: Type0) (a: ref t) (#p: perm) (#s: erased (t))
-  requires (pts_to a p s)
+  requires pts_to a #p s
   returns s': Ghost.erased (t)
-  ensures (pts_to a p s ** pure (s' == s))
+  ensures pts_to a #p s ** pure (s' == s)
   {
     s
   }

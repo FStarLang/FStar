@@ -12,7 +12,7 @@ let ref = R.ref
 let pts_to #a (r:ref a) (#[exact (`full_perm)] p:perm) (v:a) = R.pts_to r p v
 
 let alloc' (#a:Type) (x:a)
-  : stt_ghost (ref a) emp_inames S.emp (fun r -> R.pts_to r x)
+  : stt_ghost (ref a) emp_inames S.emp (fun r -> R.pts_to r full_perm x)
   = fun _ -> 
      let r = R.alloc x in
      r

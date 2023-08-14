@@ -19,7 +19,7 @@ let alloc' (#elt:Type) (x:elt) (n:SZ.t)
   : stt (array elt) 
         (requires S.emp)
         (ensures fun a ->
-            A.pts_to a (Seq.create (SZ.v n) x) `S.star`
+            A.pts_to a full_perm (Seq.create (SZ.v n) x) `S.star`
             S.pure (A.length a == SZ.v n /\ A.is_full_array a))
   = fun _ -> 
         let v = A.alloc #elt x n in
@@ -52,12 +52,12 @@ let free'
         (#s: Ghost.erased (Seq.seq elt))
   : stt unit
         (requires
-            A.pts_to a s `S.star`
+            A.pts_to a full_perm s `S.star`
             S.pure (is_full_array a))
         (ensures fun _ ->
             S.emp)
    = fun _ ->
-        S.intro_exists_erased s (A.pts_to a);
+        S.intro_exists_erased s (A.pts_to a full_perm);
         S.elim_pure (is_full_array a);
         A.free a; ()
 let free = free'

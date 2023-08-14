@@ -121,10 +121,10 @@ val blake2b:
   -> #p:perm
   -> #sd:Ghost.erased (Seq.seq U8.t) { Seq.length sd == SZ.v ll}
   -> stt unit
-    (A.pts_to output sout ** A.pts_to d p sd)
+    (A.pts_to output sout ** A.pts_to d #p sd)
     (λ _ → A.pts_to output (blake_spec (Seq.slice sd 0 (SZ.v ll)))
            **
-           A.pts_to d p sd)
+           A.pts_to d #p sd)
 
 // We don't yet expose a free on references in Pulse.Steel.Wrapper
 // That's just an oversight. So assuming it here for now.
@@ -142,8 +142,8 @@ fn free (#t:Type0) (r:ref t) (#v:erased t)
 assume
 val array_pts_to_len (#t:Type0) (a:A.array t) (#p:perm) (#x:Seq.seq t)
     : stt_ghost unit emp_inames
-          (A.pts_to a p x)
-          (fun _ -> A.pts_to a p x ** pure (A.length a == Seq.length x))
+          (A.pts_to a #p x)
+          (fun _ -> A.pts_to a #p x ** pure (A.length a == Seq.length x))
 
 // Note, writing it this way fails. Can't admit in ghost?? 
 // ```pulse
@@ -162,13 +162,13 @@ val array_pts_to_len (#t:Type0) (a:A.array t) (#p:perm) (#x:Seq.seq t)
 fn array_compare (#t:eqtype) (l:SZ.t) (a1 a2:A.larray t (SZ.v l))
                  (#p1 #p2:perm) (#s1 #s2:Seq.seq t)
   requires (
-    A.pts_to a1 p1 s1 **
-    A.pts_to a2 p2 s2
+    A.pts_to a1 #p1 s1 **
+    A.pts_to a2 #p2 s2
   )
   returns res:bool
   ensures (
-    A.pts_to a1 p1 s1 **
-    A.pts_to a2 p2 s2 **
+    A.pts_to a1 #p1 s1 **
+    A.pts_to a2 #p2 s2 **
     (pure (res <==> Seq.equal s1 s2))
   )
 {
@@ -487,11 +487,11 @@ fn add (ha:ha) (input:hashable_buffer) (l:SZ.t)
        (#s:(s:erased bytes {SZ.v l <= Seq.length s /\  SZ.v l <= blake2_max_input_length}))
   requires
     ha_val ha h **
-    A.pts_to input p s
+    A.pts_to input #p s
   returns ok:bool
   ensures
     ha_val ha (if ok then aggregate_hashes h (hash_one_value (Seq.slice s 0 (SZ.v l))) else h) **
-    A.pts_to input p s
+    A.pts_to input #p s
 { 
    let mut ctr = 1ul;
    unfold (ha_val ha h);
