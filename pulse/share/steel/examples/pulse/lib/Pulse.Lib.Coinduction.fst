@@ -234,3 +234,34 @@ let interp_rec_fold_unfold #a (p: rec_def a):
 
 let coinduction_principle (#a: Type) (r: rec_def a) (p: pred a)
 = interp_rec_mono r; coinduction (interp_rec r) p
+
+(** Example: Streams **)
+
+let interp_rec_fold_unfold_stream (a: Type) (x:R.ref(cell a)) :
+    Lemma (stream a x == h_exists (fun v -> R.pts_to_sl x full_perm v `star` stream a (v.next)))
+= calc (==) {
+        stream a x;
+        == { interp_rec_fold_unfold (rec_stream a) }
+        interp_rec (rec_stream a) (stream a) x;
+       == { _ by (Tactics.compute ()) }
+        h_exists (fun v -> R.pts_to_sl x full_perm v `star` stream a (v.next));
+    }
+
+// version 2
+// stream(x, n) = exists v. x |-> v ** v.v == f n ** stream(v.next)
+let interp_rec_fold_unfold_stream_value (a: Type) (f:nat -> a) (x: R.ref(cell a)) (n: nat):
+    Lemma (stream_value a f (x, n) ==
+    h_exists (fun v ->
+        R.pts_to_sl x full_perm v `star` pure (f n == v.v)
+        `star` stream_value a f (v.next, n + 1)
+    ))
+= calc (==) {
+        stream_value a f (x, n);
+        == { interp_rec_fold_unfold (rec_stream_value a f) }
+        interp_rec (rec_stream_value a f) (stream_value a f) (x, n);
+       == { _ by (Tactics.compute ()) }
+        h_exists (fun v ->
+            R.pts_to_sl x full_perm v `star` pure (f n == v.v) `star`
+            stream_value a f (v.next, n + 1)
+        );
+    }

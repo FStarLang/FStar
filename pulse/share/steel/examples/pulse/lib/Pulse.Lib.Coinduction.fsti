@@ -1,7 +1,7 @@
 module Pulse.Lib.Coinduction
-
-open Steel.DisposableInvariant
 open Steel.Memory
+
+(** General interface for SL props defined coinductively **)
 
 type pred a = (a -> slprop)
 
@@ -32,6 +32,10 @@ val gfp_is_fixed_point_eq (#a: Type) (f: mono_fun a):
 val coinduction (#a: Type) (f: mono_fun a) (p: pred a):
     Lemma (requires implies p (f p))
     (ensures implies p (gfp f))
+
+(** A small DSL to write recursive definitions.
+Recursive definitions written in this syntax are guaranteed to be monotonic,
+and thus have a greatest fixed point. **)
 
 noeq
 type rec_def (a: Type) =
@@ -70,6 +74,8 @@ val coinduction_principle (#a: Type) (r: rec_def a) (p: pred a):
     Lemma (requires implies p (interp_rec r p))
     (ensures implies p (coinduct r))
 
+(** Example: Streams **)
+
 module R = Steel.Reference
 open Steel.FractionalPermission
 
@@ -79,33 +85,32 @@ type cell (a: Type0) = {
     next: R.ref (cell a)
 }
 
-#set-options "--print_universes"
-
-// stream(x) = exists v. x |-> v ** stream(v)
-let rec_stream a //(f: nat -> ref int) =
+// version 1
+// stream(x) = exists v. x |-> v ** stream(v.next)
+let rec_stream a
 : rec_def (R.ref (cell a))
 = Exists _ (fun v -> Star (SLProp (fun x -> R.pts_to_sl x full_perm v))
     (RecursiveCall (fun _ -> v.next)))
 
-// stream(x) = exists v. x -> v ** stream(v.next)
-
-//let coinduct (#a: Type) (r: rec_def a): pred a
 let stream a: pred (R.ref (cell a)) = coinduct (rec_stream a)
 
-let interp_rec_exists_def ty f x delta
-: Lemma (interp_rec (Exists ty f) delta x == h_exists (fun y -> interp_rec (f y) delta x))
-= assert_norm (interp_rec (Exists ty f) delta x == h_exists (fun y -> interp_rec (f y) delta x))
-
-let interp_rec_fold_unfold_stream (a: Type) (r: rec_def a) (x:R.ref(cell a)) :
+val interp_rec_fold_unfold_stream (a: Type) (x:R.ref(cell a)) :
     Lemma (stream a x == h_exists (fun v -> R.pts_to_sl x full_perm v `star` stream a (v.next)))
-= 
-    calc (==) {
-        stream a x;
-        == { interp_rec_fold_unfold (rec_stream a) }
-        interp_rec (rec_stream a) (stream a) x;
-        == { }
-         interp_rec (Exists _ (fun v -> Star (SLProp (fun x -> R.pts_to_sl x full_perm v))
-        (RecursiveCall (fun _ -> v.next)))) (stream a) x;
-        == { _ by (Tactics.compute ()) }
-        h_exists (fun v -> R.pts_to_sl x full_perm v `star` stream a (v.next));
-    }
+
+// version 2
+// stream(x, n) = exists v. x |-> v ** v.v == f n ** stream(v.next)
+let rec_stream_value a (f: nat -> a)
+: rec_def (R.ref (cell a) * nat)
+= Exists _ (fun v -> Star (Star
+        (SLProp (fun p -> R.pts_to_sl (fst p) full_perm v))
+        (SLProp (fun p -> pure (f (snd p) == v.v))))
+        (RecursiveCall (fun (p:R.ref (cell a) & nat) -> (v.next, snd p + 1))))
+
+let stream_value a (f: nat -> a): pred (R.ref (cell a) & nat) = coinduct (rec_stream_value a f)
+
+val interp_rec_fold_unfold_stream_value (a: Type) (f:nat -> a) (x: R.ref(cell a)) (n: nat):
+    Lemma (stream_value a f (x, n) ==
+    h_exists (fun v ->
+        R.pts_to_sl x full_perm v `star` pure (f n == v.v)
+        `star` stream_value a f (v.next, n + 1)
+    ))
