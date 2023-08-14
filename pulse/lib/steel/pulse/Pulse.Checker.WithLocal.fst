@@ -36,7 +36,7 @@ let check
   let wr t0 = { term = t0; range = t.range } in
   let Tm_WithLocal {binder; initializer=init; body} = t.term in
   let (| init, init_u, init_t, init_t_typing, init_typing |) =
-    check_term_and_type g init in
+    check_tot_term_and_type g init in
   if eq_univ init_u u0
   then
     let x = fresh g in
@@ -80,7 +80,7 @@ let check
             intro_comp_typing g c pre_typing post_typing_rec.ty_typing x post_typing_rec.post_typing
           in
           let d = T_WithLocal g init body init_t c x
-            (E init_typing)
+            init_typing
             init_t_typing
             c_typing
             body_typing in

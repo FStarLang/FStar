@@ -1,5 +1,6 @@
 module DPE
 open Pulse.Lib.Pervasives
+open DPETypes
 open HACL
 open X509
 open EngineTypes
@@ -14,16 +15,11 @@ module U8 = FStar.UInt8
 module U32 = FStar.UInt32
 open Pulse.Lib.HashTable
 
-
-val record_t : Type0
-
-val repr_t : Type0 
-
-val record_perm (t_rec:record_t) (t_rep:repr_t) : vprop
-
 val ctxt_hndl_t : eqtype
 
 val sid_t : eqtype
+
+val get_profile (_:unit) : stt profile_descriptor_t emp (fun _ -> emp)
 
 val open_session (_:unit) : stt (option sid_t) emp (fun _ -> emp)
 

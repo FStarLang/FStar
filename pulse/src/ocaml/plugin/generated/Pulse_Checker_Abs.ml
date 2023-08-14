@@ -407,13 +407,13 @@ let rec (check_abs :
                             (Obj.magic
                                (FStar_Range.mk_range "Pulse.Checker.Abs.fst"
                                   (Prims.of_int (45)) (Prims.of_int (24))
-                                  (Prims.of_int (45)) (Prims.of_int (38)))))
+                                  (Prims.of_int (45)) (Prims.of_int (42)))))
                          (FStar_Sealed.seal
                             (Obj.magic
                                (FStar_Range.mk_range "Pulse.Checker.Abs.fst"
                                   (Prims.of_int (42)) (Prims.of_int (84))
                                   (Prims.of_int (101)) (Prims.of_int (29)))))
-                         (Obj.magic (Pulse_Checker_Pure.check_term g t1))
+                         (Obj.magic (Pulse_Checker_Pure.check_tot_term g t1))
                          (fun uu___ ->
                             (fun uu___ ->
                                match uu___ with
@@ -434,7 +434,7 @@ let rec (check_abs :
                                               (FStar_Range.mk_range
                                                  "Pulse.Checker.Abs.fst"
                                                  (Prims.of_int (45))
-                                                 (Prims.of_int (41))
+                                                 (Prims.of_int (45))
                                                  (Prims.of_int (101))
                                                  (Prims.of_int (29)))))
                                         (Obj.magic

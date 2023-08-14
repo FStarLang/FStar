@@ -304,37 +304,37 @@ let (stt_lid : FStar_Ident.lident) = pulse_lib_core_lid "stt"
 let (assign_lid : FStar_Ident.lident) = pulse_lib_ref_lid "op_Colon_Equals"
 let (stt_ghost_lid : FStar_Ident.lident) = pulse_lib_core_lid "stt_ghost"
 let (stt_atomic_lid : FStar_Ident.lident) = pulse_lib_core_lid "stt_atomic"
+let (op_colon_equals_lid :
+  FStar_Compiler_Range_Type.range -> FStar_Ident.lident) =
+  fun r -> FStar_Ident.lid_of_path ["op_Colon_Equals"] r
+let (op_array_assignment_lid :
+  FStar_Compiler_Range_Type.range -> FStar_Ident.lident) =
+  fun r -> FStar_Ident.lid_of_path ["op_Array_Assignment"] r
 let (stapp_assignment :
-  FStar_Syntax_Syntax.term ->
-    FStar_Syntax_Syntax.term ->
-      PulseSyntaxWrapper.range -> PulseSyntaxWrapper.st_term)
+  FStar_Ident.lident ->
+    FStar_Syntax_Syntax.term Prims.list ->
+      FStar_Syntax_Syntax.term ->
+        PulseSyntaxWrapper.range -> PulseSyntaxWrapper.st_term)
   =
-  fun lhs ->
-    fun rhs ->
-      fun r ->
-        let head_fv =
-          FStar_Syntax_Syntax.lid_as_fv assign_lid
-            FStar_Pervasives_Native.None in
-        let head = FStar_Syntax_Syntax.fv_to_tm head_fv in
-        let app =
-          FStar_Syntax_Syntax.mk_Tm_app head
-            [(lhs, FStar_Pervasives_Native.None)] lhs.FStar_Syntax_Syntax.pos in
-        let uu___ = PulseSyntaxWrapper.tm_expr app r in
-        let uu___1 = as_term rhs in
-        PulseSyntaxWrapper.tm_st_app uu___ FStar_Pervasives_Native.None
-          uu___1 r
-let (resolve_name :
-  env_t -> FStar_Ident.ident -> FStar_Syntax_Syntax.term err) =
-  fun env ->
-    fun id ->
-      let uu___ =
-        FStar_Syntax_DsEnv.try_lookup_id
-          (env.tcenv).FStar_TypeChecker_Env.dsenv id in
-      match uu___ with
-      | FStar_Pervasives_Native.None ->
-          let uu___1 = FStar_Ident.range_of_id id in
-          fail "Name not found" uu___1
-      | FStar_Pervasives_Native.Some t -> return t
+  fun assign_lid1 ->
+    fun args ->
+      fun last_arg ->
+        fun r ->
+          let head_fv =
+            FStar_Syntax_Syntax.lid_as_fv assign_lid1
+              FStar_Pervasives_Native.None in
+          let head = FStar_Syntax_Syntax.fv_to_tm head_fv in
+          let app =
+            FStar_Compiler_List.fold_left
+              (fun head1 ->
+                 fun arg ->
+                   FStar_Syntax_Syntax.mk_Tm_app head1
+                     [(arg, FStar_Pervasives_Native.None)]
+                     arg.FStar_Syntax_Syntax.pos) head args in
+          let uu___ = PulseSyntaxWrapper.tm_expr app r in
+          let uu___1 = as_term last_arg in
+          PulseSyntaxWrapper.tm_st_app uu___ FStar_Pervasives_Native.None
+            uu___1 r
 let (resolve_lid : env_t -> FStar_Ident.lident -> FStar_Ident.lident err) =
   fun env ->
     fun lid ->
@@ -728,10 +728,39 @@ let rec (desugar_stmt :
             (fun lhs1 ->
                let uu___1 = tosyntax env value in
                op_let_Question uu___1
-                 (fun value1 ->
+                 (fun rhs ->
                     let uu___2 =
-                      stapp_assignment lhs1 value1 s.PulseSugar.range1 in
-                    return uu___2))
+                      let uu___3 = op_colon_equals_lid s.PulseSugar.range1 in
+                      resolve_lid env uu___3 in
+                    op_let_Question uu___2
+                      (fun assignment_lid ->
+                         let uu___3 =
+                           stapp_assignment assignment_lid [lhs1] rhs
+                             s.PulseSugar.range1 in
+                         return uu___3)))
+      | PulseSugar.ArrayAssignment
+          { PulseSugar.arr = arr; PulseSugar.index = index;
+            PulseSugar.value1 = value;_}
+          ->
+          let uu___ = tosyntax env arr in
+          op_let_Question uu___
+            (fun arr1 ->
+               let uu___1 = tosyntax env index in
+               op_let_Question uu___1
+                 (fun index1 ->
+                    let uu___2 = tosyntax env value in
+                    op_let_Question uu___2
+                      (fun value1 ->
+                         let uu___3 =
+                           let uu___4 =
+                             op_array_assignment_lid s.PulseSugar.range1 in
+                           resolve_lid env uu___4 in
+                         op_let_Question uu___3
+                           (fun array_assignment_lid ->
+                              let uu___4 =
+                                stapp_assignment array_assignment_lid
+                                  [arr1; index1] value1 s.PulseSugar.range1 in
+                              return uu___4))))
       | PulseSugar.Sequence
           {
             PulseSugar.s1 =
@@ -854,8 +883,8 @@ let rec (desugar_stmt :
                     op_let_Question uu___2
                       (fun witnesses1 ->
                          let uu___3 =
-                           PulseSyntaxWrapper.tm_intro_exists false vp
-                             witnesses1 s.PulseSugar.range1 in
+                           PulseSyntaxWrapper.tm_intro_exists vp witnesses1
+                             s.PulseSugar.range1 in
                          return uu___3)))
       | PulseSugar.Parallel
           { PulseSugar.p1 = p1; PulseSugar.p2 = p2; PulseSugar.q1 = q1;

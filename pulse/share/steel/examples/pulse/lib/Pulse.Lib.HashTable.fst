@@ -5,7 +5,7 @@ module R = Pulse.Lib.Reference
 module SZ = FStar.SizeT
 module U8 = FStar.UInt8
 module U64 = FStar.UInt64
-module PHT = FStar.HashTable
+module PHT = Pulse.Lib.HashTable.Spec
 open Pulse.Class.BoundedIntegers
 
 #push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"

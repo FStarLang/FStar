@@ -3,8 +3,8 @@ open Pulse.Lib.Pervasives
 module A = Pulse.Lib.Array
 module US = FStar.SizeT
 module U8 = FStar.UInt8
-module PHT = FStar.HashTable
-open FStar.HashTable
+module PHT = Pulse.Lib.HashTable.Spec
+open Pulse.Lib.HashTable.Spec
 open Pulse.Class.BoundedIntegers
 
 type pos_us = n:US.t{US.v n > 0}

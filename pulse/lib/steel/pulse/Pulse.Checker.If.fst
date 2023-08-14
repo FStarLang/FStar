@@ -11,7 +11,7 @@ module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
 module Metatheory = Pulse.Typing.Metatheory
 
-#push-options "--z3rlimit_factor 10 --fuel 0 --ifuel 1"
+#push-options "--z3rlimit_factor 12 --fuel 0 --ifuel 1"
 let rec combine_if_branches
   (g_then:env)
   (e_then:st_term)
@@ -98,7 +98,7 @@ let check
   let g = Pulse.Typing.Env.push_context g "check_if" e1.range in
 
   let (| b, b_typing |) =
-    check_term_with_expected_type g b tm_bool in
+    check_tot_term_with_expected_type g b tm_bool in
 
   let post = post_hint.post in
   let hyp = fresh g in
@@ -155,6 +155,6 @@ let check
   in
 
   let d : st_typing_in_ctxt g pre (Some post_hint) =
-    (| _, c, T_If g b e1 e2 c _ hyp (E b_typing) e1_typing e2_typing (E c_typing) |) in
+    (| _, c, T_If g b e1 e2 c _ hyp b_typing e1_typing e2_typing (E c_typing) |) in
 
   checker_result_for_st_typing d res_ppname

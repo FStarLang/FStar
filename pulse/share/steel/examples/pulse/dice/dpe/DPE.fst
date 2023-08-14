@@ -1,5 +1,6 @@
 module DPE
 open Pulse.Lib.Pervasives
+open DPETypes
 open HACL
 open X509
 open EngineTypes
@@ -13,221 +14,11 @@ module SZ = FStar.SizeT
 module U8 = FStar.UInt8
 module U32 = FStar.UInt32
 module HT = Pulse.Lib.HashTable
-module PHT = FStar.HashTable
+module PHT = Pulse.Lib.HashTable.Spec
 open Pulse.Class.BoundedIntegers
 
 assume
 val run_stt (#a:Type) (#post:a -> vprop) (f:stt a emp post) : a
-
-(* Engine Context *)
-noeq
-type engine_context_t = { 
-  uds: A.larray U8.t (US.v uds_len); 
-}
-
-let engine_context_perm (c:engine_context_t) : vprop
-  = A.pts_to c.uds full_perm uds_bytes ** 
-    pure (A.is_full_array c.uds)
-
-let mk_engine_context_t uds : engine_context_t = {uds}
-
-(* L0 Context *)
-noeq
-type l0_context_t = { 
-  cdi:A.larray U8.t (US.v dice_digest_len); 
-}
-
-let mk_l0_context_t cdi : l0_context_t = {cdi}
-
-type l0_context_repr_t = {
-  cdi:elseq U8.t dice_digest_len;
-  repr:engine_record_repr;
-}
-
-let mk_l0_context_repr_t
-  (cdi:erased (elseq U8.t dice_digest_len)) 
-  (repr:erased engine_record_repr) 
-: erased l0_context_repr_t 
-= {cdi; repr}
-
-let l0_context_perm (c:l0_context_t) (r:l0_context_repr_t): vprop
-  = A.pts_to c.cdi full_perm r.cdi **
-    pure (A.is_full_array c.cdi
-       /\ cdi_functional_correctness r.cdi r.repr
-       /\ l0_is_authentic r.repr)
-
-
-(* L1 Context *)
-noeq
-type l1_context_t = { deviceID_priv: A.larray U8.t (US.v v32us);
-                    deviceID_pub: A.larray U8.t (US.v v32us);   
-                    aliasKey_priv: A.larray U8.t (US.v v32us);
-                    aliasKey_pub: A.larray U8.t (US.v v32us);
-                    aliasKeyCRT: A.array U8.t;
-                    deviceIDCSR: A.array U8.t; }
-
-let mk_l1_context_t deviceID_priv deviceID_pub aliasKey_priv aliasKey_pub aliasKeyCRT deviceIDCSR 
-: l1_context_t
-= { deviceID_priv; deviceID_pub; aliasKey_priv; aliasKey_pub; aliasKeyCRT; deviceIDCSR }
-
-noeq
-type l1_context_repr_t = {
-  deviceID_label_len: hkdf_lbl_len;
-  aliasKey_label_len: hkdf_lbl_len;
-  deviceID_priv: elseq U8.t v32us;
-  deviceID_pub: elseq U8.t v32us;
-  aliasKey_priv: elseq U8.t v32us;
-  aliasKey_pub:elseq U8.t v32us;
-  aliasKeyCRT_len:SZ.t;
-  aliasKeyCRT: elseq U8.t aliasKeyCRT_len;
-  deviceIDCSR_len:SZ.t;
-  deviceIDCSR:elseq U8.t deviceIDCSR_len;
-  cdi:elseq U8.t dice_digest_len;
-  repr:l0_record_repr;
-  deviceIDCSR_ingredients: deviceIDCSR_ingredients_t;
-  aliasKeyCRT_ingredients: aliasKeyCRT_ingredients_t;
-}
-
-let mk_l1_context_repr_t 
-  (deviceID_label_len:erased hkdf_lbl_len)
-  (aliasKey_label_len:erased hkdf_lbl_len)
-  (deviceID_priv:erased (elseq U8.t v32us))
-  (deviceID_pub:erased (elseq U8.t v32us))
-  (aliasKey_priv:erased (elseq U8.t v32us))
-  (aliasKey_pub:erased (elseq U8.t v32us))
-  (aliasKeyCRT_len:erased SZ.t)
-  (aliasKeyCRT:erased (elseq U8.t aliasKeyCRT_len))
-  (deviceIDCSR_len:erased SZ.t)
-  (deviceIDCSR:erased (elseq U8.t deviceIDCSR_len))
-  (cdi:erased (elseq U8.t dice_digest_len))
-  (repr:erased l0_record_repr)
-  (deviceIDCSR_ingredients:erased deviceIDCSR_ingredients_t)
-  (aliasKeyCRT_ingredients:erased aliasKeyCRT_ingredients_t)
-: erased l1_context_repr_t 
-= {deviceID_label_len; aliasKey_label_len; deviceID_priv; deviceID_pub; aliasKey_priv;
-  aliasKey_pub; aliasKeyCRT_len; aliasKeyCRT; deviceIDCSR_len; deviceIDCSR;
-  cdi; repr; deviceIDCSR_ingredients; aliasKeyCRT_ingredients}
-
-let l1_context_perm (c:l1_context_t) (r:l1_context_repr_t)
-  : vprop
-  = A.pts_to c.deviceID_priv full_perm r.deviceID_priv **
-    A.pts_to c.deviceID_pub full_perm r.deviceID_pub **
-    A.pts_to c.aliasKey_priv full_perm r.aliasKey_priv **
-    A.pts_to c.aliasKey_pub full_perm r.aliasKey_pub **
-    A.pts_to c.aliasKeyCRT full_perm r.aliasKeyCRT **
-    A.pts_to c.deviceIDCSR full_perm r.deviceIDCSR **
-    pure (
-      valid_hkdf_ikm_len dice_digest_len /\
-      aliasKey_functional_correctness
-        dice_hash_alg dice_digest_len r.cdi r.repr.fwid
-        r.aliasKey_label_len r.repr.aliasKey_label 
-        r.aliasKey_pub r.aliasKey_priv /\
-      deviceIDCSR_functional_correctness 
-        dice_hash_alg dice_digest_len r.cdi
-        r.deviceID_label_len r.repr.deviceID_label r.deviceIDCSR_ingredients 
-        r.deviceIDCSR_len r.deviceIDCSR /\       
-      aliasKeyCRT_functional_correctness 
-        dice_hash_alg dice_digest_len r.cdi r.repr.fwid
-        r.deviceID_label_len r.repr.deviceID_label r.aliasKeyCRT_ingredients 
-        r.aliasKeyCRT_len r.aliasKeyCRT r.aliasKey_pub /\
-      A.is_full_array c.deviceID_priv /\
-      A.is_full_array c.deviceID_pub /\
-      A.is_full_array c.aliasKey_priv /\
-      A.is_full_array c.aliasKey_pub /\
-      A.is_full_array c.aliasKeyCRT /\
-      A.is_full_array c.deviceIDCSR
-    )  
-
-(* Generic Context *)    // this is called an enumeration
-noeq
-type context_t = 
-  | Engine_context : c:engine_context_t -> context_t
-  | L0_context     : c:l0_context_t -> context_t
-  | L1_context     : c:l1_context_t -> context_t
-
-let mk_context_t_engine c = Engine_context c
-let mk_context_t_l0 c = L0_context c
-let mk_context_t_l1 c = L1_context c
-
-noeq
-type context_repr_t = 
-  | Engine_context_repr : context_repr_t
-  | L0_context_repr     : r:l0_context_repr_t -> context_repr_t
-  | L1_context_repr     : r:l1_context_repr_t -> context_repr_t
-
-let mk_context_repr_t_l0 (r:erased l0_context_repr_t) 
-: erased context_repr_t = L0_context_repr r
-let mk_context_repr_t_l1 (r:erased l1_context_repr_t) 
-: erased context_repr_t = L1_context_repr r
-
-let context_perm (context:context_t) (repr:context_repr_t): vprop = 
-  match context with
-  | Engine_context c -> engine_context_perm c
-  | L0_context c -> (
-    match repr with 
-    | L0_context_repr r -> l0_context_perm c r
-    | _ -> pure(false)
-  )
-  | L1_context c -> (
-    match repr with
-    | L1_context_repr r -> l1_context_perm c r
-    | _ -> pure(false)
-  )
-
-assume val get_l0_context_perm (context:context_t{L0_context? context}) (repr:erased context_repr_t)
-  : stt_ghost (erased l0_context_repr_t) emp_inames
-              (context_perm context repr)
-              (fun r -> l0_context_perm (L0_context?.c context) r
-                      ** pure(reveal repr == L0_context_repr r))
-
-assume val get_l1_context_perm (context:context_t{L1_context? context}) (repr:erased context_repr_t)
-  : stt_ghost (erased l1_context_repr_t) emp_inames
-              (context_perm context repr)
-              (fun r -> l1_context_perm (L1_context?.c context) r
-                      ** pure(reveal repr == L1_context_repr r))
-
-// In the implmentation, we store contexts as values in a global hash table
-// so we need a way to store and retrieve permission on the context. We do this
-// by keeping a tuple of the context along with a lock on the context permission
-let locked_context_t = c:context_t 
-                     & r:erased context_repr_t 
-                     & L.lock (context_perm c r)
-
-(* Record *)
-noeq
-type record_t =
-  | Engine_record : r:engine_record_t -> record_t
-  | L0_record     : r:l0_record_t -> record_t
-
-noeq
-type repr_t = 
-  | Engine_repr : r:engine_record_repr -> repr_t
-  | L0_repr     : r:l0_record_repr -> repr_t
-
-let record_perm (record:record_t) (repr:repr_t) : vprop = 
-  match record with
-  | Engine_record r -> (
-    match repr with 
-    | Engine_repr r0 -> engine_record_perm r r0
-    | _ -> pure(false)
-  )
-  | L0_record r -> (
-    match repr with
-    | L0_repr r0 -> l0_record_perm r r0
-    | _ -> pure(false)
-  )
-
-assume val get_engine_record_perm (record:record_t{Engine_record? record}) (repr:erased repr_t)
-  : stt_ghost (erased engine_record_repr) emp_inames
-              (record_perm record repr)
-              (fun r0 -> engine_record_perm (Engine_record?.r record) r0 
-                      ** pure(reveal repr == Engine_repr r0))
-
-assume val get_l0_record_perm (record:record_t{L0_record? record}) (repr:erased repr_t)
-  : stt_ghost (erased l0_record_repr) emp_inames
-              (record_perm record repr)
-              (fun r0 -> l0_record_perm (L0_record?.r record) r0 
-                      ** pure(reveal repr == L0_repr r0))
 
 (* Global State *)
 
@@ -280,6 +71,92 @@ let locked_sid : locked_sid_t = run_stt(alloc_sid ())
 
 
 (* ----------- IMPLEMENTATION ----------- *)
+
+let coerce_us (x:pos_us) : SZ.t = x
+
+(*
+  GetProfile: Part of DPE API 
+  Get the DPE's profile. 
+*)
+```pulse
+fn get_profile' (_:unit)
+  requires emp
+  returns d:profile_descriptor_t
+  ensures emp
+{
+  mk_profile_descriptor
+    (*name=*)""
+    (*dpe_spec_version=*)1ul
+    (*max_message_size=*)0ul // irrelevant: using direct interface
+    (*uses_multi_part_messages=*)false
+    (*supports_concurrent_operations=*)false // irrelevant by uses_multi_part_messages
+    (*supports_encrypted_sessions=*)false // irrelevant by uses_multi_part_messages
+    (*supports_derived_sessions=*)false // irrelevant by supports_encrypted_sessions
+    (*max_sessions=*)0sz // irrelevant by supports_encrypted_sessions
+    (*session_protocol=*)"" // irrelevant by supports_encrypted_sessions
+    (*supports_session_sync=*)false // by supports_encrypted_sessions
+    (*session_sync_policy=*)"" // irrelevant by supports_session_sync
+    (*session_migration_protocol=*)"" // irrelevant by supports_session_migration
+    (*supports_default_context=*)false
+    (*supports_context_handles=*)true 
+    (*max_contexts_per_session=*)(coerce_us cht_len) // cast to U32
+    (*max_context_handle_size=*)16sz // 16 bits
+    (*supports_auto_init=*)false // irrelevant by supports_default_context
+    (*supports_simulation=*)false
+    (*supports_attestation=*)false
+    (*supports_sealing=*)false 
+    (*supports_get_profile=*)true
+    (*supports_open_session=*)false // irrelevant by supports_encrypted_sessions
+    (*supports_close_session=*)false // irrelevant by supports_encrypted_sessions
+    (*supports_sync_session=*)false // irrelevant by supports_encrypted_sessions
+    (*supports_export_session=*)false
+    (*supports_import_session=*)false
+    (*supports_init_context=*)true
+    (*supports_certify_key=*)false // irrelevant by supports_attestation
+    (*supports_sign=*)false // irrelevant by supports_attestation
+    (*supports_seal=*)false // irrelevant by supports_sealing
+    (*supports_unseal=*)false // irrelevant by supports_sealing
+    (*supports_sealing_public=*)false // irrelevant by supports_sealing
+    (*supports_rotate_context_handle=*)true
+    (*dice_derivation=*)"" // FIXME: name for DICE algorithms
+    (*asymmetric_derivation=*)"" // irrelevant by supports_attestation
+    (*symmetric_derivation=*)"" // irrelevant by supports_attestation
+    (*supports_any_label=*)false
+    (*supported_labels=*)"" // FIXME: what are lables?
+    (*initial_derivation=*)"" // FIXME: name?
+    (*input_format=*)"" // FIXME: create CDDL spec for input record formats
+    (*supports_internal_inputs=*)false
+    (*supports_internal_dpe_info=*)false // irrelevant by supports_internal_inputs
+    (*supports_internal_dpe_dice=*)false // irrelevant by supports_internal_inputs
+    (*internal_dpe_info_type=*)"" // irrelevant by supports_internal_inputs
+    (*internal_dpe_dice_type=*)"" // irrelevant by supports_internal_inputs
+    (*internal_inputs=*)"" // irrelevant by supports_internal_inputs
+    (*supports_certificates=*)false // irrelevant by supports_attestation
+    (*max_certificate_size=*)0sz // irrelevant by supports_certificates
+    (*max_certificate_chain_size=*)0sz // irrelevant by supports_certificates
+    (*appends_more_certificates=*)false // irrelevant by supports_certificates
+    (*supports_certificate_policies=*)false // irrelevant by supports_certificates
+    (*supports_policy_identity_init=*)false // irrelevant by supports_certificate_policies
+    (*supports_policy_identity_loc=*)false // irrelevant by supports_certificate_policies
+    (*supports_policy_attest_init=*)false // irrelevant by supports_certificate_policies
+    (*supports_policy_attest_loc=*)false // irrelevant by supports_certificate_policies
+    (*supports_policy_assert_init=*)false // irrelevant by supports_certificate_policies
+    (*supports_policy_assert_loc=*)false // irrelevant by supports_certificate_policies
+    (*certificate_policies=*)"" // irrelevant by supports_certificate_policies
+    (*supports_eca_certificates=*)false // irrelevant by supports_certificate_policies
+    (*eca_certificate_format=*)"" // irrelevant by supports_eca_certificates
+    (*leaf_certificate_format=*)"" // irrelevant by supports_certificates
+    (*public_key_format=*)"" // irrelevant by supports_asymmetric_unseal
+    (*supports_external_key=*)false // irrelevant by supports_certificates
+    (*to_be_signed_format=*)"" // irrelevant by supports_sign
+    (*signature_format=*)"" // irrelevant by supports_sign
+    (*supports_symmetric_sign=*)false // irrelevant by supports_attestation
+    (*supports_asymmetric_unseal=*)false // irrelevant by supports_attestation
+    (*supports_unseal_policy=*)false// irrelevant by supports_sealing
+    (*unseal_policy_format=*)"" // irrelevant by supports_unseal_policy 
+}
+```
+let get_profile = get_profile'
 
 (*
   OpenSession: Part of DPE API 

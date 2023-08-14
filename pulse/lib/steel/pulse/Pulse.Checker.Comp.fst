@@ -31,13 +31,13 @@ let check (g:env)
           let px = v_as_nv x in
           assume (~(x `Set.mem` freevars (comp_post c)));
           let gx = push_binding g x (fst px) st.res in
-          let (| ty, post_typing |) = core_check_term gx (open_term_nv (comp_post c) px) in
+          let (| ty, post_typing |) = core_check_tot_term gx (open_term_nv (comp_post c) px) in
           if not (eq_tm ty tm_vprop)
           then fail g None
                  (Printf.sprintf "check_comp: ill-typed postcondition %s" (P.term_to_string (comp_post c)))
           else (
             assert (ty == tm_vprop);
-            STC g st x t_u pre_typing (E post_typing)
+            STC g st x t_u pre_typing post_typing
           )
         )
     in
@@ -47,17 +47,17 @@ let check (g:env)
       CT_ST _ _ stc
     | C_STAtomic i st -> 
       let stc = check_st_comp st in
-      let (| ty, i_typing |) = core_check_term g i in
+      let (| ty, i_typing |) = core_check_tot_term g i in
       if not (eq_tm ty tm_inames)
       then fail g None
              (Printf.sprintf "check_comp: type of inames term %s is %s, expected %s"
                 (P.term_to_string i) (P.term_to_string ty) (P.term_to_string tm_inames))
-      else CT_STAtomic _ _ _ (E i_typing) stc
+      else CT_STAtomic _ _ _ i_typing stc
     | C_STGhost i st -> 
       let stc = check_st_comp st in
-      let (| ty, i_typing |) = core_check_term g i in
+      let (| ty, i_typing |) = core_check_tot_term g i in
       if not (eq_tm ty tm_inames)
       then fail g None
              (Printf.sprintf "check_comp: type of inames term %s is %s, expected %s"
                 (P.term_to_string i) (P.term_to_string ty) (P.term_to_string tm_inames))
-      else CT_STGhost _ _ _ (E i_typing) stc
+      else CT_STGhost _ _ _ i_typing stc

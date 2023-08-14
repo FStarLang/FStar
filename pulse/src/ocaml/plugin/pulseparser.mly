@@ -39,7 +39,7 @@ let as_aqual (q:unit option) =
     match q with
     | None -> None
     | Some _ -> Some Implicit
-    
+
 let pos_of_lexpos (p:Lexing.position) = FStar_Parser_Util.pos_of_lexpos p
 
 let default_return =
@@ -49,7 +49,7 @@ let default_return =
 let with_computation_tag (c:PulseSugar.computation_type) t =
   match t with
   | None -> c
-  | Some t -> { c with tag = t }    
+  | Some t -> { c with tag = t }
 
 let rng p1 p2 = FStar_Parser_Util.mksyn_range p1 p2
 let r p = rng (fst p) (snd p)
@@ -81,7 +81,7 @@ pulseDecl:
       let ascription = with_computation_tag ascription q in
       PulseSugar.mk_decl lid (List.flatten bs) ascription body (rr $loc)
     }
-    
+
 pulseMultiBinder:
   | LPAREN qual_ids=nonempty_list(q=option(HASH) id=lidentOrUnderscore { (q, id) }) COLON t=appTerm RPAREN
     { List.map (fun (q, id) -> (as_aqual q, id, t)) qual_ids }
@@ -105,8 +105,18 @@ pulseComputationType:
 pulseStmtNoSeq:
   | OPEN i=quident
     { PulseSugar.mk_open i }
-  | tm=appTerm
-    { PulseSugar.mk_expr tm }
+  | tm=appTerm o=option(LARROW v=noSeqTerm { v })
+    {
+        match o, tm.tm with
+        | None, _ ->
+          PulseSugar.mk_expr tm
+
+        | Some arr_elt, Op(op, [arr;ix]) when FStar_Ident.string_of_id op = ".()" ->
+          PulseSugar.mk_array_assignment arr ix arr_elt
+
+        | _ ->
+          raise_error (Fatal_SyntaxError, "Expected an array assignment of the form x.(i) <- v") (rr $loc)
+    }
   | lhs=appTermNoRecordExp COLON_EQUALS a=noSeqTerm
     { PulseSugar.mk_assignment lhs a }
   | LET q=option(mutOrRefQualifier) i=lident typOpt=option(appTerm) EQUALS tm=noSeqTerm
@@ -135,6 +145,7 @@ pulseStmtNoSeq:
   | bs=withBindersOpt FOLD ns=option(names) p=pulseVprop
     { PulseSugar.mk_proof_hint_with_binders (FOLD ns) bs p }
 
+
 names:
   | LBRACK l=separated_nonempty_list(SEMICOLON, qlident) RBRACK
     { l }
@@ -154,9 +165,9 @@ pulseMatchBranch:
 
 pulsePattern:
   | p=tuplePattern { p }
-  
+
 pulseStmt:
-  | s=pulseStmtNoSeq 
+  | s=pulseStmtNoSeq
     { PulseSugar.mk_stmt s (rr $loc) }
   | s1=pulseStmtNoSeq SEMICOLON s2=option(pulseStmt)
     {
@@ -184,7 +195,7 @@ atomicVprop:
   | BACKTICK_AT p=atomicTerm
     { PulseSugar.(as_vprop (VPropTerm p) (rr $loc)) }
   | head=qlident args=list(argTerm)
-    { 
+    {
       let head = mk_term (Var head) (rr $loc(head)) Un in
       let app = mkApp head (map (fun (x,y) -> (y,x)) args) (rr2 $loc(head) $loc(args)) in
       PulseSugar.(as_vprop (VPropTerm app) (rr $loc))
@@ -196,7 +207,8 @@ starOp:
     { if o = "**" then () else raise_error (Fatal_SyntaxError, "Unexpected infix operator; expected '**'") (rr $loc) }
   | BACKTICK id=IDENT BACKTICK
     { if id = "star" then () else raise_error (Fatal_SyntaxError, "Unexpected infix operator; expected '**'") (rr $loc) }
-  
+
+
 pulseVprop:
   | t=atomicVprop
     { t }

@@ -1,4 +1,4 @@
-module LinearProbeHashTable
+module Pulse.Lib.HashTable.Spec
 module US = FStar.SizeT
 
 let unreachable #a (_:squash False) : a =

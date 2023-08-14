@@ -268,7 +268,6 @@ and st_term'__Tm_ElimExists__payload = {
   p1: vprop }
 and st_term'__Tm_IntroExists__payload =
   {
-  erased: Prims.bool ;
   p2: vprop ;
   witnesses: term Prims.list }
 and st_term'__Tm_While__payload =
@@ -506,9 +505,8 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
          { head2 = t21; body2 = k2;_}) ->
           (eq_tm t11 t21) && (eq_st_term k1 k2)
       | (Tm_IntroPure { p = p1;_}, Tm_IntroPure { p = p2;_}) -> eq_tm p1 p2
-      | (Tm_IntroExists { erased = b1; p2 = p1; witnesses = l1;_},
-         Tm_IntroExists { erased = b2; p2; witnesses = l2;_}) ->
-          ((b1 = b2) && (eq_tm p1 p2)) && (eq_tm_list l1 l2)
+      | (Tm_IntroExists { p2 = p1; witnesses = l1;_}, Tm_IntroExists
+         { p2; witnesses = l2;_}) -> (eq_tm p1 p2) && (eq_tm_list l1 l2)
       | (Tm_ElimExists { p1;_}, Tm_ElimExists { p1 = p2;_}) -> eq_tm p1 p2
       | (Tm_If { b1 = g1; then_ = ethen1; else_ = eelse1; post1 = p1;_},
          Tm_If { b1 = g2; then_ = ethen2; else_ = eelse2; post1 = p2;_}) ->

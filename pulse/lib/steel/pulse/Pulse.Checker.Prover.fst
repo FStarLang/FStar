@@ -261,7 +261,7 @@ let prove
     (| pst.pg, nts_uvs, list_as_vprop pst.remaining_ctxt, k_elab_equiv k (magic ()) (magic ()) |)
 #pop-options
 
-#push-options "--z3rlimit_factor 8 --fuel 1 --ifuel 1"
+#push-options "--z3rlimit_factor 8 --fuel 0 --ifuel 1"
 let try_frame_pre_uvs (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_vprop)
   (uvs:env { disjoint g uvs })
   (#t:st_term) (#c:comp_st) (d:st_typing (push_env g uvs) t c)

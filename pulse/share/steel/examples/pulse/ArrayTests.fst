@@ -68,7 +68,7 @@ fn fill_array (#t:Type0) (l:US.t) (a:(a:A.array t{ US.v l == A.length a })) (v:t
    )
    {
       let vi = !i; 
-      (a.(vi) <- v);
+      a.(vi) <- v;
       i := US.(vi +^ 1sz);
       ()
    };
@@ -253,7 +253,7 @@ fn write_at_offset (#t:Type0) (a:array t) (i:US.t) (v:t)
       A.pts_to a full_perm (Seq.upd s (US.v i) v)
    )
 {
-   (a.(i) <- v)
+   a.(i) <- v
 }
 ```
 
@@ -282,48 +282,42 @@ fn sort3 (a:array U32.t)
    {
       if (y >^ z)
       {
-         (a.(0sz) <- z);
-         (a.(1sz) <- y);
-         (a.(2sz) <- x);
-         ()
+         a.(0sz) <- z;
+         a.(1sz) <- y;
+         a.(2sz) <- x;
       }
       else {
          if (x >^ z)
          {
-            (a.(0sz) <- y);
-            (a.(1sz) <- z);
-            (a.(2sz) <- x);
-            ()
+            a.(0sz) <- y;
+            a.(1sz) <- z;
+            a.(2sz) <- x;
          }
          else
          {
-            (a.(0sz) <- y);
-            (a.(1sz) <- x);
-            (a.(2sz) <- z);
-            ()  
+            a.(0sz) <- y;
+            a.(1sz) <- x;
+            a.(2sz) <- z;
          }     
       }
    }
    else {
       if (y >^ z) {
          if (x >^ z) {
-            (a.(0sz) <- z);
-            (a.(1sz) <- x);
-            (a.(2sz) <- y);
-            ()
+            a.(0sz) <- z;
+            a.(1sz) <- x;
+            a.(2sz) <- y;
          }
          else {
-            (a.(0sz) <- x);
-            (a.(1sz) <- z);
-            (a.(2sz) <- y);
-            ()
+            a.(0sz) <- x;
+            a.(1sz) <- z;
+            a.(2sz) <- y;
          }
       }
       else {
-         (a.(0sz) <- x);
-         (a.(1sz) <- y);
-         (a.(2sz) <- z);
-         ()
+         a.(0sz) <- x;
+         a.(1sz) <- y;
+         a.(2sz) <- z;
       }
    }
 }
@@ -365,9 +359,9 @@ fn sort3_alt (a:array U32.t)
       y := vz;
       z := vy;
    };
-   (a.(0sz) <- x);
-   (a.(1sz) <- y);
-   (a.(2sz) <- z);
+   a.(0sz) <- x;
+   a.(1sz) <- y;
+   a.(2sz) <- z;
    ()
 }
 ```

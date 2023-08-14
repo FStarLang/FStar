@@ -140,7 +140,8 @@ let rec elab_st_typing (#g:env)
       mk_abs_with_name ppname ty (elab_qual qual) (RT.close_term body x) //this closure should be provably redundant by strengthening the conditions on x
 
 
-    | T_STApp _ head  _formal qual _res arg head_typing arg_typing ->
+    | T_STApp _ head _ qual _ arg _ _
+    | T_STGhostApp _ head _ qual _ arg _ _ _ _ ->
       let head = elab_term head in
       let arg = elab_term arg in
       R.mk_app head [(arg, elab_qual qual)]
@@ -165,7 +166,8 @@ let rec elab_st_typing (#g:env)
       let ty1 = elab_term (comp_res c1) in
       elab_bind bc e1 (mk_abs_with_name b.binder_ppname.name ty1 R.Q_Explicit (RT.close_term e2 x))
 
-    | T_TotBind _ e1 e2 t1 _ x _ e2_typing ->
+    | T_TotBind _ e1 e2 t1 _ x _ e2_typing
+    | T_GhostBind _ e1 e2 t1 _ x _ e2_typing _ ->
       let re1 = elab_term e1 in
       let rt1 = elab_term t1 in
       let re2 = elab_st_typing e2_typing in
@@ -215,13 +217,6 @@ let rec elab_st_typing (#g:env)
       let rp = elab_term p in
       let re = elab_term e in
       mk_intro_exists ru rt (mk_abs rt R.Q_Explicit rp) re
-
-    | T_IntroExistsErased _ u b p e _ _ _ ->
-      let ru = u in
-      let rt = elab_term b.binder_ty in
-      let rp = elab_term p in
-      let re = elab_term e in
-      mk_intro_exists_erased ru rt (mk_abs rt R.Q_Explicit rp) re
 
     | T_While _ inv _ _ _ cond_typing body_typing ->
       let inv = elab_term inv in

@@ -434,6 +434,9 @@ let (mk_stt_ghost_comp_post_equiv :
 let (mk_total :
   FStar_Reflection_Types.typ -> FStar_Reflection_V2_Data.comp_view) =
   fun t -> FStar_Reflection_V2_Data.C_Total t
+let (mk_ghost :
+  FStar_Reflection_Types.typ -> FStar_Reflection_V2_Data.comp_view) =
+  fun t -> FStar_Reflection_V2_Data.C_GTotal t
 let (binder_of_t_q :
   FStar_Reflection_Types.term ->
     FStar_Reflection_V2_Data.aqualv -> FStar_Reflection_Types.binder)
@@ -478,6 +481,20 @@ let (mk_arrow_with_name :
               (FStar_Reflection_V2_Data.Tv_Arrow
                  ((binder_of_t_q_s ty q s),
                    (FStar_Reflection_V2_Builtins.pack_comp (mk_total out))))
+let (mk_ghost_arrow_with_name :
+  FStar_Reflection_Typing.pp_name_t ->
+    arrow_dom -> FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
+  =
+  fun s ->
+    fun f ->
+      fun out ->
+        let uu___ = f in
+        match uu___ with
+        | (ty, q) ->
+            FStar_Reflection_V2_Builtins.pack_ln
+              (FStar_Reflection_V2_Data.Tv_Arrow
+                 ((binder_of_t_q_s ty q s),
+                   (FStar_Reflection_V2_Builtins.pack_comp (mk_ghost out))))
 let (mk_abs :
   FStar_Reflection_Types.term ->
     FStar_Reflection_V2_Data.aqualv ->
