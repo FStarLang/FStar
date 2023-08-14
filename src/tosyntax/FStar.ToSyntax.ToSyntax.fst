@@ -2885,8 +2885,8 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs:list S.term) quals tcs : (env_t
          concat_options additional_records @ [TyconVariant (id, bds, k, variants)]
     | tycon -> [tycon] in
   let tcs = concatMap desugar_tycon_variant_record tcs in
-  let tot = mk_term (Name (C.effect_Tot_lid)) rng Expr in
-  let with_constructor_effect t = mk_term (App(tot, t, Nothing)) t.range t.level in
+  let tot rng = mk_term (Name (C.effect_Tot_lid)) rng Expr in
+  let with_constructor_effect t = mk_term (App(tot t.range, t, Nothing)) t.range t.level in
   let apply_binders t binders =
     let imp_of_aqual (b:AST.binder) = match b.aqual with
         | Some Implicit
@@ -2930,7 +2930,7 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs:list S.term) quals tcs : (env_t
                                             mutuals;
                                             ds=[]};
                  sigquals = quals;
-                 sigrng = rng;
+                 sigrng = range_of_id id;
                  sigmeta = default_sigmeta;
                  sigattrs = d_attrs;
                  sigopts = None } in
@@ -3012,12 +3012,12 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs:list S.term) quals tcs : (env_t
                  { sigel = Sig_effect_abbrev {lid=qlid; us=[]; bs=typars; comp=c;
                                               cflags=cattributes @ comp_flags c};
                    sigquals = quals;
-                   sigrng = rng;
+                   sigrng = range_of_id id;
                    sigmeta = default_sigmeta  ;
                    sigattrs = [];
                    sigopts = None; }
             else let t = desugar_typ env' t in
-                 mk_typ_abbrev env d qlid [] typars kopt t [qlid] quals rng in
+                 mk_typ_abbrev env d qlid [] typars kopt t [qlid] quals (range_of_id id) in
 
         let env = push_sigelt env se in
         env, [se]
@@ -3058,7 +3058,7 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs:list S.term) quals tcs : (env_t
                   let tpars = Subst.close_binders tpars in
                   Subst.close tpars t
           in
-          [([], mk_typ_abbrev env d id uvs tpars (Some k) t [id] quals rng)]
+          [([], mk_typ_abbrev env d id uvs tpars (Some k) t [id] quals (range_of_lid id))]
 
         | Inl ({ sigel = Sig_inductive_typ {lid=tname;
                                             us=univs;
@@ -3096,7 +3096,7 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs:list S.term) quals tcs : (env_t
                                                     num_ty_params=ntps;
                                                     mutuals};
                                             sigquals = quals;
-                                            sigrng = rng;
+                                            sigrng = range_of_lid name;
                                             sigmeta = default_sigmeta  ;
                                             sigattrs = U.deduplicate_terms (val_attrs @ d_attrs @ map (desugar_term env) cons_attrs);
                                             sigopts = None; }))))
@@ -3116,7 +3116,7 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs:list S.term) quals tcs : (env_t
                                             mutuals;
                                             ds=constrNames};
                                  sigquals = tname_quals;
-                                 sigrng = rng;
+                                 sigrng = range_of_lid tname;
                                  sigmeta = default_sigmeta  ;
                                  sigattrs = U.deduplicate_terms (val_attrs @ d_attrs);
                                  sigopts = None; })::constrs

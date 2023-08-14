@@ -6630,14 +6630,18 @@ let rec (desugar_tycon :
               | tycon -> [tycon] in
             let tcs1 =
               FStar_Compiler_List.concatMap desugar_tycon_variant_record tcs in
-            let tot =
+            let tot rng1 =
               FStar_Parser_AST.mk_term
-                (FStar_Parser_AST.Name FStar_Parser_Const.effect_Tot_lid) rng
-                FStar_Parser_AST.Expr in
+                (FStar_Parser_AST.Name FStar_Parser_Const.effect_Tot_lid)
+                rng1 FStar_Parser_AST.Expr in
             let with_constructor_effect t =
-              FStar_Parser_AST.mk_term
-                (FStar_Parser_AST.App (tot, t, FStar_Parser_AST.Nothing))
-                t.FStar_Parser_AST.range t.FStar_Parser_AST.level in
+              let uu___ =
+                let uu___1 =
+                  let uu___2 = tot t.FStar_Parser_AST.range in
+                  (uu___2, t, FStar_Parser_AST.Nothing) in
+                FStar_Parser_AST.App uu___1 in
+              FStar_Parser_AST.mk_term uu___ t.FStar_Parser_AST.range
+                t.FStar_Parser_AST.level in
             let apply_binders t binders =
               let imp_of_aqual b =
                 match b.FStar_Parser_AST.aqual with
@@ -6758,6 +6762,7 @@ let rec (desugar_tycon :
                        let typars1 = FStar_Syntax_Subst.close_binders typars in
                        let k1 = FStar_Syntax_Subst.close typars1 k in
                        let se =
+                         let uu___2 = FStar_Ident.range_of_id id in
                          {
                            FStar_Syntax_Syntax.sigel =
                              (FStar_Syntax_Syntax.Sig_inductive_typ
@@ -6771,7 +6776,7 @@ let rec (desugar_tycon :
                                   FStar_Syntax_Syntax.mutuals = mutuals;
                                   FStar_Syntax_Syntax.ds = []
                                 });
-                           FStar_Syntax_Syntax.sigrng = rng;
+                           FStar_Syntax_Syntax.sigrng = uu___2;
                            FStar_Syntax_Syntax.sigquals = quals1;
                            FStar_Syntax_Syntax.sigmeta =
                              FStar_Syntax_Syntax.default_sigmeta;
@@ -6992,6 +6997,7 @@ let rec (desugar_tycon :
                                        match uu___3 with
                                        | FStar_Syntax_Syntax.Effect -> false
                                        | uu___4 -> true)) in
+                             let uu___3 = FStar_Ident.range_of_id id in
                              {
                                FStar_Syntax_Syntax.sigel =
                                  (FStar_Syntax_Syntax.Sig_effect_abbrev
@@ -7005,7 +7011,7 @@ let rec (desugar_tycon :
                                            cattributes
                                            (FStar_Syntax_Util.comp_flags c1))
                                     });
-                               FStar_Syntax_Syntax.sigrng = rng;
+                               FStar_Syntax_Syntax.sigrng = uu___3;
                                FStar_Syntax_Syntax.sigquals = quals2;
                                FStar_Syntax_Syntax.sigmeta =
                                  FStar_Syntax_Syntax.default_sigmeta;
@@ -7015,8 +7021,9 @@ let rec (desugar_tycon :
                              }
                        else
                          (let t1 = desugar_typ env' t in
+                          let uu___3 = FStar_Ident.range_of_id id in
                           mk_typ_abbrev env d qlid [] typars kopt1 t1 
-                            [qlid] quals1 rng) in
+                            [qlid] quals1 uu___3) in
                      let env1 = FStar_Syntax_DsEnv.push_sigelt env se in
                      (env1, [se]))
             | (FStar_Parser_AST.TyconRecord uu___)::[] ->
@@ -7140,9 +7147,11 @@ let rec (desugar_tycon :
                                                 t2) in
                                    let uu___12 =
                                      let uu___13 =
+                                       let uu___14 =
+                                         FStar_Ident.range_of_lid id in
                                        mk_typ_abbrev env1 d id uvs tpars
                                          (FStar_Pervasives_Native.Some k) t1
-                                         [id] quals1 rng in
+                                         [id] quals1 uu___14 in
                                      ([], uu___13) in
                                    [uu___12]
                                | FStar_Pervasives.Inl
@@ -7315,9 +7324,12 @@ let rec (desugar_tycon :
                                                               FStar_Syntax_Syntax.Sig_datacon
                                                                 uu___16 in
                                                             let uu___16 =
-                                                              let uu___17 =
-                                                                let uu___18 =
-                                                                  let uu___19
+                                                              FStar_Ident.range_of_lid
+                                                                name in
+                                                            let uu___17 =
+                                                              let uu___18 =
+                                                                let uu___19 =
+                                                                  let uu___20
                                                                     =
                                                                     FStar_Compiler_List.map
                                                                     (desugar_term
@@ -7325,24 +7337,24 @@ let rec (desugar_tycon :
                                                                     cons_attrs in
                                                                   FStar_Compiler_List.op_At
                                                                     d_attrs
-                                                                    uu___19 in
+                                                                    uu___20 in
                                                                 FStar_Compiler_List.op_At
                                                                   val_attrs
-                                                                  uu___18 in
+                                                                  uu___19 in
                                                               FStar_Syntax_Util.deduplicate_terms
-                                                                uu___17 in
+                                                                uu___18 in
                                                             {
                                                               FStar_Syntax_Syntax.sigel
                                                                 = uu___15;
                                                               FStar_Syntax_Syntax.sigrng
-                                                                = rng;
+                                                                = uu___16;
                                                               FStar_Syntax_Syntax.sigquals
                                                                 = quals2;
                                                               FStar_Syntax_Syntax.sigmeta
                                                                 =
                                                                 FStar_Syntax_Syntax.default_sigmeta;
                                                               FStar_Syntax_Syntax.sigattrs
-                                                                = uu___16;
+                                                                = uu___17;
                                                               FStar_Syntax_Syntax.sigopts
                                                                 =
                                                                 FStar_Pervasives_Native.None
@@ -7383,6 +7395,9 @@ let rec (desugar_tycon :
                                               (let uu___12 =
                                                  let uu___13 =
                                                    let uu___14 =
+                                                     FStar_Ident.range_of_lid
+                                                       tname in
+                                                   let uu___15 =
                                                      FStar_Syntax_Util.deduplicate_terms
                                                        (FStar_Compiler_List.op_At
                                                           val_attrs d_attrs) in
@@ -7407,14 +7422,14 @@ let rec (desugar_tycon :
                                                               = constrNames
                                                           });
                                                      FStar_Syntax_Syntax.sigrng
-                                                       = rng;
+                                                       = uu___14;
                                                      FStar_Syntax_Syntax.sigquals
                                                        = tname_quals;
                                                      FStar_Syntax_Syntax.sigmeta
                                                        =
                                                        FStar_Syntax_Syntax.default_sigmeta;
                                                      FStar_Syntax_Syntax.sigattrs
-                                                       = uu___14;
+                                                       = uu___15;
                                                      FStar_Syntax_Syntax.sigopts
                                                        =
                                                        FStar_Pervasives_Native.None
