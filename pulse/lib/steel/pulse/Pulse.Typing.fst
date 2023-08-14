@@ -67,7 +67,7 @@ let mk_pts_to (ty:term) (r:term) (v:term) : term =
   let t = tm_fvar (as_fv pts_to_lid) in
   let t = tm_pureapp t (Some Implicit) ty in
   let t = tm_pureapp t None r in
-  let t = tm_pureapp t None (tm_fvar (as_fv full_perm_lid)) in
+  let t = tm_pureapp t (Some Implicit) (tm_fvar (as_fv full_perm_lid)) in
   tm_pureapp t None v
 
 let comp_return (c:ctag) (use_eq:bool) (u:universe) (t:term) (e:term) (post:term) (x:var)

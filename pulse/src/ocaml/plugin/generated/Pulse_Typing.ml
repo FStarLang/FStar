@@ -204,7 +204,8 @@ let (mk_pts_to :
         let t2 =
           Pulse_Syntax_Pure.tm_pureapp t1 FStar_Pervasives_Native.None r in
         let t3 =
-          Pulse_Syntax_Pure.tm_pureapp t2 FStar_Pervasives_Native.None
+          Pulse_Syntax_Pure.tm_pureapp t2
+            (FStar_Pervasives_Native.Some Pulse_Syntax_Base.Implicit)
             (Pulse_Syntax_Pure.tm_fvar
                (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.full_perm_lid)) in
         Pulse_Syntax_Pure.tm_pureapp t3 FStar_Pervasives_Native.None v

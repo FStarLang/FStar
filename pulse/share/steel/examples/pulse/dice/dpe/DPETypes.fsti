@@ -116,7 +116,7 @@ type engine_context_t = {
 }
 
 let engine_context_perm (c:engine_context_t) : vprop
-  = A.pts_to c.uds full_perm uds_bytes ** 
+  = A.pts_to c.uds uds_bytes ** 
     pure (A.is_full_array c.uds)
 
 let mk_engine_context_t uds : engine_context_t = {uds}
@@ -141,7 +141,7 @@ let mk_l0_context_repr_t
 = {cdi; repr}
 
 let l0_context_perm (c:l0_context_t) (r:l0_context_repr_t): vprop
-  = A.pts_to c.cdi full_perm r.cdi **
+  = A.pts_to c.cdi r.cdi **
     pure (A.is_full_array c.cdi
        /\ cdi_functional_correctness r.cdi r.repr
        /\ l0_is_authentic r.repr)
@@ -150,11 +150,11 @@ let l0_context_perm (c:l0_context_t) (r:l0_context_repr_t): vprop
 (* L1 Context *)
 noeq
 type l1_context_t = { deviceID_priv: A.larray U8.t (SZ.v v32us);
-                    deviceID_pub: A.larray U8.t (SZ.v v32us);   
-                    aliasKey_priv: A.larray U8.t (SZ.v v32us);
-                    aliasKey_pub: A.larray U8.t (SZ.v v32us);
-                    aliasKeyCRT: A.array U8.t;
-                    deviceIDCSR: A.array U8.t; }
+                      deviceID_pub: A.larray U8.t (SZ.v v32us);   
+                      aliasKey_priv: A.larray U8.t (SZ.v v32us);
+                      aliasKey_pub: A.larray U8.t (SZ.v v32us);
+                      aliasKeyCRT: A.array U8.t;
+                      deviceIDCSR: A.array U8.t; }
 
 let mk_l1_context_t deviceID_priv deviceID_pub aliasKey_priv aliasKey_pub aliasKeyCRT deviceIDCSR 
 : l1_context_t
@@ -200,12 +200,12 @@ let mk_l1_context_repr_t
 
 let l1_context_perm (c:l1_context_t) (r:l1_context_repr_t)
   : vprop
-  = A.pts_to c.deviceID_priv full_perm r.deviceID_priv **
-    A.pts_to c.deviceID_pub full_perm r.deviceID_pub **
-    A.pts_to c.aliasKey_priv full_perm r.aliasKey_priv **
-    A.pts_to c.aliasKey_pub full_perm r.aliasKey_pub **
-    A.pts_to c.aliasKeyCRT full_perm r.aliasKeyCRT **
-    A.pts_to c.deviceIDCSR full_perm r.deviceIDCSR **
+  = A.pts_to c.deviceID_priv r.deviceID_priv **
+    A.pts_to c.deviceID_pub r.deviceID_pub **
+    A.pts_to c.aliasKey_priv r.aliasKey_priv **
+    A.pts_to c.aliasKey_pub r.aliasKey_pub **
+    A.pts_to c.aliasKeyCRT r.aliasKeyCRT **
+    A.pts_to c.deviceIDCSR r.deviceIDCSR **
     pure (valid_hkdf_ikm_len dice_digest_len
        /\ aliasKey_functional_correctness
             dice_hash_alg dice_digest_len r.cdi r.repr.fwid
@@ -227,6 +227,9 @@ let l1_context_perm (c:l1_context_t) (r:l1_context_repr_t)
        /\ A.is_full_array c.deviceIDCSR)  
 
 (* Generic Context *)
+// unlike record_t (below), we require full permission on the resources inside
+// the context because we will eventually free the resources when we destroy
+// the context
 noeq
 type context_t = 
   | Engine_context : c:engine_context_t -> context_t

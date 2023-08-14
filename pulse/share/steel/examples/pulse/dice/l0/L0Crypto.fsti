@@ -34,20 +34,21 @@ val derive_key_pair
   (#ikm_seq #lbl_seq:erased (Seq.seq U8.t))
  : stt unit
    (requires (
-    A.pts_to pub full_perm _pub_seq ** 
-    A.pts_to priv full_perm _priv_seq ** 
-    A.pts_to ikm ikm_perm ikm_seq ** 
-    A.pts_to lbl lbl_perm lbl_seq
+    A.pts_to pub _pub_seq ** 
+    A.pts_to priv _priv_seq ** 
+    A.pts_to ikm #ikm_perm ikm_seq ** 
+    A.pts_to lbl #lbl_perm lbl_seq
     ))
     (ensures (fun _ ->
-        A.pts_to ikm ikm_perm ikm_seq ** 
-        A.pts_to lbl lbl_perm lbl_seq **
+        A.pts_to ikm #ikm_perm ikm_seq ** 
+        A.pts_to lbl #lbl_perm lbl_seq **
         exists_ (fun (pub_seq:elseq U8.t v32us) ->
         exists_ (fun (priv_seq:elseq U8.t v32us) -> (
-        A.pts_to pub full_perm pub_seq ** 
-        A.pts_to priv full_perm priv_seq **
-        pure ((pub_seq, priv_seq) == derive_key_pair_spec ikm_len ikm_seq lbl_len lbl_seq)
-    )))))
+          A.pts_to pub pub_seq ** 
+          A.pts_to priv priv_seq **
+          pure ((pub_seq, priv_seq) == derive_key_pair_spec ikm_len ikm_seq lbl_len lbl_seq)
+        )))
+      ))
 
 let derive_DeviceID_spec
   (alg:alg_t)
@@ -73,19 +74,19 @@ val derive_DeviceID
   (#cdi_perm #p:perm)
   : stt unit
   (requires (
-    A.pts_to cdi cdi_perm cdi0 **
-    A.pts_to deviceID_label p deviceID_label0 **
-    A.pts_to deviceID_pub full_perm deviceID_pub0 **
-    A.pts_to deviceID_priv full_perm deviceID_priv0 **
+    A.pts_to cdi #cdi_perm cdi0 **
+    A.pts_to deviceID_label #p deviceID_label0 **
+    A.pts_to deviceID_pub deviceID_pub0 **
+    A.pts_to deviceID_priv deviceID_priv0 **
     pure (valid_hkdf_ikm_len (digest_len alg))
   ))
   (ensures (fun _ ->
-    A.pts_to cdi cdi_perm cdi0 **
-    A.pts_to deviceID_label p deviceID_label0 **
+    A.pts_to cdi #cdi_perm cdi0 **
+    A.pts_to deviceID_label #p deviceID_label0 **
     (exists_ (fun (deviceID_pub1:elseq U8.t v32us) ->
      exists_ (fun (deviceID_priv1:elseq U8.t v32us) ->
-        A.pts_to deviceID_pub full_perm deviceID_pub1 **
-        A.pts_to deviceID_priv full_perm deviceID_priv1 **
+        A.pts_to deviceID_pub deviceID_pub1 **
+        A.pts_to deviceID_priv deviceID_priv1 **
         pure (
           valid_hkdf_ikm_len (digest_len alg) /\
           derive_DeviceID_spec alg (digest_len alg) cdi0 deviceID_label_len deviceID_label0 
@@ -121,21 +122,21 @@ val derive_AliasKey
   (#cdi_perm #p:perm)
  : stt unit
   (requires (
-    A.pts_to cdi cdi_perm cdi0 **
-    A.pts_to fwid p fwid0 **
-    A.pts_to aliasKey_label p aliasKey_label0 **
-    A.pts_to aliasKey_pub full_perm aliasKey_pub0 **
-    A.pts_to aliasKey_priv full_perm aliasKey_priv0 **
+    A.pts_to cdi #cdi_perm cdi0 **
+    A.pts_to fwid #p fwid0 **
+    A.pts_to aliasKey_label #p aliasKey_label0 **
+    A.pts_to aliasKey_pub aliasKey_pub0 **
+    A.pts_to aliasKey_priv aliasKey_priv0 **
     pure (is_hashable_len (digest_len alg) /\ valid_hkdf_ikm_len (digest_len alg))
   ))
   (ensures (fun _ ->
-    A.pts_to cdi cdi_perm cdi0 **
-    A.pts_to fwid p fwid0 **
-    A.pts_to aliasKey_label p aliasKey_label0 **
+    A.pts_to cdi #cdi_perm cdi0 **
+    A.pts_to fwid #p fwid0 **
+    A.pts_to aliasKey_label #p aliasKey_label0 **
     (exists_ (fun (aliasKey_pub1:elseq U8.t v32us) ->
      exists_ (fun (aliasKey_priv1:elseq U8.t v32us) ->
-        A.pts_to aliasKey_pub full_perm aliasKey_pub1 **
-        A.pts_to aliasKey_priv full_perm aliasKey_priv1 **
+        A.pts_to aliasKey_pub aliasKey_pub1 **
+        A.pts_to aliasKey_priv aliasKey_priv1 **
         pure (
           is_hashable_len (digest_len alg) /\ 
           valid_hkdf_ikm_len (digest_len alg) /\
@@ -157,15 +158,16 @@ val derive_AuthKeyID
   (deviceID_pub: A.larray U8.t (US.v v32us))
   (#authKeyID0:erased (Seq.seq U8.t))
   (#deviceID_pub0:erased (elseq U8.t v32us))
+  (#p:perm)
   : stt unit
   (requires (
-    A.pts_to deviceID_pub full_perm deviceID_pub0 **
-    A.pts_to authKeyID full_perm authKeyID0 
+    A.pts_to deviceID_pub #p deviceID_pub0 **
+    A.pts_to authKeyID authKeyID0 
    ))
   (ensures (fun _ ->
-    A.pts_to deviceID_pub full_perm deviceID_pub0 **
+    A.pts_to deviceID_pub #p deviceID_pub0 **
     exists_ (fun (authKeyID1:Seq.seq U8.t) ->
-      A.pts_to authKeyID full_perm authKeyID1 **
+      A.pts_to authKeyID authKeyID1 **
       pure (Seq.equal (derive_AuthKeyID_spec alg deviceID_pub0) authKeyID1)
     )
   ))

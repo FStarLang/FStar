@@ -21,8 +21,8 @@ fn create_deviceIDCRI
   (#pub:erased (elseq U8.t v32us)) 
   (#_buf:erased (elseq U8.t deviceIDCRI_len))
   requires 
-    A.pts_to deviceID_pub pub_perm pub **
-    A.pts_to deviceIDCRI_buf full_perm _buf **
+    A.pts_to deviceID_pub #pub_perm pub **
+    A.pts_to deviceIDCRI_buf _buf **
     pure (
       deviceIDCRI_len == len_of_deviceIDCRI 
                           deviceIDCSR_ingredients.version
@@ -32,8 +32,8 @@ fn create_deviceIDCRI
     )
   ensures
     exists (buf:elseq U8.t deviceIDCRI_len).
-      A.pts_to deviceID_pub pub_perm pub **
-      A.pts_to deviceIDCRI_buf full_perm buf **
+      A.pts_to deviceID_pub #pub_perm pub **
+      A.pts_to deviceIDCRI_buf buf **
       pure (
         buf `Seq.equal`
           (spec_serialize_deviceIDCRI 
@@ -72,9 +72,9 @@ fn sign_and_finalize_deviceIDCSR
   (#_cri_buf:erased (elseq U8.t deviceIDCRI_len)) 
   (#_csr_buf:erased (elseq U8.t deviceIDCSR_len))
   requires (
-    A.pts_to deviceID_priv priv_perm priv **
-    A.pts_to deviceIDCRI_buf full_perm _cri_buf **
-    A.pts_to deviceIDCSR_buf full_perm _csr_buf **
+    A.pts_to deviceID_priv #priv_perm priv **
+    A.pts_to deviceIDCRI_buf _cri_buf **
+    A.pts_to deviceIDCSR_buf _csr_buf **
     pure (
       deviceIDCRI_len == len_of_deviceIDCRI 
                           deviceIDCSR_ingredients.version
@@ -87,9 +87,9 @@ fn sign_and_finalize_deviceIDCSR
     ))
   ensures (
     exists (csr_buf:elseq U8.t deviceIDCSR_len). 
-    A.pts_to deviceID_priv priv_perm priv **
-    A.pts_to deviceIDCRI_buf full_perm _cri_buf **
-    A.pts_to deviceIDCSR_buf full_perm csr_buf **
+    A.pts_to deviceID_priv #priv_perm priv **
+    A.pts_to deviceIDCRI_buf _cri_buf **
+    A.pts_to deviceIDCSR_buf csr_buf **
     pure (
       csr_buf `Seq.equal`
         (spec_serialize_deviceIDCSR 
@@ -132,11 +132,11 @@ fn create_aliasKeyTBS
   (#deviceID_pub0 #aliasKey_pub0: erased (elseq U8.t v32us)) 
   (#_buf:erased (elseq U8.t aliasKeyTBS_len))
   requires 
-    A.pts_to fwid fwid_perm fwid0 **
-    A.pts_to authKeyID authKey_perm authKeyID0 **
-    A.pts_to deviceID_pub device_perm deviceID_pub0 **
-    A.pts_to aliasKey_pub aliasKey_perm aliasKey_pub0 **
-    A.pts_to aliasKeyTBS_buf full_perm _buf ** 
+    A.pts_to fwid #fwid_perm fwid0 **
+    A.pts_to authKeyID #authKey_perm authKeyID0 **
+    A.pts_to deviceID_pub #device_perm deviceID_pub0 **
+    A.pts_to aliasKey_pub #aliasKey_perm aliasKey_pub0 **
+    A.pts_to aliasKeyTBS_buf _buf ** 
     pure (
       aliasKeyTBS_len == len_of_aliasKeyTBS
                           aliasKeyCRT_ingredients.serialNumber
@@ -149,11 +149,11 @@ fn create_aliasKeyTBS
                           aliasKeyCRT_ingredients.l0_version
     )
   ensures exists (buf:elseq U8.t aliasKeyTBS_len).
-    A.pts_to fwid fwid_perm fwid0 **
-    A.pts_to authKeyID authKey_perm authKeyID0 **
-    A.pts_to deviceID_pub device_perm deviceID_pub0 **
-    A.pts_to aliasKey_pub aliasKey_perm aliasKey_pub0 **
-    A.pts_to aliasKeyTBS_buf full_perm buf **
+    A.pts_to fwid #fwid_perm fwid0 **
+    A.pts_to authKeyID #authKey_perm authKeyID0 **
+    A.pts_to deviceID_pub #device_perm deviceID_pub0 **
+    A.pts_to aliasKey_pub #aliasKey_perm aliasKey_pub0 **
+    A.pts_to aliasKeyTBS_buf buf **
     pure (
       buf `Seq.equal`
         (spec_serialize_aliasKeyTBS 
@@ -188,9 +188,9 @@ fn sign_and_finalize_aliasKeyCRT
   (#_tbs_buf:erased (elseq U8.t aliasKeyTBS_len))
   (#_crt_buf:erased (elseq U8.t aliasKeyCRT_len))
   requires (
-    A.pts_to deviceID_priv priv_perm priv **
-    A.pts_to aliasKeyTBS_buf full_perm _tbs_buf **
-    A.pts_to aliasKeyCRT_buf full_perm _crt_buf **
+    A.pts_to deviceID_priv #priv_perm priv **
+    A.pts_to aliasKeyTBS_buf _tbs_buf **
+    A.pts_to aliasKeyCRT_buf _crt_buf **
     pure (
       aliasKeyTBS_len == len_of_aliasKeyTBS
                           aliasKeyCRT_ingredients.serialNumber
@@ -207,9 +207,9 @@ fn sign_and_finalize_aliasKeyCRT
     ))
   ensures (
     exists (crt_buf:elseq U8.t aliasKeyCRT_len). 
-    A.pts_to deviceID_priv priv_perm priv **
-    A.pts_to aliasKeyTBS_buf full_perm _tbs_buf **
-    A.pts_to aliasKeyCRT_buf full_perm crt_buf **
+    A.pts_to deviceID_priv #priv_perm priv **
+    A.pts_to aliasKeyTBS_buf _tbs_buf **
+    A.pts_to aliasKeyCRT_buf crt_buf **
     pure (
       crt_buf `Seq.equal`
         (spec_serialize_aliasKeyCRT 
@@ -325,29 +325,29 @@ fn l0_main'
   (#cdi_perm #p:perm)
   requires (
     l0_record_perm record repr p **
-    A.pts_to cdi cdi_perm cdi0 **
-    A.pts_to deviceID_pub full_perm deviceID_pub0 **
-    A.pts_to deviceID_priv full_perm deviceID_priv0 **
-    A.pts_to aliasKey_pub full_perm aliasKey_pub0 **
-    A.pts_to aliasKey_priv full_perm aliasKey_priv0 **
-    A.pts_to aliasKeyCRT full_perm aliasKeyCRT0 **
-    A.pts_to deviceIDCSR full_perm deviceIDCSR0 **
+    A.pts_to cdi #cdi_perm cdi0 **
+    A.pts_to deviceID_pub deviceID_pub0 **
+    A.pts_to deviceID_priv deviceID_priv0 **
+    A.pts_to aliasKey_pub aliasKey_pub0 **
+    A.pts_to aliasKey_priv aliasKey_priv0 **
+    A.pts_to aliasKeyCRT aliasKeyCRT0 **
+    A.pts_to deviceIDCSR deviceIDCSR0 **
     pure (
       deviceIDCSR_pre record.deviceIDCSR_ingredients deviceIDCRI_len deviceIDCSR_len /\
       aliasKeyCRT_pre record.aliasKeyCRT_ingredients aliasKeyTBS_len aliasKeyCRT_len
     ))
   ensures (
       l0_record_perm record repr p **
-      A.pts_to cdi cdi_perm cdi0 **
+      A.pts_to cdi #cdi_perm cdi0 **
       exists (deviceID_pub1 deviceID_priv1 aliasKey_pub1 aliasKey_priv1:elseq U8.t v32us) 
              (aliasKeyCRT1:elseq U8.t aliasKeyCRT_len)
              (deviceIDCSR1:elseq U8.t deviceIDCSR_len). (
-        A.pts_to deviceID_pub full_perm deviceID_pub1 **
-        A.pts_to deviceID_priv full_perm deviceID_priv1 **
-        A.pts_to aliasKey_pub full_perm aliasKey_pub1 **
-        A.pts_to aliasKey_priv full_perm aliasKey_priv1 **
-        A.pts_to aliasKeyCRT full_perm aliasKeyCRT1 **
-        A.pts_to deviceIDCSR full_perm deviceIDCSR1 **
+        A.pts_to deviceID_pub deviceID_pub1 **
+        A.pts_to deviceID_priv deviceID_priv1 **
+        A.pts_to aliasKey_pub aliasKey_pub1 **
+        A.pts_to aliasKey_priv aliasKey_priv1 **
+        A.pts_to aliasKeyCRT aliasKeyCRT1 **
+        A.pts_to deviceIDCSR deviceIDCSR1 **
         pure (
           valid_hkdf_ikm_len dice_digest_len /\
           aliasKey_functional_correctness
@@ -401,8 +401,8 @@ fn l0_main'
     aliasKeyCRT_len aliasKeyCRT
     record.aliasKeyCRT_ingredients;
   
-  with s3. assert (A.pts_to deviceIDCRI full_perm s3);
-  with s4. assert (A.pts_to aliasKeyTBS full_perm s4);
+  with s3. assert (A.pts_to deviceIDCRI s3);
+  with s4. assert (A.pts_to aliasKeyTBS s4);
 
   A.free authKeyID;
   A.free deviceIDCRI #(coerce deviceIDCRI_len s3);

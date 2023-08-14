@@ -13,22 +13,22 @@ let elseq (a:Type) (l:nat) = s:Ghost.erased (Seq.seq a) { Seq.length s == l }
 fn compare (#t:eqtype) (l:US.t) (a1 a2:A.larray t (US.v l))
            (#p1 #p2:perm) (#s1 #s2:elseq t (US.v l))
   requires (
-    A.pts_to a1 p1 s1 **
-    A.pts_to a2 p2 s2
+    A.pts_to a1 #p1 s1 **
+    A.pts_to a2 #p2 s2
   )
   returns res:bool
   ensures (
-    A.pts_to a1 p1 s1 **
-    A.pts_to a2 p2 s2 **
+    A.pts_to a1 #p1 s1 **
+    A.pts_to a2 #p2 s2 **
     (pure (res <==> Seq.equal s1 s2))
   )
 {
   let mut i = 0sz;
   while (let vi = !i; if US.(vi <^ l) { let v1 = a1.(vi); let v2 = a2.(vi); (v1 = v2) } else { false } )
   invariant b. exists (vi:US.t). ( 
-    R.pts_to i full_perm vi **
-    A.pts_to a1 p1 s1 **
-    A.pts_to a2 p2 s2 **
+    R.pts_to i vi **
+    A.pts_to a1 #p1 s1 **
+    A.pts_to a2 #p2 s2 **
     pure (
       US.v vi <= US.v l /\
       (b == (US.(vi <^ l) && Seq.index s1 (US.v vi) = Seq.index s2 (US.v vi))) /\
@@ -49,18 +49,18 @@ fn compare (#t:eqtype) (l:US.t) (a1 a2:A.larray t (US.v l))
 ```pulse
 fn fill_array (#t:Type0) (l:US.t) (a:(a:A.array t{ US.v l == A.length a })) (v:t)
               (#s:(s:Ghost.erased (Seq.seq t) { Seq.length s == US.v l }))
-   requires (A.pts_to a full_perm s)
+   requires (A.pts_to a s)
    ensures 
       exists (s:Seq.seq t). (
-         A.pts_to a full_perm s **
+         A.pts_to a s **
          pure (s `Seq.equal` Seq.create (US.v l) v)
       )
 {
    let mut i = 0sz;
    while (let vi = !i; US.(vi <^ l))
    invariant b. exists (s:Seq.seq t) (vi:US.t). ( 
-      A.pts_to a full_perm s **
-      R.pts_to i full_perm vi **
+      A.pts_to a s **
+      R.pts_to i vi **
       pure ((b == US.(vi <^ l)) /\
             US.v vi <= US.v l /\
             Seq.length s == A.length a /\
@@ -81,7 +81,7 @@ fn array_of_zeroes (n:US.t)
    requires emp
    returns a: array U32.t
    ensures (
-    A.pts_to a full_perm (Seq.create (US.v n) 0ul) **
+    A.pts_to a (Seq.create (US.v n) 0ul) **
     pure (is_full_array a /\ A.length a == US.v n)
   )
 {
@@ -93,11 +93,11 @@ fn array_of_zeroes (n:US.t)
 //this is not a recommended way to do this, since s is not erased, but it works
 ```pulse
 fn read_at_offset_0 (#t:Type0) (a:array t) (i:US.t) (#p:perm) (#s:Seq.seq t)
-   requires (A.pts_to a p s **
+   requires (A.pts_to a #p s **
              pure (US.v i < Seq.length s))
    returns x:t
    ensures (
-      A.pts_to a p s **
+      A.pts_to a #p s **
       pure (//Seq.length s == A.length a /\
             US.v i < Seq.length s /\
             x == Seq.index s (US.v i))
@@ -110,11 +110,11 @@ fn read_at_offset_0 (#t:Type0) (a:array t) (i:US.t) (#p:perm) (#s:Seq.seq t)
 
 ```pulse
 fn read_at_offset_poly (#t:Type0) (a:array t) (i:US.t) (#p:perm) (#s:Ghost.erased (Seq.seq t))
-   requires (A.pts_to a p s **
+   requires (A.pts_to a #p s **
              pure (US.v i < Seq.length s))
    returns x:t
    ensures (
-      A.pts_to a p s **
+      A.pts_to a #p s **
       pure (US.v i < Seq.length s /\
             x == Seq.index s (US.v i))
    )
@@ -126,11 +126,11 @@ fn read_at_offset_poly (#t:Type0) (a:array t) (i:US.t) (#p:perm) (#s:Ghost.erase
 
 ```pulse
 fn read_at_offset (a:array U32.t) (i:US.t) (#p:perm) (#s:Ghost.erased (Seq.seq U32.t))
-   requires (A.pts_to a p s **
+   requires (A.pts_to a #p s **
              pure (US.v i < Seq.length s))
    returns x:U32.t
    ensures (
-      A.pts_to a p s **
+      A.pts_to a #p s **
       pure (US.v i < Seq.length s /\
             x == Seq.index s (US.v i))
    )
@@ -149,20 +149,20 @@ val test_array_access
   (#p: perm)
 : stt t
     (requires
-      A.pts_to a p s)
+      A.pts_to a #p s)
     (ensures fun res ->
-      A.pts_to a p s **
+      A.pts_to a #p s **
       pure (Seq.length s == A.length a /\
             US.v i < Seq.length s /\
             res == Seq.index s (US.v i)))
 
 ```pulse
 fn read_at_offset_refine (a:array U32.t) (i:US.t) (#p:perm) (#s:Ghost.erased (Seq.seq U32.t))
-   requires (A.pts_to a p s **
+   requires (A.pts_to a #p s **
              pure (US.v i < A.length a \/ US.v i < Seq.length s))
    returns x:U32.t
    ensures (
-      A.pts_to a p s
+      A.pts_to a #p s
      **
       pure (Seq.length s == A.length a /\
             US.v i < Seq.length s /\
@@ -177,11 +177,11 @@ fn read_at_offset_refine (a:array U32.t) (i:US.t) (#p:perm) (#s:Ghost.erased (Se
 
 ```pulse
 fn read_at_offset_refine_poly (#t:Type0) (a:array t) (i:US.t) (#p:perm) (#s:Ghost.erased (Seq.seq t))
-   requires (A.pts_to a p s **
+   requires (A.pts_to a #p s **
              pure (US.v i < A.length a \/ US.v i < Seq.length s))
    returns x:t
    ensures (
-      A.pts_to a p s
+      A.pts_to a #p s
      **
       pure (Seq.length s == A.length a /\
             US.v i < Seq.length s /\
@@ -218,11 +218,11 @@ fn read_at_offset_refine (a:array U32.t) (i:US.t) (#p:perm) (#s:Ghost.erased (Se
 //But if we hoist the pure payload into a refinement, then it can be used for typing throughout the spec & body
 ```pulse
 fn read_at_offset_refine_post (a:array U32.t) (i:(i:US.t { US.v i < A.length a})) (#p:perm) (#s:Ghost.erased (Seq.seq U32.t))
-   requires (A.pts_to a p s)
+   requires (A.pts_to a #p s)
    returns x: (x:U32.t { Seq.length s == A.length a /\
                          x == Seq.index s (US.v i)})
    ensures (
-      A.pts_to a p s
+      A.pts_to a #p s
    )
 { 
    let x = test_array_access a i;
@@ -232,12 +232,12 @@ fn read_at_offset_refine_post (a:array U32.t) (i:(i:US.t { US.v i < A.length a})
 
 ```pulse
 fn read_at_offset_refine_post2 (a:array U32.t) (i:US.t) (#p:perm) (#s:Ghost.erased (Seq.seq U32.t))
-   requires (A.pts_to a p s ** pure (US.v i < A.length a))
+   requires (A.pts_to a #p s ** pure (US.v i < A.length a))
    returns x: (x:U32.t { Seq.length s == A.length a /\
                          US.v i < A.length a /\
                          x == Seq.index s (US.v i)})
    ensures (
-      A.pts_to a p s
+      A.pts_to a #p s
    )
 { 
    let x = test_array_access a i;
@@ -248,9 +248,9 @@ fn read_at_offset_refine_post2 (a:array U32.t) (i:US.t) (#p:perm) (#s:Ghost.eras
 ```pulse
 fn write_at_offset (#t:Type0) (a:array t) (i:US.t) (v:t)
                    (#s:(s:Ghost.erased (Seq.seq t) {US.v i < Seq.length s}))
-   requires (A.pts_to a full_perm s)
+   requires (A.pts_to a s)
    ensures (
-      A.pts_to a full_perm (Seq.upd s (US.v i) v)
+      A.pts_to a (Seq.upd s (US.v i) v)
    )
 {
    a.(i) <- v
@@ -268,10 +268,10 @@ open FStar.UInt32
 ```pulse
 fn sort3 (a:array U32.t)
          (#s:(s:Ghost.erased (Seq.seq U32.t) {Seq.length s == 3}))
-   requires (A.pts_to a full_perm s)
+   requires (A.pts_to a s)
    ensures 
       exists s'. (
-         A.pts_to a full_perm s' **
+         A.pts_to a s' **
          pure (sorted s s')
       )
 {
@@ -328,10 +328,10 @@ fn sort3 (a:array U32.t)
 ```pulse
 fn sort3_alt (a:array U32.t)
              (#s:(s:Ghost.erased (Seq.seq U32.t) {Seq.length s == 3}))
-   requires (A.pts_to a full_perm s)
+   requires (A.pts_to a s)
    ensures 
       exists s'. (
-         A.pts_to a full_perm s' **
+         A.pts_to a s' **
          pure (sorted s s')
       )
 {
@@ -365,3 +365,4 @@ fn sort3_alt (a:array U32.t)
    ()
 }
 ```
+

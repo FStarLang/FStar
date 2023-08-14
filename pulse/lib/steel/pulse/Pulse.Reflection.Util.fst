@@ -593,7 +593,7 @@ let mk_pts_to (a:R.term) (r:R.term) (perm:R.term) (v:R.term) : R.term =
   let t = pack_ln (Tv_FVar (pack_fv pts_to_lid)) in
   let t = pack_ln (Tv_App t (a, Q_Implicit)) in
   let t = pack_ln (Tv_App t (r, Q_Explicit)) in
-  let t = pack_ln (Tv_App t (perm, Q_Explicit)) in
+  let t = pack_ln (Tv_App t (perm, Q_Implicit)) in
   pack_ln (Tv_App t (v, Q_Explicit))
 
 let full_perm_tm : R.term =

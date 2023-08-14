@@ -42,7 +42,7 @@ let task_elem = (
   & p: (a -> prop) // postcondition about the return value
   & (unit_emp_stt_pure_pure a p) // the computation
   & r: ref (option a) // the reference where we put the result of the computation
-  & Lock.lock (exists_ (fun v -> pts_to r full_perm v ** pure (maybe_sat p v)))
+  & Lock.lock (exists_ (fun v -> pts_to r v ** pure (maybe_sat p v)))
 )
 // depends negatively on par_env
 
@@ -54,8 +54,8 @@ let inv_task_queue
   (c: ref int) // a counter of how many tasks are currently being performed
   : vprop
 = (exists_ (fun vq -> exists_ (fun vc ->
-    HR.pts_to q full_perm vq **
-    pts_to c full_perm vc)))
+    HR.pts_to q vq **
+    pts_to c vc)))
 // depends postivitely on task_queue
 // depends negatively on par_env
 
@@ -77,13 +77,13 @@ let create_task_elem #a p f r l: task_elem
 
 assume
 val higher_alloc (#a:Type) (x:a)
-  : stt (HR.ref a) emp (fun r -> HR.pts_to r full_perm x)
+  : stt (HR.ref a) emp (fun r -> HR.pts_to r x)
 //= admit()
 //= (fun _ -> let x = HR.alloc x in return x)
 
 assume
 val higher_free (#a:Type) (r: HR.ref a)
-  : stt unit (exists_ (fun v -> HR.pts_to r full_perm v)) (fun _ -> emp)
+  : stt unit (exists_ (fun v -> HR.pts_to r v)) (fun _ -> emp)
 
 assume
 val higher_read (#a:Type)
@@ -91,8 +91,8 @@ val higher_read (#a:Type)
          (#v:Ghost.erased a)
          (r:HR.ref a)
   : stt a
-      (HR.pts_to r p v)
-      (fun x -> HR.pts_to r p v ** pure (x == Ghost.reveal v))
+      (HR.pts_to r #p v)
+      (fun x -> HR.pts_to r #p v ** pure (x == Ghost.reveal v))
       //(requires true)
 //      (ensures fun x -> x == Ghost.reveal v)
 
@@ -101,8 +101,8 @@ assume val higher_write (#a:Type)
           (r:HR.ref a)
           (x:a)
   : stt unit
-      (HR.pts_to r full_perm v)
-      (fun _ -> HR.pts_to r full_perm x)
+      (HR.pts_to r v)
+      (fun _ -> HR.pts_to r x)
 
 
 let enqueue (t: task_elem) (q: task_queue): task_queue
@@ -114,7 +114,7 @@ fn acquire_queue_lock
   //(#q: HR.ref task_queue) (#c: ref int)
   //(l: Lock.lock (inv_task_queue q c))
   requires emp
-  ensures (exists vq vc. HR.pts_to (get_queue p) full_perm vq ** pts_to (get_counter p) full_perm vc)
+  ensures (exists vq vc. HR.pts_to (get_queue p) vq ** pts_to (get_counter p) vc)
 {
   Lock.acquire (get_lock p);
   unfold (inv_task_queue (get_queue p) (get_counter p));
@@ -127,7 +127,7 @@ fn release_queue_lock
   //(#q: HR.ref task_queue) (#c: ref int)
   //(l: Lock.lock (inv_task_queue q c))
   (p: par_env)
-  requires (exists vq vc. HR.pts_to (get_queue p) full_perm vq ** pts_to (get_counter p) full_perm vc)
+  requires (exists vq vc. HR.pts_to (get_queue p) vq ** pts_to (get_counter p) vc)
   ensures emp
 {
   fold (inv_task_queue (get_queue p) (get_counter p));
@@ -137,14 +137,14 @@ fn release_queue_lock
 ```
 
 let ref_ownership r: vprop
-  = exists_ (fun v -> pts_to r full_perm v)
+  = exists_ (fun v -> pts_to r v)
 
 
 let pure_handler #a (post: a -> prop)
-  = (res: ref (option a) & Lock.lock (exists_ (fun v -> pts_to res full_perm v ** pure (maybe_sat post v))))
+  = (res: ref (option a) & Lock.lock (exists_ (fun v -> pts_to res v ** pure (maybe_sat post v))))
 
-let mk_pure_handler #a (p: a -> prop) (r: ref (option a)) (l: Lock.lock (exists_ (fun v -> pts_to r full_perm v ** pure (maybe_sat p v))))
- : pure_handler p //(res: ref (option a) & Lock.lock (exists_ (fun v -> pts_to res full_perm v ** pure (maybe_sat p v))))
+let mk_pure_handler #a (p: a -> prop) (r: ref (option a)) (l: Lock.lock (exists_ (fun v -> pts_to r v ** pure (maybe_sat p v))))
+ : pure_handler p //(res: ref (option a) & Lock.lock (exists_ (fun v -> pts_to res v ** pure (maybe_sat p v))))
 = (| r, l |)
 
 ```pulse
@@ -157,17 +157,17 @@ fn spawn_emp'
   //(l: Lock.lock (inv_task_queue q c))
   (f : (par_env -> unit_emp_stt_pure_pure a post))
  requires emp // requires prop?
- returns r: pure_handler post //(res: ref (option a) & Lock.lock (exists_ (fun v -> pts_to res full_perm v ** pure (maybe_sat post v))))
+ returns r: pure_handler post //(res: ref (option a) & Lock.lock (exists_ (fun v -> pts_to res v ** pure (maybe_sat post v))))
   //Lock.lock
  ensures emp
 {
   let res = Pulse.Lib.Reference.alloc #(option a) None;
-  let l_res = Lock.new_lock (exists_ (fun v -> pts_to res full_perm v ** pure (maybe_sat post v)));
+  let l_res = Lock.new_lock (exists_ (fun v -> pts_to res v ** pure (maybe_sat post v)));
   let task = create_task_elem #a post (f p) res l_res;
 
   acquire_queue_lock p;
 
-  with vq. assert (HR.pts_to (get_queue p) full_perm vq);
+  with vq. assert (HR.pts_to (get_queue p) vq);
   let vq = higher_read #_ #full_perm #vq (get_queue p);
   higher_write #_ #vq (get_queue p) (enqueue task vq);
 
@@ -182,23 +182,23 @@ let spawn_emp = spawn_emp'
 
 assume val share (#a:Type0) (r:ref a) (#v:a) (#p:perm)
   : stt unit
-      (pts_to r p v)
+      (pts_to r #p v)
       (fun _ ->
-       pts_to r (half_perm p) v **
-       pts_to r (half_perm p) v)
+       pts_to r #(half_perm p) v **
+       pts_to r #(half_perm p) v)
 
 assume val gather (#a:Type0) (r:ref a) (#x0 #x1:a) (#p0 #p1:perm)
   : stt unit
-      (pts_to r p0 x0 ** pts_to r p1 x1)
-      (fun _ -> pts_to r (sum_perm p0 p1) x0 ** pure (x0 == x1))
+      (pts_to r #p0 x0 ** pts_to r #p1 x1)
+      (fun _ -> pts_to r #(sum_perm p0 p1) x0 ** pure (x0 == x1))
 
-let half = half_perm full_perm
+let half = half_perm
 
 
 assume val free_ref (#a:Type) (r: ref a)
  //(x:a)
   : stt unit
-  (exists_ (fun v -> pts_to r full_perm v))
+  (exists_ (fun v -> pts_to r v))
   (fun _ -> emp)
   
 
@@ -217,7 +217,7 @@ fn join_emp'
 {
   let r = Pulse.Lib.Reference.alloc #(option a) None;
   while (let res = !r; None? res)
-    invariant b. (exists res. pts_to r full_perm res ** pure (b == None? res)
+    invariant b. (exists res. pts_to r res ** pure (b == None? res)
     ** pure (maybe_sat post res))
   {
     Lock.acquire h._2;
@@ -249,7 +249,7 @@ assume val assert_prop (p: prop): stt unit (pure p) (fun _ -> emp)
   & p: (a -> prop) // postcondition about the return value
   & (unit_emp_stt_pure_pure a p) // the computation
   & r: ref (option a) // the reference where we put the result of the computation
-  & Lock.lock (exists_ (fun v -> pts_to r full_perm v ** pure (maybe_sat p v)))
+  & Lock.lock (exists_ (fun v -> pts_to r v ** pure (maybe_sat p v)))
       *)
 
 let perform_task (t: task_elem): stt (t._1) emp (fun x -> pure (t._2 x))
@@ -297,11 +297,11 @@ fn worker' //(#q: HR.ref task_queue) (#c: ref int) (l: Lock.lock (inv_task_queue
   let r_working = alloc #bool true;
   
   while (let working = !r_working; working)
-    invariant b. (exists w. pts_to r_working full_perm w ** pure (b == w))
+    invariant b. (exists w. pts_to r_working w ** pure (b == w))
   {
     acquire_queue_lock p;
 
-    with vq. assert (HR.pts_to (get_queue p) full_perm vq);
+    with vq. assert (HR.pts_to (get_queue p) vq);
     let vq = higher_read #_ #full_perm #vq (get_queue p);
     let vc = !(get_counter p);
 
@@ -452,7 +452,7 @@ let handler (#a: Type0) (post: a -> vprop)
 // and use invariants instead
 
 let pure_handler #a (post: a -> prop)
-  = (res: ref (option a) & Lock.lock (exists_ (fun v -> pts_to res full_perm v ** pure (maybe_sat post v))))
+  = (res: ref (option a) & Lock.lock (exists_ (fun v -> pts_to res v ** pure (maybe_sat post v))))
 
 let resourceful_res #a post = (x:a & Lock.lock (post x))
 
@@ -551,9 +551,9 @@ let par_block_pulse #a #pre #post = par_block_pulse' #a #pre #post
 
 ```pulse 
 fn double (#n: nat) (r:ref nat)
-  requires pts_to r full_perm n
+  requires pts_to r n
   returns res:nat
-  ensures pts_to r full_perm n ** pure (res = n + n)
+  ensures pts_to r n ** pure (res = n + n)
 {
   let vr = !r;
   let x = vr + vr;
@@ -570,9 +570,9 @@ let promote_seq #a #pre #post
 fn add_double (#na #nb: nat) (a b: ref nat)
   (p: par_env)
   (_: unit)
-  requires pts_to a full_perm na ** pts_to b full_perm nb
+  requires pts_to a na ** pts_to b nb
   returns res:nat
-  ensures pts_to b full_perm nb ** pure (res = na + na + nb + nb)
+  ensures pts_to b nb ** pure (res = na + na + nb + nb)
 {
   let aa_t = spawn p (promote_seq (double #na a));
   let bb_t = spawn p (promote_seq (double #nb b));

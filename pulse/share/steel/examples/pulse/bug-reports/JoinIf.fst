@@ -15,10 +15,10 @@ let sorted (s0 s:Seq.seq U32.t) =
 ```pulse
 fn sort3_alt (a:array U32.t)
              (#s:(s:Ghost.erased (Seq.seq U32.t) {Seq.length s == 3}))
-   requires (A.pts_to a full_perm s)
+   requires (A.pts_to a s)
    ensures 
       exists s'. (
-         A.pts_to a full_perm s' `star`
+         A.pts_to a s' `star`
          pure (sorted s s')
       )
 {
@@ -58,10 +58,10 @@ fn sort3_alt (a:array U32.t)
 ```pulse
 fn sort3_alt (a:array U32.t)
              (#s:(s:Ghost.erased (Seq.seq U32.t) {Seq.length s == 3}))
-   requires (A.pts_to a full_perm s)
+   requires (A.pts_to a s)
    ensures 
       exists s'. (
-         A.pts_to a full_perm s' `star`
+         A.pts_to a s' `star`
          pure (sorted s s')
       )
 {
@@ -72,8 +72,8 @@ fn sort3_alt (a:array U32.t)
    let vy = !y;
    if (vy <^ vx) //Fails to typecheck the join annotation, claiming vy has type vy has type stt U32.t ... instead of just U32.t
    returns (
-    R.pts_to x full_perm (if vy <^ vx then vy else vx) `star`
-    R.pts_to y full_perm (if vy <^ vx then vx else vy)
+    R.pts_to x (if vy <^ vx then vy else vx) `star`
+    R.pts_to y (if vy <^ vx then vx else vy)
    )
    {
       x := vy;
@@ -83,8 +83,8 @@ fn sort3_alt (a:array U32.t)
    let vz = !z;
    if (vz <^ vx)
    returns (
-    R.pts_to x full_perm (if vz <^ vx then vz else vx) `star`
-    R.pts_to z full_perm (if vz <^ vx then vx else vz)
+    R.pts_to x (if vz <^ vx then vz else vx) `star`
+    R.pts_to z (if vz <^ vx then vx else vz)
    )
    {
       x := vz;
@@ -94,8 +94,8 @@ fn sort3_alt (a:array U32.t)
    let vz = !z;
    if (vz <^ vy)
    returns (
-    R.pts_to y full_perm (if vz <^ vy then vz else vy) `star`
-    R.pts_to z full_perm (if vz <^ vy then vy else vz)
+    R.pts_to y (if vz <^ vy then vz else vy) `star`
+    R.pts_to z (if vz <^ vy then vy else vz)
    )
    {
       y := vz;

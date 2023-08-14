@@ -14,12 +14,12 @@ val engine_main (cdi:cdi_t) (uds:A.larray U8.t (SZ.v uds_len)) (record:engine_re
                 (#repr:Ghost.erased engine_record_repr)
                 (#uds_perm #p:perm)
   : stt dice_return_code (engine_record_perm record repr p **
-                          A.pts_to uds uds_perm uds_bytes **
-                          A.pts_to cdi full_perm c0)
+                          A.pts_to uds #uds_perm uds_bytes **
+                          A.pts_to cdi c0)
                          (fun r -> 
                             engine_record_perm record repr p **
-                            A.pts_to uds uds_perm uds_bytes **
+                            A.pts_to uds #uds_perm uds_bytes **
                             exists_ (fun (c1:elseq U8.t dice_digest_len) ->
-                                      A.pts_to cdi full_perm c1 **
+                                      A.pts_to cdi c1 **
                                       pure (A.is_full_array cdi
                                         /\ r = DICE_SUCCESS ==> l0_is_authentic repr /\ cdi_functional_correctness c1 repr)))

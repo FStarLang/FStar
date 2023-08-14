@@ -68,9 +68,9 @@ let mk_l0_repr fwid deviceID_label aliasKey_label
 
 // don't need full perm
 let l0_record_perm (record:l0_record_t) (repr:l0_record_repr_t) (p:perm) : vprop =
-  A.pts_to record.fwid p repr.fwid **
-  A.pts_to record.deviceID_label p repr.deviceID_label **
-  A.pts_to record.aliasKey_label p repr.aliasKey_label **
+  A.pts_to record.fwid #p repr.fwid **
+  A.pts_to record.deviceID_label #p repr.deviceID_label **
+  A.pts_to record.aliasKey_label #p repr.aliasKey_label **
   pure (
     valid_hkdf_lbl_len record.deviceID_label_len /\
     valid_hkdf_lbl_len record.aliasKey_label_len

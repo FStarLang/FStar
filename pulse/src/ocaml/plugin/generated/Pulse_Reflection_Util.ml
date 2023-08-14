@@ -1814,7 +1814,7 @@ let (mk_pts_to :
           let t3 =
             FStar_Reflection_V2_Builtins.pack_ln
               (FStar_Reflection_V2_Data.Tv_App
-                 (t2, (perm, FStar_Reflection_V2_Data.Q_Explicit))) in
+                 (t2, (perm, FStar_Reflection_V2_Data.Q_Implicit))) in
           FStar_Reflection_V2_Builtins.pack_ln
             (FStar_Reflection_V2_Data.Tv_App
                (t3, (v, FStar_Reflection_V2_Data.Q_Explicit)))

@@ -96,30 +96,30 @@ val l0_main
   (#deviceIDCSR0: elseq U8.t deviceIDCSR_len)
   (#cdi_perm #p:perm)
   : stt unit (l0_record_perm record repr p **
-              A.pts_to cdi cdi_perm cdi0 **
-              A.pts_to deviceID_pub full_perm deviceID_pub0 **
-              A.pts_to deviceID_priv full_perm deviceID_priv0 **
-              A.pts_to aliasKey_pub full_perm aliasKey_pub0 **
-              A.pts_to aliasKey_priv full_perm aliasKey_priv0 **
-              A.pts_to aliasKeyCRT full_perm aliasKeyCRT0 **
-              A.pts_to deviceIDCSR full_perm deviceIDCSR0 **
+              A.pts_to cdi #cdi_perm cdi0 **
+              A.pts_to deviceID_pub deviceID_pub0 **
+              A.pts_to deviceID_priv deviceID_priv0 **
+              A.pts_to aliasKey_pub aliasKey_pub0 **
+              A.pts_to aliasKey_priv aliasKey_priv0 **
+              A.pts_to aliasKeyCRT aliasKeyCRT0 **
+              A.pts_to deviceIDCSR deviceIDCSR0 **
               pure (deviceIDCSR_pre record.deviceIDCSR_ingredients deviceIDCRI_len deviceIDCSR_len
                  /\ aliasKeyCRT_pre record.aliasKeyCRT_ingredients aliasKeyTBS_len aliasKeyCRT_len))
              (fun _ -> 
               l0_record_perm record repr p **
-              A.pts_to cdi cdi_perm cdi0 **
+              A.pts_to cdi #cdi_perm cdi0 **
               exists_ (fun (deviceID_pub1:elseq U8.t v32us) ->
               exists_ (fun (deviceID_priv1:elseq U8.t v32us) -> 
               exists_ (fun (aliasKey_pub1:elseq U8.t v32us) ->
               exists_ (fun (aliasKey_priv1:elseq U8.t v32us) ->
               exists_ (fun (aliasKeyCRT1:elseq U8.t aliasKeyCRT_len) ->
               exists_ (fun (deviceIDCSR1:elseq U8.t deviceIDCSR_len) ->
-                A.pts_to deviceID_pub full_perm deviceID_pub1 **
-                A.pts_to deviceID_priv full_perm deviceID_priv1 **
-                A.pts_to aliasKey_pub full_perm aliasKey_pub1 **
-                A.pts_to aliasKey_priv full_perm aliasKey_priv1 **
-                A.pts_to aliasKeyCRT full_perm aliasKeyCRT1 **
-                A.pts_to deviceIDCSR full_perm deviceIDCSR1 **
+                A.pts_to deviceID_pub deviceID_pub1 **
+                A.pts_to deviceID_priv deviceID_priv1 **
+                A.pts_to aliasKey_pub aliasKey_pub1 **
+                A.pts_to aliasKey_priv aliasKey_priv1 **
+                A.pts_to aliasKeyCRT aliasKeyCRT1 **
+                A.pts_to deviceIDCSR deviceIDCSR1 **
                 pure (
                   valid_hkdf_ikm_len dice_digest_len /\
                   aliasKey_functional_correctness

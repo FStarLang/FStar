@@ -28,7 +28,7 @@ let sid_t = U32.t
 // The type of a hash table tupled with a lock storing permission on the table. 
 type locked_ht_t (s:pht_sig_us) = ht:ht_t s & L.lock (exists_ (fun pht -> models s ht pht))
 // The type of a session ID (SID) tupled with a lock storing permission on the SID
-type locked_sid_t = r:R.ref sid_t & L.lock (exists_ (fun n -> R.pts_to r full_perm n))
+type locked_sid_t = r:R.ref sid_t & L.lock (exists_ (fun n -> R.pts_to r n))
 
 let dpe_hashf : ctxt_hndl_t -> US.t = admit()
 let sht_len : pos_us = admit()
@@ -59,7 +59,7 @@ fn alloc_sid (_:unit)
   ensures emp
 {
   let locked_sid = R.alloc #sid_t 0ul;
-  let lk = L.new_lock (exists_ (fun n -> R.pts_to locked_sid full_perm n));
+  let lk = L.new_lock (exists_ (fun n -> R.pts_to locked_sid n));
   ((| locked_sid, lk |) <: locked_sid_t)
 }
 ```
@@ -176,7 +176,7 @@ fn open_session' (_:unit)
   let sht_lk = locked_sht._2;
   let sid_lk = locked_sid._2;
 
-  L.acquire #(exists_ (fun n -> R.pts_to locked_sid._1 full_perm n)) sid_lk;
+  L.acquire #(exists_ (fun n -> R.pts_to locked_sid._1 n)) sid_lk;
   L.acquire #(exists_ (fun pht -> models sht_sig locked_sht._1 pht)) sht_lk;
 
   let sid = !locked_sid._1;
@@ -194,26 +194,26 @@ fn open_session' (_:unit)
       match opt_inc {
       Some inc -> {
         locked_sid._1 := inc;
-        L.release #(exists_ (fun n -> R.pts_to locked_sid._1 full_perm n)) sid_lk;
+        L.release #(exists_ (fun n -> R.pts_to locked_sid._1 n)) sid_lk;
         L.release #(exists_ (fun pht -> models sht_sig locked_sht._1 pht)) sht_lk;
         Some sid
       }
       None -> {
         // ERROR - increment session ID failed
-        L.release #(exists_ (fun n -> R.pts_to locked_sid._1 full_perm n)) sid_lk;
+        L.release #(exists_ (fun n -> R.pts_to locked_sid._1 n)) sid_lk;
         L.release #(exists_ (fun pht -> models sht_sig locked_sht._1 pht)) sht_lk;
         None #sid_t
       }}
     } else {
       // ERROR - insert failed
       assert (HT.models sht_sig locked_sht._1 pht);
-      L.release #(exists_ (fun n -> R.pts_to locked_sid._1 full_perm n)) sid_lk;
+      L.release #(exists_ (fun n -> R.pts_to locked_sid._1 n)) sid_lk;
       L.release #(exists_ (fun pht -> models sht_sig locked_sht._1 pht)) sht_lk;
       None #sid_t
     }
   } else {
     // ERROR - table full
-    L.release #(exists_ (fun n -> R.pts_to locked_sid._1 full_perm n)) sid_lk;
+    L.release #(exists_ (fun n -> R.pts_to locked_sid._1 n)) sid_lk;
     L.release #(exists_ (fun pht -> models sht_sig locked_sht._1 pht)) sht_lk;
     None #sid_t
   }
@@ -249,7 +249,7 @@ fn destroy_ctxt (ctxt:context_t) (#repr:erased context_repr_t)
     rewrite (context_perm ctxt repr) as (context_perm (L0_context c) repr);
     let r = get_l0_context_perm c repr;
     unfold (l0_context_perm c r);
-    with s. assert (A.pts_to c.cdi full_perm s);
+    with s. assert (A.pts_to c.cdi s);
     A.zeroize dice_digest_len c.cdi;
     A.free c.cdi;
   }
@@ -410,18 +410,18 @@ let prng (_:unit) : U32.t = admit()
 
 ```pulse
 fn init_engine_ctxt (uds:A.larray U8.t (US.v uds_len)) (#p:perm)
-  requires A.pts_to uds p uds_bytes
+  requires A.pts_to uds #p uds_bytes
         ** uds_is_enabled
   returns _:locked_context_t
-  ensures A.pts_to uds p uds_bytes
+  ensures A.pts_to uds #p uds_bytes
 {
   let uds_buf = A.alloc 0uy uds_len;
   memcpy uds_len uds uds_buf;
   disable_uds ();
   let engine_context = mk_engine_context_t uds_buf;
 
-  rewrite (A.pts_to uds_buf full_perm uds_bytes) 
-    as (A.pts_to engine_context.uds full_perm uds_bytes);
+  rewrite (A.pts_to uds_buf uds_bytes) 
+    as (A.pts_to engine_context.uds uds_bytes);
   fold (engine_context_perm engine_context);
 
   let ctxt = mk_context_t_engine engine_context;
@@ -439,7 +439,7 @@ fn init_l0_ctxt (cdi:A.larray U8.t (US.v dice_digest_len))
   (#s:erased (elseq U8.t dice_digest_len))
   (_:squash(cdi_functional_correctness s engine_repr
          /\ l0_is_authentic engine_repr))
-  requires A.pts_to cdi full_perm s
+  requires A.pts_to cdi s
         ** pure (A.is_full_array cdi)
   returns _:locked_context_t
   ensures emp
@@ -451,8 +451,8 @@ fn init_l0_ctxt (cdi:A.larray U8.t (US.v dice_digest_len))
 
   let l0_context = mk_l0_context_t cdi_buf;
   let l0_context_repr = mk_l0_context_repr_t s engine_repr;
-  rewrite (A.pts_to cdi_buf full_perm s)
-    as (A.pts_to l0_context.cdi full_perm s);
+  rewrite (A.pts_to cdi_buf s)
+    as (A.pts_to l0_context.cdi s);
   fold (l0_context_perm l0_context l0_context_repr);
 
   let ctxt = mk_context_t_l0 l0_context;
@@ -491,20 +491,20 @@ fn init_l1_ctxt (deviceIDCSR_len: US.t) (aliasKeyCRT_len: US.t)
                             dice_hash_alg dice_digest_len cdi repr.fwid
                             deviceID_label_len repr.deviceID_label aliasKeyCRT_ingredients 
                             aliasKeyCRT_len aliasKeyCRT0 aliasKey_pub0))
-  requires A.pts_to deviceID_priv full_perm deviceID_priv0 ** 
-           A.pts_to deviceID_pub full_perm deviceID_pub0 ** 
-           A.pts_to aliasKey_priv full_perm aliasKey_priv0 ** 
-           A.pts_to aliasKey_pub full_perm aliasKey_pub0 ** 
-           A.pts_to deviceIDCSR full_perm deviceIDCSR0 **
-           A.pts_to aliasKeyCRT full_perm aliasKeyCRT0
+  requires A.pts_to deviceID_priv deviceID_priv0 ** 
+           A.pts_to deviceID_pub deviceID_pub0 ** 
+           A.pts_to aliasKey_priv aliasKey_priv0 ** 
+           A.pts_to aliasKey_pub aliasKey_pub0 ** 
+           A.pts_to deviceIDCSR deviceIDCSR0 **
+           A.pts_to aliasKeyCRT aliasKeyCRT0
   returns _:locked_context_t
   ensures 
-    A.pts_to deviceID_priv full_perm deviceID_priv0 ** 
-    A.pts_to deviceID_pub full_perm deviceID_pub0 **
-    A.pts_to aliasKey_priv full_perm aliasKey_priv0 ** 
-    A.pts_to aliasKey_pub full_perm aliasKey_pub0 ** 
-    A.pts_to deviceIDCSR full_perm deviceIDCSR0 **
-    A.pts_to aliasKeyCRT full_perm aliasKeyCRT0
+    A.pts_to deviceID_priv deviceID_priv0 ** 
+    A.pts_to deviceID_pub deviceID_pub0 **
+    A.pts_to aliasKey_priv aliasKey_priv0 ** 
+    A.pts_to aliasKey_pub aliasKey_pub0 ** 
+    A.pts_to deviceIDCSR deviceIDCSR0 **
+    A.pts_to aliasKeyCRT aliasKeyCRT0
 {
   let deviceID_pub_buf = A.alloc 0uy v32us;
   let deviceID_priv_buf = A.alloc 0uy v32us;
@@ -527,18 +527,18 @@ fn init_l1_ctxt (deviceIDCSR_len: US.t) (aliasKeyCRT_len: US.t)
     aliasKey_priv0 aliasKey_pub0 aliasKeyCRT_len aliasKeyCRT0 deviceIDCSR_len
     deviceIDCSR0 cdi repr deviceIDCSR_ingredients aliasKeyCRT_ingredients;
 
-  rewrite (A.pts_to deviceID_priv_buf full_perm deviceID_priv0 **
-           A.pts_to deviceID_pub_buf full_perm deviceID_pub0 **
-           A.pts_to aliasKey_priv_buf full_perm aliasKey_priv0 **
-           A.pts_to aliasKey_pub_buf full_perm aliasKey_pub0 **
-           A.pts_to deviceIDCSR_buf full_perm deviceIDCSR0 **
-           A.pts_to aliasKeyCRT_buf full_perm aliasKeyCRT0)
-       as (A.pts_to l1_context.deviceID_priv full_perm deviceID_priv0**
-           A.pts_to l1_context.deviceID_pub full_perm deviceID_pub0 **
-           A.pts_to l1_context.aliasKey_priv full_perm aliasKey_priv0 **
-           A.pts_to l1_context.aliasKey_pub full_perm aliasKey_pub0 **
-           A.pts_to l1_context.deviceIDCSR full_perm deviceIDCSR0 **
-           A.pts_to l1_context.aliasKeyCRT full_perm aliasKeyCRT0);
+  rewrite (A.pts_to deviceID_priv_buf deviceID_priv0 **
+           A.pts_to deviceID_pub_buf deviceID_pub0 **
+           A.pts_to aliasKey_priv_buf aliasKey_priv0 **
+           A.pts_to aliasKey_pub_buf aliasKey_pub0 **
+           A.pts_to deviceIDCSR_buf deviceIDCSR0 **
+           A.pts_to aliasKeyCRT_buf aliasKeyCRT0)
+       as (A.pts_to l1_context.deviceID_priv deviceID_priv0**
+           A.pts_to l1_context.deviceID_pub deviceID_pub0 **
+           A.pts_to l1_context.aliasKey_priv aliasKey_priv0 **
+           A.pts_to l1_context.aliasKey_pub aliasKey_pub0 **
+           A.pts_to l1_context.deviceIDCSR deviceIDCSR0 **
+           A.pts_to l1_context.aliasKeyCRT aliasKeyCRT0);
   fold (l1_context_perm l1_context l1_context_repr);
 
   let ctxt = mk_context_t_l1 l1_context;
@@ -558,10 +558,10 @@ fn init_l1_ctxt (deviceIDCSR_len: US.t) (aliasKeyCRT_len: US.t)
 *)
 ```pulse
 fn initialize_context' (sid:sid_t) (uds:A.larray U8.t (US.v uds_len)) (#p:perm)
-  requires A.pts_to uds p uds_bytes
+  requires A.pts_to uds #p uds_bytes
         ** uds_is_enabled
   returns _:option ctxt_hndl_t
-  ensures A.pts_to uds p uds_bytes
+  ensures A.pts_to uds #p uds_bytes
 {
   let locked_context = init_engine_ctxt uds;
   let ctxt_hndl = prng ();
@@ -756,7 +756,7 @@ fn derive_child' (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t) (#repr:er
             
             let cdi = A.alloc 0uy dice_digest_len;
             let ret = EngineCore.engine_main cdi c.uds r;
-            with s. assert (A.pts_to cdi full_perm s);
+            with s. assert (A.pts_to cdi s);
             fold (engine_context_perm c);
             rewrite (engine_context_perm c) as (context_perm ctxt ctxt_repr);
             destroy_ctxt ctxt;
@@ -825,7 +825,7 @@ fn derive_child' (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t) (#repr:er
           rewrite (context_perm ctxt ctxt_repr) as (context_perm (L0_context c) ctxt_repr);
           let cr = get_l0_context_perm c ctxt_repr;
           unfold (l0_context_perm c cr);
-          with s. assert (A.pts_to c.cdi full_perm s);
+          with s. assert (A.pts_to c.cdi s);
 
           match record {
           L0_record r -> {
@@ -859,12 +859,12 @@ fn derive_child' (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t) (#repr:er
             rewrite (l0_context_perm c cr) as (context_perm ctxt ctxt_repr);
             destroy_ctxt ctxt;
 
-            with deviceID_pub1. assert (A.pts_to deviceID_pub full_perm deviceID_pub1);
-            with deviceID_priv1. assert (A.pts_to deviceID_priv full_perm deviceID_priv1);
-            with aliasKey_pub1. assert (A.pts_to aliasKey_pub full_perm aliasKey_pub1);
-            with aliasKey_priv1. assert (A.pts_to aliasKey_priv full_perm aliasKey_priv1);
-            with deviceIDCSR1. assert (A.pts_to deviceIDCSR full_perm deviceIDCSR1);
-            with aliasKeyCRT1. assert (A.pts_to aliasKeyCRT full_perm aliasKeyCRT1);
+            with deviceID_pub1. assert (A.pts_to deviceID_pub deviceID_pub1);
+            with deviceID_priv1. assert (A.pts_to deviceID_priv deviceID_priv1);
+            with aliasKey_pub1. assert (A.pts_to aliasKey_pub aliasKey_pub1);
+            with aliasKey_priv1. assert (A.pts_to aliasKey_priv aliasKey_priv1);
+            with deviceIDCSR1. assert (A.pts_to deviceIDCSR deviceIDCSR1);
+            with aliasKeyCRT1. assert (A.pts_to aliasKeyCRT aliasKeyCRT1);
             let new_locked_context = init_l1_ctxt 
               deviceIDCSR_len aliasKeyCRT_len deviceID_priv deviceID_pub
               aliasKey_priv aliasKey_pub deviceIDCSR aliasKeyCRT

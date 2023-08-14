@@ -11,7 +11,7 @@ open Pulse.Class.BoundedIntegers
 #push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
 
 let models (s:pht_sig_us) (ht:ht_t s) (pht:pht_t (s_to_ps s)) : vprop
-= A.pts_to ht.contents full_perm pht.repr **
+= A.pts_to ht.contents pht.repr **
   pure (
     SZ.v ht.sz == pht.sz /\
     A.is_full_array ht.contents
@@ -26,8 +26,8 @@ fn alloc' (#s:pht_sig_us) (l:pos_us)
   let contents = A.alloc #(cell s.keyt s.valt) Clean l;
   let ht = mk_ht l contents;
   let pht = mk_init_pht #s l;
-  rewrite (A.pts_to contents full_perm (Seq.create (SZ.v l) Clean))
-    as (A.pts_to ht.contents full_perm pht.repr);
+  rewrite (A.pts_to contents (Seq.create (SZ.v l) Clean))
+    as (A.pts_to ht.contents pht.repr);
   fold (models s ht pht);
   ht
 }
@@ -52,8 +52,8 @@ fn dealloc' (#s:pht_sig_us) (ht:ht_t s) (l:pos_us)
 
   while (let voff = !off; (voff < ht.sz))
   invariant b. exists (voff:SZ.t). (
-    A.pts_to ht.contents full_perm pht.repr **
-    R.pts_to off full_perm voff **
+    A.pts_to ht.contents pht.repr **
+    R.pts_to off voff **
     pure (
       SZ.v ht.sz == pht.sz /\
       voff <= ht.sz /\
@@ -99,11 +99,11 @@ fn pulse_lookup_index (#s:pht_sig_us)
 
   while (let voff = !off; let vcont = !cont; let verr = !err; (voff <= ht.sz && vcont = true && verr = false)) 
   invariant b. exists (voff:SZ.t) (vcont verr:bool). (
-    A.pts_to ht.contents full_perm pht.repr **
-    R.pts_to off full_perm voff **
-    R.pts_to cont full_perm vcont **
-    R.pts_to err full_perm verr **
-    R.pts_to ret full_perm (if (vcont || verr) then None else (PHT.lookup_index_us pht k)) **
+    A.pts_to ht.contents pht.repr **
+    R.pts_to off voff **
+    R.pts_to cont vcont **
+    R.pts_to err verr **
+    R.pts_to ret (if (vcont || verr) then None else (PHT.lookup_index_us pht k)) **
     pure (
       SZ.v ht.sz == pht_sz pht /\
       voff <= ht.sz /\
@@ -115,13 +115,13 @@ fn pulse_lookup_index (#s:pht_sig_us)
     let voff = !off;
     if (voff = ht.sz) {
       cont := false;
-      assert (R.pts_to ret full_perm None);
+      assert (R.pts_to ret None);
     } else {
       let opt_sum = cidx `safe_add` voff;
       match opt_sum {
       Some sum -> {
       let idx = sum % ht.sz;
-        let c = op_Array_Access ht.contents idx; 
+        let c = (ht.contents).(idx); 
         match c {
         Used k' v' -> {
           if (k' = k) {
@@ -137,7 +137,7 @@ fn pulse_lookup_index (#s:pht_sig_us)
         Clean -> {
           cont := false;
           assert (pure (walk_get_idx pht.repr (SZ.v cidx) k (SZ.v voff) == None));
-          assert (R.pts_to ret full_perm (PHT.lookup_index_us pht k));
+          assert (R.pts_to ret (PHT.lookup_index_us pht k));
         }
         Zombie -> {
           off := voff + 1sz;
@@ -156,7 +156,7 @@ fn pulse_lookup_index (#s:pht_sig_us)
   if verr {
     (false,o)
   } else {
-    assert (R.pts_to ret full_perm (PHT.lookup_index_us pht k));
+    assert (R.pts_to ret (PHT.lookup_index_us pht k));
     (true,o)
   }}
   None -> {
@@ -207,10 +207,10 @@ fn insert' (#s:pht_sig_us)
 
   while (let voff = !off; let vcont = !cont; let verr = !err; (voff <= ht.sz && vcont = true && verr = false)) 
   invariant b. exists (voff:SZ.t) (vcont verr:bool). (
-    R.pts_to off full_perm voff **
-    R.pts_to cont full_perm vcont **
-    R.pts_to err full_perm verr **
-    A.pts_to ht.contents full_perm (if (vcont || verr) then pht.repr else (PHT.insert pht k v).repr) **
+    R.pts_to off voff **
+    R.pts_to cont vcont **
+    R.pts_to err verr **
+    A.pts_to ht.contents (if (vcont || verr) then pht.repr else (PHT.insert pht k v).repr) **
     pure (
       SZ.v ht.sz == pht_sz pht /\
       voff <= ht.sz /\
@@ -224,17 +224,17 @@ fn insert' (#s:pht_sig_us)
     let voff = !off;
     if (voff = ht.sz) {
       cont := false;
-      assert (A.pts_to ht.contents full_perm pht.repr);
+      assert (A.pts_to ht.contents pht.repr);
     } else {
       let opt_sum = cidx `safe_add` voff;
       match opt_sum {
       Some sum -> {
         let idx = sum % ht.sz;
-        let c = op_Array_Access ht.contents idx #full_perm #pht.repr;
+        let c = (ht.contents).(idx); 
         match c {
         Used k' v' -> { 
           if (k' = k) {
-            assert (A.pts_to ht.contents full_perm pht.repr);
+            assert (A.pts_to ht.contents pht.repr);
             assert (pure ( SZ.v idx < Seq.length pht.repr));
             ((ht.contents).(idx) <- (mk_used_cell k v));
             cont := false;
@@ -319,10 +319,10 @@ fn delete' (#s:pht_sig_us)
 
   while (let voff = !off; let vcont = !cont; let verr = !err; (voff <= ht.sz && vcont = true && verr = false))
   invariant b. exists (voff:SZ.t) (vcont verr:bool). (
-    R.pts_to off full_perm voff **
-    R.pts_to cont full_perm vcont **
-    R.pts_to err full_perm verr **
-    A.pts_to ht.contents full_perm (if (vcont || verr) then pht.repr else (PHT.delete pht k).repr) **
+    R.pts_to off voff **
+    R.pts_to cont vcont **
+    R.pts_to err verr **
+    A.pts_to ht.contents (if (vcont || verr) then pht.repr else (PHT.delete pht k).repr) **
     pure (
       SZ.v ht.sz == pht_sz pht /\
       voff <= ht.sz /\
@@ -337,13 +337,13 @@ fn delete' (#s:pht_sig_us)
     assume_ (pure (SZ.fits (SZ.v cidx + SZ.v voff)));
     if (voff = ht.sz) {
       cont := false;
-      assert (A.pts_to ht.contents full_perm pht.repr);
+      assert (A.pts_to ht.contents pht.repr);
     } else {
       let opt_sum = cidx `safe_add` voff;
       match opt_sum {
       Some sum -> {
         let idx = sum % ht.sz;
-        let c = op_Array_Access ht.contents idx #full_perm #pht.repr;
+        let c = (ht.contents).(idx); 
         match c {
         Used k' v' -> { 
           if (k' = k) {
@@ -402,12 +402,12 @@ fn not_full' (#s:pht_sig_us) (#pht:erased (pht_t (s_to_ps s))) (ht:ht_t s)
 
   while (let vi = !i;  
     if (vi < ht.sz) { 
-      let c = op_Array_Access ht.contents vi #full_perm #pht.repr; 
+      let c = (ht.contents).(vi); 
       (Used? c) 
     } else { false })
   invariant b. exists (vi:SZ.t). (
-    A.pts_to ht.contents full_perm pht.repr **
-    R.pts_to i full_perm vi **
+    A.pts_to ht.contents pht.repr **
+    R.pts_to i vi **
     pure (
       SZ.v ht.sz == pht_sz pht /\
       vi <= ht.sz /\

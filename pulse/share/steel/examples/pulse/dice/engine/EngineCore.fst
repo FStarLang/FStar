@@ -43,7 +43,7 @@ fn authenticate_l0_image (record:engine_record_t) (#repr:Ghost.erased engine_rec
     let hash_buf = A.alloc 0uy dice_digest_len;
     hacl_hash dice_hash_alg record.l0_binary_size record.l0_binary hash_buf;
     let res = compare dice_digest_len hash_buf record.l0_binary_hash;
-    with s. assert (A.pts_to hash_buf full_perm s);
+    with s. assert (A.pts_to hash_buf s);
     A.free hash_buf #(coerce dice_digest_len s);
     fold engine_record_perm record repr p;
     res
@@ -60,15 +60,15 @@ fn compute_cdi (cdi:cdi_t) (uds:A.larray U8.t (US.v uds_len)) (record:engine_rec
                (#c0:Ghost.erased (Seq.seq U8.t))
                (#uds_perm #p:perm)
   requires (
-    A.pts_to uds uds_perm uds_bytes **
-    A.pts_to cdi full_perm c0 **
+    A.pts_to uds #uds_perm uds_bytes **
+    A.pts_to cdi c0 **
     engine_record_perm record repr p (* should CDI only be computed on authentic l0 images? *)
   )
   ensures (
     engine_record_perm record repr p **
-    A.pts_to uds uds_perm uds_bytes **
+    A.pts_to uds #uds_perm uds_bytes **
     exists (c1:Seq.seq U8.t). (
-      A.pts_to cdi full_perm c1 **
+      A.pts_to cdi c1 **
       pure (cdi_functional_correctness c1 repr))
   )
 {
@@ -100,15 +100,15 @@ fn engine_main' (cdi:cdi_t) (uds:A.larray U8.t (US.v uds_len)) (record:engine_re
                 (#uds_perm #p:perm)
   requires (
     engine_record_perm record repr p **
-    A.pts_to uds uds_perm uds_bytes **
-    A.pts_to cdi full_perm c0
+    A.pts_to uds #uds_perm uds_bytes **
+    A.pts_to cdi c0
   )
   returns r:dice_return_code
   ensures (
     engine_record_perm record repr p **
-    A.pts_to uds uds_perm uds_bytes **
+    A.pts_to uds #uds_perm uds_bytes **
     exists (c1:elseq U8.t dice_digest_len). (
-      A.pts_to cdi full_perm c1 **
+      A.pts_to cdi c1 **
       pure (
         A.is_full_array cdi /\
         r = DICE_SUCCESS ==> l0_is_authentic repr /\ cdi_functional_correctness c1 repr
@@ -119,7 +119,7 @@ fn engine_main' (cdi:cdi_t) (uds:A.larray U8.t (US.v uds_len)) (record:engine_re
   if b 
   {
     compute_cdi cdi uds record #repr #(coerce dice_digest_len c0);
-    with s. assert (A.pts_to uds uds_perm s);
+    with s. assert (A.pts_to uds #uds_perm s);
     DICE_SUCCESS
   } else { DICE_ERROR }
 }

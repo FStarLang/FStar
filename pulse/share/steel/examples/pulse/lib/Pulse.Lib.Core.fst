@@ -312,15 +312,15 @@ let stt_par #aL #aR #preL #postL #preR #postR
 //   fun _ -> 
 //     let body (r:R.ref a) 
 //       : STT ret_t
-//         (pre `star` R.pts_to r full_perm init)
-//         (fun v -> post v `star` exists_ (R.pts_to r full_perm))
+//         (pre `star` R.pts_to r init)
+//         (fun v -> post v `star` exists_ (R.pts_to r))
 //       = Steel.ST.Util.rewrite
-//                 (pre `star` R.pts_to r full_perm init)
-//                 (pre ** R.pts_to r full_perm init);
+//                 (pre `star` R.pts_to r init)
+//                 (pre ** R.pts_to r init);
 //         let v = body r () in
 //         Steel.ST.Util.rewrite
-//                 (post v ** exists_ (R.pts_to r full_perm))
-//                 (post v `star` exists_ (R.pts_to r full_perm));
+//                 (post v ** exists_ (R.pts_to r))
+//                 (post v `star` exists_ (R.pts_to r));
 //         Steel.ST.Util.return v
 //     in
 //     let v = R.with_local init body in
