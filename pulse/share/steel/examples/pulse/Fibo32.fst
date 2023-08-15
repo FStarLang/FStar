@@ -51,3 +51,4 @@ fn fibo32 (k:U32.t) (_:squash(0ul < k /\ fits #U32.t (fib (v k))))
   r
 }
 ```
+
