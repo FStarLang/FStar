@@ -35,6 +35,7 @@ val desugar_term:            env -> term -> S.term
 val desugar_machine_integer: env -> repr:string
                            -> (FStar.Const.signedness * FStar.Const.width)
                            -> Range.range -> Syntax.term
+val free_vars (tvars_only:bool) (e:env) (t:term) : list ident
 val close:                   env -> term -> term
 
 val ast_modul_to_modul:          AST.modul -> withenv Syntax.modul

@@ -286,28 +286,40 @@ let sort_ftv ftv =
   BU.sort_with (fun x y -> String.compare (string_of_id x) (string_of_id y)) <|
       BU.remove_dups (fun x y -> (string_of_id x) = (string_of_id y)) ftv
 
-let rec free_type_vars_b env binder = match binder.b with
-  | Variable _ -> env, []
+let rec free_vars_b tvars_only env binder : (Env.env & list ident) =
+  match binder.b with
+  | Variable x ->
+    if tvars_only
+    then env, [] //tvars can't clash with vars
+    else (
+      let env, _ = Env.push_bv env x in
+      env, []
+    )
   | TVariable x ->
     let env, _ = Env.push_bv env x in
-    (env, [x])
-  | Annotated(_, term) ->
-    (env, free_type_vars env term)
-  | TAnnotated(id, _) ->
-    let env, _ = Env.push_bv env id in
-    (env, [])
+    env, [x]
+  | Annotated(x, term) ->
+    if tvars_only  //tvars can't clash with vars
+    then env, free_vars tvars_only env term
+    else (
+      let env', _ = Env.push_bv env x in
+      env', free_vars tvars_only env term
+    )
+  | TAnnotated(id, term) ->
+    let env', _ = Env.push_bv env id in
+    env', free_vars tvars_only env term
   | NoName t ->
-    (env, free_type_vars env t)
+    env, free_vars tvars_only env t
 
-and free_type_vars_bs env binders =
+and free_vars_bs tvars_only env binders =
     List.fold_left
       (fun (env, free) binder ->
-        let env, f = free_type_vars_b env binder in
+        let env, f = free_vars_b tvars_only env binder in
         env, f@free)
       (env, [])
       binders
 
-and free_type_vars env t = match (unparen t).tm with
+and free_vars tvars_only env t = match (unparen t).tm with
   | Labeled _ -> failwith "Impossible --- labeled source term"
 
   | Tvar a ->
@@ -315,10 +327,25 @@ and free_type_vars env t = match (unparen t).tm with
       | None -> [a]
       | _ -> [])
 
+  | Var x ->
+    if tvars_only 
+    then []
+    else (
+      let ids = Ident.ids_of_lid x in
+      match ids with
+      | [id] -> ( //unqualified name
+        if None? (Env.try_lookup_id env id)
+        && None? (Env.try_lookup_lid env x)
+        then [id]
+        else []
+      )
+      | _ -> []
+    )
+    
   | Wild
   | Const _
   | Uvar _
-  | Var  _
+
   | Projector _
   | Discrim _
   | Name _  -> []
@@ -326,91 +353,91 @@ and free_type_vars env t = match (unparen t).tm with
   | Requires (t, _)
   | Ensures (t, _)
   | Decreases (t, _)
-  | NamedTyp(_, t) -> free_type_vars env t
+  | NamedTyp(_, t) -> free_vars tvars_only env t
 
-  | LexList l -> List.collect (free_type_vars env) l
+  | LexList l -> List.collect (free_vars tvars_only env) l
   | WFOrder (rel, e) ->
-    (free_type_vars env rel) @ (free_type_vars env e)
+    (free_vars tvars_only env rel) @ (free_vars tvars_only env e)
 
   | Paren t -> failwith "impossible"
 
   | Ascribed(t, t', tacopt, _) ->
     let ts = t::t'::(match tacopt with None -> [] | Some t -> [t]) in
-    List.collect (free_type_vars env) ts
+    List.collect (free_vars tvars_only env) ts
 
-  | Construct(_, ts) -> List.collect (fun (t, _) -> free_type_vars env t) ts
+  | Construct(_, ts) -> List.collect (fun (t, _) -> free_vars tvars_only env t) ts
 
-  | Op(_, ts) -> List.collect (free_type_vars env) ts
+  | Op(_, ts) -> List.collect (free_vars tvars_only env) ts
 
-  | App(t1,t2,_) -> free_type_vars env t1@free_type_vars env t2
+  | App(t1,t2,_) -> free_vars tvars_only env t1@free_vars tvars_only env t2
 
   | Refine (b, t) ->
-    let env, f = free_type_vars_b env b in
-    f@free_type_vars env t
+    let env, f = free_vars_b tvars_only env b in
+    f@free_vars tvars_only env t
 
   | Sum(binders, body) ->
     let env, free = List.fold_left (fun (env, free) bt ->
       let env, f =
         match bt with
-        | Inl binder -> free_type_vars_b env binder
-        | Inr t -> env, free_type_vars env t
+        | Inl binder -> free_vars_b tvars_only env binder
+        | Inr t -> env, free_vars tvars_only env t
       in
       env, f@free) (env, []) binders in
-    free@free_type_vars env body
+    free@free_vars tvars_only env body
 
   | Product(binders, body) ->
-    let env, free = free_type_vars_bs env binders in
-    free@free_type_vars env body
+    let env, free = free_vars_bs tvars_only env binders in
+    free@free_vars tvars_only env body
 
-  | Project(t, _) -> free_type_vars env t
+  | Project(t, _) -> free_vars tvars_only env t
 
   | Attributes cattributes ->
       (* attributes should be closed but better safe than sorry *)
-      List.collect (free_type_vars env) cattributes
+      List.collect (free_vars tvars_only env) cattributes
 
   | CalcProof (rel, init, steps) ->
-    free_type_vars env rel
-    @ free_type_vars env init
+    free_vars tvars_only env rel
+    @ free_vars tvars_only env init
     @ List.collect (fun (CalcStep (rel, just, next)) ->
-                            free_type_vars env rel
-                            @ free_type_vars env just
-                            @ free_type_vars env next) steps
+                            free_vars tvars_only env rel
+                            @ free_vars tvars_only env just
+                            @ free_vars tvars_only env next) steps
 
   | ElimForall  (bs, t, ts) ->
-    let env', free = free_type_vars_bs env bs in
+    let env', free = free_vars_bs tvars_only env bs in
     free@
-    free_type_vars env' t@
-    List.collect (free_type_vars env') ts
+    free_vars tvars_only env' t@
+    List.collect (free_vars tvars_only env') ts
 
   | ElimExists (binders, p, q, y, e) ->
-    let env', free = free_type_vars_bs env binders in
-    let env'', free' = free_type_vars_b env' y in
+    let env', free = free_vars_bs tvars_only env binders in
+    let env'', free' = free_vars_b tvars_only env' y in
     free@
-    free_type_vars env' p@
-    free_type_vars env  q@
+    free_vars tvars_only env' p@
+    free_vars tvars_only env  q@
     free'@
-    free_type_vars env'' e
+    free_vars tvars_only env'' e
 
   | ElimImplies (p, q, e) ->
-    free_type_vars env p@
-    free_type_vars env q@
-    free_type_vars env e
+    free_vars tvars_only env p@
+    free_vars tvars_only env q@
+    free_vars tvars_only env e
 
   | ElimOr(p, q, r, x, e, x', e') ->
-    free_type_vars env p@
-    free_type_vars env q@
-    free_type_vars env r@
-    (let env', free = free_type_vars_b env x in
-     free@free_type_vars env' e)@
-    (let env', free = free_type_vars_b env x' in
-     free@free_type_vars env' e')
+    free_vars tvars_only env p@
+    free_vars tvars_only env q@
+    free_vars tvars_only env r@
+    (let env', free = free_vars_b tvars_only env x in
+     free@free_vars tvars_only env' e)@
+    (let env', free = free_vars_b tvars_only env x' in
+     free@free_vars tvars_only env' e')
 
   | ElimAnd(p, q, r, x, y, e) ->
-    free_type_vars env p@
-    free_type_vars env q@
-    free_type_vars env r@
-    (let env', free = free_type_vars_bs env [x;y] in
-     free@free_type_vars env' e)
+    free_vars tvars_only env p@
+    free_vars tvars_only env q@
+    free_vars tvars_only env r@
+    (let env', free = free_vars_bs tvars_only env [x;y] in
+     free@free_vars tvars_only env' e)
 
   | Abs _  (* not closing implicitly over free vars in all these forms: TODO: Fixme! *)
   | Let _
@@ -426,6 +453,8 @@ and free_type_vars env t = match (unparen t).tm with
   | VQuote _
   | Antiquote _
   | Seq _ -> []
+
+let free_type_vars = free_vars true
 
 let head_and_args t =
     let rec aux args t = match (unparen t).tm with

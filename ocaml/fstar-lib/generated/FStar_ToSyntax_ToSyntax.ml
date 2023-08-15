@@ -446,230 +446,275 @@ let (sort_ftv : FStar_Ident.ident Prims.list -> FStar_Ident.ident Prims.list)
               let uu___1 = FStar_Ident.string_of_id x in
               let uu___2 = FStar_Ident.string_of_id y in
               FStar_String.compare uu___1 uu___2)) uu___
-let rec (free_type_vars_b :
-  FStar_Syntax_DsEnv.env ->
-    FStar_Parser_AST.binder ->
-      (FStar_Syntax_DsEnv.env * FStar_Ident.ident Prims.list))
+let rec (free_vars_b :
+  Prims.bool ->
+    FStar_Syntax_DsEnv.env ->
+      FStar_Parser_AST.binder ->
+        (FStar_Syntax_DsEnv.env * FStar_Ident.ident Prims.list))
   =
-  fun env ->
-    fun binder ->
-      match binder.FStar_Parser_AST.b with
-      | FStar_Parser_AST.Variable uu___ -> (env, [])
-      | FStar_Parser_AST.TVariable x ->
-          let uu___ = FStar_Syntax_DsEnv.push_bv env x in
-          (match uu___ with | (env1, uu___1) -> (env1, [x]))
-      | FStar_Parser_AST.Annotated (uu___, term) ->
-          let uu___1 = free_type_vars env term in (env, uu___1)
-      | FStar_Parser_AST.TAnnotated (id, uu___) ->
-          let uu___1 = FStar_Syntax_DsEnv.push_bv env id in
-          (match uu___1 with | (env1, uu___2) -> (env1, []))
-      | FStar_Parser_AST.NoName t ->
-          let uu___ = free_type_vars env t in (env, uu___)
-and (free_type_vars_bs :
-  FStar_Syntax_DsEnv.env ->
-    FStar_Parser_AST.binder Prims.list ->
-      (FStar_Syntax_DsEnv.env * FStar_Ident.ident Prims.list))
+  fun tvars_only ->
+    fun env ->
+      fun binder ->
+        match binder.FStar_Parser_AST.b with
+        | FStar_Parser_AST.Variable x ->
+            if tvars_only
+            then (env, [])
+            else
+              (let uu___1 = FStar_Syntax_DsEnv.push_bv env x in
+               match uu___1 with | (env1, uu___2) -> (env1, []))
+        | FStar_Parser_AST.TVariable x ->
+            let uu___ = FStar_Syntax_DsEnv.push_bv env x in
+            (match uu___ with | (env1, uu___1) -> (env1, [x]))
+        | FStar_Parser_AST.Annotated (x, term) ->
+            if tvars_only
+            then let uu___ = free_vars tvars_only env term in (env, uu___)
+            else
+              (let uu___1 = FStar_Syntax_DsEnv.push_bv env x in
+               match uu___1 with
+               | (env', uu___2) ->
+                   let uu___3 = free_vars tvars_only env term in
+                   (env', uu___3))
+        | FStar_Parser_AST.TAnnotated (id, term) ->
+            let uu___ = FStar_Syntax_DsEnv.push_bv env id in
+            (match uu___ with
+             | (env', uu___1) ->
+                 let uu___2 = free_vars tvars_only env term in (env', uu___2))
+        | FStar_Parser_AST.NoName t ->
+            let uu___ = free_vars tvars_only env t in (env, uu___)
+and (free_vars_bs :
+  Prims.bool ->
+    FStar_Syntax_DsEnv.env ->
+      FStar_Parser_AST.binder Prims.list ->
+        (FStar_Syntax_DsEnv.env * FStar_Ident.ident Prims.list))
   =
-  fun env ->
-    fun binders ->
-      FStar_Compiler_List.fold_left
-        (fun uu___ ->
-           fun binder ->
-             match uu___ with
+  fun tvars_only ->
+    fun env ->
+      fun binders ->
+        FStar_Compiler_List.fold_left
+          (fun uu___ ->
+             fun binder ->
+               match uu___ with
+               | (env1, free) ->
+                   let uu___1 = free_vars_b tvars_only env1 binder in
+                   (match uu___1 with
+                    | (env2, f) -> (env2, (FStar_Compiler_List.op_At f free))))
+          (env, []) binders
+and (free_vars :
+  Prims.bool ->
+    FStar_Syntax_DsEnv.env ->
+      FStar_Parser_AST.term -> FStar_Ident.ident Prims.list)
+  =
+  fun tvars_only ->
+    fun env ->
+      fun t ->
+        let uu___ = let uu___1 = unparen t in uu___1.FStar_Parser_AST.tm in
+        match uu___ with
+        | FStar_Parser_AST.Labeled uu___1 ->
+            failwith "Impossible --- labeled source term"
+        | FStar_Parser_AST.Tvar a ->
+            let uu___1 = FStar_Syntax_DsEnv.try_lookup_id env a in
+            (match uu___1 with
+             | FStar_Pervasives_Native.None -> [a]
+             | uu___2 -> [])
+        | FStar_Parser_AST.Var x ->
+            if tvars_only
+            then []
+            else
+              (let ids = FStar_Ident.ids_of_lid x in
+               match ids with
+               | id::[] ->
+                   let uu___2 =
+                     (let uu___3 = FStar_Syntax_DsEnv.try_lookup_id env id in
+                      FStar_Pervasives_Native.uu___is_None uu___3) &&
+                       (let uu___3 = FStar_Syntax_DsEnv.try_lookup_lid env x in
+                        FStar_Pervasives_Native.uu___is_None uu___3) in
+                   if uu___2 then [id] else []
+               | uu___2 -> [])
+        | FStar_Parser_AST.Wild -> []
+        | FStar_Parser_AST.Const uu___1 -> []
+        | FStar_Parser_AST.Uvar uu___1 -> []
+        | FStar_Parser_AST.Projector uu___1 -> []
+        | FStar_Parser_AST.Discrim uu___1 -> []
+        | FStar_Parser_AST.Name uu___1 -> []
+        | FStar_Parser_AST.Requires (t1, uu___1) ->
+            free_vars tvars_only env t1
+        | FStar_Parser_AST.Ensures (t1, uu___1) ->
+            free_vars tvars_only env t1
+        | FStar_Parser_AST.Decreases (t1, uu___1) ->
+            free_vars tvars_only env t1
+        | FStar_Parser_AST.NamedTyp (uu___1, t1) ->
+            free_vars tvars_only env t1
+        | FStar_Parser_AST.LexList l ->
+            FStar_Compiler_List.collect (free_vars tvars_only env) l
+        | FStar_Parser_AST.WFOrder (rel, e) ->
+            let uu___1 = free_vars tvars_only env rel in
+            let uu___2 = free_vars tvars_only env e in
+            FStar_Compiler_List.op_At uu___1 uu___2
+        | FStar_Parser_AST.Paren t1 -> failwith "impossible"
+        | FStar_Parser_AST.Ascribed (t1, t', tacopt, uu___1) ->
+            let ts = t1 :: t' ::
+              (match tacopt with
+               | FStar_Pervasives_Native.None -> []
+               | FStar_Pervasives_Native.Some t2 -> [t2]) in
+            FStar_Compiler_List.collect (free_vars tvars_only env) ts
+        | FStar_Parser_AST.Construct (uu___1, ts) ->
+            FStar_Compiler_List.collect
+              (fun uu___2 ->
+                 match uu___2 with
+                 | (t1, uu___3) -> free_vars tvars_only env t1) ts
+        | FStar_Parser_AST.Op (uu___1, ts) ->
+            FStar_Compiler_List.collect (free_vars tvars_only env) ts
+        | FStar_Parser_AST.App (t1, t2, uu___1) ->
+            let uu___2 = free_vars tvars_only env t1 in
+            let uu___3 = free_vars tvars_only env t2 in
+            FStar_Compiler_List.op_At uu___2 uu___3
+        | FStar_Parser_AST.Refine (b, t1) ->
+            let uu___1 = free_vars_b tvars_only env b in
+            (match uu___1 with
+             | (env1, f) ->
+                 let uu___2 = free_vars tvars_only env1 t1 in
+                 FStar_Compiler_List.op_At f uu___2)
+        | FStar_Parser_AST.Sum (binders, body) ->
+            let uu___1 =
+              FStar_Compiler_List.fold_left
+                (fun uu___2 ->
+                   fun bt ->
+                     match uu___2 with
+                     | (env1, free) ->
+                         let uu___3 =
+                           match bt with
+                           | FStar_Pervasives.Inl binder ->
+                               free_vars_b tvars_only env1 binder
+                           | FStar_Pervasives.Inr t1 ->
+                               let uu___4 = free_vars tvars_only env1 t1 in
+                               (env1, uu___4) in
+                         (match uu___3 with
+                          | (env2, f) ->
+                              (env2, (FStar_Compiler_List.op_At f free))))
+                (env, []) binders in
+            (match uu___1 with
              | (env1, free) ->
-                 let uu___1 = free_type_vars_b env1 binder in
-                 (match uu___1 with
-                  | (env2, f) -> (env2, (FStar_Compiler_List.op_At f free))))
-        (env, []) binders
-and (free_type_vars :
+                 let uu___2 = free_vars tvars_only env1 body in
+                 FStar_Compiler_List.op_At free uu___2)
+        | FStar_Parser_AST.Product (binders, body) ->
+            let uu___1 = free_vars_bs tvars_only env binders in
+            (match uu___1 with
+             | (env1, free) ->
+                 let uu___2 = free_vars tvars_only env1 body in
+                 FStar_Compiler_List.op_At free uu___2)
+        | FStar_Parser_AST.Project (t1, uu___1) ->
+            free_vars tvars_only env t1
+        | FStar_Parser_AST.Attributes cattributes ->
+            FStar_Compiler_List.collect (free_vars tvars_only env)
+              cattributes
+        | FStar_Parser_AST.CalcProof (rel, init, steps) ->
+            let uu___1 = free_vars tvars_only env rel in
+            let uu___2 =
+              let uu___3 = free_vars tvars_only env init in
+              let uu___4 =
+                FStar_Compiler_List.collect
+                  (fun uu___5 ->
+                     match uu___5 with
+                     | FStar_Parser_AST.CalcStep (rel1, just, next) ->
+                         let uu___6 = free_vars tvars_only env rel1 in
+                         let uu___7 =
+                           let uu___8 = free_vars tvars_only env just in
+                           let uu___9 = free_vars tvars_only env next in
+                           FStar_Compiler_List.op_At uu___8 uu___9 in
+                         FStar_Compiler_List.op_At uu___6 uu___7) steps in
+              FStar_Compiler_List.op_At uu___3 uu___4 in
+            FStar_Compiler_List.op_At uu___1 uu___2
+        | FStar_Parser_AST.ElimForall (bs, t1, ts) ->
+            let uu___1 = free_vars_bs tvars_only env bs in
+            (match uu___1 with
+             | (env', free) ->
+                 let uu___2 =
+                   let uu___3 = free_vars tvars_only env' t1 in
+                   let uu___4 =
+                     FStar_Compiler_List.collect (free_vars tvars_only env')
+                       ts in
+                   FStar_Compiler_List.op_At uu___3 uu___4 in
+                 FStar_Compiler_List.op_At free uu___2)
+        | FStar_Parser_AST.ElimExists (binders, p, q, y, e) ->
+            let uu___1 = free_vars_bs tvars_only env binders in
+            (match uu___1 with
+             | (env', free) ->
+                 let uu___2 = free_vars_b tvars_only env' y in
+                 (match uu___2 with
+                  | (env'', free') ->
+                      let uu___3 =
+                        let uu___4 = free_vars tvars_only env' p in
+                        let uu___5 =
+                          let uu___6 = free_vars tvars_only env q in
+                          let uu___7 =
+                            let uu___8 = free_vars tvars_only env'' e in
+                            FStar_Compiler_List.op_At free' uu___8 in
+                          FStar_Compiler_List.op_At uu___6 uu___7 in
+                        FStar_Compiler_List.op_At uu___4 uu___5 in
+                      FStar_Compiler_List.op_At free uu___3))
+        | FStar_Parser_AST.ElimImplies (p, q, e) ->
+            let uu___1 = free_vars tvars_only env p in
+            let uu___2 =
+              let uu___3 = free_vars tvars_only env q in
+              let uu___4 = free_vars tvars_only env e in
+              FStar_Compiler_List.op_At uu___3 uu___4 in
+            FStar_Compiler_List.op_At uu___1 uu___2
+        | FStar_Parser_AST.ElimOr (p, q, r, x, e, x', e') ->
+            let uu___1 = free_vars tvars_only env p in
+            let uu___2 =
+              let uu___3 = free_vars tvars_only env q in
+              let uu___4 =
+                let uu___5 = free_vars tvars_only env r in
+                let uu___6 =
+                  let uu___7 =
+                    let uu___8 = free_vars_b tvars_only env x in
+                    match uu___8 with
+                    | (env', free) ->
+                        let uu___9 = free_vars tvars_only env' e in
+                        FStar_Compiler_List.op_At free uu___9 in
+                  let uu___8 =
+                    let uu___9 = free_vars_b tvars_only env x' in
+                    match uu___9 with
+                    | (env', free) ->
+                        let uu___10 = free_vars tvars_only env' e' in
+                        FStar_Compiler_List.op_At free uu___10 in
+                  FStar_Compiler_List.op_At uu___7 uu___8 in
+                FStar_Compiler_List.op_At uu___5 uu___6 in
+              FStar_Compiler_List.op_At uu___3 uu___4 in
+            FStar_Compiler_List.op_At uu___1 uu___2
+        | FStar_Parser_AST.ElimAnd (p, q, r, x, y, e) ->
+            let uu___1 = free_vars tvars_only env p in
+            let uu___2 =
+              let uu___3 = free_vars tvars_only env q in
+              let uu___4 =
+                let uu___5 = free_vars tvars_only env r in
+                let uu___6 =
+                  let uu___7 = free_vars_bs tvars_only env [x; y] in
+                  match uu___7 with
+                  | (env', free) ->
+                      let uu___8 = free_vars tvars_only env' e in
+                      FStar_Compiler_List.op_At free uu___8 in
+                FStar_Compiler_List.op_At uu___5 uu___6 in
+              FStar_Compiler_List.op_At uu___3 uu___4 in
+            FStar_Compiler_List.op_At uu___1 uu___2
+        | FStar_Parser_AST.Abs uu___1 -> []
+        | FStar_Parser_AST.Let uu___1 -> []
+        | FStar_Parser_AST.LetOpen uu___1 -> []
+        | FStar_Parser_AST.If uu___1 -> []
+        | FStar_Parser_AST.QForall uu___1 -> []
+        | FStar_Parser_AST.QExists uu___1 -> []
+        | FStar_Parser_AST.Record uu___1 -> []
+        | FStar_Parser_AST.Match uu___1 -> []
+        | FStar_Parser_AST.TryWith uu___1 -> []
+        | FStar_Parser_AST.Bind uu___1 -> []
+        | FStar_Parser_AST.Quote uu___1 -> []
+        | FStar_Parser_AST.VQuote uu___1 -> []
+        | FStar_Parser_AST.Antiquote uu___1 -> []
+        | FStar_Parser_AST.Seq uu___1 -> []
+let (free_type_vars :
   FStar_Syntax_DsEnv.env ->
     FStar_Parser_AST.term -> FStar_Ident.ident Prims.list)
-  =
-  fun env ->
-    fun t ->
-      let uu___ = let uu___1 = unparen t in uu___1.FStar_Parser_AST.tm in
-      match uu___ with
-      | FStar_Parser_AST.Labeled uu___1 ->
-          failwith "Impossible --- labeled source term"
-      | FStar_Parser_AST.Tvar a ->
-          let uu___1 = FStar_Syntax_DsEnv.try_lookup_id env a in
-          (match uu___1 with
-           | FStar_Pervasives_Native.None -> [a]
-           | uu___2 -> [])
-      | FStar_Parser_AST.Wild -> []
-      | FStar_Parser_AST.Const uu___1 -> []
-      | FStar_Parser_AST.Uvar uu___1 -> []
-      | FStar_Parser_AST.Var uu___1 -> []
-      | FStar_Parser_AST.Projector uu___1 -> []
-      | FStar_Parser_AST.Discrim uu___1 -> []
-      | FStar_Parser_AST.Name uu___1 -> []
-      | FStar_Parser_AST.Requires (t1, uu___1) -> free_type_vars env t1
-      | FStar_Parser_AST.Ensures (t1, uu___1) -> free_type_vars env t1
-      | FStar_Parser_AST.Decreases (t1, uu___1) -> free_type_vars env t1
-      | FStar_Parser_AST.NamedTyp (uu___1, t1) -> free_type_vars env t1
-      | FStar_Parser_AST.LexList l ->
-          FStar_Compiler_List.collect (free_type_vars env) l
-      | FStar_Parser_AST.WFOrder (rel, e) ->
-          let uu___1 = free_type_vars env rel in
-          let uu___2 = free_type_vars env e in
-          FStar_Compiler_List.op_At uu___1 uu___2
-      | FStar_Parser_AST.Paren t1 -> failwith "impossible"
-      | FStar_Parser_AST.Ascribed (t1, t', tacopt, uu___1) ->
-          let ts = t1 :: t' ::
-            (match tacopt with
-             | FStar_Pervasives_Native.None -> []
-             | FStar_Pervasives_Native.Some t2 -> [t2]) in
-          FStar_Compiler_List.collect (free_type_vars env) ts
-      | FStar_Parser_AST.Construct (uu___1, ts) ->
-          FStar_Compiler_List.collect
-            (fun uu___2 ->
-               match uu___2 with | (t1, uu___3) -> free_type_vars env t1) ts
-      | FStar_Parser_AST.Op (uu___1, ts) ->
-          FStar_Compiler_List.collect (free_type_vars env) ts
-      | FStar_Parser_AST.App (t1, t2, uu___1) ->
-          let uu___2 = free_type_vars env t1 in
-          let uu___3 = free_type_vars env t2 in
-          FStar_Compiler_List.op_At uu___2 uu___3
-      | FStar_Parser_AST.Refine (b, t1) ->
-          let uu___1 = free_type_vars_b env b in
-          (match uu___1 with
-           | (env1, f) ->
-               let uu___2 = free_type_vars env1 t1 in
-               FStar_Compiler_List.op_At f uu___2)
-      | FStar_Parser_AST.Sum (binders, body) ->
-          let uu___1 =
-            FStar_Compiler_List.fold_left
-              (fun uu___2 ->
-                 fun bt ->
-                   match uu___2 with
-                   | (env1, free) ->
-                       let uu___3 =
-                         match bt with
-                         | FStar_Pervasives.Inl binder ->
-                             free_type_vars_b env1 binder
-                         | FStar_Pervasives.Inr t1 ->
-                             let uu___4 = free_type_vars env1 t1 in
-                             (env1, uu___4) in
-                       (match uu___3 with
-                        | (env2, f) ->
-                            (env2, (FStar_Compiler_List.op_At f free))))
-              (env, []) binders in
-          (match uu___1 with
-           | (env1, free) ->
-               let uu___2 = free_type_vars env1 body in
-               FStar_Compiler_List.op_At free uu___2)
-      | FStar_Parser_AST.Product (binders, body) ->
-          let uu___1 = free_type_vars_bs env binders in
-          (match uu___1 with
-           | (env1, free) ->
-               let uu___2 = free_type_vars env1 body in
-               FStar_Compiler_List.op_At free uu___2)
-      | FStar_Parser_AST.Project (t1, uu___1) -> free_type_vars env t1
-      | FStar_Parser_AST.Attributes cattributes ->
-          FStar_Compiler_List.collect (free_type_vars env) cattributes
-      | FStar_Parser_AST.CalcProof (rel, init, steps) ->
-          let uu___1 = free_type_vars env rel in
-          let uu___2 =
-            let uu___3 = free_type_vars env init in
-            let uu___4 =
-              FStar_Compiler_List.collect
-                (fun uu___5 ->
-                   match uu___5 with
-                   | FStar_Parser_AST.CalcStep (rel1, just, next) ->
-                       let uu___6 = free_type_vars env rel1 in
-                       let uu___7 =
-                         let uu___8 = free_type_vars env just in
-                         let uu___9 = free_type_vars env next in
-                         FStar_Compiler_List.op_At uu___8 uu___9 in
-                       FStar_Compiler_List.op_At uu___6 uu___7) steps in
-            FStar_Compiler_List.op_At uu___3 uu___4 in
-          FStar_Compiler_List.op_At uu___1 uu___2
-      | FStar_Parser_AST.ElimForall (bs, t1, ts) ->
-          let uu___1 = free_type_vars_bs env bs in
-          (match uu___1 with
-           | (env', free) ->
-               let uu___2 =
-                 let uu___3 = free_type_vars env' t1 in
-                 let uu___4 =
-                   FStar_Compiler_List.collect (free_type_vars env') ts in
-                 FStar_Compiler_List.op_At uu___3 uu___4 in
-               FStar_Compiler_List.op_At free uu___2)
-      | FStar_Parser_AST.ElimExists (binders, p, q, y, e) ->
-          let uu___1 = free_type_vars_bs env binders in
-          (match uu___1 with
-           | (env', free) ->
-               let uu___2 = free_type_vars_b env' y in
-               (match uu___2 with
-                | (env'', free') ->
-                    let uu___3 =
-                      let uu___4 = free_type_vars env' p in
-                      let uu___5 =
-                        let uu___6 = free_type_vars env q in
-                        let uu___7 =
-                          let uu___8 = free_type_vars env'' e in
-                          FStar_Compiler_List.op_At free' uu___8 in
-                        FStar_Compiler_List.op_At uu___6 uu___7 in
-                      FStar_Compiler_List.op_At uu___4 uu___5 in
-                    FStar_Compiler_List.op_At free uu___3))
-      | FStar_Parser_AST.ElimImplies (p, q, e) ->
-          let uu___1 = free_type_vars env p in
-          let uu___2 =
-            let uu___3 = free_type_vars env q in
-            let uu___4 = free_type_vars env e in
-            FStar_Compiler_List.op_At uu___3 uu___4 in
-          FStar_Compiler_List.op_At uu___1 uu___2
-      | FStar_Parser_AST.ElimOr (p, q, r, x, e, x', e') ->
-          let uu___1 = free_type_vars env p in
-          let uu___2 =
-            let uu___3 = free_type_vars env q in
-            let uu___4 =
-              let uu___5 = free_type_vars env r in
-              let uu___6 =
-                let uu___7 =
-                  let uu___8 = free_type_vars_b env x in
-                  match uu___8 with
-                  | (env', free) ->
-                      let uu___9 = free_type_vars env' e in
-                      FStar_Compiler_List.op_At free uu___9 in
-                let uu___8 =
-                  let uu___9 = free_type_vars_b env x' in
-                  match uu___9 with
-                  | (env', free) ->
-                      let uu___10 = free_type_vars env' e' in
-                      FStar_Compiler_List.op_At free uu___10 in
-                FStar_Compiler_List.op_At uu___7 uu___8 in
-              FStar_Compiler_List.op_At uu___5 uu___6 in
-            FStar_Compiler_List.op_At uu___3 uu___4 in
-          FStar_Compiler_List.op_At uu___1 uu___2
-      | FStar_Parser_AST.ElimAnd (p, q, r, x, y, e) ->
-          let uu___1 = free_type_vars env p in
-          let uu___2 =
-            let uu___3 = free_type_vars env q in
-            let uu___4 =
-              let uu___5 = free_type_vars env r in
-              let uu___6 =
-                let uu___7 = free_type_vars_bs env [x; y] in
-                match uu___7 with
-                | (env', free) ->
-                    let uu___8 = free_type_vars env' e in
-                    FStar_Compiler_List.op_At free uu___8 in
-              FStar_Compiler_List.op_At uu___5 uu___6 in
-            FStar_Compiler_List.op_At uu___3 uu___4 in
-          FStar_Compiler_List.op_At uu___1 uu___2
-      | FStar_Parser_AST.Abs uu___1 -> []
-      | FStar_Parser_AST.Let uu___1 -> []
-      | FStar_Parser_AST.LetOpen uu___1 -> []
-      | FStar_Parser_AST.If uu___1 -> []
-      | FStar_Parser_AST.QForall uu___1 -> []
-      | FStar_Parser_AST.QExists uu___1 -> []
-      | FStar_Parser_AST.Record uu___1 -> []
-      | FStar_Parser_AST.Match uu___1 -> []
-      | FStar_Parser_AST.TryWith uu___1 -> []
-      | FStar_Parser_AST.Bind uu___1 -> []
-      | FStar_Parser_AST.Quote uu___1 -> []
-      | FStar_Parser_AST.VQuote uu___1 -> []
-      | FStar_Parser_AST.Antiquote uu___1 -> []
-      | FStar_Parser_AST.Seq uu___1 -> []
+  = free_vars true
 let (head_and_args :
   FStar_Parser_AST.term ->
     (FStar_Parser_AST.term * (FStar_Parser_AST.term * FStar_Parser_AST.imp)
