@@ -8,7 +8,7 @@ type pred a = (a -> slprop)
 let implies #a (p q: pred a) = (forall x. slimp (p x) (q x))
 
 let mono #a (f: pred a -> pred a) =
-    (forall p q x. (forall y. slimp (p y) (q y)) ==> slimp (f p x) (f q x))
+    (forall p q. implies p q ==> implies (f p) (f q))
 
 let mono_fun a = (f: (pred a -> pred a){mono f})
 
@@ -35,7 +35,7 @@ val coinduction (#a: Type) (f: mono_fun a) (p: pred a):
 
 (** A small DSL to write recursive definitions.
 Recursive definitions written in this syntax are guaranteed to be monotonic,
-and thus have a greatest fixed point. **)
+and thus to have a greatest fixed point. **)
 
 noeq
 type rec_def (a: Type) =
