@@ -6,6 +6,7 @@ module A = FStar.Parser.AST
 module D = FStar.Syntax.DsEnv
 module ToSyntax = FStar.ToSyntax.ToSyntax
 open FStar.Ident
+open FStar.List.Tot
 module S = FStar.Syntax.Syntax
 module L = FStar.Compiler.List
 module U = FStar.Syntax.Util
@@ -602,7 +603,7 @@ let idents_as_binders (env:env_t) (l:list ident)
     let rec aux env binders bvs l 
       : err (env_t & list (option SW.qualifier & SW.binder) & list S.bv)
       = match l with
-        | [] -> return (env, List.rev binders, List.rev bvs)
+        | [] -> return (env, L.rev binders, L.rev bvs)
         | i::l ->
           let env, bv = push_bv env i in
           let qual = SW.as_qual true in

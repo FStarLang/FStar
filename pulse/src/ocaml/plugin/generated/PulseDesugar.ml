@@ -1332,8 +1332,8 @@ let (idents_as_binders :
         match l1 with
         | [] ->
             return
-              (env1, (FStar_List_Tot_Base.rev binders),
-                (FStar_List_Tot_Base.rev bvs))
+              (env1, (FStar_Compiler_List.rev binders),
+                (FStar_Compiler_List.rev bvs))
         | i::l2 ->
             let uu___ = push_bv env1 i in
             (match uu___ with
