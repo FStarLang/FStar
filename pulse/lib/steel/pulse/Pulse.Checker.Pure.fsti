@@ -33,8 +33,11 @@ val check_term_and_type (g:env) (t:term)
            (u:universe & universe_of g ty u) &
            typing g t eff ty)
 
-val check_term_with_expected_type (g:env) (e:term) (eff:T.tot_or_ghost) (t:term)
+val check_term_with_expected_type_and_effect (g:env) (e:term) (eff:T.tot_or_ghost) (t:term)
   : T.Tac (e:term & typing g e eff t)
+
+val check_term_with_expected_type (g:env) (e:term) (t:term)
+  : T.Tac (e:term & eff:T.tot_or_ghost & typing g e eff t)
 
 val core_check_term (g:env) (t:term)
   : T.Tac (eff:T.tot_or_ghost &

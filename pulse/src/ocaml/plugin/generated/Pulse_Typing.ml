@@ -850,12 +850,12 @@ type ('dummyV0, 'dummyV1, 'dummyV2) st_typing =
   unit, unit) bind_comp 
   | T_TotBind of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
   Pulse_Syntax_Base.st_term * Pulse_Syntax_Base.term *
-  Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.var * unit * (unit, unit,
-  unit) st_typing 
+  Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.binder *
+  Pulse_Syntax_Base.var * unit * (unit, unit, unit) st_typing 
   | T_GhostBind of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
   Pulse_Syntax_Base.st_term * Pulse_Syntax_Base.term *
-  Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.var * unit * (unit, unit,
-  unit) st_typing * unit 
+  Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.binder *
+  Pulse_Syntax_Base.var * unit * (unit, unit, unit) st_typing * unit 
   | T_If of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
   Pulse_Syntax_Base.st_term * Pulse_Syntax_Base.st_term *
   Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.universe *

@@ -72,8 +72,11 @@ let rec freevars_st (t:st_term)
         (Set.union (freevars binder.binder_ty) 
                    (freevars_st head))
         (freevars_st body)
-    | Tm_TotBind { head; body } ->
-      Set.union (freevars head) (freevars_st body)
+    | Tm_TotBind { binder; head; body } ->
+      Set.union
+        (Set.union (freevars binder.binder_ty)
+                   (freevars head))
+        (freevars_st body)
     | Tm_If { b; then_; else_; post } ->
       Set.union (Set.union (freevars b) (freevars_st then_))
                 (Set.union (freevars_st else_) (freevars_term_opt post))
@@ -190,7 +193,8 @@ let rec ln_st' (t:st_term) (i:int)
       ln_st' head i &&
       ln_st' body (i + 1)
 
-    | Tm_TotBind { head; body } ->
+    | Tm_TotBind { binder; head; body } ->
+      ln' binder.binder_ty i &&
       ln' head i &&
       ln_st' body (i + 1)
 
@@ -396,8 +400,9 @@ let rec subst_st_term (t:st_term) (ss:subst)
                 head = subst_st_term head ss;
                 body = subst_st_term body (shift_subst ss) }
 
-    | Tm_TotBind { head; body } ->
-      Tm_TotBind { head = subst_term head ss; 
+    | Tm_TotBind { binder; head; body } ->
+      Tm_TotBind { binder = subst_binder binder ss;
+                   head = subst_term head ss;
                    body = subst_st_term body (shift_subst ss) }
 
     | Tm_If { b; then_; else_; post } ->

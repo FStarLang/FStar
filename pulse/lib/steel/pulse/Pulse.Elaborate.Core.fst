@@ -166,8 +166,8 @@ let rec elab_st_typing (#g:env)
       let ty1 = elab_term (comp_res c1) in
       elab_bind bc e1 (mk_abs_with_name b.binder_ppname.name ty1 R.Q_Explicit (RT.close_term e2 x))
 
-    | T_TotBind _ e1 e2 t1 _ x _ e2_typing
-    | T_GhostBind _ e1 e2 t1 _ x _ e2_typing _ ->
+    | T_TotBind _ e1 e2 t1 _ _ x _ e2_typing
+    | T_GhostBind _ e1 e2 t1 _ _ x _ e2_typing _ ->
       let re1 = elab_term e1 in
       let rt1 = elab_term t1 in
       let re2 = elab_st_typing e2_typing in

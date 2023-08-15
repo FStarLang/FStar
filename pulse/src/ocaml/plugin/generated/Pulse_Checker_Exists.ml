@@ -878,7 +878,7 @@ let (check_intro_exists :
                                                                     (Prims.of_int (104))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (104))
-                                                                    (Prims.of_int (65)))))
+                                                                    (Prims.of_int (76)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -888,7 +888,7 @@ let (check_intro_exists :
                                                                     (Prims.of_int (107))
                                                                     (Prims.of_int (85)))))
                                                                     (Obj.magic
-                                                                    (Pulse_Checker_Pure.check_term_with_expected_type
+                                                                    (Pulse_Checker_Pure.check_term_with_expected_type_and_effect
                                                                     g1
                                                                     witness
                                                                     FStar_TypeChecker_Core.E_Ghost

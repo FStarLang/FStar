@@ -292,6 +292,7 @@ let continuation_elaborator_with_let (#g:env) (#ctxt:term)
   (#e1:term)
   (#eff1:T.tot_or_ghost)
   (#t1:term)
+  (b:binder{b.binder_ty == t1})
   (e1_typing:typing g e1 eff1 t1)
   (x:nvar { None? (lookup g (snd x)) })
   : T.Tac (continuation_elaborator
@@ -310,13 +311,13 @@ let continuation_elaborator_with_let (#g:env) (#ctxt:term)
   let e2_closed = close_st_term e2 x in
   assume (open_st_term (close_st_term e2 x) x == e2);
 
-  let e = wr (Tm_TotBind {head=e1;body=e2_closed}) in
+  let e = wr (Tm_TotBind {binder=b; head=e1;body=e2_closed}) in
   let c = open_comp_with (close_comp c2 x) e1 in
   // we just closed
   assume (~ (x `Set.mem` freevars_st e2_closed));
   let d : st_typing g e c =
     if eff1 = T.E_Total
-    then T_TotBind g e1 e2_closed t1 c2 x e1_typing d2
+    then T_TotBind g e1 e2_closed t1 c2 b x e1_typing d2
     else let token = CP.is_non_informative (push_binding g x ppname t1) c2 in
          match token with
          | None ->
@@ -325,8 +326,9 @@ let continuation_elaborator_with_let (#g:env) (#ctxt:term)
                 (P.comp_to_string c2))
          | Some token ->
            let token = FStar.Squash.return_squash token in
-           T_GhostBind g e1 e2_closed t1 c2 x e1_typing d2
+           T_GhostBind g e1 e2_closed t1 c2 b x e1_typing d2
              (E (RT.Non_informative_token _ _ token)) in
+  
   let _ =
     match post_hint with
     | None -> ()

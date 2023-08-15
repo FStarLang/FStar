@@ -64,6 +64,7 @@ val continuation_elaborator_with_let (#g:env) (#ctxt:term)
   (#e1:term)
   (#eff1:T.tot_or_ghost)
   (#t1:term)
+  (b:binder{b.binder_ty == t1})
   (e1_typing:typing g e1 eff1 t1)
   (x:nvar { None? (lookup g (snd x)) })
   : T.Tac (continuation_elaborator
