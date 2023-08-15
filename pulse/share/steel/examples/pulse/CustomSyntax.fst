@@ -10,9 +10,9 @@ assume val g : unit -> stt unit emp (fun _ -> p)
 let folded_pts_to (r:ref U32.t) (n:erased U32.t) : vprop = pts_to r n
 
 ```pulse
-fn unfold_test (r:ref U32.t) (n:erased U32.t)
-  requires folded_pts_to r n
-  ensures folded_pts_to r n
+fn unfold_test (r:ref U32.t) 
+  requires folded_pts_to r 'n
+  ensures folded_pts_to r 'n
 {
   with n. unfold (folded_pts_to r n);
   with n. fold (folded_pts_to r n)
@@ -21,8 +21,7 @@ fn unfold_test (r:ref U32.t) (n:erased U32.t)
 
 ```pulse
 fn test_write_10 (x:ref U32.t)
-                 (#n:erased U32.t)
-   requires pts_to x n
+   requires pts_to x 'n
    ensures  pts_to x 0ul
 {
     x := 1ul;
@@ -32,11 +31,9 @@ fn test_write_10 (x:ref U32.t)
 
 ```pulse
 fn test_read (r:ref U32.t)
-             (#n:erased U32.t)
-             (#p:perm)
-   requires pts_to r #p n
+   requires pts_to r #pm 'n
    returns x : U32.t
-   ensures pts_to r #p x
+   ensures pts_to r #pm x
 {
   !r
 }
@@ -44,13 +41,12 @@ fn test_read (r:ref U32.t)
 
 ```pulse
 fn swap (r1 r2:ref U32.t)
-        (#n1 #n2:erased U32.t)
   requires 
-      pts_to r1 n1 **
-      pts_to r2 n2
+      pts_to r1 'n1 **
+      pts_to r2 'n2
   ensures
-      pts_to r1 n2 **
-      pts_to r2 n1
+      pts_to r1 'n2 **
+      pts_to r2 'n1
 {
   let x = !r1;
   let y = !r2;
@@ -62,13 +58,12 @@ fn swap (r1 r2:ref U32.t)
 
 ```pulse
 fn call_swap2 (r1 r2:ref U32.t)
-              (#n1 #n2:erased U32.t)
    requires
-       pts_to r1 n1 **
-       pts_to r2 n2
+       pts_to r1 'n1 **
+       pts_to r2 'n2
    ensures
-       pts_to r1 n1 **
-       pts_to r2 n2
+       pts_to r1 'n1 **
+       pts_to r2 'n2
 {
    swap r1 r2;
    swap r1 r2
@@ -95,13 +90,12 @@ fn swap_with_elim_pure (r1 r2:ref U32.t)
 
 ```pulse
 fn intro_pure_example (r:ref U32.t)
-                      (#n1 #n2:erased U32.t)
    requires 
-     (pts_to r  n1  **
-      pure (reveal n1 == reveal n2))
+     (pts_to r 'n1  **
+      pure (reveal 'n1 == reveal 'n2))
    ensures 
-     (pts_to r n2  **
-      pure (reveal n2 == reveal n1))
+     (pts_to r 'n2  **
+      pure (reveal 'n2 == reveal 'n1))
 {
   ()
 }
@@ -204,17 +198,16 @@ fn while_count2 (r:ref U32.t)
 
 ```pulse
 fn test_par (r1 r2:ref U32.t)
-            (#n1 #n2:erased U32.t)
   requires 
-    (pts_to r1 n1  **
-     pts_to r2 n2)
+     pts_to r1 'n1  **
+     pts_to r2 'n2
   ensures
-    (pts_to r1 1ul  **
-     pts_to r2 1ul)
+     pts_to r1 1ul  **
+     pts_to r2 1ul
 {
   parallel
-  requires (pts_to r1 n1)
-       and (pts_to r2 n2)
+  requires (pts_to r1 'n1)
+       and (pts_to r2 'n2)
   ensures  (pts_to r1 1ul)    
        and (pts_to r2 1ul)
   {
@@ -232,12 +225,11 @@ let mpts_to (r:ref U32.t) (n:erased U32.t) : vprop = pts_to r n
 
 ```pulse
 fn rewrite_test (r:ref U32.t)
-                (#n:erased U32.t)
-   requires (mpts_to r n)
+   requires (mpts_to r 'n)
    ensures  (mpts_to r 1ul)
 {
-  rewrite (mpts_to r n) 
-       as (pts_to r n);
+  rewrite (mpts_to r 'n) 
+       as (pts_to r 'n);
   r := 1ul;
   rewrite (pts_to r 1ul)
        as (mpts_to r 1ul)
@@ -246,8 +238,7 @@ fn rewrite_test (r:ref U32.t)
 
 ```pulse
 fn test_local (r:ref U32.t)
-              (#n:erased U32.t)
-   requires (pts_to r n)
+   requires (pts_to r 'n)
    ensures  (pts_to r 0ul)
 {
   let mut x = 0ul;

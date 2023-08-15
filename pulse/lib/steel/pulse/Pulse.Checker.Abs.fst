@@ -10,6 +10,76 @@ open Pulse.Checker.Base
 
 module P = Pulse.Syntax.Printer
 module FV = Pulse.Typing.FV
+module T = FStar.Tactics.V2
+module R = FStar.Reflection.V2
+(* Infers the the type of the binders from the specification alone, not the body *)
+
+let rec arrow_of_abs (t:st_term { Tm_Abs? t.term })
+  : T.Tac term
+  = let Tm_Abs { b; q; ascription; body } = t.term in
+    if Tm_Abs? body.term
+    then (
+      let arr = arrow_of_abs body in
+      tm_arrow b q (C_Tot arr)
+    )
+    else
+      tm_arrow b q ascription
+module Env = Pulse.Typing.Env
+
+let rec rebuild_abs (g:env) (t:st_term) (annot:T.term)
+  : T.Tac (t:st_term { Tm_Abs? t.term })
+  = match t.term, R.inspect_ln annot with
+    | Tm_Abs { b; q; ascription=C_Tot un; body }, R.Tv_Arrow b' c' -> (
+      let ty = readback_ty (T.inspect_binder b').sort in
+      let comp = R.inspect_comp c' in
+      match ty, comp with
+      | Some ty, T.C_Total res_ty ->
+        let b = { binder_ty = ty ; binder_ppname = b.binder_ppname } in
+        let body = rebuild_abs g body res_ty in
+        { t with term = Tm_Abs { b; q; ascription=C_Tot un; body }}
+      | _ ->
+        Env.fail g (Some t.range) 
+            (Printf.sprintf "Unexpected type of abstraction: %s"
+                (T.term_to_string annot))
+    )
+    | Tm_Abs { b; q; ascription=_; body }, R.Tv_Arrow b' c' -> (
+      let ty = readback_ty (T.inspect_binder b').sort in
+      let comp = R.inspect_comp c' in
+      match ty, comp with
+      | Some ty, R.C_Total res -> (
+        let c = readback_comp res in
+        match c with
+        | None -> 
+          Env.fail g (Some t.range) 
+                      (Printf.sprintf "Unexpected computation type in abstraction: %s"
+                          (T.term_to_string res))
+        | Some c ->
+          let b = { binder_ty = ty ; binder_ppname = b.binder_ppname } in
+          { t with term = Tm_Abs { b; q; ascription=c; body }}
+      )
+      | _ ->
+        Env.fail g (Some t.range) 
+                    (Printf.sprintf "Unexpected type of abstraction: %s"
+                          (T.term_to_string annot))
+    )
+    | _ -> 
+      Env.fail g (Some t.range) 
+                (Printf.sprintf "Unexpected arity of abstraction: expected a term of type %s"
+                      (T.term_to_string annot))
+
+let preprocess_abs
+      (g:env)
+      (t:st_term{Tm_Abs? t.term})
+  : T.Tac (t:st_term { Tm_Abs? t.term })
+  = let annot = arrow_of_abs t in
+    let annot, _ = Pulse.Checker.Pure.instantiate_term_implicits g annot in
+    match annot.t with
+    | Tm_FStar annot ->
+      rebuild_abs g t annot
+    | _ ->
+      Env.fail g (Some t.range) 
+                 (Printf.sprintf "Expected an arrow type as an annotation, got %s"
+                          (P.term_to_string annot))
 
 let check_effect_annotation g r (c_annot c_computed:comp) =
   match c_annot, c_computed with
@@ -31,12 +101,11 @@ let check_effect_annotation g r (c_annot c_computed:comp) =
 
 
 #push-options "--z3rlimit_factor 2 --fuel 0 --ifuel 1"
-let rec check_abs
+let rec check_abs_core
   (g:env)
   (t:st_term{Tm_Abs? t.term})
   (check:check_t)
-  : T.Tac (t:st_term & c:comp & st_typing g t c)=
-
+  : T.Tac (t:st_term & c:comp & st_typing g t c) =
   let range = t.range in
   match t.term with  
   | Tm_Abs { b = {binder_ty=t;binder_ppname=ppname}; q=qual; ascription=c; body } -> //pre=pre_hint; body; ret_ty; post=post_hint_body } ->
@@ -51,7 +120,7 @@ let rec check_abs
     let body_opened = open_st_term_nv body px in
     match body_opened.term with
     | Tm_Abs _ ->
-      let (| body, c_body, body_typing |) = check_abs g' body_opened check in
+      let (| body, c_body, body_typing |) = check_abs_core g' body_opened check in
       check_effect_annotation g' body.range c c_body;
       FV.st_typing_freevars body_typing;
       let body_closed = close_st_term body x in
@@ -99,3 +168,8 @@ let rec check_abs
       let tt = T_Abs g x qual b u body_closed c_body t_typing body_typing in
       let tres = tm_arrow {binder_ty=t;binder_ppname=ppname} qual (close_comp c_body x) in
       (| _, C_Tot tres, tt |)
+
+let check_abs (g:env) (t:st_term{Tm_Abs? t.term}) (check:check_t)
+  : T.Tac (t:st_term & c:comp & st_typing g t c) =
+  let t = preprocess_abs g t in
+  check_abs_core g t check

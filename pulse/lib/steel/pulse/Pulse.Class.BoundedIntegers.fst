@@ -112,6 +112,25 @@ instance bounded_unsigned_u32 : bounded_unsigned FStar.UInt32.t = {
   properties = ()
 }
 
+instance bounded_int_u64 : bounded_int FStar.UInt64.t = {
+    fits = (fun x -> 0 <= x /\ x <= 0xffffffffffffffff);
+    v = (fun x -> FStar.UInt64.v x);
+    u = FStar.UInt64.uint_to_t;
+    ( + ) = (fun x y -> FStar.UInt64.add x y);
+    op_Subtraction = (fun x y -> FStar.UInt64.sub x y);
+    ( < ) = FStar.UInt64.(fun x y -> x <^ y);
+    ( <= ) = FStar.UInt64.(fun x y -> x <=^ y);
+    ( % ) = FStar.UInt64.(fun x y -> x %^ y);
+    properties = ()
+}
+
+instance bounded_unsigned_u64 : bounded_unsigned FStar.UInt64.t = {
+  base = TC.solve;
+  max_bound = 0xffffffffffffffffuL;
+  static_max_bound = true;
+  properties = ()
+}
+
 let test (t:eqtype) {| _ : bounded_unsigned t |} (x:t) = v x
 
 let add_u32 (x:FStar.UInt32.t) (y:FStar.UInt32.t { ok (+) x y }) = x + y
