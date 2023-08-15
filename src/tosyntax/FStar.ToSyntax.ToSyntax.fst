@@ -325,10 +325,11 @@ and free_vars tvars_only env t = match (unparen t).tm with
     else (
       let ids = Ident.ids_of_lid x in
       match ids with
-      | [x] -> ( //unqualified name
-        match Env.try_lookup_id env x with
-        | None -> [x]
-        | _ -> []        
+      | [id] -> ( //unqualified name
+        if None? (Env.try_lookup_id env id)
+        && None? (Env.try_lookup_lid env x)
+        then [id]
+        else []
       )
       | _ -> []
     )

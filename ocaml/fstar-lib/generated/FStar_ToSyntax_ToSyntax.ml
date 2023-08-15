@@ -515,11 +515,13 @@ and (free_vars :
             else
               (let ids = FStar_Ident.ids_of_lid x in
                match ids with
-               | x1::[] ->
-                   let uu___2 = FStar_Syntax_DsEnv.try_lookup_id env x1 in
-                   (match uu___2 with
-                    | FStar_Pervasives_Native.None -> [x1]
-                    | uu___3 -> [])
+               | id::[] ->
+                   let uu___2 =
+                     (let uu___3 = FStar_Syntax_DsEnv.try_lookup_id env id in
+                      FStar_Pervasives_Native.uu___is_None uu___3) &&
+                       (let uu___3 = FStar_Syntax_DsEnv.try_lookup_lid env x in
+                        FStar_Pervasives_Native.uu___is_None uu___3) in
+                   if uu___2 then [id] else []
                | uu___2 -> [])
         | FStar_Parser_AST.Wild -> []
         | FStar_Parser_AST.Const uu___1 -> []
