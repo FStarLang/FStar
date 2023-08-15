@@ -29,11 +29,13 @@ module SZ = FStar.SizeT
 module A = Pulse.Lib.Array
 module U64 = FStar.UInt64
 module Cast = FStar.Int.Cast
+open Pulse.Class.BoundedIntegers
 #push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
 #push-options "--fuel 0 --ifuel 0"
 
 (**********************************************************)
 (* Pure specification *) 
+let u32_to_u64 (x:U32.t) : U64.t = Cast.uint32_to_uint64 x
 
 let bytes = Seq.seq U8.t
 
@@ -367,20 +369,20 @@ fn aggregate_raw_hashes (b1 b2: hash_value_buf)
     array_pts_to_len b1;
     array_pts_to_len b2;
     assert (pure (s1 `Seq.equal` xor_bytes_pfx s1 s2 0));// `Seq.equal` s1));
-    while (let vi = !i; SZ.(vi <^ 32sz))
+    while (let vi = !i; (vi < 32sz))
     invariant b.
-        exists (wi:SZ.t). //trying to add refinements here messes it up
+        exists wi. //trying to add refinements here messes it up
             pts_to i wi **
-            A.pts_to b1 (xor_bytes_pfx s1 s2 (SZ.v wi)) **
+            A.pts_to b1 (xor_bytes_pfx s1 s2 (v wi)) **
             A.pts_to b2 s2 **
-            pure (b == SZ.(wi <^ 32sz))
+            pure (b == (wi < 32sz))
     {
       let vi = !i;
       let x1 = b1.(vi);
       let x2 = b2.(vi);
       b1.(vi) <- (U8.logxor x1 x2);
-      extend_hash_value s1 s2 (SZ.v vi);
-      i := SZ.(vi +^ 1sz)
+      extend_hash_value s1 s2 (v vi);
+      i := vi + 1sz;
     };
     assert (pure (xor_bytes_pfx s1 s2 32 `Seq.equal` xor_bytes s1 s2))
 }
@@ -404,24 +406,19 @@ fn aggregate (b1 b2: ha_core)
   unfold (ha_val_core b2 'h2);
   let ctr1 = !b1.ctr;
   let ctr2 = !b2.ctr;
-  let ctr = U64.(
-      (Cast.uint32_to_uint64 ctr1)
-      +^
-      (Cast.uint32_to_uint64 ctr2)
-  );
-  if U64.(ctr >^ 0xffffffffuL)
-  {
-    fold_ha_val_core b1;
-    fold_ha_val_core b2;
-    false
-  }
-  else
-  {
-    aggregate_raw_hashes b1.acc b2.acc;
-    b1.ctr := (Cast.uint64_to_uint32 ctr);
-    fold_ha_val_core b1;
-    fold_ha_val_core b2;
-    true
+  match (safe_add ctr1 ctr2) {
+    Some ctr -> {
+      aggregate_raw_hashes b1.acc b2.acc;
+      b1.ctr := ctr;
+      fold_ha_val_core b1;
+      fold_ha_val_core b2;
+      true
+    }
+    None -> {
+      fold_ha_val_core b1;
+      fold_ha_val_core b2;
+      false
+    }
   }
 }
 ```
