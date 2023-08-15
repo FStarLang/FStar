@@ -169,6 +169,25 @@ let (bounded_unsigned_u32 : FStar_UInt32.t bounded_unsigned) =
     static_max_bound = true;
     properties1 = ()
   }
+let (bounded_int_u64 : FStar_UInt64.t bounded_int) =
+  {
+    fits = ();
+    v = ();
+    u = ();
+    op_Plus = (fun x -> fun y -> FStar_UInt64.add x y);
+    op_Subtraction = (fun x -> fun y -> FStar_UInt64.sub x y);
+    op_Less = (fun x -> fun y -> FStar_UInt64.lt x y);
+    op_Less_Equals = (fun x -> fun y -> FStar_UInt64.lte x y);
+    op_Percent = (fun x -> fun y -> FStar_UInt64.rem x y);
+    properties = ()
+  }
+let (bounded_unsigned_u64 : FStar_UInt64.t bounded_unsigned) =
+  {
+    base = bounded_int_u64;
+    max_bound = (Stdint.Uint64.of_string "0xffffffffffffffff");
+    static_max_bound = true;
+    properties1 = ()
+  }
 let (add_u32 : FStar_UInt32.t -> FStar_UInt32.t -> FStar_UInt32.t) =
   fun x -> fun y -> op_Plus bounded_int_u32 x y
 let (sub_u32 : FStar_UInt32.t -> FStar_UInt32.t -> FStar_UInt32.t) =
