@@ -289,14 +289,22 @@ let sort_ftv ftv =
 let rec free_vars_b tvars_only env binder : (Env.env & list ident) =
   match binder.b with
   | Variable x ->
-    let env, _ = Env.push_bv env x in
-    env, []
+    if tvars_only
+    then env, [] //tvars can't clash with vars
+    else (
+      let env, _ = Env.push_bv env x in
+      env, []
+    )
   | TVariable x ->
     let env, _ = Env.push_bv env x in
     env, [x]
   | Annotated(x, term) ->
-    let env', _ = Env.push_bv env x in
-    env', free_vars tvars_only env term
+    if tvars_only  //tvars can't clash with vars
+    then env, free_vars tvars_only env term
+    else (
+      let env', _ = Env.push_bv env x in
+      env', free_vars tvars_only env term
+    )
   | TAnnotated(id, term) ->
     let env', _ = Env.push_bv env id in
     env', free_vars tvars_only env term

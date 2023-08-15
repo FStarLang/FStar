@@ -457,16 +457,23 @@ let rec (free_vars_b :
       fun binder ->
         match binder.FStar_Parser_AST.b with
         | FStar_Parser_AST.Variable x ->
-            let uu___ = FStar_Syntax_DsEnv.push_bv env x in
-            (match uu___ with | (env1, uu___1) -> (env1, []))
+            if tvars_only
+            then (env, [])
+            else
+              (let uu___1 = FStar_Syntax_DsEnv.push_bv env x in
+               match uu___1 with | (env1, uu___2) -> (env1, []))
         | FStar_Parser_AST.TVariable x ->
             let uu___ = FStar_Syntax_DsEnv.push_bv env x in
             (match uu___ with | (env1, uu___1) -> (env1, [x]))
         | FStar_Parser_AST.Annotated (x, term) ->
-            let uu___ = FStar_Syntax_DsEnv.push_bv env x in
-            (match uu___ with
-             | (env', uu___1) ->
-                 let uu___2 = free_vars tvars_only env term in (env', uu___2))
+            if tvars_only
+            then let uu___ = free_vars tvars_only env term in (env, uu___)
+            else
+              (let uu___1 = FStar_Syntax_DsEnv.push_bv env x in
+               match uu___1 with
+               | (env', uu___2) ->
+                   let uu___3 = free_vars tvars_only env term in
+                   (env', uu___3))
         | FStar_Parser_AST.TAnnotated (id, term) ->
             let uu___ = FStar_Syntax_DsEnv.push_bv env id in
             (match uu___ with
