@@ -17,17 +17,20 @@ module BU = FStar.Compiler.Util
 module P =  FStar.Syntax.Print
 type error = string & R.range
 
-let err a = either a error
+let err a = nat -> either a error & nat
 
 let (let?) (f:err 'a) (g: 'a -> ML (err 'b)) =
-  match f with
-  | Inl a -> g a
-  | Inr e -> Inr e
+  fun ctr ->
+    match f ctr with
+    | Inl a, ctr -> g a ctr
+    | Inr e, ctr -> Inr e, ctr
 
-let return (x:'a) : err 'a = Inl x
+let return (x:'a) : err 'a = fun ctr -> Inl x, ctr
 
 let fail #a (message:string) (range:R.range) : err a =
-  Inr (message, range)
+  fun ctr -> Inr (message, range), ctr
+
+let next_ctr : err nat = fun ctr -> Inl (ctr + 1), ctr + 1
 
 let rec map_err (f:'a -> err 'b) (l:list 'a)
   : err (list 'b)
@@ -37,6 +40,15 @@ let rec map_err (f:'a -> err 'b) (l:list 'a)
       let? hd = f hd in
       let? tl = map_err f tl in
       return (hd :: tl)
+
+
+let rec fold_err (f:'b -> 'a -> err 'b) (l:list 'a) (x:'b)
+  : err 'b
+  = match l with
+    | [] -> return x
+    | hd::tl ->
+      let? x = f x hd in
+      fold_err f tl x
 
 let map_err_opt (f : 'a -> err 'b) (o:option 'a) : err (option 'b) =
   match o with
@@ -94,6 +106,15 @@ let stt_ghost_lid = pulse_lib_core_lid "stt_ghost"
 let stt_atomic_lid = pulse_lib_core_lid "stt_atomic"
 let op_colon_equals_lid r = Ident.lid_of_path ["op_Colon_Equals"] r
 let op_array_assignment_lid r = Ident.lid_of_path ["op_Array_Assignment"] r
+let op_bang_lid = pulse_lib_ref_lid "op_Bang"
+let read (x:ident) = 
+  let open A in
+  let range = Ident.range_of_id x in
+  let level = Un in
+  let head : A.term = {tm = Var op_bang_lid; range; level} in
+  let arg = {tm = Var (Ident.lid_of_ids [x]); range; level} in
+  {tm = App (head, arg, Nothing); range; level}
+
 let stapp_assignment assign_lid (args:list S.term) (last_arg:S.term) (r:_)
   : SW.st_term
   = let head_fv = S.lid_as_fv assign_lid None in
@@ -324,11 +345,11 @@ let desugar_datacon (env:env_t) (l:lid) : err SW.fv =
   let? tt = tosyntax env t in
   let? sfv =
     match (SS.compress tt).n with
-    | S.Tm_fvar fv -> Inl fv
-    | S.Tm_uinst ({n = S.Tm_fvar fv}, _) -> Inl fv
+    | S.Tm_fvar fv -> return fv
+    | S.Tm_uinst ({n = S.Tm_fvar fv}, _) -> return fv
     | _ -> fail (BU.format1 "Not a datacon? %s" (Ident.string_of_lid l)) rng
   in
-  Inl (SW.mk_fv (S.lid_of_fv sfv) rng)
+  return (SW.mk_fv (S.lid_of_fv sfv) rng)
 
 (* s has already been transformed with explicit dereferences for r-values *)
 let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
@@ -618,7 +639,257 @@ let idents_as_binders (env:env_t) (l:list ident)
           aux env ((qual, SW.mk_binder i ty)::binders) (bv::bvs) l
     in
     aux env [] [] l
-              
+
+(* Local mutable variables are implicitly dereferenced *)
+
+
+let mutvar_entry = (ident & S.bv & option ident)
+
+type menv = {
+  //Maps local mutable variables to an
+  //immutable variable storing their current value
+  map:list mutvar_entry;
+  env:env_t
+}
+
+let menv_push_ns (m:menv) (ns:lid) = 
+  { m with env = push_namespace m.env ns }
+
+let menv_push_bv (m:menv) (x:ident) (q:option Sugar.mut_or_ref) =
+  let env, bv = push_bv m.env x in
+  match q with
+  | Some Sugar.MUT -> 
+    { m with env; map=(x, bv, None)::m.map}
+  
+  | None -> { m with env }
+
+let menv_push_bvs (m:menv) (xs:_) =
+  { m with env = fst (push_bvs m.env xs) }
+
+let is_mut (m:menv) (x:S.bv) : option (option ident) =
+    match L.tryFind (fun (_, y, _) -> S.bv_eq x y) m.map with
+    | None -> None
+    | Some (_, _, curval) -> Some curval
+  
+let needs_derefs = list (ident & ident)
+
+let fresh_var (nm:ident)
+  : err ident
+  = let? ctr = next_ctr in
+    let s = Ident.string_of_id nm ^ "@" ^ string_of_int ctr in
+    return (Ident.mk_ident (s, Ident.range_of_id nm))
+
+let bind_curval (m:menv) (x:ident) (curval:ident) = 
+  match L.tryFind (fun (y, _, _) -> Ident.ident_equals x y) m.map with
+  | None -> failwith "Impossible"
+  | Some (x, bv, _) -> { m with map=(x, bv, Some curval)::m.map }
+
+let clear_curval (m:menv) (x:ident) =
+  match L.tryFind (fun (y, _, _) -> Ident.ident_equals x y) m.map with
+  | None -> failwith "Impossible"
+  | Some (x, bv, _) -> { m with map=(x, bv, None)::m.map }
+
+let bind_curvals (m:menv) (l:needs_derefs) = 
+  L.fold_left 
+    (fun m (x, y) -> bind_curval m x y)
+    m l
+
+
+let resolve_mut (m:menv) (e:A.term)
+  : option mutvar_entry
+  = let open A in
+    match e.tm with
+    | Var l -> (
+      let topt = FStar.Syntax.DsEnv.try_lookup_lid m.env.tcenv.dsenv l in
+      match topt with
+      | Some {n=S.Tm_name x} -> 
+        L.tryFind (fun (_, y, _) -> S.bv_eq x y) m.map 
+      | _ -> None
+    )
+    | _ -> None
+
+let maybe_clear_curval (m:menv) (x:A.term)
+  : menv
+  = match resolve_mut m x with
+    | None -> m
+    | Some (x, y, _) -> { m with map = (x, y, None)::m.map }
+
+
+  
+let add_derefs_in_scope (n:needs_derefs) (p:Sugar.stmt)
+  : Sugar.stmt
+  = L.fold_right
+       (fun (x, y) (p:Sugar.stmt) ->
+         let lb : Sugar.stmt =
+           { s=Sugar.LetBinding { qualifier=None; id=y; typ=None; init=Some (read x)};
+             range=p.range } in
+         { s=Sugar.Sequence { s1=lb; s2=p }; range=p.range})
+       n p
+
+let rec transform_term (m:menv) (e:A.term) 
+  : err (A.term & needs_derefs & menv)
+  = let open A in
+    match e.tm with
+    | Var _ -> (
+      match resolve_mut m e with
+      | None -> return (e, [], m)
+      | Some (x, _, None) ->
+        let? y = fresh_var x in
+        return ({e with tm=Var (Ident.lid_of_ids [y])}, [x, y], bind_curval m x y)
+      | Some (_, _, Some y) ->
+        return ({e with tm=Var (Ident.lid_of_ids [y])}, [], m)
+    )
+    | Op(id, tms) ->
+      let? tms, needs, m =
+        fold_err 
+          (fun (tms, needs, m) tm ->
+            let? tm, needs', m' = transform_term m tm in
+            return (tm::tms, needs@needs', m'))
+          tms
+          ([], [], m)
+      in
+      let e = { e with tm = Op(id, L.rev tms) } in
+      return (e, needs, m)
+
+    | App (head, arg, imp) ->
+      let? head, needs, m = transform_term m head in
+      let? arg, needs', m = transform_term m arg in
+      let e = { e with tm = App (head, arg, imp) } in
+      return (e, needs@needs', m)
+      
+    | Ascribed (e, t, topt, b) ->
+      let? e, needs, m = transform_term m e in
+      let e = { e with tm = Ascribed (e, t, topt, b) } in
+      return (e, needs, m)
+
+    | Paren e ->
+      let? e, needs, m = transform_term m e in
+      let e = { e with tm = Paren e } in
+      return (e, needs, m)    
+    
+    | Construct (lid, tms) ->
+      let? tms, needs, m =
+        fold_err 
+          (fun (tms, needs, m) (tm, imp) ->
+            let? tm, needs', m' = transform_term m tm in
+            return ((tm, imp)::tms, needs@needs', m'))
+          tms
+          ([], [], m)
+      in
+      let e = { e with tm = Construct(lid, L.rev tms) } in
+      return (e, needs, m)
+
+    | LetOpen (l, t) ->
+      let m = menv_push_ns m l in
+      let? p, needs, _ = transform_term m t in
+      return (p, needs, bind_curvals m needs)
+    
+    | _ -> return (e, [], m)
+    
+
+let rec transform_stmt_with_reads (m:menv) (p:Sugar.stmt)
+  : err (Sugar.stmt & needs_derefs & menv)
+  = let open Sugar in
+    match p.s with
+    | Sequence { s1; s2 } -> (
+      let? (s1, needs, m) = transform_stmt_with_reads m s1 in
+      let? s2 = transform_stmt m s2 in
+      let p = { p with s=Sequence { s1; s2 }} in      
+      return (p, needs, m)
+    )
+    
+    | Open l ->
+      return (p, [], menv_push_ns m l)
+
+    | Expr { e } -> 
+      let? e, needs, _ = transform_term m e in
+      let p = { p with s = Expr { e }} in
+      return (p, needs, m)
+
+    | Assignment { lhs; value } ->
+      let? value, needs, m = transform_term m value in
+      let m = maybe_clear_curval m lhs in
+      let s1 = { p with s = Assignment {lhs; value} } in
+      return (s1, needs, m)
+
+    | ArrayAssignment { arr; index; value } ->
+      let? arr, arr_needs, m = transform_term m arr in
+      let? index, index_needs, m = transform_term m index in
+      let? value, value_needs, m = transform_term m value in
+      let p = { p with s=ArrayAssignment {arr;index;value} } in
+      return (p, arr_needs@index_needs@value_needs, m)
+
+    | LetBinding { qualifier; id; typ; init } -> (
+      let? init, needs, m = 
+          match init with
+          | None -> return (None, [], m)
+          | Some e ->
+            let? init, needs, m = transform_term m e in
+            return (Some init, needs, m)
+      in
+      let m = menv_push_bv m id qualifier in
+      let p = { p with s=LetBinding { qualifier; id; typ; init } } in
+      return (p, needs, m)
+      )
+
+    | Block { stmt } ->
+      let? stmt = transform_stmt m stmt in
+      let p = { p with s=Block { stmt } } in
+      return (p, [], m)
+
+    | If { head; join_vprop; then_; else_opt } ->
+      let? head, needs, m = transform_term m head in
+      let? then_ = transform_stmt m then_ in
+      let? else_opt =
+        match else_opt with
+        | None ->
+          return None
+        | Some else_ ->
+          let? else_ = transform_stmt m else_ in
+          return (Some else_)
+      in
+      let p = { p with s=If {head;join_vprop;then_;else_opt} } in
+      return (p, needs, m)
+
+    | Match { head; returns_annot; branches } ->
+      let? head, needs, m = transform_term m head in
+      let? branches = 
+        map_err
+          (fun (p, s) ->
+            let? (_, vs) = desugar_pat m.env p in
+            let m = menv_push_bvs m vs in
+            let? s = transform_stmt m s in
+            return (p, s))
+          branches
+      in
+      let p = { p with s = Match { head; returns_annot; branches } } in
+      return (p, needs, m)
+
+    | While { guard; id; invariant; body } ->
+      let? guard = transform_stmt m guard in
+      let? body = transform_stmt m body in
+      let p = { p with s = While { guard; id; invariant; body } } in
+      return (p, [], m)
+
+
+    | Parallel { p1; p2; q1; q2; b1; b2} ->
+      let? b1 = transform_stmt m b1 in
+      let? b2 = transform_stmt m b2 in
+      let p = { p with s = Parallel { p1; p2; q1; q2; b1; b2 } } in
+      return (p, [], m)    
+    
+    | Introduce _ 
+    | Rewrite _
+    | ProofHintWithBinders _ ->
+      //This is a proof step; no implicit dereference
+      return (p, [], m)
+
+
+and transform_stmt (m:menv) (p:Sugar.stmt)
+  : err Sugar.stmt
+  = let open Sugar in
+    let? p, needs, m = transform_stmt_with_reads m p in
+    return (add_derefs_in_scope needs p)      
 
 let desugar_decl (env:env_t)
                  (p:Sugar.decl)
@@ -629,7 +900,8 @@ let desugar_decl (env:env_t)
     let bs = bs@bs' in
     let bvs = bvs@bvs' in
     let? comp = desugar_computation_type env p.ascription in
-    let? body = desugar_stmt env p.body in
+    let? body = transform_stmt { map=[]; env=env} p.body in
+    let? body = desugar_stmt env body in
     let rec aux (bs:list (option SW.qualifier & SW.binder)) (bvs:list S.bv) =
       match bs, bvs with
       | [(q, last)], [last_bv] -> 

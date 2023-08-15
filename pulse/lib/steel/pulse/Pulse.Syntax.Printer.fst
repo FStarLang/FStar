@@ -234,8 +234,9 @@ let rec st_term_to_string' (level:string) (t:st_term)
 	       (term_to_string t1)
                (term_to_string t2)
 
-    | Tm_WithLocal { initializer; body } ->
-      sprintf "let mut _ = %s;\n%s%s"
+    | Tm_WithLocal { binder; initializer; body } ->
+      sprintf "let mut %s = %s;\n%s%s"
+        (binder_to_string binder)
         (term_to_string initializer)
         level
         (st_term_to_string' level body)
