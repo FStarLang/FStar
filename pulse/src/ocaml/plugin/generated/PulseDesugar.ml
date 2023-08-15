@@ -1261,6 +1261,106 @@ and (desugar_computation_type :
                                PulseSyntaxWrapper.ghost_comp inames pre
                                  uu___6 post1 in
                              return uu___5)))
+let rec (free_vars_term :
+  env_t -> FStar_Parser_AST.term -> FStar_Ident.ident Prims.list) =
+  fun env ->
+    fun t ->
+      FStar_ToSyntax_ToSyntax.free_vars false
+        (env.tcenv).FStar_TypeChecker_Env.dsenv t
+and (free_vars_vprop :
+  env_t -> PulseSugar.vprop -> FStar_Ident.ident Prims.list) =
+  fun env ->
+    fun t ->
+      match t.PulseSugar.v with
+      | PulseSugar.VPropTerm t1 -> free_vars_term env t1
+      | PulseSugar.VPropStar (t0, t1) ->
+          let uu___ = free_vars_vprop env t0 in
+          let uu___1 = free_vars_vprop env t1 in
+          FStar_List_Tot_Base.op_At uu___ uu___1
+      | PulseSugar.VPropExists
+          { PulseSugar.binders = binders; PulseSugar.body = body;_} ->
+          let uu___ = free_vars_binders env binders in
+          (match uu___ with
+           | (env', fvs) ->
+               let uu___1 = free_vars_vprop env' body in
+               FStar_List_Tot_Base.op_At fvs uu___1)
+and (free_vars_binders :
+  env_t -> PulseSugar.binders -> (env_t * FStar_Ident.ident Prims.list)) =
+  fun env ->
+    fun bs ->
+      match bs with
+      | [] -> (env, [])
+      | (uu___, x, t)::bs1 ->
+          let fvs = free_vars_term env t in
+          let uu___1 =
+            let uu___2 =
+              let uu___3 = push_bv env x in
+              FStar_Pervasives_Native.fst uu___3 in
+            free_vars_binders uu___2 bs1 in
+          (match uu___1 with
+           | (env', res) -> (env', (FStar_List_Tot_Base.op_At fvs res)))
+let (free_vars_comp :
+  env_t -> PulseSugar.computation_type -> FStar_Ident.ident Prims.list) =
+  fun env ->
+    fun c ->
+      let ids =
+        let uu___ = free_vars_vprop env c.PulseSugar.precondition in
+        let uu___1 =
+          let uu___2 = free_vars_term env c.PulseSugar.return_type in
+          let uu___3 =
+            let uu___4 =
+              let uu___5 = push_bv env c.PulseSugar.return_name in
+              FStar_Pervasives_Native.fst uu___5 in
+            free_vars_vprop uu___4 c.PulseSugar.postcondition in
+          FStar_List_Tot_Base.op_At uu___2 uu___3 in
+        FStar_List_Tot_Base.op_At uu___ uu___1 in
+      FStar_Compiler_List.deduplicate FStar_Ident.ident_equals ids
+let (idents_as_binders :
+  env_t ->
+    FStar_Ident.ident Prims.list ->
+      (env_t * (PulseSyntaxWrapper.qualifier FStar_Pervasives_Native.option *
+        PulseSyntaxWrapper.binder) Prims.list * FStar_Syntax_Syntax.bv
+        Prims.list) err)
+  =
+  fun env ->
+    fun l ->
+      let erased_tm =
+        FStar_Parser_AST.mk_term
+          (FStar_Parser_AST.Var FStar_Parser_Const.erased_lid)
+          FStar_Compiler_Range_Type.dummyRange FStar_Parser_AST.Un in
+      let rec aux env1 binders bvs l1 =
+        match l1 with
+        | [] ->
+            return
+              (env1, (FStar_Compiler_List.rev binders),
+                (FStar_Compiler_List.rev bvs))
+        | i::l2 ->
+            let uu___ = push_bv env1 i in
+            (match uu___ with
+             | (env2, bv) ->
+                 let qual1 = PulseSyntaxWrapper.as_qual true in
+                 let text = FStar_Ident.string_of_id i in
+                 let wild =
+                   let uu___1 = FStar_Ident.range_of_id i in
+                   FStar_Parser_AST.mk_term FStar_Parser_AST.Wild uu___1
+                     FStar_Parser_AST.Un in
+                 let ty =
+                   if FStar_Compiler_Util.starts_with text "'"
+                   then
+                     let uu___1 = FStar_Ident.range_of_id i in
+                     FStar_Parser_AST.mkApp erased_tm
+                       [(wild, FStar_Parser_AST.Nothing)] uu___1
+                   else wild in
+                 let uu___1 = desugar_term env2 ty in
+                 op_let_Question uu___1
+                   (fun ty1 ->
+                      let uu___2 =
+                        let uu___3 =
+                          let uu___4 = PulseSyntaxWrapper.mk_binder i ty1 in
+                          (qual1, uu___4) in
+                        uu___3 :: binders in
+                      aux env2 uu___2 (bv :: bvs) l2)) in
+      aux env [] [] l
 let (desugar_decl :
   env_t -> PulseSugar.decl -> PulseSyntaxWrapper.st_term err) =
   fun env ->
@@ -1270,44 +1370,61 @@ let (desugar_decl :
         (fun uu___1 ->
            match uu___1 with
            | (env1, bs, bvs) ->
-               let uu___2 = desugar_stmt env1 p.PulseSugar.body2 in
+               let fvs = free_vars_comp env1 p.PulseSugar.ascription in
+               let uu___2 = idents_as_binders env1 fvs in
                op_let_Question uu___2
-                 (fun body ->
-                    let uu___3 =
-                      desugar_computation_type env1 p.PulseSugar.ascription in
-                    op_let_Question uu___3
-                      (fun comp ->
-                         let rec aux bs1 bvs1 =
-                           match (bs1, bvs1) with
-                           | ((q, last)::[], last_bv::[]) ->
-                               let body1 =
-                                 PulseSyntaxWrapper.close_st_term body
-                                   last_bv.FStar_Syntax_Syntax.index in
-                               let comp1 =
-                                 PulseSyntaxWrapper.close_comp comp
-                                   last_bv.FStar_Syntax_Syntax.index in
-                               let uu___4 =
-                                 PulseSyntaxWrapper.tm_abs last q comp1 body1
-                                   p.PulseSugar.range2 in
-                               return uu___4
-                           | ((q, b)::bs2, bv::bvs2) ->
-                               let uu___4 = aux bs2 bvs2 in
-                               op_let_Question uu___4
-                                 (fun body1 ->
-                                    let body2 =
-                                      PulseSyntaxWrapper.close_st_term body1
-                                        bv.FStar_Syntax_Syntax.index in
-                                    let comp1 =
-                                      let uu___5 =
-                                        PulseSyntaxWrapper.tm_unknown r_ in
-                                      PulseSyntaxWrapper.mk_tot uu___5 in
-                                    let uu___5 =
-                                      PulseSyntaxWrapper.tm_abs b q comp1
-                                        body2 p.PulseSugar.range2 in
-                                    return uu___5)
-                           | uu___4 ->
-                               fail "Unexpected empty binders in decl" r_ in
-                         aux bs bvs)))
+                 (fun uu___3 ->
+                    match uu___3 with
+                    | (env2, bs', bvs') ->
+                        let bs1 = FStar_List_Tot_Base.op_At bs bs' in
+                        let bvs1 = FStar_List_Tot_Base.op_At bvs bvs' in
+                        let uu___4 =
+                          desugar_computation_type env2
+                            p.PulseSugar.ascription in
+                        op_let_Question uu___4
+                          (fun comp ->
+                             let uu___5 =
+                               desugar_stmt env2 p.PulseSugar.body2 in
+                             op_let_Question uu___5
+                               (fun body ->
+                                  let rec aux bs2 bvs2 =
+                                    match (bs2, bvs2) with
+                                    | ((q, last)::[], last_bv::[]) ->
+                                        let body1 =
+                                          PulseSyntaxWrapper.close_st_term
+                                            body
+                                            last_bv.FStar_Syntax_Syntax.index in
+                                        let comp1 =
+                                          PulseSyntaxWrapper.close_comp comp
+                                            last_bv.FStar_Syntax_Syntax.index in
+                                        let uu___6 =
+                                          PulseSyntaxWrapper.tm_abs last q
+                                            comp1 body1 p.PulseSugar.range2 in
+                                        return uu___6
+                                    | ((q, b)::bs3, bv::bvs3) ->
+                                        let uu___6 = aux bs3 bvs3 in
+                                        op_let_Question uu___6
+                                          (fun body1 ->
+                                             let body2 =
+                                               PulseSyntaxWrapper.close_st_term
+                                                 body1
+                                                 bv.FStar_Syntax_Syntax.index in
+                                             let comp1 =
+                                               let uu___7 =
+                                                 PulseSyntaxWrapper.tm_unknown
+                                                   r_ in
+                                               PulseSyntaxWrapper.mk_tot
+                                                 uu___7 in
+                                             let uu___7 =
+                                               PulseSyntaxWrapper.tm_abs b q
+                                                 comp1 body2
+                                                 p.PulseSugar.range2 in
+                                             return uu___7)
+                                    | uu___6 ->
+                                        fail
+                                          "Unexpected empty binders in decl"
+                                          r_ in
+                                  aux bs1 bvs1))))
 type name = Prims.string Prims.list
 let (initialize_env :
   FStar_TypeChecker_Env.env ->

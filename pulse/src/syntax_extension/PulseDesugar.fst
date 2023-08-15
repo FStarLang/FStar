@@ -6,6 +6,7 @@ module A = FStar.Parser.AST
 module D = FStar.Syntax.DsEnv
 module ToSyntax = FStar.ToSyntax.ToSyntax
 open FStar.Ident
+open FStar.List.Tot
 module S = FStar.Syntax.Syntax
 module L = FStar.Compiler.List
 module U = FStar.Syntax.Util
@@ -566,13 +567,69 @@ and desugar_computation_type (env:env_t) (c:Sugar.computation_type)
       let inames = SW.tm_emp_inames in
       return SW.(ghost_comp inames pre (mk_binder c.return_name ret) post)      
 
+let rec free_vars_term (env:env_t) (t:A.term) =
+  ToSyntax.free_vars false env.tcenv.dsenv t
+and free_vars_vprop (env:env_t) (t:Sugar.vprop) =
+  let open Sugar in
+  match t.v with
+  | VPropTerm t -> free_vars_term env t
+  | VPropStar (t0, t1) -> 
+    free_vars_vprop env t0 @
+    free_vars_vprop env t1
+  | VPropExists { binders; body } ->
+    let env', fvs = free_vars_binders env binders in
+    fvs @ free_vars_vprop env' body
+and free_vars_binders (env:env_t) (bs:Sugar.binders)
+  : env_t & list ident
+  = match bs with
+    | [] -> env, []
+    | (_, x, t)::bs ->
+      let fvs = free_vars_term env t in
+      let env', res = free_vars_binders (fst (push_bv env x)) bs in
+      env', fvs@res
+
+let free_vars_comp (env:env_t) (c:Sugar.computation_type)
+  : list ident
+  = let ids =
+        free_vars_vprop env c.precondition @
+        free_vars_term env c.return_type @
+        free_vars_vprop (fst (push_bv env c.return_name)) c.postcondition
+    in
+    L.deduplicate Ident.ident_equals ids
+
+let idents_as_binders (env:env_t) (l:list ident)
+  : err (env_t & list (option SW.qualifier & SW.binder) & list S.bv)
+  = let erased_tm = A.(mk_term (Var FStar.Parser.Const.erased_lid) FStar.Compiler.Range.dummyRange Un) in
+    let rec aux env binders bvs l 
+      : err (env_t & list (option SW.qualifier & SW.binder) & list S.bv)
+      = match l with
+        | [] -> return (env, L.rev binders, L.rev bvs)
+        | i::l ->
+          let env, bv = push_bv env i in
+          let qual = SW.as_qual true in
+          let text = Ident.string_of_id i in
+          let wild = A.(mk_term Wild (Ident.range_of_id i) Un) in
+          let ty = 
+            if BU.starts_with text "'"
+            then A.(mkApp erased_tm [wild, A.Nothing] (Ident.range_of_id i))
+            else wild
+          in
+          let? ty = desugar_term env ty in
+          aux env ((qual, SW.mk_binder i ty)::binders) (bv::bvs) l
+    in
+    aux env [] [] l
+              
 
 let desugar_decl (env:env_t)
                  (p:Sugar.decl)
   : err SW.st_term 
   = let? env, bs, bvs = desugar_binders env p.binders in
-    let? body = desugar_stmt env p.body in
+    let fvs = free_vars_comp env p.ascription in
+    let? env, bs', bvs' = idents_as_binders env fvs in
+    let bs = bs@bs' in
+    let bvs = bvs@bvs' in
     let? comp = desugar_computation_type env p.ascription in
+    let? body = desugar_stmt env p.body in
     let rec aux (bs:list (option SW.qualifier & SW.binder)) (bvs:list S.bv) =
       match bs, bvs with
       | [(q, last)], [last_bv] -> 
