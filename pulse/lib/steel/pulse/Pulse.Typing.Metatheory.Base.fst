@@ -208,7 +208,7 @@ let rec st_typing_weakening g g' t c d g1
     let d_bc = bind_comp_weakening g g' d_bc g1 in
     T_Bind _ e1 e2 c1 c2 b x c d_e1 (magic ()) d_e2 d_bc
 
-  | T_TotBind _ e1 e2 t1 c2 x _ d_e2 ->
+  | T_TotBind _ e1 e2 t1 c2 b x _ d_e2 ->
     assume (~ (x `Set.mem` dom g'));
     assume (~ (x `Set.mem` dom g1));
     let d_e2
@@ -232,9 +232,9 @@ let rec st_typing_weakening g g' t c d g1
                   (open_st_term_nv e2 (v_as_nv x))
                   c2 = d_e2 in
     
-    T_TotBind _ e1 e2 t1 c2 x (magic ()) d_e2
+    T_TotBind _ e1 e2 t1 c2 b x (magic ()) d_e2
 
-  | T_GhostBind _ e1 e2 t1 c2 x _ d_e2 _ ->
+  | T_GhostBind _ e1 e2 t1 c2 b x _ d_e2 _ ->
     assume (~ (x `Set.mem` dom g'));
     assume (~ (x `Set.mem` dom g1));
     let d_e2
@@ -258,7 +258,7 @@ let rec st_typing_weakening g g' t c d g1
                   (open_st_term_nv e2 (v_as_nv x))
                   c2 = d_e2 in
     
-    T_GhostBind _ e1 e2 t1 c2 x (magic ()) d_e2 (magic ())
+    T_GhostBind _ e1 e2 t1 c2 b x (magic ()) d_e2 (magic ())
 
 
   | T_If _ b e1 e2 c uc hyp _ d_e1 d_e2 _ ->
@@ -566,20 +566,22 @@ let rec st_typing_subst g x t g' #e e_typing #e1 #c1 e1_typing
              (coerce_eq (st_typing_subst g x t (push_binding g' y ppname_default (comp_res c1)) e_typing d_e2) ())
              (bind_comp_subst g x t g' e_typing d_bc)
 
-  | T_TotBind _ e1 e2 t1 c2 y _ d_e2 ->
+  | T_TotBind _ e1 e2 t1 c2 b y _ d_e2 ->
     T_TotBind _ (subst_term e1 ss)
                 (subst_st_term e2 ss)
                 (subst_term t1 ss)
                 (subst_comp c2 ss)
+                b
                 y
                 (magic ())
                 (coerce_eq (st_typing_subst g x t (push_binding g' y ppname_default t1) e_typing d_e2) ())
 
-  | T_GhostBind _ e1 e2 t1 c2 y _ d_e2 _ ->
+  | T_GhostBind _ e1 e2 t1 c2 b y _ d_e2 _ ->
     T_GhostBind _ (subst_term e1 ss)
                 (subst_st_term e2 ss)
                 (subst_term t1 ss)
                 (subst_comp c2 ss)
+                b
                 y
                 (magic ())
                 (coerce_eq (st_typing_subst g x t (push_binding g' y ppname_default t1) e_typing d_e2) ())

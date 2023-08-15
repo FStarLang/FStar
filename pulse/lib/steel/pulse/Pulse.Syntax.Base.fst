@@ -157,8 +157,9 @@ let rec eq_st_term (t1 t2:st_term)
       eq_st_term t1 t2 &&
       eq_st_term k1 k2
 
-    | Tm_TotBind { head=t1; body=k1 },
-      Tm_TotBind { head=t2; body=k2 } ->
+    | Tm_TotBind { binder=b1; head=t1; body=k1 },
+      Tm_TotBind { binder=b2; head=t2; body=k2 } ->
+      eq_tm b1.binder_ty b2.binder_ty &&
       eq_tm t1 t2 &&
       eq_st_term k1 k2
       

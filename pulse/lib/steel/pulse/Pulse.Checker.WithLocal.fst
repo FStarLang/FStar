@@ -36,7 +36,19 @@ let check
   let wr t0 = { term = t0; range = t.range } in
   let Tm_WithLocal {binder; initializer=init; body} = t.term in
   let (| init, init_u, init_t, init_t_typing, init_typing |) =
-    check_tot_term_and_type g init in
+    (* Check against annotation if any *)
+    let ty = binder.binder_ty in
+    match ty.t with
+    | Tm_Unknown -> check_tot_term_and_type g init
+    | _ ->
+      let (| u, ty_typing |) = check_universe g ty in
+      let (| init, init_typing |) = check_term_with_expected_type_and_effect g init T.E_Total ty in
+      let ty_typing : universe_of g ty u = ty_typing in
+      let init_typing : typing g init T.E_Total ty = init_typing in
+      (| init, u, ty, ty_typing, init_typing |)
+        <: (t:term & u:universe & ty:term & universe_of g ty u & tot_typing g t ty)
+        (* ^ Need this annotation *)
+    in
   if eq_univ init_u u0
   then
     let x = fresh g in

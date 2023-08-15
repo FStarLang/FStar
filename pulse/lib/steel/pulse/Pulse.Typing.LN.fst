@@ -130,7 +130,8 @@ let rec open_st_term_ln' (e:st_term)
       open_st_term_ln' head x i;
       open_st_term_ln' body x (i + 1)
    
-    | Tm_TotBind { head; body } ->
+    | Tm_TotBind { binder; head; body } ->
+      open_term_ln' binder.binder_ty x i;
       open_term_ln' head x i;
       open_st_term_ln' body x (i + 1)
       
@@ -342,7 +343,8 @@ let rec ln_weakening_st (t:st_term) (i j:int)
       ln_weakening_st head i j;
       ln_weakening_st body (i + 1) (j + 1)
 
-    | Tm_TotBind { head; body } ->
+    | Tm_TotBind { binder; head; body } ->
+      ln_weakening binder.binder_ty i j;
       ln_weakening head i j;
       ln_weakening_st body (i + 1) (j + 1)
 
@@ -499,7 +501,8 @@ let rec open_term_ln_inv_st' (t:st_term)
       open_term_ln_inv_st' head x i;
       open_term_ln_inv_st' body x (i + 1)
 
-    | Tm_TotBind { head; body } ->
+    | Tm_TotBind { binder; head; body } ->
+      open_term_ln_inv' binder.binder_ty x i;
       open_term_ln_inv' head x i;
       open_term_ln_inv_st' body x (i + 1)
 
@@ -654,7 +657,8 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
       close_st_term_ln' head x i;
       close_st_term_ln' body x (i + 1)
 
-    | Tm_TotBind { head; body } ->
+    | Tm_TotBind { binder; head; body } ->
+      close_term_ln' binder.binder_ty x i;
       close_term_ln' head x i;
       close_st_term_ln' body x (i + 1)
 
@@ -791,8 +795,8 @@ let st_typing_ln_tot_or_ghost_bind #g #t #c (d:st_typing g t c { T_TotBind? d \/
   : Lemma (ensures ln_st t /\ ln_c c) =
 
   match d with
-  | T_TotBind _ e1 e2 _ c2 x e1_typing e2_typing
-  | T_GhostBind _ e1 e2 _ c2 x e1_typing e2_typing _ ->
+  | T_TotBind _ e1 e2 _ c2 b x e1_typing e2_typing
+  | T_GhostBind _ e1 e2 _ c2 b x e1_typing e2_typing _ ->
     tot_or_ghost_typing_ln e1_typing;
     typing_ln e2_typing;
     open_st_term_ln e2 x;
@@ -878,8 +882,8 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       bind_comp_ln bc
 
 
-    | T_TotBind _ _ _ _ _ _ _ _
-    | T_GhostBind _ _ _ _ _ _ _ _ _ ->
+    | T_TotBind _ _ _ _ _ _ _ _ _
+    | T_GhostBind _ _ _ _ _ _ _ _ _ _ ->
       st_typing_ln_tot_or_ghost_bind d st_typing_ln
 
     | T_If _ _ _ _ _ _ _ tb d1 d2 _ ->

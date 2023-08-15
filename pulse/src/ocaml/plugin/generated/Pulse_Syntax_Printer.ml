@@ -1316,7 +1316,8 @@ let rec (st_term_to_string' :
                           FStar_Tactics_Effect.lift_div_tac
                             (fun uu___2 -> uu___1 uu___)))) uu___)
       | Pulse_Syntax_Base.Tm_TotBind
-          { Pulse_Syntax_Base.head2 = head; Pulse_Syntax_Base.body2 = body;_}
+          { Pulse_Syntax_Base.binder1 = uu___;
+            Pulse_Syntax_Base.head2 = head; Pulse_Syntax_Base.body2 = body;_}
           ->
           FStar_Tactics_Effect.tac_bind
             (FStar_Sealed.seal
@@ -1330,8 +1331,8 @@ let rec (st_term_to_string' :
                      (Prims.of_int (166)) (Prims.of_int (6))
                      (Prims.of_int (169)) (Prims.of_int (39)))))
             (Obj.magic (st_term_to_string' level body))
-            (fun uu___ ->
-               (fun uu___ ->
+            (fun uu___1 ->
+               (fun uu___1 ->
                   Obj.magic
                     (FStar_Tactics_Effect.tac_bind
                        (FStar_Sealed.seal
@@ -1379,25 +1380,25 @@ let rec (st_term_to_string' :
                                             (Prims.of_int (123))
                                             (Prims.of_int (44)))))
                                    (Obj.magic (term_to_string head))
-                                   (fun uu___1 ->
+                                   (fun uu___2 ->
                                       FStar_Tactics_Effect.lift_div_tac
-                                        (fun uu___2 ->
+                                        (fun uu___3 ->
                                            fun x ->
                                              fun x1 ->
                                                Prims.strcat
                                                  (Prims.strcat
                                                     (Prims.strcat
                                                        "let tot _ = "
-                                                       (Prims.strcat uu___1
+                                                       (Prims.strcat uu___2
                                                           ";\n"))
                                                     (Prims.strcat x ""))
                                                  (Prims.strcat x1 "")))))
-                             (fun uu___1 ->
+                             (fun uu___2 ->
                                 FStar_Tactics_Effect.lift_div_tac
-                                  (fun uu___2 -> uu___1 level))))
-                       (fun uu___1 ->
+                                  (fun uu___3 -> uu___2 level))))
+                       (fun uu___2 ->
                           FStar_Tactics_Effect.lift_div_tac
-                            (fun uu___2 -> uu___1 uu___)))) uu___)
+                            (fun uu___3 -> uu___2 uu___1)))) uu___1)
       | Pulse_Syntax_Base.Tm_Abs
           { Pulse_Syntax_Base.b = b; Pulse_Syntax_Base.q = q;
             Pulse_Syntax_Base.ascription = c;
@@ -2586,7 +2587,7 @@ let rec (st_term_to_string' :
                           FStar_Tactics_Effect.lift_div_tac
                             (fun uu___2 -> uu___1 uu___)))) uu___)
       | Pulse_Syntax_Base.Tm_WithLocal
-          { Pulse_Syntax_Base.binder1 = uu___;
+          { Pulse_Syntax_Base.binder2 = uu___;
             Pulse_Syntax_Base.initializer1 = initializer1;
             Pulse_Syntax_Base.body4 = body;_}
           ->
@@ -3050,8 +3051,9 @@ let rec (print_skel : Pulse_Syntax_Base.st_term -> Prims.string) =
           (Prims.strcat "(Bind " (Prims.strcat (print_skel e1) " "))
           (Prims.strcat (print_skel e2) ")")
     | Pulse_Syntax_Base.Tm_TotBind
-        { Pulse_Syntax_Base.head2 = uu___; Pulse_Syntax_Base.body2 = e2;_} ->
-        Prims.strcat "(TotBind _ " (Prims.strcat (print_skel e2) ")")
+        { Pulse_Syntax_Base.binder1 = uu___;
+          Pulse_Syntax_Base.head2 = uu___1; Pulse_Syntax_Base.body2 = e2;_}
+        -> Prims.strcat "(TotBind _ " (Prims.strcat (print_skel e2) ")")
     | Pulse_Syntax_Base.Tm_If uu___ -> "If"
     | Pulse_Syntax_Base.Tm_Match uu___ -> "Match"
     | Pulse_Syntax_Base.Tm_While uu___ -> "While"

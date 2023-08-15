@@ -316,7 +316,7 @@ let rec (elab_st_typing :
                    ty1 FStar_Reflection_V2_Data.Q_Explicit
                    (FStar_Reflection_Typing.close_term e21 x))
           | Pulse_Typing.T_TotBind
-              (uu___, e1, e2, t1, uu___1, x, uu___2, e2_typing) ->
+              (uu___, e1, e2, t1, uu___1, uu___2, x, uu___3, e2_typing) ->
               let re1 = Pulse_Elaborate_Pure.elab_term e1 in
               let rt1 = Pulse_Elaborate_Pure.elab_term t1 in
               let re2 =
@@ -329,7 +329,9 @@ let rec (elab_st_typing :
                 FStar_Reflection_Typing.pp_name_default re1 rt1
                 (FStar_Reflection_Typing.close_term re2 x)
           | Pulse_Typing.T_GhostBind
-              (uu___, e1, e2, t1, uu___1, x, uu___2, e2_typing, uu___3) ->
+              (uu___, e1, e2, t1, uu___1, uu___2, x, uu___3, e2_typing,
+               uu___4)
+              ->
               let re1 = Pulse_Elaborate_Pure.elab_term e1 in
               let rt1 = Pulse_Elaborate_Pure.elab_term t1 in
               let re2 =

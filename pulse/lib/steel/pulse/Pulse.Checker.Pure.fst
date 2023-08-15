@@ -193,7 +193,7 @@ let check_term_and_type (g:env) (t:term)
         let (| u, uty |) = check_universe g ty in
         (| t, eff, ty, (| u, uty |), E tok |)
 
-let check_term_with_expected_type (g:env) (e:term) (eff:T.tot_or_ghost) (t:term)
+let check_term_with_expected_type_and_effect (g:env) (e:term) (eff:T.tot_or_ghost) (t:term)
   : T.Tac (e:term & typing g e eff t) =
 
   let e, _ = instantiate_term_implicits g e in 
@@ -212,6 +212,18 @@ let check_term_with_expected_type (g:env) (e:term) (eff:T.tot_or_ghost) (t:term)
   | None ->
     fail g (Some e.range) (ill_typed_term e (Some t) None)
   | Some tok -> (| e, E (RT.T_Token _ _ _ (FStar.Squash.return_squash tok)) |)
+
+(* This function will use the expected type, but can return either
+a Tot or GTot term. It has an inefficient implementation right now,
+it will change once we add a new primitive to F* (or refactor the current ones)*)
+let check_term_with_expected_type (g:env) (e:term) (t:term)
+  : T.Tac (e:term & eff:T.tot_or_ghost & typing g e eff t) =
+  try
+    let (| e, et |) = check_term_with_expected_type_and_effect g e T.E_Total t in
+    (| e, T.E_Total, et |) <: (e:term & eff:T.tot_or_ghost & typing g e eff t)
+  with | _ ->
+    let (| e, et |) = check_term_with_expected_type_and_effect g e T.E_Ghost t in
+    (| e, T.E_Ghost, et |)
 
 let tc_with_core g (f:R.env) (e:R.term) 
   : T.Tac (option (eff:T.tot_or_ghost & t:R.term & RT.typing f e (eff, t)) & issues)
@@ -257,8 +269,7 @@ let core_check_term_with_expected_type g e eff t =
 let check_vprop (g:env)
                 (t:term)
   : T.Tac (t:term & tot_typing g t tm_vprop) =
-  check_term_with_expected_type (push_context_no_range g "check_vprop") t T.E_Total tm_vprop
-
+  check_term_with_expected_type_and_effect (push_context_no_range g "check_vprop") t T.E_Total tm_vprop
 
 let check_vprop_with_core (g:env)
                           (t:term)
@@ -298,7 +309,7 @@ let get_non_informative_witness g u t
     match eopt with
     | None -> err ()
     | Some e ->
-      check_term_with_expected_type
+      check_term_with_expected_type_and_effect
         (push_context_no_range g "get_noninformative_witness")
         e
         T.E_Total
@@ -330,8 +341,7 @@ let check_tot_term_and_type g t =
   else fail_expected_tot_found_ghost g t
 
 let check_tot_term_with_expected_type g e t =
-  check_term_with_expected_type g e T.E_Total t
-
+  check_term_with_expected_type_and_effect g e T.E_Total t
 
 let core_check_tot_term g t =
   let (| eff, ty, d |) = core_check_term g t in
