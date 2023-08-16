@@ -12,6 +12,7 @@ let mono #a (f: pred a -> pred a) =
 
 let mono_fun a = (f: (pred a -> pred a){mono f})
 
+// p = f(p)
 let gfp #a (f: pred a -> pred a): pred a
 = (fun x -> (h_exists (fun p -> h_and (p x) (pure (implies p (f p))))))
 // x -> (exists (p:slprop). p x /\ p ==> f p)
@@ -86,7 +87,13 @@ type cell (a: Type0) = {
 }
 
 // version 1
-// stream(x) = exists v. x |-> v ** stream(v.next)
+// stream(x: ref (cell a)) = exists v. pts_to x v ** stream(v.next)
+(*
+```pulse
+coinductive stream(x: ref (cell a)) = exists v. pts_to x v ** stream(v.next)
+```
+*)
+
 let rec_stream a
 : rec_def (R.ref (cell a))
 = Exists _ (fun v -> Star (SLProp (fun x -> R.pts_to_sl x full_perm v))
@@ -98,7 +105,7 @@ val interp_rec_fold_unfold_stream (a: Type) (x:R.ref(cell a)) :
     Lemma (stream a x == h_exists (fun v -> R.pts_to_sl x full_perm v `star` stream a (v.next)))
 
 // version 2
-// stream(x, n) = exists v. x |-> v ** v.v == f n ** stream(v.next)
+// stream(x, n) = exists v. x |-> v ** v.v == f n ** stream(v.next, n + 1)
 let rec_stream_value a (f: nat -> a)
 : rec_def (R.ref (cell a) * nat)
 = Exists _ (fun v -> Star (Star
