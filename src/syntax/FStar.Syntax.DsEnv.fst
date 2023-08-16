@@ -35,7 +35,6 @@ module Const = FStar.Parser.Const
 type local_binding = (ident * bv * used_marker)           (* local name binding for name resolution, paired with an env-generated unique name *)
 type rec_binding   = (ident * lid * delta_depth *         (* name bound by recursive type and top-level let-bindings definitions only *)
                       used_marker)                        (* this ref marks whether it was used, so we can warn if not *)
-type module_abbrev = (ident * lident)                     (* module X = A.B.C, where A.B.C is fully qualified and already resolved *)
 
 type scope_mod =
 | Local_binding            of local_binding
@@ -107,6 +106,14 @@ let transitive_exported_ids env lid =
     match BU.smap_try_find env.trans_exported_ids module_name with
     | None -> []
     | Some exported_id_set -> !(exported_id_set Exported_id_term_type) |> BU.set_elements
+let opens_and_abbrevs env : list (either open_module_or_namespace module_abbrev) =
+    List.collect
+       (function
+        | Open_module_or_namespace (lid, info) -> [Inl (lid, info)]
+        | Module_abbrev (id, lid) -> [Inr (id, lid)]
+        | _ -> [])
+    env.scope_mods
+
 let open_modules e = e.modules
 let open_modules_and_namespaces env =
   List.filter_map (function

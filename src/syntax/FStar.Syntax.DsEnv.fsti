@@ -28,15 +28,9 @@ open FStar.Ident
 module BU = FStar.Compiler.Util
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
-
+let open_module_or_namespace = S.open_module_or_namespace
 type used_marker = ref bool
-
-type open_kind =                                          (* matters only for resolving names with some module qualifier *)
-| Open_module                                             (* only opens the module, not the namespace *)
-| Open_namespace                                          (* opens the whole namespace *)
-
-type open_module_or_namespace = (lident * open_kind)      (* lident fully qualified name, already resolved. *)
-
+                                        (* opens the whole namespace *)
 type record_or_dc = {
   typename: lident; (* the namespace part applies to the constructor and fields as well *)
   constrname: ident;
@@ -64,6 +58,7 @@ type foundname =
 val fail_or:  env -> (lident -> option 'a) -> lident -> 'a
 val fail_or2: (ident -> option 'a) -> ident -> 'a
 
+val opens_and_abbrevs :env -> list (either open_module_or_namespace module_abbrev)
 val dep_graph: env -> FStar.Parser.Dep.deps
 val set_dep_graph: env -> FStar.Parser.Dep.deps -> env
 val ds_hooks : env -> dsenv_hooks

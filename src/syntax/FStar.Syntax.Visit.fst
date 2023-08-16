@@ -434,6 +434,7 @@ and on_sub_sigelt vfs (se : sigelt) : sigelt =
     sigmeta  = se.sigmeta;
     sigattrs = map (f_term vfs) se.sigattrs;
     sigopts  = se.sigopts;
+    sigopens_and_abbrevs = se.sigopens_and_abbrevs
   }
 
 // Bottom up. The record is a reference so it can be easily cyclic.

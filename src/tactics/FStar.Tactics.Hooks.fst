@@ -856,7 +856,9 @@ let splice (env:Env.env) (is_typed:bool) (lids:list Ident.lident) (tau:term) (rn
           sigquals = [S.Visible_default];  // default visibility
           sigmeta = S.default_sigmeta;
           sigattrs = [];
-          sigopts = None}]
+          sigopts = None;
+          sigopens_and_abbrevs=[]
+          }]
       end
       else run_tactic_on_ps tau.pos tau.pos false
              e_unit ()
