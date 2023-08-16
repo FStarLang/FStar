@@ -119,3 +119,28 @@ val interp_rec_fold_unfold_stream_value (a: Type) (f:nat -> a) (x: R.ref(cell a)
         R.pts_to_sl x full_perm v `star` pure (f n == v.v)
         `star` stream_value a f (v.next, n + 1)
     ))
+
+(**
+Extending the theory to vprops (defined in Steel.Effect.Common.fsti):
+
+type vprop' = { hp: slprop u#1; t:Type0; sel: selector t hp}
+
+type vprop =
+  | VUnit : vprop' -> vprop
+  | VStar: vprop -> vprop -> vprop
+
+**)
+
+(**
+Papers that use coinductive SL predicates:
+
+- Verifying a Hash Table and Its Iterators in Higher-Order Separation Logic:
+http://gallium.inria.fr/~fpottier/publis/fpottier-hashtable.pdf
+
+- Sound, Modular and Compositional Verification of the Input/Output Behavior of Programs
+https://link.springer.com/content/pdf/10.1007/978-3-662-46669-8_7.pdf
+- Igloo: Soundly Linking Compositional Refinement and Separation Logic for Distributed System Verification
+https://pm.inf.ethz.ch/publications/SprengerKlenzeEilersWolfMuellerClochardBasin20.pdf
+- Sound Verification of Security Protocols: From Design to Interoperable Implementations
+https://pm.inf.ethz.ch/publications/ArquintWolfLallemandSasseSprengerWiesnerBasinMueller23.pdf
+**)
