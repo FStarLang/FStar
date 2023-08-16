@@ -296,6 +296,7 @@ let (defaults : (Prims.string * option_val) Prims.list) =
   ("eager_subtyping", (Bool false));
   ("error_contexts", (Bool false));
   ("expose_interfaces", (Bool false));
+  ("ext", (List []));
   ("extract", Unset);
   ("extract_all", (Bool false));
   ("extract_module", (List []));
@@ -507,6 +508,9 @@ let (get_error_contexts : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "error_contexts" as_bool
 let (get_expose_interfaces : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "expose_interfaces" as_bool
+let (get_ext :
+  unit -> Prims.string Prims.list FStar_Pervasives_Native.option) =
+  fun uu___ -> lookup_opt "ext" (as_option (as_list as_string))
 let (get_extract :
   unit -> Prims.string Prims.list FStar_Pervasives_Native.option) =
   fun uu___ -> lookup_opt "extract" (as_option (as_list as_string))
@@ -975,7 +979,7 @@ let (interp_quake_arg : Prims.string -> (Prims.int * Prims.int * Prims.bool))
           let uu___ = ios f1 in let uu___1 = ios f2 in (uu___, uu___1, true)
         else failwith "unexpected value for --quake"
     | uu___ -> failwith "unexpected value for --quake"
-let (uu___450 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
+let (uu___451 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
   =
   let cb = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None in
   let set1 f =
@@ -987,11 +991,11 @@ let (uu___450 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
     | FStar_Pervasives_Native.Some f -> f msg in
   (set1, call)
 let (set_option_warning_callback_aux : (Prims.string -> unit) -> unit) =
-  match uu___450 with
+  match uu___451 with
   | (set_option_warning_callback_aux1, option_warning_callback) ->
       set_option_warning_callback_aux1
 let (option_warning_callback : Prims.string -> unit) =
-  match uu___450 with
+  match uu___451 with
   | (set_option_warning_callback_aux1, option_warning_callback1) ->
       option_warning_callback1
 let (set_option_warning_callback : (Prims.string -> unit) -> unit) =
@@ -1074,6 +1078,11 @@ let rec (specs_with_types :
       "Try to solve subtyping constraints at each binder (loses precision but may be slightly more efficient)");
     (FStar_Getopt.noshort, "error_contexts", BoolStr,
       "Print context information for each error or warning raised (default false)");
+    (FStar_Getopt.noshort, "ext",
+      (Accumulated
+         (SimpleStr
+            "One or more semicolon separated occurrences of colon-separated pairs, e.g., 'pulse:verbose;pulse:debug;foo:bar', typically interpreted by extensions")),
+      "One or more semicolon separated occurrences of colon-separatied pairs, e.g., 'pulse:verbose;pulse:debug;foo:bar', typically interpreted by extensions");
     (FStar_Getopt.noshort, "extract",
       (Accumulated
          (SimpleStr
@@ -1419,6 +1428,7 @@ let (settable : Prims.string -> Prims.bool) =
     | "hint_file" -> true
     | "hint_info" -> true
     | "fuel" -> true
+    | "ext" -> true
     | "ifuel" -> true
     | "initial_fuel" -> true
     | "initial_ifuel" -> true
@@ -1499,7 +1509,7 @@ let (settable_specs :
     (FStar_Compiler_List.filter
        (fun uu___ ->
           match uu___ with | (uu___1, x, uu___2, uu___3) -> settable x))
-let (uu___642 :
+let (uu___644 :
   (((unit -> FStar_Getopt.parse_cmdline_res) -> unit) *
     (unit -> FStar_Getopt.parse_cmdline_res)))
   =
@@ -1516,11 +1526,11 @@ let (uu___642 :
   (set1, call)
 let (set_error_flags_callback_aux :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
-  match uu___642 with
+  match uu___644 with
   | (set_error_flags_callback_aux1, set_error_flags) ->
       set_error_flags_callback_aux1
 let (set_error_flags : unit -> FStar_Getopt.parse_cmdline_res) =
-  match uu___642 with
+  match uu___644 with
   | (set_error_flags_callback_aux1, set_error_flags1) -> set_error_flags1
 let (set_error_flags_callback :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
@@ -2554,3 +2564,19 @@ let (set_vconfig : FStar_VConfig.vconfig -> unit) =
        option_as (fun uu___28 -> String uu___28)
          vcfg.FStar_VConfig.reuse_hint_for in
      set_option "reuse_hint_for" uu___27)
+let (parse_ext : Prims.string -> (Prims.string * Prims.string) Prims.list) =
+  fun s ->
+    let exts = FStar_Compiler_Util.split s ";" in
+    FStar_Compiler_List.collect
+      (fun s1 ->
+         match FStar_Compiler_Util.split s1 ":" with
+         | k::v::[] -> [(k, v)]
+         | uu___ -> []) exts
+let (all_ext_options : unit -> (Prims.string * Prims.string) Prims.list) =
+  fun uu___ ->
+    let ext = get_ext () in
+    match ext with
+    | FStar_Pervasives_Native.None -> []
+    | FStar_Pervasives_Native.Some strs ->
+        FStar_Compiler_Effect.op_Bar_Greater strs
+          (FStar_Compiler_List.collect parse_ext)
