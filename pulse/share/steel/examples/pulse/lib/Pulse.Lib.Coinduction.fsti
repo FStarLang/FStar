@@ -12,7 +12,6 @@ let mono #a (f: pred a -> pred a) =
 
 let mono_fun a = (f: (pred a -> pred a){mono f})
 
-// p = f(p)
 let gfp #a (f: pred a -> pred a): pred a
 = (fun x -> (h_exists (fun p -> h_and (p x) (pure (implies p (f p))))))
 // x -> (exists (p:slprop). p x /\ p ==> f p)
@@ -93,7 +92,6 @@ type cell (a: Type0) = {
 coinductive stream(x: ref (cell a)) = exists v. pts_to x v ** stream(v.next)
 ```
 *)
-
 let rec_stream a
 : rec_def (R.ref (cell a))
 = Exists _ (fun v -> Star (SLProp (fun x -> R.pts_to_sl x full_perm v))
