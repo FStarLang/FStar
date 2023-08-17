@@ -9895,9 +9895,7 @@ let (maybe_unfold_head_fv :
             -> FStar_Pervasives_Native.Some (fv, us)
         | FStar_Syntax_Syntax.Tm_fvar fv ->
             FStar_Pervasives_Native.Some (fv, [])
-        | uu___1 ->
-            failwith
-              "Impossible: maybe_unfold_head_fv is called with a non fvar/uinst" in
+        | uu___1 -> FStar_Pervasives_Native.None in
       match fv_us_opt with
       | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
       | FStar_Pervasives_Native.Some (fv, us) ->
@@ -9947,16 +9945,19 @@ let rec (maybe_unfold_aux :
           let uu___2 = FStar_Syntax_Util.leftmost_head_and_args t in
           (match uu___2 with
            | (head, args) ->
-               let uu___3 = maybe_unfold_aux env1 head in
-               (match uu___3 with
-                | FStar_Pervasives_Native.None ->
-                    FStar_Pervasives_Native.None
-                | FStar_Pervasives_Native.Some head1 ->
-                    let uu___4 =
-                      FStar_Syntax_Syntax.mk_Tm_app head1 args
-                        t.FStar_Syntax_Syntax.pos in
-                    FStar_Compiler_Effect.op_Bar_Greater uu___4
-                      (fun uu___5 -> FStar_Pervasives_Native.Some uu___5)))
+               if args = []
+               then maybe_unfold_head_fv env1 head
+               else
+                 (let uu___4 = maybe_unfold_aux env1 head in
+                  match uu___4 with
+                  | FStar_Pervasives_Native.None ->
+                      FStar_Pervasives_Native.None
+                  | FStar_Pervasives_Native.Some head1 ->
+                      let uu___5 =
+                        FStar_Syntax_Syntax.mk_Tm_app head1 args
+                          t.FStar_Syntax_Syntax.pos in
+                      FStar_Compiler_Effect.op_Bar_Greater uu___5
+                        (fun uu___6 -> FStar_Pervasives_Native.Some uu___6)))
 let (maybe_unfold_head :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
