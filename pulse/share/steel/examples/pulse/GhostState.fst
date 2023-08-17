@@ -48,7 +48,8 @@ fn init' (_:unit)
   //   handle_has_state (Mkdtuple2?._1 x) Init 
   // in the context
   //   handle_has_state (Mkdtuple2?._1 p) Init
-
+  // ISSUE: idk
+  
   p
 }
 ```
@@ -71,7 +72,7 @@ fn next' (_:unit)
   //   pts_to #st_t (Mkdtuple2?._1 #handle_t #(fun h -> lock (exists_ #st_t (fun s -> handle_has_state h s))) global_locked_handle) #half_perm Init
   // in the context
   //   pts_to #st_t (Mkdtuple2?._1 #handle_t #(fun h -> lock (exists_ #st_t (fun s -> pts_to #st_t h #half_perm s <: Prims.Tot vprop))) global_locked_handle) #half_perm Init
-  // Issue: the unfold of
+  // ISSUE: the unfold of
   //   handle_has_state global_locked_handle._1 s
   // unfolded too much, so now there is not syntactic equality 
 
