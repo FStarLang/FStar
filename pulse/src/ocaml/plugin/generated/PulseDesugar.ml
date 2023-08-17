@@ -1584,6 +1584,9 @@ let (add_derefs_in_scope :
                         { PulseSugar.s1 = lb; PulseSugar.s2 = p1 });
                    PulseSugar.range1 = (p1.PulseSugar.range1)
                  }) n p
+let (term'_of_id : FStar_Ident.ident -> FStar_Parser_AST.term') =
+  fun y ->
+    let uu___ = FStar_Ident.lid_of_ids [y] in FStar_Parser_AST.Var uu___
 let rec (transform_term :
   menv ->
     FStar_Parser_AST.term ->
@@ -1846,13 +1849,63 @@ let rec (transform_stmt_with_reads :
             | FStar_Pervasives_Native.None ->
                 return (FStar_Pervasives_Native.None, [], m)
             | FStar_Pervasives_Native.Some e ->
-                let uu___1 = transform_term m e in
-                op_let_Question uu___1
-                  (fun uu___2 ->
-                     match uu___2 with
-                     | (init1, needs, m1) ->
-                         return
-                           ((FStar_Pervasives_Native.Some init1), needs, m1)) in
+                (match e.FStar_Parser_AST.tm with
+                 | FStar_Parser_AST.Var zlid ->
+                     let uu___1 =
+                       let uu___2 = FStar_Ident.ids_of_lid zlid in
+                       (qualifier, uu___2) in
+                     (match uu___1 with
+                      | (FStar_Pervasives_Native.None, z::[]) ->
+                          let uu___2 = resolve_mut m e in
+                          (match uu___2 with
+                           | FStar_Pervasives_Native.None ->
+                               return
+                                 ((FStar_Pervasives_Native.Some e), [], m)
+                           | FStar_Pervasives_Native.Some
+                               (uu___3, uu___4, FStar_Pervasives_Native.Some
+                                y)
+                               ->
+                               let uu___5 =
+                                 let uu___6 =
+                                   let uu___7 =
+                                     let uu___8 = term'_of_id y in
+                                     {
+                                       FStar_Parser_AST.tm = uu___8;
+                                       FStar_Parser_AST.range =
+                                         (e.FStar_Parser_AST.range);
+                                       FStar_Parser_AST.level =
+                                         (e.FStar_Parser_AST.level)
+                                     } in
+                                   FStar_Pervasives_Native.Some uu___7 in
+                                 (uu___6, [], m) in
+                               return uu___5
+                           | FStar_Pervasives_Native.Some
+                               (x, uu___3, FStar_Pervasives_Native.None) ->
+                               let uu___4 =
+                                 let uu___5 =
+                                   let uu___6 = read x in
+                                   FStar_Pervasives_Native.Some uu___6 in
+                                 let uu___6 = bind_curval m x z in
+                                 (uu___5, [], uu___6) in
+                               return uu___4)
+                      | uu___2 ->
+                          let uu___3 = transform_term m e in
+                          op_let_Question uu___3
+                            (fun uu___4 ->
+                               match uu___4 with
+                               | (init1, needs, m1) ->
+                                   return
+                                     ((FStar_Pervasives_Native.Some init1),
+                                       needs, m1)))
+                 | uu___1 ->
+                     let uu___2 = transform_term m e in
+                     op_let_Question uu___2
+                       (fun uu___3 ->
+                          match uu___3 with
+                          | (init1, needs, m1) ->
+                              return
+                                ((FStar_Pervasives_Native.Some init1), needs,
+                                  m1))) in
           op_let_Question uu___
             (fun uu___1 ->
                match uu___1 with
@@ -2022,6 +2075,7 @@ let (desugar_decl :
   env_t -> PulseSugar.decl -> PulseSyntaxWrapper.st_term err) =
   fun env ->
     fun p ->
+      let opts = FStar_Options.ext_options "pulse" in
       let uu___ = desugar_binders env p.PulseSugar.binders2 in
       op_let_Question uu___
         (fun uu___1 ->
@@ -2041,8 +2095,11 @@ let (desugar_decl :
                         op_let_Question uu___4
                           (fun comp ->
                              let uu___5 =
-                               transform_stmt { map = []; env = env2 }
-                                 p.PulseSugar.body2 in
+                               if FStar_Compiler_List.mem "rvalues" opts
+                               then
+                                 transform_stmt { map = []; env = env2 }
+                                   p.PulseSugar.body2
+                               else return p.PulseSugar.body2 in
                              op_let_Question uu___5
                                (fun body ->
                                   let uu___6 = desugar_stmt env2 body in

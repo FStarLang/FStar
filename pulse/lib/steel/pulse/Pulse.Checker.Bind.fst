@@ -106,7 +106,7 @@ let check_tot_bind
   let b = { b with binder_ty = t1 } in
   let k = continuation_elaborator_with_let pre_typing b e1_typing (ppname_default, x) in
 
-  let px = v_as_nv x in
+  let px = b.binder_ppname, x in
   let g' = push_binding g x (fst px) t1 in
   let pre_typing' : tot_typing g' pre tm_vprop =
     Metatheory.tot_typing_weakening_single pre_typing x t1 in

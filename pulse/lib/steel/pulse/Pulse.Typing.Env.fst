@@ -346,6 +346,11 @@ let get_range (g:env) (r:option range) : T.Tac range =
 
 let fail (#a:Type) (g:env) (r:option range) (msg:string) =
   let r = get_range g r in
+  let msg =
+    if RU.pulse_option_set "env_on_err"
+    then Printf.sprintf "%s\nIn environment\n%s\n" msg (env_to_string g)
+    else msg
+  in
   let issue = FStar.Issue.mk_issue "Error" msg (Some r) None (ctxt_to_list g) in
   T.log_issues [issue];
   T.fail "Pulse checker failed"

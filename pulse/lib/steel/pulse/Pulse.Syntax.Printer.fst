@@ -162,8 +162,9 @@ let rec st_term_to_string' (level:string) (t:st_term)
           (st_term_to_string' level body)
       // )
 
-    | Tm_TotBind { head; body } ->
-      sprintf "let tot _ = %s;\n%s%s"
+    | Tm_TotBind { head; binder; body } ->
+      sprintf "let tot %s = %s;\n%s%s"
+        (binder_to_string binder)
         (term_to_string head)
         level
         (st_term_to_string' level body)

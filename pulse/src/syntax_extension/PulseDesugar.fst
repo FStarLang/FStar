@@ -726,6 +726,8 @@ let add_derefs_in_scope (n:needs_derefs) (p:Sugar.stmt)
          { s=Sugar.Sequence { s1=lb; s2=p }; range=p.range})
        n p
 
+let term'_of_id (y:ident) = A.Var (Ident.lid_of_ids [y])
+
 let rec transform_term (m:menv) (e:A.term) 
   : err (A.term & needs_derefs & menv)
   = let open A in
@@ -820,12 +822,29 @@ let rec transform_stmt_with_reads (m:menv) (p:Sugar.stmt)
       return (p, arr_needs@index_needs@value_needs, m)
 
     | LetBinding { qualifier; id; typ; init } -> (
-      let? init, needs, m = 
+      let? init, needs, m =
           match init with
           | None -> return (None, [], m)
-          | Some e ->
-            let? init, needs, m = transform_term m e in
-            return (Some init, needs, m)
+          | Some e -> (
+            match e.tm with
+            | A.Var zlid -> (
+              match qualifier, Ident.ids_of_lid zlid with
+              | None, [z] -> (
+                match resolve_mut m e with
+                | None -> return (Some e, [], m)
+                | Some (_, _, Some y) ->
+                  return (Some { e with A.tm =term'_of_id y }, [], m)
+                | Some (x, _, None) ->
+                  return (Some (read x), [], bind_curval m x z)
+              )
+              | _ ->    
+                let? init, needs, m = transform_term m e in
+                return (Some init, needs, m)
+            )
+           | _ ->
+             let? init, needs, m = transform_term m e in
+             return (Some init, needs, m)
+          )
       in
       let m = menv_push_bv m id qualifier in
       let p = { p with s=LetBinding { qualifier; id; typ; init } } in
@@ -894,13 +913,18 @@ and transform_stmt (m:menv) (p:Sugar.stmt)
 let desugar_decl (env:env_t)
                  (p:Sugar.decl)
   : err SW.st_term 
-  = let? env, bs, bvs = desugar_binders env p.binders in
+  = let opts = FStar.Options.ext_options "pulse" in
+    let? env, bs, bvs = desugar_binders env p.binders in
     let fvs = free_vars_comp env p.ascription in
     let? env, bs', bvs' = idents_as_binders env fvs in
     let bs = bs@bs' in
     let bvs = bvs@bvs' in
     let? comp = desugar_computation_type env p.ascription in
-    let? body = transform_stmt { map=[]; env=env} p.body in
+    let? body = 
+      if L.mem "rvalues" opts
+      then transform_stmt { map=[]; env=env} p.body
+      else return p.body
+    in
     let? body = desugar_stmt env body in
     let rec aux (bs:list (option SW.qualifier & SW.binder)) (bvs:list S.bv) =
       match bs, bvs with

@@ -343,6 +343,8 @@ fn reclaim (s:ha) (#h:hash_value_t)
 }
 ```
 
+
+
 // Aggregating two raw hashes XOR's them byte-by-byte
 // Compared to the version in Zeta.Steel, this is significantly cleaner
 // That one uses a for loop, but we don't have that yet in Pulse,
@@ -355,7 +357,7 @@ fn reclaim (s:ha) (#h:hash_value_t)
 // Note, I had first tried a vairant of this with a refinement on wi
 // in the invariant to constrain its length, but that led to various problems.
 // I should try that again and open issues. 
-#push-options "--retry 2" // GM: Part of this VC fails on batch mode, not on ide...
+#push-options "--retry 2 --ext 'pulse:rvalues'" // GM: Part of this VC fails on batch mode, not on ide...
 ```pulse
 fn aggregate_raw_hashes (b1 b2: hash_value_buf)
                         (#s1 #s2:e_raw_hash_value_t)
@@ -367,23 +369,20 @@ fn aggregate_raw_hashes (b1 b2: hash_value_buf)
     A.pts_to b2 s2
 {
     let mut i = 0sz;
-    array_pts_to_len b1;
-    array_pts_to_len b2;
-    assert (pure (s1 `Seq.equal` xor_bytes_pfx s1 s2 0));// `Seq.equal` s1));
-    while (let vi = !i; (vi < 32sz))
+    assert (pure (s1 `Seq.equal` xor_bytes_pfx s1 s2 0));
+    while ((i < 32sz))
     invariant b.
-        exists wi. //trying to add refinements here messes it up
+        exists wi.
             pts_to i wi **
             A.pts_to b1 (xor_bytes_pfx s1 s2 (v wi)) **
             A.pts_to b2 s2 **
             pure (b == (wi < 32sz))
     {
-      let vi = !i;
-      let x1 = b1.(vi);
-      let x2 = b2.(vi);
-      b1.(vi) <- (U8.logxor x1 x2);
-      extend_hash_value s1 s2 (v vi);
-      i := vi + 1sz;
+      let x1 = b1.(i);
+      let x2 = b2.(i);
+      b1.(i) <- U8.logxor x1 x2;
+      extend_hash_value s1 s2 (v i);
+      i := i + 1sz;
     };
     assert (pure (xor_bytes_pfx s1 s2 32 `Seq.equal` xor_bytes s1 s2))
 }
