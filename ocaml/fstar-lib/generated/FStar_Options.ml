@@ -1082,7 +1082,7 @@ let rec (specs_with_types :
       (Accumulated
          (SimpleStr
             "One or more semicolon separated occurrences of colon-separated pairs, e.g., 'pulse:verbose;pulse:debug;foo:bar', typically interpreted by extensions")),
-      "One or more semicolon separated occurrences of colon-separatied pairs, e.g., 'pulse:verbose;pulse:debug;foo:bar', typically interpreted by extensions");
+      "One or more semicolon separated occurrences of colon-separated pairs, e.g., 'pulse:verbose;pulse:debug;foo:bar', typically interpreted by extensions. \nAn entry 'e' that is not of the form 'a:b' is treated as 'e:\"\"', i.e., 'e' associated with the empty string");
     (FStar_Getopt.noshort, "extract",
       (Accumulated
          (SimpleStr
@@ -2571,7 +2571,7 @@ let (parse_ext : Prims.string -> (Prims.string * Prims.string) Prims.list) =
       (fun s1 ->
          match FStar_Compiler_Util.split s1 ":" with
          | k::v::[] -> [(k, v)]
-         | uu___ -> []) exts
+         | uu___ -> [(s1, "")]) exts
 let (all_ext_options : unit -> (Prims.string * Prims.string) Prims.list) =
   fun uu___ ->
     let ext = get_ext () in
@@ -2580,3 +2580,13 @@ let (all_ext_options : unit -> (Prims.string * Prims.string) Prims.list) =
     | FStar_Pervasives_Native.Some strs ->
         FStar_Compiler_Effect.op_Bar_Greater strs
           (FStar_Compiler_List.collect parse_ext)
+let (ext_options : Prims.string -> Prims.string Prims.list) =
+  fun ext ->
+    let exts = all_ext_options () in
+    FStar_Compiler_List.filter_map
+      (fun uu___ ->
+         match uu___ with
+         | (k, v) ->
+             if k = ext
+             then FStar_Pervasives_Native.Some v
+             else FStar_Pervasives_Native.None) exts

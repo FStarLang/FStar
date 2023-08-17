@@ -765,8 +765,9 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * string) 
          "ext",
          Accumulated (SimpleStr "One or more semicolon separated occurrences of colon-separated pairs, \
                                  e.g., 'pulse:verbose;pulse:debug;foo:bar', typically interpreted by extensions"),
-        "One or more semicolon separated occurrences of colon-separatied pairs, \
-         e.g., 'pulse:verbose;pulse:debug;foo:bar', typically interpreted by extensions");
+        "One or more semicolon separated occurrences of colon-separated pairs, \
+         e.g., 'pulse:verbose;pulse:debug;foo:bar', typically interpreted by extensions. \n\
+         An entry 'e' that is not of the form 'a:b' is treated as 'e:\"\"', i.e., 'e' associated with the empty string");
 
        ( noshort,
          "extract",
@@ -2173,12 +2174,14 @@ let set_vconfig (vcfg:vconfig) : unit =
   ()
 
 // --ext "ext1:opt1;ext2:opt2;ext3:opt3"
+// An entry e that is not of the form a:b
+// is treated as e:""
 let parse_ext (s:string) : list (string & string) =
   let exts = Util.split s ";" in
   List.collect (fun s -> 
     match Util.split s ":" with
     | [k;v] -> [(k,v)]
-    | _ -> []) exts
+    | _ -> [s, ""]) exts
 
 let all_ext_options () : list (string & string) =
   let ext = get_ext () in
@@ -2186,3 +2189,7 @@ let all_ext_options () : list (string & string) =
   | None -> []
   | Some strs ->
     strs |> List.collect parse_ext
+
+let ext_options (ext:string) : list string =
+  let exts = all_ext_options () in
+  List.filter_map (fun (k,v) -> if k = ext then Some v else None) exts
