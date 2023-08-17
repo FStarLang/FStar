@@ -972,11 +972,12 @@ let (extract_bundle_iface :
                FStar_Syntax_Syntax.sigquals = uu___5;
                FStar_Syntax_Syntax.sigmeta = uu___6;
                FStar_Syntax_Syntax.sigattrs = uu___7;
-               FStar_Syntax_Syntax.sigopts = uu___8;_}::[];
-           FStar_Syntax_Syntax.lids = uu___9;_},
+               FStar_Syntax_Syntax.sigopens_and_abbrevs = uu___8;
+               FStar_Syntax_Syntax.sigopts = uu___9;_}::[];
+           FStar_Syntax_Syntax.lids = uu___10;_},
          (FStar_Syntax_Syntax.ExceptionConstructor)::[]) ->
-          let uu___10 = extract_ctor env [] env { dname = l; dtyp = t } in
-          (match uu___10 with
+          let uu___11 = extract_ctor env [] env { dname = l; dtyp = t } in
+          (match uu___11 with
            | (env1, ctor) -> (env1, (iface_of_bindings [ctor])))
       | (FStar_Syntax_Syntax.Sig_bundle
          { FStar_Syntax_Syntax.ses = ses; FStar_Syntax_Syntax.lids = uu___;_},
@@ -1409,6 +1410,8 @@ let (split_let_rec_types_and_terms :
                                 (se.FStar_Syntax_Syntax.sigmeta);
                               FStar_Syntax_Syntax.sigattrs =
                                 (se.FStar_Syntax_Syntax.sigattrs);
+                              FStar_Syntax_Syntax.sigopens_and_abbrevs =
+                                (se.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                               FStar_Syntax_Syntax.sigopts =
                                 (se.FStar_Syntax_Syntax.sigopts)
                             } in
@@ -1442,6 +1445,8 @@ let (split_let_rec_types_and_terms :
                   (se.FStar_Syntax_Syntax.sigmeta);
                 FStar_Syntax_Syntax.sigattrs =
                   (se.FStar_Syntax_Syntax.sigattrs);
+                FStar_Syntax_Syntax.sigopens_and_abbrevs =
+                  (se.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                 FStar_Syntax_Syntax.sigopts =
                   (se.FStar_Syntax_Syntax.sigopts)
               } in
@@ -1560,6 +1565,8 @@ let (karamel_fixup_qual :
           (se.FStar_Syntax_Syntax.sigquals));
         FStar_Syntax_Syntax.sigmeta = (se.FStar_Syntax_Syntax.sigmeta);
         FStar_Syntax_Syntax.sigattrs = (se.FStar_Syntax_Syntax.sigattrs);
+        FStar_Syntax_Syntax.sigopens_and_abbrevs =
+          (se.FStar_Syntax_Syntax.sigopens_and_abbrevs);
         FStar_Syntax_Syntax.sigopts = (se.FStar_Syntax_Syntax.sigopts)
       }
     else se
@@ -1980,11 +1987,12 @@ let (extract_bundle :
                FStar_Syntax_Syntax.sigquals = uu___5;
                FStar_Syntax_Syntax.sigmeta = uu___6;
                FStar_Syntax_Syntax.sigattrs = uu___7;
-               FStar_Syntax_Syntax.sigopts = uu___8;_}::[];
-           FStar_Syntax_Syntax.lids = uu___9;_},
+               FStar_Syntax_Syntax.sigopens_and_abbrevs = uu___8;
+               FStar_Syntax_Syntax.sigopts = uu___9;_}::[];
+           FStar_Syntax_Syntax.lids = uu___10;_},
          (FStar_Syntax_Syntax.ExceptionConstructor)::[]) ->
-          let uu___10 = extract_ctor env [] env { dname = l; dtyp = t } in
-          (match uu___10 with
+          let uu___11 = extract_ctor env [] env { dname = l; dtyp = t } in
+          (match uu___11 with
            | (env1, ctor) ->
                (env1, [FStar_Extraction_ML_Syntax.MLM_Exn ctor]))
       | (FStar_Syntax_Syntax.Sig_bundle
@@ -2662,6 +2670,8 @@ let rec (extract_sig :
                            (se1.FStar_Syntax_Syntax.sigmeta);
                          FStar_Syntax_Syntax.sigattrs =
                            (se1.FStar_Syntax_Syntax.sigattrs);
+                         FStar_Syntax_Syntax.sigopens_and_abbrevs =
+                           (se1.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                          FStar_Syntax_Syntax.sigopts =
                            (se1.FStar_Syntax_Syntax.sigopts)
                        } in

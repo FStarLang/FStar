@@ -1666,6 +1666,17 @@ let (__proj__Mksig_metadata__item__sigmeta_admit :
     match projectee with
     | { sigmeta_active; sigmeta_fact_db_ids; sigmeta_admit;_} ->
         sigmeta_admit
+type open_kind =
+  | Open_module 
+  | Open_namespace 
+let (uu___is_Open_module : open_kind -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Open_module -> true | uu___ -> false
+let (uu___is_Open_namespace : open_kind -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Open_namespace -> true | uu___ -> false
+type open_module_or_namespace = (FStar_Ident.lident * open_kind)
+type module_abbrev = (FStar_Ident.ident * FStar_Ident.lident)
 type sigelt'__Sig_inductive_typ__payload =
   {
   lid: FStar_Ident.lident ;
@@ -1755,6 +1766,10 @@ and sigelt =
   sigquals: qualifier Prims.list ;
   sigmeta: sig_metadata ;
   sigattrs: attribute Prims.list ;
+  sigopens_and_abbrevs:
+    (open_module_or_namespace, module_abbrev) FStar_Pervasives.either
+      Prims.list
+    ;
   sigopts: FStar_VConfig.vconfig FStar_Pervasives_Native.option }
 let (__proj__Mksigelt'__Sig_inductive_typ__payload__item__lid :
   sigelt'__Sig_inductive_typ__payload -> FStar_Ident.lident) =
@@ -2061,29 +2076,44 @@ let (__proj__Sig_fail__item___0 : sigelt' -> sigelt'__Sig_fail__payload) =
 let (__proj__Mksigelt__item__sigel : sigelt -> sigelt') =
   fun projectee ->
     match projectee with
-    | { sigel; sigrng; sigquals; sigmeta; sigattrs; sigopts;_} -> sigel
+    | { sigel; sigrng; sigquals; sigmeta; sigattrs; sigopens_and_abbrevs;
+        sigopts;_} -> sigel
 let (__proj__Mksigelt__item__sigrng :
   sigelt -> FStar_Compiler_Range_Type.range) =
   fun projectee ->
     match projectee with
-    | { sigel; sigrng; sigquals; sigmeta; sigattrs; sigopts;_} -> sigrng
+    | { sigel; sigrng; sigquals; sigmeta; sigattrs; sigopens_and_abbrevs;
+        sigopts;_} -> sigrng
 let (__proj__Mksigelt__item__sigquals : sigelt -> qualifier Prims.list) =
   fun projectee ->
     match projectee with
-    | { sigel; sigrng; sigquals; sigmeta; sigattrs; sigopts;_} -> sigquals
+    | { sigel; sigrng; sigquals; sigmeta; sigattrs; sigopens_and_abbrevs;
+        sigopts;_} -> sigquals
 let (__proj__Mksigelt__item__sigmeta : sigelt -> sig_metadata) =
   fun projectee ->
     match projectee with
-    | { sigel; sigrng; sigquals; sigmeta; sigattrs; sigopts;_} -> sigmeta
+    | { sigel; sigrng; sigquals; sigmeta; sigattrs; sigopens_and_abbrevs;
+        sigopts;_} -> sigmeta
 let (__proj__Mksigelt__item__sigattrs : sigelt -> attribute Prims.list) =
   fun projectee ->
     match projectee with
-    | { sigel; sigrng; sigquals; sigmeta; sigattrs; sigopts;_} -> sigattrs
+    | { sigel; sigrng; sigquals; sigmeta; sigattrs; sigopens_and_abbrevs;
+        sigopts;_} -> sigattrs
+let (__proj__Mksigelt__item__sigopens_and_abbrevs :
+  sigelt ->
+    (open_module_or_namespace, module_abbrev) FStar_Pervasives.either
+      Prims.list)
+  =
+  fun projectee ->
+    match projectee with
+    | { sigel; sigrng; sigquals; sigmeta; sigattrs; sigopens_and_abbrevs;
+        sigopts;_} -> sigopens_and_abbrevs
 let (__proj__Mksigelt__item__sigopts :
   sigelt -> FStar_VConfig.vconfig FStar_Pervasives_Native.option) =
   fun projectee ->
     match projectee with
-    | { sigel; sigrng; sigquals; sigmeta; sigattrs; sigopts;_} -> sigopts
+    | { sigel; sigrng; sigquals; sigmeta; sigattrs; sigopens_and_abbrevs;
+        sigopts;_} -> sigopts
 type sigelts = sigelt Prims.list
 type modul =
   {
@@ -2285,6 +2315,7 @@ let (mk_sigelt : sigelt' -> sigelt) =
       sigquals = [];
       sigmeta = default_sigmeta;
       sigattrs = [];
+      sigopens_and_abbrevs = [];
       sigopts = FStar_Pervasives_Native.None
     }
 let (mk_subst : subst_t -> subst_t) = fun s -> s

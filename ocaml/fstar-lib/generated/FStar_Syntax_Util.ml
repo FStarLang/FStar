@@ -3699,6 +3699,7 @@ let (action_as_lb :
             FStar_Syntax_Syntax.Action eff_lid];
           FStar_Syntax_Syntax.sigmeta = FStar_Syntax_Syntax.default_sigmeta;
           FStar_Syntax_Syntax.sigattrs = [];
+          FStar_Syntax_Syntax.sigopens_and_abbrevs = [];
           FStar_Syntax_Syntax.sigopts = FStar_Pervasives_Native.None
         }
 let (mk_reify :
@@ -4624,6 +4625,8 @@ let (extract_attr :
                  (se.FStar_Syntax_Syntax.sigquals);
                FStar_Syntax_Syntax.sigmeta = (se.FStar_Syntax_Syntax.sigmeta);
                FStar_Syntax_Syntax.sigattrs = attrs';
+               FStar_Syntax_Syntax.sigopens_and_abbrevs =
+                 (se.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                FStar_Syntax_Syntax.sigopts = (se.FStar_Syntax_Syntax.sigopts)
              }, t)
 let (is_smt_lemma : FStar_Syntax_Syntax.term -> Prims.bool) =

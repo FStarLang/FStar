@@ -7,8 +7,8 @@ type either_replst =
     FStar_Interactive_Ide_Types.repl_state) FStar_Pervasives.either
 type name_tracking_event =
   | NTAlias of (FStar_Ident.lid * FStar_Ident.ident * FStar_Ident.lid) 
-  | NTOpen of (FStar_Ident.lid * FStar_Syntax_DsEnv.open_module_or_namespace)
-  
+  | NTOpen of (FStar_Ident.lid *
+  FStar_Syntax_Syntax.open_module_or_namespace) 
   | NTInclude of (FStar_Ident.lid * FStar_Ident.lid) 
   | NTBinding of (FStar_Syntax_Syntax.binding,
   FStar_TypeChecker_Env.sig_binding) FStar_Pervasives.either 
@@ -22,7 +22,7 @@ let (uu___is_NTOpen : name_tracking_event -> Prims.bool) =
   fun projectee -> match projectee with | NTOpen _0 -> true | uu___ -> false
 let (__proj__NTOpen__item___0 :
   name_tracking_event ->
-    (FStar_Ident.lid * FStar_Syntax_DsEnv.open_module_or_namespace))
+    (FStar_Ident.lid * FStar_Syntax_Syntax.open_module_or_namespace))
   = fun projectee -> match projectee with | NTOpen _0 -> _0
 let (uu___is_NTInclude : name_tracking_event -> Prims.bool) =
   fun projectee ->
@@ -427,7 +427,7 @@ let (update_names_from_event :
             then
               let uu___1 = query_of_lid included in
               FStar_Interactive_CompletionTable.register_open table
-                (kind = FStar_Syntax_DsEnv.Open_module) [] uu___1
+                (kind = FStar_Syntax_Syntax.Open_module) [] uu___1
             else table
         | NTInclude (host, included) ->
             let uu___ =

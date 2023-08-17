@@ -362,6 +362,8 @@ let (tc_decl_attributes :
             FStar_Syntax_Syntax.sigquals = (se.FStar_Syntax_Syntax.sigquals);
             FStar_Syntax_Syntax.sigmeta = (se.FStar_Syntax_Syntax.sigmeta);
             FStar_Syntax_Syntax.sigattrs = uu___1;
+            FStar_Syntax_Syntax.sigopens_and_abbrevs =
+              (se.FStar_Syntax_Syntax.sigopens_and_abbrevs);
             FStar_Syntax_Syntax.sigopts = (se.FStar_Syntax_Syntax.sigopts)
           }
 let (tc_inductive' :
@@ -789,6 +791,8 @@ let (store_sigopts :
       FStar_Syntax_Syntax.sigquals = (se.FStar_Syntax_Syntax.sigquals);
       FStar_Syntax_Syntax.sigmeta = (se.FStar_Syntax_Syntax.sigmeta);
       FStar_Syntax_Syntax.sigattrs = (se.FStar_Syntax_Syntax.sigattrs);
+      FStar_Syntax_Syntax.sigopens_and_abbrevs =
+        (se.FStar_Syntax_Syntax.sigopens_and_abbrevs);
       FStar_Syntax_Syntax.sigopts = uu___
     }
 let (tc_decls_knot :
@@ -1089,6 +1093,8 @@ let (tc_sig_let :
                           FStar_Syntax_Syntax.sigmeta =
                             (se.FStar_Syntax_Syntax.sigmeta);
                           FStar_Syntax_Syntax.sigattrs = attrs;
+                          FStar_Syntax_Syntax.sigopens_and_abbrevs =
+                            (se.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                           FStar_Syntax_Syntax.sigopts =
                             (se.FStar_Syntax_Syntax.sigopts)
                         } in
@@ -1532,6 +1538,8 @@ let (tc_sig_let :
                                FStar_Syntax_Syntax.sigmeta =
                                  (se1.FStar_Syntax_Syntax.sigmeta);
                                FStar_Syntax_Syntax.sigattrs = attrs1;
+                               FStar_Syntax_Syntax.sigopens_and_abbrevs =
+                                 (se1.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                                FStar_Syntax_Syntax.sigopts =
                                  (se1.FStar_Syntax_Syntax.sigopts)
                              } in
@@ -1596,6 +1604,9 @@ let (tc_sig_let :
                                        (se2.FStar_Syntax_Syntax.sigmeta);
                                      FStar_Syntax_Syntax.sigattrs =
                                        (se2.FStar_Syntax_Syntax.sigattrs);
+                                     FStar_Syntax_Syntax.sigopens_and_abbrevs
+                                       =
+                                       (se2.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                                      FStar_Syntax_Syntax.sigopts =
                                        (se2.FStar_Syntax_Syntax.sigopts)
                                    } in
@@ -1788,6 +1799,9 @@ let (tc_sig_let :
                                         (se2.FStar_Syntax_Syntax.sigmeta);
                                       FStar_Syntax_Syntax.sigattrs =
                                         (se2.FStar_Syntax_Syntax.sigattrs);
+                                      FStar_Syntax_Syntax.sigopens_and_abbrevs
+                                        =
+                                        (se2.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                                       FStar_Syntax_Syntax.sigopts =
                                         (se2.FStar_Syntax_Syntax.sigopts)
                                     }, lbs3)))
@@ -2467,6 +2481,8 @@ let (tc_decl' :
                                    (se2.FStar_Syntax_Syntax.sigmeta);
                                  FStar_Syntax_Syntax.sigattrs =
                                    (se2.FStar_Syntax_Syntax.sigattrs);
+                                 FStar_Syntax_Syntax.sigopens_and_abbrevs =
+                                   (se2.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                                  FStar_Syntax_Syntax.sigopts =
                                    (se2.FStar_Syntax_Syntax.sigopts)
                                } in
@@ -2492,6 +2508,8 @@ let (tc_decl' :
                           (sigbndle.FStar_Syntax_Syntax.sigmeta);
                         FStar_Syntax_Syntax.sigattrs =
                           (se2.FStar_Syntax_Syntax.sigattrs);
+                        FStar_Syntax_Syntax.sigopens_and_abbrevs =
+                          (sigbndle.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                         FStar_Syntax_Syntax.sigopts =
                           (sigbndle.FStar_Syntax_Syntax.sigopts)
                       } in
@@ -2539,6 +2557,8 @@ let (tc_decl' :
                                  (se2.FStar_Syntax_Syntax.sigmeta);
                                FStar_Syntax_Syntax.sigattrs =
                                  (se2.FStar_Syntax_Syntax.sigattrs);
+                               FStar_Syntax_Syntax.sigopens_and_abbrevs =
+                                 (se2.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                                FStar_Syntax_Syntax.sigopts =
                                  (se2.FStar_Syntax_Syntax.sigopts)
                              };
@@ -2555,6 +2575,8 @@ let (tc_decl' :
                                  (se2.FStar_Syntax_Syntax.sigmeta);
                                FStar_Syntax_Syntax.sigattrs =
                                  (se2.FStar_Syntax_Syntax.sigattrs);
+                               FStar_Syntax_Syntax.sigopens_and_abbrevs =
+                                 (se2.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                                FStar_Syntax_Syntax.sigopts =
                                  (se2.FStar_Syntax_Syntax.sigopts)
                              }] in
@@ -2584,6 +2606,8 @@ let (tc_decl' :
                                      });
                                   FStar_Syntax_Syntax.sigattrs =
                                     (sigelt.FStar_Syntax_Syntax.sigattrs);
+                                  FStar_Syntax_Syntax.sigopens_and_abbrevs =
+                                    (sigelt.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                                   FStar_Syntax_Syntax.sigopts =
                                     (sigelt.FStar_Syntax_Syntax.sigopts)
                                 })) in
@@ -2734,6 +2758,9 @@ let (tc_decl' :
                                           (se2.FStar_Syntax_Syntax.sigmeta);
                                         FStar_Syntax_Syntax.sigattrs =
                                           (se2.FStar_Syntax_Syntax.sigattrs);
+                                        FStar_Syntax_Syntax.sigopens_and_abbrevs
+                                          =
+                                          (se2.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                                         FStar_Syntax_Syntax.sigopts =
                                           (se2.FStar_Syntax_Syntax.sigopts)
                                       }) in
@@ -2760,6 +2787,9 @@ let (tc_decl' :
                                       (se2.FStar_Syntax_Syntax.sigmeta);
                                     FStar_Syntax_Syntax.sigattrs =
                                       (se2.FStar_Syntax_Syntax.sigattrs);
+                                    FStar_Syntax_Syntax.sigopens_and_abbrevs
+                                      =
+                                      (se2.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                                     FStar_Syntax_Syntax.sigopts =
                                       (se2.FStar_Syntax_Syntax.sigopts)
                                   } in
@@ -2784,6 +2814,8 @@ let (tc_decl' :
                         (se2.FStar_Syntax_Syntax.sigmeta);
                       FStar_Syntax_Syntax.sigattrs =
                         (se2.FStar_Syntax_Syntax.sigattrs);
+                      FStar_Syntax_Syntax.sigopens_and_abbrevs =
+                        (se2.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                       FStar_Syntax_Syntax.sigopts =
                         (se2.FStar_Syntax_Syntax.sigopts)
                     } in
@@ -2802,6 +2834,8 @@ let (tc_decl' :
                      (se2.FStar_Syntax_Syntax.sigmeta);
                    FStar_Syntax_Syntax.sigattrs =
                      (se2.FStar_Syntax_Syntax.sigattrs);
+                   FStar_Syntax_Syntax.sigopens_and_abbrevs =
+                     (se2.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                    FStar_Syntax_Syntax.sigopts =
                      (se2.FStar_Syntax_Syntax.sigopts)
                  } in
@@ -2953,6 +2987,9 @@ let (tc_decl' :
                                          (se2.FStar_Syntax_Syntax.sigmeta);
                                        FStar_Syntax_Syntax.sigattrs =
                                          (se2.FStar_Syntax_Syntax.sigattrs);
+                                       FStar_Syntax_Syntax.sigopens_and_abbrevs
+                                         =
+                                         (se2.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                                        FStar_Syntax_Syntax.sigopts =
                                          (se2.FStar_Syntax_Syntax.sigopts)
                                      }) in
@@ -2998,6 +3035,8 @@ let (tc_decl' :
                                (se2.FStar_Syntax_Syntax.sigmeta);
                              FStar_Syntax_Syntax.sigattrs =
                                (se2.FStar_Syntax_Syntax.sigattrs);
+                             FStar_Syntax_Syntax.sigopens_and_abbrevs =
+                               (se2.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                              FStar_Syntax_Syntax.sigopts =
                                (se2.FStar_Syntax_Syntax.sigopts)
                            } in
@@ -3193,6 +3232,8 @@ let (tc_decl' :
                                 (se2.FStar_Syntax_Syntax.sigmeta);
                               FStar_Syntax_Syntax.sigattrs =
                                 (se2.FStar_Syntax_Syntax.sigattrs);
+                              FStar_Syntax_Syntax.sigopens_and_abbrevs =
+                                (se2.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                               FStar_Syntax_Syntax.sigopts =
                                 (se2.FStar_Syntax_Syntax.sigopts)
                             }], [], env0))))
@@ -3371,6 +3412,8 @@ let (tc_decl' :
                                 (se2.FStar_Syntax_Syntax.sigmeta);
                               FStar_Syntax_Syntax.sigattrs =
                                 (se2.FStar_Syntax_Syntax.sigattrs);
+                              FStar_Syntax_Syntax.sigopens_and_abbrevs =
+                                (se2.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                               FStar_Syntax_Syntax.sigopts =
                                 (se2.FStar_Syntax_Syntax.sigopts)
                             }], [], env0))))
@@ -3413,6 +3456,8 @@ let (tc_decl' :
                               (sp.FStar_Syntax_Syntax.sigmeta);
                             FStar_Syntax_Syntax.sigattrs =
                               (se2.FStar_Syntax_Syntax.sigattrs);
+                            FStar_Syntax_Syntax.sigopens_and_abbrevs =
+                              (sp.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                             FStar_Syntax_Syntax.sigopts =
                               (sp.FStar_Syntax_Syntax.sigopts)
                           }) ses
@@ -3706,6 +3751,9 @@ let (tc_decl' :
                                            (se2.FStar_Syntax_Syntax.sigmeta);
                                          FStar_Syntax_Syntax.sigattrs =
                                            (se2.FStar_Syntax_Syntax.sigattrs);
+                                         FStar_Syntax_Syntax.sigopens_and_abbrevs
+                                           =
+                                           (se2.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                                          FStar_Syntax_Syntax.sigopts =
                                            (se2.FStar_Syntax_Syntax.sigopts)
                                        }) in
@@ -3755,6 +3803,9 @@ let (tc_decl' :
                                         (se2.FStar_Syntax_Syntax.sigmeta);
                                       FStar_Syntax_Syntax.sigattrs =
                                         (se2.FStar_Syntax_Syntax.sigattrs);
+                                      FStar_Syntax_Syntax.sigopens_and_abbrevs
+                                        =
+                                        (se2.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                                       FStar_Syntax_Syntax.sigopts =
                                         (se2.FStar_Syntax_Syntax.sigopts)
                                     } in
@@ -3789,6 +3840,8 @@ let (tc_decl' :
                           (se2.FStar_Syntax_Syntax.sigmeta);
                         FStar_Syntax_Syntax.sigattrs =
                           (se2.FStar_Syntax_Syntax.sigattrs);
+                        FStar_Syntax_Syntax.sigopens_and_abbrevs =
+                          (se2.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                         FStar_Syntax_Syntax.sigopts =
                           (se2.FStar_Syntax_Syntax.sigopts)
                       } in
@@ -3947,6 +4000,9 @@ let (tc_decl' :
                                            (se2.FStar_Syntax_Syntax.sigmeta);
                                          FStar_Syntax_Syntax.sigattrs =
                                            (se2.FStar_Syntax_Syntax.sigattrs);
+                                         FStar_Syntax_Syntax.sigopens_and_abbrevs
+                                           =
+                                           (se2.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                                          FStar_Syntax_Syntax.sigopts =
                                            (se2.FStar_Syntax_Syntax.sigopts)
                                        }) in
@@ -3994,6 +4050,9 @@ let (tc_decl' :
                                         (se2.FStar_Syntax_Syntax.sigmeta);
                                       FStar_Syntax_Syntax.sigattrs =
                                         (se2.FStar_Syntax_Syntax.sigattrs);
+                                      FStar_Syntax_Syntax.sigopens_and_abbrevs
+                                        =
+                                        (se2.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                                       FStar_Syntax_Syntax.sigopts =
                                         (se2.FStar_Syntax_Syntax.sigopts)
                                     } in
@@ -4027,6 +4086,8 @@ let (tc_decl' :
                           (se2.FStar_Syntax_Syntax.sigmeta);
                         FStar_Syntax_Syntax.sigattrs =
                           (se2.FStar_Syntax_Syntax.sigattrs);
+                        FStar_Syntax_Syntax.sigopens_and_abbrevs =
+                          (se2.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                         FStar_Syntax_Syntax.sigopts =
                           (se2.FStar_Syntax_Syntax.sigopts)
                       } in
@@ -5309,6 +5370,8 @@ let (check_module :
                            (se.FStar_Syntax_Syntax.sigmeta);
                          FStar_Syntax_Syntax.sigattrs =
                            (se.FStar_Syntax_Syntax.sigattrs);
+                         FStar_Syntax_Syntax.sigopens_and_abbrevs =
+                           (se.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                          FStar_Syntax_Syntax.sigopts =
                            (se.FStar_Syntax_Syntax.sigopts)
                        }

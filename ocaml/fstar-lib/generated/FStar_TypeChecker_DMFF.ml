@@ -65,6 +65,8 @@ let (mk_toplevel_definition :
               (sig_ctx.FStar_Syntax_Syntax.sigmeta);
             FStar_Syntax_Syntax.sigattrs =
               (sig_ctx.FStar_Syntax_Syntax.sigattrs);
+            FStar_Syntax_Syntax.sigopens_and_abbrevs =
+              (sig_ctx.FStar_Syntax_Syntax.sigopens_and_abbrevs);
             FStar_Syntax_Syntax.sigopts =
               (sig_ctx.FStar_Syntax_Syntax.sigopts)
           }, uu___1))
@@ -185,6 +187,8 @@ let (gen_wps_for_free :
                            });
                         FStar_Syntax_Syntax.sigattrs =
                           (sigelt.FStar_Syntax_Syntax.sigattrs);
+                        FStar_Syntax_Syntax.sigopens_and_abbrevs =
+                          (sigelt.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                         FStar_Syntax_Syntax.sigopts =
                           (sigelt.FStar_Syntax_Syntax.sigopts)
                       } in
@@ -4493,6 +4497,9 @@ let (cps_and_elaborate :
                                                           FStar_Syntax_Syntax.sigattrs
                                                             =
                                                             (sigelt.FStar_Syntax_Syntax.sigattrs);
+                                                          FStar_Syntax_Syntax.sigopens_and_abbrevs
+                                                            =
+                                                            (sigelt.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                                                           FStar_Syntax_Syntax.sigopts
                                                             =
                                                             (sigelt.FStar_Syntax_Syntax.sigopts)
@@ -4525,6 +4532,9 @@ let (cps_and_elaborate :
                                                (uu___14.FStar_Syntax_Syntax.sigmeta);
                                              FStar_Syntax_Syntax.sigattrs =
                                                (uu___14.FStar_Syntax_Syntax.sigattrs);
+                                             FStar_Syntax_Syntax.sigopens_and_abbrevs
+                                               =
+                                               (uu___14.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                                              FStar_Syntax_Syntax.sigopts =
                                                (uu___14.FStar_Syntax_Syntax.sigopts)
                                            } in
