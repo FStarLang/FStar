@@ -84,9 +84,9 @@ let register_goal (g:goal) =
                      (BU.string_of_int i)
                      (Print.ctx_uvar_to_string uv);
     let goal_ty = U.ctx_uvar_typ uv in
-    match FStar.TypeChecker.Core.compute_term_type_handle_guards env goal_ty false (fun _ _ -> true) 
+    match FStar.TypeChecker.Core.compute_term_type_handle_guards env goal_ty (fun _ _ -> true) 
     with
-    | Inl _ -> ()
+    | Inl _ -> ()  // ghost is ok
     | Inr err ->
       let msg = 
           BU.format2 "Failed to check initial tactic goal %s because %s"
@@ -202,28 +202,36 @@ let rec iter_tac f l =
   | [] -> ret ()
   | hd::tl -> f hd ;! iter_tac f tl
 
+exception Bad of string
 
 (* private *)
 let nwarn = BU.mk_ref 0
 let check_valid_goal g =
   if Options.defensive () then begin
-    let b = true in
-    let env = (goal_env g) in
-    let b = b && Env.closed env (goal_witness g) in
-    let b = b && Env.closed env (goal_type g) in
-    let rec aux b e =
-        match Env.pop_bv e with
-        | None -> b
-        | Some (bv, e) -> (
-            let b = b && Env.closed e bv.sort in
-            aux b e
-            )
-    in
-    if not (aux b env) && !nwarn < 5
-    then (Err.log_issue (goal_type g).pos
-              (Errors.Warning_IllFormedGoal, BU.format1 "The following goal is ill-formed. Keeping calm and carrying on...\n<%s>\n\n"
-                          (goal_to_string_verbose g));
-          nwarn := !nwarn + 1)
+    try
+      let env = (goal_env g) in
+      if not (Env.closed env (goal_witness g)) then
+        raise (Bad "witness");
+      if not (Env.closed env (goal_type g)) then
+        raise (Bad "goal type");
+      let rec aux e =
+          match Env.pop_bv e with
+          | None -> ()
+          | Some (bv, e) ->
+            if not (Env.closed e bv.sort) then
+              raise (Bad ("bv: " ^ Print.bv_to_string bv));
+            aux e
+      in
+      aux env
+    with
+     | Bad culprit ->
+       if !nwarn < 5 then begin
+         Err.log_issue (goal_type g).pos
+          (Errors.Warning_IllFormedGoal, BU.format2 "The following goal is ill-formed (%s). Keeping calm and carrying on...\n<%s>\n\n"
+                            culprit
+                            (goal_to_string_verbose g));
+         nwarn := !nwarn + 1
+       end
   end
 
 let check_valid_goals (gs:list goal) : unit =

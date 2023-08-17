@@ -855,6 +855,7 @@ let (report_errors : query_settings -> unit) =
   fun qry_settings ->
     let uu___ = errors_to_report qry_settings in
     FStar_Errors.add_errors uu___
+let (rlimit_conversion_factor : Prims.int) = (Prims.parse_int "544656")
 let (query_info : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
   fun settings ->
     fun z3result ->
@@ -1047,7 +1048,8 @@ let (query_info : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
                                    let uu___16 =
                                      let uu___17 =
                                        FStar_Compiler_Util.string_of_int
-                                         settings.query_rlimit in
+                                         (settings.query_rlimit /
+                                            rlimit_conversion_factor) in
                                      [uu___17; stats] in
                                    uu___15 :: uu___16 in
                                  uu___13 :: uu___14 in
@@ -1277,11 +1279,11 @@ let (make_solver_configs :
                     match uu___1 with
                     | (qname, index) ->
                         let rlimit =
-                          let uu___2 = FStar_Options.z3_rlimit_factor () in
-                          let uu___3 =
+                          let uu___2 =
+                            let uu___3 = FStar_Options.z3_rlimit_factor () in
                             let uu___4 = FStar_Options.z3_rlimit () in
-                            uu___4 * (Prims.parse_int "544656") in
-                          uu___2 * uu___3 in
+                            FStar_Mul.op_Star uu___3 uu___4 in
+                          FStar_Mul.op_Star uu___2 rlimit_conversion_factor in
                         let next_hint = get_hint_for qname index in
                         let default_settings =
                           let uu___2 = FStar_TypeChecker_Env.get_range env in
@@ -1817,35 +1819,46 @@ type solver_cfg =
   smtopt: Prims.string Prims.list ;
   facts: (Prims.string Prims.list * Prims.bool) Prims.list ;
   valid_intro: Prims.bool ;
-  valid_elim: Prims.bool }
+  valid_elim: Prims.bool ;
+  z3version: Prims.string }
 let (__proj__Mksolver_cfg__item__seed : solver_cfg -> Prims.int) =
   fun projectee ->
     match projectee with
-    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim;_} -> seed
+    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;_} ->
+        seed
 let (__proj__Mksolver_cfg__item__cliopt :
   solver_cfg -> Prims.string Prims.list) =
   fun projectee ->
     match projectee with
-    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim;_} -> cliopt
+    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;_} ->
+        cliopt
 let (__proj__Mksolver_cfg__item__smtopt :
   solver_cfg -> Prims.string Prims.list) =
   fun projectee ->
     match projectee with
-    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim;_} -> smtopt
+    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;_} ->
+        smtopt
 let (__proj__Mksolver_cfg__item__facts :
   solver_cfg -> (Prims.string Prims.list * Prims.bool) Prims.list) =
   fun projectee ->
     match projectee with
-    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim;_} -> facts
+    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;_} ->
+        facts
 let (__proj__Mksolver_cfg__item__valid_intro : solver_cfg -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim;_} ->
+    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;_} ->
         valid_intro
 let (__proj__Mksolver_cfg__item__valid_elim : solver_cfg -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim;_} -> valid_elim
+    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;_} ->
+        valid_elim
+let (__proj__Mksolver_cfg__item__z3version : solver_cfg -> Prims.string) =
+  fun projectee ->
+    match projectee with
+    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;_} ->
+        z3version
 let (_last_cfg :
   solver_cfg FStar_Pervasives_Native.option FStar_Compiler_Effect.ref) =
   FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None
@@ -1856,13 +1869,15 @@ let (get_cfg : FStar_TypeChecker_Env.env -> solver_cfg) =
     let uu___2 = FStar_Options.z3_smtopt () in
     let uu___3 = FStar_Options.smtencoding_valid_intro () in
     let uu___4 = FStar_Options.smtencoding_valid_elim () in
+    let uu___5 = FStar_Options.z3_version () in
     {
       seed = uu___;
       cliopt = uu___1;
       smtopt = uu___2;
       facts = (env.FStar_TypeChecker_Env.proof_ns);
       valid_intro = uu___3;
-      valid_elim = uu___4
+      valid_elim = uu___4;
+      z3version = uu___5
     }
 let (save_cfg : FStar_TypeChecker_Env.env -> unit) =
   fun env ->
@@ -2025,28 +2040,44 @@ let (split_and_solve :
     fun use_env_msg ->
       fun tcenv ->
         fun q ->
-          let goals =
-            let uu___ = FStar_TypeChecker_Env.split_smt_query tcenv q in
-            match uu___ with
-            | FStar_Pervasives_Native.None ->
-                failwith "Impossible: split_query callback is not set"
-            | FStar_Pervasives_Native.Some goals1 -> goals1 in
-          FStar_Compiler_Effect.op_Bar_Greater goals
-            (FStar_Compiler_List.iter
-               (fun uu___1 ->
-                  match uu___1 with
-                  | (env, goal) ->
-                      do_solve false retrying use_env_msg env goal));
-          (let uu___1 =
-             (let uu___2 = FStar_Errors.get_err_count () in
-              uu___2 = Prims.int_zero) && retrying in
+          (let uu___1 = FStar_Options.query_stats () in
            if uu___1
            then
-             FStar_TypeChecker_Err.log_issue tcenv
-               tcenv.FStar_TypeChecker_Env.range
-               (FStar_Errors_Codes.Warning_SplitAndRetryQueries,
-                 "The verification condition succeeded after splitting it to localize potential errors, although the original non-split verification condition failed. If you want to rely on splitting queries for verifying your program please use the '--split_queries always' option rather than relying on it implicitly.")
-           else ())
+             let range =
+               let uu___2 =
+                 let uu___3 =
+                   let uu___4 = FStar_TypeChecker_Env.get_range tcenv in
+                   FStar_Compiler_Range_Ops.string_of_range uu___4 in
+                 Prims.op_Hat uu___3 ")" in
+               Prims.op_Hat "(" uu___2 in
+             FStar_Compiler_Util.print2
+               "%s\tQuery-stats splitting query because %s\n" range
+               (if retrying
+                then "retrying failed query"
+                else "--split_queries is always")
+           else ());
+          (let goals =
+             let uu___1 = FStar_TypeChecker_Env.split_smt_query tcenv q in
+             match uu___1 with
+             | FStar_Pervasives_Native.None ->
+                 failwith "Impossible: split_query callback is not set"
+             | FStar_Pervasives_Native.Some goals1 -> goals1 in
+           FStar_Compiler_Effect.op_Bar_Greater goals
+             (FStar_Compiler_List.iter
+                (fun uu___2 ->
+                   match uu___2 with
+                   | (env, goal) ->
+                       do_solve false retrying use_env_msg env goal));
+           (let uu___2 =
+              (let uu___3 = FStar_Errors.get_err_count () in
+               uu___3 = Prims.int_zero) && retrying in
+            if uu___2
+            then
+              FStar_TypeChecker_Err.log_issue tcenv
+                tcenv.FStar_TypeChecker_Env.range
+                (FStar_Errors_Codes.Warning_SplitAndRetryQueries,
+                  "The verification condition succeeded after splitting it to localize potential errors, although the original non-split verification condition failed. If you want to rely on splitting queries for verifying your program please use the '--split_queries always' option rather than relying on it implicitly.")
+            else ()))
 let disable_quake_for : 'a . (unit -> 'a) -> 'a =
   fun f ->
     FStar_Options.with_saved_options
@@ -2061,22 +2092,28 @@ let (do_solve_maybe_split :
   fun use_env_msg ->
     fun tcenv ->
       fun q ->
-        let uu___ = FStar_Options.split_queries () in
-        match uu___ with
-        | FStar_Options.No -> do_solve false false use_env_msg tcenv q
-        | FStar_Options.OnFailure ->
-            let can_split =
-              let uu___1 =
-                let uu___2 = FStar_Options.quake_hi () in
-                uu___2 > Prims.int_one in
-              Prims.op_Negation uu___1 in
-            (try
-               (fun uu___1 ->
-                  match () with
-                  | () -> do_solve can_split false use_env_msg tcenv q) ()
-             with
-             | SplitQueryAndRetry -> split_and_solve true use_env_msg tcenv q)
-        | FStar_Options.Always -> split_and_solve false use_env_msg tcenv q
+        let uu___ = FStar_Options.admit_smt_queries () in
+        if uu___
+        then ()
+        else
+          (let uu___2 = FStar_Options.split_queries () in
+           match uu___2 with
+           | FStar_Options.No -> do_solve false false use_env_msg tcenv q
+           | FStar_Options.OnFailure ->
+               let can_split =
+                 let uu___3 =
+                   let uu___4 = FStar_Options.quake_hi () in
+                   uu___4 > Prims.int_one in
+                 Prims.op_Negation uu___3 in
+               (try
+                  (fun uu___3 ->
+                     match () with
+                     | () -> do_solve can_split false use_env_msg tcenv q) ()
+                with
+                | SplitQueryAndRetry ->
+                    split_and_solve true use_env_msg tcenv q)
+           | FStar_Options.Always ->
+               split_and_solve false use_env_msg tcenv q)
 let (solve :
   (unit -> Prims.string) FStar_Pervasives_Native.option ->
     FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> unit)
@@ -2154,7 +2191,7 @@ let (solver : FStar_TypeChecker_Env.solver_t) =
     FStar_TypeChecker_Env.handle_smt_goal = (fun e -> fun g -> [(e, g)]);
     FStar_TypeChecker_Env.solve = solve;
     FStar_TypeChecker_Env.solve_sync = solve_sync_bool;
-    FStar_TypeChecker_Env.finish = FStar_SMTEncoding_Z3.finish;
+    FStar_TypeChecker_Env.finish = (fun uu___ -> ());
     FStar_TypeChecker_Env.refresh = FStar_SMTEncoding_Z3.refresh
   }
 let (dummy : FStar_TypeChecker_Env.solver_t) =

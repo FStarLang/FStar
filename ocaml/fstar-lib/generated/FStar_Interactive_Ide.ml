@@ -2177,7 +2177,8 @@ let run_with_parsed_and_tc_term :
                   FStar_Syntax_Syntax.sigquals = uu___8;
                   FStar_Syntax_Syntax.sigmeta = uu___9;
                   FStar_Syntax_Syntax.sigattrs = uu___10;
-                  FStar_Syntax_Syntax.sigopts = uu___11;_}::[] ->
+                  FStar_Syntax_Syntax.sigopens_and_abbrevs = uu___11;
+                  FStar_Syntax_Syntax.sigopts = uu___12;_}::[] ->
                   FStar_Pervasives_Native.Some (univs, def)
               | uu___ -> FStar_Pervasives_Native.None in
             let parse frag =

@@ -261,10 +261,15 @@ let proc_guard' (simplify:bool) (reason:string) (e : env) (g : guard_t) (sc_opt:
         let! g = goal_of_guard reason e f sc_opt rng in
         push_goals [g])
 
-    | SMT ->
-        mlog (fun () -> BU.print2 "Sending guard (%s:%s) to SMT goal\n" reason (Rel.guard_to_string e g)) (fun () ->
+      | SMT ->
+        mlog (fun () -> BU.print2 "Pushing guard (%s:%s) as SMT goal\n" reason (Print.term_to_string f)) (fun () ->
         let! g = goal_of_guard reason e f sc_opt rng in
         push_smt_goals [g])
+
+      | SMTSync ->
+        mlog (fun () -> BU.print2 "Sending guard (%s:%s) to SMT Synchronously\n" reason (Print.term_to_string f)) (fun () ->
+        Rel.force_trivial_guard e g;
+        ret ())
 
     | Force ->
         mlog (fun () -> BU.print2 "Forcing guard (%s:%s)\n" reason (Rel.guard_to_string e g)) (fun () ->
@@ -1399,10 +1404,10 @@ let _t_trefl (allow_guards:bool) (l : term) (r : term) : tac unit =
           // Note, from well-typedness of the goal, we already know ?u.ty <: ty
           let check_uvar_subtype u t =
             let env = { goal_env g with gamma = g.goal_ctx_uvar.ctx_uvar_gamma } in
-            match Core.compute_term_type_handle_guards env t false (fun _ _ -> true)
+            match Core.compute_term_type_handle_guards env t (fun _ _ -> true)
             with
             | Inr _ -> false
-            | Inl t_ty -> (
+            | Inl (_, t_ty) -> (  // ignoring the effect, ghost is ok
               match Core.check_term_subtyping env ty t_ty with
               | Inl None -> //unconditional subtype
                 mark_uvar_as_already_checked u;
@@ -1501,13 +1506,20 @@ let longest_prefix (f : 'a -> 'a -> bool) (l1 : list 'a) (l2 : list 'a) : list '
         | x::xs, y::ys ->
             if f x y
             then aux (x::acc) xs ys
-            else acc, xs, ys
+            else acc, x::xs, y::ys
         | _ ->
             acc, l1, l2
     in
     let pr, t1, t2 = aux [] l1 l2 in
     List.rev pr, t1, t2
 
+// NOTE: duplicated from V2.Basic. Should remove this whole module eventually.
+let eq_binding b1 b2 =
+    match b1, b2 with
+    | S.Binding_var bv1, Binding_var bv2 -> bv_eq bv1 bv2 && U.term_eq bv1.sort bv2.sort
+    | S.Binding_lid (lid1, _), Binding_lid (lid2, _) -> lid_equals lid1 lid2
+    | S.Binding_univ u1, Binding_univ u2 -> ident_equals u1 u2
+    | _ -> false
 
 // fix universes
 let join_goals g1 g2 : tac goal =
@@ -1524,7 +1536,7 @@ let join_goals g1 g2 : tac goal =
 
     let gamma1 = g1.goal_ctx_uvar.ctx_uvar_gamma in
     let gamma2 = g2.goal_ctx_uvar.ctx_uvar_gamma in
-    let gamma, r1, r2 = longest_prefix S.eq_binding (List.rev gamma1) (List.rev gamma2) in
+    let gamma, r1, r2 = longest_prefix eq_binding (List.rev gamma1) (List.rev gamma2) in
 
     let t1 = close_forall_no_univs (Env.binders_of_bindings (List.rev r1)) phi1 in
     let t2 = close_forall_no_univs (Env.binders_of_bindings (List.rev r2)) phi2 in
@@ -2314,266 +2326,3 @@ let unexpected_uvars_issue r =
     issue_ctx = []
   } in
   i
-
-let refl_check_relation (g:env) (t0 t1:typ) (rel:relation)
-  : tac (option unit * issues) =
-
-  if no_uvars_in_g g &&
-     no_uvars_in_term t0 &&
-     no_uvars_in_term t1
-  then refl_typing_builtin_wrapper (fun _ ->
-         dbg_refl g (fun _ ->
-           BU.format3 "refl_check_relation: %s %s %s\n"
-             (Print.term_to_string t0)
-             (if rel = Subtyping then "<:?" else "=?=")
-             (Print.term_to_string t1));
-         let f =
-           if rel = Subtyping
-           then Core.check_term_subtyping
-           else Core.check_term_equality in
-         match f g t0 t1 with
-         | Inl None ->
-           dbg_refl g (fun _ -> "refl_check_relation: succeeded (no guard)");
-           ()
-         | Inl (Some guard_f) ->
-           Rel.force_trivial_guard g {Env.trivial_guard with guard_f=NonTrivial guard_f};
-           dbg_refl g (fun _ -> "refl_check_relation: succeeded")
-         | Inr err ->
-           dbg_refl g (fun _ -> BU.format1 "refl_check_relation failed: %s\n" (Core.print_error err));
-           Errors.raise_error (Errors.Fatal_IllTyped, "check_relation failed: " ^ (Core.print_error err)) Range.dummyRange)
-  else (
-    ret (None, [unexpected_uvars_issue (Env.get_range g)])
-  )
-
-let refl_check_subtyping (g:env) (t0 t1:typ) : tac (option unit & issues) =
-  refl_check_relation g t0 t1 Subtyping
-
-let refl_check_equiv (g:env) (t0 t1:typ) : tac (option unit & issues) =
-  refl_check_relation g t0 t1 Equality
-
-let to_must_tot (eff:tot_or_ghost) : bool =
-  match eff with
-  | E_Total -> true
-  | E_Ghost -> false
-
-let refl_norm_type (g:env) (t:typ) : typ =
-  N.normalize [Env.Beta; Env.Exclude Zeta] g t
-
-let refl_core_compute_term_type (g:env) (e:term) (eff:tot_or_ghost) : tac (option typ & issues) =
-  if no_uvars_in_g g &&
-     no_uvars_in_term e
-  then refl_typing_builtin_wrapper (fun _ ->
-         dbg_refl g (fun _ ->
-           BU.format1 "refl_core_compute_term_type: %s\n" (Print.term_to_string e));
-         let must_tot = to_must_tot eff in
-         let gh = fun g guard ->
-           Rel.force_trivial_guard g
-             {Env.trivial_guard with guard_f = NonTrivial guard};
-           true in
-         match Core.compute_term_type_handle_guards g e must_tot gh with
-         | Inl t ->
-           let t = refl_norm_type g t in
-           dbg_refl g (fun _ ->
-             BU.format2 "refl_core_compute_term_type for %s computed type %s\n"
-               (Print.term_to_string e)
-               (Print.term_to_string t));
-           t
-         | Inr err ->
-           dbg_refl g (fun _ -> BU.format1 "refl_core_compute_term_type: %s\n" (Core.print_error err));
-           Errors.raise_error (Errors.Fatal_IllTyped, "core_compute_term_type failed: " ^ (Core.print_error err)) Range.dummyRange)
-  else ret (None, [unexpected_uvars_issue (Env.get_range g)])
-
-let refl_core_check_term (g:env) (e:term) (t:typ) (eff:tot_or_ghost)
-  : tac (option unit & issues) =
-
-  if no_uvars_in_g g &&
-     no_uvars_in_term e &&
-     no_uvars_in_term t
-  then refl_typing_builtin_wrapper (fun _ ->
-         dbg_refl g (fun _ ->
-           BU.format2 "refl_core_check_term: term: %s, type: %s\n"
-             (Print.term_to_string e) (Print.term_to_string t));
-         let must_tot = to_must_tot eff in
-         match Core.check_term g e t must_tot with
-         | Inl None ->
-           dbg_refl g (fun _ -> "refl_core_check_term: succeeded with no guard\n");
-           ret ()
-         | Inl (Some guard) ->
-           dbg_refl g (fun _ -> "refl_core_check_term: succeeded with guard\n");
-           Rel.force_trivial_guard g {Env.trivial_guard with guard_f=NonTrivial guard};
-           ret ()
-         | Inr err ->
-           dbg_refl g (fun _ -> BU.format1 "refl_core_check_term failed: %s\n" (Core.print_error err));
-           Errors.raise_error (Errors.Fatal_IllTyped, "refl_core_check_term failed: " ^ (Core.print_error err)) Range.dummyRange)
-  else ret (None, [unexpected_uvars_issue (Env.get_range g)])
-
-let refl_tc_term (g:env) (e:term) (eff:tot_or_ghost) : tac (option (term & typ) & issues) =
-  if no_uvars_in_g g &&
-     no_uvars_in_term e
-  then refl_typing_builtin_wrapper (fun _ ->
-    dbg_refl g (fun _ ->
-      BU.format1 "refl_tc_term: %s\n" (Print.term_to_string e));
-    dbg_refl g (fun _ -> "refl_tc_term: starting tc {\n");
-    let must_tot = to_must_tot eff in
-    //
-    // we don't instantiate implicits at the end of e
-    // it is unlikely that we will be able to resolve them,
-    //   and refl typechecking API will fail if there are unresolved uvars
-    //
-    // note that this will still try to resolve implicits within e
-    // the typechecker does not check for this env flag for such implicits
-    //
-    let g = {g with instantiate_imp=false} in
-    //
-    // lax check to elaborate
-    //
-    let e =
-      let g = {g with phase1 = true; lax = true} in
-      let e, _, guard = g.typeof_tot_or_gtot_term g e must_tot in
-      Rel.force_trivial_guard g guard;
-      e in
-    try
-     begin
-     let e = SC.deep_compress false e in
-     // TODO: may be should we check here that e has no unresolved implicits?
-     dbg_refl g (fun _ ->
-       BU.format1 "} finished tc with e = %s\n"
-         (Print.term_to_string e));
-     let gh = fun g guard ->
-        Rel.force_trivial_guard g
-          {Env.trivial_guard with guard_f = NonTrivial guard};
-        true in
-     match Core.compute_term_type_handle_guards g e must_tot gh with
-     | Inl t ->
-        let t = refl_norm_type g t in
-        dbg_refl g (fun _ ->
-          BU.format2 "refl_tc_term for %s computed type %s\n"
-            (Print.term_to_string e)
-            (Print.term_to_string t));
-        e, t
-     | Inr err ->
-        dbg_refl g (fun _ -> BU.format1 "refl_tc_term failed: %s\n" (Core.print_error err));
-        Errors.raise_error (Errors.Fatal_IllTyped, "tc_term callback failed: " ^ Core.print_error err) e.pos
-    end
-    with
-    | Errors.Error (Errors.Error_UnexpectedUnresolvedUvar, _, _, _) ->
-      Errors.raise_error (Errors.Fatal_IllTyped, "UVars remaing in term after tc_term callback") e.pos)
-  else
-    ret (None, [unexpected_uvars_issue (Env.get_range g)])
-
-let refl_universe_of (g:env) (e:term) : tac (option universe & issues) =
-  let check_univ_var_resolved u =
-    match SS.compress_univ u with
-    | S.U_unif _ -> Errors.raise_error (Errors.Fatal_IllTyped, "Unresolved variable in universe_of callback") Range.dummyRange
-    | u -> u in
-
-  if no_uvars_in_g g &&
-     no_uvars_in_term e
-  then refl_typing_builtin_wrapper (fun _ ->
-         let t, u = U.type_u () in
-         let must_tot = false in
-         match Core.check_term g e t must_tot with
-         | Inl None -> check_univ_var_resolved u
-         | Inl (Some guard) ->
-           Rel.force_trivial_guard g
-             {Env.trivial_guard with guard_f=NonTrivial guard};
-           check_univ_var_resolved u
-         | Inr err ->
-           let msg = BU.format1 "refl_universe_of failed: %s\n" (Core.print_error err) in
-           dbg_refl g (fun _ -> msg);
-           Errors.raise_error (Errors.Fatal_IllTyped, "universe_of failed: " ^ Core.print_error err) Range.dummyRange)
-  else ret (None, [unexpected_uvars_issue (Env.get_range g)])
-
-let refl_check_prop_validity (g:env) (e:term) : tac (option unit & issues) =
-  if no_uvars_in_g g &&
-     no_uvars_in_term e
-  then refl_typing_builtin_wrapper (fun _ ->
-         dbg_refl g (fun _ ->
-           BU.format1 "refl_check_prop_validity: %s\n" (Print.term_to_string e));
-         let must_tot = false in
-         let _ =
-           match Core.check_term g e (U.fvar_const PC.prop_lid) must_tot with
-           | Inl None -> ()
-           | Inl (Some guard) ->
-             Rel.force_trivial_guard g
-               {Env.trivial_guard with guard_f=NonTrivial guard}
-           | Inr err ->
-             let msg = BU.format1 "refl_check_prop_validity failed (not a prop): %s\n"
-                                  (Core.print_error err) in
-             dbg_refl g (fun _ -> msg);
-             Errors.raise_error (Errors.Fatal_IllTyped, msg) Range.dummyRange
-         in
-         Rel.force_trivial_guard g
-           {Env.trivial_guard with guard_f=NonTrivial e})
-  else ret (None, [unexpected_uvars_issue (Env.get_range g)])
-
-let refl_instantiate_implicits (g:env) (e:term) : tac (option (term & typ) & issues) =
-  if no_uvars_in_g g &&
-     no_uvars_in_term e
-  then refl_typing_builtin_wrapper (fun _ ->
-    dbg_refl g (fun _ ->
-      BU.format1 "refl_instantiate_implicits: %s\n" (Print.term_to_string e));
-    dbg_refl g (fun _ -> "refl_instantiate_implicits: starting tc {\n");
-    let must_tot = true in
-    let g = {g with instantiate_imp=false; phase1=true; lax=true} in
-    let e, t, guard = g.typeof_tot_or_gtot_term g e must_tot in
-    Rel.force_trivial_guard g guard;
-    let e = SC.deep_compress false e in
-    let t = t |> refl_norm_type g |> SC.deep_compress false in
-    dbg_refl g (fun _ ->
-      BU.format2 "} finished tc with e = %s and t = %s\n"
-        (Print.term_to_string e)
-        (Print.term_to_string t));
-    (e, t))
-  else ret (None, [unexpected_uvars_issue (Env.get_range g)])
-
-let refl_maybe_relate_after_unfolding (g:env) (t0 t1:typ)
-  : tac (option Core.side & issues) =
-
-  if no_uvars_in_g g &&
-     no_uvars_in_term t0 &&
-     no_uvars_in_term t1
-  then refl_typing_builtin_wrapper (fun _ ->
-         dbg_refl g (fun _ ->
-           BU.format2 "refl_maybe_relate_after_unfolding: %s and %s {\n"
-             (Print.term_to_string t0)
-             (Print.term_to_string t1));
-         let s = Core.maybe_relate_after_unfolding g t0 t1 in
-         dbg_refl g (fun _ ->
-           BU.format1 "} returning side: %s\n"
-             (Core.side_to_string s));
-         s)
-  else ret (None, [unexpected_uvars_issue (Env.get_range g)])
-
-let refl_maybe_unfold_head (g:env) (e:term) : tac (option term & issues) =
-  if no_uvars_in_g g &&
-     no_uvars_in_term e
-  then refl_typing_builtin_wrapper (fun _ ->
-    dbg_refl g (fun _ ->
-      BU.format1 "refl_maybe_unfold_head: %s {\n" (Print.term_to_string e));
-    let eopt = N.maybe_unfold_head g e in
-    dbg_refl g (fun _ ->
-      BU.format1 "} eopt = %s\n"
-        (match eopt with
-         | None -> "none"
-         | Some e -> Print.term_to_string e));
-    if eopt = None
-    then Errors.raise_error (Errors.Fatal_UnexpectedTerm,
-                             BU.format1
-                               "Could not unfold head: %s\n"
-                               (Print.term_to_string e)) e.pos
-    else eopt |> must)
-  else ret (None, [unexpected_uvars_issue (Env.get_range g)])
-
-let push_open_namespace (e:env) (ns:list string) =
-  let lid = Ident.lid_of_path ns Range.dummyRange in
-  ret { e with dsenv = FStar.Syntax.DsEnv.push_namespace e.dsenv lid }
-
-let push_module_abbrev (e:env) (n:string) (m:list string) =
-  let mlid = Ident.lid_of_path m Range.dummyRange in
-  let ident = Ident.id_of_text n in
-  ret { e with dsenv = FStar.Syntax.DsEnv.push_module_abbrev e.dsenv ident mlid }
-
-let resolve_name (e:env) (n:list string) =
-  let l = Ident.lid_of_path n Range.dummyRange in
-  ret (FStar.Syntax.DsEnv.resolve_name e.dsenv l)

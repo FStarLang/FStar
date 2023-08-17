@@ -448,39 +448,45 @@ val free_uvars : term -> Tac (list int)
 
 (** TODO: maybe the equiv APIs should require typing of the arguments? *)
 
+unfold
+let ret_t (a:Type) = option a & issues
+
+val is_non_informative (g:env) (t:typ)
+  : Tac (ret_t (non_informative_token g t))
+
 val check_subtyping (g:env) (t0 t1:typ)
-  : Tac (option (subtyping_token g t0 t1) & issues)
+  : Tac (ret_t (subtyping_token g t0 t1))
 
 val check_equiv (g:env) (t0 t1:typ)
-  : Tac (option (equiv_token g t0 t1) & issues)
+  : Tac (ret_t (equiv_token g t0 t1))
 
 //
 // Compute the type of e using the core typechecker
 //
-val core_compute_term_type (g:env) (e:term) (eff:tot_or_ghost)
-  : Tac (option (t:typ{typing_token g e (eff, t)}) & issues)
+val core_compute_term_type (g:env) (e:term)
+  : Tac (ret_t (r:(tot_or_ghost & typ){typing_token g e r}))
 
 //
 // Check that e:t using the core typechecker
 //
 val core_check_term (g:env) (e:term) (t:typ) (eff:tot_or_ghost)
-  : Tac (option (typing_token g e (eff, t)) & issues)
+  : Tac (ret_t (typing_token g e (eff, t)))
 
 //
 // Instantiate the implicits in e and compute its type
 //
-val tc_term (g:env) (e:term) (eff:tot_or_ghost)
-  : Tac (option (r:(term & typ){typing_token g (fst r) (eff, snd r)}) & issues)
+val tc_term (g:env) (e:term)
+  : Tac (ret_t (r:(term & (tot_or_ghost & typ)){typing_token g (fst r) (snd r)}))
 
 val universe_of (g:env) (e:term)
-  : Tac (option (u:universe{typing_token g e (E_Total, pack_ln (Tv_Type u))}) & issues)
+  : Tac (ret_t (u:universe{typing_token g e (E_Total, pack_ln (Tv_Type u))}))
 
 type prop_validity_token (g:env) (t:term) =
   e:term{typing_token g t (E_Total, pack_ln (Tv_FVar (pack_fv prop_qn))) /\
          typing_token g e (E_Total, t)}
 
 val check_prop_validity (g:env) (t:term)
-  : Tac (option (prop_validity_token g t) & issues)
+  : Tac (ret_t (prop_validity_token g t))
 
 // Can't immediately move to FStar.Tactics.Types since pattern is not in scope there
 val match_complete_token (g:env) (sc:term) (t:typ) (pats:list pattern) (bnds:list (list binding))
@@ -503,13 +509,13 @@ val check_match_complete (g:env) (sc:term) (t:typ) (pats:list pattern)
 //   The client may follow it up with another call to core_check_term get the proof
 //
 val instantiate_implicits (g:env) (t:term)
-  : Tac (option (term & typ) & issues)
+  : Tac (ret_t (term & typ))
 
 val maybe_relate_after_unfolding (g:env) (t1 t2:term)
-  : Tac (option unfold_side & issues)
+  : Tac (ret_t unfold_side)
 
 val maybe_unfold_head (g:env) (t0:term)
-  : Tac (option (t1:term{equiv_token g t0 t1}) & issues)
+  : Tac (ret_t (t1:term{equiv_token g t0 t1}))
 
 val push_open_namespace (g:env) (ns:name)
   : Tac env

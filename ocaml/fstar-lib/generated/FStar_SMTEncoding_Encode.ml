@@ -4272,6 +4272,8 @@ and (encode_sigelt' :
                             (se.FStar_Syntax_Syntax.sigmeta);
                           FStar_Syntax_Syntax.sigattrs =
                             (se.FStar_Syntax_Syntax.sigattrs);
+                          FStar_Syntax_Syntax.sigopens_and_abbrevs =
+                            (se.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                           FStar_Syntax_Syntax.sigopts =
                             (se.FStar_Syntax_Syntax.sigopts)
                         } in
@@ -4456,6 +4458,8 @@ and (encode_sigelt' :
                       (se.FStar_Syntax_Syntax.sigmeta);
                     FStar_Syntax_Syntax.sigattrs =
                       (se.FStar_Syntax_Syntax.sigattrs);
+                    FStar_Syntax_Syntax.sigopens_and_abbrevs =
+                      (se.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                     FStar_Syntax_Syntax.sigopts =
                       (se.FStar_Syntax_Syntax.sigopts)
                   } in
@@ -7307,7 +7311,6 @@ let (rollback_env : Prims.int FStar_Pervasives_Native.option -> unit) =
 let (init : FStar_TypeChecker_Env.env -> unit) =
   fun tcenv ->
     init_env tcenv;
-    FStar_SMTEncoding_Z3.init ();
     FStar_SMTEncoding_Z3.giveZ3 [FStar_SMTEncoding_Term.DefPrelude]
 let (snapshot :
   Prims.string -> (FStar_TypeChecker_Env.solver_depth_t * unit)) =
@@ -7826,7 +7829,20 @@ let (encode_query :
                                                  uu___11 in
                                              FStar_SMTEncoding_Term.Caption
                                                uu___10 in
-                                           [uu___9]
+                                           let uu___10 =
+                                             let uu___11 =
+                                               let uu___12 =
+                                                 let uu___13 =
+                                                   let uu___14 =
+                                                     FStar_Errors.get_ctx () in
+                                                   FStar_String.concat "\n"
+                                                     uu___14 in
+                                                 Prims.op_Hat "Context: "
+                                                   uu___13 in
+                                               FStar_SMTEncoding_Term.Caption
+                                                 uu___12 in
+                                             [uu___11] in
+                                           uu___9 :: uu___10
                                          else [] in
                                        let query_prelude =
                                          let uu___8 =

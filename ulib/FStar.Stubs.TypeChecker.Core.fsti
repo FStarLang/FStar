@@ -1,5 +1,5 @@
 (*
-   Copyright 2008-2018 Microsoft Research
+   Copyright 2008-2023 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -13,6 +13,18 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module FStar.Tactics
+module FStar.Stubs.TypeChecker.Core
 
-include FStar.Tactics.V1
+//
+// A stub for using some type definition from FStar.TypeChecker.Core
+//
+
+type tot_or_ghost = 
+  | E_Total
+  | E_Ghost
+
+type unfold_side =
+  | Left
+  | Right
+  | Both
+  | Neither

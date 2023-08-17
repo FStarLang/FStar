@@ -1799,7 +1799,6 @@ let rollback_env depth = FStar.Common.rollback pop_env last_env depth
 
 let init tcenv =
     init_env tcenv;
-    Z3.init ();
     Z3.giveZ3 [DefPrelude]
 let snapshot msg = BU.atomically (fun () ->
     let env_depth, () = snapshot_env () in
@@ -1920,7 +1919,7 @@ let encode_modul_from_cache tcenv tcmod (decls, fvbs) =
     if Env.debug tcenv Options.Medium then BU.print1 "Done encoding externals from cache for %s\n" name
 
 open FStar.SMTEncoding.Z3
-let encode_query use_env_msg tcenv q
+let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
   : list decl  //prelude, translation of  tcenv
   * list ErrorReporting.label //labels in the query
   * decl        //the query itself
@@ -1957,7 +1956,8 @@ let encode_query use_env_msg tcenv q
     let label_prefix, label_suffix = encode_labels labels in
     let caption =
         if Options.log_queries ()
-        then [Caption ("Encoding query formula : " ^ (Print.term_to_string q))]
+        then [Caption ("Encoding query formula : " ^ (Print.term_to_string q));
+              Caption ("Context: " ^ String.concat "\n" (Errors.get_ctx ()))]
         else []
     in
     let query_prelude =

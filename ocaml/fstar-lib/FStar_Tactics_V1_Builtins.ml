@@ -132,22 +132,6 @@ let set_vconfig             = from_tac_1 B.set_vconfig
 let t_smt_sync              = from_tac_1 B.t_smt_sync
 let free_uvars              = from_tac_1 B.free_uvars
 
-
-type ('env, 't) prop_validity_token = unit
-let check_subtyping              = from_tac_3 B.refl_check_subtyping
-let check_equiv                  = from_tac_3 B.refl_check_equiv
-let core_compute_term_type       = from_tac_3 B.refl_core_compute_term_type
-let core_check_term              = from_tac_4 B.refl_core_check_term
-let tc_term                      = from_tac_3 B.refl_tc_term
-let universe_of                  = from_tac_2 B.refl_universe_of
-let check_prop_validity          = from_tac_2 B.refl_check_prop_validity
-let instantiate_implicits        = from_tac_2 B.refl_instantiate_implicits
-let maybe_relate_after_unfolding = from_tac_3 B.refl_maybe_relate_after_unfolding
-let maybe_unfold_head            = from_tac_2 B.refl_maybe_unfold_head
-let push_open_namespace          = from_tac_2 B.push_open_namespace
-let push_module_abbrev           = from_tac_3 B.push_module_abbrev
-let resolve_name                 = from_tac_2 B.resolve_name
-
 (* The handlers need to "embed" their argument. *)
 let catch   (t: unit -> 'a __tac): ((exn, 'a) either) __tac = from_tac_1 TM.catch   (to_tac_0 (t ()))
 let recover (t: unit -> 'a __tac): ((exn, 'a) either) __tac = from_tac_1 TM.recover (to_tac_0 (t ()))
@@ -158,10 +142,3 @@ let ctrl_rewrite
     (t2 : unit -> unit __tac)
   : unit __tac
   = from_tac_3 CTRW.ctrl_rewrite d (to_tac_1 t1) (to_tac_0 (t2 ()))
-
-let log_issues (i:FStar_Issue.issue list)
-  : unit __tac
-  = fun ps ->
-       FStar_Errors.add_many i;
-       FStar_Tactics_Result.Success ((), ps)
-

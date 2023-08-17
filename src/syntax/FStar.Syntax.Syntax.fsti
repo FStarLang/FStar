@@ -621,6 +621,14 @@ type sig_metadata = {
                         //Used in DM4Free
 }
 
+
+type open_kind =                                          (* matters only for resolving names with some module qualifier *)
+| Open_module                                             (* only opens the module, not the namespace *)
+| Open_namespace  
+
+type open_module_or_namespace = (lident * open_kind)      (* lident fully qualified name, already resolved. *)
+type module_abbrev = (ident * lident)                     (* module X = A.B.C, where A.B.C is fully qualified and already resolved *)
+
 (*
  * AR: we no longer have Sig_new_effect_for_free
  *     Sig_new_effect, with an eff_decl that has DM4F_eff combinators, with dummy wps plays its part
@@ -710,6 +718,7 @@ and sigelt = {
     sigquals: list qualifier;
     sigmeta:  sig_metadata;
     sigattrs: list attribute;
+    sigopens_and_abbrevs: list (either open_module_or_namespace module_abbrev);
     sigopts:  option vconfig; (* Saving the option context where this sigelt was checked in *)
 }
 
@@ -732,8 +741,6 @@ val new_bv_set: unit -> set bv
 val new_id_set: unit -> set ident
 val new_fv_set: unit -> set lident
 val new_universe_names_set: unit -> set univ_name
-
-val eq_binding : binding -> binding -> bool
 
 val mod_name: modul -> lident
 

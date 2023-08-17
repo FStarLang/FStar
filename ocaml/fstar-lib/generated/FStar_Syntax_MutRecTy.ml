@@ -59,6 +59,7 @@ let (disentangle_abbrevs_from_bundle :
                  FStar_Syntax_Syntax.sigmeta =
                    FStar_Syntax_Syntax.default_sigmeta;
                  FStar_Syntax_Syntax.sigattrs = sigattrs1;
+                 FStar_Syntax_Syntax.sigopens_and_abbrevs = [];
                  FStar_Syntax_Syntax.sigopts = FStar_Pervasives_Native.None
                }, [])
           | uu___ ->
@@ -165,7 +166,8 @@ let (disentangle_abbrevs_from_bundle :
                           FStar_Syntax_Syntax.sigquals = uu___10;
                           FStar_Syntax_Syntax.sigmeta = uu___11;
                           FStar_Syntax_Syntax.sigattrs = uu___12;
-                          FStar_Syntax_Syntax.sigopts = uu___13;_}
+                          FStar_Syntax_Syntax.sigopens_and_abbrevs = uu___13;
+                          FStar_Syntax_Syntax.sigopts = uu___14;_}
                         -> FStar_Pervasives_Native.Some tm
                     | uu___1 -> FStar_Pervasives_Native.None in
                   let uu___1 =
@@ -278,6 +280,9 @@ let (disentangle_abbrevs_from_bundle :
                                           (x.FStar_Syntax_Syntax.sigmeta);
                                         FStar_Syntax_Syntax.sigattrs =
                                           (x.FStar_Syntax_Syntax.sigattrs);
+                                        FStar_Syntax_Syntax.sigopens_and_abbrevs
+                                          =
+                                          (x.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                                         FStar_Syntax_Syntax.sigopts =
                                           (x.FStar_Syntax_Syntax.sigopts)
                                       } :: uu___6 in
@@ -379,6 +384,8 @@ let (disentangle_abbrevs_from_bundle :
                            (x.FStar_Syntax_Syntax.sigmeta);
                          FStar_Syntax_Syntax.sigattrs =
                            (x.FStar_Syntax_Syntax.sigattrs);
+                         FStar_Syntax_Syntax.sigopens_and_abbrevs =
+                           (x.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                          FStar_Syntax_Syntax.sigopts =
                            (x.FStar_Syntax_Syntax.sigopts)
                        }]
@@ -411,6 +418,8 @@ let (disentangle_abbrevs_from_bundle :
                            (x.FStar_Syntax_Syntax.sigmeta);
                          FStar_Syntax_Syntax.sigattrs =
                            (x.FStar_Syntax_Syntax.sigattrs);
+                         FStar_Syntax_Syntax.sigopens_and_abbrevs =
+                           (x.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                          FStar_Syntax_Syntax.sigopts =
                            (x.FStar_Syntax_Syntax.sigopts)
                        }]
@@ -434,6 +443,7 @@ let (disentangle_abbrevs_from_bundle :
                   FStar_Syntax_Syntax.sigmeta =
                     FStar_Syntax_Syntax.default_sigmeta;
                   FStar_Syntax_Syntax.sigattrs = sigattrs1;
+                  FStar_Syntax_Syntax.sigopens_and_abbrevs = [];
                   FStar_Syntax_Syntax.sigopts = FStar_Pervasives_Native.None
                 } in
               (new_bundle, unfolded_type_abbrevs)

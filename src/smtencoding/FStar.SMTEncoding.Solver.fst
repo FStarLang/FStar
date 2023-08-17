@@ -474,6 +474,9 @@ let errors_to_report (settings : query_settings) : list Errors.error =
 let report_errors qry_settings =
     FStar.Errors.add_errors (errors_to_report qry_settings)
 
+(* Translation from F* rlimit to Z3 rlimit *)
+let rlimit_conversion_factor = 544656
+
 let query_info settings z3result =
     let process_unsat_core (core:unsat_core) =
         (* A generic accumulator of unique strings,
@@ -615,7 +618,7 @@ let query_info settings z3result =
                 BU.string_of_int z3result.z3result_time;
                 BU.string_of_int settings.query_fuel;
                 BU.string_of_int settings.query_ifuel;
-                BU.string_of_int settings.query_rlimit;
+                BU.string_of_int (settings.query_rlimit / rlimit_conversion_factor);
                 stats
              ];
         if Options.print_z3_statistics () then process_unsat_core core;
@@ -751,9 +754,8 @@ let make_solver_configs
             | Some (q, _typ, n), _ -> Ident.string_of_lid q, n
         in
         let rlimit =
-            Prims.op_Multiply
-                (Options.z3_rlimit_factor ())
-                (Prims.op_Multiply (Options.z3_rlimit ()) 544656)
+            let open FStar.Mul in
+            Options.z3_rlimit_factor () * Options.z3_rlimit () * rlimit_conversion_factor
         in
         let next_hint = get_hint_for qname index in
         let default_settings = {
@@ -1084,6 +1086,7 @@ type solver_cfg = {
   facts            : list (list string * bool);
   valid_intro      : bool;
   valid_elim       : bool;
+  z3version        : string;
 }
 
 let _last_cfg : ref (option solver_cfg) = BU.mk_ref None
@@ -1095,6 +1098,7 @@ let get_cfg env : solver_cfg =
     ; facts            = env.proof_ns
     ; valid_intro      = Options.smtencoding_valid_intro ()
     ; valid_elim       = Options.smtencoding_valid_elim ()
+    ; z3version        = Options.z3_version ()
     }
 
 let save_cfg env =
@@ -1179,6 +1183,12 @@ let do_solve (can_split:bool) (is_retry:bool) use_env_msg tcenv q : unit =
   | None -> () (* already logged an error *)
 
 let split_and_solve (retrying:bool) use_env_msg tcenv q : unit =
+  if Options.query_stats () then begin
+    let range = "(" ^ (Range.string_of_range (Env.get_range tcenv)) ^ ")" in
+    BU.print2 "%s\tQuery-stats splitting query because %s\n"
+                range
+                (if retrying then "retrying failed query" else "--split_queries is always")
+  end;
   let goals =
     match Env.split_smt_query tcenv q with
     | None ->
@@ -1210,6 +1220,9 @@ let disable_quake_for (f : unit -> 'a) : 'a =
 (* Split queries if needed according to --split_queries option. Note:
 sync SMT queries do not pass via this function. *)
 let do_solve_maybe_split use_env_msg tcenv q : unit =
+  (* If we are admiting queries, don't do anything, and bail out
+  right now to save time/memory *)
+  if Options.admit_smt_queries () then () else begin
     match Options.split_queries () with
     | Options.No -> do_solve false false use_env_msg tcenv q
     | Options.OnFailure ->
@@ -1224,7 +1237,7 @@ let do_solve_maybe_split use_env_msg tcenv q : unit =
     | Options.Always ->
       (* Set retrying=false so queries go through the full config list, etc. *)
       split_and_solve false use_env_msg tcenv q
-
+  end
 (* Attempt to discharge a VC through the SMT solver. Will
 automatically retry increasing fuel as needed, and perform quake testing
 (repeating the query to make sure it is robust). This function will
@@ -1286,7 +1299,7 @@ let solver = {
 
     solve=solve;
     solve_sync=solve_sync_bool;
-    finish=Z3.finish;
+    finish=(fun () -> ());
     refresh=Z3.refresh;
 }
 

@@ -470,9 +470,10 @@ let (is_constr : FStar_TypeChecker_Env.qninfo -> Prims.bool) =
             FStar_Syntax_Syntax.sigquals = uu___2;
             FStar_Syntax_Syntax.sigmeta = uu___3;
             FStar_Syntax_Syntax.sigattrs = uu___4;
-            FStar_Syntax_Syntax.sigopts = uu___5;_},
-          uu___6),
-         uu___7)
+            FStar_Syntax_Syntax.sigopens_and_abbrevs = uu___5;
+            FStar_Syntax_Syntax.sigopts = uu___6;_},
+          uu___7),
+         uu___8)
         -> true
     | uu___ -> false
 let (translate_univ :
@@ -1872,16 +1873,17 @@ and (translate_fv :
                            FStar_Syntax_Syntax.sigquals = uu___4;
                            FStar_Syntax_Syntax.sigmeta = uu___5;
                            FStar_Syntax_Syntax.sigattrs = uu___6;
-                           FStar_Syntax_Syntax.sigopts = uu___7;_},
+                           FStar_Syntax_Syntax.sigopens_and_abbrevs = uu___7;
+                           FStar_Syntax_Syntax.sigopts = uu___8;_},
                          _us_opt),
                         _rng)
                        ->
                        (debug1
-                          (fun uu___9 ->
-                             let uu___10 =
+                          (fun uu___10 ->
+                             let uu___11 =
                                FStar_Syntax_Print.fv_to_string fvar in
                              FStar_Compiler_Util.print1
-                               "(1) Decided to unfold %s\n" uu___10);
+                               "(1) Decided to unfold %s\n" uu___11);
                         (let lbm = find_let lbs fvar in
                          match lbm with
                          | FStar_Pervasives_Native.Some lb ->
@@ -1889,14 +1891,14 @@ and (translate_fv :
                                is_rec &&
                                  ((cfg.core_cfg).FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.zeta
                              then
-                               let uu___9 = let_rec_arity lb in
-                               (match uu___9 with
+                               let uu___10 = let_rec_arity lb in
+                               (match uu___10 with
                                 | (ar, lst) ->
-                                    let uu___10 =
-                                      let uu___11 =
+                                    let uu___11 =
+                                      let uu___12 =
                                         FStar_Syntax_Syntax.range_of_fv fvar in
-                                      mk_rt uu___11 in
-                                    FStar_Compiler_Effect.op_Less_Bar uu___10
+                                      mk_rt uu___12 in
+                                    FStar_Compiler_Effect.op_Less_Bar uu___11
                                       (FStar_TypeChecker_NBETerm.TopLevelRec
                                          (lb, ar, lst, [])))
                              else translate_letbinding cfg bs lb
@@ -1942,16 +1944,17 @@ and (translate_fv :
                            FStar_Syntax_Syntax.sigquals = uu___4;
                            FStar_Syntax_Syntax.sigmeta = uu___5;
                            FStar_Syntax_Syntax.sigattrs = uu___6;
-                           FStar_Syntax_Syntax.sigopts = uu___7;_},
+                           FStar_Syntax_Syntax.sigopens_and_abbrevs = uu___7;
+                           FStar_Syntax_Syntax.sigopts = uu___8;_},
                          _us_opt),
                         _rng)
                        ->
                        (debug1
-                          (fun uu___9 ->
-                             let uu___10 =
+                          (fun uu___10 ->
+                             let uu___11 =
                                FStar_Syntax_Print.fv_to_string fvar in
                              FStar_Compiler_Util.print1
-                               "(1) Decided to unfold %s\n" uu___10);
+                               "(1) Decided to unfold %s\n" uu___11);
                         (let lbm = find_let lbs fvar in
                          match lbm with
                          | FStar_Pervasives_Native.Some lb ->
@@ -1959,14 +1962,14 @@ and (translate_fv :
                                is_rec &&
                                  ((cfg.core_cfg).FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.zeta
                              then
-                               let uu___9 = let_rec_arity lb in
-                               (match uu___9 with
+                               let uu___10 = let_rec_arity lb in
+                               (match uu___10 with
                                 | (ar, lst) ->
-                                    let uu___10 =
-                                      let uu___11 =
+                                    let uu___11 =
+                                      let uu___12 =
                                         FStar_Syntax_Syntax.range_of_fv fvar in
-                                      mk_rt uu___11 in
-                                    FStar_Compiler_Effect.op_Less_Bar uu___10
+                                      mk_rt uu___12 in
+                                    FStar_Compiler_Effect.op_Less_Bar uu___11
                                       (FStar_TypeChecker_NBETerm.TopLevelRec
                                          (lb, ar, lst, [])))
                              else translate_letbinding cfg bs lb

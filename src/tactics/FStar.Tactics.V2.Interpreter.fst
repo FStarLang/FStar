@@ -603,6 +603,10 @@ let () =
 
       // reflection typechecker callbacks (part of the DSL framework)
 
+      mk_tac_step_2 0 "is_non_informative"
+        refl_is_non_informative RE.e_env RE.e_term (e_tuple2 (e_option e_unit) (e_list e_issue))
+        refl_is_non_informative NRE.e_env NRE.e_term NBET.(e_tuple2 (e_option e_unit) (e_list e_issue));
+
       mk_tac_step_3 0 "check_subtyping"
         refl_check_subtyping RE.e_env RE.e_term RE.e_term (e_tuple2 (e_option e_unit) (e_list e_issue))
         refl_check_subtyping NRE.e_env NRE.e_term NRE.e_term NBET.(e_tuple2 (e_option e_unit) (e_list e_issue));
@@ -611,17 +615,17 @@ let () =
         refl_check_equiv RE.e_env RE.e_term RE.e_term (e_tuple2 (e_option e_unit) (e_list e_issue))
         refl_check_equiv NRE.e_env NRE.e_term NRE.e_term NBET.(e_tuple2 (e_option e_unit) (e_list e_issue));
 
-      mk_tac_step_3 0 "core_compute_term_type"
-        refl_core_compute_term_type RE.e_env RE.e_term E.e_tot_or_ghost (e_tuple2 (e_option RE.e_term) (e_list e_issue))
-        refl_core_compute_term_type NRE.e_env NRE.e_term E.e_tot_or_ghost_nbe NBET.(e_tuple2 (e_option NRE.e_term) (e_list e_issue));
+      mk_tac_step_2 0 "core_compute_term_type"
+        refl_core_compute_term_type RE.e_env RE.e_term (e_tuple2 (e_option (e_tuple2 E.e_tot_or_ghost RE.e_term)) (e_list e_issue))
+        refl_core_compute_term_type NRE.e_env NRE.e_term NBET.(e_tuple2 (e_option (e_tuple2 E.e_tot_or_ghost_nbe NRE.e_term)) (e_list e_issue));
 
       mk_tac_step_4 0 "core_check_term"
         refl_core_check_term RE.e_env RE.e_term RE.e_term E.e_tot_or_ghost (e_tuple2 (e_option e_unit) (e_list e_issue))
         refl_core_check_term NRE.e_env NRE.e_term NRE.e_term E.e_tot_or_ghost_nbe NBET.(e_tuple2 (e_option e_unit) (e_list e_issue));
 
-      mk_tac_step_3 0 "tc_term"
-        refl_tc_term RE.e_env RE.e_term E.e_tot_or_ghost (e_tuple2 (e_option (e_tuple2 RE.e_term RE.e_term)) (e_list e_issue))
-        refl_tc_term NRE.e_env NRE.e_term E.e_tot_or_ghost_nbe NBET.(e_tuple2 (e_option (e_tuple2 NRE.e_term NRE.e_term)) (e_list e_issue));
+      mk_tac_step_2 0 "tc_term"
+        refl_tc_term RE.e_env RE.e_term (e_tuple2 (e_option (e_tuple2 RE.e_term (e_tuple2 E.e_tot_or_ghost RE.e_term))) (e_list e_issue))
+        refl_tc_term NRE.e_env NRE.e_term NBET.(e_tuple2 (e_option (e_tuple2 NRE.e_term (e_tuple2 E.e_tot_or_ghost_nbe NRE.e_term))) (e_list e_issue));
 
       mk_tac_step_2 0 "universe_of"
         refl_universe_of RE.e_env RE.e_term (e_tuple2 (e_option RE.e_universe) (e_list e_issue))
@@ -796,7 +800,8 @@ let run_tactic_on_ps'
 
         if !tacdbg then
             do_dump_proofstate ps "at the finish line";
-        (ps.goals@ps.smt_goals, ret)
+
+        (remaining_smt_goals, ret)
 
     | Failed (e, ps) ->
         do_dump_proofstate ps "at the time of failure";

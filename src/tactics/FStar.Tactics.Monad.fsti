@@ -75,6 +75,11 @@ val mapM : ('a -> tac 'b) -> list 'a -> tac (list 'b)
 (* iter combinator *)
 val iter_tac (f: 'a -> tac unit) (l:list 'a) : tac unit
 
+(* Defensive checks. Will only do anything if --defensive is on. If so,
+and some goal is ill-scoped, they will log a warning. *)
+val check_valid_goal (g:goal) : unit
+val check_valid_goals (gs:list goal) : unit
+
 (* Set the current set of goals / SMT goals *)
 val set_goals      : list goal -> tac unit
 val set_smt_goals  : list goal -> tac unit

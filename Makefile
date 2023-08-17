@@ -65,7 +65,7 @@ boot:
 	$(call msg, "DUNE BUILD")
 	$(Q)cd $(DUNE_SNAPSHOT) && dune build --profile release
 	$(call msg, "RAW INSTALL")
-	$(Q)cp ocaml/_build/default/fstar/main.exe $(FSTAR_CURDIR)/bin/fstar.exe
+	$(Q)install ocaml/_build/default/fstar/main.exe $(FSTAR_CURDIR)/bin/fstar.exe
 
 .PHONY: install
 install:

@@ -163,6 +163,7 @@ let defaults =
       ("eager_subtyping"              , Bool false);
       ("error_contexts"               , Bool false);
       ("expose_interfaces"            , Bool false);
+      ("ext"                          , List []);
       ("extract"                      , Unset);
       ("extract_all"                  , Bool false);
       ("extract_module"               , List []);
@@ -258,6 +259,7 @@ let defaults =
       ("z3seed"                       , Int 0);
       ("z3cliopt"                     , List []);
       ("z3smtopt"                     , List []);
+      ("z3version"                    , String "4.8.5");
       ("__no_positivity"              , Bool false);
       ("__tactics_nbe"                , Bool false);
       ("warn_error"                   , List []);
@@ -319,6 +321,7 @@ let set_verification_options o =
     "z3rlimit";
     "z3rlimit_factor";
     "z3seed";
+    "z3version";
     "trivial_pre_for_unannotated_effectful_fns";
   ] in
   List.iter (fun k -> set_option k (Util.smap_try_find o k |> Util.must)) verifopts
@@ -352,6 +355,7 @@ let get_dump_module             ()      = lookup_opt "dump_module"              
 let get_eager_subtyping         ()      = lookup_opt "eager_subtyping"          as_bool
 let get_error_contexts          ()      = lookup_opt "error_contexts"           as_bool
 let get_expose_interfaces       ()      = lookup_opt "expose_interfaces"        as_bool
+let get_ext                     ()      = lookup_opt "ext"                      (as_option (as_list as_string))
 let get_extract                 ()      = lookup_opt "extract"                  (as_option (as_list as_string))
 let get_extract_module          ()      = lookup_opt "extract_module"           (as_list as_string)
 let get_extract_namespace       ()      = lookup_opt "extract_namespace"        (as_list as_string)
@@ -441,6 +445,7 @@ let get_z3refresh               ()      = lookup_opt "z3refresh"                
 let get_z3rlimit                ()      = lookup_opt "z3rlimit"                 as_int
 let get_z3rlimit_factor         ()      = lookup_opt "z3rlimit_factor"          as_int
 let get_z3seed                  ()      = lookup_opt "z3seed"                   as_int
+let get_z3version               ()      = lookup_opt "z3version"                as_string
 let get_no_positivity           ()      = lookup_opt "__no_positivity"          as_bool
 let get_warn_error              ()      = lookup_opt "warn_error"               (as_list as_string)
 let get_use_nbe                 ()      = lookup_opt "use_nbe"                  as_bool
@@ -755,6 +760,13 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * string) 
         "error_contexts",
         BoolStr,
         "Print context information for each error or warning raised (default false)");
+
+       ( noshort,
+         "ext",
+         Accumulated (SimpleStr "One or more semicolon separated occurrences of colon-separated pairs, \
+                                 e.g., 'pulse:verbose;pulse:debug;foo:bar'"),
+        "\n\t\tThese options are typically interpreted by extensions. \n\t\t\
+         An entry 'e' that is not of the form 'a:b' is treated as 'e:\"\"', i.e., 'e' associated with the empty string");
 
        ( noshort,
          "extract",
@@ -1287,6 +1299,11 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * string) 
         "Set the Z3 random seed (default 0)");
 
        ( noshort,
+        "z3version",
+        SimpleStr "version",
+        "Set the version of Z3 that is to be used. Default: 4.8.5");
+
+       ( noshort,
         "__no_positivity",
         WithSideEffect ((fun _ -> if warn_unsafe then option_warning_callback "__no_positivity"), Const (Bool true)),
         "Don't check positivity of inductive types");
@@ -1378,6 +1395,7 @@ let settable = function
     | "hint_file"
     | "hint_info"
     | "fuel"
+    | "ext"
     | "ifuel"
     | "initial_fuel"
     | "initial_ifuel"
@@ -1440,6 +1458,7 @@ let settable = function
     | "z3rlimit"
     | "z3rlimit_factor"
     | "z3seed"
+    | "z3version"
     | "trivial_pre_for_unannotated_effectful_fns"
     | "profile_group_by_decl"
     | "profile_component"
@@ -1800,6 +1819,7 @@ let retry                        () = get_retry                       ()
 let reuse_hint_for               () = get_reuse_hint_for              ()
 let report_assumes               () = get_report_assumes              ()
 let silent                       () = get_silent                      ()
+let smt                          () = get_smt                         ()
 let smtencoding_elim_box         () = get_smtencoding_elim_box        ()
 let smtencoding_nl_arith_native  () = get_smtencoding_nl_arith_repr () = "native"
 let smtencoding_nl_arith_wrapped () = get_smtencoding_nl_arith_repr () = "wrapped"
@@ -1839,15 +1859,13 @@ let using_facts_from             () =
     | Some ns -> parse_settings ns
 let warn_default_effects         () = get_warn_default_effects        ()
 let warn_error                   () = String.concat " " (get_warn_error())
-let z3_exe                       () = match get_smt () with
-                                    | None -> Platform.exe "z3"
-                                    | Some s -> s
 let z3_cliopt                    () = get_z3cliopt                    ()
 let z3_smtopt                    () = get_z3smtopt                    ()
 let z3_refresh                   () = get_z3refresh                   ()
 let z3_rlimit                    () = get_z3rlimit                    ()
 let z3_rlimit_factor             () = get_z3rlimit_factor             ()
 let z3_seed                      () = get_z3seed                      ()
+let z3_version                   () = get_z3version                   ()
 let no_positivity                () = get_no_positivity               ()
 let use_nbe                      () = get_use_nbe                     ()
 let use_nbe_for_extraction       () = get_use_nbe_for_extraction      ()
@@ -2112,6 +2130,7 @@ let get_vconfig () =
     z3rlimit                                  = get_z3rlimit ();
     z3rlimit_factor                           = get_z3rlimit_factor ();
     z3seed                                    = get_z3seed ();
+    z3version                                 = get_z3version ();
     trivial_pre_for_unannotated_effectful_fns = get_trivial_pre_for_unannotated_effectful_fns ();
     reuse_hint_for                            = get_reuse_hint_for ();
   }
@@ -2152,3 +2171,24 @@ let set_vconfig (vcfg:vconfig) : unit =
   set_option "trivial_pre_for_unannotated_effectful_fns" (Bool vcfg.trivial_pre_for_unannotated_effectful_fns);
   set_option "reuse_hint_for"                            (option_as String vcfg.reuse_hint_for);
   ()
+
+// --ext "ext1:opt1;ext2:opt2;ext3:opt3"
+// An entry e that is not of the form a:b
+// is treated as e:""
+let parse_ext (s:string) : list (string & string) =
+  let exts = Util.split s ";" in
+  List.collect (fun s -> 
+    match Util.split s ":" with
+    | [k;v] -> [(k,v)]
+    | _ -> [s, ""]) exts
+
+let all_ext_options () : list (string & string) =
+  let ext = get_ext () in
+  match ext with
+  | None -> []
+  | Some strs ->
+    strs |> List.collect parse_ext
+
+let ext_options (ext:string) : list string =
+  let exts = all_ext_options () in
+  List.filter_map (fun (k,v) -> if k = ext then Some v else None) exts

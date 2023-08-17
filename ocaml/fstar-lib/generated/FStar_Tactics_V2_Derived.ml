@@ -5316,6 +5316,8 @@ let (smt_sync' :
                            FStar_VConfig.z3rlimit_factor =
                              (vcfg.FStar_VConfig.z3rlimit_factor);
                            FStar_VConfig.z3seed = (vcfg.FStar_VConfig.z3seed);
+                           FStar_VConfig.z3version =
+                             (vcfg.FStar_VConfig.z3version);
                            FStar_VConfig.trivial_pre_for_unannotated_effectful_fns
                              =
                              (vcfg.FStar_VConfig.trivial_pre_for_unannotated_effectful_fns);
