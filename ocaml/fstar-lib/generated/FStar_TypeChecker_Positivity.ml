@@ -483,6 +483,8 @@ let (mark_uniform_type_parameters :
                             (tc.FStar_Syntax_Syntax.sigmeta);
                           FStar_Syntax_Syntax.sigattrs =
                             (tc.FStar_Syntax_Syntax.sigattrs);
+                          FStar_Syntax_Syntax.sigopens_and_abbrevs =
+                            (tc.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                           FStar_Syntax_Syntax.sigopts =
                             (tc.FStar_Syntax_Syntax.sigopts)
                         })))) in
@@ -516,6 +518,8 @@ let (mark_uniform_type_parameters :
                    (sig1.FStar_Syntax_Syntax.sigmeta);
                  FStar_Syntax_Syntax.sigattrs =
                    (sig1.FStar_Syntax_Syntax.sigattrs);
+                 FStar_Syntax_Syntax.sigopens_and_abbrevs =
+                   (sig1.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                  FStar_Syntax_Syntax.sigopts =
                    (sig1.FStar_Syntax_Syntax.sigopts)
                })

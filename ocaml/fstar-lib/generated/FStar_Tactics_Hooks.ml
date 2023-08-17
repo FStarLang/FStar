@@ -1946,6 +1946,8 @@ let (splice :
                                         FStar_Syntax_Syntax.sigmeta =
                                           FStar_Syntax_Syntax.default_sigmeta;
                                         FStar_Syntax_Syntax.sigattrs = [];
+                                        FStar_Syntax_Syntax.sigopens_and_abbrevs
+                                          = [];
                                         FStar_Syntax_Syntax.sigopts =
                                           FStar_Pervasives_Native.None
                                       }])
@@ -2044,6 +2046,9 @@ let (splice :
                                               (se.FStar_Syntax_Syntax.sigmeta);
                                             FStar_Syntax_Syntax.sigattrs =
                                               (se.FStar_Syntax_Syntax.sigattrs);
+                                            FStar_Syntax_Syntax.sigopens_and_abbrevs
+                                              =
+                                              (se.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                                             FStar_Syntax_Syntax.sigopts =
                                               (se.FStar_Syntax_Syntax.sigopts)
                                           }
@@ -2197,6 +2202,9 @@ let (splice :
                                                 (se.FStar_Syntax_Syntax.sigmeta);
                                               FStar_Syntax_Syntax.sigattrs =
                                                 (se.FStar_Syntax_Syntax.sigattrs);
+                                              FStar_Syntax_Syntax.sigopens_and_abbrevs
+                                                =
+                                                (se.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                                               FStar_Syntax_Syntax.sigopts =
                                                 (se.FStar_Syntax_Syntax.sigopts)
                                             })) in

@@ -828,6 +828,8 @@ and (on_sub_sigelt :
         FStar_Syntax_Syntax.sigquals = (se.FStar_Syntax_Syntax.sigquals);
         FStar_Syntax_Syntax.sigmeta = (se.FStar_Syntax_Syntax.sigmeta);
         FStar_Syntax_Syntax.sigattrs = uu___1;
+        FStar_Syntax_Syntax.sigopens_and_abbrevs =
+          (se.FStar_Syntax_Syntax.sigopens_and_abbrevs);
         FStar_Syntax_Syntax.sigopts = (se.FStar_Syntax_Syntax.sigopts)
       }
 let (tie_bu : vfs_t -> vfs_t FStar_Compiler_Effect.ref) =
