@@ -2734,6 +2734,7 @@ let binder_ident (b:binder) : option ident =
 let binder_idents (bs:list binder) : list ident =
   List.collect (fun b -> FStar.Common.list_of_option (binder_ident b)) bs
 
+
 let mk_data_discriminators quals env datas attrs =
     let quals = quals |> List.filter (function
         | S.NoExtract
@@ -2753,6 +2754,7 @@ let mk_data_discriminators quals env datas attrs =
           sigmeta = default_sigmeta;
           sigattrs = attrs;
           sigopts = None;
+          sigopens_and_abbrevs = DsEnv.opens_and_abbrevs env
         })
 
 let mk_indexed_projector_names iquals fvq attrs env lid (fields:list S.binder) =
@@ -2785,7 +2787,8 @@ let mk_indexed_projector_names iquals fvq attrs env lid (fields:list S.binder) =
                      sigrng = range_of_lid field_name;
                      sigmeta = default_sigmeta ;
                      sigattrs = attrs;
-                     sigopts = None; } in
+                     sigopts = None;
+                     sigopens_and_abbrevs = opens_and_abbrevs env } in
         if only_decl
         then [decl] //only the signature
         else
@@ -2805,7 +2808,9 @@ let mk_indexed_projector_names iquals fvq attrs env lid (fields:list S.binder) =
                          sigrng = p;
                          sigmeta = default_sigmeta;
                          sigattrs = attrs;
-                         sigopts = None; } in
+                         sigopts = None;
+                         sigopens_and_abbrevs = opens_and_abbrevs env
+                        } in
             if no_decl then [impl] else [decl;impl]) |> List.flatten
 
 let mk_data_projector_names iquals env se : list sigelt =
@@ -2851,7 +2856,9 @@ let mk_typ_abbrev env d lid uvs typars kopt t lids quals rng =
       sigrng = rng;
       sigmeta = default_sigmeta ;
       sigattrs = U.deduplicate_terms (val_attrs @ attrs);
-      sigopts = None; }
+      sigopts = None;
+      sigopens_and_abbrevs = opens_and_abbrevs env
+    }
 
 let rec desugar_tycon env (d: AST.decl) (d_attrs:list S.term) quals tcs : (env_t * sigelts) =
   let rng = d.drange in
@@ -2942,7 +2949,9 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs:list S.term) quals tcs : (env_t
                  sigrng = range_of_id id;
                  sigmeta = default_sigmeta;
                  sigattrs = d_attrs;
-                 sigopts = None } in
+                 sigopts = None;
+                 sigopens_and_abbrevs = opens_and_abbrevs env
+               } in
       let _env, _ = Env.push_top_level_rec_binding _env id S.delta_constant in
       let _env2, _ = Env.push_top_level_rec_binding _env' id S.delta_constant in
       _env, _env2, se, tconstr
@@ -3024,7 +3033,9 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs:list S.term) quals tcs : (env_t
                    sigrng = range_of_id id;
                    sigmeta = default_sigmeta  ;
                    sigattrs = [];
-                   sigopts = None; }
+                   sigopts = None;
+                   sigopens_and_abbrevs = opens_and_abbrevs env
+                  }
             else let t = desugar_typ env' t in
                  mk_typ_abbrev env d qlid [] typars kopt t [qlid] quals (range_of_id id) in
 
@@ -3108,7 +3119,9 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs:list S.term) quals tcs : (env_t
                                             sigrng = range_of_lid name;
                                             sigmeta = default_sigmeta  ;
                                             sigattrs = U.deduplicate_terms (val_attrs @ d_attrs @ map (desugar_term env) cons_attrs);
-                                            sigopts = None; }))))
+                                            sigopts = None;
+                                            sigopens_and_abbrevs = opens_and_abbrevs env
+                              }))))
           in
           if Options.debug_at_level_no_module (Options.Other "attrs")
           then (
@@ -3128,7 +3141,9 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs:list S.term) quals tcs : (env_t
                                  sigrng = range_of_lid tname;
                                  sigmeta = default_sigmeta  ;
                                  sigattrs = U.deduplicate_terms (val_attrs @ d_attrs);
-                                 sigopts = None; })::constrs
+                                 sigopts = None;
+                                 sigopens_and_abbrevs = opens_and_abbrevs env
+                })::constrs
         | _ -> failwith "impossible")
       in
       let sigelts = tps_sigelts |> List.map (fun (_, se) -> se) in
@@ -3181,7 +3196,9 @@ let push_reflect_effect env quals (effect_name:Ident.lid) range =
                            sigquals = quals;
                            sigmeta = default_sigmeta  ;
                            sigattrs = [];
-                           sigopts = None; } in
+                           sigopts = None;
+                           sigopens_and_abbrevs = opens_and_abbrevs env
+                         } in
          Env.push_sigelt env refl_decl // FIXME: Add docs to refl_decl?
     else env
 
@@ -3469,6 +3486,7 @@ let rec desugar_effect env d (d_attrs:list S.term) (quals: qualifiers) (is_layer
       sigmeta = default_sigmeta  ;
       sigattrs = d_attrs;
       sigopts = None;
+      sigopens_and_abbrevs = opens_and_abbrevs env
     }) in
 
     let env = push_sigelt env0 se in
@@ -3543,7 +3561,9 @@ and desugar_redefine_effect env d d_attrs trans_qual quals eff_name eff_binders 
         sigrng = d.drange;
         sigmeta = default_sigmeta  ;
         sigattrs = d_attrs;
-        sigopts = None; }
+        sigopts = None;
+        sigopens_and_abbrevs = opens_and_abbrevs env
+      }
     in
     let monad_env = env in
     let env = push_sigelt env0 se in
@@ -3561,7 +3581,9 @@ and desugar_redefine_effect env d d_attrs trans_qual quals eff_name eff_binders 
                                sigrng = d.drange;
                                sigmeta = default_sigmeta  ;
                                sigattrs = [];
-                               sigopts = None; } in
+                               sigopts = None;
+                               sigopens_and_abbrevs = opens_and_abbrevs env
+                              } in
              push_sigelt env refl_decl
         else env in
     env, [se]
@@ -3598,7 +3620,9 @@ and desugar_decl_maybe_fail_attr env (d: decl): (env_t * sigelts) =
                    sigrng = d.drange;
                    sigmeta = default_sigmeta;
                    sigattrs = attrs;
-                   sigopts = None; } in
+                   sigopts = None;
+                   sigopens_and_abbrevs = opens_and_abbrevs env
+                  } in
         env0, [se]
 
       | errs, ropt -> (* failed! check that it failed as expected *)
@@ -3642,7 +3666,9 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
                sigrng = d.drange;
                sigmeta = default_sigmeta;
                sigattrs = d_attrs;
-               sigopts = None; } in
+               sigopts = None;
+               sigopens_and_abbrevs = opens_and_abbrevs env
+              } in
     env, [se]
 
   | TopLevelModule id -> env, []
@@ -3761,7 +3787,8 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
              sigrng = d.drange;
              sigmeta = default_sigmeta;
              sigattrs = [];
-             sigopts = None; }]
+             sigopts = None;
+             sigopens_and_abbrevs = opens_and_abbrevs env }]
         | _ -> []
     in
     let ses, extra =
@@ -3849,7 +3876,9 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
                     sigrng = d.drange;
                     sigmeta = default_sigmeta;
                     sigattrs = U.deduplicate_terms (val_attrs @ top_attrs);
-                    sigopts = None; } in
+                    sigopts = None;
+                    sigopens_and_abbrevs = opens_and_abbrevs env
+                   } in
           let env = push_sigelt env s in
           env, [s]
         | _ -> failwith "Desugaring a let did not produce a let"
@@ -3947,7 +3976,9 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
             sigrng = d.drange;
             sigmeta = default_sigmeta  ;
             sigattrs = d_attrs;
-            sigopts = None; }]
+            sigopts = None;
+            sigopens_and_abbrevs = opens_and_abbrevs env
+             }]
 
   | Val(id, t) ->
     let quals = d.quals in
@@ -3963,7 +3994,8 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
                sigrng = d.drange;
                sigmeta = default_sigmeta  ;
                sigattrs = d_attrs;
-               sigopts = None; } in
+               sigopts = None;
+               sigopens_and_abbrevs = opens_and_abbrevs env } in
     let env = push_sigelt env se in
     env, [se]
 
@@ -3983,13 +4015,15 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
                sigrng = d.drange;
                sigmeta = default_sigmeta  ;
                sigattrs = top_attrs;
-               sigopts = None; } in
+               sigopts = None;
+               sigopens_and_abbrevs = opens_and_abbrevs env } in
     let se' = { sigel = Sig_bundle {ses=[se]; lids=[l]};
                 sigquals = qual;
                 sigrng = d.drange;
                 sigmeta = default_sigmeta  ;
                 sigattrs = top_attrs;
-                sigopts = None; } in
+                sigopts = None;
+                sigopens_and_abbrevs = opens_and_abbrevs env } in
     let env = push_sigelt env se' in
     let data_ops = mk_data_projector_names [] env se in
     let discs = mk_data_discriminators [] env [l] top_attrs in
@@ -4030,7 +4064,8 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
                     sigrng = d.drange;
                     sigmeta = default_sigmeta  ;
                     sigattrs = top_attrs;
-                    sigopts = None} in
+                    sigopts = None;
+                    sigopens_and_abbrevs = opens_and_abbrevs env } in
          env, [se]
     else
       (match l.lift_op with
@@ -4048,7 +4083,8 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
            sigrng = d.drange;
            sigmeta = default_sigmeta;
            sigattrs = top_attrs;
-           sigopts = None}]
+           sigopts = None;
+           sigopens_and_abbrevs = opens_and_abbrevs env}]
        | _ -> failwith "Impossible! unexpected lift_op for lift to a layered effect")
 
   | Polymonadic_bind (m_eff, n_eff, p_eff, bind) ->
@@ -4068,7 +4104,8 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
       sigrng = d.drange;
       sigmeta = default_sigmeta;
       sigattrs = top_attrs;
-      sigopts = None }]
+      sigopts = None;
+      sigopens_and_abbrevs = opens_and_abbrevs env }]
 
   | Polymonadic_subcomp (m_eff, n_eff, subcomp) ->
     let m = lookup_effect_lid env m_eff d.drange in
@@ -4085,7 +4122,8 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
       sigrng = d.drange;
       sigmeta = default_sigmeta;
       sigattrs = top_attrs;
-      sigopts = None }]
+      sigopts = None;
+      sigopens_and_abbrevs = opens_and_abbrevs env }]
 
   | Splice (is_typed, ids, t) ->
     let t = desugar_term env t in
@@ -4095,7 +4133,8 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
                sigrng = d.drange;
                sigmeta = default_sigmeta;
                sigattrs = top_attrs;
-               sigopts = None; } in
+               sigopts = None;
+               sigopens_and_abbrevs = opens_and_abbrevs env } in
     let env = push_sigelt env se in
     env, [se]
 

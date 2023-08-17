@@ -39,7 +39,7 @@ type either_replst = either repl_state repl_state
 // Name tracking; taken directly from IDE
 type name_tracking_event =
 | NTAlias of lid (* host *) * ident (* alias *) * lid (* aliased *)
-| NTOpen of lid (* host *) * DsEnv.open_module_or_namespace (* opened *)
+| NTOpen of lid (* host *) * FStar.Syntax.Syntax.open_module_or_namespace (* opened *)
 | NTInclude of lid (* host *) * lid (* included *)
 | NTBinding of either FStar.Syntax.Syntax.binding TcEnv.sig_binding
 

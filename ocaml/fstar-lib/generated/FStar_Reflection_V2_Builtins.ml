@@ -679,6 +679,8 @@ let (set_sigelt_attrs :
         FStar_Syntax_Syntax.sigquals = (se.FStar_Syntax_Syntax.sigquals);
         FStar_Syntax_Syntax.sigmeta = (se.FStar_Syntax_Syntax.sigmeta);
         FStar_Syntax_Syntax.sigattrs = attrs;
+        FStar_Syntax_Syntax.sigopens_and_abbrevs =
+          (se.FStar_Syntax_Syntax.sigopens_and_abbrevs);
         FStar_Syntax_Syntax.sigopts = (se.FStar_Syntax_Syntax.sigopts)
       }
 let (rd_to_syntax_qual :
@@ -782,6 +784,8 @@ let (set_sigelt_quals :
         FStar_Syntax_Syntax.sigquals = uu___;
         FStar_Syntax_Syntax.sigmeta = (se.FStar_Syntax_Syntax.sigmeta);
         FStar_Syntax_Syntax.sigattrs = (se.FStar_Syntax_Syntax.sigattrs);
+        FStar_Syntax_Syntax.sigopens_and_abbrevs =
+          (se.FStar_Syntax_Syntax.sigopens_and_abbrevs);
         FStar_Syntax_Syntax.sigopts = (se.FStar_Syntax_Syntax.sigopts)
       }
 let (sigelt_opts :
@@ -829,8 +833,9 @@ let (inspect_sigelt :
                 FStar_Syntax_Syntax.sigquals = uu___6;
                 FStar_Syntax_Syntax.sigmeta = uu___7;
                 FStar_Syntax_Syntax.sigattrs = uu___8;
-                FStar_Syntax_Syntax.sigopts = uu___9;_}
-              -> let uu___10 = FStar_Ident.path_of_lid lid1 in (uu___10, cty)
+                FStar_Syntax_Syntax.sigopens_and_abbrevs = uu___9;
+                FStar_Syntax_Syntax.sigopts = uu___10;_}
+              -> let uu___11 = FStar_Ident.path_of_lid lid1 in (uu___11, cty)
           | uu___3 ->
               failwith "impossible: inspect_sigelt: did not find ctor" in
         let uu___2 =
@@ -947,6 +952,8 @@ let (pack_sigelt :
               (se.FStar_Syntax_Syntax.sigquals));
             FStar_Syntax_Syntax.sigmeta = (se.FStar_Syntax_Syntax.sigmeta);
             FStar_Syntax_Syntax.sigattrs = (se.FStar_Syntax_Syntax.sigattrs);
+            FStar_Syntax_Syntax.sigopens_and_abbrevs =
+              (se.FStar_Syntax_Syntax.sigopens_and_abbrevs);
             FStar_Syntax_Syntax.sigopts = (se.FStar_Syntax_Syntax.sigopts)
           }))
     | FStar_Reflection_V2_Data.Sg_Val (nm, us_names, ty) ->
