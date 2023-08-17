@@ -3532,7 +3532,7 @@ let maybe_unfold_head_fv (env:Env.env) (head:term)
       match (SS.compress head).n with
       | Tm_uinst ({n=Tm_fvar fv}, us) -> Some (fv, us)
       | Tm_fvar fv -> Some (fv, [])
-      | _ -> failwith "Impossible: maybe_unfold_head_fv is called with a non fvar/uinst"
+      | _ -> None
     in
     match fv_us_opt with
     | None -> None
@@ -3553,9 +3553,12 @@ let rec maybe_unfold_aux (env:Env.env) (t:term) : option term =
   | Tm_uinst _ -> maybe_unfold_head_fv env t
   | _ ->
     let head, args = U.leftmost_head_and_args t in
-    match maybe_unfold_aux env head with
-    | None -> None
-    | Some head -> S.mk_Tm_app head args t.pos |> Some
+    if args = []
+    then maybe_unfold_head_fv env head
+    else
+      match maybe_unfold_aux env head with
+      | None -> None
+      | Some head -> S.mk_Tm_app head args t.pos |> Some
 
 let maybe_unfold_head (env:Env.env) (t:term) : option term =
   BU.map_option
