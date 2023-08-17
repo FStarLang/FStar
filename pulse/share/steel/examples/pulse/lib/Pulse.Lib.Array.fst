@@ -30,8 +30,8 @@ fn compare' (#t:eqtype) (l:US.t) (a1 a2:larray t (US.v l))
     else { false } )
   invariant b. exists (vi:US.t). ( 
     R.pts_to i vi **
-    pts_to a1 #'p1 's1 **
-    pts_to a2 #'p2 's2 **
+    A.pts_to a1 #'p1 's1 **
+    A.pts_to a2 #'p2 's2 **
     pure (vi <= l
        /\ (b == (vi < l && Seq.index 's1 (US.v vi) = Seq.index 's2 (US.v vi)))
        /\ (forall (i:nat). i < US.v vi ==> Seq.index 's1 i == Seq.index 's2 i)))

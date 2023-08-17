@@ -14,6 +14,7 @@ let is_full_array = A.is_full_array
 
 [@@"__reduce__"; "__steel_reduce__"]
 let pts_to #a (r:array a) (#[exact (`full_perm)] p:perm) (v:FStar.Seq.seq a) = A.pts_to r p v
+let pts_to_len (#t:Type0) (a:array t) (#p:perm) (#x:Seq.seq t) = admit()
 
 let alloc' (#elt:Type) (x:elt) (n:SZ.t)
   : stt (array elt) 

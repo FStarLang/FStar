@@ -44,3 +44,23 @@ val with_local
   (body:(r:ref a) -> stt ret_t (pre ** pts_to r init)
                               (fun v -> post v ** exists_ (pts_to r)))
   : stt ret_t pre post
+
+let half_perm = half_perm full_perm
+
+val share (#a:Type0) (#uses:_) (r:ref a) (#x:a)
+  : stt_ghost unit uses
+    (pts_to r x)
+    (fun _ -> pts_to r #half_perm x ** pts_to r #half_perm x)
+
+val gather (#a:Type0) (#uses:_) (r:ref a) (#x:a)
+  : stt_ghost unit uses
+    (pts_to r #half_perm x ** pts_to r #half_perm x)
+    (fun _ -> pts_to r x)
+
+val pts_to_injective_eq (#a:_)
+                        (#p #q:_)
+                        (#v0 #v1:a)
+                        (r:ref a)
+  : stt_ghost unit emp_inames
+      (pts_to r #p v0 ** pts_to r #q v1)
+      (fun _ -> pts_to r #p v0 ** pts_to r #q v0 ** pure (v0 == v1))

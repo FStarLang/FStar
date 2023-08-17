@@ -7,7 +7,6 @@ open EngineTypes
 open EngineCore
 open L0Types
 open L0Core
-module L = Pulse.Lib.SpinLock
 module A = Pulse.Lib.Array
 module R = Pulse.Lib.Reference
 module US = FStar.SizeT
