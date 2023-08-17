@@ -1081,8 +1081,8 @@ let rec (specs_with_types :
     (FStar_Getopt.noshort, "ext",
       (Accumulated
          (SimpleStr
-            "One or more semicolon separated occurrences of colon-separated pairs, e.g., 'pulse:verbose;pulse:debug;foo:bar', typically interpreted by extensions")),
-      "One or more semicolon separated occurrences of colon-separated pairs, e.g., 'pulse:verbose;pulse:debug;foo:bar', typically interpreted by extensions. \nAn entry 'e' that is not of the form 'a:b' is treated as 'e:\"\"', i.e., 'e' associated with the empty string");
+            "One or more semicolon separated occurrences of colon-separated pairs, e.g., 'pulse:verbose;pulse:debug;foo:bar'")),
+      "\n\t\tThese options are typically interpreted by extensions. \n\t\tAn entry 'e' that is not of the form 'a:b' is treated as 'e:\"\"', i.e., 'e' associated with the empty string");
     (FStar_Getopt.noshort, "extract",
       (Accumulated
          (SimpleStr
