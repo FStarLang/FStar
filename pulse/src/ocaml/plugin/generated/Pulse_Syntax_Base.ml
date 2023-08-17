@@ -248,7 +248,9 @@ and st_term'__Tm_Bind__payload =
   binder: binder ;
   head1: st_term ;
   body1: st_term }
-and st_term'__Tm_TotBind__payload = {
+and st_term'__Tm_TotBind__payload =
+  {
+  binder1: binder ;
   head2: term ;
   body2: st_term }
 and st_term'__Tm_If__payload =
@@ -286,7 +288,7 @@ and st_term'__Tm_Par__payload =
   post2: term }
 and st_term'__Tm_WithLocal__payload =
   {
-  binder1: binder ;
+  binder2: binder ;
   initializer1: term ;
   body4: st_term }
 and st_term'__Tm_Rewrite__payload = {
@@ -501,9 +503,10 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
          { binder = b2; head1 = t21; body1 = k2;_}) ->
           ((eq_tm b1.binder_ty b2.binder_ty) && (eq_st_term t11 t21)) &&
             (eq_st_term k1 k2)
-      | (Tm_TotBind { head2 = t11; body2 = k1;_}, Tm_TotBind
-         { head2 = t21; body2 = k2;_}) ->
-          (eq_tm t11 t21) && (eq_st_term k1 k2)
+      | (Tm_TotBind { binder1 = b1; head2 = t11; body2 = k1;_}, Tm_TotBind
+         { binder1 = b2; head2 = t21; body2 = k2;_}) ->
+          ((eq_tm b1.binder_ty b2.binder_ty) && (eq_tm t11 t21)) &&
+            (eq_st_term k1 k2)
       | (Tm_IntroPure { p = p1;_}, Tm_IntroPure { p = p2;_}) -> eq_tm p1 p2
       | (Tm_IntroExists { p2 = p1; witnesses = l1;_}, Tm_IntroExists
          { p2; witnesses = l2;_}) -> (eq_tm p1 p2) && (eq_tm_list l1 l2)
@@ -538,8 +541,8 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
               && (eq_tm preR1 preR2))
              && (eq_st_term eR1 eR2))
             && (eq_tm postR1 postR2)
-      | (Tm_WithLocal { binder1 = x1; initializer1 = e1; body4 = b1;_},
-         Tm_WithLocal { binder1 = x2; initializer1 = e2; body4 = b2;_}) ->
+      | (Tm_WithLocal { binder2 = x1; initializer1 = e1; body4 = b1;_},
+         Tm_WithLocal { binder2 = x2; initializer1 = e2; body4 = b2;_}) ->
           ((eq_tm x1.binder_ty x2.binder_ty) && (eq_tm e1 e2)) &&
             (eq_st_term b1 b2)
       | (Tm_Rewrite { t1 = l1; t2 = r1;_}, Tm_Rewrite { t1 = l2; t2 = r2;_})

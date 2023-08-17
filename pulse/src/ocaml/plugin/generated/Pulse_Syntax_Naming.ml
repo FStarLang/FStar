@@ -84,8 +84,12 @@ let rec (freevars_st :
           (FStar_Set.union (freevars binder.Pulse_Syntax_Base.binder_ty)
              (freevars_st head)) (freevars_st body)
     | Pulse_Syntax_Base.Tm_TotBind
-        { Pulse_Syntax_Base.head2 = head; Pulse_Syntax_Base.body2 = body;_}
-        -> FStar_Set.union (freevars head) (freevars_st body)
+        { Pulse_Syntax_Base.binder1 = binder; Pulse_Syntax_Base.head2 = head;
+          Pulse_Syntax_Base.body2 = body;_}
+        ->
+        FStar_Set.union
+          (FStar_Set.union (freevars binder.Pulse_Syntax_Base.binder_ty)
+             (freevars head)) (freevars_st body)
     | Pulse_Syntax_Base.Tm_If
         { Pulse_Syntax_Base.b1 = b; Pulse_Syntax_Base.then_ = then_;
           Pulse_Syntax_Base.else_ = else_; Pulse_Syntax_Base.post1 = post;_}
@@ -127,7 +131,7 @@ let rec (freevars_st :
           (FStar_Set.union (freevars pre2)
              (FStar_Set.union (freevars_st body2) (freevars post2)))
     | Pulse_Syntax_Base.Tm_WithLocal
-        { Pulse_Syntax_Base.binder1 = binder;
+        { Pulse_Syntax_Base.binder2 = binder;
           Pulse_Syntax_Base.initializer1 = initializer1;
           Pulse_Syntax_Base.body4 = body;_}
         ->
@@ -230,8 +234,11 @@ let rec (ln_st' : Pulse_Syntax_Base.st_term -> Prims.int -> Prims.bool) =
           ((ln' binder.Pulse_Syntax_Base.binder_ty i) && (ln_st' head i)) &&
             (ln_st' body (i + Prims.int_one))
       | Pulse_Syntax_Base.Tm_TotBind
-          { Pulse_Syntax_Base.head2 = head; Pulse_Syntax_Base.body2 = body;_}
-          -> (ln' head i) && (ln_st' body (i + Prims.int_one))
+          { Pulse_Syntax_Base.binder1 = binder;
+            Pulse_Syntax_Base.head2 = head; Pulse_Syntax_Base.body2 = body;_}
+          ->
+          ((ln' binder.Pulse_Syntax_Base.binder_ty i) && (ln' head i)) &&
+            (ln_st' body (i + Prims.int_one))
       | Pulse_Syntax_Base.Tm_If
           { Pulse_Syntax_Base.b1 = b; Pulse_Syntax_Base.then_ = then_;
             Pulse_Syntax_Base.else_ = else_;
@@ -271,7 +278,7 @@ let rec (ln_st' : Pulse_Syntax_Base.st_term -> Prims.int -> Prims.bool) =
              && (ln_st' body2 i))
             && (ln' post2 (i + Prims.int_one))
       | Pulse_Syntax_Base.Tm_WithLocal
-          { Pulse_Syntax_Base.binder1 = binder;
+          { Pulse_Syntax_Base.binder2 = binder;
             Pulse_Syntax_Base.initializer1 = initializer1;
             Pulse_Syntax_Base.body4 = body;_}
           ->
@@ -560,11 +567,13 @@ let rec (subst_st_term :
                   (subst_st_term body (shift_subst ss))
               }
         | Pulse_Syntax_Base.Tm_TotBind
-            { Pulse_Syntax_Base.head2 = head;
+            { Pulse_Syntax_Base.binder1 = binder;
+              Pulse_Syntax_Base.head2 = head;
               Pulse_Syntax_Base.body2 = body;_}
             ->
             Pulse_Syntax_Base.Tm_TotBind
               {
+                Pulse_Syntax_Base.binder1 = (subst_binder binder ss);
                 Pulse_Syntax_Base.head2 = (subst_term head ss);
                 Pulse_Syntax_Base.body2 =
                   (subst_st_term body (shift_subst ss))
@@ -641,13 +650,13 @@ let rec (subst_st_term :
                 Pulse_Syntax_Base.post2 = (subst_term post2 (shift_subst ss))
               }
         | Pulse_Syntax_Base.Tm_WithLocal
-            { Pulse_Syntax_Base.binder1 = binder;
+            { Pulse_Syntax_Base.binder2 = binder;
               Pulse_Syntax_Base.initializer1 = initializer1;
               Pulse_Syntax_Base.body4 = body;_}
             ->
             Pulse_Syntax_Base.Tm_WithLocal
               {
-                Pulse_Syntax_Base.binder1 = (subst_binder binder ss);
+                Pulse_Syntax_Base.binder2 = (subst_binder binder ss);
                 Pulse_Syntax_Base.initializer1 = (subst_term initializer1 ss);
                 Pulse_Syntax_Base.body4 =
                   (subst_st_term body (shift_subst ss))

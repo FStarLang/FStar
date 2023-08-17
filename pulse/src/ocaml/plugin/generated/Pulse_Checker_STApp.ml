@@ -1066,7 +1066,7 @@ let (check :
                                                                     (Prims.of_int (131))
                                                                     (Prims.of_int (28))
                                                                     (Prims.of_int (131))
-                                                                    (Prims.of_int (78)))))
+                                                                    (Prims.of_int (89)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -1076,7 +1076,7 @@ let (check :
                                                                     (Prims.of_int (178))
                                                                     (Prims.of_int (104)))))
                                                                     (Obj.magic
-                                                                    (Pulse_Checker_Pure.check_term_with_expected_type
+                                                                    (Pulse_Checker_Pure.check_term_with_expected_type_and_effect
                                                                     g arg
                                                                     eff_arg
                                                                     formal))
@@ -1105,7 +1105,7 @@ let (check :
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.STApp.fst"
                                                                     (Prims.of_int (131))
-                                                                    (Prims.of_int (81))
+                                                                    (Prims.of_int (92))
                                                                     (Prims.of_int (178))
                                                                     (Prims.of_int (104)))))
                                                                     (match comp_typ

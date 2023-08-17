@@ -355,6 +355,7 @@ fn reclaim (s:ha) (#h:hash_value_t)
 // Note, I had first tried a vairant of this with a refinement on wi
 // in the invariant to constrain its length, but that led to various problems.
 // I should try that again and open issues. 
+#push-options "--retry 2" // GM: Part of this VC fails on batch mode, not on ide...
 ```pulse
 fn aggregate_raw_hashes (b1 b2: hash_value_buf)
                         (#s1 #s2:e_raw_hash_value_t)
@@ -387,6 +388,7 @@ fn aggregate_raw_hashes (b1 b2: hash_value_buf)
     assert (pure (xor_bytes_pfx s1 s2 32 `Seq.equal` xor_bytes s1 s2))
 }
 ```
+#pop-options
 
 // Aggregates hashes has to handle the case where the ctr overflows
 // Again, this is cleaner than the Steel version, has fewer rewrites

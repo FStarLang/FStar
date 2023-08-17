@@ -101,7 +101,7 @@ let check_intro_exists
   Pulse.Typing.FV.tot_typing_freevars t_typing;
   let ty_typing, _ = Metatheory.tm_exists_inversion #g #u #b.binder_ty #p t_typing (fresh g) in
   let (| witness, witness_typing |) = 
-    check_term_with_expected_type g witness T.E_Ghost b.binder_ty in
+    check_term_with_expected_type_and_effect g witness T.E_Ghost b.binder_ty in
   let d = T_IntroExists g u b p witness ty_typing t_typing witness_typing in
   let (| c, d |) : (c:_ & st_typing g _ c) = (| _, d |) in
   prove_post_hint (try_frame_pre pre_typing d res_ppname) post_hint (t <: term).range

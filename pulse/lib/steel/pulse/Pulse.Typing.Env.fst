@@ -349,3 +349,8 @@ let fail (#a:Type) (g:env) (r:option range) (msg:string) =
   let issue = FStar.Issue.mk_issue "Error" msg (Some r) None (ctxt_to_list g) in
   T.log_issues [issue];
   T.fail "Pulse checker failed"
+
+let warn (g:env) (r:option range) (msg:string) : T.Tac unit =
+  let r = get_range g r in
+  let issue = FStar.Issue.mk_issue "Warning" msg (Some r) None (ctxt_to_list g) in
+  T.log_issues [issue]
