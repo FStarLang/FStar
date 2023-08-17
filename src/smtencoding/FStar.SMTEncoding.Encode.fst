@@ -1526,6 +1526,13 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                   env'.tcenv
                                   t                
                 in
+                let warn_compat () =
+                  FStar.Errors.log_issue
+                    (S.range_of_fv fv)
+                    (FStar.Errors.Warning_DeprecatedGeneric,
+                    "Using 'compat:2954' to use a permissive encoding of the subterm ordering on the codomain of a constructor.\n\
+                     This is deprecated and will be removed in a future version of F*.")
+                in
                 let codomain_prec_l, cod_decls =
                   List.fold_left2
                     (fun (codomain_prec_l, cod_decls) formal var ->
@@ -1552,8 +1559,13 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                     | Tm_fvar fv ->
                                       if BU.for_some (S.fv_eq_lid fv) mutuals
                                       then Some (bs, c)
+                                      else if List.mem "2954" (Options.ext_options "compat")
+                                      then (warn_compat(); Some (bs, c)) //compatibility mode
                                       else None
-                                    | _ -> None
+                                    | _ ->
+                                      if List.mem "2954" (Options.ext_options "compat")
+                                      then (warn_compat(); Some (bs, c)) //compatibility mode
+                                      else None
                                   )
                               end
                             | _ ->

@@ -5723,6 +5723,16 @@ and (encode_sigelt' :
                                                                     FStar_TypeChecker_Env.Zeta]
                                                                     env'.FStar_SMTEncoding_Env.tcenv
                                                                     t2 in
+                                                                    let warn_compat
+                                                                    uu___25 =
+                                                                    let uu___26
+                                                                    =
+                                                                    FStar_Syntax_Syntax.range_of_fv
+                                                                    fv in
+                                                                    FStar_Errors.log_issue
+                                                                    uu___26
+                                                                    (FStar_Errors_Codes.Warning_DeprecatedGeneric,
+                                                                    "Using 'compat:2954' to use a permissive encoding of the subterm ordering on the codomain of a constructor.\nThis is deprecated and will be removed in a future version of F*.") in
                                                                     let uu___25
                                                                     =
                                                                     FStar_Compiler_List.fold_left2
@@ -5849,10 +5859,44 @@ and (encode_sigelt' :
                                                                     FStar_Pervasives_Native.Some
                                                                     (bs, c)
                                                                     else
-                                                                    FStar_Pervasives_Native.None
+                                                                    (let uu___40
+                                                                    =
+                                                                    let uu___41
+                                                                    =
+                                                                    FStar_Options.ext_options
+                                                                    "compat" in
+                                                                    FStar_Compiler_List.mem
+                                                                    "2954"
+                                                                    uu___41 in
+                                                                    if
+                                                                    uu___40
+                                                                    then
+                                                                    (warn_compat
+                                                                    ();
+                                                                    FStar_Pervasives_Native.Some
+                                                                    (bs, c))
+                                                                    else
+                                                                    FStar_Pervasives_Native.None)
                                                                     | 
                                                                     uu___38
                                                                     ->
+                                                                    let uu___39
+                                                                    =
+                                                                    let uu___40
+                                                                    =
+                                                                    FStar_Options.ext_options
+                                                                    "compat" in
+                                                                    FStar_Compiler_List.mem
+                                                                    "2954"
+                                                                    uu___40 in
+                                                                    if
+                                                                    uu___39
+                                                                    then
+                                                                    (warn_compat
+                                                                    ();
+                                                                    FStar_Pervasives_Native.Some
+                                                                    (bs, c))
+                                                                    else
                                                                     FStar_Pervasives_Native.None)))))
                                                                     | 
                                                                     uu___28
@@ -6438,6 +6482,16 @@ and (encode_sigelt' :
                                                                     FStar_TypeChecker_Env.Zeta]
                                                                     env'.FStar_SMTEncoding_Env.tcenv
                                                                     t2 in
+                                                                    let warn_compat
+                                                                    uu___21 =
+                                                                    let uu___22
+                                                                    =
+                                                                    FStar_Syntax_Syntax.range_of_fv
+                                                                    fv in
+                                                                    FStar_Errors.log_issue
+                                                                    uu___22
+                                                                    (FStar_Errors_Codes.Warning_DeprecatedGeneric,
+                                                                    "Using 'compat:2954' to use a permissive encoding of the subterm ordering on the codomain of a constructor.\nThis is deprecated and will be removed in a future version of F*.") in
                                                                     let uu___21
                                                                     =
                                                                     FStar_Compiler_List.fold_left2
@@ -6564,10 +6618,44 @@ and (encode_sigelt' :
                                                                     FStar_Pervasives_Native.Some
                                                                     (bs, c)
                                                                     else
-                                                                    FStar_Pervasives_Native.None
+                                                                    (let uu___36
+                                                                    =
+                                                                    let uu___37
+                                                                    =
+                                                                    FStar_Options.ext_options
+                                                                    "compat" in
+                                                                    FStar_Compiler_List.mem
+                                                                    "2954"
+                                                                    uu___37 in
+                                                                    if
+                                                                    uu___36
+                                                                    then
+                                                                    (warn_compat
+                                                                    ();
+                                                                    FStar_Pervasives_Native.Some
+                                                                    (bs, c))
+                                                                    else
+                                                                    FStar_Pervasives_Native.None)
                                                                     | 
                                                                     uu___34
                                                                     ->
+                                                                    let uu___35
+                                                                    =
+                                                                    let uu___36
+                                                                    =
+                                                                    FStar_Options.ext_options
+                                                                    "compat" in
+                                                                    FStar_Compiler_List.mem
+                                                                    "2954"
+                                                                    uu___36 in
+                                                                    if
+                                                                    uu___35
+                                                                    then
+                                                                    (warn_compat
+                                                                    ();
+                                                                    FStar_Pervasives_Native.Some
+                                                                    (bs, c))
+                                                                    else
                                                                     FStar_Pervasives_Native.None)))))
                                                                     | 
                                                                     uu___24
