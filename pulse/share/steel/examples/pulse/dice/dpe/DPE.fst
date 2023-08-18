@@ -24,7 +24,6 @@ val run_stt (#a:Type) (#post:a -> vprop) (f:stt a emp post) : a
 
 let ctxt_hndl_t = U32.t
 let sid_t = U32.t
-
 // The type of a hash table tupled with a lock storing permission on the table. 
 type locked_ht_t (s:pht_sig_us) = ht:ht_t s & L.lock (exists_ (fun pht -> models s ht pht))
 // The type of a session ID (SID) tupled with a lock storing permission on the SID
@@ -66,6 +65,7 @@ fn alloc_sid (_:unit)
 
 // The global session table, which associates a session ID with a context table for that session
 let locked_sht : locked_ht_t sht_sig = run_stt(alloc_ht #sht_sig sht_len)
+
 // The global session ID counter, which tracks what the next session ID is
 let locked_sid : locked_sid_t = run_stt(alloc_sid ())
 

@@ -380,13 +380,13 @@ fn get_engine_record_perm (r:engine_record_t) (repr':erased repr_t) (p:perm)
   let repr = reveal repr';
   match repr {
     Engine_repr r0 -> {
-      admit()
+      admit() // FIXME
       // rewrite (record_perm (Engine_record r) repr p)
       //     as  (engine_record_perm r r0 p);
       // hide r0
     }
     L0_repr _ -> {
-      admit()
+      admit() // FIXME
       // rewrite (record_perm (Engine_record r) repr p)
       //     as  (pure False);
       // let x = elim_false (engine_record_perm r p);
@@ -406,14 +406,14 @@ fn get_l0_record_perm (r:l0_record_t) (repr':erased repr_t) (p:perm)
   let repr = reveal repr';
   match repr {
     Engine_repr _ -> {
-      admit()
+      admit() // FIXME
       // rewrite (record_perm (L0_record r) repr p)
       //     as  (pure False);
       // let x = elim_false (l0_record_perm r);
       // hide x
     }
     L0_repr r0 -> {
-      admit()
+      admit() // FIXME
       // rewrite (record_perm (L0_record r) repr p)
       //     as  (l0_record_perm r r0 p);
       // hide r0
