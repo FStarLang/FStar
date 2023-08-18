@@ -1517,6 +1517,22 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
               let codomain_ordering, codomain_decls =
                 let _, formals' = BU.first_N n_tps formals in (* no codomain ordering for the parameters *)
                 let _, vars' = BU.first_N n_tps vars in
+                let norm t = 
+                   N.unfold_whnf' [Env.AllowUnboundUniverses;
+                                   Env.EraseUniverses;
+                                   Env.Unascribe;
+                                   //we don't know if this will terminate; so don't do recursive steps
+                                   Env.Exclude Env.Zeta]
+                                  env'.tcenv
+                                  t                
+                in
+                let warn_compat () =
+                  FStar.Errors.log_issue
+                    (S.range_of_fv fv)
+                    (FStar.Errors.Warning_DeprecatedGeneric,
+                    "Using 'compat:2954' to use a permissive encoding of the subterm ordering on the codomain of a constructor.\n\
+                     This is deprecated and will be removed in a future version of F*.")
+                in
                 let codomain_prec_l, cod_decls =
                   List.fold_left2
                     (fun (codomain_prec_l, cod_decls) formal var ->
@@ -1534,20 +1550,27 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                 then None //not useful for lemmas
                                 else
                                   let t = U.unrefine (U.comp_result c) in
+                                  let t = norm t in
                                   if is_type t || U.is_sub_singleton t
                                   then None //ordering on Type and squashed values is not useful
-                                  else Some (bs, c)
+                                  else (
+                                    let head, _ = U.head_and_args_full t in
+                                    match (U.un_uinst head).n with
+                                    | Tm_fvar fv ->
+                                      if BU.for_some (S.fv_eq_lid fv) mutuals
+                                      then Some (bs, c)
+                                      else if List.mem "2954" (Options.ext_options "compat")
+                                      then (warn_compat(); Some (bs, c)) //compatibility mode
+                                      else None
+                                    | _ ->
+                                      if List.mem "2954" (Options.ext_options "compat")
+                                      then (warn_compat(); Some (bs, c)) //compatibility mode
+                                      else None
+                                  )
                               end
                             | _ ->
                               let head, _ = U.head_and_args t in
-                              let t' = N.unfold_whnf' [Env.AllowUnboundUniverses;
-                                                       Env.EraseUniverses;
-                                                       Env.Unascribe;
-                                                       //we don't know if this will terminate; so don't do recursive steps
-                                                       Env.Exclude Env.Zeta]
-                                                       env'.tcenv
-                                                       t
-                              in
+                              let t' = norm t in
                               let head', _ = U.head_and_args t' in
                               match U.eq_tm head head' with
                               | U.Equal -> None //no progress after whnf
@@ -1567,7 +1590,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
 
                         in
                         match binder_and_codomain_type formal.binder_bv.sort with
-                        | None -> codomain_prec_l, cod_decls
+                        | None -> 
+                          codomain_prec_l, cod_decls
                         | Some (bs, c) ->
                           //var bs << D ... var ...
                           let bs', guards', _env', bs_decls, _ = encode_binders None bs env' in
