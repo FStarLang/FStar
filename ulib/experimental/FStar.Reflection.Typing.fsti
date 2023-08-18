@@ -1055,38 +1055,50 @@ let refl_bindings_to_bindings (bs : list R.binding) : list binding =
 
 [@@ no_auto_projectors]
 noeq
-type non_informative : term -> Type0 =
+type non_informative : env -> term -> Type0 =
   | Non_informative_type:
+    g:env ->
     u:universe ->
-    non_informative (pack_ln (Tv_Type u))
+    non_informative g (pack_ln (Tv_Type u))
   
   | Non_informative_fv:
+    g:env ->
     x:fv{is_non_informative_fv x} ->
-    non_informative (pack_ln (Tv_FVar x))
+    non_informative g (pack_ln (Tv_FVar x))
   
   | Non_informative_uinst:
-    x:fv ->
+    g:env ->
+    x:fv{is_non_informative_fv x} ->
     us:list universe ->
-    non_informative (pack_ln (Tv_UInst x us))
+    non_informative g (pack_ln (Tv_UInst x us))
 
   | Non_informative_app:
+    g:env ->
     t:term ->
     arg:argv ->
-    non_informative t ->
-    non_informative (pack_ln (Tv_App t arg))
+    non_informative g t ->
+    non_informative g (pack_ln (Tv_App t arg))
 
   | Non_informative_total_arrow:
+    g:env ->
     t0:term ->
     q:aqualv ->
     t1:term ->
-    non_informative t1 ->
-    non_informative (mk_arrow_ct t0 q (T.E_Total, t1))
+    non_informative g t1 ->
+    non_informative g (mk_arrow_ct t0 q (T.E_Total, t1))
   
   | Non_informative_ghost_arrow:
+    g:env ->
     t0:term ->
     q:aqualv ->
     t1:term ->
-    non_informative (mk_arrow_ct t0 q (T.E_Ghost, t1))
+    non_informative g (mk_arrow_ct t0 q (T.E_Ghost, t1))
+
+  | Non_informative_token:
+    g:env ->
+    t:typ ->
+    squash (T.non_informative_token g t) ->
+    non_informative g t
 
 val bindings_ok_for_pat : env -> list R.binding -> pattern -> Type0
 
@@ -1410,7 +1422,7 @@ and related_comp : env -> comp_typ -> relation -> comp_typ -> Type0 =
   | Relc_ghost_total:
     g:env ->
     t:term ->
-    non_informative t ->
+    non_informative g t ->
     related_comp g (T.E_Ghost, t) R_Sub (T.E_Total, t)
 
 and branches_typing (g:env) (sc_u:universe) (sc_ty:typ) (sc:term) (rty:comp_typ)
@@ -1754,8 +1766,7 @@ val if_complete_match (g:env) (t:term)
 
 // Derived rule for if
 
-
-let mkif
+val mkif
     (g:fstar_env)
     (scrutinee:term)
     (then_:term)
@@ -1770,20 +1781,3 @@ let mkif
     (te : typing (extend_env g hyp (eq2 (pack_universe Uv_Zero) bool_ty scrutinee false_bool)) else_ (eff, ty))
     (tr : typing g ty (ty_eff, tm_type u_ty))
 : typing g (mk_if scrutinee then_ else_) (eff, ty)
-= let brt = (Pat_Constant C_True, then_) in
-  let bre = (Pat_Constant C_False, else_) in
-  bindings_ok_pat_constant g C_True;
-  bindings_ok_pat_constant g C_False;
-  let brty () : branches_typing g u_zero bool_ty scrutinee (eff,ty) [brt; bre] [[]; []] =
-    BT_S (Pat_Constant C_True, then_) []
-         (BO (Pat_Constant C_True) [] hyp then_ () tt)
-         _ _ (
-      BT_S (Pat_Constant C_False, else_) []
-           (BO (Pat_Constant C_False) [] hyp else_ () te)
-           _ _
-        BT_Nil)
-  in
-  T_Match g u_zero bool_ty scrutinee T.E_Total (T_FVar g bool_fv) eff ts [brt; bre] (eff, ty)
-    [[]; []]
-    (MC_Tok g scrutinee bool_ty _ _ (Squash.return_squash (if_complete_match g scrutinee)))
-    (brty ())

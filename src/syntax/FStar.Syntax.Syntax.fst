@@ -161,7 +161,14 @@ let mk_Tac t =
             })
 
 let default_sigmeta = { sigmeta_active=true; sigmeta_fact_db_ids=[]; sigmeta_admit=false }
-let mk_sigelt (e: sigelt') = { sigel = e; sigrng = Range.dummyRange; sigquals=[]; sigmeta=default_sigmeta; sigattrs = [] ; sigopts = None }
+let mk_sigelt (e: sigelt') = { 
+    sigel = e;
+    sigrng = Range.dummyRange;
+    sigquals=[];
+    sigmeta=default_sigmeta;
+    sigattrs = [] ;
+    sigopts = None;
+    sigopens_and_abbrevs = [] }
 let mk_subst (s:subst_t)   = s
 let extend_subst x s : subst_t = x::s
 let argpos (x:arg) = (fst x).pos

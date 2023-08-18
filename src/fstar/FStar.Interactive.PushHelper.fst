@@ -205,7 +205,7 @@ let update_names_from_event cur_mod_str table evt =
   | NTOpen (host, (included, kind)) ->
     if is_cur_mod host then
       CTable.register_open
-        table (kind = DsEnv.Open_module) [] (query_of_lid included)
+        table (kind = FStar.Syntax.Syntax.Open_module) [] (query_of_lid included)
     else
       table
   | NTInclude (host, included) ->

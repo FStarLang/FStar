@@ -163,6 +163,7 @@ let defaults =
       ("eager_subtyping"              , Bool false);
       ("error_contexts"               , Bool false);
       ("expose_interfaces"            , Bool false);
+      ("ext"                          , List []);
       ("extract"                      , Unset);
       ("extract_all"                  , Bool false);
       ("extract_module"               , List []);
@@ -354,6 +355,7 @@ let get_dump_module             ()      = lookup_opt "dump_module"              
 let get_eager_subtyping         ()      = lookup_opt "eager_subtyping"          as_bool
 let get_error_contexts          ()      = lookup_opt "error_contexts"           as_bool
 let get_expose_interfaces       ()      = lookup_opt "expose_interfaces"        as_bool
+let get_ext                     ()      = lookup_opt "ext"                      (as_option (as_list as_string))
 let get_extract                 ()      = lookup_opt "extract"                  (as_option (as_list as_string))
 let get_extract_module          ()      = lookup_opt "extract_module"           (as_list as_string)
 let get_extract_namespace       ()      = lookup_opt "extract_namespace"        (as_list as_string)
@@ -758,6 +760,13 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * string) 
         "error_contexts",
         BoolStr,
         "Print context information for each error or warning raised (default false)");
+
+       ( noshort,
+         "ext",
+         Accumulated (SimpleStr "One or more semicolon separated occurrences of colon-separated pairs, \
+                                 e.g., 'pulse:verbose;pulse:debug;foo:bar'"),
+        "\n\t\tThese options are typically interpreted by extensions. \n\t\t\
+         An entry 'e' that is not of the form 'a:b' is treated as 'e:\"\"', i.e., 'e' associated with the empty string");
 
        ( noshort,
          "extract",
@@ -1386,6 +1395,7 @@ let settable = function
     | "hint_file"
     | "hint_info"
     | "fuel"
+    | "ext"
     | "ifuel"
     | "initial_fuel"
     | "initial_ifuel"
@@ -2161,3 +2171,24 @@ let set_vconfig (vcfg:vconfig) : unit =
   set_option "trivial_pre_for_unannotated_effectful_fns" (Bool vcfg.trivial_pre_for_unannotated_effectful_fns);
   set_option "reuse_hint_for"                            (option_as String vcfg.reuse_hint_for);
   ()
+
+// --ext "ext1:opt1;ext2:opt2;ext3:opt3"
+// An entry e that is not of the form a:b
+// is treated as e:""
+let parse_ext (s:string) : list (string & string) =
+  let exts = Util.split s ";" in
+  List.collect (fun s -> 
+    match Util.split s ":" with
+    | [k;v] -> [(k,v)]
+    | _ -> [s, ""]) exts
+
+let all_ext_options () : list (string & string) =
+  let ext = get_ext () in
+  match ext with
+  | None -> []
+  | Some strs ->
+    strs |> List.collect parse_ext
+
+let ext_options (ext:string) : list string =
+  let exts = all_ext_options () in
+  List.filter_map (fun (k,v) -> if k = ext then Some v else None) exts

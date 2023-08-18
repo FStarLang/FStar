@@ -470,26 +470,7 @@ let (get_phi :
     FStar_Syntax_Util.un_squash uu___
 let (is_irrelevant : goal -> Prims.bool) =
   fun g -> let uu___ = get_phi g in FStar_Compiler_Option.isSome uu___
-type unfold_side =
-  | Left 
-  | Right 
-  | Both 
-  | Neither 
-let (uu___is_Left : unfold_side -> Prims.bool) =
-  fun projectee -> match projectee with | Left -> true | uu___ -> false
-let (uu___is_Right : unfold_side -> Prims.bool) =
-  fun projectee -> match projectee with | Right -> true | uu___ -> false
-let (uu___is_Both : unfold_side -> Prims.bool) =
-  fun projectee -> match projectee with | Both -> true | uu___ -> false
-let (uu___is_Neither : unfold_side -> Prims.bool) =
-  fun projectee -> match projectee with | Neither -> true | uu___ -> false
-type tot_or_ghost =
-  | E_Total 
-  | E_Ghost 
-let (uu___is_E_Total : tot_or_ghost -> Prims.bool) =
-  fun projectee -> match projectee with | E_Total -> true | uu___ -> false
-let (uu___is_E_Ghost : tot_or_ghost -> Prims.bool) =
-  fun projectee -> match projectee with | E_Ghost -> true | uu___ -> false
+type ('g, 't) non_informative_token = unit
 type ('g, 't0, 't1) subtyping_token = unit
 type ('g, 't0, 't1) equiv_token = unit
 type ('g, 'e, 'c) typing_token = unit

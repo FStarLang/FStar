@@ -1051,12 +1051,12 @@ let (mk_if :
                ((FStar_Reflection_V2_Data.Pat_Constant
                    FStar_Reflection_V2_Data.C_False), else_)]))
 type comp_typ =
-  (FStar_Tactics_Types.tot_or_ghost * FStar_Reflection_Types.typ)
+  (FStar_TypeChecker_Core.tot_or_ghost * FStar_Reflection_Types.typ)
 let (close_comp_typ' :
   comp_typ ->
     FStar_Reflection_V2_Data.var ->
       Prims.nat ->
-        (FStar_Tactics_Types.tot_or_ghost * FStar_Reflection_Types.term))
+        (FStar_TypeChecker_Core.tot_or_ghost * FStar_Reflection_Types.term))
   =
   fun c ->
     fun x ->
@@ -1066,13 +1066,13 @@ let (close_comp_typ' :
 let (close_comp_typ :
   comp_typ ->
     FStar_Reflection_V2_Data.var ->
-      (FStar_Tactics_Types.tot_or_ghost * FStar_Reflection_Types.term))
+      (FStar_TypeChecker_Core.tot_or_ghost * FStar_Reflection_Types.term))
   = fun c -> fun x -> close_comp_typ' c x Prims.int_zero
 let (open_comp_typ' :
   comp_typ ->
     FStar_Reflection_V2_Data.var ->
       Prims.nat ->
-        (FStar_Tactics_Types.tot_or_ghost * FStar_Reflection_Types.term))
+        (FStar_TypeChecker_Core.tot_or_ghost * FStar_Reflection_Types.term))
   =
   fun c ->
     fun x ->
@@ -1082,7 +1082,7 @@ let (open_comp_typ' :
 let (open_comp_typ :
   comp_typ ->
     FStar_Reflection_V2_Data.var ->
-      (FStar_Tactics_Types.tot_or_ghost * FStar_Reflection_Types.term))
+      (FStar_TypeChecker_Core.tot_or_ghost * FStar_Reflection_Types.term))
   = fun c -> fun x -> open_comp_typ' c x Prims.int_zero
 let (freevars_comp_typ :
   comp_typ -> FStar_Reflection_V2_Data.var FStar_Set.set) =
@@ -1090,8 +1090,10 @@ let (freevars_comp_typ :
 let (mk_comp : comp_typ -> FStar_Reflection_Types.comp) =
   fun c ->
     match FStar_Pervasives_Native.fst c with
-    | FStar_Tactics_Types.E_Total -> mk_total (FStar_Pervasives_Native.snd c)
-    | FStar_Tactics_Types.E_Ghost -> mk_ghost (FStar_Pervasives_Native.snd c)
+    | FStar_TypeChecker_Core.E_Total ->
+        mk_total (FStar_Pervasives_Native.snd c)
+    | FStar_TypeChecker_Core.E_Ghost ->
+        mk_ghost (FStar_Pervasives_Native.snd c)
 let (mk_arrow_ct :
   FStar_Reflection_Types.term ->
     FStar_Reflection_V2_Data.aqualv ->
@@ -1183,30 +1185,38 @@ let (refl_bindings_to_bindings :
       (fun b ->
          ((b.FStar_Reflection_V2_Data.uniq1),
            (b.FStar_Reflection_V2_Data.sort3))) bs
-type 'dummyV0 non_informative =
-  | Non_informative_type of FStar_Reflection_Types.universe 
-  | Non_informative_fv of FStar_Reflection_Types.fv 
-  | Non_informative_uinst of FStar_Reflection_Types.fv *
-  FStar_Reflection_Types.universe Prims.list 
-  | Non_informative_app of FStar_Reflection_Types.term *
-  FStar_Reflection_V2_Data.argv * unit non_informative 
-  | Non_informative_total_arrow of FStar_Reflection_Types.term *
-  FStar_Reflection_V2_Data.aqualv * FStar_Reflection_Types.term * unit
-  non_informative 
-  | Non_informative_ghost_arrow of FStar_Reflection_Types.term *
-  FStar_Reflection_V2_Data.aqualv * FStar_Reflection_Types.term 
-let uu___is_Non_informative_type uu___ uu___1 =
-  match uu___1 with | Non_informative_type _ -> true | _ -> false
-let uu___is_Non_informative_fv uu___ uu___1 =
-  match uu___1 with | Non_informative_fv _ -> true | _ -> false
-let uu___is_Non_informative_uinst uu___ uu___1 =
-  match uu___1 with | Non_informative_uinst _ -> true | _ -> false
-let uu___is_Non_informative_app uu___ uu___1 =
-  match uu___1 with | Non_informative_app _ -> true | _ -> false
-let uu___is_Non_informative_total_arrow uu___ uu___1 =
-  match uu___1 with | Non_informative_total_arrow _ -> true | _ -> false
-let uu___is_Non_informative_ghost_arrow uu___ uu___1 =
-  match uu___1 with | Non_informative_ghost_arrow _ -> true | _ -> false
+type ('dummyV0, 'dummyV1) non_informative =
+  | Non_informative_type of FStar_Reflection_Types.env *
+  FStar_Reflection_Types.universe 
+  | Non_informative_fv of FStar_Reflection_Types.env *
+  FStar_Reflection_Types.fv 
+  | Non_informative_uinst of FStar_Reflection_Types.env *
+  FStar_Reflection_Types.fv * FStar_Reflection_Types.universe Prims.list 
+  | Non_informative_app of FStar_Reflection_Types.env *
+  FStar_Reflection_Types.term * FStar_Reflection_V2_Data.argv * (unit, 
+  unit) non_informative 
+  | Non_informative_total_arrow of FStar_Reflection_Types.env *
+  FStar_Reflection_Types.term * FStar_Reflection_V2_Data.aqualv *
+  FStar_Reflection_Types.term * (unit, unit) non_informative 
+  | Non_informative_ghost_arrow of FStar_Reflection_Types.env *
+  FStar_Reflection_Types.term * FStar_Reflection_V2_Data.aqualv *
+  FStar_Reflection_Types.term 
+  | Non_informative_token of FStar_Reflection_Types.env *
+  FStar_Reflection_Types.typ * unit 
+let uu___is_Non_informative_type uu___1 uu___ uu___2 =
+  match uu___2 with | Non_informative_type _ -> true | _ -> false
+let uu___is_Non_informative_fv uu___1 uu___ uu___2 =
+  match uu___2 with | Non_informative_fv _ -> true | _ -> false
+let uu___is_Non_informative_uinst uu___1 uu___ uu___2 =
+  match uu___2 with | Non_informative_uinst _ -> true | _ -> false
+let uu___is_Non_informative_app uu___1 uu___ uu___2 =
+  match uu___2 with | Non_informative_app _ -> true | _ -> false
+let uu___is_Non_informative_total_arrow uu___1 uu___ uu___2 =
+  match uu___2 with | Non_informative_total_arrow _ -> true | _ -> false
+let uu___is_Non_informative_ghost_arrow uu___1 uu___ uu___2 =
+  match uu___2 with | Non_informative_ghost_arrow _ -> true | _ -> false
+let uu___is_Non_informative_token uu___1 uu___ uu___2 =
+  match uu___2 with | Non_informative_token _ -> true | _ -> false
 type ('bnds, 'pat, 'uuuuu) bindings_ok_for_pat = Obj.t
 type ('g, 'bs, 'br) bindings_ok_for_branch = Obj.t
 type ('g, 'bss, 'brs) bindings_ok_for_branch_N = Obj.t
@@ -1286,32 +1296,32 @@ type ('dummyV0, 'dummyV1, 'dummyV2) typing =
   | T_Abs of FStar_Reflection_Types.env * FStar_Reflection_V2_Data.var *
   FStar_Reflection_Types.term * FStar_Reflection_Types.term * comp_typ *
   FStar_Reflection_Types.universe * pp_name_t *
-  FStar_Reflection_V2_Data.aqualv * FStar_Tactics_Types.tot_or_ghost * (
-  unit, unit, unit) typing * (unit, unit, unit) typing 
+  FStar_Reflection_V2_Data.aqualv * FStar_TypeChecker_Core.tot_or_ghost *
+  (unit, unit, unit) typing * (unit, unit, unit) typing 
   | T_App of FStar_Reflection_Types.env * FStar_Reflection_Types.term *
   FStar_Reflection_Types.term * FStar_Reflection_Types.binder *
-  FStar_Reflection_Types.term * FStar_Tactics_Types.tot_or_ghost * (unit,
-  unit, unit) typing * (unit, unit, unit) typing 
+  FStar_Reflection_Types.term * FStar_TypeChecker_Core.tot_or_ghost * (
+  unit, unit, unit) typing * (unit, unit, unit) typing 
   | T_Let of FStar_Reflection_Types.env * FStar_Reflection_V2_Data.var *
   FStar_Reflection_Types.term * FStar_Reflection_Types.typ *
   FStar_Reflection_Types.term * FStar_Reflection_Types.typ *
-  FStar_Tactics_Types.tot_or_ghost * pp_name_t * (unit, unit, unit) typing *
-  (unit, unit, unit) typing 
+  FStar_TypeChecker_Core.tot_or_ghost * pp_name_t * (unit, unit, unit) typing
+  * (unit, unit, unit) typing 
   | T_Arrow of FStar_Reflection_Types.env * FStar_Reflection_V2_Data.var *
   FStar_Reflection_Types.term * FStar_Reflection_Types.term *
   FStar_Reflection_Types.universe * FStar_Reflection_Types.universe *
   pp_name_t * FStar_Reflection_V2_Data.aqualv *
-  FStar_Tactics_Types.tot_or_ghost * FStar_Tactics_Types.tot_or_ghost *
-  FStar_Tactics_Types.tot_or_ghost * (unit, unit, unit) typing * (unit, 
-  unit, unit) typing 
+  FStar_TypeChecker_Core.tot_or_ghost * FStar_TypeChecker_Core.tot_or_ghost *
+  FStar_TypeChecker_Core.tot_or_ghost * (unit, unit, unit) typing * (
+  unit, unit, unit) typing 
   | T_Refine of FStar_Reflection_Types.env * FStar_Reflection_V2_Data.var *
   FStar_Reflection_Types.term * FStar_Reflection_Types.term *
   FStar_Reflection_Types.universe * FStar_Reflection_Types.universe *
-  FStar_Tactics_Types.tot_or_ghost * FStar_Tactics_Types.tot_or_ghost *
+  FStar_TypeChecker_Core.tot_or_ghost * FStar_TypeChecker_Core.tot_or_ghost *
   (unit, unit, unit) typing * (unit, unit, unit) typing 
   | T_PropIrrelevance of FStar_Reflection_Types.env *
   FStar_Reflection_Types.term * FStar_Reflection_Types.term *
-  FStar_Tactics_Types.tot_or_ghost * FStar_Tactics_Types.tot_or_ghost *
+  FStar_TypeChecker_Core.tot_or_ghost * FStar_TypeChecker_Core.tot_or_ghost *
   (unit, unit, unit) typing * (unit, unit, unit) typing 
   | T_Sub of FStar_Reflection_Types.env * FStar_Reflection_Types.term *
   comp_typ * comp_typ * (unit, unit, unit) typing * (unit, unit, unit, 
@@ -1319,14 +1329,14 @@ type ('dummyV0, 'dummyV1, 'dummyV2) typing =
   | T_If of FStar_Reflection_Types.env * FStar_Reflection_Types.term *
   FStar_Reflection_Types.term * FStar_Reflection_Types.term *
   FStar_Reflection_Types.term * FStar_Reflection_Types.universe *
-  FStar_Reflection_V2_Data.var * FStar_Tactics_Types.tot_or_ghost *
-  FStar_Tactics_Types.tot_or_ghost * (unit, unit, unit) typing * (unit, 
-  unit, unit) typing * (unit, unit, unit) typing * (unit, unit, unit) typing
-  
+  FStar_Reflection_V2_Data.var * FStar_TypeChecker_Core.tot_or_ghost *
+  FStar_TypeChecker_Core.tot_or_ghost * (unit, unit, unit) typing * (
+  unit, unit, unit) typing * (unit, unit, unit) typing * (unit, unit, 
+  unit) typing 
   | T_Match of FStar_Reflection_Types.env * FStar_Reflection_Types.universe *
   FStar_Reflection_Types.typ * FStar_Reflection_Types.term *
-  FStar_Tactics_Types.tot_or_ghost * (unit, unit, unit) typing *
-  FStar_Tactics_Types.tot_or_ghost * (unit, unit, unit) typing *
+  FStar_TypeChecker_Core.tot_or_ghost * (unit, unit, unit) typing *
+  FStar_TypeChecker_Core.tot_or_ghost * (unit, unit, unit) typing *
   FStar_Reflection_V2_Data.branch Prims.list * comp_typ *
   FStar_Reflection_V2_Data.binding Prims.list Prims.list * (unit, unit, 
   unit, unit, unit) match_is_complete * (unit, unit, unit, unit, unit, 
@@ -1363,12 +1373,12 @@ and ('dummyV0, 'dummyV1, 'dummyV2) equiv =
   FStar_Reflection_Types.term * term_ctxt * (unit, unit, unit) equiv 
 and ('dummyV0, 'dummyV1, 'dummyV2, 'dummyV3) related_comp =
   | Relc_typ of FStar_Reflection_Types.env * FStar_Reflection_Types.term *
-  FStar_Reflection_Types.term * FStar_Tactics_Types.tot_or_ghost * relation *
-  (unit, unit, unit, unit) related 
+  FStar_Reflection_Types.term * FStar_TypeChecker_Core.tot_or_ghost *
+  relation * (unit, unit, unit, unit) related 
   | Relc_total_ghost of FStar_Reflection_Types.env *
   FStar_Reflection_Types.term 
   | Relc_ghost_total of FStar_Reflection_Types.env *
-  FStar_Reflection_Types.term * unit non_informative 
+  FStar_Reflection_Types.term * (unit, unit) non_informative 
 and ('g, 'scuu, 'scuty, 'sc, 'rty, 'dummyV0, 'dummyV1) branches_typing =
   | BT_Nil 
   | BT_S of FStar_Reflection_V2_Data.branch *
@@ -1496,11 +1506,11 @@ let (simplify_umax :
         fun d ->
           let ue = UN_MaxLeq (u, u, (UNLEQ_Refl u)) in
           T_Sub
-            (g, t, (FStar_Tactics_Types.E_Total, (tm_type (u_max u u))),
-              (FStar_Tactics_Types.E_Total, (tm_type u)), d,
+            (g, t, (FStar_TypeChecker_Core.E_Total, (tm_type (u_max u u))),
+              (FStar_TypeChecker_Core.E_Total, (tm_type u)), d,
               (Relc_typ
                  (g, (tm_type (u_max u u)), (tm_type u),
-                   FStar_Tactics_Types.E_Total, R_Sub,
+                   FStar_TypeChecker_Core.E_Total, R_Sub,
                    (Rel_equiv
                       (g, (tm_type (u_max u u)), (tm_type u), R_Sub,
                         (EQ_Univ (g, (u_max u u), u, ue)))))))
@@ -1570,8 +1580,8 @@ let (mkif :
           FStar_Reflection_Types.term ->
             FStar_Reflection_Types.universe ->
               FStar_Reflection_V2_Data.var ->
-                FStar_Tactics_Types.tot_or_ghost ->
-                  FStar_Tactics_Types.tot_or_ghost ->
+                FStar_TypeChecker_Core.tot_or_ghost ->
+                  FStar_TypeChecker_Core.tot_or_ghost ->
                     (unit, unit, unit) typing ->
                       (unit, unit, unit) typing ->
                         (unit, unit, unit) typing ->
@@ -1620,7 +1630,7 @@ let (mkif :
                                        BT_Nil))) in
                             T_Match
                               (g, u_zero, bool_ty, scrutinee,
-                                FStar_Tactics_Types.E_Total,
+                                FStar_TypeChecker_Core.E_Total,
                                 (T_FVar (g, bool_fv)), eff, ts, [brt; bre],
                                 (eff, ty), [[]; []],
                                 (MC_Tok

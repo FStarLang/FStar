@@ -6,6 +6,10 @@ module S = FStar.Syntax.Syntax
 module R = FStar.Compiler.Range
 module U = FStar.Syntax.Util
 
+type tot_or_ghost = 
+  | E_Total
+  | E_Ghost
+
 val clear_memo_table (_:unit)
   : unit
 
@@ -21,12 +25,14 @@ val side_to_string : side -> string
 
 val maybe_relate_after_unfolding (g:Env.env) (t0 t1:term) : side
 
+val is_non_informative (g:Env.env) (t:typ) : bool
+
 val check_term (g:Env.env) (e:term) (t:typ) (must_tot:bool)
   : either (option typ) error
 
-val compute_term_type_handle_guards (g:Env.env) (e:term) (must_tot:bool)
+val compute_term_type_handle_guards (g:Env.env) (e:term)
                                     (discharge_guard: Env.env -> typ -> bool)
-  : either typ error
+  : either (tot_or_ghost & typ) error
 
 val open_binders_in_term (g:Env.env) (bs:binders) (t:term)
   : Env.env & binders & term
