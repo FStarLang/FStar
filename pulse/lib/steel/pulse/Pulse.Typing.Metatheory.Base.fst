@@ -156,6 +156,12 @@ let rec st_typing_weakening g g' t c d g1
   | T_STApp _ head ty q res arg _ _ ->
     T_STApp _ head ty q res arg (magic ()) (magic ())
 
+  | T_STGhostApp _ head ty q res arg _ _ _ _ ->
+    // candidate for renaming
+    let x = fresh (push_env (push_env g g1) g') in
+    assume (~ (x `Set.mem` freevars_comp res));
+    T_STGhostApp _ head ty q res arg x (magic ()) (magic ()) (magic ())
+
   | T_Return _ c use_eq u t e post x_old _ _ _ ->
     let x = fresh (push_env (push_env g g1) g') in
     assume (~ (x `Set.mem` freevars post));
@@ -202,7 +208,7 @@ let rec st_typing_weakening g g' t c d g1
     let d_bc = bind_comp_weakening g g' d_bc g1 in
     T_Bind _ e1 e2 c1 c2 b x c d_e1 (magic ()) d_e2 d_bc
 
-  | T_TotBind _ e1 e2 t1 c2 x _ d_e2 ->
+  | T_TotBind _ e1 e2 t1 c2 b x _ d_e2 ->
     assume (~ (x `Set.mem` dom g'));
     assume (~ (x `Set.mem` dom g1));
     let d_e2
@@ -226,7 +232,34 @@ let rec st_typing_weakening g g' t c d g1
                   (open_st_term_nv e2 (v_as_nv x))
                   c2 = d_e2 in
     
-    T_TotBind _ e1 e2 t1 c2 x (magic ()) d_e2
+    T_TotBind _ e1 e2 t1 c2 b x (magic ()) d_e2
+
+  | T_GhostBind _ e1 e2 t1 c2 b x _ d_e2 _ ->
+    assume (~ (x `Set.mem` dom g'));
+    assume (~ (x `Set.mem` dom g1));
+    let d_e2
+      : st_typing (push_binding (push_env g g') x ppname_default t1)
+                  (open_st_term_nv e2 (v_as_nv x))
+                  c2 = d_e2 in
+    assert (equal (push_binding (push_env g g') x ppname_default t1)
+                  (push_env g (push_binding g' x ppname_default t1)));
+    let d_e2
+      : st_typing (push_env g (push_binding g' x ppname_default t1))
+                  (open_st_term_nv e2 (v_as_nv x))
+                  c2 = d_e2 in
+    let d_e2
+      : st_typing (push_env (push_env g g1) (push_binding g' x ppname_default t1))
+                  (open_st_term_nv e2 (v_as_nv x))
+                  c2 = st_typing_weakening g (push_binding g' x ppname_default t1) _ _ d_e2 g1 in
+    assert (equal (push_env (push_env g g1) (push_binding g' x ppname_default t1))
+                  (push_binding (push_env (push_env g g1) g') x ppname_default t1));
+    let d_e2
+      : st_typing (push_binding (push_env (push_env g g1) g') x ppname_default t1)
+                  (open_st_term_nv e2 (v_as_nv x))
+                  c2 = d_e2 in
+    
+    T_GhostBind _ e1 e2 t1 c2 b x (magic ()) d_e2 (magic ())
+
 
   | T_If _ b e1 e2 c uc hyp _ d_e1 d_e2 _ ->
     assume (~ (hyp `Set.mem` dom g'));
@@ -291,9 +324,6 @@ let rec st_typing_weakening g g' t c d g1
 
   | T_IntroExists _ u b p e _ _ _ ->
     T_IntroExists _ u b p e (magic ()) (magic ()) (magic ())
-
-  | T_IntroExistsErased _ u b p e _ _ _ ->
-    T_IntroExistsErased _ u b p e (magic ()) (magic ()) (magic ())
 
   | T_While _ inv cond body _ cond_typing body_typing ->
     T_While _ inv cond body (magic ())
@@ -495,6 +525,17 @@ let rec st_typing_subst g x t g' #e e_typing #e1 #c1 e1_typing
               (magic ())
               (magic ())
 
+  | T_STGhostApp _ head ty q res arg x _ _ _ ->
+    T_STGhostApp _ (subst_term head ss)
+              (subst_term ty ss)
+              q
+              (subst_comp res ss)
+              (subst_term arg ss)
+              x
+              (magic ())
+              (magic ())
+              (magic ())
+
   | T_Return _ c use_eq u t e post x _ _ _ ->
     T_Return _ c use_eq u
       (subst_term t ss)
@@ -525,14 +566,26 @@ let rec st_typing_subst g x t g' #e e_typing #e1 #c1 e1_typing
              (coerce_eq (st_typing_subst g x t (push_binding g' y ppname_default (comp_res c1)) e_typing d_e2) ())
              (bind_comp_subst g x t g' e_typing d_bc)
 
-  | T_TotBind _ e1 e2 t1 c2 y _ d_e2 ->
+  | T_TotBind _ e1 e2 t1 c2 b y _ d_e2 ->
     T_TotBind _ (subst_term e1 ss)
                 (subst_st_term e2 ss)
                 (subst_term t1 ss)
                 (subst_comp c2 ss)
+                b
                 y
                 (magic ())
                 (coerce_eq (st_typing_subst g x t (push_binding g' y ppname_default t1) e_typing d_e2) ())
+
+  | T_GhostBind _ e1 e2 t1 c2 b y _ d_e2 _ ->
+    T_GhostBind _ (subst_term e1 ss)
+                (subst_st_term e2 ss)
+                (subst_term t1 ss)
+                (subst_comp c2 ss)
+                b
+                y
+                (magic ())
+                (coerce_eq (st_typing_subst g x t (push_binding g' y ppname_default t1) e_typing d_e2) ())
+                (magic ())
 
   | T_If _ b e1 e2 c uc hyp _ d_e1 d_e2 _ ->
     T_If _ (subst_term b ss)
@@ -577,14 +630,6 @@ let rec st_typing_subst g x t g' #e e_typing #e1 #c1 e1_typing
                       (magic ())
                       (magic ())
                       (magic ())
-
-  | T_IntroExistsErased _ u b p e _ _ _ ->
-    T_IntroExistsErased _ u (subst_binder b ss)
-                            (subst_term p ss)
-                            (subst_term e ss)
-                            (magic ())
-                            (magic ())
-                            (magic ())
 
   | T_While _ inv cond body _ cond_typing body_typing ->
     T_While _ (subst_term inv ss)

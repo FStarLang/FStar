@@ -33,10 +33,21 @@ let check_bind
   if None? post_hint
   then fail g (Some t.range) "check_bind: post hint is not set, please add an annotation";
 
-  let Tm_Bind { binder; head=e1; body=e2} = t.term in
+  let Tm_Bind { binder; head=e1; body=e2 } = t.term in
 
   let (| x, g1, _, (| ctxt', ctxt'_typing |), k1 |) =
-    check g ctxt ctxt_typing None binder.binder_ppname e1 in
+    let r = check g ctxt ctxt_typing None binder.binder_ppname e1 in
+    (* Check that the type matches the annotation, if any *)
+    begin match binder.binder_ty.t with
+    | Tm_Unknown -> ()
+    | _ ->
+      let (| _, _, (| _, t, _ |), _, _ |) = r in
+      if not (eq_tm binder.binder_ty t) then
+        fail g (Some e1.range)
+          (Printf.sprintf "Type mismatch: expected %s, got %s" (P.term_to_string binder.binder_ty) (P.term_to_string t))
+    end;
+    r
+  in
   let d : st_typing_in_ctxt g1 ctxt' post_hint =
     let ppname = mk_ppname_no_range "_bind_c" in
     let r =
@@ -61,8 +72,26 @@ let check_tot_bind
   if None? post_hint
   then fail g (Some t.range) "check_tot_bind: post hint is not set, please add an annotation";
 
-  let Tm_TotBind { head=e1; body=e2 } = t.term in
-  let (| e1, u1, t1, _t1_typing, e1_typing |) = check_term_and_type g e1 in
+  // let Tm_TotBind { head=e1; body=e2 } = t.term in
+  // let (| e1, eff1, t1, (| u1, _t1_typing |), e1_typing |) =
+  //   check_term_and_type g e1 in
+  let Tm_TotBind { binder=b; head=e1; body=e2 } = t.term in
+  let (| e1, eff1, t1, (| u1, _t1_typing |) , e1_typing |) =
+    (* If there's an annotated type for e1 in the binder, we check it at
+    that type. Otherwise we just call check_term_and_type and infer. *)
+    let ty = b.binder_ty in
+    match ty.t with
+    | Tm_Unknown ->
+      check_term_and_type g e1
+    | _ ->
+      let (| u1, ty_typing |) = check_universe g ty in
+      let (| e1, eff1, e1_typing |) = check_term_with_expected_type g e1 ty in
+      let ty_typing : universe_of g ty u1 = ty_typing in
+      let e1_typing : typing g e1 eff1 ty = e1_typing in
+      (| e1, eff1, ty, (| u1, ty_typing |), e1_typing |)
+        <: (t:term & eff:T.tot_or_ghost & ty:term & (u:universe & universe_of g ty u) & typing g t eff ty)
+        (* ^ Need this annotation *)
+  in
   let t1 =
     let b = {binder_ty=t1;binder_ppname=ppname_default} in
     let eq_tm = mk_eq2 u1 t1 (null_bvar 0) e1 in
@@ -70,11 +99,12 @@ let check_tot_bind
 
   // THIS IS WASTEFUL, CHECKING e1 MULTIPLE TIMES
   let (| e1, e1_typing |) =
-    check_term_with_expected_type g e1 t1 in
+    check_term_with_expected_type_and_effect g e1 eff1 t1 in
 
   let x = fresh g in
 
-  let k = continuation_elaborator_with_tot_bind pre_typing (E e1_typing) (ppname_default, x) in
+  let b = { b with binder_ty = t1 } in
+  let k = continuation_elaborator_with_let pre_typing b e1_typing (ppname_default, x) in
 
   let px = v_as_nv x in
   let g' = push_binding g x (fst px) t1 in

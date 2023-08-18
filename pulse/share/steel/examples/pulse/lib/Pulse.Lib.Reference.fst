@@ -7,7 +7,7 @@ module S = Steel.ST.Util
 let ref = R.ref
 
 [@@"__reduce__";"__steel_reduce__"]
-let pts_to = R.pts_to
+let pts_to #a (r:ref a) (#[exact (`full_perm)] p:perm) (v:a) = R.pts_to r p v
 
 let alloc #a x =
     fun _ -> 
@@ -28,8 +28,8 @@ let ( ! ) #a = read #a
 
 let ( := ) (#a:Type) (r:ref a) (x:a) (#n:erased a)
   : stt unit
-        (pts_to r full_perm n) 
-        (fun _ -> pts_to r full_perm (hide x))
+        (pts_to r #full_perm n) 
+        (fun _ -> pts_to r #full_perm (hide x))
    = fun _ ->
         R.write r x;
         S.return ()
@@ -58,7 +58,6 @@ let write_atomic (r:ref U32.t) (x:U32.t) (#n:erased U32.t)
       R.atomic_write_u32 r x;
       S.return ()
 
-
 let with_local #a init #pre #ret_t #post body =
   fun _ -> 
     let body (r:R.ref a) 
@@ -69,9 +68,13 @@ let with_local #a init #pre #ret_t #post body =
                 (pre `star` R.pts_to r full_perm init)
                 (pre ** R.pts_to r full_perm init);
         let v = body r () in
-        S.rewrite
-                (post v ** exists_ (R.pts_to r full_perm))
-                (post v `star` exists_ (R.pts_to r full_perm));
+        S.assert_ (post v ** exists_ (pts_to #a r #full_perm));
+        S.rewrite (post v ** exists_ (pts_to #a r #full_perm))
+                  (post v `star` exists_ (pts_to #a r #full_perm));
+        let w = S.elim_exists () in
+        S.rewrite (pts_to #a r #full_perm w)
+                  (R.pts_to #a r full_perm w);
+        S.intro_exists_erased w (R.pts_to #a r full_perm);
         S.return v
     in
     let v = R.with_local init body in

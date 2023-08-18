@@ -18,7 +18,7 @@ let post_hint_compatible (p:option post_hint_t) (x:var) (t:term) (u:universe) (p
     p.u == u /\
     p.ret_ty == t
 
-let check
+let check_core
   (g:env)
   (pre:term)
   (pre_typing:tot_typing g pre tm_vprop)
@@ -54,9 +54,9 @@ let check
         let (| u, t_typing |) = check_universe g t in    
         let post_opened = open_term_nv post px in      
         let (| post, post_typing |) = 
-            check_term_with_expected_type (push_binding g x (fst px) t) post_opened tm_vprop
+            check_tot_term_with_expected_type (push_binding g x (fst px) t) post_opened tm_vprop
         in
-        (| t, u, t_typing, post, E post_typing |)
+        (| t, u, t_typing, post, post_typing |)
 
       | _, Some post ->
         let post : post_hint_t = post in
@@ -76,3 +76,23 @@ let check
   assume (open_term (close_term post_opened x) x == post_opened);
   let d = T_Admit _ _ c (STC _ s x t_typing pre_typing post_typing) in
   prove_post_hint (try_frame_pre pre_typing d res_ppname) post_hint t.range
+
+let check
+    (g:env)
+    (pre:term)
+    (pre_typing:tot_typing g pre tm_vprop)
+    (post_hint:post_hint_opt g)
+    (res_ppname:ppname)
+    (t:st_term { Tm_Admit? t.term })
+
+  : T.Tac (checker_result_t g pre post_hint) 
+  = let Tm_Admit r = t.term in
+    match post_hint with
+    | Some { ctag_hint=Some ct } ->
+      check_core g pre pre_typing post_hint res_ppname ({ t with term=Tm_Admit {r with ctag=ct}})
+    | _ ->
+      check_core g pre pre_typing post_hint res_ppname t
+
+
+
+ 

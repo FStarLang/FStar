@@ -179,7 +179,7 @@ let rec (print_st_typing :
                                                (fun uu___4 -> uu___3 uu___2))))
                                     uu___2)))
                    | Pulse_Typing.T_TotBind
-                       (g1, e1, e2, t1, c2, x, uu___, d1) ->
+                       (g1, e1, e2, t1, c2, b, x, uu___, d1) ->
                        Obj.magic
                          (Obj.repr
                             (FStar_Tactics_Effect.tac_bind

@@ -17,16 +17,16 @@ let snd (p:u8_pair_repr) : U8.t =
   let (_, x) = p in x
   
 let u8_pair_pred (p:u8_pair) (v:u8_pair_repr) : vprop = 
-    R.pts_to p.a full_perm (fst v) **
-    R.pts_to p.b full_perm (snd v)
+    R.pts_to p.a (fst v) **
+    R.pts_to p.b (snd v)
 
 
 ```pulse
 ghost
 fn fold_u8_pair_pred (x:u8_pair) (#u #v:erased U8.t)
   requires
-    R.pts_to x.a full_perm u **
-    R.pts_to x.b full_perm v
+    R.pts_to x.a u **
+    R.pts_to x.b v
   ensures
     u8_pair_pred x (reveal u, reveal v)
 {
@@ -42,14 +42,14 @@ fn swap_pair (p: u8_pair) (#v: erased u8_pair_repr)
     u8_pair_pred p (snd v, fst v)
 {
     rewrite (u8_pair_pred p v)
-    as      (R.pts_to p.a full_perm (fst v) **
-             R.pts_to p.b full_perm (snd v));
+    as      (R.pts_to p.a (fst v) **
+             R.pts_to p.b (snd v));
     let x = !p.a;
     let y = !p.b;
     p.a := y;
     p.b := x; 
-    rewrite (R.pts_to p.a full_perm y **
-             R.pts_to p.b full_perm x)
+    rewrite (R.pts_to p.a y **
+             R.pts_to p.b x)
         as (u8_pair_pred p (snd v, fst v));
     ()
 }

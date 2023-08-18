@@ -70,7 +70,7 @@ let (check :
                                                      (Prims.of_int (29))
                                                      (Prims.of_int (4))
                                                      (Prims.of_int (29))
-                                                     (Prims.of_int (49)))))
+                                                     (Prims.of_int (53)))))
                                             (FStar_Sealed.seal
                                                (Obj.magic
                                                   (FStar_Range.mk_range
@@ -80,7 +80,7 @@ let (check :
                                                      (Prims.of_int (60))
                                                      (Prims.of_int (95)))))
                                             (Obj.magic
-                                               (Pulse_Checker_Pure.check_term_with_expected_type
+                                               (Pulse_Checker_Pure.check_tot_term_with_expected_type
                                                   g1 preL
                                                   Pulse_Syntax_Base.tm_vprop))
                                             (fun uu___1 ->
@@ -97,17 +97,17 @@ let (check :
                                                                     (Prims.of_int (31))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (31))
-                                                                    (Prims.of_int (49)))))
+                                                                    (Prims.of_int (53)))))
                                                            (FStar_Sealed.seal
                                                               (Obj.magic
                                                                  (FStar_Range.mk_range
                                                                     "Pulse.Checker.Par.fst"
                                                                     (Prims.of_int (29))
-                                                                    (Prims.of_int (52))
+                                                                    (Prims.of_int (56))
                                                                     (Prims.of_int (60))
                                                                     (Prims.of_int (95)))))
                                                            (Obj.magic
-                                                              (Pulse_Checker_Pure.check_term_with_expected_type
+                                                              (Pulse_Checker_Pure.check_tot_term_with_expected_type
                                                                  g1 preR
                                                                  Pulse_Syntax_Base.tm_vprop))
                                                            (fun uu___2 ->
@@ -201,7 +201,7 @@ let (check :
                                                                     (Prims.of_int (38))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (38))
-                                                                    (Prims.of_int (62)))))
+                                                                    (Prims.of_int (58)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -354,7 +354,7 @@ let (check :
                                                                     (Prims.of_int (48))
                                                                     (Prims.of_int (8))
                                                                     (Prims.of_int (48))
-                                                                    (Prims.of_int (64)))))
+                                                                    (Prims.of_int (60)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range

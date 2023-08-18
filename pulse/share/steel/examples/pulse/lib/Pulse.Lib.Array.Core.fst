@@ -13,7 +13,7 @@ let length = A.length
 let is_full_array = A.is_full_array
 
 [@@"__reduce__"; "__steel_reduce__"]
-let pts_to = A.pts_to
+let pts_to #a (r:array a) (#[exact (`full_perm)] p:perm) (v:FStar.Seq.seq a) = A.pts_to r p v
 
 let alloc' (#elt:Type) (x:elt) (n:SZ.t)
   : stt (array elt) 
@@ -34,9 +34,9 @@ let index
         (#s: Ghost.erased (Seq.seq t){SZ.v i < Seq.length s})
   : stt t
         (requires
-            pts_to a p s)
+            pts_to a #p s)
         (ensures fun res ->
-            pts_to a p s `S.star`
+            pts_to a #p s `S.star`
             S.pure (res == Seq.index s (SZ.v i)))
   = fun _ -> 
         let v = A.read #t a i in

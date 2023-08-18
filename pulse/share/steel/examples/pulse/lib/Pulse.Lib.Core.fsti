@@ -84,6 +84,7 @@ val stt_atomic (a:Type u#a) (opened:inames) (pre:vprop) (post:a -> vprop) : Type
    while relying on the ghost invariant names in `opened` 
    and returns `x:a`
    such that the final state satisfies `post x` *)
+[@@ erasable]
 inline_for_extraction
 val stt_ghost (a:Type u#a) (opened:inames) (pre:vprop) (post:a -> vprop) : Type u#(max 2 a)
 
@@ -99,6 +100,14 @@ val return_stt (#a:Type u#a) (x:a) (p:a -> vprop)
 inline_for_extraction
 val return (#a:Type u#a) (x:a) (p:a -> vprop)
   : stt a (p x) p
+
+inline_for_extraction
+val return_stt_ghost (#a:Type u#a) (x:a) (p:a -> vprop)
+  : stt_ghost a emp_inames (p x) (fun r -> p r ** pure (r == x))
+
+inline_for_extraction
+val return_stt_ghost_noeq (#a:Type u#a) (x:a) (p:a -> vprop)
+  : stt_ghost a emp_inames (p x) p
 
 // Return in ghost?
 
@@ -301,3 +310,5 @@ val assume_ (p:vprop)
 val drop_ (p:vprop) 
   : stt_ghost unit emp_inames p (fun _ -> emp)
 
+val elim_false (a:Type) (p:a -> vprop)
+  : stt_ghost a emp_inames (pure False) p

@@ -29,11 +29,13 @@ module SZ = FStar.SizeT
 module A = Pulse.Lib.Array
 module U64 = FStar.UInt64
 module Cast = FStar.Int.Cast
+open Pulse.Class.BoundedIntegers
 #push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
 #push-options "--fuel 0 --ifuel 0"
 
 (**********************************************************)
 (* Pure specification *) 
+let u32_to_u64 (x:U32.t) : U64.t = Cast.uint32_to_uint64 x
 
 let bytes = Seq.seq U8.t
 
@@ -47,6 +49,7 @@ let hashable_bytes = s:bytes { Seq.length s ≤ blake2_max_input_length }
 
 // The hash value is a sequence of 32 bytes
 let raw_hash_value_t = Seq.lseq U8.t 32
+let e_raw_hash_value_t = l:erased (Seq.seq U8.t) { Seq.length l == 32}
 
 // A hash value is a pair of a (cumulative) hash and a counter
 let hash_value_t =
@@ -121,58 +124,43 @@ val blake2b:
   -> #p:perm
   -> #sd:Ghost.erased (Seq.seq U8.t) { Seq.length sd == SZ.v ll}
   -> stt unit
-    (A.pts_to output full_perm sout ** A.pts_to d p sd)
-    (λ _ → A.pts_to output full_perm (blake_spec (Seq.slice sd 0 (SZ.v ll)))
+    (A.pts_to output sout ** A.pts_to d #p sd)
+    (λ _ → A.pts_to output (blake_spec (Seq.slice sd 0 (SZ.v ll)))
            **
-           A.pts_to d p sd)
+           A.pts_to d #p sd)
 
-// We don't yet expose a free on references in Pulse.Steel.Wrapper
-// That's just an oversight. So assuming it here for now.
-```pulse
-fn free (#t:Type0) (r:ref t) (#v:erased t)
-    requires pts_to r full_perm v
-    ensures emp
-{
-    admit()
-}
-```
 
 // We also don't yet expose a ghost lemma relating the length of a sequence
 // to its underlying array. So assuming it here for now.
 assume
 val array_pts_to_len (#t:Type0) (a:A.array t) (#p:perm) (#x:Seq.seq t)
     : stt_ghost unit emp_inames
-          (A.pts_to a p x)
-          (fun _ -> A.pts_to a p x ** pure (A.length a == Seq.length x))
-
-// Note, writing it this way fails. Can't admit in ghost?? 
-// ```pulse
-// ghost
-// fn array_pts_to_len (#t:Type0) (a:A.array t) (#p:perm) (#x:Seq.seq t)
-//     requires A.pts_to a p x
-//     ensures A.pts_to a p x ** pure (A.length a == Seq.length x)
-// {
-//     admit()
-// }
-// ```
+          (A.pts_to a #p x)
+          (fun _ -> A.pts_to a #p x ** pure (A.length a == Seq.length x))
 
 // Array compare is implemented in other Pulse array modules, but this is not
+
+
 // yet in a standard place in the library. So, I just assume it here.
 ```pulse
 fn array_compare (#t:eqtype) (l:SZ.t) (a1 a2:A.larray t (SZ.v l))
-                 (#p1 #p2:perm) (#s1 #s2:Seq.seq t)
   requires (
-    A.pts_to a1 p1 s1 **
-    A.pts_to a2 p2 s2
+    A.pts_to a1 #p1 's1 **
+    A.pts_to a2 #p2 's2
   )
   returns res:bool
   ensures (
-    A.pts_to a1 p1 s1 **
-    A.pts_to a2 p2 s2 **
-    (pure (res <==> Seq.equal s1 s2))
+    A.pts_to a1 #p1 's1 **
+    A.pts_to a2 #p2 's2 **
+    (pure (res <==> Seq.equal 's1 's2))
   )
 {
-  admit()
+  array_pts_to_len a1;
+  array_pts_to_len a2;
+  Pulse.Lib.Array.compare l a1 a2 
+            #p1 #p2
+            #(hide #(elseq t l) (reveal 's1))
+            #(hide #(elseq t l) (reveal 's2));
 }
 ```
 
@@ -206,20 +194,20 @@ let mk_ha_core acc ctr = { acc; ctr }
 // the counter hasn't overflowed yet.
 let ha_val_core (core:ha_core) (h:hash_value_t) 
   : vprop
-  = A.pts_to core.acc full_perm (fst h) **
+  = A.pts_to core.acc (fst h) **
     exists_ (λ (n:U32.t) →
       pure (U32.v n == snd h) **
-      pts_to core.ctr full_perm n)
+      pts_to core.ctr n)
 
 // Working with records and representation predicates involves a bit of boilerplate
 // This ghost function packages up permission on the fields of a ha_core into
 // ha_val_core using Pulse's primitive `fold` operation
 ```pulse
 ghost
-fn fold_ha_val_core (h:ha_core) (#acc:Seq.lseq U8.t 32) (#n:U32.t)
+fn fold_ha_val_core (h:ha_core) (#acc:Seq.lseq U8.t 32)
   requires
-   A.pts_to h.acc full_perm acc **
-   pts_to h.ctr full_perm n
+   A.pts_to h.acc acc **
+   pts_to h.ctr n
   ensures
    ha_val_core h (acc, U32.v n)
 {
@@ -232,21 +220,20 @@ fn fold_ha_val_core (h:ha_core) (#acc:Seq.lseq U8.t 32) (#n:U32.t)
 ```pulse
 fn package_core (acc:hash_value_buf) (ctr:ref U32.t) 
                 (#vacc:erased (Seq.lseq U8.t 32))
-                (#vctr:erased U32.t)          
-  requires A.pts_to acc full_perm vacc **
-           pts_to ctr full_perm vctr 
+  requires A.pts_to acc vacc **
+           pts_to ctr 'vctr 
   returns h:ha_core
-  ensures ha_val_core h (reveal vacc, U32.v vctr) **
+  ensures ha_val_core h (reveal vacc, U32.v 'vctr) **
           pure (h == mk_ha_core acc ctr)
 {
    let core = mk_ha_core acc ctr;
    // It would be nice to have a "rename" primitive
    // So we could write something like
    // rename acc as core.acc, ctr as core.ctr;
-   rewrite (A.pts_to acc full_perm vacc)
-        as  (A.pts_to core.acc full_perm vacc);    
-   rewrite (pts_to ctr full_perm vctr)
-        as  (pts_to core.ctr full_perm vctr);
+   rewrite (A.pts_to acc vacc)
+        as  (A.pts_to core.acc vacc);    
+   rewrite (pts_to ctr 'vctr)
+        as  (pts_to core.ctr 'vctr);
    fold_ha_val_core core;
    core
 }
@@ -272,8 +259,8 @@ let mk_ha core tmp dummy = { core; tmp; dummy }
 // A representation predicate for ha, encapsulating an ha_val_core
 let ha_val (h:ha) (s:hash_value_t) =
   ha_val_core h.core s **
-  exists_ (fun s -> A.pts_to h.tmp full_perm s) **
-  A.pts_to h.dummy full_perm (Seq.create 1 0uy)
+  exists_ (fun s -> A.pts_to h.tmp s) **
+  A.pts_to h.dummy (Seq.create 1 0uy)
 
 // A ghost function to package up a ha_val predicate
 // If we were generating this automatically and inserting folds also in the prover,
@@ -281,12 +268,12 @@ let ha_val (h:ha) (s:hash_value_t) =
 // But, this version is more convenient to use in a manual setting.
 ```pulse
 ghost
-fn fold_ha_val (h:ha) (#acc:Seq.lseq U8.t 32) (#s:Seq.lseq U8.t 32) (#n:U32.t)
+fn fold_ha_val (h:ha) (#acc #s:Seq.lseq U8.t 32)
   requires
-   A.pts_to h.core.acc full_perm acc **
-   pts_to h.core.ctr full_perm n **
-   A.pts_to h.tmp full_perm s **
-   A.pts_to h.dummy full_perm (Seq.create 1 0uy)
+   A.pts_to h.core.acc acc **
+   pts_to h.core.ctr n **
+   A.pts_to h.tmp s **
+   A.pts_to h.dummy (Seq.create 1 0uy)
   ensures
    ha_val h (acc, U32.v n)
 {
@@ -301,25 +288,24 @@ fn fold_ha_val (h:ha) (#acc:Seq.lseq U8.t 32) (#s:Seq.lseq U8.t 32) (#n:U32.t)
 ```pulse
 fn package (acc:hash_value_buf) (ctr:ref U32.t) (tmp:hash_value_buf) (dummy:dummy_buf)
            (#vacc:erased (Seq.lseq U8.t 32))
-           (#vctr:erased U32.t)
            (#vtmp:erased (Seq.lseq U8.t 32))
-  requires A.pts_to acc full_perm vacc **
-           pts_to ctr full_perm vctr **
-           A.pts_to tmp full_perm vtmp **
-           A.pts_to dummy full_perm (Seq.create 1 0uy)
+  requires A.pts_to acc vacc **
+           pts_to ctr 'vctr **
+           A.pts_to tmp vtmp **
+           A.pts_to dummy (Seq.create 1 0uy)
   returns h:ha
-  ensures ha_val h (reveal vacc, U32.v vctr) **
+  ensures ha_val h (reveal vacc, U32.v 'vctr) **
           pure (h == mk_ha (mk_ha_core acc ctr) tmp dummy)
 {
    let ha = mk_ha (mk_ha_core acc ctr) tmp dummy;
-   rewrite (A.pts_to acc full_perm vacc)
-        as  (A.pts_to ha.core.acc full_perm vacc);    
-   rewrite (pts_to ctr full_perm vctr)
-        as  (pts_to ha.core.ctr full_perm vctr);
-   rewrite (A.pts_to tmp full_perm vtmp)
-        as  (A.pts_to ha.tmp full_perm vtmp);
-   rewrite (A.pts_to dummy full_perm (Seq.create 1 0uy))
-        as  (A.pts_to ha.dummy full_perm (Seq.create 1 0uy));
+   rewrite (A.pts_to acc vacc)
+        as  (A.pts_to ha.core.acc vacc);    
+   rewrite (pts_to ctr 'vctr)
+        as  (pts_to ha.core.ctr 'vctr);
+   rewrite (A.pts_to tmp vtmp)
+        as  (A.pts_to ha.tmp vtmp);
+   rewrite (A.pts_to dummy (Seq.create 1 0uy))
+        as  (A.pts_to ha.dummy (Seq.create 1 0uy));
    fold_ha_val ha;
    ha
 }
@@ -369,93 +355,90 @@ fn reclaim (s:ha) (#h:hash_value_t)
 // Note, I had first tried a vairant of this with a refinement on wi
 // in the invariant to constrain its length, but that led to various problems.
 // I should try that again and open issues. 
+#push-options "--retry 2" // GM: Part of this VC fails on batch mode, not on ide...
 ```pulse
 fn aggregate_raw_hashes (b1 b2: hash_value_buf)
-                        (#s1 #s2:raw_hash_value_t)
+                        (#s1 #s2:e_raw_hash_value_t)
   requires 
-    A.pts_to b1 full_perm s1 **
-    A.pts_to b2 full_perm s2
+    A.pts_to b1 s1 **
+    A.pts_to b2 s2
   ensures
-    A.pts_to b1 full_perm (xor_bytes s1 s2) **
-    A.pts_to b2 full_perm s2
+    A.pts_to b1 (xor_bytes s1 s2) **
+    A.pts_to b2 s2
 {
     let mut i = 0sz;
     array_pts_to_len b1;
     array_pts_to_len b2;
-    assert (pure (xor_bytes_pfx s1 s2 0 `Seq.equal` s1));
-    while (let vi = !i; SZ.(vi <^ 32sz))
+    assert (pure (s1 `Seq.equal` xor_bytes_pfx s1 s2 0));// `Seq.equal` s1));
+    while (let vi = !i; (vi < 32sz))
     invariant b.
-        exists (wi:SZ.t). //trying to add refinements here messes it up
-            pts_to i full_perm wi **
-            A.pts_to b1 full_perm (xor_bytes_pfx s1 s2 (SZ.v wi)) **
-            A.pts_to b2 full_perm s2 **
-            pure (b == SZ.(wi <^ 32sz))
+        exists wi. //trying to add refinements here messes it up
+            pts_to i wi **
+            A.pts_to b1 (xor_bytes_pfx s1 s2 (v wi)) **
+            A.pts_to b2 s2 **
+            pure (b == (wi < 32sz))
     {
       let vi = !i;
       let x1 = b1.(vi);
       let x2 = b2.(vi);
-      (b1.(vi) <- (U8.logxor x1 x2));
-      extend_hash_value s1 s2 (SZ.v vi);
-      i := SZ.(vi +^ 1sz)
+      b1.(vi) <- (U8.logxor x1 x2);
+      extend_hash_value s1 s2 (v vi);
+      i := vi + 1sz;
     };
     assert (pure (xor_bytes_pfx s1 s2 32 `Seq.equal` xor_bytes s1 s2))
 }
 ```
+#pop-options
 
 // Aggregates hashes has to handle the case where the ctr overflows
 // Again, this is cleaner than the Steel version, has fewer rewrites
 // and auxiliary definitions, e.g., using an `if` in the ensures works
 // fine here but not in Steel
 ```pulse
-fn aggregate (b1 b2: ha_core) (#h1 #h2: erased hash_value_t)
+fn aggregate (b1 b2: ha_core)
   requires
-    ha_val_core b1 h1 **
-    ha_val_core b2 h2
+    ha_val_core b1 'h1 **
+    ha_val_core b2 'h2
   returns ok:bool
   ensures
-    ha_val_core b1 (if ok then aggregate_hashes h1 h2 else h1) **
-    ha_val_core b2 h2
+    ha_val_core b1 (if ok then aggregate_hashes 'h1 'h2 else 'h1) **
+    ha_val_core b2 'h2
 {
-  unfold (ha_val_core b1 h1);
-  unfold (ha_val_core b2 h2);
+  unfold (ha_val_core b1 'h1);
+  unfold (ha_val_core b2 'h2);
   let ctr1 = !b1.ctr;
   let ctr2 = !b2.ctr;
-  let ctr = U64.(
-      (Cast.uint32_to_uint64 ctr1)
-      +^
-      (Cast.uint32_to_uint64 ctr2)
-  );
-  if U64.(ctr >^ 0xffffffffuL)
-  {
-    fold_ha_val_core b1;
-    fold_ha_val_core b2;
-    false
-  }
-  else
-  {
-    aggregate_raw_hashes b1.acc b2.acc;
-    b1.ctr := (Cast.uint64_to_uint32 ctr);
-    fold_ha_val_core b1;
-    fold_ha_val_core b2;
-    true
+  match (safe_add ctr1 ctr2) {
+    Some ctr -> {
+      aggregate_raw_hashes b1.acc b2.acc;
+      b1.ctr := ctr;
+      fold_ha_val_core b1;
+      fold_ha_val_core b2;
+      true
+    }
+    None -> {
+      fold_ha_val_core b1;
+      fold_ha_val_core b2;
+      false
+    }
   }
 }
 ```
 
 // compare compares the underlying arrays and the counters
 ```pulse
-fn compare (b1 b2:ha) (#h1 #h2:erased hash_value_t) 
+fn compare (b1 b2:ha)
   requires
-    ha_val b1 h1 **
-    ha_val b2 h2
+    ha_val b1 'h1 **
+    ha_val b2 'h2
   returns b:bool
   ensures
-    ha_val b1 h1 **
-    ha_val b2 h2 **
-    pure (b <==> (h1 == h2))
+    ha_val b1 'h1 **
+    ha_val b2 'h2 **
+    pure (b <==> ('h1 == 'h2))
 { 
-  unfold (ha_val b1 h1); unfold (ha_val_core b1.core h1);
-  unfold (ha_val b2 h2); unfold (ha_val_core b2.core h2);
+  unfold (ha_val b1 'h1); unfold (ha_val_core b1.core 'h1);
+  unfold (ha_val b2 'h2); unfold (ha_val_core b2.core 'h2);
   let ctr1 = !b1.core.ctr;
   let ctr2 = !b2.core.ctr;
   if (ctr1 <> ctr2)
@@ -483,18 +466,17 @@ fn compare (b1 b2:ha) (#h1 #h2:erased hash_value_t)
 // And then to repackage it as an ha
 ```pulse
 fn add (ha:ha) (input:hashable_buffer) (l:SZ.t)
-       (#p:perm) (#h:erased hash_value_t)
        (#s:(s:erased bytes {SZ.v l <= Seq.length s /\  SZ.v l <= blake2_max_input_length}))
   requires
-    ha_val ha h **
-    A.pts_to input p s
+    ha_val ha 'h **
+    A.pts_to input #p s
   returns ok:bool
   ensures
-    ha_val ha (if ok then aggregate_hashes h (hash_one_value (Seq.slice s 0 (SZ.v l))) else h) **
-    A.pts_to input p s
+    ha_val ha (if ok then aggregate_hashes 'h (hash_one_value (Seq.slice s 0 (SZ.v l))) else 'h) **
+    A.pts_to input #p s
 { 
    let mut ctr = 1ul;
-   unfold (ha_val ha h);
+   unfold (ha_val ha 'h);
    array_pts_to_len input;
    blake2b 32sz ha.tmp l input 0sz ha.dummy;
    let ha' = package_core ha.tmp ctr;
@@ -504,14 +486,14 @@ fn add (ha:ha) (input:hashable_buffer) (l:SZ.t)
    // rename ha'.acc as ha.tmp
    // Or, at least, `with w. rewrite ... `
    // Rather than having to write an assert and then a rewrite
-   with w. assert (A.pts_to ha'.acc full_perm w);
-   rewrite (A.pts_to ha'.acc full_perm w)
-        as (A.pts_to ha.tmp full_perm w); 
+   with w. assert (A.pts_to ha'.acc w);
+   rewrite (A.pts_to ha'.acc w)
+        as (A.pts_to ha.tmp w); 
    with w. unfold (ha_val_core ha.core w);
    fold_ha_val ha;
-   with w. assert (pts_to ha'.ctr full_perm w);
-   rewrite (pts_to ha'.ctr full_perm w)
-        as (pts_to ctr full_perm w);
+   with w. assert (pts_to ha'.ctr w);
+   rewrite (pts_to ha'.ctr w)
+        as (pts_to ctr w);
    v
 }
 ```

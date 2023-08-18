@@ -75,7 +75,7 @@ fn derive_child (sid:nat) (ctxt_hndl:nat) (record:record_t) (repr:repr_t)
 
           let cdi = A.alloc 0uy dice_digest_len;
           let ret = EngineCore.engine_main cdi c.uds r;
-          with s. assert (A.pts_to cdi full_perm s);
+          with s. assert (A.pts_to cdi s);
           A.free c.uds;
 
           match ret {
@@ -149,7 +149,7 @@ fn derive_child (sid:nat) (ctxt_hndl:nat) (record:record_t) (repr:repr_t)
       rewrite (context_perm ctxt) as (l0_context_perm c);
       unfold (l0_context_perm c);
 
-      with s. assert (A.pts_to c.cdi full_perm s);
+      with s. assert (A.pts_to c.cdi s);
 
       match record {
       L0_record r -> {
@@ -184,7 +184,7 @@ fn derive_child (sid:nat) (ctxt_hndl:nat) (record:record_t) (repr:repr_t)
                           deviceIDCRI_len deviceIDCSR_len deviceIDCSR r;
           A.free c.cdi;
 
-          with (s1:elseq U8.t v32us). assert (A.pts_to aliasKey_priv full_perm s1);
+          with (s1:elseq U8.t v32us). assert (A.pts_to aliasKey_priv s1);
           let new_locked_context = init_l1_ctxt deviceIDCSR_len aliasKeyCRT_len 
                                                 deviceID_priv deviceID_pub
                                                 aliasKey_priv aliasKey_pub 

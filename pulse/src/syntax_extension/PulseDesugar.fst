@@ -6,6 +6,7 @@ module A = FStar.Parser.AST
 module D = FStar.Syntax.DsEnv
 module ToSyntax = FStar.ToSyntax.ToSyntax
 open FStar.Ident
+open FStar.List.Tot
 module S = FStar.Syntax.Syntax
 module L = FStar.Compiler.List
 module U = FStar.Syntax.Util
@@ -91,19 +92,19 @@ let stt_lid = pulse_lib_core_lid "stt"
 let assign_lid = pulse_lib_ref_lid "op_Colon_Equals"
 let stt_ghost_lid = pulse_lib_core_lid "stt_ghost"
 let stt_atomic_lid = pulse_lib_core_lid "stt_atomic"
-let stapp_assignment (lhs rhs:S.term) (r:_)
+let op_colon_equals_lid r = Ident.lid_of_path ["op_Colon_Equals"] r
+let op_array_assignment_lid r = Ident.lid_of_path ["op_Array_Assignment"] r
+let stapp_assignment assign_lid (args:list S.term) (last_arg:S.term) (r:_)
   : SW.st_term
   = let head_fv = S.lid_as_fv assign_lid None in
     let head = S.fv_to_tm head_fv in
-    let app = S.mk_Tm_app head [(lhs, None)] lhs.pos in
-    SW.(tm_st_app (tm_expr app r) None (as_term rhs) r)
-
-
-let resolve_name (env:env_t) (id:ident)
-  : err S.term
-  = match D.try_lookup_id env.tcenv.dsenv id with
-    | None -> fail "Name not found" (Ident.range_of_id id)
-    | Some t -> return t
+    let app = 
+      L.fold_left 
+        (fun head (arg:S.term) ->
+          S.mk_Tm_app head [(arg, None)] arg.pos)
+        head args
+    in
+    SW.(tm_st_app (tm_expr app r) None (as_term last_arg) r)
 
 let resolve_lid (env:env_t) (lid:lident)
   : err lident
@@ -341,8 +342,16 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
 
     | Assignment { lhs; value } ->
       let? lhs = tosyntax env lhs in
-      let? value = tosyntax env value in
-      return (stapp_assignment lhs value s.range)
+      let? rhs = tosyntax env value in
+      let? assignment_lid = resolve_lid env (op_colon_equals_lid s.range) in
+      return (stapp_assignment assignment_lid [lhs] rhs s.range)
+
+    | ArrayAssignment { arr; index; value } ->
+      let? arr = tosyntax env arr in
+      let? index = tosyntax env index in
+      let? value = tosyntax env value in      
+      let? array_assignment_lid = resolve_lid env (op_array_assignment_lid s.range) in
+      return (stapp_assignment array_assignment_lid [arr;index] value s.range)
     
     | Sequence { s1={s=Open l}; s2 } ->
       let env = push_namespace env l in
@@ -405,7 +414,7 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
       | VPropExists _ ->
         let? vp = desugar_vprop env vprop in
         let? witnesses = map_err (desugar_term env) witnesses in
-        return (SW.tm_intro_exists false vp witnesses s.range)
+        return (SW.tm_intro_exists vp witnesses s.range)
     )
 
 
@@ -558,13 +567,69 @@ and desugar_computation_type (env:env_t) (c:Sugar.computation_type)
       let inames = SW.tm_emp_inames in
       return SW.(ghost_comp inames pre (mk_binder c.return_name ret) post)      
 
+let rec free_vars_term (env:env_t) (t:A.term) =
+  ToSyntax.free_vars false env.tcenv.dsenv t
+and free_vars_vprop (env:env_t) (t:Sugar.vprop) =
+  let open Sugar in
+  match t.v with
+  | VPropTerm t -> free_vars_term env t
+  | VPropStar (t0, t1) -> 
+    free_vars_vprop env t0 @
+    free_vars_vprop env t1
+  | VPropExists { binders; body } ->
+    let env', fvs = free_vars_binders env binders in
+    fvs @ free_vars_vprop env' body
+and free_vars_binders (env:env_t) (bs:Sugar.binders)
+  : env_t & list ident
+  = match bs with
+    | [] -> env, []
+    | (_, x, t)::bs ->
+      let fvs = free_vars_term env t in
+      let env', res = free_vars_binders (fst (push_bv env x)) bs in
+      env', fvs@res
+
+let free_vars_comp (env:env_t) (c:Sugar.computation_type)
+  : list ident
+  = let ids =
+        free_vars_vprop env c.precondition @
+        free_vars_term env c.return_type @
+        free_vars_vprop (fst (push_bv env c.return_name)) c.postcondition
+    in
+    L.deduplicate Ident.ident_equals ids
+
+let idents_as_binders (env:env_t) (l:list ident)
+  : err (env_t & list (option SW.qualifier & SW.binder) & list S.bv)
+  = let erased_tm = A.(mk_term (Var FStar.Parser.Const.erased_lid) FStar.Compiler.Range.dummyRange Un) in
+    let rec aux env binders bvs l 
+      : err (env_t & list (option SW.qualifier & SW.binder) & list S.bv)
+      = match l with
+        | [] -> return (env, L.rev binders, L.rev bvs)
+        | i::l ->
+          let env, bv = push_bv env i in
+          let qual = SW.as_qual true in
+          let text = Ident.string_of_id i in
+          let wild = A.(mk_term Wild (Ident.range_of_id i) Un) in
+          let ty = 
+            if BU.starts_with text "'"
+            then A.(mkApp erased_tm [wild, A.Nothing] (Ident.range_of_id i))
+            else wild
+          in
+          let? ty = desugar_term env ty in
+          aux env ((qual, SW.mk_binder i ty)::binders) (bv::bvs) l
+    in
+    aux env [] [] l
+              
 
 let desugar_decl (env:env_t)
                  (p:Sugar.decl)
   : err SW.st_term 
   = let? env, bs, bvs = desugar_binders env p.binders in
-    let? body = desugar_stmt env p.body in
+    let fvs = free_vars_comp env p.ascription in
+    let? env, bs', bvs' = idents_as_binders env fvs in
+    let bs = bs@bs' in
+    let bvs = bvs@bvs' in
     let? comp = desugar_computation_type env p.ascription in
+    let? body = desugar_stmt env p.body in
     let rec aux (bs:list (option SW.qualifier & SW.binder)) (bvs:list S.bv) =
       match bs, bvs with
       | [(q, last)], [last_bv] -> 

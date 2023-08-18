@@ -3,6 +3,7 @@ open Pulse.Syntax.Base
 module R = FStar.Reflection.V2
 module T = FStar.Tactics.V2
 
+val tot_or_ghost_to_string (eff:T.tot_or_ghost) : string
 val name_to_string (f:R.name) : string
 // val constant_to_string (c:constant) : string
 val univ_to_string (u:universe) : string

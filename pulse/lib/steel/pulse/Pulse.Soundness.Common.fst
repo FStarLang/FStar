@@ -48,7 +48,14 @@ let tot_typing_soundness (#g:env)
                          (#t:term)
                          (d:tot_typing g e t)
   : GTot (RT.tot_typing (elab_env g) (elab_term e) (elab_term t))
-         (decreases d)
+  = let E d = d in
+    d
+
+let ghost_typing_soundness (#g:env)
+                           (#e:term)
+                           (#t:term)
+                           (d:ghost_typing g e t)
+  : GTot (RT.ghost_typing (elab_env g) (elab_term e) (elab_term t))
   = let E d = d in
     d
 
@@ -115,7 +122,7 @@ let mk_t_abs (g:env)
              (#u:universe)
              (#ty:term)
              (#q:option qualifier)
-             (#t_typing:typing g ty (tm_type u))
+             (#t_typing:typing g ty T.E_Total (tm_type u))
              (ppname:ppname)
              (r_t_typing:RT.tot_typing (elab_env g)
                                        (elab_term ty)

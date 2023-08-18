@@ -59,11 +59,13 @@ val continuation_elaborator_with_bind (#g:env) (ctxt:term)
              (push_binding g (snd x) (fst x) (comp_res c1))
              (tm_star (open_term (comp_post c1) (snd x)) ctxt))
 
-val continuation_elaborator_with_tot_bind (#g:env) (#ctxt:term)
+val continuation_elaborator_with_let (#g:env) (#ctxt:term)
   (ctxt_typing:tot_typing g ctxt tm_vprop)
   (#e1:term)
+  (#eff1:T.tot_or_ghost)
   (#t1:term)
-  (e1_typing:tot_typing g e1 t1)
+  (b:binder{b.binder_ty == t1})
+  (e1_typing:typing g e1 eff1 t1)
   (x:nvar { None? (lookup g (snd x)) })
   : T.Tac (continuation_elaborator
            g ctxt
