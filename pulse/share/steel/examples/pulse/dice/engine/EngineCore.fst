@@ -88,11 +88,12 @@ fn compute_cdi (cdi:cdi_t) (uds:A.larray U8.t (US.v uds_len)) (record:engine_rec
 #set-options "--print_implicits --print_universes"
 ```pulse
 fn engine_main' (cdi:cdi_t) (uds:A.larray U8.t (US.v uds_len)) (record:engine_record_t)
+                (#c0:Ghost.erased (elseq U8.t dice_digest_len))
                 (#repr:Ghost.erased engine_record_repr)
                 (#uds_perm #p:perm)
   requires engine_record_perm record repr p **
            A.pts_to uds #uds_perm uds_bytes **
-           A.pts_to cdi 'c0
+           A.pts_to cdi c0
   returns  r:dice_return_code
   ensures  engine_record_perm record repr p **
            A.pts_to uds #uds_perm uds_bytes **
@@ -110,4 +111,4 @@ fn engine_main' (cdi:cdi_t) (uds:A.larray U8.t (US.v uds_len)) (record:engine_re
   } else { DICE_ERROR }
 }
 ```
-// let engine_main = engine_main'
+let engine_main = engine_main'

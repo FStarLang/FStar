@@ -745,7 +745,7 @@ fn derive_child' (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t) (#repr:er
         match ctxt {
         Engine_context c -> {
           // NOTE: we won't eventually release engine_context_perm because we won't 
-          // own it anymore -- we will disable the uds and free the uds array
+          // own it anymore -- we will free the uds array
           rewrite (context_perm ctxt ctxt_repr) as (engine_context_perm c);
           unfold (engine_context_perm c);
 
