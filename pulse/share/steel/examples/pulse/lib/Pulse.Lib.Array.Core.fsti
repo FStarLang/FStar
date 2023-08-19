@@ -14,6 +14,11 @@ val is_full_array (#a:Type u#0) (x:array a) : prop
 
 val pts_to (#a:Type u#0) (x:array a) (#[exact (`full_perm)] p:perm) (s: Seq.seq a) : vprop
 
+val pts_to_len (#t:Type0) (a:array t) (#p:perm) (#x:Seq.seq t)
+    : stt_ghost unit emp_inames
+          (pts_to a #p x)
+          (fun _ → pts_to a #p x ** pure (length a == Seq.length x))
+
 val alloc 
         (#elt: Type)
         (x: elt)
