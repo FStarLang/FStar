@@ -243,6 +243,7 @@ type __internal_ocaml_attributes =
   | CAbstractStruct 
   | CIfDef 
   | CMacro 
+  | CNoInline 
 let (uu___is_PpxDerivingShow : __internal_ocaml_attributes -> Prims.bool) =
   fun projectee ->
     match projectee with | PpxDerivingShow -> true | uu___ -> false
@@ -295,6 +296,8 @@ let (uu___is_CIfDef : __internal_ocaml_attributes -> Prims.bool) =
   fun projectee -> match projectee with | CIfDef -> true | uu___ -> false
 let (uu___is_CMacro : __internal_ocaml_attributes -> Prims.bool) =
   fun projectee -> match projectee with | CMacro -> true | uu___ -> false
+let (uu___is_CNoInline : __internal_ocaml_attributes -> Prims.bool) =
+  fun projectee -> match projectee with | CNoInline -> true | uu___ -> false
 let singleton : 'uuuuu . 'uuuuu -> 'uuuuu = fun x -> x
 type 'a eqtype_as_type = 'a
 let coerce_eq : 'a 'b . unit -> 'a -> 'b =

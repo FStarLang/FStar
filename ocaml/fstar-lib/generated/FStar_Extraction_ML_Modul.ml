@@ -116,6 +116,9 @@ let rec (extract_meta :
                FStar_Extraction_ML_Syntax.PpxDerivingYoJson
          | "FStar.Pervasives.CInline" ->
              FStar_Pervasives_Native.Some FStar_Extraction_ML_Syntax.CInline
+         | "FStar.Pervasives.CNoInline" ->
+             FStar_Pervasives_Native.Some
+               FStar_Extraction_ML_Syntax.CNoInline
          | "FStar.Pervasives.Substitute" ->
              FStar_Pervasives_Native.Some
                FStar_Extraction_ML_Syntax.Substitute
