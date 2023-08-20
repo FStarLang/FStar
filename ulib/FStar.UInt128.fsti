@@ -126,6 +126,7 @@ val lte (a:t) (b:t) : Pure bool
   (ensures (fun r -> r == lte #n (v a) (v b)))
 
 val eq_mask: a:t -> b:t -> Tot (c:t{(v a = v b ==> v c = pow2 n - 1) /\ (v a <> v b ==> v c = 0)})
+
 val gte_mask: a:t -> b:t -> Tot (c:t{(v a >= v b ==> v c = pow2 n - 1) /\ (v a < v b ==> v c = 0)})
 
 (* Casts *)

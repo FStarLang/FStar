@@ -143,6 +143,7 @@ type meta =
   | Deprecated of string
   | RemoveUnusedTypeParameters of list int * FStar.Compiler.Range.range //positional
   | HasValDecl of FStar.Compiler.Range.range //this symbol appears in the interface of a module
+  | CNoInline
 
 // rename
 type metadata = list meta
