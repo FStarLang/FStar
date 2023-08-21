@@ -546,6 +546,11 @@ let colorize_red s =
   | Some true -> format3 "%s%s%s" "\x1b[31;1m" s "\x1b[0m"
   | _ -> s
 
+let colorize_yellow s =
+  match stdout_isatty () with
+  | Some true -> format3 "%s%s%s" "\x1b[33;1m" s "\x1b[0m"
+  | _ -> s
+
 let colorize_cyan s =
   match stdout_isatty () with
   | Some true -> format3 "%s%s%s" "\x1b[36;1m" s "\x1b[0m"
