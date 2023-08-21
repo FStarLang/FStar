@@ -259,26 +259,26 @@ let check_must_erase_attribute env se =
                                       FStar.Parser.Const.must_erase_for_extraction_attr in
                     if must_erase && not has_attr
                     then
-                        FStar.Errors.log_issue
+                        FStar.Errors.log_issue_doc
                             (range_of_fv lbname)
                             (FStar.Errors.Error_MustEraseMissing,
-                                BU.format2
+                               [Errors.text (BU.format2
                                     "Values of type `%s` will be erased during extraction, \
                                     but its interface hides this fact. Add the `must_erase_for_extraction` \
                                     attribute to the `val %s` declaration for this symbol in the interface"
                                     (Print.fv_to_string lbname)
                                     (Print.fv_to_string lbname)
-                                    )
+                                    )])
                     else if has_attr && not must_erase
-                    then FStar.Errors.log_issue
+                    then FStar.Errors.log_issue_doc
                         (range_of_fv lbname)
                         (FStar.Errors.Error_MustEraseMissing,
-                            BU.format1
+                           [Errors.text (BU.format1
                                 "Values of type `%s` cannot be erased during extraction, \
                                 but the `must_erase_for_extraction` attribute claims that it can. \
                                 Please remove the attribute."
                                 (Print.fv_to_string lbname)
-                                ))
+                                )]))
     end
 
     | _ -> ()

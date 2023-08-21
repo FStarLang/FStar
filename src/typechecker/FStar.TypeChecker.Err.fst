@@ -165,6 +165,9 @@ let add_errors env errs =
 let log_issue env r (e, m) : unit =
  add_errors env [e, m, r, Errors.get_ctx ()]
 
+let log_issue_text env r (e, m) : unit =
+  log_issue env r (e, [Errors.text m])
+
 let err_msg_type_strings env t1 t2 :(string * string) =
   print_discrepancy (N.term_to_string env) t1 t2
 

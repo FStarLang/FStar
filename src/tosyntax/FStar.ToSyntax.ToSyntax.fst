@@ -138,7 +138,7 @@ let trans_qual r maybe_effect_id = function
   | AST.TotalEffect ->   S.TotalEffect
   | AST.Effect_qual ->   S.Effect
   | AST.New  ->          S.New
-  | AST.Opaque ->        Errors.log_issue r (Errors.Warning_DeprecatedOpaqueQualifier, "The 'opaque' qualifier is deprecated since its use was strangely schizophrenic. There were two overloaded uses: (1) Given 'opaque val f : t', the behavior was to exclude the definition of 'f' to the SMT solver. This corresponds roughly to the new 'irreducible' qualifier. (2) Given 'opaque type t = t'', the behavior was to provide the definition of 't' to the SMT solver, but not to inline it, unless absolutely required for unification. This corresponds roughly to the behavior of 'unfoldable' (which is currently the default)."); S.Visible_default
+  | AST.Opaque ->        Errors.log_issue_text r (Errors.Warning_DeprecatedOpaqueQualifier, "The 'opaque' qualifier is deprecated since its use was strangely schizophrenic. There were two overloaded uses: (1) Given 'opaque val f : t', the behavior was to exclude the definition of 'f' to the SMT solver. This corresponds roughly to the new 'irreducible' qualifier. (2) Given 'opaque type t = t'', the behavior was to provide the definition of 't' to the SMT solver, but not to inline it, unless absolutely required for unification. This corresponds roughly to the behavior of 'unfoldable' (which is currently the default)."); S.Visible_default
   | AST.Reflectable ->
     begin match maybe_effect_id with
     | None -> raise_error (Errors.Fatal_ReflectOnlySupportedOnEffects, "Qualifier reflect only supported on effects") r
@@ -2389,6 +2389,7 @@ and desugar_comp r (allow_type_promotion:bool) env t =
          * (c.f. #57), so add the thunking here *)
         let thunk_ens (e, i) = (thunk e, i) in
         let fail_lemma () =
+             let open FStar.Pprint in
              let expected_one_of = ["Lemma post";
                                     "Lemma (ensures post)";
                                     "Lemma (requires pre) (ensures post)";
@@ -2399,8 +2400,9 @@ and desugar_comp r (allow_type_promotion:bool) env t =
                                     "Lemma (requires pre) (ensures post) (decreases d)";
                                     "Lemma (requires pre) (ensures post) [SMTPat ...]";
                                     "Lemma (requires pre) (ensures post) (decreases d) [SMTPat ...]"] in
-             let msg = String.concat "\n\t" expected_one_of in
-             raise_error (Errors.Fatal_InvalidLemmaArgument, "Invalid arguments to 'Lemma'; expected one of the following:\n\t" ^ msg) t.range
+             raise_error_doc (Errors.Fatal_InvalidLemmaArgument,
+                [text "Invalid arguments to 'Lemma'; expected one of the following"
+                  ^^ sublist empty (List.map doc_of_string expected_one_of)]) t.range
         in
         let args = match args with
           | [] -> fail_lemma ()

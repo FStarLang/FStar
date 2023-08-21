@@ -79,7 +79,7 @@ let initialize_hints_db src_filename format_filename : unit =
 
           | MalformedJson ->
             if Options.use_hints () then
-              Err.log_issue Range.dummyRange
+              Err.log_issue_text Range.dummyRange
                             (Err.Warning_CouldNotReadHints,
                              BU.format1 "Malformed JSON hints file: %s; ran without hints"
                                        val_filename);
@@ -87,7 +87,7 @@ let initialize_hints_db src_filename format_filename : unit =
 
           | UnableToOpen ->
             if Options.use_hints () then
-              Err.log_issue Range.dummyRange
+              Err.log_issue_text Range.dummyRange
                             (Err.Warning_CouldNotReadHints,
                              BU.format1 "Unable to open hints file: %s; ran without hints"
                                        val_filename);
@@ -440,11 +440,10 @@ let errors_to_report (settings : query_settings) : list Errors.error =
                   //we blame all the labels in the query. So warn about the imprecision, unless the
                   //use opted into --split_queries no.
                   if Options.split_queries () <> Options.No then
-                    FStar.TypeChecker.Err.log_issue
+                    FStar.TypeChecker.Err.log_issue_text
                          settings.query_env
                          (Env.get_range settings.query_env)
                          (Warning_SplitAndRetryQueries,
-                           mkmsg
                            "The verification condition was to be split into several atomic sub-goals, \
                             but this query has multiple sub-goals---the error report may be inaccurate");
                   settings.query_all_labels

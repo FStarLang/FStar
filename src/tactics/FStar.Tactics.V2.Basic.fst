@@ -2544,8 +2544,13 @@ let resolve_name (e:env) (n:list string) =
   ret (FStar.Syntax.DsEnv.resolve_name e.dsenv l)
 
 let log_issues (is : list Errors.issue) : tac unit =
-  idtac ;!
-  Errors.add_issues is;
+  let open FStar.Errors in
+  let! ps = get in
+  (* Prepend an error component *)
+  let is = is |>
+     List.map (fun i -> { i with issue_msg = (Errors.text "Tactic logged issue:")::i.issue_msg })
+  in
+  add_issues is;
   ret ()
 
 (**** Creating proper environments and proofstates ****)

@@ -115,9 +115,7 @@ let run_safe t ps =
     if Options.tactics_failhard ()
     then run t ps
     else try run t ps
-    with | Errors.Err (_, msg, _)
-         | Errors.Error (_, msg, _, _) -> Failed (TacticFailure (Errors.rendermsg msg), ps)
-         | e -> Failed (e, ps)
+    with | e -> Failed (e, ps)
 
 let ret (x:'a) : tac 'a =
     mk_tac (fun ps -> Success (x, ps))

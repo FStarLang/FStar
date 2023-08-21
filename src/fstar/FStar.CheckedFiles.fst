@@ -388,12 +388,12 @@ let load_module_from_cache =
         let suppress_warning = Options.should_check_file fn || !already_failed in
         if not suppress_warning then begin
           already_failed := true;
-          FStar.Errors.log_issue
+          FStar.Errors.log_issue_doc
             (Range.mk_range fn (Range.mk_pos 0 0) (Range.mk_pos 0 0))
             (Errors.Warning_CachedFile,
-             BU.format3
+             [Errors.text (BU.format3
                "Unable to load %s since %s; will recheck %s (suppressing this warning for further modules)"
-               cache_file msg fn)
+               cache_file msg fn)])
         end
       in
       match load_checked_file_with_tc_result
