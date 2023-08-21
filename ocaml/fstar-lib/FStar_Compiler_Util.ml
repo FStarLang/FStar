@@ -529,6 +529,13 @@ let flush_stdout () = flush stdout
 
 let stdout_isatty () = Some (Unix.isatty Unix.stdout)
 
+(* NOTE: this is deciding whether or not to color by looking
+   at stdout_isatty(), which may be a wrong choice if
+   we're instead outputting to stderr. e.g.
+     fstar.exe Blah.fst 2>errlog
+   will colorize the errors in the file if stdout is not
+   also redirected.
+*)
 let colorize s colors =
   match colors with
   | (c1,c2) ->
