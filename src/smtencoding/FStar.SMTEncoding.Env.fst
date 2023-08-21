@@ -228,13 +228,11 @@ let push_term_var (env:env_t) (x:bv) (t:term) =
 
 let lookup_term_var env a =
     match lookup_bvar_binding env a with
-    | None ->
-        (match lookup_bvar_binding env a with
-         | None -> failwith (BU.format2 "Bound term variable not found  %s in environment: %s"
-                                        (Print.bv_to_string a)
-                                        (print_env env))
-         | Some (b,t) -> t)
     | Some (b,t) -> t
+    | None ->
+      failwith (BU.format2 "Bound term variable not found  %s in environment: %s"
+                           (Print.bv_to_string a)
+                           (print_env env))
 
 (* Qualified term names *)
 let mk_fvb lid fname arity ftok fuel_partial_app thunked =
