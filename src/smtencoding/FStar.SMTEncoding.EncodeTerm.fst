@@ -789,27 +789,52 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                  ([], vars, mk_and_l (guards_l@[ct]@effect_args)) in
                let tkey_hash = "Non_total_Tm_arrow" ^ (hash_of_term tkey) ^ "@Effect=" ^
                  (c |> U.comp_effect_name |> string_of_lid) in
-               BU.digest_of_string tkey_hash in
+               BU.digest_of_string tkey_hash
+             in
 
              let tsym = "Non_total_Tm_arrow_" ^ tkey_hash in
-             let tdecl = Term.DeclFun(tsym, [], Term_sort, None) in
-             let t = mkApp(tsym, []) in
+             (* We need to compute all free variables of this arrow
+             expressions and parametrize the encoding wrt to them. See
+             issue #3028 *)
+             let arg_vars, arg_sorts, arg_terms =
+               let fvs = Free.names t0 |> BU.set_elements in
+               let fstar_sorts = List.map (fun bv -> bv.sort) fvs in
+               let fstar_terms = List.map S.bv_to_name fvs in
+               
+               let tms = 
+               (List.map (fun bv -> lookup_term_var env bv) fvs <: list term) in
+               
+               (* FIXME *)
+               let getfv (t:term) : fv =
+                 match t.tm with
+                 | FreeV fv -> fv
+                 | _ -> failwith "hmm"
+               in
+               
+               (List.map getfv tms <: Term.fvs),
+               (List.map (fun _ -> Term_sort) fstar_sorts <: list sort),
+               tms
+             in
+             let tdecl = Term.DeclFun(tsym, arg_sorts, Term_sort, None) in
+             let t = mkApp(tsym, arg_terms) in
              let t_kinding =
                 let a_name = "non_total_function_typing_" ^tsym in
-                Util.mkAssume(mk_HasType t mk_Term_type,
-                            Some "Typing for non-total arrows",
-                            a_name) in
+                Util.mkAssume(mkForall t0.pos ([], arg_vars, mk_HasType (mkApp (tsym, arg_terms)) mk_Term_type),
+                              Some "Typing for non-total arrows",
+                              a_name)
+             in
              let fsym = mk_fv ("f", Term_sort) in
              let f = mkFreeV fsym in
              let f_has_t = mk_HasType f t in
              let t_interp =
                  let a_name = "pre_typing_" ^tsym in
                  Util.mkAssume(mkForall_fuel module_name t0.pos ([[f_has_t]],
-                                                                 [fsym],
+                                                                 [fsym]@arg_vars,
                                                                  mkImp(f_has_t,
                                                                  mk_tester "Tm_arrow" (mk_PreType f))),
                               Some a_name,
-                              a_name) in
+                              a_name)
+             in
 
              t, mk_decls tsym tkey_hash [tdecl; t_kinding; t_interp] []
 
