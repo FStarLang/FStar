@@ -798,34 +798,33 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              issue #3028 *)
              let arg_vars, arg_sorts, arg_terms =
                let fvs = Free.names t0 |> BU.set_elements in
-               let fstar_sorts = List.map (fun bv -> bv.sort) fvs in
-               let fstar_terms = List.map S.bv_to_name fvs in
+               let tms = List.map (lookup_term_var env) fvs in
                
-               let tms = 
-               (List.map (fun bv -> lookup_term_var env bv) fvs <: list term) in
-               
-               (* FIXME *)
-               let getfv (t:term) : fv =
+               (* For each of the free variables, we attempt to close
+               the axioms over them. But, some of them are in the environment
+               when encoding was started, and those are encoded as top-level
+               names instead of FreeVs. So we only take the FreeVs. *)
+               let getfv (t:term) : list fv =
                  match t.tm with
-                 | FreeV fv -> fv
-                 | _ -> failwith "hmm"
+                 | FreeV fv -> [fv]
+                 | _ -> []
                in
                
-               (List.map getfv tms <: Term.fvs),
-               (List.map (fun _ -> Term_sort) fstar_sorts <: list sort),
+               (List.concatMap getfv tms <: Term.fvs),
+               (List.map (fun _ -> Term_sort) fvs <: list sort),
                tms
              in
              let tdecl = Term.DeclFun(tsym, arg_sorts, Term_sort, None) in
-             let t = mkApp(tsym, arg_terms) in
+             let tapp = mkApp(tsym, arg_terms) in
              let t_kinding =
                 let a_name = "non_total_function_typing_" ^tsym in
-                Util.mkAssume(mkForall t0.pos ([], arg_vars, mk_HasType (mkApp (tsym, arg_terms)) mk_Term_type),
+                Util.mkAssume(mkForall t0.pos ([], arg_vars, mk_HasType tapp mk_Term_type),
                               Some "Typing for non-total arrows",
                               a_name)
              in
              let fsym = mk_fv ("f", Term_sort) in
              let f = mkFreeV fsym in
-             let f_has_t = mk_HasType f t in
+             let f_has_t = mk_HasType f tapp in
              let t_interp =
                  let a_name = "pre_typing_" ^tsym in
                  Util.mkAssume(mkForall_fuel module_name t0.pos ([[f_has_t]],
@@ -836,7 +835,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                               a_name)
              in
 
-             t, mk_decls tsym tkey_hash [tdecl; t_kinding; t_interp] []
+             tapp, mk_decls tsym tkey_hash [tdecl; t_kinding; t_interp] []
 
       | Tm_refine _ ->
         let x, f =
@@ -1147,9 +1146,20 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
       | Tm_abs {bs; body; rc_opt=lopt} ->
           let bs, body, opening = SS.open_term' bs body in
           let fallback () =
+            let arg_sorts, arg_terms =
+              (* We need to compute all free variables of this arrow
+              expressions and parametrize the encoding wrt to them. See
+              issue #3028 *)
+              let fvs = Free.names t0 |> BU.set_elements in
+              let tms = List.map (lookup_term_var env) fvs in
+              (List.map (fun _ -> Term_sort) fvs <: list sort),
+              tms
+            in
             let f = varops.fresh env.current_module_name "Tm_abs" in
-            let decl = Term.DeclFun(f, [], Term_sort, Some "Imprecise function encoding") in
-            mkFreeV <| mk_fv (f, Term_sort), [decl] |> mk_decls_trivial
+            let decl = Term.DeclFun(f, arg_sorts, Term_sort, Some "Imprecise function encoding") in
+            let fv : term = mkFreeV <| mk_fv (f, Term_sort) in
+            let fapp = mkApp (f, arg_terms) in
+            fapp, [decl] |> mk_decls_trivial
           in
 
           let is_impure (rc:S.residual_comp) =
