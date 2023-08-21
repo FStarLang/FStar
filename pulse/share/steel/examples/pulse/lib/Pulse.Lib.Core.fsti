@@ -3,6 +3,11 @@ open FStar.Ghost
 module U32 = FStar.UInt32
 module G = FStar.Ghost
 
+(* Common alias *)
+let one_half =
+  let open Steel.FractionalPermission in
+  half_perm full_perm
+
 (***** begin vprop_equiv *****)
 
 #set-options "--print_implicits --ugly --print_universes"

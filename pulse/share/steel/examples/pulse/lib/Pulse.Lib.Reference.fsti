@@ -25,6 +25,29 @@ val ( := ) (#a:Type) (r:ref a) (x:a) (#n:erased a)
 val free (#a:Type) (r:ref a) (#n:erased a)
   : stt unit (pts_to r n) (fun _ -> emp)
 
+val share (#a:Type) (r:ref a) (#v:erased a) (#p:perm)
+  : stt_ghost unit emp_inames
+      (pts_to r #p v)
+      (fun _ ->
+       pts_to r #(half_perm p) v **
+       pts_to r #(half_perm p) v)
+
+val gather (#a:Type) (r:ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
+  : stt_ghost unit emp_inames
+      (pts_to r #p0 x0 ** pts_to r #p1 x1)
+      (fun _ -> pts_to r #(sum_perm p0 p1) x0 ** pure (x0 == x1))
+
+(* Share/gather specialized to half permission *)
+val share2 (#a:Type) (r:ref a) (#v:erased a)
+  : stt_ghost unit emp_inames
+      (pts_to r v)
+      (fun _ -> pts_to r #one_half v ** pts_to r #one_half v)
+
+val gather2 (#a:Type) (r:ref a) (#x0 #x1:erased a)
+  : stt_ghost unit emp_inames
+      (pts_to r #one_half x0 ** pts_to r #one_half x1)
+      (fun _ -> pts_to r x0 ** pure (x0 == x1))
+
 val read_atomic (r:ref U32.t) (#n:erased U32.t) (#p:perm)
   : stt_atomic U32.t emp_inames
     (pts_to r #p n)
@@ -45,17 +68,6 @@ val with_local
                               (fun v -> post v ** exists_ (pts_to r)))
   : stt ret_t pre post
 
-let half_perm = half_perm full_perm
-
-val share (#a:Type0) (#uses:_) (r:ref a) (#x:a)
-  : stt_ghost unit uses
-    (pts_to r x)
-    (fun _ -> pts_to r #half_perm x ** pts_to r #half_perm x)
-
-val gather (#a:Type0) (#uses:_) (r:ref a) (#x:a)
-  : stt_ghost unit uses
-    (pts_to r #half_perm x ** pts_to r #half_perm x)
-    (fun _ -> pts_to r x)
 
 val pts_to_injective_eq (#a:_)
                         (#p #q:_)

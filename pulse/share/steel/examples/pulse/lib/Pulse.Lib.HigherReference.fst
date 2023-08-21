@@ -42,6 +42,31 @@ let free #a (r:ref a) (#n:erased a)
         HR.free r;
         S.return ()
 
+let share #a r #v #p
+  = fun _ -> HR.share r; ()
+
+let gather' (#a:Type) (r:HR.ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
+  : stt_ghost unit emp_inames
+      (HR.pts_to r p0 x0 `S.star` HR.pts_to r p1 x1)
+      (fun _ -> HR.pts_to r (sum_perm p0 p1) x0 `S.star` S.pure (x0 == x1))
+  = fun _ -> let _ = HR.gather p1 r in ()
+let gather = gather'
+
+let share2 (#a:Type) (r:ref a) (#v:erased a)
+  : stt_ghost unit emp_inames
+      (pts_to r v)
+      (fun _ -> pts_to r #one_half v ** pts_to r #one_half v)
+  = share #a r #v
+
+let gather2' (#a:Type) (r:ref a) (#x0 #x1:erased a)
+  : stt_ghost unit emp_inames
+      (pts_to r #one_half x0 ** pts_to r #one_half x1)
+      (fun () -> pts_to r #(sum_perm one_half one_half) x0 `S.star` pure (x0 == x1))
+  = gather r
+let gather2 #a r #x0 #x1 =
+  (* Need the coerce to change sum_perm one_half one_half into full_perm *)
+  coerce_eq () (gather2' #a r #x0 #x1)
+
 let with_local #a init #pre #ret_t #post body =
   fun _ ->
     let body (r:ref a)
@@ -63,3 +88,12 @@ let with_local #a init #pre #ret_t #post body =
     in
     let v = HR.with_local init body in
     S.return v
+
+let pts_to_injective_eq (#a:Type)
+                         (#p #q:perm)
+                         (#v0 #v1:a)
+                         (r:HR.ref a)
+  : stt_ghost unit emp_inames
+      (HR.pts_to r p v0 `S.star` HR.pts_to r q v1)
+      (fun _ -> HR.pts_to r p v0 `S.star` HR.pts_to r q v0 `S.star` S.pure (v0 == v1))
+    = fun _ -> let _ = HR.pts_to_injective_eq #a #emp_inames #p #q #v0 #v1 r in ()
