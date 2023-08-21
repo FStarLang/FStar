@@ -133,6 +133,7 @@ val colorize_bold: string -> string
 val colorize_red: string -> string
 val colorize_cyan: string -> string
 val colorize_green: string -> string
+val colorize_magenta : string -> string
 
 
 type out_channel
