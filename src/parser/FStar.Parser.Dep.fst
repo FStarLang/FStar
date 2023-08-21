@@ -1393,7 +1393,7 @@ let collect (all_cmd_line_files: list file_name)
         match FStar.Options.find_file fn with
         | None ->
           Errors.raise_err (Errors.Fatal_ModuleOrFileNotFound,
-                            Util.format1 "File %s could not be found\n" fn)
+                            Util.format1 "File %s could not be found" fn)
         | Some fn -> fn) in
   (* The dependency graph; keys are lowercased module names, values = list of
    * lowercased module names this file depends on. *)

@@ -2943,7 +2943,7 @@ let check_has_type env (e:term) (t1:typ) (t2:typ) (use_eq:bool) : guard_t =
              | Some f -> apply_guard f e |> Some in
 
   match g_opt with
-  | None -> raise_error (Err.expected_expression_of_type env t2 e t1) (Env.get_range env)
+  | None -> raise_error_doc (Err.expected_expression_of_type env t2 e t1) (Env.get_range env)
   | Some g -> g
 
 let check_has_type_maybe_coerce env (e:term) (lc:lcomp) (t2:typ) use_eq : term * lcomp * guard_t =

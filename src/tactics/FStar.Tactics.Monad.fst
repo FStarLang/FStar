@@ -116,7 +116,7 @@ let run_safe t ps =
     then run t ps
     else try run t ps
     with | Errors.Err (_, msg, _)
-         | Errors.Error (_, msg, _, _) -> Failed (TacticFailure msg, ps)
+         | Errors.Error (_, msg, _, _) -> Failed (TacticFailure (Errors.rendermsg msg), ps)
          | e -> Failed (e, ps)
 
 let ret (x:'a) : tac 'a =
@@ -186,7 +186,7 @@ let trytac_exn (t : tac 'a) : tac (option 'a) =
     try run (trytac t) ps
     with | Errors.Err (_, msg, _)
          | Errors.Error (_, msg, _, _) ->
-           log ps (fun () -> BU.print1 "trytac_exn error: (%s)" msg);
+           log ps (fun () -> BU.print1 "trytac_exn error: (%s)" (Errors.rendermsg msg));
            Success (None, ps))
 
 let rec mapM (f : 'a -> tac 'b) (l : list 'a) : tac (list 'b) =

@@ -34,7 +34,7 @@ let mk_issue (i:issue_level_string)
              (number:Z.t option)
              (ctx:string list)
   = { issue_level = mk_issue_level i;
-      issue_msg = msg;
+      issue_msg = FStar_Errors_Msg.mkmsg msg;
       issue_range = range;
       issue_number = number;
       issue_ctx = ctx }

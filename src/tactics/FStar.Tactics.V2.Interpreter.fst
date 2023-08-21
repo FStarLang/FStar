@@ -201,7 +201,12 @@ let unembed_tactic_nbe_0 (eb:NBET.embedding 'b) (cb:NBET.nbe_cbs) (embedded_tac_
         bind (set ps) (fun _ -> traise e)
 
     | None ->
-        Err.raise_error (Err.Fatal_TacticGotStuck, (BU.format1 "Tactic got stuck (in NBE)! Please file a bug report with a minimal reproduction of this issue.\n%s" (NBET.t_to_string result))) proof_state.main_context.range
+        let open FStar.Pprint in
+        let text s = flow (break_ 1) (words s) in
+        Err.raise_error_doc (Err.Fatal_TacticGotStuck,
+          [doc_of_string "Tactic got stuck (in NBE)!";
+           text "Please file a bug report with a minimal reproduction of this issue.";
+           doc_of_string "Result = " ^^ doc_of_string (NBET.t_to_string result)]) proof_state.main_context.range
     )
 
 let unembed_tactic_1 (ea:embedding 'a) (er:embedding 'r) (f:term) (ncb:norm_cb) : 'a -> tac 'r =

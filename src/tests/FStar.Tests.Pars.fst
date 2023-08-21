@@ -124,14 +124,14 @@ let pars s =
         | Term t ->
             ToSyntax.desugar_term tcenv.dsenv t
         | ParseError (e, msg, r) ->
-            raise_error (e, msg) r
+            raise_error_doc (e, msg) r
         | ASTFragment _ ->
             failwith "Impossible: parsing a Fragment always results in a Term"
     with
         | Error(err, msg, r, _ctx) when not <| FStar.Options.trace_error() ->
           if r = FStar.Compiler.Range.dummyRange
-          then BU.print_string msg
-          else BU.print2 "%s: %s\n" (FStar.Compiler.Range.string_of_range r) msg;
+          then BU.print_string (Errors.rendermsg msg)
+          else BU.print2 "%s: %s\n" (FStar.Compiler.Range.string_of_range r) (Errors.rendermsg msg);
           exit 1
 
         | e when not ((Options.trace_error())) -> raise e
@@ -278,7 +278,7 @@ let parse_incremental_decls () =
       let msg =
         format2 "Incremental parsing failed: Syntax error @ %s: %s"
                 (Range.string_of_range range)
-                message
+                (Errors.rendermsg message) // FIXME
       in
       failwith msg
 

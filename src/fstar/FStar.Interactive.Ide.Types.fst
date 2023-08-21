@@ -297,7 +297,7 @@ let json_of_issue issue =
     @(match issue.issue_number with
       | None -> []
       | Some n -> [("number", JsonInt n)])
-    @[("message", JsonStr (issue_message issue));
+    @[("message", JsonStr (format_issue' false issue));
       ("ranges", JsonList
                    ((match issue.issue_range with
                      | None -> []

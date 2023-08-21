@@ -405,12 +405,12 @@ let __do_unify_wflags
             ret (Some g)
 
         with | Errors.Err (_, msg, _) -> begin
-                          mlog (fun () -> BU.print1 ">> do_unify error, (%s)\n" msg ) (fun _ ->
+                          mlog (fun () -> BU.print1 ">> do_unify error, (%s)\n" (Errors.rendermsg msg) ) (fun _ ->
                           ret None)
                end
              | Errors.Error (_, msg, r, _) -> begin
                             mlog (fun () -> BU.print2 ">> do_unify error, (%s) at (%s)\n"
-                            msg (Range.string_of_range r)) (fun _ ->
+                            (Errors.rendermsg msg) (Range.string_of_range r)) (fun _ ->
                             ret None)
                end
         )
@@ -600,7 +600,7 @@ let __tc (e : env) (t : term) : tac (term * typ * guard_t) =
          | Errors.Error (_, msg, _, _) -> begin
            fail3 "Cannot type (1) %s in context (%s). Error = (%s)" (tts e t)
                                                   (Env.all_binders e |> Print.binders_to_string ", ")
-                                                  msg
+                                                  (Errors.rendermsg msg) // FIXME
            end))
 
 let __tc_ghost (e : env) (t : term) : tac (term * typ * guard_t) =
@@ -614,7 +614,7 @@ let __tc_ghost (e : env) (t : term) : tac (term * typ * guard_t) =
          | Errors.Error (_, msg, _ ,_) -> begin
            fail3 "Cannot type (2) %s in context (%s). Error = (%s)" (tts e t)
                                                   (Env.all_binders e |> Print.binders_to_string ", ")
-                                                  msg
+                                                  (Errors.rendermsg msg) // FIXME
            end))
 
 let __tc_lax (e : env) (t : term) : tac (term * lcomp * guard_t) =
@@ -630,7 +630,7 @@ let __tc_lax (e : env) (t : term) : tac (term * lcomp * guard_t) =
          | Errors.Error (_, msg, _, _) -> begin
            fail3 "Cannot type (3) %s in context (%s). Error = (%s)" (tts e t)
                                                   (Env.all_binders e |> Print.binders_to_string ", ")
-                                                  msg
+                                                  (Errors.rendermsg msg) // FIXME
            end))
 
 let tcc (e : env) (t : term) : tac comp = wrap_err "tcc" <|
@@ -2011,11 +2011,12 @@ let string_to_term (e: Env.env) (s: string): tac term
     | Term t ->
       let dsenv = FStar.Syntax.DsEnv.set_current_module e.dsenv (current_module e) in
       begin try ret (FStar.ToSyntax.ToSyntax.desugar_term dsenv t) with
-          | FStar.Errors.Error (_, e, _, _) -> fail ("string_of_term: " ^ e)
+          | FStar.Errors.Error (_, e, _, _) ->
+            fail ("string_of_term: " ^ Errors.rendermsg e)
           | _ -> fail ("string_of_term: Unknown error")
       end
     | ASTFragment _ -> fail ("string_of_term: expected a Term as a result, got an ASTFragment")
-    | ParseError (_, err, _) -> fail ("string_of_term: got error " ^ err)
+    | ParseError (_, err, _) -> fail ("string_of_term: got error " ^ Errors.rendermsg err) // FIXME
 
 let push_bv_dsenv (e: Env.env) (i: string): tac (env * RD.binding)
   = let ident = Ident.mk_ident (i, FStar.Compiler.Range.dummyRange) in
@@ -2136,7 +2137,7 @@ let __refl_typing_builtin_wrapper (f:unit -> 'a & list (env & typ)) : tac (optio
     try Errors.catch_errors_and_ignore_rest f
     with exn -> //catch everything
       let issue = FStar.Errors.({
-        issue_msg = BU.print_exn exn;
+        issue_msg = Errors.mkmsg (BU.print_exn exn);
         issue_level = EError;
         issue_range = None;
         issue_number = (Some 17);
@@ -2210,7 +2211,7 @@ let unexpected_uvars_issue r =
   let i = {
     issue_level = EError;
     issue_range = Some r;
-    issue_msg = "Cannot check relation with uvars";
+    issue_msg = Errors.mkmsg "Cannot check relation with uvars";
     issue_number = Some (errno Error_UnexpectedUnresolvedUvar);
     issue_ctx = []
   } in

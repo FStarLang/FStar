@@ -1215,10 +1215,10 @@ let built_in_primitive_steps : prim_step_set =
         [
         (mk_lid "message_of_issue", 1, 0,
          unary_op arg_as_issue
-                  (fun _r issue -> U.exp_string issue.issue_msg),
+                  (fun _r issue -> U.exp_string (Errors.format_issue issue)),
          NBETerm.unary_op
                   nbe_arg_as_issue
-                  (fun issue -> nbe_str issue.issue_msg));
+                  (fun issue -> nbe_str (Errors.format_issue issue)));
         (mk_lid "level_of_issue", 1, 0,
          unary_op arg_as_issue
                   (fun _r issue -> U.exp_string (Errors.string_of_issue_level issue.issue_level)),
@@ -1267,7 +1267,7 @@ let built_in_primitive_steps : prim_step_set =
                 let issue = {issue_level = Errors.issue_level_of_string level;
                              issue_range = range;
                              issue_number = option_z_as_option_int number;
-                             issue_msg = msg;
+                             issue_msg = Errors.mkmsg msg;
                              issue_ctx = context} in
                 Some (embed_simple e_issue psc.psc_range issue)
               | _ -> None
@@ -1290,7 +1290,7 @@ let built_in_primitive_steps : prim_step_set =
                 let issue = {issue_level = Errors.issue_level_of_string level;
                              issue_range = range;
                              issue_number = option_z_as_option_int number;
-                             issue_msg = msg;
+                             issue_msg = Errors.mkmsg msg;
                              issue_ctx = context} in
                 Some (NBETerm.embed e_issue bogus_cbs issue)
               | _ -> None

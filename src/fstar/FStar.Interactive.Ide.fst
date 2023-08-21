@@ -595,8 +595,8 @@ let load_deps st =
 
 let rephrase_dependency_error issue =
   { issue with issue_msg =
-               format1 "Error while computing or loading dependencies:\n%s"
-                       issue.issue_msg }
+      let open FStar.Pprint in
+      (doc_of_string "Error while computing or loading dependencies:")::issue.issue_msg}
 
 let write_full_buffer_fragment_progress (di:Incremental.fragment_progress) =
     let open FStar.Interactive.Incremental in

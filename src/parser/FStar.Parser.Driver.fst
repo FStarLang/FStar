@@ -38,7 +38,7 @@ let parse_fragment (frag: ParseIt.input_frag) : fragment =
     | IncrementalFragment (decls, _, _) -> 
         DeclsWithContent decls
     | ParseError (e, msg, r) ->
-        raise_error (e, msg) r
+        raise_error_doc (e, msg) r
     | Term _ ->
         failwith "Impossible: parsing a Toplevel always results in an ASTFragment"
 
@@ -52,7 +52,7 @@ let parse_file fn =
         let r = Range.dummyRange in
         raise_error (Errors.Fatal_ModuleExpected, msg) r
     | ParseError (e, msg, r) ->
-        raise_error (e, msg) r
+        raise_error_doc (e, msg) r
     | Term _ ->
         failwith "Impossible: parsing a Filename always results in an ASTFragment"
 
