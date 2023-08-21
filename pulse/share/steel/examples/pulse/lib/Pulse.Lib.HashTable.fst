@@ -187,6 +187,7 @@ fn lookup' (#s:pht_sig_us)
 ```
 let lookup = lookup'
 
+#push-options "--z3rlimit 20"
 ```pulse
 fn insert' (#s:pht_sig_us)
            (#pht:(p:erased (pht_t (s_to_ps s)){PHT.not_full p.repr}))
@@ -298,6 +299,8 @@ fn insert' (#s:pht_sig_us)
   }}
 }
 ```
+#pop-options
+
 let insert = insert'
 
 ```pulse
