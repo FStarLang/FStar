@@ -822,20 +822,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                               Some "Typing for non-total arrows",
                               a_name)
              in
-             let fsym = mk_fv ("f", Term_sort) in
-             let f = mkFreeV fsym in
-             let f_has_t = mk_HasType f tapp in
-             let t_interp =
-                 let a_name = "pre_typing_" ^tsym in
-                 Util.mkAssume(mkForall_fuel module_name t0.pos ([[f_has_t]],
-                                                                 [fsym]@arg_vars,
-                                                                 mkImp(f_has_t,
-                                                                 mk_tester "Tm_arrow" (mk_PreType f))),
-                              Some a_name,
-                              a_name)
-             in
 
-             tapp, mk_decls tsym tkey_hash [tdecl; t_kinding; t_interp] []
+             tapp, mk_decls tsym tkey_hash [tdecl ; t_kinding ] []
 
       | Tm_refine _ ->
         let x, f =
