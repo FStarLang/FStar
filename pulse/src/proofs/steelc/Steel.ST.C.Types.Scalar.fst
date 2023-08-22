@@ -122,6 +122,12 @@ let get_scalar_value_unknown
   t
 = ()
 
+let get_scalar_value_some
+  #t c
+= match c with
+  | Some (Some v, p) -> assert (c == mk_fraction (scalar t) (mk_scalar v) p)
+  | _ -> ()
+
 let write
   #t #v r v'
 = rewrite (pts_to r _) (pts_to0 r (Ghost.reveal v));

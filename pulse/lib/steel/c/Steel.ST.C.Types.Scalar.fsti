@@ -92,6 +92,16 @@ val get_scalar_value_unknown
   (get_scalar_value (unknown (scalar t)) == None)
   [SMTPat (get_scalar_value (unknown (scalar t)))]
 
+val get_scalar_value_some
+  (#t: Type)
+  (c: scalar_t t)
+: Lemma
+  (requires (Some? (get_scalar_value c)))
+  (ensures (
+    exists v0 p . Ghost.reveal c == mk_fraction (scalar t) (mk_scalar v0) p
+  ))
+  [SMTPat (get_scalar_value c)]
+
 inline_for_extraction [@@noextract_to "krml"]
 let read (#t: Type) (#v: Ghost.erased (scalar_t t)) (r: ref (scalar t)) : ST t
   (pts_to r v)
