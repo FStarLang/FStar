@@ -106,8 +106,20 @@ let get_scalar_value
   | Some (Some v, _) -> Some v
   | _ -> None
 
-let get_scalar_value_mk_fraction_mk_scalar
+let get_scalar_value_mk_fraction
   c p
+= ()
+
+let get_scalar_value_mk_scalar
+  c
+= ()
+
+let get_scalar_value_uninitialized
+  t
+= ()
+
+let get_scalar_value_unknown
+  t
 = ()
 
 let write
