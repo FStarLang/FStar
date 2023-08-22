@@ -57,6 +57,32 @@ let parse_extension_blob (extension_name:string)
                          (blob_range:range)
                          (extension_syntax_start:range) : FStar_Parser_AST.decl' =
     DeclSyntaxExtension (extension_name, s, blob_range, extension_syntax_start)
+
+let pat_var_as_binder p =
+    match p.pat with
+    | PatVar (id, aq, attrs) ->
+      { b =Variable id; brange=p.prange; aqual=aq; battributes=attrs; blevel=Un }
+    | PatTvar (id, aq, attrs) ->
+      { b =TVariable id; brange=p.prange; aqual=aq; battributes=attrs; blevel=Un }
+    | _ ->
+      raise_error (Fatal_SyntaxError, "Syntax error: expected a variable, not a pattern") p.prange
+
+let pattern_as_binder p =
+    match p.pat with
+    | PatVar _
+    | PatTvar _ -> pat_var_as_binder p
+    | PatAscribed (p, (t, None)) ->
+      let b = pat_var_as_binder p in
+      let contents =
+        match b.b with
+        | Variable i -> Annotated(i, t)
+        | TVariable i -> TAnnotated(i,t)
+      in
+      {b with b=contents}
+    | _ ->
+      raise_error (Fatal_SyntaxError, "Syntax error: expected a variable, not a pattern") p.prange
+
+
 %}
 
 %token <string> STRING
@@ -320,11 +346,12 @@ rawDecl:
         (* This is just to provide a better error than "syntax error" *)
         raise_error (Fatal_SyntaxError, "Syntax error: constants are not allowed in val declarations") (rr $loc)
       }
-  | VAL lid=lidentOrOperator bss=list(multiBinder) COLON t=typ
+  | VAL lid=lidentOrOperator pbss=list(patternOrMultibinder) COLON t=typ
       {
-        let t = match flatten bss with
+        let bss = map pattern_as_binder (flatten pbss) in
+        let t = match bss with
           | [] -> t
-          | bs -> mk_term (Product(bs, t)) (rr2 $loc(bss) $loc(t)) Type_level
+          | bs -> mk_term (Product(bs, t)) (rr2 $loc(pbss) $loc(t)) Type_level
         in Val(lid, t)
       }
   | SPLICE LBRACK ids=separated_list(SEMICOLON, ident) RBRACK t=thunk(atomicTerm)
