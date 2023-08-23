@@ -226,7 +226,7 @@ to:
     unification algorithm implemented as part of its type inference
     procedure.
 
-  * Prove that ``(i - 1) < m``, which follows from ``i < m`` and ``n
+  * Prove that ``(i - 1) < m``, which follows from ``i < n`` and ``n
     == m + 1``.
 
   * Prove that the recursive call terminates, by proving that ``m <<

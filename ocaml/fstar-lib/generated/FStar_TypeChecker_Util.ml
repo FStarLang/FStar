@@ -8405,18 +8405,19 @@ let (try_lookup_record_type :
                            FStar_Syntax_Syntax.sigquals = uu___8;
                            FStar_Syntax_Syntax.sigmeta = uu___9;
                            FStar_Syntax_Syntax.sigattrs = uu___10;
-                           FStar_Syntax_Syntax.sigopts = uu___11;_}
+                           FStar_Syntax_Syntax.sigopens_and_abbrevs = uu___11;
+                           FStar_Syntax_Syntax.sigopts = uu___12;_}
                          ->
-                         let uu___12 = FStar_Syntax_Util.arrow_formals t in
-                         (match uu___12 with
+                         let uu___13 = FStar_Syntax_Util.arrow_formals t in
+                         (match uu___13 with
                           | (formals, c) ->
                               if
                                 nparms < (FStar_Compiler_List.length formals)
                               then
-                                let uu___13 =
+                                let uu___14 =
                                   FStar_Compiler_List.splitAt nparms formals in
-                                (match uu___13 with
-                                 | (uu___14, fields) ->
+                                (match uu___14 with
+                                 | (uu___15, fields) ->
                                      let fields1 =
                                        FStar_Compiler_List.filter
                                          (fun b ->
@@ -8424,8 +8425,8 @@ let (try_lookup_record_type :
                                             with
                                             | FStar_Pervasives_Native.Some
                                                 (FStar_Syntax_Syntax.Implicit
-                                                uu___15) -> false
-                                            | uu___15 -> true) fields in
+                                                uu___16) -> false
+                                            | uu___16 -> true) fields in
                                      let fields2 =
                                        FStar_Compiler_List.map
                                          (fun b ->
@@ -8436,13 +8437,13 @@ let (try_lookup_record_type :
                                        FStar_TypeChecker_Env.is_record env
                                          typename in
                                      let r =
-                                       let uu___15 =
+                                       let uu___16 =
                                          FStar_Ident.ident_of_lid dc in
                                        {
                                          FStar_Syntax_DsEnv.typename =
                                            typename;
                                          FStar_Syntax_DsEnv.constrname =
-                                           uu___15;
+                                           uu___16;
                                          FStar_Syntax_DsEnv.parms = [];
                                          FStar_Syntax_DsEnv.fields = fields2;
                                          FStar_Syntax_DsEnv.is_private =
@@ -8452,16 +8453,16 @@ let (try_lookup_record_type :
                                        } in
                                      FStar_Pervasives_Native.Some r)
                               else
-                                ((let uu___15 =
+                                ((let uu___16 =
                                     FStar_Compiler_Util.string_of_int nparms in
-                                  let uu___16 =
-                                    FStar_Syntax_Print.term_to_string t in
                                   let uu___17 =
+                                    FStar_Syntax_Print.term_to_string t in
+                                  let uu___18 =
                                     FStar_Syntax_Print.binders_to_string ", "
                                       formals in
                                   FStar_Compiler_Util.print3
                                     "Not enough formals; nparms=%s; type = %s; formals=%s\n"
-                                    uu___15 uu___16 uu___17);
+                                    uu___16 uu___17 uu___18);
                                  FStar_Pervasives_Native.None))
                      | uu___3 ->
                          ((let uu___5 = FStar_Ident.string_of_lid dc in

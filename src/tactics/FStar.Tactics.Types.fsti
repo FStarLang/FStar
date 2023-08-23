@@ -120,21 +120,11 @@ val check_goal_solved  : goal -> bool
 val get_phi            : goal -> option term
 val is_irrelevant      : goal -> bool
 
-type unfold_side =
-  | Left
-  | Right
-  | Both
-  | Neither
-
-type tot_or_ghost =
-  | E_Total
-  | E_Ghost
-
-
 (*** These are here for userspace, the library has an interface into this module. *)
 (* Typing reflection *)
+val non_informative_token (g:env) (t:typ) : Type0
 val subtyping_token (g:env) (t0 t1:typ) : Type0
 val equiv_token (g:env) (t0 t1:typ) : Type0
-val typing_token (g:env) (e:term) (c:tot_or_ghost & typ) : Type0
+val typing_token (g:env) (e:term) (c:Core.tot_or_ghost & typ) : Type0
 val match_complete_token (g:env) (sc:term) (t:typ) (pats:list pattern) : Type0
 let issues = list FStar.Issue.issue

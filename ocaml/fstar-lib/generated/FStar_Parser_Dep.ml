@@ -325,6 +325,14 @@ let (str_of_parsing_data : parsing_data -> Prims.string) =
                         str_of_parsing_data_elt in
                     FStar_String.op_Hat "; " uu___2 in
                   FStar_String.op_Hat s uu___1) "")
+let (friends : parsing_data -> FStar_Ident.lident Prims.list) =
+  fun p ->
+    let uu___ = p in
+    match uu___ with
+    | Mk_pd p1 ->
+        FStar_Compiler_List.collect
+          (fun uu___1 ->
+             match uu___1 with | P_dep (true, l) -> [l] | uu___2 -> []) p1
 let (parsing_data_elt_eq :
   parsing_data_elt -> parsing_data_elt -> Prims.bool) =
   fun e1 ->
@@ -1174,23 +1182,27 @@ let (collect_one :
             FStar_Compiler_Util.is_some in
         if uu___
         then
-          ((let uu___2 =
-              FStar_Options.debug_at_level_no_module
-                (FStar_Options.Other "Dep") in
-            if uu___2
-            then
-              FStar_Compiler_Util.print1
-                "Reading the parsing data for %s from its checked file\n"
-                filename
-            else ());
-           (let uu___2 =
-              let uu___3 =
-                FStar_Compiler_Effect.op_Bar_Greater data_from_cache
-                  FStar_Compiler_Util.must in
-              from_parsing_data uu___3 original_map filename in
-            match uu___2 with
-            | (deps1, has_inline_for_extraction, mo_roots) ->
-                let uu___3 =
+          let uu___1 =
+            let uu___2 =
+              FStar_Compiler_Effect.op_Bar_Greater data_from_cache
+                FStar_Compiler_Util.must in
+            from_parsing_data uu___2 original_map filename in
+          match uu___1 with
+          | (deps1, has_inline_for_extraction, mo_roots) ->
+              ((let uu___3 =
+                  FStar_Options.debug_at_level_no_module
+                    (FStar_Options.Other "Dep") in
+                if uu___3
+                then
+                  let uu___4 =
+                    let uu___5 = FStar_Compiler_List.map dep_to_string deps1 in
+                    FStar_Compiler_Effect.op_Bar_Greater uu___5
+                      (FStar_String.concat ", ") in
+                  FStar_Compiler_Util.print2
+                    "Reading the parsing data for %s from its checked file .. found [%s]\n"
+                    filename uu___4
+                else ());
+               (let uu___3 =
                   FStar_Compiler_Effect.op_Bar_Greater data_from_cache
                     FStar_Compiler_Util.must in
                 (uu___3, deps1, has_inline_for_extraction, mo_roots)))
@@ -1823,7 +1835,7 @@ let (widen_deps :
     dependence_graph ->
       files_for_module_name -> Prims.bool -> (Prims.bool * dependence_graph))
   =
-  fun friends ->
+  fun friends1 ->
     fun dep_graph ->
       fun file_system_map ->
         fun widened ->
@@ -1840,7 +1852,7 @@ let (widen_deps :
                           (fun d ->
                              match d with
                              | PreferInterface m when
-                                 (FStar_Compiler_List.contains m friends) &&
+                                 (FStar_Compiler_List.contains m friends1) &&
                                    (has_implementation file_system_map m)
                                  ->
                                  (FStar_Compiler_Effect.op_Colon_Equals
@@ -1934,7 +1946,7 @@ let (topological_dependences_of' :
                 all_friends filenames in
             let uu___ = all_friend_deps dep_graph [] ([], []) root_files in
             match uu___ with
-            | (friends, all_files_0) ->
+            | (friends1, all_files_0) ->
                 ((let uu___2 =
                     FStar_Options.debug_at_level_no_module
                       (FStar_Options.Other "Dep") in
@@ -1943,7 +1955,7 @@ let (topological_dependences_of' :
                     let uu___3 =
                       let uu___4 =
                         FStar_Compiler_Util.remove_dups
-                          (fun x -> fun y -> x = y) friends in
+                          (fun x -> fun y -> x = y) friends1 in
                       FStar_String.concat ", " uu___4 in
                     FStar_Compiler_Util.print3
                       "Phase1 complete:\n\tall_files = %s\n\tall_friends=%s\n\tinterfaces_with_inlining=%s\n"
@@ -1951,7 +1963,7 @@ let (topological_dependences_of' :
                       (FStar_String.concat ", " interfaces_needing_inlining)
                   else ());
                  (let uu___2 =
-                    widen_deps friends dep_graph file_system_map widened in
+                    widen_deps friends1 dep_graph file_system_map widened in
                   match uu___2 with
                   | (widened1, dep_graph1) ->
                       let uu___3 =

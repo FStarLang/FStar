@@ -226,6 +226,9 @@ let (tc_tycon :
                                                        FStar_Syntax_Syntax.sigattrs
                                                          =
                                                          (s.FStar_Syntax_Syntax.sigattrs);
+                                                       FStar_Syntax_Syntax.sigopens_and_abbrevs
+                                                         =
+                                                         (s.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                                                        FStar_Syntax_Syntax.sigopts
                                                          =
                                                          (s.FStar_Syntax_Syntax.sigopts)
@@ -714,6 +717,9 @@ let (tc_data :
                                                        FStar_Syntax_Syntax.sigattrs
                                                          =
                                                          (se.FStar_Syntax_Syntax.sigattrs);
+                                                       FStar_Syntax_Syntax.sigopens_and_abbrevs
+                                                         =
+                                                         (se.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                                                        FStar_Syntax_Syntax.sigopts
                                                          =
                                                          (se.FStar_Syntax_Syntax.sigopts)
@@ -916,6 +922,9 @@ let (generalize_and_inst_within :
                                                       FStar_Syntax_Syntax.sigattrs
                                                         =
                                                         (se.FStar_Syntax_Syntax.sigattrs);
+                                                      FStar_Syntax_Syntax.sigopens_and_abbrevs
+                                                        =
+                                                        (se.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                                                       FStar_Syntax_Syntax.sigopts
                                                         =
                                                         (se.FStar_Syntax_Syntax.sigopts)
@@ -965,8 +974,10 @@ let (generalize_and_inst_within :
                                                    = uu___17;
                                                  FStar_Syntax_Syntax.sigattrs
                                                    = uu___18;
+                                                 FStar_Syntax_Syntax.sigopens_and_abbrevs
+                                                   = uu___19;
                                                  FStar_Syntax_Syntax.sigopts
-                                                   = uu___19;_}
+                                                   = uu___20;_}
                                                  -> (tc, uvs_universes)
                                              | uu___9 ->
                                                  failwith "Impossible")) in
@@ -1040,6 +1051,9 @@ let (generalize_and_inst_within :
                                                      FStar_Syntax_Syntax.sigattrs
                                                        =
                                                        (d.FStar_Syntax_Syntax.sigattrs);
+                                                     FStar_Syntax_Syntax.sigopens_and_abbrevs
+                                                       =
+                                                       (d.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                                                      FStar_Syntax_Syntax.sigopts
                                                        =
                                                        (d.FStar_Syntax_Syntax.sigopts)
@@ -1507,6 +1521,8 @@ let (optimized_haseq_scheme :
                                                     FStar_Syntax_Syntax.default_sigmeta;
                                                   FStar_Syntax_Syntax.sigattrs
                                                     = [];
+                                                  FStar_Syntax_Syntax.sigopens_and_abbrevs
+                                                    = [];
                                                   FStar_Syntax_Syntax.sigopts
                                                     =
                                                     FStar_Pervasives_Native.None
@@ -1864,6 +1880,7 @@ let (unoptimized_haseq_scheme :
                        FStar_Syntax_Syntax.sigmeta =
                          FStar_Syntax_Syntax.default_sigmeta;
                        FStar_Syntax_Syntax.sigattrs = [];
+                       FStar_Syntax_Syntax.sigopens_and_abbrevs = [];
                        FStar_Syntax_Syntax.sigopts =
                          FStar_Pervasives_Native.None
                      } in
@@ -1892,7 +1909,8 @@ let (check_inductive_well_typedness :
                         FStar_Syntax_Syntax.sigquals = uu___4;
                         FStar_Syntax_Syntax.sigmeta = uu___5;
                         FStar_Syntax_Syntax.sigattrs = uu___6;
-                        FStar_Syntax_Syntax.sigopts = uu___7;_} -> true
+                        FStar_Syntax_Syntax.sigopens_and_abbrevs = uu___7;
+                        FStar_Syntax_Syntax.sigopts = uu___8;_} -> true
                     | uu___2 -> false)) in
           match uu___ with
           | (tys, datas) ->
@@ -1908,7 +1926,9 @@ let (check_inductive_well_typedness :
                               FStar_Syntax_Syntax.sigquals = uu___6;
                               FStar_Syntax_Syntax.sigmeta = uu___7;
                               FStar_Syntax_Syntax.sigattrs = uu___8;
-                              FStar_Syntax_Syntax.sigopts = uu___9;_} ->
+                              FStar_Syntax_Syntax.sigopens_and_abbrevs =
+                                uu___9;
+                              FStar_Syntax_Syntax.sigopts = uu___10;_} ->
                               false
                           | uu___4 -> true)) in
                 if uu___2
@@ -2260,6 +2280,9 @@ let (check_inductive_well_typedness :
                                                                  FStar_Syntax_Syntax.sigattrs
                                                                    =
                                                                    (se.FStar_Syntax_Syntax.sigattrs);
+                                                                 FStar_Syntax_Syntax.sigopens_and_abbrevs
+                                                                   =
+                                                                   (se.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                                                                  FStar_Syntax_Syntax.sigopts
                                                                    =
                                                                    (se.FStar_Syntax_Syntax.sigopts)
@@ -2295,6 +2318,8 @@ let (check_inductive_well_typedness :
                                   FStar_Syntax_Syntax.sigmeta =
                                     FStar_Syntax_Syntax.default_sigmeta;
                                   FStar_Syntax_Syntax.sigattrs = uu___6;
+                                  FStar_Syntax_Syntax.sigopens_and_abbrevs =
+                                    [];
                                   FStar_Syntax_Syntax.sigopts =
                                     FStar_Pervasives_Native.None
                                 } in
@@ -2511,6 +2536,8 @@ let (mk_discriminator_and_indexed_projectors :
                                    FStar_Syntax_Syntax.sigmeta =
                                      FStar_Syntax_Syntax.default_sigmeta;
                                    FStar_Syntax_Syntax.sigattrs = attrs;
+                                   FStar_Syntax_Syntax.sigopens_and_abbrevs =
+                                     [];
                                    FStar_Syntax_Syntax.sigopts =
                                      FStar_Pervasives_Native.None
                                  } in
@@ -2683,6 +2710,8 @@ let (mk_discriminator_and_indexed_projectors :
                                       FStar_Syntax_Syntax.sigmeta =
                                         FStar_Syntax_Syntax.default_sigmeta;
                                       FStar_Syntax_Syntax.sigattrs = attrs;
+                                      FStar_Syntax_Syntax.sigopens_and_abbrevs
+                                        = [];
                                       FStar_Syntax_Syntax.sigopts =
                                         FStar_Pervasives_Native.None
                                     } in
@@ -2841,6 +2870,8 @@ let (mk_discriminator_and_indexed_projectors :
                                                   FStar_Syntax_Syntax.default_sigmeta;
                                                 FStar_Syntax_Syntax.sigattrs
                                                   = attrs1;
+                                                FStar_Syntax_Syntax.sigopens_and_abbrevs
+                                                  = [];
                                                 FStar_Syntax_Syntax.sigopts =
                                                   FStar_Pervasives_Native.None
                                               } in
@@ -3112,6 +3143,8 @@ let (mk_discriminator_and_indexed_projectors :
                                                       FStar_Syntax_Syntax.default_sigmeta;
                                                     FStar_Syntax_Syntax.sigattrs
                                                       = attrs1;
+                                                    FStar_Syntax_Syntax.sigopens_and_abbrevs
+                                                      = [];
                                                     FStar_Syntax_Syntax.sigopts
                                                       =
                                                       FStar_Pervasives_Native.None
@@ -3155,6 +3188,8 @@ let (mk_discriminator_and_indexed_projectors :
                               FStar_Syntax_Syntax.sigmeta =
                                 (se.FStar_Syntax_Syntax.sigmeta);
                               FStar_Syntax_Syntax.sigattrs = uu___;
+                              FStar_Syntax_Syntax.sigopens_and_abbrevs =
+                                (se.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                               FStar_Syntax_Syntax.sigopts =
                                 (se.FStar_Syntax_Syntax.sigopts)
                             } in

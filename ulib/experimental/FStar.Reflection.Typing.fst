@@ -930,3 +930,36 @@ and open_with_gt_ln_pats (l:list (pattern & bool)) (i:nat) (t:term) (j:nat)
     open_with_gt_ln_pats tl (i + k) t (j + k)
 
 let if_complete_match (g:env) (t:term) = magic()
+
+let mkif
+    (g:fstar_env)
+    (scrutinee:term)
+    (then_:term)
+    (else_:term)
+    (ty:term)
+    (u_ty:universe)
+    (hyp:var { None? (lookup_bvar g hyp) /\ ~(hyp `Set.mem` (freevars then_ `Set.union` freevars else_)) })
+    (eff:T.tot_or_ghost)
+    (ty_eff:T.tot_or_ghost)
+    (ts : typing g scrutinee (eff, bool_ty))
+    (tt : typing (extend_env g hyp (eq2 (pack_universe Uv_Zero) bool_ty scrutinee true_bool)) then_ (eff, ty))
+    (te : typing (extend_env g hyp (eq2 (pack_universe Uv_Zero) bool_ty scrutinee false_bool)) else_ (eff, ty))
+    (tr : typing g ty (ty_eff, tm_type u_ty))
+: typing g (mk_if scrutinee then_ else_) (eff, ty)
+= let brt = (Pat_Constant C_True, then_) in
+  let bre = (Pat_Constant C_False, else_) in
+  bindings_ok_pat_constant g C_True;
+  bindings_ok_pat_constant g C_False;
+  let brty () : branches_typing g u_zero bool_ty scrutinee (eff,ty) [brt; bre] [[]; []] =
+    BT_S (Pat_Constant C_True, then_) []
+         (BO (Pat_Constant C_True) [] hyp then_ () tt)
+         _ _ (
+      BT_S (Pat_Constant C_False, else_) []
+           (BO (Pat_Constant C_False) [] hyp else_ () te)
+           _ _
+        BT_Nil)
+  in
+  T_Match g u_zero bool_ty scrutinee T.E_Total (T_FVar g bool_fv) eff ts [brt; bre] (eff, ty)
+    [[]; []]
+    (MC_Tok g scrutinee bool_ty _ _ (Squash.return_squash (if_complete_match g scrutinee)))
+    (brty ())

@@ -325,6 +325,7 @@ type meta =
   | RemoveUnusedTypeParameters of (Prims.int Prims.list *
   FStar_Compiler_Range_Type.range) 
   | HasValDecl of FStar_Compiler_Range_Type.range 
+  | CNoInline 
 let (uu___is_Mutable : meta -> Prims.bool) =
   fun projectee -> match projectee with | Mutable -> true | uu___ -> false
 let (uu___is_Assumed : meta -> Prims.bool) =
@@ -403,6 +404,8 @@ let (uu___is_HasValDecl : meta -> Prims.bool) =
     match projectee with | HasValDecl _0 -> true | uu___ -> false
 let (__proj__HasValDecl__item___0 : meta -> FStar_Compiler_Range_Type.range)
   = fun projectee -> match projectee with | HasValDecl _0 -> _0
+let (uu___is_CNoInline : meta -> Prims.bool) =
+  fun projectee -> match projectee with | CNoInline -> true | uu___ -> false
 type metadata = meta Prims.list
 type mlletflavor =
   | Rec 

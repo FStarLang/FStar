@@ -44,9 +44,9 @@ val is_interface: string -> bool
 val is_implementation: string -> bool
 
 val parsing_data : Type0  //cached in the checked files
-
+val str_of_parsing_data (p:parsing_data) : string
 val empty_parsing_data: parsing_data  //for legacy ide
-
+val friends (p:parsing_data) : list lident
 val deps : Type0
 
 val empty_deps : deps

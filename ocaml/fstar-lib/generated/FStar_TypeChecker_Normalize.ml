@@ -2067,15 +2067,16 @@ let (should_unfold :
                         FStar_Syntax_Syntax.sigquals = qs;
                         FStar_Syntax_Syntax.sigmeta = uu___3;
                         FStar_Syntax_Syntax.sigattrs = uu___4;
-                        FStar_Syntax_Syntax.sigopts = uu___5;_},
-                      uu___6),
-                     uu___7),
-                    uu___8, uu___9, uu___10, uu___11, uu___12) when
+                        FStar_Syntax_Syntax.sigopens_and_abbrevs = uu___5;
+                        FStar_Syntax_Syntax.sigopts = uu___6;_},
+                      uu___7),
+                     uu___8),
+                    uu___9, uu___10, uu___11, uu___12, uu___13) when
                      FStar_Compiler_List.contains
                        FStar_Syntax_Syntax.HasMaskedEffect qs
                      ->
                      (FStar_TypeChecker_Cfg.log_unfolding cfg
-                        (fun uu___14 ->
+                        (fun uu___15 ->
                            FStar_Compiler_Util.print_string
                              " >> HasMaskedEffect, not unfolding\n");
                       no)
@@ -2102,10 +2103,11 @@ let (should_unfold :
                         FStar_Syntax_Syntax.sigquals = qs;
                         FStar_Syntax_Syntax.sigmeta = uu___3;
                         FStar_Syntax_Syntax.sigattrs = uu___4;
-                        FStar_Syntax_Syntax.sigopts = uu___5;_},
-                      uu___6),
-                     uu___7),
-                    uu___8, uu___9, uu___10, uu___11, uu___12) when
+                        FStar_Syntax_Syntax.sigopens_and_abbrevs = uu___5;
+                        FStar_Syntax_Syntax.sigopts = uu___6;_},
+                      uu___7),
+                     uu___8),
+                    uu___9, uu___10, uu___11, uu___12, uu___13) when
                      (is_rec &&
                         (Prims.op_Negation
                            (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.zeta))
@@ -2114,7 +2116,7 @@ let (should_unfold :
                           (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.zeta_full)
                      ->
                      (FStar_TypeChecker_Cfg.log_unfolding cfg
-                        (fun uu___14 ->
+                        (fun uu___15 ->
                            FStar_Compiler_Util.print_string
                              " >> It's a recursive definition but we're not doing Zeta, not unfolding\n");
                       no)
@@ -9229,6 +9231,8 @@ let rec (elim_uvars :
           FStar_Syntax_Syntax.sigquals = (s.FStar_Syntax_Syntax.sigquals);
           FStar_Syntax_Syntax.sigmeta = (s.FStar_Syntax_Syntax.sigmeta);
           FStar_Syntax_Syntax.sigattrs = sigattrs;
+          FStar_Syntax_Syntax.sigopens_and_abbrevs =
+            (s.FStar_Syntax_Syntax.sigopens_and_abbrevs);
           FStar_Syntax_Syntax.sigopts = (s.FStar_Syntax_Syntax.sigopts)
         } in
       match s1.FStar_Syntax_Syntax.sigel with
@@ -9262,6 +9266,8 @@ let rec (elim_uvars :
                    (s1.FStar_Syntax_Syntax.sigmeta);
                  FStar_Syntax_Syntax.sigattrs =
                    (s1.FStar_Syntax_Syntax.sigattrs);
+                 FStar_Syntax_Syntax.sigopens_and_abbrevs =
+                   (s1.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                  FStar_Syntax_Syntax.sigopts =
                    (s1.FStar_Syntax_Syntax.sigopts)
                })
@@ -9283,6 +9289,8 @@ let rec (elim_uvars :
             FStar_Syntax_Syntax.sigquals = (s1.FStar_Syntax_Syntax.sigquals);
             FStar_Syntax_Syntax.sigmeta = (s1.FStar_Syntax_Syntax.sigmeta);
             FStar_Syntax_Syntax.sigattrs = (s1.FStar_Syntax_Syntax.sigattrs);
+            FStar_Syntax_Syntax.sigopens_and_abbrevs =
+              (s1.FStar_Syntax_Syntax.sigopens_and_abbrevs);
             FStar_Syntax_Syntax.sigopts = (s1.FStar_Syntax_Syntax.sigopts)
           }
       | FStar_Syntax_Syntax.Sig_datacon
@@ -9314,6 +9322,8 @@ let rec (elim_uvars :
                    (s1.FStar_Syntax_Syntax.sigmeta);
                  FStar_Syntax_Syntax.sigattrs =
                    (s1.FStar_Syntax_Syntax.sigattrs);
+                 FStar_Syntax_Syntax.sigopens_and_abbrevs =
+                   (s1.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                  FStar_Syntax_Syntax.sigopts =
                    (s1.FStar_Syntax_Syntax.sigopts)
                })
@@ -9340,6 +9350,8 @@ let rec (elim_uvars :
                    (s1.FStar_Syntax_Syntax.sigmeta);
                  FStar_Syntax_Syntax.sigattrs =
                    (s1.FStar_Syntax_Syntax.sigattrs);
+                 FStar_Syntax_Syntax.sigopens_and_abbrevs =
+                   (s1.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                  FStar_Syntax_Syntax.sigopts =
                    (s1.FStar_Syntax_Syntax.sigopts)
                })
@@ -9387,6 +9399,8 @@ let rec (elim_uvars :
             FStar_Syntax_Syntax.sigquals = (s1.FStar_Syntax_Syntax.sigquals);
             FStar_Syntax_Syntax.sigmeta = (s1.FStar_Syntax_Syntax.sigmeta);
             FStar_Syntax_Syntax.sigattrs = (s1.FStar_Syntax_Syntax.sigattrs);
+            FStar_Syntax_Syntax.sigopens_and_abbrevs =
+              (s1.FStar_Syntax_Syntax.sigopens_and_abbrevs);
             FStar_Syntax_Syntax.sigopts = (s1.FStar_Syntax_Syntax.sigopts)
           }
       | FStar_Syntax_Syntax.Sig_assume
@@ -9411,6 +9425,8 @@ let rec (elim_uvars :
                    (s1.FStar_Syntax_Syntax.sigmeta);
                  FStar_Syntax_Syntax.sigattrs =
                    (s1.FStar_Syntax_Syntax.sigattrs);
+                 FStar_Syntax_Syntax.sigopens_and_abbrevs =
+                   (s1.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                  FStar_Syntax_Syntax.sigopts =
                    (s1.FStar_Syntax_Syntax.sigopts)
                })
@@ -9624,6 +9640,8 @@ let rec (elim_uvars :
                              (s1.FStar_Syntax_Syntax.sigmeta);
                            FStar_Syntax_Syntax.sigattrs =
                              (s1.FStar_Syntax_Syntax.sigattrs);
+                           FStar_Syntax_Syntax.sigopens_and_abbrevs =
+                             (s1.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                            FStar_Syntax_Syntax.sigopts =
                              (s1.FStar_Syntax_Syntax.sigopts)
                          })))
@@ -9655,6 +9673,8 @@ let rec (elim_uvars :
             FStar_Syntax_Syntax.sigquals = (s1.FStar_Syntax_Syntax.sigquals);
             FStar_Syntax_Syntax.sigmeta = (s1.FStar_Syntax_Syntax.sigmeta);
             FStar_Syntax_Syntax.sigattrs = (s1.FStar_Syntax_Syntax.sigattrs);
+            FStar_Syntax_Syntax.sigopens_and_abbrevs =
+              (s1.FStar_Syntax_Syntax.sigopens_and_abbrevs);
             FStar_Syntax_Syntax.sigopts = (s1.FStar_Syntax_Syntax.sigopts)
           }
       | FStar_Syntax_Syntax.Sig_effect_abbrev
@@ -9684,6 +9704,8 @@ let rec (elim_uvars :
                    (s1.FStar_Syntax_Syntax.sigmeta);
                  FStar_Syntax_Syntax.sigattrs =
                    (s1.FStar_Syntax_Syntax.sigattrs);
+                 FStar_Syntax_Syntax.sigopens_and_abbrevs =
+                   (s1.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                  FStar_Syntax_Syntax.sigopts =
                    (s1.FStar_Syntax_Syntax.sigopts)
                })
@@ -9722,6 +9744,8 @@ let rec (elim_uvars :
                         (s1.FStar_Syntax_Syntax.sigmeta);
                       FStar_Syntax_Syntax.sigattrs =
                         (s1.FStar_Syntax_Syntax.sigattrs);
+                      FStar_Syntax_Syntax.sigopens_and_abbrevs =
+                        (s1.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                       FStar_Syntax_Syntax.sigopts =
                         (s1.FStar_Syntax_Syntax.sigopts)
                     }))
@@ -9755,6 +9779,8 @@ let rec (elim_uvars :
                         (s1.FStar_Syntax_Syntax.sigmeta);
                       FStar_Syntax_Syntax.sigattrs =
                         (s1.FStar_Syntax_Syntax.sigattrs);
+                      FStar_Syntax_Syntax.sigopens_and_abbrevs =
+                        (s1.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                       FStar_Syntax_Syntax.sigopts =
                         (s1.FStar_Syntax_Syntax.sigopts)
                     }))
@@ -9869,9 +9895,7 @@ let (maybe_unfold_head_fv :
             -> FStar_Pervasives_Native.Some (fv, us)
         | FStar_Syntax_Syntax.Tm_fvar fv ->
             FStar_Pervasives_Native.Some (fv, [])
-        | uu___1 ->
-            failwith
-              "Impossible: maybe_unfold_head_fv is called with a non fvar/uinst" in
+        | uu___1 -> FStar_Pervasives_Native.None in
       match fv_us_opt with
       | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
       | FStar_Pervasives_Native.Some (fv, us) ->
@@ -9921,16 +9945,19 @@ let rec (maybe_unfold_aux :
           let uu___2 = FStar_Syntax_Util.leftmost_head_and_args t in
           (match uu___2 with
            | (head, args) ->
-               let uu___3 = maybe_unfold_aux env1 head in
-               (match uu___3 with
-                | FStar_Pervasives_Native.None ->
-                    FStar_Pervasives_Native.None
-                | FStar_Pervasives_Native.Some head1 ->
-                    let uu___4 =
-                      FStar_Syntax_Syntax.mk_Tm_app head1 args
-                        t.FStar_Syntax_Syntax.pos in
-                    FStar_Compiler_Effect.op_Bar_Greater uu___4
-                      (fun uu___5 -> FStar_Pervasives_Native.Some uu___5)))
+               if args = []
+               then maybe_unfold_head_fv env1 head
+               else
+                 (let uu___4 = maybe_unfold_aux env1 head in
+                  match uu___4 with
+                  | FStar_Pervasives_Native.None ->
+                      FStar_Pervasives_Native.None
+                  | FStar_Pervasives_Native.Some head1 ->
+                      let uu___5 =
+                        FStar_Syntax_Syntax.mk_Tm_app head1 args
+                          t.FStar_Syntax_Syntax.pos in
+                      FStar_Compiler_Effect.op_Bar_Greater uu___5
+                        (fun uu___6 -> FStar_Pervasives_Native.Some uu___6)))
 let (maybe_unfold_head :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->

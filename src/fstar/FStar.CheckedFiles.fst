@@ -40,7 +40,7 @@ module Dep     = FStar.Parser.Dep
  * detect when loading the cache that the version number is same
  * It needs to be kept in sync with prims.fst
  *)
-let cache_version_number = 57
+let cache_version_number = 58
 
 (*
  * Abbreviation for what we store in the checked files (stages as described below)
@@ -472,8 +472,7 @@ let store_module_to_cache env fn parsing_data tc_result =
   end
 
 let unsafe_raw_load_checked_file (checked_fn:string)
-  : option (list string & tc_result)
   = let entry : option (checked_file_entry_stage1 * checked_file_entry_stage2) = BU.load_2values_from_file checked_fn in
     match entry with
-     | Some ((s1,s2)) -> Some (List.map fst s2.deps_dig, s2.tc_res)
+     | Some ((s1,s2)) -> Some (s1.parsing_data, List.map fst s2.deps_dig, s2.tc_res)
      | _ -> None

@@ -4302,20 +4302,20 @@ let (_t_trefl :
                                   } in
                                 let uu___12 =
                                   FStar_TypeChecker_Core.compute_term_type_handle_guards
-                                    env1 t3 false
+                                    env1 t3
                                     (fun uu___13 -> fun uu___14 -> true) in
                                 match uu___12 with
                                 | FStar_Pervasives.Inr uu___13 -> false
-                                | FStar_Pervasives.Inl t_ty ->
-                                    let uu___13 =
+                                | FStar_Pervasives.Inl (uu___13, t_ty) ->
+                                    let uu___14 =
                                       FStar_TypeChecker_Core.check_term_subtyping
                                         env1 ty t_ty in
-                                    (match uu___13 with
+                                    (match uu___14 with
                                      | FStar_Pervasives.Inl
                                          (FStar_Pervasives_Native.None) ->
                                          (mark_uvar_as_already_checked u;
                                           true)
-                                     | uu___14 -> false) in
+                                     | uu___15 -> false) in
                               let uu___12 =
                                 let uu___13 = is_uvar t1 in
                                 let uu___14 = is_uvar t2 in

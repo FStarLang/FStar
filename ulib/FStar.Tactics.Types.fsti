@@ -17,6 +17,7 @@ module FStar.Tactics.Types
 
 open FStar.Reflection.Types
 include FStar.Tactics.Common
+include FStar.Stubs.TypeChecker.Core
 
 assume new type proofstate
 assume new type goal
@@ -59,20 +60,8 @@ type guard_policy =
     | Force     // Force guards without SMT
     | Drop      // Drop guards, clearly unsound! careful!
 
-type unfold_side =
-  | Left
-  | Right
-  | Both
-  | Neither
-
-//
-// Used in the reflection typing judgment
-//
-type tot_or_ghost =
-  | E_Total
-  | E_Ghost
-
 (* Typing reflection *)
+val non_informative_token (g:env) (t:typ) : Type0
 val subtyping_token (g:env) (t0 t1:typ) : Type0
 val equiv_token (g:env) (t0 t1:typ) : Type0
 val typing_token (g:env) (e:term) (c:tot_or_ghost & typ) : Type0

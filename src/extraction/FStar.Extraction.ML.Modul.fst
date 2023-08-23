@@ -106,6 +106,7 @@ let rec extract_meta x : option meta =
       | "FStar.Pervasives.PpxDerivingShow" -> Some PpxDerivingShow
       | "FStar.Pervasives.PpxDerivingYoJson" -> Some PpxDerivingYoJson
       | "FStar.Pervasives.CInline" -> Some CInline
+      | "FStar.Pervasives.CNoInline" -> Some CNoInline
       | "FStar.Pervasives.Substitute" -> Some Substitute
       | "FStar.Pervasives.Gc" -> Some GCType
       | "FStar.Pervasives.CAbstractStruct" -> Some CAbstract

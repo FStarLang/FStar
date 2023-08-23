@@ -1074,8 +1074,8 @@ let tc_decls env ses =
 
     Env.promote_id_info env (compress_and_norm env);
           
-    // Compress all checked sigelts
-    let ses' = ses' |> List.map (Compress.deep_compress_se false) in
+    // Compress all checked sigelts. Uvars and names are not OK after a full typecheck
+    let ses' = ses' |> List.map (Compress.deep_compress_se false false) in
 
     // Add to the environment
     let env = ses' |> List.fold_left (fun env se -> add_sigelt_to_env env se false) env in
@@ -1175,7 +1175,7 @@ let finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) 
   m, env
 
 let deep_compress_modul (m:modul) : modul =
-  { m with declarations = List.map (Compress.deep_compress_se false) m.declarations }
+  { m with declarations = List.map (Compress.deep_compress_se false false) m.declarations }
 
 let tc_modul (env0:env) (m:modul) (iface_exists:bool) :(modul * env) =
   let msg = "Internals for " ^ string_of_lid m.name in

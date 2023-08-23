@@ -1440,10 +1440,10 @@ let _t_trefl (allow_guards:bool) (l : term) (r : term) : tac unit =
           // Note, from well-typedness of the goal, we already know ?u.ty <: ty
           let check_uvar_subtype u t =
             let env = { goal_env g with gamma = g.goal_ctx_uvar.ctx_uvar_gamma } in
-            match Core.compute_term_type_handle_guards env t false (fun _ _ -> true)
+            match Core.compute_term_type_handle_guards env t (fun _ _ -> true)
             with
             | Inr _ -> false
-            | Inl t_ty -> (
+            | Inl (_, t_ty) -> (  // ignoring effect, ghost is ok
               match Core.check_term_subtyping env ty t_ty with
               | Inl None -> //unconditional subtype
                 mark_uvar_as_already_checked u;
@@ -2138,7 +2138,8 @@ let __refl_typing_builtin_wrapper (f:unit -> 'a & list (env & typ)) : tac (optio
   let gs =
     if Some? r then
       let allow_uvars = false in
-      List.map (fun (e,g) -> e, SC.deep_compress allow_uvars g) (snd (Some?.v r))
+      let allow_names = true in (* terms are potentially open, names are OK *)
+      List.map (fun (e,g) -> e, SC.deep_compress allow_uvars allow_names g) (snd (Some?.v r))
     else
       []
   in
@@ -2203,6 +2204,23 @@ let unexpected_uvars_issue r =
   } in
   i
 
+let refl_is_non_informative (g:env) (t:typ) : tac (option unit & issues) =
+  if no_uvars_in_g g &&
+     no_uvars_in_term t
+  then refl_typing_builtin_wrapper (fun _ ->
+         dbg_refl g (fun _ ->
+           BU.format1 "refl_is_non_informative: %s\n"
+             (Print.term_to_string t));
+         let b = Core.is_non_informative g t in
+         dbg_refl g (fun _ -> BU.format1 "refl_is_non_informative: returned %s"
+                                (string_of_bool b));
+         if b then ((), [])
+         else Errors.raise_error (Errors.Fatal_UnexpectedTerm,
+                "is_non_informative returned false ") Range.dummyRange)
+  else (
+    ret (None, [unexpected_uvars_issue (Env.get_range g)])
+  )
+
 let refl_check_relation (g:env) (t0 t1:typ) (rel:relation)
   : tac (option unit * issues) =
 
@@ -2239,21 +2257,20 @@ let refl_check_subtyping (g:env) (t0 t1:typ) : tac (option unit & issues) =
 let refl_check_equiv (g:env) (t0 t1:typ) : tac (option unit & issues) =
   refl_check_relation g t0 t1 Equality
 
-let to_must_tot (eff:tot_or_ghost) : bool =
+let to_must_tot (eff:Core.tot_or_ghost) : bool =
   match eff with
-  | E_Total -> true
-  | E_Ghost -> false
+  | Core.E_Total -> true
+  | Core.E_Ghost -> false
 
 let refl_norm_type (g:env) (t:typ) : typ =
   N.normalize [Env.Beta; Env.Exclude Zeta] g t
 
-let refl_core_compute_term_type (g:env) (e:term) (eff:tot_or_ghost) : tac (option typ & issues) =
+let refl_core_compute_term_type (g:env) (e:term) : tac (option (Core.tot_or_ghost & typ) & issues) =
   if no_uvars_in_g g &&
      no_uvars_in_term e
   then refl_typing_builtin_wrapper (fun _ ->
          dbg_refl g (fun _ ->
            BU.format1 "refl_core_compute_term_type: %s\n" (Print.term_to_string e));
-         let must_tot = to_must_tot eff in
          let guards : ref (list (env & typ)) = BU.mk_ref [] in
          let gh = fun g guard ->
            (* FIXME: this is kinda ugly, we store all the guards
@@ -2261,20 +2278,20 @@ let refl_core_compute_term_type (g:env) (e:term) (eff:tot_or_ghost) : tac (optio
            guards := (g, guard) :: !guards;
            true
          in
-         match Core.compute_term_type_handle_guards g e must_tot gh with
-         | Inl t ->
+         match Core.compute_term_type_handle_guards g e gh with
+         | Inl (eff, t) ->
            let t = refl_norm_type g t in
            dbg_refl g (fun _ ->
              BU.format2 "refl_core_compute_term_type for %s computed type %s\n"
                (Print.term_to_string e)
                (Print.term_to_string t));
-           (t, !guards)
+           ((eff, t), !guards)
          | Inr err ->
            dbg_refl g (fun _ -> BU.format1 "refl_core_compute_term_type: %s\n" (Core.print_error err));
            Errors.raise_error (Errors.Fatal_IllTyped, "core_compute_term_type failed: " ^ (Core.print_error err)) Range.dummyRange)
   else ret (None, [unexpected_uvars_issue (Env.get_range g)])
 
-let refl_core_check_term (g:env) (e:term) (t:typ) (eff:tot_or_ghost)
+let refl_core_check_term (g:env) (e:term) (t:typ) (eff:Core.tot_or_ghost)
   : tac (option unit & issues) =
 
   if no_uvars_in_g g &&
@@ -2297,14 +2314,13 @@ let refl_core_check_term (g:env) (e:term) (t:typ) (eff:tot_or_ghost)
            Errors.raise_error (Errors.Fatal_IllTyped, "refl_core_check_term failed: " ^ (Core.print_error err)) Range.dummyRange)
   else ret (None, [unexpected_uvars_issue (Env.get_range g)])
 
-let refl_tc_term (g:env) (e:term) (eff:tot_or_ghost) : tac (option (term & typ) & issues) =
+let refl_tc_term (g:env) (e:term) : tac (option (term & (Core.tot_or_ghost & typ)) & issues) =
   if no_uvars_in_g g &&
      no_uvars_in_term e
   then refl_typing_builtin_wrapper (fun _ ->
     dbg_refl g (fun _ ->
       BU.format1 "refl_tc_term: %s\n" (Print.term_to_string e));
     dbg_refl g (fun _ -> "refl_tc_term: starting tc {\n");
-    let must_tot = to_must_tot eff in
     //
     // we don't instantiate implicits at the end of e
     // it is unlikely that we will be able to resolve them,
@@ -2319,12 +2335,19 @@ let refl_tc_term (g:env) (e:term) (eff:tot_or_ghost) : tac (option (term & typ) 
     //
     let e =
       let g = {g with phase1 = true; lax = true} in
+      //
+      // AR: we are lax checking to infer implicits,
+      //     ghost is ok
+      //
+      let must_tot = false in
       let e, _, guard = g.typeof_tot_or_gtot_term g e must_tot in
       Rel.force_trivial_guard g guard;
       e in
     try
      begin
-     let e = SC.deep_compress false e in
+     let allow_uvars = false in
+     let allow_names = true in (* terms are potentially open, names are OK *)
+     let e = SC.deep_compress allow_uvars allow_names e in
      // TODO: may be should we check here that e has no unresolved implicits?
      dbg_refl g (fun _ ->
        BU.format1 "} finished tc with e = %s\n"
@@ -2335,17 +2358,17 @@ let refl_tc_term (g:env) (e:term) (eff:tot_or_ghost) : tac (option (term & typ) 
        guards := (g, guard) :: !guards;
        true
      in
-     match Core.compute_term_type_handle_guards g e must_tot gh with
-     | Inl t ->
+     match Core.compute_term_type_handle_guards g e gh with
+     | Inl (eff, t) ->
         let t = refl_norm_type g t in
         dbg_refl g (fun _ ->
           BU.format2 "refl_tc_term for %s computed type %s\n"
             (Print.term_to_string e)
             (Print.term_to_string t));
-        ((e, t), !guards)
+        ((e, (eff, t)), !guards)
      | Inr err ->
-        dbg_refl g (fun _ -> BU.format1 "refl_tc_term failed: %s\n" (Core.print_error err));
-        Errors.raise_error (Errors.Fatal_IllTyped, "tc_term callback failed: " ^ Core.print_error err) e.pos
+       dbg_refl g (fun _ -> BU.format1 "refl_tc_term failed: %s\n" (Core.print_error err));
+       Errors.raise_error (Errors.Fatal_IllTyped, "tc_term callback failed: " ^ Core.print_error err) e.pos
     end
     with
     | Errors.Error (Errors.Error_UnexpectedUnresolvedUvar, _, _, _) ->
@@ -2436,15 +2459,18 @@ let refl_instantiate_implicits (g:env) (e:term) : tac (option (term & typ) & iss
     dbg_refl g (fun _ ->
       BU.format1 "refl_instantiate_implicits: %s\n" (Print.term_to_string e));
     dbg_refl g (fun _ -> "refl_instantiate_implicits: starting tc {\n");
-    let must_tot = true in
+    // AR: ghost is ok for instantiating implicits
+    let must_tot = false in
     let g = {g with instantiate_imp=false; phase1=true; lax=true} in
     let e, t, guard = g.typeof_tot_or_gtot_term g e must_tot in
     (* We force this guard here, and do not delay it, since we
     will return this term and it MUST be compressed. It's logical
     part should be trivial too, as we only lax-typechecked the term. *)
     Rel.force_trivial_guard g guard;
-    let e = SC.deep_compress false e in
-    let t = t |> refl_norm_type g |> SC.deep_compress false in
+    let allow_uvars = false in
+    let allow_names = true in (* terms are potentially open, names are OK *)
+    let e = SC.deep_compress allow_uvars allow_names e in
+    let t = t |> refl_norm_type g |> SC.deep_compress allow_uvars allow_names in
     dbg_refl g (fun _ ->
       BU.format2 "} finished tc with e = %s and t = %s\n"
         (Print.term_to_string e)
