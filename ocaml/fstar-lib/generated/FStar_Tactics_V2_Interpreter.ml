@@ -2875,6 +2875,8 @@ let run_tactic_on_ps' :
                              FStar_TypeChecker_Env.uvar_subtyping =
                                (uu___.FStar_TypeChecker_Env.uvar_subtyping);
                              FStar_TypeChecker_Env.intactics = true;
+                             FStar_TypeChecker_Env.nocoerce =
+                               (uu___.FStar_TypeChecker_Env.nocoerce);
                              FStar_TypeChecker_Env.tc_term =
                                (uu___.FStar_TypeChecker_Env.tc_term);
                              FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
