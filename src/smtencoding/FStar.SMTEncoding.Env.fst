@@ -206,6 +206,9 @@ let fresh_fvar mname x s = let xsym = varops.fresh mname x in xsym, mkFreeV <| m
 let gen_term_var (env:env_t) (x:bv) =
     let ysym = "@x"^(string_of_int env.depth) in
     let y = mkFreeV <| mk_fv (ysym, Term_sort) in
+    (* Note: the encoding of impure function arrows (among other places
+    probably) relies on the fact that this is exactly a FreeV. See getfreeV in
+    FStar.SMTEncoding.EncodeTerm.fst *)
     ysym, y, {env with bvar_bindings=add_bvar_binding (x, y) env.bvar_bindings
                      ; tcenv = Env.push_bv env.tcenv x
                      ; depth = env.depth + 1 }
@@ -228,13 +231,11 @@ let push_term_var (env:env_t) (x:bv) (t:term) =
 
 let lookup_term_var env a =
     match lookup_bvar_binding env a with
-    | None ->
-        (match lookup_bvar_binding env a with
-         | None -> failwith (BU.format2 "Bound term variable not found  %s in environment: %s"
-                                        (Print.bv_to_string a)
-                                        (print_env env))
-         | Some (b,t) -> t)
     | Some (b,t) -> t
+    | None ->
+      failwith (BU.format2 "Bound term variable not found  %s in environment: %s"
+                           (Print.bv_to_string a)
+                           (print_env env))
 
 (* Qualified term names *)
 let mk_fvb lid fname arity ftok fuel_partial_app thunked =

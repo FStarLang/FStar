@@ -669,19 +669,15 @@ let (lookup_term_var :
     fun a ->
       let uu___ = lookup_bvar_binding env a in
       match uu___ with
-      | FStar_Pervasives_Native.None ->
-          let uu___1 = lookup_bvar_binding env a in
-          (match uu___1 with
-           | FStar_Pervasives_Native.None ->
-               let uu___2 =
-                 let uu___3 = FStar_Syntax_Print.bv_to_string a in
-                 let uu___4 = print_env env in
-                 FStar_Compiler_Util.format2
-                   "Bound term variable not found  %s in environment: %s"
-                   uu___3 uu___4 in
-               failwith uu___2
-           | FStar_Pervasives_Native.Some (b, t) -> t)
       | FStar_Pervasives_Native.Some (b, t) -> t
+      | FStar_Pervasives_Native.None ->
+          let uu___1 =
+            let uu___2 = FStar_Syntax_Print.bv_to_string a in
+            let uu___3 = print_env env in
+            FStar_Compiler_Util.format2
+              "Bound term variable not found  %s in environment: %s" uu___2
+              uu___3 in
+          failwith uu___1
 let (mk_fvb :
   FStar_Ident.lident ->
     Prims.string ->
