@@ -1405,9 +1405,7 @@ and (encode_term :
                         let f = FStar_SMTEncoding_Util.mkFreeV fsym in
                         let app = mk_Apply f vars in
                         let tcenv_bs =
-                          let uu___6 =
-                            FStar_TypeChecker_Env.push_binders
-                              env.FStar_SMTEncoding_Env.tcenv binders1 in
+                          let uu___6 = env'.FStar_SMTEncoding_Env.tcenv in
                           {
                             FStar_TypeChecker_Env.solver =
                               (uu___6.FStar_TypeChecker_Env.solver);
@@ -1787,53 +1785,115 @@ and (encode_term :
                                     FStar_Compiler_Util.digest_of_string
                                       tkey_hash1)) in
                     let tsym = Prims.op_Hat "Non_total_Tm_arrow_" tkey_hash in
+                    let env0 = env in
                     let uu___5 =
                       let fvs =
                         let uu___6 = FStar_Syntax_Free.names t0 in
                         FStar_Compiler_Effect.op_Bar_Greater uu___6
                           FStar_Compiler_Util.set_elements in
-                      let tms =
-                        FStar_Compiler_List.map
-                          (FStar_SMTEncoding_Env.lookup_term_var env) fvs in
-                      let getfv t2 =
+                      let getfreeV t2 =
                         match t2.FStar_SMTEncoding_Term.tm with
-                        | FStar_SMTEncoding_Term.FreeV fv -> [fv]
-                        | uu___6 -> [] in
-                      let uu___6 = FStar_Compiler_List.concatMap getfv tms in
-                      let uu___7 =
-                        FStar_Compiler_List.map
-                          (fun uu___8 -> FStar_SMTEncoding_Term.Term_sort)
-                          fvs in
-                      (uu___6, uu___7, tms) in
+                        | FStar_SMTEncoding_Term.FreeV fv -> fv
+                        | uu___6 ->
+                            failwith
+                              "Impossible: getfreeV: gen_term_var should always returns a FreeV" in
+                      let uu___6 =
+                        FStar_Compiler_List.fold_left
+                          (fun uu___7 ->
+                             fun bv ->
+                               match uu___7 with
+                               | (env1, decls, vars, tms, guards) ->
+                                   let uu___8 =
+                                     FStar_TypeChecker_Env.lookup_bv
+                                       env1.FStar_SMTEncoding_Env.tcenv bv in
+                                   (match uu___8 with
+                                    | (sort, uu___9) ->
+                                        let uu___10 =
+                                          FStar_SMTEncoding_Env.gen_term_var
+                                            env1 bv in
+                                        (match uu___10 with
+                                         | (sym, smt_tm, env2) ->
+                                             let fv = getfreeV smt_tm in
+                                             let uu___11 =
+                                               let uu___12 = norm env2 sort in
+                                               encode_term_pred
+                                                 FStar_Pervasives_Native.None
+                                                 uu___12 env2 smt_tm in
+                                             (match uu___11 with
+                                              | (guard, decls') ->
+                                                  (env2,
+                                                    (FStar_Compiler_List.op_At
+                                                       decls' decls), (fv ::
+                                                    vars), (smt_tm :: tms),
+                                                    (guard :: guards))))))
+                          (env, [], [], [], []) fvs in
+                      (fvs, uu___6) in
                     match uu___5 with
-                    | (arg_vars, arg_sorts, arg_terms) ->
+                    | (fstar_fvs,
+                       (env1, fv_decls, fv_vars, fv_tms, fv_guards)) ->
+                        let fv_decls1 = FStar_Compiler_List.rev fv_decls in
+                        let fv_vars1 = FStar_Compiler_List.rev fv_vars in
+                        let fv_tms1 = FStar_Compiler_List.rev fv_tms in
+                        let fv_guards1 = FStar_Compiler_List.rev fv_guards in
+                        let arg_sorts =
+                          FStar_Compiler_List.map
+                            (fun uu___6 -> FStar_SMTEncoding_Term.Term_sort)
+                            fv_tms1 in
                         let tdecl =
                           FStar_SMTEncoding_Term.DeclFun
                             (tsym, arg_sorts,
                               FStar_SMTEncoding_Term.Term_sort,
                               FStar_Pervasives_Native.None) in
                         let tapp =
-                          FStar_SMTEncoding_Util.mkApp (tsym, arg_terms) in
+                          FStar_SMTEncoding_Util.mkApp (tsym, fv_tms1) in
                         let t_kinding =
                           let a_name =
                             Prims.op_Hat "non_total_function_typing_" tsym in
-                          let uu___6 =
-                            let uu___7 =
+                          let axiom =
+                            let uu___6 =
+                              let uu___7 =
+                                let uu___8 =
+                                  let uu___9 =
+                                    FStar_SMTEncoding_Term.mk_HasType tapp
+                                      FStar_SMTEncoding_Term.mk_Term_type in
+                                  [uu___9] in
+                                [uu___8] in
                               let uu___8 =
                                 let uu___9 =
-                                  FStar_SMTEncoding_Term.mk_HasType tapp
-                                    FStar_SMTEncoding_Term.mk_Term_type in
-                                ([], arg_vars, uu___9) in
-                              FStar_SMTEncoding_Term.mkForall
-                                t0.FStar_Syntax_Syntax.pos uu___8 in
-                            (uu___7,
+                                  let uu___10 =
+                                    FStar_SMTEncoding_Util.mk_and_l
+                                      fv_guards1 in
+                                  let uu___11 =
+                                    FStar_SMTEncoding_Term.mk_HasType tapp
+                                      FStar_SMTEncoding_Term.mk_Term_type in
+                                  (uu___10, uu___11) in
+                                FStar_SMTEncoding_Util.mkImp uu___9 in
+                              (uu___7, fv_vars1, uu___8) in
+                            FStar_SMTEncoding_Term.mkForall
+                              t0.FStar_Syntax_Syntax.pos uu___6 in
+                          let svars =
+                            FStar_SMTEncoding_Term.free_variables axiom in
+                          let axiom1 =
+                            FStar_SMTEncoding_Term.mkForall
+                              t0.FStar_Syntax_Syntax.pos ([], svars, axiom) in
+                          FStar_SMTEncoding_Util.mkAssume
+                            (axiom1,
                               (FStar_Pervasives_Native.Some
                                  "Typing for non-total arrows"), a_name) in
-                          FStar_SMTEncoding_Util.mkAssume uu___6 in
+                        let tapp_concrete =
+                          let uu___6 =
+                            let uu___7 =
+                              FStar_Compiler_List.map
+                                (FStar_SMTEncoding_Env.lookup_term_var env0)
+                                fstar_fvs in
+                            (tsym, uu___7) in
+                          FStar_SMTEncoding_Util.mkApp uu___6 in
                         let uu___6 =
-                          FStar_SMTEncoding_Term.mk_decls tsym tkey_hash
-                            [tdecl; t_kinding] [] in
-                        (tapp, uu___6)))
+                          let uu___7 =
+                            FStar_SMTEncoding_Term.mk_decls tsym tkey_hash
+                              [tdecl; t_kinding] [] in
+                          FStar_Compiler_List.op_At fv_decls1 uu___7 in
+                        (tapp_concrete, uu___6)))
         | FStar_Syntax_Syntax.Tm_refine uu___2 ->
             let uu___3 =
               let steps =
