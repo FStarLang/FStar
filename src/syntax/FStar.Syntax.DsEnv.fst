@@ -1044,6 +1044,7 @@ let push_sigelt_force env se = push_sigelt' false env se
 
 let push_namespace env ns =
   (* namespace resolution disabled, but module abbrevs enabled *)
+  (* GM: What's the rationale for this? *)
   let (ns', kd) =
     match resolve_module_name env ns false with
     | None -> (
