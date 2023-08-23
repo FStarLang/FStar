@@ -794,36 +794,65 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
              let tsym = "Non_total_Tm_arrow_" ^ tkey_hash in
              (* We need to compute all free variables of this arrow
-             expressions and parametrize the encoding wrt to them. See
+             expression and parametrize the encoding wrt to them. See
              issue #3028 *)
-             let arg_vars, arg_sorts, arg_terms =
+             let env0 = env in
+             let fstar_fvs, (env, fv_decls, fv_vars, fv_tms, fv_guards) =
                let fvs = Free.names t0 |> BU.set_elements in
-               let tms = List.map (lookup_term_var env) fvs in
-               
-               (* For each of the free variables, we attempt to close
-               the axioms over them. But, some of them are in the environment
-               when encoding was started, and those are encoded as top-level
-               names instead of FreeVs. So we only take the FreeVs. *)
-               let getfv (t:term) : list fv =
+
+               let getfreeV (t:term) : fv =
                  match t.tm with
-                 | FreeV fv -> [fv]
-                 | _ -> []
+                 | FreeV fv -> fv
+                 | _ -> failwith "Impossible: getfreeV: gen_term_var should always returns a FreeV"
                in
-               
-               (List.concatMap getfv tms <: Term.fvs),
-               (List.map (fun _ -> Term_sort) fvs <: list sort),
-               tms
+
+               fvs,
+               List.fold_left (fun (env, decls, vars, tms, guards) bv ->
+                   (* Get the sort from the environment, do not trust .sort field *)
+                   let (sort, _) = Env.lookup_bv env.tcenv bv in
+                   (* Generate a fresh SMT variable for this bv *)
+                   let sym, smt_tm, env = gen_term_var env bv in
+                   let fv = getfreeV smt_tm in
+                   (* Generate typing predicate for it at the sort type *)
+                   let guard, decls' = encode_term_pred None (norm env sort) env smt_tm in
+                   (env, decls'@decls, fv::vars, smt_tm::tms, guard::guards)
+               ) (env, [], [], [], []) fvs
              in
+             (* Putting in "correct" order... but does it matter? *)
+             let fv_decls = List.rev fv_decls in
+             let fv_vars = List.rev fv_vars in
+             let fv_tms = List.rev fv_tms in
+             let fv_guards = List.rev fv_guards in
+
+             let arg_sorts = List.map (fun _ -> Term_sort) fv_tms in
              let tdecl = Term.DeclFun(tsym, arg_sorts, Term_sort, None) in
-             let tapp = mkApp(tsym, arg_terms) in
+             let tapp = mkApp(tsym, fv_tms) in
              let t_kinding =
                 let a_name = "non_total_function_typing_" ^tsym in
-                Util.mkAssume(mkForall t0.pos ([], arg_vars, mk_HasType tapp mk_Term_type),
-                              Some "Typing for non-total arrows",
-                              a_name)
+                let axiom =
+                  (* We generate:
+                     forall v1 .. vn, (v1 hasType t1 /\ ... vn hasType tn) ==> tapp hasType Type *)
+                  (* NB: we use the conlusion (HasType tapp Type) as the pattern. Though Z3
+                  will probably pick the same one if left empty. *)
+                  mkForall t0.pos ([[mk_HasType tapp mk_Term_type]], fv_vars,
+                    mkImp (mk_and_l fv_guards, mk_HasType tapp mk_Term_type))
+                in
+                (* We furthermore must close over any variable that is
+                still free in the axiom. This can happen since the types
+                of the fvs we are closing over above may not be closed
+                in the current env. *)
+                let svars = Term.free_variables axiom in
+                let axiom = mkForall t0.pos ([], svars, axiom) in
+                Util.mkAssume (axiom, Some "Typing for non-total arrows", a_name)
              in
 
-             tapp, mk_decls tsym tkey_hash [tdecl ; t_kinding ] []
+             (* The axiom above is generated over a universal quantification of
+             the free variables, but the actual encoding of this instance of the
+             arrow is applied to (the encoding of) the actual free variables at
+             this point. *)
+
+             let tapp_concrete = mkApp(tsym, List.map (lookup_term_var env0) fstar_fvs) in
+             tapp_concrete, fv_decls @ mk_decls tsym tkey_hash [tdecl ; t_kinding ] []
 
       | Tm_refine _ ->
         let x, f =
@@ -1135,8 +1164,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
           let bs, body, opening = SS.open_term' bs body in
           let fallback () =
             let arg_sorts, arg_terms =
-              (* We need to compute all free variables of this arrow
-              expressions and parametrize the encoding wrt to them. See
+              (* We need to compute all free variables of this lambda
+              expression and parametrize the encoding wrt to them. See
               issue #3028 *)
               let fvs = Free.names t0 |> BU.set_elements in
               let tms = List.map (lookup_term_var env) fvs in
