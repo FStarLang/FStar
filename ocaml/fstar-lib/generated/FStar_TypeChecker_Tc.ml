@@ -4783,7 +4783,8 @@ let (tc_decls :
                      (let ses'2 =
                         FStar_Compiler_Effect.op_Bar_Greater ses'1
                           (FStar_Compiler_List.map
-                             (FStar_Syntax_Compress.deep_compress_se false)) in
+                             (FStar_Syntax_Compress.deep_compress_se false
+                                false)) in
                       let env3 =
                         FStar_Compiler_Effect.op_Bar_Greater ses'2
                           (FStar_Compiler_List.fold_left
@@ -5100,7 +5101,8 @@ let (deep_compress_modul :
   FStar_Syntax_Syntax.modul -> FStar_Syntax_Syntax.modul) =
   fun m ->
     let uu___ =
-      FStar_Compiler_List.map (FStar_Syntax_Compress.deep_compress_se false)
+      FStar_Compiler_List.map
+        (FStar_Syntax_Compress.deep_compress_se false false)
         m.FStar_Syntax_Syntax.declarations in
     {
       FStar_Syntax_Syntax.name = (m.FStar_Syntax_Syntax.name);

@@ -38,6 +38,7 @@ and flag =
   | IfDef 
   | Macro 
   | Deprecated of Prims.string 
+  | CNoInline 
 and lifetime =
   | Eternal 
   | Stack 
@@ -271,6 +272,8 @@ let (uu___is_Deprecated : flag -> Prims.bool) =
     match projectee with | Deprecated _0 -> true | uu___ -> false
 let (__proj__Deprecated__item___0 : flag -> Prims.string) =
   fun projectee -> match projectee with | Deprecated _0 -> _0
+let (uu___is_CNoInline : flag -> Prims.bool) =
+  fun projectee -> match projectee with | CNoInline -> true | uu___ -> false
 let (uu___is_Eternal : lifetime -> Prims.bool) =
   fun projectee -> match projectee with | Eternal -> true | uu___ -> false
 let (uu___is_Stack : lifetime -> Prims.bool) =
@@ -817,6 +820,8 @@ let (translate_flags :
              FStar_Pervasives_Native.Some WipeBody
          | FStar_Extraction_ML_Syntax.CInline ->
              FStar_Pervasives_Native.Some CInline
+         | FStar_Extraction_ML_Syntax.CNoInline ->
+             FStar_Pervasives_Native.Some CNoInline
          | FStar_Extraction_ML_Syntax.Substitute ->
              FStar_Pervasives_Native.Some Substitute
          | FStar_Extraction_ML_Syntax.GCType ->
@@ -3114,7 +3119,7 @@ let (translate : FStar_Extraction_ML_Syntax.mllib -> file Prims.list) =
                      "Unable to translate module: %s because:\n  %s\n" m_name
                      uu___3);
                   FStar_Pervasives_Native.None)) modules
-let (uu___1713 : unit) =
+let (uu___1714 : unit) =
   register_post_translate_type_without_decay translate_type_without_decay';
   register_post_translate_type translate_type';
   register_post_translate_type_decl translate_type_decl';

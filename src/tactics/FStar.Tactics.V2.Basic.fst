@@ -2138,7 +2138,8 @@ let __refl_typing_builtin_wrapper (f:unit -> 'a & list (env & typ)) : tac (optio
   let gs =
     if Some? r then
       let allow_uvars = false in
-      List.map (fun (e,g) -> e, SC.deep_compress allow_uvars g) (snd (Some?.v r))
+      let allow_names = true in (* terms are potentially open, names are OK *)
+      List.map (fun (e,g) -> e, SC.deep_compress allow_uvars allow_names g) (snd (Some?.v r))
     else
       []
   in
@@ -2344,7 +2345,9 @@ let refl_tc_term (g:env) (e:term) : tac (option (term & (Core.tot_or_ghost & typ
       e in
     try
      begin
-     let e = SC.deep_compress false e in
+     let allow_uvars = false in
+     let allow_names = true in (* terms are potentially open, names are OK *)
+     let e = SC.deep_compress allow_uvars allow_names e in
      // TODO: may be should we check here that e has no unresolved implicits?
      dbg_refl g (fun _ ->
        BU.format1 "} finished tc with e = %s\n"
@@ -2464,8 +2467,10 @@ let refl_instantiate_implicits (g:env) (e:term) : tac (option (term & typ) & iss
     will return this term and it MUST be compressed. It's logical
     part should be trivial too, as we only lax-typechecked the term. *)
     Rel.force_trivial_guard g guard;
-    let e = SC.deep_compress false e in
-    let t = t |> refl_norm_type g |> SC.deep_compress false in
+    let allow_uvars = false in
+    let allow_names = true in (* terms are potentially open, names are OK *)
+    let e = SC.deep_compress allow_uvars allow_names e in
+    let t = t |> refl_norm_type g |> SC.deep_compress allow_uvars allow_names in
     dbg_refl g (fun _ ->
       BU.format2 "} finished tc with e = %s and t = %s\n"
         (Print.term_to_string e)

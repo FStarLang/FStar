@@ -454,7 +454,7 @@ let (tc' :
     match uu___ with
     | (tm1, uu___1, g) ->
         (FStar_TypeChecker_Rel.force_trivial_guard tcenv1 g;
-         (let tm2 = FStar_Syntax_Compress.deep_compress false tm1 in
+         (let tm2 = FStar_Syntax_Compress.deep_compress false false tm1 in
           (tm2, tcenv1)))
 let (tc : Prims.string -> FStar_Syntax_Syntax.term) =
   fun s -> let uu___ = tc' s in match uu___ with | (tm, uu___1) -> tm
@@ -553,7 +553,8 @@ let (tc_term : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
     match uu___ with
     | (tm1, uu___1, g) ->
         (FStar_TypeChecker_Rel.force_trivial_guard tcenv1 g;
-         (let tm2 = FStar_Syntax_Compress.deep_compress false tm1 in tm2))
+         (let tm2 = FStar_Syntax_Compress.deep_compress false false tm1 in
+          tm2))
 let (pars_and_tc_fragment : Prims.string -> unit) =
   fun s ->
     FStar_Options.set_option "trace_error" (FStar_Options.Bool true);

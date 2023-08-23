@@ -6840,12 +6840,14 @@ let __refl_typing_builtin_wrapper :
           if FStar_Pervasives_Native.uu___is_Some r
           then
             let allow_uvars = false in
+            let allow_names = true in
             FStar_Compiler_List.map
               (fun uu___1 ->
                  match uu___1 with
                  | (e, g) ->
                      let uu___2 =
-                       FStar_Syntax_Compress.deep_compress allow_uvars g in
+                       FStar_Syntax_Compress.deep_compress allow_uvars
+                         allow_names g in
                      (e, uu___2))
               (FStar_Pervasives_Native.snd
                  (FStar_Pervasives_Native.__proj__Some__item__v r))
@@ -7436,7 +7438,11 @@ let (refl_tc_term :
                 (fun uu___4 ->
                    match () with
                    | () ->
-                       let e2 = FStar_Syntax_Compress.deep_compress false e1 in
+                       let allow_uvars = false in
+                       let allow_names = true in
+                       let e2 =
+                         FStar_Syntax_Compress.deep_compress allow_uvars
+                           allow_names e1 in
                        (dbg_refl g1
                           (fun uu___6 ->
                              let uu___7 =
@@ -7856,13 +7862,18 @@ let (refl_instantiate_implicits :
               match uu___4 with
               | (e1, t, guard) ->
                   (FStar_TypeChecker_Rel.force_trivial_guard g1 guard;
-                   (let e2 = FStar_Syntax_Compress.deep_compress false e1 in
+                   (let allow_uvars = false in
+                    let allow_names = true in
+                    let e2 =
+                      FStar_Syntax_Compress.deep_compress allow_uvars
+                        allow_names e1 in
                     let t1 =
                       let uu___6 =
                         FStar_Compiler_Effect.op_Bar_Greater t
                           (refl_norm_type g1) in
                       FStar_Compiler_Effect.op_Bar_Greater uu___6
-                        (FStar_Syntax_Compress.deep_compress false) in
+                        (FStar_Syntax_Compress.deep_compress allow_uvars
+                           allow_names) in
                     dbg_refl g1
                       (fun uu___7 ->
                          let uu___8 = FStar_Syntax_Print.term_to_string e2 in

@@ -81,6 +81,7 @@ and flag =
   | IfDef
   | Macro
   | Deprecated of string
+  | CNoInline
 
 and fsdoc = string
 
@@ -347,6 +348,7 @@ let translate_flags flags =
     | Syntax.Private -> Some Private
     | Syntax.NoExtract -> Some WipeBody
     | Syntax.CInline -> Some CInline
+    | Syntax.CNoInline -> Some CNoInline
     | Syntax.Substitute -> Some Substitute
     | Syntax.GCType -> Some GCType
     | Syntax.Comment s -> Some (Comment s)
