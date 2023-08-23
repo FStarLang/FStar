@@ -30,7 +30,7 @@ open FStar.IntegerIntervals
 open FStar.Matrix 
   
 (* Auxiliary utility that casts (matrix c m n) to seq of length (m*n) *)
-private let matrix_seq #c #m #r (generator: matrix_generator c m r) = 
+let matrix_seq #c #m #r (generator: matrix_generator c m r) = 
   seq_of_matrix (Matrix.init generator)
 
 (*
