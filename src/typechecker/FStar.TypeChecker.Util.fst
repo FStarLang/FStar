@@ -2399,7 +2399,15 @@ let rec first_opt (f : 'a -> option 'b) (xs : list 'a) : option 'b =
   | [] -> None
   | x::xs -> BU.catch_opt (f x) (fun () -> first_opt f xs)
 
-let find_coercion (env:Env.env) (checked: lcomp) (exp_t: typ) : option (lid & comp) = // returns coercion and new comp type
+let (let?) = BU.bind_opt
+let bool_guard (b:bool) : option unit =
+  if b then Some () else None
+
+let find_coercion (env:Env.env) (checked: lcomp) (exp_t: typ) (e:term)
+: option (term & lcomp & guard_t)
+// returns coerced term, new lcomp type, and guard
+// or None if no coercion applied
+=
  Errors.with_ctx "find_coercion" (fun () ->
   let is_type t =
       let t = N.unfold_whnf env t in
@@ -2408,42 +2416,108 @@ let find_coercion (env:Env.env) (checked: lcomp) (exp_t: typ) : option (lid & co
       | Tm_type _ -> true
       | _ -> false
   in
-  let in_scope lid = Some? (Env.try_lookup_lid env lid) in
-  let res_typ = U.unrefine checked.res_typ in
-  let head, args = U.head_and_args res_typ in
+  let rec head_of (t : term) : term =
+      match (compress t).n with
+      | Tm_app {hd=t}
+      | Tm_match {scrutinee=t}
+      | Tm_abs {body=t}
+      | Tm_ascribed {tm=t}
+      | Tm_meta {tm=t} -> head_of t
+      | Tm_refine {b} -> head_of b.sort
+      | _ -> t
+  in
+  let is_head_defined t =
+    let h = head_of t in
+    let h = SS.compress h in
+    Tm_fvar? h.n || Tm_uinst? h.n || Tm_type? h.n
+  in
+
+  let head_unfold env t = N.unfold_whnf' [Unascribe; Unmeta; Unrefine] env t in
+
+  (* Bail out early if either the computed or expected type are not
+  defined at the head *)
+  bool_guard (is_head_defined exp_t && is_head_defined checked.res_typ);?
+
+  (* The computed type for `e`. *)
+  let computed_t = head_unfold env checked.res_typ in
+  let head, args = U.head_and_args computed_t in
+
+  (* The expected type according to the context. *)
+  let exp_t = head_unfold env exp_t in
+
   match (U.un_uinst head).n, args with
   (* b2t is primitive... for now *)
   | Tm_fvar fv, [] when S.fv_eq_lid fv C.bool_lid && is_type exp_t ->
-    Some (C.b2t_lid, S.mk_Total U.ktype0)
+    let lc2 = TcComm.lcomp_of_comp <| S.mk_Total U.ktype0 in
+    let lc_res = bind e.pos env (Some e) checked (None, lc2) in
+    Some (U.mk_app (S.fvar C.b2t_lid None) [S.as_arg e], lc_res, Env.trivial_guard)
 
-  (* attributes *)
+  (* user coercions, find candidates with the @@coercion attribute and try. *)
   |  _ ->
-    let (let?) = BU.bind_opt in
-    let candidates = Env.lookup_attr env "FStar.Pervasives.coercion" in
-    if Cons? candidates then begin
-      candidates |> first_opt (fun se ->
-        let? name, typ =
-          match se.sigel with
-          | Sig_let {lbs=(_,[lb])} -> Some (S.lid_of_fv (BU.right lb.lbname), lb.lbtyp)
-          | Sig_declare_typ {lid; t} -> Some (lid, t)
-          | _ -> None
-        in
-        (* Errors.diag checked.res_typ.pos *)
-        (*   (BU.format2 "considering candidate %s of typ %s" (Print.sigelt_to_string_short se) (Print.term_to_string typ)); *)
-        let bs, c = U.arrow_formals_comp typ in
-        if List.length bs <> 1 then None else
-        let [b] = bs in
-        let c_checked  = N.unfold_whnf env (U.comp_result c) in
-        let c_expected = N.unfold_whnf env exp_t in
-        let b_expected = N.unfold_whnf env b.binder_bv.sort in
-        let b_checked  = N.unfold_whnf env checked.res_typ in
-        if U.term_eq b_checked b_expected && U.term_eq c_checked c_expected
-        then Some (name, c)
-        else None
-      )
-    end else None
+    let head_lid_of t =
+      match (SS.compress (head_of t)).n with
+      | Tm_fvar fv
+      | Tm_uinst ({ n = Tm_fvar fv }, _) ->
+        Some (S.lid_of_fv fv)
+      | _ -> None
+    in
 
-  | _ -> None
+    let? exp_head_lid = head_lid_of exp_t in
+    let? computed_head_lid = head_lid_of computed_t in
+
+    let candidates = Env.lookup_attr env "FStar.Pervasives.coercion" in
+    candidates |> first_opt (fun se ->
+      (* `f` is the candidate coercion, `e` the term to coerce *)
+      let? f_name, f_us, f_typ =
+        match se.sigel with
+        | Sig_let {lbs=(_,[lb])} -> Some (S.lid_of_fv (BU.right lb.lbname), lb.lbunivs, lb.lbtyp)
+        | Sig_declare_typ {lid; us; t} -> Some (lid, us, t)
+        | _ -> None
+      in
+
+      let _, f_typ = SS.open_univ_vars f_us f_typ in
+
+      (* `f` must have type `b1 -> b2 -> .... -> bN -> TB -> M TC ...,
+         Before attempting unification, which is expensive, we will
+         check that the head of B is an fvar which matches the expected
+         type, and that the head of A is and fvar which matches the type
+         of e.
+      *)
+      let f_bs, f_c = U.arrow_formals_comp f_typ in
+      bool_guard (f_bs <> []);? (* If not a function, ignore *)
+      let f_res = U.comp_result f_c in
+      let f_res = head_unfold (Env.push_binders env f_bs) f_res in
+      let? f_res_head_lid = head_lid_of f_res in
+      (* ^ The lid at the head of TC, the result type *)
+      bool_guard (lid_equals exp_head_lid f_res_head_lid);?
+
+      let b = List.last f_bs in
+      let b_ty = b.binder_bv.sort in
+      let b_ty = head_unfold (Env.push_binders env (List.init f_bs)) b_ty in
+      let? b_head_lid = head_lid_of b_ty in
+      (* ^ The lid at the head of TB, the last argument *)
+      bool_guard (lid_equals computed_head_lid b_head_lid);?
+
+      (* We will now typecheck the coercion applied to `e` at expected type
+         `exp_t` likely causing implicits to be instantiated for the coercion
+         function (if any). If this succeeds, the elaborated term is the
+         result we want.
+
+         FIXME: ideally, we would not pass `e` through the typechecker again,
+         but checking the coercion alone means we need to compute its effect (easy)
+         and effect indices (not easy).
+
+         Note: we could perhaps backtrack on an error here (using
+         catch_errors and UF.new_transaction), but that can get
+         expensive, and it's perhaps unexpected. Currently, the head FVs
+         define which coercions apply, and that's a firm choice.
+       *)
+
+      let f_tm = S.fvar f_name None in
+      let tt = U.mk_app f_tm [S.as_arg e] in
+      Some (env.tc_term { env with nocoerce=true; lax=true; expected_typ = Some (exp_t, false) } tt)
+      // NB: tc_term returns exactly elaborated term, lcomp, and guard, so we just return that.
+    )
 )
 
 let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : term * lcomp * guard_t =
@@ -2462,13 +2536,22 @@ let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : term * lcomp * guard_
                     (Print.term_to_string lc.res_typ)
                     (Print.term_to_string exp_t)
     in
-    match find_coercion env lc exp_t with
-    | Some (f, c) ->
-      let e, lc = coerce_with env e lc f [] [] c in
-      e, lc, Env.trivial_guard // explain
+    match find_coercion env lc exp_t e with
+    | Some (coerced, lc, g) ->
+      let _ = if Env.debug env (Options.Other "Coercions") then
+              BU.print3 "(%s) COERCING %s to %s\n"
+                      (Range.string_of_range e.pos)
+                      (Print.term_to_string e)
+                      (Print.term_to_string coerced)
+      in
+      coerced, lc, g
     | None ->
+      let _ = if Env.debug env (Options.Other "Coercions") then
+              BU.print1 "(%s) No user coercion found\n"
+                      (Range.string_of_range e.pos)
+      in
       
-      (* TODO: hide/reveal also coercions? it's trickier for sure *)
+      (* TODO: hide/reveal also user coercions? it's trickier for sure *)
 
       let strip_hide_or_reveal (e:term) (hide_or_reveal:lident) : option term =
         let hd, args = U.leftmost_head_and_args e in
