@@ -57,6 +57,7 @@ let parse_extension_blob (extension_name:string)
                          (blob_range:range)
                          (extension_syntax_start:range) : FStar_Parser_AST.decl' =
     DeclSyntaxExtension (extension_name, s, blob_range, extension_syntax_start)
+
 %}
 
 %token <string> STRING
@@ -320,11 +321,11 @@ rawDecl:
         (* This is just to provide a better error than "syntax error" *)
         raise_error (Fatal_SyntaxError, "Syntax error: constants are not allowed in val declarations") (rr $loc)
       }
-  | VAL lid=lidentOrOperator bss=list(multiBinder) COLON t=typ
+  | VAL lid=lidentOrOperator bs=binders COLON t=typ
       {
-        let t = match flatten bss with
+        let t = match bs with
           | [] -> t
-          | bs -> mk_term (Product(bs, t)) (rr2 $loc(bss) $loc(t)) Type_level
+          | bs -> mk_term (Product(bs, t)) (rr2 $loc(bs) $loc(t)) Type_level
         in Val(lid, t)
       }
   | SPLICE LBRACK ids=separated_list(SEMICOLON, ident) RBRACK t=thunk(atomicTerm)
@@ -713,7 +714,9 @@ multiBinder:
          mkRefinedBinder x t should_bind_var r (rr $loc) q attrs) qual_ids
      }
 
-binders: bss=list(b=binder {[b]} | bs=multiBinder {bs}) { flatten bss }
+  | b=binder { [b] }
+
+binders: bss=list(bs=multiBinder {bs}) { flatten bss }
 
 aqualifiedWithAttrs(X):
   | aq=aqual attrs=binderAttributes x=X { (Some aq, attrs), x }
