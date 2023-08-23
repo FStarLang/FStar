@@ -145,6 +145,7 @@ let initial_env deps
     lax=false;
     lax_universes=false;
     phase1=false;
+    nocoerce=false;
     failhard=false;
     nosynth=false;
     uvar_subtyping=true;

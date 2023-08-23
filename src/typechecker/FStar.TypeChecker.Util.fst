@@ -2448,9 +2448,9 @@ let find_coercion (env:Env.env) (checked: lcomp) (exp_t: typ) : option (lid & co
 
 let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : term * lcomp * guard_t =
   let should_coerce =
-      env.phase1
+      (env.phase1
     || env.lax
-    || Options.lax ()
+    || Options.lax ()) && not env.nocoerce
   in
   if not should_coerce
   then (e, lc, Env.trivial_guard)

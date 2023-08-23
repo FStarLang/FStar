@@ -181,6 +181,7 @@ and env = {
   nosynth        :bool;                         (* don't run synth tactics *)
   uvar_subtyping :bool;
   intactics      :bool;                         (* we are currently running a tactic *)
+  nocoerce       :bool;                         (* do not apply any coercions *)
 
   tc_term :env -> term -> term * lcomp * guard_t; (* typechecker callback; G |- e : C <== g *)
   typeof_tot_or_gtot_term :env -> term -> must_tot -> term * typ * guard_t; (* typechecker callback; G |- e : (G)Tot t <== g *)
