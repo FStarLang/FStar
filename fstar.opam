@@ -11,6 +11,7 @@ depends: [
   "stdint"
   "yojson"
   "dune" {build & >= "3.2.0"}
+  "memtrace"
   "menhirLib"
   "menhir" {build & >= "2.1"}
   "pprint"
