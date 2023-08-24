@@ -82,7 +82,7 @@ fn init' (_:unit)
   let ph = alloc Init;
   let h = alloc CInit;
 
-  share2 #pure_st_t ph #Init;
+  share2 #pure_st_t #emp_inames ph #Init;
   fold pure_handle_has_state ph Init;
   fold pure_handle_has_state ph Init;
   fold handle_has_state h CInit;
@@ -121,13 +121,13 @@ fn next' (_:unit)
   pts_to_injective_eq #pure_st_t #one_half #one_half #Init #ps global_locked_state.ph;
   rewrite (pts_to global_locked_state.ph #one_half ps)
        as (pts_to global_locked_state.ph #one_half Init);
-  gather2 #pure_st_t global_locked_state.ph #Init;
+  gather2 #pure_st_t #emp_inames global_locked_state.ph #Init;
 
   let st = CNext some_payload;
   global_locked_state.h := st;
   global_locked_state.ph := Next;
 
-  share2 #pure_st_t global_locked_state.ph #Next;
+  share2 #pure_st_t #emp_inames global_locked_state.ph #Next;
   fold pure_handle_has_state global_locked_state.ph Next;
   fold pure_handle_has_state global_locked_state.ph Next;
   fold handle_has_state global_locked_state.h st;
@@ -154,13 +154,13 @@ fn close' (_:unit)
   pts_to_injective_eq #pure_st_t #one_half #one_half #Next #ps global_locked_state.ph;
   rewrite (pts_to global_locked_state.ph #one_half ps)
        as (pts_to global_locked_state.ph #one_half Next);
-  gather2 #pure_st_t global_locked_state.ph #Next;
+  gather2 #pure_st_t #emp_inames global_locked_state.ph #Next;
 
   let st = CFinal some_payload;
   global_locked_state.h := st;
   global_locked_state.ph := Final;
 
-  share2 #pure_st_t global_locked_state.ph #Final;
+  share2 #pure_st_t #emp_inames global_locked_state.ph #Final;
   fold pure_handle_has_state global_locked_state.ph Final;
   fold pure_handle_has_state global_locked_state.ph Final;
   fold handle_has_state global_locked_state.h st;
