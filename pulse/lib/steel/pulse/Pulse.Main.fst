@@ -103,6 +103,12 @@ let check_pulse (namespaces:list string)
       | Inl st_term ->
         main st_term tm_emp env
       | Inr (msg, range) ->
-        T.fail (Printf.sprintf "%s: %s"
-                  (T.range_to_string range)
-                  msg)
+        let i =
+          Issue.mk_issue "Error"
+                   (Printf.sprintf "%s: %s" (T.range_to_string range) msg)
+                   (Some range)
+                   None
+                   []
+        in
+        T.log_issues [i];
+        T.fail "Pulse parser failed"
