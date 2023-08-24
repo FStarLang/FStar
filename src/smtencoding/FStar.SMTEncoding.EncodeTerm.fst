@@ -329,6 +329,7 @@ let is_BitVector_primitive head args =
       || S.fv_eq_lid fv Const.bv_shift_left_lid
       || S.fv_eq_lid fv Const.bv_shift_right_lid
       || S.fv_eq_lid fv Const.bv_udiv_lid
+      || S.fv_eq_lid fv Const.bv_udiv_unsafe_lid
       || S.fv_eq_lid fv Const.bv_mod_lid
       || S.fv_eq_lid fv Const.bv_ult_lid
       || S.fv_eq_lid fv Const.bv_uext_lid
@@ -529,6 +530,8 @@ and encode_arith_term env head args_e =
          (Const.bv_shift_left_lid, bv_shl);
          (Const.bv_shift_right_lid, bv_shr);
          (Const.bv_udiv_lid, bv_udiv);
+         (* NOTE: unsafe 'udiv' also compiles to the same smtlib2 expr *)
+         (Const.bv_udiv_unsafe_lid, bv_udiv);
          (Const.bv_mod_lid, bv_mod);
          (Const.bv_mul_lid, bv_mul);
          (Const.bv_ult_lid, bv_ult);

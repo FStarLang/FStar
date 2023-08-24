@@ -90,6 +90,11 @@ let bvdiv #n a b =
 let int2bv_div #n #x #y #z pf =
   inverse_vec_lemma #n (bvdiv #n (int2bv #n x) y)
 
+let bvdiv_unsafe #n a b = admit ()
+
+let bvdiv_unsafe_sound #n #a #b b_nonzero_pf = admit ()
+
+
 let bvmod #n a b =
     int2bv #n (U.mod #n (bv2int #n a) b)
 let int2bv_mod #n #x #y #z pf =
