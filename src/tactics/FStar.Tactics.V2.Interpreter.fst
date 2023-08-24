@@ -601,6 +601,14 @@ let () =
         free_uvars RE.e_term (e_list e_int)
         free_uvars NRE.e_term (NBET.e_list NBET.e_int);
 
+      mk_tac_step_1 0 "ext_options"
+        ext_options e_string (e_list e_string)
+        ext_options NBET.e_string (NBET.e_list NBET.e_string);
+
+      mk_tac_step_1 0 "all_ext_options"
+        all_ext_options e_unit (e_list (e_tuple2 e_string e_string))
+        all_ext_options NBET.e_unit NBET.(e_list (e_tuple2 e_string e_string));
+
       // reflection typechecker callbacks (part of the DSL framework)
 
       mk_tac_step_2 0 "is_non_informative"

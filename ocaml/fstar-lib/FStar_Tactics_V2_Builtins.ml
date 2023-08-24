@@ -131,6 +131,8 @@ let get_vconfig             = from_tac_1 "B.get_vconfig" B.get_vconfig
 let set_vconfig             = from_tac_1 "B.set_vconfig" B.set_vconfig
 let t_smt_sync              = from_tac_1 "B.t_smt_sync" B.t_smt_sync
 let free_uvars              = from_tac_1 "B.free_uvars" B.free_uvars
+let ext_options             = from_tac_1 "B.ext_options" B.ext_options
+let all_ext_options         = from_tac_1 "B.all_ext_options" B.all_ext_options
 
 
 type ('env, 't) prop_validity_token = unit

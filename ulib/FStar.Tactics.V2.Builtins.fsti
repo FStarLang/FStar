@@ -439,6 +439,16 @@ val t_smt_sync : vconfig -> Tac unit
 a reflection primitive as it depends on the state of the UF graph. *)
 val free_uvars : term -> Tac (list int)
 
+(* Access the `--ext` options. When called with `k` it returns
+a list of all the extension options registered for `k`, so if
+`--ext k:opt1 --ext k:opt2` was given, this returns ["opt1"; "opt2"]. *)
+val ext_options (ext:string) : Tac (list string)
+
+(* Access the `--ext` options. This returns all of the pairs given,
+so if `--ext k:opt1 --ext m:opt3 --ext k:opt2` was given, this
+returns [("k", "opt1"); ("m"; "opt3"); ("k"; "opt2")]. The order is
+*unspecified*, do not rely on it. *)
+val all_ext_options : unit -> Tac (list (string & string))
 
 (***** APIs used in the meta DSL framework *****)
 
