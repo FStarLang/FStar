@@ -61,10 +61,18 @@ let share2 (#a:Type) (r:ref a) (#v:erased a)
 let gather2' (#a:Type) (r:ref a) (#x0 #x1:erased a)
   : stt_ghost unit emp_inames
       (pts_to r #one_half x0 ** pts_to r #one_half x1)
-      (fun () -> pts_to r #(sum_perm one_half one_half) x0 `S.star` pure (x0 == x1))
+      (fun () -> pts_to r #(sum_perm one_half one_half) x0 ** pure (x0 == x1))
   = gather r
-let gather2 #a r #x0 #x1 =
-  (* Need the coerce to change sum_perm one_half one_half into full_perm *)
+
+let gather2 (#a:Type) (r:ref a) (#x0 #x1:erased a)
+  : Tot (stt_ghost unit emp_inames
+           (pts_to r #one_half x0 ** pts_to r #one_half x1)
+           (fun _ -> pts_to r #full_perm x0 ** pure (x0 == x1)))
+=
+  assert ((fun (_:unit) -> pts_to r #(sum_perm one_half one_half) x0 ** pure (x0 == x1))
+       == (fun (_:unit) -> pts_to r #full_perm x0 ** pure (x0 == x1)))
+      by (T.l_to_r [`double_one_half]);
+  (* NB: I'm surprised this works without extensionality and a restricted_t... bug? *)
   coerce_eq () (gather2' #a r #x0 #x1)
 
 let with_local #a init #pre #ret_t #post body =
