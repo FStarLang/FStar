@@ -6787,6 +6787,20 @@ let (free_uvars :
                        u.FStar_Syntax_Syntax.ctx_uvar_head in
                    FStar_BigInt.of_int_fs uu___2)) in
          FStar_Tactics_Monad.ret uvs)
+let (ext_options :
+  Prims.string -> Prims.string Prims.list FStar_Tactics_Monad.tac) =
+  fun ext ->
+    FStar_Tactics_Monad.op_let_Bang FStar_Tactics_Monad.idtac
+      (fun uu___ ->
+         let uu___1 = FStar_Options.ext_options ext in
+         FStar_Tactics_Monad.ret uu___1)
+let (all_ext_options :
+  unit -> (Prims.string * Prims.string) Prims.list FStar_Tactics_Monad.tac) =
+  fun uu___ ->
+    FStar_Tactics_Monad.op_let_Bang FStar_Tactics_Monad.idtac
+      (fun uu___1 ->
+         let uu___2 = FStar_Options.all_ext_options () in
+         FStar_Tactics_Monad.ret uu___2)
 let (dbg_refl : env -> (unit -> Prims.string) -> unit) =
   fun g ->
     fun msg ->
