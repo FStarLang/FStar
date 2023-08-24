@@ -463,6 +463,17 @@ and encode_arith_term env head args_e =
     let sz_key = FStar.Compiler.Util.format1 "BitVector_%s" (string_of_int sz) in
     let sz_decls =
       let t_decls = mkBvConstructor sz in
+      //Typing inversion for bv_t n
+      let bv_t sz = 
+        (* forall (x:Term). HasType x (bv_t n) ==> is-BoxVec#n x *)
+        let bv_t_n = 
+          let head = S.lid_as_fv FStar.Parser.Const.bv_t_lid None in
+          let arg = U.exp_int sz in
+          let t = U.mk_app (S.fv_to_tm head) [arg, None] in
+          encode_term t env
+        in
+        ()
+      in
       mk_decls "" sz_key t_decls []
     in
     (* we need to treat the size argument for zero_extend specially*)
