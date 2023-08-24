@@ -264,7 +264,7 @@ val fresh_token: (string * sort) -> int -> decl
 val fresh_constructor : Range.range -> (string * list sort * sort * int) -> decl
 //val constructor_to_decl_aux: bool -> constructor_t -> decls_t
 val constructor_to_decl: Range.range -> constructor_t -> list decl
-val mkBvConstructor: int -> list decl
+val mkBvConstructor: int -> list decl & string & string
 val declToSmt: string -> decl -> string
 val declToSmt_no_caps: string -> decl -> string
 

@@ -582,6 +582,8 @@ let injective_constructor
             else [proj_name])
     |> List.flatten
 
+let discriminator_name constr = "is-"^constr.constr_name
+
 let constructor_to_decl rng constr =
     let injective = true in
     let sort = constr.constr_sort in
@@ -593,7 +595,7 @@ let constructor_to_decl rng constr =
       | Some id -> [fresh_constructor rng (constr.constr_name, field_sorts, sort, id)]
     in
     let disc =
-        let disc_name = "is-"^constr.constr_name in
+        let disc_name = discriminator_name constr in
         let xfv = mk_fv ("x", sort) in
         let xx = mkFreeV xfv norng in
         let proj_terms, ex_vars =
@@ -970,7 +972,9 @@ let mkBvConstructor (sz : int) =
     constr_id=None;
     constr_fields=[{field_projectible=true; field_name=snd (boxBitVecFun sz); field_sort=BitVec_sort sz }]
   } in
-  constructor_to_decl norng constr
+  constructor_to_decl norng constr, 
+  constr.constr_name, 
+  discriminator_name constr
 
 let __range_c = BU.mk_ref 0
 let mk_Range_const () =

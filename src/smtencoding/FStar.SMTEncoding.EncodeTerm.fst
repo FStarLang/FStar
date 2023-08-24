@@ -462,19 +462,25 @@ and encode_arith_term env head args_e =
     let sz = getInteger tm_sz.n in
     let sz_key = FStar.Compiler.Util.format1 "BitVector_%s" (string_of_int sz) in
     let sz_decls =
-      let t_decls = mkBvConstructor sz in
+      let t_decls, constr_name, discriminator_name = mkBvConstructor sz in
       //Typing inversion for bv_t n
-      let bv_t sz = 
+      let decls, typing_inversion =
         (* forall (x:Term). HasType x (bv_t n) ==> is-BoxVec#n x *)
-        let bv_t_n = 
+        let bv_t_n, decls =
           let head = S.lid_as_fv FStar.Parser.Const.bv_t_lid None in
-          let arg = U.exp_int sz in
-          let t = U.mk_app (S.fv_to_tm head) [arg, None] in
+          let t = U.mk_app (S.fv_to_tm head) [tm_sz, None] in
           encode_term t env
         in
-        ()
+        let xsym = mk_fv (varops.fresh env.current_module_name "x", Term_sort) in
+        let x = mkFreeV xsym in
+        let x_has_type_bv_t_n = mk_HasType x bv_t_n in
+        let ax = mkForall head.pos ([[x_has_type_bv_t_n]],
+                                    [xsym],
+                                    mkImp(x_has_type_bv_t_n, mkApp (discriminator_name, [x]))) in
+        let name = "typing_inversion_for_" ^constr_name in
+        decls, mkAssume(ax, Some name, name)
       in
-      mk_decls "" sz_key t_decls []
+      decls@mk_decls "" sz_key (t_decls@[typing_inversion]) []
     in
     (* we need to treat the size argument for zero_extend specially*)
     let arg_tms, ext_sz =

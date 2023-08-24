@@ -1478,6 +1478,8 @@ let (injective_constructor :
                           else [proj_name])) in
           FStar_Compiler_Effect.op_Bar_Greater uu___1
             FStar_Compiler_List.flatten
+let (discriminator_name : constructor_t -> Prims.string) =
+  fun constr -> Prims.op_Hat "is-" constr.constr_name
 let (constructor_to_decl :
   FStar_Compiler_Range_Type.range -> constructor_t -> decl Prims.list) =
   fun rng ->
@@ -1500,7 +1502,7 @@ let (constructor_to_decl :
                 ((constr.constr_name), field_sorts, sort1, id) in
             [uu___] in
       let disc =
-        let disc_name = Prims.op_Hat "is-" constr.constr_name in
+        let disc_name = discriminator_name constr in
         let xfv = mk_fv ("x", sort1) in
         let xx = mkFreeV xfv norng in
         let uu___ =
@@ -1979,7 +1981,8 @@ let (declsToSmt : Prims.string -> decl Prims.list -> Prims.string) =
       FStar_Compiler_Effect.op_Bar_Greater uu___ (FStar_String.concat "\n")
 let (declToSmt_no_caps : Prims.string -> decl -> Prims.string) =
   fun z3options -> fun decl1 -> declToSmt' false z3options decl1
-let (mkBvConstructor : Prims.int -> decl Prims.list) =
+let (mkBvConstructor :
+  Prims.int -> (decl Prims.list * Prims.string * Prims.string)) =
   fun sz ->
     let constr =
       let uu___ =
@@ -2001,7 +2004,8 @@ let (mkBvConstructor : Prims.int -> decl Prims.list) =
         constr_sort = Term_sort;
         constr_id = FStar_Pervasives_Native.None
       } in
-    constructor_to_decl norng constr
+    let uu___ = constructor_to_decl norng constr in
+    (uu___, (constr.constr_name), (discriminator_name constr))
 let (__range_c : Prims.int FStar_Compiler_Effect.ref) =
   FStar_Compiler_Util.mk_ref Prims.int_zero
 let (mk_Range_const : unit -> term) =
