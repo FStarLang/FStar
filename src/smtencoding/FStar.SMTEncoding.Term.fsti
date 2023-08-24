@@ -93,10 +93,18 @@ and fvs = list fv
 
 type caption = option string
 type binders = list (string * sort)
-type constructor_field = string  //name of the field
-                       * sort    //sort of the field
-                       * bool    //true if the field is projectible
-type constructor_t = (string * list constructor_field * sort * int * bool)
+type constructor_field = {
+  field_name:string;  //name of the field
+  field_sort:sort;    //sort of the field
+  field_projectible:bool//true if the field is projectible
+}
+type constructor_t = {
+  constr_name:string;
+  constr_fields:list constructor_field;
+  constr_sort:sort;
+  constr_id:option int; //Some i, if a term whose head is this constructor is distinct from 
+               //terms with other head constructors
+}
 type constructors  = list constructor_t
 type fact_db_id =
     | Name of Ident.lid

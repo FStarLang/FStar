@@ -232,10 +232,52 @@ type fv = (Prims.string * sort * Prims.bool)
 type fvs = (Prims.string * sort * Prims.bool) Prims.list
 type caption = Prims.string FStar_Pervasives_Native.option
 type binders = (Prims.string * sort) Prims.list
-type constructor_field = (Prims.string * sort * Prims.bool)
+type constructor_field =
+  {
+  field_name: Prims.string ;
+  field_sort: sort ;
+  field_projectible: Prims.bool }
+let (__proj__Mkconstructor_field__item__field_name :
+  constructor_field -> Prims.string) =
+  fun projectee ->
+    match projectee with
+    | { field_name; field_sort; field_projectible;_} -> field_name
+let (__proj__Mkconstructor_field__item__field_sort :
+  constructor_field -> sort) =
+  fun projectee ->
+    match projectee with
+    | { field_name; field_sort; field_projectible;_} -> field_sort
+let (__proj__Mkconstructor_field__item__field_projectible :
+  constructor_field -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | { field_name; field_sort; field_projectible;_} -> field_projectible
 type constructor_t =
-  (Prims.string * constructor_field Prims.list * sort * Prims.int *
-    Prims.bool)
+  {
+  constr_name: Prims.string ;
+  constr_fields: constructor_field Prims.list ;
+  constr_sort: sort ;
+  constr_id: Prims.int FStar_Pervasives_Native.option }
+let (__proj__Mkconstructor_t__item__constr_name :
+  constructor_t -> Prims.string) =
+  fun projectee ->
+    match projectee with
+    | { constr_name; constr_fields; constr_sort; constr_id;_} -> constr_name
+let (__proj__Mkconstructor_t__item__constr_fields :
+  constructor_t -> constructor_field Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { constr_name; constr_fields; constr_sort; constr_id;_} ->
+        constr_fields
+let (__proj__Mkconstructor_t__item__constr_sort : constructor_t -> sort) =
+  fun projectee ->
+    match projectee with
+    | { constr_name; constr_fields; constr_sort; constr_id;_} -> constr_sort
+let (__proj__Mkconstructor_t__item__constr_id :
+  constructor_t -> Prims.int FStar_Pervasives_Native.option) =
+  fun projectee ->
+    match projectee with
+    | { constr_name; constr_fields; constr_sort; constr_id;_} -> constr_id
 type constructors = constructor_t Prims.list
 type fact_db_id =
   | Name of FStar_Ident.lid 
@@ -1392,10 +1434,7 @@ let (injective_constructor :
             FStar_Compiler_Effect.op_Bar_Greater fields
               (FStar_Compiler_List.mapi
                  (fun i ->
-                    fun uu___1 ->
-                      match uu___1 with
-                      | (uu___2, s, uu___3) ->
-                          let uu___4 = bvar i s in uu___4 norng)) in
+                    fun f -> let uu___1 = bvar i f.field_sort in uu___1 norng)) in
           let bvar_names = FStar_Compiler_List.map fv_of_term bvars in
           let capp = mkApp (name, bvars) norng in
           let uu___1 =
@@ -1404,7 +1443,8 @@ let (injective_constructor :
                  (fun i ->
                     fun uu___2 ->
                       match uu___2 with
-                      | (name1, s, projectible) ->
+                      | { field_name = name1; field_sort = s;
+                          field_projectible = projectible;_} ->
                           let cproj_app = mkApp (name1, [capp]) norng in
                           let proj_name =
                             DeclFun
@@ -1441,98 +1481,111 @@ let (injective_constructor :
 let (constructor_to_decl :
   FStar_Compiler_Range_Type.range -> constructor_t -> decl Prims.list) =
   fun rng ->
-    fun uu___ ->
-      match uu___ with
-      | (name, fields, sort1, id, injective) ->
-          let injective1 = injective || true in
-          let field_sorts =
-            FStar_Compiler_Effect.op_Bar_Greater fields
-              (FStar_Compiler_List.map
-                 (fun uu___1 ->
-                    match uu___1 with | (uu___2, sort2, uu___3) -> sort2)) in
-          let cdecl =
-            DeclFun
-              (name, field_sorts, sort1,
-                (FStar_Pervasives_Native.Some "Constructor")) in
-          let cid = fresh_constructor rng (name, field_sorts, sort1, id) in
-          let disc =
-            let disc_name = Prims.op_Hat "is-" name in
-            let xfv = mk_fv ("x", sort1) in
-            let xx = mkFreeV xfv norng in
-            let disc_eq =
-              let uu___1 =
-                let uu___2 =
-                  let uu___3 =
-                    let uu___4 = constr_id_of_sort sort1 in (uu___4, [xx]) in
-                  mkApp uu___3 norng in
-                let uu___3 =
-                  let uu___4 = FStar_Compiler_Util.string_of_int id in
-                  mkInteger uu___4 norng in
-                (uu___2, uu___3) in
-              mkEq uu___1 norng in
-            let uu___1 =
-              let uu___2 =
-                FStar_Compiler_Effect.op_Bar_Greater fields
-                  (FStar_Compiler_List.mapi
-                     (fun i ->
-                        fun uu___3 ->
-                          match uu___3 with
-                          | (proj, s, projectible) ->
-                              if projectible
-                              then
-                                let uu___4 = mkApp (proj, [xx]) norng in
-                                (uu___4, [])
-                              else
-                                (let fi =
-                                   let uu___5 =
-                                     let uu___6 =
-                                       let uu___7 =
-                                         FStar_Compiler_Util.string_of_int i in
-                                       Prims.op_Hat "f_" uu___7 in
-                                     (uu___6, s) in
-                                   mk_fv uu___5 in
-                                 let uu___5 = mkFreeV fi norng in
-                                 (uu___5, [fi])))) in
-              FStar_Compiler_Effect.op_Bar_Greater uu___2
-                FStar_Compiler_List.split in
-            match uu___1 with
-            | (proj_terms, ex_vars) ->
-                let ex_vars1 = FStar_Compiler_List.flatten ex_vars in
-                let disc_inv_body =
-                  let uu___2 =
-                    let uu___3 = mkApp (name, proj_terms) norng in
-                    (xx, uu___3) in
-                  mkEq uu___2 norng in
-                let disc_inv_body1 =
-                  match ex_vars1 with
-                  | [] -> disc_inv_body
-                  | uu___2 -> mkExists norng ([], ex_vars1, disc_inv_body) in
-                let disc_ax = mkAnd (disc_eq, disc_inv_body1) norng in
-                let def =
-                  mkDefineFun
-                    (disc_name, [xfv], Bool_sort, disc_ax,
-                      (FStar_Pervasives_Native.Some
-                         "Discriminator definition")) in
-                def in
-          let projs =
-            if injective1
-            then injective_constructor rng (name, fields, sort1)
-            else [] in
+    fun constr ->
+      let injective = true in
+      let sort1 = constr.constr_sort in
+      let field_sorts =
+        FStar_Compiler_Effect.op_Bar_Greater constr.constr_fields
+          (FStar_Compiler_List.map (fun f -> f.field_sort)) in
+      let cdecl =
+        DeclFun
+          ((constr.constr_name), field_sorts, (constr.constr_sort),
+            (FStar_Pervasives_Native.Some "Constructor")) in
+      let cid =
+        match constr.constr_id with
+        | FStar_Pervasives_Native.None -> []
+        | FStar_Pervasives_Native.Some id ->
+            let uu___ =
+              fresh_constructor rng
+                ((constr.constr_name), field_sorts, sort1, id) in
+            [uu___] in
+      let disc =
+        let disc_name = Prims.op_Hat "is-" constr.constr_name in
+        let xfv = mk_fv ("x", sort1) in
+        let xx = mkFreeV xfv norng in
+        let uu___ =
           let uu___1 =
-            let uu___2 =
-              let uu___3 =
-                FStar_Compiler_Util.format1 "<start constructor %s>" name in
-              Caption uu___3 in
-            uu___2 :: cdecl :: cid :: projs in
+            FStar_Compiler_Effect.op_Bar_Greater constr.constr_fields
+              (FStar_Compiler_List.mapi
+                 (fun i ->
+                    fun uu___2 ->
+                      match uu___2 with
+                      | { field_name = proj; field_sort = s;
+                          field_projectible = projectible;_} ->
+                          if projectible
+                          then
+                            let uu___3 = mkApp (proj, [xx]) norng in
+                            (uu___3, [])
+                          else
+                            (let fi =
+                               let uu___4 =
+                                 let uu___5 =
+                                   let uu___6 =
+                                     FStar_Compiler_Util.string_of_int i in
+                                   Prims.op_Hat "f_" uu___6 in
+                                 (uu___5, s) in
+                               mk_fv uu___4 in
+                             let uu___4 = mkFreeV fi norng in (uu___4, [fi])))) in
+          FStar_Compiler_Effect.op_Bar_Greater uu___1
+            FStar_Compiler_List.split in
+        match uu___ with
+        | (proj_terms, ex_vars) ->
+            let ex_vars1 = FStar_Compiler_List.flatten ex_vars in
+            let disc_inv_body =
+              let uu___1 =
+                let uu___2 = mkApp ((constr.constr_name), proj_terms) norng in
+                (xx, uu___2) in
+              mkEq uu___1 norng in
+            let disc_inv_body1 =
+              match ex_vars1 with
+              | [] -> disc_inv_body
+              | uu___1 -> mkExists norng ([], ex_vars1, disc_inv_body) in
+            let disc_ax =
+              match constr.constr_id with
+              | FStar_Pervasives_Native.None -> disc_inv_body1
+              | FStar_Pervasives_Native.Some id ->
+                  let disc_eq =
+                    let uu___1 =
+                      let uu___2 =
+                        let uu___3 =
+                          let uu___4 = constr_id_of_sort constr.constr_sort in
+                          (uu___4, [xx]) in
+                        mkApp uu___3 norng in
+                      let uu___3 =
+                        let uu___4 = FStar_Compiler_Util.string_of_int id in
+                        mkInteger uu___4 norng in
+                      (uu___2, uu___3) in
+                    mkEq uu___1 norng in
+                  mkAnd (disc_eq, disc_inv_body1) norng in
+            let def =
+              mkDefineFun
+                (disc_name, [xfv], Bool_sort, disc_ax,
+                  (FStar_Pervasives_Native.Some "Discriminator definition")) in
+            def in
+      let projs =
+        injective_constructor rng
+          ((constr.constr_name), (constr.constr_fields), sort1) in
+      let uu___ =
+        let uu___1 =
           let uu___2 =
-            let uu___3 =
-              let uu___4 =
-                let uu___5 =
-                  FStar_Compiler_Util.format1 "</end constructor %s>" name in
-                Caption uu___5 in
-              [uu___4] in
-            FStar_Compiler_List.op_At [disc] uu___3 in
-          FStar_Compiler_List.op_At uu___1 uu___2
+            FStar_Compiler_Util.format1 "<start constructor %s>"
+              constr.constr_name in
+          Caption uu___2 in
+        [uu___1; cdecl] in
+      let uu___1 =
+        let uu___2 =
+          let uu___3 =
+            let uu___4 =
+              let uu___5 =
+                let uu___6 =
+                  FStar_Compiler_Util.format1 "</end constructor %s>"
+                    constr.constr_name in
+                Caption uu___6 in
+              [uu___5] in
+            FStar_Compiler_List.op_At [disc] uu___4 in
+          FStar_Compiler_List.op_At projs uu___3 in
+        FStar_Compiler_List.op_At cid uu___2 in
+      FStar_Compiler_List.op_At uu___ uu___1
 let (name_binders_inner :
   Prims.string FStar_Pervasives_Native.option ->
     fv Prims.list ->
@@ -1853,25 +1906,41 @@ and (mkPrelude : Prims.string -> Prims.string) =
     let basic =
       Prims.op_Hat z3options
         "(declare-sort FString)\n(declare-fun FString_constr_id (FString) Int)\n\n(declare-sort Term)\n(declare-fun Term_constr_id (Term) Int)\n(declare-sort Dummy_sort)\n(declare-fun Dummy_value () Dummy_sort)\n(declare-datatypes () ((Fuel \n(ZFuel) \n(SFuel (prec Fuel)))))\n(declare-fun MaxIFuel () Fuel)\n(declare-fun MaxFuel () Fuel)\n(declare-fun PreType (Term) Term)\n(declare-fun Valid (Term) Bool)\n(declare-fun HasTypeFuel (Fuel Term Term) Bool)\n(define-fun HasTypeZ ((x Term) (t Term)) Bool\n(HasTypeFuel ZFuel x t))\n(define-fun HasType ((x Term) (t Term)) Bool\n(HasTypeFuel MaxIFuel x t))\n(declare-fun IsTotFun (Term) Bool)\n\n                ;;fuel irrelevance\n(assert (forall ((f Fuel) (x Term) (t Term))\n(! (= (HasTypeFuel (SFuel f) x t)\n(HasTypeZ x t))\n:pattern ((HasTypeFuel (SFuel f) x t)))))\n(declare-fun NoHoist (Term Bool) Bool)\n;;no-hoist\n(assert (forall ((dummy Term) (b Bool))\n(! (= (NoHoist dummy b)\nb)\n:pattern ((NoHoist dummy b)))))\n(define-fun  IsTyped ((x Term)) Bool\n(exists ((t Term)) (HasTypeZ x t)))\n(declare-fun ApplyTF (Term Fuel) Term)\n(declare-fun ApplyTT (Term Term) Term)\n(declare-fun Prec (Term Term) Bool)\n(assert (forall ((x Term) (y Term) (z Term))\n(! (implies (and (Prec x y) (Prec y z))\n(Prec x z))\n                                   :pattern ((Prec x z) (Prec x y)))))\n(assert (forall ((x Term) (y Term))\n(implies (Prec x y)\n(not (Prec y x)))))\n(declare-fun Closure (Term) Term)\n(declare-fun ConsTerm (Term Term) Term)\n(declare-fun ConsFuel (Fuel Term) Term)\n(declare-fun Tm_uvar (Int) Term)\n(define-fun Reify ((x Term)) Term x)\n(declare-fun Prims.precedes (Term Term Term Term) Term)\n(declare-fun Range_const (Int) Term)\n(declare-fun _mul (Int Int) Int)\n(declare-fun _div (Int Int) Int)\n(declare-fun _mod (Int Int) Int)\n(declare-fun __uu__PartialApp () Term)\n(assert (forall ((x Int) (y Int)) (! (= (_mul x y) (* x y)) :pattern ((_mul x y)))))\n(assert (forall ((x Int) (y Int)) (! (= (_div x y) (div x y)) :pattern ((_div x y)))))\n(assert (forall ((x Int) (y Int)) (! (= (_mod x y) (mod x y)) :pattern ((_mod x y)))))\n(declare-fun _rmul (Real Real) Real)\n(declare-fun _rdiv (Real Real) Real)\n(assert (forall ((x Real) (y Real)) (! (= (_rmul x y) (* x y)) :pattern ((_rmul x y)))))\n(assert (forall ((x Real) (y Real)) (! (= (_rdiv x y) (/ x y)) :pattern ((_rdiv x y)))))\n(define-fun Unreachable () Bool false)" in
+    let as_constr uu___ =
+      match uu___ with
+      | (name, fields, sort1, id, _injective) ->
+          let uu___1 =
+            FStar_Compiler_List.map
+              (fun uu___2 ->
+                 match uu___2 with
+                 | (field_name, field_sort, field_projectible) ->
+                     { field_name; field_sort; field_projectible }) fields in
+          {
+            constr_name = name;
+            constr_fields = uu___1;
+            constr_sort = sort1;
+            constr_id = (FStar_Pervasives_Native.Some id)
+          } in
     let constrs =
-      [("FString_const", [("FString_const_proj_0", Int_sort, true)],
-         String_sort, Prims.int_zero, true);
-      ("Tm_type", [], Term_sort, (Prims.of_int (2)), true);
-      ("Tm_arrow", [("Tm_arrow_id", Int_sort, true)], Term_sort,
-        (Prims.of_int (3)), false);
-      ("Tm_unit", [], Term_sort, (Prims.of_int (6)), true);
-      ((FStar_Pervasives_Native.fst boxIntFun),
-        [((FStar_Pervasives_Native.snd boxIntFun), Int_sort, true)],
-        Term_sort, (Prims.of_int (7)), true);
-      ((FStar_Pervasives_Native.fst boxBoolFun),
-        [((FStar_Pervasives_Native.snd boxBoolFun), Bool_sort, true)],
-        Term_sort, (Prims.of_int (8)), true);
-      ((FStar_Pervasives_Native.fst boxStringFun),
-        [((FStar_Pervasives_Native.snd boxStringFun), String_sort, true)],
-        Term_sort, (Prims.of_int (9)), true);
-      ((FStar_Pervasives_Native.fst boxRealFun),
-        [((FStar_Pervasives_Native.snd boxRealFun), (Sort "Real"), true)],
-        Term_sort, (Prims.of_int (10)), true)] in
+      FStar_Compiler_List.map as_constr
+        [("FString_const", [("FString_const_proj_0", Int_sort, true)],
+           String_sort, Prims.int_zero, true);
+        ("Tm_type", [], Term_sort, (Prims.of_int (2)), true);
+        ("Tm_arrow", [("Tm_arrow_id", Int_sort, true)], Term_sort,
+          (Prims.of_int (3)), false);
+        ("Tm_unit", [], Term_sort, (Prims.of_int (6)), true);
+        ((FStar_Pervasives_Native.fst boxIntFun),
+          [((FStar_Pervasives_Native.snd boxIntFun), Int_sort, true)],
+          Term_sort, (Prims.of_int (7)), true);
+        ((FStar_Pervasives_Native.fst boxBoolFun),
+          [((FStar_Pervasives_Native.snd boxBoolFun), Bool_sort, true)],
+          Term_sort, (Prims.of_int (8)), true);
+        ((FStar_Pervasives_Native.fst boxStringFun),
+          [((FStar_Pervasives_Native.snd boxStringFun), String_sort, true)],
+          Term_sort, (Prims.of_int (9)), true);
+        ((FStar_Pervasives_Native.fst boxRealFun),
+          [((FStar_Pervasives_Native.snd boxRealFun), (Sort "Real"), true)],
+          Term_sort, (Prims.of_int (10)), true)] in
     let bcons =
       let uu___ =
         let uu___1 =
@@ -1912,18 +1981,27 @@ let (declToSmt_no_caps : Prims.string -> decl -> Prims.string) =
   fun z3options -> fun decl1 -> declToSmt' false z3options decl1
 let (mkBvConstructor : Prims.int -> decl Prims.list) =
   fun sz ->
-    let uu___ =
+    let constr =
+      let uu___ =
+        let uu___1 = boxBitVecFun sz in FStar_Pervasives_Native.fst uu___1 in
       let uu___1 =
-        let uu___2 = boxBitVecFun sz in FStar_Pervasives_Native.fst uu___2 in
-      let uu___2 =
-        let uu___3 =
-          let uu___4 =
-            let uu___5 = boxBitVecFun sz in
-            FStar_Pervasives_Native.snd uu___5 in
-          (uu___4, (BitVec_sort sz), true) in
-        [uu___3] in
-      (uu___1, uu___2, Term_sort, ((Prims.of_int (12)) + sz), true) in
-    FStar_Compiler_Effect.op_Bar_Greater uu___ (constructor_to_decl norng)
+        let uu___2 =
+          let uu___3 =
+            let uu___4 = boxBitVecFun sz in
+            FStar_Pervasives_Native.snd uu___4 in
+          {
+            field_name = uu___3;
+            field_sort = (BitVec_sort sz);
+            field_projectible = true
+          } in
+        [uu___2] in
+      {
+        constr_name = uu___;
+        constr_fields = uu___1;
+        constr_sort = Term_sort;
+        constr_id = FStar_Pervasives_Native.None
+      } in
+    constructor_to_decl norng constr
 let (__range_c : Prims.int FStar_Compiler_Effect.ref) =
   FStar_Compiler_Util.mk_ref Prims.int_zero
 let (mk_Range_const : unit -> term) =
