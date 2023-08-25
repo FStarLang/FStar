@@ -198,9 +198,10 @@ val int2bv_div:
   -> Lemma (int2bv #n (udiv #n x y) == z)
 
 
-(** An unsafe version of 'bvdiv' that does not impose the precondition that the
-      denominator is nonzero. The behaviour of the solver when the denominator
-      is zero is implementation-defined. *)
+(** 'bvdiv_unsafe' is an uninterpreted function on 'bv_t n',
+    modeling the corresponding operator from SMT-LIB.
+    When its second argument is nonzero, the lemma below
+    says that it is equivalent to bvdiv. *)
 val bvdiv_unsafe (#n: pos) (a b: bv_t n) : Tot (bv_t n)
 
 (** 'bvdiv_unsafe' behaves as 'bvdiv' when denominator is nonzero *)
@@ -233,4 +234,3 @@ val int2bv_mul:
     #z: bv_t n ->
     squash (bvmul #n (int2bv #n x) y == z)
   -> Lemma (int2bv #n (mul_mod #n x y) == z)
-
