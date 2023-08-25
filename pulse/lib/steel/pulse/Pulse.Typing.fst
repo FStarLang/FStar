@@ -598,6 +598,9 @@ type comp_typing : env -> comp -> universe -> Type =
 let prop_validity (g:env) (t:term) =
   FTB.prop_validity_token (elab_env g) (elab_term t)
 
+let subtyping_token g t1 t2 =
+  T.subtyping_token (elab_env g) (elab_term t1) (elab_term t2)
+
 val readback_binding : R.binding -> binding
 let readback_binding b =
   assume (host_term == R.term); // fixme! expose this fact
