@@ -2479,6 +2479,63 @@ let refl_instantiate_implicits (g:env) (e:term) : tac (option (term & typ) & iss
   )
   else ret (None, [unexpected_uvars_issue (Env.get_range g)])
 
+let rec filter_uvs (uvs:list ctx_uvar) : list (ctx_uvar & typ) & list ctx_uvar =
+  match uvs with
+  | [] -> [], []
+  | uv::uvs ->
+    let uvs, uvs_delay = filter_uvs uvs in
+    let uv_t = U.ctx_uvar_typ uv in
+    if uv_t |> Free.uvars |> BU.set_is_empty
+    then (uv, uv_t)::uvs, uvs_delay
+    else uvs, uv::uvs_delay
+
+let rec intro_names_for_uvs (g:env) (uvs:list ctx_uvar) (bs:list RD.binding) : option (list RD.binding) =
+  match uvs with
+  | [] -> Some bs
+  | _ ->
+    let uvs, uvs_delay = filter_uvs uvs in
+    match uvs with
+    | [] -> None
+    | _ ->
+      let bs' = List.map (fun (uv, uv_t) ->
+        let nm = S.gen_bv "refl_uv" None uv_t in
+        U.set_uvar uv.ctx_uvar_head (S.bv_to_name nm);
+        { uniq = Z.of_int_fs nm.index; sort = uv_t; ppname = "refl_uv" }
+      ) uvs in
+      intro_names_for_uvs g uvs_delay (bs@bs')
+
+let refl_instantiate_implicits_v2 (g:env) (e:term) : tac (option (term & typ & list RD.binding) & issues) =
+  if no_uvars_in_g g &&
+     no_uvars_in_term e
+  then refl_typing_builtin_wrapper (fun _ ->
+    dbg_refl g (fun _ ->
+      BU.format1 "refl_instantiate_implicits: %s\n" (Print.term_to_string e));
+    dbg_refl g (fun _ -> "refl_instantiate_implicits: starting tc {\n");
+    // AR: ghost is ok for instantiating implicits
+    let must_tot = false in
+    let g = { g with phase1=true; lax=true } in
+    let e, t, guard = g.typeof_tot_or_gtot_term g e must_tot in
+    let guard = guard |> Rel.solve_deferred_constraints g |> Rel.resolve_implicits g in
+    let uvs = BU.set_union (Free.uvars e) (Free.uvars t) |> BU.set_elements in
+    match intro_names_for_uvs g uvs [] with
+    | None ->
+      Errors.raise_error (Errors.Fatal_UnexpectedTerm,
+                          BU.format1
+                            "refl_instantiate_implicits: could not introduce names for remaining uvars: %s\n"
+                            (Print.term_to_string e)) e.pos
+    | Some bs ->
+      let allow_uvars = false in
+      let allow_names = true in (* terms are potentially open, names are OK *)
+      let e = SC.deep_compress allow_uvars allow_names e in
+      let t = t |> refl_norm_type g |> SC.deep_compress allow_uvars allow_names in
+      dbg_refl g (fun _ ->
+        BU.format2 "} finished tc with e = %s and t = %s\n"
+          (Print.term_to_string e)
+          (Print.term_to_string t));
+      ((e, t, bs), [])
+  )
+  else ret (None, [unexpected_uvars_issue (Env.get_range g)])
+
 let refl_maybe_relate_after_unfolding (g:env) (t0 t1:typ)
   : tac (option Core.side & issues) =
 

@@ -646,6 +646,10 @@ let () =
         refl_instantiate_implicits RE.e_env RE.e_term (e_tuple2 (e_option (e_tuple2 RE.e_term RE.e_term)) (e_list e_issue))
         refl_instantiate_implicits NRE.e_env NRE.e_term NBET.(e_tuple2 (e_option (NBET.e_tuple2 NRE.e_term NRE.e_term)) (e_list e_issue));
 
+      mk_tac_step_2 0 "instantiate_implicits_v2"
+        refl_instantiate_implicits_v2 RE.e_env RE.e_term (e_tuple2 (e_option (e_tuple3 RE.e_term RE.e_term (e_list RE.e_binding))) (e_list e_issue))
+        refl_instantiate_implicits_v2 NRE.e_env NRE.e_term NBET.(e_tuple2 (e_option (NBET.e_tuple3 NRE.e_term NRE.e_term (e_list NRE.e_binding))) (e_list e_issue));
+
       mk_tac_step_3 0 "maybe_relate_after_unfolding"
         refl_maybe_relate_after_unfolding RE.e_env RE.e_term RE.e_term (e_tuple2 (e_option E.e_unfold_side) (e_list e_issue))
         refl_maybe_relate_after_unfolding NRE.e_env NRE.e_term NRE.e_term NBET.(e_tuple2 (e_option E.e_unfold_side_nbe) (e_list e_issue));

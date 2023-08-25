@@ -344,7 +344,7 @@ and letbindings = bool * list letbinding        (* let recs may have more than o
 and subst_ts = list (list subst_elt)            (* A composition of parallel substitutions *)
              * maybe_set_use_range              (* and a maybe range update, Some r, to set the use_range of subterms to r.def_range *)
 and subst_elt =
-   | DB of int * bv                            (* DB i bv: replace a bound variable with index i with name bv                 *)
+   | DB of int * bv                            (* DB i bv: replace a bound variable with index i with name bv                *)
    | DT of int * term                          (* DT i t: replace a bound variable with index i for term *)
    | NM of bv  * int                           (* NM x i: replace a local name with a bound variable i                       *)
    | NT of bv  * term                          (* NT x t: replace a local name with a term t                                 *)
