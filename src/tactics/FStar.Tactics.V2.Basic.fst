@@ -2099,6 +2099,18 @@ let free_uvars (tm : term) : tac (list Z.t)
     let uvs = Syntax.Free.uvars_uncached tm |> BU.set_elements |> List.map (fun u -> Z.of_int_fs (UF.uvar_id u.ctx_uvar_head)) in
     ret uvs
 
+let all_ext_options () : tac (list (string & string))
+  = idtac ;!
+    ret (Options.all_ext_options ())
+
+let ext_getv (k:string) : tac string
+  = idtac ;!
+    ret (Options.ext_getv k)
+
+let ext_getns (ns:string) : tac (list (string & string))
+  = idtac ;!
+    ret (Options.ext_getns ns)
+
 (***** Builtins used in the meta DSL framework *****)
 
 let dbg_refl (g:env) (msg:unit -> string) =

@@ -5888,11 +5888,10 @@ and (encode_sigelt' :
                                                                     =
                                                                     let uu___41
                                                                     =
-                                                                    FStar_Options.ext_options
-                                                                    "compat" in
-                                                                    FStar_Compiler_List.mem
-                                                                    "2954"
-                                                                    uu___41 in
+                                                                    FStar_Options.ext_getv
+                                                                    "compat:2954" in
+                                                                    uu___41
+                                                                    <> "" in
                                                                     if
                                                                     uu___40
                                                                     then
@@ -5909,11 +5908,10 @@ and (encode_sigelt' :
                                                                     =
                                                                     let uu___40
                                                                     =
-                                                                    FStar_Options.ext_options
-                                                                    "compat" in
-                                                                    FStar_Compiler_List.mem
-                                                                    "2954"
-                                                                    uu___40 in
+                                                                    FStar_Options.ext_getv
+                                                                    "compat:2954" in
+                                                                    uu___40
+                                                                    <> "" in
                                                                     if
                                                                     uu___39
                                                                     then
@@ -6647,11 +6645,10 @@ and (encode_sigelt' :
                                                                     =
                                                                     let uu___37
                                                                     =
-                                                                    FStar_Options.ext_options
-                                                                    "compat" in
-                                                                    FStar_Compiler_List.mem
-                                                                    "2954"
-                                                                    uu___37 in
+                                                                    FStar_Options.ext_getv
+                                                                    "compat:2954" in
+                                                                    uu___37
+                                                                    <> "" in
                                                                     if
                                                                     uu___36
                                                                     then
@@ -6668,11 +6665,10 @@ and (encode_sigelt' :
                                                                     =
                                                                     let uu___36
                                                                     =
-                                                                    FStar_Options.ext_options
-                                                                    "compat" in
-                                                                    FStar_Compiler_List.mem
-                                                                    "2954"
-                                                                    uu___36 in
+                                                                    FStar_Options.ext_getv
+                                                                    "compat:2954" in
+                                                                    uu___36
+                                                                    <> "" in
                                                                     if
                                                                     uu___35
                                                                     then
