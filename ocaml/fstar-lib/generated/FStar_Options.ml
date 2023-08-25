@@ -1079,10 +1079,10 @@ let rec (specs_with_types :
     (FStar_Getopt.noshort, "error_contexts", BoolStr,
       "Print context information for each error or warning raised (default false)");
     (FStar_Getopt.noshort, "ext",
-      (Accumulated
+      (ReverseAccumulated
          (SimpleStr
-            "One or more semicolon separated occurrences of colon-separated pairs, e.g., 'pulse:verbose;pulse:debug;foo:bar'")),
-      "\n\t\tThese options are typically interpreted by extensions. \n\t\tAn entry 'e' that is not of the form 'a:b' is treated as 'e:\"\"', i.e., 'e' associated with the empty string");
+            "One or more semicolon separated occurrences of key-value pairs")),
+      "\n\t\tThese options are set in extensions option map. Keys are usually namespaces separated by \":\".\n\t\tE.g., 'pulse:verbose=1;my:extension:option=xyz;foo:bar=baz'\n\t\tThese options are typically interpreted by extensions. \n\t\tAny later use of --ext over the same key overrides the old value.\n\t\tAn entry 'e' that is not of the form 'a=b' is treated as 'e=1', i.e., 'e' associated with string \"1\"");
     (FStar_Getopt.noshort, "extract",
       (Accumulated
          (SimpleStr
@@ -2569,24 +2569,62 @@ let (parse_ext : Prims.string -> (Prims.string * Prims.string) Prims.list) =
     let exts = FStar_Compiler_Util.split s ";" in
     FStar_Compiler_List.collect
       (fun s1 ->
-         match FStar_Compiler_Util.split s1 ":" with
+         match FStar_Compiler_Util.split s1 "=" with
          | k::v::[] -> [(k, v)]
-         | uu___ -> [(s1, "")]) exts
+         | uu___ -> [(s1, "1")]) exts
+let ext_dedup :
+  'a . (Prims.string * 'a) Prims.list -> (Prims.string * 'a) Prims.list =
+  fun l ->
+    FStar_Compiler_List.fold_right
+      (fun uu___ ->
+         fun rest ->
+           match uu___ with
+           | (k, v) ->
+               let uu___1 =
+                 FStar_Compiler_List.existsb
+                   (fun uu___2 -> match uu___2 with | (k', uu___3) -> k = k')
+                   rest in
+               if uu___1 then rest else (k, v) :: rest) l []
 let (all_ext_options : unit -> (Prims.string * Prims.string) Prims.list) =
   fun uu___ ->
     let ext = get_ext () in
     match ext with
     | FStar_Pervasives_Native.None -> []
     | FStar_Pervasives_Native.Some strs ->
-        FStar_Compiler_Effect.op_Bar_Greater strs
-          (FStar_Compiler_List.collect parse_ext)
-let (ext_options : Prims.string -> Prims.string Prims.list) =
-  fun ext ->
+        let uu___1 =
+          FStar_Compiler_Effect.op_Bar_Greater strs
+            (FStar_Compiler_List.collect parse_ext) in
+        FStar_Compiler_Effect.op_Bar_Greater uu___1 ext_dedup
+let (ext_getv : Prims.string -> Prims.string) =
+  fun k ->
+    let ext = all_ext_options () in
+    let uu___ =
+      FStar_Compiler_Util.find_map ext
+        (fun uu___1 ->
+           match uu___1 with
+           | (k', v) ->
+               if k = k'
+               then FStar_Pervasives_Native.Some v
+               else FStar_Pervasives_Native.None) in
+    FStar_Compiler_Util.dflt "" uu___
+let (ext_getns : Prims.string -> (Prims.string * Prims.string) Prims.list) =
+  fun ns ->
+    let is_prefix s1 s2 =
+      let l1 = FStar_String.length s1 in
+      let l2 = FStar_String.length s2 in
+      (l2 >= l1) &&
+        (let uu___ = FStar_String.substring s2 Prims.int_zero l1 in
+         uu___ = s1) in
     let exts = all_ext_options () in
-    FStar_Compiler_List.filter_map
-      (fun uu___ ->
-         match uu___ with
-         | (k, v) ->
-             if k = ext
-             then FStar_Pervasives_Native.Some v
-             else FStar_Pervasives_Native.None) exts
+    FStar_Compiler_Effect.op_Bar_Greater exts
+      (FStar_Compiler_List.filter_map
+         (fun uu___ ->
+            match uu___ with
+            | (k', v) ->
+                let uu___1 =
+                  (k' = ns) ||
+                    (let uu___2 = FStar_String.op_Hat ns ":" in
+                     is_prefix uu___2 k') in
+                if uu___1
+                then FStar_Pervasives_Native.Some (k', v)
+                else FStar_Pervasives_Native.None))

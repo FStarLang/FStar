@@ -274,5 +274,7 @@ val eager_embedding: ref bool
 
 val get_vconfig : unit -> vconfig
 val set_vconfig : vconfig -> unit
+
 val all_ext_options : unit -> list (string & string)
-val ext_options (ext:string) : list string
+val ext_getv (k:string) : string
+val ext_getns (ns:string) : list (string & string)

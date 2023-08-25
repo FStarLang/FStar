@@ -439,6 +439,17 @@ val t_smt_sync : vconfig -> Tac unit
 a reflection primitive as it depends on the state of the UF graph. *)
 val free_uvars : term -> Tac (list int)
 
+(* Return all k/v pairs in the state. The order is unspecified,
+do not rely on it. *)
+val all_ext_options : unit -> Tac (list (string & string))
+
+(* Lookup a k/v pair in the --ext option state. The empty string
+is returned if the key was unset. *)
+val ext_getv (k:string) : Tac string
+
+(* Return all k/v pairs in the state which are within
+the given namespace. *)
+val ext_getns (ns:string) : Tac (list (string & string))
 
 (***** APIs used in the meta DSL framework *****)
 
