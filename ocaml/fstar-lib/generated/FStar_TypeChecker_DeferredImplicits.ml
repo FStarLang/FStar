@@ -418,6 +418,8 @@ let solve_goals_with_tac :
                      (env.FStar_TypeChecker_Env.uvar_subtyping);
                    FStar_TypeChecker_Env.intactics =
                      (env.FStar_TypeChecker_Env.intactics);
+                   FStar_TypeChecker_Env.nocoerce =
+                     (env.FStar_TypeChecker_Env.nocoerce);
                    FStar_TypeChecker_Env.tc_term =
                      (env.FStar_TypeChecker_Env.tc_term);
                    FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
@@ -546,6 +548,8 @@ let (solve_deferred_to_tactic_goals :
                                (env1.FStar_TypeChecker_Env.uvar_subtyping);
                              FStar_TypeChecker_Env.intactics =
                                (env1.FStar_TypeChecker_Env.intactics);
+                             FStar_TypeChecker_Env.nocoerce =
+                               (env1.FStar_TypeChecker_Env.nocoerce);
                              FStar_TypeChecker_Env.tc_term =
                                (env1.FStar_TypeChecker_Env.tc_term);
                              FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
@@ -651,6 +655,8 @@ let (solve_deferred_to_tactic_goals :
                                (env2.FStar_TypeChecker_Env.uvar_subtyping);
                              FStar_TypeChecker_Env.intactics =
                                (env2.FStar_TypeChecker_Env.intactics);
+                             FStar_TypeChecker_Env.nocoerce =
+                               (env2.FStar_TypeChecker_Env.nocoerce);
                              FStar_TypeChecker_Env.tc_term =
                                (env2.FStar_TypeChecker_Env.tc_term);
                              FStar_TypeChecker_Env.typeof_tot_or_gtot_term =

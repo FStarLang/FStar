@@ -168,19 +168,7 @@ let (run_repl_ld_transactions :
           match uu___ with
           | [] -> st1
           | (_id, (task, _st'))::entries ->
-              ((let uu___3 =
-                  let uu___4 =
-                    let uu___5 =
-                      let uu___6 =
-                        let uu___7 =
-                          FStar_Compiler_Effect.op_Bang
-                            FStar_Interactive_PushHelper.repl_stack in
-                        FStar_Compiler_List.hd uu___7 in
-                      FStar_Pervasives_Native.snd uu___6 in
-                    FStar_Pervasives_Native.fst uu___5 in
-                  task = uu___4 in
-                ());
-               debug "Reverting" task;
+              (debug "Reverting" task;
                (let st' =
                   FStar_Interactive_PushHelper.pop_repl
                     "run_repl_ls_transactions" st1 in
@@ -1547,6 +1535,8 @@ let (run_push_without_deps :
                  (uu___.FStar_TypeChecker_Env.uvar_subtyping);
                FStar_TypeChecker_Env.intactics =
                  (uu___.FStar_TypeChecker_Env.intactics);
+               FStar_TypeChecker_Env.nocoerce =
+                 (uu___.FStar_TypeChecker_Env.nocoerce);
                FStar_TypeChecker_Env.tc_term =
                  (uu___.FStar_TypeChecker_Env.tc_term);
                FStar_TypeChecker_Env.typeof_tot_or_gtot_term =

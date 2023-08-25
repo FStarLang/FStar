@@ -50,7 +50,7 @@ let root_is_not_freeable () = ()
 
 let rid_length r = List.Tot.length (reveal r)
 
-let rid_tail r = elift1_p (tot_to_gtot Cons?.tl) r
+let rid_tail (r:rid{rid_length r > 0}) = elift1_p (tot_to_gtot Cons?.tl) r
 
 let rec includes r1 r2 =
   if r1 = r2 then true

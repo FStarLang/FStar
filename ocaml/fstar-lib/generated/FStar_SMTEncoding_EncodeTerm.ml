@@ -918,8 +918,58 @@ and (encode_BitVector_term :
               FStar_Compiler_Util.format1 "BitVector_%s"
                 (Prims.string_of_int sz) in
             let sz_decls =
-              let t_decls = FStar_SMTEncoding_Term.mkBvConstructor sz in
-              FStar_SMTEncoding_Term.mk_decls "" sz_key t_decls [] in
+              let uu___3 = FStar_SMTEncoding_Term.mkBvConstructor sz in
+              match uu___3 with
+              | (t_decls, constr_name, discriminator_name) ->
+                  let uu___4 =
+                    let uu___5 =
+                      let head1 =
+                        FStar_Syntax_Syntax.lid_as_fv
+                          FStar_Parser_Const.bv_t_lid
+                          FStar_Pervasives_Native.None in
+                      let t =
+                        let uu___6 = FStar_Syntax_Syntax.fv_to_tm head1 in
+                        FStar_Syntax_Util.mk_app uu___6
+                          [(tm_sz, FStar_Pervasives_Native.None)] in
+                      encode_term t env in
+                    match uu___5 with
+                    | (bv_t_n, decls) ->
+                        let xsym =
+                          let uu___6 =
+                            let uu___7 =
+                              FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.fresh
+                                env.FStar_SMTEncoding_Env.current_module_name
+                                "x" in
+                            (uu___7, FStar_SMTEncoding_Term.Term_sort) in
+                          FStar_SMTEncoding_Term.mk_fv uu___6 in
+                        let x = FStar_SMTEncoding_Util.mkFreeV xsym in
+                        let x_has_type_bv_t_n =
+                          FStar_SMTEncoding_Term.mk_HasType x bv_t_n in
+                        let ax =
+                          let uu___6 =
+                            let uu___7 =
+                              let uu___8 =
+                                let uu___9 =
+                                  FStar_SMTEncoding_Util.mkApp
+                                    (discriminator_name, [x]) in
+                                (x_has_type_bv_t_n, uu___9) in
+                              FStar_SMTEncoding_Util.mkImp uu___8 in
+                            ([[x_has_type_bv_t_n]], [xsym], uu___7) in
+                          FStar_SMTEncoding_Term.mkForall
+                            head.FStar_Syntax_Syntax.pos uu___6 in
+                        let name =
+                          Prims.op_Hat "typing_inversion_for_" constr_name in
+                        let uu___6 =
+                          FStar_SMTEncoding_Util.mkAssume
+                            (ax, (FStar_Pervasives_Native.Some name), name) in
+                        (decls, uu___6) in
+                  (match uu___4 with
+                   | (decls, typing_inversion) ->
+                       let uu___5 =
+                         FStar_SMTEncoding_Term.mk_decls "" sz_key
+                           (FStar_Compiler_List.op_At t_decls
+                              [typing_inversion]) [] in
+                       FStar_Compiler_List.op_At decls uu___5) in
             let uu___3 =
               match ((head.FStar_Syntax_Syntax.n), args_e) with
               | (FStar_Syntax_Syntax.Tm_fvar fv,
@@ -1462,6 +1512,8 @@ and (encode_term :
                               (uu___6.FStar_TypeChecker_Env.uvar_subtyping);
                             FStar_TypeChecker_Env.intactics =
                               (uu___6.FStar_TypeChecker_Env.intactics);
+                            FStar_TypeChecker_Env.nocoerce =
+                              (uu___6.FStar_TypeChecker_Env.nocoerce);
                             FStar_TypeChecker_Env.tc_term =
                               (uu___6.FStar_TypeChecker_Env.tc_term);
                             FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
