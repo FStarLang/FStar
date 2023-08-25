@@ -38,7 +38,12 @@ let (bvsub : Prims.pos -> unit bv_t -> unit bv_t -> unit bv_t) =
 let (bvdiv : Prims.pos -> unit bv_t -> unit FStar_UInt.uint_t -> unit bv_t) =
   fun n -> fun a -> fun b -> int2bv n (FStar_UInt.udiv n (bv2int n a) b)
 let (bvdiv_unsafe : Prims.pos -> unit bv_t -> unit bv_t -> unit bv_t) =
-  fun n -> fun a -> fun b -> Prims.admit ()
+  fun n ->
+    fun a ->
+      fun b ->
+        if (bv2int n b) <> Prims.int_zero
+        then bvdiv n a (bv2int n b)
+        else int2bv n Prims.int_zero
 let (bvmod : Prims.pos -> unit bv_t -> unit FStar_UInt.uint_t -> unit bv_t) =
   fun n -> fun a -> fun b -> int2bv n (FStar_UInt.mod1 n (bv2int n a) b)
 let (bvmul : Prims.pos -> unit bv_t -> unit FStar_UInt.uint_t -> unit bv_t) =
