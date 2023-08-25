@@ -234,6 +234,30 @@ let my_exprs () = register_pre_translate_expr begin fun env e ->
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [
       _ (* opened *);
+      _ (* typedef *);
+      _ (* source value *);
+      x
+    ])
+    when string_of_mlpath p = "Steel.ST.C.Types.Base.void_ptr_of_ptr" ->
+      ECast(
+        translate_expr env x,
+        TQualified (["Steel"; "ST"; "C"; "Types"; "Base"], "void_ptr")
+      )
+
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [t])}, [
+      _ (* opened *);
+      _ (* typedef *);
+      _ (* source value *);
+      x
+    ])
+    when string_of_mlpath p = "Steel.ST.C.Types.Base.ptr_of_void_ptr" ->
+      ECast(
+        translate_expr env x,
+        TBuf (translate_type env t)
+      )
+
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [
+      _ (* opened *);
       _ (* n *);
       _ (* typedef *);
       _ (* v *);
