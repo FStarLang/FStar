@@ -37,6 +37,8 @@ let (bvsub : Prims.pos -> unit bv_t -> unit bv_t -> unit bv_t) =
       fun b -> int2bv n (FStar_UInt.sub_mod n (bv2int n a) (bv2int n b))
 let (bvdiv : Prims.pos -> unit bv_t -> unit FStar_UInt.uint_t -> unit bv_t) =
   fun n -> fun a -> fun b -> int2bv n (FStar_UInt.udiv n (bv2int n a) b)
+let (bvdiv_unsafe : Prims.pos -> unit bv_t -> unit bv_t -> unit bv_t) =
+  fun n -> fun a -> fun b -> Prims.admit ()
 let (bvmod : Prims.pos -> unit bv_t -> unit FStar_UInt.uint_t -> unit bv_t) =
   fun n -> fun a -> fun b -> int2bv n (FStar_UInt.mod1 n (bv2int n a) b)
 let (bvmul : Prims.pos -> unit bv_t -> unit FStar_UInt.uint_t -> unit bv_t) =
