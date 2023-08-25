@@ -166,6 +166,7 @@ let my_exprs () = register_pre_translate_expr begin fun env e ->
   
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [t])}, _)
     when false
+    || Syntax.string_of_mlpath p = "Steel.ST.C.Types.Base.null_gen"
     || Syntax.string_of_mlpath p = "Steel.ST.C.Types.Array.null_array_ptr"
     -> EBufNull (translate_type env t)
 
@@ -194,7 +195,7 @@ let my_exprs () = register_pre_translate_expr begin fun env e ->
         EBufRead (translate_expr env r, EQualified (["C"], "_zero_for_deref")),
         field_name))
 
-  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)},
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, (t :: _))},
              [
                _ (* struct_def *)
                ; _ (* v *)
@@ -205,7 +206,7 @@ let my_exprs () = register_pre_translate_expr begin fun env e ->
     when string_of_mlpath p = "Steel.ST.C.Types.UserStruct.struct_field0"
     ->
       EAddrOf (EField (
-        assert_lid env r.mlty,
+        translate_type env t,
         EBufRead (translate_expr env r, EQualified (["C"], "_zero_for_deref")),
         field_name))
 
