@@ -140,8 +140,18 @@ val int2bv_shl:
     squash (bvshl #n (int2bv #n x) y == z)
   -> Lemma (int2bv #n (shift_left #n x y) == z)
 
+val bvshl_unsafe (#n: pos) (a b : bv_t n) : Tot (bv_t n)
+
 (** Bitwise shift right *)
 val bvshr (#n: pos) (a: bv_t n) (s: nat) : Tot (bv_t n)
+
+val bvshr_unsafe (#n: pos) (a b : bv_t n) : Tot (bv_t n)
+
+val bvshr_unsafe_sound :
+    #n: pos ->
+    #a : bv_t n ->
+    #b : bv_t n
+  -> Lemma (bvshr_unsafe #n a b = bvshr #n a (bv2int #n b))
 
 val int2bv_shr:
     #n: pos ->
@@ -216,6 +226,15 @@ val bvdiv_unsafe_sound :
 (** Modulus *)
 val bvmod (#n: pos) (a: bv_t n) (b: uint_t n {b <> 0}) : Tot (bv_t n)
 
+val bvmod_unsafe (#n: pos) (a b: bv_t n) : Tot (bv_t n)
+
+val bvmod_unsafe_sound_nonzero :
+    #n: pos ->
+    #a : bv_t n ->
+    #b : bv_t n ->
+    squash (bv2int b <> 0)
+  -> Lemma (bvmod_unsafe #n a b = bvmod a (bv2int b))
+
 val int2bv_mod:
     #n: pos ->
     #x: uint_t n ->
@@ -234,4 +253,3 @@ val int2bv_mul:
     #z: bv_t n ->
     squash (bvmul #n (int2bv #n x) y == z)
   -> Lemma (int2bv #n (mul_mod #n x y) == z)
-
