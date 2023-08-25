@@ -1559,11 +1559,11 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                     | Tm_fvar fv ->
                                       if BU.for_some (S.fv_eq_lid fv) mutuals
                                       then Some (bs, c)
-                                      else if List.mem "2954" (Options.ext_options "compat")
+                                      else if Options.ext_getv "compat:2954" <> ""
                                       then (warn_compat(); Some (bs, c)) //compatibility mode
                                       else None
                                     | _ ->
-                                      if List.mem "2954" (Options.ext_options "compat")
+                                      if Options.ext_getv "compat:2954" <> ""
                                       then (warn_compat(); Some (bs, c)) //compatibility mode
                                       else None
                                   )
