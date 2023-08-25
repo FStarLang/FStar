@@ -6059,6 +6059,9 @@ let (tc_layered_eff_decl :
                                                              FStar_TypeChecker_Env.intactics
                                                                =
                                                                (uu___20.FStar_TypeChecker_Env.intactics);
+                                                             FStar_TypeChecker_Env.nocoerce
+                                                               =
+                                                               (uu___20.FStar_TypeChecker_Env.nocoerce);
                                                              FStar_TypeChecker_Env.tc_term
                                                                =
                                                                (uu___20.FStar_TypeChecker_Env.tc_term);
@@ -8152,6 +8155,9 @@ let (tc_non_layered_eff_decl :
                                                                     FStar_TypeChecker_Env.intactics
                                                                     =
                                                                     (env1.FStar_TypeChecker_Env.intactics);
+                                                                    FStar_TypeChecker_Env.nocoerce
+                                                                    =
+                                                                    (env1.FStar_TypeChecker_Env.nocoerce);
                                                                     FStar_TypeChecker_Env.tc_term
                                                                     =
                                                                     (env1.FStar_TypeChecker_Env.tc_term);
@@ -8438,6 +8444,9 @@ let (tc_non_layered_eff_decl :
                                                                    FStar_TypeChecker_Env.intactics
                                                                     =
                                                                     (uu___24.FStar_TypeChecker_Env.intactics);
+                                                                   FStar_TypeChecker_Env.nocoerce
+                                                                    =
+                                                                    (uu___24.FStar_TypeChecker_Env.nocoerce);
                                                                    FStar_TypeChecker_Env.tc_term
                                                                     =
                                                                     (uu___24.FStar_TypeChecker_Env.tc_term);
@@ -8773,6 +8782,9 @@ let (tc_non_layered_eff_decl :
                                                                     FStar_TypeChecker_Env.intactics
                                                                     =
                                                                     (env1.FStar_TypeChecker_Env.intactics);
+                                                                    FStar_TypeChecker_Env.nocoerce
+                                                                    =
+                                                                    (env1.FStar_TypeChecker_Env.nocoerce);
                                                                     FStar_TypeChecker_Env.tc_term
                                                                     =
                                                                     (env1.FStar_TypeChecker_Env.tc_term);
@@ -9612,6 +9624,8 @@ let (tc_lift :
                                  (env.FStar_TypeChecker_Env.uvar_subtyping);
                                FStar_TypeChecker_Env.intactics =
                                  (env.FStar_TypeChecker_Env.intactics);
+                               FStar_TypeChecker_Env.nocoerce =
+                                 (env.FStar_TypeChecker_Env.nocoerce);
                                FStar_TypeChecker_Env.tc_term =
                                  (env.FStar_TypeChecker_Env.tc_term);
                                FStar_TypeChecker_Env.typeof_tot_or_gtot_term
