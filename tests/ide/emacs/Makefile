@@ -1,6 +1,6 @@
 include ../Makefile.common
 
-FSTAR:=${FSTAR_HOME}/bin/fstar.exe $(SMT) --ide --warn_error -282
+FSTAR:=${FSTAR_HOME}/bin/fstar.exe $(SMT) --ide --warn_error -282 --ext fstar:no_absolute_paths
 
 # Feed .in to F* and record output as .out.  Output is passed through cleanup.py
 # to ensure that the output is deterministic by pretty-printing JSON messages
