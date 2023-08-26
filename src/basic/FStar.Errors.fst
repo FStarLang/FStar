@@ -27,6 +27,8 @@ module BU = FStar.Compiler.Util
 
 open FStar.Errors.Codes
 
+let fallback_range : ref (option range) = BU.mk_ref None
+
 (** This exception is raised in FStar.Error
     when a warn_error string could not be processed;
     The exception is handled in FStar.Options as part of
@@ -171,6 +173,35 @@ let compare_issues i1 i2 =
     | Some _, None -> 1
     | Some r1, Some r2 -> FStar.Compiler.Range.compare_use_range r1 r2
 
+let dummy_ide_rng : Range.rng =
+  mk_rng "<input>" (mk_pos 1 0) (mk_pos 1 0)
+
+(* Attempts to set a decent range (no dummy, no dummy ide) relying
+on the fallback_range reference. *)
+let fixup_issue_range (i:issue) : issue =
+  let rng =
+    match i.issue_range with
+    | None ->
+      (* No range given, just rely on the fallback. NB: the
+      fallback could also be set to None if it's too early. *)
+      !fallback_range
+    | Some range ->
+      let use_rng = use_range range in
+      let use_rng' =
+        if use_rng <> dummy_rng && use_rng <> dummy_ide_rng then
+          (* Looks good, use it *)
+          use_rng
+        else if Some? (!fallback_range) then
+          (* Or take the use range from the fallback *)
+          use_range (Some?.v (!fallback_range))
+        else
+          (* Doesn't look good, but no fallback, oh well *)
+          use_rng
+      in
+      Some (set_use_range range use_rng')
+  in
+  { i with issue_range = rng }
+
 let mk_default_handler print =
     let issues : ref (list issue) = BU.mk_ref [] in
     (* This number may be greater than the amount of 'EErrors'
@@ -219,6 +250,8 @@ let mk_issue level range msg n ctx = {
 let get_err_count () = (!current_handler).eh_count_errors ()
 
 let wrapped_eh_add_one (h : error_handler) (issue : issue) : unit =
+    (* Try to set a good use range if we got an empty/dummy one *)
+    let issue = fixup_issue_range issue in
     h.eh_add_one issue;
     if issue.issue_level <> EInfo then begin
       Options.abort_counter := !Options.abort_counter - 1;
