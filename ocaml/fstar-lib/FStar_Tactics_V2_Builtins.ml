@@ -153,6 +153,7 @@ let maybe_unfold_head            = from_tac_2 "B.refl_maybe_unfold_head" B.refl_
 let push_open_namespace          = from_tac_2 "B.push_open_namespace" B.push_open_namespace
 let push_module_abbrev           = from_tac_3 "B.push_module_abbrev" B.push_module_abbrev
 let resolve_name                 = from_tac_2 "B.resolve_name" B.resolve_name
+let log_issues                   = from_tac_1 "B.log_issues" B.log_issues
 
 (* The handlers need to "embed" their argument. *)
 let catch   (t: unit -> 'a __tac): ((exn, 'a) either) __tac = from_tac_1 "TM.catch" TM.catch   (to_tac_0 (t ()))
@@ -164,10 +165,3 @@ let ctrl_rewrite
     (t2 : unit -> unit __tac)
   : unit __tac
   = from_tac_3 "ctrl_rewrite" CTRW.ctrl_rewrite d (to_tac_1 t1) (to_tac_0 (t2 ()))
-
-let log_issues (i:FStar_Issue.issue list)
-  : unit __tac
-  = fun ps ->
-       FStar_Errors.add_many i;
-       FStar_Tactics_Result.Success ((), ps)
-
