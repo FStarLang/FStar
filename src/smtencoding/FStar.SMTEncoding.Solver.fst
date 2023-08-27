@@ -23,6 +23,7 @@ open FStar.Compiler
 open FStar.SMTEncoding.Z3
 open FStar.SMTEncoding.Term
 open FStar.Compiler.Util
+open FStar.Compiler.Hints
 open FStar.TypeChecker
 open FStar.TypeChecker.Env
 open FStar.SMTEncoding
@@ -63,7 +64,7 @@ let initialize_hints_db src_filename format_filename : unit =
      * But it will only be used when use_hints is on
      *)
     let val_filename = Options.hint_file_for_src norm_src_filename in
-    begin match BU.read_hints val_filename with
+    begin match read_hints val_filename with
           | HintsOK hints ->
             let expected_digest = BU.digest_of_file norm_src_filename in
             if Options.hint_info()
@@ -102,7 +103,7 @@ let finalize_hints_db src_filename :unit =
               }  in
           let norm_src_filename = BU.normalize_file_path src_filename in
           let val_filename = Options.hint_file_for_src norm_src_filename in
-          BU.write_hints val_filename hints_db
+          write_hints val_filename hints_db
     end;
     recorded_hints := None;
     replaying_hints := None
