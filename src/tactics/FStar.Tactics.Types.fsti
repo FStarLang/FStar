@@ -88,6 +88,7 @@ val set_proofstate_range : proofstate -> Range.range -> proofstate
 
 val set_ps_psc : Cfg.psc -> proofstate -> proofstate
 val goal_env: goal -> env
+val goal_range: goal -> Range.range
 val goal_witness: goal -> term
 val goal_type: goal -> term
 val goal_opts: goal -> Options.optionstate

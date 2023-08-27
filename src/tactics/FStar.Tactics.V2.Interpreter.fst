@@ -735,6 +735,7 @@ let run_tactic_on_ps'
   * 'b // return value
   =
     let ps = { ps with main_context = { ps.main_context with intactics = true } } in
+    let ps = { ps with main_context = { ps.main_context with range = rng_goal } } in
     let env = ps.main_context in
     if !tacdbg then
         BU.print2 "Typechecking tactic: (%s) (already_typed: %s) {\n"

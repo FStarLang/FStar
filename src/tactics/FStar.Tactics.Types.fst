@@ -33,6 +33,7 @@ module U       = FStar.Syntax.Util
 module UF      = FStar.Syntax.Unionfind
 
 let goal_env g = g.goal_main_env
+let goal_range g = g.goal_main_env.range
 let goal_witness g =
     FStar.Syntax.Syntax.mk (Tm_uvar (g.goal_ctx_uvar, ([], NoUseRange))) Range.dummyRange
 let goal_type g = U.ctx_uvar_typ g.goal_ctx_uvar
