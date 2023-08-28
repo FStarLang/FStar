@@ -13,8 +13,8 @@ let (run_tactic_on_typ :
         fun env ->
           fun typ ->
             let rng =
-              let uu___ = FStar_Compiler_Range_Type.use_range rng_goal in
-              let uu___1 = FStar_Compiler_Range_Type.use_range rng_tac in
+              let uu___ = FStar_Compiler_Range_Type.use_range rng_tac in
+              let uu___1 = FStar_Compiler_Range_Type.use_range rng_goal in
               FStar_Compiler_Range_Type.range_of_rng uu___ uu___1 in
             let uu___ =
               FStar_Tactics_V2_Basic.proofstate_of_goal_ty rng env typ in
@@ -646,30 +646,28 @@ let (preprocess :
                                 (let label =
                                    let uu___7 =
                                      let uu___8 =
-                                       FStar_Tactics_Types.get_label g in
-                                     uu___8 = "" in
-                                   if uu___7
-                                   then
-                                     let uu___8 =
                                        FStar_Compiler_Util.string_of_int n in
-                                     Prims.op_Hat "Could not prove goal #"
-                                       uu___8
-                                   else
-                                     (let uu___9 =
-                                        let uu___10 =
-                                          FStar_Compiler_Util.string_of_int n in
-                                        let uu___11 =
-                                          let uu___12 =
+                                     let uu___9 =
+                                       let uu___10 =
+                                         let uu___11 =
+                                           FStar_Tactics_Types.get_label g in
+                                         uu___11 = "" in
+                                       if uu___10
+                                       then ""
+                                       else
+                                         (let uu___12 =
                                             let uu___13 =
                                               FStar_Tactics_Types.get_label g in
                                             Prims.op_Hat uu___13 ")" in
-                                          Prims.op_Hat " (" uu___12 in
-                                        Prims.op_Hat uu___10 uu___11 in
-                                      Prims.op_Hat "Could not prove goal #"
-                                        uu___9) in
+                                          Prims.op_Hat " (" uu___12) in
+                                     Prims.op_Hat uu___8 uu___9 in
+                                   Prims.op_Hat "Could not prove goal #"
+                                     uu___7 in
                                  let gt' =
-                                   FStar_TypeChecker_Util.label label
-                                     goal.FStar_Syntax_Syntax.pos phi in
+                                   let uu___7 =
+                                     FStar_Tactics_Types.goal_range g in
+                                   FStar_TypeChecker_Util.label label uu___7
+                                     phi in
                                  let uu___7 =
                                    let uu___8 =
                                      let uu___9 =

@@ -2572,6 +2572,7 @@ let proofstate_of_goals rng env goals imps =
     ps
 
 let proofstate_of_goal_ty rng env typ =
+    let env = { env with range = rng } in
     let env = tac_env env in
     let g, g_u = goal_of_goal_ty env typ in
     let ps = proofstate_of_goals rng env [g] g_u.implicits in

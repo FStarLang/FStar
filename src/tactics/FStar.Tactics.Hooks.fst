@@ -55,7 +55,7 @@ let run_tactic_on_typ
                     : list goal // remaining goals
                     * term // witness
                     =
-    let rng = range_of_rng (use_range rng_goal) (use_range rng_tac) in
+    let rng = range_of_rng (use_range rng_tac) (use_range rng_goal) in
     let ps, w = FStar.Tactics.V2.Basic.proofstate_of_goal_ty rng env typ in
     let tactic_already_typed = false in
     let gs, _res = run_tactic_on_ps rng_tac rng_goal false e_unit () e_unit tactic tactic_already_typed ps in
@@ -325,11 +325,10 @@ let preprocess (env:Env.env) (goal:term) : list (Env.env * term * O.optionstate)
                  if !tacdbg then
                      BU.print2 "Got goal #%s: %s\n" (string_of_int n) (Print.term_to_string (goal_type g));
                  let label =
-                    if get_label g = ""
-                    then "Could not prove goal #" ^ string_of_int n
-                    else "Could not prove goal #" ^ string_of_int n ^ " (" ^ get_label g ^ ")"
+                    "Could not prove goal #" ^ string_of_int n ^
+                    (if get_label g = "" then "" else " (" ^ get_label g ^ ")")
                  in
-                 let gt' = TcUtil.label label  goal.pos phi in
+                 let gt' = TcUtil.label label (goal_range g) phi in
                  (n+1, (goal_env g, gt', goal_opts g)::gs)) s gs in
     let (_, gs) = s in
     let gs = List.rev gs in (* Return new VCs in same order as goals *)
