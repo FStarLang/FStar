@@ -1,9 +1,6 @@
 type context = ((string * FStar_Range.range option) list) FStar_Sealed.sealed
 let extend_context (s:string) (r:FStar_Range.range option) (c:context) = (s,r)::c
 let print_exn (e:exn) = Printexc.to_string e
-let pulse_options (_:unit) = FStar_Options.ext_getns "pulse"
-let pulse_option_set (x:string) : bool = 
-    FStar_Compiler_List.existsb (fun (y,_) -> y=x) (pulse_options ())
 let debug_at_level_no_module (s:string) = FStar_Options.debug_at_level_no_module (FStar_Options.Other s)
 let debug_at_level (g:FStar_Reflection_Types.env) (s:string) = FStar_TypeChecker_Env.debug g (FStar_Options.Other s)
 let bv_set_range (bv:FStar_Syntax_Syntax.bv) (r:FStar_Range.range) = FStar_Syntax_Syntax.set_range_of_bv bv r
@@ -23,4 +20,8 @@ let unfold_def (g:FStar_Reflection_Types.env) (head:string) (names:string list) 
             [Beta; Iota;
              UnfoldOnly (FStar_Ident.lid_of_str head::List.map FStar_Ident.lid_of_str names)] g t)
 let env_set_range (e:FStar_Reflection_Types.env) (r:FStar_Range.range) =
-    FStar_TypeChecker_Env.set_range e r
+   FStar_TypeChecker_Env.set_range e r
+
+let pulse_options (_:unit) = FStar_Options.ext_getns "pulse"
+let pulse_option_set (x:string) : bool =
+    FStar_Compiler_List.existsb (fun (y, _) -> y=x) (pulse_options ())

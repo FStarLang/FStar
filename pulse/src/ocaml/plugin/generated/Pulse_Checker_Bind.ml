@@ -1047,20 +1047,20 @@ let (check_tot_bind :
                                                                     (Prims.of_int (118))
                                                                     (Prims.of_int (11))
                                                                     (Prims.of_int (118))
-                                                                    (Prims.of_int (20)))))
+                                                                    (Prims.of_int (29)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Bind.fst"
                                                                     (Prims.of_int (118))
-                                                                    (Prims.of_int (23))
+                                                                    (Prims.of_int (32))
                                                                     (Prims.of_int (127))
                                                                     (Prims.of_int (43)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___4 ->
-                                                                    Pulse_Syntax_Base.v_as_nv
-                                                                    x))
+                                                                    ((b1.Pulse_Syntax_Base.binder_ppname),
+                                                                    x)))
                                                                     (fun
                                                                     uu___4 ->
                                                                     (fun px
