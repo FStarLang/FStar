@@ -80,14 +80,21 @@ let join_smt_goals () : Tac unit =
   ()
 
 let main t pre : RT.dsl_tac_t = fun g ->
-  (* If we will be joining goals, make sure the guards from reflection
-  typing end up as SMT goals. This is anyway the default behavior but it
-  doesn't hurt to be explicit. *)
-  set_guard_policy SMT;
+  (* We use the SMT policy by default, to collect goals in the
+  proofstate and discharge them all at the end, potentially joining
+  them (see below). But it can be overriden to SMTSync by `--ext
+  pulse:guard_policy=SMTSync`. *)
+  if ext_getv "pulse:guard_policy" = "SMTSync" then
+    set_guard_policy SMTSync
+  else
+    set_guard_policy SMT;
 
   let res = main' t pre g in
 
-  if Cfg.join_goals && not (RU.debug_at_level g "DoNotJoin") then
+  if ext_getv "pulse:join" = "1"
+     (* || ext_getv "pulse:join" <> "" *)
+     // ^ Uncomment to make it true by default.
+  then
     join_smt_goals();
   res
 
@@ -103,6 +110,12 @@ let check_pulse (namespaces:list string)
       | Inl st_term ->
         main st_term tm_emp env
       | Inr (msg, range) ->
-        T.fail (Printf.sprintf "%s: %s"
-                  (T.range_to_string range)
-                  msg)
+        let i =
+          Issue.mk_issue "Error"
+                   (Printf.sprintf "%s: %s" (T.range_to_string range) msg)
+                   (Some range)
+                   None
+                   []
+        in
+        T.log_issues [i];
+        T.fail "Pulse parser failed"
