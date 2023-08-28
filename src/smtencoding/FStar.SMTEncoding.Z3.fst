@@ -592,7 +592,8 @@ let context_profile (theory:list decl) =
                modules
 
 let mk_input fresh theory =
-    let options = z3_options ((!bg_z3_proc).version()) in
+    let ver = Options.z3_version () in
+    let options = z3_options ver in
     let options = options ^ (Options.z3_smtopt() |> String.concat "\n") in
     if Options.print_z3_statistics() then context_profile theory;
     let r, hash =
@@ -625,7 +626,7 @@ let mk_input fresh theory =
               else ps
             in
             (* Add the Z3 version to the string, so we get a mismatch if we switch versions. *)
-            let hs = hs ^ "Z3 version: " ^ ((!bg_z3_proc).version()) in
+            let hs = hs ^ "Z3 version: " ^ ver in
             ps ^ "\n" ^ ss, Some (BU.digest_of_string hs)
         else
             List.map (declToSmt options) theory |> String.concat "\n", None
