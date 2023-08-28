@@ -1,7 +1,15 @@
 module Pulse.Lib.Core
 open FStar.Ghost
+open Steel.FractionalPermission
 module U32 = FStar.UInt32
 module G = FStar.Ghost
+
+(* Common alias *)
+let one_half =
+  half_perm full_perm
+
+val double_one_half (_:unit)
+  : Lemma (sum_perm one_half one_half == full_perm)
 
 (***** begin vprop_equiv *****)
 
