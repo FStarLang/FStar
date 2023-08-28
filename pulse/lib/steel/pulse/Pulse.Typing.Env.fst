@@ -354,3 +354,8 @@ let warn (g:env) (r:option range) (msg:string) : T.Tac unit =
   let r = get_range g r in
   let issue = FStar.Issue.mk_issue "Warning" msg (Some r) None (ctxt_to_list g) in
   T.log_issues [issue]
+
+let info (g:env) (r:option range) (msg:string) =
+  let r = get_range g r in
+  let issue = FStar.Issue.mk_issue "Info" msg (Some r) None (ctxt_to_list g) in
+  T.log_issues [issue]
