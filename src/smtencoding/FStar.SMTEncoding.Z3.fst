@@ -237,7 +237,8 @@ let new_z3proc_with_id =
 type bgproc = {
     ask:      string -> string;
     refresh:  unit -> unit;
-    restart:  unit -> unit
+    restart:  unit -> unit;
+    version:  unit -> string;
 }
 
 let cmd_and_args_to_string cmd_and_args =
@@ -319,7 +320,8 @@ let bg_z3_proc =
     let x : list unit = [] in
     BU.mk_ref ({ask = BU.with_monitor x ask;
                 refresh = BU.with_monitor x refresh;
-                restart = BU.with_monitor x restart})
+                restart = BU.with_monitor x restart;
+                version = (fun () -> !the_z3proc_version)})
 
 
 type smt_output_section = list string
@@ -589,7 +591,7 @@ let context_profile (theory:list decl) =
                modules
 
 let mk_input fresh theory =
-    let options = z3_options (Options.z3_version()) in //fxime use bgproc
+    let options = z3_options ((!bg_z3_proc).version()) in
     let options = options ^ (Options.z3_smtopt() |> String.concat "\n") in
     if Options.print_z3_statistics() then context_profile theory;
     let r, hash =
@@ -621,6 +623,8 @@ let mk_input fresh theory =
                    |> String.concat "\n"
               else ps
             in
+            (* Add the Z3 version to the string, so we get a mismatch if we switch versions. *)
+            let hs = hs ^ "Z3 version: " ^ ((!bg_z3_proc).version()) in
             ps ^ "\n" ^ ss, Some (BU.digest_of_string hs)
         else
             List.map (declToSmt options) theory |> String.concat "\n", None

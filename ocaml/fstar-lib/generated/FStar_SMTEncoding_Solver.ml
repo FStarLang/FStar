@@ -14,11 +14,11 @@ let z3_result_as_replay_result :
     | FStar_Pervasives.Inl l -> FStar_Pervasives.Inl l
     | FStar_Pervasives.Inr (r, uu___1) -> FStar_Pervasives.Inr r
 let (recorded_hints :
-  FStar_Compiler_Util.hints FStar_Pervasives_Native.option
+  FStar_Compiler_Hints.hints FStar_Pervasives_Native.option
     FStar_Compiler_Effect.ref)
   = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None
 let (replaying_hints :
-  FStar_Compiler_Util.hints FStar_Pervasives_Native.option
+  FStar_Compiler_Hints.hints FStar_Pervasives_Native.option
     FStar_Compiler_Effect.ref)
   = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None
 let initialize_hints_db : 'uuuuu . Prims.string -> 'uuuuu -> unit =
@@ -33,9 +33,9 @@ let initialize_hints_db : 'uuuuu . Prims.string -> 'uuuuu -> unit =
       (let norm_src_filename =
          FStar_Compiler_Util.normalize_file_path src_filename in
        let val_filename = FStar_Options.hint_file_for_src norm_src_filename in
-       let uu___1 = FStar_Compiler_Util.read_hints val_filename in
+       let uu___1 = FStar_Compiler_Hints.read_hints val_filename in
        match uu___1 with
-       | FStar_Compiler_Util.HintsOK hints ->
+       | FStar_Compiler_Hints.HintsOK hints ->
            let expected_digest =
              FStar_Compiler_Util.digest_of_file norm_src_filename in
            ((let uu___3 = FStar_Options.hint_info () in
@@ -44,13 +44,15 @@ let initialize_hints_db : 'uuuuu . Prims.string -> 'uuuuu -> unit =
                FStar_Compiler_Util.print3 "(%s) digest is %s from %s.\n"
                  norm_src_filename
                  (if
-                    hints.FStar_Compiler_Util.module_digest = expected_digest
+                    hints.FStar_Compiler_Hints.module_digest =
+                      expected_digest
                   then "valid; using hints"
                   else "invalid; using potentially stale hints") val_filename
              else ());
             FStar_Compiler_Effect.op_Colon_Equals replaying_hints
-              (FStar_Pervasives_Native.Some (hints.FStar_Compiler_Util.hints)))
-       | FStar_Compiler_Util.MalformedJson ->
+              (FStar_Pervasives_Native.Some
+                 (hints.FStar_Compiler_Hints.hints)))
+       | FStar_Compiler_Hints.MalformedJson ->
            let uu___3 = FStar_Options.use_hints () in
            if uu___3
            then
@@ -63,7 +65,7 @@ let initialize_hints_db : 'uuuuu . Prims.string -> 'uuuuu -> unit =
              FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange
                uu___4
            else ()
-       | FStar_Compiler_Util.UnableToOpen ->
+       | FStar_Compiler_Hints.UnableToOpen ->
            let uu___3 = FStar_Options.use_hints () in
            if uu___3
            then
@@ -87,13 +89,13 @@ let (finalize_hints_db : Prims.string -> unit) =
        let hints_db =
          let uu___2 = FStar_Compiler_Util.digest_of_file src_filename in
          {
-           FStar_Compiler_Util.module_digest = uu___2;
-           FStar_Compiler_Util.hints = hints
+           FStar_Compiler_Hints.module_digest = uu___2;
+           FStar_Compiler_Hints.hints = hints
          } in
        let norm_src_filename =
          FStar_Compiler_Util.normalize_file_path src_filename in
        let val_filename = FStar_Options.hint_file_for_src norm_src_filename in
-       FStar_Compiler_Util.write_hints val_filename hints_db
+       FStar_Compiler_Hints.write_hints val_filename hints_db
      else ());
     FStar_Compiler_Effect.op_Colon_Equals recorded_hints
       FStar_Pervasives_Native.None;
@@ -600,7 +602,7 @@ let (used_hint : query_settings -> Prims.bool) =
   fun s -> FStar_Compiler_Option.isSome s.query_hint
 let (get_hint_for :
   Prims.string ->
-    Prims.int -> FStar_Compiler_Util.hint FStar_Pervasives_Native.option)
+    Prims.int -> FStar_Compiler_Hints.hint FStar_Pervasives_Native.option)
   =
   fun qname ->
     fun qindex ->
@@ -611,8 +613,8 @@ let (get_hint_for :
             (fun uu___1 ->
                match uu___1 with
                | FStar_Pervasives_Native.Some hint when
-                   (hint.FStar_Compiler_Util.hint_name = qname) &&
-                     (hint.FStar_Compiler_Util.hint_index = qindex)
+                   (hint.FStar_Compiler_Hints.hint_name = qname) &&
+                     (hint.FStar_Compiler_Hints.hint_index = qindex)
                    -> FStar_Pervasives_Native.Some hint
                | uu___2 -> FStar_Pervasives_Native.None)
       | uu___1 -> FStar_Pervasives_Native.None
@@ -1077,7 +1079,7 @@ let (query_info : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
                                 (FStar_Errors_Codes.Warning_HitReplayFailed,
                                   (Prims.op_Hat tag1 msg))))))
       else ()
-let (store_hint : FStar_Compiler_Util.hint -> unit) =
+let (store_hint : FStar_Compiler_Hints.hint -> unit) =
   fun hint ->
     let uu___ = FStar_Compiler_Effect.op_Bang recorded_hints in
     match uu___ with
@@ -1097,13 +1099,13 @@ let (record_hint : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
       else
         (let mk_hint core =
            {
-             FStar_Compiler_Util.hint_name = (settings.query_name);
-             FStar_Compiler_Util.hint_index = (settings.query_index);
-             FStar_Compiler_Util.fuel = (settings.query_fuel);
-             FStar_Compiler_Util.ifuel = (settings.query_ifuel);
-             FStar_Compiler_Util.unsat_core = core;
-             FStar_Compiler_Util.query_elapsed_time = Prims.int_zero;
-             FStar_Compiler_Util.hash =
+             FStar_Compiler_Hints.hint_name = (settings.query_name);
+             FStar_Compiler_Hints.hint_index = (settings.query_index);
+             FStar_Compiler_Hints.fuel = (settings.query_fuel);
+             FStar_Compiler_Hints.ifuel = (settings.query_ifuel);
+             FStar_Compiler_Hints.unsat_core = core;
+             FStar_Compiler_Hints.query_elapsed_time = Prims.int_zero;
+             FStar_Compiler_Hints.hash =
                (match z3result.FStar_SMTEncoding_Z3.z3result_status with
                 | FStar_SMTEncoding_Z3.UNSAT core1 ->
                     z3result.FStar_SMTEncoding_Z3.z3result_query_hash
@@ -1255,7 +1257,7 @@ let (make_solver_configs :
             FStar_SMTEncoding_Term.decl ->
               FStar_Syntax_Syntax.term ->
                 FStar_SMTEncoding_Term.decl Prims.list ->
-                  (query_settings Prims.list * FStar_Compiler_Util.hint
+                  (query_settings Prims.list * FStar_Compiler_Hints.hint
                     FStar_Pervasives_Native.option))
   =
   fun can_split ->
@@ -1307,14 +1309,14 @@ let (make_solver_configs :
                                | FStar_Pervasives_Native.None ->
                                    FStar_Pervasives_Native.None
                                | FStar_Pervasives_Native.Some
-                                   { FStar_Compiler_Util.hint_name = uu___5;
-                                     FStar_Compiler_Util.hint_index = uu___6;
-                                     FStar_Compiler_Util.fuel = uu___7;
-                                     FStar_Compiler_Util.ifuel = uu___8;
-                                     FStar_Compiler_Util.unsat_core = uu___9;
-                                     FStar_Compiler_Util.query_elapsed_time =
-                                       uu___10;
-                                     FStar_Compiler_Util.hash = h;_}
+                                   { FStar_Compiler_Hints.hint_name = uu___5;
+                                     FStar_Compiler_Hints.hint_index = uu___6;
+                                     FStar_Compiler_Hints.fuel = uu___7;
+                                     FStar_Compiler_Hints.ifuel = uu___8;
+                                     FStar_Compiler_Hints.unsat_core = uu___9;
+                                     FStar_Compiler_Hints.query_elapsed_time
+                                       = uu___10;
+                                     FStar_Compiler_Hints.hash = h;_}
                                    -> h);
                             query_can_be_split_and_retried = can_split;
                             query_term
@@ -1333,14 +1335,15 @@ let (make_solver_configs :
                             FStar_Compiler_Effect.op_Bar_Greater next_hint
                               FStar_Compiler_Util.must in
                           match uu___2 with
-                          | { FStar_Compiler_Util.hint_name = uu___3;
-                              FStar_Compiler_Util.hint_index = uu___4;
-                              FStar_Compiler_Util.fuel = i;
-                              FStar_Compiler_Util.ifuel = j;
-                              FStar_Compiler_Util.unsat_core =
+                          | { FStar_Compiler_Hints.hint_name = uu___3;
+                              FStar_Compiler_Hints.hint_index = uu___4;
+                              FStar_Compiler_Hints.fuel = i;
+                              FStar_Compiler_Hints.ifuel = j;
+                              FStar_Compiler_Hints.unsat_core =
                                 FStar_Pervasives_Native.Some core;
-                              FStar_Compiler_Util.query_elapsed_time = uu___5;
-                              FStar_Compiler_Util.hash = h;_} ->
+                              FStar_Compiler_Hints.query_elapsed_time =
+                                uu___5;
+                              FStar_Compiler_Hints.hash = h;_} ->
                               [{
                                  query_env = (default_settings.query_env);
                                  query_decl = (default_settings.query_decl);

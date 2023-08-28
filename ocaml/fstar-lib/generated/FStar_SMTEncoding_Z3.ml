@@ -386,15 +386,20 @@ type bgproc =
   {
   ask: Prims.string -> Prims.string ;
   refresh: unit -> unit ;
-  restart: unit -> unit }
+  restart: unit -> unit ;
+  version: unit -> Prims.string }
 let (__proj__Mkbgproc__item__ask : bgproc -> Prims.string -> Prims.string) =
-  fun projectee -> match projectee with | { ask; refresh; restart;_} -> ask
+  fun projectee ->
+    match projectee with | { ask; refresh; restart; version;_} -> ask
 let (__proj__Mkbgproc__item__refresh : bgproc -> unit -> unit) =
   fun projectee ->
-    match projectee with | { ask; refresh; restart;_} -> refresh
+    match projectee with | { ask; refresh; restart; version;_} -> refresh
 let (__proj__Mkbgproc__item__restart : bgproc -> unit -> unit) =
   fun projectee ->
-    match projectee with | { ask; refresh; restart;_} -> restart
+    match projectee with | { ask; refresh; restart; version;_} -> restart
+let (__proj__Mkbgproc__item__version : bgproc -> unit -> Prims.string) =
+  fun projectee ->
+    match projectee with | { ask; refresh; restart; version;_} -> version
 let (cmd_and_args_to_string :
   (Prims.string * Prims.string Prims.list) -> Prims.string) =
   fun cmd_and_args ->
@@ -486,7 +491,9 @@ let (bg_z3_proc : bgproc FStar_Compiler_Effect.ref) =
      {
        ask = (FStar_Compiler_Util.with_monitor x ask);
        refresh = (FStar_Compiler_Util.with_monitor x refresh);
-       restart = (FStar_Compiler_Util.with_monitor x restart)
+       restart = (FStar_Compiler_Util.with_monitor x restart);
+       version =
+         (fun uu___1 -> FStar_Compiler_Effect.op_Bang the_z3proc_version)
      })
 type smt_output_section = Prims.string Prims.list
 type smt_output =
@@ -957,7 +964,10 @@ let (mk_input :
   fun fresh ->
     fun theory ->
       let options =
-        let uu___ = FStar_Options.z3_version () in z3_options uu___ in
+        let uu___ =
+          let uu___1 = FStar_Compiler_Effect.op_Bang bg_z3_proc in
+          uu___1.version () in
+        z3_options uu___ in
       let options1 =
         let uu___ =
           let uu___1 = FStar_Options.z3_smtopt () in
@@ -1004,8 +1014,15 @@ let (mk_input :
                    FStar_Compiler_Effect.op_Bar_Greater uu___5
                      (FStar_String.concat "\n")
                  else ps in
+               let hs1 =
+                 let uu___4 =
+                   let uu___5 =
+                     let uu___6 = FStar_Compiler_Effect.op_Bang bg_z3_proc in
+                     uu___6.version () in
+                   Prims.op_Hat "Z3 version: " uu___5 in
+                 Prims.op_Hat hs uu___4 in
                let uu___4 =
-                 let uu___5 = FStar_Compiler_Util.digest_of_string hs in
+                 let uu___5 = FStar_Compiler_Util.digest_of_string hs1 in
                  FStar_Pervasives_Native.Some uu___5 in
                ((Prims.op_Hat ps (Prims.op_Hat "\n" ss)), uu___4)
          else
