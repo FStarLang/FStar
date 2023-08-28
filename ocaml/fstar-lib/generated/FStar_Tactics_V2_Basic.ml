@@ -8248,6 +8248,11 @@ let (resolve_name :
       let uu___ =
         FStar_Syntax_DsEnv.resolve_name e.FStar_TypeChecker_Env.dsenv l in
       FStar_Tactics_Monad.ret uu___
+let (log_issues :
+  FStar_Errors.issue Prims.list -> unit FStar_Tactics_Monad.tac) =
+  fun is ->
+    FStar_Tactics_Monad.op_let_Bang FStar_Tactics_Monad.idtac
+      (fun uu___ -> FStar_Errors.add_issues is; FStar_Tactics_Monad.ret ())
 let (tac_env : FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
   fun env1 ->
     let uu___ = FStar_TypeChecker_Env.clear_expected_typ env1 in
