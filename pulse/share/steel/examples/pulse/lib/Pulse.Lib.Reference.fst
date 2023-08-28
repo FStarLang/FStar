@@ -79,5 +79,13 @@ let with_local #a init #pre #ret_t #post body =
     in
     let v = R.with_local init body in
     S.return v    
-    
-    
+
+let share (#a:Type0) (#uses:_) (r:ref a) (#x:a) = admit()
+
+let gather (#a:Type0) (#uses:_) (r:ref a) (#x:a) = admit()
+
+let pts_to_injective_eq (#a:_)
+                        (#p #q:_)
+                        (#v0 #v1:a)
+                        (r:ref a)
+  = admit()

@@ -12,8 +12,6 @@ module P = Pulse.Syntax.Printer
 module Metatheory = Pulse.Typing.Metatheory
 module PS = Pulse.Checker.Prover.Substs
 
-let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y == x} = x
-
 #push-options "--z3rlimit_factor 4 --fuel 1 --ifuel 1"
 let check_bind
   (g:env)
@@ -38,13 +36,23 @@ let check_bind
   let (| x, g1, _, (| ctxt', ctxt'_typing |), k1 |) =
     let r = check g ctxt ctxt_typing None binder.binder_ppname e1 in
     (* Check that the type matches the annotation, if any *)
-    begin match binder.binder_ty.t with
+    let ty = binder.binder_ty in
+    begin match ty.t with
     | Tm_Unknown -> ()
     | _ ->
+      let (| ty, _, _ |) = check_tot_term g ty in //elaborate it first
       let (| _, _, (| _, t, _ |), _, _ |) = r in
-      if not (eq_tm binder.binder_ty t) then
+      // TODO: once we have the rename operation then we should
+      // ditch this check and just elaborate the bind
+      //   let x : ty = stapp in ...
+      // to
+      //   let x0 = stapp in
+      //   let x : t = x0 in
+      //   rename x0 x; ...
+      // to leverage the pure case
+      if not (eq_tm ty t) then
         fail g (Some e1.range)
-          (Printf.sprintf "Type mismatch: expected %s, got %s" (P.term_to_string binder.binder_ty) (P.term_to_string t))
+          (Printf.sprintf "Type mismatch: expected %s, got %s" (P.term_to_string ty) (P.term_to_string t))
     end;
     r
   in
@@ -67,7 +75,7 @@ let check_tot_bind
   (check:check_t)
   : T.Tac (checker_result_t g pre post_hint) =
 
-  let g = Pulse.Typing.Env.push_context g "check_bind" t.range in
+  let g = Pulse.Typing.Env.push_context g "check_tot_bind" t.range in
 
   if None? post_hint
   then fail g (Some t.range) "check_tot_bind: post hint is not set, please add an annotation";
@@ -84,6 +92,7 @@ let check_tot_bind
     | Tm_Unknown ->
       check_term_and_type g e1
     | _ ->
+      let (| ty, _, _ |) = check_tot_term g ty in //elaborate it first
       let (| u1, ty_typing |) = check_universe g ty in
       let (| e1, eff1, e1_typing |) = check_term_with_expected_type g e1 ty in
       let ty_typing : universe_of g ty u1 = ty_typing in

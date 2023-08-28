@@ -331,7 +331,7 @@ let print_issues (g:env)
    = String.concat "\n" (T.map (print_issue g) i)
 
 let env_to_string (e:env) : T.Tac string =
-  let bs = T.map #((var & _) & _) #_
+  let bs = T.map #((var & typ) & ppname) #_
     (fun ((n, t), x) -> Printf.sprintf "%s#%d : %s" (T.unseal x.name) n (Pulse.Syntax.Printer.term_to_string t))
     (T.zip e.bs e.names) in
   String.concat "\n  " bs
@@ -358,4 +358,9 @@ let fail (#a:Type) (g:env) (r:option range) (msg:string) =
 let warn (g:env) (r:option range) (msg:string) : T.Tac unit =
   let r = get_range g r in
   let issue = FStar.Issue.mk_issue "Warning" msg (Some r) None (ctxt_to_list g) in
+  T.log_issues [issue]
+
+let info (g:env) (r:option range) (msg:string) =
+  let r = get_range g r in
+  let issue = FStar.Issue.mk_issue "Info" msg (Some r) None (ctxt_to_list g) in
   T.log_issues [issue]

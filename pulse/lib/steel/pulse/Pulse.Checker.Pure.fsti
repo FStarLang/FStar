@@ -85,3 +85,5 @@ val core_check_tot_term_with_expected_type (g:env) (e:term) (t:typ)
 val is_non_informative (g:env) (c:comp)
   : T.Tac (option (T.non_informative_token (elab_env g) (elab_comp c)))
 
+val check_subtyping (g:env) (t1 t2 : term)
+  : T.Tac (subtyping_token g t1 t2)

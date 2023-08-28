@@ -804,6 +804,8 @@ let uu___is_CT_STGhost uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | CT_STGhost _ -> true | _ -> false
 type ('g, 't) prop_validity =
   (unit, unit) FStar_Tactics_V2_Builtins.prop_validity_token
+type ('g, 't1, 't2) subtyping_token =
+  (unit, unit, unit) FStar_Tactics_Types.subtyping_token
 let (readback_binding :
   FStar_Reflection_V2_Data.binding -> Pulse_Typing_Env.binding) =
   fun b ->

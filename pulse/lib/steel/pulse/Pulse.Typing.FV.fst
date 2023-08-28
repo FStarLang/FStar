@@ -87,6 +87,8 @@ let rec freevars_close_term_list' (t:list term) (x:var) (i:index)
       freevars_close_term' hd x i;
       freevars_close_term_list' tl x i
 
+// Needs a bit more rlimit sometimes. Also splitting is too expensive
+#push-options "--z3rlimit 20 --split_queries no"
 let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
   : Lemma
     (ensures (freevars_st (close_st_term' t x i) `Set.equal`
@@ -162,7 +164,8 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
       let n = L.length binders in
       freevars_close_term' v x (i + n);
       freevars_close_st_term' t x (i + n)
-      
+#pop-options
+
 let freevars_close_term (e:term) (x:var) (i:index)
   : Lemma 
     (ensures freevars (close_term' e x i) `Set.equal`

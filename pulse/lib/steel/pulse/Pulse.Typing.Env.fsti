@@ -183,3 +183,6 @@ val fail (#a:Type) (g:env) (r:option range) (msg:string)
 
 val warn (g:env) (r:option range) (msg:string)
   : T.Tac unit
+
+val info (g:env) (r:option range) (msg:string)
+  : T.Tac unit

@@ -35,11 +35,11 @@ let rtb_universe_of g f e =
   let res = RTB.universe_of f e in
   res
 
-let rtb_check_subtyping g f t1 t2 =
+let rtb_check_subtyping g t1 t2 =
   debug g (fun _ -> Printf.sprintf "Calling check_subtyping on %s <: %s"
-                                       (T.term_to_string t1)
-                                       (T.term_to_string t2));                           
-  let res = RTB.check_subtyping f t1 t2 in
+                                       (P.term_to_string t1)
+                                       (P.term_to_string t2));
+  let res = RTB.check_subtyping (elab_env g) (elab_term t1) (elab_term t2) in
   res
   
 let rtb_instantiate_implicits g f t =
@@ -355,3 +355,17 @@ let is_non_informative g c =
   let ropt, issues = catch_all (fun _ -> T.is_non_informative (elab_env g) (elab_comp c)) in
   T.log_issues issues;
   ropt
+
+let check_subtyping g t1 t2 =
+  T.with_policy SMTSync (fun () ->
+  let res, issues = rtb_check_subtyping g t1 t2 in
+  T.log_issues issues;
+  match res with
+  | Some tok -> tok
+  | None ->
+    fail g (Some t1.range)
+      (Printf.sprintf
+        "Could not prove subtyping of %s and %s"
+         (P.term_to_string t1)
+         (P.term_to_string t2))
+  )
