@@ -120,6 +120,21 @@ val interp_rec_fold_unfold_stream_value (a: Type) (f:nat -> a) (x: R.ref(cell a)
         `star` stream_value a f (v.next, n + 1)
     ))
 
+module C = Steel.Effect.Common
+
+open Pulse.Lib.Pervasives
+//friend Pulse.Lib.Core
+let stream_ #a f x: vprop = to_vprop (C.to_vprop (stream_value a f x))
+
+(*
+let equiv_stream_ #a f x:
+vprop_equiv (stream_ #a f x) (
+    exists_ (fun v -> pts_to x._1 #full_perm v ** pure (f x._2 == v.v) **
+    stream_ f (v.next, x._2 + 1)))
+= admit()
+*)
+
+
 (**
 Extending the theory to vprops (defined in Steel.Effect.Common.fsti):
 
