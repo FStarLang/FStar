@@ -71,6 +71,15 @@ let bvshr_unsafe_sound #n #a #b  = ()
 let int2bv_shr #n #x #y #z pf =
   inverse_vec_lemma #n (bvshr #n (int2bv #n x) y)
 
+let bvashr = B.shift_arithmetic_right_vec
+
+let bvashr_unsafe #n a b = bvashr #n a (bv2int #n b)
+
+let bvashr_unsafe_sound #n #a #b = ()
+
+let int2bv_ashr #n #x #y #z pf =
+  inverse_vec_lemma #n (bvashr #n (int2bv #n x) y)
+
 
 
 let bvult #n a b = (bv2int #n a) < (bv2int #n b)
@@ -108,6 +117,7 @@ let bvmod #n a b =
 
 let bvmod_unsafe #n a b = if (bv2int b <> 0) then bvmod a (bv2int b) else a
 let bvmod_unsafe_sound #n #a #b b_nonzero_pf = ()
+let bvmod_unsafe_sound_nonzero #n #a #b pf = ()
 
 let int2bv_mod #n #x #y #z pf =
   inverse_vec_lemma #n (bvmod #n (int2bv #n x) y)

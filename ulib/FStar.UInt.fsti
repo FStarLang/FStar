@@ -450,6 +450,9 @@ let shift_left (#n:pos) (a:uint_t n) (s:nat) : Tot (uint_t n) =
 let shift_right (#n:pos) (a:uint_t n) (s:nat) : Tot (uint_t n) =
   from_vec (shift_right_vec #n (to_vec #n a) s)
 
+let shift_arithmetic_right (#n:pos) (a:uint_t n) (s:nat) : Tot (uint_t n) =
+  from_vec (shift_arithmetic_right_vec #n (to_vec #n a) s)
+
 (* Shift operators lemmas *)
 val shift_left_lemma_1: #n:pos -> a:uint_t n -> s:nat -> i:nat{i < n && i >= n - s} ->
   Lemma (requires True)

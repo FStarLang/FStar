@@ -204,6 +204,7 @@ let op_to_string = function
   | BvSub -> "bvsub"
   | BvShl -> "bvshl"
   | BvShr -> "bvlshr"
+  | BvAShr -> "bvashr"
   | BvUdiv -> "bvudiv"
   | BvMod -> "bvurem"
   | BvMul -> "bvmul"
@@ -308,6 +309,7 @@ let mkBvAdd = mk_bin_op BvAdd
 let mkBvSub = mk_bin_op BvSub
 let mkBvShl sz (t1, t2) r = mkApp'(BvShl, [t1;(mkNatToBv sz t2 r)]) r
 let mkBvShr sz (t1, t2) r = mkApp'(BvShr, [t1;(mkNatToBv sz t2 r)]) r
+let mkBvAshr sz (t1, t2) r = mkApp'(BvAshr, [t1;(mkNatToBv sz t2 r)]) r
 let mkBvUdiv sz (t1, t2) r = mkApp'(BvUdiv, [t1;(mkNatToBv sz t2 r)]) r
 let mkBvMod sz (t1, t2) r = mkApp'(BvMod, [t1;(mkNatToBv sz t2 r)]) r
 let mkBvMul sz (t1, t2) r = mkApp' (BvMul, [t1;(mkNatToBv sz t2 r)]) r
@@ -384,6 +386,7 @@ let check_pattern_ok (t:term) : option term =
                 | BvSub
                 | BvShl
                 | BvShr
+                | BvAShr
                 | BvUdiv
                 | BvMod
                 | BvMul
