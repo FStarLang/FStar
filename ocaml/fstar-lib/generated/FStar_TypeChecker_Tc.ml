@@ -4749,120 +4749,127 @@ let (tc_decls :
       let rec process_one_decl uu___ se =
         match uu___ with
         | (ses1, env1) ->
-            let uu___1 =
-              env1.FStar_TypeChecker_Env.nosynth &&
-                (FStar_Options.debug_any ()) in
-            if uu___1
-            then ((ses1, env1), [])
-            else
-              ((let uu___4 =
-                  FStar_TypeChecker_Env.debug env1 FStar_Options.Low in
-                if uu___4
-                then
-                  let uu___5 = FStar_Syntax_Print.tag_of_sigelt se in
-                  let uu___6 = FStar_Syntax_Print.sigelt_to_string se in
-                  FStar_Compiler_Util.print2
-                    ">>>>>>>>>>>>>>Checking top-level %s decl %s\n" uu___5
-                    uu___6
-                else ());
-               (let uu___5 = FStar_Options.ide_id_info_off () in
-                if uu___5
-                then FStar_TypeChecker_Env.toggle_id_info env1 false
-                else ());
-               (let uu___6 =
-                  FStar_TypeChecker_Env.debug env1
-                    (FStar_Options.Other "IdInfoOn") in
-                if uu___6
-                then FStar_TypeChecker_Env.toggle_id_info env1 true
-                else ());
-               (let uu___6 =
-                  let uu___7 =
-                    let uu___8 = FStar_Syntax_Print.sigelt_to_string_short se in
-                    FStar_Compiler_Util.format1
-                      "While typechecking the top-level declaration `%s`"
-                      uu___8 in
-                  FStar_Errors.with_ctx uu___7
-                    (fun uu___8 -> tc_decl env1 se) in
-                match uu___6 with
-                | (ses', ses_elaborated, env2) ->
-                    let ses'1 =
-                      FStar_Compiler_Effect.op_Bar_Greater ses'
-                        (FStar_Compiler_List.map
-                           (fun se1 ->
-                              (let uu___8 =
-                                 FStar_TypeChecker_Env.debug env2
-                                   (FStar_Options.Other "UF") in
-                               if uu___8
-                               then
-                                 let uu___9 =
-                                   FStar_Syntax_Print.sigelt_to_string se1 in
-                                 FStar_Compiler_Util.print1
-                                   "About to elim vars from %s\n" uu___9
-                               else ());
-                              FStar_TypeChecker_Normalize.elim_uvars env2 se1)) in
-                    let ses_elaborated1 =
-                      FStar_Compiler_Effect.op_Bar_Greater ses_elaborated
-                        (FStar_Compiler_List.map
-                           (fun se1 ->
-                              (let uu___8 =
-                                 FStar_TypeChecker_Env.debug env2
-                                   (FStar_Options.Other "UF") in
-                               if uu___8
-                               then
-                                 let uu___9 =
-                                   FStar_Syntax_Print.sigelt_to_string se1 in
-                                 FStar_Compiler_Util.print1
-                                   "About to elim vars from (elaborated) %s\n"
-                                   uu___9
-                               else ());
-                              FStar_TypeChecker_Normalize.elim_uvars env2 se1)) in
-                    (FStar_TypeChecker_Env.promote_id_info env2
-                       (compress_and_norm env2);
-                     (let ses'2 =
-                        FStar_Compiler_Effect.op_Bar_Greater ses'1
+            (FStar_Compiler_Effect.op_Colon_Equals
+               FStar_Errors.fallback_range
+               (FStar_Pervasives_Native.Some (se.FStar_Syntax_Syntax.sigrng));
+             (let uu___2 =
+                env1.FStar_TypeChecker_Env.nosynth &&
+                  (FStar_Options.debug_any ()) in
+              if uu___2
+              then ((ses1, env1), [])
+              else
+                ((let uu___5 =
+                    FStar_TypeChecker_Env.debug env1 FStar_Options.Low in
+                  if uu___5
+                  then
+                    let uu___6 = FStar_Syntax_Print.tag_of_sigelt se in
+                    let uu___7 = FStar_Syntax_Print.sigelt_to_string se in
+                    FStar_Compiler_Util.print2
+                      ">>>>>>>>>>>>>>Checking top-level %s decl %s\n" uu___6
+                      uu___7
+                  else ());
+                 (let uu___6 = FStar_Options.ide_id_info_off () in
+                  if uu___6
+                  then FStar_TypeChecker_Env.toggle_id_info env1 false
+                  else ());
+                 (let uu___7 =
+                    FStar_TypeChecker_Env.debug env1
+                      (FStar_Options.Other "IdInfoOn") in
+                  if uu___7
+                  then FStar_TypeChecker_Env.toggle_id_info env1 true
+                  else ());
+                 (let uu___7 =
+                    let uu___8 =
+                      let uu___9 =
+                        FStar_Syntax_Print.sigelt_to_string_short se in
+                      FStar_Compiler_Util.format1
+                        "While typechecking the top-level declaration `%s`"
+                        uu___9 in
+                    FStar_Errors.with_ctx uu___8
+                      (fun uu___9 -> tc_decl env1 se) in
+                  match uu___7 with
+                  | (ses', ses_elaborated, env2) ->
+                      let ses'1 =
+                        FStar_Compiler_Effect.op_Bar_Greater ses'
                           (FStar_Compiler_List.map
-                             (FStar_Syntax_Compress.deep_compress_se false
-                                false)) in
-                      let env3 =
-                        FStar_Compiler_Effect.op_Bar_Greater ses'2
-                          (FStar_Compiler_List.fold_left
-                             (fun env4 ->
-                                fun se1 -> add_sigelt_to_env env4 se1 false)
-                             env2) in
-                      FStar_Syntax_Unionfind.reset ();
-                      (let uu___10 =
-                         (FStar_Options.log_types ()) ||
-                           (FStar_Compiler_Effect.op_Less_Bar
-                              (FStar_TypeChecker_Env.debug env3)
-                              (FStar_Options.Other "LogTypes")) in
-                       if uu___10
-                       then
-                         let uu___11 =
-                           FStar_Compiler_List.fold_left
-                             (fun s ->
-                                fun se1 ->
-                                  let uu___12 =
+                             (fun se1 ->
+                                (let uu___9 =
+                                   FStar_TypeChecker_Env.debug env2
+                                     (FStar_Options.Other "UF") in
+                                 if uu___9
+                                 then
+                                   let uu___10 =
+                                     FStar_Syntax_Print.sigelt_to_string se1 in
+                                   FStar_Compiler_Util.print1
+                                     "About to elim vars from %s\n" uu___10
+                                 else ());
+                                FStar_TypeChecker_Normalize.elim_uvars env2
+                                  se1)) in
+                      let ses_elaborated1 =
+                        FStar_Compiler_Effect.op_Bar_Greater ses_elaborated
+                          (FStar_Compiler_List.map
+                             (fun se1 ->
+                                (let uu___9 =
+                                   FStar_TypeChecker_Env.debug env2
+                                     (FStar_Options.Other "UF") in
+                                 if uu___9
+                                 then
+                                   let uu___10 =
+                                     FStar_Syntax_Print.sigelt_to_string se1 in
+                                   FStar_Compiler_Util.print1
+                                     "About to elim vars from (elaborated) %s\n"
+                                     uu___10
+                                 else ());
+                                FStar_TypeChecker_Normalize.elim_uvars env2
+                                  se1)) in
+                      (FStar_TypeChecker_Env.promote_id_info env2
+                         (compress_and_norm env2);
+                       (let ses'2 =
+                          FStar_Compiler_Effect.op_Bar_Greater ses'1
+                            (FStar_Compiler_List.map
+                               (FStar_Syntax_Compress.deep_compress_se false
+                                  false)) in
+                        let env3 =
+                          FStar_Compiler_Effect.op_Bar_Greater ses'2
+                            (FStar_Compiler_List.fold_left
+                               (fun env4 ->
+                                  fun se1 -> add_sigelt_to_env env4 se1 false)
+                               env2) in
+                        FStar_Syntax_Unionfind.reset ();
+                        (let uu___11 =
+                           (FStar_Options.log_types ()) ||
+                             (FStar_Compiler_Effect.op_Less_Bar
+                                (FStar_TypeChecker_Env.debug env3)
+                                (FStar_Options.Other "LogTypes")) in
+                         if uu___11
+                         then
+                           let uu___12 =
+                             FStar_Compiler_List.fold_left
+                               (fun s ->
+                                  fun se1 ->
                                     let uu___13 =
-                                      FStar_Syntax_Print.sigelt_to_string se1 in
-                                    Prims.op_Hat uu___13 "\n" in
-                                  Prims.op_Hat s uu___12) "" ses'2 in
-                         FStar_Compiler_Util.print1 "Checked: %s\n" uu___11
-                       else ());
-                      (let uu___11 =
-                         let uu___12 =
+                                      let uu___14 =
+                                        FStar_Syntax_Print.sigelt_to_string
+                                          se1 in
+                                      Prims.op_Hat uu___14 "\n" in
+                                    Prims.op_Hat s uu___13) "" ses'2 in
+                           FStar_Compiler_Util.print1 "Checked: %s\n" uu___12
+                         else ());
+                        (let uu___12 =
                            let uu___13 =
-                             FStar_TypeChecker_Env.current_module env3 in
-                           FStar_Ident.string_of_lid uu___13 in
-                         FStar_Pervasives_Native.Some uu___12 in
-                       FStar_Profiling.profile
-                         (fun uu___12 ->
-                            FStar_Compiler_List.iter
-                              (fun se1 ->
-                                 (env3.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.encode_sig
-                                   env3 se1) ses'2) uu___11
-                         "FStar.TypeChecker.Tc.encode_sig");
-                      (((FStar_Compiler_List.rev_append ses'2 ses1), env3),
-                        ses_elaborated1))))) in
+                             let uu___14 =
+                               FStar_TypeChecker_Env.current_module env3 in
+                             FStar_Ident.string_of_lid uu___14 in
+                           FStar_Pervasives_Native.Some uu___13 in
+                         FStar_Profiling.profile
+                           (fun uu___13 ->
+                              FStar_Compiler_List.iter
+                                (fun se1 ->
+                                   (env3.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.encode_sig
+                                     env3 se1) ses'2) uu___12
+                           "FStar.TypeChecker.Tc.encode_sig");
+                        (((FStar_Compiler_List.rev_append ses'2 ses1), env3),
+                          ses_elaborated1))))))) in
       let process_one_decl_timed acc se =
         FStar_TypeChecker_Core.clear_memo_table ();
         (let uu___1 = acc in
@@ -4896,7 +4903,7 @@ let (tc_decls :
                ([], env) ses) in
       match uu___ with
       | (ses1, env1) -> ((FStar_Compiler_List.rev_append ses1 []), env1)
-let (uu___904 : unit) =
+let (uu___905 : unit) =
   FStar_Compiler_Effect.op_Colon_Equals tc_decls_knot
     (FStar_Pervasives_Native.Some tc_decls)
 let (snapshot_context :

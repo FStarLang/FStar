@@ -2542,6 +2542,11 @@ let resolve_name (e:env) (n:list string) =
   let l = Ident.lid_of_path n Range.dummyRange in
   ret (FStar.Syntax.DsEnv.resolve_name e.dsenv l)
 
+let log_issues (is : list Errors.issue) : tac unit =
+  idtac ;!
+  Errors.add_issues is;
+  ret ()
+
 (**** Creating proper environments and proofstates ****)
 
 let tac_env (env:Env.env) : Env.env =

@@ -679,8 +679,8 @@ let () =
         resolve_name NRE.e_env (NBET.e_list NBET.e_string) (NBET.e_option (NBET.e_either NRE.e_bv NRE.e_fv));
 
       mk_tac_step_1 0 "log_issues"
-        (fun is -> ret (FStar.Errors.add_issues is)) (e_list e_issue) e_unit
-        (fun is -> ret (FStar.Errors.add_issues is)) NBET.(e_list e_issue) NBET.e_unit;
+        log_issues (e_list e_issue) e_unit
+        log_issues NBET.(e_list e_issue) NBET.e_unit;
     ]
 
 let unembed_tactic_1_alt (ea:embedding 'a) (er:embedding 'r) (f:term) (ncb:norm_cb) : option ('a -> tac 'r) =

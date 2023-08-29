@@ -61,7 +61,7 @@ let (set_def_range : range -> rng -> range) =
 let (mk_pos : Prims.int -> Prims.int -> pos) =
   fun l ->
     fun c -> { line = (max Prims.int_zero l); col = (max Prims.int_zero c) }
-let (mk_rng : file_name -> pos -> pos -> rng) =
+let (mk_rng : Prims.string -> pos -> pos -> rng) =
   fun file_name1 ->
     fun start_pos ->
       fun end_pos -> { file_name = file_name1; start_pos; end_pos }

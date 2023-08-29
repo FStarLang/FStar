@@ -1044,6 +1044,8 @@ let compress_and_norm env t =
 
 let tc_decls env ses =
   let rec process_one_decl (ses, env) se =
+    Errors.fallback_range := Some se.sigrng;
+
     (* If emacs is peeking, and debugging is on, don't do anything,
      * otherwise the user will see a bunch of output from typechecking
      * definitions that were not yet advanced over. *)

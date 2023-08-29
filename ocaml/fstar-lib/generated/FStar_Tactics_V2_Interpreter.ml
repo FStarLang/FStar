@@ -2507,20 +2507,10 @@ let (uu___193 : unit) =
                                                                     FStar_Tactics_V2_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
                                                                     "log_issues"
-                                                                    (fun is
-                                                                    ->
-                                                                    FStar_Errors.add_issues
-                                                                    is;
-                                                                    FStar_Tactics_Monad.ret
-                                                                    ())
+                                                                    FStar_Tactics_V2_Basic.log_issues
                                                                     uu___204
                                                                     FStar_Syntax_Embeddings.e_unit
-                                                                    (fun is
-                                                                    ->
-                                                                    FStar_Errors.add_issues
-                                                                    is;
-                                                                    FStar_Tactics_Monad.ret
-                                                                    ())
+                                                                    FStar_Tactics_V2_Basic.log_issues
                                                                     uu___205
                                                                     FStar_TypeChecker_NBETerm.e_unit in
                                                                     [uu___203] in
