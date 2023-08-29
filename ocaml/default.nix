@@ -1,5 +1,5 @@
 { batteries, buildDunePackage, includeBinaryAnnotations ? false
-, installShellFiles, lib, makeWrapper, menhir, menhirLib, ocaml, pprint, ppxlib
+, installShellFiles, lib, makeWrapper, menhir, menhirLib, memtrace, ocaml, pprint, ppxlib
 , ppx_deriving, ppx_deriving_yojson, process, removeReferencesTo, sedlex, stdint
 , version, yojson, zarith }:
 
@@ -35,6 +35,7 @@ buildDunePackage {
     stdint
     yojson
     zarith
+    memtrace
   ];
 
   enableParallelBuilding = true;
