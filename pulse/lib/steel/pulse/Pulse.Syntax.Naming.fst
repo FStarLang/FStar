@@ -73,11 +73,6 @@ let rec close_open_inverse_list' (t:list term)
       close_open_inverse' hd x i;
       close_open_inverse_list' tl x i
 
-let open_term_pairs' (t:list (term * term)) (v:term) (i:index) =
-  subst_term_pairs t [DT i v]
-
-let close_term_pairs' (t:list (term * term)) (x:var) (i:index) =
-  subst_term_pairs t [ND x i]
 
 let rec close_open_inverse_pairs' (t:list (term * term))
                                   (x:var { ~(x `Set.mem` freevars_pairs t) })
@@ -89,6 +84,16 @@ let rec close_open_inverse_pairs' (t:list (term * term))
       close_open_inverse' hd1 x i;
       close_open_inverse' hd2 x i;
       close_open_inverse_pairs' tl x i
+
+let close_open_inverse_proof_hint_type' (ht:proof_hint_type)
+                                        (x:var { ~(x `Set.mem` freevars_proof_hint ht) })
+                                        (i:index)
+  : Lemma (ensures close_proof_hint' (open_proof_hint' ht (U.term_of_no_name_var x) i) x i == ht)
+  = match ht with
+    | ASSERT { p }
+    | FOLD { p }
+    | UNFOLD { p } -> close_open_inverse' p x i
+
 
 let rec close_open_inverse_st'  (t:st_term) 
                                 (x:var { ~(x `Set.mem` freevars_st t) } )
@@ -170,9 +175,9 @@ let rec close_open_inverse_st'  (t:st_term)
       close_open_inverse' typ x i;
       close_open_inverse_opt' post x (i + 1)
 
-    | Tm_ProofHintWithBinders { binders; v; t} ->
+    | Tm_ProofHintWithBinders { binders; hint_type; t} ->
       let n = L.length binders in
-      close_open_inverse' v x (i + n);
+      close_open_inverse_proof_hint_type' hint_type x (i + n);
       close_open_inverse_st' t x (i + n)
       
 let close_open_inverse (t:term) (x:var { ~(x `Set.mem` freevars t) } )

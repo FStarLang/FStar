@@ -225,11 +225,10 @@ let rec eq_st_term (t1 t2:st_term)
       eq_tm t1 t2 &&
       eq_tm_opt post1 post2
       
-    | Tm_ProofHintWithBinders { hint_type=ht1; binders=bs1; t=t1; v=v1 },
-      Tm_ProofHintWithBinders { hint_type=ht2; binders=bs2; t=t2; v=v2 } ->
-      ht1 = ht2 &&
+    | Tm_ProofHintWithBinders { hint_type=ht1; binders=bs1; t=t1 },
+      Tm_ProofHintWithBinders { hint_type=ht2; binders=bs2; t=t2 } ->
+      eq_hint_type ht1 ht2 &&
       eq_list eq_binder bs1 bs2 &&
-      eq_tm v1 v2 &&
       eq_st_term t1 t2
 
     | _ -> false
@@ -239,3 +238,14 @@ and eq_branch (b1 b2 : pattern & st_term)
   = let (p1, e1) = b1 in
     let (p2, e2) = b2 in
     eq_pattern p1 p2 && eq_st_term e1 e2
+
+and eq_hint_type (ht1 ht2:proof_hint_type)
+  : b:bool { b <==> (ht1 == ht2) }
+  = match ht1, ht2 with
+    | ASSERT { p=p1 }, ASSERT { p=p2 } ->
+      eq_tm p1 p2
+    | FOLD { names=ns1; p=p1}, FOLD { names=ns2; p=p2 }
+    | UNFOLD { names=ns1; p=p1}, UNFOLD { names=ns2; p=p2 } ->
+      eq_opt (eq_list (fun n1 n2 -> n1 = n2)) ns1 ns2 &&
+      eq_tm p1 p2
+    | _ -> false

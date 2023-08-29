@@ -148,11 +148,6 @@ let ctag_of_comp_st (c:comp_st) : ctag =
   | C_STAtomic _ _ -> STT_Atomic
   | C_STGhost _ _ -> STT_Ghost
 
-type proof_hint_type =
-  | ASSERT
-  | FOLD of option (list string)
-  | UNFOLD of option (list string)
-
 (* terms with STT types *)
 [@@ no_auto_projectors]
 noeq
@@ -239,7 +234,6 @@ type st_term' =
   | Tm_ProofHintWithBinders { // assert (R.pts_to x ?p ?v) in body
       hint_type:proof_hint_type;
       binders:list binder;
-      v:vprop;
       t:st_term
   }
 
@@ -249,6 +243,19 @@ and st_term = {
 } 
 
 and branch = pattern & st_term
+
+and proof_hint_type =
+  | ASSERT {
+      p:vprop
+    }
+  | FOLD { 
+      names:option (list string);
+      p:vprop;
+    }
+  | UNFOLD {
+      names:option (list string);
+      p:vprop
+    }
 
 let null_binder (t:term) : binder =
   {binder_ty=t;binder_ppname=ppname_default}

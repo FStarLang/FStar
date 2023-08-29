@@ -61,6 +61,12 @@ let rec freevars_pairs (pairs:list (term & term)) : Set.set var =
   | [] -> Set.empty
   | (t1, t2)::tl -> Set.union (freevars t1) (freevars t2) `Set.union` freevars_pairs tl
 
+let freevars_proof_hint (ht:proof_hint_type) : Set.set var = 
+  match ht with
+  | ASSERT { p }
+  | FOLD { p }
+  | UNFOLD { p } -> freevars p
+
 let rec freevars_st (t:st_term)
   : Set.set var
   = match t.term with
@@ -125,8 +131,8 @@ let rec freevars_st (t:st_term)
       Set.union (freevars typ)
                 (freevars_term_opt post)
 
-    | Tm_ProofHintWithBinders { binders; v; t } ->
-      Set.union (freevars v) (freevars_st t)
+    | Tm_ProofHintWithBinders { binders; hint_type; t } ->
+      Set.union (freevars_proof_hint hint_type) (freevars_st t)
 
 and freevars_branches (t:list (pattern & st_term)) : Set.set var =
   match t with
@@ -186,6 +192,12 @@ let rec ln_terms' (t:list (term & term)) (i:int) : bool =
   match t with
   | [] -> true
   | (t1, t2)::tl -> ln' t1 i && ln' t2 i && ln_terms' tl i
+
+let ln_proof_hint' (ht:proof_hint_type) (i:int) : bool =
+  match ht with
+  | ASSERT { p }
+  | UNFOLD { p }
+  | FOLD   { p } -> ln' p i
 
 let rec ln_st' (t:st_term) (i:int)
   : Tot bool (decreases t)
@@ -260,9 +272,9 @@ let rec ln_st' (t:st_term) (i:int)
       ln' typ i &&
       ln_opt' post (i + 1)
 
-    | Tm_ProofHintWithBinders { binders; v; t } ->
+    | Tm_ProofHintWithBinders { binders; hint_type; t } ->
       let n = L.length binders in
-      ln' v (i + n) &&
+      ln_proof_hint' hint_type (i + n) &&
       ln_st' t (i + n)
 
 and ln_branch' (b : pattern & st_term) (i:int) : Tot bool (decreases b) =
@@ -400,6 +412,26 @@ let rec subst_term_pairs (t:list (term & term)) (ss:subst)
     | [] -> []
     | (t1, t2)::tl -> (subst_term t1 ss, subst_term t2 ss) :: subst_term_pairs tl ss 
 
+let subst_proof_hint (ht:proof_hint_type) (ss:subst) 
+  : proof_hint_type
+  = match ht with
+    | ASSERT { p } -> ASSERT { p=subst_term p ss }
+    | UNFOLD { names; p } -> UNFOLD {names; p=subst_term p ss}
+    | FOLD { names; p } -> FOLD { names; p=subst_term p ss }
+
+let open_term_pairs' (t:list (term * term)) (v:term) (i:index) =
+  subst_term_pairs t [DT i v]
+
+let close_term_pairs' (t:list (term * term)) (x:var) (i:index) =
+  subst_term_pairs t [ND x i]
+
+let open_proof_hint'  (ht:proof_hint_type) (v:term) (i:index) =
+  subst_proof_hint ht [DT i v]
+
+let close_proof_hint' (ht:proof_hint_type) (x:var) (i:index) =
+  subst_proof_hint ht [ND x i]
+
+
 let rec subst_st_term (t:st_term) (ss:subst)
   : Tot st_term (decreases t)
   = let t' =
@@ -481,20 +513,18 @@ let rec subst_st_term (t:st_term) (ss:subst)
                  typ=subst_term typ ss;
                  post=subst_term_opt post (shift_subst ss) }
 
-    | Tm_ProofHintWithBinders { hint_type; binders; v; t} ->
+    | Tm_ProofHintWithBinders { hint_type; binders; t} ->
       let n = L.length binders in
       let ss = shift_subst_n n ss in
-      Tm_ProofHintWithBinders { hint_type; 
-                                binders;
-                                v = subst_term v ss;
+      Tm_ProofHintWithBinders { binders;
+                                hint_type=subst_proof_hint hint_type ss; 
                                 t = subst_st_term t ss }
     in
     { t with term = t' }
 
 and subst_branches (t:st_term) (ss:subst) (brs : list branch{brs << t})
 : Tot (list branch) (decreases brs)
-=
-  map_dec t brs (fun br -> subst_branch ss br)
+= map_dec t brs (fun br -> subst_branch ss br)
 
 and subst_branch (ss:subst) (b : pattern & st_term) : Tot (pattern & st_term) (decreases b) =
   let (p, e) = b in

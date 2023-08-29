@@ -21,4 +21,4 @@ let tm_rewrite t1 t2 = Tm_Rewrite { t1; t2 }
 let tm_rename pairs = Tm_Rename { pairs }
 let tm_admit ctag u typ post = Tm_Admit { ctag; u; typ; post }
 let with_range t r = { term = t; range = r}
-let tm_assert_with_binders bs v t = Tm_ProofHintWithBinders { hint_type=ASSERT; binders=bs; v; t }
+let tm_assert_with_binders bs p t = Tm_ProofHintWithBinders { hint_type=ASSERT { p }; binders=bs; t }

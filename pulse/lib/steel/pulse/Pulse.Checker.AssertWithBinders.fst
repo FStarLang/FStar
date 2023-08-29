@@ -144,14 +144,12 @@ let check
 
   let g = push_context g "check_assert" st.range in
 
-  let Tm_ProofHintWithBinders { hint_type; binders=bs; v; t=body } = st.term in
-
-  let bs = infer_binder_types g bs v in
-
-  let (| uvs, v_opened, body_opened |) = open_binders g bs (mk_env (fstar_env g)) v body in
+  let Tm_ProofHintWithBinders { hint_type; binders=bs; t=body } = st.term in
 
   match hint_type with
-  | ASSERT ->
+  | ASSERT { p = v } ->
+    let bs = infer_binder_types g bs v in
+    let (| uvs, v_opened, body_opened |) = open_binders g bs (mk_env (fstar_env g)) v body in
     let v, body = v_opened, body_opened in
     let (| v, d |) = PC.check_vprop (push_env g uvs) v in
     let (| g1, nts, pre', k_frame |) = Prover.prove pre_typing uvs d in
@@ -159,7 +157,11 @@ let check
       check g1 (tm_star (PS.nt_subst_term v nts) pre') (magic ()) post_hint res_ppname (PS.nt_subst_st_term body nts) in
     (| x, x_ty, pre'', g2, k_elab_trans k_frame k |)
 
-  | _ ->
+
+  | UNFOLD { names; p=v }
+  | FOLD { names; p=v } ->
+    let bs = infer_binder_types g bs v in
+    let (| uvs, v_opened, body_opened |) = open_binders g bs (mk_env (fstar_env g)) v body in
     check_unfoldable g v;
     let v_opened, _ = PC.instantiate_term_implicits (push_env g uvs) v_opened in
     let lhs, rhs =
@@ -167,7 +169,7 @@ let check
       | UNFOLD _ ->
         v_opened,
         unfold_defs (push_env g uvs) None v_opened
-      | FOLD ns -> 
+      | FOLD { names=ns } -> 
         unfold_defs (push_env g uvs) ns v_opened,
         v_opened in
     let uvs_bs = L.rev (bindings uvs) in
@@ -183,9 +185,8 @@ let check
       match bs with
       | [] -> st
       | _ ->
-        { term = Tm_ProofHintWithBinders { hint_type = ASSERT;
+        { term = Tm_ProofHintWithBinders { hint_type = ASSERT { p = lhs };
                                            binders = bs;
-                                           v = lhs;
                                            t = st };
           range = st.range } in
     check g pre pre_typing post_hint res_ppname st
