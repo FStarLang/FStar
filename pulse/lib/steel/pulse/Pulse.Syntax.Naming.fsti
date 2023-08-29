@@ -66,6 +66,8 @@ let freevars_proof_hint (ht:proof_hint_type) : Set.set var =
   | ASSERT { p }
   | FOLD { p }
   | UNFOLD { p } -> freevars p
+  | RENAME { pairs; goal } ->
+    Set.union (freevars_pairs pairs) (freevars_term_opt goal)
 
 let rec freevars_st (t:st_term)
   : Set.set var
@@ -123,9 +125,6 @@ let rec freevars_st (t:st_term)
 
     | Tm_Rewrite { t1; t2 } ->
       Set.union (freevars t1) (freevars t2)
-
-    | Tm_Rename { pairs } ->
-      freevars_pairs pairs
 
     | Tm_Admit { typ; post } ->
       Set.union (freevars typ)
@@ -198,6 +197,9 @@ let ln_proof_hint' (ht:proof_hint_type) (i:int) : bool =
   | ASSERT { p }
   | UNFOLD { p }
   | FOLD   { p } -> ln' p i
+  | RENAME { pairs; goal } ->
+    ln_terms' pairs i &&
+    ln_opt' goal i
 
 let rec ln_st' (t:st_term) (i:int)
   : Tot bool (decreases t)
@@ -264,9 +266,6 @@ let rec ln_st' (t:st_term) (i:int)
     | Tm_Rewrite { t1; t2 } ->
       ln' t1 i &&
       ln' t2 i
-
-    | Tm_Rename { pairs } ->
-      ln_terms' pairs i
 
     | Tm_Admit { typ; post } ->
       ln' typ i &&
@@ -418,6 +417,8 @@ let subst_proof_hint (ht:proof_hint_type) (ss:subst)
     | ASSERT { p } -> ASSERT { p=subst_term p ss }
     | UNFOLD { names; p } -> UNFOLD {names; p=subst_term p ss}
     | FOLD { names; p } -> FOLD { names; p=subst_term p ss }
+    | RENAME { pairs; goal } -> RENAME { pairs=subst_term_pairs pairs ss;
+                                         goal=subst_term_opt goal ss }
 
 let open_term_pairs' (t:list (term * term)) (v:term) (i:index) =
   subst_term_pairs t [DT i v]
@@ -503,9 +504,6 @@ let rec subst_st_term (t:st_term) (ss:subst)
     | Tm_Rewrite { t1; t2 } ->
       Tm_Rewrite { t1 = subst_term t1 ss;
                    t2 = subst_term t2 ss }
-
-    | Tm_Rename { pairs } ->
-      Tm_Rename { pairs = subst_term_pairs pairs ss }
 
     | Tm_Admit { ctag; u; typ; post } ->
       Tm_Admit { ctag;

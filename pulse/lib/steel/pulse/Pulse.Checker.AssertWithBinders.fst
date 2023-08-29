@@ -147,6 +147,9 @@ let check
   let Tm_ProofHintWithBinders { hint_type; binders=bs; t=body } = st.term in
 
   match hint_type with
+  | RENAME _ ->
+    T.fail "Renaming not yet handled"
+    
   | ASSERT { p = v } ->
     let bs = infer_binder_types g bs v in
     let (| uvs, v_opened, body_opened |) = open_binders g bs (mk_env (fstar_env g)) v body in

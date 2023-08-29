@@ -130,6 +130,9 @@ let open_proof_hint_ln (t:proof_hint_type) (x:term) (i:index)
     | FOLD { p }
     | UNFOLD { p } ->
       open_term_ln' p x i
+    | RENAME { pairs; goal } ->
+      open_term_ln_pairs pairs x i;
+      open_term_ln_opt' goal x i
 
 let rec open_st_term_ln' (e:st_term)
                          (x:term)
@@ -198,9 +201,6 @@ let rec open_st_term_ln' (e:st_term)
     | Tm_Rewrite { t1; t2 } ->
       open_term_ln' t1 x i;
       open_term_ln' t2 x i
-
-    | Tm_Rename { pairs } ->
-      open_term_ln_pairs pairs x i
 
     | Tm_WithLocal { binder; initializer; body } ->
       open_term_ln' binder.binder_ty x i;
@@ -353,6 +353,9 @@ let ln_weakening_proof_hint (t:proof_hint_type) (i j:int)
     | FOLD { p }
     | UNFOLD { p } ->
       ln_weakening p i j 
+    | RENAME { pairs; goal } ->
+      ln_weakening_pairs pairs i j;
+      ln_weakening_opt goal i j
 
 let rec ln_weakening_st (t:st_term) (i j:int)
   : Lemma
@@ -415,9 +418,6 @@ let rec ln_weakening_st (t:st_term) (i j:int)
     | Tm_Rewrite { t1; t2 } ->
       ln_weakening t1 i j;
       ln_weakening t2 i j
-
-    | Tm_Rename { pairs } ->
-      ln_weakening_pairs pairs i j
 
     | Tm_WithLocal { initializer; body } ->
       ln_weakening initializer i j;
@@ -539,6 +539,9 @@ let open_proof_hint_ln_inv (ht:proof_hint_type) (x:term { ln x }) (i:index)
     | FOLD { p }
     | UNFOLD { p } ->
       open_term_ln_inv' p x i
+    | RENAME { pairs; goal } ->
+      open_term_ln_inv_pairs pairs x i;
+      open_term_ln_inv_opt' goal x i
 
 #push-options "--z3rlimit_factor 2 --fuel 2 --ifuel 2"
 let rec open_term_ln_inv_st' (t:st_term)
@@ -604,9 +607,6 @@ let rec open_term_ln_inv_st' (t:st_term)
     | Tm_Rewrite { t1; t2 } ->
       open_term_ln_inv' t1 x i;
       open_term_ln_inv' t2 x i
-
-    | Tm_Rename { pairs } ->
-      open_term_ln_inv_pairs pairs x i
 
     | Tm_WithLocal { binder; initializer; body } ->
       open_term_ln_inv' binder.binder_ty x i;
@@ -727,6 +727,9 @@ let close_proof_hint_ln (ht:proof_hint_type) (v:var) (i:index)
     | FOLD { p }
     | UNFOLD { p } ->
       close_term_ln' p v i
+    | RENAME { pairs; goal } ->
+      close_term_ln_pairs pairs v i;
+      close_term_ln_opt' goal v i
 
 let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
   : Lemma
@@ -789,9 +792,6 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
     | Tm_Rewrite { t1; t2 } ->
       close_term_ln' t1 x i;
       close_term_ln' t2 x i
-
-    | Tm_Rename { pairs } ->
-      close_term_ln_pairs pairs x i
       
     | Tm_WithLocal { binder; initializer; body } ->
       close_term_ln' binder.binder_ty x i;

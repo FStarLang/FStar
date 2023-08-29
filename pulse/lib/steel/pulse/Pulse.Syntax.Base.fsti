@@ -148,6 +148,24 @@ let ctag_of_comp_st (c:comp_st) : ctag =
   | C_STAtomic _ _ -> STT_Atomic
   | C_STGhost _ _ -> STT_Ghost
 
+noeq
+type proof_hint_type =
+  | ASSERT {
+      p:vprop
+    }
+  | FOLD { 
+      names:option (list string);
+      p:vprop;
+    }
+  | UNFOLD {
+      names:option (list string);
+      p:vprop
+    }
+  | RENAME { //rename e as e' [in p]
+      pairs:list (term & term);
+      goal: option term
+    }
+
 (* terms with STT types *)
 [@@ no_auto_projectors]
 noeq
@@ -222,16 +240,13 @@ type st_term' =
       t1:term;
       t2:term;
     } 
-  | Tm_Rename {
-      pairs:list (term & term);
-    }
   | Tm_Admit {
       ctag:ctag;
       u:universe;
       typ:term;
       post:option term;
     }
-  | Tm_ProofHintWithBinders { // assert (R.pts_to x ?p ?v) in body
+  | Tm_ProofHintWithBinders {
       hint_type:proof_hint_type;
       binders:list binder;
       t:st_term
@@ -244,18 +259,6 @@ and st_term = {
 
 and branch = pattern & st_term
 
-and proof_hint_type =
-  | ASSERT {
-      p:vprop
-    }
-  | FOLD { 
-      names:option (list string);
-      p:vprop;
-    }
-  | UNFOLD {
-      names:option (list string);
-      p:vprop
-    }
 
 let null_binder (t:term) : binder =
   {binder_ty=t;binder_ppname=ppname_default}

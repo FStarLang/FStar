@@ -129,6 +129,20 @@ and eq_sub_pat (pb1 pb2 : pattern & bool) : b:bool{b <==> pb1 == pb2} =
   let (p2, b2) = pb2 in
   eq_pattern p1 p2 && b1 = b2
 
+let eq_hint_type (ht1 ht2:proof_hint_type)
+  : b:bool { b <==> (ht1 == ht2) }
+  = match ht1, ht2 with
+    | ASSERT { p=p1 }, ASSERT { p=p2 } ->
+      eq_tm p1 p2
+    | FOLD { names=ns1; p=p1}, FOLD { names=ns2; p=p2 }
+    | UNFOLD { names=ns1; p=p1}, UNFOLD { names=ns2; p=p2 } ->
+      eq_opt (eq_list (fun n1 n2 -> n1 = n2)) ns1 ns2 &&
+      eq_tm p1 p2
+    | RENAME { pairs=ps1; goal=p1 }, RENAME { pairs=ps2; goal=p2 } ->
+      eq_list (fun (x1, y1) (x2, y2) -> eq_tm x1 x2 && eq_tm y1 y2) ps1 ps2 &&
+      eq_opt eq_tm p1 p2
+    | _ -> false
+
 let rec eq_st_term (t1 t2:st_term) 
   : b:bool { b <==> (t1 == t2) }
   = match t1.term, t2.term with
@@ -214,10 +228,6 @@ let rec eq_st_term (t1 t2:st_term)
       eq_tm l1 l2 &&
       eq_tm r1 r2
 
-    | Tm_Rename { pairs=p1 },
-      Tm_Rename { pairs=p2 } ->
-      eq_list_dec t1 t2 (fun (x1, y1) (x2, y2) -> eq_tm x1 x2 && eq_tm y1 y2) p1 p2
-
     | Tm_Admit { ctag=c1; u=u1; typ=t1; post=post1 }, 
       Tm_Admit { ctag=c2; u=u2; typ=t2; post=post2 } ->
       c1 = c2 &&
@@ -239,13 +249,3 @@ and eq_branch (b1 b2 : pattern & st_term)
     let (p2, e2) = b2 in
     eq_pattern p1 p2 && eq_st_term e1 e2
 
-and eq_hint_type (ht1 ht2:proof_hint_type)
-  : b:bool { b <==> (ht1 == ht2) }
-  = match ht1, ht2 with
-    | ASSERT { p=p1 }, ASSERT { p=p2 } ->
-      eq_tm p1 p2
-    | FOLD { names=ns1; p=p1}, FOLD { names=ns2; p=p2 }
-    | UNFOLD { names=ns1; p=p1}, UNFOLD { names=ns2; p=p2 } ->
-      eq_opt (eq_list (fun n1 n2 -> n1 = n2)) ns1 ns2 &&
-      eq_tm p1 p2
-    | _ -> false
