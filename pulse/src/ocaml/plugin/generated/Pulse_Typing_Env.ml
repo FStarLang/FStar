@@ -917,7 +917,7 @@ let fail :
                            (FStar_Range.mk_range "Pulse.Typing.Env.fst"
                               (Prims.of_int (353)) (Prims.of_int (4))
                               (Prims.of_int (356)) (Prims.of_int (31)))))
-                     (if Pulse_RuntimeUtils.pulse_option_set "env_on_err"
+                     (if Pulse_RuntimeUtils.is_pulse_option_set "env_on_err"
                       then
                         Obj.magic
                           (Obj.repr

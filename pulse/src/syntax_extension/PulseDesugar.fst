@@ -913,15 +913,14 @@ and transform_stmt (m:menv) (p:Sugar.stmt)
 let desugar_decl (env:env_t)
                  (p:Sugar.decl)
   : err SW.st_term 
-  = let opts = FStar.Options.ext_options "pulse" in
-    let? env, bs, bvs = desugar_binders env p.binders in
+  = let? env, bs, bvs = desugar_binders env p.binders in
     let fvs = free_vars_comp env p.ascription in
     let? env, bs', bvs' = idents_as_binders env fvs in
     let bs = bs@bs' in
     let bvs = bvs@bvs' in
     let? comp = desugar_computation_type env p.ascription in
     let? body = 
-      if L.mem "rvalues" opts
+      if FStar.Options.ext_getv "pulse:rvalues" <> ""
       then transform_stmt { map=[]; env=env} p.body
       else return p.body
     in

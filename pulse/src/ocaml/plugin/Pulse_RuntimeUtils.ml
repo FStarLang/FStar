@@ -22,6 +22,7 @@ let unfold_def (g:FStar_Reflection_Types.env) (head:string) (names:string list) 
 let env_set_range (e:FStar_Reflection_Types.env) (r:FStar_Range.range) =
    FStar_TypeChecker_Env.set_range e r
 
-let pulse_options (_:unit) = FStar_Options.ext_getns "pulse"
-let pulse_option_set (x:string) : bool =
-    FStar_Compiler_List.existsb (fun (y, _) -> y=x) (pulse_options ())
+let is_pulse_option_set (x:string) : bool =
+  let key = ("pulse:"^x) in
+  let value = FStar_Options.ext_getv key in
+  value <> ""

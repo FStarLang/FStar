@@ -143,5 +143,9 @@ let (parse_pulse :
                   FStar_Compiler_Range_Type.mk_range file_name p p in
                 let uu___ = Pulse_Parser.parse_decl content range in
                 match uu___ with
-                | FStar_Pervasives.Inl d -> PulseDesugar.desugar_decl env1 d
+                | FStar_Pervasives.Inl d ->
+                    let uu___1 =
+                      let uu___2 = PulseDesugar.desugar_decl env1 d in
+                      uu___2 Prims.int_zero in
+                    FStar_Pervasives_Native.fst uu___1
                 | FStar_Pervasives.Inr e -> FStar_Pervasives.Inr e
