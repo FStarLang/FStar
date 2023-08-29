@@ -18,6 +18,7 @@ let tm_while invariant condition condition_var body = Tm_While { invariant; cond
 let tm_par pre1 body1 post1 pre2 body2 post2 = Tm_Par { pre1; body1; post1; pre2; body2; post2 }
 let tm_with_local binder initializer body = Tm_WithLocal { binder; initializer; body }
 let tm_rewrite t1 t2 = Tm_Rewrite { t1; t2 }
+let tm_rename pairs = Tm_Rename { pairs }
 let tm_admit ctag u typ post = Tm_Admit { ctag; u; typ; post }
 let with_range t r = { term = t; range = r}
 let tm_assert_with_binders bs v t = Tm_ProofHintWithBinders { hint_type=ASSERT; binders=bs; v; t }

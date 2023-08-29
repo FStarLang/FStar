@@ -198,6 +198,9 @@ and stmt'__Parallel__payload =
 and stmt'__Rewrite__payload = {
   p11: vprop ;
   p21: vprop }
+and stmt'__Rename__payload =
+  {
+  pairs: (FStar_Parser_AST.term * FStar_Parser_AST.term) Prims.list }
 and stmt'__ProofHintWithBinders__payload =
   {
   hint_type: hint_type ;
@@ -217,6 +220,7 @@ and stmt' =
   | Sequence of stmt'__Sequence__payload 
   | Parallel of stmt'__Parallel__payload 
   | Rewrite of stmt'__Rewrite__payload 
+  | Rename of stmt'__Rename__payload 
   | ProofHintWithBinders of stmt'__ProofHintWithBinders__payload 
 and stmt = {
   s: stmt' ;
@@ -356,6 +360,10 @@ let (__proj__Mkstmt'__Rewrite__payload__item__p1 :
 let (__proj__Mkstmt'__Rewrite__payload__item__p2 :
   stmt'__Rewrite__payload -> vprop) =
   fun projectee -> match projectee with | { p11 = p1; p21 = p2;_} -> p2
+let (__proj__Mkstmt'__Rename__payload__item__pairs :
+  stmt'__Rename__payload ->
+    (FStar_Parser_AST.term * FStar_Parser_AST.term) Prims.list)
+  = fun projectee -> match projectee with | { pairs;_} -> pairs
 let (__proj__Mkstmt'__ProofHintWithBinders__payload__item__hint_type :
   stmt'__ProofHintWithBinders__payload -> hint_type) =
   fun projectee ->
@@ -430,6 +438,10 @@ let (uu___is_Rewrite : stmt' -> Prims.bool) =
   fun projectee -> match projectee with | Rewrite _0 -> true | uu___ -> false
 let (__proj__Rewrite__item___0 : stmt' -> stmt'__Rewrite__payload) =
   fun projectee -> match projectee with | Rewrite _0 -> _0
+let (uu___is_Rename : stmt' -> Prims.bool) =
+  fun projectee -> match projectee with | Rename _0 -> true | uu___ -> false
+let (__proj__Rename__item___0 : stmt' -> stmt'__Rename__payload) =
+  fun projectee -> match projectee with | Rename _0 -> _0
 let (uu___is_ProofHintWithBinders : stmt' -> Prims.bool) =
   fun projectee ->
     match projectee with | ProofHintWithBinders _0 -> true | uu___ -> false
@@ -562,6 +574,9 @@ let (mk_par : vprop -> vprop -> vprop -> vprop -> stmt -> stmt -> stmt') =
         fun q2 -> fun b1 -> fun b2 -> Parallel { p1; p2; q1; q2; b1; b2 }
 let (mk_rewrite : vprop -> vprop -> stmt') =
   fun p1 -> fun p2 -> Rewrite { p11 = p1; p21 = p2 }
+let (mk_rename :
+  (FStar_Parser_AST.term * FStar_Parser_AST.term) Prims.list -> stmt') =
+  fun pairs -> Rename { pairs }
 let (mk_proof_hint_with_binders : hint_type -> binders -> vprop -> stmt') =
   fun ht ->
     fun bs ->

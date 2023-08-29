@@ -154,6 +154,9 @@ let tm_par p1 p2 q1 q2 b1 b2 r : st_term =
 let tm_rewrite p1 p2 r : st_term =
   PSB.(with_range (tm_rewrite p1 p2) r)
 
+let tm_rename ps r : st_term = failwith ""
+(*  PSB.(with_range (tm_rename ps) r) *)
+
 let tm_admit r : st_term =
   PSB.(with_range (tm_admit STT u_zero (tm_unknown r) None) r)
   

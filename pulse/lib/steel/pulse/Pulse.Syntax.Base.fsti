@@ -227,6 +227,9 @@ type st_term' =
       t1:term;
       t2:term;
     } 
+  | Tm_Rename {
+      pairs:list (term & term);
+    }
   | Tm_Admit {
       ctag:ctag;
       u:universe;

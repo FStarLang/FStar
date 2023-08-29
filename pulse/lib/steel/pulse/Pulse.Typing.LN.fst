@@ -105,6 +105,22 @@ let rec open_term_ln_list' (t:list term) (x:term) (i:index)
       open_term_ln' hd x i;
       open_term_ln_list' tl x i      
 
+let open_term_pairs' (t:list (term & term)) (v:term) (i:index)
+  : Tot (list (term & term))
+  = subst_term_pairs t [ DT i v ]
+
+let rec open_term_ln_pairs (t:list (term & term)) (x:term) (i:index)
+  : Lemma
+    (requires ln_terms' (open_term_pairs' t x i) (i - 1))
+    (ensures ln_terms' t i)
+    (decreases t)
+  = match t with
+    | [] -> ()
+    | (l, r)::tl ->
+      open_term_ln' l x i;
+      open_term_ln' r x i;
+      open_term_ln_pairs tl x i
+
 let rec open_st_term_ln' (e:st_term)
                          (x:term)
                          (i:index)
@@ -172,6 +188,9 @@ let rec open_st_term_ln' (e:st_term)
     | Tm_Rewrite { t1; t2 } ->
       open_term_ln' t1 x i;
       open_term_ln' t2 x i
+
+    | Tm_Rename { pairs } ->
+      open_term_ln_pairs pairs x i
 
     | Tm_WithLocal { binder; initializer; body } ->
       open_term_ln' binder.binder_ty x i;
@@ -303,6 +322,18 @@ let rec ln_weakening_list (t:list term) (i j:int)
       ln_weakening hd i j;
       ln_weakening_list tl i j
 
+let rec ln_weakening_pairs (t:list (term & term)) (i j:int)
+  : Lemma
+    (requires ln_terms' t i /\ i <= j)
+    (ensures ln_terms' t j)
+    (decreases t)
+  = match t with
+    | [] -> ()
+    | (l, r)::tl ->
+      ln_weakening l i j;
+      ln_weakening r i j;
+      ln_weakening_pairs tl i j
+
 let rec ln_weakening_st (t:st_term) (i j:int)
   : Lemma
     (requires ln_st' t i /\ i <= j)
@@ -364,6 +395,9 @@ let rec ln_weakening_st (t:st_term) (i j:int)
     | Tm_Rewrite { t1; t2 } ->
       ln_weakening t1 i j;
       ln_weakening t2 i j
+
+    | Tm_Rename { pairs } ->
+      ln_weakening_pairs pairs i j
 
     | Tm_WithLocal { initializer; body } ->
       ln_weakening initializer i j;
@@ -462,6 +496,20 @@ let rec open_term_ln_inv_list' (t:list term)
       open_term_ln_inv' hd x i;
       open_term_ln_inv_list' tl x i      
 
+let rec open_term_ln_inv_pairs (t:list (term & term))
+                               (x:term { ln x })
+                               (i:index)
+  : Lemma
+    (requires ln_terms' t i)
+    (ensures ln_terms' (open_term_pairs' t x i) (i - 1))
+    (decreases t)
+  = match t with
+    | [] -> ()
+    | (l, r)::tl ->
+      open_term_ln_inv' l x i;
+      open_term_ln_inv' r x i;
+      open_term_ln_inv_pairs tl x i
+
 #push-options "--z3rlimit_factor 2 --fuel 2 --ifuel 2"
 let rec open_term_ln_inv_st' (t:st_term)
                              (x:term { ln x })
@@ -526,6 +574,9 @@ let rec open_term_ln_inv_st' (t:st_term)
     | Tm_Rewrite { t1; t2 } ->
       open_term_ln_inv' t1 x i;
       open_term_ln_inv' t2 x i
+
+    | Tm_Rename { pairs } ->
+      open_term_ln_inv_pairs pairs x i
 
     | Tm_WithLocal { binder; initializer; body } ->
       open_term_ln_inv' binder.binder_ty x i;
@@ -621,6 +672,22 @@ let rec close_term_ln_list' (t:list term) (x:var) (i:index)
       close_term_ln' hd x i;
       close_term_ln_list' tl x i
 
+let close_term_pairs' (t:list (term & term)) (v:var) (i:index)
+  : Tot (list (term & term))
+  = subst_term_pairs t [ ND v i ]
+
+let rec close_term_ln_pairs (t:list (term & term)) (x:var) (i:index)
+  : Lemma
+    (requires ln_terms' t (i - 1))
+    (ensures ln_terms' (close_term_pairs' t x i) i)
+    (decreases t)
+  = match t with
+    | [] -> ()
+    | (l, r)::tl ->
+      close_term_ln' l x i;
+      close_term_ln' r x i;
+      close_term_ln_pairs tl x i
+
 let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
   : Lemma
     (requires ln_st' t (i - 1))
@@ -683,6 +750,9 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
       close_term_ln' t1 x i;
       close_term_ln' t2 x i
 
+    | Tm_Rename { pairs } ->
+      close_term_ln_pairs pairs x i
+      
     | Tm_WithLocal { binder; initializer; body } ->
       close_term_ln' binder.binder_ty x i;
       close_term_ln' initializer x i;

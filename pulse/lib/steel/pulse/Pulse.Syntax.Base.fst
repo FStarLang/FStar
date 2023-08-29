@@ -214,6 +214,10 @@ let rec eq_st_term (t1 t2:st_term)
       eq_tm l1 l2 &&
       eq_tm r1 r2
 
+    | Tm_Rename { pairs=p1 },
+      Tm_Rename { pairs=p2 } ->
+      eq_list_dec t1 t2 (fun (x1, y1) (x2, y2) -> eq_tm x1 x2 && eq_tm y1 y2) p1 p2
+
     | Tm_Admit { ctag=c1; u=u1; typ=t1; post=post1 }, 
       Tm_Admit { ctag=c2; u=u2; typ=t2; post=post2 } ->
       c1 = c2 &&

@@ -56,6 +56,11 @@ let rec freevars_list (t:list term) : Set.set var =
   | [] -> Set.empty
   | hd::tl -> freevars hd `Set.union` freevars_list tl
 
+let rec freevars_pairs (pairs:list (term & term)) : Set.set var =
+  match pairs with
+  | [] -> Set.empty
+  | (t1, t2)::tl -> Set.union (freevars t1) (freevars t2) `Set.union` freevars_pairs tl
+
 let rec freevars_st (t:st_term)
   : Set.set var
   = match t.term with
@@ -113,12 +118,16 @@ let rec freevars_st (t:st_term)
     | Tm_Rewrite { t1; t2 } ->
       Set.union (freevars t1) (freevars t2)
 
+    | Tm_Rename { pairs } ->
+      freevars_pairs pairs
+
     | Tm_Admit { typ; post } ->
       Set.union (freevars typ)
                 (freevars_term_opt post)
 
     | Tm_ProofHintWithBinders { binders; v; t } ->
       Set.union (freevars v) (freevars_st t)
+
 and freevars_branches (t:list (pattern & st_term)) : Set.set var =
   match t with
   | [] -> Set.empty
@@ -172,6 +181,11 @@ let rec ln_list' (t:list term) (i:int) : bool =
   match t with
   | [] -> true
   | hd::tl -> ln' hd i && ln_list' tl i
+
+let rec ln_terms' (t:list (term & term)) (i:int) : bool =
+  match t with
+  | [] -> true
+  | (t1, t2)::tl -> ln' t1 i && ln' t2 i && ln_terms' tl i
 
 let rec ln_st' (t:st_term) (i:int)
   : Tot bool (decreases t)
@@ -238,6 +252,9 @@ let rec ln_st' (t:st_term) (i:int)
     | Tm_Rewrite { t1; t2 } ->
       ln' t1 i &&
       ln' t2 i
+
+    | Tm_Rename { pairs } ->
+      ln_terms' pairs i
 
     | Tm_Admit { typ; post } ->
       ln' typ i &&
@@ -377,6 +394,12 @@ let subst_binder b ss =
 let open_binder b v i = 
   {b with binder_ty=open_term' b.binder_ty v i}
 
+let rec subst_term_pairs (t:list (term & term)) (ss:subst)
+  : Tot (list (term & term))
+  = match t with
+    | [] -> []
+    | (t1, t2)::tl -> (subst_term t1 ss, subst_term t2 ss) :: subst_term_pairs tl ss 
+
 let rec subst_st_term (t:st_term) (ss:subst)
   : Tot st_term (decreases t)
   = let t' =
@@ -449,6 +472,9 @@ let rec subst_st_term (t:st_term) (ss:subst)
       Tm_Rewrite { t1 = subst_term t1 ss;
                    t2 = subst_term t2 ss }
 
+    | Tm_Rename { pairs } ->
+      Tm_Rename { pairs = subst_term_pairs pairs ss }
+
     | Tm_Admit { ctag; u; typ; post } ->
       Tm_Admit { ctag;
                  u; 
@@ -483,6 +509,7 @@ and subst_branch (ss:subst) (b : pattern & st_term) : Tot (pattern & st_term) (d
   let ss = shift_subst_n nn ss in
   p, subst_st_term e ss
 
+
 let open_st_term' (t:st_term) (v:term) (i:index) : st_term =
   subst_st_term t [ DT i v ]
 
@@ -514,7 +541,7 @@ let close_comp' (c:comp) (v:var) (i:index) : comp =
 let close_term_opt' (t:option term) (v:var) (i:index) : option term =
   subst_term_opt t [ ND v i ]
 
-let  close_term_list' (t:list term) (v:var) (i:index) : list term =
+let close_term_list' (t:list term) (v:var) (i:index) : list term =
   subst_term_list t [ ND v i ]
 
 let close_binder b v i =

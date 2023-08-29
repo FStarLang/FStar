@@ -87,6 +87,22 @@ let rec freevars_close_term_list' (t:list term) (x:var) (i:index)
       freevars_close_term' hd x i;
       freevars_close_term_list' tl x i
 
+let close_term_pairs (l:list (term & term)) (x:var) (i:index) =
+    subst_term_pairs l [ ND x i ]
+
+let rec freevars_close_term_pairs' (t:list (term & term)) (x:var) (i:index)
+  : Lemma
+    (ensures (freevars_pairs (close_term_pairs t x i) `Set.equal`
+             (freevars_pairs t `set_minus` x)))
+    (decreases t)
+  = match t with
+    | [] -> ()
+    | (u, v)::tl ->
+      freevars_close_term' u x i;
+      freevars_close_term' v x i;
+      freevars_close_term_pairs' tl x i
+
+
 // Needs a bit more rlimit sometimes. Also splitting is too expensive
 #push-options "--z3rlimit 20 --split_queries no"
 let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
@@ -150,6 +166,9 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
     | Tm_Rewrite { t1; t2 } ->
       freevars_close_term' t1 x i;
       freevars_close_term' t2 x i
+
+    | Tm_Rename { pairs } ->
+      freevars_close_term_pairs' pairs x i
 
     | Tm_WithLocal { binder; initializer; body } ->
       freevars_close_term' binder.binder_ty x i;

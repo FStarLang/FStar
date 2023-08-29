@@ -73,6 +73,22 @@ let rec close_open_inverse_list' (t:list term)
       close_open_inverse' hd x i;
       close_open_inverse_list' tl x i
 
+let open_term_pairs' (t:list (term * term)) (v:term) (i:index) =
+  subst_term_pairs t [DT i v]
+
+let close_term_pairs' (t:list (term * term)) (x:var) (i:index) =
+  subst_term_pairs t [ND x i]
+
+let rec close_open_inverse_pairs' (t:list (term * term))
+                                  (x:var { ~(x `Set.mem` freevars_pairs t) })
+                                  (i:index)
+  : Lemma (ensures close_term_pairs' (open_term_pairs' t (U.term_of_no_name_var x) i) x i == t)
+  = match t with
+    | [] -> ()
+    | (hd1, hd2)::tl ->
+      close_open_inverse' hd1 x i;
+      close_open_inverse' hd2 x i;
+      close_open_inverse_pairs' tl x i
 
 let rec close_open_inverse_st'  (t:st_term) 
                                 (x:var { ~(x `Set.mem` freevars_st t) } )
@@ -147,6 +163,9 @@ let rec close_open_inverse_st'  (t:st_term)
       close_open_inverse' t1 x i;
       close_open_inverse' t2 x i
 
+    | Tm_Rename { pairs } ->
+      close_open_inverse_pairs' pairs x i
+      
     | Tm_Admit { typ; post } ->
       close_open_inverse' typ x i;
       close_open_inverse_opt' post x (i + 1)

@@ -122,6 +122,10 @@ type stmt' =
       p1:vprop;
       p2:vprop;
     }
+    
+  | Rename {
+      pairs: list (A.term & A.term)
+    }
 
   | ProofHintWithBinders {
       hint_type:hint_type;
@@ -170,4 +174,5 @@ let mk_decl id binders ascription body range = { id; binders; ascription; body; 
 let mk_open lid = Open lid
 let mk_par p1 p2 q1 q2 b1 b2 = Parallel { p1; p2; q1; q2; b1; b2 }
 let mk_rewrite p1 p2 = Rewrite { p1; p2 }
+let mk_rename pairs = Rename { pairs }
 let mk_proof_hint_with_binders ht bs p =  ProofHintWithBinders { hint_type=ht; binders=bs; vprop=p }

@@ -232,8 +232,15 @@ let rec st_term_to_string' (level:string) (t:st_term)
 
     | Tm_Rewrite { t1; t2 } ->
        sprintf "rewrite %s %s"
-	       (term_to_string t1)
-               (term_to_string t2)
+        (term_to_string t1)
+        (term_to_string t2)
+
+    | Tm_Rename { pairs } ->
+      sprintf "rename %s"
+        (String.concat ", "
+          (T.map
+            (fun (x, y) -> sprintf "%s as %s" (term_to_string x) (term_to_string y))
+            pairs))
 
     | Tm_WithLocal { binder; initializer; body } ->
       sprintf "let mut %s = %s;\n%s%s"
@@ -302,6 +309,7 @@ let tag_of_st_term (t:st_term) =
   | Tm_Par _ -> "Tm_Par"
   | Tm_WithLocal _ -> "Tm_WithLocal"
   | Tm_Rewrite _ -> "Tm_Rewrite"
+  | Tm_Rename _ -> "Tm_Rename"
   | Tm_Admit _ -> "Tm_Admit"
   | Tm_ProofHintWithBinders _ -> "Tm_ProofHintWithBinders"
 
@@ -327,6 +335,7 @@ let rec print_st_head (t:st_term)
   | Tm_Admit _ -> "Admit"
   | Tm_Par _ -> "Par"
   | Tm_Rewrite _ -> "Rewrite"
+  | Tm_Rename _ -> "Rename"
   | Tm_WithLocal _ -> "WithLocal"
   | Tm_STApp { head = p } -> print_head p
   | Tm_IntroPure _ -> "IntroPure"
@@ -353,6 +362,7 @@ let rec print_skel (t:st_term) =
   | Tm_Admit _ -> "Admit"
   | Tm_Par _ -> "Par"
   | Tm_Rewrite _ -> "Rewrite"
+  | Tm_Rename _ -> "Rename"
   | Tm_WithLocal _ -> "WithLocal"
   | Tm_STApp { head = p } -> print_head p
   | Tm_IntroPure _ -> "IntroPure"

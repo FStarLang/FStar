@@ -453,6 +453,17 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
       let? p2 = desugar_vprop env p2 in
       return (SW.tm_rewrite p1 p2 s.range)
 
+    | Rename { pairs } ->
+      let? pairs =
+        map_err
+          (fun (x, y) -> 
+            let? x = desugar_term env x in
+            let? y = desugar_term env y in
+            return (x, y))
+          pairs
+      in
+      return (SW.tm_rename pairs s.range)
+      
     | LetBinding _ -> 
       fail "Terminal let binding" s.range
 
@@ -899,6 +910,7 @@ let rec transform_stmt_with_reads (m:menv) (p:Sugar.stmt)
     
     | Introduce _ 
     | Rewrite _
+    | Rename _
     | ProofHintWithBinders _ ->
       //This is a proof step; no implicit dereference
       return (p, [], m)

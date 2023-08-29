@@ -975,6 +975,23 @@ let rec (desugar_stmt :
                       PulseSyntaxWrapper.tm_rewrite p11 p21
                         s.PulseSugar.range1 in
                     return uu___2))
+      | PulseSugar.Rename { PulseSugar.pairs = pairs;_} ->
+          let uu___ =
+            map_err
+              (fun uu___1 ->
+                 match uu___1 with
+                 | (x, y) ->
+                     let uu___2 = desugar_term env x in
+                     op_let_Question uu___2
+                       (fun x1 ->
+                          let uu___3 = desugar_term env y in
+                          op_let_Question uu___3 (fun y1 -> return (x1, y1))))
+              pairs in
+          op_let_Question uu___
+            (fun pairs1 ->
+               let uu___1 =
+                 PulseSyntaxWrapper.tm_rename pairs1 s.PulseSugar.range1 in
+               return uu___1)
       | PulseSugar.LetBinding uu___ ->
           fail "Terminal let binding" s.PulseSugar.range1
 and (desugar_branch :
@@ -2065,6 +2082,7 @@ let rec (transform_stmt_with_reads :
                     return (p3, [], m)))
       | PulseSugar.Introduce uu___ -> return (p, [], m)
       | PulseSugar.Rewrite uu___ -> return (p, [], m)
+      | PulseSugar.Rename uu___ -> return (p, [], m)
       | PulseSugar.ProofHintWithBinders uu___ -> return (p, [], m)
 and (transform_stmt : menv -> PulseSugar.stmt -> PulseSugar.stmt err) =
   fun m ->
