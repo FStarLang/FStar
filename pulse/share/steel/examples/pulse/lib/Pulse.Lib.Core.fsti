@@ -69,6 +69,8 @@ val iname : eqtype
 let inames = erased (FStar.Set.set iname)
 val emp_inames : inames
 
+let (/!) : inames -> inames -> Type0 = fun is1 is2 -> Set.disjoint is1 is2
+
 (* stt a pre post: The type of a pulse computation
    that when run in a state satisfying `pre`
    may loop forever
