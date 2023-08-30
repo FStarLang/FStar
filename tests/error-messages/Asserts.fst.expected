@@ -1,11 +1,22 @@
 >> Got issues: [
-Asserts.fst(6,9-6,17): (Error 19) assertion failed; The SMT solver could not prove the query. Use --query_stats for more details.
+* Error 19 at Asserts.fst(6,9-6,17):
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more details.
+
 >>]
 >> Got issues: [
-Asserts.fst(11,2-11,8): (Error 19) assertion failed; The SMT solver could not prove the query. Use --query_stats for more details. (see also Asserts.fst(11,9-11,17))
+* Error 19 at Asserts.fst(11,2-11,8):
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more details.
+  - See also Asserts.fst(11,9-11,17)
+
 >>]
 >> Got issues: [
-Asserts.fst(16,2-16,8): (Error 19) assertion failed; The SMT solver could not prove the query. Use --query_stats for more details. (see also Asserts.fst(16,9-16,14))
+* Error 19 at Asserts.fst(16,2-16,8):
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more details.
+  - See also Asserts.fst(16,9-16,14)
+
 >>]
 Verified module: Asserts
 All verification conditions discharged successfully

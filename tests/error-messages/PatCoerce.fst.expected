@@ -1,6 +1,10 @@
 >> Got issues: [
-PatCoerce.fst(25,4-25,8): (Error 114) Type of pattern (Prims.bool) does not match type of scrutinee (Type0)
+* Error 114 at PatCoerce.fst(25,4-25,8):
+  - Type of pattern (Prims.bool) does not match type of scrutinee (Type0)
+
 >>]
-PatCoerce.fst(20,4-20,7): (Warning 240) PatCoerce.bla is declared but no definition was found; add an 'assume' if this is intentional
+* Warning 240 at PatCoerce.fst(20,4-20,7):
+  - PatCoerce.bla is declared but no definition was found; add an 'assume' if this is intentional
+
 Verified module: PatCoerce
 All verification conditions discharged successfully
