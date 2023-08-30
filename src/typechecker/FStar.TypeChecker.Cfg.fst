@@ -1215,10 +1215,10 @@ let built_in_primitive_steps : prim_step_set =
         [
         (mk_lid "message_of_issue", 1, 0,
          unary_op arg_as_issue
-                  (fun _r issue -> U.exp_string (Errors.format_issue issue)),
+                  (fun _r issue -> EMB.(embed_simple (e_list e_document) Range.dummyRange issue.issue_msg)),
          NBETerm.unary_op
                   nbe_arg_as_issue
-                  (fun issue -> nbe_str (Errors.format_issue issue)));
+                  (fun issue -> FStar.TypeChecker.NBETerm.(embed (e_list e_document) bogus_cbs issue.issue_msg)));
         (mk_lid "level_of_issue", 1, 0,
          unary_op arg_as_issue
                   (fun _r issue -> U.exp_string (Errors.string_of_issue_level issue.issue_level)),
@@ -1249,7 +1249,14 @@ let built_in_primitive_steps : prim_step_set =
                   (fun issue -> FStar.TypeChecker.NBETerm.(embed (e_list e_string) bogus_cbs
                                                       issue.issue_ctx)));
 
-        (mk_lid "mk_issue", 5, 0, 
+        (mk_lid "render_issue", 1, 0,
+         unary_op arg_as_issue
+                  (fun _r issue -> U.exp_string (Errors.format_issue issue)),
+         NBETerm.unary_op
+                  nbe_arg_as_issue
+                  (fun issue -> nbe_str (Errors.format_issue issue)));
+
+        (mk_lid "mk_issue_doc", 5, 0,
           (fun psc univs cbs args -> 
             match args with
             | [(level, _); (msg, _); (range, _); (number, _); (context, _)] ->
@@ -1259,7 +1266,7 @@ let built_in_primitive_steps : prim_step_set =
                   try_unembed e x id_norm_cb
               in
               match try_unembed e_string level,
-                    try_unembed e_string msg, 
+                    try_unembed (e_list e_document) msg,
                     try_unembed (e_option e_range) range,
                     try_unembed (e_option e_int) number,
                     try_unembed (e_list e_string) context with
@@ -1267,7 +1274,7 @@ let built_in_primitive_steps : prim_step_set =
                 let issue = {issue_level = Errors.issue_level_of_string level;
                              issue_range = range;
                              issue_number = option_z_as_option_int number;
-                             issue_msg = Errors.mkmsg msg;
+                             issue_msg = msg;
                              issue_ctx = context} in
                 Some (embed_simple e_issue psc.psc_range issue)
               | _ -> None
@@ -1282,7 +1289,7 @@ let built_in_primitive_steps : prim_step_set =
                   unembed e bogus_cbs x
               in
               match try_unembed e_string level,
-                    try_unembed e_string msg, 
+                    try_unembed (e_list e_document) msg,
                     try_unembed (e_option e_range) range,
                     try_unembed (e_option e_int) number,
                     try_unembed (e_list e_string) context with

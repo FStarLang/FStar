@@ -28,13 +28,27 @@ let mk_issue_level (i:issue_level_string)
     | "Info" -> EInfo
     | "Warning" -> EWarning
 
+let render_issue (i:issue) : string = FStar_Errors.format_issue i
+
+let mk_issue_doc (i:issue_level_string)
+             (msg:FStar_Pprint.document list)
+             (range:FStar_Compiler_Range.range option)
+             (number:Z.t option)
+             (ctx:string list)
+  = { issue_level = mk_issue_level i;
+      issue_msg = msg;
+      issue_range = range;
+      issue_number = number;
+      issue_ctx = ctx }
+
+(* repeated... could be extracted *)
 let mk_issue (i:issue_level_string)
              (msg:string)
              (range:FStar_Compiler_Range.range option)
              (number:Z.t option)
              (ctx:string list)
   = { issue_level = mk_issue_level i;
-      issue_msg = FStar_Errors_Msg.mkmsg msg;
+      issue_msg = [FStar_Pprint.arbitrary_string msg];
       issue_range = range;
       issue_number = number;
       issue_ctx = ctx }
