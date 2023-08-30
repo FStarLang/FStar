@@ -2558,12 +2558,13 @@ let (set_vconfig : FStar_VConfig.vconfig -> unit) =
     set_option "z3rlimit" (Int (vcfg.FStar_VConfig.z3rlimit));
     set_option "z3rlimit_factor" (Int (vcfg.FStar_VConfig.z3rlimit_factor));
     set_option "z3seed" (Int (vcfg.FStar_VConfig.z3seed));
+    set_option "z3version" (String (vcfg.FStar_VConfig.z3version));
     set_option "trivial_pre_for_unannotated_effectful_fns"
       (Bool (vcfg.FStar_VConfig.trivial_pre_for_unannotated_effectful_fns));
-    (let uu___27 =
-       option_as (fun uu___28 -> String uu___28)
+    (let uu___28 =
+       option_as (fun uu___29 -> String uu___29)
          vcfg.FStar_VConfig.reuse_hint_for in
-     set_option "reuse_hint_for" uu___27)
+     set_option "reuse_hint_for" uu___28)
 let (parse_ext : Prims.string -> (Prims.string * Prims.string) Prims.list) =
   fun s ->
     let exts = FStar_Compiler_Util.split s ";" in
