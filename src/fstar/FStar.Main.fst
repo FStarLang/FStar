@@ -221,6 +221,7 @@ let lazy_chooser k i = match k with
     | FStar.Syntax.Syntax.Lazy_uvar             -> FStar.Syntax.Util.exp_string "((uvar))"
     | FStar.Syntax.Syntax.Lazy_universe_uvar    -> FStar.Syntax.Util.exp_string "((universe_uvar))"
     | FStar.Syntax.Syntax.Lazy_issue            -> FStar.Syntax.Util.exp_string "((issue))"
+    | FStar.Syntax.Syntax.Lazy_doc              -> FStar.Syntax.Util.exp_string "((document))"
     | FStar.Syntax.Syntax.Lazy_ident            -> FStar.Syntax.Util.exp_string "((ident))"
 
     | FStar.Syntax.Syntax.Lazy_embedding (_, t) -> Thunk.force t

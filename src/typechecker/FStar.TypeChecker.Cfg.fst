@@ -1290,18 +1290,31 @@ let built_in_primitive_steps : prim_step_set =
                 let issue = {issue_level = Errors.issue_level_of_string level;
                              issue_range = range;
                              issue_number = option_z_as_option_int number;
-                             issue_msg = Errors.mkmsg msg;
+                             issue_msg = msg;
                              issue_ctx = context} in
                 Some (NBETerm.embed e_issue bogus_cbs issue)
               | _ -> None
               end
             | _ -> None))
         ]
+    in
+    let doc_ops =
+        let mk_lid l = PC.p2l ["FStar"; "Stubs"; "Pprint"; l] in
+        (* FIXME: we only implement the absolute minimum. The rest of the operations
+        are availabe to plugins. *)
+        [
+        (mk_lid "arbitrary_string", 1, 0,
+         unary_op arg_as_string
+                  (fun r str ->
+                  embed_simple EMB.e_document r (FStar.Pprint.arbitrary_string str)),
+         NBETerm.unary_op NBETerm.arg_as_string
+                  (fun str -> NBETerm.embed NBETerm.e_document bogus_cbs (FStar.Pprint.arbitrary_string str)));
+        ]
 
     in
     let strong_steps =
       List.map (as_primitive_step true)
-               (basic_ops@bounded_arith_ops@[reveal_hide]@array_ops@issue_ops)
+               (basic_ops@bounded_arith_ops@[reveal_hide]@array_ops@issue_ops@doc_ops)
     in
     let weak_steps   = List.map (as_primitive_step false) weak_ops in
     prim_from_list <| (strong_steps @ weak_steps)
