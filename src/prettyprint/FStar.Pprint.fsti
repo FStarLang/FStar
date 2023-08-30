@@ -61,7 +61,7 @@ val fancystring: string -> int -> document
 
 (** [fancysubstring s ofs len apparent_length] is a document that consists of
     the portion of the string [s] delimited by the offset [ofs] and the length
-    [len]. This portion must contain a newline. The string may contain fancy
+    [len]. This portion must not contain a newline. The string may contain fancy
     characters. *)
 val fancysubstring : string -> int -> int -> int -> document
 

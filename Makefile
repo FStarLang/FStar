@@ -130,6 +130,7 @@ bench:
 output:
 	+$(Q)$(MAKE) -C tests/error-messages accept
 	+$(Q)$(MAKE) -C tests/ide/emacs accept
+	+$(Q)$(MAKE) -C tests/ide/lsp accept
 	+$(Q)$(MAKE) -C tests/bug-reports output-accept
 
 # This rule is meant to mimic what the docker based CI does, but it

@@ -529,6 +529,13 @@ let flush_stdout () = flush stdout
 
 let stdout_isatty () = Some (Unix.isatty Unix.stdout)
 
+(* NOTE: this is deciding whether or not to color by looking
+   at stdout_isatty(), which may be a wrong choice if
+   we're instead outputting to stderr. e.g.
+     fstar.exe Blah.fst 2>errlog
+   will colorize the errors in the file if stdout is not
+   also redirected.
+*)
 let colorize s colors =
   match colors with
   | (c1,c2) ->
@@ -546,6 +553,11 @@ let colorize_red s =
   | Some true -> format3 "%s%s%s" "\x1b[31;1m" s "\x1b[0m"
   | _ -> s
 
+let colorize_yellow s =
+  match stdout_isatty () with
+  | Some true -> format3 "%s%s%s" "\x1b[33;1m" s "\x1b[0m"
+  | _ -> s
+
 let colorize_cyan s =
   match stdout_isatty () with
   | Some true -> format3 "%s%s%s" "\x1b[36;1m" s "\x1b[0m"
@@ -554,6 +566,11 @@ let colorize_cyan s =
 let colorize_green s =
   match stdout_isatty () with
   | Some true -> format3 "%s%s%s" "\x1b[32;1m" s "\x1b[0m"
+  | _ -> s
+
+let colorize_magenta  s =
+  match stdout_isatty () with
+  | Some true -> format3 "%s%s%s" "\x1b[35;1m" s "\x1b[0m"
   | _ -> s
 
 let pr  = Printf.printf

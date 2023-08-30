@@ -131,8 +131,10 @@ val stdout_isatty: unit -> option bool
 val colorize: string -> (string * string) -> string
 val colorize_bold: string -> string
 val colorize_red: string -> string
+val colorize_yellow: string -> string
 val colorize_cyan: string -> string
 val colorize_green: string -> string
+val colorize_magenta : string -> string
 
 
 type out_channel

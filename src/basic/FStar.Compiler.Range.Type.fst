@@ -46,7 +46,7 @@ let dummy_pos = {
   col=0;
 }
 let dummy_rng = {
-  file_name=" dummy";
+  file_name="dummy";
   start_pos=dummy_pos;
   end_pos=dummy_pos
 }

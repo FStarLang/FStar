@@ -3636,7 +3636,7 @@ let rec (mk_arr :
                                 (Prims.of_int (610)) (Prims.of_int (37)))))
                        (FStar_Sealed.seal
                           (Obj.magic
-                             (FStar_Range.mk_range " dummy" Prims.int_zero
+                             (FStar_Range.mk_range "dummy" Prims.int_zero
                                 Prims.int_zero Prims.int_zero Prims.int_zero)))
                        (Obj.magic
                           (FStar_Tactics_Effect.tac_bind
