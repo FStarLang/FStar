@@ -227,13 +227,7 @@ fn package_core (acc:hash_value_buf) (ctr:ref U32.t)
           pure (h == mk_ha_core acc ctr)
 {
    let core = mk_ha_core acc ctr;
-   // It would be nice to have a "rename" primitive
-   // So we could write something like
-   // rename acc as core.acc, ctr as core.ctr;
-   rewrite (A.pts_to acc vacc)
-        as  (A.pts_to core.acc vacc);    
-   rewrite (pts_to ctr 'vctr)
-        as  (pts_to core.ctr 'vctr);
+   rename acc as core.acc, ctr as core.ctr;
    fold_ha_val_core core;
    core
 }
@@ -298,14 +292,8 @@ fn package (acc:hash_value_buf) (ctr:ref U32.t) (tmp:hash_value_buf) (dummy:dumm
           pure (h == mk_ha (mk_ha_core acc ctr) tmp dummy)
 {
    let ha = mk_ha (mk_ha_core acc ctr) tmp dummy;
-   rewrite (A.pts_to acc vacc)
-        as  (A.pts_to ha.core.acc vacc);    
-   rewrite (pts_to ctr 'vctr)
-        as  (pts_to ha.core.ctr 'vctr);
-   rewrite (A.pts_to tmp vtmp)
-        as  (A.pts_to ha.tmp vtmp);
-   rewrite (A.pts_to dummy (Seq.create 1 0uy))
-        as  (A.pts_to ha.dummy (Seq.create 1 0uy));
+   rename acc as ha.core.acc, ctr as ha.core.ctr,
+          tmp as ha.tmp, dummy as ha.dummy;
    fold_ha_val ha;
    ha
 }

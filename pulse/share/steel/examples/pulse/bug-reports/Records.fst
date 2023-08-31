@@ -80,6 +80,21 @@ fn alloc_rec (v1 v2:U8.t)
 }
 ```
 
+//Here's another more compact way, using rename
+```pulse
+fn alloc_rec_alt (v1 v2:U8.t)
+  requires emp
+  returns r:rec2
+  ensures rec_perm r (mk_rec_repr v1 v2)
+{
+  let r1 = alloc v1;
+  let r2 = alloc v2; 
+  let r = mk_rec2 r1 r2;
+  rename r1 as r.r1, r2 as r.r2;
+  fold_rec_perm r;
+  r
+}
+```
 //Some alternate ways to do it, useful test cases
 
 // helpers 
