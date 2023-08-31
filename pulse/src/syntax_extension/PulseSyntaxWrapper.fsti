@@ -45,6 +45,12 @@ val mk_comp (pre:term) (ret:binder) (post:term) : comp
 val ghost_comp (inames:term) (pre:term) (ret:binder) (post:term) : comp
 val atomic_comp (inames:term) (pre:term) (ret:binder) (post:term) : comp
 
+val hint_type : Type0
+val mk_assert_hint_type (vp:vprop) : hint_type
+val mk_unfold_hint_type (l:option (list string)) (vp:vprop) : hint_type
+val mk_fold_hint_type (l:option (list string)) (vp:vprop) : hint_type
+val mk_rename_hint_type (l:list (term & term)) (goal:option vprop) : hint_type
+
 new val constant : Type0
 val inspect_const : FStar.Const.sconst -> constant
 
@@ -72,7 +78,7 @@ val tm_par (p1:term) (p2:term) (q1:term) (q2:term) (b1:st_term) (b2:st_term) (_:
 val tm_rewrite (p1:term) (p2:term) (_:range) : st_term
 val tm_rename (pairs:list (term & term)) (_:range) : st_term
 val tm_admit (_:range) : st_term
-val tm_proof_hint_with_binders (_:PulseSugar.hint_type) (_:list binder) (t:term) (body:st_term) (_:range) : st_term
+val tm_proof_hint_with_binders (_:hint_type) (_:list binder) (body:st_term) (_:range) : st_term
 val close_binders (bs:list binder) (xs:list var) : list binder
 val close_term (t:term) (v:var) : term
 val close_st_term (t:st_term) (v:var) : st_term
@@ -92,3 +98,4 @@ val subst : Type0
 val bvs_as_subst (l:list var) : subst
 val subst_term (s:subst) (t:term) : term
 val subst_st_term (s:subst) (t:st_term) : st_term
+val subst_proof_hint (s:subst) (h:hint_type) : hint_type

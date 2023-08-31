@@ -46,9 +46,10 @@ type pat =
     }
 
 type hint_type =
-  | ASSERT 
-  | UNFOLD of option (list lident)
-  | FOLD of option (list lident)
+  | ASSERT of vprop
+  | UNFOLD of option (list lident) & vprop
+  | FOLD of option (list lident) & vprop
+  | RENAME of list (A.term & A.term) & option vprop
 
 type stmt' =
   | Open of lident
@@ -123,14 +124,9 @@ type stmt' =
       p2:vprop;
     }
     
-  | Rename {
-      pairs: list (A.term & A.term)
-    }
-
   | ProofHintWithBinders {
       hint_type:hint_type;
       binders:binders;
-      vprop:vprop;
     }
 
 and stmt = {
@@ -174,5 +170,4 @@ let mk_decl id binders ascription body range = { id; binders; ascription; body; 
 let mk_open lid = Open lid
 let mk_par p1 p2 q1 q2 b1 b2 = Parallel { p1; p2; q1; q2; b1; b2 }
 let mk_rewrite p1 p2 = Rewrite { p1; p2 }
-let mk_rename pairs = Rename { pairs }
-let mk_proof_hint_with_binders ht bs p =  ProofHintWithBinders { hint_type=ht; binders=bs; vprop=p }
+let mk_proof_hint_with_binders ht bs =  ProofHintWithBinders { hint_type=ht; binders=bs }

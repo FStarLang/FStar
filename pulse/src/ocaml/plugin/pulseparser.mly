@@ -138,14 +138,14 @@ pulseStmtNoSeq:
     { PulseSugar.mk_par p1 p2 q1 q2 b1 b2 }
   | REWRITE p1=pulseVprop AS p2=pulseVprop
     { PulseSugar.mk_rewrite p1 p2 }
-  | RENAME bs=separated_nonempty_list (COMMA, x=appTerm AS y=appTerm { (x, y)})
-    { PulseSugar.mk_rename bs }
+  | bs=withBindersOpt RENAME pairs=separated_nonempty_list (COMMA, x=appTerm AS y=appTerm { (x, y)}) goal=option(IN t=pulseVprop { t })
+    { PulseSugar.mk_proof_hint_with_binders (RENAME(pairs, goal)) bs }
   | bs=withBindersOpt ASSERT p=pulseVprop
-    { PulseSugar.mk_proof_hint_with_binders ASSERT bs p }
+    { PulseSugar.mk_proof_hint_with_binders (ASSERT p) bs }
   | bs=withBindersOpt UNFOLD ns=option(names) p=pulseVprop
-    { PulseSugar.mk_proof_hint_with_binders (UNFOLD ns) bs p }
+    { PulseSugar.mk_proof_hint_with_binders (UNFOLD (ns,p)) bs }
   | bs=withBindersOpt FOLD ns=option(names) p=pulseVprop
-    { PulseSugar.mk_proof_hint_with_binders (FOLD ns) bs p }
+    { PulseSugar.mk_proof_hint_with_binders (FOLD (ns,p)) bs }
 
 
 names:

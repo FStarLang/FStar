@@ -211,22 +211,70 @@ let (ctag_of_comp_st : comp_st -> ctag) =
     | C_ST uu___ -> STT
     | C_STAtomic (uu___, uu___1) -> STT_Atomic
     | C_STGhost (uu___, uu___1) -> STT_Ghost
-type proof_hint_type =
-  | ASSERT 
-  | FOLD of Prims.string Prims.list FStar_Pervasives_Native.option 
-  | UNFOLD of Prims.string Prims.list FStar_Pervasives_Native.option 
+type proof_hint_type__ASSERT__payload = {
+  p: vprop }
+and proof_hint_type__FOLD__payload =
+  {
+  names: Prims.string Prims.list FStar_Pervasives_Native.option ;
+  p1: vprop }
+and proof_hint_type__UNFOLD__payload =
+  {
+  names1: Prims.string Prims.list FStar_Pervasives_Native.option ;
+  p2: vprop }
+and proof_hint_type__RENAME__payload =
+  {
+  pairs: (term * term) Prims.list ;
+  goal: term FStar_Pervasives_Native.option }
+and proof_hint_type =
+  | ASSERT of proof_hint_type__ASSERT__payload 
+  | FOLD of proof_hint_type__FOLD__payload 
+  | UNFOLD of proof_hint_type__UNFOLD__payload 
+  | RENAME of proof_hint_type__RENAME__payload 
+let (__proj__Mkproof_hint_type__ASSERT__payload__item__p :
+  proof_hint_type__ASSERT__payload -> vprop) =
+  fun projectee -> match projectee with | { p;_} -> p
+let (__proj__Mkproof_hint_type__FOLD__payload__item__names :
+  proof_hint_type__FOLD__payload ->
+    Prims.string Prims.list FStar_Pervasives_Native.option)
+  = fun projectee -> match projectee with | { names; p1 = p;_} -> names
+let (__proj__Mkproof_hint_type__FOLD__payload__item__p :
+  proof_hint_type__FOLD__payload -> vprop) =
+  fun projectee -> match projectee with | { names; p1 = p;_} -> p
+let (__proj__Mkproof_hint_type__UNFOLD__payload__item__names :
+  proof_hint_type__UNFOLD__payload ->
+    Prims.string Prims.list FStar_Pervasives_Native.option)
+  =
+  fun projectee ->
+    match projectee with | { names1 = names; p2 = p;_} -> names
+let (__proj__Mkproof_hint_type__UNFOLD__payload__item__p :
+  proof_hint_type__UNFOLD__payload -> vprop) =
+  fun projectee -> match projectee with | { names1 = names; p2 = p;_} -> p
+let (__proj__Mkproof_hint_type__RENAME__payload__item__pairs :
+  proof_hint_type__RENAME__payload -> (term * term) Prims.list) =
+  fun projectee -> match projectee with | { pairs; goal;_} -> pairs
+let (__proj__Mkproof_hint_type__RENAME__payload__item__goal :
+  proof_hint_type__RENAME__payload -> term FStar_Pervasives_Native.option) =
+  fun projectee -> match projectee with | { pairs; goal;_} -> goal
 let (uu___is_ASSERT : proof_hint_type -> Prims.bool) =
-  fun projectee -> match projectee with | ASSERT -> true | uu___ -> false
+  fun projectee -> match projectee with | ASSERT _0 -> true | uu___ -> false
+let (__proj__ASSERT__item___0 :
+  proof_hint_type -> proof_hint_type__ASSERT__payload) =
+  fun projectee -> match projectee with | ASSERT _0 -> _0
 let (uu___is_FOLD : proof_hint_type -> Prims.bool) =
   fun projectee -> match projectee with | FOLD _0 -> true | uu___ -> false
 let (__proj__FOLD__item___0 :
-  proof_hint_type -> Prims.string Prims.list FStar_Pervasives_Native.option)
-  = fun projectee -> match projectee with | FOLD _0 -> _0
+  proof_hint_type -> proof_hint_type__FOLD__payload) =
+  fun projectee -> match projectee with | FOLD _0 -> _0
 let (uu___is_UNFOLD : proof_hint_type -> Prims.bool) =
   fun projectee -> match projectee with | UNFOLD _0 -> true | uu___ -> false
 let (__proj__UNFOLD__item___0 :
-  proof_hint_type -> Prims.string Prims.list FStar_Pervasives_Native.option)
-  = fun projectee -> match projectee with | UNFOLD _0 -> _0
+  proof_hint_type -> proof_hint_type__UNFOLD__payload) =
+  fun projectee -> match projectee with | UNFOLD _0 -> _0
+let (uu___is_RENAME : proof_hint_type -> Prims.bool) =
+  fun projectee -> match projectee with | RENAME _0 -> true | uu___ -> false
+let (__proj__RENAME__item___0 :
+  proof_hint_type -> proof_hint_type__RENAME__payload) =
+  fun projectee -> match projectee with | RENAME _0 -> _0
 type st_term'__Tm_Return__payload =
   {
   ctag: ctag ;
@@ -265,12 +313,12 @@ and st_term'__Tm_Match__payload =
   returns_: vprop FStar_Pervasives_Native.option ;
   brs: (pattern * st_term) Prims.list }
 and st_term'__Tm_IntroPure__payload = {
-  p: term }
+  p3: term }
 and st_term'__Tm_ElimExists__payload = {
-  p1: vprop }
+  p4: vprop }
 and st_term'__Tm_IntroExists__payload =
   {
-  p2: vprop ;
+  p5: vprop ;
   witnesses: term Prims.list }
 and st_term'__Tm_While__payload =
   {
@@ -304,7 +352,6 @@ and st_term'__Tm_ProofHintWithBinders__payload =
   {
   hint_type: proof_hint_type ;
   binders: binder Prims.list ;
-  v: vprop ;
   t3: st_term }
 and st_term' =
   | Tm_Return of st_term'__Tm_Return__payload 
@@ -484,6 +531,27 @@ and (eq_sub_pat :
       | (p1, b1) ->
           let uu___1 = pb2 in
           (match uu___1 with | (p2, b2) -> (eq_pattern p1 p2) && (b1 = b2))
+let (eq_hint_type : proof_hint_type -> proof_hint_type -> Prims.bool) =
+  fun ht1 ->
+    fun ht2 ->
+      match (ht1, ht2) with
+      | (ASSERT { p = p1;_}, ASSERT { p = p2;_}) -> eq_tm p1 p2
+      | (FOLD { names = ns1; p1;_}, FOLD { names = ns2; p1 = p2;_}) ->
+          (eq_opt (eq_list (fun n1 -> fun n2 -> n1 = n2)) ns1 ns2) &&
+            (eq_tm p1 p2)
+      | (UNFOLD { names1 = ns1; p2 = p1;_}, UNFOLD { names1 = ns2; p2;_}) ->
+          (eq_opt (eq_list (fun n1 -> fun n2 -> n1 = n2)) ns1 ns2) &&
+            (eq_tm p1 p2)
+      | (RENAME { pairs = ps1; goal = p1;_}, RENAME
+         { pairs = ps2; goal = p2;_}) ->
+          (eq_list
+             (fun uu___ ->
+                fun uu___1 ->
+                  match (uu___, uu___1) with
+                  | ((x1, y1), (x2, y2)) -> (eq_tm x1 x2) && (eq_tm y1 y2))
+             ps1 ps2)
+            && (eq_opt eq_tm p1 p2)
+      | uu___ -> false
 let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
   fun t1 ->
     fun t2 ->
@@ -507,10 +575,11 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
          { binder1 = b2; head2 = t21; body2 = k2;_}) ->
           ((eq_tm b1.binder_ty b2.binder_ty) && (eq_tm t11 t21)) &&
             (eq_st_term k1 k2)
-      | (Tm_IntroPure { p = p1;_}, Tm_IntroPure { p = p2;_}) -> eq_tm p1 p2
-      | (Tm_IntroExists { p2 = p1; witnesses = l1;_}, Tm_IntroExists
-         { p2; witnesses = l2;_}) -> (eq_tm p1 p2) && (eq_tm_list l1 l2)
-      | (Tm_ElimExists { p1;_}, Tm_ElimExists { p1 = p2;_}) -> eq_tm p1 p2
+      | (Tm_IntroPure { p3 = p1;_}, Tm_IntroPure { p3 = p2;_}) -> eq_tm p1 p2
+      | (Tm_IntroExists { p5 = p1; witnesses = l1;_}, Tm_IntroExists
+         { p5 = p2; witnesses = l2;_}) -> (eq_tm p1 p2) && (eq_tm_list l1 l2)
+      | (Tm_ElimExists { p4 = p1;_}, Tm_ElimExists { p4 = p2;_}) ->
+          eq_tm p1 p2
       | (Tm_If { b1 = g1; then_ = ethen1; else_ = eelse1; post1 = p1;_},
          Tm_If { b1 = g2; then_ = ethen2; else_ = eelse2; post1 = p2;_}) ->
           (((eq_tm g1 g2) && (eq_st_term ethen1 ethen2)) &&
@@ -552,10 +621,10 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
           (((c1 = c2) && (eq_univ u1 u2)) && (eq_tm t11 t21)) &&
             (eq_tm_opt post1 post2)
       | (Tm_ProofHintWithBinders
-         { hint_type = ht1; binders = bs1; v = v1; t3 = t11;_},
+         { hint_type = ht1; binders = bs1; t3 = t11;_},
          Tm_ProofHintWithBinders
-         { hint_type = ht2; binders = bs2; v = v2; t3 = t21;_}) ->
-          (((ht1 = ht2) && (eq_list eq_binder bs1 bs2)) && (eq_tm v1 v2)) &&
+         { hint_type = ht2; binders = bs2; t3 = t21;_}) ->
+          ((eq_hint_type ht1 ht2) && (eq_list eq_binder bs1 bs2)) &&
             (eq_st_term t11 t21)
       | uu___ -> false
 and (eq_branch : (pattern * st_term) -> (pattern * st_term) -> Prims.bool) =

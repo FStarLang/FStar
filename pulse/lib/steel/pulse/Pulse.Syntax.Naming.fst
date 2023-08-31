@@ -93,6 +93,9 @@ let close_open_inverse_proof_hint_type' (ht:proof_hint_type)
     | ASSERT { p }
     | FOLD { p }
     | UNFOLD { p } -> close_open_inverse' p x i
+    | RENAME { pairs; goal } ->
+      close_open_inverse_pairs' pairs x i;
+      close_open_inverse_opt' goal x i
 
 
 let rec close_open_inverse_st'  (t:st_term) 
@@ -168,9 +171,6 @@ let rec close_open_inverse_st'  (t:st_term)
       close_open_inverse' t1 x i;
       close_open_inverse' t2 x i
 
-    | Tm_Rename { pairs } ->
-      close_open_inverse_pairs' pairs x i
-      
     | Tm_Admit { typ; post } ->
       close_open_inverse' typ x i;
       close_open_inverse_opt' post x (i + 1)

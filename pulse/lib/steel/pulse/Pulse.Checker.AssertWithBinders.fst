@@ -131,6 +131,72 @@ let check_unfoldable g (v:term) : T.Tac unit =
                         but %s is a primitive term that cannot be folded or unfolded"
                         (P.term_to_string v))
 
+let rewrite_one (p: (term & term)) (t:term) : term = t 
+
+let rewrite_all (p: list (term & term)) (t:term) : option term =
+  let rec as_subst (p : list (term & term)) (out:list subst_elt) =
+    match p with
+    | [] -> Some out
+    | (e1, e2)::p -> (
+      match e1.t with
+      | Tm_FStar e1 -> ( 
+        match R.inspect_ln e1 with
+        | R.Tv_Var n -> (
+          let nv = R.inspect_namedv n in
+          as_subst p (NT nv.uniq e2::out)
+        ) 
+        | _ -> None
+      )
+      | _ -> None
+    )
+  in
+  match as_subst p [] with
+  | Some s -> Some (subst_term t s)
+  | _ -> None
+
+let rec check_renaming 
+    (g:env)
+    (pre:term)
+    (pre_typing:tot_typing g pre tm_vprop)
+    (post_hint:post_hint_opt g)
+    (res_ppname:ppname)
+    (st:st_term { 
+        match st.term with
+        | Tm_ProofHintWithBinders { hint_type = RENAME _ } -> true
+        | _ -> false
+    })
+: T.Tac st_term
+= let Tm_ProofHintWithBinders ht = st.term in
+  let { hint_type=RENAME { pairs; goal }; binders=bs; t=body } = ht in
+  match bs, goal with
+  | _::_, None ->
+   //if there are binders, we must have a goal
+    fail g (Some st.range) "A renaming with binders must have a goal (with xs. rename ... in goal)"
+
+  | _::_, Some goal -> 
+   //rewrite it as
+   // with bs. assert goal;
+   // rename [pairs] in goal;
+   // ...
+   let body = {st with term = Tm_ProofHintWithBinders { ht with binders = [] }} in
+   { st with term = Tm_ProofHintWithBinders { hint_type=ASSERT { p = goal }; binders=bs; t=body } }
+
+  | [], None ->
+    // if there is no goal, take the goal to be the full current pre
+    check_renaming g pre pre_typing post_hint res_ppname
+      {st with term = Tm_ProofHintWithBinders { ht with hint_type = RENAME { pairs; goal = Some pre } }}
+
+
+  | [], Some goal -> (
+      match rewrite_all pairs goal with
+      | Some goal' -> 
+        let t = { st with term = Tm_Rewrite { t1 = goal; t2 = goal' } } in
+        t
+      | None ->
+        fail g (Some st.range) "Failed to rewrite the goal with the given renaming pairs"
+  )
+
+
 let check
   (g:env)
   (pre:term)
@@ -147,9 +213,10 @@ let check
   let Tm_ProofHintWithBinders { hint_type; binders=bs; t=body } = st.term in
 
   match hint_type with
-  | RENAME _ ->
+  | RENAME { pairs; goal } ->
+
     T.fail "Renaming not yet handled"
-    
+
   | ASSERT { p = v } ->
     let bs = infer_binder_types g bs v in
     let (| uvs, v_opened, body_opened |) = open_binders g bs (mk_env (fstar_env g)) v body in
