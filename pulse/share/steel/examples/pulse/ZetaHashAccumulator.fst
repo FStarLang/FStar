@@ -451,6 +451,7 @@ fn compare (b1 b2:ha)
 //    the hash of the input
 // And then aggregate these two ha_cores into the first one
 // And then to repackage it as an ha
+#push-options "--debug ZetaHashAccumulator --print_implicits --debug_level with_binders"
 ```pulse
 fn add (ha:ha) (input:hashable_buffer) (l:SZ.t)
        (#s:(s:erased bytes {SZ.v l <= Seq.length s /\  SZ.v l <= blake2_max_input_length}))
@@ -469,18 +470,10 @@ fn add (ha:ha) (input:hashable_buffer) (l:SZ.t)
    let ha' = package_core ha.tmp ctr;
    let v = aggregate ha.core ha';
    with w. unfold (ha_val_core ha' w);
-   // would be nice to write this as
-   // rename ha'.acc as ha.tmp
-   // Or, at least, `with w. rewrite ... `
-   // Rather than having to write an assert and then a rewrite
-   with w. assert (A.pts_to ha'.acc w);
-   rewrite (A.pts_to ha'.acc w)
-        as (A.pts_to ha.tmp w); 
+   rename ha'.acc as ha.tmp;
    with w. unfold (ha_val_core ha.core w);
    fold_ha_val ha;
-   with w. assert (pts_to ha'.ctr w);
-   rewrite (pts_to ha'.ctr w)
-        as (pts_to ctr w);
+   rename ha'.ctr as ctr;
    v
 }
 ```
