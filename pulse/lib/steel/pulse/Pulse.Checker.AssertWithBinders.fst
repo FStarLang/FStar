@@ -157,9 +157,6 @@ let rewrite_all (p: list (term & term)) (t:term) : option term =
 let rec check_renaming 
     (g:env)
     (pre:term)
-    (pre_typing:tot_typing g pre tm_vprop)
-    (post_hint:post_hint_opt g)
-    (res_ppname:ppname)
     (st:st_term { 
         match st.term with
         | Tm_ProofHintWithBinders { hint_type = RENAME _ } -> true
@@ -183,7 +180,7 @@ let rec check_renaming
 
   | [], None ->
     // if there is no goal, take the goal to be the full current pre
-    check_renaming g pre pre_typing post_hint res_ppname
+    check_renaming g pre
       {st with term = Tm_ProofHintWithBinders { ht with hint_type = RENAME { pairs; goal = Some pre } }}
 
 
@@ -191,7 +188,8 @@ let rec check_renaming
       match rewrite_all pairs goal with
       | Some goal' -> 
         let t = { st with term = Tm_Rewrite { t1 = goal; t2 = goal' } } in
-        t
+        { st with term = Tm_Bind { binder = as_binder tm_unit; head = t; body } }
+
       | None ->
         fail g (Some st.range) "Failed to rewrite the goal with the given renaming pairs"
   )
@@ -215,8 +213,9 @@ let check
   match hint_type with
   | RENAME { pairs; goal } ->
 
-    T.fail "Renaming not yet handled"
-
+    let st = check_renaming g pre st in
+    check g pre pre_typing post_hint res_ppname st
+    
   | ASSERT { p = v } ->
     let bs = infer_binder_types g bs v in
     let (| uvs, v_opened, body_opened |) = open_binders g bs (mk_env (fstar_env g)) v body in
