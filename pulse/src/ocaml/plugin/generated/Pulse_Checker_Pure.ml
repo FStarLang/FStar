@@ -125,7 +125,7 @@ let (rtb_core_check_term :
     FStar_Reflection_Types.env ->
       FStar_Reflection_Types.term ->
         (((FStar_TypeChecker_Core.tot_or_ghost * FStar_Reflection_Types.typ)
-           FStar_Pervasives_Native.option * FStar_Tactics_Types.issues),
+           FStar_Pervasives_Native.option * FStar_Issue.issue Prims.list),
           unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
@@ -187,7 +187,7 @@ let (rtb_tc_term :
       FStar_Reflection_Types.term ->
         (((FStar_Reflection_Types.term * (FStar_TypeChecker_Core.tot_or_ghost
            * FStar_Reflection_Types.typ)) FStar_Pervasives_Native.option *
-           FStar_Tactics_Types.issues),
+           FStar_Issue.issue Prims.list),
           unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
@@ -247,7 +247,7 @@ let (rtb_universe_of :
     FStar_Reflection_Types.env ->
       FStar_Reflection_Types.term ->
         ((FStar_Reflection_Types.universe FStar_Pervasives_Native.option *
-           FStar_Tactics_Types.issues),
+           FStar_Issue.issue Prims.list),
           unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
@@ -307,7 +307,7 @@ let (rtb_check_subtyping :
     Pulse_Syntax_Base.term ->
       Pulse_Syntax_Base.term ->
         (((unit, unit, unit) FStar_Tactics_Types.subtyping_token
-           FStar_Pervasives_Native.option * FStar_Tactics_Types.issues),
+           FStar_Pervasives_Native.option * FStar_Issue.issue Prims.list),
           unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
@@ -420,7 +420,7 @@ let (rtb_instantiate_implicits :
     FStar_Reflection_Types.env ->
       FStar_Reflection_Types.term ->
         (((FStar_Reflection_Types.term * FStar_Reflection_Types.typ)
-           FStar_Pervasives_Native.option * FStar_Tactics_Types.issues),
+           FStar_Pervasives_Native.option * FStar_Issue.issue Prims.list),
           unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
@@ -512,7 +512,7 @@ let (rtb_core_check_term_at_type :
         FStar_TypeChecker_Core.tot_or_ghost ->
           FStar_Reflection_Types.term ->
             (((unit, unit, unit) FStar_Tactics_Types.typing_token
-               FStar_Pervasives_Native.option * FStar_Tactics_Types.issues),
+               FStar_Pervasives_Native.option * FStar_Issue.issue Prims.list),
               unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
@@ -642,7 +642,7 @@ let (rtb_check_prop_validity :
     FStar_Reflection_Types.env ->
       FStar_Reflection_Types.term ->
         (((unit, unit) FStar_Tactics_V2_Builtins.prop_validity_token
-           FStar_Pervasives_Native.option * FStar_Tactics_Types.issues),
+           FStar_Pervasives_Native.option * FStar_Issue.issue Prims.list),
           unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
@@ -741,10 +741,10 @@ let (exn_as_issue : Prims.exn -> FStar_Issue.issue) =
 let catch_all :
   'a .
     (unit ->
-       (('a FStar_Pervasives_Native.option * FStar_Tactics_Types.issues),
+       (('a FStar_Pervasives_Native.option * FStar_Issue.issue Prims.list),
          unit) FStar_Tactics_Effect.tac_repr)
       ->
-      (('a FStar_Pervasives_Native.option * FStar_Tactics_Types.issues),
+      (('a FStar_Pervasives_Native.option * FStar_Issue.issue Prims.list),
         unit) FStar_Tactics_Effect.tac_repr
   =
   fun f ->
@@ -1483,7 +1483,7 @@ let (tc_meta_callback :
            FStar_Reflection_Types.term,
            (unit, unit, unit) FStar_Reflection_Typing.typing)
            FStar_Pervasives.dtuple4 FStar_Pervasives_Native.option *
-           FStar_Tactics_Types.issues),
+           FStar_Issue.issue Prims.list),
           unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
@@ -2383,7 +2383,7 @@ let (tc_with_core :
         (((FStar_TypeChecker_Core.tot_or_ghost, FStar_Reflection_Types.term,
            (unit, unit, unit) FStar_Reflection_Typing.typing)
            FStar_Pervasives.dtuple3 FStar_Pervasives_Native.option *
-           FStar_Tactics_Types.issues),
+           FStar_Issue.issue Prims.list),
           unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
