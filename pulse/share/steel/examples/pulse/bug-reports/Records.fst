@@ -90,7 +90,7 @@ fn alloc_rec_alt (v1 v2:U8.t)
   let r1 = alloc v1;
   let r2 = alloc v2; 
   let r = mk_rec2 r1 r2;
-  rename r1 as r.r1, r2 as r.r2;
+  rewrite each r1 as r.r1, r2 as r.r2;
   fold_rec_perm r;
   r
 }

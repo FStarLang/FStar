@@ -141,6 +141,9 @@ let eq_hint_type (ht1 ht2:proof_hint_type)
     | RENAME { pairs=ps1; goal=p1 }, RENAME { pairs=ps2; goal=p2 } ->
       eq_list (fun (x1, y1) (x2, y2) -> eq_tm x1 x2 && eq_tm y1 y2) ps1 ps2 &&
       eq_opt eq_tm p1 p2
+    | REWRITE { t1; t2 }, REWRITE { t1=s1; t2=s2 } ->
+      eq_tm t1 s1 &&
+      eq_tm t2 s2
     | _ -> false
 
 let rec eq_st_term (t1 t2:st_term) 

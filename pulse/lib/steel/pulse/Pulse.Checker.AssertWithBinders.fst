@@ -131,68 +131,89 @@ let check_unfoldable g (v:term) : T.Tac unit =
                         but %s is a primitive term that cannot be folded or unfolded"
                         (P.term_to_string v))
 
-let rewrite_one (p: (term & term)) (t:term) : term = t 
-let visit_and_rewrite (p: list (R.term & R.term)) (t:term) : T.Tac term =
+let visit_and_rewrite (p: (R.term & R.term)) (t:term) : T.Tac term =
   let open FStar.Reflection.V2.TermEq in
+  let lhs, rhs = p in
   let visitor (t:R.term) : T.Tac R.term =
-    match List.Tot.tryFind (fun (x, _) -> term_eq x t) p with
-    | None -> t
-    | Some (_, t') -> t'
+    if term_eq t lhs then rhs else t
   in
-  let rec aux (t:term) : T.Tac term =
-    match t.t with
-    | Tm_Emp
-    | Tm_VProp
-    | Tm_Inames
-    | Tm_EmpInames
-    | Tm_Unknown  -> t
-    | Tm_Pure p -> { t with t = Tm_Pure (aux p) }
-    | Tm_Star l r ->  { t with t = Tm_Star (aux l) (aux r) }
-    | Tm_ExistsSL u b body -> { t with t = Tm_ExistsSL u { b with binder_ty=aux b.binder_ty} (aux body) }
-    | Tm_ForallSL u b body -> { t with t = Tm_ForallSL u { b with binder_ty=aux b.binder_ty} (aux body) }
-    | Tm_FStar h -> 
-      let h = FStar.Tactics.Visit.visit_tm visitor h in
-      assume (is_host_term h);
-      { t with t=Tm_FStar h }
-  in
-  aux t
-
-let visit_and_rewrite_conjuncts (p: list (R.term & R.term)) (t:term) : T.Tac (term & term) =
-  let tms = Pulse.Typing.Combinators.vprop_as_list t in
-  let tms = 
-    L.flatten (
-      T.map
-        (fun t -> 
-          let s = visit_and_rewrite p t in
-          if eq_tm s t then [] else [(t, s)])
-        tms
-    )
-  in
-  let lhs, rhs = L.unzip tms in
-  let lhs = Pulse.Typing.Combinators.list_as_vprop lhs in
-  let rhs = Pulse.Typing.Combinators.list_as_vprop rhs in
-  lhs, rhs
+  match R.inspect_ln lhs with
+  | R.Tv_Var n -> (
+    let nv = R.inspect_namedv n in
+    assume (is_host_term rhs);
+    subst_term t [NT nv.uniq { t = Tm_FStar rhs; range = t.range }]
+    ) 
+  | _ ->
+    let rec aux (t:term) : T.Tac term =
+      match t.t with
+      | Tm_Emp
+      | Tm_VProp
+      | Tm_Inames
+      | Tm_EmpInames
+      | Tm_Unknown  -> t
+      | Tm_Pure p -> { t with t = Tm_Pure (aux p) }
+      | Tm_Star l r ->  { t with t = Tm_Star (aux l) (aux r) }
+      | Tm_ExistsSL u b body -> { t with t = Tm_ExistsSL u { b with binder_ty=aux b.binder_ty} (aux body) }
+      | Tm_ForallSL u b body -> { t with t = Tm_ForallSL u { b with binder_ty=aux b.binder_ty} (aux body) }
+      | Tm_FStar h -> 
+        let h = FStar.Tactics.Visit.visit_tm visitor h in
+        assume (is_host_term h);
+        { t with t=Tm_FStar h }
+    in
+    aux t
+    
+let visit_and_rewrite_conjuncts (p: (R.term & R.term)) (tms:list term) : T.Tac (list term) =
+  T.map (visit_and_rewrite p) tms
 
 
-let rec as_subst (p : list (term & term)) (out:list subst_elt)
+let visit_and_rewrite_conjuncts_all (p: list (R.term & R.term)) (goal:term) : T.Tac (term & term) =
+  let tms = Pulse.Typing.Combinators.vprop_as_list goal in
+  let tms' = T.fold_left (fun tms p -> visit_and_rewrite_conjuncts p tms) tms p in
+  assume (L.length tms' == L.length tms);
+  let lhs, rhs =
+    T.fold_left2 
+      (fun (lhs, rhs) t t' ->  
+        if eq_tm t t' then lhs, rhs
+        else (t::lhs, t'::rhs))
+      ([], [])
+      tms tms'
+  in
+  Pulse.Typing.Combinators.list_as_vprop lhs,
+  Pulse.Typing.Combinators.list_as_vprop rhs
+  
+
+let disjoint (dom:list var) (cod:Set.set var) =
+  L.for_all (fun d -> not (Set.mem d cod)) dom
+
+let rec as_subst (p : list (term & term)) 
+                 (out:list subst_elt)
+                 (domain:list var)
+                 (codomain:Set.set var)
   : option (list subst_elt) =
   match p with
-  | [] -> Some out
+  | [] -> 
+    if disjoint domain codomain
+    then Some out
+    else None
   | (e1, e2)::p -> (
     match e1.t with
     | Tm_FStar e1 -> ( 
       match R.inspect_ln e1 with
       | R.Tv_Var n -> (
         let nv = R.inspect_namedv n in
-        as_subst p (NT nv.uniq e2::out)
+        as_subst p 
+          (NT nv.uniq e2::out) 
+          (nv.uniq ::domain )
+          (Set.union codomain (freevars e2))
       ) 
       | _ -> None
     )
     | _ -> None
   )
 
+
 let rewrite_all (g:env) (p: list (term & term)) (t:term) : T.Tac (term & term) =
-  match as_subst p [] with
+  match as_subst p [] [] Set.empty with
   | Some s ->
     t, subst_term t s
   | _ ->
@@ -203,7 +224,7 @@ let rewrite_all (g:env) (p: list (term & term)) (t:term) : T.Tac (term & term) =
           elab_term (fst (Pulse.Checker.Pure.instantiate_term_implicits g e2)))
         p
     in
-    let lhs, rhs = visit_and_rewrite_conjuncts p t in
+    let lhs, rhs = visit_and_rewrite_conjuncts_all p t in
     debug_log g (fun _ -> Printf.sprintf "Rewrote %s to %s" (P.term_to_string lhs) (P.term_to_string rhs));
     lhs, rhs
 
@@ -262,10 +283,22 @@ let check
 
   match hint_type with
   | RENAME { pairs; goal } ->
-
     let st = check_renaming g pre st in
     check g pre pre_typing post_hint res_ppname st
-    
+
+  | REWRITE { t1; t2 } -> (
+    match bs with
+    | [] -> 
+      let t = { st with term = Tm_Rewrite { t1; t2 } } in
+      check g pre pre_typing post_hint res_ppname 
+          { st with term = Tm_Bind { binder = as_binder tm_unit; head = t; body } } 
+    | _ ->
+      let t = { st with term = Tm_Rewrite { t1; t2 } } in
+      let body = { st with term = Tm_Bind { binder = as_binder tm_unit; head = t; body } } in
+      let st = { st with term = Tm_ProofHintWithBinders { hint_type = ASSERT { p = t1 }; binders = bs; t = body } } in
+      check g pre pre_typing post_hint res_ppname st
+  )
+  
   | ASSERT { p = v } ->
     let bs = infer_binder_types g bs v in
     let (| uvs, v_opened, body_opened |) = open_binders g bs (mk_env (fstar_env g)) v body in
@@ -273,7 +306,9 @@ let check
     let (| v, d |) = PC.check_vprop (push_env g uvs) v in
     let (| g1, nts, pre', k_frame |) = Prover.prove pre_typing uvs d in
     let (| x, x_ty, pre'', g2, k |) =
-      check g1 (tm_star (PS.nt_subst_term v nts) pre') (magic ()) post_hint res_ppname (PS.nt_subst_st_term body nts) in
+      check g1 (tm_star (PS.nt_subst_term v nts) pre')
+              (magic ()) 
+              post_hint res_ppname (PS.nt_subst_st_term body nts) in
     (| x, x_ty, pre'', g2, k_elab_trans k_frame k |)
 
 

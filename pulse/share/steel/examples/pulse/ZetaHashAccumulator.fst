@@ -227,7 +227,7 @@ fn package_core (acc:hash_value_buf) (ctr:ref U32.t)
           pure (h == mk_ha_core acc ctr)
 {
    let core = mk_ha_core acc ctr;
-   rename acc as core.acc, ctr as core.ctr;
+   rewrite each acc as core.acc, ctr as core.ctr;
    fold_ha_val_core core;
    core
 }
@@ -292,7 +292,7 @@ fn package (acc:hash_value_buf) (ctr:ref U32.t) (tmp:hash_value_buf) (dummy:dumm
           pure (h == mk_ha (mk_ha_core acc ctr) tmp dummy)
 {
    let ha = mk_ha (mk_ha_core acc ctr) tmp dummy;
-   rename acc as ha.core.acc, ctr as ha.core.ctr,
+   rewrite each acc as ha.core.acc, ctr as ha.core.ctr,
           tmp as ha.tmp, dummy as ha.dummy;
    fold_ha_val ha;
    ha
@@ -470,10 +470,10 @@ fn add (ha:ha) (input:hashable_buffer) (l:SZ.t)
    let ha' = package_core ha.tmp ctr;
    let v = aggregate ha.core ha';
    with w. unfold (ha_val_core ha' w);
-   rename ha'.acc as ha.tmp;
+   rewrite each ha'.acc as ha.tmp;
    with w. unfold (ha_val_core ha.core w);
    fold_ha_val ha;
-   rename ha'.ctr as ctr;
+   rewrite each ha'.ctr as ctr;
    v
 }
 ```

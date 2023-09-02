@@ -80,6 +80,9 @@ let (freevars_proof_hint :
     | Pulse_Syntax_Base.RENAME
         { Pulse_Syntax_Base.pairs = pairs; Pulse_Syntax_Base.goal = goal;_}
         -> FStar_Set.union (freevars_pairs pairs) (freevars_term_opt goal)
+    | Pulse_Syntax_Base.REWRITE
+        { Pulse_Syntax_Base.t1 = t1; Pulse_Syntax_Base.t2 = t2;_} ->
+        FStar_Set.union (freevars t1) (freevars t2)
 let rec (freevars_st :
   Pulse_Syntax_Base.st_term -> Pulse_Syntax_Base.var FStar_Set.set) =
   fun t ->
@@ -162,7 +165,7 @@ let rec (freevars_st :
         FStar_Set.union (freevars binder.Pulse_Syntax_Base.binder_ty)
           (FStar_Set.union (freevars initializer1) (freevars_st body))
     | Pulse_Syntax_Base.Tm_Rewrite
-        { Pulse_Syntax_Base.t1 = t1; Pulse_Syntax_Base.t2 = t2;_} ->
+        { Pulse_Syntax_Base.t11 = t1; Pulse_Syntax_Base.t21 = t2;_} ->
         FStar_Set.union (freevars t1) (freevars t2)
     | Pulse_Syntax_Base.Tm_Admit
         { Pulse_Syntax_Base.ctag1 = uu___; Pulse_Syntax_Base.u1 = uu___1;
@@ -252,6 +255,9 @@ let (ln_proof_hint' :
       | Pulse_Syntax_Base.RENAME
           { Pulse_Syntax_Base.pairs = pairs; Pulse_Syntax_Base.goal = goal;_}
           -> (ln_terms' pairs i) && (ln_opt' goal i)
+      | Pulse_Syntax_Base.REWRITE
+          { Pulse_Syntax_Base.t1 = t1; Pulse_Syntax_Base.t2 = t2;_} ->
+          (ln' t1 i) && (ln' t2 i)
 let rec (ln_st' : Pulse_Syntax_Base.st_term -> Prims.int -> Prims.bool) =
   fun t ->
     fun i ->
@@ -332,7 +338,7 @@ let rec (ln_st' : Pulse_Syntax_Base.st_term -> Prims.int -> Prims.bool) =
           ((ln' binder.Pulse_Syntax_Base.binder_ty i) && (ln' initializer1 i))
             && (ln_st' body (i + Prims.int_one))
       | Pulse_Syntax_Base.Tm_Rewrite
-          { Pulse_Syntax_Base.t1 = t1; Pulse_Syntax_Base.t2 = t2;_} ->
+          { Pulse_Syntax_Base.t11 = t1; Pulse_Syntax_Base.t21 = t2;_} ->
           (ln' t1 i) && (ln' t2 i)
       | Pulse_Syntax_Base.Tm_Admit
           { Pulse_Syntax_Base.ctag1 = uu___; Pulse_Syntax_Base.u1 = uu___1;
@@ -600,6 +606,13 @@ let (subst_proof_hint :
               Pulse_Syntax_Base.pairs = (subst_term_pairs pairs ss);
               Pulse_Syntax_Base.goal = (subst_term_opt goal ss)
             }
+      | Pulse_Syntax_Base.REWRITE
+          { Pulse_Syntax_Base.t1 = t1; Pulse_Syntax_Base.t2 = t2;_} ->
+          Pulse_Syntax_Base.REWRITE
+            {
+              Pulse_Syntax_Base.t1 = (subst_term t1 ss);
+              Pulse_Syntax_Base.t2 = (subst_term t2 ss)
+            }
 let (open_term_pairs' :
   (Pulse_Syntax_Base.term * Pulse_Syntax_Base.term) Prims.list ->
     Pulse_Syntax_Base.term ->
@@ -772,11 +785,11 @@ let rec (subst_st_term :
                   (subst_st_term body (shift_subst ss))
               }
         | Pulse_Syntax_Base.Tm_Rewrite
-            { Pulse_Syntax_Base.t1 = t1; Pulse_Syntax_Base.t2 = t2;_} ->
+            { Pulse_Syntax_Base.t11 = t1; Pulse_Syntax_Base.t21 = t2;_} ->
             Pulse_Syntax_Base.Tm_Rewrite
               {
-                Pulse_Syntax_Base.t1 = (subst_term t1 ss);
-                Pulse_Syntax_Base.t2 = (subst_term t2 ss)
+                Pulse_Syntax_Base.t11 = (subst_term t1 ss);
+                Pulse_Syntax_Base.t21 = (subst_term t2 ss)
               }
         | Pulse_Syntax_Base.Tm_Admit
             { Pulse_Syntax_Base.ctag1 = ctag; Pulse_Syntax_Base.u1 = u;

@@ -68,6 +68,8 @@ let freevars_proof_hint (ht:proof_hint_type) : Set.set var =
   | UNFOLD { p } -> freevars p
   | RENAME { pairs; goal } ->
     Set.union (freevars_pairs pairs) (freevars_term_opt goal)
+  | REWRITE { t1; t2 } ->
+    Set.union (freevars t1) (freevars t2)
 
 let rec freevars_st (t:st_term)
   : Set.set var
@@ -200,6 +202,9 @@ let ln_proof_hint' (ht:proof_hint_type) (i:int) : bool =
   | RENAME { pairs; goal } ->
     ln_terms' pairs i &&
     ln_opt' goal i
+  | REWRITE { t1; t2 } ->
+    ln' t1 i &&
+    ln' t2 i
 
 let rec ln_st' (t:st_term) (i:int)
   : Tot bool (decreases t)
@@ -419,6 +424,8 @@ let subst_proof_hint (ht:proof_hint_type) (ss:subst)
     | FOLD { names; p } -> FOLD { names; p=subst_term p ss }
     | RENAME { pairs; goal } -> RENAME { pairs=subst_term_pairs pairs ss;
                                          goal=subst_term_opt goal ss }
+    | REWRITE { t1; t2 } -> REWRITE { t1=subst_term t1 ss;
+                                      t2=subst_term t2 ss }
 
 let open_term_pairs' (t:list (term * term)) (v:term) (i:index) =
   subst_term_pairs t [DT i v]

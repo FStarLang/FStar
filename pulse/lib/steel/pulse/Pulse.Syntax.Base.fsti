@@ -165,6 +165,10 @@ type proof_hint_type =
       pairs:list (term & term);
       goal: option term
     }
+  | REWRITE {
+      t1:vprop;
+      t2:vprop;
+    }
 
 (* terms with STT types *)
 [@@ no_auto_projectors]

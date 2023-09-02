@@ -225,11 +225,15 @@ and proof_hint_type__RENAME__payload =
   {
   pairs: (term * term) Prims.list ;
   goal: term FStar_Pervasives_Native.option }
+and proof_hint_type__REWRITE__payload = {
+  t1: vprop ;
+  t2: vprop }
 and proof_hint_type =
   | ASSERT of proof_hint_type__ASSERT__payload 
   | FOLD of proof_hint_type__FOLD__payload 
   | UNFOLD of proof_hint_type__UNFOLD__payload 
   | RENAME of proof_hint_type__RENAME__payload 
+  | REWRITE of proof_hint_type__REWRITE__payload 
 let (__proj__Mkproof_hint_type__ASSERT__payload__item__p :
   proof_hint_type__ASSERT__payload -> vprop) =
   fun projectee -> match projectee with | { p;_} -> p
@@ -255,6 +259,12 @@ let (__proj__Mkproof_hint_type__RENAME__payload__item__pairs :
 let (__proj__Mkproof_hint_type__RENAME__payload__item__goal :
   proof_hint_type__RENAME__payload -> term FStar_Pervasives_Native.option) =
   fun projectee -> match projectee with | { pairs; goal;_} -> goal
+let (__proj__Mkproof_hint_type__REWRITE__payload__item__t1 :
+  proof_hint_type__REWRITE__payload -> vprop) =
+  fun projectee -> match projectee with | { t1; t2;_} -> t1
+let (__proj__Mkproof_hint_type__REWRITE__payload__item__t2 :
+  proof_hint_type__REWRITE__payload -> vprop) =
+  fun projectee -> match projectee with | { t1; t2;_} -> t2
 let (uu___is_ASSERT : proof_hint_type -> Prims.bool) =
   fun projectee -> match projectee with | ASSERT _0 -> true | uu___ -> false
 let (__proj__ASSERT__item___0 :
@@ -275,6 +285,11 @@ let (uu___is_RENAME : proof_hint_type -> Prims.bool) =
 let (__proj__RENAME__item___0 :
   proof_hint_type -> proof_hint_type__RENAME__payload) =
   fun projectee -> match projectee with | RENAME _0 -> _0
+let (uu___is_REWRITE : proof_hint_type -> Prims.bool) =
+  fun projectee -> match projectee with | REWRITE _0 -> true | uu___ -> false
+let (__proj__REWRITE__item___0 :
+  proof_hint_type -> proof_hint_type__REWRITE__payload) =
+  fun projectee -> match projectee with | REWRITE _0 -> _0
 type st_term'__Tm_Return__payload =
   {
   ctag: ctag ;
@@ -340,8 +355,8 @@ and st_term'__Tm_WithLocal__payload =
   initializer1: term ;
   body4: st_term }
 and st_term'__Tm_Rewrite__payload = {
-  t1: term ;
-  t2: term }
+  t11: term ;
+  t21: term }
 and st_term'__Tm_Admit__payload =
   {
   ctag1: ctag ;
@@ -551,6 +566,8 @@ let (eq_hint_type : proof_hint_type -> proof_hint_type -> Prims.bool) =
                   | ((x1, y1), (x2, y2)) -> (eq_tm x1 x2) && (eq_tm y1 y2))
              ps1 ps2)
             && (eq_opt eq_tm p1 p2)
+      | (REWRITE { t1; t2;_}, REWRITE { t1 = s1; t2 = s2;_}) ->
+          (eq_tm t1 s1) && (eq_tm t2 s2)
       | uu___ -> false
 let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
   fun t1 ->
@@ -614,8 +631,8 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
          Tm_WithLocal { binder2 = x2; initializer1 = e2; body4 = b2;_}) ->
           ((eq_tm x1.binder_ty x2.binder_ty) && (eq_tm e1 e2)) &&
             (eq_st_term b1 b2)
-      | (Tm_Rewrite { t1 = l1; t2 = r1;_}, Tm_Rewrite { t1 = l2; t2 = r2;_})
-          -> (eq_tm l1 l2) && (eq_tm r1 r2)
+      | (Tm_Rewrite { t11 = l1; t21 = r1;_}, Tm_Rewrite
+         { t11 = l2; t21 = r2;_}) -> (eq_tm l1 l2) && (eq_tm r1 r2)
       | (Tm_Admit { ctag1 = c1; u1; typ = t11; post3 = post1;_}, Tm_Admit
          { ctag1 = c2; u1 = u2; typ = t21; post3 = post2;_}) ->
           (((c1 = c2) && (eq_univ u1 u2)) && (eq_tm t11 t21)) &&

@@ -185,7 +185,7 @@ let (tm_rewrite :
   fun t1 ->
     fun t2 ->
       Pulse_Syntax_Base.Tm_Rewrite
-        { Pulse_Syntax_Base.t1 = t1; Pulse_Syntax_Base.t2 = t2 }
+        { Pulse_Syntax_Base.t11 = t1; Pulse_Syntax_Base.t21 = t2 }
 let (tm_rename :
   (Pulse_Syntax_Base.term * Pulse_Syntax_Base.term) Prims.list ->
     Pulse_Syntax_Base.st_term -> Pulse_Syntax_Base.st_term')
@@ -270,3 +270,11 @@ let (mk_rename_hint_type :
     fun goal ->
       Pulse_Syntax_Base.RENAME
         { Pulse_Syntax_Base.pairs = pairs; Pulse_Syntax_Base.goal = goal }
+let (mk_rewrite_hint_type :
+  Pulse_Syntax_Base.vprop ->
+    Pulse_Syntax_Base.vprop -> Pulse_Syntax_Base.proof_hint_type)
+  =
+  fun t1 ->
+    fun t2 ->
+      Pulse_Syntax_Base.REWRITE
+        { Pulse_Syntax_Base.t1 = t1; Pulse_Syntax_Base.t2 = t2 }

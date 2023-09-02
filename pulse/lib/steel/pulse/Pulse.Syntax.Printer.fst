@@ -270,7 +270,7 @@ let rec st_term_to_string' (level:string) (t:st_term)
         | UNFOLD { names; p } -> sprintf "unfold%s" (names_to_string names), term_to_string p
         | FOLD { names; p } -> sprintf "fold%s" (names_to_string names), term_to_string p
         | RENAME { pairs; goal } ->
-          sprintf "rename %s"
+          sprintf "rewrite each %s"
             (String.concat ", "
               (T.map
                 (fun (x, y) -> sprintf "%s as %s" (term_to_string x) (term_to_string y))
@@ -278,6 +278,8 @@ let rec st_term_to_string' (level:string) (t:st_term)
             (match goal with
             | None -> ""
             | Some t -> sprintf " in %s" (term_to_string t))
+        | REWRITE { t1; t2 } ->
+          sprintf "rewrite %s as %s" (term_to_string t1) (term_to_string t2), ""
       in
       sprintf "%s %s %s; %s" with_prefix ht p
         (st_term_to_string' level t)

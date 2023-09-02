@@ -57,7 +57,7 @@ let r p = rng (fst p) (snd p)
 %}
 
 /* pulse specific tokens; rest are inherited from F* */
-%token MUT FN INVARIANT WHILE REF PARALLEL REWRITE FOLD GHOST ATOMIC RENAME
+%token MUT FN INVARIANT WHILE REF PARALLEL REWRITE FOLD GHOST ATOMIC EACH
 
 %start pulseDecl
 %start peekFnId
@@ -136,10 +136,10 @@ pulseStmtNoSeq:
              LBRACE b1=pulseStmt RBRACE
              LBRACE b2=pulseStmt RBRACE
     { PulseSugar.mk_par p1 p2 q1 q2 b1 b2 }
-  | REWRITE p1=pulseVprop AS p2=pulseVprop
-    { PulseSugar.mk_rewrite p1 p2 }
-  | bs=withBindersOpt RENAME pairs=separated_nonempty_list (COMMA, x=appTerm AS y=appTerm { (x, y)}) goal=option(IN t=pulseVprop { t })
-    { PulseSugar.mk_proof_hint_with_binders (RENAME(pairs, goal)) bs }
+  | bs=withBindersOpt REWRITE body=rewriteBody
+    {
+        PulseSugar.mk_proof_hint_with_binders body bs
+    }
   | bs=withBindersOpt ASSERT p=pulseVprop
     { PulseSugar.mk_proof_hint_with_binders (ASSERT p) bs }
   | bs=withBindersOpt UNFOLD ns=option(names) p=pulseVprop
@@ -147,6 +147,11 @@ pulseStmtNoSeq:
   | bs=withBindersOpt FOLD ns=option(names) p=pulseVprop
     { PulseSugar.mk_proof_hint_with_binders (FOLD (ns,p)) bs }
 
+rewriteBody:
+  | EACH pairs=separated_nonempty_list (COMMA, x=appTerm AS y=appTerm { (x, y)}) goal=option(IN t=pulseVprop { t })
+    { RENAME(pairs, goal) }
+  | p1=pulseVprop AS p2=pulseVprop
+    { PulseSugar.REWRITE(p1, p2) }
 
 names:
   | LBRACK l=separated_nonempty_list(SEMICOLON, qlident) RBRACK

@@ -50,6 +50,7 @@ type hint_type =
   | UNFOLD of option (list lident) & vprop
   | FOLD of option (list lident) & vprop
   | RENAME of list (A.term & A.term) & option vprop
+  | REWRITE of vprop & vprop
 
 type stmt' =
   | Open of lident

@@ -96,6 +96,9 @@ let close_open_inverse_proof_hint_type' (ht:proof_hint_type)
     | RENAME { pairs; goal } ->
       close_open_inverse_pairs' pairs x i;
       close_open_inverse_opt' goal x i
+    | REWRITE { t1; t2 } ->
+      close_open_inverse' t1 x i;
+      close_open_inverse' t2 x i
 
 
 let rec close_open_inverse_st'  (t:st_term) 

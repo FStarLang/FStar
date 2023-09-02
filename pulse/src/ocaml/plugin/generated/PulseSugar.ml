@@ -136,6 +136,7 @@ type hint_type =
   vprop) 
   | RENAME of ((FStar_Parser_AST.term * FStar_Parser_AST.term) Prims.list *
   vprop FStar_Pervasives_Native.option) 
+  | REWRITE of (vprop * vprop) 
 let (uu___is_ASSERT : hint_type -> Prims.bool) =
   fun projectee -> match projectee with | ASSERT _0 -> true | uu___ -> false
 let (__proj__ASSERT__item___0 : hint_type -> vprop) =
@@ -159,6 +160,10 @@ let (__proj__RENAME__item___0 :
     ((FStar_Parser_AST.term * FStar_Parser_AST.term) Prims.list * vprop
       FStar_Pervasives_Native.option))
   = fun projectee -> match projectee with | RENAME _0 -> _0
+let (uu___is_REWRITE : hint_type -> Prims.bool) =
+  fun projectee -> match projectee with | REWRITE _0 -> true | uu___ -> false
+let (__proj__REWRITE__item___0 : hint_type -> (vprop * vprop)) =
+  fun projectee -> match projectee with | REWRITE _0 -> _0
 type stmt'__Expr__payload = {
   e: FStar_Parser_AST.term }
 and stmt'__Assignment__payload =

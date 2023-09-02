@@ -142,7 +142,7 @@ let mk_assert_hint_type vp = PSB.mk_assert_hint_type vp
 let mk_unfold_hint_type names vp = PSB.mk_unfold_hint_type names vp
 let mk_fold_hint_type names vp = PSB.mk_fold_hint_type names vp
 let mk_rename_hint_type pairs goal = PSB.mk_rename_hint_type pairs goal
-
+let mk_rewrite_hint_type p1 p2 = PSB.mk_rewrite_hint_type p1 p2
 
 let tm_proof_hint_with_binders (ht:_) (binders: binder list)  (s:st_term) r : st_term =
   PSB.(with_range (Tm_ProofHintWithBinders { hint_type=ht;

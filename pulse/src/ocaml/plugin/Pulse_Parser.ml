@@ -15,7 +15,7 @@ let rewrite_token (tok:FP.token)
     | IDENT "while" -> PP.WHILE
     | IDENT "fn" -> PP.FN
     | IDENT "parallel" -> PP.PARALLEL
-    | IDENT "rename" -> PP.RENAME
+    | IDENT "each" -> PP.EACH
     | IDENT "rewrite" -> PP.REWRITE
     | IDENT "fold" -> PP.FOLD
     | IDENT "atomic" -> PP.ATOMIC

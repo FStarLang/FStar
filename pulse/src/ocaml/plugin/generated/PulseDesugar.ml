@@ -768,6 +768,16 @@ let (desugar_hint_type :
                     let uu___2 =
                       PulseSyntaxWrapper.mk_rename_hint_type pairs1 goal1 in
                     return uu___2))
+      | PulseSugar.REWRITE (t1, t2) ->
+          let uu___ = desugar_vprop env t1 in
+          op_let_Question uu___
+            (fun t11 ->
+               let uu___1 = desugar_vprop env t2 in
+               op_let_Question uu___1
+                 (fun t21 ->
+                    let uu___2 =
+                      PulseSyntaxWrapper.mk_rewrite_hint_type t11 t21 in
+                    return uu___2))
 let (desugar_datacon : env_t -> FStar_Ident.lid -> PulseSyntaxWrapper.fv err)
   =
   fun env ->

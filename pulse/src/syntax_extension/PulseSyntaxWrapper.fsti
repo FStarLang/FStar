@@ -50,6 +50,7 @@ val mk_assert_hint_type (vp:vprop) : hint_type
 val mk_unfold_hint_type (l:option (list string)) (vp:vprop) : hint_type
 val mk_fold_hint_type (l:option (list string)) (vp:vprop) : hint_type
 val mk_rename_hint_type (l:list (term & term)) (goal:option vprop) : hint_type
+val mk_rewrite_hint_type (p1:term) (p2:term) : hint_type
 
 new val constant : Type0
 val inspect_const : FStar.Const.sconst -> constant

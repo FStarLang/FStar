@@ -111,6 +111,9 @@ let freevars_close_proof_hint' (ht:proof_hint_type) (x:var) (i:index)
     | RENAME { pairs; goal } ->
       freevars_close_term_pairs' pairs x i;
       freevars_close_term_opt' goal x i
+    | REWRITE { t1; t2 } ->
+      freevars_close_term' t1 x i;
+      freevars_close_term' t2 x i
 
 // Needs a bit more rlimit sometimes. Also splitting is too expensive
 #push-options "--z3rlimit 20 --split_queries no"
