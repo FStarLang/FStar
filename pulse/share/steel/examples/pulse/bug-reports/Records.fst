@@ -80,6 +80,39 @@ fn alloc_rec (v1 v2:U8.t)
 }
 ```
 
+//Here's another more compact way, using rename
+```pulse
+fn alloc_rec_alt (v1 v2:U8.t)
+  requires emp
+  returns r:rec2
+  ensures rec_perm r (mk_rec_repr v1 v2)
+{
+  let r1 = alloc v1;
+  let r2 = alloc v2; 
+  let r = mk_rec2 r1 r2;
+  rewrite each r1 as r.r1, r2 as r.r2;
+  fold_rec_perm r;
+  r
+}
+```
+
+//Here's yet another way, a bit more explicit
+```pulse
+fn alloc_rec_alt_alt (v1 v2:U8.t)
+  requires emp
+  returns r:rec2
+  ensures rec_perm r (mk_rec_repr v1 v2)
+{
+  let r1 = alloc v1;
+  let r2 = alloc v2; 
+  let r = mk_rec2 r1 r2;
+  with w1 w2.
+    rewrite each r1 as r.r1, r2 as r.r2 in 
+      (R.pts_to r1 w1 ** R.pts_to r2 w2);
+  fold_rec_perm r;
+  r
+}
+```
 //Some alternate ways to do it, useful test cases
 
 // helpers 
@@ -145,10 +178,9 @@ fn explicit_unfold_slightly_better_witness_taking_and_fold (r:rec2) (#v:Ghost.er
         R.pts_to r.r2 v.v2);
 
   r.r2 := 0uy;
-  with v2_. assert (R.pts_to r.r2 v2_);
-
-  rewrite (R.pts_to r.r1 v.v1 **
-           R.pts_to r.r2 v2_)
+  with v2_. 
+   rewrite (R.pts_to r.r1 v.v1 **
+            R.pts_to r.r2 v2_)
     as    (rec_perm r (rec_repr_with_v2 v v2_));
 
   ()

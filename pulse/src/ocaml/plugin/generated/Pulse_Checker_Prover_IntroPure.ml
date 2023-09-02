@@ -33,7 +33,7 @@ let (k_intro_pure :
                  (fun uu___ ->
                     Pulse_Typing.wr
                       (Pulse_Syntax_Base.Tm_IntroPure
-                         { Pulse_Syntax_Base.p = p })))
+                         { Pulse_Syntax_Base.p3 = p })))
               (fun uu___ ->
                  (fun t ->
                     Obj.magic

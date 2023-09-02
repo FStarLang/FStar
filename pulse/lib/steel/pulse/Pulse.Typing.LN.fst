@@ -105,6 +105,38 @@ let rec open_term_ln_list' (t:list term) (x:term) (i:index)
       open_term_ln' hd x i;
       open_term_ln_list' tl x i      
 
+let open_term_pairs' (t:list (term & term)) (v:term) (i:index)
+  : Tot (list (term & term))
+  = subst_term_pairs t [ DT i v ]
+
+let rec open_term_ln_pairs (t:list (term & term)) (x:term) (i:index)
+  : Lemma
+    (requires ln_terms' (open_term_pairs' t x i) (i - 1))
+    (ensures ln_terms' t i)
+    (decreases t)
+  = match t with
+    | [] -> ()
+    | (l, r)::tl ->
+      open_term_ln' l x i;
+      open_term_ln' r x i;
+      open_term_ln_pairs tl x i
+
+let open_proof_hint_ln (t:proof_hint_type) (x:term) (i:index)
+  : Lemma
+    (requires ln_proof_hint' (open_proof_hint' t x i) (i - 1))
+    (ensures ln_proof_hint' t i)
+  = match t with
+    | ASSERT { p }
+    | FOLD { p }
+    | UNFOLD { p } ->
+      open_term_ln' p x i
+    | RENAME { pairs; goal } ->
+      open_term_ln_pairs pairs x i;
+      open_term_ln_opt' goal x i
+    | REWRITE { t1; t2 } ->
+      open_term_ln' t1 x i;
+      open_term_ln' t2 x i
+
 let rec open_st_term_ln' (e:st_term)
                          (x:term)
                          (i:index)
@@ -182,9 +214,9 @@ let rec open_st_term_ln' (e:st_term)
       open_term_ln' typ x i;
       open_term_ln_opt' post x (i + 1)
 
-    | Tm_ProofHintWithBinders { binders; v; t } ->
+    | Tm_ProofHintWithBinders { binders; hint_type; t } ->
       let n = L.length binders in
-      open_term_ln' v x (i + n);
+      open_proof_hint_ln hint_type x (i + n);
       open_st_term_ln' t x (i + n)
 
 // The Tm_Match? and __brs_of conditions are to prove that the ln_branches' below
@@ -303,6 +335,34 @@ let rec ln_weakening_list (t:list term) (i j:int)
       ln_weakening hd i j;
       ln_weakening_list tl i j
 
+let rec ln_weakening_pairs (t:list (term & term)) (i j:int)
+  : Lemma
+    (requires ln_terms' t i /\ i <= j)
+    (ensures ln_terms' t j)
+    (decreases t)
+  = match t with
+    | [] -> ()
+    | (l, r)::tl ->
+      ln_weakening l i j;
+      ln_weakening r i j;
+      ln_weakening_pairs tl i j
+
+let ln_weakening_proof_hint (t:proof_hint_type) (i j:int)
+  : Lemma
+    (requires ln_proof_hint' t i /\ i <= j)
+    (ensures ln_proof_hint' t j)
+  = match t with
+    | ASSERT { p }
+    | FOLD { p }
+    | UNFOLD { p } ->
+      ln_weakening p i j 
+    | RENAME { pairs; goal } ->
+      ln_weakening_pairs pairs i j;
+      ln_weakening_opt goal i j
+    | REWRITE { t1; t2 } ->
+      ln_weakening t1 i j;
+      ln_weakening t2 i j
+
 let rec ln_weakening_st (t:st_term) (i j:int)
   : Lemma
     (requires ln_st' t i /\ i <= j)
@@ -373,9 +433,9 @@ let rec ln_weakening_st (t:st_term) (i j:int)
       ln_weakening typ i j;
       ln_weakening_opt post (i + 1) (j + 1)
       
-    | Tm_ProofHintWithBinders { binders; v; t } ->
+    | Tm_ProofHintWithBinders { binders; hint_type; t } ->
       let n = L.length binders in
-      ln_weakening v (i + n) (j + n);
+      ln_weakening_proof_hint hint_type (i + n) (j + n);
       ln_weakening_st t (i + n) (j + n)
 
 assume
@@ -462,6 +522,36 @@ let rec open_term_ln_inv_list' (t:list term)
       open_term_ln_inv' hd x i;
       open_term_ln_inv_list' tl x i      
 
+let rec open_term_ln_inv_pairs (t:list (term & term))
+                               (x:term { ln x })
+                               (i:index)
+  : Lemma
+    (requires ln_terms' t i)
+    (ensures ln_terms' (open_term_pairs' t x i) (i - 1))
+    (decreases t)
+  = match t with
+    | [] -> ()
+    | (l, r)::tl ->
+      open_term_ln_inv' l x i;
+      open_term_ln_inv' r x i;
+      open_term_ln_inv_pairs tl x i
+
+let open_proof_hint_ln_inv (ht:proof_hint_type) (x:term { ln x }) (i:index)
+  : Lemma
+    (requires ln_proof_hint' ht i)
+    (ensures ln_proof_hint' (open_proof_hint' ht x i) (i - 1))
+  = match ht with
+    | ASSERT { p }
+    | FOLD { p }
+    | UNFOLD { p } ->
+      open_term_ln_inv' p x i
+    | RENAME { pairs; goal } ->
+      open_term_ln_inv_pairs pairs x i;
+      open_term_ln_inv_opt' goal x i
+    | REWRITE { t1; t2 } ->
+      open_term_ln_inv' t1 x i;
+      open_term_ln_inv' t2 x i
+
 #push-options "--z3rlimit_factor 2 --fuel 2 --ifuel 2"
 let rec open_term_ln_inv_st' (t:st_term)
                              (x:term { ln x })
@@ -536,9 +626,9 @@ let rec open_term_ln_inv_st' (t:st_term)
       open_term_ln_inv' typ x i;
       open_term_ln_inv_opt' post x (i + 1)
 
-    | Tm_ProofHintWithBinders { binders; v; t } ->
+    | Tm_ProofHintWithBinders { binders; hint_type; t } ->
       let n = L.length binders in
-      open_term_ln_inv' v x (i + n);
+      open_proof_hint_ln_inv hint_type x (i + n);
       open_term_ln_inv_st' t x (i + n)
 
 #pop-options
@@ -621,6 +711,38 @@ let rec close_term_ln_list' (t:list term) (x:var) (i:index)
       close_term_ln' hd x i;
       close_term_ln_list' tl x i
 
+let close_term_pairs' (t:list (term & term)) (v:var) (i:index)
+  : Tot (list (term & term))
+  = subst_term_pairs t [ ND v i ]
+
+let rec close_term_ln_pairs (t:list (term & term)) (x:var) (i:index)
+  : Lemma
+    (requires ln_terms' t (i - 1))
+    (ensures ln_terms' (close_term_pairs' t x i) i)
+    (decreases t)
+  = match t with
+    | [] -> ()
+    | (l, r)::tl ->
+      close_term_ln' l x i;
+      close_term_ln' r x i;
+      close_term_ln_pairs tl x i
+
+let close_proof_hint_ln (ht:proof_hint_type) (v:var) (i:index)
+  : Lemma
+    (requires ln_proof_hint' ht (i - 1))
+    (ensures ln_proof_hint' (close_proof_hint' ht v i) i)
+  = match ht with
+    | ASSERT { p }
+    | FOLD { p }
+    | UNFOLD { p } ->
+      close_term_ln' p v i
+    | RENAME { pairs; goal } ->
+      close_term_ln_pairs pairs v i;
+      close_term_ln_opt' goal v i
+    | REWRITE { t1; t2 } ->
+      close_term_ln' t1 v i;
+      close_term_ln' t2 v i
+
 let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
   : Lemma
     (requires ln_st' t (i - 1))
@@ -682,7 +804,7 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
     | Tm_Rewrite { t1; t2 } ->
       close_term_ln' t1 x i;
       close_term_ln' t2 x i
-
+      
     | Tm_WithLocal { binder; initializer; body } ->
       close_term_ln' binder.binder_ty x i;
       close_term_ln' initializer x i;
@@ -692,9 +814,9 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
       close_term_ln' typ x i;
       close_term_ln_opt' post x (i + 1)
 
-    | Tm_ProofHintWithBinders { binders; v; t } ->
+    | Tm_ProofHintWithBinders { binders; hint_type; t } ->
       let n = L.length binders in
-      close_term_ln' v x (i + n);
+      close_proof_hint_ln hint_type x (i + n);
       close_st_term_ln' t x (i + n)
       
 let close_comp_ln (c:comp) (v:var)

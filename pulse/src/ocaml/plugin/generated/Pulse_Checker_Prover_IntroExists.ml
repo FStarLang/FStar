@@ -42,7 +42,7 @@ let (k_intro_exists :
                             Pulse_Typing.wr
                               (Pulse_Syntax_Base.Tm_IntroExists
                                  {
-                                   Pulse_Syntax_Base.p2 =
+                                   Pulse_Syntax_Base.p5 =
                                      (Pulse_Syntax_Base.tm_exists_sl u b p);
                                    Pulse_Syntax_Base.witnesses = [e]
                                  })))
@@ -173,7 +173,7 @@ let (k_intro_exists :
                                                                     (Pulse_Typing.wr
                                                                     (Pulse_Syntax_Base.Tm_IntroExists
                                                                     {
-                                                                    Pulse_Syntax_Base.p2
+                                                                    Pulse_Syntax_Base.p5
                                                                     =
                                                                     (Pulse_Syntax_Base.tm_exists_sl
                                                                     u b p);

@@ -74,7 +74,7 @@ let (check_elim_exists :
                               (fun uu___ ->
                                  match uu___ with
                                  | Pulse_Syntax_Base.Tm_ElimExists
-                                     { Pulse_Syntax_Base.p1 = t1;_} ->
+                                     { Pulse_Syntax_Base.p4 = t1;_} ->
                                      Obj.magic
                                        (FStar_Tactics_Effect.tac_bind
                                           (FStar_Sealed.seal
@@ -547,7 +547,7 @@ let (check_elim_exists :
                                                                     (Pulse_Typing.wr
                                                                     (Pulse_Syntax_Base.Tm_ElimExists
                                                                     {
-                                                                    Pulse_Syntax_Base.p1
+                                                                    Pulse_Syntax_Base.p4
                                                                     =
                                                                     (Pulse_Syntax_Base.tm_exists_sl
                                                                     u
@@ -598,7 +598,7 @@ let (intro_exists_witness_singleton :
   fun st ->
     match st.Pulse_Syntax_Base.term1 with
     | Pulse_Syntax_Base.Tm_IntroExists
-        { Pulse_Syntax_Base.p2 = uu___;
+        { Pulse_Syntax_Base.p5 = uu___;
           Pulse_Syntax_Base.witnesses = uu___1::[];_}
         -> true
     | uu___ -> false
@@ -607,7 +607,7 @@ let (intro_exists_vprop :
   fun st ->
     match st.Pulse_Syntax_Base.term1 with
     | Pulse_Syntax_Base.Tm_IntroExists
-        { Pulse_Syntax_Base.p2 = p; Pulse_Syntax_Base.witnesses = uu___;_} ->
+        { Pulse_Syntax_Base.p5 = p; Pulse_Syntax_Base.witnesses = uu___;_} ->
         p
 let (check_intro_exists :
   Pulse_Typing_Env.env ->
@@ -666,7 +666,7 @@ let (check_intro_exists :
                                 (fun uu___ ->
                                    match uu___ with
                                    | Pulse_Syntax_Base.Tm_IntroExists
-                                       { Pulse_Syntax_Base.p2 = t;
+                                       { Pulse_Syntax_Base.p5 = t;
                                          Pulse_Syntax_Base.witnesses =
                                            witness::[];_}
                                        ->
@@ -1020,7 +1020,7 @@ let (check_intro_exists :
                                                                     (Pulse_Typing.wr
                                                                     (Pulse_Syntax_Base.Tm_IntroExists
                                                                     {
-                                                                    Pulse_Syntax_Base.p2
+                                                                    Pulse_Syntax_Base.p5
                                                                     =
                                                                     (Pulse_Syntax_Base.tm_exists_sl
                                                                     u b p);

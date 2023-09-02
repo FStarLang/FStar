@@ -232,8 +232,8 @@ let rec st_term_to_string' (level:string) (t:st_term)
 
     | Tm_Rewrite { t1; t2 } ->
        sprintf "rewrite %s %s"
-	       (term_to_string t1)
-               (term_to_string t2)
+        (term_to_string t1)
+        (term_to_string t2)
 
     | Tm_WithLocal { binder; initializer; body } ->
       sprintf "let mut %s = %s;\n%s%s"
@@ -254,12 +254,34 @@ let rec st_term_to_string' (level:string) (t:st_term)
          | None -> ""
          | Some post -> sprintf " %s" (term_to_string post))
 
-    | Tm_ProofHintWithBinders { binders; v; t} ->
-      sprintf "assert %s%s in\n%s"
-        (if L.length binders = 0 then ""
-         else let s = L.fold_left (fun s _b -> Printf.sprintf "%s _" s) "" binders in
-              Printf.sprintf "%s." s)
-        (term_to_string v)
+    | Tm_ProofHintWithBinders { binders; hint_type; t} ->
+      let with_prefix =
+        match binders with
+        | [] -> ""
+        | _ -> sprintf "with %s." (String.concat " " (T.map binder_to_string binders))
+      in
+      let names_to_string = function
+        | None -> ""
+        | Some l -> sprintf " [%s]" (String.concat "; " l)
+      in
+      let ht, p =
+        match hint_type with
+        | ASSERT { p } -> "assert", term_to_string p
+        | UNFOLD { names; p } -> sprintf "unfold%s" (names_to_string names), term_to_string p
+        | FOLD { names; p } -> sprintf "fold%s" (names_to_string names), term_to_string p
+        | RENAME { pairs; goal } ->
+          sprintf "rewrite each %s"
+            (String.concat ", "
+              (T.map
+                (fun (x, y) -> sprintf "%s as %s" (term_to_string x) (term_to_string y))
+              pairs)),
+            (match goal with
+            | None -> ""
+            | Some t -> sprintf " in %s" (term_to_string t))
+        | REWRITE { t1; t2 } ->
+          sprintf "rewrite %s as %s" (term_to_string t1) (term_to_string t2), ""
+      in
+      sprintf "%s %s %s; %s" with_prefix ht p
         (st_term_to_string' level t)
 
 and branches_to_string brs : T.Tac _ =

@@ -712,18 +712,72 @@ let (resolve_names :
           let uu___ = map_err (resolve_lid env) ns1 in
           op_let_Question uu___
             (fun ns2 -> return (FStar_Pervasives_Native.Some ns2))
-let (resolve_hint_type :
-  env_t -> PulseSugar.hint_type -> PulseSugar.hint_type err) =
+let (desugar_hint_type :
+  env_t -> PulseSugar.hint_type -> PulseSyntaxWrapper.hint_type err) =
   fun env ->
     fun ht ->
       match ht with
-      | PulseSugar.ASSERT -> return PulseSugar.ASSERT
-      | PulseSugar.UNFOLD ns ->
-          let uu___ = resolve_names env ns in
-          op_let_Question uu___ (fun ns1 -> return (PulseSugar.UNFOLD ns1))
-      | PulseSugar.FOLD ns ->
-          let uu___ = resolve_names env ns in
-          op_let_Question uu___ (fun ns1 -> return (PulseSugar.FOLD ns1))
+      | PulseSugar.ASSERT vp ->
+          let uu___ = desugar_vprop env vp in
+          op_let_Question uu___
+            (fun vp1 ->
+               let uu___1 = PulseSyntaxWrapper.mk_assert_hint_type vp1 in
+               return uu___1)
+      | PulseSugar.UNFOLD (ns, vp) ->
+          let uu___ = desugar_vprop env vp in
+          op_let_Question uu___
+            (fun vp1 ->
+               let uu___1 = resolve_names env ns in
+               op_let_Question uu___1
+                 (fun ns1 ->
+                    let ns2 =
+                      FStar_Compiler_Util.map_opt ns1
+                        (FStar_Compiler_List.map FStar_Ident.string_of_lid) in
+                    let uu___2 =
+                      PulseSyntaxWrapper.mk_unfold_hint_type ns2 vp1 in
+                    return uu___2))
+      | PulseSugar.FOLD (ns, vp) ->
+          let uu___ = desugar_vprop env vp in
+          op_let_Question uu___
+            (fun vp1 ->
+               let uu___1 = resolve_names env ns in
+               op_let_Question uu___1
+                 (fun ns1 ->
+                    let ns2 =
+                      FStar_Compiler_Util.map_opt ns1
+                        (FStar_Compiler_List.map FStar_Ident.string_of_lid) in
+                    let uu___2 = PulseSyntaxWrapper.mk_fold_hint_type ns2 vp1 in
+                    return uu___2))
+      | PulseSugar.RENAME (pairs, goal) ->
+          let uu___ =
+            map_err
+              (fun uu___1 ->
+                 match uu___1 with
+                 | (t1, t2) ->
+                     let uu___2 = desugar_term env t1 in
+                     op_let_Question uu___2
+                       (fun t11 ->
+                          let uu___3 = desugar_term env t2 in
+                          op_let_Question uu___3
+                            (fun t21 -> return (t11, t21)))) pairs in
+          op_let_Question uu___
+            (fun pairs1 ->
+               let uu___1 = map_err_opt (desugar_vprop env) goal in
+               op_let_Question uu___1
+                 (fun goal1 ->
+                    let uu___2 =
+                      PulseSyntaxWrapper.mk_rename_hint_type pairs1 goal1 in
+                    return uu___2))
+      | PulseSugar.REWRITE (t1, t2) ->
+          let uu___ = desugar_vprop env t1 in
+          op_let_Question uu___
+            (fun t11 ->
+               let uu___1 = desugar_vprop env t2 in
+               op_let_Question uu___1
+                 (fun t21 ->
+                    let uu___2 =
+                      PulseSyntaxWrapper.mk_rewrite_hint_type t11 t21 in
+                    return uu___2))
 let (desugar_datacon : env_t -> FStar_Ident.lid -> PulseSyntaxWrapper.fv err)
   =
   fun env ->
@@ -827,11 +881,11 @@ let rec (desugar_stmt :
             PulseSugar.s2 = s2;_}
           -> desugar_bind env lb s2 s.PulseSugar.range1
       | PulseSugar.ProofHintWithBinders uu___ ->
-          desugar_assert_with_binders env s FStar_Pervasives_Native.None
+          desugar_proof_hint_with_binders env s FStar_Pervasives_Native.None
             s.PulseSugar.range1
       | PulseSugar.Sequence { PulseSugar.s1 = s1; PulseSugar.s2 = s2;_} when
           PulseSugar.uu___is_ProofHintWithBinders s1.PulseSugar.s ->
-          desugar_assert_with_binders env s1
+          desugar_proof_hint_with_binders env s1
             (FStar_Pervasives_Native.Some s2) s.PulseSugar.range1
       | PulseSugar.Sequence { PulseSugar.s1 = s1; PulseSugar.s2 = s2;_} ->
           desugar_sequence env s1 s2 s.PulseSugar.range1
@@ -1157,7 +1211,7 @@ and (desugar_sequence :
                       let uu___3 = PulseSyntaxWrapper.tm_unknown r in
                       PulseSyntaxWrapper.mk_binder uu___2 uu___3 in
                     let uu___2 = mk_bind annot s11 s21 r in return uu___2))
-and (desugar_assert_with_binders :
+and (desugar_proof_hint_with_binders :
   env_t ->
     PulseSugar.stmt ->
       PulseSugar.stmt FStar_Pervasives_Native.option ->
@@ -1169,8 +1223,7 @@ and (desugar_assert_with_binders :
         fun r ->
           match s1.PulseSugar.s with
           | PulseSugar.ProofHintWithBinders
-              { PulseSugar.hint_type = hint_type; PulseSugar.binders1 = bs;
-                PulseSugar.vprop1 = v;_}
+              { PulseSugar.hint_type = hint_type; PulseSugar.binders1 = bs;_}
               ->
               let uu___ = desugar_binders env bs in
               op_let_Question uu___
@@ -1180,9 +1233,9 @@ and (desugar_assert_with_binders :
                        let vars =
                          FStar_Compiler_List.map
                            (fun bv -> bv.FStar_Syntax_Syntax.index) bvs in
-                       let uu___2 = desugar_vprop env1 v in
+                       let uu___2 = desugar_hint_type env1 hint_type in
                        op_let_Question uu___2
-                         (fun v1 ->
+                         (fun ht ->
                             let uu___3 =
                               match k with
                               | FStar_Pervasives_Native.None ->
@@ -1204,19 +1257,15 @@ and (desugar_assert_with_binders :
                                    PulseSyntaxWrapper.bvs_as_subst vars in
                                  let s21 =
                                    PulseSyntaxWrapper.subst_st_term sub s2 in
-                                 let v2 =
-                                   PulseSyntaxWrapper.subst_term sub v1 in
+                                 let ht1 =
+                                   PulseSyntaxWrapper.subst_proof_hint sub ht in
                                  let uu___4 =
-                                   resolve_hint_type env1 hint_type in
-                                 op_let_Question uu___4
-                                   (fun ht ->
-                                      let uu___5 =
-                                        let uu___6 =
-                                          PulseSyntaxWrapper.close_binders
-                                            binders1 vars in
-                                        PulseSyntaxWrapper.tm_proof_hint_with_binders
-                                          ht uu___6 v2 s21 r in
-                                      return uu___5))))
+                                   let uu___5 =
+                                     PulseSyntaxWrapper.close_binders
+                                       binders1 vars in
+                                   PulseSyntaxWrapper.tm_proof_hint_with_binders
+                                     ht1 uu___5 s21 r in
+                                 return uu___4)))
           | uu___ ->
               fail "Expected ProofHintWithBinders" s1.PulseSugar.range1
 and (desugar_binders :

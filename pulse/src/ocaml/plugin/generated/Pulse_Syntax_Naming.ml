@@ -56,6 +56,33 @@ let rec (freevars_list :
     match t with
     | [] -> FStar_Set.empty ()
     | hd::tl -> FStar_Set.union (freevars hd) (freevars_list tl)
+let rec (freevars_pairs :
+  (Pulse_Syntax_Base.term * Pulse_Syntax_Base.term) Prims.list ->
+    Pulse_Syntax_Base.var FStar_Set.set)
+  =
+  fun pairs ->
+    match pairs with
+    | [] -> FStar_Set.empty ()
+    | (t1, t2)::tl ->
+        FStar_Set.union (FStar_Set.union (freevars t1) (freevars t2))
+          (freevars_pairs tl)
+let (freevars_proof_hint :
+  Pulse_Syntax_Base.proof_hint_type -> Pulse_Syntax_Base.var FStar_Set.set) =
+  fun ht ->
+    match ht with
+    | Pulse_Syntax_Base.ASSERT { Pulse_Syntax_Base.p = p;_} -> freevars p
+    | Pulse_Syntax_Base.FOLD
+        { Pulse_Syntax_Base.names = uu___; Pulse_Syntax_Base.p1 = p;_} ->
+        freevars p
+    | Pulse_Syntax_Base.UNFOLD
+        { Pulse_Syntax_Base.names1 = uu___; Pulse_Syntax_Base.p2 = p;_} ->
+        freevars p
+    | Pulse_Syntax_Base.RENAME
+        { Pulse_Syntax_Base.pairs = pairs; Pulse_Syntax_Base.goal = goal;_}
+        -> FStar_Set.union (freevars_pairs pairs) (freevars_term_opt goal)
+    | Pulse_Syntax_Base.REWRITE
+        { Pulse_Syntax_Base.t1 = t1; Pulse_Syntax_Base.t2 = t2;_} ->
+        FStar_Set.union (freevars t1) (freevars t2)
 let rec (freevars_st :
   Pulse_Syntax_Base.st_term -> Pulse_Syntax_Base.var FStar_Set.set) =
   fun t ->
@@ -103,12 +130,12 @@ let rec (freevars_st :
         let op_At_At = FStar_Set.union in
         op_At_At (freevars sc)
           (op_At_At (freevars_term_opt returns_) (freevars_branches brs))
-    | Pulse_Syntax_Base.Tm_IntroPure { Pulse_Syntax_Base.p = p;_} ->
+    | Pulse_Syntax_Base.Tm_IntroPure { Pulse_Syntax_Base.p3 = p;_} ->
         freevars p
-    | Pulse_Syntax_Base.Tm_ElimExists { Pulse_Syntax_Base.p1 = p;_} ->
+    | Pulse_Syntax_Base.Tm_ElimExists { Pulse_Syntax_Base.p4 = p;_} ->
         freevars p
     | Pulse_Syntax_Base.Tm_IntroExists
-        { Pulse_Syntax_Base.p2 = p;
+        { Pulse_Syntax_Base.p5 = p;
           Pulse_Syntax_Base.witnesses = witnesses;_}
         -> FStar_Set.union (freevars p) (freevars_list witnesses)
     | Pulse_Syntax_Base.Tm_While
@@ -138,17 +165,16 @@ let rec (freevars_st :
         FStar_Set.union (freevars binder.Pulse_Syntax_Base.binder_ty)
           (FStar_Set.union (freevars initializer1) (freevars_st body))
     | Pulse_Syntax_Base.Tm_Rewrite
-        { Pulse_Syntax_Base.t1 = t1; Pulse_Syntax_Base.t2 = t2;_} ->
+        { Pulse_Syntax_Base.t11 = t1; Pulse_Syntax_Base.t21 = t2;_} ->
         FStar_Set.union (freevars t1) (freevars t2)
     | Pulse_Syntax_Base.Tm_Admit
         { Pulse_Syntax_Base.ctag1 = uu___; Pulse_Syntax_Base.u1 = uu___1;
           Pulse_Syntax_Base.typ = typ; Pulse_Syntax_Base.post3 = post;_}
         -> FStar_Set.union (freevars typ) (freevars_term_opt post)
     | Pulse_Syntax_Base.Tm_ProofHintWithBinders
-        { Pulse_Syntax_Base.hint_type = uu___;
-          Pulse_Syntax_Base.binders = binders; Pulse_Syntax_Base.v = v;
-          Pulse_Syntax_Base.t3 = t1;_}
-        -> FStar_Set.union (freevars v) (freevars_st t1)
+        { Pulse_Syntax_Base.hint_type = hint_type;
+          Pulse_Syntax_Base.binders = binders; Pulse_Syntax_Base.t3 = t1;_}
+        -> FStar_Set.union (freevars_proof_hint hint_type) (freevars_st t1)
 and (freevars_branches :
   (Pulse_Syntax_Base.pattern * Pulse_Syntax_Base.st_term) Prims.list ->
     Pulse_Syntax_Base.var FStar_Set.set)
@@ -205,6 +231,33 @@ let rec (ln_list' :
   fun t ->
     fun i ->
       match t with | [] -> true | hd::tl -> (ln' hd i) && (ln_list' tl i)
+let rec (ln_terms' :
+  (Pulse_Syntax_Base.term * Pulse_Syntax_Base.term) Prims.list ->
+    Prims.int -> Prims.bool)
+  =
+  fun t ->
+    fun i ->
+      match t with
+      | [] -> true
+      | (t1, t2)::tl -> ((ln' t1 i) && (ln' t2 i)) && (ln_terms' tl i)
+let (ln_proof_hint' :
+  Pulse_Syntax_Base.proof_hint_type -> Prims.int -> Prims.bool) =
+  fun ht ->
+    fun i ->
+      match ht with
+      | Pulse_Syntax_Base.ASSERT { Pulse_Syntax_Base.p = p;_} -> ln' p i
+      | Pulse_Syntax_Base.UNFOLD
+          { Pulse_Syntax_Base.names1 = uu___; Pulse_Syntax_Base.p2 = p;_} ->
+          ln' p i
+      | Pulse_Syntax_Base.FOLD
+          { Pulse_Syntax_Base.names = uu___; Pulse_Syntax_Base.p1 = p;_} ->
+          ln' p i
+      | Pulse_Syntax_Base.RENAME
+          { Pulse_Syntax_Base.pairs = pairs; Pulse_Syntax_Base.goal = goal;_}
+          -> (ln_terms' pairs i) && (ln_opt' goal i)
+      | Pulse_Syntax_Base.REWRITE
+          { Pulse_Syntax_Base.t1 = t1; Pulse_Syntax_Base.t2 = t2;_} ->
+          (ln' t1 i) && (ln' t2 i)
 let rec (ln_st' : Pulse_Syntax_Base.st_term -> Prims.int -> Prims.bool) =
   fun t ->
     fun i ->
@@ -250,12 +303,12 @@ let rec (ln_st' : Pulse_Syntax_Base.st_term -> Prims.int -> Prims.bool) =
           { Pulse_Syntax_Base.sc = sc; Pulse_Syntax_Base.returns_ = returns_;
             Pulse_Syntax_Base.brs = brs;_}
           -> ((ln' sc i) && (ln_opt' returns_ i)) && (ln_branches' t brs i)
-      | Pulse_Syntax_Base.Tm_IntroPure { Pulse_Syntax_Base.p = p;_} ->
+      | Pulse_Syntax_Base.Tm_IntroPure { Pulse_Syntax_Base.p3 = p;_} ->
           ln' p i
-      | Pulse_Syntax_Base.Tm_ElimExists { Pulse_Syntax_Base.p1 = p;_} ->
+      | Pulse_Syntax_Base.Tm_ElimExists { Pulse_Syntax_Base.p4 = p;_} ->
           ln' p i
       | Pulse_Syntax_Base.Tm_IntroExists
-          { Pulse_Syntax_Base.p2 = p;
+          { Pulse_Syntax_Base.p5 = p;
             Pulse_Syntax_Base.witnesses = witnesses;_}
           -> (ln' p i) && (ln_list' witnesses i)
       | Pulse_Syntax_Base.Tm_While
@@ -285,19 +338,18 @@ let rec (ln_st' : Pulse_Syntax_Base.st_term -> Prims.int -> Prims.bool) =
           ((ln' binder.Pulse_Syntax_Base.binder_ty i) && (ln' initializer1 i))
             && (ln_st' body (i + Prims.int_one))
       | Pulse_Syntax_Base.Tm_Rewrite
-          { Pulse_Syntax_Base.t1 = t1; Pulse_Syntax_Base.t2 = t2;_} ->
+          { Pulse_Syntax_Base.t11 = t1; Pulse_Syntax_Base.t21 = t2;_} ->
           (ln' t1 i) && (ln' t2 i)
       | Pulse_Syntax_Base.Tm_Admit
           { Pulse_Syntax_Base.ctag1 = uu___; Pulse_Syntax_Base.u1 = uu___1;
             Pulse_Syntax_Base.typ = typ; Pulse_Syntax_Base.post3 = post;_}
           -> (ln' typ i) && (ln_opt' post (i + Prims.int_one))
       | Pulse_Syntax_Base.Tm_ProofHintWithBinders
-          { Pulse_Syntax_Base.hint_type = uu___;
-            Pulse_Syntax_Base.binders = binders; Pulse_Syntax_Base.v = v;
-            Pulse_Syntax_Base.t3 = t1;_}
+          { Pulse_Syntax_Base.hint_type = hint_type;
+            Pulse_Syntax_Base.binders = binders; Pulse_Syntax_Base.t3 = t1;_}
           ->
           let n = FStar_List_Tot_Base.length binders in
-          (ln' v (i + n)) && (ln_st' t1 (i + n))
+          (ln_proof_hint' hint_type (i + n)) && (ln_st' t1 (i + n))
 and (ln_branch' :
   (Pulse_Syntax_Base.pattern * Pulse_Syntax_Base.st_term) ->
     Prims.int -> Prims.bool)
@@ -512,6 +564,77 @@ let (open_binder :
           Pulse_Syntax_Base.binder_ppname =
             (b.Pulse_Syntax_Base.binder_ppname)
         }
+let rec (subst_term_pairs :
+  (Pulse_Syntax_Base.term * Pulse_Syntax_Base.term) Prims.list ->
+    subst -> (Pulse_Syntax_Base.term * Pulse_Syntax_Base.term) Prims.list)
+  =
+  fun t ->
+    fun ss ->
+      match t with
+      | [] -> []
+      | (t1, t2)::tl -> ((subst_term t1 ss), (subst_term t2 ss)) ::
+          (subst_term_pairs tl ss)
+let (subst_proof_hint :
+  Pulse_Syntax_Base.proof_hint_type ->
+    subst -> Pulse_Syntax_Base.proof_hint_type)
+  =
+  fun ht ->
+    fun ss ->
+      match ht with
+      | Pulse_Syntax_Base.ASSERT { Pulse_Syntax_Base.p = p;_} ->
+          Pulse_Syntax_Base.ASSERT
+            { Pulse_Syntax_Base.p = (subst_term p ss) }
+      | Pulse_Syntax_Base.UNFOLD
+          { Pulse_Syntax_Base.names1 = names; Pulse_Syntax_Base.p2 = p;_} ->
+          Pulse_Syntax_Base.UNFOLD
+            {
+              Pulse_Syntax_Base.names1 = names;
+              Pulse_Syntax_Base.p2 = (subst_term p ss)
+            }
+      | Pulse_Syntax_Base.FOLD
+          { Pulse_Syntax_Base.names = names; Pulse_Syntax_Base.p1 = p;_} ->
+          Pulse_Syntax_Base.FOLD
+            {
+              Pulse_Syntax_Base.names = names;
+              Pulse_Syntax_Base.p1 = (subst_term p ss)
+            }
+      | Pulse_Syntax_Base.RENAME
+          { Pulse_Syntax_Base.pairs = pairs; Pulse_Syntax_Base.goal = goal;_}
+          ->
+          Pulse_Syntax_Base.RENAME
+            {
+              Pulse_Syntax_Base.pairs = (subst_term_pairs pairs ss);
+              Pulse_Syntax_Base.goal = (subst_term_opt goal ss)
+            }
+      | Pulse_Syntax_Base.REWRITE
+          { Pulse_Syntax_Base.t1 = t1; Pulse_Syntax_Base.t2 = t2;_} ->
+          Pulse_Syntax_Base.REWRITE
+            {
+              Pulse_Syntax_Base.t1 = (subst_term t1 ss);
+              Pulse_Syntax_Base.t2 = (subst_term t2 ss)
+            }
+let (open_term_pairs' :
+  (Pulse_Syntax_Base.term * Pulse_Syntax_Base.term) Prims.list ->
+    Pulse_Syntax_Base.term ->
+      Pulse_Syntax_Base.index ->
+        (Pulse_Syntax_Base.term * Pulse_Syntax_Base.term) Prims.list)
+  = fun t -> fun v -> fun i -> subst_term_pairs t [DT (i, v)]
+let (close_term_pairs' :
+  (Pulse_Syntax_Base.term * Pulse_Syntax_Base.term) Prims.list ->
+    Pulse_Syntax_Base.var ->
+      Pulse_Syntax_Base.index ->
+        (Pulse_Syntax_Base.term * Pulse_Syntax_Base.term) Prims.list)
+  = fun t -> fun x -> fun i -> subst_term_pairs t [ND (x, i)]
+let (open_proof_hint' :
+  Pulse_Syntax_Base.proof_hint_type ->
+    Pulse_Syntax_Base.term ->
+      Pulse_Syntax_Base.index -> Pulse_Syntax_Base.proof_hint_type)
+  = fun ht -> fun v -> fun i -> subst_proof_hint ht [DT (i, v)]
+let (close_proof_hint' :
+  Pulse_Syntax_Base.proof_hint_type ->
+    Pulse_Syntax_Base.var ->
+      Pulse_Syntax_Base.index -> Pulse_Syntax_Base.proof_hint_type)
+  = fun ht -> fun x -> fun i -> subst_proof_hint ht [ND (x, i)]
 let rec (subst_st_term :
   Pulse_Syntax_Base.st_term -> subst -> Pulse_Syntax_Base.st_term) =
   fun t ->
@@ -602,19 +725,19 @@ let rec (subst_st_term :
                 Pulse_Syntax_Base.returns_ = (subst_term_opt returns_ ss);
                 Pulse_Syntax_Base.brs = (subst_branches t ss brs)
               }
-        | Pulse_Syntax_Base.Tm_IntroPure { Pulse_Syntax_Base.p = p;_} ->
+        | Pulse_Syntax_Base.Tm_IntroPure { Pulse_Syntax_Base.p3 = p;_} ->
             Pulse_Syntax_Base.Tm_IntroPure
-              { Pulse_Syntax_Base.p = (subst_term p ss) }
-        | Pulse_Syntax_Base.Tm_ElimExists { Pulse_Syntax_Base.p1 = p;_} ->
+              { Pulse_Syntax_Base.p3 = (subst_term p ss) }
+        | Pulse_Syntax_Base.Tm_ElimExists { Pulse_Syntax_Base.p4 = p;_} ->
             Pulse_Syntax_Base.Tm_ElimExists
-              { Pulse_Syntax_Base.p1 = (subst_term p ss) }
+              { Pulse_Syntax_Base.p4 = (subst_term p ss) }
         | Pulse_Syntax_Base.Tm_IntroExists
-            { Pulse_Syntax_Base.p2 = p;
+            { Pulse_Syntax_Base.p5 = p;
               Pulse_Syntax_Base.witnesses = witnesses;_}
             ->
             Pulse_Syntax_Base.Tm_IntroExists
               {
-                Pulse_Syntax_Base.p2 = (subst_term p ss);
+                Pulse_Syntax_Base.p5 = (subst_term p ss);
                 Pulse_Syntax_Base.witnesses = (subst_term_list witnesses ss)
               }
         | Pulse_Syntax_Base.Tm_While
@@ -662,11 +785,11 @@ let rec (subst_st_term :
                   (subst_st_term body (shift_subst ss))
               }
         | Pulse_Syntax_Base.Tm_Rewrite
-            { Pulse_Syntax_Base.t1 = t1; Pulse_Syntax_Base.t2 = t2;_} ->
+            { Pulse_Syntax_Base.t11 = t1; Pulse_Syntax_Base.t21 = t2;_} ->
             Pulse_Syntax_Base.Tm_Rewrite
               {
-                Pulse_Syntax_Base.t1 = (subst_term t1 ss);
-                Pulse_Syntax_Base.t2 = (subst_term t2 ss)
+                Pulse_Syntax_Base.t11 = (subst_term t1 ss);
+                Pulse_Syntax_Base.t21 = (subst_term t2 ss)
               }
         | Pulse_Syntax_Base.Tm_Admit
             { Pulse_Syntax_Base.ctag1 = ctag; Pulse_Syntax_Base.u1 = u;
@@ -682,16 +805,16 @@ let rec (subst_st_term :
               }
         | Pulse_Syntax_Base.Tm_ProofHintWithBinders
             { Pulse_Syntax_Base.hint_type = hint_type;
-              Pulse_Syntax_Base.binders = binders; Pulse_Syntax_Base.v = v;
+              Pulse_Syntax_Base.binders = binders;
               Pulse_Syntax_Base.t3 = t1;_}
             ->
             let n = FStar_List_Tot_Base.length binders in
             let ss1 = shift_subst_n n ss in
             Pulse_Syntax_Base.Tm_ProofHintWithBinders
               {
-                Pulse_Syntax_Base.hint_type = hint_type;
+                Pulse_Syntax_Base.hint_type =
+                  (subst_proof_hint hint_type ss1);
                 Pulse_Syntax_Base.binders = binders;
-                Pulse_Syntax_Base.v = (subst_term v ss1);
                 Pulse_Syntax_Base.t3 = (subst_st_term t1 ss1)
               } in
       {

@@ -87,6 +87,34 @@ let rec freevars_close_term_list' (t:list term) (x:var) (i:index)
       freevars_close_term' hd x i;
       freevars_close_term_list' tl x i
 
+let rec freevars_close_term_pairs' (t:list (term & term)) (x:var) (i:index)
+  : Lemma
+    (ensures (freevars_pairs (close_term_pairs' t x i) `Set.equal`
+             (freevars_pairs t `set_minus` x)))
+    (decreases t)
+  = match t with
+    | [] -> ()
+    | (u, v)::tl ->
+      freevars_close_term' u x i;
+      freevars_close_term' v x i;
+      freevars_close_term_pairs' tl x i
+
+let freevars_close_proof_hint' (ht:proof_hint_type) (x:var) (i:index)
+  : Lemma
+    (ensures (freevars_proof_hint (close_proof_hint' ht x i) `Set.equal`
+             (freevars_proof_hint ht `set_minus` x)))
+  = match ht with
+    | ASSERT { p }
+    | FOLD { p }
+    | UNFOLD { p } ->
+      freevars_close_term' p x i
+    | RENAME { pairs; goal } ->
+      freevars_close_term_pairs' pairs x i;
+      freevars_close_term_opt' goal x i
+    | REWRITE { t1; t2 } ->
+      freevars_close_term' t1 x i;
+      freevars_close_term' t2 x i
+
 // Needs a bit more rlimit sometimes. Also splitting is too expensive
 #push-options "--z3rlimit 20 --split_queries no"
 let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
@@ -160,9 +188,9 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
       freevars_close_term' typ x i;
       freevars_close_term_opt' post x (i + 1)
 
-    | Tm_ProofHintWithBinders { binders; v; t } ->
+    | Tm_ProofHintWithBinders { binders; hint_type; t } ->
       let n = L.length binders in
-      freevars_close_term' v x (i + n);
+      freevars_close_proof_hint' hint_type x (i + n);
       freevars_close_st_term' t x (i + n)
 #pop-options
 

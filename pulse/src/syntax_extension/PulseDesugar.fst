@@ -325,17 +325,38 @@ let resolve_names (env:env_t) (ns:option (list lident))
     | None -> return None
     | Some ns -> let? ns = map_err (resolve_lid env) ns in return (Some ns)
 
-let resolve_hint_type (env:env_t) (ht:Sugar.hint_type)
-  : err Sugar.hint_type
+let desugar_hint_type (env:env_t) (ht:Sugar.hint_type)
+  : err SW.hint_type
   = let open Sugar in
     match ht with
-    | ASSERT -> return ASSERT
-    | UNFOLD ns -> 
+    | ASSERT vp ->
+      let? vp = desugar_vprop env vp in
+      return (SW.mk_assert_hint_type vp)
+    | UNFOLD (ns, vp) -> 
+      let? vp = desugar_vprop env vp in
       let? ns = resolve_names env ns in
-      return (UNFOLD ns)
-    | FOLD ns -> 
+      let ns = BU.map_opt ns (L.map FStar.Ident.string_of_lid) in
+      return (SW.mk_unfold_hint_type ns vp)
+    | FOLD (ns, vp) -> 
+      let? vp = desugar_vprop env vp in
       let? ns = resolve_names env ns in
-      return (FOLD ns)
+      let ns = BU.map_opt ns (L.map FStar.Ident.string_of_lid) in
+      return (SW.mk_fold_hint_type ns vp)
+    | RENAME (pairs, goal) ->
+      let? pairs =
+        map_err 
+          (fun (t1, t2) ->
+            let? t1 = desugar_term env t1 in
+            let? t2 = desugar_term env t2 in
+            return (t1, t2))
+          pairs
+      in
+      let? goal = map_err_opt (desugar_vprop env) goal in
+      return (SW.mk_rename_hint_type pairs goal)
+    | REWRITE (t1, t2) ->
+      let? t1 = desugar_vprop env t1 in
+      let? t2 = desugar_vprop env t2 in
+      return (SW.mk_rewrite_hint_type t1 t2)
 
 // FIXME
 // should just mimic let resolve_lid
@@ -382,10 +403,10 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
       desugar_bind env lb s2 s.range
 
     | ProofHintWithBinders _ ->
-      desugar_assert_with_binders env s None s.range
+      desugar_proof_hint_with_binders env s None s.range
 
     | Sequence { s1; s2 } when ProofHintWithBinders? s1.s ->
-      desugar_assert_with_binders env s1 (Some s2) s.range
+      desugar_proof_hint_with_binders env s1 (Some s2) s.range
 
     | Sequence { s1; s2 } -> 
       desugar_sequence env s1 s2 s.range
@@ -452,7 +473,7 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
       let? p1 = desugar_vprop env p1 in
       let? p2 = desugar_vprop env p2 in
       return (SW.tm_rewrite p1 p2 s.range)
-
+      
     | LetBinding _ -> 
       fail "Terminal let binding" s.range
 
@@ -536,13 +557,13 @@ and desugar_sequence (env:env_t) (s1 s2:Sugar.stmt) r
     let annot = SW.mk_binder (Ident.id_of_text "_") (SW.tm_unknown r) in
     return (mk_bind annot s1 s2 r)
 
-and desugar_assert_with_binders (env:env_t) (s1:Sugar.stmt) (k:option Sugar.stmt) r
+and desugar_proof_hint_with_binders (env:env_t) (s1:Sugar.stmt) (k:option Sugar.stmt) r
   : err SW.st_term
   = match s1.s with
-    | Sugar.ProofHintWithBinders { hint_type; binders=bs; vprop=v } ->
+    | Sugar.ProofHintWithBinders { hint_type; binders=bs } -> //; vprop=v } ->
       let? env, binders, bvs = desugar_binders env bs in
       let vars = L.map (fun bv -> bv.S.index) bvs in
-      let? v = desugar_vprop env v in
+      let? ht = desugar_hint_type env hint_type in
       let? s2 = 
         match k with
         | None -> return (SW.tm_ghost_return (SW.tm_expr S.unit_const r) r)
@@ -550,9 +571,8 @@ and desugar_assert_with_binders (env:env_t) (s1:Sugar.stmt) (k:option Sugar.stmt
       let binders = L.map snd binders in
       let sub = SW.bvs_as_subst vars in
       let s2 = SW.subst_st_term sub s2 in
-      let v = SW.subst_term sub v in
-      let? ht = resolve_hint_type env hint_type in
-      return (SW.tm_proof_hint_with_binders ht (SW.close_binders binders vars) v s2 r)
+      let ht = SW.subst_proof_hint sub ht in
+      return (SW.tm_proof_hint_with_binders ht (SW.close_binders binders vars) s2 r)
     | _ -> fail "Expected ProofHintWithBinders" s1.range
 
 and desugar_binders (env:env_t) (bs:Sugar.binders)

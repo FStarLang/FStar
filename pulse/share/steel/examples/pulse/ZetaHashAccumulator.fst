@@ -227,13 +227,7 @@ fn package_core (acc:hash_value_buf) (ctr:ref U32.t)
           pure (h == mk_ha_core acc ctr)
 {
    let core = mk_ha_core acc ctr;
-   // It would be nice to have a "rename" primitive
-   // So we could write something like
-   // rename acc as core.acc, ctr as core.ctr;
-   rewrite (A.pts_to acc vacc)
-        as  (A.pts_to core.acc vacc);    
-   rewrite (pts_to ctr 'vctr)
-        as  (pts_to core.ctr 'vctr);
+   rewrite each acc as core.acc, ctr as core.ctr;
    fold_ha_val_core core;
    core
 }
@@ -298,14 +292,8 @@ fn package (acc:hash_value_buf) (ctr:ref U32.t) (tmp:hash_value_buf) (dummy:dumm
           pure (h == mk_ha (mk_ha_core acc ctr) tmp dummy)
 {
    let ha = mk_ha (mk_ha_core acc ctr) tmp dummy;
-   rewrite (A.pts_to acc vacc)
-        as  (A.pts_to ha.core.acc vacc);    
-   rewrite (pts_to ctr 'vctr)
-        as  (pts_to ha.core.ctr 'vctr);
-   rewrite (A.pts_to tmp vtmp)
-        as  (A.pts_to ha.tmp vtmp);
-   rewrite (A.pts_to dummy (Seq.create 1 0uy))
-        as  (A.pts_to ha.dummy (Seq.create 1 0uy));
+   rewrite each acc as ha.core.acc, ctr as ha.core.ctr,
+          tmp as ha.tmp, dummy as ha.dummy;
    fold_ha_val ha;
    ha
 }
@@ -463,6 +451,7 @@ fn compare (b1 b2:ha)
 //    the hash of the input
 // And then aggregate these two ha_cores into the first one
 // And then to repackage it as an ha
+#push-options "--debug ZetaHashAccumulator --print_implicits --debug_level with_binders"
 ```pulse
 fn add (ha:ha) (input:hashable_buffer) (l:SZ.t)
        (#s:(s:erased bytes {SZ.v l <= Seq.length s /\  SZ.v l <= blake2_max_input_length}))
@@ -481,18 +470,10 @@ fn add (ha:ha) (input:hashable_buffer) (l:SZ.t)
    let ha' = package_core ha.tmp ctr;
    let v = aggregate ha.core ha';
    with w. unfold (ha_val_core ha' w);
-   // would be nice to write this as
-   // rename ha'.acc as ha.tmp
-   // Or, at least, `with w. rewrite ... `
-   // Rather than having to write an assert and then a rewrite
-   with w. assert (A.pts_to ha'.acc w);
-   rewrite (A.pts_to ha'.acc w)
-        as (A.pts_to ha.tmp w); 
+   rewrite each ha'.acc as ha.tmp;
    with w. unfold (ha_val_core ha.core w);
    fold_ha_val ha;
-   with w. assert (pts_to ha'.ctr w);
-   rewrite (pts_to ha'.ctr w)
-        as (pts_to ctr w);
+   rewrite each ha'.ctr as ctr;
    v
 }
 ```
