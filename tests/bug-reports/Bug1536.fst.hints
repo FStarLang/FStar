@@ -14,39 +14,7 @@
         "fuel_guarded_inversion_FStar.Pervasives.either", "unit_typing"
       ],
       0,
-      "e3b595f84bad4b21befa471e6f8fb408"
-    ],
-    [
-      "Bug1536._dm4f_EXN_bind_wp",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "disc_equation_FStar.Pervasives.Inl",
-        "disc_equation_FStar.Pervasives.Inr",
-        "fuel_guarded_inversion_FStar.Pervasives.either"
-      ],
-      0,
-      "fba4eaba9468bc87d5b7965124b27ef6"
-    ],
-    [
-      "Bug1536._dm4f_EXN___proj__EXN__item__raise_elab",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "1a7fd0d20dc6a4811d6ac739362d3d5f"
-    ],
-    [
-      "Bug1536.EXN",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "a7175ba7aab7a93ab267a28395cd5873"
+      "b6a8a703a2cd2b2f20b44f4e73f7f6f5"
     ],
     [
       "Bug1536.ret",
@@ -55,7 +23,7 @@
       1,
       [ "@query" ],
       0,
-      "665d4f39dc6ca1ff1ffe02b698e9c246"
+      "7ee0e9d9e6debcfa5a0bd3914bddafef"
     ],
     [
       "Bug1536.t1",
@@ -64,7 +32,7 @@
       1,
       [ "@query", "eq2-interp" ],
       0,
-      "250c9c4a80f4055dbd58082cd77c8be1"
+      "65c04c6882ef05f625b56993825ca5a4"
     ],
     [
       "Bug1536.t2",
@@ -73,7 +41,7 @@
       1,
       [ "@query", "eq2-interp" ],
       0,
-      "653a95f36ca2a442102784e78b1804c4"
+      "f05cc262d15d71026006f19e2f04a76c"
     ]
   ]
 ]

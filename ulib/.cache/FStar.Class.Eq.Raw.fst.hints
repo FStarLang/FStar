@@ -1,0 +1,19 @@
+[
+  "\r !éw\u0006ÈÍä*ÚŠ†ò\u0001³",
+  [
+    [
+      "FStar.Class.Eq.Raw.eqList",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "7b79f4d33ea5499d0bb28cc360f8be78"
+    ]
+  ]
+]
