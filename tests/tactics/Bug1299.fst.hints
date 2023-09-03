@@ -13,7 +13,7 @@
         "lemma_FStar.Pervasives.invertOption"
       ],
       0,
-      "cbfeaec5304b1f92011853bcabc43f40"
+      "026976b6e102a28b53d6cc420826e712"
     ],
     [
       "Bug1299.test",
@@ -28,7 +28,7 @@
         "function_token_typing_FStar.Pervasives.pattern", "string_typing"
       ],
       0,
-      "84e26530294f90e332310115d5145da1"
+      "bc822c333320652368a92999fc16a7ab"
     ]
   ]
 ]

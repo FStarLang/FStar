@@ -41,7 +41,7 @@
         "typing_FStar.Reflection.V2.Data.binder_is_simple"
       ],
       0,
-      "b3fde8d338fcf15c3cc4d04eac3306c6"
+      "40963c6b629e2780be7aa55e5bdaa439"
     ],
     [
       "FStar.Tactics.Visit.visit_tm",
@@ -51,8 +51,6 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_typing",
-        "data_elim_FStar.Pervasives.Native.Mktuple2",
-        "data_elim_FStar.Pervasives.Native.Mktuple3",
         "disc_equation_FStar.Pervasives.Inl",
         "disc_equation_FStar.Pervasives.Inr",
         "disc_equation_FStar.Reflection.V2.Data.Tv_Abs",
@@ -73,28 +71,23 @@
         "disc_equation_FStar.Reflection.V2.Data.Tv_Uvar",
         "disc_equation_FStar.Reflection.V2.Data.Tv_Var",
         "equation_Prims.eqtype",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple3",
         "fuel_guarded_inversion_FStar.Pervasives.either",
         "fuel_guarded_inversion_FStar.Reflection.V2.Data.term_view",
         "fuel_guarded_inversion_FStar.Tactics.Result.__result",
-        "function_token_typing_FStar.Reflection.Types.binder",
         "function_token_typing_FStar.Reflection.Types.comp",
         "function_token_typing_FStar.Reflection.Types.term",
         "function_token_typing_Prims.bool",
         "kinding_FStar.Pervasives.Native.option@tok",
-        "kinding_FStar.Pervasives.Native.tuple3@tok",
         "kinding_FStar.Pervasives.either@tok",
-        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_2ec6ce5a1e7a7fbf7c3d0a16c7b15719",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___2",
+        "typing_FStar.Pervasives.Native.__proj__Mktuple3__item___1",
         "typing_FStar.Reflection.V2.Builtins.inspect_ln"
       ],
       0,
-      "ba1d9bc06f26c61ca288e9c4a35bcd1c"
+      "48e57e88413631b2e3ebf31680bc6968"
     ],
     [
       "FStar.Tactics.Visit.visit_tm",
@@ -111,7 +104,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "55cd098b5a3fe7288122edce0bb8abc0"
+      "de95bfa485d12d979153852ccb9aeff9"
     ],
     [
       "FStar.Tactics.Visit.visit_tm",
@@ -130,7 +123,7 @@
         "typing_FStar.Reflection.V2.Builtins.inspect_comp"
       ],
       0,
-      "587d6454f1705429f9af94f2af2d18ae"
+      "5e5b2aa0608e58a1b373bb9681a37240"
     ]
   ]
 ]
