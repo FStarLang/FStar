@@ -129,6 +129,23 @@ and eq_sub_pat (pb1 pb2 : pattern & bool) : b:bool{b <==> pb1 == pb2} =
   let (p2, b2) = pb2 in
   eq_pattern p1 p2 && b1 = b2
 
+let eq_hint_type (ht1 ht2:proof_hint_type)
+  : b:bool { b <==> (ht1 == ht2) }
+  = match ht1, ht2 with
+    | ASSERT { p=p1 }, ASSERT { p=p2 } ->
+      eq_tm p1 p2
+    | FOLD { names=ns1; p=p1}, FOLD { names=ns2; p=p2 }
+    | UNFOLD { names=ns1; p=p1}, UNFOLD { names=ns2; p=p2 } ->
+      eq_opt (eq_list (fun n1 n2 -> n1 = n2)) ns1 ns2 &&
+      eq_tm p1 p2
+    | RENAME { pairs=ps1; goal=p1 }, RENAME { pairs=ps2; goal=p2 } ->
+      eq_list (fun (x1, y1) (x2, y2) -> eq_tm x1 x2 && eq_tm y1 y2) ps1 ps2 &&
+      eq_opt eq_tm p1 p2
+    | REWRITE { t1; t2 }, REWRITE { t1=s1; t2=s2 } ->
+      eq_tm t1 s1 &&
+      eq_tm t2 s2
+    | _ -> false
+
 let rec eq_st_term (t1 t2:st_term) 
   : b:bool { b <==> (t1 == t2) }
   = match t1.term, t2.term with
@@ -157,17 +174,17 @@ let rec eq_st_term (t1 t2:st_term)
       eq_st_term t1 t2 &&
       eq_st_term k1 k2
 
-    | Tm_TotBind { head=t1; body=k1 },
-      Tm_TotBind { head=t2; body=k2 } ->
+    | Tm_TotBind { binder=b1; head=t1; body=k1 },
+      Tm_TotBind { binder=b2; head=t2; body=k2 } ->
+      eq_tm b1.binder_ty b2.binder_ty &&
       eq_tm t1 t2 &&
       eq_st_term k1 k2
       
     | Tm_IntroPure { p=p1 }, Tm_IntroPure { p=p2 } ->
       eq_tm p1 p2
 
-    | Tm_IntroExists { erased=b1; p=p1; witnesses=l1 },
-      Tm_IntroExists { erased=b2; p=p2; witnesses=l2 } ->
-      b1 = b2 &&
+    | Tm_IntroExists { p=p1; witnesses=l1 },
+      Tm_IntroExists { p=p2; witnesses=l2 } ->
       eq_tm p1 p2 &&
       eq_tm_list l1 l2
 
@@ -221,11 +238,10 @@ let rec eq_st_term (t1 t2:st_term)
       eq_tm t1 t2 &&
       eq_tm_opt post1 post2
       
-    | Tm_ProofHintWithBinders { hint_type=ht1; binders=bs1; t=t1; v=v1 },
-      Tm_ProofHintWithBinders { hint_type=ht2; binders=bs2; t=t2; v=v2 } ->
-      ht1 = ht2 &&
+    | Tm_ProofHintWithBinders { hint_type=ht1; binders=bs1; t=t1 },
+      Tm_ProofHintWithBinders { hint_type=ht2; binders=bs2; t=t2 } ->
+      eq_hint_type ht1 ht2 &&
       eq_list eq_binder bs1 bs2 &&
-      eq_tm v1 v2 &&
       eq_st_term t1 t2
 
     | _ -> false
@@ -235,3 +251,4 @@ and eq_branch (b1 b2 : pattern & st_term)
   = let (p1, e1) = b1 in
     let (p2, e2) = b2 in
     eq_pattern p1 p2 && eq_st_term e1 e2
+

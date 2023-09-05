@@ -331,20 +331,36 @@ let print_issues (g:env)
    = String.concat "\n" (T.map (print_issue g) i)
 
 let env_to_string (e:env) : T.Tac string =
-  let bs = T.map #((var & _) & _) #_
+  let bs = T.map #((var & typ) & ppname) #_
     (fun ((n, t), x) -> Printf.sprintf "%s#%d : %s" (T.unseal x.name) n (Pulse.Syntax.Printer.term_to_string t))
     (T.zip e.bs e.names) in
   String.concat "\n  " bs
 
-let fail (#a:Type) (g:env) (r:option range) (msg:string) =
-  let r = 
+let get_range (g:env) (r:option range) : T.Tac range =
     match r with
     | None -> range_of_env g
     | Some r -> 
       if RU.is_range_zero r
       then range_of_env g
       else r
+
+let fail (#a:Type) (g:env) (r:option range) (msg:string) =
+  let r = get_range g r in
+  let msg =
+    if RU.is_pulse_option_set "env_on_err"
+    then Printf.sprintf "%s\nIn environment\n%s\n" msg (env_to_string g)
+    else msg
   in
   let issue = FStar.Issue.mk_issue "Error" msg (Some r) None (ctxt_to_list g) in
   T.log_issues [issue];
   T.fail "Pulse checker failed"
+
+let warn (g:env) (r:option range) (msg:string) : T.Tac unit =
+  let r = get_range g r in
+  let issue = FStar.Issue.mk_issue "Warning" msg (Some r) None (ctxt_to_list g) in
+  T.log_issues [issue]
+
+let info (g:env) (r:option range) (msg:string) =
+  let r = get_range g r in
+  let issue = FStar.Issue.mk_issue "Info" msg (Some r) None (ctxt_to_list g) in
+  T.log_issues [issue]

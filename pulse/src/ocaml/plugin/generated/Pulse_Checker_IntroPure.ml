@@ -224,7 +224,7 @@ let (check :
                               (fun uu___ ->
                                  match uu___ with
                                  | Pulse_Syntax_Base.Tm_IntroPure
-                                     { Pulse_Syntax_Base.p = p;_} ->
+                                     { Pulse_Syntax_Base.p3 = p;_} ->
                                      Obj.magic
                                        (FStar_Tactics_Effect.tac_bind
                                           (FStar_Sealed.seal
@@ -329,7 +329,7 @@ let (check :
                                                                     (Pulse_Typing.wr
                                                                     (Pulse_Syntax_Base.Tm_IntroPure
                                                                     {
-                                                                    Pulse_Syntax_Base.p
+                                                                    Pulse_Syntax_Base.p3
                                                                     = p1
                                                                     }))
                                                                     (Pulse_Typing.comp_intro_pure

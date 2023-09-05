@@ -129,27 +129,52 @@ let (uu___is_PatConstructor : pat -> Prims.bool) =
 let (__proj__PatConstructor__item___0 : pat -> pat__PatConstructor__payload)
   = fun projectee -> match projectee with | PatConstructor _0 -> _0
 type hint_type =
-  | ASSERT 
-  | UNFOLD of FStar_Ident.lident Prims.list FStar_Pervasives_Native.option 
-  | FOLD of FStar_Ident.lident Prims.list FStar_Pervasives_Native.option 
+  | ASSERT of vprop 
+  | UNFOLD of (FStar_Ident.lident Prims.list FStar_Pervasives_Native.option *
+  vprop) 
+  | FOLD of (FStar_Ident.lident Prims.list FStar_Pervasives_Native.option *
+  vprop) 
+  | RENAME of ((FStar_Parser_AST.term * FStar_Parser_AST.term) Prims.list *
+  vprop FStar_Pervasives_Native.option) 
+  | REWRITE of (vprop * vprop) 
 let (uu___is_ASSERT : hint_type -> Prims.bool) =
-  fun projectee -> match projectee with | ASSERT -> true | uu___ -> false
+  fun projectee -> match projectee with | ASSERT _0 -> true | uu___ -> false
+let (__proj__ASSERT__item___0 : hint_type -> vprop) =
+  fun projectee -> match projectee with | ASSERT _0 -> _0
 let (uu___is_UNFOLD : hint_type -> Prims.bool) =
   fun projectee -> match projectee with | UNFOLD _0 -> true | uu___ -> false
 let (__proj__UNFOLD__item___0 :
-  hint_type -> FStar_Ident.lident Prims.list FStar_Pervasives_Native.option)
+  hint_type ->
+    (FStar_Ident.lident Prims.list FStar_Pervasives_Native.option * vprop))
   = fun projectee -> match projectee with | UNFOLD _0 -> _0
 let (uu___is_FOLD : hint_type -> Prims.bool) =
   fun projectee -> match projectee with | FOLD _0 -> true | uu___ -> false
 let (__proj__FOLD__item___0 :
-  hint_type -> FStar_Ident.lident Prims.list FStar_Pervasives_Native.option)
+  hint_type ->
+    (FStar_Ident.lident Prims.list FStar_Pervasives_Native.option * vprop))
   = fun projectee -> match projectee with | FOLD _0 -> _0
+let (uu___is_RENAME : hint_type -> Prims.bool) =
+  fun projectee -> match projectee with | RENAME _0 -> true | uu___ -> false
+let (__proj__RENAME__item___0 :
+  hint_type ->
+    ((FStar_Parser_AST.term * FStar_Parser_AST.term) Prims.list * vprop
+      FStar_Pervasives_Native.option))
+  = fun projectee -> match projectee with | RENAME _0 -> _0
+let (uu___is_REWRITE : hint_type -> Prims.bool) =
+  fun projectee -> match projectee with | REWRITE _0 -> true | uu___ -> false
+let (__proj__REWRITE__item___0 : hint_type -> (vprop * vprop)) =
+  fun projectee -> match projectee with | REWRITE _0 -> _0
 type stmt'__Expr__payload = {
   e: FStar_Parser_AST.term }
 and stmt'__Assignment__payload =
   {
   lhs: FStar_Parser_AST.term ;
   value: FStar_Parser_AST.term }
+and stmt'__ArrayAssignment__payload =
+  {
+  arr: FStar_Parser_AST.term ;
+  index: FStar_Parser_AST.term ;
+  value1: FStar_Parser_AST.term }
 and stmt'__LetBinding__payload =
   {
   qualifier: mut_or_ref FStar_Pervasives_Native.option ;
@@ -196,12 +221,12 @@ and stmt'__Rewrite__payload = {
 and stmt'__ProofHintWithBinders__payload =
   {
   hint_type: hint_type ;
-  binders1: binders ;
-  vprop1: vprop }
+  binders1: binders }
 and stmt' =
   | Open of FStar_Ident.lident 
   | Expr of stmt'__Expr__payload 
   | Assignment of stmt'__Assignment__payload 
+  | ArrayAssignment of stmt'__ArrayAssignment__payload 
   | LetBinding of stmt'__LetBinding__payload 
   | Block of stmt'__Block__payload 
   | If of stmt'__If__payload 
@@ -224,6 +249,18 @@ let (__proj__Mkstmt'__Assignment__payload__item__lhs :
 let (__proj__Mkstmt'__Assignment__payload__item__value :
   stmt'__Assignment__payload -> FStar_Parser_AST.term) =
   fun projectee -> match projectee with | { lhs; value;_} -> value
+let (__proj__Mkstmt'__ArrayAssignment__payload__item__arr :
+  stmt'__ArrayAssignment__payload -> FStar_Parser_AST.term) =
+  fun projectee ->
+    match projectee with | { arr; index; value1 = value;_} -> arr
+let (__proj__Mkstmt'__ArrayAssignment__payload__item__index :
+  stmt'__ArrayAssignment__payload -> FStar_Parser_AST.term) =
+  fun projectee ->
+    match projectee with | { arr; index; value1 = value;_} -> index
+let (__proj__Mkstmt'__ArrayAssignment__payload__item__value :
+  stmt'__ArrayAssignment__payload -> FStar_Parser_AST.term) =
+  fun projectee ->
+    match projectee with | { arr; index; value1 = value;_} -> value
 let (__proj__Mkstmt'__LetBinding__payload__item__qualifier :
   stmt'__LetBinding__payload -> mut_or_ref FStar_Pervasives_Native.option) =
   fun projectee ->
@@ -342,17 +379,11 @@ let (__proj__Mkstmt'__ProofHintWithBinders__payload__item__hint_type :
   stmt'__ProofHintWithBinders__payload -> hint_type) =
   fun projectee ->
     match projectee with
-    | { hint_type = hint_type1; binders1; vprop1;_} -> hint_type1
+    | { hint_type = hint_type1; binders1;_} -> hint_type1
 let (__proj__Mkstmt'__ProofHintWithBinders__payload__item__binders :
   stmt'__ProofHintWithBinders__payload -> binders) =
   fun projectee ->
-    match projectee with
-    | { hint_type = hint_type1; binders1; vprop1;_} -> binders1
-let (__proj__Mkstmt'__ProofHintWithBinders__payload__item__vprop :
-  stmt'__ProofHintWithBinders__payload -> vprop) =
-  fun projectee ->
-    match projectee with
-    | { hint_type = hint_type1; binders1; vprop1;_} -> vprop1
+    match projectee with | { hint_type = hint_type1; binders1;_} -> binders1
 let (uu___is_Open : stmt' -> Prims.bool) =
   fun projectee -> match projectee with | Open _0 -> true | uu___ -> false
 let (__proj__Open__item___0 : stmt' -> FStar_Ident.lident) =
@@ -366,6 +397,12 @@ let (uu___is_Assignment : stmt' -> Prims.bool) =
     match projectee with | Assignment _0 -> true | uu___ -> false
 let (__proj__Assignment__item___0 : stmt' -> stmt'__Assignment__payload) =
   fun projectee -> match projectee with | Assignment _0 -> _0
+let (uu___is_ArrayAssignment : stmt' -> Prims.bool) =
+  fun projectee ->
+    match projectee with | ArrayAssignment _0 -> true | uu___ -> false
+let (__proj__ArrayAssignment__item___0 :
+  stmt' -> stmt'__ArrayAssignment__payload) =
+  fun projectee -> match projectee with | ArrayAssignment _0 -> _0
 let (uu___is_LetBinding : stmt' -> Prims.bool) =
   fun projectee ->
     match projectee with | LetBinding _0 -> true | uu___ -> false
@@ -473,6 +510,12 @@ let (mk_vprop_exists : binders -> vprop -> vprop') =
 let (mk_expr : FStar_Parser_AST.term -> stmt') = fun e -> Expr { e }
 let (mk_assignment : FStar_Parser_AST.term -> FStar_Parser_AST.term -> stmt')
   = fun id -> fun value -> Assignment { lhs = id; value }
+let (mk_array_assignment :
+  FStar_Parser_AST.term ->
+    FStar_Parser_AST.term -> FStar_Parser_AST.term -> stmt')
+  =
+  fun arr ->
+    fun index -> fun value -> ArrayAssignment { arr; index; value1 = value }
 let (mk_let_binding :
   mut_or_ref FStar_Pervasives_Native.option ->
     FStar_Ident.ident ->
@@ -532,8 +575,5 @@ let (mk_par : vprop -> vprop -> vprop -> vprop -> stmt -> stmt -> stmt') =
         fun q2 -> fun b1 -> fun b2 -> Parallel { p1; p2; q1; q2; b1; b2 }
 let (mk_rewrite : vprop -> vprop -> stmt') =
   fun p1 -> fun p2 -> Rewrite { p11 = p1; p21 = p2 }
-let (mk_proof_hint_with_binders : hint_type -> binders -> vprop -> stmt') =
-  fun ht ->
-    fun bs ->
-      fun p ->
-        ProofHintWithBinders { hint_type = ht; binders1 = bs; vprop1 = p }
+let (mk_proof_hint_with_binders : hint_type -> binders -> stmt') =
+  fun ht -> fun bs -> ProofHintWithBinders { hint_type = ht; binders1 = bs }

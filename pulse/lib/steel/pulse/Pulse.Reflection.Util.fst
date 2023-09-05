@@ -161,6 +161,7 @@ let mk_stt_ghost_comp_post_equiv (g:R.env) (u:R.universe) (a inames pre post1 po
     posts_equiv
 
 let mk_total t = R.C_Total t
+let mk_ghost t = R.C_GTotal t
 let binder_of_t_q t q = RT.binder_of_t_q t q
 let binder_of_t_q_s (t:R.term) (q:R.aqualv) (s:RT.pp_name_t) = RT.mk_binder s t q
 let bound_var i : R.term = RT.bound_var i
@@ -173,6 +174,9 @@ let mk_arrow (f:arrow_dom) (out:R.term) : R.term =
 let mk_arrow_with_name (s:RT.pp_name_t) (f:arrow_dom) (out:R.term) : R.term =
   let ty, q = f in
   R.pack_ln (R.Tv_Arrow (binder_of_t_q_s ty q s) (R.pack_comp (mk_total out)))
+let mk_ghost_arrow_with_name (s:RT.pp_name_t) (f:arrow_dom) (out:R.term) : R.term =
+  let ty, q = f in
+  R.pack_ln (R.Tv_Arrow (binder_of_t_q_s ty q s) (R.pack_comp (mk_ghost out)))
 let mk_abs ty qual t : R.term = RT.mk_abs ty qual t
 let mk_abs_with_name s ty qual t : R.term =  R.pack_ln (R.Tv_Abs (binder_of_t_q_s ty qual s) t)
 let mk_abs_with_name_and_range s r ty qual t : R.term = 
@@ -589,7 +593,7 @@ let mk_pts_to (a:R.term) (r:R.term) (perm:R.term) (v:R.term) : R.term =
   let t = pack_ln (Tv_FVar (pack_fv pts_to_lid)) in
   let t = pack_ln (Tv_App t (a, Q_Implicit)) in
   let t = pack_ln (Tv_App t (r, Q_Explicit)) in
-  let t = pack_ln (Tv_App t (perm, Q_Explicit)) in
+  let t = pack_ln (Tv_App t (perm, Q_Implicit)) in
   pack_ln (Tv_App t (v, Q_Explicit))
 
 let full_perm_tm : R.term =

@@ -56,6 +56,21 @@ let rec freevars_list (t:list term) : Set.set var =
   | [] -> Set.empty
   | hd::tl -> freevars hd `Set.union` freevars_list tl
 
+let rec freevars_pairs (pairs:list (term & term)) : Set.set var =
+  match pairs with
+  | [] -> Set.empty
+  | (t1, t2)::tl -> Set.union (freevars t1) (freevars t2) `Set.union` freevars_pairs tl
+
+let freevars_proof_hint (ht:proof_hint_type) : Set.set var = 
+  match ht with
+  | ASSERT { p }
+  | FOLD { p }
+  | UNFOLD { p } -> freevars p
+  | RENAME { pairs; goal } ->
+    Set.union (freevars_pairs pairs) (freevars_term_opt goal)
+  | REWRITE { t1; t2 } ->
+    Set.union (freevars t1) (freevars t2)
+
 let rec freevars_st (t:st_term)
   : Set.set var
   = match t.term with
@@ -72,8 +87,11 @@ let rec freevars_st (t:st_term)
         (Set.union (freevars binder.binder_ty) 
                    (freevars_st head))
         (freevars_st body)
-    | Tm_TotBind { head; body } ->
-      Set.union (freevars head) (freevars_st body)
+    | Tm_TotBind { binder; head; body } ->
+      Set.union
+        (Set.union (freevars binder.binder_ty)
+                   (freevars head))
+        (freevars_st body)
     | Tm_If { b; then_; else_; post } ->
       Set.union (Set.union (freevars b) (freevars_st then_))
                 (Set.union (freevars_st else_) (freevars_term_opt post))
@@ -114,8 +132,9 @@ let rec freevars_st (t:st_term)
       Set.union (freevars typ)
                 (freevars_term_opt post)
 
-    | Tm_ProofHintWithBinders { binders; v; t } ->
-      Set.union (freevars v) (freevars_st t)
+    | Tm_ProofHintWithBinders { binders; hint_type; t } ->
+      Set.union (freevars_proof_hint hint_type) (freevars_st t)
+
 and freevars_branches (t:list (pattern & st_term)) : Set.set var =
   match t with
   | [] -> Set.empty
@@ -170,6 +189,23 @@ let rec ln_list' (t:list term) (i:int) : bool =
   | [] -> true
   | hd::tl -> ln' hd i && ln_list' tl i
 
+let rec ln_terms' (t:list (term & term)) (i:int) : bool =
+  match t with
+  | [] -> true
+  | (t1, t2)::tl -> ln' t1 i && ln' t2 i && ln_terms' tl i
+
+let ln_proof_hint' (ht:proof_hint_type) (i:int) : bool =
+  match ht with
+  | ASSERT { p }
+  | UNFOLD { p }
+  | FOLD   { p } -> ln' p i
+  | RENAME { pairs; goal } ->
+    ln_terms' pairs i &&
+    ln_opt' goal i
+  | REWRITE { t1; t2 } ->
+    ln' t1 i &&
+    ln' t2 i
+
 let rec ln_st' (t:st_term) (i:int)
   : Tot bool (decreases t)
   = match t.term with
@@ -190,7 +226,8 @@ let rec ln_st' (t:st_term) (i:int)
       ln_st' head i &&
       ln_st' body (i + 1)
 
-    | Tm_TotBind { head; body } ->
+    | Tm_TotBind { binder; head; body } ->
+      ln' binder.binder_ty i &&
       ln' head i &&
       ln_st' body (i + 1)
 
@@ -239,9 +276,9 @@ let rec ln_st' (t:st_term) (i:int)
       ln' typ i &&
       ln_opt' post (i + 1)
 
-    | Tm_ProofHintWithBinders { binders; v; t } ->
+    | Tm_ProofHintWithBinders { binders; hint_type; t } ->
       let n = L.length binders in
-      ln' v (i + n) &&
+      ln_proof_hint' hint_type (i + n) &&
       ln_st' t (i + n)
 
 and ln_branch' (b : pattern & st_term) (i:int) : Tot bool (decreases b) =
@@ -373,6 +410,36 @@ let subst_binder b ss =
 let open_binder b v i = 
   {b with binder_ty=open_term' b.binder_ty v i}
 
+let rec subst_term_pairs (t:list (term & term)) (ss:subst)
+  : Tot (list (term & term))
+  = match t with
+    | [] -> []
+    | (t1, t2)::tl -> (subst_term t1 ss, subst_term t2 ss) :: subst_term_pairs tl ss 
+
+let subst_proof_hint (ht:proof_hint_type) (ss:subst) 
+  : proof_hint_type
+  = match ht with
+    | ASSERT { p } -> ASSERT { p=subst_term p ss }
+    | UNFOLD { names; p } -> UNFOLD {names; p=subst_term p ss}
+    | FOLD { names; p } -> FOLD { names; p=subst_term p ss }
+    | RENAME { pairs; goal } -> RENAME { pairs=subst_term_pairs pairs ss;
+                                         goal=subst_term_opt goal ss }
+    | REWRITE { t1; t2 } -> REWRITE { t1=subst_term t1 ss;
+                                      t2=subst_term t2 ss }
+
+let open_term_pairs' (t:list (term * term)) (v:term) (i:index) =
+  subst_term_pairs t [DT i v]
+
+let close_term_pairs' (t:list (term * term)) (x:var) (i:index) =
+  subst_term_pairs t [ND x i]
+
+let open_proof_hint'  (ht:proof_hint_type) (v:term) (i:index) =
+  subst_proof_hint ht [DT i v]
+
+let close_proof_hint' (ht:proof_hint_type) (x:var) (i:index) =
+  subst_proof_hint ht [ND x i]
+
+
 let rec subst_st_term (t:st_term) (ss:subst)
   : Tot st_term (decreases t)
   = let t' =
@@ -396,8 +463,9 @@ let rec subst_st_term (t:st_term) (ss:subst)
                 head = subst_st_term head ss;
                 body = subst_st_term body (shift_subst ss) }
 
-    | Tm_TotBind { head; body } ->
-      Tm_TotBind { head = subst_term head ss; 
+    | Tm_TotBind { binder; head; body } ->
+      Tm_TotBind { binder = subst_binder binder ss;
+                   head = subst_term head ss;
                    body = subst_st_term body (shift_subst ss) }
 
     | Tm_If { b; then_; else_; post } ->
@@ -417,9 +485,8 @@ let rec subst_st_term (t:st_term) (ss:subst)
     | Tm_ElimExists { p } ->
       Tm_ElimExists { p = subst_term p ss }
       
-    | Tm_IntroExists { erased; p; witnesses } ->
-      Tm_IntroExists { erased; 
-                       p = subst_term p ss;
+    | Tm_IntroExists { p; witnesses } ->
+      Tm_IntroExists { p = subst_term p ss;
                        witnesses = subst_term_list witnesses ss }                             
 
     | Tm_While { invariant; condition; body; condition_var } ->
@@ -451,20 +518,18 @@ let rec subst_st_term (t:st_term) (ss:subst)
                  typ=subst_term typ ss;
                  post=subst_term_opt post (shift_subst ss) }
 
-    | Tm_ProofHintWithBinders { hint_type; binders; v; t} ->
+    | Tm_ProofHintWithBinders { hint_type; binders; t} ->
       let n = L.length binders in
       let ss = shift_subst_n n ss in
-      Tm_ProofHintWithBinders { hint_type; 
-                                binders;
-                                v = subst_term v ss;
+      Tm_ProofHintWithBinders { binders;
+                                hint_type=subst_proof_hint hint_type ss; 
                                 t = subst_st_term t ss }
     in
     { t with term = t' }
 
 and subst_branches (t:st_term) (ss:subst) (brs : list branch{brs << t})
 : Tot (list branch) (decreases brs)
-=
-  map_dec t brs (fun br -> subst_branch ss br)
+= map_dec t brs (fun br -> subst_branch ss br)
 
 and subst_branch (ss:subst) (b : pattern & st_term) : Tot (pattern & st_term) (decreases b) =
   let (p, e) = b in
@@ -478,6 +543,7 @@ and subst_branch (ss:subst) (b : pattern & st_term) : Tot (pattern & st_term) (d
   let nn = pat_n_binders p in
   let ss = shift_subst_n nn ss in
   p, subst_st_term e ss
+
 
 let open_st_term' (t:st_term) (v:term) (i:index) : st_term =
   subst_st_term t [ DT i v ]
@@ -510,7 +576,7 @@ let close_comp' (c:comp) (v:var) (i:index) : comp =
 let close_term_opt' (t:option term) (v:var) (i:index) : option term =
   subst_term_opt t [ ND v i ]
 
-let  close_term_list' (t:list term) (v:var) (i:index) : list term =
+let close_term_list' (t:list term) (v:var) (i:index) : list term =
   subst_term_list t [ ND v i ]
 
 let close_binder b v i =

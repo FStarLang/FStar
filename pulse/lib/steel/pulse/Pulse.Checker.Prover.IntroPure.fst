@@ -141,9 +141,7 @@ let intro_pure (#preamble:_) (pst:prover_state preamble)
   assume (ss_new `ss_extends` pst.ss);
 
   let t_ss = ss_new.(t) in
-  let d =
-    let d = core_check_term_with_expected_type pst.pg t_ss tm_prop in 
-    E d in
+  let d = core_check_tot_term_with_expected_type pst.pg t_ss tm_prop in
   let d_valid = check_prop_validity pst.pg t_ss d in
 
   // let (| ss_new, t_ss, d, d_valid |) : ss_new:PS.ss_t { ss_new `ss_extends` pst.ss } &

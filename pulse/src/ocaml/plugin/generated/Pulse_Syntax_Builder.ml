@@ -67,17 +67,20 @@ let (tm_bind :
             Pulse_Syntax_Base.head1 = head;
             Pulse_Syntax_Base.body1 = body
           }
-let tm_totbind :
-  'uuuuu .
-    'uuuuu ->
-      Pulse_Syntax_Base.term ->
-        Pulse_Syntax_Base.st_term -> Pulse_Syntax_Base.st_term'
+let (tm_totbind :
+  Pulse_Syntax_Base.binder ->
+    Pulse_Syntax_Base.term ->
+      Pulse_Syntax_Base.st_term -> Pulse_Syntax_Base.st_term')
   =
-  fun _binder ->
+  fun binder ->
     fun head ->
       fun body ->
         Pulse_Syntax_Base.Tm_TotBind
-          { Pulse_Syntax_Base.head2 = head; Pulse_Syntax_Base.body2 = body }
+          {
+            Pulse_Syntax_Base.binder1 = binder;
+            Pulse_Syntax_Base.head2 = head;
+            Pulse_Syntax_Base.body2 = body
+          }
 let (tm_if :
   Pulse_Syntax_Base.term ->
     Pulse_Syntax_Base.st_term ->
@@ -112,21 +115,15 @@ let (tm_match :
             Pulse_Syntax_Base.brs = brs
           }
 let (tm_elim_exists : Pulse_Syntax_Base.vprop -> Pulse_Syntax_Base.st_term')
-  = fun p -> Pulse_Syntax_Base.Tm_ElimExists { Pulse_Syntax_Base.p1 = p }
+  = fun p -> Pulse_Syntax_Base.Tm_ElimExists { Pulse_Syntax_Base.p4 = p }
 let (tm_intro_exists :
-  Prims.bool ->
-    Pulse_Syntax_Base.vprop ->
-      Pulse_Syntax_Base.term Prims.list -> Pulse_Syntax_Base.st_term')
+  Pulse_Syntax_Base.vprop ->
+    Pulse_Syntax_Base.term Prims.list -> Pulse_Syntax_Base.st_term')
   =
-  fun erased ->
-    fun p ->
-      fun witnesses ->
-        Pulse_Syntax_Base.Tm_IntroExists
-          {
-            Pulse_Syntax_Base.erased = erased;
-            Pulse_Syntax_Base.p2 = p;
-            Pulse_Syntax_Base.witnesses = witnesses
-          }
+  fun p ->
+    fun witnesses ->
+      Pulse_Syntax_Base.Tm_IntroExists
+        { Pulse_Syntax_Base.p5 = p; Pulse_Syntax_Base.witnesses = witnesses }
 let (tm_while :
   Pulse_Syntax_Base.term ->
     Pulse_Syntax_Base.st_term ->
@@ -177,7 +174,7 @@ let (tm_with_local :
       fun body ->
         Pulse_Syntax_Base.Tm_WithLocal
           {
-            Pulse_Syntax_Base.binder1 = binder;
+            Pulse_Syntax_Base.binder2 = binder;
             Pulse_Syntax_Base.initializer1 = initializer1;
             Pulse_Syntax_Base.body4 = body
           }
@@ -188,7 +185,24 @@ let (tm_rewrite :
   fun t1 ->
     fun t2 ->
       Pulse_Syntax_Base.Tm_Rewrite
-        { Pulse_Syntax_Base.t1 = t1; Pulse_Syntax_Base.t2 = t2 }
+        { Pulse_Syntax_Base.t11 = t1; Pulse_Syntax_Base.t21 = t2 }
+let (tm_rename :
+  (Pulse_Syntax_Base.term * Pulse_Syntax_Base.term) Prims.list ->
+    Pulse_Syntax_Base.st_term -> Pulse_Syntax_Base.st_term')
+  =
+  fun pairs ->
+    fun t ->
+      Pulse_Syntax_Base.Tm_ProofHintWithBinders
+        {
+          Pulse_Syntax_Base.hint_type =
+            (Pulse_Syntax_Base.RENAME
+               {
+                 Pulse_Syntax_Base.pairs = pairs;
+                 Pulse_Syntax_Base.goal = FStar_Pervasives_Native.None
+               });
+          Pulse_Syntax_Base.binders = [];
+          Pulse_Syntax_Base.t3 = t
+        }
 let (tm_admit :
   Pulse_Syntax_Base.ctag ->
     Pulse_Syntax_Base.universe ->
@@ -219,12 +233,48 @@ let (tm_assert_with_binders :
       Pulse_Syntax_Base.st_term -> Pulse_Syntax_Base.st_term')
   =
   fun bs ->
-    fun v ->
+    fun p ->
       fun t ->
         Pulse_Syntax_Base.Tm_ProofHintWithBinders
           {
-            Pulse_Syntax_Base.hint_type = Pulse_Syntax_Base.ASSERT;
+            Pulse_Syntax_Base.hint_type =
+              (Pulse_Syntax_Base.ASSERT { Pulse_Syntax_Base.p = p });
             Pulse_Syntax_Base.binders = bs;
-            Pulse_Syntax_Base.v = v;
             Pulse_Syntax_Base.t3 = t
           }
+let (mk_assert_hint_type :
+  Pulse_Syntax_Base.vprop -> Pulse_Syntax_Base.proof_hint_type) =
+  fun p -> Pulse_Syntax_Base.ASSERT { Pulse_Syntax_Base.p = p }
+let (mk_unfold_hint_type :
+  Prims.string Prims.list FStar_Pervasives_Native.option ->
+    Pulse_Syntax_Base.vprop -> Pulse_Syntax_Base.proof_hint_type)
+  =
+  fun names ->
+    fun p ->
+      Pulse_Syntax_Base.UNFOLD
+        { Pulse_Syntax_Base.names1 = names; Pulse_Syntax_Base.p2 = p }
+let (mk_fold_hint_type :
+  Prims.string Prims.list FStar_Pervasives_Native.option ->
+    Pulse_Syntax_Base.vprop -> Pulse_Syntax_Base.proof_hint_type)
+  =
+  fun names ->
+    fun p ->
+      Pulse_Syntax_Base.FOLD
+        { Pulse_Syntax_Base.names = names; Pulse_Syntax_Base.p1 = p }
+let (mk_rename_hint_type :
+  (Pulse_Syntax_Base.term * Pulse_Syntax_Base.term) Prims.list ->
+    Pulse_Syntax_Base.term FStar_Pervasives_Native.option ->
+      Pulse_Syntax_Base.proof_hint_type)
+  =
+  fun pairs ->
+    fun goal ->
+      Pulse_Syntax_Base.RENAME
+        { Pulse_Syntax_Base.pairs = pairs; Pulse_Syntax_Base.goal = goal }
+let (mk_rewrite_hint_type :
+  Pulse_Syntax_Base.vprop ->
+    Pulse_Syntax_Base.vprop -> Pulse_Syntax_Base.proof_hint_type)
+  =
+  fun t1 ->
+    fun t2 ->
+      Pulse_Syntax_Base.REWRITE
+        { Pulse_Syntax_Base.t1 = t1; Pulse_Syntax_Base.t2 = t2 }

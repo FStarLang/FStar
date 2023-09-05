@@ -20,11 +20,11 @@ val compare
         (#s1 #s2:Ghost.erased (elseq t l))
   : stt bool
         (requires 
-            pts_to a1 p1 s1 **
-            pts_to a2 p2 s2)
+            pts_to a1 #p1 s1 **
+            pts_to a2 #p2 s2)
         (ensures fun res ->
-            pts_to a1 p1 s1 **
-            pts_to a2 p2 s2 **
+            pts_to a1 #p1 s1 **
+            pts_to a2 #p2 s2 **
             pure (res <==> Seq.equal s1 s2))
 
 val memcpy 
@@ -35,11 +35,11 @@ val memcpy
         (#src0 #dst0:Ghost.erased (elseq t l))
   : stt unit
         (requires 
-            pts_to src p src0 **
-            pts_to dst full_perm dst0)
+            pts_to src #p src0 **
+            pts_to dst dst0)
         (ensures (fun _ ->
-            pts_to src p src0 **
-            pts_to dst full_perm src0))
+            pts_to src #p src0 **
+            pts_to dst src0))
 
 val fill
         (#t:Type0)
@@ -49,10 +49,10 @@ val fill
         (#s:Ghost.erased (elseq t l))
   : stt unit
         (requires 
-            pts_to a full_perm s)
+            pts_to a s)
         (ensures fun _ ->
             exists_ (fun (s:Seq.seq t) ->
-                pts_to a full_perm s **
+                pts_to a s **
                 pure (s `Seq.equal` Seq.create (SZ.v l) v)))
 
 val zeroize
@@ -61,8 +61,8 @@ val zeroize
         (#s:Ghost.erased (elseq U8.t l))
   : stt unit
         (requires 
-            pts_to a full_perm s)
+            pts_to a s)
         (ensures fun _ -> 
             exists_ (fun (s:Seq.seq U8.t) ->
-            pts_to a full_perm s **
+            pts_to a s **
             pure (s `Seq.equal` Seq.create (SZ.v l) 0uy)))

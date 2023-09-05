@@ -30,20 +30,19 @@ let (k_intro_exists :
                             (FStar_Range.mk_range
                                "Pulse.Checker.Prover.IntroExists.fst"
                                (Prims.of_int (27)) (Prims.of_int (10))
-                               (Prims.of_int (29)) (Prims.of_int (49)))))
+                               (Prims.of_int (28)) (Prims.of_int (49)))))
                       (FStar_Sealed.seal
                          (Obj.magic
                             (FStar_Range.mk_range
                                "Pulse.Checker.Prover.IntroExists.fst"
-                               (Prims.of_int (29)) (Prims.of_int (52))
-                               (Prims.of_int (68)) (Prims.of_int (30)))))
+                               (Prims.of_int (28)) (Prims.of_int (52))
+                               (Prims.of_int (67)) (Prims.of_int (30)))))
                       (FStar_Tactics_Effect.lift_div_tac
                          (fun uu___ ->
                             Pulse_Typing.wr
                               (Pulse_Syntax_Base.Tm_IntroExists
                                  {
-                                   Pulse_Syntax_Base.erased = false;
-                                   Pulse_Syntax_Base.p2 =
+                                   Pulse_Syntax_Base.p5 =
                                      (Pulse_Syntax_Base.tm_exists_sl u b p);
                                    Pulse_Syntax_Base.witnesses = [e]
                                  })))
@@ -55,17 +54,17 @@ let (k_intro_exists :
                                     (Obj.magic
                                        (FStar_Range.mk_range
                                           "Pulse.Checker.Prover.IntroExists.fst"
-                                          (Prims.of_int (31))
+                                          (Prims.of_int (30))
                                           (Prims.of_int (10))
-                                          (Prims.of_int (31))
+                                          (Prims.of_int (30))
                                           (Prims.of_int (35)))))
                                  (FStar_Sealed.seal
                                     (Obj.magic
                                        (FStar_Range.mk_range
                                           "Pulse.Checker.Prover.IntroExists.fst"
-                                          (Prims.of_int (31))
+                                          (Prims.of_int (30))
                                           (Prims.of_int (38))
-                                          (Prims.of_int (68))
+                                          (Prims.of_int (67))
                                           (Prims.of_int (30)))))
                                  (FStar_Tactics_Effect.lift_div_tac
                                     (fun uu___ ->
@@ -78,17 +77,17 @@ let (k_intro_exists :
                                                (Obj.magic
                                                   (FStar_Range.mk_range
                                                      "Pulse.Checker.Prover.IntroExists.fst"
-                                                     (Prims.of_int (33))
+                                                     (Prims.of_int (32))
                                                      (Prims.of_int (17))
-                                                     (Prims.of_int (33))
-                                                     (Prims.of_int (70)))))
+                                                     (Prims.of_int (32))
+                                                     (Prims.of_int (100)))))
                                             (FStar_Sealed.seal
                                                (Obj.magic
                                                   (FStar_Range.mk_range
                                                      "Pulse.Checker.Prover.IntroExists.fst"
-                                                     (Prims.of_int (36))
+                                                     (Prims.of_int (35))
                                                      (Prims.of_int (45))
-                                                     (Prims.of_int (68))
+                                                     (Prims.of_int (67))
                                                      (Prims.of_int (30)))))
                                             (FStar_Tactics_Effect.lift_div_tac
                                                (fun uu___ ->
@@ -103,17 +102,17 @@ let (k_intro_exists :
                                                           (Obj.magic
                                                              (FStar_Range.mk_range
                                                                 "Pulse.Checker.Prover.IntroExists.fst"
-                                                                (Prims.of_int (38))
+                                                                (Prims.of_int (37))
                                                                 (Prims.of_int (10))
-                                                                (Prims.of_int (38))
+                                                                (Prims.of_int (37))
                                                                 (Prims.of_int (17)))))
                                                        (FStar_Sealed.seal
                                                           (Obj.magic
                                                              (FStar_Range.mk_range
                                                                 "Pulse.Checker.Prover.IntroExists.fst"
-                                                                (Prims.of_int (39))
+                                                                (Prims.of_int (38))
                                                                 (Prims.of_int (52))
-                                                                (Prims.of_int (68))
+                                                                (Prims.of_int (67))
                                                                 (Prims.of_int (30)))))
                                                        (FStar_Tactics_Effect.lift_div_tac
                                                           (fun uu___ ->
@@ -127,17 +126,17 @@ let (k_intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (41))
+                                                                    (Prims.of_int (40))
                                                                     (Prims.of_int (15))
-                                                                    (Prims.of_int (41))
+                                                                    (Prims.of_int (40))
                                                                     (Prims.of_int (44)))))
                                                                   (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (41))
+                                                                    (Prims.of_int (40))
                                                                     (Prims.of_int (47))
-                                                                    (Prims.of_int (68))
+                                                                    (Prims.of_int (67))
                                                                     (Prims.of_int (30)))))
                                                                   (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -154,17 +153,17 @@ let (k_intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (46))
+                                                                    (Prims.of_int (45))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (46))
+                                                                    (Prims.of_int (45))
                                                                     (Prims.of_int (75)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (54))
+                                                                    (Prims.of_int (53))
                                                                     (Prims.of_int (20))
-                                                                    (Prims.of_int (68))
+                                                                    (Prims.of_int (67))
                                                                     (Prims.of_int (30)))))
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Base.continuation_elaborator_with_bind
@@ -174,9 +173,7 @@ let (k_intro_exists :
                                                                     (Pulse_Typing.wr
                                                                     (Pulse_Syntax_Base.Tm_IntroExists
                                                                     {
-                                                                    Pulse_Syntax_Base.erased
-                                                                    = false;
-                                                                    Pulse_Syntax_Base.p2
+                                                                    Pulse_Syntax_Base.p5
                                                                     =
                                                                     (Pulse_Syntax_Base.tm_exists_sl
                                                                     u b p);
@@ -200,17 +197,17 @@ let (k_intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (55))
+                                                                    (Prims.of_int (54))
                                                                     (Prims.of_int (25))
-                                                                    (Prims.of_int (55))
+                                                                    (Prims.of_int (54))
                                                                     (Prims.of_int (26)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (54))
+                                                                    (Prims.of_int (53))
                                                                     (Prims.of_int (20))
-                                                                    (Prims.of_int (68))
+                                                                    (Prims.of_int (67))
                                                                     (Prims.of_int (30)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -232,17 +229,17 @@ let (k_intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (56))
+                                                                    (Prims.of_int (55))
                                                                     (Prims.of_int (31))
-                                                                    (Prims.of_int (56))
+                                                                    (Prims.of_int (55))
                                                                     (Prims.of_int (33)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (56))
+                                                                    (Prims.of_int (55))
                                                                     (Prims.of_int (36))
-                                                                    (Prims.of_int (68))
+                                                                    (Prims.of_int (67))
                                                                     (Prims.of_int (30)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -258,17 +255,17 @@ let (k_intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (57))
+                                                                    (Prims.of_int (56))
                                                                     (Prims.of_int (18))
-                                                                    (Prims.of_int (57))
+                                                                    (Prims.of_int (56))
                                                                     (Prims.of_int (38)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (60))
+                                                                    (Prims.of_int (59))
                                                                     (Prims.of_int (64))
-                                                                    (Prims.of_int (68))
+                                                                    (Prims.of_int (67))
                                                                     (Prims.of_int (30)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -287,17 +284,17 @@ let (k_intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (62))
+                                                                    (Prims.of_int (61))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (66))
+                                                                    (Prims.of_int (65))
                                                                     (Prims.of_int (52)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (68))
+                                                                    (Prims.of_int (67))
                                                                     (Prims.of_int (2))
-                                                                    (Prims.of_int (68))
+                                                                    (Prims.of_int (67))
                                                                     (Prims.of_int (30)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -384,14 +381,14 @@ let (intro_exists :
                        (Obj.magic
                           (FStar_Range.mk_range
                              "Pulse.Checker.Prover.IntroExists.fst"
-                             (Prims.of_int (79)) (Prims.of_int (10))
-                             (Prims.of_int (79)) (Prims.of_int (41)))))
+                             (Prims.of_int (78)) (Prims.of_int (10))
+                             (Prims.of_int (78)) (Prims.of_int (41)))))
                     (FStar_Sealed.seal
                        (Obj.magic
                           (FStar_Range.mk_range
                              "Pulse.Checker.Prover.IntroExists.fst"
-                             (Prims.of_int (79)) (Prims.of_int (44))
-                             (Prims.of_int (324)) (Prims.of_int (6)))))
+                             (Prims.of_int (78)) (Prims.of_int (44))
+                             (Prims.of_int (323)) (Prims.of_int (6)))))
                     (FStar_Tactics_Effect.lift_div_tac
                        (fun uu___1 ->
                           Pulse_Typing_Env.fresh
@@ -406,17 +403,17 @@ let (intro_exists :
                                   (Obj.magic
                                      (FStar_Range.mk_range
                                         "Pulse.Checker.Prover.IntroExists.fst"
-                                        (Prims.of_int (80))
+                                        (Prims.of_int (79))
                                         (Prims.of_int (11))
-                                        (Prims.of_int (80))
+                                        (Prims.of_int (79))
                                         (Prims.of_int (29)))))
                                (FStar_Sealed.seal
                                   (Obj.magic
                                      (FStar_Range.mk_range
                                         "Pulse.Checker.Prover.IntroExists.fst"
-                                        (Prims.of_int (80))
+                                        (Prims.of_int (79))
                                         (Prims.of_int (32))
-                                        (Prims.of_int (324))
+                                        (Prims.of_int (323))
                                         (Prims.of_int (6)))))
                                (FStar_Tactics_Effect.lift_div_tac
                                   (fun uu___1 ->
@@ -429,17 +426,17 @@ let (intro_exists :
                                              (Obj.magic
                                                 (FStar_Range.mk_range
                                                    "Pulse.Checker.Prover.IntroExists.fst"
-                                                   (Prims.of_int (82))
+                                                   (Prims.of_int (81))
                                                    (Prims.of_int (4))
-                                                   (Prims.of_int (86))
+                                                   (Prims.of_int (85))
                                                    (Prims.of_int (61)))))
                                           (FStar_Sealed.seal
                                              (Obj.magic
                                                 (FStar_Range.mk_range
                                                    "Pulse.Checker.Prover.IntroExists.fst"
-                                                   (Prims.of_int (87))
+                                                   (Prims.of_int (86))
                                                    (Prims.of_int (6))
-                                                   (Prims.of_int (324))
+                                                   (Prims.of_int (323))
                                                    (Prims.of_int (6)))))
                                           (FStar_Tactics_Effect.lift_div_tac
                                              (fun uu___1 ->
@@ -476,17 +473,17 @@ let (intro_exists :
                                                         (Obj.magic
                                                            (FStar_Range.mk_range
                                                               "Pulse.Checker.Prover.IntroExists.fst"
-                                                              (Prims.of_int (91))
+                                                              (Prims.of_int (90))
                                                               (Prims.of_int (105))
-                                                              (Prims.of_int (100))
+                                                              (Prims.of_int (99))
                                                               (Prims.of_int (18)))))
                                                      (FStar_Sealed.seal
                                                         (Obj.magic
                                                            (FStar_Range.mk_range
                                                               "Pulse.Checker.Prover.IntroExists.fst"
-                                                              (Prims.of_int (102))
+                                                              (Prims.of_int (101))
                                                               (Prims.of_int (37))
-                                                              (Prims.of_int (324))
+                                                              (Prims.of_int (323))
                                                               (Prims.of_int (6)))))
                                                      (FStar_Tactics_Effect.lift_div_tac
                                                         (fun uu___1 ->
@@ -526,17 +523,17 @@ let (intro_exists :
                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (104))
+                                                                    (Prims.of_int (103))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (113))
+                                                                    (Prims.of_int (112))
                                                                     (Prims.of_int (20)))))
                                                                 (FStar_Sealed.seal
                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (114))
+                                                                    (Prims.of_int (113))
                                                                     (Prims.of_int (6))
-                                                                    (Prims.of_int (324))
+                                                                    (Prims.of_int (323))
                                                                     (Prims.of_int (6)))))
                                                                 (FStar_Tactics_Effect.lift_div_tac
                                                                    (fun
@@ -589,17 +586,17 @@ let (intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (115))
+                                                                    (Prims.of_int (114))
                                                                     (Prims.of_int (16))
-                                                                    (Prims.of_int (115))
+                                                                    (Prims.of_int (114))
                                                                     (Prims.of_int (30)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (115))
+                                                                    (Prims.of_int (114))
                                                                     (Prims.of_int (33))
-                                                                    (Prims.of_int (324))
+                                                                    (Prims.of_int (323))
                                                                     (Prims.of_int (6)))))
                                                                     (Obj.magic
                                                                     (prover
@@ -616,17 +613,17 @@ let (intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (119))
+                                                                    (Prims.of_int (118))
                                                                     (Prims.of_int (56))
-                                                                    (Prims.of_int (119))
+                                                                    (Prims.of_int (118))
                                                                     (Prims.of_int (73)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (119))
+                                                                    (Prims.of_int (118))
                                                                     (Prims.of_int (76))
-                                                                    (Prims.of_int (324))
+                                                                    (Prims.of_int (323))
                                                                     (Prims.of_int (6)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -643,17 +640,17 @@ let (intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (121))
+                                                                    (Prims.of_int (120))
                                                                     (Prims.of_int (66))
-                                                                    (Prims.of_int (129))
+                                                                    (Prims.of_int (128))
                                                                     (Prims.of_int (18)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (130))
+                                                                    (Prims.of_int (129))
                                                                     (Prims.of_int (61))
-                                                                    (Prims.of_int (324))
+                                                                    (Prims.of_int (323))
                                                                     (Prims.of_int (6)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -661,17 +658,17 @@ let (intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (122))
+                                                                    (Prims.of_int (121))
                                                                     (Prims.of_int (12))
-                                                                    (Prims.of_int (122))
+                                                                    (Prims.of_int (121))
                                                                     (Prims.of_int (64)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (123))
+                                                                    (Prims.of_int (122))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (129))
+                                                                    (Prims.of_int (128))
                                                                     (Prims.of_int (18)))))
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Prover_Substs.ss_to_nt_substs
@@ -715,17 +712,17 @@ let (intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (135))
+                                                                    (Prims.of_int (134))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (135))
+                                                                    (Prims.of_int (134))
                                                                     (Prims.of_int (80)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (137))
+                                                                    (Prims.of_int (136))
                                                                     (Prims.of_int (48))
-                                                                    (Prims.of_int (324))
+                                                                    (Prims.of_int (323))
                                                                     (Prims.of_int (6)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -742,17 +739,17 @@ let (intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (141))
+                                                                    (Prims.of_int (140))
                                                                     (Prims.of_int (59))
-                                                                    (Prims.of_int (141))
+                                                                    (Prims.of_int (140))
                                                                     (Prims.of_int (89)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (141))
+                                                                    (Prims.of_int (140))
                                                                     (Prims.of_int (92))
-                                                                    (Prims.of_int (324))
+                                                                    (Prims.of_int (323))
                                                                     (Prims.of_int (6)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -769,17 +766,17 @@ let (intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (145))
+                                                                    (Prims.of_int (144))
                                                                     (Prims.of_int (48))
-                                                                    (Prims.of_int (145))
+                                                                    (Prims.of_int (144))
                                                                     (Prims.of_int (96)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (145))
+                                                                    (Prims.of_int (144))
                                                                     (Prims.of_int (99))
-                                                                    (Prims.of_int (324))
+                                                                    (Prims.of_int (323))
                                                                     (Prims.of_int (6)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -796,17 +793,17 @@ let (intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (150))
+                                                                    (Prims.of_int (149))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (150))
+                                                                    (Prims.of_int (149))
                                                                     (Prims.of_int (13)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (150))
+                                                                    (Prims.of_int (149))
                                                                     (Prims.of_int (16))
-                                                                    (Prims.of_int (324))
+                                                                    (Prims.of_int (323))
                                                                     (Prims.of_int (6)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -822,17 +819,17 @@ let (intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (157))
+                                                                    (Prims.of_int (156))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (157))
+                                                                    (Prims.of_int (156))
                                                                     (Prims.of_int (47)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (157))
+                                                                    (Prims.of_int (156))
                                                                     (Prims.of_int (50))
-                                                                    (Prims.of_int (324))
+                                                                    (Prims.of_int (323))
                                                                     (Prims.of_int (6)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -874,17 +871,17 @@ let (intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (164))
+                                                                    (Prims.of_int (163))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (164))
+                                                                    (Prims.of_int (163))
                                                                     (Prims.of_int (22)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (166))
+                                                                    (Prims.of_int (165))
                                                                     (Prims.of_int (84))
-                                                                    (Prims.of_int (324))
+                                                                    (Prims.of_int (323))
                                                                     (Prims.of_int (6)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -901,17 +898,17 @@ let (intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (167))
+                                                                    (Prims.of_int (166))
                                                                     (Prims.of_int (16))
-                                                                    (Prims.of_int (167))
+                                                                    (Prims.of_int (166))
                                                                     (Prims.of_int (39)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (168))
+                                                                    (Prims.of_int (167))
                                                                     (Prims.of_int (94))
-                                                                    (Prims.of_int (324))
+                                                                    (Prims.of_int (323))
                                                                     (Prims.of_int (6)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -931,17 +928,17 @@ let (intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (175))
+                                                                    (Prims.of_int (174))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (175))
+                                                                    (Prims.of_int (174))
                                                                     (Prims.of_int (22)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (175))
+                                                                    (Prims.of_int (174))
                                                                     (Prims.of_int (25))
-                                                                    (Prims.of_int (324))
+                                                                    (Prims.of_int (323))
                                                                     (Prims.of_int (6)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -958,17 +955,17 @@ let (intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (184))
+                                                                    (Prims.of_int (183))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (184))
+                                                                    (Prims.of_int (183))
                                                                     (Prims.of_int (47)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (184))
+                                                                    (Prims.of_int (183))
                                                                     (Prims.of_int (50))
-                                                                    (Prims.of_int (324))
+                                                                    (Prims.of_int (323))
                                                                     (Prims.of_int (6)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -1030,17 +1027,17 @@ let (intro_exists :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (194))
+                                                                    (Prims.of_int (193))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (203))
+                                                                    (Prims.of_int (202))
                                                                     (Prims.of_int (16)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroExists.fst"
-                                                                    (Prims.of_int (312))
+                                                                    (Prims.of_int (311))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (321))
+                                                                    (Prims.of_int (320))
                                                                     (Prims.of_int (26)))))
                                                                     (Obj.magic
                                                                     (k_intro_exists

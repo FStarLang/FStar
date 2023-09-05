@@ -1,16 +1,27 @@
 open Prims
 type error = (Prims.string * FStar_Compiler_Range_Type.range)
-type 'a err = ('a, error) FStar_Pervasives.either
+type 'a err = Prims.nat -> (('a, error) FStar_Pervasives.either * Prims.nat)
 let op_let_Question :
-  'a 'b . 'a err -> ('a -> 'b err) -> ('b, error) FStar_Pervasives.either =
+  'a 'b .
+    'a err ->
+      ('a -> 'b err) ->
+        Prims.nat -> (('b, error) FStar_Pervasives.either * Prims.nat)
+  =
   fun f ->
     fun g ->
-      match f with
-      | FStar_Pervasives.Inl a1 -> g a1
-      | FStar_Pervasives.Inr e -> FStar_Pervasives.Inr e
-let return : 'a . 'a -> 'a err = fun x -> FStar_Pervasives.Inl x
+      fun ctr ->
+        let uu___ = f ctr in
+        match uu___ with
+        | (FStar_Pervasives.Inl a1, ctr1) -> let uu___1 = g a1 in uu___1 ctr1
+        | (FStar_Pervasives.Inr e, ctr1) -> ((FStar_Pervasives.Inr e), ctr1)
+let return : 'a . 'a -> 'a err =
+  fun x -> fun ctr -> ((FStar_Pervasives.Inl x), ctr)
 let fail : 'a . Prims.string -> FStar_Compiler_Range_Type.range -> 'a err =
-  fun message -> fun range -> FStar_Pervasives.Inr (message, range)
+  fun message ->
+    fun range -> fun ctr -> ((FStar_Pervasives.Inr (message, range)), ctr)
+let (next_ctr : Prims.nat err) =
+  fun ctr ->
+    ((FStar_Pervasives.Inl (ctr + Prims.int_one)), (ctr + Prims.int_one))
 let rec map_err :
   'a 'b . ('a -> 'b err) -> 'a Prims.list -> 'b Prims.list err =
   fun f ->
@@ -23,6 +34,16 @@ let rec map_err :
             (fun hd1 ->
                let uu___1 = map_err f tl in
                op_let_Question uu___1 (fun tl1 -> return (hd1 :: tl1)))
+let rec fold_err :
+  'a 'b . ('b -> 'a -> 'b err) -> 'a Prims.list -> 'b -> 'b err =
+  fun f ->
+    fun l ->
+      fun x ->
+        match l with
+        | [] -> return x
+        | hd::tl ->
+            let uu___ = f x hd in
+            op_let_Question uu___ (fun x1 -> fold_err f tl x1)
 let map_err_opt :
   'a 'b .
     ('a -> 'b err) ->
@@ -115,6 +136,8 @@ let (push_bv :
                 (uu___1.FStar_TypeChecker_Env.uvar_subtyping);
               FStar_TypeChecker_Env.intactics =
                 (uu___1.FStar_TypeChecker_Env.intactics);
+              FStar_TypeChecker_Env.nocoerce =
+                (uu___1.FStar_TypeChecker_Env.nocoerce);
               FStar_TypeChecker_Env.tc_term =
                 (uu___1.FStar_TypeChecker_Env.tc_term);
               FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
@@ -234,6 +257,8 @@ let (push_namespace : env_t -> FStar_Ident.lident -> env_t) =
             (uu___.FStar_TypeChecker_Env.uvar_subtyping);
           FStar_TypeChecker_Env.intactics =
             (uu___.FStar_TypeChecker_Env.intactics);
+          FStar_TypeChecker_Env.nocoerce =
+            (uu___.FStar_TypeChecker_Env.nocoerce);
           FStar_TypeChecker_Env.tc_term =
             (uu___.FStar_TypeChecker_Env.tc_term);
           FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
@@ -304,37 +329,63 @@ let (stt_lid : FStar_Ident.lident) = pulse_lib_core_lid "stt"
 let (assign_lid : FStar_Ident.lident) = pulse_lib_ref_lid "op_Colon_Equals"
 let (stt_ghost_lid : FStar_Ident.lident) = pulse_lib_core_lid "stt_ghost"
 let (stt_atomic_lid : FStar_Ident.lident) = pulse_lib_core_lid "stt_atomic"
-let (stapp_assignment :
-  FStar_Syntax_Syntax.term ->
-    FStar_Syntax_Syntax.term ->
-      PulseSyntaxWrapper.range -> PulseSyntaxWrapper.st_term)
-  =
-  fun lhs ->
-    fun rhs ->
-      fun r ->
-        let head_fv =
-          FStar_Syntax_Syntax.lid_as_fv assign_lid
-            FStar_Pervasives_Native.None in
-        let head = FStar_Syntax_Syntax.fv_to_tm head_fv in
-        let app =
-          FStar_Syntax_Syntax.mk_Tm_app head
-            [(lhs, FStar_Pervasives_Native.None)] lhs.FStar_Syntax_Syntax.pos in
-        let uu___ = PulseSyntaxWrapper.tm_expr app r in
-        let uu___1 = as_term rhs in
-        PulseSyntaxWrapper.tm_st_app uu___ FStar_Pervasives_Native.None
-          uu___1 r
-let (resolve_name :
-  env_t -> FStar_Ident.ident -> FStar_Syntax_Syntax.term err) =
-  fun env ->
-    fun id ->
+let (op_colon_equals_lid :
+  FStar_Compiler_Range_Type.range -> FStar_Ident.lident) =
+  fun r -> FStar_Ident.lid_of_path ["op_Colon_Equals"] r
+let (op_array_assignment_lid :
+  FStar_Compiler_Range_Type.range -> FStar_Ident.lident) =
+  fun r -> FStar_Ident.lid_of_path ["op_Array_Assignment"] r
+let (op_bang_lid : FStar_Ident.lident) = pulse_lib_ref_lid "op_Bang"
+let (read : FStar_Ident.ident -> FStar_Parser_AST.term) =
+  fun x ->
+    let range = FStar_Ident.range_of_id x in
+    let level = FStar_Parser_AST.Un in
+    let head =
+      {
+        FStar_Parser_AST.tm = (FStar_Parser_AST.Var op_bang_lid);
+        FStar_Parser_AST.range = range;
+        FStar_Parser_AST.level = level
+      } in
+    let arg =
       let uu___ =
-        FStar_Syntax_DsEnv.try_lookup_id
-          (env.tcenv).FStar_TypeChecker_Env.dsenv id in
-      match uu___ with
-      | FStar_Pervasives_Native.None ->
-          let uu___1 = FStar_Ident.range_of_id id in
-          fail "Name not found" uu___1
-      | FStar_Pervasives_Native.Some t -> return t
+        let uu___1 = FStar_Ident.lid_of_ids [x] in
+        FStar_Parser_AST.Var uu___1 in
+      {
+        FStar_Parser_AST.tm = uu___;
+        FStar_Parser_AST.range = range;
+        FStar_Parser_AST.level = level
+      } in
+    {
+      FStar_Parser_AST.tm =
+        (FStar_Parser_AST.App (head, arg, FStar_Parser_AST.Nothing));
+      FStar_Parser_AST.range = range;
+      FStar_Parser_AST.level = level
+    }
+let (stapp_assignment :
+  FStar_Ident.lident ->
+    FStar_Syntax_Syntax.term Prims.list ->
+      FStar_Syntax_Syntax.term ->
+        PulseSyntaxWrapper.range -> PulseSyntaxWrapper.st_term)
+  =
+  fun assign_lid1 ->
+    fun args ->
+      fun last_arg ->
+        fun r ->
+          let head_fv =
+            FStar_Syntax_Syntax.lid_as_fv assign_lid1
+              FStar_Pervasives_Native.None in
+          let head = FStar_Syntax_Syntax.fv_to_tm head_fv in
+          let app =
+            FStar_Compiler_List.fold_left
+              (fun head1 ->
+                 fun arg ->
+                   FStar_Syntax_Syntax.mk_Tm_app head1
+                     [(arg, FStar_Pervasives_Native.None)]
+                     arg.FStar_Syntax_Syntax.pos) head args in
+          let uu___ = PulseSyntaxWrapper.tm_expr app r in
+          let uu___1 = as_term last_arg in
+          PulseSyntaxWrapper.tm_st_app uu___ FStar_Pervasives_Native.None
+            uu___1 r
 let (resolve_lid : env_t -> FStar_Ident.lident -> FStar_Ident.lident err) =
   fun env ->
     fun lid ->
@@ -661,18 +712,72 @@ let (resolve_names :
           let uu___ = map_err (resolve_lid env) ns1 in
           op_let_Question uu___
             (fun ns2 -> return (FStar_Pervasives_Native.Some ns2))
-let (resolve_hint_type :
-  env_t -> PulseSugar.hint_type -> PulseSugar.hint_type err) =
+let (desugar_hint_type :
+  env_t -> PulseSugar.hint_type -> PulseSyntaxWrapper.hint_type err) =
   fun env ->
     fun ht ->
       match ht with
-      | PulseSugar.ASSERT -> return PulseSugar.ASSERT
-      | PulseSugar.UNFOLD ns ->
-          let uu___ = resolve_names env ns in
-          op_let_Question uu___ (fun ns1 -> return (PulseSugar.UNFOLD ns1))
-      | PulseSugar.FOLD ns ->
-          let uu___ = resolve_names env ns in
-          op_let_Question uu___ (fun ns1 -> return (PulseSugar.FOLD ns1))
+      | PulseSugar.ASSERT vp ->
+          let uu___ = desugar_vprop env vp in
+          op_let_Question uu___
+            (fun vp1 ->
+               let uu___1 = PulseSyntaxWrapper.mk_assert_hint_type vp1 in
+               return uu___1)
+      | PulseSugar.UNFOLD (ns, vp) ->
+          let uu___ = desugar_vprop env vp in
+          op_let_Question uu___
+            (fun vp1 ->
+               let uu___1 = resolve_names env ns in
+               op_let_Question uu___1
+                 (fun ns1 ->
+                    let ns2 =
+                      FStar_Compiler_Util.map_opt ns1
+                        (FStar_Compiler_List.map FStar_Ident.string_of_lid) in
+                    let uu___2 =
+                      PulseSyntaxWrapper.mk_unfold_hint_type ns2 vp1 in
+                    return uu___2))
+      | PulseSugar.FOLD (ns, vp) ->
+          let uu___ = desugar_vprop env vp in
+          op_let_Question uu___
+            (fun vp1 ->
+               let uu___1 = resolve_names env ns in
+               op_let_Question uu___1
+                 (fun ns1 ->
+                    let ns2 =
+                      FStar_Compiler_Util.map_opt ns1
+                        (FStar_Compiler_List.map FStar_Ident.string_of_lid) in
+                    let uu___2 = PulseSyntaxWrapper.mk_fold_hint_type ns2 vp1 in
+                    return uu___2))
+      | PulseSugar.RENAME (pairs, goal) ->
+          let uu___ =
+            map_err
+              (fun uu___1 ->
+                 match uu___1 with
+                 | (t1, t2) ->
+                     let uu___2 = desugar_term env t1 in
+                     op_let_Question uu___2
+                       (fun t11 ->
+                          let uu___3 = desugar_term env t2 in
+                          op_let_Question uu___3
+                            (fun t21 -> return (t11, t21)))) pairs in
+          op_let_Question uu___
+            (fun pairs1 ->
+               let uu___1 = map_err_opt (desugar_vprop env) goal in
+               op_let_Question uu___1
+                 (fun goal1 ->
+                    let uu___2 =
+                      PulseSyntaxWrapper.mk_rename_hint_type pairs1 goal1 in
+                    return uu___2))
+      | PulseSugar.REWRITE (t1, t2) ->
+          let uu___ = desugar_vprop env t1 in
+          op_let_Question uu___
+            (fun t11 ->
+               let uu___1 = desugar_vprop env t2 in
+               op_let_Question uu___1
+                 (fun t21 ->
+                    let uu___2 =
+                      PulseSyntaxWrapper.mk_rewrite_hint_type t11 t21 in
+                    return uu___2))
 let (desugar_datacon : env_t -> FStar_Ident.lid -> PulseSyntaxWrapper.fv err)
   =
   fun env ->
@@ -689,14 +794,14 @@ let (desugar_datacon : env_t -> FStar_Ident.lid -> PulseSyntaxWrapper.fv err)
                let uu___3 = FStar_Syntax_Subst.compress tt in
                uu___3.FStar_Syntax_Syntax.n in
              match uu___2 with
-             | FStar_Syntax_Syntax.Tm_fvar fv -> FStar_Pervasives.Inl fv
+             | FStar_Syntax_Syntax.Tm_fvar fv -> return fv
              | FStar_Syntax_Syntax.Tm_uinst
                  ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv;
                     FStar_Syntax_Syntax.pos = uu___3;
                     FStar_Syntax_Syntax.vars = uu___4;
                     FStar_Syntax_Syntax.hash_code = uu___5;_},
                   uu___6)
-                 -> FStar_Pervasives.Inl fv
+                 -> return fv
              | uu___3 ->
                  let uu___4 =
                    let uu___5 = FStar_Ident.string_of_lid l in
@@ -707,7 +812,7 @@ let (desugar_datacon : env_t -> FStar_Ident.lid -> PulseSyntaxWrapper.fv err)
                 let uu___2 =
                   let uu___3 = FStar_Syntax_Syntax.lid_of_fv sfv in
                   PulseSyntaxWrapper.mk_fv uu___3 rng in
-                FStar_Pervasives.Inl uu___2))
+                return uu___2))
 let rec (desugar_stmt :
   env_t -> PulseSugar.stmt -> PulseSyntaxWrapper.st_term err) =
   fun env ->
@@ -728,10 +833,39 @@ let rec (desugar_stmt :
             (fun lhs1 ->
                let uu___1 = tosyntax env value in
                op_let_Question uu___1
-                 (fun value1 ->
+                 (fun rhs ->
                     let uu___2 =
-                      stapp_assignment lhs1 value1 s.PulseSugar.range1 in
-                    return uu___2))
+                      let uu___3 = op_colon_equals_lid s.PulseSugar.range1 in
+                      resolve_lid env uu___3 in
+                    op_let_Question uu___2
+                      (fun assignment_lid ->
+                         let uu___3 =
+                           stapp_assignment assignment_lid [lhs1] rhs
+                             s.PulseSugar.range1 in
+                         return uu___3)))
+      | PulseSugar.ArrayAssignment
+          { PulseSugar.arr = arr; PulseSugar.index = index;
+            PulseSugar.value1 = value;_}
+          ->
+          let uu___ = tosyntax env arr in
+          op_let_Question uu___
+            (fun arr1 ->
+               let uu___1 = tosyntax env index in
+               op_let_Question uu___1
+                 (fun index1 ->
+                    let uu___2 = tosyntax env value in
+                    op_let_Question uu___2
+                      (fun value1 ->
+                         let uu___3 =
+                           let uu___4 =
+                             op_array_assignment_lid s.PulseSugar.range1 in
+                           resolve_lid env uu___4 in
+                         op_let_Question uu___3
+                           (fun array_assignment_lid ->
+                              let uu___4 =
+                                stapp_assignment array_assignment_lid
+                                  [arr1; index1] value1 s.PulseSugar.range1 in
+                              return uu___4))))
       | PulseSugar.Sequence
           {
             PulseSugar.s1 =
@@ -747,11 +881,11 @@ let rec (desugar_stmt :
             PulseSugar.s2 = s2;_}
           -> desugar_bind env lb s2 s.PulseSugar.range1
       | PulseSugar.ProofHintWithBinders uu___ ->
-          desugar_assert_with_binders env s FStar_Pervasives_Native.None
+          desugar_proof_hint_with_binders env s FStar_Pervasives_Native.None
             s.PulseSugar.range1
       | PulseSugar.Sequence { PulseSugar.s1 = s1; PulseSugar.s2 = s2;_} when
           PulseSugar.uu___is_ProofHintWithBinders s1.PulseSugar.s ->
-          desugar_assert_with_binders env s1
+          desugar_proof_hint_with_binders env s1
             (FStar_Pervasives_Native.Some s2) s.PulseSugar.range1
       | PulseSugar.Sequence { PulseSugar.s1 = s1; PulseSugar.s2 = s2;_} ->
           desugar_sequence env s1 s2 s.PulseSugar.range1
@@ -854,8 +988,8 @@ let rec (desugar_stmt :
                     op_let_Question uu___2
                       (fun witnesses1 ->
                          let uu___3 =
-                           PulseSyntaxWrapper.tm_intro_exists false vp
-                             witnesses1 s.PulseSugar.range1 in
+                           PulseSyntaxWrapper.tm_intro_exists vp witnesses1
+                             s.PulseSugar.range1 in
                          return uu___3)))
       | PulseSugar.Parallel
           { PulseSugar.p1 = p1; PulseSugar.p2 = p2; PulseSugar.q1 = q1;
@@ -1077,7 +1211,7 @@ and (desugar_sequence :
                       let uu___3 = PulseSyntaxWrapper.tm_unknown r in
                       PulseSyntaxWrapper.mk_binder uu___2 uu___3 in
                     let uu___2 = mk_bind annot s11 s21 r in return uu___2))
-and (desugar_assert_with_binders :
+and (desugar_proof_hint_with_binders :
   env_t ->
     PulseSugar.stmt ->
       PulseSugar.stmt FStar_Pervasives_Native.option ->
@@ -1089,8 +1223,7 @@ and (desugar_assert_with_binders :
         fun r ->
           match s1.PulseSugar.s with
           | PulseSugar.ProofHintWithBinders
-              { PulseSugar.hint_type = hint_type; PulseSugar.binders1 = bs;
-                PulseSugar.vprop1 = v;_}
+              { PulseSugar.hint_type = hint_type; PulseSugar.binders1 = bs;_}
               ->
               let uu___ = desugar_binders env bs in
               op_let_Question uu___
@@ -1100,9 +1233,9 @@ and (desugar_assert_with_binders :
                        let vars =
                          FStar_Compiler_List.map
                            (fun bv -> bv.FStar_Syntax_Syntax.index) bvs in
-                       let uu___2 = desugar_vprop env1 v in
+                       let uu___2 = desugar_hint_type env1 hint_type in
                        op_let_Question uu___2
-                         (fun v1 ->
+                         (fun ht ->
                             let uu___3 =
                               match k with
                               | FStar_Pervasives_Native.None ->
@@ -1124,19 +1257,15 @@ and (desugar_assert_with_binders :
                                    PulseSyntaxWrapper.bvs_as_subst vars in
                                  let s21 =
                                    PulseSyntaxWrapper.subst_st_term sub s2 in
-                                 let v2 =
-                                   PulseSyntaxWrapper.subst_term sub v1 in
+                                 let ht1 =
+                                   PulseSyntaxWrapper.subst_proof_hint sub ht in
                                  let uu___4 =
-                                   resolve_hint_type env1 hint_type in
-                                 op_let_Question uu___4
-                                   (fun ht ->
-                                      let uu___5 =
-                                        let uu___6 =
-                                          PulseSyntaxWrapper.close_binders
-                                            binders1 vars in
-                                        PulseSyntaxWrapper.tm_proof_hint_with_binders
-                                          ht uu___6 v2 s21 r in
-                                      return uu___5))))
+                                   let uu___5 =
+                                     PulseSyntaxWrapper.close_binders
+                                       binders1 vars in
+                                   PulseSyntaxWrapper.tm_proof_hint_with_binders
+                                     ht1 uu___5 s21 r in
+                                 return uu___4)))
           | uu___ ->
               fail "Expected ProofHintWithBinders" s1.PulseSugar.range1
 and (desugar_binders :
@@ -1232,6 +1361,769 @@ and (desugar_computation_type :
                                PulseSyntaxWrapper.ghost_comp inames pre
                                  uu___6 post1 in
                              return uu___5)))
+let rec (free_vars_term :
+  env_t -> FStar_Parser_AST.term -> FStar_Ident.ident Prims.list) =
+  fun env ->
+    fun t ->
+      FStar_ToSyntax_ToSyntax.free_vars false
+        (env.tcenv).FStar_TypeChecker_Env.dsenv t
+and (free_vars_vprop :
+  env_t -> PulseSugar.vprop -> FStar_Ident.ident Prims.list) =
+  fun env ->
+    fun t ->
+      match t.PulseSugar.v with
+      | PulseSugar.VPropTerm t1 -> free_vars_term env t1
+      | PulseSugar.VPropStar (t0, t1) ->
+          let uu___ = free_vars_vprop env t0 in
+          let uu___1 = free_vars_vprop env t1 in
+          FStar_List_Tot_Base.op_At uu___ uu___1
+      | PulseSugar.VPropExists
+          { PulseSugar.binders = binders; PulseSugar.body = body;_} ->
+          let uu___ = free_vars_binders env binders in
+          (match uu___ with
+           | (env', fvs) ->
+               let uu___1 = free_vars_vprop env' body in
+               FStar_List_Tot_Base.op_At fvs uu___1)
+and (free_vars_binders :
+  env_t -> PulseSugar.binders -> (env_t * FStar_Ident.ident Prims.list)) =
+  fun env ->
+    fun bs ->
+      match bs with
+      | [] -> (env, [])
+      | (uu___, x, t)::bs1 ->
+          let fvs = free_vars_term env t in
+          let uu___1 =
+            let uu___2 =
+              let uu___3 = push_bv env x in
+              FStar_Pervasives_Native.fst uu___3 in
+            free_vars_binders uu___2 bs1 in
+          (match uu___1 with
+           | (env', res) -> (env', (FStar_List_Tot_Base.op_At fvs res)))
+let (free_vars_comp :
+  env_t -> PulseSugar.computation_type -> FStar_Ident.ident Prims.list) =
+  fun env ->
+    fun c ->
+      let ids =
+        let uu___ = free_vars_vprop env c.PulseSugar.precondition in
+        let uu___1 =
+          let uu___2 = free_vars_term env c.PulseSugar.return_type in
+          let uu___3 =
+            let uu___4 =
+              let uu___5 = push_bv env c.PulseSugar.return_name in
+              FStar_Pervasives_Native.fst uu___5 in
+            free_vars_vprop uu___4 c.PulseSugar.postcondition in
+          FStar_List_Tot_Base.op_At uu___2 uu___3 in
+        FStar_List_Tot_Base.op_At uu___ uu___1 in
+      FStar_Compiler_List.deduplicate FStar_Ident.ident_equals ids
+let (idents_as_binders :
+  env_t ->
+    FStar_Ident.ident Prims.list ->
+      (env_t * (PulseSyntaxWrapper.qualifier FStar_Pervasives_Native.option *
+        PulseSyntaxWrapper.binder) Prims.list * FStar_Syntax_Syntax.bv
+        Prims.list) err)
+  =
+  fun env ->
+    fun l ->
+      let erased_tm =
+        FStar_Parser_AST.mk_term
+          (FStar_Parser_AST.Var FStar_Parser_Const.erased_lid)
+          FStar_Compiler_Range_Type.dummyRange FStar_Parser_AST.Un in
+      let rec aux env1 binders bvs l1 =
+        match l1 with
+        | [] ->
+            return
+              (env1, (FStar_Compiler_List.rev binders),
+                (FStar_Compiler_List.rev bvs))
+        | i::l2 ->
+            let uu___ = push_bv env1 i in
+            (match uu___ with
+             | (env2, bv) ->
+                 let qual1 = PulseSyntaxWrapper.as_qual true in
+                 let text = FStar_Ident.string_of_id i in
+                 let wild =
+                   let uu___1 = FStar_Ident.range_of_id i in
+                   FStar_Parser_AST.mk_term FStar_Parser_AST.Wild uu___1
+                     FStar_Parser_AST.Un in
+                 let ty =
+                   if FStar_Compiler_Util.starts_with text "'"
+                   then
+                     let uu___1 = FStar_Ident.range_of_id i in
+                     FStar_Parser_AST.mkApp erased_tm
+                       [(wild, FStar_Parser_AST.Nothing)] uu___1
+                   else wild in
+                 let uu___1 = desugar_term env2 ty in
+                 op_let_Question uu___1
+                   (fun ty1 ->
+                      let uu___2 =
+                        let uu___3 =
+                          let uu___4 = PulseSyntaxWrapper.mk_binder i ty1 in
+                          (qual1, uu___4) in
+                        uu___3 :: binders in
+                      aux env2 uu___2 (bv :: bvs) l2)) in
+      aux env [] [] l
+type mutvar_entry =
+  (FStar_Ident.ident * FStar_Syntax_Syntax.bv * FStar_Ident.ident
+    FStar_Pervasives_Native.option)
+type menv = {
+  map: mutvar_entry Prims.list ;
+  env: env_t }
+let (__proj__Mkmenv__item__map : menv -> mutvar_entry Prims.list) =
+  fun projectee -> match projectee with | { map; env;_} -> map
+let (__proj__Mkmenv__item__env : menv -> env_t) =
+  fun projectee -> match projectee with | { map; env;_} -> env
+let (menv_push_ns : menv -> FStar_Ident.lid -> menv) =
+  fun m ->
+    fun ns ->
+      let uu___ = push_namespace m.env ns in { map = (m.map); env = uu___ }
+let (menv_push_bv :
+  menv ->
+    FStar_Ident.ident ->
+      PulseSugar.mut_or_ref FStar_Pervasives_Native.option -> menv)
+  =
+  fun m ->
+    fun x ->
+      fun q ->
+        let uu___ = push_bv m.env x in
+        match uu___ with
+        | (env, bv) ->
+            (match q with
+             | FStar_Pervasives_Native.Some (PulseSugar.MUT) ->
+                 {
+                   map = ((x, bv, FStar_Pervasives_Native.None) :: (m.map));
+                   env
+                 }
+             | FStar_Pervasives_Native.None -> { map = (m.map); env })
+let (menv_push_bvs : menv -> FStar_Ident.ident Prims.list -> menv) =
+  fun m ->
+    fun xs ->
+      let uu___ =
+        let uu___1 = push_bvs m.env xs in FStar_Pervasives_Native.fst uu___1 in
+      { map = (m.map); env = uu___ }
+let (is_mut :
+  menv ->
+    FStar_Syntax_Syntax.bv ->
+      FStar_Ident.ident FStar_Pervasives_Native.option
+        FStar_Pervasives_Native.option)
+  =
+  fun m ->
+    fun x ->
+      let uu___ =
+        FStar_Compiler_List.tryFind
+          (fun uu___1 ->
+             match uu___1 with
+             | (uu___2, y, uu___3) -> FStar_Syntax_Syntax.bv_eq x y) 
+          m.map in
+      match uu___ with
+      | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
+      | FStar_Pervasives_Native.Some (uu___1, uu___2, curval) ->
+          FStar_Pervasives_Native.Some curval
+type needs_derefs = (FStar_Ident.ident * FStar_Ident.ident) Prims.list
+let (fresh_var : FStar_Ident.ident -> FStar_Ident.ident err) =
+  fun nm ->
+    op_let_Question next_ctr
+      (fun ctr ->
+         let s =
+           let uu___ = FStar_Ident.string_of_id nm in
+           Prims.op_Hat uu___ (Prims.op_Hat "@" (Prims.string_of_int ctr)) in
+         let uu___ =
+           let uu___1 =
+             let uu___2 = FStar_Ident.range_of_id nm in (s, uu___2) in
+           FStar_Ident.mk_ident uu___1 in
+         return uu___)
+let (bind_curval : menv -> FStar_Ident.ident -> FStar_Ident.ident -> menv) =
+  fun m ->
+    fun x ->
+      fun curval ->
+        let uu___ =
+          FStar_Compiler_List.tryFind
+            (fun uu___1 ->
+               match uu___1 with
+               | (y, uu___2, uu___3) -> FStar_Ident.ident_equals x y) 
+            m.map in
+        match uu___ with
+        | FStar_Pervasives_Native.None -> failwith "Impossible"
+        | FStar_Pervasives_Native.Some (x1, bv, uu___1) ->
+            {
+              map = ((x1, bv, (FStar_Pervasives_Native.Some curval)) ::
+                (m.map));
+              env = (m.env)
+            }
+let (clear_curval : menv -> FStar_Ident.ident -> menv) =
+  fun m ->
+    fun x ->
+      let uu___ =
+        FStar_Compiler_List.tryFind
+          (fun uu___1 ->
+             match uu___1 with
+             | (y, uu___2, uu___3) -> FStar_Ident.ident_equals x y) m.map in
+      match uu___ with
+      | FStar_Pervasives_Native.None -> failwith "Impossible"
+      | FStar_Pervasives_Native.Some (x1, bv, uu___1) ->
+          {
+            map = ((x1, bv, FStar_Pervasives_Native.None) :: (m.map));
+            env = (m.env)
+          }
+let (bind_curvals : menv -> needs_derefs -> menv) =
+  fun m ->
+    fun l ->
+      FStar_Compiler_List.fold_left
+        (fun m1 ->
+           fun uu___ -> match uu___ with | (x, y) -> bind_curval m1 x y) m l
+let (resolve_mut :
+  menv ->
+    FStar_Parser_AST.term -> mutvar_entry FStar_Pervasives_Native.option)
+  =
+  fun m ->
+    fun e ->
+      match e.FStar_Parser_AST.tm with
+      | FStar_Parser_AST.Var l ->
+          let topt =
+            FStar_Syntax_DsEnv.try_lookup_lid
+              ((m.env).tcenv).FStar_TypeChecker_Env.dsenv l in
+          (match topt with
+           | FStar_Pervasives_Native.Some
+               { FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_name x;
+                 FStar_Syntax_Syntax.pos = uu___;
+                 FStar_Syntax_Syntax.vars = uu___1;
+                 FStar_Syntax_Syntax.hash_code = uu___2;_}
+               ->
+               FStar_Compiler_List.tryFind
+                 (fun uu___3 ->
+                    match uu___3 with
+                    | (uu___4, y, uu___5) -> FStar_Syntax_Syntax.bv_eq x y)
+                 m.map
+           | uu___ -> FStar_Pervasives_Native.None)
+      | uu___ -> FStar_Pervasives_Native.None
+let (maybe_clear_curval : menv -> FStar_Parser_AST.term -> menv) =
+  fun m ->
+    fun x ->
+      let uu___ = resolve_mut m x in
+      match uu___ with
+      | FStar_Pervasives_Native.None -> m
+      | FStar_Pervasives_Native.Some (x1, y, uu___1) ->
+          {
+            map = ((x1, y, FStar_Pervasives_Native.None) :: (m.map));
+            env = (m.env)
+          }
+let (add_derefs_in_scope :
+  needs_derefs -> PulseSugar.stmt -> PulseSugar.stmt) =
+  fun n ->
+    fun p ->
+      FStar_Compiler_List.fold_right
+        (fun uu___ ->
+           fun p1 ->
+             match uu___ with
+             | (x, y) ->
+                 let lb =
+                   let uu___1 =
+                     let uu___2 =
+                       let uu___3 =
+                         let uu___4 = read x in
+                         FStar_Pervasives_Native.Some uu___4 in
+                       {
+                         PulseSugar.qualifier = FStar_Pervasives_Native.None;
+                         PulseSugar.id = y;
+                         PulseSugar.typ = FStar_Pervasives_Native.None;
+                         PulseSugar.init = uu___3
+                       } in
+                     PulseSugar.LetBinding uu___2 in
+                   {
+                     PulseSugar.s = uu___1;
+                     PulseSugar.range1 = (p1.PulseSugar.range1)
+                   } in
+                 {
+                   PulseSugar.s =
+                     (PulseSugar.Sequence
+                        { PulseSugar.s1 = lb; PulseSugar.s2 = p1 });
+                   PulseSugar.range1 = (p1.PulseSugar.range1)
+                 }) n p
+let (term'_of_id : FStar_Ident.ident -> FStar_Parser_AST.term') =
+  fun y ->
+    let uu___ = FStar_Ident.lid_of_ids [y] in FStar_Parser_AST.Var uu___
+let rec (transform_term :
+  menv ->
+    FStar_Parser_AST.term ->
+      (FStar_Parser_AST.term * needs_derefs * menv) err)
+  =
+  fun m ->
+    fun e ->
+      match e.FStar_Parser_AST.tm with
+      | FStar_Parser_AST.Var uu___ ->
+          let uu___1 = resolve_mut m e in
+          (match uu___1 with
+           | FStar_Pervasives_Native.None -> return (e, [], m)
+           | FStar_Pervasives_Native.Some
+               (x, uu___2, FStar_Pervasives_Native.None) ->
+               let uu___3 = fresh_var x in
+               op_let_Question uu___3
+                 (fun y ->
+                    let uu___4 =
+                      let uu___5 =
+                        let uu___6 =
+                          let uu___7 = FStar_Ident.lid_of_ids [y] in
+                          FStar_Parser_AST.Var uu___7 in
+                        {
+                          FStar_Parser_AST.tm = uu___6;
+                          FStar_Parser_AST.range = (e.FStar_Parser_AST.range);
+                          FStar_Parser_AST.level = (e.FStar_Parser_AST.level)
+                        } in
+                      let uu___6 = bind_curval m x y in
+                      (uu___5, [(x, y)], uu___6) in
+                    return uu___4)
+           | FStar_Pervasives_Native.Some
+               (uu___2, uu___3, FStar_Pervasives_Native.Some y) ->
+               let uu___4 =
+                 let uu___5 =
+                   let uu___6 =
+                     let uu___7 = FStar_Ident.lid_of_ids [y] in
+                     FStar_Parser_AST.Var uu___7 in
+                   {
+                     FStar_Parser_AST.tm = uu___6;
+                     FStar_Parser_AST.range = (e.FStar_Parser_AST.range);
+                     FStar_Parser_AST.level = (e.FStar_Parser_AST.level)
+                   } in
+                 (uu___5, [], m) in
+               return uu___4)
+      | FStar_Parser_AST.Op (id, tms) ->
+          let uu___ =
+            fold_err
+              (fun uu___1 ->
+                 fun tm ->
+                   match uu___1 with
+                   | (tms1, needs, m1) ->
+                       let uu___2 = transform_term m1 tm in
+                       op_let_Question uu___2
+                         (fun uu___3 ->
+                            match uu___3 with
+                            | (tm1, needs', m') ->
+                                return
+                                  ((tm1 :: tms1),
+                                    (FStar_List_Tot_Base.op_At needs needs'),
+                                    m'))) tms ([], [], m) in
+          op_let_Question uu___
+            (fun uu___1 ->
+               match uu___1 with
+               | (tms1, needs, m1) ->
+                   let e1 =
+                     {
+                       FStar_Parser_AST.tm =
+                         (FStar_Parser_AST.Op
+                            (id, (FStar_Compiler_List.rev tms1)));
+                       FStar_Parser_AST.range = (e.FStar_Parser_AST.range);
+                       FStar_Parser_AST.level = (e.FStar_Parser_AST.level)
+                     } in
+                   return (e1, needs, m1))
+      | FStar_Parser_AST.App (head, arg, imp) ->
+          let uu___ = transform_term m head in
+          op_let_Question uu___
+            (fun uu___1 ->
+               match uu___1 with
+               | (head1, needs, m1) ->
+                   let uu___2 = transform_term m1 arg in
+                   op_let_Question uu___2
+                     (fun uu___3 ->
+                        match uu___3 with
+                        | (arg1, needs', m2) ->
+                            let e1 =
+                              {
+                                FStar_Parser_AST.tm =
+                                  (FStar_Parser_AST.App (head1, arg1, imp));
+                                FStar_Parser_AST.range =
+                                  (e.FStar_Parser_AST.range);
+                                FStar_Parser_AST.level =
+                                  (e.FStar_Parser_AST.level)
+                              } in
+                            return
+                              (e1, (FStar_List_Tot_Base.op_At needs needs'),
+                                m2)))
+      | FStar_Parser_AST.Ascribed (e1, t, topt, b) ->
+          let uu___ = transform_term m e1 in
+          op_let_Question uu___
+            (fun uu___1 ->
+               match uu___1 with
+               | (e2, needs, m1) ->
+                   let e3 =
+                     {
+                       FStar_Parser_AST.tm =
+                         (FStar_Parser_AST.Ascribed (e2, t, topt, b));
+                       FStar_Parser_AST.range = (e2.FStar_Parser_AST.range);
+                       FStar_Parser_AST.level = (e2.FStar_Parser_AST.level)
+                     } in
+                   return (e3, needs, m1))
+      | FStar_Parser_AST.Paren e1 ->
+          let uu___ = transform_term m e1 in
+          op_let_Question uu___
+            (fun uu___1 ->
+               match uu___1 with
+               | (e2, needs, m1) ->
+                   let e3 =
+                     {
+                       FStar_Parser_AST.tm = (FStar_Parser_AST.Paren e2);
+                       FStar_Parser_AST.range = (e2.FStar_Parser_AST.range);
+                       FStar_Parser_AST.level = (e2.FStar_Parser_AST.level)
+                     } in
+                   return (e3, needs, m1))
+      | FStar_Parser_AST.Construct (lid, tms) ->
+          let uu___ =
+            fold_err
+              (fun uu___1 ->
+                 fun uu___2 ->
+                   match (uu___1, uu___2) with
+                   | ((tms1, needs, m1), (tm, imp)) ->
+                       let uu___3 = transform_term m1 tm in
+                       op_let_Question uu___3
+                         (fun uu___4 ->
+                            match uu___4 with
+                            | (tm1, needs', m') ->
+                                return
+                                  (((tm1, imp) :: tms1),
+                                    (FStar_List_Tot_Base.op_At needs needs'),
+                                    m'))) tms ([], [], m) in
+          op_let_Question uu___
+            (fun uu___1 ->
+               match uu___1 with
+               | (tms1, needs, m1) ->
+                   let e1 =
+                     {
+                       FStar_Parser_AST.tm =
+                         (FStar_Parser_AST.Construct
+                            (lid, (FStar_Compiler_List.rev tms1)));
+                       FStar_Parser_AST.range = (e.FStar_Parser_AST.range);
+                       FStar_Parser_AST.level = (e.FStar_Parser_AST.level)
+                     } in
+                   return (e1, needs, m1))
+      | FStar_Parser_AST.LetOpen (l, t) ->
+          let m1 = menv_push_ns m l in
+          let uu___ = transform_term m1 t in
+          op_let_Question uu___
+            (fun uu___1 ->
+               match uu___1 with
+               | (p, needs, uu___2) ->
+                   let uu___3 =
+                     let uu___4 = bind_curvals m1 needs in (p, needs, uu___4) in
+                   return uu___3)
+      | uu___ -> return (e, [], m)
+let rec (transform_stmt_with_reads :
+  menv -> PulseSugar.stmt -> (PulseSugar.stmt * needs_derefs * menv) err) =
+  fun m ->
+    fun p ->
+      match p.PulseSugar.s with
+      | PulseSugar.Sequence { PulseSugar.s1 = s1; PulseSugar.s2 = s2;_} ->
+          let uu___ = transform_stmt_with_reads m s1 in
+          op_let_Question uu___
+            (fun uu___1 ->
+               match uu___1 with
+               | (s11, needs, m1) ->
+                   let uu___2 = transform_stmt m1 s2 in
+                   op_let_Question uu___2
+                     (fun s21 ->
+                        let p1 =
+                          {
+                            PulseSugar.s =
+                              (PulseSugar.Sequence
+                                 { PulseSugar.s1 = s11; PulseSugar.s2 = s21 });
+                            PulseSugar.range1 = (p.PulseSugar.range1)
+                          } in
+                        return (p1, needs, m1)))
+      | PulseSugar.Open l ->
+          let uu___ = let uu___1 = menv_push_ns m l in (p, [], uu___1) in
+          return uu___
+      | PulseSugar.Expr { PulseSugar.e = e;_} ->
+          let uu___ = transform_term m e in
+          op_let_Question uu___
+            (fun uu___1 ->
+               match uu___1 with
+               | (e1, needs, uu___2) ->
+                   let p1 =
+                     {
+                       PulseSugar.s = (PulseSugar.Expr { PulseSugar.e = e1 });
+                       PulseSugar.range1 = (p.PulseSugar.range1)
+                     } in
+                   return (p1, needs, m))
+      | PulseSugar.Assignment
+          { PulseSugar.lhs = lhs; PulseSugar.value = value;_} ->
+          let uu___ = transform_term m value in
+          op_let_Question uu___
+            (fun uu___1 ->
+               match uu___1 with
+               | (value1, needs, m1) ->
+                   let m2 = maybe_clear_curval m1 lhs in
+                   let s1 =
+                     {
+                       PulseSugar.s =
+                         (PulseSugar.Assignment
+                            { PulseSugar.lhs = lhs; PulseSugar.value = value1
+                            });
+                       PulseSugar.range1 = (p.PulseSugar.range1)
+                     } in
+                   return (s1, needs, m2))
+      | PulseSugar.ArrayAssignment
+          { PulseSugar.arr = arr; PulseSugar.index = index;
+            PulseSugar.value1 = value;_}
+          ->
+          let uu___ = transform_term m arr in
+          op_let_Question uu___
+            (fun uu___1 ->
+               match uu___1 with
+               | (arr1, arr_needs, m1) ->
+                   let uu___2 = transform_term m1 index in
+                   op_let_Question uu___2
+                     (fun uu___3 ->
+                        match uu___3 with
+                        | (index1, index_needs, m2) ->
+                            let uu___4 = transform_term m2 value in
+                            op_let_Question uu___4
+                              (fun uu___5 ->
+                                 match uu___5 with
+                                 | (value1, value_needs, m3) ->
+                                     let p1 =
+                                       {
+                                         PulseSugar.s =
+                                           (PulseSugar.ArrayAssignment
+                                              {
+                                                PulseSugar.arr = arr1;
+                                                PulseSugar.index = index1;
+                                                PulseSugar.value1 = value1
+                                              });
+                                         PulseSugar.range1 =
+                                           (p.PulseSugar.range1)
+                                       } in
+                                     return
+                                       (p1,
+                                         (FStar_List_Tot_Base.op_At arr_needs
+                                            (FStar_List_Tot_Base.op_At
+                                               index_needs value_needs)), m3))))
+      | PulseSugar.LetBinding
+          { PulseSugar.qualifier = qualifier; PulseSugar.id = id;
+            PulseSugar.typ = typ; PulseSugar.init = init;_}
+          ->
+          let uu___ =
+            match init with
+            | FStar_Pervasives_Native.None ->
+                return (FStar_Pervasives_Native.None, [], m)
+            | FStar_Pervasives_Native.Some e ->
+                (match e.FStar_Parser_AST.tm with
+                 | FStar_Parser_AST.Var zlid ->
+                     let uu___1 =
+                       let uu___2 = FStar_Ident.ids_of_lid zlid in
+                       (qualifier, uu___2) in
+                     (match uu___1 with
+                      | (FStar_Pervasives_Native.None, z::[]) ->
+                          let uu___2 = resolve_mut m e in
+                          (match uu___2 with
+                           | FStar_Pervasives_Native.None ->
+                               return
+                                 ((FStar_Pervasives_Native.Some e), [], m)
+                           | FStar_Pervasives_Native.Some
+                               (uu___3, uu___4, FStar_Pervasives_Native.Some
+                                y)
+                               ->
+                               let uu___5 =
+                                 let uu___6 =
+                                   let uu___7 =
+                                     let uu___8 = term'_of_id y in
+                                     {
+                                       FStar_Parser_AST.tm = uu___8;
+                                       FStar_Parser_AST.range =
+                                         (e.FStar_Parser_AST.range);
+                                       FStar_Parser_AST.level =
+                                         (e.FStar_Parser_AST.level)
+                                     } in
+                                   FStar_Pervasives_Native.Some uu___7 in
+                                 (uu___6, [], m) in
+                               return uu___5
+                           | FStar_Pervasives_Native.Some
+                               (x, uu___3, FStar_Pervasives_Native.None) ->
+                               let uu___4 =
+                                 let uu___5 =
+                                   let uu___6 = read x in
+                                   FStar_Pervasives_Native.Some uu___6 in
+                                 let uu___6 = bind_curval m x z in
+                                 (uu___5, [], uu___6) in
+                               return uu___4)
+                      | uu___2 ->
+                          let uu___3 = transform_term m e in
+                          op_let_Question uu___3
+                            (fun uu___4 ->
+                               match uu___4 with
+                               | (init1, needs, m1) ->
+                                   return
+                                     ((FStar_Pervasives_Native.Some init1),
+                                       needs, m1)))
+                 | uu___1 ->
+                     let uu___2 = transform_term m e in
+                     op_let_Question uu___2
+                       (fun uu___3 ->
+                          match uu___3 with
+                          | (init1, needs, m1) ->
+                              return
+                                ((FStar_Pervasives_Native.Some init1), needs,
+                                  m1))) in
+          op_let_Question uu___
+            (fun uu___1 ->
+               match uu___1 with
+               | (init1, needs, m1) ->
+                   let m2 = menv_push_bv m1 id qualifier in
+                   let p1 =
+                     {
+                       PulseSugar.s =
+                         (PulseSugar.LetBinding
+                            {
+                              PulseSugar.qualifier = qualifier;
+                              PulseSugar.id = id;
+                              PulseSugar.typ = typ;
+                              PulseSugar.init = init1
+                            });
+                       PulseSugar.range1 = (p.PulseSugar.range1)
+                     } in
+                   return (p1, needs, m2))
+      | PulseSugar.Block { PulseSugar.stmt = stmt;_} ->
+          let uu___ = transform_stmt m stmt in
+          op_let_Question uu___
+            (fun stmt1 ->
+               let p1 =
+                 {
+                   PulseSugar.s =
+                     (PulseSugar.Block { PulseSugar.stmt = stmt1 });
+                   PulseSugar.range1 = (p.PulseSugar.range1)
+                 } in
+               return (p1, [], m))
+      | PulseSugar.If
+          { PulseSugar.head1 = head; PulseSugar.join_vprop = join_vprop;
+            PulseSugar.then_ = then_; PulseSugar.else_opt = else_opt;_}
+          ->
+          let uu___ = transform_term m head in
+          op_let_Question uu___
+            (fun uu___1 ->
+               match uu___1 with
+               | (head1, needs, m1) ->
+                   let uu___2 = transform_stmt m1 then_ in
+                   op_let_Question uu___2
+                     (fun then_1 ->
+                        let uu___3 =
+                          match else_opt with
+                          | FStar_Pervasives_Native.None ->
+                              return FStar_Pervasives_Native.None
+                          | FStar_Pervasives_Native.Some else_ ->
+                              let uu___4 = transform_stmt m1 else_ in
+                              op_let_Question uu___4
+                                (fun else_1 ->
+                                   return
+                                     (FStar_Pervasives_Native.Some else_1)) in
+                        op_let_Question uu___3
+                          (fun else_opt1 ->
+                             let p1 =
+                               {
+                                 PulseSugar.s =
+                                   (PulseSugar.If
+                                      {
+                                        PulseSugar.head1 = head1;
+                                        PulseSugar.join_vprop = join_vprop;
+                                        PulseSugar.then_ = then_1;
+                                        PulseSugar.else_opt = else_opt1
+                                      });
+                                 PulseSugar.range1 = (p.PulseSugar.range1)
+                               } in
+                             return (p1, needs, m1))))
+      | PulseSugar.Match
+          { PulseSugar.head2 = head;
+            PulseSugar.returns_annot = returns_annot;
+            PulseSugar.branches = branches;_}
+          ->
+          let uu___ = transform_term m head in
+          op_let_Question uu___
+            (fun uu___1 ->
+               match uu___1 with
+               | (head1, needs, m1) ->
+                   let uu___2 =
+                     map_err
+                       (fun uu___3 ->
+                          match uu___3 with
+                          | (p1, s) ->
+                              let uu___4 = desugar_pat m1.env p1 in
+                              op_let_Question uu___4
+                                (fun uu___5 ->
+                                   match uu___5 with
+                                   | (uu___6, vs) ->
+                                       let m2 = menv_push_bvs m1 vs in
+                                       let uu___7 = transform_stmt m2 s in
+                                       op_let_Question uu___7
+                                         (fun s1 -> return (p1, s1))))
+                       branches in
+                   op_let_Question uu___2
+                     (fun branches1 ->
+                        let p1 =
+                          {
+                            PulseSugar.s =
+                              (PulseSugar.Match
+                                 {
+                                   PulseSugar.head2 = head1;
+                                   PulseSugar.returns_annot = returns_annot;
+                                   PulseSugar.branches = branches1
+                                 });
+                            PulseSugar.range1 = (p.PulseSugar.range1)
+                          } in
+                        return (p1, needs, m1)))
+      | PulseSugar.While
+          { PulseSugar.guard = guard; PulseSugar.id1 = id;
+            PulseSugar.invariant = invariant; PulseSugar.body1 = body;_}
+          ->
+          let uu___ = transform_stmt m guard in
+          op_let_Question uu___
+            (fun guard1 ->
+               let uu___1 = transform_stmt m body in
+               op_let_Question uu___1
+                 (fun body1 ->
+                    let p1 =
+                      {
+                        PulseSugar.s =
+                          (PulseSugar.While
+                             {
+                               PulseSugar.guard = guard1;
+                               PulseSugar.id1 = id;
+                               PulseSugar.invariant = invariant;
+                               PulseSugar.body1 = body1
+                             });
+                        PulseSugar.range1 = (p.PulseSugar.range1)
+                      } in
+                    return (p1, [], m)))
+      | PulseSugar.Parallel
+          { PulseSugar.p1 = p1; PulseSugar.p2 = p2; PulseSugar.q1 = q1;
+            PulseSugar.q2 = q2; PulseSugar.b1 = b1; PulseSugar.b2 = b2;_}
+          ->
+          let uu___ = transform_stmt m b1 in
+          op_let_Question uu___
+            (fun b11 ->
+               let uu___1 = transform_stmt m b2 in
+               op_let_Question uu___1
+                 (fun b21 ->
+                    let p3 =
+                      {
+                        PulseSugar.s =
+                          (PulseSugar.Parallel
+                             {
+                               PulseSugar.p1 = p1;
+                               PulseSugar.p2 = p2;
+                               PulseSugar.q1 = q1;
+                               PulseSugar.q2 = q2;
+                               PulseSugar.b1 = b11;
+                               PulseSugar.b2 = b21
+                             });
+                        PulseSugar.range1 = (p.PulseSugar.range1)
+                      } in
+                    return (p3, [], m)))
+      | PulseSugar.Introduce uu___ -> return (p, [], m)
+      | PulseSugar.Rewrite uu___ -> return (p, [], m)
+      | PulseSugar.ProofHintWithBinders uu___ -> return (p, [], m)
+and (transform_stmt : menv -> PulseSugar.stmt -> PulseSugar.stmt err) =
+  fun m ->
+    fun p ->
+      let uu___ = transform_stmt_with_reads m p in
+      op_let_Question uu___
+        (fun uu___1 ->
+           match uu___1 with
+           | (p1, needs, m1) ->
+               let uu___2 = add_derefs_in_scope needs p1 in return uu___2)
 let (desugar_decl :
   env_t -> PulseSugar.decl -> PulseSyntaxWrapper.st_term err) =
   fun env ->
@@ -1241,44 +2133,74 @@ let (desugar_decl :
         (fun uu___1 ->
            match uu___1 with
            | (env1, bs, bvs) ->
-               let uu___2 = desugar_stmt env1 p.PulseSugar.body2 in
+               let fvs = free_vars_comp env1 p.PulseSugar.ascription in
+               let uu___2 = idents_as_binders env1 fvs in
                op_let_Question uu___2
-                 (fun body ->
-                    let uu___3 =
-                      desugar_computation_type env1 p.PulseSugar.ascription in
-                    op_let_Question uu___3
-                      (fun comp ->
-                         let rec aux bs1 bvs1 =
-                           match (bs1, bvs1) with
-                           | ((q, last)::[], last_bv::[]) ->
-                               let body1 =
-                                 PulseSyntaxWrapper.close_st_term body
-                                   last_bv.FStar_Syntax_Syntax.index in
-                               let comp1 =
-                                 PulseSyntaxWrapper.close_comp comp
-                                   last_bv.FStar_Syntax_Syntax.index in
-                               let uu___4 =
-                                 PulseSyntaxWrapper.tm_abs last q comp1 body1
-                                   p.PulseSugar.range2 in
-                               return uu___4
-                           | ((q, b)::bs2, bv::bvs2) ->
-                               let uu___4 = aux bs2 bvs2 in
-                               op_let_Question uu___4
-                                 (fun body1 ->
-                                    let body2 =
-                                      PulseSyntaxWrapper.close_st_term body1
-                                        bv.FStar_Syntax_Syntax.index in
-                                    let comp1 =
-                                      let uu___5 =
-                                        PulseSyntaxWrapper.tm_unknown r_ in
-                                      PulseSyntaxWrapper.mk_tot uu___5 in
-                                    let uu___5 =
-                                      PulseSyntaxWrapper.tm_abs b q comp1
-                                        body2 p.PulseSugar.range2 in
-                                    return uu___5)
-                           | uu___4 ->
-                               fail "Unexpected empty binders in decl" r_ in
-                         aux bs bvs)))
+                 (fun uu___3 ->
+                    match uu___3 with
+                    | (env2, bs', bvs') ->
+                        let bs1 = FStar_List_Tot_Base.op_At bs bs' in
+                        let bvs1 = FStar_List_Tot_Base.op_At bvs bvs' in
+                        let uu___4 =
+                          desugar_computation_type env2
+                            p.PulseSugar.ascription in
+                        op_let_Question uu___4
+                          (fun comp ->
+                             let uu___5 =
+                               let uu___6 =
+                                 let uu___7 =
+                                   FStar_Options.ext_getv "pulse:rvalues" in
+                                 uu___7 <> "" in
+                               if uu___6
+                               then
+                                 transform_stmt { map = []; env = env2 }
+                                   p.PulseSugar.body2
+                               else return p.PulseSugar.body2 in
+                             op_let_Question uu___5
+                               (fun body ->
+                                  let uu___6 = desugar_stmt env2 body in
+                                  op_let_Question uu___6
+                                    (fun body1 ->
+                                       let rec aux bs2 bvs2 =
+                                         match (bs2, bvs2) with
+                                         | ((q, last)::[], last_bv::[]) ->
+                                             let body2 =
+                                               PulseSyntaxWrapper.close_st_term
+                                                 body1
+                                                 last_bv.FStar_Syntax_Syntax.index in
+                                             let comp1 =
+                                               PulseSyntaxWrapper.close_comp
+                                                 comp
+                                                 last_bv.FStar_Syntax_Syntax.index in
+                                             let uu___7 =
+                                               PulseSyntaxWrapper.tm_abs last
+                                                 q comp1 body2
+                                                 p.PulseSugar.range2 in
+                                             return uu___7
+                                         | ((q, b)::bs3, bv::bvs3) ->
+                                             let uu___7 = aux bs3 bvs3 in
+                                             op_let_Question uu___7
+                                               (fun body2 ->
+                                                  let body3 =
+                                                    PulseSyntaxWrapper.close_st_term
+                                                      body2
+                                                      bv.FStar_Syntax_Syntax.index in
+                                                  let comp1 =
+                                                    let uu___8 =
+                                                      PulseSyntaxWrapper.tm_unknown
+                                                        r_ in
+                                                    PulseSyntaxWrapper.mk_tot
+                                                      uu___8 in
+                                                  let uu___8 =
+                                                    PulseSyntaxWrapper.tm_abs
+                                                      b q comp1 body3
+                                                      p.PulseSugar.range2 in
+                                                  return uu___8)
+                                         | uu___7 ->
+                                             fail
+                                               "Unexpected empty binders in decl"
+                                               r_ in
+                                       aux bs1 bvs1)))))
 type name = Prims.string Prims.list
 let (initialize_env :
   FStar_TypeChecker_Env.env ->
@@ -1358,6 +2280,8 @@ let (initialize_env :
               (env.FStar_TypeChecker_Env.uvar_subtyping);
             FStar_TypeChecker_Env.intactics =
               (env.FStar_TypeChecker_Env.intactics);
+            FStar_TypeChecker_Env.nocoerce =
+              (env.FStar_TypeChecker_Env.nocoerce);
             FStar_TypeChecker_Env.tc_term =
               (env.FStar_TypeChecker_Env.tc_term);
             FStar_TypeChecker_Env.typeof_tot_or_gtot_term =

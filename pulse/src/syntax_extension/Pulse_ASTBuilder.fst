@@ -66,6 +66,7 @@ module D = PulseDesugar
 module L = FStar.Compiler.List
 module R = FStar.Compiler.Range
 
+
 let parse_pulse (env:TcEnv.env) 
                 (namespaces:list string)
                 (module_abbrevs:list (string & string))
@@ -81,6 +82,6 @@ let parse_pulse (env:TcEnv.env)
       R.mk_range file_name p p
     in
     match Pulse.Parser.parse_decl content range with
-    | Inl d -> D.desugar_decl env d
+    | Inl d -> fst (D.desugar_decl env d 0)
     | Inr e -> Inr e
     

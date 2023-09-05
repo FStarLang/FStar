@@ -8,6 +8,8 @@ open Steel.ST.Util
 open Steel.ST.Loops
 module T = FStar.Tactics
 
+let double_one_half () = ()
+
 let vprop = vprop
 
 [@@"__reduce__"; "__steel_reduce__"]
@@ -120,6 +122,21 @@ let return_stt (#a:Type u#a) (x:a) (p:a -> vprop) =
 inline_for_extraction
 let return (#a:Type u#a) (x:a) (p:a -> vprop) =
   fun _ -> return x
+
+
+inline_for_extraction
+let return_stt_ghost (#a:Type u#a) (x:a) (p:a -> vprop) =
+  fun _ ->
+    intro_pure (x == x);
+    rewrite (p x `star` pure (x == x))
+            (p x ** pure (x == x));
+    x
+
+
+inline_for_extraction
+let return_stt_ghost_noeq (#a:Type u#a) (x:a) (p:a -> vprop) =
+  fun _ ->
+    let _ = noop() in x
 
 inline_for_extraction
 let bind_stt (#a:Type u#a) (#b:Type u#b) (#pre1:vprop) (#post1:a -> vprop) (#post2:b -> vprop)
@@ -297,15 +314,15 @@ let stt_par #aL #aR #preL #postL #preR #postR
 //   fun _ -> 
 //     let body (r:R.ref a) 
 //       : STT ret_t
-//         (pre `star` R.pts_to r full_perm init)
-//         (fun v -> post v `star` exists_ (R.pts_to r full_perm))
+//         (pre `star` R.pts_to r init)
+//         (fun v -> post v `star` exists_ (R.pts_to r))
 //       = Steel.ST.Util.rewrite
-//                 (pre `star` R.pts_to r full_perm init)
-//                 (pre ** R.pts_to r full_perm init);
+//                 (pre `star` R.pts_to r init)
+//                 (pre ** R.pts_to r init);
 //         let v = body r () in
 //         Steel.ST.Util.rewrite
-//                 (post v ** exists_ (R.pts_to r full_perm))
-//                 (post v `star` exists_ (R.pts_to r full_perm));
+//                 (post v ** exists_ (R.pts_to r))
+//                 (post v `star` exists_ (R.pts_to r));
 //         Steel.ST.Util.return v
 //     in
 //     let v = R.with_local init body in
@@ -318,4 +335,9 @@ let assert_ (p:vprop) = fun _ -> noop()
 let assume_ (p:vprop) = fun _ -> admit_()
 let drop_ (p:vprop) = fun _ -> let x = drop p in x 
 
-
+let elim_false (a:Type) (p:a -> vprop) =
+  fun _ ->
+    let _ = Steel.ST.Util.elim_pure False in
+    let x = false_elim #a () in
+    Steel.ST.Util.rewrite Steel.ST.Util.emp (p x);
+    x

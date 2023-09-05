@@ -20,6 +20,8 @@ class bounded_int (t:eqtype) = {
     (* ...todo, add other ops **)
 }
 
+
+
 instance bounded_int_int : bounded_int int = {
     fits = (fun _ -> True);
     v = id;
@@ -32,6 +34,53 @@ instance bounded_int_int : bounded_int int = {
     properties = ()
 }
 
+
+class bounded_unsigned (t:eqtype) = {
+  [@@@TC.no_method]
+  base:bounded_int t;
+  max_bound:t;
+  [@@@TC.no_method]  
+  static_max_bound: bool;
+  [@@@TC.no_method]
+  properties: squash (
+    (forall (x:t). v x >= 0 /\ (static_max_bound ==> v x <= v max_bound)) /\
+    (forall (x:nat). x <= v max_bound ==> fits #t x)
+  )
+}
+
+
+instance bounded_from_bounded_unsigned (t:eqtype) (c:bounded_unsigned t) : bounded_int t = c.base
+
+let safe_add (#t:eqtype) {| c: bounded_unsigned t |} (x y : t)
+  : o:option t { Some? o ==> v (Some?.v o) == v x + v y } 
+  = if c.static_max_bound
+    then (
+      assert ( x <= max_bound);
+      if (y <= max_bound - x) 
+      then Some (x + y)
+      else None
+    )
+    else (
+      if x <= max_bound
+      then (
+        if (y <= max_bound - x)
+        then Some (x + y)
+        else None
+      )
+      else None
+    )
+
+let safe_mod (#t:eqtype) {| c: bounded_unsigned t |} (x : t) (y : t)
+  : Pure (option t)
+         (requires v y > 0)
+         (ensures fun o -> Some? o ==> v (Some?.v o) == v x % v y)
+  = if c.static_max_bound
+    then Some (x % y)
+    else (
+      if y <= max_bound
+      then Some (x % y)
+      else None
+    )
 
 let ok (#t:eqtype) {| c:bounded_int t |} (op: int -> int -> int) (x y:t) =
     c.fits (op (v x) (v y))
@@ -55,6 +104,34 @@ instance bounded_int_u32 : bounded_int FStar.UInt32.t = {
     ( % ) = FStar.UInt32.(fun x y -> x %^ y);
     properties = ()
 }
+
+instance bounded_unsigned_u32 : bounded_unsigned FStar.UInt32.t = {
+  base = TC.solve;
+  max_bound = 0xfffffffful;
+  static_max_bound = true;
+  properties = ()
+}
+
+instance bounded_int_u64 : bounded_int FStar.UInt64.t = {
+    fits = (fun x -> 0 <= x /\ x <= 0xffffffffffffffff);
+    v = (fun x -> FStar.UInt64.v x);
+    u = FStar.UInt64.uint_to_t;
+    ( + ) = (fun x y -> FStar.UInt64.add x y);
+    op_Subtraction = (fun x y -> FStar.UInt64.sub x y);
+    ( < ) = FStar.UInt64.(fun x y -> x <^ y);
+    ( <= ) = FStar.UInt64.(fun x y -> x <=^ y);
+    ( % ) = FStar.UInt64.(fun x y -> x %^ y);
+    properties = ()
+}
+
+instance bounded_unsigned_u64 : bounded_unsigned FStar.UInt64.t = {
+  base = TC.solve;
+  max_bound = 0xffffffffffffffffuL;
+  static_max_bound = true;
+  properties = ()
+}
+
+let test (t:eqtype) {| _ : bounded_unsigned t |} (x:t) = v x
 
 let add_u32 (x:FStar.UInt32.t) (y:FStar.UInt32.t { ok (+) x y }) = x + y
 
@@ -85,6 +162,20 @@ instance bounded_int_nat : bounded_int nat = {
 let add_nat (x y:nat) = x + y
 //but we should find a way to make it work with refinement, otherwise we'll need instances for pos etc. too
 
+let pos_as_int (x:pos) : int = x
+
+instance bounded_int_pos : bounded_int pos = {
+    fits = (fun x -> x > 0);
+    v = pos_as_int;
+    u = (fun x -> x);
+    ( + ) = (fun x y -> Prims.op_Addition x y);
+    op_Subtraction = (fun x y -> Prims.op_Subtraction x y); //can't write ( - ), it doesn't parse
+    ( < ) = (fun x y -> Prims.op_LessThan x y);
+    ( <= ) = (fun x y -> Prims.op_LessThanOrEqual x y);
+    ( % ) = (fun x y -> Prims.op_Modulus x y);
+    properties = ()
+}
+
 // Using a fits predicate as the bounds check allows this class to also accomodate SizeT
 open FStar.SizeT
 instance bounded_int_size_t : bounded_int FStar.SizeT.t = {
@@ -97,6 +188,13 @@ instance bounded_int_size_t : bounded_int FStar.SizeT.t = {
     ( <= ) = (fun x y -> FStar.SizeT.(x <=^ y));
     ( % ) = (fun x y -> FStar.SizeT.(x %^ y));
     properties = ();
+}
+
+instance bounded_unsigned_size_t : bounded_unsigned FStar.SizeT.t = {
+  base = TC.solve;
+  max_bound = 0xffffsz;
+  static_max_bound = false;
+  properties = ()
 }
 
 //we know that size_t can hold at least 2^16

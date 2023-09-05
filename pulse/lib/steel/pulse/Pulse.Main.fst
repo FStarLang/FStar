@@ -10,6 +10,7 @@ open Pulse.Typing
 open Pulse.Checker
 open Pulse.Elaborate
 open Pulse.Soundness
+module Cfg = Pulse.Config
 module RU = Pulse.RuntimeUtils
 module P = Pulse.Syntax.Printer
 
@@ -29,9 +30,9 @@ let main' (t:st_term) (pre:term) (g:RT.fstar_top_env)
       then (
         T.print (Printf.sprintf "About to check pulse term:\n%s\n" (P.st_term_to_string t))
       );
-      let (| pre, ty, pre_typing |) = Pulse.Checker.Pure.check_term g pre in
+      let (| pre, ty, pre_typing |) = Pulse.Checker.Pure.check_tot_term g pre in
       if eq_tm ty tm_vprop
-      then let pre_typing : tot_typing g pre tm_vprop = E pre_typing in
+      then let pre_typing : tot_typing g pre tm_vprop = pre_typing in
            match t.term with
            | Tm_Abs _ ->
              let (| t, c, t_typing |) = Pulse.Checker.Abs.check_abs g t Pulse.Checker.check in
@@ -50,15 +51,53 @@ let main' (t:st_term) (pre:term) (g:RT.fstar_top_env)
            | _ -> fail g (Some t.range) "main: top-level term not a Tm_Abs"
       else fail g (Some t.range) "pulse main: cannot typecheck pre at type vprop"
 
-let main t pre : RT.dsl_tac_t =
- fun g ->
-  (* Solve all reflection guards as soon as they appear.
-  This is the default F* behavior, at least until
-    https://github.com/FStarLang/FStar/pull/3011
-  is merged. *)
-  set_guard_policy SMTSync;
-  main' t pre g
-  
+let join_smt_goals () : Tac unit =
+  let open FStar.Tactics.V2 in
+  let open FStar.List.Tot in
+
+  if RU.debug_at_level (top_env ()) "pulse.join" then
+    dump "PULSE: Goals before join";
+
+  (* Join *)
+  let smt_goals = smt_goals () in
+  set_goals (goals () @ smt_goals);
+  set_smt_goals [];
+  let n = List.Tot.length (goals ()) in
+  ignore (repeat join);
+
+  (* Heuristic rlimit setting :). Increase by 2 for every joined goal.
+  Default rlimit is 5, so this is "saving" 3 rlimit units per joined
+  goal. *)
+  if not (Nil? (goals ())) then (
+    let open FStar.Mul in
+    let rlimit = get_rlimit() + (n-1)*2 in
+    set_rlimit rlimit
+  );
+
+  if RU.debug_at_level (top_env ()) "pulse.join" then
+    dump "PULSE: Goals after join";
+
+  ()
+
+let main t pre : RT.dsl_tac_t = fun g ->
+  (* We use the SMT policy by default, to collect goals in the
+  proofstate and discharge them all at the end, potentially joining
+  them (see below). But it can be overriden to SMTSync by `--ext
+  pulse:guard_policy=SMTSync`. *)
+  if ext_getv "pulse:guard_policy" = "SMTSync" then
+    set_guard_policy SMTSync
+  else
+    set_guard_policy SMT;
+
+  let res = main' t pre g in
+
+  if ext_getv "pulse:join" = "1"
+     (* || ext_getv "pulse:join" <> "" *)
+     // ^ Uncomment to make it true by default.
+  then
+    join_smt_goals();
+  res
+
 [@@plugin]
 let check_pulse (namespaces:list string)
                 (module_abbrevs:list (string & string))
@@ -71,6 +110,12 @@ let check_pulse (namespaces:list string)
       | Inl st_term ->
         main st_term tm_emp env
       | Inr (msg, range) ->
-        T.fail (Printf.sprintf "%s: %s"
-                  (T.range_to_string range)
-                  msg)
+        let i =
+          Issue.mk_issue "Error"
+                   (Printf.sprintf "%s: %s" (T.range_to_string range) msg)
+                   (Some range)
+                   None
+                   []
+        in
+        T.log_issues [i];
+        T.fail "Pulse parser failed"

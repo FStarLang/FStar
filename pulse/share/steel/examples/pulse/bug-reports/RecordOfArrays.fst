@@ -20,8 +20,8 @@ type rec_array_repr = {
 
 let rec_array_perm (r:rec_array) (v:rec_array_repr)
   : vprop = 
-  A.pts_to r.r1 full_perm v.v1 **
-  A.pts_to r.r2 full_perm v.v2
+  A.pts_to r.r1 v.v1 **
+  A.pts_to r.r2 v.v2
 
 //Using record syntax directly in Pulse vprops
 //leads to strange type inference errors
@@ -31,8 +31,8 @@ let mk_rec_array_repr (v1 v2:Seq.seq U8.t) = { v1=v1; v2=v2 }
 ghost
 fn fold_rec_array_perm (r:rec_array) (#v1 #v2:erased (Seq.seq U8.t))
   requires
-    A.pts_to r.r1 full_perm v1 **
-    A.pts_to r.r2 full_perm v2
+    A.pts_to r.r1 v1 **
+    A.pts_to r.r2 v2
   ensures
     rec_array_perm r (mk_rec_array_repr v1 v2)
 {
@@ -59,9 +59,9 @@ fn mutate_r2 (r:rec_array) (#v:(v:Ghost.erased rec_array_repr { Seq.length v.v2 
 
 ```pulse
 fn get_witness_array (x:A.array U8.t) (#y:Ghost.erased (Seq.seq U8.t))
-requires A.pts_to x full_perm y
+requires A.pts_to x y
 returns z:Ghost.erased (Seq.seq U8.t)
-ensures A.pts_to x full_perm y ** pure (y==z)
+ensures A.pts_to x y ** pure (y==z)
 {   
     y
 }
@@ -80,15 +80,15 @@ fn mutate_rec_get_witness (l:US.t) (r:rec_array) (#v:Ghost.erased rec_array_repr
     pure (Seq.length v.v2 > 0 /\ v_.v2 `Seq.equal` Seq.upd v.v2 0 0uy /\ v_.v1 == v.v1)
 {
   rewrite (rec_array_perm r v)
-    as (A.pts_to r.r1 full_perm v.v1 **
-        A.pts_to r.r2 full_perm v.v2);
+    as (A.pts_to r.r1 v.v1 **
+        A.pts_to r.r2 v.v2);
   
   ((r.r2).(0sz) <- 0uy);
 
   let y = get_witness_array (r.r2);   
 
-  rewrite (A.pts_to r.r1 full_perm v.v1 **
-           A.pts_to r.r2 full_perm y)
+  rewrite (A.pts_to r.r1 v.v1 **
+           A.pts_to r.r2 y)
     as    (rec_array_perm r (rec_array_repr_with_v2 v y));
     
   ()

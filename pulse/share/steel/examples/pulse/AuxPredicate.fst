@@ -11,15 +11,15 @@ module R = Pulse.Lib.Reference
 // writing Pulse syntax for vprops in predicates 
 let my_inv (b:bool) (r:R.ref int) : vprop
   = exists_ (fun v -> 
-      R.pts_to r full_perm v ** 
+      R.pts_to r v ** 
       pure ( (v==0 \/ v == 1) /\ b == (v = 0) )
     )
 
 
 ```pulse
 fn invar_introduces_ghost (r:R.ref int)
-  requires R.pts_to r full_perm 0
-  ensures R.pts_to r full_perm 1
+  requires R.pts_to r 0
+  ensures R.pts_to r 1
 {
   r := 0;
 
@@ -53,8 +53,8 @@ fn invar_introduces_ghost (r:R.ref int)
 [@@expect_failure]
 ```pulse
 fn invar_introduces_orig (r:R.ref int)
-  requires R.pts_to r full_perm 0
-  ensures R.pts_to r full_perm 1
+  requires R.pts_to r 0
+  ensures R.pts_to r 1
 {
   r := 0;
 
@@ -75,15 +75,15 @@ fn invar_introduces_orig (r:R.ref int)
 // it just works without further ado
 ```pulse
 fn invar_introduces_ghost_alt (r:R.ref int)
-  requires R.pts_to r full_perm 0
-  ensures R.pts_to r full_perm 1
+  requires R.pts_to r 0
+  ensures R.pts_to r 1
 {
   r := 0;
 
   while (let vr = !r; (vr = 0))
   invariant b. 
     exists v.
-      R.pts_to r full_perm v **
+      R.pts_to r v **
       pure ( (v==0 \/ v == 1) /\ b == (v = 0) )
   {
     r := 1;
@@ -95,8 +95,8 @@ fn invar_introduces_ghost_alt (r:R.ref int)
 
 ```pulse
 fn exists_introduces_ghost (r:R.ref int)
-  requires R.pts_to r full_perm 0
-  ensures exists v. R.pts_to r full_perm v ** pure (v == 0 \/ v == 1)
+  requires R.pts_to r 0
+  ensures exists v. R.pts_to r v ** pure (v == 0 \/ v == 1)
 {
   r := 0;
 
@@ -111,8 +111,8 @@ fn exists_introduces_ghost (r:R.ref int)
 
 ```pulse
 fn with_assert_OK (r:R.ref int)
-  requires R.pts_to r full_perm 0
-  ensures R.pts_to r full_perm 0
+  requires R.pts_to r 0
+  ensures R.pts_to r 0
 {
   r := 0;
 

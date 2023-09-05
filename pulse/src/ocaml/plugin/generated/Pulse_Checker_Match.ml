@@ -1351,7 +1351,7 @@ let (check :
                                                                     (Prims.of_int (310))
                                                                     (Prims.of_int (55))
                                                                     (Prims.of_int (310))
-                                                                    (Prims.of_int (79)))))
+                                                                    (Prims.of_int (83)))))
                                                                 (FStar_Sealed.seal
                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -1361,7 +1361,7 @@ let (check :
                                                                     (Prims.of_int (352))
                                                                     (Prims.of_int (55)))))
                                                                 (Obj.magic
-                                                                   (Pulse_Checker_Pure.check_term_and_type
+                                                                   (Pulse_Checker_Pure.check_tot_term_and_type
                                                                     g1 sc))
                                                                 (fun uu___ ->
                                                                    (fun uu___
@@ -1696,7 +1696,7 @@ let (check :
                                                                     (Prims.of_int (351))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (351))
-                                                                    (Prims.of_int (83)))))
+                                                                    (Prims.of_int (79)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range

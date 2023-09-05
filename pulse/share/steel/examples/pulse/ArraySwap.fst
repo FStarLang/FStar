@@ -5,7 +5,6 @@ module Prf = Steel.ST.GenArraySwap.Proof
 module SZ = FStar.SizeT
 module A = Pulse.Lib.Array
 module R = Pulse.Lib.Reference
-#set-options "--ide_id_info_off"
 #push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection' --fuel 2 --ifuel 1"
 #restart-solver
 
@@ -24,8 +23,8 @@ fn gcd (n0: SZ.t) (l0: SZ.t)
   let mut pl = l0;
   while (let l = !pl ; (l `SZ.gt` 0sz))
   invariant b . exists n l . (
-    pts_to pn full_perm n **
-    pts_to pl full_perm l **
+    pts_to pn n **
+    pts_to pl l **
     pure (
       SZ.v l < SZ.v n /\
       (Prf.mk_bezout (SZ.v n0) (SZ.v l0)).d == (Prf.mk_bezout (SZ.v n) (SZ.v l)).d /\
@@ -116,9 +115,9 @@ assume val get_array_pts_to (#t: Type0) (#p: perm) (#s: Ghost.erased (Seq.seq t)
 
 ```pulse
 fn get_array_pts_to (#t: Type0) (a: A.array t) (#p: perm) (#s: Ghost.erased (Seq.seq t))
-  requires (A.pts_to a p s)
+  requires A.pts_to a #p s
   returns s': Ghost.erased (Seq.seq t)
-  ensures (A.pts_to a p s ** pure (s' == s))
+  ensures A.pts_to a #p s ** pure (s' == s)
   {
     s
   }
@@ -126,9 +125,9 @@ fn get_array_pts_to (#t: Type0) (a: A.array t) (#p: perm) (#s: Ghost.erased (Seq
 
 ```pulse
 fn get_pts_to (#t: Type0) (a: ref t) (#p: perm) (#s: erased (t))
-  requires (pts_to a p s)
+  requires pts_to a #p s
   returns s': Ghost.erased (t)
-  ensures (pts_to a p s ** pure (s' == s))
+  ensures pts_to a #p s ** pure (s' == s)
   {
     s
   }
@@ -151,7 +150,7 @@ fn pulse_assert (p: prop)
 ```pulse
 fn array_swap(#t: Type0) (#s0: Ghost.erased (Seq.seq t)) (a: A.array t) (n: SZ.t) (l: SZ.t) (bz: Prf.bezout (SZ.v n) (SZ.v l)) (d: SZ.t) (q: SZ.t)
   requires (
-    A.pts_to a full_perm s0 **
+    A.pts_to a s0 **
     pure (
       SZ.v n == A.length a /\
       SZ.v n == Seq.length s0 /\
@@ -162,15 +161,15 @@ fn array_swap(#t: Type0) (#s0: Ghost.erased (Seq.seq t)) (a: A.array t) (n: SZ.t
     )
   )
   ensures exists s . (
-    A.pts_to a full_perm s **
+    A.pts_to a s **
     pure (Prf.array_swap_post s0 (SZ.v n) (SZ.v l) s) // hoisted out because of the SMT pattern on array_as_ring_buffer_swap
   )
 {   
     let mut pi = 0sz;
     while (let i = !pi; (i `size_lt` d))
     invariant b . exists s i . (
-      A.pts_to a full_perm s **
-      R.pts_to pi full_perm i **
+      A.pts_to a s **
+      R.pts_to pi i **
       pure (
         Prf.array_swap_outer_invariant s0 (SZ.v n) (SZ.v l) bz s (SZ.v i) /\
         b == (SZ.v i < bz.d)
@@ -181,10 +180,10 @@ fn array_swap(#t: Type0) (#s0: Ghost.erased (Seq.seq t)) (a: A.array t) (n: SZ.t
       let mut pidx = i;
       while (let j = !pj; (j `size_lt` (size_sub q 1sz ())))
       invariant b . exists s j idx . (
-        A.pts_to a full_perm s **
-        R.pts_to pi full_perm i **
-        R.pts_to pj full_perm j **
-        R.pts_to pidx full_perm idx **
+        A.pts_to a s **
+        R.pts_to pi i **
+        R.pts_to pj j **
+        R.pts_to pidx idx **
         pure (
           Prf.array_swap_inner_invariant s0 (SZ.v n) (SZ.v l) bz s (SZ.v i) (SZ.v j) (SZ.v idx) /\
           b == (SZ.v j < bz.q_n - 1)

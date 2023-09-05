@@ -124,8 +124,8 @@ let tm_if (head:term) (returns_annot:vprop option) (then_:st_term) (else_:st_ter
 let tm_match (sc:term) (returns_:vprop option) (brs:branch list) r : st_term =
   PSB.(with_range (tm_match sc returns_ brs) r)
 
-let tm_intro_exists (erased:bool) (p:vprop) (witnesses:term list) r : st_term =
-  PSB.(with_range (tm_intro_exists erased p witnesses) r)
+let tm_intro_exists (p:vprop) (witnesses:term list) r : st_term =
+  PSB.(with_range (tm_intro_exists p witnesses) r)
 
 let is_tm_intro_exists (s:st_term) : bool =
   match s.term1 with
@@ -136,23 +136,27 @@ let trans_ns = function
   | None -> None
   | Some l -> Some (List.map FStar_Ident.string_of_lid l)
 
-let trans_hint_type (ht:PulseSugar.hint_type) =
-  match ht with
-  | PulseSugar.ASSERT -> Pulse_Syntax_Base.ASSERT
-  | PulseSugar.UNFOLD ns -> Pulse_Syntax_Base.UNFOLD (trans_ns ns)
-  | PulseSugar.FOLD ns -> Pulse_Syntax_Base.FOLD (trans_ns ns)
+type hint_type = Pulse_Syntax_Base.proof_hint_type
 
-let tm_proof_hint_with_binders (ht:PulseSugar.hint_type) (binders: binder list) (p:term) (s:st_term) r : st_term =
-  PSB.(with_range (Tm_ProofHintWithBinders { hint_type=trans_hint_type ht;
-                                            binders;
-                                            v=p;
-                                            t3=s }) r)
+let mk_assert_hint_type vp = PSB.mk_assert_hint_type vp
+let mk_unfold_hint_type names vp = PSB.mk_unfold_hint_type names vp
+let mk_fold_hint_type names vp = PSB.mk_fold_hint_type names vp
+let mk_rename_hint_type pairs goal = PSB.mk_rename_hint_type pairs goal
+let mk_rewrite_hint_type p1 p2 = PSB.mk_rewrite_hint_type p1 p2
+
+let tm_proof_hint_with_binders (ht:_) (binders: binder list)  (s:st_term) r : st_term =
+  PSB.(with_range (Tm_ProofHintWithBinders { hint_type=ht;
+                                             binders;
+                                             t3=s }) r)
 
 let tm_par p1 p2 q1 q2 b1 b2 r : st_term =
   PSB.(with_range (tm_par p1 b1 q1 p2 b2 q2) r)
 
 let tm_rewrite p1 p2 r : st_term =
   PSB.(with_range (tm_rewrite p1 p2) r)
+
+let tm_rename ps r : st_term = failwith ""
+(*  PSB.(with_range (tm_rename ps) r) *)
 
 let tm_admit r : st_term =
   PSB.(with_range (tm_admit STT u_zero (tm_unknown r) None) r)
@@ -217,3 +221,4 @@ let bvs_as_subst bvs =
     [] bvs
 let subst_term s t = Pulse_Syntax_Naming.subst_term t s
 let subst_st_term s t = Pulse_Syntax_Naming.subst_st_term t s
+let subst_proof_hint s t = Pulse_Syntax_Naming.subst_proof_hint t s

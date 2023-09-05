@@ -7,6 +7,12 @@ module L = FStar.List.Tot
 module T = FStar.Tactics.V2
 module Un = FStar.Sealed
 module R = FStar.Reflection.V2
+
+let tot_or_ghost_to_string = function
+  | T.E_Total -> "total"
+  | T.E_Ghost -> "ghost"
+
+
 let name_to_string (f:R.name) = String.concat "." f
 
 let dbg_printing : bool = true
@@ -156,8 +162,9 @@ let rec st_term_to_string' (level:string) (t:st_term)
           (st_term_to_string' level body)
       // )
 
-    | Tm_TotBind { head; body } ->
-      sprintf "let tot _ = %s;\n%s%s"
+    | Tm_TotBind { head; binder; body } ->
+      sprintf "let tot %s = %s;\n%s%s"
+        (binder_to_string binder)
         (term_to_string head)
         level
         (st_term_to_string' level body)
@@ -197,15 +204,8 @@ let rec st_term_to_string' (level:string) (t:st_term)
       sprintf "elim_exists %s"
         (term_to_string p)
 
-    | Tm_IntroExists { erased=false; p; witnesses } ->
+    | Tm_IntroExists { p; witnesses } ->
       sprintf "introduce\n%s%s\n%swith %s"
-        (indent level)
-        (term_to_string' (indent level) p)
-        level
-        (term_list_to_string " " witnesses)
-
-    | Tm_IntroExists { erased=true; p; witnesses } ->
-      sprintf "introduce (erased)\n%s%s\n%swith %s"
         (indent level)
         (term_to_string' (indent level) p)
         level
@@ -232,11 +232,12 @@ let rec st_term_to_string' (level:string) (t:st_term)
 
     | Tm_Rewrite { t1; t2 } ->
        sprintf "rewrite %s %s"
-	       (term_to_string t1)
-               (term_to_string t2)
+        (term_to_string t1)
+        (term_to_string t2)
 
-    | Tm_WithLocal { initializer; body } ->
-      sprintf "let mut _ = %s;\n%s%s"
+    | Tm_WithLocal { binder; initializer; body } ->
+      sprintf "let mut %s = %s;\n%s%s"
+        (binder_to_string binder)
         (term_to_string initializer)
         level
         (st_term_to_string' level body)
@@ -253,12 +254,34 @@ let rec st_term_to_string' (level:string) (t:st_term)
          | None -> ""
          | Some post -> sprintf " %s" (term_to_string post))
 
-    | Tm_ProofHintWithBinders { binders; v; t} ->
-      sprintf "assert %s%s in\n%s"
-        (if L.length binders = 0 then ""
-         else let s = L.fold_left (fun s _b -> Printf.sprintf "%s _" s) "" binders in
-              Printf.sprintf "%s." s)
-        (term_to_string v)
+    | Tm_ProofHintWithBinders { binders; hint_type; t} ->
+      let with_prefix =
+        match binders with
+        | [] -> ""
+        | _ -> sprintf "with %s." (String.concat " " (T.map binder_to_string binders))
+      in
+      let names_to_string = function
+        | None -> ""
+        | Some l -> sprintf " [%s]" (String.concat "; " l)
+      in
+      let ht, p =
+        match hint_type with
+        | ASSERT { p } -> "assert", term_to_string p
+        | UNFOLD { names; p } -> sprintf "unfold%s" (names_to_string names), term_to_string p
+        | FOLD { names; p } -> sprintf "fold%s" (names_to_string names), term_to_string p
+        | RENAME { pairs; goal } ->
+          sprintf "rewrite each %s"
+            (String.concat ", "
+              (T.map
+                (fun (x, y) -> sprintf "%s as %s" (term_to_string x) (term_to_string y))
+              pairs)),
+            (match goal with
+            | None -> ""
+            | Some t -> sprintf " in %s" (term_to_string t))
+        | REWRITE { t1; t2 } ->
+          sprintf "rewrite %s as %s" (term_to_string t1) (term_to_string t2), ""
+      in
+      sprintf "%s %s %s; %s" with_prefix ht p
         (st_term_to_string' level t)
 
 and branches_to_string brs : T.Tac _ =

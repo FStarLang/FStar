@@ -52,8 +52,8 @@ let (check :
                               (fun uu___ ->
                                  match uu___ with
                                  | Pulse_Syntax_Base.Tm_Rewrite
-                                     { Pulse_Syntax_Base.t1 = p;
-                                       Pulse_Syntax_Base.t2 = q;_}
+                                     { Pulse_Syntax_Base.t11 = p;
+                                       Pulse_Syntax_Base.t21 = q;_}
                                      ->
                                      Obj.magic
                                        (FStar_Tactics_Effect.tac_bind
@@ -558,9 +558,9 @@ let (check :
                                                                     (Pulse_Typing.wr
                                                                     (Pulse_Syntax_Base.Tm_Rewrite
                                                                     {
-                                                                    Pulse_Syntax_Base.t1
+                                                                    Pulse_Syntax_Base.t11
                                                                     = p1;
-                                                                    Pulse_Syntax_Base.t2
+                                                                    Pulse_Syntax_Base.t21
                                                                     = q1
                                                                     }))
                                                                     (Pulse_Typing.comp_rewrite

@@ -19,3 +19,10 @@ let unfold_def (g:FStar_Reflection_Types.env) (head:string) (names:string list) 
     Some (FStar_TypeChecker_Normalize.normalize
             [Beta; Iota;
              UnfoldOnly (FStar_Ident.lid_of_str head::List.map FStar_Ident.lid_of_str names)] g t)
+let env_set_range (e:FStar_Reflection_Types.env) (r:FStar_Range.range) =
+   FStar_TypeChecker_Env.set_range e r
+
+let is_pulse_option_set (x:string) : bool =
+  let key = ("pulse:"^x) in
+  let value = FStar_Options.ext_getv key in
+  value <> ""

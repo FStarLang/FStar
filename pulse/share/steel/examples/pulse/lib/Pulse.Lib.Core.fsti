@@ -1,7 +1,15 @@
 module Pulse.Lib.Core
 open FStar.Ghost
+open Steel.FractionalPermission
 module U32 = FStar.UInt32
 module G = FStar.Ghost
+
+(* Common alias *)
+let one_half =
+  half_perm full_perm
+
+val double_one_half (_:unit)
+  : Lemma (sum_perm one_half one_half == full_perm)
 
 (***** begin vprop_equiv *****)
 
@@ -84,6 +92,7 @@ val stt_atomic (a:Type u#a) (opened:inames) (pre:vprop) (post:a -> vprop) : Type
    while relying on the ghost invariant names in `opened` 
    and returns `x:a`
    such that the final state satisfies `post x` *)
+[@@ erasable]
 inline_for_extraction
 val stt_ghost (a:Type u#a) (opened:inames) (pre:vprop) (post:a -> vprop) : Type u#(max 2 a)
 
@@ -99,6 +108,14 @@ val return_stt (#a:Type u#a) (x:a) (p:a -> vprop)
 inline_for_extraction
 val return (#a:Type u#a) (x:a) (p:a -> vprop)
   : stt a (p x) p
+
+inline_for_extraction
+val return_stt_ghost (#a:Type u#a) (x:a) (p:a -> vprop)
+  : stt_ghost a emp_inames (p x) (fun r -> p r ** pure (r == x))
+
+inline_for_extraction
+val return_stt_ghost_noeq (#a:Type u#a) (x:a) (p:a -> vprop)
+  : stt_ghost a emp_inames (p x) p
 
 // Return in ghost?
 
@@ -301,3 +318,5 @@ val assume_ (p:vprop)
 val drop_ (p:vprop) 
   : stt_ghost unit emp_inames p (fun _ -> emp)
 
+val elim_false (a:Type) (p:a -> vprop)
+  : stt_ghost a emp_inames (pure False) p

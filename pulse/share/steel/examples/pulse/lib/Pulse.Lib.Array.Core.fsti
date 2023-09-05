@@ -1,4 +1,5 @@
 module Pulse.Lib.Array.Core
+open FStar.Tactics
 open Pulse.Lib.Core
 open Steel.FractionalPermission
 open FStar.Ghost
@@ -11,7 +12,12 @@ val length (#a:Type u#0) (x:array a) : GTot nat
 
 val is_full_array (#a:Type u#0) (x:array a) : prop
 
-val pts_to (#a:Type u#0) (x:array a) (p:perm) (s: Seq.seq a) : vprop
+val pts_to (#a:Type u#0) (x:array a) (#[exact (`full_perm)] p:perm) (s: Seq.seq a) : vprop
+
+val pts_to_len (#t:Type0) (a:array t) (#p:perm) (#x:Seq.seq t)
+    : stt_ghost unit emp_inames
+          (pts_to a #p x)
+          (fun _ → pts_to a #p x ** pure (length a == Seq.length x))
 
 val alloc 
         (#elt: Type)
@@ -20,7 +26,7 @@ val alloc
   : stt (array elt) 
         (requires emp)
         (ensures fun a ->
-            pts_to a full_perm (Seq.create (SZ.v n) x) **
+            pts_to a (Seq.create (SZ.v n) x) **
             pure (length a == SZ.v n /\ is_full_array a))
 
 (* Written x.(i) *)
@@ -32,9 +38,9 @@ val op_Array_Access
         (#s: Ghost.erased (Seq.seq t){SZ.v i < Seq.length s})
   : stt t
         (requires
-            pts_to a p s)
+            pts_to a #p s)
         (ensures fun res ->
-            pts_to a p s **
+            pts_to a #p s **
             pure (res == Seq.index s (SZ.v i)))
 
 
@@ -47,9 +53,9 @@ val op_Array_Assignment
         (#s: Ghost.erased (Seq.seq t) {SZ.v i < Seq.length s})
   : stt unit
         (requires
-            pts_to a full_perm s)
+            pts_to a s)
         (ensures fun res ->
-            pts_to a full_perm (Seq.upd s (SZ.v i) v))
+            pts_to a (Seq.upd s (SZ.v i) v))
 
 val free
         (#elt: Type)
@@ -57,7 +63,7 @@ val free
         (#s: Ghost.erased (Seq.seq elt))
   : stt unit
         (requires
-            pts_to a full_perm s **
+            pts_to a s **
             pure (is_full_array a))
         (ensures fun _ ->
             emp)

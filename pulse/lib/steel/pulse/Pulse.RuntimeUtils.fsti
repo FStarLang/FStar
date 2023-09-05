@@ -3,6 +3,7 @@ open FStar.Tactics
 module T = FStar.Tactics
 type context = FStar.Sealed.Inhabited.sealed #(list (string & option range)) []
 val extend_context (tag:string) (r:option range) (ctx:context) : context
+val is_pulse_option_set (x:string) : bool
 val debug_at_level_no_module (s:string) : bool
 val debug_at_level (g:env) (s:string) : bool
 val print_exn (e:exn) : string
@@ -17,3 +18,4 @@ val error_code_uninstantiated_variable (_:unit) : int
 val is_range_zero (r:range) : Dv bool
 val union_ranges (r0 r1:range) : range
 val unfold_def (g:env) (nm:string) (fully:list string) (t:T.term) : option T.term   
+val env_set_range (g:env) (r:range) : g':env{g==g'}
