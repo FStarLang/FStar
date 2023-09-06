@@ -89,22 +89,26 @@ fn arr_swap (n i j:SZ.t) (a:larray int (v n))
 [@@expect_failure]
 ```pulse
 fn max (n:SZ.t) (a:larray nat (v n))
-  requires A.pts_to a #'p 's
+  requires A.pts_to a #'p 's ** pure (Seq.length 's == v n)
   returns r:nat
   ensures A.pts_to a #'p 's
-       ** pure (forall (i:nat). i < v n ==> Seq.index 's i <= r)
+       ** pure (Seq.length 's == v n
+             /\ (forall (i:nat). i < v n ==> Seq.index 's i <= r))
 {
   let mut i = 0sz;
   let mut max = 0;
+  assert_ (pure (forall (n:nat). n >= 0));
+  assert_ (pure (forall (i:nat). i < v n ==> Seq.index 's i >= 0));
+  assert_ (pure (forall (i:nat). i < v 0sz ==> Seq.index 's i <= 0));
   while (let vi = !i; (vi < n))
   invariant b. exists (vi:SZ.t) (vmax:nat).
     A.pts_to a #'p 's **
     R.pts_to i vi **
     R.pts_to max vmax **
-    pure (vi <= n /\ vmax >= 0
-       /\ b == (vi < n)
-       /\ (forall (j:nat). j < v vi ==> Seq.index 's j <= vmax))
-  {  
+    pure (vi <= n /\ Seq.length 's == v n
+       /\ (forall (j:nat). j < v vi ==> Seq.index 's j <= vmax)
+       /\ b == (vi < n))
+  {
     let vi = !i;
     let vmax = !max;
     let v = a.(vi);
@@ -114,6 +118,15 @@ fn max (n:SZ.t) (a:larray nat (v n))
     }
   };
   let vmax = !max;
+  let vi = !i;
+  assert_ (pure (vi == n));
+  // FIXME: pulse can't prove this following assertion, which is exactly the pure
+  // part of the loop invariant
+  assert_ (
+    pure (vi <= n /\ Seq.length 's == v n
+       /\ (forall (j:nat). j < v vi ==> Seq.index 's j <= vmax))
+  );
+  assert_ (pure (forall (i:nat). i < v n ==> Seq.index 's i <= vmax));
   vmax
 }
 ```
