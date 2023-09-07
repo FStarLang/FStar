@@ -3,7 +3,10 @@ module PulseByExample
 module PM = Pulse.Main
 open Pulse.Lib.Core
 
-(*   
+assume
+val run_stt (#a:Type) (#post:a -> vprop) (f:stt a emp post) : a
+
+(* 
   Things to note:
   - syntax extension notation
   - 1 or more arguments
@@ -11,16 +14,19 @@ open Pulse.Lib.Core
   - unit return
 *)
 
+let my_list : list int = [1;2;3]
+
 ```pulse
-fn do_nothing (_:unit)
+fn five (_:unit)
   requires emp
-  returns _:unit
-  ensures  emp
-{
-  // emp is the empty assertion. It is vacuoSZly true. 
-  ()
+  returns n:int
+  ensures  pure (n == 5)
+{ 
+  5
 }
 ```
+
+let my_int = run_stt (five ()) // FIXME: nice way to invoke Pulse function from outside
 
 open Pulse.Lib.Reference
 module R = Pulse.Lib.Reference
@@ -52,8 +58,6 @@ module A = Pulse.Lib.Array
 module SZ = FStar.SizeT
 open Pulse.Class.BoundedIntegers
 
-open FStar.Ghost
-
 (* 
   Things to note:
   - heap array, read and write
@@ -62,7 +66,7 @@ open FStar.Ghost
 *)
 
 ```pulse
-fn arr_swap (n i j:SZ.t) (a:larray int (v n))
+fn arr_swap (#t:Type0) (n i j:SZ.t) (a:larray t (v n))
   requires 
     A.pts_to a 's0 **
     pure (Seq.length 's0 == v n /\ i < n /\ j < n)
