@@ -106,6 +106,8 @@ package_prefix=$(call maybe_cygwin_path,$(CURDIR)/fstar)
 
 package_dir = cd ../../$(1) && find . -type f -exec $(INSTALL_EXEC) -m 644 -D {} $(package_prefix)/$(2)/{} \;
 
+OS_UNAME=$(shell uname)
+
 package:
 	if test -z "$(Z3_LICENSE)" ; then echo Please set Z3_LICENSE to the location of the license file for Z3 ; false ; fi
 	@# Clean previous packages.
@@ -127,6 +129,9 @@ ifeq ($(OS),Windows_NT)
 	chmod a+x $(package_prefix)/bin/z3.exe $(package_prefix)/bin/*.dll
 	zip -r -9 $(PACKAGE_NAME).zip fstar
 else
+ifeq ($(OS_UNAME),Darwin)
+	cp -p -L $$(brew --prefix gmp)/lib/* $(package_prefix)/lib/
+endif
 	cp $(Z3_DIR)/z3 $(package_prefix)/bin
 	tar czf $(PACKAGE_NAME).tar.gz fstar
 endif
