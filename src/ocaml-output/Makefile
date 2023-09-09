@@ -130,7 +130,7 @@ ifeq ($(OS),Windows_NT)
 	zip -r -9 $(PACKAGE_NAME).zip fstar
 else
 ifeq ($(OS_UNAME),Darwin)
-	cp -p -L $$(brew --prefix gmp)/lib/* $(package_prefix)/lib/
+	cp -p -L $$(brew --prefix gmp)/lib/*.dylib $(package_prefix)/lib/
 endif
 	cp $(Z3_DIR)/z3 $(package_prefix)/bin
 	tar czf $(PACKAGE_NAME).tar.gz fstar
