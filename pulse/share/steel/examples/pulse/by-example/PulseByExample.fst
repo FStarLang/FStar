@@ -45,7 +45,7 @@ fn ref_swap (r1 r2:ref int)
   ensures  R.pts_to r1 'n2
         ** R.pts_to r2 'n1
 {
-  // FIXME: lvalue/rvalue inference not working on steel main
+  // FIXME: lvalue/rvalue inference not working on steel main?
   let v1 = !r1;
   let v2 = !r2;
   r1 := v2;
