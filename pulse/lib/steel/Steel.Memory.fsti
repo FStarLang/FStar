@@ -611,3 +611,42 @@ val star_is_witinv_right (#a:Type)
   : Lemma (requires (is_witness_invariant g))
           (ensures  (is_witness_invariant (fun x -> f x `star` g x)))
           //[SMTPat   (is_witness_invariant (fun x -> f x `star` g x))]
+
+// An alternate version of invariant masks
+val owns_invariants_in (e:inames) (m:mem u#a) : slprop u#a
+
+effect UsingInvariants
+  (a:Type u#a)
+  (invariants:inames)
+  (expects:slprop u#1)
+  (provides: a -> slprop u#1)
+  (frame:slprop u#1)
+  = NMSTTotal.NMSTATETOT a (full_mem u#1) mem_evolves
+    (requires fun m0 ->
+        inames_ok invariants m0 /\
+        interp (expects `star` frame `star` owns_invariants_in invariants m0) m0)
+    (ensures fun m0 x m1 ->
+        inames_ok invariants m1 /\
+        interp (expects `star` frame `star` owns_invariants_in invariants m0) m0 /\  //TODO: fix the effect so as not to repeat this
+        interp (provides x `star` frame `star` owns_invariants_in invariants m1) m1)
+
+val flush : unit
+(** An action is just a thunked computation in [MstTot] that takes a frame as argument *)
+let action_using (a:Type u#a) (invariants:inames) (expects:slprop) (provides: a -> slprop) =
+  frame:slprop -> UsingInvariants a invariants expects provides frame
+
+val alloc_invariant (fresh:list (p:_ & inv p)) (e:inames) (p:slprop)
+  : action_using
+    (i:inv p {
+        forall j. j `List.Tot.memP` fresh ==>
+                  name_of_inv i =!= name_of_inv (dsnd j)
+    }) e p (fun _ -> emp)
+
+val use_invariant (#a:Type)
+                  (#fp:slprop)
+                  (#fp':a -> slprop)
+                  (#uses:inames)
+                  (#p:slprop)
+                  (i:inv p{not (mem_inv uses i)})
+                  (f:action_using a uses (p `star` fp) (fun x -> p `star` fp' x))
+  : action_except a (add_inv uses i) fp fp'
