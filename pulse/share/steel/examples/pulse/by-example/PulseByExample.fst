@@ -107,14 +107,28 @@ fn max (n:SZ.t) (a:larray nat (v n))
        /\ (forall (j:nat). j < v vi ==> Seq.index 's j <= vmax)
        /\ b == (vi < n))
   {
-    admit()
-    // let vi = !i;
-    // let vmax = !max;
-    // let v = a.(vi);
-    // i := vi + 1sz;
-    // if (v > vmax) {
-    //   max := v;
-    // }
+    let vi = !i;
+    let vmax = !max;
+    let v = a.(vi);
+    i := vi + 1sz;
+    if (v > vmax) {
+      max := v;
+      admit()
+    } else {
+      // FIXME: assert on line 123 does not check with the pure part. seemingly
+      // any pure prop with Seq.X fails with the message:
+      //   `Expected a function; got an expression of type "int"`
+      // for example,
+      //   assert (pure (Seq.index 's (v (vi-1sz)) <= vmax));
+      assert (
+        A.pts_to a #'p 's **
+        R.pts_to i (vi+1sz) **
+        R.pts_to max vmax //**
+        // pure (vi <= n /\ Seq.length 's == v n
+        //   /\ (forall (j:nat). j < v vi ==> Seq.index 's j <= vmax))
+      );
+      admit()
+    }
   };
   with (vi:SZ.t) (vmax:nat). assert (
     A.pts_to a #'p 's **
@@ -123,10 +137,20 @@ fn max (n:SZ.t) (a:larray nat (v n))
     pure (vi <= n /\ Seq.length 's == v n
        /\ (forall (j:nat). j < v vi ==> Seq.index 's j <= vmax))
   );
-  assert_ (pure (vi == n));
-  assert_ (pure (Seq.length 's == v n
-             /\ (forall (i:nat). i < v n ==> Seq.index 's i <= vmax)));
-  admit()
+  assert (pure (vi == n));
+  assert (A.pts_to a #'p 's
+        ** pure (Seq.length 's == v n
+              /\ (forall (i:nat). i < v n ==> Seq.index 's i <= vmax)));
+  admit() 
+  (* 
+    FIXME: The last assertion above should be the postcondition, but Pulse
+    can't prove the postcondition without an admit(), so somthing must go 
+    wrong in the following two lines. I played around with the proof of the 
+    loop invariant (which, turns out, is also not checking) and my intuition 
+    is that there's a gap between the logical values vi and vmax in the spec 
+    and the values assigned to i and max. The ownership part of the loop 
+    invariant should take care of that relationship...
+  *)
   // let vmax = !max;
   // vmax
 }
