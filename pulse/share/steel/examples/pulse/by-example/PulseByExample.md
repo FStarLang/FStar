@@ -8,7 +8,7 @@ The rest of the file is a normal F* program, and it can even invoke an embedded 
 Pulse programs accept 1 or more arguments, where the `unit` type can be used to thunk a computation. 
 A Pulse program has a precondition (`requires ...`), postcondition (`ensures ...`), and optional return type. 
 Pulse is a separation logic, so its propositions are separation logic propositions. 
-You can read separation logic [here](TODO). 
+You can read about separation logic [here](TODO). 
 
 Returning to our code snippet, the separation logic proposition `emp` means that the program does not own any resources or have any knowledge. 
 The keywork `pure` allows us to write a pure F* proposition inside a Pulse proposition. 
@@ -20,7 +20,7 @@ open Pulse.Lib.Core
 
 let my_list : list int = [1;2;3]
 
-```pulse
+``pulse
 fn five (_:unit)
   requires emp
   returns n:int
@@ -202,4 +202,5 @@ There is much more to Pulse!
 Including 
 - match statements
 - parallel blocks
-- `fold` and `unfold` proof syntax
+- `rewrite`, `fold`, and `unfold` proof syntax
+- `rename` // TODO: look into this

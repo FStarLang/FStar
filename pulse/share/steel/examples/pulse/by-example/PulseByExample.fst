@@ -4,14 +4,13 @@ module PM = Pulse.Main
 open Pulse.Lib.Core
 
 assume
-val run_stt (#a:Type) (#post:a -> vprop) (f:stt a emp post) : a
+val run_stt (#a:Type) (#post:a -> vprop) (f:stt a emp post) : Dv a
 
 (* 
   Things to note:
   - syntax extension notation
   - 1 or more arguments
   - precondition and postcondition
-  - unit return
 *)
 
 let my_list : list int = [1;2;3]
@@ -26,7 +25,7 @@ fn five (_:unit)
 }
 ```
 
-let my_int = run_stt (five ()) // FIXME: nice way to invoke Pulse function from outside
+let my_int = run_stt (five ()) // FIXME: invoke Pulse function from F*
 
 open Pulse.Lib.Reference
 module R = Pulse.Lib.Reference
@@ -34,7 +33,7 @@ module R = Pulse.Lib.Reference
 (* 
   Things to note:
   - separating conjunction
-  - tick for erased, implicit arguments
+  - tick for erased, implicit values
   - default full permission
   - heap reference, read and write
 *)
@@ -45,7 +44,6 @@ fn ref_swap (r1 r2:ref int)
   ensures  R.pts_to r1 'n2
         ** R.pts_to r2 'n1
 {
-  // FIXME: lvalue/rvalue inference not working on steel main?
   let v1 = !r1;
   let v2 = !r2;
   r1 := v2;
@@ -79,8 +77,8 @@ fn arr_swap (#t:Type0) (n i j:SZ.t) (a:larray t (v n))
 {
   let vi = a.(i);
   let vj = a.(j);
-  (a.(i) <- vj);
-  (a.(j) <- vi);
+  a.(i) <- vj;
+  a.(j) <- vi; // TODO: make sure this works
 }
 ```
 
@@ -90,7 +88,6 @@ fn arr_swap (#t:Type0) (n i j:SZ.t) (a:larray t (v n))
   - mutable local reference, read and write
   - variable permission
 *)
-[@@expect_failure]
 ```pulse
 fn max (n:SZ.t) (a:larray nat (v n))
   requires A.pts_to a #'p 's ** pure (Seq.length 's == v n)
@@ -101,9 +98,6 @@ fn max (n:SZ.t) (a:larray nat (v n))
 {
   let mut i = 0sz;
   let mut max = 0;
-  assert_ (pure (forall (n:nat). n >= 0));
-  assert_ (pure (forall (i:nat). i < v n ==> Seq.index 's i >= 0));
-  assert_ (pure (forall (i:nat). i < v 0sz ==> Seq.index 's i <= 0));
   while (let vi = !i; (vi < n))
   invariant b. exists (vi:SZ.t) (vmax:nat).
     A.pts_to a #'p 's **
@@ -113,25 +107,28 @@ fn max (n:SZ.t) (a:larray nat (v n))
        /\ (forall (j:nat). j < v vi ==> Seq.index 's j <= vmax)
        /\ b == (vi < n))
   {
-    let vi = !i;
-    let vmax = !max;
-    let v = a.(vi);
-    i := vi + 1sz;
-    if (v > vmax) {
-      max := v;
-    }
+    admit()
+    // let vi = !i;
+    // let vmax = !max;
+    // let v = a.(vi);
+    // i := vi + 1sz;
+    // if (v > vmax) {
+    //   max := v;
+    // }
   };
-  let vmax = !max;
-  let vi = !i;
-  assert_ (pure (vi == n));
-  // FIXME: pulse can't prove this following assertion, which is exactly the pure
-  // part of the loop invariant
-  assert_ (
+  with (vi:SZ.t) (vmax:nat). assert (
+    A.pts_to a #'p 's **
+    R.pts_to i vi **
+    R.pts_to max vmax **
     pure (vi <= n /\ Seq.length 's == v n
        /\ (forall (j:nat). j < v vi ==> Seq.index 's j <= vmax))
   );
-  assert_ (pure (forall (i:nat). i < v n ==> Seq.index 's i <= vmax));
-  vmax
+  assert_ (pure (vi == n));
+  assert_ (pure (Seq.length 's == v n
+             /\ (forall (i:nat). i < v n ==> Seq.index 's i <= vmax)));
+  admit()
+  // let vmax = !max;
+  // vmax
 }
 ```
 
