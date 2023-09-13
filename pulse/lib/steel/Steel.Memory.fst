@@ -1205,18 +1205,37 @@ let new_invariant_tot_action (e:inames) (p:slprop) (m0:hmem_with_inv_except e p{
 let inv (p:slprop u#1) = i:erased iname & (i >--> p)
 let name_of_inv #p (i:inv p) = dfst i
 
-let new_invariant (e:inames) (p:slprop) (frame:slprop)
-  : MstTot (inv p) e p (fun _ -> emp) frame (fun _ -> True) (fun _ _ _ -> True)
+let rec recall_all (ctx:list (q:_ & inv q)) 
+  : NMSTTotal.NMSTATETOT unit (full_mem u#1) mem_evolves
+    (requires fun _ -> True)
+    (ensures fun m0 _ m1 -> m0==m1 /\ (forall qi. qi `List.Tot.memP` ctx ==> name_of_inv (dsnd qi) < List.Tot.length m0.locks))
+  = match ctx with
+    | [] -> ()
+    | hd::tl ->
+      let (| q, i |) = hd in
+      NMSTTotal.recall _ mem_evolves (iname_for_p_mem (name_of_inv i) q) (dsnd i);
+      recall_all tl
+
+let fresh_invariant (e:inames) (p:slprop) (ctx:list (q:_ & inv q)) (frame:slprop)
+  : MstTot (i:inv p { not (mem_inv e i) /\ fresh_wrt ctx (name_of_inv i)}) e p (fun _ -> emp) frame (fun _ -> True) (fun _ _ _ -> True)
   = let m0 = NMSTTotal.get () in
+    recall_all ctx;
     ac_reasoning_for_m_frame_preserving p frame (locks_invariant e m0) m0;
     assert (interp (p `star` locks_invariant e m0) m0);
     let r = new_invariant_tot_action e p m0 in
     let ( i, m1 ) = r in
+    assert (i == List.Tot.length m0.locks);
+    assert (not (Set.mem i e));
     assert (mem_evolves m0 m1);
     NMSTTotal.put #full_mem #mem_evolves m1;
     iname_for_p_stable i p;
     let w  = NMSTTotal.witness full_mem mem_evolves (iname_for_p_mem i p) in
     (| hide i, w |)
+
+
+let new_invariant (e:inames) (p:slprop) (frame:slprop)
+  : MstTot (inv p) e p (fun _ -> emp) frame (fun _ -> True) (fun _ _ _ -> True)
+  = fresh_invariant e p [] frame
 
 let rearrange_invariant (p q r : slprop) (q0 q1:slprop)
   : Lemma
@@ -1583,214 +1602,3 @@ let star_is_witinv_right (#a:Type)
   : Lemma (requires (is_witness_invariant g))
           (ensures  (is_witness_invariant (fun x -> f x `star` g x)))
   = ()
-
-
-/////////////////////////////////////
-// This is a "flipped" version of lock_store_invariant
-// Only the invariant in `e` are valid
-let rec owns_invariants_in_store (e:inames) (l:lock_store u#a) : slprop u#a =
-  let current_addr = L.length l - 1 in
-  match l with
-  | [] -> emp
-  | Invariant p :: tl ->
-    if current_addr `S.mem` e then
-      p `star` owns_invariants_in_store e tl
-    else
-      owns_invariants_in_store e tl
-
-let rec owns_invariant_remove_unused (e:inames) (x:iname) (l:lock_store u#a)
-  : Lemma
-    (requires x >= L.length l)
-    (ensures owns_invariants_in_store e l ==
-            owns_invariants_in_store (Set.remove x e) l)
-  = match l with
-    | [] -> ()
-    | Invariant p :: tl ->
-      owns_invariant_remove_unused e x tl
-
-let rec owns_invariant_add_unused (e:inames) (x:iname) (l:lock_store u#a)
-  : Lemma (requires x >= L.length l)
-          (ensures owns_invariants_in_store e l == owns_invariants_in_store (Set.add x e) l)
-  = match l with
-    | [] -> ()
-    | Invariant p :: tl ->
-      owns_invariant_add_unused e x tl
-
-let extend_lock_store_flip (e:inames) (l:lock_store{ e `inames_in` l}) (p:slprop)
-  : i:iname &
-    l':lock_store {
-      owns_invariants_in_store e l' == owns_invariants_in_store e l /\
-      iname_for_p i p l' /\
-      owns_invariants_in_store (Set.add i e) l' == p `star` owns_invariants_in_store (Set.add i e) l
-    }
-  = (| L.length l, Invariant p :: l |)
-
-let rec move_invariant_flip (e:inames) (l:lock_store) (p:slprop)
-                            (i:iname{iname_for_p i p l /\ i `Set.mem` e})
-   : Lemma (H.equiv (owns_invariants_in_store e l)
-                    (p `star` owns_invariants_in_store (Set.remove i e) l))
-   = let current_addr = L.length l - 1 in
-     match l with
-     | [] -> ()
-     | Invariant q::tl ->
-        if i = current_addr
-        then owns_invariant_remove_unused e i tl
-        else begin
-          move_invariant_flip e tl p i;
-          assert (owns_invariants_in_store e tl `equiv`
-                 (p `star` owns_invariants_in_store (Set.remove i e) tl));
-          if Set.mem current_addr e
-          then begin
-            H.star_congruence q (owns_invariants_in_store e tl) q (p `star` owns_invariants_in_store (Set.remove i e) tl);
-            assert (owns_invariants_in_store e l `equiv`
-                    (q `star` (p `star` owns_invariants_in_store (Set.remove i e) tl)));
-            H.star_associative q p (owns_invariants_in_store (Set.remove i e) tl);
-            H.star_commutative q p;
-            H.star_congruence (q `star` p) (owns_invariants_in_store (Set.remove i e) tl) (p `star` q) (owns_invariants_in_store (Set.remove i e) tl);
-            H.star_associative p q (owns_invariants_in_store (Set.remove i e) tl);
-            assert (owns_invariants_in_store e l `equiv`
-                    (p `star` (q `star` owns_invariants_in_store (Set.remove i e) tl)))
-          end
-        end
-
-let invariant_store_has (e:inames) (m:mem u#a) : slprop u#a =
-   owns_invariants_in_store e m.locks
-   `star`
-   ctr_validity m.ctr (heap_of_mem m)
-
-let owns_invariants_in e m = invariant_store_has e m
-
-let flush = ()
-
-(** Memory refined with invariants and a footprint *)
-let hmem_owns_invariants (e:inames) (fp:slprop u#a) =
-  m:full_mem{inames_ok e m /\ interp (fp `star` invariant_store_has e m) m}
-
-let frame_preserving_new (fp0 fp1:slprop u#a)
-                         (owns0 owns1:inames)
-                         (m0:hmem_owns_invariants owns0 fp0)
-                         (m1:hmem_owns_invariants owns1 fp1) =
-    forall (frame:slprop u#a).
-      interp ((fp0 `star` frame) `star` invariant_store_has owns0 m0) m0 ==>
-      interp ((fp1 `star` frame) `star` invariant_store_has owns1 m1) m1
-
-let emp_inames = Set.empty
-
-let rec owns_invariants_in_store_emp (l:lock_store) : Lemma (owns_invariants_in_store emp_inames l == emp)
-  = match l with
-    | [] -> ()
-    | Invariant p :: tl ->
-      owns_invariants_in_store_emp tl
-module T = FStar.Tactics
-let alloc_invariant_tot_action (p:slprop) (m0:hmem_owns_invariants emp_inames p)
-  : Pure (i:iname & hmem_owns_invariants emp_inames emp)
-         (requires True)
-         (ensures fun (|i, m1|) ->
-           iname_for_p_mem i p m1 /\
-           frame_preserving_new p emp emp_inames emp_inames m0 m1 /\
-           mem_evolves m0 m1)
-  = let (| i, l1 |) = extend_lock_store emp_inames m0.locks p in
-    let m1 : full_mem = { m0 with locks = l1 } in
-    assert (inames_ok emp_inames m1);
-    calc (equiv) {
-      emp `star` invariant_store_has emp_inames m1;
-        (==)    {  owns_invariants_in_store_emp m1.locks }
-      emp `star` (emp `star` ctr_validity m1.ctr (heap_of_mem m1));
-        (equiv) { H.star_associative emp emp (ctr_validity m1.ctr (heap_of_mem m1)) }
-      (emp `star` emp) `star` ctr_validity m1.ctr (heap_of_mem m1);
-        (equiv) { H.star_commutative (emp `star` emp) (ctr_validity m1.ctr (heap_of_mem m1)) }
-      ctr_validity m1.ctr (heap_of_mem m1) `star` (emp `star` emp);
-        (equiv) { H.star_associative (ctr_validity m1.ctr (heap_of_mem m1)) emp emp;
-                  H.emp_unit (ctr_validity m1.ctr (heap_of_mem m1) `star` emp) }
-      ctr_validity m1.ctr (heap_of_mem m1) `star` emp;
-        (equiv)  { H.emp_unit (ctr_validity m1.ctr (heap_of_mem m1)) }
-      ctr_validity m1.ctr (heap_of_mem m1);
-    };
-    assert (interp (emp `star` invariant_store_has emp_inames m1) m1);
-    assert (iname_for_p_mem i p m1);
-    assert (mem_evolves m0 m1);
-    assume (frame_preserving_new p emp emp_inames emp_inames m0 m1);
-    (| i, m1 |)
-
-
-//     let m1 = { m0 with locks = l1 } in
-//     assert (lock_store_invariant e m1.locks ==
-//             p `star` lock_store_invariant e m0.locks);
-//     calc (equiv) {
-//       linv e m1;
-//         (equiv) {}
-//       (lock_store_invariant e m1.locks
-//         `star`
-//        ctr_validity m1.ctr (heap_of_mem m1));
-//         (equiv) {}
-//       ((p `star` lock_store_invariant e m0.locks)
-//         `star`
-//        ctr_validity m1.ctr (heap_of_mem m1));
-//         (equiv) {
-//           H.star_associative p (lock_store_invariant e m0.locks) (ctr_validity m1.ctr (heap_of_mem m1))
-//          }
-//       (p `star` (lock_store_invariant e m0.locks
-//         `star`
-//        ctr_validity m1.ctr (heap_of_mem m1)));
-//         (equiv) { }
-//       (p `star` linv e m0);
-//     };
-//     assert (iname_for_p_mem i p m1);
-//     assert (lock_store_evolves m0.locks l1);
-//     assert (mem_evolves m0 m1);
-//     hmem_with_inv_equiv e m0 p;
-//     assert (interp (p `star` lock_store_invariant e m0.locks) m1);
-//     assert (interp (lock_store_invariant e m1.locks) m1);
-//     H.emp_unit (lock_store_invariant e m1.locks);
-//     H.star_commutative (lock_store_invariant e m1.locks) emp;
-//     assert (interp (emp `star` lock_store_invariant e m1.locks) m1);
-//     hmem_with_inv_equiv e m1 emp;
-//     let m1 : hmem_with_inv_except e emp = m1 in
-//     let aux (frame:slprop)
-//       : Lemma
-//         (requires interp ((p `star` frame) `star` linv e m0) m0)
-//         (ensures interp ((emp `star` frame) `star` linv e m1) m1 /\
-//                  mem_evolves m0 m1 /\
-//                  (forall (mp:mprop frame). mp (core_mem m0) <==> mp (core_mem m1)))
-//         [SMTPat (p `star` frame)]
-//       = assert (interp ((p `star` frame) `star` linv e m0) m1);
-//         calc (equiv) {
-//           ((p `star` frame) `star` linv e m0);
-//             (equiv) {
-//                       H.star_commutative p frame;
-//                       H.star_congruence (p `star` frame) (linv e m0) (frame `star` p) (linv e m0);
-//                       H.star_associative frame p (linv e m0)
-//                     }
-//           (frame `star` (p `star` linv e m0));
-//             (equiv) {
-//                       H.star_congruence frame (p `star` linv e m0) frame (linv e m1)
-//                     }
-//           (frame `star` linv e m1);
-//             (equiv) {
-//                        H.emp_unit (frame `star` linv e m1);
-//                        H.star_commutative (frame `star` linv e m1) emp;
-//                        H.star_associative emp frame (linv e m1)
-//                     }
-//           ((emp `star` frame) `star` linv e m1);
-//         };
-//         assert (interp ((emp `star` frame) `star` linv e m1) m1)
-//     in
-//     assert (frame_related_mems p emp e m0 m1);
-//     ( i, m1 )
-let alloc_invariant_simple (p:slprop) (frame:slprop)
-  : UsingInvariants (inv p) emp_inames p (fun _ -> emp) frame
-  = let m0 = NMSTTotal.get () in
-    ac_reasoning_for_m_frame_preserving p frame (invariant_store_has emp_inames m0) m0;
-    assert (interp (p `star` owns_invariants_in emp_inames m0) m0);
-    let r = alloc_invariant_tot_action p m0 in
-    let (| i, m1 |) = r in
-    assert (mem_evolves m0 m1);
-    NMSTTotal.put #full_mem #mem_evolves m1;
-    iname_for_p_stable i p;
-    let w  = NMSTTotal.witness full_mem mem_evolves (iname_for_p_mem i p) in
-    let r : inv p = (| hide i, w |) in
-    r
-
-let alloc_invariant_simple' (p:slprop)
-  : action_using (inv p) emp_inames p (fun _ -> emp)
-  = alloc_invariant_simple p
