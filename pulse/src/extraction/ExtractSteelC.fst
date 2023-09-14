@@ -108,6 +108,13 @@ let my_types_without_decay () =
     ->
       translate_type_without_decay env arg
 
+  | MLTY_Named ([], p) when
+    Syntax.string_of_mlpath p = "Steel.ST.C.Types.Base.void_ptr"
+    || Syntax.string_of_mlpath p = "Steel.ST.C.Types.Array.array_void_ptr"
+    ->
+      BU.print1 "Converting %s to TAny" (Syntax.string_of_mlpath p);
+      TAny
+
   | MLTY_Named ([t; n; s], p)
     when false
      || Syntax.string_of_mlpath p = "Steel.ST.C.Types.Array.base_array_t"
@@ -126,7 +133,7 @@ let my_types () = register_pre_translate_type begin fun env t ->
      || Syntax.string_of_mlpath p = "Steel.ST.C.Types.Array.base_array_t"
     ->
       TBuf (translate_type_without_decay env t)
-      
+
   | _ -> raise NotSupportedByKrmlExtension
 end
 
@@ -242,7 +249,7 @@ let my_exprs () = register_pre_translate_expr begin fun env e ->
     when string_of_mlpath p = "Steel.ST.C.Types.Base.void_ptr_of_ptr" ->
       ECast(
         translate_expr env x,
-        TQualified (["Steel"; "ST"; "C"; "Types"; "Base"], "void_ptr")
+        TAny
       )
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, [t])}, [
