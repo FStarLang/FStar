@@ -21,7 +21,7 @@ ifneq (,$(KRML_HOME))
 
 # NOTE: this is NOT a phony rule
 extract: $(ALL_KRML_FILES)
-	$(KRML_EXE) -warn-error @4 -skip-compilation -skip-makefiles -bundle 'FStar.\*,Steel.\*,C' -add-include '"steel_c.h"' $^
+	$(KRML_EXE) -warn-error @4-26 -skip-compilation -skip-makefiles -bundle 'FStar.\*,Steel.\*,C' -add-include '"steel_c.h"' $^
 	touch $@
 
 ALL_MODULE_NAMES=$(basename $(wildcard *.fst))
