@@ -202,6 +202,20 @@ val exists_cong (#a:_)
 
 /// Creation of a new invariant associated to vprop [p].
 /// After execution of this function, [p] is consumed and not available in the context anymore
+/// The newly allocated invariant is distinct from the opened invariants and any other
+/// invariants in ctxt provided by the caller
+
+(* Lifting invariants to vprops *)
+let fresh_inv (e:inames) (ctxt:list pre_inv) #p (i:inv p) =
+  not (mem_inv e i) /\
+  (forall qi. List.Tot.memP qi ctxt ==> name_of_pre_inv qi =!= name_of_inv i)
+
+val fresh_invariant (#opened_invariants:inames) (p:vprop) (ctxt:list pre_inv)
+  : STAtomicUT (i:inv p {fresh_inv opened_invariants ctxt i})
+                 opened_invariants p (fun _ -> emp)
+
+/// Creation of a new invariant associated to vprop [p].
+/// After execution of this function, [p] is consumed and not available in the context anymore
 val new_invariant (#opened_invariants:inames) (p:vprop)
   : STAtomicUT (inv p) opened_invariants p (fun _ -> emp)
 
