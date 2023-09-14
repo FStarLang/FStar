@@ -501,9 +501,17 @@ val recall (#a:Type u#1) (#pcm:pcm a) (#fact:property a)
 (**** Invariants *)
 
 (**[i : inv p] is an invariant whose content is [p] *)
+val pre_inv : Type0
+
 val inv (p:slprop u#1) : Type0
 
-val name_of_inv (#p:slprop) (i:inv p) : GTot iname
+val pre_inv_of_inv (#p:slprop) (i:inv p) : pre_inv
+
+val name_of_pre_inv (i:pre_inv) : GTot iname
+
+let name_of_inv (#p:slprop) (i:inv p)
+  : GTot iname
+  = name_of_pre_inv (pre_inv_of_inv i)
 
 let mem_inv (#p:slprop) (e:inames) (i:inv p) : erased bool = elift2 (fun e i -> Set.mem i e) e (name_of_inv i)
 
@@ -511,6 +519,13 @@ let add_inv (#p:slprop) (e:inames) (i:inv p) : inames =
   Set.union (Set.singleton (name_of_inv i)) (reveal e)
 
 (** Creates a new invariant from a separation logic predicate [p] owned at the time of the call *)
+let fresh_wrt (ctx:list pre_inv)
+              (i:iname)
+  = forall i'. List.Tot.memP i' ctx ==> name_of_pre_inv i' <> i
+
+val fresh_invariant (e:inames) (p:slprop) (ctx:list pre_inv)
+  : action_except (i:inv p { not (mem_inv e i) /\ fresh_wrt ctx (name_of_inv i) }) e p (fun _ -> emp)
+
 val new_invariant (e:inames) (p:slprop)
   : action_except (inv p) e p (fun _ -> emp)
 

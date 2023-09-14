@@ -132,8 +132,11 @@ let exists_equiv #a p1 p2
 let exists_cong #a #u p q
   = coerce_ghost (fun _ -> SEA.exists_cong #a #u p q)
 
+let fresh_invariant #u p ctxt
+  = coerce_atomic (fun _ -> SEA.fresh_invariant #u p ctxt)
+
 let new_invariant #u p
-  = coerce_atomic (fun _ -> SEA.new_invariant #u p)
+  = let i = fresh_invariant #u p [] in return i
 
 let with_invariant (#a:Type)
                    (#fp:vprop)
