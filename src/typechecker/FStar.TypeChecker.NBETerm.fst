@@ -939,13 +939,13 @@ let or_op (args:args) : option t =
     end
   | _ -> failwith "Unexpected number of arguments"
 
-let division_op (args:args) : option t =
+let division_modulus_op (op:Z.bigint -> Z.bigint -> Z.bigint) (args:args) : option t =
   match args with
   | [a1; a2] -> begin
     match arg_as_int a1, arg_as_int a2 with
     | Some m, Some n ->
       if Z.to_int_fs n <> 0
-      then Some (embed e_int bogus_cbs (Z.div_big_int m n))
+      then Some (embed e_int bogus_cbs (op m n))
       else None
     | _ -> None
     end

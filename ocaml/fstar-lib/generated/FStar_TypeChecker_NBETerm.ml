@@ -2098,28 +2098,31 @@ let (or_op : args -> t FStar_Pervasives_Native.option) =
              FStar_Pervasives_Native.Some (FStar_Pervasives_Native.fst a2)
          | uu___1 -> FStar_Pervasives_Native.None)
     | uu___ -> failwith "Unexpected number of arguments"
-let (division_op : args -> t FStar_Pervasives_Native.option) =
-  fun args1 ->
-    match args1 with
-    | a1::a2::[] ->
-        let uu___ =
-          let uu___1 = arg_as_int a1 in
-          let uu___2 = arg_as_int a2 in (uu___1, uu___2) in
-        (match uu___ with
-         | (FStar_Pervasives_Native.Some m, FStar_Pervasives_Native.Some n)
-             ->
-             let uu___1 =
-               let uu___2 = FStar_BigInt.to_int_fs n in
-               uu___2 <> Prims.int_zero in
-             if uu___1
-             then
-               let uu___2 =
-                 let uu___3 = FStar_BigInt.div_big_int m n in
-                 embed e_int bogus_cbs uu___3 in
-               FStar_Pervasives_Native.Some uu___2
-             else FStar_Pervasives_Native.None
-         | uu___1 -> FStar_Pervasives_Native.None)
-    | uu___ -> failwith "Unexpected number of arguments"
+let (division_modulus_op :
+  (FStar_BigInt.bigint -> FStar_BigInt.bigint -> FStar_BigInt.bigint) ->
+    args -> t FStar_Pervasives_Native.option)
+  =
+  fun op ->
+    fun args1 ->
+      match args1 with
+      | a1::a2::[] ->
+          let uu___ =
+            let uu___1 = arg_as_int a1 in
+            let uu___2 = arg_as_int a2 in (uu___1, uu___2) in
+          (match uu___ with
+           | (FStar_Pervasives_Native.Some m, FStar_Pervasives_Native.Some n)
+               ->
+               let uu___1 =
+                 let uu___2 = FStar_BigInt.to_int_fs n in
+                 uu___2 <> Prims.int_zero in
+               if uu___1
+               then
+                 let uu___2 =
+                   let uu___3 = op m n in embed e_int bogus_cbs uu___3 in
+                 FStar_Pervasives_Native.Some uu___2
+               else FStar_Pervasives_Native.None
+           | uu___1 -> FStar_Pervasives_Native.None)
+      | uu___ -> failwith "Unexpected number of arguments"
 let arrow_as_prim_step_1 :
   'a 'b .
     'a embedding ->
