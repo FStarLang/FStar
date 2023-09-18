@@ -1,5 +1,7 @@
 open Prims
-type error = (Prims.string * FStar_Compiler_Range_Type.range)
+type error =
+  (Prims.string * FStar_Compiler_Range_Type.range)
+    FStar_Pervasives_Native.option
 type 'a err = Prims.nat -> (('a, error) FStar_Pervasives.either * Prims.nat)
 let op_let_Question :
   'a 'b .
@@ -18,7 +20,13 @@ let return : 'a . 'a -> 'a err =
   fun x -> fun ctr -> ((FStar_Pervasives.Inl x), ctr)
 let fail : 'a . Prims.string -> FStar_Compiler_Range_Type.range -> 'a err =
   fun message ->
-    fun range -> fun ctr -> ((FStar_Pervasives.Inr (message, range)), ctr)
+    fun range ->
+      fun ctr ->
+        ((FStar_Pervasives.Inr
+            (FStar_Pervasives_Native.Some (message, range))), ctr)
+let just_fail : 'a . unit -> 'a err =
+  fun uu___ ->
+    fun ctr -> ((FStar_Pervasives.Inr FStar_Pervasives_Native.None), ctr)
 let (next_ctr : Prims.nat err) =
   fun ctr ->
     ((FStar_Pervasives.Inl (ctr + Prims.int_one)), (ctr + Prims.int_one))
@@ -558,6 +566,17 @@ let (stapp_or_return :
                                        STTerm uu___10)
                                 else Return s)))
            | uu___1 -> Return s)
+let (prepend_ctx_issue :
+  FStar_Pprint.document -> FStar_Errors.issue -> FStar_Errors.issue) =
+  fun c ->
+    fun i ->
+      {
+        FStar_Errors.issue_msg = (c :: (i.FStar_Errors.issue_msg));
+        FStar_Errors.issue_level = (i.FStar_Errors.issue_level);
+        FStar_Errors.issue_range = (i.FStar_Errors.issue_range);
+        FStar_Errors.issue_number = (i.FStar_Errors.issue_number);
+        FStar_Errors.issue_ctx = (i.FStar_Errors.issue_ctx)
+      }
 let (tosyntax' :
   env_t -> FStar_Parser_AST.term -> FStar_Syntax_Syntax.term err) =
   fun env ->
@@ -575,8 +594,12 @@ let (tosyntax' :
           let uu___1 = FStar_Errors.issue_of_exn uu___ in
           (match uu___1 with
            | FStar_Pervasives_Native.Some i ->
-               (FStar_Errors.add_issues [i];
-                fail "Failed to desugar Pulse term" t.FStar_Parser_AST.range)
+               let i1 =
+                 let uu___2 =
+                   FStar_Pprint.arbitrary_string
+                     "Failed to desugar Pulse term" in
+                 prepend_ctx_issue uu___2 i in
+               (FStar_Errors.add_issues [i1]; just_fail ())
            | FStar_Pervasives_Native.None ->
                let uu___2 =
                  let uu___3 = FStar_Parser_AST.term_to_string t in
