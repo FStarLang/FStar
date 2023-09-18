@@ -15,7 +15,6 @@ module SS = FStar.Syntax.Subst
 module R = FStar.Compiler.Range
 module BU = FStar.Compiler.Util
 module P =  FStar.Syntax.Print
-type error = string & R.range
 
 let err a = nat -> either a error & nat
 
@@ -28,7 +27,11 @@ let (let?) (f:err 'a) (g: 'a -> ML (err 'b)) =
 let return (x:'a) : err 'a = fun ctr -> Inl x, ctr
 
 let fail #a (message:string) (range:R.range) : err a =
-  fun ctr -> Inr (message, range), ctr
+  fun ctr -> Inr (Some (message, range)), ctr
+
+// Fail without logging another error
+let just_fail (#a:Type) () : err a =
+  fun ctr -> Inr None, ctr
 
 let next_ctr : err nat = fun ctr -> Inl (ctr + 1), ctr + 1
 
@@ -228,6 +231,9 @@ let stapp_or_return (env:env_t) (s:S.term)
       )
     | _ -> Return s
 
+let prepend_ctx_issue (c : Pprint.document) (i : Errors.issue) : Errors.issue =
+  { i with issue_msg = c :: i.issue_msg }
+
 
 let tosyntax' (env:env_t) (t:A.term)
   : err S.term
@@ -236,9 +242,11 @@ let tosyntax' (env:env_t) (t:A.term)
     with 
       | e -> 
         match FStar.Errors.issue_of_exn e with
-        | Some i -> 
+        | Some i ->
+          let i = prepend_ctx_issue (Pprint.arbitrary_string "Failed to desugar Pulse term") i in
           FStar.Errors.add_issues [i];
-          fail "Failed to desugar Pulse term" t.range
+          just_fail ()
+
         | None -> 
           fail (BU.format2 "Failed to desugar Pulse term %s\nUnexpected exception: %s\n"
                              (A.term_to_string t)

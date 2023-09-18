@@ -109,7 +109,11 @@ let check_pulse (namespaces:list string)
       match Pulse.ASTBuilder.parse_pulse env namespaces module_abbrevs content file_name line col with
       | Inl st_term ->
         main st_term tm_emp env
-      | Inr (msg, range) ->
+
+      | Inr None ->
+        T.fail "Pulse parser failed"
+
+      | Inr (Some (msg, range)) ->
         let i =
           Issue.mk_issue "Error"
                    (Printf.sprintf "%s: %s" (T.range_to_string range) msg)
