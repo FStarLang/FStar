@@ -166,7 +166,8 @@ let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac
     | None ->
         (* The tactic got stuck, try to provide a helpful error message. *)
         let h_result = t_head_of result in
-        let maybe_admit_tip =
+        let open FStar.Pprint in
+        let maybe_admit_tip : document =
           (* (ab)use the map visitor to check whether the reduced head
           contains an admit, which is a common error *)
           let has_admit = BU.mk_ref false in
@@ -178,12 +179,13 @@ let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac
             ) h_result
           in
           if !has_admit
-          then "\nThe term contains an `admit`, which will not reduce. Did you mean `tadmit()`?"
-          else ""
+          then doc_of_string "The term contains an `admit`, which will not reduce. Did you mean `tadmit()`?"
+          else empty
         in
-        Err.raise_error (Err.Fatal_TacticGotStuck,
-          (BU.format2 "Tactic got stuck!\n\
-                       Reduction stopped at: %s%s" (Print.term_to_string h_result) maybe_admit_tip)) proof_state.main_context.range
+        FStar.Errors.Raise.(error_doc (Fatal_TacticGotStuck,
+          [str "Tactic got stuck!";
+           str "Reduction stopped at: " ^^ ttd h_result;
+           maybe_admit_tip]) proof_state.main_context.range)
     )
 
 let unembed_tactic_nbe_0 (eb:NBET.embedding 'b) (cb:NBET.nbe_cbs) (embedded_tac_b:NBET.t) : tac 'b =
@@ -201,7 +203,12 @@ let unembed_tactic_nbe_0 (eb:NBET.embedding 'b) (cb:NBET.nbe_cbs) (embedded_tac_
         bind (set ps) (fun _ -> traise e)
 
     | None ->
-        Err.raise_error (Err.Fatal_TacticGotStuck, (BU.format1 "Tactic got stuck (in NBE)! Please file a bug report with a minimal reproduction of this issue.\n%s" (NBET.t_to_string result))) proof_state.main_context.range
+        FStar.Errors.Raise.(
+          error_doc (Fatal_TacticGotStuck,
+            [str "Tactic got stuck (in NBE)!";
+             text "Please file a bug report with a minimal reproduction of this issue.";
+             str "Result = " ^^ str (NBET.t_to_string result)]) proof_state.main_context.range
+        )
     )
 
 let unembed_tactic_1 (ea:embedding 'a) (er:embedding 'r) (f:term) (ncb:norm_cb) : 'a -> tac 'r =
@@ -816,14 +823,24 @@ let run_tactic_on_ps'
 
         (remaining_smt_goals, ret)
 
+    (* Catch normal errors to add a "Tactic failed" at the top. *)
+    | Failed (Errors.Error (code, msg, rng, ctx), ps) ->
+      let msg = FStar.Pprint.doc_of_string "Tactic failed" :: msg in
+      raise (Errors.Error (code, msg, rng, ctx))
+
+    | Failed (Errors.Err (code, msg, ctx), ps) ->
+      let msg = FStar.Pprint.doc_of_string "Tactic failed" :: msg in
+      raise (Errors.Err (code, msg, ctx))
+
+    (* Any other error, including exceptions being raised by the metaprograms. *)
     | Failed (e, ps) ->
         do_dump_proofstate ps "at the time of failure";
         let texn_to_string e =
             match e with
             | TacticFailure s ->
-                s
+                "\"" ^ s ^ "\""
             | EExn t ->
-                "uncaught exception: " ^ (Print.term_to_string t)
+                "Uncaught exception: " ^ (Print.term_to_string t)
             | e ->
                 raise e
         in
@@ -834,8 +851,11 @@ let run_tactic_on_ps'
                | _ -> rng_call
           else ps.entry_range
         in
-        Err.raise_error (Err.Fatal_UserTacticFailure,
-                            BU.format1 "user tactic failed: `%s`" (texn_to_string e))
+        let open FStar.Pprint in
+        Err.raise_error_doc (Err.Fatal_UserTacticFailure,
+                            [doc_of_string "Tactic failed";
+                             doc_of_string (texn_to_string e);
+                            ])
                           rng
 
 let run_tactic_on_ps

@@ -3880,13 +3880,21 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
       let uu___1 = mk_lid "message_of_issue" in
       let uu___2 =
         FStar_TypeChecker_NBETerm.unary_op nbe_arg_as_issue
-          (fun issue -> nbe_str issue.FStar_Errors.issue_msg) in
+          (fun issue ->
+             let uu___3 =
+               FStar_TypeChecker_NBETerm.e_list
+                 FStar_TypeChecker_NBETerm.e_document in
+             FStar_TypeChecker_NBETerm.embed uu___3 bogus_cbs
+               issue.FStar_Errors.issue_msg) in
       (uu___1, Prims.int_one, Prims.int_zero,
         (unary_op arg_as_issue
            (fun _r ->
               fun issue ->
-                FStar_Syntax_Util.exp_string issue.FStar_Errors.issue_msg)),
-        uu___2) in
+                let uu___3 =
+                  FStar_Syntax_Embeddings.e_list
+                    FStar_Syntax_Embeddings.e_document in
+                embed_simple uu___3 FStar_Compiler_Range_Type.dummyRange
+                  issue.FStar_Errors.issue_msg)), uu___2) in
     let uu___1 =
       let uu___2 =
         let uu___3 = mk_lid "level_of_issue" in
@@ -3966,136 +3974,179 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
                           issue.FStar_Errors.issue_ctx)), uu___10) in
             let uu___9 =
               let uu___10 =
-                let uu___11 = mk_lid "mk_issue" in
-                (uu___11, (Prims.of_int (5)), Prims.int_zero,
-                  (fun psc1 ->
-                     fun univs ->
-                       fun cbs ->
-                         fun args ->
-                           match args with
-                           | (level, uu___12)::(msg, uu___13)::(range,
-                                                                uu___14)::
-                               (number, uu___15)::(context, uu___16)::[] ->
-                               let try_unembed e x =
-                                 FStar_Syntax_Embeddings_Base.try_unembed e x
-                                   FStar_Syntax_Embeddings_Base.id_norm_cb in
-                               let uu___17 =
-                                 let uu___18 =
-                                   try_unembed
-                                     FStar_Syntax_Embeddings.e_string level in
+                let uu___11 = mk_lid "render_issue" in
+                let uu___12 =
+                  FStar_TypeChecker_NBETerm.unary_op nbe_arg_as_issue
+                    (fun issue ->
+                       let uu___13 = FStar_Errors.format_issue issue in
+                       nbe_str uu___13) in
+                (uu___11, Prims.int_one, Prims.int_zero,
+                  (unary_op arg_as_issue
+                     (fun _r ->
+                        fun issue ->
+                          let uu___13 = FStar_Errors.format_issue issue in
+                          FStar_Syntax_Util.exp_string uu___13)), uu___12) in
+              let uu___11 =
+                let uu___12 =
+                  let uu___13 = mk_lid "mk_issue_doc" in
+                  (uu___13, (Prims.of_int (5)), Prims.int_zero,
+                    (fun psc1 ->
+                       fun univs ->
+                         fun cbs ->
+                           fun args ->
+                             match args with
+                             | (level, uu___14)::(msg, uu___15)::(range,
+                                                                  uu___16)::
+                                 (number, uu___17)::(context, uu___18)::[] ->
+                                 let try_unembed e x =
+                                   FStar_Syntax_Embeddings_Base.try_unembed e
+                                     x
+                                     FStar_Syntax_Embeddings_Base.id_norm_cb in
                                  let uu___19 =
-                                   try_unembed
-                                     FStar_Syntax_Embeddings.e_string msg in
-                                 let uu___20 =
+                                   let uu___20 =
+                                     try_unembed
+                                       FStar_Syntax_Embeddings.e_string level in
                                    let uu___21 =
-                                     FStar_Syntax_Embeddings.e_option
-                                       FStar_Syntax_Embeddings.e_range in
-                                   try_unembed uu___21 range in
-                                 let uu___21 =
+                                     let uu___22 =
+                                       FStar_Syntax_Embeddings.e_list
+                                         FStar_Syntax_Embeddings.e_document in
+                                     try_unembed uu___22 msg in
                                    let uu___22 =
-                                     FStar_Syntax_Embeddings.e_option
-                                       FStar_Syntax_Embeddings.e_int in
-                                   try_unembed uu___22 number in
-                                 let uu___22 =
+                                     let uu___23 =
+                                       FStar_Syntax_Embeddings.e_option
+                                         FStar_Syntax_Embeddings.e_range in
+                                     try_unembed uu___23 range in
                                    let uu___23 =
-                                     FStar_Syntax_Embeddings.e_list
-                                       FStar_Syntax_Embeddings.e_string in
-                                   try_unembed uu___23 context in
-                                 (uu___18, uu___19, uu___20, uu___21,
-                                   uu___22) in
-                               (match uu___17 with
-                                | (FStar_Pervasives_Native.Some level1,
-                                   FStar_Pervasives_Native.Some msg1,
-                                   FStar_Pervasives_Native.Some range1,
-                                   FStar_Pervasives_Native.Some number1,
-                                   FStar_Pervasives_Native.Some context1) ->
-                                    let issue =
-                                      let uu___18 =
-                                        FStar_Errors.issue_level_of_string
-                                          level1 in
-                                      let uu___19 =
-                                        option_z_as_option_int number1 in
-                                      {
-                                        FStar_Errors.issue_msg = msg1;
-                                        FStar_Errors.issue_level = uu___18;
-                                        FStar_Errors.issue_range = range1;
-                                        FStar_Errors.issue_number = uu___19;
-                                        FStar_Errors.issue_ctx = context1
-                                      } in
-                                    let uu___18 =
-                                      embed_simple
-                                        FStar_Syntax_Embeddings.e_issue
-                                        psc1.psc_range issue in
-                                    FStar_Pervasives_Native.Some uu___18
-                                | uu___18 -> FStar_Pervasives_Native.None)
-                           | uu___12 -> FStar_Pervasives_Native.None),
-                  (fun univs ->
-                     fun args ->
-                       match args with
-                       | (level, uu___12)::(msg, uu___13)::(range, uu___14)::
-                           (number, uu___15)::(context, uu___16)::[] ->
-                           let try_unembed e x =
-                             FStar_TypeChecker_NBETerm.unembed e bogus_cbs x in
-                           let uu___17 =
-                             let uu___18 =
-                               try_unembed FStar_TypeChecker_NBETerm.e_string
-                                 level in
+                                     let uu___24 =
+                                       FStar_Syntax_Embeddings.e_option
+                                         FStar_Syntax_Embeddings.e_int in
+                                     try_unembed uu___24 number in
+                                   let uu___24 =
+                                     let uu___25 =
+                                       FStar_Syntax_Embeddings.e_list
+                                         FStar_Syntax_Embeddings.e_string in
+                                     try_unembed uu___25 context in
+                                   (uu___20, uu___21, uu___22, uu___23,
+                                     uu___24) in
+                                 (match uu___19 with
+                                  | (FStar_Pervasives_Native.Some level1,
+                                     FStar_Pervasives_Native.Some msg1,
+                                     FStar_Pervasives_Native.Some range1,
+                                     FStar_Pervasives_Native.Some number1,
+                                     FStar_Pervasives_Native.Some context1)
+                                      ->
+                                      let issue =
+                                        let uu___20 =
+                                          FStar_Errors.issue_level_of_string
+                                            level1 in
+                                        let uu___21 =
+                                          option_z_as_option_int number1 in
+                                        {
+                                          FStar_Errors.issue_msg = msg1;
+                                          FStar_Errors.issue_level = uu___20;
+                                          FStar_Errors.issue_range = range1;
+                                          FStar_Errors.issue_number = uu___21;
+                                          FStar_Errors.issue_ctx = context1
+                                        } in
+                                      let uu___20 =
+                                        embed_simple
+                                          FStar_Syntax_Embeddings.e_issue
+                                          psc1.psc_range issue in
+                                      FStar_Pervasives_Native.Some uu___20
+                                  | uu___20 -> FStar_Pervasives_Native.None)
+                             | uu___14 -> FStar_Pervasives_Native.None),
+                    (fun univs ->
+                       fun args ->
+                         match args with
+                         | (level, uu___14)::(msg, uu___15)::(range, uu___16)::
+                             (number, uu___17)::(context, uu___18)::[] ->
+                             let try_unembed e x =
+                               FStar_TypeChecker_NBETerm.unembed e bogus_cbs
+                                 x in
                              let uu___19 =
-                               try_unembed FStar_TypeChecker_NBETerm.e_string
-                                 msg in
-                             let uu___20 =
+                               let uu___20 =
+                                 try_unembed
+                                   FStar_TypeChecker_NBETerm.e_string level in
                                let uu___21 =
-                                 FStar_TypeChecker_NBETerm.e_option
-                                   FStar_TypeChecker_NBETerm.e_range in
-                               try_unembed uu___21 range in
-                             let uu___21 =
+                                 let uu___22 =
+                                   FStar_TypeChecker_NBETerm.e_list
+                                     FStar_TypeChecker_NBETerm.e_document in
+                                 try_unembed uu___22 msg in
                                let uu___22 =
-                                 FStar_TypeChecker_NBETerm.e_option
-                                   FStar_TypeChecker_NBETerm.e_int in
-                               try_unembed uu___22 number in
-                             let uu___22 =
+                                 let uu___23 =
+                                   FStar_TypeChecker_NBETerm.e_option
+                                     FStar_TypeChecker_NBETerm.e_range in
+                                 try_unembed uu___23 range in
                                let uu___23 =
-                                 FStar_TypeChecker_NBETerm.e_list
-                                   FStar_TypeChecker_NBETerm.e_string in
-                               try_unembed uu___23 context in
-                             (uu___18, uu___19, uu___20, uu___21, uu___22) in
-                           (match uu___17 with
-                            | (FStar_Pervasives_Native.Some level1,
-                               FStar_Pervasives_Native.Some msg1,
-                               FStar_Pervasives_Native.Some range1,
-                               FStar_Pervasives_Native.Some number1,
-                               FStar_Pervasives_Native.Some context1) ->
-                                let issue =
-                                  let uu___18 =
-                                    FStar_Errors.issue_level_of_string level1 in
-                                  let uu___19 =
-                                    option_z_as_option_int number1 in
-                                  {
-                                    FStar_Errors.issue_msg = msg1;
-                                    FStar_Errors.issue_level = uu___18;
-                                    FStar_Errors.issue_range = range1;
-                                    FStar_Errors.issue_number = uu___19;
-                                    FStar_Errors.issue_ctx = context1
-                                  } in
-                                let uu___18 =
-                                  FStar_TypeChecker_NBETerm.embed
-                                    FStar_TypeChecker_NBETerm.e_issue
-                                    bogus_cbs issue in
-                                FStar_Pervasives_Native.Some uu___18
-                            | uu___18 -> FStar_Pervasives_Native.None)
-                       | uu___12 -> FStar_Pervasives_Native.None)) in
-              [uu___10] in
+                                 let uu___24 =
+                                   FStar_TypeChecker_NBETerm.e_option
+                                     FStar_TypeChecker_NBETerm.e_int in
+                                 try_unembed uu___24 number in
+                               let uu___24 =
+                                 let uu___25 =
+                                   FStar_TypeChecker_NBETerm.e_list
+                                     FStar_TypeChecker_NBETerm.e_string in
+                                 try_unembed uu___25 context in
+                               (uu___20, uu___21, uu___22, uu___23, uu___24) in
+                             (match uu___19 with
+                              | (FStar_Pervasives_Native.Some level1,
+                                 FStar_Pervasives_Native.Some msg1,
+                                 FStar_Pervasives_Native.Some range1,
+                                 FStar_Pervasives_Native.Some number1,
+                                 FStar_Pervasives_Native.Some context1) ->
+                                  let issue =
+                                    let uu___20 =
+                                      FStar_Errors.issue_level_of_string
+                                        level1 in
+                                    let uu___21 =
+                                      option_z_as_option_int number1 in
+                                    {
+                                      FStar_Errors.issue_msg = msg1;
+                                      FStar_Errors.issue_level = uu___20;
+                                      FStar_Errors.issue_range = range1;
+                                      FStar_Errors.issue_number = uu___21;
+                                      FStar_Errors.issue_ctx = context1
+                                    } in
+                                  let uu___20 =
+                                    FStar_TypeChecker_NBETerm.embed
+                                      FStar_TypeChecker_NBETerm.e_issue
+                                      bogus_cbs issue in
+                                  FStar_Pervasives_Native.Some uu___20
+                              | uu___20 -> FStar_Pervasives_Native.None)
+                         | uu___14 -> FStar_Pervasives_Native.None)) in
+                [uu___12] in
+              uu___10 :: uu___11 in
             uu___8 :: uu___9 in
           uu___6 :: uu___7 in
         uu___4 :: uu___5 in
       uu___2 :: uu___3 in
     uu___ :: uu___1 in
+  let doc_ops =
+    let mk_lid l = FStar_Parser_Const.p2l ["FStar"; "Stubs"; "Pprint"; l] in
+    let uu___ =
+      let uu___1 = mk_lid "arbitrary_string" in
+      let uu___2 =
+        FStar_TypeChecker_NBETerm.unary_op
+          FStar_TypeChecker_NBETerm.arg_as_string
+          (fun str ->
+             let uu___3 = FStar_Pprint.arbitrary_string str in
+             FStar_TypeChecker_NBETerm.embed
+               FStar_TypeChecker_NBETerm.e_document bogus_cbs uu___3) in
+      (uu___1, Prims.int_one, Prims.int_zero,
+        (unary_op arg_as_string
+           (fun r ->
+              fun str ->
+                let uu___3 = FStar_Pprint.arbitrary_string str in
+                embed_simple FStar_Syntax_Embeddings.e_document r uu___3)),
+        uu___2) in
+    [uu___] in
   let strong_steps =
     FStar_Compiler_List.map (as_primitive_step true)
       (FStar_Compiler_List.op_At basic_ops
          (FStar_Compiler_List.op_At bounded_arith_ops
             (FStar_Compiler_List.op_At [reveal_hide]
-               (FStar_Compiler_List.op_At array_ops issue_ops)))) in
+               (FStar_Compiler_List.op_At array_ops
+                  (FStar_Compiler_List.op_At issue_ops doc_ops))))) in
   let weak_steps = FStar_Compiler_List.map (as_primitive_step false) weak_ops in
   FStar_Compiler_Effect.op_Less_Bar prim_from_list
     (FStar_Compiler_List.op_At strong_steps weak_steps)

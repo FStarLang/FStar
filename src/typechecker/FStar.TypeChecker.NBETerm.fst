@@ -484,6 +484,17 @@ let e_issue : embedding FStar.Errors.issue =
     in
     mk_emb' em un (lid_as_typ PC.issue_lid [] []) (SE.emb_typ_of SE.e_issue)  
 
+let e_document : embedding FStar.Pprint.document =
+    let t_document = SE.type_of SE.e_document in
+    let li blob rng = { blob=Dyn.mkdyn blob; lkind = Lazy_doc; ltyp = t_document; rng } in
+    let em cb doc = Lazy (Inl (li doc Range.dummyRange), (Thunk.mk (fun _ -> failwith "Cannot unembed document"))) in
+    let un cb t =
+    match t with
+    | Lazy (Inl { lkind=Lazy_doc; blob }, _) -> Some (Dyn.undyn blob)
+    | _ -> None
+    in
+    mk_emb' em un (lid_as_typ PC.document_lid [] []) (SE.emb_typ_of SE.e_document)
+
 // vconfig, NYI
 let e_vconfig : embedding vconfig =
     let em cb r = failwith "e_vconfig NBE" in

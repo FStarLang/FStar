@@ -125,10 +125,10 @@ let eq_binders env (bs1 bs2:binders) : option (list S.indexed_effect_binder_kind
   else None
 
 let log_ad_hoc_combinator_warning (comb_name:string) (r:Range.range) =
-  log_issue r
+  log_issue_doc r
     (Errors.Warning_Adhoc_IndexedEffect_Combinator,
-     BU.format1 "Combinator %s is not a substitutive indexed effect combinator, \
-                 it is better to make it one if possible for better performance and ease of use" comb_name)
+     [Errors.text (BU.format1 "Combinator %s is not a substitutive indexed effect combinator, \
+                   it is better to make it one if possible for better performance and ease of use" comb_name)])
 
 //
 // Check bind combinator kind for an indexed effect or polymonadic bind
@@ -2697,10 +2697,11 @@ let tc_polymonadic_bind env (m:lident) (n:lident) (p:lident) (ts:S.tscheme)
          eff_name (Print.tscheme_to_string (us, t))
                   (Print.tscheme_to_string (us, k));
 
-  log_issue r (Errors.Warning_BleedingEdge_Feature,
-    BU.format1 "Polymonadic binds (%s in this case) is an experimental feature;\
-      it is subject to some redesign in the future. Please keep us informed (on github etc.) about how you are using it"
-      eff_name);
+  log_issue_doc r (Errors.Warning_BleedingEdge_Feature,
+    [Errors.text <|
+      BU.format1 "Polymonadic binds (%s in this case) is an experimental feature;\
+        it is subject to some redesign in the future. Please keep us informed (on github etc.) about how you are using it"
+        eff_name]);
 
   (us, t), (us, k |> SS.close_univ_vars us), kind
 
@@ -2738,10 +2739,11 @@ let tc_polymonadic_subcomp env0 (m:lident) (n:lident) (ts:S.tscheme) =
          (Print.tscheme_to_string (us, t))
          (Print.tscheme_to_string (us, k));
 
-  log_issue r (Errors.Warning_BleedingEdge_Feature,
-    BU.format1 "Polymonadic subcomp (%s in this case) is an experimental feature;\
-      it is subject to some redesign in the future. Please keep us informed (on github etc.) about how you are using it"
-      combinator_name);
+  log_issue_doc r (Errors.Warning_BleedingEdge_Feature,
+    [Errors.text <|
+      BU.format1 "Polymonadic subcomp (%s in this case) is an experimental feature;\
+        it is subject to some redesign in the future. Please keep us informed (on github etc.) about how you are using it"
+        combinator_name]);
 
 
   (us, t), (us, k |> SS.close_univ_vars us), kind

@@ -6807,7 +6807,7 @@ let (check_has_type :
                   FStar_TypeChecker_Err.expected_expression_of_type env1 t2 e
                     t1 in
                 let uu___1 = FStar_TypeChecker_Env.get_range env1 in
-                FStar_Errors.raise_error uu___ uu___1
+                FStar_Errors.raise_error_doc uu___ uu___1
             | FStar_Pervasives_Native.Some g -> g
 let (check_has_type_maybe_coerce :
   FStar_TypeChecker_Env.env ->

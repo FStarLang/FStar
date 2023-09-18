@@ -62,7 +62,7 @@ let initialize_hints_db : 'uuuuu . Prims.string -> 'uuuuu -> unit =
                    "Malformed JSON hints file: %s; ran without hints"
                    val_filename in
                (FStar_Errors_Codes.Warning_CouldNotReadHints, uu___5) in
-             FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange
+             FStar_Errors.log_issue_text FStar_Compiler_Range_Type.dummyRange
                uu___4
            else ()
        | FStar_Compiler_Hints.UnableToOpen ->
@@ -75,7 +75,7 @@ let initialize_hints_db : 'uuuuu . Prims.string -> 'uuuuu -> unit =
                    "Unable to open hints file: %s; ran without hints"
                    val_filename in
                (FStar_Errors_Codes.Warning_CouldNotReadHints, uu___5) in
-             FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange
+             FStar_Errors.log_issue_text FStar_Compiler_Range_Type.dummyRange
                uu___4
            else ())
 let (finalize_hints_db : Prims.string -> unit) =
@@ -634,13 +634,15 @@ let (query_errors :
            | (msg, error_labels) ->
                let err =
                  let uu___2 =
-                   FStar_Compiler_List.map
-                     (fun uu___3 ->
-                        match uu___3 with
-                        | (uu___4, x, y) ->
-                            let uu___5 = FStar_Errors.get_ctx () in
-                            (FStar_Errors_Codes.Error_Z3SolverError, x, y,
-                              uu___5)) error_labels in
+                   FStar_Compiler_Effect.op_Bar_Greater error_labels
+                     (FStar_Compiler_List.map
+                        (fun uu___3 ->
+                           match uu___3 with
+                           | (uu___4, x, y) ->
+                               let uu___5 = FStar_Errors_Msg.mkmsg x in
+                               let uu___6 = FStar_Errors.get_ctx () in
+                               (FStar_Errors_Codes.Error_Z3SolverError,
+                                 uu___5, y, uu___6))) in
                  {
                    error_reason = msg;
                    error_fuel = (settings.query_fuel);
@@ -686,9 +688,35 @@ let (find_localized_errors :
 let (errors_to_report : query_settings -> FStar_Errors.error Prims.list) =
   fun settings ->
     let format_smt_error msg =
-      FStar_Compiler_Util.format1
-        "SMT solver says:\n\t%s;\n\tNote: 'canceled' or 'resource limits reached' means the SMT query timed out, so you might want to increase the rlimit;\n\t'incomplete quantifiers' means Z3 could not prove the query, so try to spell out your proof out in greater detail, increase fuel or ifuel\n\t'unknown' means Z3 provided no further reason for the proof failing"
-        msg in
+      let d =
+        let uu___ = FStar_Pprint.doc_of_string "SMT solver says:" in
+        let uu___1 =
+          let uu___2 = FStar_Errors_Msg.sublist FStar_Pprint.empty msg in
+          let uu___3 =
+            let uu___4 =
+              let uu___5 = FStar_Pprint.doc_of_string "Note:" in
+              let uu___6 =
+                let uu___7 =
+                  let uu___8 =
+                    FStar_Errors_Msg.text
+                      "'canceled' or 'resource limits reached' means the SMT query timed out, so you might want to increase the rlimit" in
+                  let uu___9 =
+                    let uu___10 =
+                      FStar_Errors_Msg.text
+                        "'incomplete quantifiers' means Z3 could not prove the query, so try to spell out your proof out in greater detail, increase fuel or ifuel" in
+                    let uu___11 =
+                      let uu___12 =
+                        FStar_Errors_Msg.text
+                          "'unknown' means Z3 provided no further reason for the proof failing" in
+                      [uu___12] in
+                    uu___10 :: uu___11 in
+                  uu___8 :: uu___9 in
+                FStar_Errors_Msg.bulleted uu___7 in
+              FStar_Pprint.op_Hat_Hat uu___5 uu___6 in
+            FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline uu___4 in
+          FStar_Pprint.op_Hat_Hat uu___2 uu___3 in
+        FStar_Pprint.op_Hat_Hat uu___ uu___1 in
+      [d] in
     let basic_errors =
       let smt_error =
         let uu___ = FStar_Options.query_stats () in
@@ -696,14 +724,11 @@ let (errors_to_report : query_settings -> FStar_Errors.error Prims.list) =
         then
           let uu___1 =
             let uu___2 =
-              let uu___3 =
-                FStar_Compiler_Effect.op_Bar_Greater settings.query_errors
-                  (FStar_Compiler_List.map error_to_short_string) in
-              FStar_Compiler_Effect.op_Bar_Greater uu___3
-                (FStar_String.concat ";\n\t") in
-            FStar_Compiler_Effect.op_Bar_Greater uu___2 format_smt_error in
-          FStar_Compiler_Effect.op_Bar_Greater uu___1
-            (fun uu___2 -> FStar_Pervasives.Inr uu___2)
+              FStar_Compiler_Effect.op_Bar_Greater settings.query_errors
+                (FStar_Compiler_List.map error_to_short_string) in
+            FStar_Compiler_Effect.op_Bar_Greater uu___2
+              (FStar_Compiler_List.map FStar_Pprint.doc_of_string) in
+          FStar_Compiler_Effect.op_Bar_Greater uu___1 format_smt_error
         else
           (let uu___2 =
              FStar_Compiler_List.fold_left
@@ -732,22 +757,22 @@ let (errors_to_report : query_settings -> FStar_Errors.error Prims.list) =
                settings.query_errors in
            match uu___2 with
            | (incomplete_count, canceled_count, unknown_count) ->
-               FStar_Compiler_Effect.op_Bar_Greater
-                 (match (incomplete_count, canceled_count, unknown_count)
-                  with
-                  | (uu___3, uu___4, uu___5) when
-                      ((uu___4 = Prims.int_zero) && (uu___5 = Prims.int_zero))
-                        && (incomplete_count > Prims.int_zero)
-                      ->
+               (match (incomplete_count, canceled_count, unknown_count) with
+                | (uu___3, uu___4, uu___5) when
+                    ((uu___4 = Prims.int_zero) && (uu___5 = Prims.int_zero))
+                      && (incomplete_count > Prims.int_zero)
+                    ->
+                    FStar_Errors_Msg.mkmsg
                       "The SMT solver could not prove the query. Use --query_stats for more details."
-                  | (uu___3, uu___4, uu___5) when
-                      ((uu___3 = Prims.int_zero) && (uu___5 = Prims.int_zero))
-                        && (canceled_count > Prims.int_zero)
-                      ->
+                | (uu___3, uu___4, uu___5) when
+                    ((uu___3 = Prims.int_zero) && (uu___5 = Prims.int_zero))
+                      && (canceled_count > Prims.int_zero)
+                    ->
+                    FStar_Errors_Msg.mkmsg
                       "The SMT query timed out, you might want to increase the rlimit"
-                  | (uu___3, uu___4, uu___5) ->
-                      "Try with --query_stats to get more details")
-                 (fun uu___3 -> FStar_Pervasives.Inl uu___3)) in
+                | (uu___3, uu___4, uu___5) ->
+                    FStar_Errors_Msg.mkmsg
+                      "Try with --query_stats to get more details")) in
       let uu___ =
         let uu___1 = find_localized_errors settings.query_errors in
         (uu___1, (settings.query_all_labels)) in
@@ -758,11 +783,12 @@ let (errors_to_report : query_settings -> FStar_Errors.error Prims.list) =
       | (FStar_Pervasives_Native.None, (uu___1, msg, rng)::[]) ->
           let uu___2 =
             let uu___3 =
-              let uu___4 = FStar_Errors.get_ctx () in
-              (FStar_Errors_Codes.Error_Z3SolverError, msg, rng, uu___4) in
+              let uu___4 = FStar_Errors_Msg.mkmsg msg in
+              let uu___5 = FStar_Errors.get_ctx () in
+              (FStar_Errors_Codes.Error_Z3SolverError, uu___4, rng, uu___5) in
             [uu___3] in
           FStar_TypeChecker_Err.errors_smt_detail settings.query_env uu___2
-            (FStar_Pervasives.Inl "")
+            []
       | (FStar_Pervasives_Native.None, uu___1) ->
           if settings.query_can_be_split_and_retried
           then FStar_Compiler_Effect.raise SplitQueryAndRetry
@@ -793,8 +819,8 @@ let (errors_to_report : query_settings -> FStar_Errors.error Prims.list) =
                      then
                        let uu___6 =
                          FStar_TypeChecker_Env.get_range settings.query_env in
-                       FStar_TypeChecker_Err.log_issue settings.query_env
-                         uu___6
+                       FStar_TypeChecker_Err.log_issue_text
+                         settings.query_env uu___6
                          (FStar_Errors_Codes.Warning_SplitAndRetryQueries,
                            "The verification condition was to be split into several atomic sub-goals, but this query has multiple sub-goals---the error report may be inaccurate")
                      else ());
@@ -807,13 +833,13 @@ let (errors_to_report : query_settings -> FStar_Errors.error Prims.list) =
                      | (uu___4, msg, rng) ->
                          let uu___5 =
                            let uu___6 =
-                             let uu___7 = FStar_Errors.get_ctx () in
-                             (FStar_Errors_Codes.Error_Z3SolverError, msg,
-                               rng, uu___7) in
+                             let uu___7 = FStar_Errors_Msg.mkmsg msg in
+                             let uu___8 = FStar_Errors.get_ctx () in
+                             (FStar_Errors_Codes.Error_Z3SolverError, uu___7,
+                               rng, uu___8) in
                            [uu___6] in
                          FStar_TypeChecker_Err.errors_smt_detail
-                           settings.query_env uu___5
-                           (FStar_Pervasives.Inl "")))) in
+                           settings.query_env uu___5 []))) in
     (let uu___ = FStar_Options.detail_errors () in
      if uu___
      then
@@ -1763,10 +1789,14 @@ let (report : FStar_TypeChecker_Env.env -> query_settings -> answer -> unit)
                              then
                                let uu___2 =
                                  let uu___3 =
-                                   FStar_Compiler_Util.string_of_int n in
-                                 FStar_Compiler_Util.format1 " (%s times)"
-                                   uu___3 in
-                               Prims.op_Hat m uu___2
+                                   let uu___4 =
+                                     let uu___5 =
+                                       FStar_Compiler_Util.string_of_int n in
+                                     FStar_Compiler_Util.format1
+                                       "Repeated %s times" uu___5 in
+                                   FStar_Pprint.doc_of_string uu___4 in
+                                 [uu___3] in
+                               FStar_Compiler_List.op_At m uu___2
                              else m in
                            (e, m1, r, ctx))) in
              (FStar_Errors.add_errors errs2;
@@ -1781,14 +1811,19 @@ let (report : FStar_TypeChecker_Env.env -> query_settings -> answer -> unit)
                    | uu___2 -> FStar_Compiler_Range_Type.dummyRange in
                  let uu___2 =
                    let uu___3 =
-                     let uu___4 = FStar_Compiler_Util.string_of_int nsuccess in
-                     let uu___5 = FStar_Compiler_Util.string_of_int total_ran in
-                     let uu___6 = FStar_Compiler_Util.string_of_int lo in
-                     let uu___7 = FStar_Compiler_Util.string_of_int hi in
-                     FStar_Compiler_Util.format6
-                       "Query %s failed the quake test, %s out of %s attempts succeded, but the threshold was %s out of %s%s"
-                       name uu___4 uu___5 uu___6 uu___7
-                       (if total_ran < hi then " (early abort)" else "") in
+                     let uu___4 =
+                       let uu___5 =
+                         FStar_Compiler_Util.string_of_int nsuccess in
+                       let uu___6 =
+                         FStar_Compiler_Util.string_of_int total_ran in
+                       let uu___7 = FStar_Compiler_Util.string_of_int lo in
+                       let uu___8 = FStar_Compiler_Util.string_of_int hi in
+                       FStar_Compiler_Util.format6
+                         "Query %s failed the quake test, %s out of %s attempts succeded, but the threshold was %s out of %s%s"
+                         name uu___5 uu___6 uu___7 uu___8
+                         (if total_ran < hi then " (early abort)" else "") in
+                     FStar_Compiler_Effect.op_Less_Bar FStar_Errors_Msg.mkmsg
+                       uu___4 in
                    (FStar_Errors_Codes.Error_QuakeFailed, uu___3) in
                  FStar_TypeChecker_Err.log_issue env rng uu___2)
               else ())
@@ -2014,12 +2049,15 @@ let (do_solve :
                       let uu___3 =
                         let uu___4 =
                           let uu___5 =
-                            FStar_Compiler_List.map
-                              FStar_Pervasives_Native.fst names in
-                          FStar_String.concat "," uu___5 in
-                        FStar_Compiler_Util.format1
-                          "Could not encode the query since F* does not support precise smtencoding of inner let-recs yet (in this case %s)"
-                          uu___4 in
+                            let uu___6 =
+                              FStar_Compiler_List.map
+                                FStar_Pervasives_Native.fst names in
+                            FStar_String.concat "," uu___6 in
+                          FStar_Compiler_Util.format1
+                            "Could not encode the query since F* does not support precise smtencoding of inner let-recs yet (in this case %s)"
+                            uu___5 in
+                        FStar_Compiler_Effect.op_Less_Bar
+                          FStar_Errors_Msg.mkmsg uu___4 in
                       (FStar_Errors_Codes.Error_NonTopRecFunctionNotFullyEncoded,
                         uu___3) in
                     FStar_TypeChecker_Err.log_issue tcenv
@@ -2076,10 +2114,13 @@ let (split_and_solve :
                uu___3 = Prims.int_zero) && retrying in
             if uu___2
             then
+              let uu___3 =
+                let uu___4 =
+                  FStar_Compiler_Effect.op_Less_Bar FStar_Errors_Msg.mkmsg
+                    "The verification condition succeeded after splitting it to localize potential errors, although the original non-split verification condition failed. If you want to rely on splitting queries for verifying your program please use the '--split_queries always' option rather than relying on it implicitly." in
+                (FStar_Errors_Codes.Warning_SplitAndRetryQueries, uu___4) in
               FStar_TypeChecker_Err.log_issue tcenv
-                tcenv.FStar_TypeChecker_Env.range
-                (FStar_Errors_Codes.Warning_SplitAndRetryQueries,
-                  "The verification condition succeeded after splitting it to localize potential errors, although the original non-split verification condition failed. If you want to rely on splitting queries for verifying your program please use the '--split_queries always' option rather than relying on it implicitly.")
+                tcenv.FStar_TypeChecker_Env.range uu___3
             else ()))
 let disable_quake_for : 'a . (unit -> 'a) -> 'a =
   fun f ->
@@ -2129,10 +2170,12 @@ let (solve :
         then
           let uu___1 =
             let uu___2 =
-              let uu___3 = FStar_Syntax_Print.term_to_string q in
-              FStar_Compiler_Util.format1
-                "Q = %s\nA query could not be solved internally, and --no_smt was given"
-                uu___3 in
+              let uu___3 =
+                let uu___4 = FStar_Syntax_Print.term_to_string q in
+                FStar_Compiler_Util.format1
+                  "Q = %s\nA query could not be solved internally, and --no_smt was given"
+                  uu___4 in
+              FStar_Compiler_Effect.op_Less_Bar FStar_Errors_Msg.mkmsg uu___3 in
             (FStar_Errors_Codes.Error_NoSMTButNeeded, uu___2) in
           FStar_TypeChecker_Err.log_issue tcenv
             tcenv.FStar_TypeChecker_Env.range uu___1

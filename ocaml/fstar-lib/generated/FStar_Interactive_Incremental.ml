@@ -362,7 +362,7 @@ let (parse_code : Prims.string -> FStar_Parser_ParseIt.parse_result) =
       FStar_Parser_ParseIt.Incremental uu___1 in
     FStar_Parser_ParseIt.parse uu___
 let (syntax_issue :
-  (FStar_Errors_Codes.raw_error * Prims.string *
+  (FStar_Errors_Codes.raw_error * FStar_Errors_Msg.error_message *
     FStar_Compiler_Range_Type.range) -> FStar_Errors.issue)
   =
   fun uu___ ->

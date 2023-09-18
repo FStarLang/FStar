@@ -225,7 +225,7 @@ val repeat: int -> document -> document
 
 (** {1 Lists and options} *)
 
-(** [concat docs] is the concatenation of the documents in the list [docs]. *)
+(** [concat docs] is the concatenation of the documents in the list [docs] (with ^^). *)
 val concat: list document -> document
 
 (** [separate sep docs] is the concatenation of the documents in the list

@@ -417,6 +417,7 @@ and lazy_kind =
   | Lazy_universe_uvar 
   | Lazy_issue 
   | Lazy_ident 
+  | Lazy_doc 
 and binding =
   | Binding_var of bv 
   | Binding_lid of (FStar_Ident.lident * (univ_names * term' syntax)) 
@@ -1073,6 +1074,8 @@ let (uu___is_Lazy_issue : lazy_kind -> Prims.bool) =
   fun projectee -> match projectee with | Lazy_issue -> true | uu___ -> false
 let (uu___is_Lazy_ident : lazy_kind -> Prims.bool) =
   fun projectee -> match projectee with | Lazy_ident -> true | uu___ -> false
+let (uu___is_Lazy_doc : lazy_kind -> Prims.bool) =
+  fun projectee -> match projectee with | Lazy_doc -> true | uu___ -> false
 let (uu___is_Binding_var : binding -> Prims.bool) =
   fun projectee ->
     match projectee with | Binding_var _0 -> true | uu___ -> false

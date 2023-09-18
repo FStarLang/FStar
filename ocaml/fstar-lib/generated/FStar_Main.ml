@@ -291,6 +291,8 @@ let (lazy_chooser :
           FStar_Syntax_Util.exp_string "((universe_uvar))"
       | FStar_Syntax_Syntax.Lazy_issue ->
           FStar_Syntax_Util.exp_string "((issue))"
+      | FStar_Syntax_Syntax.Lazy_doc ->
+          FStar_Syntax_Util.exp_string "((document))"
       | FStar_Syntax_Syntax.Lazy_ident ->
           FStar_Syntax_Util.exp_string "((ident))"
       | FStar_Syntax_Syntax.Lazy_embedding (uu___, t) -> FStar_Thunk.force t

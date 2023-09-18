@@ -571,7 +571,7 @@ let (json_of_issue : FStar_Errors.issue -> FStar_Json.json) =
         let uu___2 =
           let uu___3 =
             let uu___4 =
-              let uu___5 = FStar_Errors.issue_message issue in
+              let uu___5 = FStar_Errors.format_issue' false issue in
               FStar_Json.JsonStr uu___5 in
             ("message", uu___4) in
           let uu___4 =

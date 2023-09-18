@@ -82,7 +82,7 @@ let tc_tycon (env:env_t)     (* environment that contains all mutually defined t
          let valid_type = (U.is_eqtype_no_unrefine t && not (s.sigquals |> List.contains Noeq) && not (s.sigquals |> List.contains Unopteq)) ||
                           (teq_nosmt_force env t t_type) in
          if not valid_type then
-             raise_error (Errors.Error_InductiveAnnotNotAType,
+             raise_error_text (Errors.Error_InductiveAnnotNotAType,
                           (BU.format2 "Type annotation %s for inductive %s is not Type or eqtype, or it is eqtype but contains noeq/unopteq qualifiers"
                                                 (Print.term_to_string t)
                                                 (Ident.string_of_lid tc))) s.sigrng;

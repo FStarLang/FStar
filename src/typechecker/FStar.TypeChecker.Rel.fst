@@ -5220,7 +5220,7 @@ let check_implicit_solution_and_discharge_guard env
                   imp_tm must_tot in
 
               match get_subtyping_predicate env k' uvar_ty with
-              | None -> raise_error (Err.expected_expression_of_type env uvar_ty imp_tm k') imp_tm.pos
+              | None -> raise_error_doc (Err.expected_expression_of_type env uvar_ty imp_tm k') imp_tm.pos
               | Some f ->
                 {Env.conj_guard (Env.apply_guard f imp_tm) g with guard_f=Trivial}
             end

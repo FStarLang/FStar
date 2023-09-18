@@ -3211,6 +3211,13 @@ let ghost_to_pure_lcomp2 env (lc1, lc2) =
        then ghost_to_pure_lcomp env lc1, lc2
        else lc1, lc2
 
+let term_to_doc env t =
+  let t =
+    try normalize [AllowUnboundUniverses] env t
+    with e -> Errors.log_issue t.pos (Errors.Warning_NormalizationFailure, (BU.format1 "Normalization failed with error %s\n" (BU.message_of_exn e))) ; t
+  in
+  FStar.Syntax.Print.Pretty.term_to_doc' (DsEnv.set_current_module env.dsenv env.curmodule) t
+
 let term_to_string env t =
   let t =
     try normalize [AllowUnboundUniverses] env t

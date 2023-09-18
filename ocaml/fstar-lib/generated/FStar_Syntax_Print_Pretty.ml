@@ -4,14 +4,21 @@ let (rfrac : FStar_BaseTypes.float) =
 let (width : Prims.int) = (Prims.of_int (100))
 let (pp : FStar_Pprint.document -> Prims.string) =
   fun d -> FStar_Pprint.pretty_string rfrac width d
-let (term_to_string' :
-  FStar_Syntax_DsEnv.env -> FStar_Syntax_Syntax.term -> Prims.string) =
+let (term_to_doc' :
+  FStar_Syntax_DsEnv.env -> FStar_Syntax_Syntax.term -> FStar_Pprint.document)
+  =
   fun env ->
     fun tm ->
       FStar_GenSym.with_frozen_gensym
         (fun uu___ ->
            let e = FStar_Syntax_Resugar.resugar_term' env tm in
-           let d = FStar_Parser_ToDocument.term_to_document e in pp d)
+           FStar_Parser_ToDocument.term_to_document e)
+let (term_to_string' :
+  FStar_Syntax_DsEnv.env -> FStar_Syntax_Syntax.term -> Prims.string) =
+  fun env ->
+    fun tm ->
+      FStar_GenSym.with_frozen_gensym
+        (fun uu___ -> let d = term_to_doc' env tm in pp d)
 let (comp_to_string' :
   FStar_Syntax_DsEnv.env -> FStar_Syntax_Syntax.comp -> Prims.string) =
   fun env ->
@@ -31,12 +38,16 @@ let (sigelt_to_string' :
            | FStar_Pervasives_Native.None -> ""
            | FStar_Pervasives_Native.Some d ->
                let d1 = FStar_Parser_ToDocument.decl_to_document d in pp d1)
-let (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
+let (term_to_doc : FStar_Syntax_Syntax.term -> FStar_Pprint.document) =
   fun tm ->
     FStar_GenSym.with_frozen_gensym
       (fun uu___ ->
          let e = FStar_Syntax_Resugar.resugar_term tm in
-         let d = FStar_Parser_ToDocument.term_to_document e in pp d)
+         FStar_Parser_ToDocument.term_to_document e)
+let (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
+  fun tm ->
+    FStar_GenSym.with_frozen_gensym
+      (fun uu___ -> let d = term_to_doc tm in pp d)
 let (comp_to_string : FStar_Syntax_Syntax.comp -> Prims.string) =
   fun c ->
     FStar_GenSym.with_frozen_gensym

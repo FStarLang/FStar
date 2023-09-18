@@ -974,11 +974,12 @@ let encode_top_level_let :
               FStar.TypeChecker.Err.add_errors
                 env.tcenv
                 [(Errors.Warning_DefinitionNotTranslated,
-                  BU.format3
+                  // FIXME
+                  [Errors.text <| BU.format3
                     "Definitions of inner let-rec%s %s and %s enclosing top-level letbinding are not encoded to the solver, you will only be able to reason with their types"
                     (if plural then "s" else "")
                     (List.map fst names |> String.concat ",")
-                    (if plural then "their" else "its"),
+                    (if plural then "their" else "its")],
                   r,
                   Errors.get_ctx () // TODO: fix this, leaking abstraction
                   )];

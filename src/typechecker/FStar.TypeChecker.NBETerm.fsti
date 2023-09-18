@@ -263,6 +263,7 @@ val e_any    : embedding t
 val mk_any_emb : t -> embedding t
 val e_range  : embedding Range.range
 val e_issue  : embedding FStar.Errors.issue
+val e_document : embedding FStar.Pprint.document
 val e_vconfig  : embedding vconfig
 val e_norm_step : embedding Pervasives.norm_step
 val e_list   : embedding 'a -> embedding (list 'a)

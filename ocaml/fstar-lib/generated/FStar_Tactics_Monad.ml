@@ -243,14 +243,7 @@ let run_safe :
       then run t ps
       else
         (try (fun uu___2 -> match () with | () -> run t ps) ()
-         with
-         | FStar_Errors.Err (uu___3, msg, uu___4) ->
-             FStar_Tactics_Result.Failed
-               ((FStar_Tactics_Common.TacticFailure msg), ps)
-         | FStar_Errors.Error (uu___3, msg, uu___4, uu___5) ->
-             FStar_Tactics_Result.Failed
-               ((FStar_Tactics_Common.TacticFailure msg), ps)
-         | e -> FStar_Tactics_Result.Failed (e, ps))
+         with | uu___2 -> FStar_Tactics_Result.Failed (uu___2, ps))
 let ret : 'a . 'a -> 'a tac =
   fun x -> mk_tac (fun ps -> FStar_Tactics_Result.Success (x, ps))
 let bind : 'a 'b . 'a tac -> ('a -> 'b tac) -> 'b tac =
@@ -358,12 +351,14 @@ let trytac_exn : 'a . 'a tac -> 'a FStar_Pervasives_Native.option tac =
          | FStar_Errors.Err (uu___1, msg, uu___2) ->
              (log ps
                 (fun uu___4 ->
-                   FStar_Compiler_Util.print1 "trytac_exn error: (%s)" msg);
+                   let uu___5 = FStar_Errors_Msg.rendermsg msg in
+                   FStar_Compiler_Util.print1 "trytac_exn error: (%s)" uu___5);
               FStar_Tactics_Result.Success (FStar_Pervasives_Native.None, ps))
          | FStar_Errors.Error (uu___1, msg, uu___2, uu___3) ->
              (log ps
                 (fun uu___5 ->
-                   FStar_Compiler_Util.print1 "trytac_exn error: (%s)" msg);
+                   let uu___6 = FStar_Errors_Msg.rendermsg msg in
+                   FStar_Compiler_Util.print1 "trytac_exn error: (%s)" uu___6);
               FStar_Tactics_Result.Success (FStar_Pervasives_Native.None, ps)))
 let rec mapM : 'a 'b . ('a -> 'b tac) -> 'a Prims.list -> 'b Prims.list tac =
   fun f ->

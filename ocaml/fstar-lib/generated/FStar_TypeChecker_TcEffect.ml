@@ -211,11 +211,15 @@ let (log_ad_hoc_combinator_warning :
     fun r ->
       let uu___ =
         let uu___1 =
-          FStar_Compiler_Util.format1
-            "Combinator %s is not a substitutive indexed effect combinator, it is better to make it one if possible for better performance and ease of use"
-            comb_name in
+          let uu___2 =
+            let uu___3 =
+              FStar_Compiler_Util.format1
+                "Combinator %s is not a substitutive indexed effect combinator, it is better to make it one if possible for better performance and ease of use"
+                comb_name in
+            FStar_Errors_Msg.text uu___3 in
+          [uu___2] in
         (FStar_Errors_Codes.Warning_Adhoc_IndexedEffect_Combinator, uu___1) in
-      FStar_Errors.log_issue r uu___
+      FStar_Errors.log_issue_doc r uu___
 let (bind_combinator_kind :
   FStar_TypeChecker_Env.env ->
     FStar_Ident.lident ->
@@ -10262,12 +10266,17 @@ let (tc_polymonadic_bind :
                                   else ());
                                  (let uu___7 =
                                     let uu___8 =
-                                      FStar_Compiler_Util.format1
-                                        "Polymonadic binds (%s in this case) is an experimental feature;it is subject to some redesign in the future. Please keep us informed (on github etc.) about how you are using it"
-                                        eff_name in
+                                      let uu___9 =
+                                        let uu___10 =
+                                          FStar_Compiler_Util.format1
+                                            "Polymonadic binds (%s in this case) is an experimental feature;it is subject to some redesign in the future. Please keep us informed (on github etc.) about how you are using it"
+                                            eff_name in
+                                        FStar_Compiler_Effect.op_Less_Bar
+                                          FStar_Errors_Msg.text uu___10 in
+                                      [uu___9] in
                                     (FStar_Errors_Codes.Warning_BleedingEdge_Feature,
                                       uu___8) in
-                                  FStar_Errors.log_issue r uu___7);
+                                  FStar_Errors.log_issue_doc r uu___7);
                                  (let uu___7 =
                                     let uu___8 =
                                       FStar_Compiler_Effect.op_Bar_Greater k
@@ -10356,12 +10365,17 @@ let (tc_polymonadic_subcomp :
                                 else ());
                                (let uu___7 =
                                   let uu___8 =
-                                    FStar_Compiler_Util.format1
-                                      "Polymonadic subcomp (%s in this case) is an experimental feature;it is subject to some redesign in the future. Please keep us informed (on github etc.) about how you are using it"
-                                      combinator_name in
+                                    let uu___9 =
+                                      let uu___10 =
+                                        FStar_Compiler_Util.format1
+                                          "Polymonadic subcomp (%s in this case) is an experimental feature;it is subject to some redesign in the future. Please keep us informed (on github etc.) about how you are using it"
+                                          combinator_name in
+                                      FStar_Compiler_Effect.op_Less_Bar
+                                        FStar_Errors_Msg.text uu___10 in
+                                    [uu___9] in
                                   (FStar_Errors_Codes.Warning_BleedingEdge_Feature,
                                     uu___8) in
-                                FStar_Errors.log_issue r uu___7);
+                                FStar_Errors.log_issue_doc r uu___7);
                                (let uu___7 =
                                   let uu___8 =
                                     FStar_Compiler_Effect.op_Bar_Greater k

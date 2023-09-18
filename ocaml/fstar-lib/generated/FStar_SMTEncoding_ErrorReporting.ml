@@ -730,7 +730,7 @@ let (label_goals :
                            q1.FStar_SMTEncoding_Term.rng in
                        (labels2, uu___2)) in
             (FStar_Compiler_Effect.op_Colon_Equals __ctr Prims.int_zero;
-             aux "assertion failed" FStar_Pervasives_Native.None
+             aux "Assertion failed" FStar_Pervasives_Native.None
                FStar_Pervasives_Native.None [] q)
 let (detail_errors :
   Prims.bool ->

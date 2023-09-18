@@ -105,10 +105,11 @@ let err_unexpected_eff env t ty f0 f1 =
                         (eff_to_string f1))
 
 let err_cannot_extract_effect (l:lident) (r:Range.range) (reason:string) (ctxt:string) =
-  Errors.raise_error
+  Errors.raise_error_doc
     (Errors.Fatal_UnexpectedEffect,
+     [Errors.text <|
      BU.format3 "Cannot extract effect %s because %s (when extracting %s)"
-       (string_of_lid l) reason ctxt) r
+       (string_of_lid l) reason ctxt]) r
 
 (***********************************************************************)
 (* Translating an effect lid to an e_tag = {E_PURE, E_ERASABLE, E_IMPURE} *)
@@ -515,7 +516,7 @@ let maybe_eta_expand_coercion g expect e =
 let apply_coercion pos (g:uenv) (e:mlexpr) (ty:mlty) (expect:mlty) : mlexpr =
     if Util.codegen_fsharp()
     then //magics are not always sound in F#; warn
-        FStar.Errors.log_issue pos
+        FStar.Errors.log_issue_text pos
           (Errors.Warning_NoMagicInFSharp,
            BU.format2
              "Inserted an unsafe type coercion in generated code from %s to %s; this may be unsound in F#"

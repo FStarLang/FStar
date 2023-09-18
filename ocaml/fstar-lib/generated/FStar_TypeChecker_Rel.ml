@@ -14540,7 +14540,7 @@ let (check_implicit_solution_and_discharge_guard :
                                       let uu___6 =
                                         FStar_TypeChecker_Err.expected_expression_of_type
                                           env1 uvar_ty imp_tm1 k' in
-                                      FStar_Errors.raise_error uu___6
+                                      FStar_Errors.raise_error_doc uu___6
                                         imp_tm1.FStar_Syntax_Syntax.pos
                                   | FStar_Pervasives_Native.Some f ->
                                       let uu___6 =

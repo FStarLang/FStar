@@ -293,15 +293,15 @@ let cache_file_name =
         && (not (BU.file_exists expected_cache_file) //wrong spot ... complain
             || not (BU.paths_to_same_file path expected_cache_file))
         then
-            FStar.Errors.log_issue
+            FStar.Errors.log_issue_doc
                 Range.dummyRange
-                (FStar.Errors.Warning_UnexpectedCheckedFile,
-                    BU.format3 "Did not expect %s to be already checked, \
+                (FStar.Errors.Warning_UnexpectedCheckedFile, [
+                    Errors.Msg.text <| BU.format3 "Did not expect %s to be already checked, \
                                 but found it in an unexpected location %s \
                                 instead of %s"
                                 mname
                                 path
-                                (Options.prepend_cache_dir cache_fn));
+                                (Options.prepend_cache_dir cache_fn)]);
 
         (* This expression morally just returns [path], but prefers
          * the path in [expected_cache_file] is possible to give
@@ -493,10 +493,10 @@ let namespace_of_lid l =
 let check_module_declaration_against_filename (lid: lident) (filename: string): unit =
   let k' = lowercase_join_longident lid true in
   if String.lowercase (must (check_and_strip_suffix (basename filename))) <> k' then
-    FStar.Errors.log_issue (range_of_lid lid)
-      (Errors.Error_ModuleFileNameMismatch, (Util.format2 "The module declaration \"module %s\" \
+    FStar.Errors.log_issue_doc (range_of_lid lid)
+      (Errors.Error_ModuleFileNameMismatch, [Errors.Msg.text (Util.format2 "The module declaration \"module %s\" \
          found in file %s does not match its filename. Dependencies will be \
-         incorrect and the module will not be verified.\n" (string_of_lid lid true) filename))
+         incorrect and the module will not be verified." (string_of_lid lid true) filename)])
 
 exception Exit
 
@@ -564,10 +564,11 @@ let enter_namespace
         if implicit_open &&
            suffix_exists suffix_filename
         then let str = suffix_filename |> must |> intf_and_impl_to_string in
-             FStar.Errors.log_issue Range.dummyRange
+             FStar.Errors.log_issue_doc Range.dummyRange
                (Errors.Warning_UnexpectedFile,
+                [Errors.text <|
                 BU.format4 "Implicitly opening %s namespace shadows (%s -> %s), rename %s to \
-                  avoid conflicts" prefix suffix str str)
+                  avoid conflicts" prefix suffix str str])
       end;
 
       let filename = must (smap_try_find original_map k) in
@@ -1393,7 +1394,7 @@ let collect (all_cmd_line_files: list file_name)
         match FStar.Options.find_file fn with
         | None ->
           Errors.raise_err (Errors.Fatal_ModuleOrFileNotFound,
-                            Util.format1 "File %s could not be found\n" fn)
+                            Util.format1 "File %s could not be found" fn)
         | Some fn -> fn) in
   (* The dependency graph; keys are lowercased module names, values = list of
    * lowercased module names this file depends on. *)

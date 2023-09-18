@@ -577,23 +577,34 @@ let (interleave_module :
                            let a1 = FStar_Parser_AST.Module (l, impls2) in
                            (match remaining_iface_vals with
                             | uu___3::uu___4 when expect_complete_modul ->
-                                let err =
-                                  let uu___5 =
-                                    FStar_Compiler_List.map
-                                      FStar_Parser_AST.decl_to_string
-                                      remaining_iface_vals in
-                                  FStar_Compiler_Effect.op_Bar_Greater uu___5
-                                    (FStar_String.concat "\n\t") in
+                                let remaining =
+                                  FStar_Compiler_List.map
+                                    FStar_Parser_AST.decl_to_string
+                                    remaining_iface_vals in
                                 let uu___5 =
                                   let uu___6 =
-                                    let uu___7 = FStar_Ident.string_of_lid l in
-                                    FStar_Compiler_Util.format2
-                                      "Some interface elements were not implemented by module %s:\n\t%s"
-                                      uu___7 err in
+                                    let uu___7 =
+                                      let uu___8 =
+                                        let uu___9 =
+                                          let uu___10 =
+                                            FStar_Ident.string_of_lid l in
+                                          FStar_Compiler_Util.format1
+                                            "Some interface elements were not implemented by module %s:"
+                                            uu___10 in
+                                        FStar_Errors_Msg.text uu___9 in
+                                      let uu___9 =
+                                        let uu___10 =
+                                          FStar_Compiler_List.map
+                                            FStar_Pprint.doc_of_string
+                                            remaining in
+                                        FStar_Errors_Msg.sublist
+                                          FStar_Pprint.empty uu___10 in
+                                      FStar_Pprint.op_Hat_Hat uu___8 uu___9 in
+                                    [uu___7] in
                                   (FStar_Errors_Codes.Fatal_InterfaceNotImplementedByModule,
                                     uu___6) in
                                 let uu___6 = FStar_Ident.range_of_lid l in
-                                FStar_Errors.raise_error uu___5 uu___6
+                                FStar_Errors.raise_error_doc uu___5 uu___6
                             | uu___3 ->
                                 ((let uu___5 =
                                     let uu___6 = FStar_Ident.string_of_lid l in

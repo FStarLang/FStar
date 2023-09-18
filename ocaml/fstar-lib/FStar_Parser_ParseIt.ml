@@ -5,6 +5,7 @@ open Lexing
 open FStar_Sedlexing
 open FStar_Errors_Codes
 module Codes = FStar_Errors_Codes
+module Msg = FStar_Errors_Msg
 
 type filename = string
 
@@ -97,7 +98,7 @@ type parse_frag =
     | Incremental of input_frag
     | Fragment of input_frag
 
-type parse_error = (Codes.raw_error * string * FStar_Compiler_Range.range)
+type parse_error = (Codes.raw_error * Msg.error_message * FStar_Compiler_Range.range)
 
 
 type code_fragment = {
@@ -142,7 +143,7 @@ let parse fn =
   let err_of_parse_error () =
       let pos = lexbuf.cur_p in
       Fatal_SyntaxError,
-      "Syntax error",
+      Msg.mkmsg "Syntax error",
       range_of_positions pos pos
   in
   let parse_incremental_decls () =

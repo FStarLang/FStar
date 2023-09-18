@@ -148,12 +148,17 @@ let err_cannot_extract_effect :
         fun ctxt ->
           let uu___ =
             let uu___1 =
-              let uu___2 = FStar_Ident.string_of_lid l in
-              FStar_Compiler_Util.format3
-                "Cannot extract effect %s because %s (when extracting %s)"
-                uu___2 reason ctxt in
+              let uu___2 =
+                let uu___3 =
+                  let uu___4 = FStar_Ident.string_of_lid l in
+                  FStar_Compiler_Util.format3
+                    "Cannot extract effect %s because %s (when extracting %s)"
+                    uu___4 reason ctxt in
+                FStar_Compiler_Effect.op_Less_Bar FStar_Errors_Msg.text
+                  uu___3 in
+              [uu___2] in
             (FStar_Errors_Codes.Fatal_UnexpectedEffect, uu___1) in
-          FStar_Errors.raise_error uu___ r
+          FStar_Errors.raise_error_doc uu___ r
 let (effect_as_etag :
   FStar_Extraction_ML_UEnv.uenv ->
     FStar_Ident.lident -> FStar_Extraction_ML_Syntax.e_tag)
@@ -774,7 +779,7 @@ let (apply_coercion :
                      "Inserted an unsafe type coercion in generated code from %s to %s; this may be unsound in F#"
                      uu___4 uu___5 in
                  (FStar_Errors_Codes.Warning_NoMagicInFSharp, uu___3) in
-               FStar_Errors.log_issue pos uu___2
+               FStar_Errors.log_issue_text pos uu___2
              else ());
             (let mk_fun binder body =
                match body.FStar_Extraction_ML_Syntax.expr with

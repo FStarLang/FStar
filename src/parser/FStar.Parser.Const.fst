@@ -556,4 +556,5 @@ let sealed_lid      = p2l ["FStar"; "Sealed"; "sealed"]
 let seal_lid        = p2l ["FStar"; "Sealed"; "seal"]
 let unseal_lid      = p2l ["FStar"; "Tactics"; "Unseal"; "unseal"]
 
+let document_lid = p2l ["FStar"; "Stubs"; "Pprint"; "document"]
 let issue_lid = p2l ["FStar"; "Issue"; "issue"]

@@ -27,9 +27,13 @@ let rfrac = float_of_string "1.0"
 let width = 100
 let pp d = Pp.pretty_string rfrac width d
 
-let term_to_string' env (tm:term) : string = GenSym.with_frozen_gensym (fun () ->
+let term_to_doc' env (tm:term) : Pprint.document = GenSym.with_frozen_gensym (fun () ->
   let e = Resugar.resugar_term' env tm in
-  let d = ToDocument.term_to_document e in
+  ToDocument.term_to_document e
+)
+
+let term_to_string' env (tm:term) : string = GenSym.with_frozen_gensym (fun () ->
+  let d = term_to_doc' env tm in
   pp d
 )
 
@@ -51,9 +55,13 @@ let sigelt_to_string' env (se:sigelt) : string = GenSym.with_frozen_gensym (fun 
 of the above so we can reuse the empty_env created at module
 load time for DsEnv. Otherwise we need to create another empty
 DsEnv.env here. *)
-let term_to_string (tm:term) : string = GenSym.with_frozen_gensym (fun () ->
+let term_to_doc (tm:term) : Pprint.document = GenSym.with_frozen_gensym (fun () ->
   let e = Resugar.resugar_term tm in
-  let d = ToDocument.term_to_document e in
+  ToDocument.term_to_document e
+)
+
+let term_to_string (tm:term) : string = GenSym.with_frozen_gensym (fun () ->
+  let d = term_to_doc tm in
   pp d
 )
 

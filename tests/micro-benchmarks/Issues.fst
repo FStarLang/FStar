@@ -3,12 +3,14 @@ open FStar.Issue
 module T = FStar.Tactics.V2
 // (* This test exercises the reflection of FStar.Issue *)
 
-let print_issue (i:issue) : string = message_of_issue i
+let print_issue (i:issue) : _ = message_of_issue i
+
 let sample_range = range_of print_issue
 let test_issue = mk_issue "Error" "Test" (Some sample_range)
                           (Some 17) ["this"; "context"]
 let test = 
-  assert (message_of_issue test_issue == "Test")
+  (* Not checking the actual message... it's a doc *)
+  assert (List.length (message_of_issue test_issue) = 1)
     by T.(compute(); trefl(); qed());
   assert (level_of_issue test_issue == "Error")
     by T.(compute(); trefl(); qed());
