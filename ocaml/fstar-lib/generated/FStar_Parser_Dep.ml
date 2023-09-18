@@ -539,12 +539,17 @@ let (cache_file_name : Prims.string -> Prims.string) =
           then
             let uu___3 =
               let uu___4 =
-                let uu___5 = FStar_Options.prepend_cache_dir cache_fn in
-                FStar_Compiler_Util.format3
-                  "Did not expect %s to be already checked, but found it in an unexpected location %s instead of %s"
-                  mname path uu___5 in
+                let uu___5 =
+                  let uu___6 =
+                    let uu___7 = FStar_Options.prepend_cache_dir cache_fn in
+                    FStar_Compiler_Util.format3
+                      "Did not expect %s to be already checked, but found it in an unexpected location %s instead of %s"
+                      mname path uu___7 in
+                  FStar_Compiler_Effect.op_Less_Bar FStar_Errors_Msg.text
+                    uu___6 in
+                [uu___5] in
               (FStar_Errors_Codes.Warning_UnexpectedCheckedFile, uu___4) in
-            FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange
+            FStar_Errors.log_issue_doc FStar_Compiler_Range_Type.dummyRange
               uu___3
           else ());
          (let uu___2 =
@@ -866,12 +871,16 @@ let (check_module_declaration_against_filename :
         let uu___1 = FStar_Ident.range_of_lid lid in
         let uu___2 =
           let uu___3 =
-            let uu___4 = string_of_lid lid true in
-            FStar_Compiler_Util.format2
-              "The module declaration \"module %s\" found in file %s does not match its filename. Dependencies will be incorrect and the module will not be verified.\n"
-              uu___4 filename in
+            let uu___4 =
+              let uu___5 =
+                let uu___6 = string_of_lid lid true in
+                FStar_Compiler_Util.format2
+                  "The module declaration \"module %s\" found in file %s does not match its filename. Dependencies will be incorrect and the module will not be verified."
+                  uu___6 filename in
+              FStar_Errors_Msg.text uu___5 in
+            [uu___4] in
           (FStar_Errors_Codes.Error_ModuleFileNameMismatch, uu___3) in
-        FStar_Errors.log_issue uu___1 uu___2
+        FStar_Errors.log_issue_doc uu___1 uu___2
       else ()
 exception Exit 
 let (uu___is_Exit : Prims.exn -> Prims.bool) =
@@ -961,11 +970,16 @@ let (enter_namespace :
                            intf_and_impl_to_string in
                        let uu___3 =
                          let uu___4 =
-                           FStar_Compiler_Util.format4
-                             "Implicitly opening %s namespace shadows (%s -> %s), rename %s to avoid conflicts"
-                             prefix1 suffix str str in
+                           let uu___5 =
+                             let uu___6 =
+                               FStar_Compiler_Util.format4
+                                 "Implicitly opening %s namespace shadows (%s -> %s), rename %s to avoid conflicts"
+                                 prefix1 suffix str str in
+                             FStar_Compiler_Effect.op_Less_Bar
+                               FStar_Errors_Msg.text uu___6 in
+                           [uu___5] in
                          (FStar_Errors_Codes.Warning_UnexpectedFile, uu___4) in
-                       FStar_Errors.log_issue
+                       FStar_Errors.log_issue_doc
                          FStar_Compiler_Range_Type.dummyRange uu___3
                      else ());
                     (let filename =
@@ -2048,7 +2062,7 @@ let (collect :
                     let uu___1 =
                       let uu___2 =
                         FStar_Compiler_Util.format1
-                          "File %s could not be found\n" fn in
+                          "File %s could not be found" fn in
                       (FStar_Errors_Codes.Fatal_ModuleOrFileNotFound, uu___2) in
                     FStar_Errors.raise_err uu___1
                 | FStar_Pervasives_Native.Some fn1 -> fn1)) in

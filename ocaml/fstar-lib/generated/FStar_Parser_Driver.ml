@@ -39,7 +39,7 @@ let (parse_fragment : FStar_Parser_ParseIt.input_frag -> fragment) =
     | FStar_Parser_ParseIt.IncrementalFragment (decls, uu___1, uu___2) ->
         DeclsWithContent decls
     | FStar_Parser_ParseIt.ParseError (e, msg, r) ->
-        FStar_Errors.raise_error (e, msg) r
+        FStar_Errors.raise_error_doc (e, msg) r
     | FStar_Parser_ParseIt.Term uu___1 ->
         failwith
           "Impossible: parsing a Toplevel always results in an ASTFragment"
@@ -60,7 +60,7 @@ let (parse_file :
         FStar_Errors.raise_error
           (FStar_Errors_Codes.Fatal_ModuleExpected, msg) r
     | FStar_Parser_ParseIt.ParseError (e, msg, r) ->
-        FStar_Errors.raise_error (e, msg) r
+        FStar_Errors.raise_error_doc (e, msg) r
     | FStar_Parser_ParseIt.Term uu___1 ->
         failwith
           "Impossible: parsing a Filename always results in an ASTFragment"

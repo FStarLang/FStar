@@ -113,7 +113,8 @@ let (tc_tycon :
                                                   uu___9 uu___10 in
                                               (FStar_Errors_Codes.Error_InductiveAnnotNotAType,
                                                 uu___8) in
-                                            FStar_Errors.raise_error uu___7
+                                            FStar_Errors.raise_error_text
+                                              uu___7
                                               s.FStar_Syntax_Syntax.sigrng)
                                          else ();
                                          (let usubst1 =

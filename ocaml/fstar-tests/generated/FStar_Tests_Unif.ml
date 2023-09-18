@@ -123,7 +123,8 @@ let (should_fail :
           ()
       with
       | FStar_Errors.Error (e, msg, r, _ctx) ->
-          FStar_Compiler_Util.print1 "%s\n" msg
+          let uu___1 = FStar_Errors_Msg.rendermsg msg in
+          FStar_Compiler_Util.print1 "%s\n" uu___1
 let (unify' : Prims.string -> Prims.string -> unit) =
   fun x ->
     fun y ->

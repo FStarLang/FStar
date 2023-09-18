@@ -632,15 +632,21 @@ let (check_must_erase_attribute :
                               let uu___3 =
                                 let uu___4 =
                                   let uu___5 =
-                                    FStar_Syntax_Print.fv_to_string lbname in
-                                  let uu___6 =
-                                    FStar_Syntax_Print.fv_to_string lbname in
-                                  FStar_Compiler_Util.format2
-                                    "Values of type `%s` will be erased during extraction, but its interface hides this fact. Add the `must_erase_for_extraction` attribute to the `val %s` declaration for this symbol in the interface"
-                                    uu___5 uu___6 in
+                                    let uu___6 =
+                                      let uu___7 =
+                                        FStar_Syntax_Print.fv_to_string
+                                          lbname in
+                                      let uu___8 =
+                                        FStar_Syntax_Print.fv_to_string
+                                          lbname in
+                                      FStar_Compiler_Util.format2
+                                        "Values of type `%s` will be erased during extraction, but its interface hides this fact. Add the `must_erase_for_extraction` attribute to the `val %s` declaration for this symbol in the interface"
+                                        uu___7 uu___8 in
+                                    FStar_Errors_Msg.text uu___6 in
+                                  [uu___5] in
                                 (FStar_Errors_Codes.Error_MustEraseMissing,
                                   uu___4) in
-                              FStar_Errors.log_issue uu___2 uu___3
+                              FStar_Errors.log_issue_doc uu___2 uu___3
                             else
                               if has_attr && (Prims.op_Negation must_erase)
                               then
@@ -649,13 +655,18 @@ let (check_must_erase_attribute :
                                  let uu___4 =
                                    let uu___5 =
                                      let uu___6 =
-                                       FStar_Syntax_Print.fv_to_string lbname in
-                                     FStar_Compiler_Util.format1
-                                       "Values of type `%s` cannot be erased during extraction, but the `must_erase_for_extraction` attribute claims that it can. Please remove the attribute."
-                                       uu___6 in
+                                       let uu___7 =
+                                         let uu___8 =
+                                           FStar_Syntax_Print.fv_to_string
+                                             lbname in
+                                         FStar_Compiler_Util.format1
+                                           "Values of type `%s` cannot be erased during extraction, but the `must_erase_for_extraction` attribute claims that it can. Please remove the attribute."
+                                           uu___8 in
+                                       FStar_Errors_Msg.text uu___7 in
+                                     [uu___6] in
                                    (FStar_Errors_Codes.Error_MustEraseMissing,
                                      uu___5) in
-                                 FStar_Errors.log_issue uu___3 uu___4)
+                                 FStar_Errors.log_issue_doc uu___3 uu___4)
                               else ())
                          else ())))
           else ()

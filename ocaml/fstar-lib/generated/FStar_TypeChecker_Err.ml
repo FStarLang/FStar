@@ -39,77 +39,75 @@ let (info_at_pos :
                      (uu___2, (info.FStar_TypeChecker_Common.identifier_ty),
                        uu___3) in
                    FStar_Pervasives_Native.Some uu___1)
-let print_discrepancy :
-  'a . ('a -> Prims.string) -> 'a -> 'a -> (Prims.string * Prims.string) =
-  fun f ->
-    fun x ->
-      fun y ->
-        let print uu___ =
-          let xs = f x in let ys = f y in (xs, ys, (xs <> ys)) in
-        let rec blist_leq l1 l2 =
-          match (l1, l2) with
-          | (h1::t1, h2::t2) ->
-              ((Prims.op_Negation h1) || h2) && (blist_leq t1 t2)
-          | ([], []) -> true
-          | uu___ -> failwith "print_discrepancy: bad lists" in
-        let rec succ l =
-          match l with
-          | (false)::t -> true :: t
-          | (true)::t -> let uu___ = succ t in false :: uu___
-          | [] -> failwith "" in
-        let full l = FStar_Compiler_List.for_all (fun b -> b) l in
-        let get_bool_option s =
-          let uu___ = FStar_Options.get_option s in
-          match uu___ with
-          | FStar_Options.Bool b -> b
-          | uu___1 -> failwith "print_discrepancy: impossible" in
-        let set_bool_option s b =
-          FStar_Options.set_option s (FStar_Options.Bool b) in
-        let get uu___ =
-          let pi = get_bool_option "print_implicits" in
-          let pu = get_bool_option "print_universes" in
-          let pea = get_bool_option "print_effect_args" in
-          let pf = get_bool_option "print_full_names" in [pi; pu; pea; pf] in
-        let set l =
-          match l with
-          | pi::pu::pea::pf::[] ->
-              (set_bool_option "print_implicits" pi;
-               set_bool_option "print_universes" pu;
-               set_bool_option "print_effect_args" pea;
-               set_bool_option "print_full_names " pf)
-          | uu___ -> failwith "impossible: print_discrepancy" in
-        let bas = get () in
-        let rec go cur =
-          match () with
-          | () when full cur ->
-              let uu___ = print () in
-              (match uu___ with | (xs, ys, uu___1) -> (xs, ys))
-          | () when let uu___ = blist_leq bas cur in Prims.op_Negation uu___
-              -> let uu___ = succ cur in go uu___
-          | () ->
-              (set cur;
-               (let uu___1 = print () in
-                match uu___1 with
-                | (xs, ys, true) -> (xs, ys)
-                | uu___2 -> let uu___3 = succ cur in go uu___3)) in
-        FStar_Options.with_saved_options (fun uu___ -> go bas)
+let print_discrepancy : 'a 'b . ('a -> 'b) -> 'a -> 'a -> ('b * 'b) =
+  fun uu___2 ->
+    fun uu___1 ->
+      fun uu___ ->
+        (fun f ->
+           fun x ->
+             fun y ->
+               let print uu___ =
+                 let xs = f x in
+                 let ys = f y in ((Obj.magic xs), (Obj.magic ys), (xs <> ys)) in
+               let rec blist_leq l1 l2 =
+                 match (l1, l2) with
+                 | (h1::t1, h2::t2) ->
+                     ((Prims.op_Negation h1) || h2) && (blist_leq t1 t2)
+                 | ([], []) -> true
+                 | uu___ -> failwith "print_discrepancy: bad lists" in
+               let rec succ l =
+                 match l with
+                 | (false)::t -> true :: t
+                 | (true)::t -> let uu___ = succ t in false :: uu___
+                 | [] -> failwith "" in
+               let full l = FStar_Compiler_List.for_all (fun b1 -> b1) l in
+               let get_bool_option s =
+                 let uu___ = FStar_Options.get_option s in
+                 match uu___ with
+                 | FStar_Options.Bool b1 -> b1
+                 | uu___1 -> failwith "print_discrepancy: impossible" in
+               let set_bool_option s b1 =
+                 FStar_Options.set_option s (FStar_Options.Bool b1) in
+               let get uu___ =
+                 let pi = get_bool_option "print_implicits" in
+                 let pu = get_bool_option "print_universes" in
+                 let pea = get_bool_option "print_effect_args" in
+                 let pf = get_bool_option "print_full_names" in
+                 [pi; pu; pea; pf] in
+               let set l =
+                 match l with
+                 | pi::pu::pea::pf::[] ->
+                     (set_bool_option "print_implicits" pi;
+                      set_bool_option "print_universes" pu;
+                      set_bool_option "print_effect_args" pea;
+                      set_bool_option "print_full_names " pf)
+                 | uu___ -> failwith "impossible: print_discrepancy" in
+               let bas = get () in
+               let rec go cur =
+                 match () with
+                 | () when full cur ->
+                     let uu___ = print () in
+                     (match uu___ with | (xs, ys, uu___1) -> (xs, ys))
+                 | () when
+                     let uu___ = blist_leq bas cur in Prims.op_Negation uu___
+                     -> let uu___ = succ cur in go uu___
+                 | () ->
+                     (set cur;
+                      (let uu___1 = print () in
+                       match uu___1 with
+                       | (xs, ys, true) -> (xs, ys)
+                       | uu___2 -> let uu___3 = succ cur in go uu___3)) in
+               Obj.magic
+                 (FStar_Options.with_saved_options (fun uu___ -> go bas)))
+          uu___2 uu___1 uu___
 let (errors_smt_detail :
   FStar_TypeChecker_Env.env ->
     FStar_Errors.error Prims.list ->
-      (Prims.string, Prims.string) FStar_Pervasives.either ->
-        FStar_Errors.error Prims.list)
+      FStar_Errors_Msg.error_message -> FStar_Errors.error Prims.list)
   =
   fun env ->
     fun errs ->
       fun smt_detail ->
-        let maybe_add_smt_detail msg =
-          match smt_detail with
-          | FStar_Pervasives.Inr d ->
-              Prims.op_Hat msg (Prims.op_Hat "\n\t" d)
-          | FStar_Pervasives.Inl d when
-              (FStar_Compiler_Util.trim_string d) <> "" ->
-              Prims.op_Hat msg (Prims.op_Hat "; " d)
-          | uu___ -> msg in
         let errs1 =
           FStar_Compiler_Effect.op_Bar_Greater errs
             (FStar_Compiler_List.map
@@ -117,10 +115,11 @@ let (errors_smt_detail :
                   match uu___ with
                   | (e, msg, r, ctx) ->
                       let uu___1 =
+                        let msg1 = FStar_Compiler_List.op_At msg smt_detail in
                         if r = FStar_Compiler_Range_Type.dummyRange
                         then
                           let uu___2 = FStar_TypeChecker_Env.get_range env in
-                          (e, msg, uu___2, ctx)
+                          (e, msg1, uu___2, ctx)
                         else
                           (let r' =
                              let uu___3 =
@@ -136,62 +135,55 @@ let (errors_smt_detail :
                              uu___4 <> uu___5 in
                            if uu___3
                            then
-                             let uu___4 =
-                               let uu___5 =
+                             let msg2 =
+                               let uu___4 =
+                                 let uu___5 =
+                                   let uu___6 =
+                                     let uu___7 =
+                                       FStar_Compiler_Range_Ops.string_of_use_range
+                                         r in
+                                     Prims.op_Hat "Also see: " uu___7 in
+                                   FStar_Pprint.doc_of_string uu___6 in
                                  let uu___6 =
                                    let uu___7 =
-                                     FStar_Compiler_Range_Ops.string_of_use_range
-                                       r in
-                                   let uu___8 =
-                                     let uu___9 =
+                                     let uu___8 =
+                                       let uu___9 =
+                                         FStar_Compiler_Range_Type.use_range
+                                           r in
                                        let uu___10 =
-                                         let uu___11 =
-                                           FStar_Compiler_Range_Type.use_range
+                                         FStar_Compiler_Range_Type.def_range
+                                           r in
+                                       uu___9 <> uu___10 in
+                                     if uu___8
+                                     then
+                                       let uu___9 =
+                                         let uu___10 =
+                                           FStar_Compiler_Range_Ops.string_of_def_range
                                              r in
-                                         let uu___12 =
-                                           FStar_Compiler_Range_Type.def_range
-                                             r in
-                                         uu___11 <> uu___12 in
-                                       if uu___10
-                                       then
-                                         let uu___11 =
-                                           let uu___12 =
-                                             FStar_Compiler_Range_Ops.string_of_def_range
-                                               r in
-                                           Prims.op_Hat uu___12 ")" in
                                          Prims.op_Hat
-                                           "(Other related locations: "
-                                           uu___11
-                                       else "" in
-                                     Prims.op_Hat ")" uu___9 in
-                                   Prims.op_Hat uu___7 uu___8 in
-                                 Prims.op_Hat " (Also see: " uu___6 in
-                               Prims.op_Hat msg uu___5 in
-                             let uu___5 = FStar_TypeChecker_Env.get_range env in
-                             (e, uu___4, uu___5, ctx)
-                           else (e, msg, r, ctx)) in
+                                           "Other related locations: "
+                                           uu___10 in
+                                       FStar_Pprint.doc_of_string uu___9
+                                     else FStar_Pprint.empty in
+                                   [uu___7] in
+                                 uu___5 :: uu___6 in
+                               FStar_Compiler_List.op_At msg1 uu___4 in
+                             let uu___4 = FStar_TypeChecker_Env.get_range env in
+                             (e, msg2, uu___4, ctx)
+                           else (e, msg1, r, ctx)) in
                       (match uu___1 with
-                       | (e1, msg1, r1, ctx1) ->
-                           (e1, (maybe_add_smt_detail msg1), r1, ctx1)))) in
+                       | (e1, msg1, r1, ctx1) -> (e1, msg1, r1, ctx1)))) in
         errs1
-let (add_errors_smt_detail :
-  FStar_TypeChecker_Env.env ->
-    FStar_Errors.error Prims.list ->
-      (Prims.string, Prims.string) FStar_Pervasives.either -> unit)
-  =
-  fun env ->
-    fun errs ->
-      fun smt_detail ->
-        let uu___ = errors_smt_detail env errs smt_detail in
-        FStar_Errors.add_errors uu___
 let (add_errors :
   FStar_TypeChecker_Env.env -> FStar_Errors.error Prims.list -> unit) =
   fun env ->
-    fun errs -> add_errors_smt_detail env errs (FStar_Pervasives.Inl "")
+    fun errs ->
+      let uu___ = errors_smt_detail env errs [] in
+      FStar_Errors.add_errors uu___
 let (log_issue :
   FStar_TypeChecker_Env.env ->
     FStar_Compiler_Range_Type.range ->
-      (FStar_Errors_Codes.raw_error * Prims.string) -> unit)
+      (FStar_Errors_Codes.raw_error * FStar_Errors_Msg.error_message) -> unit)
   =
   fun env ->
     fun r ->
@@ -203,6 +195,20 @@ let (log_issue :
                 let uu___3 = FStar_Errors.get_ctx () in (e, m, r, uu___3) in
               [uu___2] in
             add_errors env uu___1
+let (log_issue_text :
+  FStar_TypeChecker_Env.env ->
+    FStar_Compiler_Range_Type.range ->
+      (FStar_Errors_Codes.raw_error * Prims.string) -> unit)
+  =
+  fun env ->
+    fun r ->
+      fun uu___ ->
+        match uu___ with
+        | (e, m) ->
+            let uu___1 =
+              let uu___2 = let uu___3 = FStar_Errors_Msg.text m in [uu___3] in
+              (e, uu___2) in
+            log_issue env r uu___1
 let (err_msg_type_strings :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
@@ -283,23 +289,45 @@ let (expected_expression_of_type :
     FStar_Syntax_Syntax.term ->
       FStar_Syntax_Syntax.term ->
         FStar_Syntax_Syntax.term ->
-          (FStar_Errors_Codes.raw_error * Prims.string))
+          (FStar_Errors_Codes.raw_error * FStar_Pprint.document Prims.list))
   =
   fun env ->
     fun t1 ->
       fun e ->
         fun t2 ->
-          let uu___ = err_msg_type_strings env t1 t2 in
-          match uu___ with
-          | (s1, s2) ->
-              let uu___1 =
-                let uu___2 =
-                  FStar_Syntax_Print.term_to_string'
-                    env.FStar_TypeChecker_Env.dsenv e in
-                FStar_Compiler_Util.format3
-                  "Expected expression of type \"%s\"; got expression \"%s\" of type \"%s\""
-                  s1 uu___2 s2 in
-              (FStar_Errors_Codes.Fatal_UnexpectedExpressionType, uu___1)
+          let d1 = FStar_TypeChecker_Normalize.term_to_doc env t1 in
+          let d2 = FStar_TypeChecker_Normalize.term_to_doc env t2 in
+          let ed = FStar_TypeChecker_Normalize.term_to_doc env e in
+          let uu___ =
+            let uu___1 =
+              let uu___2 =
+                FStar_Pprint.doc_of_string "Expected expression of type" in
+              let uu___3 =
+                let uu___4 = FStar_Pprint.blank (Prims.of_int (4)) in
+                let uu___5 =
+                  let uu___6 = FStar_Pprint.align d1 in
+                  let uu___7 =
+                    let uu___8 = FStar_Pprint.doc_of_string "got expression" in
+                    let uu___9 =
+                      let uu___10 = FStar_Pprint.blank (Prims.of_int (4)) in
+                      let uu___11 =
+                        let uu___12 = FStar_Pprint.align ed in
+                        let uu___13 =
+                          let uu___14 = FStar_Pprint.doc_of_string "of type" in
+                          let uu___15 =
+                            let uu___16 =
+                              FStar_Pprint.blank (Prims.of_int (4)) in
+                            let uu___17 = FStar_Pprint.align d2 in
+                            FStar_Pprint.op_Hat_Hat uu___16 uu___17 in
+                          FStar_Pprint.op_Hat_Slash_Hat uu___14 uu___15 in
+                        FStar_Pprint.op_Hat_Slash_Hat uu___12 uu___13 in
+                      FStar_Pprint.op_Hat_Hat uu___10 uu___11 in
+                    FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
+                  FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                FStar_Pprint.op_Hat_Hat uu___4 uu___5 in
+              FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
+            [uu___1] in
+          (FStar_Errors_Codes.Fatal_UnexpectedExpressionType, uu___)
 let (expected_pattern_of_type :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->

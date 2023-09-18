@@ -158,7 +158,7 @@ let (trans_qual :
         | FStar_Parser_AST.Effect_qual -> FStar_Syntax_Syntax.Effect
         | FStar_Parser_AST.New -> FStar_Syntax_Syntax.New
         | FStar_Parser_AST.Opaque ->
-            (FStar_Errors.log_issue r
+            (FStar_Errors.log_issue_text r
                (FStar_Errors_Codes.Warning_DeprecatedOpaqueQualifier,
                  "The 'opaque' qualifier is deprecated since its use was strangely schizophrenic. There were two overloaded uses: (1) Given 'opaque val f : t', the behavior was to exclude the definition of 'f' to the SMT solver. This corresponds roughly to the new 'irreducible' qualifier. (2) Given 'opaque type t = t'', the behavior was to provide the definition of 't' to the SMT solver, but not to inline it, unless absolutely required for unification. This corresponds roughly to the behavior of 'unfoldable' (which is currently the default).");
              FStar_Syntax_Syntax.Visible_default)
@@ -5379,12 +5379,24 @@ and (desugar_comp :
                          "Lemma (requires pre) (ensures post) (decreases d)";
                          "Lemma (requires pre) (ensures post) [SMTPat ...]";
                          "Lemma (requires pre) (ensures post) (decreases d) [SMTPat ...]"] in
-                       let msg = FStar_String.concat "\n\t" expected_one_of in
-                       FStar_Errors.raise_error
+                       let uu___2 =
+                         let uu___3 =
+                           let uu___4 =
+                             let uu___5 =
+                               FStar_Errors_Msg.text
+                                 "Invalid arguments to 'Lemma'; expected one of the following" in
+                             let uu___6 =
+                               let uu___7 =
+                                 FStar_Compiler_List.map
+                                   FStar_Pprint.doc_of_string expected_one_of in
+                               FStar_Errors_Msg.sublist FStar_Pprint.empty
+                                 uu___7 in
+                             FStar_Pprint.op_Hat_Hat uu___5 uu___6 in
+                           [uu___4] in
                          (FStar_Errors_Codes.Fatal_InvalidLemmaArgument,
-                           (Prims.op_Hat
-                              "Invalid arguments to 'Lemma'; expected one of the following:\n\t"
-                              msg)) t1.FStar_Parser_AST.range in
+                           uu___3) in
+                       FStar_Errors.raise_error_doc uu___2
+                         t1.FStar_Parser_AST.range in
                      let args1 =
                        match args with
                        | [] -> fail_lemma ()

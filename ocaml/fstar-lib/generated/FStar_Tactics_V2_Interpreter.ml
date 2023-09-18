@@ -309,16 +309,22 @@ let unembed_tactic_0 :
                    let uu___1 = FStar_Compiler_Effect.op_Bang has_admit in
                    if uu___1
                    then
-                     "\nThe term contains an `admit`, which will not reduce. Did you mean `tadmit()`?"
-                   else "" in
+                     FStar_Pprint.doc_of_string
+                       "The term contains an `admit`, which will not reduce. Did you mean `tadmit()`?"
+                   else FStar_Pprint.empty in
                  let uu___ =
                    let uu___1 =
-                     let uu___2 = FStar_Syntax_Print.term_to_string h_result in
-                     FStar_Compiler_Util.format2
-                       "Tactic got stuck!\nReduction stopped at: %s%s" uu___2
-                       maybe_admit_tip in
+                     let uu___2 = FStar_Errors_Raise.str "Tactic got stuck!" in
+                     let uu___3 =
+                       let uu___4 =
+                         let uu___5 =
+                           FStar_Errors_Raise.str "Reduction stopped at: " in
+                         let uu___6 = FStar_Errors_Raise.ttd h_result in
+                         FStar_Pprint.op_Hat_Hat uu___5 uu___6 in
+                       [uu___4; maybe_admit_tip] in
+                     uu___2 :: uu___3 in
                    (FStar_Errors_Codes.Fatal_TacticGotStuck, uu___1) in
-                 FStar_Errors.raise_error uu___
+                 FStar_Errors_Raise.error_doc uu___
                    (proof_state.FStar_Tactics_Types.main_context).FStar_TypeChecker_Env.range)
 let unembed_tactic_nbe_0 :
   'b .
@@ -359,12 +365,24 @@ let unembed_tactic_nbe_0 :
                  let uu___ =
                    let uu___1 =
                      let uu___2 =
-                       FStar_TypeChecker_NBETerm.t_to_string result in
-                     FStar_Compiler_Util.format1
-                       "Tactic got stuck (in NBE)! Please file a bug report with a minimal reproduction of this issue.\n%s"
-                       uu___2 in
+                       FStar_Errors_Raise.str "Tactic got stuck (in NBE)!" in
+                     let uu___3 =
+                       let uu___4 =
+                         FStar_Errors_Msg.text
+                           "Please file a bug report with a minimal reproduction of this issue." in
+                       let uu___5 =
+                         let uu___6 =
+                           let uu___7 = FStar_Errors_Raise.str "Result = " in
+                           let uu___8 =
+                             let uu___9 =
+                               FStar_TypeChecker_NBETerm.t_to_string result in
+                             FStar_Errors_Raise.str uu___9 in
+                           FStar_Pprint.op_Hat_Hat uu___7 uu___8 in
+                         [uu___6] in
+                       uu___4 :: uu___5 in
+                     uu___2 :: uu___3 in
                    (FStar_Errors_Codes.Fatal_TacticGotStuck, uu___1) in
-                 FStar_Errors.raise_error uu___
+                 FStar_Errors_Raise.error_doc uu___
                    (proof_state.FStar_Tactics_Types.main_context).FStar_TypeChecker_Env.range)
 let unembed_tactic_1 :
   'a 'r .
@@ -3342,16 +3360,33 @@ let run_tactic_on_ps' :
                                    ps3 "at the finish line"
                                else ());
                               (remaining_smt_goals, ret))))
+                       | FStar_Tactics_Result.Failed
+                           (FStar_Errors.Error (code, msg, rng, ctx), ps3) ->
+                           let msg1 =
+                             let uu___5 =
+                               FStar_Pprint.doc_of_string "Tactic failed" in
+                             uu___5 :: msg in
+                           FStar_Compiler_Effect.raise
+                             (FStar_Errors.Error (code, msg1, rng, ctx))
+                       | FStar_Tactics_Result.Failed
+                           (FStar_Errors.Err (code, msg, ctx), ps3) ->
+                           let msg1 =
+                             let uu___5 =
+                               FStar_Pprint.doc_of_string "Tactic failed" in
+                             uu___5 :: msg in
+                           FStar_Compiler_Effect.raise
+                             (FStar_Errors.Err (code, msg1, ctx))
                        | FStar_Tactics_Result.Failed (e, ps3) ->
                            (FStar_Tactics_Printing.do_dump_proofstate ps3
                               "at the time of failure";
                             (let texn_to_string e1 =
                                match e1 with
-                               | FStar_Tactics_Common.TacticFailure s -> s
+                               | FStar_Tactics_Common.TacticFailure s ->
+                                   Prims.op_Hat "\"" (Prims.op_Hat s "\"")
                                | FStar_Tactics_Common.EExn t ->
                                    let uu___6 =
                                      FStar_Syntax_Print.term_to_string t in
-                                   Prims.op_Hat "uncaught exception: " uu___6
+                                   Prims.op_Hat "Uncaught exception: " uu___6
                                | e2 -> FStar_Compiler_Effect.raise e2 in
                              let rng =
                                if background
@@ -3363,12 +3398,17 @@ let run_tactic_on_ps' :
                                else ps3.FStar_Tactics_Types.entry_range in
                              let uu___6 =
                                let uu___7 =
-                                 let uu___8 = texn_to_string e in
-                                 FStar_Compiler_Util.format1
-                                   "user tactic failed: `%s`" uu___8 in
+                                 let uu___8 =
+                                   FStar_Pprint.doc_of_string "Tactic failed" in
+                                 let uu___9 =
+                                   let uu___10 =
+                                     let uu___11 = texn_to_string e in
+                                     FStar_Pprint.doc_of_string uu___11 in
+                                   [uu___10] in
+                                 uu___8 :: uu___9 in
                                (FStar_Errors_Codes.Fatal_UserTacticFailure,
                                  uu___7) in
-                             FStar_Errors.raise_error uu___6 rng)))))
+                             FStar_Errors.raise_error_doc uu___6 rng)))))
 let run_tactic_on_ps :
   'a 'b .
     FStar_Compiler_Range_Type.range ->

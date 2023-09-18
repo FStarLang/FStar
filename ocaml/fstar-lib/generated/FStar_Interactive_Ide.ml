@@ -1357,9 +1357,9 @@ let (load_deps :
 let (rephrase_dependency_error : FStar_Errors.issue -> FStar_Errors.issue) =
   fun issue ->
     let uu___ =
-      FStar_Compiler_Util.format1
-        "Error while computing or loading dependencies:\n%s"
-        issue.FStar_Errors.issue_msg in
+      let uu___1 =
+        FStar_Errors_Msg.text "Error while computing or loading dependencies" in
+      uu___1 :: (issue.FStar_Errors.issue_msg) in
     {
       FStar_Errors.issue_msg = uu___;
       FStar_Errors.issue_level = (issue.FStar_Errors.issue_level);
