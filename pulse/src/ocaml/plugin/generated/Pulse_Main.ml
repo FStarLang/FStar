@@ -1135,11 +1135,11 @@ let (check_pulse :
                                        (FStar_Sealed.seal
                                           (Obj.magic
                                              (FStar_Range.mk_range
-                                                "Pulse.Main.fst"
-                                                (Prims.of_int (114))
-                                                (Prims.of_int (10))
-                                                (Prims.of_int (118))
-                                                (Prims.of_int (21)))))
+                                                "FStar.Issue.fsti"
+                                                (Prims.of_int (49))
+                                                (Prims.of_int (4))
+                                                (Prims.of_int (49))
+                                                (Prims.of_int (65)))))
                                        (Obj.magic
                                           (FStar_Tactics_Effect.tac_bind
                                              (FStar_Sealed.seal
@@ -1197,8 +1197,10 @@ let (check_pulse :
                                        (fun uu___1 ->
                                           FStar_Tactics_Effect.lift_div_tac
                                             (fun uu___2 ->
-                                               FStar_Issue.mk_issue "Error"
-                                                 uu___1
+                                               FStar_Issue.mk_issue_doc
+                                                 "Error"
+                                                 [FStar_Pprint.arbitrary_string
+                                                    uu___1]
                                                  (FStar_Pervasives_Native.Some
                                                     range)
                                                  FStar_Pervasives_Native.None

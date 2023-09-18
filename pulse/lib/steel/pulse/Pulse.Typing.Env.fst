@@ -323,7 +323,7 @@ let print_issue (g:env) (i:FStar.Issue.issue) : T.Tac string =
     Printf.sprintf "%s (%s): %s%s"
        (range_opt_to_string (range_of_issue i))
        (level_of_issue i)
-       (message_of_issue i)
+       (render_issue i)
        (ctx_to_string (T.unseal (get_context g) @ (T.map (fun i -> (i, None)) (context_of_issue i))))
 
 let print_issues (g:env)
