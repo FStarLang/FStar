@@ -363,23 +363,32 @@ let get_range (g:env) (r:option range) : T.Tac range =
       then range_of_env g
       else r
 
-let fail (#a:Type) (g:env) (r:option range) (msg:string) =
+let fail_doc (#a:Type) (g:env) (r:option range) (msg:list Pprint.document) =
   let r = get_range g r in
   let msg =
     if RU.is_pulse_option_set "env_on_err"
-    then Printf.sprintf "%s\nIn environment\n%s\n" msg (env_to_string g)
+    then msg @ [doc_of_string "In environment" ^/^ env_to_doc g]
     else msg
   in
-  let issue = FStar.Issue.mk_issue "Error" msg (Some r) None (ctxt_to_list g) in
+  let issue = FStar.Issue.mk_issue_doc "Error" msg (Some r) None (ctxt_to_list g) in
   T.log_issues [issue];
   T.fail "Pulse checker failed"
 
-let warn (g:env) (r:option range) (msg:string) : T.Tac unit =
+let warn_doc (g:env) (r:option range) (msg:list Pprint.document) : T.Tac unit =
   let r = get_range g r in
-  let issue = FStar.Issue.mk_issue "Warning" msg (Some r) None (ctxt_to_list g) in
+  let issue = FStar.Issue.mk_issue_doc "Warning" msg (Some r) None (ctxt_to_list g) in
   T.log_issues [issue]
 
-let info (g:env) (r:option range) (msg:string) =
+let info_doc (g:env) (r:option range) (msg:list Pprint.document) =
   let r = get_range g r in
-  let issue = FStar.Issue.mk_issue "Info" msg (Some r) None (ctxt_to_list g) in
+  let issue = FStar.Issue.mk_issue_doc "Info" msg (Some r) None (ctxt_to_list g) in
   T.log_issues [issue]
+
+let fail (#a:Type) (g:env) (r:option range) (msg:string) =
+  fail_doc g r [Pprint.arbitrary_string msg]
+
+let warn (g:env) (r:option range) (msg:string) : T.Tac unit =
+  warn_doc g r [Pprint.arbitrary_string msg]
+
+let info (g:env) (r:option range) (msg:string) =
+  info_doc g r [Pprint.arbitrary_string msg]
