@@ -16,6 +16,19 @@ val text : string -> FStar.Stubs.Pprint.document
 let text (s:string) : FStar.Stubs.Pprint.document =
   flow (break_ 1) (words s)
 
+(* Nests a document 2 levels deep, as a block. It inserts a hardline
+before the doc, so if you want to format something as
+
+  hdr
+    subdoc
+  tail
+
+  you should write  hdr ^^ indent (subdoc) ^/^ tail.  Note the ^^ vs ^/^.
+*)
+val indent : document -> document
+let indent d =
+  nest 2 (hardline ^^ align d)
+
 class printable (a:Type) = {
   pp : a -> Tac document;
 }

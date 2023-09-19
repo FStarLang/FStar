@@ -96,7 +96,11 @@ let rec prove_pures #preamble (pst:prover_state preamble)
     let pst_opt = IntroPure.intro_pure pst p unsolved' () in
     (match pst_opt with
      | None ->
-       fail pst.pg None (Printf.sprintf "prover error: cannot prove pure %s\n" (P.term_to_string p))
+       let open Pulse.PP in
+       fail_doc pst.pg None [
+         text "Cannot prove pure proposition" ^/^
+           pp p
+       ]
      | Some pst1 ->
        let pst2 = prove_pures pst1 in
        assert (pst1 `pst_extends` pst);
@@ -162,14 +166,15 @@ let rec prover
           let open Pprint in
           let open Pulse.PP in
           let msg = [
-            doc_of_string "Cannot prove vprop" ^/^
-                bquotes (pp q);
-            doc_of_string "In the context" ^/^
-                bquotes (pp (list_as_vprop pst.remaining_ctxt));
-            doc_of_string "The prover was started with goal" ^/^
-                bquotes (pp preamble.goals);
-            doc_of_string "and initial context" ^/^
-                bquotes (pp preamble.ctxt);
+            text "Error in proving precondition";
+            doc_of_string "Cannot prove:" ^^
+                indent (pp q);
+            doc_of_string "In the context:" ^^
+                indent (pp (list_as_vprop pst.remaining_ctxt));
+            doc_of_string "The prover was started with goal:" ^^
+                indent (pp preamble.goals);
+            doc_of_string "and initial context:" ^^
+                indent (pp preamble.ctxt);
           ]
           in
           // GM: I feel I should use (Some q.range) instead of None, but that makes
@@ -366,11 +371,15 @@ let prove_post_hint (#g:env) (#ctxt:vprop)
 
     // TODO: subtyping
     if not (eq_tm ty post_hint.ret_ty)
-    then fail g (Some rng)
-           (Printf.sprintf "error in proving post hint:\
-                            comp return type %s does not match the post hint %s"
-              (P.term_to_string ty)
-              (P.term_to_string post_hint.ret_ty))
+    then
+      let open Pulse.PP in
+      fail_doc g (Some rng) [
+        text "Error in proving postcondition";
+        text "The return type" ^^
+          indent (pp ty) ^/^
+        text "does not match the expected" ^^
+          indent (pp post_hint.ret_ty)
+      ]
     else if eq_tm post_hint_opened ctxt'
     then (| x, g2, (| u_ty, ty, ty_typing |), (| ctxt', ctxt'_typing |), k |)
     else
@@ -386,9 +395,9 @@ let prove_post_hint (#g:env) (#ctxt:vprop)
       | None -> 
         let open Pulse.PP in
         fail_doc g (Some rng) [
-          text "Error in proving post hint";
-          text "Postcondition contains extra vprops not matched in the post hint"
-            ^/^ pp remaining_ctxt;
+          text "Error in proving postcondition";
+          text "Inferred postcondition additionally contains" ^^
+            indent (pp remaining_ctxt);
         ]
       | Some d ->
         let k_post
