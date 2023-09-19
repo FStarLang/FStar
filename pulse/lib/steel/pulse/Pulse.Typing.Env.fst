@@ -366,7 +366,7 @@ let get_range (g:env) (r:option range) : T.Tac range =
 let fail_doc (#a:Type) (g:env) (r:option range) (msg:list Pprint.document) =
   let r = get_range g r in
   let msg =
-    if RU.is_pulse_option_set "env_on_err"
+    if Pulse.Config.debug_flag "env_on_err"
     then msg @ [doc_of_string "In environment" ^/^ env_to_doc g]
     else msg
   in
