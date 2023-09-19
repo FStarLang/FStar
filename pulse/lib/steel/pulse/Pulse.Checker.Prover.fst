@@ -167,15 +167,16 @@ let rec prover
           let open Pulse.PP in
           let msg = [
             text "Error in proving precondition";
-            doc_of_string "Cannot prove:" ^^
+            text "Cannot prove:" ^^
                 indent (pp q);
-            doc_of_string "In the context:" ^^
-                indent (pp (list_as_vprop pst.remaining_ctxt));
-            doc_of_string "The prover was started with goal:" ^^
-                indent (pp preamble.goals);
-            doc_of_string "and initial context:" ^^
-                indent (pp preamble.ctxt);
-          ]
+            text "In the context:" ^^
+                indent (pp (list_as_vprop pst.remaining_ctxt))
+          ] @ (if Pulse.Config.debug_flag "initial_solver_state" then [
+                text "The prover was started with goal:" ^^
+                    indent (pp preamble.goals);
+                text "and initial context:" ^^
+                    indent (pp preamble.ctxt);
+               ] else [])
           in
           // GM: I feel I should use (Some q.range) instead of None, but that makes
           // several error locations worse.
@@ -398,6 +399,9 @@ let prove_post_hint (#g:env) (#ctxt:vprop)
           text "Error in proving postcondition";
           text "Inferred postcondition additionally contains" ^^
             indent (pp remaining_ctxt);
+          (if Tm_Star? remaining_ctxt.t
+           then text "Did you forget to free these resources?"
+           else text "Did you forget to free this resource?");
         ]
       | Some d ->
         let k_post
