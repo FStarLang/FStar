@@ -351,7 +351,7 @@ let env_to_doc (e:env) : T.Tac document =
   let pp1 : ((var & typ) & ppname) -> T.Tac document =
     fun ((n, t), x) ->
       doc_of_string (T.unseal x.name) ^^ doc_of_string "#" ^^ doc_of_string (string_of_int n)
-        ^^ Pulse.Syntax.Printer.term_to_doc t
+        ^^ doc_of_string " : " ^^ Pulse.Syntax.Printer.term_to_doc t
   in
   brackets (separate_map comma pp1 (T.zip e.bs e.names))
 
@@ -366,8 +366,9 @@ let get_range (g:env) (r:option range) : T.Tac range =
 let fail_doc (#a:Type) (g:env) (r:option range) (msg:list Pprint.document) =
   let r = get_range g r in
   let msg =
+    let indent d = nest 2 (hardline ^^ align d) in
     if Pulse.Config.debug_flag "env_on_err"
-    then msg @ [doc_of_string "In environment" ^/^ env_to_doc g]
+    then msg @ [doc_of_string "In typing environment:" ^^ indent (env_to_doc g)]
     else msg
   in
   let issue = FStar.Issue.mk_issue_doc "Error" msg (Some r) None (ctxt_to_list g) in
