@@ -612,7 +612,9 @@ let base64_encode s = BatBase64.str_encode s
 let base64_decode s = BatBase64.str_decode s
 let char_of_int i = Z.to_int i
 let int_of_string = Z.of_string
-let safe_int_of_string x = try Some (int_of_string x) with Invalid_argument _ -> None
+let safe_int_of_string x =
+  if x = "" then None else
+  try Some (int_of_string x) with Invalid_argument _ -> None
 let int_of_char x = Z.of_int x
 let int_of_byte x = x
 let int_of_uint8 x = Z.of_int (Char.code x)
