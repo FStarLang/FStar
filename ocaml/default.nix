@@ -50,4 +50,6 @@ buildDunePackage {
     # Meanwhile, they add a dependency to the OCaml compiler and are thus removed by default
     rm $out/lib/ocaml/${ocaml.version}/site-lib/fstar/lib/*.cmt
   '');
+
+  FSTAR_COMMIT = version;
 }
