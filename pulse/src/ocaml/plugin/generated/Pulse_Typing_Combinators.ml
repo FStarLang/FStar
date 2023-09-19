@@ -1205,4 +1205,5 @@ let rec (list_as_vprop :
   fun vps ->
     match vps with
     | [] -> Pulse_Syntax_Base.tm_emp
+    | hd::[] -> hd
     | hd::tl -> Pulse_Syntax_Base.tm_star hd (list_as_vprop tl)
