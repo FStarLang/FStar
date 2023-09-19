@@ -8,6 +8,7 @@ module L = FStar.List.Tot
 
 module RT = FStar.Reflection.Typing
 module T = FStar.Tactics.V2
+module Pprint = FStar.Stubs.Pprint
 
 type binding = var & typ
 type env_bindings = list binding
@@ -177,6 +178,7 @@ val print_context (g:env) : T.Tac string
 val print_issue (g:env) (i:FStar.Issue.issue) : T.Tac string 
 val print_issues (g:env) (i:list FStar.Issue.issue) : T.Tac string
 val env_to_string (g:env) : T.Tac string
+val env_to_doc (g:env) : T.Tac FStar.Stubs.Pprint.document
 val get_range (g:env) (r:option range) : T.Tac range
 val fail (#a:Type) (g:env) (r:option range) (msg:string) 
   : T.TAC a (fun _ post -> forall ex ps. post FStar.Tactics.Result.(Failed ex ps))

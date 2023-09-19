@@ -336,6 +336,25 @@ let env_to_string (e:env) : T.Tac string =
     (T.zip e.bs e.names) in
   String.concat "\n  " bs
 
+open FStar.Stubs.Pprint
+
+// Cannot use Pprint.separate_map, it takes a pure func
+// FIXME: duplicate in Pulse.PP
+private
+let rec separate_map (sep: document) (f : 'a -> T.Tac document) (l : list 'a) : T.Tac document =
+  match l with
+  | [] -> empty
+  | [x] -> f x
+  | x::xs -> f x ^^ sep ^/^ separate_map sep f xs
+
+let env_to_doc (e:env) : T.Tac document =
+  let pp1 : ((var & typ) & ppname) -> T.Tac document =
+    fun ((n, t), x) ->
+      doc_of_string (T.unseal x.name) ^^ doc_of_string "#" ^^ doc_of_string (string_of_int n)
+        ^^ Pulse.Syntax.Printer.term_to_doc t
+  in
+  brackets (separate_map comma pp1 (T.zip e.bs e.names))
+
 let get_range (g:env) (r:option range) : T.Tac range =
     match r with
     | None -> range_of_env g

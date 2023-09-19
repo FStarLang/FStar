@@ -82,6 +82,39 @@ let rec term_to_string' (level:string) (t:term)
       T.term_to_string t
 let term_to_string t = term_to_string' "" t
 
+let rec term_to_doc t
+  : T.Tac document
+  = match t.t with
+    | Tm_Emp -> doc_of_string "emp"
+
+    | Tm_Pure p -> doc_of_string "pure" ^/^ parens (term_to_doc p)
+    | Tm_Star p1 p2 ->
+      infix 2 1 (doc_of_string "**")
+                (term_to_doc p1)
+                (term_to_doc p2)
+
+    | Tm_ExistsSL _ b body ->
+      parens (doc_of_string "exists" ^/^ parens (doc_of_string (T.unseal b.binder_ppname.name)
+                                                  ^^ doc_of_string ":"
+                                                  ^^ term_to_doc b.binder_ty)
+              ^^ doc_of_string "."
+              ^/^ term_to_doc body)
+
+    | Tm_ForallSL u b body ->
+      parens (doc_of_string "forall" ^/^ parens (doc_of_string (T.unseal b.binder_ppname.name)
+                                                  ^^ doc_of_string ":"
+                                                  ^^ term_to_doc b.binder_ty)
+              ^^ doc_of_string "."
+              ^/^ term_to_doc body)
+
+    | Tm_VProp -> doc_of_string "vprop"
+    | Tm_Inames -> doc_of_string "inames"
+    | Tm_EmpInames -> doc_of_string "emp_inames"
+    | Tm_Unknown -> doc_of_string "_"
+    | Tm_FStar t ->
+      // Should call term_to_doc when available
+      doc_of_string (T.term_to_string t)
+
 let binder_to_string (b:binder)
   : T.Tac string
   = sprintf "%s:%s" 
