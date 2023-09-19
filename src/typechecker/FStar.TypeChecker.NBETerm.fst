@@ -351,6 +351,8 @@ let e_int : embedding Z.t =
     in
     mk_emb' em un (lid_as_typ PC.int_lid [] [])  (SE.emb_typ_of SE.e_int)
 
+let e_fsint = embed_as e_int Z.to_int_fs Z.of_int_fs None
+
 // Embedding at option type
 let e_option (ea : embedding 'a) =
     let etyp =
@@ -797,6 +799,17 @@ let string_of_int (i:Z.t) : t =
 
 let string_of_bool (b:bool) : t =
     embed e_string bogus_cbs (if b then "true" else "false")
+
+let int_of_string (s:string) : t =
+    embed (e_option e_fsint) bogus_cbs (BU.safe_int_of_string s)
+
+let bool_of_string (s:string) : t =
+    let r = match s with
+            | "true" -> Some true
+            | "false" -> Some false
+            | _ -> None
+    in
+    embed (e_option e_bool) bogus_cbs r
 
 let string_lowercase (s:string) : t =
     embed e_string bogus_cbs (String.lowercase s)
