@@ -20,21 +20,40 @@ module FC = FStar.Const
 open FStar.Extraction.Krml
 
 let steel_translate_type_without_decay : translate_type_without_decay_t = fun env t ->
+  BU.print1 "Got control in steel_translate_type for (%s)!\n"
+    (FStar.Extraction.ML.Syntax.mlty_to_string t);
   match t with
   | MLTY_Named ([arg], p) when
     Syntax.string_of_mlpath p = "Steel.TLArray.t" ->
       TConstBuf (translate_type_without_decay env arg)
 
   | MLTY_Named ([arg], p) when
-    Syntax.string_of_mlpath p = "Steel.Reference.ref" ||
-    Syntax.string_of_mlpath p = "Steel.ST.Reference.ref" ||
-    Syntax.string_of_mlpath p = "Steel.ST.HigherArray.ptr"
+    (let p = Syntax.string_of_mlpath p in
+     p = "Steel.Reference.ref" ||
+     p = "Steel.ST.Reference.ref" ||
+     p = "Steel.ST.HigherArray.ptr" ||
+     p = "Pulse.Lib.Reference.ref")
     ->
       TBuf (translate_type_without_decay env arg)
 
   | _ -> raise NotSupportedByKrmlExtension
 
+let flatten_app e =
+  let rec aux args e = 
+    match e.expr with 
+    | MLE_App (head, args0) -> aux (args0@args) head
+    | _ -> (
+      match args with
+      | [] -> e
+      | _ -> {e with expr=MLE_App (e, args)}
+    )
+  in
+  aux [] e
+
 let steel_translate_expr : translate_expr_t = fun env e ->
+  let e = flatten_app e in
+  // BU.print1 "Got control in steel_translate_expr for (%s)!\n"
+  //   (FStar.Extraction.ML.Syntax.mlexpr_to_string e);
   match e.expr with
   | MLE_App ({expr = MLE_TApp ({expr = MLE_Name p}, [t]) }, _)
     when string_of_mlpath p = "Steel.ST.HigherArray.null_ptr"
@@ -63,6 +82,11 @@ let steel_translate_expr : translate_expr_t = fun env e ->
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _perm; _v; e ])
     when string_of_mlpath p = "Steel.ST.Reference.read" ->
+      EBufRead (translate_expr env e, EQualified (["C"], "_zero_for_deref"))
+
+  | MLE_App({expr=MLE_App({expr=MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e ])}, [_v])}, [_perm])
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e; _v; _perm ])
+    when string_of_mlpath p = "Pulse.Lib.Reference.op_Bang" ->
       EBufRead (translate_expr env e, EQualified (["C"], "_zero_for_deref"))
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ init ])
@@ -106,6 +130,11 @@ let steel_translate_expr : translate_expr_t = fun env e ->
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _v; e1; e2 ])
     when string_of_mlpath p = "Steel.ST.Reference.write" ->
+      EBufWrite (translate_expr env e1, EQualified (["C"], "_zero_for_deref"), translate_expr env e2)
+
+  | MLE_App ({expr=MLE_App({expr=MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1 ])}, [e2])}, [_e3])
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; _e3 ])
+    when string_of_mlpath p = "Pulse.Lib.Reference.op_Colon_Equals" ->
       EBufWrite (translate_expr env e1, EQualified (["C"], "_zero_for_deref"), translate_expr env e2)
 
   | MLE_App ({ expr = MLE_Name p }, [ _ ]) when (

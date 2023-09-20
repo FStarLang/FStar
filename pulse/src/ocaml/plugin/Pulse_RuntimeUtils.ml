@@ -26,3 +26,8 @@ let is_pulse_option_set (x:string) : bool =
   let key = ("pulse:"^x) in
   let value = FStar_Options.ext_getv key in
   value <> ""
+
+module U = FStar_Syntax_Util
+module S = FStar_Syntax_Syntax
+let embed_term_for_extraction (d:'a) typ r =
+   U.mk_lazy d typ (S.Lazy_extension "pulse") r

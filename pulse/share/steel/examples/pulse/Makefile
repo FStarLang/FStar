@@ -10,5 +10,10 @@ FSTAR_FILES=$(wildcard $(addsuffix /*.fst, $(SRC_DIRS))) $(wildcard $(addsuffix 
 
 all: verify
 
+extract:
+	$(FSTAR) --codegen OCaml ExtractionTest.fst --extract ExtractionTest
+
+extract_krml:
+	$(FSTAR) --codegen krml ExtractionTest.fst --extract '* -Pulse.Lib.Core'
 
 include Makefile.pulse.common

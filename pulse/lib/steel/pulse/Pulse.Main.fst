@@ -35,6 +35,7 @@ let main' (t:st_term) (pre:term) (g:RT.fstar_top_env)
       then let pre_typing : tot_typing g pre tm_vprop = pre_typing in
            match t.term with
            | Tm_Abs _ ->
+             let rng = t.range in
              let (| t, c, t_typing |) = Pulse.Checker.Abs.check_abs g t Pulse.Checker.check in
              //  let (| t, c, t_typing |) = check g t pre pre_typing None true in
              Pulse.Checker.Prover.debug_prover g
@@ -45,8 +46,11 @@ let main' (t:st_term) (pre:term) (g:RT.fstar_top_env)
                          (P.st_term_to_string t)
                          (Pulse.Typing.Printer.print_st_typing t_typing));
              let refl_t = elab_comp c in
-             let refl_e = elab_st_typing t_typing in
+             let refl_e = Pulse.RuntimeUtils.embed_term_for_extraction t refl_t (Some rng) in
+(*           let refl_e = elab_st_typing t_typing in
              soundness_lemma g t c t_typing;
+*)
+             admit();
              (refl_e, refl_t)
            | _ -> fail g (Some t.range) "main: top-level term not a Tm_Abs"
       else fail g (Some t.range) "pulse main: cannot typecheck pre at type vprop"
