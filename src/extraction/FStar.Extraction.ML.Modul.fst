@@ -49,6 +49,16 @@ module TcUtil = FStar.TypeChecker.Util
 module EMB    = FStar.Syntax.Embeddings
 module Cfg    = FStar.TypeChecker.Cfg
 
+let extension_extractor_table
+  : BU.smap extension_extractor
+  = FStar.Compiler.Util.smap_create 20
+
+let register_extension_extractor (ext:string) (callback:extension_extractor) =
+  FStar.Compiler.Util.smap_add extension_extractor_table ext callback
+
+let lookup_extension_extractor (ext:string) =
+  FStar.Compiler.Util.smap_try_find extension_extractor_table ext
+
 type env_t = UEnv.uenv
 
 (*This approach assumes that failwith already exists in scope. This might be problematic, see below.*)
@@ -933,6 +943,18 @@ let lb_irrelevant (g:env_t) (lb:letbinding) : bool =
     not (Term.is_arity g lb.lbtyp) &&  // but not a type definition
     U.is_pure_or_ghost_effect lb.lbeff // and not top-level effectful
 
+let is_extension_definition (se:sigelt) : option string =
+  match se.sigel with
+  | Sig_let { lbs=(_, lbs) } ->
+    List.tryPick
+      (fun lb ->
+        match lb.lbdef.n with
+        | Tm_lazy { lkind = Lazy_extension s } -> Some s
+        | _ -> None)
+      lbs
+  | _ -> None
+
+
 (*****************************************************************************)
 (* Extracting the top-level definitions in a module                          *)
 (*****************************************************************************)
@@ -1008,6 +1030,40 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list mlmodule1 =
             extract_let_rec_types se g lbs
           in
           env, impl
+
+        | Sig_let { lbs=(false, [lb]) } when (Cons? se.sigmeta.sigmeta_extension_data) -> (
+           let ((ext, blob)::_) = se.sigmeta.sigmeta_extension_data in
+           match lookup_extension_extractor ext with
+           | None ->
+              Errors.raise_error
+                (Errors.Fatal_ExtractionUnsupported,
+                 BU.format1 "Extension %s not registered for extraction" ext)
+                 se.sigrng
+
+           | Some extractor ->
+              match extractor g blob with
+              | Inl (term, e_tag, ty) ->
+                let meta = extract_metadata se.sigattrs in
+                let ty = Term.term_as_mlty g lb.lbtyp in
+                BU.print2 "Translated type of extension term from %s to %s\n"
+                  (Print.term_to_string lb.lbtyp)
+                  (mlty_to_string ty);
+                let tysc = [], ty in
+                let g, mlid, _ = UEnv.extend_lb g lb.lbname lb.lbtyp tysc false in
+                let mllet = MLM_Let (NonRec, [{ mllb_name = mlid;
+                                                mllb_tysc= Some tysc;
+                                                mllb_add_unit = false;
+                                                mllb_def=term;
+                                                mllb_meta=meta;
+                                                print_typ=false }]) in
+                g, [mllet]
+              | Inr err ->
+                Errors.raise_error
+                  (Errors.Fatal_ExtractionUnsupported,
+                   BU.format2 "Extension %s failed to extract term: %s" ext err)
+                  se.sigrng
+          )
+
 
         | Sig_let {lbs} ->
           let attrs = se.sigattrs in

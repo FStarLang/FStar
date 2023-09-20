@@ -839,7 +839,14 @@ let splice (env:Env.env) (is_typed:bool) (lids:list Ident.lident) (tau:term) (rn
           tau
           tactic_already_typed
           ps in
-
+        let e, sig_extension_data = 
+          match e.n with
+          | Tm_lazy { blob; lkind=Lazy_extension s } ->
+            BU.print1 "Splice got back a blob: %s\n" s;
+            S.tun, [s, blob]
+          | _ -> 
+            e, []
+        in
         let lb = U.mk_letbinding
           (Inr (S.lid_as_fv (List.hd lids) None))
           []  // no universe polymorphism yet
@@ -853,7 +860,7 @@ let splice (env:Env.env) (is_typed:bool) (lids:list Ident.lident) (tau:term) (rn
         [{sigel = S.Sig_let {lbs=(false, [lb]); lids};  // false ==> non-recursive
           sigrng = rng;
           sigquals = [S.Visible_default];  // default visibility
-          sigmeta = S.default_sigmeta;
+          sigmeta = { S.default_sigmeta with sigmeta_extension_data=sig_extension_data };
           sigattrs = [];
           sigopts = None;
           sigopens_and_abbrevs=[]

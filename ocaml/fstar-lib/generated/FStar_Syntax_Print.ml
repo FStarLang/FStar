@@ -267,7 +267,13 @@ let rec (tag_of_term : FStar_Syntax_Syntax.term -> Prims.string) =
     | FStar_Syntax_Syntax.Tm_bvar x ->
         let uu___ = db_to_string x in Prims.op_Hat "Tm_bvar: " uu___
     | FStar_Syntax_Syntax.Tm_name x ->
-        let uu___ = nm_to_string x in Prims.op_Hat "Tm_name: " uu___
+        let uu___ =
+          let uu___1 = nm_to_string x in
+          let uu___2 =
+            let uu___3 = tag_of_term x.FStar_Syntax_Syntax.sort in
+            Prims.op_Hat "@" uu___3 in
+          Prims.op_Hat uu___1 uu___2 in
+        Prims.op_Hat "Tm_name: " uu___
     | FStar_Syntax_Syntax.Tm_fvar x ->
         let uu___ =
           lid_to_string (x.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in

@@ -2629,7 +2629,10 @@ let (tc_decl' :
                                          =
                                          (uu___3.FStar_Syntax_Syntax.sigmeta_fact_db_ids);
                                        FStar_Syntax_Syntax.sigmeta_admit =
-                                         true
+                                         true;
+                                       FStar_Syntax_Syntax.sigmeta_extension_data
+                                         =
+                                         (uu___3.FStar_Syntax_Syntax.sigmeta_extension_data)
                                      });
                                   FStar_Syntax_Syntax.sigattrs =
                                     (sigelt.FStar_Syntax_Syntax.sigattrs);

@@ -225,7 +225,8 @@ let lazy_chooser k i = match k with
     | FStar.Syntax.Syntax.Lazy_ident            -> FStar.Syntax.Util.exp_string "((ident))"
 
     | FStar.Syntax.Syntax.Lazy_embedding (_, t) -> Thunk.force t
-
+    | FStar.Syntax.Syntax.Lazy_extension s      -> FStar.Syntax.Util.exp_string (format1 "((extension %s))" s)
+  
 // This is called directly by the Javascript port (it doesn't call Main)
 let setup_hooks () =
     FStar.Errors.set_parse_warn_error FStar.Parser.ParseIt.parse_warn_error;

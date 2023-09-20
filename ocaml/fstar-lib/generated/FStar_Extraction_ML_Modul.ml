@@ -1,4 +1,21 @@
 open Prims
+type extension_extractor =
+  FStar_Extraction_ML_UEnv.uenv ->
+    FStar_Compiler_Dyn.dyn ->
+      ((FStar_Extraction_ML_Syntax.mlexpr * FStar_Extraction_ML_Syntax.e_tag
+         * FStar_Extraction_ML_Syntax.mlty),
+        Prims.string) FStar_Pervasives.either
+let (extension_extractor_table :
+  extension_extractor FStar_Compiler_Util.smap) =
+  FStar_Compiler_Util.smap_create (Prims.of_int (20))
+let (register_extension_extractor :
+  Prims.string -> extension_extractor -> unit) =
+  fun ext ->
+    fun callback ->
+      FStar_Compiler_Util.smap_add extension_extractor_table ext callback
+let (lookup_extension_extractor :
+  Prims.string -> extension_extractor FStar_Pervasives_Native.option) =
+  fun ext -> FStar_Compiler_Util.smap_try_find extension_extractor_table ext
 type env_t = FStar_Extraction_ML_UEnv.uenv
 let (fail_exp :
   FStar_Ident.lident ->
@@ -2029,6 +2046,27 @@ let (lb_irrelevant : env_t -> FStar_Syntax_Syntax.letbinding -> Prims.bool) =
         &&
         (FStar_Syntax_Util.is_pure_or_ghost_effect
            lb.FStar_Syntax_Syntax.lbeff)
+let (is_extension_definition :
+  FStar_Syntax_Syntax.sigelt -> Prims.string FStar_Pervasives_Native.option)
+  =
+  fun se ->
+    match se.FStar_Syntax_Syntax.sigel with
+    | FStar_Syntax_Syntax.Sig_let
+        { FStar_Syntax_Syntax.lbs1 = (uu___, lbs);
+          FStar_Syntax_Syntax.lids1 = uu___1;_}
+        ->
+        FStar_Compiler_List.tryPick
+          (fun lb ->
+             match (lb.FStar_Syntax_Syntax.lbdef).FStar_Syntax_Syntax.n with
+             | FStar_Syntax_Syntax.Tm_lazy
+                 { FStar_Syntax_Syntax.blob = uu___2;
+                   FStar_Syntax_Syntax.lkind =
+                     FStar_Syntax_Syntax.Lazy_extension s;
+                   FStar_Syntax_Syntax.ltyp = uu___3;
+                   FStar_Syntax_Syntax.rng = uu___4;_}
+                 -> FStar_Pervasives_Native.Some s
+             | uu___2 -> FStar_Pervasives_Native.None) lbs
+    | uu___ -> FStar_Pervasives_Native.None
 let rec (extract_sig :
   env_t ->
     FStar_Syntax_Syntax.sigelt ->
@@ -2157,6 +2195,86 @@ let rec (extract_sig :
                    ->
                    let uu___6 = extract_let_rec_types se1 g lbs in
                    (match uu___6 with | (env, uu___7, impl) -> (env, impl))
+               | FStar_Syntax_Syntax.Sig_let
+                   { FStar_Syntax_Syntax.lbs1 = (false, lb::[]);
+                     FStar_Syntax_Syntax.lids1 = uu___5;_}
+                   when
+                   Prims.uu___is_Cons
+                     (se1.FStar_Syntax_Syntax.sigmeta).FStar_Syntax_Syntax.sigmeta_extension_data
+                   ->
+                   let uu___6 =
+                     (se1.FStar_Syntax_Syntax.sigmeta).FStar_Syntax_Syntax.sigmeta_extension_data in
+                   (match uu___6 with
+                    | (ext, blob)::uu___7 ->
+                        let uu___8 = lookup_extension_extractor ext in
+                        (match uu___8 with
+                         | FStar_Pervasives_Native.None ->
+                             let uu___9 =
+                               let uu___10 =
+                                 FStar_Compiler_Util.format1
+                                   "Extension %s not registered for extraction"
+                                   ext in
+                               (FStar_Errors_Codes.Fatal_ExtractionUnsupported,
+                                 uu___10) in
+                             FStar_Errors.raise_error uu___9
+                               se1.FStar_Syntax_Syntax.sigrng
+                         | FStar_Pervasives_Native.Some extractor ->
+                             let uu___9 = extractor g blob in
+                             (match uu___9 with
+                              | FStar_Pervasives.Inl (term, e_tag, ty) ->
+                                  let meta =
+                                    extract_metadata
+                                      se1.FStar_Syntax_Syntax.sigattrs in
+                                  let ty1 =
+                                    FStar_Extraction_ML_Term.term_as_mlty g
+                                      lb.FStar_Syntax_Syntax.lbtyp in
+                                  ((let uu___11 =
+                                      FStar_Syntax_Print.term_to_string
+                                        lb.FStar_Syntax_Syntax.lbtyp in
+                                    let uu___12 =
+                                      FStar_Extraction_ML_Syntax.mlty_to_string
+                                        ty1 in
+                                    FStar_Compiler_Util.print2
+                                      "Translated type of extension term from %s to %s\n"
+                                      uu___11 uu___12);
+                                   (let tysc = ([], ty1) in
+                                    let uu___11 =
+                                      FStar_Extraction_ML_UEnv.extend_lb g
+                                        lb.FStar_Syntax_Syntax.lbname
+                                        lb.FStar_Syntax_Syntax.lbtyp tysc
+                                        false in
+                                    match uu___11 with
+                                    | (g1, mlid, uu___12) ->
+                                        let mllet =
+                                          FStar_Extraction_ML_Syntax.MLM_Let
+                                            (FStar_Extraction_ML_Syntax.NonRec,
+                                              [{
+                                                 FStar_Extraction_ML_Syntax.mllb_name
+                                                   = mlid;
+                                                 FStar_Extraction_ML_Syntax.mllb_tysc
+                                                   =
+                                                   (FStar_Pervasives_Native.Some
+                                                      tysc);
+                                                 FStar_Extraction_ML_Syntax.mllb_add_unit
+                                                   = false;
+                                                 FStar_Extraction_ML_Syntax.mllb_def
+                                                   = term;
+                                                 FStar_Extraction_ML_Syntax.mllb_meta
+                                                   = meta;
+                                                 FStar_Extraction_ML_Syntax.print_typ
+                                                   = false
+                                               }]) in
+                                        (g1, [mllet])))
+                              | FStar_Pervasives.Inr err ->
+                                  let uu___10 =
+                                    let uu___11 =
+                                      FStar_Compiler_Util.format2
+                                        "Extension %s failed to extract term: %s"
+                                        ext err in
+                                    (FStar_Errors_Codes.Fatal_ExtractionUnsupported,
+                                      uu___11) in
+                                  FStar_Errors.raise_error uu___10
+                                    se1.FStar_Syntax_Syntax.sigrng)))
                | FStar_Syntax_Syntax.Sig_let
                    { FStar_Syntax_Syntax.lbs1 = lbs;
                      FStar_Syntax_Syntax.lids1 = uu___5;_}

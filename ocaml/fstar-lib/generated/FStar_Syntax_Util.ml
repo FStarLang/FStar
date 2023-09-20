@@ -928,6 +928,8 @@ let (eq_lazy_kind :
       | (FStar_Syntax_Syntax.Lazy_ident, FStar_Syntax_Syntax.Lazy_ident) ->
           true
       | (FStar_Syntax_Syntax.Lazy_doc, FStar_Syntax_Syntax.Lazy_doc) -> true
+      | (FStar_Syntax_Syntax.Lazy_extension s,
+         FStar_Syntax_Syntax.Lazy_extension t) -> s = t
       | (FStar_Syntax_Syntax.Lazy_embedding uu___, uu___1) -> false
       | (uu___, FStar_Syntax_Syntax.Lazy_embedding uu___1) -> false
       | uu___ -> failwith "FIXME! eq_lazy_kind must be complete"
@@ -953,6 +955,8 @@ let (lazy_kind_to_string : FStar_Syntax_Syntax.lazy_kind -> Prims.string) =
     | FStar_Syntax_Syntax.Lazy_doc -> "Lazy_doc"
     | FStar_Syntax_Syntax.Lazy_ident -> "Lazy_ident"
     | FStar_Syntax_Syntax.Lazy_embedding uu___ -> "Lazy_embedding _"
+    | FStar_Syntax_Syntax.Lazy_extension s ->
+        Prims.op_Hat "Lazy_extension " s
     | uu___ -> failwith "FIXME! lazy_kind_to_string must be complete"
 let unlazy_as_t :
   'uuuuu .

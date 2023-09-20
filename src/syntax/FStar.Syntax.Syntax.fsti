@@ -413,6 +413,7 @@ and lazy_kind =
   | Lazy_issue
   | Lazy_ident
   | Lazy_doc
+  | Lazy_extension of string
 and binding =
   | Binding_var      of bv
   | Binding_lid      of lident * (univ_names * typ)
@@ -620,6 +621,7 @@ type sig_metadata = {
     sigmeta_fact_db_ids:list string;
     sigmeta_admit:bool; //An internal flag to record that a sigelt's SMT proof should be admitted
                         //Used in DM4Free
+    sigmeta_extension_data: list (string & dyn) //each extension can register some data with a sig
 }
 
 

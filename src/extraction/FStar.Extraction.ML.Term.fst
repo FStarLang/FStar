@@ -153,14 +153,14 @@ let effect_as_etag =
              where PC.result_type is an arity
 
  *)
-let rec is_arity env t =
+let rec is_arity_aux tcenv t =
     let t = U.unmeta t in
     match (SS.compress t).n with
     | Tm_unknown
     | Tm_delayed _
     | Tm_ascribed _
-    | Tm_meta _ -> failwith "Impossible"
-    | Tm_lazy i -> is_arity env (U.unfold_lazy i)
+    | Tm_meta _ -> failwith "Impossible: is_arity"
+    | Tm_lazy i -> is_arity_aux tcenv (U.unfold_lazy i)
     | Tm_uvar _
     | Tm_constant _
     | Tm_name _
@@ -168,39 +168,47 @@ let rec is_arity env t =
     | Tm_bvar _ -> false
     | Tm_type _ -> true
     | Tm_arrow  {comp=c} ->
-      is_arity env (FStar.Syntax.Util.comp_result c)
+      is_arity_aux tcenv (FStar.Syntax.Util.comp_result c)
     | Tm_fvar fv ->
       let topt =
         FStar.TypeChecker.Env.lookup_definition
           [Env.Unfold delta_constant]
-          (tcenv_of_uenv env)
+          tcenv
           fv.fv_name.v
       in
       begin
       match topt with
       | None -> false
-      | Some (_, t) -> is_arity env t
+      | Some (_, t) -> is_arity_aux tcenv t
       end
     | Tm_app _ ->
       let head, _ = U.head_and_args t in
-      is_arity env head
+      is_arity_aux tcenv head
     | Tm_uinst(head, _) ->
-      is_arity env head
+      is_arity_aux tcenv head
     | Tm_refine {b=x} ->
-      is_arity env x.sort
+      is_arity_aux tcenv x.sort
     | Tm_abs {body}
     | Tm_let {body} ->
-      is_arity env body
+      is_arity_aux tcenv body
     | Tm_match {brs=branches} ->
       begin match branches with
-        | (_, _, e)::_ -> is_arity env e
+        | (_, _, e)::_ -> is_arity_aux tcenv e
         | _ -> false
       end
+
+let is_arity env t = is_arity_aux (tcenv_of_uenv env) t
+
+let push_tcenv_binders (u:uenv) (bs:binders) =
+  let tcenv = tcenv_of_uenv u in
+  let tcenv = TcEnv.push_binders tcenv bs in
+  set_tcenv u tcenv
 
 //is_type_aux env t:
 //     Determines whether or not t is a type
 //     syntactic structure and type annotations
 let rec is_type_aux env t =
+    debug env (fun () -> BU.print1 "is_type_aux: %s\n" (Print.term_to_string t));
     let t = SS.compress t in
     match t.n with
     | Tm_delayed _
@@ -227,9 +235,25 @@ let rec is_type_aux env t =
       let t= U.ctx_uvar_typ u in
       is_arity env (SS.subst' s t)
 
-    | Tm_bvar ({sort=t})
-    | Tm_name ({sort=t}) ->
+    | Tm_bvar ({sort=t}) ->
       is_arity env t
+
+    | Tm_name x -> (
+      let g = UEnv.tcenv_of_uenv env in
+      match try_lookup_bv g x with
+      | Some (t, _) ->
+        debug env (fun () -> BU.print2 "is_type_aux calling is_arity on type: %s (%s)\n" (Print.tag_of_term t) (Print.term_to_string t));
+        is_arity env t
+      | _ -> (
+        failwith (BU.format1 "Extraction: variable not found: %s" (Print.tag_of_term t))
+        // match (SS.compress x.sort).n with
+        // | Tm_unknown -> failwith (BU.format1 "Extraction: variable not found: %s" (Print.tag_of_term t))
+        // | _ -> 
+
+        //   debug env (fun () -> BU.print2 "is_type_aux calling is_arity on: %s (%s)\n" (Print.tag_of_term t) (Print.term_to_string x.sort));
+        //   is_arity env x.sort
+      )
+    )
 
     | Tm_ascribed {tm=t} ->
       is_type_aux env t
@@ -238,23 +262,32 @@ let rec is_type_aux env t =
       is_type_aux env t
 
     | Tm_abs {bs; body} ->
-      let _, body = SS.open_term bs body in
+      let bs, body = SS.open_term bs body in
+      let env = push_tcenv_binders env bs in
       is_type_aux env body
 
     | Tm_let {lbs=(false, [lb]); body} ->
       let x = BU.left lb.lbname in
-      let _, body = SS.open_term [S.mk_binder x] body in
+      let bs, body = SS.open_term [S.mk_binder x] body in
+      let env = push_tcenv_binders env bs in
       is_type_aux env body
 
     | Tm_let {lbs=(_, lbs); body} ->
-      let _, body = SS.open_let_rec lbs body in
+      let lbs, body = SS.open_let_rec lbs body in
+      let env = push_tcenv_binders env (List.map (fun lb -> S.mk_binder (BU.left lb.lbname)) lbs) in
       is_type_aux env body
 
     | Tm_match {brs=branches} ->
       begin match branches with
-        | b::_ ->
-          let _, _, e = SS.open_branch b in
-          is_type_aux env e
+        | b::_ -> (
+          let pat, _, e = SS.open_branch b in
+          match FStar.TypeChecker.PatternUtils.raw_pat_as_exp (tcenv_of_uenv env) pat with
+          | None -> false
+          | Some (_, bvs) ->
+            let binders = List.map (fun bv -> S.mk_binder bv) bvs in
+            let env = push_tcenv_binders env binders in
+            is_type_aux env e
+        )
         | _ -> false
       end
 
@@ -678,10 +711,21 @@ let rec translate_term_to_mlty (g:uenv) (t0:term) : mlty =
         else MLTY_Erased
     in
 
+    let is_pulse_lib_core_stt (t:typ) : bool =
+      let h, _ = U.head_and_args_full t in
+      match (U.un_uinst h).n with
+      | Tm_fvar fv ->
+        S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.Core.stt")
+      | _ -> false
+    in
     let fv_app_as_mlty (g:uenv) (fv:fv) (args : args) : mlty =
+        // BU.print2 "fv_app_as_mlty: %s %s\n" (Print.fv_to_string fv) (Print.args_to_string args);
         if not (is_fv_type g fv)
         then MLTY_Top //it was translated as an expression or erased
-        else
+        else if S.fv_eq_lid fv ( Ident.lid_of_str "Pulse.Lib.Core.stt")
+        then let (hd, _)::_ = args in
+              translate_term_to_mlty g hd
+        else 
             let formals, _ =
                 let (_, fvty), _ = FStar.TypeChecker.Env.lookup_lid (tcenv_of_uenv g) fv.fv_name.v in
                 let fvty = N.normalize [Env.UnfoldUntil delta_constant; Env.ForExtraction] (tcenv_of_uenv g) fvty in
@@ -730,14 +774,19 @@ let rec translate_term_to_mlty (g:uenv) (t0:term) : mlty =
           | Tm_arrow {bs; comp=c} ->
             let bs, c = SS.open_comp bs c in
             let mlbs, env = binders_as_ml_binders env bs in
-            let t_ret = translate_term_to_mlty env (maybe_reify_comp env (tcenv_of_uenv env) c) in
-            let erase = effect_as_etag env (U.comp_effect_name c) in
+            let codom = maybe_reify_comp env (tcenv_of_uenv env) c in
+            let t_ret = translate_term_to_mlty env codom in
+            let erase =
+              if is_pulse_lib_core_stt codom
+              then E_IMPURE
+              else effect_as_etag env (U.comp_effect_name c) in
             let _, t = List.fold_right (fun (_, t) (tag, t') -> (E_PURE, MLTY_Fun(t, tag, t'))) mlbs (erase, t_ret) in
             t
 
           (*can this be a partial type application? , i.e can the result of this application be something like Type -> Type, or nat -> Type? : Yes *)
           (* should we try to apply additional arguments here? if not, where? FIX!! *)
-          | Tm_app {hd=head; args} ->
+          | Tm_app _ -> //{hd=head; args} ->
+            let head, args = U.head_and_args_full t in
             let res = match (U.un_uinst head).n, args with
                 | Tm_name bv, _ ->
                   (*the args are thrown away, because in OCaml, type variables have type Type and not something like -> .. -> .. Type *)

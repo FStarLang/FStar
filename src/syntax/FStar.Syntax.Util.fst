@@ -490,6 +490,8 @@ let eq_lazy_kind k k' =
      | Lazy_ident, Lazy_ident
      | Lazy_doc, Lazy_doc
        -> true
+     | Lazy_extension s, Lazy_extension t ->
+       s = t
      | Lazy_embedding _, _
      | _, Lazy_embedding _ -> false
      | _ -> failwith "FIXME! eq_lazy_kind must be complete"
@@ -515,7 +517,8 @@ let lazy_kind_to_string k =
     | Lazy_doc -> "Lazy_doc"
     | Lazy_ident -> "Lazy_ident"
     | Lazy_embedding _ -> "Lazy_embedding _"
-     | _ -> failwith "FIXME! lazy_kind_to_string must be complete"
+    | Lazy_extension s -> "Lazy_extension " ^ s
+    | _ -> failwith "FIXME! lazy_kind_to_string must be complete"
 
 let unlazy_as_t k t =
     match (compress t).n with
