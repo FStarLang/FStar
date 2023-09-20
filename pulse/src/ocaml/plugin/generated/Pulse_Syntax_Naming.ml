@@ -819,7 +819,8 @@ let rec (subst_st_term :
               } in
       {
         Pulse_Syntax_Base.term1 = t';
-        Pulse_Syntax_Base.range2 = (t.Pulse_Syntax_Base.range2)
+        Pulse_Syntax_Base.range2 = (t.Pulse_Syntax_Base.range2);
+        Pulse_Syntax_Base.effect_tag = (t.Pulse_Syntax_Base.effect_tag)
       }
 and (subst_branches :
   Pulse_Syntax_Base.st_term ->

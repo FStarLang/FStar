@@ -1422,19 +1422,20 @@ let (continuation_elaborator_with_let :
                                                                     (Prims.of_int (314))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (314))
-                                                                    (Prims.of_int (60)))))
+                                                                    (Prims.of_int (63)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Base.fst"
                                                                     (Prims.of_int (314))
-                                                                    (Prims.of_int (63))
+                                                                    (Prims.of_int (66))
                                                                     (Prims.of_int (352))
                                                                     (Prims.of_int (15)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___4 ->
                                                                     Pulse_Typing.wr
+                                                                    c2
                                                                     (Pulse_Syntax_Base.Tm_TotBind
                                                                     {
                                                                     Pulse_Syntax_Base.binder1
@@ -2022,7 +2023,7 @@ let (return_in_ctxt :
                           (g, ctag, false, u, ty, y_tm,
                             (post_hint.Pulse_Typing.post), x, (), (), ()) in
                       let t =
-                        Pulse_Typing.wr
+                        Pulse_Typing.wtag (FStar_Pervasives_Native.Some ctag)
                           (Pulse_Syntax_Base.Tm_Return
                              {
                                Pulse_Syntax_Base.ctag = ctag;

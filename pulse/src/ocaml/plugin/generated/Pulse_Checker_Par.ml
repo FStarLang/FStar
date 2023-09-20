@@ -509,6 +509,7 @@ let (check :
                                                                     (Pulse_Checker_Prover.try_frame_pre
                                                                     g pre ()
                                                                     (Pulse_Typing.wr
+                                                                    cL
                                                                     (Pulse_Syntax_Base.Tm_Par
                                                                     {
                                                                     Pulse_Syntax_Base.pre1

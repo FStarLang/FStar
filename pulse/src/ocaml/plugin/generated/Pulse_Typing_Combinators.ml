@@ -107,6 +107,8 @@ let rec (mk_bind :
                                                              (fun uu___4 ->
                                                                 FStar_Pervasives.Mkdtuple3
                                                                   ((Pulse_Typing.wr
+                                                                    (Pulse_Typing.bind_comp_out
+                                                                    c1 c2)
                                                                     (Pulse_Syntax_Base.Tm_Bind
                                                                     {
                                                                     Pulse_Syntax_Base.binder
@@ -152,6 +154,8 @@ let rec (mk_bind :
                                                                     ->
                                                                     FStar_Pervasives.Mkdtuple3
                                                                     ((Pulse_Typing.wr
+                                                                    (Pulse_Typing.bind_comp_out
+                                                                    c1 c2)
                                                                     (Pulse_Syntax_Base.Tm_Bind
                                                                     {
                                                                     Pulse_Syntax_Base.binder
@@ -201,6 +205,10 @@ let rec (mk_bind :
                                                                     ->
                                                                     FStar_Pervasives.Mkdtuple3
                                                                     ((Pulse_Typing.wr
+                                                                    (Pulse_Typing.bind_comp_out
+                                                                    (Pulse_Syntax_Base.C_ST
+                                                                    (Pulse_Syntax_Base.st_comp_of_comp
+                                                                    c1)) c2)
                                                                     (Pulse_Syntax_Base.Tm_Bind
                                                                     {
                                                                     Pulse_Syntax_Base.binder
@@ -292,6 +300,8 @@ let rec (mk_bind :
                                                                     uu___4 ->
                                                                     FStar_Pervasives.Mkdtuple3
                                                                     ((Pulse_Typing.wr
+                                                                    (Pulse_Typing.bind_comp_ghost_l_out
+                                                                    c1 c2)
                                                                     (Pulse_Syntax_Base.Tm_Bind
                                                                     {
                                                                     Pulse_Syntax_Base.binder
@@ -365,6 +375,8 @@ let rec (mk_bind :
                                                                     uu___4 ->
                                                                     FStar_Pervasives.Mkdtuple3
                                                                     ((Pulse_Typing.wr
+                                                                    (Pulse_Typing.bind_comp_ghost_r_out
+                                                                    c1 c2)
                                                                     (Pulse_Syntax_Base.Tm_Bind
                                                                     {
                                                                     Pulse_Syntax_Base.binder
@@ -413,6 +425,11 @@ let rec (mk_bind :
                                                                     ->
                                                                     FStar_Pervasives.Mkdtuple3
                                                                     ((Pulse_Typing.wr
+                                                                    (Pulse_Typing.bind_comp_out
+                                                                    c1
+                                                                    (Pulse_Syntax_Base.C_ST
+                                                                    (Pulse_Syntax_Base.st_comp_of_comp
+                                                                    c2)))
                                                                     (Pulse_Syntax_Base.Tm_Bind
                                                                     {
                                                                     Pulse_Syntax_Base.binder

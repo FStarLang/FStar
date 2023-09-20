@@ -1727,6 +1727,7 @@ let (check :
                                                                     post_hint)
                                                                     (FStar_Pervasives.Mkdtuple3
                                                                     ((Pulse_Typing.wr
+                                                                    c
                                                                     (Pulse_Syntax_Base.Tm_Match
                                                                     {
                                                                     Pulse_Syntax_Base.sc

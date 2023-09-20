@@ -544,7 +544,9 @@ let (check_elim_exists :
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Prover.try_frame_pre
                                                                     g pre ()
-                                                                    (Pulse_Typing.wr
+                                                                    (Pulse_Typing.wtag
+                                                                    (FStar_Pervasives_Native.Some
+                                                                    Pulse_Syntax_Base.STT_Ghost)
                                                                     (Pulse_Syntax_Base.Tm_ElimExists
                                                                     {
                                                                     Pulse_Syntax_Base.p4
@@ -1017,7 +1019,9 @@ let (check_intro_exists :
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Prover.try_frame_pre
                                                                     g pre ()
-                                                                    (Pulse_Typing.wr
+                                                                    (Pulse_Typing.wtag
+                                                                    (FStar_Pervasives_Native.Some
+                                                                    Pulse_Syntax_Base.STT_Ghost)
                                                                     (Pulse_Syntax_Base.Tm_IntroExists
                                                                     {
                                                                     Pulse_Syntax_Base.p5

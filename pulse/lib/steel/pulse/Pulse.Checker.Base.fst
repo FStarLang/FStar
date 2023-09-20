@@ -311,7 +311,7 @@ let continuation_elaborator_with_let (#g:env) (#ctxt:term)
   let e2_closed = close_st_term e2 x in
   assume (open_st_term (close_st_term e2 x) x == e2);
 
-  let e = wr (Tm_TotBind {binder=b; head=e1;body=e2_closed}) in
+  let e = wr c2 (Tm_TotBind {binder=b; head=e1;body=e2_closed}) in
   let c = open_comp_with (close_comp c2 x) e1 in
   // we just closed
   assume (~ (x `Set.mem` freevars_st e2_closed));
@@ -418,7 +418,7 @@ let return_in_ctxt (g:env) (y:var) (y_ppname:ppname) (u:universe) (ty:term) (ctx
     (magic ())  // that null_var y is well typed at ty in g, we know since lookup g y == Some ty
     (magic ())  // typing of (open post x) in (g, x) ... post_hint is well-typed, so should get
   in
-  let t = wr (Tm_Return {ctag=ctag;insert_eq=false;term=y_tm}) in
+  let t = wtag (Some ctag) (Tm_Return {ctag=ctag;insert_eq=false;term=y_tm}) in
   let c = comp_return ctag false u ty y_tm post_hint.post x in
   let d : st_typing g t c = d in
 

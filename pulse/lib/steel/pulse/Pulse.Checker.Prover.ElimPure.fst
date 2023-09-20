@@ -48,7 +48,7 @@ let mk_elim_pure (p:term)
                        arg_qual = None;
                        arg = p }
     in
-    wr t
+    wtag (Some STT_Ghost) t
 
 
 let elim_pure_comp (p:host_term) =

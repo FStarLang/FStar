@@ -871,7 +871,9 @@ let (check :
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Prover.try_frame_pre
                                                                     g pre ()
-                                                                    (Pulse_Typing.wr
+                                                                    (Pulse_Typing.wtag
+                                                                    (FStar_Pervasives_Native.Some
+                                                                    Pulse_Syntax_Base.STT)
                                                                     (Pulse_Syntax_Base.Tm_While
                                                                     {
                                                                     Pulse_Syntax_Base.invariant

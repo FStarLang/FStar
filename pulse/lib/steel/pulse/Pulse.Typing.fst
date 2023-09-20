@@ -539,7 +539,8 @@ type lift_comp : env -> comp -> comp -> Type =
       non_informative_c:non_informative_c g c ->
       lift_comp g c (C_STAtomic (comp_inames c) (st_comp_of_comp c))
 
-let wr (t:st_term') : st_term = { term = t; range = FStar.Range.range_0 }
+let wr (ct:comp_st) (t:st_term') : st_term = { term = t; range = FStar.Range.range_0; effect_tag = as_effect_hint (ctag_of_comp_st ct) }
+let wtag (ct:option ctag)  (t:st_term') : st_term = { term = t; range = FStar.Range.range_0; effect_tag = FStar.Sealed.seal ct }
 
 [@@ no_auto_projectors]
 noeq
@@ -626,7 +627,7 @@ type st_typing : env -> st_term -> comp -> Type =
       c:comp ->
       tot_typing g b.binder_ty (tm_type u) ->
       st_typing (push_binding g x ppname_default b.binder_ty) (open_st_term_nv body (b.binder_ppname, x)) c ->
-      st_typing g (wr (Tm_Abs { b; q; body; ascription=(close_comp c x)}))
+      st_typing g (wtag None (Tm_Abs { b; q; body; ascription=(close_comp c x)}))
                   (C_Tot (tm_arrow b q (close_comp c x)))
   | T_STApp :
       g:env ->
@@ -637,7 +638,7 @@ type st_typing : env -> st_term -> comp -> Type =
       arg:term ->
       tot_typing g head (tm_arrow (as_binder ty) q res) ->
       tot_typing g arg ty ->
-      st_typing g (wr (Tm_STApp {head; arg_qual=q; arg}))
+      st_typing g (wr res (Tm_STApp {head; arg_qual=q; arg}))
                   (open_comp_with res arg)
 
     //
@@ -660,7 +661,7 @@ type st_typing : env -> st_term -> comp -> Type =
       non_informative (push_binding g x ppname_default ty)
                       (open_comp_with res (null_var x)) ->
       ghost_typing g arg ty ->
-      st_typing g (wr (Tm_STApp {head; arg_qual=q; arg}))
+      st_typing g (wr res (Tm_STApp {head; arg_qual=q; arg}))
                   (open_comp_with res arg)
 
   | T_Return:
@@ -675,7 +676,7 @@ type st_typing : env -> st_term -> comp -> Type =
       universe_of g t u ->
       tot_typing g e t ->
       tot_typing (push_binding g x ppname_default t) (open_term post x) tm_vprop ->
-      st_typing g (wr (Tm_Return { ctag=c; insert_eq=use_eq; term=e }))
+      st_typing g (wtag (Some c) (Tm_Return { ctag=c; insert_eq=use_eq; term=e }))
                   (comp_return c use_eq u t e post x)
 
   | T_Lift:
@@ -700,7 +701,7 @@ type st_typing : env -> st_term -> comp -> Type =
       tot_typing g (comp_res c1) (tm_type (comp_u c1)) -> //type-correctness; would be nice to derive it instead      
       st_typing (push_binding g x ppname_default (comp_res c1)) (open_st_term_nv e2 (b.binder_ppname, x)) c2 ->
       bind_comp g x c1 c2 c ->
-      st_typing g (wr (Tm_Bind { binder=b; head=e1; body=e2 })) c
+      st_typing g (wr c (Tm_Bind { binder=b; head=e1; body=e2 })) c
 
   | T_TotBind:
       g:env ->
@@ -712,7 +713,7 @@ type st_typing : env -> st_term -> comp -> Type =
       x:var { None? (lookup g x) /\ ~ (x `Set.mem` freevars_st e2) } ->
       tot_typing g e1 t1 ->
       st_typing (push_binding g x ppname_default t1) (open_st_term_nv e2 (v_as_nv x)) c2 ->
-      st_typing g (wr (Tm_TotBind { binder = b; head = e1; body = e2 }))
+      st_typing g (wr c2 (Tm_TotBind { binder = b; head = e1; body = e2 }))
                   (open_comp_with (close_comp c2 x) e1)
 
   | T_GhostBind:  // see the comment on T_STGhostApp regarding the non-informative judgment
@@ -726,8 +727,8 @@ type st_typing : env -> st_term -> comp -> Type =
       ghost_typing g e1 t1 ->
       st_typing (push_binding g x ppname_default t1) (open_st_term_nv e2 (v_as_nv x)) c2 ->
       non_informative (push_binding g x ppname_default t1) c2 ->
-      st_typing g (wr (Tm_TotBind { binder = b; head = e1; body = e2 }))
-                    (open_comp_with (close_comp c2 x) e1)
+      st_typing g (wr c2 (Tm_TotBind { binder = b; head = e1; body = e2 }))
+                  (open_comp_with (close_comp c2 x) e1)
 
   | T_If:
       g:env ->
@@ -748,7 +749,7 @@ type st_typing : env -> st_term -> comp -> Type =
       st_typing (push_binding g hyp ppname_default (mk_eq2 u0 tm_bool b tm_true)) e1 c ->
       st_typing (push_binding g hyp ppname_default (mk_eq2 u0 tm_bool b tm_false)) e2 c ->
       my_erased (comp_typing g c uc) ->
-      st_typing g (wr (Tm_If { b; then_=e1; else_=e2; post=None })) c
+      st_typing g (wr c (Tm_If { b; then_=e1; else_=e2; post=None })) c
 
   | T_Match :
       g:env ->
@@ -761,7 +762,7 @@ type st_typing : env -> st_term -> comp -> Type =
       brs:list (pattern & st_term) ->
       brs_typing g sc_u sc_ty sc brs c ->
       pats_complete g sc sc_ty (L.map (fun (p, _) -> elab_pat p) brs) ->
-      st_typing g (wr (Tm_Match {sc; returns_=None; brs})) c
+      st_typing g (wr c (Tm_Match {sc; returns_=None; brs})) c
 
   | T_Frame:
       g:env ->
@@ -786,7 +787,7 @@ type st_typing : env -> st_term -> comp -> Type =
       p:term ->
       tot_typing g p tm_prop ->
       prop_validity g p -> 
-      st_typing g (wr (Tm_IntroPure { p }))
+      st_typing g (wtag (Some STT_Ghost) (Tm_IntroPure { p }))
                   (comp_intro_pure p)
 
   | T_ElimExists:
@@ -797,7 +798,7 @@ type st_typing : env -> st_term -> comp -> Type =
       x:var { None? (lookup g x) } ->
       tot_typing g t (tm_type u) ->
       tot_typing g (tm_exists_sl u (as_binder t) p) tm_vprop ->
-      st_typing g (wr (Tm_ElimExists { p = tm_exists_sl u (as_binder t) p }))
+      st_typing g (wtag (Some STT_Ghost) (Tm_ElimExists { p = tm_exists_sl u (as_binder t) p }))
                   (comp_elim_exists u t p (v_as_nv x))
 
   | T_IntroExists:
@@ -809,8 +810,8 @@ type st_typing : env -> st_term -> comp -> Type =
       tot_typing g b.binder_ty (tm_type u) ->
       tot_typing g (tm_exists_sl u b p) tm_vprop ->
       ghost_typing g e b.binder_ty ->
-      st_typing g (wr (Tm_IntroExists { p = tm_exists_sl u b p;
-                                        witnesses= [e] }))
+      st_typing g (wtag (Some STT_Ghost) (Tm_IntroExists { p = tm_exists_sl u b p;
+                                         witnesses= [e] }))
                   (comp_intro_exists u b p e)
 
   | T_While:
@@ -821,10 +822,10 @@ type st_typing : env -> st_term -> comp -> Type =
       tot_typing g (tm_exists_sl u0 (as_binder tm_bool) inv) tm_vprop ->
       st_typing g cond (comp_while_cond ppname_default inv) ->
       st_typing g body (comp_while_body ppname_default inv) ->
-      st_typing g (wr (Tm_While { invariant = inv;
-                                  condition = cond;
-                                  body;
-                                  condition_var = ppname_default } ))
+      st_typing g (wtag (Some STT) (Tm_While { invariant = inv;
+                                              condition = cond;
+                                              body;
+                                              condition_var = ppname_default } ))
                   (comp_while ppname_default inv)
 
   | T_Par:
@@ -839,8 +840,8 @@ type st_typing : env -> st_term -> comp -> Type =
       comp_typing g cR (comp_u cR) ->
       st_typing g eL cL ->
       st_typing g eR cR ->
-      st_typing g (wr (Tm_Par { pre1=tm_unknown; body1=eL; post1=tm_unknown;
-                                pre2=tm_unknown; body2=eR; post2=tm_unknown }))
+      st_typing g (wr cL (Tm_Par { pre1=tm_unknown; body1=eL; post1=tm_unknown;
+                                   pre2=tm_unknown; body2=eR; post2=tm_unknown }))
                   (comp_par cL cR x)
 
   | T_WithLocal:
@@ -856,7 +857,7 @@ type st_typing : env -> st_term -> comp -> Type =
       st_typing (push_binding g x ppname_default (mk_ref init_t))
                 (open_st_term_nv body (v_as_nv x))
                 (comp_withlocal_body x init_t init c) ->
-      st_typing g (wr (Tm_WithLocal { binder=as_binder (mk_ref init_t); initializer=init; body } )) c
+      st_typing g (wr c (Tm_WithLocal { binder=as_binder (mk_ref init_t); initializer=init; body } )) c
 
   | T_Rewrite:
       g:env ->
@@ -864,7 +865,7 @@ type st_typing : env -> st_term -> comp -> Type =
       q:vprop ->
       tot_typing g p tm_vprop ->
       vprop_equiv g p q ->
-      st_typing g (wr (Tm_Rewrite { t1=p; t2=q } ))
+      st_typing g (wtag (Some STT_Ghost) (Tm_Rewrite { t1=p; t2=q } ))
                   (comp_rewrite p q)
 
   | T_Admit:
@@ -872,7 +873,7 @@ type st_typing : env -> st_term -> comp -> Type =
       s:st_comp ->
       c:ctag ->
       st_comp_typing g s ->
-      st_typing g (wr (Tm_Admit { ctag=c; u=s.u; typ=s.res; post=None }))
+      st_typing g (wtag (Some c) (Tm_Admit { ctag=c; u=s.u; typ=s.res; post=None }))
                   (comp_admit c s)
 
 and pats_complete : env -> term -> typ -> list R.pattern -> Type0 =

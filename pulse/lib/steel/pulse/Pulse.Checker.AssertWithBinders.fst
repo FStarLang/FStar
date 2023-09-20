@@ -330,10 +330,12 @@ let check
     let lhs, rhs = close_binders uvs_bs lhs, close_binders uvs_bs rhs in
     let rw = { term = Tm_Rewrite { t1 = lhs;
                                    t2 = rhs };
-               range = st.range } in
+               range = st.range;
+               effect_tag = as_effect_hint STT_Ghost } in
     let st = { term = Tm_Bind { binder = as_binder (tm_fstar (`unit) st.range);
                                 head = rw; body };
-               range = st.range } in
+               range = st.range;
+               effect_tag = body.effect_tag } in
 
     let st =
       match bs with
@@ -342,5 +344,6 @@ let check
         { term = Tm_ProofHintWithBinders { hint_type = ASSERT { p = lhs };
                                            binders = bs;
                                            t = st };
-          range = st.range } in
+          range = st.range;
+          effect_tag = st.effect_tag } in
     check g pre pre_typing post_hint res_ppname st

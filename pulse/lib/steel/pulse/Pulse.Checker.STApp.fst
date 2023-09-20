@@ -52,7 +52,8 @@ let rec intro_uvars_for_logical_implicits (g:env) (uvs:env { disjoint uvs g }) (
        | C_STAtomic _ _
        | C_STGhost _ _ ->
          (| uvs', push_env g uvs', {term=Tm_STApp {head=t;arg_qual=Some Implicit;arg=null_var x};
-                                    range=t.range} |)
+                                    range=t.range;
+                                    effect_tag=as_effect_hint (ctag_of_comp_st c_rest) } |)
        | C_Tot ty ->
          intro_uvars_for_logical_implicits g uvs' (tm_pureapp t (Some Implicit) (null_var x)) ty
     end
@@ -63,7 +64,7 @@ let rec intro_uvars_for_logical_implicits (g:env) (uvs:env { disjoint uvs g }) (
          (P.term_to_string ty))
 
 
-let instantaite_implicits (g:env) (t:st_term { Tm_STApp? t.term })
+let instantiate_implicits (g:env) (t:st_term { Tm_STApp? t.term })
   : T.Tac (uvs : env &
            g' : env { extends_with g' g uvs } &
            t' : st_term { Tm_STApp? t'.term }) =
@@ -80,7 +81,7 @@ let instantaite_implicits (g:env) (t:st_term { Tm_STApp? t.term })
     match is_pure_app t with
     | Some (head, q, arg) ->
       let uvs = mk_env (fstar_env g) in
-      (| uvs, push_env g uvs, {term=Tm_STApp {head;arg_qual=q;arg}; range=t.range} |)
+      (| uvs, push_env g uvs, {term=Tm_STApp {head;arg_qual=q;arg}; range=t.range; effect_tag=default_effect_hint } |)
     | _ ->
       fail g (Some t.range)
         (Printf.sprintf "check_stapp.instantiate_implicits: expected an application term, found: %s"
@@ -99,7 +100,7 @@ let check
   let g0 = push_context "st_app" t.range g0 in
   let range = t.range in
 
-  let (| uvs, g, t |) = instantaite_implicits g0 t in
+  let (| uvs, g, t |) = instantiate_implicits g0 t in
 
   let Tm_STApp { head; arg_qual=qual; arg } = t.term in
 
@@ -137,7 +138,7 @@ let check
           let d : st_typing _ _ (open_comp_with comp_typ arg) =
             T_STApp g head formal qual comp_typ arg dhead darg in
           let d = canonicalize_st_typing d in
-          let t = { term = Tm_STApp {head; arg_qual=qual; arg}; range } in
+          let t = { term = Tm_STApp {head; arg_qual=qual; arg}; range; effect_tag=as_effect_hint (ctag_of_comp_st comp_typ) } in
           let c = (canon_comp (open_comp_with comp_typ arg)) in
           (| t, c, d |)
         | C_STGhost _ res ->
@@ -168,7 +169,7 @@ let check
               (E d_non_info)
               (lift_typing_to_ghost_typing darg) in
           let d = canonicalize_st_typing d in
-          let t = { term = Tm_STApp {head; arg_qual=qual; arg}; range } in
+          let t = { term = Tm_STApp {head; arg_qual=qual; arg}; range; effect_tag=as_effect_hint STT_Ghost } in
           let c = (canon_comp (open_comp_with comp_typ arg)) in
           (| t, c, d |)
         | _ ->

@@ -24,8 +24,8 @@ let k_intro_exists (#g:env) (#u:universe) (#b:binder) (#p:vprop)
   : T.Tac (continuation_elaborator g (frame * subst_term p [ DT 0 e ])
                                    g (frame * tm_exists_sl u b p)) =
   
-  let t = wr (Tm_IntroExists { p = tm_exists_sl u b p;
-                               witnesses = [e] }) in
+  let t = wtag (Some STT_Ghost) (Tm_IntroExists { p = tm_exists_sl u b p;
+                                                  witnesses = [e] }) in
 
   let c = comp_intro_exists u b p e in
 

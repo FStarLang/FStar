@@ -433,7 +433,9 @@ let (check_core :
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Prover.try_frame_pre
                                                                     g ctxt ()
-                                                                    (Pulse_Typing.wr
+                                                                    (Pulse_Typing.wtag
+                                                                    (FStar_Pervasives_Native.Some
+                                                                    c)
                                                                     (Pulse_Syntax_Base.Tm_Return
                                                                     {
                                                                     Pulse_Syntax_Base.ctag
@@ -520,7 +522,9 @@ let (check :
                                        (f.Pulse_Syntax_Base.term)
                                    });
                               Pulse_Syntax_Base.range2 =
-                                (st.Pulse_Syntax_Base.range2)
+                                (st.Pulse_Syntax_Base.range2);
+                              Pulse_Syntax_Base.effect_tag =
+                                (st.Pulse_Syntax_Base.effect_tag)
                             }))
                       (fun uu___7 ->
                          (fun st1 ->
