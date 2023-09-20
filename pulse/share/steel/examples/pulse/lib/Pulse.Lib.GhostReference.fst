@@ -73,3 +73,7 @@ let pts_to_injective_eq (#a:Type0)
       (R.pts_to r p v0 `S.star` R.pts_to r q v1)
       (fun _ -> R.pts_to r p v0 `S.star` R.pts_to r q v0 `S.star` S.pure (v0 == v1))
     = fun _ -> let _ = R.pts_to_injective_eq #a #emp_inames #p #q #v0 #v1 r in ()
+
+inline_for_extraction
+let gref_non_informative (a:Type0) : non_informative_witness (ref a) =
+  fun r -> reveal r
