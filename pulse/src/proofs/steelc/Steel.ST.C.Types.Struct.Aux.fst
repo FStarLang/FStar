@@ -76,6 +76,7 @@ let struct_uninitialized
     (ensures (fun y -> p_refine (struct_pcm fields) y))
 = FX.on_dom field_t (fun f -> (fields.fd_typedef f).uninitialized <: fields.fd_type f)
 
+#push-options "--z3rlimit 16"
 #restart-solver
 
 [@@noextract_to "krml"] // proof-only
@@ -101,6 +102,8 @@ let struct_extract_full
       | Some (x1, _) -> x' `FX.feq` x1
   );
   x'
+
+#pop-options
 
 let struct1
   (#field_t: eqtype)

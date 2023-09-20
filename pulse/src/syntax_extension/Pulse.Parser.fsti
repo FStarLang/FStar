@@ -8,5 +8,5 @@ val parse_peek_id (contents:string)
 val parse_decl (contents:string)
                (r:FStar.Compiler.Range.range)
   : either PulseSugar.decl
-           (string & FStar.Compiler.Range.range)
+           (option (string & FStar.Compiler.Range.range))
 

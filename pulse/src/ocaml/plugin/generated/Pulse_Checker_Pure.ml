@@ -736,7 +736,8 @@ let (rtb_check_prop_validity :
                           uu___1))) uu___)
 let (exn_as_issue : Prims.exn -> FStar_Issue.issue) =
   fun e ->
-    FStar_Issue.mk_issue "Error" (Pulse_RuntimeUtils.print_exn e)
+    FStar_Issue.mk_issue_doc "Error"
+      [FStar_Pprint.arbitrary_string (Pulse_RuntimeUtils.print_exn e)]
       FStar_Pervasives_Native.None FStar_Pervasives_Native.None []
 let catch_all :
   'a .
