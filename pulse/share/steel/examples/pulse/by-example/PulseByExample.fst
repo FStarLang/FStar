@@ -78,7 +78,7 @@ fn arr_swap (#t:Type0) (n i j:SZ.t) (a:larray t (v n))
   let vi = a.(i);
   let vj = a.(j);
   a.(i) <- vj;
-  a.(j) <- vi; // TODO: make sure this works
+  a.(j) <- vi;
 }
 ```
 
@@ -97,13 +97,13 @@ fn max (n:SZ.t) (a:larray nat (v n))
              /\ (forall (i:nat). i < v n ==> Seq.index 's i <= r))
 {
   let mut i = 0sz;
-  let mut max = 0;
+  let mut max : nat = 0; //Note: without that `nat` annotation, this fails with very poor feedback. "SMT query failed"
   while (let vi = !i; (vi < n))
   invariant b. exists (vi:SZ.t) (vmax:nat).
     A.pts_to a #'p 's **
     R.pts_to i vi **
     R.pts_to max vmax **
-    pure (vi <= n /\ Seq.length 's == v n
+    pure (vi <= n
        /\ (forall (j:nat). j < v vi ==> Seq.index 's j <= vmax)
        /\ b == (vi < n))
   {
@@ -113,48 +113,43 @@ fn max (n:SZ.t) (a:larray nat (v n))
     i := vi + 1sz;
     if (v > vmax) {
       max := v;
-      admit()
-    } else {
-      // FIXME: assert on line 123 does not check with the pure part. seemingly
-      // any pure prop with Seq.X fails with the message:
-      //   `Expected a function; got an expression of type "int"`
-      // for example,
-      //   assert (pure (Seq.index 's (v (vi-1sz)) <= vmax));
-      assert (
-        A.pts_to a #'p 's **
-        R.pts_to i (vi+1sz) **
-        R.pts_to max vmax //**
-        // pure (vi <= n /\ Seq.length 's == v n
-        //   /\ (forall (j:nat). j < v vi ==> Seq.index 's j <= vmax))
-      );
-      admit()
     }
   };
-  with (vi:SZ.t) (vmax:nat). assert (
+  let vmax = !max;
+  vmax
+}
+```
+//this option should become the default, once I shake out the handling of address-taking
+#push-options "--ext 'pulse:rvalues'"
+```pulse
+fn max_alt (n:SZ.t) (a:larray nat (v n))
+  requires A.pts_to a #'p 's ** pure (Seq.length 's == v n)
+  returns r:nat
+  ensures A.pts_to a #'p 's
+       ** pure (Seq.length 's == v n
+             /\ (forall (i:nat). i < v n ==> Seq.index 's i <= r))
+{
+  let mut i = 0sz;
+  let mut max : nat = 0;
+  while ((i < n))
+  invariant b. exists (vi:SZ.t) (vmax:nat).
     A.pts_to a #'p 's **
     R.pts_to i vi **
     R.pts_to max vmax **
-    pure (vi <= n /\ Seq.length 's == v n
-       /\ (forall (j:nat). j < v vi ==> Seq.index 's j <= vmax))
-  );
-  assert (pure (vi == n));
-  assert (A.pts_to a #'p 's
-        ** pure (Seq.length 's == v n
-              /\ (forall (i:nat). i < v n ==> Seq.index 's i <= vmax)));
-  admit() 
-  (* 
-    FIXME: The last assertion above should be the postcondition, but Pulse
-    can't prove the postcondition without an admit(), so somthing must go 
-    wrong in the following two lines. I played around with the proof of the 
-    loop invariant (which, turns out, is also not checking) and my intuition 
-    is that there's a gap between the logical values vi and vmax in the spec 
-    and the values assigned to i and max. The ownership part of the loop 
-    invariant should take care of that relationship...
-  *)
-  // let vmax = !max;
-  // vmax
+    pure (vi <= n
+       /\ (forall (j:nat). j < v vi ==> Seq.index 's j <= vmax)
+       /\ b == (vi < n))
+  {
+    let v = a.(i);
+    i := i + 1sz;
+    if (v > max) {
+      max := v;
+    }
+  };
+  max
 }
 ```
+#pop-options
 
 (* 
 - some more mature example (e.g. sorting alg)
