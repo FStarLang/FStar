@@ -1,4 +1,4 @@
-module PulseExtract.CompilerLib
+module Pulse.Extract.CompilerLib
 module T = FStar.Tactics.V2
 val uenv : Type0
 val mlexpr : Type0

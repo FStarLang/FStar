@@ -1,6 +1,6 @@
-module PulseExtract.Main
+module Pulse.Extract.Main
 open Pulse.Syntax.Base
-open PulseExtract.CompilerLib
+open Pulse.Extract.CompilerLib
 open Pulse.Syntax.Printer
 module T = FStar.Tactics.V2
 

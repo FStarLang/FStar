@@ -7,7 +7,7 @@ let extractor
             (FStar_Extraction_ML_UEnv.tcenv_of_uenv uenv)
             [] []
       in
-      let result = PulseExtract_Main.extract_pulse uenv (Obj.magic tm) ps in
+      let result = Pulse_Extract_Main.extract_pulse uenv (Obj.magic tm) ps in
       match result with
       | FStar_Tactics_Result.Success (a, ps) -> a
       | FStar_Tactics_Result.Failed (exn, _) -> raise exn
