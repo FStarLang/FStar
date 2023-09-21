@@ -56,3 +56,5 @@ val pts_to_injective_eq (#a:_)
       (pts_to r #p v0 ** pts_to r #q v1)
       (fun _ -> pts_to r #p v0 ** pts_to r #q v0 ** pure (v0 == v1))
 
+inline_for_extraction
+val gref_non_informative (a:Type0) : non_informative_witness (ref a)

@@ -117,7 +117,8 @@ let (parse_pulse :
             Prims.int ->
               Prims.int ->
                 (PulseSyntaxWrapper.st_term,
-                  (Prims.string * FStar_Compiler_Range_Type.range))
+                  (Prims.string * FStar_Compiler_Range_Type.range)
+                    FStar_Pervasives_Native.option)
                   FStar_Pervasives.either)
   =
   fun env ->

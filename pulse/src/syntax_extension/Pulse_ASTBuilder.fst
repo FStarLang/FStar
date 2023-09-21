@@ -74,7 +74,7 @@ let parse_pulse (env:TcEnv.env)
                 (content:string)
                 (file_name:string)
                 (line col:int)
-  : either PulseSyntaxWrapper.st_term (string & R.range)
+  : either PulseSyntaxWrapper.st_term (option (string & R.range))
   = let namespaces = L.map Ident.path_of_text namespaces in
     let module_abbrevs = L.map (fun (x, l) -> x, Ident.path_of_text l) module_abbrevs in
     let env = D.initialize_env env namespaces module_abbrevs in
