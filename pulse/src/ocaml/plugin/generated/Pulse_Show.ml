@@ -25,8 +25,8 @@ let (uu___14 : unit tac_showable) =
     show =
       (fun uu___ ->
          (fun uu___ ->
-            Obj.magic (FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> "")))
-           uu___)
+            Obj.magic
+              (FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> "()"))) uu___)
   }
 let (uu___16 : Prims.bool tac_showable) =
   {

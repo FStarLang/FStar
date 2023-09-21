@@ -11,6 +11,7 @@ open Pulse.Checker.Base
 module L = FStar.List.Tot
 module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
+module Pprint = FStar.Stubs.Pprint
 module Metatheory = Pulse.Typing.Metatheory
 module PS = Pulse.Checker.Prover.Substs
 module ElimExists = Pulse.Checker.Prover.ElimExists
@@ -95,7 +96,11 @@ let rec prove_pures #preamble (pst:prover_state preamble)
     let pst_opt = IntroPure.intro_pure pst p unsolved' () in
     (match pst_opt with
      | None ->
-       fail pst.pg None (Printf.sprintf "prover error: cannot prove pure %s\n" (P.term_to_string p))
+       let open Pulse.PP in
+       fail_doc pst.pg None [
+         text "Cannot prove pure proposition" ^/^
+           pp p
+       ]
      | Some pst1 ->
        let pst2 = prove_pures pst1 in
        assert (pst1 `pst_extends` pst);
@@ -158,13 +163,24 @@ let rec prover
         let pst_opt = match_q pst q tl () 0 in
         match pst_opt with
         | None ->
-          let msg = Printf.sprintf
-            "cannot prove vprop %s in the context: %s\n(the prover was started with goal %s and initial context %s)"
-            (P.term_to_string q)
-            (P.term_to_string (list_as_vprop pst.remaining_ctxt))
-            (P.term_to_string preamble.goals)
-            (P.term_to_string preamble.ctxt) in
-          fail pst.pg None msg
+          let open Pprint in
+          let open Pulse.PP in
+          let msg = [
+            text "Error in proving precondition";
+            text "Cannot prove:" ^^
+                indent (pp q);
+            text "In the context:" ^^
+                indent (pp (list_as_vprop pst.remaining_ctxt))
+          ] @ (if Pulse.Config.debug_flag "initial_solver_state" then [
+                text "The prover was started with goal:" ^^
+                    indent (pp preamble.goals);
+                text "and initial context:" ^^
+                    indent (pp preamble.ctxt);
+               ] else [])
+          in
+          // GM: I feel I should use (Some q.range) instead of None, but that makes
+          // several error locations worse.
+          fail_doc pst.pg None msg
         | Some pst -> prover pst  // a little wasteful?
 #pop-options
 
@@ -356,11 +372,15 @@ let prove_post_hint (#g:env) (#ctxt:vprop)
 
     // TODO: subtyping
     if not (eq_tm ty post_hint.ret_ty)
-    then fail g (Some rng)
-           (Printf.sprintf "error in proving post hint:\
-                            comp return type %s does not match the post hint %s"
-              (P.term_to_string ty)
-              (P.term_to_string post_hint.ret_ty))
+    then
+      let open Pulse.PP in
+      fail_doc g (Some rng) [
+        text "Error in proving postcondition";
+        text "The return type" ^^
+          indent (pp ty) ^/^
+        text "does not match the expected" ^^
+          indent (pp post_hint.ret_ty)
+      ]
     else if eq_tm post_hint_opened ctxt'
     then (| x, g2, (| u_ty, ty, ty_typing |), (| ctxt', ctxt'_typing |), k |)
     else
@@ -374,10 +394,15 @@ let prove_post_hint (#g:env) (#ctxt:vprop)
 
       match check_equiv_emp g3 remaining_ctxt with
       | None -> 
-        fail g (Some rng)
-          (Printf.sprintf "error in proving post hint:\
-                           comp post contains extra vprops not matched in the post hint: %s\n"
-             (P.term_to_string remaining_ctxt))
+        let open Pulse.PP in
+        fail_doc g (Some rng) [
+          text "Error in proving postcondition";
+          text "Inferred postcondition additionally contains" ^^
+            indent (pp remaining_ctxt);
+          (if Tm_Star? remaining_ctxt.t
+           then text "Did you forget to free these resources?"
+           else text "Did you forget to free this resource?");
+        ]
       | Some d ->
         let k_post
           : continuation_elaborator g2 ctxt' g3 post_hint_opened =

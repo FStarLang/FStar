@@ -15,7 +15,7 @@ instance _ : tac_showable string = {
 }
 
 instance _ : tac_showable unit = {
-  show = (fun () -> "");
+  show = (fun () -> "()");
 }
 
 instance _ : tac_showable bool = {
