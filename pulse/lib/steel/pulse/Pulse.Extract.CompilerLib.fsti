@@ -25,6 +25,7 @@ val mle_let (x:mlletbinding) (b:mlexpr) : mlexpr
 val mle_app (x:mlexpr) (args:list mlexpr) : mlexpr
 val mke_tapp (x:mlexpr) (args:list mlty) : mlexpr
 val mle_fun (formals:list (mlident * mlty)) (body:mlexpr) : mlexpr
+val mle_unit : mlexpr
 
 val e_tag_pure : e_tag
 val e_tag_erasable : e_tag

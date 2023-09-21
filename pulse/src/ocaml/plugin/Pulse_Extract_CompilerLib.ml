@@ -61,6 +61,8 @@ let mle_fun (formals:(mlident * mlty) list) (body:mlexpr) : mlexpr =
    | _ ->
      as_expr (ML.MLE_Fun (formals, body))
 
+let mle_unit = ML.ml_unit
+
 let e_tag_pure : e_tag = ML.E_PURE
 let e_tag_erasable : e_tag = ML.E_ERASABLE
 let e_tag_impure : e_tag = ML.E_IMPURE

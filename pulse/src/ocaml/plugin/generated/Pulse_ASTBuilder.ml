@@ -108,12 +108,6 @@ let (extension_parser : FStar_Parser_AST_Util.extension_parser) =
             FStar_Pervasives.Inr d1
 let (uu___36 : unit) =
   FStar_Parser_AST_Util.register_extension_parser "pulse" extension_parser
-let (extractor : FStar_Extraction_ML_Modul.extension_extractor) =
-  fun uenv ->
-    fun tm1 ->
-      FStar_Pervasives.Inr "Extension extractor for pulse got control!"
-let (uu___39 : unit) =
-  FStar_Extraction_ML_Modul.register_extension_extractor "pulse" extractor
 let (parse_pulse :
   FStar_TypeChecker_Env.env ->
     Prims.string Prims.list ->
