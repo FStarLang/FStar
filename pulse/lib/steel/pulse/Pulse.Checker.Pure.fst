@@ -279,6 +279,11 @@ let check_vprop_with_core (g:env)
     (push_context_no_range g "check_vprop_with_core") t T.E_Total tm_vprop
 
   
+let pulse_lib_gref = ["Pulse"; "Lib"; "GhostReference"]
+let mk_pulse_lib_gref_lid s = pulse_lib_gref@[s]
+
+let gref_lid = mk_pulse_lib_gref_lid "ref"
+
 let get_non_informative_witness g u t
   : T.Tac (non_informative_t g u t)
   = let err () =
@@ -303,6 +308,12 @@ let get_non_informative_witness g u t
                      (tm_uinst (as_fv (mk_pulse_lib_core_lid "erased_non_informative")) us)
                      None
                      (Some?.v arg_opt))
+        else if l = gref_lid && Some? arg_opt
+        then (
+            Some (tm_pureapp
+                     (tm_uinst (as_fv (mk_pulse_lib_gref_lid "gref_non_informative")) us)
+                     None
+                     (Some?.v arg_opt)))
         else None
       | _ -> None
     in
