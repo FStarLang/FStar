@@ -3,9 +3,6 @@ module PulseByExample
 module PM = Pulse.Main
 open Pulse.Lib.Core
 
-assume
-val run_stt (#a:Type) (#post:a -> vprop) (f:stt a emp post) : Dv a
-
 (* 
   Things to note:
   - syntax extension notation
@@ -24,8 +21,6 @@ fn five (_:unit)
   5
 }
 ```
-
-let my_int = run_stt (five ()) // FIXME: invoke Pulse function from F*
 
 open Pulse.Lib.Reference
 module R = Pulse.Lib.Reference
@@ -96,7 +91,7 @@ fn max (n:SZ.t) (a:larray nat (v n))
        ** pure (Seq.length 's == v n
              /\ (forall (i:nat). i < v n ==> Seq.index 's i <= r))
 {
-  let mut i = 0sz;
+  let mut i : SZ.t = 0sz;
   let mut max : nat = 0; //Note: without that `nat` annotation, this fails with very poor feedback. "SMT query failed"
   while (let vi = !i; (vi < n))
   invariant b. exists (vi:SZ.t) (vmax:nat).
@@ -115,6 +110,12 @@ fn max (n:SZ.t) (a:larray nat (v n))
       max := v;
     }
   };
+  with (vi:SZ.t) (vmax:nat). assert (
+    R.pts_to i vi **
+    R.pts_to max vmax **
+    pure (vi = n
+       /\ (forall (j:nat). j < v vi ==> Seq.index 's j <= vmax))
+  );
   let vmax = !max;
   vmax
 }
