@@ -430,6 +430,27 @@ let (rt_subst_elt : subst_elt -> FStar_Reflection_Typing.subst_elt) =
 let (rt_subst :
   subst_elt Prims.list -> FStar_Reflection_Typing.subst_elt Prims.list) =
   FStar_List_Tot_Base.map rt_subst_elt
+let (r_subst_of_rt_subst_elt : subst_elt -> FStar_Syntax_Syntax.subst_elt) =
+  fun x ->
+    match x with
+    | DT (i, t) ->
+        FStar_Syntax_Syntax.DT (i, (Pulse_Elaborate_Pure.elab_term t))
+    | NT (x1, t) ->
+        FStar_Syntax_Syntax.NT
+          ((FStar_Reflection_Typing.var_as_namedv x1),
+            (Pulse_Elaborate_Pure.elab_term t))
+    | ND (x1, i) ->
+        FStar_Syntax_Syntax.NM
+          ((FStar_Reflection_Typing.var_as_namedv x1), i)
+let (subst_host_term' :
+  Pulse_Syntax_Base.host_term -> subst -> FStar_Reflection_Types.term) =
+  fun t ->
+    fun ss ->
+      FStar_Reflection_V2_Builtins.subst_term
+        (FStar_List_Tot_Base.map r_subst_of_rt_subst_elt ss) t
+let (subst_host_term :
+  Pulse_Syntax_Base.host_term -> subst -> Pulse_Syntax_Base.host_term) =
+  fun t -> fun ss -> let res0 = subst_host_term' t ss in res0
 let rec (subst_term :
   Pulse_Syntax_Base.term -> subst -> Pulse_Syntax_Base.term) =
   fun t ->
@@ -467,9 +488,7 @@ let rec (subst_term :
                      (b.Pulse_Syntax_Base.binder_ppname)
                  }, (subst_term body (shift_subst ss))))
       | Pulse_Syntax_Base.Tm_FStar t1 ->
-          w
-            (Pulse_Syntax_Base.Tm_FStar
-               (FStar_Reflection_Typing.subst_term t1 (rt_subst ss)))
+          w (Pulse_Syntax_Base.Tm_FStar (subst_host_term t1 ss))
 let (open_term' :
   Pulse_Syntax_Base.term ->
     Pulse_Syntax_Base.term ->

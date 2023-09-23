@@ -27,6 +27,8 @@ let rtb_core_check_term g f e =
 
 let rtb_tc_term g f e =
   debug g (fun _ -> Printf.sprintf "Calling tc_term on %s" (T.term_to_string e));
+  (* WARN: unary dependence, see comment in RU *)
+  let e = RU.deep_transform_to_unary_applications e in
   let res = RTB.tc_term f e in
   res
 
@@ -45,9 +47,16 @@ let rtb_check_subtyping g t1 t2 =
 let rtb_instantiate_implicits g f t =
   debug g (fun _ -> Printf.sprintf "Calling instantiate_implicits on %s"
                                        (T.term_to_string t));
-  let res = RTB.instantiate_implicits f t in
-  debug g (fun _ -> "Returned from instantiate_implicits");
-  res
+  (* WARN: unary dependence, see comment in RU *)
+  let t = RU.deep_transform_to_unary_applications t in
+  let res, iss = RTB.instantiate_implicits f t in
+  match res with
+  | None ->
+    debug g (fun _ -> "Returned from instantiate_implicits: None");
+    res, iss
+  | Some (t, _) ->
+    debug g (fun _ -> Printf.sprintf "Returned from instantiate_implicits: %s" (T.term_to_string t));
+    res, iss
 
 let rtb_core_check_term_at_type g f e eff t =
   debug g (fun _ -> Printf.sprintf "Calling core_check_term on %s and %s"

@@ -6,6 +6,23 @@ open FStar.List.Tot
 module E = Pulse.Elaborate.Pure
 open Pulse.Syntax.Base
 module U = Pulse.Syntax.Pure
+module R2 = FStar.Reflection.V2
+module RU = Pulse.RuntimeUtils
+let r_subst_of_rt_subst_elt (x:subst_elt)
+  : FStar.Reflection.V2.subst_elt
+  = match x with
+    | DT i t -> R2.DT i (E.elab_term t)
+    | NT x t -> R2.NT (RT.var_as_namedv x) (E.elab_term t) 
+    | ND x i -> R2.NM (RT.var_as_namedv x) i
+
+let subst_host_term' (t:host_term) (ss:subst) =
+  R2.subst_term (L.map r_subst_of_rt_subst_elt ss) t
+
+let subst_host_term (t:host_term) (ss:subst) =
+  open_or_close_host_term t ss;  
+  let res0 = subst_host_term' t ss in
+  assume (res0 == RT.subst_term t (rt_subst ss));
+  res0
 
 let rec close_open_inverse' (t:term) 
                             (x:var { ~(x `Set.mem` freevars t) } )
@@ -286,3 +303,4 @@ let close_binders (bs:list binder) (xs:list var { L.length bs == L.length xs }) 
       aux s (b::out) bs xs
   in
   aux [] [] bs xs
+

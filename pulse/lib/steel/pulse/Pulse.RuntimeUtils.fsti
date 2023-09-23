@@ -19,3 +19,21 @@ val union_ranges (r0 r1:range) : range
 val unfold_def (g:env) (nm:string) (fully:list string) (t:T.term) : option T.term   
 val env_set_range (g:env) (r:range) : g':env{g==g'}
 val embed_term_for_extraction (d:'a) (t:T.term) (r:option range): T.term
+module R = FStar.Reflection.V2
+val debug_subst (s:list R.subst_elt) (t:T.term) (r1 r2:T.term): y:T.term{ y == r1 }
+val deep_compress (t:T.term) : r:T.term { t == r }
+(* ***WARNING*** *)
+(* This function is natively implemented against the F* compiler libraries
+   to transform terms to use unary applications.
+
+   Unfortunately, F* type inference differs in how it handles unary vs n-ary
+   applications, notably in typeclass inference with refinement types, 
+   and also coercion insertion.
+
+   Pulse programs, to date, seem to rely on this unary application behavior.
+   So, before calling back to the F* typechecker in Pulse.Checker.Pure
+   we call this function to put terms in unary form.
+
+   Ideally, the F* typechecker should not be sensitive to the arity of application
+   nodes. If and when that is fixed, we should remove this function *)
+val deep_transform_to_unary_applications (t:T.term) : r:T.term { t == r }

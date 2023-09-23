@@ -31,3 +31,35 @@ module U = FStar_Syntax_Util
 module S = FStar_Syntax_Syntax
 let embed_term_for_extraction (d:'a) typ r =
    U.mk_lazy d typ (S.Lazy_extension "pulse") r
+
+let debug_subst (s:S.subst_elt list) (t:S.term) (r1:S.term) (r2:S.term) =
+  if is_pulse_option_set "subst"
+  then r2
+  else r1
+  (*
+  FStar_Options.debug_at_level_no_module
+  let open FStar_Compiler_Util in
+  if U.term_eq_dbg true r1 r2
+  then r1
+  else (
+    print4 "Applied subst %s to %s\nExpected %s\nGot %s\n"
+        (FStar_Syntax_Print.subst_to_string s)
+        (FStar_Syntax_Print.term_to_string t)
+        (FStar_Syntax_Print.term_to_string r1)
+        (FStar_Syntax_Print.term_to_string r2);
+    r2
+  )
+  *)
+  
+let deep_transform_to_unary_applications (t:S.term) =
+  FStar_Syntax_Visit.visit_term
+    (fun t -> 
+      let open S in
+      match t.n with
+      | Tm_app { hd; args=_::_::_ as args } ->
+        List.fold_left (fun t arg -> { t with n = Tm_app {hd=t; args=[arg]} }) hd args
+
+      | _ -> t)
+    t
+
+let deep_compress (t:S.term) = FStar_Syntax_Compress.deep_compress_uvars t
