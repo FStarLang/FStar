@@ -96,17 +96,18 @@ let readback_failure (s:R.term) =
   Printf.sprintf "Internal error: failed to readback F* term %s"
                  (T.term_to_string s)
 
-let ill_typed_term (t:term) (expected_typ:option term) (got_typ:option term)=
+let ill_typed_term (t:term) (expected_typ:option term) (got_typ:option term) : Tac (list FStar.Stubs.Pprint.document) =
+  let open Pulse.PP in
   match expected_typ, got_typ with
   | None, _ ->
-    Printf.sprintf "Ill-typed term: %s" (P.term_to_string t)   
+    [text "Ill-typed term: " ^^ pp t]
   | Some ty, None ->
-    Printf.sprintf "Expected term of type %s; got term %s" (P.term_to_string ty) (P.term_to_string t)
+    [group (text "Expected term of type" ^/^ pp ty) ^/^
+     group (text "got term" ^/^ pp t)]
   | Some ty, Some ty' ->
-    Printf.sprintf "Expected term of type %s; got term %s of type %s" 
-                   (P.term_to_string ty)
-                   (P.term_to_string t)
-                   (P.term_to_string ty')
+    [group (text "Expected term of type" ^/^ pp ty) ^/^
+     group (text "got term" ^/^ pp t) ^/^
+     group (text "of type" ^/^ pp ty')]
 
 let instantiate_term_implicits (g:env) (t0:term) =
   let f = elab_env g in
@@ -137,7 +138,7 @@ let check_universe (g:env) (t:term)
     T.log_issues issues;
     match ru_opt with
     | None -> 
-      fail g (Some t.range) (ill_typed_term t (Some (tm_type u_unknown)) None)
+      fail_doc g (Some t.range) (ill_typed_term t (Some (tm_type u_unknown)) None)
 
     | Some ru ->
       let proof : squash (T.typing_token f rt (E_Total, R.pack_ln (R.Tv_Type ru))) =
@@ -173,7 +174,7 @@ let check_term (g:env) (t:term)
     T.log_issues issues;
     match res with
     | None -> 
-      fail g (Some t.range) (ill_typed_term t None None)
+      fail_doc g (Some t.range) (ill_typed_term t None None)
     | Some (| rt, eff, ty', tok |) ->
       match readback_ty rt, readback_ty ty' with
       | None, _ -> fail g (Some t.range) (readback_failure rt)
@@ -193,7 +194,7 @@ let check_term_and_type (g:env) (t:term)
     T.log_issues issues;
     match res with
     | None -> 
-      fail g (Some t.range) (ill_typed_term t None None)
+      fail_doc g (Some t.range) (ill_typed_term t None None)
     | Some (| rt, eff, ty', tok |) ->
       match readback_ty rt, readback_ty ty' with
       | None, _ -> fail g (Some t.range) (readback_failure rt)
@@ -219,7 +220,7 @@ let check_term_with_expected_type_and_effect (g:env) (e:term) (eff:T.tot_or_ghos
   T.log_issues issues;
   match topt with
   | None ->
-    fail g (Some e.range) (ill_typed_term e (Some t) None)
+    fail_doc g (Some e.range) (ill_typed_term e (Some t) None)
   | Some tok -> (| e, E (RT.T_Token _ _ _ (FStar.Squash.return_squash tok)) |)
 
 (* This function will use the expected type, but can return either
@@ -252,7 +253,7 @@ let core_check_term (g:env) (t:term)
     T.log_issues issues;
     match res with
     | None -> 
-      fail g (Some t.range) (ill_typed_term t None None)
+      fail_doc g (Some t.range) (ill_typed_term t None None)
     | Some (| eff, ty', tok |) ->
         match readback_ty ty' with
         | None ->
@@ -272,7 +273,7 @@ let core_check_term_with_expected_type g e eff t =
   T.log_issues issues;
   match topt with
   | None ->
-    fail g (Some e.range) (ill_typed_term e (Some t) None)
+    fail_doc g (Some e.range) (ill_typed_term e (Some t) None)
   | Some tok -> E (RT.T_Token _ _ _ (FStar.Squash.return_squash tok))
 
 let check_vprop (g:env)
