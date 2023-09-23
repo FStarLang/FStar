@@ -13,8 +13,8 @@ let rec false_elim (#a:Type) (x:False) : a = false_elim x
 
 //SNIPPET_START: and_intro$
 let and_intro #p #q (pf_p:p) (pf_q:q)
-  : p & q
-  = pf_p, pf_q
+  : pair p q
+  = Pair pf_p pf_q
 //SNIPPET_END: and_intro$
 
 //SNIPPET_START: conj_intro$
@@ -89,15 +89,15 @@ let or_intro_sugar_right #p #q (pf_p:squash p)
     with Right pf_p
 //SNIPPET_END: or_intro_sugar$
 
-//SNIPPET_START: either_elim$
-let either_elim #p #q #r (p_or_q: either p q)
+//SNIPPET_START: sum_elim$
+let sum_elim #p #q #r (p_or_q: sum p q)
                          (pr: p -> r)
                          (qr: q -> r)
   : r
   = match p_or_q with
-    | Inl p -> pr p
-    | Inr q -> qr q
-//SNIPPET_END: either_elim$
+    | Left p -> pr p
+    | Right q -> qr q
+//SNIPPET_END: sum_elim$
 
 //SNIPPET_START: or_elim$
 let or_elim #p #q #r (pf_p:squash (p \/ q))
