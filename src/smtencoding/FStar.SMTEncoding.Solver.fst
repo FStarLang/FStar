@@ -1262,11 +1262,13 @@ automatically retry increasing fuel as needed, and perform quake testing
 _log_ (not raise) an error if the VC could not be proven. *)
 let solve use_env_msg tcenv q : unit =
     if Options.no_smt () then
+        let open FStar.Errors.Msg in
+        let open FStar.Pprint in
         FStar.TypeChecker.Err.log_issue
           tcenv tcenv.range
             (Errors.Error_NoSMTButNeeded,
-             Errors.mkmsg <|
-             BU.format1 "Q = %s\nA query could not be solved internally, and --no_smt was given" (Print.term_to_string q))
+             [text "A query could not be solved internally, and --no_smt was given.";
+              text "Query = " ^/^ FStar.Syntax.Print.Pretty.term_to_doc q])
     else
     Profiling.profile
       (fun () -> do_solve_maybe_split use_env_msg tcenv q)

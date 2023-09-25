@@ -205,15 +205,12 @@ let expected_expression_of_type env t1 e t2 =
   let d1 = N.term_to_doc env t1 in
   let d2 = N.term_to_doc env t2 in
   let ed = N.term_to_doc env e in
-  let open FStar.Pprint in
-  (Errors.Fatal_UnexpectedExpressionType,
-    [doc_of_string "Expected expression of type"
-    ^/^ blank 4 ^^ align d1
-    ^/^ doc_of_string "got expression"
-    ^/^ blank 4 ^^ align ed
-    ^/^ doc_of_string "of type"
-    ^/^ blank 4 ^^ align d2
-    ])
+  let open FStar.Errors.Msg in
+  (Errors.Fatal_UnexpectedExpressionType, [
+    prefix 4 1 (text "Expected expression of type") d1 ^/^
+    prefix 4 1 (text "got expression") ed ^/^
+    prefix 4 1 (text "of type") d2
+  ])
 
 let expected_pattern_of_type env t1 e t2 =
   let s1, s2 = err_msg_type_strings env t1 t2 in

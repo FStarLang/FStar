@@ -935,3 +935,13 @@ let fv_qual_to_string fvq =
   | Record_ctor _ -> "Record_ctor _"
   | Unresolved_projector _ -> "Unresolved_projector _"
   | Unresolved_constructor _ -> "Unresolved_constructor _"
+
+let term_to_doc' dsenv t =
+  if Options.ugly ()
+  then Pprint.arbitrary_string (term_to_string t)
+  else Pretty.term_to_doc' dsenv t
+
+let term_to_doc t =
+  if Options.ugly ()
+  then Pprint.arbitrary_string (term_to_string t)
+  else Pretty.term_to_doc t

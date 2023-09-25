@@ -183,7 +183,7 @@ let format_issue' (print_hdr:bool) (issue:issue) : string =
     | _ -> empty
   in
   let mainmsg : document =
-    concat (List.map subdoc issue.issue_msg)
+    concat (List.map (fun d -> subdoc (group d)) issue.issue_msg)
   in
   let doc : document =
     (* This ends in a hardline to get a 1-line spacing between errors *)
