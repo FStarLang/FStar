@@ -50,28 +50,22 @@ type ('b1, 'b2) samepat = unit
 type ('bs1, 'bs2) samepats = unit
 let (open_st_term_bs :
   Pulse_Syntax_Base.st_term ->
-    Pulse_Typing_Env.binding Prims.list ->
-      (Pulse_Syntax_Base.st_term, unit) FStar_Tactics_Effect.tac_repr)
+    Pulse_Typing_Env.binding Prims.list -> Pulse_Syntax_Base.st_term)
   =
-  fun uu___1 ->
-    fun uu___ ->
-      (fun t ->
-         fun bs ->
-           Obj.magic
-             (FStar_Tactics_Effect.lift_div_tac
-                (fun uu___ ->
-                   let rec aux bs1 i =
-                     match bs1 with
-                     | [] -> []
-                     | b::bs2 ->
-                         (Pulse_Syntax_Naming.DT
-                            (i,
-                              (Pulse_Syntax_Pure.term_of_nvar
-                                 (Pulse_Syntax_Base.ppname_default,
-                                   (FStar_Pervasives_Native.fst b)))))
-                         :: (aux bs2 (i + Prims.int_one)) in
-                   let ss = aux (FStar_List_Tot_Base.rev bs) Prims.int_zero in
-                   Pulse_Syntax_Naming.subst_st_term t ss))) uu___1 uu___
+  fun t ->
+    fun bs ->
+      let rec aux bs1 i =
+        match bs1 with
+        | [] -> []
+        | b::bs2 ->
+            (Pulse_Syntax_Naming.DT
+               (i,
+                 (Pulse_Syntax_Pure.term_of_nvar
+                    (Pulse_Syntax_Base.ppname_default,
+                      (FStar_Pervasives_Native.fst b)))))
+            :: (aux bs2 (i + Prims.int_one)) in
+      let ss = aux (FStar_List_Tot_Base.rev bs) Prims.int_zero in
+      Pulse_Syntax_Naming.subst_st_term t ss
 let rec (r_bindings_to_string :
   FStar_Reflection_V2_Data.binding Prims.list ->
     (Prims.string, unit) FStar_Tactics_Effect.tac_repr)
@@ -700,8 +694,10 @@ let (check_branch :
                                                                     (Prims.of_int (39))
                                                                     (Prims.of_int (241))
                                                                     (Prims.of_int (58)))))
-                                                                    (Obj.magic
-                                                                    (open_st_term_bs
+                                                                    (FStar_Tactics_Effect.lift_div_tac
+                                                                    (fun
+                                                                    uu___2 ->
+                                                                    open_st_term_bs
                                                                     e
                                                                     pulse_bs))
                                                                     (fun

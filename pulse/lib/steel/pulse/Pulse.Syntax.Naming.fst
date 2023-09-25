@@ -24,6 +24,10 @@ let subst_host_term (t:host_term) (ss:subst) =
   assume (res0 == RT.subst_term t (rt_subst ss));
   res0
 
+// let subst_host_term (t:host_term) (ss:subst) =
+//   open_or_close_host_term t ss;  
+//   RT.subst_term t (rt_subst ss)
+
 let rec close_open_inverse' (t:term) 
                             (x:var { ~(x `Set.mem` freevars t) } )
                             (i:index)

@@ -6,6 +6,8 @@ open Pulse.Checker.Base
 
 module T = FStar.Tactics.V2
 
+val open_st_term_bs (t:st_term) (bs:list binding) : st_term 
+
 val check
         (g:env)
         (pre:term)

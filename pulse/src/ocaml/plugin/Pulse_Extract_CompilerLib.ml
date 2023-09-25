@@ -5,6 +5,7 @@ type mlexpr = ML.mlexpr
 type e_tag = ML.e_tag
 type mlty = ML.mlty
 
+let mlty_unit = ML.ml_unit_ty
 
 type mlsymbol = ML.mlsymbol
 type mlident  = ML.mlident
@@ -26,6 +27,8 @@ let mk_mllb (mllb_name:mlident)
       print_typ=false }
 
 type mlletbinding = ML.mlletbinding
+type mlpattern = ML.mlpattern
+type mlconstant = ML.mlconstant
 
 let mk_mlletbinding (is_rec:bool) (lbs:mllb list)
   : mlletbinding
@@ -36,6 +39,8 @@ let as_expr expr : mlexpr =
   { expr;
     mlty = ML.MLTY_Top;
     loc = ML.dummy_loc }
+
+let mle_unit = ML.ml_unit
 
 let mle_var (x:mlident) : mlexpr =
     as_expr (ML.MLE_Var x)
@@ -61,7 +66,21 @@ let mle_fun (formals:(mlident * mlty) list) (body:mlexpr) : mlexpr =
    | _ ->
      as_expr (ML.MLE_Fun (formals, body))
 
-let mle_unit = ML.ml_unit
+let mle_if g t e = as_expr (ML.MLE_If (g, t, e))
+
+let mle_match (scrut:mlexpr) (branches:(mlpattern * mlexpr) list) : mlexpr =
+    as_expr (ML.MLE_Match (scrut, List.map (fun (x, y) -> x, None, y) branches))
+
+let mlconstant_of_mlexpr (e:mlexpr) =
+  match e.expr with
+  | ML.MLE_Const c -> Some c
+  | _ -> None
+
+let mlp_wild = ML.MLP_Wild
+let mlp_var x = ML.MLP_Var x
+let mlp_constructor x ps = ML.MLP_CTor (x, ps)
+let mlp_const x = ML.MLP_Const x
+let mlp_tuple x = ML.MLP_Tuple x
 
 let e_tag_pure : e_tag = ML.E_PURE
 let e_tag_erasable : e_tag = ML.E_ERASABLE

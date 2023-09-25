@@ -26,4 +26,26 @@ fn test_write_10 (x:ref U32.t)
 }
 ```
 
-let test_write_10_pub x #n = test_write_10 x #n
+#push-options "--ext 'pulse:rvalues'"
+```pulse
+fn write10 (x:ref U32.t)
+  requires pts_to x 'n
+  ensures pts_to x 0ul
+{
+  let mut ctr = 10ul;
+  while ((ctr >^ 0ul))
+  invariant b.
+    exists n i.
+      pts_to x n **
+      pts_to ctr i **
+      pure (i <=^ 10ul /\ 
+           (i <^ 10ul ==> n == 0ul) /\
+           (b == (i >^ 0ul)))
+  {
+    test_write_10 x;
+    ctr := ctr -^ 1ul;
+  }
+}
+```
+#pop-options
+let test_write_10_pub x #n = write10 x

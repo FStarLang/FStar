@@ -2,7 +2,9 @@ module Pulse.Extract.Main
 open Pulse.Syntax.Base
 open Pulse.Extract.CompilerLib
 open Pulse.Syntax.Printer
+open FStar.List.Tot
 module T = FStar.Tactics.V2
+exception Extraction_failure of string
 
 noeq
 type env = { 
@@ -44,7 +46,56 @@ let extend_env (g:env) (b:binder)
     let uenv_inner, mlident = extend_bv g.uenv_inner b.binder_ppname x mlty in
     { uenv_inner; coreenv }, mlident, mlty, (b.binder_ppname, x)
 
-exception Extraction_failure of string
+let rec name_as_mlpath (x:T.name) 
+  : T.Tac mlpath 
+  = match x with
+    | [] -> T.fail "Unexpected empty name"
+    | [x] -> [], x
+    | x :: xs ->
+      let xs, x = name_as_mlpath xs in
+      x :: xs, x
+
+module R = FStar.Reflection.V2
+let extract_constant (g:env) (c:T.vconst)
+  : T.Tac mlconstant
+  = let e = T.pack_ln (R.Tv_Const c) in
+    let mle, _, _ = CompilerLib.term_as_mlexpr (uenv_of_env g) e in
+    match mlconstant_of_mlexpr mle with
+    | None -> T.raise (Extraction_failure "Failed to extract constant")
+    | Some c -> c
+
+let rec extend_env_pat_core (g:env) (p:pattern)
+  : T.Tac (env & list mlpattern & list Pulse.Typing.Env.binding)
+  = match p with
+    | Pat_Dot_Term _ -> g, [], []
+    | Pat_Var pp -> 
+      let x = E.fresh g.coreenv in
+      let pp = mk_ppname pp FStar.Range.range_0 in
+      let coreenv = E.push_binding g.coreenv x pp tm_unknown in
+      let uenv_inner, mlident = extend_bv g.uenv_inner pp x mlty_top in
+      { uenv_inner; coreenv },
+      [ mlp_var mlident ],
+      [ (x, tm_unknown) ]
+
+    | Pat_Cons f pats ->
+      let g, pats, bindings = 
+        T.fold_left
+          (fun (g, pats, bindings) (p, _) ->
+            let g, pats', bindings' = extend_env_pat_core g p in
+            g, pats @ pats', bindings@bindings')
+          (g, [], [])
+          pats
+      in
+      g, [mlp_constructor (name_as_mlpath f.fv_name) pats], bindings
+    | Pat_Constant c ->
+      let c = extract_constant g c in
+      g, [mlp_const c], []
+let extend_env_pat g p = 
+  let g, pats, bs = extend_env_pat_core g p in
+  match pats with
+  | [p] -> g, p, bs
+  | _ -> T.raise (Extraction_failure "Unexpected extraction of pattern")
+
 let unit_val : term = tm_fstar Pulse.Reflection.Util.unit_tm Range.range_0
 let is_erasable (p:st_term) : T.Tac bool = 
   let tag = T.unseal p.effect_tag in
@@ -55,6 +106,9 @@ let is_erasable (p:st_term) : T.Tac bool =
 let rec extract (g:env) (p:st_term)
   : T.Tac (mlexpr & e_tag)
   = let erased_result = mle_unit, e_tag_erasable in
+    T.dump (Printf.sprintf "Extracting term@%s:\n%s\n" 
+              (T.range_to_string p.range)
+              (st_term_to_string p));
     if is_erasable p
     then erased_result
     else begin
@@ -84,7 +138,10 @@ let rec extract (g:env) (p:st_term)
       | Tm_Bind { binder; head; body } ->
         if is_erasable head
         then (
-          let body = LN.subst_st_term body [LN.NT 0 unit_val] in
+          let body = LN.subst_st_term body [LN.DT 0 unit_val] in
+          T.dump (Printf.sprintf "Erasing head of bind %s\nopened body to %s"
+                      (st_term_to_string head)
+                      (st_term_to_string body));
           extract g body
         )
         else (
@@ -106,45 +163,53 @@ let rec extract (g:env) (p:st_term)
         let mllb = mk_mllb mlident ([], mlty) head in 
         let mlletbinding = mk_mlletbinding false [mllb] in
         mle_let mlletbinding body, e_tag_impure
-
-      | Tm_ProofHintWithBinders { t } ->
-        extract g t
       
-    // | Tm_If {
-    //     b:term;
-    //     then_:st_term;
-    //     else_:st_term;
-    //     post:option vprop;
-    //   }
-    // | Tm_Match {
-    //     sc:term;
-    //     returns_:option vprop;
-    //     brs: list branch;
-    //   }
+      | Tm_If { b; then_; else_ } ->
+        let b = term_as_mlexpr g b in
+        let then_, _ = extract g then_ in
+        let else_, _ = extract g else_ in
+        mle_if b then_ (Some else_), e_tag_impure
+
+      | Tm_Match { sc; brs } ->
+        let sc = term_as_mlexpr g sc in
+        let extract_branch (pat, body) =
+          let g, pat, bs = extend_env_pat g pat in
+          let body = Pulse.Checker.Match.open_st_term_bs body bs in
+          let body, _ = extract g body in
+          pat, body
+        in
+        let brs = T.map extract_branch brs in
+        mle_match sc brs, e_tag_impure
+
     
-    // | Tm_While {
-    //     invariant:term;
-    //     condition:st_term;
-    //     condition_var: ppname;
-    //     body:st_term;
-    //   }
-    // | Tm_Par {
-    //     pre1:term;
-    //     body1:st_term;
-    //     post1:term;
-    //     pre2:term;
-    //     body2:st_term;
-    //     post2:term;
-    //   }  
-    // | Tm_WithLocal {
-    //     binder:binder;
-    //     initializer:term;
-    //     body:st_term;
-    //   }
+      | Tm_While { condition; body } ->
+        let condition, _ = extract g condition in
+        let body, _ = extract g body in
+        let condition = mle_fun [("_", mlty_unit)] condition in
+        let body = mle_fun [("_", mlty_unit)] body in
+        let w = mle_app (mle_name (["Pulse"; "Lib"; "Core"], "while_")) [condition; body] in
+        w, e_tag_impure
+
+      | Tm_Par { body1; body2 } ->
+        let body1, _ = extract g body1 in
+        let body2, _ = extract g body2 in
+        let body1 = mle_fun [("_", mlty_unit)] body1 in
+        let body2 = mle_fun [("_", mlty_unit)] body2 in
+        let p = mle_app (mle_name (["Pulse"; "Lib"; "Core"], "par")) [body1; body2] in
+        p, e_tag_impure
+
+      | Tm_WithLocal { binder; initializer; body } ->
+        let initializer = term_as_mlexpr g initializer in
+        let g, mlident, mlty, name = extend_env g { binder with binder_ty = binder.binder_ty } in
+        let body = LN.open_st_term_nv body name in
+        let body, _ = extract g body in
+        let allocator = mle_app (mle_name (["Pulse"; "Lib"; "Reference"] , "alloc")) [initializer] in
+        let mllb = mk_mllb mlident ([], mlty) allocator in
+        let mlletbinding = mk_mlletbinding false [mllb] in
+        mle_let mlletbinding body, e_tag_impure
     
-    
-      | Tm_Admit _
-      | _ -> T.raise (Extraction_failure (Printf.sprintf "Cannot extract code with admit: %s\n" (Pulse.Syntax.Printer.st_term_to_string p)))
+      | Tm_ProofHintWithBinders { t } -> T.fail "Unexpected constructor: ProofHintWithBinders should have been desugared away"
+      | Tm_Admit _ -> T.raise (Extraction_failure (Printf.sprintf "Cannot extract code with admit: %s\n" (Pulse.Syntax.Printer.st_term_to_string p)))
     end
 
 

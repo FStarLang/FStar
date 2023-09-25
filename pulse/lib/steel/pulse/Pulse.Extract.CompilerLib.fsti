@@ -5,6 +5,7 @@ val mlexpr : Type0
 val e_tag : Type0
 val mlty  : Type0
 
+val mlty_unit : mlty
 type mlsymbol = string
 type mlident  = mlsymbol
 type mlpath   = list mlsymbol * mlsymbol //Path and name of a module
@@ -19,13 +20,26 @@ val mk_mllb (mllb_name:mlident)
 
 val mlletbinding : Type0
 val mk_mlletbinding (is_rec:bool) (lbs:list mllb) : mlletbinding
+val mle_unit : mlexpr
 val mle_var (x:mlident) : mlexpr
 val mle_name (x:mlpath) : mlexpr
 val mle_let (x:mlletbinding) (b:mlexpr) : mlexpr
 val mle_app (x:mlexpr) (args:list mlexpr) : mlexpr
 val mke_tapp (x:mlexpr) (args:list mlty) : mlexpr
 val mle_fun (formals:list (mlident * mlty)) (body:mlexpr) : mlexpr
-val mle_unit : mlexpr
+val mle_if (guard:mlexpr) (t:mlexpr) (f:option mlexpr) : mlexpr
+
+val mlpattern : Type0
+val mlconstant : Type0
+
+val mlconstant_of_mlexpr (e:mlexpr) : Dv (option mlconstant)
+val mlp_wild : mlpattern
+val mlp_var (x:mlident) : mlpattern
+val mlp_const (t:mlconstant) : mlpattern
+val mlp_constructor (name:mlpath) (ps:list mlpattern) : mlpattern
+val mlp_tuple (ps:list mlpattern) : mlpattern
+
+val mle_match (scrut:mlexpr) (branches:list (mlpattern & mlexpr)) : mlexpr
 
 val e_tag_pure : e_tag
 val e_tag_erasable : e_tag

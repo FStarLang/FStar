@@ -11,8 +11,8 @@ FSTAR_FILES=$(wildcard $(addsuffix /*.fst, $(SRC_DIRS))) $(wildcard $(addsuffix 
 all: verify
 
 extract:
-	$(FSTAR) --codegen OCaml ExtractionTest.fst --extract ExtractionTest
-
+	$(FSTAR) --odir _output --codegen OCaml CustomSyntax.fst --extract CustomSyntax
+	
 extract_c:
 	$(FSTAR) --codegen krml ExtractionTest.fst --extract '* -Pulse.Lib.Core'
 	$(FSTAR_HOME)/../karamel/krml -bundle ExtractionTest=* -skip-compilation _output/out.krml

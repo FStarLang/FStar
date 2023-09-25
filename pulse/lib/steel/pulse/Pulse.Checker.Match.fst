@@ -171,7 +171,7 @@ let rec tot_typing_weakening_n bs d =
 let samepat (b1 b2 : branch) : prop = fst b1 == fst b2
 let samepats (bs1 bs2 : list branch) : prop = L.map fst bs1 == L.map fst bs2
 
-let open_st_term_bs (t:st_term) (bs:list binding) : T.Tac st_term =
+let open_st_term_bs (t:st_term) (bs:list binding) : st_term =
   let rec aux (bs:list binding) (i:nat) : subst =
     match bs with
     | [] -> []

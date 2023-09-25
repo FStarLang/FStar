@@ -20,8 +20,6 @@ module FC = FStar.Const
 open FStar.Extraction.Krml
 
 let steel_translate_type_without_decay : translate_type_without_decay_t = fun env t ->
-  BU.print1 "Got control in steel_translate_type for (%s)!\n"
-    (FStar.Extraction.ML.Syntax.mlty_to_string t);
   match t with
   | MLTY_Named ([arg], p) when
     Syntax.string_of_mlpath p = "Steel.TLArray.t" ->
@@ -84,16 +82,13 @@ let steel_translate_expr : translate_expr_t = fun env e ->
     when string_of_mlpath p = "Steel.ST.Reference.read" ->
       EBufRead (translate_expr env e, EQualified (["C"], "_zero_for_deref"))
 
-  | MLE_App({expr=MLE_App({expr=MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e ])}, [_v])}, [_perm])
-  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e; _v; _perm ])
-    when string_of_mlpath p = "Pulse.Lib.Reference.op_Bang" ->
-      EBufRead (translate_expr env e, EQualified (["C"], "_zero_for_deref"))
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ init ])
     when (
       string_of_mlpath p = "Steel.ST.Reference._alloca"
     ) ->
     EBufCreate (Stack, translate_expr env init, EConstant (UInt32, "1"))
+
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ init ])
     when (string_of_mlpath p = "Steel.Reference.malloc" ||
@@ -132,10 +127,6 @@ let steel_translate_expr : translate_expr_t = fun env e ->
     when string_of_mlpath p = "Steel.ST.Reference.write" ->
       EBufWrite (translate_expr env e1, EQualified (["C"], "_zero_for_deref"), translate_expr env e2)
 
-  | MLE_App ({expr=MLE_App({expr=MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1 ])}, [e2])}, [_e3])
-  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; _e3 ])
-    when string_of_mlpath p = "Pulse.Lib.Reference.op_Colon_Equals" ->
-      EBufWrite (translate_expr env e1, EQualified (["C"], "_zero_for_deref"), translate_expr env e2)
 
   | MLE_App ({ expr = MLE_Name p }, [ _ ]) when (
         string_of_mlpath p = "Steel.ST.Reference._push_frame"
@@ -184,6 +175,24 @@ let steel_translate_expr : translate_expr_t = fun env e ->
          (string_of_int (fst e.loc))
          (snd e.loc))
       Range.dummyRange
+
+  | MLE_App ({ expr = MLE_Name p } , [ init ])
+    when string_of_mlpath p = "Pulse.Lib.Reference.alloc" ->
+    EBufCreate (Stack, translate_expr env init, EConstant (UInt32, "1"))
+
+  | MLE_App({expr=MLE_App({expr=MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e ])}, [_v])}, [_perm])
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e; _v; _perm ])
+    when string_of_mlpath p = "Pulse.Lib.Reference.op_Bang" ->
+    EBufRead (translate_expr env e, EQualified (["C"], "_zero_for_deref"))
+
+  | MLE_App ({expr=MLE_App({expr=MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1 ])}, [e2])}, [_e3])
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; _e3 ])
+    when string_of_mlpath p = "Pulse.Lib.Reference.op_Colon_Equals" ->
+    EBufWrite (translate_expr env e1, EQualified (["C"], "_zero_for_deref"), translate_expr env e2)
+
+  | MLE_App ({expr=MLE_Name p}, [{expr=MLE_Fun (_, test)}; {expr=MLE_Fun(_, body)}])
+    when (string_of_mlpath p = "Pulse.Lib.Core.while_") ->
+    EWhile(translate_expr env test, translate_expr env body)
 
   | _ -> raise NotSupportedByKrmlExtension
 
