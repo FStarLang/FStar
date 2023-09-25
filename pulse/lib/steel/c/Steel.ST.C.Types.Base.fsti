@@ -62,11 +62,6 @@ val mk_fraction_eq_unknown (#t: Type0) (td: typedef t) (v: t) (p: P.perm) : Lemm
 
 // To be extracted as: void*
 
-// FIXME: Currently, Karamel does not directly support
-// void*. examples/steel/arraystructs currently has a stopgap in
-// lib/steel_c.h, whose contents should be moved to krmllib.h, unless
-// direct support for void* is added to Karamel.
-
 [@@noextract_to "krml"] // primitive
 val void_ptr : Type0
  
@@ -76,9 +71,26 @@ val void_null: void_ptr
 
 // To be extracted as: *t
 [@@noextract_to "krml"] // primitive
-let ptr_gen ([@@@unused] t: Type) : Tot Type0 = void_ptr
+val ptr_gen ([@@@unused] t: Type) : Type0
 [@@noextract_to "krml"] // primitive
-let null_gen (t: Type) : Tot (ptr_gen t) = void_null
+val null_gen (t: Type) : Tot (ptr_gen t)
+
+val ghost_void_ptr_of_ptr_gen (#[@@@unused] t: Type) (x: ptr_gen t) : GTot void_ptr
+val ghost_ptr_gen_of_void_ptr (x: void_ptr) ([@@@unused] t: Type) : GTot (ptr_gen t)
+
+val ghost_void_ptr_of_ptr_gen_of_void_ptr
+  (x: void_ptr)
+  (t: Type)
+: Lemma
+  (ghost_void_ptr_of_ptr_gen (ghost_ptr_gen_of_void_ptr x t) == x)
+  [SMTPat (ghost_void_ptr_of_ptr_gen (ghost_ptr_gen_of_void_ptr x t))]
+
+val ghost_ptr_gen_of_void_ptr_of_ptr_gen
+  (#t: Type)
+  (x: ptr_gen t)
+: Lemma
+  (ghost_ptr_gen_of_void_ptr (ghost_void_ptr_of_ptr_gen x) t == x)
+  [SMTPat (ghost_ptr_gen_of_void_ptr (ghost_void_ptr_of_ptr_gen x) t)]
 
 inline_for_extraction [@@noextract_to "krml"] // primitive
 let ptr (#t: Type) (td: typedef t) : Tot Type0 = ptr_gen t
@@ -134,6 +146,42 @@ let assert_not_null
     (~ (p == null _))
     (fun _ -> True)
 = rewrite (pts_to_or_null p v) (pts_to p v)
+
+[@@noextract_to "krml"] // primitive
+val void_ptr_of_ptr (#t: Type) (#opened: _) (#td: typedef t) (#v: Ghost.erased t) (x: ptr td) : STAtomicBase void_ptr false opened Unobservable
+  (pts_to_or_null x v)
+  (fun _ -> pts_to_or_null x v)
+  True
+  (fun y -> y == ghost_void_ptr_of_ptr_gen x)
+
+[@@noextract_to "krml"] inline_for_extraction
+let void_ptr_of_ref (#t: Type) (#opened: _) (#td: typedef t) (#v: Ghost.erased t) (x: ref td) : STAtomicBase void_ptr false opened Unobservable
+  (pts_to x v)
+  (fun _ -> pts_to x v)
+  True
+  (fun y -> y == ghost_void_ptr_of_ptr_gen x)
+= rewrite (pts_to x v) (pts_to_or_null x v);
+  let res = void_ptr_of_ptr x in
+  rewrite (pts_to_or_null x v) (pts_to x v);
+  return res
+
+[@@noextract_to "krml"] // primitive
+val ptr_of_void_ptr (#t: Type) (#opened: _) (#td: typedef t) (#v: Ghost.erased t) (x: void_ptr) : STAtomicBase (ptr td) false opened Unobservable
+  (pts_to_or_null (ghost_ptr_gen_of_void_ptr x t <: ptr td) v)
+  (fun y -> pts_to_or_null y v)
+  True
+  (fun y -> y == ghost_ptr_gen_of_void_ptr x t)
+
+[@@noextract_to "krml"] inline_for_extraction
+let ref_of_void_ptr (#t: Type) (#opened: _) (#td: typedef t) (#v: Ghost.erased t) (x: void_ptr) (y': Ghost.erased (ref td)) : STAtomicBase (ref td) false opened Unobservable
+  (pts_to y' v)
+  (fun y -> pts_to y v)
+  (Ghost.reveal y' == ghost_ptr_gen_of_void_ptr x t)
+  (fun y -> y == Ghost.reveal y')
+= rewrite (pts_to y' v) (pts_to_or_null (ghost_ptr_gen_of_void_ptr x t <: ptr td) v);
+  let y = ptr_of_void_ptr x in
+  rewrite (pts_to_or_null y v) (pts_to y v);
+  return y
 
 val ref_equiv
   (#t: Type)
