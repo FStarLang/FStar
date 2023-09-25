@@ -296,9 +296,12 @@ let gref_lid = mk_pulse_lib_gref_lid "ref"
 let get_non_informative_witness g u t
   : T.Tac (non_informative_t g u t)
   = let err () =
-      fail g (Some t.range) 
-             (Printf.sprintf "Expected a term with a non-informative (e.g., erased) type; got  %s"        
-                               (P.term_to_string t)) in
+      let open Pulse.PP in
+      fail_doc g (Some t.range) [
+        text "Expected a term with a non-informative (e.g., erased) type; got"
+          ^/^ pp t
+      ]
+    in
     let eopt =
       let ropt = is_fvar_app t in
       match ropt with
@@ -318,11 +321,10 @@ let get_non_informative_witness g u t
                      None
                      (Some?.v arg_opt))
         else if l = gref_lid && Some? arg_opt
-        then (
-            Some (tm_pureapp
+        then Some (tm_pureapp
                      (tm_uinst (as_fv (mk_pulse_lib_gref_lid "gref_non_informative")) us)
                      None
-                     (Some?.v arg_opt)))
+                     (Some?.v arg_opt))
         else None
       | _ -> None
     in
