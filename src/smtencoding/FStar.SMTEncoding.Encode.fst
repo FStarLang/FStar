@@ -974,11 +974,12 @@ let encode_top_level_let :
               FStar.TypeChecker.Err.add_errors
                 env.tcenv
                 [(Errors.Warning_DefinitionNotTranslated,
-                  BU.format3
+                  // FIXME
+                  [Errors.text <| BU.format3
                     "Definitions of inner let-rec%s %s and %s enclosing top-level letbinding are not encoded to the solver, you will only be able to reason with their types"
                     (if plural then "s" else "")
                     (List.map fst names |> String.concat ",")
-                    (if plural then "their" else "its"),
+                    (if plural then "their" else "its")],
                   r,
                   Errors.get_ctx () // TODO: fix this, leaking abstraction
                   )];
@@ -1290,8 +1291,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let is_logical = quals |> BU.for_some (function Logic | Assumption -> true | _ -> false) in
         let constructor_or_logic_type_decl (c:constructor_t) =
             if is_logical
-            then let name, args, _, _, _ = c in
-                 [Term.DeclFun(name, args |> List.map (fun (_, sort, _) -> sort), Term_sort, None)]
+            then [Term.DeclFun(c.constr_name, c.constr_fields |> List.map (fun f -> f.field_sort), Term_sort, None)]
             else constructor_to_decl (Ident.range_of_lid t) c in
         let inversion_axioms env tapp vars =
             if datas |> BU.for_some (fun l -> Env.try_lookup_lid env.tcenv l |> Option.isNone) //Q: Why would this happen?
@@ -1347,12 +1347,13 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             //See: https://github.com/FStarLang/FStar/issues/349
             let tname_decl =
                 constructor_or_logic_type_decl
-                    (tname,
-                     vars |> List.map (fun fv -> (tname^fv_name fv, fv_sort fv,false)),
-                     //The false above is extremely important; it makes sure that type-formers are not injective
-                     Term_sort,
-                     varops.next_id(),
-                     false)
+                  {
+                    constr_name = tname;
+                    constr_fields = vars |> List.map (fun fv -> {field_name=tname^fv_name fv; field_sort=fv_sort fv; field_projectible=false}) ;
+                    //The field_projectible=false above is extremely important; it makes sure that type-formers are not injective
+                    constr_sort=Term_sort;
+                    constr_id=Some (varops.next_id())
+                  }
             in
             let tok_decls, env =
                 match vars with
@@ -1404,14 +1405,16 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let s_fuel_tm = mkApp("SFuel", [fuel_tm]) in
         let vars, guards, env', binder_decls, names = encode_binders (Some fuel_tm) formals env in
         let fields = names |> List.mapi (fun n x ->
-            let projectible = true in
-//            let projectible = n >= n_tps in //Note: the type parameters are not projectible,
-                                            //i.e., (MkTuple2 int bool 0 false) is only injective in its last two arguments
-                                            //This allows the term to both have type (int * bool)
-                                            //as well as (nat * bool), without leading us to conclude that int=nat
-                                            //Also see https://github.com/FStarLang/FStar/issues/349
-            mk_term_projector_name d x, Term_sort, projectible) in
-        let datacons = (ddconstrsym, fields, Term_sort, varops.next_id(), true) |> Term.constructor_to_decl (Ident.range_of_lid d) in
+            { field_name=mk_term_projector_name d x;
+              field_sort=Term_sort;
+              field_projectible=true })
+        in
+        let datacons = 
+          {constr_name=ddconstrsym;
+           constr_fields=fields;
+           constr_sort=Term_sort;
+           constr_id=Some (varops.next_id())
+           } |> Term.constructor_to_decl (Ident.range_of_lid d) in
         let app = mk_Apply ddtok_tm vars in
         let guard = mk_and_l guards in
         let xvars = List.map mkFreeV vars in
@@ -1559,11 +1562,11 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                     | Tm_fvar fv ->
                                       if BU.for_some (S.fv_eq_lid fv) mutuals
                                       then Some (bs, c)
-                                      else if List.mem "2954" (Options.ext_options "compat")
+                                      else if Options.ext_getv "compat:2954" <> ""
                                       then (warn_compat(); Some (bs, c)) //compatibility mode
                                       else None
                                     | _ ->
-                                      if List.mem "2954" (Options.ext_options "compat")
+                                      if Options.ext_getv "compat:2954" <> ""
                                       then (warn_compat(); Some (bs, c)) //compatibility mode
                                       else None
                                   )

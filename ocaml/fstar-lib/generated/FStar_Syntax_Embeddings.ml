@@ -2253,6 +2253,12 @@ let (e_issue : FStar_Errors.issue FStar_Syntax_Embeddings_Base.embedding) =
     FStar_Syntax_Syntax.fvar FStar_Parser_Const.issue_lid
       FStar_Pervasives_Native.None in
   FStar_Syntax_Embeddings_Base.e_lazy FStar_Syntax_Syntax.Lazy_issue uu___
+let (e_document :
+  FStar_Pprint.document FStar_Syntax_Embeddings_Base.embedding) =
+  let uu___ =
+    FStar_Syntax_Syntax.fvar FStar_Parser_Const.document_lid
+      FStar_Pervasives_Native.None in
+  FStar_Syntax_Embeddings_Base.e_lazy FStar_Syntax_Syntax.Lazy_doc uu___
 let arrow_as_prim_step_1 :
   'a 'b .
     'a FStar_Syntax_Embeddings_Base.embedding ->

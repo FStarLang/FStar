@@ -542,8 +542,8 @@ let built_in_primitive_steps : prim_step_set =
         | _ -> failwith "Unexpected number of arguments"
     in
 
-    (* division is special cased since we must avoid zero denominators *)
-    let division_op : psc -> EMB.norm_cb -> universes -> args -> option term
+    (* division and modulus are special cased since we must avoid zero denominators *)
+    let division_modulus_op op : psc -> EMB.norm_cb -> universes -> args -> option term
       = fun psc _norm_cb _us args ->
         match args with
         | [(a1, None); (a2, None)] ->
@@ -551,13 +551,14 @@ let built_in_primitive_steps : prim_step_set =
                         try_unembed_simple EMB.e_int a2 with
             | Some m, Some n ->
               if Z.to_int_fs n <> 0
-              then Some (embed_simple EMB.e_int psc.psc_range (Z.div_big_int m n))
+              then Some (embed_simple EMB.e_int psc.psc_range (op m n))
               else None
 
             | _ -> None
             end
         | _ -> failwith "Unexpected number of arguments"
     in
+
     let bogus_cbs = {
         NBE.iapp = (fun h _args -> h);
         NBE.translate = (fun _ -> failwith "bogus_cbs translate");
@@ -607,8 +608,8 @@ let built_in_primitive_steps : prim_step_set =
          (PC.op_Division,
              2,
              0,
-             division_op,
-             (fun _us -> NBETerm.division_op));
+             division_modulus_op Z.div_big_int,
+             (fun _us -> NBETerm.division_modulus_op Z.div_big_int));
          (PC.op_LT,
              2,
              0,
@@ -632,8 +633,8 @@ let built_in_primitive_steps : prim_step_set =
          (PC.op_Modulus,
              2,
              0,
-             binary_int_op (fun x y -> Z.mod_big_int x y),
-             NBETerm.binary_int_op (fun x y -> Z.mod_big_int x y));
+             division_modulus_op Z.mod_big_int,
+             (fun _us -> NBETerm.division_modulus_op Z.mod_big_int));
          (PC.op_Negation,
              1,
              0,
@@ -1214,10 +1215,10 @@ let built_in_primitive_steps : prim_step_set =
         [
         (mk_lid "message_of_issue", 1, 0,
          unary_op arg_as_issue
-                  (fun _r issue -> U.exp_string issue.issue_msg),
+                  (fun _r issue -> EMB.(embed_simple (e_list e_document) Range.dummyRange issue.issue_msg)),
          NBETerm.unary_op
                   nbe_arg_as_issue
-                  (fun issue -> nbe_str issue.issue_msg));
+                  (fun issue -> FStar.TypeChecker.NBETerm.(embed (e_list e_document) bogus_cbs issue.issue_msg)));
         (mk_lid "level_of_issue", 1, 0,
          unary_op arg_as_issue
                   (fun _r issue -> U.exp_string (Errors.string_of_issue_level issue.issue_level)),
@@ -1248,7 +1249,14 @@ let built_in_primitive_steps : prim_step_set =
                   (fun issue -> FStar.TypeChecker.NBETerm.(embed (e_list e_string) bogus_cbs
                                                       issue.issue_ctx)));
 
-        (mk_lid "mk_issue", 5, 0, 
+        (mk_lid "render_issue", 1, 0,
+         unary_op arg_as_issue
+                  (fun _r issue -> U.exp_string (Errors.format_issue issue)),
+         NBETerm.unary_op
+                  nbe_arg_as_issue
+                  (fun issue -> nbe_str (Errors.format_issue issue)));
+
+        (mk_lid "mk_issue_doc", 5, 0,
           (fun psc univs cbs args -> 
             match args with
             | [(level, _); (msg, _); (range, _); (number, _); (context, _)] ->
@@ -1258,7 +1266,7 @@ let built_in_primitive_steps : prim_step_set =
                   try_unembed e x id_norm_cb
               in
               match try_unembed e_string level,
-                    try_unembed e_string msg, 
+                    try_unembed (e_list e_document) msg,
                     try_unembed (e_option e_range) range,
                     try_unembed (e_option e_int) number,
                     try_unembed (e_list e_string) context with
@@ -1281,7 +1289,7 @@ let built_in_primitive_steps : prim_step_set =
                   unembed e bogus_cbs x
               in
               match try_unembed e_string level,
-                    try_unembed e_string msg, 
+                    try_unembed (e_list e_document) msg,
                     try_unembed (e_option e_range) range,
                     try_unembed (e_option e_int) number,
                     try_unembed (e_list e_string) context with
@@ -1296,11 +1304,24 @@ let built_in_primitive_steps : prim_step_set =
               end
             | _ -> None))
         ]
+    in
+    let doc_ops =
+        let mk_lid l = PC.p2l ["FStar"; "Stubs"; "Pprint"; l] in
+        (* FIXME: we only implement the absolute minimum. The rest of the operations
+        are availabe to plugins. *)
+        [
+        (mk_lid "arbitrary_string", 1, 0,
+         unary_op arg_as_string
+                  (fun r str ->
+                  embed_simple EMB.e_document r (FStar.Pprint.arbitrary_string str)),
+         NBETerm.unary_op NBETerm.arg_as_string
+                  (fun str -> NBETerm.embed NBETerm.e_document bogus_cbs (FStar.Pprint.arbitrary_string str)));
+        ]
 
     in
     let strong_steps =
       List.map (as_primitive_step true)
-               (basic_ops@bounded_arith_ops@[reveal_hide]@array_ops@issue_ops)
+               (basic_ops@bounded_arith_ops@[reveal_hide]@array_ops@issue_ops@doc_ops)
     in
     let weak_steps   = List.map (as_primitive_step false) weak_ops in
     prim_from_list <| (strong_steps @ weak_steps)

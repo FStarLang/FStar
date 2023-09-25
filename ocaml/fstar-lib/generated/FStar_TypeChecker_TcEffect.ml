@@ -211,11 +211,15 @@ let (log_ad_hoc_combinator_warning :
     fun r ->
       let uu___ =
         let uu___1 =
-          FStar_Compiler_Util.format1
-            "Combinator %s is not a substitutive indexed effect combinator, it is better to make it one if possible for better performance and ease of use"
-            comb_name in
+          let uu___2 =
+            let uu___3 =
+              FStar_Compiler_Util.format1
+                "Combinator %s is not a substitutive indexed effect combinator, it is better to make it one if possible for better performance and ease of use"
+                comb_name in
+            FStar_Errors_Msg.text uu___3 in
+          [uu___2] in
         (FStar_Errors_Codes.Warning_Adhoc_IndexedEffect_Combinator, uu___1) in
-      FStar_Errors.log_issue r uu___
+      FStar_Errors.log_issue_doc r uu___
 let (bind_combinator_kind :
   FStar_TypeChecker_Env.env ->
     FStar_Ident.lident ->
@@ -6059,6 +6063,9 @@ let (tc_layered_eff_decl :
                                                              FStar_TypeChecker_Env.intactics
                                                                =
                                                                (uu___20.FStar_TypeChecker_Env.intactics);
+                                                             FStar_TypeChecker_Env.nocoerce
+                                                               =
+                                                               (uu___20.FStar_TypeChecker_Env.nocoerce);
                                                              FStar_TypeChecker_Env.tc_term
                                                                =
                                                                (uu___20.FStar_TypeChecker_Env.tc_term);
@@ -8152,6 +8159,9 @@ let (tc_non_layered_eff_decl :
                                                                     FStar_TypeChecker_Env.intactics
                                                                     =
                                                                     (env1.FStar_TypeChecker_Env.intactics);
+                                                                    FStar_TypeChecker_Env.nocoerce
+                                                                    =
+                                                                    (env1.FStar_TypeChecker_Env.nocoerce);
                                                                     FStar_TypeChecker_Env.tc_term
                                                                     =
                                                                     (env1.FStar_TypeChecker_Env.tc_term);
@@ -8438,6 +8448,9 @@ let (tc_non_layered_eff_decl :
                                                                    FStar_TypeChecker_Env.intactics
                                                                     =
                                                                     (uu___24.FStar_TypeChecker_Env.intactics);
+                                                                   FStar_TypeChecker_Env.nocoerce
+                                                                    =
+                                                                    (uu___24.FStar_TypeChecker_Env.nocoerce);
                                                                    FStar_TypeChecker_Env.tc_term
                                                                     =
                                                                     (uu___24.FStar_TypeChecker_Env.tc_term);
@@ -8773,6 +8786,9 @@ let (tc_non_layered_eff_decl :
                                                                     FStar_TypeChecker_Env.intactics
                                                                     =
                                                                     (env1.FStar_TypeChecker_Env.intactics);
+                                                                    FStar_TypeChecker_Env.nocoerce
+                                                                    =
+                                                                    (env1.FStar_TypeChecker_Env.nocoerce);
                                                                     FStar_TypeChecker_Env.tc_term
                                                                     =
                                                                     (env1.FStar_TypeChecker_Env.tc_term);
@@ -9612,6 +9628,8 @@ let (tc_lift :
                                  (env.FStar_TypeChecker_Env.uvar_subtyping);
                                FStar_TypeChecker_Env.intactics =
                                  (env.FStar_TypeChecker_Env.intactics);
+                               FStar_TypeChecker_Env.nocoerce =
+                                 (env.FStar_TypeChecker_Env.nocoerce);
                                FStar_TypeChecker_Env.tc_term =
                                  (env.FStar_TypeChecker_Env.tc_term);
                                FStar_TypeChecker_Env.typeof_tot_or_gtot_term
@@ -10248,12 +10266,17 @@ let (tc_polymonadic_bind :
                                   else ());
                                  (let uu___7 =
                                     let uu___8 =
-                                      FStar_Compiler_Util.format1
-                                        "Polymonadic binds (%s in this case) is an experimental feature;it is subject to some redesign in the future. Please keep us informed (on github etc.) about how you are using it"
-                                        eff_name in
+                                      let uu___9 =
+                                        let uu___10 =
+                                          FStar_Compiler_Util.format1
+                                            "Polymonadic binds (%s in this case) is an experimental feature;it is subject to some redesign in the future. Please keep us informed (on github etc.) about how you are using it"
+                                            eff_name in
+                                        FStar_Compiler_Effect.op_Less_Bar
+                                          FStar_Errors_Msg.text uu___10 in
+                                      [uu___9] in
                                     (FStar_Errors_Codes.Warning_BleedingEdge_Feature,
                                       uu___8) in
-                                  FStar_Errors.log_issue r uu___7);
+                                  FStar_Errors.log_issue_doc r uu___7);
                                  (let uu___7 =
                                     let uu___8 =
                                       FStar_Compiler_Effect.op_Bar_Greater k
@@ -10342,12 +10365,17 @@ let (tc_polymonadic_subcomp :
                                 else ());
                                (let uu___7 =
                                   let uu___8 =
-                                    FStar_Compiler_Util.format1
-                                      "Polymonadic subcomp (%s in this case) is an experimental feature;it is subject to some redesign in the future. Please keep us informed (on github etc.) about how you are using it"
-                                      combinator_name in
+                                    let uu___9 =
+                                      let uu___10 =
+                                        FStar_Compiler_Util.format1
+                                          "Polymonadic subcomp (%s in this case) is an experimental feature;it is subject to some redesign in the future. Please keep us informed (on github etc.) about how you are using it"
+                                          combinator_name in
+                                      FStar_Compiler_Effect.op_Less_Bar
+                                        FStar_Errors_Msg.text uu___10 in
+                                    [uu___9] in
                                   (FStar_Errors_Codes.Warning_BleedingEdge_Feature,
                                     uu___8) in
-                                FStar_Errors.log_issue r uu___7);
+                                FStar_Errors.log_issue_doc r uu___7);
                                (let uu___7 =
                                   let uu___8 =
                                     FStar_Compiler_Effect.op_Bar_Greater k

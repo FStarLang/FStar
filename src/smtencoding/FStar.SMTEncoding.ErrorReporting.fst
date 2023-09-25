@@ -295,7 +295,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
           labels, Term.mkLet (es, body) q.rng
     in
     __ctr := 0;
-    aux "assertion failed" None None [] q
+    aux "Assertion failed" None None [] q
 
 
 (*

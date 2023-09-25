@@ -144,6 +144,8 @@ let (init_once : unit -> unit) =
                (env.FStar_TypeChecker_Env.uvar_subtyping);
              FStar_TypeChecker_Env.intactics =
                (env.FStar_TypeChecker_Env.intactics);
+             FStar_TypeChecker_Env.nocoerce =
+               (env.FStar_TypeChecker_Env.nocoerce);
              FStar_TypeChecker_Env.tc_term =
                (env.FStar_TypeChecker_Env.tc_term);
              FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
@@ -250,6 +252,8 @@ let (init_once : unit -> unit) =
                     (env2.FStar_TypeChecker_Env.uvar_subtyping);
                   FStar_TypeChecker_Env.intactics =
                     (env2.FStar_TypeChecker_Env.intactics);
+                  FStar_TypeChecker_Env.nocoerce =
+                    (env2.FStar_TypeChecker_Env.nocoerce);
                   FStar_TypeChecker_Env.tc_term =
                     (env2.FStar_TypeChecker_Env.tc_term);
                   FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
@@ -339,7 +343,7 @@ let (pars : Prims.string -> FStar_Syntax_Syntax.term) =
                   FStar_ToSyntax_ToSyntax.desugar_term
                     tcenv.FStar_TypeChecker_Env.dsenv t
               | FStar_Parser_ParseIt.ParseError (e, msg, r) ->
-                  FStar_Errors.raise_error (e, msg) r
+                  FStar_Errors.raise_error_doc (e, msg) r
               | FStar_Parser_ParseIt.ASTFragment uu___2 ->
                   failwith
                     "Impossible: parsing a Fragment always results in a Term"))
@@ -349,10 +353,13 @@ let (pars : Prims.string -> FStar_Syntax_Syntax.term) =
         let uu___1 = FStar_Options.trace_error () in
         FStar_Compiler_Effect.op_Less_Bar Prims.op_Negation uu___1 ->
         (if r = FStar_Compiler_Range_Type.dummyRange
-         then FStar_Compiler_Util.print_string msg
+         then
+           (let uu___2 = FStar_Errors_Msg.rendermsg msg in
+            FStar_Compiler_Util.print_string uu___2)
          else
            (let uu___3 = FStar_Compiler_Range_Ops.string_of_range r in
-            FStar_Compiler_Util.print2 "%s: %s\n" uu___3 msg);
+            let uu___4 = FStar_Errors_Msg.rendermsg msg in
+            FStar_Compiler_Util.print2 "%s: %s\n" uu___3 uu___4);
          FStar_Compiler_Effect.exit Prims.int_one)
     | e when
         let uu___1 = FStar_Options.trace_error () in Prims.op_Negation uu___1
@@ -403,6 +410,8 @@ let (tc' :
           (tcenv.FStar_TypeChecker_Env.uvar_subtyping);
         FStar_TypeChecker_Env.intactics =
           (tcenv.FStar_TypeChecker_Env.intactics);
+        FStar_TypeChecker_Env.nocoerce =
+          (tcenv.FStar_TypeChecker_Env.nocoerce);
         FStar_TypeChecker_Env.tc_term = (tcenv.FStar_TypeChecker_Env.tc_term);
         FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
           (tcenv.FStar_TypeChecker_Env.typeof_tot_or_gtot_term);
@@ -502,6 +511,8 @@ let (tc_term : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
           (tcenv.FStar_TypeChecker_Env.uvar_subtyping);
         FStar_TypeChecker_Env.intactics =
           (tcenv.FStar_TypeChecker_Env.intactics);
+        FStar_TypeChecker_Env.nocoerce =
+          (tcenv.FStar_TypeChecker_Env.nocoerce);
         FStar_TypeChecker_Env.tc_term = (tcenv.FStar_TypeChecker_Env.tc_term);
         FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
           (tcenv.FStar_TypeChecker_Env.typeof_tot_or_gtot_term);
@@ -725,15 +736,15 @@ let (parse_incremental_decls : unit -> unit) =
     | (FStar_Parser_ParseIt.ParseError (code, message, range), uu___2) ->
         let msg =
           let uu___3 = FStar_Compiler_Range_Ops.string_of_range range in
+          let uu___4 = FStar_Errors_Msg.rendermsg message in
           FStar_Compiler_Util.format2
-            "Incremental parsing failed: Syntax error @ %s: %s" uu___3
-            message in
+            "Incremental parsing failed: Syntax error @ %s: %s" uu___3 uu___4 in
         failwith msg
     | (uu___2, FStar_Parser_ParseIt.ParseError (code, message, range)) ->
         let msg =
           let uu___3 = FStar_Compiler_Range_Ops.string_of_range range in
+          let uu___4 = FStar_Errors_Msg.rendermsg message in
           FStar_Compiler_Util.format2
-            "Incremental parsing failed: Syntax error @ %s: %s" uu___3
-            message in
+            "Incremental parsing failed: Syntax error @ %s: %s" uu___3 uu___4 in
         failwith msg
     | uu___2 -> failwith "Incremental parsing failed: Unexpected output"

@@ -8,7 +8,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "8358c00f96ba9fd878952d71172224f8"
+      "c471ba07d6561fe0c6ec663ddfab8743"
     ],
     [
       "Bug2229.test_pure_gtot",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "d89230b4afac3db73dee58f8cc5bb8f0"
+      "96eb38c2e9077ffe09a2a2399d989b00"
     ],
     [
       "Bug2229.test_pure",
@@ -26,7 +26,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "78287d0fe3dc8dfba23a190330218b06"
+      "cbc12878c2b866eb88a4f8b46c4704c7"
     ],
     [
       "Bug2229.test_gtot_pure",
@@ -35,7 +35,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "f39accba1f60a2462a3a76bc4d8677eb"
+      "0572e81b24e839cb24f48ae637e6f317"
     ]
   ]
 ]

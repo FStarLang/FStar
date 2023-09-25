@@ -1,5 +1,5 @@
 open Prims
-let (cache_version_number : Prims.int) = (Prims.of_int (59))
+let (cache_version_number : Prims.int) = (Prims.of_int (60))
 type tc_result =
   {
   checked_module: FStar_Syntax_Syntax.modul ;
@@ -474,11 +474,15 @@ let (load_module_from_cache :
                      FStar_Compiler_Range_Type.mk_range fn1 uu___4 uu___5 in
                    let uu___4 =
                      let uu___5 =
-                       FStar_Compiler_Util.format3
-                         "Unable to load %s since %s; will recheck %s (suppressing this warning for further modules)"
-                         cache_file1 msg fn1 in
+                       let uu___6 =
+                         let uu___7 =
+                           FStar_Compiler_Util.format3
+                             "Unable to load %s since %s; will recheck %s (suppressing this warning for further modules)"
+                             cache_file1 msg fn1 in
+                         FStar_Errors_Msg.text uu___7 in
+                       [uu___6] in
                      (FStar_Errors_Codes.Warning_CachedFile, uu___5) in
-                   FStar_Errors.log_issue uu___3 uu___4))
+                   FStar_Errors.log_issue_doc uu___3 uu___4))
                else () in
              let uu___2 =
                let uu___3 =

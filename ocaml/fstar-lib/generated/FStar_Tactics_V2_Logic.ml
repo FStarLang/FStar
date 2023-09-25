@@ -1126,7 +1126,7 @@ let (unsquash :
                                      (Prims.of_int (208)) (Prims.of_int (20)))))
                             (FStar_Sealed.seal
                                (Obj.magic
-                                  (FStar_Range.mk_range " dummy"
+                                  (FStar_Range.mk_range "dummy"
                                      Prims.int_zero Prims.int_zero
                                      Prims.int_zero Prims.int_zero)))
                             (Obj.magic (FStar_Tactics_V2_Builtins.intro ()))

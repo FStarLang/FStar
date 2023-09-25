@@ -263,6 +263,7 @@ val e_any    : embedding t
 val mk_any_emb : t -> embedding t
 val e_range  : embedding Range.range
 val e_issue  : embedding FStar.Errors.issue
+val e_document : embedding FStar.Pprint.document
 val e_vconfig  : embedding vconfig
 val e_norm_step : embedding Pervasives.norm_step
 val e_list   : embedding 'a -> embedding (list 'a)
@@ -363,6 +364,6 @@ val dummy_interp : Ident.lid -> args -> option t
 val prims_to_fstar_range_step : args -> option t
 
 val mk_range : args -> option t
-val division_op : args -> option t
+val division_modulus_op (op:Z.bigint -> Z.bigint -> Z.bigint) : args -> option t
 val and_op : args -> option t
 val or_op : args -> option t

@@ -1,0 +1,150 @@
+[
+  "|È\u001f\u0012÷\t\\§ø…ÛÛ º+w",
+  [
+    [
+      "LeftistHeap.merge",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_374b44ccfcb77ed85d505dbc44265913_2",
+        "binder_x_374b44ccfcb77ed85d505dbc44265913_3",
+        "binder_x_f0062e810d23900aea914a963397c69a_1",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_Prims.eqtype", "equation_Prims.op_Equals_Equals_Equals",
+        "fuel_guarded_inversion_LeftistHeap.ordered",
+        "fuel_guarded_inversion_Prims.list",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "2167155ca6a8bb9863f44dc0982cfdb4"
+    ],
+    [
+      "LeftistHeap.sorted",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_374b44ccfcb77ed85d505dbc44265913_2",
+        "binder_x_f0062e810d23900aea914a963397c69a_1",
+        "equation_Prims.eqtype", "equation_Prims.op_Equals_Equals_Equals",
+        "fuel_guarded_inversion_LeftistHeap.ordered",
+        "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "a42b1c63ea36e36ec6fbf6216e30e43a"
+    ],
+    [
+      "LeftistHeap.empty",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_Prims.list__uu___haseq", "equation_Prims.eqtype",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "4f055883beaf70637c041b84f3a91a3a"
+    ],
+    [
+      "LeftistHeap.isEmpty",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_Prims.list__uu___haseq", "equation_Prims.eqtype",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "87e9b8c3533462ff78d533a52edfdf0e"
+    ],
+    [
+      "LeftistHeap.singleton",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_Prims.list__uu___haseq", "equation_Prims.eqtype",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "58c7c5be8f559b8c48e6a55c07aa2597"
+    ],
+    [
+      "LeftistHeap.merge_heaps",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_Prims.list__uu___haseq", "equation_Prims.eqtype",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "ae34ee2888b65971242c12b0414de595"
+    ],
+    [
+      "LeftistHeap.insert",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_Prims.list__uu___haseq", "equation_Prims.eqtype",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "5c50b33ab8ae9e60c586cf48acab73d2"
+    ],
+    [
+      "LeftistHeap.get_min",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
+        "fuel_guarded_inversion_LeftistHeap.ordered",
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2a9a55aa69767df3fd9b8c47f8e24270",
+        "refinement_interpretation_Tm_refine_32dfddc0b557508b5956c23209347ea1",
+        "refinement_interpretation_Tm_refine_366ba6d2d69978c1c8b35278df759a3f",
+        "typing_LeftistHeap.isEmpty"
+      ],
+      0,
+      "da2250218384ea590291d8b91dcec0ba"
+    ],
+    [
+      "LeftistHeap.delete_min",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_Prims.list__uu___haseq", "disc_equation_Prims.Cons",
+        "equation_Prims.eqtype",
+        "fuel_guarded_inversion_LeftistHeap.ordered",
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2a9a55aa69767df3fd9b8c47f8e24270",
+        "refinement_interpretation_Tm_refine_32dfddc0b557508b5956c23209347ea1",
+        "refinement_interpretation_Tm_refine_366ba6d2d69978c1c8b35278df759a3f",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_LeftistHeap.isEmpty", "typing_LeftistHeap.to_list"
+      ],
+      0,
+      "d9b5e61e412e32e3d1c82c5e65f45b64"
+    ]
+  ]
+]

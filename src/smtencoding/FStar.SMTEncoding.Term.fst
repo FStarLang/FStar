@@ -564,11 +564,11 @@ let injective_constructor
     let bvar_name i = "x_" ^ string_of_int i in
     let bvar_index i = n_bvars - (i + 1) in
     let bvar i s = mkFreeV <| mk_fv (bvar_name i, s) in
-    let bvars = fields |> List.mapi (fun i (_, s, _) -> bvar i s norng) in
+    let bvars = fields |> List.mapi (fun i f -> bvar i f.field_sort norng) in
     let bvar_names = List.map fv_of_term bvars in
     let capp = mkApp(name, bvars) norng in
     fields
-    |> List.mapi (fun i (name, s, projectible) ->
+    |> List.mapi (fun i {field_projectible=projectible; field_name=name; field_sort=s} ->
             let cproj_app = mkApp(name, [capp]) norng in
             let proj_name = DeclFun(name, [sort], s, Some "Projector") in
             if projectible
@@ -582,39 +582,49 @@ let injective_constructor
             else [proj_name])
     |> List.flatten
 
-let constructor_to_decl rng (name, fields, sort, id, injective) =
-    let injective = injective || true in
-    let field_sorts = fields |> List.map (fun (_, sort, _) -> sort) in
-    let cdecl = DeclFun(name, field_sorts, sort, Some "Constructor") in
-    let cid = fresh_constructor rng (name, field_sorts, sort, id) in
+let discriminator_name constr = "is-"^constr.constr_name
+
+let constructor_to_decl rng constr =
+    let injective = true in
+    let sort = constr.constr_sort in
+    let field_sorts = constr.constr_fields |> List.map (fun f -> f.field_sort) in
+    let cdecl = DeclFun(constr.constr_name, field_sorts, constr.constr_sort, Some "Constructor") in
+    let cid = 
+      match constr.constr_id with
+      | None -> []
+      | Some id -> [fresh_constructor rng (constr.constr_name, field_sorts, sort, id)]
+    in
     let disc =
-        let disc_name = "is-"^name in
+        let disc_name = discriminator_name constr in
         let xfv = mk_fv ("x", sort) in
         let xx = mkFreeV xfv norng in
-        let disc_eq = mkEq(mkApp(constr_id_of_sort sort, [xx]) norng, mkInteger (string_of_int id) norng) norng in
         let proj_terms, ex_vars =
-            fields
-         |> List.mapi (fun i (proj, s, projectible) ->
+            constr.constr_fields
+         |> List.mapi (fun i {field_projectible=projectible; field_sort=s; field_name=proj} ->
                 if projectible
                 then mkApp(proj, [xx]) norng, []
                 else let fi = mk_fv ("f_" ^ BU.string_of_int i, s) in
                      mkFreeV fi norng, [fi])
          |> List.split in
         let ex_vars = List.flatten ex_vars in
-        let disc_inv_body = mkEq(xx, mkApp(name, proj_terms) norng) norng in
+        let disc_inv_body = mkEq(xx, mkApp(constr.constr_name, proj_terms) norng) norng in
         let disc_inv_body = match ex_vars with
             | [] -> disc_inv_body
             | _ -> mkExists norng ([], ex_vars, disc_inv_body) in
-        let disc_ax = mkAnd(disc_eq, disc_inv_body) norng in
+        let disc_ax =
+          match constr.constr_id with
+          | None -> disc_inv_body
+          | Some id ->
+            let disc_eq = mkEq(mkApp(constr_id_of_sort constr.constr_sort, [xx]) norng, mkInteger (string_of_int id) norng) norng in
+            mkAnd(disc_eq, disc_inv_body) norng in
         let def = mkDefineFun(disc_name, [xfv], Bool_sort,
                     disc_ax,
                     Some "Discriminator definition") in
         def in
-    let projs =
-        if injective
-        then injective_constructor rng (name, fields, sort)
-        else [] in
-    Caption (format1 "<start constructor %s>" name)::cdecl::cid::projs@[disc]@[Caption (format1 "</end constructor %s>" name)]
+    let projs = injective_constructor rng (constr.constr_name, constr.constr_fields, sort) in
+    Caption (format1 "<start constructor %s>" constr.constr_name)::
+    [cdecl]@cid@projs@[disc]
+    @[Caption (format1 "</end constructor %s>" constr.constr_name)]
 
 (****************************************************************************)
 (* Standard SMTLib prelude for F* and some term constructors                *)
@@ -875,14 +885,23 @@ and mkPrelude z3options =
                 (assert (forall ((x Real) (y Real)) (! (= (_rdiv x y) (/ x y)) :pattern ((_rdiv x y)))))\n\
                 (define-fun Unreachable () Bool false)"
    in
-   let constrs : constructors = [("FString_const", ["FString_const_proj_0", Int_sort, true], String_sort, 0, true);
-                                 ("Tm_type",  [], Term_sort, 2, true);
-                                 ("Tm_arrow", [("Tm_arrow_id", Int_sort, true)],  Term_sort, 3, false);
-                                 ("Tm_unit",  [], Term_sort, 6, true);
-                                 (fst boxIntFun,     [snd boxIntFun,  Int_sort, true],   Term_sort, 7, true);
-                                 (fst boxBoolFun,    [snd boxBoolFun, Bool_sort, true],  Term_sort, 8, true);
-                                 (fst boxStringFun,  [snd boxStringFun, String_sort, true], Term_sort, 9, true);
-                                 (fst boxRealFun,    [snd boxRealFun, Sort "Real", true], Term_sort, 10, true)] in
+   let as_constr (name, fields, sort, id, _injective)
+     : constructor_t
+     = { constr_name=name;
+         constr_fields=List.map (fun (field_name, field_sort, field_projectible) -> {field_name; field_sort; field_projectible}) fields;
+         constr_sort=sort;
+         constr_id=Some id }
+   in
+   let constrs : constructors = 
+     List.map as_constr
+       [("FString_const", ["FString_const_proj_0", Int_sort, true], String_sort, 0, true);
+        ("Tm_type",  [], Term_sort, 2, true);
+        ("Tm_arrow", [("Tm_arrow_id", Int_sort, true)],  Term_sort, 3, false);
+        ("Tm_unit",  [], Term_sort, 6, true);
+        (fst boxIntFun,     [snd boxIntFun,  Int_sort, true],   Term_sort, 7, true);
+        (fst boxBoolFun,    [snd boxBoolFun, Bool_sort, true],  Term_sort, 8, true);
+        (fst boxStringFun,  [snd boxStringFun, String_sort, true], Term_sort, 9, true);
+        (fst boxRealFun,    [snd boxRealFun, Sort "Real", true], Term_sort, 10, true)] in
    let bcons = constrs |> List.collect (constructor_to_decl norng)
                        |> List.map (declToSmt z3options) |> String.concat "\n" in
 
@@ -947,9 +966,15 @@ let declToSmt_no_caps z3options decl = declToSmt' false z3options decl
    I am computing them based on the size in this not very robust way.
    z3options are only used by the prelude so passing the empty string should be ok. *)
 let mkBvConstructor (sz : int) =
-    (fst (boxBitVecFun sz),
-        [snd (boxBitVecFun sz), BitVec_sort sz, true], Term_sort, 12+sz, true)
-    |> constructor_to_decl norng
+  let constr : constructor_t = {
+    constr_name=fst (boxBitVecFun sz);
+    constr_sort=Term_sort;
+    constr_id=None;
+    constr_fields=[{field_projectible=true; field_name=snd (boxBitVecFun sz); field_sort=BitVec_sort sz }]
+  } in
+  constructor_to_decl norng constr, 
+  constr.constr_name, 
+  discriminator_name constr
 
 let __range_c = BU.mk_ref 0
 let mk_Range_const () =

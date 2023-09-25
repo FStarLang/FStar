@@ -21,6 +21,9 @@ open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Compiler.Util
 
+val term_to_doc'    : DsEnv.env -> term -> Pprint.document
+val term_to_doc     : term -> Pprint.document
+
 (* Use these if possible: they abbreviate lidents *)
 val term_to_string'     : DsEnv.env -> term -> string
 val comp_to_string'     : DsEnv.env -> comp -> string

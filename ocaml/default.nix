@@ -1,7 +1,7 @@
 { batteries, buildDunePackage, includeBinaryAnnotations ? false
-, installShellFiles, lib, makeWrapper, menhir, menhirLib, ocaml, pprint, ppxlib
-, ppx_deriving, ppx_deriving_yojson, process, removeReferencesTo, sedlex, stdint
-, version, yojson, zarith }:
+, installShellFiles, lib, makeWrapper, menhir, menhirLib, memtrace, ocaml
+, pprint, ppxlib, ppx_deriving, ppx_deriving_yojson, process, removeReferencesTo
+, sedlex, stdint, version, yojson, zarith }:
 
 buildDunePackage {
   pname = "fstar";
@@ -16,12 +16,8 @@ buildDunePackage {
     patchShebangs fstar-lib/make_fstar_version.sh
   '';
 
-  nativeBuildInputs = [
-    installShellFiles
-    makeWrapper
-    removeReferencesTo
-    menhir
-  ];
+  nativeBuildInputs =
+    [ installShellFiles makeWrapper removeReferencesTo menhir ];
 
   buildInputs = [
     batteries
@@ -35,6 +31,7 @@ buildDunePackage {
     stdint
     yojson
     zarith
+    memtrace
   ];
 
   enableParallelBuilding = true;
@@ -53,4 +50,6 @@ buildDunePackage {
     # Meanwhile, they add a dependency to the OCaml compiler and are thus removed by default
     rm $out/lib/ocaml/${ocaml.version}/site-lib/fstar/lib/*.cmt
   '');
+
+  FSTAR_COMMIT = version;
 }

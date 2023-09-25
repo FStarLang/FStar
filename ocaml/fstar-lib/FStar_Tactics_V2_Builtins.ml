@@ -131,7 +131,9 @@ let get_vconfig             = from_tac_1 "B.get_vconfig" B.get_vconfig
 let set_vconfig             = from_tac_1 "B.set_vconfig" B.set_vconfig
 let t_smt_sync              = from_tac_1 "B.t_smt_sync" B.t_smt_sync
 let free_uvars              = from_tac_1 "B.free_uvars" B.free_uvars
-
+let all_ext_options         = from_tac_1 "B.all_ext_options" B.all_ext_options
+let ext_getv                = from_tac_1 "B.ext_getv" B.ext_getv
+let ext_getns               = from_tac_1 "B.ext_getns" B.ext_getns
 
 type ('env, 't) prop_validity_token = unit
 type ('env, 'sc, 't, 'pats, 'bnds) match_complete_token = unit
@@ -151,6 +153,7 @@ let maybe_unfold_head            = from_tac_2 "B.refl_maybe_unfold_head" B.refl_
 let push_open_namespace          = from_tac_2 "B.push_open_namespace" B.push_open_namespace
 let push_module_abbrev           = from_tac_3 "B.push_module_abbrev" B.push_module_abbrev
 let resolve_name                 = from_tac_2 "B.resolve_name" B.resolve_name
+let log_issues                   = from_tac_1 "B.log_issues" B.log_issues
 
 (* The handlers need to "embed" their argument. *)
 let catch   (t: unit -> 'a __tac): ((exn, 'a) either) __tac = from_tac_1 "TM.catch" TM.catch   (to_tac_0 (t ()))
@@ -162,10 +165,3 @@ let ctrl_rewrite
     (t2 : unit -> unit __tac)
   : unit __tac
   = from_tac_3 "ctrl_rewrite" CTRW.ctrl_rewrite d (to_tac_1 t1) (to_tac_0 (t2 ()))
-
-let log_issues (i:FStar_Issue.issue list)
-  : unit __tac
-  = fun ps ->
-       FStar_Errors.add_many i;
-       FStar_Tactics_Result.Success ((), ps)
-

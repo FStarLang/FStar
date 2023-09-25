@@ -1038,6 +1038,7 @@ let e___range =
 let e_range = e_sealed e___range
 
 let e_issue : embedding Err.issue = e_lazy Lazy_issue (S.fvar PC.issue_lid None)
+let e_document : embedding Pprint.document = e_lazy Lazy_doc (S.fvar PC.document_lid None)
 
  /////////////////////////////////////////////////////////////////////
  //Registering top-level functions

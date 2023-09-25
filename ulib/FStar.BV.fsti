@@ -197,6 +197,22 @@ val int2bv_div:
     squash (bvdiv #n (int2bv #n x) y == z)
   -> Lemma (int2bv #n (udiv #n x y) == z)
 
+
+(** 'bvdiv_unsafe' is an uninterpreted function on 'bv_t n',
+    modeling the corresponding operator from SMT-LIB.
+    When its second argument is nonzero, the lemma below
+    says that it is equivalent to bvdiv. *)
+val bvdiv_unsafe (#n: pos) (a b: bv_t n) : Tot (bv_t n)
+
+(** 'bvdiv_unsafe' behaves as 'bvdiv' when denominator is nonzero *)
+val bvdiv_unsafe_sound :
+    #n: pos ->
+    #a : bv_t n ->
+    #b : bv_t n ->
+    squash (bv2int b <> 0)
+  -> Lemma (bvdiv_unsafe #n a b = bvdiv a (bv2int b))
+
+
 (** Modulus *)
 val bvmod (#n: pos) (a: bv_t n) (b: uint_t n {b <> 0}) : Tot (bv_t n)
 

@@ -1002,7 +1002,10 @@ let push_sigelt' fail_on_dup env s =
           | None -> "<unknown>"
         end
       | None -> "<unknown>" in
-    raise_error (Errors.Fatal_DuplicateTopLevelNames, (BU.format2 "Duplicate top-level names [%s]; previously declared at %s" (string_of_lid l) r)) (range_of_lid l) in
+    raise_error_doc (Errors.Fatal_DuplicateTopLevelNames,
+                     [Errors.text (BU.format1 "Duplicate top-level names [%s]" (string_of_lid l));
+                      Errors.text (BU.format1 "Previously declared at %s" r)]) (range_of_lid l)
+  in
   let globals = BU.mk_ref env.scope_mods in
   let env =
       let any_val, exclude_interface = match s.sigel with
@@ -1044,6 +1047,7 @@ let push_sigelt_force env se = push_sigelt' false env se
 
 let push_namespace env ns =
   (* namespace resolution disabled, but module abbrevs enabled *)
+  (* GM: What's the rationale for this? *)
   let (ns', kd) =
     match resolve_module_name env ns false with
     | None -> (
@@ -1335,38 +1339,35 @@ let enter_monad_scope env mname =
 let fail_or env lookup lid = match lookup lid with
   | None ->
     let opened_modules = List.map (fun (lid, _) -> string_of_lid lid) env.modules in
-    let msg = BU.format1 "Identifier not found: [%s]" (string_of_lid lid) in
+    let msg = Errors.mkmsg (BU.format1 "Identifier not found: [%s]" (string_of_lid lid)) in
     let msg =
       if List.length (ns_of_lid lid) = 0
       then
        msg
       else
        let modul = set_lid_range (lid_of_ids (ns_of_lid lid)) (range_of_lid lid) in
+       let open FStar.Pprint in
+       let subdoc d =
+         nest 2 (hardline ^^ align d)
+       in
        match resolve_module_name env modul true with
        | None ->
-           let opened_modules = String.concat ", " opened_modules in
-           BU.format3
-           "%s\nModule %s does not belong to the list of modules in scope, namely %s"
-           msg
-           (string_of_lid modul)
-           opened_modules
+           let opened_modules = String.concat ", " opened_modules |> Errors.text in
+           msg @ [Errors.text (BU.format1 "Module %s does not belong to the list of modules in scope, namely:"
+                                          (string_of_lid modul)) ^^ subdoc opened_modules]
        | Some modul' when (not (List.existsb (fun m -> m = (string_of_lid modul')) opened_modules)) ->
-           let opened_modules = String.concat ", " opened_modules in
-           BU.format4
-           "%s\nModule %s resolved into %s, which does not belong to the list of modules in scope, namely %s"
-           msg
-           (string_of_lid modul)
-           (string_of_lid modul')
-           opened_modules
+           let opened_modules = String.concat ", " opened_modules |> Errors.text in
+           msg @ [Errors.text (BU.format2 "Module %s resolved into %s, which does not belong to the list of modules in scope, namely:"
+                                          (string_of_lid modul)
+                                          (string_of_lid modul')) ^^ subdoc opened_modules]
        | Some modul' ->
-           BU.format4
-           "%s\nModule %s resolved into %s, definition %s not found"
-           msg
-           (string_of_lid modul)
-           (string_of_lid modul')
-           (string_of_id (ident_of_lid lid))
+           msg @ [Errors.text (BU.format3
+                               "Module %s resolved into %s, definition %s not found"
+                               (string_of_lid modul)
+                               (string_of_lid modul')
+                               (string_of_id (ident_of_lid lid)))]
     in
-    raise_error (Errors.Fatal_IdentifierNotFound, msg) (range_of_lid lid)
+    raise_error_doc (Errors.Fatal_IdentifierNotFound, msg) (range_of_lid lid)
   | Some r -> r
 
 let fail_or2 lookup id = match lookup id with

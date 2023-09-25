@@ -23,7 +23,7 @@ proof terms with the SMT filling in the missing parts.
 Each connective has an *introduction* principle (which describes how
 to build proofs of that connective) and an *elimination* principle
 (which describes how to use a proof of that connective to build other
-proofs). Examples uses of introduction and elimination principles for
+proofs). Example uses of introduction and elimination principles for
 all the connectives can be found in `ClassicalSugar.fst
 <https://github.com/FStarLang/FStar/blob/master/tests/micro-benchmarks/ClassicalSugar.fst>`_
 
@@ -55,7 +55,7 @@ as shown below:
 Introduction
 ++++++++++++
 
-The ``False`` proposition has no introduction form since it has no proofs.
+The ``False`` proposition has no introduction form, since it has no proofs.
 
 Elimination
 +++++++++++
@@ -68,7 +68,7 @@ other type.
    :start-after: //SNIPPET_START: empty_elim$
    :end-before: //SNIPPET_END: empty_elim$
 
-This body of ``elim_false`` is a ``match`` expression no branches,
+This body of ``elim_false`` is a ``match`` expression with no branches,
 which suffices to match all the zero cases of the ``empty`` type.
 
 ``FStar.Pervasives.false_elim`` provides an analogous elimination rule
@@ -128,7 +128,7 @@ proofs of ``p`` and ``q``, respectively.
 
 .. code-block::
 
-   type pair (p q:Type) = | Pair : _1:p -> _1:q -> tuple2 p q
+   type pair (p q:Type) = | Pair : _1:p -> _1:q -> pair p q
 
 .. note::
 
@@ -144,7 +144,7 @@ follows:
 
 .. code-block::
 
-   let ( /\ ) (p q:Type) = squash (p & q)
+   let ( /\ ) (p q:Type) = squash (pair p q)
 
 Introduction
 ++++++++++++
@@ -166,7 +166,7 @@ of doing.
    :start-after: //SNIPPET_START: conj_intro$
    :end-before: //SNIPPET_END: conj_intro$
 
-Or, if one needs to finer control, F* offers specialized syntax
+Or, if one needs finer control, F* offers specialized syntax
 (defined in ``FStar.Classical.Sugar``) to manipulate each of the
 non-trivial logical connectives, as shown below.
 
@@ -219,18 +219,23 @@ inductive type:
 .. code-block:: fstar
 
    type sum (p q:Type) =
-     | Left : p -> either p q
-     | Right : q -> either p q
+     | Left : p -> sum p q
+     | Right : q -> sum p q
 
 The constructors ``Left`` and ``Right`` inject proofs of ``p`` or
 ``q`` into a proof of ``sum p q``.
+
+.. note::
+
+   Just like before, this type is isomorphic to the type ``either p q``
+   from ``FStar.Pervasives``.
 
 The classical connective ``\/`` described previously is just a
 squashed version of ``sum``.
 
 .. code-block:: fstar
 
-   let ( \/ ) (p q: Type) = squash (either p q)
+   let ( \/ ) (p q: Type) = squash (sum p q)
 
 Introduction
 ++++++++++++
@@ -238,7 +243,7 @@ Introduction
 As with the other connectives, introducing a constructive disjunction
 is just a matter of using the ``Left`` or ``Right`` constructor.
 
-To introduc the squashed version ``\/``, one can either rely on the
+To introduce the squashed version ``\/``, one can either rely on the
 SMT solver, as shown below.
 
 .. literalinclude:: ../code/Connectives.fst
@@ -258,16 +263,16 @@ Elimination
 +++++++++++
 
 Eliminating a disjunction requires a *motive*, a goal proposition to
-be derived from a proof of ``either p q`` or ``p \/ q``.
+be derived from a proof of ``sum p q`` or ``p \/ q``.
 
-In constructive style, eliminating ``either p q`` amounts to just
+In constructive style, eliminating ``sum p q`` amounts to just
 pattern matching on the cases and constructing a proof of the goal
-by applying suitable goal-producing hypothesis.
+by applying a suitable goal-producing hypothesis.
 
 .. literalinclude:: ../code/Connectives.fst
    :language: fstar
-   :start-after: //SNIPPET_START: either_elim$
-   :end-before: //SNIPPET_END: either_elim$
+   :start-after: //SNIPPET_START: sum_elim$
+   :end-before: //SNIPPET_END: sum_elim$
 
 The squashed version is similar, except the case analysis can either
 be automated by SMT or explicitly handled using the syntactic
@@ -286,7 +291,7 @@ sugar.
 Implication
 ...........
 
-One of elimination principles for disjunction used the implication
+One of the elimination principles for disjunction used the implication
 connective ``==>``. Its definition is shown below:
 
 .. code-block:: fstar
@@ -308,7 +313,7 @@ Introduction
 Introducing a constructive arrow ``p -> q`` just involves constructing
 a :math:`\lambda`-literal of the appropriate type.
 
-One can turn several kind of arrows into implications, as shown below.
+One can turn several kinds of arrows into implications, as shown below.
 
 One option is to directly use a function from the ``FStar.Classical``
 library, as shown below:
@@ -462,7 +467,7 @@ line.
    :end-before: //SNIPPET_END: forall_intro$
 
 Note, as ``forall_intro_3`` shows, the sugar also works for ``forall``
-quantifers of arities greater than 1.
+quantifiers of arities greater than 1.
 
 Elimination
 +++++++++++
@@ -477,7 +482,7 @@ application.
 For the squashed version, eliminating a ``forall`` quantifier amounts
 to instantiating the quantifier for a given term. Automating proofs
 that require quantifier instantiation is a large topic in its own
-right, on we'll cover in a later section---this `wiki page
+right, as we'll cover in a later section---this `wiki page
 <https://github.com/FStarLang/FStar/wiki/Quantifiers-and-patterns>`_
 provides some hints.
 
@@ -595,7 +600,7 @@ principle:
 Names corresponding to the binders on the ``eliminate`` line are in
 scope in the ``with`` line, which additionally binds a name for a
 proof term corresponding to the body of the existential formula. That
-is, in the examples above ``x:t`` is implicitly in scope for the proof
+is, in the examples above, ``x:t`` is implicitly in scope for the proof
 term, while ``pf_p: squash p``.
 
 Exercise
@@ -603,7 +608,7 @@ Exercise
 
 In a :ref:`previous exercise <Part2_merkle_insert>`, we defined a
 function to insert an element in a Merkle tree and had it return a new
-root hash and updated Merkle tree. Our solution had the following
+root hash and an updated Merkle tree. Our solution had the following
 signature:
 
 .. literalinclude:: ../code/MerkleTree.fst

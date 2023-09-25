@@ -484,6 +484,17 @@ let e_issue : embedding FStar.Errors.issue =
     in
     mk_emb' em un (lid_as_typ PC.issue_lid [] []) (SE.emb_typ_of SE.e_issue)  
 
+let e_document : embedding FStar.Pprint.document =
+    let t_document = SE.type_of SE.e_document in
+    let li blob rng = { blob=Dyn.mkdyn blob; lkind = Lazy_doc; ltyp = t_document; rng } in
+    let em cb doc = Lazy (Inl (li doc Range.dummyRange), (Thunk.mk (fun _ -> failwith "Cannot unembed document"))) in
+    let un cb t =
+    match t with
+    | Lazy (Inl { lkind=Lazy_doc; blob }, _) -> Some (Dyn.undyn blob)
+    | _ -> None
+    in
+    mk_emb' em un (lid_as_typ PC.document_lid [] []) (SE.emb_typ_of SE.e_document)
+
 // vconfig, NYI
 let e_vconfig : embedding vconfig =
     let em cb r = failwith "e_vconfig NBE" in
@@ -939,13 +950,13 @@ let or_op (args:args) : option t =
     end
   | _ -> failwith "Unexpected number of arguments"
 
-let division_op (args:args) : option t =
+let division_modulus_op (op:Z.bigint -> Z.bigint -> Z.bigint) (args:args) : option t =
   match args with
   | [a1; a2] -> begin
     match arg_as_int a1, arg_as_int a2 with
     | Some m, Some n ->
       if Z.to_int_fs n <> 0
-      then Some (embed e_int bogus_cbs (Z.div_big_int m n))
+      then Some (embed e_int bogus_cbs (op m n))
       else None
     | _ -> None
     end

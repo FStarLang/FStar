@@ -146,6 +146,8 @@ let (__proj__Mkproofstate__item__urgency : proofstate -> Prims.int) =
         psc; entry_range; guard_policy = guard_policy1; freshness;
         tac_verb_dbg; local_state; urgency;_} -> urgency
 let (goal_env : goal -> FStar_TypeChecker_Env.env) = fun g -> g.goal_main_env
+let (goal_range : goal -> FStar_Compiler_Range_Type.range) =
+  fun g -> (g.goal_main_env).FStar_TypeChecker_Env.range
 let (goal_witness : goal -> FStar_Syntax_Syntax.term) =
   fun g ->
     FStar_Syntax_Syntax.mk
@@ -275,6 +277,8 @@ let (goal_of_implicit :
             (env.FStar_TypeChecker_Env.uvar_subtyping);
           FStar_TypeChecker_Env.intactics =
             (env.FStar_TypeChecker_Env.intactics);
+          FStar_TypeChecker_Env.nocoerce =
+            (env.FStar_TypeChecker_Env.nocoerce);
           FStar_TypeChecker_Env.tc_term = (env.FStar_TypeChecker_Env.tc_term);
           FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
             (env.FStar_TypeChecker_Env.typeof_tot_or_gtot_term);
@@ -475,4 +479,3 @@ type ('g, 't0, 't1) subtyping_token = unit
 type ('g, 't0, 't1) equiv_token = unit
 type ('g, 'e, 'c) typing_token = unit
 type ('g, 'sc, 't, 'pats) match_complete_token = unit
-type issues = FStar_Issue.issue Prims.list

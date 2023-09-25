@@ -488,6 +488,7 @@ let eq_lazy_kind k k' =
      | Lazy_universe_uvar, Lazy_universe_uvar
      | Lazy_issue, Lazy_issue
      | Lazy_ident, Lazy_ident
+     | Lazy_doc, Lazy_doc
        -> true
      | Lazy_embedding _, _
      | _, Lazy_embedding _ -> false
@@ -511,6 +512,7 @@ let lazy_kind_to_string k =
     | Lazy_universe -> "Lazy_universe"
     | Lazy_universe_uvar -> "Lazy_universe_uvar"
     | Lazy_issue -> "Lazy_issue"
+    | Lazy_doc -> "Lazy_doc"
     | Lazy_ident -> "Lazy_ident"
     | Lazy_embedding _ -> "Lazy_embedding _"
      | _ -> failwith "FIXME! lazy_kind_to_string must be complete"

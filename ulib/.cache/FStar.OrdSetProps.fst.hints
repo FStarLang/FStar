@@ -33,7 +33,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "d66843cea5ec0e04c170168d1d4df471"
+      "f8e91a7b15dc2b2bf709a86657b8aae6"
     ],
     [
       "FStar.OrdSetProps.union_lemma",
@@ -82,7 +82,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "d7258630672dc64da85dc9f2b78dd653"
+      "25554fe9f0dfa91f9130d0901f08291a"
     ],
     [
       "FStar.OrdSetProps.union_lemma'",
@@ -91,7 +91,7 @@
       1,
       [ "@query", "lemma_FStar.OrdSet.hasEq_ordset" ],
       0,
-      "dbb3c11264d1918d649cee78e213dd1f"
+      "5ea81d960a14e45eeb66a96d54bad609"
     ],
     [
       "FStar.OrdSetProps.union_lemma'",
@@ -100,7 +100,7 @@
       1,
       [ "@query", "equation_FStar.OrdSet.equal" ],
       0,
-      "8c593dc2c398b40105dd99a890ec2b34"
+      "d58f6bb76f8b0a57d44dca52f8e23e84"
     ]
   ]
 ]

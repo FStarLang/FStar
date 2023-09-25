@@ -42,7 +42,7 @@ type parse_frag =
     | Incremental of input_frag
     | Fragment of input_frag
 
-type parse_error = (Errors.raw_error * string * Range.range)
+type parse_error = (Errors.raw_error * error_message * Range.range)
 
 type code_fragment = {
     code: string;

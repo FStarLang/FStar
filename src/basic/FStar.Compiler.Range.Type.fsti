@@ -26,6 +26,9 @@ new val range : Type0
 [@@ PpxDerivingYoJson; PpxDerivingShow]
 new val pos : Type0
 
+val dummy_rng : rng
+val mk_rng : string -> pos -> pos -> rng
+
 val dummyRange: range
 val use_range: range -> rng
 val def_range: range -> rng

@@ -1254,6 +1254,44 @@ let (e_issue : FStar_Errors.issue embedding) =
   let uu___1 =
     FStar_Syntax_Embeddings_Base.emb_typ_of FStar_Syntax_Embeddings.e_issue in
   mk_emb' em un uu___ uu___1
+let (e_document : FStar_Pprint.document embedding) =
+  let t_document =
+    FStar_Syntax_Embeddings_Base.type_of FStar_Syntax_Embeddings.e_document in
+  let li blob rng =
+    let uu___ = FStar_Compiler_Dyn.mkdyn blob in
+    {
+      FStar_Syntax_Syntax.blob = uu___;
+      FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_doc;
+      FStar_Syntax_Syntax.ltyp = t_document;
+      FStar_Syntax_Syntax.rng = rng
+    } in
+  let em cb doc =
+    let uu___ =
+      let uu___1 =
+        let uu___2 = li doc FStar_Compiler_Range_Type.dummyRange in
+        FStar_Pervasives.Inl uu___2 in
+      let uu___2 =
+        FStar_Thunk.mk (fun uu___3 -> failwith "Cannot unembed document") in
+      (uu___1, uu___2) in
+    Lazy uu___ in
+  let un cb t1 =
+    match t1 with
+    | Lazy
+        (FStar_Pervasives.Inl
+         { FStar_Syntax_Syntax.blob = blob;
+           FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_doc;
+           FStar_Syntax_Syntax.ltyp = uu___;
+           FStar_Syntax_Syntax.rng = uu___1;_},
+         uu___2)
+        ->
+        let uu___3 = FStar_Compiler_Dyn.undyn blob in
+        FStar_Pervasives_Native.Some uu___3
+    | uu___ -> FStar_Pervasives_Native.None in
+  let uu___ = lid_as_typ FStar_Parser_Const.document_lid [] [] in
+  let uu___1 =
+    FStar_Syntax_Embeddings_Base.emb_typ_of
+      FStar_Syntax_Embeddings.e_document in
+  mk_emb' em un uu___ uu___1
 let (e_vconfig : FStar_VConfig.vconfig embedding) =
   let em cb r = failwith "e_vconfig NBE" in
   let un cb t1 = failwith "e_vconfig NBE" in
@@ -2098,28 +2136,31 @@ let (or_op : args -> t FStar_Pervasives_Native.option) =
              FStar_Pervasives_Native.Some (FStar_Pervasives_Native.fst a2)
          | uu___1 -> FStar_Pervasives_Native.None)
     | uu___ -> failwith "Unexpected number of arguments"
-let (division_op : args -> t FStar_Pervasives_Native.option) =
-  fun args1 ->
-    match args1 with
-    | a1::a2::[] ->
-        let uu___ =
-          let uu___1 = arg_as_int a1 in
-          let uu___2 = arg_as_int a2 in (uu___1, uu___2) in
-        (match uu___ with
-         | (FStar_Pervasives_Native.Some m, FStar_Pervasives_Native.Some n)
-             ->
-             let uu___1 =
-               let uu___2 = FStar_BigInt.to_int_fs n in
-               uu___2 <> Prims.int_zero in
-             if uu___1
-             then
-               let uu___2 =
-                 let uu___3 = FStar_BigInt.div_big_int m n in
-                 embed e_int bogus_cbs uu___3 in
-               FStar_Pervasives_Native.Some uu___2
-             else FStar_Pervasives_Native.None
-         | uu___1 -> FStar_Pervasives_Native.None)
-    | uu___ -> failwith "Unexpected number of arguments"
+let (division_modulus_op :
+  (FStar_BigInt.bigint -> FStar_BigInt.bigint -> FStar_BigInt.bigint) ->
+    args -> t FStar_Pervasives_Native.option)
+  =
+  fun op ->
+    fun args1 ->
+      match args1 with
+      | a1::a2::[] ->
+          let uu___ =
+            let uu___1 = arg_as_int a1 in
+            let uu___2 = arg_as_int a2 in (uu___1, uu___2) in
+          (match uu___ with
+           | (FStar_Pervasives_Native.Some m, FStar_Pervasives_Native.Some n)
+               ->
+               let uu___1 =
+                 let uu___2 = FStar_BigInt.to_int_fs n in
+                 uu___2 <> Prims.int_zero in
+               if uu___1
+               then
+                 let uu___2 =
+                   let uu___3 = op m n in embed e_int bogus_cbs uu___3 in
+                 FStar_Pervasives_Native.Some uu___2
+               else FStar_Pervasives_Native.None
+           | uu___1 -> FStar_Pervasives_Native.None)
+      | uu___ -> failwith "Unexpected number of arguments"
 let arrow_as_prim_step_1 :
   'a 'b .
     'a embedding ->

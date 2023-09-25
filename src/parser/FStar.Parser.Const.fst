@@ -214,6 +214,7 @@ let bv_sub_lid         = bvconst "bvsub"
 let bv_shift_left_lid  = bvconst "bvshl"
 let bv_shift_right_lid = bvconst "bvshr"
 let bv_udiv_lid        = bvconst "bvdiv"
+let bv_udiv_unsafe_lid = bvconst "bvdiv_unsafe"
 let bv_mod_lid         = bvconst "bvmod"
 let bv_mul_lid         = bvconst "bvmul"
 let bv_ult_lid         = bvconst "bvult"
@@ -555,4 +556,5 @@ let sealed_lid      = p2l ["FStar"; "Sealed"; "sealed"]
 let seal_lid        = p2l ["FStar"; "Sealed"; "seal"]
 let unseal_lid      = p2l ["FStar"; "Tactics"; "Unseal"; "unseal"]
 
+let document_lid = p2l ["FStar"; "Stubs"; "Pprint"; "document"]
 let issue_lid = p2l ["FStar"; "Issue"; "issue"]

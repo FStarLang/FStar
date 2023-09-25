@@ -88,6 +88,7 @@ val set_proofstate_range : proofstate -> Range.range -> proofstate
 
 val set_ps_psc : Cfg.psc -> proofstate -> proofstate
 val goal_env: goal -> env
+val goal_range: goal -> Range.range
 val goal_witness: goal -> term
 val goal_type: goal -> term
 val goal_opts: goal -> Options.optionstate
@@ -127,4 +128,3 @@ val subtyping_token (g:env) (t0 t1:typ) : Type0
 val equiv_token (g:env) (t0 t1:typ) : Type0
 val typing_token (g:env) (e:term) (c:Core.tot_or_ghost & typ) : Type0
 val match_complete_token (g:env) (sc:term) (t:typ) (pats:list pattern) : Type0
-let issues = list FStar.Issue.issue

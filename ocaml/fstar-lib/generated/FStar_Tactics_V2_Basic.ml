@@ -678,6 +678,8 @@ let (tc_unifier_solved_implicits :
                            (env1.FStar_TypeChecker_Env.uvar_subtyping);
                          FStar_TypeChecker_Env.intactics =
                            (env1.FStar_TypeChecker_Env.intactics);
+                         FStar_TypeChecker_Env.nocoerce =
+                           (env1.FStar_TypeChecker_Env.nocoerce);
                          FStar_TypeChecker_Env.tc_term =
                            (env1.FStar_TypeChecker_Env.tc_term);
                          FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
@@ -914,8 +916,10 @@ let (__do_unify_wflags :
                           | FStar_Errors.Err (uu___5, msg, uu___6) ->
                               FStar_Tactics_Monad.mlog
                                 (fun uu___7 ->
+                                   let uu___8 =
+                                     FStar_Errors_Msg.rendermsg msg in
                                    FStar_Compiler_Util.print1
-                                     ">> do_unify error, (%s)\n" msg)
+                                     ">> do_unify error, (%s)\n" uu___8)
                                 (fun uu___7 ->
                                    FStar_Tactics_Monad.ret
                                      FStar_Pervasives_Native.None)
@@ -923,11 +927,13 @@ let (__do_unify_wflags :
                               FStar_Tactics_Monad.mlog
                                 (fun uu___7 ->
                                    let uu___8 =
+                                     FStar_Errors_Msg.rendermsg msg in
+                                   let uu___9 =
                                      FStar_Compiler_Range_Ops.string_of_range
                                        r in
                                    FStar_Compiler_Util.print2
-                                     ">> do_unify error, (%s) at (%s)\n" msg
-                                     uu___8)
+                                     ">> do_unify error, (%s) at (%s)\n"
+                                     uu___8 uu___9)
                                 (fun uu___7 ->
                                    FStar_Tactics_Monad.ret
                                      FStar_Pervasives_Native.None)) in
@@ -1334,6 +1340,8 @@ let (__tc :
                     FStar_TypeChecker_Env.uvar_subtyping = false;
                     FStar_TypeChecker_Env.intactics =
                       (e.FStar_TypeChecker_Env.intactics);
+                    FStar_TypeChecker_Env.nocoerce =
+                      (e.FStar_TypeChecker_Env.nocoerce);
                     FStar_TypeChecker_Env.tc_term =
                       (e.FStar_TypeChecker_Env.tc_term);
                     FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
@@ -1400,16 +1408,18 @@ let (__tc :
                       let uu___6 = FStar_TypeChecker_Env.all_binders e1 in
                       FStar_Compiler_Effect.op_Bar_Greater uu___6
                         (FStar_Syntax_Print.binders_to_string ", ") in
+                    let uu___6 = FStar_Errors_Msg.rendermsg msg in
                     fail3 "Cannot type (1) %s in context (%s). Error = (%s)"
-                      uu___4 uu___5 msg
+                      uu___4 uu___5 uu___6
                 | FStar_Errors.Error (uu___2, msg, uu___3, uu___4) ->
                     let uu___5 = tts e1 t in
                     let uu___6 =
                       let uu___7 = FStar_TypeChecker_Env.all_binders e1 in
                       FStar_Compiler_Effect.op_Bar_Greater uu___7
                         (FStar_Syntax_Print.binders_to_string ", ") in
+                    let uu___7 = FStar_Errors_Msg.rendermsg msg in
                     fail3 "Cannot type (1) %s in context (%s). Error = (%s)"
-                      uu___5 uu___6 msg))
+                      uu___5 uu___6 uu___7))
 let (__tc_ghost :
   env ->
     FStar_Syntax_Syntax.term ->
@@ -1477,6 +1487,8 @@ let (__tc_ghost :
                     FStar_TypeChecker_Env.uvar_subtyping = false;
                     FStar_TypeChecker_Env.intactics =
                       (e.FStar_TypeChecker_Env.intactics);
+                    FStar_TypeChecker_Env.nocoerce =
+                      (e.FStar_TypeChecker_Env.nocoerce);
                     FStar_TypeChecker_Env.tc_term =
                       (e.FStar_TypeChecker_Env.tc_term);
                     FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
@@ -1581,6 +1593,8 @@ let (__tc_ghost :
                       (e1.FStar_TypeChecker_Env.uvar_subtyping);
                     FStar_TypeChecker_Env.intactics =
                       (e1.FStar_TypeChecker_Env.intactics);
+                    FStar_TypeChecker_Env.nocoerce =
+                      (e1.FStar_TypeChecker_Env.nocoerce);
                     FStar_TypeChecker_Env.tc_term =
                       (e1.FStar_TypeChecker_Env.tc_term);
                     FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
@@ -1651,16 +1665,18 @@ let (__tc_ghost :
                       let uu___6 = FStar_TypeChecker_Env.all_binders e2 in
                       FStar_Compiler_Effect.op_Bar_Greater uu___6
                         (FStar_Syntax_Print.binders_to_string ", ") in
+                    let uu___6 = FStar_Errors_Msg.rendermsg msg in
                     fail3 "Cannot type (2) %s in context (%s). Error = (%s)"
-                      uu___4 uu___5 msg
+                      uu___4 uu___5 uu___6
                 | FStar_Errors.Error (uu___2, msg, uu___3, uu___4) ->
                     let uu___5 = tts e2 t in
                     let uu___6 =
                       let uu___7 = FStar_TypeChecker_Env.all_binders e2 in
                       FStar_Compiler_Effect.op_Bar_Greater uu___7
                         (FStar_Syntax_Print.binders_to_string ", ") in
+                    let uu___7 = FStar_Errors_Msg.rendermsg msg in
                     fail3 "Cannot type (2) %s in context (%s). Error = (%s)"
-                      uu___5 uu___6 msg))
+                      uu___5 uu___6 uu___7))
 let (__tc_lax :
   env ->
     FStar_Syntax_Syntax.term ->
@@ -1733,6 +1749,8 @@ let (__tc_lax :
                     FStar_TypeChecker_Env.uvar_subtyping = false;
                     FStar_TypeChecker_Env.intactics =
                       (e.FStar_TypeChecker_Env.intactics);
+                    FStar_TypeChecker_Env.nocoerce =
+                      (e.FStar_TypeChecker_Env.nocoerce);
                     FStar_TypeChecker_Env.tc_term =
                       (e.FStar_TypeChecker_Env.tc_term);
                     FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
@@ -1837,6 +1855,8 @@ let (__tc_lax :
                       (e1.FStar_TypeChecker_Env.uvar_subtyping);
                     FStar_TypeChecker_Env.intactics =
                       (e1.FStar_TypeChecker_Env.intactics);
+                    FStar_TypeChecker_Env.nocoerce =
+                      (e1.FStar_TypeChecker_Env.nocoerce);
                     FStar_TypeChecker_Env.tc_term =
                       (e1.FStar_TypeChecker_Env.tc_term);
                     FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
@@ -1942,6 +1962,8 @@ let (__tc_lax :
                       (e2.FStar_TypeChecker_Env.uvar_subtyping);
                     FStar_TypeChecker_Env.intactics =
                       (e2.FStar_TypeChecker_Env.intactics);
+                    FStar_TypeChecker_Env.nocoerce =
+                      (e2.FStar_TypeChecker_Env.nocoerce);
                     FStar_TypeChecker_Env.tc_term =
                       (e2.FStar_TypeChecker_Env.tc_term);
                     FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
@@ -2007,16 +2029,18 @@ let (__tc_lax :
                       let uu___6 = FStar_TypeChecker_Env.all_binders e3 in
                       FStar_Compiler_Effect.op_Bar_Greater uu___6
                         (FStar_Syntax_Print.binders_to_string ", ") in
+                    let uu___6 = FStar_Errors_Msg.rendermsg msg in
                     fail3 "Cannot type (3) %s in context (%s). Error = (%s)"
-                      uu___4 uu___5 msg
+                      uu___4 uu___5 uu___6
                 | FStar_Errors.Error (uu___2, msg, uu___3, uu___4) ->
                     let uu___5 = tts e3 t in
                     let uu___6 =
                       let uu___7 = FStar_TypeChecker_Env.all_binders e3 in
                       FStar_Compiler_Effect.op_Bar_Greater uu___7
                         (FStar_Syntax_Print.binders_to_string ", ") in
+                    let uu___7 = FStar_Errors_Msg.rendermsg msg in
                     fail3 "Cannot type (3) %s in context (%s). Error = (%s)"
-                      uu___5 uu___6 msg))
+                      uu___5 uu___6 uu___7))
 let (tcc :
   env ->
     FStar_Syntax_Syntax.term ->
@@ -4296,6 +4320,8 @@ let (_t_trefl :
                                       (uu___12.FStar_TypeChecker_Env.uvar_subtyping);
                                     FStar_TypeChecker_Env.intactics =
                                       (uu___12.FStar_TypeChecker_Env.intactics);
+                                    FStar_TypeChecker_Env.nocoerce =
+                                      (uu___12.FStar_TypeChecker_Env.nocoerce);
                                     FStar_TypeChecker_Env.tc_term =
                                       (uu___12.FStar_TypeChecker_Env.tc_term);
                                     FStar_TypeChecker_Env.typeof_tot_or_gtot_term
@@ -4676,6 +4702,8 @@ let (join_goals :
                           (uu___3.FStar_TypeChecker_Env.uvar_subtyping);
                         FStar_TypeChecker_Env.intactics =
                           (uu___3.FStar_TypeChecker_Env.intactics);
+                        FStar_TypeChecker_Env.nocoerce =
+                          (uu___3.FStar_TypeChecker_Env.nocoerce);
                         FStar_TypeChecker_Env.tc_term =
                           (uu___3.FStar_TypeChecker_Env.tc_term);
                         FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
@@ -5072,6 +5100,8 @@ let (unshelve : FStar_Syntax_Syntax.term -> unit FStar_Tactics_Monad.tac) =
                      (env1.FStar_TypeChecker_Env.uvar_subtyping);
                    FStar_TypeChecker_Env.intactics =
                      (env1.FStar_TypeChecker_Env.intactics);
+                   FStar_TypeChecker_Env.nocoerce =
+                     (env1.FStar_TypeChecker_Env.nocoerce);
                    FStar_TypeChecker_Env.tc_term =
                      (env1.FStar_TypeChecker_Env.tc_term);
                    FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
@@ -6024,6 +6054,9 @@ let (t_destruct :
                                                                     FStar_TypeChecker_Env.intactics
                                                                     =
                                                                     (env1.FStar_TypeChecker_Env.intactics);
+                                                                    FStar_TypeChecker_Env.nocoerce
+                                                                    =
+                                                                    (env1.FStar_TypeChecker_Env.nocoerce);
                                                                     FStar_TypeChecker_Env.tc_term
                                                                     =
                                                                     (env1.FStar_TypeChecker_Env.tc_term);
@@ -6538,15 +6571,20 @@ let (string_to_term :
                     FStar_Tactics_Monad.ret uu___2) ()
            with
            | FStar_Errors.Error (uu___2, e1, uu___3, uu___4) ->
-               FStar_Tactics_Monad.fail (Prims.op_Hat "string_of_term: " e1)
+               let uu___5 =
+                 let uu___6 = FStar_Errors_Msg.rendermsg e1 in
+                 Prims.op_Hat "string_of_term: " uu___6 in
+               FStar_Tactics_Monad.fail uu___5
            | uu___2 ->
                FStar_Tactics_Monad.fail "string_of_term: Unknown error")
       | FStar_Parser_ParseIt.ASTFragment uu___1 ->
           FStar_Tactics_Monad.fail
             "string_of_term: expected a Term as a result, got an ASTFragment"
       | FStar_Parser_ParseIt.ParseError (uu___1, err, uu___2) ->
-          FStar_Tactics_Monad.fail
-            (Prims.op_Hat "string_of_term: got error " err)
+          let uu___3 =
+            let uu___4 = FStar_Errors_Msg.rendermsg err in
+            Prims.op_Hat "string_of_term: got error " uu___4 in
+          FStar_Tactics_Monad.fail uu___3
 let (push_bv_dsenv :
   env ->
     Prims.string ->
@@ -6611,6 +6649,8 @@ let (push_bv_dsenv :
                  (e.FStar_TypeChecker_Env.uvar_subtyping);
                FStar_TypeChecker_Env.intactics =
                  (e.FStar_TypeChecker_Env.intactics);
+               FStar_TypeChecker_Env.nocoerce =
+                 (e.FStar_TypeChecker_Env.nocoerce);
                FStar_TypeChecker_Env.tc_term =
                  (e.FStar_TypeChecker_Env.tc_term);
                FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
@@ -6787,6 +6827,28 @@ let (free_uvars :
                        u.FStar_Syntax_Syntax.ctx_uvar_head in
                    FStar_BigInt.of_int_fs uu___2)) in
          FStar_Tactics_Monad.ret uvs)
+let (all_ext_options :
+  unit -> (Prims.string * Prims.string) Prims.list FStar_Tactics_Monad.tac) =
+  fun uu___ ->
+    FStar_Tactics_Monad.op_let_Bang FStar_Tactics_Monad.idtac
+      (fun uu___1 ->
+         let uu___2 = FStar_Options.all_ext_options () in
+         FStar_Tactics_Monad.ret uu___2)
+let (ext_getv : Prims.string -> Prims.string FStar_Tactics_Monad.tac) =
+  fun k ->
+    FStar_Tactics_Monad.op_let_Bang FStar_Tactics_Monad.idtac
+      (fun uu___ ->
+         let uu___1 = FStar_Options.ext_getv k in
+         FStar_Tactics_Monad.ret uu___1)
+let (ext_getns :
+  Prims.string ->
+    (Prims.string * Prims.string) Prims.list FStar_Tactics_Monad.tac)
+  =
+  fun ns ->
+    FStar_Tactics_Monad.op_let_Bang FStar_Tactics_Monad.idtac
+      (fun uu___ ->
+         let uu___1 = FStar_Options.ext_getns ns in
+         FStar_Tactics_Monad.ret uu___1)
 let (dbg_refl : env -> (unit -> Prims.string) -> unit) =
   fun g ->
     fun msg ->
@@ -6823,7 +6885,9 @@ let __refl_typing_builtin_wrapper :
       with
       | uu___1 ->
           let issue =
-            let uu___2 = FStar_Compiler_Util.print_exn uu___1 in
+            let uu___2 =
+              let uu___3 = FStar_Compiler_Util.print_exn uu___1 in
+              FStar_Errors_Msg.mkmsg uu___3 in
             let uu___3 = FStar_Errors.get_ctx () in
             {
               FStar_Errors.issue_msg = uu___2;
@@ -6930,16 +6994,17 @@ let (unexpected_uvars_issue :
   FStar_Compiler_Range_Type.range -> FStar_Errors.issue) =
   fun r ->
     let i =
-      let uu___ =
-        let uu___1 =
+      let uu___ = FStar_Errors_Msg.mkmsg "Cannot check relation with uvars" in
+      let uu___1 =
+        let uu___2 =
           FStar_Errors.errno
             FStar_Errors_Codes.Error_UnexpectedUnresolvedUvar in
-        FStar_Pervasives_Native.Some uu___1 in
+        FStar_Pervasives_Native.Some uu___2 in
       {
-        FStar_Errors.issue_msg = "Cannot check relation with uvars";
+        FStar_Errors.issue_msg = uu___;
         FStar_Errors.issue_level = FStar_Errors.EError;
         FStar_Errors.issue_range = (FStar_Pervasives_Native.Some r);
-        FStar_Errors.issue_number = uu___;
+        FStar_Errors.issue_number = uu___1;
         FStar_Errors.issue_ctx = []
       } in
     i
@@ -7272,6 +7337,8 @@ let (refl_tc_term :
                     (g.FStar_TypeChecker_Env.uvar_subtyping);
                   FStar_TypeChecker_Env.intactics =
                     (g.FStar_TypeChecker_Env.intactics);
+                  FStar_TypeChecker_Env.nocoerce =
+                    (g.FStar_TypeChecker_Env.nocoerce);
                   FStar_TypeChecker_Env.tc_term =
                     (g.FStar_TypeChecker_Env.tc_term);
                   FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
@@ -7375,6 +7442,8 @@ let (refl_tc_term :
                       (g1.FStar_TypeChecker_Env.uvar_subtyping);
                     FStar_TypeChecker_Env.intactics =
                       (g1.FStar_TypeChecker_Env.intactics);
+                    FStar_TypeChecker_Env.nocoerce =
+                      (g1.FStar_TypeChecker_Env.nocoerce);
                     FStar_TypeChecker_Env.tc_term =
                       (g1.FStar_TypeChecker_Env.tc_term);
                     FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
@@ -7806,6 +7875,8 @@ let (refl_instantiate_implicits :
                     (g.FStar_TypeChecker_Env.uvar_subtyping);
                   FStar_TypeChecker_Env.intactics =
                     (g.FStar_TypeChecker_Env.intactics);
+                  FStar_TypeChecker_Env.nocoerce =
+                    (g.FStar_TypeChecker_Env.nocoerce);
                   FStar_TypeChecker_Env.tc_term =
                     (g.FStar_TypeChecker_Env.tc_term);
                   FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
@@ -8030,6 +8101,7 @@ let (push_open_namespace :
             (e.FStar_TypeChecker_Env.uvar_subtyping);
           FStar_TypeChecker_Env.intactics =
             (e.FStar_TypeChecker_Env.intactics);
+          FStar_TypeChecker_Env.nocoerce = (e.FStar_TypeChecker_Env.nocoerce);
           FStar_TypeChecker_Env.tc_term = (e.FStar_TypeChecker_Env.tc_term);
           FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
             (e.FStar_TypeChecker_Env.typeof_tot_or_gtot_term);
@@ -8131,6 +8203,8 @@ let (push_module_abbrev :
               (e.FStar_TypeChecker_Env.uvar_subtyping);
             FStar_TypeChecker_Env.intactics =
               (e.FStar_TypeChecker_Env.intactics);
+            FStar_TypeChecker_Env.nocoerce =
+              (e.FStar_TypeChecker_Env.nocoerce);
             FStar_TypeChecker_Env.tc_term = (e.FStar_TypeChecker_Env.tc_term);
             FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
               (e.FStar_TypeChecker_Env.typeof_tot_or_gtot_term);
@@ -8192,6 +8266,28 @@ let (resolve_name :
       let uu___ =
         FStar_Syntax_DsEnv.resolve_name e.FStar_TypeChecker_Env.dsenv l in
       FStar_Tactics_Monad.ret uu___
+let (log_issues :
+  FStar_Errors.issue Prims.list -> unit FStar_Tactics_Monad.tac) =
+  fun is ->
+    FStar_Tactics_Monad.op_let_Bang FStar_Tactics_Monad.get
+      (fun ps ->
+         let is1 =
+           FStar_Compiler_Effect.op_Bar_Greater is
+             (FStar_Compiler_List.map
+                (fun i ->
+                   let uu___ =
+                     let uu___1 =
+                       FStar_Errors_Msg.text "Tactic logged issue:" in
+                     uu___1 :: (i.FStar_Errors.issue_msg) in
+                   {
+                     FStar_Errors.issue_msg = uu___;
+                     FStar_Errors.issue_level = (i.FStar_Errors.issue_level);
+                     FStar_Errors.issue_range = (i.FStar_Errors.issue_range);
+                     FStar_Errors.issue_number =
+                       (i.FStar_Errors.issue_number);
+                     FStar_Errors.issue_ctx = (i.FStar_Errors.issue_ctx)
+                   })) in
+         FStar_Errors.add_issues is1; FStar_Tactics_Monad.ret ())
 let (tac_env : FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
   fun env1 ->
     let uu___ = FStar_TypeChecker_Env.clear_expected_typ env1 in
@@ -8246,6 +8342,8 @@ let (tac_env : FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
               (env2.FStar_TypeChecker_Env.uvar_subtyping);
             FStar_TypeChecker_Env.intactics =
               (env2.FStar_TypeChecker_Env.intactics);
+            FStar_TypeChecker_Env.nocoerce =
+              (env2.FStar_TypeChecker_Env.nocoerce);
             FStar_TypeChecker_Env.tc_term =
               (env2.FStar_TypeChecker_Env.tc_term);
             FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
@@ -8344,6 +8442,8 @@ let (tac_env : FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
               (env3.FStar_TypeChecker_Env.uvar_subtyping);
             FStar_TypeChecker_Env.intactics =
               (env3.FStar_TypeChecker_Env.intactics);
+            FStar_TypeChecker_Env.nocoerce =
+              (env3.FStar_TypeChecker_Env.nocoerce);
             FStar_TypeChecker_Env.tc_term =
               (env3.FStar_TypeChecker_Env.tc_term);
             FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
@@ -8443,6 +8543,8 @@ let (tac_env : FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
               (env4.FStar_TypeChecker_Env.uvar_subtyping);
             FStar_TypeChecker_Env.intactics =
               (env4.FStar_TypeChecker_Env.intactics);
+            FStar_TypeChecker_Env.nocoerce =
+              (env4.FStar_TypeChecker_Env.nocoerce);
             FStar_TypeChecker_Env.tc_term =
               (env4.FStar_TypeChecker_Env.tc_term);
             FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
@@ -8535,12 +8637,113 @@ let (proofstate_of_goal_ty :
   fun rng ->
     fun env1 ->
       fun typ ->
-        let env2 = tac_env env1 in
-        let uu___ = FStar_Tactics_Types.goal_of_goal_ty env2 typ in
+        let env2 =
+          {
+            FStar_TypeChecker_Env.solver =
+              (env1.FStar_TypeChecker_Env.solver);
+            FStar_TypeChecker_Env.range = rng;
+            FStar_TypeChecker_Env.curmodule =
+              (env1.FStar_TypeChecker_Env.curmodule);
+            FStar_TypeChecker_Env.gamma = (env1.FStar_TypeChecker_Env.gamma);
+            FStar_TypeChecker_Env.gamma_sig =
+              (env1.FStar_TypeChecker_Env.gamma_sig);
+            FStar_TypeChecker_Env.gamma_cache =
+              (env1.FStar_TypeChecker_Env.gamma_cache);
+            FStar_TypeChecker_Env.modules =
+              (env1.FStar_TypeChecker_Env.modules);
+            FStar_TypeChecker_Env.expected_typ =
+              (env1.FStar_TypeChecker_Env.expected_typ);
+            FStar_TypeChecker_Env.sigtab =
+              (env1.FStar_TypeChecker_Env.sigtab);
+            FStar_TypeChecker_Env.attrtab =
+              (env1.FStar_TypeChecker_Env.attrtab);
+            FStar_TypeChecker_Env.instantiate_imp =
+              (env1.FStar_TypeChecker_Env.instantiate_imp);
+            FStar_TypeChecker_Env.effects =
+              (env1.FStar_TypeChecker_Env.effects);
+            FStar_TypeChecker_Env.generalize =
+              (env1.FStar_TypeChecker_Env.generalize);
+            FStar_TypeChecker_Env.letrecs =
+              (env1.FStar_TypeChecker_Env.letrecs);
+            FStar_TypeChecker_Env.top_level =
+              (env1.FStar_TypeChecker_Env.top_level);
+            FStar_TypeChecker_Env.check_uvars =
+              (env1.FStar_TypeChecker_Env.check_uvars);
+            FStar_TypeChecker_Env.use_eq_strict =
+              (env1.FStar_TypeChecker_Env.use_eq_strict);
+            FStar_TypeChecker_Env.is_iface =
+              (env1.FStar_TypeChecker_Env.is_iface);
+            FStar_TypeChecker_Env.admit = (env1.FStar_TypeChecker_Env.admit);
+            FStar_TypeChecker_Env.lax = (env1.FStar_TypeChecker_Env.lax);
+            FStar_TypeChecker_Env.lax_universes =
+              (env1.FStar_TypeChecker_Env.lax_universes);
+            FStar_TypeChecker_Env.phase1 =
+              (env1.FStar_TypeChecker_Env.phase1);
+            FStar_TypeChecker_Env.failhard =
+              (env1.FStar_TypeChecker_Env.failhard);
+            FStar_TypeChecker_Env.nosynth =
+              (env1.FStar_TypeChecker_Env.nosynth);
+            FStar_TypeChecker_Env.uvar_subtyping =
+              (env1.FStar_TypeChecker_Env.uvar_subtyping);
+            FStar_TypeChecker_Env.intactics =
+              (env1.FStar_TypeChecker_Env.intactics);
+            FStar_TypeChecker_Env.nocoerce =
+              (env1.FStar_TypeChecker_Env.nocoerce);
+            FStar_TypeChecker_Env.tc_term =
+              (env1.FStar_TypeChecker_Env.tc_term);
+            FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
+              (env1.FStar_TypeChecker_Env.typeof_tot_or_gtot_term);
+            FStar_TypeChecker_Env.universe_of =
+              (env1.FStar_TypeChecker_Env.universe_of);
+            FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
+              (env1.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+            FStar_TypeChecker_Env.teq_nosmt_force =
+              (env1.FStar_TypeChecker_Env.teq_nosmt_force);
+            FStar_TypeChecker_Env.subtype_nosmt_force =
+              (env1.FStar_TypeChecker_Env.subtype_nosmt_force);
+            FStar_TypeChecker_Env.qtbl_name_and_index =
+              (env1.FStar_TypeChecker_Env.qtbl_name_and_index);
+            FStar_TypeChecker_Env.normalized_eff_names =
+              (env1.FStar_TypeChecker_Env.normalized_eff_names);
+            FStar_TypeChecker_Env.fv_delta_depths =
+              (env1.FStar_TypeChecker_Env.fv_delta_depths);
+            FStar_TypeChecker_Env.proof_ns =
+              (env1.FStar_TypeChecker_Env.proof_ns);
+            FStar_TypeChecker_Env.synth_hook =
+              (env1.FStar_TypeChecker_Env.synth_hook);
+            FStar_TypeChecker_Env.try_solve_implicits_hook =
+              (env1.FStar_TypeChecker_Env.try_solve_implicits_hook);
+            FStar_TypeChecker_Env.splice =
+              (env1.FStar_TypeChecker_Env.splice);
+            FStar_TypeChecker_Env.mpreprocess =
+              (env1.FStar_TypeChecker_Env.mpreprocess);
+            FStar_TypeChecker_Env.postprocess =
+              (env1.FStar_TypeChecker_Env.postprocess);
+            FStar_TypeChecker_Env.identifier_info =
+              (env1.FStar_TypeChecker_Env.identifier_info);
+            FStar_TypeChecker_Env.tc_hooks =
+              (env1.FStar_TypeChecker_Env.tc_hooks);
+            FStar_TypeChecker_Env.dsenv = (env1.FStar_TypeChecker_Env.dsenv);
+            FStar_TypeChecker_Env.nbe = (env1.FStar_TypeChecker_Env.nbe);
+            FStar_TypeChecker_Env.strict_args_tab =
+              (env1.FStar_TypeChecker_Env.strict_args_tab);
+            FStar_TypeChecker_Env.erasable_types_tab =
+              (env1.FStar_TypeChecker_Env.erasable_types_tab);
+            FStar_TypeChecker_Env.enable_defer_to_tac =
+              (env1.FStar_TypeChecker_Env.enable_defer_to_tac);
+            FStar_TypeChecker_Env.unif_allow_ref_guards =
+              (env1.FStar_TypeChecker_Env.unif_allow_ref_guards);
+            FStar_TypeChecker_Env.erase_erasable_args =
+              (env1.FStar_TypeChecker_Env.erase_erasable_args);
+            FStar_TypeChecker_Env.core_check =
+              (env1.FStar_TypeChecker_Env.core_check)
+          } in
+        let env3 = tac_env env2 in
+        let uu___ = FStar_Tactics_Types.goal_of_goal_ty env3 typ in
         match uu___ with
         | (g, g_u) ->
             let ps =
-              proofstate_of_goals rng env2 [g]
+              proofstate_of_goals rng env3 [g]
                 g_u.FStar_TypeChecker_Common.implicits in
             let uu___1 = FStar_Tactics_Types.goal_witness g in (ps, uu___1)
 let (proofstate_of_all_implicits :

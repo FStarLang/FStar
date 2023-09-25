@@ -122,6 +122,10 @@ val set_vconfig            : VConfig.vconfig -> tac unit
 val t_smt_sync             : VConfig.vconfig -> tac unit
 val free_uvars             : term -> tac (list Z.t)
 
+val all_ext_options        : unit -> tac (list (string & string))
+val ext_getv               : string -> tac string
+val ext_getns              : string -> tac (list (string & string))
+
 
 (***** Callbacks for the meta DSL framework *****)
 let issues = list FStar.Errors.issue
@@ -141,3 +145,4 @@ val refl_maybe_unfold_head            : env -> term -> tac (option term & issues
 val push_open_namespace               : env -> list string -> tac env
 val push_module_abbrev                : env -> string -> list string -> tac env
 val resolve_name                      : env -> list string -> tac (option (either bv fv))
+val log_issues                        : list Errors.issue -> tac unit

@@ -3675,7 +3675,7 @@ let (abspat_arg_of_abspat_argspec :
                                   (Prims.of_int (701)) (Prims.of_int (75)))))
                          (FStar_Sealed.seal
                             (Obj.magic
-                               (FStar_Range.mk_range " dummy" Prims.int_zero
+                               (FStar_Range.mk_range "dummy" Prims.int_zero
                                   Prims.int_zero Prims.int_zero
                                   Prims.int_zero)))
                          (Obj.magic
@@ -3924,7 +3924,7 @@ let rec (hoist_and_apply :
                                                  (FStar_Sealed.seal
                                                     (Obj.magic
                                                        (FStar_Range.mk_range
-                                                          " dummy"
+                                                          "dummy"
                                                           Prims.int_zero
                                                           Prims.int_zero
                                                           Prims.int_zero

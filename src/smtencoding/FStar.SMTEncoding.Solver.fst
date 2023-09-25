@@ -23,6 +23,7 @@ open FStar.Compiler
 open FStar.SMTEncoding.Z3
 open FStar.SMTEncoding.Term
 open FStar.Compiler.Util
+open FStar.Compiler.Hints
 open FStar.TypeChecker
 open FStar.TypeChecker.Env
 open FStar.SMTEncoding
@@ -63,7 +64,7 @@ let initialize_hints_db src_filename format_filename : unit =
      * But it will only be used when use_hints is on
      *)
     let val_filename = Options.hint_file_for_src norm_src_filename in
-    begin match BU.read_hints val_filename with
+    begin match read_hints val_filename with
           | HintsOK hints ->
             let expected_digest = BU.digest_of_file norm_src_filename in
             if Options.hint_info()
@@ -78,7 +79,7 @@ let initialize_hints_db src_filename format_filename : unit =
 
           | MalformedJson ->
             if Options.use_hints () then
-              Err.log_issue Range.dummyRange
+              Err.log_issue_text Range.dummyRange
                             (Err.Warning_CouldNotReadHints,
                              BU.format1 "Malformed JSON hints file: %s; ran without hints"
                                        val_filename);
@@ -86,7 +87,7 @@ let initialize_hints_db src_filename format_filename : unit =
 
           | UnableToOpen ->
             if Options.use_hints () then
-              Err.log_issue Range.dummyRange
+              Err.log_issue_text Range.dummyRange
                             (Err.Warning_CouldNotReadHints,
                              BU.format1 "Unable to open hints file: %s; ran without hints"
                                        val_filename);
@@ -102,7 +103,7 @@ let finalize_hints_db src_filename :unit =
               }  in
           let norm_src_filename = BU.normalize_file_path src_filename in
           let val_filename = Options.hint_file_for_src norm_src_filename in
-          BU.write_hints val_filename hints_db
+          write_hints val_filename hints_db
     end;
     recorded_hints := None;
     replaying_hints := None
@@ -301,11 +302,12 @@ let query_errors settings z3result =
             error_fuel = settings.query_fuel;
             error_ifuel = settings.query_ifuel;
             error_hint = settings.query_hint;
-            error_messages = List.map (fun (_, x, y) -> Errors.Error_Z3SolverError,
-                                                        x,
-                                                        y,
-                                                        Errors.get_ctx ()) // FIXME: leaking abstraction
-                                      error_labels
+            error_messages =
+               error_labels |>
+               List.map (fun (_, x, y) -> Errors.Error_Z3SolverError,
+                                          Errors.mkmsg x,
+                                          y,
+                                          Errors.get_ctx ()) // FIXME: leaking abstraction
         }
      in
      Some err
@@ -332,12 +334,23 @@ let find_localized_errors (errs : list errors) : option errors =
     errs |> List.tryFind (fun err -> match err.error_messages with [] -> false | _ -> true)
 
 let errors_to_report (settings : query_settings) : list Errors.error =
-    let format_smt_error msg =
-      BU.format1 "SMT solver says:\n\t%s;\n\t\
-                  Note: 'canceled' or 'resource limits reached' means the SMT query timed out, so you might want to increase the rlimit;\n\t\
-                  'incomplete quantifiers' means Z3 could not prove the query, so try to spell out your proof out in greater detail, increase fuel or ifuel\n\t\
-                  'unknown' means Z3 provided no further reason for the proof failing"
-        msg
+    let open FStar.Pprint in
+    let open FStar.Errors in
+    let format_smt_error (msg:list document) : list document =
+      (* This creates an error component with the answers from Z3. Only used
+      for --query_stats. *)
+      let d =
+        doc_of_string "SMT solver says:" ^^
+          sublist empty msg ^^
+        hardline ^^
+        doc_of_string "Note:" ^^
+          bulleted [
+            text "'canceled' or 'resource limits reached' means the SMT query timed out, so you might want to increase the rlimit";
+            text "'incomplete quantifiers' means Z3 could not prove the query, so try to spell out your proof out in greater detail, increase fuel or ifuel";
+            text "'unknown' means Z3 provided no further reason for the proof failing"
+          ]
+      in
+      [d] // single error component
     in
     let basic_errors =
         (*
@@ -348,8 +361,8 @@ let errors_to_report (settings : query_settings) : list Errors.error =
           if Options.query_stats () then
             settings.query_errors
             |> List.map error_to_short_string
-            |> String.concat ";\n\t"
-            |> format_smt_error |> Inr
+            |> List.map doc_of_string
+            |> format_smt_error
           else
             (*
              * AR: --query_stats is not set, we want to give a succint but helpful diagnosis
@@ -379,10 +392,10 @@ let errors_to_report (settings : query_settings) : list Errors.error =
                 else (ic, cc, uc + 1)  //note this covers unknowns, overflows, etc.
               ) (0, 0, 0) settings.query_errors
             in
-            (match incomplete_count, canceled_count, unknown_count with
-             | _, 0, 0 when incomplete_count > 0 -> "The SMT solver could not prove the query. Use --query_stats for more details."
-             | 0, _, 0 when canceled_count > 0   -> "The SMT query timed out, you might want to increase the rlimit"
-             | _, _, _                           -> "Try with --query_stats to get more details") |> Inl
+            match incomplete_count, canceled_count, unknown_count with
+            | _, 0, 0 when incomplete_count > 0 -> mkmsg "The SMT solver could not prove the query. Use --query_stats for more details."
+            | 0, _, 0 when canceled_count > 0   -> mkmsg "The SMT query timed out, you might want to increase the rlimit"
+            | _, _, _                           -> mkmsg "Try with --query_stats to get more details"
         in
         match find_localized_errors settings.query_errors, settings.query_all_labels with
         | Some err, _ ->
@@ -393,8 +406,8 @@ let errors_to_report (settings : query_settings) : list Errors.error =
           //we have a unique label already; just report it
           FStar.TypeChecker.Err.errors_smt_detail
                      settings.query_env
-                     [(Errors.Error_Z3SolverError, msg, rng, Errors.get_ctx())]
-                     (Inl "")
+                     [(Error_Z3SolverError, mkmsg msg, rng, get_ctx())]
+                     []
 
         | None, _ ->
           //We didn't get a useful countermodel from Z3 to localize an error
@@ -427,10 +440,10 @@ let errors_to_report (settings : query_settings) : list Errors.error =
                   //we blame all the labels in the query. So warn about the imprecision, unless the
                   //use opted into --split_queries no.
                   if Options.split_queries () <> Options.No then
-                    FStar.TypeChecker.Err.log_issue
+                    FStar.TypeChecker.Err.log_issue_text
                          settings.query_env
                          (Env.get_range settings.query_env)
-                         (Errors.Warning_SplitAndRetryQueries,
+                         (Warning_SplitAndRetryQueries,
                            "The verification condition was to be split into several atomic sub-goals, \
                             but this query has multiple sub-goals---the error report may be inaccurate");
                   settings.query_all_labels
@@ -441,8 +454,9 @@ let errors_to_report (settings : query_settings) : list Errors.error =
                  List.collect (fun (_, msg, rng) ->
                    FStar.TypeChecker.Err.errors_smt_detail
                      settings.query_env
-                     [(Errors.Error_Z3SolverError, msg, rng, Errors.get_ctx())]
-                     (Inl ""))
+                     [(Error_Z3SolverError, mkmsg msg, rng, get_ctx())]
+                     [] // Nothing to add
+                     )
             )
     in
     let detailed_errors : unit =
@@ -1038,8 +1052,9 @@ let report (env:Env.env) (default_settings : query_settings) (a : answer) : unit
         (* Show the amount on each error *)
         let errs = errs |> List.map (fun ((e, m, r, ctx), n) ->
             let m =
+              let open FStar.Pprint in
               if n > 1
-              then m ^ BU.format1 " (%s times)" (string_of_int n)
+              then m @ [doc_of_string (format1 "Repeated %s times" (string_of_int n))]
               else m
             in
             (e, m, r, ctx))
@@ -1058,6 +1073,7 @@ let report (env:Env.env) (default_settings : query_settings) (a : answer) : unit
           FStar.TypeChecker.Err.log_issue
             env rng
             (Errors.Error_QuakeFailed,
+              Errors.mkmsg <|
               BU.format6
                 "Query %s failed the quake test, %s out of %s attempts succeded, \
                  but the threshold was %s out of %s%s"
@@ -1165,6 +1181,7 @@ let do_solve (can_split:bool) (is_retry:bool) use_env_msg tcenv q : unit =
       FStar.TypeChecker.Err.log_issue
         tcenv tcenv.range
         (Errors.Error_NonTopRecFunctionNotFullyEncoded,
+          Errors.mkmsg <|
          BU.format1
            "Could not encode the query since F* does not support precise smtencoding of inner let-recs yet (in this case %s)"
            (String.concat "," (List.map fst names)));
@@ -1206,6 +1223,7 @@ let split_and_solve (retrying:bool) use_env_msg tcenv q : unit =
       tcenv
       tcenv.range
       (Errors.Warning_SplitAndRetryQueries,
+        Errors.mkmsg <|
        "The verification condition succeeded after splitting it to localize potential errors, \
         although the original non-split verification condition failed. \
         If you want to rely on splitting queries for verifying your program \
@@ -1247,6 +1265,7 @@ let solve use_env_msg tcenv q : unit =
         FStar.TypeChecker.Err.log_issue
           tcenv tcenv.range
             (Errors.Error_NoSMTButNeeded,
+             Errors.mkmsg <|
              BU.format1 "Q = %s\nA query could not be solved internally, and --no_smt was given" (Print.term_to_string q))
     else
     Profiling.profile

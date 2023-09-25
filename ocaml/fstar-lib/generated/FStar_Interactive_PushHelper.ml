@@ -92,6 +92,7 @@ let (set_check_kind :
           (env.FStar_TypeChecker_Env.uvar_subtyping);
         FStar_TypeChecker_Env.intactics =
           (env.FStar_TypeChecker_Env.intactics);
+        FStar_TypeChecker_Env.nocoerce = (env.FStar_TypeChecker_Env.nocoerce);
         FStar_TypeChecker_Env.tc_term = (env.FStar_TypeChecker_Env.tc_term);
         FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
           (env.FStar_TypeChecker_Env.typeof_tot_or_gtot_term);
@@ -650,16 +651,18 @@ let (repl_tx :
         | FStar_Errors.Error (e, msg, r, _ctx) ->
             let uu___1 =
               let uu___2 =
+                let uu___3 = FStar_Errors_Msg.rendermsg msg in
                 FStar_Interactive_JsonHelper.js_diag
-                  st.FStar_Interactive_Ide_Types.repl_fname msg
+                  st.FStar_Interactive_Ide_Types.repl_fname uu___3
                   (FStar_Pervasives_Native.Some r) in
               FStar_Pervasives_Native.Some uu___2 in
             (uu___1, st)
         | FStar_Errors.Err (e, msg, _ctx) ->
             let uu___1 =
               let uu___2 =
+                let uu___3 = FStar_Errors_Msg.rendermsg msg in
                 FStar_Interactive_JsonHelper.js_diag
-                  st.FStar_Interactive_Ide_Types.repl_fname msg
+                  st.FStar_Interactive_Ide_Types.repl_fname uu___3
                   FStar_Pervasives_Native.None in
               FStar_Pervasives_Native.Some uu___2 in
             (uu___1, st)
@@ -823,7 +826,9 @@ let (ld_deps :
                        FStar_Pervasives.Inl (st2, deps)))) ()
     with
     | FStar_Errors.Err (e, msg, ctx) ->
-        (FStar_Compiler_Util.print1_error "[E] Failed to load deps. %s" msg;
+        ((let uu___2 = FStar_Errors_Msg.rendermsg msg in
+          FStar_Compiler_Util.print1_error "[E] Failed to load deps. %s"
+            uu___2);
          FStar_Pervasives.Inr st)
     | exn ->
         ((let uu___2 = FStar_Compiler_Util.message_of_exn exn in

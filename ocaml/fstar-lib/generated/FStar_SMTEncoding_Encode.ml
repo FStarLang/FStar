@@ -1518,6 +1518,8 @@ let (encode_free_var :
                                       (tcenv_comp.FStar_TypeChecker_Env.uvar_subtyping);
                                     FStar_TypeChecker_Env.intactics =
                                       (tcenv_comp.FStar_TypeChecker_Env.intactics);
+                                    FStar_TypeChecker_Env.nocoerce =
+                                      (tcenv_comp.FStar_TypeChecker_Env.nocoerce);
                                     FStar_TypeChecker_Env.tc_term =
                                       (tcenv_comp.FStar_TypeChecker_Env.tc_term);
                                     FStar_TypeChecker_Env.typeof_tot_or_gtot_term
@@ -2424,6 +2426,8 @@ let (encode_top_level_let :
                     (uu___1.FStar_TypeChecker_Env.uvar_subtyping);
                   FStar_TypeChecker_Env.intactics =
                     (uu___1.FStar_TypeChecker_Env.intactics);
+                  FStar_TypeChecker_Env.nocoerce =
+                    (uu___1.FStar_TypeChecker_Env.nocoerce);
                   FStar_TypeChecker_Env.tc_term =
                     (uu___1.FStar_TypeChecker_Env.tc_term);
                   FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
@@ -3796,19 +3800,24 @@ let (encode_top_level_let :
                                           let uu___11 =
                                             let uu___12 =
                                               let uu___13 =
-                                                FStar_Compiler_List.map
-                                                  FStar_Pervasives_Native.fst
-                                                  names in
-                                              FStar_Compiler_Effect.op_Bar_Greater
-                                                uu___13
-                                                (FStar_String.concat ",") in
-                                            FStar_Compiler_Util.format3
-                                              "Definitions of inner let-rec%s %s and %s enclosing top-level letbinding are not encoded to the solver, you will only be able to reason with their types"
-                                              (if plural then "s" else "")
-                                              uu___12
-                                              (if plural
-                                               then "their"
-                                               else "its") in
+                                                let uu___14 =
+                                                  let uu___15 =
+                                                    FStar_Compiler_List.map
+                                                      FStar_Pervasives_Native.fst
+                                                      names in
+                                                  FStar_Compiler_Effect.op_Bar_Greater
+                                                    uu___15
+                                                    (FStar_String.concat ",") in
+                                                FStar_Compiler_Util.format3
+                                                  "Definitions of inner let-rec%s %s and %s enclosing top-level letbinding are not encoded to the solver, you will only be able to reason with their types"
+                                                  (if plural then "s" else "")
+                                                  uu___14
+                                                  (if plural
+                                                   then "their"
+                                                   else "its") in
+                                              FStar_Compiler_Effect.op_Less_Bar
+                                                FStar_Errors_Msg.text uu___13 in
+                                            [uu___12] in
                                           let uu___12 =
                                             FStar_Errors.get_ctx () in
                                           (FStar_Errors_Codes.Warning_DefinitionNotTranslated,
@@ -4796,21 +4805,18 @@ and (encode_sigelt' :
              let constructor_or_logic_type_decl c =
                if is_logical
                then
-                 let uu___4 = c in
-                 match uu___4 with
-                 | (name, args, uu___5, uu___6, uu___7) ->
-                     let uu___8 =
-                       let uu___9 =
-                         let uu___10 =
-                           FStar_Compiler_Effect.op_Bar_Greater args
-                             (FStar_Compiler_List.map
-                                (fun uu___11 ->
-                                   match uu___11 with
-                                   | (uu___12, sort, uu___13) -> sort)) in
-                         (name, uu___10, FStar_SMTEncoding_Term.Term_sort,
-                           FStar_Pervasives_Native.None) in
-                       FStar_SMTEncoding_Term.DeclFun uu___9 in
-                     [uu___8]
+                 let uu___4 =
+                   let uu___5 =
+                     let uu___6 =
+                       FStar_Compiler_Effect.op_Bar_Greater
+                         c.FStar_SMTEncoding_Term.constr_fields
+                         (FStar_Compiler_List.map
+                            (fun f -> f.FStar_SMTEncoding_Term.field_sort)) in
+                     ((c.FStar_SMTEncoding_Term.constr_name), uu___6,
+                       FStar_SMTEncoding_Term.Term_sort,
+                       FStar_Pervasives_Native.None) in
+                   FStar_SMTEncoding_Term.DeclFun uu___5 in
+                 [uu___4]
                else
                  (let uu___5 = FStar_Ident.range_of_lid t in
                   FStar_SMTEncoding_Term.constructor_to_decl uu___5 c) in
@@ -5063,13 +5069,27 @@ and (encode_sigelt' :
                                            let uu___12 =
                                              FStar_SMTEncoding_Term.fv_sort
                                                fv in
-                                           (uu___11, uu___12, false))) in
+                                           {
+                                             FStar_SMTEncoding_Term.field_name
+                                               = uu___11;
+                                             FStar_SMTEncoding_Term.field_sort
+                                               = uu___12;
+                                             FStar_SMTEncoding_Term.field_projectible
+                                               = false
+                                           })) in
                                  let uu___11 =
-                                   FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.next_id
-                                     () in
-                                 (tname, uu___10,
-                                   FStar_SMTEncoding_Term.Term_sort, uu___11,
-                                   false) in
+                                   let uu___12 =
+                                     FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.next_id
+                                       () in
+                                   FStar_Pervasives_Native.Some uu___12 in
+                                 {
+                                   FStar_SMTEncoding_Term.constr_name = tname;
+                                   FStar_SMTEncoding_Term.constr_fields =
+                                     uu___10;
+                                   FStar_SMTEncoding_Term.constr_sort =
+                                     FStar_SMTEncoding_Term.Term_sort;
+                                   FStar_SMTEncoding_Term.constr_id = uu___11
+                                 } in
                                constructor_or_logic_type_decl uu___9 in
                              let uu___9 =
                                match vars with
@@ -5267,21 +5287,35 @@ and (encode_sigelt' :
                                    (FStar_Compiler_List.mapi
                                       (fun n ->
                                          fun x ->
-                                           let projectible = true in
                                            let uu___7 =
                                              FStar_SMTEncoding_Env.mk_term_projector_name
                                                d x in
-                                           (uu___7,
-                                             FStar_SMTEncoding_Term.Term_sort,
-                                             projectible))) in
+                                           {
+                                             FStar_SMTEncoding_Term.field_name
+                                               = uu___7;
+                                             FStar_SMTEncoding_Term.field_sort
+                                               =
+                                               FStar_SMTEncoding_Term.Term_sort;
+                                             FStar_SMTEncoding_Term.field_projectible
+                                               = true
+                                           })) in
                                let datacons =
                                  let uu___7 =
                                    let uu___8 =
-                                     FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.next_id
-                                       () in
-                                   (ddconstrsym, fields,
-                                     FStar_SMTEncoding_Term.Term_sort,
-                                     uu___8, true) in
+                                     let uu___9 =
+                                       FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.next_id
+                                         () in
+                                     FStar_Pervasives_Native.Some uu___9 in
+                                   {
+                                     FStar_SMTEncoding_Term.constr_name =
+                                       ddconstrsym;
+                                     FStar_SMTEncoding_Term.constr_fields =
+                                       fields;
+                                     FStar_SMTEncoding_Term.constr_sort =
+                                       FStar_SMTEncoding_Term.Term_sort;
+                                     FStar_SMTEncoding_Term.constr_id =
+                                       uu___8
+                                   } in
                                  let uu___8 =
                                    let uu___9 = FStar_Ident.range_of_lid d in
                                    FStar_SMTEncoding_Term.constructor_to_decl
@@ -5863,11 +5897,10 @@ and (encode_sigelt' :
                                                                     =
                                                                     let uu___41
                                                                     =
-                                                                    FStar_Options.ext_options
-                                                                    "compat" in
-                                                                    FStar_Compiler_List.mem
-                                                                    "2954"
-                                                                    uu___41 in
+                                                                    FStar_Options.ext_getv
+                                                                    "compat:2954" in
+                                                                    uu___41
+                                                                    <> "" in
                                                                     if
                                                                     uu___40
                                                                     then
@@ -5884,11 +5917,10 @@ and (encode_sigelt' :
                                                                     =
                                                                     let uu___40
                                                                     =
-                                                                    FStar_Options.ext_options
-                                                                    "compat" in
-                                                                    FStar_Compiler_List.mem
-                                                                    "2954"
-                                                                    uu___40 in
+                                                                    FStar_Options.ext_getv
+                                                                    "compat:2954" in
+                                                                    uu___40
+                                                                    <> "" in
                                                                     if
                                                                     uu___39
                                                                     then
@@ -6622,11 +6654,10 @@ and (encode_sigelt' :
                                                                     =
                                                                     let uu___37
                                                                     =
-                                                                    FStar_Options.ext_options
-                                                                    "compat" in
-                                                                    FStar_Compiler_List.mem
-                                                                    "2954"
-                                                                    uu___37 in
+                                                                    FStar_Options.ext_getv
+                                                                    "compat:2954" in
+                                                                    uu___37
+                                                                    <> "" in
                                                                     if
                                                                     uu___36
                                                                     then
@@ -6643,11 +6674,10 @@ and (encode_sigelt' :
                                                                     =
                                                                     let uu___36
                                                                     =
-                                                                    FStar_Options.ext_options
-                                                                    "compat" in
-                                                                    FStar_Compiler_List.mem
-                                                                    "2954"
-                                                                    uu___36 in
+                                                                    FStar_Options.ext_getv
+                                                                    "compat:2954" in
+                                                                    uu___36
+                                                                    <> "" in
                                                                     if
                                                                     uu___35
                                                                     then

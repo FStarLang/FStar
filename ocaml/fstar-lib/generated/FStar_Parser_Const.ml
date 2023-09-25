@@ -173,6 +173,7 @@ let (bv_sub_lid : FStar_Ident.lident) = bvconst "bvsub"
 let (bv_shift_left_lid : FStar_Ident.lident) = bvconst "bvshl"
 let (bv_shift_right_lid : FStar_Ident.lident) = bvconst "bvshr"
 let (bv_udiv_lid : FStar_Ident.lident) = bvconst "bvdiv"
+let (bv_udiv_unsafe_lid : FStar_Ident.lident) = bvconst "bvdiv_unsafe"
 let (bv_mod_lid : FStar_Ident.lident) = bvconst "bvmod"
 let (bv_mul_lid : FStar_Ident.lident) = bvconst "bvmul"
 let (bv_ult_lid : FStar_Ident.lident) = bvconst "bvult"
@@ -604,4 +605,6 @@ let (sealed_lid : FStar_Ident.lident) = p2l ["FStar"; "Sealed"; "sealed"]
 let (seal_lid : FStar_Ident.lident) = p2l ["FStar"; "Sealed"; "seal"]
 let (unseal_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Tactics"; "Unseal"; "unseal"]
+let (document_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Stubs"; "Pprint"; "document"]
 let (issue_lid : FStar_Ident.lident) = p2l ["FStar"; "Issue"; "issue"]

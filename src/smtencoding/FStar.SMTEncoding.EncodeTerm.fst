@@ -329,6 +329,7 @@ let is_BitVector_primitive head args =
       || S.fv_eq_lid fv Const.bv_shift_left_lid
       || S.fv_eq_lid fv Const.bv_shift_right_lid
       || S.fv_eq_lid fv Const.bv_udiv_lid
+      || S.fv_eq_lid fv Const.bv_udiv_unsafe_lid
       || S.fv_eq_lid fv Const.bv_mod_lid
       || S.fv_eq_lid fv Const.bv_ult_lid
       || S.fv_eq_lid fv Const.bv_uext_lid
@@ -462,8 +463,25 @@ and encode_arith_term env head args_e =
     let sz = getInteger tm_sz.n in
     let sz_key = FStar.Compiler.Util.format1 "BitVector_%s" (string_of_int sz) in
     let sz_decls =
-      let t_decls = mkBvConstructor sz in
-      mk_decls "" sz_key t_decls []
+      let t_decls, constr_name, discriminator_name = mkBvConstructor sz in
+      //Typing inversion for bv_t n
+      let decls, typing_inversion =
+        (* forall (x:Term). HasType x (bv_t n) ==> is-BoxVec#n x *)
+        let bv_t_n, decls =
+          let head = S.lid_as_fv FStar.Parser.Const.bv_t_lid None in
+          let t = U.mk_app (S.fv_to_tm head) [tm_sz, None] in
+          encode_term t env
+        in
+        let xsym = mk_fv (varops.fresh env.current_module_name "x", Term_sort) in
+        let x = mkFreeV xsym in
+        let x_has_type_bv_t_n = mk_HasType x bv_t_n in
+        let ax = mkForall head.pos ([[x_has_type_bv_t_n]],
+                                    [xsym],
+                                    mkImp(x_has_type_bv_t_n, mkApp (discriminator_name, [x]))) in
+        let name = "typing_inversion_for_" ^constr_name in
+        decls, mkAssume(ax, Some name, name)
+      in
+      decls@mk_decls "" sz_key (t_decls@[typing_inversion]) []
     in
     (* we need to treat the size argument for zero_extend specially*)
     let arg_tms, ext_sz =
@@ -529,6 +547,8 @@ and encode_arith_term env head args_e =
          (Const.bv_shift_left_lid, bv_shl);
          (Const.bv_shift_right_lid, bv_shr);
          (Const.bv_udiv_lid, bv_udiv);
+         (* NOTE: unsafe 'udiv' also compiles to the same smtlib2 expr *)
+         (Const.bv_udiv_unsafe_lid, bv_udiv);
          (Const.bv_mod_lid, bv_mod);
          (Const.bv_mul_lid, bv_mul);
          (Const.bv_ult_lid, bv_ult);

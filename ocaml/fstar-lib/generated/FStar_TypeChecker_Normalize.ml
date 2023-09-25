@@ -8704,6 +8704,34 @@ let (ghost_to_pure_lcomp2 :
                        let uu___7 = ghost_to_pure_lcomp env1 lc11 in
                        (uu___7, lc21)
                      else (lc11, lc21))))
+let (term_to_doc :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.term -> FStar_Pprint.document)
+  =
+  fun env1 ->
+    fun t ->
+      let t1 =
+        try
+          (fun uu___ ->
+             match () with
+             | () ->
+                 normalize [FStar_TypeChecker_Env.AllowUnboundUniverses] env1
+                   t) ()
+        with
+        | uu___ ->
+            ((let uu___2 =
+                let uu___3 =
+                  let uu___4 = FStar_Compiler_Util.message_of_exn uu___ in
+                  FStar_Compiler_Util.format1
+                    "Normalization failed with error %s\n" uu___4 in
+                (FStar_Errors_Codes.Warning_NormalizationFailure, uu___3) in
+              FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu___2);
+             t) in
+      let uu___ =
+        FStar_Syntax_DsEnv.set_current_module
+          env1.FStar_TypeChecker_Env.dsenv
+          env1.FStar_TypeChecker_Env.curmodule in
+      FStar_Syntax_Print_Pretty.term_to_doc' uu___ t1
 let (term_to_string :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> Prims.string) =
   fun env1 ->
@@ -8933,6 +8961,8 @@ let (eta_expand :
                                     (env1.FStar_TypeChecker_Env.uvar_subtyping);
                                   FStar_TypeChecker_Env.intactics =
                                     (env1.FStar_TypeChecker_Env.intactics);
+                                  FStar_TypeChecker_Env.nocoerce =
+                                    (env1.FStar_TypeChecker_Env.nocoerce);
                                   FStar_TypeChecker_Env.tc_term =
                                     (env1.FStar_TypeChecker_Env.tc_term);
                                   FStar_TypeChecker_Env.typeof_tot_or_gtot_term
@@ -9047,6 +9077,8 @@ let (eta_expand :
                             (env1.FStar_TypeChecker_Env.uvar_subtyping);
                           FStar_TypeChecker_Env.intactics =
                             (env1.FStar_TypeChecker_Env.intactics);
+                          FStar_TypeChecker_Env.nocoerce =
+                            (env1.FStar_TypeChecker_Env.nocoerce);
                           FStar_TypeChecker_Env.tc_term =
                             (env1.FStar_TypeChecker_Env.tc_term);
                           FStar_TypeChecker_Env.typeof_tot_or_gtot_term =

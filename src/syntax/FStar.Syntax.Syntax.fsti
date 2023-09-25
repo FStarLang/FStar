@@ -412,6 +412,7 @@ and lazy_kind =
   | Lazy_universe_uvar
   | Lazy_issue
   | Lazy_ident
+  | Lazy_doc
 and binding =
   | Binding_var      of bv
   | Binding_lid      of lident * (univ_names * typ)

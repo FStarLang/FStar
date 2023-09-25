@@ -19,6 +19,7 @@ ARG CI_THREADS=24
 ARG CI_BRANCH=master
 ARG CI_NO_KARAMEL=
 ARG RESOURCEMONITOR=
+ARG FSTAR_CI_NO_GITDIFF=
 RUN eval $(opam env) && Z3_LICENSE="$(opam config expand '%{prefix}%')/.opam-switch/sources/z3.4.8.5/LICENSE.txt" CI_NO_KARAMEL=$CI_NO_KARAMEL .docker/build/build-standalone.sh $CI_TARGET $CI_THREADS $CI_BRANCH
 
 WORKDIR $HOME

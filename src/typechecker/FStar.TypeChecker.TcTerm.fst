@@ -152,7 +152,7 @@ let maybe_warn_on_use env fv : unit =
           let msg_arg m =
               match args with
               | [{n=Tm_constant (Const_string (s, _))}, _] ->
-                m ^ ": " ^ s
+                m @ [Errors.text s]
               | _ ->
                 m
           in
@@ -160,23 +160,25 @@ let maybe_warn_on_use env fv : unit =
           | Tm_fvar attr_fv
               when lid_equals attr_fv.fv_name.v Const.warn_on_use_attr ->
             let m =
+              Errors.text <|
               BU.format1 "Every use of %s triggers a warning"
                          (Ident.string_of_lid fv.fv_name.v)
             in
-            log_issue (range_of_lid fv.fv_name.v)
+            log_issue_doc (range_of_lid fv.fv_name.v)
                       (Warning_WarnOnUse,
-                       msg_arg m)
+                       msg_arg [m])
 
           | Tm_fvar attr_fv
               when lid_equals attr_fv.fv_name.v Const.deprecated_attr ->
             let m =
+              Errors.text <|
               BU.format1
                 "%s is deprecated"
                 (Ident.string_of_lid fv.fv_name.v)
             in
-            log_issue (range_of_lid fv.fv_name.v)
+            log_issue_doc (range_of_lid fv.fv_name.v)
                       (Warning_DeprecatedDefinition,
-                        msg_arg m)
+                        msg_arg [m])
 
           | _ -> ())
 
@@ -532,14 +534,14 @@ let guard_letrecs env actuals expected_c : list (lbname*typ*univ_names) =
             then match (SS.compress t1).n, (SS.compress t2).n with
                  | Tm_name _, Tm_name _ -> ()
                  | _, _ ->
-                   Errors.log_issue e1.pos (Errors.Warning_Defensive,
-                     BU.format6 "SMT may not be able to prove the types of %s at %s (%s) and %s at %s (%s) to be equal, if the proof fails, try annotating these with the same type"
+                   Errors.log_issue_doc e1.pos (Errors.Warning_Defensive, [
+                     Errors.Msg.text <| BU.format6 "SMT may not be able to prove the types of %s at %s (%s) and %s at %s (%s) to be equal, if the proof fails, try annotating these with the same type"
                        (Print.term_to_string e1)
                        (Range.string_of_range e1.pos)
                        (Print.term_to_string t1)
                        (Print.term_to_string e2)
                        (Range.string_of_range e2.pos)
-                       (Print.term_to_string t2)));
+                       (Print.term_to_string t2)]));
            t1, t2 in
 
           match l, l_prev with
@@ -2939,12 +2941,16 @@ and tc_pat env (pat_t:typ) (p0:pat) :
        then BU.print2 "$$$$$$$$$$$$pat_typ_ok? %s vs. %s\n"
                (Print.term_to_string pat_t)
                (Print.term_to_string scrutinee_t);
-       let fail : string -> 'a = fun msg ->
-         let msg = BU.format3 "Type of pattern (%s) does not match type of scrutinee (%s)%s"
-                                        (Print.term_to_string pat_t)
-                                        (Print.term_to_string scrutinee_t)
-                                        msg in
-         raise_error (Errors.Fatal_MismatchedPatternType, msg) p0.p
+       let fail : string -> 'a = fun msg_str ->
+         let msg =
+           if msg_str = "" then [] else [Errors.text msg_str]
+         in
+         let msg =
+           (Errors.text (BU.format2 "Type of pattern (%s) does not match type of scrutinee (%s)"
+                                     (Print.term_to_string pat_t)
+                                     (Print.term_to_string scrutinee_t))) :: msg
+         in
+         raise_error_doc (Errors.Fatal_MismatchedPatternType, msg) p0.p
        in
        let head_s, args_s = U.head_and_args scrutinee_t in
        let pat_t = N.normalize [Env.Beta] env pat_t in
@@ -2974,7 +2980,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
                         (fun out (p, _) (s, _) ->
                             match Rel.teq_nosmt env p s with
                             | None ->
-                              fail (BU.format2 "; parameter %s <> parameter %s"
+                              fail (BU.format2 "Parameter %s <> Parameter %s"
                                             (Print.term_to_string p)
                                             (Print.term_to_string s))
                             | Some g ->
@@ -2985,7 +2991,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
                         params_s
 
                 | _ -> fail "Pattern matching a non-inductive type"
-            else fail (BU.format2 "; head mismatch %s vs %s"
+            else fail (BU.format2 "Head mismatch %s vs %s"
                                     (Print.term_to_string head_p)
                                     (Print.term_to_string head_s))
 
@@ -4440,8 +4446,9 @@ let typeof_tot_or_gtot_term env e must_tot =
     else t, c.res_typ, g
 
 let level_of_type_fail env e t =
-    raise_error (Errors.Fatal_UnexpectedTermType, (BU.format2 "Expected a term of type 'Type'; got %s : %s"
-                                (Print.term_to_string e) t)) (Env.get_range env)
+    raise_error_doc (Errors.Fatal_UnexpectedTermType,
+      [Errors.text (BU.format2 "Expected a type; got %s of type %s" (Print.term_to_string e) t)])
+                    (Env.get_range env)
 
 let level_of_type env e t =
     let rec aux retry t =

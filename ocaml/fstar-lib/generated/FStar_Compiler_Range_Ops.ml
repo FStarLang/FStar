@@ -72,18 +72,24 @@ let (string_of_file_name : Prims.string -> Prims.string) =
     let uu___ = FStar_Options.ide () in
     if uu___
     then
-      try
-        (fun uu___1 ->
-           match () with
-           | () ->
-               let uu___2 =
-                 let uu___3 = FStar_Compiler_Util.basename f in
-                 FStar_Options.find_file uu___3 in
-               (match uu___2 with
-                | FStar_Pervasives_Native.None -> f
-                | FStar_Pervasives_Native.Some absolute_path -> absolute_path))
-          ()
-      with | uu___1 -> f
+      let uu___1 =
+        let uu___2 = FStar_Options.ext_getv "fstar:no_absolute_paths" in
+        uu___2 = "1" in
+      (if uu___1
+       then FStar_Compiler_Util.basename f
+       else
+         (try
+            (fun uu___3 ->
+               match () with
+               | () ->
+                   let uu___4 =
+                     let uu___5 = FStar_Compiler_Util.basename f in
+                     FStar_Options.find_file uu___5 in
+                   (match uu___4 with
+                    | FStar_Pervasives_Native.None -> f
+                    | FStar_Pervasives_Native.Some absolute_path ->
+                        absolute_path)) ()
+          with | uu___3 -> f))
     else f
 let (file_of_range : FStar_Compiler_Range_Type.range -> Prims.string) =
   fun r ->

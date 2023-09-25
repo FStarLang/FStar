@@ -52,6 +52,7 @@ val e_sealed      : embedding 'a -> embedding 'a
 
 val e___range     : embedding Range.range (* unsealed *)
 val e_range       : embedding Range.range (* sealed *)
+val e_document    : embedding FStar.Pprint.document
 val e_issue       : embedding FStar.Errors.issue
 
 val mk_any_emb : typ -> embedding term

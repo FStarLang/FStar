@@ -158,7 +158,7 @@ let (trans_qual :
         | FStar_Parser_AST.Effect_qual -> FStar_Syntax_Syntax.Effect
         | FStar_Parser_AST.New -> FStar_Syntax_Syntax.New
         | FStar_Parser_AST.Opaque ->
-            (FStar_Errors.log_issue r
+            (FStar_Errors.log_issue_text r
                (FStar_Errors_Codes.Warning_DeprecatedOpaqueQualifier,
                  "The 'opaque' qualifier is deprecated since its use was strangely schizophrenic. There were two overloaded uses: (1) Given 'opaque val f : t', the behavior was to exclude the definition of 'f' to the SMT solver. This corresponds roughly to the new 'irreducible' qualifier. (2) Given 'opaque type t = t'', the behavior was to provide the definition of 't' to the SMT solver, but not to inline it, unless absolutely required for unification. This corresponds roughly to the behavior of 'unfoldable' (which is currently the default).");
              FStar_Syntax_Syntax.Visible_default)
@@ -1488,28 +1488,25 @@ let rec (desugar_maybe_non_constant_universe :
          else ();
          FStar_Pervasives.Inl n)
     | FStar_Parser_AST.Op (op_plus, t1::t2::[]) ->
-        ((let uu___3 =
-            let uu___4 = FStar_Ident.string_of_id op_plus in uu___4 = "+" in
-          ());
-         (let u1 = desugar_maybe_non_constant_universe t1 in
-          let u2 = desugar_maybe_non_constant_universe t2 in
-          match (u1, u2) with
-          | (FStar_Pervasives.Inl n1, FStar_Pervasives.Inl n2) ->
-              FStar_Pervasives.Inl (n1 + n2)
-          | (FStar_Pervasives.Inl n, FStar_Pervasives.Inr u) ->
-              let uu___2 = sum_to_universe u n in FStar_Pervasives.Inr uu___2
-          | (FStar_Pervasives.Inr u, FStar_Pervasives.Inl n) ->
-              let uu___2 = sum_to_universe u n in FStar_Pervasives.Inr uu___2
-          | (FStar_Pervasives.Inr u11, FStar_Pervasives.Inr u21) ->
-              let uu___2 =
-                let uu___3 =
-                  let uu___4 = FStar_Parser_AST.term_to_string t in
-                  Prims.op_Hat
-                    "This universe might contain a sum of two universe variables "
-                    uu___4 in
-                (FStar_Errors_Codes.Fatal_UniverseMightContainSumOfTwoUnivVars,
-                  uu___3) in
-              FStar_Errors.raise_error uu___2 t.FStar_Parser_AST.range))
+        let u1 = desugar_maybe_non_constant_universe t1 in
+        let u2 = desugar_maybe_non_constant_universe t2 in
+        (match (u1, u2) with
+         | (FStar_Pervasives.Inl n1, FStar_Pervasives.Inl n2) ->
+             FStar_Pervasives.Inl (n1 + n2)
+         | (FStar_Pervasives.Inl n, FStar_Pervasives.Inr u) ->
+             let uu___2 = sum_to_universe u n in FStar_Pervasives.Inr uu___2
+         | (FStar_Pervasives.Inr u, FStar_Pervasives.Inl n) ->
+             let uu___2 = sum_to_universe u n in FStar_Pervasives.Inr uu___2
+         | (FStar_Pervasives.Inr u11, FStar_Pervasives.Inr u21) ->
+             let uu___2 =
+               let uu___3 =
+                 let uu___4 = FStar_Parser_AST.term_to_string t in
+                 Prims.op_Hat
+                   "This universe might contain a sum of two universe variables "
+                   uu___4 in
+               (FStar_Errors_Codes.Fatal_UniverseMightContainSumOfTwoUnivVars,
+                 uu___3) in
+             FStar_Errors.raise_error uu___2 t.FStar_Parser_AST.range)
     | FStar_Parser_AST.App uu___1 ->
         let rec aux t1 univargs =
           let uu___2 = let uu___3 = unparen t1 in uu___3.FStar_Parser_AST.tm in
@@ -1518,40 +1515,36 @@ let rec (desugar_maybe_non_constant_universe :
               let uarg = desugar_maybe_non_constant_universe targ in
               aux t2 (uarg :: univargs)
           | FStar_Parser_AST.Var max_lid ->
-              ((let uu___5 =
-                  let uu___6 = FStar_Ident.string_of_lid max_lid in
-                  uu___6 = "max" in
-                ());
-               (let uu___4 =
-                  FStar_Compiler_List.existsb
-                    (fun uu___5 ->
-                       match uu___5 with
-                       | FStar_Pervasives.Inr uu___6 -> true
-                       | uu___6 -> false) univargs in
-                if uu___4
-                then
-                  let uu___5 =
-                    let uu___6 =
-                      FStar_Compiler_List.map
-                        (fun uu___7 ->
-                           match uu___7 with
-                           | FStar_Pervasives.Inl n -> int_to_universe n
-                           | FStar_Pervasives.Inr u -> u) univargs in
-                    FStar_Syntax_Syntax.U_max uu___6 in
-                  FStar_Pervasives.Inr uu___5
-                else
-                  (let nargs =
-                     FStar_Compiler_List.map
-                       (fun uu___6 ->
-                          match uu___6 with
-                          | FStar_Pervasives.Inl n -> n
-                          | FStar_Pervasives.Inr uu___7 ->
-                              failwith "impossible") univargs in
-                   let uu___6 =
-                     FStar_Compiler_List.fold_left
-                       (fun m -> fun n -> if m > n then m else n)
-                       Prims.int_zero nargs in
-                   FStar_Pervasives.Inl uu___6)))
+              let uu___4 =
+                FStar_Compiler_List.existsb
+                  (fun uu___5 ->
+                     match uu___5 with
+                     | FStar_Pervasives.Inr uu___6 -> true
+                     | uu___6 -> false) univargs in
+              if uu___4
+              then
+                let uu___5 =
+                  let uu___6 =
+                    FStar_Compiler_List.map
+                      (fun uu___7 ->
+                         match uu___7 with
+                         | FStar_Pervasives.Inl n -> int_to_universe n
+                         | FStar_Pervasives.Inr u -> u) univargs in
+                  FStar_Syntax_Syntax.U_max uu___6 in
+                FStar_Pervasives.Inr uu___5
+              else
+                (let nargs =
+                   FStar_Compiler_List.map
+                     (fun uu___6 ->
+                        match uu___6 with
+                        | FStar_Pervasives.Inl n -> n
+                        | FStar_Pervasives.Inr uu___7 ->
+                            failwith "impossible") univargs in
+                 let uu___6 =
+                   FStar_Compiler_List.fold_left
+                     (fun m -> fun n -> if m > n then m else n)
+                     Prims.int_zero nargs in
+                 FStar_Pervasives.Inl uu___6)
           | uu___3 ->
               let uu___4 =
                 let uu___5 =
@@ -5386,12 +5379,24 @@ and (desugar_comp :
                          "Lemma (requires pre) (ensures post) (decreases d)";
                          "Lemma (requires pre) (ensures post) [SMTPat ...]";
                          "Lemma (requires pre) (ensures post) (decreases d) [SMTPat ...]"] in
-                       let msg = FStar_String.concat "\n\t" expected_one_of in
-                       FStar_Errors.raise_error
+                       let uu___2 =
+                         let uu___3 =
+                           let uu___4 =
+                             let uu___5 =
+                               FStar_Errors_Msg.text
+                                 "Invalid arguments to 'Lemma'; expected one of the following" in
+                             let uu___6 =
+                               let uu___7 =
+                                 FStar_Compiler_List.map
+                                   FStar_Pprint.doc_of_string expected_one_of in
+                               FStar_Errors_Msg.sublist FStar_Pprint.empty
+                                 uu___7 in
+                             FStar_Pprint.op_Hat_Hat uu___5 uu___6 in
+                           [uu___4] in
                          (FStar_Errors_Codes.Fatal_InvalidLemmaArgument,
-                           (Prims.op_Hat
-                              "Invalid arguments to 'Lemma'; expected one of the following:\n\t"
-                              msg)) t1.FStar_Parser_AST.range in
+                           uu___3) in
+                       FStar_Errors.raise_error_doc uu___2
+                         t1.FStar_Parser_AST.range in
                      let args1 =
                        match args with
                        | [] -> fail_lemma ()

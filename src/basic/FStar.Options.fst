@@ -763,10 +763,12 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * string) 
 
        ( noshort,
          "ext",
-         Accumulated (SimpleStr "One or more semicolon separated occurrences of colon-separated pairs, \
-                                 e.g., 'pulse:verbose;pulse:debug;foo:bar'"),
-        "\n\t\tThese options are typically interpreted by extensions. \n\t\t\
-         An entry 'e' that is not of the form 'a:b' is treated as 'e:\"\"', i.e., 'e' associated with the empty string");
+         ReverseAccumulated (SimpleStr "One or more semicolon separated occurrences of key-value pairs"),
+         "\n\t\tThese options are set in extensions option map. Keys are usually namespaces separated by \":\".\n\t\t\
+         E.g., 'pulse:verbose=1;my:extension:option=xyz;foo:bar=baz'\n\t\t\
+         These options are typically interpreted by extensions. \n\t\t\
+         Any later use of --ext over the same key overrides the old value.\n\t\t\
+         An entry 'e' that is not of the form 'a=b' is treated as 'e=1', i.e., 'e' associated with string \"1\"");
 
        ( noshort,
          "extract",
@@ -2168,19 +2170,33 @@ let set_vconfig (vcfg:vconfig) : unit =
   set_option "z3rlimit"                                  (Int vcfg.z3rlimit);
   set_option "z3rlimit_factor"                           (Int vcfg.z3rlimit_factor);
   set_option "z3seed"                                    (Int vcfg.z3seed);
+  set_option "z3version"                                 (String vcfg.z3version);
   set_option "trivial_pre_for_unannotated_effectful_fns" (Bool vcfg.trivial_pre_for_unannotated_effectful_fns);
   set_option "reuse_hint_for"                            (option_as String vcfg.reuse_hint_for);
   ()
 
 // --ext "ext1:opt1;ext2:opt2;ext3:opt3"
 // An entry e that is not of the form a:b
-// is treated as e:""
+// is treated as e:"1". We morally reserve the empty
+// string for "disabling" an option.
+//
+// This could all be much more efficient by just storing
+// a hash table in the optionstate.
+
 let parse_ext (s:string) : list (string & string) =
   let exts = Util.split s ";" in
   List.collect (fun s -> 
-    match Util.split s ":" with
+    match Util.split s "=" with
     | [k;v] -> [(k,v)]
-    | _ -> [s, ""]) exts
+    | _ -> [s, "1"]) exts
+
+(* Deduplicates according to keys, favors the last occurrence (consistent
+with "ext" begin ReverseAccumulated *)
+let ext_dedup #a (l : list (string & a)) : list (string & a) =
+  //fold_right (fun (k,v) rest -> (k,v) :: List.filter (fun (k', _) -> k<>k') rest) l []
+  fold_right (fun (k,v) rest -> if List.existsb (fun (k', _) -> k=k') rest
+                                then rest
+                                else (k,v) :: rest) l []
 
 let all_ext_options () : list (string & string) =
   let ext = get_ext () in
@@ -2188,7 +2204,24 @@ let all_ext_options () : list (string & string) =
   | None -> []
   | Some strs ->
     strs |> List.collect parse_ext
+    |> ext_dedup
 
-let ext_options (ext:string) : list string =
+let ext_getv (k:string) : string =
+  let ext = all_ext_options () in
+  (* Get the value from the map, or return "" if not there *)
+  Util.dflt "" (
+    Util.find_map ext (fun (k',v) -> if k = k' then Some v else None))
+
+(* Get a list of all KV pairs that "begin" with k, considered
+as a namespace. *)
+let ext_getns (ns:string) : list (string & string) =
+  let is_prefix s1 s2 =
+    let open FStar.String in
+    let l1 = length s1 in
+    let l2 = length s2 in
+    l2 >= l1 && substring s2 0 l1 = s1
+  in
   let exts = all_ext_options () in
-  List.filter_map (fun (k,v) -> if k = ext then Some v else None) exts
+  exts |>
+  List.filter_map (fun (k',v) ->
+    if k' = ns || is_prefix (ns^":") k' then Some (k',v) else None)
