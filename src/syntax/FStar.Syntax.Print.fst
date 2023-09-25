@@ -412,7 +412,9 @@ and bqual_to_string' s = function
   | None -> s
 
 and aqual_to_string' s = function
-  | Some ({aqual_implicit=true}) -> "#" ^ s
+  | Some aq -> 
+    (if aq.aqual_implicit then "#" else "") ^
+    (match aq.aqual_attributes with | [] -> "" | l -> "@[" ^ String.concat "; " (List.map term_to_string l) ^ "]") ^ s
   | _ -> s
   
 and binder_to_string' is_arrow b =

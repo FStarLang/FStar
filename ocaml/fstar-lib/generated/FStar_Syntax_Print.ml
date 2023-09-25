@@ -862,10 +862,22 @@ and (aqual_to_string' :
   fun s ->
     fun uu___ ->
       match uu___ with
-      | FStar_Pervasives_Native.Some
-          { FStar_Syntax_Syntax.aqual_implicit = true;
-            FStar_Syntax_Syntax.aqual_attributes = uu___1;_}
-          -> Prims.op_Hat "#" s
+      | FStar_Pervasives_Native.Some aq ->
+          let uu___1 =
+            let uu___2 =
+              match aq.FStar_Syntax_Syntax.aqual_attributes with
+              | [] -> ""
+              | l ->
+                  let uu___3 =
+                    let uu___4 =
+                      let uu___5 = FStar_Compiler_List.map term_to_string l in
+                      FStar_String.concat "; " uu___5 in
+                    Prims.op_Hat uu___4 "]" in
+                  Prims.op_Hat "@[" uu___3 in
+            Prims.op_Hat uu___2 s in
+          Prims.op_Hat
+            (if aq.FStar_Syntax_Syntax.aqual_implicit then "#" else "")
+            uu___1
       | uu___1 -> s
 and (binder_to_string' :
   Prims.bool -> FStar_Syntax_Syntax.binder -> Prims.string) =
