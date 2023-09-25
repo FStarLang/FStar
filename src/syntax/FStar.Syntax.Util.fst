@@ -1853,16 +1853,18 @@ let eqopt (e : 'a -> 'a -> bool) (x : option 'a) (y : option 'a) : bool =
 // reason against it, so I don't have to go crazy again.
 let debug_term_eq = U.mk_ref false
 
-let check msg cond =
+let check dbg msg cond =
   if cond
   then true
-  else (if !debug_term_eq then U.print1 ">>> term_eq failing: %s\n" msg; false)
+  else (if dbg then U.print1 ">>> term_eq failing: %s\n" msg; false)
 
-let fail msg = check msg false
+let fail dbg msg = check dbg msg false
 
 let rec term_eq_dbg (dbg : bool) t1 t2 =
   let t1 = canon_app (unmeta_safe t1) in
   let t2 = canon_app (unmeta_safe t2) in
+  let check = check dbg in
+  let fail = fail dbg in
   match (compress (un_uinst t1)).n, (compress (un_uinst t2)).n with
   | Tm_uinst _, _
   | _, Tm_uinst _
@@ -1964,26 +1966,26 @@ let rec term_eq_dbg (dbg : bool) t1 t2 =
   | _, Tm_meta _     -> fail "bottom"
 
 and arg_eq_dbg (dbg : bool) a1 a2 =
-    eqprod (fun t1 t2 -> check "arg tm" (term_eq_dbg dbg t1 t2))
-           (fun q1 q2 -> check "arg qual"  (eq_aqual q1 q2 = Equal))
+    eqprod (fun t1 t2 -> check dbg "arg tm" (term_eq_dbg dbg t1 t2))
+           (fun q1 q2 -> check dbg "arg qual"  (eq_aqual q1 q2 = Equal))
            a1 a2
 and binder_eq_dbg (dbg : bool) b1 b2 =
-    (check "binder_sort" (term_eq_dbg dbg b1.binder_bv.sort b2.binder_bv.sort)) &&
-    (check "binder qual" (eq_bqual b1.binder_qual b2.binder_qual = Equal)) &&  //AR: not checking attributes, should we?
-    (check "binder attrs" (eqlist (term_eq_dbg dbg) b1.binder_attrs b2.binder_attrs))
+    (check dbg "binder_sort" (term_eq_dbg dbg b1.binder_bv.sort b2.binder_bv.sort)) &&
+    (check dbg "binder qual" (eq_bqual b1.binder_qual b2.binder_qual = Equal)) &&  //AR: not checking attributes, should we?
+    (check dbg "binder attrs" (eqlist (term_eq_dbg dbg) b1.binder_attrs b2.binder_attrs))
 
 and comp_eq_dbg (dbg : bool) c1 c2 =
     let eff1, res1, args1 = comp_eff_name_res_and_args c1 in
     let eff2, res2, args2 = comp_eff_name_res_and_args c2 in
-    (check "comp eff"  (lid_equals eff1 eff2)) &&
+    (check dbg "comp eff"  (lid_equals eff1 eff2)) &&
     //(check "comp univs"  (c1.comp_univs = c2.comp_univs)) &&
-    (check "comp result typ"  (term_eq_dbg dbg res1 res2)) &&
+    (check dbg "comp result typ"  (term_eq_dbg dbg res1 res2)) &&
     (* (check "comp args"  (eqlist arg_eq_dbg dbg c1.effect_args c2.effect_args)) && *)
     true //eq_flags c1.flags c2.flags
 and branch_eq_dbg (dbg : bool) (p1,w1,t1) (p2,w2,t2) =
-    (check "branch pat"  (eq_pat p1 p2)) &&
-    (check "branch body"  (term_eq_dbg dbg t1 t2))
-    && (check "branch when" (
+    (check dbg "branch pat"  (eq_pat p1 p2)) &&
+    (check dbg "branch body"  (term_eq_dbg dbg t1 t2))
+    && (check dbg "branch when" (
         match w1, w2 with
         | Some x, Some y -> term_eq_dbg dbg x y
         | None, None -> true
@@ -1991,10 +1993,10 @@ and branch_eq_dbg (dbg : bool) (p1,w1,t1) (p2,w2,t2) =
 
 and letbinding_eq_dbg (dbg : bool) (lb1 : letbinding) lb2 =
     // bvars have no meaning here, so we just check they have the same name
-    (check "lb bv"   (eqsum (fun bv1 bv2 -> true) fv_eq lb1.lbname lb2.lbname)) &&
+    (check dbg "lb bv"   (eqsum (fun bv1 bv2 -> true) fv_eq lb1.lbname lb2.lbname)) &&
     (* (check "lb univs"  (lb1.lbunivs = lb2.lbunivs)) *)
-    (check "lb typ"  (term_eq_dbg dbg lb1.lbtyp lb2.lbtyp)) &&
-    (check "lb def"  (term_eq_dbg dbg lb1.lbdef lb2.lbdef))
+    (check dbg "lb typ"  (term_eq_dbg dbg lb1.lbtyp lb2.lbtyp)) &&
+    (check dbg "lb def"  (term_eq_dbg dbg lb1.lbdef lb2.lbdef))
     // Ignoring eff and attrs..
 
 let term_eq t1 t2 =
