@@ -47,5 +47,33 @@ fn write10 (x:ref U32.t)
   }
 }
 ```
-#pop-options
-let test_write_10_pub x #n = write10 x
+
+module SZ = FStar.SizeT
+module A = Pulse.Lib.Array
+
+```pulse
+fn fill_array (x:array U32.t) (n:SZ.t) (v:U32.t)
+  requires A.pts_to x 's ** pure (A.length x == SZ.v n)
+  ensures exists s. A.pts_to x s ** pure (Seq.equal s (Seq.create (SZ.v n) v))
+{
+  A.pts_to_len x;
+  let mut i : SZ.t = 0sz;
+  while (SZ.(i `SZ.lt` n))
+  invariant b.
+    exists (vi:SZ.t) (s:Seq.seq U32.t).
+      pts_to i vi **
+      A.pts_to x s **
+      pure (SZ.(vi <=^ n) /\
+            Seq.length s == Seq.length 's /\
+            (forall (j:nat). j < SZ.v vi ==> Seq.index s j == v) /\
+            b == SZ.(vi <^ n))
+  {
+    x.(i) <- v;
+    i := i `SZ.add` 1sz;
+  }
+}
+```
+
+
+// #pop-options
+// let test_write_10_pub x #n = write10 x
