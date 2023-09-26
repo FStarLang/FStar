@@ -1076,6 +1076,14 @@ let (extraction_norm_steps : FStar_TypeChecker_Env.step Prims.list) =
     extraction_norm_steps_core in
   let uu___ = FStar_Options.use_nbe_for_extraction () in
   if uu___ then extraction_norm_steps_nbe else extraction_norm_steps_core
+let (normalize_for_extraction :
+  FStar_Extraction_ML_UEnv.uenv ->
+    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
+  =
+  fun env ->
+    fun e ->
+      let uu___ = FStar_Extraction_ML_UEnv.tcenv_of_uenv env in
+      FStar_TypeChecker_Normalize.normalize extraction_norm_steps uu___ e
 let maybe_reify_comp :
   'uuuuu .
     'uuuuu ->
