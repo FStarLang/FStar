@@ -2,6 +2,7 @@ module ExtractionTest
 open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
 open FStar.UInt32
+inline_for_extraction
 let zero () = 0ul
 
 
@@ -15,12 +16,14 @@ fn test_read_write (x:ref U32.t)
 }
 ```
 
+
+[@@"inline"]
 ```pulse
 fn test_write_10 (x:ref U32.t)
    requires pts_to x 'n
    ensures  pts_to x 0ul
 {
-    x := 1ul;
+    x := 2ul;
     test_read_write x;
     x := 0ul;
 }

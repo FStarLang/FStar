@@ -3,6 +3,7 @@ open Pulse.Syntax.Base
 open Pulse.Extract.CompilerLib
 open Pulse.Syntax.Printer
 open FStar.List.Tot
+module L = FStar.List.Tot
 module T = FStar.Tactics.V2
 exception Extraction_failure of string
 
@@ -19,13 +20,15 @@ module LN = Pulse.Syntax.Naming
 
 let name = ppname & nat
 
-let uenv_of_env (g:env) = 
-  set_tcenv g.uenv_inner (Pulse.Typing.elab_env g.coreenv)
+let topenv_of_env (g:env) = E.fstar_env g.coreenv
+let tcenv_of_env (g:env) = Pulse.Typing.elab_env g.coreenv
+let uenv_of_env (g:env) = set_tcenv g.uenv_inner (tcenv_of_env g)
   
 let term_as_mlexpr (g:env) (t:term)
   : T.Tac mlexpr
   = let t = Elab.elab_term t in
     let uenv = uenv_of_env g in
+    let t = normalize_for_extraction uenv t in
     let mlt, _, _ = term_as_mlexpr uenv t in
     mlt
 
@@ -103,6 +106,69 @@ let is_erasable (p:st_term) : T.Tac bool =
   | Some STT_Ghost -> true
   | _ -> false
     
+let head_and_args (t:term)
+  : option (R.term & list R.argv) =
+  match t.t with
+  | Tm_FStar t0 -> Some (R.collect_app_ln t0)
+  | _ -> None
+
+let term_eq_string (s:string) (t:R.term) : bool =
+  match R.inspect_ln t with
+  | R.Tv_Const (R.C_String s') -> s=s'
+  | _ -> false
+
+let maybe_unfold_head (g:env) (f:R.term) 
+  : option st_term
+  = match R.inspect_ln f with
+    | R.Tv_FVar f -> (
+      let name = R.inspect_fv f in
+      match R.lookup_typ (topenv_of_env g) name with
+      | None -> None
+      | Some se ->
+        let attrs = R.sigelt_attrs se in
+        if List.Tot.existsb (term_eq_string "inline") attrs
+        then sigelt_extension_data se
+        else None
+    )
+    | R.Tv_UInst f _ ->
+      //No universe-polymorphic inlining ... yet
+      None
+    | _ -> None
+
+let rec abs_body (n_args:nat) (t:st_term) =
+  if n_args = 0 then Some t
+  else (
+    match t.term with 
+    | Tm_Abs { body } -> abs_body (n_args - 1) body
+    | _ -> None
+  )
+
+
+let maybe_inline (g:env) (head:term) (arg:term) : option st_term =
+  match head_and_args head with
+  | None -> None
+  | Some (head, args) ->
+    match maybe_unfold_head g head with
+    | None -> None
+    | Some body ->
+      let args =
+        L.map #R.argv (fun (t, _) -> assume (not_tv_unknown t); tm_fstar t Range.range_0) args
+        @ [arg]
+      in
+      let n_args = L.length args in
+      match abs_body n_args body with
+      | None -> None
+      | Some body ->
+        let _, subst = 
+          L.fold_right
+            (fun arg (i, subst) ->
+              i + 1,
+              LN.DT i arg::subst)
+            args
+            (0, [])
+        in
+        Some (LN.subst_st_term body subst)
+
 let rec extract (g:env) (p:st_term)
   : T.Tac (mlexpr & e_tag)
   = let erased_result = mle_unit, e_tag_erasable in
@@ -130,11 +196,15 @@ let rec extract (g:env) (p:st_term)
         term_as_mlexpr g term,
         e_tag_pure
 
-      | Tm_STApp { head; arg } ->
-        let head = term_as_mlexpr g head in
-        let arg = term_as_mlexpr g arg in
-        mle_app head [arg], e_tag_impure
-        
+      | Tm_STApp { head; arg } -> (
+        match maybe_inline g head arg with
+        | None ->
+          let head = term_as_mlexpr g head in
+          let arg = term_as_mlexpr g arg in
+          mle_app head [arg], e_tag_impure
+        | Some t -> extract g t
+      )
+
       | Tm_Bind { binder; head; body } ->
         if is_erasable head
         then (

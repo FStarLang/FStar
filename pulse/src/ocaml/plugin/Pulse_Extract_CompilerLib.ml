@@ -88,6 +88,10 @@ let e_tag_impure : e_tag = ML.E_IMPURE
 
 let mlty_top : mlty = ML.MLTY_Top
 
+let normalize_for_extraction (g:uenv) (t:FStar_Syntax_Syntax.term)
+  : FStar_Syntax_Syntax.term
+  = FStar_Extraction_ML_Term.normalize_for_extraction g t
+
 let term_as_mlexpr (g:uenv) (t:FStar_Syntax_Syntax.term) : (mlexpr * e_tag * mlty) =
   FStar_Extraction_ML_Term.term_as_mlexpr g t
   
@@ -108,3 +112,7 @@ let initial_core_env (g:uenv) : Pulse_Typing_Env.env =
 let set_tcenv g e = UEnv.set_tcenv g e
 
 let mlexpr_to_string (e:mlexpr) = FStar_Extraction_ML_Syntax.mlexpr_to_string e
+let sigelt_extension_data (e:S.sigelt) : Pulse_Syntax_Base.st_term option =
+  match FStar_Compiler_List.tryFind (fun (s, _) -> s = "pulse") e.sigmeta.sigmeta_extension_data with
+  | None -> None
+  | Some (_, b) -> Some (Obj.magic b)
