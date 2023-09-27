@@ -206,12 +206,18 @@ let (st_equiv_weakening :
               match d with
               | Pulse_Typing.ST_VPropEquiv
                   (uu___, c11, c21, x, uu___1, uu___2, uu___3, uu___4,
-                   uu___5)
+                   uu___5, uu___6)
                   ->
                   Pulse_Typing.ST_VPropEquiv
                     ((Pulse_Typing_Env.push_env
                         (Pulse_Typing_Env.push_env g g1) g'), c11, c21, x,
-                      (), (), (), (), ())
+                      (), (), (),
+                      (FStar_Reflection_Typing.EQ_Refl
+                         ((Pulse_Typing.elab_env
+                             (Pulse_Typing_Env.push_env
+                                (Pulse_Typing_Env.push_env g g1) g')),
+                           (Pulse_Elaborate_Pure.elab_term
+                              (Pulse_Syntax_Base.comp_res c11)))), (), ())
 let (st_comp_typing_weakening :
   Pulse_Typing_Env.env ->
     Pulse_Typing_Env.env ->
@@ -674,14 +680,22 @@ let (st_equiv_subst :
                     match d with
                     | Pulse_Typing.ST_VPropEquiv
                         (uu___, c11, c21, y, uu___1, uu___2, uu___3, uu___4,
-                         uu___5)
+                         uu___5, uu___6)
                         ->
                         Pulse_Typing.ST_VPropEquiv
                           ((Pulse_Typing_Env.push_env g
                               (Pulse_Typing_Env.subst_env g' (nt x e))),
                             (Pulse_Syntax_Naming.subst_comp c11 (nt x e)),
                             (Pulse_Syntax_Naming.subst_comp c21 (nt x e)), y,
-                            (), (), (), (), ())
+                            (), (), (),
+                            (FStar_Reflection_Typing.EQ_Refl
+                               ((Pulse_Typing.elab_env
+                                   (Pulse_Typing_Env.push_env g
+                                      (Pulse_Typing_Env.subst_env g' (nt x e)))),
+                                 (Pulse_Elaborate_Pure.elab_term
+                                    (Pulse_Syntax_Base.comp_res
+                                       (Pulse_Syntax_Naming.subst_comp c11
+                                          (nt x e)))))), (), ())
 let (st_comp_typing_subst :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.var ->

@@ -38,7 +38,12 @@ let (canonicalize_st_typing :
           let c' = canon_comp c in
           let x = Pulse_Typing_Env.fresh g in
           let st_eq =
-            Pulse_Typing.ST_VPropEquiv (g, c, c', x, (), (), (), (), ()) in
+            Pulse_Typing.ST_VPropEquiv
+              (g, c, c', x, (), (), (),
+                (FStar_Reflection_Typing.EQ_Refl
+                   ((Pulse_Typing.elab_env g),
+                     (Pulse_Elaborate_Pure.elab_term
+                        (Pulse_Syntax_Base.comp_res c)))), (), ()) in
           Pulse_Typing.T_Equiv (g, t, c, c', d, st_eq)
 let coerce_eq : 'a 'b . 'a -> unit -> 'b =
   fun uu___1 -> fun uu___ -> (fun x -> fun uu___ -> Obj.magic x) uu___1 uu___

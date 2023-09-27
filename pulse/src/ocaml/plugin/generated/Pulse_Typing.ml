@@ -729,7 +729,7 @@ let (as_binder : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.binder) =
 type ('dummyV0, 'dummyV1, 'dummyV2) st_equiv =
   | ST_VPropEquiv of Pulse_Typing_Env.env * Pulse_Syntax_Base.comp_st *
   Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.var * unit * unit * unit *
-  unit * unit 
+  (unit, unit, unit) FStar_Reflection_Typing.equiv * unit * unit 
 let uu___is_ST_VPropEquiv uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | ST_VPropEquiv _ -> true | _ -> false
 type ('dummyV0, 'dummyV1, 'dummyV2, 'dummyV3, 'dummyV4) bind_comp =
