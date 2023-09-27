@@ -832,11 +832,11 @@ let splice (env:Env.env) (is_typed:bool) (lids:list Ident.lident) (tau:term) (rn
     let gs, sigelts =
       if is_typed
       then begin
-        let gs, (tm_opt, (s, blob), typ) = run_tactic_on_ps tau.pos tau.pos false
+        let gs, (tm_opt, blob_opt, typ) = run_tactic_on_ps tau.pos tau.pos false
           RE.e_env
           {env with gamma=[]}
           (e_tuple3 (e_option RE.e_term)
-                    (e_tuple2 e_string RE.e_term)
+                    (e_option (e_tuple2 e_string RE.e_term))
                     RE.e_term)
           tau
           tactic_already_typed
@@ -847,7 +847,11 @@ let splice (env:Env.env) (is_typed:bool) (lids:list Ident.lident) (tau:term) (rn
           | None -> S.tun
           | Some t -> t
         in
-        let sig_extension_data = [s, FStar.Compiler.Dyn.mkdyn blob] in
+        let sig_extension_data =
+          match blob_opt with
+          | None -> []
+          | Some (s,blob) -> [s, FStar.Compiler.Dyn.mkdyn blob]
+        in
         let lb = U.mk_letbinding
           (Inr (S.lid_as_fv (List.hd lids) None))
           []  // no universe polymorphism yet

@@ -1761,14 +1761,15 @@ type fstar_top_env = g:fstar_env {
  * It returns either:
  *   - Some tm, blob, typ, with a proof that `typing g tm typ`
  *   - None, blob, typ), with a proof that `exists tm. typing g tm typ`
- * The blob itself is some additional metadata that is passed by the tactic
- * and will be stored in the sigmeta_extension_data field of the enclosing sigelt.
+ * The blob itself is optional and can store some additional metadata that
+ * constructed by the tactic. If present, it will be stored in the 
+ * sigmeta_extension_data field of the enclosing sigelt.
  *
  * The blob can be used later, e.g., during extraction, and passed back to the
  * extension to perform additional processing.
  *)
 let blob = string & R.term
-let dsl_tac_result_base_t = option R.term & blob & R.typ
+let dsl_tac_result_base_t = option R.term & option blob & R.typ
 let well_typed g (e:dsl_tac_result_base_t) =
   let tm_opt, _, typ = e in
   match tm_opt with

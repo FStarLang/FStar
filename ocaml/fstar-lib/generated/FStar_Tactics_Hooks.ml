@@ -1800,9 +1800,11 @@ let (splice :
                                      FStar_Syntax_Embeddings.e_option
                                        FStar_Reflection_V2_Embeddings.e_term in
                                    let uu___10 =
-                                     FStar_Syntax_Embeddings.e_tuple2
-                                       FStar_Syntax_Embeddings.e_string
-                                       FStar_Reflection_V2_Embeddings.e_term in
+                                     let uu___11 =
+                                       FStar_Syntax_Embeddings.e_tuple2
+                                         FStar_Syntax_Embeddings.e_string
+                                         FStar_Reflection_V2_Embeddings.e_term in
+                                     FStar_Syntax_Embeddings.e_option uu___11 in
                                    FStar_Syntax_Embeddings.e_tuple3 uu___9
                                      uu___10
                                      FStar_Reflection_V2_Embeddings.e_term in
@@ -1926,18 +1928,22 @@ let (splice :
                                        (env.FStar_TypeChecker_Env.core_check)
                                    } uu___8 tau1 tactic_already_typed ps in
                                match uu___7 with
-                               | (gs, (tm_opt, (s, blob), typ)) ->
+                               | (gs, (tm_opt, blob_opt, typ)) ->
                                    let e =
                                      match tm_opt with
                                      | FStar_Pervasives_Native.None ->
                                          FStar_Syntax_Syntax.tun
                                      | FStar_Pervasives_Native.Some t -> t in
                                    let sig_extension_data =
-                                     let uu___8 =
-                                       let uu___9 =
-                                         FStar_Compiler_Dyn.mkdyn blob in
-                                       (s, uu___9) in
-                                     [uu___8] in
+                                     match blob_opt with
+                                     | FStar_Pervasives_Native.None -> []
+                                     | FStar_Pervasives_Native.Some (s, blob)
+                                         ->
+                                         let uu___8 =
+                                           let uu___9 =
+                                             FStar_Compiler_Dyn.mkdyn blob in
+                                           (s, uu___9) in
+                                         [uu___8] in
                                    let lb =
                                      let uu___8 =
                                        let uu___9 =

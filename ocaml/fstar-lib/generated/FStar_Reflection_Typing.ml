@@ -1564,8 +1564,8 @@ type fstar_env = FStar_Reflection_Types.env
 type fstar_top_env = fstar_env
 type blob = (Prims.string * FStar_Reflection_Types.term)
 type dsl_tac_result_base_t =
-  (FStar_Reflection_Types.term FStar_Pervasives_Native.option * blob *
-    FStar_Reflection_Types.typ)
+  (FStar_Reflection_Types.term FStar_Pervasives_Native.option * blob
+    FStar_Pervasives_Native.option * FStar_Reflection_Types.typ)
 type ('g, 'e) well_typed = Obj.t
 type 'g dsl_tac_result_t = dsl_tac_result_base_t
 type dsl_tac_t =
