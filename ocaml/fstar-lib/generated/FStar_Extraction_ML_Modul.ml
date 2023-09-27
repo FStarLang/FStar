@@ -2228,43 +2228,33 @@ let rec (extract_sig :
                                   let ty1 =
                                     FStar_Extraction_ML_Term.term_as_mlty g
                                       lb.FStar_Syntax_Syntax.lbtyp in
-                                  ((let uu___11 =
-                                      FStar_Syntax_Print.term_to_string
-                                        lb.FStar_Syntax_Syntax.lbtyp in
-                                    let uu___12 =
-                                      FStar_Extraction_ML_Syntax.mlty_to_string
-                                        ty1 in
-                                    FStar_Compiler_Util.print2
-                                      "Translated type of extension term from %s to %s\n"
-                                      uu___11 uu___12);
-                                   (let tysc = ([], ty1) in
-                                    let uu___11 =
-                                      FStar_Extraction_ML_UEnv.extend_lb g
-                                        lb.FStar_Syntax_Syntax.lbname
-                                        lb.FStar_Syntax_Syntax.lbtyp tysc
-                                        false in
-                                    match uu___11 with
-                                    | (g1, mlid, uu___12) ->
-                                        let mllet =
-                                          FStar_Extraction_ML_Syntax.MLM_Let
-                                            (FStar_Extraction_ML_Syntax.NonRec,
-                                              [{
-                                                 FStar_Extraction_ML_Syntax.mllb_name
-                                                   = mlid;
-                                                 FStar_Extraction_ML_Syntax.mllb_tysc
-                                                   =
-                                                   (FStar_Pervasives_Native.Some
-                                                      tysc);
-                                                 FStar_Extraction_ML_Syntax.mllb_add_unit
-                                                   = false;
-                                                 FStar_Extraction_ML_Syntax.mllb_def
-                                                   = term;
-                                                 FStar_Extraction_ML_Syntax.mllb_meta
-                                                   = meta;
-                                                 FStar_Extraction_ML_Syntax.print_typ
-                                                   = false
-                                               }]) in
-                                        (g1, [mllet])))
+                                  let tysc = ([], ty1) in
+                                  let uu___10 =
+                                    FStar_Extraction_ML_UEnv.extend_lb g
+                                      lb.FStar_Syntax_Syntax.lbname
+                                      lb.FStar_Syntax_Syntax.lbtyp tysc false in
+                                  (match uu___10 with
+                                   | (g1, mlid, uu___11) ->
+                                       let mllet =
+                                         FStar_Extraction_ML_Syntax.MLM_Let
+                                           (FStar_Extraction_ML_Syntax.NonRec,
+                                             [{
+                                                FStar_Extraction_ML_Syntax.mllb_name
+                                                  = mlid;
+                                                FStar_Extraction_ML_Syntax.mllb_tysc
+                                                  =
+                                                  (FStar_Pervasives_Native.Some
+                                                     tysc);
+                                                FStar_Extraction_ML_Syntax.mllb_add_unit
+                                                  = false;
+                                                FStar_Extraction_ML_Syntax.mllb_def
+                                                  = term;
+                                                FStar_Extraction_ML_Syntax.mllb_meta
+                                                  = meta;
+                                                FStar_Extraction_ML_Syntax.print_typ
+                                                  = false
+                                              }]) in
+                                       (g1, [mllet]))
                               | FStar_Pervasives.Inr err ->
                                   let uu___10 =
                                     let uu___11 =

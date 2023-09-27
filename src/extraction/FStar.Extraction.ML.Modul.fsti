@@ -25,7 +25,10 @@ module S = FStar.Syntax.Syntax
 type extension_extractor = 
    uenv -> FStar.Compiler.Dyn.dyn -> either (mlexpr * e_tag * mlty) string
 
-val register_extension_extractor (extension_name:string) (extractor:extension_extractor) : unit
+val register_extension_extractor
+         (extension_name:string)
+         (extractor:extension_extractor)
+  : unit
 
 val iface : Type0
 val extract_iface: uenv -> modul -> uenv * iface

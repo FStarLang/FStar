@@ -50,6 +50,7 @@ module U      = FStar.Syntax.Util
 
 exception Un_extractable
 
+
 (*
   Below, "the thesis" refers to:
     Letouzey, Pierre.
@@ -208,7 +209,6 @@ let push_tcenv_binders (u:uenv) (bs:binders) =
 //     Determines whether or not t is a type
 //     syntactic structure and type annotations
 let rec is_type_aux env t =
-    debug env (fun () -> BU.print1 "is_type_aux: %s\n" (Print.term_to_string t));
     let t = SS.compress t in
     match t.n with
     | Tm_delayed _
@@ -242,16 +242,9 @@ let rec is_type_aux env t =
       let g = UEnv.tcenv_of_uenv env in
       match try_lookup_bv g x with
       | Some (t, _) ->
-        debug env (fun () -> BU.print2 "is_type_aux calling is_arity on type: %s (%s)\n" (Print.tag_of_term t) (Print.term_to_string t));
         is_arity env t
       | _ -> (
         failwith (BU.format1 "Extraction: variable not found: %s" (Print.tag_of_term t))
-        // match (SS.compress x.sort).n with
-        // | Tm_unknown -> failwith (BU.format1 "Extraction: variable not found: %s" (Print.tag_of_term t))
-        // | _ -> 
-
-        //   debug env (fun () -> BU.print2 "is_type_aux calling is_arity on: %s (%s)\n" (Print.tag_of_term t) (Print.term_to_string x.sort));
-        //   is_arity env x.sort
       )
     )
 
@@ -686,7 +679,7 @@ let extraction_norm_steps =
 
 let normalize_for_extraction (env:uenv) (e:S.term) =
   N.normalize extraction_norm_steps (tcenv_of_uenv env) e
-  
+
 let maybe_reify_comp g (env:TcEnv.env) (c:S.comp) : S.term =
   match c |> U.comp_effect_name
           |> TcUtil.effect_extraction_mode env with
@@ -707,44 +700,45 @@ let maybe_reify_term (env:TcEnv.env) (t:S.term) (l:lident) : S.term  =
   | S.Extract_none s ->
     err_cannot_extract_effect l t.pos s (Print.term_to_string t)
 
+let has_extract_as_impure_effect (g:uenv) (fv:S.fv) =
+  TcEnv.fv_has_attr (tcenv_of_uenv g) fv FStar.Parser.Const.extract_as_impure_effect_lid
+
+let head_of_type_is_extract_as_impure_effect g t =
+  let hd, _ = U.head_and_args t in
+  match (U.un_uinst hd).n with
+  | Tm_fvar fv -> has_extract_as_impure_effect g fv
+  | _ -> false
+
 let rec translate_term_to_mlty (g:uenv) (t0:term) : mlty =
     let arg_as_mlty (g:uenv) (a, _) : mlty =
         if is_type g a //This is just an optimization; we could in principle always emit MLTY_Erased, at the expense of more magics
         then translate_term_to_mlty g a
         else MLTY_Erased
     in
-
-    let is_pulse_lib_core_stt (t:typ) : bool =
-      let h, _ = U.head_and_args_full t in
-      match (U.un_uinst h).n with
-      | Tm_fvar fv ->
-        S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.Core.stt")
-      | _ -> false
-    in
     let fv_app_as_mlty (g:uenv) (fv:fv) (args : args) : mlty =
-        // BU.print2 "fv_app_as_mlty: %s %s\n" (Print.fv_to_string fv) (Print.args_to_string args);
         if not (is_fv_type g fv)
         then MLTY_Top //it was translated as an expression or erased
-        else if S.fv_eq_lid fv ( Ident.lid_of_str "Pulse.Lib.Core.stt")
-        then let (hd, _)::_ = args in
-              translate_term_to_mlty g hd
-        else 
-            let formals, _ =
+        else (
+            if has_extract_as_impure_effect g fv
+            then let (a, _)::_ = args in
+                 translate_term_to_mlty g a
+            else (
+              let formals, _ =
                 let (_, fvty), _ = FStar.TypeChecker.Env.lookup_lid (tcenv_of_uenv g) fv.fv_name.v in
                 let fvty = N.normalize [Env.UnfoldUntil delta_constant; Env.ForExtraction] (tcenv_of_uenv g) fvty in
                 U.arrow_formals fvty in
-            let mlargs = List.map (arg_as_mlty g) args in
-            let mlargs =
+              let mlargs = List.map (arg_as_mlty g) args in
+              let mlargs =
                 let n_args = List.length args in
                 if List.length formals > n_args //it's not fully applied; so apply the rest to unit
                 then let _, rest = BU.first_N n_args formals in
                      mlargs @ (List.map (fun _ -> MLTY_Erased) rest)
                 else mlargs in
-            let nm = UEnv.mlpath_of_lident g fv.fv_name.v in
-            MLTY_Named (mlargs, nm)
-
+              let nm = UEnv.mlpath_of_lident g fv.fv_name.v in
+              MLTY_Named (mlargs, nm)
+            )
+        )
     in
-
     let aux env t =
          let t = SS.compress t in
          match t.n with
@@ -779,11 +773,14 @@ let rec translate_term_to_mlty (g:uenv) (t0:term) : mlty =
             let mlbs, env = binders_as_ml_binders env bs in
             let codom = maybe_reify_comp env (tcenv_of_uenv env) c in
             let t_ret = translate_term_to_mlty env codom in
-            let erase =
-              if is_pulse_lib_core_stt codom
+            let etag = effect_as_etag env (U.comp_effect_name c) in
+            let etag =
+              if etag = E_IMPURE then etag
+              else if head_of_type_is_extract_as_impure_effect env codom
               then E_IMPURE
-              else effect_as_etag env (U.comp_effect_name c) in
-            let _, t = List.fold_right (fun (_, t) (tag, t') -> (E_PURE, MLTY_Fun(t, tag, t'))) mlbs (erase, t_ret) in
+              else etag
+            in
+            let _, t = List.fold_right (fun (_, t) (tag, t') -> (E_PURE, MLTY_Fun(t, tag, t'))) mlbs (etag, t_ret) in
             t
 
           (*can this be a partial type application? , i.e can the result of this application be something like Type -> Type, or nat -> Type? : Yes *)

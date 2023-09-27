@@ -608,3 +608,5 @@ let (unseal_lid : FStar_Ident.lident) =
 let (document_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Stubs"; "Pprint"; "document"]
 let (issue_lid : FStar_Ident.lident) = p2l ["FStar"; "Issue"; "issue"]
+let (extract_as_impure_effect_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Pervasives"; "extract_as_impure_effect"]

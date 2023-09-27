@@ -1045,9 +1045,6 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list mlmodule1 =
               | Inl (term, e_tag, ty) ->
                 let meta = extract_metadata se.sigattrs in
                 let ty = Term.term_as_mlty g lb.lbtyp in
-                BU.print2 "Translated type of extension term from %s to %s\n"
-                  (Print.term_to_string lb.lbtyp)
-                  (mlty_to_string ty);
                 let tysc = [], ty in
                 let g, mlid, _ = UEnv.extend_lb g lb.lbname lb.lbtyp tysc false in
                 let mllet = MLM_Let (NonRec, [{ mllb_name = mlid;
