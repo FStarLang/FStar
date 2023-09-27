@@ -9,6 +9,7 @@ module FV = Pulse.Typing.FV
 module P = Pulse.Syntax.Printer
 
 open Pulse.Typing.Combinators
+open Pulse.Typing.Metatheory
 
 let format_failed_goal (g:env) (ctxt:list term) (goal:list term) =
   let terms_to_strings (ts:list term)= T.map Pulse.Syntax.Printer.term_to_string ts in
@@ -430,6 +431,40 @@ let return_in_ctxt (g:env) (y:var) (y_ppname:ppname) (u:universe) (ty:term) (ctx
       assume (comp_u c == post_hint.u) in
 
   (| _, _, d |)
+
+let match_comp_res_with_post_hint (#g:env) (#t:st_term) (#c:comp_st)
+  (d:st_typing g t c)
+  (post_hint:post_hint_opt g)
+  : T.Tac (t':st_term &
+           c':comp_st &
+           st_typing g t' c') =
+
+  match post_hint with
+  | None -> (| t, c, d |)
+  | Some { ret_ty } ->
+    let cres = comp_res c in
+    if eq_tm cres ret_ty
+    then (| t, c, d |)
+    else match Pulse.Checker.Pure.check_equiv g cres ret_ty with
+         | None ->
+           fail g (Some t.range)
+             (Printf.sprintf "Could not prove equiv for computed type %s and expected type %s"
+                (P.term_to_string cres)
+                (P.term_to_string ret_ty))
+         | Some tok ->
+           let d_equiv
+             : RT.equiv _ (elab_term cres) (elab_term ret_ty) =
+             RT.EQ_Token _ _ _ (FStar.Squash.return_squash tok) in
+           
+           let c' = with_st_comp c {(st_comp_of_comp c) with res = ret_ty } in
+           let (| cres_typing, cpre_typing, x, cpost_typing |) =
+             st_comp_typing_inversion (comp_typing_inversion (st_typing_correctness d)) in
+
+           let d_stequiv : st_equiv g c c' =
+             ST_VPropEquiv _ c c' _ cpre_typing cres_typing cpost_typing d_equiv (VE_Refl _ _) (VE_Refl _ _)
+           in
+
+           (| t, c', T_Equiv _ _ _ _ d d_stequiv |)
 
 let apply_checker_result_k (#g:env) (#ctxt:vprop) (#post_hint:post_hint_for_env g)
   (r:checker_result_t g ctxt (Some post_hint))

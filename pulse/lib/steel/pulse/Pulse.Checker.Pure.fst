@@ -380,3 +380,9 @@ let check_subtyping g t1 t2 =
          (P.term_to_string t1)
          (P.term_to_string t2))
   )
+
+let check_equiv g t1 t2 =
+  let res, issues =
+    Pulse.Typing.Util.check_equiv_now (elab_env g) (elab_term t1) (elab_term t2) in
+  T.log_issues issues;
+  res
