@@ -3450,3 +3450,50 @@ let (check_subtyping :
                                                               (t1.Pulse_Syntax_Base.range1))
                                                            uu___3)) uu___3))))
                                    uu___2))) uu___1))
+let (check_equiv :
+  Pulse_Typing_Env.env ->
+    Pulse_Syntax_Base.term ->
+      Pulse_Syntax_Base.term ->
+        ((unit, unit, unit) FStar_Tactics_Types.equiv_token
+           FStar_Pervasives_Native.option,
+          unit) FStar_Tactics_Effect.tac_repr)
+  =
+  fun g ->
+    fun t1 ->
+      fun t2 ->
+        FStar_Tactics_Effect.tac_bind
+          (FStar_Sealed.seal
+             (Obj.magic
+                (FStar_Range.mk_range "Pulse.Checker.Pure.fst"
+                   (Prims.of_int (386)) (Prims.of_int (4))
+                   (Prims.of_int (386)) (Prims.of_int (80)))))
+          (FStar_Sealed.seal
+             (Obj.magic
+                (FStar_Range.mk_range "Pulse.Checker.Pure.fst"
+                   (Prims.of_int (384)) (Prims.of_int (25))
+                   (Prims.of_int (388)) (Prims.of_int (5)))))
+          (Obj.magic
+             (Pulse_Typing_Util.check_equiv_now (Pulse_Typing.elab_env g)
+                (Pulse_Elaborate_Pure.elab_term t1)
+                (Pulse_Elaborate_Pure.elab_term t2)))
+          (fun uu___ ->
+             (fun uu___ ->
+                match uu___ with
+                | (res, issues) ->
+                    Obj.magic
+                      (FStar_Tactics_Effect.tac_bind
+                         (FStar_Sealed.seal
+                            (Obj.magic
+                               (FStar_Range.mk_range "Pulse.Checker.Pure.fst"
+                                  (Prims.of_int (387)) (Prims.of_int (2))
+                                  (Prims.of_int (387)) (Prims.of_int (21)))))
+                         (FStar_Sealed.seal
+                            (Obj.magic
+                               (FStar_Range.mk_range "Pulse.Checker.Pure.fst"
+                                  (Prims.of_int (385)) (Prims.of_int (6))
+                                  (Prims.of_int (385)) (Prims.of_int (9)))))
+                         (Obj.magic
+                            (FStar_Tactics_V2_Builtins.log_issues issues))
+                         (fun uu___1 ->
+                            FStar_Tactics_Effect.lift_div_tac
+                              (fun uu___2 -> res)))) uu___)
