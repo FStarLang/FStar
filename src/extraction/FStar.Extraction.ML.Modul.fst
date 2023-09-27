@@ -943,18 +943,6 @@ let lb_irrelevant (g:env_t) (lb:letbinding) : bool =
     not (Term.is_arity g lb.lbtyp) &&  // but not a type definition
     U.is_pure_or_ghost_effect lb.lbeff // and not top-level effectful
 
-let is_extension_definition (se:sigelt) : option string =
-  match se.sigel with
-  | Sig_let { lbs=(_, lbs) } ->
-    List.tryPick
-      (fun lb ->
-        match lb.lbdef.n with
-        | Tm_lazy { lkind = Lazy_extension s } -> Some s
-        | _ -> None)
-      lbs
-  | _ -> None
-
-
 (*****************************************************************************)
 (* Extracting the top-level definitions in a module                          *)
 (*****************************************************************************)

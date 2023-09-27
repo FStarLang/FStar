@@ -832,25 +832,26 @@ let splice (env:Env.env) (is_typed:bool) (lids:list Ident.lident) (tau:term) (rn
     let gs, sigelts =
       if is_typed
       then begin
-        let gs, (e, t) = run_tactic_on_ps tau.pos tau.pos false
+        let gs, (tm_opt, (s, blob), typ) = run_tactic_on_ps tau.pos tau.pos false
           RE.e_env
           {env with gamma=[]}
-          (e_tuple2 RE.e_term RE.e_term)
+          (e_tuple3 (e_option RE.e_term)
+                    (e_tuple2 e_string RE.e_term)
+                    RE.e_term)
           tau
           tactic_already_typed
-          ps in
-        let e, sig_extension_data = 
-          match e.n with
-          | Tm_lazy { blob; lkind=Lazy_extension s } ->
-            BU.print1 "Splice got back a blob: %s\n" s;
-            S.tun, [s, blob]
-          | _ -> 
-            e, []
+          ps 
         in
+        let e =
+          match tm_opt with
+          | None -> S.tun
+          | Some t -> t
+        in
+        let sig_extension_data = [s, FStar.Compiler.Dyn.mkdyn blob] in
         let lb = U.mk_letbinding
           (Inr (S.lid_as_fv (List.hd lids) None))
           []  // no universe polymorphism yet
-          t
+          typ
           PC.effect_Tot_lid  // only Tot top-level effect so far
           e
           []

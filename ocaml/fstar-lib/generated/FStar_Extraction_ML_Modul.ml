@@ -2046,27 +2046,6 @@ let (lb_irrelevant : env_t -> FStar_Syntax_Syntax.letbinding -> Prims.bool) =
         &&
         (FStar_Syntax_Util.is_pure_or_ghost_effect
            lb.FStar_Syntax_Syntax.lbeff)
-let (is_extension_definition :
-  FStar_Syntax_Syntax.sigelt -> Prims.string FStar_Pervasives_Native.option)
-  =
-  fun se ->
-    match se.FStar_Syntax_Syntax.sigel with
-    | FStar_Syntax_Syntax.Sig_let
-        { FStar_Syntax_Syntax.lbs1 = (uu___, lbs);
-          FStar_Syntax_Syntax.lids1 = uu___1;_}
-        ->
-        FStar_Compiler_List.tryPick
-          (fun lb ->
-             match (lb.FStar_Syntax_Syntax.lbdef).FStar_Syntax_Syntax.n with
-             | FStar_Syntax_Syntax.Tm_lazy
-                 { FStar_Syntax_Syntax.blob = uu___2;
-                   FStar_Syntax_Syntax.lkind =
-                     FStar_Syntax_Syntax.Lazy_extension s;
-                   FStar_Syntax_Syntax.ltyp = uu___3;
-                   FStar_Syntax_Syntax.rng = uu___4;_}
-                 -> FStar_Pervasives_Native.Some s
-             | uu___2 -> FStar_Pervasives_Native.None) lbs
-    | uu___ -> FStar_Pervasives_Native.None
 let rec (extract_sig :
   env_t ->
     FStar_Syntax_Syntax.sigelt ->
