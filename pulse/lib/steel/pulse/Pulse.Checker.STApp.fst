@@ -18,9 +18,14 @@ let canon_comp (c:comp_st) : comp_st =
   match readback_comp (elab_comp c) with
   | None -> c
   | Some (C_Tot _) -> c //should be impossible
-  | Some c' ->
-    c'
-  
+  | Some c' -> c'
+
+#push-options "--admit_smt_queries true"
+let canon_comp_eq_res (g:env) (c:comp_st)
+  : RT.equiv (elab_env g) (elab_term (comp_res c)) (elab_term (comp_res (canon_comp c)))
+  = RT.EQ_Refl _ _ 
+#pop-options
+
 let canonicalize_st_typing (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
   : st_typing g t (canon_comp c)
   = let c' = canon_comp c in
@@ -30,7 +35,7 @@ let canonicalize_st_typing (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c
     assume (st_equiv_pre c c');
     let st_eq 
       : st_equiv g c c'
-      = ST_VPropEquiv g c c' x (magic ()) (magic()) (magic()) (RT.EQ_Refl _ _) (magic()) (magic())
+      = ST_VPropEquiv g c c' x (magic ()) (magic()) (magic()) (canon_comp_eq_res g c) (magic()) (magic())
     in
     T_Equiv _ _ _ _ d st_eq
 
@@ -100,6 +105,8 @@ let check
   let range = t.range in
 
   let (| uvs, g, t |) = instantaite_implicits g0 t in
+  assert (g `env_extends` g0);
+  let post_hint : post_hint_opt g = post_hint in
 
   let Tm_STApp { head; arg_qual=qual; arg } = t.term in
 
