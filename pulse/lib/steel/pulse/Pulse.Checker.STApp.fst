@@ -175,8 +175,7 @@ let check
           fail g (Some t.range)
             "Expected an effectful application; got a pure term (could it be partially applied by mistake?)" in
 
-        let (| t, c, d |) = match_comp_res_with_post_hint d post_hint in
-        Prover.prove_post_hint (Prover.try_frame_pre_uvs ctxt_typing uvs d res_ppname) post_hint t.range
+        Prover.prove_post_hint (Prover.try_frame_pre_uvs ctxt_typing uvs (match_comp_res_with_post_hint d post_hint) res_ppname) post_hint t.range
 
     else fail g (Some t.range) (Printf.sprintf "Unexpected qualifier in head type %s of stateful application: head = %s, arg = %s"
                 (P.term_to_string ty_head)

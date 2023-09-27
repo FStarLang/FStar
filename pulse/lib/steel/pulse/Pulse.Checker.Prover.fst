@@ -280,10 +280,12 @@ let prove
 #push-options "--z3rlimit_factor 8 --fuel 0 --ifuel 1 --retry 5"
 let try_frame_pre_uvs (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_vprop)
   (uvs:env { disjoint g uvs })
-  (#t:st_term) (#c:comp_st) (d:st_typing (push_env g uvs) t c)
+  (d:(t:st_term & c:comp_st & st_typing (push_env g uvs) t c))
   (res_ppname:ppname)
 
   : T.Tac (checker_result_t g ctxt None) =
+
+  let (| t, c, d |) = d in
 
   let g = push_context g "try_frame_pre" t.range in
 
@@ -345,7 +347,8 @@ let try_frame_pre_uvs (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_v
 #pop-options
 
 let try_frame_pre (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_vprop)
-  (#t:st_term) (#c:comp_st) (d:st_typing g t c) (res_ppname:ppname)
+  (d:(t:st_term & c:comp_st & st_typing g t c))
+  (res_ppname:ppname)
 
   : T.Tac (checker_result_t g ctxt None) =
 
