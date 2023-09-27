@@ -417,7 +417,7 @@ let (check :
                                                                     (Prims.of_int (53))
                                                                     (Prims.of_int (59))
                                                                     (Prims.of_int (56))
-                                                                    (Prims.of_int (79)))))
+                                                                    (Prims.of_int (121)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___5 ->
@@ -446,7 +446,7 @@ let (check :
                                                                     (Prims.of_int (54))
                                                                     (Prims.of_int (24))
                                                                     (Prims.of_int (56))
-                                                                    (Prims.of_int (79)))))
+                                                                    (Prims.of_int (121)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___5 ->
@@ -472,7 +472,7 @@ let (check :
                                                                     (Prims.of_int (56))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (56))
-                                                                    (Prims.of_int (79)))))
+                                                                    (Prims.of_int (121)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___5 ->
@@ -496,7 +496,7 @@ let (check :
                                                                     (Prims.of_int (56))
                                                                     (Prims.of_int (22))
                                                                     (Prims.of_int (56))
-                                                                    (Prims.of_int (61)))))
+                                                                    (Prims.of_int (103)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -504,10 +504,28 @@ let (check :
                                                                     (Prims.of_int (56))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (56))
-                                                                    (Prims.of_int (79)))))
+                                                                    (Prims.of_int (121)))))
                                                                     (Obj.magic
-                                                                    (Pulse_Checker_Prover.try_frame_pre
-                                                                    g pre ()
+                                                                    (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "Pulse.Checker.Par.fst"
+                                                                    (Prims.of_int (56))
+                                                                    (Prims.of_int (48))
+                                                                    (Prims.of_int (56))
+                                                                    (Prims.of_int (91)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "Pulse.Checker.Par.fst"
+                                                                    (Prims.of_int (56))
+                                                                    (Prims.of_int (22))
+                                                                    (Prims.of_int (56))
+                                                                    (Prims.of_int (103)))))
+                                                                    (Obj.magic
+                                                                    (Pulse_Checker_Base.match_comp_res_with_post_hint
+                                                                    g1
                                                                     (Pulse_Typing.wr
                                                                     (Pulse_Syntax_Base.Tm_Par
                                                                     {
@@ -531,7 +549,17 @@ let (check :
                                                                     (Pulse_Typing.comp_par
                                                                     cL cR x)
                                                                     d
+                                                                    post_hint))
+                                                                    (fun
+                                                                    uu___5 ->
+                                                                    (fun
+                                                                    uu___5 ->
+                                                                    Obj.magic
+                                                                    (Pulse_Checker_Prover.try_frame_pre
+                                                                    g pre ()
+                                                                    uu___5
                                                                     res_ppname))
+                                                                    uu___5)))
                                                                     (fun
                                                                     uu___5 ->
                                                                     (fun
