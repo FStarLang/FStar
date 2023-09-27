@@ -163,7 +163,7 @@ let paren s = "(" ^ s ^ ")"
    redexes that should first be reduced. *)
 let rec tag_of_term (t:term) = match t.n with
   | Tm_bvar x -> "Tm_bvar: "   ^ db_to_string x
-  | Tm_name x -> "Tm_name: " ^ nm_to_string x ^ "@" ^ (tag_of_term x.sort)
+  | Tm_name x -> "Tm_name: " ^ nm_to_string x
   | Tm_fvar x -> "Tm_fvar: "   ^ lid_to_string x.fv_name.v
   | Tm_uinst _ -> "Tm_uinst"
   | Tm_constant _ -> "Tm_constant"
@@ -412,9 +412,7 @@ and bqual_to_string' s = function
   | None -> s
 
 and aqual_to_string' s = function
-  | Some aq -> 
-    (if aq.aqual_implicit then "#" else "") ^
-    (match aq.aqual_attributes with | [] -> "" | l -> "@[" ^ String.concat "; " (List.map term_to_string l) ^ "]") ^ s
+  | Some { aqual_implicit=true } -> "#" ^ s
   | _ -> s
   
 and binder_to_string' is_arrow b =

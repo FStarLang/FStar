@@ -267,13 +267,7 @@ let rec (tag_of_term : FStar_Syntax_Syntax.term -> Prims.string) =
     | FStar_Syntax_Syntax.Tm_bvar x ->
         let uu___ = db_to_string x in Prims.op_Hat "Tm_bvar: " uu___
     | FStar_Syntax_Syntax.Tm_name x ->
-        let uu___ =
-          let uu___1 = nm_to_string x in
-          let uu___2 =
-            let uu___3 = tag_of_term x.FStar_Syntax_Syntax.sort in
-            Prims.op_Hat "@" uu___3 in
-          Prims.op_Hat uu___1 uu___2 in
-        Prims.op_Hat "Tm_name: " uu___
+        let uu___ = nm_to_string x in Prims.op_Hat "Tm_name: " uu___
     | FStar_Syntax_Syntax.Tm_fvar x ->
         let uu___ =
           lid_to_string (x.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
@@ -862,22 +856,10 @@ and (aqual_to_string' :
   fun s ->
     fun uu___ ->
       match uu___ with
-      | FStar_Pervasives_Native.Some aq ->
-          let uu___1 =
-            let uu___2 =
-              match aq.FStar_Syntax_Syntax.aqual_attributes with
-              | [] -> ""
-              | l ->
-                  let uu___3 =
-                    let uu___4 =
-                      let uu___5 = FStar_Compiler_List.map term_to_string l in
-                      FStar_String.concat "; " uu___5 in
-                    Prims.op_Hat uu___4 "]" in
-                  Prims.op_Hat "@[" uu___3 in
-            Prims.op_Hat uu___2 s in
-          Prims.op_Hat
-            (if aq.FStar_Syntax_Syntax.aqual_implicit then "#" else "")
-            uu___1
+      | FStar_Pervasives_Native.Some
+          { FStar_Syntax_Syntax.aqual_implicit = true;
+            FStar_Syntax_Syntax.aqual_attributes = uu___1;_}
+          -> Prims.op_Hat "#" s
       | uu___1 -> s
 and (binder_to_string' :
   Prims.bool -> FStar_Syntax_Syntax.binder -> Prims.string) =

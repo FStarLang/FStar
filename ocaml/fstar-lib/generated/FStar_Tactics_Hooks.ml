@@ -1927,82 +1927,63 @@ let (splice :
                                    } uu___8 tau1 tactic_already_typed ps in
                                match uu___7 with
                                | (gs, (tm_opt, (s, blob), typ)) ->
-                                   (FStar_Compiler_Util.print1
-                                      "Got back blob from extension %s\n" s;
-                                    (match blob.FStar_Syntax_Syntax.n with
-                                     | FStar_Syntax_Syntax.Tm_lazy
-                                         {
-                                           FStar_Syntax_Syntax.blob = uu___10;
-                                           FStar_Syntax_Syntax.lkind =
-                                             FStar_Syntax_Syntax.Lazy_extension
-                                             s1;
-                                           FStar_Syntax_Syntax.ltyp = uu___11;
-                                           FStar_Syntax_Syntax.rng = uu___12;_}
-                                         ->
-                                         FStar_Compiler_Util.print1
-                                           "Blob has lazy kind %s\n" s1
-                                     | uu___10 ->
-                                         FStar_Compiler_Util.print_string
-                                           "unknown blob type");
-                                    (let e =
-                                       match tm_opt with
-                                       | FStar_Pervasives_Native.None ->
-                                           (FStar_Compiler_Util.print_string
-                                              "Elaborated derivation is None";
-                                            FStar_Syntax_Syntax.tun)
-                                       | FStar_Pervasives_Native.Some t -> t in
-                                     let sig_extension_data =
-                                       let uu___10 =
-                                         let uu___11 =
-                                           FStar_Compiler_Dyn.mkdyn blob in
-                                         (s, uu___11) in
-                                       [uu___10] in
-                                     let lb =
-                                       let uu___10 =
-                                         let uu___11 =
-                                           let uu___12 =
-                                             FStar_Compiler_List.hd lids in
-                                           FStar_Syntax_Syntax.lid_as_fv
-                                             uu___12
-                                             FStar_Pervasives_Native.None in
-                                         FStar_Pervasives.Inr uu___11 in
-                                       FStar_Syntax_Util.mk_letbinding
-                                         uu___10 [] typ
-                                         FStar_Parser_Const.effect_Tot_lid e
-                                         [] rng in
-                                     (gs,
-                                       [{
-                                          FStar_Syntax_Syntax.sigel =
-                                            (FStar_Syntax_Syntax.Sig_let
-                                               {
-                                                 FStar_Syntax_Syntax.lbs1 =
-                                                   (false, [lb]);
-                                                 FStar_Syntax_Syntax.lids1 =
-                                                   lids
-                                               });
-                                          FStar_Syntax_Syntax.sigrng = rng;
-                                          FStar_Syntax_Syntax.sigquals =
-                                            [FStar_Syntax_Syntax.Visible_default];
-                                          FStar_Syntax_Syntax.sigmeta =
-                                            {
-                                              FStar_Syntax_Syntax.sigmeta_active
-                                                =
-                                                (FStar_Syntax_Syntax.default_sigmeta.FStar_Syntax_Syntax.sigmeta_active);
-                                              FStar_Syntax_Syntax.sigmeta_fact_db_ids
-                                                =
-                                                (FStar_Syntax_Syntax.default_sigmeta.FStar_Syntax_Syntax.sigmeta_fact_db_ids);
-                                              FStar_Syntax_Syntax.sigmeta_admit
-                                                =
-                                                (FStar_Syntax_Syntax.default_sigmeta.FStar_Syntax_Syntax.sigmeta_admit);
-                                              FStar_Syntax_Syntax.sigmeta_extension_data
-                                                = sig_extension_data
-                                            };
-                                          FStar_Syntax_Syntax.sigattrs = [];
-                                          FStar_Syntax_Syntax.sigopens_and_abbrevs
-                                            = [];
-                                          FStar_Syntax_Syntax.sigopts =
-                                            FStar_Pervasives_Native.None
-                                        }])))
+                                   let e =
+                                     match tm_opt with
+                                     | FStar_Pervasives_Native.None ->
+                                         FStar_Syntax_Syntax.tun
+                                     | FStar_Pervasives_Native.Some t -> t in
+                                   let sig_extension_data =
+                                     let uu___8 =
+                                       let uu___9 =
+                                         FStar_Compiler_Dyn.mkdyn blob in
+                                       (s, uu___9) in
+                                     [uu___8] in
+                                   let lb =
+                                     let uu___8 =
+                                       let uu___9 =
+                                         let uu___10 =
+                                           FStar_Compiler_List.hd lids in
+                                         FStar_Syntax_Syntax.lid_as_fv
+                                           uu___10
+                                           FStar_Pervasives_Native.None in
+                                       FStar_Pervasives.Inr uu___9 in
+                                     FStar_Syntax_Util.mk_letbinding uu___8
+                                       [] typ
+                                       FStar_Parser_Const.effect_Tot_lid e []
+                                       rng in
+                                   (gs,
+                                     [{
+                                        FStar_Syntax_Syntax.sigel =
+                                          (FStar_Syntax_Syntax.Sig_let
+                                             {
+                                               FStar_Syntax_Syntax.lbs1 =
+                                                 (false, [lb]);
+                                               FStar_Syntax_Syntax.lids1 =
+                                                 lids
+                                             });
+                                        FStar_Syntax_Syntax.sigrng = rng;
+                                        FStar_Syntax_Syntax.sigquals =
+                                          [FStar_Syntax_Syntax.Visible_default];
+                                        FStar_Syntax_Syntax.sigmeta =
+                                          {
+                                            FStar_Syntax_Syntax.sigmeta_active
+                                              =
+                                              (FStar_Syntax_Syntax.default_sigmeta.FStar_Syntax_Syntax.sigmeta_active);
+                                            FStar_Syntax_Syntax.sigmeta_fact_db_ids
+                                              =
+                                              (FStar_Syntax_Syntax.default_sigmeta.FStar_Syntax_Syntax.sigmeta_fact_db_ids);
+                                            FStar_Syntax_Syntax.sigmeta_admit
+                                              =
+                                              (FStar_Syntax_Syntax.default_sigmeta.FStar_Syntax_Syntax.sigmeta_admit);
+                                            FStar_Syntax_Syntax.sigmeta_extension_data
+                                              = sig_extension_data
+                                          };
+                                        FStar_Syntax_Syntax.sigattrs = [];
+                                        FStar_Syntax_Syntax.sigopens_and_abbrevs
+                                          = [];
+                                        FStar_Syntax_Syntax.sigopts =
+                                          FStar_Pervasives_Native.None
+                                      }])
                              else
                                (let uu___8 =
                                   FStar_Syntax_Embeddings.e_list
