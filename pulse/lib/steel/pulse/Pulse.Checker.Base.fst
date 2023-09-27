@@ -89,11 +89,12 @@ let ve_unit_r g (p:term) : vprop_equiv g (tm_star p tm_emp) p =
 
 let st_equiv_trans (#g:env) (#c0 #c1 #c2:comp) (d01:st_equiv g c0 c1) (d12:st_equiv g c1 c2)
   : option (st_equiv g c0 c2)
-  = let ST_VPropEquiv _f _c0 _c1 x c0_pre_typing c0_res_typing c0_post_typing eq_pre_01 eq_post_01 = d01 in
-    let ST_VPropEquiv _f _c1 _c2 y c1_pre_typing c1_res_typing c1_post_typing eq_pre_12 eq_post_12 = d12 in
-    if x = y 
+  = let ST_VPropEquiv _f _c0 _c1 x c0_pre_typing c0_res_typing c0_post_typing eq_res_01 eq_pre_01 eq_post_01 = d01 in
+    let ST_VPropEquiv _f _c1 _c2 y c1_pre_typing c1_res_typing c1_post_typing eq_res_12 eq_pre_12 eq_post_12 = d12 in
+    if x = y && eq_tm (comp_res c0) (comp_res c1)
     then Some (
-          ST_VPropEquiv g c0 c2 x c0_pre_typing c0_res_typing c0_post_typing 
+          ST_VPropEquiv g c0 c2 x c0_pre_typing c0_res_typing c0_post_typing
+            (RT.EQ_Trans _ _ _ _ eq_res_01 eq_res_12)
             (VE_Trans _ _ _ _ eq_pre_01 eq_pre_12)
             (VE_Trans _ _ _ _ eq_post_01 eq_post_12)
     )
@@ -122,7 +123,7 @@ let st_equiv_post (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
       let (| u_of, pre_typing, x, post_typing |) = Metatheory.(st_comp_typing_inversion (comp_typing_inversion (st_typing_correctness d))) in
       let veq = veq x in
       let st_equiv : st_equiv g c c' =
-          ST_VPropEquiv g c c' x pre_typing u_of post_typing (VE_Refl _ _) veq
+          ST_VPropEquiv g c c' x pre_typing u_of post_typing (RT.EQ_Refl _ _) (VE_Refl _ _) veq
       in
       t_equiv d st_equiv
 
@@ -165,7 +166,7 @@ let st_equiv_pre (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
       let (| u_of, pre_typing, x, post_typing |) =
         Metatheory.(st_comp_typing_inversion (comp_typing_inversion (st_typing_correctness d))) in
       let st_equiv : st_equiv g c c' =
-          ST_VPropEquiv g c c' x pre_typing u_of post_typing veq (VE_Refl _ _)
+          ST_VPropEquiv g c c' x pre_typing u_of post_typing (RT.EQ_Refl _ _) veq (VE_Refl _ _)
       in
       t_equiv d st_equiv
 
