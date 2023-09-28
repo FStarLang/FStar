@@ -643,7 +643,7 @@ let rec extend_env_l_lookup_fvar (g:R.env) (sg:src_env) (fv:R.fv)
 let subtyping_soundness #f (#sg:src_env) (#t0 #t1:src_ty) (ds:sub_typing f sg t0 t1)
   : GTot (RT.sub_typing (extend_env_l f sg) (elab_ty t0) (elab_ty t1))
   = match ds with
-    | S_Refl _ _ -> RT.Rel_equiv _ _ _ _ (RT.EQ_Refl _ _)
+    | S_Refl _ _ -> RT.Rel_equiv _ _ _ _ (RT.Rel_refl _ _ _)
     | S_ELab _ _ _ d -> d
 
 #push-options "--query_stats --fuel 8 --ifuel 2 --z3rlimit_factor 4"
