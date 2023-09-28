@@ -1019,16 +1019,19 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list mlmodule1 =
           in
           env, impl
 
+        (* Extension extraction is only supported for non-recursive let bindings *)
         | Sig_let { lbs=(false, [lb]) } when (Cons? se.sigmeta.sigmeta_extension_data) -> (
-           let ((ext, blob)::_) = se.sigmeta.sigmeta_extension_data in
-           match lookup_extension_extractor ext with
+           match List.tryPick 
+                  (fun (ext, blob) ->
+                      match lookup_extension_extractor ext with
+                      | None -> None
+                      | Some extractor -> Some (ext, blob, extractor))
+                  se.sigmeta.sigmeta_extension_data
+           with
            | None ->
-              Errors.raise_error
-                (Errors.Fatal_ExtractionUnsupported,
-                 BU.format1 "Extension %s not registered for extraction" ext)
-                 se.sigrng
+             extract_sig_let g se
 
-           | Some extractor ->
+           | Some (ext, blob, extractor) ->
               match extractor g blob with
               | Inl (term, e_tag, ty) ->
                 let meta = extract_metadata se.sigattrs in
@@ -1048,156 +1051,11 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list mlmodule1 =
                    BU.format2 "Extension %s failed to extract term: %s" ext err)
                   se.sigrng
           )
+          
+        | Sig_let _ ->
+          extract_sig_let g se
 
-
-        | Sig_let {lbs} ->
-          let attrs = se.sigattrs in
-          let quals = se.sigquals in
-          let maybe_postprocess_lbs lbs =
-            let post_tau =
-              match U.extract_attr' PC.postprocess_extr_with attrs with
-              | None -> None
-              | Some (_, (tau, None)::_) -> Some tau
-              | Some _ ->
-                  Errors.log_issue
-                      se.sigrng
-                      (Errors.Warning_UnrecognizedAttribute,
-                       "Ill-formed application of 'postprocess_for_extraction_with'");
-                  None
-            in
-            let postprocess_lb (tau:term) (lb:letbinding) : letbinding =
-              let env = tcenv_of_uenv g in
-              let lbdef = 
-                Profiling.profile
-                     (fun () -> Env.postprocess env tau lb.lbtyp lb.lbdef)
-                     (Some (Ident.string_of_lid (Env.current_module env)))
-                     "FStar.Extraction.ML.Module.post_process_for_extraction"
-              in
-              { lb with lbdef = lbdef }
-            in
-            match post_tau with
-            | None -> lbs
-            | Some tau -> fst lbs, List.map (postprocess_lb tau) (snd lbs)
-          in
-          let maybe_normalize_for_extraction lbs = 
-            let norm_steps =
-              match U.extract_attr' PC.normalize_for_extraction_lid attrs with
-              | None -> None
-              | Some (_, (steps, None)::_) ->
-                let steps = 
-                  //just normalizing the steps themselves, so that the user
-                  //does not have to write a literal at every use of the attribute
-                  N.normalize 
-                    [Env.UnfoldUntil delta_constant; Env.Zeta; Env.Iota; Env.Primops]
-                    (tcenv_of_uenv g)
-                    steps
-                in
-                begin
-                match Cfg.try_unembed_simple (EMB.e_list EMB.e_norm_step) steps with
-                | Some steps -> 
-                  Some (Cfg.translate_norm_steps steps)
-                | _ -> 
-                  Errors.log_issue 
-                      se.sigrng
-                      (Errors.Warning_UnrecognizedAttribute,
-                       BU.format1
-                         "Ill-formed application of 'normalize_for_extraction': normalization steps '%s' could not be interpreted"
-                         (Print.term_to_string steps));
-                  None
-                end
-              | Some _ ->
-                  Errors.log_issue 
-                      se.sigrng
-                      (Errors.Warning_UnrecognizedAttribute,
-                       "Ill-formed application of 'normalize_for_extraction'");
-                  None
-            in
-            let norm_one_lb steps lb =
-              let env = tcenv_of_uenv g in
-              let env = {env with erase_erasable_args=true} in
-              let lbd = 
-                Profiling.profile
-                     (fun () -> N.normalize steps env lb.lbdef)
-                     (Some (Ident.string_of_lid (Env.current_module env)))
-                     "FStar.Extraction.ML.Module.normalize_for_extraction"
-              in
-              { lb with lbdef = lbd }
-            in
-            match norm_steps with
-            | None -> lbs
-            | Some steps ->
-              fst lbs, List.map (norm_one_lb steps) (snd lbs)
-          in
-          let ml_let, _, _ =
-            let lbs = maybe_normalize_for_extraction (maybe_postprocess_lbs lbs) in
-            Term.term_as_mlexpr
-                    g
-                    (mk (Tm_let {lbs; body=U.exp_false_bool}) se.sigrng)
-          in
-          begin
-          match ml_let.expr with
-          | MLE_Let((flavor, bindings), _) ->
-
-            (* Treatment of qualifiers: we synthesize the metadata that goes
-                * onto each let-binding as follows:
-                * - F* keywords (qualifiers, such as "inline_for_extraction" or
-                *   "private") are in [quals] and are distributed on each
-                *   let-binding in the mutually recursive block of bindings
-                * - F* attributes (custom arbitrary terms, such as "[@ GcType
-                *   ]"), are attached to the block of mutually recursive
-                *   definitions, we don't have syntax YET for attaching these
-                *   to individual definitions
-                * - some extra information is looked up here and added as a
-                *   bonus; in particular, the MustDisappear attribute (that
-                *   StackInline bestows upon an individual let-binding) is
-                *   specific to each let-binding! *)
-            let flags = List.choose flag_of_qual quals in
-            let flags' = extract_metadata attrs in
-
-            let g, ml_lbs' =
-                List.fold_left2
-                    (fun (env, ml_lbs) (ml_lb:mllb) {lbname=lbname; lbtyp=t } ->
-                        if ml_lb.mllb_meta |> List.contains Erased
-                        then env, ml_lbs
-                        else
-                            // debug g (fun () -> printfn "Translating source lb %s at type %s to %A" (Print.lbname_to_string lbname) (Print.typ_to_string t) (must (mllb.mllb_tysc)));
-                            let lb_lid = (right lbname).fv_name.v in
-                            let flags'' =
-                                match (SS.compress t).n with
-                                | Tm_arrow {comp={ n = Comp { effect_name = e }}}
-                                    when string_of_lid e = "FStar.HyperStack.ST.StackInline" ->
-                                    [ StackInline ]
-                                | _ ->
-                                    []
-                            in
-                            let meta = flags @ flags' @ flags'' in
-                            let ml_lb = { ml_lb with mllb_meta = meta } in
-                            let g, ml_lb =
-                                if quals |> BU.for_some (function Projector _ -> true | _ -> false) //projector names have to mangled
-                                then let env, mls, _ =
-                                         UEnv.extend_fv
-                                                env
-                                                (right lbname)
-                                                (must ml_lb.mllb_tysc)
-                                                ml_lb.mllb_add_unit
-                                     in
-                                     env, {ml_lb with mllb_name=mls }
-                                else let env, _, _ = UEnv.extend_lb env lbname t (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit in
-                                     env, ml_lb in
-                        g, ml_lb::ml_lbs)
-                (g, [])
-                bindings
-                (snd lbs) in
-            g,
-            [MLM_Loc (Util.mlloc_of_range se.sigrng);
-             MLM_Let (flavor, List.rev ml_lbs')]
-            @ maybe_register_plugin g se
-
-        | _ ->
-          failwith (BU.format1 "Impossible: Translated a let to a non-let: %s" (Code.string_of_mlexpr (current_module_of_uenv g) ml_let))
-        end
-
-       | Sig_declare_typ {lid; t} ->
+        | Sig_declare_typ {lid; t} ->
          let quals = se.sigquals in
          if quals |> List.contains Assumption
          && not (TcUtil.must_erase_for_extraction (tcenv_of_uenv g) t)
@@ -1229,7 +1087,159 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list mlmodule1 =
          U.process_pragma p se.sigrng;
          g, []
   )
- 
+
+and extract_sig_let (g:uenv) (se:sigelt) : uenv * list mlmodule1 =
+  if not (Sig_let? se.sigel)
+  then failwith "Impossible: should only be called with Sig_let"
+  else begin
+    let Sig_let { lbs } = se.sigel in
+    let attrs = se.sigattrs in
+    let quals = se.sigquals in
+    let maybe_postprocess_lbs lbs =
+      let post_tau =
+        match U.extract_attr' PC.postprocess_extr_with attrs with
+        | None -> None
+        | Some (_, (tau, None)::_) -> Some tau
+        | Some _ ->
+            Errors.log_issue
+                se.sigrng
+                (Errors.Warning_UnrecognizedAttribute,
+                  "Ill-formed application of 'postprocess_for_extraction_with'");
+            None
+      in
+      let postprocess_lb (tau:term) (lb:letbinding) : letbinding =
+        let env = tcenv_of_uenv g in
+        let lbdef = 
+          Profiling.profile
+                (fun () -> Env.postprocess env tau lb.lbtyp lb.lbdef)
+                (Some (Ident.string_of_lid (Env.current_module env)))
+                "FStar.Extraction.ML.Module.post_process_for_extraction"
+        in
+        { lb with lbdef = lbdef }
+      in
+      match post_tau with
+      | None -> lbs
+      | Some tau -> fst lbs, List.map (postprocess_lb tau) (snd lbs)
+    in
+    let maybe_normalize_for_extraction lbs = 
+      let norm_steps =
+        match U.extract_attr' PC.normalize_for_extraction_lid attrs with
+        | None -> None
+        | Some (_, (steps, None)::_) ->
+          let steps = 
+            //just normalizing the steps themselves, so that the user
+            //does not have to write a literal at every use of the attribute
+            N.normalize 
+              [Env.UnfoldUntil delta_constant; Env.Zeta; Env.Iota; Env.Primops]
+              (tcenv_of_uenv g)
+              steps
+          in
+          begin
+          match Cfg.try_unembed_simple (EMB.e_list EMB.e_norm_step) steps with
+          | Some steps -> 
+            Some (Cfg.translate_norm_steps steps)
+          | _ -> 
+            Errors.log_issue 
+                se.sigrng
+                (Errors.Warning_UnrecognizedAttribute,
+                  BU.format1
+                    "Ill-formed application of 'normalize_for_extraction': normalization steps '%s' could not be interpreted"
+                    (Print.term_to_string steps));
+            None
+          end
+        | Some _ ->
+            Errors.log_issue 
+                se.sigrng
+                (Errors.Warning_UnrecognizedAttribute,
+                  "Ill-formed application of 'normalize_for_extraction'");
+            None
+      in
+      let norm_one_lb steps lb =
+        let env = tcenv_of_uenv g in
+        let env = {env with erase_erasable_args=true} in
+        let lbd = 
+          Profiling.profile
+                (fun () -> N.normalize steps env lb.lbdef)
+                (Some (Ident.string_of_lid (Env.current_module env)))
+                "FStar.Extraction.ML.Module.normalize_for_extraction"
+        in
+        { lb with lbdef = lbd }
+      in
+      match norm_steps with
+      | None -> lbs
+      | Some steps ->
+        fst lbs, List.map (norm_one_lb steps) (snd lbs)
+    in
+    let ml_let, _, _ =
+      let lbs = maybe_normalize_for_extraction (maybe_postprocess_lbs lbs) in
+      Term.term_as_mlexpr
+              g
+              (mk (Tm_let {lbs; body=U.exp_false_bool}) se.sigrng)
+    in
+    begin
+    match ml_let.expr with
+    | MLE_Let((flavor, bindings), _) ->
+
+      (* Treatment of qualifiers: we synthesize the metadata that goes
+          * onto each let-binding as follows:
+          * - F* keywords (qualifiers, such as "inline_for_extraction" or
+          *   "private") are in [quals] and are distributed on each
+          *   let-binding in the mutually recursive block of bindings
+          * - F* attributes (custom arbitrary terms, such as "[@ GcType
+          *   ]"), are attached to the block of mutually recursive
+          *   definitions, we don't have syntax YET for attaching these
+          *   to individual definitions
+          * - some extra information is looked up here and added as a
+          *   bonus; in particular, the MustDisappear attribute (that
+          *   StackInline bestows upon an individual let-binding) is
+          *   specific to each let-binding! *)
+      let flags = List.choose flag_of_qual quals in
+      let flags' = extract_metadata attrs in
+
+      let g, ml_lbs' =
+          List.fold_left2
+              (fun (env, ml_lbs) (ml_lb:mllb) {lbname=lbname; lbtyp=t } ->
+                  if ml_lb.mllb_meta |> List.contains Erased
+                  then env, ml_lbs
+                  else
+                      // debug g (fun () -> printfn "Translating source lb %s at type %s to %A" (Print.lbname_to_string lbname) (Print.typ_to_string t) (must (mllb.mllb_tysc)));
+                      let lb_lid = (right lbname).fv_name.v in
+                      let flags'' =
+                          match (SS.compress t).n with
+                          | Tm_arrow {comp={ n = Comp { effect_name = e }}}
+                              when string_of_lid e = "FStar.HyperStack.ST.StackInline" ->
+                              [ StackInline ]
+                          | _ ->
+                              []
+                      in
+                      let meta = flags @ flags' @ flags'' in
+                      let ml_lb = { ml_lb with mllb_meta = meta } in
+                      let g, ml_lb =
+                          if quals |> BU.for_some (function Projector _ -> true | _ -> false) //projector names have to mangled
+                          then let env, mls, _ =
+                                    UEnv.extend_fv
+                                          env
+                                          (right lbname)
+                                          (must ml_lb.mllb_tysc)
+                                          ml_lb.mllb_add_unit
+                                in
+                                env, {ml_lb with mllb_name=mls }
+                          else let env, _, _ = UEnv.extend_lb env lbname t (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit in
+                                env, ml_lb in
+                  g, ml_lb::ml_lbs)
+          (g, [])
+          bindings
+          (snd lbs) in
+      g,
+      [MLM_Loc (Util.mlloc_of_range se.sigrng);
+        MLM_Let (flavor, List.rev ml_lbs')]
+      @ maybe_register_plugin g se
+
+    | _ ->
+      failwith (BU.format1 "Impossible: Translated a let to a non-let: %s" (Code.string_of_mlexpr (current_module_of_uenv g) ml_let))
+    end
+  end
+
 let extract' (g:uenv) (m:modul) : uenv * option mllib =
   let _ = Options.restore_cmd_line_options true in
   let name, g = UEnv.extend_with_module_name g m.name in
