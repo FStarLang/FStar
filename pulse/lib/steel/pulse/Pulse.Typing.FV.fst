@@ -407,7 +407,8 @@ let freevars_ref (t:term)
   : Lemma (freevars (mk_ref t) == freevars t)
   = admit()
 
-#push-options "--fuel 2 --ifuel 1 --z3rlimit_factor 10 --query_stats"
+// FIXME: tame this proof
+#push-options "--fuel 2 --ifuel 1 --z3rlimit_factor 10 --query_stats --retry 5"
 let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
                            (d:st_typing g t c)
   : Lemma 
