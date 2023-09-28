@@ -29,8 +29,10 @@ let is_pulse_option_set (x:string) : bool =
 
 module U = FStar_Syntax_Util
 module S = FStar_Syntax_Syntax
-let embed_term_for_extraction (d:'a) typ r =
-   U.mk_lazy d typ (S.Lazy_extension "pulse") r
+let embed_st_term_for_extraction (d:'a) r =
+   U.mk_lazy d S.tun (S.Lazy_extension "pulse_st_term") r
+let unembed_st_term_for_extraction (d:S.term) : 'a =
+   U.unlazy_as_t (S.Lazy_extension "pulse_st_term") d
 
 let debug_subst (s:S.subst_elt list) (t:S.term) (r1:S.term) (r2:S.term) =
   if is_pulse_option_set "subst"

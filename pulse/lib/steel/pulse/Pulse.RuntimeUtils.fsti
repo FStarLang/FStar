@@ -18,7 +18,8 @@ val is_range_zero (r:range) : Dv bool
 val union_ranges (r0 r1:range) : range
 val unfold_def (g:env) (nm:string) (fully:list string) (t:T.term) : option T.term   
 val env_set_range (g:env) (r:range) : g':env{g==g'}
-val embed_term_for_extraction (d:'a) (t:T.term) (r:option range): T.term
+val embed_st_term_for_extraction (d:'a) (r:option range): T.term
+val unembed_st_term_for_extraction (d:T.term) : 'a
 module R = FStar.Reflection.V2
 val debug_subst (s:list R.subst_elt) (t:T.term) (r1 r2:T.term): y:T.term{ y == r1 }
 val deep_compress (t:T.term) : r:T.term { t == r }
