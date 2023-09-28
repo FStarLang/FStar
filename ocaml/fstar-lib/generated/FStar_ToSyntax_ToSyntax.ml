@@ -2887,7 +2887,8 @@ and (desugar_term_maybe_top :
                              " used at an unexpected position" in
                          Prims.op_Hat "Effect " uu___5 in
                        (FStar_Errors_Codes.Fatal_UnexpectedEffect, uu___4) in
-                 FStar_Errors.raise_error err top.FStar_Parser_AST.range)
+                 let uu___2 = FStar_Ident.range_of_lid l in
+                 FStar_Errors.raise_error err uu___2)
         | FStar_Parser_AST.Sum (binders, t) when
             FStar_Compiler_Util.for_all
               (fun uu___1 ->
