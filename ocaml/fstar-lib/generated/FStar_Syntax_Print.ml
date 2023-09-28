@@ -1941,3 +1941,20 @@ let (fv_qual_to_string : FStar_Syntax_Syntax.fv_qual -> Prims.string) =
         "Unresolved_projector _"
     | FStar_Syntax_Syntax.Unresolved_constructor uu___ ->
         "Unresolved_constructor _"
+let (term_to_doc' :
+  FStar_Syntax_DsEnv.env -> FStar_Syntax_Syntax.term -> FStar_Pprint.document)
+  =
+  fun dsenv ->
+    fun t ->
+      let uu___ = FStar_Options.ugly () in
+      if uu___
+      then
+        let uu___1 = term_to_string t in FStar_Pprint.arbitrary_string uu___1
+      else FStar_Syntax_Print_Pretty.term_to_doc' dsenv t
+let (term_to_doc : FStar_Syntax_Syntax.term -> FStar_Pprint.document) =
+  fun t ->
+    let uu___ = FStar_Options.ugly () in
+    if uu___
+    then
+      let uu___1 = term_to_string t in FStar_Pprint.arbitrary_string uu___1
+    else FStar_Syntax_Print_Pretty.term_to_doc t

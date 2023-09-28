@@ -301,30 +301,20 @@ let (expected_expression_of_type :
           let uu___ =
             let uu___1 =
               let uu___2 =
-                FStar_Pprint.doc_of_string "Expected expression of type" in
+                let uu___3 =
+                  FStar_Errors_Msg.text "Expected expression of type" in
+                FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one uu___3
+                  d1 in
               let uu___3 =
-                let uu___4 = FStar_Pprint.blank (Prims.of_int (4)) in
+                let uu___4 =
+                  let uu___5 = FStar_Errors_Msg.text "got expression" in
+                  FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one uu___5
+                    ed in
                 let uu___5 =
-                  let uu___6 = FStar_Pprint.align d1 in
-                  let uu___7 =
-                    let uu___8 = FStar_Pprint.doc_of_string "got expression" in
-                    let uu___9 =
-                      let uu___10 = FStar_Pprint.blank (Prims.of_int (4)) in
-                      let uu___11 =
-                        let uu___12 = FStar_Pprint.align ed in
-                        let uu___13 =
-                          let uu___14 = FStar_Pprint.doc_of_string "of type" in
-                          let uu___15 =
-                            let uu___16 =
-                              FStar_Pprint.blank (Prims.of_int (4)) in
-                            let uu___17 = FStar_Pprint.align d2 in
-                            FStar_Pprint.op_Hat_Hat uu___16 uu___17 in
-                          FStar_Pprint.op_Hat_Slash_Hat uu___14 uu___15 in
-                        FStar_Pprint.op_Hat_Slash_Hat uu___12 uu___13 in
-                      FStar_Pprint.op_Hat_Hat uu___10 uu___11 in
-                    FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
-                  FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
-                FStar_Pprint.op_Hat_Hat uu___4 uu___5 in
+                  let uu___6 = FStar_Errors_Msg.text "of type" in
+                  FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one uu___6
+                    d2 in
+                FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
               FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
             [uu___1] in
           (FStar_Errors_Codes.Fatal_UnexpectedExpressionType, uu___)

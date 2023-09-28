@@ -139,7 +139,7 @@ let (label_goals :
               | FStar_SMTEncoding_Term.Real uu___1 -> (labels1, q1)
               | FStar_SMTEncoding_Term.LblPos uu___1 -> failwith "Impossible"
               | FStar_SMTEncoding_Term.Labeled
-                  (arg, "could not prove post-condition", label_range) ->
+                  (arg, "Could not prove post-condition", label_range) ->
                   let fallback debug_msg =
                     aux default_msg
                       (FStar_Pervasives_Native.Some label_range)
@@ -237,7 +237,7 @@ let (label_goals :
                                                       then
                                                         let uu___8 =
                                                           aux
-                                                            "could not prove post-condition"
+                                                            "Could not prove post-condition"
                                                             FStar_Pervasives_Native.None
                                                             (FStar_Pervasives_Native.Some
                                                                post_name)

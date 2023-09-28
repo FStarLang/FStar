@@ -3715,6 +3715,8 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
                     | _ -> None
                 in
                 let is_reveal_or_hide t =
+                  // Returns Inl (u, ty, t) for reveal u#u #ty t
+                  // Returns Inr (u, ty, t) for hide u#u #ty t
                   let h, args = U.head_and_args t in
                   if U.is_fvar PC.reveal h
                   then match payload_of_hide_reveal h args with

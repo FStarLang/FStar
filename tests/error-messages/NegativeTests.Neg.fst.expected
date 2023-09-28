@@ -33,7 +33,7 @@
 >>]
 >> Got issues: [
 * Error 19 at NegativeTests.Neg.fst(42,33-42,34):
-  - could not prove post-condition
+  - Could not prove post-condition
   - The SMT solver could not prove the query. Use --query_stats for more details.
   - See also NegativeTests.Neg.fst(40,83-40,88)
 

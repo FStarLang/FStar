@@ -1,11 +1,6 @@
 >> Got issues: [
 * Error 189 at Basic.fst(4,13-4,17):
-  - Expected expression of type
-        Prims.int
-    got expression
-        true
-    of type
-        Prims.bool
+  - Expected expression of type Prims.int got expression true of type Prims.bool
 
 >>]
 >> Got issues: [
