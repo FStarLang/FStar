@@ -391,7 +391,10 @@ let (format_issue' : Prims.bool -> issue -> Prims.string) =
         | uu___ -> FStar_Pprint.empty in
       let mainmsg =
         let uu___ =
-          FStar_Compiler_List.map FStar_Errors_Msg.subdoc issue1.issue_msg in
+          FStar_Compiler_List.map
+            (fun d ->
+               let uu___1 = FStar_Pprint.group d in
+               FStar_Errors_Msg.subdoc uu___1) issue1.issue_msg in
         FStar_Pprint.concat uu___ in
       let doc =
         let uu___ =
@@ -721,7 +724,7 @@ let (set_option_warning_callback_range :
   FStar_Compiler_Range_Type.range FStar_Pervasives_Native.option -> unit) =
   fun ropt ->
     FStar_Options.set_option_warning_callback (warn_unsafe_options ropt)
-let (uu___376 :
+let (uu___377 :
   (((Prims.string -> FStar_Errors_Codes.error_setting Prims.list) -> unit) *
     (unit -> FStar_Errors_Codes.error_setting Prims.list)))
   =
@@ -767,10 +770,10 @@ let (uu___376 :
   (set_callbacks, get_error_flags)
 let (t_set_parse_warn_error :
   (Prims.string -> FStar_Errors_Codes.error_setting Prims.list) -> unit) =
-  match uu___376 with
+  match uu___377 with
   | (t_set_parse_warn_error1, error_flags) -> t_set_parse_warn_error1
 let (error_flags : unit -> FStar_Errors_Codes.error_setting Prims.list) =
-  match uu___376 with
+  match uu___377 with
   | (t_set_parse_warn_error1, error_flags1) -> error_flags1
 let (set_parse_warn_error :
   (Prims.string -> FStar_Errors_Codes.error_setting Prims.list) -> unit) =

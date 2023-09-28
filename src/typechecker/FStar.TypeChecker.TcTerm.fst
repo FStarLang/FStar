@@ -317,7 +317,7 @@ let check_expected_effect env (use_eq:bool) (copt:option comp) (ec : term * comp
                  (Print.comp_to_string expected_c)
                  (string_of_bool use_eq);
        let e, _, g = TcUtil.check_comp env use_eq e c expected_c in
-       let g = TcUtil.label_guard (Env.get_range env) "could not prove post-condition" g in
+       let g = TcUtil.label_guard (Env.get_range env) "Could not prove post-condition" g in
        if debug env Options.Medium
        then BU.print2 "(%s) DONE check_expected_effect;\n\tguard is: %s\n"
                          (Range.string_of_range e.pos)

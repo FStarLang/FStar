@@ -114,7 +114,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
 
         | LblPos _ -> failwith "Impossible" //these get added after errorReporting instrumentation only
 
-        | Labeled(arg, "could not prove post-condition", label_range) ->
+        | Labeled(arg, "Could not prove post-condition", label_range) ->
           //printfn "GOT A LABELED WP IMPLICATION\n\t%s"
           //        (Term.print_smt_term q);
           let fallback debug_msg =
@@ -138,7 +138,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
                         | Quant(Forall, pats_ens, iopt_ens, sorts_ens, {tm=App(Imp, [ensures_conjuncts; post]); rng=rng_ens}) ->
                           if is_a_post_condition (Some post_name) post
                           then
-                            let labels, ensures_conjuncts = aux "could not prove post-condition" None (Some post_name) labels ensures_conjuncts in
+                            let labels, ensures_conjuncts = aux "Could not prove post-condition" None (Some post_name) labels ensures_conjuncts in
                             let pats_ens =
                               match pats_ens with
                               | []

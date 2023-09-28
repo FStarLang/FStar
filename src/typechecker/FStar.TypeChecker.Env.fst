@@ -1153,14 +1153,17 @@ let def_check_vars_in_set rng msg vset t =
     if Options.defensive () then begin
         let s = Free.names t in
         if not (BU.set_is_empty <| BU.set_difference s vset)
-        then Errors.log_issue rng
-                    (Errors.Warning_Defensive,
-                     BU.format4 "Internal: term is not closed (%s).\nt = (%s)\nFVs = (%s)\nScope = (%s)\n"
-                                      msg
-                                      (Print.term_to_string t)
-                                      (BU.set_elements s |> Print.bvs_to_string ",\n\t")
-                                      (BU.set_elements vset |> Print.bvs_to_string ",")
-                                      )
+        then 
+          let open FStar.Pprint in
+          let doclist (ds : list Pprint.document) : Pprint.document =
+            surround_separate 2 0 (doc_of_string "[]") lbracket (semi ^^ break_ 1) rbracket ds
+          in
+          Errors.log_issue_doc rng (Errors.Warning_Defensive, [
+               text "Internal: term is not well-scoped " ^/^ parens (doc_of_string msg);
+               text "t = " ^/^ Print.term_to_doc t;
+               text "FVs = " ^/^ doclist (BU.set_elements s |> List.map (fun b -> arbitrary_string (Print.bv_to_string b)));
+               text "Scope = " ^/^ doclist (BU.set_elements vset |> List.map (fun b -> arbitrary_string (Print.bv_to_string b)));
+             ])
     end
 
 let def_check_closed_in rng msg l t =

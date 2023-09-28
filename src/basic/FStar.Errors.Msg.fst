@@ -40,4 +40,4 @@ let subdoc d =
   else blank 2 ^^ doc_of_string "-" ^^ blank 1 ^^ align d ^^ hardline
 
 let rendermsg (ds : list document) : string =
-  renderdoc (concat (List.map subdoc ds))
+  renderdoc (concat (List.map (fun d -> subdoc (group d)) ds))
