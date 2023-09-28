@@ -426,7 +426,7 @@ let (mk_stt_ghost_comp_post_equiv :
                     FStar_Reflection_V2_Builtins.pack_ln
                       (FStar_Reflection_V2_Data.Tv_App
                          (t2, (pre, FStar_Reflection_V2_Data.Q_Explicit))) in
-                  FStar_Reflection_Typing.EQ_Ctxt
+                  FStar_Reflection_Typing.Rel_ctxt
                     (g, post1, post2,
                       (FStar_Reflection_Typing.Ctxt_app_arg
                          (t3, FStar_Reflection_V2_Data.Q_Explicit,

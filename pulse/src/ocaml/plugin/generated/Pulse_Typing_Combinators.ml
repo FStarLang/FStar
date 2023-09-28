@@ -1201,11 +1201,11 @@ let (apply_frame :
                          let st_equiv =
                            Pulse_Typing.ST_VPropEquiv
                              (g, c', c'', x, (), (), (),
-                               (FStar_Reflection_Typing.EQ_Refl
+                               (FStar_Reflection_Typing.Rel_refl
                                   ((Pulse_Typing.elab_env g),
                                     (Pulse_Elaborate_Pure.elab_term
-                                       (Pulse_Syntax_Base.comp_res c')))),
-                               (), ()) in
+                                       (Pulse_Syntax_Base.comp_res c')),
+                                    FStar_Reflection_Typing.R_Eq)), (), ()) in
                          let t_typing2 =
                            Pulse_Typing.T_Equiv
                              (g, t, (Pulse_Typing.add_frame c frame), c'',

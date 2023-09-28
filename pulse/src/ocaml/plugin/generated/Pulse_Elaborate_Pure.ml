@@ -191,9 +191,9 @@ let (elab_stt_equiv :
                    (elab_term (Pulse_Syntax_Base.comp_res c))
                    FStar_Reflection_V2_Data.Q_Explicit
                    (elab_term (Pulse_Syntax_Base.comp_post c)))
-                (FStar_Reflection_Typing.EQ_Refl
-                   (g, (elab_term (Pulse_Syntax_Base.comp_res c)))) eq_pre
-                eq_post
+                (FStar_Reflection_Typing.Rel_refl
+                   (g, (elab_term (Pulse_Syntax_Base.comp_res c)),
+                     FStar_Reflection_Typing.R_Eq)) eq_pre eq_post
 let (elab_statomic_equiv :
   FStar_Reflection_Types.env ->
     Pulse_Syntax_Base.comp ->

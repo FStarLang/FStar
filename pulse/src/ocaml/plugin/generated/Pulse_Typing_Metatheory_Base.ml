@@ -212,12 +212,13 @@ let (st_equiv_weakening :
                     ((Pulse_Typing_Env.push_env
                         (Pulse_Typing_Env.push_env g g1) g'), c11, c21, x,
                       (), (), (),
-                      (FStar_Reflection_Typing.EQ_Refl
+                      (FStar_Reflection_Typing.Rel_refl
                          ((Pulse_Typing.elab_env
                              (Pulse_Typing_Env.push_env
                                 (Pulse_Typing_Env.push_env g g1) g')),
                            (Pulse_Elaborate_Pure.elab_term
-                              (Pulse_Syntax_Base.comp_res c11)))), (), ())
+                              (Pulse_Syntax_Base.comp_res c11)),
+                           FStar_Reflection_Typing.R_Eq)), (), ())
 let (st_comp_typing_weakening :
   Pulse_Typing_Env.env ->
     Pulse_Typing_Env.env ->
@@ -688,14 +689,15 @@ let (st_equiv_subst :
                             (Pulse_Syntax_Naming.subst_comp c11 (nt x e)),
                             (Pulse_Syntax_Naming.subst_comp c21 (nt x e)), y,
                             (), (), (),
-                            (FStar_Reflection_Typing.EQ_Refl
+                            (FStar_Reflection_Typing.Rel_refl
                                ((Pulse_Typing.elab_env
                                    (Pulse_Typing_Env.push_env g
                                       (Pulse_Typing_Env.subst_env g' (nt x e)))),
                                  (Pulse_Elaborate_Pure.elab_term
                                     (Pulse_Syntax_Base.comp_res
                                        (Pulse_Syntax_Naming.subst_comp c11
-                                          (nt x e)))))), (), ())
+                                          (nt x e)))),
+                                 FStar_Reflection_Typing.R_Eq)), (), ())
 let (st_comp_typing_subst :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.var ->
