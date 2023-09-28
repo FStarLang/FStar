@@ -105,7 +105,7 @@ let check
   let g0 = push_context "st_app" t.range g0 in
   let range = t.range in
 
-  let (| uvs, g, t |) = instantaite_implicits g0 t in
+  let (| uvs, g, t |) = instantiate_implicits g0 t in
   assert (g `env_extends` g0);
   let post_hint : post_hint_opt g = post_hint in
 
