@@ -6,12 +6,7 @@
 >>]
 >> Got issues: [
 * Error 189 at AnotType.fst(27,14-27,16):
-  - Expected expression of type
-        Type0
-    got expression
-        tb
-    of type
-        Type
+  - Expected expression of type Type0 got expression tb of type Type
 
 >>]
 Verified module: AnotType
