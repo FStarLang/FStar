@@ -172,18 +172,41 @@ let st_equiv_soundness (g:stt_env)
     let ST_VPropEquiv _ _ _ x pre_typing res_typing post_typing eq_res eq_pre eq_post = d in
     let c1' = with_st_comp c1 {(st_comp_of_comp c1) with res = comp_res c0} in
     assert (comp_post c1 == comp_post c1');
+    let rpost1' =
+      Pulse.Reflection.Util.mk_abs
+        (elab_term (comp_res c1')) R.Q_Explicit (elab_term (comp_post c1')) in
+    let rpost1 =
+      Pulse.Reflection.Util.mk_abs
+        (elab_term (comp_res c1)) R.Q_Explicit (elab_term (comp_post c1)) in
+    
+    // these two should follow, since we know x is not free in comp_post c1 and c2
+    //   from the ST_VPropEquiv rule
+    assume (~ (x `Set.mem` (RT.freevars (elab_term (comp_post c1)))));
+    assume (~ (x `Set.mem` (RT.freevars (elab_term (comp_post c1')))));
+    
+    let d : RT.equiv (elab_env g) rpost1' rpost1 =
+      RT.Rel_abs (elab_env g)
+                 (elab_term (comp_res c1'))
+                 (elab_term (comp_res c1))
+                 R.Q_Explicit
+                 (elab_term (comp_post c1'))
+                 (elab_term (comp_post c1))
+                 x
+                 eq_res
+                 (RT.Rel_refl _ _ _) in
+
     let d_eq : RT.equiv (elab_env g) (elab_comp c1') (elab_comp c1) =
       mk_stt_comp_equiv (elab_env g)
         (comp_u c1)
         (elab_term (comp_res c1'))
         (elab_term (comp_pre c1'))
-        (Pulse.Reflection.Util.mk_abs (elab_term (comp_res c1')) R.Q_Explicit (elab_term (comp_post c1')))
+        rpost1'
         (elab_term (comp_res c1))
         (elab_term (comp_pre c1))
-        (Pulse.Reflection.Util.mk_abs (elab_term (comp_res c1)) R.Q_Explicit (elab_term (comp_post c1)))
+        rpost1
         eq_res
         (RT.Rel_refl _ _ _)
-        (magic ())  // need a rule that if t1 ~ t2, then (fun (x:t1) -> e) ~ (fun (x:t2) -> e)
+        d
     in
     let d_steq : st_equiv g c0 c1' =
       ST_VPropEquiv g c0 c1' x pre_typing res_typing post_typing (RT.Rel_refl _ _ _) eq_pre eq_post
