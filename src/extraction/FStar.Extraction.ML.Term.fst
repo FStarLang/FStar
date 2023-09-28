@@ -785,7 +785,7 @@ let rec translate_term_to_mlty (g:uenv) (t0:term) : mlty =
 
           (*can this be a partial type application? , i.e can the result of this application be something like Type -> Type, or nat -> Type? : Yes *)
           (* should we try to apply additional arguments here? if not, where? FIX!! *)
-          | Tm_app _ -> //{hd=head; args} ->
+          | Tm_app _ ->
             let head, args = U.head_and_args_full t in
             let res = match (U.un_uinst head).n, args with
                 | Tm_name bv, _ ->
@@ -798,11 +798,6 @@ let rec translate_term_to_mlty (g:uenv) (t0:term) : mlty =
 
                 | Tm_fvar fv, _ ->
                   fv_app_as_mlty env fv args
-
-                
-
-                | Tm_app {hd=head; args=args'}, _ ->
-                  translate_term_to_mlty env (S.mk (Tm_app {hd=head; args=args'@args}) t.pos)
 
                 | _ -> MLTY_Top in
             res
