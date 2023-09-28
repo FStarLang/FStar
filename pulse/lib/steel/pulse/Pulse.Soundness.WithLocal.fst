@@ -278,8 +278,9 @@ let withlocal_soundness #g #t #c d soundness =
               (WT.with_local_bodypost rpost ra rret_t x))
            (RT.open_with_var y 0)) =
     PReflUtil.mk_stt_comp_equiv _ ru
-      (RT.subst_term rret_t (RT.open_with_var y 0)) _ _ _ _
-      pre_equiv post_equiv in
+      (RT.subst_term rret_t (RT.open_with_var y 0)) _ _
+      (RT.subst_term rret_t (RT.open_with_var y 0)) _ _
+      (RT.EQ_Refl _ _) pre_equiv post_equiv in
 
   let arrow_equiv
     : RT.equiv (elab_env g)

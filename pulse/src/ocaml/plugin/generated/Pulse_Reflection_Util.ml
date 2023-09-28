@@ -1722,17 +1722,21 @@ let (mk_stt_comp_equiv :
           FStar_Reflection_Types.term ->
             FStar_Reflection_Types.term ->
               FStar_Reflection_Types.term ->
-                (unit, unit, unit) FStar_Reflection_Typing.equiv ->
+                FStar_Reflection_Types.term ->
                   (unit, unit, unit) FStar_Reflection_Typing.equiv ->
-                    (unit, unit, unit) FStar_Reflection_Typing.equiv)
+                    (unit, unit, unit) FStar_Reflection_Typing.equiv ->
+                      (unit, unit, unit) FStar_Reflection_Typing.equiv ->
+                        (unit, unit, unit) FStar_Reflection_Typing.equiv)
   =
   fun g ->
     fun u ->
-      fun res ->
+      fun res1 ->
         fun pre1 ->
           fun post1 ->
-            fun pre2 ->
-              fun post2 -> fun pre_eq -> fun post_eq -> Prims.admit ()
+            fun res2 ->
+              fun pre2 ->
+                fun post2 ->
+                  fun res_eq -> fun pre_eq -> fun post_eq -> Prims.admit ()
 let (mk_stt_atomic_comp_equiv :
   FStar_Reflection_Types.env ->
     FStar_Reflection_Types.universe ->

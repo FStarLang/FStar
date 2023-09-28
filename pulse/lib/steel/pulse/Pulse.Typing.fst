@@ -276,7 +276,7 @@ let bind_comp_ghost_r_out (c1:comp_st) (c2:comp_st{bind_comp_ghost_r_compatible 
 
 let st_equiv_pre (c1 c2:comp_st)
   : prop
-  = comp_u c1 == comp_u c2 /\ comp_res c1 == comp_res c2 /\
+  = comp_u c1 == comp_u c2 /\
     (match c1, c2 with
     | C_ST _, C_ST _ -> True
     | C_STAtomic inames1 _, C_STAtomic inames2 _ ->
@@ -474,13 +474,14 @@ type st_equiv : env -> comp -> comp -> Type =
   | ST_VPropEquiv :
       g:env ->
       c1:comp_st ->
-      c2:comp_st { st_equiv_pre c1 c2 } -> 
+      c2:comp_st { st_equiv_pre c1 c2 } ->
       x:var { None? (lookup g x) /\
               ~(x `Set.mem` freevars (comp_post c1)) /\
               ~(x `Set.mem` freevars (comp_post c2)) } ->
       tot_typing g (comp_pre c1) tm_vprop ->
       tot_typing g (comp_res c1) (tm_type (comp_u c1)) ->
       tot_typing (push_binding g x ppname_default (comp_res c1)) (open_term (comp_post c1) x) tm_vprop ->
+      RT.equiv (elab_env g) (elab_term (comp_res c1)) (elab_term (comp_res c2)) ->
       vprop_equiv g (comp_pre c1) (comp_pre c2) ->
       vprop_equiv (push_binding g x ppname_default (comp_res c1))
                   (open_term (comp_post c1) x)

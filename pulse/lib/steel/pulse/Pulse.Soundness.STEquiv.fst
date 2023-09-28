@@ -79,14 +79,14 @@ let inst_sub_stt (#g:R.env) (#u:_) (#a #pre1 #pre2 #post1 #post2 #r:R.term)
 let vprop_arrow (t:term) : term = tm_arrow (null_binder t) None (C_Tot tm_vprop)
 
 #push-options "--fuel 2 --ifuel 1 --z3rlimit_factor 4 --query_stats"
-let st_equiv_soundness (g:stt_env)
-                       (c0 c1:ln_comp) 
-                       (d:st_equiv g c0 c1)
-                       (r:R.term)
-                       (d_r:RT.tot_typing (elab_env g) r (elab_comp c0)) 
+let st_equiv_soundness_aux (g:stt_env)
+                           (c0:ln_comp) (c1:ln_comp { comp_res c0 == comp_res c1 })
+                           (d:st_equiv g c0 c1)
+                           (r:R.term)
+                           (d_r:RT.tot_typing (elab_env g) r (elab_comp c0)) 
   : GTot (RT.tot_typing (elab_env g) (elab_sub c0 c1 r) (elab_comp c1))
   = if C_ST? c0 && C_ST? c1 then
-      let ST_VPropEquiv _ _ _ x pre_typing res_typing post_typing eq_pre eq_post = d in
+      let ST_VPropEquiv _ _ _ x pre_typing res_typing post_typing _eq_res eq_pre eq_post = d in
       // assert (None? (lookup_ty g x));
       assert (None? (lookup g x));
       assume (~(x `Set.mem` RT.freevars (elab_term (comp_post c0))));
@@ -158,3 +158,45 @@ let st_equiv_soundness (g:stt_env)
                   d_r
     else admit ()
 #pop-options
+
+let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y == x} = x
+
+let st_equiv_soundness (g:stt_env)
+                       (c0 c1:ln_comp)
+                       (d:st_equiv g c0 c1)
+                       (r:R.term)
+                       (d_r:RT.tot_typing (elab_env g) r (elab_comp c0)) 
+  : GTot (RT.tot_typing (elab_env g) (elab_sub c0 c1 r) (elab_comp c1)) =
+
+  if C_ST? c0 && C_ST? c1 then
+    let ST_VPropEquiv _ _ _ x pre_typing res_typing post_typing eq_res eq_pre eq_post = d in
+    let c1' = with_st_comp c1 {(st_comp_of_comp c1) with res = comp_res c0} in
+    assert (comp_post c1 == comp_post c1');
+    let d_eq : RT.equiv (elab_env g) (elab_comp c1') (elab_comp c1) =
+      mk_stt_comp_equiv (elab_env g)
+        (comp_u c1)
+        (elab_term (comp_res c1'))
+        (elab_term (comp_pre c1'))
+        (Pulse.Reflection.Util.mk_abs (elab_term (comp_res c1')) R.Q_Explicit (elab_term (comp_post c1')))
+        (elab_term (comp_res c1))
+        (elab_term (comp_pre c1))
+        (Pulse.Reflection.Util.mk_abs (elab_term (comp_res c1)) R.Q_Explicit (elab_term (comp_post c1)))
+        eq_res
+        (RT.EQ_Refl _ _)
+        (magic ())  // need a rule that if t1 ~ t2, then (fun (x:t1) -> e) ~ (fun (x:t2) -> e)
+    in
+    let d_steq : st_equiv g c0 c1' =
+      ST_VPropEquiv g c0 c1' x pre_typing res_typing post_typing (RT.EQ_Refl _ _) eq_pre eq_post
+    in
+    let d : RT.tot_typing (elab_env g) (elab_sub c0 c1' r) (elab_comp c1') =
+      st_equiv_soundness_aux g c0 c1' d_steq r d_r in
+    assert (elab_sub c0 c1' r == elab_sub c0 c1 r);
+    let d : RT.tot_typing (elab_env g) (elab_sub c0 c1 r) (elab_comp c1') =
+      st_equiv_soundness_aux g c0 c1' d_steq r d_r in
+    RT.T_Sub (elab_env g)
+             (elab_sub c0 c1 r)
+             (T.E_Total, elab_comp c1')
+             (T.E_Total, elab_comp c1)
+             d
+             (RT.Relc_typ _ _ _ T.E_Total _ (RT.Rel_equiv _ _ _ _ d_eq))
+  else admit ()
