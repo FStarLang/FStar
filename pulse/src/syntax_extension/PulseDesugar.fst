@@ -184,7 +184,8 @@ let stapp_or_return (env:env_t) (s:S.term)
         | Some formals ->
           let is_binder_implicit (b:S.binder) =
             match b.binder_qual with
-            | Some (S.Implicit _) -> true
+            | Some (S.Implicit _)
+            | Some (S.Meta _) -> true
             | _ -> false
           in
           let is_arg_implicit (aq:S.arg) =
