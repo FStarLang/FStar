@@ -1330,7 +1330,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
               | None -> (Errors.Fatal_ConstructorNotFound, ("Constructor " ^ (string_of_lid l) ^ " not found"))
               | Some _ -> (Errors.Fatal_UnexpectedEffect, ("Effect " ^ (string_of_lid l) ^ " used at an unexpected position"))
             in
-            raise_error err top.range
+            raise_error err (range_of_lid l)
         end
 
     | Sum(binders, t)
