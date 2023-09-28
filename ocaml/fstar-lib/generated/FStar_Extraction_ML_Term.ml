@@ -1312,19 +1312,6 @@ let rec (translate_term_to_mlty :
                        translate_term_to_mlty env FStar_Syntax_Syntax.t_unit
                    | (FStar_Syntax_Syntax.Tm_fvar fv, uu___3) ->
                        fv_app_as_mlty env fv args
-                   | (FStar_Syntax_Syntax.Tm_app
-                      { FStar_Syntax_Syntax.hd = head1;
-                        FStar_Syntax_Syntax.args = args';_},
-                      uu___3) ->
-                       let uu___4 =
-                         FStar_Syntax_Syntax.mk
-                           (FStar_Syntax_Syntax.Tm_app
-                              {
-                                FStar_Syntax_Syntax.hd = head1;
-                                FStar_Syntax_Syntax.args =
-                                  (FStar_Compiler_List.op_At args' args)
-                              }) t1.FStar_Syntax_Syntax.pos in
-                       translate_term_to_mlty env uu___4
                    | uu___3 -> FStar_Extraction_ML_Syntax.MLTY_Top in
                  res)
         | FStar_Syntax_Syntax.Tm_abs
