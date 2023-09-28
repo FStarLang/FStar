@@ -40,8 +40,8 @@ let (main' :
     Pulse_Syntax_Base.term ->
       FStar_Reflection_Typing.fstar_top_env ->
         ((FStar_Reflection_Types.term FStar_Pervasives_Native.option *
-           (Prims.string * FStar_Reflection_Types.term) *
-           FStar_Reflection_Types.typ),
+           (Prims.string * FStar_Reflection_Types.term)
+           FStar_Pervasives_Native.option * FStar_Reflection_Types.typ),
           unit) FStar_Tactics_Effect.tac_repr)
   =
   fun uu___2 ->
@@ -207,7 +207,7 @@ let (main' :
                                                                     (Prims.of_int (37))
                                                                     (Prims.of_int (33))
                                                                     (Prims.of_int (52))
-                                                                    (Prims.of_int (36)))))
+                                                                    (Prims.of_int (41)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___3 ->
@@ -233,7 +233,7 @@ let (main' :
                                                                     (Prims.of_int (37))
                                                                     (Prims.of_int (33))
                                                                     (Prims.of_int (52))
-                                                                    (Prims.of_int (36)))))
+                                                                    (Prims.of_int (41)))))
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Abs.check_abs
                                                                     g1 t
@@ -266,7 +266,7 @@ let (main' :
                                                                     (Prims.of_int (42))
                                                                     (Prims.of_int (13))
                                                                     (Prims.of_int (52))
-                                                                    (Prims.of_int (36)))))
+                                                                    (Prims.of_int (41)))))
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Prover_Util.debug_prover
                                                                     g1
@@ -323,7 +323,7 @@ let (main' :
                                                                     (Prims.of_int (45))
                                                                     (Prims.of_int (74))
                                                                     (Prims.of_int (52))
-                                                                    (Prims.of_int (36)))))
+                                                                    (Prims.of_int (41)))))
                                                                     (Obj.magic
                                                                     (debug_main
                                                                     g1
@@ -436,7 +436,7 @@ let (main' :
                                                                     (Prims.of_int (46))
                                                                     (Prims.of_int (40))
                                                                     (Prims.of_int (52))
-                                                                    (Prims.of_int (36)))))
+                                                                    (Prims.of_int (41)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___6 ->
@@ -463,7 +463,7 @@ let (main' :
                                                                     (Prims.of_int (47))
                                                                     (Prims.of_int (98))
                                                                     (Prims.of_int (52))
-                                                                    (Prims.of_int (36)))))
+                                                                    (Prims.of_int (41)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___6 ->
@@ -492,7 +492,7 @@ let (main' :
                                                                     (Prims.of_int (50))
                                                                     (Prims.of_int (13))
                                                                     (Prims.of_int (52))
-                                                                    (Prims.of_int (36)))))
+                                                                    (Prims.of_int (41)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___6 ->
@@ -519,7 +519,7 @@ let (main' :
                                                                     (Prims.of_int (50))
                                                                     (Prims.of_int (13))
                                                                     (Prims.of_int (52))
-                                                                    (Prims.of_int (36)))))
+                                                                    (Prims.of_int (41)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -559,11 +559,13 @@ let (main' :
                                                                     (Pulse_Elaborate_Core.elab_st_typing
                                                                     g1 t1 c
                                                                     t_typing)),
-                                                                    blob,
+                                                                    (FStar_Pervasives_Native.Some
+                                                                    blob),
                                                                     refl_t)
                                                                     else
                                                                     (FStar_Pervasives_Native.None,
-                                                                    blob,
+                                                                    (FStar_Pervasives_Native.Some
+                                                                    blob),
                                                                     refl_t)))))
                                                                     uu___6)))
                                                                     uu___6)))
@@ -1418,7 +1420,6 @@ let (check_pulse :
                                                   FStar_Tactics_V2_Derived.fail
                                                     "Pulse parser failed")))
                                          uu___1)))) uu___)
-(*
 let _ =
   FStar_Tactics_Native.register_tactic "Pulse.Main.check_pulse"
     (Prims.of_int (8))
@@ -1440,8 +1441,8 @@ let _ =
              (FStar_Syntax_Embeddings.e_tuple3
                 (FStar_Syntax_Embeddings.e_option
                    FStar_Reflection_V2_Embeddings.e_term)
-                (FStar_Syntax_Embeddings.e_tuple2
-                   FStar_Syntax_Embeddings.e_string
-                   FStar_Reflection_V2_Embeddings.e_term)
+                (FStar_Syntax_Embeddings.e_option
+                   (FStar_Syntax_Embeddings.e_tuple2
+                      FStar_Syntax_Embeddings.e_string
+                      FStar_Reflection_V2_Embeddings.e_term))
                 FStar_Reflection_V2_Embeddings.e_term) psc ncb args)
-                *)
