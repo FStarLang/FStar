@@ -58,6 +58,8 @@ let (subdoc : FStar_Pprint.document -> FStar_Pprint.document) =
 let (rendermsg : error_message -> Prims.string) =
   fun ds ->
     let uu___ =
-      let uu___1 = FStar_Compiler_List.map subdoc ds in
+      let uu___1 =
+        FStar_Compiler_List.map
+          (fun d -> let uu___2 = FStar_Pprint.group d in subdoc uu___2) ds in
       FStar_Pprint.concat uu___1 in
     renderdoc uu___
