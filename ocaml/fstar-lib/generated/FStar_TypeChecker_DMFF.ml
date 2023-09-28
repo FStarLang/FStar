@@ -183,7 +183,9 @@ let (gen_wps_for_free :
                                (uu___3.FStar_Syntax_Syntax.sigmeta_active);
                              FStar_Syntax_Syntax.sigmeta_fact_db_ids =
                                (uu___3.FStar_Syntax_Syntax.sigmeta_fact_db_ids);
-                             FStar_Syntax_Syntax.sigmeta_admit = true
+                             FStar_Syntax_Syntax.sigmeta_admit = true;
+                             FStar_Syntax_Syntax.sigmeta_extension_data =
+                               (uu___3.FStar_Syntax_Syntax.sigmeta_extension_data)
                            });
                         FStar_Syntax_Syntax.sigattrs =
                           (sigelt.FStar_Syntax_Syntax.sigattrs);
@@ -4492,7 +4494,10 @@ let (cps_and_elaborate :
                                                                  =
                                                                  (uu___16.FStar_Syntax_Syntax.sigmeta_fact_db_ids);
                                                                FStar_Syntax_Syntax.sigmeta_admit
-                                                                 = true
+                                                                 = true;
+                                                               FStar_Syntax_Syntax.sigmeta_extension_data
+                                                                 =
+                                                                 (uu___16.FStar_Syntax_Syntax.sigmeta_extension_data)
                                                              });
                                                           FStar_Syntax_Syntax.sigattrs
                                                             =

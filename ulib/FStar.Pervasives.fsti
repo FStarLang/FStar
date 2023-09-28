@@ -1125,6 +1125,20 @@ val bind_has_range_args : unit
   *)
 val primitive_extraction : unit
 
+(** A qualifier on a type definition which when used in co-domain position
+    on an arrow type will be extracted as if it were an impure effect type.
+
+    e.g., if you have
+    
+    [@@extract_as_impure_effect]
+    val stt (a:Type) (pre:_) (post:_) : Type
+
+    then arrows of the form `a -> stt b p q` will be extracted 
+    similarly to `a -> Dv b`.
+ *)
+val extract_as_impure_effect : unit
+
+
 (** A binder in a definition/declaration may optionally be annotated as strictly_positive
     When the let definition is used in a data constructor type in an inductive
     definition, this annotation is used to check the positivity of the inductive

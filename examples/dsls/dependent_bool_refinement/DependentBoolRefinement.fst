@@ -876,12 +876,12 @@ and closed_ty (t:src_ty)
     | TRefineBool e -> closed e
     | TArrow t1 t2 -> closed_ty t1 && closed_ty t2
 
-let main (f:fstar_top_env)
-         (src:src_exp)
-  : T.Tac (e:R.term & t:R.term { RT.tot_typing f e t })
-  = if closed src
-    then 
-      let (| src_ty, _ |) = check f [] src in
-      soundness_lemma f [] src src_ty;
-      (| elab_exp src, elab_ty src_ty |)
-    else T.fail "Not locally nameless"
+let main (src:src_exp)
+  : RT.dsl_tac_t
+  = fun f -> 
+      if closed src
+      then 
+        let (| src_ty, _ |) = check f [] src in
+        soundness_lemma f [] src src_ty;
+        Some(elab_exp src), None, elab_ty src_ty
+      else T.fail "Not locally nameless"

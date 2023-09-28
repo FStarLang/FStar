@@ -1756,7 +1756,29 @@ type fstar_top_env = g:fstar_env {
 // g:fstar_top_env -> T.tac ((us, e, t):(univ_names & term & typ){typing (push g us) e t})
 //
 
-type dsl_tac_t = g:fstar_top_env -> T.Tac (r:(R.term & R.typ){typing g (fst r) (T.E_Total, snd r)})
+(**
+ * The type of the top-level tactic that would splice-in the definitions
+ * It returns either:
+ *   - Some tm, blob, typ, with a proof that `typing g tm typ`
+ *   - None, blob, typ), with a proof that `exists tm. typing g tm typ`
+ * The blob itself is optional and can store some additional metadata that
+ * constructed by the tactic. If present, it will be stored in the 
+ * sigmeta_extension_data field of the enclosing sigelt.
+ *
+ * The blob can be used later, e.g., during extraction, and passed back to the
+ * extension to perform additional processing.
+ *)
+let blob = string & R.term
+let dsl_tac_result_base_t = option R.term & option blob & R.typ
+let well_typed g (e:dsl_tac_result_base_t) =
+  let tm_opt, _, typ = e in
+  match tm_opt with
+  | None -> exists (tm:R.term). typing g tm (T.E_Total, typ)
+  | Some tm -> typing g tm (T.E_Total, typ)
+
+let dsl_tac_result_t g = e:dsl_tac_result_base_t { well_typed g e }
+
+type dsl_tac_t = g:fstar_top_env -> T.Tac (dsl_tac_result_t g)
 
 val if_complete_match (g:env) (t:term)
   : T.match_complete_token g t bool_ty [

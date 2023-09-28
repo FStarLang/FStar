@@ -174,6 +174,8 @@ let effect_param = ()
 let bind_has_range_args = ()
 let primitive_extraction = ()
 
+let extract_as_impure_effect = ()
+
 let strictly_positive = ()
 
 let unused = ()

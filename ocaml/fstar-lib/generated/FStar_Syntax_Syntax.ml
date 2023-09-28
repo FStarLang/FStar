@@ -418,6 +418,7 @@ and lazy_kind =
   | Lazy_issue 
   | Lazy_ident 
   | Lazy_doc 
+  | Lazy_extension of Prims.string 
 and binding =
   | Binding_var of bv 
   | Binding_lid of (FStar_Ident.lident * (univ_names * term' syntax)) 
@@ -1076,6 +1077,11 @@ let (uu___is_Lazy_ident : lazy_kind -> Prims.bool) =
   fun projectee -> match projectee with | Lazy_ident -> true | uu___ -> false
 let (uu___is_Lazy_doc : lazy_kind -> Prims.bool) =
   fun projectee -> match projectee with | Lazy_doc -> true | uu___ -> false
+let (uu___is_Lazy_extension : lazy_kind -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Lazy_extension _0 -> true | uu___ -> false
+let (__proj__Lazy_extension__item___0 : lazy_kind -> Prims.string) =
+  fun projectee -> match projectee with | Lazy_extension _0 -> _0
 let (uu___is_Binding_var : binding -> Prims.bool) =
   fun projectee ->
     match projectee with | Binding_var _0 -> true | uu___ -> false
@@ -1650,25 +1656,32 @@ type sig_metadata =
   {
   sigmeta_active: Prims.bool ;
   sigmeta_fact_db_ids: Prims.string Prims.list ;
-  sigmeta_admit: Prims.bool }
+  sigmeta_admit: Prims.bool ;
+  sigmeta_extension_data: (Prims.string * FStar_Compiler_Dyn.dyn) Prims.list }
 let (__proj__Mksig_metadata__item__sigmeta_active :
   sig_metadata -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | { sigmeta_active; sigmeta_fact_db_ids; sigmeta_admit;_} ->
-        sigmeta_active
+    | { sigmeta_active; sigmeta_fact_db_ids; sigmeta_admit;
+        sigmeta_extension_data;_} -> sigmeta_active
 let (__proj__Mksig_metadata__item__sigmeta_fact_db_ids :
   sig_metadata -> Prims.string Prims.list) =
   fun projectee ->
     match projectee with
-    | { sigmeta_active; sigmeta_fact_db_ids; sigmeta_admit;_} ->
-        sigmeta_fact_db_ids
+    | { sigmeta_active; sigmeta_fact_db_ids; sigmeta_admit;
+        sigmeta_extension_data;_} -> sigmeta_fact_db_ids
 let (__proj__Mksig_metadata__item__sigmeta_admit :
   sig_metadata -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | { sigmeta_active; sigmeta_fact_db_ids; sigmeta_admit;_} ->
-        sigmeta_admit
+    | { sigmeta_active; sigmeta_fact_db_ids; sigmeta_admit;
+        sigmeta_extension_data;_} -> sigmeta_admit
+let (__proj__Mksig_metadata__item__sigmeta_extension_data :
+  sig_metadata -> (Prims.string * FStar_Compiler_Dyn.dyn) Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { sigmeta_active; sigmeta_fact_db_ids; sigmeta_admit;
+        sigmeta_extension_data;_} -> sigmeta_extension_data
 type open_kind =
   | Open_module 
   | Open_namespace 
@@ -2309,7 +2322,12 @@ let (mk_Tac : typ -> comp) =
         flags = [SOMETRIVIAL; TRIVIAL_POSTCONDITION]
       }
 let (default_sigmeta : sig_metadata) =
-  { sigmeta_active = true; sigmeta_fact_db_ids = []; sigmeta_admit = false }
+  {
+    sigmeta_active = true;
+    sigmeta_fact_db_ids = [];
+    sigmeta_admit = false;
+    sigmeta_extension_data = []
+  }
 let (mk_sigelt : sigelt' -> sigelt) =
   fun e ->
     {

@@ -267,3 +267,97 @@ let pop_unit (ts : mltyscheme) : mltyscheme =
         else failwith "unexpected: pop_unit: domain was not unit"
     | _ ->
         failwith "unexpected: pop_unit: not a function type"
+module BU = FStar.Compiler.Util
+
+let mlpath_to_string mlp = String.concat "." (fst mlp) ^ "." ^ snd mlp
+
+let rec mlty_to_string (t:mlty) =
+  match t with
+  | MLTY_Var v -> v
+  | MLTY_Fun (t1, _, t2) ->
+    BU.format2 "(%s -> %s)" (mlty_to_string t1) (mlty_to_string t2)
+  | MLTY_Named (ts, p) ->
+    BU.format2 "(%s %s)" (String.concat " " (List.map mlty_to_string ts)) (mlpath_to_string p)
+  | MLTY_Tuple ts ->
+    BU.format1 "(%s)" (String.concat " * " (List.map mlty_to_string ts))
+  | MLTY_Top -> "MLTY_Top"
+  | MLTY_Erased -> "MLTY_Erased"
+
+let rec mlexpr_to_string (e:mlexpr) =
+  match e.expr with
+  | MLE_Const c ->
+    BU.format1 "(MLE_Const %s)" (mlconstant_to_string c)
+  | MLE_Var x ->
+    BU.format1 "(MLE_Var %s)" x
+  | MLE_Name (p, x) ->
+    BU.format2 "(MLE_Name (%s, %s))" (String.concat "." p) x
+  | MLE_Let (lbs, e) ->
+    BU.format2 "(MLE_Let (%s, %s))" (mlletbinding_to_string lbs) (mlexpr_to_string e)
+  | MLE_App (e, es) ->
+    BU.format2 "(MLE_App (%s, [%s]))" (mlexpr_to_string e) (String.concat "; " (List.map mlexpr_to_string es))
+  | MLE_TApp (e, ts) ->
+    BU.format2 "(MLE_TApp (%s, [%s]))" (mlexpr_to_string e) (String.concat "; " (List.map mlty_to_string ts))
+  | MLE_Fun (xs, e) ->
+    BU.format2 "(MLE_Fun ([%s], %s))" (String.concat "; " (List.map (fun (x, t) -> BU.format2 "(%s, %s)" x (mlty_to_string t)) xs)) (mlexpr_to_string e)
+  | MLE_Match (e, bs) ->
+    BU.format2 "(MLE_Match (%s, [%s]))" (mlexpr_to_string e) (String.concat "; " (List.map mlbranch_to_string bs))
+  | MLE_Coerce (e, t1, t2) ->
+    BU.format3 "(MLE_Coerce (%s, %s, %s))" (mlexpr_to_string e) (mlty_to_string t1) (mlty_to_string t2)
+  | MLE_CTor (p, es) ->
+    BU.format2 "(MLE_CTor (%s, [%s]))" (mlpath_to_string p) (String.concat "; " (List.map mlexpr_to_string es))
+  | MLE_Seq es ->
+    BU.format1 "(MLE_Seq [%s])" (String.concat "; " (List.map mlexpr_to_string es))
+  | MLE_Tuple es ->
+    BU.format1 "(MLE_Tuple [%s])" (String.concat "; " (List.map mlexpr_to_string es))
+  | MLE_Record (p, es) ->
+    BU.format2 "(MLE_Record (%s, [%s]))" (String.concat "; " p) (String.concat "; " (List.map (fun (x, e) -> BU.format2 "(%s, %s)" x (mlexpr_to_string e)) es))
+  | MLE_Proj (e, p) ->
+    BU.format2 "(MLE_Proj (%s, %s))" (mlexpr_to_string e) (mlpath_to_string p)
+  | MLE_If (e1, e2, None) ->
+    BU.format2 "(MLE_If (%s, %s, None))" (mlexpr_to_string e1) (mlexpr_to_string e2)
+  | MLE_If (e1, e2, Some e3) ->
+    BU.format3 "(MLE_If (%s, %s, %s))" (mlexpr_to_string e1) (mlexpr_to_string e2) (mlexpr_to_string e3)
+  | MLE_Raise (p, es) ->
+    BU.format2 "(MLE_Raise (%s, [%s]))" (mlpath_to_string p) (String.concat "; " (List.map mlexpr_to_string es))
+  | MLE_Try (e, bs) ->
+    BU.format2 "(MLE_Try (%s, [%s]))" (mlexpr_to_string e) (String.concat "; " (List.map mlbranch_to_string bs))
+
+and mlbranch_to_string (p, e1, e2) =
+  match e1 with
+  | None -> BU.format2 "(%s, None, %s)" (mlpattern_to_string p) (mlexpr_to_string e2)
+  | Some e1 -> BU.format3 "(%s, Some %s, %s)" (mlpattern_to_string p) (mlexpr_to_string e1) (mlexpr_to_string e2)
+
+and mlletbinding_to_string (lbs) =
+  match lbs with
+  | (Rec, lbs) -> BU.format1 "(Rec, [%s])" (String.concat "; " (List.map mllb_to_string lbs))
+  | (NonRec, lbs) -> BU.format1 "(NonRec, [%s])" (String.concat "; " (List.map mllb_to_string lbs))
+
+and mllb_to_string (lb) =
+  BU.format4 "{mllb_name = %s; mllb_tysc = %s; mllb_add_unit = %s; mllb_def = %s}"
+    lb.mllb_name
+    (match lb.mllb_tysc with
+     | None -> "None"
+     | Some (_, t) -> BU.format1 "Some %s" (mlty_to_string t))
+    (string_of_bool lb.mllb_add_unit)
+    (mlexpr_to_string lb.mllb_def)
+
+and mlconstant_to_string mlc =
+  match mlc with
+  | MLC_Unit -> "MLC_Unit"
+  | MLC_Bool b -> BU.format1 "(MLC_Bool %s)" (string_of_bool b)
+  | MLC_Int (s, None) -> BU.format1 "(MLC_Int %s)" s
+  | MLC_Int (s, Some (s1, s2)) -> BU.format1 "(MLC_Int (%s, _, _))" s
+  | MLC_Float f -> "(MLC_Float _)"
+  | MLC_Char c -> "(MLC_Char _)"
+  | MLC_String s -> BU.format1 "(MLC_String %s)" s
+  | MLC_Bytes b -> "(MLC_Bytes _)" 
+
+and mlpattern_to_string mlp =
+  match mlp with
+  | MLP_Wild -> "MLP_Wild"
+  | MLP_Const c -> BU.format1 "(MLP_Const %s)" (mlconstant_to_string c)
+  | MLP_Var x -> BU.format1 "(MLP_Var %s)" x
+  | MLP_CTor (p, ps) -> BU.format2 "(MLP_CTor (%s, [%s]))" (mlpath_to_string p) (String.concat "; " (List.map mlpattern_to_string ps))
+  | MLP_Branch ps -> BU.format1 "(MLP_Branch [%s])" (String.concat "; " (List.map mlpattern_to_string ps))
+  | MLP_Record (p, ps) -> BU.format2 "(MLP_Record (%s, [%s]))" (String.concat "; " p) (String.concat "; " (List.map (fun (x, p) -> BU.format2 "(%s, %s)" x (mlpattern_to_string p)) ps))
+  | MLP_Tuple ps -> BU.format1 "(MLP_Tuple [%s])" (String.concat "; " (List.map mlpattern_to_string ps))

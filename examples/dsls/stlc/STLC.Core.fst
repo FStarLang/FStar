@@ -542,7 +542,7 @@ let main (src:stlc_exp) : RT.dsl_tac_t =
   then
     let (| src_ty, d |) = check g [] src in
     soundness_lemma [] src src_ty g;
-    elab_exp src, elab_ty src_ty
+    Some (elab_exp src), None, elab_ty src_ty
   else T.fail "Not locally nameless"
 
 (***** Tests *****)

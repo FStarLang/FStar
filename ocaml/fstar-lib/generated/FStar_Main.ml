@@ -296,6 +296,9 @@ let (lazy_chooser :
       | FStar_Syntax_Syntax.Lazy_ident ->
           FStar_Syntax_Util.exp_string "((ident))"
       | FStar_Syntax_Syntax.Lazy_embedding (uu___, t) -> FStar_Thunk.force t
+      | FStar_Syntax_Syntax.Lazy_extension s ->
+          let uu___ = FStar_Compiler_Util.format1 "((extension %s))" s in
+          FStar_Syntax_Util.exp_string uu___
 let (setup_hooks : unit -> unit) =
   fun uu___ ->
     FStar_Errors.set_parse_warn_error FStar_Parser_ParseIt.parse_warn_error;
