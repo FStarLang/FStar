@@ -22,7 +22,7 @@ let point_fields =
   field_description_cons "y" (scalar U32.t) (
   field_description_nil))
 
-let point_t = struct_t "dummy" point_fields
+let point_t = struct_t "PointStructDirectDef.point_t" point_fields
 
 noextract
 let point : typedef point_t = struct0 _ _ _
