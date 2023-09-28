@@ -121,7 +121,7 @@ let elab_stt_equiv (g:R.env) (c:comp{C_ST? c}) (pre:R.term) (post:R.term)
   mk_stt_comp_equiv _
     (comp_u c)
     (elab_term (comp_res c))
-    _ _ _ _ _ (RT.EQ_Refl _ _) eq_pre eq_post
+    _ _ _ _ _ (RT.Rel_refl _ _ _) eq_pre eq_post
 
 let elab_statomic_equiv (g:R.env) (c:comp{C_STAtomic? c}) (pre:R.term) (post:R.term)
   (eq_pre:RT.equiv g pre (elab_term (comp_pre c)))

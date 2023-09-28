@@ -182,11 +182,11 @@ let st_equiv_soundness (g:stt_env)
         (elab_term (comp_pre c1))
         (Pulse.Reflection.Util.mk_abs (elab_term (comp_res c1)) R.Q_Explicit (elab_term (comp_post c1)))
         eq_res
-        (RT.EQ_Refl _ _)
+        (RT.Rel_refl _ _ _)
         (magic ())  // need a rule that if t1 ~ t2, then (fun (x:t1) -> e) ~ (fun (x:t2) -> e)
     in
     let d_steq : st_equiv g c0 c1' =
-      ST_VPropEquiv g c0 c1' x pre_typing res_typing post_typing (RT.EQ_Refl _ _) eq_pre eq_post
+      ST_VPropEquiv g c0 c1' x pre_typing res_typing post_typing (RT.Rel_refl _ _ _) eq_pre eq_post
     in
     let d : RT.tot_typing (elab_env g) (elab_sub c0 c1' r) (elab_comp c1') =
       st_equiv_soundness_aux g c0 c1' d_steq r d_r in

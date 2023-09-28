@@ -56,11 +56,11 @@ let while_soundness
                           (RT.subst_term (elab_term inv) [ RT.DT 0 true_tm ])
       = assume (RT.ln' (elab_term inv) 0);
         assume (RT.ln true_tm);
-        RT.EQ_Beta _ bool_tm R.Q_Explicit (elab_term inv) true_tm  in
+        RT.Rel_beta _ bool_tm R.Q_Explicit (elab_term inv) true_tm  in
     RT.T_Sub _ _ _ _ d
       (RT.Relc_typ _ _ _ _ _
          (RT.Rel_equiv _ _ _ _
-            (RT.EQ_Sym _ _ _ (elab_stt_equiv _ _ _ _ pre_eq (RT.EQ_Refl _ _))))) in
+            (RT.Rel_sym _ _ _ (elab_stt_equiv _ _ _ _ pre_eq (RT.Rel_refl _ _ _))))) in
 
 
   elab_open_commute' inv tm_false 0;
@@ -76,6 +76,6 @@ let while_soundness
   RT.T_Sub _ _ _ _ d
     (RT.Relc_typ _ _ _ _ _
        (RT.Rel_equiv _ _ _ _
-          (elab_stt_equiv _ _ _ _ (RT.EQ_Refl _ _) post_eq)))
+          (elab_stt_equiv _ _ _ _ (RT.Rel_refl _ _ _) post_eq)))
     
 #pop-options

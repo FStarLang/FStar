@@ -166,7 +166,7 @@ let withlocal_soundness #g #t #c d soundness =
         (RT.subst_term c1_pre (RT.open_with_var y 0))
         (RT.subst_term
            (mk_star rpre (PReflUtil.mk_pts_to ra (RT.bound_var 0) full_perm_tm rinit))
-           (RT.open_with_var y 0)) = RT.EQ_Refl _ _ in
+           (RT.open_with_var y 0)) = RT.Rel_refl _ _ _ in
 
   let z = fresh (push_binding g y ppname_default (mk_ref init_t)) in
   let g_z = RT.extend_env g_y z (RT.subst_term rret_t (RT.open_with_var y 0)) in
@@ -204,8 +204,8 @@ let withlocal_soundness #g #t #c d soundness =
     let d : RT.equiv g_z
               (RT.subst_term (elab_term (comp_post c)) (RT.open_with_var z 0))
               (R.pack_ln (R.Tv_App rpost ((RT.var_as_term z), R.Q_Explicit))) =      
-      RT.EQ_Sym _ _ _
-        (RT.EQ_Beta _ rret_t R.Q_Explicit
+      RT.Rel_sym _ _ _
+        (RT.Rel_beta _ rret_t R.Q_Explicit
            (elab_term (comp_post c))
            (RT.var_as_term z)) in
     d
@@ -236,7 +236,7 @@ let withlocal_soundness #g #t #c d soundness =
     assume (~ (x `Set.mem` RT.freevars ra));
     RT.close_with_not_free_var ra x 0;
     RT.close_with_not_free_var ra x 1;
-    RT.EQ_Refl _ _
+    RT.Rel_refl _ _ _
   in
 
   let post_equiv
@@ -258,7 +258,7 @@ let withlocal_soundness #g #t #c d soundness =
            (RT.subst_term
               (WT.with_local_bodypost_body rpost ra x)
               (RT.open_with_var y 1))) =
-    RT.equiv_abs _ _ z post_equiv in
+    RT.Rel_abs _ _ _ _ _ _ z (RT.Rel_refl _ _ _) post_equiv in
 
   let post_equiv
     : RT.equiv g_y
@@ -280,7 +280,7 @@ let withlocal_soundness #g #t #c d soundness =
     PReflUtil.mk_stt_comp_equiv _ ru
       (RT.subst_term rret_t (RT.open_with_var y 0)) _ _
       (RT.subst_term rret_t (RT.open_with_var y 0)) _ _
-      (RT.EQ_Refl _ _) pre_equiv post_equiv in
+      (RT.Rel_refl _ _ _) pre_equiv post_equiv in
 
   let arrow_equiv
     : RT.equiv (elab_env g)

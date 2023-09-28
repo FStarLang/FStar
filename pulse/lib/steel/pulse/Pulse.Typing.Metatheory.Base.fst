@@ -115,7 +115,7 @@ let st_equiv_weakening (g:env) (g':env { disjoint g g' })
     assume (~ (x `Set.mem` dom g'));
     assume (~ (x `Set.mem` dom g1));
     // TODO: the proof for RT.Equiv is not correct here
-    ST_VPropEquiv _ c1 c2 x (magic ()) (magic ()) (magic ()) (FStar.Reflection.Typing.EQ_Refl _ _) (magic ()) (magic ())
+    ST_VPropEquiv _ c1 c2 x (magic ()) (magic ()) (magic ()) (FStar.Reflection.Typing.Rel_refl _ _ _) (magic ()) (magic ())
 #pop-options
 
 let st_comp_typing_weakening (g:env) (g':env { disjoint g g' })
@@ -474,7 +474,7 @@ let st_equiv_subst (g:env) (x:var) (t:typ) (g':env { pairwise_disjoint g (single
                     (magic ())
                     (magic ())
                     (magic ())
-                    (RT.EQ_Refl _ _)  // TODO: incorrect proof
+                    (RT.Rel_refl _ _ _)  // TODO: incorrect proof
                     (magic ())
                     (magic ())
 

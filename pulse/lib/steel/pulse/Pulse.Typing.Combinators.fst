@@ -267,6 +267,6 @@ let apply_frame (#g:env)
     let ve: vprop_equiv g (comp_pre c') (comp_pre c'') = ve in    
     let st_typing = Metatheory.comp_typing_inversion c'_typing in
     let (| res_typing, pre_typing, x, post_typing |) = Metatheory.st_comp_typing_inversion st_typing in
-    let st_equiv = ST_VPropEquiv g c' c'' x pre_typing res_typing post_typing (RT.EQ_Refl _ _) ve (VE_Refl _ _) in
+    let st_equiv = ST_VPropEquiv g c' c'' x pre_typing res_typing post_typing (RT.Rel_refl _ _ _) ve (VE_Refl _ _) in
     let t_typing = T_Equiv _ _ _ _ t_typing st_equiv in
     (| c'', t_typing |)

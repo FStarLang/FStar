@@ -80,8 +80,8 @@ let par_soundness
       assume (RT.ln' (elab_term postR) 0);
       assume (RT.ln (elab_term (mk_snd uL uR aL aR x_tm)));
       mk_star_equiv _ _ _ _ _
-        (RT.EQ_Beta _ raL _ (elab_term postL) _)
-        (RT.EQ_Beta _ raR _ (elab_term postR) _) in
+        (RT.Rel_beta _ raL _ (elab_term postL) _)
+        (RT.Rel_beta _ raR _ (elab_term postR) _) in
 
   let post_eq
     : RT.equiv (elab_env g)
@@ -95,5 +95,5 @@ let par_soundness
   
   RT.T_Sub _ _ _ _ d
     (RT.Relc_typ _ _ _ _ _
-       (RT.Rel_equiv _ _ _ _ (elab_stt_equiv _ c _ _ (RT.EQ_Refl _ _) post_eq)))
+       (RT.Rel_equiv _ _ _ _ (elab_stt_equiv _ c _ _ (RT.Rel_refl _ _ _) post_eq)))
 #pop-options

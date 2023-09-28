@@ -95,7 +95,7 @@ let st_equiv_trans (#g:env) (#c0 #c1 #c2:comp) (d01:st_equiv g c0 c1) (d12:st_eq
     if x = y && eq_tm (comp_res c0) (comp_res c1)
     then Some (
           ST_VPropEquiv g c0 c2 x c0_pre_typing c0_res_typing c0_post_typing
-            (RT.EQ_Trans _ _ _ _ eq_res_01 eq_res_12)
+            (RT.Rel_trans _ _ _ _ _ eq_res_01 eq_res_12)
             (VE_Trans _ _ _ _ eq_pre_01 eq_pre_12)
             (VE_Trans _ _ _ _ eq_post_01 eq_post_12)
     )
@@ -124,7 +124,7 @@ let st_equiv_post (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
       let (| u_of, pre_typing, x, post_typing |) = Metatheory.(st_comp_typing_inversion (comp_typing_inversion (st_typing_correctness d))) in
       let veq = veq x in
       let st_equiv : st_equiv g c c' =
-          ST_VPropEquiv g c c' x pre_typing u_of post_typing (RT.EQ_Refl _ _) (VE_Refl _ _) veq
+          ST_VPropEquiv g c c' x pre_typing u_of post_typing (RT.Rel_refl _ _ _) (VE_Refl _ _) veq
       in
       t_equiv d st_equiv
 
@@ -142,7 +142,7 @@ let simplify_lemma (c:comp_st) (c':comp_st) (post_hint:option post_hint_t)
         comp_post c' == tm_star (comp_post c) tm_emp)
     (ensures comp_post_matches_hint (comp_st_with_post c' (comp_post c)) post_hint /\
              comp_pre (comp_st_with_post c' (comp_post c)) == comp_pre c')
-  = () 
+  = ()
 
 let vprop_equiv_typing_bk (#g:env) (#ctxt:_) (ctxt_typing:tot_typing g ctxt tm_vprop)
                            (#p:_) (d:vprop_equiv g p ctxt)
@@ -167,7 +167,7 @@ let st_equiv_pre (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
       let (| u_of, pre_typing, x, post_typing |) =
         Metatheory.(st_comp_typing_inversion (comp_typing_inversion (st_typing_correctness d))) in
       let st_equiv : st_equiv g c c' =
-          ST_VPropEquiv g c c' x pre_typing u_of post_typing (RT.EQ_Refl _ _) veq (VE_Refl _ _)
+          ST_VPropEquiv g c c' x pre_typing u_of post_typing (RT.Rel_refl _ _ _) veq (VE_Refl _ _)
       in
       t_equiv d st_equiv
 
@@ -454,7 +454,7 @@ let match_comp_res_with_post_hint (#g:env) (#t:st_term) (#c:comp_st)
          | Some tok ->
            let d_equiv
              : RT.equiv _ (elab_term cres) (elab_term ret_ty) =
-             RT.EQ_Token _ _ _ (FStar.Squash.return_squash tok) in
+             RT.Rel_eq_token _ _ _ (FStar.Squash.return_squash tok) in
            
            let c' = with_st_comp c {(st_comp_of_comp c) with res = ret_ty } in
            let (| cres_typing, cpre_typing, x, cpost_typing |) =

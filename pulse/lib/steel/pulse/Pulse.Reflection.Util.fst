@@ -156,7 +156,7 @@ let mk_stt_ghost_comp_post_equiv (g:R.env) (u:R.universe) (a inames pre post1 po
   let t = R.pack_ln (R.Tv_App t (a, R.Q_Explicit)) in
   let t = R.pack_ln (R.Tv_App t (inames, R.Q_Explicit)) in
   let t = R.pack_ln (R.Tv_App t (pre, R.Q_Explicit)) in
-  EQ_Ctxt g post1 post2
+  Rel_ctxt g post1 post2
     (Ctxt_app_arg t Q_Explicit Ctxt_hole)
     posts_equiv
 
