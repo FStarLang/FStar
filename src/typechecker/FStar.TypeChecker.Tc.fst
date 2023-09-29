@@ -146,10 +146,10 @@ let tc_inductive' env ses quals attrs lids =
         * AR: call add_sigelt_to_env here? We should maintain the invariant that push_sigelt is only called from there
         *     but then this is temporary, just to check positivity, later we actually do go through add_sigelt_to_env
         *)
-       let env = Env.push_sigelt env sig_bndle in
+       let env2 = Env.push_sigelt env sig_bndle in
        (* Check positivity of the inductives within the Sig_bundle *)
        List.iter (fun ty ->
-         let b = Positivity.check_strict_positivity env lids ty in
+         let b = Positivity.check_strict_positivity env2 lids ty in
          if not b then
            let lid, r =
              match ty.sigel with
@@ -169,7 +169,7 @@ let tc_inductive' env ses quals attrs lids =
             | _ -> failwith "Impossible"
          in
          if lid_equals ty_lid PC.exn_lid &&
-            not (Positivity.check_exn_strict_positivity env data_lid)
+            not (Positivity.check_exn_strict_positivity env2 data_lid)
          then
             Errors.log_issue d.sigrng
               (Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
