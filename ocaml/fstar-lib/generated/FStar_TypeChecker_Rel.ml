@@ -13240,7 +13240,7 @@ let (teq :
               let uu___3 =
                 FStar_TypeChecker_Err.basic_type_error env
                   FStar_Pervasives_Native.None t2 t1 in
-              FStar_Errors.log_issue uu___2 uu___3);
+              FStar_Errors.log_issue_doc uu___2 uu___3);
              FStar_TypeChecker_Common.trivial_guard)
         | FStar_Pervasives_Native.Some g ->
             ((let uu___2 =
@@ -13317,7 +13317,7 @@ let (subtype_fail :
           let uu___1 =
             FStar_TypeChecker_Err.basic_type_error env
               (FStar_Pervasives_Native.Some e) t2 t1 in
-          FStar_Errors.log_issue uu___ uu___1
+          FStar_Errors.log_issue_doc uu___ uu___1
 let (sub_or_eq_comp :
   FStar_TypeChecker_Env.env ->
     Prims.bool ->
