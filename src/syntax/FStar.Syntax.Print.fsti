@@ -81,4 +81,9 @@ val emb_typ_to_string: emb_typ -> string
 val fv_qual_to_string : fv_qual -> string
 
 val term_to_doc'          : DsEnv.env -> term -> Pprint.document
+val comp_to_doc'          : DsEnv.env -> comp -> Pprint.document
+val sigelt_to_doc'        : DsEnv.env -> sigelt -> Pprint.document
+
 val term_to_doc           : term -> Pprint.document
+val comp_to_doc           : comp -> Pprint.document
+val sigelt_to_doc         : sigelt -> Pprint.document

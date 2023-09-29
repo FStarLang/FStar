@@ -49,7 +49,7 @@
 * Error 19 at NegativeTests.Neg.fst(50,45-50,47):
   - Subtyping check failed; expected type _: FStar.Pervasives.result Prims.int {V? _}; got type FStar.Pervasives.result Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more details.
-  - See also FStar.Pervasives.fsti(512,4-512,5)
+  - See also FStar.Pervasives.fsti(514,4-514,5)
 
 >>]
 >> Got issues: [

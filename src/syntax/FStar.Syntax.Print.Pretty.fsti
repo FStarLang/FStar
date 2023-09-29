@@ -21,15 +21,21 @@ open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Compiler.Util
 
-val term_to_doc'    : DsEnv.env -> term -> Pprint.document
-val term_to_doc     : term -> Pprint.document
+(* Use the 'primed' versions if possible: they abbreviate lidents *)
 
-(* Use these if possible: they abbreviate lidents *)
+val term_to_doc'     : DsEnv.env -> term -> Pprint.document
+val comp_to_doc'     : DsEnv.env -> comp -> Pprint.document
+val sigelt_to_doc'   : DsEnv.env -> sigelt -> Pprint.document
+
 val term_to_string'     : DsEnv.env -> term -> string
 val comp_to_string'     : DsEnv.env -> comp -> string
 val sigelt_to_string'   : DsEnv.env -> sigelt -> string
 
 (* If no DsEnv.env is at hand, these can be used instead. *)
+val term_to_doc         : term -> Pprint.document
+val comp_to_doc         : comp -> Pprint.document
+val sigelt_to_doc       : sigelt -> Pprint.document
+
 val term_to_string      : term -> string
 val comp_to_string      : comp -> string
 val sigelt_to_string    : sigelt -> string
