@@ -118,6 +118,8 @@ effect Lemma (a: eqtype_u) (pre: Type) (post: (squash pre -> Type)) (pats: list 
     spawned off into a separate SMT query *)
 val spinoff (p: Type0) : Type0
 
+val spinoff_equiv (p:Type0) : Lemma (p <==> spinoff p) [SMTPat (spinoff p)]
+
 (** Logically equivalent to assert, but spins off separate query *)
 val assert_spinoff (p: Type) : Pure unit (requires (spinoff (squash p))) (ensures (fun x -> p))
 

@@ -37,18 +37,25 @@ let term_to_string' env (tm:term) : string = GenSym.with_frozen_gensym (fun () -
   pp d
 )
 
-let comp_to_string' env (c:comp) : string = GenSym.with_frozen_gensym (fun () ->
+let comp_to_doc' env (c:comp) : Pprint.document = GenSym.with_frozen_gensym (fun () ->
   let e = Resugar.resugar_comp' env c in
-  let d = ToDocument.term_to_document e in
+  ToDocument.term_to_document e
+)
+
+let comp_to_string' env (c:comp) : string = GenSym.with_frozen_gensym (fun () ->
+  let d = comp_to_doc' env c in
   pp d
 )
 
-let sigelt_to_string' env (se:sigelt) : string = GenSym.with_frozen_gensym (fun () ->
+let sigelt_to_doc' env (se:sigelt) : Pprint.document = GenSym.with_frozen_gensym (fun () ->
   match Resugar.resugar_sigelt' env se with
-  | None -> ""
-  | Some d ->
-    let d = ToDocument.decl_to_document d in
-    pp d
+  | None -> Pprint.empty
+  | Some d -> ToDocument.decl_to_document d
+)
+
+let sigelt_to_string' env (se:sigelt) : string = GenSym.with_frozen_gensym (fun () ->
+  let d = sigelt_to_doc' env se in
+  pp d
 )
 
 (* These three are duplicated instead of being a special case
@@ -58,6 +65,17 @@ DsEnv.env here. *)
 let term_to_doc (tm:term) : Pprint.document = GenSym.with_frozen_gensym (fun () ->
   let e = Resugar.resugar_term tm in
   ToDocument.term_to_document e
+)
+
+let comp_to_doc (c:comp) : Pprint.document = GenSym.with_frozen_gensym (fun () ->
+  let e = Resugar.resugar_comp c in
+  ToDocument.term_to_document e
+)
+
+let sigelt_to_doc (se:sigelt) : Pprint.document = GenSym.with_frozen_gensym (fun () ->
+  match Resugar.resugar_sigelt se with
+  | None -> Pprint.empty
+  | Some d -> ToDocument.decl_to_document d
 )
 
 let term_to_string (tm:term) : string = GenSym.with_frozen_gensym (fun () ->
