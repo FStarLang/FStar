@@ -2154,7 +2154,7 @@ and tc_abs_check_binders env bs bs_expected use_eq
                 then Rel.teq env t expected_t |> label_guard
                 else match Rel.get_subtyping_prop env expected_t t with
                      | None ->
-                       raise_error (Err.basic_type_error env None expected_t t) (Env.get_range env)
+                       raise_error_doc (Err.basic_type_error env None expected_t t) (Env.get_range env)
                      | Some g_env -> label_guard g_env in
             t, Env.conj_guard g1_env g2_env in
 

@@ -2616,7 +2616,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) (use_eq:bool) : term * lco
          * AR: 11/18: should this always fail hard?
          *)
         if env.failhard
-        then raise_error (Err.basic_type_error env (Some e) t lc.res_typ) e.pos
+        then raise_error_doc (Err.basic_type_error env (Some e) t lc.res_typ) e.pos
         else (
             subtype_fail env e lc.res_typ t; //log a sub-typing error
             e, {lc with res_typ=t}, Env.trivial_guard //and keep going to type-check the result of the program
