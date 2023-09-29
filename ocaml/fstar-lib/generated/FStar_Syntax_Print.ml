@@ -1951,6 +1951,28 @@ let (term_to_doc' :
       then
         let uu___1 = term_to_string t in FStar_Pprint.arbitrary_string uu___1
       else FStar_Syntax_Print_Pretty.term_to_doc' dsenv t
+let (comp_to_doc' :
+  FStar_Syntax_DsEnv.env -> FStar_Syntax_Syntax.comp -> FStar_Pprint.document)
+  =
+  fun dsenv ->
+    fun t ->
+      let uu___ = FStar_Options.ugly () in
+      if uu___
+      then
+        let uu___1 = comp_to_string t in FStar_Pprint.arbitrary_string uu___1
+      else FStar_Syntax_Print_Pretty.comp_to_doc' dsenv t
+let (sigelt_to_doc' :
+  FStar_Syntax_DsEnv.env ->
+    FStar_Syntax_Syntax.sigelt -> FStar_Pprint.document)
+  =
+  fun dsenv ->
+    fun t ->
+      let uu___ = FStar_Options.ugly () in
+      if uu___
+      then
+        let uu___1 = sigelt_to_string t in
+        FStar_Pprint.arbitrary_string uu___1
+      else FStar_Syntax_Print_Pretty.sigelt_to_doc' dsenv t
 let (term_to_doc : FStar_Syntax_Syntax.term -> FStar_Pprint.document) =
   fun t ->
     let uu___ = FStar_Options.ugly () in
@@ -1958,3 +1980,17 @@ let (term_to_doc : FStar_Syntax_Syntax.term -> FStar_Pprint.document) =
     then
       let uu___1 = term_to_string t in FStar_Pprint.arbitrary_string uu___1
     else FStar_Syntax_Print_Pretty.term_to_doc t
+let (comp_to_doc : FStar_Syntax_Syntax.comp -> FStar_Pprint.document) =
+  fun t ->
+    let uu___ = FStar_Options.ugly () in
+    if uu___
+    then
+      let uu___1 = comp_to_string t in FStar_Pprint.arbitrary_string uu___1
+    else FStar_Syntax_Print_Pretty.comp_to_doc t
+let (sigelt_to_doc : FStar_Syntax_Syntax.sigelt -> FStar_Pprint.document) =
+  fun t ->
+    let uu___ = FStar_Options.ugly () in
+    if uu___
+    then
+      let uu___1 = sigelt_to_string t in FStar_Pprint.arbitrary_string uu___1
+    else FStar_Syntax_Print_Pretty.sigelt_to_doc t
