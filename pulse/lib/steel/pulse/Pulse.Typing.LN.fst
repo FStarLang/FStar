@@ -17,6 +17,9 @@ let well_typed_terms_are_ln (g:R.env) (e:R.term) (t:R.term) (#eff:_) (d:RT.typin
 
   RT.well_typed_terms_are_ln g e (eff, t) d
 
+let rt_equiv_ln (g:R.env) (e1 e2:R.term) (d:RT.equiv g e1 e2)
+  : Lemma (RT.ln e1 /\ RT.ln e2) = admit ()
+
 assume
 val elab_ln_inverse (e:term)
   : Lemma 
@@ -875,10 +878,12 @@ let st_equiv_ln #g #c1 #c2 (d:st_equiv g c1 c2)
   : Lemma 
     (requires ln_c c1)
     (ensures ln_c c2)
-  = let ST_VPropEquiv _ _ _ x (E dpre) _dres _dpost eq_pre eq_post = d in
+  = let ST_VPropEquiv _ _ _ x (E dpre) _dres _dpost eq_res eq_pre eq_post = d in
     vprop_equiv_ln eq_pre;
     open_term_ln_inv' (comp_post c1) (term_of_no_name_var x) 0;
     vprop_equiv_ln eq_post;
+    rt_equiv_ln _ _ _ eq_res;
+    elab_ln_inverse (comp_res c2);
     open_term_ln' (comp_post c2) (term_of_no_name_var x) 0
 
 let bind_comp_ln #g #x #c1 #c2 #c (d:bind_comp g x c1 c2 c)

@@ -515,6 +515,8 @@ let (stapp_or_return :
                              | FStar_Pervasives_Native.Some
                                  (FStar_Syntax_Syntax.Implicit uu___7) ->
                                  true
+                             | FStar_Pervasives_Native.Some
+                                 (FStar_Syntax_Syntax.Meta uu___7) -> true
                              | uu___7 -> false in
                            let is_arg_implicit aq =
                              match FStar_Pervasives_Native.snd aq with

@@ -158,7 +158,7 @@ let stghostapp_soundness
                  RT.R_Sub
                  r_head_t_ghost
     = RT.Rel_arrow _ (elab_term formal) (elab_term formal) (elab_qual q) (T.E_Total, elab_comp res) (T.E_Ghost, elab_comp res)
-        RT.R_Sub x (RT.Rel_equiv _ _ _ _ (RT.EQ_Refl _ _))
+        RT.R_Sub x (RT.Rel_equiv _ _ _ _ (RT.Rel_refl _ _ _))
         d_rel_comp in
 
   let r_head_typing : RT.ghost_typing _ r_head r_head_t_ghost =

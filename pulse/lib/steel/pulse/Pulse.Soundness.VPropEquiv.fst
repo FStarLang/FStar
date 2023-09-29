@@ -139,7 +139,7 @@ let inst_vprop_equiv_ext_aux #g #v0 #v1
     R.Q_Explicit
     RT.Ctxt_hole in
 
-  RT.EQ_Ctxt _ _ _ ctxt (RT.EQ_Token _ _ _ (Squash.return_squash token))
+  RT.Rel_ctxt _ _ _ ctxt (RT.Rel_eq_token _ _ _ (Squash.return_squash token))
 
 let inst_vprop_equiv_ext #g #v0 #v1
   (d0:RT.tot_typing g v0 vprop_tm)

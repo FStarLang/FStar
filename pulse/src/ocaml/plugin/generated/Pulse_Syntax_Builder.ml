@@ -226,7 +226,12 @@ let (with_range :
     Pulse_Syntax_Base.range -> Pulse_Syntax_Base.st_term)
   =
   fun t ->
-    fun r -> { Pulse_Syntax_Base.term1 = t; Pulse_Syntax_Base.range2 = r }
+    fun r ->
+      {
+        Pulse_Syntax_Base.term1 = t;
+        Pulse_Syntax_Base.range2 = r;
+        Pulse_Syntax_Base.effect_tag = Pulse_Syntax_Base.default_effect_hint
+      }
 let (tm_assert_with_binders :
   Pulse_Syntax_Base.binder Prims.list ->
     Pulse_Syntax_Base.vprop ->

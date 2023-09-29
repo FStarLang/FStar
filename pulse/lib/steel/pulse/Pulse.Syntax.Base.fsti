@@ -142,6 +142,10 @@ type ctag =
   | STT_Atomic
   | STT_Ghost
 
+let effect_hint = FStar.Sealed.Inhabited.sealed #(option ctag) None
+let default_effect_hint : effect_hint = FStar.Sealed.seal None
+let as_effect_hint (c:ctag) : effect_hint = FStar.Sealed.seal (Some c)
+
 let ctag_of_comp_st (c:comp_st) : ctag =
   match c with
   | C_ST _ -> STT
@@ -169,6 +173,7 @@ type proof_hint_type =
       t1:vprop;
       t2:vprop;
     }
+
 
 (* terms with STT types *)
 [@@ no_auto_projectors]
@@ -258,7 +263,8 @@ type st_term' =
 
 and st_term = {
     term : st_term';
-    range : range
+    range : range;
+    effect_tag: effect_hint
 } 
 
 and branch = pattern & st_term

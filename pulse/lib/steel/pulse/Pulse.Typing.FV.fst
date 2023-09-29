@@ -212,6 +212,11 @@ val refl_typing_freevars (#g:R.env) (#e:R.term) (#t:R.term) (#eff:_)
     (ensures RT.freevars e `Set.subset` (vars_of_env_r g) /\
              RT.freevars t `Set.subset` (vars_of_env_r g))
 
+assume
+val refl_equiv_freevars (#g:R.env) (#e1 #e2:R.term) (d:RT.equiv g e1 e2)
+  : Lemma (RT.freevars e1 `Set.subset` (vars_of_env_r g) /\
+           RT.freevars e2 `Set.subset` (vars_of_env_r g))
+
 let freevars_open_term_inv (e:term) 
                            (x:var {~ (x `Set.mem` freevars e) })
   : Lemma 
@@ -298,14 +303,16 @@ let st_equiv_freevars #g (#c1 #c2:_)
   : Lemma
     (requires freevars_comp c1 `Set.subset` vars_of_env g)
     (ensures freevars_comp c2 `Set.subset` vars_of_env g)    
-  = let ST_VPropEquiv _ _ _ x _ _ _ eq_pre eq_post = d in
+  = let ST_VPropEquiv _ _ _ x _ _ _ eq_res eq_pre eq_post = d in
     vprop_equiv_freevars eq_pre;
     vprop_equiv_freevars eq_post;
-    freevars_open_term_inv (comp_post c1) x;     
-    freevars_open_term_inv (comp_post c2) x
-
-
-let src_typing_freevars_t (d':'a) = 
+    freevars_open_term_inv (comp_post c1) x;
+    freevars_open_term_inv (comp_post c2) x;
+    Pulse.Elaborate.elab_freevars (comp_res c1);
+    refl_equiv_freevars eq_res;
+    Pulse.Elaborate.elab_freevars (comp_res c2)
+    
+let src_typing_freevars_t (d':'a) =
     (#g:_) -> (#t:_) -> (#c:_) -> (d:st_typing g t c { d << d' }) ->
     Lemma 
     (ensures freevars_st t `Set.subset` vars_of_env g /\
@@ -400,7 +407,8 @@ let freevars_ref (t:term)
   : Lemma (freevars (mk_ref t) == freevars t)
   = admit()
 
-#push-options "--fuel 2 --ifuel 1 --z3rlimit_factor 10 --query_stats"
+// FIXME: tame this proof
+#push-options "--fuel 2 --ifuel 1 --z3rlimit_factor 10 --query_stats --retry 5"
 let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
                            (d:st_typing g t c)
   : Lemma 

@@ -773,10 +773,11 @@ let (unify :
                                           FStar_Pervasives_Native.Some
                                             (Prims.Mkdtuple2
                                                (ss,
-                                                 (FStar_Reflection_Typing.EQ_Refl
+                                                 (FStar_Reflection_Typing.Rel_refl
                                                     ((Pulse_Typing.elab_env g),
                                                       (Pulse_Elaborate_Pure.elab_term
-                                                         p))))))))
+                                                         p),
+                                                      FStar_Reflection_Typing.R_Eq)))))))
                              else
                                Obj.magic
                                  (Obj.repr
@@ -927,7 +928,7 @@ let (unify :
                                                                     FStar_Pervasives_Native.Some
                                                                     (Prims.Mkdtuple2
                                                                     (ss,
-                                                                    (FStar_Reflection_Typing.EQ_Token
+                                                                    (FStar_Reflection_Typing.Rel_eq_token
                                                                     ((Pulse_Typing.elab_env
                                                                     g), v0,
                                                                     v1, ()))))

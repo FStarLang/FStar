@@ -205,6 +205,12 @@ let (uu___is_STT_Atomic : ctag -> Prims.bool) =
   fun projectee -> match projectee with | STT_Atomic -> true | uu___ -> false
 let (uu___is_STT_Ghost : ctag -> Prims.bool) =
   fun projectee -> match projectee with | STT_Ghost -> true | uu___ -> false
+type effect_hint =
+  (ctag FStar_Pervasives_Native.option, unit) FStar_Sealed_Inhabited.sealed
+let (default_effect_hint : effect_hint) =
+  FStar_Sealed.seal FStar_Pervasives_Native.None
+let (as_effect_hint : ctag -> effect_hint) =
+  fun c -> FStar_Sealed.seal (FStar_Pervasives_Native.Some c)
 let (ctag_of_comp_st : comp_st -> ctag) =
   fun c ->
     match c with
@@ -387,7 +393,8 @@ and st_term' =
   | Tm_ProofHintWithBinders of st_term'__Tm_ProofHintWithBinders__payload 
 and st_term = {
   term1: st_term' ;
-  range2: range }
+  range2: range ;
+  effect_tag: effect_hint }
 let uu___is_Tm_Return uu___ =
   match uu___ with | Tm_Return _ -> true | _ -> false
 let uu___is_Tm_Abs uu___ = match uu___ with | Tm_Abs _ -> true | _ -> false

@@ -30,16 +30,18 @@ let (k_intro_exists :
                             (FStar_Range.mk_range
                                "Pulse.Checker.Prover.IntroExists.fst"
                                (Prims.of_int (27)) (Prims.of_int (10))
-                               (Prims.of_int (28)) (Prims.of_int (49)))))
+                               (Prims.of_int (28)) (Prims.of_int (68)))))
                       (FStar_Sealed.seal
                          (Obj.magic
                             (FStar_Range.mk_range
                                "Pulse.Checker.Prover.IntroExists.fst"
-                               (Prims.of_int (28)) (Prims.of_int (52))
+                               (Prims.of_int (28)) (Prims.of_int (71))
                                (Prims.of_int (67)) (Prims.of_int (30)))))
                       (FStar_Tactics_Effect.lift_div_tac
                          (fun uu___ ->
-                            Pulse_Typing.wr
+                            Pulse_Typing.wtag
+                              (FStar_Pervasives_Native.Some
+                                 Pulse_Syntax_Base.STT_Ghost)
                               (Pulse_Syntax_Base.Tm_IntroExists
                                  {
                                    Pulse_Syntax_Base.p5 =
@@ -170,7 +172,9 @@ let (k_intro_exists :
                                                                     g frame
                                                                     (Pulse_Typing.comp_intro_exists
                                                                     u b p e)
-                                                                    (Pulse_Typing.wr
+                                                                    (Pulse_Typing.wtag
+                                                                    (FStar_Pervasives_Native.Some
+                                                                    Pulse_Syntax_Base.STT_Ghost)
                                                                     (Pulse_Syntax_Base.Tm_IntroExists
                                                                     {
                                                                     Pulse_Syntax_Base.p5
