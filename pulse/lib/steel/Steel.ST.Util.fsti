@@ -325,7 +325,11 @@ val implies_
 : Tot vprop
 
 [@@__reduce__]
-let ( @==> ) #is hyp concl = implies_ #is hyp concl
+let ( @==> )
+  (#[T.exact (`(hide Set.empty))] is : inames) // Empty inames by default
+  (hyp concl: vprop)
+: Tot vprop
+= implies_ #is hyp concl
 
 val elim_implies
   (#opened: _)
