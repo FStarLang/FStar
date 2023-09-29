@@ -1453,48 +1453,48 @@ let (optimized_haseq_scheme :
               let uu___1 = FStar_Syntax_Subst.univ_var_opening us in
               (match uu___1 with
                | (usubst, us1) ->
-                   let env = FStar_TypeChecker_Env.push_sigelt env0 sig_bndle in
-                   ((env.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.push
-                      "haseq";
-                    (env.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.encode_sig
-                      env sig_bndle;
-                    (let env1 = FStar_TypeChecker_Env.push_univ_vars env us1 in
-                     let uu___4 =
+                   let env = FStar_TypeChecker_Env.push env0 "haseq" in
+                   let env1 =
+                     FStar_TypeChecker_Env.push_sigelt_force env sig_bndle in
+                   ((env1.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.encode_sig
+                      env1 sig_bndle;
+                    (let env2 = FStar_TypeChecker_Env.push_univ_vars env1 us1 in
+                     let uu___3 =
                        FStar_Compiler_List.fold_left
                          (optimized_haseq_ty datas usubst us1)
-                         ([], env1, FStar_Syntax_Util.t_true,
+                         ([], env2, FStar_Syntax_Util.t_true,
                            FStar_Syntax_Util.t_true) tcs in
-                     match uu___4 with
-                     | (axioms, env2, guard, cond) ->
+                     match uu___3 with
+                     | (axioms, env3, guard, cond) ->
                          let phi =
-                           let uu___5 = FStar_Syntax_Util.arrow_formals t in
-                           match uu___5 with
-                           | (uu___6, t1) ->
-                               let uu___7 =
+                           let uu___4 = FStar_Syntax_Util.arrow_formals t in
+                           match uu___4 with
+                           | (uu___5, t1) ->
+                               let uu___6 =
                                  FStar_Syntax_Util.is_eqtype_no_unrefine t1 in
-                               if uu___7
+                               if uu___6
                                then cond
                                else FStar_Syntax_Util.mk_imp guard cond in
-                         let uu___5 =
-                           FStar_TypeChecker_TcTerm.tc_trivial_guard env2 phi in
-                         (match uu___5 with
-                          | (phi1, uu___6) ->
-                              ((let uu___8 =
-                                  FStar_TypeChecker_Env.should_verify env2 in
-                                if uu___8
+                         let uu___4 =
+                           FStar_TypeChecker_TcTerm.tc_trivial_guard env3 phi in
+                         (match uu___4 with
+                          | (phi1, uu___5) ->
+                              ((let uu___7 =
+                                  FStar_TypeChecker_Env.should_verify env3 in
+                                if uu___7
                                 then
-                                  let uu___9 =
+                                  let uu___8 =
                                     FStar_TypeChecker_Env.guard_of_guard_formula
                                       (FStar_TypeChecker_Common.NonTrivial
                                          phi1) in
                                   FStar_TypeChecker_Rel.force_trivial_guard
-                                    env2 uu___9
+                                    env3 uu___8
                                 else ());
                                (let ses =
                                   FStar_Compiler_List.fold_left
                                     (fun l ->
-                                       fun uu___8 ->
-                                         match uu___8 with
+                                       fun uu___7 ->
+                                         match uu___7 with
                                          | (lid, fml) ->
                                              let fml1 =
                                                FStar_Syntax_Subst.close_univ_vars
@@ -1528,8 +1528,9 @@ let (optimized_haseq_scheme :
                                                     =
                                                     FStar_Pervasives_Native.None
                                                 }]) [] axioms in
-                                (env2.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.pop
-                                  "haseq";
+                                (let uu___8 =
+                                   FStar_TypeChecker_Env.pop env3 "haseq" in
+                                 ());
                                 ses))))))
 let (unoptimized_haseq_data :
   FStar_Syntax_Syntax.subst_elt Prims.list ->

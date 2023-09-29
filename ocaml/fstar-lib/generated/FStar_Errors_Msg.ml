@@ -39,6 +39,12 @@ let (renderdoc : FStar_Pprint.document -> Prims.string) =
   fun d ->
     let one = FStar_Compiler_Util.float_of_string "1.0" in
     FStar_Pprint.pretty_string one (Prims.of_int (80)) d
+let (backtrace_doc : unit -> FStar_Pprint.document) =
+  fun uu___ ->
+    let s = FStar_Compiler_Util.stack_dump () in
+    let uu___1 = text "Stack trace:" in
+    let uu___2 = FStar_Pprint.arbitrary_string s in
+    FStar_Pprint.op_Hat_Slash_Hat uu___1 uu___2
 let (subdoc : FStar_Pprint.document -> FStar_Pprint.document) =
   fun d ->
     if d = FStar_Pprint.empty
