@@ -47,5 +47,8 @@ val subdoc : document -> document
 (* Only to be used by FStar.Errors *)
 val renderdoc : document -> string
 
+(* Returns a document with the current stack trace *)
+val backtrace_doc : unit -> document
+
 (* Render an error message as a string. *)
 val rendermsg : error_message -> string

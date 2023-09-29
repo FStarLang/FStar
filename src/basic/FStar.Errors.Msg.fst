@@ -28,6 +28,11 @@ let renderdoc (d : document) : string =
   let one = float_of_string "1.0" in
   pretty_string one 80 d
 
+let backtrace_doc () : document =
+  let s = stack_dump () in
+  text "Stack trace:" ^/^
+  arbitrary_string s
+
 let subdoc d =
   (* NOTE: slight hack here, using equality on Pprint documents. This works
   fine, particularly for this case, since empty is just a constructor Empty.
