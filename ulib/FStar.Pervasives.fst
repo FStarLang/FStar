@@ -28,6 +28,10 @@ let smt_pat_or _ = ()
 
 let spinoff p = p
 
+#push-options "--no_tactics"
+let spinoff_equiv _ = ()
+#pop-options
+
 let assert_spinoff _ = ()
 
 let ambient #_ _ = True
