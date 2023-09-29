@@ -63,3 +63,40 @@ let free'
         A.free a; ()
 let free = free'
     
+//[@@"__reduce__"; "__steel_reduce__"]
+let pts_to_range #a (r:array a) (i j: nat) (#[exact (`full_perm)] p:perm) (v:FStar.Seq.seq a) = A.pts_to_range r i j p v
+
+let pts_to_range = admit()
+
+let pts_to_range_intro
+  #elt a p s
+= fun _ -> A.pts_to_range_intro a p s
+
+let pts_to_range_elim
+  #elt a p s
+= fun _ -> A.pts_to_range_elim a p s
+
+let pts_to_range_split
+  #elt a i m j #p #s
+= fun _ ->
+    let _ = elim_pure _ in
+    A.pts_to_range_split a i m j;
+    noop ()
+
+let pts_to_range_join
+  a i m j #p #s1 #s2
+= fun _ ->
+    A.pts_to_range_join a i m j;
+    noop ()
+
+let pts_to_range_index
+  a i #l #r #s #p
+= fun _ ->
+    let res = A.pts_to_range_index a l i r in
+    return res
+
+let pts_to_range_upd
+  a i v #l #r
+= fun _ ->
+    let _ = A.pts_to_range_upd a l i r v in
+    noop ()
