@@ -354,7 +354,7 @@ val intro_implies
     v
     (fun _ -> (@==>) #is hyp concl)
 
-let implies_uncurry
+let implies_uncurry_gen
   (#opened: _)
   (#[T.exact (`(hide Set.empty))] is1 : inames)
   (#[T.exact (`(hide Set.empty))] is2 : inames {is1 /! is2})
@@ -366,6 +366,17 @@ let implies_uncurry
     elim_implies h1 (h2 @==> c);
     elim_implies h2 c
   )
+
+let implies_uncurry
+  (#opened: _)
+  (h1 h2 c: vprop)
+: STGhostT unit opened
+    ((@==>) h1 ((@==>) h2 c))
+    (fun _ -> (@==>) (h1 `star` h2) c)
+= implies_uncurry_gen #_ #(Set.empty) #(Set.empty) h1 h2 c;
+  assert (Set.union Set.empty Set.empty `Set.equal` (Set.empty #iname));
+  noop ();
+  rewrite (implies_ #(Set.union Set.empty Set.empty) (h1 `star` h2) c) (implies_ #(Set.empty) (h1 `star` h2) c)
 
 let emp_inames : inames = Set.empty
 
@@ -381,7 +392,7 @@ let implies_curry
     elim_implies #opened' #is (h1 `star` h2) c
   ))
 
-let implies_join
+let implies_join_gen
   (#opened: _)
   (#[T.exact (`(hide Set.empty))] is1 : inames)
   (#[T.exact (`(hide Set.empty))] is2 : inames)
@@ -394,7 +405,18 @@ let implies_join
     elim_implies h2 c2
   )
 
-let implies_trans
+let implies_join
+  (#opened: _)
+  (h1 c1 h2 c2: vprop)
+: STGhostT unit opened
+    (((@==>) h1 c1) `star` ((@==>) h2 c2))
+    (fun _ -> (@==>) (h1 `star` h2) (c1 `star` c2))
+= implies_join_gen h1 c1 h2 c2;
+  assert (Set.union Set.empty Set.empty `Set.equal` (Set.empty #iname));
+  noop ();
+  rewrite (implies_ #(Set.union Set.empty Set.empty) (h1 `star` h2) (c1 `star` c2)) (implies_ #(Set.empty) (h1 `star` h2) (c1 `star` c2))
+
+let implies_trans_gen
   (#opened: _)
   (#[T.exact (`(hide Set.empty))] is1 : inames)
   (#[T.exact (`(hide Set.empty))] is2 : inames)
@@ -406,6 +428,17 @@ let implies_trans
     elim_implies v1 v2;
     elim_implies v2 v3
   )
+
+let implies_trans
+  (#opened: _)
+  (v1 v2 v3: vprop)
+: STGhostT unit opened
+    (((@==>) v1 v2) `star` ((@==>) v2 v3))
+    (fun _ -> (@==>) v1 v3)
+= implies_trans_gen v1 v2 v3;
+  assert (Set.union Set.empty Set.empty `Set.equal` (Set.empty #iname));
+  noop ();
+  rewrite (implies_ #(Set.union Set.empty Set.empty) v1 v3) (implies_ #(Set.empty) v1 v3)
 
 let adjoint_elim_implies
   (#opened: _)
@@ -437,6 +470,87 @@ let adjoint_intro_implies
 = intro_implies q r p (fun _ ->
     f _
   )
+
+/// Derived operations with implies
+
+let implies_refl
+  (#opened: _)
+  (p: vprop)
+: STGhostT unit opened
+    emp
+    (fun _ -> p @==> p)
+= intro_implies p p emp (fun _ -> noop ())
+
+let rewrite_with_implies
+  (#opened: _)
+  (p q: vprop)
+: STGhost unit opened
+    p
+    (fun _ -> q `star` (q @==> p))
+    (p == q)
+    (fun _ -> True)
+= rewrite p q;
+  intro_implies q p emp (fun _ ->
+    rewrite q p
+  )
+
+let implies_emp_l
+  (#opened: _)
+  (p: vprop)
+: STGhostT unit opened
+    p
+    (fun _ -> emp @==> p)
+= intro_implies emp p p (fun _ -> noop ())
+
+let implies_with_tactic
+  (#opened: _)
+  (p q: vprop)
+: STGhost unit opened
+    emp
+    (fun _ -> p @==> q)
+    (requires FStar.Tactics.with_tactic init_resolve_tac (squash (p `equiv` q)))
+    (ensures fun _ -> True)
+= intro_implies p q emp (fun _ -> rewrite_equiv p q)
+
+let implies_concl_l
+  (#opened: _)
+  (p q r: vprop)
+: STGhostT unit opened
+    (p `star` (q @==> r))
+    (fun _ -> q @==> (p `star` r))
+= implies_with_tactic q (emp `star` q);
+  implies_emp_l p;
+  implies_join emp p q r;
+  implies_trans q (emp `star` q) (p `star` r)
+
+let implies_concl_r
+  (#opened: _)
+  (q r p: vprop)
+: STGhostT unit opened
+    (p `star` (q @==> r))
+    (fun _ -> q @==> (r `star` p))
+= implies_concl_l p q r;
+  implies_with_tactic (p `star` r) (r `star` p);
+  implies_trans q (p `star` r) (r `star` p)
+
+let implies_reg_l
+  (#opened: _)
+  (p q r: vprop)
+: STGhostT unit opened
+    (q @==> r)
+    (fun _ -> (p `star` q) @==> (p `star` r))
+= implies_with_tactic p p;
+  implies_join p p q r
+
+let implies_reg_r
+  (#opened: _)
+  (q r: vprop)
+  (p: vprop)
+: STGhostT unit opened
+    (q @==> r)
+    (fun _ -> (q `star` p) @==> (r `star` p))
+= implies_with_tactic p p;
+  implies_join q r p p
 
 /// The magic wand is a implies (but not the converse)
 
