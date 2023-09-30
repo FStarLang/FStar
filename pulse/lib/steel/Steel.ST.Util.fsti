@@ -517,6 +517,19 @@ let rewrite_with_implies
     rewrite q p
   )
 
+let vpattern_rewrite_with_implies
+  (#opened: _)
+  (#a: Type)
+  (#x1: a)
+  (p: a -> vprop)
+  (x2: a)
+: STGhost unit opened
+    (p x1)
+    (fun _ -> p x2 `star` (p x2 @==> p x1))
+    (x1 == x2)
+    (fun _ -> True)
+= rewrite_with_implies (p x1) (p x2)
+
 let implies_emp_l
   (#opened: _)
   (p: vprop)
