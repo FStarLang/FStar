@@ -286,7 +286,7 @@ let implies_apply
   let f : Ghost.erased (elim_implies_t is hyp concl v) = FStar.IndefiniteDescription.elim_squash #(elim_implies_t is hyp concl v) () in
   Ghost.reveal f _
 
-let elim_implies
+let elim_implies_gen
   (#opened: _)
   (#is : inames{opened /! is})
   (hyp concl: vprop)

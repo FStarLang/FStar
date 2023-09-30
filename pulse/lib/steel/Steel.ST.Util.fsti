@@ -331,13 +331,21 @@ let ( @==> )
 : Tot vprop
 = implies_ #is hyp concl
 
-val elim_implies
+val elim_implies_gen
   (#opened: _)
   (#[T.exact (`(hide Set.empty))] is : inames{opened /! is})
   (hyp concl: vprop)
 : STGhostT unit opened
     ((implies_ #is hyp concl) `star` hyp)
     (fun _ -> concl)
+
+let elim_implies
+  (#opened: _)
+  (hyp concl: vprop)
+: STGhostT unit opened
+    ((implies_ hyp concl) `star` hyp)
+    (fun _ -> concl)
+= elim_implies_gen hyp concl
 
 val intro_implies_gen
   (#opened: _)
@@ -378,8 +386,8 @@ let implies_uncurry_gen
     ((@==>) #is1 h1 ((@==>) #is2 h2 c))
     (fun _ -> (@==>) #(Set.union is1 is2) (h1 `star` h2) c)
 = intro_implies_gen (h1 `star` h2) c (h1 @==> (h2 @==> c)) (fun _ ->
-    elim_implies h1 (h2 @==> c);
-    elim_implies h2 c
+    elim_implies_gen h1 (h2 @==> c);
+    elim_implies_gen h2 c
   )
 
 let implies_uncurry
@@ -404,7 +412,7 @@ let implies_curry
     (fun _ -> (@==>) #emp_inames h1 ((@==>) #is h2 c))
 = intro_implies_gen #opened #emp_inames h1 ((@==>) #is h2 c) ((h1 `star` h2) @==> c) (fun opened' ->
     intro_implies_gen #opened' #is h2 c (((h1 `star` h2) @==> c) `star` h1) (fun opened' ->
-    elim_implies #opened' #is (h1 `star` h2) c
+    elim_implies_gen #opened' #is (h1 `star` h2) c
   ))
 
 let implies_join_gen
@@ -416,8 +424,8 @@ let implies_join_gen
     (((@==>) #is1 h1 c1) `star` ((@==>) #is2 h2 c2))
     (fun _ -> (@==>) #(Set.union is1 is2) (h1 `star` h2) (c1 `star` c2))
 = intro_implies_gen (h1 `star` h2) (c1 `star` c2) ((h1 @==> c1) `star` (h2 @==> c2)) (fun _ ->
-    elim_implies h1 c1;
-    elim_implies h2 c2
+    elim_implies_gen h1 c1;
+    elim_implies_gen h2 c2
   )
 
 let implies_join
@@ -440,8 +448,8 @@ let implies_trans_gen
     (((@==>) #is1 v1 v2) `star` ((@==>) #is2 v2 v3))
     (fun _ -> (@==>) #(Set.union is1 is2) v1 v3)
 = intro_implies_gen v1 v3 ((v1 @==> v2) `star` (v2 @==> v3)) (fun _ ->
-    elim_implies v1 v2;
-    elim_implies v2 v3
+    elim_implies_gen v1 v2;
+    elim_implies_gen v2 v3
   )
 
 let implies_trans
@@ -468,7 +476,7 @@ let adjoint_elim_implies
     (p `star` q)
     (fun _ -> r)
 = f _;
-  elim_implies #opened q r
+  elim_implies_gen #opened q r
 
 let adjoint_intro_implies
   (#opened: _)

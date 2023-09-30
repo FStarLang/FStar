@@ -17,7 +17,7 @@ val __elim_stick
     (fun _ -> concl)
 
 let __elim_stick #opened #is hyp concl =
-  fun _ -> elim_implies #opened #is hyp concl
+  fun _ -> elim_implies_gen #opened #is hyp concl
 
 let elim_stick #opened #is = __elim_stick #opened #is
 
