@@ -308,7 +308,7 @@ let implies_fold
 = intro_pure (squash (elim_implies_t is hyp concl v));
   intro_exists v (fun v -> v `star` pure (squash (elim_implies_t is hyp concl v)))
 
-let intro_implies #opened #is = implies_fold #opened #is
+let intro_implies_gen #opened #is = implies_fold #opened #is
 
 let elim_forall_t
   (#t: Type)

@@ -38,7 +38,7 @@ val __intro_stick
     (fun _ -> (@==>) #is hyp concl)
 
 let __intro_stick #opens #is hyp concl v f_elim =
-  fun _ -> intro_implies #opens #is hyp concl v
+  fun _ -> intro_implies_gen #opens #is hyp concl v
                (fun opens' -> f_elim opens' ())
 
 let intro_stick #opened #is = __intro_stick #opened #is
