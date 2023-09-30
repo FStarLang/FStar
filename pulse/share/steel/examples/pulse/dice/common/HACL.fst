@@ -8,13 +8,13 @@ module U32 = FStar.UInt32
 
 let v32us : US.t = 32sz
 
-let coerce (l:US.t) (s:erased (elseq U8.t l)) : erased (Seq.seq U8.t)
-  = let s_ = reveal s in 
-    hide s_
+// let coerce (l:US.t) (s:erased (elseq U8.t l)) : erased (Seq.seq U8.t)
+//   = let s_ = reveal s in 
+//     hide s_
 
-let coerce_refined (l:US.t) (s:erased (Seq.seq U8.t){Seq.length (reveal s) == US.v l}) : erased (elseq U8.t l)
-  = let s_ = reveal s in 
-    hide s_
+// let coerce_refined (l:US.t) (s:erased (Seq.seq U8.t){Seq.length (reveal s) == US.v l}) : erased (elseq U8.t l)
+//   = let s_ = reveal s in 
+//     hide s_
 
 (* a tiny model of HACL* hashes *)
 
@@ -101,8 +101,7 @@ val ed25519_verify
   (hdr_len:signable_len { US.v hdr_len == A.length hdr })
   (sig:A.larray U8.t 64)
   (#ppubk #phdr #psig:perm)
-  (#pubk_seq:erased (elseq U8.t v32us))
-  (#hdr_seq #sig_seq:erased (Seq.seq U8.t))
+  (#pubk_seq #hdr_seq #sig_seq:erased (Seq.seq U8.t))
   : stt bool
     (A.pts_to pubk #ppubk pubk_seq **
      A.pts_to hdr #phdr hdr_seq **
@@ -123,9 +122,7 @@ val ed25519_sign
   (len:US.t)
   (msg:A.larray U8.t (US.v len))
   (#pprivk #pmsg:perm)
-  (#buf0:erased (Seq.seq U8.t))
-  (#privk_seq:erased (elseq U8.t v32us))
-  (#msg_seq:erased (elseq U8.t len))
+  (#buf0 #privk_seq #msg_seq:erased (Seq.seq U8.t))
   : stt unit
     (A.pts_to buf buf0 **
      A.pts_to privk #pprivk privk_seq **
