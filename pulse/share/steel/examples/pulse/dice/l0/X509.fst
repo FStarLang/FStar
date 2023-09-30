@@ -46,14 +46,14 @@ assume
 val spec_serialize_deviceIDCRI
   (deviceIDCRI: deviceIDCRI_t)
   (deviceIDCRI_len: US.t)
-  : elseq U8.t deviceIDCRI_len
+  : GTot (Seq.seq U8.t)
 
 assume
 val serialize_deviceIDCRI
   (deviceIDCRI: deviceIDCRI_t)
   (deviceIDCRI_len: US.t)
   (deviceIDCRI_buf: A.larray U8.t (US.v deviceIDCRI_len))
-  (#deviceIDCRI_buf0: erased (elseq U8.t deviceIDCRI_len))
+  (#deviceIDCRI_buf0: erased (Seq.seq U8.t))
   : stt unit
     (A.pts_to deviceIDCRI_buf deviceIDCRI_buf0)
     (fun _ -> A.pts_to deviceIDCRI_buf (spec_serialize_deviceIDCRI 
@@ -65,7 +65,7 @@ val spec_serialize_deviceIDCSR
   (deviceIDCRI_len: US.t)
   (deviceIDCSR_len: US.t)
   (deviceIDCSR: deviceIDCSR_t deviceIDCRI_len)
-  : elseq U8.t deviceIDCSR_len
+  : GTot (Seq.seq U8.t)
 
 assume
 val serialize_deviceIDCSR 
@@ -73,7 +73,7 @@ val serialize_deviceIDCSR
   (deviceIDCSR: deviceIDCSR_t deviceIDCRI_len)
   (deviceIDCSR_len: US.t)
   (deviceIDCSR_buf: A.larray U8.t (US.v deviceIDCSR_len))
-  (#_buf:erased (elseq U8.t deviceIDCSR_len))
+  (#_buf:erased (Seq.seq U8.t))
   : stt unit
     (A.pts_to deviceIDCSR_buf _buf)
     (fun _ -> A.pts_to deviceIDCSR_buf (spec_serialize_deviceIDCSR 
@@ -85,14 +85,14 @@ assume
 val spec_serialize_aliasKeyTBS
   (aliasKeyTBS: aliasKeyTBS_t)
   (aliasKeyTBS_len: US.t)
-  : elseq U8.t aliasKeyTBS_len
+  : GTot (Seq.seq U8.t)
 
 assume
 val serialize_aliasKeyTBS
   (aliasKeyTBS: aliasKeyTBS_t)
   (aliasKeyTBS_len: US.t)
   (aliasKeyTBS_buf: A.larray U8.t (US.v aliasKeyTBS_len))
-  (#aliasKeyTBS_buf0: erased (elseq U8.t aliasKeyTBS_len))
+  (#aliasKeyTBS_buf0: erased (Seq.seq U8.t))
   : stt unit
     (A.pts_to aliasKeyTBS_buf aliasKeyTBS_buf0)
     (fun _ -> A.pts_to aliasKeyTBS_buf (spec_serialize_aliasKeyTBS 
@@ -104,7 +104,7 @@ val spec_serialize_aliasKeyCRT
   (aliasKeyTBS_len: US.t)
   (aliasKeyCRT_len: US.t)
   (aliasKeyCRT: aliasKeyCRT_t aliasKeyTBS_len)
-  : elseq U8.t aliasKeyCRT_len
+  : GTot (Seq.seq U8.t)
 
 assume  
 val serialize_aliasKeyCRT
@@ -112,7 +112,7 @@ val serialize_aliasKeyCRT
   (aliasKeyCRT: aliasKeyCRT_t aliasKeyTBS_len)
   (aliasKeyCRT_len: US.t)
   (aliasKeyCRT_buf: A.larray U8.t (US.v aliasKeyCRT_len))
-  (#_buf:erased (elseq U8.t aliasKeyCRT_len))
+  (#_buf:erased (Seq.seq U8.t))
   : stt unit
     (A.pts_to aliasKeyCRT_buf _buf)
     (fun _ -> A.pts_to aliasKeyCRT_buf (spec_serialize_aliasKeyCRT 
@@ -125,9 +125,9 @@ val serialize_aliasKeyCRT
 assume 
 val spec_x509_get_deviceIDCSR
   (deviceIDCRI_len: US.t)
-  (deviceIDCRI_buf: elseq U8.t deviceIDCRI_len)
+  (deviceIDCRI_buf: Seq.seq U8.t)
   (deviceIDCRI_sig: Seq.seq U8.t)
-  : deviceIDCSR_t deviceIDCRI_len
+  : GTot (deviceIDCSR_t deviceIDCRI_len)
 
 assume 
 val x509_get_deviceIDCSR
@@ -135,7 +135,7 @@ val x509_get_deviceIDCSR
   (deviceIDCRI_buf: A.larray U8.t (US.v deviceIDCRI_len))
   (deviceIDCRI_sig: A.array U8.t)
   (#buf_perm #sig_perm:perm)
-  (#buf:erased (elseq U8.t deviceIDCRI_len)) (#sig:erased (Seq.seq U8.t))
+  (#buf #sig:erased (Seq.seq U8.t))
   : stt (deviceIDCSR_t deviceIDCRI_len)
     (A.pts_to deviceIDCRI_buf #buf_perm buf **
      A.pts_to deviceIDCRI_sig #sig_perm sig)
@@ -153,8 +153,8 @@ val spec_x509_get_deviceIDCRI
   (s_org: string)
   (s_country: string)
   (ku: U32.t)
-  (deviceID_pub: elseq U8.t v32us)
-  : deviceIDCRI_t
+  (deviceID_pub: Seq.seq U8.t)
+  : GTot deviceIDCRI_t
 
 assume 
 val x509_get_deviceIDCRI
@@ -165,7 +165,7 @@ val x509_get_deviceIDCRI
   (ku: U32.t)
   (deviceID_pub: A.larray U8.t (US.v v32us))
   (#pub_perm:perm)
-  (#deviceID_pub0: erased (elseq U8.t v32us))
+  (#deviceID_pub0: erased (Seq.seq U8.t))
   : stt deviceIDCRI_t
     (A.pts_to deviceID_pub #pub_perm deviceID_pub0)
     (fun res -> 
@@ -179,8 +179,8 @@ assume
 val spec_x509_get_aliasKeyTBS
   (aliasKeyCRT_ingredients:aliasKeyCRT_ingredients_t)
   (fwid:Seq.seq U8.t)
-  (deviceID_pub aliasKey_pub:elseq U8.t v32us)
-  : aliasKeyTBS_t
+  (deviceID_pub aliasKey_pub:Seq.seq U8.t)
+  : GTot aliasKeyTBS_t
 
 assume
 val x509_get_aliasKeyTBS
@@ -189,8 +189,7 @@ val x509_get_aliasKeyTBS
   (deviceID_pub:A.larray U8.t (US.v v32us))
   (aliasKey_pub:A.larray U8.t (US.v v32us))
   (#fwid_perm #deviceID_perm #aliasKey_perm:perm)
-  (#fwid0:erased (Seq.seq U8.t))
-  (#deviceID0 #aliasKey0:erased (elseq U8.t v32us))
+  (#fwid0 #deviceID0 #aliasKey0:erased (Seq.seq U8.t))
   : stt aliasKeyTBS_t
   (A.pts_to fwid #fwid_perm fwid0 **
    A.pts_to deviceID_pub #deviceID_perm deviceID0 **
@@ -206,9 +205,9 @@ val x509_get_aliasKeyTBS
 assume 
 val spec_x509_get_aliasKeyCRT
   (aliasKeyTBS_len: US.t)
-  (aliasKeyTBS_buf: elseq U8.t aliasKeyTBS_len)
+  (aliasKeyTBS_buf: Seq.seq U8.t)
   (aliasKeyTBS_sig: Seq.seq U8.t)
-  : aliasKeyCRT_t aliasKeyTBS_len
+  : GTot (aliasKeyCRT_t aliasKeyTBS_len)
 
 assume 
 val x509_get_aliasKeyCRT
@@ -216,7 +215,7 @@ val x509_get_aliasKeyCRT
   (aliasKeyTBS_buf: A.larray U8.t (US.v aliasKeyTBS_len))
   (aliasKeyTBS_sig: A.array U8.t)
   (#buf_perm #sig_perm:perm)
-  (#buf:erased (elseq U8.t aliasKeyTBS_len)) (#sig:erased (Seq.seq U8.t))
+  (#buf #sig:erased (Seq.seq U8.t))
   : stt (aliasKeyCRT_t aliasKeyTBS_len)
     (A.pts_to aliasKeyTBS_buf #buf_perm buf **
      A.pts_to aliasKeyTBS_sig #sig_perm sig)

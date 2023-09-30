@@ -10,7 +10,7 @@ val uds_is_enabled : vprop
 
 val uds_len : hashable_len 
 
-val uds_bytes : Ghost.erased (elseq U8.t uds_len)
+val uds_bytes : erased (Seq.seq U8.t)
 
 type dice_return_code = | DICE_SUCCESS | DICE_ERROR
 
@@ -32,8 +32,8 @@ type engine_record_repr = {
     l0_image_header      : Seq.seq U8.t;
     l0_image_header_sig  : Seq.seq U8.t;
     l0_binary            : Seq.seq U8.t;
-    l0_binary_hash       : elseq U8.t dice_digest_len;
-    l0_image_auth_pubkey : elseq U8.t 32sz;
+    l0_binary_hash       : Seq.seq U8.t;
+    l0_image_auth_pubkey : Seq.seq U8.t;
 }
 
 let mk_engine_repr  l0_image_header_size l0_image_header l0_image_header_sig
