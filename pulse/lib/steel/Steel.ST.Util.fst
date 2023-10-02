@@ -132,8 +132,11 @@ let exists_equiv #a p1 p2
 let exists_cong #a #u p q
   = coerce_ghost (fun _ -> SEA.exists_cong #a #u p q)
 
+let fresh_invariant #u p ctxt
+  = coerce_atomic (fun _ -> SEA.fresh_invariant #u p ctxt)
+
 let new_invariant #u p
-  = coerce_atomic (fun _ -> SEA.new_invariant #u p)
+  = let i = fresh_invariant #u p [] in return i
 
 let with_invariant (#a:Type)
                    (#fp:vprop)
@@ -235,72 +238,77 @@ let vpattern_rewrite
 (* Separating ghost-state implication *)
 
 let elim_implies_t
+  (is : inames)
   (hyp concl: vprop)
   (v: vprop)
 : Tot Type
-= (opened: inames) -> STGhostT unit opened (v `star` hyp) (fun _ -> concl)
+= (opened: inames{opened /! is}) -> STGhostT unit opened (v `star` hyp) (fun _ -> concl)
 
 let is_implies
+  (is : inames)
   (hyp concl: vprop)
   (v: vprop)
 : GTot prop
-= squash (elim_implies_t hyp concl v)
+= squash (elim_implies_t is hyp concl v)
 
 let implies_
+  (#is : inames)
   (hyp concl: vprop)
 : Tot vprop
 = exists_ (fun (v: vprop) ->
-    v `star` pure (is_implies hyp concl v)
+    v `star` pure (is_implies is hyp concl v)
   )
-
-#set-options "--ide_id_info_off"
 
 let implies_unfold
   (#opened: _)
+  (#is : inames)
   (hyp concl: vprop)
 : STGhost vprop opened
-    (hyp @==> concl)
+    ((@==>) #is hyp concl)
     (fun v -> v)
     True
-    (fun v -> is_implies hyp concl v)
+    (fun v -> is_implies is hyp concl v)
 = let v = elim_exists () in
   let _ = elim_pure _ in
   v
 
 let implies_apply
   (#opened: _)
+  (#is : inames{opened /! is})
   (v hyp concl: vprop)
 : STGhost unit opened
     (v `star` hyp)
     (fun _ -> concl)
-    (is_implies hyp concl v)
+    (is_implies is hyp concl v)
     (fun _ -> True)
-= let sq : squash (is_implies hyp concl v) = () in
-  let _ : squash (elim_implies_t hyp concl v) = FStar.Squash.join_squash sq in
-  let f : Ghost.erased (elim_implies_t hyp concl v) = FStar.IndefiniteDescription.elim_squash #(elim_implies_t hyp concl v) () in
+= let sq : squash (is_implies is hyp concl v) = () in
+  let _ : squash (elim_implies_t is hyp concl v) = FStar.Squash.join_squash sq in
+  let f : Ghost.erased (elim_implies_t is hyp concl v) = FStar.IndefiniteDescription.elim_squash #(elim_implies_t is hyp concl v) () in
   Ghost.reveal f _
 
 let elim_implies
   (#opened: _)
+  (#is : inames{opened /! is})
   (hyp concl: vprop)
 : STGhostT unit opened
-    ((hyp @==> concl) `star` hyp)
+    (((@==>) #is hyp concl) `star` hyp)
     (fun _ -> concl)
 = let v = implies_unfold hyp concl in
-  implies_apply v hyp concl
+  implies_apply #opened #is v hyp concl
 
 let implies_fold
   (#opened: _)
+  (#is : inames)
   (hyp concl: vprop)
   (v: vprop)
-  (f_elim: elim_implies_t hyp concl v)
+  (f_elim: elim_implies_t is hyp concl v)
 : STGhostT unit opened
     v
-    (fun _ -> hyp @==> concl)
-= intro_pure (squash (elim_implies_t hyp concl v));
-  intro_exists v (fun v -> v `star` pure (squash (elim_implies_t hyp concl v)))
+    (fun _ -> (@==>) #is hyp concl)
+= intro_pure (squash (elim_implies_t is hyp concl v));
+  intro_exists v (fun v -> v `star` pure (squash (elim_implies_t is hyp concl v)))
 
-let intro_implies = implies_fold
+let intro_implies #opened #is = implies_fold #opened #is
 
 let elim_forall_t
   (#t: Type)

@@ -202,6 +202,20 @@ val exists_cong (#a:_)
 
 /// Creation of a new invariant associated to vprop [p].
 /// After execution of this function, [p] is consumed and not available in the context anymore
+/// The newly allocated invariant is distinct from the opened invariants and any other
+/// invariants in ctxt provided by the caller
+
+(* Lifting invariants to vprops *)
+let fresh_inv (e:inames) (ctxt:list pre_inv) #p (i:inv p) =
+  not (mem_inv e i) /\
+  (forall qi. List.Tot.memP qi ctxt ==> name_of_pre_inv qi =!= name_of_inv i)
+
+val fresh_invariant (#opened_invariants:inames) (p:vprop) (ctxt:list pre_inv)
+  : STAtomicUT (i:inv p {fresh_inv opened_invariants ctxt i})
+                 opened_invariants p (fun _ -> emp)
+
+/// Creation of a new invariant associated to vprop [p].
+/// After execution of this function, [p] is consumed and not available in the context anymore
 val new_invariant (#opened_invariants:inames) (p:vprop)
   : STAtomicUT (inv p) opened_invariants p (fun _ -> emp)
 
@@ -302,62 +316,75 @@ val vpattern_rewrite
 /// the usual "magic wand", in the sense that we don't care about heap
 /// equations.
 
+private
+unfold let (/!) : inames -> inames -> Type0 = fun is1 is2 -> Set.disjoint is1 is2
+
 val implies_
+  (#[T.exact (`(hide Set.empty))] is : inames) // Empty inames by default
   (hyp concl: vprop)
 : Tot vprop
 
 [@@__reduce__]
-let ( @==> ) = implies_
+let ( @==> ) #is hyp concl = implies_ #is hyp concl
 
 val elim_implies
   (#opened: _)
+  (#[T.exact (`(hide Set.empty))] is : inames{opened /! is})
   (hyp concl: vprop)
 : STGhostT unit opened
-    ((hyp @==> concl) `star` hyp)
+    ((implies_ #is hyp concl) `star` hyp)
     (fun _ -> concl)
 
 val intro_implies
   (#opened: _)
+  (#[T.exact (`(hide Set.empty))] is : inames)
   (hyp concl: vprop)
   (v: vprop)
   (f_elim: (
-    (opened: inames) ->
-    STGhostT unit opened
+    (opened': inames {opened' /! is}) ->
+    STGhostT unit opened'
     (v `star` hyp)
     (fun _ -> concl)
   ))
 : STGhostT unit opened
     v
-    (fun _ -> hyp @==> concl)
+    (fun _ -> (@==>) #is hyp concl)
 
 let implies_uncurry
   (#opened: _)
+  (#[T.exact (`(hide Set.empty))] is1 : inames)
+  (#[T.exact (`(hide Set.empty))] is2 : inames {is1 /! is2})
   (h1 h2 c: vprop)
 : STGhostT unit opened
-    (h1 @==> (h2 @==> c))
-    (fun _ -> (h1 `star` h2) @==> c)
+    ((@==>) #is1 h1 ((@==>) #is2 h2 c))
+    (fun _ -> (@==>) #(Set.union is1 is2) (h1 `star` h2) c)
 = intro_implies (h1 `star` h2) c (h1 @==> (h2 @==> c)) (fun _ ->
     elim_implies h1 (h2 @==> c);
     elim_implies h2 c
   )
 
+let emp_inames : inames = Set.empty
+
 let implies_curry
   (#opened: _)
+  (#[T.exact (`(hide Set.empty))] is : inames)
   (h1 h2 c: vprop)
 : STGhostT unit opened
-    ((h1 `star` h2) @==> c)
-    (fun _ -> (h1 @==> (h2 @==> c)))
-= intro_implies h1 (h2 @==> c) ((h1 `star` h2) @==> c) (fun _ ->
-    intro_implies h2 c (((h1 `star` h2) @==> c) `star` h1) (fun _ ->
-    elim_implies (h1 `star` h2) c
+    ((@==>) #is (h1 `star` h2) c)
+    (fun _ -> (@==>) #emp_inames h1 ((@==>) #is h2 c))
+= intro_implies #opened #emp_inames h1 ((@==>) #is h2 c) ((h1 `star` h2) @==> c) (fun opened' ->
+    intro_implies #opened' #is h2 c (((h1 `star` h2) @==> c) `star` h1) (fun opened' ->
+    elim_implies #opened' #is (h1 `star` h2) c
   ))
 
 let implies_join
   (#opened: _)
+  (#[T.exact (`(hide Set.empty))] is1 : inames)
+  (#[T.exact (`(hide Set.empty))] is2 : inames)
   (h1 c1 h2 c2: vprop)
 : STGhostT unit opened
-    ((h1 @==> c1) `star` (h2 @==> c2))
-    (fun _ -> (h1 `star` h2) @==> (c1 `star` c2))
+    (((@==>) #is1 h1 c1) `star` ((@==>) #is2 h2 c2))
+    (fun _ -> (@==>) #(Set.union is1 is2) (h1 `star` h2) (c1 `star` c2))
 = intro_implies (h1 `star` h2) (c1 `star` c2) ((h1 @==> c1) `star` (h2 @==> c2)) (fun _ ->
     elim_implies h1 c1;
     elim_implies h2 c2
@@ -365,10 +392,12 @@ let implies_join
 
 let implies_trans
   (#opened: _)
+  (#[T.exact (`(hide Set.empty))] is1 : inames)
+  (#[T.exact (`(hide Set.empty))] is2 : inames)
   (v1 v2 v3: vprop)
 : STGhostT unit opened
-    ((v1 @==> v2) `star` (v2 @==> v3))
-    (fun _ -> v1 @==> v3)
+    (((@==>) #is1 v1 v2) `star` ((@==>) #is2 v2 v3))
+    (fun _ -> (@==>) #(Set.union is1 is2) v1 v3)
 = intro_implies v1 v3 ((v1 @==> v2) `star` (v2 @==> v3)) (fun _ ->
     elim_implies v1 v2;
     elim_implies v2 v3
@@ -376,29 +405,31 @@ let implies_trans
 
 let adjoint_elim_implies
   (#opened: _)
+  (#[T.exact (`(hide Set.empty))] is : inames{opened /! is})
   (p q r: vprop)
   (f: (
-    (opened: _) ->
+    (opened: inames { opened /! is }) ->
     STGhostT unit opened
-    p (fun _ -> q @==> r)
+    p (fun _ -> (@==>) #is q r)
   ))
 : STGhostT unit opened
     (p `star` q)
     (fun _ -> r)
 = f _;
-  elim_implies q r
+  elim_implies #opened q r
 
 let adjoint_intro_implies
   (#opened: _)
+  (#[T.exact (`(hide Set.empty))] is : inames)
   (p q r: vprop)
   (f: (
-    (opened: _) ->
+    (opened: inames{opened /! is}) ->
     STGhostT unit opened
     (p `star` q) (fun _ -> r)
   ))
 : STGhostT unit opened
     p
-    (fun _ -> q @==> r)
+    (fun _ -> (@==>) #is q r)
 = intro_implies q r p (fun _ ->
     f _
   )
@@ -416,8 +447,8 @@ let wand_is_implies
   )
 : STGhostT unit opened
   (s1 `wand` s2)
-  (fun _ -> s1 @==> s2)
-= intro_implies s1 s2 (s1 `wand` s2) (fun _ ->
+  (fun _ -> (@==>) #emp_inames s1 s2)
+= intro_implies #_ #emp_inames s1 s2 (s1 `wand` s2) (fun _ ->
     weaken (s1 `star` (s1 `wand` s2)) s2 (fun m ->
     interp_star (hp_of s1) (hp_of (s1 `wand` s2)) m;
     let m1 = FStar.IndefiniteDescription.indefinite_description_ghost mem (fun m1 -> exists m2 . disjoint m1 m2 /\ interp (hp_of s1) m1 /\ interp (hp_of (s1 `wand` s2)) m2 /\ join m1 m2 == m) in

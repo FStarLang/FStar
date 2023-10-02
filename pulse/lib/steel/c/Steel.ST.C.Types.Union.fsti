@@ -178,6 +178,52 @@ val full_union
   ))
   [SMTPat (full (union0 tn n fields) s); SMTPat (union_get_field s field)]
 
+let full_union_set_field_intro
+  (#tn: Type0)
+  (#tf: Type0)
+  (#n: string)
+  (#fields: field_description_t tf)
+  (field: field_t fields)
+  (v: fields.fd_type field)
+: Lemma
+  (requires (full (fields.fd_typedef field) v))
+  (ensures (
+    full (union0 tn n fields) (union_set_field tn n fields field v)
+  ))
+= full_union (union_set_field tn n fields field v) field
+
+let full_union_set_field_elim
+  (#tn: Type0)
+  (#tf: Type0)
+  (#n: string)
+  (#fields: field_description_t tf)
+  (field: field_t fields)
+  (v: fields.fd_type field)
+: Lemma
+  (requires (
+    full (union0 tn n fields) (union_set_field tn n fields field v)
+  ))
+  (ensures (
+    full (fields.fd_typedef field) v
+  ))
+= full_union (union_set_field tn n fields field v) field
+
+let full_union_set_field
+  (#tn: Type0)
+  (#tf: Type0)
+  (#n: string)
+  (#fields: field_description_t tf)
+  (field: field_t fields)
+  (v: fields.fd_type field)
+: Lemma
+  (requires True)
+  (ensures (
+    full (union0 tn n fields) (union_set_field tn n fields field v) <==> full (fields.fd_typedef field) v
+  ))
+  [SMTPat (full (union0 tn n fields) (union_set_field tn n fields field v))]
+= Classical.move_requires (full_union_set_field_intro #tn #tf #n #fields field) v;
+  Classical.move_requires (full_union_set_field_elim #tn #tf #n #fields field) v
+
 val has_union_field
   (#tn: Type0)
   (#tf: Type0)

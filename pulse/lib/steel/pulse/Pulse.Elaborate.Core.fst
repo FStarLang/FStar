@@ -117,7 +117,8 @@ let elab_lift #g #c1 #c2 (d:lift_comp g c1 c2) (e:R.term)
 
 let intro_pure_tm (p:term) =
   let open Pulse.Reflection.Util in
-  wr (Tm_STApp
+  wtag (Some STT_Ghost) 
+       (Tm_STApp
         { head =
             tm_pureapp (tm_fvar (as_fv (mk_pulse_lib_core_lid "intro_pure")))
                        None

@@ -82,6 +82,39 @@ let rec term_to_string' (level:string) (t:term)
       T.term_to_string t
 let term_to_string t = term_to_string' "" t
 
+let rec term_to_doc t
+  : T.Tac document
+  = match t.t with
+    | Tm_Emp -> doc_of_string "emp"
+
+    | Tm_Pure p -> doc_of_string "pure" ^/^ parens (term_to_doc p)
+    | Tm_Star p1 p2 ->
+      infix 2 1 (doc_of_string "**")
+                (term_to_doc p1)
+                (term_to_doc p2)
+
+    | Tm_ExistsSL _ b body ->
+      parens (doc_of_string "exists" ^/^ parens (doc_of_string (T.unseal b.binder_ppname.name)
+                                                  ^^ doc_of_string ":"
+                                                  ^^ term_to_doc b.binder_ty)
+              ^^ doc_of_string "."
+              ^/^ term_to_doc body)
+
+    | Tm_ForallSL u b body ->
+      parens (doc_of_string "forall" ^/^ parens (doc_of_string (T.unseal b.binder_ppname.name)
+                                                  ^^ doc_of_string ":"
+                                                  ^^ term_to_doc b.binder_ty)
+              ^^ doc_of_string "."
+              ^/^ term_to_doc body)
+
+    | Tm_VProp -> doc_of_string "vprop"
+    | Tm_Inames -> doc_of_string "inames"
+    | Tm_EmpInames -> doc_of_string "emp_inames"
+    | Tm_Unknown -> doc_of_string "_"
+    | Tm_FStar t ->
+      // Should call term_to_doc when available
+      doc_of_string (T.term_to_string t)
+
 let binder_to_string (b:binder)
   : T.Tac string
   = sprintf "%s:%s" 
@@ -162,8 +195,9 @@ let rec st_term_to_string' (level:string) (t:st_term)
           (st_term_to_string' level body)
       // )
 
-    | Tm_TotBind { head; body } ->
-      sprintf "let tot _ = %s;\n%s%s"
+    | Tm_TotBind { head; binder; body } ->
+      sprintf "let tot %s = %s;\n%s%s"
+        (binder_to_string binder)
         (term_to_string head)
         level
         (st_term_to_string' level body)
@@ -231,11 +265,12 @@ let rec st_term_to_string' (level:string) (t:st_term)
 
     | Tm_Rewrite { t1; t2 } ->
        sprintf "rewrite %s %s"
-	       (term_to_string t1)
-               (term_to_string t2)
+        (term_to_string t1)
+        (term_to_string t2)
 
-    | Tm_WithLocal { initializer; body } ->
-      sprintf "let mut _ = %s;\n%s%s"
+    | Tm_WithLocal { binder; initializer; body } ->
+      sprintf "let mut %s = %s;\n%s%s"
+        (binder_to_string binder)
         (term_to_string initializer)
         level
         (st_term_to_string' level body)
@@ -252,12 +287,34 @@ let rec st_term_to_string' (level:string) (t:st_term)
          | None -> ""
          | Some post -> sprintf " %s" (term_to_string post))
 
-    | Tm_ProofHintWithBinders { binders; v; t} ->
-      sprintf "assert %s%s in\n%s"
-        (if L.length binders = 0 then ""
-         else let s = L.fold_left (fun s _b -> Printf.sprintf "%s _" s) "" binders in
-              Printf.sprintf "%s." s)
-        (term_to_string v)
+    | Tm_ProofHintWithBinders { binders; hint_type; t} ->
+      let with_prefix =
+        match binders with
+        | [] -> ""
+        | _ -> sprintf "with %s." (String.concat " " (T.map binder_to_string binders))
+      in
+      let names_to_string = function
+        | None -> ""
+        | Some l -> sprintf " [%s]" (String.concat "; " l)
+      in
+      let ht, p =
+        match hint_type with
+        | ASSERT { p } -> "assert", term_to_string p
+        | UNFOLD { names; p } -> sprintf "unfold%s" (names_to_string names), term_to_string p
+        | FOLD { names; p } -> sprintf "fold%s" (names_to_string names), term_to_string p
+        | RENAME { pairs; goal } ->
+          sprintf "rewrite each %s"
+            (String.concat ", "
+              (T.map
+                (fun (x, y) -> sprintf "%s as %s" (term_to_string x) (term_to_string y))
+              pairs)),
+            (match goal with
+            | None -> ""
+            | Some t -> sprintf " in %s" (term_to_string t))
+        | REWRITE { t1; t2 } ->
+          sprintf "rewrite %s as %s" (term_to_string t1) (term_to_string t2), ""
+      in
+      sprintf "%s %s %s; %s" with_prefix ht p
         (st_term_to_string' level t)
 
 and branches_to_string brs : T.Tac _ =

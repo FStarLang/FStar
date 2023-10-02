@@ -27,6 +27,8 @@ let rtb_core_check_term g f e =
 
 let rtb_tc_term g f e =
   debug g (fun _ -> Printf.sprintf "Calling tc_term on %s" (T.term_to_string e));
+  (* WARN: unary dependence, see comment in RU *)
+  let e = RU.deep_transform_to_unary_applications e in
   let res = RTB.tc_term f e in
   res
 
@@ -35,19 +37,26 @@ let rtb_universe_of g f e =
   let res = RTB.universe_of f e in
   res
 
-let rtb_check_subtyping g f t1 t2 =
+let rtb_check_subtyping g t1 t2 =
   debug g (fun _ -> Printf.sprintf "Calling check_subtyping on %s <: %s"
-                                       (T.term_to_string t1)
-                                       (T.term_to_string t2));                           
-  let res = RTB.check_subtyping f t1 t2 in
+                                       (P.term_to_string t1)
+                                       (P.term_to_string t2));
+  let res = RTB.check_subtyping (elab_env g) (elab_term t1) (elab_term t2) in
   res
   
 let rtb_instantiate_implicits g f t =
   debug g (fun _ -> Printf.sprintf "Calling instantiate_implicits on %s"
                                        (T.term_to_string t));
-  let res = RTB.instantiate_implicits f t in
-  debug g (fun _ -> "Returned from instantiate_implicits");
-  res
+  (* WARN: unary dependence, see comment in RU *)
+  let t = RU.deep_transform_to_unary_applications t in
+  let res, iss = RTB.instantiate_implicits f t in
+  match res with
+  | None ->
+    debug g (fun _ -> "Returned from instantiate_implicits: None");
+    res, iss
+  | Some (t, _) ->
+    debug g (fun _ -> Printf.sprintf "Returned from instantiate_implicits: %s" (T.term_to_string t));
+    res, iss
 
 let rtb_core_check_term_at_type g f e eff t =
   debug g (fun _ -> Printf.sprintf "Calling core_check_term on %s and %s"
@@ -87,17 +96,18 @@ let readback_failure (s:R.term) =
   Printf.sprintf "Internal error: failed to readback F* term %s"
                  (T.term_to_string s)
 
-let ill_typed_term (t:term) (expected_typ:option term) (got_typ:option term)=
+let ill_typed_term (t:term) (expected_typ:option term) (got_typ:option term) : Tac (list FStar.Stubs.Pprint.document) =
+  let open Pulse.PP in
   match expected_typ, got_typ with
   | None, _ ->
-    Printf.sprintf "Ill-typed term: %s" (P.term_to_string t)   
+    [text "Ill-typed term: " ^^ pp t]
   | Some ty, None ->
-    Printf.sprintf "Expected term of type %s; got term %s" (P.term_to_string ty) (P.term_to_string t)
+    [group (text "Expected term of type" ^/^ pp ty) ^/^
+     group (text "got term" ^/^ pp t)]
   | Some ty, Some ty' ->
-    Printf.sprintf "Expected term of type %s; got term %s of type %s" 
-                   (P.term_to_string ty)
-                   (P.term_to_string t)
-                   (P.term_to_string ty')
+    [group (text "Expected term of type" ^/^ pp ty) ^/^
+     group (text "got term" ^/^ pp t) ^/^
+     group (text "of type" ^/^ pp ty')]
 
 let instantiate_term_implicits (g:env) (t0:term) =
   let f = elab_env g in
@@ -128,7 +138,7 @@ let check_universe (g:env) (t:term)
     T.log_issues issues;
     match ru_opt with
     | None -> 
-      fail g (Some t.range) (ill_typed_term t (Some (tm_type u_unknown)) None)
+      fail_doc g (Some t.range) (ill_typed_term t (Some (tm_type u_unknown)) None)
 
     | Some ru ->
       let proof : squash (T.typing_token f rt (E_Total, R.pack_ln (R.Tv_Type ru))) =
@@ -164,7 +174,7 @@ let check_term (g:env) (t:term)
     T.log_issues issues;
     match res with
     | None -> 
-      fail g (Some t.range) (ill_typed_term t None None)
+      fail_doc g (Some t.range) (ill_typed_term t None None)
     | Some (| rt, eff, ty', tok |) ->
       match readback_ty rt, readback_ty ty' with
       | None, _ -> fail g (Some t.range) (readback_failure rt)
@@ -184,7 +194,7 @@ let check_term_and_type (g:env) (t:term)
     T.log_issues issues;
     match res with
     | None -> 
-      fail g (Some t.range) (ill_typed_term t None None)
+      fail_doc g (Some t.range) (ill_typed_term t None None)
     | Some (| rt, eff, ty', tok |) ->
       match readback_ty rt, readback_ty ty' with
       | None, _ -> fail g (Some t.range) (readback_failure rt)
@@ -210,7 +220,7 @@ let check_term_with_expected_type_and_effect (g:env) (e:term) (eff:T.tot_or_ghos
   T.log_issues issues;
   match topt with
   | None ->
-    fail g (Some e.range) (ill_typed_term e (Some t) None)
+    fail_doc g (Some e.range) (ill_typed_term e (Some t) None)
   | Some tok -> (| e, E (RT.T_Token _ _ _ (FStar.Squash.return_squash tok)) |)
 
 (* This function will use the expected type, but can return either
@@ -243,7 +253,7 @@ let core_check_term (g:env) (t:term)
     T.log_issues issues;
     match res with
     | None -> 
-      fail g (Some t.range) (ill_typed_term t None None)
+      fail_doc g (Some t.range) (ill_typed_term t None None)
     | Some (| eff, ty', tok |) ->
         match readback_ty ty' with
         | None ->
@@ -263,7 +273,7 @@ let core_check_term_with_expected_type g e eff t =
   T.log_issues issues;
   match topt with
   | None ->
-    fail g (Some e.range) (ill_typed_term e (Some t) None)
+    fail_doc g (Some e.range) (ill_typed_term e (Some t) None)
   | Some tok -> E (RT.T_Token _ _ _ (FStar.Squash.return_squash tok))
 
 let check_vprop (g:env)
@@ -279,12 +289,20 @@ let check_vprop_with_core (g:env)
     (push_context_no_range g "check_vprop_with_core") t T.E_Total tm_vprop
 
   
+let pulse_lib_gref = ["Pulse"; "Lib"; "GhostReference"]
+let mk_pulse_lib_gref_lid s = pulse_lib_gref@[s]
+
+let gref_lid = mk_pulse_lib_gref_lid "ref"
+
 let get_non_informative_witness g u t
   : T.Tac (non_informative_t g u t)
   = let err () =
-      fail g (Some t.range) 
-             (Printf.sprintf "Expected a term with a non-informative (e.g., erased) type; got  %s"        
-                               (P.term_to_string t)) in
+      let open Pulse.PP in
+      fail_doc g (Some t.range) [
+        text "Expected a term with a non-informative (e.g., erased) type; got"
+          ^/^ pp t
+      ]
+    in
     let eopt =
       let ropt = is_fvar_app t in
       match ropt with
@@ -301,6 +319,11 @@ let get_non_informative_witness g u t
         else if l = erased_lid && Some? arg_opt
         then Some (tm_pureapp
                      (tm_uinst (as_fv (mk_pulse_lib_core_lid "erased_non_informative")) us)
+                     None
+                     (Some?.v arg_opt))
+        else if l = gref_lid && Some? arg_opt
+        then Some (tm_pureapp
+                     (tm_uinst (as_fv (mk_pulse_lib_gref_lid "gref_non_informative")) us)
                      None
                      (Some?.v arg_opt))
         else None
@@ -355,3 +378,23 @@ let is_non_informative g c =
   let ropt, issues = catch_all (fun _ -> T.is_non_informative (elab_env g) (elab_comp c)) in
   T.log_issues issues;
   ropt
+
+let check_subtyping g t1 t2 =
+  T.with_policy SMTSync (fun () ->
+  let res, issues = rtb_check_subtyping g t1 t2 in
+  T.log_issues issues;
+  match res with
+  | Some tok -> tok
+  | None ->
+    fail g (Some t1.range)
+      (Printf.sprintf
+        "Could not prove subtyping of %s and %s"
+         (P.term_to_string t1)
+         (P.term_to_string t2))
+  )
+
+let check_equiv g t1 t2 =
+  let res, issues =
+    Pulse.Typing.Util.check_equiv_now (elab_env g) (elab_term t1) (elab_term t2) in
+  T.log_issues issues;
+  res

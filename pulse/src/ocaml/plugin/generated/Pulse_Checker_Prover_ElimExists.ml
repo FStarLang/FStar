@@ -39,10 +39,12 @@ let (mk :
                            FStar_Pervasives_Native.Some
                              (FStar_Pervasives.Mkdtuple4
                                 (nm,
-                                  (Pulse_Typing.wr
+                                  (Pulse_Typing.wtag
+                                     (FStar_Pervasives_Native.Some
+                                        Pulse_Syntax_Base.STT_Ghost)
                                      (Pulse_Syntax_Base.Tm_ElimExists
                                         {
-                                          Pulse_Syntax_Base.p1 =
+                                          Pulse_Syntax_Base.p4 =
                                             (Pulse_Syntax_Base.tm_exists_sl
                                                (Pulse_Syntax_Base.comp_u
                                                   (Pulse_Typing.comp_elim_exists

@@ -36,7 +36,7 @@ let rr = FStar_Parser_Util.translate_range
 let rr2 = FStar_Parser_Util.translate_range2
 
 let logic_qualifier_deprecation_warning =
-  "logic qualifier is deprecated, please remove it from the source program. In case your program verifies with the qualifier annotated but not without it, please try to minimize the example and file a github issue"
+  "logic qualifier is deprecated, please remove it from the source program. In case your program verifies with the qualifier annotated but not without it, please try to minimize the example and file a github issue."
 
 let mk_meta_tac m = Meta m
 
@@ -57,6 +57,7 @@ let parse_extension_blob (extension_name:string)
                          (blob_range:range)
                          (extension_syntax_start:range) : FStar_Parser_AST.decl' =
     DeclSyntaxExtension (extension_name, s, blob_range, extension_syntax_start)
+
 %}
 
 %token <string> STRING
@@ -235,7 +236,7 @@ attribute:
         let _ =
             match x with
             | _::_::_ ->
-                  log_issue (rr $loc) (Warning_DeprecatedAttributeSyntax,
+                  log_issue_text (rr $loc) (Warning_DeprecatedAttributeSyntax,
                                               old_attribute_syntax_warning)
             | _ -> () in
          x
@@ -320,11 +321,11 @@ rawDecl:
         (* This is just to provide a better error than "syntax error" *)
         raise_error (Fatal_SyntaxError, "Syntax error: constants are not allowed in val declarations") (rr $loc)
       }
-  | VAL lid=lidentOrOperator bss=list(multiBinder) COLON t=typ
+  | VAL lid=lidentOrOperator bs=binders COLON t=typ
       {
-        let t = match flatten bss with
+        let t = match bs with
           | [] -> t
-          | bs -> mk_term (Product(bs, t)) (rr2 $loc(bss) $loc(t)) Type_level
+          | bs -> mk_term (Product(bs, t)) (rr2 $loc(bs) $loc(t)) Type_level
         in Val(lid, t)
       }
   | SPLICE LBRACK ids=separated_list(SEMICOLON, ident) RBRACK t=thunk(atomicTerm)
@@ -556,7 +557,7 @@ qualifier:
   | NOEQUALITY    { Noeq }
   | UNOPTEQUALITY { Unopteq }
   | NEW           { New }
-  | LOGIC         { log_issue (rr $loc) (Warning_logicqualifier,
+  | LOGIC         { log_issue_text (rr $loc) (Warning_logicqualifier,
                                                 logic_qualifier_deprecation_warning);
                     Logic }
   | OPAQUE        { Opaque }
@@ -713,7 +714,9 @@ multiBinder:
          mkRefinedBinder x t should_bind_var r (rr $loc) q attrs) qual_ids
      }
 
-binders: bss=list(b=binder {[b]} | bs=multiBinder {bs}) { flatten bss }
+  | b=binder { [b] }
+
+binders: bss=list(bs=multiBinder {bs}) { flatten bss }
 
 aqualifiedWithAttrs(X):
   | aq=aqual attrs=binderAttributes x=X { (Some aq, attrs), x }
@@ -815,12 +818,12 @@ term:
 	     let pat = mk_pattern (PatWild(None, [])) (rr $loc(op)) in
 	     LetOperator ([(op, pat, e1)], e2)
 	  | None   ->
-             log_issue (rr $loc) (Warning_DeprecatedLightDoNotation, do_notation_deprecation_warning);
+             log_issue_text (rr $loc) (Warning_DeprecatedLightDoNotation, do_notation_deprecation_warning);
 	     Bind(gen (rr $loc(op)), e1, e2)
         in mk_term t (rr2 $loc(e1) $loc(e2)) Expr
       }
   | x=lidentOrUnderscore LONG_LEFT_ARROW e1=noSeqTerm SEMICOLON e2=term
-    { log_issue (rr $loc) (Warning_DeprecatedLightDoNotation, do_notation_deprecation_warning);
+    { log_issue_text (rr $loc) (Warning_DeprecatedLightDoNotation, do_notation_deprecation_warning);
       mk_term (Bind(x, e1, e2)) (rr2 $loc(x) $loc(e2)) Expr }
 
 match_returning:
@@ -834,7 +837,7 @@ noSeqTerm:
       { mk_term (Ascribed(e,{t with level=Expr},tactic_opt,false)) (rr2 $loc(e) $loc(tactic_opt)) Expr }
   | e=tmIff EQUALTYPE t=tmIff tactic_opt=option(BY tactic=thunk(typ) {tactic})
       {
-        log_issue (rr $loc)
+        log_issue_text (rr $loc)
 	          (Warning_BleedingEdge_Feature,
 		   "Equality type ascriptions is an experimental feature subject to redesign in the future");
         mk_term (Ascribed(e,{t with level=Expr},tactic_opt,true)) (rr2 $loc(e) $loc(tactic_opt)) Expr
@@ -1407,7 +1410,7 @@ constant:
   | n=INT
      {
         if snd n then
-          log_issue (rr $loc) (Error_OutOfRange, "This number is outside the allowable range for representable integer constants");
+          log_issue_text (rr $loc) (Error_OutOfRange, "This number is outside the allowable range for representable integer constants");
         Const_int (fst n, None)
      }
   | c=CHAR { Const_char c }
@@ -1419,28 +1422,28 @@ constant:
   | n=INT8
       {
         if snd n then
-          log_issue (rr $loc) (Error_OutOfRange, "This number is outside the allowable range for 8-bit signed integers");
+          log_issue_text (rr $loc) (Error_OutOfRange, "This number is outside the allowable range for 8-bit signed integers");
         Const_int (fst n, Some (Signed, Int8))
       }
   | n=UINT16 { Const_int (n, Some (Unsigned, Int16)) }
   | n=INT16
       {
         if snd n then
-          log_issue (rr $loc) (Error_OutOfRange, "This number is outside the allowable range for 16-bit signed integers");
+          log_issue_text (rr $loc) (Error_OutOfRange, "This number is outside the allowable range for 16-bit signed integers");
         Const_int (fst n, Some (Signed, Int16))
       }
   | n=UINT32 { Const_int (n, Some (Unsigned, Int32)) }
   | n=INT32
       {
         if snd n then
-          log_issue (rr $loc) (Error_OutOfRange, "This number is outside the allowable range for 32-bit signed integers");
+          log_issue_text (rr $loc) (Error_OutOfRange, "This number is outside the allowable range for 32-bit signed integers");
         Const_int (fst n, Some (Signed, Int32))
       }
   | n=UINT64 { Const_int (n, Some (Unsigned, Int64)) }
   | n=INT64
       {
         if snd n then
-          log_issue (rr $loc) (Error_OutOfRange, "This number is outside the allowable range for 64-bit signed integers");
+          log_issue_text (rr $loc) (Error_OutOfRange, "This number is outside the allowable range for 64-bit signed integers");
         Const_int (fst n, Some (Signed, Int64))
       }
   | n=SIZET { Const_int (n, Some (Unsigned, Sizet)) }
@@ -1458,14 +1461,14 @@ universeFrom:
   | u1=universeFrom op_plus=OPINFIX2 u2=universeFrom
        {
          if op_plus <> "+"
-         then log_issue (rr $loc(u1)) (Error_OpPlusInUniverse, ("The operator " ^ op_plus ^ " was found in universe context."
-                           ^ "The only allowed operator in that context is +."));
+         then log_issue_text (rr $loc(u1)) (Error_OpPlusInUniverse, "The operator " ^ op_plus ^ " was found in universe context."
+                           ^ "The only allowed operator in that context is +.");
          mk_term (Op(mk_ident (op_plus, rr $loc(op_plus)), [u1 ; u2])) (rr2 $loc(u1) $loc(u2)) Expr
        }
   | max=ident us=nonempty_list(atomicUniverse)
       {
         if string_of_id max <> string_of_lid max_lid
-        then log_issue (rr $loc(max)) (Error_InvalidUniverseVar, "A lower case ident " ^ string_of_id max ^
+        then log_issue_text (rr $loc(max)) (Error_InvalidUniverseVar, "A lower case ident " ^ string_of_id max ^
                           " was found in a universe context. " ^
                           "It should be either max or a universe variable 'usomething.");
         let max = mk_term (Var (lid_of_ids [max])) (rr $loc(max)) Expr in
@@ -1478,7 +1481,7 @@ atomicUniverse:
   | n=INT
       {
         if snd n then
-          log_issue (rr $loc) (Error_OutOfRange, "This number is outside the allowable range for representable integer constants");
+          log_issue_text (rr $loc) (Error_OutOfRange, "This number is outside the allowable range for representable integer constants");
         mk_term (Const (Const_int (fst n, None))) (rr $loc(n)) Expr
       }
   | u=lident { mk_term (Uvar u) (range_of_id u) Expr }

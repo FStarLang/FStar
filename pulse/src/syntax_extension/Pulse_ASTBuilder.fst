@@ -1,4 +1,5 @@
 module Pulse_ASTBuilder
+open FStar.Compiler.Effect
 open FStar.Parser.AST
 open FStar.Parser.AST.Util
 open FStar.Ident
@@ -60,11 +61,12 @@ let extension_parser
 
 let _ = 
     register_extension_parser "pulse" extension_parser
-
+   
 module TcEnv = FStar.TypeChecker.Env
 module D = PulseDesugar
 module L = FStar.Compiler.List
 module R = FStar.Compiler.Range
+
 
 let parse_pulse (env:TcEnv.env) 
                 (namespaces:list string)
@@ -72,7 +74,7 @@ let parse_pulse (env:TcEnv.env)
                 (content:string)
                 (file_name:string)
                 (line col:int)
-  : either PulseSyntaxWrapper.st_term (string & R.range)
+  : either PulseSyntaxWrapper.st_term (option (string & R.range))
   = let namespaces = L.map Ident.path_of_text namespaces in
     let module_abbrevs = L.map (fun (x, l) -> x, Ident.path_of_text l) module_abbrevs in
     let env = D.initialize_env env namespaces module_abbrevs in
@@ -81,6 +83,6 @@ let parse_pulse (env:TcEnv.env)
       R.mk_range file_name p p
     in
     match Pulse.Parser.parse_decl content range with
-    | Inl d -> D.desugar_decl env d
+    | Inl d -> fst (D.desugar_decl env d 0)
     | Inr e -> Inr e
     

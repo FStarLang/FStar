@@ -729,7 +729,7 @@ let (as_binder : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.binder) =
 type ('dummyV0, 'dummyV1, 'dummyV2) st_equiv =
   | ST_VPropEquiv of Pulse_Typing_Env.env * Pulse_Syntax_Base.comp_st *
   Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.var * unit * unit * unit *
-  unit * unit 
+  (unit, unit, unit) FStar_Reflection_Typing.equiv * unit * unit 
 let uu___is_ST_VPropEquiv uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | ST_VPropEquiv _ -> true | _ -> false
 type ('dummyV0, 'dummyV1, 'dummyV2, 'dummyV3, 'dummyV4) bind_comp =
@@ -756,12 +756,30 @@ let uu___is_Lift_STAtomic_ST uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | Lift_STAtomic_ST _ -> true | _ -> false
 let uu___is_Lift_STGhost_STAtomic uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | Lift_STGhost_STAtomic _ -> true | _ -> false
-let (wr : Pulse_Syntax_Base.st_term' -> Pulse_Syntax_Base.st_term) =
-  fun t ->
-    {
-      Pulse_Syntax_Base.term1 = t;
-      Pulse_Syntax_Base.range2 = FStar_Range.range_0
-    }
+let (wr :
+  Pulse_Syntax_Base.comp_st ->
+    Pulse_Syntax_Base.st_term' -> Pulse_Syntax_Base.st_term)
+  =
+  fun ct ->
+    fun t ->
+      {
+        Pulse_Syntax_Base.term1 = t;
+        Pulse_Syntax_Base.range2 = FStar_Range.range_0;
+        Pulse_Syntax_Base.effect_tag =
+          (Pulse_Syntax_Base.as_effect_hint
+             (Pulse_Syntax_Base.ctag_of_comp_st ct))
+      }
+let (wtag :
+  Pulse_Syntax_Base.ctag FStar_Pervasives_Native.option ->
+    Pulse_Syntax_Base.st_term' -> Pulse_Syntax_Base.st_term)
+  =
+  fun ct ->
+    fun t ->
+      {
+        Pulse_Syntax_Base.term1 = t;
+        Pulse_Syntax_Base.range2 = FStar_Range.range_0;
+        Pulse_Syntax_Base.effect_tag = (FStar_Sealed.seal ct)
+      }
 type ('dummyV0, 'dummyV1) st_comp_typing =
   | STC of Pulse_Typing_Env.env * Pulse_Syntax_Base.st_comp *
   Pulse_Syntax_Base.var * unit * unit * unit 
@@ -804,6 +822,8 @@ let uu___is_CT_STGhost uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | CT_STGhost _ -> true | _ -> false
 type ('g, 't) prop_validity =
   (unit, unit) FStar_Tactics_V2_Builtins.prop_validity_token
+type ('g, 't1, 't2) subtyping_token =
+  (unit, unit, unit) FStar_Tactics_Types.subtyping_token
 let (readback_binding :
   FStar_Reflection_V2_Data.binding -> Pulse_Typing_Env.binding) =
   fun b ->

@@ -61,7 +61,7 @@ let check_core
   assume (open_term (close_term post_opened x) x == post_opened);
   let post = close_term post_opened x in
   let d = T_Return g c use_eq u ty t post x uty d post_typing in
-  prove_post_hint (try_frame_pre ctxt_typing d res_ppname) post_hint t.range
+  prove_post_hint (try_frame_pre ctxt_typing (match_comp_res_with_post_hint d post_hint) res_ppname) post_hint t.range
 
 let check
   (g:env)

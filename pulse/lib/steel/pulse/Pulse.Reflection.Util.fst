@@ -156,7 +156,7 @@ let mk_stt_ghost_comp_post_equiv (g:R.env) (u:R.universe) (a inames pre post1 po
   let t = R.pack_ln (R.Tv_App t (a, R.Q_Explicit)) in
   let t = R.pack_ln (R.Tv_App t (inames, R.Q_Explicit)) in
   let t = R.pack_ln (R.Tv_App t (pre, R.Q_Explicit)) in
-  EQ_Ctxt g post1 post2
+  Rel_ctxt g post1 post2
     (Ctxt_app_arg t Q_Explicit Ctxt_hole)
     posts_equiv
 
@@ -558,11 +558,12 @@ let mk_star_equiv (g:R.env) (t1 t2 t3 t4:R.term)
   
   admit ()
 
-let mk_stt_comp_equiv (g:R.env) (u:R.universe) (res pre1 post1 pre2 post2:R.term)
+let mk_stt_comp_equiv (g:R.env) (u:R.universe) (res1 pre1 post1 res2 pre2 post2:R.term)
+  (res_eq: RT.equiv g res1 res2)
   (pre_eq:RT.equiv g pre1 pre2)
   (post_eq:RT.equiv g post1 post2)
-  : RT.equiv g (mk_stt_comp u res pre1 post1)
-               (mk_stt_comp u res pre2 post2)
+  : RT.equiv g (mk_stt_comp u res1 pre1 post1)
+               (mk_stt_comp u res2 pre2 post2)
   = admit ()
 
 let mk_stt_atomic_comp_equiv (g:R.env) (u:R.universe) (res inames pre1 post1 pre2 post2:R.term)

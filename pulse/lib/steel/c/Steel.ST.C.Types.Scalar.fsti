@@ -64,21 +64,43 @@ val get_scalar_value
   (c: scalar_t t)
 : GTot (option t)
 
-val get_scalar_value_mk_fraction_mk_scalar
+val get_scalar_value_mk_fraction
   (#t: Type)
-  (c: t)
+  (c: scalar_t t)
   (p: perm)
 : Lemma
-  (get_scalar_value (mk_fraction (scalar t) (mk_scalar c) p) == Some c)
-  [SMTPat (get_scalar_value (mk_fraction (scalar t) (mk_scalar c) p))]
+  (requires (fractionable (scalar t) c))
+  (ensures (get_scalar_value (mk_fraction (scalar t) c p) == get_scalar_value c))
+  [SMTPat (get_scalar_value (mk_fraction (scalar t) c p))]
 
-let get_scalar_value_mk_scalar
+val get_scalar_value_mk_scalar
   (#t: Type)
   (c: t)
 : Lemma
   (get_scalar_value (mk_scalar c) == Some c)
   [SMTPat (get_scalar_value (mk_scalar c))]
-= ()
+
+val get_scalar_value_uninitialized
+  (t: Type)
+: Lemma
+  (get_scalar_value (uninitialized (scalar t)) == None)
+  [SMTPat (get_scalar_value (uninitialized (scalar t)))]
+
+val get_scalar_value_unknown
+  (t: Type)
+: Lemma
+  (get_scalar_value (unknown (scalar t)) == None)
+  [SMTPat (get_scalar_value (unknown (scalar t)))]
+
+val get_scalar_value_some
+  (#t: Type)
+  (c: scalar_t t)
+: Lemma
+  (requires (Some? (get_scalar_value c)))
+  (ensures (
+    exists v0 p . Ghost.reveal c == mk_fraction (scalar t) (mk_scalar v0) p
+  ))
+  [SMTPat (get_scalar_value c)]
 
 inline_for_extraction [@@noextract_to "krml"]
 let read (#t: Type) (#v: Ghost.erased (scalar_t t)) (r: ref (scalar t)) : ST t

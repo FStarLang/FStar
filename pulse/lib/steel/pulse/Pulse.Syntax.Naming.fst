@@ -6,6 +6,27 @@ open FStar.List.Tot
 module E = Pulse.Elaborate.Pure
 open Pulse.Syntax.Base
 module U = Pulse.Syntax.Pure
+module R2 = FStar.Reflection.V2
+module RU = Pulse.RuntimeUtils
+let r_subst_of_rt_subst_elt (x:subst_elt)
+  : FStar.Reflection.V2.subst_elt
+  = match x with
+    | DT i t -> R2.DT i (E.elab_term t)
+    | NT x t -> R2.NT (RT.var_as_namedv x) (E.elab_term t) 
+    | ND x i -> R2.NM (RT.var_as_namedv x) i
+
+let subst_host_term' (t:host_term) (ss:subst) =
+  R2.subst_term (L.map r_subst_of_rt_subst_elt ss) t
+
+let subst_host_term (t:host_term) (ss:subst) =
+  open_or_close_host_term t ss;  
+  let res0 = subst_host_term' t ss in
+  assume (res0 == RT.subst_term t (rt_subst ss));
+  res0
+
+// let subst_host_term (t:host_term) (ss:subst) =
+//   open_or_close_host_term t ss;  
+//   RT.subst_term t (rt_subst ss)
 
 let rec close_open_inverse' (t:term) 
                             (x:var { ~(x `Set.mem` freevars t) } )
@@ -72,6 +93,33 @@ let rec close_open_inverse_list' (t:list term)
     | hd::tl ->
       close_open_inverse' hd x i;
       close_open_inverse_list' tl x i
+
+
+let rec close_open_inverse_pairs' (t:list (term * term))
+                                  (x:var { ~(x `Set.mem` freevars_pairs t) })
+                                  (i:index)
+  : Lemma (ensures close_term_pairs' (open_term_pairs' t (U.term_of_no_name_var x) i) x i == t)
+  = match t with
+    | [] -> ()
+    | (hd1, hd2)::tl ->
+      close_open_inverse' hd1 x i;
+      close_open_inverse' hd2 x i;
+      close_open_inverse_pairs' tl x i
+
+let close_open_inverse_proof_hint_type' (ht:proof_hint_type)
+                                        (x:var { ~(x `Set.mem` freevars_proof_hint ht) })
+                                        (i:index)
+  : Lemma (ensures close_proof_hint' (open_proof_hint' ht (U.term_of_no_name_var x) i) x i == ht)
+  = match ht with
+    | ASSERT { p }
+    | FOLD { p }
+    | UNFOLD { p } -> close_open_inverse' p x i
+    | RENAME { pairs; goal } ->
+      close_open_inverse_pairs' pairs x i;
+      close_open_inverse_opt' goal x i
+    | REWRITE { t1; t2 } ->
+      close_open_inverse' t1 x i;
+      close_open_inverse' t2 x i
 
 
 let rec close_open_inverse_st'  (t:st_term) 
@@ -151,9 +199,9 @@ let rec close_open_inverse_st'  (t:st_term)
       close_open_inverse' typ x i;
       close_open_inverse_opt' post x (i + 1)
 
-    | Tm_ProofHintWithBinders { binders; v; t} ->
+    | Tm_ProofHintWithBinders { binders; hint_type; t} ->
       let n = L.length binders in
-      close_open_inverse' v x (i + n);
+      close_open_inverse_proof_hint_type' hint_type x (i + n);
       close_open_inverse_st' t x (i + n)
       
 let close_open_inverse (t:term) (x:var { ~(x `Set.mem` freevars t) } )
@@ -259,3 +307,4 @@ let close_binders (bs:list binder) (xs:list var { L.length bs == L.length xs }) 
       aux s (b::out) bs xs
   in
   aux [] [] bs xs
+

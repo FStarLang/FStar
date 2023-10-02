@@ -1,7 +1,15 @@
 module Pulse.Lib.Core
 open FStar.Ghost
+open Steel.FractionalPermission
 module U32 = FStar.UInt32
 module G = FStar.Ghost
+
+(* Common alias *)
+let one_half =
+  half_perm full_perm
+
+val double_one_half (_:unit)
+  : Lemma (sum_perm one_half one_half == full_perm)
 
 (***** begin vprop_equiv *****)
 
@@ -61,12 +69,14 @@ val iname : eqtype
 let inames = erased (FStar.Set.set iname)
 val emp_inames : inames
 
+let (/!) : inames -> inames -> Type0 = fun is1 is2 -> Set.disjoint is1 is2
+
 (* stt a pre post: The type of a pulse computation
    that when run in a state satisfying `pre`
    may loop forever
    but if it returns, it returns `x:a`
    such that the final state satisfies `post x` *)
-inline_for_extraction
+[@@extract_as_impure_effect]
 val stt (a:Type u#a) (pre:vprop) (post:a -> vprop) : Type0
 
 (* stt_atomic a opened pre post: The type of a pulse computation
@@ -75,7 +85,7 @@ val stt (a:Type u#a) (pre:vprop) (post:a -> vprop) : Type0
    while relying on the ghost invariant names in `opened` 
    and returns `x:a`
    such that the final state satisfies `post x` *)
-inline_for_extraction
+[@@extract_as_impure_effect]
 val stt_atomic (a:Type u#a) (opened:inames) (pre:vprop) (post:a -> vprop) : Type u#(max 2 a)
 
 (* stt_ghost a opened pre post: The type of a pulse computation
@@ -85,7 +95,7 @@ val stt_atomic (a:Type u#a) (opened:inames) (pre:vprop) (post:a -> vprop) : Type
    and returns `x:a`
    such that the final state satisfies `post x` *)
 [@@ erasable]
-inline_for_extraction
+// inline_for_extraction
 val stt_ghost (a:Type u#a) (opened:inames) (pre:vprop) (post:a -> vprop) : Type u#(max 2 a)
 
 //

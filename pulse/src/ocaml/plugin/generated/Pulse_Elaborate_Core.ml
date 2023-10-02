@@ -211,7 +211,8 @@ let (elab_lift :
                   (Pulse_Elaborate_Pure.elab_term reveal_a)
 let (intro_pure_tm : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.st_term) =
   fun p ->
-    Pulse_Typing.wr
+    Pulse_Typing.wtag
+      (FStar_Pervasives_Native.Some Pulse_Syntax_Base.STT_Ghost)
       (Pulse_Syntax_Base.Tm_STApp
          {
            Pulse_Syntax_Base.head =

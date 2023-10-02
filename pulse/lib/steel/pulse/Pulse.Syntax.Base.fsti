@@ -142,16 +142,38 @@ type ctag =
   | STT_Atomic
   | STT_Ghost
 
+let effect_hint = FStar.Sealed.Inhabited.sealed #(option ctag) None
+let default_effect_hint : effect_hint = FStar.Sealed.seal None
+let as_effect_hint (c:ctag) : effect_hint = FStar.Sealed.seal (Some c)
+
 let ctag_of_comp_st (c:comp_st) : ctag =
   match c with
   | C_ST _ -> STT
   | C_STAtomic _ _ -> STT_Atomic
   | C_STGhost _ _ -> STT_Ghost
 
+noeq
 type proof_hint_type =
-  | ASSERT
-  | FOLD of option (list string)
-  | UNFOLD of option (list string)
+  | ASSERT {
+      p:vprop
+    }
+  | FOLD { 
+      names:option (list string);
+      p:vprop;
+    }
+  | UNFOLD {
+      names:option (list string);
+      p:vprop
+    }
+  | RENAME { //rename e as e' [in p]
+      pairs:list (term & term);
+      goal: option term
+    }
+  | REWRITE {
+      t1:vprop;
+      t2:vprop;
+    }
+
 
 (* terms with STT types *)
 [@@ no_auto_projectors]
@@ -233,19 +255,20 @@ type st_term' =
       typ:term;
       post:option term;
     }
-  | Tm_ProofHintWithBinders { // assert (R.pts_to x ?p ?v) in body
+  | Tm_ProofHintWithBinders {
       hint_type:proof_hint_type;
       binders:list binder;
-      v:vprop;
       t:st_term
   }
 
 and st_term = {
     term : st_term';
-    range : range
+    range : range;
+    effect_tag: effect_hint
 } 
 
 and branch = pattern & st_term
+
 
 let null_binder (t:term) : binder =
   {binder_ty=t;binder_ppname=ppname_default}

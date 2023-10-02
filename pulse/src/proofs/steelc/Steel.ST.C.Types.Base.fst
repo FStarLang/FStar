@@ -144,6 +144,15 @@ module HR = Steel.ST.HigherReference
 let void_ptr = HR.ref ref0_v
 let void_null = HR.null
 
+let ptr_gen _ = void_ptr
+let null_gen _ = void_null
+
+let ghost_void_ptr_of_ptr_gen x = x
+let ghost_ptr_gen_of_void_ptr x _ = x
+
+let ghost_void_ptr_of_ptr_gen_of_void_ptr _ _ = ()
+let ghost_ptr_gen_of_void_ptr_of_ptr_gen _ = ()
+
 let r_pts_to
   (#a: Type u#0) (#b: Type u#b) (#p: pcm b)
   (r: R.ref a p) (v: b)
@@ -219,6 +228,15 @@ let is_null
   p
 = let res = HR.is_null p in
   return res
+
+let void_ptr_of_ptr
+  x
+= return x
+
+let ptr_of_void_ptr
+  x
+= vpattern_rewrite (fun x -> pts_to_or_null x _) x;
+  return x
 
 [@@__reduce__]
 let ref_equiv0

@@ -87,6 +87,36 @@ let rec freevars_close_term_list' (t:list term) (x:var) (i:index)
       freevars_close_term' hd x i;
       freevars_close_term_list' tl x i
 
+let rec freevars_close_term_pairs' (t:list (term & term)) (x:var) (i:index)
+  : Lemma
+    (ensures (freevars_pairs (close_term_pairs' t x i) `Set.equal`
+             (freevars_pairs t `set_minus` x)))
+    (decreases t)
+  = match t with
+    | [] -> ()
+    | (u, v)::tl ->
+      freevars_close_term' u x i;
+      freevars_close_term' v x i;
+      freevars_close_term_pairs' tl x i
+
+let freevars_close_proof_hint' (ht:proof_hint_type) (x:var) (i:index)
+  : Lemma
+    (ensures (freevars_proof_hint (close_proof_hint' ht x i) `Set.equal`
+             (freevars_proof_hint ht `set_minus` x)))
+  = match ht with
+    | ASSERT { p }
+    | FOLD { p }
+    | UNFOLD { p } ->
+      freevars_close_term' p x i
+    | RENAME { pairs; goal } ->
+      freevars_close_term_pairs' pairs x i;
+      freevars_close_term_opt' goal x i
+    | REWRITE { t1; t2 } ->
+      freevars_close_term' t1 x i;
+      freevars_close_term' t2 x i
+
+// Needs a bit more rlimit sometimes. Also splitting is too expensive
+#push-options "--z3rlimit 20 --split_queries no"
 let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
   : Lemma
     (ensures (freevars_st (close_st_term' t x i) `Set.equal`
@@ -158,11 +188,12 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
       freevars_close_term' typ x i;
       freevars_close_term_opt' post x (i + 1)
 
-    | Tm_ProofHintWithBinders { binders; v; t } ->
+    | Tm_ProofHintWithBinders { binders; hint_type; t } ->
       let n = L.length binders in
-      freevars_close_term' v x (i + n);
+      freevars_close_proof_hint' hint_type x (i + n);
       freevars_close_st_term' t x (i + n)
-      
+#pop-options
+
 let freevars_close_term (e:term) (x:var) (i:index)
   : Lemma 
     (ensures freevars (close_term' e x i) `Set.equal`
@@ -180,6 +211,11 @@ val refl_typing_freevars (#g:R.env) (#e:R.term) (#t:R.term) (#eff:_)
   : Lemma 
     (ensures RT.freevars e `Set.subset` (vars_of_env_r g) /\
              RT.freevars t `Set.subset` (vars_of_env_r g))
+
+assume
+val refl_equiv_freevars (#g:R.env) (#e1 #e2:R.term) (d:RT.equiv g e1 e2)
+  : Lemma (RT.freevars e1 `Set.subset` (vars_of_env_r g) /\
+           RT.freevars e2 `Set.subset` (vars_of_env_r g))
 
 let freevars_open_term_inv (e:term) 
                            (x:var {~ (x `Set.mem` freevars e) })
@@ -267,14 +303,16 @@ let st_equiv_freevars #g (#c1 #c2:_)
   : Lemma
     (requires freevars_comp c1 `Set.subset` vars_of_env g)
     (ensures freevars_comp c2 `Set.subset` vars_of_env g)    
-  = let ST_VPropEquiv _ _ _ x _ _ _ eq_pre eq_post = d in
+  = let ST_VPropEquiv _ _ _ x _ _ _ eq_res eq_pre eq_post = d in
     vprop_equiv_freevars eq_pre;
     vprop_equiv_freevars eq_post;
-    freevars_open_term_inv (comp_post c1) x;     
-    freevars_open_term_inv (comp_post c2) x
-
-
-let src_typing_freevars_t (d':'a) = 
+    freevars_open_term_inv (comp_post c1) x;
+    freevars_open_term_inv (comp_post c2) x;
+    Pulse.Elaborate.elab_freevars (comp_res c1);
+    refl_equiv_freevars eq_res;
+    Pulse.Elaborate.elab_freevars (comp_res c2)
+    
+let src_typing_freevars_t (d':'a) =
     (#g:_) -> (#t:_) -> (#c:_) -> (d:st_typing g t c { d << d' }) ->
     Lemma 
     (ensures freevars_st t `Set.subset` vars_of_env g /\
@@ -369,7 +407,8 @@ let freevars_ref (t:term)
   : Lemma (freevars (mk_ref t) == freevars t)
   = admit()
 
-#push-options "--fuel 2 --ifuel 1 --z3rlimit_factor 10 --query_stats"
+// FIXME: tame this proof
+#push-options "--fuel 2 --ifuel 1 --z3rlimit_factor 10 --query_stats --retry 5"
 let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
                            (d:st_typing g t c)
   : Lemma 

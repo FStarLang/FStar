@@ -21,9 +21,8 @@ let debug_main g (s: unit -> T.Tac string) : T.Tac unit =
   else ()
   
 let main' (t:st_term) (pre:term) (g:RT.fstar_top_env)
-  : T.Tac (r:(R.term & R.typ){RT.tot_typing g (fst r) (snd r)})
-  = 
-    match Pulse.Soundness.Common.check_top_level_environment g with
+  : T.Tac (r:(option R.term & option (string & R.term) & R.typ){RT.well_typed g r})
+  = match Pulse.Soundness.Common.check_top_level_environment g with
     | None -> T.fail "pulse main: top-level environment does not include stt at the expected types"
     | Some g ->
       if RU.debug_at_level (fstar_env g) "Pulse"
@@ -35,8 +34,8 @@ let main' (t:st_term) (pre:term) (g:RT.fstar_top_env)
       then let pre_typing : tot_typing g pre tm_vprop = pre_typing in
            match t.term with
            | Tm_Abs _ ->
+             let rng = t.range in
              let (| t, c, t_typing |) = Pulse.Checker.Abs.check_abs g t Pulse.Checker.check in
-             //  let (| t, c, t_typing |) = check g t pre pre_typing None true in
              Pulse.Checker.Prover.debug_prover g
                (fun _ -> Printf.sprintf "\ncheck call returned in main with:\n%s\n"
                          (P.st_term_to_string t));
@@ -45,9 +44,12 @@ let main' (t:st_term) (pre:term) (g:RT.fstar_top_env)
                          (P.st_term_to_string t)
                          (Pulse.Typing.Printer.print_st_typing t_typing));
              let refl_t = elab_comp c in
-             let refl_e = elab_st_typing t_typing in
+             let refl_e = Pulse.RuntimeUtils.embed_st_term_for_extraction #st_term t (Some rng) in
+             let blob = "pulse", refl_e in
              soundness_lemma g t c t_typing;
-             (refl_e, refl_t)
+             if T.ext_getv "pulse:elab_derivation" <> ""
+             then Some (elab_st_typing t_typing), Some blob, refl_t
+             else None, Some blob, refl_t
            | _ -> fail g (Some t.range) "main: top-level term not a Tm_Abs"
       else fail g (Some t.range) "pulse main: cannot typecheck pre at type vprop"
 
@@ -80,14 +82,21 @@ let join_smt_goals () : Tac unit =
   ()
 
 let main t pre : RT.dsl_tac_t = fun g ->
-  (* If we will be joining goals, make sure the guards from reflection
-  typing end up as SMT goals. This is anyway the default behavior but it
-  doesn't hurt to be explicit. *)
-  set_guard_policy SMT;
+  (* We use the SMT policy by default, to collect goals in the
+  proofstate and discharge them all at the end, potentially joining
+  them (see below). But it can be overriden to SMTSync by `--ext
+  pulse:guard_policy=SMTSync`. *)
+  if ext_getv "pulse:guard_policy" = "SMTSync" then
+    set_guard_policy SMTSync
+  else
+    set_guard_policy SMT;
 
   let res = main' t pre g in
 
-  if Cfg.join_goals && not (RU.debug_at_level g "DoNotJoin") then
+  if ext_getv "pulse:join" = "1"
+     (* || ext_getv "pulse:join" <> "" *)
+     // ^ Uncomment to make it true by default.
+  then
     join_smt_goals();
   res
 
@@ -102,7 +111,17 @@ let check_pulse (namespaces:list string)
       match Pulse.ASTBuilder.parse_pulse env namespaces module_abbrevs content file_name line col with
       | Inl st_term ->
         main st_term tm_emp env
-      | Inr (msg, range) ->
-        T.fail (Printf.sprintf "%s: %s"
-                  (T.range_to_string range)
-                  msg)
+
+      | Inr None ->
+        T.fail "Pulse parser failed"
+
+      | Inr (Some (msg, range)) ->
+        let i =
+          Issue.mk_issue "Error"
+                   (Printf.sprintf "%s: %s" (T.range_to_string range) msg)
+                   (Some range)
+                   None
+                   []
+        in
+        T.log_issues [i];
+        T.fail "Pulse parser failed"

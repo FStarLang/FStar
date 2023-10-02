@@ -227,13 +227,7 @@ fn package_core (acc:hash_value_buf) (ctr:ref U32.t)
           pure (h == mk_ha_core acc ctr)
 {
    let core = mk_ha_core acc ctr;
-   // It would be nice to have a "rename" primitive
-   // So we could write something like
-   // rename acc as core.acc, ctr as core.ctr;
-   rewrite (A.pts_to acc vacc)
-        as  (A.pts_to core.acc vacc);    
-   rewrite (pts_to ctr 'vctr)
-        as  (pts_to core.ctr 'vctr);
+   rewrite each acc as core.acc, ctr as core.ctr;
    fold_ha_val_core core;
    core
 }
@@ -298,14 +292,8 @@ fn package (acc:hash_value_buf) (ctr:ref U32.t) (tmp:hash_value_buf) (dummy:dumm
           pure (h == mk_ha (mk_ha_core acc ctr) tmp dummy)
 {
    let ha = mk_ha (mk_ha_core acc ctr) tmp dummy;
-   rewrite (A.pts_to acc vacc)
-        as  (A.pts_to ha.core.acc vacc);    
-   rewrite (pts_to ctr 'vctr)
-        as  (pts_to ha.core.ctr 'vctr);
-   rewrite (A.pts_to tmp vtmp)
-        as  (A.pts_to ha.tmp vtmp);
-   rewrite (A.pts_to dummy (Seq.create 1 0uy))
-        as  (A.pts_to ha.dummy (Seq.create 1 0uy));
+   rewrite each acc as ha.core.acc, ctr as ha.core.ctr,
+          tmp as ha.tmp, dummy as ha.dummy;
    fold_ha_val ha;
    ha
 }
@@ -343,6 +331,8 @@ fn reclaim (s:ha) (#h:hash_value_t)
 }
 ```
 
+
+
 // Aggregating two raw hashes XOR's them byte-by-byte
 // Compared to the version in Zeta.Steel, this is significantly cleaner
 // That one uses a for loop, but we don't have that yet in Pulse,
@@ -355,7 +345,7 @@ fn reclaim (s:ha) (#h:hash_value_t)
 // Note, I had first tried a vairant of this with a refinement on wi
 // in the invariant to constrain its length, but that led to various problems.
 // I should try that again and open issues. 
-#push-options "--retry 2" // GM: Part of this VC fails on batch mode, not on ide...
+#push-options "--retry 2 --ext 'pulse:rvalues'" // GM: Part of this VC fails on batch mode, not on ide...
 ```pulse
 fn aggregate_raw_hashes (b1 b2: hash_value_buf)
                         (#s1 #s2:e_raw_hash_value_t)
@@ -367,23 +357,20 @@ fn aggregate_raw_hashes (b1 b2: hash_value_buf)
     A.pts_to b2 s2
 {
     let mut i = 0sz;
-    array_pts_to_len b1;
-    array_pts_to_len b2;
-    assert (pure (s1 `Seq.equal` xor_bytes_pfx s1 s2 0));// `Seq.equal` s1));
-    while (let vi = !i; (vi < 32sz))
+    assert (pure (s1 `Seq.equal` xor_bytes_pfx s1 s2 0));
+    while ((i < 32sz))
     invariant b.
-        exists wi. //trying to add refinements here messes it up
+        exists wi.
             pts_to i wi **
             A.pts_to b1 (xor_bytes_pfx s1 s2 (v wi)) **
             A.pts_to b2 s2 **
             pure (b == (wi < 32sz))
     {
-      let vi = !i;
-      let x1 = b1.(vi);
-      let x2 = b2.(vi);
-      b1.(vi) <- (U8.logxor x1 x2);
-      extend_hash_value s1 s2 (v vi);
-      i := vi + 1sz;
+      let x1 = b1.(i);
+      let x2 = b2.(i);
+      b1.(i) <- U8.logxor x1 x2;
+      extend_hash_value s1 s2 (v i);
+      i := i + 1sz;
     };
     assert (pure (xor_bytes_pfx s1 s2 32 `Seq.equal` xor_bytes s1 s2))
 }
@@ -464,6 +451,7 @@ fn compare (b1 b2:ha)
 //    the hash of the input
 // And then aggregate these two ha_cores into the first one
 // And then to repackage it as an ha
+#push-options "--debug ZetaHashAccumulator --print_implicits --debug_level with_binders"
 ```pulse
 fn add (ha:ha) (input:hashable_buffer) (l:SZ.t)
        (#s:(s:erased bytes {SZ.v l <= Seq.length s /\  SZ.v l <= blake2_max_input_length}))
@@ -482,18 +470,10 @@ fn add (ha:ha) (input:hashable_buffer) (l:SZ.t)
    let ha' = package_core ha.tmp ctr;
    let v = aggregate ha.core ha';
    with w. unfold (ha_val_core ha' w);
-   // would be nice to write this as
-   // rename ha'.acc as ha.tmp
-   // Or, at least, `with w. rewrite ... `
-   // Rather than having to write an assert and then a rewrite
-   with w. assert (A.pts_to ha'.acc w);
-   rewrite (A.pts_to ha'.acc w)
-        as (A.pts_to ha.tmp w); 
+   rewrite each ha'.acc as ha.tmp;
    with w. unfold (ha_val_core ha.core w);
    fold_ha_val ha;
-   with w. assert (pts_to ha'.ctr w);
-   rewrite (pts_to ha'.ctr w)
-        as (pts_to ctr w);
+   rewrite each ha'.ctr as ctr;
    v
 }
 ```

@@ -126,6 +126,13 @@ val intro_comp_typing (g:env)
                       (post_typing:tot_typing (push_binding g x ppname_default (comp_res c)) (open_term (comp_post c) x) tm_vprop)
   : T.Tac (comp_typing g c (comp_u c))
 
+val match_comp_res_with_post_hint (#g:env) (#t:st_term) (#c:comp_st)
+  (d:st_typing g t c)
+  (post_hint:post_hint_opt g)
+  : T.Tac (t':st_term &
+           c':comp_st &
+           st_typing g t' c')
+
 val apply_checker_result_k (#g:env) (#ctxt:vprop) (#post_hint:post_hint_for_env g)
   (r:checker_result_t g ctxt (Some post_hint))
   (res_ppname:ppname)

@@ -630,11 +630,13 @@ let exists_cong p q =
       reveal_equiv (h_exists p) (h_exists q);
       exists_equiv p q)
 
-let new_invariant #uses p =
+let fresh_invariant #uses p ctxt =
   rewrite_slprop p (to_vprop (hp_of p)) (fun _ -> ());
-  let i = as_atomic_unobservable_action (new_invariant uses (hp_of p)) in
+  let i = as_atomic_unobservable_action (fresh_invariant uses (hp_of p) ctxt) in
   rewrite_slprop (to_vprop Mem.emp) emp (fun _ -> reveal_emp ());
   return i
+
+let new_invariant #uses p = let i = fresh_invariant #uses p [] in return i
 
 (*
  * AR: SteelAtomic and SteelGhost are not marked reifiable since we intend to run Steel programs natively

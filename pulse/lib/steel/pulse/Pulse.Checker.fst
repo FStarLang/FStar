@@ -81,20 +81,22 @@ let instantiate_unknown_witnesses (g:env) (t:st_term { Tm_IntroExists? t.term })
   | _ ->
     let e2 = {t with term=Tm_IntroExists { p; witnesses=new_ws }} in
     let e1 =
-      let hint_type = ASSERT in
+      let hint_type = ASSERT { p = opened_p } in
       let binders = [] in
-      let v = opened_p in
-      {term=Tm_ProofHintWithBinders { hint_type;binders;v;t=e2 }; range=t.range} in
+      {term=Tm_ProofHintWithBinders { hint_type;binders;t=e2 }; range=t.range; effect_tag=as_effect_hint STT_Ghost } in
     
-    let t = L.fold_right (fun new_name (e:st_term { Tm_ProofHintWithBinders? e.term }) ->
-      let (ppname, x), ty = new_name in
-      let e = close_st_term' e x 0 in
-      match e.term with
-      | Tm_ProofHintWithBinders {hint_type;binders;v;t} ->
-        let new_binder = {binder_ty=ty; binder_ppname=ppname} in
-        let t' = Tm_ProofHintWithBinders {hint_type;binders=new_binder::binders;v;t} in
-        {e with term=t'}
-    ) new_names e1 in
+    let t = 
+      L.fold_right
+        (fun new_name (e:st_term { Tm_ProofHintWithBinders? e.term }) ->
+          let (ppname, x), ty = new_name in
+          let e = close_st_term' e x 0 in
+          match e.term with
+          | Tm_ProofHintWithBinders {hint_type;binders;t} ->
+            let new_binder = {binder_ty=ty; binder_ppname=ppname} in
+            let t' = Tm_ProofHintWithBinders {hint_type;binders=new_binder::binders;t} in
+            {e with term=t'})
+        new_names
+        e1 in
     Some t
 
 let rec transform_to_unary_intro_exists (g:env) (t:term) (ws:list term)
@@ -104,7 +106,7 @@ let rec transform_to_unary_intro_exists (g:env) (t:term) (ws:list term)
   | [] -> fail g (Some t.range) "intro exists with empty witnesses"
   | [w] ->
     if Tm_ExistsSL? t.t
-    then wr (Tm_IntroExists {p=t;witnesses=[w]})
+    then wtag (Some STT_Ghost) (Tm_IntroExists {p=t;witnesses=[w]})
     else fail g (Some t.range) "intro exists with non-existential"
   | w::ws ->
     match t.t with
@@ -112,10 +114,11 @@ let rec transform_to_unary_intro_exists (g:env) (t:term) (ws:list term)
       let body = subst_term body [ DT 0 w ] in
       let st = transform_to_unary_intro_exists g body ws in
       // w is the witness
-      let intro = wr (Tm_IntroExists {p=t;witnesses=[w]}) in
-      wr (Tm_Bind {binder=null_binder tm_unit;
-                   head=st;
-                   body= intro})
+      let intro = wtag None (Tm_IntroExists {p=t;witnesses=[w]}) in
+      wtag None
+           (Tm_Bind {binder=null_binder tm_unit;
+                     head=st;
+                     body= intro})
 
     | _ -> fail g (Some t.range) "intro exists with non-existential"
 

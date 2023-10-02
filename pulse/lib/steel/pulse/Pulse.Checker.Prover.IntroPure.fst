@@ -22,7 +22,7 @@ let k_intro_pure (g:env) (p:term)
   
   : T.Tac (continuation_elaborator g frame g (frame * tm_pure p)) =
 
-  let t = wr (Tm_IntroPure {p}) in
+  let t = wtag (Some STT_Ghost) (Tm_IntroPure {p}) in
   let c = comp_intro_pure p in
   let d : st_typing g t c = T_IntroPure g p d token in
 

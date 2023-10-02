@@ -15,6 +15,7 @@ let rewrite_token (tok:FP.token)
     | IDENT "while" -> PP.WHILE
     | IDENT "fn" -> PP.FN
     | IDENT "parallel" -> PP.PARALLEL
+    | IDENT "each" -> PP.EACH
     | IDENT "rewrite" -> PP.REWRITE
     | IDENT "fold" -> PP.FOLD
     | IDENT "atomic" -> PP.ATOMIC
@@ -216,10 +217,10 @@ let parse_decl (s:string) (r:range) =
   | e ->
     let pos = FStar_Parser_Util.pos_of_lexpos (lexbuf.cur_p) in
     let r = FStar_Compiler_Range.mk_range fn pos pos in
-    Inr ("Syntax error", r)
+    Inr (Some ("Syntax error", r))
 
  
-let parse_peek_id (s:string) (r:range) =
+let parse_peek_id (s:string) (r:range) : (string, string * range) either =
   (* print_string ("About to parse <" ^ s ^ ">"); *)
   let fn = file_of_range r in
   let lexbuf, lexer = lexbuf_and_lexer s r in

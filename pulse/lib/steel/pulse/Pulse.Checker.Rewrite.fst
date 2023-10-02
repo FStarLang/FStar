@@ -41,4 +41,4 @@ let check
            | Some token ->
             VE_Ext g p q token in
 	let d = T_Rewrite _ p q p_typing equiv_p_q in
-	prove_post_hint (try_frame_pre pre_typing d res_ppname) post_hint t.range
+	prove_post_hint (try_frame_pre pre_typing (match_comp_res_with_post_hint d post_hint) res_ppname) post_hint t.range

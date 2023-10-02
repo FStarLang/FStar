@@ -18,9 +18,14 @@ let canon_comp (c:comp_st) : comp_st =
   match readback_comp (elab_comp c) with
   | None -> c
   | Some (C_Tot _) -> c //should be impossible
-  | Some c' ->
-    c'
-  
+  | Some c' -> c'
+
+#push-options "--admit_smt_queries true"
+let canon_comp_eq_res (g:env) (c:comp_st)
+  : RT.equiv (elab_env g) (elab_term (comp_res c)) (elab_term (comp_res (canon_comp c)))
+  = RT.Rel_refl _ _ _ 
+#pop-options
+
 let canonicalize_st_typing (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
   : st_typing g t (canon_comp c)
   = let c' = canon_comp c in
@@ -30,7 +35,7 @@ let canonicalize_st_typing (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c
     assume (st_equiv_pre c c');
     let st_eq 
       : st_equiv g c c'
-      = ST_VPropEquiv g c c' x (magic()) (magic()) (magic()) (magic()) (magic())
+      = ST_VPropEquiv g c c' x (magic ()) (magic()) (magic()) (canon_comp_eq_res g c) (magic()) (magic())
     in
     T_Equiv _ _ _ _ d st_eq
 
@@ -52,7 +57,8 @@ let rec intro_uvars_for_logical_implicits (g:env) (uvs:env { disjoint uvs g }) (
        | C_STAtomic _ _
        | C_STGhost _ _ ->
          (| uvs', push_env g uvs', {term=Tm_STApp {head=t;arg_qual=Some Implicit;arg=null_var x};
-                                    range=t.range} |)
+                                    range=t.range;
+                                    effect_tag=as_effect_hint (ctag_of_comp_st c_rest) } |)
        | C_Tot ty ->
          intro_uvars_for_logical_implicits g uvs' (tm_pureapp t (Some Implicit) (null_var x)) ty
     end
@@ -63,7 +69,7 @@ let rec intro_uvars_for_logical_implicits (g:env) (uvs:env { disjoint uvs g }) (
          (P.term_to_string ty))
 
 
-let instantaite_implicits (g:env) (t:st_term { Tm_STApp? t.term })
+let instantiate_implicits (g:env) (t:st_term { Tm_STApp? t.term })
   : T.Tac (uvs : env &
            g' : env { extends_with g' g uvs } &
            t' : st_term { Tm_STApp? t'.term }) =
@@ -80,7 +86,7 @@ let instantaite_implicits (g:env) (t:st_term { Tm_STApp? t.term })
     match is_pure_app t with
     | Some (head, q, arg) ->
       let uvs = mk_env (fstar_env g) in
-      (| uvs, push_env g uvs, {term=Tm_STApp {head;arg_qual=q;arg}; range=t.range} |)
+      (| uvs, push_env g uvs, {term=Tm_STApp {head;arg_qual=q;arg}; range=t.range; effect_tag=default_effect_hint } |)
     | _ ->
       fail g (Some t.range)
         (Printf.sprintf "check_stapp.instantiate_implicits: expected an application term, found: %s"
@@ -99,7 +105,9 @@ let check
   let g0 = push_context "st_app" t.range g0 in
   let range = t.range in
 
-  let (| uvs, g, t |) = instantaite_implicits g0 t in
+  let (| uvs, g, t |) = instantiate_implicits g0 t in
+  assert (g `env_extends` g0);
+  let post_hint : post_hint_opt g = post_hint in
 
   let Tm_STApp { head; arg_qual=qual; arg } = t.term in
 
@@ -137,7 +145,7 @@ let check
           let d : st_typing _ _ (open_comp_with comp_typ arg) =
             T_STApp g head formal qual comp_typ arg dhead darg in
           let d = canonicalize_st_typing d in
-          let t = { term = Tm_STApp {head; arg_qual=qual; arg}; range } in
+          let t = { term = Tm_STApp {head; arg_qual=qual; arg}; range; effect_tag=as_effect_hint (ctag_of_comp_st comp_typ) } in
           let c = (canon_comp (open_comp_with comp_typ arg)) in
           (| t, c, d |)
         | C_STGhost _ res ->
@@ -168,14 +176,14 @@ let check
               (E d_non_info)
               (lift_typing_to_ghost_typing darg) in
           let d = canonicalize_st_typing d in
-          let t = { term = Tm_STApp {head; arg_qual=qual; arg}; range } in
+          let t = { term = Tm_STApp {head; arg_qual=qual; arg}; range; effect_tag=as_effect_hint STT_Ghost } in
           let c = (canon_comp (open_comp_with comp_typ arg)) in
           (| t, c, d |)
         | _ ->
           fail g (Some t.range)
             "Expected an effectful application; got a pure term (could it be partially applied by mistake?)" in
 
-        Prover.prove_post_hint (Prover.try_frame_pre_uvs ctxt_typing uvs d res_ppname) post_hint t.range
+        Prover.prove_post_hint (Prover.try_frame_pre_uvs ctxt_typing uvs (match_comp_res_with_post_hint d post_hint) res_ppname) post_hint t.range
 
     else fail g (Some t.range) (Printf.sprintf "Unexpected qualifier in head type %s of stateful application: head = %s, arg = %s"
                 (P.term_to_string ty_head)
