@@ -20,7 +20,7 @@ val derive_key_pair_spec
   (ikm: Seq.seq U8.t)
   (lbl_len: hkdf_lbl_len)
   (lbl: Seq.seq U8.t)
-  : elseq U8.t v32us & elseq U8.t v32us
+  : GTot (Seq.seq U8.t & Seq.seq U8.t)
 
 val derive_key_pair
   (pub : A.larray U8.t (US.v v32us))
@@ -30,8 +30,7 @@ val derive_key_pair
   (lbl_len: hkdf_lbl_len) 
   (lbl: A.array U8.t)
   (#ikm_perm #lbl_perm:perm)
-  (#_pub_seq #_priv_seq:erased (elseq U8.t v32us))
-  (#ikm_seq #lbl_seq:erased (Seq.seq U8.t))
+  (#_pub_seq #_priv_seq #ikm_seq #lbl_seq:erased (Seq.seq U8.t))
  : stt unit
    (requires (
     A.pts_to pub _pub_seq ** 
@@ -42,8 +41,8 @@ val derive_key_pair
     (ensures (fun _ ->
         A.pts_to ikm #ikm_perm ikm_seq ** 
         A.pts_to lbl #lbl_perm lbl_seq **
-        exists_ (fun (pub_seq:elseq U8.t v32us) ->
-        exists_ (fun (priv_seq:elseq U8.t v32us) -> (
+        exists_ (fun (pub_seq:Seq.seq U8.t) ->
+        exists_ (fun (priv_seq:Seq.seq U8.t) -> (
           A.pts_to pub pub_seq ** 
           A.pts_to priv priv_seq **
           pure ((pub_seq, priv_seq) == derive_key_pair_spec ikm_len ikm_seq lbl_len lbl_seq)
@@ -56,7 +55,7 @@ let derive_DeviceID_spec
   (cdi: Seq.seq U8.t) (* should be length 32 *)
   (l0_label_DeviceID_len: hkdf_lbl_len)
   (l0_label_DeviceID: Seq.seq U8.t)
-: elseq U8.t v32us & elseq U8.t v32us
+: GTot (Seq.seq U8.t & Seq.seq U8.t)
 = let cdigest = spec_hash alg cdi in
   derive_key_pair_spec
     (* ikm *) dig_len cdigest
@@ -69,8 +68,7 @@ val derive_DeviceID
   (cdi:A.larray U8.t (US.v dice_digest_len))
   (deviceID_label_len:hkdf_lbl_len)
   (deviceID_label:A.larray U8.t (US.v deviceID_label_len))
-  (#cdi0 #deviceID_label0:erased (Seq.seq U8.t))
-  (#deviceID_pub0 #deviceID_priv0:erased (elseq U8.t v32us))
+  (#cdi0 #deviceID_label0 #deviceID_pub0 #deviceID_priv0:erased (Seq.seq U8.t))
   (#cdi_perm #p:perm)
   : stt unit
   (requires (
@@ -83,8 +81,8 @@ val derive_DeviceID
   (ensures (fun _ ->
     A.pts_to cdi #cdi_perm cdi0 **
     A.pts_to deviceID_label #p deviceID_label0 **
-    (exists_ (fun (deviceID_pub1:elseq U8.t v32us) ->
-     exists_ (fun (deviceID_priv1:elseq U8.t v32us) ->
+    (exists_ (fun (deviceID_pub1:Seq.seq U8.t) ->
+     exists_ (fun (deviceID_priv1:Seq.seq U8.t) ->
         A.pts_to deviceID_pub deviceID_pub1 **
         A.pts_to deviceID_priv deviceID_priv1 **
         pure (
@@ -102,7 +100,7 @@ let derive_AliasKey_spec
   (fwid: Seq.seq U8.t) (* should be length 32 *)
   (l0_label_AliasKey_len: hkdf_lbl_len)
   (l0_label_AliasKey: Seq.seq U8.t)
-: elseq U8.t v32us & elseq U8.t v32us
+: GTot (Seq.seq U8.t & Seq.seq U8.t)
 = let cdigest = spec_hash alg cdi in
   let adigest = spec_hmac alg cdigest fwid in
   derive_key_pair_spec
@@ -117,8 +115,7 @@ val derive_AliasKey
   (fwid: A.larray U8.t (US.v v32us))
   (aliasKey_label_len: hkdf_lbl_len)
   (aliasKey_label: A.larray U8.t (US.v aliasKey_label_len))
-  (#cdi0 #fwid0 #aliasKey_label0:erased (Seq.seq U8.t))
-  (#aliasKey_pub0 #aliasKey_priv0:erased (elseq U8.t v32us))
+  (#cdi0 #fwid0 #aliasKey_label0 #aliasKey_pub0 #aliasKey_priv0:erased (Seq.seq U8.t))
   (#cdi_perm #p:perm)
  : stt unit
   (requires (
@@ -133,8 +130,8 @@ val derive_AliasKey
     A.pts_to cdi #cdi_perm cdi0 **
     A.pts_to fwid #p fwid0 **
     A.pts_to aliasKey_label #p aliasKey_label0 **
-    (exists_ (fun (aliasKey_pub1:elseq U8.t v32us) ->
-     exists_ (fun (aliasKey_priv1:elseq U8.t v32us) ->
+    (exists_ (fun (aliasKey_pub1:Seq.seq U8.t) ->
+     exists_ (fun (aliasKey_priv1:Seq.seq U8.t) ->
         A.pts_to aliasKey_pub aliasKey_pub1 **
         A.pts_to aliasKey_priv aliasKey_priv1 **
         pure (
@@ -156,8 +153,7 @@ val derive_AuthKeyID
   (alg:alg_t)
   (authKeyID: A.larray U8.t (US.v (digest_len alg)))
   (deviceID_pub: A.larray U8.t (US.v v32us))
-  (#authKeyID0:erased (Seq.seq U8.t))
-  (#deviceID_pub0:erased (elseq U8.t v32us))
+  (#authKeyID0 #deviceID_pub0:erased (Seq.seq U8.t))
   (#p:perm)
   : stt unit
   (requires (

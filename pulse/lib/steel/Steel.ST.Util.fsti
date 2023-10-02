@@ -325,9 +325,13 @@ val implies_
 : Tot vprop
 
 [@@__reduce__]
-let ( @==> ) #is hyp concl = implies_ #is hyp concl
+let ( @==> )
+  (#[T.exact (`(hide Set.empty))] is : inames) // Empty inames by default
+  (hyp concl: vprop)
+: Tot vprop
+= implies_ #is hyp concl
 
-val elim_implies
+val elim_implies_gen
   (#opened: _)
   (#[T.exact (`(hide Set.empty))] is : inames{opened /! is})
   (hyp concl: vprop)
@@ -335,7 +339,15 @@ val elim_implies
     ((implies_ #is hyp concl) `star` hyp)
     (fun _ -> concl)
 
-val intro_implies
+let elim_implies
+  (#opened: _)
+  (hyp concl: vprop)
+: STGhostT unit opened
+    ((implies_ hyp concl) `star` hyp)
+    (fun _ -> concl)
+= elim_implies_gen hyp concl
+
+val intro_implies_gen
   (#opened: _)
   (#[T.exact (`(hide Set.empty))] is : inames)
   (hyp concl: vprop)
@@ -350,7 +362,22 @@ val intro_implies
     v
     (fun _ -> (@==>) #is hyp concl)
 
-let implies_uncurry
+let intro_implies
+  (#opened: _)
+  (hyp concl: vprop)
+  (v: vprop)
+  (f_elim: (
+    (opened': inames) ->
+    STGhostT unit opened'
+    (v `star` hyp)
+    (fun _ -> concl)
+  ))
+: STGhostT unit opened
+    v
+    (fun _ -> (@==>) hyp concl)
+= intro_implies_gen hyp concl v f_elim
+
+let implies_uncurry_gen
   (#opened: _)
   (#[T.exact (`(hide Set.empty))] is1 : inames)
   (#[T.exact (`(hide Set.empty))] is2 : inames {is1 /! is2})
@@ -358,10 +385,21 @@ let implies_uncurry
 : STGhostT unit opened
     ((@==>) #is1 h1 ((@==>) #is2 h2 c))
     (fun _ -> (@==>) #(Set.union is1 is2) (h1 `star` h2) c)
-= intro_implies (h1 `star` h2) c (h1 @==> (h2 @==> c)) (fun _ ->
-    elim_implies h1 (h2 @==> c);
-    elim_implies h2 c
+= intro_implies_gen (h1 `star` h2) c (h1 @==> (h2 @==> c)) (fun _ ->
+    elim_implies_gen h1 (h2 @==> c);
+    elim_implies_gen h2 c
   )
+
+let implies_uncurry
+  (#opened: _)
+  (h1 h2 c: vprop)
+: STGhostT unit opened
+    ((@==>) h1 ((@==>) h2 c))
+    (fun _ -> (@==>) (h1 `star` h2) c)
+= implies_uncurry_gen #_ #(Set.empty) #(Set.empty) h1 h2 c;
+  assert (Set.union Set.empty Set.empty `Set.equal` (Set.empty #iname));
+  noop ();
+  rewrite (implies_ #(Set.union Set.empty Set.empty) (h1 `star` h2) c) (implies_ #(Set.empty) (h1 `star` h2) c)
 
 let emp_inames : inames = Set.empty
 
@@ -372,12 +410,12 @@ let implies_curry
 : STGhostT unit opened
     ((@==>) #is (h1 `star` h2) c)
     (fun _ -> (@==>) #emp_inames h1 ((@==>) #is h2 c))
-= intro_implies #opened #emp_inames h1 ((@==>) #is h2 c) ((h1 `star` h2) @==> c) (fun opened' ->
-    intro_implies #opened' #is h2 c (((h1 `star` h2) @==> c) `star` h1) (fun opened' ->
-    elim_implies #opened' #is (h1 `star` h2) c
+= intro_implies_gen #opened #emp_inames h1 ((@==>) #is h2 c) ((h1 `star` h2) @==> c) (fun opened' ->
+    intro_implies_gen #opened' #is h2 c (((h1 `star` h2) @==> c) `star` h1) (fun opened' ->
+    elim_implies_gen #opened' #is (h1 `star` h2) c
   ))
 
-let implies_join
+let implies_join_gen
   (#opened: _)
   (#[T.exact (`(hide Set.empty))] is1 : inames)
   (#[T.exact (`(hide Set.empty))] is2 : inames)
@@ -385,12 +423,23 @@ let implies_join
 : STGhostT unit opened
     (((@==>) #is1 h1 c1) `star` ((@==>) #is2 h2 c2))
     (fun _ -> (@==>) #(Set.union is1 is2) (h1 `star` h2) (c1 `star` c2))
-= intro_implies (h1 `star` h2) (c1 `star` c2) ((h1 @==> c1) `star` (h2 @==> c2)) (fun _ ->
-    elim_implies h1 c1;
-    elim_implies h2 c2
+= intro_implies_gen (h1 `star` h2) (c1 `star` c2) ((h1 @==> c1) `star` (h2 @==> c2)) (fun _ ->
+    elim_implies_gen h1 c1;
+    elim_implies_gen h2 c2
   )
 
-let implies_trans
+let implies_join
+  (#opened: _)
+  (h1 c1 h2 c2: vprop)
+: STGhostT unit opened
+    (((@==>) h1 c1) `star` ((@==>) h2 c2))
+    (fun _ -> (@==>) (h1 `star` h2) (c1 `star` c2))
+= implies_join_gen h1 c1 h2 c2;
+  assert (Set.union Set.empty Set.empty `Set.equal` (Set.empty #iname));
+  noop ();
+  rewrite (implies_ #(Set.union Set.empty Set.empty) (h1 `star` h2) (c1 `star` c2)) (implies_ #(Set.empty) (h1 `star` h2) (c1 `star` c2))
+
+let implies_trans_gen
   (#opened: _)
   (#[T.exact (`(hide Set.empty))] is1 : inames)
   (#[T.exact (`(hide Set.empty))] is2 : inames)
@@ -398,10 +447,21 @@ let implies_trans
 : STGhostT unit opened
     (((@==>) #is1 v1 v2) `star` ((@==>) #is2 v2 v3))
     (fun _ -> (@==>) #(Set.union is1 is2) v1 v3)
-= intro_implies v1 v3 ((v1 @==> v2) `star` (v2 @==> v3)) (fun _ ->
-    elim_implies v1 v2;
-    elim_implies v2 v3
+= intro_implies_gen v1 v3 ((v1 @==> v2) `star` (v2 @==> v3)) (fun _ ->
+    elim_implies_gen v1 v2;
+    elim_implies_gen v2 v3
   )
+
+let implies_trans
+  (#opened: _)
+  (v1 v2 v3: vprop)
+: STGhostT unit opened
+    (((@==>) v1 v2) `star` ((@==>) v2 v3))
+    (fun _ -> (@==>) v1 v3)
+= implies_trans_gen v1 v2 v3;
+  assert (Set.union Set.empty Set.empty `Set.equal` (Set.empty #iname));
+  noop ();
+  rewrite (implies_ #(Set.union Set.empty Set.empty) v1 v3) (implies_ #(Set.empty) v1 v3)
 
 let adjoint_elim_implies
   (#opened: _)
@@ -416,7 +476,7 @@ let adjoint_elim_implies
     (p `star` q)
     (fun _ -> r)
 = f _;
-  elim_implies #opened q r
+  elim_implies_gen #opened q r
 
 let adjoint_intro_implies
   (#opened: _)
@@ -430,9 +490,103 @@ let adjoint_intro_implies
 : STGhostT unit opened
     p
     (fun _ -> (@==>) #is q r)
-= intro_implies q r p (fun _ ->
+= intro_implies_gen q r p (fun _ ->
     f _
   )
+
+/// Derived operations with implies
+
+let implies_refl
+  (#opened: _)
+  (p: vprop)
+: STGhostT unit opened
+    emp
+    (fun _ -> p @==> p)
+= intro_implies p p emp (fun _ -> noop ())
+
+let rewrite_with_implies
+  (#opened: _)
+  (p q: vprop)
+: STGhost unit opened
+    p
+    (fun _ -> q `star` (q @==> p))
+    (p == q)
+    (fun _ -> True)
+= rewrite p q;
+  intro_implies q p emp (fun _ ->
+    rewrite q p
+  )
+
+let vpattern_rewrite_with_implies
+  (#opened: _)
+  (#a: Type)
+  (#x1: a)
+  (p: a -> vprop)
+  (x2: a)
+: STGhost unit opened
+    (p x1)
+    (fun _ -> p x2 `star` (p x2 @==> p x1))
+    (x1 == x2)
+    (fun _ -> True)
+= rewrite_with_implies (p x1) (p x2)
+
+let implies_emp_l
+  (#opened: _)
+  (p: vprop)
+: STGhostT unit opened
+    p
+    (fun _ -> emp @==> p)
+= intro_implies emp p p (fun _ -> noop ())
+
+let implies_with_tactic
+  (#opened: _)
+  (p q: vprop)
+: STGhost unit opened
+    emp
+    (fun _ -> p @==> q)
+    (requires FStar.Tactics.with_tactic init_resolve_tac (squash (p `equiv` q)))
+    (ensures fun _ -> True)
+= intro_implies p q emp (fun _ -> rewrite_equiv p q)
+
+let implies_concl_l
+  (#opened: _)
+  (p q r: vprop)
+: STGhostT unit opened
+    (p `star` (q @==> r))
+    (fun _ -> q @==> (p `star` r))
+= implies_with_tactic q (emp `star` q);
+  implies_emp_l p;
+  implies_join emp p q r;
+  implies_trans q (emp `star` q) (p `star` r)
+
+let implies_concl_r
+  (#opened: _)
+  (q r p: vprop)
+: STGhostT unit opened
+    (p `star` (q @==> r))
+    (fun _ -> q @==> (r `star` p))
+= implies_concl_l p q r;
+  implies_with_tactic (p `star` r) (r `star` p);
+  implies_trans q (p `star` r) (r `star` p)
+
+let implies_reg_l
+  (#opened: _)
+  (p q r: vprop)
+: STGhostT unit opened
+    (q @==> r)
+    (fun _ -> (p `star` q) @==> (p `star` r))
+= implies_with_tactic p p;
+  implies_join p p q r
+
+let implies_reg_r
+  (#opened: _)
+  (q r: vprop)
+  (p: vprop)
+: STGhostT unit opened
+    (q @==> r)
+    (fun _ -> (q `star` p) @==> (r `star` p))
+= implies_with_tactic p p;
+  implies_join q r p p
 
 /// The magic wand is a implies (but not the converse)
 
@@ -448,7 +602,7 @@ let wand_is_implies
 : STGhostT unit opened
   (s1 `wand` s2)
   (fun _ -> (@==>) #emp_inames s1 s2)
-= intro_implies #_ #emp_inames s1 s2 (s1 `wand` s2) (fun _ ->
+= intro_implies s1 s2 (s1 `wand` s2) (fun _ ->
     weaken (s1 `star` (s1 `wand` s2)) s2 (fun m ->
     interp_star (hp_of s1) (hp_of (s1 `wand` s2)) m;
     let m1 = FStar.IndefiniteDescription.indefinite_description_ghost mem (fun m1 -> exists m2 . disjoint m1 m2 /\ interp (hp_of s1) m1 /\ interp (hp_of (s1 `wand` s2)) m2 /\ join m1 m2 == m) in

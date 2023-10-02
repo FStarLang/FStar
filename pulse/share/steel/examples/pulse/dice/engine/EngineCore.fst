@@ -44,7 +44,7 @@ fn authenticate_l0_image (record:engine_record_t) (#repr:Ghost.erased engine_rec
     hacl_hash dice_hash_alg record.l0_binary_size record.l0_binary hash_buf;
     let res = compare dice_digest_len hash_buf record.l0_binary_hash;
     with s. assert (A.pts_to hash_buf s);
-    A.free hash_buf #(coerce dice_digest_len s);
+    A.free hash_buf;
     fold engine_record_perm record repr p;
     res
   } else {
@@ -68,7 +68,7 @@ fn compute_cdi (cdi:cdi_t) (uds:A.larray U8.t (US.v uds_len)) (record:engine_rec
 {
   let uds_digest = A.alloc 0uy dice_digest_len;
   let l0_digest = A.alloc 0uy dice_digest_len;
-  hacl_hash dice_hash_alg uds_len uds uds_digest #uds_perm #(coerce uds_len uds_bytes);
+  hacl_hash dice_hash_alg uds_len uds uds_digest;
 
   unfold engine_record_perm record 'repr p;
   hacl_hash dice_hash_alg record.l0_binary_size record.l0_binary l0_digest;
@@ -85,10 +85,9 @@ fn compute_cdi (cdi:cdi_t) (uds:A.larray U8.t (US.v uds_len)) (record:engine_rec
 }
 ```
 
-#set-options "--print_implicits --print_universes"
 ```pulse
 fn engine_main' (cdi:cdi_t) (uds:A.larray U8.t (US.v uds_len)) (record:engine_record_t)
-                (#c0:Ghost.erased (elseq U8.t dice_digest_len))
+                (#c0:Ghost.erased (Seq.seq U8.t))
                 (#repr:Ghost.erased engine_record_repr)
                 (#uds_perm #p:perm)
   requires engine_record_perm record repr p **
@@ -97,7 +96,7 @@ fn engine_main' (cdi:cdi_t) (uds:A.larray U8.t (US.v uds_len)) (record:engine_re
   returns  r:dice_return_code
   ensures  engine_record_perm record repr p **
            A.pts_to uds #uds_perm uds_bytes **
-           exists (c1:elseq U8.t dice_digest_len).
+           exists (c1:Seq.seq U8.t).
              A.pts_to cdi c1 **
              pure (A.is_full_array cdi
                 /\ r = DICE_SUCCESS ==> l0_is_authentic repr /\ cdi_functional_correctness c1 repr)
