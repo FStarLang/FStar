@@ -130,14 +130,14 @@ type l0_context_t = {
 let mk_l0_context_t cdi : l0_context_t = {cdi}
 
 type l0_context_repr_t = {
-  cdi:elseq U8.t dice_digest_len;
+  cdi:Seq.seq U8.t;
   repr:engine_record_repr;
 }
 
 let mk_l0_context_repr_t
-  (cdi:erased (elseq U8.t dice_digest_len)) 
-  (repr:erased engine_record_repr) 
-: erased l0_context_repr_t 
+  (cdi:Seq.seq U8.t)
+  (repr:engine_record_repr) 
+: GTot l0_context_repr_t 
 = {cdi; repr}
 
 let l0_context_perm (c:l0_context_t) (r:l0_context_repr_t): vprop
@@ -164,36 +164,36 @@ noeq
 type l1_context_repr_t = {
   deviceID_label_len: hkdf_lbl_len;
   aliasKey_label_len: hkdf_lbl_len;
-  deviceID_priv: elseq U8.t v32us;
-  deviceID_pub: elseq U8.t v32us;
-  aliasKey_priv: elseq U8.t v32us;
-  aliasKey_pub:elseq U8.t v32us;
+  deviceID_priv: Seq.seq U8.t;
+  deviceID_pub: Seq.seq U8.t;
+  aliasKey_priv: Seq.seq U8.t;
+  aliasKey_pub: Seq.seq U8.t;
   aliasKeyCRT_len:SZ.t;
-  aliasKeyCRT: elseq U8.t aliasKeyCRT_len;
+  aliasKeyCRT:Seq.seq U8.t;// aliasKeyCRT_len;
   deviceIDCSR_len:SZ.t;
-  deviceIDCSR:elseq U8.t deviceIDCSR_len;
-  cdi:elseq U8.t dice_digest_len;
+  deviceIDCSR:Seq.seq U8.t;// deviceIDCSR_len;
+  cdi:Seq.seq U8.t; // dice_digest_len;
   repr:l0_record_repr_t;
   deviceIDCSR_ingredients: deviceIDCSR_ingredients_t;
   aliasKeyCRT_ingredients: aliasKeyCRT_ingredients_t;
 }
 
 let mk_l1_context_repr_t 
-  (deviceID_label_len:erased hkdf_lbl_len)
-  (aliasKey_label_len:erased hkdf_lbl_len)
-  (deviceID_priv:erased (elseq U8.t v32us))
-  (deviceID_pub:erased (elseq U8.t v32us))
-  (aliasKey_priv:erased (elseq U8.t v32us))
-  (aliasKey_pub:erased (elseq U8.t v32us))
-  (aliasKeyCRT_len:erased SZ.t)
-  (aliasKeyCRT:erased (elseq U8.t aliasKeyCRT_len))
+  (deviceID_label_len:hkdf_lbl_len)
+  (aliasKey_label_len:hkdf_lbl_len)
+  (deviceID_priv:Seq.seq U8.t)
+  (deviceID_pub:Seq.seq U8.t)
+  (aliasKey_priv:Seq.seq U8.t)
+  (aliasKey_pub:Seq.seq U8.t)
+  (aliasKeyCRT_len:SZ.t)
+  (aliasKeyCRT:Seq.seq U8.t)
   (deviceIDCSR_len:erased SZ.t)
-  (deviceIDCSR:erased (elseq U8.t deviceIDCSR_len))
-  (cdi:erased (elseq U8.t dice_digest_len))
-  (repr:erased l0_record_repr_t)
-  (deviceIDCSR_ingredients:erased deviceIDCSR_ingredients_t)
-  (aliasKeyCRT_ingredients:erased aliasKeyCRT_ingredients_t)
-: erased l1_context_repr_t 
+  (deviceIDCSR:Seq.seq U8.t)
+  (cdi:Seq.seq U8.t)
+  (repr:l0_record_repr_t)
+  (deviceIDCSR_ingredients:deviceIDCSR_ingredients_t)
+  (aliasKeyCRT_ingredients:aliasKeyCRT_ingredients_t)
+: GTot l1_context_repr_t 
 = {deviceID_label_len; aliasKey_label_len; deviceID_priv; deviceID_pub; aliasKey_priv;
   aliasKey_pub; aliasKeyCRT_len; aliasKeyCRT; deviceIDCSR_len; deviceIDCSR;
   cdi; repr; deviceIDCSR_ingredients; aliasKeyCRT_ingredients}
