@@ -14,7 +14,7 @@ let mono_fun a = (f: (pred a -> pred a){mono f})
 
 let gfp #a (f: pred a -> pred a): pred a
 = (fun x -> (h_exists (fun p -> h_and (p x) (pure (implies p (f p))))))
-// x -> (exists (p:slprop). p x /\ p ==> f p)
+// x -> (exists (p:slprop). p x /\ (p ==> f p))
 
 // Knaster-Tarski theorem
 val gfp_is_fixed_point (#a: Type) (f: mono_fun a):
@@ -120,23 +120,9 @@ val interp_rec_fold_unfold_stream_value (a: Type) (f:nat -> a) (x: R.ref(cell a)
         `star` stream_value a f (v.next, n + 1)
     ))
 
-module C = Steel.Effect.Common
-
-open Pulse.Lib.Pervasives
-//friend Pulse.Lib.Core
-let stream_ #a f x: vprop = to_vprop (C.to_vprop (stream_value a f x))
-
-(*
-let equiv_stream_ #a f x:
-vprop_equiv (stream_ #a f x) (
-    exists_ (fun v -> pts_to x._1 #full_perm v ** pure (f x._2 == v.v) **
-    stream_ f (v.next, x._2 + 1)))
-= admit()
-*)
-
-
 (**
-Extending the theory to vprops (defined in Steel.Effect.Common.fsti):
+To extend the theory to vprops, the following definitions can be used
+(defined in Steel.Effect.Common.fsti):
 
 type vprop' = { hp: slprop u#1; t:Type0; sel: selector t hp}
 
@@ -144,18 +130,7 @@ type vprop =
   | VUnit : vprop' -> vprop
   | VStar: vprop -> vprop -> vprop
 
-**)
+let to_vprop' (p:slprop) = {hp = p; t = unit; sel = fun _ -> ()}
 
-(**
-Papers that use coinductive SL predicates:
-
-- Verifying a Hash Table and Its Iterators in Higher-Order Separation Logic:
-http://gallium.inria.fr/~fpottier/publis/fpottier-hashtable.pdf
-
-- Sound, Modular and Compositional Verification of the Input/Output Behavior of Programs
-https://link.springer.com/content/pdf/10.1007/978-3-662-46669-8_7.pdf
-- Igloo: Soundly Linking Compositional Refinement and Separation Logic for Distributed System Verification
-https://pm.inf.ethz.ch/publications/SprengerKlenzeEilersWolfMuellerClochardBasin20.pdf
-- Sound Verification of Security Protocols: From Design to Interoperable Implementations
-https://pm.inf.ethz.ch/publications/ArquintWolfLallemandSasseSprengerWiesnerBasinMueller23.pdf
+let to_vprop (p:slprop) = VUnit (to_vprop' p)
 **)
