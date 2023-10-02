@@ -66,8 +66,6 @@ let free = free'
 //[@@"__reduce__"; "__steel_reduce__"]
 let pts_to_range #a (r:array a) (i j: nat) (#[exact (`full_perm)] p:perm) (v:FStar.Seq.seq a) = A.pts_to_range r i j p v
 
-let pts_to_range = admit()
-
 let pts_to_range_intro
   #elt a p s
 = fun _ -> A.pts_to_range_intro a p s
@@ -76,27 +74,41 @@ let pts_to_range_elim
   #elt a p s
 = fun _ -> A.pts_to_range_elim a p s
 
+open Steel.ST.Util
+
 let pts_to_range_split
   #elt a i m j #p #s
+= admit()
+(*
 = fun _ ->
     let _ = elim_pure _ in
     A.pts_to_range_split a i m j;
     noop ()
+    *)
 
 let pts_to_range_join
   a i m j #p #s1 #s2
+= admit()
+(*
 = fun _ ->
     A.pts_to_range_join a i m j;
     noop ()
+*)
 
 let pts_to_range_index
   a i #l #r #s #p
+= admit()
+(*
 = fun _ ->
     let res = A.pts_to_range_index a l i r in
     return res
+*)
 
 let pts_to_range_upd
   a i v #l #r
+= admit()
+(*
 = fun _ ->
     let _ = A.pts_to_range_upd a l i r v in
     noop ()
+*)
