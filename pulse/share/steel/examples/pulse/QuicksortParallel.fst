@@ -5,10 +5,6 @@ module R = Pulse.Lib.Reference
 module T = FStar.Tactics
 module SZ = FStar.SizeT
 
-//#set-options "--ide_id_info_off"
-//#push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
-//#restart-solver
-
 let nat_smaller (n: nat) = i:nat{i < n}
 let seqn (n: nat) = (s:Seq.seq int{Seq.length s = n})
 let arrayn (n: nat) = (a:A.array int{A.length a = n})
@@ -23,7 +19,6 @@ let larger_than (s: Seq.seq int) (lb: int)
 let larger_than_slice (s: Seq.seq int) (lo: nat) (hi: nat{lo <= hi /\ hi <= Seq.length s}) (lb: int):
   Lemma (requires larger_than s lb)
   (ensures larger_than (Seq.slice s lo hi) lb)
-  //[SMTPat (larger_than (Seq.slice s lo hi) lb)]
 = ()
 
 let smaller_than (s: Seq.seq int) (rb: int)
@@ -31,6 +26,8 @@ let smaller_than (s: Seq.seq int) (rb: int)
 
 let between_bounds (s: Seq.seq int) (lb rb: int)
   = larger_than s lb /\ smaller_than s rb
+
+(** Permutation reasoning **)
 
 [@@"opaque_to_smt"]
 let permutation = Seq.Properties.permutation int
@@ -93,6 +90,8 @@ let permutation_refl (s: Seq.seq int)
       ()
    )
 
+(** Overriding array accesses and assignment with the pts_to_range version **)
+
 let op_Array_Access
   (#t: Type)
   (a: A.array t)
@@ -103,9 +102,9 @@ let op_Array_Access
   (#p: perm)
 : stt t
     (requires
-      A.pts_to_range a l r p s)
+      A.pts_to_range a l r #p s)
     (ensures fun res ->
-      A.pts_to_range a l r p s `star`
+      A.pts_to_range a l r #p s **
       pure (Seq.length s == r - l /\
             res == Seq.index s (SZ.v i - l)))
 = pts_to_range_index a i #l #r #s #p
@@ -120,18 +119,20 @@ let op_Array_Assignment
   //(#s: Ghost.erased (Seq.seq t) {US.v i < Seq.length s})
   (#s0: Ghost.erased (Seq.seq t))
 : stt unit
-    (requires A.pts_to_range a l r full_perm s0)
-    (ensures fun _ -> (exists_ (fun s -> A.pts_to_range a l r full_perm s `star`
+    (requires A.pts_to_range a l r s0)
+    (ensures fun _ -> (exists_ (fun s -> A.pts_to_range a l r s **
     pure(
       Seq.length s0 == r - l /\ s == Seq.upd s0 (SZ.v i - l) v
     ))))
 = pts_to_range_upd a i v #l #r
 
+(** Partitioning **)
+
 ```pulse
 fn swap (a: A.array int) (i j: nat_fits) (#l:(l:nat{l <= i /\ l <= j})) (#r:(r:nat{i < r /\ j < r}))
   (#s0: Ghost.erased (Seq.seq int))
-  requires A.pts_to_range a l r full_perm s0
-  ensures exists s. (A.pts_to_range a l r full_perm s
+  requires A.pts_to_range a l r s0
+  ensures exists s. (A.pts_to_range a l r s
     ** pure (Seq.length s0 = r - l /\ Seq.length s = r - l /\
       s = seq_swap s0 (i - l) (j - l) /\ permutation s0 s
     ))
@@ -153,7 +154,7 @@ let to_nat (x: int{x >= 0}): nat = x
 ```pulse
 fn partition (a: A.array int) (lo: nat) (hi:(hi:nat{lo < hi - 1})) (n: nat) (lb rb: int) (#s0: Ghost.erased (Seq.seq int))
   requires (
-    A.pts_to_range a lo hi full_perm s0 **
+    A.pts_to_range a lo hi s0 **
     pure (
       hi - 1 < n /\
       n = A.length a /\ SZ.fits n /\
@@ -163,7 +164,7 @@ fn partition (a: A.array int) (lo: nat) (hi:(hi:nat{lo < hi - 1})) (n: nat) (lb 
   )
   returns r: nat & nat & int // left, right, pivot
   ensures exists s. (
-    A.pts_to_range a lo hi full_perm s
+    A.pts_to_range a lo hi s
      **
     pure (
       Seq.length s = hi - lo /\ Seq.length s0 = hi - lo
@@ -182,12 +183,13 @@ fn partition (a: A.array int) (lo: nat) (hi:(hi:nat{lo < hi - 1})) (n: nat) (lb 
   let mut k = lo;
   while (let vk = !k; (vk < hi - 1))
     invariant b . exists s vi vj vk. (
-      A.pts_to_range a lo hi full_perm s **
-      R.pts_to i full_perm vi **
-      R.pts_to j full_perm vj **
-      R.pts_to k full_perm vk **
+      A.pts_to_range a lo hi s **
+      R.pts_to i vi **
+      R.pts_to j vj **
+      R.pts_to k vk **
       pure (
-        eq2_prop #bool b (vk < hi - 1) /\
+        b == (vk < hi - 1) /\
+        //eq2_prop #bool b (vk < hi - 1) /\
         lo <= vk /\ vk <= hi - 1 /\
         lo - 1 <= vi /\ vi <= vj /\ vj < vk /\
         lb <= pivot /\ pivot <= rb /\
@@ -242,29 +244,6 @@ fn partition (a: A.array int) (lo: nat) (hi:(hi:nat{lo < hi - 1})) (n: nat) (lb 
 ```
 #pop-options
 
-assume
-val split
-  (#elt: Type)
-  (a: A.array elt)
-  (i: nat)
-  (#l #r: nat)
-  (#s: Ghost.erased (Seq.seq elt))
-  (#p: perm)
-: stt unit
-    (requires A.pts_to_range a l r p s
-     `star` pure (l <= i /\ i <= r))
-    (ensures fun _ ->
-      exists_ (fun s1 -> exists_ (fun s2 ->
-        A.pts_to_range a l i p s1 `star`
-        A.pts_to_range a i r p s2 `star` pure (
-          l <= i /\ i <= r /\
-          Seq.length s == r - l /\
-          Seq.length s1 == i - l /\ Seq.length s2 == r - i /\
-          s1 == Seq.slice s 0 (i - l) /\
-          s2 == Seq.slice s (i - l) (Seq.length s) /\
-          s == Ghost.hide (Seq.append s1 s2))
-        )))
-
 let transfer_larger_slice (s: Seq.seq int) (l: nat) (r: nat{l <= r /\ r <= Seq.length s}) (lb: int):
   Lemma
     (requires (forall (k: nat). l <= k /\ k < r ==> (lb <= Seq.index s k)))
@@ -281,15 +260,15 @@ let transfer_smaller_slice (s: Seq.seq int) (l: nat) (r: nat{l <= r /\ r <= Seq.
 ```pulse
 fn partition_wrapper (a: A.array int) (lo: nat) (hi:(hi:nat{lo < hi - 1})) (n: nat) (lb rb: int) (#s0: Ghost.erased (Seq.seq int))
   requires (
-    A.pts_to_range a lo hi full_perm s0 **
+    A.pts_to_range a lo hi s0 **
     pure (hi - 1 < n /\ n = A.length a /\ SZ.fits n /\ between_bounds s0 lb rb
       /\ Seq.length s0 = hi - lo)
   )
   returns r: nat & nat & int // left, right, pivot
   ensures exists s1 s2 s3. (
-    A.pts_to_range a lo r._1 full_perm s1 **
-    A.pts_to_range a r._1 r._2 full_perm s2 **
-    A.pts_to_range a r._2 hi full_perm s3 **
+    A.pts_to_range a lo r._1 s1 **
+    A.pts_to_range a r._1 r._2 s2 **
+    A.pts_to_range a r._2 hi s3 **
     pure (
       lo <= r._1 /\ r._1 < r._2 /\ r._2 <= hi /\ hi - 1 < n /\
       lb <= r._3 /\ r._3 <= rb /\
@@ -301,28 +280,28 @@ fn partition_wrapper (a: A.array int) (lo: nat) (hi:(hi:nat{lo < hi - 1})) (n: n
    ))
 {
   let r = partition a lo hi n lb rb #s0;
-  with s. assert (A.pts_to_range a lo hi full_perm s);
+  with s. assert (A.pts_to_range a lo hi s);
 
   transfer_smaller_slice s 0 (r._1 - lo) r._3;
   transfer_larger_slice s (r._2 - lo) (hi - lo) r._3;
 
   let pivot = r._3;
-  split a r._1;
-  with s1. assert (A.pts_to_range a lo r._1 full_perm s1);
+  pts_to_range_split a lo r._1 hi;
+  with s1. assert (A.pts_to_range a lo r._1 s1);
   assert_prop (s1 == Seq.slice s 0 (r._1 - lo));
 
   assert_prop (between_bounds s1 lb r._3);
 
-  with s23. assert (A.pts_to_range a r._1 hi full_perm s23);
+  with s23. assert (A.pts_to_range a r._1 hi s23);
   assert_prop (s23 == Seq.slice s (r._1 - lo) (Seq.length s));
 
-  assert (A.pts_to_range a lo r._1 full_perm s1);
-  split a r._2 #(r._1);
+  assert (A.pts_to_range a lo r._1 s1);
+  pts_to_range_split a r._1 r._2 hi;
 
-  with s2. assert (A.pts_to_range a r._1 r._2 full_perm s2);
+  with s2. assert (A.pts_to_range a r._1 r._2 s2);
   assert_prop (s2 == Seq.slice s23 0 (r._2 - r._1));
   assert_prop (s2 == Seq.slice s (r._1 - lo) (r._2 - lo));
-  with s3. assert (A.pts_to_range a r._2 hi full_perm s3);
+  with s3. assert (A.pts_to_range a r._2 hi s3);
   assert_prop (s3 == Seq.slice s (r._2 - lo) (hi - lo));
   assert_prop (Seq.length s1 = r._1 - lo);
   assert_prop (Seq.length s2 = r._2 - r._1);
@@ -333,17 +312,7 @@ fn partition_wrapper (a: A.array int) (lo: nat) (hi:(hi:nat{lo < hi - 1})) (n: n
 ```
 #pop-options
 
-assume
-val join
-  (#elt: Type)
-  (a: A.array elt)
-  //(i: nat)
-  (l m r: nat)
-  (#s1 #s2: Ghost.erased (Seq.seq elt))
-  (#p: perm)
-: stt unit
-    (requires A.pts_to_range a l m p s1 `star` A.pts_to_range a m r p s2)
-    (ensures fun _ -> A.pts_to_range a l r p (Seq.append s1 s2))   
+(** QuickSort **)
 
 unfold
 let pure_pre_quicksort (a: A.array int) (lo: nat) (hi:(hi:int{-1 <= hi - 1 /\ lo <= hi})) (lb rb: int) (n: nat) (s0: Seq.seq int)
@@ -354,38 +323,39 @@ let pure_post_quicksort (a: A.array int) (lo: nat) (hi:(hi:int{-1 <= hi - 1 /\ l
   = hi - 1 < n /\ Seq.length s0 = hi - lo /\ Seq.length s = hi - lo /\ SZ.fits n /\ A.length a = n
       /\ sorted s /\ between_bounds s lb rb /\ permutation s0 s
 
+(* Assuming recursion *)
 ```pulse
 fn quicksort' (a: A.array int) (lo: nat)
 (hi:(hi:int{-1 <= hi - 1 /\ lo <= hi}))
 (lb rb: int) (n: nat) (#s0: Ghost.erased (Seq.seq int))
-  requires A.pts_to_range a lo hi full_perm s0 ** pure (pure_pre_quicksort a lo hi lb rb n s0)
-  ensures exists s. (A.pts_to_range a lo hi full_perm s ** pure (pure_post_quicksort a lo hi lb rb n s0 s))
+  requires A.pts_to_range a lo hi s0 ** pure (pure_pre_quicksort a lo hi lb rb n s0)
+  ensures exists s. (A.pts_to_range a lo hi s ** pure (pure_post_quicksort a lo hi lb rb n s0 s))
 { admit() }
 ```
 
 #push-options "--z3rlimit 50"
 ```pulse
 fn quicksort (a: A.array int) (lo: nat) (hi:(hi:int{-1 <= hi - 1 /\ lo <= hi})) (lb rb: int) (n: nat) (#s0: Ghost.erased (Seq.seq int))
-  requires A.pts_to_range a lo hi full_perm s0 ** pure (pure_pre_quicksort a lo hi lb rb n s0)
-  ensures exists s. (A.pts_to_range a lo hi full_perm s ** pure (pure_post_quicksort a lo hi lb rb n s0 s))
+  requires A.pts_to_range a lo hi s0 ** pure (pure_pre_quicksort a lo hi lb rb n s0)
+  ensures exists s. (A.pts_to_range a lo hi s ** pure (pure_post_quicksort a lo hi lb rb n s0 s))
   // decreases hi + 1 - lo
 {
   if (lo < hi - 1)
   {
     let r = partition_wrapper a lo hi n lb rb;
     let pivot = r._3;
-    with s1. assert (A.pts_to_range a lo r._1 full_perm s1);
-    with s2. assert (A.pts_to_range a r._1 r._2 full_perm s2);
-    with s3. assert (A.pts_to_range a r._2 hi full_perm s3);
+    with s1. assert (A.pts_to_range a lo r._1 s1);
+    with s2. assert (A.pts_to_range a r._1 r._2 s2);
+    with s3. assert (A.pts_to_range a r._2 hi s3);
     //assert_prop (squash (permutation s0 (Seq.append s1 (Seq.append s2 s3))));
 
     if (lo < hi + 1000) // worth parallelizing
     {
       parallel
-      requires (A.pts_to_range a lo r._1 full_perm s1 ** pure (pure_pre_quicksort a lo r._1 lb pivot n s1))
-          and (A.pts_to_range a r._2 hi full_perm s3 ** pure (pure_pre_quicksort a r._2 hi pivot rb n s3))
-      ensures (exists s. (A.pts_to_range a lo r._1 full_perm s ** pure (pure_post_quicksort a lo r._1 lb pivot n s1 s)))
-          and (exists s. (A.pts_to_range a r._2 hi full_perm s ** pure (pure_post_quicksort a r._2 hi pivot rb n s3 s)))
+      requires (A.pts_to_range a lo r._1 s1 ** pure (pure_pre_quicksort a lo r._1 lb pivot n s1))
+          and (A.pts_to_range a r._2 hi s3 ** pure (pure_pre_quicksort a r._2 hi pivot rb n s3))
+      ensures (exists s. (A.pts_to_range a lo r._1 s ** pure (pure_post_quicksort a lo r._1 lb pivot n s1 s)))
+          and (exists s. (A.pts_to_range a r._2 hi s ** pure (pure_post_quicksort a r._2 hi pivot rb n s3 s)))
       {
         // termination check
         assert_prop (hi - lo > (r._1 - 1) + 1 - lo);
@@ -397,10 +367,10 @@ fn quicksort (a: A.array int) (lo: nat) (hi:(hi:int{-1 <= hi - 1 /\ lo <= hi})) 
         quicksort' a r._2 hi pivot rb n;
       };
 
-      with s1'. assert (A.pts_to_range a lo r._1 full_perm s1');
-      with s3'. assert (A.pts_to_range a r._2 hi full_perm s3');
-      join a lo r._1 r._2;
-      join a lo r._2 hi;
+      with s1'. assert (A.pts_to_range a lo r._1 s1');
+      with s3'. assert (A.pts_to_range a r._2 hi s3');
+      pts_to_range_join a lo r._1 r._2;
+      pts_to_range_join a lo r._2 hi;
       Seq.append_assoc s1' s2 s3';
       append_permutations_3 s1 s2 s3 s1' s3';
       ()
@@ -415,10 +385,10 @@ fn quicksort (a: A.array int) (lo: nat) (hi:(hi:int{-1 <= hi - 1 /\ lo <= hi})) 
       assert_prop (hi - lo > hi - r._2);
       quicksort' a r._2 hi pivot rb n;
   
-      with s1'. assert (A.pts_to_range a lo r._1 full_perm s1');
-      with s3'. assert (A.pts_to_range a r._2 hi full_perm s3');
-      join a lo r._1 r._2;
-      join a lo r._2 hi;
+      with s1'. assert (A.pts_to_range a lo r._1 s1');
+      with s3'. assert (A.pts_to_range a r._2 hi s3');
+      pts_to_range_join a lo r._1 r._2;
+      pts_to_range_join a lo r._2 hi;
       Seq.append_assoc s1' s2 s3';
       append_permutations_3 s1 s2 s3 s1' s3';
       ()
