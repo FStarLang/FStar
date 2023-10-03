@@ -163,7 +163,7 @@ let rec on_range_weaken_and_shift
   (delta: int)
   (i: nat { i + delta >= 0 })
   (j: nat)
-  (phi: (k: nat { i <= k /\ k <= j }) -> STGhostT unit opened (p k) (fun _ -> p' (k + delta)))
+  (phi: (k: nat { i <= k /\ k < j }) -> STGhostT unit opened (p k) (fun _ -> p' (k + delta)))
   (i': nat { i' == i + delta })
   (j': nat { j' == j + delta })
 : STGhostT unit opened
@@ -190,7 +190,7 @@ let on_range_weaken
   (p p': (nat -> vprop))
   (i: nat)
   (j: nat)
-  (phi: (k: nat { i <= k /\ k <= j }) -> STGhostT unit opened (p k) (fun _ -> p' k))
+  (phi: (k: nat { i <= k /\ k < j }) -> STGhostT unit opened (p k) (fun _ -> p' k))
 : STGhostT unit opened
     (on_range p i j)
     (fun _ -> on_range p' i j)
