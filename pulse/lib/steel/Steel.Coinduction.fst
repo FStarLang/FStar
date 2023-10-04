@@ -1,4 +1,4 @@
-module Pulse.Lib.Coinduction
+module Steel.Coinduction
 
 open Steel.Memory
 
