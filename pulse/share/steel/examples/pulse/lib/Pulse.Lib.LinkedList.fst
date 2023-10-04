@@ -99,9 +99,9 @@ fn elim_is_list_cons (#t:Type0) (x:llist t) (head:t) (tl:list t)
 
 ```pulse
 ghost
-fn intro_is_list_cons (#t:Type0) (v:node_ptr t) (#tail:llist t) (#hd:t) (#tl:list t)
-    requires pts_to v (mk_node hd tail) ** is_list tail tl
-    ensures is_list (Some v) (hd::tl)
+fn intro_is_list_cons (#t:Type0) (x:llist t) (v:node_ptr t) (#node:node t) (#tl:list t)
+    requires pts_to v node ** is_list node.tail tl ** pure (x == Some v)
+    ensures is_list x (node.head::tl)
 {
 //     assert (exists (v:node_ptr t) (tail:llist t).
 //         pure (Some v == Some v) **
@@ -171,11 +171,7 @@ fn is_list_of_cases (#t:Type) (x:llist t) (l:list t)
         Some vl -> {
             rewrite (is_list_cases x l) as (is_list_cases (Some vl) l);
             unfold (is_list_cases (Some vl) l);
-            with n. assert (pts_to vl n);
-            with tl. assert (is_list n.tail tl);
-            rewrite (pts_to vl n) as (pts_to vl (mk_node n.head n.tail));
-            intro_is_list_cons vl;
-            rewrite (is_list (Some vl) (n.head::tl)) as (is_list x l);
+            intro_is_list_cons x vl;
         }
     }
 }
@@ -199,15 +195,14 @@ fn is_list_cases_none (#t:Type) (x:llist t) (#l:list t)
 ghost
 fn is_list_cases_some (#t:Type) (x:llist t) (v:node_ptr t) (#l:list t) 
     requires is_list x l ** pure (x == Some v)
-    ensures exists (hd:t) (tail:llist t) (tl:list t).
-                pts_to v (mk_node hd tail) **
-                pure (l == hd::tl) **
-                is_list tail tl
+    ensures exists (node:node t) (tl:list t).
+                pts_to v node **
+                pure (l == node.head::tl) **
+                is_list node.tail tl
 {
     cases_of_is_list x l;
     rewrite (is_list_cases x l) as (is_list_cases (Some v) l);
     unfold (is_list_cases (Some v) l);
-    with n. rewrite (pts_to v n) as (pts_to v (mk_node #t n.head n.tail));
 }
 ```
 
@@ -226,8 +221,7 @@ fn is_empty (#t:Type) (x:llist t)
         }
         Some vl -> {
             is_list_cases_some x vl;
-            intro_is_list_cons vl;
-            rewrite (is_list (Some vl) 'l) as (is_list x 'l);
+            intro_is_list_cons x vl;
             false
         }
     }
@@ -260,21 +254,16 @@ fn length (#t:Type) (x:llist t)
         is_list_cases_some x vl;
         let node = !vl;
         with tail tl. assert (is_list #t tail tl);
-        rewrite (is_list tail tl) as (is_list #t node.tail tl);
+        rewrite each tail as node.tail; 
         let n = perform (length_rec node.tail tl);
-        rewrite (pts_to vl node) as (pts_to vl (mk_node node.head node.tail));
-        intro_is_list_cons vl;
-        rewrite (is_list (Some vl) l) as (is_list x l);
+        intro_is_list_cons x vl;
         (1 + n)
     }
    }
 }
 ```
 
-let return (#t:Type) (x:t) : stt t emp (fun y -> pure (x == y)) = admit()
 let null_llist #t : llist t = None #(node_ptr t)
-
-assume val dbg : vprop
 
 ```pulse
 fn create (t:Type)
@@ -294,7 +283,8 @@ fn cons (#t:Type) (v:t) (x:llist t)
     ensures is_list y (v::'l)
 {
     let y = alloc (mk_node v x);
-    intro_is_list_cons y;
+    rewrite each x as (mk_node v x).tail in (is_list x 'l);
+    intro_is_list_cons (Some y) y;
     Some y
 }
 ```
@@ -320,24 +310,184 @@ fn append (#t:Type) (x y:llist t)
         is_list_cases_some x np;
         let node = !np;
         with tail tl. assert (is_list #t tail tl);
-        rewrite (pts_to np node) as (pts_to np (mk_node node.head node.tail));
-        rewrite (is_list tail tl) as (is_list #t node.tail tl);
+        rewrite each tail as node.tail;
         match node.tail {
             None -> {
                 is_list_cases_none node.tail;
                 drop (is_list node.tail tl);
                 np := mk_node node.head y;
-                intro_is_list_cons np #y;
-                with l. rewrite (is_list (Some np) l) as (is_list x l);
+                rewrite each y as (mk_node node.head y).tail in (is_list y 'l2);
+                intro_is_list_cons x np; 
             }
             Some _ -> {
                 perform (append_rec node.tail y tl 'l2);
-                intro_is_list_cons np;
-                with l. rewrite (is_list (Some np) l) as (is_list x l);
+                intro_is_list_cons x np;
             }
         }
     }
    }
+}
+```
+
+// #push-options "--ext 'pulse:rvalues'"
+let yields (p q:vprop) = Pulse.Lib.Stick.stick #emp_inames p q
+```pulse
+ghost
+fn yields_idem (p:vprop)
+   requires emp
+   ensures yields p p
+{
+    admit()
+}
+```
+
+```pulse
+ghost
+fn yields_curry (p q r:vprop)
+   requires yields (p ** q) r
+   ensures yields p (yields q r)
+{
+  admit()
+}
+```
+
+```pulse
+ghost
+fn yields_trans (p q r:vprop)
+    requires yields p q ** yields q r
+    ensures yields p r
+{
+    admit()
+}
+```
+
+```pulse
+ghost
+fn yields_comm_l (p q r:vprop)
+   requires yields (p ** q) r
+   ensures yields (q ** p) r
+{
+  admit()
+}
+```
+
+```pulse
+ghost
+fn yields_assoc_l (p q r:vprop)
+   requires yields (p ** (q ** r)) r
+   ensures yields ((p ** q) ** r) r
+{
+  admit()
+}
+```
+
+```pulse
+ghost
+fn elim_yields (_:unit) (#p #q:vprop)
+   requires yields p q ** p
+   ensures q
+{
+  admit()
+}
+```
+
+let assume_ (p:vprop) : stt_ghost unit emp_inames emp (fun _ -> p) = admit()
+let not_null #t (x:llist t) : bool = Some? x
+assume val dbg : vprop
+
+```pulse
+ghost
+fn yields_elim (#t:Type) 
+               (v:node_ptr t)
+               (n:node t)
+               (tl:list t)
+    requires 
+        pts_to v n ** is_list n.tail tl
+    ensures 
+        is_list (Some v) (n.head::tl)
+{
+    intro_is_list_cons (Some v) v
+}
+```
+assume
+val yields_elim' (#t:Type) 
+                 (v:node_ptr t)
+                 (n:node t)
+                 (tl:list t)
+                 (o:inames { o /! emp_inames })
+   : stt_ghost unit o
+        (pts_to v n ** is_list n.tail tl)
+        (fun _ -> is_list (Some v) (n.head::tl))
+
+```pulse
+ghost
+fn intro_yields_cons (#t:Type) 
+                     (v:node_ptr t)
+                     (#n:node t)
+                     (#tl:erased (list t))
+    requires 
+        pts_to v n ** is_list n.tail tl
+    ensures 
+        is_list n.tail tl **
+        yields (is_list n.tail tl) 
+               (is_list (Some v) (n.head::tl))
+{
+    open Pulse.Lib.Stick;
+    intro_stick #emp_inames _ _ _ 
+                (yields_elim' #t v n tl);
+    with p q. rewrite (stick p q) as (yields p q); 
+}
+```
+
+#push-options "--ext 'pulse:env_on_err'"
+```pulse
+fn length_iter (#t:Type) (x: llist t)
+    requires is_list x 'l
+    returns n:nat
+    ensures is_list x 'l ** pure (n == List.Tot.length 'l)
+{
+    let mut cur = x;
+    let mut ctr = 0; 
+    yields_idem (is_list x 'l);
+    while (
+        with ll. assert pts_to cur ll;
+        let v = !cur; 
+        rewrite (pts_to cur v) as (pts_to cur ll);
+        Some? v
+    )
+    invariant b.  
+    exists n ll suffix.
+        pts_to ctr n **
+        pts_to cur ll **
+        is_list ll suffix **
+        yields (is_list ll suffix) (is_list x 'l) **
+        pure (n == List.Tot.length 'l - List.Tot.length suffix) **
+        pure (b == (Some? ll))
+    {
+        let n = !ctr;
+        let ll = !cur;
+        let node_ptr = Some?.v ll;
+        with _ll suffix. assert (is_list #t _ll suffix);
+        rewrite each _ll as ll;
+        is_list_cases_some ll node_ptr;
+        let node : node t = !node_ptr;
+        with _node tl. assert (is_list #t _node.tail tl);
+        rewrite (is_list #t _node.tail tl)
+            as  (is_list node.tail tl);
+        intro_yields_cons node_ptr #node #tl;
+        rewrite (yields (is_list node.tail tl) (is_list (Some node_ptr) (node.head::tl)))
+            as  (yields (is_list node.tail tl) (is_list ll suffix));
+        yields_trans (is_list node.tail tl) (is_list ll suffix) (is_list x 'l);
+        cur := node.tail;
+        ctr := n + 1;
+    };
+    let n = !ctr;
+    let ll = !cur;
+    with _ll _sfx. rewrite (is_list #t _ll _sfx) as (is_list ll _sfx);
+    is_list_cases_none ll;
+    with p. rewrite (yields p (is_list x 'l)) as (yields (is_list #t ll []) (is_list x 'l));
+    elim_yields ();
+    n
 }
 ```
 
