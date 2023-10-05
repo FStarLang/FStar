@@ -297,14 +297,16 @@ fn append (#t:Type) (x y:llist t)
              m:erased (list t) ->
              n:erased (list t) ->
              stt unit
-                 (is_list x m ** is_list y n)
+                 (is_list x m ** is_list y n ** pure (x =!= None))
                  (fun _ -> is_list x (List.Tot.append m n))))
     requires is_list x 'l1 ** is_list y 'l2 ** pure (x =!= None)
     ensures is_list x (List.Tot.append 'l1 'l2)
 {
    match x {
     None -> { //impossible
-        drop (is_list y 'l2)
+        drop (is_list y 'l2);
+        drop (is_list x 'l1);
+        elim_false (is_list x 'l1)
     }
     Some np -> {
         is_list_cases_some x np;
@@ -381,13 +383,21 @@ fn yields_assoc_l (p q r:vprop)
 }
 ```
 
+let emp_inames_disjoint (t:inames)
+  : Lemma 
+    (ensures (t /! emp_inames))
+    [SMTPat (Set.disjoint t emp_inames)]
+  = admit()
+
 ```pulse
 ghost
 fn elim_yields (_:unit) (#p #q:vprop)
    requires yields p q ** p
    ensures q
 {
-  admit()
+  open Pulse.Lib.Stick;
+  rewrite (yields p q) as (stick #emp_inames p q);
+  elim_stick #emp_inames #emp_inames p q;
 }
 ```
 
@@ -474,23 +484,32 @@ fn length_iter (#t:Type) (x: llist t)
         with _node tl. assert (is_list #t _node.tail tl);
         rewrite (is_list #t _node.tail tl)
             as  (is_list node.tail tl);
-        intro_yields_cons node_ptr #node #tl;
-        rewrite (yields (is_list node.tail tl) (is_list (Some node_ptr) (node.head::tl)))
-            as  (yields (is_list node.tail tl) (is_list ll suffix));
+        intro_yields_cons node_ptr;// #node #tl;
+        // rewrite (yields (is_list node.tail tl) (is_list (Some node_ptr) (node.head::tl)))
+        //     as  (yields (is_list node.tail tl) (is_list ll suffix));
         yields_trans (is_list node.tail tl) (is_list ll suffix) (is_list x 'l);
         cur := node.tail;
         ctr := n + 1;
     };
-    let n = !ctr;
-    let ll = !cur;
-    with _ll _sfx. rewrite (is_list #t _ll _sfx) as (is_list ll _sfx);
+    with ll _sfx. assert (is_list #t ll _sfx);
     is_list_cases_none ll;
-    with p. rewrite (yields p (is_list x 'l)) as (yields (is_list #t ll []) (is_list x 'l));
+    // with p. rewrite (yields p (is_list x 'l)) as (yields (is_list #t ll []) (is_list x 'l));
     elim_yields ();
+    let n = !ctr;
     n
 }
 ```
 
+```pulse
+ghost
+fn foo (_:unit)
+  requires emp
+  returns y:int
+  ensures emp
+{
+  17
+}
+```
 // let rec take (n:nat) (l:list 't { n < List.Tot.length l })
 //   : list 'tg
 //   = if n = 0 then []
