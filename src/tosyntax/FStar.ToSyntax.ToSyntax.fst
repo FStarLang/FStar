@@ -4256,7 +4256,7 @@ let partial_ast_modul_to_modul modul a_modul : withenv S.modul =
         let env, modul = desugar_partial_modul modul env a_modul in
         modul, env)
 
-let add_modul_to_env (m:Syntax.modul)
+let add_modul_to_env_core (finish: bool) (m:Syntax.modul)
                      (mii:module_inclusion_info)
                      (erase_univs:S.term -> S.term) : withenv unit =
   fun en ->
@@ -4322,5 +4322,8 @@ let add_modul_to_env (m:Syntax.modul)
                     push_sigelt
                     (Env.set_current_module en m.name)
                     m.declarations in
-      let env = Env.finish en m in
-      (), (if pop_when_done then export_interface m.name env else env)
+      let en = if finish then Env.finish en m else en in
+      (), (if pop_when_done then export_interface m.name en else en)
+
+let add_partial_modul_to_env = add_modul_to_env_core false
+let add_modul_to_env = add_modul_to_env_core true
