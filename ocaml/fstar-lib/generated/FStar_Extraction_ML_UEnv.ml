@@ -502,6 +502,7 @@ let (initial_mlident_map : unit -> Prims.string FStar_Compiler_Util.psmap) =
                 FStar_Extraction_ML_Syntax.ocamlkeywords
             | FStar_Pervasives_Native.Some (FStar_Options.Krml) ->
                 FStar_Extraction_ML_Syntax.krml_keywords ()
+            | FStar_Pervasives_Native.Some (FStar_Options.Extension) -> []
             | FStar_Pervasives_Native.None -> [] in
           let uu___3 = FStar_Compiler_Util.psmap_empty () in
           FStar_Compiler_List.fold_right
