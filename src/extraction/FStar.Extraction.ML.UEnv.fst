@@ -295,6 +295,7 @@ let initial_mlident_map =
               | Some Options.OCaml
               | Some Options.Plugin -> ocamlkeywords
               | Some Options.Krml -> krml_keywords
+              | Some Options.Extension -> []  // TODO
               | None -> [])
           (BU.psmap_empty())
         in
