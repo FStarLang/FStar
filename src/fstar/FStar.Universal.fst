@@ -262,10 +262,6 @@ let load_interface_decls env interface_file_name : TcEnv.env_t =
 (* Batch mode: checking a file                                         *)
 (***********************************************************************)
 
-type extension_extraction_env = {
-  gamma : list FStar.Extraction.ML.UEnv.binding
-}
-
 (* Extraction to OCaml, F# or Krml *)
 let emit (mllibs:list (uenv & FStar.Extraction.ML.Syntax.mllib)) =
   let opt = Options.codegen () in
@@ -295,10 +291,8 @@ let emit (mllibs:list (uenv & FStar.Extraction.ML.Syntax.mllib)) =
           let filename = String.concat "_" (fst mname @ [snd mname]) in
           match modul with
           | Some (_, decls) ->
-            let env : extension_extraction_env = {
-              gamma = FStar.Extraction.ML.UEnv.bindings_of_uenv env
-            } in
-            save_value_to_file (Options.prepend_output_dir (filename^ext)) (env, decls)
+            let bindings = FStar.Extraction.ML.UEnv.bindings_of_uenv env in 
+            save_value_to_file (Options.prepend_output_dir (filename^ext)) (bindings, decls)
           | None ->
             failwith "Unexpected ml modul in Extension extraction mode"
         ) ms

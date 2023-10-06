@@ -914,12 +914,6 @@ let (load_interface_decls :
       | FStar_Parser_ParseIt.Term uu___ ->
           failwith
             "Impossible: parsing a Toplevel always results in an ASTFragment"
-type extension_extraction_env =
-  {
-  gamma: FStar_Extraction_ML_UEnv.binding Prims.list }
-let (__proj__Mkextension_extraction_env__item__gamma :
-  extension_extraction_env -> FStar_Extraction_ML_UEnv.binding Prims.list) =
-  fun projectee -> match projectee with | { gamma;_} -> gamma
 let (emit : (uenv * FStar_Extraction_ML_Syntax.mllib) Prims.list -> unit) =
   fun mllibs ->
     let opt = FStar_Options.codegen () in
@@ -973,16 +967,14 @@ let (emit : (uenv * FStar_Extraction_ML_Syntax.mllib) Prims.list -> unit) =
                                  (match modul with
                                   | FStar_Pervasives_Native.Some
                                       (uu___4, decls) ->
-                                      let env1 =
-                                        let uu___5 =
-                                          FStar_Extraction_ML_UEnv.bindings_of_uenv
-                                            env in
-                                        { gamma = uu___5 } in
+                                      let bindings =
+                                        FStar_Extraction_ML_UEnv.bindings_of_uenv
+                                          env in
                                       let uu___5 =
                                         FStar_Options.prepend_output_dir
                                           (Prims.op_Hat filename ext) in
                                       FStar_Compiler_Util.save_value_to_file
-                                        uu___5 (env1, decls)
+                                        uu___5 (bindings, decls)
                                   | FStar_Pervasives_Native.None ->
                                       failwith
                                         "Unexpected ml modul in Extension extraction mode"))
