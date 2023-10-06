@@ -517,6 +517,19 @@ let rewrite_with_implies
     rewrite q p
   )
 
+let rewrite_with_implies_with_tactic
+  (#opened: _)
+  (p q: vprop)
+: STGhost unit opened
+    p
+    (fun _ -> q `star` (q @==> p))
+    (requires FStar.Tactics.with_tactic init_resolve_tac (squash (p `equiv` q)))
+    (fun _ -> True)
+= rewrite_equiv p q;
+  intro_implies q p emp (fun _ ->
+    rewrite_equiv q p
+  )
+
 let vpattern_rewrite_with_implies
   (#opened: _)
   (#a: Type)
