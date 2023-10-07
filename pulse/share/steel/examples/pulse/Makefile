@@ -15,7 +15,7 @@ extract:
 	$(FSTAR) --odir _output --codegen OCaml ExtractionTest.fst --extract ExtractionTest
 	
 extract_c:
-	$(FSTAR) --codegen krml ExtractionTest.fst --extract '* -Pulse.Lib.Core'
-	$(FSTAR_HOME)/../karamel/krml -bundle ExtractionTest=* -skip-compilation _output/out.krml
+	$(FSTAR) --codegen krml Demo.MultiplyByRepeatedAddition.fst --extract '* -Pulse.Lib.Core'
+	$(FSTAR_HOME)/../karamel/krml -bundle Demo.MultiplyByRepeatedAddition=* -skip-compilation _output/out.krml
 
 include Makefile.pulse.common
