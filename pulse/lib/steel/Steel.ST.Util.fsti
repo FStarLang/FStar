@@ -601,6 +601,24 @@ let implies_reg_r
 = implies_with_tactic p p;
   implies_join q r p p
 
+let implies_trans_l1
+  (#opened: _)
+  (p q1 q2 r: vprop)
+: STGhostT unit opened
+    ((p @==> q1) `star` ((q1 `star` q2) @==> r))
+    (fun _ -> (p `star` q2) @==> r)
+= implies_reg_r p q1 q2;
+  implies_trans (p `star` q2) (q1 `star` q2) r
+
+let implies_trans_r1
+  (#opened: _)
+  (q1 p q2 r: vprop)
+: STGhostT unit opened
+    ((p @==> q2) `star` ((q1 `star` q2) @==> r))
+    (fun _ -> (q1 `star` p) @==> r)
+= implies_reg_l q1 p q2;
+  implies_trans (q1 `star` p) (q1 `star` q2) r
+
 let implies_trans_l2
   (#opened: _)
   (p q1 q2 r1: vprop)
