@@ -381,7 +381,7 @@ let tc_one_file
       else check_mod () //don't add a hints file for modules that are not actually verified
   in
   if not (Options.cache_off()) then
-      let r = Ch.load_module_from_cache env fn in
+      let r = Ch.load_module_from_cache (tcenv_of_uenv env) fn in
       let r =
         (* If --force and this file was given in the command line,
          * forget about the cache we just loaded and recheck the file.
@@ -413,7 +413,7 @@ let tc_one_file
         //but we will not write out a .checked file for an unverified dependence
         //of some file that should be checked
         //(i.e. we DO write .checked.lax files for dependencies even if not provided as an argument)
-        then Ch.store_module_to_cache env fn parsing_data tc_result;
+        then Ch.store_module_to_cache (tcenv_of_uenv env) fn parsing_data tc_result;
         tc_result, mllib, env
 
       | Some tc_result ->
