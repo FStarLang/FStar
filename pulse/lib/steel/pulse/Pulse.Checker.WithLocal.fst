@@ -33,7 +33,6 @@ let check
   : T.Tac (checker_result_t g pre post_hint) =
 
   let g = push_context "check_withlocal" t.range g in
-  let wr t0 = { term = t0; range = t.range } in
   let Tm_WithLocal {binder; initializer=init; body} = t.term in
   let (| init, init_u, init_t, init_t_typing, init_typing |) =
     (* Check against annotation if any *)

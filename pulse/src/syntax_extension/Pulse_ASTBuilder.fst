@@ -1,4 +1,5 @@
 module Pulse_ASTBuilder
+open FStar.Compiler.Effect
 open FStar.Parser.AST
 open FStar.Parser.AST.Util
 open FStar.Ident
@@ -60,7 +61,7 @@ let extension_parser
 
 let _ = 
     register_extension_parser "pulse" extension_parser
-
+   
 module TcEnv = FStar.TypeChecker.Env
 module D = PulseDesugar
 module L = FStar.Compiler.List

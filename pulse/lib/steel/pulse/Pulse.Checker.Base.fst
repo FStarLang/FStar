@@ -9,6 +9,7 @@ module FV = Pulse.Typing.FV
 module P = Pulse.Syntax.Printer
 
 open Pulse.Typing.Combinators
+open Pulse.Typing.Metatheory
 
 let format_failed_goal (g:env) (ctxt:list term) (goal:list term) =
   let terms_to_strings (ts:list term)= T.map Pulse.Syntax.Printer.term_to_string ts in
@@ -89,11 +90,12 @@ let ve_unit_r g (p:term) : vprop_equiv g (tm_star p tm_emp) p =
 
 let st_equiv_trans (#g:env) (#c0 #c1 #c2:comp) (d01:st_equiv g c0 c1) (d12:st_equiv g c1 c2)
   : option (st_equiv g c0 c2)
-  = let ST_VPropEquiv _f _c0 _c1 x c0_pre_typing c0_res_typing c0_post_typing eq_pre_01 eq_post_01 = d01 in
-    let ST_VPropEquiv _f _c1 _c2 y c1_pre_typing c1_res_typing c1_post_typing eq_pre_12 eq_post_12 = d12 in
-    if x = y 
+  = let ST_VPropEquiv _f _c0 _c1 x c0_pre_typing c0_res_typing c0_post_typing eq_res_01 eq_pre_01 eq_post_01 = d01 in
+    let ST_VPropEquiv _f _c1 _c2 y c1_pre_typing c1_res_typing c1_post_typing eq_res_12 eq_pre_12 eq_post_12 = d12 in
+    if x = y && eq_tm (comp_res c0) (comp_res c1)
     then Some (
-          ST_VPropEquiv g c0 c2 x c0_pre_typing c0_res_typing c0_post_typing 
+          ST_VPropEquiv g c0 c2 x c0_pre_typing c0_res_typing c0_post_typing
+            (RT.Rel_trans _ _ _ _ _ eq_res_01 eq_res_12)
             (VE_Trans _ _ _ _ eq_pre_01 eq_pre_12)
             (VE_Trans _ _ _ _ eq_post_01 eq_post_12)
     )
@@ -122,7 +124,7 @@ let st_equiv_post (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
       let (| u_of, pre_typing, x, post_typing |) = Metatheory.(st_comp_typing_inversion (comp_typing_inversion (st_typing_correctness d))) in
       let veq = veq x in
       let st_equiv : st_equiv g c c' =
-          ST_VPropEquiv g c c' x pre_typing u_of post_typing (VE_Refl _ _) veq
+          ST_VPropEquiv g c c' x pre_typing u_of post_typing (RT.Rel_refl _ _ _) (VE_Refl _ _) veq
       in
       t_equiv d st_equiv
 
@@ -140,7 +142,7 @@ let simplify_lemma (c:comp_st) (c':comp_st) (post_hint:option post_hint_t)
         comp_post c' == tm_star (comp_post c) tm_emp)
     (ensures comp_post_matches_hint (comp_st_with_post c' (comp_post c)) post_hint /\
              comp_pre (comp_st_with_post c' (comp_post c)) == comp_pre c')
-  = () 
+  = ()
 
 let vprop_equiv_typing_bk (#g:env) (#ctxt:_) (ctxt_typing:tot_typing g ctxt tm_vprop)
                            (#p:_) (d:vprop_equiv g p ctxt)
@@ -165,7 +167,7 @@ let st_equiv_pre (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
       let (| u_of, pre_typing, x, post_typing |) =
         Metatheory.(st_comp_typing_inversion (comp_typing_inversion (st_typing_correctness d))) in
       let st_equiv : st_equiv g c c' =
-          ST_VPropEquiv g c c' x pre_typing u_of post_typing veq (VE_Refl _ _)
+          ST_VPropEquiv g c c' x pre_typing u_of post_typing (RT.Rel_refl _ _ _) veq (VE_Refl _ _)
       in
       t_equiv d st_equiv
 
@@ -311,7 +313,7 @@ let continuation_elaborator_with_let (#g:env) (#ctxt:term)
   let e2_closed = close_st_term e2 x in
   assume (open_st_term (close_st_term e2 x) x == e2);
 
-  let e = wr (Tm_TotBind {binder=b; head=e1;body=e2_closed}) in
+  let e = wr c2 (Tm_TotBind {binder=b; head=e1;body=e2_closed}) in
   let c = open_comp_with (close_comp c2 x) e1 in
   // we just closed
   assume (~ (x `Set.mem` freevars_st e2_closed));
@@ -418,7 +420,7 @@ let return_in_ctxt (g:env) (y:var) (y_ppname:ppname) (u:universe) (ty:term) (ctx
     (magic ())  // that null_var y is well typed at ty in g, we know since lookup g y == Some ty
     (magic ())  // typing of (open post x) in (g, x) ... post_hint is well-typed, so should get
   in
-  let t = wr (Tm_Return {ctag=ctag;insert_eq=false;term=y_tm}) in
+  let t = wtag (Some ctag) (Tm_Return {ctag=ctag;insert_eq=false;term=y_tm}) in
   let c = comp_return ctag false u ty y_tm post_hint.post x in
   let d : st_typing g t c = d in
 
@@ -429,6 +431,40 @@ let return_in_ctxt (g:env) (y:var) (y_ppname:ppname) (u:universe) (ty:term) (ctx
       assume (comp_u c == post_hint.u) in
 
   (| _, _, d |)
+
+let match_comp_res_with_post_hint (#g:env) (#t:st_term) (#c:comp_st)
+  (d:st_typing g t c)
+  (post_hint:post_hint_opt g)
+  : T.Tac (t':st_term &
+           c':comp_st &
+           st_typing g t' c') =
+
+  match post_hint with
+  | None -> (| t, c, d |)
+  | Some { ret_ty } ->
+    let cres = comp_res c in
+    if eq_tm cres ret_ty
+    then (| t, c, d |)
+    else match Pulse.Checker.Pure.check_equiv g cres ret_ty with
+         | None ->
+           fail g (Some t.range)
+             (Printf.sprintf "Could not prove equiv for computed type %s and expected type %s"
+                (P.term_to_string cres)
+                (P.term_to_string ret_ty))
+         | Some tok ->
+           let d_equiv
+             : RT.equiv _ (elab_term cres) (elab_term ret_ty) =
+             RT.Rel_eq_token _ _ _ (FStar.Squash.return_squash tok) in
+           
+           let c' = with_st_comp c {(st_comp_of_comp c) with res = ret_ty } in
+           let (| cres_typing, cpre_typing, x, cpost_typing |) =
+             st_comp_typing_inversion (comp_typing_inversion (st_typing_correctness d)) in
+
+           let d_stequiv : st_equiv g c c' =
+             ST_VPropEquiv _ c c' _ cpre_typing cres_typing cpost_typing d_equiv (VE_Refl _ _) (VE_Refl _ _)
+           in
+
+           (| t, c', T_Equiv _ _ _ _ d d_stequiv |)
 
 let apply_checker_result_k (#g:env) (#ctxt:vprop) (#post_hint:post_hint_for_env g)
   (r:checker_result_t g ctxt (Some post_hint))

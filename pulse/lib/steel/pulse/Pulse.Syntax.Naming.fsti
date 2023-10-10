@@ -325,6 +325,9 @@ let open_or_close_host_term (t:host_term) (ss:subst)
   : Lemma (not_tv_unknown (RT.subst_term t (rt_subst ss)))
   = admit()
 
+val subst_host_term (t:host_term) (ss:subst)
+  : Tot (t':host_term { t' == RT.subst_term t (rt_subst ss) })
+
 let rec subst_term (t:term) (ss:subst)
   : Tot term (decreases t)
   = let w t' = with_range t' t.range in
@@ -351,8 +354,7 @@ let rec subst_term (t:term) (ss:subst)
                        (subst_term body (shift_subst ss)))
     
     | Tm_FStar t ->
-      open_or_close_host_term t ss;
-      w (Tm_FStar (RT.subst_term t (rt_subst ss)))
+      w (Tm_FStar (subst_host_term t ss))
 
 let open_term' (t:term) (v:term) (i:index) =
   subst_term t [ DT i v ]

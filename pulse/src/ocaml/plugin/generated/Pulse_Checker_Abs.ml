@@ -178,7 +178,10 @@ let rec (rebuild_abs :
                                                                   });
                                                              Pulse_Syntax_Base.range2
                                                                =
-                                                               (t.Pulse_Syntax_Base.range2)
+                                                               (t.Pulse_Syntax_Base.range2);
+                                                             Pulse_Syntax_Base.effect_tag
+                                                               =
+                                                               (t.Pulse_Syntax_Base.effect_tag)
                                                            })))) uu___))
                                | uu___ ->
                                    Obj.magic
@@ -391,7 +394,10 @@ let rec (rebuild_abs :
                                                                     });
                                                                Pulse_Syntax_Base.range2
                                                                  =
-                                                                 (t.Pulse_Syntax_Base.range2)
+                                                                 (t.Pulse_Syntax_Base.range2);
+                                                               Pulse_Syntax_Base.effect_tag
+                                                                 =
+                                                                 (t.Pulse_Syntax_Base.effect_tag)
                                                              })))) uu___1))
                                | uu___1 ->
                                    Obj.magic
@@ -1237,7 +1243,8 @@ let rec (check_abs_core :
                                                                     (fun
                                                                     uu___7 ->
                                                                     FStar_Pervasives.Mkdtuple3
-                                                                    ((Pulse_Typing.wr
+                                                                    ((Pulse_Typing.wtag
+                                                                    FStar_Pervasives_Native.None
                                                                     (Pulse_Syntax_Base.Tm_Abs
                                                                     {
                                                                     Pulse_Syntax_Base.b
@@ -1627,7 +1634,8 @@ let rec (check_abs_core :
                                                                     uu___10
                                                                     ->
                                                                     FStar_Pervasives.Mkdtuple3
-                                                                    ((Pulse_Typing.wr
+                                                                    ((Pulse_Typing.wtag
+                                                                    FStar_Pervasives_Native.None
                                                                     (Pulse_Syntax_Base.Tm_Abs
                                                                     {
                                                                     Pulse_Syntax_Base.b

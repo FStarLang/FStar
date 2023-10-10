@@ -48,8 +48,8 @@ val aliasKey_functional_correctness
   (fwid:Seq.seq U8.t)
   (aliasKey_label_len:hkdf_lbl_len)
   (aliasKey_label:Seq.seq U8.t)
-  (aliasKey_pub:elseq U8.t v32us)
-  (aliasKey_priv:elseq U8.t v32us)
+  (aliasKey_pub:Seq.seq U8.t)
+  (aliasKey_priv:Seq.seq U8.t)
   : prop
 
 val deviceIDCSR_functional_correctness
@@ -60,7 +60,7 @@ val deviceIDCSR_functional_correctness
   (deviceID_label: Seq.seq U8.t)
   (deviceIDCSR_ingredients: deviceIDCSR_ingredients_t)
   (deviceIDCSR_len: SZ.t)
-  (deviceIDCSR_buf: elseq U8.t deviceIDCSR_len)
+  (deviceIDCSR_buf: Seq.seq U8.t)
   : prop
 
 val aliasKeyCRT_functional_correctness
@@ -72,8 +72,8 @@ val aliasKeyCRT_functional_correctness
   (deviceID_label:Seq.seq U8.t)
   (aliasKeyCRT_ingredients:aliasKeyCRT_ingredients_t)
   (aliasKeyCRT_len:SZ.t)
-  (aliasKeyCRT_buf:elseq U8.t aliasKeyCRT_len)
-  (aliasKey_pub:elseq U8.t v32us)
+  (aliasKeyCRT_buf:Seq.seq U8.t)
+  (aliasKey_pub:Seq.seq U8.t)
   : prop
 
 val l0_main
@@ -90,10 +90,7 @@ val l0_main
   (deviceIDCSR: A.larray U8.t (SZ.v deviceIDCSR_len))
   (record: l0_record_t)
   (#repr: erased l0_record_repr_t)
-  (#cdi0:erased (elseq U8.t dice_digest_len))
-  (#deviceID_pub0 #deviceID_priv0 #aliasKey_pub0 #aliasKey_priv0:erased (elseq U8.t v32us)) 
-  (#aliasKeyCRT0: elseq U8.t aliasKeyCRT_len)
-  (#deviceIDCSR0: elseq U8.t deviceIDCSR_len)
+  (#cdi0 #deviceID_pub0 #deviceID_priv0 #aliasKey_pub0 #aliasKey_priv0 #aliasKeyCRT0 #deviceIDCSR0: Seq.seq U8.t)
   (#cdi_perm #p:perm)
   : stt unit (l0_record_perm record repr p **
               A.pts_to cdi #cdi_perm cdi0 **
@@ -108,12 +105,12 @@ val l0_main
              (fun _ -> 
               l0_record_perm record repr p **
               A.pts_to cdi #cdi_perm cdi0 **
-              exists_ (fun (deviceID_pub1:elseq U8.t v32us) ->
-              exists_ (fun (deviceID_priv1:elseq U8.t v32us) -> 
-              exists_ (fun (aliasKey_pub1:elseq U8.t v32us) ->
-              exists_ (fun (aliasKey_priv1:elseq U8.t v32us) ->
-              exists_ (fun (aliasKeyCRT1:elseq U8.t aliasKeyCRT_len) ->
-              exists_ (fun (deviceIDCSR1:elseq U8.t deviceIDCSR_len) ->
+              exists_ (fun (deviceID_pub1:Seq.seq U8.t) ->
+              exists_ (fun (deviceID_priv1:Seq.seq U8.t) -> 
+              exists_ (fun (aliasKey_pub1:Seq.seq U8.t) ->
+              exists_ (fun (aliasKey_priv1:Seq.seq U8.t) ->
+              exists_ (fun (aliasKeyCRT1:Seq.seq U8.t) ->
+              exists_ (fun (deviceIDCSR1:Seq.seq U8.t) ->
                 A.pts_to deviceID_pub deviceID_pub1 **
                 A.pts_to deviceID_priv deviceID_priv1 **
                 A.pts_to aliasKey_pub aliasKey_pub1 **

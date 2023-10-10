@@ -440,7 +440,7 @@ fn init_engine_ctxt (uds:A.larray U8.t (US.v uds_len)) (#p:perm)
 ```pulse
 fn init_l0_ctxt (cdi:A.larray U8.t (US.v dice_digest_len)) 
   (#engine_repr:erased engine_record_repr)
-  (#s:erased (elseq U8.t dice_digest_len))
+  (#s:erased (Seq.seq U8.t))
   (_:squash(cdi_functional_correctness s engine_repr
          /\ l0_is_authentic engine_repr))
   requires A.pts_to cdi s
@@ -454,7 +454,7 @@ fn init_l0_ctxt (cdi:A.larray U8.t (US.v dice_digest_len))
   A.free cdi;
 
   let l0_context = mk_l0_context_t cdi_buf;
-  let l0_context_repr = mk_l0_context_repr_t s engine_repr;
+  let l0_context_repr = hide (mk_l0_context_repr_t s engine_repr);
   rewrite each cdi_buf as (l0_context.cdi);
   fold (l0_context_perm l0_context l0_context_repr);
 
@@ -473,11 +473,10 @@ fn init_l1_ctxt (deviceIDCSR_len: US.t) (aliasKeyCRT_len: US.t)
                 (deviceID_priv: A.larray U8.t (US.v v32us)) (deviceID_pub: A.larray U8.t (US.v v32us))
                 (aliasKey_priv: A.larray U8.t (US.v v32us)) (aliasKey_pub: A.larray U8.t (US.v v32us)) 
                 (deviceIDCSR: A.larray U8.t (US.v deviceIDCSR_len)) (aliasKeyCRT: A.larray U8.t (US.v aliasKeyCRT_len))
-                (#deviceID_priv0 #deviceID_pub0 #aliasKey_priv0 #aliasKey_pub0: erased (elseq U8.t v32us)) 
-                (#deviceIDCSR0:erased (elseq U8.t deviceIDCSR_len))
-                (#aliasKeyCRT0:erased (elseq U8.t aliasKeyCRT_len))
+                (#deviceID_priv0 #deviceID_pub0 #aliasKey_priv0 #aliasKey_pub0
+                 #deviceIDCSR0 #aliasKeyCRT0:erased (Seq.seq U8.t))
                 (#deviceID_label_len #aliasKey_label_len: erased hkdf_lbl_len)
-                (#cdi:erased (elseq U8.t dice_digest_len))
+                (#cdi:erased (Seq.seq U8.t))
                 (#repr:erased l0_record_repr_t)
                 (#deviceIDCSR_ingredients:erased deviceIDCSR_ingredients_t)
                 (#aliasKeyCRT_ingredients:erased aliasKeyCRT_ingredients_t)
@@ -525,10 +524,10 @@ fn init_l1_ctxt (deviceIDCSR_len: US.t) (aliasKeyCRT_len: US.t)
   let l1_context = mk_l1_context_t 
     deviceID_priv_buf deviceID_pub_buf aliasKey_priv_buf aliasKey_pub_buf 
     aliasKeyCRT_buf deviceIDCSR_buf;
-  let l1_context_repr = mk_l1_context_repr_t 
+  let l1_context_repr = hide (mk_l1_context_repr_t 
     deviceID_label_len aliasKey_label_len deviceID_priv0 deviceID_pub0
     aliasKey_priv0 aliasKey_pub0 aliasKeyCRT_len aliasKeyCRT0 deviceIDCSR_len
-    deviceIDCSR0 cdi repr deviceIDCSR_ingredients aliasKeyCRT_ingredients;
+    deviceIDCSR0 cdi repr deviceIDCSR_ingredients aliasKeyCRT_ingredients);
 
   rewrite each deviceID_priv_buf  as l1_context.deviceID_priv,
           deviceID_pub_buf  as l1_context.deviceID_pub,
@@ -544,7 +543,7 @@ fn init_l1_ctxt (deviceIDCSR_len: US.t) (aliasKeyCRT_len: US.t)
   rewrite (l1_context_perm l1_context l1_context_repr) as (context_perm ctxt repr);
   
   let ctxt_lk = L.new_lock (context_perm ctxt repr);
-  ((| ctxt, repr, ctxt_lk |) <: locked_context_t)
+  (| ctxt, repr, ctxt_lk |)
 }
 ```
 
