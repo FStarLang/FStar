@@ -210,7 +210,7 @@ let check_z3version (p:proc) : unit =
     _already_warned_solver_mismatch := true
   );
   let ver = getinfo "version" in
-  if ver <> Options.z3_version () && not (!_already_warned_version_mismatch) then (
+  if not (BU.starts_with ver (Options.z3_version())) && not (!_already_warned_version_mismatch) then (
     Errors.log_issue Range.dummyRange (Errors.Warning_SolverMismatch,
       BU.format5 "Unexpected Z3 version for `%s': expected %s, got %s.\n\
                   Please download the correct version of Z3 from %s\n\

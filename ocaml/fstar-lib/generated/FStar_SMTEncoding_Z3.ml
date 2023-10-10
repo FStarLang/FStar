@@ -334,7 +334,10 @@ let (check_z3version : FStar_Compiler_Util.proc -> unit) =
      else ());
     (let ver = getinfo "version" in
      let uu___2 =
-       (let uu___3 = FStar_Options.z3_version () in ver <> uu___3) &&
+       (let uu___3 =
+          let uu___4 = FStar_Options.z3_version () in
+          FStar_Compiler_Util.starts_with ver uu___4 in
+        Prims.op_Negation uu___3) &&
          (let uu___3 =
             FStar_Compiler_Effect.op_Bang _already_warned_version_mismatch in
           Prims.op_Negation uu___3) in
