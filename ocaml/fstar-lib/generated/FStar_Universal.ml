@@ -1093,7 +1093,9 @@ let (tc_one_file :
              Prims.op_Negation uu___2 in
            if uu___1
            then
-             let r = FStar_CheckedFiles.load_module_from_cache env fn in
+             let r =
+               let uu___2 = FStar_Extraction_ML_UEnv.tcenv_of_uenv env in
+               FStar_CheckedFiles.load_module_from_cache uu___2 fn in
              let r1 =
                let uu___2 =
                  (FStar_Options.force ()) &&
@@ -1142,7 +1144,9 @@ let (tc_one_file :
                                  FStar_Options.should_verify uu___7)) in
                          if uu___6
                          then
-                           FStar_CheckedFiles.store_module_to_cache env1 fn
+                           let uu___7 =
+                             FStar_Extraction_ML_UEnv.tcenv_of_uenv env1 in
+                           FStar_CheckedFiles.store_module_to_cache uu___7 fn
                              parsing_data tc_result
                          else ());
                         (tc_result, mllib, env1))))
