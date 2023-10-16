@@ -760,6 +760,11 @@ let rec (mlty_to_string : mlty -> Prims.string) =
         FStar_Compiler_Util.format1 "(<MLTY_Tuple> %s)" uu___
     | MLTY_Top -> "MLTY_Top"
     | MLTY_Erased -> "MLTY_Erased"
+let (mltyscheme_to_string : mltyscheme -> Prims.string) =
+  fun tsc ->
+    let uu___ = mlty_to_string (FStar_Pervasives_Native.snd tsc) in
+    FStar_Compiler_Util.format2 "(<MLTY_Scheme> [%s], %s)"
+      (FStar_String.concat ", " (FStar_Pervasives_Native.fst tsc)) uu___
 let rec (mlexpr_to_string : mlexpr -> Prims.string) =
   fun e ->
     match e.expr with

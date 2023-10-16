@@ -283,6 +283,11 @@ let rec mlty_to_string (t:mlty) =
   | MLTY_Top -> "MLTY_Top"
   | MLTY_Erased -> "MLTY_Erased"
 
+let mltyscheme_to_string (tsc:mltyscheme) =
+  BU.format2 "(<MLTY_Scheme> [%s], %s)"
+    (String.concat ", " (fst tsc))
+    (mlty_to_string (snd tsc))
+
 let rec mlexpr_to_string (e:mlexpr) =
   match e.expr with
   | MLE_Const c ->
