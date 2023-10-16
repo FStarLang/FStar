@@ -1,10 +1,13 @@
 module Pulse.Extract.Main
+
 open Pulse.Syntax.Base
 open Pulse.Extract.CompilerLib
 open Pulse.Syntax.Printer
 open FStar.List.Tot
 
 module L = FStar.List.Tot
+module R = FStar.Reflection
+module RT = FStar.Reflection.Typing
 module T = FStar.Tactics.V2
 module RB = Pulse.Readback
 module Elab = Pulse.Elaborate.Pure
@@ -285,6 +288,48 @@ let rec extract (g:env) (p:st_term)
       | Tm_Admit _ -> T.raise (Extraction_failure (Printf.sprintf "Cannot extract code with admit: %s\n" (Pulse.Syntax.Printer.st_term_to_string p)))
     end
 
+let rec generalize (g:env) (t:R.typ) (e:option st_term)
+  : T.Tac (env &
+           list mlident &
+           R.typ &
+           option st_term) =
+
+  T.dump (Printf.sprintf "Generalizing arrow:\n%s\n" (T.term_to_string t));
+  let tv = R.inspect_ln t in
+  match tv with
+  | R.Tv_Arrow b c ->
+    let {sort; ppname} = R.inspect_binder b in
+    if is_type g.uenv_inner sort
+    then let cview = R.inspect_comp c in
+         match cview with
+         | R.C_Total t ->
+           let x = Pulse.Typing.fresh g.coreenv in
+           let xt = R.(pack_ln (Tv_Var (pack_namedv {uniq = x; sort = RT.sort_default; ppname}))) in
+           let t = R.subst_term [R.DT 0 xt] t in
+           let e =
+             match e with
+             | Some ({term = Tm_Abs {b; body}}) ->
+               Some (LN.subst_st_term body [LN.DT 0 (tm_fstar xt Range.range_0)])
+             | _ -> e in
+           let namedv = R.pack_namedv {
+            uniq = x;
+            sort = FStar.Sealed.seal sort;
+            ppname
+           } in
+           let uenv = extend_ty g.uenv_inner namedv in
+           let coreenv =
+             E.push_binding
+               g.coreenv
+               x
+               (mk_ppname ppname FStar.Range.range_0)
+               (tm_fstar sort FStar.Range.range_0) in
+           let g = { g with uenv_inner = uenv; coreenv } in
+           let g, tys, t, e = generalize g t e in
+           g, (lookup_ty g.uenv_inner namedv)::tys, t, e
+         | _ -> T.raise (Extraction_failure "Unexpected effectful arrow")
+    else g, [], t, e
+  
+  | _ -> g, [], t, e
 
 let extract_pulse (g:uenv) (selt:R.sigelt) (p:st_term)
   : T.Tac (either mlmodule string) =
@@ -299,8 +344,13 @@ let extract_pulse (g:uenv) (selt:R.sigelt) (p:st_term)
       then T.raise (Extraction_failure "Extraction of recursive lets is not yet supported")
       else
         let {lb_fv; lb_typ} = R.inspect_lb (List.Tot.hd lbs) in
-        let mlty = ECL.term_as_mlty g lb_typ in
-        let tm, tag = extract { uenv_inner=g; coreenv=initial_core_env g } p in
+        let g = { uenv_inner=g; coreenv=initial_core_env g } in
+        let g, tys, lb_typ, p = generalize g lb_typ (Some p) in
+        T.dump (Printf.sprintf "Extracting ml typ: %s\n" (T.term_to_string lb_typ));
+        let mlty = ECL.term_as_mlty g.uenv_inner lb_typ in
+        if None? p
+        then T.raise (Extraction_failure "Unexpected p");
+        let tm, tag = extract g (Some?.v p) in
         T.dump (Printf.sprintf "Extracted term: %s\n" (mlexpr_to_string tm));
         let fv_name = R.inspect_fv lb_fv in
         if List.Tot.length fv_name = 0

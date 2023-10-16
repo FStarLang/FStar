@@ -1,5 +1,7 @@
 module ML = FStar_Extraction_ML_Syntax
 module UEnv = FStar_Extraction_ML_UEnv
+module MLTerm = FStar_Extraction_ML_Term
+
 type uenv = UEnv.uenv
 type mlexpr = ML.mlexpr
 type e_tag = ML.e_tag
@@ -122,3 +124,9 @@ type mlmodule = ML.mlmodule
 
 let mlm_let (is_rec:bool) (lbs:mllb list) : mlmodule1 =
   ML.MLM_Let ((if is_rec then ML.Rec else ML.NonRec), lbs)
+
+let is_type (g:uenv) (t:S.typ) = MLTerm.is_arity g t
+
+let extend_ty (g:uenv) (a:S.bv) = UEnv.extend_ty g a false
+
+let lookup_ty (g:uenv) (a:S.bv) = (UEnv.lookup_ty g a).ty_b_name

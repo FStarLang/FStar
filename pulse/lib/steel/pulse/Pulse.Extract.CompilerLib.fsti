@@ -1,5 +1,8 @@
 module Pulse.Extract.CompilerLib
+
+module R = FStar.Reflection
 module T = FStar.Tactics.V2
+
 val uenv : Type0
 val mlexpr : Type0
 val e_tag : Type0
@@ -63,3 +66,6 @@ val mlmodule1 : Type0
 type mlmodule = list mlmodule1
 
 val mlm_let (is_rec:bool) (lbs:list mllb) : mlmodule1
+val is_type (g:uenv) (t:R.typ) : Dv bool
+val extend_ty (g:uenv) (a:R.namedv) : Dv uenv
+val lookup_ty (g:uenv) (a:R.namedv) : Dv mlident
