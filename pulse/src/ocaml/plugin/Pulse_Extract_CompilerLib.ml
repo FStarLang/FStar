@@ -116,3 +116,9 @@ let sigelt_extension_data (e:S.sigelt) : Pulse_Syntax_Base.st_term option =
   match FStar_Compiler_List.tryFind (fun (s, _) -> s = "pulse") e.sigmeta.sigmeta_extension_data with
   | None -> None
   | Some (_, b) -> Some (Obj.magic b)
+
+type mlmodule1= ML.mlmodule1
+type mlmodule = ML.mlmodule
+
+let mlm_let (is_rec:bool) (lbs:mllb list) : mlmodule1 =
+  ML.MLM_Let ((if is_rec then ML.Rec else ML.NonRec), lbs)

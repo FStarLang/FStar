@@ -3,8 +3,16 @@ open Pulse.Syntax.Base
 open Pulse.Extract.CompilerLib
 open Pulse.Syntax.Printer
 open FStar.List.Tot
+
 module L = FStar.List.Tot
 module T = FStar.Tactics.V2
+module RB = Pulse.Readback
+module Elab = Pulse.Elaborate.Pure
+module E = Pulse.Typing.Env
+module LN = Pulse.Syntax.Naming
+module RU = Pulse.RuntimeUtils
+module ECL = Pulse.Extract.CompilerLib
+
 exception Extraction_failure of string
 
 noeq
@@ -12,11 +20,6 @@ type env = {
   uenv_inner: uenv;
   coreenv: Pulse.Typing.Env.env
 }
-
-module RB = Pulse.Readback
-module Elab = Pulse.Elaborate.Pure
-module E = Pulse.Typing.Env
-module LN = Pulse.Syntax.Naming
 
 let name = ppname & nat
 
@@ -283,18 +286,30 @@ let rec extract (g:env) (p:st_term)
     end
 
 
-module RU = Pulse.RuntimeUtils
-let extract_pulse (g:uenv) (p:st_term)
-  : T.Tac (either (mlexpr  & e_tag & mlty) string)
-  = let open T in
-    T.dump (Printf.sprintf "About to extract:\n%s\n" (st_term_to_string p));
-    try 
-      let tm, tag = extract { uenv_inner=g; coreenv=initial_core_env g } p in
-      T.dump (Printf.sprintf "Extracted term: %s\n" (mlexpr_to_string tm));
-      Inl (tm, tag, mlty_top)
-    with
-    | Extraction_failure msg -> 
-      Inr msg
-    | e ->
-      Inr (Printf.sprintf "Unexpected extraction error: %s" (RU.print_exn e))
+let extract_pulse (g:uenv) (selt:R.sigelt) (p:st_term)
+  : T.Tac (either mlmodule string) =
   
+  let open T in
+  T.dump (Printf.sprintf "About to extract:\n%s\n" (st_term_to_string p));
+  try
+    let sigelt_view = R.inspect_sigelt selt in
+    match sigelt_view with
+    | R.Sg_Let is_rec lbs ->
+      if is_rec || List.length lbs <> 1
+      then T.raise (Extraction_failure "Extraction of recursive lets is not yet supported")
+      else
+        let {lb_fv; lb_typ} = R.inspect_lb (List.Tot.hd lbs) in
+        let mlty = ECL.term_as_mlty g lb_typ in
+        let tm, tag = extract { uenv_inner=g; coreenv=initial_core_env g } p in
+        T.dump (Printf.sprintf "Extracted term: %s\n" (mlexpr_to_string tm));
+        let fv_name = R.inspect_fv lb_fv in
+        if List.Tot.length fv_name = 0
+        then T.raise (Extraction_failure "Unexpected empty name");
+        let mllb = mk_mllb (FStar.List.Tot.last fv_name) ([], mlty) tm in
+        Inl [mlm_let false [mllb]]
+    | _ -> T.raise (Extraction_failure "Unexpected sigelt")
+  with
+  | Extraction_failure msg -> 
+    Inr msg
+  | e ->
+    Inr (Printf.sprintf "Unexpected extraction error: %s" (RU.print_exn e))

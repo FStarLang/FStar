@@ -58,3 +58,8 @@ val set_tcenv (g:uenv) (e:T.env) :  uenv
 val mlexpr_to_string (e:mlexpr) : Dv string
 open Pulse.Syntax.Base
 val sigelt_extension_data (e:T.sigelt) : option st_term
+
+val mlmodule1 : Type0
+type mlmodule = list mlmodule1
+
+val mlm_let (is_rec:bool) (lbs:list mllb) : mlmodule1
