@@ -4,14 +4,14 @@ module U32 = FStar.UInt32
 #push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
 #push-options "--ide_id_info_off"
 
-// ```pulse
-// fn foo (#a:Type) (r:ref a) (x:a) (#y:erased a)
-//   requires (pts_to r y)
-//   ensures  (pts_to r x)
-// {
-//   r := x
-// }
-// ```
+```pulse
+fn foo (#a:Type) (r:ref a) (x:a) (#y:erased a)
+  requires (pts_to r y)
+  ensures  (pts_to r x)
+{
+  r := x
+}
+```
 
 // assume val p : vprop
 // assume val g : unit -> stt unit emp (fun _ -> p)
@@ -38,45 +38,45 @@ module U32 = FStar.UInt32
 // }
 // ```
 
-```pulse
-fn test_read (r:ref U32.t) (#n:erased U32.t)
-   requires pts_to r #pm n
-   returns x : U32.t
-   ensures pts_to r #pm x
-{
-  !r
-}
-```
+// ```pulse
+// fn test_read (r:ref U32.t) (#n:erased U32.t)
+//    requires pts_to r #pm n
+//    returns x : U32.t
+//    ensures pts_to r #pm x
+// {
+//   !r
+// }
+// ```
 
-```pulse
-fn swap (r1 r2:ref U32.t) (#n1:erased U32.t) (#n2:erased U32.t)
-  requires 
-      pts_to r1 n1 **
-      pts_to r2 n2
-  ensures
-      pts_to r1 n2 **
-      pts_to r2 n1
-{
-  let x = !r1;
-  let y = !r2;
-  r1 := y;
-  r2 := x
-}
-```
+// ```pulse
+// fn swap (r1 r2:ref U32.t) (#n1:erased U32.t) (#n2:erased U32.t)
+//   requires 
+//       pts_to r1 n1 **
+//       pts_to r2 n2
+//   ensures
+//       pts_to r1 n2 **
+//       pts_to r2 n1
+// {
+//   let x = !r1;
+//   let y = !r2;
+//   r1 := y;
+//   r2 := x
+// }
+// ```
 
-```pulse
-fn call_swap2 (r1 r2:ref U32.t) (#n1:erased U32.t) (#n2:erased U32.t)
-   requires
-       pts_to r1 n1 **
-       pts_to r2 n2
-   ensures
-       pts_to r1 n1 **
-       pts_to r2 n2
-{
-   swap r1 r2;
-   swap r1 r2
-}
-```
+// ```pulse
+// fn call_swap2 (r1 r2:ref U32.t) (#n1:erased U32.t) (#n2:erased U32.t)
+//    requires
+//        pts_to r1 n1 **
+//        pts_to r2 n2
+//    ensures
+//        pts_to r1 n1 **
+//        pts_to r2 n2
+// {
+//    swap r1 r2;
+//    swap r1 r2
+// }
+// ```
 
 
 // ```pulse
