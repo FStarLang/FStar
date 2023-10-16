@@ -3354,7 +3354,7 @@ let (extract_pulse :
                                                                     Pulse_Extract_CompilerLib.mk_mllb
                                                                     (FStar_List_Tot_Base.last
                                                                     fv_name)
-                                                                    ([],
+                                                                    (tys,
                                                                     mlty) tm]]))))
                                                                     uu___11)))
                                                                     uu___10)))

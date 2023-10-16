@@ -355,7 +355,7 @@ let extract_pulse (g:uenv) (selt:R.sigelt) (p:st_term)
         let fv_name = R.inspect_fv lb_fv in
         if List.Tot.length fv_name = 0
         then T.raise (Extraction_failure "Unexpected empty name");
-        let mllb = mk_mllb (FStar.List.Tot.last fv_name) ([], mlty) tm in
+        let mllb = mk_mllb (FStar.List.Tot.last fv_name) (tys, mlty) tm in
         Inl [mlm_let false [mllb]]
     | _ -> T.raise (Extraction_failure "Unexpected sigelt")
   with
