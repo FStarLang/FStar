@@ -22,8 +22,8 @@ open FStar.Extraction.ML.Syntax
 open FStar.Extraction.ML.UEnv
 module S = FStar.Syntax.Syntax
 
-type extension_extractor = 
-   uenv -> FStar.Compiler.Dyn.dyn -> either (mlexpr * e_tag * mlty) string
+type extension_extractor =
+   uenv -> sigelt -> FStar.Compiler.Dyn.dyn -> either mlmodule string
 
 val register_extension_extractor
          (extension_name:string)
@@ -33,4 +33,3 @@ val register_extension_extractor
 val iface : Type0
 val extract_iface: uenv -> modul -> uenv * iface
 val extract : uenv -> modul -> uenv * option mllib
-

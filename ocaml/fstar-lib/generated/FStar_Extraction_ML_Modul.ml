@@ -1,10 +1,10 @@
 open Prims
 type extension_extractor =
   FStar_Extraction_ML_UEnv.uenv ->
-    FStar_Compiler_Dyn.dyn ->
-      ((FStar_Extraction_ML_Syntax.mlexpr * FStar_Extraction_ML_Syntax.e_tag
-         * FStar_Extraction_ML_Syntax.mlty),
-        Prims.string) FStar_Pervasives.either
+    FStar_Syntax_Syntax.sigelt ->
+      FStar_Compiler_Dyn.dyn ->
+        (FStar_Extraction_ML_Syntax.mlmodule, Prims.string)
+          FStar_Pervasives.either
 let (extension_extractor_table :
   extension_extractor FStar_Compiler_Util.smap) =
   FStar_Compiler_Util.smap_create (Prims.of_int (20))
@@ -2197,42 +2197,68 @@ let rec (extract_sig :
                    (match uu___6 with
                     | FStar_Pervasives_Native.None -> extract_sig_let g se1
                     | FStar_Pervasives_Native.Some (ext, blob, extractor) ->
-                        let uu___7 = extractor g blob in
+                        let uu___7 = extractor g se1 blob in
                         (match uu___7 with
-                         | FStar_Pervasives.Inl (term, e_tag, ty) ->
+                         | FStar_Pervasives.Inl decls ->
                              let meta =
                                extract_metadata
                                  se1.FStar_Syntax_Syntax.sigattrs in
-                             let ty1 =
-                               FStar_Extraction_ML_Term.term_as_mlty g
-                                 lb.FStar_Syntax_Syntax.lbtyp in
-                             let tysc = ([], ty1) in
-                             let uu___8 =
-                               FStar_Extraction_ML_UEnv.extend_lb g
-                                 lb.FStar_Syntax_Syntax.lbname
-                                 lb.FStar_Syntax_Syntax.lbtyp tysc false in
-                             (match uu___8 with
-                              | (g1, mlid, uu___9) ->
-                                  let mllet =
-                                    FStar_Extraction_ML_Syntax.MLM_Let
-                                      (FStar_Extraction_ML_Syntax.NonRec,
-                                        [{
-                                           FStar_Extraction_ML_Syntax.mllb_name
-                                             = mlid;
-                                           FStar_Extraction_ML_Syntax.mllb_tysc
-                                             =
-                                             (FStar_Pervasives_Native.Some
-                                                tysc);
-                                           FStar_Extraction_ML_Syntax.mllb_add_unit
-                                             = false;
-                                           FStar_Extraction_ML_Syntax.mllb_def
-                                             = term;
-                                           FStar_Extraction_ML_Syntax.mllb_meta
-                                             = meta;
-                                           FStar_Extraction_ML_Syntax.print_typ
-                                             = false
-                                         }]) in
-                                  (g1, [mllet]))
+                             FStar_Compiler_List.fold_left
+                               (fun uu___8 ->
+                                  fun d ->
+                                    match uu___8 with
+                                    | (g1, decls1) ->
+                                        (match d with
+                                         | FStar_Extraction_ML_Syntax.MLM_Let
+                                             (FStar_Extraction_ML_Syntax.NonRec,
+                                              mllb::[])
+                                             ->
+                                             let uu___9 =
+                                               let uu___10 =
+                                                 FStar_Compiler_Util.must
+                                                   mllb.FStar_Extraction_ML_Syntax.mllb_tysc in
+                                               FStar_Extraction_ML_UEnv.extend_lb
+                                                 g1
+                                                 lb.FStar_Syntax_Syntax.lbname
+                                                 lb.FStar_Syntax_Syntax.lbtyp
+                                                 uu___10
+                                                 mllb.FStar_Extraction_ML_Syntax.mllb_add_unit in
+                                             (match uu___9 with
+                                              | (g2, mlid, uu___10) ->
+                                                  let mllb1 =
+                                                    {
+                                                      FStar_Extraction_ML_Syntax.mllb_name
+                                                        = mlid;
+                                                      FStar_Extraction_ML_Syntax.mllb_tysc
+                                                        =
+                                                        (mllb.FStar_Extraction_ML_Syntax.mllb_tysc);
+                                                      FStar_Extraction_ML_Syntax.mllb_add_unit
+                                                        =
+                                                        (mllb.FStar_Extraction_ML_Syntax.mllb_add_unit);
+                                                      FStar_Extraction_ML_Syntax.mllb_def
+                                                        =
+                                                        (mllb.FStar_Extraction_ML_Syntax.mllb_def);
+                                                      FStar_Extraction_ML_Syntax.mllb_meta
+                                                        = meta;
+                                                      FStar_Extraction_ML_Syntax.print_typ
+                                                        =
+                                                        (mllb.FStar_Extraction_ML_Syntax.print_typ)
+                                                    } in
+                                                  (g2,
+                                                    (FStar_Compiler_List.op_At
+                                                       decls1
+                                                       [FStar_Extraction_ML_Syntax.MLM_Let
+                                                          (FStar_Extraction_ML_Syntax.NonRec,
+                                                            [mllb1])])))
+                                         | uu___9 ->
+                                             let uu___10 =
+                                               let uu___11 =
+                                                 FStar_Extraction_ML_Syntax.mlmodule1_to_string
+                                                   d in
+                                               FStar_Compiler_Util.format1
+                                                 "Unexpected ML decl returned by the extension: %s"
+                                                 uu___11 in
+                                             failwith uu___10)) (g, []) decls
                          | FStar_Pervasives.Inr err ->
                              let uu___8 =
                                let uu___9 =

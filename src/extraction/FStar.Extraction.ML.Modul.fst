@@ -1032,19 +1032,31 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list mlmodule1 =
              extract_sig_let g se
 
            | Some (ext, blob, extractor) ->
-              match extractor g blob with
-              | Inl (term, e_tag, ty) ->
+              match extractor g se blob with
+              | Inl decls ->
                 let meta = extract_metadata se.sigattrs in
-                let ty = Term.term_as_mlty g lb.lbtyp in
-                let tysc = [], ty in
-                let g, mlid, _ = UEnv.extend_lb g lb.lbname lb.lbtyp tysc false in
-                let mllet = MLM_Let (NonRec, [{ mllb_name = mlid;
-                                                mllb_tysc= Some tysc;
-                                                mllb_add_unit = false;
-                                                mllb_def=term;
-                                                mllb_meta=meta;
-                                                print_typ=false }]) in
-                g, [mllet]
+                List.fold_left (fun (g, decls) d ->
+                  match d with
+                  | MLM_Let (NonRec, [mllb]) ->
+                    let g, mlid, _ =
+                      UEnv.extend_lb g lb.lbname lb.lbtyp (must mllb.mllb_tysc) mllb.mllb_add_unit in
+                    let mllb = { mllb with mllb_name = mlid; mllb_meta = meta } in
+                    g, decls@[MLM_Let (NonRec, [mllb])]
+                  | _ ->
+                    failwith (BU.format1 "Unexpected ML decl returned by the extension: %s" (mlmodule1_to_string d))
+                ) (g, []) decls
+              // | Inl (term, e_tag, ty) ->
+              //   let meta = extract_metadata se.sigattrs in
+              //   let ty = Term.term_as_mlty g lb.lbtyp in
+              //   let tysc = [], ty in
+              //   let g, mlid, _ = UEnv.extend_lb g lb.lbname lb.lbtyp tysc false in
+              //   let mllet = MLM_Let (NonRec, [{ mllb_name = mlid;
+              //                                   mllb_tysc= Some tysc;
+              //                                   mllb_add_unit = false;
+              //                                   mllb_def=term;
+              //                                   mllb_meta=meta;
+              //                                   print_typ=false }]) in
+              //   g, [mllet]
               | Inr err ->
                 Errors.raise_error
                   (Errors.Fatal_ExtractionUnsupported,
