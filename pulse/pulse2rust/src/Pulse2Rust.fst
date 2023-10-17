@@ -23,7 +23,7 @@ let tyvar_of (s:string) : string =
 // Pulse has variable _'n, which are not valid in Rust
 //
 let varname (s:string) : string = replace_char s '\'' '_'
-  
+
 let fail (s:string) =
   failwith (format1 "Pulse to Rust extraction failed: %s" s)
 
@@ -48,6 +48,8 @@ let extract_mlty (t:S.mlty) : typ =
     when S.string_of_mlpath p = "FStar.UInt64.t" -> Typ_name "u64"
   | S.MLTY_Named ([], p)
     when S.string_of_mlpath p = "FStar.Int64.t" -> Typ_name "i64"
+  | S.MLTY_Named ([], p)
+    when S.string_of_mlpath p = "Prims.bool" -> Typ_name "bool"
   | S.MLTY_Erased -> Typ_name "unit"
   | _ -> fail_nyi (format1 "mlty %s" (S.mlty_to_string t))
 
@@ -58,7 +60,9 @@ let extract_top_level_fn_arg (arg_name:string) (t:S.mlty) : fn_arg =
     when S.string_of_mlpath p = "FStar.UInt32.t" ||
          S.string_of_mlpath p = "FStar.Int32.t"  ||
          S.string_of_mlpath p = "FStar.UInt64.t" ||
-         S.string_of_mlpath p = "FStar.Int64.t" -> mk_scalar_fn_arg arg_name (extract_mlty t)
+         S.string_of_mlpath p = "FStar.Int64.t"  ||
+         S.string_of_mlpath p = "Prims.bool" ->
+    mk_scalar_fn_arg arg_name (extract_mlty t)
 
   | S.MLTY_Named ([arg], p)
     when S.string_of_mlpath p = "Pulse.Lib.Reference.ref" ->
@@ -129,6 +133,17 @@ let rec extract_mlexpr (e:S.mlexpr) : expr =
     let args = List.map extract_mlexpr args in
     mk_call head args
   | S.MLE_TApp (head, _) -> extract_mlexpr head  // make type applications explicit in the Rust code?
+  | S.MLE_If (cond, if_then, if_else_opt) ->
+    let cond = extract_mlexpr cond in
+    let then_ = extract_mlexpr_to_stmts if_then in
+    let else_ = map_option extract_mlexpr if_else_opt in
+    let else_ =
+      match else_ with
+      | None
+      | Some (Expr_if _)
+      | Some (Expr_block _) -> else_
+      | Some else_ -> Some (mk_block_expr [Stmt_expr else_]) in 
+    mk_if cond then_ else_
   | _ -> fail_nyi (format1 "mlexpr %s" (S.mlexpr_to_string e))
 
 and extract_mlexpr_to_stmts (e:S.mlexpr) : list stmt =

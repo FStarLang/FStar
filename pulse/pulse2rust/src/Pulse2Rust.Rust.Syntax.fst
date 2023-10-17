@@ -17,6 +17,9 @@ let mk_ref_read (l:expr) = Expr_unary { expr_unary_op = Deref; expr_unary_expr =
 let mk_call (head:expr) (args:list expr) =
   Expr_call { expr_call_fn = head; expr_call_args = args }
 
+let mk_if (expr_if_cond:expr) (expr_if_then:list stmt) (expr_if_else:option expr) : expr =
+  Expr_if { expr_if_cond; expr_if_then; expr_if_else }
+
 let mk_scalar_fn_arg (name:string) (t:typ) =
   Fn_arg_pat {
     pat_typ_pat = Pat_ident {

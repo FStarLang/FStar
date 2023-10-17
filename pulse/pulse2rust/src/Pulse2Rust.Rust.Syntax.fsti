@@ -44,6 +44,7 @@ type expr =
   | Expr_assign of expr_assignment
   | Expr_block of list stmt
   | Expr_lit of lit
+  | Expr_if of expr_if
 
 and expr_bin = {
   expr_bin_left : expr;
@@ -64,6 +65,12 @@ and expr_call = {
 and expr_assignment = {
   expr_assignment_l : expr;
   expr_assignment_r : expr;
+}
+
+and expr_if = {
+  expr_if_cond : expr;
+  expr_if_then : list stmt;
+  expr_if_else : option expr;  // only EBlock or Expr_if, if set
 }
 
 and local_stmt = {
@@ -102,6 +109,7 @@ val mk_block_expr (l:list stmt) : expr
 val mk_ref_read (r:expr) : expr
 val mk_ref_assign (l r:expr) : expr
 val mk_call (head:expr) (args:list expr) : expr
+val mk_if (cond:expr) (then_:list stmt) (else_:option expr) : expr  // else is Block or ExprIf
 val mk_local_stmt (name:string) (is_mut:bool) (init:expr) : stmt
 val mk_scalar_fn_arg (name:string) (t:typ) : fn_arg
 val mk_ref_fn_arg (name:string) (is_mut:bool) (t:typ) : fn_arg

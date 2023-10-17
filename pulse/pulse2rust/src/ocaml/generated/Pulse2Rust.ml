@@ -47,6 +47,9 @@ let (extract_mlty :
     | FStar_Extraction_ML_Syntax.MLTY_Named ([], p) when
         let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
         uu___ = "FStar.Int64.t" -> Pulse2Rust_Rust_Syntax.Typ_name "i64"
+    | FStar_Extraction_ML_Syntax.MLTY_Named ([], p) when
+        let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+        uu___ = "Prims.bool" -> Pulse2Rust_Rust_Syntax.Typ_name "bool"
     | FStar_Extraction_ML_Syntax.MLTY_Erased ->
         Pulse2Rust_Rust_Syntax.Typ_name "unit"
     | uu___ ->
@@ -66,16 +69,19 @@ let (extract_top_level_fn_arg :
             let uu___1 = tyvar_of s in Pulse2Rust_Rust_Syntax.Typ_name uu___1 in
           Pulse2Rust_Rust_Syntax.mk_scalar_fn_arg arg_name uu___
       | FStar_Extraction_ML_Syntax.MLTY_Named ([], p) when
-          (((let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-             uu___ = "FStar.UInt32.t") ||
+          ((((let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+              uu___ = "FStar.UInt32.t") ||
+               (let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+                uu___ = "FStar.Int32.t"))
+              ||
               (let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-               uu___ = "FStar.Int32.t"))
+               uu___ = "FStar.UInt64.t"))
              ||
              (let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-              uu___ = "FStar.UInt64.t"))
+              uu___ = "FStar.Int64.t"))
             ||
             (let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-             uu___ = "FStar.Int64.t")
+             uu___ = "Prims.bool")
           ->
           let uu___ = extract_mlty t in
           Pulse2Rust_Rust_Syntax.mk_scalar_fn_arg arg_name uu___
@@ -221,6 +227,23 @@ let rec (extract_mlexpr :
         Pulse2Rust_Rust_Syntax.mk_call head1 args1
     | FStar_Extraction_ML_Syntax.MLE_TApp (head, uu___) ->
         extract_mlexpr head
+    | FStar_Extraction_ML_Syntax.MLE_If (cond, if_then, if_else_opt) ->
+        let cond1 = extract_mlexpr cond in
+        let then_ = extract_mlexpr_to_stmts if_then in
+        let else_ = FStar_Compiler_Util.map_option extract_mlexpr if_else_opt in
+        let else_1 =
+          match else_ with
+          | FStar_Pervasives_Native.None -> else_
+          | FStar_Pervasives_Native.Some (Pulse2Rust_Rust_Syntax.Expr_if
+              uu___) -> else_
+          | FStar_Pervasives_Native.Some (Pulse2Rust_Rust_Syntax.Expr_block
+              uu___) -> else_
+          | FStar_Pervasives_Native.Some else_2 ->
+              let uu___ =
+                Pulse2Rust_Rust_Syntax.mk_block_expr
+                  [Pulse2Rust_Rust_Syntax.Stmt_expr else_2] in
+              FStar_Pervasives_Native.Some uu___ in
+        Pulse2Rust_Rust_Syntax.mk_if cond1 then_ else_1
     | uu___ ->
         let uu___1 =
           let uu___2 = FStar_Extraction_ML_Syntax.mlexpr_to_string e in

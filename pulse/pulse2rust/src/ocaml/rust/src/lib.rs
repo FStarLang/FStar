@@ -60,6 +60,12 @@ struct ExprAssign {
     expr_assign_r: Box<Expr>,
 }
 
+struct ExprIf {
+    expr_if_cond: Box<Expr>,
+    expr_if_then: Vec<Stmt>,
+    expr_if_else: Option<Box<Expr>>,
+}
+
 enum Expr {
     EBinOp(ExprBin),
     EPath(String),
@@ -68,6 +74,7 @@ enum Expr {
     EAssign(ExprAssign),
     EBlock(Vec<Stmt>),
     ELit(Lit),
+    EIf(ExprIf),
 }
 
 enum Typ {
@@ -167,7 +174,8 @@ impl_from_ocaml_variant! {
     Expr::EUnOp (payload:ExprUnary),
     Expr::EAssign (payload:ExprAssign),
     Expr::EBlock (payload:OCamlList<Stmt>),
-    Expr::ELit (payload:Lit)
+    Expr::ELit (payload:Lit),
+    Expr::EIf (payload:ExprIf),
   }
 }
 
@@ -197,6 +205,14 @@ impl_from_ocaml_record! {
   ExprAssign {
     expr_assign_l : Expr,
     expr_assign_r : Expr,
+  }
+}
+
+impl_from_ocaml_record! {
+  ExprIf {
+    expr_if_cond : Expr,
+    expr_if_then : OCamlList<Stmt>,
+    expr_if_else : Option<Expr>
   }
 }
 
@@ -363,6 +379,35 @@ fn to_syn_expr(e: &Expr) -> syn::Expr {
                 })
             }
         },
+        Expr::EIf(ExprIf {
+            expr_if_cond,
+            expr_if_then,
+            expr_if_else,
+        }) => {
+            let cond: Box<syn::Expr> = Box::new(to_syn_expr(expr_if_cond));
+            let if_then: Block = Block {
+                brace_token: Brace::default(),
+                stmts: expr_if_then.iter().map(to_syn_stmt).collect(),
+            };
+            let if_else: Option<(syn::token::Else, Box<syn::Expr>)> = match expr_if_else {
+                None => None,
+                Some(e) => Some((
+                    syn::token::Else {
+                        span: Span::call_site(),
+                    },
+                    Box::new(to_syn_expr(e)),
+                )),
+            };
+            syn::Expr::If(syn::ExprIf {
+                attrs: vec![],
+                if_token: syn::token::If {
+                    span: Span::call_site(),
+                },
+                cond,
+                then_branch: if_then,
+                else_branch: if_else,
+            })
+        }
     }
 }
 
@@ -565,6 +610,22 @@ impl fmt::Display for Expr {
                     .join(";\n")
             ),
             Expr::ELit(lit) => write!(f, "{}", lit),
+            Expr::EIf(ExprIf {
+                expr_if_cond,
+                expr_if_then,
+                expr_if_else,
+            }) => {
+                let if_then = expr_if_then
+                    .iter()
+                    .map(|s| s.to_string())
+                    .collect::<Vec<_>>()
+                    .join(";\n");
+                let if_else = match expr_if_else {
+                    None => "".to_string(),
+                    Some(e) => format!("else {}", e),
+                };
+                write!(f, "if {} {{ {} }} {}", expr_if_cond, if_then, if_else)
+            }
         }
     }
 }

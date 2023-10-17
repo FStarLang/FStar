@@ -81,6 +81,7 @@ type expr =
   | Expr_assign of expr_assignment 
   | Expr_block of stmt Prims.list 
   | Expr_lit of lit 
+  | Expr_if of expr_if 
 and expr_bin =
   {
   expr_bin_left: expr ;
@@ -95,6 +96,11 @@ and expr_call = {
 and expr_assignment = {
   expr_assignment_l: expr ;
   expr_assignment_r: expr }
+and expr_if =
+  {
+  expr_if_cond: expr ;
+  expr_if_then: stmt Prims.list ;
+  expr_if_else: expr FStar_Pervasives_Native.option }
 and local_stmt =
   {
   local_stmt_pat: pat ;
@@ -137,6 +143,10 @@ let (uu___is_Expr_lit : expr -> Prims.bool) =
     match projectee with | Expr_lit _0 -> true | uu___ -> false
 let (__proj__Expr_lit__item___0 : expr -> lit) =
   fun projectee -> match projectee with | Expr_lit _0 -> _0
+let (uu___is_Expr_if : expr -> Prims.bool) =
+  fun projectee -> match projectee with | Expr_if _0 -> true | uu___ -> false
+let (__proj__Expr_if__item___0 : expr -> expr_if) =
+  fun projectee -> match projectee with | Expr_if _0 -> _0
 let (__proj__Mkexpr_bin__item__expr_bin_left : expr_bin -> expr) =
   fun projectee ->
     match projectee with
@@ -175,6 +185,19 @@ let (__proj__Mkexpr_assignment__item__expr_assignment_r :
   fun projectee ->
     match projectee with
     | { expr_assignment_l; expr_assignment_r;_} -> expr_assignment_r
+let (__proj__Mkexpr_if__item__expr_if_cond : expr_if -> expr) =
+  fun projectee ->
+    match projectee with
+    | { expr_if_cond; expr_if_then; expr_if_else;_} -> expr_if_cond
+let (__proj__Mkexpr_if__item__expr_if_then : expr_if -> stmt Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { expr_if_cond; expr_if_then; expr_if_else;_} -> expr_if_then
+let (__proj__Mkexpr_if__item__expr_if_else :
+  expr_if -> expr FStar_Pervasives_Native.option) =
+  fun projectee ->
+    match projectee with
+    | { expr_if_cond; expr_if_then; expr_if_else;_} -> expr_if_else
 let (__proj__Mklocal_stmt__item__local_stmt_pat : local_stmt -> pat) =
   fun projectee ->
     match projectee with
@@ -260,6 +283,12 @@ let (mk_ref_read : expr -> expr) =
 let (mk_call : expr -> expr Prims.list -> expr) =
   fun head ->
     fun args -> Expr_call { expr_call_fn = head; expr_call_args = args }
+let (mk_if :
+  expr -> stmt Prims.list -> expr FStar_Pervasives_Native.option -> expr) =
+  fun expr_if_cond ->
+    fun expr_if_then ->
+      fun expr_if_else ->
+        Expr_if { expr_if_cond; expr_if_then; expr_if_else }
 let (mk_scalar_fn_arg : Prims.string -> typ -> fn_arg) =
   fun name ->
     fun t ->
