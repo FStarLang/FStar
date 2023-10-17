@@ -1,6 +1,7 @@
 module ML = FStar_Extraction_ML_Syntax
 module UEnv = FStar_Extraction_ML_UEnv
 module MLTerm = FStar_Extraction_ML_Term
+module MLModul = FStar_Extraction_ML_Modul
 
 type uenv = UEnv.uenv
 type mlexpr = ML.mlexpr
@@ -130,3 +131,8 @@ let is_type (g:uenv) (t:S.typ) = MLTerm.is_arity g t
 let extend_ty (g:uenv) (a:S.bv) = UEnv.extend_ty g a false
 
 let lookup_ty (g:uenv) (a:S.bv) = (UEnv.lookup_ty g a).ty_b_name
+
+type iface = MLModul.iface
+type exp_binding = UEnv.exp_binding
+let iface_of_bindings (l:(S.fv * exp_binding) list) = MLModul.iface_of_bindings l
+let extend_fv (g:uenv) (x:S.fv) (tysc:mltyscheme) = UEnv.extend_fv g x tysc false

@@ -299,7 +299,9 @@ let rec generalize (g:env) (t:R.typ) (e:option st_term)
   match tv with
   | R.Tv_Arrow b c ->
     let {sort; ppname} = R.inspect_binder b in
-    if is_type g.uenv_inner sort
+    if R.Tv_Unknown? (R.inspect_ln sort)
+    then T.raise (Extraction_failure "Unexpected unknown sort when generalizing")
+    else if is_type g.uenv_inner sort
     then let cview = R.inspect_comp c in
          match cview with
          | R.C_Total t ->
@@ -346,7 +348,6 @@ let extract_pulse (g:uenv) (selt:R.sigelt) (p:st_term)
         let {lb_fv; lb_typ} = R.inspect_lb (List.Tot.hd lbs) in
         let g = { uenv_inner=g; coreenv=initial_core_env g } in
         let g, tys, lb_typ, p = generalize g lb_typ (Some p) in
-        T.dump (Printf.sprintf "Extracting ml typ: %s\n" (T.term_to_string lb_typ));
         let mlty = ECL.term_as_mlty g.uenv_inner lb_typ in
         if None? p
         then T.raise (Extraction_failure "Unexpected p");
@@ -363,3 +364,28 @@ let extract_pulse (g:uenv) (selt:R.sigelt) (p:st_term)
     Inr msg
   | e ->
     Inr (Printf.sprintf "Unexpected extraction error: %s" (RU.print_exn e))
+
+let extract_pulse_sig (g:uenv) (selt:R.sigelt) (p:st_term)
+  : T.Tac (either (uenv & iface) string) =
+
+  let open T in
+  try
+    let sigelt_view = R.inspect_sigelt selt in
+    match sigelt_view with
+    | R.Sg_Let is_rec lbs ->
+      if is_rec || List.length lbs <> 1
+      then T.raise (Extraction_failure "Extraction of iface for recursive lets is not yet supported")
+      else
+        let {lb_fv; lb_typ} = R.inspect_lb (List.Tot.hd lbs) in
+        let g0 = g in
+        let g = { uenv_inner=g; coreenv=initial_core_env g } in
+        let g, tys, lb_typ, _ = generalize g lb_typ None in
+        T.dump (Printf.sprintf "Extracting ml typ: %s\n" (T.term_to_string lb_typ));
+        let mlty = ECL.term_as_mlty g.uenv_inner lb_typ in
+        let g, _, e_bnd = extend_fv g0 lb_fv (tys, mlty) in
+        Inl (g, iface_of_bindings [lb_fv, e_bnd])
+    | _ -> T.raise (Extraction_failure "Unexpected sigelt")    
+  with
+  | Extraction_failure msg ->  Inr msg
+  | e ->
+    Inr (Printf.sprintf "Unexpected extraction error (iface): %s" (RU.print_exn e))

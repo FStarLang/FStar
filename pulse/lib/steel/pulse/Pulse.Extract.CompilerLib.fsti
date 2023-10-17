@@ -69,3 +69,8 @@ val mlm_let (is_rec:bool) (lbs:list mllb) : mlmodule1
 val is_type (g:uenv) (t:R.typ) : Dv bool
 val extend_ty (g:uenv) (a:R.namedv) : Dv uenv
 val lookup_ty (g:uenv) (a:R.namedv) : Dv mlident
+
+val iface : Type0
+val exp_binding : Type0
+val iface_of_bindings : list (R.fv & exp_binding) -> iface
+val extend_fv : uenv -> R.fv -> mltyscheme -> Dv (uenv & mlident & exp_binding)
