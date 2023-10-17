@@ -332,12 +332,18 @@ let (check_z3version : FStar_Compiler_Util.proc -> unit) =
         FStar_Compiler_Effect.op_Colon_Equals _already_warned_solver_mismatch
           true)
      else ());
-    (let ver = getinfo "version" in
+    (let ver_found =
+       let uu___1 =
+         let uu___2 =
+           let uu___3 = getinfo "version" in
+           FStar_Compiler_Util.split uu___3 "-" in
+         FStar_Compiler_List.hd uu___2 in
+       FStar_Compiler_Util.trim_string uu___1 in
+     let ver_conf =
+       let uu___1 = FStar_Options.z3_version () in
+       FStar_Compiler_Util.trim_string uu___1 in
      let uu___2 =
-       (let uu___3 =
-          let uu___4 = FStar_Options.z3_version () in
-          FStar_Compiler_Util.starts_with ver uu___4 in
-        Prims.op_Negation uu___3) &&
+       (ver_conf <> ver_found) &&
          (let uu___3 =
             FStar_Compiler_Effect.op_Bang _already_warned_version_mismatch in
           Prims.op_Negation uu___3) in
@@ -346,15 +352,14 @@ let (check_z3version : FStar_Compiler_Util.proc -> unit) =
        ((let uu___4 =
            let uu___5 =
              let uu___6 = FStar_Compiler_Util.proc_prog p in
-             let uu___7 = FStar_Options.z3_version () in
-             let uu___8 =
-               let uu___9 =
-                 let uu___10 = FStar_Options.z3_version () in
-                 Prims.op_Hat "z3-" uu___10 in
-               FStar_Platform.exe uu___9 in
+             let uu___7 =
+               let uu___8 =
+                 let uu___9 = FStar_Options.z3_version () in
+                 Prims.op_Hat "z3-" uu___9 in
+               FStar_Platform.exe uu___8 in
              FStar_Compiler_Util.format5
-               "Unexpected Z3 version for `%s': expected %s, got %s.\nPlease download the correct version of Z3 from %s\nand install it into your $PATH as `%s'."
-               uu___6 uu___7 ver z3url uu___8 in
+               "Unexpected Z3 version for `%s': expected `%s', got `%s'.\nPlease download the correct version of Z3 from %s\nand install it into your $PATH as `%s'."
+               uu___6 ver_conf ver_found z3url uu___7 in
            (FStar_Errors_Codes.Warning_SolverMismatch, uu___5) in
          FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange uu___4);
         FStar_Compiler_Effect.op_Colon_Equals

@@ -209,14 +209,15 @@ let check_z3version (p:proc) : unit =
         );
     _already_warned_solver_mismatch := true
   );
-  let ver = getinfo "version" in
-  if not (BU.starts_with ver (Options.z3_version())) && not (!_already_warned_version_mismatch) then (
+  let ver_found : string = BU.trim_string (List.hd (BU.split (getinfo "version") "-")) in
+  let ver_conf  : string = BU.trim_string (Options.z3_version ()) in
+  if ver_conf <> ver_found && not (!_already_warned_version_mismatch) then (
     Errors.log_issue Range.dummyRange (Errors.Warning_SolverMismatch,
-      BU.format5 "Unexpected Z3 version for `%s': expected %s, got %s.\n\
+      BU.format5 "Unexpected Z3 version for `%s': expected `%s', got `%s'.\n\
                   Please download the correct version of Z3 from %s\n\
                   and install it into your $PATH as `%s'."
         (proc_prog p)
-        (Options.z3_version()) ver
+        ver_conf ver_found
         z3url (Platform.exe ("z3-" ^ Options.z3_version  ()))
         );
     _already_warned_version_mismatch := true
