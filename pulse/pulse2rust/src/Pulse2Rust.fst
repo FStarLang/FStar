@@ -97,6 +97,21 @@ let arg_ts_and_ret_t (t:S.mltyscheme) : S.mlidents & list S.mlty & S.mlty =
 let rec extract_mlexpr (e:S.mlexpr) : expr =
   match e.expr with
   | S.MLE_Const (S.MLC_Unit) -> Expr_path "unitv"
+  | S.MLE_Const (S.MLC_Int (lit_int_val, swopt)) ->
+    let lit_int_signed =
+      match swopt with
+      | Some (FStar.Const.Unsigned, _) -> Some false
+      | Some (FStar.Const.Signed, _) -> Some true
+      | None -> None in
+    let lit_int_width =
+      match swopt with
+      | Some (_, FStar.Const.Int8) -> Some I8
+      | Some (_, FStar.Const.Int16) -> Some I16
+      | Some (_, FStar.Const.Int32) -> Some I32
+      | Some (_, FStar.Const.Int64) -> Some I64
+      | None -> None in
+    Expr_lit (Lit_int {lit_int_val; lit_int_signed; lit_int_width})
+
   | S.MLE_Var x -> Expr_path (varname x)
   | S.MLE_Name p -> Expr_path (snd p)
   | S.MLE_Let _ -> e |> extract_mlexpr_to_stmts |> mk_block_expr

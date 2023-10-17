@@ -14,6 +14,21 @@ type pat_ident = {
 type pat =
   | Pat_ident of pat_ident
 
+type lit_int_width =
+  | I8
+  | I16
+  | I32
+  | I64
+
+type lit_int = {
+  lit_int_val : string;
+  lit_int_signed : option bool;
+  lit_int_width : option lit_int_width;
+}
+
+type lit =
+  | Lit_int of lit_int 
+
 type binop =
   | Add
   | Sub
@@ -28,6 +43,7 @@ type expr =
   | Expr_unary of expr_unary
   | Expr_assign of expr_assignment
   | Expr_block of list stmt
+  | Expr_lit of lit
 
 and expr_bin = {
   expr_bin_left : expr;

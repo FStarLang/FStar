@@ -143,6 +143,33 @@ let rec (extract_mlexpr :
     | FStar_Extraction_ML_Syntax.MLE_Const
         (FStar_Extraction_ML_Syntax.MLC_Unit) ->
         Pulse2Rust_Rust_Syntax.Expr_path "unitv"
+    | FStar_Extraction_ML_Syntax.MLE_Const
+        (FStar_Extraction_ML_Syntax.MLC_Int (lit_int_val, swopt)) ->
+        let lit_int_signed =
+          match swopt with
+          | FStar_Pervasives_Native.Some (FStar_Const.Unsigned, uu___) ->
+              FStar_Pervasives_Native.Some false
+          | FStar_Pervasives_Native.Some (FStar_Const.Signed, uu___) ->
+              FStar_Pervasives_Native.Some true
+          | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None in
+        let lit_int_width =
+          match swopt with
+          | FStar_Pervasives_Native.Some (uu___, FStar_Const.Int8) ->
+              FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.I8
+          | FStar_Pervasives_Native.Some (uu___, FStar_Const.Int16) ->
+              FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.I16
+          | FStar_Pervasives_Native.Some (uu___, FStar_Const.Int32) ->
+              FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.I32
+          | FStar_Pervasives_Native.Some (uu___, FStar_Const.Int64) ->
+              FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.I64
+          | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None in
+        Pulse2Rust_Rust_Syntax.Expr_lit
+          (Pulse2Rust_Rust_Syntax.Lit_int
+             {
+               Pulse2Rust_Rust_Syntax.lit_int_val = lit_int_val;
+               Pulse2Rust_Rust_Syntax.lit_int_signed = lit_int_signed;
+               Pulse2Rust_Rust_Syntax.lit_int_width = lit_int_width
+             })
     | FStar_Extraction_ML_Syntax.MLE_Var x ->
         let uu___ = varname x in Pulse2Rust_Rust_Syntax.Expr_path uu___
     | FStar_Extraction_ML_Syntax.MLE_Name p ->

@@ -23,6 +23,46 @@ type pat =
 let (uu___is_Pat_ident : pat -> Prims.bool) = fun projectee -> true
 let (__proj__Pat_ident__item___0 : pat -> pat_ident) =
   fun projectee -> match projectee with | Pat_ident _0 -> _0
+type lit_int_width =
+  | I8 
+  | I16 
+  | I32 
+  | I64 
+let (uu___is_I8 : lit_int_width -> Prims.bool) =
+  fun projectee -> match projectee with | I8 -> true | uu___ -> false
+let (uu___is_I16 : lit_int_width -> Prims.bool) =
+  fun projectee -> match projectee with | I16 -> true | uu___ -> false
+let (uu___is_I32 : lit_int_width -> Prims.bool) =
+  fun projectee -> match projectee with | I32 -> true | uu___ -> false
+let (uu___is_I64 : lit_int_width -> Prims.bool) =
+  fun projectee -> match projectee with | I64 -> true | uu___ -> false
+type lit_int =
+  {
+  lit_int_val: Prims.string ;
+  lit_int_signed: Prims.bool FStar_Pervasives_Native.option ;
+  lit_int_width: lit_int_width FStar_Pervasives_Native.option }
+let (__proj__Mklit_int__item__lit_int_val : lit_int -> Prims.string) =
+  fun projectee ->
+    match projectee with
+    | { lit_int_val; lit_int_signed; lit_int_width = lit_int_width1;_} ->
+        lit_int_val
+let (__proj__Mklit_int__item__lit_int_signed :
+  lit_int -> Prims.bool FStar_Pervasives_Native.option) =
+  fun projectee ->
+    match projectee with
+    | { lit_int_val; lit_int_signed; lit_int_width = lit_int_width1;_} ->
+        lit_int_signed
+let (__proj__Mklit_int__item__lit_int_width :
+  lit_int -> lit_int_width FStar_Pervasives_Native.option) =
+  fun projectee ->
+    match projectee with
+    | { lit_int_val; lit_int_signed; lit_int_width = lit_int_width1;_} ->
+        lit_int_width1
+type lit =
+  | Lit_int of lit_int 
+let (uu___is_Lit_int : lit -> Prims.bool) = fun projectee -> true
+let (__proj__Lit_int__item___0 : lit -> lit_int) =
+  fun projectee -> match projectee with | Lit_int _0 -> _0
 type binop =
   | Add 
   | Sub 
@@ -40,6 +80,7 @@ type expr =
   | Expr_unary of expr_unary 
   | Expr_assign of expr_assignment 
   | Expr_block of stmt Prims.list 
+  | Expr_lit of lit 
 and expr_bin =
   {
   expr_bin_left: expr ;
@@ -91,6 +132,11 @@ let (uu___is_Expr_block : expr -> Prims.bool) =
     match projectee with | Expr_block _0 -> true | uu___ -> false
 let (__proj__Expr_block__item___0 : expr -> stmt Prims.list) =
   fun projectee -> match projectee with | Expr_block _0 -> _0
+let (uu___is_Expr_lit : expr -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Expr_lit _0 -> true | uu___ -> false
+let (__proj__Expr_lit__item___0 : expr -> lit) =
+  fun projectee -> match projectee with | Expr_lit _0 -> _0
 let (__proj__Mkexpr_bin__item__expr_bin_left : expr_bin -> expr) =
   fun projectee ->
     match projectee with
