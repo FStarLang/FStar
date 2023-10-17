@@ -1314,7 +1314,7 @@ let extract_lb_iface (g:uenv) (lbs:letbindings)
     let is_rec = not is_top && fst lbs in
     let lbs = extract_lb_sig g lbs in
     BU.fold_map (fun env
-                     (lbname, _, (_, (_, mltyscheme)), add_unit, _) ->
+                     (lbname, _e_tag, (typ, (_binders, mltyscheme)), add_unit, _body) ->
                   let env, _, exp_binding =
                       UEnv.extend_lb env lbname typ mltyscheme add_unit in
                   env, (BU.right lbname, exp_binding))
