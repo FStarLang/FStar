@@ -13,9 +13,18 @@ module S = FStar.Extraction.ML.Syntax
 
 module UEnv = FStar.Extraction.ML.UEnv
 
+//
+// 'a to A
+//
 let tyvar_of (s:string) : string =
   String.uppercase (String.substring s 1 (String.length s - 1))
 
+//
+// Pulse has variable _'n, which are not valid in Rust
+//
+let varname (s:string) : string =
+  replace_char s '\'' '_'
+  
 let fail (s:string) =
   failwith (format1 "Pulse to Rust extraction failed: %s" s)
 
@@ -72,7 +81,8 @@ let extract_top_level_sig
   
   : fn_signature =
 
-  let fn_args = List.map2 extract_top_level_fn_arg arg_names arg_ts in
+  let fn_args =
+    List.map2 extract_top_level_fn_arg (List.map varname arg_names) arg_ts in
   let fn_ret_t = extract_mlty ret_t in
   mk_fn_signature fn_name tvars fn_args fn_ret_t
 
@@ -88,7 +98,7 @@ let arg_ts_and_ret_t (t:S.mltyscheme) : S.mlidents & list S.mlty & S.mlty =
 let rec extract_mlexpr (e:S.mlexpr) : expr =
   match e.expr with
   | S.MLE_Const (S.MLC_Unit) -> Expr_path "unitv"
-  | S.MLE_Var x -> Expr_path x
+  | S.MLE_Var x -> Expr_path (varname x)
   | S.MLE_Name p -> Expr_path (snd p)
   | S.MLE_Let _ -> e |> extract_mlexpr_to_stmts |> mk_block_expr
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2; _])
@@ -110,7 +120,7 @@ let rec extract_mlexpr (e:S.mlexpr) : expr =
 and extract_mlexpr_to_stmts (e:S.mlexpr) : list stmt =
   match e.expr with
   | S.MLE_Const S.MLC_Unit -> []
-  | S.MLE_Var x -> [Stmt_expr (Expr_path x)]
+  | S.MLE_Var x -> [Stmt_expr (Expr_path (varname x))]
   | S.MLE_Name p -> [Stmt_expr (Expr_path (S.mlpath_to_string p))]
   | S.MLE_Let ((S.NonRec, [lb]), e) ->
     let is_mut = false in
