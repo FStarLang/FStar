@@ -112,7 +112,7 @@ val cache_off                   : unit    -> bool
 val print_cache_version         : unit    -> bool
 val cmi                         : unit    -> bool
 type codegen_t =
-    | OCaml | FSharp | Krml | Plugin
+    | OCaml | FSharp | Krml | Plugin | Extension
 val codegen                     : unit    -> option codegen_t
 val parse_codegen               : string  -> option codegen_t
 val codegen_libs                : unit    -> list (list string)
