@@ -284,6 +284,10 @@ let emit (mllibs:list (uenv & FStar.Extraction.ML.Syntax.mllib)) =
       List.iter (FStar.Extraction.ML.PrintML.print outdir ext) (List.map snd mllibs)
 
     | Some Options.Extension ->
+      //
+      // In the Extension mode, we dump (bindings_of_uenv & ml decls)
+      //   in the binary format to a file
+      //
       List.iter (fun (env, m) ->
         let FStar.Extraction.ML.Syntax.MLLib ms = m in
         List.iter (fun m ->
