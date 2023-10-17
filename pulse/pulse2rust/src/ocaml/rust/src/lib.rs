@@ -12,6 +12,24 @@ use syn::{
 
 use std::fmt;
 
+enum LitIntWidth {
+    I8,
+    I16,
+    I32,
+    I64,
+}
+
+#[allow(dead_code)]
+struct LitInt {
+    lit_int_val: String,
+    lit_int_signed: Option<bool>,
+    lit_int_width: Option<LitIntWidth>,
+}
+
+enum Lit {
+    LitInt(LitInt),
+}
+
 enum BinOp {
     Add,
     Sub,
@@ -49,6 +67,7 @@ enum Expr {
     EUnOp(ExprUnary),
     EAssign(ExprAssign),
     EBlock(Vec<Stmt>),
+    ELit(Lit),
 }
 
 enum Typ {
@@ -105,6 +124,29 @@ fn fn_to_string(f: &Fn) -> String {
 }
 
 impl_from_ocaml_variant! {
+  LitIntWidth {
+      LitIntWidth::I8,
+      LitIntWidth::I16,
+      LitIntWidth::I32,
+      LitIntWidth::I64,
+  }
+}
+
+impl_from_ocaml_record! {
+  LitInt {
+    lit_int_val : String,
+    lit_int_signed : Option<bool>,
+    lit_int_width : Option<LitIntWidth>,
+  }
+}
+
+impl_from_ocaml_variant! {
+  Lit {
+    Lit::LitInt (payload:LitInt),
+  }
+}
+
+impl_from_ocaml_variant! {
   BinOp {
       BinOp::Add,
       BinOp::Sub,
@@ -125,6 +167,7 @@ impl_from_ocaml_variant! {
     Expr::EUnOp (payload:ExprUnary),
     Expr::EAssign (payload:ExprAssign),
     Expr::EBlock (payload:OCamlList<Stmt>),
+    Expr::ELit (payload:Lit)
   }
 }
 
@@ -311,6 +354,15 @@ fn to_syn_expr(e: &Expr) -> syn::Expr {
                 },
             })
         }
+        Expr::ELit(lit) => match lit {
+            Lit::LitInt(LitInt { lit_int_val, .. }) => {
+                let litint = syn::LitInt::new(lit_int_val, Span::call_site());
+                syn::Expr::Lit(syn::ExprLit {
+                    attrs: vec![],
+                    lit: syn::Lit::Int(litint),
+                })
+            }
+        },
     }
 }
 
@@ -487,6 +539,14 @@ impl fmt::Display for ExprCall {
     }
 }
 
+impl fmt::Display for Lit {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match &self {
+            Lit::LitInt(LitInt { lit_int_val, .. }) => write!(f, "{}", lit_int_val),
+        }
+    }
+}
+
 impl fmt::Display for Expr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self {
@@ -504,6 +564,7 @@ impl fmt::Display for Expr {
                     .collect::<Vec<_>>()
                     .join(";\n")
             ),
+            Expr::ELit(lit) => write!(f, "{}", lit),
         }
     }
 }
