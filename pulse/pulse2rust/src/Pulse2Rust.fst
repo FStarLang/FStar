@@ -22,8 +22,7 @@ let tyvar_of (s:string) : string =
 //
 // Pulse has variable _'n, which are not valid in Rust
 //
-let varname (s:string) : string =
-  replace_char s '\'' '_'
+let varname (s:string) : string = replace_char s '\'' '_'
   
 let fail (s:string) =
   failwith (format1 "Pulse to Rust extraction failed: %s" s)
