@@ -746,19 +746,25 @@ let rec (mlty_to_string : mlty -> Prims.string) =
     | MLTY_Fun (t1, uu___, t2) ->
         let uu___1 = mlty_to_string t1 in
         let uu___2 = mlty_to_string t2 in
-        FStar_Compiler_Util.format2 "(%s -> %s)" uu___1 uu___2
+        FStar_Compiler_Util.format2 "(<MLTY_Fun> %s -> %s)" uu___1 uu___2
     | MLTY_Named (ts, p) ->
         let uu___ =
           let uu___1 = FStar_Compiler_List.map mlty_to_string ts in
           FStar_String.concat " " uu___1 in
-        FStar_Compiler_Util.format2 "(%s %s)" uu___ (mlpath_to_string p)
+        FStar_Compiler_Util.format2 "(<MLTY_Named> %s %s)" uu___
+          (mlpath_to_string p)
     | MLTY_Tuple ts ->
         let uu___ =
           let uu___1 = FStar_Compiler_List.map mlty_to_string ts in
           FStar_String.concat " * " uu___1 in
-        FStar_Compiler_Util.format1 "(%s)" uu___
+        FStar_Compiler_Util.format1 "(<MLTY_Tuple> %s)" uu___
     | MLTY_Top -> "MLTY_Top"
     | MLTY_Erased -> "MLTY_Erased"
+let (mltyscheme_to_string : mltyscheme -> Prims.string) =
+  fun tsc ->
+    let uu___ = mlty_to_string (FStar_Pervasives_Native.snd tsc) in
+    FStar_Compiler_Util.format2 "(<MLTY_Scheme> [%s], %s)"
+      (FStar_String.concat ", " (FStar_Pervasives_Native.fst tsc)) uu___
 let rec (mlexpr_to_string : mlexpr -> Prims.string) =
   fun e ->
     match e.expr with
@@ -959,3 +965,82 @@ and (mlpattern_to_string : mlpattern -> Prims.string) =
           let uu___1 = FStar_Compiler_List.map mlpattern_to_string ps in
           FStar_String.concat "; " uu___1 in
         FStar_Compiler_Util.format1 "(MLP_Tuple [%s])" uu___
+let (mltybody_to_string : mltybody -> Prims.string) =
+  fun d ->
+    match d with
+    | MLTD_Abbrev mlty1 ->
+        let uu___ = mlty_to_string mlty1 in
+        FStar_Compiler_Util.format1 "(MLTD_Abbrev %s)" uu___
+    | MLTD_Record l ->
+        let uu___ =
+          let uu___1 =
+            FStar_Compiler_List.map
+              (fun uu___2 ->
+                 match uu___2 with
+                 | (x, t) ->
+                     let uu___3 = mlty_to_string t in
+                     FStar_Compiler_Util.format2 "(%s, %s)" x uu___3) l in
+          FStar_String.concat "; " uu___1 in
+        FStar_Compiler_Util.format1 "(MLTD_Record { %s })" uu___
+    | MLTD_DType l ->
+        let uu___ =
+          let uu___1 =
+            FStar_Compiler_List.map
+              (fun uu___2 ->
+                 match uu___2 with
+                 | (x, l1) ->
+                     let uu___3 =
+                       let uu___4 =
+                         FStar_Compiler_List.map
+                           (fun uu___5 ->
+                              match uu___5 with
+                              | (x1, t) ->
+                                  let uu___6 = mlty_to_string t in
+                                  FStar_Compiler_Util.format2 "(%s, %s)" x1
+                                    uu___6) l1 in
+                       FStar_String.concat "; " uu___4 in
+                     FStar_Compiler_Util.format2 "(%s, [%s])" x uu___3) l in
+          FStar_String.concat "; " uu___1 in
+        FStar_Compiler_Util.format1 "(MLTD_DType [ %s ])" uu___
+let (one_mltydecl_to_string : one_mltydecl -> Prims.string) =
+  fun d ->
+    let uu___ =
+      match d.tydecl_defn with
+      | FStar_Pervasives_Native.None -> "<none>"
+      | FStar_Pervasives_Native.Some d1 -> mltybody_to_string d1 in
+    FStar_Compiler_Util.format3
+      "{tydecl_name = %s; tydecl_parameters = %s; tydecl_defn = %s}"
+      d.tydecl_name (FStar_String.concat "," d.tydecl_parameters) uu___
+let (mlmodule1_to_string : mlmodule1 -> Prims.string) =
+  fun m ->
+    match m with
+    | MLM_Ty d ->
+        let uu___ =
+          let uu___1 = FStar_Compiler_List.map one_mltydecl_to_string d in
+          FStar_Compiler_Effect.op_Bar_Greater uu___1
+            (FStar_String.concat "; ") in
+        FStar_Compiler_Util.format1 "MLM_Ty [%s]" uu___
+    | MLM_Let l ->
+        let uu___ = mlletbinding_to_string l in
+        FStar_Compiler_Util.format1 "MLM_Let %s" uu___
+    | MLM_Exn (s, l) ->
+        let uu___ =
+          let uu___1 =
+            FStar_Compiler_List.map
+              (fun uu___2 ->
+                 match uu___2 with
+                 | (x, t) ->
+                     let uu___3 = mlty_to_string t in
+                     FStar_Compiler_Util.format2 "(%s, %s)" x uu___3) l in
+          FStar_String.concat "; " uu___1 in
+        FStar_Compiler_Util.format2 "MLM_Exn (%s, [%s])" s uu___
+    | MLM_Top e ->
+        let uu___ = mlexpr_to_string e in
+        FStar_Compiler_Util.format1 "MLM_Top %s" uu___
+    | MLM_Loc _mlloc -> "MLM_Loc"
+let (mlmodule_to_string : mlmodule -> Prims.string) =
+  fun m ->
+    let uu___ =
+      let uu___1 = FStar_Compiler_List.map mlmodule1_to_string m in
+      FStar_Compiler_Effect.op_Bar_Greater uu___1 (FStar_String.concat ";\n") in
+    FStar_Compiler_Util.format1 "[ %s ]" uu___
