@@ -128,6 +128,11 @@ let rec extract_mlexpr (e:S.mlexpr) : expr =
     when S.string_of_mlpath p = "Pulse.Lib.Reference.op_Bang" ->
     let e = extract_mlexpr e in
     mk_ref_read e
+  | S.MLE_App ({expr=S.MLE_Name p}, [{expr=S.MLE_Fun (_, cond)}; {expr=S.MLE_Fun (_, body)}])
+    when S.string_of_mlpath p = "Pulse.Lib.Core.while_" ->
+    let expr_while_cond = extract_mlexpr cond in
+    let expr_while_body = extract_mlexpr_to_stmts body in
+    Expr_while {expr_while_cond; expr_while_body}
   | S.MLE_App (head, args) ->
     let head = extract_mlexpr head in
     let args = List.map extract_mlexpr args in
@@ -137,6 +142,9 @@ let rec extract_mlexpr (e:S.mlexpr) : expr =
     let cond = extract_mlexpr cond in
     let then_ = extract_mlexpr_to_stmts if_then in
     let else_ = map_option extract_mlexpr if_else_opt in
+    //
+    // make sure that else is either another if or block
+    //
     let else_ =
       match else_ with
       | None

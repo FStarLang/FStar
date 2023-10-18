@@ -221,6 +221,35 @@ let rec (extract_mlexpr :
         let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
         uu___7 = "Pulse.Lib.Reference.op_Bang" ->
         let e2 = extract_mlexpr e1 in Pulse2Rust_Rust_Syntax.mk_ref_read e2
+    | FStar_Extraction_ML_Syntax.MLE_App
+        ({
+           FStar_Extraction_ML_Syntax.expr =
+             FStar_Extraction_ML_Syntax.MLE_Name p;
+           FStar_Extraction_ML_Syntax.mlty = uu___;
+           FStar_Extraction_ML_Syntax.loc = uu___1;_},
+         {
+           FStar_Extraction_ML_Syntax.expr =
+             FStar_Extraction_ML_Syntax.MLE_Fun (uu___2, cond);
+           FStar_Extraction_ML_Syntax.mlty = uu___3;
+           FStar_Extraction_ML_Syntax.loc = uu___4;_}::{
+                                                         FStar_Extraction_ML_Syntax.expr
+                                                           =
+                                                           FStar_Extraction_ML_Syntax.MLE_Fun
+                                                           (uu___5, body);
+                                                         FStar_Extraction_ML_Syntax.mlty
+                                                           = uu___6;
+                                                         FStar_Extraction_ML_Syntax.loc
+                                                           = uu___7;_}::[])
+        when
+        let uu___8 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+        uu___8 = "Pulse.Lib.Core.while_" ->
+        let expr_while_cond = extract_mlexpr cond in
+        let expr_while_body = extract_mlexpr_to_stmts body in
+        Pulse2Rust_Rust_Syntax.Expr_while
+          {
+            Pulse2Rust_Rust_Syntax.expr_while_cond = expr_while_cond;
+            Pulse2Rust_Rust_Syntax.expr_while_body = expr_while_body
+          }
     | FStar_Extraction_ML_Syntax.MLE_App (head, args) ->
         let head1 = extract_mlexpr head in
         let args1 = FStar_Compiler_List.map extract_mlexpr args in

@@ -82,6 +82,7 @@ type expr =
   | Expr_block of stmt Prims.list 
   | Expr_lit of lit 
   | Expr_if of expr_if 
+  | Expr_while of expr_while 
 and expr_bin =
   {
   expr_bin_left: expr ;
@@ -101,6 +102,9 @@ and expr_if =
   expr_if_cond: expr ;
   expr_if_then: stmt Prims.list ;
   expr_if_else: expr FStar_Pervasives_Native.option }
+and expr_while = {
+  expr_while_cond: expr ;
+  expr_while_body: stmt Prims.list }
 and local_stmt =
   {
   local_stmt_pat: pat ;
@@ -147,6 +151,11 @@ let (uu___is_Expr_if : expr -> Prims.bool) =
   fun projectee -> match projectee with | Expr_if _0 -> true | uu___ -> false
 let (__proj__Expr_if__item___0 : expr -> expr_if) =
   fun projectee -> match projectee with | Expr_if _0 -> _0
+let (uu___is_Expr_while : expr -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Expr_while _0 -> true | uu___ -> false
+let (__proj__Expr_while__item___0 : expr -> expr_while) =
+  fun projectee -> match projectee with | Expr_while _0 -> _0
 let (__proj__Mkexpr_bin__item__expr_bin_left : expr_bin -> expr) =
   fun projectee ->
     match projectee with
@@ -198,6 +207,15 @@ let (__proj__Mkexpr_if__item__expr_if_else :
   fun projectee ->
     match projectee with
     | { expr_if_cond; expr_if_then; expr_if_else;_} -> expr_if_else
+let (__proj__Mkexpr_while__item__expr_while_cond : expr_while -> expr) =
+  fun projectee ->
+    match projectee with
+    | { expr_while_cond; expr_while_body;_} -> expr_while_cond
+let (__proj__Mkexpr_while__item__expr_while_body :
+  expr_while -> stmt Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { expr_while_cond; expr_while_body;_} -> expr_while_body
 let (__proj__Mklocal_stmt__item__local_stmt_pat : local_stmt -> pat) =
   fun projectee ->
     match projectee with
@@ -289,6 +307,9 @@ let (mk_if :
     fun expr_if_then ->
       fun expr_if_else ->
         Expr_if { expr_if_cond; expr_if_then; expr_if_else }
+let (mk_while : expr -> stmt Prims.list -> expr) =
+  fun expr_while_cond ->
+    fun expr_while_body -> Expr_while { expr_while_cond; expr_while_body }
 let (mk_scalar_fn_arg : Prims.string -> typ -> fn_arg) =
   fun name ->
     fun t ->

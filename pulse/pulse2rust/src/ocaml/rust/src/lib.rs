@@ -66,6 +66,11 @@ struct ExprIf {
     expr_if_else: Option<Box<Expr>>,
 }
 
+struct ExprWhile {
+    expr_while_cond: Box<Expr>,
+    expr_while_body: Vec<Stmt>,
+}
+
 enum Expr {
     EBinOp(ExprBin),
     EPath(String),
@@ -75,6 +80,7 @@ enum Expr {
     EBlock(Vec<Stmt>),
     ELit(Lit),
     EIf(ExprIf),
+    EWhile(ExprWhile),
 }
 
 enum Typ {
@@ -176,6 +182,7 @@ impl_from_ocaml_variant! {
     Expr::EBlock (payload:OCamlList<Stmt>),
     Expr::ELit (payload:Lit),
     Expr::EIf (payload:ExprIf),
+    Expr::EWhile (payload:ExprWhile)
   }
 }
 
@@ -213,6 +220,13 @@ impl_from_ocaml_record! {
     expr_if_cond : Expr,
     expr_if_then : OCamlList<Stmt>,
     expr_if_else : Option<Expr>
+  }
+}
+
+impl_from_ocaml_record! {
+  ExprWhile {
+    expr_while_cond : Expr,
+    expr_while_body : OCamlList<Stmt>,
   }
 }
 
@@ -406,6 +420,25 @@ fn to_syn_expr(e: &Expr) -> syn::Expr {
                 cond,
                 then_branch: if_then,
                 else_branch: if_else,
+            })
+        }
+        Expr::EWhile(ExprWhile {
+            expr_while_cond,
+            expr_while_body,
+        }) => {
+            let cond: Box<syn::Expr> = Box::new(to_syn_expr(expr_while_cond));
+            let body: Block = Block {
+                brace_token: Brace::default(),
+                stmts: expr_while_body.iter().map(to_syn_stmt).collect(),
+            };
+            syn::Expr::While(syn::ExprWhile {
+                attrs: vec![],
+                label: None,
+                while_token: syn::token::While {
+                    span: Span::call_site(),
+                },
+                cond,
+                body,
             })
         }
     }
@@ -625,6 +658,17 @@ impl fmt::Display for Expr {
                     Some(e) => format!("else {}", e),
                 };
                 write!(f, "if {} {{ {} }} {}", expr_if_cond, if_then, if_else)
+            }
+            Expr::EWhile(ExprWhile {
+                expr_while_cond,
+                expr_while_body,
+            }) => {
+                let while_body = expr_while_body
+                    .iter()
+                    .map(|s| s.to_string())
+                    .collect::<Vec<_>>()
+                    .join(";\n");
+                write!(f, "while {} {{ {} }}", expr_while_cond, while_body)
             }
         }
     }

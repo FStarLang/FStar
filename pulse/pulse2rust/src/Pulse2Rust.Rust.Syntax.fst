@@ -20,6 +20,9 @@ let mk_call (head:expr) (args:list expr) =
 let mk_if (expr_if_cond:expr) (expr_if_then:list stmt) (expr_if_else:option expr) : expr =
   Expr_if { expr_if_cond; expr_if_then; expr_if_else }
 
+let mk_while (expr_while_cond:expr) (expr_while_body:list stmt) : expr =
+  Expr_while { expr_while_cond; expr_while_body }
+
 let mk_scalar_fn_arg (name:string) (t:typ) =
   Fn_arg_pat {
     pat_typ_pat = Pat_ident {
