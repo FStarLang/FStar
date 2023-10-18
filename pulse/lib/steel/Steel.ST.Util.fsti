@@ -331,7 +331,7 @@ let ( @==> )
 : Tot vprop
 = implies_ #is hyp concl
 
-val elim_implies
+val elim_implies_gen
   (#opened: _)
   (#[T.exact (`(hide Set.empty))] is : inames{opened /! is})
   (hyp concl: vprop)
@@ -339,7 +339,15 @@ val elim_implies
     ((implies_ #is hyp concl) `star` hyp)
     (fun _ -> concl)
 
-val intro_implies
+let elim_implies
+  (#opened: _)
+  (hyp concl: vprop)
+: STGhostT unit opened
+    ((implies_ hyp concl) `star` hyp)
+    (fun _ -> concl)
+= elim_implies_gen hyp concl
+
+val intro_implies_gen
   (#opened: _)
   (#[T.exact (`(hide Set.empty))] is : inames)
   (hyp concl: vprop)
@@ -354,6 +362,21 @@ val intro_implies
     v
     (fun _ -> (@==>) #is hyp concl)
 
+let intro_implies
+  (#opened: _)
+  (hyp concl: vprop)
+  (v: vprop)
+  (f_elim: (
+    (opened': inames) ->
+    STGhostT unit opened'
+    (v `star` hyp)
+    (fun _ -> concl)
+  ))
+: STGhostT unit opened
+    v
+    (fun _ -> (@==>) hyp concl)
+= intro_implies_gen hyp concl v f_elim
+
 let implies_uncurry_gen
   (#opened: _)
   (#[T.exact (`(hide Set.empty))] is1 : inames)
@@ -362,9 +385,9 @@ let implies_uncurry_gen
 : STGhostT unit opened
     ((@==>) #is1 h1 ((@==>) #is2 h2 c))
     (fun _ -> (@==>) #(Set.union is1 is2) (h1 `star` h2) c)
-= intro_implies (h1 `star` h2) c (h1 @==> (h2 @==> c)) (fun _ ->
-    elim_implies h1 (h2 @==> c);
-    elim_implies h2 c
+= intro_implies_gen (h1 `star` h2) c (h1 @==> (h2 @==> c)) (fun _ ->
+    elim_implies_gen h1 (h2 @==> c);
+    elim_implies_gen h2 c
   )
 
 let implies_uncurry
@@ -387,9 +410,9 @@ let implies_curry
 : STGhostT unit opened
     ((@==>) #is (h1 `star` h2) c)
     (fun _ -> (@==>) #emp_inames h1 ((@==>) #is h2 c))
-= intro_implies #opened #emp_inames h1 ((@==>) #is h2 c) ((h1 `star` h2) @==> c) (fun opened' ->
-    intro_implies #opened' #is h2 c (((h1 `star` h2) @==> c) `star` h1) (fun opened' ->
-    elim_implies #opened' #is (h1 `star` h2) c
+= intro_implies_gen #opened #emp_inames h1 ((@==>) #is h2 c) ((h1 `star` h2) @==> c) (fun opened' ->
+    intro_implies_gen #opened' #is h2 c (((h1 `star` h2) @==> c) `star` h1) (fun opened' ->
+    elim_implies_gen #opened' #is (h1 `star` h2) c
   ))
 
 let implies_join_gen
@@ -400,9 +423,9 @@ let implies_join_gen
 : STGhostT unit opened
     (((@==>) #is1 h1 c1) `star` ((@==>) #is2 h2 c2))
     (fun _ -> (@==>) #(Set.union is1 is2) (h1 `star` h2) (c1 `star` c2))
-= intro_implies (h1 `star` h2) (c1 `star` c2) ((h1 @==> c1) `star` (h2 @==> c2)) (fun _ ->
-    elim_implies h1 c1;
-    elim_implies h2 c2
+= intro_implies_gen (h1 `star` h2) (c1 `star` c2) ((h1 @==> c1) `star` (h2 @==> c2)) (fun _ ->
+    elim_implies_gen h1 c1;
+    elim_implies_gen h2 c2
   )
 
 let implies_join
@@ -424,9 +447,9 @@ let implies_trans_gen
 : STGhostT unit opened
     (((@==>) #is1 v1 v2) `star` ((@==>) #is2 v2 v3))
     (fun _ -> (@==>) #(Set.union is1 is2) v1 v3)
-= intro_implies v1 v3 ((v1 @==> v2) `star` (v2 @==> v3)) (fun _ ->
-    elim_implies v1 v2;
-    elim_implies v2 v3
+= intro_implies_gen v1 v3 ((v1 @==> v2) `star` (v2 @==> v3)) (fun _ ->
+    elim_implies_gen v1 v2;
+    elim_implies_gen v2 v3
   )
 
 let implies_trans
@@ -453,7 +476,7 @@ let adjoint_elim_implies
     (p `star` q)
     (fun _ -> r)
 = f _;
-  elim_implies #opened q r
+  elim_implies_gen #opened q r
 
 let adjoint_intro_implies
   (#opened: _)
@@ -467,7 +490,7 @@ let adjoint_intro_implies
 : STGhostT unit opened
     p
     (fun _ -> (@==>) #is q r)
-= intro_implies q r p (fun _ ->
+= intro_implies_gen q r p (fun _ ->
     f _
   )
 
@@ -493,6 +516,32 @@ let rewrite_with_implies
   intro_implies q p emp (fun _ ->
     rewrite q p
   )
+
+let rewrite_with_implies_with_tactic
+  (#opened: _)
+  (p q: vprop)
+: STGhost unit opened
+    p
+    (fun _ -> q `star` (q @==> p))
+    (requires FStar.Tactics.with_tactic init_resolve_tac (squash (p `equiv` q)))
+    (fun _ -> True)
+= rewrite_equiv p q;
+  intro_implies q p emp (fun _ ->
+    rewrite_equiv q p
+  )
+
+let vpattern_rewrite_with_implies
+  (#opened: _)
+  (#a: Type)
+  (#x1: a)
+  (p: a -> vprop)
+  (x2: a)
+: STGhost unit opened
+    (p x1)
+    (fun _ -> p x2 `star` (p x2 @==> p x1))
+    (x1 == x2)
+    (fun _ -> True)
+= rewrite_with_implies (p x1) (p x2)
 
 let implies_emp_l
   (#opened: _)
@@ -552,6 +601,51 @@ let implies_reg_r
 = implies_with_tactic p p;
   implies_join q r p p
 
+let implies_trans_l1
+  (#opened: _)
+  (p q1 q2 r: vprop)
+: STGhostT unit opened
+    ((p @==> q1) `star` ((q1 `star` q2) @==> r))
+    (fun _ -> (p `star` q2) @==> r)
+= implies_reg_r p q1 q2;
+  implies_trans (p `star` q2) (q1 `star` q2) r
+
+let implies_trans_r1
+  (#opened: _)
+  (q1 p q2 r: vprop)
+: STGhostT unit opened
+    ((p @==> q2) `star` ((q1 `star` q2) @==> r))
+    (fun _ -> (q1 `star` p) @==> r)
+= implies_reg_l q1 p q2;
+  implies_trans (q1 `star` p) (q1 `star` q2) r
+
+let implies_trans_l2
+  (#opened: _)
+  (p q1 q2 r1: vprop)
+: STGhostT unit opened
+    ((p @==> (q1 `star` q2)) `star` (q1 @==> r1))
+    (fun _ -> p @==> (r1 `star` q2))
+= implies_reg_r q1 r1 q2;
+  implies_trans p (q1 `star` q2) (r1 `star` q2)
+
+let implies_trans_r2
+  (#opened: _)
+  (p q1 q2 r2: vprop)
+: STGhostT unit opened
+    ((p @==> (q1 `star` q2)) `star` (q2 @==> r2))
+    (fun _ -> p @==> (q1 `star` r2))
+= implies_reg_l q1 q2 r2;
+  implies_trans p (q1 `star` q2) (q1 `star` r2)
+
+let implies_swap_r
+  (#opened: _)
+  (p q1 q2: vprop)
+: STGhostT unit opened
+  (p @==> (q1 `star` q2))
+  (fun _ -> p @==> (q2 `star` q1))
+= implies_with_tactic (q1 `star` q2) (q2 `star` q1);
+  implies_trans p (q1 `star` q2) (q2 `star` q1)
+
 /// The magic wand is a implies (but not the converse)
 
 let wand_is_implies
@@ -566,7 +660,7 @@ let wand_is_implies
 : STGhostT unit opened
   (s1 `wand` s2)
   (fun _ -> (@==>) #emp_inames s1 s2)
-= intro_implies #_ #emp_inames s1 s2 (s1 `wand` s2) (fun _ ->
+= intro_implies s1 s2 (s1 `wand` s2) (fun _ ->
     weaken (s1 `star` (s1 `wand` s2)) s2 (fun m ->
     interp_star (hp_of s1) (hp_of (s1 `wand` s2)) m;
     let m1 = FStar.IndefiniteDescription.indefinite_description_ghost mem (fun m1 -> exists m2 . disjoint m1 m2 /\ interp (hp_of s1) m1 /\ interp (hp_of (s1 `wand` s2)) m2 /\ join m1 m2 == m) in

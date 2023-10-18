@@ -9,12 +9,13 @@
     "lib/steel/pulse",
     "share/steel/examples/pulse",
     "share/steel/examples/pulse/bug-reports",
+    "share/steel/examples/pulse/by-example",
+    "share/steel/examples/pulse/lib",
+    "share/steel/examples/pulse/parallel",
     "share/steel/examples/pulse/dice",
     "share/steel/examples/pulse/dice/dpe",
     "share/steel/examples/pulse/dice/l0",
     "share/steel/examples/pulse/dice/engine",
-    "share/steel/examples/pulse/dice/common",
-    "share/steel/examples/pulse/lib",
-    "share/steel/examples/pulse/parallel"
+    "share/steel/examples/pulse/dice/common"
   ]
 }

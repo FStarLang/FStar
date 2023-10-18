@@ -1,5 +1,8 @@
 module ML = FStar_Extraction_ML_Syntax
 module UEnv = FStar_Extraction_ML_UEnv
+module MLTerm = FStar_Extraction_ML_Term
+module MLModul = FStar_Extraction_ML_Modul
+
 type uenv = UEnv.uenv
 type mlexpr = ML.mlexpr
 type e_tag = ML.e_tag
@@ -116,3 +119,20 @@ let sigelt_extension_data (e:S.sigelt) : Pulse_Syntax_Base.st_term option =
   match FStar_Compiler_List.tryFind (fun (s, _) -> s = "pulse") e.sigmeta.sigmeta_extension_data with
   | None -> None
   | Some (_, b) -> Some (Obj.magic b)
+
+type mlmodule1= ML.mlmodule1
+type mlmodule = ML.mlmodule
+
+let mlm_let (is_rec:bool) (lbs:mllb list) : mlmodule1 =
+  ML.MLM_Let ((if is_rec then ML.Rec else ML.NonRec), lbs)
+
+let is_type (g:uenv) (t:S.typ) = MLTerm.is_arity g t
+
+let extend_ty (g:uenv) (a:S.bv) = UEnv.extend_ty g a false
+
+let lookup_ty (g:uenv) (a:S.bv) = (UEnv.lookup_ty g a).ty_b_name
+
+type iface = MLModul.iface
+type exp_binding = UEnv.exp_binding
+let iface_of_bindings (l:(S.fv * exp_binding) list) = MLModul.iface_of_bindings l
+let extend_fv (g:uenv) (x:S.fv) (tysc:mltyscheme) = UEnv.extend_fv g x tysc false

@@ -30,7 +30,7 @@ let weaken #o p q l =
   coerce_ghost (fun () -> SEA.rewrite_slprop p q l)
 
 let rewrite #o p q =
-  weaken p q (fun _ -> ()); ()
+  weaken p q (fun _ -> ())
 
 let rewrite_with_tactic #opened p q =
   weaken p q (fun _ -> reveal_equiv p q)
@@ -286,7 +286,7 @@ let implies_apply
   let f : Ghost.erased (elim_implies_t is hyp concl v) = FStar.IndefiniteDescription.elim_squash #(elim_implies_t is hyp concl v) () in
   Ghost.reveal f _
 
-let elim_implies
+let elim_implies_gen
   (#opened: _)
   (#is : inames{opened /! is})
   (hyp concl: vprop)
@@ -308,7 +308,7 @@ let implies_fold
 = intro_pure (squash (elim_implies_t is hyp concl v));
   intro_exists v (fun v -> v `star` pure (squash (elim_implies_t is hyp concl v)))
 
-let intro_implies #opened #is = implies_fold #opened #is
+let intro_implies_gen #opened #is = implies_fold #opened #is
 
 let elim_forall_t
   (#t: Type)
