@@ -275,13 +275,18 @@ let rec mlty_to_string (t:mlty) =
   match t with
   | MLTY_Var v -> v
   | MLTY_Fun (t1, _, t2) ->
-    BU.format2 "(%s -> %s)" (mlty_to_string t1) (mlty_to_string t2)
+    BU.format2 "(<MLTY_Fun> %s -> %s)" (mlty_to_string t1) (mlty_to_string t2)
   | MLTY_Named (ts, p) ->
-    BU.format2 "(%s %s)" (String.concat " " (List.map mlty_to_string ts)) (mlpath_to_string p)
+    BU.format2 "(<MLTY_Named> %s %s)" (String.concat " " (List.map mlty_to_string ts)) (mlpath_to_string p)
   | MLTY_Tuple ts ->
-    BU.format1 "(%s)" (String.concat " * " (List.map mlty_to_string ts))
+    BU.format1 "(<MLTY_Tuple> %s)" (String.concat " * " (List.map mlty_to_string ts))
   | MLTY_Top -> "MLTY_Top"
   | MLTY_Erased -> "MLTY_Erased"
+
+let mltyscheme_to_string (tsc:mltyscheme) =
+  BU.format2 "(<MLTY_Scheme> [%s], %s)"
+    (String.concat ", " (fst tsc))
+    (mlty_to_string (snd tsc))
 
 let rec mlexpr_to_string (e:mlexpr) =
   match e.expr with
@@ -361,3 +366,38 @@ and mlpattern_to_string mlp =
   | MLP_Branch ps -> BU.format1 "(MLP_Branch [%s])" (String.concat "; " (List.map mlpattern_to_string ps))
   | MLP_Record (p, ps) -> BU.format2 "(MLP_Record (%s, [%s]))" (String.concat "; " p) (String.concat "; " (List.map (fun (x, p) -> BU.format2 "(%s, %s)" x (mlpattern_to_string p)) ps))
   | MLP_Tuple ps -> BU.format1 "(MLP_Tuple [%s])" (String.concat "; " (List.map mlpattern_to_string ps))
+
+let mltybody_to_string (d:mltybody) : string =
+  match d with
+  | MLTD_Abbrev mlty -> BU.format1 "(MLTD_Abbrev %s)" (mlty_to_string mlty)
+  | MLTD_Record l ->
+    BU.format1 "(MLTD_Record { %s })"
+      (String.concat "; " (List.map (fun (x, t) -> BU.format2 "(%s, %s)" x (mlty_to_string t)) l))
+  | MLTD_DType l ->
+    BU.format1 "(MLTD_DType [ %s ])"
+      (String.concat "; " (List.map (fun (x, l) -> BU.format2 "(%s, [%s])" x
+                                                     (String.concat "; " (List.map (fun (x, t) -> BU.format2 "(%s, %s)"
+                                                                                                    x
+                                                                                                    (mlty_to_string t)) l))) l))
+
+let one_mltydecl_to_string (d:one_mltydecl) : string =
+  BU.format3 "{tydecl_name = %s; tydecl_parameters = %s; tydecl_defn = %s}"
+    d.tydecl_name
+    (String.concat "," d.tydecl_parameters)
+    (match d.tydecl_defn with
+     | None -> "<none>"
+     | Some d -> mltybody_to_string d)
+
+let mlmodule1_to_string (m:mlmodule1) : string =
+  match m with
+  | MLM_Ty d -> BU.format1 "MLM_Ty [%s]" (List.map one_mltydecl_to_string d |> String.concat "; ")
+  | MLM_Let l -> BU.format1 "MLM_Let %s" (mlletbinding_to_string l)
+  | MLM_Exn (s, l) ->
+    BU.format2 "MLM_Exn (%s, [%s])"
+      s
+      (String.concat "; " (List.map (fun (x, t) -> BU.format2 "(%s, %s)" x (mlty_to_string t)) l))
+  | MLM_Top e -> BU.format1 "MLM_Top %s" (mlexpr_to_string e)
+  | MLM_Loc _mlloc -> "MLM_Loc"
+
+let mlmodule_to_string (m:mlmodule) : string =
+  BU.format1 "[ %s ]" (List.map mlmodule1_to_string m |> String.concat ";\n")
