@@ -276,6 +276,9 @@ let string_of_mlconstant (sctt : mlconstant) =
   | MLC_Int (s, Some (Signed, Int64)) -> s ^"L"
   | MLC_Int (s, Some (_, Int8))
   | MLC_Int (s, Some (_, Int16)) -> s
+  | MLC_Int (v, Some (_, Sizet)) ->
+   let z =  "(Prims.parse_int \"" ^ v ^ "\")" in
+   "(FStar_SizeT.int_to_t (" ^ z ^ "))"
   | MLC_Int (v, Some (s, w)) ->
     let sign = match s with
       | Signed -> "Int"
@@ -285,7 +288,6 @@ let string_of_mlconstant (sctt : mlconstant) =
       | Int16 -> "16"
       | Int32 -> "32"
       | Int64 -> "64" in
-
     let z =  "(Prims.parse_int \"" ^ v ^ "\")" in
     let u = match s with
       | Signed -> ""
