@@ -29,8 +29,8 @@ val derive_key_pair_spec'
   : GTot (Seq.seq U8.t & Seq.seq U8.t)
 let derive_key_pair_spec = derive_key_pair_spec'
 
-```pulse
-fn derive_key_pair'
+assume
+val derive_key_pair'
   (pub : A.larray U8.t (US.v v32us))
   (priv: A.larray U8.t (US.v v32us))
   (ikm_len: hkdf_ikm_len) 
@@ -39,24 +39,51 @@ fn derive_key_pair'
   (lbl: A.array U8.t)
   (#ikm_perm #lbl_perm:perm)
   (#_pub_seq #_priv_seq #ikm_seq #lbl_seq:erased (Seq.seq U8.t))
-  requires (
+  : stt unit
+  (requires (
     A.pts_to pub _pub_seq ** 
     A.pts_to priv _priv_seq ** 
     A.pts_to ikm #ikm_perm ikm_seq ** 
     A.pts_to lbl #lbl_perm lbl_seq
-  )
-  ensures (
+  ))
+  (ensures (fun _ ->
     A.pts_to ikm #ikm_perm ikm_seq ** 
     A.pts_to lbl #lbl_perm lbl_seq **
-    exists (pub_seq priv_seq:Seq.seq U8.t). (
+    exists_ (fun (pub_seq:Seq.seq U8.t) ->
+    exists_ (fun (priv_seq:Seq.seq U8.t) ->
       A.pts_to pub pub_seq ** 
       A.pts_to priv priv_seq **
       pure ((pub_seq, priv_seq) == derive_key_pair_spec ikm_len ikm_seq lbl_len lbl_seq)
-    ))
-{
-  admit()
-}
-```
+    ))))
+
+// ```pulse
+// fn derive_key_pair'
+//   (pub : A.larray U8.t (US.v v32us))
+//   (priv: A.larray U8.t (US.v v32us))
+//   (ikm_len: hkdf_ikm_len) 
+//   (ikm: A.array U8.t)
+//   (lbl_len: hkdf_lbl_len) 
+//   (lbl: A.array U8.t)
+//   (#ikm_perm #lbl_perm:perm)
+//   (#_pub_seq #_priv_seq #ikm_seq #lbl_seq:erased (Seq.seq U8.t))
+//   requires (
+//     A.pts_to pub _pub_seq ** 
+//     A.pts_to priv _priv_seq ** 
+//     A.pts_to ikm #ikm_perm ikm_seq ** 
+//     A.pts_to lbl #lbl_perm lbl_seq
+//   )
+//   ensures (
+//     A.pts_to ikm #ikm_perm ikm_seq ** 
+//     A.pts_to lbl #lbl_perm lbl_seq **
+//     exists (pub_seq priv_seq:Seq.seq U8.t). (
+//       A.pts_to pub pub_seq ** 
+//       A.pts_to priv priv_seq **
+//       pure ((pub_seq, priv_seq) == derive_key_pair_spec ikm_len ikm_seq lbl_len lbl_seq)
+//     ))
+// {
+//   admit()
+// }
+// ```
 let derive_key_pair = derive_key_pair'
 
 ```pulse 

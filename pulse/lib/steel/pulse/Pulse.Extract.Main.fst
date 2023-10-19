@@ -48,9 +48,9 @@ let extend_env (g:env) (b:binder)
   = let mlty = term_as_mlty g b.binder_ty in
     let x = E.fresh g.coreenv in
     let coreenv = E.push_binding g.coreenv x b.binder_ppname b.binder_ty in
-    T.dump (Printf.sprintf "Extending environment with %s : %s\n"
-                                      (binder_to_string b)
-                                      (term_to_string b.binder_ty));
+    // T.dump (Printf.sprintf "Extending environment with %s : %s\n"
+    //                                   (binder_to_string b)
+    //                                   (term_to_string b.binder_ty));
 
     let uenv_inner, mlident = extend_bv g.uenv_inner b.binder_ppname x mlty in
     { uenv_inner; coreenv }, mlident, mlty, (b.binder_ppname, x)
@@ -178,9 +178,9 @@ let maybe_inline (g:env) (head:term) (arg:term) : option st_term =
 let rec extract (g:env) (p:st_term)
   : T.Tac (mlexpr & e_tag)
   = let erased_result = mle_unit, e_tag_erasable in
-    T.dump (Printf.sprintf "Extracting term@%s:\n%s\n" 
-              (T.range_to_string p.range)
-              (st_term_to_string p));
+    // T.dump (Printf.sprintf "Extracting term@%s:\n%s\n" 
+    //           (T.range_to_string p.range)
+    //           (st_term_to_string p));
     if is_erasable p
     then erased_result
     else begin
@@ -215,9 +215,9 @@ let rec extract (g:env) (p:st_term)
         if is_erasable head
         then (
           let body = LN.subst_st_term body [LN.DT 0 unit_val] in
-          T.dump (Printf.sprintf "Erasing head of bind %s\nopened body to %s"
-                      (st_term_to_string head)
-                      (st_term_to_string body));
+          // T.dump (Printf.sprintf "Erasing head of bind %s\nopened body to %s"
+          //             (st_term_to_string head)
+          //             (st_term_to_string body));
           extract g body
         )
         else (
@@ -248,8 +248,12 @@ let rec extract (g:env) (p:st_term)
 
       | Tm_Match { sc; brs } ->
         let sc = term_as_mlexpr g sc in
-        let extract_branch (pat, body) =
-          let g, pat, bs = extend_env_pat g pat in
+        let extract_branch (pat0, body) =
+          let g, pat, bs = extend_env_pat g pat0 in
+          T.print (Printf.sprintf "Extracting branch with pattern %s\n"
+                    (Pulse.Syntax.Printer.pattern_to_string pat0)
+          //           // (String.concat ", " (L.map (fun (x, _) -> x) bs))
+                    );
           let body = Pulse.Checker.Match.open_st_term_bs body bs in
           let body, _ = extract g body in
           pat, body
@@ -293,8 +297,7 @@ let rec generalize (g:env) (t:R.typ) (e:option st_term)
            list mlident &
            R.typ &
            option st_term) =
-
-  T.dump (Printf.sprintf "Generalizing arrow:\n%s\n" (T.term_to_string t));
+  // T.dump (Printf.sprintf "Generalizing arrow:\n%s\n" (T.term_to_string t));
   let tv = R.inspect_ln t in
   match tv with
   | R.Tv_Arrow b c ->
@@ -352,7 +355,7 @@ let extract_pulse (g:uenv) (selt:R.sigelt) (p:st_term)
         if None? p
         then T.raise (Extraction_failure "Unexpected p");
         let tm, tag = extract g (Some?.v p) in
-        T.dump (Printf.sprintf "Extracted term: %s\n" (mlexpr_to_string tm));
+        // T.dump (Printf.sprintf "Extracted term: %s\n" (mlexpr_to_string tm));
         let fv_name = R.inspect_fv lb_fv in
         if List.Tot.length fv_name = 0
         then T.raise (Extraction_failure "Unexpected empty name");
@@ -380,7 +383,7 @@ let extract_pulse_sig (g:uenv) (selt:R.sigelt) (p:st_term)
         let g0 = g in
         let g = { uenv_inner=g; coreenv=initial_core_env g } in
         let g, tys, lb_typ, _ = generalize g lb_typ None in
-        T.dump (Printf.sprintf "Extracting ml typ: %s\n" (T.term_to_string lb_typ));
+        // T.dump (Printf.sprintf "Extracting ml typ: %s\n" (T.term_to_string lb_typ));
         let mlty = ECL.term_as_mlty g.uenv_inner lb_typ in
         let g, _, e_bnd = extend_fv g0 lb_fv (tys, mlty) in
         Inl (g, iface_of_bindings [lb_fv, e_bnd])
