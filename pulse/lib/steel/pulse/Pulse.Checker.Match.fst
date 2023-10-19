@@ -272,7 +272,7 @@ let check_branches
     in
     let r = zipWith tr1 rest bnds in
     assume (samepats (L.map dfst r) brs0);
-    r
+    (| (p0, e0), d0 |)::r
   in
   let brs = List.Tot.map dfst brs_d in
   let _ = List.Tot.Properties.append_l_nil brs in // odd
