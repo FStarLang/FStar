@@ -1029,7 +1029,7 @@ let (check_branches :
                                                                     (Prims.of_int (263))
                                                                     (Prims.of_int (3))
                                                                     (Prims.of_int (275))
-                                                                    (Prims.of_int (5)))))
+                                                                    (Prims.of_int (25)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -1055,7 +1055,7 @@ let (check_branches :
                                                                     (Prims.of_int (272))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (275))
-                                                                    (Prims.of_int (5)))))
+                                                                    (Prims.of_int (25)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___5 ->
@@ -1184,10 +1184,10 @@ let (check_branches :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Match.fst"
-                                                                    (Prims.of_int (273))
-                                                                    (Prims.of_int (8))
-                                                                    (Prims.of_int (273))
-                                                                    (Prims.of_int (9)))))
+                                                                    (Prims.of_int (275))
+                                                                    (Prims.of_int (4))
+                                                                    (Prims.of_int (275))
+                                                                    (Prims.of_int (25)))))
                                                                     (Obj.magic
                                                                     (Pulse_Common.zipWith
                                                                     tr1 rest
@@ -1196,7 +1196,10 @@ let (check_branches :
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___5 ->
-                                                                    r))))
+                                                                    (Prims.Mkdtuple2
+                                                                    ((p01,
+                                                                    e01), d0))
+                                                                    :: r))))
                                                                     uu___5)))
                                                                     (fun
                                                                     brs_d ->
