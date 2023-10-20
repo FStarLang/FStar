@@ -159,6 +159,7 @@ let tcdecltime = ()
 let unifier_hint_injective = ()
 
 let strict_on_arguments _ = ()
+let strict_on_arguments_unfold _ = ()
 
 let resolve_implicits = ()
 

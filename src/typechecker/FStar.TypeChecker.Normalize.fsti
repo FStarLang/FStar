@@ -30,6 +30,7 @@ type should_unfold_res =
     | Should_unfold_reify
 
 val should_unfold : cfg
+                 -> strict_ok:bool
                  -> should_reify:(cfg -> bool)
                  -> fv
                  -> Env.qninfo

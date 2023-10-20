@@ -862,7 +862,7 @@ and translate_fv (cfg: config) (bs:list t) (fvar:fv): t =
    let qninfo = Env.lookup_qname (Cfg.cfg_env cfg.core_cfg) (S.lid_of_fv fvar) in
    if is_constr qninfo || is_constr_fv fvar then mkConstruct fvar [] []
    else
-     match N.should_unfold cfg.core_cfg (fun _ -> cfg.core_cfg.reifying) fvar qninfo with
+     match N.should_unfold cfg.core_cfg false (fun _ -> cfg.core_cfg.reifying) fvar qninfo with
      | N.Should_unfold_fully  ->
        failwith "Not yet handled"
 
