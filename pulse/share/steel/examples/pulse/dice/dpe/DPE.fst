@@ -15,7 +15,7 @@ module U8 = FStar.UInt8
 module U32 = FStar.UInt32
 module HT = Pulse.Lib.HashTable
 module PHT = Pulse.Lib.HashTable.Spec
-open Pulse.Class.BoundedIntegers
+open Pulse.Lib.BoundedIntegers
 
 assume
 val run_stt (#a:Type) (#post:a -> vprop) (f:stt a emp post) : a

@@ -146,18 +146,7 @@ let safe_add :
 let safe_mod :
   't . 't bounded_unsigned -> 't -> 't -> 't FStar_Pervasives_Native.option =
   fun c ->
-    fun x ->
-      fun y ->
-        if c.static_max_bound
-        then
-          FStar_Pervasives_Native.Some
-            (op_Percent (bounded_from_bounded_unsigned c) x y)
-        else
-          if op_Less_Equals (bounded_from_bounded_unsigned c) y (max_bound c)
-          then
-            FStar_Pervasives_Native.Some
-              (op_Percent (bounded_from_bounded_unsigned c) x y)
-          else FStar_Pervasives_Native.None
+    fun x -> fun y -> FStar_Pervasives_Native.Some (op_Percent c.base x y)
 type ('t, 'c, 'op, 'x, 'y) ok = Obj.t
 let add : 't . 't bounded_int -> 't -> 't -> 't =
   fun uu___ -> fun x -> fun y -> op_Plus uu___ x y
@@ -179,7 +168,18 @@ let (bounded_int_u32 : FStar_UInt32.t bounded_int) =
   }
 let (bounded_unsigned_u32 : FStar_UInt32.t bounded_unsigned) =
   {
-    base = bounded_int_u32;
+    base =
+      {
+        fits = ();
+        v = ();
+        u = ();
+        op_Plus = (fun x -> fun y -> FStar_UInt32.add x y);
+        op_Subtraction = (fun x -> fun y -> FStar_UInt32.sub x y);
+        op_Less = (fun x -> fun y -> FStar_UInt32.lt x y);
+        op_Less_Equals = (fun x -> fun y -> FStar_UInt32.lte x y);
+        op_Percent = (fun x -> fun y -> FStar_UInt32.rem x y);
+        properties = ()
+      };
     max_bound = (Stdint.Uint32.of_string "0xffffffff");
     static_max_bound = true;
     properties1 = ()
@@ -198,17 +198,27 @@ let (bounded_int_u64 : FStar_UInt64.t bounded_int) =
   }
 let (bounded_unsigned_u64 : FStar_UInt64.t bounded_unsigned) =
   {
-    base = bounded_int_u64;
+    base =
+      {
+        fits = ();
+        v = ();
+        u = ();
+        op_Plus = (fun x -> fun y -> FStar_UInt64.add x y);
+        op_Subtraction = (fun x -> fun y -> FStar_UInt64.sub x y);
+        op_Less = (fun x -> fun y -> FStar_UInt64.lt x y);
+        op_Less_Equals = (fun x -> fun y -> FStar_UInt64.lte x y);
+        op_Percent = (fun x -> fun y -> FStar_UInt64.rem x y);
+        properties = ()
+      };
     max_bound = (Stdint.Uint64.of_string "0xffffffffffffffff");
     static_max_bound = true;
     properties1 = ()
   }
 let (add_u32 : FStar_UInt32.t -> FStar_UInt32.t -> FStar_UInt32.t) =
-  fun x -> fun y -> op_Plus bounded_int_u32 x y
+  fun x -> fun y -> FStar_UInt32.add x y
 let (sub_u32 : FStar_UInt32.t -> FStar_UInt32.t -> FStar_UInt32.t) =
-  fun x -> fun y -> op_Subtraction bounded_int_u32 x y
-let (add_nat_1 : Prims.nat -> Prims.int) =
-  fun x -> op_Plus bounded_int_int x Prims.int_one
+  fun x -> fun y -> FStar_UInt32.sub x y
+let (add_nat_1 : Prims.nat -> Prims.int) = fun x -> x + Prims.int_one
 let (nat_as_int : Prims.nat -> Prims.int) = fun x -> x
 let (bounded_int_nat : Prims.nat bounded_int) =
   {
@@ -222,21 +232,7 @@ let (bounded_int_nat : Prims.nat bounded_int) =
     op_Percent = (fun x -> fun y -> x mod y);
     properties = ()
   }
-let (add_nat : Prims.nat -> Prims.nat -> Prims.nat) =
-  fun x -> fun y -> op_Plus bounded_int_nat x y
-let (pos_as_int : Prims.pos -> Prims.int) = fun x -> x
-let (bounded_int_pos : Prims.pos bounded_int) =
-  {
-    fits = ();
-    v = ();
-    u = ();
-    op_Plus = (fun x -> fun y -> x + y);
-    op_Subtraction = (fun x -> fun y -> x - y);
-    op_Less = (fun x -> fun y -> x < y);
-    op_Less_Equals = (fun x -> fun y -> x <= y);
-    op_Percent = (fun x -> fun y -> x mod y);
-    properties = ()
-  }
+let (add_nat : Prims.nat -> Prims.nat -> Prims.int) = fun x -> fun y -> x + y
 let (bounded_int_size_t : FStar_SizeT.t bounded_int) =
   {
     fits = ();
@@ -251,10 +247,21 @@ let (bounded_int_size_t : FStar_SizeT.t bounded_int) =
   }
 let (bounded_unsigned_size_t : FStar_SizeT.t bounded_unsigned) =
   {
-    base = bounded_int_size_t;
+    base =
+      {
+        fits = ();
+        v = ();
+        u = ();
+        op_Plus = (fun x -> fun y -> FStar_SizeT.add x y);
+        op_Subtraction = (fun x -> fun y -> FStar_SizeT.sub x y);
+        op_Less = (fun x -> fun y -> FStar_SizeT.lt x y);
+        op_Less_Equals = (fun x -> fun y -> FStar_SizeT.lte x y);
+        op_Percent = (fun x -> fun y -> FStar_SizeT.rem x y);
+        properties = ()
+      };
     max_bound = (Stdint.Uint64.of_string "0xffff");
     static_max_bound = false;
     properties1 = ()
   }
 let (size_t_plus_one : FStar_SizeT.t -> FStar_SizeT.t) =
-  fun x -> op_Plus bounded_int_size_t x Stdint.Uint64.one
+  fun x -> FStar_SizeT.add x Stdint.Uint64.one

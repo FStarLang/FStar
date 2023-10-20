@@ -14,7 +14,7 @@ let rec fib_mono (n:nat) (m:nat { m <= n})
   = if n = m then ()
     else fib_mono (n - 1) m
 
-open Pulse.Class.BoundedIntegers
+open Pulse.Lib.BoundedIntegers
 
 
 ```pulse

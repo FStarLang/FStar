@@ -5,7 +5,6 @@ module US = FStar.SizeT
 module U8 = FStar.UInt8
 module PHT = Pulse.Lib.HashTable.Spec
 open Pulse.Lib.HashTable.Spec
-open Pulse.Class.BoundedIntegers
 
 type pos_us = n:US.t{US.v n > 0}
 
@@ -28,11 +27,11 @@ let mk_ht (#s:pht_sig_us) (sz:pos_us)
   : ht_t s 
   = { sz; contents; }
 
-let s_to_ps (s:pht_sig_us) : pht_sig
+let s_to_ps (s:pht_sig_us) : GTot pht_sig
   = { keyt = s.keyt; valt = s.valt; hashf = (fun k -> US.v (s.hashf k)) }
 
 let mk_init_pht (#s:pht_sig_us) (sz:pos_us)
-  : pht_t (s_to_ps s)
+  : GTot (pht_t (s_to_ps s))
   = 
   { sz = US.v sz;
     spec = (fun (k:s.keyt) -> None);
@@ -41,7 +40,7 @@ let mk_init_pht (#s:pht_sig_us) (sz:pos_us)
 
 val models (s:pht_sig_us) (ht:ht_t s) (pht:pht_t (s_to_ps s)) : vprop
 
-let pht_sz #s (pht:pht_t s) : pos = pht.sz
+let pht_sz #s (pht:pht_t s) : GTot pos = pht.sz
 
 let destroy_fn_t (t:Type0) : Type = v:t -> stt unit emp (fun _ -> emp) 
 
@@ -61,8 +60,9 @@ val lookup (#s:pht_sig_us)
     (models s ht pht)
     (fun p -> models s ht pht ** pure ( fst p ==> (snd p) == PHT.lookup pht k ))
 
-let maybe_update (b:bool) (s:pht_sig_us) (ht:ht_t s) (pht pht':pht_t (s_to_ps s)) =
-  if b then models s ht pht' else models s ht pht
+let maybe_update (b:bool) (s:pht_sig_us) (ht:ht_t s) (pht pht':pht_t (s_to_ps s))
+  : vprop
+  = if b then models s ht pht' else models s ht pht
 
 val insert (#s:pht_sig_us)
           (#pht:(p:erased (pht_t (s_to_ps s)){PHT.not_full p.repr}))

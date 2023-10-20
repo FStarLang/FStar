@@ -1,6 +1,6 @@
 module L0Crypto
 open Pulse.Lib.Pervasives
-open Pulse.Class.BoundedIntegers
+open Pulse.Lib.BoundedIntegers
 module R = Pulse.Lib.Reference
 module A = Pulse.Lib.Array
 module US = FStar.SizeT

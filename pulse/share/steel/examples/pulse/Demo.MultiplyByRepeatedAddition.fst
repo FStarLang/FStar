@@ -33,7 +33,7 @@ fn mult (x y:nat)
 }
 ```
 
-open Pulse.Class.BoundedIntegers
+open Pulse.Lib.BoundedIntegers
 ```pulse
 fn mult32 (x y:U32.t)
     requires pure (fits #U32.t (v x * v y))
