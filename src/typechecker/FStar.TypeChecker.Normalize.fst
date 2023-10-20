@@ -1158,7 +1158,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
           // Note: we drop the environment, no free indices here
           | Tm_fvar({ fv_qual = Some Data_ctor })
           | Tm_fvar({ fv_qual = Some (Record_ctor _) }) ->
-            log_unfolding cfg (fun () -> BU.print1 ">>> Tm_fvar case 0 for %s\n" (Print.term_to_string t));
+            log_unfolding cfg (fun () -> BU.print1 " >> This is a constructor: %s\n" (Print.term_to_string t));
             rebuild cfg empty_env stack t
 
           // A top-level name, possibly unfold it.
@@ -1169,7 +1169,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             begin
             match Env.delta_depth_of_qninfo fv qninfo with
             | Some (Delta_constant_at_level 0) ->
-              log_unfolding cfg (fun () -> BU.print1 ">>> Tm_fvar case 1 for %s\n" (Print.term_to_string t));
+              log_unfolding cfg (fun () -> BU.print1 " >> This is a constant: %s\n" (Print.term_to_string t));
               rebuild cfg empty_env stack t
             | _ ->
               match decide_unfolding cfg stack t.pos fv qninfo with
@@ -1737,7 +1737,7 @@ and do_unfold_fv cfg stack (t0:term) (qninfo : qninfo) (f:fv) : term =
     match Env.lookup_definition_qninfo cfg.delta_level f.fv_name.v qninfo with
        | None ->
          log_unfolding cfg (fun () -> // printfn "delta_level = %A, qninfo=%A" cfg.delta_level qninfo;
-                                      BU.print1 " >> Tm_fvar case 2 for %s\n" (Print.fv_to_string f));
+                                      BU.print1 " >> No definition found for %s\n" (Print.fv_to_string f));
          rebuild cfg empty_env stack t0
 
        | Some (us, t) ->
