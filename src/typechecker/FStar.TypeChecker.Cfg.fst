@@ -213,7 +213,8 @@ let equality_ops = prim_from_list equality_ops_list
 let cfg_to_string cfg =
     String.concat "\n"
         ["{";
-         BU.format1 "  steps = %s" (steps_to_string cfg.steps);
+         BU.format1 "  steps = %s;" (steps_to_string cfg.steps);
+         BU.format1 "  delta_level = %s;" (FStar.Common.string_of_list Env.string_of_delta_level cfg.delta_level);
          "}" ]
 
 let cfg_env cfg = cfg.tcenv
