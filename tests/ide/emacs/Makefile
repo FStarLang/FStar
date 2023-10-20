@@ -6,7 +6,7 @@ FSTAR:=${FSTAR_HOME}/bin/fstar.exe $(SMT) --ide --warn_error -282 --ext fstar:no
 # to ensure that the output is deterministic by pretty-printing JSON messages
 # (otherwise the order of fields in JSON dictionaries might vary across runs)
 # We turn off the .checked file cache so we don't get any races in CI
-# because we run multiple F* processes for the same *.fst file in parallel.
+# because we don't track dependency information.
 %.out: %.in $(FSTAR_HOME)/bin/fstar.exe
 	$(call msg, "OUT_IDE", $<)
 	$(Q)$(eval FST := $(firstword $(subst ., ,$<)))
