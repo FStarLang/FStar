@@ -477,6 +477,58 @@ val delete (#kt:eqtype) (#vt:Type0)
                   else pht'==reveal pht)))
 let delete = delete'
 
+```pulse
+fn not_full' (#kt:eqtype) (#vt:eqtype)
+             (ht:ht_t kt vt)
+             (#pht:erased (pht_t kt vt))
+  requires models ht pht
+  returns b:bool
+  ensures models ht pht ** 
+          pure (b ==> PHT.not_full pht.repr)
+{
+  let mut i = 0sz;
+  unfold (models ht pht);
+  while
+  (
+    let vi = !i;  
+    if SZ.(vi <^ ht.sz) 
+    { 
+      let c = ht.contents.(vi); 
+      (Used? c) 
+    }
+    else 
+    { 
+      false
+    }
+  )
+  invariant b. exists (vi:SZ.t). (
+    A.pts_to ht.contents pht.repr.seq **
+    R.pts_to i vi **
+    pure (
+      SZ.v ht.sz == pht_sz pht /\
+      SZ.(vi <=^ ht.sz) /\
+      (b == (SZ.(vi <^ ht.sz) && Used? (pht.repr @@ (SZ.v vi)))) /\
+      (forall (i:nat). i < SZ.v vi ==> Used? (pht.repr @@ i))
+    )
+  )
+  {
+    let vi = !i;
+    i := SZ.(vi +^ 1sz);
+  };
+  let vi = !i;
+  let res = SZ.(vi <^ ht.sz);
+  fold (models ht pht);  
+  res
+}
+```
+val not_full (#kt:eqtype) (#vt:eqtype)
+             (ht:ht_t kt vt)
+             (#pht:erased (pht_t kt vt))
+  : stt bool (models ht pht)
+      (fun b -> 
+        models ht pht ** 
+        pure (b ==> PHT.not_full pht.repr))
+let not_full = not_full'
 
 
 let hash_us (k:US.t) : US.t= k
@@ -493,50 +545,5 @@ fn test_mono' (_:unit)
 }
 ```
 let test_mono = test_mono'
-// let delete = delete'
 
 
-// ```pulse
-// fn not_full' (#s:pht_sig_us) (#pht:erased (pht_t (s_to_ps s))) (ht:ht_t s)
-//   requires models s ht pht
-//   returns b:bool
-//   ensures models s ht pht ** 
-//           pure (b ==> PHT.not_full #(s_to_ps s) #(pht_sz pht) pht.repr)
-// {
-//   let mut i = 0sz;
-//   unfold (models s ht pht);
-
-//   while
-//   (
-//     let vi = !i;  
-//     if (vi < ht.sz) 
-//     { 
-//       let c = ht.contents.(vi); 
-//       (Used? c) 
-//     }
-//     else 
-//     { 
-//       false
-//     }
-//   )
-//   invariant b. exists (vi:SZ.t). (
-//     A.pts_to ht.contents pht.repr **
-//     R.pts_to i vi **
-//     pure (
-//       SZ.v ht.sz == pht_sz pht /\
-//       vi <= ht.sz /\
-//       (b == (vi < ht.sz && Used? (pht.repr @@ (SZ.v vi)))) /\
-//       (forall (i:nat). i < SZ.v vi ==> Used? (pht.repr @@ i))
-//     )
-//   )
-//   {
-//     let vi = !i;
-//     i := vi + 1sz;
-//   };
-//   let vi = !i;
-//   let res = vi < ht.sz;
-//   fold (models s ht pht);  
-//   res
-// }
-// ```
-// let not_full = not_full'
