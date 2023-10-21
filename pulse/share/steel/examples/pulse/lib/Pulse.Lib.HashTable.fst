@@ -10,13 +10,30 @@ module PHT = Pulse.Lib.HashTable.Spec
 
 #push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
 
+let related #kt #vt (ht:ht_t kt vt) (pht:pht_t kt vt) : prop =
+    SZ.v ht.sz == pht.repr.sz /\
+    pht.repr.hashf == lift_hash_fun ht.hashf
+
 let models #kt #vt (ht:ht_t kt vt) (pht:pht_t kt vt) : vprop
 = A.pts_to ht.contents pht.repr.seq **
   pure (
-    SZ.v ht.sz == pht.repr.sz /\
-    pht.repr.hashf == lift_hash_fun ht.hashf /\
+    related ht pht /\
     A.is_full_array ht.contents
   )
+
+val alloc (#k:eqtype) (#v:Type0) (hashf:k -> US.t) (l:pos_us)
+  : stt (ht_t k v) emp (fun ht -> exists_ (fun pht -> models ht pht))
+
+val dealloc (#k:eqtype) (#v:Type0) (ht:ht_t k v)
+  : stt unit (requires exists_ (fun pht -> models ht pht))
+             (ensures fun _ -> emp)
+
+val lookup (#kt:eqtype) (#vt:Type0)
+           (ht:ht_t kt vt) (k:kt)
+           (#pht:erased (pht_t kt vt))
+  : stt (bool & option vt)
+    (models ht pht)
+    (fun p -> models ht pht ** pure (fst p ==> (snd p) == PHT.lookup pht k ))
 
 ```pulse
 fn alloc' (#k:eqtype) (#v:Type0) (hashf:(k -> US.t)) (l:pos_us)
@@ -35,15 +52,10 @@ fn alloc' (#k:eqtype) (#v:Type0) (hashf:(k -> US.t)) (l:pos_us)
 ```
 let alloc = alloc'
 
-let perform (#a:Type0) (#b:Type0) (f:  (a -> stt b emp (fun _ -> emp))) (x:a) 
-  : stt b emp (fun _ -> emp)
-  = f x
 
 #push-options "--query_stats --log_queries"
 ```pulse
 fn dealloc' (#k:eqtype) (#v:Type0) (ht:ht_t k v)
-  (destroy_val:destroy_fn_t v)
-  (destroy_key:destroy_fn_t k)
   requires exists pht. models ht pht
   ensures emp
 {
@@ -53,32 +65,33 @@ fn dealloc' (#k:eqtype) (#v:Type0) (ht:ht_t k v)
   with pht. assert (models ht pht);
   unfold (models ht pht);
 
-  while (let voff = !off; (voff <^ ht.sz))
-  invariant b. exists (voff:SZ.t). (
-    A.pts_to ht.contents pht.repr.seq **
-    R.pts_to off voff **
-    pure (
-      SZ.v ht.sz == pht.repr.sz /\
-      voff <=^ ht.sz /\
-      b == (voff <^ ht.sz)
-    )
-  )
-  {
-    let voff = !off;
-    let c = ht.contents.(voff);
-    match c
-    {
-      Used k v ->
-      {
-        perform destroy_val v;
-        perform destroy_key k;
-      }
-      _ ->
-      {
-        off := voff +^ 1sz;
-      }
-    }
-  };
+  // while (let voff = !off; (voff <^ ht.sz))
+  // invariant b. exists (voff:SZ.t). (
+  //   A.pts_to ht.contents pht.repr.seq **
+  //   R.pts_to off voff **
+  //   pure (
+  //     SZ.v ht.sz == pht.repr.sz /\
+  //     voff <=^ ht.sz /\
+  //     b == (voff <^ ht.sz)
+  //   )
+  // )
+  // {
+  //   let voff = !off;
+  //   let c = ht.contents.(voff);
+  //   off := voff +^ 1sz;
+  //   // match c
+  //   // {
+  //   //   Used k v ->
+  //   //   {
+  //   //     perform destroy_val v;
+  //   //     perform destroy_key k;
+  //   //   }
+  //   //   _ ->
+  //   //   {
+  //   //     off := voff +^ 1sz;
+  //   //   }
+  //   // }
+  // };
   A.free ht.contents;
 }
 ```
@@ -95,11 +108,11 @@ let sz_add (x y : SZ.t)
     )
     else None
 
-#push-options "--z3rlimit_factor 4 --query_stats"// --admit_smt_queries true"
+#push-options "--z3rlimit_factor 4 --query_stats"
 ```pulse
 fn pulse_lookup_index (#kt:eqtype) (#vt:Type0)
-                      (#pht:erased (pht_t kt vt))
                       (ht:ht_t kt vt) (k:kt)
+                      (#pht:erased (pht_t kt vt))
   requires models ht pht
   returns  p:bool & option (vt & SZ.t)
   ensures  models ht pht ** 
@@ -123,7 +136,7 @@ fn pulse_lookup_index (#kt:eqtype) (#vt:Type0)
     R.pts_to err verr **
     R.pts_to ret (if (vcont || verr) then None else (PHT.lookup_index_us pht k)) **
     pure (
-      SZ.v ht.sz == pht_sz pht /\
+      US.v ht.sz == pht_sz pht /\
       voff <=^ ht.sz /\
       walk_get_idx pht.repr (SZ.v cidx) k (SZ.v voff) 
         == lookup_repr_index pht.repr k /\
@@ -198,17 +211,18 @@ fn pulse_lookup_index (#kt:eqtype) (#vt:Type0)
   }
 }
 ```
+
 #pop-options
 ```pulse
 fn lookup' (#kt:eqtype) (#vt:Type0)
-           (#pht:erased (pht_t kt vt))
            (ht:ht_t kt vt) (k:kt)
+           (#pht:erased (pht_t kt vt))
   requires models ht pht
   returns  p:bool & option vt
   ensures  models ht pht ** 
            pure ( fst p ==> (snd p) == PHT.lookup pht k )
 {
-  let p = pulse_lookup_index #_ #_ #pht ht k;
+  let p = pulse_lookup_index ht k;
   if (fst p)
   {
     match (snd p)
@@ -225,123 +239,145 @@ fn lookup' (#kt:eqtype) (#vt:Type0)
 ```
 let lookup = lookup'
 
+let hash_us (k:US.t) : US.t= k
+
 // #push-options "--z3rlimit_factor 8 --query_stats --log_queries"
 // #restart-solver
 // open Pulse.Lib.BoundedIntegers
+let maybe_update #kt #vt (b:bool) (ht:ht_t kt vt) (pht pht':pht_t kt vt)
+  : vprop
+  = models ht (if b then pht' else pht)
+// #push-options "--admit_smt_queries true"
+```pulse
+fn insert' (#kt:eqtype) (#vt:Type0)
+           (ht:ht_t kt vt) (k:kt) (v:vt)
+           (#pht:(p:erased (pht_t kt vt){PHT.not_full p.repr}))
+  requires models ht pht
+  returns b:bool
+  ensures exists pht'. 
+    models ht pht' **
+    pure (if b
+          then pht'==PHT.insert pht k v
+          else pht'==pht)
+{
+  let cidx = SZ.(ht.hashf k %^ ht.sz);
+  assert (pure (SZ.v cidx == SZ.v (ht.hashf k) % SZ.v ht.sz));
+  let mut off = 0sz;
+  let mut cont = true;
+  let mut err = false;
 
-// ```pulse
-// fn insert' (#s:pht_sig_us)
-//            (#pht:(p:erased (pht_t (s_to_ps s)){PHT.not_full p.repr}))
-//            (ht:ht_t s) (k:s.keyt) (v:s.valt)
-//   requires models s ht pht
-//   returns b:bool
-//   ensures maybe_update b s ht pht (PHT.insert pht k v)
-// {
-//   let cidx = SZ.(s.hashf k %^ ht.sz);
-//   // match opt_cidx {
-//   // Some cidx -> {
-//   assert (pure (SZ.v cidx == SZ.v (s.hashf k) % SZ.v ht.sz));
-//   let mut off = 0sz;
-//   let mut cont = true;
-//   let mut err = false;
+  unfold (models ht pht);
+  while
+  (let vcont = !cont;
+   let verr = !err;
+   (vcont = true && verr = false)
+  ) 
+  invariant b. exists (voff:SZ.t) (vcont verr:bool). (
+    R.pts_to off voff **
+    R.pts_to cont vcont **
+    R.pts_to err verr **
+    A.pts_to ht.contents (if (vcont || verr) then pht.repr.seq else (PHT.insert pht k v).repr.seq) **
+    pure (
+      related ht pht /\
+      SZ.(voff <=^ ht.sz) /\
+      strong_all_used_not_by pht.repr (SZ.v cidx) (SZ.v voff) k /\
+      walk pht.repr (SZ.v cidx) k (SZ.v voff) == lookup_repr pht.repr k /\
+      insert_repr_walk #kt #vt #(pht_sz pht) #pht.spec pht.repr k v (SZ.v voff) (SZ.v cidx) () () 
+        == insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v /\
+      b == (vcont = true && verr = false)
+    ))
+  {
+    let voff = !off;
+    if (voff = ht.sz) {
+      cont := false;
+      assert pure(false);
+      assert (A.pts_to ht.contents pht.repr.seq);
+    } else {
+      admit();
+      let opt_sum = cidx `sz_add` voff;
+      match opt_sum {
+      Some sum -> {
+        let idx = SZ.(sum %^ ht.sz);
+        let c = (ht.contents).(idx); 
+        match c {
+        Used k' v' -> { 
+          if (k' = k) {
+            assert (A.pts_to ht.contents pht.repr.seq);
+            assert (pure ( SZ.v idx < Seq.length pht.repr.seq));
+            ((ht.contents).(idx) <- (mk_used_cell k v));
+            cont := false;
+            assert (pure ((insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq `Seq.equal` 
+                          Seq.upd pht.repr.seq (SZ.v idx) (mk_used_cell k v))); 
+          } else {
+            off := SZ.(voff +^ 1sz);
+          } 
+        }
+        Clean -> {
+          ((ht.contents).(idx) <- (mk_used_cell k v));
+          cont := false;
+          assert (pure ((insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq `Seq.equal` 
+                  Seq.upd pht.repr.seq (SZ.v idx) (mk_used_cell k v)));
+        }
+        Zombie -> {
+          fold (models ht pht);
+          let res = pulse_lookup_index ht k;
+          unfold (models ht pht);
+          if (fst res) {
+            let o = snd res;
+            match o {
+              Some p -> {
+                ((ht.contents).(snd p) <- Zombie);
+                ((ht.contents).(idx) <- (mk_used_cell k v));
+                cont := false;
+                assert (pure ((insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq `Seq.equal` 
+                              Seq.upd (Seq.upd pht.repr.seq (SZ.v (snd p)) Zombie) (SZ.v idx) (mk_used_cell k v)));
+              }
+              None -> { 
+                ((ht.contents).(idx) <- (mk_used_cell k v)); 
+                cont := false;
+                assert (pure ((insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq `Seq.equal`
+                              Seq.upd pht.repr.seq (SZ.v idx) (mk_used_cell k v)));
+              }
+          }} else {
+            // ERROR - lookup failed
+            err := true;
+          }
+        }
+      }
+    }
+    None -> {
+      // ERROR - add failed
+      err := true 
+    }}}
+  };
+  let verr = !err;
+  if verr {
+    fold (models ht pht);
+    false
+  } else {
+    // let vcont = !cont;
+    // assert pure(vcont == false);
+    assert (A.pts_to ht.contents (PHT.insert pht k v).repr.seq);
+    assume_ (pure (related ht (PHT.insert pht k v)));
+    fold (models ht (PHT.insert pht k v));
+    true
+  }
+}
+```
+#pop-options
 
-//   unfold (models s ht pht);
-
-//   while (let voff = !off; let vcont = !cont; let verr = !err; (SZ.(voff <=^ ht.sz) && vcont = true && verr = false)) 
-//   invariant b. exists (voff:SZ.t) (vcont verr:bool). (
-//     R.pts_to off voff **
-//     R.pts_to cont vcont **
-//     R.pts_to err verr **
-//     A.pts_to ht.contents (if (vcont || verr) then pht.repr else (PHT.insert pht k v).repr) **
-//     pure (
-//       SZ.v ht.sz == pht_sz pht /\
-//       SZ.(voff <=^ ht.sz) /\
-//       strong_all_used_not_by pht.repr (SZ.v cidx) (SZ.v voff) k /\
-//       walk pht.repr (SZ.v cidx) k (SZ.v voff) == lookup_repr pht.repr k /\
-//       insert_repr_walk #(s_to_ps s) #(pht_sz pht) #pht.spec pht.repr k v (SZ.v voff) (SZ.v cidx) () () 
-//         == insert_repr #(s_to_ps s) #(pht_sz pht) #pht.spec pht.repr k v /\
-//       b == (SZ.(voff <=^ ht.sz) && vcont = true && verr = false)
-//     ))
-//   {
-//     let voff = !off;
-//     if (voff = ht.sz) {
-//       cont := false;
-//       assert (A.pts_to ht.contents pht.repr);
-//     } else {
-//       let opt_sum = cidx `sz_add` voff;
-//       match opt_sum {
-//       Some sum -> {
-//         let idx = sum % ht.sz;
-//         let c = (ht.contents).(idx); 
-//         match c {
-//         Used k' v' -> { 
-//           if (k' = k) {
-//             assert (A.pts_to ht.contents pht.repr);
-//             assert (pure ( SZ.v idx < Seq.length pht.repr));
-//             ((ht.contents).(idx) <- (mk_used_cell k v));
-//             cont := false;
-//             assert (pure (insert_repr #(s_to_ps s) #(pht_sz pht) #pht.spec pht.repr k v `Seq.equal` 
-//                           Seq.upd pht.repr (SZ.v idx) (mk_used_cell k v))); 
-//           } else {
-//             off := voff + 1sz;
-//           } 
-//         }
-//         Clean -> {
-//           ((ht.contents).(idx) <- (mk_used_cell k v));
-//           cont := false;
-//           assert (pure (insert_repr #(s_to_ps s) #(pht_sz pht) #pht.spec pht.repr k v `Seq.equal` 
-//                   Seq.upd pht.repr (SZ.v idx) (mk_used_cell k v)));
-//         }
-//         Zombie -> {
-//           fold (models s ht pht);
-//           let res = pulse_lookup_index #s #pht ht k;
-//           unfold (models s ht pht);
-//           if (fst res) {
-//             let o = snd res;
-//             match o {
-//               Some p -> {
-//                 ((ht.contents).(snd p) <- Zombie);
-//                 ((ht.contents).(idx) <- (mk_used_cell k v));
-//                 cont := false;
-//                 assert (pure (insert_repr #(s_to_ps s) #(pht_sz pht) #pht.spec pht.repr k v `Seq.equal` 
-//                               Seq.upd (Seq.upd pht.repr (SZ.v (snd p)) Zombie) (SZ.v idx) (mk_used_cell k v)));
-//               }
-//               None -> { 
-//                 ((ht.contents).(idx) <- (mk_used_cell k v)); 
-//                 cont := false;
-//                 assert (pure (insert_repr #(s_to_ps s) #(pht_sz pht) #pht.spec pht.repr k v `Seq.equal`
-//                               Seq.upd pht.repr (SZ.v idx) (mk_used_cell k v)));
-//               }
-//           }} else {
-//             // ERROR - lookup failed
-//             err := true;
-//           }
-//         }
-//       }
-//     }
-//     None -> {
-//       // ERROR - add failed
-//       err := true 
-//     }}}
-//   };
-//   let verr = !err;
-//   if verr {
-//     fold (models s ht pht);
-//     fold (maybe_update false s ht pht (PHT.insert pht k v));
-//     false
-//   } else {
-//     fold (models s ht (PHT.insert pht k v));
-//     fold (maybe_update true s ht pht (PHT.insert pht k v));
-//     true
-//   }
-//   // }
-
-//   // None -> {
-//   //   fold (maybe_update false s ht pht (PHT.insert pht k v));
-//   //   false
-//   // }}
-// }
-// ```
+```pulse
+fn test_mono' (_:unit)
+  requires emp
+  ensures emp
+{
+   let ht = alloc #US.t #US.t hash_us 128sz;
+   let b = insert' ht 0sz 17sz;
+   let v = lookup ht 0sz;
+   dealloc ht
+}
+```
+let test_mono = test_mono'
 
 // // ```pulse
 // // fn insert' (#s:pht_sig_us)

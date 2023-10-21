@@ -41,47 +41,31 @@ val models #k #v (ht:ht_t k v) (pht:pht_t k v) : vprop
 
 let pht_sz #k #v (pht:pht_t k v) : GTot pos = pht.repr.sz
 
-let destroy_fn_t (t:Type0) : Type = v:t -> stt unit emp (fun _ -> emp) 
 
-val alloc (#k:eqtype) (#v:Type0) (hashf:k -> US.t) (l:pos_us)
-  : stt (ht_t k v) emp (fun ht -> exists_ (fun pht -> models ht pht))
+val test_mono (_:unit) : stt unit emp (fun _ -> emp)
+// let maybe_update #kt #vt (b:bool) (ht:ht_t kt vt) (pht pht':pht_t kt vt)
+//   : vprop
+//   = if b then models ht pht' else models ht pht
 
-val dealloc (#k:eqtype) (#v:Type0) (ht:ht_t k v)
-  (destroy_val:destroy_fn_t v)
-  (destroy_key:destroy_fn_t k)
-  : stt unit (requires exists_ (fun pht -> models ht pht))
-             (ensures fun _ -> emp)
+// val insert (#kt:eqtype) (#vt:Type0)
+//            (#pht:(p:erased (pht_t kt vt){PHT.not_full p.repr}))
+//            (ht:ht_t kt vt) (k:kt) (v:vt)
+//   : stt bool 
+//     (models ht pht)
+//     (fun b -> maybe_update b ht pht (PHT.insert pht k v))
 
-val lookup (#kt:eqtype) (#vt:Type0)
-           (#pht:erased (pht_t kt vt))
-           (ht:ht_t kt vt) (k:kt)
-  : stt (bool & option vt)
-    (models ht pht)
-    (fun p -> models ht pht ** pure (fst p ==> (snd p) == PHT.lookup pht k ))
+// val delete (#kt:eqtype) (#vt:Type0)
+//            (#pht:erased (pht_t kt vt))
+//            (ht:ht_t kt vt) (k:kt)
+//   : stt bool
+//     (models ht pht)
+//     (fun b -> maybe_update b ht pht (PHT.delete pht k))
 
-let maybe_update #kt #vt (b:bool) (ht:ht_t kt vt) (pht pht':pht_t kt vt)
-  : vprop
-  = if b then models ht pht' else models ht pht
-
-val insert (#kt:eqtype) (#vt:Type0)
-           (#pht:(p:erased (pht_t kt vt){PHT.not_full p.repr}))
-           (ht:ht_t kt vt) (k:kt) (v:vt)
-  : stt bool 
-    (models ht pht)
-    (fun b -> maybe_update b ht pht (PHT.insert pht k v))
-
-val delete (#kt:eqtype) (#vt:Type0)
-           (#pht:erased (pht_t kt vt))
-           (ht:ht_t kt vt) (k:kt)
-  : stt bool
-    (models ht pht)
-    (fun b -> maybe_update b ht pht (PHT.delete pht k))
-
-val not_full (#kt:eqtype) (#vt:Type0)
-             (#pht:erased (pht_t kt vt))
-             (ht:ht_t kt vt)
-  : stt bool
-    (models ht pht)
-    (fun b -> 
-      models ht pht ** 
-      pure (b ==> PHT.not_full pht.repr))
+// val not_full (#kt:eqtype) (#vt:Type0)
+//              (#pht:erased (pht_t kt vt))
+//              (ht:ht_t kt vt)
+//   : stt bool
+//     (models ht pht)
+//     (fun b -> 
+//       models ht pht ** 
+//       pure (b ==> PHT.not_full pht.repr))

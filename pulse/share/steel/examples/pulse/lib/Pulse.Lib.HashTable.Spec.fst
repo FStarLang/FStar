@@ -655,3 +655,38 @@ let lookup_index_us #kt #vt (ht : pht_t kt vt) (k : kt)
   match o with
   | Some (v,i) -> Some (v, US.uint_to_t i)
   | None -> None
+
+let eliminate_strong_all_used_not_by #kt #vt (r:repr_t kt vt) (k:kt) (i:nat{i < r.sz})
+  : Lemma 
+    (requires strong_all_used_not_by r (canonical_index k r) r.sz k)
+    (ensures Used? (r @@ i) /\ Used?.k (r @@ i) <> k)
+  = let j = canonical_index k r in
+    if (j < i) 
+    then (
+        assert (i == (j + (i-j)) % r.sz);
+        assert (Used? (r @@ i))
+    )
+    else (
+      let k = ((r.sz - j) + i) in
+      assert (i == (j + k) % r.sz);
+      if (k < r.sz) then (
+        assert (Used? (r @@ i))
+      )
+      else (
+        assert (i == (j + 0) % r.sz);
+        assert (Used? (r @@ ((j + 0) % r.sz)))
+      )
+    )
+    
+let full_not_full #kt #vt (r:repr_t kt vt) (k:kt)
+  : Lemma 
+    (requires
+      not_full r /\
+      strong_all_used_not_by r (canonical_index k r) r.sz k)
+    (ensures False)
+  = eliminate exists (i:nat { i < r.sz }). ~(Used? (r @@ i))
+    returns False
+    with _ . (
+      assert (~(Used? (r@@i)));
+      eliminate_strong_all_used_not_by r k i
+    )
