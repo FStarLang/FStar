@@ -241,13 +241,11 @@ let lookup = lookup'
 
 let hash_us (k:US.t) : US.t= k
 
-// #push-options "--z3rlimit_factor 8 --query_stats --log_queries"
-// #restart-solver
-// open Pulse.Lib.BoundedIntegers
-let maybe_update #kt #vt (b:bool) (ht:ht_t kt vt) (pht pht':pht_t kt vt)
-  : vprop
-  = models ht (if b then pht' else pht)
-// #push-options "--admit_smt_queries true"
+let size_t_mod (x:SZ.t) (y : SZ.t { y =!= 0sz }) 
+  : z:SZ.t { SZ.v z == SZ.v x % SZ.v y }
+  = SZ.(x %^ y)
+
+
 ```pulse
 fn insert' (#kt:eqtype) (#vt:Type0)
            (ht:ht_t kt vt) (k:kt) (v:vt)
@@ -260,17 +258,17 @@ fn insert' (#kt:eqtype) (#vt:Type0)
           then pht'==PHT.insert pht k v
           else pht'==pht)
 {
-  let cidx = SZ.(ht.hashf k %^ ht.sz);
-  assert (pure (SZ.v cidx == SZ.v (ht.hashf k) % SZ.v ht.sz));
+  let cidx = size_t_mod (ht.hashf k) ht.sz;
   let mut off = 0sz;
   let mut cont = true;
   let mut err = false;
 
   unfold (models ht pht);
   while
-  (let vcont = !cont;
-   let verr = !err;
-   (vcont = true && verr = false)
+  (
+    let vcont = !cont;
+    let verr = !err;
+    (vcont = true && verr = false)
   ) 
   invariant b. exists (voff:SZ.t) (vcont verr:bool). (
     R.pts_to off voff **
@@ -288,75 +286,91 @@ fn insert' (#kt:eqtype) (#vt:Type0)
     ))
   {
     let voff = !off;
-    if (voff = ht.sz) {
+    if (voff = ht.sz)
+    {
       cont := false;
-      assert pure(false);
+      full_not_full pht.repr k;
+      // elim_false unit (fun _ -> A.pts_to ht.contents pht.repr.seq);
       assert (A.pts_to ht.contents pht.repr.seq);
-    } else {
-      admit();
+    }
+    else
+    {
       let opt_sum = cidx `sz_add` voff;
-      match opt_sum {
-      Some sum -> {
-        let idx = SZ.(sum %^ ht.sz);
-        let c = (ht.contents).(idx); 
-        match c {
-        Used k' v' -> { 
-          if (k' = k) {
-            assert (A.pts_to ht.contents pht.repr.seq);
-            assert (pure ( SZ.v idx < Seq.length pht.repr.seq));
-            ((ht.contents).(idx) <- (mk_used_cell k v));
-            cont := false;
-            assert (pure ((insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq `Seq.equal` 
-                          Seq.upd pht.repr.seq (SZ.v idx) (mk_used_cell k v))); 
-          } else {
-            off := SZ.(voff +^ 1sz);
-          } 
-        }
-        Clean -> {
-          ((ht.contents).(idx) <- (mk_used_cell k v));
-          cont := false;
-          assert (pure ((insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq `Seq.equal` 
-                  Seq.upd pht.repr.seq (SZ.v idx) (mk_used_cell k v)));
-        }
-        Zombie -> {
-          fold (models ht pht);
-          let res = pulse_lookup_index ht k;
-          unfold (models ht pht);
-          if (fst res) {
-            let o = snd res;
-            match o {
-              Some p -> {
-                ((ht.contents).(snd p) <- Zombie);
-                ((ht.contents).(idx) <- (mk_used_cell k v));
+      match opt_sum
+      {
+        Some sum ->
+        {
+          let idx = size_t_mod sum ht.sz;
+          let c = (ht.contents).(idx); 
+          match c
+          {
+            Used k' v' -> { 
+              if (k' = k) {
+                assert (A.pts_to ht.contents pht.repr.seq);
+                assert (pure ( SZ.v idx < Seq.length pht.repr.seq));
+                ht.contents.(idx) <- (mk_used_cell k v);
                 cont := false;
                 assert (pure ((insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq `Seq.equal` 
-                              Seq.upd (Seq.upd pht.repr.seq (SZ.v (snd p)) Zombie) (SZ.v idx) (mk_used_cell k v)));
+                              Seq.upd pht.repr.seq (SZ.v idx) (mk_used_cell k v))); 
+              } else {
+                off := SZ.(voff +^ 1sz);
+              } 
+            }
+            Clean -> {
+              ht.contents.(idx) <- (mk_used_cell k v);
+              cont := false;
+              assert (pure ((insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq `Seq.equal` 
+                      Seq.upd pht.repr.seq (SZ.v idx) (mk_used_cell k v)));
+            }
+            Zombie ->
+            {
+              fold (models ht pht);
+              let res = pulse_lookup_index ht k;
+              unfold (models ht pht);
+              if (fst res)
+              {
+                let o = snd res;
+                match o
+                {
+                  Some p ->
+                  {
+                    ((ht.contents).(snd p) <- Zombie);
+                    ((ht.contents).(idx) <- (mk_used_cell k v));
+                    cont := false;
+                    assert (pure ((insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq `Seq.equal` 
+                                  Seq.upd (Seq.upd pht.repr.seq (SZ.v (snd p)) Zombie) (SZ.v idx) (mk_used_cell k v)));
+                  }
+                  None ->
+                  { 
+                    ((ht.contents).(idx) <- (mk_used_cell k v)); 
+                    cont := false;
+                    assert (pure ((insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq `Seq.equal`
+                                  Seq.upd pht.repr.seq (SZ.v idx) (mk_used_cell k v)));
+                  }
+                }
               }
-              None -> { 
-                ((ht.contents).(idx) <- (mk_used_cell k v)); 
-                cont := false;
-                assert (pure ((insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq `Seq.equal`
-                              Seq.upd pht.repr.seq (SZ.v idx) (mk_used_cell k v)));
+              else
+              {
+                // ERROR - lookup failed
+                err := true;
               }
-          }} else {
-            // ERROR - lookup failed
-            err := true;
+            }
           }
+        }
+        None ->
+        {
+          // ERROR - add failed
+          err := true 
         }
       }
     }
-    None -> {
-      // ERROR - add failed
-      err := true 
-    }}}
   };
   let verr = !err;
-  if verr {
+  if verr
+  {
     fold (models ht pht);
     false
   } else {
-    // let vcont = !cont;
-    // assert pure(vcont == false);
     assert (A.pts_to ht.contents (PHT.insert pht k v).repr.seq);
     assume_ (pure (related ht (PHT.insert pht k v)));
     fold (models ht (PHT.insert pht k v));
