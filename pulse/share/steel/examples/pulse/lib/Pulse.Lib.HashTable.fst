@@ -21,39 +21,24 @@ let models #kt #vt (ht:ht_t kt vt) (pht:pht_t kt vt) : vprop
     A.is_full_array ht.contents
   )
 
-val alloc (#k:eqtype) (#v:Type0) (hashf:k -> US.t) (l:pos_us)
-  : stt (ht_t k v) emp (fun ht -> exists_ (fun pht -> models ht pht))
-
-val dealloc (#k:eqtype) (#v:Type0) (ht:ht_t k v)
-  : stt unit (requires exists_ (fun pht -> models ht pht))
-             (ensures fun _ -> emp)
-
-val lookup (#kt:eqtype) (#vt:Type0)
-           (ht:ht_t kt vt) (k:kt)
-           (#pht:erased (pht_t kt vt))
-  : stt (bool & option vt)
-    (models ht pht)
-    (fun p -> models ht pht ** pure (fst p ==> (snd p) == PHT.lookup pht k ))
 
 ```pulse
 fn alloc' (#k:eqtype) (#v:Type0) (hashf:(k -> US.t)) (l:pos_us)
   requires emp
   returns ht:ht_t k v
-  ensures exists pht. models ht pht
+  ensures exists pht. models ht pht ** pure (pht == mk_init_pht hashf l)
 {
   let contents = A.alloc #(cell k v) Clean l;
   let ht = mk_ht l hashf contents;
   let pht = Ghost.hide (mk_init_pht #k #v hashf l);
   rewrite (A.pts_to contents (Seq.create (SZ.v l) Clean))
-    as (A.pts_to ht.contents pht.repr.seq);
+       as (A.pts_to ht.contents pht.repr.seq);
   fold (models ht pht);
   ht
 }
 ```
 let alloc = alloc'
 
-
-#push-options "--query_stats --log_queries"
 ```pulse
 fn dealloc' (#k:eqtype) (#v:Type0) (ht:ht_t k v)
   requires exists pht. models ht pht
@@ -347,18 +332,6 @@ fn insert' (#kt:eqtype) (#vt:Type0)
 }
 ```
 
-val insert (#kt:eqtype) (#vt:Type0)
-           (ht:ht_t kt vt) (k:kt) (v:vt)
-           (#pht:erased (pht_t kt vt){PHT.not_full pht.repr})
-  : stt bool 
-        (models ht pht)
-        (fun b -> 
-          exists_ (fun pht' -> 
-            models ht pht' **
-            pure (if b
-                  then pht'==PHT.insert pht k v
-                  else pht'==reveal pht)))
-
 let insert = insert'
 
 ```pulse
@@ -462,19 +435,6 @@ fn delete' (#kt:eqtype) (#vt:Type0)
   }
 }
 ```
-
-
-val delete (#kt:eqtype) (#vt:Type0)
-           (ht:ht_t kt vt) (k:kt)
-           (#pht:erased (pht_t kt vt))
-  : stt bool
-    (models ht pht)
-    (fun b -> 
-        exists_ (fun pht' -> 
-            models ht pht' **
-            pure (if b
-                  then pht'==PHT.delete pht k
-                  else pht'==reveal pht)))
 let delete = delete'
 
 ```pulse
@@ -521,27 +481,38 @@ fn not_full' (#kt:eqtype) (#vt:eqtype)
   res
 }
 ```
-val not_full (#kt:eqtype) (#vt:eqtype)
-             (ht:ht_t kt vt)
-             (#pht:erased (pht_t kt vt))
-  : stt bool (models ht pht)
-      (fun b -> 
-        models ht pht ** 
-        pure (b ==> PHT.not_full pht.repr))
 let not_full = not_full'
 
 
 let hash_us (k:US.t) : US.t= k
 
+let init_not_full (#kt:eqtype) (#vt:eqtype) (hashf:kt -> US.t) (l:pos_us)
+  : Lemma (Pulse.Lib.HashTable.Spec.not_full (mk_init_pht #kt #vt hashf l).repr)
+  = assert (~(Used? ((mk_init_pht #kt #vt hashf l).repr @@ 0)))
+  
 ```pulse
 fn test_mono' (_:unit)
   requires emp
   ensures emp
 {
    let ht = alloc #US.t #US.t hash_us 128sz;
+   init_not_full #US.t #US.t hash_us 128sz;
    let b = insert' ht 0sz 17sz;
-   let v = lookup ht 0sz;
-   dealloc ht
+   if (b) {
+     let v = lookup ht 0sz;
+     if (fst v) {
+       assert pure (snd v == Some 17sz);
+       dealloc ht
+     }
+     else {
+      dealloc ht
+     }
+   }
+   else {
+    let b = delete ht 0sz;
+    let b' = not_full ht;
+    dealloc ht
+   } 
 }
 ```
 let test_mono = test_mono'

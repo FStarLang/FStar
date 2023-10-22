@@ -515,7 +515,10 @@ let rec insert_repr_walk #kt #vt #sz (#spec : erased (spec_t kt vt))
   (cidx:nat{cidx = canonical_index k repr})
   (_ : squash (strong_all_used_not_by repr cidx off k))
   (_ : squash (walk repr cidx k off == lookup_repr repr k))
-  : Tot (repr':repr_t_sz kt vt sz{pht_models (spec ++ (k,v)) repr'})
+  : Tot (repr':repr_t_sz kt vt sz{
+          pht_models (spec ++ (k,v)) repr' /\
+          repr_related repr repr'
+        })
         (decreases sz - off)
   = if off = sz then (
       // Impossible! table was not full
@@ -579,7 +582,10 @@ let insert_repr #kt #vt #sz
                 (repr : repr_t_sz kt vt sz{pht_models spec repr})
                 (k : kt) 
                 (v : vt)
-: Pure (r':repr_t_sz kt vt sz{pht_models (spec ++ (k,v)) r'})
+: Pure (r':repr_t_sz kt vt sz{
+        pht_models (spec ++ (k,v)) r' /\
+        repr_related repr r'
+       })
        (requires not_full repr)
        (ensures fun _ -> True)
 = let cidx = canonical_index k repr in
@@ -591,7 +597,10 @@ let rec delete_repr_walk #kt #vt #sz (#spec : erased (spec_t kt vt))
   (off:nat{off <= sz}) (cidx:nat{cidx = canonical_index k repr})
   (_ : squash (all_used_not_by repr cidx off k))
   (_ : squash (walk repr cidx k off == lookup_repr repr k))
-  : Tot (repr':repr_t_sz kt vt sz{pht_models (spec -- k) repr'})
+  : Tot (repr':repr_t_sz kt vt sz{
+          pht_models (spec -- k) repr' /\
+          repr_related repr repr'
+        })
         (decreases sz - off)
   = if off = sz then
     repr // If we reach this, the element was not in the table
@@ -615,7 +624,10 @@ let rec delete_repr_walk #kt #vt #sz (#spec : erased (spec_t kt vt))
 let delete_repr #kt #vt #sz (#spec : erased (spec_t kt vt))
               (repr : repr_t_sz kt vt sz{pht_models spec repr})
               (k : kt)
-: r':repr_t_sz kt vt sz{pht_models (spec -- k) r'}
+: r':repr_t_sz kt vt sz{
+    pht_models (spec -- k) r' /\
+    repr_related repr r'
+  }
 = let cidx = canonical_index k repr in
   let res = delete_repr_walk #kt #vt #sz #spec repr k 0 cidx () () in
   res

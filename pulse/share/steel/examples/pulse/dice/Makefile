@@ -20,8 +20,14 @@ include $(PULSE_EXAMPLES_ROOT)/Makefile.pulse.common
 
 extract_all: $(ALL_KRML_FILES)
 
-$(OUTPUT_DIRECTORY)/DPE.c:
-	$(KRML) -dast -warn-error +9 -bundle Pulse.Lib.HashTable=* -skip-compilation $(wildcard _output/*.krml) -tmpdir $(OUTPUT_DIRECTORY)
+$(OUTPUT_DIRECTORY)/Pulse_Lib_HashTable.ml:
+	$(FSTAR) --codegen OCaml $(subst .checked,, $(notdir $<)) --extract_module $(basename $(subst .checked,, $(notdir $<)))
+
+$(OUTPUT_DIRECTORY)/Pulse_Lib_HashTable_Spec.ml:
+	$(FSTAR) --codegen OCaml $(subst .checked,, $(notdir $<)) --extract_module $(basename $(subst .checked,, $(notdir $<)))
+
+$(OUTPUT_DIRECTORY)/Pulse_Lib_HashTable.c:
+	$(KRML) -bundle Pulse.Lib.HashTable=* -skip-compilation $(wildcard _output/*.krml) -tmpdir $(OUTPUT_DIRECTORY)
 
 $(OUTPUT_DIRECTORY)/%.krml:
 	$(FSTAR) --codegen krml $(subst .checked,, $(notdir $<)) --extract_module $(basename $(subst .checked,, $(notdir $<)))
