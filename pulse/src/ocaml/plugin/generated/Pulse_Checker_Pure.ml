@@ -3201,13 +3201,7 @@ let (get_non_informative_witness :
                                          (Prims.of_int (8))
                                          (Prims.of_int (303))
                                          (Prims.of_int (18)))))
-                                (Obj.magic
-                                   (Pulse_PP.pp
-                                      (Pulse_PP.from_show
-                                         {
-                                           Pulse_Show.show =
-                                             Pulse_Syntax_Printer.term_to_string
-                                         }) t))
+                                (Obj.magic (Pulse_PP.pp Pulse_PP.uu___44 t))
                                 (fun uu___2 ->
                                    FStar_Tactics_Effect.lift_div_tac
                                      (fun uu___3 ->

@@ -41,56 +41,12 @@ let from_show : 'a . 'a Pulse_Show.tac_showable -> 'a printable =
                 FStar_Tactics_Effect.lift_div_tac
                   (fun uu___1 -> FStar_Pprint.arbitrary_string uu___)))
     }
-let (uu___19 : Prims.string printable) =
-  from_show
-    {
-      Pulse_Show.show =
-        (fun uu___ ->
-           (fun s ->
-              Obj.magic (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> s)))
-             uu___)
-    }
-let (uu___20 : unit printable) =
-  from_show
-    {
-      Pulse_Show.show =
-        (fun uu___ ->
-           (fun uu___ ->
-              Obj.magic
-                (FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> "()")))
-             uu___)
-    }
-let (uu___21 : Prims.bool printable) =
-  from_show
-    {
-      Pulse_Show.show =
-        (fun uu___ ->
-           (fun b ->
-              Obj.magic
-                (FStar_Tactics_Effect.lift_div_tac
-                   (fun uu___ -> Prims.string_of_bool b))) uu___)
-    }
-let (uu___22 : Prims.int printable) =
-  from_show
-    {
-      Pulse_Show.show =
-        (fun uu___ ->
-           (fun b ->
-              Obj.magic
-                (FStar_Tactics_Effect.lift_div_tac
-                   (fun uu___ -> Prims.string_of_int b))) uu___)
-    }
+let (uu___19 : Prims.string printable) = from_show Pulse_Show.uu___12
+let (uu___20 : unit printable) = from_show Pulse_Show.uu___14
+let (uu___21 : Prims.bool printable) = from_show Pulse_Show.uu___16
+let (uu___22 : Prims.int printable) = from_show Pulse_Show.uu___18
 let (uu___23 : Pulse_Syntax_Base.ctag printable) =
-  from_show
-    {
-      Pulse_Show.show =
-        (fun uu___ ->
-           (fun t ->
-              Obj.magic
-                (FStar_Tactics_Effect.lift_div_tac
-                   (fun uu___ -> Pulse_Syntax_Printer.ctag_to_string t)))
-             uu___)
-    }
+  from_show Pulse_Show.uu___28
 let showable_option :
   'a . 'a printable -> 'a FStar_Pervasives_Native.option printable =
   fun uu___ ->
@@ -234,20 +190,11 @@ let showable_list : 'a . 'a printable -> 'a Prims.list printable =
                   (fun uu___2 -> FStar_Pprint.brackets uu___1)))
     }
 let (uu___44 : Pulse_Syntax_Base.term printable) =
-  from_show { Pulse_Show.show = Pulse_Syntax_Printer.term_to_string }
+  from_show Pulse_Show.uu___30
 let (uu___45 : Pulse_Syntax_Base.universe printable) =
-  from_show
-    {
-      Pulse_Show.show =
-        (fun uu___ ->
-           (fun t ->
-              Obj.magic
-                (FStar_Tactics_Effect.lift_div_tac
-                   (fun uu___ -> Pulse_Syntax_Printer.univ_to_string t)))
-             uu___)
-    }
+  from_show Pulse_Show.uu___31
 let (uu___46 : Pulse_Syntax_Base.comp printable) =
-  from_show { Pulse_Show.show = Pulse_Syntax_Printer.comp_to_string }
+  from_show Pulse_Show.uu___33
 let (uu___47 : Pulse_Typing_Env.env printable) =
   { pp = Pulse_Typing_Env.env_to_doc }
 let (pp_record :
@@ -319,8 +266,7 @@ let (uu___52 : Pulse_Typing.post_hint_t printable) =
                              (FStar_Range.mk_range "Pulse.PP.fst"
                                 (Prims.of_int (79)) (Prims.of_int (22))
                                 (Prims.of_int (79)) (Prims.of_int (33)))))
-                       (Obj.magic
-                          (Pulse_Typing_Env.env_to_doc h.Pulse_Typing.g))
+                       (Obj.magic (pp uu___47 h.Pulse_Typing.g))
                        (fun uu___ ->
                           FStar_Tactics_Effect.lift_div_tac
                             (fun uu___1 -> ("g", uu___)))))
@@ -372,43 +318,9 @@ let (uu___52 : Pulse_Typing.post_hint_t printable) =
                                                  (Prims.of_int (22))
                                                  (Prims.of_int (80))
                                                  (Prims.of_int (49)))))
-                                        (match h.Pulse_Typing.ctag_hint with
-                                         | FStar_Pervasives_Native.None ->
-                                             Obj.magic
-                                               (Obj.repr
-                                                  (FStar_Tactics_Effect.lift_div_tac
-                                                     (fun uu___1 ->
-                                                        FStar_Pprint.doc_of_string
-                                                          "None")))
-                                         | FStar_Pervasives_Native.Some v ->
-                                             Obj.magic
-                                               (Obj.repr
-                                                  (FStar_Tactics_Effect.tac_bind
-                                                     (FStar_Sealed.seal
-                                                        (Obj.magic
-                                                           (FStar_Range.mk_range
-                                                              "Pulse.PP.fst"
-                                                              (Prims.of_int (50))
-                                                              (Prims.of_int (54))
-                                                              (Prims.of_int (50))
-                                                              (Prims.of_int (58)))))
-                                                     (FStar_Sealed.seal
-                                                        (Obj.magic
-                                                           (FStar_Range.mk_range
-                                                              "Pulse.PP.fst"
-                                                              (Prims.of_int (50))
-                                                              (Prims.of_int (29))
-                                                              (Prims.of_int (50))
-                                                              (Prims.of_int (58)))))
-                                                     (Obj.magic
-                                                        (pp uu___23 v))
-                                                     (fun uu___1 ->
-                                                        FStar_Tactics_Effect.lift_div_tac
-                                                          (fun uu___2 ->
-                                                             FStar_Pprint.op_Hat_Slash_Hat
-                                                               (FStar_Pprint.doc_of_string
-                                                                  "Some")
-                                                               uu___1)))))
+                                        (Obj.magic
+                                           (pp (showable_option uu___23)
+                                              h.Pulse_Typing.ctag_hint))
                                         (fun uu___1 ->
                                            FStar_Tactics_Effect.lift_div_tac
                                              (fun uu___2 ->
@@ -470,13 +382,7 @@ let (uu___52 : Pulse_Typing.post_hint_t printable) =
                                                                   (Prims.of_int (81))
                                                                   (Prims.of_int (43)))))
                                                          (Obj.magic
-                                                            (pp
-                                                               (from_show
-                                                                  {
-                                                                    Pulse_Show.show
-                                                                    =
-                                                                    Pulse_Syntax_Printer.term_to_string
-                                                                  })
+                                                            (pp uu___44
                                                                h.Pulse_Typing.ret_ty))
                                                          (fun uu___2 ->
                                                             FStar_Tactics_Effect.lift_div_tac
@@ -546,21 +452,7 @@ let (uu___52 : Pulse_Typing.post_hint_t printable) =
                                                                     (Prims.of_int (33)))))
                                                                     (Obj.magic
                                                                     (pp
-                                                                    (from_show
-                                                                    {
-                                                                    Pulse_Show.show
-                                                                    =
-                                                                    (fun
-                                                                    uu___3 ->
-                                                                    (fun t ->
-                                                                    Obj.magic
-                                                                    (FStar_Tactics_Effect.lift_div_tac
-                                                                    (fun
-                                                                    uu___3 ->
-                                                                    Pulse_Syntax_Printer.univ_to_string
-                                                                    t)))
-                                                                    uu___3)
-                                                                    })
+                                                                    uu___45
                                                                     h.Pulse_Typing.u))
                                                                     (fun
                                                                     uu___3 ->
@@ -630,12 +522,7 @@ let (uu___52 : Pulse_Typing.post_hint_t printable) =
                                                                     (Prims.of_int (39)))))
                                                                     (Obj.magic
                                                                     (pp
-                                                                    (from_show
-                                                                    {
-                                                                    Pulse_Show.show
-                                                                    =
-                                                                    Pulse_Syntax_Printer.term_to_string
-                                                                    })
+                                                                    uu___44
                                                                     h.Pulse_Typing.post))
                                                                     (fun
                                                                     uu___4 ->

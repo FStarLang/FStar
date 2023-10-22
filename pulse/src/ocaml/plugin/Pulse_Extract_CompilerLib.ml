@@ -96,8 +96,8 @@ let mlty_top : mlty = ML.MLTY_Top
 
 let normalize_for_extraction (g:uenv) (t:FStar_Syntax_Syntax.term)
   : FStar_Syntax_Syntax.term
-  = let extra = [] in 
-    let res = FStar_Extraction_ML_Term.normalize_for_extraction g extra t in
+  = (* let extra = [] in *)
+    let res = FStar_Extraction_ML_Term.normalize_for_extraction g t in
     res
 
 let term_as_mlexpr (g:uenv) (t:FStar_Syntax_Syntax.term) : (mlexpr * e_tag * mlty) =
