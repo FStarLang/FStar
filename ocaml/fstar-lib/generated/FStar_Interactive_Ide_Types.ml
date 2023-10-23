@@ -180,6 +180,7 @@ type query' =
   | Segment of Prims.string 
   | Pop 
   | Push of push_query 
+  | PushPartialCheckedFile of Prims.string 
   | VfsAdd of (Prims.string FStar_Pervasives_Native.option * Prims.string) 
   | AutoComplete of (Prims.string * completion_context) 
   | Lookup of (Prims.string * lookup_context * position
@@ -231,6 +232,11 @@ let (uu___is_Push : query' -> Prims.bool) =
   fun projectee -> match projectee with | Push _0 -> true | uu___ -> false
 let (__proj__Push__item___0 : query' -> push_query) =
   fun projectee -> match projectee with | Push _0 -> _0
+let (uu___is_PushPartialCheckedFile : query' -> Prims.bool) =
+  fun projectee ->
+    match projectee with | PushPartialCheckedFile _0 -> true | uu___ -> false
+let (__proj__PushPartialCheckedFile__item___0 : query' -> Prims.string) =
+  fun projectee -> match projectee with | PushPartialCheckedFile _0 -> _0
 let (uu___is_VfsAdd : query' -> Prims.bool) =
   fun projectee -> match projectee with | VfsAdd _0 -> true | uu___ -> false
 let (__proj__VfsAdd__item___0 :
@@ -483,6 +489,8 @@ let (query_to_string : query -> Prims.string) =
         let uu___ =
           let uu___1 = push_query_to_string pq in Prims.op_Hat uu___1 ")" in
         Prims.op_Hat "(Push " uu___
+    | PushPartialCheckedFile d ->
+        Prims.op_Hat "(PushPartialCheckedFile " (Prims.op_Hat d ")")
     | VfsAdd uu___ -> "VfsAdd"
     | AutoComplete uu___ -> "AutoComplete"
     | Lookup (s, _lc, pos, features, _sr) ->
@@ -519,6 +527,7 @@ let (query_needs_current_module : query' -> Prims.bool) =
     | VfsAdd uu___1 -> false
     | GenericError uu___1 -> false
     | ProtocolViolation uu___1 -> false
+    | PushPartialCheckedFile uu___1 -> false
     | FullBuffer uu___1 -> false
     | Callback uu___1 -> false
     | Format uu___1 -> false
@@ -546,6 +555,7 @@ let (interactive_protocol_features : Prims.string Prims.list) =
   "peek";
   "pop";
   "push";
+  "push-partial-checked-file";
   "search";
   "segment";
   "vfs-add";
