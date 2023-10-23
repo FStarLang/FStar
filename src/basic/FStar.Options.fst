@@ -700,7 +700,7 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * string) 
 
       ( noshort,
         "codegen",
-        EnumStr ["OCaml"; "FSharp"; "krml"; "Plugin"],
+        EnumStr ["OCaml"; "FSharp"; "krml"; "Plugin"; "Extension"],
         "Generate code for further compilation to executable code, or build a compiler plugin");
 
       ( noshort,
@@ -774,7 +774,7 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * string) 
          "extract",
          Accumulated (SimpleStr "One or more semicolon separated occurrences of '[TargetName:]ModuleSelector'"),
         "\n\t\tExtract only those modules whose names or namespaces match the provided options.\n\t\t\t\
-         'TargetName' ranges over {OCaml, krml, FSharp, Plugin}.\n\t\t\t\
+         'TargetName' ranges over {OCaml, krml, FSharp, Plugin, Extension}.\n\t\t\t\
          A 'ModuleSelector' is a space or comma-separated list of '[+|-]( * | namespace | module)'.\n\t\t\t\
          For example --extract 'OCaml:A -A.B' --extract 'krml:A -A.C' --extract '*' means\n\t\t\t\t\
          for OCaml, extract everything in the A namespace only except A.B;\n\t\t\t\t\
@@ -1724,6 +1724,7 @@ let parse_codegen =
   | "FSharp" -> Some FSharp
   | "krml" -> Some Krml
   | "Plugin" -> Some Plugin
+  | "Extension" -> Some Extension
   | _ -> None
 
 let print_codegen =
@@ -1732,6 +1733,7 @@ let print_codegen =
   | FSharp -> "FSharp"
   | Krml -> "krml"
   | Plugin -> "Plugin"
+  | Extension -> "Extension"
 
 let codegen                      () =
     Util.map_opt (get_codegen())
@@ -1959,7 +1961,7 @@ let extract_settings
         | Some x -> [tgt,x]
       in
       {
-        target_specific_settings = List.collect merge_target [OCaml;FSharp;Krml;Plugin];
+        target_specific_settings = List.collect merge_target [OCaml;FSharp;Krml;Plugin;Extension];
         default_settings = merge_setting p0.default_settings p1.default_settings
       }
     in

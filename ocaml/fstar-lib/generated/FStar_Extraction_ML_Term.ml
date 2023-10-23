@@ -2588,8 +2588,8 @@ let (extract_lb_iface :
         (fun env ->
            fun uu___ ->
              match uu___ with
-             | (lbname, e_tag, (typ, (binders, mltyscheme)), add_unit, _body)
-                 ->
+             | (lbname, _e_tag, (typ, (_binders, mltyscheme)), add_unit,
+                _body) ->
                  let uu___1 =
                    FStar_Extraction_ML_UEnv.extend_lb env lbname typ
                      mltyscheme add_unit in
