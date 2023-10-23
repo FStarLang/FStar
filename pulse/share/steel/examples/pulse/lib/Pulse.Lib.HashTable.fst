@@ -438,7 +438,7 @@ fn delete' (#kt:eqtype) (#vt:Type0)
 let delete = delete'
 
 ```pulse
-fn not_full' (#kt:eqtype) (#vt:eqtype)
+fn not_full' (#kt:eqtype) (#vt:Type0)
              (ht:ht_t kt vt)
              (#pht:erased (pht_t kt vt))
   requires models ht pht

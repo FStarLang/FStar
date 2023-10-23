@@ -84,7 +84,7 @@ val delete (#kt:eqtype) (#vt:Type0)
                   then pht'==PHT.delete pht k
                   else pht'==reveal pht)))
 
-val not_full (#kt:eqtype) (#vt:eqtype)
+val not_full (#kt:eqtype) (#vt:Type0)
              (ht:ht_t kt vt)
              (#pht:erased (pht_t kt vt))
   : stt bool (models ht pht)
