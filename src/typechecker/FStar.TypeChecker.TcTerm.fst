@@ -3817,7 +3817,7 @@ and check_top_level_let env e =
          if Env.debug env Options.Medium then
                 BU.print1 "Let binding BEFORE tcnorm: %s\n" (Print.term_to_string e1);
          let e1 = if Options.tcnorm () then
-                    N.normalize [Env.UnfoldAttr [Const.tcnorm_attr];
+                    N.normalize [//Env.UnfoldAttr [Const.tcnorm_attr];
                                  Env.Exclude Env.Beta; Env.Exclude Env.Zeta;
                                  Env.NoFullNorm; Env.DoNotUnfoldPureLets] env e1
                   else e1
