@@ -279,3 +279,141 @@ ensures read_cbor_with_typ_post t a p va res
     }
 }
 ```
+
+let cbor_map_get_with_typ_post_not_found
+  (t: typ)
+  (vkey: raw_data_item)
+  (vmap: raw_data_item)
+  (map: cbor)
+: Tot vprop
+= raw_data_item_match map vmap ** pure (
+    Map? vmap /\
+    begin match list_ghost_assoc vkey (Map?.v vmap) with
+    | None -> True
+    | Some v -> t v == false
+    end
+  )
+
+let cbor_map_get_with_typ_post_found
+  (t: typ)
+  (vkey: raw_data_item)
+  (vmap: raw_data_item)
+  (map: cbor)
+  (value: cbor)
+: Tot vprop
+= exists_ (fun vvalue ->
+    raw_data_item_match value vvalue **
+    (raw_data_item_match value vvalue @==> raw_data_item_match map vmap) **
+    pure (
+      Map? vmap /\
+      list_ghost_assoc vkey (Map?.v vmap) == Some vvalue /\
+      t vvalue == true
+  ))
+
+let cbor_map_get_with_typ_post
+  (t: typ)
+  (vkey: raw_data_item)
+  (vmap: raw_data_item)
+  (map: cbor)
+  (res: cbor_map_get_t)
+: Tot vprop
+= match res with
+  | NotFound -> cbor_map_get_with_typ_post_not_found t vkey vmap map
+  | Found value -> cbor_map_get_with_typ_post_found t vkey vmap map value
+
+let cbor_map_get_post_eq_found
+  (vkey: raw_data_item)
+  (vmap: raw_data_item)
+  (map: cbor)
+  (res: cbor_map_get_t)
+  (fres: cbor)
+: Lemma
+  (requires (res == Found fres))
+  (ensures (
+    cbor_map_get_post vkey vmap map res ==
+        cbor_map_get_post_found vkey vmap map fres
+  ))
+= ()
+
+```pulse
+ghost
+fn manurewrite
+    (pre post: vprop)
+requires
+    pre ** pure (pre == post)
+ensures
+    post
+{
+    rewrite pre as post
+}
+
+```
+
+```pulse
+ghost
+fn cbor_map_get_found_elim
+  (vkey: Ghost.erased raw_data_item)
+  (vmap: Ghost.erased raw_data_item)
+  (map: cbor)
+  (res: cbor_map_get_t)
+  (fres: cbor)
+requires
+    cbor_map_get_post vkey vmap map res **
+    pure (res == Found fres)
+ensures
+    cbor_map_get_post_found vkey vmap map fres
+{
+    manurewrite (cbor_map_get_post vkey vmap map res) (cbor_map_get_post_found vkey vmap map fres)
+    // rewrite ... as ... fails: WHY WHY WHY??
+}
+```
+
+inline_for_extraction noextract
+```pulse
+fn cbor_map_get_with_typ
+  (#t: typ)
+  (ft: impl_typ t)
+  (key: cbor)
+  (map: cbor)
+  (#vkey: Ghost.erased raw_data_item)
+  (#vmap: Ghost.erased raw_data_item)
+requires
+    (raw_data_item_match key vkey ** raw_data_item_match map vmap ** pure (
+      Map? vmap /\
+      (~ (Tagged? vkey \/ Array? vkey \/ Map? vkey))
+    ))
+returns res: cbor_map_get_t
+ensures
+    (raw_data_item_match key vkey ** cbor_map_get_with_typ_post t vkey vmap map res ** pure (
+      Map? vmap /\
+      Found? res == begin match list_ghost_assoc (Ghost.reveal vkey) (Map?.v vmap) with
+      | None -> false
+      | Some v -> t v
+      end
+    ))
+{
+    let res = cbor_map_get key map;
+    if (Found? res) {
+        let fres = Found?._0 res;
+        manurewrite (cbor_map_get_post vkey vmap map res) (cbor_map_get_post_found vkey vmap map fres);
+        unfold (cbor_map_get_post_found vkey vmap map fres);
+        let test = eval_impl_typ ft fres;
+        if (test) {
+            fold (cbor_map_get_with_typ_post_found t vkey vmap map fres);
+            manurewrite (cbor_map_get_with_typ_post_found t vkey vmap map fres) (cbor_map_get_with_typ_post t vkey vmap map res);
+            res
+        } else {
+            elim_stick0 ();
+            fold (cbor_map_get_with_typ_post_not_found t vkey vmap map);
+            rewrite (cbor_map_get_with_typ_post_not_found t vkey vmap map) as (cbor_map_get_with_typ_post t vkey vmap map NotFound);
+            NotFound
+        }
+    } else {
+        rewrite (cbor_map_get_post vkey vmap map res) as (cbor_map_get_post_not_found vkey vmap map);
+        unfold (cbor_map_get_post_not_found vkey vmap map);
+        fold (cbor_map_get_with_typ_post_not_found t vkey vmap map);
+        rewrite (cbor_map_get_with_typ_post_not_found t vkey vmap map) as (cbor_map_get_with_typ_post t vkey vmap map res);
+        res
+    }
+}
+```
