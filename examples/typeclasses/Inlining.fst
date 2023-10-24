@@ -39,8 +39,11 @@ let elem' #a {|d : inhab a|} =
 [@@ tcnorm]
 instance inhab_unit : inhab unit = { elem = fun () -> admit #unit () }
 
-(* This will only succeed if the found instance is inlined, sa
+(* This will only succeed if the found instance is inlined, as
  * can be seen from the failure if one uses --tcnorm false *)
+(* This now fails, since we don't unfold methods between phases, so the
+ * verification happens over the interface and not the definitions. *)
+[@@expect_failure]
 let f (u:unit) =
   let t = elem' #unit () in
   assert (forall y. y == 1)
