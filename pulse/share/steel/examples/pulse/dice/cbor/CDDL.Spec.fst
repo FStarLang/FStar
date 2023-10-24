@@ -217,7 +217,7 @@ let match_array_group3 (#b: Cbor.raw_data_item) (a: array_group3 b)
   (l: list Cbor.raw_data_item {l << b})
 : GTot bool
 = match a l with
-  | Some l' -> Nil? l
+  | Some l' -> Nil? l'
   | _ -> false
 
 let t_array3_bounded (#b: Cbor.raw_data_item) (a: array_group3 b) : bounded_typ b = fun x ->
