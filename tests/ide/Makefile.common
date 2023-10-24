@@ -29,6 +29,7 @@ accept: ${ACCEPT_TARGETS}
 clean:
 	rm -f *.out
 	rm -f *.out.check
+	rm -f .depend *.checked
 
 touch:
 	touch ${IN}

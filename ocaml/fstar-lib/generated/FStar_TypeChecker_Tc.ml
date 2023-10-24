@@ -5185,19 +5185,18 @@ let (tc_modul :
         let uu___ = tc_partial_modul env01 m in
         match uu___ with
         | (modul, env) -> finish_partial_modul false iface_exists env modul
-let (load_checked_module :
+let (load_checked_module_sigelts :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.modul -> FStar_TypeChecker_Env.env)
   =
   fun en ->
     fun m ->
-      let m1 = deep_compress_modul m in
       let env =
         FStar_TypeChecker_Env.set_current_module en
-          m1.FStar_Syntax_Syntax.name in
+          m.FStar_Syntax_Syntax.name in
       let env1 =
         let uu___ =
-          let uu___1 = FStar_Ident.string_of_lid m1.FStar_Syntax_Syntax.name in
+          let uu___1 = FStar_Ident.string_of_lid m.FStar_Syntax_Syntax.name in
           Prims.op_Hat "Internals for " uu___1 in
         push_context env uu___ in
       let env2 =
@@ -5212,9 +5211,25 @@ let (load_checked_module :
                        let uu___1 =
                          FStar_TypeChecker_Env.lookup_sigelt env4 lid in
                        ()));
-               env4) env1 m1.FStar_Syntax_Syntax.declarations in
-      let uu___ = finish_partial_modul true true env2 m1 in
-      match uu___ with | (uu___1, env3) -> env3
+               env4) env1 m.FStar_Syntax_Syntax.declarations in
+      env2
+let (load_checked_module :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.modul -> FStar_TypeChecker_Env.env)
+  =
+  fun en ->
+    fun m ->
+      let m1 = deep_compress_modul m in
+      let env = load_checked_module_sigelts en m1 in
+      let uu___ = finish_partial_modul true true env m1 in
+      match uu___ with | (uu___1, env1) -> env1
+let (load_partial_checked_module :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.modul -> FStar_TypeChecker_Env.env)
+  =
+  fun en ->
+    fun m ->
+      let m1 = deep_compress_modul m in load_checked_module_sigelts en m1
 let (check_module :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.modul ->
