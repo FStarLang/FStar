@@ -68,6 +68,40 @@ let eval_impl_bounded_typ
 = f c #v
 
 inline_for_extraction noextract
+```pulse
+fn impl_t_choice'
+    (#t1 #t2: typ)
+    (f1: impl_typ t1)
+    (f2: impl_typ t2)
+    (c: cbor)
+    (#v: Ghost.erased raw_data_item)
+requires
+        (raw_data_item_match c v)
+returns res: bool
+ensures
+        (raw_data_item_match c v ** pure (
+            res == t_choice t1 t2 v
+        ))
+{
+    let test = eval_impl_typ f1 c;
+    if (test)
+    {
+        true
+    } else {
+        eval_impl_typ f2 c
+    }
+}
+```
+
+inline_for_extraction
+let impl_t_choice
+    (#t1 #t2: typ)
+    (f1: impl_typ t1)
+    (f2: impl_typ t2)
+: Tot (impl_typ (t_choice t1 t2))
+= impl_t_choice' f1 f2
+
+inline_for_extraction noextract
 let impl_array_group3
     (#b: raw_data_item)
     (g: array_group3 b)
@@ -195,7 +229,7 @@ val stick_trans
 
 inline_for_extraction noextract
 ```pulse
-fn impl_array_group3_item
+fn impl_array_group3_item'
     (#b: Ghost.erased raw_data_item)
     (#ty: bounded_typ b)
     (fty: impl_bounded_typ ty)
@@ -257,8 +291,16 @@ ensures
 ```
 
 inline_for_extraction noextract
+let impl_array_group3_item
+    (#b: Ghost.erased raw_data_item)
+    (#ty: bounded_typ b)
+    (fty: impl_bounded_typ ty)
+: Tot (impl_array_group3 (array_group3_item ty))
+= impl_array_group3_item' fty
+
+inline_for_extraction noextract
 ```pulse
-fn impl_t_array
+fn impl_t_array'
     (g: ((b: raw_data_item) -> array_group3 b))
     (ig: ((b: Ghost.erased raw_data_item) -> impl_array_group3 (g b)))
     (c: cbor)
@@ -293,6 +335,13 @@ ensures
     }
 }
 ```
+
+inline_for_extraction noextract
+let impl_t_array
+    (#g: ((b: raw_data_item) -> array_group3 b))
+    (ig: ((b: Ghost.erased raw_data_item) -> impl_array_group3 (g b)))
+: Tot (impl_typ (t_array3 g))
+= impl_t_array' g ig
 
 module U8 = FStar.UInt8
 
