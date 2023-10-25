@@ -11,6 +11,3 @@ let uds_is_enabled : vprop
 
 let uds_len : hashable_len 
 = admit()
-
-let uds_bytes 
-= admit()

@@ -16,6 +16,8 @@
     "share/steel/examples/pulse/dice/dpe",
     "share/steel/examples/pulse/dice/l0",
     "share/steel/examples/pulse/dice/engine",
-    "share/steel/examples/pulse/dice/common"
+    "share/steel/examples/pulse/dice/common",
+    "share/steel/examples/pulse/dice/cbor"
+
   ]
 }

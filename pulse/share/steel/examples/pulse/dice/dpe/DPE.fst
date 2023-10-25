@@ -241,6 +241,40 @@ fn disable_uds (_:unit)
     drop uds_is_enabled
 }
 ```
+assume val dbg : vprop
+let uds_of_engine_context_repr (r:_{Engine_context_repr? r}) : erased (Seq.seq U8.t)=
+  match r with
+  | Engine_context_repr uds_bytes -> uds_bytes
+
+// ```pulse
+// ghost
+// fn get_engine_context_perm (c:engine_context_t) (repr:erased context_repr_t)
+//   requires context_perm (Engine_context c) repr
+//   returns uds:Ghost.erased (Seq.seq U8.t)
+//   ensures engine_context_perm c uds ** pure (repr == Engine_context_repr uds)
+// {
+//   let repr = reveal repr;
+//   match repr {
+//     Engine_context_repr uds -> {
+//       rewrite (context_perm (Engine_context c) repr)
+//           as  (engine_context_perm c uds);
+//       hide uds
+//     }
+//     L0_context_repr r0 -> {
+//       rewrite (context_perm (Engine_context c) repr)
+//           as  (pure False);
+//       let x = elim_false (engine_context_perm c);
+//       hide x
+//     }
+//     L1_context_repr _ -> {
+//       rewrite (context_perm (Engine_context c) repr)
+//           as  (pure False);
+//       let x = elim_false (engine_context_perm c);
+//       hide x
+//     }
+//   }
+// }
+// ```
 
 ```pulse 
 fn destroy_ctxt (ctxt:context_t) (#repr:erased context_repr_t)
@@ -251,8 +285,9 @@ fn destroy_ctxt (ctxt:context_t) (#repr:erased context_repr_t)
   {
     Engine_context c ->
     {
-      rewrite (context_perm ctxt repr) as (engine_context_perm c);
-      unfold (engine_context_perm c);
+      rewrite each ctxt as (Engine_context c);
+      let uds = get_engine_context_perm c repr;
+      unfold (engine_context_perm c uds);
       A.zeroize uds_len c.uds;
       A.free c.uds;
     }
@@ -440,7 +475,9 @@ let close_session = close_session'
 let prng (_:unit) : U32.t = admit()
 
 ```pulse
-fn init_engine_ctxt (uds:A.larray U8.t (US.v uds_len)) (#p:perm)
+fn init_engine_ctxt (uds:A.larray U8.t (US.v uds_len))
+                    (#p:perm)
+                    (#uds_bytes:Ghost.erased (Seq.seq U8.t))
   requires A.pts_to uds #p uds_bytes
         ** uds_is_enabled
   returns _:locked_context_t
@@ -452,22 +489,23 @@ fn init_engine_ctxt (uds:A.larray U8.t (US.v uds_len)) (#p:perm)
   let engine_context = mk_engine_context_t uds_buf;
 
   rewrite each uds_buf as (engine_context.uds);
-  fold (engine_context_perm engine_context);
+  fold (engine_context_perm engine_context uds_bytes);
 
   let ctxt = mk_context_t_engine engine_context;
-  rewrite (engine_context_perm engine_context) 
-    as (context_perm ctxt Engine_context_repr);
+  rewrite (engine_context_perm engine_context uds_bytes) 
+    as (context_perm ctxt (Engine_context_repr uds_bytes));
 
-  let ctxt_lk = L.new_lock (context_perm ctxt Engine_context_repr);
-  ((| ctxt, hide Engine_context_repr, ctxt_lk |) <: locked_context_t)
+  let ctxt_lk = L.new_lock (context_perm ctxt (Engine_context_repr uds_bytes));
+  ((| ctxt, hide (Engine_context_repr uds_bytes), ctxt_lk |) <: locked_context_t)
 }
 ```
 
 ```pulse
-fn init_l0_ctxt (cdi:A.larray U8.t (US.v dice_digest_len)) 
+fn init_l0_ctxt (cdi:A.larray U8.t (US.v dice_digest_len))  
                 (#engine_repr:erased engine_record_repr)
                 (#s:erased (Seq.seq U8.t))
-                (_:squash(cdi_functional_correctness s engine_repr
+                (#uds_bytes:erased (Seq.seq U8.t))
+                (_:squash(cdi_functional_correctness s uds_bytes engine_repr
                       /\ l0_is_authentic engine_repr))
   requires A.pts_to cdi s
         ** pure (A.is_full_array cdi)
@@ -480,7 +518,7 @@ fn init_l0_ctxt (cdi:A.larray U8.t (US.v dice_digest_len))
   A.free cdi;
 
   let l0_context = mk_l0_context_t cdi_buf;
-  let l0_context_repr = hide (mk_l0_context_repr_t s engine_repr);
+  let l0_context_repr = hide (mk_l0_context_repr_t uds_bytes s engine_repr);
   rewrite each cdi_buf as (l0_context.cdi);
   fold (l0_context_perm l0_context l0_context_repr);
 
@@ -580,7 +618,8 @@ fn init_l1_ctxt (deviceIDCSR_len: US.t) (aliasKeyCRT_len: US.t)
   success and None upon failure. 
 *)
 ```pulse
-fn initialize_context' (sid:sid_t) (uds:A.larray U8.t (US.v uds_len)) (#p:perm)
+fn initialize_context' (sid:sid_t) (uds:A.larray U8.t (US.v uds_len)) 
+                       (#p:perm) (#uds_bytes:Ghost.erased (Seq.seq U8.t))
   requires A.pts_to uds #p uds_bytes
         ** uds_is_enabled
   returns _:option ctxt_hndl_t
@@ -766,9 +805,9 @@ let rotate_context_handle = rotate_context_handle'
 ```pulse
 fn derive_child' (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t)
                  (#repr:erased repr_t) (#p:perm)
-  requires record_perm record repr p
+  requires record_perm record p repr
   returns _:option ctxt_hndl_t
-  ensures record_perm record repr p
+  ensures record_perm record p repr
 {
   let new_ctxt_hndl = prng ();
 
@@ -809,9 +848,10 @@ fn derive_child' (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t)
                 {
                   // NOTE: we won't eventually release engine_context_perm because we won't 
                   // own it anymore -- we will free the uds array
-                  
-                  rewrite (context_perm ctxt ctxt_repr) as (engine_context_perm c);
-                  unfold (engine_context_perm c);
+                  rewrite each ctxt as (Engine_context c);
+                  let uds = get_engine_context_perm c ctxt_repr;
+                  // rewrite (context_perm (E) ctxt_repr) as (engine_context_perm c);
+                  unfold (engine_context_perm c uds);
                   match record
                   {
                     Engine_record r ->
@@ -822,15 +862,16 @@ fn derive_child' (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t)
                       let cdi = A.alloc 0uy dice_digest_len;
                       let ret = EngineCore.engine_main cdi c.uds r;
                       with s. assert (A.pts_to cdi s);
-                      fold (engine_context_perm c);
-                      rewrite (engine_context_perm c) as (context_perm ctxt ctxt_repr);
+                      fold (engine_context_perm c uds);
+                      rewrite (engine_context_perm c uds)
+                           as (context_perm ctxt ctxt_repr);
                       destroy_ctxt ctxt;
 
                       match ret
                       {
                         DICE_SUCCESS ->
                         {
-                          let new_locked_context = init_l0_ctxt cdi #r0 #s ();
+                          let new_locked_context = init_l0_ctxt cdi #r0 #s #uds ();
                           
                           let d = HT.delete locked_cht._1 ctxt_hndl;
                           if d 
@@ -843,7 +884,8 @@ fn derive_child' (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t)
                               if i 
                               {
                                 // assert (models cht_sig locked_cht._1 (PHT.insert (PHT.delete cpht ctxt_hndl) new_ctxt_hndl new_locked_context));
-                                rewrite (engine_record_perm r r0 p) as (record_perm record repr p);
+                                rewrite (engine_record_perm r p r0)
+                                     as (record_perm record p repr);
                                 L.release sht_lk;
                                 L.release cht_lk;
                                 Some new_ctxt_hndl
@@ -852,7 +894,8 @@ fn derive_child' (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t)
                               {
                                 // ERROR - insert failed
                                 // assert (models cht_sig locked_cht._1 (PHT.delete cpht ctxt_hndl));
-                                rewrite (engine_record_perm r r0 p) as (record_perm record repr p);
+                                rewrite (engine_record_perm r p r0)
+                                     as (record_perm record p repr);
                                 L.release sht_lk;
                                 L.release cht_lk;
                                 None #ctxt_hndl_t
@@ -861,7 +904,8 @@ fn derive_child' (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t)
                             else
                             {
                                           // ERROR - table full
-                                rewrite (engine_record_perm r r0 p) as (record_perm record repr p);
+                                rewrite (engine_record_perm r p r0)
+                                     as (record_perm record p repr);
                                 L.release sht_lk;
                                 L.release cht_lk;
                                 None #ctxt_hndl_t
@@ -871,7 +915,8 @@ fn derive_child' (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t)
                           {
                             // ERROR - delete failed
                             // assert (models cht_sig locked_cht._1 cpht);
-                            rewrite (engine_record_perm r r0 p) as (record_perm record repr p);
+                            rewrite (engine_record_perm r p r0)
+                                 as (record_perm record p repr);
                             L.release sht_lk;
                             L.release cht_lk;
                             None #ctxt_hndl_t
@@ -882,7 +927,8 @@ fn derive_child' (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t)
                           // ERROR - DICE engine failed
                           A.zeroize dice_digest_len cdi;
                           A.free cdi;
-                          rewrite (engine_record_perm r r0 p) as (record_perm record repr p);
+                          rewrite (engine_record_perm r p r0)
+                               as (record_perm record p repr);
                           L.release sht_lk;
                           L.release cht_lk;
                           None #ctxt_hndl_t
@@ -893,8 +939,9 @@ fn derive_child' (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t)
                     { 
                       // ERROR - record should have type (Engine_record r)
                       // TODO: prove this case is unreachable
-                      fold (engine_context_perm c);
-                      rewrite (engine_context_perm c) as (context_perm ctxt ctxt_repr);
+                      fold (engine_context_perm c uds);
+                      rewrite (engine_context_perm c uds)
+                           as (context_perm ctxt ctxt_repr);
                       destroy_ctxt ctxt;
                       L.release sht_lk;
                       L.release cht_lk;
@@ -978,7 +1025,8 @@ fn derive_child' (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t)
                           if i
                           {
                             // assert (models cht_sig locked_cht._1 (PHT.insert (PHT.delete cpht ctxt_hndl) new_ctxt_hndl new_locked_context));
-                            rewrite (l0_record_perm r r0 p) as (record_perm record repr p);
+                            rewrite (l0_record_perm r p r0)
+                                 as (record_perm record p repr);
                             L.release  sht_lk;
                             L.release  cht_lk;
                             Some new_ctxt_hndl
@@ -987,7 +1035,8 @@ fn derive_child' (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t)
                           {
                             // ERROR - insert failed
                             // assert (models cht_sig locked_cht._1 (PHT.delete cpht ctxt_hndl));
-                            rewrite (l0_record_perm r r0 p) as (record_perm record repr p);
+                            rewrite (l0_record_perm r p r0)
+                                 as (record_perm record p repr);
                             L.release  sht_lk;
                             L.release  cht_lk;
                             None #ctxt_hndl_t
@@ -996,7 +1045,8 @@ fn derive_child' (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t)
                         else
                         {
                           // ERROR - table full
-                          rewrite (l0_record_perm r r0 p) as (record_perm record repr p);
+                          rewrite (l0_record_perm r p r0)
+                              as (record_perm record p repr);
                           L.release  sht_lk;
                           L.release  cht_lk;
                           None #ctxt_hndl_t
@@ -1006,7 +1056,8 @@ fn derive_child' (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t)
                       {
                         // ERROR - delete failed
                         // assert (models cht_sig locked_cht._1 cpht);
-                        rewrite (l0_record_perm r r0 p) as (record_perm record repr p);
+                        rewrite (l0_record_perm r p r0)
+                             as (record_perm record p repr);
                         L.release  sht_lk;
                         L.release  cht_lk;
                         None #ctxt_hndl_t
@@ -1016,7 +1067,8 @@ fn derive_child' (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t)
                     {
                       // ERROR - record should have type (L0_record r)
                       fold (l0_context_perm c cr);
-                      rewrite (l0_context_perm c cr) as (context_perm ctxt ctxt_repr);
+                      rewrite (l0_context_perm c cr)
+                           as (context_perm ctxt ctxt_repr);
                       destroy_ctxt ctxt;
                       L.release  sht_lk;
                       L.release  cht_lk;
