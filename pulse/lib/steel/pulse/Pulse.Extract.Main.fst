@@ -280,7 +280,7 @@ let rec extract (g:env) (p:st_term)
         let body = LN.open_st_term_nv body name in
         let body, _ = extract g body in
         let allocator = mle_app (mle_name (["Pulse"; "Lib"; "Reference"] , "alloc")) [initializer] in
-        let mllb = mk_mllb mlident ([], mlty) allocator in
+        let mllb = mk_mut_mllb mlident ([], mlty) allocator in
         let mlletbinding = mk_mlletbinding false [mllb] in
         mle_let mlletbinding body, e_tag_impure
     
