@@ -33,6 +33,12 @@ enum Lit {
 enum BinOp {
     Add,
     Sub,
+    Ne,
+    Eq,
+    Lt,
+    Le,
+    Gt,
+    Ge,
 }
 
 enum UnOp {
@@ -169,6 +175,12 @@ impl_from_ocaml_variant! {
   BinOp {
       BinOp::Add,
       BinOp::Sub,
+      BinOp::Ne,
+      BinOp::Eq,
+      BinOp::Lt,
+      BinOp::Le,
+      BinOp::Gt,
+      BinOp::Ge,
   }
 }
 
@@ -325,6 +337,35 @@ fn to_syn_path(s: String) -> syn::Path {
     }
 }
 
+fn to_syn_binop(op: &BinOp) -> syn::BinOp {
+    match op {
+        BinOp::Add => syn::BinOp::Add(syn::token::Plus {
+            spans: [Span::call_site()],
+        }),
+        BinOp::Sub => syn::BinOp::Sub(syn::token::Minus {
+            spans: [Span::call_site()],
+        }),
+        BinOp::Ne => syn::BinOp::Ne(syn::token::Ne {
+            spans: [Span::call_site(), Span::call_site()],
+        }),
+        BinOp::Eq => syn::BinOp::Eq(syn::token::EqEq {
+            spans: [Span::call_site(), Span::call_site()],
+        }),
+        BinOp::Lt => syn::BinOp::Lt(syn::token::Lt {
+            spans: [Span::call_site()],
+        }),
+        BinOp::Le => syn::BinOp::Le(syn::token::Le {
+            spans: [Span::call_site(), Span::call_site()],
+        }),
+        BinOp::Gt => syn::BinOp::Gt(syn::token::Gt {
+            spans: [Span::call_site()],
+        }),
+        BinOp::Ge => syn::BinOp::Ge(syn::token::Ge {
+            spans: [Span::call_site(), Span::call_site()],
+        }),
+    }
+}
+
 fn to_syn_expr(e: &Expr) -> syn::Expr {
     match e {
         Expr::EBinOp(e) => {
@@ -333,14 +374,7 @@ fn to_syn_expr(e: &Expr) -> syn::Expr {
             syn::Expr::Binary(syn::ExprBinary {
                 attrs: vec![],
                 left: Box::new(e1),
-                op: match e.op {
-                    BinOp::Add => syn::BinOp::Add(syn::token::Plus {
-                        spans: [Span::call_site()],
-                    }),
-                    BinOp::Sub => syn::BinOp::Sub(syn::token::Minus {
-                        spans: [Span::call_site()],
-                    }),
-                },
+                op: to_syn_binop(&e.op),
                 right: Box::new(e2),
             })
         }
@@ -622,6 +656,12 @@ impl fmt::Display for BinOp {
         let s = match &self {
             BinOp::Add => "+",
             BinOp::Sub => "-",
+            BinOp::Ne => "!=",
+            BinOp::Eq => "==",
+            BinOp::Lt => "<",
+            BinOp::Le => "<=",
+            BinOp::Gt => ">",
+            BinOp::Ge => ">=",
         };
         write!(f, "{}", s)
     }

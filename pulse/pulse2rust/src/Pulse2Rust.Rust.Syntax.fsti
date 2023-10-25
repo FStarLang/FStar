@@ -38,6 +38,12 @@ type lit =
 type binop =
   | Add
   | Sub
+  | Ne
+  | Eq
+  | Lt
+  | Le
+  | Gt
+  | Ge
 
 type unop =
   | Deref
@@ -118,6 +124,7 @@ type fn = {
 }
 
 val mk_ref_typ (is_mut:bool) (t:typ) : typ
+val mk_binop (e1:expr) (op:binop) (e2:expr) : expr
 val mk_block_expr (l:list stmt) : expr
 val mk_ref_read (r:expr) : expr
 val mk_assign (l r:expr) : expr

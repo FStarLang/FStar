@@ -7,6 +7,9 @@ module L = FStar.Compiler.List
 let mk_ref_typ (is_mut:bool) (t:typ) : typ =
   Typ_reference { typ_ref_mut = is_mut; typ_ref_typ = t }
 
+let mk_binop (l:expr) (op:binop) (r:expr) : expr =
+  Expr_binop { expr_bin_left = l; expr_bin_op = op; expr_bin_right = r }
+
 let mk_block_expr l = Expr_block l
 
 let mk_assign (l r:expr) =

@@ -84,10 +84,28 @@ let (__proj__Lit_int__item___0 : lit -> lit_int) =
 type binop =
   | Add 
   | Sub 
+  | Ne 
+  | Eq 
+  | Lt 
+  | Le 
+  | Gt 
+  | Ge 
 let (uu___is_Add : binop -> Prims.bool) =
   fun projectee -> match projectee with | Add -> true | uu___ -> false
 let (uu___is_Sub : binop -> Prims.bool) =
   fun projectee -> match projectee with | Sub -> true | uu___ -> false
+let (uu___is_Ne : binop -> Prims.bool) =
+  fun projectee -> match projectee with | Ne -> true | uu___ -> false
+let (uu___is_Eq : binop -> Prims.bool) =
+  fun projectee -> match projectee with | Eq -> true | uu___ -> false
+let (uu___is_Lt : binop -> Prims.bool) =
+  fun projectee -> match projectee with | Lt -> true | uu___ -> false
+let (uu___is_Le : binop -> Prims.bool) =
+  fun projectee -> match projectee with | Le -> true | uu___ -> false
+let (uu___is_Gt : binop -> Prims.bool) =
+  fun projectee -> match projectee with | Gt -> true | uu___ -> false
+let (uu___is_Ge : binop -> Prims.bool) =
+  fun projectee -> match projectee with | Ge -> true | uu___ -> false
 type unop =
   | Deref 
 let (uu___is_Deref : unop -> Prims.bool) = fun projectee -> true
@@ -307,6 +325,12 @@ let (__proj__Mkfn__item__fn_body : fn -> stmt Prims.list) =
 let (mk_ref_typ : Prims.bool -> typ -> typ) =
   fun is_mut ->
     fun t -> Typ_reference { typ_ref_mut = is_mut; typ_ref_typ = t }
+let (mk_binop : expr -> binop -> expr -> expr) =
+  fun l ->
+    fun op ->
+      fun r ->
+        Expr_binop
+          { expr_bin_left = l; expr_bin_op = op; expr_bin_right = r }
 let (mk_block_expr : stmt Prims.list -> expr) = fun l -> Expr_block l
 let (mk_assign : expr -> expr -> expr) =
   fun l ->

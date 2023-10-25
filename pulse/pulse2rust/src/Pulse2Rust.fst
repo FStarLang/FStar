@@ -79,7 +79,8 @@ let rec extract_mlty (g:env) (t:S.mlty) : typ =
     when S.string_of_mlpath p = "FStar.UInt64.t" -> Typ_name "u64"
   | S.MLTY_Named ([], p)
     when S.string_of_mlpath p = "FStar.Int64.t" ||
-         S.string_of_mlpath p = "Prims.int" -> Typ_name "i64"  // TODO: int to int64, FIX
+         S.string_of_mlpath p = "Prims.int"     ||
+         S.string_of_mlpath p = "Prims.nat" ->Typ_name "i64"  // TODO: int to int64, nat to int64, FIX
   | S.MLTY_Named ([], p)
     when S.string_of_mlpath p = "Prims.bool" -> Typ_name "bool"
   | S.MLTY_Named ([arg], p)
@@ -98,6 +99,7 @@ let extract_top_level_fn_arg (g:env) (arg_name:string) (t:S.mlty) : fn_arg =
          S.string_of_mlpath p = "FStar.UInt64.t" ||
          S.string_of_mlpath p = "FStar.Int64.t"  ||
          S.string_of_mlpath p = "Prims.int"      ||
+         S.string_of_mlpath p = "Prims.nat"      ||
          S.string_of_mlpath p = "Prims.bool" ->
     mk_scalar_fn_arg arg_name (extract_mlty g t)
 
@@ -143,6 +145,25 @@ let arg_ts_and_ret_t (t:S.mltyscheme) : S.mlidents & list S.mlty & S.mlty =
     tvars, arg_ts, ret_t
   | _ -> fail_nyi (format1 "top level arg_ts and ret_t %s" (S.mlty_to_string t))
 
+let is_binop (s:string) : option binop =
+  if s = "Prims.op_Addition"
+  then Some Add
+  else if s = "Prims.op_Subtraction"
+  then Some Sub
+  else if s = "Prims.op_disEquality"
+  then Some Ne
+  else if s = "Prims.op_LessThanOrEqual"
+  then Some Le
+  else if s = "Prims.op_LessThan"
+  then Some Lt
+  else if s = "Prims.op_GreaterThanOrEqual"
+  then Some Ge
+  else if s = "Prims.op_GreaterThan"
+  then Some Gt
+  else if s = "Prims.op_Equality"
+  then Some Eq
+  else None
+
 let rec extract_mlexpr (g:env) (e:S.mlexpr) : expr =
   match e.expr with
   | S.MLE_Const (S.MLC_Unit) -> Expr_path "unitv"
@@ -183,6 +204,14 @@ let rec extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     let expr_while_cond = extract_mlexpr g cond in
     let expr_while_body = extract_mlexpr_to_stmts g body in
     Expr_while {expr_while_cond; expr_while_body}
+  | S.MLE_App ({expr=S.MLE_Name p}, [e1; e2])
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2])
+    when p |> S.string_of_mlpath |> is_binop |> Some? ->
+    let e1 = extract_mlexpr g e1 in
+    let op = p |> S.string_of_mlpath |> is_binop |> must in
+    let e2 = extract_mlexpr g e2 in
+    mk_binop e1 op e2
+
   | S.MLE_App (head, args) ->
     let head = extract_mlexpr g head in
     let args = List.map (extract_mlexpr g) args in
@@ -274,6 +303,7 @@ let extract_one (file:string) : unit =
       print_string "Extracted to:\n";
       print_string (RustBindings.fn_to_rust f ^ "\n");
       g
+    | S.MLM_Loc _ -> g
     | _ -> fail_nyi (format1 "top level decl %s" (S.mlmodule1_to_string d))
   ) (empty_env ()) decls in
   ()
