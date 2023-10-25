@@ -51,6 +51,23 @@ let impl_bounded_typ
         ))
 
 inline_for_extraction noextract
+let eval_impl_bounded_typ
+    (#b: Ghost.erased raw_data_item)
+    (#t: bounded_typ b)
+    (f: impl_bounded_typ t)
+    (c: cbor)
+    (#v: Ghost.erased raw_data_item)
+:   stt bool
+        (raw_data_item_match c v ** pure (
+            Ghost.reveal v << Ghost.reveal b
+        ))
+        (fun res -> raw_data_item_match c v ** pure (
+            Ghost.reveal v << Ghost.reveal b /\
+            res == t v
+        ))
+= f c #v
+
+inline_for_extraction noextract
 let impl_array_group3
     (#b: raw_data_item)
     (g: array_group3 b)
@@ -106,6 +123,138 @@ assume val elim_stick0
 : stt_ghost unit emp_inames
     ((hyp @==> concl) ** hyp)
     (fun _ -> concl)
+
+assume val stick_refl0
+    (p: vprop)
+: stt_ghost unit emp_inames
+    (emp)
+    (fun _ -> p @==> p)
+
+```pulse
+ghost
+fn intro_impl_array_group3_post
+    (#b: raw_data_item)
+    (g: array_group3 b)
+    (pi: R.ref cbor_array_iterator_t)
+    (i: cbor_array_iterator_t)
+    (l: list raw_data_item)
+    (res: bool)
+    (i': cbor_array_iterator_t)
+    (l': list raw_data_item)
+requires
+    (
+            R.pts_to pi i' **
+            cbor_array_iterator_match i' l' **
+            `@(cbor_array_iterator_match i' l' @==> cbor_array_iterator_match i l) **
+            pure (
+                Ghost.reveal l << b /\
+                res == Some? (g l) /\
+                (res == true ==> Some?.v (g l) == l')
+            )
+    )
+ensures
+        (exists_ (fun i' -> exists_ (fun l' ->
+            R.pts_to pi i' **
+            cbor_array_iterator_match i' l' **
+            (cbor_array_iterator_match i' l' @==> cbor_array_iterator_match i l) **
+            pure (
+                Ghost.reveal l << b /\
+                res == Some? (g l) /\
+                (res == true ==> Some?.v (g l) == l')
+            )
+        )))
+
+{
+    ()
+}
+```
+
+assume
+val stick_consume_l
+    (_: unit)
+    (#p #q #r: vprop)
+: stt_ghost unit emp_inames
+    (p ** ((p ** q) @==> r))
+    (fun _ -> q @==> r)
+
+assume
+val stick_consume_r
+    (_: unit)
+    (#q #p #r: vprop)
+: stt_ghost unit emp_inames
+    (p ** ((q ** p) @==> r))
+    (fun _ -> q @==> r)
+
+assume
+val stick_trans
+    (_: unit)
+    (#p #q #r: vprop)
+: stt_ghost unit emp_inames
+    ((p @==> q) ** (q @==> r))
+    (fun _ -> p @==> r)
+
+inline_for_extraction noextract
+```pulse
+fn impl_array_group3_item
+    (#b: Ghost.erased raw_data_item)
+    (#ty: bounded_typ b)
+    (fty: impl_bounded_typ ty)
+    (pi: R.ref cbor_array_iterator_t)
+    (#gi: Ghost.erased cbor_array_iterator_t)
+    (#l: Ghost.erased (list raw_data_item))
+requires
+        (R.pts_to pi gi **
+            cbor_array_iterator_match gi l **
+            pure (Ghost.reveal l << Ghost.reveal b)
+        )
+returns res: bool
+ensures
+        (exists_ (fun i' -> exists_ (fun l' ->
+            R.pts_to pi i' **
+            cbor_array_iterator_match i' l' **
+            (cbor_array_iterator_match i' l' @==> cbor_array_iterator_match gi l) **
+            pure (
+                Ghost.reveal l << Ghost.reveal b /\
+                res == Some? (array_group3_item ty l) /\
+                (res == true ==> Some?.v (array_group3_item ty l) == l')
+            )
+        )))
+{
+    let i = !pi;
+    rewrite (cbor_array_iterator_match gi l) as (cbor_array_iterator_match i l);
+    let is_done = cbor_array_iterator_is_done i;
+    rewrite (cbor_array_iterator_match i l) as (cbor_array_iterator_match gi l);
+    if (is_done) {
+        stick_refl0 (cbor_array_iterator_match gi l);
+        intro_impl_array_group3_post (array_group3_item ty) pi gi l false gi l; // FIXME: WHY WHY WHY? and also WHY WHY WHY here and not in the other "false" case below?
+        false
+    } else {
+        let c = cbor_array_iterator_next pi #l #gi; // FIXME: WHY WHY WHY those explicit arguments?
+        with gc i' l' . assert (
+            raw_data_item_match c gc **
+            cbor_array_iterator_match i' l' **
+            `@((raw_data_item_match c gc ** cbor_array_iterator_match i' l') @==> cbor_array_iterator_match gi l)
+        ); // this is needed for the explicit arguments to split_consume_l below
+        let test = eval_impl_bounded_typ fty c;
+        if (test) {
+            stick_consume_l ()
+                #(raw_data_item_match c gc)
+                #(cbor_array_iterator_match i' l')
+                #(cbor_array_iterator_match gi l) // FIXME: WHY WHY WHY those explicit arguments? (for which the with above is needed)
+            ;
+            true
+        } else {
+            elim_stick0 ()
+                #(raw_data_item_match c gc ** cbor_array_iterator_match i' l')
+                #(cbor_array_iterator_match gi l); // FIXME: WHY WHY WHY those explicit arguments?
+            pi := i;
+            rewrite (R.pts_to pi i) as (R.pts_to pi gi);
+            stick_refl0 (cbor_array_iterator_match gi l);
+            false
+        }
+    }
+}
+```
 
 inline_for_extraction noextract
 ```pulse
