@@ -4,7 +4,16 @@ open FStar.Compiler.Effect
 
 module L = FStar.Compiler.List
 
+let mk_ref_typ (is_mut:bool) (t:typ) : typ =
+  Typ_reference { typ_ref_mut = is_mut; typ_ref_typ = t }
+
 let mk_block_expr l = Expr_block l
+
+let mk_assign (l r:expr) =
+  Expr_assign {
+    expr_assignment_l = l;
+    expr_assignment_r = r;
+  }
 
 let mk_ref_assign (l r:expr) =
   Expr_assign {
@@ -47,7 +56,7 @@ let mk_fn_signature (fn_name:string) (fn_generics:list string) (fn_args:list fn_
   let fn_generics = L.map Generic_type_param fn_generics in
   { fn_name; fn_generics; fn_args; fn_ret_t }
 
-let mk_local_stmt (name:string) (is_mut) (init:expr) =
+let mk_local_stmt (name:string) (is_mut:bool) (init:expr) =
   Stmt_local {
     local_stmt_pat = Pat_ident { pat_name = name; by_ref = false; is_mut };
     local_stmt_init = Some init

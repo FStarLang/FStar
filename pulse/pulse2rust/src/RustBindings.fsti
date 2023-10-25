@@ -12,4 +12,7 @@ open Pulse2Rust.Rust.Syntax
 
 // val dflt (x:option i64) : string
 
+val fn_to_rust (f:fn) : string
 val fn_to_string (f:fn) : string
+val expr_to_string (e:expr) : string
+val typ_to_string (t:typ) : string

@@ -2204,7 +2204,7 @@ let rec (extract :
                                                                     (Pulse_Extract_CompilerLib.mk_mlletbinding
                                                                     false
                                                                     [
-                                                                    Pulse_Extract_CompilerLib.mk_mllb
+                                                                    Pulse_Extract_CompilerLib.mk_mut_mllb
                                                                     mlident
                                                                     ([],
                                                                     mlty)

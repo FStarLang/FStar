@@ -1,9 +1,27 @@
 open Prims
 type typ =
   | Typ_name of Prims.string 
-let (uu___is_Typ_name : typ -> Prims.bool) = fun projectee -> true
+  | Typ_reference of typ_reference 
+and typ_reference = {
+  typ_ref_mut: Prims.bool ;
+  typ_ref_typ: typ }
+let (uu___is_Typ_name : typ -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Typ_name _0 -> true | uu___ -> false
 let (__proj__Typ_name__item___0 : typ -> Prims.string) =
   fun projectee -> match projectee with | Typ_name _0 -> _0
+let (uu___is_Typ_reference : typ -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Typ_reference _0 -> true | uu___ -> false
+let (__proj__Typ_reference__item___0 : typ -> typ_reference) =
+  fun projectee -> match projectee with | Typ_reference _0 -> _0
+let (__proj__Mktyp_reference__item__typ_ref_mut :
+  typ_reference -> Prims.bool) =
+  fun projectee ->
+    match projectee with | { typ_ref_mut; typ_ref_typ;_} -> typ_ref_mut
+let (__proj__Mktyp_reference__item__typ_ref_typ : typ_reference -> typ) =
+  fun projectee ->
+    match projectee with | { typ_ref_mut; typ_ref_typ;_} -> typ_ref_typ
 type pat_ident =
   {
   pat_name: Prims.string ;
@@ -286,7 +304,13 @@ let (__proj__Mkfn__item__fn_sig : fn -> fn_signature) =
   fun projectee -> match projectee with | { fn_sig; fn_body;_} -> fn_sig
 let (__proj__Mkfn__item__fn_body : fn -> stmt Prims.list) =
   fun projectee -> match projectee with | { fn_sig; fn_body;_} -> fn_body
+let (mk_ref_typ : Prims.bool -> typ -> typ) =
+  fun is_mut ->
+    fun t -> Typ_reference { typ_ref_mut = is_mut; typ_ref_typ = t }
 let (mk_block_expr : stmt Prims.list -> expr) = fun l -> Expr_block l
+let (mk_assign : expr -> expr -> expr) =
+  fun l ->
+    fun r -> Expr_assign { expr_assignment_l = l; expr_assignment_r = r }
 let (mk_ref_assign : expr -> expr -> expr) =
   fun l ->
     fun r ->

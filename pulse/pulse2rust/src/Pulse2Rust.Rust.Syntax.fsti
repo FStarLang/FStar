@@ -4,6 +4,12 @@ open FStar.Compiler.Effect
 
 type typ =
   | Typ_name of string
+  | Typ_reference of typ_reference
+
+and typ_reference = {
+  typ_ref_mut : bool;
+  typ_ref_typ : typ;
+}
 
 type pat_ident = {
   pat_name : string;
@@ -111,8 +117,10 @@ type fn = {
   fn_body : list stmt;
 }
 
+val mk_ref_typ (is_mut:bool) (t:typ) : typ
 val mk_block_expr (l:list stmt) : expr
 val mk_ref_read (r:expr) : expr
+val mk_assign (l r:expr) : expr
 val mk_ref_assign (l r:expr) : expr
 val mk_call (head:expr) (args:list expr) : expr
 val mk_if (cond:expr) (then_:list stmt) (else_:option expr) : expr  // else is Block or ExprIf

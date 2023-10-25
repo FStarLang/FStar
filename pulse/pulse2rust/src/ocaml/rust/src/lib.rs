@@ -1,6 +1,6 @@
 use ocaml_interop::{
-    impl_from_ocaml_record, impl_from_ocaml_variant, ocaml_export, FromOCaml, OCaml, OCamlInt64,
-    OCamlList, OCamlRef, ToOCaml,
+    impl_from_ocaml_record, impl_from_ocaml_variant, ocaml_export, OCaml, OCamlList, OCamlRef,
+    ToOCaml,
 };
 use proc_macro2::Span;
 use syn::{
@@ -83,8 +83,14 @@ enum Expr {
     EWhile(ExprWhile),
 }
 
+struct TypeReference {
+    type_reference_mut: bool,
+    type_reference_typ: Box<Typ>,
+}
+
 enum Typ {
     TName(String),
+    TReference(TypeReference),
 }
 
 struct PatIdent {
@@ -230,9 +236,17 @@ impl_from_ocaml_record! {
   }
 }
 
+impl_from_ocaml_record! {
+  TypeReference {
+    type_reference_mut : bool,
+    type_reference_typ : Typ,
+  }
+}
+
 impl_from_ocaml_variant! {
   Typ {
     Typ::TName (payload:String),
+    Typ::TReference (payload:TypeReference),
   }
 }
 
@@ -506,9 +520,26 @@ fn to_syn_block(l: &Vec<Stmt>) -> Block {
 }
 
 fn to_syn_typ(t: &Typ) -> Type {
-    let Typ::TName(s) = t;
-    let path = to_syn_path(s.to_string());
-    Type::Path(TypePath { qself: None, path })
+    match &t {
+        Typ::TName(s) => {
+            let path = to_syn_path(s.to_string());
+            Type::Path(TypePath { qself: None, path })
+        }
+        Typ::TReference(type_reference) => Type::Reference(syn::TypeReference {
+            and_token: syn::token::And {
+                spans: [Span::call_site()],
+            },
+            lifetime: None,
+            mutability: if type_reference.type_reference_mut {
+                Some(Mut {
+                    span: Span::call_site(),
+                })
+            } else {
+                None
+            },
+            elem: Box::new(to_syn_typ(&type_reference.type_reference_typ)),
+        }),
+    }
 }
 
 fn to_syn_fn_arg(a: &FnArg) -> syn::FnArg {
@@ -676,8 +707,19 @@ impl fmt::Display for Expr {
 
 impl fmt::Display for Typ {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let Typ::TName(s) = self;
-        write!(f, "{}", s)
+        match &self {
+            Typ::TName(s) => write!(f, "{}", s),
+            Typ::TReference(type_reference) => write!(
+                f,
+                "&{} {}",
+                if type_reference.type_reference_mut {
+                    "mut"
+                } else {
+                    ""
+                },
+                type_reference.type_reference_typ
+            ),
+        }
     }
 }
 
@@ -767,26 +809,32 @@ ocaml_export! {
     e.to_string().to_owned().to_ocaml(cr)
   }
 
+  fn rust_typ_to_string(cr, e:OCamlRef<Typ>) -> OCaml<String> {
+    let e = cr.get(e);
+    let e: Typ = e.to_rust ();
+    e.to_string().to_owned().to_ocaml(cr)
+  }
+
   fn rust_fn_to_syn_string(cr, e:OCamlRef<Fn>) -> OCaml<String> {
     let e = cr.get(e);
     let e: Fn = e.to_rust ();
     fn_to_syn_string(&e).to_owned ().to_ocaml(cr)
   }
 
-  fn rust_add_2(cr, x:OCamlRef<OCamlInt64>) -> OCaml<String> {
-    let x: OCaml<OCamlInt64> = cr.get(x);
-    let x: i64 = FromOCaml::from_ocaml(x);
-    let z = x + 2;
-    z.to_string().to_owned().to_ocaml(cr)
-  }
+  // fn rust_add_2(cr, x:OCamlRef<OCamlInt64>) -> OCaml<String> {
+  //   let x: OCaml<OCamlInt64> = cr.get(x);
+  //   let x: i64 = FromOCaml::from_ocaml(x);
+  //   let z = x + 2;
+  //   z.to_string().to_owned().to_ocaml(cr)
+  // }
 
-  fn rust_dflt(cr, x:OCamlRef<Option<OCamlInt64>>) -> OCaml<String> {
-    let x: OCaml<Option<OCamlInt64>> = cr.get(x);
-    let x: Option<i64> = FromOCaml::from_ocaml(x);
-    let z = match x {
-      Some(x) => x,
-      None => 0,
-    };
-    z.to_string().to_owned().to_ocaml(cr)
-  }
+  // fn rust_dflt(cr, x:OCamlRef<Option<OCamlInt64>>) -> OCaml<String> {
+  //   let x: OCaml<Option<OCamlInt64>> = cr.get(x);
+  //   let x: Option<i64> = FromOCaml::from_ocaml(x);
+  //   let z = match x {
+  //     Some(x) => x,
+  //     None => 0,
+  //   };
+  //   z.to_string().to_owned().to_ocaml(cr)
+  // }
 }
