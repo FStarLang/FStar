@@ -1,7 +1,7 @@
 %{
 (*
  We are expected to have only 6 shift-reduce conflicts in ML and 8 in F#.
- A lot (176) of end-of-stream conflicts are also reported and
+ A lot (222) of end-of-stream conflicts are also reported and
  should be investigated...
 *)
 (* (c) Microsoft Corporation. All rights reserved *)
