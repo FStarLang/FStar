@@ -5,11 +5,32 @@ module U64 = FStar.UInt64
 
 // Concise Data Definition Language (RFC 8610)
 
+noextract
+let opt_precedes
+  (#t1 #t2: Type)
+  (x1: t1)
+  (x2: option t2)
+: Tot prop
+= match x2 with
+  | None -> True
+  | Some x2 -> x1 << x2
+
 [@@noextract_to "krml"]
-let typ = (Cbor.raw_data_item -> GTot bool) // GTot needed because of the .cbor control (staged serialization)
-let bounded_typ (e: Cbor.raw_data_item) = ((e': Cbor.raw_data_item { e' << e }) -> GTot bool)
-let t_choice (t1 t2: typ) : typ = (fun x -> t1 x || t2 x)
-let t_bounded_choice (e: Cbor.raw_data_item) (t1 t2: bounded_typ e) : bounded_typ e = (fun x -> t1 x || t2 x)
+let bounded_typ_gen (e: option Cbor.raw_data_item) = (e': Cbor.raw_data_item { opt_precedes e' e }) -> GTot bool  // GTot needed because of the .cbor control (staged serialization)
+
+[@@noextract_to "krml"]
+let typ = bounded_typ_gen None
+
+[@@noextract_to "krml"]
+let bounded_typ (e: Cbor.raw_data_item) = bounded_typ_gen (Some e)
+
+let coerce_to_bounded_typ
+  (b: option Cbor.raw_data_item)
+  (t: typ)
+: Tot (bounded_typ_gen b)
+= t
+
+let t_choice (#b: option Cbor.raw_data_item) (t1 t2: bounded_typ_gen b) : bounded_typ_gen b = (fun x -> t1 x || t2 x)
 let t_always_false : typ = (fun _ -> false)
 
 // Appendix D
@@ -168,11 +189,11 @@ let rec list_is_suffix_of_precedes
   end
 
 [@@erasable; noextract_to "krml"]
-let array_group3 (bound: Cbor.raw_data_item) = (l: list Cbor.raw_data_item { l << bound }) -> Ghost (option (list Cbor.raw_data_item))
+let array_group3 (bound: option Cbor.raw_data_item) = (l: list Cbor.raw_data_item { opt_precedes l bound }) -> Ghost (option (list Cbor.raw_data_item))
   (requires True)
   (ensures (fun l' -> match l' with
   | None -> True
-  | Some l' -> l' << bound
+  | Some l' -> opt_precedes l' bound
   ))
 let array_group3_always_false #b : array_group3 b = fun _ -> None
 let array_group3_empty #b : array_group3 b = fun x -> Some x
@@ -188,9 +209,9 @@ let array_group3_choice #b (a1 a3: array_group3 b) : array_group3 b =
     | None -> a3 l
     | Some l3 -> Some l3
 
-let rec array_group3_zero_or_more' #b (a: array_group3 b) (l: list Cbor.raw_data_item { l << b }) : Ghost (option (list Cbor.raw_data_item))
+let rec array_group3_zero_or_more' #b (a: array_group3 b) (l: list Cbor.raw_data_item { opt_precedes l b }) : Ghost (option (list Cbor.raw_data_item))
   (requires True)
-  (ensures (fun l' -> match l' with None -> True | Some l' -> l' << b))
+  (ensures (fun l' -> match l' with None -> True | Some l' -> opt_precedes l' b))
   (decreases (List.Tot.length l))
 =
   match a l with
@@ -208,19 +229,19 @@ let array_group3_one_or_more #b (a: array_group3 b) : array_group3 b =
 let array_group3_zero_or_one #b (a: array_group3 b) : Tot (array_group3 b) =
   a `array_group3_choice` array_group3_empty
 
-let array_group3_item (#b: Cbor.raw_data_item) (t: bounded_typ b) : array_group3 b = fun l ->
+let array_group3_item (#b: option Cbor.raw_data_item) (t: bounded_typ_gen b) : array_group3 b = fun l ->
   match l with
   | [] -> None
   | a :: q -> if t a then Some q else None
 
-let match_array_group3 (#b: Cbor.raw_data_item) (a: array_group3 b)
-  (l: list Cbor.raw_data_item {l << b})
+let match_array_group3 (#b: option Cbor.raw_data_item) (a: array_group3 b)
+  (l: list Cbor.raw_data_item {opt_precedes l b})
 : GTot bool
 = match a l with
   | Some l' -> Nil? l'
   | _ -> false
 
-let t_array3_bounded (#b: Cbor.raw_data_item) (a: array_group3 b) : bounded_typ b = fun x ->
+let t_array3 (#b: option Cbor.raw_data_item) (a: array_group3 b) : bounded_typ_gen b = fun x ->
   Cbor.Array? x &&
   match_array_group3 a (Cbor.Array?.v x)
 
@@ -234,7 +255,7 @@ let t_array3_bounded (#b: Cbor.raw_data_item) (a: array_group3 b) : bounded_typ 
 // to the "size" annotation in a sized type.)
 
 let rec t_array3_rec
-  (phi: (b: Cbor.raw_data_item) -> (bounded_typ b -> array_group3 b))
+  (phi: (b: Cbor.raw_data_item) -> (bounded_typ b -> array_group3 (Some b)))
   (x: Cbor.raw_data_item)
 : GTot bool
   (decreases x)
@@ -242,27 +263,22 @@ let rec t_array3_rec
   Cbor.Array? x &&
   match_array_group3 (phi x (t_array3_rec phi)) (Cbor.Array?.v x)
 
-let t_array3
-  (phi: (b: Cbor.raw_data_item) -> array_group3 b)
-: Tot typ
-= t_array3_rec (fun b _ -> phi b)
-
 // Groups in map context (Section 3.5)
 
 [@@erasable]
 noeq
-type map_group_entry (b: Cbor.raw_data_item) = | MapGroupEntry: (fst: bounded_typ b) -> (snd: bounded_typ b) -> map_group_entry b
+type map_group_entry (b: option Cbor.raw_data_item) = | MapGroupEntry: (fst: bounded_typ_gen b) -> (snd: bounded_typ_gen b) -> map_group_entry b
 
 let matches_map_group_entry
-  (#b: Cbor.raw_data_item)
+  (#b: option Cbor.raw_data_item)
   (ge: map_group_entry b)
-  (x: (Cbor.raw_data_item & Cbor.raw_data_item) { x << b })
+  (x: (Cbor.raw_data_item & Cbor.raw_data_item) { opt_precedes x b })
 : GTot bool
 = ge.fst (fst x) && ge.snd (snd x)
 
 [@@erasable]
 noeq
-type map_group (b: Cbor.raw_data_item) = {
+type map_group (b: option Cbor.raw_data_item) = {
   one: list (map_group_entry b);
   zero_or_one: list (map_group_entry b);
   zero_or_more: list (map_group_entry b);
@@ -275,10 +291,10 @@ let map_group_empty #b : map_group b = {
 }
 
 // Section 3.5.4: Cut
-let cut_map_group_entry #b (key: bounded_typ b) (ge: map_group_entry b) : map_group_entry b =
+let cut_map_group_entry #b (key: bounded_typ_gen b) (ge: map_group_entry b) : map_group_entry b =
   (fun x -> ge.fst x && not (key x)) `MapGroupEntry` ge.snd
 
-let cut_map_group #b (key: bounded_typ b) (g: map_group b) : map_group b = {
+let cut_map_group #b (key: bounded_typ_gen b) (g: map_group b) : map_group b = {
   one = List.Tot.map (cut_map_group_entry key) g.one;
   zero_or_one = List.Tot.map (cut_map_group_entry key) g.zero_or_one;
   zero_or_more = List.Tot.map (cut_map_group_entry key) g.zero_or_more;
@@ -308,8 +324,8 @@ let map_group_cons_zero_or_more #b (ge: map_group_entry b) (cut: bool) (g: map_g
 }
 
 let rec matches_list_map_group_entry'
-  (#b: Cbor.raw_data_item)
-  (x: (Cbor.raw_data_item & Cbor.raw_data_item) { x << b })
+  (#b: option Cbor.raw_data_item)
+  (x: (Cbor.raw_data_item & Cbor.raw_data_item) { opt_precedes x b })
   (unmatched: list (map_group_entry b))
   (l: list (map_group_entry b))
 : GTot (option (list (map_group_entry b)))
@@ -322,8 +338,8 @@ let rec matches_list_map_group_entry'
     else matches_list_map_group_entry' x (a :: unmatched) q
 
 let matches_list_map_group_entry
-  (#b: Cbor.raw_data_item)
-  (x: (Cbor.raw_data_item & Cbor.raw_data_item) { x << b })
+  (#b: option Cbor.raw_data_item)
+  (x: (Cbor.raw_data_item & Cbor.raw_data_item) { opt_precedes x b })
   (l: list (map_group_entry b))
 : GTot (option (list (map_group_entry b)))
 = matches_list_map_group_entry' x [] l
@@ -333,9 +349,9 @@ let rec ghost_list_exists (#a: Type) (f: (a -> GTot bool)) (l: list a): GTot boo
  | hd::tl -> if f hd then true else ghost_list_exists f tl
 
 let rec matches_map_group
-  (#b: Cbor.raw_data_item)
+  (#b: option Cbor.raw_data_item)
   (m: map_group b)
-  (x: list (Cbor.raw_data_item & Cbor.raw_data_item) {x << b })
+  (x: list (Cbor.raw_data_item & Cbor.raw_data_item) {opt_precedes x b })
 : GTot bool
   (decreases x)
 = match x with
@@ -356,26 +372,21 @@ let rec matches_map_group
 // 2.1 specifies "names that turn into the map key text string"
 let name_as_text_string (s: Seq.seq U8.t) : typ = (fun x -> tstr x && Cbor.String?.v x = s)
 
-let t_map_bounded (#b: Cbor.raw_data_item) (m: map_group b) : bounded_typ b = fun x ->
+let t_map (#b: option Cbor.raw_data_item) (m: map_group b) : bounded_typ_gen b = fun x ->
   Cbor.Map? x &&
   matches_map_group m (Cbor.Map?.v x)
 
 let rec t_map_rec
-  (phi: (b: Cbor.raw_data_item) -> (bounded_typ b -> map_group b))
+  (phi: (b: Cbor.raw_data_item) -> (bounded_typ b -> map_group (Some b)))
   (x: Cbor.raw_data_item)
 : GTot bool
   (decreases x)
 = Cbor.Map? x &&
   matches_map_group (phi x (t_map_rec phi)) (Cbor.Map?.v x)
 
-let t_map
-  (phi: (b: Cbor.raw_data_item) -> map_group b)
-: Tot typ
-= t_map_rec (fun b _ -> phi b)
-
 // Section 3.6: Tags
 
-let t_tag_bounded (#b: Cbor.raw_data_item) (tag: U64.t) (t: bounded_typ b) : bounded_typ b = fun x ->
+let t_tag (#b: option Cbor.raw_data_item) (tag: U64.t) (t: bounded_typ_gen b) : bounded_typ_gen b = fun x ->
   Cbor.Tagged? x &&
   Cbor.Tagged?.tag x = tag &&
   t (Cbor.Tagged?.v x)
@@ -390,18 +401,12 @@ let rec t_tag_rec
   Cbor.Tagged?.tag x = tag &&
   phi x (t_tag_rec tag phi) (Cbor.Tagged?.v x)
 
-let t_tag
-  (tag: U64.t)
-  (phi: (b: Cbor.raw_data_item) -> bounded_typ b)
-: Tot typ
-= t_tag_rec tag (fun b _ -> phi b)
-
 // Multi-purpose recursive combinator, to allow disjunctions between destructors
 
 let rec multi_rec
   (phi_base: typ)
-  (phi_array: (b: Cbor.raw_data_item) -> bounded_typ b -> array_group3 b)
-  (phi_map: (b: Cbor.raw_data_item) -> bounded_typ b -> map_group b)
+  (phi_array: (b: Cbor.raw_data_item) -> bounded_typ b -> array_group3 (Some b))
+  (phi_map: (b: Cbor.raw_data_item) -> bounded_typ b -> map_group (Some b))
   (phi_tag: U64.t -> (b: Cbor.raw_data_item) -> bounded_typ b -> bounded_typ b)
   (x: Cbor.raw_data_item)
 : GTot bool

@@ -9,77 +9,86 @@ module R = Pulse.Lib.Reference
 
 inline_for_extraction noextract
 let impl_typ
-    (t: typ)
+    (#b: option raw_data_item)
+    (t: bounded_typ_gen b)
 : Tot Type
 =
     (c: cbor) ->
     (#v: Ghost.erased raw_data_item) ->
     stt bool
-        (raw_data_item_match c v)
+        (raw_data_item_match c v ** pure (
+            opt_precedes (Ghost.reveal v) b
+        ))
         (fun res -> raw_data_item_match c v ** pure (
+            opt_precedes (Ghost.reveal v) b /\
             res == t v
         ))
 
 inline_for_extraction noextract
 let eval_impl_typ
-    (#t: typ)
+    (#b: Ghost.erased (option raw_data_item))
+    (#t: bounded_typ_gen b)
     (f: impl_typ t)
     (c: cbor)
     (#v: Ghost.erased raw_data_item)
 :   stt bool
-        (raw_data_item_match c v)
-        (fun res -> raw_data_item_match c v ** pure (
-            res == t v
-        ))
-= f c #v
-
-inline_for_extraction noextract
-let impl_bounded_typ
-    (#b: raw_data_item)
-    (t: bounded_typ b)
-: Tot Type
-=
-    (c: cbor) ->
-    (#v: Ghost.erased raw_data_item) ->
-    stt bool
         (raw_data_item_match c v ** pure (
-            Ghost.reveal v << b
+            opt_precedes (Ghost.reveal v) (Ghost.reveal b)
         ))
         (fun res -> raw_data_item_match c v ** pure (
-            Ghost.reveal v << b /\
-            res == t v
-        ))
-
-inline_for_extraction noextract
-let eval_impl_bounded_typ
-    (#b: Ghost.erased raw_data_item)
-    (#t: bounded_typ b)
-    (f: impl_bounded_typ t)
-    (c: cbor)
-    (#v: Ghost.erased raw_data_item)
-:   stt bool
-        (raw_data_item_match c v ** pure (
-            Ghost.reveal v << Ghost.reveal b
-        ))
-        (fun res -> raw_data_item_match c v ** pure (
-            Ghost.reveal v << Ghost.reveal b /\
+            opt_precedes (Ghost.reveal v) (Ghost.reveal b) /\
             res == t v
         ))
 = f c #v
 
 inline_for_extraction noextract
 ```pulse
+fn impl_coerce_to_bounded_typ'
+    (b: Ghost.erased (option raw_data_item))
+    (#t: typ)
+    (f: impl_typ t)
+    (c: cbor)
+    (#v: Ghost.erased raw_data_item)
+requires
+        (raw_data_item_match c v ** pure (
+            opt_precedes (Ghost.reveal v) (Ghost.reveal b)
+        ))
+returns res: bool
+ensures
+        (raw_data_item_match c v ** pure (
+            opt_precedes (Ghost.reveal v) (Ghost.reveal b) /\
+            res == coerce_to_bounded_typ b t v
+        ))
+{
+    eval_impl_typ f c
+}
+```
+
+inline_for_extraction noextract
+let impl_coerce_to_bounded_typ
+    (b: Ghost.erased (option raw_data_item))
+    (#t: typ)
+    (f: impl_typ t)
+: Tot (impl_typ (coerce_to_bounded_typ b t))
+= impl_coerce_to_bounded_typ' b f
+
+inline_for_extraction noextract
+```pulse
 fn impl_t_choice'
-    (#t1 #t2: typ)
+    (#b: Ghost.erased (option raw_data_item))
+    (#t1 #t2: bounded_typ_gen b)
     (f1: impl_typ t1)
     (f2: impl_typ t2)
     (c: cbor)
     (#v: Ghost.erased raw_data_item)
 requires
-        (raw_data_item_match c v)
+        (raw_data_item_match c v ** pure (
+            opt_precedes (Ghost.reveal v) (Ghost.reveal b)
+        ))
 returns res: bool
 ensures
         (raw_data_item_match c v ** pure (
+            opt_precedes (Ghost.reveal v) (Ghost.reveal b) /\
             res == t_choice t1 t2 v
         ))
 {
@@ -95,7 +104,8 @@ ensures
 
 inline_for_extraction
 let impl_t_choice
-    (#t1 #t2: typ)
+    (#b: Ghost.erased (option raw_data_item))
+    (#t1 #t2: bounded_typ_gen b)
     (f1: impl_typ t1)
     (f2: impl_typ t2)
 : Tot (impl_typ (t_choice t1 t2))
@@ -103,7 +113,7 @@ let impl_t_choice
 
 inline_for_extraction noextract
 let impl_array_group3
-    (#b: raw_data_item)
+    (#b: option raw_data_item)
     (g: array_group3 b)
 : Tot Type
 =
@@ -113,14 +123,14 @@ let impl_array_group3
     stt bool
         (R.pts_to pi i **
             cbor_array_iterator_match i l **
-            pure (Ghost.reveal l << b)
+            pure (opt_precedes (Ghost.reveal l) b)
         )
         (fun res -> exists_ (fun i' -> exists_ (fun l' ->
             R.pts_to pi i' **
             cbor_array_iterator_match i' l' **
             (cbor_array_iterator_match i' l' @==> cbor_array_iterator_match i l) **
             pure (
-                Ghost.reveal l << b /\
+                opt_precedes (Ghost.reveal l) b /\
                 res == Some? (g l) /\
                 (res == true ==> Some?.v (g l) == l')
             )
@@ -128,7 +138,7 @@ let impl_array_group3
 
 inline_for_extraction noextract
 let eval_impl_array_group3
-    (#b: Ghost.erased raw_data_item)
+    (#b: Ghost.erased (option raw_data_item))
     (#g: array_group3 b)
     (ig: impl_array_group3 g)
     (pi: R.ref cbor_array_iterator_t)
@@ -137,14 +147,14 @@ let eval_impl_array_group3
 :   stt bool
         (R.pts_to pi i **
             cbor_array_iterator_match i l **
-            pure (Ghost.reveal l << Ghost.reveal b)
+            pure (opt_precedes (Ghost.reveal l) b)
         )
         (fun res -> exists_ (fun i' -> exists_ (fun l' ->
             R.pts_to pi i' **
             cbor_array_iterator_match i' l' **
             (cbor_array_iterator_match i' l' @==> cbor_array_iterator_match i l) **
             pure (
-                Ghost.reveal l << Ghost.reveal b /\
+                opt_precedes (Ghost.reveal l) b /\
                 res == Some? (g l) /\
                 (res == true ==> Some?.v (g l) == l')
             )
@@ -167,7 +177,7 @@ assume val stick_refl0
 ```pulse
 ghost
 fn intro_impl_array_group3_post
-    (#b: raw_data_item)
+    (#b: option raw_data_item)
     (g: array_group3 b)
     (pi: R.ref cbor_array_iterator_t)
     (i: cbor_array_iterator_t)
@@ -181,7 +191,7 @@ requires
             cbor_array_iterator_match i' l' **
             `@(cbor_array_iterator_match i' l' @==> cbor_array_iterator_match i l) **
             pure (
-                Ghost.reveal l << b /\
+                opt_precedes (Ghost.reveal l) b /\
                 res == Some? (g l) /\
                 (res == true ==> Some?.v (g l) == l')
             )
@@ -192,7 +202,7 @@ ensures
             cbor_array_iterator_match i' l' **
             (cbor_array_iterator_match i' l' @==> cbor_array_iterator_match i l) **
             pure (
-                Ghost.reveal l << b /\
+                opt_precedes (Ghost.reveal l) b /\
                 res == Some? (g l) /\
                 (res == true ==> Some?.v (g l) == l')
             )
@@ -230,16 +240,16 @@ val stick_trans
 inline_for_extraction noextract
 ```pulse
 fn impl_array_group3_item'
-    (#b: Ghost.erased raw_data_item)
-    (#ty: bounded_typ b)
-    (fty: impl_bounded_typ ty)
+    (#b: Ghost.erased (option raw_data_item))
+    (#ty: bounded_typ_gen b)
+    (fty: impl_typ ty)
     (pi: R.ref cbor_array_iterator_t)
     (#gi: Ghost.erased cbor_array_iterator_t)
     (#l: Ghost.erased (list raw_data_item))
 requires
         (R.pts_to pi gi **
             cbor_array_iterator_match gi l **
-            pure (Ghost.reveal l << Ghost.reveal b)
+            pure (opt_precedes (Ghost.reveal l) (Ghost.reveal b))
         )
 returns res: bool
 ensures
@@ -248,7 +258,7 @@ ensures
             cbor_array_iterator_match i' l' **
             (cbor_array_iterator_match i' l' @==> cbor_array_iterator_match gi l) **
             pure (
-                Ghost.reveal l << Ghost.reveal b /\
+                opt_precedes (Ghost.reveal l) (Ghost.reveal b) /\
                 res == Some? (array_group3_item ty l) /\
                 (res == true ==> Some?.v (array_group3_item ty l) == l')
             )
@@ -269,7 +279,7 @@ ensures
             cbor_array_iterator_match i' l' **
             `@((raw_data_item_match c gc ** cbor_array_iterator_match i' l') @==> cbor_array_iterator_match gi l)
         ); // this is needed for the explicit arguments to split_consume_l below
-        let test = eval_impl_bounded_typ fty c;
+        let test = eval_impl_typ fty c;
         if (test) {
             stick_consume_l ()
                 #(raw_data_item_match c gc)
@@ -292,25 +302,28 @@ ensures
 
 inline_for_extraction noextract
 let impl_array_group3_item
-    (#b: Ghost.erased raw_data_item)
-    (#ty: bounded_typ b)
-    (fty: impl_bounded_typ ty)
+    (#b: Ghost.erased (option raw_data_item))
+    (#ty: bounded_typ_gen b)
+    (fty: impl_typ ty)
 : Tot (impl_array_group3 (array_group3_item ty))
 = impl_array_group3_item' fty
 
 inline_for_extraction noextract
 ```pulse
 fn impl_t_array'
-    (g: ((b: raw_data_item) -> array_group3 b))
-    (ig: ((b: Ghost.erased raw_data_item) -> impl_array_group3 (g b)))
+    (#b: Ghost.erased (option raw_data_item))
+    (g: (array_group3 b))
+    (ig: (impl_array_group3 (g)))
     (c: cbor)
     (#v: Ghost.erased raw_data_item)
 requires
-    raw_data_item_match c v
+    raw_data_item_match c v **
+    pure (opt_precedes (Ghost.reveal v) (Ghost.reveal b))
 returns res: bool
 ensures
     raw_data_item_match c v **
     pure (
+        opt_precedes (Ghost.reveal v) (Ghost.reveal b) /\
         res == t_array3 g v
     )
 {
@@ -320,7 +333,7 @@ ensures
         with l . assert (cbor_array_iterator_match i l);
         rewrite (cbor_array_iterator_match i l) as (cbor_array_iterator_match (Ghost.reveal (Ghost.hide i)) l);
         let mut pi = i;
-        let b_success = eval_impl_array_group3 (ig v) pi;
+        let b_success = eval_impl_array_group3 ig pi;
         with gi' l' . assert (cbor_array_iterator_match gi' l');
         let i' = ! pi;
         rewrite (cbor_array_iterator_match gi' l') as (cbor_array_iterator_match i' l');
@@ -338,8 +351,9 @@ ensures
 
 inline_for_extraction noextract
 let impl_t_array
-    (#g: ((b: raw_data_item) -> array_group3 b))
-    (ig: ((b: Ghost.erased raw_data_item) -> impl_array_group3 (g b)))
+    (#b: Ghost.erased (option raw_data_item))
+    (#g: array_group3 b)
+    (ig: impl_array_group3 g)
 : Tot (impl_typ (t_array3 g))
 = impl_t_array' g ig
 
