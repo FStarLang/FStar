@@ -1585,7 +1585,9 @@ let config' psteps s e =
      strong = false;
      memoize_lazy = true;
      normalize_pure_lets = (not steps.pure_subterms_within_computations) || Options.normalize_pure_terms_for_extraction();
-     reifying = false}
+     reifying = false;
+     compat_memo_ignore_cfg = Options.ext_getv "compat:normalizer_memo_ignore_cfg" <> "";
+   }
 
 let config s e = config' [] s e
 

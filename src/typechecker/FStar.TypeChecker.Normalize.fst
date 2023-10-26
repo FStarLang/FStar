@@ -115,7 +115,9 @@ let head_of t = let hd, _ = U.head_and_args_full t in hd
 
 let read_memo cfg (r:memo (Cfg.cfg * 'a)) : option 'a =
   match !r with
-  | Some (cfg', a) when BU.physical_equality cfg cfg' ->
+  (* We only take this memoized value if the cfg matches the current
+  one, or if we are running in compatibility mode for it. *)
+  | Some (cfg', a) when cfg.compat_memo_ignore_cfg || BU.physical_equality cfg cfg' ->
     Some a
   | _ -> None
 
