@@ -212,6 +212,12 @@ let rec open_st_term_ln' (e:st_term)
       open_term_ln' binder.binder_ty x i;
       open_term_ln' initializer x i;
       open_st_term_ln' body x (i + 1)
+    
+    | Tm_WithLocalArray { binder; initializer; length; body } ->
+      open_term_ln' binder.binder_ty x i;
+      open_term_ln' initializer x i;
+      open_term_ln' length x i;
+      open_st_term_ln' body x (i + 1)
 
     | Tm_Admit { typ; post } ->
       open_term_ln' typ x i;
@@ -432,6 +438,11 @@ let rec ln_weakening_st (t:st_term) (i j:int)
       ln_weakening initializer i j;
       ln_weakening_st body (i + 1) (j + 1)
 
+    | Tm_WithLocalArray { initializer; length; body } ->
+      ln_weakening initializer i j;
+      ln_weakening length i j;
+      ln_weakening_st body (i + 1) (j + 1)
+   
     | Tm_Admit { typ; post } ->
       ln_weakening typ i j;
       ln_weakening_opt post (i + 1) (j + 1)
@@ -625,6 +636,12 @@ let rec open_term_ln_inv_st' (t:st_term)
       open_term_ln_inv' initializer x i;
       open_term_ln_inv_st' body x (i + 1)
 
+    | Tm_WithLocalArray { binder; initializer; length; body } ->
+      open_term_ln_inv' binder.binder_ty x i;
+      open_term_ln_inv' initializer x i;
+      open_term_ln_inv' length x i;
+      open_term_ln_inv_st' body x (i + 1)
+
     | Tm_Admit { typ; post } ->
       open_term_ln_inv' typ x i;
       open_term_ln_inv_opt' post x (i + 1)
@@ -701,7 +718,6 @@ let close_term_ln_opt' (t:option term) (x:var) (i:index)
   = match t with
     | None -> ()
     | Some t -> close_term_ln' t x i
-
 
 let rec close_term_ln_list' (t:list term) (x:var) (i:index)
   : Lemma
@@ -811,6 +827,12 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
     | Tm_WithLocal { binder; initializer; body } ->
       close_term_ln' binder.binder_ty x i;
       close_term_ln' initializer x i;
+      close_st_term_ln' body x (i + 1)
+
+    | Tm_WithLocalArray { binder; initializer; length; body } ->
+      close_term_ln' binder.binder_ty x i;
+      close_term_ln' initializer x i;
+      close_term_ln' length x i;
       close_st_term_ln' body x (i + 1)
 
     | Tm_Admit { typ; post } ->
@@ -955,6 +977,12 @@ let ln_mk_ref (t:term) (n:int)
       (ensures ln' (mk_ref t) n) =
   admit ()
 
+let ln_mk_array (t:term) (n:int)
+  : Lemma
+      (requires ln' t n)
+      (ensures ln' (mk_array t) n) =
+  admit ()
+
 #push-options "--z3rlimit_factor 12 --fuel 4 --ifuel 1 --query_stats"
 let rec st_typing_ln (#g:_) (#t:_) (#c:_)
                      (d:st_typing g t c)
@@ -1079,6 +1107,15 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       comp_typing_ln c_typing;
       tot_or_ghost_typing_ln init_t_typing;
       ln_mk_ref init_t (-1)
+
+    | T_WithLocalArray g init len body init_t c x init_typing len_typing init_t_typing c_typing body_typing ->
+      tot_or_ghost_typing_ln init_typing;
+      tot_or_ghost_typing_ln len_typing;
+      st_typing_ln body_typing;
+      open_st_term_ln' body (null_var x) 0;
+      comp_typing_ln c_typing;
+      tot_or_ghost_typing_ln init_t_typing;
+      ln_mk_array init_t (-1)
 
     | T_Admit _ s _ (STC _ _ x t_typing pre_typing post_typing) ->
       tot_or_ghost_typing_ln t_typing;

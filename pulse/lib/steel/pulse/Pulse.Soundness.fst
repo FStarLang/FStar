@@ -383,6 +383,9 @@ let rec soundness (g:stt_env)
     | T_WithLocal _ _ _ _ _ _ _ _ _ _ ->
       WithLocal.withlocal_soundness d soundness
 
+    | T_WithLocalArray _ _ _ _ _ _ _ _ _ _ _ _ ->
+      admit ()
+
     | T_Rewrite _ _ _ _ _ ->
       Rewrite.rewrite_soundness d
 

@@ -18,6 +18,7 @@ let debug_log (level:string)  (g:env) (f: unit -> T.Tac string) : T.Tac unit =
 let tm_unit = tm_fvar (as_fv unit_lid)
 let tm_bool = tm_fvar (as_fv bool_lid)
 let tm_int  = tm_fvar (as_fv int_lid)
+let tm_nat  = tm_fvar (as_fv nat_lid)
 let tm_true = tm_constant R.C_True
 let tm_false = tm_constant R.C_False
 
@@ -46,8 +47,8 @@ let mk_eq2 (u:universe)
                      None e0) None e1
 
 let mk_sq_eq2 (u:universe)
-           (t:term)
-           (e0 e1:term) 
+              (t:term)
+              (e0 e1:term) 
   : term
   = let eq = mk_eq2 u t e0 e1 in
     (tm_pureapp (tm_uinst (as_fv R.squash_qn) [u]) None eq)
@@ -420,6 +421,53 @@ let comp_withlocal_body (r:var) (init_t:term) (init:term) (c:comp{C_ST? c}) : co
     res = comp_res c;
     pre = comp_withlocal_body_pre (comp_pre c) init_t r init;
     post = comp_withlocal_body_post (comp_post c) init_t r
+  }
+
+let mk_array (a:term) : term = tm_pureapp (tm_fvar (as_fv array_lid)) None a
+
+let mk_array_length (a:term) (arr:term) : term =
+  let t = tm_fvar (as_fv array_length_lid) in
+  let t = tm_pureapp t (Some Implicit) a in
+  tm_pureapp t None arr
+
+let mk_array_pts_to (a:term) (arr:term) (v:term) : term =
+  let t = tm_fvar (as_fv array_pts_to_lid) in
+  let t = tm_pureapp t (Some Implicit) a in
+  let t = tm_pureapp t None arr in
+  let t = tm_pureapp t (Some Implicit) (tm_fvar (as_fv full_perm_lid)) in
+  tm_pureapp t None v
+
+let mk_array_is_full (a:term) (arr:term) : term =
+  let t = tm_fvar (as_fv array_is_full_lid) in
+  let t = tm_pureapp t (Some Implicit) a in
+  tm_pureapp t None arr
+
+let mk_seq_create (a:term) (len:term) (v:term) : term =
+  let t = tm_fvar (as_fv ["FStar"; "Seq"; "create"]) in
+  let t = tm_pureapp t (Some Implicit) a in
+  let t = tm_pureapp t None len in
+  tm_pureapp t None v
+
+let comp_withlocal_array_body_pre (pre:vprop) (a:term) (arr:term) (init:term) (len:term) : vprop =
+  tm_star pre
+          (tm_star (mk_array_pts_to a arr (mk_seq_create a len init))
+                   (tm_star (tm_pure (mk_array_is_full a arr))
+                            (tm_pure (mk_eq2_prop u0 tm_nat (mk_array_length a arr) len))))
+
+let mk_seq (a:term) : term =
+  let t = tm_fvar (as_fv ["FStar"; "Seq"; "seq"]) in
+  tm_pureapp t None a
+
+let comp_withlocal_array_body_post (post:term) (a:term) (arr:term) : term =
+  tm_star post (tm_exists_sl u0 (as_binder (mk_seq a)) (mk_array_pts_to a arr (null_bvar 0)))
+
+let comp_withlocal_array_body (arr:var) (a:term) (init:term) (len:term) (c:comp{C_ST? c}) : comp =
+  let arr = null_var arr in
+  C_ST {
+    u = comp_u c;
+    res = comp_res c;
+    pre = comp_withlocal_array_body_pre (comp_pre c) a arr init len;
+    post = comp_withlocal_array_body_post (comp_post c) a arr
   }
 
 let comp_rewrite (p q:vprop) : comp =
@@ -859,6 +907,23 @@ type st_typing : env -> st_term -> comp -> Type =
                 (open_st_term_nv body (v_as_nv x))
                 (comp_withlocal_body x init_t init c) ->
       st_typing g (wr c (Tm_WithLocal { binder=as_binder (mk_ref init_t); initializer=init; body } )) c
+
+  | T_WithLocalArray:
+      g:env ->
+      initializer:term ->
+      length:term ->
+      body:st_term ->
+      a:term ->
+      c:comp { C_ST? c } ->
+      x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars_st body) } ->
+      tot_typing g initializer a ->
+      tot_typing g length tm_nat ->
+      universe_of g a u0 ->
+      comp_typing g c (comp_u c) ->
+      st_typing (push_binding g x ppname_default (mk_array a))
+                (open_st_term_nv body (v_as_nv x))
+                (comp_withlocal_array_body x a initializer length c) ->
+      st_typing g (wr c (Tm_WithLocalArray { binder=as_binder (mk_array a); initializer; length; body } )) c
 
   | T_Rewrite:
       g:env ->
