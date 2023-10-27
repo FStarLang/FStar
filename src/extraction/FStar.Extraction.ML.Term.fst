@@ -157,7 +157,7 @@ let effect_as_etag =
 let rec is_arity_aux tcenv t =
     let t = U.unmeta t in
     match (SS.compress t).n with
-    | Tm_unknown -> false
+    | Tm_unknown
     | Tm_delayed _
     | Tm_ascribed _
     | Tm_meta _ -> failwith (BU.format1 "Impossible: is_arity (%s)" (Print.tag_of_term t))
