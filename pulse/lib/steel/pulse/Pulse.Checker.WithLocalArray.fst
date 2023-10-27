@@ -79,7 +79,7 @@ let check
         (* ^ Need this annotation *)
   in
   let (| len, len_typing |) =
-    check_tot_term_with_expected_type g length tm_nat in
+    check_tot_term_with_expected_type g length tm_szt in
   if eq_univ init_u u0
   then
     let x = fresh g in

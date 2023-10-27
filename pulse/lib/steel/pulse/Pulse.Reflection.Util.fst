@@ -23,6 +23,13 @@ let unit_tm = R.pack_ln (R.Tv_FVar unit_fv)
 let bool_fv = R.pack_fv bool_lid
 let bool_tm = R.pack_ln (R.Tv_FVar bool_fv)
 let nat_lid = ["Prims"; "nat"]
+let szt_lid = ["FStar"; "SizeT"; "t"]
+let szt_fv = R.pack_fv szt_lid
+let szt_tm = R.pack_ln (R.Tv_FVar szt_fv)
+let szv_lid = ["FStar"; "SizeT"; "v"]
+let szv_fv = R.pack_fv szv_lid
+let szv_tm = R.pack_ln (R.Tv_FVar szv_fv)
+
 
 let tuple2_lid = ["FStar"; "Pervasives"; "Native"; "tuple2"]
 let fst_lid = ["FStar"; "Pervasives"; "Native"; "fst"]

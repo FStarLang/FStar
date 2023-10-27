@@ -19,6 +19,7 @@ let tm_unit = tm_fvar (as_fv unit_lid)
 let tm_bool = tm_fvar (as_fv bool_lid)
 let tm_int  = tm_fvar (as_fv int_lid)
 let tm_nat  = tm_fvar (as_fv nat_lid)
+let tm_szt  = tm_fvar (as_fv szt_lid)
 let tm_true = tm_constant R.C_True
 let tm_false = tm_constant R.C_False
 
@@ -448,11 +449,15 @@ let mk_seq_create (a:term) (len:term) (v:term) : term =
   let t = tm_pureapp t None len in
   tm_pureapp t None v
 
+let mk_szv (n:term) : term =
+  let t = tm_fvar (as_fv szv_lid) in
+  tm_pureapp t None n
+
 let comp_withlocal_array_body_pre (pre:vprop) (a:term) (arr:term) (init:term) (len:term) : vprop =
   tm_star pre
-          (tm_star (mk_array_pts_to a arr (mk_seq_create a len init))
+          (tm_star (mk_array_pts_to a arr (mk_seq_create a (mk_szv len) init))
                    (tm_star (tm_pure (mk_array_is_full a arr))
-                            (tm_pure (mk_eq2_prop u0 tm_nat (mk_array_length a arr) len))))
+                            (tm_pure (mk_eq2_prop u0 tm_nat (mk_array_length a arr) (mk_szv len)))))
 
 let mk_seq (a:term) : term =
   let t = tm_fvar (as_fv ["FStar"; "Seq"; "seq"]) in
@@ -917,7 +922,7 @@ type st_typing : env -> st_term -> comp -> Type =
       c:comp { C_ST? c } ->
       x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars_st body) } ->
       tot_typing g initializer a ->
-      tot_typing g length tm_nat ->
+      tot_typing g length tm_szt ->
       universe_of g a u0 ->
       comp_typing g c (comp_u c) ->
       st_typing (push_binding g x ppname_default (mk_array a))
