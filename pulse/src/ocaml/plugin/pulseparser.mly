@@ -119,8 +119,10 @@ pulseStmtNoSeq:
     }
   | lhs=appTermNoRecordExp COLON_EQUALS a=noSeqTerm
     { PulseSugar.mk_assignment lhs a }
+  | LET q=option(mutOrRefQualifier) i=lident typOpt=option(preceded(COLON, appTerm)) EQUALS LBRACK_BAR v=noSeqTerm SEMICOLON n=noSeqTerm BAR_RBRACK
+    { PulseSugar.mk_let_binding q i typOpt (Some (Array_initializer { init=v; len=n })) }
   | LET q=option(mutOrRefQualifier) i=lident typOpt=option(preceded(COLON, appTerm)) EQUALS tm=noSeqTerm
-    { PulseSugar.mk_let_binding q i typOpt (Some tm) }
+    { PulseSugar.mk_let_binding q i typOpt (Some (Default_initializer tm)) }
   | LBRACE s=pulseStmt RBRACE
     { PulseSugar.mk_block s }
   | IF tm=appTermNoRecordExp vp=option(ensuresVprop) LBRACE th=pulseStmt RBRACE e=option(elseBlock)

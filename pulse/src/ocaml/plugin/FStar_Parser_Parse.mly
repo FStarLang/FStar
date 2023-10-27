@@ -1364,12 +1364,12 @@ projectionLHS:
           | Some (level, t) -> mk_term (Ascribed(e,{t with level=level},None,false)) (rr2 $loc($1) $loc($4)) level
         in mk_term (Paren e1) (rr2 $loc($1) $loc($4)) (e.level)
       }
-  | LBRACK_BAR es=semiColonTermList BAR_RBRACK
-      {
-        let l = mkConsList (rr2 $loc($1) $loc($3)) es in
-        let pos = (rr2 $loc($1) $loc($3)) in
-        mkExplicitApp (mk_term (Var (array_of_list_lid)) pos Expr) [l] pos
-      }
+  // | LBRACK_BAR es=semiColonTermList BAR_RBRACK
+  //     {
+  //       let l = mkConsList (rr2 $loc($1) $loc($3)) es in
+  //       let pos = (rr2 $loc($1) $loc($3)) in
+  //       mkExplicitApp (mk_term (Var (array_of_list_lid)) pos Expr) [l] pos
+  //     }
   | LBRACK es=semiColonTermList RBRACK
       { mkConsList (rr2 $loc($1) $loc($3)) es }
   | PERCENT_LBRACK es=semiColonTermList RBRACK
