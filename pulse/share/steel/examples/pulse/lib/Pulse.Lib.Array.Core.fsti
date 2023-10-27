@@ -67,3 +67,17 @@ val free
             pure (is_full_array a))
         (ensures fun _ ->
             emp)
+
+val with_local
+  (#a:Type0)
+  (init:a)
+  (len:SZ.t)
+  (#pre:vprop)
+  (ret_t:Type)
+  (#post:ret_t -> vprop)
+  (body:(arr:array a) -> stt ret_t (pre **
+                                    (pts_to arr (Seq.create (SZ.v len) init) **
+                                     (pure (is_full_array arr) **
+                                      pure (length arr == SZ.v len))))
+                                   (fun r -> post r ** exists_ (pts_to arr)))
+  : stt ret_t pre post
