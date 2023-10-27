@@ -8,7 +8,7 @@ open DPEStateful
 module SZ = FStar.SizeT
 module U8 = FStar.UInt8
 module A = Pulse.Lib.Array
-val snapshot (s:sid_t) (s:state_t) : vprop
+val snapshot (s:sid_t) (st:state_t) : vprop
 
 val snapshot_dup (#o:_) (s:sid_t) (st:state_t)
   : stt_ghost unit o
@@ -68,7 +68,6 @@ val derive_child (sid:sid_t)
                  (record:record_t)
                  (#repr:erased repr_t)
                  (#rd:perm)
-                 (#s:state_t)
   : stt (option ctxt_hndl_t) 
     (requires
       record_perm record rd repr)
@@ -77,7 +76,9 @@ val derive_child (sid:sid_t)
       (match hdl with
        | None -> emp
        | Some hdl ->
-         exists_ (fun s' -> snapshot sid s')))
+         exists_ (fun s' -> 
+           snapshot sid s' **
+           pure (commits_to repr s'))))
 
 val destroy_context (sid:sid_t)
                     (ctxt_hndl:ctxt_hndl_t)

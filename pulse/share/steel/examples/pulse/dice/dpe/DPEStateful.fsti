@@ -96,12 +96,11 @@ val initialize_context (sid:sid_t)
   : stt (option ctxt_hndl_t) 
     (requires
       A.pts_to uds #rd uds_bytes ** 
-      uds_is_enabled **
       exists_ (fun h -> in_state sid (SessionStart h)))
     (ensures fun hdl ->
       A.pts_to uds #rd uds_bytes **
       (match hdl with
-       | None -> emp
+       | None -> emp //more informative codes; leaves the state unchanged
        | Some hdl -> 
          in_state sid (EngineInitialized hdl uds_bytes)))
 
