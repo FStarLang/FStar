@@ -164,6 +164,15 @@ let rec (freevars_st :
         ->
         FStar_Set.union (freevars binder.Pulse_Syntax_Base.binder_ty)
           (FStar_Set.union (freevars initializer1) (freevars_st body))
+    | Pulse_Syntax_Base.Tm_WithLocalArray
+        { Pulse_Syntax_Base.binder3 = binder;
+          Pulse_Syntax_Base.initializer2 = initializer1;
+          Pulse_Syntax_Base.length = length;
+          Pulse_Syntax_Base.body5 = body;_}
+        ->
+        FStar_Set.union (freevars binder.Pulse_Syntax_Base.binder_ty)
+          (FStar_Set.union (freevars initializer1)
+             (FStar_Set.union (freevars length) (freevars_st body)))
     | Pulse_Syntax_Base.Tm_Rewrite
         { Pulse_Syntax_Base.t11 = t1; Pulse_Syntax_Base.t21 = t2;_} ->
         FStar_Set.union (freevars t1) (freevars t2)
@@ -336,6 +345,16 @@ let rec (ln_st' : Pulse_Syntax_Base.st_term -> Prims.int -> Prims.bool) =
             Pulse_Syntax_Base.body4 = body;_}
           ->
           ((ln' binder.Pulse_Syntax_Base.binder_ty i) && (ln' initializer1 i))
+            && (ln_st' body (i + Prims.int_one))
+      | Pulse_Syntax_Base.Tm_WithLocalArray
+          { Pulse_Syntax_Base.binder3 = binder;
+            Pulse_Syntax_Base.initializer2 = initializer1;
+            Pulse_Syntax_Base.length = length;
+            Pulse_Syntax_Base.body5 = body;_}
+          ->
+          (((ln' binder.Pulse_Syntax_Base.binder_ty i) &&
+              (ln' initializer1 i))
+             && (ln' length i))
             && (ln_st' body (i + Prims.int_one))
       | Pulse_Syntax_Base.Tm_Rewrite
           { Pulse_Syntax_Base.t11 = t1; Pulse_Syntax_Base.t21 = t2;_} ->
@@ -801,6 +820,20 @@ let rec (subst_st_term :
                 Pulse_Syntax_Base.binder2 = (subst_binder binder ss);
                 Pulse_Syntax_Base.initializer1 = (subst_term initializer1 ss);
                 Pulse_Syntax_Base.body4 =
+                  (subst_st_term body (shift_subst ss))
+              }
+        | Pulse_Syntax_Base.Tm_WithLocalArray
+            { Pulse_Syntax_Base.binder3 = binder;
+              Pulse_Syntax_Base.initializer2 = initializer1;
+              Pulse_Syntax_Base.length = length;
+              Pulse_Syntax_Base.body5 = body;_}
+            ->
+            Pulse_Syntax_Base.Tm_WithLocalArray
+              {
+                Pulse_Syntax_Base.binder3 = (subst_binder binder ss);
+                Pulse_Syntax_Base.initializer2 = (subst_term initializer1 ss);
+                Pulse_Syntax_Base.length = (subst_term length ss);
+                Pulse_Syntax_Base.body5 =
                   (subst_st_term body (shift_subst ss))
               }
         | Pulse_Syntax_Base.Tm_Rewrite
