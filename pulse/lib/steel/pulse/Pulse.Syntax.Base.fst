@@ -118,7 +118,7 @@ let rec eq_pattern (p1 p2 : pattern) : b:bool{ b <==> (p1 == p2) } =
   | Pat_Constant c1, Pat_Constant c2 ->
     fstar_const_eq c1 c2
 
-  | Pat_Var _, Pat_Var _ -> true
+  | Pat_Var _ _, Pat_Var _ _ -> true
   
   | Pat_Dot_Term to1, Pat_Dot_Term to2 -> eq_opt eq_tm to1 to2
 

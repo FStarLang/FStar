@@ -77,6 +77,21 @@ fn fill_array (x:array U32.t) (n:SZ.t) (v:U32.t)
 }
 ```
 
-
-// #pop-options
-// let test_write_10_pub x #n = write10 x
+```pulse
+fn extract_match (x:option bool)
+  requires emp
+  returns b:bool
+  ensures emp
+{
+  match x {
+    None ->
+    {
+      false
+    }
+    Some b ->
+    {
+      not b
+    }
+  }
+}
+```

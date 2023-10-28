@@ -140,6 +140,56 @@ let open_proof_hint_ln (t:proof_hint_type) (x:term) (i:index)
       open_term_ln' t1 x i;
       open_term_ln' t2 x i
 
+let open_pattern'  (p:pattern) (v:term) (i:index) =
+  subst_pat p [DT i v]
+let close_pattern' (p:pattern) (x:var) (i:index) =
+  subst_pat p [ND x i]
+let open_pattern_args' (ps:list (pattern & bool)) (v:term) (i:index) =
+  subst_pat_args ps [DT i v]
+let close_pattern_args' (ps:list (pattern & bool)) (x:var) (i:index) =
+  subst_pat_args ps [ND x i]
+
+let rec pattern_shift_subst_invariant (p:pattern) (s:subst)
+  : Lemma
+    (ensures pattern_shift_n p == pattern_shift_n (subst_pat p s))
+    [SMTPat (pattern_shift_n (subst_pat p s))]
+  = match p with
+    | Pat_Cons _ subpats -> admit()
+    | _ -> ()
+and pattern_args_shift_subst_invariant (ps:list (pattern & bool)) (s:subst)
+  : Lemma
+    (ensures pattern_args_shift_n ps == pattern_args_shift_n (subst_pat_args ps s))
+  = match ps with
+    | [] -> ()
+    | (hd, _)::tl ->
+      pattern_shift_subst_invariant hd s;
+      pattern_args_shift_subst_invariant tl (shift_subst_n (pattern_shift_n hd) s)
+
+let rec open_pattern_ln (p:pattern) (x:term) (i:index)
+  : Lemma 
+    (requires ln_pattern' (open_pattern' p x i) (i - 1))
+    (ensures ln_pattern' p i)
+    (decreases p)
+  = match p with
+    | Pat_Constant _
+    | Pat_Var _ _
+    | Pat_Dot_Term None -> ()
+    | Pat_Dot_Term (Some e) ->
+      open_term_ln' e x i
+    | Pat_Cons _ subpats ->
+      open_pattern_args_ln subpats x i
+
+and open_pattern_args_ln (pats:list (pattern & bool)) (x:term) (i:index)
+  : Lemma 
+    (requires ln_pattern_args' (open_pattern_args' pats x i) (i - 1))
+    (ensures ln_pattern_args' pats i)
+    (decreases pats)
+  = match pats with
+    | [] -> ()
+    | (hd, b)::tl ->
+      open_pattern_ln hd x i;
+      open_pattern_args_ln tl x (i + pattern_shift_n hd)
+
 let rec open_st_term_ln' (e:st_term)
                          (x:term)
                          (i:index)
@@ -224,7 +274,10 @@ let rec open_st_term_ln' (e:st_term)
 
 // The Tm_Match? and __brs_of conditions are to prove that the ln_branches' below
 // satisfies the termination refinment.
-and open_branches_ln' (t:st_term{Tm_Match? t.term}) (brs:list branch{brs << t /\ __brs_of t == brs}) (x:term) (i:index)
+and open_branches_ln' (t:st_term{Tm_Match? t.term})
+                      (brs:list branch{brs << t /\ __brs_of t == brs})
+                      (x:term)
+                      (i:index)
   : Lemma 
     (requires (
       assert (subst_branches t [DT i x] brs == __brs_of (subst_st_term t [DT i x])); // hint
@@ -243,11 +296,8 @@ and open_branch_ln' (br : branch) (x:term) (i:index)
     (requires ln_branch' (subst_branch [DT i x] br) (i - 1))
     (ensures ln_branch' br i)
   = let (p, e) = br in
-    match p with
-    | Pat_Constant _ -> open_st_term_ln' e x i
-    | Pat_Dot_Term _ -> open_st_term_ln' e x i
-    | Pat_Var v -> open_st_term_ln' e x (i+1)
-    | Pat_Cons _ subpats -> open_st_term_ln' e x (i + L.length subpats)
+    open_pattern_ln p x i;
+    open_st_term_ln' e x (i + pattern_shift_n p)
 
 let open_term_ln (e:term) (v:var)
   : Lemma 
