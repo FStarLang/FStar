@@ -443,8 +443,8 @@ let mk_array_is_full (a:term) (arr:term) : term =
   let t = tm_pureapp t (Some Implicit) a in
   tm_pureapp t None arr
 
-let mk_seq_create (a:term) (len:term) (v:term) : term =
-  let t = tm_fvar (as_fv ["FStar"; "Seq"; "create"]) in
+let mk_seq_create (u:universe) (a:term) (len:term) (v:term) : term =
+  let t = tm_uinst (as_fv seq_create_lid) [u] in
   let t = tm_pureapp t (Some Implicit) a in
   let t = tm_pureapp t None len in
   tm_pureapp t None v
@@ -455,16 +455,16 @@ let mk_szv (n:term) : term =
 
 let comp_withlocal_array_body_pre (pre:vprop) (a:term) (arr:term) (init:term) (len:term) : vprop =
   tm_star pre
-          (tm_star (mk_array_pts_to a arr (mk_seq_create a (mk_szv len) init))
+          (tm_star (mk_array_pts_to a arr (mk_seq_create u0 a (mk_szv len) init))
                    (tm_star (tm_pure (mk_array_is_full a arr))
-                            (tm_pure (mk_eq2_prop u0 tm_nat (mk_array_length a arr) (mk_szv len)))))
+                            (tm_pure (mk_eq2 u0 tm_nat (mk_array_length a arr) (mk_szv len)))))
 
-let mk_seq (a:term) : term =
-  let t = tm_fvar (as_fv ["FStar"; "Seq"; "seq"]) in
+let mk_seq (u:universe) (a:term) : term =
+  let t = tm_uinst (as_fv seq_lid) [u] in
   tm_pureapp t None a
 
 let comp_withlocal_array_body_post (post:term) (a:term) (arr:term) : term =
-  tm_star post (tm_exists_sl u0 (as_binder (mk_seq a)) (mk_array_pts_to a arr (null_bvar 0)))
+  tm_star post (tm_exists_sl u0 (as_binder (mk_seq u0 a)) (mk_array_pts_to a arr (null_bvar 0)))
 
 let comp_withlocal_array_body (arr:var) (a:term) (init:term) (len:term) (c:comp{C_ST? c}) : comp =
   let arr = null_var arr in

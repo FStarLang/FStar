@@ -368,7 +368,7 @@ val with_local_typing
 
 let with_localarray_body_pre (pre:term) (a:term) (init:term) (len:term) : term =
   let pts_to : term =
-    mk_array_pts_to a (RT.bound_var 0) full_perm_tm (mk_seq_create a (mk_szv len) init) in
+    mk_array_pts_to a (RT.bound_var 0) full_perm_tm (mk_seq_create uzero a (mk_szv len) init) in
   let is_full : term = mk_pure (mk_array_is_full a (RT.bound_var 0)) in
   let len_vp : term =
     mk_pure (mk_eq2 uzero nat_tm (mk_array_length a (RT.bound_var 0)) (mk_szv len)) in
@@ -381,7 +381,7 @@ let with_localarray_body_post_body (post:term) (a:term) (x:var) : term =
   // exists_ (A.pts_to arr full_perm)
   let exists_tm =
     mk_exists uzero a
-      (mk_abs (mk_seq a) Q_Explicit
+      (mk_abs (mk_seq uzero a) Q_Explicit
          (mk_array_pts_to a (RT.bound_var 2) full_perm_tm (RT.bound_var 0))) in
   let star_tm = mk_star post_app exists_tm in
   RT.subst_term star_tm [ RT.ND x 0 ]

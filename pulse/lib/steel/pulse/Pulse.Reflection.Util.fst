@@ -31,6 +31,8 @@ let szt_tm = R.pack_ln (R.Tv_FVar szt_fv)
 let szv_lid = ["FStar"; "SizeT"; "v"]
 let szv_fv = R.pack_fv szv_lid
 let szv_tm = R.pack_ln (R.Tv_FVar szv_fv)
+let seq_lid = ["FStar"; "Seq"; "Base"; "seq"]
+let seq_create_lid = ["FStar"; "Seq"; "Base"; "create"]
 
 
 let tuple2_lid = ["FStar"; "Pervasives"; "Native"; "tuple2"]
@@ -643,14 +645,14 @@ let mk_array_is_full (a:R.term) (arr:R.term) : R.term =
   let t = pack_ln (Tv_App t (a, Q_Implicit)) in
   pack_ln (Tv_App t (arr, Q_Explicit))
 
-let mk_seq (a:R.term) : R.term =
+let mk_seq (u:R.universe) (a:R.term) : R.term =
   let open R in
-  let t = pack_ln (Tv_FVar (pack_fv ["FStar"; "Seq"; "seq"])) in
+  let t = pack_ln (Tv_UInst (R.pack_fv seq_lid) [u]) in
   pack_ln (Tv_App t (a, Q_Explicit))
 
-let mk_seq_create (a:R.term) (len:R.term) (v:R.term) : R.term =
+let mk_seq_create (u:R.universe) (a:R.term) (len:R.term) (v:R.term) : R.term =
   let open R in
-  let t = pack_ln (Tv_FVar (pack_fv ["FStar"; "Seq"; "create"])) in
+  let t = pack_ln (Tv_UInst (R.pack_fv seq_create_lid) [u]) in
   let t = pack_ln (Tv_App t (a, Q_Implicit)) in
   let t = pack_ln (Tv_App t (len, Q_Explicit)) in
   pack_ln (Tv_App t (v, Q_Explicit))
