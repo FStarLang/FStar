@@ -319,7 +319,7 @@ let (check :
                                                            (Obj.magic
                                                               (Pulse_Checker_Pure.check_tot_term_with_expected_type
                                                                  g1 length
-                                                                 Pulse_Typing.tm_nat))
+                                                                 Pulse_Typing.tm_szt))
                                                            (fun uu___2 ->
                                                               (fun uu___2 ->
                                                                  match uu___2

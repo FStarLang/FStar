@@ -74,6 +74,9 @@ let (tm_int : Pulse_Syntax_Base.term) =
 let (tm_nat : Pulse_Syntax_Base.term) =
   Pulse_Syntax_Pure.tm_fvar
     (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.nat_lid)
+let (tm_szt : Pulse_Syntax_Base.term) =
+  Pulse_Syntax_Pure.tm_fvar
+    (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.szt_lid)
 let (tm_true : Pulse_Syntax_Base.term) =
   Pulse_Syntax_Pure.tm_constant FStar_Reflection_V2_Data.C_True
 let (tm_false : Pulse_Syntax_Base.term) =
@@ -742,22 +745,31 @@ let (mk_array_is_full :
           (FStar_Pervasives_Native.Some Pulse_Syntax_Base.Implicit) a in
       Pulse_Syntax_Pure.tm_pureapp t1 FStar_Pervasives_Native.None arr
 let (mk_seq_create :
-  Pulse_Syntax_Base.term ->
+  Pulse_Syntax_Base.universe ->
     Pulse_Syntax_Base.term ->
-      Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)
+      Pulse_Syntax_Base.term ->
+        Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)
   =
-  fun a ->
-    fun len ->
-      fun v ->
-        let t =
-          Pulse_Syntax_Pure.tm_fvar
-            (Pulse_Syntax_Base.as_fv ["FStar"; "Seq"; "create"]) in
-        let t1 =
-          Pulse_Syntax_Pure.tm_pureapp t
-            (FStar_Pervasives_Native.Some Pulse_Syntax_Base.Implicit) a in
-        let t2 =
-          Pulse_Syntax_Pure.tm_pureapp t1 FStar_Pervasives_Native.None len in
-        Pulse_Syntax_Pure.tm_pureapp t2 FStar_Pervasives_Native.None v
+  fun u ->
+    fun a ->
+      fun len ->
+        fun v ->
+          let t =
+            Pulse_Syntax_Pure.tm_uinst
+              (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.seq_create_lid)
+              [u] in
+          let t1 =
+            Pulse_Syntax_Pure.tm_pureapp t
+              (FStar_Pervasives_Native.Some Pulse_Syntax_Base.Implicit) a in
+          let t2 =
+            Pulse_Syntax_Pure.tm_pureapp t1 FStar_Pervasives_Native.None len in
+          Pulse_Syntax_Pure.tm_pureapp t2 FStar_Pervasives_Native.None v
+let (mk_szv : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term) =
+  fun n ->
+    let t =
+      Pulse_Syntax_Pure.tm_fvar
+        (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.szv_lid) in
+    Pulse_Syntax_Pure.tm_pureapp t FStar_Pervasives_Native.None n
 let (comp_withlocal_array_body_pre :
   Pulse_Syntax_Base.vprop ->
     Pulse_Syntax_Base.term ->
@@ -772,18 +784,23 @@ let (comp_withlocal_array_body_pre :
           fun len ->
             Pulse_Syntax_Base.tm_star pre
               (Pulse_Syntax_Base.tm_star
-                 (mk_array_pts_to a arr (mk_seq_create a len init))
+                 (mk_array_pts_to a arr
+                    (mk_seq_create Pulse_Syntax_Pure.u0 a (mk_szv len) init))
                  (Pulse_Syntax_Base.tm_star
                     (Pulse_Syntax_Base.tm_pure (mk_array_is_full a arr))
                     (Pulse_Syntax_Base.tm_pure
-                       (mk_eq2_prop Pulse_Syntax_Pure.u0 tm_nat
-                          (mk_array_length a arr) len))))
-let (mk_seq : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term) =
-  fun a ->
-    let t =
-      Pulse_Syntax_Pure.tm_fvar
-        (Pulse_Syntax_Base.as_fv ["FStar"; "Seq"; "seq"]) in
-    Pulse_Syntax_Pure.tm_pureapp t FStar_Pervasives_Native.None a
+                       (mk_eq2 Pulse_Syntax_Pure.u0 tm_nat
+                          (mk_array_length a arr) (mk_szv len)))))
+let (mk_seq :
+  Pulse_Syntax_Base.universe ->
+    Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)
+  =
+  fun u ->
+    fun a ->
+      let t =
+        Pulse_Syntax_Pure.tm_uinst
+          (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.seq_lid) [u] in
+      Pulse_Syntax_Pure.tm_pureapp t FStar_Pervasives_Native.None a
 let (comp_withlocal_array_body_post :
   Pulse_Syntax_Base.term ->
     Pulse_Syntax_Base.term ->
@@ -794,7 +811,7 @@ let (comp_withlocal_array_body_post :
       fun arr ->
         Pulse_Syntax_Base.tm_star post
           (Pulse_Syntax_Base.tm_exists_sl Pulse_Syntax_Pure.u0
-             (Pulse_Syntax_Base.as_binder (mk_seq a))
+             (Pulse_Syntax_Base.as_binder (mk_seq Pulse_Syntax_Pure.u0 a))
              (mk_array_pts_to a arr
                 (Pulse_Syntax_Pure.null_bvar Prims.int_zero)))
 let (comp_withlocal_array_body :

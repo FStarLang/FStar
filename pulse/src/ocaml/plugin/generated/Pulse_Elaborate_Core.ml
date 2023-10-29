@@ -532,7 +532,7 @@ let rec (elab_st_typing :
               let rbody1 = FStar_Reflection_Typing.close_term rbody x in
               let rbody2 =
                 Pulse_Reflection_Util.mk_abs
-                  (Pulse_Reflection_Util.mk_ref ra)
+                  (Pulse_Reflection_Util.mk_array ra)
                   FStar_Reflection_V2_Data.Q_Explicit rbody1 in
               Pulse_Reflection_Util.mk_withlocalarray rret_u ra rinit rlen
                 rpre rret_t rpost rbody2

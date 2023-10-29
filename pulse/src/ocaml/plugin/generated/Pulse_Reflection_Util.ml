@@ -27,6 +27,26 @@ let (bool_tm : FStar_Reflection_Types.term) =
   FStar_Reflection_V2_Builtins.pack_ln
     (FStar_Reflection_V2_Data.Tv_FVar bool_fv)
 let (nat_lid : Prims.string Prims.list) = ["Prims"; "nat"]
+let (nat_fv : FStar_Reflection_Types.fv) =
+  FStar_Reflection_V2_Builtins.pack_fv nat_lid
+let (nat_tm : FStar_Reflection_Types.term) =
+  FStar_Reflection_V2_Builtins.pack_ln
+    (FStar_Reflection_V2_Data.Tv_FVar nat_fv)
+let (szt_lid : Prims.string Prims.list) = ["FStar"; "SizeT"; "t"]
+let (szt_fv : FStar_Reflection_Types.fv) =
+  FStar_Reflection_V2_Builtins.pack_fv szt_lid
+let (szt_tm : FStar_Reflection_Types.term) =
+  FStar_Reflection_V2_Builtins.pack_ln
+    (FStar_Reflection_V2_Data.Tv_FVar szt_fv)
+let (szv_lid : Prims.string Prims.list) = ["FStar"; "SizeT"; "v"]
+let (szv_fv : FStar_Reflection_Types.fv) =
+  FStar_Reflection_V2_Builtins.pack_fv szv_lid
+let (szv_tm : FStar_Reflection_Types.term) =
+  FStar_Reflection_V2_Builtins.pack_ln
+    (FStar_Reflection_V2_Data.Tv_FVar szv_fv)
+let (seq_lid : Prims.string Prims.list) = ["FStar"; "Seq"; "Base"; "seq"]
+let (seq_create_lid : Prims.string Prims.list) =
+  ["FStar"; "Seq"; "Base"; "create"]
 let (tuple2_lid : Prims.string Prims.list) =
   ["FStar"; "Pervasives"; "Native"; "tuple2"]
 let (fst_lid : Prims.string Prims.list) =
@@ -1911,30 +1931,44 @@ let (mk_array_is_full :
       FStar_Reflection_V2_Builtins.pack_ln
         (FStar_Reflection_V2_Data.Tv_App
            (t1, (arr, FStar_Reflection_V2_Data.Q_Explicit)))
-let (mk_seq_create :
-  FStar_Reflection_Types.term ->
-    FStar_Reflection_Types.term ->
-      FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
+let (mk_seq :
+  FStar_Reflection_Types.universe ->
+    FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
   =
-  fun a ->
-    fun len ->
-      fun v ->
-        let t =
-          FStar_Reflection_V2_Builtins.pack_ln
-            (FStar_Reflection_V2_Data.Tv_FVar
-               (FStar_Reflection_V2_Builtins.pack_fv
-                  ["FStar"; "Seq"; "create"])) in
-        let t1 =
-          FStar_Reflection_V2_Builtins.pack_ln
-            (FStar_Reflection_V2_Data.Tv_App
-               (t, (a, FStar_Reflection_V2_Data.Q_Implicit))) in
-        let t2 =
-          FStar_Reflection_V2_Builtins.pack_ln
-            (FStar_Reflection_V2_Data.Tv_App
-               (t1, (len, FStar_Reflection_V2_Data.Q_Explicit))) in
+  fun u ->
+    fun a ->
+      let t =
         FStar_Reflection_V2_Builtins.pack_ln
-          (FStar_Reflection_V2_Data.Tv_App
-             (t2, (v, FStar_Reflection_V2_Data.Q_Explicit)))
+          (FStar_Reflection_V2_Data.Tv_UInst
+             ((FStar_Reflection_V2_Builtins.pack_fv seq_lid), [u])) in
+      FStar_Reflection_V2_Builtins.pack_ln
+        (FStar_Reflection_V2_Data.Tv_App
+           (t, (a, FStar_Reflection_V2_Data.Q_Explicit)))
+let (mk_seq_create :
+  FStar_Reflection_Types.universe ->
+    FStar_Reflection_Types.term ->
+      FStar_Reflection_Types.term ->
+        FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
+  =
+  fun u ->
+    fun a ->
+      fun len ->
+        fun v ->
+          let t =
+            FStar_Reflection_V2_Builtins.pack_ln
+              (FStar_Reflection_V2_Data.Tv_UInst
+                 ((FStar_Reflection_V2_Builtins.pack_fv seq_create_lid), [u])) in
+          let t1 =
+            FStar_Reflection_V2_Builtins.pack_ln
+              (FStar_Reflection_V2_Data.Tv_App
+                 (t, (a, FStar_Reflection_V2_Data.Q_Implicit))) in
+          let t2 =
+            FStar_Reflection_V2_Builtins.pack_ln
+              (FStar_Reflection_V2_Data.Tv_App
+                 (t1, (len, FStar_Reflection_V2_Data.Q_Explicit))) in
+          FStar_Reflection_V2_Builtins.pack_ln
+            (FStar_Reflection_V2_Data.Tv_App
+               (t2, (v, FStar_Reflection_V2_Data.Q_Explicit)))
 let (mk_withlocalarray :
   FStar_Reflection_Types.universe ->
     FStar_Reflection_Types.term ->
@@ -1986,3 +2020,12 @@ let (mk_withlocalarray :
                   FStar_Reflection_V2_Builtins.pack_ln
                     (FStar_Reflection_V2_Data.Tv_App
                        (t6, (body, FStar_Reflection_V2_Data.Q_Explicit)))
+let (mk_szv : FStar_Reflection_Types.term -> FStar_Reflection_Types.term) =
+  fun n ->
+    let t =
+      FStar_Reflection_V2_Builtins.pack_ln
+        (FStar_Reflection_V2_Data.Tv_FVar
+           (FStar_Reflection_V2_Builtins.pack_fv szv_lid)) in
+    FStar_Reflection_V2_Builtins.pack_ln
+      (FStar_Reflection_V2_Data.Tv_App
+         (t, (n, FStar_Reflection_V2_Data.Q_Explicit)))
