@@ -365,3 +365,53 @@ val with_local_typing
                        (with_local_bodypost post a ret_t x))))
   : GTot (RT.tot_typing g (mk_withlocal u a init pre ret_t post body)
                           (mk_stt_comp u ret_t pre post))
+
+let with_localarray_body_pre (pre:term) (a:term) (init:term) (len:term) : term =
+  let pts_to : term =
+    mk_array_pts_to a (RT.bound_var 0) full_perm_tm (mk_seq_create a (mk_szv len) init) in
+  let is_full : term = mk_pure (mk_array_is_full a (RT.bound_var 0)) in
+  let len_vp : term =
+    mk_pure (mk_eq2 uzero nat_tm (mk_array_length a (RT.bound_var 0)) (mk_szv len)) in
+  mk_star pre (mk_star pts_to (mk_star is_full len_vp))
+
+let with_localarray_body_post_body (post:term) (a:term) (x:var) : term =
+  let x_tm = RT.var_as_term x in
+  // post x
+  let post_app = pack_ln (Tv_App post (RT.bound_var 0, Q_Explicit)) in
+  // exists_ (A.pts_to arr full_perm)
+  let exists_tm =
+    mk_exists uzero a
+      (mk_abs (mk_seq a) Q_Explicit
+         (mk_array_pts_to a (RT.bound_var 2) full_perm_tm (RT.bound_var 0))) in
+  let star_tm = mk_star post_app exists_tm in
+  RT.subst_term star_tm [ RT.ND x 0 ]
+
+let with_localarray_body_post (post:term) (a:term) (ret_t:term) (x:var) : term =
+  mk_abs ret_t Q_Explicit (with_localarray_body_post_body post a x)
+
+val with_localarray_typing
+  (#g:env)
+  (#u:universe)
+  (#a:term)
+  (#init:term)
+  (#len:term)
+  (#pre:term)
+  (#ret_t:term)
+  (#post:term)
+  (#body:term)
+  (x:var{None? (RT.lookup_bvar g x)})
+  (a_typing:RT.tot_typing g a (pack_ln (Tv_Type (pack_universe Uv_Zero))))
+  (init_typing:RT.tot_typing g init a)
+  (len_typing:RT.tot_typing g len szt_tm)
+  (pre_typing:RT.tot_typing g pre vprop_tm)
+  (ret_t_typing:RT.tot_typing g ret_t (pack_ln (Tv_Type u)))
+  (post_typing:RT.tot_typing g post (mk_arrow (ret_t, Q_Explicit) vprop_tm))
+  (body_typing:RT.tot_typing g 
+                 body
+                 (mk_arrow
+                    (mk_array a, Q_Explicit)
+                    (mk_stt_comp u ret_t
+                       (with_localarray_body_pre pre a init len)
+                       (with_localarray_body_post post a ret_t x))))
+  : GTot (RT.tot_typing g (mk_withlocalarray u a init len pre ret_t post body)
+                          (mk_stt_comp u ret_t pre post))

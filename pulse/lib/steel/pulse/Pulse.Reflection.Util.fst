@@ -23,6 +23,8 @@ let unit_tm = R.pack_ln (R.Tv_FVar unit_fv)
 let bool_fv = R.pack_fv bool_lid
 let bool_tm = R.pack_ln (R.Tv_FVar bool_fv)
 let nat_lid = ["Prims"; "nat"]
+let nat_fv = R.pack_fv nat_lid
+let nat_tm = R.pack_ln (R.Tv_FVar nat_fv)
 let szt_lid = ["FStar"; "SizeT"; "t"]
 let szt_fv = R.pack_fv szt_lid
 let szt_tm = R.pack_ln (R.Tv_FVar szt_fv)
@@ -641,6 +643,11 @@ let mk_array_is_full (a:R.term) (arr:R.term) : R.term =
   let t = pack_ln (Tv_App t (a, Q_Implicit)) in
   pack_ln (Tv_App t (arr, Q_Explicit))
 
+let mk_seq (a:R.term) : R.term =
+  let open R in
+  let t = pack_ln (Tv_FVar (pack_fv ["FStar"; "Seq"; "seq"])) in
+  pack_ln (Tv_App t (a, Q_Explicit))
+
 let mk_seq_create (a:R.term) (len:R.term) (v:R.term) : R.term =
   let open R in
   let t = pack_ln (Tv_FVar (pack_fv ["FStar"; "Seq"; "create"])) in
@@ -659,3 +666,8 @@ let mk_withlocalarray (ret_u:R.universe) (a init len pre ret_t post body:R.term)
   let t = pack_ln (Tv_App t (ret_t, Q_Implicit)) in
   let t = pack_ln (Tv_App t (post, Q_Implicit)) in
   pack_ln (Tv_App t (body, Q_Explicit))
+
+let mk_szv (n:R.term) =
+  let open R in
+  let t = pack_ln (Tv_FVar (pack_fv szv_lid)) in
+  pack_ln (Tv_App t (n, Q_Explicit))
