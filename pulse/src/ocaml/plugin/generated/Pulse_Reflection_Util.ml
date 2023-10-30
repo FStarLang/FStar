@@ -210,7 +210,7 @@ let (mk_eq2 :
             FStar_Reflection_V2_Builtins.pack_ln
               (FStar_Reflection_V2_Data.Tv_UInst
                  ((FStar_Reflection_V2_Builtins.pack_fv
-                     (mk_pulse_lib_core_lid "eq2_prop")), [u])) in
+                     FStar_Reflection_Const.eq2_qn), [u])) in
           let t1 =
             FStar_Reflection_V2_Builtins.pack_ln
               (FStar_Reflection_V2_Data.Tv_App

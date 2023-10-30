@@ -162,26 +162,6 @@ let (mk_sq_eq2 :
             (Pulse_Syntax_Pure.tm_uinst
                (Pulse_Syntax_Base.as_fv FStar_Reflection_Const.squash_qn) 
                [u]) FStar_Pervasives_Native.None eq
-let (mk_eq2_prop :
-  Pulse_Syntax_Base.universe ->
-    Pulse_Syntax_Base.term ->
-      Pulse_Syntax_Base.term ->
-        Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)
-  =
-  fun u ->
-    fun t ->
-      fun e0 ->
-        fun e1 ->
-          Pulse_Syntax_Pure.tm_pureapp
-            (Pulse_Syntax_Pure.tm_pureapp
-               (Pulse_Syntax_Pure.tm_pureapp
-                  (Pulse_Syntax_Pure.tm_uinst
-                     (Pulse_Syntax_Base.as_fv
-                        (Pulse_Reflection_Util.mk_pulse_lib_core_lid
-                           "eq2_prop")) [u])
-                  (FStar_Pervasives_Native.Some Pulse_Syntax_Base.Implicit) t)
-               FStar_Pervasives_Native.None e0) FStar_Pervasives_Native.None
-            e1
 let (mk_vprop_eq :
   Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)
   =
@@ -240,7 +220,7 @@ let (comp_return :
                     let post2 =
                       Pulse_Syntax_Base.tm_star post1
                         (Pulse_Syntax_Base.tm_pure
-                           (mk_eq2_prop u t (Pulse_Syntax_Pure.null_var x) e)) in
+                           (mk_eq2 u t (Pulse_Syntax_Pure.null_var x) e)) in
                     Pulse_Syntax_Naming.close_term post2 x
                   else post in
                 match c with
@@ -789,7 +769,7 @@ let (comp_withlocal_array_body_pre :
                  (Pulse_Syntax_Base.tm_star
                     (Pulse_Syntax_Base.tm_pure (mk_array_is_full a arr))
                     (Pulse_Syntax_Base.tm_pure
-                       (mk_eq2_prop Pulse_Syntax_Pure.u0 tm_nat
+                       (mk_eq2 Pulse_Syntax_Pure.u0 tm_nat
                           (mk_array_length a arr) (mk_szv len)))))
 let (mk_seq :
   Pulse_Syntax_Base.universe ->
