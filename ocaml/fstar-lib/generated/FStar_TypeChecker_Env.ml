@@ -4613,22 +4613,64 @@ let (def_check_vars_in_set :
               Prims.op_Negation uu___2 in
             (if uu___1
              then
+               let doclist ds =
+                 let uu___2 = FStar_Pprint.doc_of_string "[]" in
+                 let uu___3 =
+                   let uu___4 = FStar_Pprint.break_ Prims.int_one in
+                   FStar_Pprint.op_Hat_Hat FStar_Pprint.semi uu___4 in
+                 FStar_Pprint.surround_separate (Prims.of_int (2))
+                   Prims.int_zero uu___2 FStar_Pprint.lbracket uu___3
+                   FStar_Pprint.rbracket ds in
                let uu___2 =
                  let uu___3 =
-                   let uu___4 = FStar_Syntax_Print.term_to_string t in
+                   let uu___4 =
+                     let uu___5 =
+                       FStar_Errors_Msg.text
+                         "Internal: term is not well-scoped " in
+                     let uu___6 =
+                       let uu___7 = FStar_Pprint.doc_of_string msg in
+                       FStar_Pprint.parens uu___7 in
+                     FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
                    let uu___5 =
-                     let uu___6 = FStar_Compiler_Util.set_elements s in
-                     FStar_Compiler_Effect.op_Bar_Greater uu___6
-                       (FStar_Syntax_Print.bvs_to_string ",\n\t") in
-                   let uu___6 =
-                     let uu___7 = FStar_Compiler_Util.set_elements vset in
-                     FStar_Compiler_Effect.op_Bar_Greater uu___7
-                       (FStar_Syntax_Print.bvs_to_string ",") in
-                   FStar_Compiler_Util.format4
-                     "Internal: term is not closed (%s).\nt = (%s)\nFVs = (%s)\nScope = (%s)\n"
-                     msg uu___4 uu___5 uu___6 in
+                     let uu___6 =
+                       let uu___7 = FStar_Errors_Msg.text "t = " in
+                       let uu___8 = FStar_Syntax_Print.term_to_doc t in
+                       FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
+                     let uu___7 =
+                       let uu___8 =
+                         let uu___9 = FStar_Errors_Msg.text "FVs = " in
+                         let uu___10 =
+                           let uu___11 =
+                             let uu___12 = FStar_Compiler_Util.set_elements s in
+                             FStar_Compiler_Effect.op_Bar_Greater uu___12
+                               (FStar_Compiler_List.map
+                                  (fun b ->
+                                     let uu___13 =
+                                       FStar_Syntax_Print.bv_to_string b in
+                                     FStar_Pprint.arbitrary_string uu___13)) in
+                           doclist uu___11 in
+                         FStar_Pprint.op_Hat_Slash_Hat uu___9 uu___10 in
+                       let uu___9 =
+                         let uu___10 =
+                           let uu___11 = FStar_Errors_Msg.text "Scope = " in
+                           let uu___12 =
+                             let uu___13 =
+                               let uu___14 =
+                                 FStar_Compiler_Util.set_elements vset in
+                               FStar_Compiler_Effect.op_Bar_Greater uu___14
+                                 (FStar_Compiler_List.map
+                                    (fun b ->
+                                       let uu___15 =
+                                         FStar_Syntax_Print.bv_to_string b in
+                                       FStar_Pprint.arbitrary_string uu___15)) in
+                             doclist uu___13 in
+                           FStar_Pprint.op_Hat_Slash_Hat uu___11 uu___12 in
+                         [uu___10] in
+                       uu___8 :: uu___9 in
+                     uu___6 :: uu___7 in
+                   uu___4 :: uu___5 in
                  (FStar_Errors_Codes.Warning_Defensive, uu___3) in
-               FStar_Errors.log_issue rng uu___2
+               FStar_Errors.log_issue_doc rng uu___2
              else ())
           else ()
 let (def_check_closed_in :

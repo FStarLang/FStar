@@ -2335,13 +2335,13 @@ type isErased =
     | No
 
 let rec check_erased (env:Env.env) (t:term) : isErased =
-  let norm' = N.normalize [Env.Beta; Env.Eager_unfolding;
-                           Env.UnfoldUntil delta_constant;
-                           Env.Exclude Env.Zeta; Env.Primops;
-                           Env.Weak; Env.HNF; Env.Iota]
+  let norm' = N.normalize [Beta; Eager_unfolding;
+                           UnfoldUntil delta_constant;
+                           Exclude Zeta; Primops;
+                           Unascribe; Unmeta; Unrefine;
+                           Weak; HNF; Iota]
   in
   let t = norm' env t in
-  let t = U.unrefine t in
   let h, args = U.head_and_args t in
   let h = U.un_uinst h in
   let r =

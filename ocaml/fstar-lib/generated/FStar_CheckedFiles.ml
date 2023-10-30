@@ -1,5 +1,5 @@
 open Prims
-let (cache_version_number : Prims.int) = (Prims.of_int (60))
+let (cache_version_number : Prims.int) = (Prims.of_int (61))
 type tc_result =
   {
   checked_module: FStar_Syntax_Syntax.modul ;
@@ -446,7 +446,7 @@ let (load_parsing_data_from_cache :
               | (uu___2, FStar_Pervasives.Inr data) ->
                   FStar_Pervasives_Native.Some data))
 let (load_module_from_cache :
-  FStar_Extraction_ML_UEnv.uenv ->
+  FStar_TypeChecker_Env.env ->
     Prims.string -> tc_result FStar_Pervasives_Native.option)
   =
   let already_failed = FStar_Compiler_Util.mk_ref false in
@@ -485,9 +485,7 @@ let (load_module_from_cache :
                    FStar_Errors.log_issue_doc uu___3 uu___4))
                else () in
              let uu___2 =
-               let uu___3 =
-                 let uu___4 = FStar_Extraction_ML_UEnv.tcenv_of_uenv env in
-                 FStar_TypeChecker_Env.dep_graph uu___4 in
+               let uu___3 = FStar_TypeChecker_Env.dep_graph env in
                load_checked_file_with_tc_result uu___3 fn1 cache_file in
              match uu___2 with
              | FStar_Pervasives.Inl msg ->
@@ -507,9 +505,7 @@ let (load_module_from_cache :
              FStar_Profiling.profile (load_it fn1)
                FStar_Pervasives_Native.None "FStar.CheckedFiles" in
            let i_fn_opt =
-             let uu___1 =
-               let uu___2 = FStar_Extraction_ML_UEnv.tcenv_of_uenv env in
-               FStar_TypeChecker_Env.dep_graph uu___2 in
+             let uu___1 = FStar_TypeChecker_Env.dep_graph env in
              let uu___2 = FStar_Parser_Dep.lowercase_module_name fn in
              FStar_Parser_Dep.interface_of uu___1 uu___2 in
            let uu___1 =
@@ -539,7 +535,7 @@ let (store_values_to_cache :
              FStar_Compiler_Util.save_2values_to_file cache_file stage1
                stage2)
 let (store_module_to_cache :
-  FStar_Extraction_ML_UEnv.uenv ->
+  FStar_TypeChecker_Env.env ->
     Prims.string -> FStar_Parser_Dep.parsing_data -> tc_result -> unit)
   =
   fun env ->
@@ -554,9 +550,7 @@ let (store_module_to_cache :
           then
             let cache_file = FStar_Parser_Dep.cache_file_name fn in
             let digest =
-              let uu___1 =
-                let uu___2 = FStar_Extraction_ML_UEnv.tcenv_of_uenv env in
-                FStar_TypeChecker_Env.dep_graph uu___2 in
+              let uu___1 = FStar_TypeChecker_Env.dep_graph env in
               hash_dependences uu___1 fn in
             match digest with
             | FStar_Pervasives.Inr hashes ->

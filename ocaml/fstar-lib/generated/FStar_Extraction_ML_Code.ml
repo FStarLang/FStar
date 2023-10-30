@@ -400,6 +400,10 @@ let (string_of_mlconstant :
     | FStar_Extraction_ML_Syntax.MLC_Int
         (s, FStar_Pervasives_Native.Some (uu___, FStar_Const.Int16)) -> s
     | FStar_Extraction_ML_Syntax.MLC_Int
+        (v, FStar_Pervasives_Native.Some (uu___, FStar_Const.Sizet)) ->
+        let z = Prims.op_Hat "(Prims.parse_int \"" (Prims.op_Hat v "\")") in
+        Prims.op_Hat "(FStar_SizeT.int_to_t (" (Prims.op_Hat z "))")
+    | FStar_Extraction_ML_Syntax.MLC_Int
         (v, FStar_Pervasives_Native.Some (s, w)) ->
         let sign =
           match s with

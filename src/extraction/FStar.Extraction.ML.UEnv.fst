@@ -295,6 +295,7 @@ let initial_mlident_map =
               | Some Options.OCaml
               | Some Options.Plugin -> ocamlkeywords
               | Some Options.Krml -> krml_keywords
+              | Some Options.Extension -> []  // TODO
               | None -> [])
           (BU.psmap_empty())
         in
@@ -497,7 +498,7 @@ let extend_fv (g:uenv) (x:fv) (t_x:mltyscheme) (add_unit:bool)
         let gamma = Fv(x, exp_binding)::g.env_bindings in
         let mlident_map = BU.psmap_add g.env_mlident_map mlsymbol "" in
         {g with env_bindings=gamma; env_mlident_map=mlident_map}, mlsymbol, exp_binding
-    else failwith "freevars found"
+    else failwith (BU.format1 "freevars found (%s)" (mltyscheme_to_string t_x))
 
 let extend_erased_fv (g:uenv) (f:fv) : uenv =
   { g with env_bindings = ErasedFv f :: g.env_bindings }

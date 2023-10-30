@@ -746,14 +746,20 @@ and close_args_with_not_free_var (l:list R.argv) (x:var) (i:nat)
     close_with_not_free_var t x i;
     close_args_with_not_free_var tl x i
 
-let equiv_abs _ _ _ _ = admit ()
-let equiv_arrow _ _ _ _ = admit ()
+let equiv_arrow #g #e1 #e2 ty q x eq =
+  assume (~ (x `Set.mem` (freevars e1 `Set.union` freevars e2)));
+  let c1 = T.E_Total, e1 in
+  let c2 = T.E_Total, e2 in
+  Rel_arrow _ _ _ _ c1 c2 _ _ (Rel_refl _ _ _) (Relc_typ _ _ _ _ _ eq)
 
 let equiv_abs_close #g #e1 #e2 ty q x eq =
   // TODO: the following can be the preconditions?
   //       or derived from equiv?
   assume (ln' e1 (-1));
   assume (ln' e2 (-1));
+  // this should be a lemma
+  assume (~ (x `Set.mem` (freevars (subst_term e1 [ ND x 0 ]) `Set.union`
+                          freevars (subst_term e2 [ ND x 0 ]))));
   open_close_inverse' 0 e1 x;
   open_close_inverse' 0 e2 x;
   let eq
@@ -765,8 +771,8 @@ let equiv_abs_close #g #e1 #e2 ty q x eq =
            (subst_term e2 [ ND x 0 ])
            (open_with_var x 0)) =
     eq in
-  
-  equiv_abs _ _ _ eq
+
+  Rel_abs _ _ _ _ _ _ _ (Rel_refl _ _ _) eq
 
 let rec open_with_gt_ln e i t j
   : Lemma (requires ln' e i /\ i < j)

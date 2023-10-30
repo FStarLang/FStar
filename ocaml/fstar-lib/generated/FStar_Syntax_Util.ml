@@ -928,6 +928,8 @@ let (eq_lazy_kind :
       | (FStar_Syntax_Syntax.Lazy_ident, FStar_Syntax_Syntax.Lazy_ident) ->
           true
       | (FStar_Syntax_Syntax.Lazy_doc, FStar_Syntax_Syntax.Lazy_doc) -> true
+      | (FStar_Syntax_Syntax.Lazy_extension s,
+         FStar_Syntax_Syntax.Lazy_extension t) -> s = t
       | (FStar_Syntax_Syntax.Lazy_embedding uu___, uu___1) -> false
       | (uu___, FStar_Syntax_Syntax.Lazy_embedding uu___1) -> false
       | uu___ -> failwith "FIXME! eq_lazy_kind must be complete"
@@ -953,6 +955,8 @@ let (lazy_kind_to_string : FStar_Syntax_Syntax.lazy_kind -> Prims.string) =
     | FStar_Syntax_Syntax.Lazy_doc -> "Lazy_doc"
     | FStar_Syntax_Syntax.Lazy_ident -> "Lazy_ident"
     | FStar_Syntax_Syntax.Lazy_embedding uu___ -> "Lazy_embedding _"
+    | FStar_Syntax_Syntax.Lazy_extension s ->
+        Prims.op_Hat "Lazy_extension " s
     | uu___ -> failwith "FIXME! lazy_kind_to_string must be complete"
 let unlazy_as_t :
   'uuuuu .
@@ -3934,18 +3938,19 @@ let eqopt :
         | uu___ -> false
 let (debug_term_eq : Prims.bool FStar_Compiler_Effect.ref) =
   FStar_Compiler_Util.mk_ref false
-let (check : Prims.string -> Prims.bool -> Prims.bool) =
-  fun msg ->
-    fun cond ->
-      if cond
-      then true
-      else
-        ((let uu___2 = FStar_Compiler_Effect.op_Bang debug_term_eq in
-          if uu___2
-          then FStar_Compiler_Util.print1 ">>> term_eq failing: %s\n" msg
-          else ());
-         false)
-let (fail : Prims.string -> Prims.bool) = fun msg -> check msg false
+let (check : Prims.bool -> Prims.string -> Prims.bool -> Prims.bool) =
+  fun dbg ->
+    fun msg ->
+      fun cond ->
+        if cond
+        then true
+        else
+          (if dbg
+           then FStar_Compiler_Util.print1 ">>> term_eq failing: %s\n" msg
+           else ();
+           false)
+let (fail : Prims.bool -> Prims.string -> Prims.bool) =
+  fun dbg -> fun msg -> check dbg msg false
 let rec (term_eq_dbg :
   Prims.bool ->
     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> Prims.bool)
@@ -3955,6 +3960,8 @@ let rec (term_eq_dbg :
       fun t2 ->
         let t11 = let uu___ = unmeta_safe t1 in canon_app uu___ in
         let t21 = let uu___ = unmeta_safe t2 in canon_app uu___ in
+        let check1 = check dbg in
+        let fail1 = fail dbg in
         let uu___ =
           let uu___1 =
             let uu___2 =
@@ -3979,16 +3986,17 @@ let rec (term_eq_dbg :
         | (uu___1, FStar_Syntax_Syntax.Tm_ascribed uu___2) ->
             failwith "term_eq: impossible, should have been removed"
         | (FStar_Syntax_Syntax.Tm_bvar x, FStar_Syntax_Syntax.Tm_bvar y) ->
-            check "bvar"
+            check1 "bvar"
               (x.FStar_Syntax_Syntax.index = y.FStar_Syntax_Syntax.index)
         | (FStar_Syntax_Syntax.Tm_name x, FStar_Syntax_Syntax.Tm_name y) ->
-            check "name"
+            check1 "name"
               (x.FStar_Syntax_Syntax.index = y.FStar_Syntax_Syntax.index)
         | (FStar_Syntax_Syntax.Tm_fvar x, FStar_Syntax_Syntax.Tm_fvar y) ->
-            let uu___1 = FStar_Syntax_Syntax.fv_eq x y in check "fvar" uu___1
+            let uu___1 = FStar_Syntax_Syntax.fv_eq x y in
+            check1 "fvar" uu___1
         | (FStar_Syntax_Syntax.Tm_constant c1,
            FStar_Syntax_Syntax.Tm_constant c2) ->
-            let uu___1 = FStar_Const.eq_const c1 c2 in check "const" uu___1
+            let uu___1 = FStar_Const.eq_const c1 c2 in check1 "const" uu___1
         | (FStar_Syntax_Syntax.Tm_type uu___1, FStar_Syntax_Syntax.Tm_type
            uu___2) -> true
         | (FStar_Syntax_Syntax.Tm_abs
@@ -3999,18 +4007,18 @@ let rec (term_eq_dbg :
              FStar_Syntax_Syntax.rc_opt = k2;_})
             ->
             (let uu___1 = eqlist (binder_eq_dbg dbg) b1 b2 in
-             check "abs binders" uu___1) &&
+             check1 "abs binders" uu___1) &&
               (let uu___1 = term_eq_dbg dbg t12 t22 in
-               check "abs bodies" uu___1)
+               check1 "abs bodies" uu___1)
         | (FStar_Syntax_Syntax.Tm_arrow
            { FStar_Syntax_Syntax.bs1 = b1; FStar_Syntax_Syntax.comp = c1;_},
            FStar_Syntax_Syntax.Tm_arrow
            { FStar_Syntax_Syntax.bs1 = b2; FStar_Syntax_Syntax.comp = c2;_})
             ->
             (let uu___1 = eqlist (binder_eq_dbg dbg) b1 b2 in
-             check "arrow binders" uu___1) &&
+             check1 "arrow binders" uu___1) &&
               (let uu___1 = comp_eq_dbg dbg c1 c2 in
-               check "arrow comp" uu___1)
+               check1 "arrow comp" uu___1)
         | (FStar_Syntax_Syntax.Tm_refine
            { FStar_Syntax_Syntax.b = b1; FStar_Syntax_Syntax.phi = t12;_},
            FStar_Syntax_Syntax.Tm_refine
@@ -4018,18 +4026,18 @@ let rec (term_eq_dbg :
             (let uu___1 =
                term_eq_dbg dbg b1.FStar_Syntax_Syntax.sort
                  b2.FStar_Syntax_Syntax.sort in
-             check "refine bv sort" uu___1) &&
+             check1 "refine bv sort" uu___1) &&
               (let uu___1 = term_eq_dbg dbg t12 t22 in
-               check "refine formula" uu___1)
+               check1 "refine formula" uu___1)
         | (FStar_Syntax_Syntax.Tm_app
            { FStar_Syntax_Syntax.hd = f1; FStar_Syntax_Syntax.args = a1;_},
            FStar_Syntax_Syntax.Tm_app
            { FStar_Syntax_Syntax.hd = f2; FStar_Syntax_Syntax.args = a2;_})
             ->
-            (let uu___1 = term_eq_dbg dbg f1 f2 in check "app head" uu___1)
+            (let uu___1 = term_eq_dbg dbg f1 f2 in check1 "app head" uu___1)
               &&
               (let uu___1 = eqlist (arg_eq_dbg dbg) a1 a2 in
-               check "app args" uu___1)
+               check1 "app args" uu___1)
         | (FStar_Syntax_Syntax.Tm_match
            { FStar_Syntax_Syntax.scrutinee = t12;
              FStar_Syntax_Syntax.ret_opt = FStar_Pervasives_Native.None;
@@ -4042,17 +4050,17 @@ let rec (term_eq_dbg :
              FStar_Syntax_Syntax.rc_opt1 = uu___2;_})
             ->
             (let uu___3 = term_eq_dbg dbg t12 t22 in
-             check "match head" uu___3) &&
+             check1 "match head" uu___3) &&
               (let uu___3 = eqlist (branch_eq_dbg dbg) bs1 bs2 in
-               check "match branches" uu___3)
+               check1 "match branches" uu___3)
         | (FStar_Syntax_Syntax.Tm_lazy uu___1, uu___2) ->
             let uu___3 =
               let uu___4 = unlazy t11 in term_eq_dbg dbg uu___4 t21 in
-            check "lazy_l" uu___3
+            check1 "lazy_l" uu___3
         | (uu___1, FStar_Syntax_Syntax.Tm_lazy uu___2) ->
             let uu___3 =
               let uu___4 = unlazy t21 in term_eq_dbg dbg t11 uu___4 in
-            check "lazy_r" uu___3
+            check1 "lazy_r" uu___3
         | (FStar_Syntax_Syntax.Tm_let
            { FStar_Syntax_Syntax.lbs = (b1, lbs1);
              FStar_Syntax_Syntax.body1 = t12;_},
@@ -4060,23 +4068,23 @@ let rec (term_eq_dbg :
            { FStar_Syntax_Syntax.lbs = (b2, lbs2);
              FStar_Syntax_Syntax.body1 = t22;_})
             ->
-            ((check "let flag" (b1 = b2)) &&
+            ((check1 "let flag" (b1 = b2)) &&
                (let uu___1 = eqlist (letbinding_eq_dbg dbg) lbs1 lbs2 in
-                check "let lbs" uu___1))
+                check1 "let lbs" uu___1))
               &&
               (let uu___1 = term_eq_dbg dbg t12 t22 in
-               check "let body" uu___1)
+               check1 "let body" uu___1)
         | (FStar_Syntax_Syntax.Tm_uvar (u1, uu___1),
            FStar_Syntax_Syntax.Tm_uvar (u2, uu___2)) ->
-            check "uvar"
+            check1 "uvar"
               (u1.FStar_Syntax_Syntax.ctx_uvar_head =
                  u2.FStar_Syntax_Syntax.ctx_uvar_head)
         | (FStar_Syntax_Syntax.Tm_quoted (qt1, qi1),
            FStar_Syntax_Syntax.Tm_quoted (qt2, qi2)) ->
             (let uu___1 = let uu___2 = eq_quoteinfo qi1 qi2 in uu___2 = Equal in
-             check "tm_quoted qi" uu___1) &&
+             check1 "tm_quoted qi" uu___1) &&
               (let uu___1 = term_eq_dbg dbg qt1 qt2 in
-               check "tm_quoted payload" uu___1)
+               check1 "tm_quoted payload" uu___1)
         | (FStar_Syntax_Syntax.Tm_meta
            { FStar_Syntax_Syntax.tm2 = t12; FStar_Syntax_Syntax.meta = m1;_},
            FStar_Syntax_Syntax.Tm_meta
@@ -4086,47 +4094,47 @@ let rec (term_eq_dbg :
              | (FStar_Syntax_Syntax.Meta_monadic (n1, ty1),
                 FStar_Syntax_Syntax.Meta_monadic (n2, ty2)) ->
                  (let uu___1 = FStar_Ident.lid_equals n1 n2 in
-                  check "meta_monadic lid" uu___1) &&
+                  check1 "meta_monadic lid" uu___1) &&
                    (let uu___1 = term_eq_dbg dbg ty1 ty2 in
-                    check "meta_monadic type" uu___1)
+                    check1 "meta_monadic type" uu___1)
              | (FStar_Syntax_Syntax.Meta_monadic_lift (s1, t13, ty1),
                 FStar_Syntax_Syntax.Meta_monadic_lift (s2, t23, ty2)) ->
                  ((let uu___1 = FStar_Ident.lid_equals s1 s2 in
-                   check "meta_monadic_lift src" uu___1) &&
+                   check1 "meta_monadic_lift src" uu___1) &&
                     (let uu___1 = FStar_Ident.lid_equals t13 t23 in
-                     check "meta_monadic_lift tgt" uu___1))
+                     check1 "meta_monadic_lift tgt" uu___1))
                    &&
                    (let uu___1 = term_eq_dbg dbg ty1 ty2 in
-                    check "meta_monadic_lift type" uu___1)
-             | uu___1 -> fail "metas")
-        | (FStar_Syntax_Syntax.Tm_unknown, uu___1) -> fail "unk"
-        | (uu___1, FStar_Syntax_Syntax.Tm_unknown) -> fail "unk"
-        | (FStar_Syntax_Syntax.Tm_bvar uu___1, uu___2) -> fail "bottom"
-        | (FStar_Syntax_Syntax.Tm_name uu___1, uu___2) -> fail "bottom"
-        | (FStar_Syntax_Syntax.Tm_fvar uu___1, uu___2) -> fail "bottom"
-        | (FStar_Syntax_Syntax.Tm_constant uu___1, uu___2) -> fail "bottom"
-        | (FStar_Syntax_Syntax.Tm_type uu___1, uu___2) -> fail "bottom"
-        | (FStar_Syntax_Syntax.Tm_abs uu___1, uu___2) -> fail "bottom"
-        | (FStar_Syntax_Syntax.Tm_arrow uu___1, uu___2) -> fail "bottom"
-        | (FStar_Syntax_Syntax.Tm_refine uu___1, uu___2) -> fail "bottom"
-        | (FStar_Syntax_Syntax.Tm_app uu___1, uu___2) -> fail "bottom"
-        | (FStar_Syntax_Syntax.Tm_match uu___1, uu___2) -> fail "bottom"
-        | (FStar_Syntax_Syntax.Tm_let uu___1, uu___2) -> fail "bottom"
-        | (FStar_Syntax_Syntax.Tm_uvar uu___1, uu___2) -> fail "bottom"
-        | (FStar_Syntax_Syntax.Tm_meta uu___1, uu___2) -> fail "bottom"
-        | (uu___1, FStar_Syntax_Syntax.Tm_bvar uu___2) -> fail "bottom"
-        | (uu___1, FStar_Syntax_Syntax.Tm_name uu___2) -> fail "bottom"
-        | (uu___1, FStar_Syntax_Syntax.Tm_fvar uu___2) -> fail "bottom"
-        | (uu___1, FStar_Syntax_Syntax.Tm_constant uu___2) -> fail "bottom"
-        | (uu___1, FStar_Syntax_Syntax.Tm_type uu___2) -> fail "bottom"
-        | (uu___1, FStar_Syntax_Syntax.Tm_abs uu___2) -> fail "bottom"
-        | (uu___1, FStar_Syntax_Syntax.Tm_arrow uu___2) -> fail "bottom"
-        | (uu___1, FStar_Syntax_Syntax.Tm_refine uu___2) -> fail "bottom"
-        | (uu___1, FStar_Syntax_Syntax.Tm_app uu___2) -> fail "bottom"
-        | (uu___1, FStar_Syntax_Syntax.Tm_match uu___2) -> fail "bottom"
-        | (uu___1, FStar_Syntax_Syntax.Tm_let uu___2) -> fail "bottom"
-        | (uu___1, FStar_Syntax_Syntax.Tm_uvar uu___2) -> fail "bottom"
-        | (uu___1, FStar_Syntax_Syntax.Tm_meta uu___2) -> fail "bottom"
+                    check1 "meta_monadic_lift type" uu___1)
+             | uu___1 -> fail1 "metas")
+        | (FStar_Syntax_Syntax.Tm_unknown, uu___1) -> fail1 "unk"
+        | (uu___1, FStar_Syntax_Syntax.Tm_unknown) -> fail1 "unk"
+        | (FStar_Syntax_Syntax.Tm_bvar uu___1, uu___2) -> fail1 "bottom"
+        | (FStar_Syntax_Syntax.Tm_name uu___1, uu___2) -> fail1 "bottom"
+        | (FStar_Syntax_Syntax.Tm_fvar uu___1, uu___2) -> fail1 "bottom"
+        | (FStar_Syntax_Syntax.Tm_constant uu___1, uu___2) -> fail1 "bottom"
+        | (FStar_Syntax_Syntax.Tm_type uu___1, uu___2) -> fail1 "bottom"
+        | (FStar_Syntax_Syntax.Tm_abs uu___1, uu___2) -> fail1 "bottom"
+        | (FStar_Syntax_Syntax.Tm_arrow uu___1, uu___2) -> fail1 "bottom"
+        | (FStar_Syntax_Syntax.Tm_refine uu___1, uu___2) -> fail1 "bottom"
+        | (FStar_Syntax_Syntax.Tm_app uu___1, uu___2) -> fail1 "bottom"
+        | (FStar_Syntax_Syntax.Tm_match uu___1, uu___2) -> fail1 "bottom"
+        | (FStar_Syntax_Syntax.Tm_let uu___1, uu___2) -> fail1 "bottom"
+        | (FStar_Syntax_Syntax.Tm_uvar uu___1, uu___2) -> fail1 "bottom"
+        | (FStar_Syntax_Syntax.Tm_meta uu___1, uu___2) -> fail1 "bottom"
+        | (uu___1, FStar_Syntax_Syntax.Tm_bvar uu___2) -> fail1 "bottom"
+        | (uu___1, FStar_Syntax_Syntax.Tm_name uu___2) -> fail1 "bottom"
+        | (uu___1, FStar_Syntax_Syntax.Tm_fvar uu___2) -> fail1 "bottom"
+        | (uu___1, FStar_Syntax_Syntax.Tm_constant uu___2) -> fail1 "bottom"
+        | (uu___1, FStar_Syntax_Syntax.Tm_type uu___2) -> fail1 "bottom"
+        | (uu___1, FStar_Syntax_Syntax.Tm_abs uu___2) -> fail1 "bottom"
+        | (uu___1, FStar_Syntax_Syntax.Tm_arrow uu___2) -> fail1 "bottom"
+        | (uu___1, FStar_Syntax_Syntax.Tm_refine uu___2) -> fail1 "bottom"
+        | (uu___1, FStar_Syntax_Syntax.Tm_app uu___2) -> fail1 "bottom"
+        | (uu___1, FStar_Syntax_Syntax.Tm_match uu___2) -> fail1 "bottom"
+        | (uu___1, FStar_Syntax_Syntax.Tm_let uu___2) -> fail1 "bottom"
+        | (uu___1, FStar_Syntax_Syntax.Tm_uvar uu___2) -> fail1 "bottom"
+        | (uu___1, FStar_Syntax_Syntax.Tm_meta uu___2) -> fail1 "bottom"
 and (arg_eq_dbg :
   Prims.bool ->
     (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax *
@@ -4141,11 +4149,11 @@ and (arg_eq_dbg :
         eqprod
           (fun t1 ->
              fun t2 ->
-               let uu___ = term_eq_dbg dbg t1 t2 in check "arg tm" uu___)
+               let uu___ = term_eq_dbg dbg t1 t2 in check dbg "arg tm" uu___)
           (fun q1 ->
              fun q2 ->
                let uu___ = let uu___1 = eq_aqual q1 q2 in uu___1 = Equal in
-               check "arg qual" uu___) a1 a2
+               check dbg "arg qual" uu___) a1 a2
 and (binder_eq_dbg :
   Prims.bool ->
     FStar_Syntax_Syntax.binder -> FStar_Syntax_Syntax.binder -> Prims.bool)
@@ -4157,18 +4165,18 @@ and (binder_eq_dbg :
             term_eq_dbg dbg
               (b1.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort
               (b2.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
-          check "binder_sort" uu___) &&
+          check dbg "binder_sort" uu___) &&
            (let uu___ =
               let uu___1 =
                 eq_bqual b1.FStar_Syntax_Syntax.binder_qual
                   b2.FStar_Syntax_Syntax.binder_qual in
               uu___1 = Equal in
-            check "binder qual" uu___))
+            check dbg "binder qual" uu___))
           &&
           (let uu___ =
              eqlist (term_eq_dbg dbg) b1.FStar_Syntax_Syntax.binder_attrs
                b2.FStar_Syntax_Syntax.binder_attrs in
-           check "binder attrs" uu___)
+           check dbg "binder attrs" uu___)
 and (comp_eq_dbg :
   Prims.bool ->
     FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
@@ -4184,9 +4192,9 @@ and (comp_eq_dbg :
             (match uu___1 with
              | (eff2, res2, args2) ->
                  ((let uu___2 = FStar_Ident.lid_equals eff1 eff2 in
-                   check "comp eff" uu___2) &&
+                   check dbg "comp eff" uu___2) &&
                     (let uu___2 = term_eq_dbg dbg res1 res2 in
-                     check "comp result typ" uu___2))
+                     check dbg "comp result typ" uu___2))
                    && true)
 and (branch_eq_dbg :
   Prims.bool ->
@@ -4205,9 +4213,9 @@ and (branch_eq_dbg :
         match (uu___, uu___1) with
         | ((p1, w1, t1), (p2, w2, t2)) ->
             ((let uu___2 = FStar_Syntax_Syntax.eq_pat p1 p2 in
-              check "branch pat" uu___2) &&
+              check dbg "branch pat" uu___2) &&
                (let uu___2 = term_eq_dbg dbg t1 t2 in
-                check "branch body" uu___2))
+                check dbg "branch body" uu___2))
               &&
               (let uu___2 =
                  match (w1, w2) with
@@ -4216,7 +4224,7 @@ and (branch_eq_dbg :
                  | (FStar_Pervasives_Native.None,
                     FStar_Pervasives_Native.None) -> true
                  | uu___3 -> false in
-               check "branch when" uu___2)
+               check dbg "branch when" uu___2)
 and (letbinding_eq_dbg :
   Prims.bool ->
     FStar_Syntax_Syntax.letbinding ->
@@ -4228,16 +4236,16 @@ and (letbinding_eq_dbg :
         ((let uu___ =
             eqsum (fun bv1 -> fun bv2 -> true) FStar_Syntax_Syntax.fv_eq
               lb1.FStar_Syntax_Syntax.lbname lb2.FStar_Syntax_Syntax.lbname in
-          check "lb bv" uu___) &&
+          check dbg "lb bv" uu___) &&
            (let uu___ =
               term_eq_dbg dbg lb1.FStar_Syntax_Syntax.lbtyp
                 lb2.FStar_Syntax_Syntax.lbtyp in
-            check "lb typ" uu___))
+            check dbg "lb typ" uu___))
           &&
           (let uu___ =
              term_eq_dbg dbg lb1.FStar_Syntax_Syntax.lbdef
                lb2.FStar_Syntax_Syntax.lbdef in
-           check "lb def" uu___)
+           check dbg "lb def" uu___)
 let (term_eq :
   FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> Prims.bool) =
   fun t1 ->

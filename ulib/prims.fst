@@ -616,32 +616,32 @@ let as_ensures (#a: Type) (wp: pure_wp a) : pure_post a = fun (x:a) -> ~(wp (fun
 (** The keyword term-level keyword [assume] is desugared to [_assume].
     It explicitly provides an escape hatch to assume a given property
     [p]. *)
-[@@ warn_on_use "uses an axiom"]
+[@@ warn_on_use "Uses an axiom"]
 assume
 val _assume (p: Type) : Pure unit (requires (True)) (ensures (fun x -> p))
 
 (** [admit] is another escape hatch: It discards the continuation and
     returns a value of any type *)
-[@@ warn_on_use "uses an axiom"]
+[@@ warn_on_use "Uses an axiom"]
 assume
 val admit: #a: Type -> unit -> Admit a
 
 (** [magic] is another escape hatch: It retains the continuation but
     returns a value of any type *)
-[@@ warn_on_use "uses an axiom"]
+[@@ warn_on_use "Uses an axiom"]
 assume
 val magic: #a: Type -> unit -> Tot a
 
 (** [unsafe_coerce] is another escape hatch: It coerces an [a] to a
     [b].  *)
-[@@ warn_on_use "uses an axiom"]
+[@@ warn_on_use "Uses an axiom"]
 irreducible
 let unsafe_coerce (#a #b: Type) (x: a) : b =
   admit ();
   x
 
 (** [admitP]: TODO: Unused ... remove? *)
-[@@ warn_on_use "uses an axiom"]
+[@@ warn_on_use "Uses an axiom"]
 assume
 val admitP (p: Type) : Pure unit True (fun x -> p)
 
@@ -708,4 +708,4 @@ val string_of_int: int -> Tot string
 (** THIS IS MEANT TO BE KEPT IN SYNC WITH FStar.CheckedFiles.fs
     Incrementing this forces all .checked files to be invalidated *)
 irreducible
-let __cache_version_number__ = 60
+let __cache_version_number__ = 61

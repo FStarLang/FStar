@@ -1300,13 +1300,52 @@ type typing : env -> term -> comp_typ -> Type0 =
      typing g (pack_ln (Tv_Match sc None branches)) ty
 
 and related : env -> term -> relation -> term -> Type0 =
-  | Rel_equiv:
+  | Rel_refl:
+    g:env ->
+    t:term ->
+    rel:relation ->
+    related g t rel t
+
+  | Rel_sym:
     g:env ->
     t0:term ->
     t1:term ->
+    related g t0 R_Eq t1 ->
+    related g t1 R_Eq t0
+
+  | Rel_trans:
+    g:env ->
+    t0:term ->
+    t1:term ->
+    t2:term ->
     rel:relation ->
-    equiv g t0 t1 ->
-    related g t0 rel t1
+    related g t0 rel t1 ->
+    related g t1 rel t2 ->
+    related g t0 rel t2
+
+  | Rel_univ:
+    g:env ->
+    u:universe ->
+    v:universe ->
+    univ_eq u v ->
+    related g (tm_type u) R_Eq (tm_type v)
+
+  | Rel_beta:
+    g:env ->
+    t:typ ->
+    q:aqualv ->
+    e:term { ln' e 0 } ->
+    arg:term { ln arg } ->
+    related g (R.pack_ln (R.Tv_App (mk_abs t q e) (arg, q)))
+            R_Eq
+            (subst_term e [ DT 0 arg ])
+
+  | Rel_eq_token:
+    g:env ->
+    t0:term ->
+    t1:term ->
+    squash (T.equiv_token g t0 t1) ->
+    related g t0 R_Eq t1 
 
   | Rel_subtyping_token:
     g:env ->
@@ -1314,6 +1353,14 @@ and related : env -> term -> relation -> term -> Type0 =
     t1:term ->
     squash (T.subtyping_token g t0 t1) ->
     related g t0 R_Sub t1
+
+  | Rel_equiv:
+    g:env ->
+    t0:term ->
+    t1:term ->
+    rel:relation ->
+    related g t0 R_Eq t1 ->
+    related g t0 rel t1
 
   | Rel_arrow:
     g:env ->
@@ -1351,58 +1398,13 @@ and related : env -> term -> relation -> term -> Type0 =
             (subst_term e2 (open_with_var x 0)) ->
     related g (mk_abs t1 q e1) R_Eq (mk_abs t2 q e2)
 
-and equiv : env -> term -> term -> Type0 =
-  | EQ_Refl:
-    g:env ->
-    t0:term ->
-    equiv g t0 t0
-
-  | EQ_Sym:
-    g:env ->
-    t0:term ->
-    t1:term ->
-    equiv g t0 t1 ->
-    equiv g t1 t0
-
-  | EQ_Trans:
-    g:env ->
-    t0:term ->
-    t1:term ->
-    t2:term ->
-    equiv g t0 t1 ->
-    equiv g t1 t2 ->
-    equiv g t0 t2
-
-  | EQ_Univ:
-    g:env ->
-    u:universe ->
-    v:universe ->
-    univ_eq u v ->
-    equiv g (tm_type u) (tm_type v)
-
-  | EQ_Beta:
-    g:env ->
-    t:R.typ ->
-    q:R.aqualv ->
-    e:R.term { ln' e 0 } ->
-    arg:R.term { ln arg } ->
-    equiv g (R.pack_ln (R.Tv_App (mk_abs t q e) (arg, q)))
-            (subst_term e [ DT 0 arg ])
-
-  | EQ_Token:
-    g:env ->
-    t0:term ->
-    t1:term ->
-    squash (T.equiv_token g t0 t1) ->
-    equiv g t0 t1
-
-  | EQ_Ctxt:
+  | Rel_ctxt:
     g:env ->
     t0:term ->
     t1:term ->
     ctxt:term_ctxt ->
-    equiv g t0 t1 ->
-    equiv g (apply_term_ctxt ctxt t0) (apply_term_ctxt ctxt t1)
+    related g t0 R_Eq t1 ->
+    related g (apply_term_ctxt ctxt t0) R_Eq (apply_term_ctxt ctxt t1)
 
 and related_comp : env -> comp_typ -> relation -> comp_typ -> Type0 =
   | Relc_typ:
@@ -1481,6 +1483,8 @@ and sub_typing (g:env) (t1 t2:term) = related g t1 R_Sub t2
 
 and sub_comp (g:env) (c1 c2:comp_typ) = related_comp g c1 R_Sub c2
 
+and equiv (g:env) (t1 t2:term) = related g t1 R_Eq t2
+
 type tot_typing (g:env) (e:term) (t:term) = typing g e (T.E_Total, t)
 
 type ghost_typing (g:env) (e:term) (t:term) = typing g e (T.E_Ghost, t)
@@ -1513,9 +1517,11 @@ let simplify_umax (#g:R.env) (#t:R.term) (#u:R.universe)
        : univ_eq (u_max u u) u
        = UN_MaxLeq u u (UNLEQ_Refl u)
      in
-
-     T_Sub _ _ _ _ d (Relc_typ _ _ _ T.E_Total _ (Rel_equiv _ _ _ _ (EQ_Univ _ _ _ ue)))
-
+     let du : related g (tm_type (u_max u u)) R_Eq (tm_type u)
+       = Rel_univ g (u_max u u) u ue in
+     let du : related g (tm_type (u_max u u)) R_Sub (tm_type u)
+       = Rel_equiv _ _ _ _ du in
+     T_Sub _ _ _ _ d (Relc_typ _ _ _ T.E_Total _ du)
 
 val well_typed_terms_are_ln (g:R.env) (e:R.term) (c:comp_typ) (_:typing g e c)
   : Lemma (ensures ln e /\ ln (snd c))
@@ -1702,23 +1708,15 @@ val close_with_not_free_var (t:R.term) (x:var) (i:nat)
       (requires ~ (Set.mem x (freevars t)))
       (ensures subst_term t [ ND x i ] == t)
 
-// may be it should require e1 and e2 to be ln at 0,
-//   and x not in FV e1 and FV e2
-val equiv_abs (#g:R.env) (#e1 #e2:R.term) (ty:R.typ) (q:R.aqualv)
-  (x:var{None? (lookup_bvar g x)})
-  (eq:equiv (extend_env g x ty)
-            (subst_term e1 (open_with_var x 0))
-            (subst_term e2 (open_with_var x 0)))
-  : equiv g (mk_abs ty q e1)
-            (mk_abs ty q e2)
-
+// this also requires x to be not in freevars e1 `Set.union` freevars e2
 val equiv_arrow (#g:R.env) (#e1 #e2:R.term) (ty:R.typ) (q:R.aqualv)
-  (x:var{None? (lookup_bvar g x)})
+  (x:var { None? (lookup_bvar g x) })
   (eq:equiv (extend_env g x ty)
             (subst_term e1 (open_with_var x 0))
             (subst_term e2 (open_with_var x 0)))
   : equiv g (mk_arrow ty q e1)
             (mk_arrow ty q e2)
+
 
 // the proof for this requires e1 and e2 to be ln
 val equiv_abs_close (#g:R.env) (#e1 #e2:R.term) (ty:R.typ) (q:R.aqualv)
@@ -1756,7 +1754,29 @@ type fstar_top_env = g:fstar_env {
 // g:fstar_top_env -> T.tac ((us, e, t):(univ_names & term & typ){typing (push g us) e t})
 //
 
-type dsl_tac_t = g:fstar_top_env -> T.Tac (r:(R.term & R.typ){typing g (fst r) (T.E_Total, snd r)})
+(**
+ * The type of the top-level tactic that would splice-in the definitions
+ * It returns either:
+ *   - Some tm, blob, typ, with a proof that `typing g tm typ`
+ *   - None, blob, typ), with a proof that `exists tm. typing g tm typ`
+ * The blob itself is optional and can store some additional metadata that
+ * constructed by the tactic. If present, it will be stored in the 
+ * sigmeta_extension_data field of the enclosing sigelt.
+ *
+ * The blob can be used later, e.g., during extraction, and passed back to the
+ * extension to perform additional processing.
+ *)
+let blob = string & R.term
+let dsl_tac_result_base_t = option R.term & option blob & R.typ
+let well_typed g (e:dsl_tac_result_base_t) =
+  let tm_opt, _, typ = e in
+  match tm_opt with
+  | None -> exists (tm:R.term). typing g tm (T.E_Total, typ)
+  | Some tm -> typing g tm (T.E_Total, typ)
+
+let dsl_tac_result_t g = e:dsl_tac_result_base_t { well_typed g e }
+
+type dsl_tac_t = g:fstar_top_env -> T.Tac (dsl_tac_result_t g)
 
 val if_complete_match (g:env) (t:term)
   : T.match_complete_token g t bool_ty [

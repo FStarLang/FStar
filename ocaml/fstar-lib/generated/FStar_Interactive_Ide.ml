@@ -433,6 +433,12 @@ let (unpack_interactive_query :
                        FStar_Interactive_Ide_Types.push_code_or_decl = uu___6
                      } in
                    FStar_Interactive_Ide_Types.Push uu___2
+               | "push-partial-checked-file" ->
+                   let uu___2 =
+                     let uu___3 = arg "until-lid" in
+                     FStar_Compiler_Effect.op_Bar_Greater uu___3
+                       FStar_Interactive_JsonHelper.js_str in
+                   FStar_Interactive_Ide_Types.PushPartialCheckedFile uu___2
                | "full-buffer" ->
                    let uu___2 =
                      let uu___3 =
@@ -1461,6 +1467,190 @@ let (write_full_buffer_fragment_progress :
     | FStar_Interactive_Incremental.FullBufferFinished ->
         write_progress (FStar_Pervasives_Native.Some "full-buffer-finished")
           []
+let (trunc_modul :
+  FStar_Syntax_Syntax.modul ->
+    (FStar_Syntax_Syntax.sigelt -> Prims.bool) ->
+      (Prims.bool * FStar_Syntax_Syntax.modul))
+  =
+  fun m ->
+    fun pred ->
+      let rec filter decls acc =
+        match decls with
+        | [] -> (false, (FStar_Compiler_List.rev acc))
+        | d::ds ->
+            let uu___ = pred d in
+            if uu___
+            then (true, (FStar_Compiler_List.rev acc))
+            else filter ds (d :: acc) in
+      let uu___ = filter m.FStar_Syntax_Syntax.declarations [] in
+      match uu___ with
+      | (found, decls) ->
+          (found,
+            {
+              FStar_Syntax_Syntax.name = (m.FStar_Syntax_Syntax.name);
+              FStar_Syntax_Syntax.declarations = decls;
+              FStar_Syntax_Syntax.is_interface =
+                (m.FStar_Syntax_Syntax.is_interface)
+            })
+let (load_partial_checked_file :
+  FStar_TypeChecker_Env.env ->
+    Prims.string ->
+      Prims.string -> (FStar_TypeChecker_Env.env * FStar_Syntax_Syntax.modul))
+  =
+  fun env ->
+    fun filename ->
+      fun until_lid ->
+        let uu___ = FStar_CheckedFiles.load_module_from_cache env filename in
+        match uu___ with
+        | FStar_Pervasives_Native.None ->
+            failwith (Prims.op_Hat "cannot find checked file for " filename)
+        | FStar_Pervasives_Native.Some tc_result ->
+            let uu___1 =
+              FStar_Universal.with_dsenv_of_tcenv env
+                (fun ds ->
+                   let uu___2 =
+                     FStar_Syntax_DsEnv.set_current_module ds
+                       (tc_result.FStar_CheckedFiles.checked_module).FStar_Syntax_Syntax.name in
+                   ((), uu___2)) in
+            (match uu___1 with
+             | (uu___2, env1) ->
+                 let uu___3 =
+                   FStar_Universal.with_dsenv_of_tcenv env1
+                     (fun ds ->
+                        let uu___4 =
+                          FStar_Syntax_DsEnv.set_iface_decls ds
+                            (tc_result.FStar_CheckedFiles.checked_module).FStar_Syntax_Syntax.name
+                            [] in
+                        ((), uu___4)) in
+                 (match uu___3 with
+                  | (uu___4, env2) ->
+                      let pred se =
+                        let rec pred1 lids =
+                          match lids with
+                          | [] -> false
+                          | lid::lids1 ->
+                              let uu___5 =
+                                let uu___6 = FStar_Ident.string_of_lid lid in
+                                uu___6 = until_lid in
+                              if uu___5 then true else pred1 lids1 in
+                        pred1 (FStar_Syntax_Util.lids_of_sigelt se) in
+                      let uu___5 =
+                        trunc_modul
+                          tc_result.FStar_CheckedFiles.checked_module pred in
+                      (match uu___5 with
+                       | (found_decl, m) ->
+                           if Prims.op_Negation found_decl
+                           then
+                             failwith
+                               (Prims.op_Hat
+                                  "did not find declaration with lident "
+                                  until_lid)
+                           else
+                             (let uu___7 =
+                                let uu___8 =
+                                  FStar_ToSyntax_ToSyntax.add_partial_modul_to_env
+                                    m tc_result.FStar_CheckedFiles.mii
+                                    (FStar_TypeChecker_Normalize.erase_universes
+                                       env2) in
+                                FStar_Compiler_Effect.op_Less_Bar
+                                  (FStar_Universal.with_dsenv_of_tcenv env2)
+                                  uu___8 in
+                              match uu___7 with
+                              | (uu___8, env3) ->
+                                  let env4 =
+                                    FStar_TypeChecker_Tc.load_partial_checked_module
+                                      env3 m in
+                                  let uu___9 =
+                                    FStar_Universal.with_dsenv_of_tcenv env4
+                                      (fun ds ->
+                                         let uu___10 =
+                                           FStar_Syntax_DsEnv.set_current_module
+                                             ds m.FStar_Syntax_Syntax.name in
+                                         ((), uu___10)) in
+                                  (match uu___9 with
+                                   | (uu___10, env5) ->
+                                       let env6 =
+                                         FStar_TypeChecker_Env.set_current_module
+                                           env5 m.FStar_Syntax_Syntax.name in
+                                       ((let uu___12 =
+                                           FStar_SMTEncoding_Encode.encode_modul
+                                             env6 m in
+                                         ());
+                                        (env6, m)))))))
+let (run_load_partial_file :
+  FStar_Interactive_Ide_Types.repl_state ->
+    Prims.string ->
+      ((FStar_Interactive_Ide_Types.query_status * FStar_Json.json) *
+        (FStar_Interactive_Ide_Types.repl_state, Prims.int)
+        FStar_Pervasives.either))
+  =
+  fun st ->
+    fun decl_name ->
+      let uu___ = load_deps st in
+      match uu___ with
+      | FStar_Pervasives.Inr st1 ->
+          let errors =
+            let uu___1 = collect_errors () in
+            FStar_Compiler_List.map rephrase_dependency_error uu___1 in
+          let js_errors =
+            FStar_Compiler_Effect.op_Bar_Greater errors
+              (FStar_Compiler_List.map
+                 FStar_Interactive_Ide_Types.json_of_issue) in
+          ((FStar_Interactive_Ide_Types.QueryNOK,
+             (FStar_Json.JsonList js_errors)), (FStar_Pervasives.Inl st1))
+      | FStar_Pervasives.Inl (st1, deps) ->
+          let st2 =
+            FStar_Interactive_PushHelper.push_repl "load partial file"
+              (FStar_Pervasives_Native.Some
+                 FStar_Interactive_Ide_Types.FullCheck)
+              FStar_Interactive_Ide_Types.Noop st1 in
+          let env = st2.FStar_Interactive_Ide_Types.repl_env in
+          let uu___1 =
+            with_captured_errors env FStar_Compiler_Util.sigint_raise
+              (fun env1 ->
+                 let uu___2 =
+                   load_partial_checked_file env1
+                     st2.FStar_Interactive_Ide_Types.repl_fname decl_name in
+                 FStar_Compiler_Effect.op_Less_Bar
+                   (fun uu___3 -> FStar_Pervasives_Native.Some uu___3) uu___2) in
+          (match uu___1 with
+           | FStar_Pervasives_Native.Some (env1, curmod) when
+               let uu___2 = FStar_Errors.get_err_count () in
+               uu___2 = Prims.int_zero ->
+               let st3 =
+                 {
+                   FStar_Interactive_Ide_Types.repl_line =
+                     (st2.FStar_Interactive_Ide_Types.repl_line);
+                   FStar_Interactive_Ide_Types.repl_column =
+                     (st2.FStar_Interactive_Ide_Types.repl_column);
+                   FStar_Interactive_Ide_Types.repl_fname =
+                     (st2.FStar_Interactive_Ide_Types.repl_fname);
+                   FStar_Interactive_Ide_Types.repl_deps_stack =
+                     (st2.FStar_Interactive_Ide_Types.repl_deps_stack);
+                   FStar_Interactive_Ide_Types.repl_curmod =
+                     (FStar_Pervasives_Native.Some curmod);
+                   FStar_Interactive_Ide_Types.repl_env = env1;
+                   FStar_Interactive_Ide_Types.repl_stdin =
+                     (st2.FStar_Interactive_Ide_Types.repl_stdin);
+                   FStar_Interactive_Ide_Types.repl_names =
+                     (st2.FStar_Interactive_Ide_Types.repl_names);
+                   FStar_Interactive_Ide_Types.repl_buffered_input_queries =
+                     (st2.FStar_Interactive_Ide_Types.repl_buffered_input_queries)
+                 } in
+               ((FStar_Interactive_Ide_Types.QueryOK,
+                  (FStar_Json.JsonList [])), (FStar_Pervasives.Inl st3))
+           | uu___2 ->
+               let json_error_list =
+                 let uu___3 = collect_errors () in
+                 FStar_Compiler_Effect.op_Bar_Greater uu___3
+                   (FStar_Compiler_List.map
+                      FStar_Interactive_Ide_Types.json_of_issue) in
+               let json_errors = FStar_Json.JsonList json_error_list in
+               let st3 =
+                 FStar_Interactive_PushHelper.pop_repl "load partial file"
+                   st2 in
+               ((FStar_Interactive_Ide_Types.QueryNOK, json_errors),
+                 (FStar_Pervasives.Inl st3)))
 let (run_push_without_deps :
   FStar_Interactive_Ide_Types.repl_state ->
     FStar_Interactive_Ide_Types.push_query ->
@@ -2710,6 +2900,9 @@ let rec (run_query :
           let uu___ = run_vfs_add st fname contents in as_json_list uu___
       | FStar_Interactive_Ide_Types.Push pquery ->
           let uu___ = run_push st pquery in as_json_list uu___
+      | FStar_Interactive_Ide_Types.PushPartialCheckedFile decl_name ->
+          let uu___ = run_load_partial_file st decl_name in
+          as_json_list uu___
       | FStar_Interactive_Ide_Types.Pop ->
           let uu___ = run_pop st in as_json_list uu___
       | FStar_Interactive_Ide_Types.FullBuffer

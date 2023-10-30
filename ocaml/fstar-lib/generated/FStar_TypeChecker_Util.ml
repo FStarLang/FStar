@@ -5174,12 +5174,14 @@ let rec (check_erased :
             FStar_Syntax_Syntax.delta_constant;
           FStar_TypeChecker_Env.Exclude FStar_TypeChecker_Env.Zeta;
           FStar_TypeChecker_Env.Primops;
+          FStar_TypeChecker_Env.Unascribe;
+          FStar_TypeChecker_Env.Unmeta;
+          FStar_TypeChecker_Env.Unrefine;
           FStar_TypeChecker_Env.Weak;
           FStar_TypeChecker_Env.HNF;
           FStar_TypeChecker_Env.Iota] in
       let t1 = norm' env t in
-      let t2 = FStar_Syntax_Util.unrefine t1 in
-      let uu___ = FStar_Syntax_Util.head_and_args t2 in
+      let uu___ = FStar_Syntax_Util.head_and_args t1 in
       match uu___ with
       | (h, args) ->
           let h1 = FStar_Syntax_Util.un_uinst h in

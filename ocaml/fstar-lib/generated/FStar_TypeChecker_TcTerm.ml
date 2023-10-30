@@ -747,7 +747,7 @@ let (check_expected_effect :
                                         FStar_TypeChecker_Env.get_range env in
                                       FStar_TypeChecker_Util.label_guard
                                         uu___7
-                                        "could not prove post-condition" g in
+                                        "Could not prove post-condition" g in
                                     ((let uu___8 =
                                         FStar_TypeChecker_Env.debug env
                                           FStar_Options.Medium in

@@ -28,6 +28,10 @@ let smt_pat_or _ = ()
 
 let spinoff p = p
 
+#push-options "--no_tactics"
+let spinoff_equiv _ = ()
+#pop-options
+
 let assert_spinoff _ = ()
 
 let ambient #_ _ = True
@@ -173,6 +177,8 @@ let top_level_effect _ = ()
 let effect_param = ()
 let bind_has_range_args = ()
 let primitive_extraction = ()
+
+let extract_as_impure_effect = ()
 
 let strictly_positive = ()
 

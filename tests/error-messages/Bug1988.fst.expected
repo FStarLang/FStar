@@ -1,11 +1,8 @@
 >> Got issues: [
 * Error 189 at Bug1988.fst(4,14-4,30):
-  - Expected expression of type
-        Prims.int
-    got expression
-        "string literal"
-    of type
-        Prims.string
+  - Expected expression of type Prims.int
+    got expression "string literal"
+    of type Prims.string
 
 >>]
 >> Got issues: [

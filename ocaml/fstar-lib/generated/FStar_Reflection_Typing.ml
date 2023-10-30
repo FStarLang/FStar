@@ -1342,10 +1342,24 @@ type ('dummyV0, 'dummyV1, 'dummyV2) typing =
   unit, unit, unit) match_is_complete * (unit, unit, unit, unit, unit, 
   unit, unit) branches_typing 
 and ('dummyV0, 'dummyV1, 'dummyV2, 'dummyV3) related =
-  | Rel_equiv of FStar_Reflection_Types.env * FStar_Reflection_Types.term *
-  FStar_Reflection_Types.term * relation * (unit, unit, unit) equiv 
+  | Rel_refl of FStar_Reflection_Types.env * FStar_Reflection_Types.term *
+  relation 
+  | Rel_sym of FStar_Reflection_Types.env * FStar_Reflection_Types.term *
+  FStar_Reflection_Types.term * (unit, unit, unit, unit) related 
+  | Rel_trans of FStar_Reflection_Types.env * FStar_Reflection_Types.term *
+  FStar_Reflection_Types.term * FStar_Reflection_Types.term * relation *
+  (unit, unit, unit, unit) related * (unit, unit, unit, unit) related 
+  | Rel_univ of FStar_Reflection_Types.env * FStar_Reflection_Types.universe
+  * FStar_Reflection_Types.universe * (unit, unit) univ_eq 
+  | Rel_beta of FStar_Reflection_Types.env * FStar_Reflection_Types.typ *
+  FStar_Reflection_V2_Data.aqualv * FStar_Reflection_Types.term *
+  FStar_Reflection_Types.term 
+  | Rel_eq_token of FStar_Reflection_Types.env * FStar_Reflection_Types.term
+  * FStar_Reflection_Types.term * unit 
   | Rel_subtyping_token of FStar_Reflection_Types.env *
   FStar_Reflection_Types.term * FStar_Reflection_Types.term * unit 
+  | Rel_equiv of FStar_Reflection_Types.env * FStar_Reflection_Types.term *
+  FStar_Reflection_Types.term * relation * (unit, unit, unit, unit) related 
   | Rel_arrow of FStar_Reflection_Types.env * FStar_Reflection_Types.term *
   FStar_Reflection_Types.term * FStar_Reflection_V2_Data.aqualv * comp_typ *
   comp_typ * relation * FStar_Reflection_V2_Data.var * (unit, unit, unit,
@@ -1355,22 +1369,8 @@ and ('dummyV0, 'dummyV1, 'dummyV2, 'dummyV3) related =
   FStar_Reflection_Types.term * FStar_Reflection_Types.term *
   FStar_Reflection_V2_Data.var * (unit, unit, unit, unit) related * (
   unit, unit, unit, unit) related 
-and ('dummyV0, 'dummyV1, 'dummyV2) equiv =
-  | EQ_Refl of FStar_Reflection_Types.env * FStar_Reflection_Types.term 
-  | EQ_Sym of FStar_Reflection_Types.env * FStar_Reflection_Types.term *
-  FStar_Reflection_Types.term * (unit, unit, unit) equiv 
-  | EQ_Trans of FStar_Reflection_Types.env * FStar_Reflection_Types.term *
-  FStar_Reflection_Types.term * FStar_Reflection_Types.term * (unit, 
-  unit, unit) equiv * (unit, unit, unit) equiv 
-  | EQ_Univ of FStar_Reflection_Types.env * FStar_Reflection_Types.universe *
-  FStar_Reflection_Types.universe * (unit, unit) univ_eq 
-  | EQ_Beta of FStar_Reflection_Types.env * FStar_Reflection_Types.typ *
-  FStar_Reflection_V2_Data.aqualv * FStar_Reflection_Types.term *
-  FStar_Reflection_Types.term 
-  | EQ_Token of FStar_Reflection_Types.env * FStar_Reflection_Types.term *
-  FStar_Reflection_Types.term * unit 
-  | EQ_Ctxt of FStar_Reflection_Types.env * FStar_Reflection_Types.term *
-  FStar_Reflection_Types.term * term_ctxt * (unit, unit, unit) equiv 
+  | Rel_ctxt of FStar_Reflection_Types.env * FStar_Reflection_Types.term *
+  FStar_Reflection_Types.term * term_ctxt * (unit, unit, unit, unit) related 
 and ('dummyV0, 'dummyV1, 'dummyV2, 'dummyV3) related_comp =
   | Relc_typ of FStar_Reflection_Types.env * FStar_Reflection_Types.term *
   FStar_Reflection_Types.term * FStar_TypeChecker_Core.tot_or_ghost *
@@ -1422,28 +1422,28 @@ let uu___is_T_If uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_If _ -> true | _ -> false
 let uu___is_T_Match uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_Match _ -> true | _ -> false
-let uu___is_Rel_equiv uu___3 uu___2 uu___1 uu___ uu___4 =
-  match uu___4 with | Rel_equiv _ -> true | _ -> false
+let uu___is_Rel_refl uu___3 uu___2 uu___1 uu___ uu___4 =
+  match uu___4 with | Rel_refl _ -> true | _ -> false
+let uu___is_Rel_sym uu___3 uu___2 uu___1 uu___ uu___4 =
+  match uu___4 with | Rel_sym _ -> true | _ -> false
+let uu___is_Rel_trans uu___3 uu___2 uu___1 uu___ uu___4 =
+  match uu___4 with | Rel_trans _ -> true | _ -> false
+let uu___is_Rel_univ uu___3 uu___2 uu___1 uu___ uu___4 =
+  match uu___4 with | Rel_univ _ -> true | _ -> false
+let uu___is_Rel_beta uu___3 uu___2 uu___1 uu___ uu___4 =
+  match uu___4 with | Rel_beta _ -> true | _ -> false
+let uu___is_Rel_eq_token uu___3 uu___2 uu___1 uu___ uu___4 =
+  match uu___4 with | Rel_eq_token _ -> true | _ -> false
 let uu___is_Rel_subtyping_token uu___3 uu___2 uu___1 uu___ uu___4 =
   match uu___4 with | Rel_subtyping_token _ -> true | _ -> false
+let uu___is_Rel_equiv uu___3 uu___2 uu___1 uu___ uu___4 =
+  match uu___4 with | Rel_equiv _ -> true | _ -> false
 let uu___is_Rel_arrow uu___3 uu___2 uu___1 uu___ uu___4 =
   match uu___4 with | Rel_arrow _ -> true | _ -> false
 let uu___is_Rel_abs uu___3 uu___2 uu___1 uu___ uu___4 =
   match uu___4 with | Rel_abs _ -> true | _ -> false
-let uu___is_EQ_Refl uu___2 uu___1 uu___ uu___3 =
-  match uu___3 with | EQ_Refl _ -> true | _ -> false
-let uu___is_EQ_Sym uu___2 uu___1 uu___ uu___3 =
-  match uu___3 with | EQ_Sym _ -> true | _ -> false
-let uu___is_EQ_Trans uu___2 uu___1 uu___ uu___3 =
-  match uu___3 with | EQ_Trans _ -> true | _ -> false
-let uu___is_EQ_Univ uu___2 uu___1 uu___ uu___3 =
-  match uu___3 with | EQ_Univ _ -> true | _ -> false
-let uu___is_EQ_Beta uu___2 uu___1 uu___ uu___3 =
-  match uu___3 with | EQ_Beta _ -> true | _ -> false
-let uu___is_EQ_Token uu___2 uu___1 uu___ uu___3 =
-  match uu___3 with | EQ_Token _ -> true | _ -> false
-let uu___is_EQ_Ctxt uu___2 uu___1 uu___ uu___3 =
-  match uu___3 with | EQ_Ctxt _ -> true | _ -> false
+let uu___is_Rel_ctxt uu___3 uu___2 uu___1 uu___ uu___4 =
+  match uu___4 with | Rel_ctxt _ -> true | _ -> false
 let uu___is_Relc_typ uu___3 uu___2 uu___1 uu___ uu___4 =
   match uu___4 with | Relc_typ _ -> true | _ -> false
 let uu___is_Relc_total_ghost uu___3 uu___2 uu___1 uu___ uu___4 =
@@ -1460,6 +1460,7 @@ let uu___is_MC_Tok uu___4 uu___3 uu___2 uu___1 uu___ uu___5 =
   match uu___5 with | MC_Tok _ -> true | _ -> false
 type ('g, 't1, 't2) sub_typing = (unit, unit, unit, unit) related
 type ('g, 'c1, 'c2) sub_comp = (unit, unit, unit, unit) related_comp
+type ('g, 't1, 't2) equiv = (unit, unit, unit, unit) related
 type ('g, 'e, 't) tot_typing = (unit, unit, unit) typing
 type ('g, 'e, 't) ghost_typing = (unit, unit, unit) typing
 let (subtyping_token_renaming :
@@ -1505,28 +1506,15 @@ let (simplify_umax :
       fun u ->
         fun d ->
           let ue = UN_MaxLeq (u, u, (UNLEQ_Refl u)) in
+          let du = Rel_univ (g, (u_max u u), u, ue) in
+          let du1 =
+            Rel_equiv (g, (tm_type (u_max u u)), (tm_type u), R_Sub, du) in
           T_Sub
             (g, t, (FStar_TypeChecker_Core.E_Total, (tm_type (u_max u u))),
               (FStar_TypeChecker_Core.E_Total, (tm_type u)), d,
               (Relc_typ
                  (g, (tm_type (u_max u u)), (tm_type u),
-                   FStar_TypeChecker_Core.E_Total, R_Sub,
-                   (Rel_equiv
-                      (g, (tm_type (u_max u u)), (tm_type u), R_Sub,
-                        (EQ_Univ (g, (u_max u u), u, ue)))))))
-let (equiv_abs :
-  FStar_Reflection_Types.env ->
-    FStar_Reflection_Types.term ->
-      FStar_Reflection_Types.term ->
-        FStar_Reflection_Types.typ ->
-          FStar_Reflection_V2_Data.aqualv ->
-            FStar_Reflection_V2_Data.var ->
-              (unit, unit, unit) equiv -> (unit, unit, unit) equiv)
-  =
-  fun g ->
-    fun e1 ->
-      fun e2 ->
-        fun uu___ -> fun uu___1 -> fun uu___2 -> fun uu___3 -> Prims.admit ()
+                   FStar_TypeChecker_Core.E_Total, R_Sub, du1)))
 let (equiv_arrow :
   FStar_Reflection_Types.env ->
     FStar_Reflection_Types.term ->
@@ -1539,7 +1527,19 @@ let (equiv_arrow :
   fun g ->
     fun e1 ->
       fun e2 ->
-        fun uu___ -> fun uu___1 -> fun uu___2 -> fun uu___3 -> Prims.admit ()
+        fun ty ->
+          fun q ->
+            fun x ->
+              fun eq ->
+                let c1 = (FStar_TypeChecker_Core.E_Total, e1) in
+                let c2 = (FStar_TypeChecker_Core.E_Total, e2) in
+                Rel_arrow
+                  (g, ty, ty, q, c1, c2, R_Eq, x, (Rel_refl (g, ty, R_Eq)),
+                    (Relc_typ
+                       ((extend_env g x ty),
+                         (subst_term e1 (open_with_var x Prims.int_zero)),
+                         (subst_term e2 (open_with_var x Prims.int_zero)),
+                         (FStar_Pervasives_Native.fst c1), R_Eq, eq)))
 let (equiv_abs_close :
   FStar_Reflection_Types.env ->
     FStar_Reflection_Types.term ->
@@ -1557,15 +1557,22 @@ let (equiv_abs_close :
             fun x ->
               fun eq ->
                 let eq1 = eq in
-                equiv_abs g (subst_term e1 [ND (x, Prims.int_zero)])
-                  (subst_term e2 [ND (x, Prims.int_zero)]) ty q x eq1
+                Rel_abs
+                  (g, ty, ty, q, (subst_term e1 [ND (x, Prims.int_zero)]),
+                    (subst_term e2 [ND (x, Prims.int_zero)]), x,
+                    (Rel_refl (g, ty, R_Eq)), eq1)
 type 'g fstar_env_fvs = unit
 type fstar_env = FStar_Reflection_Types.env
 type fstar_top_env = fstar_env
+type blob = (Prims.string * FStar_Reflection_Types.term)
+type dsl_tac_result_base_t =
+  (FStar_Reflection_Types.term FStar_Pervasives_Native.option * blob
+    FStar_Pervasives_Native.option * FStar_Reflection_Types.typ)
+type ('g, 'e) well_typed = Obj.t
+type 'g dsl_tac_result_t = dsl_tac_result_base_t
 type dsl_tac_t =
   fstar_top_env ->
-    ((FStar_Reflection_Types.term * FStar_Reflection_Types.typ), unit)
-      FStar_Tactics_Effect.tac_repr
+    (unit dsl_tac_result_t, unit) FStar_Tactics_Effect.tac_repr
 let (if_complete_match :
   FStar_Reflection_Types.env ->
     FStar_Reflection_Types.term ->

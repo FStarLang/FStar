@@ -24,6 +24,7 @@ module EMB = FStar.Syntax.Embeddings
 
 val check_module: env -> modul -> bool -> modul * env
 val load_checked_module: env -> modul -> env
+val load_partial_checked_module: env -> modul -> env
 
 val pop_context: env -> string -> env
 val push_context: env -> string -> env

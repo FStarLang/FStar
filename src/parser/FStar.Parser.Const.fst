@@ -560,3 +560,5 @@ let unseal_lid      = p2l ["FStar"; "Tactics"; "Unseal"; "unseal"]
 
 let document_lid = p2l ["FStar"; "Stubs"; "Pprint"; "document"]
 let issue_lid = p2l ["FStar"; "Issue"; "issue"]
+
+let extract_as_impure_effect_lid = p2l ["FStar"; "Pervasives"; "extract_as_impure_effect"]

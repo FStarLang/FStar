@@ -21,6 +21,7 @@ open FStar.Syntax.Syntax
 open FStar.Extraction.ML.Syntax
 
 val normalize_abs: term -> term
+val normalize_for_extraction (env:uenv) (e:term) : term
 val is_arity: uenv -> term -> bool
 val ind_discriminator_body : env:uenv -> discName:lident -> constrName:lident -> mlmodule1
 val term_as_mlty: uenv -> term -> mlty

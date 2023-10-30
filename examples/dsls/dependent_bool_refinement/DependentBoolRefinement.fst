@@ -643,7 +643,7 @@ let rec extend_env_l_lookup_fvar (g:R.env) (sg:src_env) (fv:R.fv)
 let subtyping_soundness #f (#sg:src_env) (#t0 #t1:src_ty) (ds:sub_typing f sg t0 t1)
   : GTot (RT.sub_typing (extend_env_l f sg) (elab_ty t0) (elab_ty t1))
   = match ds with
-    | S_Refl _ _ -> RT.Rel_equiv _ _ _ _ (RT.EQ_Refl _ _)
+    | S_Refl _ _ -> RT.Rel_equiv _ _ _ _ (RT.Rel_refl _ _ _)
     | S_ELab _ _ _ d -> d
 
 #push-options "--query_stats --fuel 8 --ifuel 2 --z3rlimit_factor 4"
@@ -876,12 +876,12 @@ and closed_ty (t:src_ty)
     | TRefineBool e -> closed e
     | TArrow t1 t2 -> closed_ty t1 && closed_ty t2
 
-let main (f:fstar_top_env)
-         (src:src_exp)
-  : T.Tac (e:R.term & t:R.term { RT.tot_typing f e t })
-  = if closed src
-    then 
-      let (| src_ty, _ |) = check f [] src in
-      soundness_lemma f [] src src_ty;
-      (| elab_exp src, elab_ty src_ty |)
-    else T.fail "Not locally nameless"
+let main (src:src_exp)
+  : RT.dsl_tac_t
+  = fun f -> 
+      if closed src
+      then 
+        let (| src_ty, _ |) = check f [] src in
+        soundness_lemma f [] src src_ty;
+        Some(elab_exp src), None, elab_ty src_ty
+      else T.fail "Not locally nameless"

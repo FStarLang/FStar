@@ -426,7 +426,7 @@ terms_, but that distinction cannot leave the Tac effect.
 
 This is only exposed as a migration path. Please use
 [Reflection.term_eq] instead. *)
-[@@deprecated "use Reflection.term_eq instead"]
+[@@deprecated "Use Reflection.term_eq instead"]
 val term_eq_old : term -> term -> Tac bool
 
 (** Runs the input tactic `f` with compat pre core setting `n`.

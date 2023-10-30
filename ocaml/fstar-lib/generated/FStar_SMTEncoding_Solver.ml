@@ -2171,11 +2171,15 @@ let (solve :
           let uu___1 =
             let uu___2 =
               let uu___3 =
-                let uu___4 = FStar_Syntax_Print.term_to_string q in
-                FStar_Compiler_Util.format1
-                  "Q = %s\nA query could not be solved internally, and --no_smt was given"
-                  uu___4 in
-              FStar_Compiler_Effect.op_Less_Bar FStar_Errors_Msg.mkmsg uu___3 in
+                FStar_Errors_Msg.text
+                  "A query could not be solved internally, and --no_smt was given." in
+              let uu___4 =
+                let uu___5 =
+                  let uu___6 = FStar_Errors_Msg.text "Query = " in
+                  let uu___7 = FStar_Syntax_Print_Pretty.term_to_doc q in
+                  FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                [uu___5] in
+              uu___3 :: uu___4 in
             (FStar_Errors_Codes.Error_NoSMTButNeeded, uu___2) in
           FStar_TypeChecker_Err.log_issue tcenv
             tcenv.FStar_TypeChecker_Env.range uu___1
