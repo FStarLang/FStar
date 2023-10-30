@@ -326,20 +326,25 @@ val rewrite_typing
               p
               (mk_abs unit_tm Q_Explicit q)))
 
-let with_local_bodypost_body (post:term) (a:term) (x:var) : term =
-  let x_tm = RT.var_as_term x in
-  // post x
-  let post_app = pack_ln (Tv_App post (x_tm, Q_Explicit)) in
+// mk_star pre (mk_pts_to a (RT.bound_var 0) full_perm_tm init
+let with_local_body_pre (pre:term) (a:term) (x:term) (init:term) : term =
+  let pts_to : term =
+    mk_pts_to a x full_perm_tm init in
+  mk_star pre pts_to
+
+//
+// post has 0 db index free
+//
+let with_local_body_post_body (post:term) (a:term) (x:term) : term =
   // exists_ (R.pts_to r full_perm)
   let exists_tm =
     mk_exists (pack_universe Uv_Zero) a
       (mk_abs a Q_Explicit
-         (mk_pts_to a (RT.bound_var 2) full_perm_tm (RT.bound_var 0))) in
-  let star_tm = mk_star post_app exists_tm in
-  RT.subst_term star_tm [ RT.ND x 0 ]
+         (mk_pts_to a x full_perm_tm (RT.bound_var 0))) in
+  mk_star post exists_tm
 
-let with_local_bodypost (post:term) (a:term) (ret_t:term) (x:var) : term =
-  mk_abs ret_t Q_Explicit (with_local_bodypost_body post a x)
+let with_local_body_post (post:term) (a:term) (ret_t:term) (x:term) : term =
+  mk_abs ret_t Q_Explicit (with_local_body_post_body post a x)
 
 val with_local_typing
   (#g:env)
@@ -348,23 +353,24 @@ val with_local_typing
   (#init:term)
   (#pre:term)
   (#ret_t:term)
-  (#post:term)
-  (#body:term)
+  (#post:term)  // post has db 0 free
+  (#body:term)  // body has x free
   (x:var{None? (RT.lookup_bvar g x)})
   (a_typing:RT.tot_typing g a (pack_ln (Tv_Type (pack_universe Uv_Zero))))
   (init_typing:RT.tot_typing g init a)
   (pre_typing:RT.tot_typing g pre vprop_tm)
   (ret_t_typing:RT.tot_typing g ret_t (pack_ln (Tv_Type u)))
-  (post_typing:RT.tot_typing g post (mk_arrow (ret_t, Q_Explicit) vprop_tm))
-  (body_typing:RT.tot_typing g 
+  (post_typing:RT.tot_typing g (RT.mk_abs ret_t Q_Explicit post)
+                               (mk_arrow (ret_t, Q_Explicit) vprop_tm))
+  (body_typing:RT.tot_typing (RT.extend_env g x (mk_ref a)) 
                  body
-                 (mk_arrow
-                    (mk_ref a, Q_Explicit)
-                    (mk_stt_comp u ret_t
-                       (mk_star pre (mk_pts_to a (RT.bound_var 0) full_perm_tm init))
-                       (with_local_bodypost post a ret_t x))))
-  : GTot (RT.tot_typing g (mk_withlocal u a init pre ret_t post body)
-                          (mk_stt_comp u ret_t pre post))
+                 (mk_stt_comp u ret_t
+                    (with_local_body_pre pre a (RT.var_as_term x) init)
+                    (with_local_body_post post a ret_t (RT.var_as_term x))))
+
+  : GTot (RT.tot_typing g (mk_withlocal u a init pre ret_t (RT.mk_abs ret_t Q_Explicit post)
+                                                           (RT.mk_abs (mk_ref a) Q_Explicit (RT.close_term body x)))
+                          (mk_stt_comp u ret_t pre (mk_abs ret_t Q_Explicit post)))
 
 let with_localarray_body_pre (pre:term) (a:term) (arr:term) (init:term) (len:term) : term =
   let pts_to : term =

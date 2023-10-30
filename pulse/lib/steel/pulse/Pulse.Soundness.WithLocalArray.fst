@@ -8,7 +8,6 @@ open Pulse.Elaborate
 open Pulse.Soundness.Common
 
 module WT = Pulse.Steel.Wrapper.Typing
-module PRU = Pulse.Reflection.Util
 
 #push-options "--ifuel 1 --fuel 8 --z3rlimit_factor 10"
 let withlocalarray_soundness #g #t #c d soundness =
