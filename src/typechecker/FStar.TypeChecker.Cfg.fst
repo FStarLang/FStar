@@ -310,7 +310,7 @@ let built_in_primitive_steps : prim_step_set =
          -> option term
          = fun as_a f res n _univs args -> lift_binary (f res.psc_range) (List.map as_a args)
     in
-    let as_primitive_step is_strong (l, arity, u_arity, f, f_nbe) = {
+    let as_primitive_step_nbecbs is_strong (l, arity, u_arity, f, f_nbe) = {
         name=l;
         arity=arity;
         univ_arity=u_arity;
@@ -319,8 +319,13 @@ let built_in_primitive_steps : prim_step_set =
         requires_binder_substitution=false;
         renorm_after=false;
         interpretation=(fun psc cb univs args -> f psc cb univs args);
-        interpretation_nbe=(fun _cb univs args -> f_nbe univs args)
-    } in
+        interpretation_nbe=(fun cb univs args -> f_nbe cb univs args)
+    }
+    in
+    (* Most primitive steps don't use the NBE cbs, so they can use this wrapper. *)
+    let as_primitive_step is_strong (l, arity, u_arity, f, f_nbe) =
+      as_primitive_step_nbecbs is_strong (l, arity, u_arity, f, (fun cb univs args -> f_nbe univs args))
+    in
     let unary_int_op (f:Z.t -> Z.t) =
         unary_op arg_as_int (fun r x -> embed_simple EMB.e_int r (f x))
     in
@@ -1321,9 +1326,95 @@ let built_in_primitive_steps : prim_step_set =
         ]
 
     in
+    let seal_steps =
+      [
+        (PC.map_seal_lid, 4, 2,
+          (fun psc univs cbs args ->
+            match args with
+            | [(ta, _); (tb, _); (s, _); (f, _)] ->
+              begin
+              let open EMB in
+              let try_unembed (#a:Type) (e:embedding a) (x:term) : option a =
+                  try_unembed e x id_norm_cb
+              in
+              match try_unembed e_any ta,
+                    try_unembed e_any tb,
+                    try_unembed (e_sealed e_any) s,
+                    try_unembed e_any f with
+              | Some ta, Some tb, Some s, Some f ->
+                let r = U.mk_app f [S.as_arg s] in
+                let emb = set_type ta e_any in
+                Some (embed_simple (e_sealed emb) psc.psc_range r)
+              | _ -> None
+              end
+            | _ -> None),
+          (fun cb univs args ->
+            match args with
+            | [(ta, _); (tb, _); (s, _); (f, _)] ->
+              begin
+              let open FStar.TypeChecker.NBETerm in
+              let try_unembed (#a:Type) (e:embedding a) (x:NBETerm.t) : option a =
+                  unembed e bogus_cbs x
+              in
+              match try_unembed e_any ta,
+                    try_unembed e_any tb,
+                    try_unembed (e_sealed e_any) s,
+                    try_unembed e_any f with
+              | Some ta, Some tb, Some s, Some f ->
+                let r = cb.iapp f [as_arg s] in
+                let emb = set_type ta e_any in
+                Some (embed (e_sealed emb) cb r)
+              | _ -> None
+              end
+            | _ -> None
+            ));
+        (PC.bind_seal_lid, 4, 2,
+          (fun psc univs cbs args ->
+            match args with
+            | [(ta, _); (tb, _); (s, _); (f, _)] ->
+              begin
+              let open EMB in
+              let try_unembed (#a:Type) (e:embedding a) (x:term) : option a =
+                  try_unembed e x id_norm_cb
+              in
+              match try_unembed e_any ta,
+                    try_unembed e_any tb,
+                    try_unembed (e_sealed e_any) s,
+                    try_unembed e_any f with
+              | Some ta, Some tb, Some s, Some f ->
+                let r = U.mk_app f [S.as_arg s] in
+                Some (embed_simple e_any psc.psc_range r)
+              | _ -> None
+              end
+            | _ -> None),
+          (fun cb univs args ->
+            match args with
+            | [(ta, _); (tb, _); (s, _); (f, _)] ->
+              begin
+              let open FStar.TypeChecker.NBETerm in
+              let try_unembed (#a:Type) (e:embedding a) (x:NBETerm.t) : option a =
+                  unembed e bogus_cbs x
+              in
+              match try_unembed e_any ta,
+                    try_unembed e_any tb,
+                    try_unembed (e_sealed e_any) s,
+                    try_unembed e_any f with
+              | Some ta, Some tb, Some s, Some f ->
+                let r = cb.iapp f [as_arg s] in
+                let emb = set_type ta e_any in
+                Some (embed emb cb r)
+              | _ -> None
+              end
+            | _ -> None
+            ));
+      ]
+    in
     let strong_steps =
       List.map (as_primitive_step true)
                (basic_ops@bounded_arith_ops@[reveal_hide]@array_ops@issue_ops@doc_ops)
+      @
+      List.map (fun p -> { as_primitive_step_nbecbs true p with renorm_after = true})
+               seal_steps
     in
     let weak_steps   = List.map (as_primitive_step false) weak_ops in
     prim_from_list <| (strong_steps @ weak_steps)
