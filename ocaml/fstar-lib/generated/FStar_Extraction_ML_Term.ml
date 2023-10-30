@@ -220,12 +220,26 @@ let rec (is_arity_aux :
         let uu___1 = FStar_Syntax_Subst.compress t1 in
         uu___1.FStar_Syntax_Syntax.n in
       match uu___ with
-      | FStar_Syntax_Syntax.Tm_unknown -> failwith "Impossible: is_arity"
+      | FStar_Syntax_Syntax.Tm_unknown ->
+          let uu___1 =
+            let uu___2 = FStar_Syntax_Print.tag_of_term t1 in
+            FStar_Compiler_Util.format1 "Impossible: is_arity (%s)" uu___2 in
+          failwith uu___1
       | FStar_Syntax_Syntax.Tm_delayed uu___1 ->
-          failwith "Impossible: is_arity"
+          let uu___2 =
+            let uu___3 = FStar_Syntax_Print.tag_of_term t1 in
+            FStar_Compiler_Util.format1 "Impossible: is_arity (%s)" uu___3 in
+          failwith uu___2
       | FStar_Syntax_Syntax.Tm_ascribed uu___1 ->
-          failwith "Impossible: is_arity"
-      | FStar_Syntax_Syntax.Tm_meta uu___1 -> failwith "Impossible: is_arity"
+          let uu___2 =
+            let uu___3 = FStar_Syntax_Print.tag_of_term t1 in
+            FStar_Compiler_Util.format1 "Impossible: is_arity (%s)" uu___3 in
+          failwith uu___2
+      | FStar_Syntax_Syntax.Tm_meta uu___1 ->
+          let uu___2 =
+            let uu___3 = FStar_Syntax_Print.tag_of_term t1 in
+            FStar_Compiler_Util.format1 "Impossible: is_arity (%s)" uu___3 in
+          failwith uu___2
       | FStar_Syntax_Syntax.Tm_lazy i ->
           let uu___1 = FStar_Syntax_Util.unfold_lazy i in
           is_arity_aux tcenv uu___1
