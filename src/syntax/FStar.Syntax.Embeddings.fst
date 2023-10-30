@@ -632,6 +632,7 @@ let steps_Zeta          = tconst PC.steps_zeta
 let steps_ZetaFull      = tconst PC.steps_zeta_full
 let steps_Iota          = tconst PC.steps_iota
 let steps_Reify         = tconst PC.steps_reify
+let steps_NormDebug     = tconst PC.steps_norm_debug
 let steps_UnfoldOnly    = tconst PC.steps_unfoldonly
 let steps_UnfoldFully   = tconst PC.steps_unfoldonly
 let steps_UnfoldAttr    = tconst PC.steps_unfoldattr
@@ -678,6 +679,8 @@ let e_norm_step : embedding Pervasives.norm_step =
                     steps_Unmeta
                 | Reify ->
                     steps_Reify
+                | NormDebug ->
+                    steps_NormDebug
                 | UnfoldOnly l ->
                     S.mk_Tm_app steps_UnfoldOnly [S.as_arg (embed (e_list e_string) l rng None norm)]
                                 rng
@@ -730,6 +733,8 @@ let e_norm_step : embedding Pervasives.norm_step =
                     Some Unmeta
                 | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_reify ->
                     Some Reify
+                | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_norm_debug ->
+                    Some NormDebug
                 | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv PC.steps_unfoldonly ->
                     BU.bind_opt (try_unembed (e_list e_string) l norm) (fun ss ->
                     Some <| UnfoldOnly ss)

@@ -174,6 +174,9 @@ val primops : norm_step
 (** Unfold all non-recursive definitions *)
 val delta : norm_step
 
+(** Turn on debugging for this specific call. *)
+val norm_debug : norm_step
+
 (** Unroll recursive calls
 
     Note: Since F*'s termination check is semantic rather than

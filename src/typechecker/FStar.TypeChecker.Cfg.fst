@@ -168,6 +168,7 @@ let fstep_add_one s fs =
     | NBE -> {fs with nbe_step = true }
     | ForExtraction -> {fs with for_extraction = true }
     | Unrefine -> {fs with unrefine = true }
+    | NormDebug -> fs // handled above, affects only dbg flags
 
 let to_fsteps (s : list step) : fsteps =
     List.fold_right fstep_add_one s default_steps
@@ -1437,9 +1438,10 @@ let config' psteps s e =
         | _ -> d in
     let steps = to_fsteps s |> add_nbe in
     let psteps = add_steps (cached_steps ()) psteps in
+    let dbg_flag = List.contains NormDebug s in
     {tcenv = e;
-     debug = if Options.debug_any () then
-            { gen = Env.debug e (Options.Other "Norm")
+     debug = if dbg_flag || Options.debug_any () then
+            { gen = Env.debug e (Options.Other "Norm") || dbg_flag
              ; top = Env.debug e (Options.Other "NormTop")
              ; cfg = Env.debug e (Options.Other "NormCfg")
              ; primop = Env.debug e (Options.Other "Primops")
@@ -1495,6 +1497,7 @@ let translate_norm_step = function
     | Pervasives.HNF  ->    [HNF]
     | Pervasives.Primops -> [Primops]
     | Pervasives.Reify ->   [Reify]
+    | Pervasives.NormDebug -> [NormDebug]
     | Pervasives.UnfoldOnly names ->
         [UnfoldUntil delta_constant; UnfoldOnly (List.map I.lid_of_str names)]
     | Pervasives.UnfoldFully names ->
