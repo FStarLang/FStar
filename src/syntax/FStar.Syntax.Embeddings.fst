@@ -973,39 +973,26 @@ let e_sealed (ea : embedding 'a) : embedding 'a =
     in
     let printer x = "(seal " ^ printer_of ea x ^ ")" in
     let em (a:'a) (rng:range) shadow norm : term =
-        lazy_embed
-            printer
-            emb_ty_a
-            rng
-            typ
-            a
-            (fun () ->
-                  let shadow_a =
-                    (* TODO: this application below is in TAC.. OK? *)
-                    map_shadow shadow (fun t ->
-                      let unseal = U.fvar_const PC.unseal_lid in
-                      S.mk_Tm_app (S.mk_Tm_uinst unseal [U_zero])
-                                  [S.iarg (type_of ea); S.as_arg t]
-                                  rng)
-                  in
-                  S.mk_Tm_app (S.mk_Tm_uinst (U.fvar_const PC.seal_lid) [U_zero])
-                              [S.iarg (type_of ea); S.as_arg (embed ea a rng shadow_a norm)]
-                              rng)
+      let shadow_a =
+        (* TODO: this application below is in TAC.. OK? *)
+        map_shadow shadow (fun t ->
+          let unseal = U.fvar_const PC.unseal_lid in
+          S.mk_Tm_app (S.mk_Tm_uinst unseal [U_zero])
+                      [S.iarg (type_of ea); S.as_arg t]
+                      rng)
+      in
+      S.mk_Tm_app (S.mk_Tm_uinst (U.fvar_const PC.seal_lid) [U_zero])
+                  [S.iarg (type_of ea); S.as_arg (embed ea a rng shadow_a norm)]
+                  rng
     in
     let un (t:term) norm : option (option 'a) =
-        lazy_unembed
-            printer
-            emb_ty_a
-            t
-            typ
-            (fun t ->
-                let hd, args = U.head_and_args_full t in
-                match (U.un_uinst hd).n, args with
-                | Tm_fvar fv, [_; (a, _)] when S.fv_eq_lid fv PC.seal_lid ->
-                     // Just relay it
-                     try_unembed ea a norm
-                | _ ->
-                     None)
+      let hd, args = U.head_and_args_full t in
+      match (U.un_uinst hd).n, args with
+      | Tm_fvar fv, [_; (a, _)] when S.fv_eq_lid fv PC.seal_lid ->
+           // Just relay it
+           try_unembed ea a norm
+      | _ ->
+           None
     in
     mk_emb_full
         em
