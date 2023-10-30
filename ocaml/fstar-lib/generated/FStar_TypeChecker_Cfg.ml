@@ -1674,6 +1674,7 @@ let (fstep_add_one : FStar_TypeChecker_Env.step -> fsteps -> fsteps) =
             for_extraction = (fs.for_extraction);
             unrefine = true
           }
+      | FStar_TypeChecker_Env.NormDebug -> fs
 let (to_fsteps : FStar_TypeChecker_Env.step Prims.list -> fsteps) =
   fun s -> FStar_Compiler_List.fold_right fstep_add_one s default_steps
 type psc =
@@ -1705,6 +1706,7 @@ type primitive_step =
   auto_reflect: Prims.int FStar_Pervasives_Native.option ;
   strong_reduction_ok: Prims.bool ;
   requires_binder_substitution: Prims.bool ;
+  renorm_after: Prims.bool ;
   interpretation:
     psc ->
       FStar_Syntax_Embeddings_Base.norm_cb ->
@@ -1723,42 +1725,49 @@ let (__proj__Mkprimitive_step__item__name :
   fun projectee ->
     match projectee with
     | { name; arity; univ_arity; auto_reflect; strong_reduction_ok;
-        requires_binder_substitution; interpretation; interpretation_nbe;_}
-        -> name
+        requires_binder_substitution; renorm_after; interpretation;
+        interpretation_nbe;_} -> name
 let (__proj__Mkprimitive_step__item__arity : primitive_step -> Prims.int) =
   fun projectee ->
     match projectee with
     | { name; arity; univ_arity; auto_reflect; strong_reduction_ok;
-        requires_binder_substitution; interpretation; interpretation_nbe;_}
-        -> arity
+        requires_binder_substitution; renorm_after; interpretation;
+        interpretation_nbe;_} -> arity
 let (__proj__Mkprimitive_step__item__univ_arity :
   primitive_step -> Prims.int) =
   fun projectee ->
     match projectee with
     | { name; arity; univ_arity; auto_reflect; strong_reduction_ok;
-        requires_binder_substitution; interpretation; interpretation_nbe;_}
-        -> univ_arity
+        requires_binder_substitution; renorm_after; interpretation;
+        interpretation_nbe;_} -> univ_arity
 let (__proj__Mkprimitive_step__item__auto_reflect :
   primitive_step -> Prims.int FStar_Pervasives_Native.option) =
   fun projectee ->
     match projectee with
     | { name; arity; univ_arity; auto_reflect; strong_reduction_ok;
-        requires_binder_substitution; interpretation; interpretation_nbe;_}
-        -> auto_reflect
+        requires_binder_substitution; renorm_after; interpretation;
+        interpretation_nbe;_} -> auto_reflect
 let (__proj__Mkprimitive_step__item__strong_reduction_ok :
   primitive_step -> Prims.bool) =
   fun projectee ->
     match projectee with
     | { name; arity; univ_arity; auto_reflect; strong_reduction_ok;
-        requires_binder_substitution; interpretation; interpretation_nbe;_}
-        -> strong_reduction_ok
+        requires_binder_substitution; renorm_after; interpretation;
+        interpretation_nbe;_} -> strong_reduction_ok
 let (__proj__Mkprimitive_step__item__requires_binder_substitution :
   primitive_step -> Prims.bool) =
   fun projectee ->
     match projectee with
     | { name; arity; univ_arity; auto_reflect; strong_reduction_ok;
-        requires_binder_substitution; interpretation; interpretation_nbe;_}
-        -> requires_binder_substitution
+        requires_binder_substitution; renorm_after; interpretation;
+        interpretation_nbe;_} -> requires_binder_substitution
+let (__proj__Mkprimitive_step__item__renorm_after :
+  primitive_step -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | { name; arity; univ_arity; auto_reflect; strong_reduction_ok;
+        requires_binder_substitution; renorm_after; interpretation;
+        interpretation_nbe;_} -> renorm_after
 let (__proj__Mkprimitive_step__item__interpretation :
   primitive_step ->
     psc ->
@@ -1770,8 +1779,8 @@ let (__proj__Mkprimitive_step__item__interpretation :
   fun projectee ->
     match projectee with
     | { name; arity; univ_arity; auto_reflect; strong_reduction_ok;
-        requires_binder_substitution; interpretation; interpretation_nbe;_}
-        -> interpretation
+        requires_binder_substitution; renorm_after; interpretation;
+        interpretation_nbe;_} -> interpretation
 let (__proj__Mkprimitive_step__item__interpretation_nbe :
   primitive_step ->
     FStar_TypeChecker_NBETerm.nbe_cbs ->
@@ -1782,8 +1791,8 @@ let (__proj__Mkprimitive_step__item__interpretation_nbe :
   fun projectee ->
     match projectee with
     | { name; arity; univ_arity; auto_reflect; strong_reduction_ok;
-        requires_binder_substitution; interpretation; interpretation_nbe;_}
-        -> interpretation_nbe
+        requires_binder_substitution; renorm_after; interpretation;
+        interpretation_nbe;_} -> interpretation_nbe
 type debug_switches =
   {
   gen: Prims.bool ;
@@ -2091,7 +2100,7 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
   let binary_op as_a f res n _univs args =
     let uu___ = FStar_Compiler_List.map as_a args in
     lift_binary (f res.psc_range) uu___ in
-  let as_primitive_step is_strong uu___ =
+  let as_primitive_step_nbecbs is_strong uu___ =
     match uu___ with
     | (l, arity, u_arity, f, f_nbe) ->
         {
@@ -2101,12 +2110,19 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
           auto_reflect = FStar_Pervasives_Native.None;
           strong_reduction_ok = is_strong;
           requires_binder_substitution = false;
+          renorm_after = false;
           interpretation =
             ((fun psc1 ->
                 fun cb -> fun univs -> fun args -> f psc1 cb univs args));
           interpretation_nbe =
-            ((fun _cb -> fun univs -> fun args -> f_nbe univs args))
+            ((fun cb -> fun univs -> fun args -> f_nbe cb univs args))
         } in
+  let as_primitive_step is_strong uu___ =
+    match uu___ with
+    | (l, arity, u_arity, f, f_nbe) ->
+        as_primitive_step_nbecbs is_strong
+          (l, arity, u_arity, f,
+            (fun cb -> fun univs -> fun args -> f_nbe univs args)) in
   let unary_int_op f =
     unary_op arg_as_int
       (fun r ->
@@ -4140,13 +4156,191 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
                 embed_simple FStar_Syntax_Embeddings.e_document r uu___3)),
         uu___2) in
     [uu___] in
+  let seal_steps =
+    [(FStar_Parser_Const.map_seal_lid, (Prims.of_int (4)),
+       (Prims.of_int (2)),
+       ((fun psc1 ->
+           fun univs ->
+             fun cbs ->
+               fun args ->
+                 match args with
+                 | (ta, uu___)::(tb, uu___1)::(s, uu___2)::(f, uu___3)::[] ->
+                     let try_unembed e x =
+                       FStar_Syntax_Embeddings_Base.try_unembed e x
+                         FStar_Syntax_Embeddings_Base.id_norm_cb in
+                     let uu___4 =
+                       let uu___5 =
+                         try_unembed FStar_Syntax_Embeddings.e_any ta in
+                       let uu___6 =
+                         try_unembed FStar_Syntax_Embeddings.e_any tb in
+                       let uu___7 =
+                         let uu___8 =
+                           FStar_Syntax_Embeddings.e_sealed
+                             FStar_Syntax_Embeddings.e_any in
+                         try_unembed uu___8 s in
+                       let uu___8 =
+                         try_unembed FStar_Syntax_Embeddings.e_any f in
+                       (uu___5, uu___6, uu___7, uu___8) in
+                     (match uu___4 with
+                      | (FStar_Pervasives_Native.Some ta1,
+                         FStar_Pervasives_Native.Some tb1,
+                         FStar_Pervasives_Native.Some s1,
+                         FStar_Pervasives_Native.Some f1) ->
+                          let r =
+                            let uu___5 =
+                              let uu___6 = FStar_Syntax_Syntax.as_arg s1 in
+                              [uu___6] in
+                            FStar_Syntax_Util.mk_app f1 uu___5 in
+                          let emb =
+                            FStar_Syntax_Embeddings_Base.set_type ta1
+                              FStar_Syntax_Embeddings.e_any in
+                          let uu___5 =
+                            let uu___6 = FStar_Syntax_Embeddings.e_sealed emb in
+                            embed_simple uu___6 psc1.psc_range r in
+                          FStar_Pervasives_Native.Some uu___5
+                      | uu___5 -> FStar_Pervasives_Native.None)
+                 | uu___ -> FStar_Pervasives_Native.None)),
+       ((fun cb ->
+           fun univs ->
+             fun args ->
+               match args with
+               | (ta, uu___)::(tb, uu___1)::(s, uu___2)::(f, uu___3)::[] ->
+                   let try_unembed e x =
+                     FStar_TypeChecker_NBETerm.unembed e bogus_cbs x in
+                   let uu___4 =
+                     let uu___5 =
+                       try_unembed FStar_TypeChecker_NBETerm.e_any ta in
+                     let uu___6 =
+                       try_unembed FStar_TypeChecker_NBETerm.e_any tb in
+                     let uu___7 =
+                       let uu___8 =
+                         FStar_TypeChecker_NBETerm.e_sealed
+                           FStar_TypeChecker_NBETerm.e_any in
+                       try_unembed uu___8 s in
+                     let uu___8 =
+                       try_unembed FStar_TypeChecker_NBETerm.e_any f in
+                     (uu___5, uu___6, uu___7, uu___8) in
+                   (match uu___4 with
+                    | (FStar_Pervasives_Native.Some ta1,
+                       FStar_Pervasives_Native.Some tb1,
+                       FStar_Pervasives_Native.Some s1,
+                       FStar_Pervasives_Native.Some f1) ->
+                        let r =
+                          let uu___5 =
+                            let uu___6 = FStar_TypeChecker_NBETerm.as_arg s1 in
+                            [uu___6] in
+                          cb.FStar_TypeChecker_NBETerm.iapp f1 uu___5 in
+                        let emb =
+                          FStar_TypeChecker_NBETerm.set_type ta1
+                            FStar_TypeChecker_NBETerm.e_any in
+                        let uu___5 =
+                          let uu___6 = FStar_TypeChecker_NBETerm.e_sealed emb in
+                          FStar_TypeChecker_NBETerm.embed uu___6 cb r in
+                        FStar_Pervasives_Native.Some uu___5
+                    | uu___5 -> FStar_Pervasives_Native.None)
+               | uu___ -> FStar_Pervasives_Native.None)));
+    (FStar_Parser_Const.bind_seal_lid, (Prims.of_int (4)),
+      (Prims.of_int (2)),
+      ((fun psc1 ->
+          fun univs ->
+            fun cbs ->
+              fun args ->
+                match args with
+                | (ta, uu___)::(tb, uu___1)::(s, uu___2)::(f, uu___3)::[] ->
+                    let try_unembed e x =
+                      FStar_Syntax_Embeddings_Base.try_unembed e x
+                        FStar_Syntax_Embeddings_Base.id_norm_cb in
+                    let uu___4 =
+                      let uu___5 =
+                        try_unembed FStar_Syntax_Embeddings.e_any ta in
+                      let uu___6 =
+                        try_unembed FStar_Syntax_Embeddings.e_any tb in
+                      let uu___7 =
+                        let uu___8 =
+                          FStar_Syntax_Embeddings.e_sealed
+                            FStar_Syntax_Embeddings.e_any in
+                        try_unembed uu___8 s in
+                      let uu___8 =
+                        try_unembed FStar_Syntax_Embeddings.e_any f in
+                      (uu___5, uu___6, uu___7, uu___8) in
+                    (match uu___4 with
+                     | (FStar_Pervasives_Native.Some ta1,
+                        FStar_Pervasives_Native.Some tb1,
+                        FStar_Pervasives_Native.Some s1,
+                        FStar_Pervasives_Native.Some f1) ->
+                         let r =
+                           let uu___5 =
+                             let uu___6 = FStar_Syntax_Syntax.as_arg s1 in
+                             [uu___6] in
+                           FStar_Syntax_Util.mk_app f1 uu___5 in
+                         let uu___5 =
+                           embed_simple FStar_Syntax_Embeddings.e_any
+                             psc1.psc_range r in
+                         FStar_Pervasives_Native.Some uu___5
+                     | uu___5 -> FStar_Pervasives_Native.None)
+                | uu___ -> FStar_Pervasives_Native.None)),
+      ((fun cb ->
+          fun univs ->
+            fun args ->
+              match args with
+              | (ta, uu___)::(tb, uu___1)::(s, uu___2)::(f, uu___3)::[] ->
+                  let try_unembed e x =
+                    FStar_TypeChecker_NBETerm.unembed e bogus_cbs x in
+                  let uu___4 =
+                    let uu___5 =
+                      try_unembed FStar_TypeChecker_NBETerm.e_any ta in
+                    let uu___6 =
+                      try_unembed FStar_TypeChecker_NBETerm.e_any tb in
+                    let uu___7 =
+                      let uu___8 =
+                        FStar_TypeChecker_NBETerm.e_sealed
+                          FStar_TypeChecker_NBETerm.e_any in
+                      try_unembed uu___8 s in
+                    let uu___8 =
+                      try_unembed FStar_TypeChecker_NBETerm.e_any f in
+                    (uu___5, uu___6, uu___7, uu___8) in
+                  (match uu___4 with
+                   | (FStar_Pervasives_Native.Some ta1,
+                      FStar_Pervasives_Native.Some tb1,
+                      FStar_Pervasives_Native.Some s1,
+                      FStar_Pervasives_Native.Some f1) ->
+                       let r =
+                         let uu___5 =
+                           let uu___6 = FStar_TypeChecker_NBETerm.as_arg s1 in
+                           [uu___6] in
+                         cb.FStar_TypeChecker_NBETerm.iapp f1 uu___5 in
+                       let emb =
+                         FStar_TypeChecker_NBETerm.set_type ta1
+                           FStar_TypeChecker_NBETerm.e_any in
+                       let uu___5 = FStar_TypeChecker_NBETerm.embed emb cb r in
+                       FStar_Pervasives_Native.Some uu___5
+                   | uu___5 -> FStar_Pervasives_Native.None)
+              | uu___ -> FStar_Pervasives_Native.None)))] in
   let strong_steps =
-    FStar_Compiler_List.map (as_primitive_step true)
-      (FStar_Compiler_List.op_At basic_ops
-         (FStar_Compiler_List.op_At bounded_arith_ops
-            (FStar_Compiler_List.op_At [reveal_hide]
-               (FStar_Compiler_List.op_At array_ops
-                  (FStar_Compiler_List.op_At issue_ops doc_ops))))) in
+    let uu___ =
+      FStar_Compiler_List.map (as_primitive_step true)
+        (FStar_Compiler_List.op_At basic_ops
+           (FStar_Compiler_List.op_At bounded_arith_ops
+              (FStar_Compiler_List.op_At [reveal_hide]
+                 (FStar_Compiler_List.op_At array_ops
+                    (FStar_Compiler_List.op_At issue_ops doc_ops))))) in
+    let uu___1 =
+      FStar_Compiler_List.map
+        (fun p ->
+           let uu___2 = as_primitive_step_nbecbs true p in
+           {
+             name = (uu___2.name);
+             arity = (uu___2.arity);
+             univ_arity = (uu___2.univ_arity);
+             auto_reflect = (uu___2.auto_reflect);
+             strong_reduction_ok = (uu___2.strong_reduction_ok);
+             requires_binder_substitution =
+               (uu___2.requires_binder_substitution);
+             renorm_after = true;
+             interpretation = (uu___2.interpretation);
+             interpretation_nbe = (uu___2.interpretation_nbe)
+           }) seal_steps in
+    FStar_Compiler_List.op_At uu___ uu___1 in
   let weak_steps = FStar_Compiler_List.map (as_primitive_step false) weak_ops in
   FStar_Compiler_Effect.op_Less_Bar prim_from_list
     (FStar_Compiler_List.op_At strong_steps weak_steps)
@@ -4189,6 +4383,7 @@ let (equality_ops : primitive_step FStar_Compiler_Util.psmap) =
       auto_reflect = FStar_Pervasives_Native.None;
       strong_reduction_ok = true;
       requires_binder_substitution = false;
+      renorm_after = false;
       interpretation = interp_prop_eq2;
       interpretation_nbe =
         (fun _cb -> fun _univs -> FStar_TypeChecker_NBETerm.interp_prop_eq2)
@@ -4360,12 +4555,15 @@ let (config' :
           let uu___ = to_fsteps s in
           FStar_Compiler_Effect.op_Bar_Greater uu___ add_nbe in
         let psteps1 = let uu___ = cached_steps () in add_steps uu___ psteps in
+        let dbg_flag =
+          FStar_Compiler_List.contains FStar_TypeChecker_Env.NormDebug s in
         let uu___ =
-          let uu___1 = FStar_Options.debug_any () in
+          let uu___1 = dbg_flag || (FStar_Options.debug_any ()) in
           if uu___1
           then
             let uu___2 =
-              FStar_TypeChecker_Env.debug e (FStar_Options.Other "Norm") in
+              (FStar_TypeChecker_Env.debug e (FStar_Options.Other "Norm")) ||
+                dbg_flag in
             let uu___3 =
               FStar_TypeChecker_Env.debug e (FStar_Options.Other "NormTop") in
             let uu___4 =
@@ -4472,6 +4670,7 @@ let (translate_norm_step :
     | FStar_Pervasives.HNF -> [FStar_TypeChecker_Env.HNF]
     | FStar_Pervasives.Primops -> [FStar_TypeChecker_Env.Primops]
     | FStar_Pervasives.Reify -> [FStar_TypeChecker_Env.Reify]
+    | FStar_Pervasives.NormDebug -> [FStar_TypeChecker_Env.NormDebug]
     | FStar_Pervasives.UnfoldOnly names ->
         let uu___1 =
           let uu___2 =

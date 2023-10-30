@@ -263,6 +263,7 @@ let (steps_zeta_full : FStar_Ident.lident) = psconst "zeta_full"
 let (steps_iota : FStar_Ident.lident) = psconst "iota"
 let (steps_delta : FStar_Ident.lident) = psconst "delta"
 let (steps_reify : FStar_Ident.lident) = psconst "reify_"
+let (steps_norm_debug : FStar_Ident.lident) = psconst "norm_debug"
 let (steps_unfoldonly : FStar_Ident.lident) = psconst "delta_only"
 let (steps_unfoldfully : FStar_Ident.lident) = psconst "delta_fully"
 let (steps_unfoldattr : FStar_Ident.lident) = psconst "delta_attr"
@@ -605,6 +606,9 @@ let (sealed_lid : FStar_Ident.lident) = p2l ["FStar"; "Sealed"; "sealed"]
 let (seal_lid : FStar_Ident.lident) = p2l ["FStar"; "Sealed"; "seal"]
 let (unseal_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Tactics"; "Unseal"; "unseal"]
+let (map_seal_lid : FStar_Ident.lident) = p2l ["FStar"; "Sealed"; "map_seal"]
+let (bind_seal_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Sealed"; "bind_seal"]
 let (document_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Stubs"; "Pprint"; "document"]
 let (issue_lid : FStar_Ident.lident) = p2l ["FStar"; "Issue"; "issue"]

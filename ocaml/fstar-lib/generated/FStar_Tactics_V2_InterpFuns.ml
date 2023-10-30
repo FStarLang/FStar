@@ -70,6 +70,7 @@ let (mk :
                 (FStar_Pervasives_Native.Some (arity - Prims.int_one));
               FStar_TypeChecker_Cfg.strong_reduction_ok = true;
               FStar_TypeChecker_Cfg.requires_binder_substitution = true;
+              FStar_TypeChecker_Cfg.renorm_after = false;
               FStar_TypeChecker_Cfg.interpretation =
                 (fun psc ->
                    fun cbs ->
@@ -108,6 +109,7 @@ let (mkt :
                 FStar_Pervasives_Native.None;
               FStar_TypeChecker_Cfg.strong_reduction_ok = true;
               FStar_TypeChecker_Cfg.requires_binder_substitution = true;
+              FStar_TypeChecker_Cfg.renorm_after = false;
               FStar_TypeChecker_Cfg.interpretation =
                 (fun psc ->
                    fun cbs ->

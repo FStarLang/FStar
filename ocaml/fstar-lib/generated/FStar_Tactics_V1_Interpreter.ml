@@ -37,6 +37,7 @@ let (native_tactics_steps :
         FStar_TypeChecker_Cfg.strong_reduction_ok =
           (s.FStar_Tactics_Native.strong_reduction_ok);
         FStar_TypeChecker_Cfg.requires_binder_substitution = false;
+        FStar_TypeChecker_Cfg.renorm_after = false;
         FStar_TypeChecker_Cfg.interpretation =
           (fun psc ->
              fun cb ->
@@ -87,6 +88,8 @@ let mk_total_step_1' :
                       (uu___.FStar_TypeChecker_Cfg.strong_reduction_ok);
                     FStar_TypeChecker_Cfg.requires_binder_substitution =
                       (uu___.FStar_TypeChecker_Cfg.requires_binder_substitution);
+                    FStar_TypeChecker_Cfg.renorm_after =
+                      (uu___.FStar_TypeChecker_Cfg.renorm_after);
                     FStar_TypeChecker_Cfg.interpretation =
                       (uu___.FStar_TypeChecker_Cfg.interpretation);
                     FStar_TypeChecker_Cfg.interpretation_nbe =
@@ -130,6 +133,8 @@ let mk_total_step_1'_psc :
                       (uu___.FStar_TypeChecker_Cfg.strong_reduction_ok);
                     FStar_TypeChecker_Cfg.requires_binder_substitution =
                       (uu___.FStar_TypeChecker_Cfg.requires_binder_substitution);
+                    FStar_TypeChecker_Cfg.renorm_after =
+                      (uu___.FStar_TypeChecker_Cfg.renorm_after);
                     FStar_TypeChecker_Cfg.interpretation =
                       (uu___.FStar_TypeChecker_Cfg.interpretation);
                     FStar_TypeChecker_Cfg.interpretation_nbe =
@@ -177,6 +182,8 @@ let mk_total_step_2' :
                           (uu___.FStar_TypeChecker_Cfg.strong_reduction_ok);
                         FStar_TypeChecker_Cfg.requires_binder_substitution =
                           (uu___.FStar_TypeChecker_Cfg.requires_binder_substitution);
+                        FStar_TypeChecker_Cfg.renorm_after =
+                          (uu___.FStar_TypeChecker_Cfg.renorm_after);
                         FStar_TypeChecker_Cfg.interpretation =
                           (uu___.FStar_TypeChecker_Cfg.interpretation);
                         FStar_TypeChecker_Cfg.interpretation_nbe =
