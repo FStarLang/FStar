@@ -374,8 +374,8 @@ let freevars_tm_arrow (b:binder) (q:option qualifier) (c:comp)
                      (freevars_comp c)) =
   admit ()
 
-let freevars_mk_eq2_prop (u:universe) (t e0 e1:term)
-  : Lemma (freevars (mk_eq2_prop u t e0 e1) ==
+let freevars_mk_eq2 (u:universe) (t e0 e1:term)
+  : Lemma (freevars (mk_eq2 u t e0 e1) ==
            Set.union (freevars t)
                      (Set.union (freevars e0)
                                 (freevars e1))) =
@@ -448,14 +448,14 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
      let post_maybe_eq =
        if use_eq
        then let post = open_term' post (null_var x) 0 in
-            let post = tm_star post (tm_pure (mk_eq2_prop u t (null_var x) e)) in
+            let post = tm_star post (tm_pure (mk_eq2 u t (null_var x) e)) in
             let post = close_term post x in
             post
        else post in
     freevars_open_term post (null_var x) 0;
-    freevars_mk_eq2_prop u t (null_var x) e;
+    freevars_mk_eq2 u t (null_var x) e;
     freevars_close_term
-      (tm_star (open_term' post (null_var x) 0) (tm_pure (mk_eq2_prop u t (null_var x) e)))
+      (tm_star (open_term' post (null_var x) 0) (tm_pure (mk_eq2 u t (null_var x) e)))
       x 0;
     freevars_open_term post e 0
 

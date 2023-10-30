@@ -96,7 +96,7 @@ let mk_squash (u:R.universe) (ty:R.term) : R.term =
 
 let mk_eq2 (u:R.universe) (ty e1 e2:R.term) : R.term =
   let open R in
-  let t = pack_ln (Tv_UInst (pack_fv (mk_pulse_lib_core_lid "eq2_prop")) [u]) in
+  let t = pack_ln (Tv_UInst (pack_fv R.eq2_qn) [u]) in
   let t = pack_ln (Tv_App t (ty, Q_Implicit)) in
   let t = pack_ln (Tv_App t (e1, Q_Explicit)) in
   pack_ln (Tv_App t (e2, Q_Explicit))

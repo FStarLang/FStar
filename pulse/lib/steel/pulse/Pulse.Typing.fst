@@ -54,12 +54,6 @@ let mk_sq_eq2 (u:universe)
   = let eq = mk_eq2 u t e0 e1 in
     (tm_pureapp (tm_uinst (as_fv R.squash_qn) [u]) None eq)
 
-let mk_eq2_prop (u:universe) (t:term) (e0 e1:term)
-  : term
-  = tm_pureapp
-         (tm_pureapp (tm_pureapp (tm_uinst (as_fv (mk_pulse_lib_core_lid "eq2_prop")) [u]) (Some Implicit) t)
-                     None e0) None e1
-
 let mk_vprop_eq (e0 e1:term) : term =
   mk_eq2 u2 tm_vprop e0 e1
 
@@ -78,7 +72,7 @@ let comp_return (c:ctag) (use_eq:bool) (u:universe) (t:term) (e:term) (post:term
   let post_maybe_eq =
     if use_eq
     then let post = open_term' post (null_var x) 0 in
-         let post = tm_star post (tm_pure (mk_eq2_prop u t (null_var x) e)) in
+         let post = tm_star post (tm_pure (mk_eq2 u t (null_var x) e)) in
          close_term post x
     else post in
 
@@ -457,7 +451,7 @@ let comp_withlocal_array_body_pre (pre:vprop) (a:term) (arr:term) (init:term) (l
   tm_star pre
           (tm_star (mk_array_pts_to a arr (mk_seq_create u0 a (mk_szv len) init))
                    (tm_star (tm_pure (mk_array_is_full a arr))
-                            (tm_pure (mk_eq2_prop u0 tm_nat (mk_array_length a arr) (mk_szv len)))))
+                            (tm_pure (mk_eq2 u0 tm_nat (mk_array_length a arr) (mk_szv len)))))
 
 let mk_seq (u:universe) (a:term) : term =
   let t = tm_uinst (as_fv seq_lid) [u] in

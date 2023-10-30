@@ -1022,10 +1022,10 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       then ()
       else begin
         // Add some lemmas about ln' of tm_pureapp etc.
-        assume (ln' (mk_eq2_prop u t (null_var x) e) (-1));
+        assume (ln' (mk_eq2 u t (null_var x) e) (-1));
         let e = tm_star
           (open_term' post (null_var x) 0)
-          (tm_pure (mk_eq2_prop u t (null_var x) e)) in
+          (tm_pure (mk_eq2 u t (null_var x) e)) in
         close_term_ln' e x 0
       end
 

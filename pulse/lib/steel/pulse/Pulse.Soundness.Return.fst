@@ -84,9 +84,9 @@ let return_soundess
                    (elab_comp c)) =
     
     assert (elab_term (close_term' (tm_star (open_term' post (null_var x) 0)
-                                            (tm_pure (mk_eq2_prop u t (null_var x) e))) x 0) ==
+                                            (tm_pure (mk_eq2 u t (null_var x) e))) x 0) ==
             RT.subst_term (elab_term (tm_star (open_term' post (null_var x) 0)
-                                              (tm_pure (mk_eq2_prop u t (null_var x) e))))
+                                              (tm_pure (mk_eq2 u t (null_var x) e))))
                           [ RT. ND x 0 ]);
     let elab_c_post =
       mk_abs rt R.Q_Explicit
