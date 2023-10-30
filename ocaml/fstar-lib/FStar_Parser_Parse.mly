@@ -4,7 +4,7 @@
 
    Warning: 5 states have shift/reduce conflicts.
    Warning: 6 shift/reduce conflicts were arbitrarily resolved.
-   Warning: 222 end-of-stream conflicts were arbitrarily resolved.
+   Warning: 221 end-of-stream conflicts were arbitrarily resolved.
 
  If you're editing this file, be sure to not increase the warnings,
  except if you have a really good reason.
