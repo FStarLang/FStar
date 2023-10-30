@@ -219,6 +219,7 @@ let translate_cb cbs t = cbs.translate t
 let embed   (e:embedding 'a) (cb:nbe_cbs) (x:'a) : t = e.em cb x
 let unembed (e:embedding 'a) (cb:nbe_cbs) (trm:t) : option 'a = e.un cb trm
 let type_of (e:embedding 'a) : t = e.typ
+let set_type (ty:t) (e:embedding 'a) : embedding 'a = { e with typ = ty }
 
 
 let mk_emb em un typ et = {em = em; un = un; typ = typ; emb_typ=et}
