@@ -19,6 +19,7 @@ module While = Pulse.Soundness.While
 module Admit = Pulse.Soundness.Admit
 module Par = Pulse.Soundness.Par
 module WithLocal = Pulse.Soundness.WithLocal
+module WithLocalArray = Pulse.Soundness.WithLocalArray
 module Rewrite = Pulse.Soundness.Rewrite
 module Comp = Pulse.Soundness.Comp
 module LN = Pulse.Typing.LN
@@ -384,7 +385,7 @@ let rec soundness (g:stt_env)
       WithLocal.withlocal_soundness d soundness
 
     | T_WithLocalArray _ _ _ _ _ _ _ _ _ _ _ _ ->
-      admit ()
+      WithLocalArray.withlocalarray_soundness d soundness
 
     | T_Rewrite _ _ _ _ _ ->
       Rewrite.rewrite_soundness d

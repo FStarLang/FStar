@@ -457,7 +457,7 @@ let comp_withlocal_array_body_pre (pre:vprop) (a:term) (arr:term) (init:term) (l
   tm_star pre
           (tm_star (mk_array_pts_to a arr (mk_seq_create u0 a (mk_szv len) init))
                    (tm_star (tm_pure (mk_array_is_full a arr))
-                            (tm_pure (mk_eq2 u0 tm_nat (mk_array_length a arr) (mk_szv len)))))
+                            (tm_pure (mk_eq2_prop u0 tm_nat (mk_array_length a arr) (mk_szv len)))))
 
 let mk_seq (u:universe) (a:term) : term =
   let t = tm_uinst (as_fv seq_lid) [u] in

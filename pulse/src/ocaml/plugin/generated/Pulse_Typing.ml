@@ -789,7 +789,7 @@ let (comp_withlocal_array_body_pre :
                  (Pulse_Syntax_Base.tm_star
                     (Pulse_Syntax_Base.tm_pure (mk_array_is_full a arr))
                     (Pulse_Syntax_Base.tm_pure
-                       (mk_eq2 Pulse_Syntax_Pure.u0 tm_nat
+                       (mk_eq2_prop Pulse_Syntax_Pure.u0 tm_nat
                           (mk_array_length a arr) (mk_szv len)))))
 let (mk_seq :
   Pulse_Syntax_Base.universe ->
