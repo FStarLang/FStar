@@ -501,6 +501,28 @@ let rec (st_typing_weakening :
                       init_t, c1, x, (), (),
                       (comp_typing_weakening g g' c1
                          (Pulse_Syntax_Base.comp_u c1) d_c g1), d_body4)
+              | Pulse_Typing.T_WithLocalArray
+                  (uu___, init, len, body, init_t, c1, x, uu___1, uu___2,
+                   uu___3, d_c, d_body)
+                  ->
+                  let d_body1 = d_body in
+                  let d_body2 = d_body1 in
+                  let d_body3 =
+                    st_typing_weakening g
+                      (Pulse_Typing_Env.push_binding g' x
+                         Pulse_Syntax_Base.ppname_default
+                         (Pulse_Typing.mk_array init_t))
+                      (Pulse_Syntax_Naming.open_st_term_nv body
+                         (Pulse_Syntax_Base.v_as_nv x))
+                      (Pulse_Typing.comp_withlocal_array_body x init_t init
+                         len c1) d_body2 g1 in
+                  let d_body4 = d_body3 in
+                  Pulse_Typing.T_WithLocalArray
+                    ((Pulse_Typing_Env.push_env
+                        (Pulse_Typing_Env.push_env g g1) g'), init, len,
+                      body, init_t, c1, x, (), (), (),
+                      (comp_typing_weakening g g' c1
+                         (Pulse_Syntax_Base.comp_u c1) d_c g1), d_body4)
               | Pulse_Typing.T_Rewrite (uu___, p, q, uu___1, uu___2) ->
                   Pulse_Typing.T_Rewrite
                     ((Pulse_Typing_Env.push_env
@@ -1034,6 +1056,30 @@ let rec (st_typing_subst :
                                      (Pulse_Syntax_Base.v_as_nv y))
                                   (Pulse_Typing.comp_withlocal_body y init_t
                                      init c) d_body) ()))
+                    | Pulse_Typing.T_WithLocalArray
+                        (uu___, init, len, body, init_t, c, y, uu___1,
+                         uu___2, uu___3, d_c, d_body)
+                        ->
+                        Pulse_Typing.T_WithLocalArray
+                          ((Pulse_Typing_Env.push_env g
+                              (Pulse_Typing_Env.subst_env g' (nt x e))),
+                            (Pulse_Syntax_Naming.subst_term init ss),
+                            (Pulse_Syntax_Naming.subst_term len ss),
+                            (Pulse_Syntax_Naming.subst_st_term body ss),
+                            (Pulse_Syntax_Naming.subst_term init_t ss),
+                            (Pulse_Syntax_Naming.subst_comp c ss), y, (), (),
+                            (),
+                            (comp_typing_subst g x t g' e () c
+                               (Pulse_Syntax_Base.comp_u c) d_c),
+                            (coerce_eq
+                               (st_typing_subst g x t
+                                  (Pulse_Typing_Env.push_binding g' y
+                                     Pulse_Syntax_Base.ppname_default
+                                     (Pulse_Typing.mk_ref init_t)) e ()
+                                  (Pulse_Syntax_Naming.open_st_term_nv body
+                                     (Pulse_Syntax_Base.v_as_nv y))
+                                  (Pulse_Typing.comp_withlocal_array_body y
+                                     init_t init len c) d_body) ()))
                     | Pulse_Typing.T_Rewrite (uu___, p, q, uu___1, uu___2) ->
                         Pulse_Typing.T_Rewrite
                           ((Pulse_Typing_Env.push_env g

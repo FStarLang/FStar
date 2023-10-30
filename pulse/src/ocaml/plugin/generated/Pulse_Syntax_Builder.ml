@@ -179,6 +179,23 @@ let (tm_with_local :
             Pulse_Syntax_Base.initializer1 = initializer1;
             Pulse_Syntax_Base.body4 = body
           }
+let (tm_with_local_array :
+  Pulse_Syntax_Base.binder ->
+    Pulse_Syntax_Base.term ->
+      Pulse_Syntax_Base.term ->
+        Pulse_Syntax_Base.st_term -> Pulse_Syntax_Base.st_term')
+  =
+  fun binder ->
+    fun initializer1 ->
+      fun length ->
+        fun body ->
+          Pulse_Syntax_Base.Tm_WithLocalArray
+            {
+              Pulse_Syntax_Base.binder3 = binder;
+              Pulse_Syntax_Base.initializer2 = initializer1;
+              Pulse_Syntax_Base.length = length;
+              Pulse_Syntax_Base.body5 = body
+            }
 let (tm_rewrite :
   Pulse_Syntax_Base.term ->
     Pulse_Syntax_Base.term -> Pulse_Syntax_Base.st_term')
