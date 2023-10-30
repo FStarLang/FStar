@@ -23,7 +23,6 @@ open FStar.Errors
 open FStar.Compiler.Util
 open FStar.Getopt
 open FStar.Syntax.Syntax
-open FStar.Extraction.ML.UEnv
 open FStar.TypeChecker.Env
 open FStar.Syntax.DsEnv
 
@@ -397,7 +396,7 @@ let load_module_from_cache =
         end
       in
       match load_checked_file_with_tc_result
-              (TcEnv.dep_graph (tcenv_of_uenv env))
+              (TcEnv.dep_graph env)
               fn
               cache_file with
       | Inl msg -> fail msg cache_file; None
@@ -424,7 +423,7 @@ let load_module_from_cache =
       "FStar.CheckedFiles" in
 
     let i_fn_opt = Dep.interface_of
-      (TcEnv.dep_graph (tcenv_of_uenv env))
+      (TcEnv.dep_graph env)
       (Dep.lowercase_module_name fn) in
 
     if Dep.is_implementation fn
@@ -454,7 +453,7 @@ let store_module_to_cache env fn parsing_data tc_result =
   && not (Options.cache_off())
   then begin
     let cache_file = FStar.Parser.Dep.cache_file_name fn in
-    let digest = hash_dependences (TcEnv.dep_graph (tcenv_of_uenv env)) fn in
+    let digest = hash_dependences (TcEnv.dep_graph env) fn in
     match digest with
     | Inr hashes ->
       let tc_result = { tc_result with tc_time=0; extraction_time=0 } in
