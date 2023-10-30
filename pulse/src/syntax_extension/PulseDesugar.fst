@@ -693,17 +693,15 @@ type menv = {
 let menv_push_ns (m:menv) (ns:lid) = 
   { m with env = push_namespace m.env ns }
 
+//
+// auto_deref is not applicable for mutable local arrays
+//
 let menv_push_bv (m:menv) (x:ident) (q:option Sugar.mut_or_ref) (auto_deref_applicable:bool) =
   let env, bv = push_bv m.env x in
   let m = { m with env } in
   if q = Some Sugar.MUT && auto_deref_applicable
   then { m with map=(x, bv, None)::m.map }
   else m
-  // match q with
-  // | Some Sugar.MUT ->
-  //   { m with env; map=(x, bv, None)::m.map}
-  
-  // | None -> { m with env }
 
 let menv_push_bvs (m:menv) (xs:_) =
   { m with env = fst (push_bvs m.env xs) }
