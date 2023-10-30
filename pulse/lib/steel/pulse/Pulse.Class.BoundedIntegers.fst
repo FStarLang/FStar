@@ -63,6 +63,7 @@ let safe_add (#t:eqtype) {| c: bounded_unsigned t |} (x y : t)
     else (
       if x <= max_bound
       then (
+        assert (fits #t (v (max_bound #t) - v x));
         if (y <= max_bound - x)
         then Some (x + y)
         else None
@@ -78,7 +79,10 @@ let safe_mod (#t:eqtype) {| c: bounded_unsigned t |} (x : t) (y : t)
     then Some (x % y)
     else (
       if y <= max_bound
-      then Some (x % y)
+      then  (
+        assert (fits #t (v x % v y));
+        Some (x % y)
+      )
       else None
     )
 
