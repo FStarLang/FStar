@@ -245,6 +245,12 @@ type st_term' =
       initializer:term;
       body:st_term;
     }
+  | Tm_WithLocalArray {
+      binder:binder;
+      initializer:term;
+      length:term;
+      body:st_term;
+    }
   | Tm_Rewrite {
       t1:term;
       t2:term;
