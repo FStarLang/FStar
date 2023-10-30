@@ -4,7 +4,7 @@
 
    Warning: 5 states have shift/reduce conflicts.
    Warning: 6 shift/reduce conflicts were arbitrarily resolved.
-   Warning: 222 end-of-stream conflicts were arbitrarily resolved.
+   Warning: 221 end-of-stream conflicts were arbitrarily resolved.
 
  If you're editing this file, be sure to not increase the warnings,
  except if you have a really good reason.
@@ -1364,12 +1364,6 @@ projectionLHS:
           | Some (level, t) -> mk_term (Ascribed(e,{t with level=level},None,false)) (rr2 $loc($1) $loc($4)) level
         in mk_term (Paren e1) (rr2 $loc($1) $loc($4)) (e.level)
       }
-  // | LBRACK_BAR es=semiColonTermList BAR_RBRACK
-  //     {
-  //       let l = mkConsList (rr2 $loc($1) $loc($3)) es in
-  //       let pos = (rr2 $loc($1) $loc($3)) in
-  //       mkExplicitApp (mk_term (Var (array_of_list_lid)) pos Expr) [l] pos
-  //     }
   | LBRACK es=semiColonTermList RBRACK
       { mkConsList (rr2 $loc($1) $loc($3)) es }
   | PERCENT_LBRACK es=semiColonTermList RBRACK
