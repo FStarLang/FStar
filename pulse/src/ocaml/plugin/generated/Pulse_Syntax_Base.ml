@@ -169,7 +169,8 @@ type comp_st = comp
 type pattern =
   | Pat_Cons of fv * (pattern * Prims.bool) Prims.list 
   | Pat_Constant of constant 
-  | Pat_Var of FStar_Reflection_Typing.pp_name_t 
+  | Pat_Var of FStar_Reflection_Typing.pp_name_t *
+  FStar_Reflection_Typing.sort_t 
   | Pat_Dot_Term of term FStar_Pervasives_Native.option 
 let (uu___is_Pat_Cons : pattern -> Prims.bool) =
   fun projectee ->
@@ -185,10 +186,13 @@ let (uu___is_Pat_Constant : pattern -> Prims.bool) =
 let (__proj__Pat_Constant__item___0 : pattern -> constant) =
   fun projectee -> match projectee with | Pat_Constant _0 -> _0
 let (uu___is_Pat_Var : pattern -> Prims.bool) =
-  fun projectee -> match projectee with | Pat_Var _0 -> true | uu___ -> false
+  fun projectee ->
+    match projectee with | Pat_Var (_0, ty) -> true | uu___ -> false
 let (__proj__Pat_Var__item___0 :
   pattern -> FStar_Reflection_Typing.pp_name_t) =
-  fun projectee -> match projectee with | Pat_Var _0 -> _0
+  fun projectee -> match projectee with | Pat_Var (_0, ty) -> _0
+let (__proj__Pat_Var__item__ty : pattern -> FStar_Reflection_Typing.sort_t) =
+  fun projectee -> match projectee with | Pat_Var (_0, ty) -> ty
 let (uu___is_Pat_Dot_Term : pattern -> Prims.bool) =
   fun projectee ->
     match projectee with | Pat_Dot_Term _0 -> true | uu___ -> false
@@ -541,7 +545,7 @@ let rec (eq_pattern : pattern -> pattern -> Prims.bool) =
       | (Pat_Cons (f1, vs1), Pat_Cons (f2, vs2)) ->
           (f1.fv_name = f2.fv_name) && (eq_list_dec p1 p2 eq_sub_pat vs1 vs2)
       | (Pat_Constant c1, Pat_Constant c2) -> fstar_const_eq c1 c2
-      | (Pat_Var uu___, Pat_Var uu___1) -> true
+      | (Pat_Var (uu___, uu___1), Pat_Var (uu___2, uu___3)) -> true
       | (Pat_Dot_Term to1, Pat_Dot_Term to2) -> eq_opt eq_tm to1 to2
       | uu___ -> false
 and (eq_sub_pat :

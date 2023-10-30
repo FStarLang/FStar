@@ -30,6 +30,12 @@ let topenv_of_env (g:env) = E.fstar_env g.coreenv
 let tcenv_of_env (g:env) = Pulse.Typing.elab_env g.coreenv
 let uenv_of_env (g:env) = set_tcenv g.uenv_inner (tcenv_of_env g)
   
+let debug (g:env) (f: unit -> T.Tac string)
+  : T.Tac unit
+  = if RU.debug_at_level (E.fstar_env g.coreenv) "pulse_extraction"
+    then T.print (f())
+
+
 let term_as_mlexpr (g:env) (t:term)
   : T.Tac mlexpr
   = let t = Elab.elab_term t in
@@ -48,10 +54,9 @@ let extend_env (g:env) (b:binder)
   = let mlty = term_as_mlty g b.binder_ty in
     let x = E.fresh g.coreenv in
     let coreenv = E.push_binding g.coreenv x b.binder_ppname b.binder_ty in
-    T.dump (Printf.sprintf "Extending environment with %s : %s\n"
+    debug g (fun _ -> Printf.sprintf "Extending environment with %s : %s\n"
                                       (binder_to_string b)
                                       (term_to_string b.binder_ty));
-
     let uenv_inner, mlident = extend_bv g.uenv_inner b.binder_ppname x mlty in
     { uenv_inner; coreenv }, mlident, mlty, (b.binder_ppname, x)
 
@@ -77,10 +82,14 @@ let rec extend_env_pat_core (g:env) (p:pattern)
   : T.Tac (env & list mlpattern & list Pulse.Typing.Env.binding)
   = match p with
     | Pat_Dot_Term _ -> g, [], []
-    | Pat_Var pp -> 
+    | Pat_Var pp sort -> 
       let x = E.fresh g.coreenv in
       let pp = mk_ppname pp FStar.Range.range_0 in
-      let coreenv = E.push_binding g.coreenv x pp tm_unknown in
+      let ty = T.unseal sort in
+      assume (not_tv_unknown ty);
+      let ty = tm_fstar ty (T.range_of_term ty) in
+      debug g (fun _ -> Printf.sprintf "Pushing pat_var %s : %s\n" (T.unseal pp.name) (term_to_string ty));
+      let coreenv = E.push_binding g.coreenv x pp ty in
       let uenv_inner, mlident = extend_bv g.uenv_inner pp x mlty_top in
       { uenv_inner; coreenv },
       [ mlp_var mlident ],
@@ -178,7 +187,7 @@ let maybe_inline (g:env) (head:term) (arg:term) : option st_term =
 let rec extract (g:env) (p:st_term)
   : T.Tac (mlexpr & e_tag)
   = let erased_result = mle_unit, e_tag_erasable in
-    T.dump (Printf.sprintf "Extracting term@%s:\n%s\n" 
+    debug g (fun _ -> Printf.sprintf "Extracting term@%s:\n%s\n" 
               (T.range_to_string p.range)
               (st_term_to_string p));
     if is_erasable p
@@ -215,9 +224,9 @@ let rec extract (g:env) (p:st_term)
         if is_erasable head
         then (
           let body = LN.subst_st_term body [LN.DT 0 unit_val] in
-          T.dump (Printf.sprintf "Erasing head of bind %s\nopened body to %s"
-                      (st_term_to_string head)
-                      (st_term_to_string body));
+          debug g (fun _ -> Printf.sprintf "Erasing head of bind %s\nopened body to %s"
+                              (st_term_to_string head)
+                              (st_term_to_string body));
           extract g body
         )
         else (
@@ -294,7 +303,7 @@ let rec generalize (g:env) (t:R.typ) (e:option st_term)
            R.typ &
            option st_term) =
 
-  T.dump (Printf.sprintf "Generalizing arrow:\n%s\n" (T.term_to_string t));
+  debug g (fun _ -> Printf.sprintf "Generalizing arrow:\n%s\n" (T.term_to_string t));
   let tv = R.inspect_ln t in
   match tv with
   | R.Tv_Arrow b c ->
@@ -333,11 +342,14 @@ let rec generalize (g:env) (t:R.typ) (e:option st_term)
   
   | _ -> g, [], t, e
 
+let debug_ = debug
+  
 let extract_pulse (g:uenv) (selt:R.sigelt) (p:st_term)
   : T.Tac (either mlmodule string) =
   
+  let g = { uenv_inner=g; coreenv=initial_core_env g } in
+  debug g (fun _ -> Printf.sprintf "About to extract:\n%s\n" (st_term_to_string p));
   let open T in
-  T.dump (Printf.sprintf "About to extract:\n%s\n" (st_term_to_string p));
   try
     let sigelt_view = R.inspect_sigelt selt in
     match sigelt_view with
@@ -346,13 +358,12 @@ let extract_pulse (g:uenv) (selt:R.sigelt) (p:st_term)
       then T.raise (Extraction_failure "Extraction of recursive lets is not yet supported")
       else
         let {lb_fv; lb_typ} = R.inspect_lb (List.Tot.hd lbs) in
-        let g = { uenv_inner=g; coreenv=initial_core_env g } in
         let g, tys, lb_typ, p = generalize g lb_typ (Some p) in
         let mlty = ECL.term_as_mlty g.uenv_inner lb_typ in
         if None? p
         then T.raise (Extraction_failure "Unexpected p");
         let tm, tag = extract g (Some?.v p) in
-        T.dump (Printf.sprintf "Extracted term: %s\n" (mlexpr_to_string tm));
+        debug_ g (fun _ -> Printf.sprintf "Extracted term: %s\n" (mlexpr_to_string tm));
         let fv_name = R.inspect_fv lb_fv in
         if List.Tot.length fv_name = 0
         then T.raise (Extraction_failure "Unexpected empty name");
@@ -380,7 +391,7 @@ let extract_pulse_sig (g:uenv) (selt:R.sigelt) (p:st_term)
         let g0 = g in
         let g = { uenv_inner=g; coreenv=initial_core_env g } in
         let g, tys, lb_typ, _ = generalize g lb_typ None in
-        T.dump (Printf.sprintf "Extracting ml typ: %s\n" (T.term_to_string lb_typ));
+        debug_ g (fun _ -> Printf.sprintf "Extracting ml typ: %s\n" (T.term_to_string lb_typ));
         let mlty = ECL.term_as_mlty g.uenv_inner lb_typ in
         let g, _, e_bnd = extend_fv g0 lb_fv (tys, mlty) in
         Inl (g, iface_of_bindings [lb_fv, e_bnd])

@@ -84,7 +84,7 @@ let inspect_const = FStar_Reflection_V2_Builtins.inspect_const
 
 type pattern = Pulse_Syntax_Base.pattern
 
-let pat_var s _r = PSB.(pat_var s)
+let pat_var s _r = PSB.(pat_var s S.tun)
 let pat_constant c _r = PSB.(pat_const c)
 let pat_cons fv vs _r = PSB.(pat_cons fv (List.map (fun v -> (v,false)) vs))
 

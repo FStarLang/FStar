@@ -1,7 +1,7 @@
 module ExtractionTest
 open Pulse.Lib.Pervasives
-module U32 = FStar.UInt32
 open FStar.UInt32
+module U32 = FStar.UInt32
 inline_for_extraction
 let zero () = 0ul
 

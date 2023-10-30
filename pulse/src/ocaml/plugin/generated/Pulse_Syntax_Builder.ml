@@ -1,7 +1,8 @@
 open Prims
 let (pat_var :
-  FStar_Reflection_Typing.pp_name_t -> Pulse_Syntax_Base.pattern) =
-  fun s -> Pulse_Syntax_Base.Pat_Var s
+  FStar_Reflection_Typing.pp_name_t ->
+    FStar_Reflection_Typing.sort_t -> Pulse_Syntax_Base.pattern)
+  = fun s -> fun uu___ -> Pulse_Syntax_Base.Pat_Var (s, uu___)
 let (pat_const : Pulse_Syntax_Base.constant -> Pulse_Syntax_Base.pattern) =
   fun c -> Pulse_Syntax_Base.Pat_Constant c
 let (pat_cons :
