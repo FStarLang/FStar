@@ -1943,7 +1943,6 @@ let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
   Errors.with_ctx "While encoding a query" (fun () ->
     Z3.query_logging.set_module_name (string_of_lid (TypeChecker.Env.current_module tcenv));
     let env = get_env (Env.current_module tcenv) tcenv in
-    let original_query = q in
     let q, bindings =
         let rec aux bindings = match bindings with
             | S.Binding_var x::rest ->
@@ -1966,7 +1965,7 @@ let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
     if debug tcenv Options.Medium
     || debug tcenv <| Options.Other "SMTEncoding"
     || debug tcenv <| Options.Other "SMTQuery"
-    then BU.print1 "Encoding query formula {: %s\n" (Print.term_to_string original_query);
+    then BU.print1 "Encoding query formula {: %s\n" (Print.term_to_string q);
     let (phi, qdecls), ms = BU.record_time (fun () -> encode_formula q env) in
     let labels, phi = ErrorReporting.label_goals use_env_msg (Env.get_range tcenv) phi in
     let label_prefix, label_suffix = encode_labels labels in

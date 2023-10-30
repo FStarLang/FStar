@@ -7845,7 +7845,6 @@ let (encode_query :
              (let env =
                 let uu___2 = FStar_TypeChecker_Env.current_module tcenv in
                 get_env uu___2 tcenv in
-              let original_query = q in
               let uu___2 =
                 let rec aux bindings =
                   match bindings with
@@ -7912,8 +7911,7 @@ let (encode_query :
                                 (FStar_Options.Other "SMTQuery")) in
                          if uu___5
                          then
-                           let uu___6 =
-                             FStar_Syntax_Print.term_to_string original_query in
+                           let uu___6 = FStar_Syntax_Print.term_to_string q1 in
                            FStar_Compiler_Util.print1
                              "Encoding query formula {: %s\n" uu___6
                          else ());
