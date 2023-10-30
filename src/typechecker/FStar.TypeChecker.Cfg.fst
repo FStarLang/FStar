@@ -317,6 +317,7 @@ let built_in_primitive_steps : prim_step_set =
         auto_reflect=None;
         strong_reduction_ok=is_strong;
         requires_binder_substitution=false;
+        renorm_after=false;
         interpretation=(fun psc cb univs args -> f psc cb univs args);
         interpretation_nbe=(fun _cb univs args -> f_nbe univs args)
     } in
@@ -1347,6 +1348,7 @@ let equality_ops : prim_step_set =
          auto_reflect=None;
          strong_reduction_ok=true;
          requires_binder_substitution=false;
+         renorm_after=false;
          interpretation = interp_prop_eq2;
          interpretation_nbe = fun _cb _univs -> NBETerm.interp_prop_eq2}
     in
