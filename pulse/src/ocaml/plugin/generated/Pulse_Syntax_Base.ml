@@ -360,6 +360,12 @@ and st_term'__Tm_WithLocal__payload =
   binder2: binder ;
   initializer1: term ;
   body4: st_term }
+and st_term'__Tm_WithLocalArray__payload =
+  {
+  binder3: binder ;
+  initializer2: term ;
+  length: term ;
+  body5: st_term }
 and st_term'__Tm_Rewrite__payload = {
   t11: term ;
   t21: term }
@@ -388,6 +394,7 @@ and st_term' =
   | Tm_While of st_term'__Tm_While__payload 
   | Tm_Par of st_term'__Tm_Par__payload 
   | Tm_WithLocal of st_term'__Tm_WithLocal__payload 
+  | Tm_WithLocalArray of st_term'__Tm_WithLocalArray__payload 
   | Tm_Rewrite of st_term'__Tm_Rewrite__payload 
   | Tm_Admit of st_term'__Tm_Admit__payload 
   | Tm_ProofHintWithBinders of st_term'__Tm_ProofHintWithBinders__payload 
@@ -417,6 +424,8 @@ let uu___is_Tm_While uu___ =
 let uu___is_Tm_Par uu___ = match uu___ with | Tm_Par _ -> true | _ -> false
 let uu___is_Tm_WithLocal uu___ =
   match uu___ with | Tm_WithLocal _ -> true | _ -> false
+let uu___is_Tm_WithLocalArray uu___ =
+  match uu___ with | Tm_WithLocalArray _ -> true | _ -> false
 let uu___is_Tm_Rewrite uu___ =
   match uu___ with | Tm_Rewrite _ -> true | _ -> false
 let uu___is_Tm_Admit uu___ =
@@ -638,6 +647,13 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
          Tm_WithLocal { binder2 = x2; initializer1 = e2; body4 = b2;_}) ->
           ((eq_tm x1.binder_ty x2.binder_ty) && (eq_tm e1 e2)) &&
             (eq_st_term b1 b2)
+      | (Tm_WithLocalArray
+         { binder3 = x1; initializer2 = e1; length = n1; body5 = b1;_},
+         Tm_WithLocalArray
+         { binder3 = x2; initializer2 = e2; length = n2; body5 = b2;_}) ->
+          (((eq_tm x1.binder_ty x2.binder_ty) && (eq_tm e1 e2)) &&
+             (eq_tm n1 n2))
+            && (eq_st_term b1 b2)
       | (Tm_Rewrite { t11 = l1; t21 = r1;_}, Tm_Rewrite
          { t11 = l2; t21 = r2;_}) -> (eq_tm l1 l2) && (eq_tm r1 r2)
       | (Tm_Admit { ctag1 = c1; u1; typ = t11; post3 = post1;_}, Tm_Admit

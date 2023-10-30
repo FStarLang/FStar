@@ -184,6 +184,12 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
       freevars_close_term' initializer x i;
       freevars_close_st_term' body x (i + 1)
 
+    | Tm_WithLocalArray { binder; initializer; length; body } ->
+      freevars_close_term' binder.binder_ty x i;
+      freevars_close_term' initializer x i;
+      freevars_close_term' length x i;
+      freevars_close_st_term' body x (i + 1)
+
     | Tm_Admit { typ; post } ->
       freevars_close_term' typ x i;
       freevars_close_term_opt' post x (i + 1)
@@ -368,8 +374,8 @@ let freevars_tm_arrow (b:binder) (q:option qualifier) (c:comp)
                      (freevars_comp c)) =
   admit ()
 
-let freevars_mk_eq2_prop (u:universe) (t e0 e1:term)
-  : Lemma (freevars (mk_eq2_prop u t e0 e1) ==
+let freevars_mk_eq2 (u:universe) (t e0 e1:term)
+  : Lemma (freevars (mk_eq2 u t e0 e1) ==
            Set.union (freevars t)
                      (Set.union (freevars e0)
                                 (freevars e1))) =
@@ -407,6 +413,10 @@ let freevars_ref (t:term)
   : Lemma (freevars (mk_ref t) == freevars t)
   = admit()
 
+let freevars_array (t:term)
+  : Lemma (freevars (mk_array t) == freevars t)
+  = admit()
+
 // FIXME: tame this proof
 #push-options "--fuel 2 --ifuel 1 --z3rlimit_factor 10 --query_stats --retry 5"
 let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
@@ -438,14 +448,14 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
      let post_maybe_eq =
        if use_eq
        then let post = open_term' post (null_var x) 0 in
-            let post = tm_star post (tm_pure (mk_eq2_prop u t (null_var x) e)) in
+            let post = tm_star post (tm_pure (mk_eq2 u t (null_var x) e)) in
             let post = close_term post x in
             post
        else post in
     freevars_open_term post (null_var x) 0;
-    freevars_mk_eq2_prop u t (null_var x) e;
+    freevars_mk_eq2 u t (null_var x) e;
     freevars_close_term
-      (tm_star (open_term' post (null_var x) 0) (tm_pure (mk_eq2_prop u t (null_var x) e)))
+      (tm_star (open_term' post (null_var x) 0) (tm_pure (mk_eq2 u t (null_var x) e)))
       x 0;
     freevars_open_term post e 0
 
@@ -581,6 +591,15 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
      comp_typing_freevars c_typing;
      tot_or_ghost_typing_freevars u_typing;
      freevars_ref init_t
+
+   | T_WithLocalArray _ init len body init_t c x init_typing len_typing u_typing c_typing body_typing ->
+     tot_or_ghost_typing_freevars init_typing;
+     tot_or_ghost_typing_freevars len_typing;
+     st_typing_freevars body_typing;
+     freevars_open_st_term_inv body x;
+     comp_typing_freevars c_typing;
+     tot_or_ghost_typing_freevars u_typing;
+     freevars_array init_t
 
    | T_Admit _ s _ (STC _ _ x t_typing pre_typing post_typing) ->
      tot_or_ghost_typing_freevars t_typing;

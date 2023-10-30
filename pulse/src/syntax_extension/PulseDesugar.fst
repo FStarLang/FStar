@@ -542,6 +542,9 @@ and desugar_bind (env:env_t) (lb:_) (s2:Sugar.stmt) (r:R.range)
     | Some e1 -> (
       match lb.qualifier with
       | None -> //just a regular bind
+        if Sugar.Array_initializer? e1
+        then failwith "immutable local arrays are not yet supported";
+        let Default_initializer e1 = e1 in
         let? s1 = tosyntax env e1 in
         let b = SW.mk_binder lb.id annot in
         let t =
@@ -553,10 +556,16 @@ and desugar_bind (env:env_t) (lb:_) (s2:Sugar.stmt) (r:R.range)
         in
         return t
       | Some MUT //these are handled the same for now
-      | Some REF -> 
-        let? e1 = desugar_term env e1 in 
+      | Some REF ->
         let b = SW.mk_binder lb.id annot in
-        return (SW.tm_let_mut b e1 s2 r)
+        match e1 with
+        | Sugar.Array_initializer {init; len} ->
+          let? init = desugar_term env init in
+          let? len = desugar_term env len in
+          return (SW.tm_let_mut_array b init len s2 r)
+        | Sugar.Default_initializer e1 ->
+          let? e1 = desugar_term env e1 in 
+          return (SW.tm_let_mut b e1 s2 r)
     )
 
 and desugar_sequence (env:env_t) (s1 s2:Sugar.stmt) r
@@ -684,13 +693,15 @@ type menv = {
 let menv_push_ns (m:menv) (ns:lid) = 
   { m with env = push_namespace m.env ns }
 
-let menv_push_bv (m:menv) (x:ident) (q:option Sugar.mut_or_ref) =
+//
+// auto_deref is not applicable for mutable local arrays
+//
+let menv_push_bv (m:menv) (x:ident) (q:option Sugar.mut_or_ref) (auto_deref_applicable:bool) =
   let env, bv = push_bv m.env x in
-  match q with
-  | Some Sugar.MUT -> 
-    { m with env; map=(x, bv, None)::m.map}
-  
-  | None -> { m with env }
+  let m = { m with env } in
+  if q = Some Sugar.MUT && auto_deref_applicable
+  then { m with map=(x, bv, None)::m.map }
+  else m
 
 let menv_push_bvs (m:menv) (xs:_) =
   { m with env = fst (push_bvs m.env xs) }
@@ -699,7 +710,7 @@ let is_mut (m:menv) (x:S.bv) : option (option ident) =
     match L.tryFind (fun (_, y, _) -> S.bv_eq x y) m.map with
     | None -> None
     | Some (_, _, curval) -> Some curval
-  
+
 let needs_derefs = list (ident & ident)
 
 let fresh_var (nm:ident)
@@ -750,7 +761,8 @@ let add_derefs_in_scope (n:needs_derefs) (p:Sugar.stmt)
   = L.fold_right
        (fun (x, y) (p:Sugar.stmt) ->
          let lb : Sugar.stmt =
-           { s=Sugar.LetBinding { qualifier=None; id=y; typ=None; init=Some (read x)};
+           { s=Sugar.LetBinding { qualifier=None; id=y; typ=None;
+                                  init=Some (Sugar.Default_initializer (read x)) };
              range=p.range } in
          { s=Sugar.Sequence { s1=lb; s2=p }; range=p.range})
        n p
@@ -854,28 +866,37 @@ let rec transform_stmt_with_reads (m:menv) (p:Sugar.stmt)
       let? init, needs, m =
           match init with
           | None -> return (None, [], m)
-          | Some e -> (
+          | Some (Default_initializer e) -> (
+            let mk_init e = Some (Default_initializer e) in
             match e.tm with
             | A.Var zlid -> (
               match qualifier, Ident.ids_of_lid zlid with
               | None, [z] -> (
                 match resolve_mut m e with
-                | None -> return (Some e, [], m)
+                | None -> return (mk_init e, [], m)
                 | Some (_, _, Some y) ->
-                  return (Some { e with A.tm =term'_of_id y }, [], m)
+                  return (mk_init { e with A.tm =term'_of_id y }, [], m)
                 | Some (x, _, None) ->
-                  return (Some (read x), [], bind_curval m x z)
+                  return (mk_init (read x), [], bind_curval m x z)
               )
-              | _ ->    
+              | _ ->
                 let? init, needs, m = transform_term m e in
-                return (Some init, needs, m)
+                return (mk_init init, needs, m)
             )
-           | _ ->
-             let? init, needs, m = transform_term m e in
-             return (Some init, needs, m)
-          )
+            | _ ->
+              let? init, needs, m = transform_term m e in
+              return (mk_init init, needs, m)
+            )
+          | Some (Array_initializer {init; len}) ->
+            let? init, needs, m = transform_term m init in
+            let? len, len_needs, m = transform_term m len in
+            return (Some (Array_initializer {init; len}), needs@len_needs, m)
       in
-      let m = menv_push_bv m id qualifier in
+      let auto_deref_applicable =
+        match init with
+        | Some (Array_initializer _) -> false
+        | _ -> true in
+      let m = menv_push_bv m id qualifier auto_deref_applicable in
       let p = { p with s=LetBinding { qualifier; id; typ; init } } in
       return (p, needs, m)
       )

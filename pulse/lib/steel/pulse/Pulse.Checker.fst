@@ -24,6 +24,7 @@ module If = Pulse.Checker.If
 module Bind = Pulse.Checker.Bind
 module Match = Pulse.Checker.Match
 module WithLocal = Pulse.Checker.WithLocal
+module WithLocalArray = Pulse.Checker.WithLocalArray
 module While = Pulse.Checker.While
 module STApp = Pulse.Checker.STApp
 module Exists = Pulse.Checker.Exists
@@ -228,6 +229,9 @@ let rec check
 
     | Tm_WithLocal _ ->
       WithLocal.check g pre pre_typing post_hint res_ppname t check
+
+    | Tm_WithLocalArray _ ->
+      WithLocalArray.check g pre pre_typing post_hint res_ppname t check
 
     | Tm_Par _ ->
       Par.check g pre pre_typing post_hint res_ppname t check
