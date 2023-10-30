@@ -65,3 +65,42 @@ let _ = assert True by begin
   if r <> 120 then
     fail "bad"
 end
+
+(* map_seal and bind_seal *)
+let _ = assert True by begin
+  let f (x:int) : int = x*2 in
+  let s = seal 123 in
+  let s = map_seal s f in
+  let r = unseal s in
+  if r <> 246 then
+    fail "bad"
+end
+
+let _ = assert True by begin
+  let t = `(map_seal #int #int (seal 1) (fun (x:int) -> x+1)) in
+  print (term_to_string t);
+  let t = norm_term [primops] t in
+  print (term_to_string t);
+  if not (term_eq t (`seal u#0 #int 2)) then
+    fail "not equal";
+  ()
+end
+
+let _ = assert True by begin
+  let f (x:int) : sealed int = seal (x*2) in
+  let s = seal 123 in
+  let s = bind_seal s f in
+  let r = unseal s in
+  if r <> 246 then
+    fail "bad"
+end
+
+let _ = assert True by begin
+  let t = `(bind_seal #int #int (seal 1) (fun (x:int) -> seal (x+1))) in
+  print (term_to_string t);
+  let t = norm_term [primops] t in
+  print (term_to_string t);
+  if not (term_eq t (`seal u#0 #int 2)) then
+    fail "not equal";
+  ()
+end
