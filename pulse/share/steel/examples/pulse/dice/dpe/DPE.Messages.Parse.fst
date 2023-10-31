@@ -62,7 +62,12 @@ fn finish (c:read_cbor_success_t)
 
 assume Fits_u64 : squash (SZ.fits_u64)
 
-assume val impl_session_message : impl_typ Spec.session_message
+let impl_session_message : impl_typ Spec.session_message =
+  impl_t_array (
+    impl_array_group3_concat
+      (impl_array_group3_item impl_uint)
+      (impl_array_group3_item impl_bytes)
+  )
 
 #push-options "--z3rlimit 32"
 

@@ -112,6 +112,56 @@ let impl_t_choice
 = impl_t_choice' f1 f2
 
 inline_for_extraction noextract
+```pulse
+fn impl_uint'
+    (c: cbor)
+    (#v: Ghost.erased raw_data_item)
+requires
+        (raw_data_item_match c v ** pure (
+            opt_precedes (Ghost.reveal v) (None #raw_data_item)
+        ))
+returns res: bool
+ensures
+        (raw_data_item_match c v ** pure (
+            opt_precedes (Ghost.reveal v) (None #raw_data_item) /\
+            res == uint v
+        ))
+{
+    let mt = cbor_get_major_type c;
+    (mt = major_type_uint64)
+}
+```
+inline_for_extraction
+let impl_uint
+: impl_typ uint
+= impl_uint'
+
+inline_for_extraction noextract
+```pulse
+fn impl_bytes'
+    (c: cbor)
+    (#v: Ghost.erased raw_data_item)
+requires
+        (raw_data_item_match c v ** pure (
+            opt_precedes (Ghost.reveal v) (None #raw_data_item)
+        ))
+returns res: bool
+ensures
+        (raw_data_item_match c v ** pure (
+            opt_precedes (Ghost.reveal v) (None #raw_data_item) /\
+            res == bytes v
+        ))
+{
+    let mt = cbor_get_major_type c;
+    (mt = major_type_byte_string)
+}
+```
+inline_for_extraction
+let impl_bytes
+: impl_typ bytes
+= impl_bytes'
+
+inline_for_extraction noextract
 let impl_array_group3
     (#b: option raw_data_item)
     (g: array_group3 b)
@@ -236,6 +286,56 @@ val stick_trans
 : stt_ghost unit emp_inames
     ((p @==> q) ** (q @==> r))
     (fun _ -> p @==> r)
+
+inline_for_extraction noextract
+```pulse
+fn impl_array_group3_concat'
+    (#b: Ghost.erased (option raw_data_item))
+    (#g1: array_group3 b)
+    (f1: impl_array_group3 g1)
+    (#g2: array_group3 b)
+    (f2: impl_array_group3 g2)
+    (pi: R.ref cbor_array_iterator_t)
+    (#gi: Ghost.erased cbor_array_iterator_t)
+    (#l: Ghost.erased (list raw_data_item))
+requires
+        (R.pts_to pi gi **
+            cbor_array_iterator_match gi l **
+            pure (opt_precedes (Ghost.reveal l) (Ghost.reveal b))
+        )
+returns res: bool
+ensures
+        (exists_ (fun i' -> exists_ (fun l' ->
+            R.pts_to pi i' **
+            cbor_array_iterator_match i' l' **
+            (cbor_array_iterator_match i' l' @==> cbor_array_iterator_match gi l) **
+            pure (
+                opt_precedes (Ghost.reveal l) (Ghost.reveal b) /\
+                res == Some? (array_group3_concat g1 g2 l) /\
+                (res == true ==> Some?.v (array_group3_concat g1 g2 l) == l')
+            )
+        )))
+{
+    let test1 = eval_impl_array_group3 f1 pi;
+    if (test1) {
+        let test2 = eval_impl_array_group3 f2 pi;
+        stick_trans ();
+        test2
+    } else {
+        false
+    }
+}
+```
+
+inline_for_extraction noextract
+let impl_array_group3_concat
+    (#b: Ghost.erased (option raw_data_item))
+    (#g1: array_group3 b)
+    (f1: impl_array_group3 g1)
+    (#g2: array_group3 b)
+    (f2: impl_array_group3 g2)
+: Tot (impl_array_group3 (array_group3_concat g1 g2))
+= impl_array_group3_concat' f1 f2
 
 inline_for_extraction noextract
 ```pulse
