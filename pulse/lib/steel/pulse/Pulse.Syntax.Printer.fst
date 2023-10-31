@@ -344,7 +344,7 @@ and pattern_to_string (p:pattern) : T.Tac string =
       (String.concat " " (T.map (fun (p, _) -> pattern_to_string p) pats))
   | Pat_Constant c ->
     "<constant>"
-  | Pat_Var x ->
+  | Pat_Var x _ ->
     T.unseal x
   | Pat_Dot_Term None ->
     ""
