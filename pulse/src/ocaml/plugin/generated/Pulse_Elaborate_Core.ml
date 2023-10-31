@@ -501,6 +501,41 @@ let rec (elab_st_typing :
                   FStar_Reflection_V2_Data.Q_Explicit rbody1 in
               Pulse_Reflection_Util.mk_withlocal rret_u ra rinit rpre rret_t
                 rpost rbody2
+          | Pulse_Typing.T_WithLocalArray
+              (uu___, init, len, uu___1, init_t, c1, x, uu___2, uu___3,
+               uu___4, uu___5, body_typing)
+              ->
+              let rret_u = Pulse_Syntax_Base.comp_u c1 in
+              let ra = Pulse_Elaborate_Pure.elab_term init_t in
+              let rinit = Pulse_Elaborate_Pure.elab_term init in
+              let rlen = Pulse_Elaborate_Pure.elab_term len in
+              let rret_t =
+                Pulse_Elaborate_Pure.elab_term
+                  (Pulse_Syntax_Base.comp_res c1) in
+              let rpre =
+                Pulse_Elaborate_Pure.elab_term
+                  (Pulse_Syntax_Base.comp_pre c1) in
+              let rpost =
+                Pulse_Reflection_Util.mk_abs rret_t
+                  FStar_Reflection_V2_Data.Q_Explicit
+                  (Pulse_Elaborate_Pure.elab_term
+                     (Pulse_Syntax_Base.comp_post c1)) in
+              let rbody =
+                elab_st_typing
+                  (Pulse_Typing_Env.push_binding uu___ x
+                     Pulse_Syntax_Base.ppname_default
+                     (Pulse_Typing.mk_array init_t))
+                  (Pulse_Syntax_Naming.open_st_term_nv uu___1
+                     (Pulse_Syntax_Base.v_as_nv x))
+                  (Pulse_Typing.comp_withlocal_array_body x init_t init len
+                     c1) body_typing in
+              let rbody1 = FStar_Reflection_Typing.close_term rbody x in
+              let rbody2 =
+                Pulse_Reflection_Util.mk_abs
+                  (Pulse_Reflection_Util.mk_array ra)
+                  FStar_Reflection_V2_Data.Q_Explicit rbody1 in
+              Pulse_Reflection_Util.mk_withlocalarray rret_u ra rinit rlen
+                rpre rret_t rpost rbody2
           | Pulse_Typing.T_Admit
               (uu___,
                { Pulse_Syntax_Base.u = u; Pulse_Syntax_Base.res = res;

@@ -164,6 +164,27 @@ let (uu___is_REWRITE : hint_type -> Prims.bool) =
   fun projectee -> match projectee with | REWRITE _0 -> true | uu___ -> false
 let (__proj__REWRITE__item___0 : hint_type -> (vprop * vprop)) =
   fun projectee -> match projectee with | REWRITE _0 -> _0
+type array_init = {
+  init: FStar_Parser_AST.term ;
+  len: FStar_Parser_AST.term }
+let (__proj__Mkarray_init__item__init : array_init -> FStar_Parser_AST.term)
+  = fun projectee -> match projectee with | { init; len;_} -> init
+let (__proj__Mkarray_init__item__len : array_init -> FStar_Parser_AST.term) =
+  fun projectee -> match projectee with | { init; len;_} -> len
+type let_init =
+  | Array_initializer of array_init 
+  | Default_initializer of FStar_Parser_AST.term 
+let (uu___is_Array_initializer : let_init -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Array_initializer _0 -> true | uu___ -> false
+let (__proj__Array_initializer__item___0 : let_init -> array_init) =
+  fun projectee -> match projectee with | Array_initializer _0 -> _0
+let (uu___is_Default_initializer : let_init -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Default_initializer _0 -> true | uu___ -> false
+let (__proj__Default_initializer__item___0 :
+  let_init -> FStar_Parser_AST.term) =
+  fun projectee -> match projectee with | Default_initializer _0 -> _0
 type stmt'__Expr__payload = {
   e: FStar_Parser_AST.term }
 and stmt'__Assignment__payload =
@@ -180,7 +201,7 @@ and stmt'__LetBinding__payload =
   qualifier: mut_or_ref FStar_Pervasives_Native.option ;
   id: FStar_Ident.ident ;
   typ: FStar_Parser_AST.term FStar_Pervasives_Native.option ;
-  init: FStar_Parser_AST.term FStar_Pervasives_Native.option }
+  init1: let_init FStar_Pervasives_Native.option }
 and stmt'__Block__payload = {
   stmt: stmt }
 and stmt'__If__payload =
@@ -264,22 +285,21 @@ let (__proj__Mkstmt'__ArrayAssignment__payload__item__value :
 let (__proj__Mkstmt'__LetBinding__payload__item__qualifier :
   stmt'__LetBinding__payload -> mut_or_ref FStar_Pervasives_Native.option) =
   fun projectee ->
-    match projectee with | { qualifier; id; typ; init;_} -> qualifier
+    match projectee with | { qualifier; id; typ; init1 = init;_} -> qualifier
 let (__proj__Mkstmt'__LetBinding__payload__item__id :
   stmt'__LetBinding__payload -> FStar_Ident.ident) =
-  fun projectee -> match projectee with | { qualifier; id; typ; init;_} -> id
+  fun projectee ->
+    match projectee with | { qualifier; id; typ; init1 = init;_} -> id
 let (__proj__Mkstmt'__LetBinding__payload__item__typ :
   stmt'__LetBinding__payload ->
     FStar_Parser_AST.term FStar_Pervasives_Native.option)
   =
   fun projectee ->
-    match projectee with | { qualifier; id; typ; init;_} -> typ
+    match projectee with | { qualifier; id; typ; init1 = init;_} -> typ
 let (__proj__Mkstmt'__LetBinding__payload__item__init :
-  stmt'__LetBinding__payload ->
-    FStar_Parser_AST.term FStar_Pervasives_Native.option)
-  =
+  stmt'__LetBinding__payload -> let_init FStar_Pervasives_Native.option) =
   fun projectee ->
-    match projectee with | { qualifier; id; typ; init;_} -> init
+    match projectee with | { qualifier; id; typ; init1 = init;_} -> init
 let (__proj__Mkstmt'__Block__payload__item__stmt :
   stmt'__Block__payload -> stmt) =
   fun projectee -> match projectee with | { stmt = stmt1;_} -> stmt1
@@ -520,10 +540,11 @@ let (mk_let_binding :
   mut_or_ref FStar_Pervasives_Native.option ->
     FStar_Ident.ident ->
       FStar_Parser_AST.term FStar_Pervasives_Native.option ->
-        FStar_Parser_AST.term FStar_Pervasives_Native.option -> stmt')
+        let_init FStar_Pervasives_Native.option -> stmt')
   =
   fun qualifier ->
-    fun id -> fun typ -> fun init -> LetBinding { qualifier; id; typ; init }
+    fun id ->
+      fun typ -> fun init -> LetBinding { qualifier; id; typ; init1 = init }
 let (mk_block : stmt -> stmt') = fun stmt1 -> Block { stmt = stmt1 }
 let (mk_if :
   FStar_Parser_AST.term ->

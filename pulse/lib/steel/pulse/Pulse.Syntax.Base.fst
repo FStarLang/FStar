@@ -118,7 +118,7 @@ let rec eq_pattern (p1 p2 : pattern) : b:bool{ b <==> (p1 == p2) } =
   | Pat_Constant c1, Pat_Constant c2 ->
     fstar_const_eq c1 c2
 
-  | Pat_Var _, Pat_Var _ -> true
+  | Pat_Var _ _, Pat_Var _ _ -> true
   
   | Pat_Dot_Term to1, Pat_Dot_Term to2 -> eq_opt eq_tm to1 to2
 
@@ -224,6 +224,13 @@ let rec eq_st_term (t1 t2:st_term)
       Tm_WithLocal { binder=x2; initializer=e2; body=b2 } ->
       eq_tm x1.binder_ty x2.binder_ty &&
       eq_tm e1 e2 &&
+      eq_st_term b1 b2
+
+    | Tm_WithLocalArray { binder=x1; initializer=e1; length=n1; body=b1 },
+      Tm_WithLocalArray { binder=x2; initializer=e2; length=n2; body=b2 } ->
+      eq_tm x1.binder_ty x2.binder_ty &&
+      eq_tm e1 e2 &&
+      eq_tm n1 n2 &&
       eq_st_term b1 b2
 
     | Tm_Rewrite { t1=l1; t2=r1 },

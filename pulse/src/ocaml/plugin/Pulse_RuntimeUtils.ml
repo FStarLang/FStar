@@ -65,3 +65,4 @@ let deep_transform_to_unary_applications (t:S.term) =
     t
 
 let deep_compress (t:S.term) = FStar_Syntax_Compress.deep_compress_uvars t
+let map_seal (t:'a) (f:'a -> 'b) : 'b = f t

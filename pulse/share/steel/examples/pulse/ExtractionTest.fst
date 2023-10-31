@@ -1,7 +1,7 @@
 module ExtractionTest
 open Pulse.Lib.Pervasives
-module U32 = FStar.UInt32
 open FStar.UInt32
+module U32 = FStar.UInt32
 inline_for_extraction
 let zero () = 0ul
 
@@ -77,6 +77,21 @@ fn fill_array (x:array U32.t) (n:SZ.t) (v:U32.t)
 }
 ```
 
-
-// #pop-options
-// let test_write_10_pub x #n = write10 x
+```pulse
+fn extract_match (x:option bool)
+  requires emp
+  returns b:bool
+  ensures emp
+{
+  match x {
+    None ->
+    {
+      false
+    }
+    Some b ->
+    {
+      not b
+    }
+  }
+}
+```
