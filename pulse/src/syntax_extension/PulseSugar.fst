@@ -52,6 +52,15 @@ type hint_type =
   | RENAME of list (A.term & A.term) & option vprop
   | REWRITE of vprop & vprop
 
+type array_init = {
+  init : A.term;
+  len : A.term;
+}
+
+type let_init =
+  | Array_initializer of array_init
+  | Default_initializer of A.term
+
 type stmt' =
   | Open of lident
   
@@ -74,7 +83,7 @@ type stmt' =
       qualifier: option mut_or_ref;
       id:ident;
       typ:option A.term;
-      init:option A.term;
+      init:option let_init
     }
       
   | Block { 

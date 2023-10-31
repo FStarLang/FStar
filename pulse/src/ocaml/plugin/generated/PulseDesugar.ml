@@ -1175,47 +1175,89 @@ and (desugar_bind :
                           return uu___4) in
                op_let_Question uu___1
                  (fun s21 ->
-                    match lb.PulseSugar.init with
+                    match lb.PulseSugar.init1 with
                     | FStar_Pervasives_Native.None ->
                         failwith
                           "Uninitialized variables are not yet handled"
                     | FStar_Pervasives_Native.Some e1 ->
                         (match lb.PulseSugar.qualifier with
                          | FStar_Pervasives_Native.None ->
-                             let uu___2 = tosyntax env e1 in
-                             op_let_Question uu___2
-                               (fun s1 ->
-                                  let b =
-                                    PulseSyntaxWrapper.mk_binder
-                                      lb.PulseSugar.id annot in
-                                  let t =
-                                    let uu___3 = stapp_or_return env s1 in
-                                    match uu___3 with
-                                    | STTerm s11 -> mk_bind b s11 s21 r
-                                    | Return s11 ->
-                                        let uu___4 = as_term s11 in
-                                        mk_totbind b uu___4 s21 r in
-                                  return t)
+                             (if PulseSugar.uu___is_Array_initializer e1
+                              then
+                                failwith
+                                  "immutable local arrays are not yet supported"
+                              else ();
+                              (let uu___3 = e1 in
+                               match uu___3 with
+                               | PulseSugar.Default_initializer e11 ->
+                                   let uu___4 = tosyntax env e11 in
+                                   op_let_Question uu___4
+                                     (fun s1 ->
+                                        let b =
+                                          PulseSyntaxWrapper.mk_binder
+                                            lb.PulseSugar.id annot in
+                                        let t =
+                                          let uu___5 = stapp_or_return env s1 in
+                                          match uu___5 with
+                                          | STTerm s11 -> mk_bind b s11 s21 r
+                                          | Return s11 ->
+                                              let uu___6 = as_term s11 in
+                                              mk_totbind b uu___6 s21 r in
+                                        return t)))
                          | FStar_Pervasives_Native.Some (PulseSugar.MUT) ->
-                             let uu___2 = desugar_term env e1 in
-                             op_let_Question uu___2
-                               (fun e11 ->
-                                  let b =
-                                    PulseSyntaxWrapper.mk_binder
-                                      lb.PulseSugar.id annot in
-                                  let uu___3 =
-                                    PulseSyntaxWrapper.tm_let_mut b e11 s21 r in
-                                  return uu___3)
+                             let b =
+                               PulseSyntaxWrapper.mk_binder lb.PulseSugar.id
+                                 annot in
+                             (match e1 with
+                              | PulseSugar.Array_initializer
+                                  { PulseSugar.init = init;
+                                    PulseSugar.len = len;_}
+                                  ->
+                                  let uu___2 = desugar_term env init in
+                                  op_let_Question uu___2
+                                    (fun init1 ->
+                                       let uu___3 = desugar_term env len in
+                                       op_let_Question uu___3
+                                         (fun len1 ->
+                                            let uu___4 =
+                                              PulseSyntaxWrapper.tm_let_mut_array
+                                                b init1 len1 s21 r in
+                                            return uu___4))
+                              | PulseSugar.Default_initializer e11 ->
+                                  let uu___2 = desugar_term env e11 in
+                                  op_let_Question uu___2
+                                    (fun e12 ->
+                                       let uu___3 =
+                                         PulseSyntaxWrapper.tm_let_mut b e12
+                                           s21 r in
+                                       return uu___3))
                          | FStar_Pervasives_Native.Some (PulseSugar.REF) ->
-                             let uu___2 = desugar_term env e1 in
-                             op_let_Question uu___2
-                               (fun e11 ->
-                                  let b =
-                                    PulseSyntaxWrapper.mk_binder
-                                      lb.PulseSugar.id annot in
-                                  let uu___3 =
-                                    PulseSyntaxWrapper.tm_let_mut b e11 s21 r in
-                                  return uu___3))))
+                             let b =
+                               PulseSyntaxWrapper.mk_binder lb.PulseSugar.id
+                                 annot in
+                             (match e1 with
+                              | PulseSugar.Array_initializer
+                                  { PulseSugar.init = init;
+                                    PulseSugar.len = len;_}
+                                  ->
+                                  let uu___2 = desugar_term env init in
+                                  op_let_Question uu___2
+                                    (fun init1 ->
+                                       let uu___3 = desugar_term env len in
+                                       op_let_Question uu___3
+                                         (fun len1 ->
+                                            let uu___4 =
+                                              PulseSyntaxWrapper.tm_let_mut_array
+                                                b init1 len1 s21 r in
+                                            return uu___4))
+                              | PulseSugar.Default_initializer e11 ->
+                                  let uu___2 = desugar_term env e11 in
+                                  op_let_Question uu___2
+                                    (fun e12 ->
+                                       let uu___3 =
+                                         PulseSyntaxWrapper.tm_let_mut b e12
+                                           s21 r in
+                                       return uu___3)))))
 and (desugar_sequence :
   env_t ->
     PulseSugar.stmt ->
@@ -1503,21 +1545,26 @@ let (menv_push_ns : menv -> FStar_Ident.lid -> menv) =
 let (menv_push_bv :
   menv ->
     FStar_Ident.ident ->
-      PulseSugar.mut_or_ref FStar_Pervasives_Native.option -> menv)
+      PulseSugar.mut_or_ref FStar_Pervasives_Native.option ->
+        Prims.bool -> menv)
   =
   fun m ->
     fun x ->
       fun q ->
-        let uu___ = push_bv m.env x in
-        match uu___ with
-        | (env, bv) ->
-            (match q with
-             | FStar_Pervasives_Native.Some (PulseSugar.MUT) ->
-                 {
-                   map = ((x, bv, FStar_Pervasives_Native.None) :: (m.map));
-                   env
-                 }
-             | FStar_Pervasives_Native.None -> { map = (m.map); env })
+        fun auto_deref_applicable ->
+          let uu___ = push_bv m.env x in
+          match uu___ with
+          | (env, bv) ->
+              let m1 = { map = (m.map); env } in
+              if
+                (q = (FStar_Pervasives_Native.Some PulseSugar.MUT)) &&
+                  auto_deref_applicable
+              then
+                {
+                  map = ((x, bv, FStar_Pervasives_Native.None) :: (m1.map));
+                  env = (m1.env)
+                }
+              else m1
 let (menv_push_bvs : menv -> FStar_Ident.ident Prims.list -> menv) =
   fun m ->
     fun xs ->
@@ -1643,13 +1690,15 @@ let (add_derefs_in_scope :
                    let uu___1 =
                      let uu___2 =
                        let uu___3 =
-                         let uu___4 = read x in
+                         let uu___4 =
+                           let uu___5 = read x in
+                           PulseSugar.Default_initializer uu___5 in
                          FStar_Pervasives_Native.Some uu___4 in
                        {
                          PulseSugar.qualifier = FStar_Pervasives_Native.None;
                          PulseSugar.id = y;
                          PulseSugar.typ = FStar_Pervasives_Native.None;
-                         PulseSugar.init = uu___3
+                         PulseSugar.init1 = uu___3
                        } in
                      PulseSugar.LetBinding uu___2 in
                    {
@@ -1920,13 +1969,17 @@ let rec (transform_stmt_with_reads :
                                                index_needs value_needs)), m3))))
       | PulseSugar.LetBinding
           { PulseSugar.qualifier = qualifier; PulseSugar.id = id;
-            PulseSugar.typ = typ; PulseSugar.init = init;_}
+            PulseSugar.typ = typ; PulseSugar.init1 = init;_}
           ->
           let uu___ =
             match init with
             | FStar_Pervasives_Native.None ->
                 return (FStar_Pervasives_Native.None, [], m)
-            | FStar_Pervasives_Native.Some e ->
+            | FStar_Pervasives_Native.Some (PulseSugar.Default_initializer e)
+                ->
+                let mk_init e1 =
+                  FStar_Pervasives_Native.Some
+                    (PulseSugar.Default_initializer e1) in
                 (match e.FStar_Parser_AST.tm with
                  | FStar_Parser_AST.Var zlid ->
                      let uu___1 =
@@ -1937,8 +1990,7 @@ let rec (transform_stmt_with_reads :
                           let uu___2 = resolve_mut m e in
                           (match uu___2 with
                            | FStar_Pervasives_Native.None ->
-                               return
-                                 ((FStar_Pervasives_Native.Some e), [], m)
+                               return ((mk_init e), [], m)
                            | FStar_Pervasives_Native.Some
                                (uu___3, uu___4, FStar_Pervasives_Native.Some
                                 y)
@@ -1954,15 +2006,14 @@ let rec (transform_stmt_with_reads :
                                        FStar_Parser_AST.level =
                                          (e.FStar_Parser_AST.level)
                                      } in
-                                   FStar_Pervasives_Native.Some uu___7 in
+                                   mk_init uu___7 in
                                  (uu___6, [], m) in
                                return uu___5
                            | FStar_Pervasives_Native.Some
                                (x, uu___3, FStar_Pervasives_Native.None) ->
                                let uu___4 =
                                  let uu___5 =
-                                   let uu___6 = read x in
-                                   FStar_Pervasives_Native.Some uu___6 in
+                                   let uu___6 = read x in mk_init uu___6 in
                                  let uu___6 = bind_curval m x z in
                                  (uu___5, [], uu___6) in
                                return uu___4)
@@ -1972,23 +2023,46 @@ let rec (transform_stmt_with_reads :
                             (fun uu___4 ->
                                match uu___4 with
                                | (init1, needs, m1) ->
-                                   return
-                                     ((FStar_Pervasives_Native.Some init1),
-                                       needs, m1)))
+                                   return ((mk_init init1), needs, m1)))
                  | uu___1 ->
                      let uu___2 = transform_term m e in
                      op_let_Question uu___2
                        (fun uu___3 ->
                           match uu___3 with
                           | (init1, needs, m1) ->
-                              return
-                                ((FStar_Pervasives_Native.Some init1), needs,
-                                  m1))) in
+                              return ((mk_init init1), needs, m1)))
+            | FStar_Pervasives_Native.Some (PulseSugar.Array_initializer
+                { PulseSugar.init = init1; PulseSugar.len = len;_}) ->
+                let uu___1 = transform_term m init1 in
+                op_let_Question uu___1
+                  (fun uu___2 ->
+                     match uu___2 with
+                     | (init2, needs, m1) ->
+                         let uu___3 = transform_term m1 len in
+                         op_let_Question uu___3
+                           (fun uu___4 ->
+                              match uu___4 with
+                              | (len1, len_needs, m2) ->
+                                  return
+                                    ((FStar_Pervasives_Native.Some
+                                        (PulseSugar.Array_initializer
+                                           {
+                                             PulseSugar.init = init2;
+                                             PulseSugar.len = len1
+                                           })),
+                                      (FStar_List_Tot_Base.op_At needs
+                                         len_needs), m2))) in
           op_let_Question uu___
             (fun uu___1 ->
                match uu___1 with
                | (init1, needs, m1) ->
-                   let m2 = menv_push_bv m1 id qualifier in
+                   let auto_deref_applicable =
+                     match init1 with
+                     | FStar_Pervasives_Native.Some
+                         (PulseSugar.Array_initializer uu___2) -> false
+                     | uu___2 -> true in
+                   let m2 =
+                     menv_push_bv m1 id qualifier auto_deref_applicable in
                    let p1 =
                      {
                        PulseSugar.s =
@@ -1997,7 +2071,7 @@ let rec (transform_stmt_with_reads :
                               PulseSugar.qualifier = qualifier;
                               PulseSugar.id = id;
                               PulseSugar.typ = typ;
-                              PulseSugar.init = init1
+                              PulseSugar.init1 = init1
                             });
                        PulseSugar.range1 = (p.PulseSugar.range1)
                      } in

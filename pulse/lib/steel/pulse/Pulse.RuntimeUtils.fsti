@@ -39,3 +39,5 @@ val deep_compress (t:T.term) : r:T.term { t == r }
    Ideally, the F* typechecker should not be sensitive to the arity of application
    nodes. If and when that is fixed, we should remove this function *)
 val deep_transform_to_unary_applications (t:T.term) : r:T.term { t == r }
+val map_seal (s:FStar.Sealed.sealed 't) (f: 't -> 'u) : FStar.Sealed.sealed 'u
+      

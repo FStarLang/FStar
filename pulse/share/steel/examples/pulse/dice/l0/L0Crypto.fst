@@ -117,15 +117,13 @@ fn derive_DeviceID'
       ))
   )
 {
-  let cdigest = A.alloc 0uy (digest_len alg);
+  let mut cdigest = [| 0uy; digest_len alg |];
   hacl_hash alg dice_digest_len cdi cdigest;
 
   derive_key_pair
     deviceID_pub deviceID_priv
     (digest_len alg) cdigest
     deviceID_label_len deviceID_label;
-
-  A.free cdigest;
 }
 ```
 let derive_DeviceID = derive_DeviceID'
@@ -165,8 +163,8 @@ fn derive_AliasKey'
       ))
   )
 {
-  let cdigest = A.alloc 0uy (digest_len alg);
-  let adigest = A.alloc 0uy (digest_len alg);
+  let mut cdigest = [| 0uy; digest_len alg |];
+  let mut adigest = [| 0uy; digest_len alg |];
 
   hacl_hash alg dice_digest_len cdi cdigest;
   is_hashable_len_32;
@@ -176,9 +174,6 @@ fn derive_AliasKey'
     aliasKey_pub aliasKey_priv
     (digest_len alg) adigest
     aliasKey_label_len aliasKey_label;
-
-  A.free cdigest;
-  A.free adigest;
 }
 ```
 let derive_AliasKey = derive_AliasKey'

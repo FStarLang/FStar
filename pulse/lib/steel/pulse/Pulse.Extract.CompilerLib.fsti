@@ -20,6 +20,9 @@ val mk_mllb (mllb_name:mlident)
             (mllb_tysc:mltyscheme)
             (mllb_def:mlexpr) : mllb
 
+val mk_mut_mllb (mllb_name:mlident)
+                (mllb_tysc:mltyscheme)
+                (mllb_def:mlexpr) : mllb
 
 val mlletbinding : Type0
 val mk_mlletbinding (is_rec:bool) (lbs:list mllb) : mlletbinding

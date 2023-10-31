@@ -134,7 +134,7 @@ noeq
 type pattern =
   | Pat_Cons     : fv -> list (pattern & bool) -> pattern
   | Pat_Constant : constant -> pattern
-  | Pat_Var      : RT.pp_name_t -> pattern
+  | Pat_Var      : RT.pp_name_t -> ty:RT.sort_t -> pattern
   | Pat_Dot_Term : option term -> pattern
 
 type ctag =
@@ -243,6 +243,12 @@ type st_term' =
   | Tm_WithLocal {
       binder:binder;
       initializer:term;
+      body:st_term;
+    }
+  | Tm_WithLocalArray {
+      binder:binder;
+      initializer:term;
+      length:term;
       body:st_term;
     }
   | Tm_Rewrite {

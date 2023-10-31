@@ -100,7 +100,7 @@ fn sign_and_finalize_deviceIDCSR
               _cri_buf)))
     ))
 {
-  let deviceIDCRI_sig = A.alloc 0uy deviceIDCRI_len;
+  let mut deviceIDCRI_sig = [| 0uy; deviceIDCRI_len |];
 
   ed25519_sign deviceIDCRI_sig deviceID_priv deviceIDCRI_len deviceIDCRI_buf;
 
@@ -110,8 +110,6 @@ fn sign_and_finalize_deviceIDCSR
                       deviceIDCRI_sig;
                     
   serialize_deviceIDCSR deviceIDCRI_len deviceIDCSR deviceIDCSR_len deviceIDCSR_buf;
-
-  A.free deviceIDCRI_sig;
 }
 ```
 
@@ -216,7 +214,7 @@ fn sign_and_finalize_aliasKeyCRT
               _tbs_buf)))
     ))
 {
-  let aliasKeyTBS_sig = A.alloc 0uy aliasKeyTBS_len;
+  let mut aliasKeyTBS_sig = [| 0uy; aliasKeyTBS_len |];
 
   ed25519_sign aliasKeyTBS_sig deviceID_priv aliasKeyTBS_len aliasKeyTBS_buf;
 
@@ -226,8 +224,6 @@ fn sign_and_finalize_aliasKeyCRT
                       aliasKeyTBS_sig;
                     
   serialize_aliasKeyCRT aliasKeyTBS_len aliasKeyCRT aliasKeyCRT_len aliasKeyCRT_buf;
-
-  A.free aliasKeyTBS_sig;
 }
 ```
 
@@ -364,11 +360,11 @@ fn l0_main'
     aliasKey_pub aliasKey_priv cdi 
     record.fwid record.aliasKey_label_len record.aliasKey_label;
   
-  let authKeyID = A.alloc 0uy dice_digest_len;
+  let mut authKeyID = [| 0uy; dice_digest_len |];
   derive_AuthKeyID dice_hash_alg
     authKeyID deviceID_pub;
 
-  let deviceIDCRI = A.alloc 0uy deviceIDCRI_len;
+  let mut deviceIDCRI = [| 0uy; deviceIDCRI_len |];
   create_deviceIDCRI deviceID_pub
     deviceIDCRI_len deviceIDCRI
     record.deviceIDCSR_ingredients;
@@ -378,7 +374,7 @@ fn l0_main'
     deviceIDCSR_len deviceIDCSR
     record.deviceIDCSR_ingredients;
 
-  let aliasKeyTBS = A.alloc 0uy aliasKeyTBS_len;
+  let mut aliasKeyTBS = [| 0uy; aliasKeyTBS_len |];
   create_aliasKeyTBS record.fwid authKeyID
     deviceID_pub aliasKey_pub
     aliasKeyTBS_len aliasKeyTBS
@@ -392,11 +388,7 @@ fn l0_main'
   with s3. assert (A.pts_to deviceIDCRI s3);
   with s4. assert (A.pts_to aliasKeyTBS s4);
 
-  A.free authKeyID;
-  A.free deviceIDCRI;
-  A.free aliasKeyTBS;
-
-  fold (l0_record_perm record p repr);
+  fold l0_record_perm record repr p;
 }
 ```
 let l0_main = l0_main'

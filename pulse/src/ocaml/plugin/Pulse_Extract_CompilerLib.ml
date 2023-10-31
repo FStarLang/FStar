@@ -32,6 +32,18 @@ let mk_mllb (mllb_name:mlident)
       mllb_meta=[];
       print_typ=false }
 
+let mk_mut_mllb
+  (mllb_name:mlident)
+  (mllb_tysc:mltyscheme)
+  (mllb_def:mlexpr)
+: mllb 
+= { mllb_name;
+    mllb_tysc=Some mllb_tysc;
+    mllb_add_unit=false;
+    mllb_def;
+    mllb_meta=[Mutable];
+    print_typ=false }
+
 type mlletbinding = ML.mlletbinding
 type mlpattern = ML.mlpattern
 type mlconstant = ML.mlconstant

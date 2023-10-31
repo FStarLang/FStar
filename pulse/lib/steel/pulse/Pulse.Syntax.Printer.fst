@@ -275,6 +275,14 @@ let rec st_term_to_string' (level:string) (t:st_term)
         level
         (st_term_to_string' level body)
 
+    | Tm_WithLocalArray { binder; initializer; length; body } ->
+      sprintf "let mut %s = [| %s; %s |]\n%s%s"
+        (binder_to_string binder)
+        (term_to_string initializer)
+        (term_to_string length)
+        level
+        (st_term_to_string' level body)
+
     | Tm_Admit { ctag; u; typ; post } ->
       sprintf "%s<%s> %s%s"
         (match ctag with
@@ -375,6 +383,7 @@ let tag_of_st_term (t:st_term) =
   | Tm_While _ -> "Tm_While"
   | Tm_Par _ -> "Tm_Par"
   | Tm_WithLocal _ -> "Tm_WithLocal"
+  | Tm_WithLocalArray _ -> "Tm_WithLocalArray"
   | Tm_Rewrite _ -> "Tm_Rewrite"
   | Tm_Admit _ -> "Tm_Admit"
   | Tm_ProofHintWithBinders _ -> "Tm_ProofHintWithBinders"
@@ -402,6 +411,7 @@ let rec print_st_head (t:st_term)
   | Tm_Par _ -> "Par"
   | Tm_Rewrite _ -> "Rewrite"
   | Tm_WithLocal _ -> "WithLocal"
+  | Tm_WithLocalArray _ -> "WithLocalArray"
   | Tm_STApp { head = p } -> print_head p
   | Tm_IntroPure _ -> "IntroPure"
   | Tm_IntroExists _ -> "IntroExists"
@@ -428,6 +438,7 @@ let rec print_skel (t:st_term) =
   | Tm_Par _ -> "Par"
   | Tm_Rewrite _ -> "Rewrite"
   | Tm_WithLocal _ -> "WithLocal"
+  | Tm_WithLocalArray _ -> "WithLocalArray"
   | Tm_STApp { head = p } -> print_head p
   | Tm_IntroPure _ -> "IntroPure"
   | Tm_IntroExists _ -> "IntroExists"

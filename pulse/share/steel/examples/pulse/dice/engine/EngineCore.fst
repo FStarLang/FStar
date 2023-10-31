@@ -42,11 +42,11 @@ fn authenticate_l0_image (record:engine_record_t) (#repr:Ghost.erased engine_rec
   let mut b = false;
   if valid_header_sig
   {
-    let hash_buf = A.alloc 0uy dice_digest_len;
+    let mut hash_buf = [| 0uy; dice_digest_len |];
     hacl_hash dice_hash_alg record.l0_binary_size record.l0_binary hash_buf;
     let res = compare dice_digest_len hash_buf record.l0_binary_hash;
-    A.free hash_buf;
-    fold (engine_record_perm record p repr);
+    with s. assert (A.pts_to hash_buf s);
+    fold engine_record_perm record repr p;
     res
   }
   else
@@ -70,8 +70,8 @@ fn compute_cdi (cdi:cdi_t) (uds:A.larray U8.t (US.v uds_len)) (record:engine_rec
             pure (cdi_functional_correctness c1 uds_bytes 'repr)
 {
   A.pts_to_len uds;
-  let uds_digest = A.alloc 0uy dice_digest_len;
-  let l0_digest = A.alloc 0uy dice_digest_len;
+  let mut uds_digest = [| 0uy; dice_digest_len |];
+  let mut l0_digest = [| 0uy; dice_digest_len |];
   hacl_hash dice_hash_alg uds_len uds uds_digest;
 
   unfold engine_record_perm record p 'repr;
@@ -83,9 +83,6 @@ fn compute_cdi (cdi:cdi_t) (uds:A.larray U8.t (US.v uds_len)) (record:engine_rec
   hacl_hmac dice_hash_alg cdi 
     uds_digest dice_digest_len
     l0_digest dice_digest_len;
-
-  A.free l0_digest;
-  A.free uds_digest;
 }
 ```
 
