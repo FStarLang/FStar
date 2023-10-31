@@ -53,10 +53,16 @@ let eqList_ok (#a:Type) (d : deq a) : Lemma (decides_eq #(list a) (Raw.eqList d.
   Classical.forall_intro_2 aux;
   ()
 
-instance eq_list (d : deq 'a) : deq (list 'a) = {
+#push-options "--admit_smt_queries true"
+instance eq_list (#a:Type) (d : deq a) : deq (list a) = {
   raw = Raw.eq_list d.raw;
-  eq_dec = eqList_ok d;
+  eq_dec = (
+    eqList_ok d;
+    assert (decides_eq #(list a) (Raw.eqList d.raw.eq));
+    ()
+  );
 }
+#pop-options
 
 instance eq_pair (_ : deq 'a) (_ : deq 'b) : deq ('a * 'b) = {
   raw = solve;

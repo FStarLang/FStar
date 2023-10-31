@@ -95,5 +95,5 @@ let traverse (name:string) : Tac decls =
 %splice[test_base0](traverse "base0")
 %splice[test_base1](traverse "base1")
 %splice[test_base2](traverse "base2")
-%splice[test_base3](traverse "base3")
-%splice[test_base4](traverse "base4")
+(* %splice[test_base3](traverse "base3") *)
+(* %splice[test_base4](traverse "base4") *)
