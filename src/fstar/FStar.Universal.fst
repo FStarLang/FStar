@@ -263,7 +263,7 @@ let load_interface_decls env interface_file_name : TcEnv.env_t =
 (***********************************************************************)
 
 (* Extraction to OCaml, F# or Krml *)
-let emit (mllibs:list FStar.Extraction.ML.Syntax.mllib) =
+let emit (mllibs:list (uenv & FStar.Extraction.ML.Syntax.mllib)) =
   let opt = Options.codegen () in
   if opt <> None then
     let ext = match opt with
@@ -271,25 +271,46 @@ let emit (mllibs:list FStar.Extraction.ML.Syntax.mllib) =
       | Some Options.OCaml
       | Some Options.Plugin -> ".ml"
       | Some Options.Krml -> ".krml"
+      | Some Options.Extension -> ".ast"
       | _ -> failwith "Unrecognized option"
     in
     match opt with
     | Some Options.FSharp | Some Options.OCaml | Some Options.Plugin ->
-        (* When bootstrapped in F#, this will use the old printer in
-           FStar.Extraction.ML.Code for both OCaml and F# extraction.
-           When bootstarpped in OCaml, this will use the old printer
-           for F# extraction and the new printer for OCaml extraction. *)
-        let outdir = Options.output_dir() in
-        List.iter (FStar.Extraction.ML.PrintML.print outdir ext) mllibs
+      (* When bootstrapped in F#, this will use the old printer in
+         FStar.Extraction.ML.Code for both OCaml and F# extraction.
+         When bootstarpped in OCaml, this will use the old printer
+         for F# extraction and the new printer for OCaml extraction. *)
+      let outdir = Options.output_dir() in
+      List.iter (FStar.Extraction.ML.PrintML.print outdir ext) (List.map snd mllibs)
+
+    | Some Options.Extension ->
+      //
+      // In the Extension mode, we dump (bindings_of_uenv & ml decls)
+      //   in the binary format to a file
+      //
+      List.iter (fun (env, m) ->
+        let FStar.Extraction.ML.Syntax.MLLib ms = m in
+        List.iter (fun m ->
+          let mname, modul, _ = m in
+          let filename = String.concat "_" (fst mname @ [snd mname]) in
+          match modul with
+          | Some (_, decls) ->
+            let bindings = FStar.Extraction.ML.UEnv.bindings_of_uenv env in 
+            save_value_to_file (Options.prepend_output_dir (filename^ext)) (bindings, decls)
+          | None ->
+            failwith "Unexpected ml modul in Extension extraction mode"
+        ) ms
+      ) mllibs
+
     | Some Options.Krml ->
-        let programs = List.collect Extraction.Krml.translate mllibs in
-        let bin: Extraction.Krml.binary_format = Extraction.Krml.current_version, programs in
-        begin match programs with
-        | [ name, _ ] ->
-            save_value_to_file (Options.prepend_output_dir (name ^ ext)) bin
-        | _ ->
-            save_value_to_file (Options.prepend_output_dir "out.krml") bin
-        end
+      let programs = List.collect Extraction.Krml.translate (List.map snd mllibs) in
+      let bin: Extraction.Krml.binary_format = Extraction.Krml.current_version, programs in
+      begin match programs with
+            | [ name, _ ] ->
+              save_value_to_file (Options.prepend_output_dir (name ^ ext)) bin
+            | _ ->
+             save_value_to_file (Options.prepend_output_dir "out.krml") bin
+      end
    | _ -> failwith "Unrecognized option"
 
 let tc_one_file
@@ -381,7 +402,7 @@ let tc_one_file
       else check_mod () //don't add a hints file for modules that are not actually verified
   in
   if not (Options.cache_off()) then
-      let r = Ch.load_module_from_cache env fn in
+      let r = Ch.load_module_from_cache (tcenv_of_uenv env) fn in
       let r =
         (* If --force and this file was given in the command line,
          * forget about the cache we just loaded and recheck the file.
@@ -413,7 +434,7 @@ let tc_one_file
         //but we will not write out a .checked file for an unverified dependence
         //of some file that should be checked
         //(i.e. we DO write .checked.lax files for dependencies even if not provided as an argument)
-        then Ch.store_module_to_cache env fn parsing_data tc_result;
+        then Ch.store_module_to_cache (tcenv_of_uenv env) fn parsing_data tc_result;
         tc_result, mllib, env
 
       | Some tc_result ->
@@ -509,17 +530,23 @@ let tc_one_file_from_remaining (remaining:list string) (env:uenv)
   remaining, nmods, mllib, env
 
 let rec tc_fold_interleave (deps:FStar.Parser.Dep.deps)  //used to query parsing data
-                           (acc:list tc_result * list FStar.Extraction.ML.Syntax.mllib * uenv)
+                           (acc:list tc_result &
+                                list (uenv & FStar.Extraction.ML.Syntax.mllib) &  // initial env in which this module is extracted
+                                uenv)
                            (remaining:list string) =
-  let as_list = function None -> [] | Some l -> [l] in
+  let as_list env mllib =
+    match mllib with
+    | None -> []
+    | Some mllib -> [env, mllib] in
+
   match remaining with
     | [] -> acc
     | _  ->
-      let mods, mllibs, env = acc in
-      let remaining, nmod, mllib, env = tc_one_file_from_remaining remaining env deps in
+      let mods, mllibs, env_before = acc in
+      let remaining, nmod, mllib, env = tc_one_file_from_remaining remaining env_before deps in
       if not (Options.profile_group_by_decls())
       then Profiling.report_and_clear (Ident.string_of_lid nmod.checked_module.name);
-      tc_fold_interleave deps (mods@[nmod], mllibs@as_list mllib, env) remaining
+      tc_fold_interleave deps (mods@[nmod], mllibs@(as_list env_before mllib), env) remaining
 
 (***********************************************************************)
 (* Batch mode: checking many files                                     *)

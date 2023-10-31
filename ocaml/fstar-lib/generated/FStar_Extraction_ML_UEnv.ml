@@ -502,6 +502,7 @@ let (initial_mlident_map : unit -> Prims.string FStar_Compiler_Util.psmap) =
                 FStar_Extraction_ML_Syntax.ocamlkeywords
             | FStar_Pervasives_Native.Some (FStar_Options.Krml) ->
                 FStar_Extraction_ML_Syntax.krml_keywords ()
+            | FStar_Pervasives_Native.Some (FStar_Options.Extension) -> []
             | FStar_Pervasives_Native.None -> [] in
           let uu___3 = FStar_Compiler_Util.psmap_empty () in
           FStar_Compiler_List.fold_right
@@ -865,7 +866,12 @@ let (extend_fv :
                    tydef_declarations = (g1.tydef_declarations);
                    currentModule = (g1.currentModule)
                  }, mlsymbol, exp_binding1)
-          else failwith "freevars found"
+          else
+            (let uu___2 =
+               let uu___3 =
+                 FStar_Extraction_ML_Syntax.mltyscheme_to_string t_x in
+               FStar_Compiler_Util.format1 "freevars found (%s)" uu___3 in
+             failwith uu___2)
 let (extend_erased_fv : uenv -> FStar_Syntax_Syntax.fv -> uenv) =
   fun g ->
     fun f ->

@@ -1,0 +1,4 @@
+{"kind": "protocol-info", "rest": "[...]"}
+{"kind": "response", "query-id": "1", "response": [], "status": "success"}
+{"kind": "response", "query-id": "2", "response": [{"level": "error", "message": "  - Could not prove post-condition\n  - The SMT solver could not prove the query. Use --query_stats for more details.\n  - See also <input>(1,25-1,32)\n", "number": 19, "ranges": [{"beg": [1, 35], "end": [1, 37], "fname": "<input>"}, {"beg": [1, 25], "end": [1, 32], "fname": "<input>"}]}], "status": "failure"}
+{"kind": "response", "query-id": "3", "response": [{"level": "error", "message": "  - Identifier not found: [Harness.always_foo]\n  - Module Harness resolved into Harness, which does not belong to the list of\n    modules in scope, namely:\n      FStar.Mul, FStar.Classical, FStar.Classical.Sugar, FStar.Pervasives,\n      FStar.Pervasives.Native, Prims\n", "number": 72, "ranges": [{"beg": [1, 43], "end": [1, 53], "fname": "<input>"}]}], "status": "failure"}

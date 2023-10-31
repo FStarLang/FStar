@@ -49,6 +49,15 @@ module TcUtil = FStar.TypeChecker.Util
 module EMB    = FStar.Syntax.Embeddings
 module Cfg    = FStar.TypeChecker.Cfg
 
+type tydef_declaration = (mlsymbol * FStar.Extraction.ML.Syntax.metadata * int) //int is the arity
+
+type iface = {
+    iface_module_name: mlpath;
+    iface_bindings: list (fv * exp_binding);
+    iface_tydefs: list (either tydef tydef_declaration);
+    iface_type_names:list (fv * mlpath);
+}
+
 let extension_extractor_table
   : BU.smap extension_extractor
   = FStar.Compiler.Util.smap_create 20
@@ -237,15 +246,6 @@ let bundle_as_inductive_families env ses quals
 (********************************************************************************************)
 (* Extract Interfaces *)
 (********************************************************************************************)
-
-type tydef_declaration = (mlsymbol * FStar.Extraction.ML.Syntax.metadata * int) //int is the arity
-
-type iface = {
-    iface_module_name: mlpath;
-    iface_bindings: list (fv * exp_binding);
-    iface_tydefs: list (either tydef tydef_declaration);
-    iface_type_names:list (fv * mlpath);
-}
 
 let empty_iface = {
     iface_module_name=[], "";
@@ -794,6 +794,30 @@ let rec extract_sigelt_iface (g:uenv) (se:sigelt) : uenv * iface =
       else g, empty_iface //it's not assumed, so wait for the corresponding Sig_let to generate code
                     //or, it must be erased
 
+    (* Extension extraction is only supported for non-recursive let bindings *)
+    | Sig_let { lbs=(false, [lb]) } when (Cons? se.sigmeta.sigmeta_extension_data) -> (
+      match List.tryPick
+              (fun (ext, blob) ->
+               match lookup_extension_extractor ext with
+               | None -> None
+               | Some extractor -> Some (ext, blob, extractor))
+            se.sigmeta.sigmeta_extension_data
+      with
+      | None ->
+        let g, bindings = Term.extract_lb_iface g (false, [lb]) in
+        g, iface_of_bindings bindings
+      | Some (ext, blob, extractor) ->
+        let res = extractor.extract_sigelt_iface g se blob in
+        match res with
+        | Inl res -> res
+        | Inr err ->
+          Errors.raise_error
+            (Errors.Fatal_ExtractionUnsupported,
+             BU.format2 "Extension %s failed to extract iface: %s" ext err)
+            se.sigrng
+
+    )
+
     | Sig_let {lbs} ->
       let g, bindings = Term.extract_lb_iface g lbs in
       g, iface_of_bindings bindings
@@ -1032,19 +1056,19 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list mlmodule1 =
              extract_sig_let g se
 
            | Some (ext, blob, extractor) ->
-              match extractor g blob with
-              | Inl (term, e_tag, ty) ->
+              match extractor.extract_sigelt g se blob with
+              | Inl decls ->
                 let meta = extract_metadata se.sigattrs in
-                let ty = Term.term_as_mlty g lb.lbtyp in
-                let tysc = [], ty in
-                let g, mlid, _ = UEnv.extend_lb g lb.lbname lb.lbtyp tysc false in
-                let mllet = MLM_Let (NonRec, [{ mllb_name = mlid;
-                                                mllb_tysc= Some tysc;
-                                                mllb_add_unit = false;
-                                                mllb_def=term;
-                                                mllb_meta=meta;
-                                                print_typ=false }]) in
-                g, [mllet]
+                List.fold_left (fun (g, decls) d ->
+                  match d with
+                  | MLM_Let (NonRec, [mllb]) ->
+                    let g, mlid, _ =
+                      UEnv.extend_lb g lb.lbname lb.lbtyp (must mllb.mllb_tysc) mllb.mllb_add_unit in
+                    let mllb = { mllb with mllb_name = mlid; mllb_meta = meta } in
+                    g, decls@[MLM_Let (NonRec, [mllb])]
+                  | _ ->
+                    failwith (BU.format1 "Unexpected ML decl returned by the extension: %s" (mlmodule1_to_string d))
+                ) (g, []) decls
               | Inr err ->
                 Errors.raise_error
                   (Errors.Fatal_ExtractionUnsupported,

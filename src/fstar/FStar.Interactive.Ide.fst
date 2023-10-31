@@ -245,6 +245,7 @@ let unpack_interactive_query json =
                                        push_line = arg "line" |> js_int;
                                        push_column = arg "column" |> js_int;
                                        push_peek_only = query = "peek" })
+           | "push-partial-checked-file" -> PushPartialCheckedFile (arg "until-lid" |> js_str)
            | "full-buffer" -> FullBuffer (arg "code" |> js_str,
                                           parse_full_buffer_kind (arg "kind" |> js_str), 
                                           arg "with-symbols" |> js_bool)
@@ -634,6 +635,58 @@ let write_full_buffer_fragment_progress (di:Incremental.fragment_progress) =
     | FullBufferFinished ->
       write_progress (Some "full-buffer-finished") []
 
+let trunc_modul (m: SS.modul) (pred : SS.sigelt -> bool) : bool * SS.modul =
+  let rec filter decls acc =
+    match decls with
+    | [] -> false, List.rev acc
+    | d::ds ->
+      if pred d then true, List.rev acc else filter ds (d::acc) in
+  let found, decls = filter m.declarations [] in
+  found, { m with SS.declarations = decls }
+
+let load_partial_checked_file (env: TcEnv.env) (filename: string) (until_lid: string) =
+  match FStar.CheckedFiles.load_module_from_cache env filename with
+  | None -> failwith ("cannot find checked file for " ^ filename)
+  | Some tc_result ->
+  let _, env = with_dsenv_of_tcenv env (fun ds -> (), DsEnv.set_current_module ds tc_result.checked_module.name) in
+  let _, env = with_dsenv_of_tcenv env (fun ds -> (), DsEnv.set_iface_decls ds tc_result.checked_module.name []) in
+  let pred se =
+    let rec pred lids = match lids with
+      | [] -> false
+      | lid::lids -> if string_of_lid lid = until_lid then true else pred lids in
+    pred (Syntax.Util.lids_of_sigelt se) in
+  let found_decl, m = trunc_modul tc_result.checked_module pred in
+  if not found_decl then failwith ("did not find declaration with lident " ^ until_lid) else
+  let _, env = with_dsenv_of_tcenv env <|
+      FStar.ToSyntax.ToSyntax.add_partial_modul_to_env m tc_result.mii
+        (FStar.TypeChecker.Normalize.erase_universes env) in
+  let env = FStar.TypeChecker.Tc.load_partial_checked_module env m in
+  let _, env = with_dsenv_of_tcenv env (fun ds -> (), DsEnv.set_current_module ds m.name) in
+  let env = FStar.TypeChecker.Env.set_current_module env m.name in
+  ignore (FStar.SMTEncoding.Encode.encode_modul env m);
+  // TODO: opens / includes
+  env, m
+
+let run_load_partial_file st decl_name: (query_status & json) & either repl_state int =
+  match load_deps st with
+  | Inr st ->
+    let errors = List.map rephrase_dependency_error (collect_errors ()) in
+    let js_errors = errors |> List.map json_of_issue in
+    ((QueryNOK, JsonList js_errors), Inl st)
+  | Inl (st, deps) ->
+    // We have to specify a push_kind here, otherwise push_repl will not snapshot the environment.
+    let st = push_repl "load partial file" (Some FullCheck) Noop st in
+    let env = st.repl_env in
+    match with_captured_errors env Util.sigint_raise
+              (fun env -> Some <| load_partial_checked_file env st.repl_fname decl_name) with
+    | Some (env, curmod) when get_err_count () = 0 ->
+      let st = { st with repl_curmod = Some curmod; repl_env = env } in
+      ((QueryOK, JsonList []), Inl st)
+    | _ ->
+      let json_error_list = collect_errors () |> List.map json_of_issue in
+      let json_errors = JsonList json_error_list in
+      let st = pop_repl "load partial file" st in
+      (QueryNOK, json_errors), Inl st
 
 let run_push_without_deps st query
   : (query_status & json) & either repl_state int =
@@ -1087,6 +1140,7 @@ let rec run_query st (q: query) : (query_status * list json) * either repl_state
   | Segment c -> as_json_list (run_segment st c)
   | VfsAdd (fname, contents) -> as_json_list (run_vfs_add st fname contents)
   | Push pquery -> as_json_list (run_push st pquery)
+  | PushPartialCheckedFile decl_name -> as_json_list (run_load_partial_file st decl_name)
   | Pop -> as_json_list (run_pop st)
   | FullBuffer (code, full_kind, with_symbols) ->
     let open FStar.Interactive.Incremental in

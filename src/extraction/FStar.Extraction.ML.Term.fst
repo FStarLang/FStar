@@ -160,7 +160,7 @@ let rec is_arity_aux tcenv t =
     | Tm_unknown
     | Tm_delayed _
     | Tm_ascribed _
-    | Tm_meta _ -> failwith "Impossible: is_arity"
+    | Tm_meta _ -> failwith (BU.format1 "Impossible: is_arity (%s)" (Print.tag_of_term t))
     | Tm_lazy i -> is_arity_aux tcenv (U.unfold_lazy i)
     | Tm_uvar _
     | Tm_constant _
@@ -1314,7 +1314,7 @@ let extract_lb_iface (g:uenv) (lbs:letbindings)
     let is_rec = not is_top && fst lbs in
     let lbs = extract_lb_sig g lbs in
     BU.fold_map (fun env
-                     (lbname, e_tag, (typ, (binders, mltyscheme)), add_unit, _body) ->
+                     (lbname, _e_tag, (typ, (_binders, mltyscheme)), add_unit, _body) ->
                   let env, _, exp_binding =
                       UEnv.extend_lb env lbname typ mltyscheme add_unit in
                   env, (BU.right lbname, exp_binding))

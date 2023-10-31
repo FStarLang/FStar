@@ -1188,10 +1188,7 @@ let tc_modul (env0:env) (m:modul) (iface_exists:bool) :(modul * env) =
   // by Syntax.compress.deep_compress, so they are safe to output.
   finish_partial_modul false iface_exists env modul
 
-let load_checked_module (en:env) (m:modul) :env =
-  (* Another compression pass to make sure we are not loading a corrupt
-  module. *)
-  let m = deep_compress_modul m in
+let load_checked_module_sigelts (en:env) (m:modul) : env =
   //This function tries to very carefully mimic the effect of the environment
   //of having checked the module from scratch, i.e., using tc_module below
   let env = Env.set_current_module en m.name in
@@ -1210,11 +1207,22 @@ let load_checked_module (en:env) (m:modul) :env =
              env)
              env
              m.declarations in
+  env
+
+let load_checked_module (en:env) (m:modul) :env =
+  (* Another compression pass to make sure we are not loading a corrupt
+  module. *)
+  let m = deep_compress_modul m in
+  let env = load_checked_module_sigelts en m in
   //And then call finish_partial_modul, which is the normal workflow of tc_modul below
   //except with the flag `must_check_exports` set to false, since this is already a checked module
   //the second true flag is for iface_exists, used to determine whether should extract interface or not
   let _, env = finish_partial_modul true true env m in
   env
+
+let load_partial_checked_module (en:env) (m:modul) : env =
+  let m = deep_compress_modul m in
+  load_checked_module_sigelts en m
 
 let check_module env m b =
   if Options.debug_any()
