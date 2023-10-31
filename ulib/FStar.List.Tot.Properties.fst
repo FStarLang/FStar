@@ -572,6 +572,17 @@ let rec partition_count_forall #a f l= match l with
   | [] -> ()
   | hd::tl -> partition_count_forall f tl
 
+(** Properties about subset **)
+
+let rec mem_subset (#a: eqtype) (la lb: list a)
+    : Lemma (requires (forall x. mem x la ==> mem x lb))
+            (ensures (subset la lb)) =
+  match la with
+  | [] -> ()
+  | hd :: tl -> mem_subset tl lb
+
+let subset_reflexive (#a: eqtype) (l: list a)
+    : Lemma (subset l l) [SMTPat (subset l l)] = mem_subset l l
 
 (** Correctness of quicksort **)
 
