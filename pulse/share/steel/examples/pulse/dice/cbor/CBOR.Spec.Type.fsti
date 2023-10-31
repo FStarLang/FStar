@@ -84,6 +84,57 @@ val holds_on_raw_data_item_eq
 : Lemma
   (holds_on_raw_data_item p x == holds_on_raw_data_item' p x)
 
+let holds_on_raw_data_item_eq_simple
+  (p: (raw_data_item -> bool))
+  (v: simple_value)
+: Lemma
+  (holds_on_raw_data_item p (Simple v) == p (Simple v))
+  [SMTPat (holds_on_raw_data_item p (Simple v))]
+= holds_on_raw_data_item_eq p (Simple v)
+
+let holds_on_raw_data_item_eq_int64
+  (p: (raw_data_item -> bool))
+  (typ: major_type_uint64_or_neg_int64)
+  (v: U64.t)
+: Lemma
+  (holds_on_raw_data_item p (Int64 typ v) == p (Int64 typ v))
+  [SMTPat (holds_on_raw_data_item p (Int64 typ v))]
+= holds_on_raw_data_item_eq p (Int64 typ v)
+
+let holds_on_raw_data_item_eq_string
+  (p: (raw_data_item -> bool))
+  (typ: major_type_byte_string_or_text_string)
+  (v: Seq.seq U8.t { FStar.UInt.fits (Seq.length v) U64.n })
+: Lemma
+  (holds_on_raw_data_item p (String typ v) == p (String typ v))
+  [SMTPat (holds_on_raw_data_item p (String typ v))]
+= holds_on_raw_data_item_eq p (String typ v)
+
+let holds_on_raw_data_item_eq_array
+  (p: (raw_data_item -> bool))
+  (v: list raw_data_item { FStar.UInt.fits (List.Tot.length v) U64.n })
+: Lemma
+  (holds_on_raw_data_item p (Array v) == (p (Array v) && List.Tot.for_all (holds_on_raw_data_item p) v))
+  [SMTPat (holds_on_raw_data_item p (Array v))]
+= holds_on_raw_data_item_eq p (Array v)
+
+let holds_on_raw_data_item_eq_map
+  (p: (raw_data_item -> bool))
+  (v: list (raw_data_item & raw_data_item) { FStar.UInt.fits (List.Tot.length v) U64.n })
+: Lemma
+  (holds_on_raw_data_item p (Map v) == (p (Map v) && List.Tot.for_all (holds_on_pair (holds_on_raw_data_item p)) v))
+  [SMTPat (holds_on_raw_data_item p (Map v))]
+= holds_on_raw_data_item_eq p (Map v)
+
+let holds_on_raw_data_item_eq_tagged
+  (p: (raw_data_item -> bool))
+  (tag: U64.t)
+  (v: raw_data_item)
+: Lemma
+  (holds_on_raw_data_item p (Tagged tag v) <==> (p (Tagged tag v) && holds_on_raw_data_item p v))
+  [SMTPat (holds_on_raw_data_item p (Tagged tag v))]
+= holds_on_raw_data_item_eq p (Tagged tag v)
+
 noextract
 let map_entry_order
   (#key: Type)
