@@ -499,18 +499,9 @@ let (pack_ln :
     | FStar_Reflection_V2_Data.Tv_App (l, (r, q)) ->
         let q' = pack_aqual q in FStar_Syntax_Util.mk_app l [(r, q')]
     | FStar_Reflection_V2_Data.Tv_Abs (b, t) ->
-        FStar_Syntax_Syntax.mk
-          (FStar_Syntax_Syntax.Tm_abs
-             {
-               FStar_Syntax_Syntax.bs = [b];
-               FStar_Syntax_Syntax.body = t;
-               FStar_Syntax_Syntax.rc_opt = FStar_Pervasives_Native.None
-             }) t.FStar_Syntax_Syntax.pos
+        FStar_Syntax_Util.abs [b] t FStar_Pervasives_Native.None
     | FStar_Reflection_V2_Data.Tv_Arrow (b, c) ->
-        FStar_Syntax_Syntax.mk
-          (FStar_Syntax_Syntax.Tm_arrow
-             { FStar_Syntax_Syntax.bs1 = [b]; FStar_Syntax_Syntax.comp = c })
-          c.FStar_Syntax_Syntax.pos
+        FStar_Syntax_Util.flat_arrow [b] c
     | FStar_Reflection_V2_Data.Tv_Type u ->
         FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_type u)
           FStar_Compiler_Range_Type.dummyRange
