@@ -477,9 +477,10 @@ let optimized_haseq_scheme (sig_bndle:sigelt) (tcs:list sigelt) (datas:list sige
   in
   let usubst, us = SS.univ_var_opening us in
 
-  //we need the sigbundle for the inductive to be in the type environment
-  let env = Env.push_sigelt env0 sig_bndle in
-  env.solver.push "haseq";
+  // We need the sigbundle for the inductive to be in the type environment.
+  // We can force this push as this is only temporary, it will be rolled back
+  let env = Env.push env0 "haseq" in
+  let env = Env.push_sigelt_force env sig_bndle in
   env.solver.encode_sig env sig_bndle;
   let env = Env.push_univ_vars env us in
 
@@ -509,7 +510,8 @@ let optimized_haseq_scheme (sig_bndle:sigelt) (tcs:list sigelt) (datas:list sige
             sigopens_and_abbrevs = []; } ]
   ) [] axioms in
 
-  env.solver.pop "haseq";
+  ignore (Env.pop env "haseq");
+
   ses
 
 //folding function for t_datas

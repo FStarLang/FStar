@@ -419,13 +419,13 @@ let (tc_inductive' :
                    if uu___3
                    then ()
                    else
-                     (let env1 =
+                     (let env2 =
                         FStar_TypeChecker_Env.push_sigelt env sig_bndle1 in
                       FStar_Compiler_List.iter
                         (fun ty ->
                            let b =
                              FStar_TypeChecker_Positivity.check_strict_positivity
-                               env1 lids ty in
+                               env2 lids ty in
                            if Prims.op_Negation b
                            then
                              let uu___6 =
@@ -476,7 +476,7 @@ let (tc_inductive' :
                                    &&
                                    (let uu___8 =
                                       FStar_TypeChecker_Positivity.check_exn_strict_positivity
-                                        env1 data_lid in
+                                        env2 data_lid in
                                     Prims.op_Negation uu___8) in
                                if uu___7
                                then
