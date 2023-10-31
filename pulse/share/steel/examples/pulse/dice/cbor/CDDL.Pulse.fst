@@ -491,6 +491,139 @@ ensures read_cbor_with_typ_post t a p va res
     }
 }
 ```
+noextract
+let read_deterministically_encoded_cbor_with_typ_success_postcond
+  (t: typ)
+  (va: Ghost.erased (Seq.seq U8.t))
+  (c: read_cbor_success_t)
+  (v: raw_data_item)
+  (rem: Seq.seq U8.t)
+: Tot prop
+=
+    read_deterministically_encoded_cbor_success_postcond va c v rem /\
+    t v == true
+
+let read_deterministically_encoded_cbor_with_typ_success_post
+  (t: typ)
+  (a: A.array U8.t)
+  (p: perm)
+  (va: Ghost.erased (Seq.seq U8.t))
+  (c: read_cbor_success_t)
+: Tot vprop
+= exists_ (fun v -> exists_ (fun rem ->
+    raw_data_item_match c.read_cbor_payload v **
+    A.pts_to c.read_cbor_remainder #p rem **
+    ((raw_data_item_match c.read_cbor_payload v ** A.pts_to c.read_cbor_remainder #p rem) @==>
+      A.pts_to a #p va) **
+    pure (read_deterministically_encoded_cbor_with_typ_success_postcond t va c v rem)
+  ))
+
+noextract
+let read_deterministically_encoded_cbor_with_typ_error_postcond
+  (t: typ)
+  (va: Ghost.erased (Seq.seq U8.t))
+: Tot prop
+= forall v .
+    (serialize_cbor v == Seq.slice va 0 (min (Seq.length (serialize_cbor v)) (Seq.length va)) /\
+        data_item_wf deterministically_encoded_cbor_map_key_order v == true
+    ) ==>
+    t v == false
+
+let read_deterministically_encoded_cbor_with_typ_error_postcond_intro_typ_fail
+  (t: typ)
+  (va: Ghost.erased (Seq.seq U8.t))
+  (c: read_cbor_success_t)
+  (v: raw_data_item)
+  (rem: Seq.seq U8.t)
+: Lemma
+    (requires (
+        read_deterministically_encoded_cbor_success_postcond va c v rem /\
+        t v == false
+    ))
+    (ensures (
+        read_deterministically_encoded_cbor_with_typ_error_postcond t va
+    ))
+=
+    let s = serialize_cbor v in
+    let prf
+        (v': raw_data_item)
+    : Lemma
+        (requires (serialize_cbor v' == Seq.slice va 0 (min (Seq.length (serialize_cbor v')) (Seq.length va))))
+        (ensures (t v' == false))
+    =
+        let s' = serialize_cbor v' in
+        Seq.lemma_split va (Seq.length s');
+        serialize_cbor_inj v v' rem (Seq.slice va (Seq.length s') (Seq.length va))
+    in
+    Classical.forall_intro (Classical.move_requires prf)
+
+let read_deterministically_encoded_cbor_with_typ_error_post
+  (t: typ)
+  (a: A.array U8.t)
+  (p: perm)
+  (va: Ghost.erased (Seq.seq U8.t))
+: Tot vprop
+= A.pts_to a #p va ** pure (read_deterministically_encoded_cbor_with_typ_error_postcond t va)
+
+let read_deterministically_encoded_cbor_with_typ_post
+  (t: typ)
+  (a: A.array U8.t)
+  (p: perm)
+  (va: Ghost.erased (Seq.seq U8.t))
+  (res: read_cbor_t)
+: Tot vprop
+= match res with
+  | ParseError -> read_deterministically_encoded_cbor_with_typ_error_post t a p va
+  | ParseSuccess c -> read_deterministically_encoded_cbor_with_typ_success_post t a p va c
+
+module SZ = FStar.SizeT
+
+inline_for_extraction noextract
+```pulse
+fn read_deterministically_encoded_cbor_with_typ
+  (#t: typ)
+  (ft: impl_typ t)
+  (a: A.array U8.t)
+  (sz: SZ.t)
+  (#va: Ghost.erased (Seq.seq U8.t))
+  (#p: perm)
+requires
+    (A.pts_to a #p va ** pure (
+      (SZ.v sz == Seq.length va \/ SZ.v sz == A.length a)
+    ))
+returns res: read_cbor_t
+ensures read_deterministically_encoded_cbor_with_typ_post t a p va res
+{
+    let res = read_deterministically_encoded_cbor a sz;
+    if (ParseSuccess? res) {
+        let sres = ParseSuccess?._0 res;
+        rewrite (read_deterministically_encoded_cbor_post a p va res) as (read_deterministically_encoded_cbor_success_post a p va sres);
+        unfold (read_deterministically_encoded_cbor_success_post a p va sres);
+        let test = eval_impl_typ ft sres.read_cbor_payload;
+        if (test) {
+            fold (read_deterministically_encoded_cbor_with_typ_success_post t a p va sres);
+            rewrite (read_deterministically_encoded_cbor_with_typ_success_post t a p va sres) as (read_deterministically_encoded_cbor_with_typ_post t a p va res);
+            res
+        } else {
+            with v . assert (raw_data_item_match sres.read_cbor_payload v);
+            with vrem . assert (A.pts_to sres.read_cbor_remainder #p vrem);
+            read_deterministically_encoded_cbor_with_typ_error_postcond_intro_typ_fail t va sres v vrem;
+            elim_stick0 ()
+                #(raw_data_item_match sres.read_cbor_payload v ** A.pts_to sres.read_cbor_remainder #p vrem);
+            fold (read_deterministically_encoded_cbor_with_typ_error_post t a p va);
+            rewrite (read_deterministically_encoded_cbor_with_typ_error_post t a p va) as (read_deterministically_encoded_cbor_with_typ_post t a p va ParseError);
+            ParseError
+        }
+    } else {
+        rewrite (read_deterministically_encoded_cbor_post a p va res) as (read_deterministically_encoded_cbor_error_post a p va);
+        unfold (read_deterministically_encoded_cbor_error_post a p va);
+        fold (read_deterministically_encoded_cbor_with_typ_error_post t a p va);
+        rewrite (read_deterministically_encoded_cbor_with_typ_error_post t a p va) as (read_deterministically_encoded_cbor_with_typ_post t a p va res);
+        res
+    }
+}
+```
+
 
 let cbor_map_get_with_typ_post_not_found
   (t: typ)

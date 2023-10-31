@@ -78,27 +78,27 @@ fn initialize_context (len:SZ.t)
     ensures
         A.pts_to input #p s
 {
-    let rc = read_cbor_with_typ impl_session_message input len;
-    unfold (read_cbor_with_typ_post Spec.session_message input p s rc); 
+    let rc = read_deterministically_encoded_cbor_with_typ impl_session_message input len;
+    unfold (read_deterministically_encoded_cbor_with_typ_post Spec.session_message input p s rc); 
     match rc
     {
       ParseError ->
       {
-        unfold (read_cbor_with_typ_error_post Spec.session_message input p s); //How can this match against the `match ... `
+        unfold (read_deterministically_encoded_cbor_with_typ_error_post Spec.session_message input p s); //How can this match against the `match ... `
         drop uds_is_enabled;
         None #ctxt_hndl_t
       }
       ParseSuccess c ->
       {
-        manurewrite (read_cbor_with_typ_post Spec.session_message input p s rc) (read_cbor_with_typ_success_post Spec.session_message input p s c);
-        unfold (read_cbor_with_typ_success_post Spec.session_message input p s c); //How can this match against the `match ... `
+        manurewrite (read_deterministically_encoded_cbor_with_typ_post Spec.session_message input p s rc) (read_deterministically_encoded_cbor_with_typ_success_post Spec.session_message input p s c);
+        unfold (read_deterministically_encoded_cbor_with_typ_success_post Spec.session_message input p s c); //How can this match against the `match ... `
         let i0 = cbor_array_index c.read_cbor_payload 0sz;
         let cbor_int = destr_cbor_int64 i0;
         let sid = cbor_int.cbor_int_value;
         elim_implies ();
         let i1 = cbor_array_index c.read_cbor_payload 1sz;
         let cbor_str = destr_cbor_string i1;
-        let rc = read_cbor cbor_str.cbor_string_payload (SZ.of_u64 cbor_str.cbor_string_length);
+        let rc = read_deterministically_encoded_cbor cbor_str.cbor_string_payload (SZ.of_u64 cbor_str.cbor_string_length);
         
         admit();
       }
