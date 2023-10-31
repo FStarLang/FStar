@@ -387,15 +387,19 @@ let pack_ln (tv:term_view) : term =
     | Tv_UInst (fv, us) ->
       mk_Tm_uinst (S.fv_to_tm fv) us
 
+    (* NB: The following three cases are important: we construct
+    terms in 'flat' shape, joining several App/Abs/Arrow nodes
+    if possible. *)
+
     | Tv_App (l, (r, q)) ->
         let q' = pack_aqual q in
         U.mk_app l [(r, q')]
 
     | Tv_Abs (b, t) ->
-        mk (Tm_abs {bs=[b]; body=t; rc_opt=None}) t.pos // TODO: effect?
+        U.abs [b] t None
 
     | Tv_Arrow (b, c) ->
-        mk (Tm_arrow {bs=[b]; comp=c}) c.pos
+        U.flat_arrow [b] c
 
     | Tv_Type u ->
         mk (Tm_type u) Range.dummyRange
