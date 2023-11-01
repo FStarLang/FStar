@@ -1794,20 +1794,20 @@ let (splice :
                            let uu___6 =
                              if is_typed
                              then
+                               let e_blob =
+                                 let uu___7 =
+                                   FStar_Syntax_Embeddings.e_tuple2
+                                     FStar_Syntax_Embeddings.e_string
+                                     FStar_Reflection_V2_Embeddings.e_term in
+                                 FStar_Syntax_Embeddings.e_option uu___7 in
                                let uu___7 =
                                  let uu___8 =
                                    let uu___9 =
-                                     FStar_Syntax_Embeddings.e_option
-                                       FStar_Reflection_V2_Embeddings.e_term in
-                                   let uu___10 =
-                                     let uu___11 =
-                                       FStar_Syntax_Embeddings.e_tuple2
-                                         FStar_Syntax_Embeddings.e_string
-                                         FStar_Reflection_V2_Embeddings.e_term in
-                                     FStar_Syntax_Embeddings.e_option uu___11 in
-                                   FStar_Syntax_Embeddings.e_tuple3 uu___9
-                                     uu___10
-                                     FStar_Reflection_V2_Embeddings.e_term in
+                                     FStar_Syntax_Embeddings.e_tuple3
+                                       FStar_Syntax_Embeddings.e_bool
+                                       FStar_Reflection_V2_Embeddings.e_sigelt
+                                       e_blob in
+                                   FStar_Syntax_Embeddings.e_list uu___9 in
                                  FStar_Tactics_V2_Interpreter.run_tactic_on_ps
                                    tau1.FStar_Syntax_Syntax.pos
                                    tau1.FStar_Syntax_Syntax.pos false
@@ -1928,68 +1928,67 @@ let (splice :
                                        (env.FStar_TypeChecker_Env.core_check)
                                    } uu___8 tau1 tactic_already_typed ps in
                                match uu___7 with
-                               | (gs, (tm_opt, blob_opt, typ)) ->
-                                   let e =
-                                     match tm_opt with
-                                     | FStar_Pervasives_Native.None ->
-                                         FStar_Syntax_Syntax.tun
-                                     | FStar_Pervasives_Native.Some t -> t in
-                                   let sig_extension_data =
-                                     match blob_opt with
-                                     | FStar_Pervasives_Native.None -> []
-                                     | FStar_Pervasives_Native.Some (s, blob)
-                                         ->
-                                         let uu___8 =
-                                           let uu___9 =
-                                             FStar_Compiler_Dyn.mkdyn blob in
-                                           (s, uu___9) in
-                                         [uu___8] in
-                                   let lb =
-                                     let uu___8 =
-                                       let uu___9 =
-                                         let uu___10 =
-                                           FStar_Compiler_List.hd lids in
-                                         FStar_Syntax_Syntax.lid_as_fv
-                                           uu___10
-                                           FStar_Pervasives_Native.None in
-                                       FStar_Pervasives.Inr uu___9 in
-                                     FStar_Syntax_Util.mk_letbinding uu___8
-                                       [] typ
-                                       FStar_Parser_Const.effect_Tot_lid e []
-                                       rng in
-                                   (gs,
-                                     [{
-                                        FStar_Syntax_Syntax.sigel =
-                                          (FStar_Syntax_Syntax.Sig_let
-                                             {
-                                               FStar_Syntax_Syntax.lbs1 =
-                                                 (false, [lb]);
-                                               FStar_Syntax_Syntax.lids1 =
-                                                 lids
-                                             });
-                                        FStar_Syntax_Syntax.sigrng = rng;
-                                        FStar_Syntax_Syntax.sigquals =
-                                          [FStar_Syntax_Syntax.Visible_default];
-                                        FStar_Syntax_Syntax.sigmeta =
-                                          {
-                                            FStar_Syntax_Syntax.sigmeta_active
-                                              =
-                                              (FStar_Syntax_Syntax.default_sigmeta.FStar_Syntax_Syntax.sigmeta_active);
-                                            FStar_Syntax_Syntax.sigmeta_fact_db_ids
-                                              =
-                                              (FStar_Syntax_Syntax.default_sigmeta.FStar_Syntax_Syntax.sigmeta_fact_db_ids);
-                                            FStar_Syntax_Syntax.sigmeta_admit
-                                              =
-                                              (FStar_Syntax_Syntax.default_sigmeta.FStar_Syntax_Syntax.sigmeta_admit);
-                                            FStar_Syntax_Syntax.sigmeta_extension_data
-                                              = sig_extension_data
-                                          };
-                                        FStar_Syntax_Syntax.sigattrs = [];
-                                        FStar_Syntax_Syntax.sigopens_and_abbrevs
-                                          = [];
-                                        FStar_Syntax_Syntax.sigopts =
-                                          FStar_Pervasives_Native.None
-                                      }])
+                               | (gs, sig_blobs) ->
+                                   let sigelts =
+                                     FStar_Compiler_Effect.op_Bar_Greater
+                                       sig_blobs
+                                       (FStar_Compiler_List.map
+                                          (fun uu___8 ->
+                                             match uu___8 with
+                                             | (checked, se, blob_opt) ->
+                                                 let uu___9 =
+                                                   let uu___10 =
+                                                     se.FStar_Syntax_Syntax.sigmeta in
+                                                   let uu___11 =
+                                                     match blob_opt with
+                                                     | FStar_Pervasives_Native.Some
+                                                         (s, blob) ->
+                                                         let uu___12 =
+                                                           let uu___13 =
+                                                             FStar_Compiler_Dyn.mkdyn
+                                                               blob in
+                                                           (s, uu___13) in
+                                                         [uu___12]
+                                                     | FStar_Pervasives_Native.None
+                                                         -> [] in
+                                                   {
+                                                     FStar_Syntax_Syntax.sigmeta_active
+                                                       =
+                                                       (uu___10.FStar_Syntax_Syntax.sigmeta_active);
+                                                     FStar_Syntax_Syntax.sigmeta_fact_db_ids
+                                                       =
+                                                       (uu___10.FStar_Syntax_Syntax.sigmeta_fact_db_ids);
+                                                     FStar_Syntax_Syntax.sigmeta_admit
+                                                       =
+                                                       (uu___10.FStar_Syntax_Syntax.sigmeta_admit);
+                                                     FStar_Syntax_Syntax.sigmeta_already_checked
+                                                       = checked;
+                                                     FStar_Syntax_Syntax.sigmeta_extension_data
+                                                       = uu___11
+                                                   } in
+                                                 {
+                                                   FStar_Syntax_Syntax.sigel
+                                                     =
+                                                     (se.FStar_Syntax_Syntax.sigel);
+                                                   FStar_Syntax_Syntax.sigrng
+                                                     =
+                                                     (se.FStar_Syntax_Syntax.sigrng);
+                                                   FStar_Syntax_Syntax.sigquals
+                                                     =
+                                                     (se.FStar_Syntax_Syntax.sigquals);
+                                                   FStar_Syntax_Syntax.sigmeta
+                                                     = uu___9;
+                                                   FStar_Syntax_Syntax.sigattrs
+                                                     =
+                                                     (se.FStar_Syntax_Syntax.sigattrs);
+                                                   FStar_Syntax_Syntax.sigopens_and_abbrevs
+                                                     =
+                                                     (se.FStar_Syntax_Syntax.sigopens_and_abbrevs);
+                                                   FStar_Syntax_Syntax.sigopts
+                                                     =
+                                                     (se.FStar_Syntax_Syntax.sigopts)
+                                                 })) in
+                                   (gs, sigelts)
                              else
                                (let uu___8 =
                                   FStar_Syntax_Embeddings.e_list
