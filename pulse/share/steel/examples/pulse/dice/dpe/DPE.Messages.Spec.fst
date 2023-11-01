@@ -826,12 +826,14 @@ let command_message = Cddl.t_array3 (
   Cddl.array_group3_item (* input_args *) input_args
 )
 
-#push-options "--z3rlimit 32"
-#restart-solver
-let _ : squash (command_message `Cddl.typ_equiv` Cddl.t_array3 (
+let command_message' = Cddl.t_array3 (
   Cddl.array_group3_item command_id `Cddl.array_group3_concat`
   Cddl.array_group3_item (Cddl.t_map default_args_group)
-)) = ()
+)
+
+#push-options "--z3rlimit 32"
+#restart-solver
+let _ : squash (command_message `Cddl.typ_equiv` command_message') = ()
 #pop-options
 
 let response_message = Cddl.t_array3 (
@@ -839,10 +841,12 @@ let response_message = Cddl.t_array3 (
   Cddl.array_group3_item (* output_args *) output_args
 )
 
-#push-options "--z3rlimit 32"
-#restart-solver
-let _ : squash (response_message `Cddl.typ_equiv` Cddl.t_array3 (
+let response_message' = Cddl.t_array3 (
   Cddl.array_group3_item error_code `Cddl.array_group3_concat`
   Cddl.array_group3_item (Cddl.t_map default_args_group)
-)) = ()
+)
+
+#push-options "--z3rlimit 32"
+#restart-solver
+let _ : squash (response_message `Cddl.typ_equiv` response_message') = ()
 #pop-options
