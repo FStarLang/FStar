@@ -493,8 +493,8 @@ let read_cbor_with_typ_error_postcond
   (t: typ)
   (va: Ghost.erased (Seq.seq U8.t))
 : Tot prop
-= forall v .
-    serialize_cbor v == Seq.slice va 0 (min (Seq.length (serialize_cbor v)) (Seq.length va)) ==>
+= forall v suff .
+    Ghost.reveal va == serialize_cbor v `Seq.append` suff ==>
     t v == false
 
 let read_cbor_with_typ_error_postcond_intro_typ_fail
@@ -511,19 +511,7 @@ let read_cbor_with_typ_error_postcond_intro_typ_fail
     (ensures (
         read_cbor_with_typ_error_postcond t va
     ))
-=
-    let s = serialize_cbor v in
-    let prf
-        (v': raw_data_item)
-    : Lemma
-        (requires (serialize_cbor v' == Seq.slice va 0 (min (Seq.length (serialize_cbor v')) (Seq.length va))))
-        (ensures (t v' == false))
-    =
-        let s' = serialize_cbor v' in
-        Seq.lemma_split va (Seq.length s');
-        serialize_cbor_inj v v' rem (Seq.slice va (Seq.length s') (Seq.length va))
-    in
-    Classical.forall_intro (Classical.move_requires prf)
+= serialize_cbor_with_test_correct v rem (fun v' rem' -> t v' == true)
 
 let read_cbor_with_typ_error_post
   (t: typ)
@@ -608,8 +596,8 @@ let read_deterministically_encoded_cbor_with_typ_error_postcond
   (t: typ)
   (va: Ghost.erased (Seq.seq U8.t))
 : Tot prop
-= forall v .
-    (serialize_cbor v == Seq.slice va 0 (min (Seq.length (serialize_cbor v)) (Seq.length va)) /\
+= forall v suff .
+    (Ghost.reveal va == serialize_cbor v `Seq.append` suff /\
         data_item_wf deterministically_encoded_cbor_map_key_order v == true
     ) ==>
     t v == false
@@ -628,19 +616,7 @@ let read_deterministically_encoded_cbor_with_typ_error_postcond_intro_typ_fail
     (ensures (
         read_deterministically_encoded_cbor_with_typ_error_postcond t va
     ))
-=
-    let s = serialize_cbor v in
-    let prf
-        (v': raw_data_item)
-    : Lemma
-        (requires (serialize_cbor v' == Seq.slice va 0 (min (Seq.length (serialize_cbor v')) (Seq.length va))))
-        (ensures (t v' == false))
-    =
-        let s' = serialize_cbor v' in
-        Seq.lemma_split va (Seq.length s');
-        serialize_cbor_inj v v' rem (Seq.slice va (Seq.length s') (Seq.length va))
-    in
-    Classical.forall_intro (Classical.move_requires prf)
+= serialize_cbor_with_test_correct v rem (fun v' rem' -> data_item_wf deterministically_encoded_cbor_map_key_order v' == true /\ t v' == true)
 
 let read_deterministically_encoded_cbor_with_typ_post
   (t: typ)
