@@ -433,15 +433,43 @@ let add_se_to_attrtab env se =
                 | Tm_fvar fv -> add_one env se (string_of_lid (lid_of_fv fv))
                 | _ -> ()) se.sigattrs
 
-let rec add_sigelt env se = match se.sigel with
-    | Sig_bundle {ses} -> add_sigelts env ses
+(* This adds a sigelt to the sigtab in the environment but checks
+that we are not clashing with something that is already defined.
+The force flag overrides the check, it's convenient in the checking for
+haseq in inductives. *)
+let try_add_sigelt force env se l =
+  let s = string_of_lid l in
+  if not force && Some? (BU.smap_try_find (sigtab env) s) then (
+    let old_se = Some?.v (BU.smap_try_find (sigtab env) s) in
+    if Sig_declare_typ? old_se.sigel &&
+        (Sig_let? se.sigel || Sig_inductive_typ? se.sigel || Sig_datacon? se.sigel)
+    then
+      (* overriding a val with a let, a type, or a datacon is ok *)
+      ()
+    else (
+      (* anything else is an error *)
+      let open FStar.Errors.Msg in
+      let open FStar.Pprint in
+      raise_error_doc (Errors.Fatal_DuplicateTopLevelNames, [
+        text "Duplicate top-level names" ^/^ arbitrary_string s;
+        text "Previously declared at" ^/^ arbitrary_string (Range.string_of_range (range_of_lid l));
+        // text "New decl = " ^/^ Print.sigelt_to_doc se;
+        // text "Old decl = " ^/^ Print.sigelt_to_doc old_se;
+        // backtrace_doc ();
+      ]) (range_of_lid l)
+    )
+  );
+  BU.smap_add (sigtab env) s se
+
+let rec add_sigelt force env se = match se.sigel with
+    | Sig_bundle {ses} -> add_sigelts force env ses
     | _ ->
       let lids = lids_of_sigelt se in
-      List.iter (fun l -> BU.smap_add (sigtab env) (string_of_lid l) se) lids;
+      List.iter (try_add_sigelt force env se) lids;
       add_se_to_attrtab env se
 
-and add_sigelts env ses =
-    ses |> List.iter (add_sigelt env)
+and add_sigelts force env ses =
+    ses |> List.iter (add_sigelt force env)
 
 ////////////////////////////////////////////////////////////
 // Lookup up various kinds of identifiers                 //
@@ -1347,12 +1375,15 @@ let reify_comp env c u_c : term =
 // This function assumes that, in the case that the environment contains local
 // bindings _and_ we push a top-level binding, then the top-level binding does
 // not capture any of the local bindings (duh).
-let push_sigelt env s =
+let push_sigelt' (force:bool) env s =
   let sb = (lids_of_sigelt s, s) in
   let env = {env with gamma_sig = sb::env.gamma_sig} in
-  add_sigelt env s;
+  add_sigelt force env s;
   env.tc_hooks.tc_push_in_gamma_hook env (Inr sb);
   env
+
+let push_sigelt = push_sigelt' false
+let push_sigelt_force = push_sigelt' true
 
 let push_new_effect env (ed, quals) =
   let effects = {env.effects with decls=env.effects.decls@[(ed, quals)]} in
@@ -1676,7 +1707,6 @@ let finish_module =
         if lid_equals m.name Const.prims_lid
         then env.gamma_sig |> List.map snd |> List.rev
         else m.declarations  in
-      add_sigelts env sigs;
       {env with
         curmodule=empty_lid;
         gamma=[];

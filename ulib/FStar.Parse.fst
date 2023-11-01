@@ -1,5 +1,5 @@
 (*
-   Copyright 2008-2018 Microsoft Research
+   Copyright 2008-2020 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -13,17 +13,12 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module HyE.Plain
+module FStar.Parse
 
-open Platform.Bytes
-open CoreCrypto
-open HyE.Ideal
+(** A primitive parser for booleans *)
+assume
+val bool_of_string: string -> Tot (option bool)
 
-type t = bytes
-
-(* two pure functions, never called when ideal *)
-let repr t = t       (* a pure function from t to RSA.plain *)
-
-let coerce t =t (* a function from r to t *)
-
-let length p = length p
+(** A primitive parser for [int] *)
+assume
+val int_of_string: string -> Tot (option int)

@@ -943,6 +943,9 @@ let (e_int : FStar_BigInt.t embedding) =
   let uu___1 =
     FStar_Syntax_Embeddings_Base.emb_typ_of FStar_Syntax_Embeddings.e_int in
   mk_emb' em un uu___ uu___1
+let (e_fsint : Prims.int embedding) =
+  embed_as e_int FStar_BigInt.to_int_fs FStar_BigInt.of_int_fs
+    FStar_Pervasives_Native.None
 let e_option :
   'a . 'a embedding -> 'a FStar_Pervasives_Native.option embedding =
   fun ea ->
@@ -1951,6 +1954,19 @@ let (string_of_int : FStar_BigInt.t -> t) =
     embed e_string bogus_cbs uu___
 let (string_of_bool : Prims.bool -> t) =
   fun b -> embed e_string bogus_cbs (if b then "true" else "false")
+let (int_of_string : Prims.string -> t) =
+  fun s ->
+    let uu___ = e_option e_fsint in
+    let uu___1 = FStar_Compiler_Util.safe_int_of_string s in
+    embed uu___ bogus_cbs uu___1
+let (bool_of_string : Prims.string -> t) =
+  fun s ->
+    let r =
+      match s with
+      | "true" -> FStar_Pervasives_Native.Some true
+      | "false" -> FStar_Pervasives_Native.Some false
+      | uu___ -> FStar_Pervasives_Native.None in
+    let uu___ = e_option e_bool in embed uu___ bogus_cbs r
 let (string_lowercase : Prims.string -> t) =
   fun s -> embed e_string bogus_cbs (FStar_String.lowercase s)
 let (string_uppercase : Prims.string -> t) =

@@ -358,6 +358,7 @@ val mk_univ_subst          : list univ_name -> universes -> list subst_elt
  *   Tc calls separate functions
  *)
 val push_sigelt           : env -> sigelt -> env
+val push_sigelt_force     : env -> sigelt -> env (* does not check for repeats *)
 val push_new_effect       : env -> (eff_decl * list qualifier) -> env
 
 //client constructs the mlift and gives it to us

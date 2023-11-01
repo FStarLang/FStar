@@ -126,6 +126,10 @@ let (let_in_typ : FStar_Ident.lident) = p2l ["Prims"; "Let"]
 let (string_of_int_lid : FStar_Ident.lident) = p2l ["Prims"; "string_of_int"]
 let (string_of_bool_lid : FStar_Ident.lident) =
   p2l ["Prims"; "string_of_bool"]
+let (int_of_string_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Parse"; "int_of_string"]
+let (bool_of_string_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Parse"; "bool_of_string"]
 let (string_compare : FStar_Ident.lident) =
   p2l ["FStar"; "String"; "compare"]
 let (order_lid : FStar_Ident.lident) = p2l ["FStar"; "Order"; "order"]

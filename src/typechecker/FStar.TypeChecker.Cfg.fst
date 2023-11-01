@@ -455,6 +455,19 @@ let built_in_primitive_steps : prim_step_set =
     let string_of_bool rng (b:bool) : term =
         embed_simple EMB.e_string rng (if b then "true" else "false")
     in
+    let int_of_string rng (s:string) : term =
+      let r = safe_int_of_string s in
+      embed_simple EMB.(e_option e_fsint) rng r
+    in
+    let bool_of_string rng (s:string) : term =
+      let r =
+        match s with
+        | "true" -> Some true
+        | "false" -> Some false
+        | _ -> None
+      in
+      embed_simple EMB.(e_option e_bool) rng r
+    in
     let lowercase rng (s:string) : term =
         embed_simple EMB.e_string rng (String.lowercase s)
     in
@@ -680,6 +693,17 @@ let built_in_primitive_steps : prim_step_set =
              0,
              unary_op arg_as_bool string_of_bool,
              NBETerm.unary_op NBETerm.arg_as_bool NBETerm.string_of_bool);
+
+         (PC.bool_of_string_lid,
+             1,
+             0,
+             unary_op arg_as_string bool_of_string,
+             NBETerm.unary_op NBETerm.arg_as_string NBETerm.bool_of_string);
+         (PC.int_of_string_lid,
+             1,
+             0,
+             unary_op arg_as_string int_of_string,
+             NBETerm.unary_op NBETerm.arg_as_string NBETerm.int_of_string);
 (* Operations from FStar.String *)
          (PC.string_list_of_string_lid,
              1,
