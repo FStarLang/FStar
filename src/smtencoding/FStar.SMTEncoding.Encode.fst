@@ -1394,11 +1394,17 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                 @aux in
         g, env
 
-    | Sig_datacon {lid=d; t; num_ty_params=n_tps; mutuals} ->
+    | Sig_datacon {lid=d; t; num_ty_params=n_tps; ty_lid; mutuals} ->
         let quals = se.sigquals in
         let t = norm_before_encoding env t in
         let formals, t_res = U.arrow_formals t in
         let arity = List.length formals in
+        let num_constructors_of_ty =
+            let is_inductive, datas = Env.datacons_of_typ env.tcenv ty_lid in
+            if is_inductive
+            then Some (List.length datas)
+            else None
+        in
         let ddconstrsym, ddtok, env = new_term_constant_and_tok_from_lid env d arity in
         let ddtok_tm = mkApp(ddtok, []) in
         let fuel_var, fuel_tm = fresh_fvar env.current_module_name "f" Fuel_sort in
@@ -1490,7 +1496,15 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
               let ty = maybe_curry_fvb fv.fv_name.p encoded_head_fvb arg_vars in
               let xvars = List.map mkFreeV vars in
               let dapp =  mkApp(ddconstrsym, xvars) in //arity ok; |xvars| = |formals| = arity
-              let ty_pred = mk_HasTypeWithFuel (Some s_fuel_tm) dapp ty in
+              let ty_pred_sfuel = mk_HasTypeWithFuel (Some s_fuel_tm) dapp ty in
+              let ty_pred =
+                match num_constructors_of_ty with
+                | Some 1 ->
+                  //single constructor inductives are not fuel guarded; see #3076
+                  mk_HasTypeWithFuel (Some fuel_tm) dapp ty
+                | _ ->
+                  ty_pred_sfuel
+              in
               let arg_binders = List.map fv_of_term arg_vars in
               let typing_inversion =
                     Util.mkAssume(mkForall (Ident.range_of_lid d) ([[ty_pred]],
@@ -1617,8 +1631,10 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                 | [] ->
                   [], cod_decls
                 | _ ->
+                  //If we have codomain_prec axioms, then this type is recursive
+                  //so, guard with fuel
                   [Util.mkAssume(mkForall (Ident.range_of_lid d)
-                                          ([[ty_pred]],//we use ty_pred here as the pattern, which has an S_fuel guard
+                                          ([[ty_pred_sfuel]],//we use ty_pred_sfuel here as the pattern, which has an S_fuel guard
                                            add_fuel (mk_fv (fuel_var, Fuel_sort)) (vars@arg_binders),
                                            mk_and_l codomain_prec_l),
                                  Some "well-founded ordering on codomain",
