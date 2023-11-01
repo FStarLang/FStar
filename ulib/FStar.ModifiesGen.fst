@@ -1894,6 +1894,7 @@ let union_loc_of_loc_includes #al c b s1 s2 =
   Classical.move_requires (union_loc_of_loc_includes_intro c b s1) s2
 
 #push-options "--fuel 0 --ifuel 0"
+#restart-solver
 let union_loc_of_loc_disjoint_intro
   (#al: (bool -> HS.rid -> nat -> Tot Type))
   (c: ((b: bool) -> Tot (cls (al b))))
@@ -1944,7 +1945,8 @@ let union_loc_of_loc_disjoint_intro
     aloc_disjoint xl xs
   )) by (
     let open FStar.Tactics.SMT in
-    set_rlimit 15;
+    set_rlimit 64;
+    set_options "--z3cliopt 'smt.qi.eager_threshold=1'";
     ()
   );
   assert (auxl ` loc_aux_disjoint` doms);
