@@ -123,6 +123,7 @@ type cfg = {
      memoize_lazy : bool;
      normalize_pure_lets: bool;
      reifying : bool;
+     compat_memo_ignore_cfg:bool; (* See #2155, #2161, #2986 *)
 }
 
 (* Profiling primitive operators *)

@@ -56,12 +56,12 @@ let cases :
         match uu___ with
         | FStar_Pervasives_Native.Some x -> f x
         | FStar_Pervasives_Native.None -> d
+type 'a cfg_memo = (FStar_TypeChecker_Cfg.cfg * 'a) FStar_Syntax_Syntax.memo
 type closure =
   | Clos of ((FStar_Syntax_Syntax.binder FStar_Pervasives_Native.option *
   closure) Prims.list * FStar_Syntax_Syntax.term *
   ((FStar_Syntax_Syntax.binder FStar_Pervasives_Native.option * closure)
-  Prims.list * FStar_Syntax_Syntax.term) FStar_Syntax_Syntax.memo *
-  Prims.bool) 
+  Prims.list * FStar_Syntax_Syntax.term) cfg_memo * Prims.bool) 
   | Univ of FStar_Syntax_Syntax.universe 
   | Dummy 
 let (uu___is_Clos : closure -> Prims.bool) =
@@ -71,7 +71,7 @@ let (__proj__Clos__item___0 :
     ((FStar_Syntax_Syntax.binder FStar_Pervasives_Native.option * closure)
       Prims.list * FStar_Syntax_Syntax.term * ((FStar_Syntax_Syntax.binder
       FStar_Pervasives_Native.option * closure) Prims.list *
-      FStar_Syntax_Syntax.term) FStar_Syntax_Syntax.memo * Prims.bool))
+      FStar_Syntax_Syntax.term) cfg_memo * Prims.bool))
   = fun projectee -> match projectee with | Clos _0 -> _0
 let (uu___is_Univ : closure -> Prims.bool) =
   fun projectee -> match projectee with | Univ _0 -> true | uu___ -> false
@@ -94,7 +94,7 @@ type stack_elt =
   FStar_Compiler_Range_Type.range) 
   | UnivArgs of (FStar_Syntax_Syntax.universe Prims.list *
   FStar_Compiler_Range_Type.range) 
-  | MemoLazy of (env * FStar_Syntax_Syntax.term) FStar_Syntax_Syntax.memo 
+  | MemoLazy of (env * FStar_Syntax_Syntax.term) cfg_memo 
   | Match of (env * FStar_Syntax_Syntax.match_returns_ascription
   FStar_Pervasives_Native.option * branches *
   FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option *
@@ -130,7 +130,7 @@ let (uu___is_MemoLazy : stack_elt -> Prims.bool) =
   fun projectee ->
     match projectee with | MemoLazy _0 -> true | uu___ -> false
 let (__proj__MemoLazy__item___0 :
-  stack_elt -> (env * FStar_Syntax_Syntax.term) FStar_Syntax_Syntax.memo) =
+  stack_elt -> (env * FStar_Syntax_Syntax.term) cfg_memo) =
   fun projectee -> match projectee with | MemoLazy _0 -> _0
 let (uu___is_Match : stack_elt -> Prims.bool) =
   fun projectee -> match projectee with | Match _0 -> true | uu___ -> false
@@ -188,21 +188,39 @@ let (head_of : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
   fun t ->
     let uu___ = FStar_Syntax_Util.head_and_args_full t in
     match uu___ with | (hd, uu___1) -> hd
+let read_memo :
+  'a .
+    FStar_TypeChecker_Cfg.cfg ->
+      (FStar_TypeChecker_Cfg.cfg * 'a) FStar_Syntax_Syntax.memo ->
+        'a FStar_Pervasives_Native.option
+  =
+  fun cfg ->
+    fun r ->
+      let uu___ = FStar_Compiler_Effect.op_Bang r in
+      match uu___ with
+      | FStar_Pervasives_Native.Some (cfg', a1) when
+          cfg.FStar_TypeChecker_Cfg.compat_memo_ignore_cfg ||
+            (FStar_Compiler_Util.physical_equality cfg cfg')
+          -> FStar_Pervasives_Native.Some a1
+      | uu___1 -> FStar_Pervasives_Native.None
 let set_memo :
-  'a . FStar_TypeChecker_Cfg.cfg -> 'a FStar_Syntax_Syntax.memo -> 'a -> unit
+  'a .
+    FStar_TypeChecker_Cfg.cfg ->
+      (FStar_TypeChecker_Cfg.cfg * 'a) FStar_Syntax_Syntax.memo -> 'a -> unit
   =
   fun cfg ->
     fun r ->
       fun t ->
         if cfg.FStar_TypeChecker_Cfg.memoize_lazy
         then
-          let uu___ = FStar_Compiler_Effect.op_Bang r in
-          match uu___ with
-          | FStar_Pervasives_Native.Some uu___1 ->
-              failwith "Unexpected set_memo: thunk already evaluated"
-          | FStar_Pervasives_Native.None ->
-              FStar_Compiler_Effect.op_Colon_Equals r
-                (FStar_Pervasives_Native.Some t)
+          ((let uu___1 =
+              let uu___2 = read_memo cfg r in
+              FStar_Compiler_Option.isSome uu___2 in
+            if uu___1
+            then failwith "Unexpected set_memo: thunk already evaluated"
+            else ());
+           FStar_Compiler_Effect.op_Colon_Equals r
+             (FStar_Pervasives_Native.Some (cfg, t)))
         else ()
 let (closure_to_string : closure -> Prims.string) =
   fun uu___ ->
@@ -1647,7 +1665,9 @@ let (reduce_equality :
             FStar_TypeChecker_Cfg.normalize_pure_lets =
               (cfg.FStar_TypeChecker_Cfg.normalize_pure_lets);
             FStar_TypeChecker_Cfg.reifying =
-              (cfg.FStar_TypeChecker_Cfg.reifying)
+              (cfg.FStar_TypeChecker_Cfg.reifying);
+            FStar_TypeChecker_Cfg.compat_memo_ignore_cfg =
+              (cfg.FStar_TypeChecker_Cfg.compat_memo_ignore_cfg)
           } tm
 type norm_request_t =
   | Norm_request_none 
@@ -2821,7 +2841,9 @@ let decide_unfolding :
                     FStar_TypeChecker_Cfg.normalize_pure_lets =
                       (cfg.FStar_TypeChecker_Cfg.normalize_pure_lets);
                     FStar_TypeChecker_Cfg.reifying =
-                      (cfg.FStar_TypeChecker_Cfg.reifying)
+                      (cfg.FStar_TypeChecker_Cfg.reifying);
+                    FStar_TypeChecker_Cfg.compat_memo_ignore_cfg =
+                      (cfg.FStar_TypeChecker_Cfg.compat_memo_ignore_cfg)
                   } in
                 let stack' =
                   match stack1 with
@@ -3180,7 +3202,9 @@ let rec (norm :
                        (cfg.FStar_TypeChecker_Cfg.memoize_lazy);
                      FStar_TypeChecker_Cfg.normalize_pure_lets = true;
                      FStar_TypeChecker_Cfg.reifying =
-                       (cfg.FStar_TypeChecker_Cfg.reifying)
+                       (cfg.FStar_TypeChecker_Cfg.reifying);
+                     FStar_TypeChecker_Cfg.compat_memo_ignore_cfg =
+                       (cfg.FStar_TypeChecker_Cfg.compat_memo_ignore_cfg)
                    } in
                  let uu___3 = get_norm_request cfg (norm cfg' env1 []) args in
                  match uu___3 with
@@ -3353,7 +3377,9 @@ let rec (norm :
                            (cfg.FStar_TypeChecker_Cfg.memoize_lazy);
                          FStar_TypeChecker_Cfg.normalize_pure_lets = true;
                          FStar_TypeChecker_Cfg.reifying =
-                           (cfg.FStar_TypeChecker_Cfg.reifying)
+                           (cfg.FStar_TypeChecker_Cfg.reifying);
+                         FStar_TypeChecker_Cfg.compat_memo_ignore_cfg =
+                           (cfg.FStar_TypeChecker_Cfg.compat_memo_ignore_cfg)
                        } in
                      let stack' =
                        let debug =
@@ -3399,7 +3425,7 @@ let rec (norm :
                         ||
                         (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.zeta_full
                     then
-                      let uu___3 = FStar_Compiler_Effect.op_Bang r in
+                      let uu___3 = read_memo cfg r in
                       (match uu___3 with
                        | FStar_Pervasives_Native.Some (env3, t') ->
                            (FStar_TypeChecker_Cfg.log cfg
@@ -3515,7 +3541,9 @@ let rec (norm :
                               FStar_TypeChecker_Cfg.normalize_pure_lets =
                                 (cfg.FStar_TypeChecker_Cfg.normalize_pure_lets);
                               FStar_TypeChecker_Cfg.reifying =
-                                (cfg.FStar_TypeChecker_Cfg.reifying)
+                                (cfg.FStar_TypeChecker_Cfg.reifying);
+                              FStar_TypeChecker_Cfg.compat_memo_ignore_cfg =
+                                (cfg.FStar_TypeChecker_Cfg.compat_memo_ignore_cfg)
                             } in
                           norm cfg1 env'
                             ((Abs
@@ -3722,7 +3750,7 @@ let rec (norm :
                                               let uu___8 =
                                                 FStar_Compiler_Util.mk_ref
                                                   (FStar_Pervasives_Native.Some
-                                                     ([], a)) in
+                                                     (cfg, ([], a))) in
                                               (env1, a, uu___8, false) in
                                             Clos uu___7 in
                                           (uu___6, aq,
@@ -4028,7 +4056,9 @@ let rec (norm :
                      FStar_TypeChecker_Cfg.normalize_pure_lets =
                        (cfg.FStar_TypeChecker_Cfg.normalize_pure_lets);
                      FStar_TypeChecker_Cfg.reifying =
-                       (cfg.FStar_TypeChecker_Cfg.reifying)
+                       (cfg.FStar_TypeChecker_Cfg.reifying);
+                     FStar_TypeChecker_Cfg.compat_memo_ignore_cfg =
+                       (cfg.FStar_TypeChecker_Cfg.compat_memo_ignore_cfg)
                    } in
                  norm cfg' env1 ((Cfg (cfg, FStar_Pervasives_Native.None)) ::
                    stack3) head
@@ -4070,7 +4100,10 @@ let rec (norm :
                                  FStar_TypeChecker_Cfg.normalize_pure_lets =
                                    (cfg.FStar_TypeChecker_Cfg.normalize_pure_lets);
                                  FStar_TypeChecker_Cfg.reifying =
-                                   (cfg.FStar_TypeChecker_Cfg.reifying)
+                                   (cfg.FStar_TypeChecker_Cfg.reifying);
+                                 FStar_TypeChecker_Cfg.compat_memo_ignore_cfg
+                                   =
+                                   (cfg.FStar_TypeChecker_Cfg.compat_memo_ignore_cfg)
                                } in
                              let norm1 t2 =
                                let uu___3 =
@@ -4279,7 +4312,10 @@ let rec (norm :
                                   FStar_TypeChecker_Cfg.normalize_pure_lets =
                                     (cfg.FStar_TypeChecker_Cfg.normalize_pure_lets);
                                   FStar_TypeChecker_Cfg.reifying =
-                                    (cfg.FStar_TypeChecker_Cfg.reifying)
+                                    (cfg.FStar_TypeChecker_Cfg.reifying);
+                                  FStar_TypeChecker_Cfg.compat_memo_ignore_cfg
+                                    =
+                                    (cfg.FStar_TypeChecker_Cfg.compat_memo_ignore_cfg)
                                 } in
                               FStar_TypeChecker_Cfg.log cfg1
                                 (fun uu___11 ->
@@ -4459,7 +4495,8 @@ let rec (norm :
                            fun memo ->
                              FStar_Compiler_Effect.op_Colon_Equals memo
                                (FStar_Pervasives_Native.Some
-                                  (rec_env, (lb.FStar_Syntax_Syntax.lbdef))))
+                                  (cfg,
+                                    (rec_env, (lb.FStar_Syntax_Syntax.lbdef)))))
                         (FStar_Pervasives_Native.snd lbs) memos in
                     let body_env =
                       FStar_Compiler_List.fold_left
@@ -7608,7 +7645,7 @@ and (do_rebuild :
                     (let stack3 = (App (env1, t, aq, r)) :: stack2 in
                      norm cfg env_arg stack3 tm))
                else
-                 (let uu___3 = FStar_Compiler_Effect.op_Bang m in
+                 (let uu___3 = read_memo cfg m in
                   match uu___3 with
                   | FStar_Pervasives_Native.None ->
                       let uu___4 =
@@ -7975,7 +8012,9 @@ and (do_rebuild :
                           FStar_TypeChecker_Cfg.normalize_pure_lets =
                             (cfg1.FStar_TypeChecker_Cfg.normalize_pure_lets);
                           FStar_TypeChecker_Cfg.reifying =
-                            (cfg1.FStar_TypeChecker_Cfg.reifying)
+                            (cfg1.FStar_TypeChecker_Cfg.reifying);
+                          FStar_TypeChecker_Cfg.compat_memo_ignore_cfg =
+                            (cfg1.FStar_TypeChecker_Cfg.compat_memo_ignore_cfg)
                         }) in
                    let norm_or_whnf env3 t1 =
                      if whnf
@@ -8229,7 +8268,10 @@ and (do_rebuild :
                                  FStar_TypeChecker_Cfg.normalize_pure_lets =
                                    (cfg1.FStar_TypeChecker_Cfg.normalize_pure_lets);
                                  FStar_TypeChecker_Cfg.reifying =
-                                   (cfg1.FStar_TypeChecker_Cfg.reifying)
+                                   (cfg1.FStar_TypeChecker_Cfg.reifying);
+                                 FStar_TypeChecker_Cfg.compat_memo_ignore_cfg
+                                   =
+                                   (cfg1.FStar_TypeChecker_Cfg.compat_memo_ignore_cfg)
                                } scrutinee_env [] scrutinee
                            else scrutinee in
                          let asc_opt1 = norm_match_returns cfg1 env2 asc_opt in
@@ -8381,7 +8423,7 @@ and (do_rebuild :
                                                        FStar_Pervasives_Native.None
                                                      else
                                                        FStar_Pervasives_Native.Some
-                                                         ([], t1)) in
+                                                         (cfg1, ([], t1))) in
                                                 ([], t1, uu___8, false) in
                                               Clos uu___7 in
                                             (uu___5, uu___6) in
