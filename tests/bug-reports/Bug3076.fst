@@ -19,8 +19,7 @@ let f3 (x:t3) : t3 =
 
 let f3_lemma (x:t3) : Lemma (f3 ( f3 (f3 x)) == x) = ()
 
-#set-options "--ifuel 1"
-
+#push-options "--ifuel 1"
 type t1 = option int & int
 
 let f1 (x:t1) : t1 =
@@ -29,3 +28,16 @@ let f1 (x:t1) : t1 =
   | (None, x2) -> (None, x2)
 
 let f1_lemma (x:t1) : Lemma (f1 (f1 x) == x)  = ()
+#pop-options
+
+#push-options "--fuel 0 --ifuel 0"
+type t4 = unit & unit
+
+let f4 (x:t4) =
+  match x with
+  | (x1, x2) -> (x2, x1)
+
+let f4_lemma (x:t4)
+  : Lemma (f4 x == x)
+  = ()
+#pop-options
