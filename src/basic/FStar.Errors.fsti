@@ -87,6 +87,8 @@ val report_all : unit -> list issue
 val clear : unit -> unit
 val set_handler : error_handler -> unit
 val get_ctx : unit -> list string
+
+val diag_doc : Range.range -> error_message -> unit
 val diag : Range.range -> string -> unit
 
 val diag0 : string -> unit

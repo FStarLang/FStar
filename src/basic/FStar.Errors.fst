@@ -345,9 +345,12 @@ let error_context : error_context_t =
 let get_ctx () : list string =
   error_context.get ()
 
-let diag r msg =
+let diag_doc r msg =
   if Options.debug_any()
-  then add_one (mk_issue EInfo (Some r) (mkmsg msg) None [])
+  then add_one (mk_issue EInfo (Some r) msg None [])
+
+let diag r msg =
+  diag_doc r (mkmsg msg)
 
 let diag0 msg =
   if Options.debug_any()

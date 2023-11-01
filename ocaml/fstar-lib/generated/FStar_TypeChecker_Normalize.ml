@@ -3015,8 +3015,8 @@ let rec (norm :
                (FStar_TypeChecker_Cfg.log_unfolding cfg
                   (fun uu___5 ->
                      let uu___6 = FStar_Syntax_Print.term_to_string t1 in
-                     FStar_Compiler_Util.print1 ">>> Tm_fvar case 0 for %s\n"
-                       uu___6);
+                     FStar_Compiler_Util.print1
+                       " >> This is a constructor: %s\n" uu___6);
                 rebuild cfg empty_env stack2 t1)
            | FStar_Syntax_Syntax.Tm_fvar
                { FStar_Syntax_Syntax.fv_name = uu___2;
@@ -3027,8 +3027,8 @@ let rec (norm :
                (FStar_TypeChecker_Cfg.log_unfolding cfg
                   (fun uu___6 ->
                      let uu___7 = FStar_Syntax_Print.term_to_string t1 in
-                     FStar_Compiler_Util.print1 ">>> Tm_fvar case 0 for %s\n"
-                       uu___7);
+                     FStar_Compiler_Util.print1
+                       " >> This is a constructor: %s\n" uu___7);
                 rebuild cfg empty_env stack2 t1)
            | FStar_Syntax_Syntax.Tm_fvar fv ->
                let lid = FStar_Syntax_Syntax.lid_of_fv fv in
@@ -3045,7 +3045,7 @@ let rec (norm :
                        (fun uu___5 ->
                           let uu___6 = FStar_Syntax_Print.term_to_string t1 in
                           FStar_Compiler_Util.print1
-                            ">>> Tm_fvar case 1 for %s\n" uu___6);
+                            " >> This is a constant: %s\n" uu___6);
                      rebuild cfg empty_env stack2 t1)
                 | uu___3 ->
                     let uu___4 =
@@ -4651,7 +4651,7 @@ and (do_unfold_fv :
                    (fun uu___2 ->
                       let uu___3 = FStar_Syntax_Print.fv_to_string f in
                       FStar_Compiler_Util.print1
-                        " >> Tm_fvar case 2 for %s\n" uu___3);
+                        " >> No definition found for %s\n" uu___3);
                  rebuild cfg empty_env stack1 t0)
             | FStar_Pervasives_Native.Some (us, t) ->
                 (FStar_TypeChecker_Cfg.log_unfolding cfg
