@@ -19,9 +19,12 @@ assume val n : int
 
 type proof (m:int) =
   | Proof    : squash (m == n) -> proof m
+  | NotProof
 
 type m_and_proof =
   | C : m:int -> p:proof m -> m_and_proof
+  | NotC
+
 
 (*
  * The following proof fails with ifuel 0
@@ -36,6 +39,7 @@ type m_and_proof =
 let test1 (x:m_and_proof) =
   match x with
   | C m (Proof ()) -> assert (m == n)
+  | _ -> ()
 #pop-options
 
 
@@ -46,6 +50,7 @@ let test1 (x:m_and_proof) =
 let test2 (x:m_and_proof) =
   match x with
   | C m (Proof ()) -> assert (m == n)
+  | _ -> ()
 #pop-options
 
 #restart-solver
@@ -64,7 +69,24 @@ let test2 (x:m_and_proof) =
 #push-options "--ifuel 1"
 let test3 (x:m_and_proof) =
   match x with
-  | C m p ->
+  | C m p -> (
     match p with
     | Proof () -> assert (m == n)
+    | _ -> ()
+  )
+  | _ -> ()
+#pop-options
+
+(* Alternatively, for single-constructor inductives, inversion is free *)
+type proof' (m:int) =
+  | Proof'   : squash (m == n) -> proof' m
+
+type m_and_proof' =
+  | C' : m:int -> p:proof' m -> m_and_proof'
+
+#push-options "--ifuel 0"
+let test4 (x:m_and_proof') =
+  match x with
+  | C' m (Proof' ()) -> assert (m == n)
+  | _ -> ()
 #pop-options
