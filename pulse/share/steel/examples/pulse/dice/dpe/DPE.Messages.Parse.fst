@@ -113,19 +113,17 @@ fn parse_dpe_cmd (len:SZ.t)
       parse_dpe_cmd_post len input s p res
 {
     let rc = read_deterministically_encoded_cbor_with_typ impl_session_message input len;
-    unfold (read_deterministically_encoded_cbor_with_typ_post Spec.session_message input p s rc); 
     match rc
     {
       ParseError ->
       {
-        unfold (read_deterministically_encoded_cbor_with_typ_error_post Spec.session_message input p s); //How can this match against the `match ... `
+        unfold (read_deterministically_encoded_cbor_with_typ_post Spec.session_message input p s ParseError); 
         fold (parse_dpe_cmd_post len input s p None);
         None #dpe_cmd
       }
       ParseSuccess c ->
       {
-        manurewrite (read_deterministically_encoded_cbor_with_typ_post Spec.session_message input p s rc) (read_deterministically_encoded_cbor_with_typ_success_post Spec.session_message input p s c);
-        unfold (read_deterministically_encoded_cbor_with_typ_success_post Spec.session_message input p s c); //How can this match against the `match ... `
+        unfold (read_deterministically_encoded_cbor_with_typ_post Spec.session_message input p s (ParseSuccess c));
         with vc . assert (raw_data_item_match c.read_cbor_payload vc);
         with vrem . assert (A.pts_to c.read_cbor_remainder #p vrem);
         stick_consume_r ()
@@ -147,20 +145,14 @@ fn parse_dpe_cmd (len:SZ.t)
         {
           ParseError ->
           {
-            manurewrite
-              (read_deterministically_encoded_cbor_with_typ_post Spec.command_message' cbor_str.cbor_string_payload cbor_str.permission cs msg_rc)
-              (read_deterministically_encoded_cbor_with_typ_error_post Spec.command_message' cbor_str.cbor_string_payload cbor_str.permission cs);
-            unfold (read_deterministically_encoded_cbor_with_typ_error_post Spec.command_message' cbor_str.cbor_string_payload cbor_str.permission cs);
+            unfold (read_deterministically_encoded_cbor_with_typ_post Spec.command_message' cbor_str.cbor_string_payload cbor_str.permission cs ParseError);
             elim_implies ();
             fold (parse_dpe_cmd_post len input s p None);
             None #dpe_cmd
           }
           ParseSuccess msg ->
           {
-            manurewrite
-              (read_deterministically_encoded_cbor_with_typ_post Spec.command_message' cbor_str.cbor_string_payload cbor_str.permission cs msg_rc)
-              (read_deterministically_encoded_cbor_with_typ_success_post Spec.command_message' cbor_str.cbor_string_payload cbor_str.permission cs msg);
-            unfold (read_deterministically_encoded_cbor_with_typ_success_post Spec.command_message' cbor_str.cbor_string_payload cbor_str.permission cs msg);
+            unfold (read_deterministically_encoded_cbor_with_typ_post Spec.command_message' cbor_str.cbor_string_payload cbor_str.permission cs (ParseSuccess msg));
             with vmsg . assert (raw_data_item_match msg.read_cbor_payload vmsg);
             with vrem . assert (A.pts_to msg.read_cbor_remainder #cbor_str.permission vrem);
             stick_consume_r ()

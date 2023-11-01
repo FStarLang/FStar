@@ -603,21 +603,6 @@ let read_deterministically_encoded_cbor_with_typ_success_postcond
     read_deterministically_encoded_cbor_success_postcond va c v rem /\
     t v == true
 
-let read_deterministically_encoded_cbor_with_typ_success_post
-  (t: typ)
-  (a: A.array U8.t)
-  (p: perm)
-  (va: Ghost.erased (Seq.seq U8.t))
-  (c: read_cbor_success_t)
-: Tot vprop
-= exists_ (fun v -> exists_ (fun rem ->
-    raw_data_item_match c.read_cbor_payload v **
-    A.pts_to c.read_cbor_remainder #p rem **
-    ((raw_data_item_match c.read_cbor_payload v ** A.pts_to c.read_cbor_remainder #p rem) @==>
-      A.pts_to a #p va) **
-    pure (read_deterministically_encoded_cbor_with_typ_success_postcond t va c v rem)
-  ))
-
 noextract
 let read_deterministically_encoded_cbor_with_typ_error_postcond
   (t: typ)
@@ -657,14 +642,6 @@ let read_deterministically_encoded_cbor_with_typ_error_postcond_intro_typ_fail
     in
     Classical.forall_intro (Classical.move_requires prf)
 
-let read_deterministically_encoded_cbor_with_typ_error_post
-  (t: typ)
-  (a: A.array U8.t)
-  (p: perm)
-  (va: Ghost.erased (Seq.seq U8.t))
-: Tot vprop
-= A.pts_to a #p va ** pure (read_deterministically_encoded_cbor_with_typ_error_postcond t va)
-
 let read_deterministically_encoded_cbor_with_typ_post
   (t: typ)
   (a: A.array U8.t)
@@ -673,8 +650,16 @@ let read_deterministically_encoded_cbor_with_typ_post
   (res: read_cbor_t)
 : Tot vprop
 = match res with
-  | ParseError -> read_deterministically_encoded_cbor_with_typ_error_post t a p va
-  | ParseSuccess c -> read_deterministically_encoded_cbor_with_typ_success_post t a p va c
+  | ParseError ->
+    A.pts_to a #p va ** pure (read_deterministically_encoded_cbor_with_typ_error_postcond t va)
+  | ParseSuccess c ->
+    exists_ (fun v -> exists_ (fun rem ->
+        raw_data_item_match c.read_cbor_payload v **
+        A.pts_to c.read_cbor_remainder #p rem **
+        ((raw_data_item_match c.read_cbor_payload v ** A.pts_to c.read_cbor_remainder #p rem) @==>
+        A.pts_to a #p va) **
+        pure (read_deterministically_encoded_cbor_with_typ_success_postcond t va c v rem)
+    ))
 
 module SZ = FStar.SizeT
 
@@ -701,8 +686,7 @@ ensures read_deterministically_encoded_cbor_with_typ_post t a p va res
         unfold (read_deterministically_encoded_cbor_success_post a p va sres);
         let test = eval_impl_typ ft sres.read_cbor_payload;
         if (test) {
-            fold (read_deterministically_encoded_cbor_with_typ_success_post t a p va sres);
-            rewrite (read_deterministically_encoded_cbor_with_typ_success_post t a p va sres) as (read_deterministically_encoded_cbor_with_typ_post t a p va res);
+            fold (read_deterministically_encoded_cbor_with_typ_post t a p va (ParseSuccess sres));
             res
         } else {
             with v . assert (raw_data_item_match sres.read_cbor_payload v);
@@ -710,50 +694,17 @@ ensures read_deterministically_encoded_cbor_with_typ_post t a p va res
             read_deterministically_encoded_cbor_with_typ_error_postcond_intro_typ_fail t va sres v vrem;
             elim_stick0 ()
                 #(raw_data_item_match sres.read_cbor_payload v ** A.pts_to sres.read_cbor_remainder #p vrem);
-            fold (read_deterministically_encoded_cbor_with_typ_error_post t a p va);
-            rewrite (read_deterministically_encoded_cbor_with_typ_error_post t a p va) as (read_deterministically_encoded_cbor_with_typ_post t a p va ParseError);
+            fold (read_deterministically_encoded_cbor_with_typ_post t a p va ParseError);
             ParseError
         }
     } else {
         rewrite (read_deterministically_encoded_cbor_post a p va res) as (read_deterministically_encoded_cbor_error_post a p va);
         unfold (read_deterministically_encoded_cbor_error_post a p va);
-        fold (read_deterministically_encoded_cbor_with_typ_error_post t a p va);
-        rewrite (read_deterministically_encoded_cbor_with_typ_error_post t a p va) as (read_deterministically_encoded_cbor_with_typ_post t a p va res);
+        fold (read_deterministically_encoded_cbor_with_typ_post t a p va ParseError);
         res
     }
 }
 ```
-
-
-let cbor_map_get_with_typ_post_not_found
-  (t: typ)
-  (vkey: raw_data_item)
-  (vmap: raw_data_item)
-  (map: cbor)
-: Tot vprop
-= raw_data_item_match map vmap ** pure (
-    Map? vmap /\
-    begin match list_ghost_assoc vkey (Map?.v vmap) with
-    | None -> True
-    | Some v -> t v == false
-    end
-  )
-
-let cbor_map_get_with_typ_post_found
-  (t: typ)
-  (vkey: raw_data_item)
-  (vmap: raw_data_item)
-  (map: cbor)
-  (value: cbor)
-: Tot vprop
-= exists_ (fun vvalue ->
-    raw_data_item_match value vvalue **
-    (raw_data_item_match value vvalue @==> raw_data_item_match map vmap) **
-    pure (
-      Map? vmap /\
-      list_ghost_assoc vkey (Map?.v vmap) == Some vvalue /\
-      t vvalue == true
-  ))
 
 let cbor_map_get_with_typ_post
   (t: typ)
@@ -763,8 +714,23 @@ let cbor_map_get_with_typ_post
   (res: cbor_map_get_t)
 : Tot vprop
 = match res with
-  | NotFound -> cbor_map_get_with_typ_post_not_found t vkey vmap map
-  | Found value -> cbor_map_get_with_typ_post_found t vkey vmap map value
+  | NotFound ->
+    raw_data_item_match map vmap ** pure (
+        Map? vmap /\
+        begin match list_ghost_assoc vkey (Map?.v vmap) with
+        | None -> True
+        | Some v -> t v == false
+        end
+    )
+  | Found value ->
+    exists_ (fun vvalue ->
+        raw_data_item_match value vvalue **
+        (raw_data_item_match value vvalue @==> raw_data_item_match map vmap) **
+        pure (
+        Map? vmap /\
+        list_ghost_assoc vkey (Map?.v vmap) == Some vvalue /\
+        t vvalue == true
+    ))
 
 let cbor_map_get_post_eq_found
   (vkey: raw_data_item)
@@ -844,20 +810,17 @@ ensures
         unfold (cbor_map_get_post_found vkey vmap map fres);
         let test = eval_impl_typ ft fres;
         if (test) {
-            fold (cbor_map_get_with_typ_post_found t vkey vmap map fres);
-            manurewrite (cbor_map_get_with_typ_post_found t vkey vmap map fres) (cbor_map_get_with_typ_post t vkey vmap map res);
+            fold (cbor_map_get_with_typ_post t vkey vmap map (Found fres));
             res
         } else {
             elim_stick0 ();
-            fold (cbor_map_get_with_typ_post_not_found t vkey vmap map);
-            rewrite (cbor_map_get_with_typ_post_not_found t vkey vmap map) as (cbor_map_get_with_typ_post t vkey vmap map NotFound);
+            fold (cbor_map_get_with_typ_post t vkey vmap map NotFound);
             NotFound
         }
     } else {
         rewrite (cbor_map_get_post vkey vmap map res) as (cbor_map_get_post_not_found vkey vmap map);
         unfold (cbor_map_get_post_not_found vkey vmap map);
-        fold (cbor_map_get_with_typ_post_not_found t vkey vmap map);
-        rewrite (cbor_map_get_with_typ_post_not_found t vkey vmap map) as (cbor_map_get_with_typ_post t vkey vmap map res);
+        fold (cbor_map_get_with_typ_post t vkey vmap map NotFound);
         res
     }
 }
