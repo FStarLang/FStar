@@ -58,6 +58,7 @@ type step =
   | NBE
   | ForExtraction   //marking an invocation of the normalizer for extraction
   | Unrefine
+  | NormDebug       //force debugging
 and steps = list step
 
 val eq_step : step -> step -> bool

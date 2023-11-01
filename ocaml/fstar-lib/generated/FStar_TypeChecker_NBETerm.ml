@@ -731,6 +731,9 @@ let unembed :
   'a . 'a embedding -> nbe_cbs -> t -> 'a FStar_Pervasives_Native.option =
   fun e -> fun cb -> fun trm -> e.un cb trm
 let type_of : 'a . 'a embedding -> t = fun e -> e.typ
+let set_type : 'a . t -> 'a embedding -> 'a embedding =
+  fun ty ->
+    fun e -> { em = (e.em); un = (e.un); typ = ty; emb_typ = (e.emb_typ) }
 let mk_emb :
   'a .
     (nbe_cbs -> 'a -> t) ->

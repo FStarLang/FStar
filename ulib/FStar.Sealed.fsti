@@ -45,4 +45,7 @@ val sealed_singl (#a:Type) (x y : sealed a)
 
 (* Sealing a value hides it from the logical fragment of F* *)
 val seal (#a : Type u#aa) (x:a) : Tot (sealed a)
-// ^ NB: Tot annotation needed since this file is used in bootstrapping.
+
+val map_seal (#a : Type u#aa) (#b : Type u#bb) (s : sealed a) (f : a -> Tot b) : Tot (sealed b)
+
+val bind_seal (#a : Type u#aa) (#b : Type u#bb) (s : sealed a) (f : a -> Tot (sealed b)) : Tot (sealed b)

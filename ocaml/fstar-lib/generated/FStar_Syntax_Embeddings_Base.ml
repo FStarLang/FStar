@@ -183,17 +183,31 @@ let unembed :
           (let uu___1 =
              let uu___2 =
                let uu___3 =
-                 let uu___4 = type_of e in
-                 FStar_Syntax_Print.term_to_string uu___4 in
+                 let uu___4 =
+                   FStar_Errors_Msg.text "Unembedding failed for type" in
+                 let uu___5 =
+                   let uu___6 = type_of e in
+                   FStar_Syntax_Print.term_to_doc uu___6 in
+                 FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
                let uu___4 =
-                 let uu___5 = emb_typ_of e in
-                 FStar_Syntax_Print.emb_typ_to_string uu___5 in
-               let uu___5 = FStar_Syntax_Print.term_to_string t in
-               FStar_Compiler_Util.format3
-                 "Warning, unembedding failed for type %s (%s); term = %s"
-                 uu___3 uu___4 uu___5 in
+                 let uu___5 =
+                   let uu___6 = FStar_Errors_Msg.text "emb_typ = " in
+                   let uu___7 =
+                     let uu___8 =
+                       let uu___9 = emb_typ_of e in
+                       FStar_Syntax_Print.emb_typ_to_string uu___9 in
+                     FStar_Pprint.doc_of_string uu___8 in
+                   FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                 let uu___6 =
+                   let uu___7 =
+                     let uu___8 = FStar_Errors_Msg.text "Term =" in
+                     let uu___9 = FStar_Syntax_Print.term_to_doc t in
+                     FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
+                   [uu___7] in
+                 uu___5 :: uu___6 in
+               uu___3 :: uu___4 in
              (FStar_Errors_Codes.Warning_NotEmbedded, uu___2) in
-           FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu___1)
+           FStar_Errors.log_issue_doc t.FStar_Syntax_Syntax.pos uu___1)
         else ();
         r
 let embed_as :
