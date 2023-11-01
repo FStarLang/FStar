@@ -109,6 +109,7 @@ let mk_us (l : lid) (u_arity:int) (arity : int)
   ; Cfg.auto_reflect                 = None
   ; Cfg.strong_reduction_ok          = true
   ; Cfg.requires_binder_substitution = false
+  ; Cfg.renorm_after                 = false
   ; Cfg.interpretation               = (fun psc cbs _us args -> fn psc cbs args)
   ; Cfg.interpretation_nbe           = (fun cbs _us args -> nbe_fn cbs args)
   }

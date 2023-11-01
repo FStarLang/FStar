@@ -626,9 +626,12 @@ let mk_psc_subst cfg env =
             | _ -> subst)
         env []
 
-let reduce_primops norm_cb cfg env tm =
+(* Boolean indicates whether further normalization of the result is
+required. It is usually false, unless we call into a 'renorm' primitive
+step. *)
+let reduce_primops norm_cb cfg env tm : term & bool =
     if not cfg.steps.primops
-    then tm
+    then tm, false
     else begin
          let head, args = U.head_and_args tm in
          let head_term, universes = 
@@ -647,7 +650,7 @@ let reduce_primops norm_cb cfg env tm =
                                                      (Print.lid_to_string prim_step.name)
                                                      (string_of_int l)
                                                      (string_of_int prim_step.arity));
-                        tm //partial application; can't step
+                        tm, false //partial application; can't step
                   end
              else begin
                   let args_1, args_2 = if l = prim_step.arity
@@ -672,26 +675,29 @@ let reduce_primops norm_cb cfg env tm =
                   match r with
                   | None ->
                       log_primops cfg (fun () -> BU.print1 "primop: <%s> did not reduce\n" (Print.term_to_string tm));
-                      tm
+                      tm, false
                   | Some reduced ->
                       log_primops cfg (fun () -> BU.print2 "primop: <%s> reduced to  %s\n"
                                               (Print.term_to_string tm)
                                               (Print.term_to_string reduced));
-                      U.mk_app reduced args_2
+                      (* If prim_step.renorm_after is step, we will later
+                      keep reducing this term. Otherwise we will just
+                      rebuild. *)
+                      U.mk_app reduced args_2, prim_step.renorm_after
                  end
            | Some _ ->
                log_primops cfg (fun () -> BU.print1 "primop: not reducing <%s> since we're doing strong reduction\n"
                                             (Print.term_to_string tm));
-               tm
-           | None -> tm
+               tm, false
+           | None -> tm, false
            end
 
          | Tm_constant Const_range_of when not cfg.strong ->
            log_primops cfg (fun () -> BU.print1 "primop: reducing <%s>\n"
                                         (Print.term_to_string tm));
            begin match args with
-           | [(a1, _)] -> embed_simple EMB.e_range a1.pos tm.pos
-           | _ -> tm
+           | [(a1, _)] -> embed_simple EMB.e_range a1.pos tm.pos, false
+           | _ -> tm, false
            end
 
          | Tm_constant Const_set_range_of when not cfg.strong ->
@@ -700,13 +706,13 @@ let reduce_primops norm_cb cfg env tm =
            begin match args with
            | [(t, _); (r, _)] ->
                 begin match try_unembed_simple EMB.e_range r with
-                | Some rng -> Subst.set_use_range rng t
-                | None -> tm
+                | Some rng -> Subst.set_use_range rng t, false
+                | None -> tm, false
                 end
-           | _ -> tm
+           | _ -> tm, false
            end
 
-         | _ -> tm
+         | _ -> tm, false
    end
 
 let reduce_equality norm_cb cfg tm =
@@ -2203,12 +2209,13 @@ and norm_binders : cfg -> env -> binders -> binders =
         List.rev nbs
 
 and maybe_simplify cfg env stack tm =
-    let tm' = maybe_simplify_aux cfg env stack tm in
+    let tm', renorm = maybe_simplify_aux cfg env stack tm in
     if cfg.debug.b380
-    then BU.print3 "%sSimplified\n\t%s to\n\t%s\n"
+    then BU.print4 "%sSimplified\n\t%s to\n\t%s\nrenorm = %s\n"
                    (if cfg.steps.simplify then "" else "NOT ")
-                   (Print.term_to_string tm) (Print.term_to_string tm');
-    tm'
+                   (Print.term_to_string tm) (Print.term_to_string tm')
+                   (string_of_bool renorm);
+    tm', renorm
 
 and norm_cb cfg : EMB.norm_cb = function
     | Inr x -> norm cfg [] [] x
@@ -2224,10 +2231,11 @@ and norm_cb cfg : EMB.norm_cb = function
 (*******************************************************************)
 (* Simplification steps are not part of definitional equality      *)
 (* simplifies True /\ t, t /\ True, t /\ False, False /\ t etc.    *)
+(* The boolean indicates whether further normalization is required. *)
 (*******************************************************************)
-and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term =
-    let tm = reduce_primops (norm_cb cfg) cfg env tm in
-    if not <| cfg.steps.simplify then tm
+and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term & bool =
+    let tm, renorm = reduce_primops (norm_cb cfg) cfg env tm in
+    if not <| cfg.steps.simplify then tm, renorm
     else
     let w t = {t with pos=tm.pos} in
     let simp_t t =
@@ -2379,7 +2387,7 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term =
         in
         let head, args = U.head_and_args t in
         let args = List.map maybe_un_auto_squash_arg args in
-        S.mk_Tm_app head args t.pos
+        S.mk_Tm_app head args t.pos, false
     in
     let rec clearly_inhabited (ty : typ) : bool =
         match (U.unmeta ty).n with
@@ -2408,46 +2416,46 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term =
       if S.fv_eq_lid fv PC.and_lid
       then match args |> List.map simplify with
            | [(Some true, _); (_, (arg, _))]
-           | [(_, (arg, _)); (Some true, _)] -> maybe_auto_squash arg
+           | [(_, (arg, _)); (Some true, _)] -> maybe_auto_squash arg, false
            | [(Some false, _); _]
-           | [_; (Some false, _)] -> w U.t_false
+           | [_; (Some false, _)] -> w U.t_false, false
            | _ -> squashed_head_un_auto_squash_args tm
       else if S.fv_eq_lid fv PC.or_lid
       then match args |> List.map simplify with
            | [(Some true, _); _]
-           | [_; (Some true, _)] -> w U.t_true
+           | [_; (Some true, _)] -> w U.t_true, false
            | [(Some false, _); (_, (arg, _))]
-           | [(_, (arg, _)); (Some false, _)] -> maybe_auto_squash arg
+           | [(_, (arg, _)); (Some false, _)] -> maybe_auto_squash arg, false
            | _ -> squashed_head_un_auto_squash_args tm
       else if S.fv_eq_lid fv PC.imp_lid
       then match args |> List.map simplify with
            | [_; (Some true, _)]
-           | [(Some false, _); _] -> w U.t_true
-           | [(Some true, _); (_, (arg, _))] -> maybe_auto_squash arg
+           | [(Some false, _); _] -> w U.t_true, false
+           | [(Some true, _); (_, (arg, _))] -> maybe_auto_squash arg, false
            | [(_, (p, _)); (_, (q, _))] ->
              if U.term_eq p q
-             then w U.t_true
+             then w U.t_true, false
              else squashed_head_un_auto_squash_args tm
            | _ -> squashed_head_un_auto_squash_args tm
       else if S.fv_eq_lid fv PC.iff_lid
       then match args |> List.map simplify with
            | [(Some true, _)  ; (Some true, _)]
-           | [(Some false, _) ; (Some false, _)] -> w U.t_true
+           | [(Some false, _) ; (Some false, _)] -> w U.t_true, false
            | [(Some true, _)  ; (Some false, _)]
-           | [(Some false, _) ; (Some true, _)]  -> w U.t_false
+           | [(Some false, _) ; (Some true, _)]  -> w U.t_false, false
            | [(_, (arg, _))   ; (Some true, _)]
-           | [(Some true, _)  ; (_, (arg, _))]   -> maybe_auto_squash arg
+           | [(Some true, _)  ; (_, (arg, _))]   -> maybe_auto_squash arg, false
            | [(_, (arg, _))   ; (Some false, _)]
-           | [(Some false, _) ; (_, (arg, _))]   -> maybe_auto_squash (U.mk_neg arg)
+           | [(Some false, _) ; (_, (arg, _))]   -> maybe_auto_squash (U.mk_neg arg), false
            | [(_, (p, _)); (_, (q, _))] ->
              if U.term_eq p q
-             then w U.t_true
+             then w U.t_true, false
              else squashed_head_un_auto_squash_args tm
            | _ -> squashed_head_un_auto_squash_args tm
       else if S.fv_eq_lid fv PC.not_lid
       then match args |> List.map simplify with
-           | [(Some true, _)] ->  w U.t_false
-           | [(Some false, _)] -> w U.t_true
+           | [(Some true, _)] ->  w U.t_false, false
+           | [(Some false, _)] -> w U.t_true, false
            | _ -> squashed_head_un_auto_squash_args tm
       else if S.fv_eq_lid fv PC.forall_lid
       then match args with
@@ -2456,21 +2464,21 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term =
              begin match (SS.compress t).n with
                    | Tm_abs {bs=[_]; body} ->
                      (match simp_t body with
-                     | Some true -> w U.t_true
-                     | _ -> tm)
-                   | _ -> tm
+                     | Some true -> w U.t_true, false
+                     | _ -> tm, false)
+                   | _ -> tm, false
              end
            (* Simplify ∀x. True to True, and ∀x. False to False, if the domain is not empty *)
            | [(ty, Some ({ aqual_implicit = true })); (t, _)] ->
              begin match (SS.compress t).n with
                    | Tm_abs {bs=[_]; body} ->
                      (match simp_t body with
-                     | Some true -> w U.t_true
-                     | Some false when clearly_inhabited ty -> w U.t_false
-                     | _ -> tm)
-                   | _ -> tm
+                     | Some true -> w U.t_true, false
+                     | Some false when clearly_inhabited ty -> w U.t_false, false
+                     | _ -> tm, false)
+                   | _ -> tm, false
              end
-           | _ -> tm
+           | _ -> tm, false
       else if S.fv_eq_lid fv PC.exists_lid
       then match args with
            (* Simplify ∃x. False to False *)
@@ -2478,26 +2486,26 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term =
              begin match (SS.compress t).n with
                    | Tm_abs {bs=[_]; body} ->
                      (match simp_t body with
-                     | Some false -> w U.t_false
-                     | _ -> tm)
-                   | _ -> tm
+                     | Some false -> w U.t_false, false
+                     | _ -> tm, false)
+                   | _ -> tm, false
              end
            (* Simplify ∃x. False to False and ∃x. True to True, if the domain is not empty *)
            | [(ty, Some ({ aqual_implicit = true })); (t, _)] ->
              begin match (SS.compress t).n with
                    | Tm_abs {bs=[_]; body} ->
                      (match simp_t body with
-                     | Some false -> w U.t_false
-                     | Some true when clearly_inhabited ty -> w U.t_true
-                     | _ -> tm)
-                   | _ -> tm
+                     | Some false -> w U.t_false, false
+                     | Some true when clearly_inhabited ty -> w U.t_true, false
+                     | _ -> tm, false)
+                   | _ -> tm, false
              end
-           | _ -> tm
+           | _ -> tm, false
       else if S.fv_eq_lid fv PC.b2t_lid
       then match args with
-           | [{n=Tm_constant (Const_bool true)}, _] -> w U.t_true
-           | [{n=Tm_constant (Const_bool false)}, _] -> w U.t_false
-           | _ -> tm //its arg is a bool, can't unsquash
+           | [{n=Tm_constant (Const_bool true)}, _] -> w U.t_true, false
+           | [{n=Tm_constant (Const_bool false)}, _] -> w U.t_false, false
+           | _ -> tm, false //its arg is a bool, can't unsquash
       else if S.fv_eq_lid fv PC.haseq_lid
       then begin
         (*
@@ -2515,12 +2523,12 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term =
         in
         if List.length args = 1 then
           let t = args |> List.hd |> fst in
-          if t |> t_has_eq_for_sure then w U.t_true
+          if t |> t_has_eq_for_sure then w U.t_true, false
           else
             match (SS.compress t).n with
             | Tm_refine _ ->
               let t = U.unrefine t in
-              if t |> t_has_eq_for_sure then w U.t_true
+              if t |> t_has_eq_for_sure then w U.t_true, false
               else
                 //get the hasEq term itself
                 let haseq_tm =
@@ -2529,9 +2537,9 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term =
                   | _ -> failwith "Impossible! We have already checked that this is a Tm_app"
                 in
                 //and apply it to the unrefined type
-                mk_app (haseq_tm) [t |> as_arg]
-            | _ -> tm
-        else tm
+                mk_app (haseq_tm) [t |> as_arg], false
+            | _ -> tm, false
+        else tm, false
       end
       else if S.fv_eq_lid fv PC.subtype_of_lid
       then begin
@@ -2543,31 +2551,31 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term =
         match args with
         | [(t, _); (ty, _)]
           when is_unit ty && U.is_sub_singleton t ->
-          w U.t_true
-        | _ -> tm
+          w U.t_true, false
+        | _ -> tm, false
       end
       else begin
            match U.is_auto_squash tm with
            | Some (U_zero, t)
              when U.is_sub_singleton t ->
              //remove redundant auto_squashes
-             t
+             t, false
            | _ ->
              reduce_equality (norm_cb cfg) cfg env tm
       end
     | Tm_refine {b=bv; phi=t} ->
         begin match simp_t t with
-        | Some true -> bv.sort
-        | Some false -> tm
-        | None -> tm
+        | Some true -> bv.sort, false
+        | Some false -> tm, false
+        | None -> tm, false
         end
     | Tm_match _ ->
         begin match is_const_match tm with
-        | Some true -> w U.t_true
-        | Some false -> w U.t_false
-        | None -> tm
+        | Some true -> w U.t_true, false
+        | Some false -> w U.t_false, false
+        | None -> tm, false
         end
-    | _ -> tm
+    | _ -> tm, false
 
 
 and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
@@ -2594,7 +2602,12 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
   if f_opt |> is_some && (match stack with | Arg _::_ -> true | _ -> false)  //AR: it is crucial to check that (on_domain a #b) is actually applied, else it would be unsound to reduce it to f
   then f_opt |> must |> norm cfg env stack
   else
-      let t = maybe_simplify cfg env stack t in
+      let t, renorm = maybe_simplify cfg env stack t in
+      if renorm
+      then norm cfg env stack t
+      else do_rebuild cfg env stack t
+
+and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
       match stack with
       | [] -> t
 

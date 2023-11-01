@@ -43,6 +43,7 @@ let register_plugin (s: string) (arity: Prims.int) (t: itac) (n:nbe_itac) =
              C.auto_reflect=None;
              C.strong_reduction_ok=true;
              C.requires_binder_substitution = false;
+             C.renorm_after = false;
              C.interpretation=(fun psc cbs _us args -> t psc cbs args);
              C.univ_arity=Z.of_int 0; (* TODO: bogus for now, just as in Tactics.Interpreter *)
              C.interpretation_nbe = (fun cbs _us args -> n cbs args);

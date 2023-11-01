@@ -321,6 +321,7 @@ let steps_zeta_full     = psconst "zeta_full"
 let steps_iota          = psconst "iota"
 let steps_delta         = psconst "delta"
 let steps_reify         = psconst "reify_"
+let steps_norm_debug    = psconst "norm_debug"
 let steps_unfoldonly    = psconst "delta_only"
 let steps_unfoldfully   = psconst "delta_fully"
 let steps_unfoldattr    = psconst "delta_attr"
@@ -556,7 +557,9 @@ let fext_on_dom_g_lid = fext_lid "on_dom_g"
 
 let sealed_lid      = p2l ["FStar"; "Sealed"; "sealed"]
 let seal_lid        = p2l ["FStar"; "Sealed"; "seal"]
-let unseal_lid      = p2l ["FStar"; "Tactics"; "Unseal"; "unseal"]
+let unseal_lid      = p2l ["FStar"; "Tactics"; "Unseal"; "unseal"] (* In a separate module due to the mention of TAC *)
+let map_seal_lid    = p2l ["FStar"; "Sealed"; "map_seal"]
+let bind_seal_lid   = p2l ["FStar"; "Sealed"; "bind_seal"]
 
 let document_lid = p2l ["FStar"; "Stubs"; "Pprint"; "document"]
 let issue_lid = p2l ["FStar"; "Issue"; "issue"]

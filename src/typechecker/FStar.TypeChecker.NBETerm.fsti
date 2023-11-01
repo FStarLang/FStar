@@ -253,6 +253,7 @@ val embed   : embedding 'a -> nbe_cbs -> 'a -> t
 val unembed : embedding 'a -> nbe_cbs -> t -> option 'a
 val lazy_unembed_lazy_kind (#a:Type) (k:lazy_kind) (x:t) : option a
 val type_of : embedding 'a -> t
+val set_type : t -> embedding 'a -> embedding 'a
 
 val e_bool   : embedding bool
 val e_string : embedding string

@@ -94,6 +94,7 @@ type primitive_step = {
     auto_reflect:option int;
     strong_reduction_ok:bool;
     requires_binder_substitution:bool;
+    renorm_after:bool; // whether the result of this primop must possibly undergo more normalization
     interpretation:(psc -> FStar.Syntax.Embeddings.norm_cb -> universes -> args -> option term);
     interpretation_nbe:(NBE.nbe_cbs -> universes -> NBE.args -> option NBE.t)
 }
