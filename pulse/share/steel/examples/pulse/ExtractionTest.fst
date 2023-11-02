@@ -116,7 +116,7 @@ fn testbi2 (x:SZ.t) (y:SZ.t)
 ```
 
 ```pulse
-fn extract_match (x:option bool)
+fn extract_match (x:opt bool)
   requires emp
   returns b:bool
   ensures emp
