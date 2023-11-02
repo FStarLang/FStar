@@ -11,5 +11,17 @@ top-level names, so this allows to force it. *)
 val perform
   (#a #pre #post : _)
   (f : unit -> stt a pre post)
-  : unit -> stt a pre post
-let perform f () = f ()
+  : stt a pre post
+let perform f = f ()
+
+val perform_ghost
+  (#a #is #pre #post : _)
+  (f : unit -> stt_ghost is a pre post)
+  : stt_ghost is a pre post
+let perform_ghost f = f ()
+
+val perform_atomic
+  (#a #is #pre #post : _)
+  (f : unit -> stt_atomic is a pre post)
+  : stt_atomic is a pre post
+let perform_atomic f = f ()
