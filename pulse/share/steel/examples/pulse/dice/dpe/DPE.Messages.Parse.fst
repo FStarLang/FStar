@@ -1,6 +1,5 @@
 module DPE.Messages.Parse
 open Pulse.Lib.Pervasives
-open DPE
 open CBOR.Spec
 open CBOR.Pulse
 open CDDL.Pulse
@@ -8,9 +7,6 @@ module Spec = DPE.Messages.Spec
 module SZ = FStar.SizeT
 module U8 = FStar.UInt8
 module A = Pulse.Lib.Array
-assume
-val drop (p:vprop)
-    : stt unit p (fun _ -> emp)
 
 #push-options "--ext 'pulse:env_on_err'"
 
@@ -37,29 +33,6 @@ fn elim_implies (_:unit) (#p #q:vprop)
 }
 ```
 
-```pulse
-fn finish (c:read_cbor_success_t)
-          (#p:perm)
-          (#v:erased (raw_data_item))
-          (#s:erased (Seq.seq U8.t))
-          (#rem:erased (Seq.seq U8.t))
-  requires `@((raw_data_item_match c.read_cbor_payload v **
-               A.pts_to c.read_cbor_remainder #p rem) @==>
-              A.pts_to input #p s) **
-            raw_data_item_match c.read_cbor_payload v **
-            A.pts_to c.read_cbor_remainder #p rem **
-            uds_is_enabled
-  returns _:option ctxt_hndl_t
-  ensures A.pts_to input #p s
-{
-   elim_implies ()  #(raw_data_item_match c.read_cbor_payload v **
-                            A.pts_to c.read_cbor_remainder #p rem)
-                            #(A.pts_to input #p s);
-    drop uds_is_enabled;
-    None #ctxt_hndl_t
-}
-```
-
 assume Fits_u64 : squash (SZ.fits_u64)
 
 let impl_session_message : impl_typ Spec.session_message =
@@ -79,9 +52,6 @@ type dpe_cmd = {
   dpe_cmd_cid: U64.t;
   dpe_cmd_args: cbor;
 }
-
-#push-options "--z3rlimit 64 --query_stats" // to let z3 cope with CDDL specs
-#restart-solver
 
 noextract
 let parse_dpe_cmd_args_postcond
