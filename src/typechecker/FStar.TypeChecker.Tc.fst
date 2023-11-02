@@ -871,9 +871,11 @@ let tc_decl' env0 se: list sigelt * list sigelt * Env.env =
       BU.print1 "Splice returned sigelts {\n%s\n}\n"
         (String.concat "\n" <| List.map Print.sigelt_to_string ses);
 
-    if is_typed
-    then ses, [], env
-    else [], ses, env
+    (* sigelts returned by splice_t can be marked with sigmeta
+    already_checked, and those will be skipped on the next run. But they do
+    run through the pipeline again. This also allows a splice tactic
+    to return any mixture of checked and unchecked sigelts. *)
+    [], ses, env
 
   | Sig_let {lbs; lids} ->
     Profiling.profile
@@ -958,7 +960,9 @@ let tc_decl env se: list sigelt * list sigelt * Env.env =
      BU.print1 "Processing %s\n" (Print.sigelt_to_string_short se);
    if Env.debug env Options.Low then
      BU.print1 ">>>>>>>>>>>>>>tc_decl %s\n" (Print.sigelt_to_string se);
-   if se.sigmeta.sigmeta_admit
+   if se.sigmeta.sigmeta_already_checked then
+     [se], [], env
+   else if se.sigmeta.sigmeta_admit
    then begin
      let old = Options.admit_smt_queries () in
      Options.set_admit_smt_queries true;

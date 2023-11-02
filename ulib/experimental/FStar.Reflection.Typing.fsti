@@ -1754,8 +1754,34 @@ type fstar_top_env = g:fstar_env {
 // g:fstar_top_env -> T.tac ((us, e, t):(univ_names & term & typ){typing (push g us) e t})
 //
 
+noeq
+type sigelt_typing : env -> sigelt -> Type0 =
+  | ST_Let :
+    g : env ->
+    fv : R.fv ->
+    ty : R.typ ->
+    tm : R.term ->
+    squash (typing g tm (T.E_Total, ty)) ->
+    sigelt_typing g (pack_sigelt (Sg_Let false [pack_lb ({ lb_fv = fv; lb_us = []; lb_typ = ty; lb_def = tm })]))
+
+  | ST_Let_Opaque :
+    g : env ->
+    fv : R.fv ->
+    ty : R.typ ->
+    (* no tm: only a proof of existence *)
+    squash (exists (tm:R.term). typing g tm (T.E_Total, ty)) ->
+    sigelt_typing g (pack_sigelt (Sg_Let false [pack_lb ({ lb_fv = fv; lb_us = []; lb_typ = ty; lb_def = (`_) })]))
+
 (**
- * The type of the top-level tactic that would splice-in the definitions
+ * The type of the top-level tactic that would splice-in the definitions.
+ * It returns a list of well typed definitions, via the judgment above.
+ *
+ * Each definition can have a 'blob' attached with a given name.
+ * The blob can be used later, e.g., during extraction, and passed back to the
+ * extension to perform additional processing.
+ *)
+
+(*
  * It returns either:
  *   - Some tm, blob, typ, with a proof that `typing g tm typ`
  *   - None, blob, typ), with a proof that `exists tm. typing g tm typ`
@@ -1763,18 +1789,18 @@ type fstar_top_env = g:fstar_env {
  * constructed by the tactic. If present, it will be stored in the 
  * sigmeta_extension_data field of the enclosing sigelt.
  *
- * The blob can be used later, e.g., during extraction, and passed back to the
- * extension to perform additional processing.
  *)
 let blob = string & R.term
-let dsl_tac_result_base_t = option R.term & option blob & R.typ
-let well_typed g (e:dsl_tac_result_base_t) =
-  let tm_opt, _, typ = e in
-  match tm_opt with
-  | None -> exists (tm:R.term). typing g tm (T.E_Total, typ)
-  | Some tm -> typing g tm (T.E_Total, typ)
+(* If checked is true, this sigelt is properly typed for the environment. If not,
+we don't know and let F* re-typecheck the sigelt. *)
+let sigelt_for (g:env) =
+  tup:(bool & sigelt & option blob)
+  {
+    let (checked, se, _) = tup in
+    checked ==> sigelt_typing g se
+  }
 
-let dsl_tac_result_t g = e:dsl_tac_result_base_t { well_typed g e }
+let dsl_tac_result_t (g:env) = list (sigelt_for g)
 
 type dsl_tac_t = g:fstar_top_env -> T.Tac (dsl_tac_result_t g)
 
@@ -1801,3 +1827,19 @@ val mkif
     (te : typing (extend_env g hyp (eq2 (pack_universe Uv_Zero) bool_ty scrutinee false_bool)) else_ (eff, ty))
     (tr : typing g ty (ty_eff, tm_type u_ty))
 : typing g (mk_if scrutinee then_ else_) (eff, ty)
+
+(* Helper to return a single let definition in a splice_t tactic. *)
+let mk_checked_let (g:R.env) (nm:string) (tm:R.term) (ty:R.typ{typing g tm (T.E_Total, ty)}) : T.Tac (sigelt_for g) =
+  let fv = pack_fv (T.cur_module () @ [nm]) in
+  let lb = R.pack_lb ({ lb_fv = fv; lb_us = []; lb_typ = ty; lb_def = tm }) in
+  let se = R.pack_sigelt (R.Sg_Let false [lb]) in
+  let pf : sigelt_typing g se =
+    ST_Let g fv ty tm ()
+  in
+  ( true, se, None )
+
+let mk_unchecked_let (g:R.env) (nm:string) (tm:R.term) (ty:R.typ) : T.Tac (sigelt_for g) =
+  let fv = pack_fv (T.cur_module () @ [nm]) in
+  let lb = R.pack_lb ({ lb_fv = fv; lb_us = []; lb_typ = ty; lb_def = tm }) in
+  let se = R.pack_sigelt (R.Sg_Let false [lb]) in
+  ( false, se, None )
