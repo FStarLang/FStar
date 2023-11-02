@@ -1944,6 +1944,7 @@ let union_loc_of_loc_disjoint_intro
     xs.addr `GSet.mem` addrs_of_loc_weak smaller xs.region /\
     aloc_disjoint xl xs
   )) by (
+    let open FStar.Tactics.V2.Builtins in
     let open FStar.Tactics.SMT in
     set_rlimit 64;
     set_options "--z3cliopt 'smt.qi.eager_threshold=1'";
