@@ -149,58 +149,6 @@ let parse_dpe_cmd_post
       )
     )
 
-let parse_dpe_cmd_fail_case_2
-  (s: Seq.seq U8.t)
-  (vsess: raw_data_item)
-  (rem: Seq.seq U8.t)
-: Lemma
-  (requires (
-    s == serialize_cbor vsess `Seq.append` rem /\
-    data_item_wf deterministically_encoded_cbor_map_key_order vsess /\
-    Spec.session_message vsess /\ (
-    let Array [_; String _ msg] = vsess in
-    (forall vmsg rem2 . (msg == serialize_cbor vmsg `Seq.append` rem2 /\ data_item_wf deterministically_encoded_cbor_map_key_order vmsg) ==>
-      Spec.command_message' vmsg == false
-    )
-  )))
-  (ensures (
-    parse_dpe_cmd_failure_postcond s
-  ))
-= serialize_cbor_with_test_correct vsess rem (fun vc' vrem1' ->
-    exists sid cid vargs .
-    parse_dpe_cmd_postcond sid cid vargs vc' vrem1'
-  )
-
-let parse_dpe_cmd_fail_case_3
-  (s: Seq.seq U8.t)
-  (vsess: raw_data_item)
-  (rem: Seq.seq U8.t)
-  (vmsg: raw_data_item)
-  (rem2: Seq.seq U8.t)
-: Lemma
-  (requires (
-    s == serialize_cbor vsess `Seq.append` rem /\
-    data_item_wf deterministically_encoded_cbor_map_key_order vsess /\
-    Spec.session_message vsess /\ (
-    let Array [_; String _ msg] = vsess in
-    msg == serialize_cbor vmsg `Seq.append` rem2 /\
-    data_item_wf deterministically_encoded_cbor_map_key_order vmsg /\
-    Spec.command_message' vmsg == true /\
-    Seq.length rem2 <> 0
-  )))
-  (ensures (
-    parse_dpe_cmd_failure_postcond s
-  ))
-= serialize_cbor_with_test_correct vmsg rem2 (fun vmsg' vrem2' ->
-    exists cid vargs .
-    parse_dpe_cmd_args_postcond cid vargs vmsg' vrem2'
-  );
-  serialize_cbor_with_test_correct vsess rem (fun vc' vrem1' ->
-    exists sid cid vargs .
-    parse_dpe_cmd_postcond sid cid vargs vc' vrem1'
-  )
-
-
 #push-options "--z3rlimit 64 --query_stats" // to let z3 cope with CDDL specs
 #restart-solver
 
@@ -250,7 +198,7 @@ fn parse_dpe_cmd (len:SZ.t)
           {
             unfold (read_deterministically_encoded_cbor_with_typ_post Spec.command_message' cbor_str.cbor_string_payload cbor_str.permission cs ParseError);
             elim_implies ();
-            parse_dpe_cmd_fail_case_2 s vc vrem1;
+            serialize_cbor_inj' vc vrem1;
             fold (parse_dpe_cmd_post len input s p None);
             None #dpe_cmd
           }
@@ -267,7 +215,8 @@ fn parse_dpe_cmd (len:SZ.t)
             stick_trans ();
             if (msg.read_cbor_remainder_length <> 0sz) {
               elim_implies ();
-              parse_dpe_cmd_fail_case_3 s vc vrem1 vmsg vrem2;
+              serialize_cbor_inj' vmsg vrem2;
+              serialize_cbor_inj' vc vrem1;
               fold (parse_dpe_cmd_post len input s p None);
               None #dpe_cmd
             } else {
