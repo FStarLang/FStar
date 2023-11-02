@@ -47,7 +47,7 @@ let (uu___21 : Prims.bool printable) = from_show Pulse_Show.uu___16
 let (uu___22 : Prims.int printable) = from_show Pulse_Show.uu___18
 let (uu___23 : Pulse_Syntax_Base.ctag printable) =
   from_show Pulse_Show.uu___28
-let showable_option :
+let printable_option :
   'a . 'a printable -> 'a FStar_Pervasives_Native.option printable =
   fun uu___ ->
     {
@@ -205,12 +205,12 @@ let (pp_record :
     FStar_Tactics_Effect.tac_bind
       (FStar_Sealed.seal
          (Obj.magic
-            (FStar_Range.mk_range "Pulse.PP.fst" (Prims.of_int (74))
-               (Prims.of_int (9)) (Prims.of_int (75)) (Prims.of_int (91)))))
+            (FStar_Range.mk_range "Pulse.PP.fst" (Prims.of_int (75))
+               (Prims.of_int (4)) (Prims.of_int (75)) (Prims.of_int (104)))))
       (FStar_Sealed.seal
          (Obj.magic
-            (FStar_Range.mk_range "Pulse.PP.fst" (Prims.of_int (74))
-               (Prims.of_int (2)) (Prims.of_int (75)) (Prims.of_int (91)))))
+            (FStar_Range.mk_range "Pulse.PP.fst" (Prims.of_int (77))
+               (Prims.of_int (2)) (Prims.of_int (77)) (Prims.of_int (25)))))
       (Obj.magic
          (separate_map (FStar_Pprint.doc_of_string ";")
             (fun uu___ ->
@@ -220,52 +220,54 @@ let (pp_record :
                        (fun uu___1 ->
                           match uu___ with
                           | (s, d) ->
-                              FStar_Pprint.op_Hat_Slash_Hat
-                                (FStar_Pprint.doc_of_string s)
+                              FStar_Pprint.group
                                 (FStar_Pprint.op_Hat_Slash_Hat
-                                   FStar_Pprint.equals d)))) uu___) flds))
-      (fun uu___ ->
+                                   (FStar_Pprint.doc_of_string s)
+                                   (FStar_Pprint.op_Hat_Slash_Hat
+                                      FStar_Pprint.equals
+                                      (FStar_Pprint.group d)))))) uu___) flds))
+      (fun flds_doc ->
          FStar_Tactics_Effect.lift_div_tac
-           (fun uu___1 -> FStar_Pprint.braces uu___))
-let (uu___52 : Pulse_Typing.post_hint_t printable) =
+           (fun uu___ -> FStar_Pprint.braces (FStar_Pprint.align flds_doc)))
+let (uu___53 : Pulse_Typing.post_hint_t printable) =
   {
     pp =
       (fun h ->
          FStar_Tactics_Effect.tac_bind
            (FStar_Sealed.seal
               (Obj.magic
-                 (FStar_Range.mk_range "Pulse.PP.fst" (Prims.of_int (79))
-                    (Prims.of_int (20)) (Prims.of_int (83))
+                 (FStar_Range.mk_range "Pulse.PP.fst" (Prims.of_int (81))
+                    (Prims.of_int (20)) (Prims.of_int (85))
                     (Prims.of_int (41)))))
            (FStar_Sealed.seal
               (Obj.magic
-                 (FStar_Range.mk_range "Pulse.PP.fst" (Prims.of_int (79))
-                    (Prims.of_int (10)) (Prims.of_int (83))
+                 (FStar_Range.mk_range "Pulse.PP.fst" (Prims.of_int (81))
+                    (Prims.of_int (10)) (Prims.of_int (85))
                     (Prims.of_int (41)))))
            (Obj.magic
               (FStar_Tactics_Effect.tac_bind
                  (FStar_Sealed.seal
                     (Obj.magic
                        (FStar_Range.mk_range "Pulse.PP.fst"
-                          (Prims.of_int (79)) (Prims.of_int (22))
-                          (Prims.of_int (79)) (Prims.of_int (33)))))
+                          (Prims.of_int (81)) (Prims.of_int (22))
+                          (Prims.of_int (81)) (Prims.of_int (33)))))
                  (FStar_Sealed.seal
                     (Obj.magic
                        (FStar_Range.mk_range "Pulse.PP.fst"
-                          (Prims.of_int (79)) (Prims.of_int (20))
-                          (Prims.of_int (83)) (Prims.of_int (41)))))
+                          (Prims.of_int (81)) (Prims.of_int (20))
+                          (Prims.of_int (85)) (Prims.of_int (41)))))
                  (Obj.magic
                     (FStar_Tactics_Effect.tac_bind
                        (FStar_Sealed.seal
                           (Obj.magic
                              (FStar_Range.mk_range "Pulse.PP.fst"
-                                (Prims.of_int (79)) (Prims.of_int (27))
-                                (Prims.of_int (79)) (Prims.of_int (33)))))
+                                (Prims.of_int (81)) (Prims.of_int (27))
+                                (Prims.of_int (81)) (Prims.of_int (33)))))
                        (FStar_Sealed.seal
                           (Obj.magic
                              (FStar_Range.mk_range "Pulse.PP.fst"
-                                (Prims.of_int (79)) (Prims.of_int (22))
-                                (Prims.of_int (79)) (Prims.of_int (33)))))
+                                (Prims.of_int (81)) (Prims.of_int (22))
+                                (Prims.of_int (81)) (Prims.of_int (33)))))
                        (Obj.magic (pp uu___47 h.Pulse_Typing.g))
                        (fun uu___ ->
                           FStar_Tactics_Effect.lift_div_tac
@@ -277,28 +279,28 @@ let (uu___52 : Pulse_Typing.post_hint_t printable) =
                             (FStar_Sealed.seal
                                (Obj.magic
                                   (FStar_Range.mk_range "Pulse.PP.fst"
-                                     (Prims.of_int (79)) (Prims.of_int (20))
-                                     (Prims.of_int (83)) (Prims.of_int (41)))))
+                                     (Prims.of_int (81)) (Prims.of_int (20))
+                                     (Prims.of_int (85)) (Prims.of_int (41)))))
                             (FStar_Sealed.seal
                                (Obj.magic
                                   (FStar_Range.mk_range "Pulse.PP.fst"
-                                     (Prims.of_int (79)) (Prims.of_int (20))
-                                     (Prims.of_int (83)) (Prims.of_int (41)))))
+                                     (Prims.of_int (81)) (Prims.of_int (20))
+                                     (Prims.of_int (85)) (Prims.of_int (41)))))
                             (Obj.magic
                                (FStar_Tactics_Effect.tac_bind
                                   (FStar_Sealed.seal
                                      (Obj.magic
                                         (FStar_Range.mk_range "Pulse.PP.fst"
-                                           (Prims.of_int (80))
+                                           (Prims.of_int (82))
                                            (Prims.of_int (22))
-                                           (Prims.of_int (80))
+                                           (Prims.of_int (82))
                                            (Prims.of_int (49)))))
                                   (FStar_Sealed.seal
                                      (Obj.magic
                                         (FStar_Range.mk_range "Pulse.PP.fst"
-                                           (Prims.of_int (79))
+                                           (Prims.of_int (81))
                                            (Prims.of_int (20))
-                                           (Prims.of_int (83))
+                                           (Prims.of_int (85))
                                            (Prims.of_int (41)))))
                                   (Obj.magic
                                      (FStar_Tactics_Effect.tac_bind
@@ -306,20 +308,20 @@ let (uu___52 : Pulse_Typing.post_hint_t printable) =
                                            (Obj.magic
                                               (FStar_Range.mk_range
                                                  "Pulse.PP.fst"
-                                                 (Prims.of_int (80))
+                                                 (Prims.of_int (82))
                                                  (Prims.of_int (35))
-                                                 (Prims.of_int (80))
+                                                 (Prims.of_int (82))
                                                  (Prims.of_int (49)))))
                                         (FStar_Sealed.seal
                                            (Obj.magic
                                               (FStar_Range.mk_range
                                                  "Pulse.PP.fst"
-                                                 (Prims.of_int (80))
+                                                 (Prims.of_int (82))
                                                  (Prims.of_int (22))
-                                                 (Prims.of_int (80))
+                                                 (Prims.of_int (82))
                                                  (Prims.of_int (49)))))
                                         (Obj.magic
-                                           (pp (showable_option uu___23)
+                                           (pp (printable_option uu___23)
                                               h.Pulse_Typing.ctag_hint))
                                         (fun uu___1 ->
                                            FStar_Tactics_Effect.lift_div_tac
@@ -333,17 +335,17 @@ let (uu___52 : Pulse_Typing.post_hint_t printable) =
                                                 (Obj.magic
                                                    (FStar_Range.mk_range
                                                       "Pulse.PP.fst"
-                                                      (Prims.of_int (79))
+                                                      (Prims.of_int (81))
                                                       (Prims.of_int (20))
-                                                      (Prims.of_int (83))
+                                                      (Prims.of_int (85))
                                                       (Prims.of_int (41)))))
                                              (FStar_Sealed.seal
                                                 (Obj.magic
                                                    (FStar_Range.mk_range
                                                       "Pulse.PP.fst"
-                                                      (Prims.of_int (79))
+                                                      (Prims.of_int (81))
                                                       (Prims.of_int (20))
-                                                      (Prims.of_int (83))
+                                                      (Prims.of_int (85))
                                                       (Prims.of_int (41)))))
                                              (Obj.magic
                                                 (FStar_Tactics_Effect.tac_bind
@@ -351,17 +353,17 @@ let (uu___52 : Pulse_Typing.post_hint_t printable) =
                                                       (Obj.magic
                                                          (FStar_Range.mk_range
                                                             "Pulse.PP.fst"
-                                                            (Prims.of_int (81))
+                                                            (Prims.of_int (83))
                                                             (Prims.of_int (22))
-                                                            (Prims.of_int (81))
+                                                            (Prims.of_int (83))
                                                             (Prims.of_int (43)))))
                                                    (FStar_Sealed.seal
                                                       (Obj.magic
                                                          (FStar_Range.mk_range
                                                             "Pulse.PP.fst"
-                                                            (Prims.of_int (79))
+                                                            (Prims.of_int (81))
                                                             (Prims.of_int (20))
-                                                            (Prims.of_int (83))
+                                                            (Prims.of_int (85))
                                                             (Prims.of_int (41)))))
                                                    (Obj.magic
                                                       (FStar_Tactics_Effect.tac_bind
@@ -369,17 +371,17 @@ let (uu___52 : Pulse_Typing.post_hint_t printable) =
                                                             (Obj.magic
                                                                (FStar_Range.mk_range
                                                                   "Pulse.PP.fst"
-                                                                  (Prims.of_int (81))
+                                                                  (Prims.of_int (83))
                                                                   (Prims.of_int (32))
-                                                                  (Prims.of_int (81))
+                                                                  (Prims.of_int (83))
                                                                   (Prims.of_int (43)))))
                                                          (FStar_Sealed.seal
                                                             (Obj.magic
                                                                (FStar_Range.mk_range
                                                                   "Pulse.PP.fst"
-                                                                  (Prims.of_int (81))
+                                                                  (Prims.of_int (83))
                                                                   (Prims.of_int (22))
-                                                                  (Prims.of_int (81))
+                                                                  (Prims.of_int (83))
                                                                   (Prims.of_int (43)))))
                                                          (Obj.magic
                                                             (pp uu___44
@@ -398,18 +400,18 @@ let (uu___52 : Pulse_Typing.post_hint_t printable) =
                                                                     (
                                                                     FStar_Range.mk_range
                                                                     "Pulse.PP.fst"
-                                                                    (Prims.of_int (79))
+                                                                    (Prims.of_int (81))
                                                                     (Prims.of_int (20))
-                                                                    (Prims.of_int (83))
+                                                                    (Prims.of_int (85))
                                                                     (Prims.of_int (41)))))
                                                               (FStar_Sealed.seal
                                                                  (Obj.magic
                                                                     (
                                                                     FStar_Range.mk_range
                                                                     "Pulse.PP.fst"
-                                                                    (Prims.of_int (79))
+                                                                    (Prims.of_int (81))
                                                                     (Prims.of_int (20))
-                                                                    (Prims.of_int (83))
+                                                                    (Prims.of_int (85))
                                                                     (Prims.of_int (41)))))
                                                               (Obj.magic
                                                                  (FStar_Tactics_Effect.tac_bind
@@ -418,18 +420,18 @@ let (uu___52 : Pulse_Typing.post_hint_t printable) =
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.PP.fst"
-                                                                    (Prims.of_int (82))
+                                                                    (Prims.of_int (84))
                                                                     (Prims.of_int (22))
-                                                                    (Prims.of_int (82))
+                                                                    (Prims.of_int (84))
                                                                     (Prims.of_int (33)))))
                                                                     (
                                                                     FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.PP.fst"
-                                                                    (Prims.of_int (79))
+                                                                    (Prims.of_int (81))
                                                                     (Prims.of_int (20))
-                                                                    (Prims.of_int (83))
+                                                                    (Prims.of_int (85))
                                                                     (Prims.of_int (41)))))
                                                                     (
                                                                     Obj.magic
@@ -438,17 +440,17 @@ let (uu___52 : Pulse_Typing.post_hint_t printable) =
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.PP.fst"
-                                                                    (Prims.of_int (82))
+                                                                    (Prims.of_int (84))
                                                                     (Prims.of_int (27))
-                                                                    (Prims.of_int (82))
+                                                                    (Prims.of_int (84))
                                                                     (Prims.of_int (33)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.PP.fst"
-                                                                    (Prims.of_int (82))
+                                                                    (Prims.of_int (84))
                                                                     (Prims.of_int (22))
-                                                                    (Prims.of_int (82))
+                                                                    (Prims.of_int (84))
                                                                     (Prims.of_int (33)))))
                                                                     (Obj.magic
                                                                     (pp
@@ -472,17 +474,17 @@ let (uu___52 : Pulse_Typing.post_hint_t printable) =
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.PP.fst"
-                                                                    (Prims.of_int (79))
+                                                                    (Prims.of_int (81))
                                                                     (Prims.of_int (20))
-                                                                    (Prims.of_int (83))
+                                                                    (Prims.of_int (85))
                                                                     (Prims.of_int (41)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.PP.fst"
-                                                                    (Prims.of_int (79))
+                                                                    (Prims.of_int (81))
                                                                     (Prims.of_int (20))
-                                                                    (Prims.of_int (83))
+                                                                    (Prims.of_int (85))
                                                                     (Prims.of_int (41)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -490,17 +492,17 @@ let (uu___52 : Pulse_Typing.post_hint_t printable) =
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.PP.fst"
-                                                                    (Prims.of_int (83))
+                                                                    (Prims.of_int (85))
                                                                     (Prims.of_int (22))
-                                                                    (Prims.of_int (83))
+                                                                    (Prims.of_int (85))
                                                                     (Prims.of_int (39)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.PP.fst"
-                                                                    (Prims.of_int (79))
+                                                                    (Prims.of_int (81))
                                                                     (Prims.of_int (20))
-                                                                    (Prims.of_int (83))
+                                                                    (Prims.of_int (85))
                                                                     (Prims.of_int (41)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -508,17 +510,17 @@ let (uu___52 : Pulse_Typing.post_hint_t printable) =
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.PP.fst"
-                                                                    (Prims.of_int (83))
+                                                                    (Prims.of_int (85))
                                                                     (Prims.of_int (30))
-                                                                    (Prims.of_int (83))
+                                                                    (Prims.of_int (85))
                                                                     (Prims.of_int (39)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.PP.fst"
-                                                                    (Prims.of_int (83))
+                                                                    (Prims.of_int (85))
                                                                     (Prims.of_int (22))
-                                                                    (Prims.of_int (83))
+                                                                    (Prims.of_int (85))
                                                                     (Prims.of_int (39)))))
                                                                     (Obj.magic
                                                                     (pp
@@ -560,4 +562,24 @@ let (uu___52 : Pulse_Typing.post_hint_t printable) =
                                FStar_Tactics_Effect.lift_div_tac
                                  (fun uu___2 -> uu___ :: uu___1)))) uu___)))
            (fun uu___ -> (fun uu___ -> Obj.magic (pp_record uu___)) uu___))
+  }
+let (printable_fstar_term : FStar_Reflection_Types.term printable) =
+  {
+    pp =
+      (fun t ->
+         FStar_Tactics_Effect.tac_bind
+           (FStar_Sealed.seal
+              (Obj.magic
+                 (FStar_Range.mk_range "Pulse.PP.fst" (Prims.of_int (90))
+                    (Prims.of_int (31)) (Prims.of_int (90))
+                    (Prims.of_int (60)))))
+           (FStar_Sealed.seal
+              (Obj.magic
+                 (FStar_Range.mk_range "Pulse.PP.fst" (Prims.of_int (90))
+                    (Prims.of_int (17)) (Prims.of_int (90))
+                    (Prims.of_int (60)))))
+           (Obj.magic (FStar_Tactics_V2_Builtins.term_to_string t))
+           (fun uu___ ->
+              FStar_Tactics_Effect.lift_div_tac
+                (fun uu___1 -> FStar_Pprint.doc_of_string uu___)))
   }

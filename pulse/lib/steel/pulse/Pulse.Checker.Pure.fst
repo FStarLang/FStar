@@ -117,9 +117,11 @@ let instantiate_term_implicits (g:env) (t0:term) =
   T.log_issues issues;
   match topt with
   | None -> 
-    fail g (Some t0.range)
-           (Printf.sprintf "Could not infer implicit arguments in %s"
-                       (P.term_to_string t0))
+    let open Pulse.PP in
+    fail_doc g (Some t0.range) [
+      prefix 4 1 (text "Could not infer implicit arguments in")
+                 (pp t0)
+    ]
   | Some (t, ty) ->
     let topt = readback_ty t in
     let tyopt = readback_ty ty in
