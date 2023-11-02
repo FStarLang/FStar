@@ -30,9 +30,7 @@ module Seq = FStar.Seq
 module Map = FStar.PartialMap
 module US = FStar.SizeT
 module R = Steel.ST.Reference
-module GR = Steel.ST.GhostReference
 module A = Steel.ST.Array
-module BV = Steel.ST.BitVector
 
 
 /// `store` is the concrete store implemented as an array
