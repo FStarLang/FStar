@@ -45,7 +45,16 @@ let check_fndecl
   : T.Tac (RT.dsl_tac_result_t (fstar_env g))
 = 
 
-  let FnDecl { id; bs; comp; meas; body } = d.d in
+  (* Maybe add a recursive knot before starting *)
+  let FnDecl fn_d = d.d in
+  let nm_orig = fst (inspect_ident fn_d.id) in // keep the original name
+  let d =
+    if fn_d.isrec
+    then Recursion.add_knot g d.range d
+    else d
+  in
+
+  let FnDecl { id; isrec; bs; comp; meas; body } = d.d in
 
   if Nil? bs then
     fail g (Some d.range) "main: FnDecl does not have binders";
@@ -76,7 +85,12 @@ let check_fndecl
     let (chk, se, _) = main_decl in
     (chk, se, Some blob)
   in
-  [main_decl]
+  let recursive_decls =
+    if fn_d.isrec
+    then Rec.tie_knot g rng nm_orig d refl_t
+    else []
+  in
+  main_decl :: recursive_decls
 
 let main' (nm:string) (d:decl) (pre:term) (g:RT.fstar_top_env)
   : T.Tac (RT.dsl_tac_result_t g)
