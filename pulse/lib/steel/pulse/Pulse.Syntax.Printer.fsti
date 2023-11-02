@@ -21,3 +21,4 @@ val tag_of_st_term (t:st_term) : string
 val tag_of_comp (c:comp): T.Tac string
 val print_st_head (t:st_term) : string
 val print_skel (t:st_term) : string
+val decl_to_string (d:decl) : T.Tac string
