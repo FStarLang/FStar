@@ -84,7 +84,7 @@ let (extension_parser : FStar_Parser_AST_Util.extension_parser) =
                               let uu___9 =
                                 let uu___10 = i col in
                                 (uu___10, FStar_Parser_AST.Nothing) in
-                              [uu___9] in
+                              [uu___9; ((str id), FStar_Parser_AST.Nothing)] in
                             uu___7 :: uu___8 in
                           ((str file_name), FStar_Parser_AST.Nothing) ::
                             uu___6 in
@@ -116,7 +116,7 @@ let (parse_pulse :
           Prims.string ->
             Prims.int ->
               Prims.int ->
-                (PulseSyntaxWrapper.st_term,
+                (PulseSyntaxWrapper.decl,
                   (Prims.string * FStar_Compiler_Range_Type.range)
                     FStar_Pervasives_Native.option)
                   FStar_Pervasives.either)

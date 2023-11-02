@@ -45,7 +45,7 @@ instance _ : printable int    = from_show
 
 instance _ : printable ctag = from_show
 
-instance showable_option (a:Type) (_ : printable a) : printable (option a) = {
+instance printable_option (a:Type) (_ : printable a) : printable (option a) = {
   pp = (function None -> doc_of_string "None"
                  | Some v -> doc_of_string "Some" ^/^ pp v);
 }
@@ -71,8 +71,10 @@ instance _ : printable env = {
 }
 
 let pp_record (flds : list (string & document)) : Tac document =
-  braces (
-    separate_map (doc_of_string ";") (fun (s, d) -> doc_of_string s ^/^ equals ^/^ d) flds)
+  let flds_doc =
+    separate_map (doc_of_string ";") (fun (s, d) -> group (doc_of_string s ^/^ equals ^/^ group d)) flds
+  in
+  braces (align flds_doc)
 
 instance _ : printable post_hint_t = {
   pp = (fun (h:post_hint_t) ->
@@ -81,4 +83,9 @@ instance _ : printable post_hint_t = {
                     ; "ret_ty", pp h.ret_ty
                     ; "u", pp h.u
                     ; "post", pp h.post ]);
+}
+
+// FIXME: use term_to_doc when available
+instance printable_fstar_term : printable Reflection.V2.term = {
+  pp = (fun t -> doc_of_string (Tactics.V2.term_to_string t))
 }

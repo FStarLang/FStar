@@ -144,14 +144,16 @@ and stmt = {
   range:rng
 }
 
-type decl = {
-  id:ident;
-  binders:binders;
-  ascription:computation_type;
-  body:stmt;
-  range:rng
-}
-
+type decl =
+  | FnDecl {
+      id:ident;
+      is_rec:bool;
+      binders:binders;
+      ascription:computation_type;
+      measure:option A.term; // with binders in scope
+      body:stmt;
+      range:rng
+    }
 
 (* Convenience builders for use from OCaml/Menhir, since field names get mangled in OCaml *)
 let mk_comp tag precondition return_name return_type postcondition range = 
@@ -176,7 +178,7 @@ let mk_while guard id invariant body = While { guard; id; invariant; body }
 let mk_intro vprop witnesses = Introduce { vprop; witnesses }
 let mk_sequence s1 s2 = Sequence { s1; s2 }
 let mk_stmt s range = { s; range }
-let mk_decl id binders ascription body range = { id; binders; ascription; body; range }
+let mk_fn_decl id is_rec binders ascription measure body range = FnDecl { id; is_rec; binders; ascription; measure; body; range }
 let mk_open lid = Open lid
 let mk_par p1 p2 q1 q2 b1 b2 = Parallel { p1; p2; q1; q2; b1; b2 }
 let mk_rewrite p1 p2 = Rewrite { p1; p2 }

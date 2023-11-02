@@ -437,6 +437,58 @@ let uu___is_Tm_Admit uu___ =
 let uu___is_Tm_ProofHintWithBinders uu___ =
   match uu___ with | Tm_ProofHintWithBinders _ -> true | _ -> false
 type branch = (pattern * st_term)
+type decl'__FnDecl__payload =
+  {
+  id: FStar_Reflection_Types.ident ;
+  isrec: Prims.bool ;
+  bs: (qualifier FStar_Pervasives_Native.option * binder * bv) Prims.list ;
+  comp: comp ;
+  meas: term FStar_Pervasives_Native.option ;
+  body6: st_term }
+and decl' =
+  | FnDecl of decl'__FnDecl__payload 
+and decl = {
+  d: decl' ;
+  range3: range }
+let (__proj__Mkdecl'__FnDecl__payload__item__id :
+  decl'__FnDecl__payload -> FStar_Reflection_Types.ident) =
+  fun projectee ->
+    match projectee with
+    | { id; isrec; bs; comp = comp1; meas; body6 = body;_} -> id
+let (__proj__Mkdecl'__FnDecl__payload__item__isrec :
+  decl'__FnDecl__payload -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | { id; isrec; bs; comp = comp1; meas; body6 = body;_} -> isrec
+let (__proj__Mkdecl'__FnDecl__payload__item__bs :
+  decl'__FnDecl__payload ->
+    (qualifier FStar_Pervasives_Native.option * binder * bv) Prims.list)
+  =
+  fun projectee ->
+    match projectee with
+    | { id; isrec; bs; comp = comp1; meas; body6 = body;_} -> bs
+let (__proj__Mkdecl'__FnDecl__payload__item__comp :
+  decl'__FnDecl__payload -> comp) =
+  fun projectee ->
+    match projectee with
+    | { id; isrec; bs; comp = comp1; meas; body6 = body;_} -> comp1
+let (__proj__Mkdecl'__FnDecl__payload__item__meas :
+  decl'__FnDecl__payload -> term FStar_Pervasives_Native.option) =
+  fun projectee ->
+    match projectee with
+    | { id; isrec; bs; comp = comp1; meas; body6 = body;_} -> meas
+let (__proj__Mkdecl'__FnDecl__payload__item__body :
+  decl'__FnDecl__payload -> st_term) =
+  fun projectee ->
+    match projectee with
+    | { id; isrec; bs; comp = comp1; meas; body6 = body;_} -> body
+let (uu___is_FnDecl : decl' -> Prims.bool) = fun projectee -> true
+let (__proj__FnDecl__item___0 : decl' -> decl'__FnDecl__payload) =
+  fun projectee -> match projectee with | FnDecl _0 -> _0
+let (__proj__Mkdecl__item__d : decl -> decl') =
+  fun projectee -> match projectee with | { d; range3 = range1;_} -> d
+let (__proj__Mkdecl__item__range : decl -> range) =
+  fun projectee -> match projectee with | { d; range3 = range1;_} -> range1
 let (null_binder : term -> binder) =
   fun t -> { binder_ty = t; binder_ppname = ppname_default }
 let (mk_binder : Prims.string -> range -> term -> binder) =

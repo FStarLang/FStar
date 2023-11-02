@@ -7,4 +7,5 @@ val check_pulse (namespaces:list string)
                 (content:string)
                 (file_name:string)
                 (line col:int)
+                (nm:string)
   : RT.dsl_tac_t

@@ -301,3 +301,34 @@ let (mk_rewrite_hint_type :
     fun t2 ->
       Pulse_Syntax_Base.REWRITE
         { Pulse_Syntax_Base.t1 = t1; Pulse_Syntax_Base.t2 = t2 }
+let (mk_fn_decl :
+  FStar_Reflection_Types.ident ->
+    Prims.bool ->
+      (Pulse_Syntax_Base.qualifier FStar_Pervasives_Native.option *
+        Pulse_Syntax_Base.binder * Pulse_Syntax_Base.bv) Prims.list ->
+        Pulse_Syntax_Base.comp ->
+          Pulse_Syntax_Base.term FStar_Pervasives_Native.option ->
+            Pulse_Syntax_Base.st_term -> Pulse_Syntax_Base.decl')
+  =
+  fun id ->
+    fun isrec ->
+      fun bs ->
+        fun comp ->
+          fun meas ->
+            fun body ->
+              Pulse_Syntax_Base.FnDecl
+                {
+                  Pulse_Syntax_Base.id = id;
+                  Pulse_Syntax_Base.isrec = isrec;
+                  Pulse_Syntax_Base.bs = bs;
+                  Pulse_Syntax_Base.comp = comp;
+                  Pulse_Syntax_Base.meas = meas;
+                  Pulse_Syntax_Base.body6 = body
+                }
+let (mk_decl :
+  Pulse_Syntax_Base.decl' ->
+    Pulse_Syntax_Base.range -> Pulse_Syntax_Base.decl)
+  =
+  fun d ->
+    fun range ->
+      { Pulse_Syntax_Base.d = d; Pulse_Syntax_Base.range3 = range }

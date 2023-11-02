@@ -258,4 +258,3 @@ and eq_branch (b1 b2 : pattern & st_term)
   = let (p1, e1) = b1 in
     let (p2, e2) = b2 in
     eq_pattern p1 p2 && eq_st_term e1 e2
-
