@@ -102,7 +102,7 @@ ensures
 }
 ```
 
-inline_for_extraction
+inline_for_extraction noextract
 let impl_t_choice
     (#b: Ghost.erased (option raw_data_item))
     (#t1 #t2: bounded_typ_gen b)
@@ -131,7 +131,7 @@ ensures
     (mt = major_type_uint64)
 }
 ```
-inline_for_extraction
+inline_for_extraction noextract
 let impl_uint
 : impl_typ uint
 = impl_uint'
@@ -156,7 +156,7 @@ ensures
     (mt = major_type_byte_string)
 }
 ```
-inline_for_extraction
+inline_for_extraction noextract
 let impl_bytes
 : impl_typ bytes
 = impl_bytes'
