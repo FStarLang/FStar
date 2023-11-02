@@ -114,6 +114,11 @@ let rec mk_tot_arr_ln (bs: list binder) (cod : term) : Tot term (decreases bs) =
     | [] -> cod
     | (b::bs) -> pack_ln (Tv_Arrow b (pack_comp (C_Total (mk_tot_arr_ln bs cod))))
 
+let rec mk_arr_ln (bs: list binder{~(Nil? bs)}) (cod : comp) : Tot term (decreases bs) =
+    match bs with
+    | [b] -> pack_ln (Tv_Arrow b cod)
+    | (b::bs) -> pack_ln (Tv_Arrow b (pack_comp (C_Total (mk_arr_ln bs cod))))
+
 let rec collect_arr' (bs : list binder) (c : comp) : Tot (list binder * comp) (decreases c) =
     begin match inspect_comp c with
     | C_Total t ->
