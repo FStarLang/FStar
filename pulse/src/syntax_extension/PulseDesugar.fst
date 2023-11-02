@@ -167,6 +167,61 @@ let st_term_of_stapp_or_return (t:stapp_or_return_t) : SW.st_term =
   | STTerm t -> t
   | Return t -> ret t
 
+let type_is_stt_fun (env:env_t) (t:S.term) (args : list S.arg) : bool =
+  match pulse_arrow_formals t with
+  | None -> false
+  | Some formals ->
+    let is_binder_implicit (b:S.binder) =
+      match b.binder_qual with
+      | Some (S.Implicit _)
+      | Some (S.Meta _) -> true
+      | _ -> false
+    in
+    let is_arg_implicit (aq:S.arg) =
+      match snd aq with
+      | Some {aqual_implicit=b} -> b
+      | _ -> false
+    in
+    let rec uninst_formals formals args =
+      match formals, args with
+      | _, [] ->
+        Some formals
+
+      | [], _ -> //too many args, ill-typed
+        None
+
+      | f::formals, a::args ->
+        if is_binder_implicit f
+        then (
+          if is_arg_implicit a
+          then uninst_formals formals args
+          else uninst_formals formals (a::args)
+        )
+        else if is_arg_implicit a
+        then // this looks ill-typed
+             None
+        else //both explicit
+             uninst_formals formals args
+    in
+    match uninst_formals formals args with
+    | None -> //likely ill-typed; do not treat as stt
+      false
+
+    | Some formals ->
+      if L.for_all is_binder_implicit formals
+      then (
+         //this is an st app
+        true
+      ) else (
+        //partial app of a stateful function
+        false
+      )
+
+let mk_st_app rng (head:S.term) (args : list _) : SW.st_term =
+  let head = S.mk_Tm_app head (L.init args) rng in
+  let last, q = L.last args in
+  SW.(tm_st_app (tm_expr head head.pos) q (as_term last) rng)
+
 let stapp_or_return (env:env_t) (s:S.term)
   : stapp_or_return_t
   = let r = s.pos in
@@ -175,61 +230,14 @@ let stapp_or_return (env:env_t) (s:S.term)
     | S.Tm_fvar fv -> (
       if S.fv_eq_lid fv admit_lid
       then STTerm (SW.tm_admit r) 
-      else
-      match TcEnv.try_lookup_lid env.tcenv fv.fv_name.v with
+      else match TcEnv.try_lookup_lid env.tcenv fv.fv_name.v with
       | None -> Return s
-      | Some ((_, t), _) ->
-        match pulse_arrow_formals t with
-        | None -> Return s
-        | Some formals ->
-          let is_binder_implicit (b:S.binder) =
-            match b.binder_qual with
-            | Some (S.Implicit _)
-            | Some (S.Meta _) -> true
-            | _ -> false
-          in
-          let is_arg_implicit (aq:S.arg) =
-            match snd aq with
-            | Some {aqual_implicit=b} -> b
-            | _ -> false
-          in
-          let rec uninst_formals formals args =
-            match formals, args with
-            | _, [] ->
-              Some formals
-
-            | [], _ -> //too many args, ill-typed
-              None
-
-            | f::formals, a::args ->
-              if is_binder_implicit f
-              then (
-                if is_arg_implicit a
-                then uninst_formals formals args
-                else uninst_formals formals (a::args)
-              )
-              else if is_arg_implicit a
-              then // this looks ill-typed
-                   None
-              else //both explicit
-                   uninst_formals formals args
-          in
-          match uninst_formals formals args with
-          | None -> //likely ill-typed; leave as is
-            Return s
-
-          | Some formals ->
-            if L.for_all is_binder_implicit formals
-            then ( //this is an st app
-              let head = S.mk_Tm_app head (L.init args) s.pos in
-              let last, q = L.last args in
-              STTerm SW.(tm_st_app (tm_expr head head.pos) q (as_term last) r)
-            )
-            else (
-              //partial app of a stateful function
-              Return s
-            )
+      | Some ((_, t), _) -> (
+        if type_is_stt_fun env t args
+        then STTerm (mk_st_app r head args)
+        else Return s
       )
+    )
     | _ -> Return s
 
 let prepend_ctx_issue (c : Pprint.document) (i : Errors.issue) : Errors.issue =
@@ -608,7 +616,7 @@ and desugar_binders (env:env_t) (bs:Sugar.binders)
     let? env, bs, bvs = aux env bs in
     return (env, L.map (fun (aq, b, t) -> aq, SW.mk_binder b t) bs, bvs)
 
-and desugar_computation_type (env:env_t) (c:Sugar.computation_type)
+let desugar_computation_type (env:env_t) (c:Sugar.computation_type)
   : err SW.comp
   = let? pre = desugar_vprop env c.precondition in
     let? ret = desugar_term env c.return_type in
@@ -960,37 +968,137 @@ and transform_stmt (m:menv) (p:Sugar.stmt)
     let? p, needs, m = transform_stmt_with_reads m p in
     return (add_derefs_in_scope needs p)      
 
-let desugar_decl (env:env_t)
-                 (p:Sugar.decl)
-  : err SW.st_term 
-  = let? env, bs, bvs = desugar_binders env p.binders in
-    let fvs = free_vars_comp env p.ascription in
-    let? env, bs', bvs' = idents_as_binders env fvs in
-    let bs = bs@bs' in
-    let bvs = bvs@bvs' in
-    let? comp = desugar_computation_type env p.ascription in
-    let? body = 
-      if FStar.Options.ext_getv "pulse:rvalues" <> ""
-      then transform_stmt { map=[]; env=env} p.body
-      else return p.body
+let rec vprop_to_ast_term (v:Sugar.vprop)
+  : err A.term
+  = let open FStar.Parser.AST in
+    match v.v with
+    | Sugar.VPropTerm t -> return t
+    | Sugar.VPropStar (v1, v2) ->
+      let t = mk_term (Var star_lid) v.vrange Expr in
+      let? vv1 = vprop_to_ast_term v1 in
+      let t = mk_term (App (t, vv1, Nothing)) v.vrange Expr in
+      let? vv2 = vprop_to_ast_term v2 in
+      let t = mk_term (App (t, vv2, Nothing)) v.vrange Expr in
+      return t
+
+    | Sugar.VPropExists { binders; body } ->
+      fail "IOU :(" v.vrange
+
+let comp_to_ast_term (c:Sugar.computation_type) : err A.term =
+  let open FStar.Parser.AST in
+  let return_ty = c.return_type in
+  let r = c.range in
+  let head =
+    match c.tag with
+    | Sugar.ST ->
+      let h = mk_term (Var stt_lid) r Expr in
+      let h = mk_term (App (h, return_ty, Nothing)) r Expr in
+      h
+    | Sugar.STAtomic is ->
+      (* hack for now *)
+      let is = mk_term (Var (Ident.lid_of_str "Pulse.Lib.Core.emp_inames")) r Expr in
+      let h = mk_term (Var stt_atomic_lid) r Expr in
+      let h = mk_term (App (h, return_ty, Nothing)) r Expr in
+      mk_term (App (h, is, Nothing)) r Expr
+    | Sugar.STGhost is ->
+      (* hack for now *)
+      let is = mk_term (Var (Ident.lid_of_str "Pulse.Lib.Core.emp_inames")) r Expr in
+      let h = mk_term (Var stt_ghost_lid) r Expr in
+      let h = mk_term (App (h, return_ty, Nothing)) r Expr in
+      mk_term (App (h, is, Nothing)) r Expr
+  in
+  let? pre = vprop_to_ast_term c.precondition in
+  let? post = vprop_to_ast_term c.postcondition in
+  let post =
+    let pat = mk_pattern (PatVar (c.return_name, None, [])) r in
+    let pat = mk_pattern (PatAscribed (pat, (return_ty, None))) r in
+    mk_term (Abs ([pat], post)) r Expr
+  in
+  let t = mk_term (App (head, pre, Nothing)) r Expr in
+  let t = mk_term (App (t, post, Nothing)) r Expr in
+  return t
+
+let rec map2 (f : 'a -> 'b -> 'c) (xs : list 'a) (ys : list 'b) : err (list 'c) =
+  match xs, ys with
+  | [], [] ->
+    return []
+  | x::xx, y::yy ->
+    let? r = map2 f xx yy in
+    return (f x y :: r)
+  | _ ->
+    fail "map2: mismatch" r_
+
+let faux (qb : option SW.qualifier & SW.binder) (bv : S.bv)
+  : option SW.qualifier & SW.binder & SW.bv
+   =
+    let (q,b) = qb in
+    let bv = SW.mk_bv bv.S.index
+                      (Ident.string_of_id bv.S.ppname)
+                      bv.S.sort.pos
     in
-    let? body = desugar_stmt env body in
-    let rec aux (bs:list (option SW.qualifier & SW.binder)) (bvs:list S.bv) =
-      match bs, bvs with
-      | [(q, last)], [last_bv] -> 
-        let body = SW.close_st_term body last_bv.S.index in
-        let comp = SW.close_comp comp last_bv.S.index in
-        return (SW.tm_abs last q comp
-                          body
-                          p.range)
-      | (q, b)::bs, bv::bvs ->
-        let? body = aux bs bvs in
-        let body = SW.close_st_term body bv.index in
-        let comp = SW.mk_tot (SW.tm_unknown r_) in
-        return (SW.tm_abs b q comp body p.range)
-      | _ -> fail "Unexpected empty binders in decl" r_
-    in
-    aux bs bvs
+    (q,b,bv)
+
+let mk_knot_arr (env:env_t) (meas : option A.term) (bs:Sugar.binders) (res:Sugar.computation_type)
+: err A.term
+=
+  // can we just use a unknown type here?
+  let r = range_of_id res.return_name in
+  let? env, bs', _ = desugar_binders env bs in
+  let? res_t = comp_to_ast_term res in
+  let bs'' = bs |> L.map (fun (q, x, ty) ->
+    A.mk_binder (A.Annotated (x, ty)) r A.Expr q)
+  in
+  let last = L.last bs'' in
+  let init = L.init bs'' in
+  let bs'' = init @ [last] in
+  return (A.mk_term (A.Product (bs'', res_t)) r A.Expr)
+
+let rec desugar_decl (env:env_t)
+                     (d:Sugar.decl)
+  : err SW.decl
+  = match d with
+    | Sugar.FnDecl p ->
+      let? env, bs, bvs = desugar_binders env p.binders in
+      let fvs = free_vars_comp env p.ascription in
+      let? env, bs', bvs' = idents_as_binders env fvs in
+      let bs = bs@bs' in
+      let bvs = bvs@bvs' in
+      let? comp = desugar_computation_type env p.ascription in
+      let? body = 
+        if FStar.Options.ext_getv "pulse:rvalues" <> ""
+        then transform_stmt { map=[]; env=env} p.body
+        else return p.body
+      in
+      let? meas = map_err_opt (desugar_term env) p.measure in
+      (* Perhaps push the recursive binding. *)
+      let? (env, bs, bvs) =
+        if p.is_rec
+        then
+          let? ty = mk_knot_arr env p.measure p.binders p.ascription in
+          let? ty = desugar_term env ty in
+          let env, bv = push_bv env p.id in
+          let b = SW.mk_binder p.id ty in
+          return (env, bs@[(None, b)], bvs@[bv])
+        else
+          return (env, bs, bvs)
+      in
+      let? body = desugar_stmt env body in
+      // let rec aux (bs:list (option SW.qualifier & SW.binder)) (bvs:list S.bv) =
+      //   match bs, bvs with
+      //   | [(q, last)], [last_bv] -> 
+      //     let body = SW.close_st_term body last_bv.S.index in
+      //     let comp = SW.close_comp comp last_bv.S.index in
+      //     return (SW.tm_abs last q comp body p.range)
+      //   | (q, b)::bs, bv::bvs ->
+      //     let? body = aux bs bvs in
+      //     let body = SW.close_st_term body bv.index in
+      //     let comp = SW.mk_tot (SW.tm_unknown r_) in
+      //     return (SW.tm_abs b q comp body p.range)
+      //   | _ -> fail "Unexpected empty binders in decl" r_
+      // in
+      // let? st_tm = aux bs bvs in
+      let? qbs = map2 faux bs bvs in
+      return (SW.fn_decl p.range p.id p.is_rec qbs comp meas body)
 
 let name = list string
 

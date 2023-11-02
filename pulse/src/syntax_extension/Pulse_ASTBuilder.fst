@@ -52,7 +52,8 @@ let extension_parser
                       (str contents, Nothing);
                       (str file_name, Nothing);
                       (i line, Nothing);
-                      (i col, Nothing)]
+                      (i col, Nothing);
+                      (str id, Nothing)]
                       r
         in
         let d = Splice (true, [Ident.id_of_text id], splicer) in
@@ -74,7 +75,7 @@ let parse_pulse (env:TcEnv.env)
                 (content:string)
                 (file_name:string)
                 (line col:int)
-  : either PulseSyntaxWrapper.st_term (option (string & R.range))
+  : either PulseSyntaxWrapper.decl (option (string & R.range))
   = let namespaces = L.map Ident.path_of_text namespaces in
     let module_abbrevs = L.map (fun (x, l) -> x, Ident.path_of_text l) module_abbrevs in
     let env = D.initialize_env env namespaces module_abbrevs in

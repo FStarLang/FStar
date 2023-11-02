@@ -13,45 +13,85 @@ open Pulse.Soundness
 module Cfg = Pulse.Config
 module RU = Pulse.RuntimeUtils
 module P = Pulse.Syntax.Printer
-
+module Rec = Pulse.Recursion
 
 let debug_main g (s: unit -> T.Tac string) : T.Tac unit =
   if RU.debug_at_level (fstar_env g) "pulse.main"
   then T.print (s ())
   else ()
-  
-let main' (t:st_term) (pre:term) (g:RT.fstar_top_env)
-  : T.Tac (r:(option R.term & option (string & R.term) & R.typ){RT.well_typed g r})
+
+let rec mk_abs (g:env) (qbs:list (option qualifier & binder & bv)) (body:st_term) (comp:comp)
+: TacH st_term (fun _ -> not (Nil? qbs))
+               (fun _ r -> match r with FStar.Tactics.Result.Success v _ -> Tm_Abs? v.term | _ -> False)
+=
+  let with_range (s:st_term') (r:range) : st_term =
+    { term = s; range = r; effect_tag = default_effect_hint }
+  in
+  match qbs with
+  | [(q, last, last_bv)] -> 
+    let body = close_st_term body last_bv.bv_index in
+    let comp = close_comp comp last_bv.bv_index in
+    with_range (Pulse.Syntax.Builder.tm_abs last q comp body) body.range
+  | (q, b, bv)::qbs ->
+    let body = mk_abs g qbs body comp in
+    let body = close_st_term body bv.bv_index in
+    let comp = C_Tot tm_unknown in
+    with_range (Pulse.Syntax.Builder.tm_abs b q comp body) body.range
+
+let check_fndecl
+    (d : decl{FnDecl? d.d})
+    (g : Soundness.Common.stt_env{bindings g == []})
+    (pre : term) (pre_typing : tot_typing g pre tm_vprop)
+  : T.Tac (RT.dsl_tac_result_t (fstar_env g))
+= 
+
+  let FnDecl { id; bs; comp; meas; body } = d.d in
+
+  if Nil? bs then
+    fail g (Some d.range) "main: FnDecl does not have binders";
+  let body = mk_abs g bs body comp in
+  let rng = body.range in
+  let (| body, c, t_typing |) = Pulse.Checker.Abs.check_abs g body Pulse.Checker.check in
+
+  Pulse.Checker.Prover.debug_prover g
+    (fun _ -> Printf.sprintf "\ncheck call returned in main with:\n%s\n"
+              (P.st_term_to_string body));
+  debug_main g
+    (fun _ -> Printf.sprintf "\nchecker call returned in main with:\n%s\nderivation=%s\n"
+              (P.st_term_to_string body)
+              (Pulse.Typing.Printer.print_st_typing t_typing));
+
+  let refl_t = elab_comp c in
+  let refl_e = Pulse.RuntimeUtils.embed_st_term_for_extraction #st_term body (Some rng) in
+  let blob = "pulse", refl_e in
+  soundness_lemma g body c t_typing;
+  let main_decl =
+    let nm = fst (inspect_ident id) in
+    if T.ext_getv "pulse:elab_derivation" <> ""
+    then RT.mk_checked_let (fstar_env g) nm (elab_st_typing t_typing) refl_t
+    else Pulse.Reflection.Util.mk_opaque_let (fstar_env g) nm (elab_st_typing t_typing) refl_t
+  in
+  (* Set the blob *)
+  let main_decl =
+    let (chk, se, _) = main_decl in
+    (chk, se, Some blob)
+  in
+  [main_decl]
+
+let main' (nm:string) (d:decl) (pre:term) (g:RT.fstar_top_env)
+  : T.Tac (RT.dsl_tac_result_t g)
   = match Pulse.Soundness.Common.check_top_level_environment g with
     | None -> T.fail "pulse main: top-level environment does not include stt at the expected types"
     | Some g ->
-      if RU.debug_at_level (fstar_env g) "Pulse"
-      then (
-        T.print (Printf.sprintf "About to check pulse term:\n%s\n" (P.st_term_to_string t))
-      );
+      if RU.debug_at_level (fstar_env g) "Pulse" then 
+        T.print (Printf.sprintf "About to check pulse decl:\n%s\n" (P.decl_to_string d));
       let (| pre, ty, pre_typing |) = Pulse.Checker.Pure.check_tot_term g pre in
-      if eq_tm ty tm_vprop
-      then let pre_typing : tot_typing g pre tm_vprop = pre_typing in
-           match t.term with
-           | Tm_Abs _ ->
-             let rng = t.range in
-             let (| t, c, t_typing |) = Pulse.Checker.Abs.check_abs g t Pulse.Checker.check in
-             Pulse.Checker.Prover.debug_prover g
-               (fun _ -> Printf.sprintf "\ncheck call returned in main with:\n%s\n"
-                         (P.st_term_to_string t));
-             debug_main g
-               (fun _ -> Printf.sprintf "\nchecker call returned in main with:\n%s\nderivation=%s\n"
-                         (P.st_term_to_string t)
-                         (Pulse.Typing.Printer.print_st_typing t_typing));
-             let refl_t = elab_comp c in
-             let refl_e = Pulse.RuntimeUtils.embed_st_term_for_extraction #st_term t (Some rng) in
-             let blob = "pulse", refl_e in
-             soundness_lemma g t c t_typing;
-             if T.ext_getv "pulse:elab_derivation" <> ""
-             then Some (elab_st_typing t_typing), Some blob, refl_t
-             else None, Some blob, refl_t
-           | _ -> fail g (Some t.range) "main: top-level term not a Tm_Abs"
-      else fail g (Some t.range) "pulse main: cannot typecheck pre at type vprop"
+      if not (eq_tm ty tm_vprop) then
+        fail g (Some pre.range) "pulse main: cannot typecheck pre at type vprop"; //fix range
+      let pre_typing : tot_typing g pre tm_vprop = pre_typing in
+      match d.d with
+      | FnDecl _ ->
+        check_fndecl d g pre pre_typing
 
 let join_smt_goals () : Tac unit =
   let open FStar.Tactics.V2 in
@@ -81,7 +121,7 @@ let join_smt_goals () : Tac unit =
 
   ()
 
-let main t pre : RT.dsl_tac_t = fun g ->
+let main nm t pre : RT.dsl_tac_t = fun g ->
   (* We use the SMT policy by default, to collect goals in the
   proofstate and discharge them all at the end, potentially joining
   them (see below). But it can be overriden to SMTSync by `--ext
@@ -91,7 +131,7 @@ let main t pre : RT.dsl_tac_t = fun g ->
   else
     set_guard_policy SMT;
 
-  let res = main' t pre g in
+  let res = main' nm t pre g in
 
   if ext_getv "pulse:join" = "1"
      (* || ext_getv "pulse:join" <> "" *)
@@ -106,11 +146,12 @@ let check_pulse (namespaces:list string)
                 (content:string)
                 (file_name:string)
                 (line col:int)
+                (nm:string)
   : RT.dsl_tac_t
   = fun env ->
       match Pulse.ASTBuilder.parse_pulse env namespaces module_abbrevs content file_name line col with
-      | Inl st_term ->
-        main st_term tm_emp env
+      | Inl decl ->
+        main nm decl tm_emp env
 
       | Inr None ->
         T.fail "Pulse parser failed"

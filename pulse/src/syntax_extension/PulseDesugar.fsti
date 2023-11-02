@@ -17,7 +17,7 @@ val env_t : Type0
 
 val desugar_decl (env:env_t)
                  (p:Sugar.decl)
-  : err SW.st_term
+  : err SW.decl
 
 let name = list string
 
