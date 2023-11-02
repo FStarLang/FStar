@@ -53,6 +53,9 @@ type dpe_cmd = {
   dpe_cmd_args: cbor;
 }
 
+#push-options "--z3rlimit 64 --query_stats" // to let z3 cope with CDDL specs
+#restart-solver
+
 noextract
 let parse_dpe_cmd_args_postcond
   (cid: U64.t)
@@ -118,9 +121,6 @@ let parse_dpe_cmd_post
         parse_dpe_cmd_postcond cmd.dpe_cmd_sid cmd.dpe_cmd_cid vargs vsess rem
       )
     )
-
-#push-options "--z3rlimit 64 --query_stats" // to let z3 cope with CDDL specs
-#restart-solver
 
 ```pulse
 fn parse_dpe_cmd (len:SZ.t)
