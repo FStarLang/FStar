@@ -75,9 +75,45 @@ module U64 = FStar.UInt64
 
 noeq
 type dpe_cmd = {
-  dpe_cmd_id: U64.t;
+  dpe_cmd_sid: U64.t;
+  dpe_cmd_cid: U64.t;
   dpe_cmd_args: cbor;
 }
+
+#push-options "--z3rlimit 64 --query_stats" // to let z3 cope with CDDL specs
+#restart-solver
+
+noextract
+let parse_dpe_cmd_args_postcond
+  (cid: U64.t)
+  (vargs: raw_data_item)
+  (vcmd: raw_data_item)
+  (rem: Seq.seq U8.t)
+: Tot prop
+= data_item_wf deterministically_encoded_cbor_map_key_order vcmd /\
+  Spec.command_message vcmd /\ (
+    let Array [Int64 _ cid'; vargs'] = vcmd in
+    cid == cid' /\
+    vargs == vargs'
+  ) /\
+  Seq.length rem == 0
+  
+noextract
+let parse_dpe_cmd_postcond
+  (sid: U64.t)
+  (cid: U64.t)
+  (vargs: raw_data_item)
+  (vsess: raw_data_item)
+  (_: Seq.seq U8.t)
+: Tot prop
+= data_item_wf deterministically_encoded_cbor_map_key_order vsess /\
+  Spec.session_message vsess /\ (
+    let Array [Int64 _ sid'; String _ cmd] = vsess in
+    sid == sid' /\ (
+    exists vcmd rem .
+    cmd == serialize_cbor vcmd `Seq.append` rem /\
+    parse_dpe_cmd_args_postcond cid vargs vcmd rem
+  ))
 
 let parse_dpe_cmd_post
   (len:SZ.t)
@@ -87,19 +123,28 @@ let parse_dpe_cmd_post
   (res: option dpe_cmd)
 : vprop
 = match res with
-  | None -> A.pts_to input #p s
+  | None -> A.pts_to input #p s ** pure True (*
+      ~ (exists vsess rem .
+        Ghost.reveal s == serialize_cbor vsess `Seq.append` rem /\ (
+          exists sid cid vargs .
+          parse_dpe_cmd_postcond sid cid vargs vsess rem
+        )
+      )
+    *)
   | Some cmd -> exists_ (fun vargs ->
       raw_data_item_match cmd.dpe_cmd_args vargs **
       (raw_data_item_match cmd.dpe_cmd_args vargs @==>
         A.pts_to input #p s
       ) **
       pure (
-        Map? vargs /\
-        CDDL.Spec.matches_map_group Spec.default_args_group (Map?.v vargs)
+        exists (vsess: raw_data_item) (rem: Seq.seq U8.t) .
+        Ghost.reveal s == serialize_cbor vsess `Seq.append` rem /\
+        parse_dpe_cmd_postcond cmd.dpe_cmd_sid cmd.dpe_cmd_cid vargs vsess rem
       )
     )
 
-#push-options "--z3rlimit 64" // to let z3 cope with CDDL specs
+#push-options "--z3rlimit 512 --query_stats" // to let z3 cope with CDDL specs
+#restart-solver
 
 ```pulse
 fn parse_dpe_cmd (len:SZ.t)
@@ -125,10 +170,10 @@ fn parse_dpe_cmd (len:SZ.t)
       {
         unfold (read_deterministically_encoded_cbor_with_typ_post Spec.session_message input p s (ParseSuccess c));
         with vc . assert (raw_data_item_match c.read_cbor_payload vc);
-        with vrem . assert (A.pts_to c.read_cbor_remainder #p vrem);
+        with vrem1 . assert (A.pts_to c.read_cbor_remainder #p vrem1);
         stick_consume_r ()
           #(raw_data_item_match c.read_cbor_payload vc)
-          #(A.pts_to c.read_cbor_remainder #p vrem)
+          #(A.pts_to c.read_cbor_remainder #p vrem1)
           #(A.pts_to input #p s)
         ;
         let i0 = cbor_array_index c.read_cbor_payload 0sz;
@@ -147,6 +192,12 @@ fn parse_dpe_cmd (len:SZ.t)
           {
             unfold (read_deterministically_encoded_cbor_with_typ_post Spec.command_message' cbor_str.cbor_string_payload cbor_str.permission cs ParseError);
             elim_implies ();
+(*
+            serialize_cbor_with_test_correct vc vrem1 (fun vc' vrem1' ->
+              exists sid cid vargs .
+              parse_dpe_cmd_postcond sid cid vargs vc' vrem1'
+            );
+*)
             fold (parse_dpe_cmd_post len input s p None);
             None #dpe_cmd
           }
@@ -154,15 +205,25 @@ fn parse_dpe_cmd (len:SZ.t)
           {
             unfold (read_deterministically_encoded_cbor_with_typ_post Spec.command_message' cbor_str.cbor_string_payload cbor_str.permission cs (ParseSuccess msg));
             with vmsg . assert (raw_data_item_match msg.read_cbor_payload vmsg);
-            with vrem . assert (A.pts_to msg.read_cbor_remainder #cbor_str.permission vrem);
+            with vrem2 . assert (A.pts_to msg.read_cbor_remainder #cbor_str.permission vrem2);
             stick_consume_r ()
               #(raw_data_item_match msg.read_cbor_payload vmsg)
-              #(A.pts_to msg.read_cbor_remainder #cbor_str.permission vrem)
+              #(A.pts_to msg.read_cbor_remainder #cbor_str.permission vrem2)
               #(A.pts_to cbor_str.cbor_string_payload #cbor_str.permission cs)
             ;
             stick_trans ();
             if (msg.read_cbor_remainder_length <> 0sz) {
               elim_implies ();
+(*
+              serialize_cbor_with_test_correct vmsg vrem2 (fun vmsg' vrem2' ->
+                exists cid vargs .
+                parse_dpe_cmd_args_postcond cid vargs vmsg' vrem2'
+              );
+              serialize_cbor_with_test_correct vc vrem1 (fun vc' vrem1' ->
+                exists sid cid vargs .
+                parse_dpe_cmd_postcond sid cid vargs vc' vrem1'
+              );
+*)
               fold (parse_dpe_cmd_post len input s p None);
               None #dpe_cmd
             } else {
@@ -173,7 +234,8 @@ fn parse_dpe_cmd (len:SZ.t)
               let cmd_args = cbor_array_index msg.read_cbor_payload 1sz;
               stick_trans ();
               with vargs . assert (raw_data_item_match cmd_args vargs);
-              let res = Mkdpe_cmd cmd_id cmd_args;
+
+              let res = Mkdpe_cmd sid cmd_id cmd_args;
 (*  // FIXME: WHY WHY WHY does the following record literal FAIL with "List.combine: list lengths differ"
               let res = {
                 dpe_cmd_id = cmd_id;
