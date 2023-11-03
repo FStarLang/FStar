@@ -12,11 +12,10 @@ class bounded_int (t:eqtype) = {
     op_Subtraction : (x:t -> y:t -> Pure t (requires fits (v x - v y)) (ensures fun z -> v z == v x - v y));
     ( < ) : (x:t -> y:t -> b:bool { b = (v x < v y)});
     ( <= ) : (x:t -> y:t -> b:bool { b = (v x <= v y)});
-    ( % ) : (x:t -> y:t -> Pure t (requires v y > 0) (ensures fun z -> v z == v x % v y));
+    ( % ) : (x:t -> y:t -> Pure t (requires v y > 0 /\ fits (v x % v y)) (ensures fun z -> v z == v x % v y));
     [@@@TC.no_method]
     properties: squash (
-      (forall (x:t). {:pattern v x} fits (v x)) /\
-      (forall (x:t) (y:nat). y `Prims.op_LessThanOrEqual` v x /\ fits (v x) ==> fits y)
+      (forall (x:t). {:pattern v x} fits (v x)) 
     )
     (* ...todo, add other ops **)
 }
@@ -52,7 +51,6 @@ class bounded_unsigned (t:eqtype) = {
 
 instance bounded_from_bounded_unsigned (t:eqtype) (c:bounded_unsigned t) : bounded_int t = c.base
 
-[@@tcnorm; strict_on_arguments[1]]
 let safe_add (#t:eqtype) {| c: bounded_unsigned t |} (x y : t)
   : o:option t { Some? o ==> v (Some?.v o) == v x + v y } 
   = if c.static_max_bound
@@ -168,19 +166,19 @@ instance bounded_int_nat : bounded_int nat = {
 let add_nat (x y:nat) = x + y
 //but we should find a way to make it work with refinement, otherwise we'll need instances for pos etc. too
 
-// let pos_as_int (x:pos) : int = x
+let pos_as_int (x:pos) : int = x
 
-// instance bounded_int_pos : bounded_int pos = {
-//     fits = (fun x -> x > 0);
-//     v = pos_as_int;
-//     u = (fun x -> x);
-//     ( + ) = (fun x y -> Prims.op_Addition x y);
-//     op_Subtraction = (fun x y -> Prims.op_Subtraction x y); //can't write ( - ), it doesn't parse
-//     ( < ) = (fun x y -> Prims.op_LessThan x y);
-//     ( <= ) = (fun x y -> Prims.op_LessThanOrEqual x y);
-//     ( % ) = (fun x y -> Prims.op_Modulus x y);
-//     properties = ()
-// }
+instance bounded_int_pos : bounded_int pos = {
+    fits = (fun x -> x > 0);
+    v = pos_as_int;
+    u = (fun x -> x);
+    ( + ) = (fun x y -> Prims.op_Addition x y);
+    op_Subtraction = (fun x y -> Prims.op_Subtraction x y); //can't write ( - ), it doesn't parse
+    ( < ) = (fun x y -> Prims.op_LessThan x y);
+    ( <= ) = (fun x y -> Prims.op_LessThanOrEqual x y);
+    ( % ) = (fun x y -> Prims.op_Modulus x y);
+    properties = ()
+}
 
 // Using a fits predicate as the bounds check allows this class to also accomodate SizeT
 open FStar.SizeT

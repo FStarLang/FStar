@@ -385,10 +385,10 @@ fn l0_main'
     aliasKeyCRT_len aliasKeyCRT
     record.aliasKeyCRT_ingredients;
   
-  with s3. assert (A.pts_to deviceIDCRI s3);
-  with s4. assert (A.pts_to aliasKeyTBS s4);
+  // with s3. assert (A.pts_to deviceIDCRI s3);
+  // with s4. assert (A.pts_to aliasKeyTBS s4);
 
-  fold l0_record_perm record repr p;
+  fold l0_record_perm record p repr;
 }
 ```
 let l0_main = l0_main'

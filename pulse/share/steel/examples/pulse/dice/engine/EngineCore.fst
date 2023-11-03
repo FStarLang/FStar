@@ -45,8 +45,8 @@ fn authenticate_l0_image (record:engine_record_t) (#repr:Ghost.erased engine_rec
     let mut hash_buf = [| 0uy; dice_digest_len |];
     hacl_hash dice_hash_alg record.l0_binary_size record.l0_binary hash_buf;
     let res = compare dice_digest_len hash_buf record.l0_binary_hash;
-    with s. assert (A.pts_to hash_buf s);
-    fold engine_record_perm record repr p;
+    // with s. assert (A.pts_to hash_buf s);
+    fold (engine_record_perm record p repr);
     res
   }
   else
