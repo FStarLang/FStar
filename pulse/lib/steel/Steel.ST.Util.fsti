@@ -646,6 +646,28 @@ let implies_swap_r
 = implies_with_tactic (q1 `star` q2) (q2 `star` q1);
   implies_trans p (q1 `star` q2) (q2 `star` q1)
 
+let implies_consumes_l
+  (#opened: _)
+  (p q r: vprop)
+: STGhostT unit opened
+    (p `star` ((p `star` q) `implies_` r))
+    (fun _ -> q `implies_` r)
+= intro_implies
+    q
+    r
+    (p `star` ((p `star` q) `implies_` r))
+    (fun _ -> elim_implies (p `star` q) r)
+
+let implies_consumes_r
+  (#opened: _)
+  (p q r: vprop)
+: STGhostT unit opened
+    (q `star` ((p `star` q) `implies_` r))
+    (fun _ -> p `implies_` r)
+= implies_with_tactic (q `star` p) (p `star` q);
+  implies_trans (q `star` p) (p `star` q) r;
+  implies_consumes_l q p r
+
 /// The magic wand is a implies (but not the converse)
 
 let wand_is_implies
