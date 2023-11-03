@@ -15,7 +15,7 @@
 *)
 module Canon
 
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.Tactics.Canon
 open FStar.Mul
 
@@ -60,25 +60,25 @@ let lem4 (a b c : int) =
 (* The following tests should pass, but it's too slow to run them on every regression build, *)
 (* and the previous ones are probably enough *)
 
-let lem5 (a b c d e : int) =
-    assert
-        ((a+b+c+d+e)*(a+b+c+d+e) ==
-                a * a + a * b + a * c + a * d + a * e
-              + b * a + b * b + b * c + b * d + b * e
-              + c * a + c * b + c * c + c * d + c * e
-              + d * a + d * b + d * c + d * d + d * e
-              + e * a + e * b + e * c + e * d + e * e)
-        by check_canon ()
-
-let lem6 (a b c d e : int) =
-    assert
-        ((a+b+c+d+e)*(e+d+c+b+a) ==
-                a * a + a * b + a * c + a * d + a * e
-              + b * a + b * b + b * c + b * d + b * e
-              + c * a + c * b + c * c + c * d + c * e
-              + d * a + d * b + d * c + d * d + d * e
-              + e * a + e * b + e * c + e * d + e * e)
-        by check_canon ()
+// let lem5 (a b c d e : int) =
+//     assert
+//         ((a+b+c+d+e)*(a+b+c+d+e) ==
+//                 a * a + a * b + a * c + a * d + a * e
+//               + b * a + b * b + b * c + b * d + b * e
+//               + c * a + c * b + c * c + c * d + c * e
+//               + d * a + d * b + d * c + d * d + d * e
+//               + e * a + e * b + e * c + e * d + e * e)
+//         by check_canon ()
+//
+// let lem6 (a b c d e : int) =
+//     assert
+//         ((a+b+c+d+e)*(e+d+c+b+a) ==
+//                 a * a + a * b + a * c + a * d + a * e
+//               + b * a + b * b + b * c + b * d + b * e
+//               + c * a + c * b + c * c + c * d + c * e
+//               + d * a + d * b + d * c + d * d + d * e
+//               + e * a + e * b + e * c + e * d + e * e)
+//         by check_canon ()
 
 let lem7 (a b c d : int) =
     assert

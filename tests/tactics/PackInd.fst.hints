@@ -1,6 +1,20 @@
 [
-  "?Ë¿8-N«P{ÅÖ\u0002\\…‰²",
+  "¨tÀ<‚Qôç»O\u0000ÍÂL¸",
   [
+    [
+      "PackInd.tau",
+      1,
+      2,
+      1,
+      [
+        "@query",
+        "constructor_distinct_FStar.Tactics.NamedView.Sg_Inductive",
+        "disc_equation_FStar.Tactics.NamedView.Unk",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "8aea86901b13ac95a8bc0d5e0dfdd089"
+    ],
     [
       "PackInd.test",
       1,
@@ -13,7 +27,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "91e089e33aed6148b88aa5cd4d3b8ff3"
+      "9061717046ddc6a25edd349c4d46d824"
     ]
   ]
 ]

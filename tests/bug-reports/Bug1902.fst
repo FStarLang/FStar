@@ -1,7 +1,7 @@
 module Bug1902
 
 open FStar.List.Tot
-open FStar.Tactics
+open FStar.Tactics.V2
 
 // a few helpers
 let fvOf (t: term) = match inspect t with
@@ -21,8 +21,8 @@ let rec f m (n: nat): Tot int (decreases n) =
 // we extract f's type
 let typOfF (): Tac typ =
   let Some fdef = admit (); lookup_typ (top_env ()) (inspect_fv (fvOf (`f (*`*)))) in
-  let Sg_Let _ lbs = admit (); inspect_sigelt fdef in
-  let lbv = lookup_lb_view lbs (inspect_fv (fvOf (`f (*`*)))) in
+  let Sg_Let {lbs} = admit (); inspect_sigelt fdef in
+  let lbv = lookup_lb lbs (inspect_fv (fvOf (`f (*`*)))) in
   lbv.lb_typ
 
 // Note that the type of f is actually
@@ -69,8 +69,8 @@ let craft_f' use_f_type: Tac decls =
     mk_abs [m;n] (
       pack (
         Tv_Match n' None
-        [ (Pat_Constant   (C_Int 0), (`(*`*)0))
-        ; (Pat_Wild (fresh_bv (`(*`*)int)),
+        [ (Pat_Constant {c=C_Int 0}, (`(*`*)0))
+        ; (Pat_Var {v=fresh_namedv (); sort=Sealed.seal (`int)},
                     call2 (pack (Tv_FVar name))
                       (call2 (`(*`*)(+)) m' (`(*`*)  1 ))
                       (call2 (`(*`*)(+)) n' (`(*`*)(-1)))
@@ -79,8 +79,8 @@ let craft_f' use_f_type: Tac decls =
       )
     )
   ) in
-  let lb = pack_lb ({lb_fv = name; lb_us = []; lb_typ = typ; lb_def = def}) in
-  let se = Sg_Let true [lb] in
+  let lb = {lb_fv = name; lb_us = []; lb_typ = typ; lb_def = def} in
+  let se = Sg_Let {isrec=true; lbs= [lb]} in
   [pack_sigelt se]
 
 // crafting f' using f type works

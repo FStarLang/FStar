@@ -315,7 +315,7 @@ let apply_ml_mode_optimizations (mname:lident) : bool =
    *     But until then ... (sigh)
    *)  
   Options.ml_ish () &&
-  (not (List.contains (Ident.string_of_lid mname) (Parser.Dep.core_modules))) &&
+  (not (List.contains (Ident.string_of_lid mname) (Parser.Dep.core_modules ()))) &&
   (not (List.contains (Ident.string_of_lid mname) ulib_modules))
 
 let prefix_one_decl mname iface impl =
@@ -393,10 +393,11 @@ let interleave_module (a:modul) (expect_complete_modul:bool) : E.withenv modul =
         let a = Module(l, impls) in
         match remaining_iface_vals with
         | _::_ when expect_complete_modul ->
-          let err = List.map FStar.Parser.AST.decl_to_string remaining_iface_vals |> String.concat "\n\t" in
-          raise_error (Errors.Fatal_InterfaceNotImplementedByModule, (Util.format2 "Some interface elements were not implemented by module %s:\n\t%s"
-                                    (Ident.string_of_lid l)
-                                    err)) (Ident.range_of_lid l)
+          let remaining = List.map FStar.Parser.AST.decl_to_string remaining_iface_vals in
+          FStar.Pprint.(raise_error_doc
+            (Errors.Fatal_InterfaceNotImplementedByModule,
+              [text (Util.format1 "Some interface elements were not implemented by module %s:" (Ident.string_of_lid l))
+                ^^ sublist empty (List.map doc_of_string remaining)]) (Ident.range_of_lid l))
         | _ ->
           if Options.dump_module (string_of_lid l)
           then Util.print1 "Interleaved module is:\n%s\n" (FStar.Parser.AST.modul_to_string a);

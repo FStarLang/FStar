@@ -1,5 +1,6 @@
 module FStar.Syntax.Compress
 
+open FStar.Compiler
 open FStar.Compiler.Util
 open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
@@ -12,7 +13,7 @@ module Err = FStar.Errors
 (* This function really just checks for bad(tm) things happening, the
 actual `compress` call is done by the visitor, so no need to repeat it
 here. Morally, `deep_compress` is just `visit id` with some checks. *)
-let compress1_t (allow_uvars:bool) : term -> term =
+let compress1_t (allow_uvars: bool) (allow_names: bool) : term -> term =
   fun t ->
     let mk x = Syntax.mk x t.pos in
     match t.n with
@@ -20,7 +21,7 @@ let compress1_t (allow_uvars:bool) : term -> term =
       Err.raise_err (Err.Error_UnexpectedUnresolvedUvar,
                      format1 "Internal error: unexpected unresolved uvar in deep_compress: %s" (string_of_int (Unionfind.uvar_id uv.ctx_uvar_head)))
 
-    | Tm_name bv when not allow_uvars ->
+    | Tm_name bv when not allow_names ->
       (* This currently happens, and often, but it should not! *)
       if Options.debug_any () then
         Errors.log_issue t.pos (Err.Warning_NameEscape, format1 "Tm_name %s in deep compress" (Syntax.Print.bv_to_string bv));
@@ -62,18 +63,31 @@ function.
 [1] OCaml's Marshal module can actually serialize closures, but this
 makes .checked files more brittle, so we don't do it.
 *)
-let deep_compress (allow_uvars:bool) (tm : term) : term =
+let deep_compress (allow_uvars:bool) (allow_names: bool) (tm : term) : term =
   Err.with_ctx ("While deep-compressing a term") (fun () ->
     Visit.visit_term_univs
-      (compress1_t allow_uvars)
+      (compress1_t allow_uvars allow_names)
       (compress1_u allow_uvars)
       tm
   )
 
-let deep_compress_se (allow_uvars:bool) (se : sigelt) : sigelt =
+let deep_compress_uvars = deep_compress false true
+
+let deep_compress_if_no_uvars (tm : term) : option term =
+  Err.with_ctx ("While deep-compressing a term") (fun () ->
+    try 
+      Some (Visit.visit_term_univs
+              (compress1_t false true)
+              (compress1_u false)
+              tm)
+    with
+    | FStar.Errors.Err (Err.Error_UnexpectedUnresolvedUvar, _, _) -> None
+  )
+
+let deep_compress_se (allow_uvars:bool) (allow_names:bool) (se : sigelt) : sigelt =
   Err.with_ctx (format1 "While deep-compressing %s" (Syntax.Print.sigelt_to_string_short se)) (fun () ->
     Visit.visit_sigelt
-      (compress1_t allow_uvars)
+      (compress1_t allow_uvars allow_names)
       (compress1_u allow_uvars)
       se
   )

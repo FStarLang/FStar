@@ -17,6 +17,7 @@ module FStar.Tactics.Types
 
 open FStar.Reflection.Types
 include FStar.Tactics.Common
+include FStar.Stubs.TypeChecker.Core
 
 assume new type proofstate
 assume new type goal
@@ -53,13 +54,18 @@ type ctrl_flag =
     | Abort
 
 type guard_policy =
-    | SMT
-    | Goal
-    | Force
-    | Drop // unsound! careful!
+    | Goal      // Add guards as (normal) goals
+    | SMT       // Add guards as SMT goals
+    | SMTSync   // Send guards to SMT immediately, will *log* errors (not raise) if anything fails
+    | Force     // Force guards without SMT
+    | Drop      // Drop guards, clearly unsound! careful!
 
-type unfold_side =
-  | Left
-  | Right
-  | Both
-  | Neither
+(* Typing reflection *)
+val non_informative_token (g:env) (t:typ) : Type0
+val subtyping_token (g:env) (t0 t1:typ) : Type0
+val equiv_token (g:env) (t0 t1:typ) : Type0
+val typing_token (g:env) (e:term) (c:tot_or_ghost & typ) : Type0
+
+(* Must be inline, this definition is not there in src/FStar.Tactics.Types *)
+inline_for_extraction
+let issues = list FStar.Issue.issue

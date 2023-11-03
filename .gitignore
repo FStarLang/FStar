@@ -41,7 +41,6 @@ tests/*/*.ml
 tests/incl/*.neg/error.log
 
 _build/
-/ulib/ml/_taclib_build/
 /ulib/fs/obj
 /ulib/fs/bin
 
@@ -65,6 +64,7 @@ dump
 *.cmxa
 *.o
 fstar.install
+._fstar.install
 
 .depend
 .depend.rsp
@@ -98,3 +98,6 @@ nubuild.progress
 
 # Nuget packages
 nuget/
+
+# devcontainer temp files
+/.devcontainer_build.log

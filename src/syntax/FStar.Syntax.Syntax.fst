@@ -25,10 +25,11 @@ open FStar.Compiler.Range
 open FStar.Ident
 open FStar.Const
 open FStar.Compiler.Dyn
-module O = FStar.Options
-module PC = FStar.Parser.Const
 open FStar.VConfig
-module Err = FStar.Errors
+module O    = FStar.Options
+module PC   = FStar.Parser.Const
+module Err  = FStar.Errors
+module GS   = FStar.GenSym
 
 // This is set in FStar.Main.main, where all modules are in-scope.
 let lazy_chooser : ref (option (lazy_kind -> lazyinfo -> term)) = mk_ref None
@@ -101,13 +102,6 @@ let new_fv_set () :set lident = Util.new_set order_fv
 let order_univ_name x y = String.compare (Ident.string_of_id x) (Ident.string_of_id y)
 let new_universe_names_set () : set univ_name = Util.new_set order_univ_name
 
-let eq_binding b1 b2 =
-    match b1, b2 with
-    | Binding_var bv1, Binding_var bv2 -> bv_eq bv1 bv2
-    | Binding_lid (lid1, _), Binding_lid (lid2, _) -> lid_equals lid1 lid2
-    | Binding_univ u1, Binding_univ u2 -> ident_equals u1 u2
-    | _ -> false
-
 let no_names  = new_bv_set()
 let no_fvars  = new_fv_set()
 let no_universe_names = new_universe_names_set ()
@@ -130,7 +124,7 @@ let binders_to_names (bs:binders) : list term = bs |> List.map (fun b -> bv_to_n
 let mk_Tm_app (t1:typ) (args:list arg) p =
     match args with
     | [] -> t1
-    | _ -> mk (Tm_app (t1, args)) p
+    | _ -> mk (Tm_app {hd=t1; args}) p
 let mk_Tm_uinst (t:term) (us:universes) =
   match t.n with
   | Tm_fvar _ ->
@@ -141,10 +135,10 @@ let mk_Tm_uinst (t:term) (us:universes) =
   | _ -> failwith "Unexpected universe instantiation"
 
 let extend_app_n t args' r = match t.n with
-    | Tm_app(head, args) -> mk_Tm_app head (args@args') r
+    | Tm_app {hd; args} -> mk_Tm_app hd (args@args') r
     | _ -> mk_Tm_app t args' r
 let extend_app t arg r = extend_app_n t [arg] r
-let mk_Tm_delayed lr pos : term = mk (Tm_delayed lr) pos
+let mk_Tm_delayed lr pos : term = mk (Tm_delayed {tm=fst lr; substs=snd lr}) pos
 let mk_Total t = mk (Total t) t.pos
 let mk_GTotal t : comp = mk (GTotal t) t.pos
 let mk_Comp (ct:comp_typ) : comp  = mk (Comp ct) ct.result_typ.pos
@@ -166,23 +160,41 @@ let mk_Tac t =
                flags = [SOMETRIVIAL; TRIVIAL_POSTCONDITION];
             })
 
-let default_sigmeta = { sigmeta_active=true; sigmeta_fact_db_ids=[]; sigmeta_admit=false }
-let mk_sigelt (e: sigelt') = { sigel = e; sigrng = Range.dummyRange; sigquals=[]; sigmeta=default_sigmeta; sigattrs = [] ; sigopts = None }
+let default_sigmeta = {
+    sigmeta_active=true;
+    sigmeta_fact_db_ids=[];
+    sigmeta_admit=false;
+    sigmeta_already_checked=false;
+    sigmeta_extension_data=[]
+}
+let mk_sigelt (e: sigelt') = { 
+    sigel = e;
+    sigrng = Range.dummyRange;
+    sigquals=[];
+    sigmeta=default_sigmeta;
+    sigattrs = [] ;
+    sigopts = None;
+    sigopens_and_abbrevs = [] }
 let mk_subst (s:subst_t)   = s
 let extend_subst x s : subst_t = x::s
 let argpos (x:arg) = (fst x).pos
 
 let tun : term = mk (Tm_unknown) dummyRange
 let teff : term = mk (Tm_constant Const_effect) dummyRange
+
+(* no compress call? *)
 let is_teff (t:term) = match t.n with
     | Tm_constant Const_effect -> true
     | _ -> false
+(* no compress call? *)
 let is_type (t:term) = match t.n with
     | Tm_type _ -> true
     | _ -> false
+
 (* Gen sym *)
 let null_id  = mk_ident("_", dummyRange)
-let null_bv k = {ppname=null_id; index=Ident.next_id(); sort=k}
+let null_bv k = {ppname=null_id; index=GS.next_id(); sort=k}
+
 let is_null_bv (b:bv) = string_of_id b.ppname = string_of_id null_id
 let is_null_binder (b:binder) = is_null_bv b.binder_bv
 let range_of_ropt = function
@@ -190,7 +202,7 @@ let range_of_ropt = function
     | Some r -> r
 
 let gen_bv' (id : ident) (r : option Range.range) (t : typ) : bv =
-  {ppname=id; index=Ident.next_id(); sort=t}
+  {ppname=id; index=GS.next_id(); sort=t}
 
 let gen_bv (s : string) (r : option Range.range) (t : typ) : bv =
   let id = mk_ident(s, range_of_ropt r) in
@@ -200,7 +212,7 @@ let new_bv ropt t = gen_bv Ident.reserved_prefix ropt t
 let freshen_bv bv =
     if is_null_bv bv
     then new_bv (Some (range_of_bv bv)) bv.sort
-    else {bv with index=Ident.next_id()}
+    else {bv with index=GS.next_id()}
 let mk_binder_with_attrs bv aqual pqual attrs = {
   binder_bv = bv;
   binder_qual = aqual;
@@ -232,7 +244,6 @@ let pat_bvs (p:pat) : list bv =
     let rec aux b p = match p.v with
         | Pat_dot_term _
         | Pat_constant _ -> b
-        | Pat_wild x
         | Pat_var x -> x::b
         | Pat_cons(_, _, pats) -> List.fold_left (fun b (p, _) -> aux b p) b pats
     in
@@ -242,7 +253,7 @@ let pat_bvs (p:pat) : list bv =
 let freshen_binder (b:binder) = { b with binder_bv = freshen_bv b.binder_bv }
 
 let new_univ_name ropt =
-    let id = Ident.next_id() in
+    let id = GS.next_id() in
     mk_ident (Ident.reserved_prefix ^ Util.string_of_int id, range_of_ropt ropt)
 let lbname_eq l1 l2 = match l1, l2 with
   | Inl x, Inl y -> bv_eq x y
@@ -253,13 +264,19 @@ let fv_eq_lid fv lid = lid_equals fv.fv_name.v lid
 
 let set_bv_range bv r = {bv with ppname = set_id_range r bv.ppname}
 
-let lid_as_fv l dd dq : fv = {
+let lid_and_dd_as_fv l dd dq : fv = {
     fv_name=withinfo l (range_of_lid l);
-    fv_delta=dd;
+    fv_delta=Some dd;
+    fv_qual =dq;
+}
+let lid_as_fv l dq : fv = {
+    fv_name=withinfo l (range_of_lid l);
+    fv_delta=None;
     fv_qual =dq;
 }
 let fv_to_tm (fv:fv) : term = mk (Tm_fvar fv) (range_of_lid fv.fv_name.v)
-let fvar l dd dq =  fv_to_tm (lid_as_fv l dd dq)
+let fvar_with_dd l dd dq =  fv_to_tm (lid_and_dd_as_fv l dd dq)
+let fvar l dq = fv_to_tm (lid_as_fv l dq)
 let lid_of_fv (fv:fv) = fv.fv_name.v
 let range_of_fv (fv:fv) = range_of_lid (lid_of_fv fv)
 let set_range_of_fv (fv:fv) (r:Range.range) =
@@ -287,7 +304,6 @@ let rec eq_pat (p1 : pat) (p2 : pat) : bool =
               | _ -> false)
         else false
     | Pat_var _, Pat_var _ -> true
-    | Pat_wild _, Pat_wild _ -> true
     | Pat_dot_term _, Pat_dot_term _ -> true
     | _, _ -> false
 
@@ -296,10 +312,10 @@ let rec eq_pat (p1 : pat) (p2 : pat) : bool =
 ///////////////////////////////////////////////////////////////////////
 let delta_constant = Delta_constant_at_level 0
 let delta_equational = Delta_equational_at_level 0
-let fvconst l = lid_as_fv l delta_constant None
+let fvconst l = lid_and_dd_as_fv l delta_constant None
 let tconst l = mk (Tm_fvar (fvconst l)) Range.dummyRange
-let tabbrev l = mk (Tm_fvar(lid_as_fv l (Delta_constant_at_level 1) None)) Range.dummyRange
-let tdataconstr l = fv_to_tm (lid_as_fv l delta_constant (Some Data_ctor))
+let tabbrev l = mk (Tm_fvar(lid_and_dd_as_fv l (Delta_constant_at_level 1) None)) Range.dummyRange
+let tdataconstr l = fv_to_tm (lid_and_dd_as_fv l delta_constant (Some Data_ctor))
 let t_unit      = tconst PC.unit_lid
 let t_bool      = tconst PC.bool_lid
 let t_int       = tconst PC.int_lid
@@ -309,6 +325,7 @@ let t_real      = tconst PC.real_lid
 let t_float     = tconst PC.float_lid
 let t_char      = tabbrev PC.char_lid
 let t_range     = tconst PC.range_lid
+let t___range   = tconst PC.__range_lid
 let t_vconfig   = tconst PC.vconfig_lid
 let t_term      = tconst PC.term_lid
 let t_term_view = tabbrev PC.term_view_lid

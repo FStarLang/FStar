@@ -16,7 +16,7 @@
         "projection_inverse_BoxInt_proj_0", "well-founded-ordering-on-nat"
       ],
       0,
-      "798e7fa5428f4700f7f313f2f272b0de"
+      "dcb0c357236371ec11856235134442aa"
     ],
     [
       "Pure.fact",
@@ -29,20 +29,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "97643371ecec3e45c3fd8a772c190da5"
-    ],
-    [
-      "Pure.op_Equals_Tilde_Equals",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_Forall",
-        "equation_Prims.squash", "equation_Prims.subtype_of",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
-      ],
-      0,
-      "b899bd19adc8cc34d1588105a943c022"
+      "ea5b3c5cae0ac7a1f35ec3521b045a31"
     ],
     [
       "Pure.left_identity",
@@ -57,7 +44,7 @@
         "interpretation_Tm_abs_d0f415a5361a9d7988d8e425dc193472"
       ],
       0,
-      "f9303c213758d79b77644c8dd8546562"
+      "154979e8b64c1688ea6ae0523d11c686"
     ],
     [
       "Pure.right_identity",
@@ -77,7 +64,7 @@
         "typing_Tm_abs_d0f415a5361a9d7988d8e425dc193472"
       ],
       0,
-      "682e1c784468d6d999f288e40b584031"
+      "6e1753208e3d653bc957f1af840c448a"
     ],
     [
       "Pure.associativity",
@@ -95,7 +82,7 @@
         "typing_Tm_abs_d0f415a5361a9d7988d8e425dc193472"
       ],
       0,
-      "76a64f86afc9057f57989ba5fa3378a8"
+      "17e26a657414cf0f89247e340c649246"
     ],
     [
       "Pure.square",
@@ -108,20 +95,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "0ef568aea252460a17ba2df397c0d209"
-    ],
-    [
-      "Pure.stronger_wp",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_Forall",
-        "equation_Prims.squash", "equation_Prims.subtype_of",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
-      ],
-      0,
-      "9d4cd32084d434b22bd00ec209bc0ed5"
+      "f0fe8ff191178e2ea354c7df8410894d"
     ],
     [
       "Pure.maybe_incr",
@@ -144,7 +118,7 @@
         "token_correspondence_Pure.if_then_else_wp"
       ],
       0,
-      "07af5c7a1b0e0a082b908c5dd6a457d2"
+      "ebd24c632bc3a6f28888248cf25bde9f"
     ],
     [
       "Pure.maybe_incr2",
@@ -156,7 +130,7 @@
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "b9873fd509aaf9687bab200465675220"
+      "564b96564642ef2037d7c6f7dc9f7d8b"
     ],
     [
       "Pure.maybe_incr_tot",
@@ -168,7 +142,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "383653dbe042327ec4991dd2bb060f2f"
+      "6fc1a1a735a94570becc8472dad685f6"
     ],
     [
       "Pure.assert_wp",
@@ -177,7 +151,7 @@
       1,
       [ "@query" ],
       0,
-      "b70e4f99ec8007a9244a9f139d4fdfb2"
+      "ad3e2c7f35a73f36faa3f37fa3c00bf8"
     ]
   ]
 ]

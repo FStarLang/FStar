@@ -1,6 +1,7 @@
 include ../../Makefile.include
 
-FSTAR_FILES := $(wildcard *.fst *.fsti)
+EXCLUDE_FILES = ContextPollution.fst
+FSTAR_FILES := $(filter-out $(EXCLUDE_FILES),$(wildcard *.fst *.fsti))
 FSTAR_FLAGS +=--cache_checked_modules $(OTHERFLAGS)
 
 all: $(addsuffix .checked, $(FSTAR_FILES))

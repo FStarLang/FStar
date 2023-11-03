@@ -255,7 +255,7 @@ type raw_error =
   | Fatal_WhenClauseNotSupported 
   | Unused01 
   | Warning_AddImplicitAssumeNewQualifier 
-  | Warning_AdmitWithoutDefinition 
+  | Error_AdmitWithoutDefinition 
   | Warning_CachedFile 
   | Warning_DefinitionNotTranslated 
   | Warning_DependencyFound 
@@ -372,6 +372,8 @@ type raw_error =
   | Error_InternalQualifier 
   | Warning_NameEscape 
   | Warning_UnexpectedZ3Stderr 
+  | Warning_SolverMismatch 
+  | Warning_SolverVersionMismatch 
 let (uu___is_Error_DependencyAnalysisFailed : raw_error -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -1430,10 +1432,10 @@ let (uu___is_Warning_AddImplicitAssumeNewQualifier : raw_error -> Prims.bool)
     match projectee with
     | Warning_AddImplicitAssumeNewQualifier -> true
     | uu___ -> false
-let (uu___is_Warning_AdmitWithoutDefinition : raw_error -> Prims.bool) =
+let (uu___is_Error_AdmitWithoutDefinition : raw_error -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | Warning_AdmitWithoutDefinition -> true
+    | Error_AdmitWithoutDefinition -> true
     | uu___ -> false
 let (uu___is_Warning_CachedFile : raw_error -> Prims.bool) =
   fun projectee ->
@@ -1909,6 +1911,14 @@ let (uu___is_Warning_UnexpectedZ3Stderr : raw_error -> Prims.bool) =
     match projectee with
     | Warning_UnexpectedZ3Stderr -> true
     | uu___ -> false
+let (uu___is_Warning_SolverMismatch : raw_error -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Warning_SolverMismatch -> true | uu___ -> false
+let (uu___is_Warning_SolverVersionMismatch : raw_error -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | Warning_SolverVersionMismatch -> true
+    | uu___ -> false
 type error_setting = (raw_error * error_flag * Prims.int)
 let (default_settings : error_setting Prims.list) =
   [(Error_DependencyAnalysisFailed, CAlwaysError, Prims.int_zero);
@@ -2155,7 +2165,7 @@ let (default_settings : error_setting Prims.list) =
   (Unused01, CFatal, (Prims.of_int (237)));
   (Warning_PluginNotImplemented, CError, (Prims.of_int (238)));
   (Warning_AddImplicitAssumeNewQualifier, CWarning, (Prims.of_int (239)));
-  (Warning_AdmitWithoutDefinition, CWarning, (Prims.of_int (240)));
+  (Error_AdmitWithoutDefinition, CError, (Prims.of_int (240)));
   (Warning_CachedFile, CWarning, (Prims.of_int (241)));
   (Warning_DefinitionNotTranslated, CWarning, (Prims.of_int (242)));
   (Warning_DependencyFound, CWarning, (Prims.of_int (243)));
@@ -2272,4 +2282,6 @@ let (default_settings : error_setting Prims.list) =
   (Error_PluginDynlink, CError, (Prims.of_int (353)));
   (Error_InternalQualifier, CAlwaysError, (Prims.of_int (354)));
   (Warning_NameEscape, CWarning, (Prims.of_int (355)));
-  (Warning_UnexpectedZ3Stderr, CWarning, (Prims.of_int (356)))]
+  (Warning_UnexpectedZ3Stderr, CWarning, (Prims.of_int (356)));
+  (Warning_SolverMismatch, CError, (Prims.of_int (357)));
+  (Warning_SolverVersionMismatch, CError, (Prims.of_int (358)))]

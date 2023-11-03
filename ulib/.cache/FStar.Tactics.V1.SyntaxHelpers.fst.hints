@@ -1,0 +1,87 @@
+[
+  "Sk#4|ìÙ‘3y£4ïƒ‡\u000b",
+  [
+    [
+      "FStar.Tactics.V1.SyntaxHelpers.mk_arr",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "b0c391be1f85cb093f925d5511402731"
+    ],
+    [
+      "FStar.Tactics.V1.SyntaxHelpers.mk_arr_curried",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "70486b62b316370142bd9456a21dfbf0"
+    ],
+    [
+      "FStar.Tactics.V1.SyntaxHelpers.mk_tot_arr",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "70c098667a48ed3d5403695bf0f82cd3"
+    ],
+    [
+      "FStar.Tactics.V1.SyntaxHelpers.lookup_lb_view",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.find.fuel_instrumented",
+        "@query",
+        "FStar.List.Tot.Base_interpretation_Tm_arrow_84543425b818e2d10a976186b8e8c250",
+        "FStar.Tactics.V1.SyntaxHelpers_interpretation_Tm_arrow_9cee15d608581612622ea4ace43954b0",
+        "constructor_distinct_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "equation_with_fuel_FStar.List.Tot.Base.find.fuel_instrumented",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.option",
+        "fuel_guarded_inversion_Prims.list",
+        "function_token_typing_FStar.Reflection.Types.letbinding",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.None_a",
+        "typing_FStar.List.Tot.Base.find",
+        "typing_Tm_abs_37868cdadba52273508e4e7efc2080db"
+      ],
+      0,
+      "52e959822839193ec94e7aad01fcbd39"
+    ],
+    [
+      "FStar.Tactics.V1.SyntaxHelpers.inspect_unascribe",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Reflection.V1.Data.Tv_AscribedC",
+        "disc_equation_FStar.Reflection.V1.Data.Tv_AscribedT",
+        "equation_FStar.Reflection.V1.Data.notAscription",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Negation",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "32567eb37e298b09ad0fff1aa70853ba"
+    ]
+  ]
+]

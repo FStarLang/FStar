@@ -28,6 +28,10 @@ let smt_pat_or _ = ()
 
 let spinoff p = p
 
+#push-options "--no_tactics"
+let spinoff_equiv _ = ()
+#pop-options
+
 let assert_spinoff _ = ()
 
 let ambient #_ _ = True
@@ -50,6 +54,7 @@ type norm_step =
   | Iota // Reduce case analysis (i.e., match)
   | NBE // Use normalization-by-evaluation, instead of interpretation (experimental)
   | Reify // Reify effectful definitions into their representations
+  | NormDebug // Turn on debugging for this call
   | UnfoldOnly : list string -> norm_step // Unlike Delta, unfold definitions for only the given
   // names, each string is a fully qualified name
   // like `A.M.f`
@@ -75,6 +80,9 @@ let primops = Primops
 
 irreducible
 let delta = Delta
+
+irreducible
+let norm_debug = NormDebug
 
 irreducible
 let zeta = Zeta
@@ -174,6 +182,8 @@ let effect_param = ()
 let bind_has_range_args = ()
 let primitive_extraction = ()
 
+let extract_as_impure_effect = ()
+
 let strictly_positive = ()
 
 let unused = ()
@@ -182,4 +192,8 @@ let no_auto_projectors = ()
 
 let no_subtyping = ()
 
+let admit_termination = ()
+
 let singleton #_ x = x
+
+let coercion = ()

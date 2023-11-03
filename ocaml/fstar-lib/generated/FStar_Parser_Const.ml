@@ -1,6 +1,6 @@
 open Prims
 let (p2l : FStar_Ident.path -> FStar_Ident.lident) =
-  fun l -> FStar_Ident.lid_of_path l FStar_Compiler_Range.dummyRange
+  fun l -> FStar_Ident.lid_of_path l FStar_Compiler_Range_Type.dummyRange
 let (pconst : Prims.string -> FStar_Ident.lident) = fun s -> p2l ["Prims"; s]
 let (psconst : Prims.string -> FStar_Ident.lident) =
   fun s -> p2l ["FStar"; "Pervasives"; s]
@@ -126,6 +126,10 @@ let (let_in_typ : FStar_Ident.lident) = p2l ["Prims"; "Let"]
 let (string_of_int_lid : FStar_Ident.lident) = p2l ["Prims"; "string_of_int"]
 let (string_of_bool_lid : FStar_Ident.lident) =
   p2l ["Prims"; "string_of_bool"]
+let (int_of_string_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Parse"; "int_of_string"]
+let (bool_of_string_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Parse"; "bool_of_string"]
 let (string_compare : FStar_Ident.lident) =
   p2l ["FStar"; "String"; "compare"]
 let (order_lid : FStar_Ident.lident) = p2l ["FStar"; "Order"; "order"]
@@ -147,6 +151,7 @@ let (op_Modulus : FStar_Ident.lident) = pconst "op_Modulus"
 let (op_And : FStar_Ident.lident) = pconst "op_AmpAmp"
 let (op_Or : FStar_Ident.lident) = pconst "op_BarBar"
 let (op_Negation : FStar_Ident.lident) = pconst "op_Negation"
+let (subtype_of_lid : FStar_Ident.lident) = pconst "subtype_of"
 let (real_const : Prims.string -> FStar_Ident.lident) =
   fun s -> p2l ["FStar"; "Real"; s]
 let (real_op_LT : FStar_Ident.lident) = real_const "op_Less_Dot"
@@ -172,6 +177,7 @@ let (bv_sub_lid : FStar_Ident.lident) = bvconst "bvsub"
 let (bv_shift_left_lid : FStar_Ident.lident) = bvconst "bvshl"
 let (bv_shift_right_lid : FStar_Ident.lident) = bvconst "bvshr"
 let (bv_udiv_lid : FStar_Ident.lident) = bvconst "bvdiv"
+let (bv_udiv_unsafe_lid : FStar_Ident.lident) = bvconst "bvdiv_unsafe"
 let (bv_mod_lid : FStar_Ident.lident) = bvconst "bvmod"
 let (bv_mul_lid : FStar_Ident.lident) = bvconst "bvmul"
 let (bv_ult_lid : FStar_Ident.lident) = bvconst "bvult"
@@ -242,10 +248,10 @@ let (as_ensures : FStar_Ident.lident) = pconst "as_ensures"
 let (decreases_lid : FStar_Ident.lident) = pconst "decreases"
 let (reveal : FStar_Ident.lident) = p2l ["FStar"; "Ghost"; "reveal"]
 let (hide : FStar_Ident.lident) = p2l ["FStar"; "Ghost"; "hide"]
-let (range_lid : FStar_Ident.lident) = pconst "range"
-let (range_of_lid : FStar_Ident.lident) = pconst "range_of"
-let (labeled_lid : FStar_Ident.lident) = pconst "labeled"
-let (range_0 : FStar_Ident.lident) = pconst "range_0"
+let (labeled_lid : FStar_Ident.lident) = p2l ["FStar"; "Range"; "labeled"]
+let (__range_lid : FStar_Ident.lident) = p2l ["FStar"; "Range"; "__range"]
+let (range_lid : FStar_Ident.lident) = p2l ["FStar"; "Range"; "range"]
+let (range_0 : FStar_Ident.lident) = p2l ["FStar"; "Range"; "range_0"]
 let (guard_free : FStar_Ident.lident) = pconst "guard_free"
 let (inversion_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "inversion"]
@@ -261,6 +267,7 @@ let (steps_zeta_full : FStar_Ident.lident) = psconst "zeta_full"
 let (steps_iota : FStar_Ident.lident) = psconst "iota"
 let (steps_delta : FStar_Ident.lident) = psconst "delta"
 let (steps_reify : FStar_Ident.lident) = psconst "reify_"
+let (steps_norm_debug : FStar_Ident.lident) = psconst "norm_debug"
 let (steps_unfoldonly : FStar_Ident.lident) = psconst "delta_only"
 let (steps_unfoldfully : FStar_Ident.lident) = psconst "delta_fully"
 let (steps_unfoldattr : FStar_Ident.lident) = psconst "delta_attr"
@@ -322,6 +329,8 @@ let (binder_unused_attr : FStar_Ident.lident) = psconst "unused"
 let (no_auto_projectors_attr : FStar_Ident.lident) =
   psconst "no_auto_projectors"
 let (no_subtping_attr_lid : FStar_Ident.lident) = psconst "no_subtyping"
+let (admit_termination_lid : FStar_Ident.lident) =
+  psconst "admit_termination"
 let (attr_substitute_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "Substitute"]
 let (well_founded_relation_lid : FStar_Ident.lident) =
@@ -354,7 +363,7 @@ let (const_to_string : FStar_Const.sconst -> Prims.string) =
         let uu___ =
           FStar_String.op_Hat (FStar_Compiler_Util.string_of_char c) "'" in
         FStar_String.op_Hat "'" uu___
-    | FStar_Const.Const_range r -> FStar_Compiler_Range.string_of_range r
+    | FStar_Const.Const_range r -> FStar_Compiler_Range_Ops.string_of_range r
     | FStar_Const.Const_range_of -> "range_of"
     | FStar_Const.Const_set_range_of -> "set_range_of"
     | FStar_Const.Const_reify lopt ->
@@ -369,7 +378,7 @@ let (const_to_string : FStar_Const.sconst -> Prims.string) =
         let uu___ = sli l in
         FStar_Compiler_Util.format1 "[[%s.reflect]]" uu___
 let (mk_tuple_lid :
-  Prims.int -> FStar_Compiler_Range.range -> FStar_Ident.lident) =
+  Prims.int -> FStar_Compiler_Range_Type.range -> FStar_Ident.lident) =
   fun n ->
     fun r ->
       let t =
@@ -377,9 +386,9 @@ let (mk_tuple_lid :
         FStar_Compiler_Util.format1 "tuple%s" uu___ in
       let uu___ = psnconst t in FStar_Ident.set_lid_range uu___ r
 let (lid_tuple2 : FStar_Ident.lident) =
-  mk_tuple_lid (Prims.of_int (2)) FStar_Compiler_Range.dummyRange
+  mk_tuple_lid (Prims.of_int (2)) FStar_Compiler_Range_Type.dummyRange
 let (lid_tuple3 : FStar_Ident.lident) =
-  mk_tuple_lid (Prims.of_int (3)) FStar_Compiler_Range.dummyRange
+  mk_tuple_lid (Prims.of_int (3)) FStar_Compiler_Range_Type.dummyRange
 let (is_tuple_constructor_string : Prims.string -> Prims.bool) =
   fun s -> FStar_Compiler_Util.starts_with s "FStar.Pervasives.Native.tuple"
 let (is_tuple_constructor_id : FStar_Ident.ident -> Prims.bool) =
@@ -391,7 +400,7 @@ let (is_tuple_constructor_lid : FStar_Ident.lident -> Prims.bool) =
     let uu___ = FStar_Ident.string_of_lid lid in
     is_tuple_constructor_string uu___
 let (mk_tuple_data_lid :
-  Prims.int -> FStar_Compiler_Range.range -> FStar_Ident.lident) =
+  Prims.int -> FStar_Compiler_Range_Type.range -> FStar_Ident.lident) =
   fun n ->
     fun r ->
       let t =
@@ -399,9 +408,9 @@ let (mk_tuple_data_lid :
         FStar_Compiler_Util.format1 "Mktuple%s" uu___ in
       let uu___ = psnconst t in FStar_Ident.set_lid_range uu___ r
 let (lid_Mktuple2 : FStar_Ident.lident) =
-  mk_tuple_data_lid (Prims.of_int (2)) FStar_Compiler_Range.dummyRange
+  mk_tuple_data_lid (Prims.of_int (2)) FStar_Compiler_Range_Type.dummyRange
 let (lid_Mktuple3 : FStar_Ident.lident) =
-  mk_tuple_data_lid (Prims.of_int (3)) FStar_Compiler_Range.dummyRange
+  mk_tuple_data_lid (Prims.of_int (3)) FStar_Compiler_Range_Type.dummyRange
 let (is_tuple_datacon_string : Prims.string -> Prims.bool) =
   fun s ->
     FStar_Compiler_Util.starts_with s "FStar.Pervasives.Native.Mktuple"
@@ -415,7 +424,7 @@ let (is_tuple_datacon_lid : FStar_Ident.lident -> Prims.bool) =
 let (is_tuple_data_lid : FStar_Ident.lident -> Prims.int -> Prims.bool) =
   fun f ->
     fun n ->
-      let uu___ = mk_tuple_data_lid n FStar_Compiler_Range.dummyRange in
+      let uu___ = mk_tuple_data_lid n FStar_Compiler_Range_Type.dummyRange in
       FStar_Ident.lid_equals f uu___
 let (is_tuple_data_lid' : FStar_Ident.lident -> Prims.bool) =
   fun f ->
@@ -423,7 +432,7 @@ let (is_tuple_data_lid' : FStar_Ident.lident -> Prims.bool) =
 let (mod_prefix_dtuple : Prims.int -> Prims.string -> FStar_Ident.lident) =
   fun n -> if n = (Prims.of_int (2)) then pconst else psconst
 let (mk_dtuple_lid :
-  Prims.int -> FStar_Compiler_Range.range -> FStar_Ident.lident) =
+  Prims.int -> FStar_Compiler_Range_Type.range -> FStar_Ident.lident) =
   fun n ->
     fun r ->
       let t =
@@ -440,7 +449,7 @@ let (is_dtuple_constructor_lid : FStar_Ident.lident -> Prims.bool) =
     let uu___ = FStar_Ident.string_of_lid lid in
     is_dtuple_constructor_string uu___
 let (mk_dtuple_data_lid :
-  Prims.int -> FStar_Compiler_Range.range -> FStar_Ident.lident) =
+  Prims.int -> FStar_Compiler_Range_Type.range -> FStar_Ident.lident) =
   fun n ->
     fun r ->
       let t =
@@ -455,7 +464,7 @@ let (is_dtuple_datacon_string : Prims.string -> Prims.bool) =
 let (is_dtuple_data_lid : FStar_Ident.lident -> Prims.int -> Prims.bool) =
   fun f ->
     fun n ->
-      let uu___ = mk_dtuple_data_lid n FStar_Compiler_Range.dummyRange in
+      let uu___ = mk_dtuple_data_lid n FStar_Compiler_Range_Type.dummyRange in
       FStar_Ident.lid_equals f uu___
 let (is_dtuple_data_lid' : FStar_Ident.lident -> Prims.bool) =
   fun f ->
@@ -468,17 +477,13 @@ let (is_name : FStar_Ident.lident -> Prims.bool) =
         FStar_Ident.string_of_id uu___1 in
       FStar_Compiler_Util.char_at uu___ Prims.int_zero in
     FStar_Compiler_Util.is_upper c
-let (inspect : FStar_Ident.lident) =
-  p2l ["FStar"; "Tactics"; "Builtins"; "inspect"]
-let (pack : FStar_Ident.lident) =
-  p2l ["FStar"; "Tactics"; "Builtins"; "pack"]
-let (binder_to_term : FStar_Ident.lident) =
-  p2l ["FStar"; "Tactics"; "Derived"; "binder_to_term"]
+let (term_view_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Reflection"; "V1"; "Data"; "term_view"]
 let (fstar_tactics_lid' : Prims.string Prims.list -> FStar_Ident.lid) =
   fun s ->
     FStar_Ident.lid_of_path
       (FStar_Compiler_List.op_At ["FStar"; "Tactics"] s)
-      FStar_Compiler_Range.dummyRange
+      FStar_Compiler_Range_Type.dummyRange
 let (fstar_tactics_lid : Prims.string -> FStar_Ident.lid) =
   fun s -> fstar_tactics_lid' [s]
 let (tac_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "tac"]
@@ -507,16 +512,16 @@ let (fstar_syntax_syntax_term : FStar_Ident.lident) =
   FStar_Ident.lid_of_str "FStar.Syntax.Syntax.term"
 let (binder_lid : FStar_Ident.lident) =
   FStar_Ident.lid_of_path ["FStar"; "Reflection"; "Types"; "binder"]
-    FStar_Compiler_Range.dummyRange
+    FStar_Compiler_Range_Type.dummyRange
 let (binders_lid : FStar_Ident.lident) =
   FStar_Ident.lid_of_path ["FStar"; "Reflection"; "Types"; "binders"]
-    FStar_Compiler_Range.dummyRange
+    FStar_Compiler_Range_Type.dummyRange
 let (bv_lid : FStar_Ident.lident) =
   FStar_Ident.lid_of_path ["FStar"; "Reflection"; "Types"; "bv"]
-    FStar_Compiler_Range.dummyRange
+    FStar_Compiler_Range_Type.dummyRange
 let (fv_lid : FStar_Ident.lident) =
   FStar_Ident.lid_of_path ["FStar"; "Reflection"; "Types"; "fv"]
-    FStar_Compiler_Range.dummyRange
+    FStar_Compiler_Range_Type.dummyRange
 let (norm_step_lid : FStar_Ident.lident) = psconst "norm_step"
 let (postprocess_with : FStar_Ident.lident) =
   p2l ["FStar"; "Tactics"; "Effect"; "postprocess_with"]
@@ -526,30 +531,28 @@ let (postprocess_extr_with : FStar_Ident.lident) =
   p2l ["FStar"; "Tactics"; "Effect"; "postprocess_for_extraction_with"]
 let (term_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Reflection"; "Types"; "term"]
-let (term_view_lid : FStar_Ident.lident) =
-  p2l ["FStar"; "Reflection"; "Data"; "term_view"]
-let (decls_lid : FStar_Ident.lident) =
-  p2l ["FStar"; "Reflection"; "Data"; "decls"]
 let (ctx_uvar_and_subst_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Reflection"; "Types"; "ctx_uvar_and_subst"]
 let (universe_uvar_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Reflection"; "Types"; "universe_uvar"]
 let (check_with_lid : FStar_Ident.lident) =
-  FStar_Ident.lid_of_path ["FStar"; "Reflection"; "Builtins"; "check_with"]
-    FStar_Compiler_Range.dummyRange
+  FStar_Ident.lid_of_path ["FStar"; "VConfig"; "check_with"]
+    FStar_Compiler_Range_Type.dummyRange
+let (decls_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Reflection"; "Types"; "decls"]
 let (dsl_typing_builtin : Prims.string -> FStar_Ident.lident) =
   fun s ->
     FStar_Ident.lid_of_path
       (FStar_Compiler_List.op_At
          ["FStar"; "Reflection"; "Typing"; "Builtins"] [s])
-      FStar_Compiler_Range.dummyRange
+      FStar_Compiler_Range_Type.dummyRange
 let (dsl_tac_typ_lid : FStar_Ident.lident) =
   FStar_Ident.lid_of_path ["FStar"; "Reflection"; "Typing"; "dsl_tac_t"]
-    FStar_Compiler_Range.dummyRange
+    FStar_Compiler_Range_Type.dummyRange
 let (calc_lid : Prims.string -> FStar_Ident.lid) =
   fun i ->
     FStar_Ident.lid_of_path ["FStar"; "Calc"; i]
-      FStar_Compiler_Range.dummyRange
+      FStar_Compiler_Range_Type.dummyRange
 let (calc_init_lid : FStar_Ident.lid) = calc_lid "calc_init"
 let (calc_step_lid : FStar_Ident.lid) = calc_lid "calc_step"
 let (calc_finish_lid : FStar_Ident.lid) = calc_lid "calc_finish"
@@ -557,7 +560,7 @@ let (calc_push_impl_lid : FStar_Ident.lid) = calc_lid "calc_push_impl"
 let (classical_sugar_lid : Prims.string -> FStar_Ident.lid) =
   fun i ->
     FStar_Ident.lid_of_path ["FStar"; "Classical"; "Sugar"; i]
-      FStar_Compiler_Range.dummyRange
+      FStar_Compiler_Range_Type.dummyRange
 let (forall_intro_lid : FStar_Ident.lid) = classical_sugar_lid "forall_intro"
 let (exists_intro_lid : FStar_Ident.lid) = classical_sugar_lid "exists_intro"
 let (implies_intro_lid : FStar_Ident.lid) =
@@ -576,29 +579,29 @@ let (match_returns_def_name : Prims.string) =
   FStar_String.op_Hat FStar_Ident.reserved_prefix "_ret_"
 let (steel_memory_inv_lid : FStar_Ident.lident) =
   FStar_Ident.lid_of_path ["Steel"; "Memory"; "inv"]
-    FStar_Compiler_Range.dummyRange
+    FStar_Compiler_Range_Type.dummyRange
 let (steel_new_invariant_lid : FStar_Ident.lident) =
   FStar_Ident.lid_of_path ["Steel"; "Effect"; "Atomic"; "new_invariant"]
-    FStar_Compiler_Range.dummyRange
+    FStar_Compiler_Range_Type.dummyRange
 let (steel_st_new_invariant_lid : FStar_Ident.lident) =
   FStar_Ident.lid_of_path ["Steel"; "ST"; "Util"; "new_invariant"]
-    FStar_Compiler_Range.dummyRange
+    FStar_Compiler_Range_Type.dummyRange
 let (steel_with_invariant_g_lid : FStar_Ident.lident) =
   FStar_Ident.lid_of_path ["Steel"; "Effect"; "Atomic"; "with_invariant_g"]
-    FStar_Compiler_Range.dummyRange
+    FStar_Compiler_Range_Type.dummyRange
 let (steel_st_with_invariant_g_lid : FStar_Ident.lident) =
   FStar_Ident.lid_of_path ["Steel"; "ST"; "Util"; "with_invariant_g"]
-    FStar_Compiler_Range.dummyRange
+    FStar_Compiler_Range_Type.dummyRange
 let (steel_with_invariant_lid : FStar_Ident.lident) =
   FStar_Ident.lid_of_path ["Steel"; "Effect"; "Atomic"; "with_invariant"]
-    FStar_Compiler_Range.dummyRange
+    FStar_Compiler_Range_Type.dummyRange
 let (steel_st_with_invariant_lid : FStar_Ident.lident) =
   FStar_Ident.lid_of_path ["Steel"; "ST"; "Util"; "with_invariant"]
-    FStar_Compiler_Range.dummyRange
+    FStar_Compiler_Range_Type.dummyRange
 let (fext_lid : Prims.string -> FStar_Ident.lident) =
   fun s ->
     FStar_Ident.lid_of_path ["FStar"; "FunctionalExtensionality"; s]
-      FStar_Compiler_Range.dummyRange
+      FStar_Compiler_Range_Type.dummyRange
 let (fext_on_domain_lid : FStar_Ident.lident) = fext_lid "on_domain"
 let (fext_on_dom_lid : FStar_Ident.lident) = fext_lid "on_dom"
 let (fext_on_domain_g_lid : FStar_Ident.lident) = fext_lid "on_domain_g"
@@ -606,4 +609,12 @@ let (fext_on_dom_g_lid : FStar_Ident.lident) = fext_lid "on_dom_g"
 let (sealed_lid : FStar_Ident.lident) = p2l ["FStar"; "Sealed"; "sealed"]
 let (seal_lid : FStar_Ident.lident) = p2l ["FStar"; "Sealed"; "seal"]
 let (unseal_lid : FStar_Ident.lident) =
-  p2l ["FStar"; "Tactics"; "Builtins"; "unseal"]
+  p2l ["FStar"; "Tactics"; "Unseal"; "unseal"]
+let (map_seal_lid : FStar_Ident.lident) = p2l ["FStar"; "Sealed"; "map_seal"]
+let (bind_seal_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Sealed"; "bind_seal"]
+let (document_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Stubs"; "Pprint"; "document"]
+let (issue_lid : FStar_Ident.lident) = p2l ["FStar"; "Issue"; "issue"]
+let (extract_as_impure_effect_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Pervasives"; "extract_as_impure_effect"]

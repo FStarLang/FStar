@@ -36,6 +36,9 @@ LowStar.Ex3.fst
 
 include ../../../Makefile.include
 
+# exercises have val without definitions, by design
+OTHERFLAGS+=--warn_error -240
+
 verify-%: __force__
 	$(FSTAR) --include $(FSTAR_CONTRIB)/Platform/fst --include $(FSTAR_CONTRIB)/CoreCrypto/fst $*
 

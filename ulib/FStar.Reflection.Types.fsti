@@ -15,11 +15,13 @@
 *)
 module FStar.Reflection.Types
 
-include FStar.VConfig
+include FStar.Range
 include FStar.Sealed
 
+assume new type namedv  // named fresh variable
+assume new type bv      // db variable
 assume new type binder
-assume new type bv
+
 assume new type term
 assume new type env
 assume new type fv
@@ -28,12 +30,12 @@ assume new type sigelt // called `def` in the paper, but we keep the internal na
 assume new type ctx_uvar_and_subst
 assume new type letbinding
 
+assume new type ident
 assume new type universe_uvar
 assume new type universe
 
 type name : eqtype = list string
 
-type ident = string * range
 type univ_name = ident
 type typ     = term
 type binders = list binder
@@ -44,3 +46,5 @@ type binders = list binder
  * the bool says whether returns (bool = false) or returns$ (bool = true, use type equality
  *)
 type match_returns_ascription = binder & (either term comp & option term & bool)
+
+type decls = list sigelt

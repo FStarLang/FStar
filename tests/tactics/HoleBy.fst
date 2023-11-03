@@ -15,7 +15,7 @@
 *)
 module HoleBy
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let x : int = _ by (exact (`1))
 let _ = assert (x == 1)
@@ -31,6 +31,7 @@ val lem2 : (x:int) -> (y:int) -> Lemma (x + y == y + x)
 let lem2 x y =
     () <: _ by smt ()
 
+#push-options "--warn_error +240"
 val lem3 : (x:int) -> (y:int) -> Lemma (x + y == y + x)
 [@@(expect_failure [228])]
 let lem3 x y =

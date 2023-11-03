@@ -5,6 +5,7 @@ open Lexing
 open FStar_Sedlexing
 open FStar_Errors_Codes
 module Codes = FStar_Errors_Codes
+module Msg = FStar_Errors_Msg
 
 type filename = string
 
@@ -97,7 +98,7 @@ type parse_frag =
     | Incremental of input_frag
     | Fragment of input_frag
 
-type parse_error = (Codes.raw_error * string * FStar_Compiler_Range.range)
+type parse_error = (Codes.raw_error * Msg.error_message * FStar_Compiler_Range.range)
 
 
 type code_fragment = {
@@ -142,7 +143,7 @@ let parse fn =
   let err_of_parse_error () =
       let pos = lexbuf.cur_p in
       Fatal_SyntaxError,
-      "Syntax error",
+      Msg.mkmsg "Syntax error",
       range_of_positions pos pos
   in
   let parse_incremental_decls () =
@@ -237,18 +238,18 @@ let parse fn =
           try
             (* Reset the gensym between decls, to ensure determinism, 
                otherwise, every _ is parsed as different name *)
-            FStar_Ident.reset_gensym();
+            FStar_GenSym.reset_gensym();
             Inl (parse_one_decl lexer)
           with 
           | FStar_Errors.Error(e, msg, r, _ctx) ->
             Inr (e, msg, r)
 
-          | Parsing.Parse_error as _e -> 
+          | _e -> 
             Inr (err_of_parse_error ())
         in
         match d with
         | Inl None -> List.rev decls, None
-        | Inl (Some d) -> 
+        | Inl (Some (d, snap_opt)) -> 
           (* The parser may advance the lexer beyond the decls last token.
              E.g., in `let f x = 0 let g = 1`, we will have parsed the decl for `f`
                    but the lexer will have advanced to `let ^ g ...` since the
@@ -257,26 +258,21 @@ let parse fn =
                    requires such lookahead to complete a production.
           *)
           let end_pos =
-            if not (FStar_Parser_AST.decl_syntax_is_delimited d)
-            then (
-              rollback lexbuf;
-              current_pos lexbuf
-            )
-            else (
-              current_pos lexbuf
-            )
+            let _ = 
+              match snap_opt with
+              | None -> 
+                rollback lexbuf
+              | Some p -> 
+                restore_snapshot lexbuf p
+            in
+            current_pos lexbuf
           in
           let raw_contents = contents_at d.drange in
-          (*
           if FStar_Options.debug_any()
-          then (
-            FStar_Compiler_Util.print4 "Parsed decl@%s=%s\nRaw contents@%s=%s\n"
-              (FStar_Compiler_Range.string_of_def_range d.drange)
-              (FStar_Parser_AST.decl_to_string d)
-              (FStar_Compiler_Range.string_of_def_range raw_contents.range)
-              raw_contents.code
-          );
-          *)
+          then 
+            FStar_Compiler_Util.print2 "At range %s, got code\n%s\n"
+              (FStar_Compiler_Range.string_of_range raw_contents.range)
+              (raw_contents.code);
           parse ((d, raw_contents)::decls)
         | Inr err -> List.rev decls, Some err
       in
@@ -323,8 +319,13 @@ let parse fn =
     | FStar_Errors.Error(e, msg, r, _ctx) ->
       ParseError (e, msg, r)
 
-    | Parsing.Parse_error as _e ->
+    | _e ->
+(*
+    | Parsing.Parse_error as _e
+    | FStar_Parser_Parse.MenhirBasics.Error as _e  ->
+*)
       ParseError (err_of_parse_error())
+
 
 (** Parsing of command-line error/warning/silent flags. *)
 let parse_warn_error s =

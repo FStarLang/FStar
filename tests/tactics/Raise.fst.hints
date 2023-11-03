@@ -1,5 +1,5 @@
 [
-  "b`Q\u0012¥!é·\u0001≈\u0014\u001aîj^\u0016",
+  "y›ÀL\u001aAVÃ‡\"YâùõÅá",
   [
     [
       "Raise.uu___0",
@@ -11,7 +11,7 @@
         "Prims_pretyping_2feddfe489e78a01f5d2e9b55172b46a",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "data_elim_FStar.Tactics.Result.Success",
-        "data_typing_intro_FStar.Tactics.Derived.Goal_not_trivial@tok",
+        "data_typing_intro_FStar.Tactics.V2.Derived.Goal_not_trivial@tok",
         "disc_equation_FStar.Pervasives.Inl",
         "disc_equation_FStar.Pervasives.Inr",
         "disc_equation_FStar.Tactics.Result.Success",
@@ -20,7 +20,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "160eea3be3c8a6bf8fba47146a4b60e0"
+      "4c4cef3822a4bb20b50e1bf0f85cabc7"
     ],
     [
       "Raise.uu___0",
@@ -32,7 +32,7 @@
         "Prims_pretyping_2feddfe489e78a01f5d2e9b55172b46a",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "data_elim_FStar.Tactics.Result.Success",
-        "data_typing_intro_FStar.Tactics.Derived.Goal_not_trivial@tok",
+        "data_typing_intro_FStar.Tactics.V2.Derived.Goal_not_trivial@tok",
         "disc_equation_FStar.Pervasives.Inl",
         "disc_equation_FStar.Pervasives.Inr",
         "disc_equation_FStar.Tactics.Result.Success",
@@ -41,7 +41,7 @@
         "projection_inverse_BoxBool_proj_0", "true_interp"
       ],
       0,
-      "56c42271236e03cdefa5b78b6df9ae38"
+      "27d53549101b742e3b6beffb718f81cf"
     ],
     [
       "Raise.x",
@@ -53,7 +53,7 @@
         "Prims_pretyping_2feddfe489e78a01f5d2e9b55172b46a",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "data_elim_FStar.Tactics.Result.Success",
-        "data_typing_intro_FStar.Tactics.Derived.Goal_not_trivial@tok",
+        "data_typing_intro_FStar.Tactics.V2.Derived.Goal_not_trivial@tok",
         "disc_equation_FStar.Pervasives.Inl",
         "disc_equation_FStar.Pervasives.Inr",
         "disc_equation_FStar.Tactics.Result.Success",
@@ -62,7 +62,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "5d1043b9e82310da9eaab02b8d66c270"
+      "0dac81e7585410740e02bd52578d8012"
     ]
   ]
 ]

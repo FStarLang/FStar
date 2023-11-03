@@ -60,9 +60,9 @@ open FStar.OrdSet
 open FStar.OrdSetProps
 open FStar.PredicateExtensionality
 open FStar.PropositionalExtensionality
-open FStar.Reflection
+open FStar.Reflection.V2
 
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.List
 
 // This query will go the SMT, in the default proof namespace

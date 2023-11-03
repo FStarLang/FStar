@@ -41,6 +41,9 @@ module CTable = FStar.Interactive.CompletionTable
 module PI = FStar.Parser.ParseIt
 module U = FStar.Compiler.Util
 
+(* Importing this module bring FStar.Json into scope. *)
+include FStar.Json
+
 (***********************)
 (* Global state setup *)
 (***********************)
@@ -98,7 +101,7 @@ type repl_task =
   | PushFragment of either PI.input_frag FStar.Parser.AST.decl (* code fragment *)
                   * push_kind (* FullCheck, LaxCheck, SyntaxCheck *)
                   * list json (* any warnings that were raised while checking this fragment *)
-  | Noop (* Used by compute *)
+  | Noop (* Used by compute, PushPartialCheckedFile *)
 
 type full_buffer_request_kind =
   | Full : full_buffer_request_kind
@@ -115,6 +118,7 @@ type query' =
 | Segment of string (* File contents *)
 | Pop
 | Push of push_query
+| PushPartialCheckedFile of string (* long declaration name *)
 | VfsAdd of option string (* fname *) * string (* contents *)
 | AutoComplete of string * completion_context
 | Lookup of string * lookup_context * option position * list string * option lookup_symbol_range
@@ -243,6 +247,7 @@ let query_to_string q = match q.qq with
 | Segment _ -> "Segment"
 | Pop -> "Pop"
 | Push pq -> "(Push " ^ push_query_to_string pq ^ ")"
+| PushPartialCheckedFile d -> "(PushPartialCheckedFile " ^ d ^ ")"
 | VfsAdd _ -> "VfsAdd"
 | AutoComplete _ -> "AutoComplete"
 | Lookup(s, _lc, pos, features, _sr) ->
@@ -267,6 +272,7 @@ let query_needs_current_module = function
   | Exit | DescribeProtocol | DescribeRepl | Segment _
   | Pop | Push { push_peek_only = false } | VfsAdd _
   | GenericError _ | ProtocolViolation _
+  | PushPartialCheckedFile _
   | FullBuffer _ | Callback _ | Format _ | RestartSolver | Cancel _ -> false
   | Push _ | AutoComplete _ | Lookup _ | Compute _ | Search _ -> true
 
@@ -277,7 +283,7 @@ let interactive_protocol_features =
    "compute"; "compute/reify"; "compute/pure-subterms";
    "describe-protocol"; "describe-repl"; "exit";
    "lookup"; "lookup/context"; "lookup/documentation"; "lookup/definition";
-   "peek"; "pop"; "push"; "search"; "segment";
+   "peek"; "pop"; "push"; "push-partial-checked-file"; "search"; "segment";
    "vfs-add"; "tactic-ranges"; "interrupt"; "progress";
    "full-buffer"; "format"; "restart-solver"; "cancel"]
 
@@ -294,7 +300,7 @@ let json_of_issue issue =
     @(match issue.issue_number with
       | None -> []
       | Some n -> [("number", JsonInt n)])
-    @[("message", JsonStr (issue_message issue));
+    @[("message", JsonStr (format_issue' false issue));
       ("ranges", JsonList
                    ((match issue.issue_range with
                      | None -> []

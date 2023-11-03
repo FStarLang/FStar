@@ -23,7 +23,6 @@ open FStar.Errors
 open FStar.Compiler.Util
 open FStar.Getopt
 open FStar.Syntax.Syntax
-open FStar.Extraction.ML.UEnv
 open FStar.TypeChecker.Env
 open FStar.Syntax.DsEnv
 
@@ -40,7 +39,7 @@ module Dep     = FStar.Parser.Dep
  * detect when loading the cache that the version number is same
  * It needs to be kept in sync with prims.fst
  *)
-let cache_version_number = 53
+let cache_version_number = 62
 
 (*
  * Abbreviation for what we store in the checked files (stages as described below)
@@ -201,6 +200,8 @@ let hash_dependences (deps:Dep.deps) (fn:string) :either string (list (string * 
  * See above for the two steps of loading the checked files
  *)
 let load_checked_file (fn:string) (checked_fn:string) :cache_t =
+  if Options.debug_at_level_no_module (Options.Other "CheckedFiles") then
+    BU.print1 "Trying to load checked file result %s\n" checked_fn;
   let elt = checked_fn |> BU.smap_try_find mcache in
   if elt |> is_some then elt |> must  //already loaded
   else
@@ -236,6 +237,8 @@ let load_checked_file (fn:string) (checked_fn:string) :cache_t =
  *)
 let load_checked_file_with_tc_result (deps:Dep.deps) (fn:string) (checked_fn:string)
   :either string tc_result =
+  if Options.debug_at_level_no_module (Options.Other "CheckedFiles") then
+    BU.print1 "Trying to load checked file with tc result %s\n" checked_fn;
 
   let load_tc_result (fn:string) :list (string * string) * tc_result =
     let entry :option (checked_file_entry_stage1 * checked_file_entry_stage2) = BU.load_2values_from_file checked_fn in
@@ -384,16 +387,16 @@ let load_module_from_cache =
         let suppress_warning = Options.should_check_file fn || !already_failed in
         if not suppress_warning then begin
           already_failed := true;
-          FStar.Errors.log_issue
+          FStar.Errors.log_issue_doc
             (Range.mk_range fn (Range.mk_pos 0 0) (Range.mk_pos 0 0))
             (Errors.Warning_CachedFile,
-             BU.format3
+             [Errors.text (BU.format3
                "Unable to load %s since %s; will recheck %s (suppressing this warning for further modules)"
-               cache_file msg fn)
+               cache_file msg fn)])
         end
       in
       match load_checked_file_with_tc_result
-              (TcEnv.dep_graph (tcenv_of_uenv env))
+              (TcEnv.dep_graph env)
               fn
               cache_file with
       | Inl msg -> fail msg cache_file; None
@@ -420,7 +423,7 @@ let load_module_from_cache =
       "FStar.CheckedFiles" in
 
     let i_fn_opt = Dep.interface_of
-      (TcEnv.dep_graph (tcenv_of_uenv env))
+      (TcEnv.dep_graph env)
       (Dep.lowercase_module_name fn) in
 
     if Dep.is_implementation fn
@@ -450,7 +453,7 @@ let store_module_to_cache env fn parsing_data tc_result =
   && not (Options.cache_off())
   then begin
     let cache_file = FStar.Parser.Dep.cache_file_name fn in
-    let digest = hash_dependences (TcEnv.dep_graph (tcenv_of_uenv env)) fn in
+    let digest = hash_dependences (TcEnv.dep_graph env) fn in
     match digest with
     | Inr hashes ->
       let tc_result = { tc_result with tc_time=0; extraction_time=0 } in
@@ -466,3 +469,9 @@ let store_module_to_cache env fn parsing_data tc_result =
          BU.format2 "%s was not written since %s"
                     cache_file msg)
   end
+
+let unsafe_raw_load_checked_file (checked_fn:string)
+  = let entry : option (checked_file_entry_stage1 * checked_file_entry_stage2) = BU.load_2values_from_file checked_fn in
+    match entry with
+     | Some ((s1,s2)) -> Some (s1.parsing_data, List.map fst s2.deps_dig, s2.tc_res)
+     | _ -> None

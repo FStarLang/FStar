@@ -44,8 +44,7 @@ module CanonCommSemiring
 ///  - http://www.cs.ru.nl/~freek/courses/tt-2014/read/10.1.1.61.3041.pdf
 
 open FStar.List
-open FStar.Tactics
-open FStar.Reflection
+open FStar.Tactics.V2
 open FStar.Algebra.CommMonoid
 
 (** An attribute for marking definitions to unfold by the tactic *)
@@ -1518,7 +1517,7 @@ let make_fvar (#a:Type) (t:term) (unquotea:term -> Tac a) (ts:list term)
 (** This expects that add, opp, mone mult, and t have already been normalized *)
 let rec reification_aux (#a:Type) (unquotea:term -> Tac a) (ts:list term) (vm:vmap a) (add opp mone mult t: term) : Tac (polynomial a * list term * vmap a) =
   // ddump ("term = " ^ term_to_string t ^ "\n");
-  let hd, tl = collect_app_ref t in
+  let hd, tl = collect_app t in
   match inspect hd, list_unref tl with
   | Tv_FVar fv, [(t1, _) ; (t2, _)] ->
     //ddump ("add = " ^ term_to_string add ^ "

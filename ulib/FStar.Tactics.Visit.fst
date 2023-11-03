@@ -17,40 +17,37 @@ module FStar.Tactics.Visit
 
 (* Visit a term and transform it step by step. *)
 
-open FStar.Reflection
+open FStar.Reflection.V2
 open FStar.Tactics.Effect
 open FStar.Tactics.Types
 open FStar.Tactics.Util
 
-let on_sort_bv (f : term -> Tac term) (xbv:bv) : Tac bv =
-  let bvv = inspect_bv xbv in
-  let bvv = { bvv with bv_sort = f bvv.bv_sort } in
-  let bv = pack_bv bvv in
-  bv
-
 let on_sort_binder (f : term -> Tac term) (b:binder) : Tac binder =
   let bview = inspect_binder b in
-  let bv = on_sort_bv f bview.binder_bv in
-  pack_binder {bview with binder_bv=bv}
+  let bview = { bview with sort = f bview.sort } in
+  pack_binder bview
+
+(* Same *)
+let on_sort_simple_binder (f : term -> Tac term) (b:simple_binder) : Tac simple_binder =
+  let bview = inspect_binder b in
+  let bview = { bview with sort = f bview.sort } in
+  inspect_pack_binder bview;
+  pack_binder bview
 
 let rec visit_tm (ff : term -> Tac term) (t : term) : Tac term =
   let tv = inspect_ln t in
   let tv' =
     match tv with
     | Tv_FVar _
+    | Tv_Var _
+    | Tv_BVar _
     | Tv_UInst _ _ -> tv
-    | Tv_Var bv ->
-        let bv = on_sort_bv (visit_tm ff) bv in
-        Tv_Var bv
-
-    | Tv_BVar bv ->
-        let bv = on_sort_bv (visit_tm ff) bv in
-        Tv_BVar bv
 
     | Tv_Type u -> Tv_Type u
     | Tv_Const c -> Tv_Const c
     | Tv_Uvar i u -> Tv_Uvar i u
     | Tv_Unknown -> Tv_Unknown
+    | Tv_Unsupp -> Tv_Unsupp
     | Tv_Arrow b c ->
         let b = on_sort_binder (visit_tm ff) b in
         let c = visit_comp ff c in
@@ -64,11 +61,11 @@ let rec visit_tm (ff : term -> Tac term) (t : term) : Tac term =
          let r = visit_tm ff r in
          Tv_App l (r, q)
     | Tv_Refine b r ->
-        let b = on_sort_bv (visit_tm ff) b in
+        let b = on_sort_simple_binder (visit_tm ff) b in
         let r = visit_tm ff r in
         Tv_Refine b r
     | Tv_Let r attrs b def t ->
-        let b = on_sort_bv (visit_tm ff) b in
+        let b = on_sort_simple_binder (visit_tm ff) b in
         let def = visit_tm ff def in
         let t = visit_tm ff t in
         Tv_Let r attrs b def t
@@ -101,18 +98,15 @@ and visit_br (ff : term -> Tac term) (b:branch) : Tac branch =
   (p, t)
 and visit_pat (ff : term -> Tac term) (p:pattern) : Tac pattern =
   match p with
-  | Pat_Constant c -> p
-  | Pat_Cons fv us l ->
-      let l = (map (fun(p,b) -> (visit_pat ff p, b)) l) in
-      Pat_Cons fv us l
-  | Pat_Var bv ->
-      let bv = on_sort_bv (visit_tm ff) bv in
-      Pat_Var bv
-  | Pat_Wild bv ->
-      let bv = on_sort_bv (visit_tm ff) bv in
-      Pat_Wild bv
-  | Pat_Dot_Term eopt ->
-      Pat_Dot_Term (map_opt (visit_tm ff) eopt)
+  | Pat_Constant _ -> p
+  | Pat_Var v s -> Pat_Var v s
+  | Pat_Cons head univs subpats  ->
+      let subpats = (map (fun(p,b) -> (visit_pat ff p, b)) subpats) in
+      Pat_Cons head univs subpats
+  | Pat_Dot_Term t ->
+      let t = map_opt (visit_tm ff) t in
+      Pat_Dot_Term t
+
 and visit_comp (ff : term -> Tac term) (c : comp) : Tac comp =
   let cv = inspect_comp c in
   let cv' =

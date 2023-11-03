@@ -65,6 +65,10 @@ let with_dsenv_of_tcenv :
                 (tcenv.FStar_TypeChecker_Env.nosynth);
               FStar_TypeChecker_Env.uvar_subtyping =
                 (tcenv.FStar_TypeChecker_Env.uvar_subtyping);
+              FStar_TypeChecker_Env.intactics =
+                (tcenv.FStar_TypeChecker_Env.intactics);
+              FStar_TypeChecker_Env.nocoerce =
+                (tcenv.FStar_TypeChecker_Env.nocoerce);
               FStar_TypeChecker_Env.tc_term =
                 (tcenv.FStar_TypeChecker_Env.tc_term);
               FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
@@ -269,7 +273,10 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         } in
     let env =
       let uu___ =
-        let uu___1 = FStar_Tactics_Interpreter.primitive_steps () in
+        let uu___1 =
+          let uu___2 = FStar_Tactics_V1_Interpreter.primitive_steps () in
+          let uu___3 = FStar_Tactics_V2_Interpreter.primitive_steps () in
+          FStar_Compiler_List.op_At uu___2 uu___3 in
         FStar_TypeChecker_NBE.normalize uu___1 in
       FStar_TypeChecker_Env.initial_env deps FStar_TypeChecker_TcTerm.tc_term
         FStar_TypeChecker_TcTerm.typeof_tot_or_gtot_term
@@ -316,6 +323,9 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.nosynth = (env.FStar_TypeChecker_Env.nosynth);
         FStar_TypeChecker_Env.uvar_subtyping =
           (env.FStar_TypeChecker_Env.uvar_subtyping);
+        FStar_TypeChecker_Env.intactics =
+          (env.FStar_TypeChecker_Env.intactics);
+        FStar_TypeChecker_Env.nocoerce = (env.FStar_TypeChecker_Env.nocoerce);
         FStar_TypeChecker_Env.tc_term = (env.FStar_TypeChecker_Env.tc_term);
         FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
           (env.FStar_TypeChecker_Env.typeof_tot_or_gtot_term);
@@ -400,6 +410,10 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.nosynth = (env1.FStar_TypeChecker_Env.nosynth);
         FStar_TypeChecker_Env.uvar_subtyping =
           (env1.FStar_TypeChecker_Env.uvar_subtyping);
+        FStar_TypeChecker_Env.intactics =
+          (env1.FStar_TypeChecker_Env.intactics);
+        FStar_TypeChecker_Env.nocoerce =
+          (env1.FStar_TypeChecker_Env.nocoerce);
         FStar_TypeChecker_Env.tc_term = (env1.FStar_TypeChecker_Env.tc_term);
         FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
           (env1.FStar_TypeChecker_Env.typeof_tot_or_gtot_term);
@@ -487,6 +501,10 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.nosynth = (env2.FStar_TypeChecker_Env.nosynth);
         FStar_TypeChecker_Env.uvar_subtyping =
           (env2.FStar_TypeChecker_Env.uvar_subtyping);
+        FStar_TypeChecker_Env.intactics =
+          (env2.FStar_TypeChecker_Env.intactics);
+        FStar_TypeChecker_Env.nocoerce =
+          (env2.FStar_TypeChecker_Env.nocoerce);
         FStar_TypeChecker_Env.tc_term = (env2.FStar_TypeChecker_Env.tc_term);
         FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
           (env2.FStar_TypeChecker_Env.typeof_tot_or_gtot_term);
@@ -574,6 +592,10 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.nosynth = (env3.FStar_TypeChecker_Env.nosynth);
         FStar_TypeChecker_Env.uvar_subtyping =
           (env3.FStar_TypeChecker_Env.uvar_subtyping);
+        FStar_TypeChecker_Env.intactics =
+          (env3.FStar_TypeChecker_Env.intactics);
+        FStar_TypeChecker_Env.nocoerce =
+          (env3.FStar_TypeChecker_Env.nocoerce);
         FStar_TypeChecker_Env.tc_term = (env3.FStar_TypeChecker_Env.tc_term);
         FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
           (env3.FStar_TypeChecker_Env.typeof_tot_or_gtot_term);
@@ -660,6 +682,10 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.nosynth = (env4.FStar_TypeChecker_Env.nosynth);
         FStar_TypeChecker_Env.uvar_subtyping =
           (env4.FStar_TypeChecker_Env.uvar_subtyping);
+        FStar_TypeChecker_Env.intactics =
+          (env4.FStar_TypeChecker_Env.intactics);
+        FStar_TypeChecker_Env.nocoerce =
+          (env4.FStar_TypeChecker_Env.nocoerce);
         FStar_TypeChecker_Env.tc_term = (env4.FStar_TypeChecker_Env.tc_term);
         FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
           (env4.FStar_TypeChecker_Env.typeof_tot_or_gtot_term);
@@ -723,7 +749,7 @@ let (tc_one_fragment :
           if uu___
           then
             let uu___1 = FStar_TypeChecker_Env.get_range env1 in
-            FStar_Compiler_Range.file_of_range uu___1
+            FStar_Compiler_Range_Ops.file_of_range uu___1
           else
             (let uu___2 = FStar_Options.file_list () in
              FStar_Compiler_List.hd uu___2) in
@@ -751,7 +777,7 @@ let (tc_one_fragment :
                  FStar_Parser_AST.attrs = uu___3;_}::uu___4,
                uu___5)
               -> d
-          | uu___ -> FStar_Compiler_Range.dummyRange in
+          | uu___ -> FStar_Compiler_Range_Type.dummyRange in
         let check_module_name_declaration ast_modul =
           let uu___ =
             let uu___1 =
@@ -888,7 +914,7 @@ let (load_interface_decls :
       | FStar_Parser_ParseIt.Term uu___ ->
           failwith
             "Impossible: parsing a Toplevel always results in an ASTFragment"
-let (emit : FStar_Extraction_ML_Syntax.mllib Prims.list -> unit) =
+let (emit : (uenv * FStar_Extraction_ML_Syntax.mllib) Prims.list -> unit) =
   fun mllibs ->
     let opt = FStar_Options.codegen () in
     if opt <> FStar_Pervasives_Native.None
@@ -899,24 +925,65 @@ let (emit : FStar_Extraction_ML_Syntax.mllib Prims.list -> unit) =
         | FStar_Pervasives_Native.Some (FStar_Options.OCaml) -> ".ml"
         | FStar_Pervasives_Native.Some (FStar_Options.Plugin) -> ".ml"
         | FStar_Pervasives_Native.Some (FStar_Options.Krml) -> ".krml"
+        | FStar_Pervasives_Native.Some (FStar_Options.Extension) -> ".ast"
         | uu___ -> failwith "Unrecognized option" in
       match opt with
       | FStar_Pervasives_Native.Some (FStar_Options.FSharp) ->
           let outdir = FStar_Options.output_dir () in
+          let uu___ =
+            FStar_Compiler_List.map FStar_Pervasives_Native.snd mllibs in
           FStar_Compiler_List.iter
-            (FStar_Extraction_ML_PrintML.print outdir ext) mllibs
+            (FStar_Extraction_ML_PrintML.print outdir ext) uu___
       | FStar_Pervasives_Native.Some (FStar_Options.OCaml) ->
           let outdir = FStar_Options.output_dir () in
+          let uu___ =
+            FStar_Compiler_List.map FStar_Pervasives_Native.snd mllibs in
           FStar_Compiler_List.iter
-            (FStar_Extraction_ML_PrintML.print outdir ext) mllibs
+            (FStar_Extraction_ML_PrintML.print outdir ext) uu___
       | FStar_Pervasives_Native.Some (FStar_Options.Plugin) ->
           let outdir = FStar_Options.output_dir () in
+          let uu___ =
+            FStar_Compiler_List.map FStar_Pervasives_Native.snd mllibs in
           FStar_Compiler_List.iter
-            (FStar_Extraction_ML_PrintML.print outdir ext) mllibs
+            (FStar_Extraction_ML_PrintML.print outdir ext) uu___
+      | FStar_Pervasives_Native.Some (FStar_Options.Extension) ->
+          FStar_Compiler_List.iter
+            (fun uu___ ->
+               match uu___ with
+               | (env, m) ->
+                   let uu___1 = m in
+                   (match uu___1 with
+                    | FStar_Extraction_ML_Syntax.MLLib ms ->
+                        FStar_Compiler_List.iter
+                          (fun m1 ->
+                             let uu___2 = m1 in
+                             match uu___2 with
+                             | (mname, modul, uu___3) ->
+                                 let filename =
+                                   FStar_String.concat "_"
+                                     (FStar_Compiler_List.op_At
+                                        (FStar_Pervasives_Native.fst mname)
+                                        [FStar_Pervasives_Native.snd mname]) in
+                                 (match modul with
+                                  | FStar_Pervasives_Native.Some
+                                      (uu___4, decls) ->
+                                      let bindings =
+                                        FStar_Extraction_ML_UEnv.bindings_of_uenv
+                                          env in
+                                      let uu___5 =
+                                        FStar_Options.prepend_output_dir
+                                          (Prims.op_Hat filename ext) in
+                                      FStar_Compiler_Util.save_value_to_file
+                                        uu___5 (bindings, decls)
+                                  | FStar_Pervasives_Native.None ->
+                                      failwith
+                                        "Unexpected ml modul in Extension extraction mode"))
+                          ms)) mllibs
       | FStar_Pervasives_Native.Some (FStar_Options.Krml) ->
           let programs =
-            FStar_Compiler_List.collect FStar_Extraction_Krml.translate
-              mllibs in
+            let uu___ =
+              FStar_Compiler_List.map FStar_Pervasives_Native.snd mllibs in
+            FStar_Compiler_List.collect FStar_Extraction_Krml.translate uu___ in
           let bin = (FStar_Extraction_Krml.current_version, programs) in
           (match programs with
            | (name, uu___)::[] ->
@@ -940,7 +1007,7 @@ let (tc_one_file :
     fun pre_fn ->
       fun fn ->
         fun parsing_data ->
-          FStar_Ident.reset_gensym ();
+          FStar_GenSym.reset_gensym ();
           (let maybe_restore_opts uu___1 =
              let uu___2 =
                let uu___3 = FStar_Options.interactive () in
@@ -1067,7 +1134,9 @@ let (tc_one_file :
              Prims.op_Negation uu___2 in
            if uu___1
            then
-             let r = FStar_CheckedFiles.load_module_from_cache env fn in
+             let r =
+               let uu___2 = FStar_Extraction_ML_UEnv.tcenv_of_uenv env in
+               FStar_CheckedFiles.load_module_from_cache uu___2 fn in
              let r1 =
                let uu___2 =
                  (FStar_Options.force ()) &&
@@ -1116,7 +1185,9 @@ let (tc_one_file :
                                  FStar_Options.should_verify uu___7)) in
                          if uu___6
                          then
-                           FStar_CheckedFiles.store_module_to_cache env1 fn
+                           let uu___7 =
+                             FStar_Extraction_ML_UEnv.tcenv_of_uenv env1 in
+                           FStar_CheckedFiles.store_module_to_cache uu___7 fn
                              parsing_data tc_result
                          else ());
                         (tc_result, mllib, env1))))
@@ -1264,28 +1335,29 @@ let (tc_one_file_from_remaining :
             (remaining1, nmods, mllib, env1)
 let rec (tc_fold_interleave :
   FStar_Parser_Dep.deps ->
-    (FStar_CheckedFiles.tc_result Prims.list *
-      FStar_Extraction_ML_Syntax.mllib Prims.list * uenv) ->
+    (FStar_CheckedFiles.tc_result Prims.list * (uenv *
+      FStar_Extraction_ML_Syntax.mllib) Prims.list * uenv) ->
       Prims.string Prims.list ->
-        (FStar_CheckedFiles.tc_result Prims.list *
-          FStar_Extraction_ML_Syntax.mllib Prims.list * uenv))
+        (FStar_CheckedFiles.tc_result Prims.list * (uenv *
+          FStar_Extraction_ML_Syntax.mllib) Prims.list * uenv))
   =
   fun deps ->
     fun acc ->
       fun remaining ->
-        let as_list uu___ =
-          match uu___ with
+        let as_list env mllib =
+          match mllib with
           | FStar_Pervasives_Native.None -> []
-          | FStar_Pervasives_Native.Some l -> [l] in
+          | FStar_Pervasives_Native.Some mllib1 -> [(env, mllib1)] in
         match remaining with
         | [] -> acc
         | uu___ ->
             let uu___1 = acc in
             (match uu___1 with
-             | (mods, mllibs, env) ->
-                 let uu___2 = tc_one_file_from_remaining remaining env deps in
+             | (mods, mllibs, env_before) ->
+                 let uu___2 =
+                   tc_one_file_from_remaining remaining env_before deps in
                  (match uu___2 with
-                  | (remaining1, nmod, mllib, env1) ->
+                  | (remaining1, nmod, mllib, env) ->
                       ((let uu___4 =
                           let uu___5 =
                             FStar_Options.profile_group_by_decls () in
@@ -1299,8 +1371,8 @@ let rec (tc_fold_interleave :
                         else ());
                        tc_fold_interleave deps
                          ((FStar_Compiler_List.op_At mods [nmod]),
-                           (FStar_Compiler_List.op_At mllibs (as_list mllib)),
-                           env1) remaining1)))
+                           (FStar_Compiler_List.op_At mllibs
+                              (as_list env_before mllib)), env) remaining1)))
 let (batch_mode_tc :
   Prims.string Prims.list ->
     FStar_Parser_Dep.deps ->

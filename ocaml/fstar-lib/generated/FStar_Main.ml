@@ -200,13 +200,13 @@ let go : 'uuuuu . 'uuuuu -> unit =
                             (match filenames with
                              | [] ->
                                  (FStar_Errors.log_issue
-                                    FStar_Compiler_Range.dummyRange
+                                    FStar_Compiler_Range_Type.dummyRange
                                     (FStar_Errors_Codes.Error_MissingFileName,
                                       "--ide: Name of current file missing in command line invocation\n");
                                   FStar_Compiler_Effect.exit Prims.int_one)
                              | uu___13::uu___14::uu___15 ->
                                  (FStar_Errors.log_issue
-                                    FStar_Compiler_Range.dummyRange
+                                    FStar_Compiler_Range_Type.dummyRange
                                     (FStar_Errors_Codes.Error_TooManyFiles,
                                       "--ide: Too many files in command line invocation\n");
                                   FStar_Compiler_Effect.exit Prims.int_one)
@@ -251,7 +251,7 @@ let go : 'uuuuu . 'uuuuu -> unit =
                              FStar_Errors.raise_error
                                (FStar_Errors_Codes.Error_MissingFileName,
                                  "No file provided")
-                               FStar_Compiler_Range.dummyRange)))))))
+                               FStar_Compiler_Range_Type.dummyRange)))))))
 let (lazy_chooser :
   FStar_Syntax_Syntax.lazy_kind ->
     FStar_Syntax_Syntax.lazyinfo ->
@@ -262,32 +262,43 @@ let (lazy_chooser :
       match k with
       | FStar_Syntax_Syntax.BadLazy -> failwith "lazy chooser: got a BadLazy"
       | FStar_Syntax_Syntax.Lazy_bv ->
-          FStar_Reflection_Embeddings.unfold_lazy_bv i
+          FStar_Reflection_V2_Embeddings.unfold_lazy_bv i
+      | FStar_Syntax_Syntax.Lazy_namedv ->
+          FStar_Reflection_V2_Embeddings.unfold_lazy_namedv i
       | FStar_Syntax_Syntax.Lazy_binder ->
-          FStar_Reflection_Embeddings.unfold_lazy_binder i
+          FStar_Reflection_V2_Embeddings.unfold_lazy_binder i
       | FStar_Syntax_Syntax.Lazy_letbinding ->
-          FStar_Reflection_Embeddings.unfold_lazy_letbinding i
+          FStar_Reflection_V2_Embeddings.unfold_lazy_letbinding i
       | FStar_Syntax_Syntax.Lazy_optionstate ->
-          FStar_Reflection_Embeddings.unfold_lazy_optionstate i
+          FStar_Reflection_V2_Embeddings.unfold_lazy_optionstate i
       | FStar_Syntax_Syntax.Lazy_fvar ->
-          FStar_Reflection_Embeddings.unfold_lazy_fvar i
+          FStar_Reflection_V2_Embeddings.unfold_lazy_fvar i
       | FStar_Syntax_Syntax.Lazy_comp ->
-          FStar_Reflection_Embeddings.unfold_lazy_comp i
+          FStar_Reflection_V2_Embeddings.unfold_lazy_comp i
       | FStar_Syntax_Syntax.Lazy_env ->
-          FStar_Reflection_Embeddings.unfold_lazy_env i
+          FStar_Reflection_V2_Embeddings.unfold_lazy_env i
       | FStar_Syntax_Syntax.Lazy_sigelt ->
-          FStar_Reflection_Embeddings.unfold_lazy_sigelt i
+          FStar_Reflection_V2_Embeddings.unfold_lazy_sigelt i
+      | FStar_Syntax_Syntax.Lazy_universe ->
+          FStar_Reflection_V2_Embeddings.unfold_lazy_universe i
       | FStar_Syntax_Syntax.Lazy_proofstate ->
           FStar_Tactics_Embedding.unfold_lazy_proofstate i
       | FStar_Syntax_Syntax.Lazy_goal ->
           FStar_Tactics_Embedding.unfold_lazy_goal i
       | FStar_Syntax_Syntax.Lazy_uvar ->
           FStar_Syntax_Util.exp_string "((uvar))"
-      | FStar_Syntax_Syntax.Lazy_embedding (uu___, t) -> FStar_Thunk.force t
-      | FStar_Syntax_Syntax.Lazy_universe ->
-          FStar_Reflection_Embeddings.unfold_lazy_universe i
       | FStar_Syntax_Syntax.Lazy_universe_uvar ->
           FStar_Syntax_Util.exp_string "((universe_uvar))"
+      | FStar_Syntax_Syntax.Lazy_issue ->
+          FStar_Syntax_Util.exp_string "((issue))"
+      | FStar_Syntax_Syntax.Lazy_doc ->
+          FStar_Syntax_Util.exp_string "((document))"
+      | FStar_Syntax_Syntax.Lazy_ident ->
+          FStar_Syntax_Util.exp_string "((ident))"
+      | FStar_Syntax_Syntax.Lazy_embedding (uu___, t) -> FStar_Thunk.force t
+      | FStar_Syntax_Syntax.Lazy_extension s ->
+          let uu___ = FStar_Compiler_Util.format1 "((extension %s))" s in
+          FStar_Syntax_Util.exp_string uu___
 let (setup_hooks : unit -> unit) =
   fun uu___ ->
     FStar_Errors.set_parse_warn_error FStar_Parser_ParseIt.parse_warn_error;
@@ -297,7 +308,7 @@ let (setup_hooks : unit -> unit) =
       (FStar_Pervasives_Native.Some FStar_Syntax_Print.term_to_string);
     FStar_Compiler_Effect.op_Colon_Equals
       FStar_TypeChecker_Normalize.unembed_binder_knot
-      (FStar_Pervasives_Native.Some FStar_Reflection_Embeddings.e_binder)
+      (FStar_Pervasives_Native.Some FStar_Reflection_V2_Embeddings.e_binder)
 let (handle_error : Prims.exn -> unit) =
   fun e ->
     (let uu___1 = FStar_Errors.handleable e in

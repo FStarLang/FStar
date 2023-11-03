@@ -251,7 +251,9 @@ val embed_as : embedding 'a -> ('a -> 'b) -> ('b -> 'a) -> option t -> embedding
 
 val embed   : embedding 'a -> nbe_cbs -> 'a -> t
 val unembed : embedding 'a -> nbe_cbs -> t -> option 'a
+val lazy_unembed_lazy_kind (#a:Type) (k:lazy_kind) (x:t) : option a
 val type_of : embedding 'a -> t
+val set_type : t -> embedding 'a -> embedding 'a
 
 val e_bool   : embedding bool
 val e_string : embedding string
@@ -261,8 +263,10 @@ val e_unit   : embedding unit
 val e_any    : embedding t
 val mk_any_emb : t -> embedding t
 val e_range  : embedding Range.range
+val e_issue  : embedding FStar.Errors.issue
+val e_document : embedding FStar.Pprint.document
 val e_vconfig  : embedding vconfig
-val e_norm_step : embedding Syntax.Embeddings.norm_step
+val e_norm_step : embedding Pervasives.norm_step
 val e_list   : embedding 'a -> embedding (list 'a)
 val e_option : embedding 'a -> embedding (option 'a)
 val e_tuple2 : embedding 'a -> embedding 'b -> embedding ('a * 'b)
@@ -271,6 +275,9 @@ val e_either : embedding 'a -> embedding 'b -> embedding (either 'a 'b)
 val e_sealed : embedding 'a -> embedding 'a
 val e_string_list : embedding (list string)
 val e_arrow : embedding 'a -> embedding 'b -> embedding ('a -> 'b)
+
+(* Unconditionally fails raising an exception when called *)
+val e_unsupported : #a:Type -> embedding a
 
 (* Arity specific raw_embeddings of arrows; used to generate top-level
    registrations of compiled functions in FStar.Extraction.ML.Util *)
@@ -325,6 +332,8 @@ val binary_string_op : (string -> string -> string) -> (universes -> args -> opt
 
 val string_of_int : Z.t -> t
 val string_of_bool : bool -> t
+val int_of_string : string -> t
+val bool_of_string : string -> t
 val string_of_list' : list char -> t
 val string_compare' : string -> string -> t
 val string_concat' : args -> option t
@@ -358,6 +367,6 @@ val dummy_interp : Ident.lid -> args -> option t
 val prims_to_fstar_range_step : args -> option t
 
 val mk_range : args -> option t
-val division_op : args -> option t
+val division_modulus_op (op:Z.bigint -> Z.bigint -> Z.bigint) : args -> option t
 val and_op : args -> option t
 val or_op : args -> option t

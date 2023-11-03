@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module Bane.Lib
-open FStar.Tactics
+open FStar.Tactics.V2
 (* To understand the naming convention on this file, please refer to
  * https://www.youtube.com/watch?v=w9wi0cPrU4U *)
 val big_phi : int -> Tac unit

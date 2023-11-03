@@ -114,7 +114,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
 
         | LblPos _ -> failwith "Impossible" //these get added after errorReporting instrumentation only
 
-        | Labeled(arg, "could not prove post-condition", label_range) ->
+        | Labeled(arg, "Could not prove post-condition", label_range) ->
           //printfn "GOT A LABELED WP IMPLICATION\n\t%s"
           //        (Term.print_smt_term q);
           let fallback debug_msg =
@@ -125,9 +125,9 @@ let label_goals use_env_msg  //when present, provides an alternate error message
           begin try
               begin match arg.tm with
                 | Quant(Forall, pats, iopt, post::sorts, {tm=App(Imp, [lhs;rhs]); rng=rng}) ->
-                  let post_name = "^^post_condition_"^ (BU.string_of_int <| Ident.next_id ()) in
+                  let post_name = "^^post_condition_"^ (BU.string_of_int <| GenSym.next_id ()) in
                   let names = mk_fv (post_name, post)
-                              ::List.map (fun s -> mk_fv ("^^" ^ (string_of_int <| Ident.next_id()), s)) sorts in
+                              ::List.map (fun s -> mk_fv ("^^" ^ (string_of_int <| GenSym.next_id()), s)) sorts in
                   let instantiation = List.map mkFreeV names in
                   let lhs, rhs = Term.inst instantiation lhs, Term.inst instantiation rhs in
 
@@ -138,7 +138,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
                         | Quant(Forall, pats_ens, iopt_ens, sorts_ens, {tm=App(Imp, [ensures_conjuncts; post]); rng=rng_ens}) ->
                           if is_a_post_condition (Some post_name) post
                           then
-                            let labels, ensures_conjuncts = aux "could not prove post-condition" None (Some post_name) labels ensures_conjuncts in
+                            let labels, ensures_conjuncts = aux "Could not prove post-condition" None (Some post_name) labels ensures_conjuncts in
                             let pats_ens =
                               match pats_ens with
                               | []
@@ -180,9 +180,9 @@ let label_goals use_env_msg  //when present, provides an alternate error message
         | Quant(Forall, [], None, sorts, {tm=App(Imp, [lhs;rhs]); rng=rng})
             when is_a_named_continuation lhs ->
           let sorts', post = BU.prefix sorts in
-          let new_post_name = "^^post_condition_"^ (BU.string_of_int <| Ident.next_id ()) in
+          let new_post_name = "^^post_condition_"^ (BU.string_of_int <| GenSym.next_id ()) in
           //printfn "Got a named continuation with post-condition %s" new_post_name;
-          let names = List.map (fun s -> mk_fv ("^^" ^ (string_of_int <| Ident.next_id()), s)) sorts'
+          let names = List.map (fun s -> mk_fv ("^^" ^ (string_of_int <| GenSym.next_id()), s)) sorts'
                              @ [mk_fv (new_post_name, post)] in
           let instantiation = List.map mkFreeV names in
           let lhs, rhs = Term.inst instantiation lhs, Term.inst instantiation rhs in
@@ -295,7 +295,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
           labels, Term.mkLet (es, body) q.rng
     in
     __ctr := 0;
-    aux "assertion failed" None None [] q
+    aux "Assertion failed" None None [] q
 
 
 (*

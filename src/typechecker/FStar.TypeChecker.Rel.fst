@@ -111,6 +111,7 @@ type worklist = {
                                                 //is allowed; disabled by default, enabled in
                                                 //sub_comp which is called by the typechecker, and
                                                 //will insert the appropriate lifts.
+    typeclass_variables: list ctx_uvar          //variables that will be solved by typeclass instantiation
 }
 
 (* A NOTE ON ENVIRONMENTS
@@ -382,6 +383,7 @@ let empty_worklist env = {
     umax_heuristic_ok=true;
     wl_implicits=[];
     repr_subcomp_allowed=false;
+    typeclass_variables=[];
 }
 
 let giveup wl (reason : lstring) prob =
@@ -690,11 +692,11 @@ let base_and_refinement_maybe_delta should_delta env t1 =
    let rec aux norm t1 =
         let t1 = U.unmeta t1 in
         match t1.n with
-        | Tm_refine(x, phi) ->
+        | Tm_refine {b=x; phi} ->
             if norm
             then (x.sort, Some(x, phi))
             else (match norm_refinement env t1 with
-                 | {n=Tm_refine(x, phi)} -> (x.sort, Some(x, phi))
+                 | {n=Tm_refine {b=x; phi}} -> (x.sort, Some(x, phi))
                  | tt -> failwith (BU.format2 "impossible: Got %s ... %s\n"
                                                (Print.term_to_string tt)
                                                (Print.tag_of_term tt))
@@ -750,7 +752,7 @@ let force_refinement (t_base, refopt) : term =
     let y, phi = match refopt with
         | Some (y, phi) -> y, phi
         | None -> trivial_refinement t_base in
-    mk (Tm_refine(y, phi)) t_base.pos
+    mk (Tm_refine {b=y; phi}) t_base.pos
 
 (* ------------------------------------------------ *)
 (* </normalization>                                 *)
@@ -928,9 +930,9 @@ let rec may_relate_with_logical_guard env is_eq head =
          //Note, this is specifically not applicable for subtyping queries: see issue #1359
          is_eq
        | _ -> false)
-    | Tm_ascribed (t, _, _)
+    | Tm_ascribed {tm=t}
     | Tm_uinst (t, _)
-    | Tm_meta (t, _) -> may_relate_with_logical_guard env is_eq t
+    | Tm_meta {tm=t} -> may_relate_with_logical_guard env is_eq t
     | _ -> false
 
 let may_relate env prel head  = may_relate_with_logical_guard env (EQ? prel) head
@@ -960,7 +962,7 @@ let destruct_flex_t (t:term) wl : flex_t * worklist =
 
 let u_abs (k : typ) (ys : binders) (t : term) : term =
     let (ys, t), (xs, c) = match (SS.compress k).n with
-        | Tm_arrow(bs, c) ->
+        | Tm_arrow {bs; comp=c} ->
           if List.length bs = List.length ys
           then (ys, t), SS.open_comp bs c
           else let ys', t, _ = U.abs_formals t in
@@ -1255,9 +1257,9 @@ let rec delta_depth_of_term env t =
     | Tm_let _
     | Tm_match _ -> None
     | Tm_uinst(t, _)
-    | Tm_ascribed(t, _, _)
-    | Tm_app(t, _)
-    | Tm_refine({sort=t}, _) -> delta_depth_of_term env t
+    | Tm_ascribed {tm=t}
+    | Tm_app {hd=t}
+    | Tm_refine {b={sort=t}} -> delta_depth_of_term env t
     | Tm_constant _
     | Tm_type _
     | Tm_arrow _
@@ -1287,17 +1289,17 @@ let rec head_matches env t1 t2 : match_result =
 
     | Tm_uvar (uv, _), Tm_uvar (uv', _) -> if UF.equiv uv.ctx_uvar_head uv'.ctx_uvar_head then FullMatch else MisMatch(None, None)
 
-    | Tm_refine(x, _), Tm_refine(y, _) -> head_matches env x.sort y.sort |> head_match
+    | Tm_refine {b=x}, Tm_refine {b=y} -> head_matches env x.sort y.sort |> head_match
 
-    | Tm_refine(x, _), _  -> head_matches env x.sort t2 |> head_match
-    | _, Tm_refine(x, _)  -> head_matches env t1 x.sort |> head_match
+    | Tm_refine {b=x}, _  -> head_matches env x.sort t2 |> head_match
+    | _, Tm_refine {b=x}  -> head_matches env t1 x.sort |> head_match
 
     | Tm_type _, Tm_type _
     | Tm_arrow _, Tm_arrow _ -> HeadMatch false
 
-    | Tm_app(head, _), Tm_app(head', _) -> head_matches env head head' |> head_match
-    | Tm_app(head, _), _ -> head_matches env head t2 |> head_match
-    | _, Tm_app(head, _) -> head_matches env t1 head |> head_match
+    | Tm_app {hd=head}, Tm_app {hd=head'} -> head_matches env head head' |> head_match
+    | Tm_app {hd=head}, _ -> head_matches env head t2 |> head_match
+    | _, Tm_app {hd=head} -> head_matches env t1 head |> head_match
 
     | Tm_let _, Tm_let _
     | Tm_match _, Tm_match _
@@ -2065,6 +2067,10 @@ let apply_ad_hoc_indexed_subcomp (env:Env.env)
   f_sub_probs@g_sub_probs,
   wl
 
+let has_typeclass_constraint (u:ctx_uvar) (wl:worklist)
+  : bool
+  = wl.typeclass_variables |> List.existsb (fun v -> UF.equiv v.ctx_uvar_head u.ctx_uvar_head)
+
 (******************************************************************************************************)
 (* Main solving algorithm begins here *)
 (******************************************************************************************************)
@@ -2217,9 +2223,16 @@ and solve_rigid_flex_or_flex_rigid_subtyping
 
             t1 op t2 is only defined when t1 and t2
             are refinements of the same base type
+
+            if `op` is None, then we are computing the meet
+            and the result is widened to the base type
     *)
-    let meet_or_join (op : term -> term -> term) (ts : list term) (wl:worklist) : term & list prob & worklist =
-        let eq_prob t1 t2 wl =
+    let meet_or_join 
+           (op : option (term -> term -> term))
+           (ts : list term)
+           (wl:worklist)
+      : term & list prob & worklist
+      = let eq_prob t1 t2 wl =
             let p, wl =
             new_problem wl (p_env wl (TProb tp)) t1 EQ t2 None t1.pos
                         "join/meet refinements"
@@ -2300,6 +2313,9 @@ and solve_rigid_flex_or_flex_rigid_subtyping
                     op (squash phi1) (squash phi2)
                   in
                   let combine_refinements t_base p1_opt p2_opt =
+                    match op with
+                    | None -> t_base
+                    | Some op ->
                       let refine x t =
                           if U.is_t_true t then x.sort
                           else U.refine x t
@@ -2357,7 +2373,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
     let this_flex, this_rigid = if flip then tp.lhs, tp.rhs else tp.rhs, tp.lhs in
     begin
     match (SS.compress this_rigid).n with
-    | Tm_arrow (_bs, comp) ->
+    | Tm_arrow {bs=_bs; comp} ->
         //Although it's possible to take the meet/join of arrow types
         //we handle them separately either by imitation (for Tot/GTot arrows)
         //which provides some structural subtyping for them
@@ -2417,88 +2433,99 @@ and solve_rigid_flex_or_flex_rigid_subtyping
                            | _ -> [])
                           bounds_probs
       in
-      //let env_g =
-      //  {env with gamma=(p_guard_uvar (TProb tp)).ctx_uvar_gamma}
-      //  |> Env.clear_expected_typ
-      //  |> fst
-      //in
-      let (bound, sub_probs, wl) =
-         meet_or_join (if flip then U.mk_conj_simp else U.mk_disj_simp)
-                      bounds_typs
-                      wl
-      in
-      let bound_typ, (eq_prob, wl') =
-          let flex_u = flex_uvar_head this_flex in
-          let bound =
-            //We get constraints of the form (x:?u{phi} <: ?u)
-            //This cannot be solved with an equality constraints
-            //So, turn the bound on the LHS to just ?u
-            match (SS.compress bound).n with
-            | Tm_refine (x, phi)
-              when tp.relation=SUB
-                && snd (occurs flex_u x.sort) ->
-              x.sort
-            | _ ->
-              bound
-          in
-          bound,
-          new_problem wl (p_env wl (TProb tp)) bound EQ this_flex None tp.loc
-                (if flip then "joining refinements" else "meeting refinements")
-      in
-      def_check_prob "meet_or_join2" (TProb eq_prob);
-      let _ = if debug wl <| Options.Other "Rel"
-              then let wl' = {wl with attempting=TProb eq_prob::sub_probs} in
-                   BU.print1 "After meet/join refinements: %s\n" (wl_to_string wl') in
-
-      let tx = UF.new_transaction () in
       begin
-      List.iter (def_check_prob "meet_or_join3_sub") sub_probs;
-      match solve_t eq_prob ({wl' with defer_ok=NoDefer;
-                                       wl_implicits = [];
-                                       wl_deferred = [];
-                                       attempting=sub_probs}) with
-      | Success (_, defer_to_tac, imps) ->
-         let wl = {wl' with attempting=rest} in
-         let wl = extend_wl wl [] defer_to_tac imps in
-         let g =  List.fold_left (fun g p -> U.mk_conj g (p_guard p))
-                                 eq_prob.logical_guard
-                                 sub_probs in
-         let wl = solve_prob' false (TProb tp) (Some g) [] wl in
-         let _ = List.fold_left (fun wl p -> solve_prob' true p None [] wl) wl bounds_probs in
-         UF.commit tx;
-         solve wl
+        let widen, meet_or_join_op = 
+          if has_typeclass_constraint ctx_uvar wl
+          && not flip //we are widening; so widen all the way
+          then true, None
+          else false, Some (if flip then U.mk_conj_simp else U.mk_disj_simp)
+        in
+        let (bound, sub_probs, wl) =
+          match bounds_typs with
+          | [t] ->
+            if widen
+            then fst (base_and_refinement_maybe_delta false env t), [], wl
+            else (t, [], wl)
+          | _ -> 
+            meet_or_join meet_or_join_op
+                        bounds_typs
+                        wl
+        in
+        let bound_typ, (eq_prob, wl') =
+            let flex_u = flex_uvar_head this_flex in
+            let bound =
+              //We get constraints of the form (x:?u{phi} <: ?u)
+              //This cannot be solved with an equality constraints
+              //So, turn the bound on the LHS to just ?u
+              match (SS.compress bound).n with
+              | Tm_refine {b=x; phi}
+                when tp.relation=SUB
+                  && snd (occurs flex_u x.sort) ->
+                x.sort
+              | _ ->
+                bound
+            in
+            bound,
+            new_problem wl (p_env wl (TProb tp)) bound EQ this_flex None tp.loc
+                  (if flip then "joining refinements" else "meeting refinements")
+        in
+        def_check_prob "meet_or_join2" (TProb eq_prob);
+        let _ = if debug wl <| Options.Other "Rel"
+                then let wl' = {wl with attempting=TProb eq_prob::sub_probs} in
+                    BU.print1 "After meet/join refinements: %s\n" (wl_to_string wl') in
 
-      | Failed (p, msg) ->
-         if debug wl <| Options.Other "Rel"
-         then BU.print1 "meet/join attempted and failed to solve problems:\n%s\n"
-                        (List.map (prob_to_string env) (TProb eq_prob::sub_probs) |> String.concat "\n");
-         (match rank, base_and_refinement env bound_typ with
-          | Rigid_flex, (t_base, Some _) ->
-            UF.rollback tx;
-              //We failed to solve (x:t_base{p} <: ?u) while computing a precise join of all the lower bounds
-              //Rather than giving up, try again with a widening heuristic
-              //i.e., try to solve ?u = t and proceed
-            let eq_prob, wl =
-                new_problem wl (p_env wl (TProb tp)) t_base EQ this_flex None tp.loc "widened subtyping" in
-            def_check_prob "meet_or_join3" (TProb eq_prob);
-            let wl = solve_prob' false (TProb tp) (Some (p_guard (TProb eq_prob))) [] wl in
-            solve (attempt [TProb eq_prob] wl)
+        let tx = UF.new_transaction () in
+        begin
+        List.iter (def_check_prob "meet_or_join3_sub") sub_probs;
+        match solve_t eq_prob ({wl' with defer_ok=NoDefer;
+                                        wl_implicits = [];
+                                        wl_deferred = [];
+                                        attempting=sub_probs}) with
+        | Success (_, defer_to_tac, imps) ->
+          let wl = {wl' with attempting=rest} in
+          let wl = extend_wl wl [] defer_to_tac imps in
+          let g =  List.fold_left (fun g p -> U.mk_conj g (p_guard p))
+                                  eq_prob.logical_guard
+                                  sub_probs in
+          let wl = solve_prob' false (TProb tp) (Some g) [] wl in
+          let _ = List.fold_left (fun wl p -> solve_prob' true p None [] wl) wl bounds_probs in
+          UF.commit tx;
+          solve wl
 
-          | Flex_rigid, (t_base, Some (x, phi)) ->
-            UF.rollback tx;
-              //We failed to solve (?u = x:t_base{phi}) while computing
-              //a precise meet of all the upper bounds
-              //Rather than giving up, try again with a narrowing heuristic
-              //i.e., solve ?u = t_base, with the guard formula phi
-            let eq_prob, wl =
-                new_problem wl env t_base EQ this_flex None tp.loc "widened subtyping" in
-            def_check_prob "meet_or_join4" (TProb eq_prob);
-            let phi = guard_on_element wl tp x phi in
-            let wl = solve_prob' false (TProb tp) (Some (U.mk_conj phi (p_guard (TProb eq_prob)))) [] wl in
-            solve (attempt [TProb eq_prob] wl)
+        | Failed (p, msg) ->
+          if debug wl <| Options.Other "Rel"
+          then BU.print1 "meet/join attempted and failed to solve problems:\n%s\n"
+                          (List.map (prob_to_string env) (TProb eq_prob::sub_probs) |> String.concat "\n");
+          (match rank, base_and_refinement env bound_typ with
+            | Rigid_flex, (t_base, Some _) ->
+              UF.rollback tx;
+                //We failed to solve (x:t_base{p} <: ?u) while computing a precise join of all the lower bounds
+                //Rather than giving up, try again with a widening heuristic
+                //i.e., try to solve ?u = t and proceed
+              let eq_prob, wl =
+                  new_problem wl (p_env wl (TProb tp)) t_base EQ this_flex None tp.loc "widened subtyping" in
+              def_check_prob "meet_or_join3" (TProb eq_prob);
+              let wl = solve_prob' false (TProb tp) (Some (p_guard (TProb eq_prob))) [] wl in
+              solve (attempt [TProb eq_prob] wl)
 
-          | _ ->
-            giveup wl (Thunk.map (fun s -> "failed to solve the sub-problems: " ^ s) msg) p)
+            | Flex_rigid, (t_base, Some (x, phi)) ->
+              UF.rollback tx;
+                //We failed to solve (?u = x:t_base{phi}) while computing
+                //a precise meet of all the upper bounds
+                //Rather than giving up, try again with a narrowing heuristic
+                //i.e., solve ?u = t_base, with the guard formula phi
+              let x = freshen_bv x in
+              let _, phi = SS.open_term [S.mk_binder x] phi in
+              let eq_prob, wl =
+                  new_problem wl env t_base EQ this_flex None tp.loc "widened subtyping" in
+              def_check_prob "meet_or_join4" (TProb eq_prob);
+              let phi = guard_on_element wl tp x phi in
+              let wl = solve_prob' false (TProb tp) (Some (U.mk_conj phi (p_guard (TProb eq_prob)))) [] wl in
+              solve (attempt [TProb eq_prob] wl)
+
+            | _ ->
+              giveup wl (Thunk.map (fun s -> "failed to solve the sub-problems: " ^ s) msg) p)
+        end
       end
 
     | _ when flip ->
@@ -3587,8 +3614,8 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
                             (Print.term_to_string t1)
                             (Print.term_to_string t2);
             match (s1, U.unmeta t1), (s2, U.unmeta t2) with
-            | (_, {n=Tm_match (scrutinee, _, branches, _)}), (s, t)
-            | (s, t), (_, {n=Tm_match(scrutinee, _, branches, _)}) ->
+            | (_, {n=Tm_match {scrutinee; brs=branches}}), (s, t)
+            | (s, t), (_, {n=Tm_match {scrutinee; brs=branches}}) ->
               if not (is_flex scrutinee)
               then begin
                 if debug wl <| Options.Other "Rel"
@@ -3688,6 +3715,8 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
                     | _ -> None
                 in
                 let is_reveal_or_hide t =
+                  // Returns Inl (u, ty, t) for reveal u#u #ty t
+                  // Returns Inr (u, ty, t) for hide u#u #ty t
                   let h, args = U.head_and_args t in
                   if U.is_fvar PC.reveal h
                   then match payload_of_hide_reveal h args with
@@ -3840,10 +3869,10 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
       | Tm_type u1, Tm_type u2 ->
         solve_one_universe_eq orig u1 u2 wl
 
-      | Tm_arrow(bs1, c1), Tm_arrow(bs2, c2) ->
+      | Tm_arrow {bs=bs1; comp=c1}, Tm_arrow {bs=bs2; comp=c2} ->
         let mk_c c = function
             | [] -> c
-            | bs -> mk_Total(mk (Tm_arrow(bs, c)) c.pos) in
+            | bs -> mk_Total(mk (Tm_arrow {bs; comp=c}) c.pos) in
 
         let (bs1, c1), (bs2, c2) =
             match_num_binders (bs1, mk_c c1) (bs2, mk_c c2) in
@@ -3855,10 +3884,11 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
             let rel = if (Options.use_eq_at_higher_order()) then EQ else problem.relation in
             mk_c_problem wl scope orig c1 rel c2 None "function co-domain")
 
-      | Tm_abs(bs1, tbody1, lopt1), Tm_abs(bs2, tbody2, lopt2) ->
+      | Tm_abs {bs=bs1; body=tbody1; rc_opt=lopt1},
+        Tm_abs {bs=bs2; body=tbody2; rc_opt=lopt2} ->
         let mk_t t l = function
             | [] -> t
-            | bs -> mk (Tm_abs(bs, t, l)) t.pos in
+            | bs -> mk (Tm_abs {bs; body=t; rc_opt=l}) t.pos in
         let (bs1, tbody1), (bs2, tbody2) =
             match_num_binders (bs1, mk_t tbody1 lopt1) (bs2, mk_t tbody2 lopt2) in
         solve_binders bs1 bs2 orig wl
@@ -3867,7 +3897,7 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
                                        problem.relation
                                        (Subst.subst subst tbody2) None "lambda co-domain")
 
-      | Tm_refine(x1, phi1), Tm_refine(x2, phi2) ->
+      | Tm_refine {b=x1; phi=phi1}, Tm_refine {b=x2; phi=phi2} ->
         (* If the heads of their bases can match, make it so, and continue *)
         (* The unfolding is very much needed since we might have
          *   n:nat{phi n} =?= i:int{psi i}
@@ -3955,9 +3985,9 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
 
       (* flex-flex *)
       | Tm_uvar _,                Tm_uvar _
-      | Tm_app({n=Tm_uvar _}, _), Tm_uvar _
-      | Tm_uvar _,                Tm_app({n=Tm_uvar _}, _)
-      | Tm_app({n=Tm_uvar _}, _), Tm_app({n=Tm_uvar _}, _) ->
+      | Tm_app {hd={n=Tm_uvar _}}, Tm_uvar _
+      | Tm_uvar _,                Tm_app {hd={n=Tm_uvar _}}
+      | Tm_app {hd={n=Tm_uvar _}}, Tm_app {hd={n=Tm_uvar _}} ->
       (* In the case that we have the same uvar on both sides, we cannot
        * simply call destruct_flex_t on them, and instead we need to do
        * both ensure_no_uvar_subst calls before destructing.
@@ -3984,18 +4014,18 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
 
       (* flex-rigid equalities *)
       | Tm_uvar _, _
-      | Tm_app({n=Tm_uvar _}, _), _ when (problem.relation=EQ) -> (* just imitate/project ... no slack *)
+      | Tm_app {hd={n=Tm_uvar _}}, _ when (problem.relation=EQ) -> (* just imitate/project ... no slack *)
         let f1, wl = destruct_flex_t t1 wl in
         solve_t_flex_rigid_eq orig wl f1 t2
 
       (* rigid-flex: reorient if it is an equality constraint *)
       | _, Tm_uvar _
-      | _, Tm_app({n=Tm_uvar _}, _) when (problem.relation = EQ) ->
+      | _, Tm_app {hd={n=Tm_uvar _}} when (problem.relation = EQ) ->
         solve_t' (invert problem) wl
 
       (* flex-rigid: ?u _ <: t1 -> t2 *)
       | Tm_uvar _, Tm_arrow _
-      | Tm_app({n=Tm_uvar _}, _), Tm_arrow _ ->
+      | Tm_app {hd={n=Tm_uvar _}}, Tm_arrow _ ->
         //FIXME! This is weird; it should be handled by imitate_arrow
         //this case is so common, that even though we could delay, it is almost always ok to solve it immediately as an equality
         //besides, in the case of arrows, if we delay it, the arity of various terms built by the unifier goes awry
@@ -4003,9 +4033,9 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
         solve_t' ({problem with relation=EQ}) wl
 
       | _, Tm_uvar _
-      | _, Tm_app({n=Tm_uvar _}, _)
+      | _, Tm_app {hd={n=Tm_uvar _}}
       | Tm_uvar _, _
-      | Tm_app({n=Tm_uvar _}, _), _ ->
+      | Tm_app {hd={n=Tm_uvar _}}, _ ->
         //flex-rigid subtyping is handled in the top-loop
         solve (attempt [TProb problem] wl)
 
@@ -4048,7 +4078,7 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
         let t1 = force_refinement <| base_and_refinement (p_env wl orig) t1 in
         solve_t' ({problem with lhs=t1}) wl
 
-      | Tm_match (s1, _, brs1, _), Tm_match (s2, _, brs2, _) ->  //AR: note ignoring the return annotation
+      | Tm_match {scrutinee=s1;brs=brs1}, Tm_match {scrutinee=s2;brs=brs2} ->  //AR: note ignoring the return annotation
         let by_smt () =
             // using original WL
             let guard, wl = guard_of_prob wl problem t1 t2 in
@@ -4143,9 +4173,15 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
                 (string_of_bool (Env.is_interpreted wl.tcenv head2));
                 (string_of_bool (no_free_uvars t2))]
          in
-         let equal t1 t2 =
-            (U.eq_tm t1 t2 = U.Equal) ||
-            (let steps = [
+         let equal t1 t2 : bool =
+          (* Try comparing the terms as they are. If we get Equal or NotEqual,
+             we are done. If we get an Unknown, attempt some normalization. *)
+           let r = U.eq_tm t1 t2 in
+           match r with
+           | U.Equal -> true
+           | U.NotEqual -> false
+           | U.Unknown ->
+             let steps = [
                Env.UnfoldUntil delta_constant;
                Env.Primops;
                Env.Beta;
@@ -4154,7 +4190,7 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
              let env = p_env wl orig in
              let t1 = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.2" steps env t1 in
              let t2 = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.3" steps env t2 in
-             U.eq_tm t1 t2 = U.Equal)
+             U.eq_tm t1 t2 = U.Equal
          in
          if (Env.is_interpreted wl.tcenv head1 || Env.is_interpreted wl.tcenv head2) //we have something like (+ x1 x2) =?= (- y1 y2)
            && problem.relation = EQ
@@ -4383,7 +4419,7 @@ and solve_c (problem:problem comp) (wl:worklist) : solution =
                   | Tm_uvar (uv, _) ->
                     not (DeferredImplicits.should_defer_uvar_to_user_tac env uv)
                   | Tm_uinst (t, _) -> is_uvar t
-                  | Tm_app (t, _) -> is_uvar t
+                  | Tm_app {hd=t} -> is_uvar t
                   | _ -> false in
                 List.fold_right2 (fun (a1, _) (a2, _) (is_sub_probs, wl) ->
                   if is_uvar a1
@@ -4497,15 +4533,12 @@ and solve_c (problem:problem comp) (wl:worklist) : solution =
                                      match c2_decl |> U.get_wp_trivial_combinator with
                                      | None -> failwith "Rel doesn't yet handle undefined trivial combinator in an effect"
                                      | Some t -> t in
-                                   mk (Tm_app (inst_effect_fun_with [c1_univ] env c2_decl trivial,
-                                               [as_arg c1.result_typ;
-                                                wpc1_2])) r
+                                   mk (Tm_app {hd=inst_effect_fun_with [c1_univ] env c2_decl trivial;
+                                               args=[as_arg c1.result_typ; wpc1_2]}) r
                               else let c2_univ = env.universe_of env c2.result_typ in
                                    let stronger = c2_decl |> U.get_stronger_vc_combinator |> fst in
-                                   mk (Tm_app(inst_effect_fun_with [c2_univ] env c2_decl stronger,
-                                              [as_arg c2.result_typ;
-                                               as_arg wpc2;
-                                               wpc1_2])) r in
+                                   mk (Tm_app {hd=inst_effect_fun_with [c2_univ] env c2_decl stronger;
+                                               args=[as_arg c2.result_typ; as_arg wpc2; wpc1_2]}) r in
                       if debug wl <| Options.Other "Rel" then
                           BU.print1 "WP guard (simplifed) is (%s)\n" (Print.term_to_string (N.normalize [Env.Iota; Env.Eager_unfolding; Env.Primops; Env.Simplify] env g));
                       let base_prob, wl = sub_prob wl c1.result_typ problem.relation c2.result_typ "result type" in
@@ -4839,8 +4872,25 @@ let solve_universe_inequalities env ineqs : unit =
 
 let try_solve_deferred_constraints (defer_ok:defer_ok_t) smt_ok deferred_to_tac_ok env (g:guard_t) : guard_t =
   Profiling.profile (fun () ->
+   let typeclass_variables =
+    g.implicits
+    |> List.collect
+          (fun i ->
+            match i.imp_uvar.ctx_uvar_meta with
+            | Some (Ctx_uvar_meta_tac (_, tac)) -> 
+              let head, _ = U.head_and_args_full tac in
+              if U.is_fvar PC.tcresolve_lid head
+              then (
+                let goal_type = U.ctx_uvar_typ i.imp_uvar in
+                let uvs = Free.uvars goal_type in
+                BU.set_elements uvs
+              )
+              else []
+            | _ -> [])
+   in
    let wl = {wl_of_guard env g.deferred with defer_ok=defer_ok
-                                           ; smt_ok=smt_ok } in
+                                           ; smt_ok=smt_ok
+                                           ; typeclass_variables } in
    let fail (d,s) =
       let msg = explain wl d s in
       raise_error (Errors.Fatal_ErrorInSolveDeferredConstraints, msg) (p_loc d)
@@ -5004,20 +5054,19 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option g
                         () // do nothing
 
                     | NonTrivial goal ->
-                        FStar.Options.push ();
+                      Options.with_saved_options (fun () ->
                         FStar.Options.set opts;
-                        if debug
-                        then Errors.diag (Env.get_range env)
-                                         (BU.format2 "Trying to solve:\n> %s\nWith proof_ns:\n %s\n"
+                        if debug then
+                          Errors.diag (Env.get_range env)
+                                      (BU.format2 "Trying to solve:\n> %s\nWith proof_ns:\n %s\n"
                                                  (Print.term_to_string goal)
                                                  (Env.string_of_proof_ns env));
-                        if debug
-                        then Errors.diag (Env.get_range env)
-                                         (BU.format1 "Before calling solver VC=\n%s\n" (Print.term_to_string goal));
-                        let res = env.solver.solve use_env_range_msg env goal in
-                        FStar.Options.pop ();
-                        res
-                        )
+                        if debug then
+                          Errors.diag (Env.get_range env)
+                                      (BU.format1 "Before calling solver VC=\n%s\n" (Print.term_to_string goal));
+                        env.solver.solve use_env_range_msg env goal
+                      )
+                   )
           in
           Some ret_g
 
@@ -5123,7 +5172,7 @@ let try_solve_single_valued_implicits env is_tac (imps:Env.implicits) : Env.impl
       match (SS.compress t_norm).n with
       | Tm_fvar fv when S.fv_eq_lid fv PC.unit_lid ->
         r |> S.unit_const_with_range |> Some
-      | Tm_refine (b, _) when U.is_unit b.sort ->
+      | Tm_refine {b} when U.is_unit b.sort ->
         r |> S.unit_const_with_range |> Some
       | _ -> None in
 
@@ -5205,8 +5254,8 @@ let check_implicit_solution_and_discharge_guard env
                *)
               let imp_tm =
                 match (SS.compress imp_tm).n with
-                | Tm_abs (bs, body, Some rc) ->
-                  {imp_tm with n=Tm_abs (bs, body, Some ({rc with residual_typ=None}))}
+                | Tm_abs {bs; body; rc_opt=Some rc} ->
+                  {imp_tm with n=Tm_abs {bs; body; rc_opt=Some ({rc with residual_typ=None})}}
                 | _ -> imp_tm in
 
               let k', g =
@@ -5215,7 +5264,7 @@ let check_implicit_solution_and_discharge_guard env
                   imp_tm must_tot in
 
               match get_subtyping_predicate env k' uvar_ty with
-              | None -> raise_error (Err.expected_expression_of_type env uvar_ty imp_tm k') imp_tm.pos
+              | None -> raise_error_doc (Err.expected_expression_of_type env uvar_ty imp_tm k') imp_tm.pos
               | Some f ->
                 {Env.conj_guard (Env.apply_guard f imp_tm) g with guard_f=Trivial}
             end

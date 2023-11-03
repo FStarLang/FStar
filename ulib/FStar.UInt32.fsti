@@ -251,6 +251,7 @@ let n_minus_one = uint_to_t (n - 1)
 
     Note, the branching on [a=b] is just for proof-purposes.
   *)
+[@ CNoInline ]
 let eq_mask (a:t) (b:t)
   : Pure t
     (requires True)
@@ -289,6 +290,7 @@ val lemma_sub_msbs (a:t) (b:t)
 
     With inspiration from https://git.zx2c4.com/WireGuard/commit/src/crypto/curve25519-hacl64.h?id=0a483a9b431d87eca1b275463c632f8d5551978a
   *)
+[@ CNoInline ]
 let gte_mask (a:t) (b:t)
   : Pure t
     (requires True)

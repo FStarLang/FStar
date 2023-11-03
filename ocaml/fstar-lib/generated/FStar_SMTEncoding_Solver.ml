@@ -14,11 +14,11 @@ let z3_result_as_replay_result :
     | FStar_Pervasives.Inl l -> FStar_Pervasives.Inl l
     | FStar_Pervasives.Inr (r, uu___1) -> FStar_Pervasives.Inr r
 let (recorded_hints :
-  FStar_Compiler_Util.hints FStar_Pervasives_Native.option
+  FStar_Compiler_Hints.hints FStar_Pervasives_Native.option
     FStar_Compiler_Effect.ref)
   = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None
 let (replaying_hints :
-  FStar_Compiler_Util.hints FStar_Pervasives_Native.option
+  FStar_Compiler_Hints.hints FStar_Pervasives_Native.option
     FStar_Compiler_Effect.ref)
   = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None
 let initialize_hints_db : 'uuuuu . Prims.string -> 'uuuuu -> unit =
@@ -33,9 +33,9 @@ let initialize_hints_db : 'uuuuu . Prims.string -> 'uuuuu -> unit =
       (let norm_src_filename =
          FStar_Compiler_Util.normalize_file_path src_filename in
        let val_filename = FStar_Options.hint_file_for_src norm_src_filename in
-       let uu___1 = FStar_Compiler_Util.read_hints val_filename in
+       let uu___1 = FStar_Compiler_Hints.read_hints val_filename in
        match uu___1 with
-       | FStar_Compiler_Util.HintsOK hints ->
+       | FStar_Compiler_Hints.HintsOK hints ->
            let expected_digest =
              FStar_Compiler_Util.digest_of_file norm_src_filename in
            ((let uu___3 = FStar_Options.hint_info () in
@@ -44,13 +44,15 @@ let initialize_hints_db : 'uuuuu . Prims.string -> 'uuuuu -> unit =
                FStar_Compiler_Util.print3 "(%s) digest is %s from %s.\n"
                  norm_src_filename
                  (if
-                    hints.FStar_Compiler_Util.module_digest = expected_digest
+                    hints.FStar_Compiler_Hints.module_digest =
+                      expected_digest
                   then "valid; using hints"
                   else "invalid; using potentially stale hints") val_filename
              else ());
             FStar_Compiler_Effect.op_Colon_Equals replaying_hints
-              (FStar_Pervasives_Native.Some (hints.FStar_Compiler_Util.hints)))
-       | FStar_Compiler_Util.MalformedJson ->
+              (FStar_Pervasives_Native.Some
+                 (hints.FStar_Compiler_Hints.hints)))
+       | FStar_Compiler_Hints.MalformedJson ->
            let uu___3 = FStar_Options.use_hints () in
            if uu___3
            then
@@ -60,9 +62,10 @@ let initialize_hints_db : 'uuuuu . Prims.string -> 'uuuuu -> unit =
                    "Malformed JSON hints file: %s; ran without hints"
                    val_filename in
                (FStar_Errors_Codes.Warning_CouldNotReadHints, uu___5) in
-             FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___4
+             FStar_Errors.log_issue_text FStar_Compiler_Range_Type.dummyRange
+               uu___4
            else ()
-       | FStar_Compiler_Util.UnableToOpen ->
+       | FStar_Compiler_Hints.UnableToOpen ->
            let uu___3 = FStar_Options.use_hints () in
            if uu___3
            then
@@ -72,7 +75,8 @@ let initialize_hints_db : 'uuuuu . Prims.string -> 'uuuuu -> unit =
                    "Unable to open hints file: %s; ran without hints"
                    val_filename in
                (FStar_Errors_Codes.Warning_CouldNotReadHints, uu___5) in
-             FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___4
+             FStar_Errors.log_issue_text FStar_Compiler_Range_Type.dummyRange
+               uu___4
            else ())
 let (finalize_hints_db : Prims.string -> unit) =
   fun src_filename ->
@@ -85,13 +89,13 @@ let (finalize_hints_db : Prims.string -> unit) =
        let hints_db =
          let uu___2 = FStar_Compiler_Util.digest_of_file src_filename in
          {
-           FStar_Compiler_Util.module_digest = uu___2;
-           FStar_Compiler_Util.hints = hints
+           FStar_Compiler_Hints.module_digest = uu___2;
+           FStar_Compiler_Hints.hints = hints
          } in
        let norm_src_filename =
          FStar_Compiler_Util.normalize_file_path src_filename in
        let val_filename = FStar_Options.hint_file_for_src norm_src_filename in
-       FStar_Compiler_Util.write_hints val_filename hints_db
+       FStar_Compiler_Hints.write_hints val_filename hints_db
      else ());
     FStar_Compiler_Effect.op_Colon_Equals recorded_hints
       FStar_Pervasives_Native.None;
@@ -183,7 +187,7 @@ let rec (filter_assertions_with_stats :
                       let uu___5 =
                         FStar_Compiler_Effect.op_Bar_Greater core1
                           (FStar_String.concat ", ") in
-                      Prims.op_Hat "UNSAT CORE: " uu___5 in
+                      Prims.op_Hat "UNSAT CORE USED: " uu___5 in
                     FStar_SMTEncoding_Term.Caption uu___4 in
                   [uu___3] in
                 (uu___2, Prims.int_zero, Prims.int_zero) in
@@ -227,17 +231,6 @@ let rec (filter_assertions_with_stats :
             (match uu___ with
              | (theory', n_retained, n_pruned) ->
                  (theory', true, n_retained, n_pruned))
-let (filter_assertions :
-  FStar_TypeChecker_Env.env ->
-    FStar_SMTEncoding_Z3.unsat_core ->
-      FStar_SMTEncoding_Term.decl Prims.list ->
-        (FStar_SMTEncoding_Term.decl Prims.list * Prims.bool))
-  =
-  fun e ->
-    fun core ->
-      fun theory ->
-        let uu___ = filter_assertions_with_stats e core theory in
-        match uu___ with | (theory1, b, uu___1, uu___2) -> (theory1, b)
 let (filter_facts_without_core :
   FStar_TypeChecker_Env.env ->
     FStar_SMTEncoding_Term.decl Prims.list ->
@@ -307,7 +300,7 @@ type query_settings =
   query_decl: FStar_SMTEncoding_Term.decl ;
   query_name: Prims.string ;
   query_index: Prims.int ;
-  query_range: FStar_Compiler_Range.range ;
+  query_range: FStar_Compiler_Range_Type.range ;
   query_fuel: Prims.int ;
   query_ifuel: Prims.int ;
   query_rlimit: Prims.int ;
@@ -351,7 +344,7 @@ let (__proj__Mkquery_settings__item__query_index :
         query_all_labels; query_suffix; query_hash;
         query_can_be_split_and_retried; query_term;_} -> query_index
 let (__proj__Mkquery_settings__item__query_range :
-  query_settings -> FStar_Compiler_Range.range) =
+  query_settings -> FStar_Compiler_Range_Type.range) =
   fun projectee ->
     match projectee with
     | { query_env; query_decl; query_name; query_index; query_range;
@@ -439,6 +432,104 @@ let (__proj__Mkquery_settings__item__query_term :
         query_fuel; query_ifuel; query_rlimit; query_hint; query_errors;
         query_all_labels; query_suffix; query_hash;
         query_can_be_split_and_retried; query_term;_} -> query_term
+let (maybe_build_core_from_hook :
+  FStar_TypeChecker_Env.env ->
+    query_settings FStar_Pervasives_Native.option ->
+      FStar_SMTEncoding_Z3.unsat_core ->
+        FStar_SMTEncoding_Term.decl Prims.list ->
+          FStar_SMTEncoding_Z3.unsat_core)
+  =
+  fun e ->
+    fun qsettings ->
+      fun core ->
+        fun theory ->
+          match qsettings with
+          | FStar_Pervasives_Native.None -> core
+          | FStar_Pervasives_Native.Some qsettings1 ->
+              (match core with
+               | FStar_Pervasives_Native.Some uu___ -> core
+               | FStar_Pervasives_Native.None ->
+                   let uu___ = FStar_Options.hint_hook () in
+                   (match uu___ with
+                    | FStar_Pervasives_Native.None -> core
+                    | FStar_Pervasives_Native.Some hint_hook_cmd ->
+                        let qryid =
+                          let uu___1 =
+                            FStar_Compiler_Util.string_of_int
+                              qsettings1.query_index in
+                          FStar_Compiler_Util.format2 "(%s, %s)"
+                            qsettings1.query_name uu___1 in
+                        let qry =
+                          FStar_SMTEncoding_Term.declToSmt_no_caps ""
+                            qsettings1.query_decl in
+                        let qry1 =
+                          FStar_Compiler_Util.replace_chars qry 10 "" in
+                        (match e.FStar_TypeChecker_Env.qtbl_name_and_index
+                         with
+                         | (FStar_Pervasives_Native.None, uu___1) ->
+                             (FStar_Errors.diag qsettings1.query_range
+                                "maybe_build_core_from_hook: qbtl name unset?";
+                              core)
+                         | (FStar_Pervasives_Native.Some (lid, typ, ctr),
+                            uu___1) ->
+                             let input =
+                               let uu___2 =
+                                 let uu___3 =
+                                   let uu___4 =
+                                     let uu___5 =
+                                       let uu___6 =
+                                         let uu___7 =
+                                           FStar_Syntax_Print.term_to_string
+                                             typ in
+                                         FStar_Json.JsonStr uu___7 in
+                                       ("type", uu___6) in
+                                     let uu___6 =
+                                       let uu___7 =
+                                         let uu___8 =
+                                           let uu___9 =
+                                             let uu___10 =
+                                               FStar_Compiler_List.map
+                                                 (fun d ->
+                                                    let uu___11 =
+                                                      FStar_SMTEncoding_Term.declToSmt_no_caps
+                                                        "" d in
+                                                    FStar_Json.JsonStr
+                                                      uu___11) theory in
+                                             FStar_Json.JsonList uu___10 in
+                                           ("theory", uu___9) in
+                                         [uu___8] in
+                                       ("query", (FStar_Json.JsonStr qry1))
+                                         :: uu___7 in
+                                     uu___5 :: uu___6 in
+                                   ("query_ctr", (FStar_Json.JsonInt ctr)) ::
+                                     uu___4 in
+                                 ("query_name",
+                                   (FStar_Json.JsonStr
+                                      (qsettings1.query_name)))
+                                   :: uu___3 in
+                               FStar_Json.JsonAssoc uu___2 in
+                             let input1 = FStar_Json.string_of_json input in
+                             let output =
+                               FStar_Compiler_Util.run_process
+                                 (Prims.op_Hat "hint-hook-" qryid)
+                                 hint_hook_cmd []
+                                 (FStar_Pervasives_Native.Some input1) in
+                             let facts = FStar_String.split [44] output in
+                             FStar_Pervasives_Native.Some facts)))
+let (filter_assertions :
+  FStar_TypeChecker_Env.env ->
+    query_settings FStar_Pervasives_Native.option ->
+      FStar_SMTEncoding_Z3.unsat_core ->
+        FStar_SMTEncoding_Term.decl Prims.list ->
+          (FStar_SMTEncoding_Term.decl Prims.list * Prims.bool))
+  =
+  fun e ->
+    fun qsettings ->
+      fun core ->
+        fun theory ->
+          let core1 = maybe_build_core_from_hook e qsettings core theory in
+          let uu___ = filter_assertions_with_stats e core1 theory in
+          match uu___ with | (theory1, b, uu___1, uu___2) -> (theory1, b)
 let (with_fuel_and_diagnostics :
   query_settings ->
     FStar_SMTEncoding_Term.decl Prims.list ->
@@ -511,7 +602,7 @@ let (used_hint : query_settings -> Prims.bool) =
   fun s -> FStar_Compiler_Option.isSome s.query_hint
 let (get_hint_for :
   Prims.string ->
-    Prims.int -> FStar_Compiler_Util.hint FStar_Pervasives_Native.option)
+    Prims.int -> FStar_Compiler_Hints.hint FStar_Pervasives_Native.option)
   =
   fun qname ->
     fun qindex ->
@@ -522,8 +613,8 @@ let (get_hint_for :
             (fun uu___1 ->
                match uu___1 with
                | FStar_Pervasives_Native.Some hint when
-                   (hint.FStar_Compiler_Util.hint_name = qname) &&
-                     (hint.FStar_Compiler_Util.hint_index = qindex)
+                   (hint.FStar_Compiler_Hints.hint_name = qname) &&
+                     (hint.FStar_Compiler_Hints.hint_index = qindex)
                    -> FStar_Pervasives_Native.Some hint
                | uu___2 -> FStar_Pervasives_Native.None)
       | uu___1 -> FStar_Pervasives_Native.None
@@ -543,13 +634,15 @@ let (query_errors :
            | (msg, error_labels) ->
                let err =
                  let uu___2 =
-                   FStar_Compiler_List.map
-                     (fun uu___3 ->
-                        match uu___3 with
-                        | (uu___4, x, y) ->
-                            let uu___5 = FStar_Errors.get_ctx () in
-                            (FStar_Errors_Codes.Error_Z3SolverError, x, y,
-                              uu___5)) error_labels in
+                   FStar_Compiler_Effect.op_Bar_Greater error_labels
+                     (FStar_Compiler_List.map
+                        (fun uu___3 ->
+                           match uu___3 with
+                           | (uu___4, x, y) ->
+                               let uu___5 = FStar_Errors_Msg.mkmsg x in
+                               let uu___6 = FStar_Errors.get_ctx () in
+                               (FStar_Errors_Codes.Error_Z3SolverError,
+                                 uu___5, y, uu___6))) in
                  {
                    error_reason = msg;
                    error_fuel = (settings.query_fuel);
@@ -572,9 +665,15 @@ let (detail_hint_replay :
             let ask_z3 label_assumptions =
               let uu___1 =
                 with_fuel_and_diagnostics settings label_assumptions in
+              let uu___2 =
+                let uu___3 =
+                  FStar_Compiler_Util.string_of_int settings.query_index in
+                FStar_Compiler_Util.format2 "(%s, %s)" settings.query_name
+                  uu___3 in
               FStar_SMTEncoding_Z3.ask settings.query_range
-                (filter_assertions settings.query_env settings.query_hint)
-                settings.query_hash settings.query_all_labels uu___1
+                (filter_assertions settings.query_env
+                   FStar_Pervasives_Native.None settings.query_hint)
+                settings.query_hash settings.query_all_labels uu___1 uu___2
                 FStar_Pervasives_Native.None false in
             FStar_SMTEncoding_ErrorReporting.detail_errors true
               settings.query_env settings.query_all_labels ask_z3
@@ -589,9 +688,35 @@ let (find_localized_errors :
 let (errors_to_report : query_settings -> FStar_Errors.error Prims.list) =
   fun settings ->
     let format_smt_error msg =
-      FStar_Compiler_Util.format1
-        "SMT solver says:\n\t%s;\n\tNote: 'canceled' or 'resource limits reached' means the SMT query timed out, so you might want to increase the rlimit;\n\t'incomplete quantifiers' means Z3 could not prove the query, so try to spell out your proof out in greater detail, increase fuel or ifuel\n\t'unknown' means Z3 provided no further reason for the proof failing"
-        msg in
+      let d =
+        let uu___ = FStar_Pprint.doc_of_string "SMT solver says:" in
+        let uu___1 =
+          let uu___2 = FStar_Errors_Msg.sublist FStar_Pprint.empty msg in
+          let uu___3 =
+            let uu___4 =
+              let uu___5 = FStar_Pprint.doc_of_string "Note:" in
+              let uu___6 =
+                let uu___7 =
+                  let uu___8 =
+                    FStar_Errors_Msg.text
+                      "'canceled' or 'resource limits reached' means the SMT query timed out, so you might want to increase the rlimit" in
+                  let uu___9 =
+                    let uu___10 =
+                      FStar_Errors_Msg.text
+                        "'incomplete quantifiers' means Z3 could not prove the query, so try to spell out your proof out in greater detail, increase fuel or ifuel" in
+                    let uu___11 =
+                      let uu___12 =
+                        FStar_Errors_Msg.text
+                          "'unknown' means Z3 provided no further reason for the proof failing" in
+                      [uu___12] in
+                    uu___10 :: uu___11 in
+                  uu___8 :: uu___9 in
+                FStar_Errors_Msg.bulleted uu___7 in
+              FStar_Pprint.op_Hat_Hat uu___5 uu___6 in
+            FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline uu___4 in
+          FStar_Pprint.op_Hat_Hat uu___2 uu___3 in
+        FStar_Pprint.op_Hat_Hat uu___ uu___1 in
+      [d] in
     let basic_errors =
       let smt_error =
         let uu___ = FStar_Options.query_stats () in
@@ -599,14 +724,11 @@ let (errors_to_report : query_settings -> FStar_Errors.error Prims.list) =
         then
           let uu___1 =
             let uu___2 =
-              let uu___3 =
-                FStar_Compiler_Effect.op_Bar_Greater settings.query_errors
-                  (FStar_Compiler_List.map error_to_short_string) in
-              FStar_Compiler_Effect.op_Bar_Greater uu___3
-                (FStar_String.concat ";\n\t") in
-            FStar_Compiler_Effect.op_Bar_Greater uu___2 format_smt_error in
-          FStar_Compiler_Effect.op_Bar_Greater uu___1
-            (fun uu___2 -> FStar_Pervasives.Inr uu___2)
+              FStar_Compiler_Effect.op_Bar_Greater settings.query_errors
+                (FStar_Compiler_List.map error_to_short_string) in
+            FStar_Compiler_Effect.op_Bar_Greater uu___2
+              (FStar_Compiler_List.map FStar_Pprint.doc_of_string) in
+          FStar_Compiler_Effect.op_Bar_Greater uu___1 format_smt_error
         else
           (let uu___2 =
              FStar_Compiler_List.fold_left
@@ -635,22 +757,22 @@ let (errors_to_report : query_settings -> FStar_Errors.error Prims.list) =
                settings.query_errors in
            match uu___2 with
            | (incomplete_count, canceled_count, unknown_count) ->
-               FStar_Compiler_Effect.op_Bar_Greater
-                 (match (incomplete_count, canceled_count, unknown_count)
-                  with
-                  | (uu___3, uu___4, uu___5) when
-                      ((uu___4 = Prims.int_zero) && (uu___5 = Prims.int_zero))
-                        && (incomplete_count > Prims.int_zero)
-                      ->
+               (match (incomplete_count, canceled_count, unknown_count) with
+                | (uu___3, uu___4, uu___5) when
+                    ((uu___4 = Prims.int_zero) && (uu___5 = Prims.int_zero))
+                      && (incomplete_count > Prims.int_zero)
+                    ->
+                    FStar_Errors_Msg.mkmsg
                       "The SMT solver could not prove the query. Use --query_stats for more details."
-                  | (uu___3, uu___4, uu___5) when
-                      ((uu___3 = Prims.int_zero) && (uu___5 = Prims.int_zero))
-                        && (canceled_count > Prims.int_zero)
-                      ->
+                | (uu___3, uu___4, uu___5) when
+                    ((uu___3 = Prims.int_zero) && (uu___5 = Prims.int_zero))
+                      && (canceled_count > Prims.int_zero)
+                    ->
+                    FStar_Errors_Msg.mkmsg
                       "The SMT query timed out, you might want to increase the rlimit"
-                  | (uu___3, uu___4, uu___5) ->
-                      "Try with --query_stats to get more details")
-                 (fun uu___3 -> FStar_Pervasives.Inl uu___3)) in
+                | (uu___3, uu___4, uu___5) ->
+                    FStar_Errors_Msg.mkmsg
+                      "Try with --query_stats to get more details")) in
       let uu___ =
         let uu___1 = find_localized_errors settings.query_errors in
         (uu___1, (settings.query_all_labels)) in
@@ -661,11 +783,12 @@ let (errors_to_report : query_settings -> FStar_Errors.error Prims.list) =
       | (FStar_Pervasives_Native.None, (uu___1, msg, rng)::[]) ->
           let uu___2 =
             let uu___3 =
-              let uu___4 = FStar_Errors.get_ctx () in
-              (FStar_Errors_Codes.Error_Z3SolverError, msg, rng, uu___4) in
+              let uu___4 = FStar_Errors_Msg.mkmsg msg in
+              let uu___5 = FStar_Errors.get_ctx () in
+              (FStar_Errors_Codes.Error_Z3SolverError, uu___4, rng, uu___5) in
             [uu___3] in
           FStar_TypeChecker_Err.errors_smt_detail settings.query_env uu___2
-            (FStar_Pervasives.Inl "")
+            []
       | (FStar_Pervasives_Native.None, uu___1) ->
           if settings.query_can_be_split_and_retried
           then FStar_Compiler_Effect.raise SplitQueryAndRetry
@@ -696,8 +819,8 @@ let (errors_to_report : query_settings -> FStar_Errors.error Prims.list) =
                      then
                        let uu___6 =
                          FStar_TypeChecker_Env.get_range settings.query_env in
-                       FStar_TypeChecker_Err.log_issue settings.query_env
-                         uu___6
+                       FStar_TypeChecker_Err.log_issue_text
+                         settings.query_env uu___6
                          (FStar_Errors_Codes.Warning_SplitAndRetryQueries,
                            "The verification condition was to be split into several atomic sub-goals, but this query has multiple sub-goals---the error report may be inaccurate")
                      else ());
@@ -710,13 +833,13 @@ let (errors_to_report : query_settings -> FStar_Errors.error Prims.list) =
                      | (uu___4, msg, rng) ->
                          let uu___5 =
                            let uu___6 =
-                             let uu___7 = FStar_Errors.get_ctx () in
-                             (FStar_Errors_Codes.Error_Z3SolverError, msg,
-                               rng, uu___7) in
+                             let uu___7 = FStar_Errors_Msg.mkmsg msg in
+                             let uu___8 = FStar_Errors.get_ctx () in
+                             (FStar_Errors_Codes.Error_Z3SolverError, uu___7,
+                               rng, uu___8) in
                            [uu___6] in
                          FStar_TypeChecker_Err.errors_smt_detail
-                           settings.query_env uu___5
-                           (FStar_Pervasives.Inl "")))) in
+                           settings.query_env uu___5 []))) in
     (let uu___ = FStar_Options.detail_errors () in
      if uu___
      then
@@ -744,10 +867,14 @@ let (errors_to_report : query_settings -> FStar_Errors.error Prims.list) =
        let ask_z3 label_assumptions =
          let uu___1 =
            with_fuel_and_diagnostics initial_fuel label_assumptions in
+         let uu___2 =
+           let uu___3 =
+             FStar_Compiler_Util.string_of_int settings.query_index in
+           FStar_Compiler_Util.format2 "(%s, %s)" settings.query_name uu___3 in
          FStar_SMTEncoding_Z3.ask settings.query_range
            (filter_facts_without_core settings.query_env) settings.query_hash
-           settings.query_all_labels uu___1 FStar_Pervasives_Native.None
-           false in
+           settings.query_all_labels uu___1 uu___2
+           FStar_Pervasives_Native.None false in
        FStar_SMTEncoding_ErrorReporting.detail_errors false
          settings.query_env settings.query_all_labels ask_z3
      else ());
@@ -756,6 +883,7 @@ let (report_errors : query_settings -> unit) =
   fun qry_settings ->
     let uu___ = errors_to_report qry_settings in
     FStar_Errors.add_errors uu___
+let (rlimit_conversion_factor : Prims.int) = (Prims.parse_int "544656")
 let (query_info : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
   fun settings ->
     fun z3result ->
@@ -888,17 +1016,21 @@ let (query_info : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
               | FStar_Pervasives_Native.Some s -> Prims.op_Hat "@" s in
             let uu___2 =
               match z3result.FStar_SMTEncoding_Z3.z3result_status with
-              | FStar_SMTEncoding_Z3.UNSAT core -> ("succeeded", core)
+              | FStar_SMTEncoding_Z3.UNSAT core ->
+                  let uu___3 = FStar_Compiler_Util.colorize_green "succeeded" in
+                  (uu___3, core)
               | uu___3 ->
-                  ((Prims.op_Hat "failed {reason-unknown="
-                      (Prims.op_Hat status_string "}")),
-                    FStar_Pervasives_Native.None) in
+                  let uu___4 =
+                    FStar_Compiler_Util.colorize_red
+                      (Prims.op_Hat "failed {reason-unknown="
+                         (Prims.op_Hat status_string "}")) in
+                  (uu___4, FStar_Pervasives_Native.None) in
             (match uu___2 with
              | (tag, core) ->
                  let range =
                    let uu___3 =
                      let uu___4 =
-                       FStar_Compiler_Range.string_of_range
+                       FStar_Compiler_Range_Ops.string_of_range
                          settings.query_range in
                      Prims.op_Hat uu___4 (Prims.op_Hat at_log_file ")") in
                    Prims.op_Hat "(" uu___3 in
@@ -944,7 +1076,8 @@ let (query_info : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
                                    let uu___16 =
                                      let uu___17 =
                                        FStar_Compiler_Util.string_of_int
-                                         settings.query_rlimit in
+                                         (settings.query_rlimit /
+                                            rlimit_conversion_factor) in
                                      [uu___17; stats] in
                                    uu___15 :: uu___16 in
                                  uu___13 :: uu___14 in
@@ -972,7 +1105,7 @@ let (query_info : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
                                 (FStar_Errors_Codes.Warning_HitReplayFailed,
                                   (Prims.op_Hat tag1 msg))))))
       else ()
-let (store_hint : FStar_Compiler_Util.hint -> unit) =
+let (store_hint : FStar_Compiler_Hints.hint -> unit) =
   fun hint ->
     let uu___ = FStar_Compiler_Effect.op_Bang recorded_hints in
     match uu___ with
@@ -992,13 +1125,13 @@ let (record_hint : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
       else
         (let mk_hint core =
            {
-             FStar_Compiler_Util.hint_name = (settings.query_name);
-             FStar_Compiler_Util.hint_index = (settings.query_index);
-             FStar_Compiler_Util.fuel = (settings.query_fuel);
-             FStar_Compiler_Util.ifuel = (settings.query_ifuel);
-             FStar_Compiler_Util.unsat_core = core;
-             FStar_Compiler_Util.query_elapsed_time = Prims.int_zero;
-             FStar_Compiler_Util.hash =
+             FStar_Compiler_Hints.hint_name = (settings.query_name);
+             FStar_Compiler_Hints.hint_index = (settings.query_index);
+             FStar_Compiler_Hints.fuel = (settings.query_fuel);
+             FStar_Compiler_Hints.ifuel = (settings.query_ifuel);
+             FStar_Compiler_Hints.unsat_core = core;
+             FStar_Compiler_Hints.query_elapsed_time = Prims.int_zero;
+             FStar_Compiler_Hints.hash =
                (match z3result.FStar_SMTEncoding_Z3.z3result_status with
                 | FStar_SMTEncoding_Z3.UNSAT core1 ->
                     z3result.FStar_SMTEncoding_Z3.z3result_query_hash
@@ -1150,7 +1283,7 @@ let (make_solver_configs :
             FStar_SMTEncoding_Term.decl ->
               FStar_Syntax_Syntax.term ->
                 FStar_SMTEncoding_Term.decl Prims.list ->
-                  (query_settings Prims.list * FStar_Compiler_Util.hint
+                  (query_settings Prims.list * FStar_Compiler_Hints.hint
                     FStar_Pervasives_Native.option))
   =
   fun can_split ->
@@ -1165,19 +1298,20 @@ let (make_solver_configs :
                     let uu___1 =
                       match env.FStar_TypeChecker_Env.qtbl_name_and_index
                       with
-                      | (uu___2, FStar_Pervasives_Native.None) ->
+                      | (FStar_Pervasives_Native.None, uu___2) ->
                           failwith "No query name set!"
-                      | (uu___2, FStar_Pervasives_Native.Some (q, n)) ->
+                      | (FStar_Pervasives_Native.Some (q, _typ, n), uu___2)
+                          ->
                           let uu___3 = FStar_Ident.string_of_lid q in
                           (uu___3, n) in
                     match uu___1 with
                     | (qname, index) ->
                         let rlimit =
-                          let uu___2 = FStar_Options.z3_rlimit_factor () in
-                          let uu___3 =
+                          let uu___2 =
+                            let uu___3 = FStar_Options.z3_rlimit_factor () in
                             let uu___4 = FStar_Options.z3_rlimit () in
-                            uu___4 * (Prims.parse_int "544656") in
-                          uu___2 * uu___3 in
+                            FStar_Mul.op_Star uu___3 uu___4 in
+                          FStar_Mul.op_Star uu___2 rlimit_conversion_factor in
                         let next_hint = get_hint_for qname index in
                         let default_settings =
                           let uu___2 = FStar_TypeChecker_Env.get_range env in
@@ -1201,14 +1335,14 @@ let (make_solver_configs :
                                | FStar_Pervasives_Native.None ->
                                    FStar_Pervasives_Native.None
                                | FStar_Pervasives_Native.Some
-                                   { FStar_Compiler_Util.hint_name = uu___5;
-                                     FStar_Compiler_Util.hint_index = uu___6;
-                                     FStar_Compiler_Util.fuel = uu___7;
-                                     FStar_Compiler_Util.ifuel = uu___8;
-                                     FStar_Compiler_Util.unsat_core = uu___9;
-                                     FStar_Compiler_Util.query_elapsed_time =
-                                       uu___10;
-                                     FStar_Compiler_Util.hash = h;_}
+                                   { FStar_Compiler_Hints.hint_name = uu___5;
+                                     FStar_Compiler_Hints.hint_index = uu___6;
+                                     FStar_Compiler_Hints.fuel = uu___7;
+                                     FStar_Compiler_Hints.ifuel = uu___8;
+                                     FStar_Compiler_Hints.unsat_core = uu___9;
+                                     FStar_Compiler_Hints.query_elapsed_time
+                                       = uu___10;
+                                     FStar_Compiler_Hints.hash = h;_}
                                    -> h);
                             query_can_be_split_and_retried = can_split;
                             query_term
@@ -1227,14 +1361,15 @@ let (make_solver_configs :
                             FStar_Compiler_Effect.op_Bar_Greater next_hint
                               FStar_Compiler_Util.must in
                           match uu___2 with
-                          | { FStar_Compiler_Util.hint_name = uu___3;
-                              FStar_Compiler_Util.hint_index = uu___4;
-                              FStar_Compiler_Util.fuel = i;
-                              FStar_Compiler_Util.ifuel = j;
-                              FStar_Compiler_Util.unsat_core =
+                          | { FStar_Compiler_Hints.hint_name = uu___3;
+                              FStar_Compiler_Hints.hint_index = uu___4;
+                              FStar_Compiler_Hints.fuel = i;
+                              FStar_Compiler_Hints.ifuel = j;
+                              FStar_Compiler_Hints.unsat_core =
                                 FStar_Pervasives_Native.Some core;
-                              FStar_Compiler_Util.query_elapsed_time = uu___5;
-                              FStar_Compiler_Util.hash = h;_} ->
+                              FStar_Compiler_Hints.query_elapsed_time =
+                                uu___5;
+                              FStar_Compiler_Hints.hash = h;_} ->
                               [{
                                  query_env = (default_settings.query_env);
                                  query_decl = (default_settings.query_decl);
@@ -1382,11 +1517,15 @@ let (__ask_solver :
          if uu___1 then FStar_SMTEncoding_Z3.refresh () else ());
         (let uu___1 = with_fuel_and_diagnostics config [] in
          let uu___2 =
-           let uu___3 = FStar_SMTEncoding_Z3.mk_fresh_scope () in
-           FStar_Pervasives_Native.Some uu___3 in
+           let uu___3 = FStar_Compiler_Util.string_of_int config.query_index in
+           FStar_Compiler_Util.format2 "(%s, %s)" config.query_name uu___3 in
+         let uu___3 =
+           let uu___4 = FStar_SMTEncoding_Z3.mk_fresh_scope () in
+           FStar_Pervasives_Native.Some uu___4 in
          FStar_SMTEncoding_Z3.ask config.query_range
-           (filter_assertions config.query_env config.query_hint)
-           config.query_hash config.query_all_labels uu___1 uu___2
+           (filter_assertions config.query_env
+              (FStar_Pervasives_Native.Some config) config.query_hint)
+           config.query_hash config.query_all_labels uu___1 uu___2 uu___3
            (used_hint config)) in
       fold_queries configs check_one_config process_result
 let (ask_solver_quake :
@@ -1650,32 +1789,41 @@ let (report : FStar_TypeChecker_Env.env -> query_settings -> answer -> unit)
                              then
                                let uu___2 =
                                  let uu___3 =
-                                   FStar_Compiler_Util.string_of_int n in
-                                 FStar_Compiler_Util.format1 " (%s times)"
-                                   uu___3 in
-                               Prims.op_Hat m uu___2
+                                   let uu___4 =
+                                     let uu___5 =
+                                       FStar_Compiler_Util.string_of_int n in
+                                     FStar_Compiler_Util.format1
+                                       "Repeated %s times" uu___5 in
+                                   FStar_Pprint.doc_of_string uu___4 in
+                                 [uu___3] in
+                               FStar_Compiler_List.op_At m uu___2
                              else m in
                            (e, m1, r, ctx))) in
              (FStar_Errors.add_errors errs2;
               if quaking
               then
                 (let rng =
-                   match FStar_Pervasives_Native.snd
+                   match FStar_Pervasives_Native.fst
                            env.FStar_TypeChecker_Env.qtbl_name_and_index
                    with
-                   | FStar_Pervasives_Native.Some (l, uu___2) ->
+                   | FStar_Pervasives_Native.Some (l, uu___2, uu___3) ->
                        FStar_Ident.range_of_lid l
-                   | uu___2 -> FStar_Compiler_Range.dummyRange in
+                   | uu___2 -> FStar_Compiler_Range_Type.dummyRange in
                  let uu___2 =
                    let uu___3 =
-                     let uu___4 = FStar_Compiler_Util.string_of_int nsuccess in
-                     let uu___5 = FStar_Compiler_Util.string_of_int total_ran in
-                     let uu___6 = FStar_Compiler_Util.string_of_int lo in
-                     let uu___7 = FStar_Compiler_Util.string_of_int hi in
-                     FStar_Compiler_Util.format6
-                       "Query %s failed the quake test, %s out of %s attempts succeded, but the threshold was %s out of %s%s"
-                       name uu___4 uu___5 uu___6 uu___7
-                       (if total_ran < hi then " (early abort)" else "") in
+                     let uu___4 =
+                       let uu___5 =
+                         FStar_Compiler_Util.string_of_int nsuccess in
+                       let uu___6 =
+                         FStar_Compiler_Util.string_of_int total_ran in
+                       let uu___7 = FStar_Compiler_Util.string_of_int lo in
+                       let uu___8 = FStar_Compiler_Util.string_of_int hi in
+                       FStar_Compiler_Util.format6
+                         "Query %s failed the quake test, %s out of %s attempts succeded, but the threshold was %s out of %s%s"
+                         name uu___5 uu___6 uu___7 uu___8
+                         (if total_ran < hi then " (early abort)" else "") in
+                     FStar_Compiler_Effect.op_Less_Bar FStar_Errors_Msg.mkmsg
+                       uu___4 in
                    (FStar_Errors_Codes.Error_QuakeFailed, uu___3) in
                  FStar_TypeChecker_Err.log_issue env rng uu___2)
               else ())
@@ -1709,35 +1857,46 @@ type solver_cfg =
   smtopt: Prims.string Prims.list ;
   facts: (Prims.string Prims.list * Prims.bool) Prims.list ;
   valid_intro: Prims.bool ;
-  valid_elim: Prims.bool }
+  valid_elim: Prims.bool ;
+  z3version: Prims.string }
 let (__proj__Mksolver_cfg__item__seed : solver_cfg -> Prims.int) =
   fun projectee ->
     match projectee with
-    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim;_} -> seed
+    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;_} ->
+        seed
 let (__proj__Mksolver_cfg__item__cliopt :
   solver_cfg -> Prims.string Prims.list) =
   fun projectee ->
     match projectee with
-    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim;_} -> cliopt
+    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;_} ->
+        cliopt
 let (__proj__Mksolver_cfg__item__smtopt :
   solver_cfg -> Prims.string Prims.list) =
   fun projectee ->
     match projectee with
-    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim;_} -> smtopt
+    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;_} ->
+        smtopt
 let (__proj__Mksolver_cfg__item__facts :
   solver_cfg -> (Prims.string Prims.list * Prims.bool) Prims.list) =
   fun projectee ->
     match projectee with
-    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim;_} -> facts
+    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;_} ->
+        facts
 let (__proj__Mksolver_cfg__item__valid_intro : solver_cfg -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim;_} ->
+    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;_} ->
         valid_intro
 let (__proj__Mksolver_cfg__item__valid_elim : solver_cfg -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim;_} -> valid_elim
+    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;_} ->
+        valid_elim
+let (__proj__Mksolver_cfg__item__z3version : solver_cfg -> Prims.string) =
+  fun projectee ->
+    match projectee with
+    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;_} ->
+        z3version
 let (_last_cfg :
   solver_cfg FStar_Pervasives_Native.option FStar_Compiler_Effect.ref) =
   FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None
@@ -1748,13 +1907,15 @@ let (get_cfg : FStar_TypeChecker_Env.env -> solver_cfg) =
     let uu___2 = FStar_Options.z3_smtopt () in
     let uu___3 = FStar_Options.smtencoding_valid_intro () in
     let uu___4 = FStar_Options.smtencoding_valid_elim () in
+    let uu___5 = FStar_Options.z3_version () in
     {
       seed = uu___;
       cliopt = uu___1;
       smtopt = uu___2;
       facts = (env.FStar_TypeChecker_Env.proof_ns);
       valid_intro = uu___3;
-      valid_elim = uu___4
+      valid_elim = uu___4;
+      z3version = uu___5
     }
 let (save_cfg : FStar_TypeChecker_Env.env -> unit) =
   fun env ->
@@ -1795,7 +1956,7 @@ let (encode_and_ask :
                let uu___3 =
                  let uu___4 = FStar_TypeChecker_Env.get_range tcenv in
                  FStar_Compiler_Effect.op_Less_Bar
-                   FStar_Compiler_Range.string_of_range uu___4 in
+                   FStar_Compiler_Range_Ops.string_of_range uu___4 in
                FStar_Compiler_Util.format1 "Starting query at %s" uu___3 in
              FStar_SMTEncoding_Encode.push uu___2);
             (let pop uu___2 =
@@ -1803,7 +1964,7 @@ let (encode_and_ask :
                  let uu___4 =
                    let uu___5 = FStar_TypeChecker_Env.get_range tcenv in
                    FStar_Compiler_Effect.op_Less_Bar
-                     FStar_Compiler_Range.string_of_range uu___5 in
+                     FStar_Compiler_Range_Ops.string_of_range uu___5 in
                  FStar_Compiler_Util.format1 "Ending query at %s" uu___4 in
                FStar_SMTEncoding_Encode.pop uu___3 in
              finally pop
@@ -1888,12 +2049,15 @@ let (do_solve :
                       let uu___3 =
                         let uu___4 =
                           let uu___5 =
-                            FStar_Compiler_List.map
-                              FStar_Pervasives_Native.fst names in
-                          FStar_String.concat "," uu___5 in
-                        FStar_Compiler_Util.format1
-                          "Could not encode the query since F* does not support precise smtencoding of inner let-recs yet (in this case %s)"
-                          uu___4 in
+                            let uu___6 =
+                              FStar_Compiler_List.map
+                                FStar_Pervasives_Native.fst names in
+                            FStar_String.concat "," uu___6 in
+                          FStar_Compiler_Util.format1
+                            "Could not encode the query since F* does not support precise smtencoding of inner let-recs yet (in this case %s)"
+                            uu___5 in
+                        FStar_Compiler_Effect.op_Less_Bar
+                          FStar_Errors_Msg.mkmsg uu___4 in
                       (FStar_Errors_Codes.Error_NonTopRecFunctionNotFullyEncoded,
                         uu___3) in
                     FStar_TypeChecker_Err.log_issue tcenv
@@ -1917,28 +2081,47 @@ let (split_and_solve :
     fun use_env_msg ->
       fun tcenv ->
         fun q ->
-          let goals =
-            let uu___ = FStar_TypeChecker_Env.split_smt_query tcenv q in
-            match uu___ with
-            | FStar_Pervasives_Native.None ->
-                failwith "Impossible: split_query callback is not set"
-            | FStar_Pervasives_Native.Some goals1 -> goals1 in
-          FStar_Compiler_Effect.op_Bar_Greater goals
-            (FStar_Compiler_List.iter
-               (fun uu___1 ->
-                  match uu___1 with
-                  | (env, goal) ->
-                      do_solve false retrying use_env_msg env goal));
-          (let uu___1 =
-             (let uu___2 = FStar_Errors.get_err_count () in
-              uu___2 = Prims.int_zero) && retrying in
+          (let uu___1 = FStar_Options.query_stats () in
            if uu___1
            then
-             FStar_TypeChecker_Err.log_issue tcenv
-               tcenv.FStar_TypeChecker_Env.range
-               (FStar_Errors_Codes.Warning_SplitAndRetryQueries,
-                 "The verification condition succeeded after splitting it to localize potential errors, although the original non-split verification condition failed. If you want to rely on splitting queries for verifying your program please use the '--split_queries always' option rather than relying on it implicitly.")
-           else ())
+             let range =
+               let uu___2 =
+                 let uu___3 =
+                   let uu___4 = FStar_TypeChecker_Env.get_range tcenv in
+                   FStar_Compiler_Range_Ops.string_of_range uu___4 in
+                 Prims.op_Hat uu___3 ")" in
+               Prims.op_Hat "(" uu___2 in
+             FStar_Compiler_Util.print2
+               "%s\tQuery-stats splitting query because %s\n" range
+               (if retrying
+                then "retrying failed query"
+                else "--split_queries is always")
+           else ());
+          (let goals =
+             let uu___1 = FStar_TypeChecker_Env.split_smt_query tcenv q in
+             match uu___1 with
+             | FStar_Pervasives_Native.None ->
+                 failwith "Impossible: split_query callback is not set"
+             | FStar_Pervasives_Native.Some goals1 -> goals1 in
+           FStar_Compiler_Effect.op_Bar_Greater goals
+             (FStar_Compiler_List.iter
+                (fun uu___2 ->
+                   match uu___2 with
+                   | (env, goal) ->
+                       do_solve false retrying use_env_msg env goal));
+           (let uu___2 =
+              (let uu___3 = FStar_Errors.get_err_count () in
+               uu___3 = Prims.int_zero) && retrying in
+            if uu___2
+            then
+              let uu___3 =
+                let uu___4 =
+                  FStar_Compiler_Effect.op_Less_Bar FStar_Errors_Msg.mkmsg
+                    "The verification condition succeeded after splitting it to localize potential errors, although the original non-split verification condition failed. If you want to rely on splitting queries for verifying your program please use the '--split_queries always' option rather than relying on it implicitly." in
+                (FStar_Errors_Codes.Warning_SplitAndRetryQueries, uu___4) in
+              FStar_TypeChecker_Err.log_issue tcenv
+                tcenv.FStar_TypeChecker_Env.range uu___3
+            else ()))
 let disable_quake_for : 'a . (unit -> 'a) -> 'a =
   fun f ->
     FStar_Options.with_saved_options
@@ -1953,22 +2136,28 @@ let (do_solve_maybe_split :
   fun use_env_msg ->
     fun tcenv ->
       fun q ->
-        let uu___ = FStar_Options.split_queries () in
-        match uu___ with
-        | FStar_Options.No -> do_solve false false use_env_msg tcenv q
-        | FStar_Options.OnFailure ->
-            let can_split =
-              let uu___1 =
-                let uu___2 = FStar_Options.quake_hi () in
-                uu___2 > Prims.int_one in
-              Prims.op_Negation uu___1 in
-            (try
-               (fun uu___1 ->
-                  match () with
-                  | () -> do_solve can_split false use_env_msg tcenv q) ()
-             with
-             | SplitQueryAndRetry -> split_and_solve true use_env_msg tcenv q)
-        | FStar_Options.Always -> split_and_solve false use_env_msg tcenv q
+        let uu___ = FStar_Options.admit_smt_queries () in
+        if uu___
+        then ()
+        else
+          (let uu___2 = FStar_Options.split_queries () in
+           match uu___2 with
+           | FStar_Options.No -> do_solve false false use_env_msg tcenv q
+           | FStar_Options.OnFailure ->
+               let can_split =
+                 let uu___3 =
+                   let uu___4 = FStar_Options.quake_hi () in
+                   uu___4 > Prims.int_one in
+                 Prims.op_Negation uu___3 in
+               (try
+                  (fun uu___3 ->
+                     match () with
+                     | () -> do_solve can_split false use_env_msg tcenv q) ()
+                with
+                | SplitQueryAndRetry ->
+                    split_and_solve true use_env_msg tcenv q)
+           | FStar_Options.Always ->
+               split_and_solve false use_env_msg tcenv q)
 let (solve :
   (unit -> Prims.string) FStar_Pervasives_Native.option ->
     FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> unit)
@@ -1981,10 +2170,16 @@ let (solve :
         then
           let uu___1 =
             let uu___2 =
-              let uu___3 = FStar_Syntax_Print.term_to_string q in
-              FStar_Compiler_Util.format1
-                "Q = %s\nA query could not be solved internally, and --no_smt was given"
-                uu___3 in
+              let uu___3 =
+                FStar_Errors_Msg.text
+                  "A query could not be solved internally, and --no_smt was given." in
+              let uu___4 =
+                let uu___5 =
+                  let uu___6 = FStar_Errors_Msg.text "Query = " in
+                  let uu___7 = FStar_Syntax_Print_Pretty.term_to_doc q in
+                  FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                [uu___5] in
+              uu___3 :: uu___4 in
             (FStar_Errors_Codes.Error_NoSMTButNeeded, uu___2) in
           FStar_TypeChecker_Err.log_issue tcenv
             tcenv.FStar_TypeChecker_Env.range uu___1
@@ -2046,7 +2241,7 @@ let (solver : FStar_TypeChecker_Env.solver_t) =
     FStar_TypeChecker_Env.handle_smt_goal = (fun e -> fun g -> [(e, g)]);
     FStar_TypeChecker_Env.solve = solve;
     FStar_TypeChecker_Env.solve_sync = solve_sync_bool;
-    FStar_TypeChecker_Env.finish = FStar_SMTEncoding_Z3.finish;
+    FStar_TypeChecker_Env.finish = (fun uu___ -> ());
     FStar_TypeChecker_Env.refresh = FStar_SMTEncoding_Z3.refresh
   }
 let (dummy : FStar_TypeChecker_Env.solver_t) =

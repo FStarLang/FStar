@@ -94,6 +94,7 @@ type primitive_step = {
     auto_reflect:option int;
     strong_reduction_ok:bool;
     requires_binder_substitution:bool;
+    renorm_after:bool; // whether the result of this primop must possibly undergo more normalization
     interpretation:(psc -> FStar.Syntax.Embeddings.norm_cb -> universes -> args -> option term);
     interpretation_nbe:(NBE.nbe_cbs -> universes -> NBE.args -> option NBE.t)
 }
@@ -122,6 +123,7 @@ type cfg = {
      memoize_lazy : bool;
      normalize_pure_lets: bool;
      reifying : bool;
+     compat_memo_ignore_cfg:bool; (* See #2155, #2161, #2986 *)
 }
 
 (* Profiling primitive operators *)
@@ -156,4 +158,4 @@ val config: list step -> Env.env -> cfg
 
 val should_reduce_local_let : cfg -> letbinding -> bool
 
-val translate_norm_steps: list EMB.norm_step -> list Env.step
+val translate_norm_steps: list Pervasives.norm_step -> list Env.step

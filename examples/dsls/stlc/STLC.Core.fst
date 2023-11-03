@@ -1,6 +1,6 @@
 module STLC.Core
-module T = FStar.Tactics
-module R = FStar.Reflection
+module T = FStar.Tactics.V2
+module R = FStar.Reflection.V2
 module L = FStar.List.Tot
 module RT = FStar.Reflection.Typing
 
@@ -148,33 +148,23 @@ let rec fresh (e:list (var & 'a))
   : var
   = match e with
     | [] -> 0
-    | hd :: tl -> 
+    | hd :: tl ->
       max (fresh tl) (fst hd) + 1
+
+let _ = assert (fresh [1,();2,();3,();4,()] == 8) // odd.. but ok
 
 let rec fresh_not_mem (e:list (var & 'a)) (elt: (var & 'a))
   : Lemma (ensures L.memP elt e ==> fresh e > fst elt)
   = match e with
     | [] -> ()
     | hd :: tl -> fresh_not_mem tl elt
-  
-let rec lookup_mem (e:list (var & 'a)) (x:var)
+
+let lookup_mem (e:list (var & 'a)) (x:var)
   : Lemma
     (requires Some? (lookup e x))
     (ensures exists elt. L.memP elt e /\ fst elt == x)
-  = match e with
-    | [] -> ()
-    | hd :: tl -> 
-      match lookup tl x with
-      | None -> assert (L.memP hd e)
-      | _ -> 
-        lookup_mem tl x;
-        eliminate exists elt. L.memP elt tl /\ fst elt == x
-        returns _
-        with _ . ( 
-          introduce exists elt. L.memP elt e /\ fst elt == x
-          with elt
-          and ()
-        )
+  = let Some y = lookup e x in
+    List.Tot.Properties.assoc_memP_some x y e
 
 let fresh_is_fresh (e:list (var & 'a))
   : Lemma (None? (lookup e (fresh e)))
@@ -301,7 +291,7 @@ let rec elab_ty (t:stlc_ty)
 
       R.pack_ln 
         (R.Tv_Arrow
-          (RT.mk_binder RT.pp_name_default 0 t1 R.Q_Explicit)
+          (RT.mk_simple_binder RT.pp_name_default t1)
           (R.pack_comp (C_Total t2)))
   
 let rec elab_exp (e:stlc_exp)
@@ -312,18 +302,17 @@ let rec elab_exp (e:stlc_exp)
       pack_ln (Tv_Const C_Unit)
 
     | EBVar n -> 
-      let bv = R.pack_bv (RT.make_bv n tun) in
+      let bv = R.pack_bv (RT.make_bv n) in
       R.pack_ln (Tv_BVar bv)
       
     | EVar n ->
-      // tun because type does not matter at a use site
-      let bv = R.pack_bv (RT.make_bv n tun) in
+      let bv = R.pack_namedv (RT.make_namedv n) in
       R.pack_ln (Tv_Var bv)
 
     | ELam t e ->
       let t = elab_ty t in
       let e = elab_exp e in
-      R.pack_ln (Tv_Abs (RT.mk_binder RT.pp_name_default 0 t R.Q_Explicit) e)
+      R.pack_ln (Tv_Abs (RT.mk_simple_binder RT.pp_name_default t) e)
              
     | EApp e1 e2 ->
       let e1 = elab_exp e1 in
@@ -350,33 +339,33 @@ let rec extend_env_l_lookup_bvar (g:R.env) (sg:stlc_env) (x:var)
 open FStar.Calc
 
 //key lemma about STLC types: Their elaborations are closed
-let rec stlc_types_are_closed_core (ty:stlc_ty) (x:RT.open_or_close) (n:nat)
-  : Lemma (ensures RT.open_or_close_term' (elab_ty ty) x n == elab_ty ty)
+let rec stlc_types_are_closed_core (ty:stlc_ty) (ss:RT.subst)
+  : Lemma (ensures RT.subst_term (elab_ty ty) ss == elab_ty ty)
           (decreases ty)
-          [SMTPat (RT.open_or_close_term' (elab_ty ty) x n)]
+          [SMTPat (RT.subst_term (elab_ty ty) ss)]
 
   = match ty with
     | TUnit -> ()
     | TArrow t1 t2 ->
-      stlc_types_are_closed_core t1 x n;
-      stlc_types_are_closed_core t2 x (n + 1)
+      stlc_types_are_closed_core t1 ss;
+      stlc_types_are_closed_core t2 (RT.shift_subst ss)
 
 let stlc_types_are_closed1 (ty:stlc_ty) (v:R.term)
   : Lemma (RT.open_with (elab_ty ty) v == elab_ty ty)
           [SMTPat (RT.open_with (elab_ty ty) v)]
-  = stlc_types_are_closed_core ty (RT.OpenWith v) 0;
+  = stlc_types_are_closed_core ty [ RT.DT 0 v ];
     RT.open_with_spec (elab_ty ty) v
 
 let stlc_types_are_closed2 (ty:stlc_ty) (x:R.var)
   : Lemma (RT.close_term (elab_ty ty) x == elab_ty ty)
           [SMTPat (RT.close_term (elab_ty ty) x)]
-  = stlc_types_are_closed_core ty (RT.CloseVar x) 0;
+  = stlc_types_are_closed_core ty [ RT.ND x 0 ];
     RT.close_term_spec (elab_ty ty) x
 
 let stlc_types_are_closed3 (ty:stlc_ty) (x:R.var)
   : Lemma (RT.open_term (elab_ty ty) x == elab_ty ty)
           [SMTPat (RT.open_term (elab_ty ty) x)]
-  = stlc_types_are_closed_core ty (RT.OpenWith (RT.var_as_term x)) 0;
+  = stlc_types_are_closed_core ty [ RT.DT 0 (RT.var_as_term x) ];
     RT.open_term_spec (elab_ty ty) x
 
 let rec elab_ty_freevars (ty:stlc_ty)
@@ -389,7 +378,7 @@ let rec elab_ty_freevars (ty:stlc_ty)
       
 let rec elab_open_commute' (e:stlc_exp) (x:var) (n:nat)
   : Lemma (ensures
-              RT.open_or_close_term' (elab_exp e) (RT.open_with_var x) n ==
+              RT.subst_term (elab_exp e) (RT.open_with_var x n) ==
               elab_exp (open_exp' e x n))
           (decreases e)
   = match e with
@@ -405,15 +394,14 @@ let rec elab_open_commute' (e:stlc_exp) (x:var) (n:nat)
       (==) {}
         elab_exp (ELam t (open_exp' e x (n + 1)));      
       (==) {  }
-        R.(pack_ln (Tv_Abs (RT.as_binder 0 (elab_ty t)) (elab_exp (open_exp' e x (n + 1)))));
+        R.(pack_ln (Tv_Abs (RT.mk_simple_binder RT.pp_name_default (elab_ty t)) (elab_exp (open_exp' e x (n + 1)))));
       (==) { elab_open_commute' e x (n + 1) } 
-        R.(pack_ln (Tv_Abs (RT.as_binder 0 (elab_ty t))
-                           (RT.open_or_close_term' (elab_exp e) RT.(open_with_var x) (n + 1))));
-      (==) { stlc_types_are_closed_core t (RT.open_with_var x) n }
-        RT.open_or_close_term'
-          R.(pack_ln (Tv_Abs (RT.as_binder 0 (elab_ty t)) (elab_exp e)))
-          RT.(open_with_var x)
-          n;
+        R.(pack_ln (Tv_Abs (RT.mk_simple_binder RT.pp_name_default (elab_ty t))
+                           (RT.subst_term (elab_exp e) RT.(open_with_var x (n + 1)))));
+      (==) { stlc_types_are_closed_core t (RT.open_with_var x n) }
+        RT.subst_term
+          R.(pack_ln (Tv_Abs (RT.mk_simple_binder RT.pp_name_default (elab_ty t)) (elab_exp e)))
+          RT.(open_with_var x n);
       }
 
 let elab_open_commute (e:stlc_exp) (x:var)
@@ -435,7 +423,7 @@ let rec extend_env_l_lookup_fvar (g:R.env) (sg:stlc_env) (fv:R.fv)
 let rec elab_ty_soundness (g:RT.fstar_top_env)
                           (sg:stlc_env)
                           (t:stlc_ty)
-  : GTot (RT.typing (extend_env_l g sg) (elab_ty t) (RT.tm_type RT.u_zero))
+  : GTot (RT.tot_typing (extend_env_l g sg) (elab_ty t) (RT.tm_type RT.u_zero))
          (decreases t)
   = match t with
     | TUnit -> 
@@ -448,12 +436,12 @@ let rec elab_ty_soundness (g:RT.fstar_top_env)
       elab_ty_freevars t2;
       let t2_ok = elab_ty_soundness g ((x, t1)::sg) t2 in
       let arr_max 
-        : RT.typing 
+        : RT.tot_typing 
                (extend_env_l g sg)
                (elab_ty t)
                (RT.tm_type RT.(u_max u_zero u_zero))
             =  RT.T_Arrow _ x (elab_ty t1) (elab_ty t2) 
-                          _ _ RT.pp_name_default R.Q_Explicit t1_ok t2_ok
+                          _ _ RT.pp_name_default R.Q_Explicit T.E_Total _ _ t1_ok t2_ok
       in
       RT.simplify_umax arr_max
 
@@ -475,26 +463,26 @@ let rec soundness (#sg:stlc_env)
                   (#st:stlc_ty)
                   (dd:stlc_typing sg se st)
                   (g:RT.fstar_top_env)
-  : GTot (RT.typing (extend_env_l g sg)
-                    (elab_exp se)
-                    (elab_ty st))
+  : GTot (RT.tot_typing (extend_env_l g sg)
+                        (elab_exp se)
+                        (elab_ty st))
          (decreases dd)
   = match dd with
     | T_Unit _ ->
       RT.T_Const _ _ _ RT.CT_Unit
 
     | T_Var _ x ->
-      RT.T_Var _ (R.pack_bv (RT.make_bv x tun))
+      RT.T_Var _ (R.pack_namedv (RT.make_namedv x))
 
     | T_Lam _ t e t' x de ->
-      let de : RT.typing (extend_env_l g ((x,t)::sg))
-                         (elab_exp (open_exp e x))
-                         (elab_ty t')
+      let de : RT.tot_typing (extend_env_l g ((x,t)::sg))
+                             (elab_exp (open_exp e x))
+                             (elab_ty t')
             = soundness de g 
       in    
-      let de : RT.typing (RT.extend_env (extend_env_l g sg) x (elab_ty t))
-                         (elab_exp (open_exp e x))
-                         (elab_ty t')
+      let de : RT.tot_typing (RT.extend_env (extend_env_l g sg) x (elab_ty t))
+                             (elab_exp (open_exp e x))
+                             (elab_ty t')
              = de
       in
       fresh_is_fresh sg;
@@ -504,32 +492,33 @@ let rec soundness (#sg:stlc_env)
                    x
                    (elab_ty t) 
                    (elab_exp e)
-                   (elab_ty t')
+                   (T.E_Total, elab_ty t')
                    _
                    RT.pp_name_default
                    R.Q_Explicit
+                   _
                    (elab_ty_soundness g sg t)
                    de
       in
       dd
     | T_App _ e1 e2 t t' d1 d2 ->
       let dt1 
-        : RT.typing (extend_env_l g sg)
-                    (elab_exp e1)
-                    (elab_ty (TArrow t t'))
+        : RT.tot_typing (extend_env_l g sg)
+                        (elab_exp e1)
+                        (elab_ty (TArrow t t'))
         = soundness d1 g
       in
       let dt2
-        : RT.typing (extend_env_l g sg)
-                    (elab_exp e2)
-                    (elab_ty t)
+        : RT.tot_typing (extend_env_l g sg)
+                        (elab_exp e2)
+                        (elab_ty t)
         = soundness d2 g
       in
       let dt :
-        RT.typing (extend_env_l g sg)
-                  (elab_exp (EApp e1 e2))
-                  (RT.open_with (elab_ty t') (elab_exp e2))
-        = RT.T_App _ _ _ _ _ dt1 dt2
+        RT.tot_typing (extend_env_l g sg)
+                      (elab_exp (EApp e1 e2))
+                      (RT.open_with (elab_ty t') (elab_exp e2))
+        = RT.T_App _ _ _ _ _ _ dt1 dt2
       in
       dt
 
@@ -539,35 +528,33 @@ let soundness_lemma (sg:stlc_env)
                     (g:RT.fstar_top_env)
   : Lemma
     (requires stlc_typing sg se st)
-    (ensures  RT.typing (extend_env_l g sg)
-                        (elab_exp se)
-                        (elab_ty st))
+    (ensures  RT.tot_typing (extend_env_l g sg)
+                            (elab_exp se)
+                            (elab_ty st))
   = FStar.Squash.bind_squash 
       #(stlc_typing sg se st)
       ()
       (fun dd -> FStar.Squash.return_squash (soundness dd g))
 
-let main (src:stlc_exp) : RT.dsl_tac_t =
+let main (nm:string) (src:stlc_exp) : RT.dsl_tac_t =
   fun g ->
   if ln src && closed src
   then
     let (| src_ty, d |) = check g [] src in
     soundness_lemma [] src src_ty g;
-    elab_exp src, elab_ty src_ty
+    [RT.mk_checked_let g nm (elab_exp src) (elab_ty src_ty)]
   else T.fail "Not locally nameless"
 
 (***** Tests *****)
 
-#set-options "--ugly"
-
-%splice_t[foo] (main (ELam TUnit (EBVar 0)))
+%splice_t[foo] (main "foo" (ELam TUnit (EBVar 0)))
 
 #push-options "--no_smt"
 let test_id () = assert (foo () == ()) by (T.compute ())
 #pop-options
 
 let bar_s = (ELam TUnit (ELam TUnit (EBVar 1)))
-%splice_t[bar] (main bar_s)
+%splice_t[bar] (main "bar" bar_s)
 
 let baz_s : stlc_exp = EApp bar_s EUnit
-%splice_t[baz] (main bar_s)
+%splice_t[baz] (main "baz" bar_s)

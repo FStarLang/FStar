@@ -130,6 +130,6 @@ let is_smt_reifiable_rc (en:TcEnv.env) (rc:S.residual_comp) : bool =
 
 let is_smt_reifiable_function (en:TcEnv.env) (t:S.term) : bool =
   match (SS.compress t).n with
-  | Tm_arrow (_, c) ->
+  | Tm_arrow {comp=c} ->
     c |> U.comp_effect_name |> is_smt_reifiable_effect en
   | _ -> false

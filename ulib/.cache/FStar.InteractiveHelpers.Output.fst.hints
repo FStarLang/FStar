@@ -1,5 +1,5 @@
 [
-  "¦\f3ýúÃ’Æ±¾c’^$\u0003º",
+  "¿W\u0019tOwÛ\u000b§@\u0015Ãš\u000bJ¼",
   [
     [
       "FStar.InteractiveHelpers.Output._split_subst_at_bv",
@@ -8,13 +8,13 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "binder_x_1eabc41484fd5b9dcaf6fca81ee03b09_3",
+        "binder_x_dcb92bdf6cb3244567ec86570ac3a2eb_5",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equality_tok_Prims.LexTop@tok", "fuel_guarded_inversion_Prims.list",
+        "fuel_guarded_inversion_Prims.list",
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "0a85c84813d7ae4ac2d03ae3aeaf2830"
+      "65aa29049c25842e95e8d0d48b75cf61"
     ],
     [
       "FStar.InteractiveHelpers.Output.subst_shadowed_with_abs_in_assertions",
@@ -39,7 +39,7 @@
         "projection_inverse_FStar.Tactics.Result.Success_v"
       ],
       0,
-      "01d055c8d4e1b9d8166d24491e89ce07"
+      "ff1686142832ba4e1236681f99d3b358"
     ],
     [
       "FStar.InteractiveHelpers.Output.opt_term_to_printout",
@@ -51,7 +51,7 @@
         "lemma_FStar.Pervasives.invertOption"
       ],
       0,
-      "c7fee126177ab3c7594a97053f991e24"
+      "aeafb0b7a9144f3af463f7debf137a21"
     ],
     [
       "FStar.InteractiveHelpers.Output.__proj__ESuccess__item__ge",
@@ -63,7 +63,7 @@
         "refinement_interpretation_Tm_refine_c3603a9204b69bd537f4b4bbf2a00266"
       ],
       0,
-      "c2b313ae3a0921f1565786e2dc0ac408"
+      "bb5f54ca79fc6d91ffed563a76a03f0d"
     ],
     [
       "FStar.InteractiveHelpers.Output.__proj__ESuccess__item__a",
@@ -75,7 +75,7 @@
         "refinement_interpretation_Tm_refine_c3603a9204b69bd537f4b4bbf2a00266"
       ],
       0,
-      "a02bdb0ee954069ae488eb2bc80960a4"
+      "8ff8496e0f3e59d019f80160c9111249"
     ],
     [
       "FStar.InteractiveHelpers.Output.__proj__EFailure__item__err",
@@ -87,7 +87,7 @@
         "refinement_interpretation_Tm_refine_c8334db65fdbf30bb7a9e3ef5d0b3120"
       ],
       0,
-      "f407e65682091d45cec8ba23c4279043"
+      "56af0ccaaa9c2e34f10ee25f7e88cb23"
     ],
     [
       "FStar.InteractiveHelpers.Output.result_to_printout",
@@ -102,7 +102,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "1a7215915c9513bff02fe025dfc6c67b"
+      "79833e1069536b354e093efb8d8e1de7"
     ]
   ]
 ]

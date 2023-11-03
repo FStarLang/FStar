@@ -24,8 +24,12 @@ open FStar.Compiler.Range
 open FStar.Options
 module List = FStar.Compiler.List
 module BU = FStar.Compiler.Util
+module PP = FStar.Pprint
 
 open FStar.Errors.Codes
+open FStar.Errors.Msg
+
+let fallback_range : ref (option range) = BU.mk_ref None
 
 (** This exception is raised in FStar.Error
     when a warn_error string could not be processed;
@@ -72,10 +76,14 @@ let update_flags (l:list (error_flag * string))
         raise (Invalid_warn_error_setting
                  (BU.format1 "cannot silence error %s"
                              (BU.string_of_int i)))
-      | (_, CFatal) ->
+      | (CSilent, CFatal)
+      | (CWarning, CFatal)
+      | (CError, CFatal) ->
         raise (Invalid_warn_error_setting
                  (BU.format1 "cannot change the error level of fatal error %s"
                              (BU.string_of_int i)))
+      | (CAlwaysError, CFatal) ->
+        CFatal
       | _ -> flag
    in
    let set_flag_for_range (flag, range) =
@@ -92,60 +100,106 @@ let update_flags (l:list (error_flag * string))
      in
      flag, (l, h)
   in
-  let error_range_settings = List.map compute_range l in
+  // NOTE: Rev below so when we handle things like '@0..100-50'
+  // the -50 overrides the @0..100.
+  let error_range_settings = List.map compute_range (List.rev l) in
   List.collect set_flag_for_range error_range_settings
   @ default_settings
 
 exception Error   of error
-exception Err     of raw_error * string * list string
+exception Err     of raw_error * error_message * list string
 exception Warning of error
 exception Stop
 exception Empty_frag
 
-let ctx_string (ctx : list string) : string =
+let ctx_doc (ctx : list string) : PP.document =
+  let open FStar.Pprint in
   if Options.error_contexts ()
   then
     ctx
-      |> List.map (fun s -> "\n> " ^ s)
-      |> String.concat ""
-  else ""
+      |> List.map (fun s -> hardline ^^ doc_of_string "> " ^^ doc_of_string s)
+      |> Pprint.concat
+  else empty
 
 (* No newline at the end *)
-let issue_message (i:issue) : string =
-  i.issue_msg ^ ctx_string i.issue_ctx
+(* Only used externally *)
+let issue_message (i:issue) : list PP.document =
+  let open FStar.Pprint in
+  i.issue_msg @ [ctx_doc i.issue_ctx]
 
-(* No newline at the end *)
-let format_issue issue =
-  let level_header =
-      match issue.issue_level with
-      | EInfo -> "Info"
-      | EWarning -> "Warning"
-      | EError -> "Error"
-      | ENotImplemented -> "Feature not yet implemented: "
+let string_of_issue_level il =
+    match il with
+    | EInfo -> "Info"
+    | EWarning -> "Warning"
+    | EError -> "Error"
+    | ENotImplemented -> "Feature not yet implemented: "
+let issue_level_of_string =
+  function
+  | "Info" -> EInfo
+  | "Warning" -> EWarning
+  | "Error" -> EError
+  | _ -> ENotImplemented
+
+let optional_def (f : 'a -> PP.document) (def : PP.document) (o : option 'a) : PP.document =
+  match o with
+  | Some x -> f x
+  | None -> def
+
+let format_issue' (print_hdr:bool) (issue:issue) : string =
+  let open FStar.Pprint in
+  let level_header = doc_of_string (string_of_issue_level issue.issue_level) in
+  let num_opt =
+    if issue.issue_level = EError || issue.issue_level = EWarning
+    then blank 1 ^^ optional_def (fun n -> doc_of_string (string_of_int n)) (doc_of_string "<unknown>") issue.issue_number
+    else empty
   in
-  let range_str, see_also_str =
-      match issue.issue_range with
-      | None -> "", ""
-      | Some r when r = dummyRange ->
-          "", (if def_range r = def_range dummyRange then ""
-               else BU.format1 " (see also %s)" (FStar.Compiler.Range.string_of_range r))
-      | Some r ->
-        (BU.format1 "%s: " (FStar.Compiler.Range.string_of_use_range r),
-         (if use_range r = def_range r || def_range r = def_range dummyRange
-          then ""
-          else BU.format1 " (see also %s)" (FStar.Compiler.Range.string_of_range r)))
+  let r = issue.issue_range in
+  let atrng : document =
+    match r with
+    | Some r ->
+      blank 1 ^^ doc_of_string "at" ^^ blank 1 ^^ doc_of_string (Range.string_of_use_range r)
+    | None ->
+      empty
   in
-  let issue_number =
-      match issue.issue_number with
-      | None -> ""
-      | Some n -> BU.format1 " %s" (string_of_int n)
+  let hdr : document =
+    if print_hdr
+    then
+      doc_of_string "*" ^^ blank 1 ^^ level_header ^^ num_opt ^^
+        atrng ^^
+        doc_of_string ":" ^^ hardline
+    else empty
   in
-  BU.format5 "%s(%s%s) %s%s" range_str level_header issue_number (issue_message issue) see_also_str
+  let seealso : document =
+    match r with
+    | Some r when def_range r <> use_range r && def_range r <> def_range dummyRange ->
+      doc_of_string "See also" ^^ blank 1 ^^ doc_of_string (Range.string_of_range r)
+    | _ -> empty
+  in
+  let ctx : document =
+    match issue.issue_ctx with
+    | h::t when Options.error_contexts () ->
+      let d1 s = doc_of_string "> " ^^ doc_of_string s in
+      List.fold_left (fun l r -> l ^^ hardline ^^ d1 r) (d1 h) t
+    | _ -> empty
+  in
+  let mainmsg : document =
+    concat (List.map (fun d -> subdoc (group d)) issue.issue_msg)
+  in
+  let doc : document =
+    (* This ends in a hardline to get a 1-line spacing between errors *)
+    hdr ^^
+    mainmsg ^^
+    subdoc seealso ^^
+    subdoc ctx
+  in
+  renderdoc doc
+
+let format_issue issue : string = format_issue' true issue
 
 let print_issue issue =
     let printer =
         match issue.issue_level with
-        | EInfo -> BU.print_string
+        | EInfo -> (fun s -> BU.print_string (colorize_magenta s))
         | EWarning -> BU.print_warning
         | EError -> BU.print_error
         | ENotImplemented -> BU.print_error in
@@ -157,6 +211,35 @@ let compare_issues i1 i2 =
     | None, Some _ -> -1
     | Some _, None -> 1
     | Some r1, Some r2 -> FStar.Compiler.Range.compare_use_range r1 r2
+
+let dummy_ide_rng : Range.rng =
+  mk_rng "<input>" (mk_pos 1 0) (mk_pos 1 0)
+
+(* Attempts to set a decent range (no dummy, no dummy ide) relying
+on the fallback_range reference. *)
+let fixup_issue_range (i:issue) : issue =
+  let rng =
+    match i.issue_range with
+    | None ->
+      (* No range given, just rely on the fallback. NB: the
+      fallback could also be set to None if it's too early. *)
+      !fallback_range
+    | Some range ->
+      let use_rng = use_range range in
+      let use_rng' =
+        if use_rng <> dummy_rng && use_rng <> dummy_ide_rng then
+          (* Looks good, use it *)
+          use_rng
+        else if Some? (!fallback_range) then
+          (* Or take the use range from the fallback *)
+          use_range (Some?.v (!fallback_range))
+        else
+          (* Doesn't look good, but no fallback, oh well *)
+          use_rng
+      in
+      Some (set_use_range range use_rng')
+  in
+  { i with issue_range = rng }
 
 let mk_default_handler print =
     let issues : ref (list issue) = BU.mk_ref [] in
@@ -206,6 +289,8 @@ let mk_issue level range msg n ctx = {
 let get_err_count () = (!current_handler).eh_count_errors ()
 
 let wrapped_eh_add_one (h : error_handler) (issue : issue) : unit =
+    (* Try to set a good use range if we got an empty/dummy one *)
+    let issue = fixup_issue_range issue in
     h.eh_add_one issue;
     if issue.issue_level <> EInfo then begin
       Options.abort_counter := !Options.abort_counter - 1;
@@ -218,6 +303,8 @@ let add_one issue =
 
 let add_many issues =
     atomically (fun () -> List.iter (wrapped_eh_add_one (!current_handler)) issues)
+
+let add_issues issues = add_many issues
 
 let report_all () =
     (!current_handler).eh_report ()
@@ -258,16 +345,29 @@ let error_context : error_context_t =
 let get_ctx () : list string =
   error_context.get ()
 
-let diag r msg =
+let diag_doc r msg =
   if Options.debug_any()
   then add_one (mk_issue EInfo (Some r) msg None [])
+
+let diag r msg =
+  diag_doc r (mkmsg msg)
+
+let diag0 msg =
+  if Options.debug_any()
+  then add_one (mk_issue EInfo None (mkmsg msg) None [])
+
+let diag1 f a         = diag0 (BU.format1 f a)
+let diag2 f a b       = diag0 (BU.format2 f a b)
+let diag3 f a b c     = diag0 (BU.format3 f a b c)
+let diag4 f a b c d   = diag0 (BU.format4 f a b c d)
+let diag5 f a b c d e = diag0 (BU.format5 f a b c d e)
 
 let warn_unsafe_options rng_opt msg =
   match Options.report_assumes () with
   | Some "warn" ->
-    add_one (mk_issue EWarning rng_opt ("Every use of this option triggers a warning: " ^msg) (Some warn_on_use_errno) [])
+    add_one (mk_issue EWarning rng_opt (mkmsg ("Every use of this option triggers a warning: " ^ msg)) (Some warn_on_use_errno) [])
   | Some "error" ->
-    add_one (mk_issue EError rng_opt ("Every use of this option triggers an error: " ^msg) (Some warn_on_use_errno) [])
+    add_one (mk_issue EError rng_opt (mkmsg ("Every use of this option triggers an error: " ^ msg)) (Some warn_on_use_errno) [])
   | _ -> ()
 
 let set_option_warning_callback_range (ropt:option FStar.Compiler.Range.range) =
@@ -377,11 +477,14 @@ let log_issue_ctx r (e, msg) ctx =
     let i = mk_issue EError (Some r) msg (Some errno) ctx in
     if Options.ide()
     then add_one i
-    else failwith ("don't use log_issue to report fatal error, should use raise_error: " ^format_issue i)
+    else failwith ("don't use log_issue to report fatal error, should use raise_error: " ^ format_issue i)
 
-let log_issue r (e, msg) =
+let log_issue_doc r (e, msg) =
   let ctx = error_context.get () in
   log_issue_ctx r (e, msg) ctx
+
+let log_issue r (e, msg) =
+  log_issue_doc r (e, mkmsg msg)
 
 let add_errors (errs : list error) : unit =
     atomically (fun () -> List.iter (fun (e, msg, r, ctx) -> log_issue_ctx r (e, msg) ctx) errs)
@@ -413,11 +516,26 @@ let stop_if_err () =
     if get_err_count () > 0
     then raise Stop
 
-let raise_error (e, msg) r =
+let raise_error_doc (e, msg) r =
   raise (Error (e, msg, r, error_context.get ()))
 
-let raise_err (e, msg) =
+let raise_err_doc (e, msg) =
   raise (Err (e, msg, error_context.get ()))
+
+let raise_error (e, msg) r =
+  raise_error_doc (e, mkmsg msg) r
+
+let raise_err (e, msg) =
+  raise_err_doc (e, mkmsg msg)
+
+let log_issue_text r (e, msg) =
+  log_issue_doc r (e, [text msg])
+
+let raise_error_text (e, msg) r =
+  raise_error_doc (e, [text msg]) r
+
+let raise_err_text (e, msg) =
+  raise_err_doc (e, [text msg])
 
 let with_ctx (s:string) (f : unit -> 'a) : 'a =
   error_context.push s;
@@ -435,7 +553,7 @@ let with_ctx (s:string) (f : unit -> 'a) : 'a =
        * TODO: deprecate failwith and use F* exceptions, which we can
        * then catch and print sensibly. *)
       | Failure msg ->
-        Inl (Failure (msg ^ ctx_string (error_context.get ())))
+        Inl (Failure (msg ^ rendermsg [ctx_doc (error_context.get ())]))
       | ex -> Inl ex
   in
   ignore (error_context.pop ());
@@ -457,14 +575,24 @@ let catch_errors_aux (f : unit -> 'a) : list issue & list issue & option 'a =
   let newh = mk_default_handler false in
   let old = !current_handler in
   current_handler := newh;
-  let r = try Some (f ())
-          with | ex -> err_exn ex; None
+  let finally_restore () =
+    let all_issues = newh.eh_report() in //de-duplicated already
+    current_handler := old;
+    let errs, rest = List.partition (fun i -> i.issue_level = EError) all_issues in
+    errs, rest
   in
-  let all_issues = newh.eh_report() in //de-duplicated already
-  current_handler := old;
-  let errs, rest = List.partition (fun i -> i.issue_level = EError) all_issues in
+  let r = try Some (f ())
+          with
+          | ex when handleable ex ->
+            err_exn ex;
+            None
+          | ex ->
+            let _ = finally_restore() in
+            raise ex
+  in
+  let errs, rest = finally_restore() in
   errs, rest, r
-
+ 
 let no_ctx (f : unit -> 'a) : 'a =
   let save = error_context.get () in
   error_context.clear ();

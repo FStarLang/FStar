@@ -206,10 +206,10 @@ let (ps_to_string :
               let uu___5 =
                 if
                   ps.FStar_Tactics_Types.entry_range <>
-                    FStar_Compiler_Range.dummyRange
+                    FStar_Compiler_Range_Type.dummyRange
                 then
                   let uu___6 =
-                    FStar_Compiler_Range.string_of_def_range
+                    FStar_Compiler_Range_Ops.string_of_def_range
                       ps.FStar_Tactics_Types.entry_range in
                   FStar_Compiler_Util.format1 "Location: %s\n" uu___6
                 else "" in
@@ -248,7 +248,7 @@ let (ps_to_string :
             FStar_Compiler_List.op_At uu___4 uu___5 in
           FStar_Compiler_List.op_At uu___2 uu___3 in
         FStar_String.concat "" uu___1
-let (goal_to_json : FStar_Tactics_Types.goal -> FStar_Compiler_Util.json) =
+let (goal_to_json : FStar_Tactics_Types.goal -> FStar_Json.json) =
   fun g ->
     let g_binders =
       (g.FStar_Tactics_Types.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_binders in
@@ -272,7 +272,7 @@ let (goal_to_json : FStar_Tactics_Types.goal -> FStar_Compiler_Util.json) =
                         let uu___9 = FStar_Tactics_Types.goal_env g in
                         let uu___10 = FStar_Tactics_Types.goal_witness g in
                         term_to_string uu___9 uu___10 in
-                      FStar_Compiler_Util.JsonStr uu___8 in
+                      FStar_Json.JsonStr uu___8 in
                     ("witness", uu___7) in
                   let uu___7 =
                     let uu___8 =
@@ -280,21 +280,19 @@ let (goal_to_json : FStar_Tactics_Types.goal -> FStar_Compiler_Util.json) =
                         let uu___10 =
                           let uu___11 = FStar_Tactics_Types.goal_env g in
                           term_to_string uu___11 g_type1 in
-                        FStar_Compiler_Util.JsonStr uu___10 in
+                        FStar_Json.JsonStr uu___10 in
                       ("type", uu___9) in
                     [uu___8;
                     ("label",
-                      (FStar_Compiler_Util.JsonStr
-                         (g.FStar_Tactics_Types.label)))] in
+                      (FStar_Json.JsonStr (g.FStar_Tactics_Types.label)))] in
                   uu___6 :: uu___7 in
-                FStar_Compiler_Util.JsonAssoc uu___5 in
+                FStar_Json.JsonAssoc uu___5 in
               ("goal", uu___4) in
             [uu___3] in
           ("hyps", j_binders) :: uu___2 in
-        FStar_Compiler_Util.JsonAssoc uu___1
+        FStar_Json.JsonAssoc uu___1
 let (ps_to_json :
-  (Prims.string * FStar_Tactics_Types.proofstate) -> FStar_Compiler_Util.json)
-  =
+  (Prims.string * FStar_Tactics_Types.proofstate) -> FStar_Json.json) =
   fun uu___ ->
     match uu___ with
     | (msg, ps) ->
@@ -308,7 +306,7 @@ let (ps_to_json :
                       let uu___8 =
                         FStar_Compiler_List.map goal_to_json
                           ps.FStar_Tactics_Types.goals in
-                      FStar_Compiler_Util.JsonList uu___8 in
+                      FStar_Json.JsonList uu___8 in
                     ("goals", uu___7) in
                   let uu___7 =
                     let uu___8 =
@@ -316,32 +314,30 @@ let (ps_to_json :
                         let uu___10 =
                           FStar_Compiler_List.map goal_to_json
                             ps.FStar_Tactics_Types.smt_goals in
-                        FStar_Compiler_Util.JsonList uu___10 in
+                        FStar_Json.JsonList uu___10 in
                       ("smt-goals", uu___9) in
                     [uu___8] in
                   uu___6 :: uu___7 in
                 ("urgency",
-                  (FStar_Compiler_Util.JsonInt
-                     (ps.FStar_Tactics_Types.urgency)))
-                  :: uu___5 in
-              ("depth",
-                (FStar_Compiler_Util.JsonInt (ps.FStar_Tactics_Types.depth)))
+                  (FStar_Json.JsonInt (ps.FStar_Tactics_Types.urgency))) ::
+                  uu___5 in
+              ("depth", (FStar_Json.JsonInt (ps.FStar_Tactics_Types.depth)))
                 :: uu___4 in
-            ("label", (FStar_Compiler_Util.JsonStr msg)) :: uu___3 in
+            ("label", (FStar_Json.JsonStr msg)) :: uu___3 in
           let uu___3 =
             if
               ps.FStar_Tactics_Types.entry_range <>
-                FStar_Compiler_Range.dummyRange
+                FStar_Compiler_Range_Type.dummyRange
             then
               let uu___4 =
                 let uu___5 =
-                  FStar_Compiler_Range.json_of_def_range
+                  FStar_Compiler_Range_Ops.json_of_def_range
                     ps.FStar_Tactics_Types.entry_range in
                 ("location", uu___5) in
               [uu___4]
             else [] in
           FStar_Compiler_List.op_At uu___2 uu___3 in
-        FStar_Compiler_Util.JsonAssoc uu___1
+        FStar_Json.JsonAssoc uu___1
 let (do_dump_proofstate :
   FStar_Tactics_Types.proofstate -> Prims.string -> unit) =
   fun ps ->

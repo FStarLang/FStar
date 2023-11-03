@@ -1,6 +1,6 @@
 module SigeltOpts
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 #set-options "--max_fuel 0"
 
@@ -19,13 +19,16 @@ let tau () : Tac decls =
     match sigelt_opts se with
     | None -> fail "2"
     | Some opts ->
-      let lb = pack_lb ({lb_fv = pack_fv ["SigeltOpts"; "blah"];
-                         lb_us = [];
-                         lb_typ = (`_);
-                         lb_def = (`(assert (List.length [2] == 1)))}) in
-      let se : sigelt = pack_sigelt (Sg_Let false [lb]) in
+      let lb = {
+        lb_fv = pack_fv ["SigeltOpts"; "blah"];
+        lb_us = [];
+        lb_typ = (`_);
+        lb_def = (`(assert (List.length [2] == 1)))
+      } in
+      let se : sigelt = pack_sigelt (Sg_Let {isrec=false;lbs=[lb]}) in
       let se = add_check_with opts se in
       [se]
+
 (* Splice `blah`, using the options for sp1, i.e. --max_fuel 2 *)
 %splice[blah] (tau ())
 

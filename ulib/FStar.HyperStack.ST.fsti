@@ -17,7 +17,6 @@ module FStar.HyperStack.ST
 
 open FStar.HyperStack
 
-module W  = FStar.Monotonic.Witnessed
 module HS = FStar.HyperStack
 
 open FStar.Preorder
@@ -342,12 +341,12 @@ val salloc (#a:Type) (#rel:preorder a) (init:a)
   
 // JP, AR: these are not supported in C, and `salloc` already benefits from
 // automatic memory management.
-[@@ (deprecated "use salloc instead") ]
+[@@ (deprecated "Use salloc instead") ]
 val salloc_mm (#a:Type) (#rel:preorder a) (init:a)
   :StackInline (mmmstackref a rel) (requires (fun m -> is_stack_region (get_tip m)))
                                    (ensures  salloc_post init)
 
-[@@ (deprecated "use salloc instead") ]
+[@@ (deprecated "Use salloc instead") ]
 val sfree (#a:Type) (#rel:preorder a) (r:mmmstackref a rel)
   :StackInline unit (requires (fun m0 -> frameOf r = get_tip m0 /\ m0 `contains` r))
                     (ensures (fun m0 _ m1 -> m0 `contains` r /\ m1 == HS.free r m0))

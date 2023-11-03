@@ -7,8 +7,8 @@ type either_replst =
     FStar_Interactive_Ide_Types.repl_state) FStar_Pervasives.either
 type name_tracking_event =
   | NTAlias of (FStar_Ident.lid * FStar_Ident.ident * FStar_Ident.lid) 
-  | NTOpen of (FStar_Ident.lid * FStar_Syntax_DsEnv.open_module_or_namespace)
-  
+  | NTOpen of (FStar_Ident.lid *
+  FStar_Syntax_Syntax.open_module_or_namespace) 
   | NTInclude of (FStar_Ident.lid * FStar_Ident.lid) 
   | NTBinding of (FStar_Syntax_Syntax.binding,
   FStar_TypeChecker_Env.sig_binding) FStar_Pervasives.either 
@@ -22,7 +22,7 @@ let (uu___is_NTOpen : name_tracking_event -> Prims.bool) =
   fun projectee -> match projectee with | NTOpen _0 -> true | uu___ -> false
 let (__proj__NTOpen__item___0 :
   name_tracking_event ->
-    (FStar_Ident.lid * FStar_Syntax_DsEnv.open_module_or_namespace))
+    (FStar_Ident.lid * FStar_Syntax_Syntax.open_module_or_namespace))
   = fun projectee -> match projectee with | NTOpen _0 -> _0
 let (uu___is_NTInclude : name_tracking_event -> Prims.bool) =
   fun projectee ->
@@ -90,6 +90,9 @@ let (set_check_kind :
         FStar_TypeChecker_Env.nosynth = (env.FStar_TypeChecker_Env.nosynth);
         FStar_TypeChecker_Env.uvar_subtyping =
           (env.FStar_TypeChecker_Env.uvar_subtyping);
+        FStar_TypeChecker_Env.intactics =
+          (env.FStar_TypeChecker_Env.intactics);
+        FStar_TypeChecker_Env.nocoerce = (env.FStar_TypeChecker_Env.nocoerce);
         FStar_TypeChecker_Env.tc_term = (env.FStar_TypeChecker_Env.tc_term);
         FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
           (env.FStar_TypeChecker_Env.typeof_tot_or_gtot_term);
@@ -292,8 +295,7 @@ let (push_repl :
                         =
                         (st.FStar_Interactive_Ide_Types.repl_buffered_input_queries)
                     }))
-let (add_issues_to_push_fragment :
-  FStar_Compiler_Util.json Prims.list -> unit) =
+let (add_issues_to_push_fragment : FStar_Json.json Prims.list -> unit) =
   fun issues ->
     let uu___ = FStar_Compiler_Effect.op_Bang repl_stack in
     match uu___ with
@@ -426,7 +428,7 @@ let (update_names_from_event :
             then
               let uu___1 = query_of_lid included in
               FStar_Interactive_CompletionTable.register_open table
-                (kind = FStar_Syntax_DsEnv.Open_module) [] uu___1
+                (kind = FStar_Syntax_Syntax.Open_module) [] uu___1
             else table
         | NTInclude (host, included) ->
             let uu___ =
@@ -649,16 +651,18 @@ let (repl_tx :
         | FStar_Errors.Error (e, msg, r, _ctx) ->
             let uu___1 =
               let uu___2 =
+                let uu___3 = FStar_Errors_Msg.rendermsg msg in
                 FStar_Interactive_JsonHelper.js_diag
-                  st.FStar_Interactive_Ide_Types.repl_fname msg
+                  st.FStar_Interactive_Ide_Types.repl_fname uu___3
                   (FStar_Pervasives_Native.Some r) in
               FStar_Pervasives_Native.Some uu___2 in
             (uu___1, st)
         | FStar_Errors.Err (e, msg, _ctx) ->
             let uu___1 =
               let uu___2 =
+                let uu___3 = FStar_Errors_Msg.rendermsg msg in
                 FStar_Interactive_JsonHelper.js_diag
-                  st.FStar_Interactive_Ide_Types.repl_fname msg
+                  st.FStar_Interactive_Ide_Types.repl_fname uu___3
                   FStar_Pervasives_Native.None in
               FStar_Pervasives_Native.Some uu___2 in
             (uu___1, st)
@@ -822,7 +826,9 @@ let (ld_deps :
                        FStar_Pervasives.Inl (st2, deps)))) ()
     with
     | FStar_Errors.Err (e, msg, ctx) ->
-        (FStar_Compiler_Util.print1_error "[E] Failed to load deps. %s" msg;
+        ((let uu___2 = FStar_Errors_Msg.rendermsg msg in
+          FStar_Compiler_Util.print1_error "[E] Failed to load deps. %s"
+            uu___2);
          FStar_Pervasives.Inr st)
     | exn ->
         ((let uu___2 = FStar_Compiler_Util.message_of_exn exn in

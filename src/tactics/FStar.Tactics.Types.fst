@@ -33,9 +33,11 @@ module U       = FStar.Syntax.Util
 module UF      = FStar.Syntax.Unionfind
 
 let goal_env g = g.goal_main_env
+let goal_range g = g.goal_main_env.range
 let goal_witness g =
     FStar.Syntax.Syntax.mk (Tm_uvar (g.goal_ctx_uvar, ([], NoUseRange))) Range.dummyRange
 let goal_type g = U.ctx_uvar_typ g.goal_ctx_uvar
+let goal_opts g = g.opts
 
 let goal_with_env g env : goal =
     let c = g.goal_ctx_uvar in
@@ -110,3 +112,9 @@ let get_phi (g:goal) : option term =
 
 let is_irrelevant (g:goal) : bool =
     Option.isSome (get_phi g)
+
+let non_informative_token (g:env) (t:typ) = unit
+let subtyping_token (g:env) (t0 t1:typ) = unit
+let equiv_token (g:env) (t0 t1:typ) = unit
+let typing_token (g:env) (e:term) (c:Core.tot_or_ghost & typ) = unit
+let match_complete_token (g:env) (sc:term) (t:typ) (pats:list pattern) = unit

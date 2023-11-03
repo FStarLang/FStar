@@ -27,6 +27,8 @@ open FStar.Errors
 open FStar.Char
 open FStar.String
 
+friend FStar.Pervasives (* To expose norm_step *)
+
 (**** NOTE: Don't say I didn't warn you! ***)
 (* FV and Construct accumulate arguments *in reverse order*.
  * Therefore the embeddings must be aware of this and match/construct
@@ -217,6 +219,7 @@ let translate_cb cbs t = cbs.translate t
 let embed   (e:embedding 'a) (cb:nbe_cbs) (x:'a) : t = e.em cb x
 let unembed (e:embedding 'a) (cb:nbe_cbs) (trm:t) : option 'a = e.un cb trm
 let type_of (e:embedding 'a) : t = e.typ
+let set_type (ty:t) (e:embedding 'a) : embedding 'a = { e with typ = ty }
 
 
 let mk_emb em un typ et = {em = em; un = un; typ = typ; emb_typ=et}
@@ -234,10 +237,10 @@ let embed_as (ea:embedding 'a)
           ea.emb_typ
 
 let lid_as_constr (l:lident) (us:list universe) (args:args) : t =
-    mkConstruct (lid_as_fv l S.delta_constant (Some Data_ctor)) us args
+    mkConstruct (lid_as_fv l (Some Data_ctor)) us args
 
 let lid_as_typ (l:lident) (us:list universe) (args:args) : t =
-    mkFV (lid_as_fv l S.delta_constant None) us args
+    mkFV (lid_as_fv l None) us args
 
 let as_iarg (a:t) : arg = (a, S.as_aqual_implicit true)
 let as_arg (a:t) : arg = (a, None)
@@ -255,7 +258,7 @@ let lazy_embed (et:emb_typ) (x:'a) (f:unit -> t) =
          let li = FStar.Compiler.Dyn.mkdyn x, et in
          mk_t <| Lazy (Inr li, thunk)
 
-let lazy_unembed cb (et:emb_typ) (x:t) (f:t -> option 'a) : option 'a =
+let lazy_unembed (et:emb_typ) (x:t) (f:t -> option 'a) : option 'a =
     match x.nbe_t with
     | Lazy (Inl li, thunk) ->
       f (Thunk.force thunk)
@@ -283,6 +286,13 @@ let lazy_unembed cb (et:emb_typ) (x:t) (f:t -> option 'a) : option 'a =
                                (P.emb_typ_to_string et) in
       aopt
 
+let lazy_unembed_lazy_kind (#a:Type) (k:lazy_kind) (x:t) : option a =
+  match x.nbe_t with
+  | Lazy (Inl li, _) ->
+    if li.lkind = k
+    then Some (FStar.Compiler.Dyn.undyn li.blob)
+    else None
+  | _ -> None
 
 // Emdebbing for polymorphic types
 let mk_any_emb (ty:t) : embedding t =
@@ -342,6 +352,8 @@ let e_int : embedding Z.t =
     in
     mk_emb' em un (lid_as_typ PC.int_lid [] [])  (SE.emb_typ_of SE.e_int)
 
+let e_fsint = embed_as e_int Z.to_int_fs Z.of_int_fs None
+
 // Embedding at option type
 let e_option (ea : embedding 'a) =
     let etyp =
@@ -357,7 +369,7 @@ let e_option (ea : embedding 'a) =
                                               as_iarg (type_of ea)])
     in
     let un cb (trm:t) : option (option 'a) =
-        lazy_unembed cb etyp trm (fun trm ->
+        lazy_unembed etyp trm (fun trm ->
         match trm.nbe_t with
         | Construct (fvar, us, args) when S.fv_eq_lid fvar PC.none_lid ->
           Some None
@@ -383,7 +395,7 @@ let e_tuple2 (ea:embedding 'a) (eb:embedding 'b) =
                        as_iarg (type_of ea)])
     in
     let un cb (trm:t) : option ('a * 'b) =
-        lazy_unembed cb etyp trm (fun trm ->
+        lazy_unembed etyp trm (fun trm ->
         match trm.nbe_t with
         | Construct (fvar, us, [(b, _); (a, _); _; _]) when S.fv_eq_lid fvar PC.lid_Mktuple2 ->
           BU.bind_opt (unembed ea cb a) (fun a ->
@@ -409,7 +421,7 @@ let e_tuple3 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c) =
                        as_iarg (type_of ea)])
     in
     let un cb (trm:t) : option ('a * 'b * 'c) =
-        lazy_unembed cb etyp trm (fun trm ->
+        lazy_unembed etyp trm (fun trm ->
         match trm.nbe_t with
         | Construct (fvar, us, [(c, _); (b, _); (a, _); _; _]) when S.fv_eq_lid fvar PC.lid_Mktuple3 ->
           BU.bind_opt (unembed ea cb a) (fun a ->
@@ -441,7 +453,7 @@ let e_either (ea:embedding 'a) (eb:embedding 'b) =
                        as_iarg (type_of ea)])
     in
     let un cb (trm:t) : option (either 'a 'b) =
-        lazy_unembed cb etyp trm (fun trm ->
+        lazy_unembed etyp trm (fun trm ->
         match trm.nbe_t with
         | Construct (fvar, us, [(a, _); _; _]) when S.fv_eq_lid fvar PC.inl_lid ->
           BU.bind_opt (unembed ea cb a) (fun a ->
@@ -462,7 +474,29 @@ let e_range : embedding Range.range =
     | _ ->
         None
     in
-    mk_emb' em un (lid_as_typ PC.range_lid [] []) (SE.emb_typ_of SE.e_range)
+    mk_emb' em un (lid_as_typ PC.__range_lid [] []) (SE.emb_typ_of SE.e_range)
+
+let e_issue : embedding FStar.Errors.issue =
+    let t_issue = SE.type_of SE.e_issue in
+    let li blob rng = { blob=Dyn.mkdyn blob; lkind = Lazy_issue; ltyp = t_issue; rng } in
+    let em cb iss = Lazy (Inl (li iss Range.dummyRange), (Thunk.mk (fun _ -> failwith "Cannot unembed issue"))) in
+    let un cb t =
+    match t with
+    | Lazy (Inl { lkind=Lazy_issue; blob }, _) -> Some (Dyn.undyn blob)
+    | _ -> None
+    in
+    mk_emb' em un (lid_as_typ PC.issue_lid [] []) (SE.emb_typ_of SE.e_issue)  
+
+let e_document : embedding FStar.Pprint.document =
+    let t_document = SE.type_of SE.e_document in
+    let li blob rng = { blob=Dyn.mkdyn blob; lkind = Lazy_doc; ltyp = t_document; rng } in
+    let em cb doc = Lazy (Inl (li doc Range.dummyRange), (Thunk.mk (fun _ -> failwith "Cannot unembed document"))) in
+    let un cb t =
+    match t with
+    | Lazy (Inl { lkind=Lazy_doc; blob }, _) -> Some (Dyn.undyn blob)
+    | _ -> None
+    in
+    mk_emb' em un (lid_as_typ PC.document_lid [] []) (SE.emb_typ_of SE.e_document)
 
 // vconfig, NYI
 let e_vconfig : embedding vconfig =
@@ -483,7 +517,7 @@ let e_list (ea:embedding 'a) =
         List.fold_right cons l nil)
     in
     let rec un cb (trm:t) : option (list 'a) =
-        lazy_unembed cb etyp trm (fun trm ->
+        lazy_unembed etyp trm (fun trm ->
         match trm.nbe_t with
         | Construct (fv, _, _) when S.fv_eq_lid fv PC.nil_lid -> Some []
         | Construct (fv, _, [(tl, None); (hd, None); (_, Some ({ aqual_implicit = true }))])
@@ -516,84 +550,89 @@ let e_arrow (ea:embedding 'a) (eb:embedding 'b) : embedding ('a -> 'b) =
                                 | Some y -> y
                                 | None -> failwith "cannot unembed function result")
         in
-        lazy_unembed cb etyp lam k
+        lazy_unembed etyp lam k
     in
     mk_emb em un (make_arrow1 (type_of ea) (as_iarg (type_of eb))) etyp
 
+let e_unsupported #a : embedding a =
+    let em = (fun _cb a -> failwith "Unsupported NBE embedding") in
+    let un = (fun _cb t -> failwith "Unsupported NBE embedding") in
+    mk_emb em un (lid_as_typ PC.term_lid [] []) ET_abstract
+
 let e_norm_step =
-    let em cb (n:SE.norm_step) : t =
+    let em cb (n:Pervasives.norm_step) : t =
         match n with
-        | SE.Simpl   -> mkFV (lid_as_fv PC.steps_simpl     S.delta_constant None) [] []
-        | SE.Weak    -> mkFV (lid_as_fv PC.steps_weak      S.delta_constant None) [] []
-        | SE.HNF     -> mkFV (lid_as_fv PC.steps_hnf       S.delta_constant None) [] []
-        | SE.Primops -> mkFV (lid_as_fv PC.steps_primops   S.delta_constant None) [] []
-        | SE.Delta   -> mkFV (lid_as_fv PC.steps_delta     S.delta_constant None) [] []
-        | SE.Zeta    -> mkFV (lid_as_fv PC.steps_zeta      S.delta_constant None) [] []
-        | SE.Iota    -> mkFV (lid_as_fv PC.steps_iota      S.delta_constant None) [] []
-        | SE.Reify   -> mkFV (lid_as_fv PC.steps_reify     S.delta_constant None) [] []
-        | SE.NBE     -> mkFV (lid_as_fv PC.steps_nbe       S.delta_constant None) [] []
-        | SE.UnfoldOnly l ->
-                     mkFV (lid_as_fv PC.steps_unfoldonly S.delta_constant None)
+        | Pervasives.Simpl   -> mkFV (lid_as_fv PC.steps_simpl     None) [] []
+        | Pervasives.Weak    -> mkFV (lid_as_fv PC.steps_weak      None) [] []
+        | Pervasives.HNF     -> mkFV (lid_as_fv PC.steps_hnf       None) [] []
+        | Pervasives.Primops -> mkFV (lid_as_fv PC.steps_primops   None) [] []
+        | Pervasives.Delta   -> mkFV (lid_as_fv PC.steps_delta     None) [] []
+        | Pervasives.Zeta    -> mkFV (lid_as_fv PC.steps_zeta      None) [] []
+        | Pervasives.Iota    -> mkFV (lid_as_fv PC.steps_iota      None) [] []
+        | Pervasives.Reify   -> mkFV (lid_as_fv PC.steps_reify     None) [] []
+        | Pervasives.NBE     -> mkFV (lid_as_fv PC.steps_nbe       None) [] []
+        | Pervasives.UnfoldOnly l ->
+                     mkFV (lid_as_fv PC.steps_unfoldonly None)
                           [] [as_arg (embed (e_list e_string) cb l)]
-        | SE.UnfoldFully l ->
-                     mkFV (lid_as_fv PC.steps_unfoldfully S.delta_constant None)
+        | Pervasives.UnfoldFully l ->
+                     mkFV (lid_as_fv PC.steps_unfoldfully None)
                           [] [as_arg (embed (e_list e_string) cb l)]
-        | SE.UnfoldAttr l ->
-                     mkFV (lid_as_fv PC.steps_unfoldattr S.delta_constant None)
+        | Pervasives.UnfoldAttr l ->
+                     mkFV (lid_as_fv PC.steps_unfoldattr None)
                           [] [as_arg (embed (e_list e_string) cb l)]
-        | SE.UnfoldQual l ->
-                     mkFV (lid_as_fv PC.steps_unfoldqual S.delta_constant None)
+        | Pervasives.UnfoldQual l ->
+                     mkFV (lid_as_fv PC.steps_unfoldqual None)
                           [] [as_arg (embed (e_list e_string) cb l)]
-        | SE.UnfoldNamespace l ->
-                     mkFV (lid_as_fv PC.steps_unfoldnamespace S.delta_constant None)
+        | Pervasives.UnfoldNamespace l ->
+                     mkFV (lid_as_fv PC.steps_unfoldnamespace None)
                           [] [as_arg (embed (e_list e_string) cb l)]
-        | SE.ZetaFull -> mkFV (lid_as_fv PC.steps_zeta_full S.delta_constant None) [] []
-        | SE.Unascribe -> mkFV (lid_as_fv PC.steps_unascribe S.delta_constant None) [] []
+        | Pervasives.ZetaFull -> mkFV (lid_as_fv PC.steps_zeta_full None) [] []
+        | Pervasives.Unascribe -> mkFV (lid_as_fv PC.steps_unascribe None) [] []
     in
-    let un cb (t0:t) : option SE.norm_step =
+    let un cb (t0:t) : option Pervasives.norm_step =
         match t0.nbe_t with
         | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_simpl ->
-            Some SE.Simpl
+            Some Pervasives.Simpl
         | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_weak ->
-            Some SE.Weak
+            Some Pervasives.Weak
         | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_hnf ->
-            Some SE.HNF
+            Some Pervasives.HNF
         | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_primops ->
-            Some SE.Primops
+            Some Pervasives.Primops
         | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_delta ->
-            Some SE.Delta
+            Some Pervasives.Delta
         | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_zeta ->
-            Some SE.Zeta
+            Some Pervasives.Zeta
         | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_iota ->
-            Some SE.Iota
+            Some Pervasives.Iota
         | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_nbe ->
-            Some SE.NBE
+            Some Pervasives.NBE
         | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_reify ->
-            Some SE.Reify
+            Some Pervasives.Reify
         | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_zeta_full ->
-            Some SE.ZetaFull
+            Some Pervasives.ZetaFull
         | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_unascribe ->
-            Some SE.Unascribe
+            Some Pervasives.Unascribe
         | FV (fv, _, [(l, _)]) when S.fv_eq_lid fv PC.steps_unfoldonly ->
             BU.bind_opt (unembed (e_list e_string) cb l) (fun ss ->
-            Some <| SE.UnfoldOnly ss)
+            Some <| Pervasives.UnfoldOnly ss)
         | FV (fv, _, [(l, _)]) when S.fv_eq_lid fv PC.steps_unfoldfully ->
             BU.bind_opt (unembed (e_list e_string) cb l) (fun ss ->
-            Some <| SE.UnfoldFully ss)
+            Some <| Pervasives.UnfoldFully ss)
         | FV (fv, _, [(l, _)]) when S.fv_eq_lid fv PC.steps_unfoldattr ->
             BU.bind_opt (unembed (e_list e_string) cb l) (fun ss ->
-            Some <| SE.UnfoldAttr ss)
+            Some <| Pervasives.UnfoldAttr ss)
         | FV (fv, _, [(l, _)]) when S.fv_eq_lid fv PC.steps_unfoldqual ->
             BU.bind_opt (unembed (e_list e_string) cb l) (fun ss ->
-            Some <| SE.UnfoldQual ss)
+            Some <| Pervasives.UnfoldQual ss)
         | FV (fv, _, [(l, _)]) when S.fv_eq_lid fv PC.steps_unfoldnamespace ->
             BU.bind_opt (unembed (e_list e_string) cb l) (fun ss ->
-            Some <| SE.UnfoldNamespace ss)            
+            Some <| Pervasives.UnfoldNamespace ss)
         | _ ->
             Errors.log_issue Range.dummyRange (Errors.Warning_NotEmbedded, (BU.format1 "Not an embedded norm_step: %s" (t_to_string t0)));
             None
     in
-    mk_emb em un (mkFV (lid_as_fv PC.norm_step_lid delta_constant None) [] []) (SE.emb_typ_of SE.e_norm_step)
+    mk_emb em un (mkFV (lid_as_fv PC.norm_step_lid None) [] []) (SE.emb_typ_of SE.e_norm_step)
 
 // Embedding a sealed term. This just calls the embedding for a but also
 // adds a `seal` marker to the result. The unembedding removes it.
@@ -607,7 +646,7 @@ let e_sealed (ea : embedding 'a) =
                                           as_iarg (type_of ea)])
     in
     let un cb (trm:t) : option 'a =
-        lazy_unembed cb etyp trm (fun trm ->
+        lazy_unembed etyp trm (fun trm ->
         match trm.nbe_t with
         | Construct (fvar, us, [(a, _); _]) when S.fv_eq_lid fvar PC.seal_lid ->
           unembed ea cb a
@@ -754,13 +793,24 @@ let string_concat' args : option t =
             end
         | _ -> None
         end
-    | _ -> None
+    | _ -> None             
 
 let string_of_int (i:Z.t) : t =
     embed e_string bogus_cbs (Z.string_of_big_int i)
 
 let string_of_bool (b:bool) : t =
     embed e_string bogus_cbs (if b then "true" else "false")
+
+let int_of_string (s:string) : t =
+    embed (e_option e_fsint) bogus_cbs (BU.safe_int_of_string s)
+
+let bool_of_string (s:string) : t =
+    let r = match s with
+            | "true" -> Some true
+            | "false" -> Some false
+            | _ -> None
+    in
+    embed (e_option e_bool) bogus_cbs r
 
 let string_lowercase (s:string) : t =
     embed e_string bogus_cbs (String.lowercase s)
@@ -914,13 +964,13 @@ let or_op (args:args) : option t =
     end
   | _ -> failwith "Unexpected number of arguments"
 
-let division_op (args:args) : option t =
+let division_modulus_op (op:Z.bigint -> Z.bigint -> Z.bigint) (args:args) : option t =
   match args with
   | [a1; a2] -> begin
     match arg_as_int a1, arg_as_int a2 with
     | Some m, Some n ->
       if Z.to_int_fs n <> 0
-      then Some (embed e_int bogus_cbs (Z.div_big_int m n))
+      then Some (embed e_int bogus_cbs (op m n))
       else None
     | _ -> None
     end

@@ -20,7 +20,7 @@ include MiniParse.Spec.Int
 include MiniParse.Spec.List
 include MiniParse.Spec.TEnum
 
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 module L = FStar.List.Tot
 
 noeq

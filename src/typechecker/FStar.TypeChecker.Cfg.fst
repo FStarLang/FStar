@@ -22,6 +22,8 @@ module EMB = FStar.Syntax.Embeddings
 module Z = FStar.BigInt
 module NBE = FStar.TypeChecker.NBETerm
 
+friend FStar.Pervasives (* to expose norm_step *)
+
 let steps_to_string f =
   let format_opt (f:'a -> string) (o:option 'a) =
     match o with
@@ -166,6 +168,7 @@ let fstep_add_one s fs =
     | NBE -> {fs with nbe_step = true }
     | ForExtraction -> {fs with for_extraction = true }
     | Unrefine -> {fs with unrefine = true }
+    | NormDebug -> fs // handled above, affects only dbg flags
 
 let to_fsteps (s : list step) : fsteps =
     List.fold_right fstep_add_one s default_steps
@@ -246,7 +249,7 @@ let log_nbe cfg f =
 let embed_simple (emb:EMB.embedding 'a) (r:Range.range) (x:'a) : term =
     EMB.embed emb x r None EMB.id_norm_cb
 let try_unembed_simple (emb:EMB.embedding 'a) (x:term) : option 'a =
-    EMB.unembed emb x false EMB.id_norm_cb
+    EMB.try_unembed emb x EMB.id_norm_cb
 let built_in_primitive_steps : prim_step_set =
     let arg_as_int    (a:arg) = fst a |> try_unembed_simple EMB.e_int in
     let arg_as_bool   (a:arg) = fst a |> try_unembed_simple EMB.e_bool in
@@ -256,7 +259,7 @@ let built_in_primitive_steps : prim_step_set =
     let arg_as_bounded_int ((a, _) :arg) : option (fv * Z.t * option S.meta_source_info) =
         let (a, m) =
             (match (SS.compress a).n with
-             | Tm_meta(t, Meta_desugared m) -> (t, Some m)
+             | Tm_meta {tm=t; meta=Meta_desugared m} -> (t, Some m)
              | _ -> (a, None)) in
         let a = U.unmeta_safe a in
         let hd, args = U.head_and_args_full a in
@@ -307,16 +310,22 @@ let built_in_primitive_steps : prim_step_set =
          -> option term
          = fun as_a f res n _univs args -> lift_binary (f res.psc_range) (List.map as_a args)
     in
-    let as_primitive_step is_strong (l, arity, u_arity, f, f_nbe) = {
+    let as_primitive_step_nbecbs is_strong (l, arity, u_arity, f, f_nbe) = {
         name=l;
         arity=arity;
         univ_arity=u_arity;
         auto_reflect=None;
         strong_reduction_ok=is_strong;
         requires_binder_substitution=false;
+        renorm_after=false;
         interpretation=(fun psc cb univs args -> f psc cb univs args);
-        interpretation_nbe=(fun _cb univs args -> f_nbe univs args)
-    } in
+        interpretation_nbe=(fun cb univs args -> f_nbe cb univs args)
+    }
+    in
+    (* Most primitive steps don't use the NBE cbs, so they can use this wrapper. *)
+    let as_primitive_step is_strong (l, arity, u_arity, f, f_nbe) =
+      as_primitive_step_nbecbs is_strong (l, arity, u_arity, f, (fun cb univs args -> f_nbe univs args))
+    in
     let unary_int_op (f:Z.t -> Z.t) =
         unary_op arg_as_int (fun r x -> embed_simple EMB.e_int r (f x))
     in
@@ -380,7 +389,7 @@ let built_in_primitive_steps : prim_step_set =
                  | _ -> None
     in
     let list_of_string' rng (s:string) : term =
-        let name l = mk (Tm_fvar (lid_as_fv l delta_constant None)) rng in
+        let name l = mk (Tm_fvar (lid_as_fv l None)) rng in
         let char_t = name PC.char_lid in
         let charterm c = mk (Tm_constant (Const_char c)) rng in
         U.mk_list char_t rng <| List.map charterm (list_of_string s)
@@ -445,6 +454,19 @@ let built_in_primitive_steps : prim_step_set =
     in
     let string_of_bool rng (b:bool) : term =
         embed_simple EMB.e_string rng (if b then "true" else "false")
+    in
+    let int_of_string rng (s:string) : term =
+      let r = safe_int_of_string s in
+      embed_simple EMB.(e_option e_fsint) rng r
+    in
+    let bool_of_string rng (s:string) : term =
+      let r =
+        match s with
+        | "true" -> Some true
+        | "false" -> Some false
+        | _ -> None
+      in
+      embed_simple EMB.(e_option e_bool) rng r
     in
     let lowercase rng (s:string) : term =
         embed_simple EMB.e_string rng (String.lowercase s)
@@ -511,16 +533,6 @@ let built_in_primitive_steps : prim_step_set =
         | _ ->
             failwith "Unexpected number of arguments"
     in
-    (* Really an identity, but only when the thing is an embedded range *)
-    let prims_to_fstar_range_step psc _norm_cb _us args : option term =
-        match args with
-        | [(a1, _)] ->
-            begin match try_unembed_simple EMB.e_range a1 with
-            | Some r -> Some (embed_simple EMB.e_range psc.psc_range r)
-            | None -> None
-            end
-        | _ -> failwith "Unexpected number of arguments"
-    in
     (* and_op and or_op are special cased because they are short-circuting,
      * can run without unembedding its second argument. *)
     let and_op : psc -> EMB.norm_cb -> universes -> args -> option term
@@ -550,8 +562,8 @@ let built_in_primitive_steps : prim_step_set =
         | _ -> failwith "Unexpected number of arguments"
     in
 
-    (* division is special cased since we must avoid zero denominators *)
-    let division_op : psc -> EMB.norm_cb -> universes -> args -> option term
+    (* division and modulus are special cased since we must avoid zero denominators *)
+    let division_modulus_op op : psc -> EMB.norm_cb -> universes -> args -> option term
       = fun psc _norm_cb _us args ->
         match args with
         | [(a1, None); (a2, None)] ->
@@ -559,13 +571,14 @@ let built_in_primitive_steps : prim_step_set =
                         try_unembed_simple EMB.e_int a2 with
             | Some m, Some n ->
               if Z.to_int_fs n <> 0
-              then Some (embed_simple EMB.e_int psc.psc_range (Z.div_big_int m n))
+              then Some (embed_simple EMB.e_int psc.psc_range (op m n))
               else None
 
             | _ -> None
             end
         | _ -> failwith "Unexpected number of arguments"
     in
+
     let bogus_cbs = {
         NBE.iapp = (fun h _args -> h);
         NBE.translate = (fun _ -> failwith "bogus_cbs translate");
@@ -579,12 +592,13 @@ let built_in_primitive_steps : prim_step_set =
     let with_meta_ds r t (m:option meta_source_info) =
       match m with
       | None -> t
-      | Some m -> S.mk (Tm_meta(t, Meta_desugared m)) r
+      | Some m -> S.mk (Tm_meta {tm=t; meta=Meta_desugared m}) r
     in
     let basic_ops
-      //this type annotation has to be on a single line for it to parse
       //because our support for F# style type-applications is very limited
-      : list (Ident.lid * int * int * (psc -> EMB.norm_cb -> universes -> args -> option term) * (universes -> NBETerm.args -> option NBETerm.t))
+      : list (Ident.lid * int * int * 
+              (psc -> EMB.norm_cb -> universes -> args -> option term) *
+              (universes -> NBETerm.args -> option NBETerm.t))
        //name of primitive
           //arity
           //universe arity
@@ -614,8 +628,8 @@ let built_in_primitive_steps : prim_step_set =
          (PC.op_Division,
              2,
              0,
-             division_op,
-             (fun _us -> NBETerm.division_op));
+             division_modulus_op Z.div_big_int,
+             (fun _us -> NBETerm.division_modulus_op Z.div_big_int));
          (PC.op_LT,
              2,
              0,
@@ -639,8 +653,8 @@ let built_in_primitive_steps : prim_step_set =
          (PC.op_Modulus,
              2,
              0,
-             binary_int_op (fun x y -> Z.mod_big_int x y),
-             NBETerm.binary_int_op (fun x y -> Z.mod_big_int x y));
+             division_modulus_op Z.mod_big_int,
+             (fun _us -> NBETerm.division_modulus_op Z.mod_big_int));
          (PC.op_Negation,
              1,
              0,
@@ -659,7 +673,7 @@ let built_in_primitive_steps : prim_step_set =
          (let u32_int_to_t =
             ["FStar"; "UInt32"; "uint_to_t"]
             |> PC.p2l
-            |> (fun l -> S.lid_as_fv l (S.Delta_constant_at_level 0) None) in
+            |> (fun l -> S.lid_as_fv l None) in
           PC.char_u32_of_char,
              1,
              0,
@@ -679,6 +693,17 @@ let built_in_primitive_steps : prim_step_set =
              0,
              unary_op arg_as_bool string_of_bool,
              NBETerm.unary_op NBETerm.arg_as_bool NBETerm.string_of_bool);
+
+         (PC.bool_of_string_lid,
+             1,
+             0,
+             unary_op arg_as_string bool_of_string,
+             NBETerm.unary_op NBETerm.arg_as_string NBETerm.bool_of_string);
+         (PC.int_of_string_lid,
+             1,
+             0,
+             unary_op arg_as_string int_of_string,
+             NBETerm.unary_op NBETerm.arg_as_string NBETerm.int_of_string);
 (* Operations from FStar.String *)
          (PC.string_list_of_string_lid,
              1,
@@ -759,16 +784,11 @@ let built_in_primitive_steps : prim_step_set =
              0,
              decidable_eq true,
              (fun _ -> NBETerm.decidable_eq true));
-         (PC.p2l ["Prims"; "mk_range"],
+         (PC.p2l ["FStar"; "Range"; "mk_range"],
              5,
              0,
              mk_range,
              (fun _ -> NBE.mk_range));
-         (PC.p2l ["FStar"; "Range"; "prims_to_fstar_range"],
-             1,
-             0,
-             prims_to_fstar_range_step,
-             (fun _ -> NBE.prims_to_fstar_range_step));
         ]
     in
     (* GM: Just remove strong_reduction_ok? There's currently no operator which requires that
@@ -1141,7 +1161,7 @@ let built_in_primitive_steps : prim_step_set =
                NBETerm.mk_t <|
                NBETerm.Lazy (Inr (blob, emb_typ EMB.(emb_typ_of e_any)),
                              Thunk.mk (fun _ ->
-                               NBETerm.mk_t <| NBETerm.FV (S.lid_as_fv PC.immutable_array_of_list_lid S.delta_constant None,
+                               NBETerm.mk_t <| NBETerm.FV (S.lid_as_fv PC.immutable_array_of_list_lid None,
                                                           universes,
                                                           [NBETerm.as_arg l]))))
              (fun  universes elt_t (l, lst) ->
@@ -1199,9 +1219,226 @@ let built_in_primitive_steps : prim_step_set =
       in
       [of_list_op; length_op; index_op]
     in
+    let issue_ops =
+        let mk_lid l = PC.p2l ["FStar"; "Issue"; l] in
+        let arg_as_issue (x:arg) : option issue =
+            EMB.(try_unembed e_issue (fst x) id_norm_cb)
+        in
+        let option_int_as_option_z oi = 
+          match oi with
+          | None -> None
+          | Some i -> (Some (Z.of_int_fs i))
+        in
+        let option_z_as_option_int zi = 
+          match zi with
+          | None -> None
+          | Some i -> (Some (Z.to_int_fs i))
+        in
+        let nbe_arg_as_issue (x:NBETerm.arg) : option issue =
+          FStar.TypeChecker.NBETerm.(unembed e_issue bogus_cbs (fst x))
+        in
+        let nbe_str s = FStar.TypeChecker.NBETerm.(embed e_string bogus_cbs s) in
+        let nbe_int s = FStar.TypeChecker.NBETerm.(embed e_int bogus_cbs s) in
+        let nbe_option_int oi =
+          let em = FStar.TypeChecker.NBETerm.(embed (e_option e_int) bogus_cbs) in 
+          em (option_int_as_option_z oi)
+        in
+        [
+        (mk_lid "message_of_issue", 1, 0,
+         unary_op arg_as_issue
+                  (fun _r issue -> EMB.(embed_simple (e_list e_document) Range.dummyRange issue.issue_msg)),
+         NBETerm.unary_op
+                  nbe_arg_as_issue
+                  (fun issue -> FStar.TypeChecker.NBETerm.(embed (e_list e_document) bogus_cbs issue.issue_msg)));
+        (mk_lid "level_of_issue", 1, 0,
+         unary_op arg_as_issue
+                  (fun _r issue -> U.exp_string (Errors.string_of_issue_level issue.issue_level)),
+         NBETerm.unary_op
+                  nbe_arg_as_issue
+                  (fun issue -> nbe_str (Errors.string_of_issue_level issue.issue_level)));
+        (mk_lid "number_of_issue", 1, 0,
+         unary_op arg_as_issue
+                  (fun _r issue -> EMB.(embed_simple (e_option e_int) Range.dummyRange 
+                                                      (option_int_as_option_z issue.issue_number))),
+         NBETerm.unary_op
+                  nbe_arg_as_issue
+                  (fun issue -> nbe_option_int issue.issue_number));
+        (mk_lid "range_of_issue", 1, 0,
+         unary_op arg_as_issue
+                  (fun _r issue -> EMB.(embed_simple (e_option e_range) Range.dummyRange 
+                                                      issue.issue_range)),
+         NBETerm.unary_op
+                  nbe_arg_as_issue
+                  (fun issue -> FStar.TypeChecker.NBETerm.(embed (e_option e_range) bogus_cbs
+                                                      issue.issue_range)));
+        (mk_lid "context_of_issue", 1, 0,
+         unary_op arg_as_issue
+                  (fun _r issue -> EMB.(embed_simple (e_list e_string) Range.dummyRange 
+                                                      issue.issue_ctx)),
+         NBETerm.unary_op
+                  nbe_arg_as_issue
+                  (fun issue -> FStar.TypeChecker.NBETerm.(embed (e_list e_string) bogus_cbs
+                                                      issue.issue_ctx)));
+
+        (mk_lid "render_issue", 1, 0,
+         unary_op arg_as_issue
+                  (fun _r issue -> U.exp_string (Errors.format_issue issue)),
+         NBETerm.unary_op
+                  nbe_arg_as_issue
+                  (fun issue -> nbe_str (Errors.format_issue issue)));
+
+        (mk_lid "mk_issue_doc", 5, 0,
+          (fun psc univs cbs args -> 
+            match args with
+            | [(level, _); (msg, _); (range, _); (number, _); (context, _)] ->
+              begin
+              let open EMB in
+              let try_unembed (#a:Type) (e:embedding a) (x:term) : option a =
+                  try_unembed e x id_norm_cb
+              in
+              match try_unembed e_string level,
+                    try_unembed (e_list e_document) msg,
+                    try_unembed (e_option e_range) range,
+                    try_unembed (e_option e_int) number,
+                    try_unembed (e_list e_string) context with
+              | Some level, Some msg, Some range, Some number, Some context ->
+                let issue = {issue_level = Errors.issue_level_of_string level;
+                             issue_range = range;
+                             issue_number = option_z_as_option_int number;
+                             issue_msg = msg;
+                             issue_ctx = context} in
+                Some (embed_simple e_issue psc.psc_range issue)
+              | _ -> None
+              end
+            | _ -> None),
+          (fun univs args -> 
+            match args with
+            | [(level, _); (msg, _); (range, _); (number, _); (context, _)] ->
+              begin
+              let open FStar.TypeChecker.NBETerm in 
+              let try_unembed (#a:Type) (e:embedding a) (x:NBETerm.t) : option a =
+                  unembed e bogus_cbs x
+              in
+              match try_unembed e_string level,
+                    try_unembed (e_list e_document) msg,
+                    try_unembed (e_option e_range) range,
+                    try_unembed (e_option e_int) number,
+                    try_unembed (e_list e_string) context with
+              | Some level, Some msg, Some range, Some number, Some context ->
+                let issue = {issue_level = Errors.issue_level_of_string level;
+                             issue_range = range;
+                             issue_number = option_z_as_option_int number;
+                             issue_msg = msg;
+                             issue_ctx = context} in
+                Some (NBETerm.embed e_issue bogus_cbs issue)
+              | _ -> None
+              end
+            | _ -> None))
+        ]
+    in
+    let doc_ops =
+        let mk_lid l = PC.p2l ["FStar"; "Stubs"; "Pprint"; l] in
+        (* FIXME: we only implement the absolute minimum. The rest of the operations
+        are availabe to plugins. *)
+        [
+        (mk_lid "arbitrary_string", 1, 0,
+         unary_op arg_as_string
+                  (fun r str ->
+                  embed_simple EMB.e_document r (FStar.Pprint.arbitrary_string str)),
+         NBETerm.unary_op NBETerm.arg_as_string
+                  (fun str -> NBETerm.embed NBETerm.e_document bogus_cbs (FStar.Pprint.arbitrary_string str)));
+        ]
+
+    in
+    let seal_steps =
+      [
+        (PC.map_seal_lid, 4, 2,
+          (fun psc univs cbs args ->
+            match args with
+            | [(ta, _); (tb, _); (s, _); (f, _)] ->
+              begin
+              let open EMB in
+              let try_unembed (#a:Type) (e:embedding a) (x:term) : option a =
+                  try_unembed e x id_norm_cb
+              in
+              match try_unembed e_any ta,
+                    try_unembed e_any tb,
+                    try_unembed (e_sealed e_any) s,
+                    try_unembed e_any f with
+              | Some ta, Some tb, Some s, Some f ->
+                let r = U.mk_app f [S.as_arg s] in
+                let emb = set_type ta e_any in
+                Some (embed_simple (e_sealed emb) psc.psc_range r)
+              | _ -> None
+              end
+            | _ -> None),
+          (fun cb univs args ->
+            match args with
+            | [(ta, _); (tb, _); (s, _); (f, _)] ->
+              begin
+              let open FStar.TypeChecker.NBETerm in
+              let try_unembed (#a:Type) (e:embedding a) (x:NBETerm.t) : option a =
+                  unembed e bogus_cbs x
+              in
+              match try_unembed e_any ta,
+                    try_unembed e_any tb,
+                    try_unembed (e_sealed e_any) s,
+                    try_unembed e_any f with
+              | Some ta, Some tb, Some s, Some f ->
+                let r = cb.iapp f [as_arg s] in
+                let emb = set_type ta e_any in
+                Some (embed (e_sealed emb) cb r)
+              | _ -> None
+              end
+            | _ -> None
+            ));
+        (PC.bind_seal_lid, 4, 2,
+          (fun psc univs cbs args ->
+            match args with
+            | [(ta, _); (tb, _); (s, _); (f, _)] ->
+              begin
+              let open EMB in
+              let try_unembed (#a:Type) (e:embedding a) (x:term) : option a =
+                  try_unembed e x id_norm_cb
+              in
+              match try_unembed e_any ta,
+                    try_unembed e_any tb,
+                    try_unembed (e_sealed e_any) s,
+                    try_unembed e_any f with
+              | Some ta, Some tb, Some s, Some f ->
+                let r = U.mk_app f [S.as_arg s] in
+                Some (embed_simple e_any psc.psc_range r)
+              | _ -> None
+              end
+            | _ -> None),
+          (fun cb univs args ->
+            match args with
+            | [(ta, _); (tb, _); (s, _); (f, _)] ->
+              begin
+              let open FStar.TypeChecker.NBETerm in
+              let try_unembed (#a:Type) (e:embedding a) (x:NBETerm.t) : option a =
+                  unembed e bogus_cbs x
+              in
+              match try_unembed e_any ta,
+                    try_unembed e_any tb,
+                    try_unembed (e_sealed e_any) s,
+                    try_unembed e_any f with
+              | Some ta, Some tb, Some s, Some f ->
+                let r = cb.iapp f [as_arg s] in
+                let emb = set_type ta e_any in
+                Some (embed emb cb r)
+              | _ -> None
+              end
+            | _ -> None
+            ));
+      ]
+    in
     let strong_steps =
       List.map (as_primitive_step true)
-               (basic_ops@bounded_arith_ops@[reveal_hide]@array_ops)
+               (basic_ops@bounded_arith_ops@[reveal_hide]@array_ops@issue_ops@doc_ops)
+      @
+      List.map (fun p -> { as_primitive_step_nbecbs true p with renorm_after = true})
+               seal_steps
     in
     let weak_steps   = List.map (as_primitive_step false) weak_ops in
     prim_from_list <| (strong_steps @ weak_steps)
@@ -1226,6 +1463,7 @@ let equality_ops : prim_step_set =
          auto_reflect=None;
          strong_reduction_ok=true;
          requires_binder_substitution=false;
+         renorm_after=false;
          interpretation = interp_prop_eq2;
          interpretation_nbe = fun _cb _univs -> NBETerm.interp_prop_eq2}
     in
@@ -1317,9 +1555,10 @@ let config' psteps s e =
         | _ -> d in
     let steps = to_fsteps s |> add_nbe in
     let psteps = add_steps (cached_steps ()) psteps in
+    let dbg_flag = List.contains NormDebug s in
     {tcenv = e;
-     debug = if Options.debug_any () then
-            { gen = Env.debug e (Options.Other "Norm")
+     debug = if dbg_flag || Options.debug_any () then
+            { gen = Env.debug e (Options.Other "Norm") || dbg_flag
              ; top = Env.debug e (Options.Other "NormTop")
              ; cfg = Env.debug e (Options.Other "NormCfg")
              ; primop = Env.debug e (Options.Other "Primops")
@@ -1346,7 +1585,9 @@ let config' psteps s e =
      strong = false;
      memoize_lazy = true;
      normalize_pure_lets = (not steps.pure_subterms_within_computations) || Options.normalize_pure_terms_for_extraction();
-     reifying = false}
+     reifying = false;
+     compat_memo_ignore_cfg = Options.ext_getv "compat:normalizer_memo_ignore_cfg" <> "";
+   }
 
 let config s e = config' [] s e
 
@@ -1366,28 +1607,29 @@ let should_reduce_local_let cfg lb =
          not (cfg.steps.pure_subterms_within_computations)
 
 let translate_norm_step = function
-    | EMB.Zeta ->    [Zeta]
-    | EMB.ZetaFull -> [ZetaFull]
-    | EMB.Iota ->    [Iota]
-    | EMB.Delta ->   [UnfoldUntil delta_constant]
-    | EMB.Simpl ->   [Simplify]
-    | EMB.Weak ->    [Weak]
-    | EMB.HNF  ->    [HNF]
-    | EMB.Primops -> [Primops]
-    | EMB.Reify ->   [Reify]
-    | EMB.UnfoldOnly names ->
+    | Pervasives.Zeta ->    [Zeta]
+    | Pervasives.ZetaFull -> [ZetaFull]
+    | Pervasives.Iota ->    [Iota]
+    | Pervasives.Delta ->   [UnfoldUntil delta_constant]
+    | Pervasives.Simpl ->   [Simplify]
+    | Pervasives.Weak ->    [Weak]
+    | Pervasives.HNF  ->    [HNF]
+    | Pervasives.Primops -> [Primops]
+    | Pervasives.Reify ->   [Reify]
+    | Pervasives.NormDebug -> [NormDebug]
+    | Pervasives.UnfoldOnly names ->
         [UnfoldUntil delta_constant; UnfoldOnly (List.map I.lid_of_str names)]
-    | EMB.UnfoldFully names ->
+    | Pervasives.UnfoldFully names ->
         [UnfoldUntil delta_constant; UnfoldFully (List.map I.lid_of_str names)]
-    | EMB.UnfoldAttr names ->
+    | Pervasives.UnfoldAttr names ->
         [UnfoldUntil delta_constant; UnfoldAttr (List.map I.lid_of_str names)]
-    | EMB.UnfoldQual names ->
+    | Pervasives.UnfoldQual names ->
         [UnfoldUntil delta_constant; UnfoldQual names]
-    | EMB.UnfoldNamespace names ->
+    | Pervasives.UnfoldNamespace names ->
         [UnfoldUntil delta_constant; UnfoldNamespace names]
-    | EMB.Unascribe -> [Unascribe]
-    | EMB.NBE -> [NBE]
-    | EMB.Unmeta -> [Unmeta]
+    | Pervasives.Unascribe -> [Unascribe]
+    | Pervasives.NBE -> [NBE]
+    | Pervasives.Unmeta -> [Unmeta]
 
 let translate_norm_steps s =
     let s = List.concatMap translate_norm_step s in

@@ -15,7 +15,7 @@
 *)
 module Syntax
 
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.Reflection.Arith
 
 let quote_sanity_check =
@@ -107,7 +107,7 @@ let _ = assert True
                        print "But that's a known issue...";
                        ())
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let arith_test1 =
     assert True

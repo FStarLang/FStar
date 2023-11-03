@@ -33,12 +33,15 @@ let (__proj__Mkgoal__item__label : goal -> Prims.string) =
 type guard_policy =
   | Goal 
   | SMT 
+  | SMTSync 
   | Force 
   | Drop 
 let (uu___is_Goal : guard_policy -> Prims.bool) =
   fun projectee -> match projectee with | Goal -> true | uu___ -> false
 let (uu___is_SMT : guard_policy -> Prims.bool) =
   fun projectee -> match projectee with | SMT -> true | uu___ -> false
+let (uu___is_SMTSync : guard_policy -> Prims.bool) =
+  fun projectee -> match projectee with | SMTSync -> true | uu___ -> false
 let (uu___is_Force : guard_policy -> Prims.bool) =
   fun projectee -> match projectee with | Force -> true | uu___ -> false
 let (uu___is_Drop : guard_policy -> Prims.bool) =
@@ -52,7 +55,7 @@ type proofstate =
   depth: Prims.int ;
   __dump: proofstate -> Prims.string -> unit ;
   psc: FStar_TypeChecker_Cfg.psc ;
-  entry_range: FStar_Compiler_Range.range ;
+  entry_range: FStar_Compiler_Range_Type.range ;
   guard_policy: guard_policy ;
   freshness: Prims.int ;
   tac_verb_dbg: Prims.bool ;
@@ -105,7 +108,7 @@ let (__proj__Mkproofstate__item__psc :
         psc; entry_range; guard_policy = guard_policy1; freshness;
         tac_verb_dbg; local_state; urgency;_} -> psc
 let (__proj__Mkproofstate__item__entry_range :
-  proofstate -> FStar_Compiler_Range.range) =
+  proofstate -> FStar_Compiler_Range_Type.range) =
   fun projectee ->
     match projectee with
     | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
@@ -143,14 +146,17 @@ let (__proj__Mkproofstate__item__urgency : proofstate -> Prims.int) =
         psc; entry_range; guard_policy = guard_policy1; freshness;
         tac_verb_dbg; local_state; urgency;_} -> urgency
 let (goal_env : goal -> FStar_TypeChecker_Env.env) = fun g -> g.goal_main_env
+let (goal_range : goal -> FStar_Compiler_Range_Type.range) =
+  fun g -> (g.goal_main_env).FStar_TypeChecker_Env.range
 let (goal_witness : goal -> FStar_Syntax_Syntax.term) =
   fun g ->
     FStar_Syntax_Syntax.mk
       (FStar_Syntax_Syntax.Tm_uvar
          ((g.goal_ctx_uvar), ([], FStar_Syntax_Syntax.NoUseRange)))
-      FStar_Compiler_Range.dummyRange
+      FStar_Compiler_Range_Type.dummyRange
 let (goal_type : goal -> FStar_Syntax_Syntax.term) =
   fun g -> FStar_Syntax_Util.ctx_uvar_typ g.goal_ctx_uvar
+let (goal_opts : goal -> FStar_Options.optionstate) = fun g -> g.opts
 let (goal_with_env : goal -> FStar_TypeChecker_Env.env -> goal) =
   fun g ->
     fun env ->
@@ -269,6 +275,10 @@ let (goal_of_implicit :
           FStar_TypeChecker_Env.nosynth = (env.FStar_TypeChecker_Env.nosynth);
           FStar_TypeChecker_Env.uvar_subtyping =
             (env.FStar_TypeChecker_Env.uvar_subtyping);
+          FStar_TypeChecker_Env.intactics =
+            (env.FStar_TypeChecker_Env.intactics);
+          FStar_TypeChecker_Env.nocoerce =
+            (env.FStar_TypeChecker_Env.nocoerce);
           FStar_TypeChecker_Env.tc_term = (env.FStar_TypeChecker_Env.tc_term);
           FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
             (env.FStar_TypeChecker_Env.typeof_tot_or_gtot_term);
@@ -389,12 +399,12 @@ let (tracepoint : proofstate -> Prims.bool) =
      if uu___1 then ps.__dump ps "TRACE" else ());
     true
 let (set_proofstate_range :
-  proofstate -> FStar_Compiler_Range.range -> proofstate) =
+  proofstate -> FStar_Compiler_Range_Type.range -> proofstate) =
   fun ps ->
     fun r ->
       let uu___ =
-        let uu___1 = FStar_Compiler_Range.def_range r in
-        FStar_Compiler_Range.set_def_range ps.entry_range uu___1 in
+        let uu___1 = FStar_Compiler_Range_Type.def_range r in
+        FStar_Compiler_Range_Type.set_def_range ps.entry_range uu___1 in
       {
         main_context = (ps.main_context);
         all_implicits = (ps.all_implicits);
@@ -464,16 +474,8 @@ let (get_phi :
     FStar_Syntax_Util.un_squash uu___
 let (is_irrelevant : goal -> Prims.bool) =
   fun g -> let uu___ = get_phi g in FStar_Compiler_Option.isSome uu___
-type unfold_side =
-  | Left 
-  | Right 
-  | Both 
-  | Neither 
-let (uu___is_Left : unfold_side -> Prims.bool) =
-  fun projectee -> match projectee with | Left -> true | uu___ -> false
-let (uu___is_Right : unfold_side -> Prims.bool) =
-  fun projectee -> match projectee with | Right -> true | uu___ -> false
-let (uu___is_Both : unfold_side -> Prims.bool) =
-  fun projectee -> match projectee with | Both -> true | uu___ -> false
-let (uu___is_Neither : unfold_side -> Prims.bool) =
-  fun projectee -> match projectee with | Neither -> true | uu___ -> false
+type ('g, 't) non_informative_token = unit
+type ('g, 't0, 't1) subtyping_token = unit
+type ('g, 't0, 't1) equiv_token = unit
+type ('g, 'e, 'c) typing_token = unit
+type ('g, 'sc, 't, 'pats) match_complete_token = unit

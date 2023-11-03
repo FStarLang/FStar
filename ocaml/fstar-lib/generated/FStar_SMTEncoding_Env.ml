@@ -1,11 +1,11 @@
 open Prims
-exception Inner_let_rec of (Prims.string * FStar_Compiler_Range.range)
+exception Inner_let_rec of (Prims.string * FStar_Compiler_Range_Type.range)
   Prims.list 
 let (uu___is_Inner_let_rec : Prims.exn -> Prims.bool) =
   fun projectee ->
     match projectee with | Inner_let_rec uu___ -> true | uu___ -> false
 let (__proj__Inner_let_rec__item__uu___ :
-  Prims.exn -> (Prims.string * FStar_Compiler_Range.range) Prims.list) =
+  Prims.exn -> (Prims.string * FStar_Compiler_Range_Type.range) Prims.list) =
   fun projectee -> match projectee with | Inner_let_rec uu___ -> uu___
 let add_fuel : 'uuuuu . 'uuuuu -> 'uuuuu Prims.list -> 'uuuuu Prims.list =
   fun x ->
@@ -59,7 +59,10 @@ let (primitive_projector_by_pos :
               let uu___3 = FStar_Syntax_Subst.compress t in
               uu___3.FStar_Syntax_Syntax.n in
             (match uu___2 with
-             | FStar_Syntax_Syntax.Tm_arrow (bs, c) ->
+             | FStar_Syntax_Syntax.Tm_arrow
+                 { FStar_Syntax_Syntax.bs1 = bs;
+                   FStar_Syntax_Syntax.comp = c;_}
+                 ->
                  let uu___3 = FStar_Syntax_Subst.open_comp bs c in
                  (match uu___3 with
                   | (binders, uu___4) ->
@@ -321,9 +324,10 @@ let (fvb_to_string : fvar_binding -> Prims.string) =
     let uu___1 = term_opt_to_string fvb.smt_token in
     let uu___2 = term_pair_opt_to_string fvb.smt_fuel_partial_app in
     let uu___3 = FStar_Compiler_Util.string_of_bool fvb.fvb_thunked in
-    FStar_Compiler_Util.format5
-      "{ lid = %s;\n  smt_id = %s;\n  smt_token = %s;\n smt_fuel_partial_app = %s;\n fvb_thunked = %s }"
-      uu___ fvb.smt_id uu___1 uu___2 uu___3
+    FStar_Compiler_Util.format6
+      "{ lid = %s;\n  smt_arity = %s;\n  smt_id = %s;\n  smt_token = %s;\n  smt_fuel_partial_app = %s;\n  fvb_thunked = %s }"
+      uu___ (Prims.string_of_int fvb.smt_arity) fvb.smt_id uu___1 uu___2
+      uu___3
 let (check_valid_fvb : fvar_binding -> unit) =
   fun fvb ->
     if
@@ -665,19 +669,15 @@ let (lookup_term_var :
     fun a ->
       let uu___ = lookup_bvar_binding env a in
       match uu___ with
-      | FStar_Pervasives_Native.None ->
-          let uu___1 = lookup_bvar_binding env a in
-          (match uu___1 with
-           | FStar_Pervasives_Native.None ->
-               let uu___2 =
-                 let uu___3 = FStar_Syntax_Print.bv_to_string a in
-                 let uu___4 = print_env env in
-                 FStar_Compiler_Util.format2
-                   "Bound term variable not found  %s in environment: %s"
-                   uu___3 uu___4 in
-               failwith uu___2
-           | FStar_Pervasives_Native.Some (b, t) -> t)
       | FStar_Pervasives_Native.Some (b, t) -> t
+      | FStar_Pervasives_Native.None ->
+          let uu___1 =
+            let uu___2 = FStar_Syntax_Print.bv_to_string a in
+            let uu___3 = print_env env in
+            FStar_Compiler_Util.format2
+              "Bound term variable not found  %s in environment: %s" uu___2
+              uu___3 in
+          failwith uu___1
 let (mk_fvb :
   FStar_Ident.lident ->
     Prims.string ->

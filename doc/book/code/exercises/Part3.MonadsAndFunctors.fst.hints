@@ -7,8 +7,7 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "equation_FStar.FunctionalExtensionality.feq",
+        "@query", "equation_FStar.FunctionalExtensionality.feq",
         "equation_Part3.MonadsAndFunctors.bind",
         "equation_Part3.MonadsAndFunctors.get",
         "equation_Part3.MonadsAndFunctors.get_put",
@@ -16,27 +15,22 @@
         "equation_Part3.MonadsAndFunctors.put",
         "equation_Part3.MonadsAndFunctors.return",
         "equation_Part3.MonadsAndFunctors.st_monad",
-        "fuel_guarded_inversion_Part3.MonadsAndFunctors.monad",
+        "interpretation_Tm_abs_2aa0b1a96b161b2d053b39fd53381fc4",
+        "interpretation_Tm_abs_507db0de980bbf77bf49302498bf419c",
         "interpretation_Tm_abs_6fe7781f05550e647ef9348567de2f4a",
         "interpretation_Tm_abs_79991cb66008561c642fa3e96942b94c",
-        "interpretation_Tm_abs_7b635665b13d92867e2a7a394f6a2045",
         "interpretation_Tm_abs_80bae2cedda8810a1873ff1bc009da67",
         "interpretation_Tm_abs_c0d0000c389ad35def48694f32ab1308",
-        "interpretation_Tm_abs_cb72b10530b50327b78d3bba5e7a9f66",
         "interpretation_Tm_abs_e63dccd4c4d84c40c92b7577b02d7e3b",
-        "proj_equation_Part3.MonadsAndFunctors.Mkmonad_bind",
-        "proj_equation_Part3.MonadsAndFunctors.Mkmonad_return",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_Part3.MonadsAndFunctors.Mkmonad_bind",
-        "projection_inverse_Part3.MonadsAndFunctors.Mkmonad_m",
         "projection_inverse_Part3.MonadsAndFunctors.Mkmonad_return",
         "token_correspondence_Part3.MonadsAndFunctors.bind",
-        "token_correspondence_Part3.MonadsAndFunctors.return",
-        "typing_Part3.MonadsAndFunctors.st_monad"
+        "token_correspondence_Part3.MonadsAndFunctors.return"
       ],
       0,
-      "bcc26503da63f691b638af98664705d7"
+      "41fa7aa072bea55451899b0e551726ef"
     ],
     [
       "Part3.MonadsAndFunctors.opt_monad",
@@ -45,7 +39,7 @@
       1,
       [ "@query", "lemma_FStar.Pervasives.invertOption" ],
       0,
-      "8fea6341007823c4feea91b6abfbaadb"
+      "74b267e82b28b5a46a76735d9096fd24"
     ],
     [
       "Part3.MonadsAndFunctors.div",
@@ -54,7 +48,7 @@
       1,
       [ "@query", "primitive_Prims.op_Equality" ],
       0,
-      "660574b33bc9d881116909f258ec9b7a"
+      "8e335290a1e4ca379b5575822003c6ac"
     ]
   ]
 ]

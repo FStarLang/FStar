@@ -40,6 +40,14 @@ module BU = FStar.Compiler.Util
 
 let profile f c = Profiling.profile f None c
 
+(* Meant to write to a file as an out_channel. If an exception is raised,
+the file is deleted. *)
+let with_file_outchannel (fn : string) (k : out_channel -> 'a) : 'a =
+  let outc = BU.open_file_for_writing fn in
+  (try k outc
+   with | e -> BU.close_out_channel outc; BU.delete_file fn; raise e);
+  BU.close_out_channel outc
+
 (* In case the user passed [--verify_all], we record every single module name we
  * found in the list of modules to be verified.
  * In the [VerifyUserList] case, for every [--verify_module X], we check we
@@ -156,7 +164,7 @@ type parsing_data_elt =
   | P_begin_module of lident  //begin_module
   | P_open of bool * lident  //record_open
   | P_implicit_open_module_or_namespace of (open_kind * lid)  //record_open_module_or_namespace
-  | P_dep of bool * lident  //add_dep_on_module
+  | P_dep of bool * lident  //add_dep_on_module, bool=true iff it's a friend dependency
   | P_alias of ident * lident  //record_module_alias
   | P_lid of lident  //record_lid
   | P_inline_for_extraction
@@ -181,6 +189,15 @@ let str_of_parsing_data_elt elt =
 let str_of_parsing_data = function
   | Mk_pd l ->
     l |> List.fold_left (fun s elt -> s ^ "; " ^ (elt |> str_of_parsing_data_elt)) ""
+
+let friends (p:parsing_data) : list lident =
+  let Mk_pd p = p in
+  List.collect
+    (function
+      | P_dep (true, l) -> [l]
+      | _ -> [])
+    p
+
 
 let parsing_data_elt_eq (e1:parsing_data_elt) (e2:parsing_data_elt) =
   match e1, e2 with
@@ -276,15 +293,15 @@ let cache_file_name =
         && (not (BU.file_exists expected_cache_file) //wrong spot ... complain
             || not (BU.paths_to_same_file path expected_cache_file))
         then
-            FStar.Errors.log_issue
+            FStar.Errors.log_issue_doc
                 Range.dummyRange
-                (FStar.Errors.Warning_UnexpectedCheckedFile,
-                    BU.format3 "Did not expect %s to be already checked, \
+                (FStar.Errors.Warning_UnexpectedCheckedFile, [
+                    Errors.Msg.text <| BU.format3 "Did not expect %s to be already checked, \
                                 but found it in an unexpected location %s \
                                 instead of %s"
                                 mname
                                 path
-                                (Options.prepend_cache_dir cache_fn));
+                                (Options.prepend_cache_dir cache_fn)]);
 
         (* This expression morally just returns [path], but prefers
          * the path in [expected_cache_file] is possible to give
@@ -382,13 +399,13 @@ let dependences_of (file_system_map:files_for_module_name)
       List.map (file_of_dep file_system_map all_cmd_line_files) deps
       |> List.filter (fun k -> k <> fn) (* skip current module, cf #451 *)
 
-let print_graph (graph:dependence_graph) =
+let print_graph (outc : out_channel) (fn : string) (graph:dependence_graph) =
   if not (Options.silent ()) then begin
-    Util.print_endline "A DOT-format graph has been dumped in the current directory as dep.graph";
-    Util.print_endline "With GraphViz installed, try: fdp -Tpng -odep.png dep.graph";
-    Util.print_endline "Hint: cat dep.graph | grep -v _ | grep -v prims"
+    Util.print1 "A DOT-format graph has been dumped in the current directory as `%s`\n" fn;
+    Util.print1 "With GraphViz installed, try: fdp -Tpng -odep.png %s\n" fn;
+    Util.print1 "Hint: cat %s | grep -v _ | grep -v prims\n" fn
   end;
-  Util.write_file "dep.graph" (
+  let s =
     "digraph {\n" ^
     String.concat "\n" (List.collect
       (fun k ->
@@ -402,7 +419,8 @@ let print_graph (graph:dependence_graph) =
           List.map print deps)
      (List.unique (deps_keys graph))) ^
     "\n}\n"
-  )
+  in
+  fprint outc "%s" [s]
 
 (** Enumerate all F* files in include directories.
     Return a list of pairs of long names and full paths. *)
@@ -475,16 +493,16 @@ let namespace_of_lid l =
 let check_module_declaration_against_filename (lid: lident) (filename: string): unit =
   let k' = lowercase_join_longident lid true in
   if String.lowercase (must (check_and_strip_suffix (basename filename))) <> k' then
-    FStar.Errors.log_issue (range_of_lid lid)
-      (Errors.Error_ModuleFileNameMismatch, (Util.format2 "The module declaration \"module %s\" \
+    FStar.Errors.log_issue_doc (range_of_lid lid)
+      (Errors.Error_ModuleFileNameMismatch, [Errors.Msg.text (Util.format2 "The module declaration \"module %s\" \
          found in file %s does not match its filename. Dependencies will be \
-         incorrect and the module will not be verified.\n" (string_of_lid lid true) filename))
+         incorrect and the module will not be verified." (string_of_lid lid true) filename)])
 
 exception Exit
 
 (* In public interface *)
 
-let core_modules =
+let core_modules () =
   [Options.prims_basename () ;
    Options.pervasives_basename () ;
    Options.pervasives_native_basename ()]
@@ -503,8 +521,8 @@ let hard_coded_dependencies full_filename =
   let implicit_ns_deps = List.map (fun l -> l, Open_namespace) implicit_ns_deps in
 
   (* The core libraries do not have any implicit dependencies *)
-  if List.mem (module_name_of_file filename) core_modules then []
-  else match (namespace_of_module (lowercase_module_name full_filename)) with
+  if List.mem (module_name_of_file filename) (core_modules ()) then []
+  else match namespace_of_module (module_name_of_file full_filename) with
        | None -> implicit_ns_deps @ implicit_module_deps
          (*
           * AR: we open FStar, and then ns
@@ -546,10 +564,11 @@ let enter_namespace
         if implicit_open &&
            suffix_exists suffix_filename
         then let str = suffix_filename |> must |> intf_and_impl_to_string in
-             FStar.Errors.log_issue Range.dummyRange
+             FStar.Errors.log_issue_doc Range.dummyRange
                (Errors.Warning_UnexpectedFile,
+                [Errors.text <|
                 BU.format4 "Implicitly opening %s namespace shadows (%s -> %s), rename %s to \
-                  avoid conflicts" prefix suffix str str)
+                  avoid conflicts" prefix suffix str str])
       end;
 
       let filename = must (smap_try_find original_map k) in
@@ -742,9 +761,9 @@ let collect_one
   let data_from_cache = filename |> get_parsing_data_from_cache in
 
   if data_from_cache |> is_some then begin  //we found the parsing data in the checked file
-    if Options.debug_at_level_no_module (Options.Other "Dep") then
-      BU.print1 "Reading the parsing data for %s from its checked file\n" filename;
     let deps, has_inline_for_extraction, mo_roots = from_parsing_data (data_from_cache |> must) original_map filename in
+    if Options.debug_at_level_no_module (Options.Other "Dep") then
+      BU.print2 "Reading the parsing data for %s from its checked file .. found [%s]\n" filename (List.map dep_to_string deps |> String.concat ", ");
     data_from_cache |> must,
     deps, has_inline_for_extraction, mo_roots
   end
@@ -809,7 +828,8 @@ let collect_one
         | Polymonadic_bind (_, _, _, t)
         | Polymonadic_subcomp (_, _, t) -> collect_term t  //collect deps from the effect lids?
 
-        | Pragma _ ->
+        | Pragma _
+        | DeclSyntaxExtension _ ->
             ()
         | TopLevelModule lid ->
             incr num_of_toplevelmods;
@@ -881,6 +901,9 @@ let collect_one
             add_to_parsing_data (P_dep (false, (Util.format2 "fstar.%sint%s" u w |> Ident.lid_of_str)))
         | Const_char _ ->
             add_to_parsing_data (P_dep (false, ("fstar.char" |> Ident.lid_of_str)))
+        | Const_range_of
+        | Const_set_range_of ->
+            add_to_parsing_data (P_dep (false, ("fstar.range" |> Ident.lid_of_str)))
         | _ ->
             ()
 
@@ -1371,7 +1394,7 @@ let collect (all_cmd_line_files: list file_name)
         match FStar.Options.find_file fn with
         | None ->
           Errors.raise_err (Errors.Fatal_ModuleOrFileNotFound,
-                            Util.format1 "File %s could not be found\n" fn)
+                            Util.format1 "File %s could not be found" fn)
         | Some fn -> fn) in
   (* The dependency graph; keys are lowercased module names, values = list of
    * lowercased module names this file depends on. *)
@@ -1427,7 +1450,11 @@ let collect (all_cmd_line_files: list file_name)
   (* At this point, dep_graph has all the (immediate) dependency graph of all the files. *)
   let cycle_detected dep_graph cycle filename =
       Util.print1 "The cycle contains a subset of the modules in:\n%s \n" (String.concat "\n`used by` " cycle);
-      print_graph dep_graph;
+
+      (* Write the graph to a file for the user to see. *)
+      let fn = "dep.graph" in
+      with_file_outchannel fn (fun outc -> print_graph outc fn dep_graph);
+
       print_string "\n";
       Errors.raise_err (Errors.Fatal_CyclicDependence,
                         BU.format1 "Recursive dependency on module %s\n" filename)
@@ -1559,7 +1586,7 @@ let print_digest (dig:list (string * string)) : string =
 
     Deprecated: this will print the dependences among the source files
   *)
-let print_make deps : unit =
+let print_make (outc : out_channel) deps : unit =
     let file_system_map = deps.file_system_map in
     let all_cmd_line_files = deps.cmd_line_files in
     let deps = deps.dep_graph in
@@ -1574,12 +1601,12 @@ let print_make deps : unit =
           Util.print2 "%s: %s\n\n" f (String.concat " " files))
 
 (* In public interface *)
-let print_raw (deps:deps) =
+let print_raw (outc : out_channel) (deps:deps) =
     let (Deps deps) = deps.dep_graph in
       smap_fold deps (fun k dep_node out ->
         BU.format2 "%s -> [\n\t%s\n] " k (List.map dep_to_string dep_node.edges |> String.concat ";\n\t") :: out) []
       |> String.concat ";;\n"
-      |> BU.print_endline
+      |> (fun s -> BU.fprint outc "%s\n" [s])
 
 (** Print the dependencies as returned by [collect] in a Makefile-compatible
     format.
@@ -1589,7 +1616,7 @@ let print_raw (deps:deps) =
      -- We also print dependences for producing .ml files from .checked files
         This takes care of renaming A.B.C.fst to A_B_C.ml
   *)
-let print_full (deps:deps) : unit =
+let print_full (outc : out_channel) (deps:deps) : unit =
     //let (Mk (deps, file_system_map, all_cmd_line_files, all_files)) = deps in
     let sort_output_files (orig_output_file_map:BU.smap string) =
         let order : ref (list string) = BU.mk_ref [] in
@@ -1650,8 +1677,21 @@ let print_full (deps:deps) : unit =
         pr "\n\n"
     in
     let keys = deps_keys deps.dep_graph in
+    let no_fstar_stubs_file (s:string) : string =
+      (* If the original filename begins with FStar.Stubs, then remove that,
+      consistent with what extraction will actually do. *)
+      let s1 = "FStar.Stubs." in
+      let s2 = "FStar." in
+      let l1 = String.length s1 in
+      if String.length s >= l1 && String.substring s 0 l1 = s1 then
+        s2 ^ String.substring s l1 (String.length s - l1)
+      else
+        s
+    in
     let output_file ext fst_file =
-        let ml_base_name = replace_chars (Option.get (check_and_strip_suffix (BU.basename fst_file))) '.' "_" in
+        let basename = Option.get (check_and_strip_suffix (BU.basename fst_file)) in
+        let basename = no_fstar_stubs_file basename in
+        let ml_base_name = replace_chars basename '.' "_" in
         Options.prepend_output_dir (ml_base_name ^ ext)
     in
     let norm_path s = replace_chars (replace_chars s '\\' "/") ' ' "\\ " in
@@ -1903,32 +1943,41 @@ let print_full (deps:deps) : unit =
     print_all "ALL_ML_FILES" all_ml_files;
     print_all "ALL_KRML_FILES" all_krml_files;
 
+    FStar.StringBuffer.output_channel outc sb
 
-    FStar.StringBuffer.output_channel BU.stdout sb
+let coerce #a #b (x : a) : b = x
 
-(* In public interface *)
-let print deps =
+let do_print (outc : out_channel) (fn : string) deps : unit =
   match Options.dep() with
   | Some "make" ->
-      print_make deps
+      print_make outc deps
   | Some "full" ->
-      profile (fun () -> print_full deps) "FStar.Parser.Deps.print_full_deps"
+      profile (fun () -> print_full outc deps) "FStar.Parser.Deps.print_full_deps"
   | Some "graph" ->
-      print_graph deps.dep_graph
+      print_graph outc fn deps.dep_graph
   | Some "raw" ->
-      print_raw deps
+      print_raw outc deps
   | Some _ ->
       raise_err (Errors.Fatal_UnknownToolForDep, "unknown tool for --dep\n")
   | None ->
       assert false
 
-let print_fsmap fsmap =
-    smap_fold fsmap (fun k (v0, v1) s ->
-        s
-        ^ "; "
-        ^ BU.format3 "%s -> (%s, %s)"
-                k (BU.dflt "_" v0) (BU.dflt "_" v1))
-        ""
+(* Just prints to stdout *)
+let do_print_stdout deps =
+  do_print BU.stdout "<stdout>" deps
+
+(* Opens the file, prints to it, and closes it. If anything failed, the file
+is deleted. *)
+let do_print_file deps fn =
+  with_file_outchannel fn (fun outc -> do_print outc fn deps)
+
+(* In public interface *)
+let print deps =
+  match Options.output_deps_to () with
+  | Some s -> do_print_file deps s
+  (* Special case for --dep graph, by default we write to dep.graph instead of stdout. *)
+  | None when Options.dep () = Some "graph" -> do_print_file deps "dep.graph"
+  | None -> do_print_stdout deps
 
 (* In public interface *)
 let module_has_interface deps module_name =

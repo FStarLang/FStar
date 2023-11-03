@@ -15,15 +15,14 @@
 *)
 module Sequences
 
-open FStar.Tactics
-open FStar.Reflection
+open FStar.Tactics.V2
 open FStar.Seq
 
 let is_seq_t (t:term) : Tac bool =
     let hd, args = collect_app t in
     is_fvar hd (`%seq)
 
-let clear_hypothesis (b:binder) : Tac unit = ()
+let clear_hypothesis (b:binding) : Tac unit = ()
 
 let retain_only (nss:list string) : Tac unit = 
   prune ""; //removes every top-level assertion which "" as a prefix; so prune everything
@@ -36,10 +35,10 @@ let unrefine_eq_lem (#a:Type) (#p : (a -> Type)) (x y : (z:a{p z})) (s : squash 
   
 let prune_for_seq () : Tac unit =
   let e = cur_env () in 
-  let bs = binders_of_env e in
+  let bs = vars_of_env e in
   //prune the local environment
   let _ = map (fun b ->
-    match term_as_formula (type_of_binder b) with
+    match term_as_formula (type_of_binding b) with
     | Comp (Eq (Some t)) _ _ ->
       if is_seq_t t then //this is a sequence equality; keep it
         ()

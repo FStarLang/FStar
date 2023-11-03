@@ -17,7 +17,15 @@
 module FStar.Errors
 
 module Range = FStar.Compiler.Range
+
 include FStar.Errors.Codes
+include FStar.Errors.Msg
+open FStar.Errors.Msg
+
+(* This is a fallback to be used if an error is raised/logged
+with a dummy range. It is set by TypeChecker.Tc.process_one_decl to
+the range of the sigelt being checked. *)
+val fallback_range : FStar.Compiler.Effect.ref (option Range.range)
 
 (* Get the error number for a particular code. Useful for creating error
 messages mentioning --warn_error. *)
@@ -31,10 +39,10 @@ val call_to_erased_errno : int
 val update_flags : list (error_flag * string) -> list error_setting
 
 (* error code, message, source position, and error context *)
-type error = raw_error * string * FStar.Compiler.Range.range * list string
+type error = raw_error * error_message * FStar.Compiler.Range.range * list string
 
 exception Error   of error
-exception Err     of raw_error * string * list string
+exception Err     of raw_error * error_message * list string
 exception Warning of error
 exception Stop
 exception Empty_frag
@@ -46,7 +54,7 @@ type issue_level =
   | EError
 
 type issue = {
-    issue_msg: string;
+    issue_msg: error_message;
     issue_level: issue_level;
     issue_range: option Range.range;
     issue_number: option int;
@@ -60,7 +68,10 @@ type error_handler = {
     eh_clear: unit -> unit
 }
 
-val issue_message : issue -> string
+val string_of_issue_level : issue_level -> string
+val issue_level_of_string : string -> issue_level
+val issue_message : issue -> error_message
+val format_issue' : bool -> issue -> string
 val format_issue : issue -> string
 val error_number : error_setting -> int
 val print_issue : issue -> unit
@@ -76,7 +87,16 @@ val report_all : unit -> list issue
 val clear : unit -> unit
 val set_handler : error_handler -> unit
 val get_ctx : unit -> list string
+
+val diag_doc : Range.range -> error_message -> unit
 val diag : Range.range -> string -> unit
+
+val diag0 : string -> unit
+val diag1 : string -> string -> unit
+val diag2 : string -> string -> string -> unit
+val diag3 : string -> string -> string -> string -> unit
+val diag4 : string -> string -> string -> string -> string -> unit
+val diag5 : string -> string -> string -> string -> string -> string -> unit
 
 val set_option_warning_callback_range : ropt:option FStar.Compiler.Range.range -> unit
 val set_parse_warn_error : (string -> list error_setting) -> unit
@@ -96,9 +116,25 @@ val stop_if_err : unit -> unit
 use this for any CFatal error. *)
 val log_issue   : Range.range -> raw_error & string -> unit
 
+(* Log an issue directly, rather than converting it from a raw_error etc.
+   This does not raise an exception. Do not use this for any CFatal error. *)
+val add_issues : list issue -> unit
+
 (* Raise an error. This raises an exception and does not return. *)
 val raise_error : (raw_error & string) -> Range.range -> 'a
 val raise_err   : (raw_error & string) -> 'a
+
+(* As above, but with doc error_message API *)
+val raise_error_doc : (raw_error & error_message) -> Range.range -> 'a
+val raise_err_doc   : (raw_error & error_message) -> 'a
+val log_issue_doc   : Range.range -> raw_error & error_message -> unit
+
+(* Simplified versions for a single text error component. The text will
+be formatted and wrapped. Use this instead of the plain versions above
+unless you need to retain formatting. *)
+val raise_error_text : (raw_error & string) -> Range.range -> 'a
+val raise_err_text   : (raw_error & string) -> 'a
+val log_issue_text   : Range.range -> raw_error & string -> unit
 
 (* Run a function f inside an extended "error context", so its errors
 are prefixed by the messages of each enclosing with_ctx. Only visible

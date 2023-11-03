@@ -23,17 +23,17 @@ open FStar.InteractiveHelpers.Propositions
 /// differently the pre-assertions and the post-assertions. Moreover, we need to
 /// keep track of which variables are shadowed for every assertion.
   
-let rec _split_subst_at_bv (#a : Type) (b : bv) (subst : list (bv & a)) :
-  Tot (list (bv & a) & list (bv & a))
+let rec _split_subst_at_bv (#a #b : Type) (x : bv) (subst : list ((bv & a) & b)) :
+  Tot (list ((bv & a) & b) & list ((bv & a) & b))
   (decreases subst) =
   match subst with
   | [] -> [], []
-  | (src, tgt) :: subst' ->
-    if bv_eq b src then
+  | ((src, ty), tgt) :: subst' ->
+    if bv_eq x src then
       [], subst'
     else 
-      let s1, s2 = _split_subst_at_bv b subst' in
-      (src, tgt) :: s1, s2
+      let s1, s2 = _split_subst_at_bv x subst' in
+      ((src, ty), tgt) :: s1, s2
 
 val subst_shadowed_with_abs_in_assertions : bool -> genv -> option bv -> assertions -> Tac (genv & assertions)
 let subst_shadowed_with_abs_in_assertions dbg ge shadowed_bv es =
@@ -44,7 +44,7 @@ let subst_shadowed_with_abs_in_assertions dbg ge shadowed_bv es =
   print_dbg dbg ("subst_shadowed_with_abs_in_assertions:\n" ^ genv_to_string ge);
   (* Generate the substitution *)
   let ge1, subst = generate_shadowed_subst ge in
-  let post_subst = map (fun (src, tgt) -> src, pack (Tv_Var tgt)) subst in
+  let post_subst = map (fun (src, ty, tgt) -> (src, ty), pack (Tv_Var tgt)) subst in
   (* The current substitution is valid for the post-assertions: derive from it
    * a substitution valid for the pre-assertions (just cut it where the bv
    * shadowed by the return value appears). Note that because we might introduce
@@ -55,7 +55,7 @@ let subst_shadowed_with_abs_in_assertions dbg ge shadowed_bv es =
     else post_subst
   in
   let subst_to_string subst : Tac string =
-    let to_string (x, y) =
+    let to_string ((x, ty), y) =
       "(" ^ abv_to_string x ^ " -> " ^ term_to_string y ^ ")\n"
     in
     let str = map to_string subst in
@@ -85,8 +85,8 @@ let string_to_printout (prefix data:string) : Tot string =
 let term_to_printout (ge:genv) (prefix:string) (t:term) : Tac string =
   (* We need to look for abstract variables and abstract them away *)
   let abs = abs_free_in ge t in
-  let abs_binders = List.Tot.map mk_binder abs in
-  let abs_terms = map (fun bv -> pack (Tv_Var bv)) abs in
+  let abs_binders = List.Tot.map (fun (bv, t) -> mk_binder bv t) abs in
+  let abs_terms = map (fun (bv, _) -> pack (Tv_Var bv)) abs in
   let t = mk_abs abs_binders t in
   let t = mk_e_app t abs_terms in
   string_to_printout prefix (term_to_string t)
@@ -164,8 +164,7 @@ let _debug_print_var (name : string) (t : term) : Tac unit =
   | Tv_Var bv ->
     let b : bv_view = inspect_bv bv in
     print ("Tv_Var: ppname: " ^ name_of_bv bv ^
-           "; index: " ^ (string_of_int b.bv_index) ^
-           "; sort: " ^ term_to_string b.bv_sort)
+           "; index: " ^ (string_of_int b.bv_index))
   | _ -> ()
   end;
   print "end of _debug_print_var"

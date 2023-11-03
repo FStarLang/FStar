@@ -282,14 +282,6 @@ let subtype_of (p1 p2: Type) = forall (x: p1). has_type x p2
     *)
 type prop = a: Type0{a `subtype_of` unit}
 
-(** [range] is a type for the internal representations of source
-   ranges The functions that follow below allow manipulating ranges
-   abstractly.  Importantly, while we allow constructing ranges, we do
-   not allow destructing them, since that would reveal that
-   internally, set_range_of is not an identity function.  *)
-assume new
-type range : Type0 
-
 (**** The PURE effect *)
 
 (** The type of pure preconditions *)
@@ -500,14 +492,6 @@ type l_Exists (#a: Type) (p: (a -> GTot Type0)) : logical = squash (x: a & p x)
 assume new
 type int : eqtype 
 
-(** A dummy range constant *)
-assume
-val range_0:range
-
-(** Building a range constant *)
-assume
-val mk_range (file: string) (from_line from_col to_line to_col: int) : Tot range
-
 (**** Basic operators on booleans and integers *)
 
 (** [&&] boolean conjunction *)
@@ -632,32 +616,32 @@ let as_ensures (#a: Type) (wp: pure_wp a) : pure_post a = fun (x:a) -> ~(wp (fun
 (** The keyword term-level keyword [assume] is desugared to [_assume].
     It explicitly provides an escape hatch to assume a given property
     [p]. *)
-[@@ warn_on_use "uses an axiom"]
+[@@ warn_on_use "Uses an axiom"]
 assume
 val _assume (p: Type) : Pure unit (requires (True)) (ensures (fun x -> p))
 
 (** [admit] is another escape hatch: It discards the continuation and
     returns a value of any type *)
-[@@ warn_on_use "uses an axiom"]
+[@@ warn_on_use "Uses an axiom"]
 assume
 val admit: #a: Type -> unit -> Admit a
 
 (** [magic] is another escape hatch: It retains the continuation but
     returns a value of any type *)
-[@@ warn_on_use "uses an axiom"]
+[@@ warn_on_use "Uses an axiom"]
 assume
 val magic: #a: Type -> unit -> Tot a
 
 (** [unsafe_coerce] is another escape hatch: It coerces an [a] to a
     [b].  *)
-[@@ warn_on_use "uses an axiom"]
+[@@ warn_on_use "Uses an axiom"]
 irreducible
 let unsafe_coerce (#a #b: Type) (x: a) : b =
   admit ();
   x
 
 (** [admitP]: TODO: Unused ... remove? *)
-[@@ warn_on_use "uses an axiom"]
+[@@ warn_on_use "Uses an axiom"]
 assume
 val admitP (p: Type) : Pure unit True (fun x -> p)
 
@@ -721,13 +705,7 @@ val string_of_bool: bool -> Tot string
 assume
 val string_of_int: int -> Tot string
 
-(** [labeled] is used internally to the SMT encoding to associate a
-    source-code location with an assertion. *)
-irreducible
-let labeled (r: range) (msg: string) (b: Type) : Type = b
-
-
 (** THIS IS MEANT TO BE KEPT IN SYNC WITH FStar.CheckedFiles.fs
     Incrementing this forces all .checked files to be invalidated *)
 irreducible
-let __cache_version_number__ = 53
+let __cache_version_number__ = 62

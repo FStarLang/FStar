@@ -26,7 +26,7 @@
         "typing_FStar.UInt8.t", "typing_LowStar.Monotonic.Buffer.loc_none"
       ],
       0,
-      "891b6c3e491cbc14b31ad01403d10f77"
+      "93f47af30d4ee8e6700cf424bf037c8c"
     ],
     [
       "MiniParse.Impl.Int.serialize_u8_impl",
@@ -120,7 +120,7 @@
         "typing_MiniParse.Spec.Int.serialize_u8"
       ],
       0,
-      "1ab8c72bfae109cef22c2706b23a2269"
+      "e36f60c46b68a6c06a30c29862cea272"
     ],
     [
       "MiniParse.Impl.Int.parse_u16_impl",
@@ -143,7 +143,7 @@
         "typing_MiniParse.Spec.Int.Aux.decode_u16"
       ],
       0,
-      "fdd1978904c27ca97f5aa5bda89f99af"
+      "f26e8066afa1f57fefc5cc27ba0e744d"
     ],
     [
       "MiniParse.Impl.Int.serialize_u16_impl",
@@ -259,7 +259,7 @@
         "typing_MiniParse.Spec.Int.serialize_u16"
       ],
       0,
-      "9eeca0cd49fa54ba473fe7affa445ca1"
+      "c6e269e751b1c791785630f34bb98199"
     ],
     [
       "MiniParse.Impl.Int.parse_bounded_u16_impl",
@@ -278,7 +278,6 @@
         "b2t_def", "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "constructor_distinct_Tm_unit",
-        "disc_equation_FStar.Pervasives.Native.None",
         "equation_FStar.Monotonic.HyperStack.mem",
         "equation_FStar.UInt.fits", "equation_FStar.UInt.lt",
         "equation_FStar.UInt.max_int", "equation_FStar.UInt.min_int",
@@ -367,7 +366,7 @@
         "typing_Tm_abs_ca539376a5f570dfa840a07f6c3cae8b"
       ],
       0,
-      "bef4a51f57dd49383d4c6da946d93540"
+      "03aaa702a9817ff64962b2d078fdb1b0"
     ],
     [
       "MiniParse.Impl.Int.serialize_bounded_u16_impl",
@@ -399,7 +398,7 @@
         "token_correspondence_MiniParse.Spec.Base.__proj__Serializer__item__f"
       ],
       0,
-      "1fb8eec33a63f75ec7ce73f8c1df4044"
+      "c041e674b7cab154d567c7e140bff86e"
     ]
   ]
 ]

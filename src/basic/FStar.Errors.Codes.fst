@@ -256,7 +256,7 @@ let default_settings : list error_setting =
     Unused01                                          , CFatal, 237;
     Warning_PluginNotImplemented                      , CError, 238;
     Warning_AddImplicitAssumeNewQualifier             , CWarning, 239;
-    Warning_AdmitWithoutDefinition                    , CWarning, 240;
+    Error_AdmitWithoutDefinition                      , CError, 240;
     Warning_CachedFile                                , CWarning, 241;
     Warning_DefinitionNotTranslated                   , CWarning, 242;
     Warning_DependencyFound                           , CWarning, 243;
@@ -372,4 +372,6 @@ let default_settings : list error_setting =
     Error_InternalQualifier                           , CAlwaysError, 354;
     Warning_NameEscape                                , CWarning, 355;
     Warning_UnexpectedZ3Stderr                        , CWarning, 356;
+    Warning_SolverMismatch                            , CError, 357;
+    Warning_SolverVersionMismatch                     , CError, 358;
     ]

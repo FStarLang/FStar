@@ -2112,6 +2112,7 @@ and p_projectionLHS e = match e.tm with
   | Abs _       (* p_simpleTerm *)
   | App _       (* p_appTerm *)
   | Let _       (* p_noSeqTerm *)
+  | LetOperator _   (* p_noSeqTerm *)
   | LetOpen _   (* p_noSeqTerm *)
   | LetOpenRecord _ (* p_noSeqTerm *)
   | Seq _       (* p_term *)

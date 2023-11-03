@@ -163,12 +163,14 @@ let defaults =
       ("eager_subtyping"              , Bool false);
       ("error_contexts"               , Bool false);
       ("expose_interfaces"            , Bool false);
+      ("ext"                          , List []);
       ("extract"                      , Unset);
       ("extract_all"                  , Bool false);
       ("extract_module"               , List []);
       ("extract_namespace"            , List []);
       ("full_context_dependency"      , Bool true);
       ("hide_uvar_nums"               , Bool false);
+      ("hint_hook"                    , Unset);
       ("hint_info"                    , Bool false);
       ("hint_dir"                     , Unset);
       ("hint_file"                    , Unset);
@@ -202,6 +204,7 @@ let defaults =
       ("normalize_pure_terms_for_extraction"
                                       , Bool false);
       ("odir"                         , Unset);
+      ("output_deps_to"               , Unset);
       ("prims"                        , Unset);
       ("pretype"                      , Bool true);
       ("prims_ref"                    , Unset);
@@ -256,6 +259,7 @@ let defaults =
       ("z3seed"                       , Int 0);
       ("z3cliopt"                     , List []);
       ("z3smtopt"                     , List []);
+      ("z3version"                    , String "4.8.5");
       ("__no_positivity"              , Bool false);
       ("__tactics_nbe"                , Bool false);
       ("warn_error"                   , List []);
@@ -317,6 +321,7 @@ let set_verification_options o =
     "z3rlimit";
     "z3rlimit_factor";
     "z3seed";
+    "z3version";
     "trivial_pre_for_unannotated_effectful_fns";
   ] in
   List.iter (fun k -> set_option k (Util.smap_try_find o k |> Util.must)) verifopts
@@ -350,11 +355,13 @@ let get_dump_module             ()      = lookup_opt "dump_module"              
 let get_eager_subtyping         ()      = lookup_opt "eager_subtyping"          as_bool
 let get_error_contexts          ()      = lookup_opt "error_contexts"           as_bool
 let get_expose_interfaces       ()      = lookup_opt "expose_interfaces"        as_bool
+let get_ext                     ()      = lookup_opt "ext"                      (as_option (as_list as_string))
 let get_extract                 ()      = lookup_opt "extract"                  (as_option (as_list as_string))
 let get_extract_module          ()      = lookup_opt "extract_module"           (as_list as_string)
 let get_extract_namespace       ()      = lookup_opt "extract_namespace"        (as_list as_string)
 let get_force                   ()      = lookup_opt "force"                    as_bool
 let get_hide_uvar_nums          ()      = lookup_opt "hide_uvar_nums"           as_bool
+let get_hint_hook               ()      = lookup_opt "hint_hook"                (as_option as_string)
 let get_hint_info               ()      = lookup_opt "hint_info"                as_bool
 let get_hint_dir                ()      = lookup_opt "hint_dir"                 (as_option as_string)
 let get_hint_file               ()      = lookup_opt "hint_file"                (as_option as_string)
@@ -384,6 +391,7 @@ let get_no_smt                  ()      = lookup_opt "no_smt"                   
 let get_normalize_pure_terms_for_extraction
                                 ()      = lookup_opt "normalize_pure_terms_for_extraction" as_bool
 let get_odir                    ()      = lookup_opt "odir"                     (as_option as_string)
+let get_output_deps_to          ()      = lookup_opt "output_deps_to"           (as_option as_string)
 let get_ugly                    ()      = lookup_opt "ugly"                     as_bool
 let get_prims                   ()      = lookup_opt "prims"                    (as_option as_string)
 let get_print_bound_var_types   ()      = lookup_opt "print_bound_var_types"    as_bool
@@ -437,6 +445,7 @@ let get_z3refresh               ()      = lookup_opt "z3refresh"                
 let get_z3rlimit                ()      = lookup_opt "z3rlimit"                 as_int
 let get_z3rlimit_factor         ()      = lookup_opt "z3rlimit_factor"          as_int
 let get_z3seed                  ()      = lookup_opt "z3seed"                   as_int
+let get_z3version               ()      = lookup_opt "z3version"                as_string
 let get_no_positivity           ()      = lookup_opt "__no_positivity"          as_bool
 let get_warn_error              ()      = lookup_opt "warn_error"               (as_list as_string)
 let get_use_nbe                 ()      = lookup_opt "use_nbe"                  as_bool
@@ -691,7 +700,7 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * string) 
 
       ( noshort,
         "codegen",
-        EnumStr ["OCaml"; "FSharp"; "krml"; "Plugin"],
+        EnumStr ["OCaml"; "FSharp"; "krml"; "Plugin"; "Extension"],
         "Generate code for further compilation to executable code, or build a compiler plugin");
 
       ( noshort,
@@ -753,10 +762,19 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * string) 
         "Print context information for each error or warning raised (default false)");
 
        ( noshort,
+         "ext",
+         ReverseAccumulated (SimpleStr "One or more semicolon separated occurrences of key-value pairs"),
+         "\n\t\tThese options are set in extensions option map. Keys are usually namespaces separated by \":\".\n\t\t\
+         E.g., 'pulse:verbose=1;my:extension:option=xyz;foo:bar=baz'\n\t\t\
+         These options are typically interpreted by extensions. \n\t\t\
+         Any later use of --ext over the same key overrides the old value.\n\t\t\
+         An entry 'e' that is not of the form 'a=b' is treated as 'e=1', i.e., 'e' associated with string \"1\"");
+
+       ( noshort,
          "extract",
          Accumulated (SimpleStr "One or more semicolon separated occurrences of '[TargetName:]ModuleSelector'"),
         "\n\t\tExtract only those modules whose names or namespaces match the provided options.\n\t\t\t\
-         'TargetName' ranges over {OCaml, krml, FSharp, Plugin}.\n\t\t\t\
+         'TargetName' ranges over {OCaml, krml, FSharp, Plugin, Extension}.\n\t\t\t\
          A 'ModuleSelector' is a space or comma-separated list of '[+|-]( * | namespace | module)'.\n\t\t\t\
          For example --extract 'OCaml:A -A.B' --extract 'krml:A -A.C' --extract '*' means\n\t\t\t\t\
          for OCaml, extract everything in the A namespace only except A.B;\n\t\t\t\t\
@@ -795,6 +813,14 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * string) 
          "hint_file",
          PathStr "path",
         "Read/write hints to  path (instead of module-specific hints files; overrides hint_dir)");
+
+       ( noshort,
+        "hint_hook",
+        SimpleStr "command",
+        "Use <command> to generate hints for definitions which do not have them. The command will\n\t\
+         receive a JSON representation of the query, the type of the top-level definition involved,\n\t\
+         and the full SMT theory, and must output a comma separated list\n\t\
+         of facts to be used.");
 
        ( noshort,
         "hint_info",
@@ -961,6 +987,11 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * string) 
         "odir",
         PostProcessed (pp_validate_dir, PathStr "dir"),
         "Place output in directory  dir");
+
+       ( noshort,
+        "output_deps_to",
+        PathStr "file",
+        "Output the result of --dep into this file instead of to standard output.");
 
        ( noshort,
         "prims",
@@ -1270,13 +1301,18 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * string) 
         "Set the Z3 random seed (default 0)");
 
        ( noshort,
+        "z3version",
+        SimpleStr "version",
+        "Set the version of Z3 that is to be used. Default: 4.8.5");
+
+       ( noshort,
         "__no_positivity",
         WithSideEffect ((fun _ -> if warn_unsafe then option_warning_callback "__no_positivity"), Const (Bool true)),
         "Don't check positivity of inductive types");
 
         ( noshort,
         "warn_error",
-        Accumulated (SimpleStr ("")),
+        ReverseAccumulated (SimpleStr ("")),
         "The [-warn_error] option follows the OCaml syntax, namely:\n\t\t\
          - [r] is a range of warnings (either a number [n], or a range [n..n])\n\t\t\
          - [-r] silences range [r]\n\t\t\
@@ -1361,6 +1397,7 @@ let settable = function
     | "hint_file"
     | "hint_info"
     | "fuel"
+    | "ext"
     | "ifuel"
     | "initial_fuel"
     | "initial_ifuel"
@@ -1423,6 +1460,7 @@ let settable = function
     | "z3rlimit"
     | "z3rlimit_factor"
     | "z3seed"
+    | "z3version"
     | "trivial_pre_for_unannotated_effectful_fns"
     | "profile_group_by_decl"
     | "profile_component"
@@ -1686,6 +1724,7 @@ let parse_codegen =
   | "FSharp" -> Some FSharp
   | "krml" -> Some Krml
   | "Plugin" -> Some Plugin
+  | "Extension" -> Some Extension
   | _ -> None
 
 let print_codegen =
@@ -1694,6 +1733,7 @@ let print_codegen =
   | FSharp -> "FSharp"
   | Krml -> "krml"
   | Plugin -> "Plugin"
+  | Extension -> "Extension"
 
 let codegen                      () =
     Util.map_opt (get_codegen())
@@ -1720,6 +1760,7 @@ let expose_interfaces            () = get_expose_interfaces          ()
 let force                        () = get_force                       ()
 let full_context_dependency      () = true
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
+let hint_hook                    () = get_hint_hook                   ()
 let hint_info                    () = get_hint_info                   ()
                                     || get_query_stats                ()
 let hint_dir                     () = get_hint_dir                    ()
@@ -1763,6 +1804,7 @@ let no_location_info             () = get_no_location_info            ()
 let no_plugins                   () = get_no_plugins                  ()
 let no_smt                       () = get_no_smt                      ()
 let output_dir                   () = get_odir                        ()
+let output_deps_to               () = get_output_deps_to              ()
 let ugly                         () = get_ugly                        ()
 let print_bound_var_types        () = get_print_bound_var_types       ()
 let print_effect_args            () = get_print_effect_args           ()
@@ -1781,6 +1823,7 @@ let retry                        () = get_retry                       ()
 let reuse_hint_for               () = get_reuse_hint_for              ()
 let report_assumes               () = get_report_assumes              ()
 let silent                       () = get_silent                      ()
+let smt                          () = get_smt                         ()
 let smtencoding_elim_box         () = get_smtencoding_elim_box        ()
 let smtencoding_nl_arith_native  () = get_smtencoding_nl_arith_repr () = "native"
 let smtencoding_nl_arith_wrapped () = get_smtencoding_nl_arith_repr () = "wrapped"
@@ -1820,15 +1863,13 @@ let using_facts_from             () =
     | Some ns -> parse_settings ns
 let warn_default_effects         () = get_warn_default_effects        ()
 let warn_error                   () = String.concat " " (get_warn_error())
-let z3_exe                       () = match get_smt () with
-                                    | None -> Platform.exe "z3"
-                                    | Some s -> s
 let z3_cliopt                    () = get_z3cliopt                    ()
 let z3_smtopt                    () = get_z3smtopt                    ()
 let z3_refresh                   () = get_z3refresh                   ()
 let z3_rlimit                    () = get_z3rlimit                    ()
 let z3_rlimit_factor             () = get_z3rlimit_factor             ()
 let z3_seed                      () = get_z3seed                      ()
+let z3_version                   () = get_z3version                   ()
 let no_positivity                () = get_no_positivity               ()
 let use_nbe                      () = get_use_nbe                     ()
 let use_nbe_for_extraction       () = get_use_nbe_for_extraction      ()
@@ -1920,7 +1961,7 @@ let extract_settings
         | Some x -> [tgt,x]
       in
       {
-        target_specific_settings = List.collect merge_target [OCaml;FSharp;Krml;Plugin];
+        target_specific_settings = List.collect merge_target [OCaml;FSharp;Krml;Plugin;Extension];
         default_settings = merge_setting p0.default_settings p1.default_settings
       }
     in
@@ -2093,6 +2134,7 @@ let get_vconfig () =
     z3rlimit                                  = get_z3rlimit ();
     z3rlimit_factor                           = get_z3rlimit_factor ();
     z3seed                                    = get_z3seed ();
+    z3version                                 = get_z3version ();
     trivial_pre_for_unannotated_effectful_fns = get_trivial_pre_for_unannotated_effectful_fns ();
     reuse_hint_for                            = get_reuse_hint_for ();
   }
@@ -2130,6 +2172,58 @@ let set_vconfig (vcfg:vconfig) : unit =
   set_option "z3rlimit"                                  (Int vcfg.z3rlimit);
   set_option "z3rlimit_factor"                           (Int vcfg.z3rlimit_factor);
   set_option "z3seed"                                    (Int vcfg.z3seed);
+  set_option "z3version"                                 (String vcfg.z3version);
   set_option "trivial_pre_for_unannotated_effectful_fns" (Bool vcfg.trivial_pre_for_unannotated_effectful_fns);
   set_option "reuse_hint_for"                            (option_as String vcfg.reuse_hint_for);
   ()
+
+// --ext "ext1:opt1;ext2:opt2;ext3:opt3"
+// An entry e that is not of the form a:b
+// is treated as e:"1". We morally reserve the empty
+// string for "disabling" an option.
+//
+// This could all be much more efficient by just storing
+// a hash table in the optionstate.
+
+let parse_ext (s:string) : list (string & string) =
+  let exts = Util.split s ";" in
+  List.collect (fun s -> 
+    match Util.split s "=" with
+    | [k;v] -> [(k,v)]
+    | _ -> [s, "1"]) exts
+
+(* Deduplicates according to keys, favors the last occurrence (consistent
+with "ext" begin ReverseAccumulated *)
+let ext_dedup #a (l : list (string & a)) : list (string & a) =
+  //fold_right (fun (k,v) rest -> (k,v) :: List.filter (fun (k', _) -> k<>k') rest) l []
+  fold_right (fun (k,v) rest -> if List.existsb (fun (k', _) -> k=k') rest
+                                then rest
+                                else (k,v) :: rest) l []
+
+let all_ext_options () : list (string & string) =
+  let ext = get_ext () in
+  match ext with
+  | None -> []
+  | Some strs ->
+    strs |> List.collect parse_ext
+    |> ext_dedup
+
+let ext_getv (k:string) : string =
+  let ext = all_ext_options () in
+  (* Get the value from the map, or return "" if not there *)
+  Util.dflt "" (
+    Util.find_map ext (fun (k',v) -> if k = k' then Some v else None))
+
+(* Get a list of all KV pairs that "begin" with k, considered
+as a namespace. *)
+let ext_getns (ns:string) : list (string & string) =
+  let is_prefix s1 s2 =
+    let open FStar.String in
+    let l1 = length s1 in
+    let l2 = length s2 in
+    l2 >= l1 && substring s2 0 l1 = s1
+  in
+  let exts = all_ext_options () in
+  exts |>
+  List.filter_map (fun (k',v) ->
+    if k' = ns || is_prefix (ns^":") k' then Some (k',v) else None)

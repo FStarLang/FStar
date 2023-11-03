@@ -1,6 +1,6 @@
 module STLC.Infer
-module T = FStar.Tactics
-module R = FStar.Reflection
+module T = FStar.Tactics.V2
+module R = FStar.Reflection.V2
 module L = FStar.List.Tot
 module RT = FStar.Reflection.Typing
 open STLC.Core
@@ -77,25 +77,25 @@ let rec infer (g:R.env)
 let is_fv (t:R.term) (n:R.name)
   : T.Tac bool
   = match T.inspect t with
-    | R.Tv_FVar fv ->
-      R.inspect_fv fv = n
+    | T.Tv_FVar fv ->
+      T.inspect_fv fv = n
     | _ -> false
    
 let rec read_back (g:R.env) (t:R.term)
   : T.Tac stlc_ty
   = let tt = T.inspect t in
     match tt with
-    | R.Tv_Uvar _ _ -> 
+    | T.Tv_Uvar _ _ ->
       if T.unify_env g t (`TUnit)
       then read_back g t
       else T.fail "Impossible: Unresolved uvar must be unifiable with TUnit"
       
-    | R.Tv_FVar _ ->
+    | T.Tv_FVar _ ->
       if is_fv t ["STLC"; "Core"; "TUnit"]
       then TUnit
       else T.fail "Got an FV of type stlc_ty, but it is not a TUnit"
 
-    | R.Tv_App _ _ ->
+    | T.Tv_App _ _ ->
       begin
       let head, args = T.collect_app t in
       if not (is_fv head ["STLC"; "Core"; "TArrow"])
@@ -121,25 +121,25 @@ let rec elab_core g (e:stlc_exp R.term)
     | ELam t e -> Core.ELam (read_back g t) (elab_core g e)
     | EApp e1 e2 -> Core.EApp (elab_core g e1) (elab_core g e2)
 
-let main (e:stlc_exp unit)
+let main (nm:string) (e:stlc_exp unit)
   : RT.dsl_tac_t
   = fun g -> 
       let (| e, _ |) = infer g [] e in
       let e = elab_core g e in
-      Core.main e g
+      Core.main nm e g
 
 (***** Tests *****)
 
 #set-options "--ugly"
 
-%splice_t[foo] (main (ELam () (EBVar 0)))
+%splice_t[foo] (main "foo" (ELam () (EBVar 0)))
 
 #push-options "--no_smt"
 let test_id () = assert (foo () == ()) by (T.compute ())
 #pop-options
 
 let bar_s = (ELam () (ELam () (EBVar 1)))
-%splice_t[bar] (main bar_s)
+%splice_t[bar] (main "bar" bar_s)
 
 let baz_s = EApp bar_s EUnit
-%splice_t[baz] (main bar_s)
+%splice_t[baz] (main "baz" bar_s)

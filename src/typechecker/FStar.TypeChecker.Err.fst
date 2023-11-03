@@ -19,6 +19,7 @@ open FStar.Compiler.Effect
 
 open FStar
 open FStar.Compiler
+open FStar.Compiler.List
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Compiler.Util
@@ -26,7 +27,7 @@ open FStar.TypeChecker.Normalize
 open FStar.TypeChecker.Env
 open FStar.Compiler.Range
 open FStar.Ident
-
+open FStar.Pprint
 module N = FStar.TypeChecker.Normalize
 module BU = FStar.Compiler.Util //basic util
 module Env = FStar.TypeChecker.Env
@@ -48,7 +49,7 @@ let info_at_pos env file row col =
  * It will also prioritize them in that order, prefering to show
  * a discrepancy of implicits before one of universes, etc.
  *)
-let print_discrepancy (f : 'a -> string) (x : 'a) (y : 'a) : string * string =
+let print_discrepancy (#a:Type) (#b:eqtype) (f : a -> b) (x : a) (y : a) : b * b =
     let print () : string * string * bool =
         let xs = f x in
         let ys = f y in
@@ -126,57 +127,60 @@ let print_discrepancy (f : 'a -> string) (x : 'a) (y : 'a) : string * string =
  * AR: smt_detail is either an Inr of a long multi-line message or Inr of a short one
  *     in the first case, we print it starting from a newline,
  *       while in the latter, it is printed on the same line
+ * GM: TODO: Use a document?
  *)
 let errors_smt_detail env
         (errs : list Errors.error)
-        (smt_detail : either string string)
+        (smt_detail : Errors.error_message)
 : list Errors.error
 =
-    let maybe_add_smt_detail msg =
-      match smt_detail with
-      | Inr d -> msg ^ "\n\t" ^ d
-      | Inl d when BU.trim_string d <> "" -> msg ^ "; " ^ d
-      | _ -> msg
-    in
     let errs =
         errs
         |> List.map
           (fun (e, msg, r, ctx) ->
             let e, msg, r, ctx =
+                let msg = msg @ smt_detail in
                 if r = dummyRange
                 then e, msg, Env.get_range env, ctx
                 else let r' = Range.set_def_range r (Range.use_range r) in
                      if Range.file_of_range r' <> Range.file_of_range (Env.get_range env) //r points to another file
-                     then e,
-                          (msg ^
-                                " (Also see: " ^ Range.string_of_use_range r ^")"
-                                ^ (if Range.use_range r <> Range.def_range r
-                                   then "(Other related locations: " ^ Range.string_of_def_range r ^")"
-                                   else "")),
-                          Env.get_range env,
-                          ctx
+                     then
+                       let msg =
+                         let open FStar.Pprint in
+                         msg @ [doc_of_string ("Also see: " ^ Range.string_of_use_range r)
+                               ; (if Range.use_range r <> Range.def_range r
+                                  then doc_of_string ("Other related locations: " ^ Range.string_of_def_range r)
+                                  else empty)]
+                       in
+                       e, msg, Env.get_range env, ctx
                      else e, msg, r, ctx
             in
-            e, maybe_add_smt_detail msg, r, ctx)
+            e, msg, r, ctx)
     in
     errs
 
-let add_errors_smt_detail env (errs:list Errors.error) smt_detail : unit =
-    FStar.Errors.add_errors (errors_smt_detail env errs smt_detail)
-
-let add_errors env errs = add_errors_smt_detail env errs (Inl "")
+let add_errors env errs =
+    FStar.Errors.add_errors (errors_smt_detail env errs [])
 
 let log_issue env r (e, m) : unit =
  add_errors env [e, m, r, Errors.get_ctx ()]
 
+let log_issue_text env r (e, m) : unit =
+  log_issue env r (e, [Errors.text m])
+
 let err_msg_type_strings env t1 t2 :(string * string) =
   print_discrepancy (N.term_to_string env) t1 t2
+
+// let err_msg_type_docs env t1 t2 :(Pprint.document * Pprint.document) =
+
+//   print_discrepancy (N.term_to_doc env) t1 t2
 
 let err_msg_comp_strings env c1 c2 :(string * string) =
   print_discrepancy (N.comp_to_string env) c1 c2
 
 (* Error messages for labels in VCs *)
 let exhaustiveness_check = "Patterns are incomplete"
+
 let subtyping_failed : env -> typ -> typ -> unit -> string =
      fun env t1 t2 () ->
        let s1, s2 = err_msg_type_strings env t1 t2 in
@@ -196,9 +200,17 @@ let unexpected_implicit_argument =
   (Errors.Fatal_UnexpectedImplicitArgument, ("Unexpected instantiation of an implicit argument to a function that only expects explicit arguments"))
 
 let expected_expression_of_type env t1 e t2 =
-  let s1, s2 = err_msg_type_strings env t1 t2 in
-  (Errors.Fatal_UnexpectedExpressionType, (format3 "Expected expression of type \"%s\"; got expression \"%s\" of type \"%s\""
-    s1 (Print.term_to_string' env.dsenv e) s2))
+  // let s1, s2 = err_msg_type_strings env t1 t2 in
+  // MISSING: print discrepancy!
+  let d1 = N.term_to_doc env t1 in
+  let d2 = N.term_to_doc env t2 in
+  let ed = N.term_to_doc env e in
+  let open FStar.Errors.Msg in
+  (Errors.Fatal_UnexpectedExpressionType, [
+    prefix 4 1 (text "Expected expression of type") d1 ^/^
+    prefix 4 1 (text "got expression") ed ^/^
+    prefix 4 1 (text "of type") d2
+  ])
 
 let expected_pattern_of_type env t1 e t2 =
   let s1, s2 = err_msg_type_strings env t1 t2 in

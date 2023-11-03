@@ -205,7 +205,7 @@ let update_names_from_event cur_mod_str table evt =
   | NTOpen (host, (included, kind)) ->
     if is_cur_mod host then
       CTable.register_open
-        table (kind = DsEnv.Open_module) [] (query_of_lid included)
+        table (kind = FStar.Syntax.Syntax.Open_module) [] (query_of_lid included)
     else
       table
   | NTInclude (host, included) ->
@@ -275,9 +275,10 @@ let repl_tx st push_kind task =
   | U.SigInt ->
     U.print_error "[E] Interrupt"; None, st
   | Error (e, msg, r, _ctx) -> // TODO: display the error context somehow
-    Some (js_diag st.repl_fname msg (Some r)), st
+    // FIXME, or is it OK to render?
+    Some (js_diag st.repl_fname (Errors.rendermsg msg) (Some r)), st
   | Err (e, msg, _ctx) ->
-    Some (js_diag st.repl_fname msg None), st
+    Some (js_diag st.repl_fname (Errors.rendermsg msg) None), st
   | Stop ->
     U.print_error "[E] Stop"; None, st
 
@@ -349,7 +350,7 @@ let ld_deps st =
     | Inr st -> Inr st
     | Inl st -> Inl (st, deps)
   with
-  | Err (e, msg, ctx) -> U.print1_error "[E] Failed to load deps. %s" msg; Inr st
+  | Err (e, msg, ctx) -> U.print1_error "[E] Failed to load deps. %s" (Errors.rendermsg msg); Inr st
   | exn -> U.print1_error "[E] Failed to load deps. Message: %s" (message_of_exn exn); Inr st
 
 let add_module_completions this_fname deps table =

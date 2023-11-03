@@ -551,7 +551,10 @@ let (gen :
                                             uu___8.FStar_Syntax_Syntax.n in
                                           match uu___7 with
                                           | FStar_Syntax_Syntax.Tm_arrow
-                                              (bs, cod) ->
+                                              { FStar_Syntax_Syntax.bs1 = bs;
+                                                FStar_Syntax_Syntax.comp =
+                                                  cod;_}
+                                              ->
                                               let uu___8 =
                                                 FStar_Syntax_Subst.open_comp
                                                   bs cod in
@@ -591,12 +594,6 @@ let (generalize' :
   fun env ->
     fun is_rec ->
       fun lecs ->
-        (let uu___2 =
-           FStar_Compiler_List.for_all
-             (fun uu___3 ->
-                match uu___3 with
-                | (l, uu___4, uu___5) -> FStar_Compiler_Util.is_right l) lecs in
-         ());
         (let uu___2 = FStar_TypeChecker_Env.debug env FStar_Options.Low in
          if uu___2
          then
@@ -643,7 +640,7 @@ let (generalize' :
                            match uu___5 with
                            | (l, us, e, c, gvs) ->
                                let uu___6 =
-                                 FStar_Compiler_Range.string_of_range
+                                 FStar_Compiler_Range_Ops.string_of_range
                                    e.FStar_Syntax_Syntax.pos in
                                let uu___7 =
                                  FStar_Syntax_Print.lbname_to_string l in

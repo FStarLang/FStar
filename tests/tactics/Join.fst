@@ -15,7 +15,14 @@
 *)
 module Join
 
-open FStar.Tactics
+open FStar.Tactics.V2
+
+(* Basic test *)
+assume val p : int -> prop
+let test (x:int) (_:squash (p x)) = assert (p x /\ p x) by (
+  split ();
+  join()
+  )
 
 val p16 : x:int -> Lemma (x == 16 ==> pow2 x == 65536) [SMTPat (pow2 x)]
 let p16 _ = assert_norm (pow2 16 == 65536)

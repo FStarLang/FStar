@@ -1,0 +1,50 @@
+[
+  "\u000e­~ZI‹lŒZó/îfy‹X",
+  [
+    [
+      "Bug2882.univ_uvar_to_term",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
+      ],
+      0,
+      "7a98547e51961d14d1f55aea2abe35b7"
+    ],
+    [
+      "Bug2882.unif_uvars",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Reflection.V2.Data_pretyping_9a2be86692da5fc1b335167d5a2d5432",
+        "constructor_distinct_FStar.Reflection.V2.Data.Tv_Uvar",
+        "constructor_distinct_FStar.Tactics.Result.Success",
+        "data_typing_intro_FStar.Reflection.V2.Data.Tv_Unknown@tok",
+        "disc_equation_FStar.Reflection.V2.Data.Tv_Uvar",
+        "equation_FStar.Tactics.NamedView.term", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "primitive_Prims.op_disEquality",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_FStar.Reflection.V2.Data.Tv_Uvar__0",
+        "projection_inverse_FStar.Reflection.V2.Data.Tv_Uvar__1",
+        "projection_inverse_FStar.Tactics.Result.Success_a",
+        "projection_inverse_FStar.Tactics.Result.Success_ps",
+        "projection_inverse_FStar.Tactics.Result.Success_v",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "656c19ec8c1d87aa115b764c3c83500c"
+    ]
+  ]
+]

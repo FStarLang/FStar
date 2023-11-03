@@ -1,6 +1,6 @@
 module Bug2081
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let pp_test () : Tac unit = trefl()
 

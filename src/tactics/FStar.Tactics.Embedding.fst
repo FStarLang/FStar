@@ -15,6 +15,7 @@
 *)
 
 module FStar.Tactics.Embedding
+
 open FStar
 open FStar.Compiler
 open FStar.Pervasives
@@ -22,35 +23,26 @@ open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
 open FStar.Syntax.Embeddings
 open FStar.Compiler.Util
+open FStar.Compiler.List
 
 open FStar.Tactics.Common
-module S = FStar.Syntax.Syntax
-module SS = FStar.Syntax.Subst
-module PC = FStar.Parser.Const
-module Env = FStar.TypeChecker.Env
-module BU = FStar.Compiler.Util
-module C = FStar.Const
-module U = FStar.Syntax.Util
-module Rel = FStar.TypeChecker.Rel
-module Print = FStar.Syntax.Print
-module TcUtil = FStar.TypeChecker.Util
-module N = FStar.TypeChecker.Normalize
-module Err = FStar.Errors
-module NBETerm = FStar.TypeChecker.NBETerm
-module NBET    = FStar.TypeChecker.NBETerm
-module NBE = FStar.TypeChecker.NBE
-
 open FStar.Tactics.Types
 open FStar.Tactics.Result
-open FStar.Tactics.Basic
 
-open FStar.Reflection.Basic
-open FStar.Reflection.Data
+module BU      = FStar.Compiler.Util
+module Err     = FStar.Errors
+module NBE     = FStar.TypeChecker.NBE
+module NBETerm = FStar.TypeChecker.NBETerm
+module NBET    = FStar.TypeChecker.NBETerm
+module PC      = FStar.Parser.Const
+module S       = FStar.Syntax.Syntax
+module SS      = FStar.Syntax.Subst
+module U       = FStar.Syntax.Util
 
 type name = bv
 
 let fstar_tactics_lid' s = PC.fstar_tactics_lid' s
-let lid_as_tm l = S.lid_as_fv l delta_constant None |> S.fv_to_tm
+let lid_as_tm l = S.lid_as_fv l None |> S.fv_to_tm
 let mk_tactic_lid_as_term (s:string) = lid_as_tm (fstar_tactics_lid' ["Effect"; s])
 
 
@@ -60,7 +52,7 @@ type tac_constant = {
   t   : term;
 }
 
-let lid_as_data_fv l = S.lid_as_fv l delta_constant (Some Data_ctor)
+let lid_as_data_fv l = S.lid_as_fv l (Some Data_ctor)
 let lid_as_data_tm l = S.fv_to_tm (lid_as_data_fv l)
 
 let fstar_tactics_data ns =
@@ -75,6 +67,20 @@ let fstar_tactics_const ns =
       fv  = S.fvconst lid;
       t   = S.tconst lid }
 
+let fstar_tc_core_lid s : lid =
+  FStar.Ident.lid_of_path (["FStar"; "Stubs"; "TypeChecker"; "Core"]@[s]) Range.dummyRange
+
+let fstar_tc_core_data s =
+    let lid = fstar_tc_core_lid s in
+    { lid = lid;
+      fv  = lid_as_data_fv lid;
+      t   = lid_as_data_tm lid }
+
+let fstar_tc_core_const s =
+    let lid = fstar_tc_core_lid s in
+    { lid = lid;
+      fv  = S.fvconst lid;
+      t   = S.tconst lid }
 
 
 let fstar_tactics_proofstate    = fstar_tactics_const ["Types"; "proofstate"]
@@ -95,27 +101,32 @@ let fstar_tactics_Continue      = fstar_tactics_data  ["Types"; "Continue"]
 let fstar_tactics_Skip          = fstar_tactics_data  ["Types"; "Skip"]
 let fstar_tactics_Abort         = fstar_tactics_data  ["Types"; "Abort"]
 
-let fstar_tactics_unfold_side         = fstar_tactics_const ["Types"; "unfold_side"]
-let fstar_tactics_unfold_side_Left    = fstar_tactics_data  ["Types"; "Left"]
-let fstar_tactics_unfold_side_Right   = fstar_tactics_data  ["Types"; "Right"]
-let fstar_tactics_unfold_side_Both    = fstar_tactics_data  ["Types"; "Both"]
-let fstar_tactics_unfold_side_Neither = fstar_tactics_data  ["Types"; "Neither"]
+let fstar_tc_core_unfold_side         = fstar_tc_core_const "unfold_side"
+let fstar_tc_core_unfold_side_Left    = fstar_tc_core_data  "Left"
+let fstar_tc_core_unfold_side_Right   = fstar_tc_core_data  "Right"
+let fstar_tc_core_unfold_side_Both    = fstar_tc_core_data  "Both"
+let fstar_tc_core_unfold_side_Neither = fstar_tc_core_data  "Neither"
+
+let fstar_tc_core_tot_or_ghost        = fstar_tc_core_const "tot_or_ghost"
+let fstar_tc_core_tot_or_ghost_ETotal = fstar_tc_core_data "E_Total"
+let fstar_tc_core_tot_or_ghost_EGhost = fstar_tc_core_data "E_Ghost"
 
 let fstar_tactics_guard_policy  = fstar_tactics_const ["Types"; "guard_policy"]
 let fstar_tactics_SMT           = fstar_tactics_data  ["Types"; "SMT"]
+let fstar_tactics_SMTSync       = fstar_tactics_data  ["Types"; "SMTSync"]
 let fstar_tactics_Goal          = fstar_tactics_data  ["Types"; "Goal"]
 let fstar_tactics_Drop          = fstar_tactics_data  ["Types"; "Drop"]
 let fstar_tactics_Force         = fstar_tactics_data  ["Types"; "Force"]
 
 
 let mk_emb (em: Range.range -> 'a -> term)
-           (un: bool -> term -> option 'a)
+           (un: term -> option 'a)
            (t: term) =
     mk_emb (fun x r _topt _norm -> em r x)
-           (fun x w _norm -> un w x)
+           (fun x _norm -> un x)
            (FStar.Syntax.Embeddings.term_as_fv t)
 let embed e r x = FStar.Syntax.Embeddings.embed e x r None id_norm_cb
-let unembed' w e x = FStar.Syntax.Embeddings.unembed e x w id_norm_cb
+let unembed' e x = FStar.Syntax.Embeddings.unembed e x id_norm_cb
 
 let t_result_of t   = U.mk_app fstar_tactics_result.t [S.as_arg t] // TODO: uinst on t_result?
 
@@ -124,26 +135,14 @@ let hd'_and_args tm =
   let hd, args = U.head_and_args tm in
   (U.un_uinst hd).n, args
 
-let e_proofstate =
-    let embed_proofstate (rng:Range.range) (ps:proofstate) : term =
-        U.mk_lazy ps fstar_tactics_proofstate.t Lazy_proofstate (Some rng)
-    in
-    let unembed_proofstate w (t:term) : option proofstate =
-        match (SS.compress t).n with
-        | Tm_lazy {blob=b; lkind=Lazy_proofstate} ->
-            Some <| FStar.Compiler.Dyn.undyn b
-        | _ ->
-            if w then
-                Err.log_issue t.pos
-                  (Err.Warning_NotEmbedded,
-                   BU.format1 "Not an embedded proofstate: %s\n"
-                     (Print.term_to_string t));
-            None
-    in
-    mk_emb embed_proofstate unembed_proofstate fstar_tactics_proofstate.t
+let e_proofstate : embedding proofstate = e_lazy Lazy_proofstate fstar_tactics_proofstate.t
+let e_goal       : embedding goal       = e_lazy Lazy_goal fstar_tactics_goal.t
 
 let unfold_lazy_proofstate (i : lazyinfo) : term =
     U.exp_string "(((proofstate)))"
+
+let unfold_lazy_goal (i : lazyinfo) : term =
+    U.exp_string "(((goal)))"
 
 (* PLEASE NOTE: Construct and FV accumulate their arguments BACKWARDS. That is,
  * the expression (f 1 2) is stored as FV (f, [], [Constant (Int 2); Constant (Int 1)].
@@ -180,24 +179,6 @@ let e_proofstate_nbe =
     ; NBETerm.un = unembed_proofstate
     ; NBETerm.typ = mkFV fstar_tactics_proofstate.fv [] []
     ; NBETerm.emb_typ = fv_as_emb_typ fstar_tactics_proofstate.fv }
-
-let e_goal =
-    let embed_goal (rng:Range.range) (g:goal) : term =
-        U.mk_lazy g fstar_tactics_goal.t Lazy_goal (Some rng)
-    in
-    let unembed_goal w (t:term) : option goal =
-        match (SS.compress t).n with
-        | Tm_lazy {blob=b; lkind=Lazy_goal} ->
-            Some <| FStar.Compiler.Dyn.undyn b
-        | _ ->
-            if w then
-                Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded goal: %s" (Print.term_to_string t)));
-            None
-    in
-    mk_emb embed_goal unembed_goal fstar_tactics_goal.t
-
-let unfold_lazy_goal (i : lazyinfo) : term =
-    U.exp_string "(((goal)))"
 
 let e_goal_nbe =
     let embed_goal _cb (ps:goal) : NBETerm.t =
@@ -238,10 +219,10 @@ let e_exn : embedding exn =
                 [S.as_arg (embed e_string rng s)]
                 rng
     in
-    let unembed_exn (t:term) w _ : option exn =
+    let unembed_exn (t:term) _ : option exn =
         match hd'_and_args t with
         | Tm_fvar fv, [(s, _)] when S.fv_eq_lid fv fstar_tactics_TacticFailure.lid ->
-            BU.bind_opt (unembed' w e_string s) (fun s ->
+            BU.bind_opt (unembed' e_string s) (fun s ->
             Some (TacticFailure s))
 
         | _ ->
@@ -297,22 +278,19 @@ let e_result (ea : embedding 'a)  =
                   S.as_arg (embed e_proofstate rng ps)]
                  rng
     in
-    let unembed_result (t:term) w _ : option (__result 'a) =
+    let unembed_result (t:term) _ : option (__result 'a) =
         match hd'_and_args t with
         | Tm_fvar fv, [_t; (a, _); (ps, _)] when S.fv_eq_lid fv fstar_tactics_Success.lid ->
-            BU.bind_opt (unembed' w ea a) (fun a ->
-            BU.bind_opt (unembed' w e_proofstate ps) (fun ps ->
+            BU.bind_opt (unembed' ea a) (fun a ->
+            BU.bind_opt (unembed' e_proofstate ps) (fun ps ->
             Some (Success (a, ps))))
 
         | Tm_fvar fv, [_t; (e, _); (ps, _)] when S.fv_eq_lid fv fstar_tactics_Failed.lid ->
-            BU.bind_opt (unembed' w e_exn e) (fun e ->
-            BU.bind_opt (unembed' w e_proofstate ps) (fun ps ->
+            BU.bind_opt (unembed' e_exn e) (fun e ->
+            BU.bind_opt (unembed' e_proofstate ps) (fun ps ->
             Some (Failed (e, ps))))
 
-        | _ ->
-            if w then
-                Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded tactic result: %s" (Print.term_to_string t)));
-            None
+        | _ -> None
     in
     mk_emb_full
         embed_result
@@ -363,14 +341,11 @@ let e_direction =
         | TopDown -> fstar_tactics_topdown.t
         | BottomUp -> fstar_tactics_bottomup.t
     in
-    let unembed_direction w (t : term) : option direction =
+    let unembed_direction (t : term) : option direction =
         match (SS.compress t).n with
         | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_topdown.lid -> Some TopDown
         | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_bottomup.lid -> Some BottomUp
-        | _ ->
-            if w then
-                Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded direction: %s" (Print.term_to_string t)));
-            None
+        | _ -> None
     in
     mk_emb embed_direction unembed_direction fstar_tactics_direction.t
 
@@ -401,15 +376,12 @@ let e_ctrl_flag =
         | Skip     -> fstar_tactics_Skip.t
         | Abort    -> fstar_tactics_Abort.t
     in
-    let unembed_ctrl_flag w (t : term) : option ctrl_flag =
+    let unembed_ctrl_flag (t : term) : option ctrl_flag =
         match (SS.compress t).n with
         | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_Continue.lid -> Some Continue
         | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_Skip.lid     -> Some Skip
         | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_Abort.lid    -> Some Abort
-        | _ ->
-            if w then
-                Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded ctrl_flag: %s" (Print.term_to_string t)));
-            None
+        | _ -> None
     in
     mk_emb embed_ctrl_flag unembed_ctrl_flag fstar_tactics_ctrl_flag.t
 
@@ -439,40 +411,41 @@ let e_unfold_side =
   let open FStar.TypeChecker.Core in
   let embed_unfold_side (rng:Range.range) (s:side) : term =
     match s with
-    | Left -> fstar_tactics_unfold_side_Left.t
-    | Right -> fstar_tactics_unfold_side_Right.t
-    | Both -> fstar_tactics_unfold_side_Both.t
-    | Neither  -> fstar_tactics_unfold_side_Neither.t
+    | Left -> fstar_tc_core_unfold_side_Left.t
+    | Right -> fstar_tc_core_unfold_side_Right.t
+    | Both -> fstar_tc_core_unfold_side_Both.t
+    | Neither  -> fstar_tc_core_unfold_side_Neither.t
   in
-  let unembed_unfold_side w (t : term) : option side =
+  let unembed_unfold_side (t : term) : option side =
     match (SS.compress t).n with
-    | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_unfold_side_Left.lid -> Some Left
-    | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_unfold_side_Right.lid -> Some Right
-    | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_unfold_side_Both.lid -> Some Both
-    | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_unfold_side_Neither.lid -> Some Neither
+    | Tm_fvar fv when S.fv_eq_lid fv fstar_tc_core_unfold_side_Left.lid -> Some Left
+    | Tm_fvar fv when S.fv_eq_lid fv fstar_tc_core_unfold_side_Right.lid -> Some Right
+    | Tm_fvar fv when S.fv_eq_lid fv fstar_tc_core_unfold_side_Both.lid -> Some Both
+    | Tm_fvar fv when S.fv_eq_lid fv fstar_tc_core_unfold_side_Neither.lid -> Some Neither
     | _ ->
-      if w then
-        Err.log_issue t.pos (Err.Warning_NotEmbedded,
-                             BU.format1 "Not an embedded unfold_side: %s" (Print.term_to_string t));
         None
   in
-  mk_emb embed_unfold_side unembed_unfold_side fstar_tactics_unfold_side.t
+  mk_emb embed_unfold_side unembed_unfold_side fstar_tc_core_unfold_side.t
 
 let e_unfold_side_nbe  =
   let open FStar.TypeChecker.Core in
   let embed_unfold_side cb (res:side) : NBET.t =
     match res with
-    | Left -> mkConstruct fstar_tactics_unfold_side_Left.fv [] []
-    | Right -> mkConstruct fstar_tactics_unfold_side_Right.fv [] []
-    | Both -> mkConstruct fstar_tactics_unfold_side_Both.fv [] []
-    | Neither -> mkConstruct fstar_tactics_unfold_side_Neither.fv [] []
+    | Left -> mkConstruct fstar_tc_core_unfold_side_Left.fv [] []
+    | Right -> mkConstruct fstar_tc_core_unfold_side_Right.fv [] []
+    | Both -> mkConstruct fstar_tc_core_unfold_side_Both.fv [] []
+    | Neither -> mkConstruct fstar_tc_core_unfold_side_Neither.fv [] []
   in
   let unembed_unfold_side cb (t:NBET.t) : option side =
     match NBETerm.nbe_t_of_t t with
-    | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_unfold_side_Left.lid -> Some Left
-    | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_unfold_side_Right.lid -> Some Right
-    | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_unfold_side_Both.lid -> Some Both
-    | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_unfold_side_Neither.lid -> Some Neither
+    | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tc_core_unfold_side_Left.lid ->
+      Some Left
+    | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tc_core_unfold_side_Right.lid ->
+      Some Right
+    | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tc_core_unfold_side_Both.lid ->
+      Some Both
+    | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tc_core_unfold_side_Neither.lid ->
+      Some Neither
     | _ ->
       if !Options.debug_embedding then
         Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded,
@@ -481,27 +454,67 @@ let e_unfold_side_nbe  =
   in
   { NBETerm.em = embed_unfold_side
   ; NBETerm.un = unembed_unfold_side
-  ; NBETerm.typ = mkFV fstar_tactics_unfold_side.fv [] []
-  ; NBETerm.emb_typ = fv_as_emb_typ fstar_tactics_unfold_side.fv }
+  ; NBETerm.typ = mkFV fstar_tc_core_unfold_side.fv [] []
+  ; NBETerm.emb_typ = fv_as_emb_typ fstar_tc_core_unfold_side.fv }
+
+let e_tot_or_ghost =
+  let open FStar.TypeChecker.Core in
+  let embed_tot_or_ghost (rng:Range.range) (s:tot_or_ghost) : term =
+    match s with
+    | E_Total -> fstar_tc_core_tot_or_ghost_ETotal.t
+    | E_Ghost -> fstar_tc_core_tot_or_ghost_EGhost.t
+  in
+  let unembed_tot_or_ghost (t : term) : option tot_or_ghost =
+    match (SS.compress t).n with
+    | Tm_fvar fv when S.fv_eq_lid fv fstar_tc_core_tot_or_ghost_ETotal.lid ->
+      Some E_Total
+    | Tm_fvar fv when S.fv_eq_lid fv fstar_tc_core_tot_or_ghost_EGhost.lid ->
+      Some E_Ghost
+    | _ -> None
+  in
+  mk_emb embed_tot_or_ghost unembed_tot_or_ghost fstar_tc_core_tot_or_ghost.t
+
+let e_tot_or_ghost_nbe  =
+  let open FStar.TypeChecker.Core in
+  let embed_tot_or_ghost cb (res:tot_or_ghost) : NBET.t =
+    match res with
+    | E_Total -> mkConstruct fstar_tc_core_tot_or_ghost_ETotal.fv [] []
+    | E_Ghost -> mkConstruct fstar_tc_core_tot_or_ghost_EGhost.fv [] []
+  in
+  let unembed_tot_or_ghost cb (t:NBET.t) : option tot_or_ghost =
+    match NBETerm.nbe_t_of_t t with
+    | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tc_core_tot_or_ghost_ETotal.lid ->
+      Some E_Total
+    | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tc_core_tot_or_ghost_EGhost.lid ->
+      Some E_Ghost
+    | _ ->
+      if !Options.debug_embedding then
+        Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded,
+                                        BU.format1 "Not an embedded tot_or_ghost: %s" (NBETerm.t_to_string t));
+      None
+  in
+  { NBETerm.em = embed_tot_or_ghost
+  ; NBETerm.un = unembed_tot_or_ghost
+  ; NBETerm.typ = mkFV fstar_tc_core_tot_or_ghost.fv [] []
+  ; NBETerm.emb_typ = fv_as_emb_typ fstar_tc_core_tot_or_ghost.fv }
 
 let e_guard_policy =
     let embed_guard_policy (rng:Range.range) (p : guard_policy) : term =
         match p with
         | SMT   -> fstar_tactics_SMT.t
+        | SMTSync -> fstar_tactics_SMTSync.t
         | Goal  -> fstar_tactics_Goal.t
         | Force -> fstar_tactics_Force.t
         | Drop  -> fstar_tactics_Drop.t
     in
-    let unembed_guard_policy w (t : term) : option guard_policy =
+    let unembed_guard_policy (t : term) : option guard_policy =
         match (SS.compress t).n with
         | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_SMT.lid   -> Some SMT
+        | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_SMTSync.lid   -> Some SMTSync
         | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_Goal.lid  -> Some Goal
         | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_Force.lid -> Some Force
         | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_Drop.lid  -> Some Drop
-        | _ ->
-            if w then
-                Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded guard_policy: %s" (Print.term_to_string t)));
-            None
+        | _ -> None
     in
     mk_emb embed_guard_policy unembed_guard_policy fstar_tactics_guard_policy.t
 
@@ -509,6 +522,7 @@ let e_guard_policy_nbe  =
     let embed_guard_policy cb (p:guard_policy) : NBET.t =
         match p with
         | SMT   -> mkConstruct fstar_tactics_SMT.fv [] []
+        | SMTSync -> mkConstruct fstar_tactics_SMTSync.fv [] []
         | Goal  -> mkConstruct fstar_tactics_Goal.fv [] []
         | Force -> mkConstruct fstar_tactics_Force.fv [] []
         | Drop  -> mkConstruct fstar_tactics_Drop.fv [] []
@@ -516,6 +530,7 @@ let e_guard_policy_nbe  =
     let unembed_guard_policy cb (t:NBET.t) : option guard_policy =
         match NBETerm.nbe_t_of_t t with
         | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_SMT.lid   -> Some SMT
+        | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_SMTSync.lid -> Some SMTSync
         | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_Goal.lid  -> Some Goal
         | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_Force.lid -> Some Force
         | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_Drop.lid  -> Some Drop

@@ -291,7 +291,7 @@ let (elim_tydef :
             let range_of_tydef =
               match remove_typars_list with
               | FStar_Pervasives_Native.None ->
-                  FStar_Compiler_Range.dummyRange
+                  FStar_Compiler_Range_Type.dummyRange
               | FStar_Pervasives_Native.Some
                   (FStar_Extraction_ML_Syntax.RemoveUnusedTypeParameters
                   (uu___, r)) -> r in

@@ -15,7 +15,7 @@
 *)
 module FailFlow
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let fail_flow () : Tac unit =
     fail "failing";

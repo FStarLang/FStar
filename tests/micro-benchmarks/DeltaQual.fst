@@ -1,6 +1,6 @@
 module DeltaQual
 
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 
 unfold
 let f0 = 0

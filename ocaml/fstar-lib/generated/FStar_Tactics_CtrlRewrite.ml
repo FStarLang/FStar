@@ -3,7 +3,7 @@ type controller_ty =
   FStar_Syntax_Syntax.term ->
     (Prims.bool * FStar_Tactics_Types.ctrl_flag) FStar_Tactics_Monad.tac
 type rewriter_ty = unit FStar_Tactics_Monad.tac
-let (rangeof : FStar_Tactics_Types.goal -> FStar_Compiler_Range.range) =
+let (rangeof : FStar_Tactics_Types.goal -> FStar_Compiler_Range_Type.range) =
   fun g ->
     (g.FStar_Tactics_Types.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_range
 let (__do_rewrite :
@@ -94,6 +94,10 @@ let (__do_rewrite :
                                      (env.FStar_TypeChecker_Env.nosynth);
                                    FStar_TypeChecker_Env.uvar_subtyping =
                                      (env.FStar_TypeChecker_Env.uvar_subtyping);
+                                   FStar_TypeChecker_Env.intactics =
+                                     (env.FStar_TypeChecker_Env.intactics);
+                                   FStar_TypeChecker_Env.nocoerce =
+                                     (env.FStar_TypeChecker_Env.nocoerce);
                                    FStar_TypeChecker_Env.tc_term =
                                      (env.FStar_TypeChecker_Env.tc_term);
                                    FStar_TypeChecker_Env.typeof_tot_or_gtot_term
@@ -183,7 +187,8 @@ let (__do_rewrite :
                         FStar_Pervasives_Native.Some
                           (FStar_Syntax_Syntax.Allow_ghost "do_rewrite.lhs") in
                     let uu___4 =
-                      let uu___5 = FStar_Tactics_Basic.goal_typedness_deps g0 in
+                      let uu___5 =
+                        FStar_Tactics_V2_Basic.goal_typedness_deps g0 in
                       FStar_Tactics_Monad.new_uvar "do_rewrite.rhs" env typ
                         should_check uu___5 (rangeof g0) in
                     FStar_Tactics_Monad.op_let_Bang uu___4
@@ -215,7 +220,8 @@ let (__do_rewrite :
                                   FStar_Tactics_Monad.op_let_Bang uu___8
                                     (fun uu___9 ->
                                        let uu___10 =
-                                         FStar_Tactics_Basic.focus rewriter in
+                                         FStar_Tactics_V2_Basic.focus
+                                           rewriter in
                                        FStar_Tactics_Monad.op_let_Bang
                                          uu___10
                                          (fun uu___11 ->
@@ -551,7 +557,10 @@ and (on_subterms :
               let go uu___ =
                 let tm1 = FStar_Syntax_Subst.compress tm in
                 match tm1.FStar_Syntax_Syntax.n with
-                | FStar_Syntax_Syntax.Tm_app (hd, args) ->
+                | FStar_Syntax_Syntax.Tm_app
+                    { FStar_Syntax_Syntax.hd = hd;
+                      FStar_Syntax_Syntax.args = args;_}
+                    ->
                     let uu___1 =
                       let uu___2 =
                         let uu___3 = ctac_args rr in par_ctac rr uu___3 in
@@ -561,9 +570,16 @@ and (on_subterms :
                          match uu___2 with
                          | ((hd1, args1), flag) ->
                              FStar_Tactics_Monad.ret
-                               ((FStar_Syntax_Syntax.Tm_app (hd1, args1)),
-                                 flag))
-                | FStar_Syntax_Syntax.Tm_abs (bs, t, k) ->
+                               ((FStar_Syntax_Syntax.Tm_app
+                                   {
+                                     FStar_Syntax_Syntax.hd = hd1;
+                                     FStar_Syntax_Syntax.args = args1
+                                   }), flag))
+                | FStar_Syntax_Syntax.Tm_abs
+                    { FStar_Syntax_Syntax.bs = bs;
+                      FStar_Syntax_Syntax.body = t;
+                      FStar_Syntax_Syntax.rc_opt = k;_}
+                    ->
                     let uu___1 = FStar_Syntax_Subst.open_term' bs t in
                     (match uu___1 with
                      | (bs_orig, t1, subst) ->
@@ -576,8 +592,16 @@ and (on_subterms :
                            (fun bs1 ->
                               fun t2 ->
                                 fun k2 ->
-                                  FStar_Syntax_Syntax.Tm_abs (bs1, t2, k2)))
-                | FStar_Syntax_Syntax.Tm_refine (x, phi) ->
+                                  FStar_Syntax_Syntax.Tm_abs
+                                    {
+                                      FStar_Syntax_Syntax.bs = bs1;
+                                      FStar_Syntax_Syntax.body = t2;
+                                      FStar_Syntax_Syntax.rc_opt = k2
+                                    }))
+                | FStar_Syntax_Syntax.Tm_refine
+                    { FStar_Syntax_Syntax.b = x;
+                      FStar_Syntax_Syntax.phi = phi;_}
+                    ->
                     let uu___1 =
                       let uu___2 =
                         let uu___3 = FStar_Syntax_Syntax.mk_binder x in
@@ -596,12 +620,21 @@ and (on_subterms :
                                     | x2::[] ->
                                         x2.FStar_Syntax_Syntax.binder_bv
                                     | uu___3 -> failwith "Impossible" in
-                                  FStar_Syntax_Syntax.Tm_refine (x1, phi2)))
-                | FStar_Syntax_Syntax.Tm_arrow (bs, k) ->
+                                  FStar_Syntax_Syntax.Tm_refine
+                                    {
+                                      FStar_Syntax_Syntax.b = x1;
+                                      FStar_Syntax_Syntax.phi = phi2
+                                    }))
+                | FStar_Syntax_Syntax.Tm_arrow uu___1 ->
                     FStar_Tactics_Monad.ret
                       ((tm1.FStar_Syntax_Syntax.n),
                         FStar_Tactics_Types.Continue)
-                | FStar_Syntax_Syntax.Tm_match (hd, asc_opt, brs, lopt) ->
+                | FStar_Syntax_Syntax.Tm_match
+                    { FStar_Syntax_Syntax.scrutinee = hd;
+                      FStar_Syntax_Syntax.ret_opt = asc_opt;
+                      FStar_Syntax_Syntax.brs = brs;
+                      FStar_Syntax_Syntax.rc_opt1 = lopt;_}
+                    ->
                     let c_branch br =
                       let uu___1 = FStar_Syntax_Subst.open_branch br in
                       match uu___1 with
@@ -629,24 +662,35 @@ and (on_subterms :
                          | ((hd1, brs1), flag) ->
                              FStar_Tactics_Monad.ret
                                ((FStar_Syntax_Syntax.Tm_match
-                                   (hd1, asc_opt, brs1, lopt)), flag))
+                                   {
+                                     FStar_Syntax_Syntax.scrutinee = hd1;
+                                     FStar_Syntax_Syntax.ret_opt = asc_opt;
+                                     FStar_Syntax_Syntax.brs = brs1;
+                                     FStar_Syntax_Syntax.rc_opt1 = lopt
+                                   }), flag))
                 | FStar_Syntax_Syntax.Tm_let
-                    ((false,
-                      { FStar_Syntax_Syntax.lbname = FStar_Pervasives.Inl bv;
-                        FStar_Syntax_Syntax.lbunivs = uu___1;
-                        FStar_Syntax_Syntax.lbtyp = uu___2;
-                        FStar_Syntax_Syntax.lbeff = uu___3;
-                        FStar_Syntax_Syntax.lbdef = def;
-                        FStar_Syntax_Syntax.lbattrs = uu___4;
-                        FStar_Syntax_Syntax.lbpos = uu___5;_}::[]),
-                     e)
+                    {
+                      FStar_Syntax_Syntax.lbs =
+                        (false,
+                         {
+                           FStar_Syntax_Syntax.lbname = FStar_Pervasives.Inl
+                             bv;
+                           FStar_Syntax_Syntax.lbunivs = uu___1;
+                           FStar_Syntax_Syntax.lbtyp = uu___2;
+                           FStar_Syntax_Syntax.lbeff = uu___3;
+                           FStar_Syntax_Syntax.lbdef = def;
+                           FStar_Syntax_Syntax.lbattrs = uu___4;
+                           FStar_Syntax_Syntax.lbpos = uu___5;_}::[]);
+                      FStar_Syntax_Syntax.body1 = e;_}
                     ->
                     let lb =
                       let uu___6 =
                         let uu___7 = FStar_Syntax_Subst.compress tm1 in
                         uu___7.FStar_Syntax_Syntax.n in
                       match uu___6 with
-                      | FStar_Syntax_Syntax.Tm_let ((false, lb1::[]), uu___7)
+                      | FStar_Syntax_Syntax.Tm_let
+                          { FStar_Syntax_Syntax.lbs = (false, lb1::[]);
+                            FStar_Syntax_Syntax.body1 = uu___7;_}
                           -> lb1
                       | uu___7 -> failwith "impossible" in
                     let uu___6 = FStar_Syntax_Subst.open_term_bv bv e in
@@ -688,8 +732,15 @@ and (on_subterms :
                                     FStar_Syntax_Subst.close uu___9 e2 in
                                   FStar_Tactics_Monad.ret
                                     ((FStar_Syntax_Syntax.Tm_let
-                                        ((false, [lb1]), e3)), flag)))
-                | FStar_Syntax_Syntax.Tm_let ((true, lbs), e) ->
+                                        {
+                                          FStar_Syntax_Syntax.lbs =
+                                            (false, [lb1]);
+                                          FStar_Syntax_Syntax.body1 = e3
+                                        }), flag)))
+                | FStar_Syntax_Syntax.Tm_let
+                    { FStar_Syntax_Syntax.lbs = (true, lbs);
+                      FStar_Syntax_Syntax.body1 = e;_}
+                    ->
                     let c_lb lb =
                       let uu___1 = rr lb.FStar_Syntax_Syntax.lbdef in
                       FStar_Tactics_Monad.op_let_Bang uu___1
@@ -729,8 +780,16 @@ and (on_subterms :
                                    | (lbs3, e3) ->
                                        FStar_Tactics_Monad.ret
                                          ((FStar_Syntax_Syntax.Tm_let
-                                             ((true, lbs3), e3)), flag))))
-                | FStar_Syntax_Syntax.Tm_ascribed (t, asc, eff) ->
+                                             {
+                                               FStar_Syntax_Syntax.lbs =
+                                                 (true, lbs3);
+                                               FStar_Syntax_Syntax.body1 = e3
+                                             }), flag))))
+                | FStar_Syntax_Syntax.Tm_ascribed
+                    { FStar_Syntax_Syntax.tm = t;
+                      FStar_Syntax_Syntax.asc = asc;
+                      FStar_Syntax_Syntax.eff_opt = eff;_}
+                    ->
                     let uu___1 = rr t in
                     FStar_Tactics_Monad.op_let_Bang uu___1
                       (fun uu___2 ->
@@ -738,15 +797,26 @@ and (on_subterms :
                          | (t1, flag) ->
                              FStar_Tactics_Monad.ret
                                ((FStar_Syntax_Syntax.Tm_ascribed
-                                   (t1, asc, eff)), flag))
-                | FStar_Syntax_Syntax.Tm_meta (t, m) ->
+                                   {
+                                     FStar_Syntax_Syntax.tm = t1;
+                                     FStar_Syntax_Syntax.asc = asc;
+                                     FStar_Syntax_Syntax.eff_opt = eff
+                                   }), flag))
+                | FStar_Syntax_Syntax.Tm_meta
+                    { FStar_Syntax_Syntax.tm2 = t;
+                      FStar_Syntax_Syntax.meta = m;_}
+                    ->
                     let uu___1 = rr t in
                     FStar_Tactics_Monad.op_let_Bang uu___1
                       (fun uu___2 ->
                          match uu___2 with
                          | (t1, flag) ->
                              FStar_Tactics_Monad.ret
-                               ((FStar_Syntax_Syntax.Tm_meta (t1, m)), flag))
+                               ((FStar_Syntax_Syntax.Tm_meta
+                                   {
+                                     FStar_Syntax_Syntax.tm2 = t1;
+                                     FStar_Syntax_Syntax.meta = m
+                                   }), flag))
                 | uu___1 ->
                     FStar_Tactics_Monad.ret
                       ((tm1.FStar_Syntax_Syntax.n),
@@ -837,7 +907,7 @@ let (ctrl_rewrite :
                                        FStar_Tactics_Monad.op_let_Bang uu___8
                                          (fun uu___9 ->
                                             let g1 =
-                                              FStar_Tactics_Basic.goal_with_type
+                                              FStar_Tactics_V2_Basic.goal_with_type
                                                 g gt' in
                                             FStar_Tactics_Monad.add_goals
                                               [g1])))))) in

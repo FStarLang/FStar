@@ -3,7 +3,8 @@ type position = (Prims.string * Prims.int * Prims.int)
 type sl_reponse =
   {
   slr_name: Prims.string ;
-  slr_def_range: FStar_Compiler_Range.range FStar_Pervasives_Native.option ;
+  slr_def_range:
+    FStar_Compiler_Range_Type.range FStar_Pervasives_Native.option ;
   slr_typ: Prims.string FStar_Pervasives_Native.option ;
   slr_doc: Prims.string FStar_Pervasives_Native.option ;
   slr_def: Prims.string FStar_Pervasives_Native.option }
@@ -12,7 +13,9 @@ let (__proj__Mksl_reponse__item__slr_name : sl_reponse -> Prims.string) =
     match projectee with
     | { slr_name; slr_def_range; slr_typ; slr_doc; slr_def;_} -> slr_name
 let (__proj__Mksl_reponse__item__slr_def_range :
-  sl_reponse -> FStar_Compiler_Range.range FStar_Pervasives_Native.option) =
+  sl_reponse ->
+    FStar_Compiler_Range_Type.range FStar_Pervasives_Native.option)
+  =
   fun projectee ->
     match projectee with
     | { slr_name; slr_def_range; slr_typ; slr_doc; slr_def;_} ->
@@ -239,11 +242,11 @@ let (hoverlookup :
             FStar_Compiler_Util.format2
               "```fstar\n%s\n````\n---\n```fstar\n%s\n```" t d in
           FStar_Interactive_JsonHelper.resultResponse
-            (FStar_Compiler_Util.JsonAssoc
+            (FStar_Json.JsonAssoc
                [("contents",
-                  (FStar_Compiler_Util.JsonAssoc
-                     [("kind", (FStar_Compiler_Util.JsonStr "markdown"));
-                     ("value", (FStar_Compiler_Util.JsonStr hovertxt))]))])
+                  (FStar_Json.JsonAssoc
+                     [("kind", (FStar_Json.JsonStr "markdown"));
+                     ("value", (FStar_Json.JsonStr hovertxt))]))])
       | uu___1 -> FStar_Interactive_JsonHelper.nullResponse
 let (complookup :
   FStar_Interactive_Ide_Types.repl_state ->
@@ -291,10 +294,10 @@ let (complookup :
                let l =
                  FStar_Compiler_List.map
                    (fun r ->
-                      FStar_Compiler_Util.JsonAssoc
+                      FStar_Json.JsonAssoc
                         [("label",
-                           (FStar_Compiler_Util.JsonStr
+                           (FStar_Json.JsonStr
                               (r.FStar_Interactive_CompletionTable.completion_candidate)))])
                    items in
                FStar_Interactive_JsonHelper.resultResponse
-                 (FStar_Compiler_Util.JsonList l))
+                 (FStar_Json.JsonList l))

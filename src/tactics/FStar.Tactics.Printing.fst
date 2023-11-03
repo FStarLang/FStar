@@ -144,6 +144,7 @@ let ps_to_string (msg, ps) =
                  @ (List.mapi (fun i g -> goal_to_string "SMT Goal" (Some (1 + n_active + i, n)) ps g) ps.smt_goals))
 
 let goal_to_json g =
+    let open FStar.Json in
     let g_binders = g.goal_ctx_uvar.ctx_uvar_binders in
     let g_type = goal_type g in
     let g_binders, g_type = unshadow g_binders g_type in
@@ -155,6 +156,7 @@ let goal_to_json g =
                                   ])]
 
 let ps_to_json (msg, ps) =
+    let open FStar.Json in
     JsonAssoc ([("label", JsonStr msg);
                 ("depth", JsonInt ps.depth);
                 ("urgency", JsonInt ps.urgency);

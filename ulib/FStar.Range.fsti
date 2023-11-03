@@ -15,6 +15,24 @@
 *)
 module FStar.Range
 
-assume new type range
+open FStar.Sealed
 
-val prims_to_fstar_range : Prims.range -> Tot range
+(** [range] is a type for the internal representations of source
+   ranges The functions that follow below allow manipulating ranges
+   abstractly.  Importantly, while we allow constructing ranges, we do
+   not allow destructing them, since that would reveal that
+   internally, set_range_of is not an identity function.  *)
+assume new type __range
+
+type range = sealed __range
+
+(** A dummy range constant *)
+val range_0 : range
+
+(** Building a range constant *)
+val mk_range (file: string) (from_line from_col to_line to_col: int) : Tot range
+
+(** [labeled] is used internally to the SMT encoding to associate a
+    source-code location with an assertion. *)
+irreducible
+let labeled (r : range) (msg: string) (b: Type) : Type = b

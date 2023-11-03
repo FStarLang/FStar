@@ -35,7 +35,7 @@ val lowercase_module_name : string -> string
 
 val build_inclusion_candidates_list : unit -> list (string * string)
 
-val core_modules  : list string
+val core_modules (_: unit) : list string
 (* Given a filename, returns the list of automatically opened modules
 and namespaces *)
 val hard_coded_dependencies : string -> list (lident * open_kind)
@@ -44,9 +44,9 @@ val is_interface: string -> bool
 val is_implementation: string -> bool
 
 val parsing_data : Type0  //cached in the checked files
-
+val str_of_parsing_data (p:parsing_data) : string
 val empty_parsing_data: parsing_data  //for legacy ide
-
+val friends (p:parsing_data) : list lident
 val deps : Type0
 
 val empty_deps : deps
@@ -60,4 +60,4 @@ val print : deps -> unit
 val print_digest: list (string * string) -> string
 val module_has_interface: deps -> module_name:Ident.lident -> bool
 val deps_has_implementation: deps -> module_name:Ident.lident -> bool
-val print_raw: deps -> unit
+val print_raw: out_channel -> deps -> unit

@@ -2,6 +2,8 @@ FSTAR_HOME=../..
 include $(FSTAR_HOME)/examples/Makefile.include
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
 
+OTHERFLAGS+=--warn_error +240
+
 all: verify iverify not-verify extract
 
 ##################
@@ -34,7 +36,7 @@ SHOULD_VERIFY_CLOSED=Bug022.fst Bug024.fst Bug025.fst Bug026.fst Bug026b.fst Bug
   Bug1561a.fst Bug1561b.fst Bug1065a.fst Bug1065b.fst Bug1065c.fst Bug1568.fst Bug1571.fst Bug1572.fst Bug1592.fst \
   Bug1595.fst Bug1601.fst Bug1602.fst Bug1604.fst Bug1605.fst Bug1621.fst Bug1680.fst Bug1682.fst Bug1694.fst \
   Bug1730b.fst Bug1612.fst Bug1614a.fst Bug1614b.fst Bug1614c.fst Bug1614d.fst Bug1614e.fst Bug1750.fst Bug1750.Aux.fst \
-  Bug1622.fst Bug1540.fst Bug1784.fst Bug1802.fst Bug1055.fst Bug1818.fst Bug1640.fst Bug1243.fst Bug1841.fst \
+  Bug1622.fst Bug1540.fst Bug1784.fst Bug1802.fst Bug1055.fst Bug1818.fst Bug1640.fst Bug1841.fst \
   Bug1847.fst Bug1855.fst Bug1812.fst Bug1840.fst Bug1866.fst Bug811.fst Bug841.fst Bug1060.fst Bug1070.fst \
   Bug1130.fst Bug1170.fst Bug1191.fst Bug1799.fst Bug1900.fst Bug1908.fst Bug1913.fst Bug1940a.fst \
   Bug1940b.fst Bug1940c.fst Bug1936.fst Bug1952a.fst Bug1952b.fst Bug1953.fst Bug1074.fst Bug442.fst Bug1954.fst \
@@ -46,11 +48,12 @@ SHOULD_VERIFY_CLOSED=Bug022.fst Bug024.fst Bug025.fst Bug026.fst Bug026b.fst Bug
   Bug2398.fst Bug2432.fst Bug2374.fst Bug2438.fst Bug2456.fst Bug2475.fst Bug2477.fst Bug1355.fst \
   Bug1418.fst Bug171.fst Bug2496.fst Bug2478.fst Bug2414.fst Bug2515.fst \
   Bug2535.fst Bug2557.fst Bug2572.fst Bug2522.fst Bug2486.fst \
-  Bug2552.fst Bug2597.fst Bug2471_B.fst Bug2605.fst Bug2614.fst Bug2622.fst \
+  Bug2552.fst Bug2597.fst Bug2471_B.fst Bug2614.fst Bug2622.fst \
   Bug2635.fst Bug2637.fst Bug2641.fst Bug1486.fst PropProofs.fst \
   Bug2684a.fst Bug2684b.fst Bug2684c.fst Bug2684d.fst Bug2659b.fst\
   Bug2756.fst MutualRecPositivity.fst Bug2806a.fst Bug2806b.fst Bug2806c.fst Bug2806d.fst Bug2809.fst\
-  Bug2849a.fst Bug2849b.fst Bug2045.fst Bug2876.fst Bug2882.fst
+  Bug2849a.fst Bug2849b.fst Bug2045.fst Bug2876.fst Bug2882.fst Bug2895.fst Bug2894.fst \
+	Bug2415.fst Bug3028.fst Bug2954.fst
 
 SHOULD_VERIFY_INTERFACE_CLOSED=Bug771.fsti Bug771b.fsti
 SHOULD_VERIFY_AND_WARN_CLOSED=Bug016.fst
@@ -112,7 +115,8 @@ SHOULD_NOT_VERIFY_NOT_WORKING=Bug186.fst Bug397b.fst
 SHOULD_EXTRACT_CLOSED=Bug086.fst Bug314.fst Bug540.fst Bug541.fst Bug589.fst \
 	ExtractionBug2.fst Bug1101.fst Bug1485.fst Bug734.fst Bug310.fst \
 	Bug2058.fst RemoveUnusedTypars.B.fst RemoveUnusedTyparsIFace.B.fst \
-	PushPopProjectors.fst Bug2412.fst Bug2595.fst Bug2699.fst
+	PushPopProjectors.fst Bug2412.fst Bug2595.fst Bug2699.fst Bug2895.fst \
+	ValLetRec.fst
 #ExtractionBug03.fst
 
 # Bug1479.fst Crashes when in CI with "Error: Unbound module FStar_Tactics_Effect"
@@ -153,7 +157,7 @@ Bug2684d.verify: OTHERFLAGS += --cache_checked_modules
 verify: $(subst .fst,.verify,$(SHOULD_VERIFY_CLOSED))
 
 %.iverify: %.fsti
-	@echo '[CHECK_I   $<]'
+	$(call msg, "CHECK_I", $<)
 	$(Q)$(FSTAR) $(SIL) $^
 	@touch $@
 
@@ -192,6 +196,12 @@ Bug2699.ml:
 Bug2699.extract: Bug2699.ml
 	diff -u --strip-trailing-cr Bug2699.ml Bug2699.ml.expected
 
+Bug2895.ml:
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract Bug2895 --codegen OCaml Bug2895.fst
+
+Bug2895.extract: Bug2895.ml
+	diff -u --strip-trailing-cr Bug2895.ml Bug2895.ml.expected
+
 
 RemoveUnusedTypars.B.extract: RemoveUnusedTypars.A.fst RemoveUnusedTypars.B.fst
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --cache_checked_modules RemoveUnusedTypars.A.fst
@@ -213,20 +223,22 @@ RemoveUnusedTyparsIFace.B.extract: RemoveUnusedTyparsIFace.A.fst RemoveUnusedTyp
 PushPopProjectors.extract: PushPopProjectors.fst
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out_$* --codegen FSharp $^
 
-output-accept: Bug310.ml Bug2058.ml Bug2595.ml
+output-accept: Bug310.ml Bug2058.ml Bug2595.ml Bug2699.ml Bug2895.ml
 	cp Bug310.ml Bug310.ml.expected
 	cp Bug2058.ml Bug2058.ml.expected
 	cp Bug2595.ml Bug2595.ml.expected
+	cp Bug2699.ml Bug2699.ml.expected
+	cp Bug2895.ml Bug2895.ml.expected
 
 %.extract: %.fst
-	@mkdir -p out_$*
-	@echo '[EXTRACT   $<]'
+	$(Q)mkdir -p out_$*
+	$(call msg, "EXTRACT", $<)
 	$(Q)$(FSTAR) $(SIL) $(FSTAR_DEFAULT_ARGS) --odir out_$* --codegen OCaml $^
-	@echo '[OCAMLOPT  $<]'
-	@$(OCAMLOPT) out_$*/$(CAPPED).ml -o $(CAPPED).exe
-	@echo '[RUN       $(CAPPED).exe]'
-	@./$(CAPPED).exe
-	@touch $@
+	$(call msg, "OCAMLOPT", $<)
+	$(Q)$(OCAMLOPT) out_$*/$(CAPPED).ml -o $(CAPPED).exe
+	$(call msg, "RUN", $(CAPPED).exe)
+	$(Q)./$(CAPPED).exe
+	$(Q)touch $@
 
 extract: $(subst .fst,.extract,$(SHOULD_EXTRACT_CLOSED))
 

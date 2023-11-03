@@ -1,6 +1,6 @@
 open Prims
 let (test_lid : FStar_Ident.lident) =
-  FStar_Ident.lid_of_path ["Test"] FStar_Compiler_Range.dummyRange
+  FStar_Ident.lid_of_path ["Test"] FStar_Compiler_Range_Type.dummyRange
 let (tcenv_ref :
   FStar_TypeChecker_Env.env FStar_Pervasives_Native.option
     FStar_Compiler_Effect.ref)
@@ -35,7 +35,7 @@ let (parse_mod :
                let uu___3 =
                  let uu___4 =
                    FStar_Ident.lid_of_path ["Test"]
-                     FStar_Compiler_Range.dummyRange in
+                     FStar_Compiler_Range_Type.dummyRange in
                  FStar_Syntax_DsEnv.prepare_module_or_interface false false
                    env' uu___4 FStar_Syntax_DsEnv.default_mii in
                (match uu___3 with | (env'1, uu___4) -> (env'1, m1)))
@@ -47,7 +47,7 @@ let (parse_mod :
             FStar_Compiler_Util.format1 "%s: expected a module\n" mod_name in
           FStar_Errors.raise_error
             (FStar_Errors_Codes.Fatal_ModuleExpected, msg)
-            FStar_Compiler_Range.dummyRange
+            FStar_Compiler_Range_Type.dummyRange
       | FStar_Parser_ParseIt.Term uu___1 ->
           failwith
             "Impossible: parsing a Filename always results in an ASTFragment"
@@ -142,6 +142,10 @@ let (init_once : unit -> unit) =
                (env.FStar_TypeChecker_Env.nosynth);
              FStar_TypeChecker_Env.uvar_subtyping =
                (env.FStar_TypeChecker_Env.uvar_subtyping);
+             FStar_TypeChecker_Env.intactics =
+               (env.FStar_TypeChecker_Env.intactics);
+             FStar_TypeChecker_Env.nocoerce =
+               (env.FStar_TypeChecker_Env.nocoerce);
              FStar_TypeChecker_Env.tc_term =
                (env.FStar_TypeChecker_Env.tc_term);
              FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
@@ -246,6 +250,10 @@ let (init_once : unit -> unit) =
                     (env2.FStar_TypeChecker_Env.nosynth);
                   FStar_TypeChecker_Env.uvar_subtyping =
                     (env2.FStar_TypeChecker_Env.uvar_subtyping);
+                  FStar_TypeChecker_Env.intactics =
+                    (env2.FStar_TypeChecker_Env.intactics);
+                  FStar_TypeChecker_Env.nocoerce =
+                    (env2.FStar_TypeChecker_Env.nocoerce);
                   FStar_TypeChecker_Env.tc_term =
                     (env2.FStar_TypeChecker_Env.tc_term);
                   FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
@@ -335,7 +343,7 @@ let (pars : Prims.string -> FStar_Syntax_Syntax.term) =
                   FStar_ToSyntax_ToSyntax.desugar_term
                     tcenv.FStar_TypeChecker_Env.dsenv t
               | FStar_Parser_ParseIt.ParseError (e, msg, r) ->
-                  FStar_Errors.raise_error (e, msg) r
+                  FStar_Errors.raise_error_doc (e, msg) r
               | FStar_Parser_ParseIt.ASTFragment uu___2 ->
                   failwith
                     "Impossible: parsing a Fragment always results in a Term"))
@@ -344,11 +352,14 @@ let (pars : Prims.string -> FStar_Syntax_Syntax.term) =
     | FStar_Errors.Error (err, msg, r, _ctx) when
         let uu___1 = FStar_Options.trace_error () in
         FStar_Compiler_Effect.op_Less_Bar Prims.op_Negation uu___1 ->
-        (if r = FStar_Compiler_Range.dummyRange
-         then FStar_Compiler_Util.print_string msg
+        (if r = FStar_Compiler_Range_Type.dummyRange
+         then
+           (let uu___2 = FStar_Errors_Msg.rendermsg msg in
+            FStar_Compiler_Util.print_string uu___2)
          else
-           (let uu___3 = FStar_Compiler_Range.string_of_range r in
-            FStar_Compiler_Util.print2 "%s: %s\n" uu___3 msg);
+           (let uu___3 = FStar_Compiler_Range_Ops.string_of_range r in
+            let uu___4 = FStar_Errors_Msg.rendermsg msg in
+            FStar_Compiler_Util.print2 "%s: %s\n" uu___3 uu___4);
          FStar_Compiler_Effect.exit Prims.int_one)
     | e when
         let uu___1 = FStar_Options.trace_error () in Prims.op_Negation uu___1
@@ -397,6 +408,10 @@ let (tc' :
         FStar_TypeChecker_Env.nosynth = (tcenv.FStar_TypeChecker_Env.nosynth);
         FStar_TypeChecker_Env.uvar_subtyping =
           (tcenv.FStar_TypeChecker_Env.uvar_subtyping);
+        FStar_TypeChecker_Env.intactics =
+          (tcenv.FStar_TypeChecker_Env.intactics);
+        FStar_TypeChecker_Env.nocoerce =
+          (tcenv.FStar_TypeChecker_Env.nocoerce);
         FStar_TypeChecker_Env.tc_term = (tcenv.FStar_TypeChecker_Env.tc_term);
         FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
           (tcenv.FStar_TypeChecker_Env.typeof_tot_or_gtot_term);
@@ -448,7 +463,7 @@ let (tc' :
     match uu___ with
     | (tm1, uu___1, g) ->
         (FStar_TypeChecker_Rel.force_trivial_guard tcenv1 g;
-         (let tm2 = FStar_Syntax_Compress.deep_compress false tm1 in
+         (let tm2 = FStar_Syntax_Compress.deep_compress false false tm1 in
           (tm2, tcenv1)))
 let (tc : Prims.string -> FStar_Syntax_Syntax.term) =
   fun s -> let uu___ = tc' s in match uu___ with | (tm, uu___1) -> tm
@@ -494,6 +509,10 @@ let (tc_term : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
         FStar_TypeChecker_Env.nosynth = (tcenv.FStar_TypeChecker_Env.nosynth);
         FStar_TypeChecker_Env.uvar_subtyping =
           (tcenv.FStar_TypeChecker_Env.uvar_subtyping);
+        FStar_TypeChecker_Env.intactics =
+          (tcenv.FStar_TypeChecker_Env.intactics);
+        FStar_TypeChecker_Env.nocoerce =
+          (tcenv.FStar_TypeChecker_Env.nocoerce);
         FStar_TypeChecker_Env.tc_term = (tcenv.FStar_TypeChecker_Env.tc_term);
         FStar_TypeChecker_Env.typeof_tot_or_gtot_term =
           (tcenv.FStar_TypeChecker_Env.typeof_tot_or_gtot_term);
@@ -545,7 +564,8 @@ let (tc_term : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
     match uu___ with
     | (tm1, uu___1, g) ->
         (FStar_TypeChecker_Rel.force_trivial_guard tcenv1 g;
-         (let tm2 = FStar_Syntax_Compress.deep_compress false tm1 in tm2))
+         (let tm2 = FStar_Syntax_Compress.deep_compress false false tm1 in
+          tm2))
 let (pars_and_tc_fragment : Prims.string -> unit) =
   fun s ->
     FStar_Options.set_option "trace_error" (FStar_Options.Bool true);
@@ -626,26 +646,105 @@ let (test_hashes : unit -> unit) =
      aux (Prims.of_int (100)); FStar_Options.init ())
 let (parse_incremental_decls : unit -> unit) =
   fun uu___ ->
-    let source =
-      "module Demo\nlet f x = match x with | Some x -> true | None -> false\nlet test y = if Some? y then f y else true\nlet some junk )(" in
-    let input =
+    let source0 =
+      "module Demo\nlet f x = match x with | Some x -> true | None -> false\nlet test y = if Some? y then f y else true\n```pulse\nfn f() {}\n```\n```pulse\nfn g() {}\n```\nlet something = more\nlet >< junk" in
+    let source1 =
+      "module Demo\nlet f x = match x with | Some x -> true | None -> false\nlet test y = if Some? y then f y else true\n```pulse\nfn f() {}\n```\n\n```pulse\nfn g() {}\n```\nlet something = more\nlet >< junk" in
+    let input0 =
       FStar_Parser_ParseIt.Incremental
         {
           FStar_Parser_ParseIt.frag_fname = "Demo.fst";
-          FStar_Parser_ParseIt.frag_text = source;
-          FStar_Parser_ParseIt.frag_line = Prims.int_zero;
+          FStar_Parser_ParseIt.frag_text = source0;
+          FStar_Parser_ParseIt.frag_line = Prims.int_one;
           FStar_Parser_ParseIt.frag_col = Prims.int_zero
         } in
-    let uu___1 = FStar_Parser_ParseIt.parse input in
+    let input1 =
+      FStar_Parser_ParseIt.Incremental
+        {
+          FStar_Parser_ParseIt.frag_fname = "Demo.fst";
+          FStar_Parser_ParseIt.frag_text = source1;
+          FStar_Parser_ParseIt.frag_line = Prims.int_one;
+          FStar_Parser_ParseIt.frag_col = Prims.int_zero
+        } in
+    let uu___1 =
+      let uu___2 = FStar_Parser_ParseIt.parse input0 in
+      let uu___3 = FStar_Parser_ParseIt.parse input1 in (uu___2, uu___3) in
     match uu___1 with
-    | FStar_Parser_ParseIt.IncrementalFragment
-        (d0::d1::d2::[], uu___2, FStar_Pervasives_Native.Some
-         (uu___3, uu___4, rng))
-        when
-        let p = FStar_Compiler_Range.start_of_range rng in
-        (let uu___5 = FStar_Compiler_Range.line_of_pos p in
-         uu___5 = (Prims.of_int (3))) &&
-          (let uu___5 = FStar_Compiler_Range.col_of_pos p in
-           uu___5 = (Prims.of_int (15)))
-        -> ()
-    | uu___2 -> failwith "Incremental parsing failed"
+    | (FStar_Parser_ParseIt.IncrementalFragment (decls0, uu___2, parse_err0),
+       FStar_Parser_ParseIt.IncrementalFragment (decls1, uu___3, parse_err1))
+        ->
+        let check_range r l c =
+          let p = FStar_Compiler_Range_Ops.start_of_range r in
+          let uu___4 =
+            (let uu___5 = FStar_Compiler_Range_Ops.line_of_pos p in
+             uu___5 = l) &&
+              (let uu___5 = FStar_Compiler_Range_Ops.col_of_pos p in
+               uu___5 = c) in
+          if uu___4
+          then ()
+          else
+            (let uu___6 =
+               let uu___7 = FStar_Compiler_Util.string_of_int l in
+               let uu___8 = FStar_Compiler_Util.string_of_int c in
+               let uu___9 =
+                 let uu___10 = FStar_Compiler_Range_Ops.line_of_pos p in
+                 FStar_Compiler_Util.string_of_int uu___10 in
+               let uu___10 =
+                 let uu___11 = FStar_Compiler_Range_Ops.col_of_pos p in
+                 FStar_Compiler_Util.string_of_int uu___11 in
+               FStar_Compiler_Util.format4
+                 "Incremental parsing failed: Expected syntax error at (%s, %s), got error at (%s, %s)"
+                 uu___7 uu___8 uu___9 uu___10 in
+             failwith uu___6) in
+        ((match (parse_err0, parse_err1) with
+          | (FStar_Pervasives_Native.None, uu___5) ->
+              failwith
+                "Incremental parsing failed: Expected syntax error at (8, 6), got no error"
+          | (uu___5, FStar_Pervasives_Native.None) ->
+              failwith
+                "Incremental parsing failed: Expected syntax error at (9, 6), got no error"
+          | (FStar_Pervasives_Native.Some (uu___5, uu___6, rng0),
+             FStar_Pervasives_Native.Some (uu___7, uu___8, rng1)) ->
+              (check_range rng0 (Prims.of_int (11)) (Prims.of_int (6));
+               check_range rng1 (Prims.of_int (12)) (Prims.of_int (6))));
+         (match (decls0, decls1) with
+          | (d0::d1::d2::d3::d4::d5::[], e0::e1::e2::e3::e4::e5::[]) ->
+              let uu___5 =
+                FStar_Compiler_List.forall2
+                  (fun uu___6 ->
+                     fun uu___7 ->
+                       match (uu___6, uu___7) with
+                       | ((x, uu___8), (y, uu___9)) ->
+                           FStar_Parser_AST_Util.eq_decl x y) decls0 decls1 in
+              if uu___5
+              then ()
+              else
+                failwith
+                  "Incremental parsing failed; unexpected change in a decl"
+          | uu___5 ->
+              let uu___6 =
+                let uu___7 =
+                  FStar_Compiler_Util.string_of_int
+                    (FStar_Compiler_List.length decls0) in
+                let uu___8 =
+                  FStar_Compiler_Util.string_of_int
+                    (FStar_Compiler_List.length decls1) in
+                FStar_Compiler_Util.format2
+                  "Incremental parsing failed; expected 6 decls got %s and %s\n"
+                  uu___7 uu___8 in
+              failwith uu___6))
+    | (FStar_Parser_ParseIt.ParseError (code, message, range), uu___2) ->
+        let msg =
+          let uu___3 = FStar_Compiler_Range_Ops.string_of_range range in
+          let uu___4 = FStar_Errors_Msg.rendermsg message in
+          FStar_Compiler_Util.format2
+            "Incremental parsing failed: Syntax error @ %s: %s" uu___3 uu___4 in
+        failwith msg
+    | (uu___2, FStar_Parser_ParseIt.ParseError (code, message, range)) ->
+        let msg =
+          let uu___3 = FStar_Compiler_Range_Ops.string_of_range range in
+          let uu___4 = FStar_Errors_Msg.rendermsg message in
+          FStar_Compiler_Util.format2
+            "Incremental parsing failed: Syntax error @ %s: %s" uu___3 uu___4 in
+        failwith msg
+    | uu___2 -> failwith "Incremental parsing failed: Unexpected output"

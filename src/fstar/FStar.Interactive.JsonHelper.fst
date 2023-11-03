@@ -25,6 +25,7 @@ open FStar.Compiler
 open FStar.Compiler.Util
 open FStar.Errors
 open FStar.Compiler.Range
+open FStar.Json
 open FStar.TypeChecker.Env
 
 module U = FStar.Compiler.Util
@@ -49,12 +50,12 @@ let assoc key a =
   | None -> raise (MissingKey (U.format1 "Missing key [%s]" key))
 
 let write_json (js: json) =
-  U.print_raw (U.string_of_json js);
+  U.print_raw (string_of_json js);
   U.print_raw "\n"
 
 let write_jsonrpc (js: json) : unit =
   // TODO: utf-8 strings: byte buffers?
-  let js_str = U.string_of_json js in
+  let js_str = string_of_json js in
   let len = U.string_of_int (String.length js_str) in
   U.print_raw (U.format2 "Content-Length: %s\r\n\r\n%s" len js_str)
 

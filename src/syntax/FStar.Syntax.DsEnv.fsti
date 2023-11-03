@@ -28,15 +28,9 @@ open FStar.Ident
 module BU = FStar.Compiler.Util
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
-
+let open_module_or_namespace = S.open_module_or_namespace
 type used_marker = ref bool
-
-type open_kind =                                          (* matters only for resolving names with some module qualifier *)
-| Open_module                                             (* only opens the module, not the namespace *)
-| Open_namespace                                          (* opens the whole namespace *)
-
-type open_module_or_namespace = (lident * open_kind)      (* lident fully qualified name, already resolved. *)
-
+                                        (* opens the whole namespace *)
 type record_or_dc = {
   typename: lident; (* the namespace part applies to the constructor and fields as well *)
   constrname: ident;
@@ -64,6 +58,7 @@ type foundname =
 val fail_or:  env -> (lident -> option 'a) -> lident -> 'a
 val fail_or2: (ident -> option 'a) -> ident -> 'a
 
+val opens_and_abbrevs :env -> list (either open_module_or_namespace module_abbrev)
 val dep_graph: env -> FStar.Parser.Dep.deps
 val set_dep_graph: env -> FStar.Parser.Dep.deps -> env
 val ds_hooks : env -> dsenv_hooks
@@ -82,6 +77,7 @@ val current_module: env -> lident
 val set_current_module: env -> lident -> env
 val open_modules: env -> list (lident * modul)
 val open_modules_and_namespaces: env -> list lident
+val module_abbrevs: env -> list (ident * lident)
 val iface_decls : env -> lident -> option (list Parser.AST.decl)
 val set_iface_decls: env -> lident -> list Parser.AST.decl -> env
 val try_lookup_id: env -> ident -> option term
@@ -120,6 +116,7 @@ val push_sigelt: env -> sigelt -> env
 val push_namespace: env -> lident -> env
 val push_include: env -> lident -> env
 val push_module_abbrev : env -> ident -> lident -> env
+val resolve_name: env -> lident -> option (either bv fv)
 
 (* Won't fail on duplicates, use with caution *)
 val push_sigelt_force : env -> sigelt -> env

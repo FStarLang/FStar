@@ -1,6 +1,6 @@
 module FStar.Platform
-open FStar.Compiler.Effect module List = FStar.Compiler.List
-open FStar.Compiler.Effect module List = FStar.Compiler.List
+open FStar.Compiler.Effect
+
 type sys =
 | Windows
 | Posix

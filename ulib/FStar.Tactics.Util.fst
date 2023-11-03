@@ -16,7 +16,7 @@
 module FStar.Tactics.Util
 
 open FStar.Tactics.Effect
-open FStar.List.Tot
+open FStar.List.Tot.Base
 
 (* Tac list functions, since there's no effect polymorphism *)
 val map: ('a -> Tac 'b) -> list 'a -> Tac (list 'b)
@@ -115,3 +115,8 @@ let rec fold_left2 (#a #b #c:Type) (f:a -> b -> c -> Tac a) (x:a) (l1:list b) (l
   | [], [] -> x
   | hd1::tl1, hd2::tl2 ->
     fold_left2 f (f x hd1 hd2) tl1 tl2
+
+let rec string_of_list #a (f : a -> Tac string) (l : list a) : Tac string =
+  match l with
+  | [] -> ""
+  | x::xs -> f x ^ ";" ^ string_of_list f xs

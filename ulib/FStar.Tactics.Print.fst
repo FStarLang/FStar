@@ -1,17 +1,16 @@
 module FStar.Tactics.Print
 
-open FStar.Reflection
+open FStar.Reflection.V2
 open FStar.Tactics.Effect
-open FStar.Tactics.Builtins
-open FStar.Tactics.Derived
+open FStar.Tactics.V2.Builtins
+open FStar.Tactics.V2.Derived
+open FStar.Tactics.NamedView
+
+let namedv_to_string (x:namedv) : Tac string=
+  unseal x.ppname ^ "#" ^ string_of_int x.uniq
 
 private
 let paren (s:string) : string = "(" ^ s ^ ")"
-
-(* Redefine bv_to_string, which is able to show the type of the bv when in TAC *)
-let bv_to_string (bv : bv) : Tac string =
-    let bvv = inspect_bv bv in
-    "(" ^ name_of_bv bv ^ ":" ^ term_to_string bvv.bv_sort ^ ")"
 
 (* TODO: making this a local definition in print_list fails to extract. *)
 private
@@ -40,7 +39,7 @@ let universes_to_ast_string (us:universes) : Tac string =
 
 let rec term_to_ast_string (t:term) : Tac string =
   match inspect t with
-  | Tv_Var bv -> "Tv_Var " ^ bv_to_string bv
+  | Tv_Var bv -> "Tv_Var " ^ namedv_to_string bv
   | Tv_BVar bv -> "Tv_BVar " ^ bv_to_string bv
   | Tv_FVar fv -> "Tv_FVar " ^ fv_to_string fv
   | Tv_UInst fv us ->
@@ -49,12 +48,12 @@ let rec term_to_ast_string (t:term) : Tac string =
   | Tv_Abs x e -> "Tv_Abs " ^ paren (binder_to_string x ^ ", " ^ term_to_ast_string e)
   | Tv_Arrow x c -> "Tv_Arrow " ^ paren (binder_to_string x ^ ", " ^ comp_to_ast_string c)
   | Tv_Type u -> "Type" ^ paren (universe_to_ast_string u)
-  | Tv_Refine x e -> "Tv_Refine " ^ paren (bv_to_string x ^ ", " ^ term_to_ast_string e)
+  | Tv_Refine x e -> "Tv_Refine " ^ paren (binder_to_string x ^ ", " ^ term_to_ast_string e)
   | Tv_Const c -> const_to_ast_string c
   | Tv_Uvar i _ -> "Tv_Uvar " ^ string_of_int i
   | Tv_Let recf _ x e1 e2 ->
            "Tv_Let " ^ paren (string_of_bool recf ^ ", " ^
-                              bv_to_string x ^ ", " ^
+                              binder_to_string x ^ ", " ^
                               term_to_ast_string e1 ^ ", " ^
                               term_to_ast_string e2)
   | Tv_Match e ret_opt brs ->
@@ -68,6 +67,7 @@ let rec term_to_ast_string (t:term) : Tac string =
   | Tv_AscribedT e t _ use_eq -> "Tv_AscribedT " ^ paren (term_to_ast_string e ^ ", " ^ term_to_ast_string t ^ ", " ^ string_of_bool use_eq)
   | Tv_AscribedC e c _ use_eq -> "Tv_AscribedC " ^ paren (term_to_ast_string e ^ ", " ^ comp_to_ast_string c ^ ", " ^ string_of_bool use_eq)
   | Tv_Unknown -> "_"
+  | Tv_Unsupp -> "<Tv_Unsupp>"
 
 and match_returns_to_string (ret_opt:option match_returns_ascription) : Tac string =
   let tacopt_to_string tacopt : Tac string =

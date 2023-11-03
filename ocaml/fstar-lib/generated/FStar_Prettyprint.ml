@@ -86,5 +86,5 @@ let (generate : printing_mode -> Prims.string Prims.list -> unit) =
                        (Prims.of_int (100)) left_over_doc in
                    FStar_Compiler_Effect.op_Less_Bar
                      (FStar_Compiler_Util.append_to_file outf1) uu___2);
-                  FStar_Compiler_Util.close_file outf1)) in
+                  FStar_Compiler_Util.close_out_channel outf1)) in
       FStar_Compiler_List.iter (parse_and_prettyprint m) filenames

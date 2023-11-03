@@ -1,0 +1,52 @@
+[
+  "giƒÅ° °Mz™b¶Q8æ2",
+  [
+    [
+      "ValLetRec.tt",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "72be5e3f5c96c37b9544a26ce5845910"
+    ],
+    [
+      "ValLetRec.__proj__A__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_9f8cdf5b59c7868a420342e13f3b1fcc"
+      ],
+      0,
+      "7d34bb7e00273764639c80e7cd4fd1a6"
+    ],
+    [
+      "ValLetRec.__proj__B__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_a1bc58c5296cb54dc8f0ebdadb0dcbe1"
+      ],
+      0,
+      "4cf79ef8a228192cb25f86d282de5aa9"
+    ],
+    [
+      "ValLetRec.cmp",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_6de9362c46708c57af4825efdaff2e57_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "subterm_ordering_ValLetRec.A"
+      ],
+      0,
+      "c4e50be189da7e66d71e86dd5c77e6a8"
+    ]
+  ]
+]

@@ -3,8 +3,8 @@ module ReduceRecUnderMatch
 (** An example adapted from one provided by Son Ho
     Demonstrates the use of the [zeta_full] option of the normalizer *)
 
-module T = FStar.Tactics
-open FStar.Tactics
+module T = FStar.Tactics.V2
+open FStar.Tactics.V2
 
 (** A check to make sure that [t0] doesn't appear in the goal
     and to catch regressions.
@@ -24,7 +24,7 @@ let qname_as_term (x:string) : term =
   let qn = explode_qn x in
   let fv = pack_fv qn in
   let tv = Tv_FVar fv in
-  pack_ln tv
+  pack tv
 
 (** This tactic unfolds only [t] and reduces matches and recursive
     functions fully *)

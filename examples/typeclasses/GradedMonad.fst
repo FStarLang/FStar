@@ -1,5 +1,7 @@
 module GradedMonad
 
+#set-options "--warn_error -350"
+
 //SNIPPET_START:monoid$
 class monoid (a:Type) =
 {

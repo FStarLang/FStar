@@ -81,9 +81,6 @@ let __proj__Mkdtuple2__item___1 : 'Aa 'Ab . ('Aa,'Ab) dtuple2 -> 'Aa =
 let __proj__Mkdtuple2__item___2 : 'Aa 'Ab . ('Aa,'Ab) dtuple2 -> 'Ab =
   fun projectee  -> match projectee with | Mkdtuple2 (_1,_2) -> _2
 type ('Aa,'Ap) l_Exists = unit
-type _pos = int * int
-type _rng = string * _pos * _pos
-type range = _rng * _rng
 type string' = string[@@deriving yojson,show]
 type string = string'[@@deriving yojson,show]
 type pure_pre = unit
@@ -103,8 +100,6 @@ type ('Aa,'Ap) pure_null_wp = unit
 type ('Aa,'Awp) pure_trivial = 'Awp
 type ('Ap, 'Apost) pure_assert_wp = unit
 type ('Aa,'Awp,'Auu____878) purewp_id = 'Awp
-let mk_range f a b c d : range = let r = (f, (a, b), (c, d)) in (r, r)
-let range_0 : range = let z = parse_int "0" in mk_range "<dummy>" z z z z
 
 
 let op_AmpAmp x y = x && y
@@ -198,5 +193,3 @@ let (abs : int -> int) =
   fun x  -> if x >= (parse_int "0") then x else op_Minus x
 let string_of_bool = string_of_bool
 let string_of_int = to_string
-
-type ('Ar,'Amsg,'Ab) labeled = 'Ab

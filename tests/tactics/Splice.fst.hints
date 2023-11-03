@@ -1,18 +1,67 @@
 [
-  "3tåÂ≥Ñ«ÀŸ˜ö[|KÍ\u0017",
+  "|\u0006Ø˜±'èù3\u0013§'¿À\u001eˇ",
   [
     [
-      "Splice.uu___7",
+      "Splice.make_42",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_FStar.Tactics.NamedView.Sg_Let",
+        "constructor_distinct_FStar.Tactics.Result.Failed",
+        "constructor_distinct_FStar.Tactics.Result.Success",
+        "disc_equation_FStar.Tactics.NamedView.Unk",
+        "equation_FStar.Reflection.Types.name",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Tactics.Result.Failed_a",
+        "projection_inverse_FStar.Tactics.Result.Failed_exn",
+        "projection_inverse_FStar.Tactics.Result.Failed_ps",
+        "projection_inverse_FStar.Tactics.Result.Success_a",
+        "projection_inverse_FStar.Tactics.Result.Success_ps",
+        "projection_inverse_FStar.Tactics.Result.Success_v"
+      ],
+      0,
+      "10db09e91b98194f7c0eea15ae59d4ac"
+    ],
+    [
+      "Splice.uu___6",
       1,
       2,
       1,
       [ "@query", "equation_Splice.x" ],
       0,
-      "3b998255ae949d268985bcd9974f3c21"
+      "e4d534c4bd461d3516e5d29e63fe791d"
     ],
     [
       "Splice.recursive",
       1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_FStar.Tactics.NamedView.Sg_Let",
+        "constructor_distinct_FStar.Tactics.Result.Failed",
+        "constructor_distinct_FStar.Tactics.Result.Success",
+        "disc_equation_FStar.Tactics.NamedView.Unk",
+        "equation_FStar.Reflection.Types.typ",
+        "equation_FStar.Tactics.NamedView.simple_binder",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Tactics.Result.Failed_a",
+        "projection_inverse_FStar.Tactics.Result.Failed_exn",
+        "projection_inverse_FStar.Tactics.Result.Failed_ps",
+        "projection_inverse_FStar.Tactics.Result.Success_a",
+        "projection_inverse_FStar.Tactics.Result.Success_ps",
+        "projection_inverse_FStar.Tactics.Result.Success_v"
+      ],
+      0,
+      "3f6cbde1908b879d3660ff2ae154bd56"
+    ],
+    [
+      "Splice.recursive",
+      2,
       2,
       1,
       [
@@ -27,16 +76,16 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "795f02cfb3dd093b77a96aeb9aff0d6f"
+      "8d2bd321a8ac0ad3b142d7b276e4638c"
     ],
     [
-      "Splice.uu___16",
+      "Splice.uu___15",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "689b198ac02dbc3bd466224d5ddeef8e"
+      "0b9d437ce570493a27a4a6e3041e179d"
     ]
   ]
 ]

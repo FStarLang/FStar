@@ -1,8 +1,9 @@
 open FStar_Syntax_Syntax
 open FStar_Reflection_Types
+module R = FStar_Compiler_Range
 
-let dummy_range = FStar_Compiler_Range.dummyRange
-let underscore = FStar_Ident.mk_ident ("_", dummy_range)
+let dummy_range = R.dummyRange
+let underscore = FStar_Ident.mk_ident ("_", R.dummyRange)
 let int_as_bv (n:Prims.int) = { ppname = underscore; index = n; sort = tun}
 
 let open_term (t:term) (v:Prims.int)

@@ -30,7 +30,7 @@ function fetch_karamel() {
     git fetch origin
     local ref=$(jq -c -r '.RepoVersions["karamel_version"]' "$rootPath/.docker/build/config.json" )
     if [[ $ref == "null" ]]; then
-        echo "Unale to find RepoVersions.karamel_version on $rootPath/.docker/build/config.json"
+        echo "Unable to find RepoVersions.karamel_version on $rootPath/.docker/build/config.json"
         return -1
     fi
 
@@ -41,11 +41,11 @@ function fetch_karamel() {
 
     # Install the Karamel dependencies
     pushd $KRML_HOME
-    .docker/build/install-other-deps.sh
+    OPAMYES=true .docker/build/install-other-deps.sh
     popd
 }
 
-function make_karamel() {
+function make_karamel_pre() {
     # Default build target is minimal, unless specified otherwise
     local localTarget
     if [[ $1 == "" ]]; then
@@ -56,6 +56,9 @@ function make_karamel() {
 
     make -C karamel -j $threads $localTarget ||
         (cd karamel && git clean -fdx && make -j $threads $localTarget)
+}
+
+function make_karamel_post() {
     OTHERFLAGS='--admit_smt_queries true' make -C karamel/krmllib -j $threads
     export PATH="$(pwd)/karamel:$PATH"
 }
@@ -75,45 +78,58 @@ function fstar_default_build () {
         export OTHERFLAGS="--record_hints $OTHERFLAGS"
     fi
 
-    # Start fetching while we build F*
+    # Start fetching and building karamel while we build F*
     if [[ -z "$CI_NO_KARAMEL" ]] ; then
         fetch_karamel
+        make_karamel_pre
     fi &
 
     # Build F*, along with fstarlib
-    if ! make -j $threads ci-utest-prelude; then
+    if ! make -j $threads ci-pre; then
         echo Warm-up failed
         echo Failure >$result_file
         return 1
     fi
 
+    # Clean temporary build files, not needed and saves
+    # several hundred MB
+    make clean-buildfiles || true
+
     export_home FSTAR "$(pwd)"
 
     wait # for fetches above
 
-    # Build karamel if enabled
+    # Build the rest of karamel if enabled (i.e. verify krmllib)
     if [[ -z "$CI_NO_KARAMEL" ]] ; then
         # The commands above were executed in sub-shells and their EXPORTs are not
         # propagated to the current shell. Re-do.
         export_home KRML "$(pwd)/karamel"
-        make_karamel
+        make_karamel_post
     fi
+    # NOTE: We cannot run this in parallel with F* regressions as some
+    # examples depend on having krmllib checked.
 
     # Once F* is built, run its main regression suite.
     $gnutime make -j $threads -k ci-$localTarget && echo true >$status_file
     echo Done building FStar
 
-    # Make it a hard failure if there's a git diff. Note: FStar_Version.ml is in the
-    # .gitignore.
-    echo "Searching for a diff in ocaml/*/generated"
-    if ! git diff --exit-code ocaml/*/generated ; then
-        echo " *** GIT DIFF: the files in the list above have a git diff"
-        echo false >$status_file
-    fi
+    if [ -z "${FSTAR_CI_NO_GITDIFF}" ]; then
+        # Make it a hard failure if there's a git diff in the snapshot. First check for
+        # extraneous files, then for a diff.
+        echo "Searching for a diff in ocaml/*/generated"
+        git status ocaml/*/generated # Print status for log
 
-    # We should not generate hints when building on Windows
-    if [[ $localTarget == "uregressions-ulong" && "$OS" != "Windows_NT" ]]; then
-        .scripts/advance.sh refresh_fstar_hints || echo false >$status_file
+        # If there's any output, i.e. any file not in HEAD, fail
+        if git ls-files --others --exclude-standard -- ocaml/*/generated | grep -q . ; then
+            echo " *** GIT DIFF: there are extraneous files in the snapshot"
+            echo false >$status_file
+        fi
+
+        # If there's a diff in existing files, fail
+        if ! git diff --exit-code ocaml/*/generated ; then
+            echo " *** GIT DIFF: the files in the list above have a git diff"
+            echo false >$status_file
+        fi
     fi
 }
 

@@ -45,7 +45,7 @@ let primitive_projector_by_pos env lid i =
     let fail () = failwith (BU.format2 "Projector %s on data constructor %s not found" (string_of_int i) (string_of_lid lid)) in
     let _, t = Env.lookup_datacon env lid in
     match (SS.compress t).n with
-        | Tm_arrow(bs, c) ->
+        | Tm_arrow {bs; comp=c} ->
           let binders, _ = SS.open_comp bs c in
           if ((i < 0) || i >= List.length binders) //this has to be within bounds!
           then fail ()
@@ -132,8 +132,9 @@ let fvb_to_string fvb =
         (Term.print_smt_term s0)
         (Term.print_smt_term s1)
   in
-  BU.format5 "{ lid = %s;\n  smt_id = %s;\n  smt_token = %s;\n smt_fuel_partial_app = %s;\n fvb_thunked = %s }"
+  BU.format6 "{ lid = %s;\n  smt_arity = %s;\n  smt_id = %s;\n  smt_token = %s;\n  smt_fuel_partial_app = %s;\n  fvb_thunked = %s }"
     (Ident.string_of_lid fvb.fvar_lid)
+    (string_of_int fvb.smt_arity)
     fvb.smt_id
     (term_opt_to_string fvb.smt_token)
     (term_pair_opt_to_string fvb.smt_fuel_partial_app)
@@ -205,6 +206,9 @@ let fresh_fvar mname x s = let xsym = varops.fresh mname x in xsym, mkFreeV <| m
 let gen_term_var (env:env_t) (x:bv) =
     let ysym = "@x"^(string_of_int env.depth) in
     let y = mkFreeV <| mk_fv (ysym, Term_sort) in
+    (* Note: the encoding of impure function arrows (among other places
+    probably) relies on the fact that this is exactly a FreeV. See getfreeV in
+    FStar.SMTEncoding.EncodeTerm.fst *)
     ysym, y, {env with bvar_bindings=add_bvar_binding (x, y) env.bvar_bindings
                      ; tcenv = Env.push_bv env.tcenv x
                      ; depth = env.depth + 1 }
@@ -227,13 +231,11 @@ let push_term_var (env:env_t) (x:bv) (t:term) =
 
 let lookup_term_var env a =
     match lookup_bvar_binding env a with
-    | None ->
-        (match lookup_bvar_binding env a with
-         | None -> failwith (BU.format2 "Bound term variable not found  %s in environment: %s"
-                                        (Print.bv_to_string a)
-                                        (print_env env))
-         | Some (b,t) -> t)
     | Some (b,t) -> t
+    | None ->
+      failwith (BU.format2 "Bound term variable not found  %s in environment: %s"
+                           (Print.bv_to_string a)
+                           (print_env env))
 
 (* Qualified term names *)
 let mk_fvb lid fname arity ftok fuel_partial_app thunked =

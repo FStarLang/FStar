@@ -105,7 +105,7 @@ val lemma_SelConst: #key:eqtype -> #value:Type -> v:value -> k:key ->
                     [SMTPat (sel (const v) k)]
 
 val lemma_SelRestrict: #key:eqtype -> #value:Type -> m:t key value -> ks:S.set key -> k:key ->
-                       Lemma (requires True) (ensures (S.mem k ks ==> sel (restrict ks m) k == sel m k))
+                       Lemma (requires True) (ensures (sel (restrict ks m) k == sel m k))
                        [SMTPat (sel (restrict ks m) k)]
 
 val lemma_SelConcat1: #key:eqtype -> #value:Type -> m1:t key value -> m2:t key value -> k:key ->
@@ -183,7 +183,7 @@ val lemma_equal_elim: #key:eqtype -> #value:Type -> m1:t key value -> m2:t key v
                       Lemma (ensures (equal m1 m2 <==> m1 == m2))
                             [SMTPat (equal m1 m2)]
 
-[@@(deprecated "use lemma_equal_elim")]
+[@@(deprecated "Use lemma_equal_elim instead")]
 val lemma_equal_refl: #key:eqtype -> #value:Type -> m1:t key value -> m2:t key value ->
                       Lemma  (requires (m1 == m2))
                              (ensures  (equal m1 m2))

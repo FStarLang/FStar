@@ -81,7 +81,7 @@ let should_fail x y =
         match g.guard_f with
             | Trivial -> fail (BU.format2 "%s and %s should not be unifiable\n" (P.term_to_string x) (P.term_to_string y))
             | NonTrivial f -> BU.print3 "%s and %s are unifiable if %s\n"  (P.term_to_string x) (P.term_to_string y) (P.term_to_string f)
-    with Error(e, msg, r, _ctx) -> BU.print1 "%s\n" msg // FIXME?
+    with Error(e, msg, r, _ctx) -> BU.print1 "%s\n" (Errors.rendermsg msg) // FIXME?
 
 let unify' x y =
     let x = pars x in

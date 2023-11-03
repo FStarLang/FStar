@@ -18,7 +18,7 @@ module Imp
 //#set-options "--debug Imp --debug_level SMTQuery"
 
 open FStar.Mul
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.Tactics.CanonCommSemiring
 open FStar.Algebra.CommMonoid
 

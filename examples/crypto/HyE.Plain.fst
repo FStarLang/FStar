@@ -19,10 +19,7 @@ open Platform.Bytes
 open CoreCrypto
 open HyE.Ideal
 
-
 type t = bytes
-
-assume Plain_hasEq: hasEq t
 
 (* two pure functions, never called when ideal *)
 let repr t = t       (* a pure function from t to RSA.plain *)

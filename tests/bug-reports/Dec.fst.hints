@@ -19,7 +19,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "8922f67a85c0d11185444f63bc754bb5"
+      "a4d2890d0c1ecbccb2e86c4639eb293e"
     ],
     [
       "Dec.f1",
@@ -39,7 +39,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "ca63aa23fb942e9d282d1d480b52e1bf"
+      "ad0e1366aff2ec9b22c51b3ef6d401df"
     ],
     [
       "Dec.f1",
@@ -59,21 +59,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "6d67a6a6b994e1e02df64003fbdeeb1a"
-    ],
-    [
-      "Dec.pred",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eq2",
-        "equation_Prims.squash", "equation_Prims.subtype_of",
-        "primitive_Prims.op_LessThanOrEqual",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
-      ],
-      0,
-      "e1d4203298cdcaf886e325659be4005d"
+      "fa012b3dacea88bd423f38cea3a77ced"
     ],
     [
       "Dec.g",
@@ -95,7 +81,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "6310ad0c6e44cc73635790ed7ecf8483"
+      "b15d511e7402b35b5bd2cb9ec6dd795a"
     ],
     [
       "Dec.h",
@@ -117,7 +103,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "39ee0448dd48c4473993436988363a93"
+      "995a147674ef94366f7b0bf678601d6b"
     ],
     [
       "Dec.old",
@@ -137,7 +123,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "cf2754c6bbe94cee25e7a3d00ba11a31"
+      "8ab2cfea48f2b9043d33c144fb328628"
     ],
     [
       "Dec.old2",
@@ -157,7 +143,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "f3523a6f1213e4c5a8c0f9c7f6962f34"
+      "daf5d6afebc4bec9d93948a1884ce945"
     ],
     [
       "Dec.simple",
@@ -175,7 +161,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "35a57414ed032dec094a9bca3f948971"
+      "b8f06c495bcdf93ba53193e2404ac55b"
     ],
     [
       "Dec.last",
@@ -195,7 +181,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "a21e9d877c6a56b3d12d6118e74b3570"
+      "359663706ee4b68ad844826ca6b2a629"
     ],
     [
       "Dec.test_inner_let_rec",
@@ -215,7 +201,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "23b00eeda69d27bbb9a96ca4d1464e02"
+      "6bf83a12d0fa7865ff794286a85f4340"
     ],
     [
       "Dec.factorial_tail",
@@ -235,7 +221,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "eff89e70e30690a012f72c667274f67a"
+      "64edae054399f33b26c9d10d20950d4c"
     ],
     [
       "Dec.test_inner_let_rec_with_wf",
@@ -254,7 +240,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "2d0dc91a9d4bc96b5839035c654bf58e"
+      "eca440d9431827275a97d976ec2b19ed"
     ]
   ]
 ]

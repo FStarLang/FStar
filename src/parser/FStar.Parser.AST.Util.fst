@@ -532,6 +532,8 @@ let rec eq_decl' (d1 d2:decl') : bool =
     is_typed1 = is_typed2 &&
     eq_list eq_ident is1 is2 &&
     eq_term t1 t2
+  | DeclSyntaxExtension (s1, t1, _, _), DeclSyntaxExtension (s2, t2, _, _) ->
+    s1 = s2 && t1 = t2
   | _ -> false
 
 and eq_effect_decl (t1 t2: effect_decl) =
@@ -693,6 +695,7 @@ let rec lidents_of_decl (d:decl) =
   | Pragma _ -> []
   | Assume (_, t) -> lidents_of_term t
   | Splice (_, _, t) -> lidents_of_term t
+  | DeclSyntaxExtension _ -> []
 
 and lidents_of_effect_decl (ed:effect_decl) =
   match ed with
@@ -703,3 +706,10 @@ and lidents_of_effect_decl (ed:effect_decl) =
   | RedefineEffect (_, bs, t) -> 
     concat_map lidents_of_binder bs @
     lidents_of_term t
+
+module BU = FStar.Compiler.Util
+let extension_parser_table : BU.smap extension_parser = FStar.Compiler.Util.smap_create 20
+let register_extension_parser (ext:string) (parser:extension_parser) =
+  FStar.Compiler.Util.smap_add extension_parser_table ext parser
+let lookup_extension_parser (ext:string) =
+  FStar.Compiler.Util.smap_try_find extension_parser_table ext

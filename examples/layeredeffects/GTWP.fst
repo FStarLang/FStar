@@ -1,6 +1,6 @@
 module GTWP
 
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.Universe
 open FStar.Monotonic.Pure
 
@@ -56,16 +56,23 @@ let bind (a b : Type) (i:idx) (wc:wp a) (wf:a -> wp b) (c : m a i wc) (f : (x:a 
   | D -> coerce (d_bind #_ #_ #wc #wf (coerce c) f)
 // GM: would be nice to skip the annotations.
 
-let subcomp (a:Type) (i:idx) (wp1 : wp a)
-                             (wp2 : wp a)
-                             (f : m a i wp1)
+let subcomp (a:Type u#aa) (i:idx)
+            (wp1 : wp a)
+            (wp2 : wp a)
+            (f : m a i wp1)
    : Pure (m a i wp2)
           (requires (forall p. wp2 p ==> wp1 p))
           (ensures (fun _ -> True))
    = match i with
      | T -> f
      | G -> f
-     | D -> coerce f
+     | D ->
+       (* This case needs some handholding. *)
+       let f : raise_t (unit -> DIV a wp1) = f in
+       let f : unit -> DIV a wp1 = downgrade_val f in
+       let f : unit -> DIV a wp2 = f in
+       assert_norm (m a i wp2 == raise_t (unit -> DIV a wp2));
+       coerce (raise_val f)
 
 unfold
 let ite_wp #a (w1 w2 : wp a) (b:bool) : wp a =
@@ -129,7 +136,7 @@ let rec map #a #b #i (f : a -> Gtd b i) (xs : list a) : Gtd (list b) i (* by (ex
 
 let app #a #b #i #wp (f : a -> GTD b i wp) (x : a) : GTD b i wp = f x
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let rec appn #a #i (n:nat) (f : a -> Gtd a i) (x : a) : Gtd a i =
   match n with

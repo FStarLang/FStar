@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module Split
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.Reflection.Types
 
 private val split_lem : (#a:Type) -> (#b:Type) ->

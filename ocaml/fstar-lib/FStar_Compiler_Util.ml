@@ -1,3 +1,5 @@
+open FStar_Json
+
 let max_int = Z.of_int max_int
 let is_letter c = if c > 255 then false else BatChar.is_letter (BatChar.chr c)
 let is_digit  c = if c > 255 then false else BatChar.is_digit  (BatChar.chr c)
@@ -69,6 +71,20 @@ let with_sigint_handler handler f =
     (fun () -> set_sigint_handler handler; f ())
     ()
 
+(* Re export this type, it's mentioned in the interface for this module. *)
+type out_channel = Stdlib.out_channel
+
+let stderr = Stdlib.stderr
+let stdout = Stdlib.stdout
+
+let open_file_for_writing (fn : string) = Stdlib.open_out_bin fn
+let open_file_for_appending (fn : string) = Stdlib.open_out_gen [Open_append; Open_wronly; Open_creat; Open_binary] 0o644 fn
+let close_out_channel (c : out_channel) = Stdlib.close_out c
+
+let flush (c:out_channel) : unit = Stdlib.flush c
+
+let append_to_file (c:out_channel) s = Printf.fprintf c "%s\n" s; flush c
+
 type proc =
     {pid: int;
      inc : in_channel; (* in == where we read from, so the process's stdout *)
@@ -77,6 +93,7 @@ type proc =
      mutable killed : bool;
      stop_marker: (string -> bool) option;
      id : string;
+     prog : string;
      start_time : time}
 
 let all_procs : (proc list) ref = ref []
@@ -126,7 +143,9 @@ let start_process'
   Unix.close stdin_r;
   Unix.close stdout_w;
   Unix.close stderr_w;
-  let proc = { pid = pid; id = prog ^ ":" ^ id;
+  let proc = { pid = pid;
+               id = prog ^ ":" ^ id;
+               prog = prog;
                inc = Unix.in_channel_of_descr stdout_r;
                errc = Unix.in_channel_of_descr stderr_r;
                outc = Unix.out_channel_of_descr stdin_w;
@@ -169,6 +188,8 @@ let kill_process (p: proc) =
 
 let kill_all () =
   BatList.iter kill_process !all_procs
+
+let proc_prog (p:proc) : string = p.prog
 
 let process_read_all_output (p: proc) =
   (* Pass cleanup:false because kill_process closes both fds already. *)
@@ -250,10 +271,16 @@ let run_process (id: string) (prog: string) (args: string list) (stdin: string o
   let p = start_process' id prog args None in
   (match stdin with
    | None -> ()
-   | Some str -> output_string p.outc str);
-  flush p.outc;
-  close_out p.outc;
-  process_read_all_output p
+   | Some str ->
+     try output_string p.outc str with
+     | Sys_error _ -> () (* FIXME: check for "Broken pipe". In that case this is fine, process must have finished without reading input *)
+     | e -> raise e
+  );
+  (try flush p.outc with | _ -> ()); (* only _attempt_ to flush, so we don't get an exception if the process is finished *)
+  (try close_out p.outc with | _ -> ()); (* idem *)
+  let s = process_read_all_output p in
+  kill_process p;
+  s
 
 type read_result = EOF | SIGINT
 
@@ -502,6 +529,13 @@ let flush_stdout () = flush stdout
 
 let stdout_isatty () = Some (Unix.isatty Unix.stdout)
 
+(* NOTE: this is deciding whether or not to color by looking
+   at stdout_isatty(), which may be a wrong choice if
+   we're instead outputting to stderr. e.g.
+     fstar.exe Blah.fst 2>errlog
+   will colorize the errors in the file if stdout is not
+   also redirected.
+*)
 let colorize s colors =
   match colors with
   | (c1,c2) ->
@@ -519,22 +553,29 @@ let colorize_red s =
   | Some true -> format3 "%s%s%s" "\x1b[31;1m" s "\x1b[0m"
   | _ -> s
 
+let colorize_yellow s =
+  match stdout_isatty () with
+  | Some true -> format3 "%s%s%s" "\x1b[33;1m" s "\x1b[0m"
+  | _ -> s
+
 let colorize_cyan s =
   match stdout_isatty () with
   | Some true -> format3 "%s%s%s" "\x1b[36;1m" s "\x1b[0m"
   | _ -> s
 
+let colorize_green s =
+  match stdout_isatty () with
+  | Some true -> format3 "%s%s%s" "\x1b[32;1m" s "\x1b[0m"
+  | _ -> s
+
+let colorize_magenta  s =
+  match stdout_isatty () with
+  | Some true -> format3 "%s%s%s" "\x1b[35;1m" s "\x1b[0m"
+  | _ -> s
+
 let pr  = Printf.printf
 let spr = Printf.sprintf
 let fpr = Printf.fprintf
-
-type json =
-| JsonNull
-| JsonBool of bool
-| JsonInt of Z.t
-| JsonStr of string
-| JsonList of json list
-| JsonAssoc of (string * json) list
 
 type printer = {
   printer_prinfo: string -> unit;
@@ -571,7 +612,9 @@ let base64_encode s = BatBase64.str_encode s
 let base64_decode s = BatBase64.str_decode s
 let char_of_int i = Z.to_int i
 let int_of_string = Z.of_string
-let safe_int_of_string x = try Some (int_of_string x) with Invalid_argument _ -> None
+let safe_int_of_string x =
+  if x = "" then None else
+  try Some (int_of_string x) with Invalid_argument _ -> None
 let int_of_char x = Z.of_int x
 let int_of_byte x = x
 let int_of_uint8 x = Z.of_int (Char.code x)
@@ -637,10 +680,7 @@ let print1_warning a b = print_warning (format1 a b)
 let print2_warning a b c = print_warning (format2 a b c)
 let print3_warning a b c d = print_warning (format3 a b c d)
 
-let stderr = stderr
-let stdout = stdout
-
-let fprint oc fmt args = Printf.fprintf oc "%s" (format fmt args)
+let fprint (oc:out_channel) fmt args : unit = Printf.fprintf oc "%s" (format fmt args)
 
 [@@deriving yojson,show]
 
@@ -856,14 +896,11 @@ let rec stfold (init:'b) (l:'a list) (f: 'b -> 'a -> ('s,'b) state) : ('s,'b) st
   | [] -> ret init
   | hd::tl -> (f init hd) >> (fun next -> stfold next tl f)
 
-type file_handle = out_channel
-let open_file_for_writing (fn:string) : file_handle = open_out_bin fn
-let append_to_file (fh:file_handle) s = fpr fh "%s\n" s; flush fh
-let close_file (fh:file_handle) = close_out fh
 let write_file (fn:string) s =
   let fh = open_file_for_writing fn in
   append_to_file fh s;
-  close_file fh
+  close_out_channel fh
+
 let copy_file input_name output_name =
   (* see https://ocaml.github.io/ocamlunix/ocamlunix.html#sec33 *)
   let open Unix in
@@ -879,7 +916,6 @@ let copy_file input_name output_name =
   copy_loop ();
   close fd_in;
   close fd_out
-let flush_file (fh:file_handle) = flush fh
 let delete_file (fn:string) = Sys.remove fn
 let file_get_contents f =
   let ic = open_in_bin f in
@@ -1119,156 +1155,6 @@ let return_execution_time f =
   let retv = f () in
   let t2 = Sys.time () in
   (retv, 1000.0 *. (t2 -. t1))
-
-(** Hints. *)
-type hint = {
-    hint_name:string;
-    hint_index:Z.t;
-    fuel:Z.t;
-    ifuel:Z.t;
-    unsat_core:string list option;
-    query_elapsed_time:Z.t;
-    hash:string option
-}
-
-type hints = hint option list
-
-type hints_db = {
-    module_digest:string;
-    hints: hints
-}
-
-type hints_read_result =
-  | HintsOK of hints_db
-  | MalformedJson
-  | UnableToOpen
-
-let write_hints (filename: string) (hints: hints_db): unit =
-  let json = `List [
-    `String hints.module_digest;
-    `List (List.map (function
-      | None -> `Null
-      | Some { hint_name; hint_index; fuel; ifuel; unsat_core; query_elapsed_time; hash } ->
-          `List [
-            `String hint_name;
-            `Int (Z.to_int hint_index);
-            `Int (Z.to_int fuel);
-            `Int (Z.to_int ifuel);
-            (match unsat_core with
-            | None -> `Null
-            | Some strings ->
-                `List (List.map (fun s -> `String s) strings));
-            `Int (Z.to_int query_elapsed_time);
-            `String (match hash with | Some(h) -> h | _ -> "")
-          ]
-    ) hints.hints)
-  ] in
-  let channel = open_out_bin filename in
-  BatPervasives.finally
-    (fun () -> close_out channel)
-    (fun channel -> Yojson.Safe.pretty_to_channel channel json)
-    channel
-
-let read_hints (filename: string) : hints_read_result =
-  let mk_hint nm ix fuel ifuel unsat_core time hash_opt = {
-      hint_name = nm;
-      hint_index = Z.of_int ix;
-      fuel = Z.of_int fuel;
-      ifuel = Z.of_int ifuel;
-      unsat_core = begin
-        match unsat_core with
-        | `Null ->
-           None
-        | `List strings ->
-           Some (List.map (function
-                           | `String s -> s
-                           | _ -> raise Exit)
-                           strings)
-        |  _ ->
-           raise Exit
-        end;
-      query_elapsed_time = Z.of_int time;
-      hash = hash_opt
-  }
-  in
-  try
-    let chan = open_in filename in
-    let json = Yojson.Safe.from_channel chan in
-    close_in chan;
-    HintsOK (
-        match json with
-        | `List [
-            `String module_digest;
-            `List hints
-          ] -> {
-            module_digest;
-            hints = List.map (function
-                        | `Null -> None
-                        | `List [ `String hint_name;
-                                  `Int hint_index;
-                                  `Int fuel;
-                                  `Int ifuel;
-                                  unsat_core;
-                                  `Int query_elapsed_time ] ->
-                          (* This case is for dealing with old-style hint files
-                             that lack a query-hashes field. We should remove this
-                             case once we definitively remove support for old hints *)
-                           Some (mk_hint hint_name hint_index fuel ifuel unsat_core query_elapsed_time None)
-                        | `List [ `String hint_name;
-                                  `Int hint_index;
-                                  `Int fuel;
-                                  `Int ifuel;
-                                  unsat_core;
-                                  `Int query_elapsed_time;
-                                  `String hash ] ->
-                           let hash_opt = if hash <> "" then Some(hash) else None in
-                           Some (mk_hint hint_name hint_index fuel ifuel unsat_core query_elapsed_time hash_opt)
-                        | _ ->
-                           raise Exit
-                      ) hints
-          }
-        | _ ->
-           raise Exit
-    )
-  with
-   | Exit ->
-      MalformedJson
-   | Sys_error _ ->
-      UnableToOpen
-
-(** Interactive protocol **)
-
-exception UnsupportedJson
-
-let json_of_yojson yjs: json option =
-  let rec aux yjs =
-    match yjs with
-    | `Null -> JsonNull
-    | `Bool b -> JsonBool b
-    | `Int i -> JsonInt (Z.of_int i)
-    | `String s -> JsonStr s
-    | `List l -> JsonList (List.map aux l)
-    | `Assoc a -> JsonAssoc (List.map (fun (k, v) -> (k, aux v)) a)
-    | _ -> raise UnsupportedJson in
-  try Some (aux yjs) with UnsupportedJson -> None
-
-let rec yojson_of_json js =
-  match js with
-  | JsonNull -> `Null
-  | JsonBool b -> `Bool b
-  | JsonInt i -> `Int (Z.to_int i)
-  | JsonStr s -> `String s
-  | JsonList l -> `List (List.map yojson_of_json l)
-  | JsonAssoc a -> `Assoc (List.map (fun (k, v) -> (k, yojson_of_json v)) a)
-
-let json_of_string str : json option =
-  let open Yojson.Basic in
-  try
-    json_of_yojson (Yojson.Basic.from_string str)
-  with Yojson.Json_error _ -> None
-
-let string_of_json json =
-  Yojson.Basic.to_string (yojson_of_json json)
 
 (* Outside of this file the reference to FStar_Util.ref must use the following combinators *)
 (* Export it at the end of the file so that we don't break other internal uses of ref *)

@@ -17,8 +17,7 @@ module FStar.Compiler.Util
 open Prims
 open FStar.Pervasives
 open FStar.Compiler.Effect
-module List = FStar.Compiler.List
-
+open FStar.Json
 open FStar.BaseTypes
 
 exception Impos
@@ -53,7 +52,6 @@ val set_difference: set 'a -> set 'a -> set 'a
 val set_symmetric_difference: set 'a -> set 'a -> set 'a
 val set_eq: set 'a -> set 'a -> bool
 
-(* not relying on representation *)
 type smap 'value
 val smap_create: int -> smap 'value
 val smap_clear:smap 'value -> unit
@@ -79,7 +77,6 @@ val psmap_find_map: psmap 'value -> (string -> 'value -> option 'a) -> option 'a
 val psmap_modify: psmap 'value -> string -> (option 'value -> 'value) -> psmap 'value
 val psmap_merge: psmap 'value -> psmap 'value -> psmap 'value
 
-(* not relying on representation *)
 type imap 'value
 val imap_create: int -> imap 'value
 val imap_clear:imap 'value -> unit
@@ -134,22 +131,27 @@ val stdout_isatty: unit -> option bool
 val colorize: string -> (string * string) -> string
 val colorize_bold: string -> string
 val colorize_red: string -> string
+val colorize_yellow: string -> string
 val colorize_cyan: string -> string
+val colorize_green: string -> string
+val colorize_magenta : string -> string
 
 
-(* Clients of this module should *NOT* rely on this representation *)
 type out_channel
+
 val stderr: out_channel
 val stdout: out_channel
+
+val open_file_for_writing : string -> out_channel
+val open_file_for_appending : string -> out_channel
+val close_out_channel : out_channel -> unit
+
+val flush: out_channel -> unit
+
 val fprint: out_channel -> string -> list string -> unit
 
-type json =
-| JsonNull
-| JsonBool of bool
-| JsonInt of int
-| JsonStr of string
-| JsonList of list json
-| JsonAssoc of list (string * json)
+(* Adds a newline and flushes *)
+val append_to_file: out_channel -> string -> unit
 
 type printer = {
   printer_prinfo: string -> unit;
@@ -168,28 +170,20 @@ val print_any : 'a -> unit
 val strcat : string -> string -> string
 val concat_l : string -> list string -> string
 
-(* not relying on representation *)
-type file_handle
-val open_file_for_writing: string -> file_handle
-val append_to_file: file_handle -> string -> unit
-val close_file: file_handle -> unit
 val write_file: string -> string -> unit
 val copy_file: string -> string -> unit
-val flush_file: file_handle -> unit
 val delete_file: string -> unit
 val file_get_contents: string -> string
 val file_get_lines: string -> list string
 val mkdir: bool-> string -> unit (* [mkdir clean d] a new dir with user read/write; else delete content of [d] if it exists && clean *)
 val concat_dir_filename: string -> string -> string
 
-(* not relying on representation *)
 type stream_reader
 val open_stdin : unit -> stream_reader
 val read_line: stream_reader -> option string
 val nread : stream_reader -> int -> option string
 val poll_stdin : float -> bool
 
-(* not relying on representation *)
 type string_builder
 val new_string_builder: unit -> string_builder
 val clear_string_builder: string_builder -> unit
@@ -207,13 +201,13 @@ val sigint_raise: sigint_handler
 val set_sigint_handler: sigint_handler -> unit
 val with_sigint_handler: sigint_handler -> (unit -> 'a) -> 'a
 
-(* not relying on representation *)
 type proc
 val run_process : string -> string -> list string -> option string -> string
 val start_process: string -> string -> list string -> (string -> bool) -> proc
 val ask_process: proc -> string -> (*err_handler:*)(unit -> string) -> (*stderr_handler:*)(string -> unit) -> string
 val kill_process: proc -> unit
 val kill_all: unit -> unit
+val proc_prog : proc -> string
 
 val get_file_extension: string -> string
 val is_path_absolute: string -> bool
@@ -399,35 +393,6 @@ val touch_file: string -> unit (* Precondition: file exists *)
 val ensure_decimal: string -> string
 val measure_execution_time: string -> (unit -> 'a) -> 'a
 val return_execution_time: (unit -> 'a) -> ('a * float)
-
-(** Hints. *)
-type hint = {
-    hint_name:string; //name associated to the top-level term in the source program
-    hint_index:int; //the nth query associated with that top-level term
-    fuel:int; //fuel for unrolling recursive functions
-    ifuel:int; //fuel for inverting inductive datatypes
-    unsat_core:option (list string); //unsat core, if requested
-    query_elapsed_time:int; //time in milliseconds taken for the query, to decide if a fresh replay is worth it
-    hash:option string; //hash of the smt2 query that last succeeded
-}
-
-type hints = list (option hint)
-
-type hints_db = {
-    module_digest:string;
-    hints: hints
-}
-
-type hints_read_result =
-  | HintsOK of hints_db
-  | MalformedJson
-  | UnableToOpen
-
-val write_hints: string -> hints_db -> unit
-val read_hints: string -> hints_read_result
-
-val json_of_string : string -> option json
-val string_of_json : json -> string
 
 (* Common interface between F#, Ocaml and F* to read and write references *)
 (* F# uses native references, while OCaml uses both native references (Pervasives) and FStar_Heap ones *)

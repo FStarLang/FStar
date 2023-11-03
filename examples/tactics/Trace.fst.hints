@@ -1,5 +1,5 @@
 [
-  "s¿)\n˜\u0007\u000fØ>\u0014`Å%€\u00073",
+  "‰ˇ6êV\u001e•∫ˆ‡\u0004FBã‡º",
   [
     [
       "Trace.mynat",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "8781c0350e47aa6d7ddc0688c91af1dd"
+      "a56e902e526c07e5f53d6ed31bb359bf"
     ],
     [
       "Trace.__proj__S__item___0",
@@ -20,7 +20,7 @@
         "refinement_interpretation_Tm_refine_404885b3cc4eeb5f45b884df07c7ad02"
       ],
       0,
-      "3b15f708c472d91e1a08982d8f06d086"
+      "080bf1218c21866253890f6ea07588fd"
     ],
     [
       "Trace.tick_last",
@@ -37,7 +37,20 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "3cea1366a61e5bee1636c13ec5382dff"
+      "39f5b424eda09d69470f9422c37c9f7b"
+    ],
+    [
+      "Trace.instrument_body",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Tactics.NamedView.term",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
+      ],
+      0,
+      "ba43cf88dcf57995b264687ae6cb49e8"
     ],
     [
       "Trace.cutlast",
@@ -66,7 +79,7 @@
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented"
       ],
       0,
-      "4f1f65316c8dd5b4d7b654d3a07a80af"
+      "5d293c3bf20cf825a2790ebd32907540"
     ],
     [
       "Trace.instrument",
@@ -76,21 +89,19 @@
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
-        "@query",
-        "FStar.Reflection.Data_pretyping_ee655bc751cef679bca813f86c407d6b",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "constructor_distinct_FStar.Reflection.Data.Tv_FVar",
+        "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "constructor_distinct_FStar.Tactics.NamedView.Tv_FVar",
         "constructor_distinct_FStar.Tactics.Result.Failed",
         "constructor_distinct_FStar.Tactics.Result.Success",
         "data_elim_FStar.Tactics.Result.Success",
-        "data_typing_intro_FStar.Reflection.Data.Tv_Unknown@tok",
-        "equation_Prims.nat",
+        "equation_FStar.Tactics.NamedView.binding",
+        "equation_FStar.Tactics.NamedView.term", "equation_Prims.nat",
         "fuel_guarded_inversion_FStar.Tactics.Result.__result",
-        "function_token_typing_FStar.Reflection.Types.binder",
         "function_token_typing_Prims.__cache_version_number__",
-        "int_inversion", "primitive_Prims.op_Equality",
-        "primitive_Prims.op_GreaterThan", "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_FStar.Reflection.Data.Tv_FVar_v",
+        "int_inversion", "kinding_FStar.Reflection.V2.Data.binding@tok",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_GreaterThan",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Tactics.NamedView.Tv_FVar_v",
         "projection_inverse_FStar.Tactics.Result.Failed_a",
         "projection_inverse_FStar.Tactics.Result.Failed_exn",
         "projection_inverse_FStar.Tactics.Result.Failed_ps",
@@ -101,7 +112,7 @@
         "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "f8d2d23a14a4b50ddf5100c71c372ab8"
+      "23f0f793e84d60a2a85442920717ea3e"
     ],
     [
       "Trace.fall",
@@ -118,7 +129,7 @@
         "typing_tok_Trace.Z@tok"
       ],
       0,
-      "e413515249916dc68f2a1193e9bd5896"
+      "02d9d85d87ba5bfa2300a138456fe9b7"
     ],
     [
       "Trace.uu___114",
@@ -137,7 +148,7 @@
         "typing_tok_Trace.Z@tok"
       ],
       0,
-      "b2276d3a6520112e2acdd27d829e97bb"
+      "31f020f9fbfd9e5cac301cfa71972fd3"
     ],
     [
       "Trace.fact_aux",
@@ -155,7 +166,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "af120174454ec658231552e7ffbb61c8"
+      "b96e52f34df9e9d3f1a3154e0e96ed4b"
     ],
     [
       "Trace.uu___127",
@@ -180,7 +191,7 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "a615e862aba8238a3f021c3071913adb"
+      "915bfe38ac0ba8b2900daf0e87084b35"
     ],
     [
       "Trace.uu___133",
@@ -206,7 +217,7 @@
         "typing_Trace.fact_"
       ],
       0,
-      "79766e216352fbfb4175908b601f991c"
+      "6e53efac1405530b4d545607e522b672"
     ]
   ]
 ]

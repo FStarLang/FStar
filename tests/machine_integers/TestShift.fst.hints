@@ -1,5 +1,5 @@
 [
-  "ö˘Nµ¡X!Vs!pG\rﬁ~±",
+  "á§'â\u000b≈}ô?øŸèñ¸\t‚",
   [
     [
       "TestShift.test_u32",
@@ -27,7 +27,7 @@
         "typing_Prims.pow2", "unit_typing"
       ],
       0,
-      "219ecc3c4cf12f2f130b1ad0225ba322"
+      "7b274dbbbbf36b53362af6d1c5b940ad"
     ],
     [
       "TestShift.test_u8",
@@ -55,7 +55,7 @@
         "typing_Prims.pow2", "unit_typing"
       ],
       0,
-      "98bebaa97619eed8f2d79ffc03a99680"
+      "6eb3da769199252c7d671f39983abdcd"
     ],
     [
       "TestShift.test_i32_right",
@@ -79,7 +79,7 @@
         "typing_Prims.pow2", "unit_typing"
       ],
       0,
-      "0c44efc6e1090286194f52bf624231ae"
+      "cc5283e8b8a4259db4b7615f6a0b3b84"
     ],
     [
       "TestShift.test_i32_arith_right",
@@ -103,7 +103,7 @@
         "typing_Prims.pow2", "unit_typing"
       ],
       0,
-      "473fda7ffcb3416fa3b8f5c283feac2a"
+      "b4941c8fcde6654b8b833eaed836e427"
     ],
     [
       "TestShift.test_i8_right",
@@ -127,7 +127,7 @@
         "typing_Prims.pow2", "unit_typing"
       ],
       0,
-      "2beeb168b19d812e8e7500c70d35be27"
+      "e66ab5585569d3cb979a03524aa22945"
     ],
     [
       "TestShift.test_i8_arith_right",
@@ -151,7 +151,7 @@
         "typing_Prims.pow2", "unit_typing"
       ],
       0,
-      "9bd5bcf14dfa2cf32ff0cb27da95996d"
+      "38151067ffe1017d6e3e164cdc0d80aa"
     ],
     [
       "TestShift.test_i8_left",
@@ -186,7 +186,7 @@
         "typing_Prims.pow2", "unit_typing"
       ],
       0,
-      "8e8d497762cc877302f9cf01455f66c4"
+      "c9195aeb0849a0aaf947d3b58817f49b"
     ]
   ]
 ]

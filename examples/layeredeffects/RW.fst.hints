@@ -1,5 +1,5 @@
 [
-  "$ÐG~,±\"ÌŽ|C<ØB—‰",
+  ">Ñ—´Q='%²n„»â×ÜT",
   [
     [
       "RW.coerce",
@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_754b00004f4a881ff74d076ab276dfe1"
       ],
       0,
-      "feea7e1f705ff34fae7f3086029b9552"
+      "5487e7ca1446d0461b5229367175dd5c"
     ],
     [
       "RW.ro_sanity_check",
@@ -24,7 +24,7 @@
         "l_and-interp"
       ],
       0,
-      "03cf32cb5b6d8fd6001f722398a9a64a"
+      "0f54895c9444f57dc983ba497a01274c"
     ],
     [
       "RW.return",
@@ -40,7 +40,7 @@
         "l_and-interp", "token_correspondence_RW.real_post"
       ],
       0,
-      "8652829187ffcc6b3ec6f10aee295530"
+      "8565420587dfe8935c22b0779b88c9f0"
     ],
     [
       "RW.bind",
@@ -66,7 +66,7 @@
         "token_correspondence_RW.real_post"
       ],
       0,
-      "bd9f94eb83ee85631c310fa798eb0ba3"
+      "d4a8d30c0c64f2639ea7c9bf2ec3143d"
     ],
     [
       "RW.rwi_subtype",
@@ -91,7 +91,7 @@
         "token_correspondence_RW.real_post"
       ],
       0,
-      "fc9351c9dba2a4a91f3c9d19bc94c50f"
+      "b24c0267fe93ea810c6968c4018490a5"
     ],
     [
       "RW.subcomp",
@@ -114,7 +114,7 @@
         "token_correspondence_RW.real_post"
       ],
       0,
-      "e4de026e62a410c65bf2ed569958f227"
+      "6cbc6e6062f53ec24ef7f133853e6216"
     ],
     [
       "RW.RWI",
@@ -137,7 +137,7 @@
         "true_interp"
       ],
       0,
-      "f77dc7a263fff74bf48e1862fac6b1bb"
+      "be2329ec14aa20ed0cc7cdc54231a58b"
     ],
     [
       "RW.RWI",
@@ -161,7 +161,7 @@
         "true_interp"
       ],
       0,
-      "412ca0ba6223c886351c976001d7aba6"
+      "d4a6c3e6b6d4bd240e93cba1294764bd"
     ],
     [
       "RW.RWI",
@@ -185,7 +185,7 @@
         "true_interp"
       ],
       0,
-      "17d740ad2687ca45dda9b4d21f32be30"
+      "db56baff87818b4dad5003c6a31d6fa9"
     ],
     [
       "RW.lift_pure_rwi",
@@ -224,7 +224,7 @@
         "typing_Tm_abs_e5f9da69b4e622fc8b88c80c57775066", "unit_typing"
       ],
       0,
-      "f1a3459f0028cd3feb11c9d9768689db"
+      "a89b1123bc927fc856f787dd82faef00"
     ],
     [
       "RW.test_rrr",
@@ -257,7 +257,7 @@
         "unit_typing"
       ],
       0,
-      "674b4b9ec1fe6dcb8d4010e99ba1a725"
+      "bc857b230416affafe994ac56a9f417f"
     ],
     [
       "RW.test_rrw",
@@ -293,7 +293,7 @@
         "typing_tok_RW.RO@tok", "unit_inversion"
       ],
       0,
-      "630ddfbf4b7e43e2a1415ec6ae5f4dcc"
+      "184639cfa6bed9dcd322d80047367a58"
     ],
     [
       "RW.test_rww",
@@ -329,7 +329,7 @@
         "typing_tok_RW.RO@tok", "typing_tok_RW.RW@tok", "unit_inversion"
       ],
       0,
-      "cd1bad3503e07ed5c198028b19dfe11c"
+      "cf624d3fbf4fba83b1f62c039311cb08"
     ],
     [
       "RW.test_wrw",
@@ -363,7 +363,7 @@
         "typing_tok_RW.RO@tok", "typing_tok_RW.RW@tok", "unit_inversion"
       ],
       0,
-      "0bda69a1d9a256f3f6cc77b1eb79ab32"
+      "6a4d82831349b09ac1940c5ed9e82618"
     ],
     [
       "RW.test_www",
@@ -399,7 +399,7 @@
         "typing_tok_RW.RO@tok", "typing_tok_RW.RW@tok", "unit_inversion"
       ],
       0,
-      "54c3f108cd6e2ad6de47b9b847d14723"
+      "a130322e7ec7ff8b942169e7c3c8f60f"
     ],
     [
       "RW.map",
@@ -425,7 +425,7 @@
         "true_interp"
       ],
       0,
-      "ebd6eb1efa71af80597b869f6d92d624"
+      "2c3d785c318792e3fe3bb2ee98ae49b1"
     ],
     [
       "RW.app",
@@ -444,7 +444,7 @@
         "true_interp"
       ],
       0,
-      "c8991580c5517f4a0d72d2bf7a7c04a4"
+      "3501c9c528cf7cc969749f940bf4a3a1"
     ],
     [
       "RW.appn",
@@ -469,7 +469,7 @@
         "true_interp", "typing_RW.join", "typing_tok_RW.RO@tok"
       ],
       0,
-      "91388a77848cab066393427b8512e2e0"
+      "8fd0852aecd65961916368acfb6e3a4e"
     ],
     [
       "RW.labs0",
@@ -497,7 +497,7 @@
         "true_interp"
       ],
       0,
-      "5d35ef3c5663f1957b69eacedc5e38a2"
+      "b28bcd6537f93b2deb1cab0ec962b268"
     ],
     [
       "RW.labs",
@@ -525,7 +525,7 @@
         "true_interp"
       ],
       0,
-      "e58b1e94197bc674171f9e1108969744"
+      "fe5b17ab02657b3fdb11a841a94d273f"
     ],
     [
       "RW.rwi_assert",
@@ -542,7 +542,7 @@
         "token_correspondence_RW.real_post", "unit_inversion"
       ],
       0,
-      "fdc6ec3be365a832f657d39c46ae84b7"
+      "7bac5b1a8d529d4eaaec52557881803f"
     ],
     [
       "RW.rwi_assume",
@@ -558,7 +558,7 @@
         "l_and-interp", "token_correspondence_RW.real_post", "unit_inversion"
       ],
       0,
-      "f826842269d44e39998b1baa8656264c"
+      "82d25520b16b817f115c0a102f9d37f7"
     ],
     [
       "RW.test_abs0",
@@ -588,7 +588,7 @@
         "token_correspondence_RW.real_post", "true_interp"
       ],
       0,
-      "ac1076761f731cc9a7d30f2bd97264fb"
+      "f5b7a664936a790924539b722ee67103"
     ],
     [
       "RW.test_abs0'",
@@ -618,7 +618,7 @@
         "token_correspondence_RW.real_post", "true_interp", "unit_typing"
       ],
       0,
-      "4415fadfd85f1038da1af8f773df3b0c"
+      "8bc2c43197b985102c90c1c30ddf2798"
     ],
     [
       "RW.test_abs",
@@ -637,7 +637,7 @@
         "true_interp"
       ],
       0,
-      "ac3b2c54e45fd67988cff0d92405c010"
+      "4f98604b11d310f628d0cdc0fa3d27cd"
     ],
     [
       "RW.get_indexed",
@@ -652,7 +652,7 @@
         "l_and-interp", "token_correspondence_RW.real_post"
       ],
       0,
-      "7c49eb6a81913433037378abc1680c2f"
+      "286afe6950f1249ca7ab4f31b4a5c859"
     ],
     [
       "RW.get_r",
@@ -668,7 +668,7 @@
         "l_and-interp", "token_correspondence_RW.real_post"
       ],
       0,
-      "a23ad678197009616d9997d80c6b6a06"
+      "3a61ae8addcd9ea98b961f41b0ac37dc"
     ],
     [
       "RW.test_state_eq_rrr",
@@ -696,7 +696,7 @@
         "token_correspondence_RW.real_post", "true_interp", "unit_typing"
       ],
       0,
-      "6f20b833de3632fa1a98f8374778a958"
+      "da99a067e128e8a13222de51dd53054a"
     ],
     [
       "RW.test_state_eq_rrw",
@@ -724,7 +724,7 @@
         "token_correspondence_RW.real_post", "true_interp", "unit_typing"
       ],
       0,
-      "5a3bc14ae3764a3eb53c1fdc3f106e81"
+      "72edee818fe675c7ff96494d78e148f0"
     ],
     [
       "RW.test_state_eq_rww",
@@ -752,7 +752,7 @@
         "token_correspondence_RW.real_post", "true_interp", "unit_typing"
       ],
       0,
-      "9902b224c535958e8bee7f6fd6a794b6"
+      "eb1ede2798b5acf7a89e3525b6a6a701"
     ],
     [
       "RW.test_state_eq_www",
@@ -773,7 +773,7 @@
         "true_interp"
       ],
       0,
-      "bebd15c1893a1958fa085bd8288578f0"
+      "5d6a0a326950de2152a71c3d64683f8c"
     ],
     [
       "RW.makero",
@@ -792,7 +792,7 @@
         "token_correspondence_RW.real_post"
       ],
       0,
-      "f6ad42698f5a27d06d032315474b7342"
+      "fd0bf4ee70ff45ecd2d8aa4575bb1e83"
     ]
   ]
 ]

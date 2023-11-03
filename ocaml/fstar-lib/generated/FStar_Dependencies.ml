@@ -12,7 +12,7 @@ let (find_deps_if_needed :
       | (all_files, deps) ->
           (match all_files with
            | [] ->
-               (FStar_Errors.log_issue FStar_Compiler_Range.dummyRange
+               (FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange
                   (FStar_Errors_Codes.Error_DependencyAnalysisFailed,
                     "Dependency analysis failed; reverting to using only the files provided\n");
                 (files, deps))

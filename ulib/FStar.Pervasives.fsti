@@ -118,6 +118,8 @@ effect Lemma (a: eqtype_u) (pre: Type) (post: (squash pre -> Type)) (pats: list 
     spawned off into a separate SMT query *)
 val spinoff (p: Type0) : Type0
 
+val spinoff_equiv (p:Type0) : Lemma (p <==> spinoff p) [SMTPat (spinoff p)]
+
 (** Logically equivalent to assert, but spins off separate query *)
 val assert_spinoff (p: Type) : Pure unit (requires (spinoff (squash p))) (ensures (fun x -> p))
 
@@ -171,6 +173,9 @@ val primops : norm_step
 
 (** Unfold all non-recursive definitions *)
 val delta : norm_step
+
+(** Turn on debugging for this specific call. *)
+val norm_debug : norm_step
 
 (** Unroll recursive calls
 
@@ -789,10 +794,10 @@ val false_elim (#a: Type) (u: unit{False}) : Tot a
     is extracted to C by KaRaMeL to a C definition tagged with the
     [inline] qualifier. *)
 type __internal_ocaml_attributes =
-  | PpxDerivingShow
-  | PpxDerivingShowConstant of string (* Generate [@@@ deriving show ] on the resulting OCaml type *)
-  | PpxDerivingYoJson (* Similar, but for constant printers. *)
-  | CInline (* Generate [@@@ deriving yojson ] on the resulting OCaml type *)
+  | PpxDerivingShow (* Generate [@@@ deriving show ] on the resulting OCaml type *)
+  | PpxDerivingShowConstant of string (* Similar, but for constant printers. *)
+  | PpxDerivingYoJson (* Generate [@@@ deriving yojson ] on the resulting OCaml type *)
+  | CInline
   (* KaRaMeL-only: generates a C "inline" attribute on the resulting
      * function declaration. *)
   | Substitute
@@ -809,22 +814,27 @@ type __internal_ocaml_attributes =
   | CPrologue of string
   (* KaRaMeL-only: verbatim C code to be prepended to the declaration.
      * Multiple attributes are valid and accumulate, separated by newlines. *)
-  | CEpilogue of string
-  | CConst of string (* Ibid. *)
+  | CEpilogue of string (* Ibid. *)
+  | CConst of string
   (* KaRaMeL-only: indicates that the parameter with that name is to be marked
      * as C const.  This will be checked by the C compiler, not by KaRaMeL or F*.
      *
      * This is deprecated and doesn't work as intended. Use
      * LowStar.ConstBuffer.fst instead! *)
-  | CCConv of string
-  | CAbstractStruct (* A calling convention for C, one of stdcall, cdecl, fastcall *)
+  | CCConv of string (* A calling convention for C, one of stdcall, cdecl, fastcall *)
+  | CAbstractStruct
   (* KaRaMeL-only: for types that compile to struct types (records and
      * inductives), indicate that the header file should only contain a forward
      * declaration, which in turn forces the client to only ever use this type
      * through a pointer. *)
-  | CIfDef
-  | CMacro (* KaRaMeL-only: on a given `val foo`, compile if foo with #ifdef. *)
+  | CIfDef (* KaRaMeL-only: on a given `val foo`, compile if foo with #ifdef. *)
+  | CMacro
 (* KaRaMeL-only: for a top-level `let v = e`, compile as a macro *)
+  | CNoInline
+    (* For security-sensitive functions only: generate special attributes in C
+       to prevent inlining; if the function is subjected to a -static-header
+       option, the `inline` attribute will be removed, but the static will
+       remain. *)
 
 (** The [inline_let] attribute on a local let-binding, instructs the
     extraction pipeline to inline the definition. This may be both to
@@ -1120,6 +1130,20 @@ val bind_has_range_args : unit
   *)
 val primitive_extraction : unit
 
+(** A qualifier on a type definition which when used in co-domain position
+    on an arrow type will be extracted as if it were an impure effect type.
+
+    e.g., if you have
+    
+    [@@extract_as_impure_effect]
+    val stt (a:Type) (pre:_) (post:_) : Type
+
+    then arrows of the form `a -> stt b p q` will be extracted 
+    similarly to `a -> Dv b`.
+ *)
+val extract_as_impure_effect : unit
+
+
 (** A binder in a definition/declaration may optionally be annotated as strictly_positive
     When the let definition is used in a data constructor type in an inductive
     definition, this annotation is used to check the positivity of the inductive
@@ -1163,6 +1187,8 @@ val no_auto_projectors : unit
 *)
 val no_subtyping : unit
 
+val admit_termination : unit
+
 (** Pure and ghost inner let bindings are now always inlined during
     the wp computation, if: the return type is not unit and the head
     symbol is not marked irreducible.
@@ -1182,3 +1208,5 @@ unfold let eqtype_as_type (a:eqtype) : Type = a
     along a provable equality (as in the body of this
     function). Occasionally, you may need to apply this explicitly *)
 let coerce_eq (#a:Type) (#b:Type) (_:squash (a == b)) (x:a) : b = x
+
+val coercion : unit

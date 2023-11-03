@@ -3,6 +3,7 @@ open Dynlink
 module U = FStar_Compiler_Util
 module E = FStar_Errors
 module EC = FStar_Errors_Codes
+module EM = FStar_Errors_Msg
 module O = FStar_Options
 
 let perr  s   = if O.debug_any () then U.print_error s
@@ -15,12 +16,12 @@ let dynlink (fname:string) : unit =
   with Dynlink.Error e ->
     let msg = U.format2 "Dynlinking %s failed: %s" fname (Dynlink.error_message e) in
     perr (msg ^ "\n");
-    E.log_issue FStar_Compiler_Range.dummyRange
+    E.log_issue_doc FStar_Compiler_Range.dummyRange
         (EC.Error_PluginDynlink,
-         (U.format3 "Failed to load plugin file %s\n  Reason: `%s`.\n  Remove the `--load` option or use `--warn_error -%s` to ignore and continue."
-                    fname
-                    (Dynlink.error_message e)
-                    (string_of_int (Z.to_int (E.errno EC.Error_PluginDynlink)))))
+         [EM.text (U.format1 "Failed to load plugin file %s" fname);
+          EM.text (U.format1 "Reason: `%s`" (Dynlink.error_message e));
+          EM.text (U.format1 "Remove the `--load` option or use `--warn_error -%s` to ignore and continue."
+                    (string_of_int (Z.to_int (E.errno EC.Error_PluginDynlink))))])
 
 let load_tactic tac =
   dynlink tac;

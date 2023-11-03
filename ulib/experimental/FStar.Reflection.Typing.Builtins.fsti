@@ -22,7 +22,8 @@ module FStar.Reflection.Typing.Builtins
     IT IS HIGHLY EXPERIMENTAL AND NOT YET READY TO USE.
   *)
 
-open FStar.Reflection
+open FStar.Reflection.V2
+open FStar.Range
 
 val dummy_range : range
 

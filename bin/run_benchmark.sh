@@ -146,16 +146,16 @@ function clean_slate () {
     # build fstar compiler bootstrap
     T0=`date +'%Y%m%d_%H%M%S'`
     echo "Starting fstar compiler bootstrap ${T0}"
-    make -j${JLEVEL} -C src ocaml-fstar-ocaml 2>&1 | tee ${BENCH_OUTDIR}/build_fstar.log
+    make -j${JLEVEL} dune-full-bootstrap 2>&1 | tee ${BENCH_OUTDIR}/build_fstar.log
     T1=`date +'%Y%m%d_%H%M%S'`
     echo "Finished fstar compiler boostrap ${T1} (started at ${T0})"
 
-    # verify ulib and install
+    # build library
     T0=`date +'%Y%m%d_%H%M%S'`
-    echo "Starting fstarlib build ${T0}"
-    make -j${JLEVEL} -C src .fstarlib 2>&1 | tee ${BENCH_OUTDIR}/build_fstarlib.log
+    echo "Starting library build ${T0}"
+    make -j${JLEVEL} 2>&1 | tee ${BENCH_OUTDIR}/build_fstarlib.log
     T1=`date +'%Y%m%d_%H%M%S'`
-    echo "Finished fstar compiler boostrap ${T1} (started at ${T0})"
+    echo "Finished library build ${T1} (started at ${T0})"
 
     ls -ltr ulib >> ${BENCH_OUTDIR}/build_fstarlib.log
 }
@@ -171,7 +171,8 @@ function bench_dir () {
         # Remove old .bench files
         find "${BENCH_DIR}" -name '*.bench' -delete
 
-        ${BENCH_WRAP} make -j${JLEVEL} -C "${BENCH_DIR}" "${RULE}" BENCHMARK_CMD=orun OTHERFLAGS="${BENCH_OTHERFLAGS}" 2>&1 | tee ${BENCH_OUTDIR}/${NAME}.log
+        # We explicitly add -f since we have previously built F* and its library, we are re-checking here.
+        ${BENCH_WRAP} make -j${JLEVEL} -C "${BENCH_DIR}" "${RULE}" BENCHMARK_CMD=orun OTHERFLAGS="${BENCH_OTHERFLAGS} -f" 2>&1 | tee ${BENCH_OUTDIR}/${NAME}.log
     fi
 
     cat_benches_into "${BENCH_DIR}" "${BENCH_OUTDIR}/${NAME}.bench"
@@ -380,9 +381,10 @@ check_for jq "Try to install it via your package manager, or see https://stedola
 
 check_for orun "\
 To install a local pinned copy of orun do the following:
- $ git clone https://github.com/ocaml-bench/sandmark.git sandmark
+ $ git clone https://github.com/ocaml-bench/orun.git sandmark
  $ cd sandmark/orun
- $ opam install ."
+ $ opam install .
+You may need to install libdw-dev via your package manager before."
 
 # Second pass for options, only handles --custom which needs to run after the others
 OPTIONS=

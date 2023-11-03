@@ -1,0 +1,61 @@
+[
+  "°Ôû”=E¾»¡1ïä!Ólö",
+  [
+    [
+      "Bug2954.fmap_comb_flip",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "well_founded_ordering_on_codomain_Bug2954.Comb"
+      ],
+      0,
+      "9e1d4f4e16cb0144bdf052273be4cba6"
+    ],
+    [
+      "Bug2954.__proj__Ret__item__v",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_3d4e6567a0e1e5e936462c2668417afd"
+      ],
+      0,
+      "5398ec0c2e88bcbf30696497d2a43153"
+    ],
+    [
+      "Bug2954.__proj__Com__item__v",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_775819d584794e06221f84e1f80c296c"
+      ],
+      0,
+      "e939442366683c8d40a62d85a12b3d62"
+    ],
+    [
+      "Bug2954.join_comba",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_1",
+        "binder_x_d6a0bc14950db4f05e8cd8c1f56477a7_3",
+        "disc_equation_Bug2954.Abort", "disc_equation_Bug2954.Com",
+        "disc_equation_Bug2954.Ret", "equation_Prims.nat",
+        "equation_Prims.op_Equals_Equals_Equals",
+        "fuel_guarded_inversion_Bug2954.comba", "int_inversion",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "subterm_ordering_Bug2954.Com"
+      ],
+      0,
+      "55e31773b93d8d1a468430c49c9b2fff"
+    ]
+  ]
+]

@@ -21,6 +21,7 @@ module FStar.Interactive.JsonHelper
 open FStar
 open FStar.Compiler
 open FStar.Errors
+open FStar.Json
 open FStar.Compiler.Util
 
 // Type of an associative array

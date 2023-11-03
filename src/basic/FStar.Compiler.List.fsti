@@ -75,3 +75,4 @@ val contains: #a:eqtype -> a -> (list a) -> Tot bool
 val unique: #a:eqtype -> list a -> list a
 val index: #a:eqtype -> (a -> bool) -> list a -> int
 val span: #a:eqtype -> (a -> bool) -> list a -> Tot ((list a) * (list a))
+val deduplicate (f: 'a -> 'a -> bool) (s: list 'a) : list 'a

@@ -1,6 +1,6 @@
 module SMTSync
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let test1 x = assert (1 + x == x + 1)
   by (try smt_sync () with |_ -> fail "")

@@ -19,7 +19,6 @@ open FStar.Getopt
 open FStar.BaseTypes
 open FStar.VConfig
 open FStar.Compiler
-module List = FStar.Compiler.List
 
 //let __test_norm_all = Util.mk_ref false
 
@@ -113,7 +112,7 @@ val cache_off                   : unit    -> bool
 val print_cache_version         : unit    -> bool
 val cmi                         : unit    -> bool
 type codegen_t =
-    | OCaml | FSharp | Krml | Plugin
+    | OCaml | FSharp | Krml | Plugin | Extension
 val codegen                     : unit    -> option codegen_t
 val parse_codegen               : string  -> option codegen_t
 val codegen_libs                : unit    -> list (list string)
@@ -137,6 +136,7 @@ val fstar_bin_directory         : string
 val get_option                  : string  -> option_val
 val full_context_dependency     : unit    -> bool
 val hide_uvar_nums              : unit    -> bool
+val hint_hook                   : unit    -> option string
 val hint_info                   : unit    -> bool
 val hint_file_for_src           : string  -> string
 val ide                         : unit    -> bool
@@ -166,6 +166,7 @@ val no_plugins                  : unit    -> bool
 val no_smt                      : unit    -> bool
 val normalize_pure_terms_for_extraction
                                 : unit    -> bool
+val output_deps_to              : unit    -> option string
 val output_dir                  : unit    -> option string
 val prepend_cache_dir           : string  -> string
 val prepend_output_dir          : string  -> string
@@ -200,6 +201,7 @@ val should_check_file           : string  -> bool (* Should check this file, lax
 val should_verify               : string  -> bool (* Should check this module with verification enabled. *)
 val should_verify_file          : string  -> bool (* Should check this file with verification enabled. *)
 val silent                      : unit    -> bool
+val smt                         : unit    -> option string
 val smtencoding_elim_box        : unit    -> bool
 val smtencoding_nl_arith_default: unit    -> bool
 val smtencoding_nl_arith_wrapped: unit    -> bool
@@ -229,13 +231,13 @@ val use_tactics                 : unit    -> bool
 val using_facts_from            : unit    -> list (list string * bool)
 val warn_default_effects        : unit    -> bool
 val with_saved_options          : (unit -> 'a) -> 'a
-val z3_exe                      : unit    -> string
 val z3_cliopt                   : unit    -> list string
 val z3_smtopt                   : unit    -> list string
 val z3_refresh                  : unit    -> bool
 val z3_rlimit                   : unit    -> int
 val z3_rlimit_factor            : unit    -> int
 val z3_seed                     : unit    -> int
+val z3_version                  : unit    -> string
 val no_positivity               : unit    -> bool
 val warn_error                  : unit    -> string
 val set_error_flags_callback    : ((unit  -> parse_cmdline_res) -> unit)
@@ -272,3 +274,7 @@ val eager_embedding: ref bool
 
 val get_vconfig : unit -> vconfig
 val set_vconfig : vconfig -> unit
+
+val all_ext_options : unit -> list (string & string)
+val ext_getv (k:string) : string
+val ext_getns (ns:string) : list (string & string)

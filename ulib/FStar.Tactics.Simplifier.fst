@@ -15,8 +15,8 @@
 *)
 module FStar.Tactics.Simplifier
 
-open FStar.Tactics
-open FStar.Reflection.Formula
+open FStar.Tactics.V2
+open FStar.Reflection.V2.Formula
 open FStar.Reflection.Const
 
 (* A correct-by-construction logical simplifier
@@ -124,9 +124,8 @@ let fa_cong #a #p #q f =
     let do1 () : Tac unit =
       let _ = l_intros () in
       let t = quote f in
-      let x = nth_binder (-1) in
-      let bb = pose (mk_e_app t [binder_to_term x]) in
-      dump "a";
+      let x = nth_var (-1) in
+      let bb = pose (mk_e_app t [binding_to_term x]) in
       ()
     in
     iseq [do1; do1]
@@ -140,10 +139,9 @@ let ex_cong #a #p #q f =
     split();
     let do1 () : Tac unit =
       let [ex] = l_intros () in
-      let (b, pf) = elim_exists ex in
+      let (b, pf) = elim_exists (binding_to_term ex) in
       let t = quote f in
-      let bb = pose (mk_e_app t [binder_to_term b]) in
-      dump "a";
+      let bb = pose (mk_e_app t [binding_to_term b]) in
       ()
     in
     iseq [do1; do1]
@@ -235,12 +233,12 @@ let rec simplify_point () =
             else if is_false p then apply_lemma (`lem_false_imp_p)
             else tiff ()
 
-        | Forall b p ->
+        | Forall _b _sort p ->
                  if is_true p  then apply_lemma (`lem_fa_true)
             else if is_false p then or_else (fun () -> apply_lemma (`lem_fa_false); inhabit ()) tiff
             else tiff ()
 
-        | Exists b p ->
+        | Exists _b _sort p ->
                  if is_false p then apply_lemma (`lem_ex_false)
             else if is_true  p then or_else (fun () -> apply_lemma (`lem_ex_true); inhabit ()) tiff
             else tiff ()
@@ -282,12 +280,12 @@ and recurse () : Tac unit =
         | Implies _ _ ->
             seq (fun () -> apply_lemma (`imp_cong)) simplify_point
 
-        | Forall _ _ ->
+        | Forall _ _ _ ->
             apply_lemma (`fa_cong);
             let _ = intro () in
             simplify_point ()
 
-        | Exists _ _ ->
+        | Exists _ _ _ ->
             apply_lemma (`ex_cong);
             let _ = intro () in
             simplify_point ()

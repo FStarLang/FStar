@@ -190,9 +190,9 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
     //Rather than use U.arrow_formals_comp, we use un_arrow here
     //since the former collapses adjacent Tot annotations, e.g.,
     //    x:t -> Tot (y:t -> M)
-    // is collapsed, breaking arities
+    // is collapsed, possibly breaking arities.
       match (SS.compress t).n with
-      | Tm_arrow (bs, c) ->
+      | Tm_arrow {bs; comp=c} ->
         Subst.open_comp bs c
       | _ ->
         Errors.raise_error (Errors.Fatal_LetRecArgumentMismatch, "Recursive functions must be introduced at arrow types")
@@ -202,19 +202,23 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
       let get_decreases c =
           U.comp_flags c |> BU.prefix_until (function DECREASES _ -> true | _ -> false)
       in
-      match lbtyp_opt with
-      | None ->
-        let bs, c = un_arrow tarr in
-        (match get_decreases c with
-         | Some (pfx, DECREASES d, sfx) ->
+      let fallback () =
+        let bs, c = U.arrow_formals_comp tarr in
+        match get_decreases c with
+        | Some (pfx, DECREASES d, sfx) ->
            let c = Env.comp_set_flags env c (pfx @ sfx) in
            U.arrow bs c, tarr, true
-         | _ -> tarr, tarr, true)
+        | _ -> tarr, tarr, true
+      in
+      match lbtyp_opt with
+      | None ->
+        fallback()
 
       | Some annot ->
         let bs, c = un_arrow tarr in
-        let bs', c' = un_arrow annot in
-        if List.length bs <> List.length bs'
+        let n_bs = List.length bs in
+        let bs', c' = N.get_n_binders env n_bs annot in
+        if List.length bs' <> n_bs
         then Errors.raise_error (Errors.Fatal_LetRecArgumentMismatch, "Arity mismatch on let rec annotation")
                                 rng;
         let move_decreases d flags flags' =
@@ -247,23 +251,25 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
         : typ * term * bool
         = let e = SS.compress e in
           match e.n with
-          | Tm_meta(e', m) ->
+          | Tm_meta {tm=e';meta=m} ->
             let t, e', recheck = aux_lbdef e' in
-            t, { e with n = Tm_meta(e', m) }, recheck
+            t, { e with n = Tm_meta {tm=e'; meta=m} }, recheck
 
-          | Tm_ascribed(e', (Inr c, tac_opt, use_eq), lopt) ->
+          | Tm_ascribed {tm=e'; asc=(Inr c, tac_opt, use_eq); eff_opt=lopt} ->
             if U.is_total_comp c
             then let t, lbtyp, recheck = reconcile_let_rec_ascription_and_body_type (U.comp_result c) lbtyp_opt in
-                 let e = { e with n = Tm_ascribed(e', (Inr (S.mk_Total t), tac_opt, use_eq), lopt) } in
+                 let e = { e with n = Tm_ascribed {tm=e';
+                                                   asc=(Inr (S.mk_Total t), tac_opt, use_eq);
+                                                   eff_opt=lopt} } in
                  lbtyp, e, recheck
             else raise_error (Errors.Fatal_UnexpectedComputationTypeForLetRec,
                               BU.format1 "Expected a 'let rec' to be annotated with a value type; got a computation type %s"
                                                    (Print.comp_to_string c))
                               rng
 
-          | Tm_ascribed(e', (Inl t, tac_opt, use_eq), lopt) ->
+          | Tm_ascribed {tm=e'; asc=(Inl t, tac_opt, use_eq); eff_opt=lopt} ->
             let t, lbtyp, recheck = reconcile_let_rec_ascription_and_body_type t lbtyp_opt in
-            let e = { e with n = Tm_ascribed(e', (Inl t, tac_opt, use_eq), lopt) } in
+            let e = { e with n = Tm_ascribed {tm=e'; asc=(Inl t, tac_opt, use_eq); eff_opt=lopt} } in
             lbtyp, e, recheck
 
           | Tm_abs _ ->
@@ -277,12 +283,12 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
             let rec aux_abs_body body =
               let body = SS.compress body in
               match body.n with
-              | Tm_meta (body, m) ->
+              | Tm_meta {tm=body; meta=m} ->
                 let t, body', recheck = aux_abs_body body in
-                let body = { body with n = Tm_meta(body', m) } in
+                let body = { body with n = Tm_meta {tm=body'; meta=m} } in
                 t, body, recheck
 
-              | Tm_ascribed (_, (Inl t, _, use_eq), _) -> //no decreases clause here
+              | Tm_ascribed {asc=(Inl t, _, use_eq)} -> //no decreases clause here
                 //
                 //AR: In this case, the type in the ascription is moving to lbtyp
                 //    if use_eq is true, then we are in trouble
@@ -304,15 +310,18 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
                   t, body, true
                 end
 
-              | Tm_ascribed (body', (Inr c, tac_opt, use_eq), lopt) ->
+              | Tm_ascribed {tm=body'; asc=(Inr c, tac_opt, use_eq); eff_opt=lopt} ->
                 let tarr = mk_arrow c in
                 let tarr, lbtyp, recheck = reconcile_let_rec_ascription_and_body_type tarr lbtyp_opt in
-                let bs', c = un_arrow tarr in
-                if List.length bs' <> List.length bs
+                let n_bs = List.length bs in
+                let bs', c = N.get_n_binders env n_bs tarr in
+                if List.length bs' <> n_bs
                 then failwith "Impossible"
                 else let subst = U.rename_binders bs' bs in
                      let c = SS.subst_comp subst c in
-                     let body = { body with n = Tm_ascribed(body', (Inr c, tac_opt, use_eq), lopt) } in
+                     let body = { body with n = Tm_ascribed {tm=body';
+                                                             asc=(Inr c, tac_opt, use_eq);
+                                                             eff_opt=lopt} } in
                      lbtyp, body, recheck
 
               | _ ->
@@ -433,7 +442,6 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
     | Pat_constant c ->
         [], mk (Tm_constant c)
 
-    | Pat_wild x
     | Pat_var x  ->
         [x], mk (Tm_name x)
 
@@ -446,7 +454,7 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
           | None -> head
           | Some us -> S.mk_Tm_uinst head us
         in
-        vars,  mk (Tm_app(head, args))
+        vars,  mk (Tm_app {hd=head; args})
 
     | Pat_dot_term eopt ->
         (match eopt with
@@ -487,10 +495,10 @@ let effect_args_from_repr (repr:term) (is_layered:bool) (r:Range.range) : list t
   let repr = SS.compress repr in
   if is_layered
   then match repr.n with
-       | Tm_app (_, _::is) -> is |> List.map fst
+       | Tm_app {args=_::is} -> is |> List.map fst
        | _ -> err ()
   else match repr.n with
-       | Tm_arrow (_, c) -> c |> U.comp_eff_name_res_and_args |> (fun (_, _, args) -> args |> List.map fst)
+       | Tm_arrow {comp=c} -> c |> U.comp_eff_name_res_and_args |> (fun (_, _, args) -> args |> List.map fst)
        | _ -> err ()
 
 
@@ -525,7 +533,7 @@ let mk_wp_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Range.ra
   c
 
 let label reason r f : term =
-    mk (Tm_meta(f, Meta_labeled(reason, r, false))) f.pos
+    mk (Tm_meta {tm=f; meta=Meta_labeled(reason, r, false)}) f.pos
 
 let label_opt env reason r f = match reason with
     | None -> f
@@ -681,10 +689,82 @@ let close_wp_lcomp env bvs (lc:lcomp) : lcomp =
     (close_wp_comp env bvs)
     (fun g -> g |> Env.close_guard env bs |> close_guard_implicits env false bs)
 
+//
+// Apply substitutive close combinator for indexed effects
+//
+// The effect indices binders in the close combinator are arrows,
+//   so we abstract b_bv on the effect args for the substitutions
+//
+let substitutive_indexed_close_substs (env:env)
+  (close_bs:binders)
+  (a:typ)
+  (b_bv:bv)
+  (ct_args:args)
+  (num_effect_params:int)
+  (r:Range.range)
+
+  : list subst_elt =
+  
+  let debug = Env.debug env <| Options.Other "LayeredEffectsApp" in
+
+  // go through the binders bs and aggregate substitutions
+  let close_bs, subst =
+    let a_b::b_b::close_bs = close_bs in
+    close_bs, [NT (a_b.binder_bv, a); NT (b_b.binder_bv, b_bv.sort)] in
+  
+  let close_bs, subst, ct_args =
+    let eff_params_bs, close_bs = List.splitAt num_effect_params close_bs in
+    let ct_eff_params_args, ct_args = List.splitAt num_effect_params ct_args in
+    close_bs,
+    (subst@
+     List.map2 (fun b (arg, _) -> NT (b.binder_bv, arg)) eff_params_bs ct_eff_params_args),
+    ct_args in
+
+  let close_bs, _ = List.splitAt (List.length close_bs - 1) close_bs in
+  List.fold_left2 (fun ss b (ct_arg, _) ->
+    ss@[NT (b.binder_bv, U.abs [b_bv |> S.mk_binder] ct_arg None)]
+  ) subst close_bs ct_args
+
+//
+// The caller ensures that the effect has the close combinator defined
+//
+let close_layered_comp_with_combinator (env:env) (bvs:list bv) (c:comp) : comp =
+  let r = c.pos in
+  
+  let env_bvs = Env.push_bvs env bvs in
+  let ct = Env.unfold_effect_abbrev env_bvs c in
+  let ed = Env.get_effect_decl env_bvs ct.effect_name in
+  let num_effect_params =
+    match ed.signature with
+    | Layered_eff_sig (n, _) -> n
+    | _ -> raise_error (Errors.Fatal_UnexpectedEffect,
+                        "mk_indexed_close called with a non-indexed effect") r in
+  let close_ts = U.get_layered_close_combinator ed |> must in
+  let effect_args = List.fold_right (fun x args ->
+    let u_a = List.hd ct.comp_univs in
+    let u_b = env.universe_of env_bvs x.sort in
+    let _, close_t = Env.inst_tscheme_with close_ts [u_a; u_b] in
+    let close_bs, close_body, _ = U.abs_formals close_t in
+    let ss = substitutive_indexed_close_substs
+      env_bvs close_bs ct.result_typ x args num_effect_params r in
+    match (SS.compress (SS.subst ss close_body)).n with
+    | Tm_app { args = _::args} -> args
+    | _ -> raise_error (Errors.Fatal_UnexpectedEffect,
+                        "Unexpected close combinator shape") r
+  ) bvs ct.effect_args in
+  S.mk_Comp {ct with effect_args}
+
+let close_layered_lcomp_with_combinator env bvs lc =
+  let bs = bvs |> List.map S.mk_binder in
+  lc |>
+  TcComm.apply_lcomp
+    (close_layered_comp_with_combinator env bvs)
+    (fun g -> g |> Env.close_guard env bs |> close_guard_implicits env false bs)
+
 (*
- * Closing of layered computations happens via substitution
+ * Closing of layered computations via substitution
  *)
-let close_layered_lcomp env bvs tms (lc:lcomp) =
+let close_layered_lcomp_with_substitutions env bvs tms (lc:lcomp) =
   let bs = bvs |> List.map S.mk_binder in
   let substs = List.map2 (fun bv tm ->
     NT (bv, tm)
@@ -970,7 +1050,7 @@ let ad_hoc_indexed_bind_substs env
 
     let g_sort_is : list term =
       match (SS.compress g_b.binder_bv.sort).n with
-      | Tm_arrow (bs, c) ->
+      | Tm_arrow {bs; comp=c} ->
         let bs, c = SS.open_comp bs c in
         let bs_subst = NT ((List.hd bs).binder_bv, x_a.binder_bv |> S.bv_to_name) in
         let c = SS.subst_comp [bs_subst] c in
@@ -1022,7 +1102,7 @@ let mk_indexed_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Ran
 
   let a_b, x_b, rest_bs, return_typ =
     match (SS.compress return_t).n with
-    | Tm_arrow (bs, c) when List.length bs >= 2 ->
+    | Tm_arrow {bs; comp=c} when List.length bs >= 2 ->
       let ((a_b::x_b::bs, c)) = SS.open_comp bs c in
       a_b, x_b, bs, U.comp_result c
     | _ -> raise_error (return_t_shape_error "Either not an arrow or not enough binders") r in
@@ -1223,7 +1303,7 @@ let strengthen_comp env (reason:option (unit -> string)) (c:comp) (f:formula) fl
           * its type is p:Type -> pure_wp unit
           *  and it is not universe polymorphic
           *)
-         let pure_assert_wp = S.fv_to_tm (S.lid_as_fv C.pure_assert_wp_lid (Delta_constant_at_level 1) None) in
+         let pure_assert_wp = S.fv_to_tm (S.lid_as_fv C.pure_assert_wp_lid None) in
 
          (* apply it to f, after decorating f with the reason *)
          let pure_assert_wp = mk_Tm_app
@@ -1286,7 +1366,7 @@ let weaken_comp env (c:comp) (formula:term) : comp * guard_t =
         * its type is p:Type -> pure_wp unit
         *  and it is not universe polymorphic
         *)
-       let pure_assume_wp = S.fv_to_tm (S.lid_as_fv C.pure_assume_wp_lid (Delta_constant_at_level 1) None) in
+       let pure_assume_wp = S.fv_to_tm (S.lid_as_fv C.pure_assume_wp_lid None) in
 
        (* apply it to f, after decorating f with the reason *)
        let pure_assume_wp = mk_Tm_app
@@ -1368,7 +1448,7 @@ let strengthen_precondition
        {g0 with guard_f=Trivial}
 
 
-let lcomp_has_trivial_postcondition lc =
+let lcomp_has_trivial_postcondition (lc:lcomp) =
     TcComm.is_tot_or_gtot_lcomp lc
     || BU.for_some (function SOMETRIVIAL | TRIVIAL_POSTCONDITION -> true | _ -> false)
                    lc.cflags
@@ -1386,7 +1466,7 @@ let lcomp_has_trivial_postcondition lc =
 let maybe_capture_unit_refinement (env:env) (t:term) (x:bv) (c:comp) : comp * guard_t =
   let t = N.normalize_refinement N.whnf_steps env t in
   match t.n with
-  | Tm_refine (b, phi) ->
+  | Tm_refine {b; phi} ->
     let is_unit =
       match b.sort.n with
       | Tm_fvar fv -> S.fv_eq_lid fv C.unit_lid
@@ -1718,7 +1798,7 @@ let maybe_return_e2_and_bind
         else lc2 in //the resulting computation is still pure/ghost and inlineable; no need to insert a return
    bind r env e1opt lc1 (x, lc2)
 
-let fvar_const env lid =  S.fvar (Ident.set_lid_range lid (Env.get_range env)) delta_constant None
+let fvar_env env lid =  S.fvar (Ident.set_lid_range lid (Env.get_range env)) None
 
 //
 // Apply substitutive ite combinator for indexed effects
@@ -1853,7 +1933,7 @@ let ad_hoc_indexed_ite_substs (env:env)
   let f_guard =
     let f_sort_is =
       match (SS.compress f_b.binder_bv.sort).n with
-      | Tm_app (_, _::is) ->
+      | Tm_app {args=_::is} ->
         is |> List.map fst |> List.map (SS.subst substs)
       | _ -> raise_error (conjunction_t_error "f's type is not a repr type") r in
     List.fold_left2
@@ -1866,7 +1946,7 @@ let ad_hoc_indexed_ite_substs (env:env)
   let g_guard =
     let g_sort_is =
       match (SS.compress g_b.binder_bv.sort).n with
-      | Tm_app (_, _::is) ->
+      | Tm_app {args=_::is} ->
         is |> List.map fst |> List.map (SS.subst substs)
       | _ -> raise_error (conjunction_t_error "g's type is not a repr type") r in
     List.fold_left2
@@ -1911,7 +1991,7 @@ let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (
 
   let is =
     match (SS.compress body).n with
-    | Tm_app (_, a::args) -> List.map fst args
+    | Tm_app {args=a::args} -> List.map fst args
     | _ -> raise_error (conjunction_t_error "body is not a repr type") r in
 
   let c = mk_Comp ({
@@ -1951,7 +2031,7 @@ let comp_pure_wp_false env (u:universe) (t:typ) =
   let kwp    = U.arrow [null_binder post_k] (S.mk_Total U.ktype0) in
   let post   = S.new_bv None post_k in
   let wp     = U.abs [S.mk_binder post]
-               (fvar_const env C.false_lid)
+               (fvar_env env C.false_lid)
                (Some (U.mk_residual_comp C.effect_Tot_lid None [TOTAL])) in
   let md     = Env.get_effect_decl env C.effect_PURE_lid in
   mk_comp md u t wp []
@@ -2201,7 +2281,7 @@ let maybe_lift env e c1 c2 t =
     || (U.is_pure_effect c1 && U.is_ghost_effect c2)
     || (U.is_pure_effect c2 && U.is_ghost_effect c1)
     then e
-    else mk (Tm_meta(e, Meta_monadic_lift(m1, m2, t))) e.pos
+    else mk (Tm_meta {tm=e; meta=Meta_monadic_lift(m1, m2, t)}) e.pos
 
 let maybe_monadic env e c t =
     let m = Env.norm_eff_name env c in
@@ -2209,22 +2289,21 @@ let maybe_monadic env e c t =
     || Ident.lid_equals m C.effect_Tot_lid
     || Ident.lid_equals m C.effect_GTot_lid //for the cases in prims where Pure is not yet defined
     then e
-    else mk (Tm_meta(e, Meta_monadic (m, t))) e.pos
+    else mk (Tm_meta {tm=e; meta=Meta_monadic (m, t)}) e.pos
 
 let coerce_with (env:Env.env)
                 (e : term) (lc : lcomp) // original term and its computation type
-                (ty : typ) // new result typ
                 (f : lident) // coercion
                 (us : universes) (eargs : args) // extra arguments to coertion
-                (mkcomp : term -> comp)
+                (comp2 : comp) // new result computation type
                 : term * lcomp =
     match Env.try_lookup_lid env f with
     | Some _ ->
         if Env.debug env (Options.Other "Coercions") then
             BU.print1 "Coercing with %s!\n" (Ident.string_of_lid f);
-        let lc2 = TcComm.lcomp_of_comp <| mkcomp ty in
+        let lc2 = TcComm.lcomp_of_comp <| comp2 in
         let lc_res = bind e.pos env (Some e) lc (None, lc2) in
-        let coercion = S.fvar (Ident.set_lid_range f e.pos) (Delta_constant_at_level 1) None in
+        let coercion = S.fvar (Ident.set_lid_range f e.pos) None in
         let coercion = S.mk_Tm_uinst coercion us in
 
         //
@@ -2239,9 +2318,9 @@ let coerce_with (env:Env.env)
           else let x = S.new_bv (Some e.pos) lc.res_typ in
                let e2 = mk_Tm_app coercion (eargs@[x |> S.bv_to_name |> S.as_arg]) e.pos in
                let e = maybe_lift env e lc.eff_name lc_res.eff_name lc.res_typ in
-               let e2 = maybe_lift (Env.push_bv env x) e2 lc2.eff_name lc_res.eff_name ty in
+               let e2 = maybe_lift (Env.push_bv env x) e2 lc2.eff_name lc_res.eff_name lc2.res_typ in
                let lb = U.mk_letbinding (Inl x) [] lc.res_typ lc_res.eff_name e [] e.pos in
-               let e = mk (Tm_let ((false, [lb]), SS.close [S.mk_binder x] e2)) e.pos in
+               let e = mk (Tm_let {lbs=(false, [lb]); body=SS.close [S.mk_binder x] e2}) e.pos in
                maybe_monadic env e lc_res.eff_name lc_res.res_typ in
         e, lc_res
     | None ->
@@ -2256,13 +2335,13 @@ type isErased =
     | No
 
 let rec check_erased (env:Env.env) (t:term) : isErased =
-  let norm' = N.normalize [Env.Beta; Env.Eager_unfolding;
-                           Env.UnfoldUntil delta_constant;
-                           Env.Exclude Env.Zeta; Env.Primops;
-                           Env.Weak; Env.HNF; Env.Iota]
+  let norm' = N.normalize [Beta; Eager_unfolding;
+                           UnfoldUntil delta_constant;
+                           Exclude Zeta; Primops;
+                           Unascribe; Unmeta; Unrefine;
+                           Weak; HNF; Iota]
   in
   let t = norm' env t in
-  let t = U.unrefine t in
   let h, args = U.head_and_args t in
   let h = U.un_uinst h in
   let r =
@@ -2285,7 +2364,7 @@ let rec check_erased (env:Env.env) (t:term) : isErased =
      *       cases like the int types in FStar.Integers
      *     So we iterate over all the branches and return a No if possible
      *)
-    | Tm_match (_, _, branches, _), _ ->
+    | Tm_match {brs=branches}, _ ->
       branches |> List.fold_left (fun acc br ->
         match acc with
         | Yes _ | Maybe -> Maybe
@@ -2315,99 +2394,205 @@ let rec check_erased (env:Env.env) (t:term) : isErased =
   (*      | No -> "No"); *)
   r
 
+let rec first_opt (f : 'a -> option 'b) (xs : list 'a) : option 'b =
+  match xs with
+  | [] -> None
+  | x::xs -> BU.catch_opt (f x) (fun () -> first_opt f xs)
+
+let (let?) = BU.bind_opt
+let bool_guard (b:bool) : option unit =
+  if b then Some () else None
+
+let find_coercion (env:Env.env) (checked: lcomp) (exp_t: typ) (e:term)
+: option (term & lcomp & guard_t)
+// returns coerced term, new lcomp type, and guard
+// or None if no coercion applied
+=
+ Errors.with_ctx "find_coercion" (fun () ->
+  let is_type t =
+      let t = N.unfold_whnf env t in
+      let t = U.unrefine t in (* mostly to catch `prop` too *)
+      match (SS.compress t).n with
+      | Tm_type _ -> true
+      | _ -> false
+  in
+  let rec head_of (t : term) : term =
+      match (compress t).n with
+      | Tm_app {hd=t}
+      | Tm_match {scrutinee=t}
+      | Tm_abs {body=t}
+      | Tm_ascribed {tm=t}
+      | Tm_meta {tm=t} -> head_of t
+      | Tm_refine {b} -> head_of b.sort
+      | _ -> t
+  in
+  let is_head_defined t =
+    let h = head_of t in
+    let h = SS.compress h in
+    Tm_fvar? h.n || Tm_uinst? h.n || Tm_type? h.n
+  in
+
+  let head_unfold env t = N.unfold_whnf' [Unascribe; Unmeta; Unrefine] env t in
+
+  (* Bail out early if either the computed or expected type are not
+  defined at the head *)
+  bool_guard (is_head_defined exp_t && is_head_defined checked.res_typ);?
+
+  (* The computed type for `e`. *)
+  let computed_t = head_unfold env checked.res_typ in
+  let head, args = U.head_and_args computed_t in
+
+  (* The expected type according to the context. *)
+  let exp_t = head_unfold env exp_t in
+
+  match (U.un_uinst head).n, args with
+  (* b2t is primitive... for now *)
+  | Tm_fvar fv, [] when S.fv_eq_lid fv C.bool_lid && is_type exp_t ->
+    let lc2 = TcComm.lcomp_of_comp <| S.mk_Total U.ktype0 in
+    let lc_res = bind e.pos env (Some e) checked (None, lc2) in
+    Some (U.mk_app (S.fvar C.b2t_lid None) [S.as_arg e], lc_res, Env.trivial_guard)
+
+  (* user coercions, find candidates with the @@coercion attribute and try. *)
+  |  _ ->
+    let head_lid_of t =
+      match (SS.compress (head_of t)).n with
+      | Tm_fvar fv
+      | Tm_uinst ({ n = Tm_fvar fv }, _) ->
+        Some (S.lid_of_fv fv)
+      | _ -> None
+    in
+
+    let? exp_head_lid = head_lid_of exp_t in
+    let? computed_head_lid = head_lid_of computed_t in
+
+    let candidates = Env.lookup_attr env "FStar.Pervasives.coercion" in
+    candidates |> first_opt (fun se ->
+      (* `f` is the candidate coercion, `e` the term to coerce *)
+      let? f_name, f_us, f_typ =
+        match se.sigel with
+        | Sig_let {lbs=(_,[lb])} -> Some (S.lid_of_fv (BU.right lb.lbname), lb.lbunivs, lb.lbtyp)
+        | Sig_declare_typ {lid; us; t} -> Some (lid, us, t)
+        | _ -> None
+      in
+
+      let _, f_typ = SS.open_univ_vars f_us f_typ in
+
+      (* `f` must have type `b1 -> b2 -> .... -> bN -> TB -> M TC ...,
+         Before attempting unification, which is expensive, we will
+         check that the head of B is an fvar which matches the expected
+         type, and that the head of A is and fvar which matches the type
+         of e.
+      *)
+      let f_bs, f_c = U.arrow_formals_comp f_typ in
+      bool_guard (f_bs <> []);? (* If not a function, ignore *)
+      let f_res = U.comp_result f_c in
+      let f_res = head_unfold (Env.push_binders env f_bs) f_res in
+      let? f_res_head_lid = head_lid_of f_res in
+      (* ^ The lid at the head of TC, the result type *)
+      bool_guard (lid_equals exp_head_lid f_res_head_lid);?
+
+      let b = List.last f_bs in
+      let b_ty = b.binder_bv.sort in
+      let b_ty = head_unfold (Env.push_binders env (List.init f_bs)) b_ty in
+      let? b_head_lid = head_lid_of b_ty in
+      (* ^ The lid at the head of TB, the last argument *)
+      bool_guard (lid_equals computed_head_lid b_head_lid);?
+
+      (* We will now typecheck the coercion applied to `e` at expected type
+         `exp_t` likely causing implicits to be instantiated for the coercion
+         function (if any). If this succeeds, the elaborated term is the
+         result we want.
+
+         FIXME: ideally, we would not pass `e` through the typechecker again,
+         but checking the coercion alone means we need to compute its effect (easy)
+         and effect indices (not easy).
+
+         Note: we could perhaps backtrack on an error here (using
+         catch_errors and UF.new_transaction), but that can get
+         expensive, and it's perhaps unexpected. Currently, the head FVs
+         define which coercions apply, and that's a firm choice.
+       *)
+
+      let f_tm = S.fvar f_name None in
+      let tt = U.mk_app f_tm [S.as_arg e] in
+      Some (env.tc_term { env with nocoerce=true; lax=true; expected_typ = Some (exp_t, false) } tt)
+      // NB: tc_term returns exactly elaborated term, lcomp, and guard, so we just return that.
+    )
+)
+
 let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : term * lcomp * guard_t =
-    let should_coerce =
-        env.phase1
-      || env.lax
-      || Options.lax ()
-    in
-    if not should_coerce
-    then (e, lc, Env.trivial_guard)
-    else
-    let is_t_term t =
-        let t = N.unfold_whnf env t in
-        match (SS.compress t).n with
-        | Tm_fvar fv -> S.fv_eq_lid fv C.term_lid
-        | _ -> false
-    in
-    let is_t_term_view t =
-        let t = N.unfold_whnf env t in
-        match (SS.compress t).n with
-        | Tm_fvar fv -> S.fv_eq_lid fv C.term_view_lid
-        | _ -> false
-    in
-    let is_type t =
-        let t = N.unfold_whnf env t in
-        let t = U.unrefine t in (* mostly to catch `prop` too *)
-        match (SS.compress t).n with
-        | Tm_type _ -> true
-        | _ -> false
-    in
-    let res_typ = U.unrefine lc.res_typ in
-    let head, args = U.head_and_args res_typ in
-    if Env.debug env (Options.Other "Coercions") then
+  let should_coerce =
+      (env.phase1
+    || env.lax
+    || Options.lax ()) && not env.nocoerce
+  in
+  if not should_coerce
+  then (e, lc, Env.trivial_guard)
+  else
+    let _ = if Env.debug env (Options.Other "Coercions") then
             BU.print4 "(%s) Trying to coerce %s from type (%s) to type (%s)\n"
                     (Range.string_of_range e.pos)
                     (Print.term_to_string e)
-                    (Print.term_to_string res_typ)
-                    (Print.term_to_string exp_t);
-
-    let mk_erased u t =
-      U.mk_app
-        (S.mk_Tm_uinst (fvar_const env C.erased_lid) [u])
-        [S.as_arg t]
+                    (Print.term_to_string lc.res_typ)
+                    (Print.term_to_string exp_t)
     in
-    match (U.un_uinst head).n, args with
-    | Tm_fvar fv, [] when S.fv_eq_lid fv C.bool_lid && is_type exp_t ->
-        let e, lc = coerce_with env e lc U.ktype0 C.b2t_lid [] [] S.mk_Total in
-        e, lc, Env.trivial_guard
+    match find_coercion env lc exp_t e with
+    | Some (coerced, lc, g) ->
+      let _ = if Env.debug env (Options.Other "Coercions") then
+              BU.print3 "(%s) COERCING %s to %s\n"
+                      (Range.string_of_range e.pos)
+                      (Print.term_to_string e)
+                      (Print.term_to_string coerced)
+      in
+      coerced, lc, g
+    | None ->
+      let _ = if Env.debug env (Options.Other "Coercions") then
+              BU.print1 "(%s) No user coercion found\n"
+                      (Range.string_of_range e.pos)
+      in
+      
+      (* TODO: hide/reveal also user coercions? it's trickier for sure *)
 
+      let strip_hide_or_reveal (e:term) (hide_or_reveal:lident) : option term =
+        let hd, args = U.leftmost_head_and_args e in
+        match (SS.compress hd).n, args with
+        | Tm_uinst (hd, _), [(_, aq_t); (e, aq_e)]
+          when U.is_fvar hide_or_reveal hd &&
+               Some? aq_t && (Some?.v aq_t).aqual_implicit &&
+               (aq_e = None || not (Some?.v aq_e).aqual_implicit) ->
+          Some e
+        | _ -> None
+      in
 
-    | Tm_fvar fv, [] when S.fv_eq_lid fv C.term_lid && is_t_term_view exp_t ->
-        let e, lc = coerce_with env e lc S.t_term_view C.inspect [] [] S.mk_Tac in
-        e, lc, Env.trivial_guard
+      match check_erased env lc.res_typ, check_erased env exp_t with
+      | No, Yes ty ->
+          begin
+          let u = env.universe_of env ty in
+          match Rel.get_subtyping_predicate env lc.res_typ ty with
+          | None ->
+            e, lc, Env.trivial_guard
+          | Some g ->
+            let g = Env.apply_guard g e in
+            let e_hide, lc = coerce_with env e lc C.hide [u] [S.iarg ty] (S.mk_Total exp_t) in
+            //
+            // AR: an optimization to see if input e is a reveal e',
+            //     we can just take e', rather than hide (reveal e') 
+            //
+            //     we still let coerce_with happen just above,
+            //     since it has logic to compute the correct lc
+            //  
+            let e_hide = BU.dflt e_hide (strip_hide_or_reveal e C.reveal) in
+            e_hide, lc, g
+          end
 
-    | Tm_fvar fv, [] when S.fv_eq_lid fv C.term_view_lid && is_t_term exp_t ->
-        let e, lc = coerce_with env e lc S.t_term C.pack [] [] S.mk_Tac in
-        e, lc, Env.trivial_guard
-
-    | Tm_fvar fv, [] when S.fv_eq_lid fv C.binder_lid && is_t_term exp_t ->
-        let e, lc = coerce_with env e lc S.t_term C.binder_to_term [] [] S.mk_Tac in
-        e, lc, Env.trivial_guard
-
-    | _ ->
-    match check_erased env res_typ, check_erased env exp_t with
-    | No, Yes ty ->
-        begin
+      | Yes ty, No ->
         let u = env.universe_of env ty in
-        match Rel.get_subtyping_predicate env res_typ ty with
-        | None ->
-          e, lc, Env.trivial_guard
-        | Some g ->
-          let g = Env.apply_guard g e in
-          let e, lc = coerce_with env e lc exp_t C.hide [u] [S.iarg ty] S.mk_Total in
-          e, lc, g
-        end
+        let e_reveal, lc = coerce_with env e lc C.reveal [u] [S.iarg ty] (S.mk_GTotal ty) in
+        let e_reveal = BU.dflt e_reveal (strip_hide_or_reveal e C.hide) in
+        e_reveal, lc, Env.trivial_guard
 
-    | Yes ty, No ->
-        let u = env.universe_of env ty in
-        let e, lc = coerce_with env e lc ty C.reveal [u] [S.iarg ty] S.mk_GTotal in
+      | _ ->
         e, lc, Env.trivial_guard
-
-    | _ ->
-      e, lc, Env.trivial_guard
-
-(* Coerces regardless of expected type if a view exists, useful for matches *)
-(* Returns `None` if no coercion was applied. *)
-let coerce_views (env:Env.env) (e:term) (lc:lcomp) : option (term * lcomp) =
-    let rt = lc.res_typ in
-    let rt = U.unrefine rt in
-    let hd, args = U.head_and_args rt in
-    match (SS.compress hd).n, args with
-    | Tm_fvar fv, [] when S.fv_eq_lid fv C.term_lid ->
-        Some <| coerce_with env e lc S.t_term_view C.inspect [] [] S.mk_Tac
-    | _ ->
-        None
 
 let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) (use_eq:bool) : term * lcomp * guard_t =
   if Env.debug env Options.High then
@@ -2498,7 +2683,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) (use_eq:bool) : term * lco
                   //try to normalize one more time, since more unification variables may be resolved now
                   let f = N.normalize [Env.Beta; Env.Eager_unfolding; Env.Simplify; Env.Primops] env f in
                   match (SS.compress f).n with
-                      | Tm_abs(_, {n=Tm_fvar fv}, _) when S.fv_eq_lid fv C.true_lid ->
+                      | Tm_abs {body={n=Tm_fvar fv}} when S.fv_eq_lid fv C.true_lid ->
                         //it's trivial
                         let lc = {lc with res_typ=t} in //NS: what's the point of this?
                         TcComm.lcomp_comp lc
@@ -2573,8 +2758,8 @@ let pure_or_ghost_pre_and_post env comp =
                               let us_r, _ = fst <| Env.lookup_lid env C.as_requires in
                               let us_e, _ = fst <| Env.lookup_lid env C.as_ensures in
                               let r = ct.result_typ.pos in
-                              let as_req = S.mk_Tm_uinst (S.fvar (Ident.set_lid_range C.as_requires r) delta_equational None) us_r in
-                              let as_ens = S.mk_Tm_uinst (S.fvar (Ident.set_lid_range C.as_ensures r) delta_equational None) us_e in
+                              let as_req = S.mk_Tm_uinst (S.fvar (Ident.set_lid_range C.as_requires r) None) us_r in
+                              let as_ens = S.mk_Tm_uinst (S.fvar (Ident.set_lid_range C.as_ensures r) None) us_e in
                               let req = mk_Tm_app as_req [(ct.result_typ, S.as_aqual_implicit true); S.as_arg wp] ct.result_typ.pos in
                               let ens = mk_Tm_app as_ens [(ct.result_typ, S.as_aqual_implicit true); S.as_arg wp] ct.result_typ.pos in
                               Some (norm req), norm (mk_post_type ct.result_typ ens)
@@ -2671,7 +2856,7 @@ let maybe_instantiate (env:Env.env) e t =
         in
         let t = N.unfold_whnf env t in
         begin match t.n with
-            | Tm_arrow(bs, c) ->
+            | Tm_arrow {bs; comp=c} ->
               let bs, c = SS.open_comp bs c in
               //instantiate at most inst_n implicit binders, when inst_n = Some n
               //otherwise, instantate all implicits
@@ -2758,7 +2943,7 @@ let check_has_type env (e:term) (t1:typ) (t2:typ) (use_eq:bool) : guard_t =
              | Some f -> apply_guard f e |> Some in
 
   match g_opt with
-  | None -> raise_error (Err.expected_expression_of_type env t2 e t1) (Env.get_range env)
+  | None -> raise_error_doc (Err.expected_expression_of_type env t2 e t1) (Env.get_range env)
   | Some g -> g
 
 let check_has_type_maybe_coerce env (e:term) (lc:lcomp) (t2:typ) use_eq : term * lcomp * guard_t =
@@ -2957,7 +3142,7 @@ let maybe_add_implicit_binders (env:env) (bs:binders) : binders =
             | None -> bs
             | Some (t, _) ->  //the use_eq flag is not relevant
                 match (SS.compress t).n with
-                    | Tm_arrow(bs', _) ->
+                    | Tm_arrow {bs=bs'} ->
                       begin match BU.prefix_until (fun b -> not (is_implicit_binder b)) bs' with
                         | None -> bs
                         | Some ([], _, _) -> bs // no implicits in the prefix
@@ -2970,28 +3155,6 @@ let maybe_add_implicit_binders (env:env) (bs:binders) : binders =
 
                     | _ -> bs
 
-
-let d s = BU.print1 "\x1b[01;36m%s\x1b[00m\n" s
-
-// Takes care of creating the [fv], generating the top-level let-binding, and
-// return a term that's a suitable reference (a [Tm_fv]) to the definition
-let mk_toplevel_definition (env: env_t) lident (def: term): sigelt * term =
-  // Debug
-  if Env.debug env (Options.Other "ED") then begin
-    d (string_of_lid lident);
-    BU.print2 "Registering top-level definition: %s\n%s\n" (string_of_lid lident) (Print.term_to_string def)
-  end;
-  // Allocate a new top-level name.
-  let fv = S.lid_as_fv lident (U.incr_delta_qualifier def) None in
-  let lbname: lbname = Inr fv in
-  let lb: letbindings =
-    // the effect label will be recomputed correctly
-    false, [U.mk_letbinding lbname [] S.tun C.effect_Tot_lid def [] Range.dummyRange]
-  in
-  // [Inline] triggers a "Impossible: locally nameless" error // FIXME: Doc?
-  let sig_ctx = mk_sigelt (Sig_let (lb, [ lident ])) in
-  {sig_ctx with sigquals=[ Unfold_for_unification_and_vcgen ]},
-  mk (Tm_fvar fv) Range.dummyRange
 
 /////////////////////////////////////////////////////////////////////////////
 //Checks that the qualifiers on this sigelt are legal for it
@@ -3103,7 +3266,7 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
           | Sig_fail _ ->
             () (* just ignore it, the member ses have the attribute too *)
 
-          | Sig_let((false, [lb]), _) ->
+          | Sig_let {lbs=(false, [lb])} ->
             let _, body, _ = U.abs_formals lb.lbdef in
             if not (N.non_info_norm env body)
             then raise_error
@@ -3160,7 +3323,7 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
       then err "ill-formed combination";
       check_erasable quals se r;
       match se.sigel with
-      | Sig_let((is_rec, _), _) -> //let rec
+      | Sig_let {lbs=(is_rec, _)} -> //let rec
         if is_rec && quals |> List.contains Unfold_for_unification_and_vcgen
         then err "recursive definitions cannot be marked inline";
         if quals |> BU.for_some (fun x -> assumption x || has_eq x)
@@ -3202,9 +3365,9 @@ let must_erase_for_extraction (g:env) (t:typ) =
            let env = FStar.TypeChecker.Env.push_binders env bs in
            (Env.is_erasable_effect env (U.comp_effect_name c))  //includes GHOST
            || (U.is_pure_or_ghost_comp c && aux env (U.comp_result c))
-      | Tm_refine({sort=t}, _) ->
+      | Tm_refine {b={sort=t}} ->
            aux env t
-      | Tm_app (head, _)
+      | Tm_app {hd=head}
       | Tm_uinst (head, _) ->
            descend env head
       | Tm_fvar fv ->
@@ -3248,7 +3411,7 @@ let fresh_effect_repr env r eff_name signature_ts repr_ts_opt u a_tm =
    * But keep substituting [a/a_tm, b_i/?ui] in the sorts of the subsequent binders
    *)
   match (SS.compress signature).n with
-  | Tm_arrow (bs, _) ->
+  | Tm_arrow {bs} ->
     let bs = SS.open_binders bs in
     (match bs with
      | a::bs ->
@@ -3269,7 +3432,7 @@ let fresh_effect_repr env r eff_name signature_ts repr_ts_opt u a_tm =
             result_typ = a_tm;
             effect_args = List.map S.as_arg is;
             flags = [] }) in
-          S.mk (Tm_arrow ([S.null_binder S.t_unit], eff_c)) r
+          S.mk (Tm_arrow {bs=[S.null_binder S.t_unit]; comp=eff_c}) r
         | Some repr_ts ->
           let repr = Env.inst_tscheme_with repr_ts [u] |> snd in
           let is_args = List.map2 (fun i b -> (i, U.aqual_of_binder b)) is bs in
@@ -3291,7 +3454,7 @@ let layered_effect_indices_as_binders env r eff_name sig_ts u a_tm =
   let fail t = raise_error (Err.unexpected_signature_for_monad env eff_name t) r in
 
   match (SS.compress sig_tm).n with
-  | Tm_arrow (bs, _) ->
+  | Tm_arrow {bs} ->
     let bs = SS.open_binders bs in
     (match bs with
      | ({binder_bv=a'})::bs -> bs |> SS.subst_binders [NT (a', a_tm)]
@@ -3466,7 +3629,7 @@ let lift_tf_layered_effect_term env (sub:sub_eff)
   let rest_bs =
     let lift_t = sub.lift_wp |> must in
     match (lift_t |> snd |> SS.compress).n with
-    | Tm_arrow (_::bs, _) when List.length bs >= 1 ->
+    | Tm_arrow {bs=_::bs} when List.length bs >= 1 ->
       bs |> List.splitAt (List.length bs - 1) |> fst
     | _ ->
       raise_error (Errors.Fatal_UnexpectedEffect,
@@ -3474,7 +3637,7 @@ let lift_tf_layered_effect_term env (sub:sub_eff)
           (Print.tscheme_to_string lift_t)) (snd lift_t).pos in
 
   let args = (S.as_arg a)::((rest_bs |> List.map (fun _ -> S.as_arg S.unit_const))@[S.as_arg e]) in
-  mk (Tm_app (lift, args)) e.pos
+  mk (Tm_app {hd=lift; args}) e.pos
 
 let get_field_projector_name env datacon index =
   let _, t = Env.lookup_datacon env datacon in
@@ -3483,7 +3646,7 @@ let get_field_projector_name env datacon index =
       BU.format3 "Data constructor %s does not have enough binders (has %s, tried %s)"
         (Ident.string_of_lid datacon) (string_of_int n) (string_of_int index)) (Env.get_range env) in
   match (SS.compress t).n with
-  | Tm_arrow (bs, _) ->
+  | Tm_arrow {bs} ->
     let bs = bs |> List.filter (fun ({binder_qual=q}) -> match q with | Some (Implicit true) -> false | _ -> true) in
     if List.length bs <= index then err (List.length bs)
     else
@@ -3508,13 +3671,13 @@ let get_mlift_for_subeff env (sub:S.sub_eff) : Env.mlift =
       S.mk_Comp ({ ct with
         effect_name = sub.target;
         effect_args =
-          [mk (Tm_app (lift_t, [as_arg ct.result_typ; wp])) (fst wp).pos |> S.as_arg]
+          [mk (Tm_app {hd=lift_t; args=[as_arg ct.result_typ; wp]}) (fst wp).pos |> S.as_arg]
       }), TcComm.trivial_guard
     in
 
     let mk_mlift_term ts u r e =
       let _, lift_t = inst_tscheme_with ts [u] in
-      mk (Tm_app (lift_t, [as_arg r; as_arg S.tun; as_arg e])) e.pos
+      mk (Tm_app {hd=lift_t; args=[as_arg r; as_arg S.tun; as_arg e]}) e.pos
     in
 
     ({ mlift_wp = sub.lift_wp |> must |> mk_mlift_wp;
@@ -3567,7 +3730,7 @@ let try_lookup_record_type env (typename:lident)
       | _, [dc] ->
         let se = Env.lookup_sigelt env dc in
         (match se with
-         | Some ({sigel=Sig_datacon (_, _, t, _, nparms, _)}) ->
+         | Some ({sigel=Sig_datacon {t; num_ty_params=nparms}}) ->
            let formals, c = U.arrow_formals t in
            if nparms < List.length formals
            then let _, fields = List.splitAt nparms formals in //remove params
@@ -3653,7 +3816,7 @@ let find_record_or_dc_from_typ env (t:option typ) (uc:unresolved_constructor) rn
             then (Some (Record_ctor(rdc.typename, rdc.fields |> List.map fst)))
           else None
         in
-        S.lid_as_fv constrname delta_constant qual
+        S.lid_as_fv constrname qual
     in
     rdc, constrname, constructor
 
@@ -3772,6 +3935,6 @@ let make_record_fields_in_order env uc topt
             BU.format2 "Field %s is redundant for type %s"
                        (string_of_lid f)
                        (string_of_lid rdc.typename))
-          rng
+          (range_of_lid f)
     in
     List.rev as_rev

@@ -18,7 +18,7 @@ include MiniParse.Spec.Combinators
 include MiniParse.Tac.Base
 include MiniParse.Spec.Int
 
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 module U16 = FStar.UInt16
 
 let rec mk_tenum_branches (ty: T.term) (vty: T.term) (v: nat) (accu: list T.branch) (l: list T.name) : T.Tac (list T.branch) =
@@ -30,14 +30,14 @@ let rec mk_tenum_branches (ty: T.term) (vty: T.term) (v: nat) (accu: list T.bran
     let v = T.mk_app (`(mk_u16)) [pack_nat v, T.Q_Explicit] in
     let v = T.pack (T.Tv_AscribedT v vty None false) in
     let pat =
-      T.Pat_Cons (T.pack_fv n) None []
+      T.Pat_Cons {head=T.pack_fv n; univs=None; subpats=[]}
     in
     let br : T.branch = (pat, v) in
     let accu' = br :: accu in
     begin match q with
     | [] ->
-      let b = T.fresh_binder ty in
-      let pat = T.Pat_Var (T.bv_of_binder b) in
+      let nv : T.namedv = T.fresh_namedv () in
+      let pat = T.Pat_Var {v = nv; sort=Sealed.seal ty} in
       let br = (pat, v) in
       accu' `List.Tot.append` [br]
     | _ -> mk_tenum_branches ty vty v' accu' q
@@ -45,7 +45,7 @@ let rec mk_tenum_branches (ty: T.term) (vty: T.term) (v: nat) (accu: list T.bran
 
 let mk_function (t: T.term) (l: list T.branch) : T.Tac T.term =
   let b = T.fresh_binder t in
-  let body = T.pack (T.Tv_Match (T.pack (T.Tv_Var (T.bv_of_binder b))) None l) in
+  let body = T.pack (T.Tv_Match (T.pack (T.Tv_Var (T.binder_to_namedv b))) None l) in
   T.pack (T.Tv_Abs b body)
 
 let get_inductive_constructors (t: T.term) : T.Tac (list T.name) =
@@ -60,7 +60,7 @@ let get_inductive_constructors (t: T.term) : T.Tac (list T.name) =
     else begin
       let v : T.sigelt_view = T.inspect_sigelt (Some?.v s) in
       match v with
-      | T.Sg_Inductive _ _ _ _ cts -> T.map (fun ct -> fst ct) cts
+      | T.Sg_Inductive {ctors} -> T.map (fun ct -> fst ct) ctors
       | _ -> T.fail "Not an inductive type"
     end
   | _ -> T.fail "Not a free variable"
@@ -79,16 +79,16 @@ let gen_synth (t: T.term) : T.Tac unit =
 let pat_of_term (t: T.term) : T.Tac T.pattern =
   let t = T.norm_term_env (T.cur_env ()) [delta; iota; primops] t in
   match T.inspect t with
-  | T.Tv_Const v -> T.Pat_Constant v
-  | T.Tv_FVar v -> T.Pat_Cons v (Some []) []
+  | T.Tv_Const v -> T.Pat_Constant {c=v}
+  | T.Tv_FVar v -> T.Pat_Cons {head=v; univs=Some []; subpats=[]}
   | _ -> T.fail "Not a pattern"
 
 let term_of_pat (t: T.pattern) : T.Tac (option T.term) =
   match t with
-  | T.Pat_Constant v -> Some (T.pack (T.Tv_Const v))
-  | T.Pat_Cons v None [] -> Some (T.pack (T.Tv_FVar v))
-  | T.Pat_Cons v (Some []) [] -> Some (T.pack (T.Tv_FVar v))  
-  | T.Pat_Cons v (Some us) [] -> Some (T.pack (T.Tv_UInst v us))    
+  | T.Pat_Constant {c=v} -> Some (T.pack (T.Tv_Const v))
+  | T.Pat_Cons {head=v; univs=None; subpats=[]} -> Some (T.pack (T.Tv_FVar v))
+  | T.Pat_Cons {head=v; univs=Some []; subpats=[]} -> Some (T.pack (T.Tv_FVar v))  
+  | T.Pat_Cons {head=v; univs=Some us; subpats=[]} -> Some (T.pack (T.Tv_UInst v us))    
   | _ -> None
 
 let rec invert_branches_with_cascade (enum_ty: T.term) (val_eq: T.term) (x: T.term) (accu: option T.term) (l: list T.branch) : T.Tac T.term =
@@ -120,10 +120,10 @@ let invert_function' (enum_ty val_ty: T.term) (teq: T.term) (f: T.term) : T.Tac 
   | T.Tv_Abs b body ->
     begin match T.inspect body with
     | T.Tv_Match t _ br ->
-      if T.term_eq t (T.pack (T.Tv_Var (T.bv_of_binder b)))
+      if T.term_eq t (T.pack (T.Tv_Var (T.binder_to_namedv b)))
       then
         let bx = T.fresh_binder val_ty in
-        let x = T.pack (T.Tv_Var (T.bv_of_binder bx)) in
+        let x = T.pack (T.Tv_Var (T.binder_to_namedv bx)) in
         T.pack (T.Tv_Abs bx (invert_branches_with_cascade enum_ty teq x None br))
       else T.fail "Not a function destructing on its argument"
     | _ -> T.fail "Not a match"
@@ -176,7 +176,7 @@ let synth_inverse_forall_bounded_u16_intro b t f1 f2 u
 let synth_inverse_forall_tenum_solve' () : T.Tac unit =
   T.norm [delta; zeta; iota; primops];
   let x = tforall_intro () in
-  T.destruct (T.pack (T.Tv_Var (T.bv_of_binder x)));
+  T.destruct (T.pack (T.Tv_Var (T.binding_to_namedv x)));
   to_all_goals (fun () ->
     let y = T.intro () in
     T.rewrite y;

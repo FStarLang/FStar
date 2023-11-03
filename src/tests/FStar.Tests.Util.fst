@@ -45,7 +45,7 @@ let h = gen_bv "h" None S.tun
 let m = gen_bv "m" None S.tun
 let tm t = mk t dummyRange
 let nm x = bv_to_name x
-let app x ts = mk (Tm_app(x, List.map as_arg ts)) dummyRange
+let app x ts = mk (Tm_app {hd=x; args=List.map as_arg ts}) dummyRange
 
 let rec term_eq' t1 t2 =
     let t1 = SS.compress t1 in
@@ -73,36 +73,41 @@ let rec term_eq' t1 t2 =
       | Tm_uinst (t, _), Tm_uinst(s, _) -> term_eq' t s
       | Tm_constant c1, Tm_constant c2 -> FStar.Const.eq_const c1 c2
       | Tm_type u, Tm_type v -> u=v
-      | Tm_abs(xs, t, _), Tm_abs(ys, u, _) when (List.length xs = List.length ys) -> binders_eq xs ys && term_eq' t u
-      | Tm_abs(xs, t, _), Tm_abs(ys, u, _) ->
+      | Tm_abs {bs=xs; body=t}, Tm_abs {bs=ys; body=u} when (List.length xs = List.length ys) -> binders_eq xs ys && term_eq' t u
+      | Tm_abs {bs=xs; body=t}, Tm_abs {bs=ys; body=u} ->
         if List.length xs > List.length ys
         then let xs, xs' = BU.first_N (List.length ys) xs in
-             let t1 = mk (Tm_abs(xs, mk (Tm_abs(xs', t, None)) t1.pos, None)) t1.pos in
+             let t1 = mk (Tm_abs {bs=xs; body=mk (Tm_abs {bs=xs'; body=t; rc_opt=None}) t1.pos; rc_opt=None}) t1.pos in
              term_eq' t1 t2
         else let ys, ys' = BU.first_N (List.length xs) ys in
-             let t2 = mk (Tm_abs(ys, mk (Tm_abs(ys', u, None)) t2.pos, None)) t2.pos in
+             let t2 = mk (Tm_abs {bs=ys; body=mk (Tm_abs {bs=ys'; body=u; rc_opt=None}) t2.pos; rc_opt=None}) t2.pos in
              term_eq' t1 t2
-      | Tm_arrow(xs, c), Tm_arrow(ys, d) -> binders_eq xs ys && comp_eq c d
-      | Tm_refine(x, t), Tm_refine(y, u) -> term_eq' x.sort y.sort && term_eq' t u
-      | Tm_app({n=Tm_fvar fv_eq_1}, [(_, Some ({ aqual_implicit = true })); t1; t2]),
-        Tm_app({n=Tm_fvar fv_eq_2}, [(_, Some ({ aqual_implicit = true })); s1; s2])
+      | Tm_arrow {bs=xs; comp=c}, Tm_arrow {bs=ys; comp=d} -> binders_eq xs ys && comp_eq c d
+      | Tm_refine {b=x; phi=t}, Tm_refine {b=y; phi=u} -> term_eq' x.sort y.sort && term_eq' t u
+      | Tm_app {hd={n=Tm_fvar fv_eq_1};
+                args=[(_, Some ({ aqual_implicit = true })); t1; t2]},
+        Tm_app {hd={n=Tm_fvar fv_eq_2};
+                args=[(_, Some ({ aqual_implicit = true })); s1; s2]}
             when S.fv_eq_lid fv_eq_1 Const.eq2_lid
               && S.fv_eq_lid fv_eq_2 Const.eq2_lid -> //Unification produces equality applications that may have unconstrainted implicit arguments
         args_eq [s1;s2] [t1;t2]
-      | Tm_app(t, args), Tm_app(s, args') -> term_eq' t s && args_eq args args'
-      | Tm_match(t, None, pats, _), Tm_match(t', None, pats', _) ->
+      | Tm_app {hd=t; args}, Tm_app {hd=s; args=args'} -> term_eq' t s && args_eq args args'
+      | Tm_match {scrutinee=t; ret_opt=None; brs=pats},
+        Tm_match {scrutinee=t'; ret_opt=None; brs=pats'} ->
         List.length pats = List.length pats'
         && List.forall2 (fun (_, _, e) (_, _, e') -> term_eq' e e') pats pats'
         && term_eq' t t'
-      | Tm_ascribed(t1, (Inl t2, _, _), _), Tm_ascribed(s1, (Inl s2, _, _), _) ->
+      | Tm_ascribed {tm=t1; asc=(Inl t2, _, _)},
+        Tm_ascribed {tm=s1; asc=(Inl s2, _, _)} ->
         term_eq' t1 s1 && term_eq' t2 s2
-      | Tm_let((is_rec, lbs), t), Tm_let((is_rec',lbs'), s) when is_rec=is_rec' ->
+      | Tm_let {lbs=(is_rec, lbs); body=t},
+        Tm_let {lbs=(is_rec',lbs'); body=s} when is_rec=is_rec' ->
         List.length lbs = List.length lbs'
         && List.forall2 (fun lb1 lb2 -> term_eq' lb1.lbtyp lb2.lbtyp && term_eq' lb1.lbdef lb2.lbdef) lbs lbs'
         && term_eq' t s
       | Tm_uvar (u,_), Tm_uvar (u',_) -> UF.equiv u.ctx_uvar_head u'.ctx_uvar_head
-      | Tm_meta(t1, _), _ -> term_eq' t1 t2
-      | _, Tm_meta(t2, _) -> term_eq' t1 t2
+      | Tm_meta {tm=t1}, _ -> term_eq' t1 t2
+      | _, Tm_meta {tm=t2} -> term_eq' t1 t2
 
       | Tm_delayed _, _
       | _, Tm_delayed _ ->

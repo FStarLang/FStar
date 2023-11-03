@@ -74,7 +74,9 @@ let rec (prefix_with_iface_decls :
             (impl1.FStar_Parser_AST.attrs))
         } in
       match iface with
-      | [] -> ([], [qualify_karamel_private impl])
+      | [] ->
+          let uu___ = let uu___1 = qualify_karamel_private impl in [uu___1] in
+          ([], uu___)
       | iface_hd::iface_tl ->
           (match iface_hd.FStar_Parser_AST.d with
            | FStar_Parser_AST.Tycon (uu___, uu___1, tys) when
@@ -124,7 +126,10 @@ let rec (prefix_with_iface_decls :
                       (FStar_Errors_Codes.Fatal_WrongDefinitionOrder, uu___2) in
                     FStar_Errors.raise_error uu___1
                       impl.FStar_Parser_AST.drange
-                  else (iface, [qualify_karamel_private impl]))
+                  else
+                    (let uu___2 =
+                       let uu___3 = qualify_karamel_private impl in [uu___3] in
+                     (iface, uu___2)))
                else
                  (let mutually_defined_with_x =
                     FStar_Compiler_Effect.op_Bar_Greater def_ids
@@ -426,7 +431,8 @@ let (apply_ml_mode_optimizations : FStar_Ident.lident -> Prims.bool) =
     ((FStar_Options.ml_ish ()) &&
        (let uu___ =
           let uu___1 = FStar_Ident.string_of_lid mname in
-          FStar_Compiler_List.contains uu___1 FStar_Parser_Dep.core_modules in
+          let uu___2 = FStar_Parser_Dep.core_modules () in
+          FStar_Compiler_List.contains uu___1 uu___2 in
         Prims.op_Negation uu___))
       &&
       (let uu___ =
@@ -571,23 +577,34 @@ let (interleave_module :
                            let a1 = FStar_Parser_AST.Module (l, impls2) in
                            (match remaining_iface_vals with
                             | uu___3::uu___4 when expect_complete_modul ->
-                                let err =
-                                  let uu___5 =
-                                    FStar_Compiler_List.map
-                                      FStar_Parser_AST.decl_to_string
-                                      remaining_iface_vals in
-                                  FStar_Compiler_Effect.op_Bar_Greater uu___5
-                                    (FStar_String.concat "\n\t") in
+                                let remaining =
+                                  FStar_Compiler_List.map
+                                    FStar_Parser_AST.decl_to_string
+                                    remaining_iface_vals in
                                 let uu___5 =
                                   let uu___6 =
-                                    let uu___7 = FStar_Ident.string_of_lid l in
-                                    FStar_Compiler_Util.format2
-                                      "Some interface elements were not implemented by module %s:\n\t%s"
-                                      uu___7 err in
+                                    let uu___7 =
+                                      let uu___8 =
+                                        let uu___9 =
+                                          let uu___10 =
+                                            FStar_Ident.string_of_lid l in
+                                          FStar_Compiler_Util.format1
+                                            "Some interface elements were not implemented by module %s:"
+                                            uu___10 in
+                                        FStar_Errors_Msg.text uu___9 in
+                                      let uu___9 =
+                                        let uu___10 =
+                                          FStar_Compiler_List.map
+                                            FStar_Pprint.doc_of_string
+                                            remaining in
+                                        FStar_Errors_Msg.sublist
+                                          FStar_Pprint.empty uu___10 in
+                                      FStar_Pprint.op_Hat_Hat uu___8 uu___9 in
+                                    [uu___7] in
                                   (FStar_Errors_Codes.Fatal_InterfaceNotImplementedByModule,
                                     uu___6) in
                                 let uu___6 = FStar_Ident.range_of_lid l in
-                                FStar_Errors.raise_error uu___5 uu___6
+                                FStar_Errors.raise_error_doc uu___5 uu___6
                             | uu___3 ->
                                 ((let uu___5 =
                                     let uu___6 = FStar_Ident.string_of_lid l in

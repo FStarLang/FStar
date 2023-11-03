@@ -16,7 +16,7 @@
 module Enum
 
 open FStar.Tactics.Typeclasses
-open FStar.Tactics
+open FStar.Tactics.V2
 
 type bound = option nat
 

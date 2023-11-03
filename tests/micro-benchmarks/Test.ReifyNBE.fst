@@ -36,7 +36,7 @@ total reifiable reflectable new_effect {
 let test1 (a:Type) (y:a) =
     assert (norm [nbe; delta] (reify (ID?.reflect (return_id a y)) ()) == y)
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let test2 (a:Type) (x:a) =
     assert True by (let t0 = quote (reify (ID?.reflect (return_id a x)) ()) in

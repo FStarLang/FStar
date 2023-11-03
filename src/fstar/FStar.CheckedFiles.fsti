@@ -19,11 +19,12 @@ open FStar.Compiler.Effect
 open FStar
 open FStar.Compiler
 open FStar.Compiler.Util
-open FStar.Extraction.ML.UEnv
-open FStar.Syntax.DsEnv
+open FStar.TypeChecker.Env
+open FStar.Syntax
 
 module Syntax  = FStar.Syntax.Syntax
 module Dep     = FStar.Parser.Dep
+module TcEnv   = FStar.TypeChecker.Env
 
 val cache_version_number : int
 
@@ -32,7 +33,7 @@ val cache_version_number : int
  *)
 type tc_result = {
   checked_module: Syntax.modul; //persisted
-  mii:module_inclusion_info; //persisted
+  mii:DsEnv.module_inclusion_info; //persisted
   smt_decls:(FStar.SMTEncoding.Term.decls_t *  //list of smt decls and fvbs for the module
              list FStar.SMTEncoding.Env.fvar_binding); //persisted
 
@@ -53,6 +54,9 @@ val load_parsing_data_from_cache: file_name:string -> option Parser.Dep.parsing_
 (* Loading and storing cache files                                     *)
 (***********************************************************************)
 
-val load_module_from_cache: (uenv -> string -> option tc_result)
+val load_module_from_cache: TcEnv.env -> string -> option tc_result
 
-val store_module_to_cache: uenv -> file_name:string -> Dep.parsing_data -> tc_result -> unit
+val store_module_to_cache: TcEnv.env -> file_name:string -> Dep.parsing_data -> tc_result -> unit
+
+val unsafe_raw_load_checked_file (checked_file_name:string)
+  : option (FStar.Parser.Dep.parsing_data & list string & tc_result)
