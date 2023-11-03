@@ -247,7 +247,7 @@ into play is in the :ref:`universe levels <Part2_universes>`. As we
 learned previously, the logical core of F* is organized into an
 infinite hierarchy with copies of the F* type system arranged in a
 tower of universes. This stratification is necessary to prevent
-inconsistencies within the logical core. However, term in the ``Dv``
+inconsistencies within the logical core. However, terms in the ``Dv``
 effect are outside the logical core and, as such, restrictions on the
 universe levels no longer apply. As the snippet below shows a total
 function returning a type in universe ``u#a`` resides in universe
