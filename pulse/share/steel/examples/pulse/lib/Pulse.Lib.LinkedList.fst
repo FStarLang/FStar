@@ -228,19 +228,9 @@ fn is_empty (#t:Type) (x:llist t)
 }
 ```
 
-let perform (#a:Type0) (#p:vprop) (#q:a -> vprop)
-            (f: stt a p q)
-  : stt a p q = f  
-
 ```pulse
-fn length (#t:Type) (x:llist t)
-          (length_rec: 
-            (y:llist t ->
-             m:erased (list t) ->
-             stt nat
-                 (is_list y m)
-                 (fun n -> is_list y m ** pure (n == List.Tot.length m))))
-          (l:erased (list t))
+fn rec length (#t:Type0) (x:llist t)
+              (l:erased (list t))
     requires is_list x l
     returns n:nat
     ensures is_list x l ** pure (n == List.Tot.length l)
@@ -255,7 +245,7 @@ fn length (#t:Type) (x:llist t)
         let node = !vl;
         with tail tl. assert (is_list #t tail tl);
         rewrite each tail as node.tail; 
-        let n = perform (length_rec node.tail tl);
+        let n = perform (fun () -> length #t node.tail tl);
         intro_is_list_cons x vl;
         (1 + n)
     }
@@ -290,15 +280,7 @@ fn cons (#t:Type) (v:t) (x:llist t)
 ```
 
 ```pulse
-fn append (#t:Type) (x y:llist t)
-          (append_rec : 
-            (x:llist t ->
-             y:llist t ->
-             m:erased (list t) ->
-             n:erased (list t) ->
-             stt unit
-                 (is_list x m ** is_list y n ** pure (x =!= None))
-                 (fun _ -> is_list x (List.Tot.append m n))))
+fn rec append (#t:Type0) (x y:llist t)
     requires is_list x 'l1 ** is_list y 'l2 ** pure (x =!= None)
     ensures is_list x (List.Tot.append 'l1 'l2)
 {
@@ -322,7 +304,7 @@ fn append (#t:Type) (x y:llist t)
                 intro_is_list_cons x np; 
             }
             Some _ -> {
-                perform (append_rec node.tail y tl 'l2);
+                perform (fun () -> append #t node.tail y #tl #'l2);
                 intro_is_list_cons x np;
             }
         }
