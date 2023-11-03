@@ -444,3 +444,8 @@ let rec print_skel (t:st_term) =
   | Tm_IntroExists _ -> "IntroExists"
   | Tm_ElimExists _ -> "ElimExists"
   | Tm_ProofHintWithBinders _ -> "AssertWithBinders"
+
+let decl_to_string (d:decl) : T.Tac string =
+  match d.d with
+  | FnDecl {id; isrec; body} ->
+    "let " ^ (if isrec then "rec " else "") ^ fst (R.inspect_ident id) ^ " { " ^ st_term_to_string body ^ "}"
