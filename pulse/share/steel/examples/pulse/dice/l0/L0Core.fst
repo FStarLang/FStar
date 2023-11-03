@@ -1,6 +1,6 @@
 module L0Core
 open Pulse.Lib.Pervasives
-open Pulse.Class.BoundedIntegers
+open Pulse.Lib.BoundedIntegers
 module R = Pulse.Lib.Reference
 module A = Pulse.Lib.Array
 module US = FStar.SizeT
@@ -310,7 +310,7 @@ fn l0_main'
   (#cdi0 #deviceID_pub0 #deviceID_priv0 #aliasKey_pub0 #aliasKey_priv0 #aliasKeyCRT0 #deviceIDCSR0: Seq.seq U8.t)
   (#cdi_perm #p:perm)
   requires (
-    l0_record_perm record repr p **
+    l0_record_perm record p repr **
     A.pts_to cdi #cdi_perm cdi0 **
     A.pts_to deviceID_pub deviceID_pub0 **
     A.pts_to deviceID_priv deviceID_priv0 **
@@ -323,7 +323,7 @@ fn l0_main'
       aliasKeyCRT_pre record.aliasKeyCRT_ingredients aliasKeyTBS_len aliasKeyCRT_len
     ))
   ensures (
-      l0_record_perm record repr p **
+      l0_record_perm record p repr **
       A.pts_to cdi #cdi_perm cdi0 **
       exists (deviceID_pub1 deviceID_priv1 aliasKey_pub1 aliasKey_priv1
               aliasKeyCRT1 deviceIDCSR1:Seq.seq U8.t). (
@@ -349,7 +349,7 @@ fn l0_main'
             aliasKeyCRT_len aliasKeyCRT1 aliasKey_pub1
       )))
 {
-  unfold (l0_record_perm record repr p);
+  unfold (l0_record_perm record p repr);
   dice_digest_len_is_hkdf_ikm;
 
   derive_DeviceID dice_hash_alg 
@@ -385,10 +385,10 @@ fn l0_main'
     aliasKeyCRT_len aliasKeyCRT
     record.aliasKeyCRT_ingredients;
   
-  with s3. assert (A.pts_to deviceIDCRI s3);
-  with s4. assert (A.pts_to aliasKeyTBS s4);
+  // with s3. assert (A.pts_to deviceIDCRI s3);
+  // with s4. assert (A.pts_to aliasKeyTBS s4);
 
-  fold l0_record_perm record repr p;
+  fold l0_record_perm record p repr;
 }
 ```
 let l0_main = l0_main'

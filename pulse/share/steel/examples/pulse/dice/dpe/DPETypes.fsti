@@ -115,7 +115,7 @@ type engine_context_t = {
   uds: A.larray U8.t (SZ.v uds_len); 
 }
 
-let engine_context_perm (c:engine_context_t) : vprop
+let engine_context_perm (c:engine_context_t) (uds_bytes:Seq.seq U8.t) : vprop
   = A.pts_to c.uds uds_bytes ** 
     pure (A.is_full_array c.uds)
 
@@ -130,20 +130,22 @@ type l0_context_t = {
 let mk_l0_context_t cdi : l0_context_t = {cdi}
 
 type l0_context_repr_t = {
+  uds:Seq.seq U8.t;
   cdi:Seq.seq U8.t;
   repr:engine_record_repr;
 }
 
 let mk_l0_context_repr_t
+  (uds:Seq.seq U8.t)
   (cdi:Seq.seq U8.t)
   (repr:engine_record_repr) 
 : GTot l0_context_repr_t 
-= {cdi; repr}
+= {uds; cdi; repr}
 
 let l0_context_perm (c:l0_context_t) (r:l0_context_repr_t): vprop
   = A.pts_to c.cdi r.cdi **
     pure (A.is_full_array c.cdi
-       /\ cdi_functional_correctness r.cdi r.repr
+       /\ cdi_functional_correctness r.cdi r.uds r.repr
        /\ l0_is_authentic r.repr)
 
 
@@ -242,7 +244,7 @@ let mk_context_t_l1 c = L1_context c
 
 noeq
 type context_repr_t = 
-  | Engine_context_repr : context_repr_t
+  | Engine_context_repr : uds:Seq.seq U8.t -> context_repr_t
   | L0_context_repr     : r:l0_context_repr_t -> context_repr_t
   | L1_context_repr     : r:l1_context_repr_t -> context_repr_t
 
@@ -253,7 +255,11 @@ let mk_context_repr_t_l1 (r:erased l1_context_repr_t)
 
 let context_perm (context:context_t) (repr:context_repr_t): vprop = 
   match context with
-  | Engine_context c -> engine_context_perm c
+  | Engine_context c -> (
+    match repr with
+    | Engine_context_repr uds -> engine_context_perm c uds
+    | _ -> pure False
+  )
   | L0_context c -> (
     match repr with 
     | L0_context_repr r -> l0_context_perm c r
@@ -280,6 +286,37 @@ fn elim_false (#a:Type0) (p: (a -> vprop))
 
 ```pulse
 ghost
+fn get_engine_context_perm (c:engine_context_t) (repr:erased context_repr_t)
+  requires context_perm (Engine_context c) repr
+  returns uds:Ghost.erased (Seq.seq U8.t)
+  ensures engine_context_perm c uds ** pure (repr == Engine_context_repr uds)
+{
+  let repr = reveal repr;
+  match repr {
+    Engine_context_repr uds -> {
+      rewrite (context_perm (Engine_context c) repr)
+          as  (engine_context_perm c uds);
+      hide uds
+    } 
+    L0_context_repr r0 -> {
+      rewrite (context_perm (Engine_context c) repr)
+          as  (pure False);
+      let x = elim_false (engine_context_perm c);
+      hide x
+    }
+    L1_context_repr _ -> {
+      rewrite (context_perm (Engine_context c) repr)
+          as  (pure False);
+      let x = elim_false (engine_context_perm c);
+      hide x
+    }
+  }
+}
+```
+
+
+```pulse
+ghost
 fn get_l0_context_perm (r:l0_context_t) (repr':erased context_repr_t)
   requires context_perm (L0_context r) repr'
   returns r0:erased l0_context_repr_t
@@ -287,7 +324,7 @@ fn get_l0_context_perm (r:l0_context_t) (repr':erased context_repr_t)
 {
   let repr = reveal repr';
   match repr {
-    Engine_context_repr -> {
+    Engine_context_repr uds -> {
       rewrite (context_perm (L0_context r) repr)
           as  (pure False);
       let x = elim_false (l0_context_perm r);
@@ -317,7 +354,7 @@ fn get_l1_context_perm (r:l1_context_t) (repr':erased context_repr_t)
 {
   let repr = reveal repr';
   match repr {
-    Engine_context_repr -> {
+    Engine_context_repr uds -> {
       rewrite (context_perm (L1_context r) repr)
           as  (pure False);
       let x = elim_false (l1_context_perm r);
@@ -356,16 +393,16 @@ type repr_t =
   | Engine_repr : r:engine_record_repr -> repr_t
   | L0_repr     : r:l0_record_repr_t -> repr_t
 
-let record_perm (record:record_t) (repr:repr_t) (p:perm) : vprop = 
+let record_perm (record:record_t) (p:perm) (repr:repr_t)  : vprop = 
   match record with
   | Engine_record r -> (
     match repr with 
-    | Engine_repr r0 -> engine_record_perm r r0 p
+    | Engine_repr r0 -> engine_record_perm r p r0
     | _ -> pure False
   )
   | L0_record r -> (
     match repr with
-    | L0_repr r0 -> l0_record_perm r r0 p
+    | L0_repr r0 -> l0_record_perm r p r0
     | _ -> pure False
   )
 
@@ -373,24 +410,22 @@ let record_perm (record:record_t) (repr:repr_t) (p:perm) : vprop =
 ```pulse
 ghost
 fn get_engine_record_perm (r:engine_record_t) (repr':erased repr_t) (p:perm)
-  requires record_perm (Engine_record r) repr' p
+  requires record_perm (Engine_record r) p repr'
   returns r0:erased engine_record_repr
-  ensures engine_record_perm r r0 p ** pure (reveal repr' == Engine_repr r0)
+  ensures engine_record_perm r p r0 ** pure (reveal repr' == Engine_repr r0)
 {
   let repr = reveal repr';
   match repr {
     Engine_repr r0 -> {
-      admit() // FIXME
-      // rewrite (record_perm (Engine_record r) repr p)
-      //     as  (engine_record_perm r r0 p);
-      // hide r0
+      rewrite (record_perm (Engine_record r) p (reveal repr))
+          as  (engine_record_perm r p r0);
+      hide r0
     }
     L0_repr _ -> {
-      admit() // FIXME
-      // rewrite (record_perm (Engine_record r) repr p)
-      //     as  (pure False);
-      // let x = elim_false (engine_record_perm r p);
-      // hide x
+      rewrite (record_perm (Engine_record r) p repr)
+          as  (pure False);
+      let x = elim_false #engine_record_repr (engine_record_perm r p);
+      hide x
     }
   }
 }
@@ -399,25 +434,23 @@ fn get_engine_record_perm (r:engine_record_t) (repr':erased repr_t) (p:perm)
 ```pulse
 ghost
 fn get_l0_record_perm (r:l0_record_t) (repr':erased repr_t) (p:perm)
-  requires record_perm (L0_record r) repr' p
+  requires record_perm (L0_record r) p repr'
   returns r0:erased l0_record_repr_t
-  ensures l0_record_perm r r0 p ** pure (reveal repr' == L0_repr r0)
+  ensures l0_record_perm r p r0 ** pure (reveal repr' == L0_repr r0)
 {
   let repr = reveal repr';
   match repr {
-    Engine_repr _ -> {
-      admit() // FIXME
-      // rewrite (record_perm (L0_record r) repr p)
-      //     as  (pure False);
-      // let x = elim_false (l0_record_perm r);
-      // hide x
+    Engine_repr rr -> {
+      rewrite (record_perm (L0_record r) p repr)
+          as  (pure False);
+      let x = elim_false #l0_record_repr_t (l0_record_perm r p);
+      hide x
     }
     L0_repr r0 -> {
-      admit() // FIXME
-      // rewrite (record_perm (L0_record r) repr p)
-      //     as  (l0_record_perm r r0 p);
-      // hide r0
-    }
+      rewrite (record_perm (L0_record r) p repr)
+          as  (l0_record_perm r p r0);
+      hide r0
+   }
   }
 }
 ```

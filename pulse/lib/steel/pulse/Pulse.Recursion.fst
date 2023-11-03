@@ -178,7 +178,16 @@ let tie_knot (g : env)  (rng : R.range)
              (d : decl) (r_typ : R.typ)
 : Tac (list (RT.sigelt_for (fstar_env g)))
 =
+  let knot_r_typ =
+    (* Remove the last arguments from r_typ, as that is the recursive knot.
+    After doing that, we now have the needed type for elaboration. *)
+    let bs, c = collect_arr_bs r_typ in
+    if Nil? bs then fail g (Some rng) "tie_knot: impossible (1)";
+    let bs = init bs in
+    if Nil? bs then fail g (Some rng) "tie_knot: impossible (2)";
+    mk_arr bs c
+  in
   (* This is a temporary implementation. It will just create
   a new letbinding at the appropriate type with a `magic()` body. *)
 
-  [RT.mk_unchecked_let (fstar_env g) nm_orig (`(magic())) r_typ]
+  [RT.mk_unchecked_let (fstar_env g) nm_orig (`(magic())) knot_r_typ]

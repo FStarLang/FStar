@@ -14,9 +14,12 @@ extract:
 #	$(FSTAR) --odir _output --codegen OCaml CustomSyntax.fst --extract CustomSyntax
 	$(FSTAR) --odir _output --codegen OCaml ExtractionTest.fst --extract ExtractionTest
 	
-extract_c:
-	$(FSTAR) --codegen krml ExtractionTest.fst --extract '* -Pulse.Lib.Core'
-	$(FSTAR_HOME)/../karamel/krml -bundle ExtractionTest=* -skip-compilation _output/out.krml
+extract_c: _output/cache/ExtractionTest.fst.checked
+	$(FSTAR) --odir _output --codegen krml ExtractionTest.fst --extract ExtractionTest
+	$(FSTAR_HOME)/../karamel/krml -bundle ExtractionTest=* -skip-compilation _output/ExtractionTest.krml -tmpdir _output
+
+#	$(FSTAR) --codegen krml Demo.MultiplyByRepeatedAddition.fst --extract '* -Pulse.Lib.Core'
+#	$(FSTAR_HOME)/../karamel/krml -bundle Demo.MultiplyByRepeatedAddition=* -skip-compilation _output/out.krml
 
 extract_cbor:
 	$(FSTAR) --codegen krml DPE.Messages.Parse.fst --extract '* -Pulse.Lib.Core'

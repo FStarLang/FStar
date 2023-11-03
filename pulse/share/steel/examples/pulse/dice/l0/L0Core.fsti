@@ -92,7 +92,7 @@ val l0_main
   (#repr: erased l0_record_repr_t)
   (#cdi0 #deviceID_pub0 #deviceID_priv0 #aliasKey_pub0 #aliasKey_priv0 #aliasKeyCRT0 #deviceIDCSR0: Seq.seq U8.t)
   (#cdi_perm #p:perm)
-  : stt unit (l0_record_perm record repr p **
+  : stt unit (l0_record_perm record p repr **
               A.pts_to cdi #cdi_perm cdi0 **
               A.pts_to deviceID_pub deviceID_pub0 **
               A.pts_to deviceID_priv deviceID_priv0 **
@@ -103,7 +103,7 @@ val l0_main
               pure (deviceIDCSR_pre record.deviceIDCSR_ingredients deviceIDCRI_len deviceIDCSR_len
                  /\ aliasKeyCRT_pre record.aliasKeyCRT_ingredients aliasKeyTBS_len aliasKeyCRT_len))
              (fun _ -> 
-              l0_record_perm record repr p **
+              l0_record_perm record p repr **
               A.pts_to cdi #cdi_perm cdi0 **
               exists_ (fun (deviceID_pub1:Seq.seq U8.t) ->
               exists_ (fun (deviceID_priv1:Seq.seq U8.t) -> 

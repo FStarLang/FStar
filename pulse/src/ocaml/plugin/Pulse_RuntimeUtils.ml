@@ -1,5 +1,6 @@
 type context = ((string * FStar_Range.range option) list) FStar_Sealed.sealed
 let extend_context (s:string) (r:FStar_Range.range option) (c:context) = (s,r)::c
+let env_set_context (g:FStar_Reflection_Types.env) (c:context) = g
 let print_exn (e:exn) = Printexc.to_string e
 let debug_at_level_no_module (s:string) = FStar_Options.debug_at_level_no_module (FStar_Options.Other s)
 let debug_at_level (g:FStar_Reflection_Types.env) (s:string) = FStar_TypeChecker_Env.debug g (FStar_Options.Other s)

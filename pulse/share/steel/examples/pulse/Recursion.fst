@@ -16,6 +16,16 @@ fn rec test1
 let _ = test1
 
 ```pulse
+fn test_call_1
+  (z:unit)
+  requires emp
+  ensures pure False
+{
+  test1()
+}
+```
+
+```pulse
 fn rec test2
   (y:nat)
   requires emp
@@ -77,7 +87,6 @@ fn rec test4
   (y : nat)
   requires pts_to r v
   ensures pts_to r (v+y)
-  decreases 1
 {
   if (y > 0) {
     let w = !r;
@@ -106,7 +115,7 @@ fn rec test5
 [@@expect_failure]
 ```pulse
 ghost
-fn rec test5
+fn rec test5'
   (z:int)
   (y:nat)
   requires emp
@@ -114,7 +123,7 @@ fn rec test5
   decreases z
 {
   if (z <> 0 && y <> 0) {
-    perform_ghost (fun () -> test5 (z-1) (y-1))
+    perform_ghost (fun () -> test5' (z-1) (y-1))
   }
 }
 ```
@@ -126,6 +135,7 @@ fn rec test6
   ensures pure False
 {
   let x = perform (fun () -> test6 () (y+1));
+  test5 10 10;
   ()
 }
 ```

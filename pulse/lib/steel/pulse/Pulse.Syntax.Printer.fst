@@ -332,7 +332,26 @@ and branches_to_string brs : T.Tac _ =
 
 and branch_to_string br : T.Tac _ =
   let (pat, e) = br in
-  st_term_to_string' "" e
+  Printf.sprintf "{ %s -> %s }"
+    (pattern_to_string pat)
+    (st_term_to_string' "" e)
+
+and pattern_to_string (p:pattern) : T.Tac string = 
+  match p with
+  | Pat_Cons fv pats ->
+    Printf.sprintf "(%s %s)"
+      (String.concat "." fv.fv_name) 
+      (String.concat " " (T.map (fun (p, _) -> pattern_to_string p) pats))
+  | Pat_Constant c ->
+    "<constant>"
+  | Pat_Var x _ ->
+    T.unseal x
+  | Pat_Dot_Term None ->
+    ""
+  | Pat_Dot_Term (Some t) ->
+    Printf.sprintf "(.??)" //%s)" (term_to_string t)
+    
+
 
 let st_term_to_string t = st_term_to_string' "" t
 

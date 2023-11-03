@@ -257,8 +257,12 @@ let rec extract (g:env) (p:st_term)
 
       | Tm_Match { sc; brs } ->
         let sc = term_as_mlexpr g sc in
-        let extract_branch (pat, body) =
-          let g, pat, bs = extend_env_pat g pat in
+        let extract_branch (pat0, body) =
+          let g, pat, bs = extend_env_pat g pat0 in
+          T.print (Printf.sprintf "Extracting branch with pattern %s\n"
+                    (Pulse.Syntax.Printer.pattern_to_string pat0)
+          //           // (String.concat ", " (L.map (fun (x, _) -> x) bs))
+                    );
           let body = Pulse.Checker.Match.open_st_term_bs body bs in
           let body, _ = extract g body in
           pat, body

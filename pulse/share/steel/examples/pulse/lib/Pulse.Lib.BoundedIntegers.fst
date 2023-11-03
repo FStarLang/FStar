@@ -1,4 +1,4 @@
-module Pulse.Class.BoundedIntegers
+module Pulse.Lib.BoundedIntegers
 
 module TC = FStar.Tactics.Typeclasses
 
@@ -182,6 +182,7 @@ instance bounded_int_pos : bounded_int pos = {
 
 // Using a fits predicate as the bounds check allows this class to also accomodate SizeT
 open FStar.SizeT
+
 instance bounded_int_size_t : bounded_int FStar.SizeT.t = {
     fits = (fun x -> x >= 0 /\ FStar.SizeT.fits x);
     v = (fun x -> FStar.SizeT.v x);

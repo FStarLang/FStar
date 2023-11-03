@@ -45,8 +45,7 @@ FSTAR_OPTIONS=--odir $(OUTPUT_DIRECTORY) \
 		 --cache_dir $(CACHE_DIRECTORY) \
 	         $(addprefix --include , $(INCLUDE_PATHS)) \
 		 --cache_checked_modules \
-		 --cmi \
-                 --load_cmxs steel
+ 		 --load_cmxs steel
 
 FSTAR=$(FSTAR_HOME)/bin/fstar.exe $(FSTAR_OPTIONS) $(ALREADY_CACHED)
 

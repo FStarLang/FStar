@@ -32,39 +32,43 @@ let check_bind
   then fail g (Some t.range) "check_bind: post hint is not set, please add an annotation";
 
   let Tm_Bind { binder; head=e1; body=e2 } = t.term in
+  if Tm_Admit? e1.term
+  then ( //Discard the continuation if the head is an admit
+    check g ctxt ctxt_typing post_hint res_ppname e1
+  )
+  else (
+    let (| x, g1, _, (| ctxt', ctxt'_typing |), k1 |) =
+      let r = check g ctxt ctxt_typing None binder.binder_ppname e1 in
+      (* Check that the type matches the annotation, if any *)
+      let ty = binder.binder_ty in
+      begin match ty.t with
+      | Tm_Unknown -> ()
+      | _ ->
+        let (| ty, _, _ |) = check_tot_term g ty in //elaborate it first
+        let (| _, _, (| _, t, _ |), _, _ |) = r in
+        // TODO: once we have the rename operation then we should
+        // ditch this check and just elaborate the bind
+        //   let x : ty = stapp in ...
+        // to
+        //   let x0 = stapp in
+        //   let x : t = x0 in
+        //   rename x0 x; ...
+        // to leverage the pure case
+        if not (eq_tm ty t) then
+          fail g (Some e1.range)
+            (Printf.sprintf "Type mismatch: expected %s, got %s" (P.term_to_string ty) (P.term_to_string t))
+      end;
+      r
+    in
+    let d : st_typing_in_ctxt g1 ctxt' post_hint =
+      let ppname = mk_ppname_no_range "_bind_c" in
+      let r =
+        check g1 ctxt' ctxt'_typing post_hint ppname (open_st_term_nv e2 (binder.binder_ppname, x)) in
+        apply_checker_result_k #_ #_ #(Some?.v post_hint) r ppname in
+    let d : st_typing_in_ctxt g ctxt post_hint = k1 post_hint d in
 
-  let (| x, g1, _, (| ctxt', ctxt'_typing |), k1 |) =
-    let r = check g ctxt ctxt_typing None binder.binder_ppname e1 in
-    (* Check that the type matches the annotation, if any *)
-    let ty = binder.binder_ty in
-    begin match ty.t with
-    | Tm_Unknown -> ()
-    | _ ->
-      let (| ty, _, _ |) = check_tot_term g ty in //elaborate it first
-      let (| _, _, (| _, t, _ |), _, _ |) = r in
-      // TODO: once we have the rename operation then we should
-      // ditch this check and just elaborate the bind
-      //   let x : ty = stapp in ...
-      // to
-      //   let x0 = stapp in
-      //   let x : t = x0 in
-      //   rename x0 x; ...
-      // to leverage the pure case
-      if not (eq_tm ty t) then
-        fail g (Some e1.range)
-          (Printf.sprintf "Type mismatch: expected %s, got %s" (P.term_to_string ty) (P.term_to_string t))
-    end;
-    r
-  in
-  let d : st_typing_in_ctxt g1 ctxt' post_hint =
-    let ppname = mk_ppname_no_range "_bind_c" in
-    let r =
-      check g1 ctxt' ctxt'_typing post_hint ppname (open_st_term_nv e2 (binder.binder_ppname, x)) in
-      apply_checker_result_k #_ #_ #(Some?.v post_hint) r ppname in
-  let d : st_typing_in_ctxt g ctxt post_hint = k1 post_hint d in
-
-  checker_result_for_st_typing d res_ppname
-
+    checker_result_for_st_typing d res_ppname
+  )
 let check_tot_bind
   (g:env)
   (pre:term)
