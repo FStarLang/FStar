@@ -178,6 +178,20 @@ let (soft_brackets_with_nesting :
   fun contents ->
     FStar_Pprint.soft_surround (Prims.of_int (2)) Prims.int_one
       FStar_Pprint.lbracket contents FStar_Pprint.rbracket
+let (soft_lens_access_with_nesting :
+  FStar_Pprint.document -> FStar_Pprint.document) =
+  fun contents ->
+    let uu___ = str "(|" in
+    let uu___1 = str "|)" in
+    FStar_Pprint.soft_surround (Prims.of_int (2)) Prims.int_one uu___
+      contents uu___1
+let (soft_brackets_lens_access_with_nesting :
+  FStar_Pprint.document -> FStar_Pprint.document) =
+  fun contents ->
+    let uu___ = str "[|" in
+    let uu___1 = str "|]" in
+    FStar_Pprint.soft_surround (Prims.of_int (2)) Prims.int_one uu___
+      contents uu___1
 let (soft_begin_end_with_nesting :
   FStar_Pprint.document -> FStar_Pprint.document) =
   fun contents ->
@@ -671,11 +685,23 @@ let (handleable_args_length : FStar_Ident.ident -> Prims.int) =
       (let uu___2 =
          ((is_operatorInfix0ad12 op) || (is_operatorInfix34 op)) ||
            (FStar_Compiler_List.mem op_s
-              ["<==>"; "==>"; "\\/"; "/\\"; "="; "|>"; ":="; ".()"; ".[]"]) in
+              ["<==>";
+              "==>";
+              "\\/";
+              "/\\";
+              "=";
+              "|>";
+              ":=";
+              ".()";
+              ".[]";
+              ".(||)";
+              ".[||]"]) in
        if uu___2
        then (Prims.of_int (2))
        else
-         if FStar_Compiler_List.mem op_s [".()<-"; ".[]<-"]
+         if
+           FStar_Compiler_List.mem op_s
+             [".()<-"; ".[]<-"; ".(||)<-"; ".[||]<-"]
          then (Prims.of_int (3))
          else Prims.int_zero)
 let handleable_op :
@@ -692,10 +718,21 @@ let handleable_op :
           ((is_operatorInfix0ad12 op) || (is_operatorInfix34 op)) ||
             (let uu___1 = FStar_Ident.string_of_id op in
              FStar_Compiler_List.mem uu___1
-               ["<==>"; "==>"; "\\/"; "/\\"; "="; "|>"; ":="; ".()"; ".[]"])
+               ["<==>";
+               "==>";
+               "\\/";
+               "/\\";
+               "=";
+               "|>";
+               ":=";
+               ".()";
+               ".[]";
+               ".(||)";
+               ".[||]"])
       | uu___ when uu___ = (Prims.of_int (3)) ->
           let uu___1 = FStar_Ident.string_of_id op in
-          FStar_Compiler_List.mem uu___1 [".()<-"; ".[]<-"]
+          FStar_Compiler_List.mem uu___1
+            [".()<-"; ".[]<-"; ".(||)<-"; ".[||]<-"]
       | uu___ -> false
 type annotation_style =
   | Binders of (Prims.int * Prims.int * Prims.bool) 
@@ -2509,6 +2546,50 @@ and (p_noSeqTerm' :
                       let uu___6 =
                         let uu___7 = p_term false false e2 in
                         soft_brackets_with_nesting uu___7 in
+                      let uu___7 =
+                        FStar_Pprint.op_Hat_Hat FStar_Pprint.space
+                          FStar_Pprint.larrow in
+                      FStar_Pprint.op_Hat_Hat uu___6 uu___7 in
+                    FStar_Pprint.op_Hat_Hat FStar_Pprint.dot uu___5 in
+                  FStar_Pprint.op_Hat_Hat uu___3 uu___4 in
+                FStar_Pprint.group uu___2 in
+              let uu___2 =
+                let uu___3 = p_noSeqTermAndComment ps pb e3 in jump2 uu___3 in
+              FStar_Pprint.op_Hat_Hat uu___1 uu___2 in
+            FStar_Pprint.group uu___
+        | FStar_Parser_AST.Op (id, e1::e2::e3::[]) when
+            let uu___ = FStar_Ident.string_of_id id in uu___ = ".(||)<-" ->
+            let uu___ =
+              let uu___1 =
+                let uu___2 =
+                  let uu___3 = p_atomicTermNotQUident e1 in
+                  let uu___4 =
+                    let uu___5 =
+                      let uu___6 =
+                        let uu___7 = p_term false false e2 in
+                        soft_lens_access_with_nesting uu___7 in
+                      let uu___7 =
+                        FStar_Pprint.op_Hat_Hat FStar_Pprint.space
+                          FStar_Pprint.larrow in
+                      FStar_Pprint.op_Hat_Hat uu___6 uu___7 in
+                    FStar_Pprint.op_Hat_Hat FStar_Pprint.dot uu___5 in
+                  FStar_Pprint.op_Hat_Hat uu___3 uu___4 in
+                FStar_Pprint.group uu___2 in
+              let uu___2 =
+                let uu___3 = p_noSeqTermAndComment ps pb e3 in jump2 uu___3 in
+              FStar_Pprint.op_Hat_Hat uu___1 uu___2 in
+            FStar_Pprint.group uu___
+        | FStar_Parser_AST.Op (id, e1::e2::e3::[]) when
+            let uu___ = FStar_Ident.string_of_id id in uu___ = ".[||]<-" ->
+            let uu___ =
+              let uu___1 =
+                let uu___2 =
+                  let uu___3 = p_atomicTermNotQUident e1 in
+                  let uu___4 =
+                    let uu___5 =
+                      let uu___6 =
+                        let uu___7 = p_term false false e2 in
+                        soft_brackets_lens_access_with_nesting uu___7 in
                       let uu___7 =
                         FStar_Pprint.op_Hat_Hat FStar_Pprint.space
                           FStar_Pprint.larrow in
@@ -4502,6 +4583,28 @@ and (p_indexingTerm_aux :
               let uu___3 =
                 let uu___4 = p_term false false e2 in
                 soft_brackets_with_nesting uu___4 in
+              FStar_Pprint.op_Hat_Hat FStar_Pprint.dot uu___3 in
+            FStar_Pprint.op_Hat_Hat uu___1 uu___2 in
+          FStar_Pprint.group uu___
+      | FStar_Parser_AST.Op (id, e1::e2::[]) when
+          let uu___ = FStar_Ident.string_of_id id in uu___ = ".(||)" ->
+          let uu___ =
+            let uu___1 = p_indexingTerm_aux p_atomicTermNotQUident e1 in
+            let uu___2 =
+              let uu___3 =
+                let uu___4 = p_term false false e2 in
+                soft_lens_access_with_nesting uu___4 in
+              FStar_Pprint.op_Hat_Hat FStar_Pprint.dot uu___3 in
+            FStar_Pprint.op_Hat_Hat uu___1 uu___2 in
+          FStar_Pprint.group uu___
+      | FStar_Parser_AST.Op (id, e1::e2::[]) when
+          let uu___ = FStar_Ident.string_of_id id in uu___ = ".[||]" ->
+          let uu___ =
+            let uu___1 = p_indexingTerm_aux p_atomicTermNotQUident e1 in
+            let uu___2 =
+              let uu___3 =
+                let uu___4 = p_term false false e2 in
+                soft_brackets_lens_access_with_nesting uu___4 in
               FStar_Pprint.op_Hat_Hat FStar_Pprint.dot uu___3 in
             FStar_Pprint.op_Hat_Hat uu___1 uu___2 in
           FStar_Pprint.group uu___
