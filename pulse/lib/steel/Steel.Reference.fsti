@@ -350,6 +350,8 @@ let vptr_not_null (#opened: _)
 [@@ erasable]
 val ghost_ref (a:Type u#0) : Type u#0
 
+val dummy_ghost_ref (a: Type) : Tot (ghost_ref a)
+
 (* Textbook separation logic version of ghost references *)
 
 val ghost_pts_to_sl (#a:_) (r:ghost_ref a) (p:perm) (v:a) : slprop u#1

@@ -35,6 +35,8 @@ open Steel.ST.Util
 val ref (a:Type u#0)
   : Type u#0
 
+val dummy_ref (a: Type) : Tot (ref a)
+
 /// The main representation predicate
 val pts_to (#a:_)
            (r:ref a)

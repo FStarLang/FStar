@@ -24,6 +24,8 @@ let ref (a:Type u#0)
   : Type u#0
   = R.ghost_ref a
 
+let dummy_ref a = R.dummy_ghost_ref a
+
 let pts_to (#a:_)
            (r:ref a)
            (p:perm)

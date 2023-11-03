@@ -359,6 +359,10 @@ let vptrp_not_null
 (*** GHOST REFERENCES ***)
 let ghost_ref a = H.ghost_ref (U.raise_t a)
 
+let dummy_ghost_ref a =
+  H.reveal_ghost_ref (U.raise_t a);
+  coerce_eq () (Ghost.hide (H.null #(U.raise_t a)))
+
 [@__reduce__]
 let ghost_pts_to_sl #a r p x = H.ghost_pts_to_sl #(U.raise_t a) r p (U.raise_val x)
 
