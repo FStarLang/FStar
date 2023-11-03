@@ -21,26 +21,38 @@ let debug (g:env) (msg: unit -> T.Tac string) =
   then T.print (print_context g ^ "\n" ^ msg())
 
 let rtb_core_check_term g f e =
-  debug g (fun _ -> Printf.sprintf "Calling core_check_term on %s" (T.term_to_string e));
+  debug g (fun _ ->
+    Printf.sprintf "(%s) Calling core_check_term on %s" 
+          (T.range_to_string (RU.range_of_term e))
+          (T.term_to_string e));
   let res = RTB.core_compute_term_type f e in
   res
 
 let rtb_tc_term g f e =
-  debug g (fun _ -> Printf.sprintf "Calling tc_term on %s" (T.term_to_string e));
   (* WARN: unary dependence, see comment in RU *)
   let e = RU.deep_transform_to_unary_applications e in
+  debug g (fun _ ->
+    Printf.sprintf "(%s) Calling tc_term on %s"
+      (T.range_to_string (RU.range_of_term e))
+      (T.term_to_string e));
   let res = RTB.tc_term f e in
   res
 
 let rtb_universe_of g f e =
-  debug g (fun _ -> Printf.sprintf "Calling universe_of on %s" (T.term_to_string e));
+  debug g (fun _ ->
+    Printf.sprintf "(%s) Calling universe_of on %s"
+      (T.range_to_string (RU.range_of_term e))
+      (T.term_to_string e));
   let res = RTB.universe_of f e in
   res
 
-let rtb_check_subtyping g t1 t2 =
-  debug g (fun _ -> Printf.sprintf "Calling check_subtyping on %s <: %s"
-                                       (P.term_to_string t1)
-                                       (P.term_to_string t2));
+let rtb_check_subtyping g (t1 t2:term) =
+  debug g (fun _ ->
+    Printf.sprintf "(%s, %s) Calling check_subtyping on %s <: %s"
+        (T.range_to_string (t1.range))
+        (T.range_to_string (t2.range))
+        (P.term_to_string t1)
+        (P.term_to_string t2));
   let res = RTB.check_subtyping (elab_env g) (elab_term t1) (elab_term t2) in
   res
   
@@ -59,9 +71,11 @@ let rtb_instantiate_implicits g f t =
     res, iss
 
 let rtb_core_check_term_at_type g f e eff t =
-  debug g (fun _ -> Printf.sprintf "Calling core_check_term on %s and %s"
-                                       (T.term_to_string e)
-                                       (T.term_to_string t));
+  debug g (fun _ ->
+    Printf.sprintf "(%s) Calling core_check_term on %s and %s"
+                (T.range_to_string (RU.range_of_term e))
+                (T.term_to_string e)
+                (T.term_to_string t));
   let res = RTB.core_check_term f e t eff in
   res
 
@@ -74,8 +88,10 @@ let squash_prop_validity_token f p (t:prop_validity_token f (mk_squash p))
   = admit(); t
 
 let rtb_check_prop_validity (g:env) (f:_) (p:_) = 
-  debug g (fun _ -> Printf.sprintf "Calling check_prop_validity on %s"
-                                       (T.term_to_string p));
+  debug g (fun _ -> 
+    Printf.sprintf "(%s) Calling check_prop_validity on %s"
+          (T.range_to_string (RU.range_of_term p))
+          (T.term_to_string p));
   let sp = mk_squash p in
   let res, issues = RTB.check_prop_validity f sp in
   match res with

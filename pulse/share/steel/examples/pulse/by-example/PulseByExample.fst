@@ -49,7 +49,7 @@ fn ref_swap (r1 r2:ref int)
 open Pulse.Lib.Array
 module A = Pulse.Lib.Array
 module SZ = FStar.SizeT
-open Pulse.Class.BoundedIntegers
+open Pulse.Lib.BoundedIntegers
 
 (* 
   Things to note:

@@ -6,7 +6,7 @@ open FStar.Ghost
 module SZ = FStar.SizeT
 module Seq = FStar.Seq
 
-val array (a:Type u#0) : Type u#0
+val array ([@@@strictly_positive] a:Type u#0) : Type u#0
 
 val length (#a:Type u#0) (x:array a) : GTot nat
 

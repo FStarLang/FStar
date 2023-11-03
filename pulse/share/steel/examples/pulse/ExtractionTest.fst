@@ -77,8 +77,46 @@ fn fill_array (x:array U32.t) (n:SZ.t) (v:U32.t)
 }
 ```
 
+module SZ = FStar.SizeT
+let test0 (x:SZ.t) (y:(y:SZ.t { SZ.v y <> 0 })) = let open SZ in x %^ y
+type opt a =
+  | None
+  | Some : v:a -> opt a
+
+let my_safe_add (x y : SZ.t)
+  : o:opt SZ.t { Some? o ==> SZ.v (Some?.v o) == SZ.v x + SZ.v y } 
+  = let open SZ in
+    if x <=^ 0xffffsz
+    then (
+      if (y <=^ 0xffffsz -^ x)
+      then Some (x +^ y)
+      else None
+    )
+    else None
+     
 ```pulse
-fn extract_match (x:option bool)
+fn testbi (x:SZ.t) (y:(y:SZ.t { SZ.v y <> 0 }))
+  requires emp
+  returns z:SZ.t
+  ensures emp
+{
+  open SZ;
+  (x %^ y)
+}
+```
+
+```pulse
+fn testbi2 (x:SZ.t) (y:SZ.t)
+  requires emp
+  returns o:opt SZ.t
+  ensures emp
+{
+  (my_safe_add x y)
+}
+```
+
+```pulse
+fn extract_match (x:opt bool)
   requires emp
   returns b:bool
   ensures emp

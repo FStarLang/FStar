@@ -2,6 +2,9 @@ module ML = FStar_Extraction_ML_Syntax
 module UEnv = FStar_Extraction_ML_UEnv
 module MLTerm = FStar_Extraction_ML_Term
 module MLModul = FStar_Extraction_ML_Modul
+module Env = FStar_TypeChecker_Env
+module PC = FStar_Parser_Const
+module BU = FStar_Compiler_Util
 
 type uenv = UEnv.uenv
 type mlexpr = ML.mlexpr
@@ -105,7 +108,9 @@ let mlty_top : mlty = ML.MLTY_Top
 
 let normalize_for_extraction (g:uenv) (t:FStar_Syntax_Syntax.term)
   : FStar_Syntax_Syntax.term
-  = FStar_Extraction_ML_Term.normalize_for_extraction g t
+  = (* let extra = [] in *)
+    let res = FStar_Extraction_ML_Term.normalize_for_extraction g t in
+    res
 
 let term_as_mlexpr (g:uenv) (t:FStar_Syntax_Syntax.term) : (mlexpr * e_tag * mlty) =
   FStar_Extraction_ML_Term.term_as_mlexpr g t

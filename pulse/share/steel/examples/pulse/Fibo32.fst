@@ -1,7 +1,7 @@
 module Fibo32
 open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
-#push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
+#push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection' --fuel 2 --ifuel 2"
 
 
 let rec fib (n:nat) : nat =
@@ -14,9 +14,9 @@ let rec fib_mono (n:nat) (m:nat { m <= n})
   = if n = m then ()
     else fib_mono (n - 1) m
 
-open Pulse.Class.BoundedIntegers
+open Pulse.Lib.BoundedIntegers
 
-
+#push-options "--z3rlimit_factor 4 --z3refresh --log_queries --query_stats"
 ```pulse
 fn fibo32 (k:U32.t) (_:squash(0ul < k /\ fits #U32.t (fib (v k))))
   requires emp

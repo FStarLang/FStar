@@ -18,6 +18,7 @@ val is_range_zero (r:range) : Dv bool
 val union_ranges (r0 r1:range) : range
 val unfold_def (g:env) (nm:string) (fully:list string) (t:T.term) : option T.term   
 val env_set_range (g:env) (r:range) : g':env{g==g'}
+val env_set_context (g:env) (ctx:context) : g':env{g==g'}
 val embed_st_term_for_extraction (d:'a) (r:option range): T.term
 val unembed_st_term_for_extraction (d:T.term) : 'a
 module R = FStar.Reflection.V2
