@@ -79,7 +79,15 @@ val pts_to_not_null (#a:Type)
       (fun _ -> pts_to r p v)
       (requires True)
       (ensures fun _ -> r =!= null)
-                    
+
+/// A permission is always no greater than one
+val pts_to_perm (#a: _) (#u: _) (#p: _) (#v: _) (r: ref a)
+  : STGhost unit u
+      (pts_to r p v)
+      (fun _ -> pts_to r p v)
+      True
+      (fun _ -> p `lesser_equal_perm` full_perm)
+
 /// Allocating a reference returns full-permission to a non-null
 /// reference pointing to the initializer [x].
 ///

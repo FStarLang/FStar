@@ -57,6 +57,10 @@ let pts_to_not_null #a #opened #p #v r
   = extract_fact #opened (pts_to r p v) (r =!= null) (R.pts_to_not_null r p v);
     ()
 
+let pts_to_perm
+  r
+= coerce_ghost (fun _ -> R.pts_to_perm r)
+
 let alloc (#a:Type) (x:a)
   : ST (ref a)
       emp

@@ -122,6 +122,13 @@ let intro_pts_to (p:perm) #a #uses (#v:erased a) (r:ref a)
   = intro_pure (perm_ok p);
     rewrite_slprop (pts_to' r p v) (pts_to r p v) (fun _ -> ())
 
+let pts_to_perm
+  #_ #_ #p #v r
+= rewrite_slprop (pts_to r p v) (pts_to' r p v) (fun _ -> ());
+  elim_pure (perm_ok p);
+  intro_pure (perm_ok p);
+  rewrite_slprop (pts_to' r p v) (pts_to r p v) (fun _ -> ())
+
 let alloc #a x =
   let v = Some (x, full_perm) in
   assert (FStar.PCM.composable pcm_frac v None);

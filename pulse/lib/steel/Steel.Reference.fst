@@ -92,6 +92,10 @@ let pts_to_injective_eq #a #opened #p0 #p1 #v0 #v1 r =
     (fun m -> pts_to_ref_injective r p0 p1 v0 v1 m);
   rewrite_slprop (pts_to r p1 v1) (pts_to r p1 v0) (fun _ -> ())
 
+let pts_to_perm
+  r
+= H.pts_to_perm r
+
 let alloc_pt x =
   let r = H.alloc (U.raise_val x) in
   rewrite_slprop (H.pts_to r full_perm (U.raise_val x)) (pts_to r full_perm x) (fun _ -> ());

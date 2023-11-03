@@ -98,6 +98,14 @@ val pts_to_injective_eq
           (requires fun _ -> True)
           (ensures fun _ _ _ -> v0 == v1)
 
+/// A permission is always no greater than one
+val pts_to_perm (#a: _) (#u: _) (#p: _) (#v: _) (r: ref a)
+  : SteelGhost unit u
+      (pts_to r p v)
+      (fun _ -> pts_to r p v)
+      (fun _ -> True)
+      (fun _ _ _ -> p `lesser_equal_perm` full_perm)
+
 /// Allocates a reference with value [x]. We have full permission on the newly
 /// allocated reference.
 val alloc_pt (#a:Type) (x:a)
