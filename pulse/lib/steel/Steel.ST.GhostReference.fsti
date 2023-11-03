@@ -96,6 +96,20 @@ val write (#a:Type)
       (fun _ -> pts_to r full_perm x)
 
 /// Splitting ownership of a ghost reference
+
+val share_gen
+  (#t: Type)
+  (#opened: _)
+  (#p: perm)
+  (#v: t)
+  (r: ref t)
+  (p1 p2: perm)
+: STGhost unit opened
+    (pts_to r p v)
+    (fun _ -> pts_to r p1 v `star` pts_to r p2 v)
+    (p == p1 `sum_perm` p2)
+    (fun _ -> True)
+
 val share (#a:Type)
           (#u:_)
           (#p:perm)

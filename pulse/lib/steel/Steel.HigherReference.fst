@@ -220,37 +220,54 @@ let free (#a:Type) (#v:erased a) (r:ref a)
     RP.free r v_old;
     drop (RP.pts_to r (Mkpcm'?.one (Mkpcm?.p pcm_frac)))
 
-let share_atomic_raw #a #uses (#p:perm) (r:ref a{perm_ok p}) (v0:erased a)
-  : SteelGhostT unit uses
+let share_atomic_raw_gen #a #uses (#p:perm) (r:ref a{perm_ok p}) (v0:erased a) (p1 p2: perm)
+  : SteelGhost unit uses
                 (pts_to_raw r p v0)
-                (fun _ -> pts_to_raw r (half_perm p) v0 `star` pts_to_raw r (half_perm p) v0)
+                (fun _ -> pts_to_raw r p1 v0 `star` pts_to_raw r p2 v0)
+                (fun _ -> p == p1 `sum_perm` p2)
+                (fun _ _ _ -> True)
   = rewrite_slprop
       (pts_to_raw r p v0)
       (RP.pts_to r _)
       (fun _ -> ());
-    RP.split r (Some (Ghost.reveal v0, p)) (Some (Ghost.reveal v0, half_perm p)) (Some (Ghost.reveal v0, half_perm p));
+    RP.split r (Some (Ghost.reveal v0, p)) (Some (Ghost.reveal v0, p1)) (Some (Ghost.reveal v0, p2));
     rewrite_slprop
       (RP.pts_to r _)
-      (pts_to_raw r (half_perm p) v0)
+      (pts_to_raw r p1 v0)
       (fun _ -> ());
     rewrite_slprop
       (RP.pts_to r _)
-      (pts_to_raw r (half_perm p) v0)
+      (pts_to_raw r p2 v0)
       (fun _ -> ())
 
-let share (#a:Type) #uses (#p:perm) (#v:erased a) (r:ref a)
+let share_atomic_raw #a #uses (#p:perm) (r:ref a{perm_ok p}) (v0:erased a)
   : SteelGhostT unit uses
-               (pts_to r p v)
-               (fun _ -> pts_to r (half_perm p) v `star` pts_to r (half_perm p) v)
+                (pts_to_raw r p v0)
+                (fun _ -> pts_to_raw r (half_perm p) v0 `star` pts_to_raw r (half_perm p) v0)
+= share_atomic_raw_gen r v0 (half_perm p) (half_perm p)
+
+let share_gen (#a:Type) (#uses:_) (#p:perm) (#v:erased a) (r:ref a)
+  (p1 p2: perm)
+  : SteelGhost unit uses
+    (pts_to r p v)
+    (fun _ -> pts_to r p1 v `star` pts_to r p2 v)
+    (fun _ -> p == p1 `sum_perm` p2)
+    (fun _ _ _ -> True)
   = let v_old : erased (fractional a) = Ghost.hide (Some (Ghost.reveal v, p)) in
     rewrite_slprop
       (pts_to r p v)
       (pts_to' r p v)
       (fun _ -> ());
     elim_pure (perm_ok p);
-    share_atomic_raw r v;
-    intro_pts_to (half_perm p) r;
-    intro_pts_to (half_perm p) r
+    share_atomic_raw_gen r v p1 p2;
+    intro_pts_to p1 r;
+    intro_pts_to p2 r
+
+let share (#a:Type) #uses (#p:perm) (#v:erased a) (r:ref a)
+  : SteelGhostT unit uses
+               (pts_to r p v)
+               (fun _ -> pts_to r (half_perm p) v `star` pts_to r (half_perm p) v)
+= share_gen r (half_perm p) (half_perm p)
 
 let gather_atomic_raw (#a:Type) (#uses:_) (#p0 #p1:perm) (r:ref a) (v0:erased a) (v1:erased a)
   : SteelGhostT (_:unit{v0==v1 /\ perm_ok (sum_perm p0 p1)}) uses
@@ -419,6 +436,7 @@ let ghost_free #a #u #v r =
     as_atomic_action_ghost (free_action u r v_old);
     drop (RP.pts_to r (Mkpcm'?.one (Mkpcm?.p pcm_frac)))
 
+let ghost_share_gen r p1 p2 = share_gen (reveal r) p1 p2
 let ghost_share r = share (reveal r)
 let ghost_gather r = gather (reveal r)
 

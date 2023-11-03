@@ -79,6 +79,10 @@ let write (#a:Type)
       (fun _ -> pts_to r full_perm x)
   = coerce_ghost (fun _ -> R.ghost_write_pt r x)
 
+let share_gen
+  #_ #_ #_ #v r p1 p2
+= coerce_ghost (fun _ -> R.ghost_share_gen_pt #_ #_ #_ #v r p1 p2)
+
 let share (#a:Type)
           (#u:_)
           (#p:perm)

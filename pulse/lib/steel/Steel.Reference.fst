@@ -392,6 +392,10 @@ let ghost_alloc_pt (#a:Type) (#u:_) (x:erased a)
 
 let ghost_free_pt r = H.ghost_free r
 
+let ghost_share_gen_pt
+  #_ #_ #_ #x r p1 p2
+= H.ghost_share_gen #_ #_ #_ #(raise_erased x) r p1 p2
+
 let ghost_share_pt (#a:Type) (#u:_)
                 (#p:perm)
                 (#x:erased a)

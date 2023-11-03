@@ -208,6 +208,18 @@ val ghost_alloc (#a:Type) (#u:_) (x:erased a)
 val ghost_free (#a:Type) (#u:_) (#v:erased a) (r:ghost_ref a)
   : SteelGhostT unit u (ghost_pts_to r full_perm v) (fun _ -> emp)
 
+val ghost_share_gen (#a:Type) (#u:_)
+                (#p:perm)
+                (#x:erased a)
+                (r:ghost_ref a)
+                (p1 p2: perm)
+  : SteelGhost unit u
+    (ghost_pts_to r p x)
+    (fun _ -> ghost_pts_to r p1 x `star`
+           ghost_pts_to r p2 x)
+    (fun _ -> p == p1 `sum_perm` p2)
+    (fun _ _ _ -> True)
+
 val ghost_share (#a:Type) (#u:_)
                 (#p:perm)
                 (#x:erased a)
