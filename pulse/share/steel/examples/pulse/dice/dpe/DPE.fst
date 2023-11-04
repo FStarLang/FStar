@@ -16,6 +16,7 @@ module U32 = FStar.UInt32
 module HT = Pulse.Lib.HashTable
 module PHT = Pulse.Lib.HashTable.Spec
 open Pulse.Lib.BoundedIntegers
+open Pulse.Lib.OnRange
 
 assume
 val run_stt (#a:Type) (#post:a -> vprop) (f:stt a emp post) : a
@@ -24,55 +25,119 @@ val run_stt (#a:Type) (#post:a -> vprop) (f:stt a emp post) : a
 
 let ctxt_hndl_t = U32.t
 let sid_t = U32.t
-// The type of a hash table tupled with a lock storing permission on the table. 
-type locked_ht_t (kt:eqtype) (vt:Type0) = ht:ht_t kt vt & L.lock (exists_ (fun pht -> models ht pht))
-// The type of a session ID (SID) tupled with a lock storing permission on the SID
-type locked_sid_t = r:R.ref sid_t & L.lock (exists_ (fun n -> R.pts_to r n))
+noeq
+type session_state =
+  | SessionStart
+  | Available { handle:ctxt_hndl_t; context:context_t }
+  | InUse
 
-let dpe_hashf : ctxt_hndl_t -> US.t = admit()
-let sht_len : pos_us = admit()
-let cht_len : pos_us = admit()
-// Signature for a context table, which maps a context handle to a locked context
-let ctxt_hndl_table = locked_ht_t ctxt_hndl_t locked_context_t
-let sid_table = locked_ht_t sid_t ctxt_hndl_table
-// let cht_sig : pht_sig_us = mk_pht_sig_us ctxt_hndl_t locked_context_t dpe_hashf
-// // Signature for a session table, which map a session ID to a context table
-// let sht_sig : pht_sig_us = mk_pht_sig_us sid_t (locked_ht_t cht_sig) dpe_hashf 
+let session_state_perm (s:session_state) =
+  match s with
+  | SessionStart
+  | InUse -> emp
+  | Available { handle; context } ->
+    exists_ (fun repr -> context_perm context repr)
+
+let session_table_map = PHT.pht_t sid_t session_state
+
+let session_perm (stm:session_table_map) (sid:nat) =
+  if not(UInt.fits sid 32) then emp
+  else let sid = U32.uint_to_t sid in
+       match PHT.lookup stm sid with
+       | None -> emp
+       | Some s -> session_state_perm s
+
+let global_state_lock_pred
+  (session_id_counter: R.ref sid_t)
+  (session_table: ht_t sid_t session_state)
+: vprop
+= exists_ (fun stm ->
+  exists_ (fun sid ->
+    pts_to session_id_counter sid **
+    models session_table stm **
+    on_range (session_perm stm) 0 (U32.v sid)))
+  
+noeq
+type global_state_t = {
+  session_id_counter: R.ref sid_t;
+  session_table: ht_t sid_t session_state;
+  lock: L.lock (global_state_lock_pred session_id_counter session_table)
+}
+let mk_global_state
+      (sid_counter:R.ref sid_t)
+      (session_table:ht_t sid_t session_state)
+      (lock:L.lock (global_state_lock_pred sid_counter session_table))
+: global_state_t
+= { session_id_counter = sid_counter;
+    session_table = session_table;
+    lock = lock }
+
 assume Fits_size_t_u32 : squash (US.fits_u32)
-
 let sid_hash (x:sid_t) : US.t = US.of_u32 x
-let ctx_hash (x:ctxt_hndl_t) : US.t = US.of_u32 x
 
-// Function for allocating a locked hash table
+#push-options "--ext 'pulse:env_on_err' --print_implicits"
 ```pulse
-fn alloc_ht (kt:eqtype) (vt:Type0) (hashf:(kt -> US.t)) (l:pos_us)
+fn alloc_global_state (_:unit)
   requires emp
-  returns _:locked_ht_t kt vt
+  returns _:global_state_t
   ensures emp
 {
-  let ht = HT.alloc #kt #vt hashf l;
-  let lk = L.new_lock (exists_ (fun pht -> models ht pht));
-  ((| ht, lk |) <: locked_ht_t kt vt)
+  let sid_counter = R.alloc #sid_t 0ul;
+  let session_table = HT.alloc #sid_t #session_state sid_hash 256sz;
+  with stm. assert (models session_table stm);
+  Pulse.Lib.OnRange.on_range_empty #emp_inames (session_perm stm) 0;
+  fold (global_state_lock_pred sid_counter session_table);
+  let lock = L.new_lock (global_state_lock_pred sid_counter session_table);
+  mk_global_state sid_counter session_table lock
 }
 ```
-// The global session table, which associates a session ID with a context table for that session
-let locked_sht : sid_table = run_stt (alloc_ht sid_t ctxt_hndl_table sid_hash sht_len)
+let global_state : global_state_t = run_stt (alloc_global_state ())
 
-// Function for allocating a locked session ID
+(* Utilities to work with on_range (session_perm stm) *)
+(* <utilities on on_range> *)
+let session_table_eq_on_range  
+  (stm0 stm1:session_table_map)
+  (i j:nat)
+: prop
+= forall (k:sid_t). i <= U32.v k && U32.v k < j ==> PHT.lookup stm0 k == PHT.lookup stm1 k
+
 ```pulse
-fn alloc_sid (_:unit)
-  requires emp
-  returns _:locked_sid_t
-  ensures emp
+ghost
+fn frame_session_perm_at_sid 
+    (stm0 stm1:session_table_map)
+    (i j:nat)
+    (_:squash (session_table_eq_on_range stm0 stm1 i j))
+    (sid:(sid:nat { i <= sid /\ sid < j }))
+  requires
+    session_perm stm0 sid
+  ensures
+    session_perm stm1 sid
 {
-  let locked_sid = R.alloc #sid_t 0ul;
-  let lk = L.new_lock (exists_ (fun n -> R.pts_to locked_sid n));
-  ((| locked_sid, lk |) <: locked_sid_t)
+  rewrite (session_perm stm0 sid)
+      as  (session_perm stm1 sid)
 }
 ```
 
-// The global session ID counter, which tracks what the next session ID is
-let locked_sid : locked_sid_t = run_stt(alloc_sid ())
+```pulse
+ghost
+fn frame_session_perm_on_range
+    (stm0 stm1:session_table_map)
+    (i j:nat)
+  requires
+    on_range (session_perm stm0) i j **
+    pure (session_table_eq_on_range stm0 stm1 i j)
+  ensures
+    on_range (session_perm stm1) i j
+{
+  Pulse.Lib.OnRange.on_range_weaken #emp_inames
+    (session_perm stm0)
+    (session_perm stm1)
+    i j
+    (frame_session_perm_at_sid stm0 stm1 i j ())
+}
+```
+(* </utilities on on_range> *)
+
 
 
 (* ----------- IMPLEMENTATION ----------- *)
@@ -104,7 +169,7 @@ fn get_profile' (_:unit)
     (*session_migration_protocol=*)"" // irrelevant by supports_session_migration
     (*supports_default_context=*)false
     (*supports_context_handles=*)true 
-    (*max_contexts_per_session=*)(coerce_us cht_len) // cast to U32
+    (*max_contexts_per_session=*)1sz // 1 context per session
     (*max_context_handle_size=*)16sz // 16 bits
     (*supports_auto_init=*)false // irrelevant by supports_default_context
     (*supports_simulation=*)false
@@ -163,6 +228,34 @@ fn get_profile' (_:unit)
 ```
 let get_profile = get_profile'
 
+
+```pulse
+fn insert (#kt:eqtype) (#vt:Type0)
+          (ht:ht_t kt vt) (k:kt) (v:vt)
+          (#pht:erased (PHT.pht_t kt vt))
+  requires
+    models ht pht
+  returns b:bool
+  ensures
+    exists pht'.
+      models ht pht' **
+      pure (if b
+            then (PHT.not_full (reveal pht).repr /\
+                  pht'==PHT.insert pht k v)
+            else pht'==pht)
+{
+  let b = not_full ht;
+  if b
+  {
+    Pulse.Lib.HashTable.insert ht k v;
+  }
+  else
+  {
+    false
+  }
+}
+```
+
 (*
   OpenSession: Part of DPE API 
   Create a context table and context table lock for the new session. 
@@ -170,111 +263,62 @@ let get_profile = get_profile'
   ID or None upon failure
   NOTE: Current implementation disregards session protocol 
 *)
-// #push-options "--query_stats --debug DPE --debug_level SMTQuery"
 ```pulse
 fn open_session' (_:unit)
   requires emp
   returns _:option sid_t
   ensures emp
 {
-  let cht : locked_ht_t ctxt_hndl_t locked_context_t = alloc_ht ctxt_hndl_t locked_context_t ctx_hash cht_len;
-  let sht_lk = locked_sht._2;
-  let sid_lk = locked_sid._2;
-
-  L.acquire sid_lk;
-  L.acquire sht_lk;
-
-  let sid = !locked_sid._1;
-
-  let b = not_full locked_sht._1;
-  if b
+  L.acquire global_state.lock;
+  unfold (global_state_lock_pred global_state.session_id_counter global_state.session_table);
+  with pht0. assert (models global_state.session_table pht0);
+  with i j. assert (on_range (session_perm pht0) i j);
+  let sid = !global_state.session_id_counter;
+  assert pure (U32.v sid == j);
+  let opt_inc = sid `safe_add` 1ul;
+  match opt_inc
   {
-    let r = HT.insert #sid_t #ctxt_hndl_table locked_sht._1 sid cht;
-    if r 
+    None -> 
     {
-      let opt_inc = sid `safe_add` 1ul;
-      match opt_inc
-      {
-        Some inc ->
-        {
-          locked_sid._1 := inc;
-          L.release sid_lk;
-          L.release sht_lk;
-          Some sid
-        }
-        None ->
-        {
-          // ERROR - increment session ID failed
-          L.release sid_lk;
-          L.release sht_lk;
-          None #sid_t
-        }
-      }
-    } 
-    else
-    {
-      // ERROR - insert failed
-      L.release sid_lk;
-      L.release sht_lk;
+      fold (global_state_lock_pred global_state.session_id_counter global_state.session_table);
+      L.release global_state.lock;
       None #sid_t
     }
-  }
-  else
-  {
-    // ERROR - table full
-    L.release sid_lk;
-    L.release sht_lk;
-    None #sid_t
+    Some next_sid ->
+    {
+      let r = insert global_state.session_table sid SessionStart;
+      if r 
+      {
+        global_state.session_id_counter := next_sid;
+        with pht1. assert (models global_state.session_table pht1);
+        frame_session_perm_on_range pht0 pht1 i j;
+        rewrite emp as (session_perm pht1 j);
+        Pulse.Lib.OnRange.on_range_snoc #emp_inames () #(session_perm pht1);
+        fold (global_state_lock_pred global_state.session_id_counter global_state.session_table);
+        L.release global_state.lock;
+        Some sid
+      } 
+      else
+      {
+        with pht1. rewrite (models global_state.session_table pht1)
+                        as (models global_state.session_table pht0);    
+        // ERROR - insert failed
+        fold (global_state_lock_pred global_state.session_id_counter global_state.session_table);
+        L.release global_state.lock;
+        None #sid_t
+      }
+    }
   }
 }
 ```
 let open_session = open_session'
 
-assume
-val drop (p:vprop)
-    : stt unit p (fun _ -> emp)
-```pulse
-fn disable_uds (_:unit) 
-    requires uds_is_enabled
-    ensures emp
-{
-    drop uds_is_enabled
-}
-```
 assume val dbg : vprop
+
 let uds_of_engine_context_repr (r:_{Engine_context_repr? r}) : erased (Seq.seq U8.t)=
   match r with
   | Engine_context_repr uds_bytes -> uds_bytes
 
-// ```pulse
-// ghost
-// fn get_engine_context_perm (c:engine_context_t) (repr:erased context_repr_t)
-//   requires context_perm (Engine_context c) repr
-//   returns uds:Ghost.erased (Seq.seq U8.t)
-//   ensures engine_context_perm c uds ** pure (repr == Engine_context_repr uds)
-// {
-//   let repr = reveal repr;
-//   match repr {
-//     Engine_context_repr uds -> {
-//       rewrite (context_perm (Engine_context c) repr)
-//           as  (engine_context_perm c uds);
-//       hide uds
-//     }
-//     L0_context_repr r0 -> {
-//       rewrite (context_perm (Engine_context c) repr)
-//           as  (pure False);
-//       let x = elim_false (engine_context_perm c);
-//       hide x
-//     }
-//     L1_context_repr _ -> {
-//       rewrite (context_perm (Engine_context c) repr)
-//           as  (pure False);
-//       let x = elim_false (engine_context_perm c);
-//       hide x
-//     }
-//   }
-// }
-// ```
 
 ```pulse 
 fn destroy_ctxt (ctxt:context_t) (#repr:erased context_repr_t)
@@ -316,17 +360,141 @@ fn destroy_ctxt (ctxt:context_t) (#repr:erased context_repr_t)
 }
 ```
 
-```pulse 
-fn destroy_locked_ctxt (locked_ctxt:locked_context_t)
+let opt #a (p:a -> vprop) (x:option a) : vprop =
+  match x with
+  | None -> emp
+  | Some x -> p x
+
+let available_session_state_perm (s:session_state) =
+  session_state_perm s ** pure (Available? s)
+
+```pulse
+fn return_none (a:Type0) (#p:(a -> vprop))
   requires emp
-  ensures emp
+  returns o:option a
+  ensures opt p o
 {
-  let ctxt = locked_ctxt._1;
-  let repr = locked_ctxt._2;
-  let ctxt_lk = locked_ctxt._3;
-  // TODO: would be nice to use a rename here, to transfer ownership to ctxt_lk
-  L.acquire locked_ctxt._3;
-  destroy_ctxt locked_ctxt._1;
+  rewrite emp as (opt p (None #a));
+  None #a
+}
+```
+
+let dflt #a (x:option a) (y:a) =
+  match x with
+  | Some v -> v
+  | _ -> y
+
+```pulse
+fn take_session_state (sid:sid_t) (replace:session_state)
+   requires session_state_perm replace
+   returns r:option session_state
+   ensures session_state_perm (dflt r replace)
+  {
+    L.acquire global_state.lock;
+    unfold (global_state_lock_pred global_state.session_id_counter global_state.session_table);
+    let max_sid = !global_state.session_id_counter;
+    if U32.(sid < max_sid)
+    {
+      with stm. assert (on_range (session_perm stm) 0 (U32.v max_sid));
+      assert (models global_state.session_table stm);
+      let ss = HT.lookup global_state.session_table sid;
+      assert (models global_state.session_table stm);
+      if fst ss
+      {
+        match snd ss 
+        {
+          Some st ->
+          {
+            let ok = insert global_state.session_table sid replace;
+            if ok
+            {
+              Pulse.Lib.OnRange.on_range_get #emp_inames (U32.v sid);
+              rewrite (session_perm stm (U32.v sid))
+                   as (session_state_perm st);
+              with stm'. assert (models global_state.session_table stm');
+              frame_session_perm_on_range stm stm' 0 (U32.v sid);
+              // with stm0. assert (on_range (session_perm stm0) 
+              //                             (U32.v sid `Prims.op_Addition` 1)
+              //                             (U32.v max_sid));
+              frame_session_perm_on_range stm stm' (U32.v sid `Prims.op_Addition` 1) (U32.v max_sid);
+              rewrite (session_state_perm replace)
+                  as  (session_perm stm' (U32.v sid));
+              Pulse.Lib.OnRange.on_range_put #emp_inames 
+                    0 (U32.v sid) (U32.v max_sid)
+                    #(session_perm stm');
+              fold (global_state_lock_pred global_state.session_id_counter global_state.session_table);
+              L.release global_state.lock;
+              Some st
+            }
+            else
+            {
+              assert (models global_state.session_table stm);
+              fold (global_state_lock_pred global_state.session_id_counter global_state.session_table);
+              L.release global_state.lock;
+              None #session_state
+              // return_none session_state #(session_state_perm)
+            }
+          }
+
+          None -> 
+          {
+            fold (global_state_lock_pred global_state.session_id_counter global_state.session_table);
+            L.release global_state.lock;
+            None #session_state
+            // return_none session_state #(session_state_perm)
+          }
+        }
+      }
+      else 
+      {
+        fold (global_state_lock_pred global_state.session_id_counter global_state.session_table);
+        L.release global_state.lock;
+        None #session_state
+        // return_none session_state #(session_state_perm)
+      }
+    }
+    else
+    {
+      fold (global_state_lock_pred global_state.session_id_counter global_state.session_table);
+      L.release global_state.lock;
+      None #session_state
+      // return_none session_state #(session_state_perm)
+    }
+  }
+  ```
+
+// ```pulse 
+// fn destroy_locked_ctxt (locked_ctxt:locked_context_t)
+//   requires emp
+//   ensures emp
+// {
+//   let ctxt = locked_ctxt._1;
+//   let repr = locked_ctxt._2;
+//   let ctxt_lk = locked_ctxt._3;
+//   // TODO: would be nice to use a rename here, to transfer ownership to ctxt_lk
+//   L.acquire locked_ctxt._3;
+//   destroy_ctxt locked_ctxt._1;
+// }
+// ```
+
+let ctxt_of (s:session_state { Available? s })
+  : context_t
+  = let Available { context } = s in context
+
+```pulse
+ghost
+fn elim_session_state_perm_available (s:(s:session_state { Available? s }))
+  requires session_state_perm s 
+  ensures exists r. context_perm (ctxt_of s) r 
+{
+  match s
+  {
+    Available ctxt ->
+    {
+      unfold (session_state_perm s);
+      admit()
+    }
+  }
 }
 ```
 
@@ -343,66 +511,48 @@ fn destroy_context' (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
   returns b:bool
   ensures emp
 {
-  let sht_lk = locked_sht._2;
-  rewrite each locked_sht._2 as sht_lk;
-  L.acquire sht_lk;
-
-  let res = HT.lookup locked_sht._1 sid;
-  if (fst res) 
+  rewrite emp as (session_state_perm SessionStart);
+  let st = take_session_state sid SessionStart;
+  match st
   {
-    let opt_locked_cht = snd res;
-    match opt_locked_cht
+    None ->
     {
-      Some locked_cht ->
+      with s. rewrite (session_state_perm s) as emp;
+      false
+    }
+
+  
+    Some st ->
+    {
+      with s. rewrite (session_state_perm s)
+                   as (session_state_perm st);
+      match st
       {
-        let cht_lk = locked_cht._2;
-        rewrite each locked_cht._2 as cht_lk;
-        L.acquire cht_lk;
-        let res = HT.lookup locked_cht._1 ctxt_hndl;
-        if (fst res)
+        Available ctxt ->
         {
-          let opt_locked_ctxt = snd res;
-          match opt_locked_ctxt
-          {
-            Some locked_ctxt ->
-            {
-              destroy_locked_ctxt locked_ctxt;
-              L.release cht_lk;
-              L.release sht_lk;
-              true
-            }
-            None -> {
-              // ERROR - bad context handle
-              L.release cht_lk;
-              L.release sht_lk;
-              false
-            }
-          }
+          elim_session_state_perm_available st;
+          destroy_ctxt (ctxt_of st);
+          true
         }
-        else
+
+        SessionStart ->
         {
-          // ERROR - lookup failed
-          L.release cht_lk;
-          L.release sht_lk;
+          rewrite (session_state_perm st) as emp;
           false
         }
-      }
-      None ->
-      {
-        // ERROR - bad session ID
-        L.release sht_lk;
-        false
+
+        InUse -> 
+        {
+          rewrite (session_state_perm st) as emp;
+          false
+        }
+
       }
     }
   }
-  else
-  {
-    // ERROR - lookup failed
-    L.release sht_lk;
-    false
-  }
 }
 ```
+
 let destroy_context = destroy_context'
 
 ```pulse

@@ -50,7 +50,8 @@ let is_smt_fallback (t:R.term) : bool =
   match R.inspect_ln t with
   | R.Tv_FVar fv ->
     let name = R.inspect_fv fv in
-    name = ["Steel";"Effect";"Common";"smt_fallback"]
+    name = ["Steel";"Effect";"Common";"smt_fallback"] ||
+    name = ["Pulse"; "Lib"; "Core"; "equate_by_smt"]
   | _ -> false
 
 (*
