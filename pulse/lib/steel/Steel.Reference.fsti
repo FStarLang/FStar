@@ -135,6 +135,19 @@ val free_pt (#a:Type0) (#v:erased a) (r:ref a)
 
 /// Splits the permission on reference [r] into two.
 /// This function is computationally irrelevant (it has effect SteelGhost)
+
+val share_gen_pt (#a:Type0)
+          (#uses:_)
+          (#p:perm)
+          (#v: a)
+          (r:ref a)
+          (p1 p2: perm)
+  : SteelGhost unit uses
+      (pts_to r p v)
+      (fun _ -> pts_to r p1 v `star` pts_to r p2 v)
+      (fun _ -> p == p1 `sum_perm` p2)
+      (fun _ _ _ -> True)
+
 val share_pt (#a:Type0) (#uses:_) (#p:perm) (#v:erased a) (r:ref a)
   : SteelGhostT unit uses
     (pts_to r p v)

@@ -133,6 +133,13 @@ let free_pt #a #v r =
   rewrite_slprop (pts_to r full_perm v) (H.pts_to r full_perm v') (fun _ -> ());
   H.free r
 
+let share_gen_pt #a #uses #p #v r p1 p2 =
+  let v' = Ghost.hide (U.raise_val (Ghost.reveal v)) in
+  rewrite_slprop (pts_to r p v) (H.pts_to r p v') (fun _ -> ());
+  H.share_gen r p1 p2;
+  rewrite_slprop (H.pts_to r p1 v') (pts_to r p1 v) (fun _ -> ());
+  rewrite_slprop (H.pts_to r p2 v') (pts_to r p2 v) (fun _ -> ())
+
 let share_pt #a #uses #p #v r =
   let v' = Ghost.hide (U.raise_val (Ghost.reveal v)) in
   rewrite_slprop (pts_to r p v) (H.pts_to r p v') (fun _ -> ());

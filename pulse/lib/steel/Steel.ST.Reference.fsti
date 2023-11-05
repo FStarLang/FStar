@@ -190,6 +190,19 @@ val with_named_local
 
 /// Splits the permission on reference [r] into two. This function is
 /// computationally irrelevant (it has effect SteelGhost)
+
+val share_gen (#a:Type0)
+          (#uses:_)
+          (#p:perm)
+          (#v: a)
+          (r:ref a)
+          (p1 p2: perm)
+  : STGhost unit uses
+      (pts_to r p v)
+      (fun _ -> pts_to r p1 v `star` pts_to r p2 v)
+      (p == p1 `sum_perm` p2)
+      (fun _ -> True)
+
 val share (#a:Type0)
           (#uses:_)
           (#p:perm)

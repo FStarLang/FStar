@@ -169,6 +169,10 @@ let with_named_local
   _free_and_pop_frame r;
   return v
 
+let share_gen
+  r p1 p2
+= coerce_ghost (fun _ -> R.share_gen_pt r p1 p2)
+
 let share (#a:Type0)
           (#uses:_)
           (#p:perm)
