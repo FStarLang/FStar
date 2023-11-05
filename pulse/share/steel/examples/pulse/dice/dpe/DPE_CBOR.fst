@@ -41,16 +41,16 @@ fn finish (c:read_cbor_success_t)
           (#v:erased (raw_data_item))
           (#s:erased (Seq.seq U8.t))
           (#rem:erased (Seq.seq U8.t))
-  requires `@((raw_data_item_match c.read_cbor_payload v **
+  requires `@((raw_data_item_match full_perm c.read_cbor_payload v **
                A.pts_to c.read_cbor_remainder #p rem) @==>
               A.pts_to input #p s) **
-            raw_data_item_match c.read_cbor_payload v **
+            raw_data_item_match full_perm c.read_cbor_payload v **
             A.pts_to c.read_cbor_remainder #p rem **
             uds_is_enabled
   returns _:option ctxt_hndl_t
   ensures A.pts_to input #p s
 {
-   elim_implies ()  #(raw_data_item_match c.read_cbor_payload v **
+   elim_implies ()  #(raw_data_item_match full_perm c.read_cbor_payload v **
                             A.pts_to c.read_cbor_remainder #p rem)
                             #(A.pts_to input #p s);
     drop uds_is_enabled;
@@ -85,7 +85,7 @@ fn initialize_context (len:SZ.t)
       ParseSuccess c ->
       {
         unfold (read_cbor_success_post input p s c); //How can this match against the `match ... `
-        with v. assert (raw_data_item_match c.read_cbor_payload v);
+        with v. assert (raw_data_item_match full_perm c.read_cbor_payload v);
         with rem. assert (A.pts_to c.read_cbor_remainder #p rem);
         let major_type = cbor_get_major_type c.read_cbor_payload;
         if (major_type = major_type_array)
@@ -99,8 +99,8 @@ fn initialize_context (len:SZ.t)
                 {
                     let cbor_int = destr_cbor_int64 i0;
                     let sid = cbor_int.cbor_int_value;
-                    with va'. assert (raw_data_item_match i0 va');
-                    elim_implies () #(raw_data_item_match i0 va') #(raw_data_item_match c.read_cbor_payload v);
+                    with va'. assert (raw_data_item_match full_perm i0 va');
+                    elim_implies () #(raw_data_item_match full_perm i0 va') #(raw_data_item_match full_perm c.read_cbor_payload v);
                     let i1 = cbor_array_index c.read_cbor_payload 1sz;
                     let major_type = cbor_get_major_type i1;
                     if (major_type = major_type_byte_string)
@@ -128,7 +128,7 @@ fn initialize_context (len:SZ.t)
             }
             else 
             {
-                elim_implies ()  #(raw_data_item_match c.read_cbor_payload v **
+                elim_implies ()  #(raw_data_item_match full_perm c.read_cbor_payload v **
                                 A.pts_to c.read_cbor_remainder #p rem)
                                 #(A.pts_to input #p s);
                 drop uds_is_enabled;
@@ -140,7 +140,7 @@ fn initialize_context (len:SZ.t)
             // finish c #p #v #rem #s
             // elim_implies (); this could work, except this has a ** on the left of the @==>
             //                  which remains uninterpreted by Pulse and then unification fails
-            elim_implies ()  #(raw_data_item_match c.read_cbor_payload v **
+            elim_implies ()  #(raw_data_item_match full_perm c.read_cbor_payload v **
                             A.pts_to c.read_cbor_remainder #p rem)
                             #(A.pts_to input #p s);
             drop uds_is_enabled;

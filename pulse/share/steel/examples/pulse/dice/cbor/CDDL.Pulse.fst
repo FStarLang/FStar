@@ -14,12 +14,13 @@ let impl_typ
 : Tot Type
 =
     (c: cbor) ->
+    (#p: perm) ->
     (#v: Ghost.erased raw_data_item) ->
     stt bool
-        (raw_data_item_match c v ** pure (
+        (raw_data_item_match p c v ** pure (
             opt_precedes (Ghost.reveal v) b
         ))
-        (fun res -> raw_data_item_match c v ** pure (
+        (fun res -> raw_data_item_match p c v ** pure (
             opt_precedes (Ghost.reveal v) b /\
             res == t v
         ))
@@ -30,16 +31,17 @@ let eval_impl_typ
     (#t: bounded_typ_gen b)
     (f: impl_typ t)
     (c: cbor)
+    (#p: perm)
     (#v: Ghost.erased raw_data_item)
 :   stt bool
-        (raw_data_item_match c v ** pure (
+        (raw_data_item_match p c v ** pure (
             opt_precedes (Ghost.reveal v) (Ghost.reveal b)
         ))
-        (fun res -> raw_data_item_match c v ** pure (
+        (fun res -> raw_data_item_match p c v ** pure (
             opt_precedes (Ghost.reveal v) (Ghost.reveal b) /\
             res == t v
         ))
-= f c #v
+= f c #p #v
 
 inline_for_extraction noextract
 ```pulse
@@ -48,14 +50,15 @@ fn impl_coerce_to_bounded_typ'
     (#t: typ)
     (f: impl_typ t)
     (c: cbor)
+    (#p: perm)
     (#v: Ghost.erased raw_data_item)
 requires
-        (raw_data_item_match c v ** pure (
+        (raw_data_item_match p c v ** pure (
             opt_precedes (Ghost.reveal v) (Ghost.reveal b)
         ))
 returns res: bool
 ensures
-        (raw_data_item_match c v ** pure (
+        (raw_data_item_match p c v ** pure (
             opt_precedes (Ghost.reveal v) (Ghost.reveal b) /\
             res == coerce_to_bounded_typ b t v
         ))
@@ -80,14 +83,15 @@ fn impl_t_choice'
     (f1: impl_typ t1)
     (f2: impl_typ t2)
     (c: cbor)
+    (#p: perm)
     (#v: Ghost.erased raw_data_item)
 requires
-        (raw_data_item_match c v ** pure (
+        (raw_data_item_match p c v ** pure (
             opt_precedes (Ghost.reveal v) (Ghost.reveal b)
         ))
 returns res: bool
 ensures
-        (raw_data_item_match c v ** pure (
+        (raw_data_item_match p c v ** pure (
             opt_precedes (Ghost.reveal v) (Ghost.reveal b) /\
             res == t_choice t1 t2 v
         ))
@@ -115,14 +119,15 @@ inline_for_extraction noextract
 ```pulse
 fn impl_uint'
     (c: cbor)
+    (#p: perm)
     (#v: Ghost.erased raw_data_item)
 requires
-        (raw_data_item_match c v ** pure (
+        (raw_data_item_match p c v ** pure (
             opt_precedes (Ghost.reveal v) (None #raw_data_item)
         ))
 returns res: bool
 ensures
-        (raw_data_item_match c v ** pure (
+        (raw_data_item_match p c v ** pure (
             opt_precedes (Ghost.reveal v) (None #raw_data_item) /\
             res == uint v
         ))
@@ -140,14 +145,15 @@ inline_for_extraction noextract
 ```pulse
 fn impl_bytes'
     (c: cbor)
+    (#p: perm)
     (#v: Ghost.erased raw_data_item)
 requires
-        (raw_data_item_match c v ** pure (
+        (raw_data_item_match p c v ** pure (
             opt_precedes (Ghost.reveal v) (None #raw_data_item)
         ))
 returns res: bool
 ensures
-        (raw_data_item_match c v ** pure (
+        (raw_data_item_match p c v ** pure (
             opt_precedes (Ghost.reveal v) (None #raw_data_item) /\
             res == bytes v
         ))
@@ -168,17 +174,18 @@ let impl_array_group3
 : Tot Type
 =
     (pi: R.ref cbor_array_iterator_t) ->
+    (#p: perm) ->
     (#i: Ghost.erased cbor_array_iterator_t) ->
     (#l: Ghost.erased (list raw_data_item)) ->
     stt bool
         (R.pts_to pi i **
-            cbor_array_iterator_match i l **
+            cbor_array_iterator_match p i l **
             pure (opt_precedes (Ghost.reveal l) b)
         )
         (fun res -> exists_ (fun i' -> exists_ (fun l' ->
             R.pts_to pi i' **
-            cbor_array_iterator_match i' l' **
-            (cbor_array_iterator_match i' l' @==> cbor_array_iterator_match i l) **
+            cbor_array_iterator_match p i' l' **
+            (cbor_array_iterator_match p i' l' @==> cbor_array_iterator_match p i l) **
             pure (
                 opt_precedes (Ghost.reveal l) b /\
                 res == Some? (g l) /\
@@ -192,24 +199,25 @@ let eval_impl_array_group3
     (#g: array_group3 b)
     (ig: impl_array_group3 g)
     (pi: R.ref cbor_array_iterator_t)
+    (#p: perm)
     (#i: Ghost.erased cbor_array_iterator_t)
     (#l: Ghost.erased (list raw_data_item))
 :   stt bool
         (R.pts_to pi i **
-            cbor_array_iterator_match i l **
+            cbor_array_iterator_match p i l **
             pure (opt_precedes (Ghost.reveal l) b)
         )
         (fun res -> exists_ (fun i' -> exists_ (fun l' ->
             R.pts_to pi i' **
-            cbor_array_iterator_match i' l' **
-            (cbor_array_iterator_match i' l' @==> cbor_array_iterator_match i l) **
+            cbor_array_iterator_match p i' l' **
+            (cbor_array_iterator_match p i' l' @==> cbor_array_iterator_match p i l) **
             pure (
                 opt_precedes (Ghost.reveal l) b /\
                 res == Some? (g l) /\
                 (res == true ==> Some?.v (g l) == l')
             )
         )))
-= ig pi #i #l
+= ig pi #p #i #l
 
 assume val elim_stick0
   (_: unit)
@@ -230,6 +238,7 @@ fn intro_impl_array_group3_post
     (#b: option raw_data_item)
     (g: array_group3 b)
     (pi: R.ref cbor_array_iterator_t)
+    (p: perm)
     (i: cbor_array_iterator_t)
     (l: list raw_data_item)
     (res: bool)
@@ -238,8 +247,8 @@ fn intro_impl_array_group3_post
 requires
     (
             R.pts_to pi i' **
-            cbor_array_iterator_match i' l' **
-            `@(cbor_array_iterator_match i' l' @==> cbor_array_iterator_match i l) **
+            cbor_array_iterator_match p i' l' **
+            `@(cbor_array_iterator_match p i' l' @==> cbor_array_iterator_match p i l) **
             pure (
                 opt_precedes (Ghost.reveal l) b /\
                 res == Some? (g l) /\
@@ -249,8 +258,8 @@ requires
 ensures
         (exists_ (fun i' -> exists_ (fun l' ->
             R.pts_to pi i' **
-            cbor_array_iterator_match i' l' **
-            (cbor_array_iterator_match i' l' @==> cbor_array_iterator_match i l) **
+            cbor_array_iterator_match p i' l' **
+            (cbor_array_iterator_match p i' l' @==> cbor_array_iterator_match p i l) **
             pure (
                 opt_precedes (Ghost.reveal l) b /\
                 res == Some? (g l) /\
@@ -296,19 +305,20 @@ fn impl_array_group3_concat'
     (#g2: array_group3 b)
     (f2: impl_array_group3 g2)
     (pi: R.ref cbor_array_iterator_t)
+    (#p: perm)
     (#gi: Ghost.erased cbor_array_iterator_t)
     (#l: Ghost.erased (list raw_data_item))
 requires
         (R.pts_to pi gi **
-            cbor_array_iterator_match gi l **
+            cbor_array_iterator_match p gi l **
             pure (opt_precedes (Ghost.reveal l) (Ghost.reveal b))
         )
 returns res: bool
 ensures
         (exists_ (fun i' -> exists_ (fun l' ->
             R.pts_to pi i' **
-            cbor_array_iterator_match i' l' **
-            (cbor_array_iterator_match i' l' @==> cbor_array_iterator_match gi l) **
+            cbor_array_iterator_match p i' l' **
+            (cbor_array_iterator_match p i' l' @==> cbor_array_iterator_match p gi l) **
             pure (
                 opt_precedes (Ghost.reveal l) (Ghost.reveal b) /\
                 res == Some? (array_group3_concat g1 g2 l) /\
@@ -344,19 +354,20 @@ fn impl_array_group3_item'
     (#ty: bounded_typ_gen b)
     (fty: impl_typ ty)
     (pi: R.ref cbor_array_iterator_t)
+    (#p: perm)
     (#gi: Ghost.erased cbor_array_iterator_t)
     (#l: Ghost.erased (list raw_data_item))
 requires
         (R.pts_to pi gi **
-            cbor_array_iterator_match gi l **
+            cbor_array_iterator_match p gi l **
             pure (opt_precedes (Ghost.reveal l) (Ghost.reveal b))
         )
 returns res: bool
 ensures
         (exists_ (fun i' -> exists_ (fun l' ->
             R.pts_to pi i' **
-            cbor_array_iterator_match i' l' **
-            (cbor_array_iterator_match i' l' @==> cbor_array_iterator_match gi l) **
+            cbor_array_iterator_match p i' l' **
+            (cbor_array_iterator_match p i' l' @==> cbor_array_iterator_match p gi l) **
             pure (
                 opt_precedes (Ghost.reveal l) (Ghost.reveal b) /\
                 res == Some? (array_group3_item ty l) /\
@@ -365,35 +376,35 @@ ensures
         )))
 {
     let i = !pi;
-    rewrite (cbor_array_iterator_match gi l) as (cbor_array_iterator_match i l);
+    rewrite (cbor_array_iterator_match p gi l) as (cbor_array_iterator_match p i l);
     let is_done = cbor_array_iterator_is_done i;
-    rewrite (cbor_array_iterator_match i l) as (cbor_array_iterator_match gi l);
+    rewrite (cbor_array_iterator_match p i l) as (cbor_array_iterator_match p gi l);
     if (is_done) {
-        stick_refl0 (cbor_array_iterator_match gi l);
-        intro_impl_array_group3_post (array_group3_item ty) pi gi l false gi l; // FIXME: WHY WHY WHY? and also WHY WHY WHY here and not in the other "false" case below?
+        stick_refl0 (cbor_array_iterator_match p gi l);
+        intro_impl_array_group3_post (array_group3_item ty) pi p gi l false gi l; // FIXME: WHY WHY WHY? and also WHY WHY WHY here and not in the other "false" case below?
         false
     } else {
-        let c = cbor_array_iterator_next pi #l #gi; // FIXME: WHY WHY WHY those explicit arguments?
+        let c = cbor_array_iterator_next pi #p #l #gi; // FIXME: WHY WHY WHY those explicit arguments?
         with gc i' l' . assert (
-            raw_data_item_match c gc **
-            cbor_array_iterator_match i' l' **
-            `@((raw_data_item_match c gc ** cbor_array_iterator_match i' l') @==> cbor_array_iterator_match gi l)
+            raw_data_item_match p c gc **
+            cbor_array_iterator_match p i' l' **
+            `@((raw_data_item_match p c gc ** cbor_array_iterator_match p i' l') @==> cbor_array_iterator_match p gi l)
         ); // this is needed for the explicit arguments to split_consume_l below
         let test = eval_impl_typ fty c;
         if (test) {
             stick_consume_l ()
-                #(raw_data_item_match c gc)
-                #(cbor_array_iterator_match i' l')
-                #(cbor_array_iterator_match gi l) // FIXME: WHY WHY WHY those explicit arguments? (for which the with above is needed)
+                #(raw_data_item_match p c gc)
+                #(cbor_array_iterator_match p i' l')
+                #(cbor_array_iterator_match p gi l) // FIXME: WHY WHY WHY those explicit arguments? (for which the with above is needed)
             ;
             true
         } else {
             elim_stick0 ()
-                #(raw_data_item_match c gc ** cbor_array_iterator_match i' l')
-                #(cbor_array_iterator_match gi l); // FIXME: WHY WHY WHY those explicit arguments?
+                #(raw_data_item_match p c gc ** cbor_array_iterator_match p i' l')
+                #(cbor_array_iterator_match p gi l); // FIXME: WHY WHY WHY those explicit arguments?
             pi := i;
             rewrite (R.pts_to pi i) as (R.pts_to pi gi);
-            stick_refl0 (cbor_array_iterator_match gi l);
+            stick_refl0 (cbor_array_iterator_match p gi l);
             false
         }
     }
@@ -415,13 +426,14 @@ fn impl_t_array'
     (g: (array_group3 b))
     (ig: (impl_array_group3 (g)))
     (c: cbor)
+    (#p: perm)
     (#v: Ghost.erased raw_data_item)
 requires
-    raw_data_item_match c v **
+    raw_data_item_match p c v **
     pure (opt_precedes (Ghost.reveal v) (Ghost.reveal b))
 returns res: bool
 ensures
-    raw_data_item_match c v **
+    raw_data_item_match p c v **
     pure (
         opt_precedes (Ghost.reveal v) (Ghost.reveal b) /\
         res == t_array3 g v
@@ -430,17 +442,17 @@ ensures
     let ty = cbor_get_major_type c;
     if (ty = major_type_array) {
         let i = cbor_array_iterator_init c;
-        with l . assert (cbor_array_iterator_match i l);
-        rewrite (cbor_array_iterator_match i l) as (cbor_array_iterator_match (Ghost.reveal (Ghost.hide i)) l);
+        with l . assert (cbor_array_iterator_match p i l);
+        rewrite (cbor_array_iterator_match p i l) as (cbor_array_iterator_match p (Ghost.reveal (Ghost.hide i)) l);
         let mut pi = i;
         let b_success = eval_impl_array_group3 ig pi;
-        with gi' l' . assert (cbor_array_iterator_match gi' l');
+        with gi' l' . assert (cbor_array_iterator_match p gi' l');
         let i' = ! pi;
-        rewrite (cbor_array_iterator_match gi' l') as (cbor_array_iterator_match i' l');
+        rewrite (cbor_array_iterator_match p gi' l') as (cbor_array_iterator_match p i' l');
         let b_end = cbor_array_iterator_is_done i';
-        rewrite (cbor_array_iterator_match i' l') as (cbor_array_iterator_match gi' l');
+        rewrite (cbor_array_iterator_match p i' l') as (cbor_array_iterator_match p gi' l');
         elim_stick0 ();
-        rewrite (cbor_array_iterator_match (Ghost.reveal (Ghost.hide i)) l) as (cbor_array_iterator_match i l);
+        rewrite (cbor_array_iterator_match p (Ghost.reveal (Ghost.hide i)) l) as (cbor_array_iterator_match p i l);
         elim_stick0 ();
         (b_success && b_end)
     } else {
@@ -481,9 +493,9 @@ let read_cbor_with_typ_success_post
   (c: read_cbor_success_t)
 : Tot vprop
 = exists_ (fun v -> exists_ (fun rem ->
-    raw_data_item_match c.read_cbor_payload v **
+    raw_data_item_match full_perm c.read_cbor_payload v **
     A.pts_to c.read_cbor_remainder #p rem **
-    ((raw_data_item_match c.read_cbor_payload v ** A.pts_to c.read_cbor_remainder #p rem) @==>
+    ((raw_data_item_match full_perm c.read_cbor_payload v ** A.pts_to c.read_cbor_remainder #p rem) @==>
       A.pts_to a #p va) **
     pure (read_cbor_with_typ_success_postcond t va c v rem)
   ))
@@ -561,11 +573,11 @@ ensures read_cbor_with_typ_post t a p va res
             rewrite (read_cbor_with_typ_success_post t a p va sres) as (read_cbor_with_typ_post t a p va res);
             res
         } else {
-            with v . assert (raw_data_item_match sres.read_cbor_payload v);
+            with v . assert (raw_data_item_match full_perm sres.read_cbor_payload v);
             with vrem . assert (A.pts_to sres.read_cbor_remainder #p vrem);
             read_cbor_with_typ_error_postcond_intro_typ_fail t va sres v vrem;
             elim_stick0 ()
-                #(raw_data_item_match sres.read_cbor_payload v ** A.pts_to sres.read_cbor_remainder #p vrem);
+                #(raw_data_item_match full_perm sres.read_cbor_payload v ** A.pts_to sres.read_cbor_remainder #p vrem);
             fold (read_cbor_with_typ_error_post t a p va);
             rewrite (read_cbor_with_typ_error_post t a p va) as (read_cbor_with_typ_post t a p va ParseError);
             ParseError
@@ -630,9 +642,9 @@ let read_deterministically_encoded_cbor_with_typ_post
     A.pts_to a #p va ** pure (read_deterministically_encoded_cbor_with_typ_error_postcond t va)
   | ParseSuccess c ->
     exists_ (fun v -> exists_ (fun rem ->
-        raw_data_item_match c.read_cbor_payload v **
+        raw_data_item_match full_perm c.read_cbor_payload v **
         A.pts_to c.read_cbor_remainder #p rem **
-        ((raw_data_item_match c.read_cbor_payload v ** A.pts_to c.read_cbor_remainder #p rem) @==>
+        ((raw_data_item_match full_perm c.read_cbor_payload v ** A.pts_to c.read_cbor_remainder #p rem) @==>
         A.pts_to a #p va) **
         pure (read_deterministically_encoded_cbor_with_typ_success_postcond t va c v rem)
     ))
@@ -665,11 +677,11 @@ ensures read_deterministically_encoded_cbor_with_typ_post t a p va res
             fold (read_deterministically_encoded_cbor_with_typ_post t a p va (ParseSuccess sres));
             res
         } else {
-            with v . assert (raw_data_item_match sres.read_cbor_payload v);
+            with v . assert (raw_data_item_match full_perm sres.read_cbor_payload v);
             with vrem . assert (A.pts_to sres.read_cbor_remainder #p vrem);
             read_deterministically_encoded_cbor_with_typ_error_postcond_intro_typ_fail t va sres v vrem;
             elim_stick0 ()
-                #(raw_data_item_match sres.read_cbor_payload v ** A.pts_to sres.read_cbor_remainder #p vrem);
+                #(raw_data_item_match full_perm sres.read_cbor_payload v ** A.pts_to sres.read_cbor_remainder #p vrem);
             fold (read_deterministically_encoded_cbor_with_typ_post t a p va ParseError);
             ParseError
         }
@@ -684,6 +696,7 @@ ensures read_deterministically_encoded_cbor_with_typ_post t a p va res
 
 let cbor_map_get_with_typ_post
   (t: typ)
+  (p: perm)
   (vkey: raw_data_item)
   (vmap: raw_data_item)
   (map: cbor)
@@ -691,7 +704,7 @@ let cbor_map_get_with_typ_post
 : Tot vprop
 = match res with
   | NotFound ->
-    raw_data_item_match map vmap ** pure (
+    raw_data_item_match p map vmap ** pure (
         Map? vmap /\
         begin match list_ghost_assoc vkey (Map?.v vmap) with
         | None -> True
@@ -700,8 +713,8 @@ let cbor_map_get_with_typ_post
     )
   | Found value ->
     exists_ (fun vvalue ->
-        raw_data_item_match value vvalue **
-        (raw_data_item_match value vvalue @==> raw_data_item_match map vmap) **
+        raw_data_item_match p value vvalue **
+        (raw_data_item_match p value vvalue @==> raw_data_item_match p map vmap) **
         pure (
         Map? vmap /\
         list_ghost_assoc vkey (Map?.v vmap) == Some vvalue /\
@@ -709,6 +722,7 @@ let cbor_map_get_with_typ_post
     ))
 
 let cbor_map_get_post_eq_found
+  (p: perm)
   (vkey: raw_data_item)
   (vmap: raw_data_item)
   (map: cbor)
@@ -717,8 +731,8 @@ let cbor_map_get_post_eq_found
 : Lemma
   (requires (res == Found fres))
   (ensures (
-    cbor_map_get_post vkey vmap map res ==
-        cbor_map_get_post_found vkey vmap map fres
+    cbor_map_get_post p vkey vmap map res ==
+        cbor_map_get_post_found p vkey vmap map fres
   ))
 = ()
 
@@ -739,18 +753,19 @@ ensures
 ```pulse
 ghost
 fn cbor_map_get_found_elim
+  (p: perm)
   (vkey: Ghost.erased raw_data_item)
   (vmap: Ghost.erased raw_data_item)
   (map: cbor)
   (res: cbor_map_get_t)
   (fres: cbor)
 requires
-    cbor_map_get_post vkey vmap map res **
+    cbor_map_get_post p vkey vmap map res **
     pure (res == Found fres)
 ensures
-    cbor_map_get_post_found vkey vmap map fres
+    cbor_map_get_post_found p vkey vmap map fres
 {
-    manurewrite (cbor_map_get_post vkey vmap map res) (cbor_map_get_post_found vkey vmap map fres)
+    manurewrite (cbor_map_get_post p vkey vmap map res) (cbor_map_get_post_found p vkey vmap map fres)
     // rewrite ... as ... fails: WHY WHY WHY??
 }
 ```
@@ -762,16 +777,18 @@ fn cbor_map_get_with_typ
   (ft: impl_typ t)
   (key: cbor)
   (map: cbor)
+  (#pkey: perm)
   (#vkey: Ghost.erased raw_data_item)
+  (#pmap: perm)
   (#vmap: Ghost.erased raw_data_item)
 requires
-    (raw_data_item_match key vkey ** raw_data_item_match map vmap ** pure (
+    (raw_data_item_match pkey key vkey ** raw_data_item_match pmap map vmap ** pure (
       Map? vmap /\
       (~ (Tagged? vkey \/ Array? vkey \/ Map? vkey))
     ))
 returns res: cbor_map_get_t
 ensures
-    (raw_data_item_match key vkey ** cbor_map_get_with_typ_post t vkey vmap map res ** pure (
+    (raw_data_item_match pkey key vkey ** cbor_map_get_with_typ_post t pmap vkey vmap map res ** pure (
       Map? vmap /\
       Found? res == begin match list_ghost_assoc (Ghost.reveal vkey) (Map?.v vmap) with
       | None -> false
@@ -782,21 +799,21 @@ ensures
     let res = cbor_map_get key map;
     if (Found? res) {
         let fres = Found?._0 res;
-        manurewrite (cbor_map_get_post vkey vmap map res) (cbor_map_get_post_found vkey vmap map fres);
-        unfold (cbor_map_get_post_found vkey vmap map fres);
+        manurewrite (cbor_map_get_post pmap vkey vmap map res) (cbor_map_get_post_found pmap vkey vmap map fres);
+        unfold (cbor_map_get_post_found pmap vkey vmap map fres);
         let test = eval_impl_typ ft fres;
         if (test) {
-            fold (cbor_map_get_with_typ_post t vkey vmap map (Found fres));
+            fold (cbor_map_get_with_typ_post t pmap vkey vmap map (Found fres));
             res
         } else {
             elim_stick0 ();
-            fold (cbor_map_get_with_typ_post t vkey vmap map NotFound);
+            fold (cbor_map_get_with_typ_post t pmap vkey vmap map NotFound);
             NotFound
         }
     } else {
-        rewrite (cbor_map_get_post vkey vmap map res) as (cbor_map_get_post_not_found vkey vmap map);
-        unfold (cbor_map_get_post_not_found vkey vmap map);
-        fold (cbor_map_get_with_typ_post t vkey vmap map NotFound);
+        rewrite (cbor_map_get_post pmap vkey vmap map res) as (cbor_map_get_post_not_found pmap vkey vmap map);
+        unfold (cbor_map_get_post_not_found pmap vkey vmap map);
+        fold (cbor_map_get_with_typ_post t pmap vkey vmap map NotFound);
         res
     }
 }
