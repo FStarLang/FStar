@@ -98,6 +98,14 @@ val pts_to_injective_eq
           (requires fun _ -> True)
           (ensures fun _ _ _ -> v0 == v1)
 
+/// A permission is always no greater than one
+val pts_to_perm (#a: _) (#u: _) (#p: _) (#v: _) (r: ref a)
+  : SteelGhost unit u
+      (pts_to r p v)
+      (fun _ -> pts_to r p v)
+      (fun _ -> True)
+      (fun _ _ _ -> p `lesser_equal_perm` full_perm)
+
 /// Allocates a reference with value [x]. We have full permission on the newly
 /// allocated reference.
 val alloc_pt (#a:Type) (x:a)
@@ -127,6 +135,19 @@ val free_pt (#a:Type0) (#v:erased a) (r:ref a)
 
 /// Splits the permission on reference [r] into two.
 /// This function is computationally irrelevant (it has effect SteelGhost)
+
+val share_gen_pt (#a:Type0)
+          (#uses:_)
+          (#p:perm)
+          (#v: a)
+          (r:ref a)
+          (p1 p2: perm)
+  : SteelGhost unit uses
+      (pts_to r p v)
+      (fun _ -> pts_to r p1 v `star` pts_to r p2 v)
+      (fun _ -> p == p1 `sum_perm` p2)
+      (fun _ _ _ -> True)
+
 val share_pt (#a:Type0) (#uses:_) (#p:perm) (#v:erased a) (r:ref a)
   : SteelGhostT unit uses
     (pts_to r p v)
@@ -350,6 +371,8 @@ let vptr_not_null (#opened: _)
 [@@ erasable]
 val ghost_ref (a:Type u#0) : Type u#0
 
+val dummy_ghost_ref (a: Type) : Tot (ghost_ref a)
+
 (* Textbook separation logic version of ghost references *)
 
 val ghost_pts_to_sl (#a:_) (r:ghost_ref a) (p:perm) (v:a) : slprop u#1
@@ -372,6 +395,18 @@ val ghost_alloc_pt (#a:Type) (#u:_) (x:erased a)
 
 val ghost_free_pt (#a:Type0) (#u:_) (#v:erased a) (r:ghost_ref a)
   : SteelGhostT unit u (ghost_pts_to r full_perm v) (fun _ -> emp)
+
+val ghost_share_gen_pt (#a:Type) (#u:_)
+                (#p:perm)
+                (#x:erased a)
+                (r:ghost_ref a)
+                (p1 p2: perm)
+  : SteelGhost unit u
+    (ghost_pts_to r p x)
+    (fun _ -> ghost_pts_to r p1 x `star`
+           ghost_pts_to r p2 x)
+    (fun _ -> p == p1 `sum_perm` p2)
+    (fun _ _ _ -> True)
 
 val ghost_share_pt (#a:Type) (#u:_)
                 (#p:perm)
