@@ -35,13 +35,40 @@ fn elim_implies (_:unit) (#p #q:vprop)
 
 assume Fits_u64 : squash (SZ.fits_u64)
 
-let impl_session_message : impl_typ Spec.session_message =
+inline_for_extraction noextract [@@noextract_to "krml"]
+let impl_session_message1 : impl_typ Spec.session_message =
   impl_t_array (
     impl_array_group3_concat
       (impl_array_group3_item impl_uint)
       (impl_array_group3_item impl_bytes)
   )
 
+
+```pulse
+fn impl_session_message0
+    (c: cbor)
+    (#p: perm)
+    (#v: Ghost.erased raw_data_item)
+requires
+        (raw_data_item_match p c v ** pure (
+            opt_precedes (Ghost.reveal v) (None #raw_data_item)
+        ))
+returns res: bool
+ensures
+        (raw_data_item_match p c v ** pure (
+            opt_precedes (Ghost.reveal v) (None #raw_data_item) /\
+            res == Spec.session_message v
+        ))
+{
+  eval_impl_typ impl_session_message1 c
+}
+```
+
+inline_for_extraction noextract [@@noextract_to "krml"]
+let impl_session_message : impl_typ Spec.session_message =
+  fun c #p #v -> impl_session_message0 c #p #v
+
+inline_for_extraction noextract [@@noextract_to "krml"]
 let impl_command_id: impl_typ Spec.command_id =
   impl_uint_literal Spec.get_profile `impl_t_choice_none`
   impl_uint_literal Spec.open_session `impl_t_choice_none`
@@ -59,6 +86,7 @@ let impl_command_id: impl_typ Spec.command_id =
   impl_uint_literal Spec.rotate_context_handle `impl_t_choice_none`
   impl_uint_literal Spec.destroy_context
 
+inline_for_extraction noextract [@@noextract_to "krml"]
 let impl_default_args_group : impl_matches_map_group Spec.default_args_group =
   impl_matches_map_group_no_restricted (
     impl_matches_map_entry_zero_or_more_cons
@@ -68,11 +96,36 @@ let impl_default_args_group : impl_matches_map_group Spec.default_args_group =
       (impl_matches_map_entry_zero_or_more_nil _)
   )
 
-let impl_command_message' : impl_typ Spec.command_message' =
+inline_for_extraction noextract [@@noextract_to "krml"]
+let impl_command_message1 : impl_typ Spec.command_message = // Wow, the equivalence with command_message' seems to work out of the box
   impl_t_array (
     impl_array_group3_item impl_command_id `impl_array_group3_concat`
     impl_array_group3_item (impl_t_map impl_default_args_group)
   )
+
+```pulse
+fn impl_command_message0
+    (c: cbor)
+    (#p: perm)
+    (#v: Ghost.erased raw_data_item)
+requires
+        (raw_data_item_match p c v ** pure (
+            opt_precedes (Ghost.reveal v) (None #raw_data_item)
+        ))
+returns res: bool
+ensures
+        (raw_data_item_match p c v ** pure (
+            opt_precedes (Ghost.reveal v) (None #raw_data_item) /\
+            res == Spec.command_message v
+        ))
+{
+  eval_impl_typ impl_command_message1 c
+}
+```
+
+inline_for_extraction noextract [@@noextract_to "krml"]
+let impl_command_message : impl_typ Spec.command_message =
+  fun c #p #v -> impl_command_message0 c #p #v
 
 module U64 = FStar.UInt64
 
@@ -191,12 +244,12 @@ fn parse_dpe_cmd (len:SZ.t)
         let cbor_str = destr_cbor_string i1;
         stick_trans ();
         with cs ps . assert (A.pts_to cbor_str.cbor_string_payload #ps cs);
-        let msg_rc = read_deterministically_encoded_cbor_with_typ impl_command_message' cbor_str.cbor_string_payload (SZ.of_u64 cbor_str.cbor_string_length);
+        let msg_rc = read_deterministically_encoded_cbor_with_typ impl_command_message cbor_str.cbor_string_payload (SZ.of_u64 cbor_str.cbor_string_length);
         match msg_rc
         {
           ParseError ->
           {
-            unfold (read_deterministically_encoded_cbor_with_typ_post Spec.command_message' cbor_str.cbor_string_payload ps cs ParseError);
+            unfold (read_deterministically_encoded_cbor_with_typ_post Spec.command_message cbor_str.cbor_string_payload ps cs ParseError);
             elim_implies ();
             serialize_cbor_inj' vc vrem1;
             fold (parse_dpe_cmd_post len input s p None);
@@ -204,7 +257,7 @@ fn parse_dpe_cmd (len:SZ.t)
           }
           ParseSuccess msg ->
           {
-            unfold (read_deterministically_encoded_cbor_with_typ_post Spec.command_message' cbor_str.cbor_string_payload ps cs (ParseSuccess msg));
+            unfold (read_deterministically_encoded_cbor_with_typ_post Spec.command_message cbor_str.cbor_string_payload ps cs (ParseSuccess msg));
             with vmsg . assert (raw_data_item_match full_perm msg.read_cbor_payload vmsg);
             with vrem2 . assert (A.pts_to msg.read_cbor_remainder #ps vrem2);
             stick_consume_r ()
