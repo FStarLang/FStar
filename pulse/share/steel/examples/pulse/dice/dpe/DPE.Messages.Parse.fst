@@ -44,6 +44,7 @@ let impl_session_message1 : impl_typ Spec.session_message =
   )
 
 
+(*
 ```pulse
 fn impl_session_message0
     (c: cbor)
@@ -63,10 +64,10 @@ ensures
   eval_impl_typ impl_session_message1 c
 }
 ```
+*)
 
-inline_for_extraction noextract [@@noextract_to "krml"]
-let impl_session_message : impl_typ Spec.session_message =
-  fun c #p #v -> impl_session_message0 c #p #v
+noextract [@@noextract_to "krml"]
+assume val impl_session_message : impl_typ Spec.session_message
 
 inline_for_extraction noextract [@@noextract_to "krml"]
 let impl_command_id: impl_typ Spec.command_id =
@@ -103,6 +104,7 @@ let impl_command_message1 : impl_typ Spec.command_message = // Wow, the equivale
     impl_array_group3_item (impl_t_map impl_default_args_group)
   )
 
+(*
 ```pulse
 fn impl_command_message0
     (c: cbor)
@@ -122,10 +124,10 @@ ensures
   eval_impl_typ impl_command_message1 c
 }
 ```
+*)
 
-inline_for_extraction noextract [@@noextract_to "krml"]
-let impl_command_message : impl_typ Spec.command_message =
-  fun c #p #v -> impl_command_message0 c #p #v
+noextract [@@noextract_to "krml"]
+assume val impl_command_message : impl_typ Spec.command_message
 
 module U64 = FStar.UInt64
 
