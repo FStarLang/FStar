@@ -613,7 +613,8 @@ let full_perm_tm : R.term =
   let open R in
   pack_ln (Tv_FVar (pack_fv full_perm_lid))
 
-let pulse_lib_array_core = ["Pulse"; "Lib"; "Array"; "Core"]
+// let pulse_lib_array_core = ["Pulse"; "Lib"; "Array"; "Core"]
+let pulse_lib_array_core = ["Pulse"; "Lib"; "Rust"; "Array"]
 let mk_pulse_lib_array_core_lid s = pulse_lib_array_core @ [s]
 
 let array_lid = mk_pulse_lib_array_core_lid "array"
@@ -640,11 +641,11 @@ let mk_array_pts_to (a:R.term) (arr:R.term) (perm:R.term) (v:R.term) : R.term =
   let t = pack_ln (Tv_App t (perm, Q_Implicit)) in
   pack_ln (Tv_App t (v, Q_Explicit))
 
-let mk_array_is_full (a:R.term) (arr:R.term) : R.term =
-  let open R in
-  let t = pack_ln (Tv_FVar (pack_fv array_is_full_lid)) in
-  let t = pack_ln (Tv_App t (a, Q_Implicit)) in
-  pack_ln (Tv_App t (arr, Q_Explicit))
+// let mk_array_is_full (a:R.term) (arr:R.term) : R.term =
+//   let open R in
+//   let t = pack_ln (Tv_FVar (pack_fv array_is_full_lid)) in
+//   let t = pack_ln (Tv_App t (a, Q_Implicit)) in
+//   pack_ln (Tv_App t (arr, Q_Explicit))
 
 let mk_seq (u:R.universe) (a:R.term) : R.term =
   let open R in

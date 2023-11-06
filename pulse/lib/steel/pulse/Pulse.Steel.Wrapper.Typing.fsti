@@ -375,10 +375,9 @@ val with_local_typing
 let with_localarray_body_pre (pre:term) (a:term) (arr:term) (init:term) (len:term) : term =
   let pts_to : term =
     mk_array_pts_to a arr full_perm_tm (mk_seq_create uzero a (mk_szv len) init) in
-  let is_full : term = mk_pure (mk_array_is_full a arr) in
   let len_vp : term =
     mk_pure (mk_eq2 uzero nat_tm (mk_array_length a arr) (mk_szv len)) in
-  mk_star pre (mk_star pts_to (mk_star is_full len_vp))
+  mk_star pre (mk_star pts_to len_vp)
 
 //
 // post has 0 db index free
