@@ -21,8 +21,4 @@ extract_c: _output/cache/ExtractionTest.fst.checked
 #	$(FSTAR) --codegen krml Demo.MultiplyByRepeatedAddition.fst --extract '* -Pulse.Lib.Core'
 #	$(FSTAR_HOME)/../karamel/krml -bundle Demo.MultiplyByRepeatedAddition=* -skip-compilation _output/out.krml
 
-extract_cbor:
-	$(FSTAR) --codegen krml DPE.Messages.Parse.fst --extract '* -Pulse.Lib.Core'
-	$(FSTAR_HOME)/../karamel/krml -bundle DPE_Messages_Parse=* -skip-compilation _output/out.krml
-
 include Makefile.pulse.common
