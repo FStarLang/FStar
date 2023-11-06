@@ -30,13 +30,64 @@ type session_state =
   | SessionStart
   | Available { handle:ctxt_hndl_t; context:context_t }
   | InUse
+  | SessionClosed
+  | SessionError //error description
+
+
+let ctxt_of (s:session_state { Available? s })
+  : context_t
+  = let Available { context } = s in context
+
+let hndl_of (s:session_state { Available? s })
+  : ctxt_hndl_t
+  = let Available { handle } = s in handle
+
+let mk_available (hndl:ctxt_hndl_t) (ctxt:context_t)
+  : session_state
+  = Available { handle = hndl; context = ctxt }
 
 let session_state_perm (s:session_state) =
   match s with
   | SessionStart
-  | InUse -> emp
-  | Available { handle; context } ->
-    exists_ (fun repr -> context_perm context repr)
+  | InUse
+  | SessionClosed
+  | SessionError -> emp
+  | Available _ ->
+    exists_ (fun repr -> context_perm (ctxt_of s) repr)
+
+let mk_available_payload handle context = { handle; context }
+```pulse
+fn intro_session_state_perm_available 
+      (ctxt:context_t)
+      (hndl:ctxt_hndl_t)
+  requires context_perm ctxt 'repr
+  returns s:session_state
+  ensures session_state_perm s
+{
+  rewrite (context_perm ctxt 'repr)
+       as (context_perm (ctxt_of (Available (mk_available_payload hndl ctxt))) 'repr);
+  fold (session_state_perm (Available (mk_available_payload hndl ctxt)));
+  Available (mk_available_payload hndl ctxt)
+}
+```
+
+```pulse
+ghost
+fn elim_session_state_perm_available (s:(s:session_state { Available? s }))
+  requires session_state_perm s 
+  ensures exists r. context_perm (ctxt_of s) r 
+{
+  match s
+  {
+    Available ctxt ->
+    {
+      rewrite (session_state_perm s) as (session_state_perm (Available ctxt));
+      unfold (session_state_perm (Available ctxt));
+      with x y. rewrite (context_perm x y) as (context_perm (ctxt_of s) y);
+    }
+  }
+}
+```
 
 let session_table_map = PHT.pht_t sid_t session_state
 
@@ -477,26 +528,7 @@ fn take_session_state (sid:sid_t) (replace:session_state)
 // }
 // ```
 
-let ctxt_of (s:session_state { Available? s })
-  : context_t
-  = let Available { context } = s in context
 
-```pulse
-ghost
-fn elim_session_state_perm_available (s:(s:session_state { Available? s }))
-  requires session_state_perm s 
-  ensures exists r. context_perm (ctxt_of s) r 
-{
-  match s
-  {
-    Available ctxt ->
-    {
-      unfold (session_state_perm s);
-      admit()
-    }
-  }
-}
-```
 
 (*
   DestroyContext: Part of DPE API 
@@ -511,8 +543,8 @@ fn destroy_context' (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
   returns b:bool
   ensures emp
 {
-  rewrite emp as (session_state_perm SessionStart);
-  let st = take_session_state sid SessionStart;
+  rewrite emp as (session_state_perm InUse);
+  let st = take_session_state sid InUse;
   match st
   {
     None ->
@@ -521,32 +553,47 @@ fn destroy_context' (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
       false
     }
 
-  
     Some st ->
     {
       with s. rewrite (session_state_perm s)
                    as (session_state_perm st);
-      match st
+      if not (Available? st)
       {
-        Available ctxt ->
+        rewrite (session_state_perm st) as emp;
+        rewrite emp as (session_state_perm SessionError);
+        let st' = take_session_state sid SessionError;
+        //TODO: Fix this by proving that st' must be present and InUse
+        drop_ (session_state_perm (dflt st' SessionError));
+        false
+      }
+      else
+      {             
+        match st
         {
-          elim_session_state_perm_available st;
-          destroy_ctxt (ctxt_of st);
-          true
+          Available ctxt ->
+          {
+            if (ctxt_hndl = ctxt.handle)
+            {
+              elim_session_state_perm_available st;
+              destroy_ctxt (ctxt_of st);
+              //reset the session to the start state
+              rewrite emp as (session_state_perm SessionStart);
+              let st' = take_session_state sid SessionStart;
+              //TODO: Fix this by proving that st' must be present and InUse
+              drop_ (session_state_perm (dflt st' SessionStart));
+              true
+            }
+            else
+            {
+              //context handle mismatch; put back st
+              //and return false
+              let st' = take_session_state sid st;
+              //TODO: Fix this by proving that st' must be present and InUse
+              drop_ (session_state_perm (dflt st' st));
+              false
+            }
+          }
         }
-
-        SessionStart ->
-        {
-          rewrite (session_state_perm st) as emp;
-          false
-        }
-
-        InUse -> 
-        {
-          rewrite (session_state_perm st) as emp;
-          false
-        }
-
       }
     }
   }
@@ -564,6 +611,29 @@ fn ctxt_hndl_do_nothing (k:ctxt_hndl_t)
 }
 ```
 
+```pulse
+fn destroy_session_state (st:session_state)
+  requires session_state_perm st
+  ensures emp
+{
+  if not (Available? st)
+  {
+    rewrite (session_state_perm st) as emp
+  }
+  else 
+  {
+    match st
+    {
+      Available ctxt ->
+      {
+        elim_session_state_perm_available st;
+        destroy_ctxt (ctxt_of st);
+      }
+    }
+  }
+}
+```
+
 (* 
   CloseSession: Part of DPE API 
   Destroy the context table for the session and remove the reference
@@ -576,46 +646,25 @@ fn close_session' (sid:sid_t)
   returns b:bool
   ensures emp
 {
-  let sht_lk = locked_sht._2;
-  rewrite each locked_sht._2 as sht_lk;
-  L.acquire sht_lk;
-  let res = HT.lookup locked_sht._1 sid;
-  if (fst res) 
+  rewrite emp as (session_state_perm InUse);
+  let st = take_session_state sid InUse;
+  match st 
   {
-    let opt_locked_cht = snd res;
-    match opt_locked_cht
+    None -> 
     {
-      Some locked_cht ->
-      { 
-        let cht_lk = locked_cht._2;
-        rewrite each locked_cht._2 as cht_lk;
-        // Note: We don't release this lock because we give up permission
-        // on the cht when we deallocate it
-        L.acquire cht_lk; 
-        dealloc locked_cht._1;//TODO: destroy locked ctxt cht_len;// destroy_locked_ctxt;
-        let b = HT.delete locked_sht._1 sid;
-        if b
-        {
-          L.release sht_lk;
-          b
-        } else {
-          L.release sht_lk;
-          b
-        }
-      }
-      None ->
-      {
-        // ERROR - bad session ID
-        L.release sht_lk;
-        false
-      }
+      with s. rewrite (session_state_perm s) as emp;
+      false 
     }
-  } 
-  else
-  {
-    // ERROR - lookup failed
-    L.release sht_lk;
-    false
+
+    Some st ->
+    {
+      destroy_session_state st;
+      rewrite emp as (session_state_perm SessionClosed);
+      let st' = take_session_state sid SessionClosed;
+      //TODO: Fix this by proving that st' must be present and InUse
+      drop_ (session_state_perm (dflt st' SessionClosed));
+      true
+    }
   }
 }
 ```
@@ -629,13 +678,12 @@ fn init_engine_ctxt (uds:A.larray U8.t (US.v uds_len))
                     (#p:perm)
                     (#uds_bytes:Ghost.erased (Seq.seq U8.t))
   requires A.pts_to uds #p uds_bytes
-        ** uds_is_enabled
-  returns _:locked_context_t
-  ensures A.pts_to uds #p uds_bytes
-{
+  returns ctxt:context_t
+  ensures A.pts_to uds #p uds_bytes **
+          context_perm ctxt (Engine_context_repr uds_bytes)
+{ 
   let uds_buf = A.alloc 0uy uds_len;
   memcpy uds_len uds uds_buf;
-  disable_uds ();
   let engine_context = mk_engine_context_t uds_buf;
 
   rewrite each uds_buf as (engine_context.uds);
@@ -644,9 +692,7 @@ fn init_engine_ctxt (uds:A.larray U8.t (US.v uds_len))
   let ctxt = mk_context_t_engine engine_context;
   rewrite (engine_context_perm engine_context uds_bytes) 
     as (context_perm ctxt (Engine_context_repr uds_bytes));
-
-  let ctxt_lk = L.new_lock (context_perm ctxt (Engine_context_repr uds_bytes));
-  ((| ctxt, hide (Engine_context_repr uds_bytes), ctxt_lk |) <: locked_context_t)
+  ctxt
 }
 ```
 
@@ -659,8 +705,10 @@ fn init_l0_ctxt (cdi:A.larray U8.t (US.v dice_digest_len))
                       /\ l0_is_authentic engine_repr))
   requires A.pts_to cdi s
         ** pure (A.is_full_array cdi)
-  returns _:locked_context_t
-  ensures emp
+  returns ctxt:context_t
+  ensures exists repr.
+    context_perm ctxt repr **
+    pure (repr == L0_context_repr (mk_l0_context_repr_t uds_bytes s engine_repr))
 {
   let cdi_buf = A.alloc 0uy dice_digest_len;
   memcpy dice_digest_len cdi cdi_buf;
@@ -677,8 +725,7 @@ fn init_l0_ctxt (cdi:A.larray U8.t (US.v dice_digest_len))
   rewrite (l0_context_perm l0_context l0_context_repr) 
     as (context_perm ctxt repr);
 
-  let ctxt_lk = L.new_lock (context_perm ctxt repr);
-  ((| ctxt, repr, ctxt_lk |) <: locked_context_t)
+  ctxt
 }
 ```
 
@@ -687,14 +734,22 @@ fn init_l1_ctxt (deviceIDCSR_len: US.t) (aliasKeyCRT_len: US.t)
                 (deviceID_priv: A.larray U8.t (US.v v32us)) (deviceID_pub: A.larray U8.t (US.v v32us))
                 (aliasKey_priv: A.larray U8.t (US.v v32us)) (aliasKey_pub: A.larray U8.t (US.v v32us)) 
                 (deviceIDCSR: A.larray U8.t (US.v deviceIDCSR_len)) (aliasKeyCRT: A.larray U8.t (US.v aliasKeyCRT_len))
+                (deviceID_label_len aliasKey_label_len: erased hkdf_lbl_len)
+                (cdi:erased (Seq.seq U8.t))
+                (repr:erased l0_record_repr_t)
+                (deviceIDCSR_ingredients:erased deviceIDCSR_ingredients_t)
+                (aliasKeyCRT_ingredients:erased aliasKeyCRT_ingredients_t)
                 (#deviceID_priv0 #deviceID_pub0 #aliasKey_priv0 #aliasKey_pub0
                  #deviceIDCSR0 #aliasKeyCRT0:erased (Seq.seq U8.t))
-                (#deviceID_label_len #aliasKey_label_len: erased hkdf_lbl_len)
-                (#cdi:erased (Seq.seq U8.t))
-                (#repr:erased l0_record_repr_t)
-                (#deviceIDCSR_ingredients:erased deviceIDCSR_ingredients_t)
-                (#aliasKeyCRT_ingredients:erased aliasKeyCRT_ingredients_t)
-                (_:squash(valid_hkdf_ikm_len dice_digest_len
+              
+  requires A.pts_to deviceID_priv deviceID_priv0 ** 
+           A.pts_to deviceID_pub deviceID_pub0 ** 
+           A.pts_to aliasKey_priv aliasKey_priv0 ** 
+           A.pts_to aliasKey_pub aliasKey_pub0 ** 
+           A.pts_to deviceIDCSR deviceIDCSR0 **
+           A.pts_to aliasKeyCRT aliasKeyCRT0 **
+           pure (
+            valid_hkdf_ikm_len dice_digest_len
                        /\ aliasKey_functional_correctness
                             dice_hash_alg dice_digest_len cdi repr.fwid
                             aliasKey_label_len repr.aliasKey_label 
@@ -706,21 +761,25 @@ fn init_l1_ctxt (deviceIDCSR_len: US.t) (aliasKeyCRT_len: US.t)
                        /\ aliasKeyCRT_functional_correctness 
                             dice_hash_alg dice_digest_len cdi repr.fwid
                             deviceID_label_len repr.deviceID_label aliasKeyCRT_ingredients 
-                            aliasKeyCRT_len aliasKeyCRT0 aliasKey_pub0))
-  requires A.pts_to deviceID_priv deviceID_priv0 ** 
-           A.pts_to deviceID_pub deviceID_pub0 ** 
-           A.pts_to aliasKey_priv aliasKey_priv0 ** 
-           A.pts_to aliasKey_pub aliasKey_pub0 ** 
-           A.pts_to deviceIDCSR deviceIDCSR0 **
-           A.pts_to aliasKeyCRT aliasKeyCRT0
-  returns _:locked_context_t
+                            aliasKeyCRT_len aliasKeyCRT0 aliasKey_pub0
+           )
+  returns ctxt:context_t
   ensures 
     A.pts_to deviceID_priv deviceID_priv0 ** 
     A.pts_to deviceID_pub deviceID_pub0 **
     A.pts_to aliasKey_priv aliasKey_priv0 ** 
     A.pts_to aliasKey_pub aliasKey_pub0 ** 
     A.pts_to deviceIDCSR deviceIDCSR0 **
-    A.pts_to aliasKeyCRT aliasKeyCRT0
+    A.pts_to aliasKeyCRT aliasKeyCRT0 **
+    exists l1repr. (
+      context_perm ctxt l1repr **
+      pure (l1repr ==
+            L1_context_repr (mk_l1_context_repr_t 
+                              deviceID_label_len aliasKey_label_len deviceID_priv0 deviceID_pub0
+                              aliasKey_priv0 aliasKey_pub0 aliasKeyCRT_len aliasKeyCRT0 deviceIDCSR_len
+                              deviceIDCSR0 cdi repr deviceIDCSR_ingredients aliasKeyCRT_ingredients))
+    )
+
 {
   let deviceID_pub_buf = A.alloc 0uy v32us;
   let deviceID_priv_buf = A.alloc 0uy v32us;
@@ -755,9 +814,7 @@ fn init_l1_ctxt (deviceIDCSR_len: US.t) (aliasKeyCRT_len: US.t)
   let ctxt = mk_context_t_l1 l1_context;
   let repr = mk_context_repr_t_l1 l1_context_repr;
   rewrite (l1_context_perm l1_context l1_context_repr) as (context_perm ctxt repr);
-  
-  let ctxt_lk = L.new_lock (context_perm ctxt repr);
-  (| ctxt, repr, ctxt_lk |)
+  ctxt  
 }
 ```
 
@@ -771,71 +828,47 @@ fn init_l1_ctxt (deviceIDCSR_len: US.t) (aliasKeyCRT_len: US.t)
 fn initialize_context' (sid:sid_t) (uds:A.larray U8.t (US.v uds_len)) 
                        (#p:perm) (#uds_bytes:Ghost.erased (Seq.seq U8.t))
   requires A.pts_to uds #p uds_bytes
-        ** uds_is_enabled
   returns _:option ctxt_hndl_t
   ensures A.pts_to uds #p uds_bytes
 {
-  let locked_context = init_engine_ctxt uds;
-  let ctxt_hndl = prng ();
-
-  let sht_lk = locked_sht._2;
-  rewrite each locked_sht._2 as sht_lk;
-  L.acquire sht_lk;
-
-  let res = HT.lookup locked_sht._1 sid;
-  if (fst res)
+  rewrite emp as (session_state_perm InUse);
+  let st = take_session_state sid InUse;
+  match st 
   {
-    let opt_locked_cht = snd res;
-    match opt_locked_cht
+    None ->
     {
-      Some locked_cht ->
+      with s. rewrite (session_state_perm s) as emp;
+      None #ctxt_hndl_t
+    }
+    
+    Some st ->
+    {
+      if SessionStart? st 
       {
-        let cht_lk = locked_cht._2;
-        rewrite each locked_cht._2 as cht_lk;
-        L.acquire cht_lk;
-
-        let b = not_full locked_cht._1;
-        if b
-        {
-          let r = HT.insert locked_cht._1 ctxt_hndl locked_context;
-          if r
-          {
-            L.release sht_lk;
-            L.release cht_lk;
-            Some ctxt_hndl
-          }
-          else
-          {
-            // ERROR - insert failed
-            L.release sht_lk;
-            L.release cht_lk;
-            None #ctxt_hndl_t     
-          }
-        }
-        else
-        {
-          // ERROR - table full
-          L.release sht_lk;
-          L.release cht_lk;
-          None #ctxt_hndl_t
-        }
+        rewrite (session_state_perm st) as emp;
+        let ctxt = init_engine_ctxt uds;
+        let ctxt_hndl = prng ();
+        let st' = intro_session_state_perm_available ctxt ctxt_hndl;
+        let st'' = take_session_state sid st';
+        //TODO: prove that st'' is InUse
+        drop_ (session_state_perm (dflt st'' st'));
+        Some ctxt_hndl
       }
-      None -> {
-        // ERROR - bad session ID
-        L.release sht_lk;
+      else //session error
+      {
+        destroy_session_state st;
+        rewrite emp as (session_state_perm SessionError);
+        let st' = take_session_state sid SessionError;
+        //TODO: prove st' is InUse
+        drop_ (session_state_perm (dflt st' SessionError));
         None #ctxt_hndl_t
       }
     }
   }
-  else
-  {
-    // ERROR - lookup failed
-    L.release sht_lk;
-    None #ctxt_hndl_t
-  }
 }
 ```
-let initialize_context = initialize_context'
+
+let initialize_context = admit() //initialize_context' ...uds_is_enabled
 
 (*
   RotateContextHandle: Part of DPE API 
@@ -848,102 +881,216 @@ fn rotate_context_handle' (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
   returns _:option ctxt_hndl_t
   ensures emp
 {
-  let new_ctxt_hndl = prng ();
-
-  let sht_lk = locked_sht._2;
-  rewrite each locked_sht._2 as sht_lk;
-  L.acquire sht_lk;
-
-  let res = HT.lookup locked_sht._1 sid;
-  if (fst res)
+  rewrite emp as (session_state_perm InUse);
+  let st = take_session_state sid InUse;
+  match st 
   {
-    let opt_locked_cht = snd res;
-    match opt_locked_cht
+    None ->
     {
-      Some locked_cht ->
-      {
-        let cht_lk = locked_cht._2;
-        rewrite each locked_cht._2 as cht_lk;
-        L.acquire cht_lk;
-        let r = HT.lookup locked_cht._1 ctxt_hndl;
-        if (fst r)
-        {
-          let opt_locked_ctxt = snd r;
-          match opt_locked_ctxt
-          {
-            Some locked_context ->
-            {
-              let b = not_full locked_cht._1;
-              if b
-              {
-                let r = HT.insert locked_cht._1 new_ctxt_hndl locked_context;
-                if r
-                {
-                  let d = HT.delete locked_cht._1 ctxt_hndl;
-                  if d
-                  {
-                    L.release sht_lk;
-                    L.release cht_lk;
-                    Some new_ctxt_hndl
-                  }
-                  else
-                  {
-                    // ERROR - delete failed
-                    L.release sht_lk;
-                    L.release cht_lk;
-                    None #ctxt_hndl_t
-                  }
-                } 
-                else 
-                {
-                  // ERROR - insert failed
-                  L.release sht_lk;
-                  L.release cht_lk;
-                  None #ctxt_hndl_t
-                }
-              }
-              else
-              {
-                  // ERROR - table full
-                  L.release sht_lk;
-                  L.release cht_lk;
-                  None #ctxt_hndl_t
-              }
-            }
-            None ->
-            {
-              // ERROR - bad context handle
-              L.release sht_lk;
-              L.release cht_lk;
-              None #ctxt_hndl_t 
-            }
-          }
-        }
-        else
-        {
-          // ERROR - lookup failed
-          L.release sht_lk;
-          L.release cht_lk;
-          None #ctxt_hndl_t 
-        }
+      with s. rewrite (session_state_perm s) as emp;
+      None #ctxt_hndl_t
+    }
+
+    Some st ->
+    {
+      if InUse? st
+      { //block concurrent access
+        rewrite (session_state_perm st) as emp;
+        None #ctxt_hndl_t
       }
-      None ->
+      else  //TODO, allow `else if`
       {
-        // ERROR - lookup context table failed
-        L.release sht_lk;
-        None #ctxt_hndl_t 
+        if not (Available? st)
+        { //session error
+          rewrite (session_state_perm st) as emp;
+          rewrite emp as (session_state_perm SessionError);
+          let st' = take_session_state sid SessionError;
+          //TODO: prove st' is InUse
+          drop_ (session_state_perm (dflt st' SessionError));
+          None #ctxt_hndl_t
+        }
+        else 
+        {
+          let new_ctxt_hndl = prng ();
+          elim_session_state_perm_available st;
+          let st' = intro_session_state_perm_available (ctxt_of st) new_ctxt_hndl;
+          let st'' = take_session_state sid st';
+          //TODO: prove st'' is InUse
+          drop_ (session_state_perm (dflt st'' st'));
+          Some new_ctxt_hndl
+        }
       }
     }
-  }
-  else
-  {
-    // ERROR - lookup context table failed
-    L.release sht_lk;
-    None #ctxt_hndl_t 
   }
 }
 ```
 let rotate_context_handle = rotate_context_handle'
+
+let maybe_context_perm (o:option context_t) =
+  match o with
+  | None -> emp
+  | _ -> exists_ (fun repr -> context_perm (Some?.v o) repr)
+
+```pulse
+fn intro_maybe_context_perm (c:context_t)
+  requires context_perm c 'repr
+  returns o:option context_t
+  ensures maybe_context_perm o
+{
+  rewrite (context_perm c 'repr)
+       as (context_perm (Some?.v (Some c)) 'repr);
+  fold (maybe_context_perm (Some c));
+  Some c
+}
+```
+
+```pulse
+ghost
+fn elim_maybe_context_perm (c:context_t)
+  requires maybe_context_perm (Some c)
+  ensures exists repr. context_perm c repr
+{
+  unfold (maybe_context_perm (Some c));
+  with x y. rewrite (context_perm x y) as (context_perm c y)
+}
+```
+
+```pulse
+fn derive_child_from_context
+    (context:context_t)
+    (record:record_t)
+  requires
+    record_perm record p 'record_repr **
+    context_perm context 'context_repr
+  returns res:option context_t
+  ensures
+    record_perm record p 'record_repr **
+    context_perm context 'context_repr **
+    maybe_context_perm res
+{
+  match context
+  {
+    Engine_context c ->
+    {
+      if not (Engine_record? record)
+      { //illegal argument; reject
+        rewrite emp as (maybe_context_perm None);
+        None #context_t
+      }
+      else
+      {
+        rewrite each context as (Engine_context c);
+        let uds = get_engine_context_perm c 'context_repr;
+        // rewrite (context_perm (E) ctxt_repr) as (engine_context_perm c);
+        unfold (engine_context_perm c uds);
+        match record
+        {
+          Engine_record r ->
+          {
+            rewrite each record as (Engine_record r);
+            let r0 = get_engine_record_perm r 'record_repr p;
+            let cdi = A.alloc 0uy dice_digest_len;
+            let ret = EngineCore.engine_main cdi c.uds r;
+            with s. assert (A.pts_to cdi s);
+            fold (engine_context_perm c uds);
+            rewrite (engine_context_perm c uds)
+                 as (context_perm context 'context_repr);
+            match ret 
+            {
+              DICE_SUCCESS ->
+              {
+                let l0_ctxt = init_l0_ctxt cdi #r0 #s #uds ();
+                rewrite (engine_record_perm r p r0)
+                     as (record_perm record p 'record_repr);
+                let l0_ctxt_opt = intro_maybe_context_perm l0_ctxt;
+                l0_ctxt_opt
+              }
+
+              DICE_ERROR ->
+              {
+                A.zeroize dice_digest_len cdi;
+                A.free cdi;
+                rewrite (engine_record_perm r p r0)
+                     as (record_perm record p 'record_repr);
+                rewrite emp as (maybe_context_perm None);
+                None #context_t
+              }
+            }
+          }
+        }
+      }
+    }
+    L0_context c ->
+    { 
+      if not (L0_record? record)
+      { //illegal argument; reject
+        rewrite emp as (maybe_context_perm None);
+        None #context_t
+      }
+      else
+      {
+        match record 
+        {
+          L0_record r ->
+          {
+            // NOTE: we won't eventually release l0_context_perm because we won't 
+            // own it anymore -- we will free the cdi array
+            rewrite each context as (L0_context c);
+            let cr = get_l0_context_perm c 'context_repr;
+            unfold (l0_context_perm c cr);
+            with s. assert (A.pts_to c.cdi s);
+
+            rewrite each record as (L0_record r);
+            let r0 = get_l0_record_perm r 'record_repr p;
+
+            let idcsr_ing = r.deviceIDCSR_ingredients;
+            let akcrt_ing = r.aliasKeyCRT_ingredients;
+
+            let deviceIDCRI_len = len_of_deviceIDCRI  idcsr_ing.version idcsr_ing.s_common 
+                                                      idcsr_ing.s_org idcsr_ing.s_country;
+            let aliasKeyTBS_len = len_of_aliasKeyTBS  akcrt_ing.serialNumber akcrt_ing.i_common 
+                                                      akcrt_ing.i_org akcrt_ing.i_country 
+                                                      akcrt_ing.s_common akcrt_ing.s_org 
+                                                      akcrt_ing.s_country akcrt_ing.l0_version;
+            let deviceIDCSR_len = length_of_deviceIDCSR deviceIDCRI_len;
+            let aliasKeyCRT_len = length_of_aliasKeyCRT aliasKeyTBS_len;
+
+            let mut deviceID_pub = [| 0uy; v32us |];
+            let mut deviceID_priv = [| 0uy; v32us |];
+            let mut aliasKey_pub = [| 0uy; v32us |];
+            let mut aliasKey_priv = [| 0uy; v32us |];
+            let mut deviceIDCSR = [| 0uy; deviceIDCSR_len |];
+            let mut aliasKeyCRT = [| 0uy; aliasKeyCRT_len |];
+            
+            L0Core.l0_main  c.cdi deviceID_pub deviceID_priv 
+                            aliasKey_pub aliasKey_priv 
+                            aliasKeyTBS_len aliasKeyCRT_len aliasKeyCRT 
+                            deviceIDCRI_len deviceIDCSR_len deviceIDCSR r;
+            fold (l0_context_perm c cr);
+            rewrite (l0_context_perm c cr)
+                 as (context_perm context 'context_repr);
+            rewrite (l0_record_perm r p r0)
+                 as (record_perm record p 'record_repr);
+            let l1_context = init_l1_ctxt 
+                        deviceIDCSR_len aliasKeyCRT_len deviceID_priv deviceID_pub
+                        aliasKey_priv aliasKey_pub deviceIDCSR aliasKeyCRT
+                        (hide r.deviceID_label_len)
+                        (hide r.aliasKey_label_len) s r0 (hide idcsr_ing) (hide akcrt_ing);
+            intro_maybe_context_perm l1_context
+          }
+        }
+      }
+    }
+    L1_context _ ->
+    {
+      // ERROR - cannot invoke DeriveChild with L1 context
+      rewrite emp as (maybe_context_perm None);
+      None #context_t
+    }
+  }
+}
+```
+
 
 (*
   DeriveChild: Part of DPE API 
@@ -959,313 +1106,65 @@ fn derive_child' (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t)
   returns _:option ctxt_hndl_t
   ensures record_perm record p repr
 {
-  let new_ctxt_hndl = prng ();
-
-  let sht_lk = locked_sht._2;
-  rewrite each locked_sht._2 as sht_lk;
-  L.acquire sht_lk;
-  // with spht. assert (models sht_sig locked_sht._1 spht);
-
-  let res = HT.lookup locked_sht._1 sid;
-  if (fst res)
+  rewrite emp as (session_state_perm InUse);
+  let st = take_session_state sid InUse;
+  match st 
   {
-    let opt_locked_cht = snd res;
-    match opt_locked_cht
+    None ->
     {
-      Some locked_cht ->
-      {
-        let cht_lk = locked_cht._2;
-        rewrite each locked_cht._2 as cht_lk;
-        L.acquire cht_lk;
-        with cpht. assert (models locked_cht._1 cpht);
+      with s. rewrite (session_state_perm s) as emp;
+      None #ctxt_hndl_t
+    }
 
-        let r = HT.lookup locked_cht._1 ctxt_hndl;
-        if (fst r)
-        {
-          let opt_locked_ctxt = snd r;
-          match opt_locked_ctxt
-          {
-            Some locked_ctxt ->
-            {
-              let ctxt = locked_ctxt._1;
-              let ctxt_repr = locked_ctxt._2;
-              let ctxt_lk = locked_ctxt._3;
-              L.acquire #(context_perm ctxt ctxt_repr) ctxt_lk;
-              
-              match ctxt
-              {
-                Engine_context c ->
-                {
-                  // NOTE: we won't eventually release engine_context_perm because we won't 
-                  // own it anymore -- we will free the uds array
-                  rewrite each ctxt as (Engine_context c);
-                  let uds = get_engine_context_perm c ctxt_repr;
-                  // rewrite (context_perm (E) ctxt_repr) as (engine_context_perm c);
-                  unfold (engine_context_perm c uds);
-                  match record
-                  {
-                    Engine_record r ->
-                    {
-                      rewrite each record as (Engine_record r);
-                      let r0 = get_engine_record_perm r repr p;
-                      
-                      let cdi = A.alloc 0uy dice_digest_len;
-                      let ret = EngineCore.engine_main cdi c.uds r;
-                      with s. assert (A.pts_to cdi s);
-                      fold (engine_context_perm c uds);
-                      rewrite (engine_context_perm c uds)
-                           as (context_perm ctxt ctxt_repr);
-                      destroy_ctxt ctxt;
-
-                      match ret
-                      {
-                        DICE_SUCCESS ->
-                        {
-                          let new_locked_context = init_l0_ctxt cdi #r0 #s #uds ();
-                          
-                          let d = HT.delete locked_cht._1 ctxt_hndl;
-                          if d 
-                          {
-                            let b = not_full locked_cht._1;
-                            if b
-                            {
-                              let i = HT.insert locked_cht._1 new_ctxt_hndl new_locked_context; 
-                              // with x y. unfold (maybe_update i cht_sig locked_cht._1 x y);
-                              if i 
-                              {
-                                // assert (models cht_sig locked_cht._1 (PHT.insert (PHT.delete cpht ctxt_hndl) new_ctxt_hndl new_locked_context));
-                                rewrite (engine_record_perm r p r0)
-                                     as (record_perm record p repr);
-                                L.release sht_lk;
-                                L.release cht_lk;
-                                Some new_ctxt_hndl
-                              } 
-                              else
-                              {
-                                // ERROR - insert failed
-                                // assert (models cht_sig locked_cht._1 (PHT.delete cpht ctxt_hndl));
-                                rewrite (engine_record_perm r p r0)
-                                     as (record_perm record p repr);
-                                L.release sht_lk;
-                                L.release cht_lk;
-                                None #ctxt_hndl_t
-                              }
-                            } 
-                            else
-                            {
-                                          // ERROR - table full
-                                rewrite (engine_record_perm r p r0)
-                                     as (record_perm record p repr);
-                                L.release sht_lk;
-                                L.release cht_lk;
-                                None #ctxt_hndl_t
-                            }
-                          } 
-                          else
-                          {
-                            // ERROR - delete failed
-                            // assert (models cht_sig locked_cht._1 cpht);
-                            rewrite (engine_record_perm r p r0)
-                                 as (record_perm record p repr);
-                            L.release sht_lk;
-                            L.release cht_lk;
-                            None #ctxt_hndl_t
-                          }
-                        }
-                        DICE_ERROR ->
-                        {
-                          // ERROR - DICE engine failed
-                          A.zeroize dice_digest_len cdi;
-                          A.free cdi;
-                          rewrite (engine_record_perm r p r0)
-                               as (record_perm record p repr);
-                          L.release sht_lk;
-                          L.release cht_lk;
-                          None #ctxt_hndl_t
-                        }
-                      }
-                    }
-                    _ ->
-                    { 
-                      // ERROR - record should have type (Engine_record r)
-                      // TODO: prove this case is unreachable
-                      fold (engine_context_perm c uds);
-                      rewrite (engine_context_perm c uds)
-                           as (context_perm ctxt ctxt_repr);
-                      destroy_ctxt ctxt;
-                      L.release sht_lk;
-                      L.release cht_lk;
-                      None #ctxt_hndl_t
-                    }
-                  }
-                }
-                L0_context c ->
-                { 
-                  // NOTE: we won't eventually release l0_context_perm because we won't 
-                  // own it anymore -- we will free the cdi array
-                  rewrite each ctxt as (L0_context c);
-                  let cr = get_l0_context_perm c ctxt_repr;
-                  unfold (l0_context_perm c cr);
-                  with s. assert (A.pts_to c.cdi s);
-
-                  match record
-                  {
-                    L0_record r ->
-                    {
-                      rewrite each record as (L0_record r);
-                      let r0 = get_l0_record_perm r repr p;
-
-                      let idcsr_ing = r.deviceIDCSR_ingredients;
-                      let akcrt_ing = r.aliasKeyCRT_ingredients;
-
-                      let deviceIDCRI_len = len_of_deviceIDCRI  idcsr_ing.version idcsr_ing.s_common 
-                                                                idcsr_ing.s_org idcsr_ing.s_country;
-                      let aliasKeyTBS_len = len_of_aliasKeyTBS  akcrt_ing.serialNumber akcrt_ing.i_common 
-                                                                akcrt_ing.i_org akcrt_ing.i_country 
-                                                                akcrt_ing.s_common akcrt_ing.s_org 
-                                                                akcrt_ing.s_country akcrt_ing.l0_version;
-                      let deviceIDCSR_len = length_of_deviceIDCSR deviceIDCRI_len;
-                      let aliasKeyCRT_len = length_of_aliasKeyCRT aliasKeyTBS_len;
-
-                      let deviceID_pub = A.alloc 0uy v32us;
-                      let deviceID_priv = A.alloc 0uy v32us;
-                      let aliasKey_pub = A.alloc 0uy v32us;
-                      let aliasKey_priv = A.alloc 0uy v32us;
-                      let deviceIDCSR = A.alloc 0uy deviceIDCSR_len;
-                      let aliasKeyCRT = A.alloc 0uy aliasKeyCRT_len;
-                      
-                      L0Core.l0_main  c.cdi deviceID_pub deviceID_priv 
-                                      aliasKey_pub aliasKey_priv 
-                                      aliasKeyTBS_len aliasKeyCRT_len aliasKeyCRT 
-                                      deviceIDCRI_len deviceIDCSR_len deviceIDCSR r;
-                      fold (l0_context_perm c cr);
-                      rewrite (l0_context_perm c cr) as (context_perm ctxt ctxt_repr);
-                      destroy_ctxt ctxt;
-
-                      with deviceID_pub1. assert (A.pts_to deviceID_pub deviceID_pub1);
-                      with deviceID_priv1. assert (A.pts_to deviceID_priv deviceID_priv1);
-                      with aliasKey_pub1. assert (A.pts_to aliasKey_pub aliasKey_pub1);
-                      with aliasKey_priv1. assert (A.pts_to aliasKey_priv aliasKey_priv1);
-                      with deviceIDCSR1. assert (A.pts_to deviceIDCSR deviceIDCSR1);
-                      with aliasKeyCRT1. assert (A.pts_to aliasKeyCRT aliasKeyCRT1);
-                      let new_locked_context = init_l1_ctxt 
-                        deviceIDCSR_len aliasKeyCRT_len deviceID_priv deviceID_pub
-                        aliasKey_priv aliasKey_pub deviceIDCSR aliasKeyCRT
-                        #deviceID_priv1 #deviceID_pub1 #aliasKey_priv1 #aliasKey_pub1
-                        #deviceIDCSR1 #aliasKeyCRT1 #(hide r.deviceID_label_len)
-                        #(hide r.aliasKey_label_len) #s #r0 #(hide idcsr_ing) #(hide akcrt_ing) ();
-                      
-                      A.free deviceID_pub;
-                      A.free deviceID_priv;
-                      A.free aliasKey_pub;
-                      A.free aliasKey_priv;
-                      A.free deviceIDCSR;
-                      A.free aliasKeyCRT;
-                      
-                      let d = HT.delete locked_cht._1 ctxt_hndl;
-                      // with x y. unfold (maybe_update d cht_sig locked_cht._1 x y);
-                      if d
-                      {
-                        // assert (models cht_sig locked_cht._1 (PHT.delete cpht ctxt_hndl));
-                        let b = not_full locked_cht._1;
-                        if b
-                        {
-                          let i = HT.insert locked_cht._1 new_ctxt_hndl new_locked_context;
-                          // with x y. unfold (maybe_update i cht_sig locked_cht._1 x y);
-                          if i
-                          {
-                            // assert (models cht_sig locked_cht._1 (PHT.insert (PHT.delete cpht ctxt_hndl) new_ctxt_hndl new_locked_context));
-                            rewrite (l0_record_perm r p r0)
-                                 as (record_perm record p repr);
-                            L.release  sht_lk;
-                            L.release  cht_lk;
-                            Some new_ctxt_hndl
-                          }
-                          else
-                          {
-                            // ERROR - insert failed
-                            // assert (models cht_sig locked_cht._1 (PHT.delete cpht ctxt_hndl));
-                            rewrite (l0_record_perm r p r0)
-                                 as (record_perm record p repr);
-                            L.release  sht_lk;
-                            L.release  cht_lk;
-                            None #ctxt_hndl_t
-                          }
-                        }
-                        else
-                        {
-                          // ERROR - table full
-                          rewrite (l0_record_perm r p r0)
-                              as (record_perm record p repr);
-                          L.release  sht_lk;
-                          L.release  cht_lk;
-                          None #ctxt_hndl_t
-                        }
-                      }
-                      else
-                      {
-                        // ERROR - delete failed
-                        // assert (models cht_sig locked_cht._1 cpht);
-                        rewrite (l0_record_perm r p r0)
-                             as (record_perm record p repr);
-                        L.release  sht_lk;
-                        L.release  cht_lk;
-                        None #ctxt_hndl_t
-                      }
-                    }
-                    _ ->
-                    {
-                      // ERROR - record should have type (L0_record r)
-                      fold (l0_context_perm c cr);
-                      rewrite (l0_context_perm c cr)
-                           as (context_perm ctxt ctxt_repr);
-                      destroy_ctxt ctxt;
-                      L.release  sht_lk;
-                      L.release  cht_lk;
-                      None #ctxt_hndl_t
-                    }
-                  }
-                }
-                _ ->
-                { 
-                  // ERROR - cannot invoke DeriveChild with L1 context
-                  L.release #(context_perm ctxt ctxt_repr) ctxt_lk;
-                  L.release  sht_lk;
-                  L.release  cht_lk;
-                  None #ctxt_hndl_t
-                }
-              }
-            }
-            None ->
-            { 
-              // ERROR - bad context handle
-              L.release  sht_lk;
-              L.release  cht_lk;
-              None #ctxt_hndl_t
-            }
-          }
-        } 
-        else
-        {
-          // ERROR - lookup failed
-          L.release  sht_lk;
-          L.release  cht_lk;
-          None #ctxt_hndl_t
-        }
-      }
-      None ->
-      { 
-        // ERROR - bad session ID
-        L.release  sht_lk;
+    Some st ->
+    {
+      if InUse? st
+      { //block concurrent access
+        rewrite (session_state_perm st) as emp;
         None #ctxt_hndl_t
       }
+      else  //TODO, allow `else if`
+      {
+        if not (Available? st)
+        { //session error
+          rewrite (session_state_perm st) as emp;
+          rewrite emp as (session_state_perm SessionError);
+          let st' = take_session_state sid SessionError;
+          //TODO: prove st' is InUse
+          drop_ (session_state_perm (dflt st' SessionError));
+          None #ctxt_hndl_t
+        }
+        else 
+        {
+          elim_session_state_perm_available st;
+          let next_ctxt = derive_child_from_context (ctxt_of st) record;
+          destroy_ctxt (ctxt_of st);
+          match next_ctxt
+          {
+            None ->
+            {
+              rewrite emp as (session_state_perm SessionError);
+              rewrite (maybe_context_perm next_ctxt) as emp;
+              let st' = take_session_state sid SessionError;
+              //TODO: prove st' is InUse
+              drop_ (session_state_perm (dflt st' SessionError));
+              None #ctxt_hndl_t
+            }
+
+            Some next_ctxt ->
+            {
+              elim_maybe_context_perm next_ctxt;
+              let next_ctxt_hndl = prng();
+              let st' = intro_session_state_perm_available next_ctxt next_ctxt_hndl;
+              let st'' = take_session_state sid st';
+              //TODO: prove st'' is InUse
+              drop_ (session_state_perm (dflt st'' st'));
+              Some next_ctxt_hndl
+            }
+          }
+        }
+      }
     }
-  }
-  else
-  {
-    // ERROR - lookup failed
-    L.release  sht_lk;
-    None #ctxt_hndl_t
   }
 }
 ```

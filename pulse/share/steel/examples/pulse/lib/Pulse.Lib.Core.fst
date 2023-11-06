@@ -10,6 +10,8 @@ module T = FStar.Tactics
 
 let double_one_half () = ()
 
+let equate_by_smt = ()
+
 let vprop = vprop
 
 [@@"__reduce__"; "__steel_reduce__"]
