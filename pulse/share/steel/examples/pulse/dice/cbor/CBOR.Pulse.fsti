@@ -480,6 +480,56 @@ val constr_cbor_map
       vres == Cbor.Map v'
     )))
 
+val dummy_cbor_map_iterator: cbor_map_iterator_t
+
+val cbor_map_iterator_match
+  (p: perm)
+  (i: cbor_map_iterator_t)
+  (l: list (Cbor.raw_data_item & Cbor.raw_data_item))
+: Tot vprop
+
+val cbor_map_iterator_init
+  (a: cbor)
+  (#p: perm)
+  (#v: Ghost.erased Cbor.raw_data_item)
+: stt cbor_map_iterator_t
+    (raw_data_item_match p a v ** pure (Cbor.Map? v))
+    (fun i -> exists_ (fun l ->
+      cbor_map_iterator_match p i l **
+      (cbor_map_iterator_match p i l @==>
+        raw_data_item_match p a v) **
+      pure (
+        Cbor.Map? v /\
+        l == Cbor.Map?.v v
+      )
+    ))
+
+val cbor_map_iterator_is_done
+  (i: cbor_map_iterator_t)
+  (#p: perm)
+  (#l: Ghost.erased (list (Cbor.raw_data_item & Cbor.raw_data_item)))
+: stt bool
+    (cbor_map_iterator_match p i l)
+    (fun res -> cbor_map_iterator_match p i l ** pure (res == Nil? l))
+
+val cbor_map_iterator_next
+  (pi: R.ref cbor_map_iterator_t)
+  (#p: perm)
+  (#l: Ghost.erased (list (Cbor.raw_data_item & Cbor.raw_data_item)) { Cons? l})
+  (#i: Ghost.erased cbor_map_iterator_t)
+: stt cbor_map_entry
+    (pts_to pi i ** cbor_map_iterator_match p i l ** pure (Cons? l))
+    (fun c -> exists_ (fun i' -> exists_ (fun vc -> exists_ (fun l' ->
+      pts_to pi i' **
+      raw_data_item_map_entry_match p c vc **
+      cbor_map_iterator_match p i' l' **
+      ((raw_data_item_map_entry_match p c vc **
+        cbor_map_iterator_match p i' l' @==>
+        cbor_map_iterator_match p i l
+      ) **
+      pure (Ghost.reveal l == vc :: l')
+    )))))
+    
 val cbor_get_major_type
   (a: cbor)
   (#p: perm)
