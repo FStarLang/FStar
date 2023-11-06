@@ -86,7 +86,7 @@ type dpe_cmd = {
 #push-options "--z3rlimit 64 --query_stats" // to let z3 cope with CDDL specs
 #restart-solver
 
-noextract
+noextract [@@noextract_to "krml"]
 let parse_dpe_cmd_args_postcond
   (cid: U64.t)
   (vargs: raw_data_item)
@@ -101,7 +101,7 @@ let parse_dpe_cmd_args_postcond
   ) /\
   Seq.length rem == 0
   
-noextract
+noextract [@@noextract_to "krml"]
 let parse_dpe_cmd_postcond
   (sid: U64.t)
   (cid: U64.t)
@@ -118,7 +118,7 @@ let parse_dpe_cmd_postcond
     parse_dpe_cmd_args_postcond cid vargs vcmd rem
   ))
 
-noextract
+noextract [@@noextract_to "krml"]
 let parse_dpe_cmd_failure_postcond
  (s: Seq.seq U8.t)
 : prop

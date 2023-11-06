@@ -7,7 +7,7 @@ open CDDL.Spec
 
 module R = Pulse.Lib.Reference
 
-inline_for_extraction noextract
+inline_for_extraction noextract [@@noextract_to "krml"]
 let impl_typ
     (#b: option raw_data_item)
     (t: bounded_typ_gen b)
@@ -25,7 +25,7 @@ let impl_typ
             res == t v
         ))
 
-inline_for_extraction noextract
+inline_for_extraction noextract [@@noextract_to "krml"]
 let eval_impl_typ
     (#b: Ghost.erased (option raw_data_item))
     (#t: bounded_typ_gen b)
@@ -43,7 +43,7 @@ let eval_impl_typ
         ))
 = f c #p #v
 
-inline_for_extraction noextract
+inline_for_extraction noextract [@@noextract_to "krml"]
 ```pulse
 fn impl_coerce_to_bounded_typ'
     (b: Ghost.erased (option raw_data_item))
@@ -67,7 +67,7 @@ ensures
 }
 ```
 
-inline_for_extraction noextract
+inline_for_extraction noextract [@@noextract_to "krml"]
 let impl_coerce_to_bounded_typ
     (b: Ghost.erased (option raw_data_item))
     (#t: typ)
@@ -75,7 +75,7 @@ let impl_coerce_to_bounded_typ
 : Tot (impl_typ (coerce_to_bounded_typ b t))
 = impl_coerce_to_bounded_typ' b f
 
-inline_for_extraction noextract
+inline_for_extraction noextract [@@noextract_to "krml"]
 ```pulse
 fn impl_t_choice'
     (#b: Ghost.erased (option raw_data_item))
@@ -106,7 +106,7 @@ ensures
 }
 ```
 
-inline_for_extraction noextract
+inline_for_extraction noextract [@@noextract_to "krml"]
 let impl_t_choice
     (#b: Ghost.erased (option raw_data_item))
     (#t1 #t2: bounded_typ_gen b)
@@ -115,7 +115,7 @@ let impl_t_choice
 : Tot (impl_typ (t_choice t1 t2))
 = impl_t_choice' f1 f2
 
-inline_for_extraction noextract
+inline_for_extraction noextract [@@noextract_to "krml"]
 let impl_t_choice_none // FIXME: WHY WHY WHY can F* not automatically infer t1 and t2 by reducing (reveal (hide None)) to None?
     (#t1 #t2: bounded_typ_gen None)
     (f1: impl_typ t1)
@@ -123,7 +123,7 @@ let impl_t_choice_none // FIXME: WHY WHY WHY can F* not automatically infer t1 a
 : Tot (impl_typ (t_choice t1 t2))
 = impl_t_choice #None #t1 #t2 f1 f2
 
-inline_for_extraction noextract
+inline_for_extraction noextract [@@noextract_to "krml"]
 ```pulse
 fn impl_any'
     (c: cbor)
@@ -143,12 +143,12 @@ ensures
     true
 }
 ```
-inline_for_extraction noextract
+inline_for_extraction noextract [@@noextract_to "krml"]
 let impl_any
 : impl_typ any
 = impl_any'
 
-inline_for_extraction noextract
+inline_for_extraction noextract [@@noextract_to "krml"]
 ```pulse
 fn impl_uint'
     (c: cbor)
@@ -169,14 +169,14 @@ ensures
     (mt = major_type_uint64)
 }
 ```
-inline_for_extraction noextract
+inline_for_extraction noextract [@@noextract_to "krml"]
 let impl_uint
 : impl_typ uint
 = impl_uint'
 
 module U64 = FStar.UInt64
 
-inline_for_extraction noextract
+inline_for_extraction noextract [@@noextract_to "krml"]
 ```pulse
 fn impl_uint_literal'
     (n: U64.t)
@@ -203,13 +203,13 @@ ensures
     }
 }
 ```
-inline_for_extraction noextract
+inline_for_extraction noextract [@@noextract_to "krml"]
 let impl_uint_literal
     (n: U64.t)
 : impl_typ (t_uint_literal n)
 = impl_uint_literal' n
 
-inline_for_extraction noextract
+inline_for_extraction noextract [@@noextract_to "krml"]
 ```pulse
 fn impl_bytes'
     (c: cbor)
@@ -230,12 +230,12 @@ ensures
     (mt = major_type_byte_string)
 }
 ```
-inline_for_extraction noextract
+inline_for_extraction noextract [@@noextract_to "krml"]
 let impl_bytes
 : impl_typ bytes
 = impl_bytes'
 
-inline_for_extraction noextract
+inline_for_extraction noextract [@@noextract_to "krml"]
 let impl_array_group3
     (#b: Ghost.erased (option raw_data_item))
     (g: array_group3 b)
@@ -261,7 +261,7 @@ let impl_array_group3
             )
         )))
 
-inline_for_extraction noextract
+inline_for_extraction noextract [@@noextract_to "krml"]
 let eval_impl_array_group3
     (#b: Ghost.erased (option raw_data_item))
     (#g: array_group3 b)
@@ -364,7 +364,7 @@ val stick_trans
     ((p @==> q) ** (q @==> r))
     (fun _ -> p @==> r)
 
-inline_for_extraction noextract
+inline_for_extraction noextract [@@noextract_to "krml"]
 ```pulse
 fn impl_array_group3_concat'
     (#b: Ghost.erased (option raw_data_item))
@@ -405,7 +405,7 @@ ensures
 }
 ```
 
-inline_for_extraction noextract
+inline_for_extraction noextract [@@noextract_to "krml"]
 let impl_array_group3_concat
     (#b: Ghost.erased (option raw_data_item))
     (#g1: array_group3 b)
@@ -415,7 +415,7 @@ let impl_array_group3_concat
 : Tot (impl_array_group3 (array_group3_concat g1 g2))
 = impl_array_group3_concat' f1 f2
 
-inline_for_extraction noextract
+inline_for_extraction noextract [@@noextract_to "krml"]
 ```pulse
 fn impl_array_group3_item'
     (#b: Ghost.erased (option raw_data_item))
@@ -479,7 +479,7 @@ ensures
 }
 ```
 
-inline_for_extraction noextract
+inline_for_extraction noextract [@@noextract_to "krml"]
 let impl_array_group3_item
     (#b: Ghost.erased (option raw_data_item))
     (#ty: bounded_typ_gen b)
@@ -487,7 +487,7 @@ let impl_array_group3_item
 : Tot (impl_array_group3 (array_group3_item ty))
 = impl_array_group3_item' fty
 
-inline_for_extraction noextract
+inline_for_extraction noextract [@@noextract_to "krml"]
 ```pulse
 fn impl_t_array'
     (#b: Ghost.erased (option raw_data_item))
@@ -529,7 +529,7 @@ ensures
 }
 ```
 
-inline_for_extraction noextract
+inline_for_extraction noextract [@@noextract_to "krml"]
 let impl_t_array
     (#b: Ghost.erased (option raw_data_item))
     (#g: array_group3 b)
@@ -539,7 +539,7 @@ let impl_t_array
 
 module U8 = FStar.UInt8
 
-noextract
+noextract [@@noextract_to "krml"]
 let read_cbor_with_typ_success_postcond
   (t: typ)
   (va: Ghost.erased (Seq.seq U8.t))
@@ -568,7 +568,7 @@ let read_cbor_with_typ_success_post
     pure (read_cbor_with_typ_success_postcond t va c v rem)
   ))
 
-noextract
+noextract [@@noextract_to "krml"]
 let read_cbor_with_typ_error_postcond
   (t: typ)
   (va: Ghost.erased (Seq.seq U8.t))
@@ -614,7 +614,7 @@ let read_cbor_with_typ_post
 
 module SZ = FStar.SizeT
 
-inline_for_extraction noextract
+inline_for_extraction noextract [@@noextract_to "krml"]
 ```pulse
 fn read_cbor_with_typ
   (#t: typ)
@@ -659,7 +659,7 @@ ensures read_cbor_with_typ_post t a p va res
     }
 }
 ```
-noextract
+noextract [@@noextract_to "krml"]
 let read_deterministically_encoded_cbor_with_typ_success_postcond
   (t: typ)
   (va: Ghost.erased (Seq.seq U8.t))
@@ -671,7 +671,7 @@ let read_deterministically_encoded_cbor_with_typ_success_postcond
     read_deterministically_encoded_cbor_success_postcond va c v rem /\
     t v == true
 
-noextract
+noextract [@@noextract_to "krml"]
 let read_deterministically_encoded_cbor_with_typ_error_postcond
   (t: typ)
   (va: Ghost.erased (Seq.seq U8.t))
@@ -719,7 +719,7 @@ let read_deterministically_encoded_cbor_with_typ_post
 
 module SZ = FStar.SizeT
 
-inline_for_extraction noextract
+inline_for_extraction noextract [@@noextract_to "krml"]
 ```pulse
 fn read_deterministically_encoded_cbor_with_typ
   (#t: typ)
@@ -838,7 +838,7 @@ ensures
 }
 ```
 
-inline_for_extraction noextract
+inline_for_extraction noextract [@@noextract_to "krml"]
 ```pulse
 fn cbor_map_get_with_typ
   (#t: typ)
@@ -887,7 +887,7 @@ ensures
 }
 ```
 
-inline_for_extraction noextract
+inline_for_extraction noextract [@@noextract_to "krml"]
 let impl_matches_map_group
     (#b: Ghost.erased (option raw_data_item))
     (g: map_group b)
@@ -906,7 +906,7 @@ let impl_matches_map_group
             pure (opt_precedes (Ghost.reveal v) b /\ Map? v /\ res == matches_map_group g (Map?.v v))
         )
 
-inline_for_extraction noextract
+inline_for_extraction noextract [@@noextract_to "krml"]
 let eval_impl_matches_map_group
     (#b: Ghost.erased (option raw_data_item))
     (#g: map_group b)
@@ -925,7 +925,7 @@ let eval_impl_matches_map_group
         )
 = f c #p #v
 
-inline_for_extraction noextract
+inline_for_extraction noextract [@@noextract_to "krml"]
 ```pulse
 fn impl_t_map'
     (#b: Ghost.erased (option raw_data_item))
@@ -954,7 +954,7 @@ ensures
 }
 ```
 
-inline_for_extraction noextract
+inline_for_extraction noextract [@@noextract_to "krml"]
 let impl_t_map
     (#b: Ghost.erased (option raw_data_item))
     (#g: map_group b)
@@ -962,7 +962,7 @@ let impl_t_map
 : Tot (impl_typ (t_map g))
 = impl_t_map' ig
 
-inline_for_extraction noextract
+inline_for_extraction noextract [@@noextract_to "krml"]
 let impl_matches_map_entry_zero_or_more
     (#b: Ghost.erased (option raw_data_item))
     (g: map_group b)
@@ -982,7 +982,7 @@ let impl_matches_map_entry_zero_or_more
             res == List.Tot.existsb (pull_rel matches_map_group_entry' (Ghost.reveal v)) g.zero_or_more)
         )
 
-inline_for_extraction noextract
+inline_for_extraction noextract [@@noextract_to "krml"]
 let eval_impl_matches_map_entry_zero_or_more
     (#b: Ghost.erased (option raw_data_item))
     (#g: map_group b)
@@ -1002,7 +1002,7 @@ let eval_impl_matches_map_entry_zero_or_more
         )
 = f c
 
-inline_for_extraction noextract
+inline_for_extraction noextract [@@noextract_to "krml"]
 ```pulse
 fn impl_matches_map_entry_zero_or_more_nil'
     (b: Ghost.erased (option raw_data_item))
@@ -1026,13 +1026,13 @@ ensures
 }
 ```
 
-inline_for_extraction noextract
+inline_for_extraction noextract [@@noextract_to "krml"]
 let impl_matches_map_entry_zero_or_more_nil
     (b: Ghost.erased (option raw_data_item))
 : Tot (impl_matches_map_entry_zero_or_more (map_group_empty #b))
 = impl_matches_map_entry_zero_or_more_nil' b
 
-inline_for_extraction noextract
+inline_for_extraction noextract [@@noextract_to "krml"]
 ```pulse
 fn impl_matches_map_entry_zero_or_more_cons'
     (#b: Ghost.erased (option raw_data_item))
@@ -1079,7 +1079,7 @@ ensures
 }
 ```
 
-inline_for_extraction noextract
+inline_for_extraction noextract [@@noextract_to "krml"]
 let impl_matches_map_entry_zero_or_more_cons
     (#b: Ghost.erased (option raw_data_item))
     (e: map_group_entry b)
@@ -1090,7 +1090,7 @@ let impl_matches_map_entry_zero_or_more_cons
 : Tot (impl_matches_map_entry_zero_or_more (map_group_cons_zero_or_more e false g))
 = impl_matches_map_entry_zero_or_more_cons' e f_fst f_snd f_g
 
-inline_for_extraction noextract
+inline_for_extraction noextract [@@noextract_to "krml"]
 ```pulse
 fn impl_matches_map_group_no_restricted'
     (#b: Ghost.erased (option raw_data_item))
@@ -1156,7 +1156,7 @@ ensures
 }
 ```
 
-inline_for_extraction noextract
+inline_for_extraction noextract [@@noextract_to "krml"]
 let impl_matches_map_group_no_restricted
     (#b: Ghost.erased (option raw_data_item))
     (#g: map_group b)
