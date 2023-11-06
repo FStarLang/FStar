@@ -1,11 +1,56 @@
-module ArrayTests
+module RustArrayTests
+
+open FStar.Ghost
 open Pulse.Lib.Pervasives
+
 module U32 = FStar.UInt32
-module A = Pulse.Lib.Array
 module US = FStar.SizeT
-module R = Pulse.Lib.Reference
+module S = Pulse.Lib.Rust.Slice
+module A = Pulse.Lib.Rust.Array
+module V = Pulse.Lib.Rust.Vec
 
 #push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
+
+```pulse
+fn read (x:S.slice U32.t) (i:US.t) (#s:(s:erased (Seq.seq U32.t) { US.v i < Seq.length s }))
+  requires (S.pts_to x s)
+  returns r:U32.t
+  ensures (pure (r == Seq.index s (US.v i)) **
+           S.pts_to x s)
+{
+  S.op_Array_Access x i
+}
+```
+
+```pulse
+fn read_local (_:unit)
+  requires emp
+  returns r:U32.t
+  ensures (pure (r == 0ul))
+{
+  let mut a = [| 0ul; 1sz |];
+  S.array_to_slice_pts_to a;
+  let r = read (S.array_as_slice a) 0sz;
+  S.to_array_pts_to a;
+  r
+}
+```
+
+```pulse
+fn read_vec (_:unit)
+  requires emp
+  returns r:U32.t
+  ensures (pure (r == 0ul))
+{
+  let v = V.alloc 0ul 1sz;
+  S.vec_to_slice_pts_to v;
+  let r = read (S.vec_as_slice v) 0sz;
+  S.to_vec_pts_to v;
+  V.free v;
+  r
+}
+```
+
 
 // let elseq (a:Type) (l:nat) = s:Ghost.erased (Seq.seq a) { Seq.length s == l }
 

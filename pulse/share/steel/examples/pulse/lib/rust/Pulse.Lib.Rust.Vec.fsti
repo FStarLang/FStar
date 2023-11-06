@@ -53,3 +53,8 @@ val op_Array_Assignment
       (requires pts_to x s)
       (ensures fun res ->
          pts_to x (Seq.upd s (SZ.v i) v))
+
+val free (#a:Type0) (x:vec a) (#s:Ghost.erased (Seq.seq a))
+  : stt unit
+      (requires pts_to x s)
+      (ensures fun _ -> emp)
