@@ -169,7 +169,7 @@ let impl_bytes
 
 inline_for_extraction noextract
 let impl_array_group3
-    (#b: option raw_data_item)
+    (#b: Ghost.erased (option raw_data_item))
     (g: array_group3 b)
 : Tot Type
 =
@@ -818,3 +818,281 @@ ensures
     }
 }
 ```
+
+inline_for_extraction noextract
+let impl_matches_map_group
+    (#b: Ghost.erased (option raw_data_item))
+    (g: map_group b)
+: Tot Type
+=
+    c: cbor ->
+    (#p: perm) ->
+    (#v: Ghost.erased raw_data_item) ->
+    stt bool
+        (
+            raw_data_item_match p c v **
+            pure (opt_precedes (Ghost.reveal v) b /\ Map? v)
+        )
+        (fun res -> 
+            raw_data_item_match p c v **
+            pure (opt_precedes (Ghost.reveal v) b /\ Map? v /\ res == matches_map_group g (Map?.v v))
+        )
+
+inline_for_extraction noextract
+let eval_impl_matches_map_group
+    (#b: Ghost.erased (option raw_data_item))
+    (#g: map_group b)
+    (f: impl_matches_map_group g)
+    (c: cbor)
+    (#p: perm)
+    (#v: Ghost.erased raw_data_item)
+:   stt bool
+        (
+            raw_data_item_match p c v **
+            pure (opt_precedes (Ghost.reveal v) b /\ Map? v)
+        )
+        (fun res -> 
+            raw_data_item_match p c v **
+            pure (opt_precedes (Ghost.reveal v) b /\ Map? v /\ res == matches_map_group g (Map?.v v))
+        )
+= f c #p #v
+
+inline_for_extraction noextract
+```pulse
+fn impl_t_map'
+    (#b: Ghost.erased (option raw_data_item))
+    (#g: map_group b)
+    (ig: (impl_matches_map_group (g)))
+    (c: cbor)
+    (#p: perm)
+    (#v: Ghost.erased raw_data_item)
+requires
+    raw_data_item_match p c v **
+    pure (opt_precedes (Ghost.reveal v) (Ghost.reveal b))
+returns res: bool
+ensures
+    raw_data_item_match p c v **
+    pure (
+        opt_precedes (Ghost.reveal v) (Ghost.reveal b) /\
+        res == t_map g v
+    )
+{
+    let ty = cbor_get_major_type c;
+    if (ty = major_type_map) {
+        eval_impl_matches_map_group ig c;
+    } else {
+        false
+    }
+}
+```
+
+inline_for_extraction noextract
+let impl_t_map
+    (#b: Ghost.erased (option raw_data_item))
+    (#g: map_group b)
+    (ig: impl_matches_map_group g)
+: Tot (impl_typ (t_map g))
+= impl_t_map' ig
+
+inline_for_extraction noextract
+let impl_matches_map_entry_zero_or_more
+    (#b: Ghost.erased (option raw_data_item))
+    (g: map_group b)
+: Tot Type
+=
+    c: cbor_map_entry ->
+    (#p: perm) ->
+    (#v: Ghost.erased (raw_data_item & raw_data_item)) ->
+    stt bool
+        (
+            raw_data_item_map_entry_match p c v **
+            pure (opt_precedes (Ghost.reveal v) b)
+        )
+        (fun res -> 
+            raw_data_item_map_entry_match p c v **
+            pure (opt_precedes (Ghost.reveal v) b /\
+            res == List.Tot.existsb (pull_rel matches_map_group_entry' (Ghost.reveal v)) g.zero_or_more)
+        )
+
+inline_for_extraction noextract
+let eval_impl_matches_map_entry_zero_or_more
+    (#b: Ghost.erased (option raw_data_item))
+    (#g: map_group b)
+    (f: impl_matches_map_entry_zero_or_more g)
+    (c: cbor_map_entry)
+    (#p: perm)
+    (#v: Ghost.erased (raw_data_item & raw_data_item))
+:   stt bool
+        (
+            raw_data_item_map_entry_match p c v **
+            pure (opt_precedes (Ghost.reveal v) b)
+        )
+        (fun res -> 
+            raw_data_item_map_entry_match p c v **
+            pure (opt_precedes (Ghost.reveal v) b /\
+            res == List.Tot.existsb (pull_rel matches_map_group_entry' (Ghost.reveal v)) g.zero_or_more)
+        )
+= f c
+
+inline_for_extraction noextract
+```pulse
+fn impl_matches_map_entry_zero_or_more_nil'
+    (b: Ghost.erased (option raw_data_item))
+    (c: cbor_map_entry)
+    (#p: perm)
+    (#v: Ghost.erased (raw_data_item & raw_data_item))
+requires
+        (
+            raw_data_item_map_entry_match p c v **
+            pure (opt_precedes (Ghost.reveal v) b)
+        )
+returns res: bool
+ensures
+        (
+            raw_data_item_map_entry_match p c v **
+            pure (opt_precedes (Ghost.reveal v) b /\
+            res == List.Tot.existsb (pull_rel matches_map_group_entry' (Ghost.reveal v)) (map_group_empty #b).zero_or_more)
+        )
+{
+    false
+}
+```
+
+inline_for_extraction noextract
+let impl_matches_map_entry_zero_or_more_nil
+    (b: Ghost.erased (option raw_data_item))
+: Tot (impl_matches_map_entry_zero_or_more (map_group_empty #b))
+= impl_matches_map_entry_zero_or_more_nil' b
+
+inline_for_extraction noextract
+```pulse
+fn impl_matches_map_entry_zero_or_more_cons'
+    (#b: Ghost.erased (option raw_data_item))
+    (e: map_group_entry b)
+    (f_fst: impl_typ e.fst)
+    (f_snd: impl_typ e.snd)
+    (#g: map_group b)
+    (f_g: impl_matches_map_entry_zero_or_more g)
+    (c: cbor_map_entry)
+    (#p: perm)
+    (#v: Ghost.erased (raw_data_item & raw_data_item))
+requires
+        (
+            raw_data_item_map_entry_match p c v **
+            pure (opt_precedes (Ghost.reveal v) b)
+        )
+returns res: bool
+ensures
+        (
+            raw_data_item_map_entry_match p c v **
+            pure (opt_precedes (Ghost.reveal v) b /\
+            res == List.Tot.existsb (pull_rel matches_map_group_entry' (Ghost.reveal v)) (map_group_cons_zero_or_more e false g).zero_or_more)
+        )
+{
+    assert (pure (
+        List.Tot.existsb (pull_rel matches_map_group_entry' (Ghost.reveal v)) (map_group_cons_zero_or_more e false g).zero_or_more == (
+          matches_map_group_entry e (Ghost.reveal v) ||
+          List.Tot.existsb (pull_rel matches_map_group_entry' (Ghost.reveal v)) g.zero_or_more
+    )));
+    unfold (raw_data_item_map_entry_match p c v);
+    let test_fst = eval_impl_typ f_fst (cbor_map_entry_key c);
+    if (test_fst) {
+        let test_snd = eval_impl_typ f_snd (cbor_map_entry_value c);
+        fold (raw_data_item_map_entry_match p c v);
+        if (test_snd) {
+            true
+        } else {
+            eval_impl_matches_map_entry_zero_or_more f_g c;
+        }
+    } else {
+        fold (raw_data_item_map_entry_match p c v);
+        eval_impl_matches_map_entry_zero_or_more f_g c;
+    }
+}
+```
+
+inline_for_extraction noextract
+let impl_matches_map_entry_zero_or_more_cons
+    (#b: Ghost.erased (option raw_data_item))
+    (e: map_group_entry b)
+    (f_fst: impl_typ e.fst)
+    (f_snd: impl_typ e.snd)
+    (#g: map_group b)
+    (f_g: impl_matches_map_entry_zero_or_more g)
+: Tot (impl_matches_map_entry_zero_or_more (map_group_cons_zero_or_more e false g))
+= impl_matches_map_entry_zero_or_more_cons' e f_fst f_snd f_g
+
+inline_for_extraction noextract
+```pulse
+fn impl_matches_map_group_no_restricted'
+    (#b: Ghost.erased (option raw_data_item))
+    (#g: map_group b)
+    (ig: (impl_matches_map_entry_zero_or_more (g)))
+    (h_ig: squash (
+        (Nil? g.one /\ Nil? g.zero_or_one)
+    ))
+    (c: cbor)
+    (#p: perm)
+    (#v: Ghost.erased raw_data_item)
+requires
+    raw_data_item_match p c v **
+    pure (opt_precedes (Ghost.reveal v) (Ghost.reveal b) /\ Map? v)
+returns res: bool
+ensures
+    raw_data_item_match p c v **
+    pure (
+        opt_precedes (Ghost.reveal v) (Ghost.reveal b) /\
+        Map? v /\
+        res == matches_map_group g (Map?.v v)
+    )
+{
+    let i0 = cbor_map_iterator_init c;
+    let mut pi = i0;
+    let mut pres = true;
+    let done0 = cbor_map_iterator_is_done i0;
+    let mut pcont = not done0;
+    while (let cont = !pcont ; cont)
+    invariant cont . exists (i: cbor_map_iterator_t) . exists (l: list (raw_data_item & raw_data_item)) . exists (res: bool) . (
+        pts_to pcont cont **
+        pts_to pres res **
+        pts_to pi i **
+        cbor_map_iterator_match p i l **
+        `@(cbor_map_iterator_match p i l @==> raw_data_item_match p c v) **
+        pure (
+            list_ghost_forall_exists matches_map_group_entry' (Map?.v v) g.zero_or_more ==
+                (res && list_ghost_forall_exists matches_map_group_entry' l g.zero_or_more) /\
+            opt_precedes l (Ghost.reveal b) /\
+            cont == (res && Cons? l)
+        )
+    )
+    {   
+        let x = cbor_map_iterator_next pi;
+        stick_trans ();
+        let res = eval_impl_matches_map_entry_zero_or_more ig x;
+        with vx gi l . assert (pts_to pi gi ** raw_data_item_map_entry_match p x vx ** cbor_map_iterator_match p gi l ** `@((raw_data_item_map_entry_match p x vx ** cbor_map_iterator_match p gi l) @==> raw_data_item_match p c v)) ;
+        stick_consume_l ()
+            #(raw_data_item_map_entry_match p x vx)
+            #(cbor_map_iterator_match p gi l);
+        pres := res;
+        if (res) {
+            let i = !pi;
+            rewrite each gi as i; // FIXME: HOW HOW HOW to do that once the issue with the use of stick_consume_l above is solved and the `with` above is removed?
+            let done = cbor_map_iterator_is_done i;
+            pcont := not done;
+        } else {
+            pcont := false;
+        }
+    };
+    elim_stick0 ();
+    !pres
+}
+```
+
+inline_for_extraction noextract
+let impl_matches_map_group_no_restricted
+    (#b: Ghost.erased (option raw_data_item))
+    (#g: map_group b)
+    (ig: impl_matches_map_entry_zero_or_more (g) {
+        (Nil? g.one /\ Nil? g.zero_or_one)
+    })
+= impl_matches_map_group_no_restricted' ig ()

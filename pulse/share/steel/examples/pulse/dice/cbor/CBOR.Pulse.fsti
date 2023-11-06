@@ -19,14 +19,6 @@ let fstp (#a1 #a2: Type) (x: (a1 & a2)) : Tot a1 = fst x
 noextract
 let sndp (#a1 #a2: Type) (x: (a1 & a2)) : Tot a2 = snd x
 
-let raw_data_item_map_entry_match1
-  (c1: cbor_map_entry)
-  (v1: (Cbor.raw_data_item & Cbor.raw_data_item))
-  (raw_data_item_match: (cbor -> (v': Cbor.raw_data_item { v' << v1 }) -> vprop))
-: Tot vprop
-= raw_data_item_match (cbor_map_entry_key c1) (fstp v1) **
-  raw_data_item_match (cbor_map_entry_value c1) (sndp v1)
-
 val raw_data_item_match
   (p: perm)
   (c: cbor)
@@ -45,7 +37,8 @@ let raw_data_item_map_entry_match
   (c1: cbor_map_entry)
   (v1: (Cbor.raw_data_item & Cbor.raw_data_item))
 : Tot vprop
-= raw_data_item_map_entry_match1 c1 v1 (raw_data_item_match p)
+= raw_data_item_match p (cbor_map_entry_key c1) (fstp v1) **
+  raw_data_item_match p (cbor_map_entry_value c1) (sndp v1)
 
 let raw_data_item_map_match
   (p: perm)
@@ -529,7 +522,7 @@ val cbor_map_iterator_next
       ) **
       pure (Ghost.reveal l == vc :: l')
     )))))
-    
+
 val cbor_get_major_type
   (a: cbor)
   (#p: perm)
