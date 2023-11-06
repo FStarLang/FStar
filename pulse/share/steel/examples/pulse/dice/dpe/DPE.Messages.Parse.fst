@@ -42,7 +42,37 @@ let impl_session_message : impl_typ Spec.session_message =
       (impl_array_group3_item impl_bytes)
   )
 
-assume val impl_command_message' : impl_typ Spec.command_message'
+let impl_command_id: impl_typ Spec.command_id =
+  impl_uint_literal Spec.get_profile `impl_t_choice_none`
+  impl_uint_literal Spec.open_session `impl_t_choice_none`
+  impl_uint_literal Spec.close_session `impl_t_choice_none`
+  impl_uint_literal Spec.sync_session `impl_t_choice_none`
+  impl_uint_literal Spec.export_session `impl_t_choice_none`
+  impl_uint_literal Spec.import_session `impl_t_choice_none`
+  impl_uint_literal Spec.initialize_context `impl_t_choice_none`
+  impl_uint_literal Spec.derive_child `impl_t_choice_none`
+  impl_uint_literal Spec.certify_key `impl_t_choice_none`
+  impl_uint_literal Spec.sign `impl_t_choice_none`
+  impl_uint_literal Spec.seal `impl_t_choice_none`
+  impl_uint_literal Spec.unseal `impl_t_choice_none`
+  impl_uint_literal Spec.derive_sealing_public_key `impl_t_choice_none`
+  impl_uint_literal Spec.rotate_context_handle `impl_t_choice_none`
+  impl_uint_literal Spec.destroy_context
+
+let impl_default_args_group : impl_matches_map_group Spec.default_args_group =
+  impl_matches_map_group_no_restricted (
+    impl_matches_map_entry_zero_or_more_cons
+      (CDDL.Spec.uint `CDDL.Spec.MapGroupEntry` CDDL.Spec.any)
+      impl_uint
+      impl_any
+      (impl_matches_map_entry_zero_or_more_nil _)
+  )
+
+let impl_command_message' : impl_typ Spec.command_message' =
+  impl_t_array (
+    impl_array_group3_item impl_command_id `impl_array_group3_concat`
+    impl_array_group3_item (impl_t_map impl_default_args_group)
+  )
 
 module U64 = FStar.UInt64
 

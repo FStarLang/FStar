@@ -116,6 +116,39 @@ let impl_t_choice
 = impl_t_choice' f1 f2
 
 inline_for_extraction noextract
+let impl_t_choice_none // FIXME: WHY WHY WHY can F* not automatically infer t1 and t2 by reducing (reveal (hide None)) to None?
+    (#t1 #t2: bounded_typ_gen None)
+    (f1: impl_typ t1)
+    (f2: impl_typ t2)
+: Tot (impl_typ (t_choice t1 t2))
+= impl_t_choice #None #t1 #t2 f1 f2
+
+inline_for_extraction noextract
+```pulse
+fn impl_any'
+    (c: cbor)
+    (#p: perm)
+    (#v: Ghost.erased raw_data_item)
+requires
+        (raw_data_item_match p c v ** pure (
+            opt_precedes (Ghost.reveal v) (None #raw_data_item)
+        ))
+returns res: bool
+ensures
+        (raw_data_item_match p c v ** pure (
+            opt_precedes (Ghost.reveal v) (None #raw_data_item) /\
+            res == any v
+        ))
+{
+    true
+}
+```
+inline_for_extraction noextract
+let impl_any
+: impl_typ any
+= impl_any'
+
+inline_for_extraction noextract
 ```pulse
 fn impl_uint'
     (c: cbor)
@@ -140,6 +173,41 @@ inline_for_extraction noextract
 let impl_uint
 : impl_typ uint
 = impl_uint'
+
+module U64 = FStar.UInt64
+
+inline_for_extraction noextract
+```pulse
+fn impl_uint_literal'
+    (n: U64.t)
+    (c: cbor)
+    (#p: perm)
+    (#v: Ghost.erased raw_data_item)
+requires
+        (raw_data_item_match p c v ** pure (
+            opt_precedes (Ghost.reveal v) (None #raw_data_item)
+        ))
+returns res: bool
+ensures
+        (raw_data_item_match p c v ** pure (
+            opt_precedes (Ghost.reveal v) (None #raw_data_item) /\
+            res == t_uint_literal n v
+        ))
+{
+    let mt = cbor_get_major_type c;
+    if (mt = major_type_uint64) {
+        let i = destr_cbor_int64 c;
+        (i.cbor_int_value = n)
+    } else {
+        false
+    }
+}
+```
+inline_for_extraction noextract
+let impl_uint_literal
+    (n: U64.t)
+: impl_typ (t_uint_literal n)
+= impl_uint_literal' n
 
 inline_for_extraction noextract
 ```pulse
