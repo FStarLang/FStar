@@ -92,6 +92,10 @@ let pts_to_injective_eq #a #opened #p0 #p1 #v0 #v1 r =
     (fun m -> pts_to_ref_injective r p0 p1 v0 v1 m);
   rewrite_slprop (pts_to r p1 v1) (pts_to r p1 v0) (fun _ -> ())
 
+let pts_to_perm
+  r
+= H.pts_to_perm r
+
 let alloc_pt x =
   let r = H.alloc (U.raise_val x) in
   rewrite_slprop (H.pts_to r full_perm (U.raise_val x)) (pts_to r full_perm x) (fun _ -> ());
@@ -128,6 +132,13 @@ let free_pt #a #v r =
   let v' = Ghost.hide (U.raise_val (Ghost.reveal v)) in
   rewrite_slprop (pts_to r full_perm v) (H.pts_to r full_perm v') (fun _ -> ());
   H.free r
+
+let share_gen_pt #a #uses #p #v r p1 p2 =
+  let v' = Ghost.hide (U.raise_val (Ghost.reveal v)) in
+  rewrite_slprop (pts_to r p v) (H.pts_to r p v') (fun _ -> ());
+  H.share_gen r p1 p2;
+  rewrite_slprop (H.pts_to r p1 v') (pts_to r p1 v) (fun _ -> ());
+  rewrite_slprop (H.pts_to r p2 v') (pts_to r p2 v) (fun _ -> ())
 
 let share_pt #a #uses #p #v r =
   let v' = Ghost.hide (U.raise_val (Ghost.reveal v)) in
@@ -359,6 +370,10 @@ let vptrp_not_null
 (*** GHOST REFERENCES ***)
 let ghost_ref a = H.ghost_ref (U.raise_t a)
 
+let dummy_ghost_ref a =
+  H.reveal_ghost_ref (U.raise_t a);
+  coerce_eq () (Ghost.hide (H.null #(U.raise_t a)))
+
 [@__reduce__]
 let ghost_pts_to_sl #a r p x = H.ghost_pts_to_sl #(U.raise_t a) r p (U.raise_val x)
 
@@ -383,6 +398,10 @@ let ghost_alloc_pt (#a:Type) (#u:_) (x:erased a)
   = H.ghost_alloc (raise_erased x)
 
 let ghost_free_pt r = H.ghost_free r
+
+let ghost_share_gen_pt
+  #_ #_ #_ #x r p1 p2
+= H.ghost_share_gen #_ #_ #_ #(raise_erased x) r p1 p2
 
 let ghost_share_pt (#a:Type) (#u:_)
                 (#p:perm)

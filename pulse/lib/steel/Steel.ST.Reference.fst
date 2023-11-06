@@ -57,6 +57,10 @@ let pts_to_not_null #a #opened #p #v r
   = extract_fact #opened (pts_to r p v) (r =!= null) (R.pts_to_not_null r p v);
     ()
 
+let pts_to_perm
+  r
+= coerce_ghost (fun _ -> R.pts_to_perm r)
+
 let alloc (#a:Type) (x:a)
   : ST (ref a)
       emp
@@ -164,6 +168,10 @@ let with_named_local
   let _ = elim_exists () in
   _free_and_pop_frame r;
   return v
+
+let share_gen
+  r p1 p2
+= coerce_ghost (fun _ -> R.share_gen_pt r p1 p2)
 
 let share (#a:Type0)
           (#uses:_)
