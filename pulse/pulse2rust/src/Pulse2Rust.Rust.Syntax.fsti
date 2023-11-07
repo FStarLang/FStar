@@ -3,12 +3,17 @@ module Pulse2Rust.Rust.Syntax
 open FStar.Compiler.Effect
 
 type typ =
-  | Typ_name of string
+  | Typ_path of list typ_path_segment
   | Typ_reference of typ_reference
 
 and typ_reference = {
   typ_ref_mut : bool;
   typ_ref_typ : typ;
+}
+
+and typ_path_segment = {
+  typ_path_segment_name : string;
+  typ_path_segment_generic_args : list typ;
 }
 
 type pat_ident = {
@@ -123,6 +128,7 @@ type fn = {
   fn_body : list stmt;
 }
 
+val mk_scalar_typ (name:string) : typ
 val mk_ref_typ (is_mut:bool) (t:typ) : typ
 val mk_binop (e1:expr) (op:binop) (e2:expr) : expr
 val mk_block_expr (l:list stmt) : expr

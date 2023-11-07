@@ -70,29 +70,29 @@ let rec uncurry_arrow (t:S.mlty) : (list S.mlty & S.mlty) =
 
 let rec extract_mlty (g:env) (t:S.mlty) : typ =
   match t with
-  | S.MLTY_Var s -> Typ_name (tyvar_of s)
+  | S.MLTY_Var s -> mk_scalar_typ (tyvar_of s)
   | S.MLTY_Named ([], p)
-    when S.string_of_mlpath p = "FStar.UInt32.t" -> Typ_name "u32"
+    when S.string_of_mlpath p = "FStar.UInt32.t" -> mk_scalar_typ "u32"
   | S.MLTY_Named ([], p)
-    when S.string_of_mlpath p = "FStar.Int32.t" -> Typ_name "i32"
+    when S.string_of_mlpath p = "FStar.Int32.t" -> mk_scalar_typ "i32"
   | S.MLTY_Named ([], p)
-    when S.string_of_mlpath p = "FStar.UInt64.t" -> Typ_name "u64"
+    when S.string_of_mlpath p = "FStar.UInt64.t" -> mk_scalar_typ "u64"
   | S.MLTY_Named ([], p)
     when S.string_of_mlpath p = "FStar.Int64.t" ||
          S.string_of_mlpath p = "Prims.int"     ||
-         S.string_of_mlpath p = "Prims.nat" ->Typ_name "i64"  // TODO: int to int64, nat to int64, FIX
+         S.string_of_mlpath p = "Prims.nat" -> mk_scalar_typ "i64"  // TODO: int to int64, nat to int64, FIX
   | S.MLTY_Named ([], p)
-    when S.string_of_mlpath p = "Prims.bool" -> Typ_name "bool"
+    when S.string_of_mlpath p = "Prims.bool" -> mk_scalar_typ "bool"
   | S.MLTY_Named ([arg], p)
     when S.string_of_mlpath p = "Pulse.Lib.Reference.ref" ->
     let is_mut = true in
     mk_ref_typ is_mut (extract_mlty g arg)
-  | S.MLTY_Erased -> Typ_name "unit"
+  | S.MLTY_Erased -> mk_scalar_typ "unit"
   | _ -> fail_nyi (format1 "mlty %s" (S.mlty_to_string t))
 
 let extract_top_level_fn_arg (g:env) (arg_name:string) (t:S.mlty) : fn_arg =
   match t with
-  | S.MLTY_Var s -> mk_scalar_fn_arg arg_name (Typ_name (tyvar_of s))
+  | S.MLTY_Var s -> mk_scalar_fn_arg arg_name (mk_scalar_typ (tyvar_of s))
   | S.MLTY_Named ([], p)
     when S.string_of_mlpath p = "FStar.UInt32.t" ||
          S.string_of_mlpath p = "FStar.Int32.t"  ||
@@ -106,11 +106,9 @@ let extract_top_level_fn_arg (g:env) (arg_name:string) (t:S.mlty) : fn_arg =
   | S.MLTY_Named ([arg], p)
     when S.string_of_mlpath p = "Pulse.Lib.Reference.ref" ->
     mk_scalar_fn_arg arg_name (extract_mlty g t)
-    // let is_mut = true in
-    // mk_ref_fn_arg arg_name is_mut (extract_mlty g arg)  // TODO: try making an argument with ref type, it may print as &t
 
   | S.MLTY_Erased ->
-    mk_scalar_fn_arg arg_name (Typ_name "unit")
+    mk_scalar_fn_arg arg_name (extract_mlty g t)
   
   | _ -> fail_nyi (format1 "top level fn arg %s" (S.mlty_to_string t))
 

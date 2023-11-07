@@ -4,6 +4,9 @@ open FStar.Compiler.Effect
 
 module L = FStar.Compiler.List
 
+let mk_scalar_typ (name:string) : typ =
+  Typ_path [ {typ_path_segment_name = name; typ_path_segment_generic_args = [] } ]
+
 let mk_ref_typ (is_mut:bool) (t:typ) : typ =
   Typ_reference { typ_ref_mut = is_mut; typ_ref_typ = t }
 
