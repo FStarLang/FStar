@@ -2363,37 +2363,45 @@ let refl_tc_term (g:env) (e:term) : tac (option (term & (Core.tot_or_ghost & typ
       e in
     try
      begin
-     let allow_uvars = false in
-     let allow_names = true in (* terms are potentially open, names are OK *)
-     let e = SC.deep_compress allow_uvars allow_names e in
-     // TODO: may be should we check here that e has no unresolved implicits?
-     dbg_refl g (fun _ ->
-       BU.format1 "} finished tc with e = %s\n"
-         (Print.term_to_string e));
-     let guards : ref (list (env & typ)) = BU.mk_ref [] in
-     let gh = fun g guard ->
-       (* collect guards and return them *)
-       dbg_refl g (fun _ -> 
-        BU.format3 "Got guard in Env@%s |- %s@%s\n"
-          (Env.get_range g |> Range.string_of_range)
-          (Print.term_to_string guard)
-          (Range.string_of_range guard.pos)
-          );
-       guards := (g, guard) :: !guards;
-       true
-     in
-     match Core.compute_term_type_handle_guards g e gh with
-     | Inl (eff, t) ->
-        let t = refl_norm_type g t in
-        dbg_refl g (fun _ ->
-          BU.format3 "refl_tc_term@%s for %s computed type %s\n"
-            (Range.string_of_range e.pos)
-            (Print.term_to_string e)
-            (Print.term_to_string t));
-        ((e, (eff, t)), !guards)
-     | Inr err ->
-       dbg_refl g (fun _ -> BU.format1 "refl_tc_term failed: %s\n" (Core.print_error err));
-       Errors.raise_error (Errors.Fatal_IllTyped, "tc_term callback failed: " ^ Core.print_error err) e.pos
+     if not (no_uvars_in_term e)
+     then (
+        Errors.raise_error (Errors.Error_UnexpectedUnresolvedUvar,
+                            BU.format1 "Elaborated term has unresolved implicits: %s" (Print.term_to_string e))
+                            e.pos
+     )
+     else ( 
+      let allow_uvars = false in
+      let allow_names = true in (* terms are potentially open, names are OK *)
+      let e = SC.deep_compress allow_uvars allow_names e in
+      // TODO: may be should we check here that e has no unresolved implicits?
+      dbg_refl g (fun _ ->
+        BU.format1 "} finished tc with e = %s\n"
+          (Print.term_to_string e));
+      let guards : ref (list (env & typ)) = BU.mk_ref [] in
+      let gh = fun g guard ->
+        (* collect guards and return them *)
+        dbg_refl g (fun _ -> 
+          BU.format3 "Got guard in Env@%s |- %s@%s\n"
+            (Env.get_range g |> Range.string_of_range)
+            (Print.term_to_string guard)
+            (Range.string_of_range guard.pos)
+            );
+        guards := (g, guard) :: !guards;
+        true
+      in
+      match Core.compute_term_type_handle_guards g e gh with
+      | Inl (eff, t) ->
+          let t = refl_norm_type g t in
+          dbg_refl g (fun _ ->
+            BU.format3 "refl_tc_term@%s for %s computed type %s\n"
+              (Range.string_of_range e.pos)
+              (Print.term_to_string e)
+              (Print.term_to_string t));
+          ((e, (eff, t)), !guards)
+      | Inr err ->
+        dbg_refl g (fun _ -> BU.format1 "refl_tc_term failed: %s\n" (Core.print_error err));
+        Errors.raise_error (Errors.Fatal_IllTyped, "tc_term callback failed: " ^ Core.print_error err) e.pos
+     )
     end
     with
     | Errors.Error (Errors.Error_UnexpectedUnresolvedUvar, _, _, _) ->
@@ -2495,15 +2503,29 @@ let refl_instantiate_implicits (g:env) (e:term) : tac (option (term & typ) & iss
     will return this term and it MUST be compressed. It's logical
     part should be trivial too, as we only lax-typechecked the term. *)
     Rel.force_trivial_guard g guard;
-    let allow_uvars = false in
-    let allow_names = true in (* terms are potentially open, names are OK *)
-    let e = SC.deep_compress allow_uvars allow_names e in
-    let t = t |> refl_norm_type g |> SC.deep_compress allow_uvars allow_names in
-    dbg_refl g (fun _ ->
-      BU.format2 "} finished tc with e = %s and t = %s\n"
-        (Print.term_to_string e)
-        (Print.term_to_string t));
-    ((e, t), [])
+    if not (no_uvars_in_term e)
+    then (
+      Errors.raise_error (Errors.Error_UnexpectedUnresolvedUvar,
+                          BU.format1 "Elaborated term has unresolved implicits: %s" (Print.term_to_string e))
+                          e.pos
+    )
+    else if not (no_uvars_in_term t)
+    then (
+      Errors.raise_error (Errors.Error_UnexpectedUnresolvedUvar,
+                          BU.format1 "Inferred type has unresolved implicits: %s" (Print.term_to_string t))
+                          e.pos
+    )
+    else (
+      let allow_uvars = false in
+      let allow_names = true in (* terms are potentially open, names are OK *)
+      let e = SC.deep_compress allow_uvars allow_names e in
+      let t = t |> refl_norm_type g |> SC.deep_compress allow_uvars allow_names in
+      dbg_refl g (fun _ ->
+        BU.format2 "} finished tc with e = %s and t = %s\n"
+          (Print.term_to_string e)
+          (Print.term_to_string t));
+      ((e, t), [])
+    )
   )
   else ret (None, [unexpected_uvars_issue (Env.get_range g)])
 
