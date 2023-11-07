@@ -246,6 +246,14 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     let e2 = extract_mlexpr g e2 in
     let e3 = extract_mlexpr g e3 in
     mk_assign (mk_expr_index e1 e2) e3
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e])
+    when S.string_of_mlpath p = "Pulse.Lib.Rust.Slice.array_as_slice" ->
+    extract_mlexpr g e
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e])
+    when S.string_of_mlpath p = "Pulse.Lib.Rust.Slice.vec_as_slice" ->
+    let e = extract_mlexpr g e in
+    let is_mut = true in
+    mk_reference_expr is_mut e
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2])
     when S.string_of_mlpath p = "Pulse.Lib.Rust.Vec.alloc" ->
     let e1 = extract_mlexpr g e1 in

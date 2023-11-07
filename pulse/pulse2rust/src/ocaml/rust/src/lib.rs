@@ -451,7 +451,7 @@ fn to_syn_vec_new(args: &Vec<Expr>) -> syn::Expr {
     let len = to_syn_expr(&args[1]);
     let init_str = quote::quote!(#init).to_string();
     let len_str = quote::quote!(#len).to_string();
-    let macro_args = format!("{}, {} as i64", init_str, len_str);
+    let macro_args = format!("{}, {}", init_str, len_str);
     let ts = proc_macro2::TokenStream::from_str(&macro_args).unwrap();
     syn::Expr::Macro(syn::ExprMacro {
         attrs: vec![],
