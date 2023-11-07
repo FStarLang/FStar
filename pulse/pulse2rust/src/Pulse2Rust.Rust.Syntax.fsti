@@ -2,21 +2,6 @@ module Pulse2Rust.Rust.Syntax
 
 open FStar.Compiler.Effect
 
-type typ =
-  | Typ_path of list typ_path_segment
-  | Typ_reference of typ_reference
-  | Typ_slice of typ
-
-and typ_reference = {
-  typ_ref_mut : bool;
-  typ_ref_typ : typ;
-}
-
-and typ_path_segment = {
-  typ_path_segment_name : string;
-  typ_path_segment_generic_args : list typ;
-}
-
 type pat_ident = {
   pat_name : string;
   by_ref : bool;
@@ -65,6 +50,7 @@ type expr =
   | Expr_if of expr_if
   | Expr_while of expr_while
   | Expr_index of expr_index
+  | Expr_repeat of expr_repeat
 
 and expr_bin = {
   expr_bin_left : expr;
@@ -103,6 +89,11 @@ and expr_while = {
   expr_while_body : list stmt;
 }
 
+and expr_repeat = {
+  expr_repeat_elem : expr;
+  expr_repeat_len : expr;
+}
+
 and local_stmt = {
   local_stmt_pat : pat;
   local_stmt_init : option expr;
@@ -111,6 +102,27 @@ and local_stmt = {
 and stmt =
   | Stmt_local of local_stmt
   | Stmt_expr of expr
+
+type typ =
+  | Typ_path of list typ_path_segment
+  | Typ_reference of typ_reference
+  | Typ_slice of typ
+  | Typ_array of typ_array
+
+and typ_reference = {
+  typ_ref_mut : bool;
+  typ_ref_typ : typ;
+}
+
+and typ_path_segment = {
+  typ_path_segment_name : string;
+  typ_path_segment_generic_args : list typ;
+}
+
+and typ_array = {
+  typ_array_elem : typ;
+  typ_array_len : expr;
+}
 
 type pat_typ = {
   pat_typ_pat : pat;
@@ -141,6 +153,7 @@ val mk_scalar_typ (name:string) : typ
 val mk_ref_typ (is_mut:bool) (t:typ) : typ
 val mk_slice_typ (t:typ) : typ
 val mk_vec_typ (t:typ) : typ
+val mk_array_typ (t:typ) (len:expr) : typ
 val mk_binop (e1:expr) (op:binop) (e2:expr) : expr
 val mk_block_expr (l:list stmt) : expr
 val mk_ref_read (r:expr) : expr
@@ -150,6 +163,7 @@ val mk_ref_assign (l r:expr) : expr
 val mk_call (head:expr) (args:list expr) : expr
 val mk_if (cond:expr) (then_:list stmt) (else_:option expr) : expr  // else is Block or ExprIf
 val mk_while (cond:expr) (body:list stmt) : expr
+val mk_repeat (elem len:expr) : expr
 val mk_local_stmt (name:string) (is_mut:bool) (init:expr) : stmt
 val mk_scalar_fn_arg (name:string) (t:typ) : fn_arg
 val mk_ref_fn_arg (name:string) (is_mut:bool) (t:typ) : fn_arg

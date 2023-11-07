@@ -83,6 +83,11 @@ struct ExprIndex {
     expr_index_index: Box<Expr>,
 }
 
+struct ExprRepeat {
+    expr_repeat_elem: Box<Expr>,
+    expr_repeat_len: Box<Expr>,
+}
+
 enum Expr {
     EBinOp(ExprBin),
     EPath(String),
@@ -94,6 +99,7 @@ enum Expr {
     EIf(ExprIf),
     EWhile(ExprWhile),
     EIndex(ExprIndex),
+    ERepeat(ExprRepeat),
 }
 
 struct TypeReference {
@@ -106,10 +112,16 @@ struct TypePathSegment {
     type_path_segment_generic_args: Vec<Typ>,
 }
 
+struct TypeArray {
+    type_array_elem: Box<Typ>,
+    type_array_len: Expr,
+}
+
 enum Typ {
     TPath(Vec<TypePathSegment>),
     TReference(TypeReference),
     TSlice(Box<Typ>),
+    TArray(TypeArray),
 }
 
 struct PatIdent {
@@ -217,6 +229,7 @@ impl_from_ocaml_variant! {
     Expr::EIf (payload:ExprIf),
     Expr::EWhile (payload:ExprWhile),
     Expr::EIndex (payload:ExprIndex),
+    Expr::ERepeat (payload:ExprRepeat),
   }
 }
 
@@ -272,6 +285,13 @@ impl_from_ocaml_record! {
 }
 
 impl_from_ocaml_record! {
+  ExprRepeat {
+    expr_repeat_elem: Expr,
+    expr_repeat_len: Expr,
+  }
+}
+
+impl_from_ocaml_record! {
   TypeReference {
     type_reference_mut: bool,
     type_reference_typ: Typ,
@@ -285,11 +305,19 @@ impl_from_ocaml_record! {
   }
 }
 
+impl_from_ocaml_record! {
+  TypeArray {
+    type_array_elem: Typ,
+    type_array_len: Expr,
+  }
+}
+
 impl_from_ocaml_variant! {
   Typ {
     Typ::TPath (payload:OCamlList<TypePathSegment>),
     Typ::TReference (payload:TypeReference),
     Typ::TSlice (payload:Typ),
+    Typ::TArray (payload:TypeArray),
   }
 }
 
@@ -574,6 +602,24 @@ fn to_syn_expr(e: &Expr) -> syn::Expr {
                 index: Box::new(to_syn_expr(expr_index_index)),
             }
         }),
+        Expr::ERepeat(ExprRepeat {
+            expr_repeat_elem,
+            expr_repeat_len,
+        }) => syn::Expr::Repeat(syn::ExprRepeat {
+            attrs: vec![],
+            bracket_token: syn::token::Bracket {
+                span: proc_macro2::Group::new(
+                    proc_macro2::Delimiter::None,
+                    proc_macro2::TokenStream::new(),
+                )
+                .delim_span(),
+            },
+            expr: Box::new(to_syn_expr(expr_repeat_elem)),
+            semi_token: syn::token::Semi {
+                spans: [Span::call_site()],
+            },
+            len: Box::new(to_syn_expr(expr_repeat_len)),
+        }),
     }
 }
 
@@ -695,6 +741,23 @@ fn to_syn_typ(t: &Typ) -> Type {
                 .delim_span(),
             },
             elem: Box::new(to_syn_typ(&t)),
+        }),
+        Typ::TArray(TypeArray {
+            type_array_elem,
+            type_array_len,
+        }) => syn::Type::Array(syn::TypeArray {
+            bracket_token: syn::token::Bracket {
+                span: proc_macro2::Group::new(
+                    proc_macro2::Delimiter::None,
+                    proc_macro2::TokenStream::new(),
+                )
+                .delim_span(),
+            },
+            elem: Box::new(to_syn_typ(&type_array_elem)),
+            semi_token: syn::token::Semi {
+                spans: [Span::call_site()],
+            },
+            len: to_syn_expr(&type_array_len),
         }),
     }
 }
@@ -868,6 +931,10 @@ impl fmt::Display for Expr {
                 expr_index_base,
                 expr_index_index,
             }) => write!(f, "{}[{}]", expr_index_base, expr_index_index),
+            Expr::ERepeat(ExprRepeat {
+                expr_repeat_elem,
+                expr_repeat_len,
+            }) => write!(f, "[{}; {}]", expr_repeat_elem, expr_repeat_len),
         }
     }
 }
@@ -906,6 +973,10 @@ impl fmt::Display for Typ {
                 type_reference.type_reference_typ
             ),
             Typ::TSlice(t) => write!(f, "[{}]", t),
+            Typ::TArray(TypeArray {
+                type_array_elem,
+                type_array_len,
+            }) => write!(f, "[{}; {}]", type_array_elem, type_array_len),
         }
     }
 }
