@@ -135,9 +135,12 @@ type fn = {
   fn_body : list stmt;
 }
 
+val vec_new_fn : string
+
 val mk_scalar_typ (name:string) : typ
 val mk_ref_typ (is_mut:bool) (t:typ) : typ
 val mk_slice_typ (t:typ) : typ
+val mk_vec_typ (t:typ) : typ
 val mk_binop (e1:expr) (op:binop) (e2:expr) : expr
 val mk_block_expr (l:list stmt) : expr
 val mk_ref_read (r:expr) : expr

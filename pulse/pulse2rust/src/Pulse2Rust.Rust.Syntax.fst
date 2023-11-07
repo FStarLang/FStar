@@ -4,6 +4,8 @@ open FStar.Compiler.Effect
 
 module L = FStar.Compiler.List
 
+let vec_new_fn = "vec_new"
+
 let mk_scalar_typ (name:string) : typ =
   Typ_path [ {typ_path_segment_name = name; typ_path_segment_generic_args = [] } ]
 
@@ -11,6 +13,13 @@ let mk_ref_typ (is_mut:bool) (t:typ) : typ =
   Typ_reference { typ_ref_mut = is_mut; typ_ref_typ = t }
 
 let mk_slice_typ (t:typ) : typ = Typ_slice t
+
+let mk_vec_typ (t:typ) : typ =
+  Typ_path [
+    { typ_path_segment_name = "std"; typ_path_segment_generic_args = [] };
+    { typ_path_segment_name = "vec"; typ_path_segment_generic_args = [] };
+    { typ_path_segment_name = "Vec"; typ_path_segment_generic_args = [t] };
+  ]
 
 let mk_binop (l:expr) (op:binop) (r:expr) : expr =
   Expr_binop { expr_bin_left = l; expr_bin_op = op; expr_bin_right = r }

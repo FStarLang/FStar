@@ -11,6 +11,7 @@ use syn::{
 };
 
 use std::fmt;
+use std::str::FromStr;
 
 enum LitIntWidth {
     I8,
@@ -155,6 +156,8 @@ struct Fn {
     fn_sig: FnSig,
     fn_body: Vec<Stmt>,
 }
+
+const VEC_NEW_FN: &str = "vec_new";
 
 fn fn_to_string(f: &Fn) -> String {
     f.to_string()
@@ -394,6 +397,39 @@ fn to_syn_binop(op: &BinOp) -> syn::BinOp {
     }
 }
 
+fn is_vec_new(e: &Expr) -> bool {
+    match e {
+        Expr::EPath(s) => s == VEC_NEW_FN,
+        _ => false,
+    }
+}
+
+fn to_syn_vec_new(args: &Vec<Expr>) -> syn::Expr {
+    let init = to_syn_expr(&args[0]);
+    let len = to_syn_expr(&args[1]);
+    let init_str = quote::quote!(#init).to_string();
+    let len_str = quote::quote!(#len).to_string();
+    let macro_args = format!("{}, {} as i64", init_str, len_str);
+    let ts = proc_macro2::TokenStream::from_str(&macro_args).unwrap();
+    syn::Expr::Macro(syn::ExprMacro {
+        attrs: vec![],
+        mac: syn::Macro {
+            path: to_syn_path_basic("vec".to_string()),
+            bang_token: syn::token::Not {
+                spans: [Span::call_site()],
+            },
+            delimiter: syn::MacroDelimiter::Bracket(syn::token::Bracket {
+                span: proc_macro2::Group::new(
+                    proc_macro2::Delimiter::None,
+                    proc_macro2::TokenStream::new(),
+                )
+                .delim_span(),
+            }),
+            tokens: ts,
+        },
+    })
+}
+
 fn to_syn_expr(e: &Expr) -> syn::Expr {
     match e {
         Expr::EBinOp(e) => {
@@ -415,15 +451,19 @@ fn to_syn_expr(e: &Expr) -> syn::Expr {
             })
         }
         Expr::ECall(e) => {
-            let mut args: Punctuated<syn::Expr, Comma> = Punctuated::new();
-            e.call_args.iter().for_each(|a| args.push(to_syn_expr(a)));
-            let func = Box::new(to_syn_expr(&e.call_fn));
-            syn::Expr::Call(syn::ExprCall {
-                attrs: vec![],
-                func,
-                paren_token: Paren::default(),
-                args,
-            })
+            if is_vec_new(&e.call_fn) {
+                to_syn_vec_new(&e.call_args)
+            } else {
+                let mut args: Punctuated<syn::Expr, Comma> = Punctuated::new();
+                e.call_args.iter().for_each(|a| args.push(to_syn_expr(a)));
+                let func = Box::new(to_syn_expr(&e.call_fn));
+                syn::Expr::Call(syn::ExprCall {
+                    attrs: vec![],
+                    func,
+                    paren_token: Paren::default(),
+                    args,
+                })
+            }
         }
         Expr::EUnOp(e) => {
             let e1 = to_syn_expr(&e.expr_unary_expr);
