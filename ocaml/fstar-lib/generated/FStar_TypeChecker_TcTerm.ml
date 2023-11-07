@@ -12450,13 +12450,14 @@ let (typeof_tot_or_gtot_term :
              (fun uu___2 -> match () with | () -> tc_tot_or_gtot_term env1 e)
                ()
            with
-           | FStar_Errors.Error (e1, msg, uu___3, ctx) ->
-               let uu___4 =
-                 let uu___5 =
-                   let uu___6 = FStar_TypeChecker_Env.get_range env1 in
-                   (e1, msg, uu___6, ctx) in
-                 FStar_Errors.Error uu___5 in
-               FStar_Compiler_Effect.raise uu___4 in
+           | FStar_Errors.Error (e1, msg, r, ctx) when
+               r = FStar_Compiler_Range_Type.dummyRange ->
+               let uu___3 =
+                 let uu___4 =
+                   let uu___5 = FStar_TypeChecker_Env.get_range env1 in
+                   (e1, msg, uu___5, ctx) in
+                 FStar_Errors.Error uu___4 in
+               FStar_Compiler_Effect.raise uu___3 in
          match uu___1 with
          | (t, c, g) ->
              if must_tot

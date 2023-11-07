@@ -7524,78 +7524,97 @@ let (refl_tc_term :
                 (fun uu___4 ->
                    match () with
                    | () ->
-                       let allow_uvars = false in
-                       let allow_names = true in
-                       let e2 =
-                         FStar_Syntax_Compress.deep_compress allow_uvars
-                           allow_names e1 in
-                       (dbg_refl g2
-                          (fun uu___6 ->
-                             let uu___7 =
-                               FStar_Syntax_Print.term_to_string e2 in
-                             FStar_Compiler_Util.format1
-                               "} finished tc with e = %s\n" uu___7);
-                        (let guards = FStar_Compiler_Util.mk_ref [] in
-                         let gh g3 guard =
-                           dbg_refl g3
-                             (fun uu___7 ->
-                                let uu___8 =
-                                  let uu___9 =
-                                    FStar_TypeChecker_Env.get_range g3 in
-                                  FStar_Compiler_Effect.op_Bar_Greater uu___9
-                                    FStar_Compiler_Range_Ops.string_of_range in
-                                let uu___9 =
-                                  FStar_Syntax_Print.term_to_string guard in
-                                let uu___10 =
-                                  FStar_Compiler_Range_Ops.string_of_range
-                                    guard.FStar_Syntax_Syntax.pos in
-                                FStar_Compiler_Util.format3
-                                  "Got guard in Env@%s |- %s@%s\n" uu___8
-                                  uu___9 uu___10);
-                           (let uu___8 =
-                              let uu___9 =
-                                FStar_Compiler_Effect.op_Bang guards in
-                              (g3, guard) :: uu___9 in
-                            FStar_Compiler_Effect.op_Colon_Equals guards
-                              uu___8);
-                           true in
+                       let uu___5 =
+                         let uu___6 = no_uvars_in_term e1 in
+                         Prims.op_Negation uu___6 in
+                       if uu___5
+                       then
                          let uu___6 =
-                           FStar_TypeChecker_Core.compute_term_type_handle_guards
-                             g2 e2 gh in
-                         match uu___6 with
-                         | FStar_Pervasives.Inl (eff, t) ->
-                             let t1 = refl_norm_type g2 t in
-                             (dbg_refl g2
-                                (fun uu___8 ->
-                                   let uu___9 =
-                                     FStar_Compiler_Range_Ops.string_of_range
-                                       e2.FStar_Syntax_Syntax.pos in
-                                   let uu___10 =
-                                     FStar_Syntax_Print.term_to_string e2 in
+                           let uu___7 =
+                             let uu___8 =
+                               FStar_Syntax_Print.term_to_string e1 in
+                             FStar_Compiler_Util.format1
+                               "Elaborated term has unresolved implicits: %s"
+                               uu___8 in
+                           (FStar_Errors_Codes.Error_UnexpectedUnresolvedUvar,
+                             uu___7) in
+                         FStar_Errors.raise_error uu___6
+                           e1.FStar_Syntax_Syntax.pos
+                       else
+                         (let allow_uvars = false in
+                          let allow_names = true in
+                          let e2 =
+                            FStar_Syntax_Compress.deep_compress allow_uvars
+                              allow_names e1 in
+                          dbg_refl g2
+                            (fun uu___8 ->
+                               let uu___9 =
+                                 FStar_Syntax_Print.term_to_string e2 in
+                               FStar_Compiler_Util.format1
+                                 "} finished tc with e = %s\n" uu___9);
+                          (let guards = FStar_Compiler_Util.mk_ref [] in
+                           let gh g3 guard =
+                             dbg_refl g3
+                               (fun uu___9 ->
+                                  let uu___10 =
+                                    let uu___11 =
+                                      FStar_TypeChecker_Env.get_range g3 in
+                                    FStar_Compiler_Effect.op_Bar_Greater
+                                      uu___11
+                                      FStar_Compiler_Range_Ops.string_of_range in
+                                  let uu___11 =
+                                    FStar_Syntax_Print.term_to_string guard in
+                                  let uu___12 =
+                                    FStar_Compiler_Range_Ops.string_of_range
+                                      guard.FStar_Syntax_Syntax.pos in
+                                  FStar_Compiler_Util.format3
+                                    "Got guard in Env@%s |- %s@%s\n" uu___10
+                                    uu___11 uu___12);
+                             (let uu___10 =
+                                let uu___11 =
+                                  FStar_Compiler_Effect.op_Bang guards in
+                                (g3, guard) :: uu___11 in
+                              FStar_Compiler_Effect.op_Colon_Equals guards
+                                uu___10);
+                             true in
+                           let uu___8 =
+                             FStar_TypeChecker_Core.compute_term_type_handle_guards
+                               g2 e2 gh in
+                           match uu___8 with
+                           | FStar_Pervasives.Inl (eff, t) ->
+                               let t1 = refl_norm_type g2 t in
+                               (dbg_refl g2
+                                  (fun uu___10 ->
+                                     let uu___11 =
+                                       FStar_Compiler_Range_Ops.string_of_range
+                                         e2.FStar_Syntax_Syntax.pos in
+                                     let uu___12 =
+                                       FStar_Syntax_Print.term_to_string e2 in
+                                     let uu___13 =
+                                       FStar_Syntax_Print.term_to_string t1 in
+                                     FStar_Compiler_Util.format3
+                                       "refl_tc_term@%s for %s computed type %s\n"
+                                       uu___11 uu___12 uu___13);
+                                (let uu___10 =
+                                   FStar_Compiler_Effect.op_Bang guards in
+                                 ((e2, (eff, t1)), uu___10)))
+                           | FStar_Pervasives.Inr err ->
+                               (dbg_refl g2
+                                  (fun uu___10 ->
+                                     let uu___11 =
+                                       FStar_TypeChecker_Core.print_error err in
+                                     FStar_Compiler_Util.format1
+                                       "refl_tc_term failed: %s\n" uu___11);
+                                (let uu___10 =
                                    let uu___11 =
-                                     FStar_Syntax_Print.term_to_string t1 in
-                                   FStar_Compiler_Util.format3
-                                     "refl_tc_term@%s for %s computed type %s\n"
-                                     uu___9 uu___10 uu___11);
-                              (let uu___8 =
-                                 FStar_Compiler_Effect.op_Bang guards in
-                               ((e2, (eff, t1)), uu___8)))
-                         | FStar_Pervasives.Inr err ->
-                             (dbg_refl g2
-                                (fun uu___8 ->
-                                   let uu___9 =
-                                     FStar_TypeChecker_Core.print_error err in
-                                   FStar_Compiler_Util.format1
-                                     "refl_tc_term failed: %s\n" uu___9);
-                              (let uu___8 =
-                                 let uu___9 =
-                                   let uu___10 =
-                                     FStar_TypeChecker_Core.print_error err in
-                                   Prims.op_Hat "tc_term callback failed: "
-                                     uu___10 in
-                                 (FStar_Errors_Codes.Fatal_IllTyped, uu___9) in
-                               FStar_Errors.raise_error uu___8
-                                 e2.FStar_Syntax_Syntax.pos))))) ()
+                                     let uu___12 =
+                                       FStar_TypeChecker_Core.print_error err in
+                                     Prims.op_Hat "tc_term callback failed: "
+                                       uu___12 in
+                                   (FStar_Errors_Codes.Fatal_IllTyped,
+                                     uu___11) in
+                                 FStar_Errors.raise_error uu___10
+                                   e2.FStar_Syntax_Syntax.pos))))) ()
               with
               | FStar_Errors.Error
                   (FStar_Errors_Codes.Error_UnexpectedUnresolvedUvar, uu___5,
@@ -7974,26 +7993,61 @@ let (refl_instantiate_implicits :
               match uu___4 with
               | (e1, t, guard) ->
                   (FStar_TypeChecker_Rel.force_trivial_guard g2 guard;
-                   (let allow_uvars = false in
-                    let allow_names = true in
-                    let e2 =
-                      FStar_Syntax_Compress.deep_compress allow_uvars
-                        allow_names e1 in
-                    let t1 =
-                      let uu___6 =
-                        FStar_Compiler_Effect.op_Bar_Greater t
-                          (refl_norm_type g2) in
-                      FStar_Compiler_Effect.op_Bar_Greater uu___6
-                        (FStar_Syntax_Compress.deep_compress allow_uvars
-                           allow_names) in
-                    dbg_refl g2
-                      (fun uu___7 ->
-                         let uu___8 = FStar_Syntax_Print.term_to_string e2 in
-                         let uu___9 = FStar_Syntax_Print.term_to_string t1 in
-                         FStar_Compiler_Util.format2
-                           "} finished tc with e = %s and t = %s\n" uu___8
-                           uu___9);
-                    ((e2, t1), [])))))
+                   (let uu___6 =
+                      let uu___7 = no_uvars_in_term e1 in
+                      Prims.op_Negation uu___7 in
+                    if uu___6
+                    then
+                      let uu___7 =
+                        let uu___8 =
+                          let uu___9 = FStar_Syntax_Print.term_to_string e1 in
+                          FStar_Compiler_Util.format1
+                            "Elaborated term has unresolved implicits: %s"
+                            uu___9 in
+                        (FStar_Errors_Codes.Error_UnexpectedUnresolvedUvar,
+                          uu___8) in
+                      FStar_Errors.raise_error uu___7
+                        e1.FStar_Syntax_Syntax.pos
+                    else
+                      (let uu___8 =
+                         let uu___9 = no_uvars_in_term t in
+                         Prims.op_Negation uu___9 in
+                       if uu___8
+                       then
+                         let uu___9 =
+                           let uu___10 =
+                             let uu___11 =
+                               FStar_Syntax_Print.term_to_string t in
+                             FStar_Compiler_Util.format1
+                               "Inferred type has unresolved implicits: %s"
+                               uu___11 in
+                           (FStar_Errors_Codes.Error_UnexpectedUnresolvedUvar,
+                             uu___10) in
+                         FStar_Errors.raise_error uu___9
+                           e1.FStar_Syntax_Syntax.pos
+                       else
+                         (let allow_uvars = false in
+                          let allow_names = true in
+                          let e2 =
+                            FStar_Syntax_Compress.deep_compress allow_uvars
+                              allow_names e1 in
+                          let t1 =
+                            let uu___10 =
+                              FStar_Compiler_Effect.op_Bar_Greater t
+                                (refl_norm_type g2) in
+                            FStar_Compiler_Effect.op_Bar_Greater uu___10
+                              (FStar_Syntax_Compress.deep_compress
+                                 allow_uvars allow_names) in
+                          dbg_refl g2
+                            (fun uu___11 ->
+                               let uu___12 =
+                                 FStar_Syntax_Print.term_to_string e2 in
+                               let uu___13 =
+                                 FStar_Syntax_Print.term_to_string t1 in
+                               FStar_Compiler_Util.format2
+                                 "} finished tc with e = %s and t = %s\n"
+                                 uu___12 uu___13);
+                          ((e2, t1), [])))))))
       else
         (let uu___2 =
            let uu___3 =
