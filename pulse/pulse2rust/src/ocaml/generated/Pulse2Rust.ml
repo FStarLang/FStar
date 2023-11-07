@@ -103,16 +103,20 @@ let rec (extract_mlty :
     fun t ->
       match t with
       | FStar_Extraction_ML_Syntax.MLTY_Var s ->
-          let uu___ = tyvar_of s in Pulse2Rust_Rust_Syntax.Typ_name uu___
+          let uu___ = tyvar_of s in
+          Pulse2Rust_Rust_Syntax.mk_scalar_typ uu___
       | FStar_Extraction_ML_Syntax.MLTY_Named ([], p) when
           let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___ = "FStar.UInt32.t" -> Pulse2Rust_Rust_Syntax.Typ_name "u32"
+          uu___ = "FStar.UInt32.t" ->
+          Pulse2Rust_Rust_Syntax.mk_scalar_typ "u32"
       | FStar_Extraction_ML_Syntax.MLTY_Named ([], p) when
           let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___ = "FStar.Int32.t" -> Pulse2Rust_Rust_Syntax.Typ_name "i32"
+          uu___ = "FStar.Int32.t" ->
+          Pulse2Rust_Rust_Syntax.mk_scalar_typ "i32"
       | FStar_Extraction_ML_Syntax.MLTY_Named ([], p) when
           let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___ = "FStar.UInt64.t" -> Pulse2Rust_Rust_Syntax.Typ_name "u64"
+          uu___ = "FStar.UInt64.t" ->
+          Pulse2Rust_Rust_Syntax.mk_scalar_typ "u64"
       | FStar_Extraction_ML_Syntax.MLTY_Named ([], p) when
           ((let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
             uu___ = "FStar.Int64.t") ||
@@ -121,10 +125,10 @@ let rec (extract_mlty :
             ||
             (let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
              uu___ = "Prims.nat")
-          -> Pulse2Rust_Rust_Syntax.Typ_name "i64"
+          -> Pulse2Rust_Rust_Syntax.mk_scalar_typ "i64"
       | FStar_Extraction_ML_Syntax.MLTY_Named ([], p) when
           let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___ = "Prims.bool" -> Pulse2Rust_Rust_Syntax.Typ_name "bool"
+          uu___ = "Prims.bool" -> Pulse2Rust_Rust_Syntax.mk_scalar_typ "bool"
       | FStar_Extraction_ML_Syntax.MLTY_Named (arg::[], p) when
           let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
           uu___ = "Pulse.Lib.Reference.ref" ->
@@ -132,7 +136,7 @@ let rec (extract_mlty :
           let uu___ = extract_mlty g arg in
           Pulse2Rust_Rust_Syntax.mk_ref_typ is_mut uu___
       | FStar_Extraction_ML_Syntax.MLTY_Erased ->
-          Pulse2Rust_Rust_Syntax.Typ_name "unit"
+          Pulse2Rust_Rust_Syntax.mk_scalar_typ "unit"
       | uu___ ->
           let uu___1 =
             let uu___2 = FStar_Extraction_ML_Syntax.mlty_to_string t in
@@ -150,7 +154,7 @@ let (extract_top_level_fn_arg :
         | FStar_Extraction_ML_Syntax.MLTY_Var s ->
             let uu___ =
               let uu___1 = tyvar_of s in
-              Pulse2Rust_Rust_Syntax.Typ_name uu___1 in
+              Pulse2Rust_Rust_Syntax.mk_scalar_typ uu___1 in
             Pulse2Rust_Rust_Syntax.mk_scalar_fn_arg arg_name uu___
         | FStar_Extraction_ML_Syntax.MLTY_Named ([], p) when
             ((((((let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
@@ -181,8 +185,8 @@ let (extract_top_level_fn_arg :
             let uu___ = extract_mlty g t in
             Pulse2Rust_Rust_Syntax.mk_scalar_fn_arg arg_name uu___
         | FStar_Extraction_ML_Syntax.MLTY_Erased ->
-            Pulse2Rust_Rust_Syntax.mk_scalar_fn_arg arg_name
-              (Pulse2Rust_Rust_Syntax.Typ_name "unit")
+            let uu___ = extract_mlty g t in
+            Pulse2Rust_Rust_Syntax.mk_scalar_fn_arg arg_name uu___
         | uu___ ->
             let uu___1 =
               let uu___2 = FStar_Extraction_ML_Syntax.mlty_to_string t in

@@ -7,7 +7,7 @@ use syn::{
     punctuated::Punctuated, token::Brace, token::Colon, token::Comma, token::Eq, token::Let,
     token::Mut, token::Paren, token::Pub, token::RArrow, token::Ref, token::Semi, Block, Generics,
     Ident, ItemFn, Local, LocalInit, Pat as SynPat, PatType, Path, PathArguments, PathSegment,
-    ReturnType, Signature, Type, TypePath, Visibility,
+    ReturnType, Signature, Type, Visibility,
 };
 
 use std::fmt;
@@ -94,8 +94,13 @@ struct TypeReference {
     type_reference_typ: Box<Typ>,
 }
 
+struct TypePathSegment {
+    type_path_segment_name: String,
+    type_path_segment_generic_args: Vec<Typ>,
+}
+
 enum Typ {
-    TName(String),
+    TPath(Vec<TypePathSegment>),
     TReference(TypeReference),
 }
 
@@ -206,58 +211,65 @@ impl_from_ocaml_variant! {
 
 impl_from_ocaml_record! {
   ExprCall {
-    call_fn : Expr,
-    call_args : OCamlList<Expr>
+    call_fn: Expr,
+    call_args: OCamlList<Expr>
   }
 }
 
 impl_from_ocaml_record! {
   ExprBin {
-    expr_bin_left : Expr,
-    op : BinOp,
-    expr_bin_right : Expr,
+    expr_bin_left: Expr,
+    op: BinOp,
+    expr_bin_right: Expr,
   }
 }
 
 impl_from_ocaml_record! {
   ExprUnary {
-    expr_unary_op : UnOp,
-    expr_unary_expr : Expr,
+    expr_unary_op: UnOp,
+    expr_unary_expr: Expr,
   }
 }
 
 impl_from_ocaml_record! {
   ExprAssign {
-    expr_assign_l : Expr,
-    expr_assign_r : Expr,
+    expr_assign_l: Expr,
+    expr_assign_r: Expr,
   }
 }
 
 impl_from_ocaml_record! {
   ExprIf {
-    expr_if_cond : Expr,
-    expr_if_then : OCamlList<Stmt>,
-    expr_if_else : Option<Expr>
+    expr_if_cond: Expr,
+    expr_if_then: OCamlList<Stmt>,
+    expr_if_else: Option<Expr>
   }
 }
 
 impl_from_ocaml_record! {
   ExprWhile {
-    expr_while_cond : Expr,
-    expr_while_body : OCamlList<Stmt>,
+    expr_while_cond: Expr,
+    expr_while_body: OCamlList<Stmt>,
   }
 }
 
 impl_from_ocaml_record! {
   TypeReference {
-    type_reference_mut : bool,
-    type_reference_typ : Typ,
+    type_reference_mut: bool,
+    type_reference_typ: Typ,
+  }
+}
+
+impl_from_ocaml_record! {
+  TypePathSegment {
+    type_path_segment_name: String,
+    type_path_segment_generic_args: OCamlList<Typ>,
   }
 }
 
 impl_from_ocaml_variant! {
   Typ {
-    Typ::TName (payload:String),
+    Typ::TPath (payload:OCamlList<TypePathSegment>),
     Typ::TReference (payload:TypeReference),
   }
 }
@@ -325,7 +337,7 @@ impl_from_ocaml_record! {
   }
 }
 
-fn to_syn_path(s: String) -> syn::Path {
+fn to_syn_path_basic(s: String) -> syn::Path {
     let mut segs: Punctuated<syn::PathSegment, syn::token::PathSep> = Punctuated::new();
     segs.push(PathSegment {
         ident: Ident::new(&s, Span::call_site()),
@@ -379,7 +391,7 @@ fn to_syn_expr(e: &Expr) -> syn::Expr {
             })
         }
         Expr::EPath(s) => {
-            let path = to_syn_path(s.to_string());
+            let path = to_syn_path_basic(s.to_string());
             syn::Expr::Path(syn::ExprPath {
                 attrs: vec![],
                 qself: None,
@@ -555,10 +567,38 @@ fn to_syn_block(l: &Vec<Stmt>) -> Block {
 
 fn to_syn_typ(t: &Typ) -> Type {
     match &t {
-        Typ::TName(s) => {
-            let path = to_syn_path(s.to_string());
-            Type::Path(TypePath { qself: None, path })
-        }
+        Typ::TPath(v) => syn::Type::Path(syn::TypePath {
+            qself: None,
+            path: syn::Path {
+                leading_colon: None,
+                segments: v
+                    .iter()
+                    .map(|s| syn::PathSegment {
+                        ident: Ident::new(&s.type_path_segment_name, Span::call_site()),
+                        arguments: if s.type_path_segment_generic_args.len() == 0 {
+                            syn::PathArguments::None
+                        } else {
+                            syn::PathArguments::AngleBracketed(
+                                syn::AngleBracketedGenericArguments {
+                                    colon2_token: None,
+                                    lt_token: syn::token::Lt {
+                                        spans: [Span::call_site()],
+                                    },
+                                    args: s
+                                        .type_path_segment_generic_args
+                                        .iter()
+                                        .map(|t| syn::GenericArgument::Type(to_syn_typ(t)))
+                                        .collect(),
+                                    gt_token: syn::token::Gt {
+                                        spans: [Span::call_site()],
+                                    },
+                                },
+                            )
+                        },
+                    })
+                    .collect(),
+            },
+        }),
         Typ::TReference(type_reference) => Type::Reference(syn::TypeReference {
             and_token: syn::token::And {
                 spans: [Span::call_site()],
@@ -748,7 +788,26 @@ impl fmt::Display for Expr {
 impl fmt::Display for Typ {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self {
-            Typ::TName(s) => write!(f, "{}", s),
+            Typ::TPath(v) => write!(
+                f,
+                "{}",
+                v.iter()
+                    .map(|s| if s.type_path_segment_generic_args.len() == 0 {
+                        s.type_path_segment_name.to_string()
+                    } else {
+                        format!(
+                            "{}<{}>",
+                            s.type_path_segment_name,
+                            s.type_path_segment_generic_args
+                                .iter()
+                                .map(|t| t.to_string())
+                                .collect::<Vec<_>>()
+                                .join(",")
+                        )
+                    })
+                    .collect::<Vec<_>>()
+                    .join("::")
+            ),
             Typ::TReference(type_reference) => write!(
                 f,
                 "&{} {}",

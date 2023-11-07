@@ -1,15 +1,19 @@
 open Prims
 type typ =
-  | Typ_name of Prims.string 
+  | Typ_path of typ_path_segment Prims.list 
   | Typ_reference of typ_reference 
 and typ_reference = {
   typ_ref_mut: Prims.bool ;
   typ_ref_typ: typ }
-let (uu___is_Typ_name : typ -> Prims.bool) =
+and typ_path_segment =
+  {
+  typ_path_segment_name: Prims.string ;
+  typ_path_segment_generic_args: typ Prims.list }
+let (uu___is_Typ_path : typ -> Prims.bool) =
   fun projectee ->
-    match projectee with | Typ_name _0 -> true | uu___ -> false
-let (__proj__Typ_name__item___0 : typ -> Prims.string) =
-  fun projectee -> match projectee with | Typ_name _0 -> _0
+    match projectee with | Typ_path _0 -> true | uu___ -> false
+let (__proj__Typ_path__item___0 : typ -> typ_path_segment Prims.list) =
+  fun projectee -> match projectee with | Typ_path _0 -> _0
 let (uu___is_Typ_reference : typ -> Prims.bool) =
   fun projectee ->
     match projectee with | Typ_reference _0 -> true | uu___ -> false
@@ -22,6 +26,18 @@ let (__proj__Mktyp_reference__item__typ_ref_mut :
 let (__proj__Mktyp_reference__item__typ_ref_typ : typ_reference -> typ) =
   fun projectee ->
     match projectee with | { typ_ref_mut; typ_ref_typ;_} -> typ_ref_typ
+let (__proj__Mktyp_path_segment__item__typ_path_segment_name :
+  typ_path_segment -> Prims.string) =
+  fun projectee ->
+    match projectee with
+    | { typ_path_segment_name; typ_path_segment_generic_args;_} ->
+        typ_path_segment_name
+let (__proj__Mktyp_path_segment__item__typ_path_segment_generic_args :
+  typ_path_segment -> typ Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { typ_path_segment_name; typ_path_segment_generic_args;_} ->
+        typ_path_segment_generic_args
 type pat_ident =
   {
   pat_name: Prims.string ;
@@ -322,6 +338,10 @@ let (__proj__Mkfn__item__fn_sig : fn -> fn_signature) =
   fun projectee -> match projectee with | { fn_sig; fn_body;_} -> fn_sig
 let (__proj__Mkfn__item__fn_body : fn -> stmt Prims.list) =
   fun projectee -> match projectee with | { fn_sig; fn_body;_} -> fn_body
+let (mk_scalar_typ : Prims.string -> typ) =
+  fun name ->
+    Typ_path
+      [{ typ_path_segment_name = name; typ_path_segment_generic_args = [] }]
 let (mk_ref_typ : Prims.bool -> typ -> typ) =
   fun is_mut ->
     fun t -> Typ_reference { typ_ref_mut = is_mut; typ_ref_typ = t }
