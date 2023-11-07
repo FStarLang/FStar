@@ -2,6 +2,7 @@ open Prims
 type typ =
   | Typ_path of typ_path_segment Prims.list 
   | Typ_reference of typ_reference 
+  | Typ_slice of typ 
 and typ_reference = {
   typ_ref_mut: Prims.bool ;
   typ_ref_typ: typ }
@@ -19,6 +20,11 @@ let (uu___is_Typ_reference : typ -> Prims.bool) =
     match projectee with | Typ_reference _0 -> true | uu___ -> false
 let (__proj__Typ_reference__item___0 : typ -> typ_reference) =
   fun projectee -> match projectee with | Typ_reference _0 -> _0
+let (uu___is_Typ_slice : typ -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Typ_slice _0 -> true | uu___ -> false
+let (__proj__Typ_slice__item___0 : typ -> typ) =
+  fun projectee -> match projectee with | Typ_slice _0 -> _0
 let (__proj__Mktyp_reference__item__typ_ref_mut :
   typ_reference -> Prims.bool) =
   fun projectee ->
@@ -135,6 +141,7 @@ type expr =
   | Expr_lit of lit 
   | Expr_if of expr_if 
   | Expr_while of expr_while 
+  | Expr_index of expr_index 
 and expr_bin =
   {
   expr_bin_left: expr ;
@@ -146,6 +153,9 @@ and expr_unary = {
 and expr_call = {
   expr_call_fn: expr ;
   expr_call_args: expr Prims.list }
+and expr_index = {
+  expr_index_base: expr ;
+  expr_index_index: expr }
 and expr_assignment = {
   expr_assignment_l: expr ;
   expr_assignment_r: expr }
@@ -208,6 +218,11 @@ let (uu___is_Expr_while : expr -> Prims.bool) =
     match projectee with | Expr_while _0 -> true | uu___ -> false
 let (__proj__Expr_while__item___0 : expr -> expr_while) =
   fun projectee -> match projectee with | Expr_while _0 -> _0
+let (uu___is_Expr_index : expr -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Expr_index _0 -> true | uu___ -> false
+let (__proj__Expr_index__item___0 : expr -> expr_index) =
+  fun projectee -> match projectee with | Expr_index _0 -> _0
 let (__proj__Mkexpr_bin__item__expr_bin_left : expr_bin -> expr) =
   fun projectee ->
     match projectee with
@@ -236,6 +251,14 @@ let (__proj__Mkexpr_call__item__expr_call_args :
   fun projectee ->
     match projectee with
     | { expr_call_fn; expr_call_args;_} -> expr_call_args
+let (__proj__Mkexpr_index__item__expr_index_base : expr_index -> expr) =
+  fun projectee ->
+    match projectee with
+    | { expr_index_base; expr_index_index;_} -> expr_index_base
+let (__proj__Mkexpr_index__item__expr_index_index : expr_index -> expr) =
+  fun projectee ->
+    match projectee with
+    | { expr_index_base; expr_index_index;_} -> expr_index_index
 let (__proj__Mkexpr_assignment__item__expr_assignment_l :
   expr_assignment -> expr) =
   fun projectee ->
@@ -345,6 +368,7 @@ let (mk_scalar_typ : Prims.string -> typ) =
 let (mk_ref_typ : Prims.bool -> typ -> typ) =
   fun is_mut ->
     fun t -> Typ_reference { typ_ref_mut = is_mut; typ_ref_typ = t }
+let (mk_slice_typ : typ -> typ) = fun t -> Typ_slice t
 let (mk_binop : expr -> binop -> expr -> expr) =
   fun l ->
     fun op ->
@@ -366,6 +390,9 @@ let (mk_ref_assign : expr -> expr -> expr) =
         }
 let (mk_ref_read : expr -> expr) =
   fun l -> Expr_unary { expr_unary_op = Deref; expr_unary_expr = l }
+let (mk_expr_index : expr -> expr -> expr) =
+  fun expr_index_base ->
+    fun expr_index_index -> Expr_index { expr_index_base; expr_index_index }
 let (mk_call : expr -> expr Prims.list -> expr) =
   fun head ->
     fun args -> Expr_call { expr_call_fn = head; expr_call_args = args }
