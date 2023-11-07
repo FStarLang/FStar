@@ -2227,6 +2227,8 @@ let bind_cases env0 (res_t:typ)
     TcComm.mk_lcomp eff res_t bind_cases_flags bind_cases
 
 let check_comp env (use_eq:bool) (e:term) (c:comp) (c':comp) : term * comp * guard_t =
+  def_check_comp_closed_in_env c.pos "check_comp.c" env c;
+  def_check_comp_closed_in_env c'.pos "check_comp.c'" env c';
   if Env.debug env <| Options.Extreme then
     BU.print4 "Checking comp relation:\n%s has type %s\n\t %s \n%s\n"
             (Print.term_to_string e)
