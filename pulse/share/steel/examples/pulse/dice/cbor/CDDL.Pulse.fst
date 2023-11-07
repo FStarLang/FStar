@@ -287,19 +287,6 @@ let eval_impl_array_group3
         )))
 = ig pi #p #i #l
 
-assume val elim_stick0
-  (_: unit)
-  (#hyp #concl: vprop)
-: stt_ghost unit emp_inames
-    ((hyp @==> concl) ** hyp)
-    (fun _ -> concl)
-
-assume val stick_refl0
-    (p: vprop)
-: stt_ghost unit emp_inames
-    (emp)
-    (fun _ -> p @==> p)
-
 ```pulse
 ghost
 fn intro_impl_array_group3_post
@@ -339,30 +326,6 @@ ensures
     ()
 }
 ```
-
-assume
-val stick_consume_l
-    (_: unit)
-    (#p #q #r: vprop)
-: stt_ghost unit emp_inames
-    (p ** ((p ** q) @==> r))
-    (fun _ -> q @==> r)
-
-assume
-val stick_consume_r
-    (_: unit)
-    (#q #p #r: vprop)
-: stt_ghost unit emp_inames
-    (p ** ((q ** p) @==> r))
-    (fun _ -> q @==> r)
-
-assume
-val stick_trans
-    (_: unit)
-    (#p #q #r: vprop)
-: stt_ghost unit emp_inames
-    ((p @==> q) ** (q @==> r))
-    (fun _ -> p @==> r)
 
 inline_for_extraction noextract [@@noextract_to "krml"]
 ```pulse
