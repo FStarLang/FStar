@@ -3752,17 +3752,19 @@ let try_lookup_record_type env (typename:lident)
                 Some r
 
            else (
-             BU.print3 "Not enough formals; nparms=%s; type = %s; formals=%s\n"
-               (string_of_int nparms)
-               (Print.term_to_string t)
-               (Print.binders_to_string ", " formals);
+            //  BU.print3 "Not enough formals; nparms=%s; type = %s; formals=%s\n"
+            //    (string_of_int nparms)
+            //    (Print.term_to_string t)
+            //    (Print.binders_to_string ", " formals);
              None
            )
          | _ ->
-           BU.print1 "Could not find %s\n" (string_of_lid dc);
+          //  BU.print1 "Could not find %s\n" (string_of_lid dc);
            None)
       | _, dcs ->
-        BU.print1 "Could not find type %s ... Got %s\n" (string_of_lid typename);
+        // BU.print2 "Could not find type %s ... Got %s\n"
+        //    (string_of_lid typename)
+        //    (FStar.Common.string_of_list Ident.string_of_lid dcs);
         None
     with
     | _ -> None
