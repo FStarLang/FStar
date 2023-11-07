@@ -566,34 +566,25 @@ fn destroy_context' (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
         drop_ (session_state_perm (dflt st' SessionError));
         false
       }
+      else if (ctxt_hndl = hndl_of st)
+      {
+        elim_session_state_perm_available st;
+        destroy_ctxt (ctxt_of st);
+        //reset the session to the start state
+        rewrite emp as (session_state_perm SessionStart);
+        let st' = take_session_state sid SessionStart;
+        //TODO: Fix this by proving that st' must be present and InUse
+        drop_ (session_state_perm (dflt st' SessionStart));
+        true
+      }
       else
-      {             
-        match st
-        {
-          Available ctxt ->
-          {
-            if (ctxt_hndl = ctxt.handle)
-            {
-              elim_session_state_perm_available st;
-              destroy_ctxt (ctxt_of st);
-              //reset the session to the start state
-              rewrite emp as (session_state_perm SessionStart);
-              let st' = take_session_state sid SessionStart;
-              //TODO: Fix this by proving that st' must be present and InUse
-              drop_ (session_state_perm (dflt st' SessionStart));
-              true
-            }
-            else
-            {
-              //context handle mismatch; put back st
-              //and return false
-              let st' = take_session_state sid st;
-              //TODO: Fix this by proving that st' must be present and InUse
-              drop_ (session_state_perm (dflt st' st));
-              false
-            }
-          }
-        }
+      {
+        //context handle mismatch; put back st
+        //and return false
+        let st' = take_session_state sid st;
+        //TODO: Fix this by proving that st' must be present and InUse
+        drop_ (session_state_perm (dflt st' st));
+        false
       }
     }
   }
@@ -622,14 +613,8 @@ fn destroy_session_state (st:session_state)
   }
   else 
   {
-    match st
-    {
-      Available ctxt ->
-      {
-        elim_session_state_perm_available st;
-        destroy_ctxt (ctxt_of st);
-      }
-    }
+    elim_session_state_perm_available st;
+    destroy_ctxt (ctxt_of st);
   }
 }
 ```
@@ -868,7 +853,7 @@ fn initialize_context' (sid:sid_t) (uds:A.larray U8.t (US.v uds_len))
 }
 ```
 
-let initialize_context = admit() //initialize_context' ...uds_is_enabled
+let initialize_context = initialize_context'
 
 (*
   RotateContextHandle: Part of DPE API 
@@ -898,28 +883,25 @@ fn rotate_context_handle' (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
         rewrite (session_state_perm st) as emp;
         None #ctxt_hndl_t
       }
-      else  //TODO, allow `else if`
-      {
-        if not (Available? st)
-        { //session error
-          rewrite (session_state_perm st) as emp;
-          rewrite emp as (session_state_perm SessionError);
-          let st' = take_session_state sid SessionError;
-          //TODO: prove st' is InUse
-          drop_ (session_state_perm (dflt st' SessionError));
-          None #ctxt_hndl_t
-        }
-        else 
-        {
-          let new_ctxt_hndl = prng ();
-          elim_session_state_perm_available st;
-          let st' = intro_session_state_perm_available (ctxt_of st) new_ctxt_hndl;
-          let st'' = take_session_state sid st';
-          //TODO: prove st'' is InUse
-          drop_ (session_state_perm (dflt st'' st'));
-          Some new_ctxt_hndl
-        }
+      else if not (Available? st)
+      { //session error
+        rewrite (session_state_perm st) as emp;
+        rewrite emp as (session_state_perm SessionError);
+        let st' = take_session_state sid SessionError;
+        //TODO: prove st' is InUse
+        drop_ (session_state_perm (dflt st' SessionError));
+        None #ctxt_hndl_t
       }
+      else 
+      {
+        let new_ctxt_hndl = prng ();
+        elim_session_state_perm_available st;
+        let st' = intro_session_state_perm_available (ctxt_of st) new_ctxt_hndl;
+        let st'' = take_session_state sid st';
+        //TODO: prove st'' is InUse
+        drop_ (session_state_perm (dflt st'' st'));
+        Some new_ctxt_hndl
+      }      
     }
   }
 }
@@ -1123,44 +1105,41 @@ fn derive_child' (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t)
         rewrite (session_state_perm st) as emp;
         None #ctxt_hndl_t
       }
-      else  //TODO, allow `else if`
+      else if not (Available? st)
+      { //session error
+        rewrite (session_state_perm st) as emp;
+        rewrite emp as (session_state_perm SessionError);
+        let st' = take_session_state sid SessionError;
+        //TODO: prove st' is InUse
+        drop_ (session_state_perm (dflt st' SessionError));
+        None #ctxt_hndl_t
+      }
+      else 
       {
-        if not (Available? st)
-        { //session error
-          rewrite (session_state_perm st) as emp;
-          rewrite emp as (session_state_perm SessionError);
-          let st' = take_session_state sid SessionError;
-          //TODO: prove st' is InUse
-          drop_ (session_state_perm (dflt st' SessionError));
-          None #ctxt_hndl_t
-        }
-        else 
+        elim_session_state_perm_available st;
+        let next_ctxt = derive_child_from_context (ctxt_of st) record;
+        destroy_ctxt (ctxt_of st);
+        match next_ctxt
         {
-          elim_session_state_perm_available st;
-          let next_ctxt = derive_child_from_context (ctxt_of st) record;
-          destroy_ctxt (ctxt_of st);
-          match next_ctxt
+          None ->
           {
-            None ->
-            {
-              rewrite emp as (session_state_perm SessionError);
-              rewrite (maybe_context_perm next_ctxt) as emp;
-              let st' = take_session_state sid SessionError;
-              //TODO: prove st' is InUse
-              drop_ (session_state_perm (dflt st' SessionError));
-              None #ctxt_hndl_t
-            }
+            rewrite emp as (session_state_perm SessionError);
+            rewrite (maybe_context_perm next_ctxt) as emp;
+            let st' = take_session_state sid SessionError;
+            //TODO: prove st' is InUse
+            drop_ (session_state_perm (dflt st' SessionError));
+            None #ctxt_hndl_t
+          }
 
-            Some next_ctxt ->
-            {
-              elim_maybe_context_perm next_ctxt;
-              let next_ctxt_hndl = prng();
-              let st' = intro_session_state_perm_available next_ctxt next_ctxt_hndl;
-              let st'' = take_session_state sid st';
-              //TODO: prove st'' is InUse
-              drop_ (session_state_perm (dflt st'' st'));
-              Some next_ctxt_hndl
-            }
+          Some next_ctxt ->
+          {
+            elim_maybe_context_perm next_ctxt;
+            let next_ctxt_hndl = prng();
+            let st' = intro_session_state_perm_available next_ctxt next_ctxt_hndl;
+            let st'' = take_session_state sid st';
+            //TODO: prove st'' is InUse
+            drop_ (session_state_perm (dflt st'' st'));
+            Some next_ctxt_hndl
           }
         }
       }
