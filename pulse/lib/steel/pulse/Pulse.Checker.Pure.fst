@@ -125,6 +125,19 @@ let ill_typed_term (t:term) (expected_typ:option term) (got_typ:option term) : T
      group (text "got term" ^/^ pp t) ^/^
      group (text "of type" ^/^ pp ty')]
 
+let maybe_fail_doc (issues:list FStar.Issue.issue) (msg:string)
+                   (g:env) (range:option range) (doc:list FStar.Stubs.Pprint.document) =
+  let has_localized_error = 
+      List.Tot.Base.existsb
+        (fun i -> 
+          FStar.Issue.level_of_issue i = "Error"
+          && Some? (FStar.Issue.range_of_issue i))
+        issues
+  in
+  if has_localized_error
+  then T.fail msg
+  else fail_doc g range doc
+
 let instantiate_term_implicits (g:env) (t0:term) =
   let f = elab_env g in
   let rt = elab_term t0 in
@@ -132,12 +145,14 @@ let instantiate_term_implicits (g:env) (t0:term) =
   let topt, issues = catch_all (fun _ -> rtb_instantiate_implicits g f rt) in
   T.log_issues issues;
   match topt with
-  | None -> 
+  | None -> (
     let open Pulse.PP in
-    fail_doc g (Some t0.range) [
-      prefix 4 1 (text "Could not infer implicit arguments in")
-                 (pp t0)
-    ]
+    maybe_fail_doc issues "Could not infer implicit arguments"
+         g (Some t0.range) [
+              prefix 4 1 (text "Could not infer implicit arguments in")
+                        (pp t0)
+            ]
+  )
   | Some (t, ty) ->
     let topt = readback_ty t in
     let tyopt = readback_ty ty in
@@ -156,7 +171,9 @@ let check_universe (g:env) (t:term)
     T.log_issues issues;
     match ru_opt with
     | None -> 
-      fail_doc g (Some t.range) (ill_typed_term t (Some (tm_type u_unknown)) None)
+      maybe_fail_doc
+        issues "Could not infer universe"
+        g (Some t.range) (ill_typed_term t (Some (tm_type u_unknown)) None)
 
     | Some ru ->
       let proof : squash (T.typing_token f rt (E_Total, R.pack_ln (R.Tv_Type ru))) =
@@ -192,7 +209,8 @@ let check_term (g:env) (t:term)
     T.log_issues issues;
     match res with
     | None -> 
-      fail_doc g (Some t.range) (ill_typed_term t None None)
+      maybe_fail_doc issues "Failed to typecheck term"
+            g (Some t.range) (ill_typed_term t None None)
     | Some (| rt, eff, ty', tok |) ->
       match readback_ty rt, readback_ty ty' with
       | None, _ -> fail g (Some t.range) (readback_failure rt)
@@ -211,8 +229,10 @@ let check_term_and_type (g:env) (t:term)
     let res, issues = tc_meta_callback g fg rt in
     T.log_issues issues;
     match res with
-    | None -> 
-      fail_doc g (Some t.range) (ill_typed_term t None None)
+    | None ->
+      maybe_fail_doc 
+        issues "Failed to check term at expected type"
+        g (Some t.range) (ill_typed_term t None None)
     | Some (| rt, eff, ty', tok |) ->
       match readback_ty rt, readback_ty ty' with
       | None, _ -> fail g (Some t.range) (readback_failure rt)
@@ -238,7 +258,9 @@ let check_term_with_expected_type_and_effect (g:env) (e:term) (eff:T.tot_or_ghos
   T.log_issues issues;
   match topt with
   | None ->
-    fail_doc g (Some e.range) (ill_typed_term e (Some t) None)
+    maybe_fail_doc 
+      issues "Failed to check term at expected type"
+      g (Some e.range) (ill_typed_term e (Some t) None)
   | Some tok -> (| e, E (RT.T_Token _ _ _ (FStar.Squash.return_squash tok)) |)
 
 (* This function will use the expected type, but can return either
@@ -271,7 +293,9 @@ let core_check_term (g:env) (t:term)
     T.log_issues issues;
     match res with
     | None -> 
-      fail_doc g (Some t.range) (ill_typed_term t None None)
+      maybe_fail_doc 
+        issues "Failed to check term"
+        g (Some t.range) (ill_typed_term t None None)
     | Some (| eff, ty', tok |) ->
         match readback_ty ty' with
         | None ->
@@ -291,7 +315,9 @@ let core_check_term_with_expected_type g e eff t =
   T.log_issues issues;
   match topt with
   | None ->
-    fail_doc g (Some e.range) (ill_typed_term e (Some t) None)
+    maybe_fail_doc
+      issues "Failed to check term"
+      g (Some e.range) (ill_typed_term e (Some t) None)
   | Some tok -> E (RT.T_Token _ _ _ (FStar.Squash.return_squash tok))
 
 let check_vprop (g:env)
