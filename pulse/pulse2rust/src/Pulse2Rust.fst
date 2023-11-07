@@ -90,7 +90,8 @@ let rec extract_mlty (g:env) (t:S.mlty) : typ =
     let is_mut = true in
     arg |> extract_mlty g |> mk_ref_typ is_mut
   | S.MLTY_Named ([arg], p)
-    when S.string_of_mlpath p = "Pulse.Lib.Rust.Slice.slice" ->
+    when S.string_of_mlpath p = "Pulse.Lib.Rust.Slice.slice" ||
+         S.string_of_mlpath p = "Pulse.Lib.Rust.Array.array" ->
     let is_mut = true in
     arg |> extract_mlty g |> mk_slice_typ |> mk_ref_typ is_mut
   | S.MLTY_Named ([arg], p)
@@ -172,37 +173,48 @@ let is_binop (s:string) : option binop =
   then Some Eq
   else None
 
-let lb_init_and_def (lb:S.mllb)
+let rec lb_init_and_def (g:env) (lb:S.mllb)
   : bool &       // is_mut
-    S.mlty &     // type of the let binder
-    S.mlexpr =   // init expression
+    typ &        // type of the let binder
+    expr =       // init expression
   
   let is_mut = contains S.Mutable lb.mllb_meta in
   if is_mut
   then
-    let init =
-      match lb.mllb_def.expr with
-      | S.MLE_App ({expr=S.MLE_Name p}, [init])
-        when S.string_of_mlpath p = "Pulse.Lib.Reference.alloc" -> init
-      | _ -> fail (format1 "unexpected initializer for mutable local: %s" (S.mlexpr_to_string lb.mllb_def))
-    in
-    let ty =
-      match lb.mllb_tysc with
-      | Some ([], S.MLTY_Named ([ty], p))
-        when S.string_of_mlpath p = "Pulse.Lib.Reference.ref" ->
-        ty
-      | _ -> fail (format1 "unexpected type of mutable local: %s" (S.mltyscheme_to_string (must lb.mllb_tysc)))
-    in
-    is_mut, ty, init
+    match lb.mllb_def.expr, lb.mllb_tysc with
+    | S.MLE_App ({expr=S.MLE_Name pe}, [init]),
+      Some ([], S.MLTY_Named ([ty], pt))
+      when S.string_of_mlpath pe = "Pulse.Lib.Reference.alloc" &&
+           S.string_of_mlpath pt = "Pulse.Lib.Reference.ref" ->
+      is_mut,
+      extract_mlty g ty,
+      extract_mlexpr g init
+
+    | S.MLE_App ({expr=S.MLE_Name pe}, [init; len]),
+      Some ([], S.MLTY_Named ([ty], pt))
+      when S.string_of_mlpath pe = "Pulse.Lib.Rust.Array.alloc" &&
+           S.string_of_mlpath pt = "Pulse.Lib.Rust.Array.array" ->
+      let init = extract_mlexpr g init in
+      let len = extract_mlexpr g len in
+      let is_mut = false in
+      is_mut,
+      lb.mllb_tysc |> must |> snd |> extract_mlty g,
+      mk_repeat init len
+
+    | _ ->
+      fail (format1 "unexpected initializer for mutable local: %s" (S.mlexpr_to_string lb.mllb_def))
+
   else
     let is_mut =
       match lb.mllb_def.expr with
       | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, _) ->
         S.string_of_mlpath p = "Pulse.Lib.Rust.Vec.alloc"
       | _ -> false in
-    is_mut, snd (must lb.mllb_tysc), lb.mllb_def
+    is_mut,
+    lb.mllb_tysc |> must |> snd |> extract_mlty g,
+    extract_mlexpr g lb.mllb_def
 
-let rec extract_mlexpr (g:env) (e:S.mlexpr) : expr =
+and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
   match e.expr with
   | S.MLE_Const (S.MLC_Unit) -> Expr_path "unitv"
   | S.MLE_Const (S.MLC_Int (lit_int_val, swopt)) ->
@@ -219,6 +231,9 @@ let rec extract_mlexpr (g:env) (e:S.mlexpr) : expr =
       | Some (_, FStar.Const.Int64) -> Some I64
       | None -> None in
     Expr_lit (Lit_int {lit_int_val; lit_int_signed; lit_int_width})
+  | S.MLE_App ({expr=S.MLE_Name p}, [e])
+    when S.string_of_mlpath p = "FStar.SizeT.uint_to_t" ->
+    extract_mlexpr g e
 
   | S.MLE_Var x -> Expr_path (varname x)
   | S.MLE_Name p -> Expr_path (snd p)
@@ -299,9 +314,9 @@ and extract_mlexpr_to_stmts (g:env) (e:S.mlexpr) : list stmt =
   | S.MLE_Var x -> [Stmt_expr (Expr_path (varname x))]
   | S.MLE_Name p -> [Stmt_expr (Expr_path (S.mlpath_to_string p))]
   | S.MLE_Let ((S.NonRec, [lb]), e) ->
-    let is_mut, ty, init = lb_init_and_def lb in
-    let s = mk_local_stmt lb.mllb_name is_mut (extract_mlexpr g init) in
-    s::(extract_mlexpr_to_stmts (push_local g lb.mllb_name (extract_mlty g ty) is_mut) e)
+    let is_mut, ty, init = lb_init_and_def g lb in
+    let s = mk_local_stmt lb.mllb_name is_mut init in
+    s::(extract_mlexpr_to_stmts (push_local g lb.mllb_name ty is_mut) e)
   | _ -> fail_nyi (format1 "mlexpr_to_stmt  %s" (S.mlexpr_to_string e))
 
 let extract_top_level_lb (g:env) (lbs:S.mlletbinding) : fn & env =
