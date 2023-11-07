@@ -4436,7 +4436,8 @@ let typeof_tot_or_gtot_term env e must_tot =
     let env = {env with top_level=false; letrecs=[]} in
     let t, c, g =
         try tc_tot_or_gtot_term env e
-        with Error(e, msg, _, ctx) -> raise (Error (e, msg, Env.get_range env, ctx))
+        with Error(e, msg, r, ctx) when r = Range.dummyRange -> 
+             raise (Error (e, msg, Env.get_range env, ctx))
     in
     if must_tot then
       let c = N.maybe_ghost_to_pure_lcomp env c in
