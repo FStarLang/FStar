@@ -160,6 +160,12 @@ let brackets_with_nesting contents =
 let soft_brackets_with_nesting contents =
   soft_surround 2 1 lbracket contents rbracket
 
+let soft_lens_access_with_nesting contents =
+  soft_surround 2 1 (str "(|") contents (str "|)")
+
+let soft_brackets_lens_access_with_nesting contents =
+  soft_surround 2 1 (str "[|") contents (str "|]")
+
 let soft_begin_end_with_nesting contents =
   soft_surround 2 1 (str "begin") contents (str "end")
 
@@ -413,9 +419,9 @@ let handleable_args_length (op:ident) =
   if is_general_prefix_op op || List.mem op_s [ "-" ; "~" ] then 1
   else if (is_operatorInfix0ad12 op ||
     is_operatorInfix34 op ||
-    List.mem op_s ["<==>" ; "==>" ; "\\/" ; "/\\" ; "=" ; "|>" ; ":=" ; ".()" ; ".[]"])
+    List.mem op_s ["<==>" ; "==>" ; "\\/" ; "/\\" ; "=" ; "|>" ; ":=" ; ".()" ; ".[]"; ".(||)"; ".[||]"])
   then 2
-  else if (List.mem op_s [".()<-" ; ".[]<-"]) then 3
+  else if (List.mem op_s [".()<-" ; ".[]<-"; ".(||)<-"; ".[||]<-"]) then 3
   else 0
 
 let handleable_op op args =
@@ -425,8 +431,8 @@ let handleable_op op args =
   | 2 ->
     is_operatorInfix0ad12 op ||
     is_operatorInfix34 op ||
-    List.mem (Ident.string_of_id op) ["<==>" ; "==>" ; "\\/" ; "/\\" ; "=" ; "|>" ; ":=" ; ".()" ; ".[]"]
-  | 3 -> List.mem (Ident.string_of_id op) [".()<-" ; ".[]<-"]
+    List.mem (Ident.string_of_id op) ["<==>" ; "==>" ; "\\/" ; "/\\" ; "=" ; "|>" ; ":=" ; ".()" ; ".[]"; ".(||)"; ".[||]"]
+  | 3 -> List.mem (Ident.string_of_id op) [".()<-" ; ".[]<-"; ".(||)<-"; ".[||]<-"]
   | _ -> false
 
 
@@ -1290,6 +1296,14 @@ and p_noSeqTerm' ps pb e = match e.tm with
       group (
         group (p_atomicTermNotQUident e1 ^^ dot ^^ soft_brackets_with_nesting (p_term false false e2)
           ^^ space ^^ larrow) ^^ jump2 (p_noSeqTermAndComment ps pb e3))
+  | Op (id, [ e1; e2; e3 ]) when string_of_id id = ".(||)<-" ->
+      group (
+        group (p_atomicTermNotQUident e1 ^^ dot ^^ soft_lens_access_with_nesting (p_term false false e2)
+          ^^ space ^^ larrow) ^^ jump2 (p_noSeqTermAndComment ps pb e3))
+  | Op (id, [ e1; e2; e3 ]) when string_of_id id = ".[||]<-" ->
+      group (
+        group (p_atomicTermNotQUident e1 ^^ dot ^^ soft_brackets_lens_access_with_nesting (p_term false false e2)
+          ^^ space ^^ larrow) ^^ jump2 (p_noSeqTermAndComment ps pb e3))
   | Requires (e, wtf) ->
       assert (wtf = None);
       group (str "requires" ^/^ p_typ ps pb e)
@@ -2009,6 +2023,12 @@ and p_indexingTerm_aux exit e = match e.tm with
   | Op(id, [e1; e2]) when string_of_id id = ".[]" ->
         group (p_indexingTerm_aux p_atomicTermNotQUident e1 ^^ dot ^^
         soft_brackets_with_nesting (p_term false false e2))
+  | Op(id, [e1; e2]) when string_of_id id = ".(||)" ->
+        group (p_indexingTerm_aux p_atomicTermNotQUident e1 ^^ dot ^^
+        soft_lens_access_with_nesting (p_term false false e2))
+  | Op(id, [e1; e2]) when string_of_id id = ".[||]" ->
+        group (p_indexingTerm_aux p_atomicTermNotQUident e1 ^^ dot ^^
+        soft_brackets_lens_access_with_nesting (p_term false false e2))
   | _ ->
       exit e
 and p_indexingTerm e = p_indexingTerm_aux p_atomicTerm e
