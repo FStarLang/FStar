@@ -207,6 +207,12 @@ let rec extract_mlexpr (g:env) (e:S.mlexpr) : expr =
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e; i; _; _])
     when S.string_of_mlpath p = "Pulse.Lib.Rust.Slice.op_Array_Access" ->
     mk_expr_index (extract_mlexpr g e) (extract_mlexpr g i)
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2; e3; _])
+    when S.string_of_mlpath p = "Pulse.Lib.Rust.Slice.op_Array_Assignment" ->
+    let e1 = extract_mlexpr g e1 in
+    let e2 = extract_mlexpr g e2 in
+    let e3 = extract_mlexpr g e3 in
+    mk_assign (mk_expr_index e1 e2) e3
   | S.MLE_App ({expr=S.MLE_Name p}, [{expr=S.MLE_Fun (_, cond)}; {expr=S.MLE_Fun (_, body)}])
     when S.string_of_mlpath p = "Pulse.Lib.Core.while_" ->
     let expr_while_cond = extract_mlexpr g cond in
