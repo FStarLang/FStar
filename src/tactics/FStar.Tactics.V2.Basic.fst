@@ -2221,6 +2221,7 @@ let refl_is_non_informative (g:env) (t:typ) : tac (option unit & issues) =
   if no_uvars_in_g g &&
      no_uvars_in_term t
   then refl_typing_builtin_wrapper (fun _ ->
+         let g = Env.set_range g t.pos in
          dbg_refl g (fun _ ->
            BU.format1 "refl_is_non_informative: %s\n"
              (Print.term_to_string t));
@@ -2241,6 +2242,7 @@ let refl_check_relation (g:env) (t0 t1:typ) (rel:relation)
      no_uvars_in_term t0 &&
      no_uvars_in_term t1
   then refl_typing_builtin_wrapper (fun _ ->
+         let g = Env.set_range g t0.pos in
          dbg_refl g (fun _ ->
            BU.format3 "refl_check_relation: %s %s %s\n"
              (Print.term_to_string t0)
@@ -2282,6 +2284,7 @@ let refl_core_compute_term_type (g:env) (e:term) : tac (option (Core.tot_or_ghos
   if no_uvars_in_g g &&
      no_uvars_in_term e
   then refl_typing_builtin_wrapper (fun _ ->
+         let g = Env.set_range g e.pos in
          dbg_refl g (fun _ ->
            BU.format1 "refl_core_compute_term_type: %s\n" (Print.term_to_string e));
          let guards : ref (list (env & typ)) = BU.mk_ref [] in
@@ -2311,6 +2314,7 @@ let refl_core_check_term (g:env) (e:term) (t:typ) (eff:Core.tot_or_ghost)
      no_uvars_in_term e &&
      no_uvars_in_term t
   then refl_typing_builtin_wrapper (fun _ ->
+         let g = Env.set_range g e.pos in
          dbg_refl g (fun _ ->
            BU.format2 "refl_core_check_term: term: %s, type: %s\n"
              (Print.term_to_string e) (Print.term_to_string t));
@@ -2331,8 +2335,9 @@ let refl_tc_term (g:env) (e:term) : tac (option (term & (Core.tot_or_ghost & typ
   if no_uvars_in_g g &&
      no_uvars_in_term e
   then refl_typing_builtin_wrapper (fun _ ->
+    let g = Env.set_range g e.pos in
     dbg_refl g (fun _ ->
-      BU.format1 "refl_tc_term: %s\n" (Print.term_to_string e));
+      BU.format2 "refl_tc_term@%s: %s\n" (Range.string_of_range e.pos) (Print.term_to_string e));
     dbg_refl g (fun _ -> "refl_tc_term: starting tc {\n");
     //
     // we don't instantiate implicits at the end of e
@@ -2358,30 +2363,45 @@ let refl_tc_term (g:env) (e:term) : tac (option (term & (Core.tot_or_ghost & typ
       e in
     try
      begin
-     let allow_uvars = false in
-     let allow_names = true in (* terms are potentially open, names are OK *)
-     let e = SC.deep_compress allow_uvars allow_names e in
-     // TODO: may be should we check here that e has no unresolved implicits?
-     dbg_refl g (fun _ ->
-       BU.format1 "} finished tc with e = %s\n"
-         (Print.term_to_string e));
-     let guards : ref (list (env & typ)) = BU.mk_ref [] in
-     let gh = fun g guard ->
-       (* collect guards and return them *)
-       guards := (g, guard) :: !guards;
-       true
-     in
-     match Core.compute_term_type_handle_guards g e gh with
-     | Inl (eff, t) ->
-        let t = refl_norm_type g t in
-        dbg_refl g (fun _ ->
-          BU.format2 "refl_tc_term for %s computed type %s\n"
-            (Print.term_to_string e)
-            (Print.term_to_string t));
-        ((e, (eff, t)), !guards)
-     | Inr err ->
-       dbg_refl g (fun _ -> BU.format1 "refl_tc_term failed: %s\n" (Core.print_error err));
-       Errors.raise_error (Errors.Fatal_IllTyped, "tc_term callback failed: " ^ Core.print_error err) e.pos
+     if not (no_uvars_in_term e)
+     then (
+        Errors.raise_error (Errors.Error_UnexpectedUnresolvedUvar,
+                            BU.format1 "Elaborated term has unresolved implicits: %s" (Print.term_to_string e))
+                            e.pos
+     )
+     else ( 
+      let allow_uvars = false in
+      let allow_names = true in (* terms are potentially open, names are OK *)
+      let e = SC.deep_compress allow_uvars allow_names e in
+      // TODO: may be should we check here that e has no unresolved implicits?
+      dbg_refl g (fun _ ->
+        BU.format1 "} finished tc with e = %s\n"
+          (Print.term_to_string e));
+      let guards : ref (list (env & typ)) = BU.mk_ref [] in
+      let gh = fun g guard ->
+        (* collect guards and return them *)
+        dbg_refl g (fun _ -> 
+          BU.format3 "Got guard in Env@%s |- %s@%s\n"
+            (Env.get_range g |> Range.string_of_range)
+            (Print.term_to_string guard)
+            (Range.string_of_range guard.pos)
+            );
+        guards := (g, guard) :: !guards;
+        true
+      in
+      match Core.compute_term_type_handle_guards g e gh with
+      | Inl (eff, t) ->
+          let t = refl_norm_type g t in
+          dbg_refl g (fun _ ->
+            BU.format3 "refl_tc_term@%s for %s computed type %s\n"
+              (Range.string_of_range e.pos)
+              (Print.term_to_string e)
+              (Print.term_to_string t));
+          ((e, (eff, t)), !guards)
+      | Inr err ->
+        dbg_refl g (fun _ -> BU.format1 "refl_tc_term failed: %s\n" (Core.print_error err));
+        Errors.raise_error (Errors.Fatal_IllTyped, "tc_term callback failed: " ^ Core.print_error err) e.pos
+     )
     end
     with
     | Errors.Error (Errors.Error_UnexpectedUnresolvedUvar, _, _, _) ->
@@ -2398,6 +2418,7 @@ let refl_universe_of (g:env) (e:term) : tac (option universe & issues) =
   if no_uvars_in_g g &&
      no_uvars_in_term e
   then refl_typing_builtin_wrapper (fun _ ->
+         let g = Env.set_range g e.pos in
          let t, u = U.type_u () in
          let must_tot = false in
          match Core.check_term g e t must_tot with
@@ -2414,6 +2435,7 @@ let refl_check_prop_validity (g:env) (e:term) : tac (option unit & issues) =
   if no_uvars_in_g g &&
      no_uvars_in_term e
   then refl_typing_builtin_wrapper (fun _ ->
+         let g = Env.set_range g e.pos in
          dbg_refl g (fun _ ->
            BU.format1 "refl_check_prop_validity: %s\n" (Print.term_to_string e));
          let must_tot = false in
@@ -2469,6 +2491,7 @@ let refl_instantiate_implicits (g:env) (e:term) : tac (option (term & typ) & iss
   if no_uvars_in_g g &&
      no_uvars_in_term e
   then refl_typing_builtin_wrapper (fun _ ->
+    let g = Env.set_range g e.pos in
     dbg_refl g (fun _ ->
       BU.format1 "refl_instantiate_implicits: %s\n" (Print.term_to_string e));
     dbg_refl g (fun _ -> "refl_instantiate_implicits: starting tc {\n");
@@ -2480,15 +2503,29 @@ let refl_instantiate_implicits (g:env) (e:term) : tac (option (term & typ) & iss
     will return this term and it MUST be compressed. It's logical
     part should be trivial too, as we only lax-typechecked the term. *)
     Rel.force_trivial_guard g guard;
-    let allow_uvars = false in
-    let allow_names = true in (* terms are potentially open, names are OK *)
-    let e = SC.deep_compress allow_uvars allow_names e in
-    let t = t |> refl_norm_type g |> SC.deep_compress allow_uvars allow_names in
-    dbg_refl g (fun _ ->
-      BU.format2 "} finished tc with e = %s and t = %s\n"
-        (Print.term_to_string e)
-        (Print.term_to_string t));
-    ((e, t), [])
+    if not (no_uvars_in_term e)
+    then (
+      Errors.raise_error (Errors.Error_UnexpectedUnresolvedUvar,
+                          BU.format1 "Elaborated term has unresolved implicits: %s" (Print.term_to_string e))
+                          e.pos
+    )
+    else if not (no_uvars_in_term t)
+    then (
+      Errors.raise_error (Errors.Error_UnexpectedUnresolvedUvar,
+                          BU.format1 "Inferred type has unresolved implicits: %s" (Print.term_to_string t))
+                          e.pos
+    )
+    else (
+      let allow_uvars = false in
+      let allow_names = true in (* terms are potentially open, names are OK *)
+      let e = SC.deep_compress allow_uvars allow_names e in
+      let t = t |> refl_norm_type g |> SC.deep_compress allow_uvars allow_names in
+      dbg_refl g (fun _ ->
+        BU.format2 "} finished tc with e = %s and t = %s\n"
+          (Print.term_to_string e)
+          (Print.term_to_string t));
+      ((e, t), [])
+    )
   )
   else ret (None, [unexpected_uvars_issue (Env.get_range g)])
 
@@ -2499,6 +2536,7 @@ let refl_maybe_relate_after_unfolding (g:env) (t0 t1:typ)
      no_uvars_in_term t0 &&
      no_uvars_in_term t1
   then refl_typing_builtin_wrapper (fun _ ->
+        let g = Env.set_range g t0.pos in
          dbg_refl g (fun _ ->
            BU.format2 "refl_maybe_relate_after_unfolding: %s and %s {\n"
              (Print.term_to_string t0)
@@ -2514,6 +2552,7 @@ let refl_maybe_unfold_head (g:env) (e:term) : tac (option term & issues) =
   if no_uvars_in_g g &&
      no_uvars_in_term e
   then refl_typing_builtin_wrapper (fun _ ->
+    let g = Env.set_range g e.pos in
     dbg_refl g (fun _ ->
       BU.format1 "refl_maybe_unfold_head: %s {\n" (Print.term_to_string e));
     let eopt = N.maybe_unfold_head g e in

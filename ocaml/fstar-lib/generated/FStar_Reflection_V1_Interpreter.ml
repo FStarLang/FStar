@@ -262,6 +262,7 @@ let (mk_us :
                 FStar_Pervasives_Native.None;
               FStar_TypeChecker_Cfg.strong_reduction_ok = true;
               FStar_TypeChecker_Cfg.requires_binder_substitution = false;
+              FStar_TypeChecker_Cfg.renorm_after = false;
               FStar_TypeChecker_Cfg.interpretation =
                 (fun psc -> fun cbs -> fun _us -> fun args -> fn psc cbs args);
               FStar_TypeChecker_Cfg.interpretation_nbe =

@@ -1754,7 +1754,8 @@ and tc_value env (e:term) : term
     let c, uc, f = tc_comp env c in
     let e = {U.arrow bs c with pos=top.pos} in
     (* checks the SMT pattern associated with this function is properly defined with regard to context *)
-    check_smt_pat env e bs c;
+    if not env.phase1 then
+      check_smt_pat env e bs c;
     (* taking the maximum of the universes of the computation and of all binders *)
     let u = S.U_max (uc::us) in
     (* create a universe of level u *)
@@ -4436,7 +4437,8 @@ let typeof_tot_or_gtot_term env e must_tot =
     let env = {env with top_level=false; letrecs=[]} in
     let t, c, g =
         try tc_tot_or_gtot_term env e
-        with Error(e, msg, _, ctx) -> raise (Error (e, msg, Env.get_range env, ctx))
+        with Error(e, msg, r, ctx) when r = Range.dummyRange -> 
+             raise (Error (e, msg, Env.get_range env, ctx))
     in
     if must_tot then
       let c = N.maybe_ghost_to_pure_lcomp env c in

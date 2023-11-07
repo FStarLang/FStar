@@ -157,6 +157,22 @@ let rec (mk_tot_arr_ln :
                (b,
                  (FStar_Reflection_V2_Builtins.pack_comp
                     (FStar_Reflection_V2_Data.C_Total (mk_tot_arr_ln bs1 cod)))))
+let rec (mk_arr_ln :
+  FStar_Reflection_Types.binder Prims.list ->
+    FStar_Reflection_Types.comp -> FStar_Reflection_Types.term)
+  =
+  fun bs ->
+    fun cod ->
+      match bs with
+      | b::[] ->
+          FStar_Reflection_V2_Builtins.pack_ln
+            (FStar_Reflection_V2_Data.Tv_Arrow (b, cod))
+      | b::bs1 ->
+          FStar_Reflection_V2_Builtins.pack_ln
+            (FStar_Reflection_V2_Data.Tv_Arrow
+               (b,
+                 (FStar_Reflection_V2_Builtins.pack_comp
+                    (FStar_Reflection_V2_Data.C_Total (mk_arr_ln bs1 cod)))))
 let rec (collect_arr' :
   FStar_Reflection_Types.binder Prims.list ->
     FStar_Reflection_Types.comp ->

@@ -197,13 +197,14 @@ let try_unembed  (e:embedding 'a) t n =
 
 let unembed (e:embedding 'a) t n =
   let r = try_unembed e t n in
+  let open FStar.Errors.Msg in
+  let open FStar.Pprint in
   if None? r then
-    Err.log_issue t.pos (Err.Warning_NotEmbedded,
-              BU.format3 "Warning, unembedding failed for type %s (%s); term = %s"
-                          (Print.term_to_string (type_of e))
-                          (Print.emb_typ_to_string (emb_typ_of e))
-                          (Print.term_to_string t)
-                          );
+    Err.log_issue_doc t.pos (Err.Warning_NotEmbedded, [
+      text "Unembedding failed for type" ^/^ Print.term_to_doc (type_of e);
+      text "emb_typ = " ^/^ doc_of_string (Print.emb_typ_to_string (emb_typ_of e));
+      text "Term =" ^/^ Print.term_to_doc t;
+      ]);
   r
 
 

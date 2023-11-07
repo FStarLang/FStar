@@ -253,6 +253,7 @@ val embed   : embedding 'a -> nbe_cbs -> 'a -> t
 val unembed : embedding 'a -> nbe_cbs -> t -> option 'a
 val lazy_unembed_lazy_kind (#a:Type) (k:lazy_kind) (x:t) : option a
 val type_of : embedding 'a -> t
+val set_type : t -> embedding 'a -> embedding 'a
 
 val e_bool   : embedding bool
 val e_string : embedding string
@@ -331,6 +332,8 @@ val binary_string_op : (string -> string -> string) -> (universes -> args -> opt
 
 val string_of_int : Z.t -> t
 val string_of_bool : bool -> t
+val int_of_string : string -> t
+val bool_of_string : string -> t
 val string_of_list' : list char -> t
 val string_compare' : string -> string -> t
 val string_concat' : args -> option t

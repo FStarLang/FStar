@@ -31,6 +31,7 @@ type step =
   | NBE 
   | ForExtraction 
   | Unrefine 
+  | NormDebug 
 let (uu___is_Beta : step -> Prims.bool) =
   fun projectee -> match projectee with | Beta -> true | uu___ -> false
 let (uu___is_Iota : step -> Prims.bool) =
@@ -123,6 +124,8 @@ let (uu___is_ForExtraction : step -> Prims.bool) =
     match projectee with | ForExtraction -> true | uu___ -> false
 let (uu___is_Unrefine : step -> Prims.bool) =
   fun projectee -> match projectee with | Unrefine -> true | uu___ -> false
+let (uu___is_NormDebug : step -> Prims.bool) =
+  fun projectee -> match projectee with | NormDebug -> true | uu___ -> false
 type steps = step Prims.list
 let rec (eq_step : step -> step -> Prims.bool) =
   fun s1 ->
@@ -2779,26 +2782,84 @@ let (add_se_to_attrtab : env -> FStar_Syntax_Syntax.sigelt -> unit) =
                  FStar_Ident.string_of_lid uu___2 in
                add_one env1 se uu___1
            | uu___1 -> ()) se.FStar_Syntax_Syntax.sigattrs
-let rec (add_sigelt : env -> FStar_Syntax_Syntax.sigelt -> unit) =
-  fun env1 ->
-    fun se ->
-      match se.FStar_Syntax_Syntax.sigel with
-      | FStar_Syntax_Syntax.Sig_bundle
-          { FStar_Syntax_Syntax.ses = ses;
-            FStar_Syntax_Syntax.lids = uu___;_}
-          -> add_sigelts env1 ses
-      | uu___ ->
-          let lids = FStar_Syntax_Util.lids_of_sigelt se in
-          (FStar_Compiler_List.iter
-             (fun l ->
-                let uu___2 = FStar_Ident.string_of_lid l in
-                FStar_Compiler_Util.smap_add (sigtab env1) uu___2 se) lids;
-           add_se_to_attrtab env1 se)
-and (add_sigelts : env -> FStar_Syntax_Syntax.sigelt Prims.list -> unit) =
-  fun env1 ->
-    fun ses ->
-      FStar_Compiler_Effect.op_Bar_Greater ses
-        (FStar_Compiler_List.iter (add_sigelt env1))
+let (try_add_sigelt :
+  Prims.bool ->
+    env -> FStar_Syntax_Syntax.sigelt -> FStar_Ident.lident -> unit)
+  =
+  fun force ->
+    fun env1 ->
+      fun se ->
+        fun l ->
+          let s = FStar_Ident.string_of_lid l in
+          (let uu___1 =
+             (Prims.op_Negation force) &&
+               (let uu___2 =
+                  FStar_Compiler_Util.smap_try_find (sigtab env1) s in
+                FStar_Pervasives_Native.uu___is_Some uu___2) in
+           if uu___1
+           then
+             let old_se =
+               let uu___2 = FStar_Compiler_Util.smap_try_find (sigtab env1) s in
+               FStar_Pervasives_Native.__proj__Some__item__v uu___2 in
+             (if
+                (FStar_Syntax_Syntax.uu___is_Sig_declare_typ
+                   old_se.FStar_Syntax_Syntax.sigel)
+                  &&
+                  (((FStar_Syntax_Syntax.uu___is_Sig_let
+                       se.FStar_Syntax_Syntax.sigel)
+                      ||
+                      (FStar_Syntax_Syntax.uu___is_Sig_inductive_typ
+                         se.FStar_Syntax_Syntax.sigel))
+                     ||
+                     (FStar_Syntax_Syntax.uu___is_Sig_datacon
+                        se.FStar_Syntax_Syntax.sigel))
+              then ()
+              else
+                (let uu___3 =
+                   let uu___4 =
+                     let uu___5 =
+                       let uu___6 =
+                         FStar_Errors_Msg.text "Duplicate top-level names" in
+                       let uu___7 = FStar_Pprint.arbitrary_string s in
+                       FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                     let uu___6 =
+                       let uu___7 =
+                         let uu___8 =
+                           FStar_Errors_Msg.text "Previously declared at" in
+                         let uu___9 =
+                           let uu___10 =
+                             let uu___11 = FStar_Ident.range_of_lid l in
+                             FStar_Compiler_Range_Ops.string_of_range uu___11 in
+                           FStar_Pprint.arbitrary_string uu___10 in
+                         FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
+                       [uu___7] in
+                     uu___5 :: uu___6 in
+                   (FStar_Errors_Codes.Fatal_DuplicateTopLevelNames, uu___4) in
+                 let uu___4 = FStar_Ident.range_of_lid l in
+                 FStar_Errors.raise_error_doc uu___3 uu___4))
+           else ());
+          FStar_Compiler_Util.smap_add (sigtab env1) s se
+let rec (add_sigelt :
+  Prims.bool -> env -> FStar_Syntax_Syntax.sigelt -> unit) =
+  fun force ->
+    fun env1 ->
+      fun se ->
+        match se.FStar_Syntax_Syntax.sigel with
+        | FStar_Syntax_Syntax.Sig_bundle
+            { FStar_Syntax_Syntax.ses = ses;
+              FStar_Syntax_Syntax.lids = uu___;_}
+            -> add_sigelts force env1 ses
+        | uu___ ->
+            let lids = FStar_Syntax_Util.lids_of_sigelt se in
+            (FStar_Compiler_List.iter (try_add_sigelt force env1 se) lids;
+             add_se_to_attrtab env1 se)
+and (add_sigelts :
+  Prims.bool -> env -> FStar_Syntax_Syntax.sigelt Prims.list -> unit) =
+  fun force ->
+    fun env1 ->
+      fun ses ->
+        FStar_Compiler_Effect.op_Bar_Greater ses
+          (FStar_Compiler_List.iter (add_sigelt force env1))
 let (try_lookup_bv :
   env ->
     FStar_Syntax_Syntax.bv ->
@@ -5098,69 +5159,74 @@ let (reify_comp :
          | FStar_Pervasives_Native.None ->
              failwith "internal error: reifiable effect has no repr?"
          | FStar_Pervasives_Native.Some tm -> tm)
+let (push_sigelt' : Prims.bool -> env -> FStar_Syntax_Syntax.sigelt -> env) =
+  fun force ->
+    fun env1 ->
+      fun s ->
+        let sb = ((FStar_Syntax_Util.lids_of_sigelt s), s) in
+        let env2 =
+          {
+            solver = (env1.solver);
+            range = (env1.range);
+            curmodule = (env1.curmodule);
+            gamma = (env1.gamma);
+            gamma_sig = (sb :: (env1.gamma_sig));
+            gamma_cache = (env1.gamma_cache);
+            modules = (env1.modules);
+            expected_typ = (env1.expected_typ);
+            sigtab = (env1.sigtab);
+            attrtab = (env1.attrtab);
+            instantiate_imp = (env1.instantiate_imp);
+            effects = (env1.effects);
+            generalize = (env1.generalize);
+            letrecs = (env1.letrecs);
+            top_level = (env1.top_level);
+            check_uvars = (env1.check_uvars);
+            use_eq_strict = (env1.use_eq_strict);
+            is_iface = (env1.is_iface);
+            admit = (env1.admit);
+            lax = (env1.lax);
+            lax_universes = (env1.lax_universes);
+            phase1 = (env1.phase1);
+            failhard = (env1.failhard);
+            nosynth = (env1.nosynth);
+            uvar_subtyping = (env1.uvar_subtyping);
+            intactics = (env1.intactics);
+            nocoerce = (env1.nocoerce);
+            tc_term = (env1.tc_term);
+            typeof_tot_or_gtot_term = (env1.typeof_tot_or_gtot_term);
+            universe_of = (env1.universe_of);
+            typeof_well_typed_tot_or_gtot_term =
+              (env1.typeof_well_typed_tot_or_gtot_term);
+            teq_nosmt_force = (env1.teq_nosmt_force);
+            subtype_nosmt_force = (env1.subtype_nosmt_force);
+            qtbl_name_and_index = (env1.qtbl_name_and_index);
+            normalized_eff_names = (env1.normalized_eff_names);
+            fv_delta_depths = (env1.fv_delta_depths);
+            proof_ns = (env1.proof_ns);
+            synth_hook = (env1.synth_hook);
+            try_solve_implicits_hook = (env1.try_solve_implicits_hook);
+            splice = (env1.splice);
+            mpreprocess = (env1.mpreprocess);
+            postprocess = (env1.postprocess);
+            identifier_info = (env1.identifier_info);
+            tc_hooks = (env1.tc_hooks);
+            dsenv = (env1.dsenv);
+            nbe = (env1.nbe);
+            strict_args_tab = (env1.strict_args_tab);
+            erasable_types_tab = (env1.erasable_types_tab);
+            enable_defer_to_tac = (env1.enable_defer_to_tac);
+            unif_allow_ref_guards = (env1.unif_allow_ref_guards);
+            erase_erasable_args = (env1.erase_erasable_args);
+            core_check = (env1.core_check)
+          } in
+        add_sigelt force env2 s;
+        (env2.tc_hooks).tc_push_in_gamma_hook env2 (FStar_Pervasives.Inr sb);
+        env2
 let (push_sigelt : env -> FStar_Syntax_Syntax.sigelt -> env) =
-  fun env1 ->
-    fun s ->
-      let sb = ((FStar_Syntax_Util.lids_of_sigelt s), s) in
-      let env2 =
-        {
-          solver = (env1.solver);
-          range = (env1.range);
-          curmodule = (env1.curmodule);
-          gamma = (env1.gamma);
-          gamma_sig = (sb :: (env1.gamma_sig));
-          gamma_cache = (env1.gamma_cache);
-          modules = (env1.modules);
-          expected_typ = (env1.expected_typ);
-          sigtab = (env1.sigtab);
-          attrtab = (env1.attrtab);
-          instantiate_imp = (env1.instantiate_imp);
-          effects = (env1.effects);
-          generalize = (env1.generalize);
-          letrecs = (env1.letrecs);
-          top_level = (env1.top_level);
-          check_uvars = (env1.check_uvars);
-          use_eq_strict = (env1.use_eq_strict);
-          is_iface = (env1.is_iface);
-          admit = (env1.admit);
-          lax = (env1.lax);
-          lax_universes = (env1.lax_universes);
-          phase1 = (env1.phase1);
-          failhard = (env1.failhard);
-          nosynth = (env1.nosynth);
-          uvar_subtyping = (env1.uvar_subtyping);
-          intactics = (env1.intactics);
-          nocoerce = (env1.nocoerce);
-          tc_term = (env1.tc_term);
-          typeof_tot_or_gtot_term = (env1.typeof_tot_or_gtot_term);
-          universe_of = (env1.universe_of);
-          typeof_well_typed_tot_or_gtot_term =
-            (env1.typeof_well_typed_tot_or_gtot_term);
-          teq_nosmt_force = (env1.teq_nosmt_force);
-          subtype_nosmt_force = (env1.subtype_nosmt_force);
-          qtbl_name_and_index = (env1.qtbl_name_and_index);
-          normalized_eff_names = (env1.normalized_eff_names);
-          fv_delta_depths = (env1.fv_delta_depths);
-          proof_ns = (env1.proof_ns);
-          synth_hook = (env1.synth_hook);
-          try_solve_implicits_hook = (env1.try_solve_implicits_hook);
-          splice = (env1.splice);
-          mpreprocess = (env1.mpreprocess);
-          postprocess = (env1.postprocess);
-          identifier_info = (env1.identifier_info);
-          tc_hooks = (env1.tc_hooks);
-          dsenv = (env1.dsenv);
-          nbe = (env1.nbe);
-          strict_args_tab = (env1.strict_args_tab);
-          erasable_types_tab = (env1.erasable_types_tab);
-          enable_defer_to_tac = (env1.enable_defer_to_tac);
-          unif_allow_ref_guards = (env1.unif_allow_ref_guards);
-          erase_erasable_args = (env1.erase_erasable_args);
-          core_check = (env1.core_check)
-        } in
-      add_sigelt env2 s;
-      (env2.tc_hooks).tc_push_in_gamma_hook env2 (FStar_Pervasives.Inr sb);
-      env2
+  push_sigelt' false
+let (push_sigelt_force : env -> FStar_Syntax_Syntax.sigelt -> env) =
+  push_sigelt' true
 let (push_new_effect :
   env ->
     (FStar_Syntax_Syntax.eff_decl * FStar_Syntax_Syntax.qualifier Prims.list)
@@ -6226,7 +6292,6 @@ let (finish_module : env -> FStar_Syntax_Syntax.modul -> env) =
               (FStar_Compiler_List.map FStar_Pervasives_Native.snd) in
           FStar_Compiler_Effect.op_Bar_Greater uu___1 FStar_Compiler_List.rev
         else m.FStar_Syntax_Syntax.declarations in
-      add_sigelts env1 sigs;
       {
         solver = (env1.solver);
         range = (env1.range);

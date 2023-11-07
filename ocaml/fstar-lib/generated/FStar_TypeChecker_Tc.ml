@@ -419,13 +419,13 @@ let (tc_inductive' :
                    if uu___3
                    then ()
                    else
-                     (let env1 =
+                     (let env2 =
                         FStar_TypeChecker_Env.push_sigelt env sig_bndle1 in
                       FStar_Compiler_List.iter
                         (fun ty ->
                            let b =
                              FStar_TypeChecker_Positivity.check_strict_positivity
-                               env1 lids ty in
+                               env2 lids ty in
                            if Prims.op_Negation b
                            then
                              let uu___6 =
@@ -476,7 +476,7 @@ let (tc_inductive' :
                                    &&
                                    (let uu___8 =
                                       FStar_TypeChecker_Positivity.check_exn_strict_positivity
-                                        env1 data_lid in
+                                        env2 data_lid in
                                     Prims.op_Negation uu___8) in
                                if uu___7
                                then
@@ -2630,6 +2630,9 @@ let (tc_decl' :
                                          (uu___3.FStar_Syntax_Syntax.sigmeta_fact_db_ids);
                                        FStar_Syntax_Syntax.sigmeta_admit =
                                          true;
+                                       FStar_Syntax_Syntax.sigmeta_already_checked
+                                         =
+                                         (uu___3.FStar_Syntax_Syntax.sigmeta_already_checked);
                                        FStar_Syntax_Syntax.sigmeta_extension_data
                                          =
                                          (uu___3.FStar_Syntax_Syntax.sigmeta_extension_data)
@@ -3624,7 +3627,7 @@ let (tc_decl' :
                     FStar_Compiler_Util.print1
                       "Splice returned sigelts {\n%s\n}\n" uu___5
                   else ());
-                 if is_typed then (ses1, [], env1) else ([], ses1, env1)))
+                 ([], ses1, env1)))
            | FStar_Syntax_Syntax.Sig_let
                { FStar_Syntax_Syntax.lbs1 = lbs;
                  FStar_Syntax_Syntax.lids1 = lids;_}
@@ -4160,13 +4163,17 @@ let (tc_decl :
          let uu___3 = FStar_Syntax_Print.sigelt_to_string se in
          FStar_Compiler_Util.print1 ">>>>>>>>>>>>>>tc_decl %s\n" uu___3
        else ());
-      if (se.FStar_Syntax_Syntax.sigmeta).FStar_Syntax_Syntax.sigmeta_admit
-      then
-        (let old = FStar_Options.admit_smt_queries () in
-         FStar_Options.set_admit_smt_queries true;
-         (let result = tc_decl' env1 se in
-          FStar_Options.set_admit_smt_queries old; result))
-      else tc_decl' env1 se
+      if
+        (se.FStar_Syntax_Syntax.sigmeta).FStar_Syntax_Syntax.sigmeta_already_checked
+      then ([se], [], env1)
+      else
+        if (se.FStar_Syntax_Syntax.sigmeta).FStar_Syntax_Syntax.sigmeta_admit
+        then
+          (let old = FStar_Options.admit_smt_queries () in
+           FStar_Options.set_admit_smt_queries true;
+           (let result = tc_decl' env1 se in
+            FStar_Options.set_admit_smt_queries old; result))
+        else tc_decl' env1 se
 let (add_sigelt_to_env :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.sigelt -> Prims.bool -> FStar_TypeChecker_Env.env)

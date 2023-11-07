@@ -16,27 +16,27 @@
    Authors: G. Martinez, N. Swamy
 *)
 
-module FStar.Sealed
+module SealedModel
 
-(* This module provides the type ``sealed a`` which is a singleton
-   type from the perspective of F*'s logic. I.e., two values `x, y`
-   both of type `sealed a` are provably equal.
+open FStar.Tactics.Effect
 
-   However, from the meta-F*, i.e., using the Tac effect, one can
-   break the seal and extract an underlying value of type `a` from a
-   `sealed a`.
+(* This module provides a model for the `FStar.Sealed.sealed` type
+   in ulib, by implementing its interface over a single axiom
+   about Tac functions. This is not done directly in ulib/
+   due to some circular dependencies that would be introduced if
+   we tried to use the Tac effect from the FStar.Sealed module,
+   so it is just kept here in examples.
 
-   See also FStar.Sealed.Inhabited for a version of this module for
-   use with inhabited types, in a style that is more efficient for
-   SMT-based reasoning
+   See also FStar.Sealed.fsti in the library.
 *)
-assume
-new type sealed ([@@@strictly_positive] a : Type u#aa) : Type u#0
+
+new
+val sealed ([@@@strictly_positive] a : Type u#aa) : Type u#0
 
 (* The main axiom provided by this module:
 
    Two sealed values of the same type are equal.
-   
+
    Their seal can be broken only at the meta level, by incurring a Tac effect.
    See FStar.Tactics.unseal
 *)
@@ -46,6 +46,20 @@ val sealed_singl (#a:Type) (x y : sealed a)
 (* Sealing a value hides it from the logical fragment of F* *)
 val seal (#a : Type u#aa) (x:a) : Tot (sealed a)
 
-val map_seal (#a : Type u#aa) (#b : Type u#bb) (s : sealed a) (f : a -> Tot b) : Tot (sealed b)
+(* Unsealing, a Tac function. In particular a TacS, it never raises an exception. *)
+val unseal (#a : Type u#aa) (s : sealed a) : TacS a
 
-val bind_seal (#a : Type u#aa) (#b : Type u#bb) (s : sealed a) (f : a -> Tot (sealed b)) : Tot (sealed b)
+(* (Tac) functions can be mapped inside of a seal, without incurring
+in an effect. *)
+val map_seal
+  (#a : Type u#aa) (b : Type u#bb)
+  (s : sealed a)
+  (f : a -> TacS b)
+: Tot (sealed b)
+
+(* Similarly to above, we can do a pure bind. *)
+val bind_seal
+  (#a : Type u#aa) (b : Type u#bb)
+  (s : sealed a)
+  (f : a -> TacS (sealed b))
+: Tot (sealed b)

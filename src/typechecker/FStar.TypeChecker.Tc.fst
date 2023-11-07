@@ -146,10 +146,10 @@ let tc_inductive' env ses quals attrs lids =
         * AR: call add_sigelt_to_env here? We should maintain the invariant that push_sigelt is only called from there
         *     but then this is temporary, just to check positivity, later we actually do go through add_sigelt_to_env
         *)
-       let env = Env.push_sigelt env sig_bndle in
+       let env2 = Env.push_sigelt env sig_bndle in
        (* Check positivity of the inductives within the Sig_bundle *)
        List.iter (fun ty ->
-         let b = Positivity.check_strict_positivity env lids ty in
+         let b = Positivity.check_strict_positivity env2 lids ty in
          if not b then
            let lid, r =
              match ty.sigel with
@@ -169,7 +169,7 @@ let tc_inductive' env ses quals attrs lids =
             | _ -> failwith "Impossible"
          in
          if lid_equals ty_lid PC.exn_lid &&
-            not (Positivity.check_exn_strict_positivity env data_lid)
+            not (Positivity.check_exn_strict_positivity env2 data_lid)
          then
             Errors.log_issue d.sigrng
               (Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
@@ -871,9 +871,11 @@ let tc_decl' env0 se: list sigelt * list sigelt * Env.env =
       BU.print1 "Splice returned sigelts {\n%s\n}\n"
         (String.concat "\n" <| List.map Print.sigelt_to_string ses);
 
-    if is_typed
-    then ses, [], env
-    else [], ses, env
+    (* sigelts returned by splice_t can be marked with sigmeta
+    already_checked, and those will be skipped on the next run. But they do
+    run through the pipeline again. This also allows a splice tactic
+    to return any mixture of checked and unchecked sigelts. *)
+    [], ses, env
 
   | Sig_let {lbs; lids} ->
     Profiling.profile
@@ -958,7 +960,9 @@ let tc_decl env se: list sigelt * list sigelt * Env.env =
      BU.print1 "Processing %s\n" (Print.sigelt_to_string_short se);
    if Env.debug env Options.Low then
      BU.print1 ">>>>>>>>>>>>>>tc_decl %s\n" (Print.sigelt_to_string se);
-   if se.sigmeta.sigmeta_admit
+   if se.sigmeta.sigmeta_already_checked then
+     [se], [], env
+   else if se.sigmeta.sigmeta_admit
    then begin
      let old = Options.admit_smt_queries () in
      Options.set_admit_smt_queries true;

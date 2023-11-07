@@ -536,25 +536,25 @@ let soundness_lemma (sg:stlc_env)
       ()
       (fun dd -> FStar.Squash.return_squash (soundness dd g))
 
-let main (src:stlc_exp) : RT.dsl_tac_t =
+let main (nm:string) (src:stlc_exp) : RT.dsl_tac_t =
   fun g ->
   if ln src && closed src
   then
     let (| src_ty, d |) = check g [] src in
     soundness_lemma [] src src_ty g;
-    Some (elab_exp src), None, elab_ty src_ty
+    [RT.mk_checked_let g nm (elab_exp src) (elab_ty src_ty)]
   else T.fail "Not locally nameless"
 
 (***** Tests *****)
 
-%splice_t[foo] (main (ELam TUnit (EBVar 0)))
+%splice_t[foo] (main "foo" (ELam TUnit (EBVar 0)))
 
 #push-options "--no_smt"
 let test_id () = assert (foo () == ()) by (T.compute ())
 #pop-options
 
 let bar_s = (ELam TUnit (ELam TUnit (EBVar 1)))
-%splice_t[bar] (main bar_s)
+%splice_t[bar] (main "bar" bar_s)
 
 let baz_s : stlc_exp = EApp bar_s EUnit
-%splice_t[baz] (main bar_s)
+%splice_t[baz] (main "baz" bar_s)

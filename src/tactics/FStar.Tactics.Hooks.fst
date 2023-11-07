@@ -823,53 +823,37 @@ let splice (env:Env.env) (is_typed:bool) (lids:list Ident.lident) (tau:term) (rn
     let tau, _, g =
       if is_typed
       then TcTerm.tc_check_tot_or_gtot_term env tau U.t_dsl_tac_typ ""
-      else TcTerm.tc_tactic t_unit S.t_decls env tau in
+      else TcTerm.tc_tactic t_unit S.t_decls env tau
+    in
 
     TcRel.force_trivial_guard env g;
 
     let ps = FStar.Tactics.V2.Basic.proofstate_of_goals tau.pos env [] [] in
     let tactic_already_typed = true in
     let gs, sigelts =
-      if is_typed
-      then begin
-        let gs, (tm_opt, blob_opt, typ) = run_tactic_on_ps tau.pos tau.pos false
+      if is_typed then
+      begin
+        let e_blob = e_option (e_tuple2 e_string RE.e_term) in
+        let gs, sig_blobs = run_tactic_on_ps tau.pos tau.pos false
           RE.e_env
           {env with gamma=[]}
-          (e_tuple3 (e_option RE.e_term)
-                    (e_option (e_tuple2 e_string RE.e_term))
-                    RE.e_term)
+          (e_list (e_tuple3 e_bool RE.e_sigelt e_blob))
           tau
           tactic_already_typed
           ps 
         in
-        let e =
-          match tm_opt with
-          | None -> S.tun
-          | Some t -> t
+        let sigelts = sig_blobs |> map (fun (checked, se, blob_opt) ->
+          { se with
+              sigmeta = { se.sigmeta with
+                sigmeta_extension_data =
+                      (match blob_opt with
+                       | Some (s, blob) -> [s, Dyn.mkdyn blob]
+                       | None -> []);
+                sigmeta_already_checked = checked; }
+          }
+        )
         in
-        let sig_extension_data =
-          match blob_opt with
-          | None -> []
-          | Some (s,blob) -> [s, FStar.Compiler.Dyn.mkdyn blob]
-        in
-        let lb = U.mk_letbinding
-          (Inr (S.lid_as_fv (List.hd lids) None))
-          []  // no universe polymorphism yet
-          typ
-          PC.effect_Tot_lid  // only Tot top-level effect so far
-          e
-          []
-          rng in
-
-        gs,
-        [{sigel = S.Sig_let {lbs=(false, [lb]); lids};  // false ==> non-recursive
-          sigrng = rng;
-          sigquals = [S.Visible_default];  // default visibility
-          sigmeta = { S.default_sigmeta with sigmeta_extension_data=sig_extension_data };
-          sigattrs = [];
-          sigopts = None;
-          sigopens_and_abbrevs=[]
-          }]
+        gs, sigelts
       end
       else run_tactic_on_ps tau.pos tau.pos false
              e_unit ()

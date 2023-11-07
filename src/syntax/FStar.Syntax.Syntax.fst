@@ -164,6 +164,7 @@ let default_sigmeta = {
     sigmeta_active=true;
     sigmeta_fact_db_ids=[];
     sigmeta_admit=false;
+    sigmeta_already_checked=false;
     sigmeta_extension_data=[]
 }
 let mk_sigelt (e: sigelt') = { 

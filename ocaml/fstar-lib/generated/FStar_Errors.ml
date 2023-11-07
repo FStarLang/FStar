@@ -631,18 +631,21 @@ let (error_context : error_context_t) =
   { push; pop; clear = clear1; get; set }
 let (get_ctx : unit -> Prims.string Prims.list) =
   fun uu___ -> error_context.get ()
-let (diag : FStar_Compiler_Range_Type.range -> Prims.string -> unit) =
+let (diag_doc :
+  FStar_Compiler_Range_Type.range -> FStar_Errors_Msg.error_message -> unit)
+  =
   fun r ->
     fun msg ->
       let uu___ = FStar_Options.debug_any () in
       if uu___
       then
-        let uu___1 =
-          let uu___2 = FStar_Errors_Msg.mkmsg msg in
-          mk_issue EInfo (FStar_Pervasives_Native.Some r) uu___2
-            FStar_Pervasives_Native.None [] in
-        add_one uu___1
+        add_one
+          (mk_issue EInfo (FStar_Pervasives_Native.Some r) msg
+             FStar_Pervasives_Native.None [])
       else ()
+let (diag : FStar_Compiler_Range_Type.range -> Prims.string -> unit) =
+  fun r ->
+    fun msg -> let uu___ = FStar_Errors_Msg.mkmsg msg in diag_doc r uu___
 let (diag0 : Prims.string -> unit) =
   fun msg ->
     let uu___ = FStar_Options.debug_any () in
@@ -724,7 +727,7 @@ let (set_option_warning_callback_range :
   FStar_Compiler_Range_Type.range FStar_Pervasives_Native.option -> unit) =
   fun ropt ->
     FStar_Options.set_option_warning_callback (warn_unsafe_options ropt)
-let (uu___377 :
+let (uu___381 :
   (((Prims.string -> FStar_Errors_Codes.error_setting Prims.list) -> unit) *
     (unit -> FStar_Errors_Codes.error_setting Prims.list)))
   =
@@ -770,10 +773,10 @@ let (uu___377 :
   (set_callbacks, get_error_flags)
 let (t_set_parse_warn_error :
   (Prims.string -> FStar_Errors_Codes.error_setting Prims.list) -> unit) =
-  match uu___377 with
+  match uu___381 with
   | (t_set_parse_warn_error1, error_flags) -> t_set_parse_warn_error1
 let (error_flags : unit -> FStar_Errors_Codes.error_setting Prims.list) =
-  match uu___377 with
+  match uu___381 with
   | (t_set_parse_warn_error1, error_flags1) -> error_flags1
 let (set_parse_warn_error :
   (Prims.string -> FStar_Errors_Codes.error_setting Prims.list) -> unit) =

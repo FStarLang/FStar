@@ -20,6 +20,7 @@ type norm_step =
   | Iota 
   | NBE 
   | Reify 
+  | NormDebug 
   | UnfoldOnly of Prims.string Prims.list 
   | UnfoldFully of Prims.string Prims.list 
   | UnfoldAttr of Prims.string Prims.list 
@@ -47,6 +48,8 @@ let (uu___is_NBE : norm_step -> Prims.bool) =
   fun projectee -> match projectee with | NBE -> true | uu___ -> false
 let (uu___is_Reify : norm_step -> Prims.bool) =
   fun projectee -> match projectee with | Reify -> true | uu___ -> false
+let (uu___is_NormDebug : norm_step -> Prims.bool) =
+  fun projectee -> match projectee with | NormDebug -> true | uu___ -> false
 let (uu___is_UnfoldOnly : norm_step -> Prims.bool) =
   fun projectee ->
     match projectee with | UnfoldOnly _0 -> true | uu___ -> false
@@ -82,6 +85,7 @@ let (weak : norm_step) = Weak
 let (hnf : norm_step) = HNF
 let (primops : norm_step) = Primops
 let (delta : norm_step) = Delta
+let (norm_debug : norm_step) = NormDebug
 let (zeta : norm_step) = Zeta
 let (zeta_full : norm_step) = ZetaFull
 let (iota : norm_step) = Iota

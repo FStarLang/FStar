@@ -1684,30 +1684,30 @@ let soundness_lemma (f:RT.fstar_top_env)
       ()
       (fun dd -> FStar.Squash.return_squash (soundness dd))
 
-let main (src:src_exp) : RT.dsl_tac_t =
+let main (nm:string) (src:src_exp) : RT.dsl_tac_t =
   fun f ->
   if ln src && closed src
   then 
     let (| src_ty, _ |) = check f [] src in
     soundness_lemma f [] src src_ty;
-    Some (elab_exp src), None, elab_ty src_ty
+    [RT.mk_checked_let f nm (elab_exp src) (elab_ty src_ty)]
   else T.fail "Not locally nameless"
 
 (***** Examples *****)
 
-%splice_t[foo] (main (EBool true))
+%splice_t[foo] (main "foo" (EBool true))
 
 //
 // This emits a subtyping query, bool <: x:bool{true}
 //   which is dispatched to the tc call back and succeeds
 //
-%splice_t[bar] (main (EApp (ELam (TRefineBool (ELam TBool (EBool true))) (EBVar 0))
-                           (EBool false)))
+%splice_t[bar] (main "bar" (EApp (ELam (TRefineBool (ELam TBool (EBool true))) (EBVar 0))
+                                 (EBool false)))
 
 //
 // The query here is bool <: x:bool{false}
 //   which fails as expected
 //
 [@@ expect_failure]
-%splice_t[baz] (main (EApp (ELam (TRefineBool (ELam TBool (EBool false))) (EBVar 0))
-                           (EBool true)))
+%splice_t[baz] (main "baz" (EApp (ELam (TRefineBool (ELam TBool (EBool false))) (EBVar 0))
+                                 (EBool true)))

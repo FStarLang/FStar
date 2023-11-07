@@ -120,7 +120,9 @@ let (reifying_false : config -> config) =
              (uu___.FStar_TypeChecker_Cfg.memoize_lazy);
            FStar_TypeChecker_Cfg.normalize_pure_lets =
              (uu___.FStar_TypeChecker_Cfg.normalize_pure_lets);
-           FStar_TypeChecker_Cfg.reifying = false
+           FStar_TypeChecker_Cfg.reifying = false;
+           FStar_TypeChecker_Cfg.compat_memo_ignore_cfg =
+             (uu___.FStar_TypeChecker_Cfg.compat_memo_ignore_cfg)
          })
     else cfg
 let (reifying_true : config -> config) =
@@ -143,7 +145,9 @@ let (reifying_true : config -> config) =
              (uu___.FStar_TypeChecker_Cfg.memoize_lazy);
            FStar_TypeChecker_Cfg.normalize_pure_lets =
              (uu___.FStar_TypeChecker_Cfg.normalize_pure_lets);
-           FStar_TypeChecker_Cfg.reifying = true
+           FStar_TypeChecker_Cfg.reifying = true;
+           FStar_TypeChecker_Cfg.compat_memo_ignore_cfg =
+             (uu___.FStar_TypeChecker_Cfg.compat_memo_ignore_cfg)
          })
     else cfg
 let (zeta_false : config -> config) =
@@ -230,7 +234,9 @@ let (zeta_false : config -> config) =
           FStar_TypeChecker_Cfg.normalize_pure_lets =
             (cfg_core.FStar_TypeChecker_Cfg.normalize_pure_lets);
           FStar_TypeChecker_Cfg.reifying =
-            (cfg_core.FStar_TypeChecker_Cfg.reifying)
+            (cfg_core.FStar_TypeChecker_Cfg.reifying);
+          FStar_TypeChecker_Cfg.compat_memo_ignore_cfg =
+            (cfg_core.FStar_TypeChecker_Cfg.compat_memo_ignore_cfg)
         } in
       new_config cfg_core'
     else cfg
@@ -3348,7 +3354,9 @@ let (normalize :
               FStar_TypeChecker_Cfg.normalize_pure_lets =
                 (cfg.FStar_TypeChecker_Cfg.normalize_pure_lets);
               FStar_TypeChecker_Cfg.reifying =
-                (cfg.FStar_TypeChecker_Cfg.reifying)
+                (cfg.FStar_TypeChecker_Cfg.reifying);
+              FStar_TypeChecker_Cfg.compat_memo_ignore_cfg =
+                (cfg.FStar_TypeChecker_Cfg.compat_memo_ignore_cfg)
             } in
           (let uu___1 =
              (FStar_TypeChecker_Env.debug env (FStar_Options.Other "NBETop"))
@@ -3457,7 +3465,9 @@ let (normalize_for_unit_test :
             FStar_TypeChecker_Cfg.normalize_pure_lets =
               (cfg.FStar_TypeChecker_Cfg.normalize_pure_lets);
             FStar_TypeChecker_Cfg.reifying =
-              (cfg.FStar_TypeChecker_Cfg.reifying)
+              (cfg.FStar_TypeChecker_Cfg.reifying);
+            FStar_TypeChecker_Cfg.compat_memo_ignore_cfg =
+              (cfg.FStar_TypeChecker_Cfg.compat_memo_ignore_cfg)
           } in
         let cfg2 = new_config cfg1 in
         debug cfg2

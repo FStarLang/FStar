@@ -160,7 +160,7 @@ let rec is_arity_aux tcenv t =
     | Tm_unknown
     | Tm_delayed _
     | Tm_ascribed _
-    | Tm_meta _ -> failwith "Impossible: is_arity"
+    | Tm_meta _ -> failwith (BU.format1 "Impossible: is_arity (%s)" (Print.tag_of_term t))
     | Tm_lazy i -> is_arity_aux tcenv (U.unfold_lazy i)
     | Tm_uvar _
     | Tm_constant _

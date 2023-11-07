@@ -135,7 +135,7 @@ eventually bottom out, since there are no infinite descending chains
 related by ``<<``.
 
 In the case of ``length``, we need to prove at the recursive call
-``length tl`` that ``tl : (m : list a { m << l }``, or, equivalently
+``length tl`` that ``tl : (m : list a { m << l })``, or, equivalently
 that ``tl << l`` is valid. But, from the sub-term ordering on
 inductive types, ``l = Cons _ tl``, so ``tl << l`` is indeed provable
 and everything checks out.
@@ -336,7 +336,7 @@ sense:
    \mathsf{f_n~:~(\overline{x_n:t_n}\{~m_n~<<~m~\}~\rightarrow~r_n)} \\
 
 That is, each function in the mutually recursive group can only be
-applied to arguments that are precede the current formal parameters of
+applied to arguments that precede the current formal parameters of
 :math:`\mathsf{f}` according to the annotated measures of each
 function.
 
