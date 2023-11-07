@@ -361,6 +361,7 @@ let (__proj__Mkfn__item__fn_sig : fn -> fn_signature) =
   fun projectee -> match projectee with | { fn_sig; fn_body;_} -> fn_sig
 let (__proj__Mkfn__item__fn_body : fn -> stmt Prims.list) =
   fun projectee -> match projectee with | { fn_sig; fn_body;_} -> fn_body
+let (vec_new_fn : Prims.string) = "vec_new"
 let (mk_scalar_typ : Prims.string -> typ) =
   fun name ->
     Typ_path
@@ -369,6 +370,12 @@ let (mk_ref_typ : Prims.bool -> typ -> typ) =
   fun is_mut ->
     fun t -> Typ_reference { typ_ref_mut = is_mut; typ_ref_typ = t }
 let (mk_slice_typ : typ -> typ) = fun t -> Typ_slice t
+let (mk_vec_typ : typ -> typ) =
+  fun t ->
+    Typ_path
+      [{ typ_path_segment_name = "std"; typ_path_segment_generic_args = [] };
+      { typ_path_segment_name = "vec"; typ_path_segment_generic_args = [] };
+      { typ_path_segment_name = "Vec"; typ_path_segment_generic_args = [t] }]
 let (mk_binop : expr -> binop -> expr -> expr) =
   fun l ->
     fun op ->

@@ -152,6 +152,13 @@ let rec (extract_mlty :
               Pulse2Rust_Rust_Syntax.mk_slice_typ in
           FStar_Compiler_Effect.op_Bar_Greater uu___
             (Pulse2Rust_Rust_Syntax.mk_ref_typ is_mut)
+      | FStar_Extraction_ML_Syntax.MLTY_Named (arg::[], p) when
+          let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___ = "Pulse.Lib.Rust.Vec.vec" ->
+          let uu___ =
+            FStar_Compiler_Effect.op_Bar_Greater arg (extract_mlty g) in
+          FStar_Compiler_Effect.op_Bar_Greater uu___
+            Pulse2Rust_Rust_Syntax.mk_vec_typ
       | FStar_Extraction_ML_Syntax.MLTY_Erased ->
           Pulse2Rust_Rust_Syntax.mk_scalar_typ "unit"
       | uu___ ->
@@ -368,8 +375,11 @@ let rec (extract_mlexpr :
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
            e1::i::uu___5::uu___6::[])
           when
-          let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___7 = "Pulse.Lib.Rust.Slice.op_Array_Access" ->
+          (let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+           uu___7 = "Pulse.Lib.Rust.Slice.op_Array_Access") ||
+            (let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___7 = "Pulse.Lib.Rust.Vec.op_Array_Access")
+          ->
           let uu___7 = extract_mlexpr g e1 in
           let uu___8 = extract_mlexpr g i in
           Pulse2Rust_Rust_Syntax.mk_expr_index uu___7 uu___8
@@ -387,13 +397,56 @@ let rec (extract_mlexpr :
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
            e1::e2::e3::uu___5::[])
           when
-          let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___6 = "Pulse.Lib.Rust.Slice.op_Array_Assignment" ->
+          (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+           uu___6 = "Pulse.Lib.Rust.Slice.op_Array_Assignment") ||
+            (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___6 = "Pulse.Lib.Rust.Vec.op_Array_Assignment")
+          ->
           let e11 = extract_mlexpr g e1 in
           let e21 = extract_mlexpr g e2 in
           let e31 = extract_mlexpr g e3 in
           let uu___6 = Pulse2Rust_Rust_Syntax.mk_expr_index e11 e21 in
           Pulse2Rust_Rust_Syntax.mk_assign uu___6 e31
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_TApp
+               ({
+                  FStar_Extraction_ML_Syntax.expr =
+                    FStar_Extraction_ML_Syntax.MLE_Name p;
+                  FStar_Extraction_ML_Syntax.mlty = uu___;
+                  FStar_Extraction_ML_Syntax.loc = uu___1;_},
+                uu___2::[]);
+             FStar_Extraction_ML_Syntax.mlty = uu___3;
+             FStar_Extraction_ML_Syntax.loc = uu___4;_},
+           e1::e2::[])
+          when
+          let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___5 = "Pulse.Lib.Rust.Vec.alloc" ->
+          let e11 = extract_mlexpr g e1 in
+          let e21 = extract_mlexpr g e2 in
+          Pulse2Rust_Rust_Syntax.mk_call
+            (Pulse2Rust_Rust_Syntax.Expr_path
+               Pulse2Rust_Rust_Syntax.vec_new_fn) [e11; e21]
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_TApp
+               ({
+                  FStar_Extraction_ML_Syntax.expr =
+                    FStar_Extraction_ML_Syntax.MLE_Name p;
+                  FStar_Extraction_ML_Syntax.mlty = uu___;
+                  FStar_Extraction_ML_Syntax.loc = uu___1;_},
+                uu___2::[]);
+             FStar_Extraction_ML_Syntax.mlty = uu___3;
+             FStar_Extraction_ML_Syntax.loc = uu___4;_},
+           e1::uu___5::[])
+          when
+          let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___6 = "Pulse.Lib.Rust.Vec.free" ->
+          let e2 = extract_mlexpr g e1 in
+          Pulse2Rust_Rust_Syntax.mk_call
+            (Pulse2Rust_Rust_Syntax.Expr_path "drop") [e2]
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
              FStar_Extraction_ML_Syntax.expr =
