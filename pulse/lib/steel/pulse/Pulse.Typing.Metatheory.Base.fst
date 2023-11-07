@@ -376,24 +376,24 @@ let rec st_typing_weakening g g' t c d g1
     assume (~ (x `Set.mem` dom g'));
     assume (~ (x `Set.mem` dom g1));
     let d_body
-      : st_typing (push_binding (push_env g g') x ppname_default (mk_array init_t))
+      : st_typing (push_binding (push_env g g') x ppname_default (mk_array init_t len))
                   (open_st_term_nv body (v_as_nv x))
                   (comp_withlocal_array_body x init_t init len c) = d_body in
-    assert (equal (push_binding (push_env g g') x ppname_default (mk_array init_t))
-                  (push_env g (push_binding g' x ppname_default (mk_array init_t))));
+    assert (equal (push_binding (push_env g g') x ppname_default (mk_array init_t len))
+                  (push_env g (push_binding g' x ppname_default (mk_array init_t len))));
     let d_body
-      : st_typing (push_env g (push_binding g' x ppname_default (mk_array init_t)))
+      : st_typing (push_env g (push_binding g' x ppname_default (mk_array init_t len)))
                   (open_st_term_nv body (v_as_nv x))
                   (comp_withlocal_array_body x init_t init len c) = d_body in
     let d_body
-      : st_typing (push_env (push_env g g1) (push_binding g' x ppname_default (mk_array init_t)))
+      : st_typing (push_env (push_env g g1) (push_binding g' x ppname_default (mk_array init_t len)))
                   (open_st_term_nv body (v_as_nv x))
                   (comp_withlocal_array_body x init_t init len c)
-      = st_typing_weakening g (push_binding g' x ppname_default (mk_array init_t))  _ _ d_body g1 in
-    assert (equal (push_env (push_env g g1) (push_binding g' x ppname_default (mk_array init_t)))
-                  (push_binding (push_env (push_env g g1) g') x ppname_default (mk_array init_t)));
+      = st_typing_weakening g (push_binding g' x ppname_default (mk_array init_t len))  _ _ d_body g1 in
+    assert (equal (push_env (push_env g g1) (push_binding g' x ppname_default (mk_array init_t len)))
+                  (push_binding (push_env (push_env g g1) g') x ppname_default (mk_array init_t len)));
     let d_body
-      : st_typing (push_binding (push_env (push_env g g1) g') x ppname_default (mk_array init_t))
+      : st_typing (push_binding (push_env (push_env g g1) g') x ppname_default (mk_array init_t len))
                   (open_st_term_nv body (v_as_nv x))
                   (comp_withlocal_array_body x init_t init len c) = d_body in
     T_WithLocalArray _ init len body init_t c x (magic ()) (magic ()) (magic ())

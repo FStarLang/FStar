@@ -413,8 +413,8 @@ let freevars_ref (t:term)
   : Lemma (freevars (mk_ref t) == freevars t)
   = admit()
 
-let freevars_array (t:term)
-  : Lemma (freevars (mk_array t) == freevars t)
+let freevars_array (t len:term)
+  : Lemma (freevars (mk_array t len) == freevars t)
   = admit()
 
 // FIXME: tame this proof
@@ -599,7 +599,7 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
      freevars_open_st_term_inv body x;
      comp_typing_freevars c_typing;
      tot_or_ghost_typing_freevars u_typing;
-     freevars_array init_t
+     freevars_array init_t len
 
    | T_Admit _ s _ (STC _ _ x t_typing pre_typing post_typing) ->
      tot_or_ghost_typing_freevars t_typing;

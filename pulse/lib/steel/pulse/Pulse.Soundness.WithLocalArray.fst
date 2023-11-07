@@ -34,7 +34,7 @@ let withlocalarray_soundness #g #t #c d soundness =
   let ret_t_typing = cres_typing in
   let post_typing = cpost_typing in
 
-  elab_push_binding g x (mk_array init_t);
+  elab_push_binding g x (mk_array init_t len);
   let rbody_typing = soundness _ _ _ body_typing in
 
   WT.with_localarray_typing

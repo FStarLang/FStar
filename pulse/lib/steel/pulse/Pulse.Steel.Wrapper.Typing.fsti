@@ -374,24 +374,24 @@ val with_local_typing
 
 let with_localarray_body_pre (pre:term) (a:term) (arr:term) (init:term) (len:term) : term =
   let pts_to : term =
-    mk_array_pts_to a arr full_perm_tm (mk_seq_create uzero a (mk_szv len) init) in
+    mk_array_pts_to a len arr full_perm_tm (mk_seq_create uzero a (mk_szv len) init) in
   let len_vp : term =
-    mk_pure (mk_eq2 uzero nat_tm (mk_array_length a arr) (mk_szv len)) in
+    mk_pure (mk_eq2 uzero nat_tm (mk_array_length a len arr) (mk_szv len)) in
   mk_star pre (mk_star pts_to len_vp)
 
 //
 // post has 0 db index free
 //
-let with_localarray_body_post_body (post:term) (a:term) (arr:term) : term =
+let with_localarray_body_post_body (post:term) (a:term) (arr:term) (len:term) : term =
   // exists_ (A.pts_to arr full_perm)
   let exists_tm =
     mk_exists uzero (mk_seq uzero a)
       (mk_abs (mk_seq uzero a) Q_Explicit
-         (mk_array_pts_to a arr full_perm_tm (RT.bound_var 0))) in
+         (mk_array_pts_to a len arr full_perm_tm (RT.bound_var 0))) in
   mk_star post exists_tm
 
-let with_localarray_body_post (post:term) (a:term) (ret_t:term) (arr:term) : term =
-  mk_abs ret_t Q_Explicit (with_localarray_body_post_body post a arr)
+let with_localarray_body_post (post:term) (a:term) (ret_t:term) (arr:term) (len:term) : term =
+  mk_abs ret_t Q_Explicit (with_localarray_body_post_body post a arr len)
 
 val with_localarray_typing
   (#g:env)
@@ -410,11 +410,11 @@ val with_localarray_typing
   (pre_typing:RT.tot_typing g pre vprop_tm)
   (ret_t_typing:RT.tot_typing g ret_t (pack_ln (Tv_Type u)))
   (post_typing:RT.tot_typing g (RT.mk_abs ret_t Q_Explicit post) (mk_arrow (ret_t, Q_Explicit) vprop_tm))
-  (body_typing:RT.tot_typing (RT.extend_env g x (mk_array a))
+  (body_typing:RT.tot_typing (RT.extend_env g x (mk_array a len))
                              body
                              (mk_stt_comp u ret_t
                                 (with_localarray_body_pre pre a (RT.var_as_term x) init len)
-                                (with_localarray_body_post post a ret_t (RT.var_as_term x))))
+                                (with_localarray_body_post post a ret_t (RT.var_as_term x) len)))
   : GTot (RT.tot_typing g (mk_withlocalarray u a init len pre ret_t (RT.mk_abs ret_t Q_Explicit post)
-                                                                    (RT.mk_abs (mk_array a) Q_Explicit (RT.close_term body x)))
+                                                                    (RT.mk_abs (mk_array a len) Q_Explicit (RT.close_term body x)))
                           (mk_stt_comp u ret_t pre (mk_abs ret_t Q_Explicit post)))
