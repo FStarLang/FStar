@@ -1,49 +1,4 @@
 open Prims
-type typ =
-  | Typ_path of typ_path_segment Prims.list 
-  | Typ_reference of typ_reference 
-  | Typ_slice of typ 
-and typ_reference = {
-  typ_ref_mut: Prims.bool ;
-  typ_ref_typ: typ }
-and typ_path_segment =
-  {
-  typ_path_segment_name: Prims.string ;
-  typ_path_segment_generic_args: typ Prims.list }
-let (uu___is_Typ_path : typ -> Prims.bool) =
-  fun projectee ->
-    match projectee with | Typ_path _0 -> true | uu___ -> false
-let (__proj__Typ_path__item___0 : typ -> typ_path_segment Prims.list) =
-  fun projectee -> match projectee with | Typ_path _0 -> _0
-let (uu___is_Typ_reference : typ -> Prims.bool) =
-  fun projectee ->
-    match projectee with | Typ_reference _0 -> true | uu___ -> false
-let (__proj__Typ_reference__item___0 : typ -> typ_reference) =
-  fun projectee -> match projectee with | Typ_reference _0 -> _0
-let (uu___is_Typ_slice : typ -> Prims.bool) =
-  fun projectee ->
-    match projectee with | Typ_slice _0 -> true | uu___ -> false
-let (__proj__Typ_slice__item___0 : typ -> typ) =
-  fun projectee -> match projectee with | Typ_slice _0 -> _0
-let (__proj__Mktyp_reference__item__typ_ref_mut :
-  typ_reference -> Prims.bool) =
-  fun projectee ->
-    match projectee with | { typ_ref_mut; typ_ref_typ;_} -> typ_ref_mut
-let (__proj__Mktyp_reference__item__typ_ref_typ : typ_reference -> typ) =
-  fun projectee ->
-    match projectee with | { typ_ref_mut; typ_ref_typ;_} -> typ_ref_typ
-let (__proj__Mktyp_path_segment__item__typ_path_segment_name :
-  typ_path_segment -> Prims.string) =
-  fun projectee ->
-    match projectee with
-    | { typ_path_segment_name; typ_path_segment_generic_args;_} ->
-        typ_path_segment_name
-let (__proj__Mktyp_path_segment__item__typ_path_segment_generic_args :
-  typ_path_segment -> typ Prims.list) =
-  fun projectee ->
-    match projectee with
-    | { typ_path_segment_name; typ_path_segment_generic_args;_} ->
-        typ_path_segment_generic_args
 type pat_ident =
   {
   pat_name: Prims.string ;
@@ -142,6 +97,7 @@ type expr =
   | Expr_if of expr_if 
   | Expr_while of expr_while 
   | Expr_index of expr_index 
+  | Expr_repeat of expr_repeat 
 and expr_bin =
   {
   expr_bin_left: expr ;
@@ -167,6 +123,9 @@ and expr_if =
 and expr_while = {
   expr_while_cond: expr ;
   expr_while_body: stmt Prims.list }
+and expr_repeat = {
+  expr_repeat_elem: expr ;
+  expr_repeat_len: expr }
 and local_stmt =
   {
   local_stmt_pat: pat ;
@@ -223,6 +182,11 @@ let (uu___is_Expr_index : expr -> Prims.bool) =
     match projectee with | Expr_index _0 -> true | uu___ -> false
 let (__proj__Expr_index__item___0 : expr -> expr_index) =
   fun projectee -> match projectee with | Expr_index _0 -> _0
+let (uu___is_Expr_repeat : expr -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Expr_repeat _0 -> true | uu___ -> false
+let (__proj__Expr_repeat__item___0 : expr -> expr_repeat) =
+  fun projectee -> match projectee with | Expr_repeat _0 -> _0
 let (__proj__Mkexpr_bin__item__expr_bin_left : expr_bin -> expr) =
   fun projectee ->
     match projectee with
@@ -291,6 +255,14 @@ let (__proj__Mkexpr_while__item__expr_while_body :
   fun projectee ->
     match projectee with
     | { expr_while_cond; expr_while_body;_} -> expr_while_body
+let (__proj__Mkexpr_repeat__item__expr_repeat_elem : expr_repeat -> expr) =
+  fun projectee ->
+    match projectee with
+    | { expr_repeat_elem; expr_repeat_len;_} -> expr_repeat_elem
+let (__proj__Mkexpr_repeat__item__expr_repeat_len : expr_repeat -> expr) =
+  fun projectee ->
+    match projectee with
+    | { expr_repeat_elem; expr_repeat_len;_} -> expr_repeat_len
 let (__proj__Mklocal_stmt__item__local_stmt_pat : local_stmt -> pat) =
   fun projectee ->
     match projectee with
@@ -310,6 +282,68 @@ let (uu___is_Stmt_expr : stmt -> Prims.bool) =
     match projectee with | Stmt_expr _0 -> true | uu___ -> false
 let (__proj__Stmt_expr__item___0 : stmt -> expr) =
   fun projectee -> match projectee with | Stmt_expr _0 -> _0
+type typ =
+  | Typ_path of typ_path_segment Prims.list 
+  | Typ_reference of typ_reference 
+  | Typ_slice of typ 
+  | Typ_array of typ_array 
+and typ_reference = {
+  typ_ref_mut: Prims.bool ;
+  typ_ref_typ: typ }
+and typ_path_segment =
+  {
+  typ_path_segment_name: Prims.string ;
+  typ_path_segment_generic_args: typ Prims.list }
+and typ_array = {
+  typ_array_elem: typ ;
+  typ_array_len: expr }
+let (uu___is_Typ_path : typ -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Typ_path _0 -> true | uu___ -> false
+let (__proj__Typ_path__item___0 : typ -> typ_path_segment Prims.list) =
+  fun projectee -> match projectee with | Typ_path _0 -> _0
+let (uu___is_Typ_reference : typ -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Typ_reference _0 -> true | uu___ -> false
+let (__proj__Typ_reference__item___0 : typ -> typ_reference) =
+  fun projectee -> match projectee with | Typ_reference _0 -> _0
+let (uu___is_Typ_slice : typ -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Typ_slice _0 -> true | uu___ -> false
+let (__proj__Typ_slice__item___0 : typ -> typ) =
+  fun projectee -> match projectee with | Typ_slice _0 -> _0
+let (uu___is_Typ_array : typ -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Typ_array _0 -> true | uu___ -> false
+let (__proj__Typ_array__item___0 : typ -> typ_array) =
+  fun projectee -> match projectee with | Typ_array _0 -> _0
+let (__proj__Mktyp_reference__item__typ_ref_mut :
+  typ_reference -> Prims.bool) =
+  fun projectee ->
+    match projectee with | { typ_ref_mut; typ_ref_typ;_} -> typ_ref_mut
+let (__proj__Mktyp_reference__item__typ_ref_typ : typ_reference -> typ) =
+  fun projectee ->
+    match projectee with | { typ_ref_mut; typ_ref_typ;_} -> typ_ref_typ
+let (__proj__Mktyp_path_segment__item__typ_path_segment_name :
+  typ_path_segment -> Prims.string) =
+  fun projectee ->
+    match projectee with
+    | { typ_path_segment_name; typ_path_segment_generic_args;_} ->
+        typ_path_segment_name
+let (__proj__Mktyp_path_segment__item__typ_path_segment_generic_args :
+  typ_path_segment -> typ Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { typ_path_segment_name; typ_path_segment_generic_args;_} ->
+        typ_path_segment_generic_args
+let (__proj__Mktyp_array__item__typ_array_elem : typ_array -> typ) =
+  fun projectee ->
+    match projectee with
+    | { typ_array_elem; typ_array_len;_} -> typ_array_elem
+let (__proj__Mktyp_array__item__typ_array_len : typ_array -> expr) =
+  fun projectee ->
+    match projectee with
+    | { typ_array_elem; typ_array_len;_} -> typ_array_len
 type pat_typ = {
   pat_typ_pat: pat ;
   pat_typ_typ: typ }
@@ -376,6 +410,8 @@ let (mk_vec_typ : typ -> typ) =
       [{ typ_path_segment_name = "std"; typ_path_segment_generic_args = [] };
       { typ_path_segment_name = "vec"; typ_path_segment_generic_args = [] };
       { typ_path_segment_name = "Vec"; typ_path_segment_generic_args = [t] }]
+let (mk_array_typ : typ -> expr -> typ) =
+  fun t -> fun len -> Typ_array { typ_array_elem = t; typ_array_len = len }
 let (mk_binop : expr -> binop -> expr -> expr) =
   fun l ->
     fun op ->
@@ -412,6 +448,9 @@ let (mk_if :
 let (mk_while : expr -> stmt Prims.list -> expr) =
   fun expr_while_cond ->
     fun expr_while_body -> Expr_while { expr_while_cond; expr_while_body }
+let (mk_repeat : expr -> expr -> expr) =
+  fun expr_repeat_elem ->
+    fun expr_repeat_len -> Expr_repeat { expr_repeat_elem; expr_repeat_len }
 let (mk_scalar_fn_arg : Prims.string -> typ -> fn_arg) =
   fun name ->
     fun t ->

@@ -622,24 +622,21 @@ let array_pts_to_lid = mk_pulse_lib_array_core_lid "pts_to"
 let array_length_lid = mk_pulse_lib_array_core_lid "length"
 let array_is_full_lid = mk_pulse_lib_array_core_lid "is_full_array"
 
-let mk_array (a len:R.term) : R.term =
+let mk_array (a:R.term) : R.term =
   let open R in
   let t = pack_ln (Tv_FVar (pack_fv array_lid)) in
-  let t = pack_ln (Tv_App t (a, Q_Explicit)) in
-  pack_ln (Tv_App t (len, Q_Explicit))
+  pack_ln (Tv_App t (a, Q_Explicit))
 
-let mk_array_length (a len:R.term) (arr:R.term) : R.term =
+let mk_array_length (a:R.term) (arr:R.term) : R.term =
   let open R in
   let t = pack_ln (Tv_FVar (pack_fv array_length_lid)) in
   let t = pack_ln (Tv_App t (a, Q_Implicit)) in
-  let t = pack_ln (Tv_App t (len, Q_Implicit)) in
   pack_ln (Tv_App t (arr, Q_Explicit))
 
-let mk_array_pts_to (a len:R.term) (arr:R.term) (perm:R.term) (v:R.term) : R.term =
+let mk_array_pts_to (a:R.term) (arr:R.term) (perm:R.term) (v:R.term) : R.term =
   let open R in
   let t = pack_ln (Tv_FVar (pack_fv array_pts_to_lid)) in
   let t = pack_ln (Tv_App t (a, Q_Implicit)) in
-  let t = pack_ln (Tv_App t (len, Q_Implicit)) in
   let t = pack_ln (Tv_App t (arr, Q_Explicit)) in
   let t = pack_ln (Tv_App t (perm, Q_Implicit)) in
   pack_ln (Tv_App t (v, Q_Explicit))

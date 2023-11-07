@@ -1859,81 +1859,61 @@ let (array_length_lid : Prims.string Prims.list) =
   mk_pulse_lib_array_core_lid "length"
 let (array_is_full_lid : Prims.string Prims.list) =
   mk_pulse_lib_array_core_lid "is_full_array"
-let (mk_array :
+let (mk_array : FStar_Reflection_Types.term -> FStar_Reflection_Types.term) =
+  fun a ->
+    let t =
+      FStar_Reflection_V2_Builtins.pack_ln
+        (FStar_Reflection_V2_Data.Tv_FVar
+           (FStar_Reflection_V2_Builtins.pack_fv array_lid)) in
+    FStar_Reflection_V2_Builtins.pack_ln
+      (FStar_Reflection_V2_Data.Tv_App
+         (t, (a, FStar_Reflection_V2_Data.Q_Explicit)))
+let (mk_array_length :
   FStar_Reflection_Types.term ->
     FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
   =
   fun a ->
-    fun len ->
+    fun arr ->
       let t =
         FStar_Reflection_V2_Builtins.pack_ln
           (FStar_Reflection_V2_Data.Tv_FVar
-             (FStar_Reflection_V2_Builtins.pack_fv array_lid)) in
+             (FStar_Reflection_V2_Builtins.pack_fv array_length_lid)) in
       let t1 =
         FStar_Reflection_V2_Builtins.pack_ln
           (FStar_Reflection_V2_Data.Tv_App
-             (t, (a, FStar_Reflection_V2_Data.Q_Explicit))) in
+             (t, (a, FStar_Reflection_V2_Data.Q_Implicit))) in
       FStar_Reflection_V2_Builtins.pack_ln
         (FStar_Reflection_V2_Data.Tv_App
-           (t1, (len, FStar_Reflection_V2_Data.Q_Explicit)))
-let (mk_array_length :
-  FStar_Reflection_Types.term ->
-    FStar_Reflection_Types.term ->
-      FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
-  =
-  fun a ->
-    fun len ->
-      fun arr ->
-        let t =
-          FStar_Reflection_V2_Builtins.pack_ln
-            (FStar_Reflection_V2_Data.Tv_FVar
-               (FStar_Reflection_V2_Builtins.pack_fv array_length_lid)) in
-        let t1 =
-          FStar_Reflection_V2_Builtins.pack_ln
-            (FStar_Reflection_V2_Data.Tv_App
-               (t, (a, FStar_Reflection_V2_Data.Q_Implicit))) in
-        let t2 =
-          FStar_Reflection_V2_Builtins.pack_ln
-            (FStar_Reflection_V2_Data.Tv_App
-               (t1, (len, FStar_Reflection_V2_Data.Q_Implicit))) in
-        FStar_Reflection_V2_Builtins.pack_ln
-          (FStar_Reflection_V2_Data.Tv_App
-             (t2, (arr, FStar_Reflection_V2_Data.Q_Explicit)))
+           (t1, (arr, FStar_Reflection_V2_Data.Q_Explicit)))
 let (mk_array_pts_to :
   FStar_Reflection_Types.term ->
     FStar_Reflection_Types.term ->
       FStar_Reflection_Types.term ->
-        FStar_Reflection_Types.term ->
-          FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
+        FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
   =
   fun a ->
-    fun len ->
-      fun arr ->
-        fun perm ->
-          fun v ->
-            let t =
-              FStar_Reflection_V2_Builtins.pack_ln
-                (FStar_Reflection_V2_Data.Tv_FVar
-                   (FStar_Reflection_V2_Builtins.pack_fv array_pts_to_lid)) in
-            let t1 =
-              FStar_Reflection_V2_Builtins.pack_ln
-                (FStar_Reflection_V2_Data.Tv_App
-                   (t, (a, FStar_Reflection_V2_Data.Q_Implicit))) in
-            let t2 =
-              FStar_Reflection_V2_Builtins.pack_ln
-                (FStar_Reflection_V2_Data.Tv_App
-                   (t1, (len, FStar_Reflection_V2_Data.Q_Implicit))) in
-            let t3 =
-              FStar_Reflection_V2_Builtins.pack_ln
-                (FStar_Reflection_V2_Data.Tv_App
-                   (t2, (arr, FStar_Reflection_V2_Data.Q_Explicit))) in
-            let t4 =
-              FStar_Reflection_V2_Builtins.pack_ln
-                (FStar_Reflection_V2_Data.Tv_App
-                   (t3, (perm, FStar_Reflection_V2_Data.Q_Implicit))) in
+    fun arr ->
+      fun perm ->
+        fun v ->
+          let t =
+            FStar_Reflection_V2_Builtins.pack_ln
+              (FStar_Reflection_V2_Data.Tv_FVar
+                 (FStar_Reflection_V2_Builtins.pack_fv array_pts_to_lid)) in
+          let t1 =
             FStar_Reflection_V2_Builtins.pack_ln
               (FStar_Reflection_V2_Data.Tv_App
-                 (t4, (v, FStar_Reflection_V2_Data.Q_Explicit)))
+                 (t, (a, FStar_Reflection_V2_Data.Q_Implicit))) in
+          let t2 =
+            FStar_Reflection_V2_Builtins.pack_ln
+              (FStar_Reflection_V2_Data.Tv_App
+                 (t1, (arr, FStar_Reflection_V2_Data.Q_Explicit))) in
+          let t3 =
+            FStar_Reflection_V2_Builtins.pack_ln
+              (FStar_Reflection_V2_Data.Tv_App
+                 (t2, (perm, FStar_Reflection_V2_Data.Q_Implicit))) in
+          FStar_Reflection_V2_Builtins.pack_ln
+            (FStar_Reflection_V2_Data.Tv_App
+               (t3, (v, FStar_Reflection_V2_Data.Q_Explicit)))
 let (mk_seq :
   FStar_Reflection_Types.universe ->
     FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
@@ -2048,39 +2028,39 @@ let (mk_opaque_let :
             (FStar_Sealed.seal
                (Obj.magic
                   (FStar_Range.mk_range "Pulse.Reflection.Util.fst"
-                     (Prims.of_int (683)) (Prims.of_int (11))
-                     (Prims.of_int (683)) (Prims.of_int (45)))))
+                     (Prims.of_int (680)) (Prims.of_int (11))
+                     (Prims.of_int (680)) (Prims.of_int (45)))))
             (FStar_Sealed.seal
                (Obj.magic
                   (FStar_Range.mk_range "Pulse.Reflection.Util.fst"
-                     (Prims.of_int (683)) (Prims.of_int (48))
-                     (Prims.of_int (689)) (Prims.of_int (18)))))
+                     (Prims.of_int (680)) (Prims.of_int (48))
+                     (Prims.of_int (686)) (Prims.of_int (18)))))
             (Obj.magic
                (FStar_Tactics_Effect.tac_bind
                   (FStar_Sealed.seal
                      (Obj.magic
                         (FStar_Range.mk_range "Pulse.Reflection.Util.fst"
-                           (Prims.of_int (683)) (Prims.of_int (21))
-                           (Prims.of_int (683)) (Prims.of_int (45)))))
+                           (Prims.of_int (680)) (Prims.of_int (21))
+                           (Prims.of_int (680)) (Prims.of_int (45)))))
                   (FStar_Sealed.seal
                      (Obj.magic
                         (FStar_Range.mk_range "Pulse.Reflection.Util.fst"
-                           (Prims.of_int (683)) (Prims.of_int (11))
-                           (Prims.of_int (683)) (Prims.of_int (45)))))
+                           (Prims.of_int (680)) (Prims.of_int (11))
+                           (Prims.of_int (680)) (Prims.of_int (45)))))
                   (Obj.magic
                      (FStar_Tactics_Effect.tac_bind
                         (FStar_Sealed.seal
                            (Obj.magic
                               (FStar_Range.mk_range
                                  "Pulse.Reflection.Util.fst"
-                                 (Prims.of_int (683)) (Prims.of_int (22))
-                                 (Prims.of_int (683)) (Prims.of_int (37)))))
+                                 (Prims.of_int (680)) (Prims.of_int (22))
+                                 (Prims.of_int (680)) (Prims.of_int (37)))))
                         (FStar_Sealed.seal
                            (Obj.magic
                               (FStar_Range.mk_range
                                  "Pulse.Reflection.Util.fst"
-                                 (Prims.of_int (683)) (Prims.of_int (21))
-                                 (Prims.of_int (683)) (Prims.of_int (45)))))
+                                 (Prims.of_int (680)) (Prims.of_int (21))
+                                 (Prims.of_int (680)) (Prims.of_int (45)))))
                         (Obj.magic (FStar_Tactics_V2_Derived.cur_module ()))
                         (fun uu___ ->
                            FStar_Tactics_Effect.lift_div_tac

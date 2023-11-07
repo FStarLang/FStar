@@ -271,7 +271,7 @@ let rec elab_st_typing (#g:env)
       let rpost = mk_abs rret_t R.Q_Explicit (elab_term (comp_post c)) in
       let rbody = elab_st_typing body_typing in
       let rbody = RT.close_term rbody x in
-      let rbody = mk_abs (mk_array ra rlen) R.Q_Explicit rbody in
+      let rbody = mk_abs (mk_array ra) R.Q_Explicit rbody in
       mk_withlocalarray rret_u ra rinit rlen rpre rret_t rpost rbody
 
     | T_Admit _ {u;res;pre;post} c _ ->

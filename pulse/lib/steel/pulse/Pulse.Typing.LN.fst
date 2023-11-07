@@ -1027,10 +1027,10 @@ let ln_mk_ref (t:term) (n:int)
       (ensures ln' (mk_ref t) n) =
   admit ()
 
-let ln_mk_array (t len:term) (n:int)
+let ln_mk_array (t:term) (n:int)
   : Lemma
       (requires ln' t n)
-      (ensures ln' (mk_array t len) n) =
+      (ensures ln' (mk_array t) n) =
   admit ()
 
 #push-options "--z3rlimit_factor 12 --fuel 4 --ifuel 1 --query_stats"
@@ -1165,7 +1165,7 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       open_st_term_ln' body (null_var x) 0;
       comp_typing_ln c_typing;
       tot_or_ghost_typing_ln init_t_typing;
-      ln_mk_array init_t len (-1)
+      ln_mk_array init_t (-1)
 
     | T_Admit _ s _ (STC _ _ x t_typing pre_typing post_typing) ->
       tot_or_ghost_typing_ln t_typing;

@@ -13,10 +13,9 @@ let extend_post_hint
   (g:env)
   (p:post_hint_for_env g)
   (init_t:term)
-  (len:term)
   (x:var { ~ (Set.mem x (dom g)) })
   : post_hint_for_env (push_binding g x ppname_default init_t)
-  = { p with post = comp_withlocal_array_body_post p.post init_t (null_var x) len;
+  = { p with post = comp_withlocal_array_body_post p.post init_t (null_var x);
              post_typing = admit() } //star typing intro
 
 let with_local_array_pre_typing (#g:env) (#pre:term)
@@ -27,7 +26,7 @@ let with_local_array_pre_typing (#g:env) (#pre:term)
   (init_typing:tot_typing g init init_t)
   (len_typing:tot_typing g len tm_szt)
   (x:var { ~ (Set.mem x (dom g)) })
-  : tot_typing (push_binding g x ppname_default (mk_array init_t len))
+  : tot_typing (push_binding g x ppname_default (mk_array init_t))
                (comp_withlocal_array_body_pre pre init_t (null_var x) init len)
                tm_vprop
   = admit()
@@ -92,7 +91,7 @@ let check
                  (T.unseal binder.binder_ppname.name))
     else
       let x_tm = term_of_nvar px in
-      let g_extended = push_binding g x binder.binder_ppname (mk_array init_t len) in
+      let g_extended = push_binding g x binder.binder_ppname (mk_array init_t) in
       let body_pre = comp_withlocal_array_body_pre pre init_t x_tm init len in
       let body_pre_typing =
         with_local_array_pre_typing pre_typing init_t init len init_typing len_typing x in
@@ -108,7 +107,7 @@ let check
       then fail g None "Impossible! check_withlocal: unexpected name clash in with_local,\
                         please file a bug-report"
       else
-        let body_post = extend_post_hint g post init_t len x in
+        let body_post = extend_post_hint g post init_t x in
         let (| opened_body, c_body, body_typing |) =
           let r =
             check g_extended body_pre body_pre_typing (Some body_post) binder.binder_ppname (open_st_term_nv body px) in
