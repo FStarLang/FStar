@@ -33,8 +33,6 @@ fn elim_implies (_:unit) (#p #q:vprop)
 }
 ```
 
-assume Fits_u64 : squash (SZ.fits_u64)
-
 inline_for_extraction noextract [@@noextract_to "krml"]
 let impl_session_message1 : impl_typ Spec.session_message =
   impl_t_array (
