@@ -67,3 +67,4 @@ let deep_transform_to_unary_applications (t:S.term) =
 
 let deep_compress (t:S.term) = FStar_Syntax_Compress.deep_compress_uvars t
 let map_seal (t:'a) (f:'a -> 'b) : 'b = f t
+let float_one = FStar_Compiler_Util.float_of_string "1.0"

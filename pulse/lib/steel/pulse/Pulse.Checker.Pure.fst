@@ -125,8 +125,8 @@ let ill_typed_term (t:term) (expected_typ:option term) (got_typ:option term) : T
      group (text "got term" ^/^ pp t) ^/^
      group (text "of type" ^/^ pp ty')]
 
-let maybe_fail_doc (issues:list FStar.Issue.issue) (msg:string)
-                   (g:env) (range:option range) (doc:list FStar.Stubs.Pprint.document) =
+let maybe_fail_doc (issues:list FStar.Issue.issue)
+                   (g:env) (rng:range) (doc:list FStar.Stubs.Pprint.document) =
   let has_localized_error = 
       List.Tot.Base.existsb
         (fun i -> 
@@ -135,8 +135,9 @@ let maybe_fail_doc (issues:list FStar.Issue.issue) (msg:string)
         issues
   in
   if has_localized_error
-  then T.fail msg
-  else fail_doc g range doc
+  then let message = FStar.Stubs.Pprint.(pretty_string RU.float_one 80 (concat doc)) in
+       T.fail message (* Would be nice to tag this failure with the provided range *)
+  else fail_doc g (Some rng) doc
 
 let instantiate_term_implicits (g:env) (t0:term) =
   let f = elab_env g in
@@ -147,8 +148,8 @@ let instantiate_term_implicits (g:env) (t0:term) =
   match topt with
   | None -> (
     let open Pulse.PP in
-    maybe_fail_doc issues "Could not infer implicit arguments"
-         g (Some t0.range) [
+    maybe_fail_doc issues
+         g t0.range [
               prefix 4 1 (text "Could not infer implicit arguments in")
                         (pp t0)
             ]
@@ -172,8 +173,8 @@ let check_universe (g:env) (t:term)
     match ru_opt with
     | None -> 
       maybe_fail_doc
-        issues "Could not infer universe"
-        g (Some t.range) (ill_typed_term t (Some (tm_type u_unknown)) None)
+        issues
+        g t.range (ill_typed_term t (Some (tm_type u_unknown)) None)
 
     | Some ru ->
       let proof : squash (T.typing_token f rt (E_Total, R.pack_ln (R.Tv_Type ru))) =
@@ -209,8 +210,8 @@ let check_term (g:env) (t:term)
     T.log_issues issues;
     match res with
     | None -> 
-      maybe_fail_doc issues "Failed to typecheck term"
-            g (Some t.range) (ill_typed_term t None None)
+      maybe_fail_doc issues
+            g t.range (ill_typed_term t None None)
     | Some (| rt, eff, ty', tok |) ->
       match readback_ty rt, readback_ty ty' with
       | None, _ -> fail g (Some t.range) (readback_failure rt)
@@ -231,8 +232,8 @@ let check_term_and_type (g:env) (t:term)
     match res with
     | None ->
       maybe_fail_doc 
-        issues "Failed to check term at expected type"
-        g (Some t.range) (ill_typed_term t None None)
+        issues
+        g t.range (ill_typed_term t None None)
     | Some (| rt, eff, ty', tok |) ->
       match readback_ty rt, readback_ty ty' with
       | None, _ -> fail g (Some t.range) (readback_failure rt)
@@ -259,8 +260,8 @@ let check_term_with_expected_type_and_effect (g:env) (e:term) (eff:T.tot_or_ghos
   match topt with
   | None ->
     maybe_fail_doc 
-      issues "Failed to check term at expected type"
-      g (Some e.range) (ill_typed_term e (Some t) None)
+      issues
+      g e.range (ill_typed_term e (Some t) None)
   | Some tok -> (| e, E (RT.T_Token _ _ _ (FStar.Squash.return_squash tok)) |)
 
 (* This function will use the expected type, but can return either
@@ -294,8 +295,8 @@ let core_check_term (g:env) (t:term)
     match res with
     | None -> 
       maybe_fail_doc 
-        issues "Failed to check term"
-        g (Some t.range) (ill_typed_term t None None)
+        issues
+        g t.range (ill_typed_term t None None)
     | Some (| eff, ty', tok |) ->
         match readback_ty ty' with
         | None ->
@@ -316,8 +317,8 @@ let core_check_term_with_expected_type g e eff t =
   match topt with
   | None ->
     maybe_fail_doc
-      issues "Failed to check term"
-      g (Some e.range) (ill_typed_term e (Some t) None)
+      issues
+      g e.range (ill_typed_term e (Some t) None)
   | Some tok -> E (RT.T_Token _ _ _ (FStar.Squash.return_squash tok))
 
 let check_vprop (g:env)
@@ -388,10 +389,10 @@ let check_prop_validity (g:env) (p:term) (_:tot_typing g p tm_prop)
     T.log_issues issues;
     match t_opt with
     | None -> 
-      fail g (Some p.range)
-             (Printf.sprintf "Failed to prove property: %s\n" 
-                      (Pulse.Syntax.Printer.term_to_string p))
-   | Some tok -> tok
+      let open Pulse.PP in
+      maybe_fail_doc issues g p.range
+                     [text "Failed to prove property:" ^/^ pp p]
+    | Some tok -> tok
 
 let fail_expected_tot_found_ghost (g:env) (t:term) =
   fail g (Some t.range)
@@ -430,11 +431,10 @@ let check_subtyping g t1 t2 =
   match res with
   | Some tok -> tok
   | None ->
-    fail g (Some t1.range)
-      (Printf.sprintf
-        "Could not prove subtyping of %s and %s"
-         (P.term_to_string t1)
-         (P.term_to_string t2))
+    let open Pulse.PP in
+    maybe_fail_doc issues g t1.range
+          [ text "Could not prove subtyping of "
+            ^/^ pp t1 ^/^ text "and" ^/^ pp t2]
   )
 
 let check_equiv g t1 t2 =
