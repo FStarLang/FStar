@@ -172,6 +172,36 @@ let is_binop (s:string) : option binop =
   then Some Eq
   else None
 
+let lb_init_and_def (lb:S.mllb)
+  : bool &       // is_mut
+    S.mlty &     // type of the let binder
+    S.mlexpr =   // init expression
+  
+  let is_mut = contains S.Mutable lb.mllb_meta in
+  if is_mut
+  then
+    let init =
+      match lb.mllb_def.expr with
+      | S.MLE_App ({expr=S.MLE_Name p}, [init])
+        when S.string_of_mlpath p = "Pulse.Lib.Reference.alloc" -> init
+      | _ -> fail (format1 "unexpected initializer for mutable local: %s" (S.mlexpr_to_string lb.mllb_def))
+    in
+    let ty =
+      match lb.mllb_tysc with
+      | Some ([], S.MLTY_Named ([ty], p))
+        when S.string_of_mlpath p = "Pulse.Lib.Reference.ref" ->
+        ty
+      | _ -> fail (format1 "unexpected type of mutable local: %s" (S.mltyscheme_to_string (must lb.mllb_tysc)))
+    in
+    is_mut, ty, init
+  else
+    let is_mut =
+      match lb.mllb_def.expr with
+      | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, _) ->
+        S.string_of_mlpath p = "Pulse.Lib.Rust.Vec.alloc"
+      | _ -> false in
+    is_mut, snd (must lb.mllb_tysc), lb.mllb_def
+
 let rec extract_mlexpr (g:env) (e:S.mlexpr) : expr =
   match e.expr with
   | S.MLE_Const (S.MLC_Unit) -> Expr_path "unitv"
@@ -267,25 +297,7 @@ and extract_mlexpr_to_stmts (g:env) (e:S.mlexpr) : list stmt =
   | S.MLE_Var x -> [Stmt_expr (Expr_path (varname x))]
   | S.MLE_Name p -> [Stmt_expr (Expr_path (S.mlpath_to_string p))]
   | S.MLE_Let ((S.NonRec, [lb]), e) ->
-    let is_mut = contains S.Mutable lb.mllb_meta in
-    let init, ty =
-      if is_mut
-      then
-        let init =
-          match lb.mllb_def.expr with
-          | S.MLE_App ({expr=S.MLE_Name p}, [init])
-            when S.string_of_mlpath p = "Pulse.Lib.Reference.alloc" -> init
-          | _ -> fail (format1 "unexpected initializer for mutable local: %s" (S.mlexpr_to_string lb.mllb_def))
-        in
-        let ty =
-          match lb.mllb_tysc with
-          | Some ([], S.MLTY_Named ([ty], p))
-            when S.string_of_mlpath p = "Pulse.Lib.Reference.ref" ->
-            ty
-          | _ -> fail (format1 "unexpected type of mutable local: %s" (S.mltyscheme_to_string (must lb.mllb_tysc))) in
-        init, ty
-      else lb.mllb_def,
-           snd (must lb.mllb_tysc) in
+    let is_mut, ty, init = lb_init_and_def lb in
     let s = mk_local_stmt lb.mllb_name is_mut (extract_mlexpr g init) in
     s::(extract_mlexpr_to_stmts (push_local g lb.mllb_name (extract_mlty g ty) is_mut) e)
   | _ -> fail_nyi (format1 "mlexpr_to_stmt  %s" (S.mlexpr_to_string e))
