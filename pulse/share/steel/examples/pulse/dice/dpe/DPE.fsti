@@ -32,8 +32,7 @@ val initialize_context (sid:sid_t)
                        (#p:perm)
                        (#uds_bytes:erased (Seq.seq U8.t))
   : stt (option ctxt_hndl_t) 
-        (A.pts_to uds #p uds_bytes ** 
-         uds_is_enabled)
+        (A.pts_to uds #p uds_bytes)
         (fun _ -> A.pts_to uds #p uds_bytes)
 
 val rotate_context_handle (sid:sid_t)
