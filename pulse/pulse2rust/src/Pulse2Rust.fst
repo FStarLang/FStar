@@ -209,6 +209,7 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
       | Some (_, FStar.Const.Int16) -> Some I16
       | Some (_, FStar.Const.Int32) -> Some I32
       | Some (_, FStar.Const.Int64) -> Some I64
+      | Some (_, FStar.Const.Sizet) -> Some I64  // TODO: FIXME
       | None -> None in
     Expr_lit (Lit_int {lit_int_val; lit_int_signed; lit_int_width})
   | S.MLE_App ({expr=S.MLE_Name p}, [e])

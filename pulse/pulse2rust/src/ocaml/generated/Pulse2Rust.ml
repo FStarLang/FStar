@@ -402,6 +402,8 @@ and (extract_mlexpr :
                 FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.I32
             | FStar_Pervasives_Native.Some (uu___, FStar_Const.Int64) ->
                 FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.I64
+            | FStar_Pervasives_Native.Some (uu___, FStar_Const.Sizet) ->
+                FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.I64
             | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None in
           Pulse2Rust_Rust_Syntax.Expr_lit
             (Pulse2Rust_Rust_Syntax.Lit_int
