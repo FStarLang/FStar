@@ -218,6 +218,18 @@ val constr_cbor_simple_value
     emp
     (fun c -> raw_data_item_match full_perm c (Cbor.Simple value))
 
+noextract
+let destr_cbor_string_post
+  (va: Cbor.raw_data_item)
+  (c': cbor_string)
+  (vc' : Seq.seq U8.t)
+: Tot prop
+=         Cbor.String? va /\
+        U64.v c'.cbor_string_length == Seq.length vc' /\
+        c'.cbor_string_type == Cbor.String?.typ va /\
+        vc' == Cbor.String?.v va
+
+
 val destr_cbor_string
   (c: cbor)
   (#p: perm)
@@ -229,11 +241,7 @@ val destr_cbor_string
     (fun c' -> exists_ (fun vc' -> exists_ (fun p'->
       A.pts_to c'.cbor_string_payload #p' vc' **
       (A.pts_to c'.cbor_string_payload #p' vc' @==> raw_data_item_match p c (Ghost.reveal va)) **
-      pure (
-        Cbor.String? va /\
-        U64.v c'.cbor_string_length == Seq.length vc' /\
-        c'.cbor_string_type == Cbor.String?.typ va /\
-        vc' == Cbor.String?.v va
+      pure (destr_cbor_string_post va c'  vc'
     ))))
 
 val constr_cbor_string

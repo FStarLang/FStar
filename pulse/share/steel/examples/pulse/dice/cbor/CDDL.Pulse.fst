@@ -762,6 +762,18 @@ ensures read_deterministically_encoded_cbor_with_typ_post t a p va res
 }
 ```
 
+noextract
+let cbor_map_get_with_typ_post_found
+    (t: typ)
+    (vkey: raw_data_item)
+    (vmap: raw_data_item)
+    (vvalue: raw_data_item)
+: Tot prop
+= Map? vmap /\
+  list_ghost_assoc vkey (Map?.v vmap) == Some vvalue /\
+  t vvalue == true
+
+
 let cbor_map_get_with_typ_post
   (t: typ)
   (p: perm)
@@ -783,11 +795,8 @@ let cbor_map_get_with_typ_post
     exists_ (fun vvalue ->
         raw_data_item_match p value vvalue **
         (raw_data_item_match p value vvalue @==> raw_data_item_match p map vmap) **
-        pure (
-        Map? vmap /\
-        list_ghost_assoc vkey (Map?.v vmap) == Some vvalue /\
-        t vvalue == true
-    ))
+        pure (cbor_map_get_with_typ_post_found t vkey vmap vvalue)
+    )
 
 let cbor_map_get_post_eq_found
   (p: perm)
@@ -1164,3 +1173,39 @@ let impl_matches_map_group_no_restricted
         (Nil? g.one /\ Nil? g.zero_or_one)
     })
 = impl_matches_map_group_no_restricted' ig ()
+
+inline_for_extraction noextract [@@noextract_to "krml"]
+```pulse
+fn impl_str_size'
+    (ty: major_type_byte_string_or_text_string)
+    (sz: (sz: SZ.t { SZ.fits_u64 }))
+    (c: cbor)
+    (#p: perm)
+    (#v: Ghost.erased raw_data_item)
+requires
+        (raw_data_item_match p c v ** pure (
+            opt_precedes (Ghost.reveal v) (None #raw_data_item)
+        ))
+returns res: bool
+ensures
+        (raw_data_item_match p c v ** pure (
+            opt_precedes (Ghost.reveal v) (None #raw_data_item) /\
+            res == str_size ty (SZ.v sz) v
+        ))
+{
+    let mt = cbor_get_major_type c;
+    if (mt = ty) {
+        let str = destr_cbor_string c;
+        elim_stick0 ();
+        (SZ.uint64_to_sizet str.cbor_string_length = sz)
+    } else {
+        false
+    }
+}
+```
+inline_for_extraction noextract [@@noextract_to "krml"]
+let impl_str_size
+    (ty: major_type_byte_string_or_text_string)
+    (sz: SZ.t {SZ.fits_u64})
+: impl_typ (str_size ty (SZ.v sz))
+= impl_str_size' ty sz

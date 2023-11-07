@@ -16,8 +16,7 @@ open Pulse.Lib.HashTable
 
 val ctxt_hndl_t : eqtype
 
-val sid_t : eqtype
-
+let sid_t : eqtype = U32.t // FIXME: type needed by DPE_CBOR
 
 
 val get_profile (_:unit) : stt profile_descriptor_t emp (fun _ -> emp)

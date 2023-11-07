@@ -1,11 +1,16 @@
 module DPE_CBOR
 open Pulse.Lib.Pervasives
 open DPE
+open DPE.Messages.Parse
 open CBOR.Spec
 open CBOR.Pulse
+open CDDL.Pulse
+module Cddl = CDDL.Spec
+module MsgSpec = DPE.Messages.Spec
 module SZ = FStar.SizeT
 module U8 = FStar.UInt8
 module A = Pulse.Lib.Array
+module Cast = FStar.Int.Cast
 assume
 val drop (p:vprop)
     : stt unit p (fun _ -> emp)
@@ -17,48 +22,7 @@ val dbg : vprop
 
 open Pulse.Lib.Stick
 
-let emp_inames_disjoint (t:inames)
-  : Lemma 
-    (ensures (t /! emp_inames))
-    [SMTPat (Set.disjoint t emp_inames)]
-  = admit()
-
-```pulse
-ghost
-fn elim_implies (_:unit) (#p #q:vprop)
-   requires `@(p @==> q) ** p
-   ensures q
-{
-  open Pulse.Lib.Stick;
-  rewrite `@(p @==> q) as (stick #emp_inames p q);
-  elim_stick #emp_inames #emp_inames p q;
-}
-```
-
-```pulse
-fn finish (c:read_cbor_success_t)
-          (#p:perm)
-          (#v:erased (raw_data_item))
-          (#s:erased (Seq.seq U8.t))
-          (#rem:erased (Seq.seq U8.t))
-  requires `@((raw_data_item_match full_perm c.read_cbor_payload v **
-               A.pts_to c.read_cbor_remainder #p rem) @==>
-              A.pts_to input #p s) **
-            raw_data_item_match full_perm c.read_cbor_payload v **
-            A.pts_to c.read_cbor_remainder #p rem **
-            uds_is_enabled
-  returns _:option ctxt_hndl_t
-  ensures A.pts_to input #p s
-{
-   elim_implies ()  #(raw_data_item_match full_perm c.read_cbor_payload v **
-                            A.pts_to c.read_cbor_remainder #p rem)
-                            #(A.pts_to input #p s);
-    drop uds_is_enabled;
-    None #ctxt_hndl_t
-}
-```
-
-assume Fits_u64 : squash (SZ.fits_u64)
+#push-options "--z3rlimit 16 --query_stats --ifuel 16" // to let z3 cope with CDDL specs
 
 ```pulse
 fn initialize_context (len:SZ.t)
@@ -67,88 +31,60 @@ fn initialize_context (len:SZ.t)
                       (#p:perm)
     requires
         A.pts_to input #p s **
-        uds_is_enabled
+        EngineTypes.uds_is_enabled
     returns _:option ctxt_hndl_t
     ensures
         A.pts_to input #p s
 {
-    let rc = read_cbor input len;
-    unfold (read_cbor_post input p s rc); 
-    match rc
+    let read = parse_dpe_cmd len input;
+    match read
     {
-      ParseError ->
+      None ->
       {
-        unfold (read_cbor_error_post input p s); //How can this match against the `match ... `
-        drop uds_is_enabled;
+        unfold (parse_dpe_cmd_post len input s p None);
+        drop EngineTypes.uds_is_enabled;
         None #ctxt_hndl_t
       }
-      ParseSuccess c ->
+      Some cmd ->
       {
-        unfold (read_cbor_success_post input p s c); //How can this match against the `match ... `
-        with v. assert (raw_data_item_match full_perm c.read_cbor_payload v);
-        with rem. assert (A.pts_to c.read_cbor_remainder #p rem);
-        let major_type = cbor_get_major_type c.read_cbor_payload;
-        if (major_type = major_type_array)
-        {
-            let arr_len = cbor_array_length c.read_cbor_payload;
-            if (arr_len = 2uL)
+        unfold (parse_dpe_cmd_post len input s p (Some cmd));
+        if (cmd.dpe_cmd_sid `FStar.UInt64.gte` 4294967296uL) {
+          // FIXME: DPE.sid == U32.t, but the CDDL specification for DPE session messages does not specify any bound on sid (if so, I could have used a CDDL combinator and avoided this additional test here)
+          elim_stick0 ();
+          drop EngineTypes.uds_is_enabled;
+          None #ctxt_hndl_t
+        } else {
+          let sid : FStar.UInt32.t = Cast.uint64_to_uint32 cmd.dpe_cmd_sid;
+          with vargs . assert (raw_data_item_match full_perm cmd.dpe_cmd_args vargs);
+          let key = constr_cbor_int64 major_type_uint64 MsgSpec.initialize_context_seed;
+          with vkey . assert (raw_data_item_match full_perm key vkey);
+          let read_uds = cbor_map_get_with_typ (impl_str_size major_type_byte_string EngineTypes.uds_len) key cmd.dpe_cmd_args;
+          drop (raw_data_item_match full_perm key vkey); // FIXME: HOW HOW HOW can I avoid the arguments to raw_data_item_match, like in Steel?
+          match read_uds
+          {
+            NotFound ->
             {
-                let i0 = cbor_array_index c.read_cbor_payload 0sz;
-                let major_type = cbor_get_major_type i0;
-                if (major_type = major_type_uint64)
-                {
-                    let cbor_int = destr_cbor_int64 i0;
-                    let sid = cbor_int.cbor_int_value;
-                    with va'. assert (raw_data_item_match full_perm i0 va');
-                    elim_implies () #(raw_data_item_match full_perm i0 va') #(raw_data_item_match full_perm c.read_cbor_payload v);
-                    let i1 = cbor_array_index c.read_cbor_payload 1sz;
-                    let major_type = cbor_get_major_type i1;
-                    if (major_type = major_type_byte_string)
-                    {
-                        
-                        let cbor_str = destr_cbor_string i1;
-                        let rc = read_cbor cbor_str.cbor_string_payload (SZ.of_u64 cbor_str.cbor_string_length);
-                        
-                        admit();
-                        // let bs = cbor_bs.cbor_byte_string_value;
-                        // with va''. assert (raw_data_item_match i1 va'');
-                        // elim_implies () #(raw_data_item_match i1 va'') #(raw_data_item_match c.read_cbor_payload v);
-                        // let ctx = mk_context sid bs;
-                        // let ctx_hndl = alloc_context ctx;
-                        // let c
-                    }   
-                    else 
-                    {
-                        admit()
-                    }
-                }
-                else {
-                    admit()
-                }
+              unfold (cbor_map_get_with_typ_post (Cddl.str_size major_type_byte_string (SZ.v EngineTypes.uds_len)) full_perm (Ghost.reveal vkey) vargs cmd.dpe_cmd_args NotFound); // same here; also WHY WHY WHY the explicit Ghost.reveal
+              elim_stick0 ();
+              drop EngineTypes.uds_is_enabled;
+              None #ctxt_hndl_t
             }
-            else 
+            Found uds_cbor ->
             {
-                elim_implies ()  #(raw_data_item_match full_perm c.read_cbor_payload v **
-                                A.pts_to c.read_cbor_remainder #p rem)
-                                #(A.pts_to input #p s);
-                drop uds_is_enabled;
-                None #ctxt_hndl_t
+              unfold (cbor_map_get_with_typ_post (Cddl.str_size major_type_byte_string (SZ.v EngineTypes.uds_len)) full_perm (Ghost.reveal vkey) vargs cmd.dpe_cmd_args (Found uds_cbor)); // same here; also WHY WHY WHY the explicit Ghost.reveal
+              let uds = destr_cbor_string uds_cbor;
+              A.pts_to_len uds.cbor_string_payload;
+              let res = DPE.initialize_context sid uds.cbor_string_payload;
+              elim_stick0 ();
+              elim_stick0 ();
+              elim_stick0 ();
+              res
             }
-        }
-        else
-        {
-            // finish c #p #v #rem #s
-            // elim_implies (); this could work, except this has a ** on the left of the @==>
-            //                  which remains uninterpreted by Pulse and then unification fails
-            elim_implies ()  #(raw_data_item_match full_perm c.read_cbor_payload v **
-                            A.pts_to c.read_cbor_remainder #p rem)
-                            #(A.pts_to input #p s);
-            drop uds_is_enabled;
-            None #ctxt_hndl_t
+          }
         }
       }
     }
 }
 ```
 
-
+#pop-options

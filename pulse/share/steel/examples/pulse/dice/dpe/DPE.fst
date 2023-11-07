@@ -23,7 +23,7 @@ val run_stt (#a:Type) (#post:a -> vprop) (f:stt a emp post) : a
 (* Global State *)
 
 let ctxt_hndl_t = U32.t
-let sid_t = U32.t
+// let sid_t = U32.t // FIXME: moved to interface, due to DPE_CBOR
 // The type of a hash table tupled with a lock storing permission on the table. 
 type locked_ht_t (kt:eqtype) (vt:Type0) = ht:ht_t kt vt & L.lock (exists_ (fun pht -> models ht pht))
 // The type of a session ID (SID) tupled with a lock storing permission on the SID
