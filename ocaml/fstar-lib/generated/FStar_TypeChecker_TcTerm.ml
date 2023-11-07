@@ -4689,7 +4689,11 @@ and (tc_value :
                                   FStar_Syntax_Syntax.hash_code =
                                     (uu___5.FStar_Syntax_Syntax.hash_code)
                                 } in
-                              (check_smt_pat env3 e1 bs2 c2;
+                              (if
+                                 Prims.op_Negation
+                                   env3.FStar_TypeChecker_Env.phase1
+                               then check_smt_pat env3 e1 bs2 c2
+                               else ();
                                (let u = FStar_Syntax_Syntax.U_max (uc :: us) in
                                 let t =
                                   FStar_Syntax_Syntax.mk

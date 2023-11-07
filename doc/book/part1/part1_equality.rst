@@ -32,8 +32,8 @@ For any type definition, F* automatically computes whether or not that
 type is an ``eqtype``. We'll explain later exactly how F* decides
 whether or not a type is an ``eqtype``. Roughly, for F* has built-in
 knowledge that various primitive types like integers and booleans
-support decidable equality. When defining a new type, F* checks to
-that all values of the the new type are composed structurally of terms
+support decidable equality. When defining a new type, F* checks
+that all values of the new type are composed structurally of terms
 that support decidable equality. In particular, if an ``e : t`` may
 contain a sub-term that is a function, then ``t`` cannot be an
 ``eqtype``.
