@@ -50,6 +50,7 @@ let raw_data_item_map_match
 
 (* Parsing *)
 
+[@@no_auto_projectors]
 noeq
 type read_cbor_success_t = {
   read_cbor_payload: cbor;
@@ -57,6 +58,7 @@ type read_cbor_success_t = {
   read_cbor_remainder_length: SZ.t;
 }
 
+[@@no_auto_projectors]
 noeq
 type read_cbor_t =
 | ParseError
@@ -413,6 +415,7 @@ let maybe_cbor_tagged_payload
   | Cbor.Tagged _ l -> l
   | _ -> dummy_raw_data_item
 
+[@@no_auto_projectors]
 noeq
 type cbor_tagged = {
   cbor_tagged_tag: U64.t;
@@ -546,6 +549,7 @@ val cbor_is_equal
       (~ (Cbor.Tagged? v1 \/ Cbor.Array? v1 \/ Cbor.Map? v1)) ==> (res == true <==> v1 == v2) // TODO: underspecified for tagged, arrays and maps, complete those missing cases
     ))
 
+[@@no_auto_projectors]
 noeq
 type cbor_map_get_t =
 | Found of cbor

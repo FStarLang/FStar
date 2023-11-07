@@ -6,17 +6,13 @@ module U64 = FStar.UInt64
 
 (* Simple values *)
 
-[@@CMacro]
-let min_simple_value_long_argument = 32uy
+let min_simple_value_long_argument : Ghost.erased U8.t = 32uy
 
-[@@CMacro]
-let max_simple_value_additional_info = 23uy
+let max_simple_value_additional_info : Ghost.erased U8.t = 23uy
 
-inline_for_extraction
-noextract
 let simple_value_wf
   (x: U8.t)
-: Tot bool
+: GTot bool
 = x `U8.lte` max_simple_value_additional_info || min_simple_value_long_argument `U8.lte` x
 
 inline_for_extraction
