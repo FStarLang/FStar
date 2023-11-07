@@ -30,8 +30,7 @@ fn initialize_context (len:SZ.t)
                       (#s:erased (Seq.seq U8.t))
                       (#p:perm)
     requires
-        A.pts_to input #p s **
-        EngineTypes.uds_is_enabled
+        A.pts_to input #p s
     returns _:option ctxt_hndl_t
     ensures
         A.pts_to input #p s
@@ -42,7 +41,6 @@ fn initialize_context (len:SZ.t)
       None ->
       {
         unfold (parse_dpe_cmd_post len input s p None);
-        drop EngineTypes.uds_is_enabled;
         None #ctxt_hndl_t
       }
       Some cmd ->
@@ -51,7 +49,6 @@ fn initialize_context (len:SZ.t)
         if (cmd.dpe_cmd_sid `FStar.UInt64.gte` 4294967296uL) {
           // FIXME: DPE.sid == U32.t, but the CDDL specification for DPE session messages does not specify any bound on sid (if so, I could have used a CDDL combinator and avoided this additional test here)
           elim_stick0 ();
-          drop EngineTypes.uds_is_enabled;
           None #ctxt_hndl_t
         } else {
           let sid : FStar.UInt32.t = Cast.uint64_to_uint32 cmd.dpe_cmd_sid;
@@ -66,7 +63,6 @@ fn initialize_context (len:SZ.t)
             {
               unfold (cbor_map_get_with_typ_post (Cddl.str_size major_type_byte_string (SZ.v EngineTypes.uds_len)) full_perm (Ghost.reveal vkey) vargs cmd.dpe_cmd_args NotFound); // same here; also WHY WHY WHY the explicit Ghost.reveal
               elim_stick0 ();
-              drop EngineTypes.uds_is_enabled;
               None #ctxt_hndl_t
             }
             Found uds_cbor ->
