@@ -511,7 +511,7 @@ let rec (st_typing_weakening :
                     st_typing_weakening g
                       (Pulse_Typing_Env.push_binding g' x
                          Pulse_Syntax_Base.ppname_default
-                         (Pulse_Typing.mk_array init_t))
+                         (Pulse_Typing.mk_array init_t len))
                       (Pulse_Syntax_Naming.open_st_term_nv body
                          (Pulse_Syntax_Base.v_as_nv x))
                       (Pulse_Typing.comp_withlocal_array_body x init_t init

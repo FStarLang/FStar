@@ -524,7 +524,7 @@ let rec (elab_st_typing :
                 elab_st_typing
                   (Pulse_Typing_Env.push_binding uu___ x
                      Pulse_Syntax_Base.ppname_default
-                     (Pulse_Typing.mk_array init_t))
+                     (Pulse_Typing.mk_array init_t len))
                   (Pulse_Syntax_Naming.open_st_term_nv uu___1
                      (Pulse_Syntax_Base.v_as_nv x))
                   (Pulse_Typing.comp_withlocal_array_body x init_t init len
@@ -532,7 +532,7 @@ let rec (elab_st_typing :
               let rbody1 = FStar_Reflection_Typing.close_term rbody x in
               let rbody2 =
                 Pulse_Reflection_Util.mk_abs
-                  (Pulse_Reflection_Util.mk_array ra)
+                  (Pulse_Reflection_Util.mk_array ra rlen)
                   FStar_Reflection_V2_Data.Q_Explicit rbody1 in
               Pulse_Reflection_Util.mk_withlocalarray rret_u ra rinit rlen
                 rpre rret_t rpost rbody2
