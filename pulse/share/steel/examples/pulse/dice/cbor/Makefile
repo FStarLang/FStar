@@ -19,7 +19,7 @@ extract_all: $(ALL_KRML_FILES)
 
 
 $(OUTPUT_DIRECTORY)/CDDLExtractionTest.c: extract_all
-	$(KRML) -bundle CBOR.Spec.Constants+CBOR.Pulse.Type+CBOR.Pulse=CBOR.*[rename=CBOR,rename-prefix] -bundle CDDLExtractionTest.Assume+CDDLExtractionTest.Bytes+CDDLExtractionTest.BytesUnwrapped+CDDLExtractionTest.Choice=*[rename=CDDLExtractionTest] -skip-compilation $(wildcard _output/*.krml) -tmpdir $(OUTPUT_DIRECTORY)
+	$(KRML) -bundle CBOR.Spec.Constants+CBOR.Pulse.Type+CBOR.Pulse.Extern+CBOR.Pulse=CBOR.*[rename=CBOR,rename-prefix] -bundle CDDLExtractionTest.Assume+CDDLExtractionTest.Bytes+CDDLExtractionTest.BytesUnwrapped+CDDLExtractionTest.Choice=*[rename=CDDLExtractionTest] -skip-compilation $(wildcard _output/*.krml) -tmpdir $(OUTPUT_DIRECTORY)
 
 $(OUTPUT_DIRECTORY)/%.krml:
 	$(FSTAR) --codegen krml $(subst .checked,, $(notdir $<)) --extract_module $(basename $(subst .checked,, $(notdir $<)))

@@ -1,4 +1,4 @@
-module CBOR.Pulse
+module CBOR.Pulse.Extern
 include CBOR.Pulse.Type
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Stick
