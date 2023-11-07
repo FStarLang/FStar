@@ -376,6 +376,27 @@ let rec (extract_mlexpr :
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
              FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_TApp
+               ({
+                  FStar_Extraction_ML_Syntax.expr =
+                    FStar_Extraction_ML_Syntax.MLE_Name p;
+                  FStar_Extraction_ML_Syntax.mlty = uu___;
+                  FStar_Extraction_ML_Syntax.loc = uu___1;_},
+                uu___2::[]);
+             FStar_Extraction_ML_Syntax.mlty = uu___3;
+             FStar_Extraction_ML_Syntax.loc = uu___4;_},
+           e1::e2::e3::uu___5::[])
+          when
+          let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___6 = "Pulse.Lib.Rust.Slice.op_Array_Assignment" ->
+          let e11 = extract_mlexpr g e1 in
+          let e21 = extract_mlexpr g e2 in
+          let e31 = extract_mlexpr g e3 in
+          let uu___6 = Pulse2Rust_Rust_Syntax.mk_expr_index e11 e21 in
+          Pulse2Rust_Rust_Syntax.mk_assign uu___6 e31
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
                FStar_Extraction_ML_Syntax.MLE_Name p;
              FStar_Extraction_ML_Syntax.mlty = uu___;
              FStar_Extraction_ML_Syntax.loc = uu___1;_},
