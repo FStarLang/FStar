@@ -10,6 +10,8 @@ let mk_scalar_typ (name:string) : typ =
 let mk_ref_typ (is_mut:bool) (t:typ) : typ =
   Typ_reference { typ_ref_mut = is_mut; typ_ref_typ = t }
 
+let mk_slice_typ (t:typ) : typ = Typ_slice t
+
 let mk_binop (l:expr) (op:binop) (r:expr) : expr =
   Expr_binop { expr_bin_left = l; expr_bin_op = op; expr_bin_right = r }
 
@@ -28,6 +30,9 @@ let mk_ref_assign (l r:expr) =
   }
 
 let mk_ref_read (l:expr) = Expr_unary { expr_unary_op = Deref; expr_unary_expr = l }
+
+let mk_expr_index (expr_index_base:expr) (expr_index_index:expr) : expr =
+  Expr_index { expr_index_base; expr_index_index }
 
 let mk_call (head:expr) (args:list expr) =
   Expr_call { expr_call_fn = head; expr_call_args = args }

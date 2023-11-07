@@ -5,6 +5,7 @@ open FStar.Compiler.Effect
 type typ =
   | Typ_path of list typ_path_segment
   | Typ_reference of typ_reference
+  | Typ_slice of typ
 
 and typ_reference = {
   typ_ref_mut : bool;
@@ -63,6 +64,7 @@ type expr =
   | Expr_lit of lit
   | Expr_if of expr_if
   | Expr_while of expr_while
+  | Expr_index of expr_index
 
 and expr_bin = {
   expr_bin_left : expr;
@@ -78,6 +80,11 @@ and expr_unary = {
 and expr_call = {
   expr_call_fn : expr;
   expr_call_args : list expr;
+}
+
+and expr_index = {
+  expr_index_base : expr;
+  expr_index_index : expr;
 }
 
 and expr_assignment = {
@@ -130,9 +137,11 @@ type fn = {
 
 val mk_scalar_typ (name:string) : typ
 val mk_ref_typ (is_mut:bool) (t:typ) : typ
+val mk_slice_typ (t:typ) : typ
 val mk_binop (e1:expr) (op:binop) (e2:expr) : expr
 val mk_block_expr (l:list stmt) : expr
 val mk_ref_read (r:expr) : expr
+val mk_expr_index (base:expr) (index:expr) : expr
 val mk_assign (l r:expr) : expr
 val mk_ref_assign (l r:expr) : expr
 val mk_call (head:expr) (args:list expr) : expr

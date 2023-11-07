@@ -77,6 +77,11 @@ struct ExprWhile {
     expr_while_body: Vec<Stmt>,
 }
 
+struct ExprIndex {
+    expr_index_base: Box<Expr>,
+    expr_index_index: Box<Expr>,
+}
+
 enum Expr {
     EBinOp(ExprBin),
     EPath(String),
@@ -87,6 +92,7 @@ enum Expr {
     ELit(Lit),
     EIf(ExprIf),
     EWhile(ExprWhile),
+    EIndex(ExprIndex),
 }
 
 struct TypeReference {
@@ -102,6 +108,7 @@ struct TypePathSegment {
 enum Typ {
     TPath(Vec<TypePathSegment>),
     TReference(TypeReference),
+    TSlice(Box<Typ>),
 }
 
 struct PatIdent {
@@ -205,7 +212,8 @@ impl_from_ocaml_variant! {
     Expr::EBlock (payload:OCamlList<Stmt>),
     Expr::ELit (payload:Lit),
     Expr::EIf (payload:ExprIf),
-    Expr::EWhile (payload:ExprWhile)
+    Expr::EWhile (payload:ExprWhile),
+    Expr::EIndex (payload:ExprIndex),
   }
 }
 
@@ -254,6 +262,13 @@ impl_from_ocaml_record! {
 }
 
 impl_from_ocaml_record! {
+  ExprIndex {
+    expr_index_base: Expr,
+    expr_index_index: Expr,
+  }
+}
+
+impl_from_ocaml_record! {
   TypeReference {
     type_reference_mut: bool,
     type_reference_typ: Typ,
@@ -271,6 +286,7 @@ impl_from_ocaml_variant! {
   Typ {
     Typ::TPath (payload:OCamlList<TypePathSegment>),
     Typ::TReference (payload:TypeReference),
+    Typ::TSlice (payload:Typ),
   }
 }
 
@@ -501,6 +517,23 @@ fn to_syn_expr(e: &Expr) -> syn::Expr {
                 body,
             })
         }
+        Expr::EIndex(ExprIndex {
+            expr_index_base,
+            expr_index_index,
+        }) => syn::Expr::Index({
+            syn::ExprIndex {
+                attrs: vec![],
+                expr: Box::new(to_syn_expr(expr_index_base)),
+                bracket_token: syn::token::Bracket {
+                    span: proc_macro2::Group::new(
+                        proc_macro2::Delimiter::None,
+                        proc_macro2::TokenStream::new(),
+                    )
+                    .delim_span(),
+                },
+                index: Box::new(to_syn_expr(expr_index_index)),
+            }
+        }),
     }
 }
 
@@ -612,6 +645,16 @@ fn to_syn_typ(t: &Typ) -> Type {
                 None
             },
             elem: Box::new(to_syn_typ(&type_reference.type_reference_typ)),
+        }),
+        Typ::TSlice(t) => syn::Type::Slice(syn::TypeSlice {
+            bracket_token: syn::token::Bracket {
+                span: proc_macro2::Group::new(
+                    proc_macro2::Delimiter::None,
+                    proc_macro2::TokenStream::new(),
+                )
+                .delim_span(),
+            },
+            elem: Box::new(to_syn_typ(&t)),
         }),
     }
 }
@@ -781,6 +824,10 @@ impl fmt::Display for Expr {
                     .join(";\n");
                 write!(f, "while {} {{ {} }}", expr_while_cond, while_body)
             }
+            Expr::EIndex(ExprIndex {
+                expr_index_base,
+                expr_index_index,
+            }) => write!(f, "{}[{}]", expr_index_base, expr_index_index),
         }
     }
 }
@@ -818,6 +865,7 @@ impl fmt::Display for Typ {
                 },
                 type_reference.type_reference_typ
             ),
+            Typ::TSlice(t) => write!(f, "[{}]", t),
         }
     }
 }

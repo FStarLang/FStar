@@ -52,7 +52,7 @@ let push_fv (g:env) (s:string) (t:fn_signature) : env =
 let push_local (g:env) (s:string) (t:typ) (is_mut:bool) : env =
   { g with gamma = (s, t, is_mut)::g.gamma }
 
-let type_of (g:env) (e:expr) : typ & bool =
+let type_of (g:env) (e:expr) : typ & bool =  // is_mut
   match e with
   | Expr_path s ->
     (match lookup_local g s with
@@ -82,35 +82,42 @@ let rec extract_mlty (g:env) (t:S.mlty) : typ =
          S.string_of_mlpath p = "Prims.int"     ||
          S.string_of_mlpath p = "Prims.nat" -> mk_scalar_typ "i64"  // TODO: int to int64, nat to int64, FIX
   | S.MLTY_Named ([], p)
+    when S.string_of_mlpath p = "FStar.SizeT.t" -> mk_scalar_typ "usize"
+  | S.MLTY_Named ([], p)
     when S.string_of_mlpath p = "Prims.bool" -> mk_scalar_typ "bool"
   | S.MLTY_Named ([arg], p)
     when S.string_of_mlpath p = "Pulse.Lib.Reference.ref" ->
     let is_mut = true in
-    mk_ref_typ is_mut (extract_mlty g arg)
+    arg |> extract_mlty g |> mk_ref_typ is_mut
+  | S.MLTY_Named ([arg], p)
+    when S.string_of_mlpath p = "Pulse.Lib.Rust.Slice.slice" ->
+    let is_mut = true in
+    arg |> extract_mlty g |> mk_slice_typ |> mk_ref_typ is_mut
   | S.MLTY_Erased -> mk_scalar_typ "unit"
   | _ -> fail_nyi (format1 "mlty %s" (S.mlty_to_string t))
 
 let extract_top_level_fn_arg (g:env) (arg_name:string) (t:S.mlty) : fn_arg =
-  match t with
-  | S.MLTY_Var s -> mk_scalar_fn_arg arg_name (mk_scalar_typ (tyvar_of s))
-  | S.MLTY_Named ([], p)
-    when S.string_of_mlpath p = "FStar.UInt32.t" ||
-         S.string_of_mlpath p = "FStar.Int32.t"  ||
-         S.string_of_mlpath p = "FStar.UInt64.t" ||
-         S.string_of_mlpath p = "FStar.Int64.t"  ||
-         S.string_of_mlpath p = "Prims.int"      ||
-         S.string_of_mlpath p = "Prims.nat"      ||
-         S.string_of_mlpath p = "Prims.bool" ->
-    mk_scalar_fn_arg arg_name (extract_mlty g t)
+  t |> extract_mlty g |> mk_scalar_fn_arg arg_name
+  // match t with
+  // | S.MLTY_Var s -> mk_scalar_fn_arg arg_name (mk_scalar_typ (tyvar_of s))
+  // | S.MLTY_Named ([], p)
+  //   when S.string_of_mlpath p = "FStar.UInt32.t" ||
+  //        S.string_of_mlpath p = "FStar.Int32.t"  ||
+  //        S.string_of_mlpath p = "FStar.UInt64.t" ||
+  //        S.string_of_mlpath p = "FStar.Int64.t"  ||
+  //        S.string_of_mlpath p = "Prims.int"      ||
+  //        S.string_of_mlpath p = "Prims.nat"      ||
+  //        S.string_of_mlpath p = "Prims.bool" ->
+  //   mk_scalar_fn_arg arg_name (extract_mlty g t)
 
-  | S.MLTY_Named ([arg], p)
-    when S.string_of_mlpath p = "Pulse.Lib.Reference.ref" ->
-    mk_scalar_fn_arg arg_name (extract_mlty g t)
+  // | S.MLTY_Named ([arg], p)
+  //   when S.string_of_mlpath p = "Pulse.Lib.Reference.ref" ->
+  //   mk_scalar_fn_arg arg_name (extract_mlty g t)
 
-  | S.MLTY_Erased ->
-    mk_scalar_fn_arg arg_name (extract_mlty g t)
+  // | S.MLTY_Erased ->
+  //   mk_scalar_fn_arg arg_name (extract_mlty g t)
   
-  | _ -> fail_nyi (format1 "top level fn arg %s" (S.mlty_to_string t))
+  // | _ -> fail_nyi (format1 "top level fn arg %s" (S.mlty_to_string t))
 
 let push_fn_arg (g:env) (arg_name:string) (arg:fn_arg) : env =
   match arg with
@@ -197,6 +204,9 @@ let rec extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     let _, b = type_of g e in
     if b then e
     else mk_ref_read e
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e; i; _; _])
+    when S.string_of_mlpath p = "Pulse.Lib.Rust.Slice.op_Array_Access" ->
+    mk_expr_index (extract_mlexpr g e) (extract_mlexpr g i)
   | S.MLE_App ({expr=S.MLE_Name p}, [{expr=S.MLE_Fun (_, cond)}; {expr=S.MLE_Fun (_, body)}])
     when S.string_of_mlpath p = "Pulse.Lib.Core.while_" ->
     let expr_while_cond = extract_mlexpr g cond in
