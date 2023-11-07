@@ -798,16 +798,17 @@ let get_norm_request cfg (full_norm:term -> term) args =
       @ (if cfg.steps.allow_unbound_universes then [AllowUnboundUniverses] else [])
       @ (if cfg.steps.nbe_step then [NBE] else []) // ZOE : NBE can be set as the default mode
     in
+    (* We always set UnfoldTac: do not unfold logical connectives *)
     match args with
     | [_; (tm, _)]
     | [(tm, _)] ->
       let s = [Beta; Zeta; Iota; Primops; UnfoldUntil delta_constant; Reify] in
-      Some (inherited_steps @ s, tm)
+      Some (UnfoldTac :: inherited_steps @ s, tm)
     | [(steps, _); _; (tm, _)] ->
       begin
       match parse_steps (full_norm steps) with
       | None -> None
-      | Some s -> Some (inherited_steps @ s, tm)
+      | Some s -> Some (UnfoldTac :: inherited_steps @ s, tm)
       end
     | _ ->
       None
@@ -963,11 +964,6 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
         log_unfolding cfg (fun () -> BU.print_string " >> HasMaskedEffect, not unfolding\n");
         no
 
-    // UnfoldTac means never unfold FVs marked [@"tac_opaque"]
-    | _, _, _, _, _, _ when cfg.steps.unfold_tac && BU.for_some (U.attr_eq U.tac_opaque_attr) attrs ->
-        log_unfolding cfg (fun () -> BU.print_string " >> tac_opaque, not unfolding\n");
-        no
-
     // Recursive lets may only be unfolded when Zeta is on
     | Some (Inr ({sigquals=qs; sigel=Sig_let {lbs=(is_rec, _)}}, _), _), _, _, _, _, _ when
             is_rec && not cfg.steps.zeta && not cfg.steps.zeta_full ->
@@ -1020,6 +1016,11 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
            ]
         in
         meets_some_criterion
+
+    // UnfoldTac means never unfold FVs marked [@"tac_opaque"]
+    | _, _, _, _, _, _ when cfg.steps.unfold_tac && BU.for_some (U.attr_eq U.tac_opaque_attr) attrs ->
+        log_unfolding cfg (fun () -> BU.print_string " >> tac_opaque, not unfolding\n");
+        no
 
     // Nothing special, just check the depth
     | _ ->
