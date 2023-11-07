@@ -88,6 +88,11 @@ struct ExprRepeat {
     expr_repeat_len: Box<Expr>,
 }
 
+struct ExprReference {
+    expr_reference_is_mut: bool,
+    expr_reference_expr: Box<Expr>,
+}
+
 enum Expr {
     EBinOp(ExprBin),
     EPath(String),
@@ -100,6 +105,7 @@ enum Expr {
     EWhile(ExprWhile),
     EIndex(ExprIndex),
     ERepeat(ExprRepeat),
+    EReference(ExprReference),
 }
 
 struct TypeReference {
@@ -230,6 +236,7 @@ impl_from_ocaml_variant! {
     Expr::EWhile (payload:ExprWhile),
     Expr::EIndex (payload:ExprIndex),
     Expr::ERepeat (payload:ExprRepeat),
+    Expr::EReference (payload:ExprReference),
   }
 }
 
@@ -288,6 +295,13 @@ impl_from_ocaml_record! {
   ExprRepeat {
     expr_repeat_elem: Expr,
     expr_repeat_len: Expr,
+  }
+}
+
+impl_from_ocaml_record! {
+  ExprReference {
+    expr_reference_is_mut: bool,
+    expr_reference_expr: Expr,
   }
 }
 
@@ -620,6 +634,23 @@ fn to_syn_expr(e: &Expr) -> syn::Expr {
             },
             len: Box::new(to_syn_expr(expr_repeat_len)),
         }),
+        Expr::EReference(ExprReference {
+            expr_reference_is_mut,
+            expr_reference_expr,
+        }) => syn::Expr::Reference(syn::ExprReference {
+            attrs: vec![],
+            and_token: syn::token::And {
+                spans: [Span::call_site()],
+            },
+            mutability: if *expr_reference_is_mut {
+                Some(syn::token::Mut {
+                    span: Span::call_site(),
+                })
+            } else {
+                None
+            },
+            expr: Box::new(to_syn_expr(expr_reference_expr)),
+        }),
     }
 }
 
@@ -935,6 +966,15 @@ impl fmt::Display for Expr {
                 expr_repeat_elem,
                 expr_repeat_len,
             }) => write!(f, "[{}; {}]", expr_repeat_elem, expr_repeat_len),
+            Expr::EReference(ExprReference {
+                expr_reference_is_mut,
+                expr_reference_expr,
+            }) => write!(
+                f,
+                "&{} {}",
+                if *expr_reference_is_mut { "mut" } else { "" },
+                expr_reference_expr
+            ),
         }
     }
 }

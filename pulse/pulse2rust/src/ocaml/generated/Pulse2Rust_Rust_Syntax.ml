@@ -98,6 +98,7 @@ type expr =
   | Expr_while of expr_while 
   | Expr_index of expr_index 
   | Expr_repeat of expr_repeat 
+  | Expr_reference of expr_reference 
 and expr_bin =
   {
   expr_bin_left: expr ;
@@ -126,6 +127,10 @@ and expr_while = {
 and expr_repeat = {
   expr_repeat_elem: expr ;
   expr_repeat_len: expr }
+and expr_reference =
+  {
+  expr_reference_is_mut: Prims.bool ;
+  expr_reference_expr: expr }
 and local_stmt =
   {
   local_stmt_pat: pat ;
@@ -187,6 +192,11 @@ let (uu___is_Expr_repeat : expr -> Prims.bool) =
     match projectee with | Expr_repeat _0 -> true | uu___ -> false
 let (__proj__Expr_repeat__item___0 : expr -> expr_repeat) =
   fun projectee -> match projectee with | Expr_repeat _0 -> _0
+let (uu___is_Expr_reference : expr -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Expr_reference _0 -> true | uu___ -> false
+let (__proj__Expr_reference__item___0 : expr -> expr_reference) =
+  fun projectee -> match projectee with | Expr_reference _0 -> _0
 let (__proj__Mkexpr_bin__item__expr_bin_left : expr_bin -> expr) =
   fun projectee ->
     match projectee with
@@ -263,6 +273,17 @@ let (__proj__Mkexpr_repeat__item__expr_repeat_len : expr_repeat -> expr) =
   fun projectee ->
     match projectee with
     | { expr_repeat_elem; expr_repeat_len;_} -> expr_repeat_len
+let (__proj__Mkexpr_reference__item__expr_reference_is_mut :
+  expr_reference -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | { expr_reference_is_mut; expr_reference_expr;_} ->
+        expr_reference_is_mut
+let (__proj__Mkexpr_reference__item__expr_reference_expr :
+  expr_reference -> expr) =
+  fun projectee ->
+    match projectee with
+    | { expr_reference_is_mut; expr_reference_expr;_} -> expr_reference_expr
 let (__proj__Mklocal_stmt__item__local_stmt_pat : local_stmt -> pat) =
   fun projectee ->
     match projectee with
@@ -451,6 +472,10 @@ let (mk_while : expr -> stmt Prims.list -> expr) =
 let (mk_repeat : expr -> expr -> expr) =
   fun expr_repeat_elem ->
     fun expr_repeat_len -> Expr_repeat { expr_repeat_elem; expr_repeat_len }
+let (mk_reference_expr : Prims.bool -> expr -> expr) =
+  fun expr_reference_is_mut ->
+    fun expr_reference_expr ->
+      Expr_reference { expr_reference_is_mut; expr_reference_expr }
 let (mk_scalar_fn_arg : Prims.string -> typ -> fn_arg) =
   fun name ->
     fun t ->

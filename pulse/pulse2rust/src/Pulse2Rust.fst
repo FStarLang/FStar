@@ -102,26 +102,6 @@ let rec extract_mlty (g:env) (t:S.mlty) : typ =
 
 let extract_top_level_fn_arg (g:env) (arg_name:string) (t:S.mlty) : fn_arg =
   t |> extract_mlty g |> mk_scalar_fn_arg arg_name
-  // match t with
-  // | S.MLTY_Var s -> mk_scalar_fn_arg arg_name (mk_scalar_typ (tyvar_of s))
-  // | S.MLTY_Named ([], p)
-  //   when S.string_of_mlpath p = "FStar.UInt32.t" ||
-  //        S.string_of_mlpath p = "FStar.Int32.t"  ||
-  //        S.string_of_mlpath p = "FStar.UInt64.t" ||
-  //        S.string_of_mlpath p = "FStar.Int64.t"  ||
-  //        S.string_of_mlpath p = "Prims.int"      ||
-  //        S.string_of_mlpath p = "Prims.nat"      ||
-  //        S.string_of_mlpath p = "Prims.bool" ->
-  //   mk_scalar_fn_arg arg_name (extract_mlty g t)
-
-  // | S.MLTY_Named ([arg], p)
-  //   when S.string_of_mlpath p = "Pulse.Lib.Reference.ref" ->
-  //   mk_scalar_fn_arg arg_name (extract_mlty g t)
-
-  // | S.MLTY_Erased ->
-  //   mk_scalar_fn_arg arg_name (extract_mlty g t)
-  
-  // | _ -> fail_nyi (format1 "top level fn arg %s" (S.mlty_to_string t))
 
 let push_fn_arg (g:env) (arg_name:string) (arg:fn_arg) : env =
   match arg with
@@ -199,7 +179,7 @@ let rec lb_init_and_def (g:env) (lb:S.mllb)
       let is_mut = false in
       is_mut,
       lb.mllb_tysc |> must |> snd |> extract_mlty g,
-      mk_repeat init len
+      mk_reference_expr true (mk_repeat init len)
 
     | _ ->
       fail (format1 "unexpected initializer for mutable local: %s" (S.mlexpr_to_string lb.mllb_def))

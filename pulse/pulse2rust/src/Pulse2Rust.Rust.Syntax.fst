@@ -58,6 +58,9 @@ let mk_while (expr_while_cond:expr) (expr_while_body:list stmt) : expr =
 let mk_repeat (expr_repeat_elem expr_repeat_len:expr) : expr =
   Expr_repeat { expr_repeat_elem; expr_repeat_len }
 
+let mk_reference_expr (expr_reference_is_mut:bool) (expr_reference_expr:expr) : expr =
+  Expr_reference { expr_reference_is_mut; expr_reference_expr }
+
 let mk_scalar_fn_arg (name:string) (t:typ) =
   Fn_arg_pat {
     pat_typ_pat = Pat_ident {

@@ -321,6 +321,7 @@ let rec (lb_init_and_def :
             ->
             let init1 = extract_mlexpr g init in
             let len1 = extract_mlexpr g len in
+            let is_mut1 = false in
             let uu___2 =
               let uu___3 =
                 let uu___4 =
@@ -330,8 +331,10 @@ let rec (lb_init_and_def :
                 FStar_Compiler_Effect.op_Bar_Greater uu___4
                   FStar_Pervasives_Native.snd in
               FStar_Compiler_Effect.op_Bar_Greater uu___3 (extract_mlty g) in
-            let uu___3 = Pulse2Rust_Rust_Syntax.mk_repeat init1 len1 in
-            (is_mut, uu___2, uu___3)
+            let uu___3 =
+              let uu___4 = Pulse2Rust_Rust_Syntax.mk_repeat init1 len1 in
+              Pulse2Rust_Rust_Syntax.mk_reference_expr true uu___4 in
+            (is_mut1, uu___2, uu___3)
         | uu___ ->
             let uu___1 =
               let uu___2 =

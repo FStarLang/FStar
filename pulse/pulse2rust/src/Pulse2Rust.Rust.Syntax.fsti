@@ -51,6 +51,7 @@ type expr =
   | Expr_while of expr_while
   | Expr_index of expr_index
   | Expr_repeat of expr_repeat
+  | Expr_reference of expr_reference
 
 and expr_bin = {
   expr_bin_left : expr;
@@ -92,6 +93,11 @@ and expr_while = {
 and expr_repeat = {
   expr_repeat_elem : expr;
   expr_repeat_len : expr;
+}
+
+and expr_reference = {
+  expr_reference_is_mut : bool;
+  expr_reference_expr : expr
 }
 
 and local_stmt = {
@@ -164,6 +170,7 @@ val mk_call (head:expr) (args:list expr) : expr
 val mk_if (cond:expr) (then_:list stmt) (else_:option expr) : expr  // else is Block or ExprIf
 val mk_while (cond:expr) (body:list stmt) : expr
 val mk_repeat (elem len:expr) : expr
+val mk_reference_expr (is_mut:bool) (e:expr) : expr
 val mk_local_stmt (name:string) (is_mut:bool) (init:expr) : stmt
 val mk_scalar_fn_arg (name:string) (t:typ) : fn_arg
 val mk_ref_fn_arg (name:string) (is_mut:bool) (t:typ) : fn_arg
