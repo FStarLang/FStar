@@ -971,11 +971,8 @@ let (mk_input :
   =
   fun fresh ->
     fun theory ->
-      let options =
-        let uu___ =
-          let uu___1 = FStar_Compiler_Effect.op_Bang bg_z3_proc in
-          uu___1.version () in
-        z3_options uu___ in
+      let ver = FStar_Options.z3_version () in
+      let options = z3_options ver in
       let options1 =
         let uu___ =
           let uu___1 = FStar_Options.z3_smtopt () in
@@ -1022,13 +1019,7 @@ let (mk_input :
                    FStar_Compiler_Effect.op_Bar_Greater uu___5
                      (FStar_String.concat "\n")
                  else ps in
-               let hs1 =
-                 let uu___4 =
-                   let uu___5 =
-                     let uu___6 = FStar_Compiler_Effect.op_Bang bg_z3_proc in
-                     uu___6.version () in
-                   Prims.op_Hat "Z3 version: " uu___5 in
-                 Prims.op_Hat hs uu___4 in
+               let hs1 = Prims.op_Hat hs (Prims.op_Hat "Z3 version: " ver) in
                let uu___4 =
                  let uu___5 = FStar_Compiler_Util.digest_of_string hs1 in
                  FStar_Pervasives_Native.Some uu___5 in
