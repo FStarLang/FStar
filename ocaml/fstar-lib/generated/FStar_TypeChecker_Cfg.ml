@@ -1868,6 +1868,20 @@ let (__proj__Mkdebug_switches__item__erase_erasable_args :
     | { gen; top; cfg; primop; unfolding; b380; wpe; norm_delayed;
         print_normalized; debug_nbe; erase_erasable_args;_} ->
         erase_erasable_args
+let (no_debug_switches : debug_switches) =
+  {
+    gen = false;
+    top = false;
+    cfg = false;
+    primop = false;
+    unfolding = false;
+    b380 = false;
+    wpe = false;
+    norm_delayed = false;
+    print_normalized = false;
+    debug_nbe = false;
+    erase_erasable_args = false
+  }
 type cfg =
   {
   steps: fsteps ;
@@ -1942,20 +1956,6 @@ let (__proj__Mkcfg__item__compat_memo_ignore_cfg : cfg -> Prims.bool) =
     | { steps; tcenv; debug; delta_level; primitive_steps; strong;
         memoize_lazy; normalize_pure_lets; reifying;
         compat_memo_ignore_cfg;_} -> compat_memo_ignore_cfg
-let (no_debug_switches : debug_switches) =
-  {
-    gen = false;
-    top = false;
-    cfg = false;
-    primop = false;
-    unfolding = false;
-    b380 = false;
-    wpe = false;
-    norm_delayed = false;
-    print_normalized = false;
-    debug_nbe = false;
-    erase_erasable_args = false
-  }
 type prim_step_set = primitive_step FStar_Compiler_Util.psmap
 let (empty_prim_steps : unit -> prim_step_set) =
   fun uu___ -> FStar_Compiler_Util.psmap_empty ()
@@ -4629,7 +4629,8 @@ let (config' :
               (FStar_TypeChecker_Env.debug e (FStar_Options.Other "Norm")) ||
                 dbg_flag in
             let uu___3 =
-              FStar_TypeChecker_Env.debug e (FStar_Options.Other "NormTop") in
+              (FStar_TypeChecker_Env.debug e (FStar_Options.Other "NormTop"))
+                || dbg_flag in
             let uu___4 =
               FStar_TypeChecker_Env.debug e (FStar_Options.Other "NormCfg") in
             let uu___5 =

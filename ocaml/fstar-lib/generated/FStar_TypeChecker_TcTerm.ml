@@ -696,85 +696,97 @@ let (check_expected_effect :
                                     FStar_Pervasives_Native.None))))) in
               (match uu___1 with
                | (expected_c_opt, c1, gopt) ->
-                   let c2 = norm_c env c1 in
-                   (match expected_c_opt with
-                    | FStar_Pervasives_Native.None ->
-                        (e, c2,
+                   (FStar_TypeChecker_Env.def_check_comp_closed_in_env
+                      c1.FStar_Syntax_Syntax.pos
+                      "check_expected_effect.c.before_norm" env c1;
+                    (let c2 = norm_c env c1 in
+                     FStar_TypeChecker_Env.def_check_comp_closed_in_env
+                       c2.FStar_Syntax_Syntax.pos
+                       "check_expected_effect.c.after_norm" env c2;
+                     (match expected_c_opt with
+                      | FStar_Pervasives_Native.None ->
+                          (e, c2,
+                            ((match gopt with
+                              | FStar_Pervasives_Native.None ->
+                                  FStar_TypeChecker_Env.trivial_guard
+                              | FStar_Pervasives_Native.Some g -> g)))
+                      | FStar_Pervasives_Native.Some expected_c ->
                           ((match gopt with
-                            | FStar_Pervasives_Native.None ->
-                                FStar_TypeChecker_Env.trivial_guard
-                            | FStar_Pervasives_Native.Some g -> g)))
-                    | FStar_Pervasives_Native.Some expected_c ->
-                        ((match gopt with
-                          | FStar_Pervasives_Native.None -> ()
-                          | FStar_Pervasives_Native.Some uu___3 ->
-                              failwith
-                                "Impossible! check_expected_effect, gopt should have been None");
-                         (let c3 =
-                            let uu___3 =
-                              FStar_TypeChecker_Common.lcomp_of_comp c2 in
-                            FStar_TypeChecker_Util.maybe_assume_result_eq_pure_term
-                              env e uu___3 in
-                          let uu___3 = FStar_TypeChecker_Common.lcomp_comp c3 in
-                          match uu___3 with
-                          | (c4, g_c) ->
-                              ((let uu___5 =
-                                  FStar_Compiler_Effect.op_Less_Bar
-                                    (FStar_TypeChecker_Env.debug env)
-                                    FStar_Options.Medium in
-                                if uu___5
-                                then
-                                  let uu___6 =
-                                    FStar_Syntax_Print.term_to_string e in
-                                  let uu___7 =
-                                    FStar_Syntax_Print.comp_to_string c4 in
-                                  let uu___8 =
-                                    FStar_Syntax_Print.comp_to_string
-                                      expected_c in
-                                  let uu___9 =
-                                    FStar_Compiler_Util.string_of_bool use_eq in
-                                  FStar_Compiler_Util.print4
-                                    "In check_expected_effect, asking rel to solve the problem on e=(%s) and c=(%s), expected_c=(%s), and use_eq=%s\n"
-                                    uu___6 uu___7 uu___8 uu___9
-                                else ());
-                               (let uu___5 =
-                                  FStar_TypeChecker_Util.check_comp env
-                                    use_eq e c4 expected_c in
-                                match uu___5 with
-                                | (e1, uu___6, g) ->
-                                    let g1 =
-                                      let uu___7 =
-                                        FStar_TypeChecker_Env.get_range env in
-                                      FStar_TypeChecker_Util.label_guard
-                                        uu___7
-                                        "Could not prove post-condition" g in
-                                    ((let uu___8 =
-                                        FStar_TypeChecker_Env.debug env
-                                          FStar_Options.Medium in
-                                      if uu___8
-                                      then
-                                        let uu___9 =
-                                          FStar_Compiler_Range_Ops.string_of_range
-                                            e1.FStar_Syntax_Syntax.pos in
+                            | FStar_Pervasives_Native.None -> ()
+                            | FStar_Pervasives_Native.Some uu___5 ->
+                                failwith
+                                  "Impossible! check_expected_effect, gopt should have been None");
+                           (let c3 =
+                              let uu___5 =
+                                FStar_TypeChecker_Common.lcomp_of_comp c2 in
+                              FStar_TypeChecker_Util.maybe_assume_result_eq_pure_term
+                                env e uu___5 in
+                            let uu___5 =
+                              FStar_TypeChecker_Common.lcomp_comp c3 in
+                            match uu___5 with
+                            | (c4, g_c) ->
+                                (FStar_TypeChecker_Env.def_check_comp_closed_in_env
+                                   c4.FStar_Syntax_Syntax.pos
+                                   "check_expected_effect.c.after_assume" env
+                                   c4;
+                                 (let uu___8 =
+                                    FStar_Compiler_Effect.op_Less_Bar
+                                      (FStar_TypeChecker_Env.debug env)
+                                      FStar_Options.Medium in
+                                  if uu___8
+                                  then
+                                    let uu___9 =
+                                      FStar_Syntax_Print.term_to_string e in
+                                    let uu___10 =
+                                      FStar_Syntax_Print.comp_to_string c4 in
+                                    let uu___11 =
+                                      FStar_Syntax_Print.comp_to_string
+                                        expected_c in
+                                    let uu___12 =
+                                      FStar_Compiler_Util.string_of_bool
+                                        use_eq in
+                                    FStar_Compiler_Util.print4
+                                      "In check_expected_effect, asking rel to solve the problem on e=(%s) and c=(%s), expected_c=(%s), and use_eq=%s\n"
+                                      uu___9 uu___10 uu___11 uu___12
+                                  else ());
+                                 (let uu___8 =
+                                    FStar_TypeChecker_Util.check_comp env
+                                      use_eq e c4 expected_c in
+                                  match uu___8 with
+                                  | (e1, uu___9, g) ->
+                                      let g1 =
                                         let uu___10 =
-                                          FStar_TypeChecker_Rel.guard_to_string
-                                            env g1 in
-                                        FStar_Compiler_Util.print2
-                                          "(%s) DONE check_expected_effect;\n\tguard is: %s\n"
-                                          uu___9 uu___10
-                                      else ());
-                                     (let e2 =
-                                        FStar_TypeChecker_Util.maybe_lift env
-                                          e1
-                                          (FStar_Syntax_Util.comp_effect_name
-                                             c4)
-                                          (FStar_Syntax_Util.comp_effect_name
-                                             expected_c)
-                                          (FStar_Syntax_Util.comp_result c4) in
-                                      let uu___8 =
-                                        FStar_TypeChecker_Env.conj_guard g_c
-                                          g1 in
-                                      (e2, expected_c, uu___8)))))))))
+                                          FStar_TypeChecker_Env.get_range env in
+                                        FStar_TypeChecker_Util.label_guard
+                                          uu___10
+                                          "Could not prove post-condition" g in
+                                      ((let uu___11 =
+                                          FStar_TypeChecker_Env.debug env
+                                            FStar_Options.Medium in
+                                        if uu___11
+                                        then
+                                          let uu___12 =
+                                            FStar_Compiler_Range_Ops.string_of_range
+                                              e1.FStar_Syntax_Syntax.pos in
+                                          let uu___13 =
+                                            FStar_TypeChecker_Rel.guard_to_string
+                                              env g1 in
+                                          FStar_Compiler_Util.print2
+                                            "(%s) DONE check_expected_effect;\n\tguard is: %s\n"
+                                            uu___12 uu___13
+                                        else ());
+                                       (let e2 =
+                                          FStar_TypeChecker_Util.maybe_lift
+                                            env e1
+                                            (FStar_Syntax_Util.comp_effect_name
+                                               c4)
+                                            (FStar_Syntax_Util.comp_effect_name
+                                               expected_c)
+                                            (FStar_Syntax_Util.comp_result c4) in
+                                        let uu___11 =
+                                          FStar_TypeChecker_Env.conj_guard
+                                            g_c g1 in
+                                        (e2, expected_c, uu___11)))))))))))
 let no_logical_guard :
   'uuuuu 'uuuuu1 .
     FStar_TypeChecker_Env.env ->
