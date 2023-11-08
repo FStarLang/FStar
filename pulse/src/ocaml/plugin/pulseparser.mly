@@ -135,8 +135,8 @@ pulseStmtNoSeq:
     { PulseSugar.mk_let_binding q i typOpt (Some (Default_initializer tm)) }
   | LBRACE s=pulseStmt RBRACE
     { PulseSugar.mk_block s }
-  | IF tm=appTermNoRecordExp vp=option(ensuresVprop) LBRACE th=pulseStmt RBRACE e=option(elseBlock)
-    { PulseSugar.mk_if tm vp th e }
+  | s=ifStmt
+    { s }
   | MATCH tm=appTermNoRecordExp c=option(ensuresVprop) LBRACE brs=list(pulseMatchBranch) RBRACE
     { PulseSugar.mk_match tm c brs }
   | WHILE LPAREN tm=pulseStmt RPAREN INVARIANT i=lident DOT v=pulseVprop LBRACE body=pulseStmt RBRACE
@@ -196,9 +196,15 @@ pulseStmt:
       | Some s2 -> PulseSugar.mk_stmt (PulseSugar.mk_sequence s1 s2) (rr ($loc))
     }
 
+ifStmt:
+  | IF tm=appTermNoRecordExp vp=option(ensuresVprop) LBRACE th=pulseStmt RBRACE e=option(elseBlock)
+    { PulseSugar.mk_if tm vp th e }
+
 elseBlock:
   | ELSE LBRACE p=pulseStmt RBRACE
     { p }
+  | ELSE s=ifStmt
+    { PulseSugar.mk_stmt s (rr $loc) }
 
 mutOrRefQualifier:
   | MUT { MUT }
