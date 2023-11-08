@@ -2227,6 +2227,8 @@ let bind_cases env0 (res_t:typ)
     TcComm.mk_lcomp eff res_t bind_cases_flags bind_cases
 
 let check_comp env (use_eq:bool) (e:term) (c:comp) (c':comp) : term * comp * guard_t =
+  def_check_comp_closed_in_env c.pos "check_comp.c" env c;
+  def_check_comp_closed_in_env c'.pos "check_comp.c'" env c';
   if Env.debug env <| Options.Extreme then
     BU.print4 "Checking comp relation:\n%s has type %s\n\t %s \n%s\n"
             (Print.term_to_string e)
@@ -3750,17 +3752,19 @@ let try_lookup_record_type env (typename:lident)
                 Some r
 
            else (
-             BU.print3 "Not enough formals; nparms=%s; type = %s; formals=%s\n"
-               (string_of_int nparms)
-               (Print.term_to_string t)
-               (Print.binders_to_string ", " formals);
+            //  BU.print3 "Not enough formals; nparms=%s; type = %s; formals=%s\n"
+            //    (string_of_int nparms)
+            //    (Print.term_to_string t)
+            //    (Print.binders_to_string ", " formals);
              None
            )
          | _ ->
-           BU.print1 "Could not find %s\n" (string_of_lid dc);
+          //  BU.print1 "Could not find %s\n" (string_of_lid dc);
            None)
       | _, dcs ->
-        BU.print1 "Could not find type %s ... Got %s\n" (string_of_lid typename);
+        // BU.print2 "Could not find type %s ... Got %s\n"
+        //    (string_of_lid typename)
+        //    (FStar.Common.string_of_list Ident.string_of_lid dcs);
         None
     with
     | _ -> None

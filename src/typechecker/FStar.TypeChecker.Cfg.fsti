@@ -113,6 +113,8 @@ type debug_switches = {
     erase_erasable_args: bool;
 }
 
+val no_debug_switches : debug_switches
+
 type cfg = {
      steps: fsteps;
      tcenv: Env.env;

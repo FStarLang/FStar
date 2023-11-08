@@ -100,7 +100,7 @@ type branches = list (pat * option term * term)
 
 type stack_elt =
  | Arg      of closure * aqual * Range.range
- | UnivArgs of list universe * Range.range
+ | UnivArgs of list universe * Range.range // NB: universes must be values already, no bvars allowed
  | MemoLazy of cfg_memo (env * term)
  | Match    of env * option match_returns_ascription * branches * option residual_comp * cfg * Range.range
  | Abs      of env * binders * env * option residual_comp * Range.range //the second env is the first one extended with the binders, for reducing the option lcomp

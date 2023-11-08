@@ -298,7 +298,9 @@ let check_expected_effect env (use_eq:bool) (copt:option comp) (ec : term * comp
                             Some g)
              else None, c, None
   in
+  def_check_comp_closed_in_env c.pos "check_expected_effect.c.before_norm" env c;
   let c = norm_c env c in
+  def_check_comp_closed_in_env c.pos "check_expected_effect.c.after_norm" env c;
   match expected_c_opt with
     | None ->
       e, c, (match gopt with | None -> Env.trivial_guard | Some g -> g)
@@ -310,6 +312,7 @@ let check_expected_effect env (use_eq:bool) (copt:option comp) (ec : term * comp
 
        let c = TcUtil.maybe_assume_result_eq_pure_term env e (TcComm.lcomp_of_comp c) in
        let c, g_c = TcComm.lcomp_comp c in
+       def_check_comp_closed_in_env c.pos "check_expected_effect.c.after_assume" env c;
        if debug env <| Options.Medium then
        BU.print4 "In check_expected_effect, asking rel to solve the problem on e=(%s) and c=(%s), expected_c=(%s), and use_eq=%s\n"
                  (Print.term_to_string e)
