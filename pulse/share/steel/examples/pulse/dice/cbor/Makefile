@@ -8,6 +8,7 @@ STEEL_HOME = $(PULSE_EXAMPLES_ROOT)/../../../../
 INCLUDE_DIRS=lib dice/common dice/dpe dice/engine dice/l0 dice/cbor .
 SRC_DIRS=$(addprefix $(PULSE_EXAMPLES_ROOT)/, $(INCLUDE_DIRS))
 FSTAR_FILES=$(wildcard CDDLExtractionTest.*.fst) # but I still need to enumerate them in the Karamel bundle
+OTHERFLAGS += --cmi
 
 FSTAR_DEP_OPTIONS=--extract '* -FStar.Tactics -FStar.Reflection -Steel -Pulse +Pulse.Class +Pulse.Lib -Pulse.Lib.Core'
 KRML=$(KRML_HOME)/krml
@@ -20,7 +21,7 @@ extract_all: $(ALL_KRML_FILES)
 extract_all_ml: $(ALL_ML_FILES)
 
 $(OUTPUT_DIRECTORY)/CDDLExtractionTest.c: extract_all
-	$(KRML) -bundle CBOR.Spec.Constants+CBOR.Pulse.Type+CBOR.Pulse.Extern+CBOR.Pulse=CBOR.*[rename=CBOR,rename-prefix] -bundle CDDLExtractionTest.Assume+CDDLExtractionTest.Bytes+CDDLExtractionTest.BytesUnwrapped+CDDLExtractionTest.Choice=*[rename=CDDLExtractionTest] -skip-compilation $(wildcard _output/*.krml) -tmpdir $(OUTPUT_DIRECTORY)
+	$(KRML) -bundle C -bundle CBOR.Spec.Constants+CBOR.Pulse.Type+CBOR.Pulse.Extern=[rename=CBOR,rename-prefix] -bundle CBOR.Pulse= -bundle CDDLExtractionTest.Assume+CDDLExtractionTest.Bytes+CDDLExtractionTest.BytesUnwrapped+CDDLExtractionTest.Choice=*[rename=CDDLExtractionTest] -skip-linking $(wildcard _output/*.krml) -tmpdir $(OUTPUT_DIRECTORY)
 
 $(OUTPUT_DIRECTORY)/%.krml:
 	$(FSTAR) --codegen krml $(subst .checked,, $(notdir $<)) --extract_module $(basename $(subst .checked,, $(notdir $<)))
