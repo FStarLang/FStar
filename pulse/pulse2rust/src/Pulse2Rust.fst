@@ -85,6 +85,9 @@ let rec uncurry_arrow (t:S.mlty) : (list S.mlty & S.mlty) =
 //
 // Most translations are straightforward
 //
+// Slice.slice t is extracted to &mut [t]
+//   i.e., a ref is added, we need to figure permissions better
+//
 let rec extract_mlty (g:env) (t:S.mlty) : typ =
   match t with
   | S.MLTY_Var s -> mk_scalar_typ (tyvar_of s)
@@ -190,8 +193,8 @@ let is_binop (s:string) : option binop =
 // Tm_WithLocal in pulse looks like (in mllb): let x : ref t = alloc e, where e : t
 // So we return true, extract t, extract e
 //
-// Tm_WithLocalArray in pulse looks like (in mllb): let x : array t = alloc init len
-// So we return false, extract (array t), mk_mutable_ref (repeat (extract init) (extract len))
+// Tm_WithLocalArray in pulse looks like (in mllb): let x : slice t = alloc init len
+// So we return false, extract (slice t), mk_mutable_ref (repeat (extract init) (extract len))
 // Basically, a local array in pulse becomes a mutable reference to a slice in rust
 // Note that the let binding itself is immutable, but the slice is mutable
 //
