@@ -142,11 +142,8 @@ let rec (extract_mlty :
           FStar_Compiler_Effect.op_Bar_Greater uu___
             (Pulse2Rust_Rust_Syntax.mk_ref_typ is_mut)
       | FStar_Extraction_ML_Syntax.MLTY_Named (arg::[], p) when
-          (let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-           uu___ = "Pulse.Lib.Rust.Slice.slice") ||
-            (let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-             uu___ = "Pulse.Lib.Rust.Array.array")
-          ->
+          let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___ = "Pulse.Lib.Rust.Slice.slice" ->
           let is_mut = true in
           let uu___ =
             let uu___1 =
@@ -491,13 +488,10 @@ and (extract_mlexpr :
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
            e1::i::uu___5::uu___6::[])
           when
-          ((let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-            uu___7 = "Pulse.Lib.Rust.Slice.op_Array_Access") ||
-             (let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-              uu___7 = "Pulse.Lib.Rust.Vec.op_Array_Access"))
-            ||
+          (let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+           uu___7 = "Pulse.Lib.Rust.Slice.op_Array_Access") ||
             (let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-             uu___7 = "Pulse.Lib.Rust.Array.op_Array_Access")
+             uu___7 = "Pulse.Lib.Rust.Vec.op_Array_Access")
           ->
           let uu___7 = extract_mlexpr g e1 in
           let uu___8 = extract_mlexpr g i in
@@ -516,36 +510,16 @@ and (extract_mlexpr :
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
            e1::e2::e3::uu___5::[])
           when
-          ((let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-            uu___6 = "Pulse.Lib.Rust.Slice.op_Array_Assignment") ||
-             (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-              uu___6 = "Pulse.Lib.Rust.Vec.op_Array_Assignment"))
-            ||
+          (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+           uu___6 = "Pulse.Lib.Rust.Slice.op_Array_Assignment") ||
             (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-             uu___6 = "Pulse.Lib.Rust.Array.op_Array_Assignment")
+             uu___6 = "Pulse.Lib.Rust.Vec.op_Array_Assignment")
           ->
           let e11 = extract_mlexpr g e1 in
           let e21 = extract_mlexpr g e2 in
           let e31 = extract_mlexpr g e3 in
           let uu___6 = Pulse2Rust_Rust_Syntax.mk_expr_index e11 e21 in
           Pulse2Rust_Rust_Syntax.mk_assign uu___6 e31
-      | FStar_Extraction_ML_Syntax.MLE_App
-          ({
-             FStar_Extraction_ML_Syntax.expr =
-               FStar_Extraction_ML_Syntax.MLE_TApp
-               ({
-                  FStar_Extraction_ML_Syntax.expr =
-                    FStar_Extraction_ML_Syntax.MLE_Name p;
-                  FStar_Extraction_ML_Syntax.mlty = uu___;
-                  FStar_Extraction_ML_Syntax.loc = uu___1;_},
-                uu___2::[]);
-             FStar_Extraction_ML_Syntax.mlty = uu___3;
-             FStar_Extraction_ML_Syntax.loc = uu___4;_},
-           e1::[])
-          when
-          let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___5 = "Pulse.Lib.Rust.Slice.array_as_slice" ->
-          extract_mlexpr g e1
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
              FStar_Extraction_ML_Syntax.expr =
