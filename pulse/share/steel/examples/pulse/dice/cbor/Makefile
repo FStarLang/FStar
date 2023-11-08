@@ -17,11 +17,15 @@ include $(PULSE_EXAMPLES_ROOT)/Makefile.pulse.common
 
 extract_all: $(ALL_KRML_FILES)
 
+extract_all_ml: $(ALL_ML_FILES)
 
 $(OUTPUT_DIRECTORY)/CDDLExtractionTest.c: extract_all
 	$(KRML) -bundle CBOR.Spec.Constants+CBOR.Pulse.Type+CBOR.Pulse.Extern+CBOR.Pulse=CBOR.*[rename=CBOR,rename-prefix] -bundle CDDLExtractionTest.Assume+CDDLExtractionTest.Bytes+CDDLExtractionTest.BytesUnwrapped+CDDLExtractionTest.Choice=*[rename=CDDLExtractionTest] -skip-compilation $(wildcard _output/*.krml) -tmpdir $(OUTPUT_DIRECTORY)
 
 $(OUTPUT_DIRECTORY)/%.krml:
 	$(FSTAR) --codegen krml $(subst .checked,, $(notdir $<)) --extract_module $(basename $(subst .checked,, $(notdir $<)))
+
+$(OUTPUT_DIRECTORY)/%.ml:
+	$(FSTAR) --codegen OCaml $(subst .checked,, $(notdir $<)) --extract_module $(basename $(subst .checked,, $(notdir $<)))
 
 test: $(OUTPUT_DIRECTORY)/CDDLExtractionTest.c

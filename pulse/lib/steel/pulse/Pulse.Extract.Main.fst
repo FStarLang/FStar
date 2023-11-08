@@ -243,22 +243,18 @@ let maybe_inline (g:env) (head:term) (arg:term) :T.Tac (option st_term) =
         T.print "Ok 2\n";
         let applied_body = LN.subst_st_term body subst in
         T.print "Ok 3\n";
-        None
-        // match rest with
-        // | [] -> 
-        //   T.print "Inlined successfully\n";
-        //   Some applied_body
-        // | _ ->
-        //   T.print "Partial or over-application of inlined Pulse definition is not yet supported\n";
-        //   None
-          // T.fail //(Printf.sprintf 
-            // "Partial or over application of inlined Pulse definition is not yet supported"
-            // %s has %d arguments, but %d were left unapplied"
-            // (T.term_to_string head)
-            // (L.length args)
-            // (L.length rest)
-            // (String.concat ", " (T.map (fun x -> term_to_string (fst x)) rest))
-          // )
+        match rest with
+        | [] -> 
+          T.print "Inlined successfully\n";
+          Some applied_body
+        | _ ->
+          T.fail (Printf.sprintf 
+            "Partial or over application of inlined Pulse definition is not yet supported\n\
+            %s has %d arguments, but %s were left unapplied"
+            (T.term_to_string head)
+            (L.length args)
+            (String.concat ", " (T.map (fun x -> term_to_string (fst x)) rest))
+          )
       )
       | Inr body ->
         assume (not_tv_unknown body);
