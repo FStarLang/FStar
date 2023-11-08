@@ -85,9 +85,6 @@ let rec uncurry_arrow (t:S.mlty) : (list S.mlty & S.mlty) =
 //
 // Most translations are straightforward
 //
-// Array.t is translated to &mut slice in rust
-//   partly because we don't have array length in mltyp
-//
 let rec extract_mlty (g:env) (t:S.mlty) : typ =
   match t with
   | S.MLTY_Var s -> mk_scalar_typ (tyvar_of s)
@@ -110,8 +107,7 @@ let rec extract_mlty (g:env) (t:S.mlty) : typ =
     let is_mut = true in
     arg |> extract_mlty g |> mk_ref_typ is_mut
   | S.MLTY_Named ([arg], p)
-    when S.string_of_mlpath p = "Pulse.Lib.Rust.Slice.slice" ||
-         S.string_of_mlpath p = "Pulse.Lib.Rust.Array.array" ->
+    when S.string_of_mlpath p = "Pulse.Lib.Rust.Slice.slice" ->
     let is_mut = true in
     arg |> extract_mlty g |> mk_slice_typ |> mk_ref_typ is_mut
   | S.MLTY_Named ([arg], p)
@@ -224,8 +220,8 @@ let rec lb_init_and_def (g:env) (lb:S.mllb)
 
     | S.MLE_App ({expr=S.MLE_Name pe}, [init; len]),
       Some ([], S.MLTY_Named ([ty], pt))
-      when S.string_of_mlpath pe = "Pulse.Lib.Rust.Array.alloc" &&
-           S.string_of_mlpath pt = "Pulse.Lib.Rust.Array.array" ->
+      when S.string_of_mlpath pe = "Pulse.Lib.Rust.Slice.alloc" &&
+           S.string_of_mlpath pt = "Pulse.Lib.Rust.Slice.slice" ->
       let init = extract_mlexpr g init in
       let len = extract_mlexpr g len in
       let is_mut = false in
@@ -297,28 +293,18 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
 
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e; i; _; _])
     when S.string_of_mlpath p = "Pulse.Lib.Rust.Slice.op_Array_Access" ||
-         S.string_of_mlpath p = "Pulse.Lib.Rust.Vec.op_Array_Access" ||
-         S.string_of_mlpath p = "Pulse.Lib.Rust.Array.op_Array_Access" ->
+         S.string_of_mlpath p = "Pulse.Lib.Rust.Vec.op_Array_Access"  ->
 
     mk_expr_index (extract_mlexpr g e) (extract_mlexpr g i)
 
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2; e3; _])
     when S.string_of_mlpath p = "Pulse.Lib.Rust.Slice.op_Array_Assignment" ||
-         S.string_of_mlpath p = "Pulse.Lib.Rust.Vec.op_Array_Assignment" ||
-         S.string_of_mlpath p = "Pulse.Lib.Rust.Array.op_Array_Assignment" ->
+         S.string_of_mlpath p = "Pulse.Lib.Rust.Vec.op_Array_Assignment" ->
 
     let e1 = extract_mlexpr g e1 in
     let e2 = extract_mlexpr g e2 in
     let e3 = extract_mlexpr g e3 in
     mk_assign (mk_expr_index e1 e2) e3
-
-    //
-    // array_as_slice is an identity coercion in rust,
-    //   since arrays are also extracted as slices
-    //
-  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e])
-    when S.string_of_mlpath p = "Pulse.Lib.Rust.Slice.array_as_slice" ->
-    extract_mlexpr g e
 
     //
     // vec_as_slice e extracted to &mut e

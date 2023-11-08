@@ -1848,11 +1848,11 @@ let (full_perm_tm : FStar_Reflection_Types.term) =
     (FStar_Reflection_V2_Data.Tv_FVar
        (FStar_Reflection_V2_Builtins.pack_fv full_perm_lid))
 let (pulse_lib_array_core : Prims.string Prims.list) =
-  ["Pulse"; "Lib"; "Rust"; "Array"]
+  ["Pulse"; "Lib"; "Rust"; "Slice"]
 let (mk_pulse_lib_array_core_lid : Prims.string -> Prims.string Prims.list) =
   fun s -> FStar_List_Tot_Base.op_At pulse_lib_array_core [s]
 let (array_lid : Prims.string Prims.list) =
-  mk_pulse_lib_array_core_lid "array"
+  mk_pulse_lib_array_core_lid "slice"
 let (array_pts_to_lid : Prims.string Prims.list) =
   mk_pulse_lib_array_core_lid "pts_to"
 let (array_length_lid : Prims.string Prims.list) =

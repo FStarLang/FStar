@@ -9,7 +9,6 @@ module SZ = FStar.SizeT
 module T = FStar.Tactics.V2
 
 module V = Pulse.Lib.Rust.Vec
-module A = Pulse.Lib.Rust.Array
 
 val slice ([@@@strictly_positive] a:Type0) : Type0
 
@@ -58,15 +57,3 @@ val vec_to_slice_pts_to (#a:Type0) (x:V.vec a) (#s:Seq.seq a)
   : stt_ghost unit emp_inames
       (requires V.pts_to x s)
       (ensures fun _ -> pts_to (vec_as_slice x) s)
-
-val array_as_slice (#a:Type0) (x:A.array a) : slice a
-
-val to_array_pts_to (#a:Type0) (x:A.array a) (#s:Seq.seq a)
-  : stt_ghost unit emp_inames
-      (requires pts_to (array_as_slice x) s)
-      (ensures fun _ -> A.pts_to x s)
-
-val array_to_slice_pts_to (#a:Type0) (x:A.array a) (#s:Seq.seq a)
-  : stt_ghost unit emp_inames
-      (requires A.pts_to x s)
-      (ensures fun _ -> pts_to (array_as_slice x) s)

@@ -315,9 +315,9 @@ let rec (lb_init_and_def :
            FStar_Pervasives_Native.Some
            ([], FStar_Extraction_ML_Syntax.MLTY_Named (ty::[], pt))) when
             (let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath pe in
-             uu___2 = "Pulse.Lib.Rust.Array.alloc") &&
+             uu___2 = "Pulse.Lib.Rust.Slice.alloc") &&
               (let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath pt in
-               uu___2 = "Pulse.Lib.Rust.Array.array")
+               uu___2 = "Pulse.Lib.Rust.Slice.slice")
             ->
             let init1 = extract_mlexpr g init in
             let len1 = extract_mlexpr g len in
