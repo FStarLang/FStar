@@ -374,4 +374,5 @@ let default_settings : list error_setting =
     Warning_UnexpectedZ3Stderr                        , CWarning, 356;
     Warning_SolverMismatch                            , CError, 357;
     Warning_SolverVersionMismatch                     , CError, 358;
+    Warning_ProofRecovery                             , CWarning, 359;
     ]

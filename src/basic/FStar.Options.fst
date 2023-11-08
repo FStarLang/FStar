@@ -217,6 +217,7 @@ let defaults =
       ("print_universes"              , Bool false);
       ("print_z3_statistics"          , Bool false);
       ("prn"                          , Bool false);
+      ("proof_recovery"               , Bool false);
       ("quake"                        , Int 0);
       ("quake_lo"                     , Int 1);
       ("quake_hi"                     , Int 1);
@@ -403,6 +404,7 @@ let get_print_implicits         ()      = lookup_opt "print_implicits"          
 let get_print_universes         ()      = lookup_opt "print_universes"          as_bool
 let get_print_z3_statistics     ()      = lookup_opt "print_z3_statistics"      as_bool
 let get_prn                     ()      = lookup_opt "prn"                      as_bool
+let get_proof_recovery          ()      = lookup_opt "proof_recovery"           as_bool
 let get_quake_lo                ()      = lookup_opt "quake_lo"                 as_int
 let get_quake_hi                ()      = lookup_opt "quake_hi"                 as_int
 let get_quake_keep              ()      = lookup_opt "quake_keep"               as_bool
@@ -1039,6 +1041,14 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * string) 
         "prn",
         Const (Bool true),
         "Print full names (deprecated; use --print_full_names instead)");
+
+       ( noshort,
+        "proof_recovery",
+        Const (Bool true),
+        "Proof recovery mode: before failing an SMT query, retry 3 times, increasing rlimits.\n\
+         If the query goes through after retrying, verification will succeed, but a warning will be emitted.\n\
+         This feature is useful to restore a project after some change to its libraries or F* upgrade.\n\
+         Importantly, then, this option cannot be used in a pragma (#set-options, etc).");
 
        ( noshort,
         "quake",
@@ -1814,6 +1824,7 @@ let print_implicits              () = get_print_implicits             ()
 let print_real_names             () = get_prn () || get_print_full_names()
 let print_universes              () = get_print_universes             ()
 let print_z3_statistics          () = get_print_z3_statistics         ()
+let proof_recovery               () = get_proof_recovery              ()
 let quake_lo                     () = get_quake_lo                    ()
 let quake_hi                     () = get_quake_hi                    ()
 let quake_keep                   () = get_quake_keep                  ()
