@@ -14,6 +14,11 @@ module S = FStar.Extraction.ML.Syntax
 module UEnv = FStar.Extraction.ML.UEnv
 
 type var = string
+//
+// We keep the is_mut flag in the binding in gamma
+// We use it to extract !x in pulse to x in rust
+//   for a mutable local x
+//
 type binding = var & typ & bool // name, type, is_mut
 
 type env = {
@@ -52,6 +57,12 @@ let push_fv (g:env) (s:string) (t:fn_signature) : env =
 let push_local (g:env) (s:string) (t:typ) (is_mut:bool) : env =
   { g with gamma = (s, t, is_mut)::g.gamma }
 
+//
+// A very shallow type checker for rust ast terms
+// For now this is used only for variables,
+//   to see whether a variable is mut
+// Later, this may be used to insert coercions (e.g., &)
+//
 let type_of (g:env) (e:expr) : typ & bool =  // is_mut
   match e with
   | Expr_path s ->
@@ -61,6 +72,9 @@ let type_of (g:env) (e:expr) : typ & bool =  // is_mut
 
   | _ -> fail_nyi (format1 "type_of %s" (expr_to_string e))
 
+//
+// rust functions are uncurried
+//
 let rec uncurry_arrow (t:S.mlty) : (list S.mlty & S.mlty) =
   match t with
   | S.MLTY_Fun (t1, _, t2) ->
@@ -68,6 +82,12 @@ let rec uncurry_arrow (t:S.mlty) : (list S.mlty & S.mlty) =
     t1::arg_ts, ret_t
   | _ -> ([], t)
 
+//
+// Most translations are straightforward
+//
+// Array.t is translated to &mut slice in rust
+//   partly because we don't have array length in mltyp
+//
 let rec extract_mlty (g:env) (t:S.mlty) : typ =
   match t with
   | S.MLTY_Var s -> mk_scalar_typ (tyvar_of s)
@@ -109,6 +129,12 @@ let push_fn_arg (g:env) (arg_name:string) (arg:fn_arg) : env =
     let is_mut = false in
     push_local g arg_name pat_typ_typ false
 
+//
+// Top level function signature extraction
+//
+// The returned env is for extracting the body
+//   with function parameters in scope
+//
 let extract_top_level_sig
   (g:env)
   (fn_name:string)
@@ -125,7 +151,10 @@ let extract_top_level_sig
   mk_fn_signature fn_name tvars fn_args fn_ret_t,
   fold_left (fun g (arg_name, arg) -> push_fn_arg g arg_name arg) g (zip arg_names fn_args)
 
-let arg_ts_and_ret_t (t:S.mltyscheme) : S.mlidents & list S.mlty & S.mlty =
+let arg_ts_and_ret_t (t:S.mltyscheme)
+  : S.mlidents &   // type parameters
+    list S.mlty &  // function argument types (after uncurrying the input type)
+    S.mlty =       // function return type
   let tvars, t = t in
   match t with
   | S.MLTY_Fun (_, S.E_PURE, _)
@@ -134,6 +163,9 @@ let arg_ts_and_ret_t (t:S.mltyscheme) : S.mlidents & list S.mlty & S.mlty =
     tvars, arg_ts, ret_t
   | _ -> fail_nyi (format1 "top level arg_ts and ret_t %s" (S.mlty_to_string t))
 
+//
+// TODO: add machine integers binops?
+//
 let is_binop (s:string) : option binop =
   if s = "Prims.op_Addition"
   then Some Add
@@ -153,8 +185,28 @@ let is_binop (s:string) : option binop =
   then Some Eq
   else None
 
+//
+// Given an mllb,
+//   compute the rust let binding mut flag, typ, and initializer
+//
+// If the mllb has Mutable flag, this means either a Tm_WithLocal or Tm_WithLocalArray in pulse
+//
+// Tm_WithLocal in pulse looks like (in mllb): let x : ref t = alloc e, where e : t
+// So we return true, extract t, extract e
+//
+// Tm_WithLocalArray in pulse looks like (in mllb): let x : array t = alloc init len
+// So we return false, extract (array t), mk_mutable_ref (repeat (extract init) (extract len))
+// Basically, a local array in pulse becomes a mutable reference to a slice in rust
+// Note that the let binding itself is immutable, but the slice is mutable
+//
+// If the mllb does not have Mutable flag, but the initializer is Vec::alloc,
+//   we extract it as: let mut x = std::vec::new(...)
+// So we return true, extract (vec t), extract (Vec::alloc (...))
+//
+// When we introduce Box, it will follow a similar path as Vec
+//
 let rec lb_init_and_def (g:env) (lb:S.mllb)
-  : bool &       // is_mut
+  : bool &       // whether the let binding in rust should be mut
     typ &        // type of the let binder
     expr =       // init expression
   
@@ -194,6 +246,12 @@ let rec lb_init_and_def (g:env) (lb:S.mllb)
     lb.mllb_tysc |> must |> snd |> extract_mlty g,
     extract_mlexpr g lb.mllb_def
 
+//
+// We have two mutually recursive functions:
+//   extract_mlexpr and extract_mlexpr_to_stmts
+// The top-level starts with the latter
+// Nested let bindings are extracted as block expressions in rust
+//
 and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
   match e.expr with
   | S.MLE_Const (S.MLC_Unit) -> Expr_path "unitv"
@@ -218,7 +276,10 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
 
   | S.MLE_Var x -> Expr_path (varname x)
   | S.MLE_Name p -> Expr_path (snd p)
+
+    // nested let binding
   | S.MLE_Let _ -> e |> extract_mlexpr_to_stmts g |> mk_block_expr
+
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2; _])
     when S.string_of_mlpath p = "Pulse.Lib.Reference.op_Colon_Equals" ->
     let e1 = extract_mlexpr g e1 in
@@ -233,27 +294,44 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     let _, b = type_of g e in
     if b then e
     else mk_ref_read e
+
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e; i; _; _])
     when S.string_of_mlpath p = "Pulse.Lib.Rust.Slice.op_Array_Access" ||
          S.string_of_mlpath p = "Pulse.Lib.Rust.Vec.op_Array_Access" ||
          S.string_of_mlpath p = "Pulse.Lib.Rust.Array.op_Array_Access" ->
+
     mk_expr_index (extract_mlexpr g e) (extract_mlexpr g i)
+
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2; e3; _])
     when S.string_of_mlpath p = "Pulse.Lib.Rust.Slice.op_Array_Assignment" ||
          S.string_of_mlpath p = "Pulse.Lib.Rust.Vec.op_Array_Assignment" ||
          S.string_of_mlpath p = "Pulse.Lib.Rust.Array.op_Array_Assignment" ->
+
     let e1 = extract_mlexpr g e1 in
     let e2 = extract_mlexpr g e2 in
     let e3 = extract_mlexpr g e3 in
     mk_assign (mk_expr_index e1 e2) e3
+
+    //
+    // array_as_slice is an identity coercion in rust,
+    //   since arrays are also extracted as slices
+    //
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e])
     when S.string_of_mlpath p = "Pulse.Lib.Rust.Slice.array_as_slice" ->
     extract_mlexpr g e
+
+    //
+    // vec_as_slice e extracted to &mut e
+    //
+    // We need to figure out permissions
+    //
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e])
     when S.string_of_mlpath p = "Pulse.Lib.Rust.Slice.vec_as_slice" ->
+
     let e = extract_mlexpr g e in
     let is_mut = true in
     mk_reference_expr is_mut e
+
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2])
     when S.string_of_mlpath p = "Pulse.Lib.Rust.Vec.alloc" ->
     let e1 = extract_mlexpr g e1 in
