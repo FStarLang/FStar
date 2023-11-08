@@ -518,3 +518,87 @@ let checker_result_for_st_typing (#g:env) (#ctxt:vprop) (#post_hint:post_hint_op
   assume (~ (x `Set.mem` freevars (comp_post c)));
   (| x, g', (| comp_u c, comp_res c, magic () |), (| ctxt', f x |), k |)
 #pop-options
+
+module R = FStar.Reflection.V2
+
+let readback_comp_res_as_comp (c:R.comp) : option comp =
+  match R.inspect_comp c with
+  | R.C_Total t -> (
+    match readback_comp t with
+    | None -> None
+    | Some c -> Some c
+  )
+  | _ -> None
+
+let rec is_stateful_arrow (c:option comp) (args:list T.argv) (out:list T.argv)
+  : T.Tac (option (list T.argv & T.argv))
+  = let open R in
+    match c with
+    | None -> None
+    | Some (C_ST _)
+    | Some (C_STGhost _ _)
+    | Some (C_STAtomic _ _) -> (
+      match args, out with
+      | [], hd::tl -> Some (List.rev tl, hd)
+      | _ -> None //leftover or not enough args
+    )
+
+    | Some (C_Tot c_res) -> (
+      if not (Tm_FStar? c_res.t)
+      then None
+      else (
+        let Tm_FStar c_res = c_res.t in
+        let ht = R.inspect_ln c_res in
+        match ht with
+        | R.Tv_Arrow b c -> (
+          match args with
+          | [] -> ( //no more args; check that only implicits remain, ending in an stateful comp  
+            let bs, c = T.collect_arr_ln_bs c_res in
+            if List.Tot.for_all (fun b -> R.Q_Implicit? (R.inspect_binder b).qual) bs
+            then is_stateful_arrow (readback_comp_res_as_comp c) [] out
+            else None //too few args    
+          )
+
+          | (arg, qual)::args' -> ( //check that this arg qual matches the binder and recurse accordingly
+            let b = R.inspect_binder b in
+            match b.qual, qual with
+            | T.Q_Implicit, T.Q_Implicit 
+            | T.Q_Explicit, T.Q_Explicit ->  //consume this argument
+              is_stateful_arrow (readback_comp_res_as_comp c) args' ((arg, qual)::out)
+
+            | T.Q_Implicit, T.Q_Explicit -> 
+              //don't consume this argument
+              is_stateful_arrow (readback_comp_res_as_comp c) args out
+
+            | _ -> None //incompatible qualifiers; bail
+          )
+        )
+        | _ -> None
+      )
+    )
+  
+let is_stateful_application (g:env) (e:term) 
+  : T.Tac (option st_term)
+  = match e.t with
+    | Tm_FStar host_term -> (
+      let head, args = T.collect_app_ln host_term in
+      assume (not_tv_unknown head);
+      let (| head_t, _ |) = Pulse.Checker.Pure.core_check_tot_term g (tm_fstar head (T.range_of_term head)) in
+      match is_stateful_arrow (Some (C_Tot head_t)) args [] with 
+      | None -> None
+      | Some (applied_args, (last_arg, aqual))->
+        let head = T.mk_app head applied_args in
+        assume (not_tv_unknown head);
+        let head = tm_fstar head (T.range_of_term head) in
+        assume (not_tv_unknown last_arg);
+        let last_arg = tm_fstar last_arg (T.range_of_term last_arg) in
+        let qual = 
+          match aqual with
+          | T.Q_Implicit -> Some Implicit
+          | _ -> None
+        in
+        let st_app = Tm_STApp { head; arg=last_arg; arg_qual=qual} in
+        let st_app = { term = st_app; range=e.range; effect_tag=default_effect_hint } in
+        Some st_app
+    )
+    | _ -> None

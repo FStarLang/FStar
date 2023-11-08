@@ -142,3 +142,6 @@ val checker_result_for_st_typing (#g:env) (#ctxt:vprop) (#post_hint:post_hint_op
   (d:st_typing_in_ctxt g ctxt post_hint)
   (ppname:ppname)
   : T.Tac (checker_result_t g ctxt post_hint)
+
+val is_stateful_application (g:env) (e:term) 
+  : T.Tac (option st_term)

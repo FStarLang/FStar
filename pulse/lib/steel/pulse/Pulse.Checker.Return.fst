@@ -70,11 +70,20 @@ let check
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (st:st_term { Tm_Return? st.term })
+  (check:check_t)
   : T.Tac (checker_result_t g ctxt post_hint)
-  = match post_hint, st.term with
-    | Some { ctag_hint = Some ct }, Tm_Return f ->
-      if ct = f.ctag
-      then check_core g ctxt ctxt_typing post_hint res_ppname st
-      else let st = { st with term = Tm_Return { f with ctag=ct }} in
-           check_core g ctxt ctxt_typing post_hint res_ppname st
-    | _ ->  check_core g ctxt ctxt_typing post_hint res_ppname st
+  = let Tm_Return f = st.term in
+    match Pulse.Checker.Base.is_stateful_application g f.term with
+    | Some st_app ->
+      check g ctxt ctxt_typing post_hint res_ppname st_app
+    
+    | None -> (
+      match post_hint with
+      | Some { ctag_hint = Some ct } -> (
+        if ct = f.ctag
+        then check_core g ctxt ctxt_typing post_hint res_ppname st
+        else let st = { st with term = Tm_Return { f with ctag=ct }} in
+             check_core g ctxt ctxt_typing post_hint res_ppname st
+      )
+      | _ ->  check_core g ctxt ctxt_typing post_hint res_ppname st
+    )
