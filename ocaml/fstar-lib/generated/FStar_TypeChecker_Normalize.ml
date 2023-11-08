@@ -1823,7 +1823,8 @@ let get_norm_request :
                 FStar_Syntax_Syntax.delta_constant;
               FStar_TypeChecker_Env.Reify] in
             FStar_Pervasives_Native.Some
-              ((FStar_Compiler_List.op_At inherited_steps s), tm)
+              ((FStar_Compiler_List.op_At (FStar_TypeChecker_Env.UnfoldTac ::
+                  inherited_steps) s), tm)
         | (tm, uu___)::[] ->
             let s =
               [FStar_TypeChecker_Env.Beta;
@@ -1834,14 +1835,17 @@ let get_norm_request :
                 FStar_Syntax_Syntax.delta_constant;
               FStar_TypeChecker_Env.Reify] in
             FStar_Pervasives_Native.Some
-              ((FStar_Compiler_List.op_At inherited_steps s), tm)
+              ((FStar_Compiler_List.op_At (FStar_TypeChecker_Env.UnfoldTac ::
+                  inherited_steps) s), tm)
         | (steps, uu___)::uu___1::(tm, uu___2)::[] ->
             let uu___3 = let uu___4 = full_norm steps in parse_steps uu___4 in
             (match uu___3 with
              | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
              | FStar_Pervasives_Native.Some s ->
                  FStar_Pervasives_Native.Some
-                   ((FStar_Compiler_List.op_At inherited_steps s), tm))
+                   ((FStar_Compiler_List.op_At
+                       (FStar_TypeChecker_Env.UnfoldTac :: inherited_steps) s),
+                     tm))
         | uu___ -> FStar_Pervasives_Native.None
 let (nbe_eval :
   FStar_TypeChecker_Cfg.cfg ->
@@ -2106,18 +2110,6 @@ let (should_unfold :
                         (fun uu___15 ->
                            FStar_Compiler_Util.print_string
                              " >> HasMaskedEffect, not unfolding\n");
-                      no)
-                 | (uu___, uu___1, uu___2, uu___3, uu___4, uu___5) when
-                     (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_tac
-                       &&
-                       (FStar_Compiler_Util.for_some
-                          (FStar_Syntax_Util.attr_eq
-                             FStar_Syntax_Util.tac_opaque_attr) attrs)
-                     ->
-                     (FStar_TypeChecker_Cfg.log_unfolding cfg
-                        (fun uu___7 ->
-                           FStar_Compiler_Util.print_string
-                             " >> tac_opaque, not unfolding\n");
                       no)
                  | (FStar_Pervasives_Native.Some
                     (FStar_Pervasives.Inr
@@ -2682,6 +2674,18 @@ let (should_unfold :
                            uu___8 :: uu___9 in
                          comb_or uu___7 in
                        meets_some_criterion))
+                 | (uu___, uu___1, uu___2, uu___3, uu___4, uu___5) when
+                     (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_tac
+                       &&
+                       (FStar_Compiler_Util.for_some
+                          (FStar_Syntax_Util.attr_eq
+                             FStar_Syntax_Util.tac_opaque_attr) attrs)
+                     ->
+                     (FStar_TypeChecker_Cfg.log_unfolding cfg
+                        (fun uu___7 ->
+                           FStar_Compiler_Util.print_string
+                             " >> tac_opaque, not unfolding\n");
+                      no)
                  | uu___ -> default_unfolding ()) in
           FStar_TypeChecker_Cfg.log_unfolding cfg
             (fun uu___1 ->
