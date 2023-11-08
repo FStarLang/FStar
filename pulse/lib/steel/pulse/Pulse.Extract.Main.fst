@@ -132,17 +132,30 @@ let term_eq_string (s:string) (t:R.term) : bool =
   | R.Tv_Const (R.C_String s') -> s=s'
   | _ -> false
 
-let maybe_unfold_head (g:env) (f:R.term) 
-  : option st_term
-  = match R.inspect_ln f with
+let maybe_unfold_head (g:env) (head:R.term) 
+  : T.Tac (option (either st_term R.term))
+  = debug g (fun _ -> Printf.sprintf "Maybe unfolding head %s\n" (T.term_to_string head));
+    match R.inspect_ln head with
     | R.Tv_FVar f -> (
       let name = R.inspect_fv f in
       match R.lookup_typ (topenv_of_env g) name with
       | None -> None
       | Some se ->
         let attrs = R.sigelt_attrs se in
+        let quals = R.sigelt_quals se in
         if List.Tot.existsb (term_eq_string "inline") attrs
-        then sigelt_extension_data se
+        || List.Tot.existsb (function | R.Inline_for_extraction -> true | _ -> false) quals
+        then match sigelt_extension_data se with
+             | Some se ->
+               T.print (Printf.sprintf "Unfolded head %s\n"  (T.term_to_string head));
+               T.print (Printf.sprintf "to %s\n"  (st_term_to_string se));
+               Some (Inl se)
+             | None -> (
+                match T.inspect_sigelt se with
+                | T.Sg_Let { isrec=false; lbs = [ { lb_us=[]; lb_def }] } ->
+                  Some (Inr lb_def)
+                | _ -> None
+             )
         else None
     )
     | R.Tv_UInst f _ ->
@@ -150,39 +163,141 @@ let maybe_unfold_head (g:env) (f:R.term)
       None
     | _ -> None
 
-let rec abs_body (n_args:nat) (t:st_term) =
-  if n_args = 0 then Some t
-  else (
-    match t.term with 
-    | Tm_Abs { body } -> abs_body (n_args - 1) body
-    | _ -> None
-  )
+let rec st_term_abs_take_n_args (n_args:nat) (t:st_term)
+  : res:(st_term & nat){snd res <= n_args}
+  = if n_args = 0 then t, 0
+    else (
+      match t.term with 
+      | Tm_Abs { body } -> st_term_abs_take_n_args (n_args - 1) body
+      | _ -> (t, n_args)
+    )
 
+let rec term_abs_take_n_args (n_args:nat) (t:R.term)
+  : res:(R.term & nat){snd res <= n_args}
+  = if n_args = 0 then t, 0
+    else (
+      match R.inspect_ln t with 
+      | R.Tv_Abs _ body -> term_abs_take_n_args (n_args - 1) body
+      | _ -> (t, n_args)
+    )
 
-let maybe_inline (g:env) (head:term) (arg:term) : option st_term =
+let abs_take_n_args (n_args:nat) (t:either st_term R.term)
+  : T.Tac (res:(either st_term R.term & nat){snd res <= n_args}) 
+  = match t with
+    | Inl t -> 
+      let t, n_args = st_term_abs_take_n_args n_args t in
+      Inl t, n_args
+    | Inr t ->
+      let t, n_args = term_abs_take_n_args n_args t in
+      Inr t, n_args
+
+let rec unascribe (t:R.term) : T.Tac R.term =
+  match R.inspect_ln t with
+  | R.Tv_AscribedT e _ _ _ -> unascribe e
+  | R.Tv_AscribedC e _ _ _ -> unascribe e
+  | _ -> t
+
+let maybe_inline (g:env) (head:term) (arg:term) :T.Tac (option st_term) =
+  debug g (fun _ -> Printf.sprintf "Considering inlining %s\n"
+                      (term_to_string head));
   match head_and_args head with
   | None -> None
   | Some (head, args) ->
+    debug g (fun _ -> Printf.sprintf "head=%s with %d args\n"
+                      (T.term_to_string head)
+                      (List.length args));
     match maybe_unfold_head g head with
-    | None -> None
-    | Some body ->
-      let args =
-        L.map #R.argv (fun (t, _) -> assume (not_tv_unknown t); tm_fstar t Range.range_0) args
-        @ [arg]
+    | None -> 
+      debug g (fun _ -> Printf.sprintf "No unfolding of %s\n"
+                            (T.term_to_string head));
+      None
+
+    | Some def ->
+      // debug g (fun _ -> Printf.sprintf "Unfolded %s to body %s\n"
+      //                       (T.term_to_string head)
+      //                       (st_term_to_string body));
+      let as_term (a:R.term) = assume (not_tv_unknown a); tm_fstar a Range.range_0 in
+      let all_args : list (term & option qualifier) =
+        L.map #R.argv
+              (fun (t, q) -> 
+                let t = as_term t in
+                let qual = if R.Q_Implicit? q then Some Implicit else None in
+                t, qual)
+              args
+        @ [arg, None]
       in
-      let n_args = L.length args in
-      match abs_body n_args body with
-      | None -> None
-      | Some body ->
-        let _, subst = 
+      let n_args = L.length all_args in
+      let body, remaining_args = abs_take_n_args n_args def in
+      let args, rest = L.splitAt (n_args - remaining_args) all_args in
+      let _, subst =
           L.fold_right
             (fun arg (i, subst) ->
               i + 1,
-              LN.DT i arg::subst)
+              LN.DT i (fst arg)::subst)
             args
             (0, [])
+      in
+      T.print "Ok 1\n";
+      match body with
+      | Inl body -> (
+        T.print "Ok 2\n";
+        let applied_body = LN.subst_st_term body subst in
+        T.print "Ok 3\n";
+        None
+        // match rest with
+        // | [] -> 
+        //   T.print "Inlined successfully\n";
+        //   Some applied_body
+        // | _ ->
+        //   T.print "Partial or over-application of inlined Pulse definition is not yet supported\n";
+        //   None
+          // T.fail //(Printf.sprintf 
+            // "Partial or over application of inlined Pulse definition is not yet supported"
+            // %s has %d arguments, but %d were left unapplied"
+            // (T.term_to_string head)
+            // (L.length args)
+            // (L.length rest)
+            // (String.concat ", " (T.map (fun x -> term_to_string (fst x)) rest))
+          // )
+      )
+      | Inr body ->
+        assume (not_tv_unknown body);
+        let applied_body = unascribe (LN.subst_host_term body subst) in
+        let mk_st_app (head:R.term) (arg:term) (arg_qual:option qualifier) =
+          assume (not_tv_unknown head);
+          let head = tm_fstar head (T.range_of_term head) in
+          let tm = Tm_STApp { head; arg_qual; arg } in 
+          Some { term = tm; range=FStar.Range.range_0; effect_tag=default_effect_hint }
         in
-        Some (LN.subst_st_term body subst)
+        match rest with
+        | [] -> (
+          match R.inspect_ln applied_body with
+          | R.Tv_App head (arg, aqual) ->
+            assume (not_tv_unknown arg);
+            let arg = tm_fstar arg (T.range_of_term arg) in
+            let arg_qual = if R.Q_Implicit? aqual then Some Implicit else None in
+            mk_st_app head arg arg_qual
+          | _ ->
+            T.fail 
+              (Printf.sprintf "Cannot inline F* definitions of stt terms whose body is not an application; got %s"
+                (T.term_to_string applied_body))
+        )
+        | rest ->
+          FStar.List.Tot.lemma_splitAt_snd_length (L.length rest - 1) rest;
+          let rest, [last] = L.splitAt (L.length rest - 1) rest in
+          let head = 
+            L.fold_left 
+              (fun head (tm, qual) ->
+                R.pack_ln (
+                  R.Tv_App head (Pulse.Elaborate.Pure.elab_term tm, (if Some? qual then R.Q_Implicit else R.Q_Explicit))
+                ))
+              applied_body
+              rest
+          in
+          mk_st_app head (fst last) (snd last)
+        
+
+
 
 let rec extract (g:env) (p:st_term)
   : T.Tac (mlexpr & e_tag)
@@ -217,7 +332,9 @@ let rec extract (g:env) (p:st_term)
           let head = term_as_mlexpr g head in
           let arg = term_as_mlexpr g arg in
           mle_app head [arg], e_tag_impure
-        | Some t -> extract g t
+        | Some t ->
+          debug g (fun _ -> Printf.sprintf "Inlined to: %s\n" (st_term_to_string t));
+          extract g t
       )
 
       | Tm_Bind { binder; head; body } ->

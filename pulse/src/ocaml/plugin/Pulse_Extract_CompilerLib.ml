@@ -135,7 +135,7 @@ let mlexpr_to_string (e:mlexpr) = FStar_Extraction_ML_Syntax.mlexpr_to_string e
 let sigelt_extension_data (e:S.sigelt) : Pulse_Syntax_Base.st_term option =
   match FStar_Compiler_List.tryFind (fun (s, _) -> s = "pulse") e.sigmeta.sigmeta_extension_data with
   | None -> None
-  | Some (_, b) -> Some (Obj.magic b)
+  | Some (_, b) -> Some (Obj.magic (Pulse_RuntimeUtils.unembed_st_term_for_extraction (Obj.magic b)))
 
 type mlmodule1= ML.mlmodule1
 type mlmodule = ML.mlmodule
