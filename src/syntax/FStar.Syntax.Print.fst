@@ -153,8 +153,35 @@ let quals_to_string' quals =
     | [] -> ""
     | _ -> quals_to_string quals ^ " "
 
-
 let paren s = "(" ^ s ^ ")"
+
+let rec emb_typ_to_string = function
+    | ET_abstract -> "abstract"
+    | ET_app (h, []) -> h
+    | ET_app(h, args) -> "(" ^h^ " " ^ (List.map emb_typ_to_string args |> String.concat " ")  ^")"
+    | ET_fun(a, b) -> "(" ^ emb_typ_to_string a ^ ") -> " ^ emb_typ_to_string b
+
+let lkind_to_string = function
+  | BadLazy -> "BadLazy"
+  | Lazy_bv -> "Lazy_bv"
+  | Lazy_namedv -> "Lazy_namedv"
+  | Lazy_binder -> "Lazy_binder"
+  | Lazy_optionstate -> "Lazy_optionstate"
+  | Lazy_fvar -> "Lazy_fvar"
+  | Lazy_comp -> "Lazy_comp"
+  | Lazy_env -> "Lazy_env"
+  | Lazy_proofstate -> "Lazy_proofstate"
+  | Lazy_goal -> "Lazy_goal"
+  | Lazy_sigelt -> "Lazy_sigelt"
+  | Lazy_uvar -> "Lazy_uvar"
+  | Lazy_letbinding -> "Lazy_letbinding"
+  | Lazy_embedding (e, _) -> "Lazy_embedding(" ^ emb_typ_to_string e ^ ")"
+  | Lazy_universe -> "Lazy_universe"
+  | Lazy_universe_uvar -> "Lazy_universe_uvar"
+  | Lazy_issue -> "Lazy_issue"
+  | Lazy_ident -> "Lazy_ident"
+  | Lazy_doc -> "Lazy_doc"
+  | Lazy_extension s -> "Lazy_extension:" ^ s
 
 (* This function prints the type it gets as argument verbatim.
    For already type-checked types use the typ_norm_to_string
@@ -181,7 +208,7 @@ let rec tag_of_term (t:term) = match t.n with
   | Tm_delayed _ -> "Tm_delayed"
   | Tm_meta {meta=m} -> "Tm_meta:" ^ metadata_to_string m
   | Tm_unknown -> "Tm_unknown"
-  | Tm_lazy _ -> "Tm_lazy"
+  | Tm_lazy li -> "Tm_lazy(" ^ lkind_to_string li.lkind ^ ")"
 
 and term_to_string x =
   if not (Options.ugly()) then
@@ -921,12 +948,6 @@ let bvs_to_string sep bvs = binders_to_string sep (List.map mk_binder bvs)
 let ctx_uvar_to_string ctx_uvar = ctx_uvar_to_string_aux true ctx_uvar
 
 let ctx_uvar_to_string_no_reason ctx_uvar = ctx_uvar_to_string_aux false ctx_uvar
-
-let rec emb_typ_to_string = function
-    | ET_abstract -> "abstract"
-    | ET_app (h, []) -> h
-    | ET_app(h, args) -> "(" ^h^ " " ^ (List.map emb_typ_to_string args |> String.concat " ")  ^")"
-    | ET_fun(a, b) -> "(" ^ emb_typ_to_string a ^ ") -> " ^ emb_typ_to_string b
 
 let fv_qual_to_string fvq =
   match fvq with
