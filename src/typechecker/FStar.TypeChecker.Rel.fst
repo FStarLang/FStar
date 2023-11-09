@@ -648,9 +648,13 @@ let whnf env t =
 
   Profiling.profile
     (fun () ->
-      if should_strongly_reduce t
-      then norm [Env.Beta; Env.Reify; Env.Exclude Env.Zeta; Env.UnfoldUntil delta_constant] t
-      else norm [Env.Beta; Env.Reify; Env.Weak; Env.HNF] (U.unmeta t))
+      let steps =
+        (if should_strongly_reduce t
+          then [Env.Exclude Env.Zeta; Env.UnfoldUntil delta_constant]
+          else [Env.Weak; Env.HNF]) // GM: an explanation of this bit would be good, I just retained it
+        @ [Env.Beta; Env.Reify; Env.Primops]
+      in
+      norm steps t)
     (Some (Ident.string_of_lid (Env.current_module env)))
     "FStar.TypeChecker.Rel.whnf"
 
@@ -1381,9 +1385,9 @@ let head_matches_delta env smt_ok t1 t2 : (match_result & option (typ&typ)) =
           let d1_greater_than_d2 = Common.delta_depth_greater_than d1 d2 in
           let t1, t2, made_progress =
             if d1_greater_than_d2
-            then let t1' = normalize_refinement [Env.UnfoldUntil d2; Env.Weak; Env.HNF] env t1 in
+            then let t1' = normalize_refinement [Env.UnfoldUntil d2; Env.Primops; Env.Weak; Env.HNF] env t1 in
                  t1', t2, made_progress t1 t1'
-            else let t2' = normalize_refinement [Env.UnfoldUntil d1; Env.Weak; Env.HNF] env t2 in
+            else let t2' = normalize_refinement [Env.UnfoldUntil d1; Env.Primops; Env.Weak; Env.HNF] env t2 in
                  t1, t2', made_progress t2 t2' in
           if made_progress
           then aux retry (n_delta + 1) t1 t2
@@ -1394,8 +1398,8 @@ let head_matches_delta env smt_ok t1 t2 : (match_result & option (typ&typ)) =
           match Common.decr_delta_depth d with
           | None -> fail n_delta r t1 t2
           | Some d ->
-            let t1' = normalize_refinement [Env.UnfoldUntil d; Env.Weak; Env.HNF] env t1 in
-            let t2' = normalize_refinement [Env.UnfoldUntil d; Env.Weak; Env.HNF] env t2 in
+            let t1' = normalize_refinement [Env.UnfoldUntil d; Env.Primops; Env.Weak; Env.HNF] env t1 in
+            let t2' = normalize_refinement [Env.UnfoldUntil d; Env.Primops; Env.Weak; Env.HNF] env t2 in
             if made_progress t1 t1' &&
                made_progress t2 t2'
             then aux retry (n_delta + 1) t1' t2'
