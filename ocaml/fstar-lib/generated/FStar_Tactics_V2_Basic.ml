@@ -173,7 +173,7 @@ let (do_dump_ps : Prims.string -> FStar_Tactics_Types.proofstate -> unit) =
   fun msg ->
     fun ps ->
       let psc = ps.FStar_Tactics_Types.psc in
-      let subst = FStar_TypeChecker_Cfg.psc_subst psc in
+      let subst = FStar_TypeChecker_Primops.psc_subst psc in
       FStar_Tactics_Printing.do_dump_proofstate ps msg
 let (dump : Prims.string -> unit FStar_Tactics_Monad.tac) =
   fun msg ->
@@ -6719,6 +6719,26 @@ let (comp_to_string :
          let s =
            FStar_Syntax_Print.comp_to_string' g.FStar_TypeChecker_Env.dsenv c in
          FStar_Tactics_Monad.ret s)
+let (term_to_doc :
+  FStar_Syntax_Syntax.term -> FStar_Pprint.document FStar_Tactics_Monad.tac)
+  =
+  fun t ->
+    let uu___ = top_env () in
+    FStar_Tactics_Monad.op_let_Bang uu___
+      (fun g ->
+         let s =
+           FStar_Syntax_Print.term_to_doc' g.FStar_TypeChecker_Env.dsenv t in
+         FStar_Tactics_Monad.ret s)
+let (comp_to_doc :
+  FStar_Syntax_Syntax.comp -> FStar_Pprint.document FStar_Tactics_Monad.tac)
+  =
+  fun c ->
+    let uu___ = top_env () in
+    FStar_Tactics_Monad.op_let_Bang uu___
+      (fun g ->
+         let s =
+           FStar_Syntax_Print.comp_to_doc' g.FStar_TypeChecker_Env.dsenv c in
+         FStar_Tactics_Monad.ret s)
 let (range_to_string :
   FStar_Compiler_Range_Type.range -> Prims.string FStar_Tactics_Monad.tac) =
   fun r ->
@@ -8719,7 +8739,7 @@ let (proofstate_of_goals :
               FStar_Tactics_Types.depth = Prims.int_zero;
               FStar_Tactics_Types.__dump =
                 FStar_Tactics_Printing.do_dump_proofstate;
-              FStar_Tactics_Types.psc = FStar_TypeChecker_Cfg.null_psc;
+              FStar_Tactics_Types.psc = FStar_TypeChecker_Primops.null_psc;
               FStar_Tactics_Types.entry_range = rng;
               FStar_Tactics_Types.guard_policy = FStar_Tactics_Types.SMT;
               FStar_Tactics_Types.freshness = Prims.int_zero;
@@ -8875,7 +8895,7 @@ let (proofstate_of_all_implicits :
             FStar_Tactics_Types.depth = Prims.int_zero;
             FStar_Tactics_Types.__dump =
               FStar_Tactics_Printing.do_dump_proofstate;
-            FStar_Tactics_Types.psc = FStar_TypeChecker_Cfg.null_psc;
+            FStar_Tactics_Types.psc = FStar_TypeChecker_Primops.null_psc;
             FStar_Tactics_Types.entry_range = rng;
             FStar_Tactics_Types.guard_policy = FStar_Tactics_Types.SMT;
             FStar_Tactics_Types.freshness = Prims.int_zero;

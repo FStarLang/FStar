@@ -158,7 +158,8 @@ let (goal_to_string :
             then (goal_binders, goal_ty)
             else
               (let subst =
-                 FStar_TypeChecker_Cfg.psc_subst ps.FStar_Tactics_Types.psc in
+                 FStar_TypeChecker_Primops.psc_subst
+                   ps.FStar_Tactics_Types.psc in
                let binders = rename_binders subst goal_binders in
                let ty = FStar_Syntax_Subst.subst subst goal_ty in
                (binders, ty)) in

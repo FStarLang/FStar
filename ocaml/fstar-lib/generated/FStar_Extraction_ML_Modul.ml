@@ -2519,7 +2519,8 @@ and (extract_sig_let :
                        let uu___7 =
                          FStar_Syntax_Embeddings.e_list
                            FStar_Syntax_Embeddings.e_norm_step in
-                       FStar_TypeChecker_Cfg.try_unembed_simple uu___7 steps1 in
+                       FStar_TypeChecker_Primops.try_unembed_simple uu___7
+                         steps1 in
                      (match uu___6 with
                       | FStar_Pervasives_Native.Some steps2 ->
                           let uu___7 =

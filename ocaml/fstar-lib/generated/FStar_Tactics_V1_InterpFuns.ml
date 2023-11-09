@@ -45,7 +45,7 @@ let (mk :
   Prims.string ->
     Prims.int ->
       Prims.int ->
-        (FStar_TypeChecker_Cfg.psc ->
+        (FStar_TypeChecker_Primops.psc ->
            FStar_Syntax_Embeddings_Base.norm_cb ->
              FStar_Syntax_Syntax.args ->
                FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
@@ -53,7 +53,7 @@ let (mk :
           (FStar_TypeChecker_NBETerm.nbe_cbs ->
              FStar_TypeChecker_NBETerm.args ->
                FStar_TypeChecker_NBETerm.t FStar_Pervasives_Native.option)
-            -> FStar_TypeChecker_Cfg.primitive_step)
+            -> FStar_TypeChecker_Primops.primitive_step)
   =
   fun nm ->
     fun arity ->
@@ -63,20 +63,20 @@ let (mk :
             let nm1 =
               FStar_Parser_Const.fstar_tactics_lid' ["V1"; "Builtins"; nm] in
             {
-              FStar_TypeChecker_Cfg.name = nm1;
-              FStar_TypeChecker_Cfg.arity = arity;
-              FStar_TypeChecker_Cfg.univ_arity = nunivs;
-              FStar_TypeChecker_Cfg.auto_reflect =
+              FStar_TypeChecker_Primops.name = nm1;
+              FStar_TypeChecker_Primops.arity = arity;
+              FStar_TypeChecker_Primops.univ_arity = nunivs;
+              FStar_TypeChecker_Primops.auto_reflect =
                 (FStar_Pervasives_Native.Some (arity - Prims.int_one));
-              FStar_TypeChecker_Cfg.strong_reduction_ok = true;
-              FStar_TypeChecker_Cfg.requires_binder_substitution = true;
-              FStar_TypeChecker_Cfg.renorm_after = false;
-              FStar_TypeChecker_Cfg.interpretation =
+              FStar_TypeChecker_Primops.strong_reduction_ok = true;
+              FStar_TypeChecker_Primops.requires_binder_substitution = true;
+              FStar_TypeChecker_Primops.renorm_after = false;
+              FStar_TypeChecker_Primops.interpretation =
                 (fun psc ->
                    fun cbs ->
                      fun _us ->
                        fun args -> timing_int nm1 interp psc cbs args);
-              FStar_TypeChecker_Cfg.interpretation_nbe =
+              FStar_TypeChecker_Primops.interpretation_nbe =
                 (fun cbs ->
                    fun _us -> fun args -> timing_nbe nm1 nbe_interp cbs args)
             }
@@ -84,7 +84,7 @@ let (mkt :
   Prims.string ->
     Prims.int ->
       Prims.int ->
-        (FStar_TypeChecker_Cfg.psc ->
+        (FStar_TypeChecker_Primops.psc ->
            FStar_Syntax_Embeddings_Base.norm_cb ->
              FStar_Syntax_Syntax.args ->
                FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
@@ -92,7 +92,7 @@ let (mkt :
           (FStar_TypeChecker_NBETerm.nbe_cbs ->
              FStar_TypeChecker_NBETerm.args ->
                FStar_TypeChecker_NBETerm.t FStar_Pervasives_Native.option)
-            -> FStar_TypeChecker_Cfg.primitive_step)
+            -> FStar_TypeChecker_Primops.primitive_step)
   =
   fun nm ->
     fun arity ->
@@ -102,29 +102,29 @@ let (mkt :
             let nm1 =
               FStar_Parser_Const.fstar_tactics_lid' ["V1"; "Builtins"; nm] in
             {
-              FStar_TypeChecker_Cfg.name = nm1;
-              FStar_TypeChecker_Cfg.arity = arity;
-              FStar_TypeChecker_Cfg.univ_arity = nunivs;
-              FStar_TypeChecker_Cfg.auto_reflect =
+              FStar_TypeChecker_Primops.name = nm1;
+              FStar_TypeChecker_Primops.arity = arity;
+              FStar_TypeChecker_Primops.univ_arity = nunivs;
+              FStar_TypeChecker_Primops.auto_reflect =
                 FStar_Pervasives_Native.None;
-              FStar_TypeChecker_Cfg.strong_reduction_ok = true;
-              FStar_TypeChecker_Cfg.requires_binder_substitution = true;
-              FStar_TypeChecker_Cfg.renorm_after = false;
-              FStar_TypeChecker_Cfg.interpretation =
+              FStar_TypeChecker_Primops.strong_reduction_ok = true;
+              FStar_TypeChecker_Primops.requires_binder_substitution = true;
+              FStar_TypeChecker_Primops.renorm_after = false;
+              FStar_TypeChecker_Primops.interpretation =
                 (fun psc ->
                    fun cbs ->
                      fun _us ->
                        fun args -> timing_int nm1 interp psc cbs args);
-              FStar_TypeChecker_Cfg.interpretation_nbe =
+              FStar_TypeChecker_Primops.interpretation_nbe =
                 (fun cbs ->
                    fun _us -> fun args -> timing_nbe nm1 nbe_interp cbs args)
             }
 let mk_total_interpretation_1_psc :
   'r 't1 .
-    (FStar_TypeChecker_Cfg.psc -> 't1 -> 'r) ->
+    (FStar_TypeChecker_Primops.psc -> 't1 -> 'r) ->
       't1 FStar_Syntax_Embeddings_Base.embedding ->
         'r FStar_Syntax_Embeddings_Base.embedding ->
-          FStar_TypeChecker_Cfg.psc ->
+          FStar_TypeChecker_Primops.psc ->
             FStar_Syntax_Embeddings_Base.norm_cb ->
               FStar_Syntax_Syntax.args ->
                 FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
@@ -142,14 +142,14 @@ let mk_total_interpretation_1_psc :
                     (fun a11 ->
                        let r1 = f psc a11 in
                        let uu___2 =
-                         let uu___3 = FStar_TypeChecker_Cfg.psc_range psc in
+                         let uu___3 = FStar_TypeChecker_Primops.psc_range psc in
                          embed er uu___3 r1 ncb in
                        FStar_Pervasives_Native.Some uu___2)
               | uu___ -> FStar_Pervasives_Native.None
 let mk_total_nbe_interpretation_1_psc :
   'r 't1 .
     FStar_TypeChecker_NBETerm.nbe_cbs ->
-      (FStar_TypeChecker_Cfg.psc -> 't1 -> 'r) ->
+      (FStar_TypeChecker_Primops.psc -> 't1 -> 'r) ->
         't1 FStar_TypeChecker_NBETerm.embedding ->
           'r FStar_TypeChecker_NBETerm.embedding ->
             FStar_TypeChecker_NBETerm.args ->
@@ -165,7 +165,7 @@ let mk_total_nbe_interpretation_1_psc :
                 let uu___1 = FStar_TypeChecker_NBETerm.unembed e1 cb a1 in
                 FStar_Compiler_Util.bind_opt uu___1
                   (fun a11 ->
-                     let r1 = f FStar_TypeChecker_Cfg.null_psc a11 in
+                     let r1 = f FStar_TypeChecker_Primops.null_psc a11 in
                      let uu___2 = FStar_TypeChecker_NBETerm.embed er cb r1 in
                      FStar_Pervasives_Native.Some uu___2)
             | uu___ -> FStar_Pervasives_Native.None
@@ -173,13 +173,13 @@ let mk_total_step_1_psc :
   'a 'na 'nr 'r .
     Prims.int ->
       Prims.string ->
-        (FStar_TypeChecker_Cfg.psc -> 'a -> 'r) ->
+        (FStar_TypeChecker_Primops.psc -> 'a -> 'r) ->
           'a FStar_Syntax_Embeddings_Base.embedding ->
             'r FStar_Syntax_Embeddings_Base.embedding ->
-              (FStar_TypeChecker_Cfg.psc -> 'na -> 'nr) ->
+              (FStar_TypeChecker_Primops.psc -> 'na -> 'nr) ->
                 'na FStar_TypeChecker_NBETerm.embedding ->
                   'nr FStar_TypeChecker_NBETerm.embedding ->
-                    FStar_TypeChecker_Cfg.primitive_step
+                    FStar_TypeChecker_Primops.primitive_step
   =
   fun nunivs ->
     fun name ->
@@ -202,7 +202,7 @@ let mk_tactic_interpretation_1 :
     ('t1 -> 'r FStar_Tactics_Monad.tac) ->
       't1 FStar_Syntax_Embeddings_Base.embedding ->
         'r FStar_Syntax_Embeddings_Base.embedding ->
-          FStar_TypeChecker_Cfg.psc ->
+          FStar_TypeChecker_Primops.psc ->
             FStar_Syntax_Embeddings_Base.norm_cb ->
               FStar_Syntax_Syntax.args ->
                 FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
@@ -230,7 +230,7 @@ let mk_tactic_interpretation_1 :
                               let uu___5 =
                                 FStar_Tactics_Embedding.e_result er in
                               let uu___6 =
-                                FStar_TypeChecker_Cfg.psc_range psc in
+                                FStar_TypeChecker_Primops.psc_range psc in
                               embed uu___5 uu___6 r1 ncb in
                             FStar_Pervasives_Native.Some uu___4))
               | uu___ -> FStar_Pervasives_Native.None
@@ -240,7 +240,7 @@ let mk_tactic_interpretation_2 :
       't1 FStar_Syntax_Embeddings_Base.embedding ->
         't2 FStar_Syntax_Embeddings_Base.embedding ->
           'r FStar_Syntax_Embeddings_Base.embedding ->
-            FStar_TypeChecker_Cfg.psc ->
+            FStar_TypeChecker_Primops.psc ->
               FStar_Syntax_Embeddings_Base.norm_cb ->
                 FStar_Syntax_Syntax.args ->
                   FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
@@ -274,7 +274,8 @@ let mk_tactic_interpretation_2 :
                                      let uu___7 =
                                        FStar_Tactics_Embedding.e_result er in
                                      let uu___8 =
-                                       FStar_TypeChecker_Cfg.psc_range psc in
+                                       FStar_TypeChecker_Primops.psc_range
+                                         psc in
                                      embed uu___7 uu___8 r1 ncb in
                                    FStar_Pervasives_Native.Some uu___6)))
                 | uu___ -> FStar_Pervasives_Native.None
@@ -285,7 +286,7 @@ let mk_tactic_interpretation_3 :
         't2 FStar_Syntax_Embeddings_Base.embedding ->
           't3 FStar_Syntax_Embeddings_Base.embedding ->
             'r FStar_Syntax_Embeddings_Base.embedding ->
-              FStar_TypeChecker_Cfg.psc ->
+              FStar_TypeChecker_Primops.psc ->
                 FStar_Syntax_Embeddings_Base.norm_cb ->
                   FStar_Syntax_Syntax.args ->
                     FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
@@ -328,7 +329,7 @@ let mk_tactic_interpretation_3 :
                                               FStar_Tactics_Embedding.e_result
                                                 er in
                                             let uu___10 =
-                                              FStar_TypeChecker_Cfg.psc_range
+                                              FStar_TypeChecker_Primops.psc_range
                                                 psc in
                                             embed uu___9 uu___10 r1 ncb in
                                           FStar_Pervasives_Native.Some uu___8))))
@@ -341,7 +342,7 @@ let mk_tactic_interpretation_4 :
           't3 FStar_Syntax_Embeddings_Base.embedding ->
             't4 FStar_Syntax_Embeddings_Base.embedding ->
               'r FStar_Syntax_Embeddings_Base.embedding ->
-                FStar_TypeChecker_Cfg.psc ->
+                FStar_TypeChecker_Primops.psc ->
                   FStar_Syntax_Embeddings_Base.norm_cb ->
                     FStar_Syntax_Syntax.args ->
                       FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
@@ -390,7 +391,7 @@ let mk_tactic_interpretation_4 :
                                                      FStar_Tactics_Embedding.e_result
                                                        er in
                                                    let uu___12 =
-                                                     FStar_TypeChecker_Cfg.psc_range
+                                                     FStar_TypeChecker_Primops.psc_range
                                                        psc in
                                                    embed uu___11 uu___12 r1
                                                      ncb in
@@ -406,7 +407,7 @@ let mk_tactic_interpretation_5 :
             't4 FStar_Syntax_Embeddings_Base.embedding ->
               't5 FStar_Syntax_Embeddings_Base.embedding ->
                 'r FStar_Syntax_Embeddings_Base.embedding ->
-                  FStar_TypeChecker_Cfg.psc ->
+                  FStar_TypeChecker_Primops.psc ->
                     FStar_Syntax_Embeddings_Base.norm_cb ->
                       FStar_Syntax_Syntax.args ->
                         FStar_Syntax_Syntax.term
@@ -462,7 +463,7 @@ let mk_tactic_interpretation_5 :
                                                             FStar_Tactics_Embedding.e_result
                                                               er in
                                                           let uu___14 =
-                                                            FStar_TypeChecker_Cfg.psc_range
+                                                            FStar_TypeChecker_Primops.psc_range
                                                               psc in
                                                           embed uu___13
                                                             uu___14 r1 ncb in
@@ -479,7 +480,7 @@ let mk_tactic_interpretation_6 :
               't5 FStar_Syntax_Embeddings_Base.embedding ->
                 't6 FStar_Syntax_Embeddings_Base.embedding ->
                   'r FStar_Syntax_Embeddings_Base.embedding ->
-                    FStar_TypeChecker_Cfg.psc ->
+                    FStar_TypeChecker_Primops.psc ->
                       FStar_Syntax_Embeddings_Base.norm_cb ->
                         FStar_Syntax_Syntax.args ->
                           FStar_Syntax_Syntax.term
@@ -549,7 +550,7 @@ let mk_tactic_interpretation_6 :
                                                                     er in
                                                                  let uu___16
                                                                    =
-                                                                   FStar_TypeChecker_Cfg.psc_range
+                                                                   FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                  embed
                                                                    uu___15
@@ -571,7 +572,7 @@ let mk_tactic_interpretation_7 :
                 't6 FStar_Syntax_Embeddings_Base.embedding ->
                   't7 FStar_Syntax_Embeddings_Base.embedding ->
                     'r FStar_Syntax_Embeddings_Base.embedding ->
-                      FStar_TypeChecker_Cfg.psc ->
+                      FStar_TypeChecker_Primops.psc ->
                         FStar_Syntax_Embeddings_Base.norm_cb ->
                           FStar_Syntax_Syntax.args ->
                             FStar_Syntax_Syntax.term
@@ -651,7 +652,7 @@ let mk_tactic_interpretation_7 :
                                                                     er in
                                                                     let uu___18
                                                                     =
-                                                                    FStar_TypeChecker_Cfg.psc_range
+                                                                    FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                     embed
                                                                     uu___17
@@ -675,7 +676,7 @@ let mk_tactic_interpretation_8 :
                   't7 FStar_Syntax_Embeddings_Base.embedding ->
                     't8 FStar_Syntax_Embeddings_Base.embedding ->
                       'r FStar_Syntax_Embeddings_Base.embedding ->
-                        FStar_TypeChecker_Cfg.psc ->
+                        FStar_TypeChecker_Primops.psc ->
                           FStar_Syntax_Embeddings_Base.norm_cb ->
                             FStar_Syntax_Syntax.args ->
                               FStar_Syntax_Syntax.term
@@ -768,7 +769,7 @@ let mk_tactic_interpretation_8 :
                                                                     er in
                                                                     let uu___20
                                                                     =
-                                                                    FStar_TypeChecker_Cfg.psc_range
+                                                                    FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                     embed
                                                                     uu___19
@@ -795,7 +796,7 @@ let mk_tactic_interpretation_9 :
                     't8 FStar_Syntax_Embeddings_Base.embedding ->
                       't9 FStar_Syntax_Embeddings_Base.embedding ->
                         'r FStar_Syntax_Embeddings_Base.embedding ->
-                          FStar_TypeChecker_Cfg.psc ->
+                          FStar_TypeChecker_Primops.psc ->
                             FStar_Syntax_Embeddings_Base.norm_cb ->
                               FStar_Syntax_Syntax.args ->
                                 FStar_Syntax_Syntax.term
@@ -899,7 +900,7 @@ let mk_tactic_interpretation_9 :
                                                                     er in
                                                                     let uu___22
                                                                     =
-                                                                    FStar_TypeChecker_Cfg.psc_range
+                                                                    FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                     embed
                                                                     uu___21
@@ -928,7 +929,7 @@ let mk_tactic_interpretation_10 :
                       't9 FStar_Syntax_Embeddings_Base.embedding ->
                         't10 FStar_Syntax_Embeddings_Base.embedding ->
                           'r FStar_Syntax_Embeddings_Base.embedding ->
-                            FStar_TypeChecker_Cfg.psc ->
+                            FStar_TypeChecker_Primops.psc ->
                               FStar_Syntax_Embeddings_Base.norm_cb ->
                                 FStar_Syntax_Syntax.args ->
                                   FStar_Syntax_Syntax.term
@@ -1045,7 +1046,7 @@ let mk_tactic_interpretation_10 :
                                                                     er in
                                                                     let uu___24
                                                                     =
-                                                                    FStar_TypeChecker_Cfg.psc_range
+                                                                    FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                     embed
                                                                     uu___23
@@ -1077,7 +1078,7 @@ let mk_tactic_interpretation_11 :
                         't10 FStar_Syntax_Embeddings_Base.embedding ->
                           't11 FStar_Syntax_Embeddings_Base.embedding ->
                             'r FStar_Syntax_Embeddings_Base.embedding ->
-                              FStar_TypeChecker_Cfg.psc ->
+                              FStar_TypeChecker_Primops.psc ->
                                 FStar_Syntax_Embeddings_Base.norm_cb ->
                                   FStar_Syntax_Syntax.args ->
                                     FStar_Syntax_Syntax.term
@@ -1209,7 +1210,7 @@ let mk_tactic_interpretation_11 :
                                                                     er in
                                                                     let uu___26
                                                                     =
-                                                                    FStar_TypeChecker_Cfg.psc_range
+                                                                    FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                     embed
                                                                     uu___25
@@ -1244,7 +1245,7 @@ let mk_tactic_interpretation_12 :
                           't11 FStar_Syntax_Embeddings_Base.embedding ->
                             't12 FStar_Syntax_Embeddings_Base.embedding ->
                               'r FStar_Syntax_Embeddings_Base.embedding ->
-                                FStar_TypeChecker_Cfg.psc ->
+                                FStar_TypeChecker_Primops.psc ->
                                   FStar_Syntax_Embeddings_Base.norm_cb ->
                                     FStar_Syntax_Syntax.args ->
                                       FStar_Syntax_Syntax.term
@@ -1389,7 +1390,7 @@ let mk_tactic_interpretation_12 :
                                                                     er in
                                                                     let uu___28
                                                                     =
-                                                                    FStar_TypeChecker_Cfg.psc_range
+                                                                    FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                     embed
                                                                     uu___27
@@ -1426,7 +1427,7 @@ let mk_tactic_interpretation_13 :
                             't12 FStar_Syntax_Embeddings_Base.embedding ->
                               't13 FStar_Syntax_Embeddings_Base.embedding ->
                                 'r FStar_Syntax_Embeddings_Base.embedding ->
-                                  FStar_TypeChecker_Cfg.psc ->
+                                  FStar_TypeChecker_Primops.psc ->
                                     FStar_Syntax_Embeddings_Base.norm_cb ->
                                       FStar_Syntax_Syntax.args ->
                                         FStar_Syntax_Syntax.term
@@ -1585,7 +1586,7 @@ let mk_tactic_interpretation_13 :
                                                                     er in
                                                                     let uu___30
                                                                     =
-                                                                    FStar_TypeChecker_Cfg.psc_range
+                                                                    FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                     embed
                                                                     uu___29
@@ -1626,7 +1627,7 @@ let mk_tactic_interpretation_14 :
                                   ->
                                   'r FStar_Syntax_Embeddings_Base.embedding
                                     ->
-                                    FStar_TypeChecker_Cfg.psc ->
+                                    FStar_TypeChecker_Primops.psc ->
                                       FStar_Syntax_Embeddings_Base.norm_cb ->
                                         FStar_Syntax_Syntax.args ->
                                           FStar_Syntax_Syntax.term
@@ -1796,7 +1797,7 @@ let mk_tactic_interpretation_14 :
                                                                     er in
                                                                     let uu___32
                                                                     =
-                                                                    FStar_TypeChecker_Cfg.psc_range
+                                                                    FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                     embed
                                                                     uu___31
@@ -1842,7 +1843,7 @@ let mk_tactic_interpretation_15 :
                                     ->
                                     'r FStar_Syntax_Embeddings_Base.embedding
                                       ->
-                                      FStar_TypeChecker_Cfg.psc ->
+                                      FStar_TypeChecker_Primops.psc ->
                                         FStar_Syntax_Embeddings_Base.norm_cb
                                           ->
                                           FStar_Syntax_Syntax.args ->
@@ -2028,7 +2029,7 @@ let mk_tactic_interpretation_15 :
                                                                     er in
                                                                     let uu___34
                                                                     =
-                                                                    FStar_TypeChecker_Cfg.psc_range
+                                                                    FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                     embed
                                                                     uu___33
@@ -2079,7 +2080,7 @@ let mk_tactic_interpretation_16 :
                                       'r
                                         FStar_Syntax_Embeddings_Base.embedding
                                         ->
-                                        FStar_TypeChecker_Cfg.psc ->
+                                        FStar_TypeChecker_Primops.psc ->
                                           FStar_Syntax_Embeddings_Base.norm_cb
                                             ->
                                             FStar_Syntax_Syntax.args ->
@@ -2278,7 +2279,7 @@ let mk_tactic_interpretation_16 :
                                                                     er in
                                                                     let uu___36
                                                                     =
-                                                                    FStar_TypeChecker_Cfg.psc_range
+                                                                    FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                     embed
                                                                     uu___35
@@ -2334,7 +2335,7 @@ let mk_tactic_interpretation_17 :
                                         'r
                                           FStar_Syntax_Embeddings_Base.embedding
                                           ->
-                                          FStar_TypeChecker_Cfg.psc ->
+                                          FStar_TypeChecker_Primops.psc ->
                                             FStar_Syntax_Embeddings_Base.norm_cb
                                               ->
                                               FStar_Syntax_Syntax.args ->
@@ -2549,7 +2550,7 @@ let mk_tactic_interpretation_17 :
                                                                     er in
                                                                     let uu___38
                                                                     =
-                                                                    FStar_TypeChecker_Cfg.psc_range
+                                                                    FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                     embed
                                                                     uu___37
@@ -2610,7 +2611,7 @@ let mk_tactic_interpretation_18 :
                                           'r
                                             FStar_Syntax_Embeddings_Base.embedding
                                             ->
-                                            FStar_TypeChecker_Cfg.psc ->
+                                            FStar_TypeChecker_Primops.psc ->
                                               FStar_Syntax_Embeddings_Base.norm_cb
                                                 ->
                                                 FStar_Syntax_Syntax.args ->
@@ -2840,7 +2841,7 @@ let mk_tactic_interpretation_18 :
                                                                     er in
                                                                     let uu___40
                                                                     =
-                                                                    FStar_TypeChecker_Cfg.psc_range
+                                                                    FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                     embed
                                                                     uu___39
@@ -2905,7 +2906,8 @@ let mk_tactic_interpretation_19 :
                                             'r
                                               FStar_Syntax_Embeddings_Base.embedding
                                               ->
-                                              FStar_TypeChecker_Cfg.psc ->
+                                              FStar_TypeChecker_Primops.psc
+                                                ->
                                                 FStar_Syntax_Embeddings_Base.norm_cb
                                                   ->
                                                   FStar_Syntax_Syntax.args ->
@@ -3147,7 +3149,7 @@ let mk_tactic_interpretation_19 :
                                                                     er in
                                                                     let uu___42
                                                                     =
-                                                                    FStar_TypeChecker_Cfg.psc_range
+                                                                    FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                     embed
                                                                     uu___41
@@ -3216,7 +3218,8 @@ let mk_tactic_interpretation_20 :
                                               'r
                                                 FStar_Syntax_Embeddings_Base.embedding
                                                 ->
-                                                FStar_TypeChecker_Cfg.psc ->
+                                                FStar_TypeChecker_Primops.psc
+                                                  ->
                                                   FStar_Syntax_Embeddings_Base.norm_cb
                                                     ->
                                                     FStar_Syntax_Syntax.args
@@ -3475,7 +3478,7 @@ let mk_tactic_interpretation_20 :
                                                                     er in
                                                                     let uu___44
                                                                     =
-                                                                    FStar_TypeChecker_Cfg.psc_range
+                                                                    FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                     embed
                                                                     uu___43
@@ -6652,7 +6655,7 @@ let mk_total_interpretation_1 :
     ('t1 -> 'r) ->
       't1 FStar_Syntax_Embeddings_Base.embedding ->
         'r FStar_Syntax_Embeddings_Base.embedding ->
-          FStar_TypeChecker_Cfg.psc ->
+          FStar_TypeChecker_Primops.psc ->
             FStar_Syntax_Embeddings_Base.norm_cb ->
               FStar_Syntax_Syntax.args ->
                 FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
@@ -6670,7 +6673,7 @@ let mk_total_interpretation_1 :
                     (fun a11 ->
                        let r1 = f a11 in
                        let uu___2 =
-                         let uu___3 = FStar_TypeChecker_Cfg.psc_range psc in
+                         let uu___3 = FStar_TypeChecker_Primops.psc_range psc in
                          embed er uu___3 r1 ncb in
                        FStar_Pervasives_Native.Some uu___2)
               | uu___ -> FStar_Pervasives_Native.None
@@ -6680,7 +6683,7 @@ let mk_total_interpretation_2 :
       't1 FStar_Syntax_Embeddings_Base.embedding ->
         't2 FStar_Syntax_Embeddings_Base.embedding ->
           'r FStar_Syntax_Embeddings_Base.embedding ->
-            FStar_TypeChecker_Cfg.psc ->
+            FStar_TypeChecker_Primops.psc ->
               FStar_Syntax_Embeddings_Base.norm_cb ->
                 FStar_Syntax_Syntax.args ->
                   FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
@@ -6703,7 +6706,7 @@ let mk_total_interpretation_2 :
                               let r1 = f a11 a21 in
                               let uu___4 =
                                 let uu___5 =
-                                  FStar_TypeChecker_Cfg.psc_range psc in
+                                  FStar_TypeChecker_Primops.psc_range psc in
                                 embed er uu___5 r1 ncb in
                               FStar_Pervasives_Native.Some uu___4))
                 | uu___ -> FStar_Pervasives_Native.None
@@ -6714,7 +6717,7 @@ let mk_total_interpretation_3 :
         't2 FStar_Syntax_Embeddings_Base.embedding ->
           't3 FStar_Syntax_Embeddings_Base.embedding ->
             'r FStar_Syntax_Embeddings_Base.embedding ->
-              FStar_TypeChecker_Cfg.psc ->
+              FStar_TypeChecker_Primops.psc ->
                 FStar_Syntax_Embeddings_Base.norm_cb ->
                   FStar_Syntax_Syntax.args ->
                     FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
@@ -6741,7 +6744,8 @@ let mk_total_interpretation_3 :
                                      let r1 = f a11 a21 a31 in
                                      let uu___6 =
                                        let uu___7 =
-                                         FStar_TypeChecker_Cfg.psc_range psc in
+                                         FStar_TypeChecker_Primops.psc_range
+                                           psc in
                                        embed er uu___7 r1 ncb in
                                      FStar_Pervasives_Native.Some uu___6)))
                   | uu___ -> FStar_Pervasives_Native.None
@@ -6753,7 +6757,7 @@ let mk_total_interpretation_4 :
           't3 FStar_Syntax_Embeddings_Base.embedding ->
             't4 FStar_Syntax_Embeddings_Base.embedding ->
               'r FStar_Syntax_Embeddings_Base.embedding ->
-                FStar_TypeChecker_Cfg.psc ->
+                FStar_TypeChecker_Primops.psc ->
                   FStar_Syntax_Embeddings_Base.norm_cb ->
                     FStar_Syntax_Syntax.args ->
                       FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
@@ -6785,7 +6789,7 @@ let mk_total_interpretation_4 :
                                             let r1 = f a11 a21 a31 a41 in
                                             let uu___8 =
                                               let uu___9 =
-                                                FStar_TypeChecker_Cfg.psc_range
+                                                FStar_TypeChecker_Primops.psc_range
                                                   psc in
                                               embed er uu___9 r1 ncb in
                                             FStar_Pervasives_Native.Some
@@ -6800,7 +6804,7 @@ let mk_total_interpretation_5 :
             't4 FStar_Syntax_Embeddings_Base.embedding ->
               't5 FStar_Syntax_Embeddings_Base.embedding ->
                 'r FStar_Syntax_Embeddings_Base.embedding ->
-                  FStar_TypeChecker_Cfg.psc ->
+                  FStar_TypeChecker_Primops.psc ->
                     FStar_Syntax_Embeddings_Base.norm_cb ->
                       FStar_Syntax_Syntax.args ->
                         FStar_Syntax_Syntax.term
@@ -6839,7 +6843,7 @@ let mk_total_interpretation_5 :
                                                      f a11 a21 a31 a41 a51 in
                                                    let uu___10 =
                                                      let uu___11 =
-                                                       FStar_TypeChecker_Cfg.psc_range
+                                                       FStar_TypeChecker_Primops.psc_range
                                                          psc in
                                                      embed er uu___11 r1 ncb in
                                                    FStar_Pervasives_Native.Some
@@ -6855,7 +6859,7 @@ let mk_total_interpretation_6 :
               't5 FStar_Syntax_Embeddings_Base.embedding ->
                 't6 FStar_Syntax_Embeddings_Base.embedding ->
                   'r FStar_Syntax_Embeddings_Base.embedding ->
-                    FStar_TypeChecker_Cfg.psc ->
+                    FStar_TypeChecker_Primops.psc ->
                       FStar_Syntax_Embeddings_Base.norm_cb ->
                         FStar_Syntax_Syntax.args ->
                           FStar_Syntax_Syntax.term
@@ -6904,7 +6908,7 @@ let mk_total_interpretation_6 :
                                                               a51 a61 in
                                                           let uu___12 =
                                                             let uu___13 =
-                                                              FStar_TypeChecker_Cfg.psc_range
+                                                              FStar_TypeChecker_Primops.psc_range
                                                                 psc in
                                                             embed er uu___13
                                                               r1 ncb in
@@ -6922,7 +6926,7 @@ let mk_total_interpretation_7 :
                 't6 FStar_Syntax_Embeddings_Base.embedding ->
                   't7 FStar_Syntax_Embeddings_Base.embedding ->
                     'r FStar_Syntax_Embeddings_Base.embedding ->
-                      FStar_TypeChecker_Cfg.psc ->
+                      FStar_TypeChecker_Primops.psc ->
                         FStar_Syntax_Embeddings_Base.norm_cb ->
                           FStar_Syntax_Syntax.args ->
                             FStar_Syntax_Syntax.term
@@ -6982,7 +6986,7 @@ let mk_total_interpretation_7 :
                                                                    =
                                                                    let uu___15
                                                                     =
-                                                                    FStar_TypeChecker_Cfg.psc_range
+                                                                    FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                    embed er
                                                                     uu___15
@@ -7002,7 +7006,7 @@ let mk_total_interpretation_8 :
                   't7 FStar_Syntax_Embeddings_Base.embedding ->
                     't8 FStar_Syntax_Embeddings_Base.embedding ->
                       'r FStar_Syntax_Embeddings_Base.embedding ->
-                        FStar_TypeChecker_Cfg.psc ->
+                        FStar_TypeChecker_Primops.psc ->
                           FStar_Syntax_Embeddings_Base.norm_cb ->
                             FStar_Syntax_Syntax.args ->
                               FStar_Syntax_Syntax.term
@@ -7073,7 +7077,7 @@ let mk_total_interpretation_8 :
                                                                     =
                                                                     let uu___17
                                                                     =
-                                                                    FStar_TypeChecker_Cfg.psc_range
+                                                                    FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                     embed er
                                                                     uu___17
@@ -7094,7 +7098,7 @@ let mk_total_interpretation_9 :
                     't8 FStar_Syntax_Embeddings_Base.embedding ->
                       't9 FStar_Syntax_Embeddings_Base.embedding ->
                         'r FStar_Syntax_Embeddings_Base.embedding ->
-                          FStar_TypeChecker_Cfg.psc ->
+                          FStar_TypeChecker_Primops.psc ->
                             FStar_Syntax_Embeddings_Base.norm_cb ->
                               FStar_Syntax_Syntax.args ->
                                 FStar_Syntax_Syntax.term
@@ -7177,7 +7181,7 @@ let mk_total_interpretation_9 :
                                                                     =
                                                                     let uu___19
                                                                     =
-                                                                    FStar_TypeChecker_Cfg.psc_range
+                                                                    FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                     embed er
                                                                     uu___19
@@ -7201,7 +7205,7 @@ let mk_total_interpretation_10 :
                       't9 FStar_Syntax_Embeddings_Base.embedding ->
                         't10 FStar_Syntax_Embeddings_Base.embedding ->
                           'r FStar_Syntax_Embeddings_Base.embedding ->
-                            FStar_TypeChecker_Cfg.psc ->
+                            FStar_TypeChecker_Primops.psc ->
                               FStar_Syntax_Embeddings_Base.norm_cb ->
                                 FStar_Syntax_Syntax.args ->
                                   FStar_Syntax_Syntax.term
@@ -7297,7 +7301,7 @@ let mk_total_interpretation_10 :
                                                                     =
                                                                     let uu___21
                                                                     =
-                                                                    FStar_TypeChecker_Cfg.psc_range
+                                                                    FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                     embed er
                                                                     uu___21
@@ -7323,7 +7327,7 @@ let mk_total_interpretation_11 :
                         't10 FStar_Syntax_Embeddings_Base.embedding ->
                           't11 FStar_Syntax_Embeddings_Base.embedding ->
                             'r FStar_Syntax_Embeddings_Base.embedding ->
-                              FStar_TypeChecker_Cfg.psc ->
+                              FStar_TypeChecker_Primops.psc ->
                                 FStar_Syntax_Embeddings_Base.norm_cb ->
                                   FStar_Syntax_Syntax.args ->
                                     FStar_Syntax_Syntax.term
@@ -7433,7 +7437,7 @@ let mk_total_interpretation_11 :
                                                                     =
                                                                     let uu___23
                                                                     =
-                                                                    FStar_TypeChecker_Cfg.psc_range
+                                                                    FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                     embed er
                                                                     uu___23
@@ -7462,7 +7466,7 @@ let mk_total_interpretation_12 :
                           't11 FStar_Syntax_Embeddings_Base.embedding ->
                             't12 FStar_Syntax_Embeddings_Base.embedding ->
                               'r FStar_Syntax_Embeddings_Base.embedding ->
-                                FStar_TypeChecker_Cfg.psc ->
+                                FStar_TypeChecker_Primops.psc ->
                                   FStar_Syntax_Embeddings_Base.norm_cb ->
                                     FStar_Syntax_Syntax.args ->
                                       FStar_Syntax_Syntax.term
@@ -7586,7 +7590,7 @@ let mk_total_interpretation_12 :
                                                                     =
                                                                     let uu___25
                                                                     =
-                                                                    FStar_TypeChecker_Cfg.psc_range
+                                                                    FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                     embed er
                                                                     uu___25
@@ -7617,7 +7621,7 @@ let mk_total_interpretation_13 :
                             't12 FStar_Syntax_Embeddings_Base.embedding ->
                               't13 FStar_Syntax_Embeddings_Base.embedding ->
                                 'r FStar_Syntax_Embeddings_Base.embedding ->
-                                  FStar_TypeChecker_Cfg.psc ->
+                                  FStar_TypeChecker_Primops.psc ->
                                     FStar_Syntax_Embeddings_Base.norm_cb ->
                                       FStar_Syntax_Syntax.args ->
                                         FStar_Syntax_Syntax.term
@@ -7755,7 +7759,7 @@ let mk_total_interpretation_13 :
                                                                     =
                                                                     let uu___27
                                                                     =
-                                                                    FStar_TypeChecker_Cfg.psc_range
+                                                                    FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                     embed er
                                                                     uu___27
@@ -7791,7 +7795,7 @@ let mk_total_interpretation_14 :
                                   ->
                                   'r FStar_Syntax_Embeddings_Base.embedding
                                     ->
-                                    FStar_TypeChecker_Cfg.psc ->
+                                    FStar_TypeChecker_Primops.psc ->
                                       FStar_Syntax_Embeddings_Base.norm_cb ->
                                         FStar_Syntax_Syntax.args ->
                                           FStar_Syntax_Syntax.term
@@ -7940,7 +7944,7 @@ let mk_total_interpretation_14 :
                                                                     =
                                                                     let uu___29
                                                                     =
-                                                                    FStar_TypeChecker_Cfg.psc_range
+                                                                    FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                     embed er
                                                                     uu___29
@@ -7981,7 +7985,7 @@ let mk_total_interpretation_15 :
                                     ->
                                     'r FStar_Syntax_Embeddings_Base.embedding
                                       ->
-                                      FStar_TypeChecker_Cfg.psc ->
+                                      FStar_TypeChecker_Primops.psc ->
                                         FStar_Syntax_Embeddings_Base.norm_cb
                                           ->
                                           FStar_Syntax_Syntax.args ->
@@ -8145,7 +8149,7 @@ let mk_total_interpretation_15 :
                                                                     =
                                                                     let uu___31
                                                                     =
-                                                                    FStar_TypeChecker_Cfg.psc_range
+                                                                    FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                     embed er
                                                                     uu___31
@@ -8191,7 +8195,7 @@ let mk_total_interpretation_16 :
                                       'r
                                         FStar_Syntax_Embeddings_Base.embedding
                                         ->
-                                        FStar_TypeChecker_Cfg.psc ->
+                                        FStar_TypeChecker_Primops.psc ->
                                           FStar_Syntax_Embeddings_Base.norm_cb
                                             ->
                                             FStar_Syntax_Syntax.args ->
@@ -8369,7 +8373,7 @@ let mk_total_interpretation_16 :
                                                                     =
                                                                     let uu___33
                                                                     =
-                                                                    FStar_TypeChecker_Cfg.psc_range
+                                                                    FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                     embed er
                                                                     uu___33
@@ -8420,7 +8424,7 @@ let mk_total_interpretation_17 :
                                         'r
                                           FStar_Syntax_Embeddings_Base.embedding
                                           ->
-                                          FStar_TypeChecker_Cfg.psc ->
+                                          FStar_TypeChecker_Primops.psc ->
                                             FStar_Syntax_Embeddings_Base.norm_cb
                                               ->
                                               FStar_Syntax_Syntax.args ->
@@ -8612,7 +8616,7 @@ let mk_total_interpretation_17 :
                                                                     =
                                                                     let uu___35
                                                                     =
-                                                                    FStar_TypeChecker_Cfg.psc_range
+                                                                    FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                     embed er
                                                                     uu___35
@@ -8668,7 +8672,7 @@ let mk_total_interpretation_18 :
                                           'r
                                             FStar_Syntax_Embeddings_Base.embedding
                                             ->
-                                            FStar_TypeChecker_Cfg.psc ->
+                                            FStar_TypeChecker_Primops.psc ->
                                               FStar_Syntax_Embeddings_Base.norm_cb
                                                 ->
                                                 FStar_Syntax_Syntax.args ->
@@ -8876,7 +8880,7 @@ let mk_total_interpretation_18 :
                                                                     =
                                                                     let uu___37
                                                                     =
-                                                                    FStar_TypeChecker_Cfg.psc_range
+                                                                    FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                     embed er
                                                                     uu___37
@@ -8936,7 +8940,8 @@ let mk_total_interpretation_19 :
                                             'r
                                               FStar_Syntax_Embeddings_Base.embedding
                                               ->
-                                              FStar_TypeChecker_Cfg.psc ->
+                                              FStar_TypeChecker_Primops.psc
+                                                ->
                                                 FStar_Syntax_Embeddings_Base.norm_cb
                                                   ->
                                                   FStar_Syntax_Syntax.args ->
@@ -9156,7 +9161,7 @@ let mk_total_interpretation_19 :
                                                                     =
                                                                     let uu___39
                                                                     =
-                                                                    FStar_TypeChecker_Cfg.psc_range
+                                                                    FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                     embed er
                                                                     uu___39
@@ -9220,7 +9225,8 @@ let mk_total_interpretation_20 :
                                               'r
                                                 FStar_Syntax_Embeddings_Base.embedding
                                                 ->
-                                                FStar_TypeChecker_Cfg.psc ->
+                                                FStar_TypeChecker_Primops.psc
+                                                  ->
                                                   FStar_Syntax_Embeddings_Base.norm_cb
                                                     ->
                                                     FStar_Syntax_Syntax.args
@@ -9457,7 +9463,7 @@ let mk_total_interpretation_20 :
                                                                     =
                                                                     let uu___41
                                                                     =
-                                                                    FStar_TypeChecker_Cfg.psc_range
+                                                                    FStar_TypeChecker_Primops.psc_range
                                                                     psc in
                                                                     embed er
                                                                     uu___41
@@ -12224,7 +12230,7 @@ let mk_tac_step_1 :
               ('nt1 -> 'nr FStar_Tactics_Monad.tac) ->
                 'nt1 FStar_TypeChecker_NBETerm.embedding ->
                   'nr FStar_TypeChecker_NBETerm.embedding ->
-                    FStar_TypeChecker_Cfg.primitive_step
+                    FStar_TypeChecker_Primops.primitive_step
   =
   fun nunivs ->
     fun name ->
@@ -12252,7 +12258,7 @@ let mk_tac_step_2 :
                   'nt1 FStar_TypeChecker_NBETerm.embedding ->
                     'nt2 FStar_TypeChecker_NBETerm.embedding ->
                       'nr FStar_TypeChecker_NBETerm.embedding ->
-                        FStar_TypeChecker_Cfg.primitive_step
+                        FStar_TypeChecker_Primops.primitive_step
   =
   fun nunivs ->
     fun name ->
@@ -12285,7 +12291,7 @@ let mk_tac_step_3 :
                       'nt2 FStar_TypeChecker_NBETerm.embedding ->
                         'nt3 FStar_TypeChecker_NBETerm.embedding ->
                           'nr FStar_TypeChecker_NBETerm.embedding ->
-                            FStar_TypeChecker_Cfg.primitive_step
+                            FStar_TypeChecker_Primops.primitive_step
   =
   fun nunivs ->
     fun name ->
@@ -12324,7 +12330,7 @@ let mk_tac_step_4 :
                           'nt3 FStar_TypeChecker_NBETerm.embedding ->
                             'nt4 FStar_TypeChecker_NBETerm.embedding ->
                               'nr FStar_TypeChecker_NBETerm.embedding ->
-                                FStar_TypeChecker_Cfg.primitive_step
+                                FStar_TypeChecker_Primops.primitive_step
   =
   fun nunivs ->
     fun name ->
@@ -12369,7 +12375,7 @@ let mk_tac_step_5 :
                               'nt4 FStar_TypeChecker_NBETerm.embedding ->
                                 'nt5 FStar_TypeChecker_NBETerm.embedding ->
                                   'nr FStar_TypeChecker_NBETerm.embedding ->
-                                    FStar_TypeChecker_Cfg.primitive_step
+                                    FStar_TypeChecker_Primops.primitive_step
   =
   fun nunivs ->
     fun name ->
@@ -12423,7 +12429,7 @@ let mk_tac_step_6 :
                                       ->
                                       'nr FStar_TypeChecker_NBETerm.embedding
                                         ->
-                                        FStar_TypeChecker_Cfg.primitive_step
+                                        FStar_TypeChecker_Primops.primitive_step
   =
   fun nunivs ->
     fun name ->
@@ -12491,7 +12497,7 @@ let mk_tac_step_7 :
                                           'nr
                                             FStar_TypeChecker_NBETerm.embedding
                                             ->
-                                            FStar_TypeChecker_Cfg.primitive_step
+                                            FStar_TypeChecker_Primops.primitive_step
   =
   fun nunivs ->
     fun name ->
@@ -12571,7 +12577,7 @@ let mk_tac_step_8 :
                                               'nr
                                                 FStar_TypeChecker_NBETerm.embedding
                                                 ->
-                                                FStar_TypeChecker_Cfg.primitive_step
+                                                FStar_TypeChecker_Primops.primitive_step
   =
   fun nunivs ->
     fun name ->
@@ -12665,7 +12671,7 @@ let mk_tac_step_9 :
                                                   'nr
                                                     FStar_TypeChecker_NBETerm.embedding
                                                     ->
-                                                    FStar_TypeChecker_Cfg.primitive_step
+                                                    FStar_TypeChecker_Primops.primitive_step
   =
   fun nunivs ->
     fun name ->
@@ -12771,7 +12777,7 @@ let mk_tac_step_10 :
                                                       'nr
                                                         FStar_TypeChecker_NBETerm.embedding
                                                         ->
-                                                        FStar_TypeChecker_Cfg.primitive_step
+                                                        FStar_TypeChecker_Primops.primitive_step
   =
   fun nunivs ->
     fun name ->
@@ -12892,7 +12898,7 @@ let mk_tac_step_11 :
                                                           'nr
                                                             FStar_TypeChecker_NBETerm.embedding
                                                             ->
-                                                            FStar_TypeChecker_Cfg.primitive_step
+                                                            FStar_TypeChecker_Primops.primitive_step
   =
   fun nunivs ->
     fun name ->
@@ -13028,7 +13034,7 @@ let mk_tac_step_12 :
                                                               'nr
                                                                 FStar_TypeChecker_NBETerm.embedding
                                                                 ->
-                                                                FStar_TypeChecker_Cfg.primitive_step
+                                                                FStar_TypeChecker_Primops.primitive_step
   =
   fun nunivs ->
     fun name ->
@@ -13179,7 +13185,7 @@ let mk_tac_step_13 :
                                                                   'nr
                                                                     FStar_TypeChecker_NBETerm.embedding
                                                                     ->
-                                                                    FStar_TypeChecker_Cfg.primitive_step
+                                                                    FStar_TypeChecker_Primops.primitive_step
   =
   fun nunivs ->
     fun name ->
@@ -13344,7 +13350,7 @@ let mk_tac_step_14 :
                                                                     'nr
                                                                     FStar_TypeChecker_NBETerm.embedding
                                                                     ->
-                                                                    FStar_TypeChecker_Cfg.primitive_step
+                                                                    FStar_TypeChecker_Primops.primitive_step
   =
   fun nunivs ->
     fun name ->
@@ -13522,7 +13528,7 @@ let mk_tac_step_15 :
                                                                     'nr
                                                                     FStar_TypeChecker_NBETerm.embedding
                                                                     ->
-                                                                    FStar_TypeChecker_Cfg.primitive_step
+                                                                    FStar_TypeChecker_Primops.primitive_step
   =
   fun nunivs ->
     fun name ->
@@ -13713,7 +13719,7 @@ let mk_tac_step_16 :
                                                                     'nr
                                                                     FStar_TypeChecker_NBETerm.embedding
                                                                     ->
-                                                                    FStar_TypeChecker_Cfg.primitive_step
+                                                                    FStar_TypeChecker_Primops.primitive_step
   =
   fun nunivs ->
     fun name ->
@@ -13918,7 +13924,7 @@ let mk_tac_step_17 :
                                                                     'nr
                                                                     FStar_TypeChecker_NBETerm.embedding
                                                                     ->
-                                                                    FStar_TypeChecker_Cfg.primitive_step
+                                                                    FStar_TypeChecker_Primops.primitive_step
   =
   fun nunivs ->
     fun name ->
@@ -14135,7 +14141,7 @@ let mk_tac_step_18 :
                                                                     'nr
                                                                     FStar_TypeChecker_NBETerm.embedding
                                                                     ->
-                                                                    FStar_TypeChecker_Cfg.primitive_step
+                                                                    FStar_TypeChecker_Primops.primitive_step
   =
   fun nunivs ->
     fun name ->
@@ -14367,7 +14373,7 @@ let mk_tac_step_19 :
                                                                     'nr
                                                                     FStar_TypeChecker_NBETerm.embedding
                                                                     ->
-                                                                    FStar_TypeChecker_Cfg.primitive_step
+                                                                    FStar_TypeChecker_Primops.primitive_step
   =
   fun nunivs ->
     fun name ->
@@ -14611,7 +14617,7 @@ let mk_tac_step_20 :
                                                                     'nr
                                                                     FStar_TypeChecker_NBETerm.embedding
                                                                     ->
-                                                                    FStar_TypeChecker_Cfg.primitive_step
+                                                                    FStar_TypeChecker_Primops.primitive_step
   =
   fun nunivs ->
     fun name ->
@@ -14718,7 +14724,7 @@ let mk_total_step_1 :
               ('nt1 -> 'nr) ->
                 'nt1 FStar_TypeChecker_NBETerm.embedding ->
                   'nr FStar_TypeChecker_NBETerm.embedding ->
-                    FStar_TypeChecker_Cfg.primitive_step
+                    FStar_TypeChecker_Primops.primitive_step
   =
   fun nunivs ->
     fun name ->
@@ -14746,7 +14752,7 @@ let mk_total_step_2 :
                   'nt1 FStar_TypeChecker_NBETerm.embedding ->
                     'nt2 FStar_TypeChecker_NBETerm.embedding ->
                       'nr FStar_TypeChecker_NBETerm.embedding ->
-                        FStar_TypeChecker_Cfg.primitive_step
+                        FStar_TypeChecker_Primops.primitive_step
   =
   fun nunivs ->
     fun name ->
@@ -14779,7 +14785,7 @@ let mk_total_step_3 :
                       'nt2 FStar_TypeChecker_NBETerm.embedding ->
                         'nt3 FStar_TypeChecker_NBETerm.embedding ->
                           'nr FStar_TypeChecker_NBETerm.embedding ->
-                            FStar_TypeChecker_Cfg.primitive_step
+                            FStar_TypeChecker_Primops.primitive_step
   =
   fun nunivs ->
     fun name ->
@@ -14816,7 +14822,7 @@ let mk_total_step_4 :
                           'nt3 FStar_TypeChecker_NBETerm.embedding ->
                             'nt4 FStar_TypeChecker_NBETerm.embedding ->
                               'nr FStar_TypeChecker_NBETerm.embedding ->
-                                FStar_TypeChecker_Cfg.primitive_step
+                                FStar_TypeChecker_Primops.primitive_step
   =
   fun nunivs ->
     fun name ->
@@ -14857,7 +14863,7 @@ let mk_total_step_5 :
                               'nt4 FStar_TypeChecker_NBETerm.embedding ->
                                 'nt5 FStar_TypeChecker_NBETerm.embedding ->
                                   'nr FStar_TypeChecker_NBETerm.embedding ->
-                                    FStar_TypeChecker_Cfg.primitive_step
+                                    FStar_TypeChecker_Primops.primitive_step
   =
   fun nunivs ->
     fun name ->
@@ -14906,7 +14912,7 @@ let mk_total_step_6 :
                                       ->
                                       'nr FStar_TypeChecker_NBETerm.embedding
                                         ->
-                                        FStar_TypeChecker_Cfg.primitive_step
+                                        FStar_TypeChecker_Primops.primitive_step
   =
   fun nunivs ->
     fun name ->
@@ -14967,7 +14973,7 @@ let mk_total_step_7 :
                                           'nr
                                             FStar_TypeChecker_NBETerm.embedding
                                             ->
-                                            FStar_TypeChecker_Cfg.primitive_step
+                                            FStar_TypeChecker_Primops.primitive_step
   =
   fun nunivs ->
     fun name ->
@@ -15039,7 +15045,7 @@ let mk_total_step_8 :
                                               'nr
                                                 FStar_TypeChecker_NBETerm.embedding
                                                 ->
-                                                FStar_TypeChecker_Cfg.primitive_step
+                                                FStar_TypeChecker_Primops.primitive_step
   =
   fun nunivs ->
     fun name ->
@@ -15124,7 +15130,7 @@ let mk_total_step_9 :
                                                   'nr
                                                     FStar_TypeChecker_NBETerm.embedding
                                                     ->
-                                                    FStar_TypeChecker_Cfg.primitive_step
+                                                    FStar_TypeChecker_Primops.primitive_step
   =
   fun nunivs ->
     fun name ->
@@ -15221,7 +15227,7 @@ let mk_total_step_10 :
                                                       'nr
                                                         FStar_TypeChecker_NBETerm.embedding
                                                         ->
-                                                        FStar_TypeChecker_Cfg.primitive_step
+                                                        FStar_TypeChecker_Primops.primitive_step
   =
   fun nunivs ->
     fun name ->
@@ -15334,7 +15340,7 @@ let mk_total_step_11 :
                                                           'nr
                                                             FStar_TypeChecker_NBETerm.embedding
                                                             ->
-                                                            FStar_TypeChecker_Cfg.primitive_step
+                                                            FStar_TypeChecker_Primops.primitive_step
   =
   fun nunivs ->
     fun name ->
@@ -15464,7 +15470,7 @@ let mk_total_step_12 :
                                                               'nr
                                                                 FStar_TypeChecker_NBETerm.embedding
                                                                 ->
-                                                                FStar_TypeChecker_Cfg.primitive_step
+                                                                FStar_TypeChecker_Primops.primitive_step
   =
   fun nunivs ->
     fun name ->
@@ -15608,7 +15614,7 @@ let mk_total_step_13 :
                                                                   'nr
                                                                     FStar_TypeChecker_NBETerm.embedding
                                                                     ->
-                                                                    FStar_TypeChecker_Cfg.primitive_step
+                                                                    FStar_TypeChecker_Primops.primitive_step
   =
   fun nunivs ->
     fun name ->
@@ -15768,7 +15774,7 @@ let mk_total_step_14 :
                                                                     'nr
                                                                     FStar_TypeChecker_NBETerm.embedding
                                                                     ->
-                                                                    FStar_TypeChecker_Cfg.primitive_step
+                                                                    FStar_TypeChecker_Primops.primitive_step
   =
   fun nunivs ->
     fun name ->
@@ -15941,7 +15947,7 @@ let mk_total_step_15 :
                                                                     'nr
                                                                     FStar_TypeChecker_NBETerm.embedding
                                                                     ->
-                                                                    FStar_TypeChecker_Cfg.primitive_step
+                                                                    FStar_TypeChecker_Primops.primitive_step
   =
   fun nunivs ->
     fun name ->
@@ -16127,7 +16133,7 @@ let mk_total_step_16 :
                                                                     'nr
                                                                     FStar_TypeChecker_NBETerm.embedding
                                                                     ->
-                                                                    FStar_TypeChecker_Cfg.primitive_step
+                                                                    FStar_TypeChecker_Primops.primitive_step
   =
   fun nunivs ->
     fun name ->
@@ -16327,7 +16333,7 @@ let mk_total_step_17 :
                                                                     'nr
                                                                     FStar_TypeChecker_NBETerm.embedding
                                                                     ->
-                                                                    FStar_TypeChecker_Cfg.primitive_step
+                                                                    FStar_TypeChecker_Primops.primitive_step
   =
   fun nunivs ->
     fun name ->
@@ -16539,7 +16545,7 @@ let mk_total_step_18 :
                                                                     'nr
                                                                     FStar_TypeChecker_NBETerm.embedding
                                                                     ->
-                                                                    FStar_TypeChecker_Cfg.primitive_step
+                                                                    FStar_TypeChecker_Primops.primitive_step
   =
   fun nunivs ->
     fun name ->
@@ -16766,7 +16772,7 @@ let mk_total_step_19 :
                                                                     'nr
                                                                     FStar_TypeChecker_NBETerm.embedding
                                                                     ->
-                                                                    FStar_TypeChecker_Cfg.primitive_step
+                                                                    FStar_TypeChecker_Primops.primitive_step
   =
   fun nunivs ->
     fun name ->
@@ -17005,7 +17011,7 @@ let mk_total_step_20 :
                                                                     'nr
                                                                     FStar_TypeChecker_NBETerm.embedding
                                                                     ->
-                                                                    FStar_TypeChecker_Cfg.primitive_step
+                                                                    FStar_TypeChecker_Primops.primitive_step
   =
   fun nunivs ->
     fun name ->

@@ -34,7 +34,7 @@ let int1 :
       ('a -> 'r) ->
         'a FStar_Syntax_Embeddings_Base.embedding ->
           'r FStar_Syntax_Embeddings_Base.embedding ->
-            FStar_TypeChecker_Cfg.psc ->
+            FStar_TypeChecker_Primops.psc ->
               FStar_Syntax_Embeddings_Base.norm_cb ->
                 FStar_Syntax_Syntax.args ->
                   FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
@@ -52,7 +52,8 @@ let int1 :
                     FStar_Compiler_Util.bind_opt uu___1
                       (fun a2 ->
                          let uu___2 =
-                           let uu___3 = FStar_TypeChecker_Cfg.psc_range psc in
+                           let uu___3 =
+                             FStar_TypeChecker_Primops.psc_range psc in
                            let uu___4 = f a2 in embed er uu___3 uu___4 n in
                          FStar_Pervasives_Native.Some uu___2)
                 | uu___ -> FStar_Pervasives_Native.None
@@ -63,7 +64,7 @@ let int2 :
         'a FStar_Syntax_Embeddings_Base.embedding ->
           'b FStar_Syntax_Embeddings_Base.embedding ->
             'r FStar_Syntax_Embeddings_Base.embedding ->
-              FStar_TypeChecker_Cfg.psc ->
+              FStar_TypeChecker_Primops.psc ->
                 FStar_Syntax_Embeddings_Base.norm_cb ->
                   FStar_Syntax_Syntax.args ->
                     FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
@@ -86,7 +87,7 @@ let int2 :
                              (fun b2 ->
                                 let uu___4 =
                                   let uu___5 =
-                                    FStar_TypeChecker_Cfg.psc_range psc in
+                                    FStar_TypeChecker_Primops.psc_range psc in
                                   let uu___6 = f a2 b2 in
                                   embed er uu___5 uu___6 n in
                                 FStar_Pervasives_Native.Some uu___4))
@@ -99,7 +100,7 @@ let int3 :
           'b FStar_Syntax_Embeddings_Base.embedding ->
             'c FStar_Syntax_Embeddings_Base.embedding ->
               'r FStar_Syntax_Embeddings_Base.embedding ->
-                FStar_TypeChecker_Cfg.psc ->
+                FStar_TypeChecker_Primops.psc ->
                   FStar_Syntax_Embeddings_Base.norm_cb ->
                     FStar_Syntax_Syntax.args ->
                       FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
@@ -126,7 +127,7 @@ let int3 :
                                     (fun c2 ->
                                        let uu___6 =
                                          let uu___7 =
-                                           FStar_TypeChecker_Cfg.psc_range
+                                           FStar_TypeChecker_Primops.psc_range
                                              psc in
                                          let uu___8 = f a2 b2 c2 in
                                          embed er uu___7 uu___8 n in
@@ -236,7 +237,7 @@ let (mk_us :
   FStar_Ident.lid ->
     Prims.int ->
       Prims.int ->
-        (FStar_TypeChecker_Cfg.psc ->
+        (FStar_TypeChecker_Primops.psc ->
            FStar_Syntax_Embeddings_Base.norm_cb ->
              FStar_Syntax_Syntax.args ->
                FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
@@ -244,7 +245,7 @@ let (mk_us :
           (FStar_TypeChecker_NBETerm.nbe_cbs ->
              FStar_TypeChecker_NBETerm.args ->
                FStar_TypeChecker_NBETerm.t FStar_Pervasives_Native.option)
-            -> FStar_TypeChecker_Cfg.primitive_step)
+            -> FStar_TypeChecker_Primops.primitive_step)
   =
   fun l ->
     fun u_arity ->
@@ -252,23 +253,23 @@ let (mk_us :
         fun fn ->
           fun nbe_fn ->
             {
-              FStar_TypeChecker_Cfg.name = l;
-              FStar_TypeChecker_Cfg.arity = arity;
-              FStar_TypeChecker_Cfg.univ_arity = u_arity;
-              FStar_TypeChecker_Cfg.auto_reflect =
+              FStar_TypeChecker_Primops.name = l;
+              FStar_TypeChecker_Primops.arity = arity;
+              FStar_TypeChecker_Primops.univ_arity = u_arity;
+              FStar_TypeChecker_Primops.auto_reflect =
                 FStar_Pervasives_Native.None;
-              FStar_TypeChecker_Cfg.strong_reduction_ok = true;
-              FStar_TypeChecker_Cfg.requires_binder_substitution = false;
-              FStar_TypeChecker_Cfg.renorm_after = false;
-              FStar_TypeChecker_Cfg.interpretation =
+              FStar_TypeChecker_Primops.strong_reduction_ok = true;
+              FStar_TypeChecker_Primops.requires_binder_substitution = false;
+              FStar_TypeChecker_Primops.renorm_after = false;
+              FStar_TypeChecker_Primops.interpretation =
                 (fun psc -> fun cbs -> fun _us -> fun args -> fn psc cbs args);
-              FStar_TypeChecker_Cfg.interpretation_nbe =
+              FStar_TypeChecker_Primops.interpretation_nbe =
                 (fun cbs -> fun _us -> fun args -> nbe_fn cbs args)
             }
 let (mk :
   FStar_Ident.lid ->
     Prims.int ->
-      (FStar_TypeChecker_Cfg.psc ->
+      (FStar_TypeChecker_Primops.psc ->
          FStar_Syntax_Embeddings_Base.norm_cb ->
            FStar_Syntax_Syntax.args ->
              FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
@@ -276,7 +277,7 @@ let (mk :
         (FStar_TypeChecker_NBETerm.nbe_cbs ->
            FStar_TypeChecker_NBETerm.args ->
              FStar_TypeChecker_NBETerm.t FStar_Pervasives_Native.option)
-          -> FStar_TypeChecker_Cfg.primitive_step)
+          -> FStar_TypeChecker_Primops.primitive_step)
   =
   fun l ->
     fun arity ->
@@ -408,7 +409,7 @@ let mk1' :
   'a 'r .
     Prims.string ->
       ('a -> 'r) ->
-        'a dualemb -> 'r dualemb -> FStar_TypeChecker_Cfg.primitive_step
+        'a dualemb -> 'r dualemb -> FStar_TypeChecker_Primops.primitive_step
   =
   fun nm ->
     fun f ->
@@ -424,7 +425,7 @@ let mk1 :
   'a 'r .
     Prims.string ->
       ('a -> 'r) ->
-        'a dualemb -> 'r dualemb -> FStar_TypeChecker_Cfg.primitive_step
+        'a dualemb -> 'r dualemb -> FStar_TypeChecker_Primops.primitive_step
   =
   fun nm ->
     fun f ->
@@ -441,7 +442,8 @@ let mk2 :
     Prims.string ->
       ('a -> 'b -> 'r) ->
         'a dualemb ->
-          'b dualemb -> 'r dualemb -> FStar_TypeChecker_Cfg.primitive_step
+          'b dualemb ->
+            'r dualemb -> FStar_TypeChecker_Primops.primitive_step
   =
   fun nm ->
     fun f ->
@@ -462,7 +464,8 @@ let mk3 :
       ('a -> 'b -> 'c -> 'r) ->
         'a dualemb ->
           'b dualemb ->
-            'c dualemb -> 'r dualemb -> FStar_TypeChecker_Cfg.primitive_step
+            'c dualemb ->
+              'r dualemb -> FStar_TypeChecker_Primops.primitive_step
   =
   fun nm ->
     fun f ->
@@ -480,7 +483,8 @@ let mk3 :
                    (FStar_Pervasives_Native.snd eb)
                    (FStar_Pervasives_Native.snd ec)
                    (FStar_Pervasives_Native.snd er))
-let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
+let (reflection_primops :
+  FStar_TypeChecker_Primops.primitive_step Prims.list) =
   let uu___ =
     mk1 "inspect_ln" FStar_Reflection_V2_Builtins.inspect_ln e_term
       e_term_view in
