@@ -418,7 +418,8 @@ let comp_withlocal_body (r:var) (init_t:term) (init:term) (c:comp{C_ST? c}) : co
     post = comp_withlocal_body_post (comp_post c) init_t r
   }
 
-let mk_array (a:term) : term = tm_pureapp (tm_fvar (as_fv array_lid)) None a
+let mk_array (a:term) : term =
+  tm_pureapp (tm_fvar (as_fv array_lid)) None a
 
 let mk_array_length (a:term) (arr:term) : term =
   let t = tm_fvar (as_fv array_length_lid) in
@@ -432,10 +433,10 @@ let mk_array_pts_to (a:term) (arr:term) (v:term) : term =
   let t = tm_pureapp t (Some Implicit) (tm_fvar (as_fv full_perm_lid)) in
   tm_pureapp t None v
 
-let mk_array_is_full (a:term) (arr:term) : term =
-  let t = tm_fvar (as_fv array_is_full_lid) in
-  let t = tm_pureapp t (Some Implicit) a in
-  tm_pureapp t None arr
+// let mk_array_is_full (a:term) (arr:term) : term =
+//   let t = tm_fvar (as_fv array_is_full_lid) in
+//   let t = tm_pureapp t (Some Implicit) a in
+//   tm_pureapp t None arr
 
 let mk_seq_create (u:universe) (a:term) (len:term) (v:term) : term =
   let t = tm_uinst (as_fv seq_create_lid) [u] in
@@ -450,8 +451,7 @@ let mk_szv (n:term) : term =
 let comp_withlocal_array_body_pre (pre:vprop) (a:term) (arr:term) (init:term) (len:term) : vprop =
   tm_star pre
           (tm_star (mk_array_pts_to a arr (mk_seq_create u0 a (mk_szv len) init))
-                   (tm_star (tm_pure (mk_array_is_full a arr))
-                            (tm_pure (mk_eq2 u0 tm_nat (mk_array_length a arr) (mk_szv len)))))
+                   (tm_pure (mk_eq2 u0 tm_nat (mk_array_length a arr) (mk_szv len))))
 
 let mk_seq (u:universe) (a:term) : term =
   let t = tm_uinst (as_fv seq_lid) [u] in

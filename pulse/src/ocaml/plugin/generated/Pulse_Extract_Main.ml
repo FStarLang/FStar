@@ -947,7 +947,7 @@ let rec (extract :
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "Pulse.Extract.Main.fst"
-                 (Prims.of_int (190)) (Prims.of_int (4)) (Prims.of_int (305))
+                 (Prims.of_int (190)) (Prims.of_int (4)) (Prims.of_int (318))
                  (Prims.of_int (7)))))
         (FStar_Tactics_Effect.lift_div_tac
            (fun uu___ ->
@@ -966,7 +966,7 @@ let rec (extract :
                       (Obj.magic
                          (FStar_Range.mk_range "Pulse.Extract.Main.fst"
                             (Prims.of_int (193)) (Prims.of_int (4))
-                            (Prims.of_int (305)) (Prims.of_int (7)))))
+                            (Prims.of_int (318)) (Prims.of_int (7)))))
                    (Obj.magic
                       (debug g
                          (fun uu___ ->
@@ -1063,7 +1063,7 @@ let rec (extract :
                                        "Pulse.Extract.Main.fst"
                                        (Prims.of_int (193))
                                        (Prims.of_int (4))
-                                       (Prims.of_int (305))
+                                       (Prims.of_int (318))
                                        (Prims.of_int (7)))))
                               (Obj.magic (is_erasable p))
                               (fun uu___1 ->
@@ -2479,10 +2479,188 @@ let rec (extract :
                                                                     uu___3)))
                                                           uu___3))
                                             | Pulse_Syntax_Base.Tm_WithLocalArray
-                                                uu___3 ->
+                                                {
+                                                  Pulse_Syntax_Base.binder3 =
+                                                    binder;
+                                                  Pulse_Syntax_Base.initializer2
+                                                    = initializer1;
+                                                  Pulse_Syntax_Base.length =
+                                                    length;
+                                                  Pulse_Syntax_Base.body5 =
+                                                    body;_}
+                                                ->
                                                 Obj.repr
-                                                  (FStar_Tactics_V2_Derived.fail
-                                                     "Extraction of local arrays is not yet supported")
+                                                  (FStar_Tactics_Effect.tac_bind
+                                                     (FStar_Sealed.seal
+                                                        (Obj.magic
+                                                           (FStar_Range.mk_range
+                                                              "Pulse.Extract.Main.fst"
+                                                              (Prims.of_int (301))
+                                                              (Prims.of_int (26))
+                                                              (Prims.of_int (301))
+                                                              (Prims.of_int (54)))))
+                                                     (FStar_Sealed.seal
+                                                        (Obj.magic
+                                                           (FStar_Range.mk_range
+                                                              "Pulse.Extract.Main.fst"
+                                                              (Prims.of_int (301))
+                                                              (Prims.of_int (57))
+                                                              (Prims.of_int (314))
+                                                              (Prims.of_int (47)))))
+                                                     (Obj.magic
+                                                        (term_as_mlexpr g
+                                                           initializer1))
+                                                     (fun uu___3 ->
+                                                        (fun initializer2 ->
+                                                           Obj.magic
+                                                             (FStar_Tactics_Effect.tac_bind
+                                                                (FStar_Sealed.seal
+                                                                   (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "Pulse.Extract.Main.fst"
+                                                                    (Prims.of_int (302))
+                                                                    (Prims.of_int (21))
+                                                                    (Prims.of_int (302))
+                                                                    (Prims.of_int (44)))))
+                                                                (FStar_Sealed.seal
+                                                                   (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "Pulse.Extract.Main.fst"
+                                                                    (Prims.of_int (302))
+                                                                    (Prims.of_int (47))
+                                                                    (Prims.of_int (314))
+                                                                    (Prims.of_int (47)))))
+                                                                (Obj.magic
+                                                                   (term_as_mlexpr
+                                                                    g length))
+                                                                (fun uu___3
+                                                                   ->
+                                                                   (fun
+                                                                    length1
+                                                                    ->
+                                                                    Obj.magic
+                                                                    (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "Pulse.Extract.Main.fst"
+                                                                    (Prims.of_int (303))
+                                                                    (Prims.of_int (37))
+                                                                    (Prims.of_int (303))
+                                                                    (Prims.of_int (94)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "Pulse.Extract.Main.fst"
+                                                                    (Prims.of_int (302))
+                                                                    (Prims.of_int (47))
+                                                                    (Prims.of_int (314))
+                                                                    (Prims.of_int (47)))))
+                                                                    (Obj.magic
+                                                                    (extend_env
+                                                                    g
+                                                                    {
+                                                                    Pulse_Syntax_Base.binder_ty
+                                                                    =
+                                                                    (binder.Pulse_Syntax_Base.binder_ty);
+                                                                    Pulse_Syntax_Base.binder_ppname
+                                                                    =
+                                                                    (binder.Pulse_Syntax_Base.binder_ppname)
+                                                                    }))
+                                                                    (fun
+                                                                    uu___3 ->
+                                                                    (fun
+                                                                    uu___3 ->
+                                                                    match uu___3
+                                                                    with
+                                                                    | 
+                                                                    (g1,
+                                                                    mlident,
+                                                                    mlty,
+                                                                    name1) ->
+                                                                    Obj.magic
+                                                                    (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "Pulse.Extract.Main.fst"
+                                                                    (Prims.of_int (304))
+                                                                    (Prims.of_int (19))
+                                                                    (Prims.of_int (304))
+                                                                    (Prims.of_int (47)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "Pulse.Extract.Main.fst"
+                                                                    (Prims.of_int (304))
+                                                                    (Prims.of_int (50))
+                                                                    (Prims.of_int (314))
+                                                                    (Prims.of_int (47)))))
+                                                                    (FStar_Tactics_Effect.lift_div_tac
+                                                                    (fun
+                                                                    uu___4 ->
+                                                                    Pulse_Syntax_Naming.open_st_term_nv
+                                                                    body
+                                                                    name1))
+                                                                    (fun
+                                                                    uu___4 ->
+                                                                    (fun
+                                                                    body1 ->
+                                                                    Obj.magic
+                                                                    (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "Pulse.Extract.Main.fst"
+                                                                    (Prims.of_int (305))
+                                                                    (Prims.of_int (22))
+                                                                    (Prims.of_int (305))
+                                                                    (Prims.of_int (36)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "Pulse.Extract.Main.fst"
+                                                                    (Prims.of_int (304))
+                                                                    (Prims.of_int (50))
+                                                                    (Prims.of_int (314))
+                                                                    (Prims.of_int (47)))))
+                                                                    (Obj.magic
+                                                                    (extract
+                                                                    g1 body1))
+                                                                    (fun
+                                                                    uu___4 ->
+                                                                    FStar_Tactics_Effect.lift_div_tac
+                                                                    (fun
+                                                                    uu___5 ->
+                                                                    match uu___4
+                                                                    with
+                                                                    | 
+                                                                    (body2,
+                                                                    uu___6)
+                                                                    ->
+                                                                    ((Pulse_Extract_CompilerLib.mle_let
+                                                                    (Pulse_Extract_CompilerLib.mk_mlletbinding
+                                                                    false
+                                                                    [
+                                                                    Pulse_Extract_CompilerLib.mk_mut_mllb
+                                                                    mlident
+                                                                    ([],
+                                                                    mlty)
+                                                                    (Pulse_Extract_CompilerLib.mle_app
+                                                                    (Pulse_Extract_CompilerLib.mle_name
+                                                                    (["Pulse";
+                                                                    "Lib";
+                                                                    "Array";
+                                                                    "Core"],
+                                                                    "alloc"))
+                                                                    [initializer2;
+                                                                    length1])])
+                                                                    body2),
+                                                                    Pulse_Extract_CompilerLib.e_tag_impure)))))
+                                                                    uu___4)))
+                                                                    uu___3)))
+                                                                    uu___3)))
+                                                          uu___3))
                                             | Pulse_Syntax_Base.Tm_ProofHintWithBinders
                                                 {
                                                   Pulse_Syntax_Base.hint_type
@@ -2502,17 +2680,17 @@ let rec (extract :
                                                         (Obj.magic
                                                            (FStar_Range.mk_range
                                                               "Pulse.Extract.Main.fst"
-                                                              (Prims.of_int (304))
+                                                              (Prims.of_int (317))
                                                               (Prims.of_int (30))
-                                                              (Prims.of_int (304))
+                                                              (Prims.of_int (317))
                                                               (Prims.of_int (149)))))
                                                      (FStar_Sealed.seal
                                                         (Obj.magic
                                                            (FStar_Range.mk_range
                                                               "Pulse.Extract.Main.fst"
-                                                              (Prims.of_int (304))
+                                                              (Prims.of_int (317))
                                                               (Prims.of_int (22))
-                                                              (Prims.of_int (304))
+                                                              (Prims.of_int (317))
                                                               (Prims.of_int (149)))))
                                                      (Obj.magic
                                                         (FStar_Tactics_Effect.tac_bind
@@ -2520,17 +2698,17 @@ let rec (extract :
                                                               (Obj.magic
                                                                  (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (304))
+                                                                    (Prims.of_int (317))
                                                                     (Prims.of_int (50))
-                                                                    (Prims.of_int (304))
+                                                                    (Prims.of_int (317))
                                                                     (Prims.of_int (148)))))
                                                            (FStar_Sealed.seal
                                                               (Obj.magic
                                                                  (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (304))
+                                                                    (Prims.of_int (317))
                                                                     (Prims.of_int (30))
-                                                                    (Prims.of_int (304))
+                                                                    (Prims.of_int (317))
                                                                     (Prims.of_int (149)))))
                                                            (Obj.magic
                                                               (FStar_Tactics_Effect.tac_bind
@@ -2539,9 +2717,9 @@ let rec (extract :
                                                                     Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (304))
+                                                                    (Prims.of_int (317))
                                                                     (Prims.of_int (105))
-                                                                    (Prims.of_int (304))
+                                                                    (Prims.of_int (317))
                                                                     (Prims.of_int (147)))))
                                                                  (FStar_Sealed.seal
                                                                     (
@@ -2592,13 +2770,13 @@ let rec (generalize :
           (FStar_Sealed.seal
              (Obj.magic
                 (FStar_Range.mk_range "Pulse.Extract.Main.fst"
-                   (Prims.of_int (313)) (Prims.of_int (2))
-                   (Prims.of_int (313)) (Prims.of_int (84)))))
+                   (Prims.of_int (326)) (Prims.of_int (2))
+                   (Prims.of_int (326)) (Prims.of_int (84)))))
           (FStar_Sealed.seal
              (Obj.magic
                 (FStar_Range.mk_range "Pulse.Extract.Main.fst"
-                   (Prims.of_int (313)) (Prims.of_int (85))
-                   (Prims.of_int (350)) (Prims.of_int (20)))))
+                   (Prims.of_int (326)) (Prims.of_int (85))
+                   (Prims.of_int (363)) (Prims.of_int (20)))))
           (Obj.magic
              (debug g
                 (fun uu___ ->
@@ -2606,8 +2784,8 @@ let rec (generalize :
                      (FStar_Sealed.seal
                         (Obj.magic
                            (FStar_Range.mk_range "Pulse.Extract.Main.fst"
-                              (Prims.of_int (313)) (Prims.of_int (63))
-                              (Prims.of_int (313)) (Prims.of_int (83)))))
+                              (Prims.of_int (326)) (Prims.of_int (63))
+                              (Prims.of_int (326)) (Prims.of_int (83)))))
                      (FStar_Sealed.seal
                         (Obj.magic
                            (FStar_Range.mk_range "prims.fst"
@@ -2626,13 +2804,13 @@ let rec (generalize :
                      (FStar_Sealed.seal
                         (Obj.magic
                            (FStar_Range.mk_range "Pulse.Extract.Main.fst"
-                              (Prims.of_int (314)) (Prims.of_int (11))
-                              (Prims.of_int (314)) (Prims.of_int (25)))))
+                              (Prims.of_int (327)) (Prims.of_int (11))
+                              (Prims.of_int (327)) (Prims.of_int (25)))))
                      (FStar_Sealed.seal
                         (Obj.magic
                            (FStar_Range.mk_range "Pulse.Extract.Main.fst"
-                              (Prims.of_int (315)) (Prims.of_int (2))
-                              (Prims.of_int (350)) (Prims.of_int (20)))))
+                              (Prims.of_int (328)) (Prims.of_int (2))
+                              (Prims.of_int (363)) (Prims.of_int (20)))))
                      (FStar_Tactics_Effect.lift_div_tac
                         (fun uu___1 ->
                            FStar_Reflection_V2_Builtins.inspect_ln t))
@@ -2647,17 +2825,17 @@ let rec (generalize :
                                           (Obj.magic
                                              (FStar_Range.mk_range
                                                 "Pulse.Extract.Main.fst"
-                                                (Prims.of_int (317))
+                                                (Prims.of_int (330))
                                                 (Prims.of_int (25))
-                                                (Prims.of_int (317))
+                                                (Prims.of_int (330))
                                                 (Prims.of_int (43)))))
                                        (FStar_Sealed.seal
                                           (Obj.magic
                                              (FStar_Range.mk_range
                                                 "Pulse.Extract.Main.fst"
-                                                (Prims.of_int (316))
+                                                (Prims.of_int (329))
                                                 (Prims.of_int (21))
-                                                (Prims.of_int (348))
+                                                (Prims.of_int (361))
                                                 (Prims.of_int (20)))))
                                        (FStar_Tactics_Effect.lift_div_tac
                                           (fun uu___1 ->
@@ -2694,17 +2872,17 @@ let rec (generalize :
                                                               (Obj.magic
                                                                  (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (320))
+                                                                    (Prims.of_int (333))
                                                                     (Prims.of_int (12))
-                                                                    (Prims.of_int (320))
+                                                                    (Prims.of_int (333))
                                                                     (Prims.of_int (37)))))
                                                            (FStar_Sealed.seal
                                                               (Obj.magic
                                                                  (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (320))
+                                                                    (Prims.of_int (333))
                                                                     (Prims.of_int (9))
-                                                                    (Prims.of_int (348))
+                                                                    (Prims.of_int (361))
                                                                     (Prims.of_int (20)))))
                                                            (FStar_Tactics_Effect.lift_div_tac
                                                               (fun uu___5 ->
@@ -2722,17 +2900,17 @@ let rec (generalize :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (321))
+                                                                    (Prims.of_int (334))
                                                                     (Prims.of_int (21))
-                                                                    (Prims.of_int (321))
+                                                                    (Prims.of_int (334))
                                                                     (Prims.of_int (37)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (322))
+                                                                    (Prims.of_int (335))
                                                                     (Prims.of_int (9))
-                                                                    (Prims.of_int (347))
+                                                                    (Prims.of_int (360))
                                                                     (Prims.of_int (73)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -2755,17 +2933,17 @@ let rec (generalize :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (324))
+                                                                    (Prims.of_int (337))
                                                                     (Prims.of_int (19))
-                                                                    (Prims.of_int (324))
+                                                                    (Prims.of_int (337))
                                                                     (Prims.of_int (47)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (324))
+                                                                    (Prims.of_int (337))
                                                                     (Prims.of_int (50))
-                                                                    (Prims.of_int (346))
+                                                                    (Prims.of_int (359))
                                                                     (Prims.of_int (56)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -2781,17 +2959,17 @@ let rec (generalize :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (325))
+                                                                    (Prims.of_int (338))
                                                                     (Prims.of_int (23))
-                                                                    (Prims.of_int (325))
+                                                                    (Prims.of_int (338))
                                                                     (Prims.of_int (96)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (325))
+                                                                    (Prims.of_int (338))
                                                                     (Prims.of_int (100))
-                                                                    (Prims.of_int (346))
+                                                                    (Prims.of_int (359))
                                                                     (Prims.of_int (56)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -2818,17 +2996,17 @@ let rec (generalize :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (326))
+                                                                    (Prims.of_int (339))
                                                                     (Prims.of_int (19))
-                                                                    (Prims.of_int (326))
+                                                                    (Prims.of_int (339))
                                                                     (Prims.of_int (45)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (326))
+                                                                    (Prims.of_int (339))
                                                                     (Prims.of_int (48))
-                                                                    (Prims.of_int (346))
+                                                                    (Prims.of_int (359))
                                                                     (Prims.of_int (56)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -2848,17 +3026,17 @@ let rec (generalize :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (328))
+                                                                    (Prims.of_int (341))
                                                                     (Prims.of_int (13))
-                                                                    (Prims.of_int (331))
+                                                                    (Prims.of_int (344))
                                                                     (Prims.of_int (21)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (331))
+                                                                    (Prims.of_int (344))
                                                                     (Prims.of_int (24))
-                                                                    (Prims.of_int (346))
+                                                                    (Prims.of_int (359))
                                                                     (Prims.of_int (56)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -2907,17 +3085,17 @@ let rec (generalize :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (332))
+                                                                    (Prims.of_int (345))
                                                                     (Prims.of_int (24))
-                                                                    (Prims.of_int (336))
+                                                                    (Prims.of_int (349))
                                                                     (Prims.of_int (12)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (336))
+                                                                    (Prims.of_int (349))
                                                                     (Prims.of_int (15))
-                                                                    (Prims.of_int (346))
+                                                                    (Prims.of_int (359))
                                                                     (Prims.of_int (56)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -2943,17 +3121,17 @@ let rec (generalize :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (337))
+                                                                    (Prims.of_int (350))
                                                                     (Prims.of_int (22))
-                                                                    (Prims.of_int (337))
+                                                                    (Prims.of_int (350))
                                                                     (Prims.of_int (51)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (337))
+                                                                    (Prims.of_int (350))
                                                                     (Prims.of_int (54))
-                                                                    (Prims.of_int (346))
+                                                                    (Prims.of_int (359))
                                                                     (Prims.of_int (56)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -2971,17 +3149,17 @@ let rec (generalize :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (339))
+                                                                    (Prims.of_int (352))
                                                                     (Prims.of_int (13))
-                                                                    (Prims.of_int (343))
+                                                                    (Prims.of_int (356))
                                                                     (Prims.of_int (50)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (343))
+                                                                    (Prims.of_int (356))
                                                                     (Prims.of_int (53))
-                                                                    (Prims.of_int (346))
+                                                                    (Prims.of_int (359))
                                                                     (Prims.of_int (56)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -3006,17 +3184,17 @@ let rec (generalize :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (344))
+                                                                    (Prims.of_int (357))
                                                                     (Prims.of_int (21))
-                                                                    (Prims.of_int (344))
+                                                                    (Prims.of_int (357))
                                                                     (Prims.of_int (54)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (344))
+                                                                    (Prims.of_int (357))
                                                                     (Prims.of_int (59))
-                                                                    (Prims.of_int (346))
+                                                                    (Prims.of_int (359))
                                                                     (Prims.of_int (56)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -3036,17 +3214,17 @@ let rec (generalize :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (345))
+                                                                    (Prims.of_int (358))
                                                                     (Prims.of_int (30))
-                                                                    (Prims.of_int (345))
+                                                                    (Prims.of_int (358))
                                                                     (Prims.of_int (46)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (344))
+                                                                    (Prims.of_int (357))
                                                                     (Prims.of_int (59))
-                                                                    (Prims.of_int (346))
+                                                                    (Prims.of_int (359))
                                                                     (Prims.of_int (56)))))
                                                                     (Obj.magic
                                                                     (generalize
@@ -3120,13 +3298,13 @@ let (extract_pulse :
           (FStar_Sealed.seal
              (Obj.magic
                 (FStar_Range.mk_range "Pulse.Extract.Main.fst"
-                   (Prims.of_int (357)) (Prims.of_int (12))
-                   (Prims.of_int (357)) (Prims.of_int (52)))))
+                   (Prims.of_int (370)) (Prims.of_int (12))
+                   (Prims.of_int (370)) (Prims.of_int (52)))))
           (FStar_Sealed.seal
              (Obj.magic
                 (FStar_Range.mk_range "Pulse.Extract.Main.fst"
-                   (Prims.of_int (358)) (Prims.of_int (2))
-                   (Prims.of_int (384)) (Prims.of_int (75)))))
+                   (Prims.of_int (371)) (Prims.of_int (2))
+                   (Prims.of_int (397)) (Prims.of_int (75)))))
           (FStar_Tactics_Effect.lift_div_tac
              (fun uu___ ->
                 {
@@ -3140,13 +3318,13 @@ let (extract_pulse :
                      (FStar_Sealed.seal
                         (Obj.magic
                            (FStar_Range.mk_range "Pulse.Extract.Main.fst"
-                              (Prims.of_int (358)) (Prims.of_int (2))
-                              (Prims.of_int (358)) (Prims.of_int (83)))))
+                              (Prims.of_int (371)) (Prims.of_int (2))
+                              (Prims.of_int (371)) (Prims.of_int (83)))))
                      (FStar_Sealed.seal
                         (Obj.magic
                            (FStar_Range.mk_range "Pulse.Extract.Main.fst"
-                              (Prims.of_int (360)) (Prims.of_int (2))
-                              (Prims.of_int (384)) (Prims.of_int (75)))))
+                              (Prims.of_int (373)) (Prims.of_int (2))
+                              (Prims.of_int (397)) (Prims.of_int (75)))))
                      (Obj.magic
                         (debug g1
                            (fun uu___ ->
@@ -3155,9 +3333,9 @@ let (extract_pulse :
                                    (Obj.magic
                                       (FStar_Range.mk_range
                                          "Pulse.Extract.Main.fst"
-                                         (Prims.of_int (358))
+                                         (Prims.of_int (371))
                                          (Prims.of_int (61))
-                                         (Prims.of_int (358))
+                                         (Prims.of_int (371))
                                          (Prims.of_int (82)))))
                                 (FStar_Sealed.seal
                                    (Obj.magic
@@ -3185,17 +3363,17 @@ let (extract_pulse :
                                             (Obj.magic
                                                (FStar_Range.mk_range
                                                   "Pulse.Extract.Main.fst"
-                                                  (Prims.of_int (361))
+                                                  (Prims.of_int (374))
                                                   (Prims.of_int (22))
-                                                  (Prims.of_int (361))
+                                                  (Prims.of_int (374))
                                                   (Prims.of_int (43)))))
                                          (FStar_Sealed.seal
                                             (Obj.magic
                                                (FStar_Range.mk_range
                                                   "Pulse.Extract.Main.fst"
-                                                  (Prims.of_int (362))
+                                                  (Prims.of_int (375))
                                                   (Prims.of_int (4))
-                                                  (Prims.of_int (379))
+                                                  (Prims.of_int (392))
                                                   (Prims.of_int (59)))))
                                          (FStar_Tactics_Effect.lift_div_tac
                                             (fun uu___2 ->
@@ -3226,17 +3404,17 @@ let (extract_pulse :
                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (367))
+                                                                    (Prims.of_int (380))
                                                                     (Prims.of_int (30))
-                                                                    (Prims.of_int (367))
+                                                                    (Prims.of_int (380))
                                                                     (Prims.of_int (60)))))
                                                                 (FStar_Sealed.seal
                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (366))
+                                                                    (Prims.of_int (379))
                                                                     (Prims.of_int (10))
-                                                                    (Prims.of_int (378))
+                                                                    (Prims.of_int (391))
                                                                     (Prims.of_int (34)))))
                                                                 (FStar_Tactics_Effect.lift_div_tac
                                                                    (fun
@@ -3267,17 +3445,17 @@ let (extract_pulse :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (368))
+                                                                    (Prims.of_int (381))
                                                                     (Prims.of_int (32))
-                                                                    (Prims.of_int (368))
+                                                                    (Prims.of_int (381))
                                                                     (Prims.of_int (60)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (367))
+                                                                    (Prims.of_int (380))
                                                                     (Prims.of_int (63))
-                                                                    (Prims.of_int (378))
+                                                                    (Prims.of_int (391))
                                                                     (Prims.of_int (34)))))
                                                                     (Obj.magic
                                                                     (generalize
@@ -3300,17 +3478,17 @@ let (extract_pulse :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (369))
+                                                                    (Prims.of_int (382))
                                                                     (Prims.of_int (19))
-                                                                    (Prims.of_int (369))
+                                                                    (Prims.of_int (382))
                                                                     (Prims.of_int (55)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (370))
+                                                                    (Prims.of_int (383))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (378))
+                                                                    (Prims.of_int (391))
                                                                     (Prims.of_int (34)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -3328,17 +3506,17 @@ let (extract_pulse :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (370))
+                                                                    (Prims.of_int (383))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (371))
+                                                                    (Prims.of_int (384))
                                                                     (Prims.of_int (56)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (371))
+                                                                    (Prims.of_int (384))
                                                                     (Prims.of_int (57))
-                                                                    (Prims.of_int (378))
+                                                                    (Prims.of_int (391))
                                                                     (Prims.of_int (34)))))
                                                                     (if
                                                                     FStar_Pervasives_Native.uu___is_None
@@ -3362,17 +3540,17 @@ let (extract_pulse :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (372))
+                                                                    (Prims.of_int (385))
                                                                     (Prims.of_int (22))
-                                                                    (Prims.of_int (372))
+                                                                    (Prims.of_int (385))
                                                                     (Prims.of_int (43)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (371))
+                                                                    (Prims.of_int (384))
                                                                     (Prims.of_int (57))
-                                                                    (Prims.of_int (378))
+                                                                    (Prims.of_int (391))
                                                                     (Prims.of_int (34)))))
                                                                     (Obj.magic
                                                                     (extract
@@ -3394,17 +3572,17 @@ let (extract_pulse :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (373))
+                                                                    (Prims.of_int (386))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (373))
+                                                                    (Prims.of_int (386))
                                                                     (Prims.of_int (87)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (373))
+                                                                    (Prims.of_int (386))
                                                                     (Prims.of_int (88))
-                                                                    (Prims.of_int (378))
+                                                                    (Prims.of_int (391))
                                                                     (Prims.of_int (34)))))
                                                                     (Obj.magic
                                                                     (debug_
@@ -3434,17 +3612,17 @@ let (extract_pulse :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (374))
+                                                                    (Prims.of_int (387))
                                                                     (Prims.of_int (22))
-                                                                    (Prims.of_int (374))
+                                                                    (Prims.of_int (387))
                                                                     (Prims.of_int (40)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (375))
+                                                                    (Prims.of_int (388))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (378))
+                                                                    (Prims.of_int (391))
                                                                     (Prims.of_int (34)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -3464,17 +3642,17 @@ let (extract_pulse :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (375))
+                                                                    (Prims.of_int (388))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (376))
+                                                                    (Prims.of_int (389))
                                                                     (Prims.of_int (65)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (378))
+                                                                    (Prims.of_int (391))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (378))
+                                                                    (Prims.of_int (391))
                                                                     (Prims.of_int (34)))))
                                                                     (if
                                                                     (FStar_List_Tot_Base.length
@@ -3556,13 +3734,13 @@ let (extract_pulse_sig :
                    (FStar_Sealed.seal
                       (Obj.magic
                          (FStar_Range.mk_range "Pulse.Extract.Main.fst"
-                            (Prims.of_int (391)) (Prims.of_int (22))
-                            (Prims.of_int (391)) (Prims.of_int (43)))))
+                            (Prims.of_int (404)) (Prims.of_int (22))
+                            (Prims.of_int (404)) (Prims.of_int (43)))))
                    (FStar_Sealed.seal
                       (Obj.magic
                          (FStar_Range.mk_range "Pulse.Extract.Main.fst"
-                            (Prims.of_int (392)) (Prims.of_int (4))
-                            (Prims.of_int (405)) (Prims.of_int (59)))))
+                            (Prims.of_int (405)) (Prims.of_int (4))
+                            (Prims.of_int (418)) (Prims.of_int (59)))))
                    (FStar_Tactics_Effect.lift_div_tac
                       (fun uu___1 ->
                          FStar_Reflection_V2_Builtins.inspect_sigelt selt))
@@ -3588,17 +3766,17 @@ let (extract_pulse_sig :
                                              (Obj.magic
                                                 (FStar_Range.mk_range
                                                    "Pulse.Extract.Main.fst"
-                                                   (Prims.of_int (397))
+                                                   (Prims.of_int (410))
                                                    (Prims.of_int (30))
-                                                   (Prims.of_int (397))
+                                                   (Prims.of_int (410))
                                                    (Prims.of_int (60)))))
                                           (FStar_Sealed.seal
                                              (Obj.magic
                                                 (FStar_Range.mk_range
                                                    "Pulse.Extract.Main.fst"
-                                                   (Prims.of_int (396))
+                                                   (Prims.of_int (409))
                                                    (Prims.of_int (10))
-                                                   (Prims.of_int (404))
+                                                   (Prims.of_int (417))
                                                    (Prims.of_int (49)))))
                                           (FStar_Tactics_Effect.lift_div_tac
                                              (fun uu___2 ->
@@ -3623,17 +3801,17 @@ let (extract_pulse_sig :
                                                             (Obj.magic
                                                                (FStar_Range.mk_range
                                                                   "Pulse.Extract.Main.fst"
-                                                                  (Prims.of_int (398))
+                                                                  (Prims.of_int (411))
                                                                   (Prims.of_int (17))
-                                                                  (Prims.of_int (398))
+                                                                  (Prims.of_int (411))
                                                                   (Prims.of_int (18)))))
                                                          (FStar_Sealed.seal
                                                             (Obj.magic
                                                                (FStar_Range.mk_range
                                                                   "Pulse.Extract.Main.fst"
-                                                                  (Prims.of_int (398))
+                                                                  (Prims.of_int (411))
                                                                   (Prims.of_int (21))
-                                                                  (Prims.of_int (404))
+                                                                  (Prims.of_int (417))
                                                                   (Prims.of_int (49)))))
                                                          (FStar_Tactics_Effect.lift_div_tac
                                                             (fun uu___5 -> g))
@@ -3646,18 +3824,18 @@ let (extract_pulse_sig :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (399))
+                                                                    (Prims.of_int (412))
                                                                     (Prims.of_int (18))
-                                                                    (Prims.of_int (399))
+                                                                    (Prims.of_int (412))
                                                                     (Prims.of_int (58)))))
                                                                     (
                                                                     FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (399))
+                                                                    (Prims.of_int (412))
                                                                     (Prims.of_int (63))
-                                                                    (Prims.of_int (404))
+                                                                    (Prims.of_int (417))
                                                                     (Prims.of_int (49)))))
                                                                     (
                                                                     FStar_Tactics_Effect.lift_div_tac
@@ -3681,17 +3859,17 @@ let (extract_pulse_sig :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (400))
+                                                                    (Prims.of_int (413))
                                                                     (Prims.of_int (32))
-                                                                    (Prims.of_int (400))
+                                                                    (Prims.of_int (413))
                                                                     (Prims.of_int (56)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (399))
+                                                                    (Prims.of_int (412))
                                                                     (Prims.of_int (63))
-                                                                    (Prims.of_int (404))
+                                                                    (Prims.of_int (417))
                                                                     (Prims.of_int (49)))))
                                                                     (Obj.magic
                                                                     (generalize
@@ -3714,17 +3892,17 @@ let (extract_pulse_sig :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (401))
+                                                                    (Prims.of_int (414))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (401))
+                                                                    (Prims.of_int (414))
                                                                     (Prims.of_int (94)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (402))
+                                                                    (Prims.of_int (415))
                                                                     (Prims.of_int (58))
-                                                                    (Prims.of_int (404))
+                                                                    (Prims.of_int (417))
                                                                     (Prims.of_int (49)))))
                                                                     (Obj.magic
                                                                     (debug_
@@ -3736,9 +3914,9 @@ let (extract_pulse_sig :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Extract.Main.fst"
-                                                                    (Prims.of_int (401))
+                                                                    (Prims.of_int (414))
                                                                     (Prims.of_int (68))
-                                                                    (Prims.of_int (401))
+                                                                    (Prims.of_int (414))
                                                                     (Prims.of_int (93)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
