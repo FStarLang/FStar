@@ -613,11 +613,10 @@ let full_perm_tm : R.term =
   let open R in
   pack_ln (Tv_FVar (pack_fv full_perm_lid))
 
-// let pulse_lib_array_core = ["Pulse"; "Lib"; "Array"; "Core"]
-let pulse_lib_array_core = ["Pulse"; "Lib"; "Rust"; "Slice"]
+let pulse_lib_array_core = ["Pulse"; "Lib"; "Array"; "Core"]
 let mk_pulse_lib_array_core_lid s = pulse_lib_array_core @ [s]
 
-let array_lid = mk_pulse_lib_array_core_lid "slice"
+let array_lid = mk_pulse_lib_array_core_lid "array"
 let array_pts_to_lid = mk_pulse_lib_array_core_lid "pts_to"
 let array_length_lid = mk_pulse_lib_array_core_lid "length"
 let array_is_full_lid = mk_pulse_lib_array_core_lid "is_full_array"

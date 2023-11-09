@@ -1848,11 +1848,11 @@ let (full_perm_tm : FStar_Reflection_Types.term) =
     (FStar_Reflection_V2_Data.Tv_FVar
        (FStar_Reflection_V2_Builtins.pack_fv full_perm_lid))
 let (pulse_lib_array_core : Prims.string Prims.list) =
-  ["Pulse"; "Lib"; "Rust"; "Slice"]
+  ["Pulse"; "Lib"; "Array"; "Core"]
 let (mk_pulse_lib_array_core_lid : Prims.string -> Prims.string Prims.list) =
   fun s -> FStar_List_Tot_Base.op_At pulse_lib_array_core [s]
 let (array_lid : Prims.string Prims.list) =
-  mk_pulse_lib_array_core_lid "slice"
+  mk_pulse_lib_array_core_lid "array"
 let (array_pts_to_lid : Prims.string Prims.list) =
   mk_pulse_lib_array_core_lid "pts_to"
 let (array_length_lid : Prims.string Prims.list) =
@@ -2028,39 +2028,39 @@ let (mk_opaque_let :
             (FStar_Sealed.seal
                (Obj.magic
                   (FStar_Range.mk_range "Pulse.Reflection.Util.fst"
-                     (Prims.of_int (680)) (Prims.of_int (11))
-                     (Prims.of_int (680)) (Prims.of_int (45)))))
+                     (Prims.of_int (679)) (Prims.of_int (11))
+                     (Prims.of_int (679)) (Prims.of_int (45)))))
             (FStar_Sealed.seal
                (Obj.magic
                   (FStar_Range.mk_range "Pulse.Reflection.Util.fst"
-                     (Prims.of_int (680)) (Prims.of_int (48))
-                     (Prims.of_int (686)) (Prims.of_int (18)))))
+                     (Prims.of_int (679)) (Prims.of_int (48))
+                     (Prims.of_int (685)) (Prims.of_int (18)))))
             (Obj.magic
                (FStar_Tactics_Effect.tac_bind
                   (FStar_Sealed.seal
                      (Obj.magic
                         (FStar_Range.mk_range "Pulse.Reflection.Util.fst"
-                           (Prims.of_int (680)) (Prims.of_int (21))
-                           (Prims.of_int (680)) (Prims.of_int (45)))))
+                           (Prims.of_int (679)) (Prims.of_int (21))
+                           (Prims.of_int (679)) (Prims.of_int (45)))))
                   (FStar_Sealed.seal
                      (Obj.magic
                         (FStar_Range.mk_range "Pulse.Reflection.Util.fst"
-                           (Prims.of_int (680)) (Prims.of_int (11))
-                           (Prims.of_int (680)) (Prims.of_int (45)))))
+                           (Prims.of_int (679)) (Prims.of_int (11))
+                           (Prims.of_int (679)) (Prims.of_int (45)))))
                   (Obj.magic
                      (FStar_Tactics_Effect.tac_bind
                         (FStar_Sealed.seal
                            (Obj.magic
                               (FStar_Range.mk_range
                                  "Pulse.Reflection.Util.fst"
-                                 (Prims.of_int (680)) (Prims.of_int (22))
-                                 (Prims.of_int (680)) (Prims.of_int (37)))))
+                                 (Prims.of_int (679)) (Prims.of_int (22))
+                                 (Prims.of_int (679)) (Prims.of_int (37)))))
                         (FStar_Sealed.seal
                            (Obj.magic
                               (FStar_Range.mk_range
                                  "Pulse.Reflection.Util.fst"
-                                 (Prims.of_int (680)) (Prims.of_int (21))
-                                 (Prims.of_int (680)) (Prims.of_int (45)))))
+                                 (Prims.of_int (679)) (Prims.of_int (21))
+                                 (Prims.of_int (679)) (Prims.of_int (45)))))
                         (Obj.magic (FStar_Tactics_V2_Derived.cur_module ()))
                         (fun uu___ ->
                            FStar_Tactics_Effect.lift_div_tac

@@ -11,7 +11,6 @@
     "share/steel/examples/pulse/bug-reports",
     "share/steel/examples/pulse/by-example",
     "share/steel/examples/pulse/lib",
-    "share/steel/examples/pulse/lib/rust",
     "share/steel/examples/pulse/parallel",
     "share/steel/examples/pulse/dice",
     "share/steel/examples/pulse/dice/cbor",
