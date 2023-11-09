@@ -381,3 +381,6 @@ val surround_separate_map: int -> int -> document -> document -> document -> doc
 // [print_out_channel] uses the ToChannel:RENDERER one.
 val pretty_string : float -> int -> document -> string
 val pretty_out_channel : float -> int -> document -> FStar.Compiler.Util.out_channel -> unit
+
+(* Simple renderer, defined as [pretty_string 1.0 80] *)
+val render : document -> string

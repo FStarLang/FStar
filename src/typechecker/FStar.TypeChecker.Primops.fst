@@ -46,6 +46,7 @@ let arg_as_bool   (a:arg) = fst a |> try_unembed_simple EMB.e_bool
 let arg_as_char   (a:arg) = fst a |> try_unembed_simple EMB.e_char
 let arg_as_string (a:arg) = fst a |> try_unembed_simple EMB.e_string
 let arg_as_list   (e:EMB.embedding 'a) (a:arg) = fst a |> try_unembed_simple (EMB.e_list e)
+let arg_as_doc    (a:arg) = fst a |> try_unembed_simple EMB.e_document
 
 let arg_as_bounded_int ((a, _) :arg) : option (fv * Z.t * option S.meta_source_info) =
     let (a, m) =
@@ -1133,6 +1134,13 @@ let built_in_primitive_steps_list : list primitive_step =
                   embed_simple EMB.e_document r (FStar.Pprint.arbitrary_string str)),
          NBETerm.unary_op NBETerm.arg_as_string
                   (fun str -> NBETerm.embed NBETerm.e_document bogus_cbs (FStar.Pprint.arbitrary_string str)));
+
+        (mk_lid "render", 1, 0,
+         unary_op arg_as_doc
+                  (fun r doc ->
+                  embed_simple EMB.e_string r (FStar.Pprint.render doc)),
+         NBETerm.unary_op NBETerm.arg_as_doc
+                  (fun doc -> NBETerm.embed NBETerm.e_string bogus_cbs (FStar.Pprint.render doc)));
         ]
 
     in
