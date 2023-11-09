@@ -54,7 +54,7 @@ type proofstate =
   smt_goals: goal Prims.list ;
   depth: Prims.int ;
   __dump: proofstate -> Prims.string -> unit ;
-  psc: FStar_TypeChecker_Cfg.psc ;
+  psc: FStar_TypeChecker_Primops.psc ;
   entry_range: FStar_Compiler_Range_Type.range ;
   guard_policy: guard_policy ;
   freshness: Prims.int ;
@@ -101,7 +101,7 @@ let (__proj__Mkproofstate__item____dump :
         psc; entry_range; guard_policy = guard_policy1; freshness;
         tac_verb_dbg; local_state; urgency;_} -> __dump
 let (__proj__Mkproofstate__item__psc :
-  proofstate -> FStar_TypeChecker_Cfg.psc) =
+  proofstate -> FStar_TypeChecker_Primops.psc) =
   fun projectee ->
     match projectee with
     | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
@@ -361,7 +361,8 @@ let (incr_depth : proofstate -> proofstate) =
       local_state = (ps.local_state);
       urgency = (ps.urgency)
     }
-let (set_ps_psc : FStar_TypeChecker_Cfg.psc -> proofstate -> proofstate) =
+let (set_ps_psc : FStar_TypeChecker_Primops.psc -> proofstate -> proofstate)
+  =
   fun psc ->
     fun ps ->
       {
@@ -380,7 +381,7 @@ let (set_ps_psc : FStar_TypeChecker_Cfg.psc -> proofstate -> proofstate) =
         urgency = (ps.urgency)
       }
 let (tracepoint_with_psc :
-  FStar_TypeChecker_Cfg.psc -> proofstate -> Prims.bool) =
+  FStar_TypeChecker_Primops.psc -> proofstate -> Prims.bool) =
   fun psc ->
     fun ps ->
       (let uu___1 =

@@ -671,6 +671,8 @@ let arg_as_string (a:arg) = fst a |> unembed e_string  bogus_cbs
 
 let arg_as_list   (e:embedding 'a) (a:arg) = fst a |> unembed (e_list e) bogus_cbs
 
+let arg_as_doc    (a:arg) = fst a |> unembed e_document bogus_cbs
+
 let arg_as_bounded_int ((a, _) : arg) : option (fv * Z.t * option S.meta_source_info) =
     let (a, m) =
       (match a.nbe_t with

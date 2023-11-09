@@ -164,7 +164,7 @@ let (do_dump_ps : Prims.string -> FStar_Tactics_Types.proofstate -> unit) =
   fun msg ->
     fun ps ->
       let psc = ps.FStar_Tactics_Types.psc in
-      let subst = FStar_TypeChecker_Cfg.psc_subst psc in
+      let subst = FStar_TypeChecker_Primops.psc_subst psc in
       FStar_Tactics_Printing.do_dump_proofstate ps msg
 let (dump : Prims.string -> unit FStar_Tactics_Monad.tac) =
   fun msg ->

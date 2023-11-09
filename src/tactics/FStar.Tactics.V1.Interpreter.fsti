@@ -22,4 +22,4 @@ open FStar.Syntax.Embeddings
 open FStar.Tactics.Types
 module Env = FStar.TypeChecker.Env
 
-val primitive_steps : unit -> list FStar.TypeChecker.Cfg.primitive_step
+val primitive_steps : unit -> list FStar.TypeChecker.Primops.primitive_step

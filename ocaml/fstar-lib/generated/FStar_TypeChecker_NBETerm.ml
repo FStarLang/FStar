@@ -1703,6 +1703,11 @@ let arg_as_list :
       let uu___ = let uu___1 = e_list e in unembed uu___1 bogus_cbs in
       FStar_Compiler_Effect.op_Bar_Greater (FStar_Pervasives_Native.fst a1)
         uu___
+let (arg_as_doc :
+  arg -> FStar_Pprint.document FStar_Pervasives_Native.option) =
+  fun a ->
+    FStar_Compiler_Effect.op_Bar_Greater (FStar_Pervasives_Native.fst a)
+      (unembed e_document bogus_cbs)
 let (arg_as_bounded_int :
   arg ->
     (FStar_Syntax_Syntax.fv * FStar_BigInt.t *

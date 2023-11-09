@@ -54,6 +54,7 @@ module TcRel   = FStar.TypeChecker.Rel
 module TcTerm  = FStar.TypeChecker.TcTerm
 module U       = FStar.Syntax.Util
 module PC      = FStar.Parser.Const
+module PO      = FStar.TypeChecker.Primops
 
 let tacdbg = BU.mk_ref false
 
@@ -61,16 +62,16 @@ let unembed ea a norm_cb = unembed ea a norm_cb
 let embed ea r x norm_cb = embed ea x r None norm_cb
 
 let native_tactics_steps () =
-  let step_from_native_step (s: native_primitive_step): Cfg.primitive_step =
-    { Cfg.name                         = s.name
-    ; Cfg.arity                        = s.arity
-    ; Cfg.univ_arity                   = 0 // Zoe : We might need to change that
-    ; Cfg.auto_reflect                 = Some (s.arity - 1)
-    ; Cfg.strong_reduction_ok          = s.strong_reduction_ok
-    ; Cfg.requires_binder_substitution = false // GM: Don't think we care about pretty-printing on native
-    ; Cfg.renorm_after                 = false
-    ; Cfg.interpretation               = (fun psc cb _us t -> s.tactic psc cb t)
-    ; Cfg.interpretation_nbe           = fun _cb _us -> NBET.dummy_interp s.name
+  let step_from_native_step (s: native_primitive_step) : PO.primitive_step =
+    { name                         = s.name
+    ; arity                        = s.arity
+    ; univ_arity                   = 0 // Zoe : We might need to change that
+    ; auto_reflect                 = Some (s.arity - 1)
+    ; strong_reduction_ok          = s.strong_reduction_ok
+    ; requires_binder_substitution = false // GM: Don't think we care about pretty-printing on native
+    ; renorm_after                 = false
+    ; interpretation               = (fun psc cb _us t -> s.tactic psc cb t)
+    ; interpretation_nbe           = fun _cb _us -> NBET.dummy_interp s.name
     }
   in
   List.map step_from_native_step (FStar.Tactics.Native.list_all ())
@@ -79,25 +80,25 @@ let native_tactics_steps () =
  * are in other modules: *)
 let mk_total_step_1' uarity nm f ea er nf ena enr =
   { mk_total_step_1  uarity nm f ea er nf ena enr
-    with Cfg.name = Ident.lid_of_str ("FStar.Tactics.Types." ^ nm) }
+    with name = Ident.lid_of_str ("FStar.Tactics.Types." ^ nm) }
 
 let mk_total_step_1'_psc uarity nm f ea er nf ena enr =
   { mk_total_step_1_psc  uarity nm f ea er nf ena enr
-    with Cfg.name = Ident.lid_of_str ("FStar.Tactics.Types." ^ nm) }
+    with name = Ident.lid_of_str ("FStar.Tactics.Types." ^ nm) }
 
 let mk_total_step_2' uarity nm f ea eb er nf ena enb enr =
   { mk_total_step_2  uarity nm f ea eb er nf ena enb enr
-    with Cfg.name = Ident.lid_of_str ("FStar.Tactics.Types." ^ nm) }
+    with name = Ident.lid_of_str ("FStar.Tactics.Types." ^ nm) }
 
 (* This reference keeps all of the tactic primitives. *)
-let __primitive_steps_ref : ref (list Cfg.primitive_step) =
+let __primitive_steps_ref : ref (list PO.primitive_step) =
   BU.mk_ref []
 
-let primitive_steps () : list Cfg.primitive_step =
+let primitive_steps () : list PO.primitive_step =
     (!__primitive_steps_ref)
     @ (native_tactics_steps ())
 
-let register_tactic_primitive_step (s : Cfg.primitive_step) : unit =
+let register_tactic_primitive_step (s : PO.primitive_step) : unit =
   __primitive_steps_ref := s :: !__primitive_steps_ref
 
 (* This function attempts to reconstruct the reduction head of a
@@ -580,6 +581,14 @@ let () =
       mk_tac_step_1 0 "comp_to_string"
         comp_to_string RE.e_comp e_string
         comp_to_string NRE.e_comp NBET.e_string;
+
+      mk_tac_step_1 0 "term_to_doc"
+        term_to_doc RE.e_term e_document
+        term_to_doc NRE.e_term NBET.e_document;
+
+      mk_tac_step_1 0 "comp_to_doc"
+        comp_to_doc RE.e_comp e_document
+        comp_to_doc NRE.e_comp NBET.e_document;
 
       mk_tac_step_1 0 "range_to_string"
         range_to_string FStar.Syntax.Embeddings.e_range e_string
