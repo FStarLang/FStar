@@ -140,103 +140,26 @@ let resolve_lid (env:env_t) (lid:lident)
       | _ -> fail (BU.format2 "Name %s resolved unexpectedly to %s" (Ident.string_of_lid lid) (P.term_to_string t))
                   (Ident.range_of_lid lid)
 
-let pulse_arrow_formals (t:S.term) =
-    let formals, comp = U.arrow_formals_comp_ln t in
-    if U.is_total_comp comp
-    then (
-      let res = U.comp_result comp in        
-      let head, _ = U.head_and_args_full res in
-      match (SS.compress head).n with
-      | S.Tm_fvar fv
-      | S.Tm_uinst ({n=S.Tm_fvar fv}, _) ->
-        if L.existsML (S.fv_eq_lid fv) [stt_lid; stt_ghost_lid; stt_atomic_lid]
-        then Some formals
-        else None
-      | _ -> None
-    )
-    else None
-
 let ret (s:S.term) = SW.(tm_return (as_term s) s.pos)
 
-type stapp_or_return_t =
-  | STTerm : SW.st_term -> stapp_or_return_t
-  | Return : S.term -> stapp_or_return_t
+type admit_or_return_t =
+  | STTerm : SW.st_term -> admit_or_return_t
+  | Return : S.term -> admit_or_return_t
 
-let st_term_of_stapp_or_return (t:stapp_or_return_t) : SW.st_term =
+let st_term_of_admit_or_return (t:admit_or_return_t) : SW.st_term =
   match t with
   | STTerm t -> t
   | Return t -> ret t
 
-let type_is_stt_fun (env:env_t) (t:S.term) (args : list S.arg) : bool =
-  match pulse_arrow_formals t with
-  | None -> false
-  | Some formals ->
-    let is_binder_implicit (b:S.binder) =
-      match b.binder_qual with
-      | Some (S.Implicit _)
-      | Some (S.Meta _) -> true
-      | _ -> false
-    in
-    let is_arg_implicit (aq:S.arg) =
-      match snd aq with
-      | Some {aqual_implicit=b} -> b
-      | _ -> false
-    in
-    let rec uninst_formals formals args =
-      match formals, args with
-      | _, [] ->
-        Some formals
-
-      | [], _ -> //too many args, ill-typed
-        None
-
-      | f::formals, a::args ->
-        if is_binder_implicit f
-        then (
-          if is_arg_implicit a
-          then uninst_formals formals args
-          else uninst_formals formals (a::args)
-        )
-        else if is_arg_implicit a
-        then // this looks ill-typed
-             None
-        else //both explicit
-             uninst_formals formals args
-    in
-    match uninst_formals formals args with
-    | None -> //likely ill-typed; do not treat as stt
-      false
-
-    | Some formals ->
-      if L.for_all is_binder_implicit formals
-      then (
-         //this is an st app
-        true
-      ) else (
-        //partial app of a stateful function
-        false
-      )
-
-let mk_st_app rng (head:S.term) (args : list _) : SW.st_term =
-  let head = S.mk_Tm_app head (L.init args) rng in
-  let last, q = L.last args in
-  SW.(tm_st_app (tm_expr head head.pos) q (as_term last) rng)
-
-let stapp_or_return (env:env_t) (s:S.term)
-  : stapp_or_return_t
+let admit_or_return (env:env_t) (s:S.term)
+  : admit_or_return_t
   = let r = s.pos in
     let head, args = U.head_and_args_full s in
     match head.n with
     | S.Tm_fvar fv -> (
       if S.fv_eq_lid fv admit_lid
       then STTerm (SW.tm_admit r) 
-      else match TcEnv.try_lookup_lid env.tcenv fv.fv_name.v with
-      | None -> Return s
-      | Some ((_, t), _) -> (
-        if type_is_stt_fun env t args
-        then STTerm (mk_st_app r head args)
-        else Return s
-      )
+      else Return s
     )
     | _ -> Return s
 
@@ -397,7 +320,7 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
     match s.s with
     | Expr { e } -> 
       let? tm = tosyntax env e in
-      return (st_term_of_stapp_or_return (stapp_or_return env tm))
+      return (st_term_of_admit_or_return (admit_or_return env tm))
 
     | Assignment { lhs; value } ->
       let? lhs = tosyntax env lhs in
@@ -556,7 +479,7 @@ and desugar_bind (env:env_t) (lb:_) (s2:Sugar.stmt) (r:R.range)
         let? s1 = tosyntax env e1 in
         let b = SW.mk_binder lb.id annot in
         let t =
-          match stapp_or_return env s1 with
+          match admit_or_return env s1 with
           | STTerm s1 ->
             mk_bind b s1 s2 r
           | Return s1 ->

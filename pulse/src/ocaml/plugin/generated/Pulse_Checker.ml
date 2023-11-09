@@ -504,7 +504,7 @@ let rec (check : Pulse_Checker_Base.check_t) =
                                                  (Obj.repr
                                                     (Pulse_Checker_Return.check
                                                        g1 pre () post_hint
-                                                       res_ppname t))
+                                                       res_ppname t check))
                                            | Pulse_Syntax_Base.Tm_Abs uu___1
                                                ->
                                                Obj.magic

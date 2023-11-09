@@ -144,7 +144,7 @@ let rec check
     let g = push_context (P.tag_of_st_term t) t.range g in
     match t.term with
     | Tm_Return _ ->
-      Return.check g pre pre_typing post_hint res_ppname t
+      Return.check g pre pre_typing post_hint res_ppname t check
     
     | Tm_Abs _ -> T.fail "Tm_Abs check should not have been called in the checker"
 
