@@ -23,7 +23,7 @@ function make_tactic_interp_def () {
     echo "    (e$i:embedding 't$i)"
     done
     echo "    (er:embedding 'r)"
-    echo "    (psc:Cfg.psc)"
+    echo "    (psc:PO.psc)"
     echo "    (ncb:norm_cb)"
     echo "    (args:args)"
     echo "  : option term"
@@ -39,7 +39,7 @@ function make_tactic_interp_def () {
     echo "    let ps = set_ps_psc psc ps in"
     echo -n "    let r = interp_ctx name (fun () -> run_safe (t"
     for i in $(seq 1 $n); do echo -n " a$i"; done; echo ") ps) in"
-    echo -n "    Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb)"
+    echo -n "    Some (embed (E.e_result er) (PO.psc_range psc) r ncb)"
     for i in $(seq 1 $((n+1))); do echo -n ")"; done
     echo
     echo "  | _ ->"
@@ -93,7 +93,7 @@ function make_total_interp_def () {
     echo "    (e$i:embedding 't$i)"
     done
     echo "    (er:embedding 'r)"
-    echo "    (psc:Cfg.psc)"
+    echo "    (psc:PO.psc)"
     echo "    (ncb:norm_cb)"
     echo "    (args:args)"
     echo "  : option term"
@@ -107,7 +107,7 @@ function make_total_interp_def () {
     done
     echo -n "    let r = interp_ctx name (fun () -> f"
     for i in $(seq 1 $n); do echo -n " a$i"; done; echo ") in"
-    echo -n "    Some (embed er (Cfg.psc_range psc) r ncb)"
+    echo -n "    Some (embed er (PO.psc_range psc) r ncb)"
     for i in $(seq 1 $n); do echo -n ")"; done
     echo
     echo "  | _ ->"
@@ -168,7 +168,7 @@ function make_tac_step_def () {
     echo "  (ne$i:NBET.embedding 'nt$i)"
     done
     echo "  (ner:NBET.embedding 'nr)"
-    echo "  : Cfg.primitive_step"
+    echo "  : PO.primitive_step"
     echo "  ="
     echo "    mk name $((n+1)) nunivs"
     echo -n "      (mk_tactic_interpretation_$n name t"
@@ -198,7 +198,7 @@ function make_total_step_def () {
     echo "  (ne$i:NBET.embedding 'nt$i)"
     done
     echo "  (ner:NBET.embedding 'nr)"
-    echo "  : Cfg.primitive_step"
+    echo "  : PO.primitive_step"
     echo "  ="
     echo "    mk name $n nunivs"
     echo -n "      (mk_total_interpretation_$n name f"
@@ -228,7 +228,7 @@ function make_tac_step_decl () {
     echo "  NBET.embedding 'nt$i> ->"
     done
     echo "  NBET.embedding 'nr> ->"
-    echo "  Cfg.primitive_step"
+    echo "  PO.primitive_step"
     echo
 }
 
@@ -252,7 +252,7 @@ function make_total_step_decl () {
     echo "  NBET.embedding 'nt$i> ->"
     done
     echo "  NBET.embedding 'nr> ->"
-    echo "  Cfg.primitive_step"
+    echo "  PO.primitive_step"
     echo
 }
 

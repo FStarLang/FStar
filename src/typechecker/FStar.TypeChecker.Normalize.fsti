@@ -65,7 +65,7 @@ val maybe_ghost_to_pure_lcomp:  Env.env -> lcomp -> lcomp
 val ghost_to_pure2 : Env.env -> (comp * comp) -> (comp * comp)
 val ghost_to_pure_lcomp2 : Env.env -> (lcomp * lcomp) -> (lcomp * lcomp)
 
-val normalize_with_primitive_steps : list primitive_step -> steps -> Env.env -> term -> term
+val normalize_with_primitive_steps : list Primops.primitive_step -> steps -> Env.env -> term -> term
 val term_to_string:  Env.env -> term -> string
 val term_to_doc:     Env.env -> term -> Pprint.document
 val comp_to_string:  Env.env -> comp -> string

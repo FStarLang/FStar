@@ -21,6 +21,7 @@ module EMB   = FStar.Syntax.Embeddings
 module Env   = FStar.TypeChecker.Env
 module NBET  = FStar.TypeChecker.NBETerm
 module NRE   = FStar.Reflection.V2.NBEEmbeddings
+module PO    = FStar.TypeChecker.Primops
 module RB    = FStar.Reflection.V2.Builtins
 module RD    = FStar.Reflection.V2.Data
 module RE    = FStar.Reflection.V2.Embeddings
@@ -44,30 +45,30 @@ let embed ea r x norm_cb     = EMB.embed ea x r None norm_cb
  * spurious warnings. *)
 
 let int1 (m:lid) (f:'a -> 'r) (ea:EMB.embedding 'a) (er:EMB.embedding 'r)
-                 (psc:Cfg.psc) n (args : args) : option term =
+                 (psc:PO.psc) n (args : args) : option term =
     match args with
     | [(a, _)] ->
         BU.bind_opt (try_unembed ea a n) (fun a ->
-        Some (embed er (Cfg.psc_range psc) (f a) n))
+        Some (embed er (PO.psc_range psc) (f a) n))
     | _ -> None
 
 let int2 (m:lid) (f:'a -> 'b -> 'r) (ea:EMB.embedding 'a) (eb:EMB.embedding 'b) (er:EMB.embedding 'r)
-                 (psc:Cfg.psc) n (args : args) : option term =
+                 (psc:PO.psc) n (args : args) : option term =
     match args with
     | [(a, _); (b, _)] ->
         BU.bind_opt (try_unembed ea a n) (fun a ->
         BU.bind_opt (try_unembed eb b n) (fun b ->
-        Some (embed er (Cfg.psc_range psc) (f a b) n)))
+        Some (embed er (PO.psc_range psc) (f a b) n)))
     | _ -> None
 
 let int3 (m:lid) (f:'a -> 'b -> 'c -> 'r) (ea:EMB.embedding 'a) (eb:EMB.embedding 'b) (ec:EMB.embedding 'c) (er:EMB.embedding 'r)
-                 (psc:Cfg.psc) n (args : args) : option term =
+                 (psc:PO.psc) n (args : args) : option term =
     match args with
     | [(a, _); (b, _); (c, _)] ->
         BU.bind_opt (try_unembed ea a n) (fun a ->
         BU.bind_opt (try_unembed eb b n) (fun b ->
         BU.bind_opt (try_unembed ec c n) (fun c ->
-        Some (embed er (Cfg.psc_range psc) (f a b c) n))))
+        Some (embed er (PO.psc_range psc) (f a b c) n))))
     | _ -> None
 
 let nbe_int1 (m:lid) (f:'a -> 'r) (ea:NBET.embedding 'a) (er:NBET.embedding 'r)
@@ -100,18 +101,18 @@ let nbe_int3 (m:lid) (f:'a -> 'b -> 'c -> 'r) (ea:NBET.embedding 'a) (eb:NBET.em
 let mklid (nm : string) : lid = fstar_refl_builtins_lid nm
 
 let mk_us (l : lid) (u_arity:int) (arity : int)
-            (fn     : Cfg.psc -> EMB.norm_cb -> args -> option term)
-            (nbe_fn : NBET.nbe_cbs -> NBET.args -> option NBET.t) : Cfg.primitive_step
+            (fn     : PO.psc -> EMB.norm_cb -> args -> option term)
+            (nbe_fn : NBET.nbe_cbs -> NBET.args -> option NBET.t) : PO.primitive_step
   =
-  { Cfg.name                         = l
-  ; Cfg.arity                        = arity
-  ; Cfg.univ_arity                   = u_arity
-  ; Cfg.auto_reflect                 = None
-  ; Cfg.strong_reduction_ok          = true
-  ; Cfg.requires_binder_substitution = false
-  ; Cfg.renorm_after                 = false
-  ; Cfg.interpretation               = (fun psc cbs _us args -> fn psc cbs args)
-  ; Cfg.interpretation_nbe           = (fun cbs _us args -> nbe_fn cbs args)
+  { name                         = l
+  ; arity                        = arity
+  ; univ_arity                   = u_arity
+  ; auto_reflect                 = None
+  ; strong_reduction_ok          = true
+  ; requires_binder_substitution = false
+  ; renorm_after                 = false
+  ; interpretation               = (fun psc cbs _us args -> fn psc cbs args)
+  ; interpretation_nbe           = (fun cbs _us args -> nbe_fn cbs args)
   }
 
 (* Most primitives are not universe polymorphic. *)
@@ -185,25 +186,25 @@ let e_string_list = e_list e_string
 
 (** Helpers to create a (total) primitive step from a function and embeddings. *)
 let mk1' nm (f  : 'a  -> 'r) (ea  : dualemb 'a)
-        (er  : dualemb 'r): Cfg.primitive_step =
+        (er  : dualemb 'r): PO.primitive_step =
     let l = mklid nm in
     mk_us l 1 1 (int1     l f (fst ea) (fst er))
            (nbe_int1 l f (snd ea) (snd er))
 
 let mk1 nm (f  : 'a  -> 'r) (ea  : dualemb 'a)
-        (er  : dualemb 'r): Cfg.primitive_step =
+        (er  : dualemb 'r): PO.primitive_step =
     let l = mklid nm in
     mk l 1 (int1     l f (fst ea) (fst er))
            (nbe_int1 l f (snd ea) (snd er))
 
 let mk2 nm (f  : 'a  -> 'b -> 'r) (ea  : dualemb 'a) (eb : dualemb 'b)
-        (er  : dualemb 'r): Cfg.primitive_step =
+        (er  : dualemb 'r): PO.primitive_step =
     let l = mklid nm in
     mk l 2 (int2     l f (fst ea) (fst eb) (fst er))
            (nbe_int2 l f (snd ea) (snd eb) (snd er))
 
 let mk3 nm (f  : 'a  -> 'b -> 'c -> 'r) (ea  : dualemb 'a) (eb : dualemb 'b) (ec : dualemb 'c)
-        (er  : dualemb 'r): Cfg.primitive_step =
+        (er  : dualemb 'r): PO.primitive_step =
     let l = mklid nm in
     mk l 3 (int3     l f (fst ea) (fst eb) (fst ec) (fst er))
            (nbe_int3 l f (snd ea) (snd eb) (snd ec) (snd er))
@@ -223,7 +224,7 @@ let mk3 nm (f  : 'a  -> 'b -> 'c -> 'r) (ea  : dualemb 'a) (eb : dualemb 'b) (ec
  * Util.term_eq, will _very likely_ be inconsistent with the view.
  * Exceptions to the "way to go" above should be well justified.
  *)
-let reflection_primops : list Cfg.primitive_step = [
+let reflection_primops : list PO.primitive_step = [
   (****** Inspecting/packing various kinds of syntax ******)
   mk1 "inspect_ln"
     RB.inspect_ln

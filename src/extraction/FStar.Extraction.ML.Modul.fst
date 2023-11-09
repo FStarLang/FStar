@@ -48,6 +48,7 @@ module Env    = FStar.TypeChecker.Env
 module TcUtil = FStar.TypeChecker.Util
 module EMB    = FStar.Syntax.Embeddings
 module Cfg    = FStar.TypeChecker.Cfg
+module PO     = FStar.TypeChecker.Primops
 
 type tydef_declaration = (mlsymbol * FStar.Extraction.ML.Syntax.metadata * int) //int is the arity
 
@@ -1159,7 +1160,7 @@ and extract_sig_let (g:uenv) (se:sigelt) : uenv * list mlmodule1 =
               steps
           in
           begin
-          match Cfg.try_unembed_simple (EMB.e_list EMB.e_norm_step) steps with
+          match PO.try_unembed_simple (EMB.e_list EMB.e_norm_step) steps with
           | Some steps -> 
             Some (Cfg.translate_norm_steps steps)
           | _ -> 

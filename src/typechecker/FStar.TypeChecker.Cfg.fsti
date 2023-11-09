@@ -30,6 +30,8 @@ open FStar.Syntax.Util
 open FStar.TypeChecker
 open FStar.TypeChecker.Env
 
+open FStar.TypeChecker.Primops
+
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module BU = FStar.Compiler.Util
@@ -77,27 +79,6 @@ type fsteps = {
 val default_steps : fsteps
 val fstep_add_one : step -> fsteps -> fsteps
 val to_fsteps : list step -> fsteps
-
-type psc = {
-     psc_range:FStar.Compiler.Range.range;
-     psc_subst: unit -> subst_t // potentially expensive, so thunked
-}
-
-val null_psc : psc
-val psc_range : psc -> FStar.Compiler.Range.range
-val psc_subst : psc -> subst_t
-
-type primitive_step = {
-    name:FStar.Ident.lid;
-    arity:int;
-    univ_arity:int; // universe arity
-    auto_reflect:option int;
-    strong_reduction_ok:bool;
-    requires_binder_substitution:bool;
-    renorm_after:bool; // whether the result of this primop must possibly undergo more normalization
-    interpretation:(psc -> FStar.Syntax.Embeddings.norm_cb -> universes -> args -> option term);
-    interpretation_nbe:(NBE.nbe_cbs -> universes -> NBE.args -> option NBE.t)
-}
 
 type debug_switches = {
     gen              : bool;
@@ -147,8 +128,9 @@ val log_nbe : cfg -> (unit -> unit) -> unit
 val is_prim_step: cfg -> fv -> bool
 val find_prim_step: cfg -> fv -> option primitive_step
 
-val embed_simple: EMB.embedding 'a -> Range.range -> 'a -> term
-val try_unembed_simple: EMB.embedding 'a -> term -> option 'a
+// val embed_simple: EMB.embedding 'a -> Range.range -> 'a -> term
+// val try_unembed_simple: EMB.embedding 'a -> term -> option 'a
+
 val built_in_primitive_steps : BU.psmap primitive_step
 val equality_ops : BU.psmap primitive_step
 

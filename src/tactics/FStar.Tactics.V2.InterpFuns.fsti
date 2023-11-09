@@ -26,6 +26,7 @@ open FStar.Tactics.Monad
 
 module Cfg   = FStar.TypeChecker.Cfg
 module NBET  = FStar.TypeChecker.NBETerm
+module PO    = FStar.TypeChecker.Primops
 
 (* These functions are suboptimal, since they need to take embeddings for both
  * the interpreter AND the NBE evaluator. Attempting to coallesce them
@@ -38,13 +39,13 @@ module NBET  = FStar.TypeChecker.NBETerm
 val mk_total_step_1_psc :
     int ->
     string ->
-    (Cfg.psc -> 'a -> 'r) ->
+    (PO.psc -> 'a -> 'r) ->
     embedding 'a ->
     embedding 'r ->
-    (Cfg.psc -> 'na -> 'nr) ->
+    (PO.psc -> 'na -> 'nr) ->
     NBET.embedding 'na ->
     NBET.embedding 'nr ->
-    Cfg.primitive_step
+    PO.primitive_step
 
 val max_tac_arity : int // = 20
 
@@ -59,7 +60,7 @@ val mk_tac_step_1 :
   ('nt1 -> tac 'nr) ->
   NBET.embedding 'nt1 ->
   NBET.embedding 'nr ->
-  Cfg.primitive_step
+  PO.primitive_step
 
 val mk_tac_step_2 :
   int ->
@@ -72,7 +73,7 @@ val mk_tac_step_2 :
   NBET.embedding 'nt1 ->
   NBET.embedding 'nt2 ->
   NBET.embedding 'nr ->
-  Cfg.primitive_step
+  PO.primitive_step
 
 val mk_tac_step_3 :
   int ->
@@ -87,7 +88,7 @@ val mk_tac_step_3 :
   NBET.embedding 'nt2 ->
   NBET.embedding 'nt3 ->
   NBET.embedding 'nr ->
-  Cfg.primitive_step
+  PO.primitive_step
 
 val mk_tac_step_4 :
   int ->
@@ -104,7 +105,7 @@ val mk_tac_step_4 :
   NBET.embedding 'nt3 ->
   NBET.embedding 'nt4 ->
   NBET.embedding 'nr ->
-  Cfg.primitive_step
+  PO.primitive_step
 
 val mk_tac_step_5 :
   int ->
@@ -123,7 +124,7 @@ val mk_tac_step_5 :
   NBET.embedding 'nt4 ->
   NBET.embedding 'nt5 ->
   NBET.embedding 'nr ->
-  Cfg.primitive_step
+  PO.primitive_step
 
 val mk_tac_step_6 :
   int ->
@@ -144,7 +145,7 @@ val mk_tac_step_6 :
   NBET.embedding 'nt5 ->
   NBET.embedding 'nt6 ->
   NBET.embedding 'nr ->
-  Cfg.primitive_step
+  PO.primitive_step
 
 val mk_tac_step_7 :
   int ->
@@ -167,7 +168,7 @@ val mk_tac_step_7 :
   NBET.embedding 'nt6 ->
   NBET.embedding 'nt7 ->
   NBET.embedding 'nr ->
-  Cfg.primitive_step
+  PO.primitive_step
 
 val mk_tac_step_8 :
   int ->
@@ -192,7 +193,7 @@ val mk_tac_step_8 :
   NBET.embedding 'nt7 ->
   NBET.embedding 'nt8 ->
   NBET.embedding 'nr ->
-  Cfg.primitive_step
+  PO.primitive_step
 
 val mk_tac_step_9 :
   int ->
@@ -219,7 +220,7 @@ val mk_tac_step_9 :
   NBET.embedding 'nt8 ->
   NBET.embedding 'nt9 ->
   NBET.embedding 'nr ->
-  Cfg.primitive_step
+  PO.primitive_step
 
 val mk_tac_step_10 :
   int ->
@@ -248,7 +249,7 @@ val mk_tac_step_10 :
   NBET.embedding 'nt9 ->
   NBET.embedding 'nt10 ->
   NBET.embedding 'nr ->
-  Cfg.primitive_step
+  PO.primitive_step
 
 val mk_tac_step_11 :
   int ->
@@ -279,7 +280,7 @@ val mk_tac_step_11 :
   NBET.embedding 'nt10 ->
   NBET.embedding 'nt11 ->
   NBET.embedding 'nr ->
-  Cfg.primitive_step
+  PO.primitive_step
 
 val mk_tac_step_12 :
   int ->
@@ -312,7 +313,7 @@ val mk_tac_step_12 :
   NBET.embedding 'nt11 ->
   NBET.embedding 'nt12 ->
   NBET.embedding 'nr ->
-  Cfg.primitive_step
+  PO.primitive_step
 
 val mk_tac_step_13 :
   int ->
@@ -347,7 +348,7 @@ val mk_tac_step_13 :
   NBET.embedding 'nt12 ->
   NBET.embedding 'nt13 ->
   NBET.embedding 'nr ->
-  Cfg.primitive_step
+  PO.primitive_step
 
 val mk_tac_step_14 :
   int ->
@@ -384,7 +385,7 @@ val mk_tac_step_14 :
   NBET.embedding 'nt13 ->
   NBET.embedding 'nt14 ->
   NBET.embedding 'nr ->
-  Cfg.primitive_step
+  PO.primitive_step
 
 val mk_tac_step_15 :
   int ->
@@ -423,7 +424,7 @@ val mk_tac_step_15 :
   NBET.embedding 'nt14 ->
   NBET.embedding 'nt15 ->
   NBET.embedding 'nr ->
-  Cfg.primitive_step
+  PO.primitive_step
 
 val mk_tac_step_16 :
   int ->
@@ -464,7 +465,7 @@ val mk_tac_step_16 :
   NBET.embedding 'nt15 ->
   NBET.embedding 'nt16 ->
   NBET.embedding 'nr ->
-  Cfg.primitive_step
+  PO.primitive_step
 
 val mk_tac_step_17 :
   int ->
@@ -507,7 +508,7 @@ val mk_tac_step_17 :
   NBET.embedding 'nt16 ->
   NBET.embedding 'nt17 ->
   NBET.embedding 'nr ->
-  Cfg.primitive_step
+  PO.primitive_step
 
 val mk_tac_step_18 :
   int ->
@@ -552,7 +553,7 @@ val mk_tac_step_18 :
   NBET.embedding 'nt17 ->
   NBET.embedding 'nt18 ->
   NBET.embedding 'nr ->
-  Cfg.primitive_step
+  PO.primitive_step
 
 val mk_tac_step_19 :
   int ->
@@ -599,7 +600,7 @@ val mk_tac_step_19 :
   NBET.embedding 'nt18 ->
   NBET.embedding 'nt19 ->
   NBET.embedding 'nr ->
-  Cfg.primitive_step
+  PO.primitive_step
 
 val mk_tac_step_20 :
   int ->
@@ -648,7 +649,7 @@ val mk_tac_step_20 :
   NBET.embedding 'nt19 ->
   NBET.embedding 'nt20 ->
   NBET.embedding 'nr ->
-  Cfg.primitive_step
+  PO.primitive_step
 
 val mk_total_step_1 :
   int ->
@@ -659,7 +660,7 @@ val mk_total_step_1 :
   ('nt1 -> 'nr) ->
   NBET.embedding 'nt1 ->
   NBET.embedding 'nr ->
-  Cfg.primitive_step
+  PO.primitive_step
 
 val mk_total_step_2 :
   int ->
@@ -672,7 +673,7 @@ val mk_total_step_2 :
   NBET.embedding 'nt1 ->
   NBET.embedding 'nt2 ->
   NBET.embedding 'nr ->
-  Cfg.primitive_step
+  PO.primitive_step
 
 val mk_total_step_3 :
   int ->
@@ -687,7 +688,7 @@ val mk_total_step_3 :
   NBET.embedding 'nt2 ->
   NBET.embedding 'nt3 ->
   NBET.embedding 'nr ->
-  Cfg.primitive_step
+  PO.primitive_step
 
 val mk_total_step_4 :
   int ->
@@ -704,7 +705,7 @@ val mk_total_step_4 :
   NBET.embedding 'nt3 ->
   NBET.embedding 'nt4 ->
   NBET.embedding 'nr ->
-  Cfg.primitive_step
+  PO.primitive_step
 
 val mk_total_step_5 :
   int ->
@@ -723,7 +724,7 @@ val mk_total_step_5 :
   NBET.embedding 'nt4 ->
   NBET.embedding 'nt5 ->
   NBET.embedding 'nr ->
-  Cfg.primitive_step
+  PO.primitive_step
 
 val mk_total_step_6 :
   int ->
@@ -744,7 +745,7 @@ val mk_total_step_6 :
   NBET.embedding 'nt5 ->
   NBET.embedding 'nt6 ->
   NBET.embedding 'nr ->
-  Cfg.primitive_step
+  PO.primitive_step
 
 val mk_total_step_7 :
   int ->
@@ -767,7 +768,7 @@ val mk_total_step_7 :
   NBET.embedding 'nt6 ->
   NBET.embedding 'nt7 ->
   NBET.embedding 'nr ->
-  Cfg.primitive_step
+  PO.primitive_step
 
 val mk_total_step_8 :
   int ->
@@ -792,7 +793,7 @@ val mk_total_step_8 :
   NBET.embedding 'nt7 ->
   NBET.embedding 'nt8 ->
   NBET.embedding 'nr ->
-  Cfg.primitive_step
+  PO.primitive_step
 
 val mk_total_step_9 :
   int ->
@@ -819,7 +820,7 @@ val mk_total_step_9 :
   NBET.embedding 'nt8 ->
   NBET.embedding 'nt9 ->
   NBET.embedding 'nr ->
-  Cfg.primitive_step
+  PO.primitive_step
 
 val mk_total_step_10 :
   int ->
@@ -848,7 +849,7 @@ val mk_total_step_10 :
   NBET.embedding 'nt9 ->
   NBET.embedding 'nt10 ->
   NBET.embedding 'nr ->
-  Cfg.primitive_step
+  PO.primitive_step
 
 val mk_total_step_11 :
   int ->
@@ -879,7 +880,7 @@ val mk_total_step_11 :
   NBET.embedding 'nt10 ->
   NBET.embedding 'nt11 ->
   NBET.embedding 'nr ->
-  Cfg.primitive_step
+  PO.primitive_step
 
 val mk_total_step_12 :
   int ->
@@ -912,7 +913,7 @@ val mk_total_step_12 :
   NBET.embedding 'nt11 ->
   NBET.embedding 'nt12 ->
   NBET.embedding 'nr ->
-  Cfg.primitive_step
+  PO.primitive_step
 
 val mk_total_step_13 :
   int ->
@@ -947,7 +948,7 @@ val mk_total_step_13 :
   NBET.embedding 'nt12 ->
   NBET.embedding 'nt13 ->
   NBET.embedding 'nr ->
-  Cfg.primitive_step
+  PO.primitive_step
 
 val mk_total_step_14 :
   int ->
@@ -984,7 +985,7 @@ val mk_total_step_14 :
   NBET.embedding 'nt13 ->
   NBET.embedding 'nt14 ->
   NBET.embedding 'nr ->
-  Cfg.primitive_step
+  PO.primitive_step
 
 val mk_total_step_15 :
   int ->
@@ -1023,7 +1024,7 @@ val mk_total_step_15 :
   NBET.embedding 'nt14 ->
   NBET.embedding 'nt15 ->
   NBET.embedding 'nr ->
-  Cfg.primitive_step
+  PO.primitive_step
 
 val mk_total_step_16 :
   int ->
@@ -1064,7 +1065,7 @@ val mk_total_step_16 :
   NBET.embedding 'nt15 ->
   NBET.embedding 'nt16 ->
   NBET.embedding 'nr ->
-  Cfg.primitive_step
+  PO.primitive_step
 
 val mk_total_step_17 :
   int ->
@@ -1107,7 +1108,7 @@ val mk_total_step_17 :
   NBET.embedding 'nt16 ->
   NBET.embedding 'nt17 ->
   NBET.embedding 'nr ->
-  Cfg.primitive_step
+  PO.primitive_step
 
 val mk_total_step_18 :
   int ->
@@ -1152,7 +1153,7 @@ val mk_total_step_18 :
   NBET.embedding 'nt17 ->
   NBET.embedding 'nt18 ->
   NBET.embedding 'nr ->
-  Cfg.primitive_step
+  PO.primitive_step
 
 val mk_total_step_19 :
   int ->
@@ -1199,7 +1200,7 @@ val mk_total_step_19 :
   NBET.embedding 'nt18 ->
   NBET.embedding 'nt19 ->
   NBET.embedding 'nr ->
-  Cfg.primitive_step
+  PO.primitive_step
 
 val mk_total_step_20 :
   int ->
@@ -1248,4 +1249,4 @@ val mk_total_step_20 :
   NBET.embedding 'nt19 ->
   NBET.embedding 'nt20 ->
   NBET.embedding 'nr ->
-  Cfg.primitive_step
+  PO.primitive_step

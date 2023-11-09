@@ -56,6 +56,7 @@ module UF     = FStar.Syntax.Unionfind
 module U      = FStar.Syntax.Util
 module Z      = FStar.BigInt
 module Core   = FStar.TypeChecker.Core
+module PO     = FStar.TypeChecker.Primops
 
 let compress (t:term) : tac term =
   idtac ;!
@@ -148,7 +149,7 @@ let debugging () : tac bool =
 
 let do_dump_ps (msg:string) (ps:proofstate) : unit =
   let psc = ps.psc in
-  let subst = Cfg.psc_subst psc in
+  let subst = PO.psc_subst psc in
   do_dump_proofstate ps msg
 
 let dump (msg:string) : tac unit =
@@ -2620,7 +2621,7 @@ let proofstate_of_goals rng env goals imps =
         smt_goals = [];
         depth = 0;
         __dump = do_dump_proofstate;
-        psc = Cfg.null_psc;
+        psc = PO.null_psc;
         entry_range = rng;
         guard_policy = SMT;
         freshness = 0;
@@ -2649,7 +2650,7 @@ let proofstate_of_all_implicits rng env imps =
         smt_goals = [];
         depth = 0;
         __dump = do_dump_proofstate;
-        psc = Cfg.null_psc;
+        psc = PO.null_psc;
         entry_range = rng;
         guard_policy = SMT;
         freshness = 0;

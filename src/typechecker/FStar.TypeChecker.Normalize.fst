@@ -44,6 +44,7 @@ module U  = FStar.Syntax.Util
 module I  = FStar.Ident
 module EMB = FStar.Syntax.Embeddings
 module Z = FStar.BigInt
+module PO = FStar.TypeChecker.Primops
 
 module TcComm = FStar.TypeChecker.Common
 
@@ -681,7 +682,7 @@ let reduce_primops norm_cb cfg env tm : term & bool =
                                        else List.splitAt prim_step.arity args
                   in
                   log_primops cfg (fun () -> BU.print1 "primop: trying to reduce <%s>\n" (Print.term_to_string tm));
-                  let psc = {
+                  let psc : PO.psc = {
                       psc_range = head.pos;
                       psc_subst = fun () -> if prim_step.requires_binder_substitution
                                             then mk_psc_subst cfg env
@@ -719,7 +720,7 @@ let reduce_primops norm_cb cfg env tm : term & bool =
            log_primops cfg (fun () -> BU.print1 "primop: reducing <%s>\n"
                                         (Print.term_to_string tm));
            begin match args with
-           | [(a1, _)] -> embed_simple EMB.e_range a1.pos tm.pos, false
+           | [(a1, _)] -> PO.embed_simple EMB.e_range a1.pos tm.pos, false
            | _ -> tm, false
            end
 
@@ -728,7 +729,7 @@ let reduce_primops norm_cb cfg env tm : term & bool =
                                         (Print.term_to_string tm));
            begin match args with
            | [(t, _); (r, _)] ->
-                begin match try_unembed_simple EMB.e_range r with
+                begin match PO.try_unembed_simple EMB.e_range r with
                 | Some rng -> Subst.set_use_range rng t, false
                 | None -> tm, false
                 end
@@ -789,7 +790,7 @@ let is_nbe_request s = BU.for_some (eq_step NBE) s
 
 let get_norm_request cfg (full_norm:term -> term) args =
     let parse_steps s =
-      match try_unembed_simple (EMB.e_list EMB.e_norm_step) s with
+      match PO.try_unembed_simple (EMB.e_list EMB.e_norm_step) s with
       | Some steps -> Some (Cfg.translate_norm_steps steps)
       | None -> None
     in
@@ -1936,16 +1937,16 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
 
                   let range_args =
                     if bind_has_range_args
-                    then [as_arg (embed_simple EMB.e_range lb.lbpos lb.lbpos);
-                          as_arg (embed_simple EMB.e_range body.pos body.pos)]
+                    then [as_arg (PO.embed_simple EMB.e_range lb.lbpos lb.lbpos);
+                          as_arg (PO.embed_simple EMB.e_range body.pos body.pos)]
                     else [] in
 
                   (S.as_arg lb.lbtyp)::(S.as_arg t)::(unit_args@range_args@[S.as_arg f_arg; S.as_arg body])
                 else
                   let maybe_range_arg =
                     if BU.for_some (U.attr_eq U.dm4f_bind_range_attr) ed.eff_attrs
-                    then [as_arg (embed_simple EMB.e_range lb.lbpos lb.lbpos);
-                          as_arg (embed_simple EMB.e_range body.pos body.pos)]
+                    then [as_arg (PO.embed_simple EMB.e_range lb.lbpos lb.lbpos);
+                          as_arg (PO.embed_simple EMB.e_range body.pos body.pos)]
                     else []
                   in
                   [ (* a, b *)

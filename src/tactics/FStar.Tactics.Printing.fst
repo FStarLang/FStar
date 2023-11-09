@@ -35,6 +35,7 @@ module S       = FStar.Syntax.Syntax
 module Env     = FStar.TypeChecker.Env
 module U       = FStar.Syntax.Util
 module Cfg     = FStar.TypeChecker.Cfg
+module PO      = FStar.TypeChecker.Primops
 
 let term_to_string (e:Env.env) (t:term) : string =
     Print.term_to_string' e.dsenv t
@@ -107,7 +108,7 @@ let goal_to_string (kind : string) (maybe_num : option (int * int)) (ps:proofsta
       if Options.tactic_raw_binders()
       then goal_binders, goal_ty
       else (
-        let subst = Cfg.psc_subst ps.psc in
+        let subst = PO.psc_subst ps.psc in
         let binders = rename_binders subst goal_binders in
         let ty = SS.subst subst goal_ty in
         binders, ty

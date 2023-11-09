@@ -15,6 +15,6 @@
 *)
 module FStar.Reflection.V2.Interpreter
 
-module Cfg = FStar.TypeChecker.Cfg
+module P = FStar.TypeChecker.Primops
 
-val reflection_primops : list Cfg.primitive_step
+val reflection_primops : list P.primitive_step
