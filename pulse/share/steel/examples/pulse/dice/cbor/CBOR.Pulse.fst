@@ -158,7 +158,7 @@ ensures
                         with v1' . assert (raw_data_item_match p1 x1 v1');
                         let x2 = cbor_array_iterator_next pi2;
                         with v2' . assert (raw_data_item_match p2 x2 v2');
-                        let test = perform (fun _ -> cbor_is_equal x1 x2 #p1 #p2 #v1' #v2');
+                        let test = cbor_is_equal x1 x2;
                         with gi1' l1' . assert (pts_to pi1 gi1' ** cbor_array_iterator_match p1 gi1' l1');
                         with gi2' l2' . assert (pts_to pi2 gi2' ** cbor_array_iterator_match p2 gi2' l2');
                         stick_consume_l ()
@@ -194,7 +194,7 @@ ensures
                 } else {
                     with v1' . assert (raw_data_item_match p1 tg1.cbor_tagged_payload v1');
                     with v2' . assert (raw_data_item_match p2 tg2.cbor_tagged_payload v2');
-                    let test = perform (fun _ -> cbor_is_equal tg1.cbor_tagged_payload tg2.cbor_tagged_payload #p1 #p2 #v1' #v2');
+                    let test = cbor_is_equal tg1.cbor_tagged_payload tg2.cbor_tagged_payload;
                     elim_stick0 ();
                     elim_stick0 ();
                     test
@@ -242,7 +242,7 @@ ensures
                             #(raw_data_item_map_entry_match p2 x2 v2' ** cbor_map_iterator_match p2 gi2' l2');
                         unfold (raw_data_item_map_entry_match p1 x1 v1');
                         unfold (raw_data_item_map_entry_match p2 x2 v2');
-                        let test = perform (fun _ -> cbor_is_equal (cbor_map_entry_key x1) (cbor_map_entry_key x2) #p1 #p2 #(fstp v1') #(fstp v2'));
+                        let test = cbor_is_equal (cbor_map_entry_key x1) (cbor_map_entry_key x2);
                         if test ensures exists res done . // FIXME: HOW HOW HOW can I frame some things out?
                             pts_to pi1 gi1' ** pts_to pi2 gi2' ** pts_to pdone done **
                             raw_data_item_match p1 (cbor_map_entry_key x1) (fstp v1') **
@@ -255,7 +255,7 @@ ensures
                             `@((raw_data_item_map_entry_match p2 x2 v2' ** cbor_map_iterator_match p2 gi2' l2') @==> raw_data_item_match p2 a2 v2) **
                             pts_to pres res ** pure (res == true <==> v1' == v2')
                         {
-                            let test = perform (fun _ -> cbor_is_equal (cbor_map_entry_value x1) (cbor_map_entry_value x2) #p1 #p2 #(sndp v1') #(sndp v2'));
+                            let test = cbor_is_equal (cbor_map_entry_value x1) (cbor_map_entry_value x2);
                             pres := test;
                         } else {
                             pres := false;
