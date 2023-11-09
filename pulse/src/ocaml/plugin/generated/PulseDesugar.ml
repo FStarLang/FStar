@@ -421,50 +421,6 @@ let (resolve_lid : env_t -> FStar_Ident.lident -> FStar_Ident.lident err) =
                    "Name %s resolved unexpectedly to %s" uu___4 uu___5 in
                let uu___4 = FStar_Ident.range_of_lid lid in
                fail uu___3 uu___4)
-let (pulse_arrow_formals :
-  FStar_Syntax_Syntax.term ->
-    FStar_Syntax_Syntax.binder Prims.list FStar_Pervasives_Native.option)
-  =
-  fun t ->
-    let uu___ = FStar_Syntax_Util.arrow_formals_comp_ln t in
-    match uu___ with
-    | (formals, comp) ->
-        let uu___1 = FStar_Syntax_Util.is_total_comp comp in
-        if uu___1
-        then
-          let res = FStar_Syntax_Util.comp_result comp in
-          let uu___2 = FStar_Syntax_Util.head_and_args_full res in
-          (match uu___2 with
-           | (head, uu___3) ->
-               let uu___4 =
-                 let uu___5 = FStar_Syntax_Subst.compress head in
-                 uu___5.FStar_Syntax_Syntax.n in
-               (match uu___4 with
-                | FStar_Syntax_Syntax.Tm_fvar fv ->
-                    let uu___5 =
-                      FStar_Compiler_List.existsML
-                        (FStar_Syntax_Syntax.fv_eq_lid fv)
-                        [stt_lid; stt_ghost_lid; stt_atomic_lid] in
-                    if uu___5
-                    then FStar_Pervasives_Native.Some formals
-                    else FStar_Pervasives_Native.None
-                | FStar_Syntax_Syntax.Tm_uinst
-                    ({
-                       FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv;
-                       FStar_Syntax_Syntax.pos = uu___5;
-                       FStar_Syntax_Syntax.vars = uu___6;
-                       FStar_Syntax_Syntax.hash_code = uu___7;_},
-                     uu___8)
-                    ->
-                    let uu___9 =
-                      FStar_Compiler_List.existsML
-                        (FStar_Syntax_Syntax.fv_eq_lid fv)
-                        [stt_lid; stt_ghost_lid; stt_atomic_lid] in
-                    if uu___9
-                    then FStar_Pervasives_Native.Some formals
-                    else FStar_Pervasives_Native.None
-                | uu___5 -> FStar_Pervasives_Native.None))
-        else FStar_Pervasives_Native.None
 let (ret : FStar_Syntax_Syntax.term -> PulseSyntaxWrapper.st_term) =
   fun s ->
     let uu___ = as_term s in
@@ -485,53 +441,6 @@ let (__proj__Return__item___0 :
 let (st_term_of_admit_or_return :
   admit_or_return_t -> PulseSyntaxWrapper.st_term) =
   fun t -> match t with | STTerm t1 -> t1 | Return t1 -> ret t1
-let (type_is_stt_fun :
-  env_t ->
-    FStar_Syntax_Syntax.term ->
-      FStar_Syntax_Syntax.arg Prims.list -> Prims.bool)
-  =
-  fun env ->
-    fun t ->
-      fun args ->
-        let uu___ = pulse_arrow_formals t in
-        match uu___ with
-        | FStar_Pervasives_Native.None -> false
-        | FStar_Pervasives_Native.Some formals ->
-            let is_binder_implicit b =
-              match b.FStar_Syntax_Syntax.binder_qual with
-              | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Implicit
-                  uu___1) -> true
-              | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Meta
-                  uu___1) -> true
-              | uu___1 -> false in
-            let is_arg_implicit aq =
-              match FStar_Pervasives_Native.snd aq with
-              | FStar_Pervasives_Native.Some
-                  { FStar_Syntax_Syntax.aqual_implicit = b;
-                    FStar_Syntax_Syntax.aqual_attributes = uu___1;_}
-                  -> b
-              | uu___1 -> false in
-            let rec uninst_formals formals1 args1 =
-              match (formals1, args1) with
-              | (uu___1, []) -> FStar_Pervasives_Native.Some formals1
-              | ([], uu___1) -> FStar_Pervasives_Native.None
-              | (f::formals2, a::args2) ->
-                  if is_binder_implicit f
-                  then
-                    (if is_arg_implicit a
-                     then uninst_formals formals2 args2
-                     else uninst_formals formals2 (a :: args2))
-                  else
-                    if is_arg_implicit a
-                    then FStar_Pervasives_Native.None
-                    else uninst_formals formals2 args2 in
-            let uu___1 = uninst_formals formals args in
-            (match uu___1 with
-             | FStar_Pervasives_Native.None -> false
-             | FStar_Pervasives_Native.Some formals1 ->
-                 let uu___2 =
-                   FStar_Compiler_List.for_all is_binder_implicit formals1 in
-                 if uu___2 then true else false)
 let (admit_or_return :
   env_t -> FStar_Syntax_Syntax.term -> admit_or_return_t) =
   fun env ->
