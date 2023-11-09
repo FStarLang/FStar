@@ -29,6 +29,7 @@ struct LitInt {
 
 enum Lit {
     LitInt(LitInt),
+    LitBool(bool),
 }
 
 enum BinOp {
@@ -176,6 +177,7 @@ struct Fn {
 }
 
 const VEC_NEW_FN: &str = "vec_new";
+const PANIC_FN: &str = "panic";
 
 fn fn_to_string(f: &Fn) -> String {
     f.to_string()
@@ -201,6 +203,7 @@ impl_from_ocaml_record! {
 impl_from_ocaml_variant! {
   Lit {
     Lit::LitInt (payload:LitInt),
+    Lit::LitBool (payload:bool),
   }
 }
 
@@ -446,12 +449,19 @@ fn is_vec_new(e: &Expr) -> bool {
     }
 }
 
+fn is_panic(e: &Expr) -> bool {
+    match e {
+        Expr::EPath(s) => s == PANIC_FN,
+        _ => false,
+    }
+}
+
 fn to_syn_vec_new(args: &Vec<Expr>) -> syn::Expr {
     let init = to_syn_expr(&args[0]);
     let len = to_syn_expr(&args[1]);
     let init_str = quote::quote!(#init).to_string();
     let len_str = quote::quote!(#len).to_string();
-    let macro_args = format!("{}, {}", init_str, len_str);
+    let macro_args = format!("{}; {}", init_str, len_str);
     let ts = proc_macro2::TokenStream::from_str(&macro_args).unwrap();
     syn::Expr::Macro(syn::ExprMacro {
         attrs: vec![],
@@ -461,6 +471,28 @@ fn to_syn_vec_new(args: &Vec<Expr>) -> syn::Expr {
                 spans: [Span::call_site()],
             },
             delimiter: syn::MacroDelimiter::Bracket(syn::token::Bracket {
+                span: proc_macro2::Group::new(
+                    proc_macro2::Delimiter::None,
+                    proc_macro2::TokenStream::new(),
+                )
+                .delim_span(),
+            }),
+            tokens: ts,
+        },
+    })
+}
+
+fn to_syn_panic() -> syn::Expr {
+    let macro_args = "";
+    let ts = proc_macro2::TokenStream::from_str(&macro_args).unwrap();
+    syn::Expr::Macro(syn::ExprMacro {
+        attrs: vec![],
+        mac: syn::Macro {
+            path: to_syn_path_basic("panic".to_string()),
+            bang_token: syn::token::Not {
+                spans: [Span::call_site()],
+            },
+            delimiter: syn::MacroDelimiter::Paren(syn::token::Paren {
                 span: proc_macro2::Group::new(
                     proc_macro2::Delimiter::None,
                     proc_macro2::TokenStream::new(),
@@ -495,6 +527,8 @@ fn to_syn_expr(e: &Expr) -> syn::Expr {
         Expr::ECall(e) => {
             if is_vec_new(&e.call_fn) {
                 to_syn_vec_new(&e.call_args)
+            } else if is_panic(&e.call_fn) {
+                to_syn_panic()
             } else {
                 let mut args: Punctuated<syn::Expr, Comma> = Punctuated::new();
                 e.call_args.iter().for_each(|a| args.push(to_syn_expr(a)));
@@ -542,15 +576,20 @@ fn to_syn_expr(e: &Expr) -> syn::Expr {
                 },
             })
         }
-        Expr::ELit(lit) => match lit {
-            Lit::LitInt(LitInt { lit_int_val, .. }) => {
-                let litint = syn::LitInt::new(lit_int_val, Span::call_site());
-                syn::Expr::Lit(syn::ExprLit {
-                    attrs: vec![],
-                    lit: syn::Lit::Int(litint),
-                })
-            }
-        },
+        Expr::ELit(lit) => syn::Expr::Lit(syn::ExprLit {
+            attrs: vec![],
+            lit: {
+                match lit {
+                    Lit::LitInt(LitInt { lit_int_val, .. }) => {
+                        syn::Lit::Int(syn::LitInt::new(lit_int_val, Span::call_site()))
+                    }
+                    Lit::LitBool(b) => syn::Lit::Bool(syn::LitBool {
+                        value: *b,
+                        span: Span::call_site(),
+                    }),
+                }
+            },
+        }),
         Expr::EIf(ExprIf {
             expr_if_cond,
             expr_if_then,
@@ -909,6 +948,7 @@ impl fmt::Display for Lit {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self {
             Lit::LitInt(LitInt { lit_int_val, .. }) => write!(f, "{}", lit_int_val),
+            Lit::LitBool(b) => write!(f, "{}", b),
         }
     }
 }

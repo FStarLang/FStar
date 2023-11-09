@@ -276,6 +276,7 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
       | Some (_, FStar.Const.Sizet) -> Some I64  // TODO: FIXME
       | None -> None in
     Expr_lit (Lit_int {lit_int_val; lit_int_signed; lit_int_width})
+  | S.MLE_Const (S.MLC_Bool b) -> mk_lit_bool b
   | S.MLE_App ({expr=S.MLE_Name p}, [e])
     when S.string_of_mlpath p = "FStar.SizeT.uint_to_t" ->
     extract_mlexpr g e
@@ -322,7 +323,7 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     // We need to figure out permissions
     //
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e])
-    when S.string_of_mlpath p = "Pulse.Lib.Vec.vec_as_array" ->
+    when S.string_of_mlpath p = "Pulse.Lib.Vec.vec_to_array" ->
 
     let e = extract_mlexpr g e in
     let is_mut = true in
@@ -355,6 +356,10 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     let expr_while_body = extract_mlexpr_to_stmts g body in
     Expr_while {expr_while_cond; expr_while_body}
 
+  | S.MLE_App ({ expr=S.MLE_TApp ({ expr=S.MLE_Name p }, _) }, _)
+    when S.string_of_mlpath p = "failwith" ->
+    mk_call (Expr_path panic_fn) []
+
   | S.MLE_App ({expr=S.MLE_Name p}, [e1; e2])
 
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2])
@@ -383,6 +388,9 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
       | Some (Expr_block _) -> else_
       | Some else_ -> Some (mk_block_expr [Stmt_expr else_]) in 
     mk_if cond then_ else_
+
+  | S.MLE_Coerce (e, _, _) -> extract_mlexpr g e  // TODO: FIXME: perhaps cast in Rust?
+
   | _ -> fail_nyi (format1 "mlexpr %s" (S.mlexpr_to_string e))
 
 and extract_mlexpr_to_stmts (g:env) (e:S.mlexpr) : list stmt =
@@ -394,6 +402,9 @@ and extract_mlexpr_to_stmts (g:env) (e:S.mlexpr) : list stmt =
     let is_mut, ty, init = lb_init_and_def g lb in
     let s = mk_local_stmt lb.mllb_name is_mut init in
     s::(extract_mlexpr_to_stmts (push_local g lb.mllb_name ty is_mut) e)
+  | S.MLE_App ({ expr=S.MLE_TApp ({ expr=S.MLE_Name p }, _) }, _)
+    when S.string_of_mlpath p = "failwith" ->
+    [Stmt_expr (mk_call (Expr_path panic_fn) [])]
   | _ -> fail_nyi (format1 "mlexpr_to_stmt  %s" (S.mlexpr_to_string e))
 
 let extract_top_level_lb (g:env) (lbs:S.mlletbinding) : fn & env =
@@ -408,6 +419,8 @@ let extract_top_level_lb (g:env) (lbs:S.mlletbinding) : fn & env =
     // if tsc is not set, we could get the arg types from the fun inside
     //
     let Some tsc = lb.mllb_tysc in
+    print1 "Typescheme is: %s\n\n" (S.mltyscheme_to_string tsc);
+    print1 "lbdef is: %s\n\n" (S.mlexpr_to_string lb.mllb_def);
     let arg_names, body =
       match lb.mllb_def.expr with
       | S.MLE_Fun (bs, body) ->
@@ -417,6 +430,11 @@ let extract_top_level_lb (g:env) (lbs:S.mlletbinding) : fn & env =
     
     let tvars, arg_ts, ret_t = arg_ts_and_ret_t tsc in
     
+    print3 "tvars: %s, arg_ts: %s, ret_t: %s\n"
+      (String.concat ", " tvars)
+      (String.concat ", " (List.map S.mlty_to_string arg_ts))
+      (S.mlty_to_string ret_t);
+
     let fn_sig, g_body = extract_top_level_sig g lb.mllb_name (List.map tyvar_of tvars) arg_names arg_ts ret_t in
     let fn_body = extract_mlexpr_to_stmts g_body body in
 
@@ -434,7 +452,7 @@ let extract_one (file:string) : unit =
     match d with
     | S.MLM_Let lb ->
       let f, g = extract_top_level_lb g lb in
-      print_string "Extracted to:\n";
+      // print_string "Extracted to:\n";
       print_string (RustBindings.fn_to_rust f ^ "\n");
       g
     | S.MLM_Loc _ -> g

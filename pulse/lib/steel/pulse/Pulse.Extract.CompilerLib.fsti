@@ -61,6 +61,7 @@ module PSB = Pulse.Syntax.Base
 val extend_bv (g:uenv) (np:PSB.ppname) (uniq:nat) (ty:mlty) : Dv (uenv & mlident)
 val initial_core_env (g:uenv) : Pulse.Typing.Env.env
 val set_tcenv (g:uenv) (e:T.env) :  uenv
+val mlty_to_string (t:mlty) : Dv string
 val mlexpr_to_string (e:mlexpr) : Dv string
 open Pulse.Syntax.Base
 val sigelt_extension_data (e:T.sigelt) : option st_term

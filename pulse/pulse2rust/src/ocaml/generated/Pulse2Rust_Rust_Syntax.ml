@@ -55,9 +55,16 @@ let (__proj__Mklit_int__item__lit_int_width :
         lit_int_width1
 type lit =
   | Lit_int of lit_int 
-let (uu___is_Lit_int : lit -> Prims.bool) = fun projectee -> true
+  | Lit_bool of Prims.bool 
+let (uu___is_Lit_int : lit -> Prims.bool) =
+  fun projectee -> match projectee with | Lit_int _0 -> true | uu___ -> false
 let (__proj__Lit_int__item___0 : lit -> lit_int) =
   fun projectee -> match projectee with | Lit_int _0 -> _0
+let (uu___is_Lit_bool : lit -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Lit_bool _0 -> true | uu___ -> false
+let (__proj__Lit_bool__item___0 : lit -> Prims.bool) =
+  fun projectee -> match projectee with | Lit_bool _0 -> _0
 type binop =
   | Add 
   | Sub 
@@ -417,6 +424,7 @@ let (__proj__Mkfn__item__fn_sig : fn -> fn_signature) =
 let (__proj__Mkfn__item__fn_body : fn -> stmt Prims.list) =
   fun projectee -> match projectee with | { fn_sig; fn_body;_} -> fn_body
 let (vec_new_fn : Prims.string) = "vec_new"
+let (panic_fn : Prims.string) = "panic"
 let (mk_scalar_typ : Prims.string -> typ) =
   fun name ->
     Typ_path
@@ -433,6 +441,7 @@ let (mk_vec_typ : typ -> typ) =
       { typ_path_segment_name = "Vec"; typ_path_segment_generic_args = [t] }]
 let (mk_array_typ : typ -> expr -> typ) =
   fun t -> fun len -> Typ_array { typ_array_elem = t; typ_array_len = len }
+let (mk_lit_bool : Prims.bool -> expr) = fun b -> Expr_lit (Lit_bool b)
 let (mk_binop : expr -> binop -> expr -> expr) =
   fun l ->
     fun op ->

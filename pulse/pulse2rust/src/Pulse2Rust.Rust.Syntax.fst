@@ -5,6 +5,7 @@ open FStar.Compiler.Effect
 module L = FStar.Compiler.List
 
 let vec_new_fn = "vec_new"
+let panic_fn = "panic"
 
 let mk_scalar_typ (name:string) : typ =
   Typ_path [ {typ_path_segment_name = name; typ_path_segment_generic_args = [] } ]
@@ -23,6 +24,8 @@ let mk_vec_typ (t:typ) : typ =
 
 let mk_array_typ (t:typ) (len:expr) : typ =
   Typ_array { typ_array_elem = t; typ_array_len = len }
+
+let mk_lit_bool (b:bool) : expr = Expr_lit (Lit_bool b)
 
 let mk_binop (l:expr) (op:binop) (r:expr) : expr =
   Expr_binop { expr_bin_left = l; expr_bin_op = op; expr_bin_right = r }

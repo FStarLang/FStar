@@ -68,7 +68,7 @@ val free
            pure (is_full_vec v))
         (ensures fun _ -> emp)
 
-val vec_to_array (#a:Type0) (v:vec a) : A.array a
+val vec_to_array (#a:Type0) (v:vec a) : arr:A.array a { A.length arr == length v }
 
 val to_array_pts_to (#a:Type0) (v:vec a) (#p:perm) (#s:Seq.seq a)
   : stt_ghost unit emp_inames
