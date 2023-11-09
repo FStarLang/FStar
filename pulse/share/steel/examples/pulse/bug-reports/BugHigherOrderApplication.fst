@@ -19,7 +19,7 @@ fn apply2 (#a #b:Type0) (f: (x:a -> stt b emp (fun _ -> emp))) (x:a)
 {
     let fst = f x;
     let snd = f x;
-    Mktuple2 u#0 u#0 fst snd
+    (fst, snd)
 }
 ```
 

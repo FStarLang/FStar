@@ -245,7 +245,7 @@ fn rec length (#t:Type0) (x:llist t)
         let node = !vl;
         with tail tl. assert (is_list #t tail tl);
         rewrite each tail as node.tail; 
-        let n = perform (fun () -> length #t node.tail tl);
+        let n = length #t node.tail tl;
         intro_is_list_cons x vl;
         (1 + n)
     }
@@ -304,7 +304,7 @@ fn rec append (#t:Type0) (x y:llist t)
                 intro_is_list_cons x np; 
             }
             Some _ -> {
-                perform (fun () -> append #t node.tail y #tl #'l2);
+                append #t node.tail y #tl #'l2;
                 intro_is_list_cons x np;
             }
         }

@@ -576,29 +576,34 @@ let rec is_stateful_arrow (c:option comp) (args:list T.argv) (out:list T.argv)
         | _ -> None
       )
     )
-  
+
+module RU = Pulse.RuntimeUtils  
 let is_stateful_application (g:env) (e:term) 
   : T.Tac (option st_term)
   = match e.t with
     | Tm_FStar host_term -> (
       let head, args = T.collect_app_ln host_term in
       assume (not_tv_unknown head);
-      let (| head_t, _ |) = Pulse.Checker.Pure.core_check_tot_term g (tm_fstar head (T.range_of_term head)) in
-      match is_stateful_arrow (Some (C_Tot head_t)) args [] with 
+      match RU.lax_check_term_with_unknown_universes (elab_env g) head with
       | None -> None
-      | Some (applied_args, (last_arg, aqual))->
-        let head = T.mk_app head applied_args in
-        assume (not_tv_unknown head);
-        let head = tm_fstar head (T.range_of_term head) in
-        assume (not_tv_unknown last_arg);
-        let last_arg = tm_fstar last_arg (T.range_of_term last_arg) in
-        let qual = 
-          match aqual with
-          | T.Q_Implicit -> Some Implicit
-          | _ -> None
-        in
-        let st_app = Tm_STApp { head; arg=last_arg; arg_qual=qual} in
-        let st_app = { term = st_app; range=e.range; effect_tag=default_effect_hint } in
-        Some st_app
+      | Some ht -> 
+        assume (not_tv_unknown ht);
+        let head_t = tm_fstar ht (T.range_of_term ht) in
+        match is_stateful_arrow (Some (C_Tot head_t)) args [] with 
+        | None -> None
+        | Some (applied_args, (last_arg, aqual))->
+          let head = T.mk_app head applied_args in
+          assume (not_tv_unknown head);
+          let head = tm_fstar head (T.range_of_term head) in
+          assume (not_tv_unknown last_arg);
+          let last_arg = tm_fstar last_arg (T.range_of_term last_arg) in
+          let qual = 
+            match aqual with
+            | T.Q_Implicit -> Some Implicit
+            | _ -> None
+          in
+          let st_app = Tm_STApp { head; arg=last_arg; arg_qual=qual} in
+          let st_app = { term = st_app; range=e.range; effect_tag=default_effect_hint } in
+          Some st_app
     )
     | _ -> None
