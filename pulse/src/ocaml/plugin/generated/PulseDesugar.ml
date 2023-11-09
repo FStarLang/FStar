@@ -421,139 +421,28 @@ let (resolve_lid : env_t -> FStar_Ident.lident -> FStar_Ident.lident err) =
                    "Name %s resolved unexpectedly to %s" uu___4 uu___5 in
                let uu___4 = FStar_Ident.range_of_lid lid in
                fail uu___3 uu___4)
-let (pulse_arrow_formals :
-  FStar_Syntax_Syntax.term ->
-    FStar_Syntax_Syntax.binder Prims.list FStar_Pervasives_Native.option)
-  =
-  fun t ->
-    let uu___ = FStar_Syntax_Util.arrow_formals_comp_ln t in
-    match uu___ with
-    | (formals, comp) ->
-        let uu___1 = FStar_Syntax_Util.is_total_comp comp in
-        if uu___1
-        then
-          let res = FStar_Syntax_Util.comp_result comp in
-          let uu___2 = FStar_Syntax_Util.head_and_args_full res in
-          (match uu___2 with
-           | (head, uu___3) ->
-               let uu___4 =
-                 let uu___5 = FStar_Syntax_Subst.compress head in
-                 uu___5.FStar_Syntax_Syntax.n in
-               (match uu___4 with
-                | FStar_Syntax_Syntax.Tm_fvar fv ->
-                    let uu___5 =
-                      FStar_Compiler_List.existsML
-                        (FStar_Syntax_Syntax.fv_eq_lid fv)
-                        [stt_lid; stt_ghost_lid; stt_atomic_lid] in
-                    if uu___5
-                    then FStar_Pervasives_Native.Some formals
-                    else FStar_Pervasives_Native.None
-                | FStar_Syntax_Syntax.Tm_uinst
-                    ({
-                       FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv;
-                       FStar_Syntax_Syntax.pos = uu___5;
-                       FStar_Syntax_Syntax.vars = uu___6;
-                       FStar_Syntax_Syntax.hash_code = uu___7;_},
-                     uu___8)
-                    ->
-                    let uu___9 =
-                      FStar_Compiler_List.existsML
-                        (FStar_Syntax_Syntax.fv_eq_lid fv)
-                        [stt_lid; stt_ghost_lid; stt_atomic_lid] in
-                    if uu___9
-                    then FStar_Pervasives_Native.Some formals
-                    else FStar_Pervasives_Native.None
-                | uu___5 -> FStar_Pervasives_Native.None))
-        else FStar_Pervasives_Native.None
 let (ret : FStar_Syntax_Syntax.term -> PulseSyntaxWrapper.st_term) =
   fun s ->
     let uu___ = as_term s in
     PulseSyntaxWrapper.tm_return uu___ s.FStar_Syntax_Syntax.pos
-type stapp_or_return_t =
+type admit_or_return_t =
   | STTerm of PulseSyntaxWrapper.st_term 
   | Return of FStar_Syntax_Syntax.term 
-let (uu___is_STTerm : stapp_or_return_t -> Prims.bool) =
+let (uu___is_STTerm : admit_or_return_t -> Prims.bool) =
   fun projectee -> match projectee with | STTerm _0 -> true | uu___ -> false
 let (__proj__STTerm__item___0 :
-  stapp_or_return_t -> PulseSyntaxWrapper.st_term) =
+  admit_or_return_t -> PulseSyntaxWrapper.st_term) =
   fun projectee -> match projectee with | STTerm _0 -> _0
-let (uu___is_Return : stapp_or_return_t -> Prims.bool) =
+let (uu___is_Return : admit_or_return_t -> Prims.bool) =
   fun projectee -> match projectee with | Return _0 -> true | uu___ -> false
 let (__proj__Return__item___0 :
-  stapp_or_return_t -> FStar_Syntax_Syntax.term) =
+  admit_or_return_t -> FStar_Syntax_Syntax.term) =
   fun projectee -> match projectee with | Return _0 -> _0
-let (st_term_of_stapp_or_return :
-  stapp_or_return_t -> PulseSyntaxWrapper.st_term) =
+let (st_term_of_admit_or_return :
+  admit_or_return_t -> PulseSyntaxWrapper.st_term) =
   fun t -> match t with | STTerm t1 -> t1 | Return t1 -> ret t1
-let (type_is_stt_fun :
-  env_t ->
-    FStar_Syntax_Syntax.term ->
-      FStar_Syntax_Syntax.arg Prims.list -> Prims.bool)
-  =
-  fun env ->
-    fun t ->
-      fun args ->
-        let uu___ = pulse_arrow_formals t in
-        match uu___ with
-        | FStar_Pervasives_Native.None -> false
-        | FStar_Pervasives_Native.Some formals ->
-            let is_binder_implicit b =
-              match b.FStar_Syntax_Syntax.binder_qual with
-              | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Implicit
-                  uu___1) -> true
-              | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Meta
-                  uu___1) -> true
-              | uu___1 -> false in
-            let is_arg_implicit aq =
-              match FStar_Pervasives_Native.snd aq with
-              | FStar_Pervasives_Native.Some
-                  { FStar_Syntax_Syntax.aqual_implicit = b;
-                    FStar_Syntax_Syntax.aqual_attributes = uu___1;_}
-                  -> b
-              | uu___1 -> false in
-            let rec uninst_formals formals1 args1 =
-              match (formals1, args1) with
-              | (uu___1, []) -> FStar_Pervasives_Native.Some formals1
-              | ([], uu___1) -> FStar_Pervasives_Native.None
-              | (f::formals2, a::args2) ->
-                  if is_binder_implicit f
-                  then
-                    (if is_arg_implicit a
-                     then uninst_formals formals2 args2
-                     else uninst_formals formals2 (a :: args2))
-                  else
-                    if is_arg_implicit a
-                    then FStar_Pervasives_Native.None
-                    else uninst_formals formals2 args2 in
-            let uu___1 = uninst_formals formals args in
-            (match uu___1 with
-             | FStar_Pervasives_Native.None -> false
-             | FStar_Pervasives_Native.Some formals1 ->
-                 let uu___2 =
-                   FStar_Compiler_List.for_all is_binder_implicit formals1 in
-                 if uu___2 then true else false)
-let (mk_st_app :
-  FStar_Compiler_Range_Type.range ->
-    FStar_Syntax_Syntax.term ->
-      (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax *
-        FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option)
-        Prims.list -> PulseSyntaxWrapper.st_term)
-  =
-  fun rng ->
-    fun head ->
-      fun args ->
-        let head1 =
-          let uu___ = FStar_Compiler_List.init args in
-          FStar_Syntax_Syntax.mk_Tm_app head uu___ rng in
-        let uu___ = FStar_Compiler_List.last args in
-        match uu___ with
-        | (last, q) ->
-            let uu___1 =
-              PulseSyntaxWrapper.tm_expr head1 head1.FStar_Syntax_Syntax.pos in
-            let uu___2 = as_term last in
-            PulseSyntaxWrapper.tm_st_app uu___1 q uu___2 rng
-let (stapp_or_return :
-  env_t -> FStar_Syntax_Syntax.term -> stapp_or_return_t) =
+let (admit_or_return :
+  env_t -> FStar_Syntax_Syntax.term -> admit_or_return_t) =
   fun env ->
     fun s ->
       let r = s.FStar_Syntax_Syntax.pos in
@@ -566,18 +455,7 @@ let (stapp_or_return :
                if uu___1
                then
                  let uu___2 = PulseSyntaxWrapper.tm_admit r in STTerm uu___2
-               else
-                 (let uu___3 =
-                    FStar_TypeChecker_Env.try_lookup_lid env.tcenv
-                      (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-                  match uu___3 with
-                  | FStar_Pervasives_Native.None -> Return s
-                  | FStar_Pervasives_Native.Some ((uu___4, t), uu___5) ->
-                      let uu___6 = type_is_stt_fun env t args in
-                      if uu___6
-                      then
-                        let uu___7 = mk_st_app r head args in STTerm uu___7
-                      else Return s)
+               else Return s
            | uu___1 -> Return s)
 let (prepend_ctx_issue :
   FStar_Pprint.document -> FStar_Errors.issue -> FStar_Errors.issue) =
@@ -859,8 +737,8 @@ let rec (desugar_stmt :
           op_let_Question uu___
             (fun tm ->
                let uu___1 =
-                 let uu___2 = stapp_or_return env tm in
-                 st_term_of_stapp_or_return uu___2 in
+                 let uu___2 = admit_or_return env tm in
+                 st_term_of_admit_or_return uu___2 in
                return uu___1)
       | PulseSugar.Assignment
           { PulseSugar.lhs = lhs; PulseSugar.value = value;_} ->
@@ -1208,7 +1086,7 @@ and (desugar_bind :
                                           PulseSyntaxWrapper.mk_binder
                                             lb.PulseSugar.id annot in
                                         let t =
-                                          let uu___5 = stapp_or_return env s1 in
+                                          let uu___5 = admit_or_return env s1 in
                                           match uu___5 with
                                           | STTerm s11 -> mk_bind b s11 s21 r
                                           | Return s11 ->
