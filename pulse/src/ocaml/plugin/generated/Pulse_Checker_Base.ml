@@ -2731,7 +2731,7 @@ let rec (is_stateful_arrow :
                                              "Pulse.Checker.Base.fst"
                                              (Prims.of_int (549))
                                              (Prims.of_int (11))
-                                             (Prims.of_int (586))
+                                             (Prims.of_int (588))
                                              (Prims.of_int (7)))))
                                     (FStar_Tactics_Effect.lift_div_tac
                                        (fun uu___1 ->
@@ -2757,7 +2757,7 @@ let rec (is_stateful_arrow :
                                                             "Pulse.Checker.Base.fst"
                                                             (Prims.of_int (552))
                                                             (Prims.of_int (8))
-                                                            (Prims.of_int (576))
+                                                            (Prims.of_int (578))
                                                             (Prims.of_int (14)))))
                                                    (Obj.magic
                                                       (FStar_Tactics_NamedView.inspect
@@ -2840,6 +2840,19 @@ let rec (is_stateful_arrow :
                                                                     qual)
                                                                     with
                                                                     | 
+                                                                    (FStar_Reflection_V2_Data.Q_Meta
+                                                                    uu___2,
+                                                                    FStar_Reflection_V2_Data.Q_Implicit)
+                                                                    ->
+                                                                    Obj.repr
+                                                                    (is_stateful_arrow
+                                                                    g
+                                                                    (readback_comp_res_as_comp
+                                                                    c1) args'
+                                                                    ((arg,
+                                                                    qual) ::
+                                                                    out))
+                                                                    | 
                                                                     (FStar_Reflection_V2_Data.Q_Implicit,
                                                                     FStar_Reflection_V2_Data.Q_Implicit)
                                                                     ->
@@ -2863,6 +2876,17 @@ let rec (is_stateful_arrow :
                                                                     ((arg,
                                                                     qual) ::
                                                                     out))
+                                                                    | 
+                                                                    (FStar_Reflection_V2_Data.Q_Meta
+                                                                    uu___2,
+                                                                    FStar_Reflection_V2_Data.Q_Explicit)
+                                                                    ->
+                                                                    Obj.repr
+                                                                    (is_stateful_arrow
+                                                                    g
+                                                                    (readback_comp_res_as_comp
+                                                                    c1) args
+                                                                    out)
                                                                     | 
                                                                     (FStar_Reflection_V2_Data.Q_Implicit,
                                                                     FStar_Reflection_V2_Data.Q_Explicit)
@@ -2907,13 +2931,13 @@ let (is_stateful_application :
                        (FStar_Sealed.seal
                           (Obj.magic
                              (FStar_Range.mk_range "Pulse.Checker.Base.fst"
-                                (Prims.of_int (594)) (Prims.of_int (23))
-                                (Prims.of_int (594)) (Prims.of_int (49)))))
+                                (Prims.of_int (596)) (Prims.of_int (23))
+                                (Prims.of_int (596)) (Prims.of_int (49)))))
                        (FStar_Sealed.seal
                           (Obj.magic
                              (FStar_Range.mk_range "Pulse.Checker.Base.fst"
-                                (Prims.of_int (593)) (Prims.of_int (28))
-                                (Prims.of_int (617)) (Prims.of_int (5)))))
+                                (Prims.of_int (595)) (Prims.of_int (28))
+                                (Prims.of_int (619)) (Prims.of_int (5)))))
                        (FStar_Tactics_Effect.lift_div_tac
                           (fun uu___ ->
                              FStar_Reflection_V2_Derived.collect_app_ln
@@ -2939,17 +2963,17 @@ let (is_stateful_application :
                                                  (Obj.magic
                                                     (FStar_Range.mk_range
                                                        "Pulse.Checker.Base.fst"
-                                                       (Prims.of_int (600))
+                                                       (Prims.of_int (602))
                                                        (Prims.of_int (21))
-                                                       (Prims.of_int (600))
+                                                       (Prims.of_int (602))
                                                        (Prims.of_int (53)))))
                                               (FStar_Sealed.seal
                                                  (Obj.magic
                                                     (FStar_Range.mk_range
                                                        "Pulse.Checker.Base.fst"
-                                                       (Prims.of_int (601))
+                                                       (Prims.of_int (603))
                                                        (Prims.of_int (8))
-                                                       (Prims.of_int (616))
+                                                       (Prims.of_int (618))
                                                        (Prims.of_int (21)))))
                                               (FStar_Tactics_Effect.lift_div_tac
                                                  (fun uu___1 ->
@@ -2965,17 +2989,17 @@ let (is_stateful_application :
                                                             (Obj.magic
                                                                (FStar_Range.mk_range
                                                                   "Pulse.Checker.Base.fst"
-                                                                  (Prims.of_int (601))
+                                                                  (Prims.of_int (603))
                                                                   (Prims.of_int (14))
-                                                                  (Prims.of_int (601))
+                                                                  (Prims.of_int (603))
                                                                   (Prims.of_int (63)))))
                                                          (FStar_Sealed.seal
                                                             (Obj.magic
                                                                (FStar_Range.mk_range
                                                                   "Pulse.Checker.Base.fst"
-                                                                  (Prims.of_int (601))
+                                                                  (Prims.of_int (603))
                                                                   (Prims.of_int (8))
-                                                                  (Prims.of_int (616))
+                                                                  (Prims.of_int (618))
                                                                   (Prims.of_int (21)))))
                                                          (Obj.magic
                                                             (is_stateful_arrow
