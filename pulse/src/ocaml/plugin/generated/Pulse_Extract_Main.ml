@@ -2650,8 +2650,8 @@ let rec (extract :
                                                                     (Pulse_Extract_CompilerLib.mle_name
                                                                     (["Pulse";
                                                                     "Lib";
-                                                                    "Rust";
-                                                                    "Slice"],
+                                                                    "Array";
+                                                                    "Core"],
                                                                     "alloc"))
                                                                     [initializer2;
                                                                     length1])])

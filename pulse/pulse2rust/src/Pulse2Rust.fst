@@ -85,10 +85,13 @@ let rec uncurry_arrow (t:S.mlty) : (list S.mlty & S.mlty) =
 //
 // Most translations are straightforward
 //
-// Slice.slice t is extracted to &mut [t]
-//   i.e., a ref is added, we need to figure permissions better
+// Array.array t is extracted to &mut [t]
+//   we need to figure permissions better
 //
 let rec extract_mlty (g:env) (t:S.mlty) : typ =
+  let mk_slice (is_mut:bool) (t:S.mlty) =
+    t |> extract_mlty g |> mk_slice_typ |> mk_ref_typ is_mut in
+
   match t with
   | S.MLTY_Var s -> mk_scalar_typ (tyvar_of s)
   | S.MLTY_Named ([], p)
@@ -110,11 +113,15 @@ let rec extract_mlty (g:env) (t:S.mlty) : typ =
     let is_mut = true in
     arg |> extract_mlty g |> mk_ref_typ is_mut
   | S.MLTY_Named ([arg], p)
-    when S.string_of_mlpath p = "Pulse.Lib.Rust.Slice.slice" ->
+    when S.string_of_mlpath p = "Pulse.Lib.Array.Core.array" ->
     let is_mut = true in
-    arg |> extract_mlty g |> mk_slice_typ |> mk_ref_typ is_mut
+    mk_slice is_mut arg
+  | S.MLTY_Named ([arg; _], p)
+    when S.string_of_mlpath p = "Pulse.Lib.Array.Core.larray" ->
+    let is_mut = true in
+    mk_slice is_mut arg
   | S.MLTY_Named ([arg], p)
-    when S.string_of_mlpath p = "Pulse.Lib.Rust.Vec.vec" ->
+    when S.string_of_mlpath p = "Pulse.Lib.Vec.vec" ->
     arg |> extract_mlty g |> mk_vec_typ
   | S.MLTY_Erased -> mk_scalar_typ "unit"
   | _ -> fail_nyi (format1 "mlty %s" (S.mlty_to_string t))
@@ -193,8 +200,8 @@ let is_binop (s:string) : option binop =
 // Tm_WithLocal in pulse looks like (in mllb): let x : ref t = alloc e, where e : t
 // So we return true, extract t, extract e
 //
-// Tm_WithLocalArray in pulse looks like (in mllb): let x : slice t = alloc init len
-// So we return false, extract (slice t), mk_mutable_ref (repeat (extract init) (extract len))
+// Tm_WithLocalArray in pulse looks like (in mllb): let x : array t = alloc init len
+// So we return false, extract (array t), mk_mutable_ref (repeat (extract init) (extract len))
 // Basically, a local array in pulse becomes a mutable reference to a slice in rust
 // Note that the let binding itself is immutable, but the slice is mutable
 //
@@ -223,8 +230,8 @@ let rec lb_init_and_def (g:env) (lb:S.mllb)
 
     | S.MLE_App ({expr=S.MLE_Name pe}, [init; len]),
       Some ([], S.MLTY_Named ([ty], pt))
-      when S.string_of_mlpath pe = "Pulse.Lib.Rust.Slice.alloc" &&
-           S.string_of_mlpath pt = "Pulse.Lib.Rust.Slice.slice" ->
+      when S.string_of_mlpath pe = "Pulse.Lib.Array.Core.alloc" &&
+           S.string_of_mlpath pt = "Pulse.Lib.Array.Core.array" ->
       let init = extract_mlexpr g init in
       let len = extract_mlexpr g len in
       let is_mut = false in
@@ -239,7 +246,7 @@ let rec lb_init_and_def (g:env) (lb:S.mllb)
     let is_mut =
       match lb.mllb_def.expr with
       | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, _) ->
-        S.string_of_mlpath p = "Pulse.Lib.Rust.Vec.alloc"
+        S.string_of_mlpath p = "Pulse.Lib.Vec.alloc"
       | _ -> false in
     is_mut,
     lb.mllb_tysc |> must |> snd |> extract_mlty g,
@@ -295,14 +302,14 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     else mk_ref_read e
 
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e; i; _; _])
-    when S.string_of_mlpath p = "Pulse.Lib.Rust.Slice.op_Array_Access" ||
-         S.string_of_mlpath p = "Pulse.Lib.Rust.Vec.op_Array_Access"  ->
+    when S.string_of_mlpath p = "Pulse.Lib.Array.Core.op_Array_Access" ||
+         S.string_of_mlpath p = "Pulse.Lib.Vec.op_Array_Access"  ->
 
     mk_expr_index (extract_mlexpr g e) (extract_mlexpr g i)
 
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2; e3; _])
-    when S.string_of_mlpath p = "Pulse.Lib.Rust.Slice.op_Array_Assignment" ||
-         S.string_of_mlpath p = "Pulse.Lib.Rust.Vec.op_Array_Assignment" ->
+    when S.string_of_mlpath p = "Pulse.Lib.Array.Core.op_Array_Assignment" ||
+         S.string_of_mlpath p = "Pulse.Lib.Vec.op_Array_Assignment" ->
 
     let e1 = extract_mlexpr g e1 in
     let e2 = extract_mlexpr g e2 in
@@ -310,32 +317,46 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     mk_assign (mk_expr_index e1 e2) e3
 
     //
-    // vec_as_slice e extracted to &mut e
+    // vec_as_array e extracted to &mut e
     //
     // We need to figure out permissions
     //
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e])
-    when S.string_of_mlpath p = "Pulse.Lib.Rust.Slice.vec_as_slice" ->
+    when S.string_of_mlpath p = "Pulse.Lib.Vec.vec_as_array" ->
 
     let e = extract_mlexpr g e in
     let is_mut = true in
     mk_reference_expr is_mut e
 
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2])
-    when S.string_of_mlpath p = "Pulse.Lib.Rust.Vec.alloc" ->
+    when S.string_of_mlpath p = "Pulse.Lib.Vec.alloc" ->
     let e1 = extract_mlexpr g e1 in
     let e2 = extract_mlexpr g e2 in
     mk_call (Expr_path vec_new_fn) [e1; e2]
+
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2])
+    when S.string_of_mlpath p = "Pulse.Lib.Array.Core.alloc" ->
+
+    fail_nyi (format1 "mlexpr %s" (S.mlexpr_to_string e))
+
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e; _])
-    when S.string_of_mlpath p = "Pulse.Lib.Rust.Vec.free" ->
+    when S.string_of_mlpath p = "Pulse.Lib.Vec.free" ->
     let e = extract_mlexpr g e in
     mk_call (Expr_path "drop") [e]
+
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2])
+    when S.string_of_mlpath p = "Pulse.Lib.Array.Core.free" ->
+
+    fail_nyi (format1 "mlexpr %s" (S.mlexpr_to_string e))
+
   | S.MLE_App ({expr=S.MLE_Name p}, [{expr=S.MLE_Fun (_, cond)}; {expr=S.MLE_Fun (_, body)}])
     when S.string_of_mlpath p = "Pulse.Lib.Core.while_" ->
     let expr_while_cond = extract_mlexpr g cond in
     let expr_while_body = extract_mlexpr_to_stmts g body in
     Expr_while {expr_while_cond; expr_while_body}
+
   | S.MLE_App ({expr=S.MLE_Name p}, [e1; e2])
+
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2])
     when p |> S.string_of_mlpath |> is_binop |> Some? ->
     let e1 = extract_mlexpr g e1 in

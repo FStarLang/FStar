@@ -308,7 +308,7 @@ let rec extract (g:env) (p:st_term)
         //
         // This is parsed by Pulse2Rust
         //
-        let allocator = mle_app (mle_name (["Pulse"; "Lib"; "Rust"; "Slice"] , "alloc")) [initializer; length] in
+        let allocator = mle_app (mle_name (["Pulse"; "Lib"; "Array"; "Core"] , "alloc")) [initializer; length] in
         let mllb = mk_mut_mllb mlident ([], mlty) allocator in
         let mlletbinding = mk_mlletbinding false [mllb] in
         mle_let mlletbinding body, e_tag_impure
