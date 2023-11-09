@@ -15,6 +15,5 @@
 *)
 module FStar.Reflection.V1.Interpreter
 
-module P = FStar.TypeChecker.Primops
-
-val reflection_primops : list P.primitive_step
+(* This module only has an initialization effect of registering
+many primitive steps in the normalizer. *)

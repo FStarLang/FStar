@@ -97,7 +97,7 @@ type implicits = Env.implicits
 let rangeof g = g.goal_ctx_uvar.ctx_uvar_range
 
 // Beta reduce
-let normalize s e t = N.normalize_with_primitive_steps FStar.Reflection.V2.Interpreter.reflection_primops s e t
+let normalize s e t = N.normalize s e t
 let bnorm e t = normalize [] e t
 let whnf e t = N.unfold_whnf e t
 

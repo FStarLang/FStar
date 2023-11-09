@@ -29,6 +29,13 @@ module RE = FStar.Reflection.V2.Embeddings
 
 let _ = FStar.Version.dummy ()
 
+(* These modules only mentioned to put them in the dep graph
+and hence compile and link them in. They do not export anything,
+instead they register primitive steps in the normalizer during
+initialization. *)
+module X1 = FStar.Reflection.V1.Interpreter
+module X2 = FStar.Reflection.V2.Interpreter
+
 (* process_args:  parses command line arguments, setting FStar.Options *)
 (*                returns an error status and list of filenames        *)
 let process_args () : parse_cmdline_res * list string =
