@@ -121,6 +121,8 @@ let string_to_term          = from_tac_2 "B.string_to_term" B.string_to_term
 let push_bv_dsenv           = from_tac_2 "B.push_bv_dsenv" B.push_bv_dsenv
 let term_to_string          = from_tac_1 "B.term_to_string" B.term_to_string
 let comp_to_string          = from_tac_1 "B.comp_to_string" B.comp_to_string
+let term_to_doc             = from_tac_1 "B.term_to_doc" B.term_to_doc
+let comp_to_doc             = from_tac_1 "B.comp_to_doc" B.comp_to_doc
 let range_to_string         = from_tac_1 "B.range_to_string" B.range_to_string
 let term_eq_old             = from_tac_2 "B.term_eq_old" B.term_eq_old
 

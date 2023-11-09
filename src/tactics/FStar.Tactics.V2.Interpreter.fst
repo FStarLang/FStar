@@ -581,6 +581,14 @@ let () =
         comp_to_string RE.e_comp e_string
         comp_to_string NRE.e_comp NBET.e_string;
 
+      mk_tac_step_1 0 "term_to_doc"
+        term_to_doc RE.e_term e_document
+        term_to_doc NRE.e_term NBET.e_document;
+
+      mk_tac_step_1 0 "comp_to_doc"
+        comp_to_doc RE.e_comp e_document
+        comp_to_doc NRE.e_comp NBET.e_document;
+
       mk_tac_step_1 0 "range_to_string"
         range_to_string FStar.Syntax.Embeddings.e_range e_string
         range_to_string FStar.TypeChecker.NBETerm.e_range NBET.e_string;

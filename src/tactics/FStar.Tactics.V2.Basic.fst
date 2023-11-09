@@ -2033,6 +2033,16 @@ let comp_to_string (c:comp) : tac string
     let s = Print.comp_to_string' g.dsenv c in
     ret s
 
+let term_to_doc (t:term) : tac Pprint.document
+  = let! g = top_env () in
+    let s = Print.term_to_doc' g.dsenv t in
+    ret s
+
+let comp_to_doc (c:comp) : tac Pprint.document
+  = let! g = top_env () in
+    let s = Print.comp_to_doc' g.dsenv c in
+    ret s
+
 let range_to_string (r:FStar.Compiler.Range.range) : tac string
   = ret (Range.string_of_range r)
 
