@@ -79,23 +79,28 @@ let lax_check_term_with_unknown_universes (g:TcEnv.env) (e:S.term)
         if no_uvars_in_g g &&
           no_uvars_in_term e
         then (
-          let g = TcEnv.set_range g e.pos in
-          let must_tot = false in
-          let g = {g with instantiate_imp=false; phase1=true; lax=true} in
-          let e, t, guard = g.typeof_tot_or_gtot_term g e must_tot in
-          let _ = FStar_TypeChecker_Rel.resolve_implicits g guard in
-          let uvs = BU.set_union (Free.uvars e) (Free.uvars t) in
-          if not (BU.set_is_empty uvs)
-          then None
-          else (
-            let univs = BU.set_union (Free.univs e) (Free.univs t) in
-            let univs = BU.set_elements univs in
-            List.iter (fun univ -> FStar_Syntax_Unionfind.univ_change univ S.U_unknown) univs;
-            let t = FStar_Syntax_Compress.deep_compress false true t in
-            Some t
+          match e.n with
+          | S.Tm_fvar { fv_qual = Some _ } ->
+            (* record projectors etc. are pure *)
+            None 
+          | _ ->
+            let g = TcEnv.set_range g e.pos in
+            let must_tot = false in
+            let g = {g with instantiate_imp=false; phase1=true; lax=true} in
+            let e, t, guard = g.typeof_tot_or_gtot_term g e must_tot in
+            let _ = FStar_TypeChecker_Rel.resolve_implicits g guard in
+            let uvs = BU.set_union (Free.uvars e) (Free.uvars t) in
+            if not (BU.set_is_empty uvs)
+            then None
+            else (
+              let univs = BU.set_union (Free.univs e) (Free.univs t) in
+              let univs = BU.set_elements univs in
+              List.iter (fun univ -> FStar_Syntax_Unionfind.univ_change univ S.U_unknown) univs;
+              let t = FStar_Syntax_Compress.deep_compress false true t in
+              Some t
+            )
           )
-        )
-        else None
+          else None
       )
     in
     FStar_Errors.add_issues issues;

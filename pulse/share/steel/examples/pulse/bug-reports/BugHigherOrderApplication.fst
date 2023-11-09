@@ -102,3 +102,53 @@ fn apply_id_t (f:id_t bool) (x:bool)
    res
 }
 ```
+
+noeq
+type record = {
+    first:bool;
+    second: (bool -> stt bool emp (fun _ -> emp));
+}
+
+```pulse
+fn projection (r:record)
+requires emp
+returns _:bool
+ensures emp
+{
+    let res = r.first;
+    res
+}
+```
+
+```pulse
+fn return (#a:Type0) (x:a)
+requires emp
+returns y:a
+ensures pure (x == y)
+{
+    x
+}
+```
+
+```pulse
+fn project_and_apply (r:record)
+requires emp
+returns _:bool
+ensures emp
+{
+    let f = return r.second; //need the return since otherwise Pulse adds an equality refinement to the type of x
+    f r.first
+}
+```
+
+assume val g :  (f:(bool -> stt bool emp (fun _ -> emp)){ f == f })
+[@@expect_failure] //this fails too, with unexpected head type in impure application
+```pulse
+fn apply_refined_function (b:bool)
+requires emp
+returns b:bool
+ensures emp
+{
+    g b
+}
+```

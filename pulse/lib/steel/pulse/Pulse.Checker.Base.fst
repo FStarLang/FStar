@@ -521,16 +521,16 @@ let checker_result_for_st_typing (#g:env) (#ctxt:vprop) (#post_hint:post_hint_op
 
 module R = FStar.Reflection.V2
 
-let readback_comp_res_as_comp (c:R.comp) : option comp =
-  match R.inspect_comp c with
-  | R.C_Total t -> (
+let readback_comp_res_as_comp (c:T.comp) : option comp =
+  match c with
+  | T.C_Total t -> (
     match readback_comp t with
     | None -> None
     | Some c -> Some c
   )
   | _ -> None
 
-let rec is_stateful_arrow (c:option comp) (args:list T.argv) (out:list T.argv)
+let rec is_stateful_arrow (g:env) (c:option comp) (args:list T.argv) (out:list T.argv)
   : T.Tac (option (list T.argv & T.argv))
   = let open R in
     match c with
@@ -548,32 +548,41 @@ let rec is_stateful_arrow (c:option comp) (args:list T.argv) (out:list T.argv)
       then None
       else (
         let Tm_FStar c_res = c_res.t in
-        let ht = R.inspect_ln c_res in
+        let ht = T.inspect c_res in
         match ht with
-        | R.Tv_Arrow b c -> (
+        | T.Tv_Arrow b c -> (
           match args with
           | [] -> ( //no more args; check that only implicits remain, ending in an stateful comp  
             let bs, c = T.collect_arr_ln_bs c_res in
             if List.Tot.for_all (fun b -> R.Q_Implicit? (R.inspect_binder b).qual) bs
-            then is_stateful_arrow (readback_comp_res_as_comp c) [] out
+            then is_stateful_arrow g (readback_comp_res_as_comp (R.inspect_comp c)) [] out
             else None //too few args    
           )
 
           | (arg, qual)::args' -> ( //check that this arg qual matches the binder and recurse accordingly
-            let b = R.inspect_binder b in
             match b.qual, qual with
             | T.Q_Implicit, T.Q_Implicit 
             | T.Q_Explicit, T.Q_Explicit ->  //consume this argument
-              is_stateful_arrow (readback_comp_res_as_comp c) args' ((arg, qual)::out)
+              is_stateful_arrow g (readback_comp_res_as_comp c) args' ((arg, qual)::out)
 
             | T.Q_Implicit, T.Q_Explicit -> 
               //don't consume this argument
-              is_stateful_arrow (readback_comp_res_as_comp c) args out
+              is_stateful_arrow g (readback_comp_res_as_comp c) args out
 
             | _ -> None //incompatible qualifiers; bail
           )
         )
-        | _ -> None
+        | _ ->
+          None
+          // let c_res = T.norm_term_env (elab_env g) [weak; hnf; delta] c_res in
+          // let ht = T.inspect c_res in
+          // if T.Tv_Arrow? ht
+          // then (
+          //   assume (not_tv_unknown c_res);
+          //   let c_res = tm_fstar c_res (T.range_of_term c_res) in
+          //   is_stateful_arrow g (Some (C_Tot c_res)) args out
+          // )
+          // else None
       )
     )
 
@@ -589,7 +598,7 @@ let is_stateful_application (g:env) (e:term)
       | Some ht -> 
         assume (not_tv_unknown ht);
         let head_t = tm_fstar ht (T.range_of_term ht) in
-        match is_stateful_arrow (Some (C_Tot head_t)) args [] with 
+        match is_stateful_arrow g (Some (C_Tot head_t)) args [] with 
         | None -> None
         | Some (applied_args, (last_arg, aqual))->
           let head = T.mk_app head applied_args in
