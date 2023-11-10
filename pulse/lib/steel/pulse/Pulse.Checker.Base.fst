@@ -575,16 +575,15 @@ let rec is_stateful_arrow (g:env) (c:option comp) (args:list T.argv) (out:list T
           )
         )
         | _ ->
-          None
-          // let c_res = T.norm_term_env (elab_env g) [weak; hnf; delta] c_res in
-          // let ht = T.inspect c_res in
-          // if T.Tv_Arrow? ht
-          // then (
-          //   assume (not_tv_unknown c_res);
-          //   let c_res = tm_fstar c_res (T.range_of_term c_res) in
-          //   is_stateful_arrow g (Some (C_Tot c_res)) args out
-          // )
-          // else None
+          let c_res' = RU.whnf_lax (elab_env g) c_res in
+          let ht = T.inspect c_res' in
+          if T.Tv_Arrow? ht
+          then (
+            assume (not_tv_unknown c_res);
+            let c_res' = tm_fstar c_res' (T.range_of_term c_res') in
+            is_stateful_arrow g (Some (C_Tot c_res')) args out
+          )
+          else None
       )
     )
 

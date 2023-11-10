@@ -54,6 +54,7 @@ let pure_typing_inversion (#g:env) (#p:term) (_:tot_typing g (tm_pure p) tm_vpro
    : tot_typing g p (tm_fstar FStar.Reflection.Typing.tm_prop Range.range_0)
    = admit ()
 
+let typing_correctness _ = admit()
 let tot_typing_weakening _ _ _ _ _ _ = admit ()
 
 let non_informative_t_weakening (g g':env) (g1:env{ pairwise_disjoint g g1 g' })
