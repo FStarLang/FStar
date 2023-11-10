@@ -4,8 +4,28 @@ open FStar.Compiler.Effect
 
 module L = FStar.Compiler.List
 
+let vec_new_fn = "vec_new"
+let panic_fn = "panic"
+
+let mk_scalar_typ (name:string) : typ =
+  Typ_path [ {typ_path_segment_name = name; typ_path_segment_generic_args = [] } ]
+
 let mk_ref_typ (is_mut:bool) (t:typ) : typ =
   Typ_reference { typ_ref_mut = is_mut; typ_ref_typ = t }
+
+let mk_slice_typ (t:typ) : typ = Typ_slice t
+
+let mk_vec_typ (t:typ) : typ =
+  Typ_path [
+    { typ_path_segment_name = "std"; typ_path_segment_generic_args = [] };
+    { typ_path_segment_name = "vec"; typ_path_segment_generic_args = [] };
+    { typ_path_segment_name = "Vec"; typ_path_segment_generic_args = [t] };
+  ]
+
+let mk_array_typ (t:typ) (len:expr) : typ =
+  Typ_array { typ_array_elem = t; typ_array_len = len }
+
+let mk_lit_bool (b:bool) : expr = Expr_lit (Lit_bool b)
 
 let mk_binop (l:expr) (op:binop) (r:expr) : expr =
   Expr_binop { expr_bin_left = l; expr_bin_op = op; expr_bin_right = r }
@@ -26,6 +46,9 @@ let mk_ref_assign (l r:expr) =
 
 let mk_ref_read (l:expr) = Expr_unary { expr_unary_op = Deref; expr_unary_expr = l }
 
+let mk_expr_index (expr_index_base:expr) (expr_index_index:expr) : expr =
+  Expr_index { expr_index_base; expr_index_index }
+
 let mk_call (head:expr) (args:list expr) =
   Expr_call { expr_call_fn = head; expr_call_args = args }
 
@@ -34,6 +57,12 @@ let mk_if (expr_if_cond:expr) (expr_if_then:list stmt) (expr_if_else:option expr
 
 let mk_while (expr_while_cond:expr) (expr_while_body:list stmt) : expr =
   Expr_while { expr_while_cond; expr_while_body }
+
+let mk_repeat (expr_repeat_elem expr_repeat_len:expr) : expr =
+  Expr_repeat { expr_repeat_elem; expr_repeat_len }
+
+let mk_reference_expr (expr_reference_is_mut:bool) (expr_reference_expr:expr) : expr =
+  Expr_reference { expr_reference_is_mut; expr_reference_expr }
 
 let mk_scalar_fn_arg (name:string) (t:typ) =
   Fn_arg_pat {
