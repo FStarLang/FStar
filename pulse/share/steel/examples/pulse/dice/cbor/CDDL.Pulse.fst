@@ -11,7 +11,6 @@ inline_for_extraction noextract [@@noextract_to "krml"]
 let impl_typ
     (#b: option raw_data_item)
     (t: bounded_typ_gen b)
-: Tot Type
 =
     (c: cbor) ->
     (#p: perm) ->
@@ -24,24 +23,6 @@ let impl_typ
             opt_precedes (Ghost.reveal v) b /\
             res == t v
         ))
-
-inline_for_extraction noextract [@@noextract_to "krml"]
-let eval_impl_typ
-    (#b: Ghost.erased (option raw_data_item))
-    (#t: bounded_typ_gen b)
-    (f: impl_typ t)
-    (c: cbor)
-    (#p: perm)
-    (#v: Ghost.erased raw_data_item)
-:   stt bool
-        (raw_data_item_match p c v ** pure (
-            opt_precedes (Ghost.reveal v) (Ghost.reveal b)
-        ))
-        (fun res -> raw_data_item_match p c v ** pure (
-            opt_precedes (Ghost.reveal v) (Ghost.reveal b) /\
-            res == t v
-        ))
-= f c #p #v
 
 inline_for_extraction noextract [@@noextract_to "krml"]
 ```pulse
@@ -63,7 +44,7 @@ ensures
             res == coerce_to_bounded_typ b t v
         ))
 {
-    eval_impl_typ f c
+    f c;
 }
 ```
 
@@ -96,12 +77,12 @@ ensures
             res == t_choice t1 t2 v
         ))
 {
-    let test = eval_impl_typ f1 c;
+    let test = f1 c;
     if (test)
     {
         true
     } else {
-        eval_impl_typ f2 c
+        f2 c
     }
 }
 ```
@@ -239,7 +220,6 @@ inline_for_extraction noextract [@@noextract_to "krml"]
 let impl_array_group3
     (#b: Ghost.erased (option raw_data_item))
     (g: array_group3 b)
-: Tot Type
 =
     (pi: R.ref cbor_array_iterator_t) ->
     (#p: perm) ->
@@ -260,32 +240,6 @@ let impl_array_group3
                 (res == true ==> Some?.v (g l) == l')
             )
         )))
-
-inline_for_extraction noextract [@@noextract_to "krml"]
-let eval_impl_array_group3
-    (#b: Ghost.erased (option raw_data_item))
-    (#g: array_group3 b)
-    (ig: impl_array_group3 g)
-    (pi: R.ref cbor_array_iterator_t)
-    (#p: perm)
-    (#i: Ghost.erased cbor_array_iterator_t)
-    (#l: Ghost.erased (list raw_data_item))
-:   stt bool
-        (R.pts_to pi i **
-            cbor_array_iterator_match p i l **
-            pure (opt_precedes (Ghost.reveal l) b)
-        )
-        (fun res -> exists_ (fun i' -> exists_ (fun l' ->
-            R.pts_to pi i' **
-            cbor_array_iterator_match p i' l' **
-            (cbor_array_iterator_match p i' l' @==> cbor_array_iterator_match p i l) **
-            pure (
-                opt_precedes (Ghost.reveal l) b /\
-                res == Some? (g l) /\
-                (res == true ==> Some?.v (g l) == l')
-            )
-        )))
-= ig pi #p #i #l
 
 ```pulse
 ghost
@@ -357,9 +311,9 @@ ensures
             )
         )))
 {
-    let test1 = eval_impl_array_group3 f1 pi;
+    let test1 = f1 pi;
     if (test1) {
-        let test2 = eval_impl_array_group3 f2 pi;
+        let test2 = f2 pi;
         stick_trans ();
         test2
     } else {
@@ -421,7 +375,7 @@ ensures
             cbor_array_iterator_match p i' l' **
             `@((raw_data_item_match p c gc ** cbor_array_iterator_match p i' l') @==> cbor_array_iterator_match p gi l)
         ); // this is needed for the explicit arguments to split_consume_l below
-        let test = eval_impl_typ fty c;
+        let test = fty c;
         if (test) {
             stick_consume_l ()
                 #(raw_data_item_match p c gc)
@@ -476,7 +430,7 @@ ensures
         with l . assert (cbor_array_iterator_match p i l);
         rewrite (cbor_array_iterator_match p i l) as (cbor_array_iterator_match p (Ghost.reveal (Ghost.hide i)) l);
         let mut pi = i;
-        let b_success = eval_impl_array_group3 ig pi;
+        let b_success = ig pi;
         with gi' l' . assert (cbor_array_iterator_match p gi' l');
         let i' = ! pi;
         rewrite (cbor_array_iterator_match p gi' l') as (cbor_array_iterator_match p i' l');
@@ -598,7 +552,7 @@ ensures read_cbor_with_typ_post t a p va res
         let sres = ParseSuccess?._0 res;
         rewrite (read_cbor_post a p va res) as (read_cbor_success_post a p va sres);
         unfold (read_cbor_success_post a p va sres);
-        let test = eval_impl_typ ft sres.read_cbor_payload;
+        let test = ft sres.read_cbor_payload;
         if (test) {
             fold (read_cbor_with_typ_success_post t a p va sres);
             rewrite (read_cbor_with_typ_success_post t a p va sres) as (read_cbor_with_typ_post t a p va res);
@@ -703,7 +657,7 @@ ensures read_deterministically_encoded_cbor_with_typ_post t a p va res
         let sres = ParseSuccess?._0 res;
         rewrite (read_deterministically_encoded_cbor_post a p va res) as (read_deterministically_encoded_cbor_success_post a p va sres);
         unfold (read_deterministically_encoded_cbor_success_post a p va sres);
-        let test = eval_impl_typ ft sres.read_cbor_payload;
+        let test = ft sres.read_cbor_payload;
         if (test) {
             fold (read_deterministically_encoded_cbor_with_typ_post t a p va (ParseSuccess sres));
             res
@@ -841,7 +795,7 @@ ensures
         let fres = Found?._0 res;
         manurewrite (cbor_map_get_post pmap vkey vmap map res) (cbor_map_get_post_found pmap vkey vmap map fres);
         unfold (cbor_map_get_post_found pmap vkey vmap map fres);
-        let test = eval_impl_typ ft fres;
+        let test = ft fres;
         if (test) {
             fold (cbor_map_get_with_typ_post t pmap vkey vmap map (Found fres));
             res
@@ -863,7 +817,6 @@ inline_for_extraction noextract [@@noextract_to "krml"]
 let impl_matches_map_group
     (#b: Ghost.erased (option raw_data_item))
     (g: map_group b)
-: Tot Type
 =
     c: cbor ->
     (#p: perm) ->
@@ -877,25 +830,6 @@ let impl_matches_map_group
             raw_data_item_match p c v **
             pure (opt_precedes (Ghost.reveal v) b /\ Map? v /\ res == matches_map_group g (Map?.v v))
         )
-
-inline_for_extraction noextract [@@noextract_to "krml"]
-let eval_impl_matches_map_group
-    (#b: Ghost.erased (option raw_data_item))
-    (#g: map_group b)
-    (f: impl_matches_map_group g)
-    (c: cbor)
-    (#p: perm)
-    (#v: Ghost.erased raw_data_item)
-:   stt bool
-        (
-            raw_data_item_match p c v **
-            pure (opt_precedes (Ghost.reveal v) b /\ Map? v)
-        )
-        (fun res -> 
-            raw_data_item_match p c v **
-            pure (opt_precedes (Ghost.reveal v) b /\ Map? v /\ res == matches_map_group g (Map?.v v))
-        )
-= f c #p #v
 
 inline_for_extraction noextract [@@noextract_to "krml"]
 ```pulse
@@ -919,7 +853,7 @@ ensures
 {
     let ty = cbor_get_major_type c;
     if (ty = major_type_map) {
-        eval_impl_matches_map_group ig c;
+        ig c;
     } else {
         false
     }
@@ -938,7 +872,6 @@ inline_for_extraction noextract [@@noextract_to "krml"]
 let impl_matches_map_entry_zero_or_more
     (#b: Ghost.erased (option raw_data_item))
     (g: map_group b)
-: Tot Type
 =
     c: cbor_map_entry ->
     (#p: perm) ->
@@ -953,26 +886,6 @@ let impl_matches_map_entry_zero_or_more
             pure (opt_precedes (Ghost.reveal v) b /\
             res == List.Tot.existsb (pull_rel matches_map_group_entry' (Ghost.reveal v)) g.zero_or_more)
         )
-
-inline_for_extraction noextract [@@noextract_to "krml"]
-let eval_impl_matches_map_entry_zero_or_more
-    (#b: Ghost.erased (option raw_data_item))
-    (#g: map_group b)
-    (f: impl_matches_map_entry_zero_or_more g)
-    (c: cbor_map_entry)
-    (#p: perm)
-    (#v: Ghost.erased (raw_data_item & raw_data_item))
-:   stt bool
-        (
-            raw_data_item_map_entry_match p c v **
-            pure (opt_precedes (Ghost.reveal v) b)
-        )
-        (fun res -> 
-            raw_data_item_map_entry_match p c v **
-            pure (opt_precedes (Ghost.reveal v) b /\
-            res == List.Tot.existsb (pull_rel matches_map_group_entry' (Ghost.reveal v)) g.zero_or_more)
-        )
-= f c
 
 inline_for_extraction noextract [@@noextract_to "krml"]
 ```pulse
@@ -1035,18 +948,18 @@ ensures
           List.Tot.existsb (pull_rel matches_map_group_entry' (Ghost.reveal v)) g.zero_or_more
     )));
     unfold (raw_data_item_map_entry_match p c v);
-    let test_fst = eval_impl_typ f_fst (cbor_map_entry_key c);
+    let test_fst = f_fst (cbor_map_entry_key c);
     if (test_fst) {
-        let test_snd = eval_impl_typ f_snd (cbor_map_entry_value c);
+        let test_snd = f_snd (cbor_map_entry_value c);
         fold (raw_data_item_map_entry_match p c v);
         if (test_snd) {
             true
         } else {
-            eval_impl_matches_map_entry_zero_or_more f_g c;
+            f_g c;
         }
     } else {
         fold (raw_data_item_map_entry_match p c v);
-        eval_impl_matches_map_entry_zero_or_more f_g c;
+        f_g c;
     }
 }
 ```
@@ -1108,7 +1021,7 @@ ensures
     {   
         let x = cbor_map_iterator_next pi;
         stick_trans ();
-        let res = eval_impl_matches_map_entry_zero_or_more ig x;
+        let res = ig x;
         with vx gi l . assert (pts_to pi gi ** raw_data_item_map_entry_match p x vx ** cbor_map_iterator_match p gi l ** `@((raw_data_item_map_entry_match p x vx ** cbor_map_iterator_match p gi l) @==> raw_data_item_match p c v)) ;
         stick_consume_l ()
             #(raw_data_item_map_entry_match p x vx)

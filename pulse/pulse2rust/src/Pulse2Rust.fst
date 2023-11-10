@@ -14,6 +14,11 @@ module S = FStar.Extraction.ML.Syntax
 module UEnv = FStar.Extraction.ML.UEnv
 
 type var = string
+//
+// We keep the is_mut flag in the binding in gamma
+// We use it to extract !x in pulse to x in rust
+//   for a mutable local x
+//
 type binding = var & typ & bool // name, type, is_mut
 
 type env = {
@@ -52,7 +57,13 @@ let push_fv (g:env) (s:string) (t:fn_signature) : env =
 let push_local (g:env) (s:string) (t:typ) (is_mut:bool) : env =
   { g with gamma = (s, t, is_mut)::g.gamma }
 
-let type_of (g:env) (e:expr) : typ & bool =
+//
+// A very shallow type checker for rust ast terms
+// For now this is used only for variables,
+//   to see whether a variable is mut
+// Later, this may be used to insert coercions (e.g., &)
+//
+let type_of (g:env) (e:expr) : typ & bool =  // is_mut
   match e with
   | Expr_path s ->
     (match lookup_local g s with
@@ -61,6 +72,9 @@ let type_of (g:env) (e:expr) : typ & bool =
 
   | _ -> fail_nyi (format1 "type_of %s" (expr_to_string e))
 
+//
+// rust functions are uncurried
+//
 let rec uncurry_arrow (t:S.mlty) : (list S.mlty & S.mlty) =
   match t with
   | S.MLTY_Fun (t1, _, t2) ->
@@ -68,51 +82,52 @@ let rec uncurry_arrow (t:S.mlty) : (list S.mlty & S.mlty) =
     t1::arg_ts, ret_t
   | _ -> ([], t)
 
+//
+// Most translations are straightforward
+//
+// Array.array t is extracted to &mut [t]
+//   we need to figure permissions better
+//
 let rec extract_mlty (g:env) (t:S.mlty) : typ =
+  let mk_slice (is_mut:bool) (t:S.mlty) =
+    t |> extract_mlty g |> mk_slice_typ |> mk_ref_typ is_mut in
+
   match t with
-  | S.MLTY_Var s -> Typ_name (tyvar_of s)
+  | S.MLTY_Var s -> mk_scalar_typ (tyvar_of s)
   | S.MLTY_Named ([], p)
-    when S.string_of_mlpath p = "FStar.UInt32.t" -> Typ_name "u32"
+    when S.string_of_mlpath p = "FStar.UInt32.t" -> mk_scalar_typ "u32"
   | S.MLTY_Named ([], p)
-    when S.string_of_mlpath p = "FStar.Int32.t" -> Typ_name "i32"
+    when S.string_of_mlpath p = "FStar.Int32.t" -> mk_scalar_typ "i32"
   | S.MLTY_Named ([], p)
-    when S.string_of_mlpath p = "FStar.UInt64.t" -> Typ_name "u64"
+    when S.string_of_mlpath p = "FStar.UInt64.t" -> mk_scalar_typ "u64"
   | S.MLTY_Named ([], p)
     when S.string_of_mlpath p = "FStar.Int64.t" ||
          S.string_of_mlpath p = "Prims.int"     ||
-         S.string_of_mlpath p = "Prims.nat" ->Typ_name "i64"  // TODO: int to int64, nat to int64, FIX
+         S.string_of_mlpath p = "Prims.nat" -> mk_scalar_typ "i64"  // TODO: int to int64, nat to int64, FIX
   | S.MLTY_Named ([], p)
-    when S.string_of_mlpath p = "Prims.bool" -> Typ_name "bool"
+    when S.string_of_mlpath p = "FStar.SizeT.t" -> mk_scalar_typ "usize"
+  | S.MLTY_Named ([], p)
+    when S.string_of_mlpath p = "Prims.bool" -> mk_scalar_typ "bool"
   | S.MLTY_Named ([arg], p)
     when S.string_of_mlpath p = "Pulse.Lib.Reference.ref" ->
     let is_mut = true in
-    mk_ref_typ is_mut (extract_mlty g arg)
-  | S.MLTY_Erased -> Typ_name "unit"
+    arg |> extract_mlty g |> mk_ref_typ is_mut
+  | S.MLTY_Named ([arg], p)
+    when S.string_of_mlpath p = "Pulse.Lib.Array.Core.array" ->
+    let is_mut = true in
+    mk_slice is_mut arg
+  | S.MLTY_Named ([arg; _], p)
+    when S.string_of_mlpath p = "Pulse.Lib.Array.Core.larray" ->
+    let is_mut = true in
+    mk_slice is_mut arg
+  | S.MLTY_Named ([arg], p)
+    when S.string_of_mlpath p = "Pulse.Lib.Vec.vec" ->
+    arg |> extract_mlty g |> mk_vec_typ
+  | S.MLTY_Erased -> mk_scalar_typ "unit"
   | _ -> fail_nyi (format1 "mlty %s" (S.mlty_to_string t))
 
 let extract_top_level_fn_arg (g:env) (arg_name:string) (t:S.mlty) : fn_arg =
-  match t with
-  | S.MLTY_Var s -> mk_scalar_fn_arg arg_name (Typ_name (tyvar_of s))
-  | S.MLTY_Named ([], p)
-    when S.string_of_mlpath p = "FStar.UInt32.t" ||
-         S.string_of_mlpath p = "FStar.Int32.t"  ||
-         S.string_of_mlpath p = "FStar.UInt64.t" ||
-         S.string_of_mlpath p = "FStar.Int64.t"  ||
-         S.string_of_mlpath p = "Prims.int"      ||
-         S.string_of_mlpath p = "Prims.nat"      ||
-         S.string_of_mlpath p = "Prims.bool" ->
-    mk_scalar_fn_arg arg_name (extract_mlty g t)
-
-  | S.MLTY_Named ([arg], p)
-    when S.string_of_mlpath p = "Pulse.Lib.Reference.ref" ->
-    mk_scalar_fn_arg arg_name (extract_mlty g t)
-    // let is_mut = true in
-    // mk_ref_fn_arg arg_name is_mut (extract_mlty g arg)  // TODO: try making an argument with ref type, it may print as &t
-
-  | S.MLTY_Erased ->
-    mk_scalar_fn_arg arg_name (Typ_name "unit")
-  
-  | _ -> fail_nyi (format1 "top level fn arg %s" (S.mlty_to_string t))
+  t |> extract_mlty g |> mk_scalar_fn_arg arg_name
 
 let push_fn_arg (g:env) (arg_name:string) (arg:fn_arg) : env =
   match arg with
@@ -120,6 +135,12 @@ let push_fn_arg (g:env) (arg_name:string) (arg:fn_arg) : env =
     let is_mut = false in
     push_local g arg_name pat_typ_typ false
 
+//
+// Top level function signature extraction
+//
+// The returned env is for extracting the body
+//   with function parameters in scope
+//
 let extract_top_level_sig
   (g:env)
   (fn_name:string)
@@ -136,7 +157,10 @@ let extract_top_level_sig
   mk_fn_signature fn_name tvars fn_args fn_ret_t,
   fold_left (fun g (arg_name, arg) -> push_fn_arg g arg_name arg) g (zip arg_names fn_args)
 
-let arg_ts_and_ret_t (t:S.mltyscheme) : S.mlidents & list S.mlty & S.mlty =
+let arg_ts_and_ret_t (t:S.mltyscheme)
+  : S.mlidents &   // type parameters
+    list S.mlty &  // function argument types (after uncurrying the input type)
+    S.mlty =       // function return type
   let tvars, t = t in
   match t with
   | S.MLTY_Fun (_, S.E_PURE, _)
@@ -145,6 +169,9 @@ let arg_ts_and_ret_t (t:S.mltyscheme) : S.mlidents & list S.mlty & S.mlty =
     tvars, arg_ts, ret_t
   | _ -> fail_nyi (format1 "top level arg_ts and ret_t %s" (S.mlty_to_string t))
 
+//
+// TODO: add machine integers binops?
+//
 let is_binop (s:string) : option binop =
   if s = "Prims.op_Addition"
   then Some Add
@@ -164,7 +191,74 @@ let is_binop (s:string) : option binop =
   then Some Eq
   else None
 
-let rec extract_mlexpr (g:env) (e:S.mlexpr) : expr =
+//
+// Given an mllb,
+//   compute the rust let binding mut flag, typ, and initializer
+//
+// If the mllb has Mutable flag, this means either a Tm_WithLocal or Tm_WithLocalArray in pulse
+//
+// Tm_WithLocal in pulse looks like (in mllb): let x : ref t = alloc e, where e : t
+// So we return true, extract t, extract e
+//
+// Tm_WithLocalArray in pulse looks like (in mllb): let x : array t = alloc init len
+// So we return false, extract (array t), mk_mutable_ref (repeat (extract init) (extract len))
+// Basically, a local array in pulse becomes a mutable reference to a slice in rust
+// Note that the let binding itself is immutable, but the slice is mutable
+//
+// If the mllb does not have Mutable flag, but the initializer is Vec::alloc,
+//   we extract it as: let mut x = std::vec::new(...)
+// So we return true, extract (vec t), extract (Vec::alloc (...))
+//
+// When we introduce Box, it will follow a similar path as Vec
+//
+let rec lb_init_and_def (g:env) (lb:S.mllb)
+  : bool &       // whether the let binding in rust should be mut
+    typ &        // type of the let binder
+    expr =       // init expression
+  
+  let is_mut = contains S.Mutable lb.mllb_meta in
+  if is_mut
+  then
+    match lb.mllb_def.expr, lb.mllb_tysc with
+    | S.MLE_App ({expr=S.MLE_Name pe}, [init]),
+      Some ([], S.MLTY_Named ([ty], pt))
+      when S.string_of_mlpath pe = "Pulse.Lib.Reference.alloc" &&
+           S.string_of_mlpath pt = "Pulse.Lib.Reference.ref" ->
+      is_mut,
+      extract_mlty g ty,
+      extract_mlexpr g init
+
+    | S.MLE_App ({expr=S.MLE_Name pe}, [init; len]),
+      Some ([], S.MLTY_Named ([ty], pt))
+      when S.string_of_mlpath pe = "Pulse.Lib.Array.Core.alloc" &&
+           S.string_of_mlpath pt = "Pulse.Lib.Array.Core.array" ->
+      let init = extract_mlexpr g init in
+      let len = extract_mlexpr g len in
+      let is_mut = false in
+      is_mut,
+      lb.mllb_tysc |> must |> snd |> extract_mlty g,
+      mk_reference_expr true (mk_repeat init len)
+
+    | _ ->
+      fail (format1 "unexpected initializer for mutable local: %s" (S.mlexpr_to_string lb.mllb_def))
+
+  else
+    let is_mut =
+      match lb.mllb_def.expr with
+      | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, _) ->
+        S.string_of_mlpath p = "Pulse.Lib.Vec.alloc"
+      | _ -> false in
+    is_mut,
+    lb.mllb_tysc |> must |> snd |> extract_mlty g,
+    extract_mlexpr g lb.mllb_def
+
+//
+// We have two mutually recursive functions:
+//   extract_mlexpr and extract_mlexpr_to_stmts
+// The top-level starts with the latter
+// Nested let bindings are extracted as block expressions in rust
+//
+and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
   match e.expr with
   | S.MLE_Const (S.MLC_Unit) -> Expr_path "unitv"
   | S.MLE_Const (S.MLC_Int (lit_int_val, swopt)) ->
@@ -179,12 +273,20 @@ let rec extract_mlexpr (g:env) (e:S.mlexpr) : expr =
       | Some (_, FStar.Const.Int16) -> Some I16
       | Some (_, FStar.Const.Int32) -> Some I32
       | Some (_, FStar.Const.Int64) -> Some I64
+      | Some (_, FStar.Const.Sizet) -> Some I64  // TODO: FIXME
       | None -> None in
     Expr_lit (Lit_int {lit_int_val; lit_int_signed; lit_int_width})
+  | S.MLE_Const (S.MLC_Bool b) -> mk_lit_bool b
+  | S.MLE_App ({expr=S.MLE_Name p}, [e])
+    when S.string_of_mlpath p = "FStar.SizeT.uint_to_t" ->
+    extract_mlexpr g e
 
   | S.MLE_Var x -> Expr_path (varname x)
   | S.MLE_Name p -> Expr_path (snd p)
+
+    // nested let binding
   | S.MLE_Let _ -> e |> extract_mlexpr_to_stmts g |> mk_block_expr
+
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2; _])
     when S.string_of_mlpath p = "Pulse.Lib.Reference.op_Colon_Equals" ->
     let e1 = extract_mlexpr g e1 in
@@ -199,12 +301,67 @@ let rec extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     let _, b = type_of g e in
     if b then e
     else mk_ref_read e
+
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e; i; _; _])
+    when S.string_of_mlpath p = "Pulse.Lib.Array.Core.op_Array_Access" ||
+         S.string_of_mlpath p = "Pulse.Lib.Vec.op_Array_Access"  ->
+
+    mk_expr_index (extract_mlexpr g e) (extract_mlexpr g i)
+
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2; e3; _])
+    when S.string_of_mlpath p = "Pulse.Lib.Array.Core.op_Array_Assignment" ||
+         S.string_of_mlpath p = "Pulse.Lib.Vec.op_Array_Assignment" ->
+
+    let e1 = extract_mlexpr g e1 in
+    let e2 = extract_mlexpr g e2 in
+    let e3 = extract_mlexpr g e3 in
+    mk_assign (mk_expr_index e1 e2) e3
+
+    //
+    // vec_as_array e extracted to &mut e
+    //
+    // We need to figure out permissions
+    //
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e])
+    when S.string_of_mlpath p = "Pulse.Lib.Vec.vec_to_array" ->
+
+    let e = extract_mlexpr g e in
+    let is_mut = true in
+    mk_reference_expr is_mut e
+
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2])
+    when S.string_of_mlpath p = "Pulse.Lib.Vec.alloc" ->
+    let e1 = extract_mlexpr g e1 in
+    let e2 = extract_mlexpr g e2 in
+    mk_call (Expr_path vec_new_fn) [e1; e2]
+
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2])
+    when S.string_of_mlpath p = "Pulse.Lib.Array.Core.alloc" ->
+
+    fail_nyi (format1 "mlexpr %s" (S.mlexpr_to_string e))
+
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e; _])
+    when S.string_of_mlpath p = "Pulse.Lib.Vec.free" ->
+    let e = extract_mlexpr g e in
+    mk_call (Expr_path "drop") [e]
+
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2])
+    when S.string_of_mlpath p = "Pulse.Lib.Array.Core.free" ->
+
+    fail_nyi (format1 "mlexpr %s" (S.mlexpr_to_string e))
+
   | S.MLE_App ({expr=S.MLE_Name p}, [{expr=S.MLE_Fun (_, cond)}; {expr=S.MLE_Fun (_, body)}])
     when S.string_of_mlpath p = "Pulse.Lib.Core.while_" ->
     let expr_while_cond = extract_mlexpr g cond in
     let expr_while_body = extract_mlexpr_to_stmts g body in
     Expr_while {expr_while_cond; expr_while_body}
+
+  | S.MLE_App ({ expr=S.MLE_TApp ({ expr=S.MLE_Name p }, _) }, _)
+    when S.string_of_mlpath p = "failwith" ->
+    mk_call (Expr_path panic_fn) []
+
   | S.MLE_App ({expr=S.MLE_Name p}, [e1; e2])
+
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2])
     when p |> S.string_of_mlpath |> is_binop |> Some? ->
     let e1 = extract_mlexpr g e1 in
@@ -231,6 +388,9 @@ let rec extract_mlexpr (g:env) (e:S.mlexpr) : expr =
       | Some (Expr_block _) -> else_
       | Some else_ -> Some (mk_block_expr [Stmt_expr else_]) in 
     mk_if cond then_ else_
+
+  | S.MLE_Coerce (e, _, _) -> extract_mlexpr g e  // TODO: FIXME: perhaps cast in Rust?
+
   | _ -> fail_nyi (format1 "mlexpr %s" (S.mlexpr_to_string e))
 
 and extract_mlexpr_to_stmts (g:env) (e:S.mlexpr) : list stmt =
@@ -239,27 +399,12 @@ and extract_mlexpr_to_stmts (g:env) (e:S.mlexpr) : list stmt =
   | S.MLE_Var x -> [Stmt_expr (Expr_path (varname x))]
   | S.MLE_Name p -> [Stmt_expr (Expr_path (S.mlpath_to_string p))]
   | S.MLE_Let ((S.NonRec, [lb]), e) ->
-    let is_mut = contains S.Mutable lb.mllb_meta in
-    let init, ty =
-      if is_mut
-      then
-        let init =
-          match lb.mllb_def.expr with
-          | S.MLE_App ({expr=S.MLE_Name p}, [init])
-            when S.string_of_mlpath p = "Pulse.Lib.Reference.alloc" -> init
-          | _ -> fail (format1 "unexpected initializer for mutable local: %s" (S.mlexpr_to_string lb.mllb_def))
-        in
-        let ty =
-          match lb.mllb_tysc with
-          | Some ([], S.MLTY_Named ([ty], p))
-            when S.string_of_mlpath p = "Pulse.Lib.Reference.ref" ->
-            ty
-          | _ -> fail (format1 "unexpected type of mutable local: %s" (S.mltyscheme_to_string (must lb.mllb_tysc))) in
-        init, ty
-      else lb.mllb_def,
-           snd (must lb.mllb_tysc) in
-    let s = mk_local_stmt lb.mllb_name is_mut (extract_mlexpr g init) in
-    s::(extract_mlexpr_to_stmts (push_local g lb.mllb_name (extract_mlty g ty) is_mut) e)
+    let is_mut, ty, init = lb_init_and_def g lb in
+    let s = mk_local_stmt lb.mllb_name is_mut init in
+    s::(extract_mlexpr_to_stmts (push_local g lb.mllb_name ty is_mut) e)
+  | S.MLE_App ({ expr=S.MLE_TApp ({ expr=S.MLE_Name p }, _) }, _)
+    when S.string_of_mlpath p = "failwith" ->
+    [Stmt_expr (mk_call (Expr_path panic_fn) [])]
   | _ -> fail_nyi (format1 "mlexpr_to_stmt  %s" (S.mlexpr_to_string e))
 
 let extract_top_level_lb (g:env) (lbs:S.mlletbinding) : fn & env =
@@ -274,6 +419,8 @@ let extract_top_level_lb (g:env) (lbs:S.mlletbinding) : fn & env =
     // if tsc is not set, we could get the arg types from the fun inside
     //
     let Some tsc = lb.mllb_tysc in
+    print1 "Typescheme is: %s\n\n" (S.mltyscheme_to_string tsc);
+    print1 "lbdef is: %s\n\n" (S.mlexpr_to_string lb.mllb_def);
     let arg_names, body =
       match lb.mllb_def.expr with
       | S.MLE_Fun (bs, body) ->
@@ -283,6 +430,11 @@ let extract_top_level_lb (g:env) (lbs:S.mlletbinding) : fn & env =
     
     let tvars, arg_ts, ret_t = arg_ts_and_ret_t tsc in
     
+    print3 "tvars: %s, arg_ts: %s, ret_t: %s\n"
+      (String.concat ", " tvars)
+      (String.concat ", " (List.map S.mlty_to_string arg_ts))
+      (S.mlty_to_string ret_t);
+
     let fn_sig, g_body = extract_top_level_sig g lb.mllb_name (List.map tyvar_of tvars) arg_names arg_ts ret_t in
     let fn_body = extract_mlexpr_to_stmts g_body body in
 
@@ -300,7 +452,7 @@ let extract_one (file:string) : unit =
     match d with
     | S.MLM_Let lb ->
       let f, g = extract_top_level_lb g lb in
-      print_string "Extracted to:\n";
+      // print_string "Extracted to:\n";
       print_string (RustBindings.fn_to_rust f ^ "\n");
       g
     | S.MLM_Loc _ -> g

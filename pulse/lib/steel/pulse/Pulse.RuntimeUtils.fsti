@@ -42,3 +42,18 @@ val deep_transform_to_unary_applications (t:T.term) : r:T.term { t == r }
 val map_seal (s:FStar.Sealed.sealed 't) (f: 't -> 'u) : FStar.Sealed.sealed 'u
 val float_one : FStar.Float.float
 val lax_check_term_with_unknown_universes (g:env) (t:T.term) : option T.term
+val whnf_lax (g:env) (t:T.term) : T.term
+module RT = FStar.Reflection.Typing
+module T = FStar.Tactics.V2
+val norm_well_typed_term
+      (#g:T.env)
+      (#t:R.term)
+      (#eff:T.tot_or_ghost)
+      (#k:Ghost.erased R.term)
+      (_:Ghost.erased (RT.typing g t (eff, Ghost.reveal k)))
+      (_:list norm_step)
+  : T.Tac (
+      t':R.term &
+      Ghost.erased (RT.typing g t' (eff, Ghost.reveal k)) &
+      Ghost.erased (RT.related g t RT.R_Eq t')
+    )

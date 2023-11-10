@@ -2,7 +2,7 @@ module Steel.TLArray
 
 module G = FStar.Ghost
 module L = FStar.List.Tot
-module U32 = FStar.UInt32
+module US = FStar.SizeT
 
 noextract
 val t (a:Type0) : Type0
@@ -21,9 +21,9 @@ val create (#a:Type0) (l: list a) :
          length x == normalize_term (List.Tot.length l))
 
 noextract
-val get (#a:Type0) (x: t a) (i:U32.t{U32.v i < length x}) :
+val get (#a:Type0) (x: t a) (i:US.t{US.v i < length x}) :
   Pure a
     (requires True)
     (ensures fun y ->
-      U32.v i < L.length (v x) /\
-      y == L.index (v x) (U32.v i))
+      US.v i < L.length (v x) /\
+      y == L.index (v x) (US.v i))

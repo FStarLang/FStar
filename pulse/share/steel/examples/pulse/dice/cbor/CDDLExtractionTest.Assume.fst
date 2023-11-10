@@ -17,7 +17,7 @@ requires
 ensures
     raw_data_item_match full_perm c v
 {
-    let unused = eval_impl_typ impl_mytype c;
+    let unused = impl_mytype c;
     ()
 }
 ```
