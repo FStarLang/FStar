@@ -1013,7 +1013,13 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
            ;(match cfg.steps.unfold_namespace with
              | None -> no
              | Some namespaces ->
-               yesno <| BU.for_some (fun ns -> BU.starts_with (FStar.Ident.nsstr (lid_of_fv fv)) ns) namespaces)
+               (* Check if the variable is under some of the modules in [ns].
+               Essentially we check if there is a component in ns that is a prefix of
+               the (printed) lid. But, to prevent unfolding `ABCD.def` when we
+               are trying to unfold `AB`, we append a single `.` to both before checking,
+               so `AB` only unfold lids under the `AB` module and its submodules. *)
+               yesno <| BU.for_some (fun ns ->
+                BU.starts_with (FStar.Ident.nsstr (lid_of_fv fv) ^ ".") (ns ^ ".")) namespaces)
            ]
         in
         meets_some_criterion
