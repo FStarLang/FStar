@@ -579,7 +579,7 @@ let rec is_stateful_arrow (g:env) (c:option comp) (args:list T.argv) (out:list T
           let ht = T.inspect c_res' in
           if T.Tv_Arrow? ht
           then (
-            assume (not_tv_unknown c_res);
+            assume (not_tv_unknown c_res');
             let c_res' = tm_fstar c_res' (T.range_of_term c_res') in
             is_stateful_arrow g (Some (C_Tot c_res')) args out
           )
