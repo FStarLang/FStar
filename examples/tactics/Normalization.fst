@@ -62,15 +62,19 @@ let _ = assert True
                 then ()
                 else fail "Test 1")
 
+(* GM, 2023/11/09: this is now no longer true. The unifier does trigger
+primitive steps computations, and the trefl() call above
+will instantiate the RHS with the WHNF of the LHS, which is also 4. *)
+
 (* If we only allow for Delta steps, then there's no primitive computation and we
  * end up with (2 + 1) + 1 *)
-let four' : int = _ by (normalize [delta] (add_2 2))
+(* let four' : int = _ by (normalize [delta] (add_2 2)) *)
 
-let _ = assert True
-            by (let t = def_of four' in
-                if compare_term t (`((2 + 1) + 1)) = FStar.Order.Eq
-                then ()
-                else fail "Test 2")
+(* let _ = assert True *)
+(*             by (let t = def_of four' in *)
+(*                 if compare_term t (`((2 + 1) + 1)) = FStar.Order.Eq *)
+(*                 then () *)
+(*                 else fail "Test 2") *)
 
 (* Here, we allow for primitive computation but don't allow for `add_2` to be expanded to
  * its definition, so the final result is `add_2 1` *)
