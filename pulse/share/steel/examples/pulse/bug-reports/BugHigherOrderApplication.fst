@@ -90,18 +90,46 @@ fn curry_stt
 
 let id_t (a:Type) = a -> stt a emp (fun _ -> emp)
 
-// Abbreviations don't work yet
-[@@expect_failure]
 ```pulse
 fn apply_id_t (f:id_t bool) (x:bool)
   requires emp
   returns _:bool
   ensures emp
 {
-   let res = f x;
-   res
+   f x;
 }
 ```
+
+//binary
+let choice_t (a:Type) = a -> a -> stt a emp (fun _ -> emp)
+
+```pulse
+fn apply_choice (f:choice_t bool) (x y:bool)
+  requires emp
+  returns _:bool
+  ensures emp
+{
+   f x y;
+}
+```
+
+//with non-trivial pre / post
+
+//binary
+let swap_fun a = x:ref a -> y:ref a -> #vx:erased a -> #vy:erased a -> stt unit
+    (requires pts_to x vx ** pts_to y vy)
+    (ensures fun _ -> pts_to x vy ** pts_to y vx)
+
+```pulse
+fn apply_swap2 (f:swap_fun int) (x y:ref int)
+  requires pts_to x 'vx ** pts_to y 'vy
+  ensures pts_to x 'vx ** pts_to y 'vy
+{
+   f x y;
+   f x y
+}
+```
+
 
 noeq
 type record = {
