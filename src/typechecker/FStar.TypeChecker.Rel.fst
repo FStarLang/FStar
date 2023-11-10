@@ -1280,9 +1280,19 @@ let universe_has_max env u =
 let rec head_matches env t1 t2 : match_result =
   let t1 = U.unmeta t1 in
   let t2 = U.unmeta t2 in
+  if Env.debug env <| Options.Other "RelDelta" then (
+      BU.print2 "head_matches %s %s\n" (Print.term_to_string t1) (Print.term_to_string t2);
+      BU.print2 "             %s  -- %s\n" (Print.tag_of_term t1) (Print.tag_of_term t2);
+      ()
+  );
   match t1.n, t2.n with
     | Tm_lazy ({lkind=Lazy_embedding _}), _ -> head_matches env (U.unlazy t1) t2
     |  _, Tm_lazy({lkind=Lazy_embedding _}) -> head_matches env t1 (U.unlazy t2)
+    | Tm_lazy li1, Tm_lazy li2 ->
+      if li1.lkind = li2.lkind
+      then HeadMatch false
+      else MisMatch(None, None)
+
     | Tm_name x, Tm_name y -> if S.bv_eq x y then FullMatch else MisMatch(None, None)
     | Tm_fvar f, Tm_fvar g -> if S.fv_eq f g then FullMatch else MisMatch(Some (fv_delta_depth env f), Some (fv_delta_depth env g))
     | Tm_uinst (f, _), Tm_uinst(g, _) -> head_matches env f g |> head_match
@@ -2074,6 +2084,26 @@ let apply_ad_hoc_indexed_subcomp (env:Env.env)
 let has_typeclass_constraint (u:ctx_uvar) (wl:worklist)
   : bool
   = wl.typeclass_variables |> List.existsb (fun v -> UF.equiv v.ctx_uvar_head u.ctx_uvar_head)
+
+(* This function returns true for those lazykinds that
+are "complete" in the sense that unfolding them does not
+lose any information. For instance, embedded universes
+are complete, since we embed them as applications of pack over a view,
+and checking equality of such terms is equivalent to checking equality
+of the views. Embedded proofstates are definitely not.
+
+This is probably not the place for this function though. *)
+let lazy_complete_repr (k:lazy_kind) : bool =
+  match k with
+  | Lazy_bv
+  | Lazy_namedv
+  | Lazy_binder
+  | Lazy_letbinding
+  | Lazy_fvar
+  | Lazy_comp
+  | Lazy_sigelt
+  | Lazy_universe -> true
+  | _ -> false
 
 (******************************************************************************************************)
 (* Main solving algorithm begins here *)
@@ -4248,7 +4278,11 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
                             (Print.tag_of_term t1) (Print.tag_of_term t2)
                             (Print.term_to_string t1) (Print.term_to_string t2)) t1.pos
 
-      | _ -> giveup wl (Thunk.mkv "head tag mismatch") orig
+      | Tm_lazy li1, Tm_lazy li2 when li1.lkind = li2.lkind
+                                   && lazy_complete_repr li1.lkind ->
+        solve_t' ({problem with lhs = U.unfold_lazy li1; rhs = U.unfold_lazy li2}) wl
+
+      | _ -> giveup wl (Thunk.mk (fun () -> "head tag mismatch: " ^ Print.tag_of_term t1 ^ " vs " ^ Print.tag_of_term t2)) orig
 
 and solve_c (problem:problem comp) (wl:worklist) : solution =
     let c1 = problem.lhs in
