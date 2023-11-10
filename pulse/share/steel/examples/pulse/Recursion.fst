@@ -8,8 +8,7 @@ fn rec test1
   requires emp
   ensures pure False
 {
-  let x = perform (fun () -> test1 ());
-  ()
+  test1 ()
 }
 ```
 
@@ -32,8 +31,7 @@ fn rec test2
   ensures emp
 {
   if (y > 0) {
-    perform (fun () -> test2 (y-1));
-    ()
+    test2 (y-1)
   }
 }
 ```
@@ -47,7 +45,7 @@ fn rec test3
   ensures emp
 {
   if (y > 0) {
-    perform (fun () -> test3 (z+1) (y-1));
+    test3 (z+1) (y-1)
   } else {
     z
   }
@@ -76,7 +74,7 @@ fn rec test_ghost_loop
   ensures emp
   decreases ()
 {
-  perform_ghost (fun () -> test_ghost_loop ())
+  test_ghost_loop ()
 }
 ```
 
@@ -91,7 +89,7 @@ fn rec test4
   if (y > 0) {
     let w = !r;
     r := w+1;
-    perform (fun () -> test4 r (v+1) (y-1));
+    test4 r (v+1) (y-1);
   }
 }
 ```
@@ -106,7 +104,7 @@ fn rec test5
   decreases z
 {
   if (z <> 0 && y <> 0) {
-    perform_ghost (fun () -> test5 (z-1) (y-1))
+    test5 (z-1) (y-1)
   }
 }
 ```
@@ -123,7 +121,7 @@ fn rec test5'
   decreases z
 {
   if (z <> 0 && y <> 0) {
-    perform_ghost (fun () -> test5' (z-1) (y-1))
+    test5' (z-1) (y-1)
   }
 }
 ```
@@ -134,7 +132,7 @@ fn rec test6
   requires emp
   ensures pure False
 {
-  let x = perform (fun () -> test6 () (y+1));
+  let x = test6 () (y+1);
   test5 10 10;
   ()
 }

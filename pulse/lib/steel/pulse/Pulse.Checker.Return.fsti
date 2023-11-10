@@ -13,4 +13,5 @@ val check
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (st:st_term { Tm_Return? st.term })
+  (check:check_t)
   : T.Tac (checker_result_t g ctxt post_hint)

@@ -712,18 +712,6 @@ let (mk_array_pts_to :
             (Pulse_Syntax_Pure.tm_fvar
                (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.full_perm_lid)) in
         Pulse_Syntax_Pure.tm_pureapp t3 FStar_Pervasives_Native.None v
-let (mk_array_is_full :
-  Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)
-  =
-  fun a ->
-    fun arr ->
-      let t =
-        Pulse_Syntax_Pure.tm_fvar
-          (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.array_is_full_lid) in
-      let t1 =
-        Pulse_Syntax_Pure.tm_pureapp t
-          (FStar_Pervasives_Native.Some Pulse_Syntax_Base.Implicit) a in
-      Pulse_Syntax_Pure.tm_pureapp t1 FStar_Pervasives_Native.None arr
 let (mk_seq_create :
   Pulse_Syntax_Base.universe ->
     Pulse_Syntax_Base.term ->
@@ -766,11 +754,9 @@ let (comp_withlocal_array_body_pre :
               (Pulse_Syntax_Base.tm_star
                  (mk_array_pts_to a arr
                     (mk_seq_create Pulse_Syntax_Pure.u0 a (mk_szv len) init))
-                 (Pulse_Syntax_Base.tm_star
-                    (Pulse_Syntax_Base.tm_pure (mk_array_is_full a arr))
-                    (Pulse_Syntax_Base.tm_pure
-                       (mk_eq2 Pulse_Syntax_Pure.u0 tm_nat
-                          (mk_array_length a arr) (mk_szv len)))))
+                 (Pulse_Syntax_Base.tm_pure
+                    (mk_eq2 Pulse_Syntax_Pure.u0 tm_nat
+                       (mk_array_length a arr) (mk_szv len))))
 let (mk_seq :
   Pulse_Syntax_Base.universe ->
     Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)

@@ -7,11 +7,9 @@ module R = Pulse.Lib.Reference
 
 #push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
 
-let elseq (a:Type) (l:nat) = s:Ghost.erased (Seq.seq a) { Seq.length s == l }
-
 ```pulse
 fn compare (#t:eqtype) (l:US.t) (a1 a2:A.larray t (US.v l))
-           (#p1 #p2:perm) (#s1 #s2:elseq t (US.v l))
+           (#p1 #p2:perm) (#s1 #s2:elseq t l)
   requires (
     A.pts_to a1 #p1 s1 **
     A.pts_to a2 #p2 s2

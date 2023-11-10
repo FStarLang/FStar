@@ -7,10 +7,11 @@ use syn::{
     punctuated::Punctuated, token::Brace, token::Colon, token::Comma, token::Eq, token::Let,
     token::Mut, token::Paren, token::Pub, token::RArrow, token::Ref, token::Semi, Block, Generics,
     Ident, ItemFn, Local, LocalInit, Pat as SynPat, PatType, Path, PathArguments, PathSegment,
-    ReturnType, Signature, Type, TypePath, Visibility,
+    ReturnType, Signature, Type, Visibility,
 };
 
 use std::fmt;
+use std::str::FromStr;
 
 enum LitIntWidth {
     I8,
@@ -28,6 +29,7 @@ struct LitInt {
 
 enum Lit {
     LitInt(LitInt),
+    LitBool(bool),
 }
 
 enum BinOp {
@@ -77,6 +79,21 @@ struct ExprWhile {
     expr_while_body: Vec<Stmt>,
 }
 
+struct ExprIndex {
+    expr_index_base: Box<Expr>,
+    expr_index_index: Box<Expr>,
+}
+
+struct ExprRepeat {
+    expr_repeat_elem: Box<Expr>,
+    expr_repeat_len: Box<Expr>,
+}
+
+struct ExprReference {
+    expr_reference_is_mut: bool,
+    expr_reference_expr: Box<Expr>,
+}
+
 enum Expr {
     EBinOp(ExprBin),
     EPath(String),
@@ -87,6 +104,9 @@ enum Expr {
     ELit(Lit),
     EIf(ExprIf),
     EWhile(ExprWhile),
+    EIndex(ExprIndex),
+    ERepeat(ExprRepeat),
+    EReference(ExprReference),
 }
 
 struct TypeReference {
@@ -94,9 +114,21 @@ struct TypeReference {
     type_reference_typ: Box<Typ>,
 }
 
+struct TypePathSegment {
+    type_path_segment_name: String,
+    type_path_segment_generic_args: Vec<Typ>,
+}
+
+struct TypeArray {
+    type_array_elem: Box<Typ>,
+    type_array_len: Expr,
+}
+
 enum Typ {
-    TName(String),
+    TPath(Vec<TypePathSegment>),
     TReference(TypeReference),
+    TSlice(Box<Typ>),
+    TArray(TypeArray),
 }
 
 struct PatIdent {
@@ -144,6 +176,9 @@ struct Fn {
     fn_body: Vec<Stmt>,
 }
 
+const VEC_NEW_FN: &str = "vec_new";
+const PANIC_FN: &str = "panic";
+
 fn fn_to_string(f: &Fn) -> String {
     f.to_string()
 }
@@ -168,6 +203,7 @@ impl_from_ocaml_record! {
 impl_from_ocaml_variant! {
   Lit {
     Lit::LitInt (payload:LitInt),
+    Lit::LitBool (payload:bool),
   }
 }
 
@@ -200,65 +236,105 @@ impl_from_ocaml_variant! {
     Expr::EBlock (payload:OCamlList<Stmt>),
     Expr::ELit (payload:Lit),
     Expr::EIf (payload:ExprIf),
-    Expr::EWhile (payload:ExprWhile)
+    Expr::EWhile (payload:ExprWhile),
+    Expr::EIndex (payload:ExprIndex),
+    Expr::ERepeat (payload:ExprRepeat),
+    Expr::EReference (payload:ExprReference),
   }
 }
 
 impl_from_ocaml_record! {
   ExprCall {
-    call_fn : Expr,
-    call_args : OCamlList<Expr>
+    call_fn: Expr,
+    call_args: OCamlList<Expr>
   }
 }
 
 impl_from_ocaml_record! {
   ExprBin {
-    expr_bin_left : Expr,
-    op : BinOp,
-    expr_bin_right : Expr,
+    expr_bin_left: Expr,
+    op: BinOp,
+    expr_bin_right: Expr,
   }
 }
 
 impl_from_ocaml_record! {
   ExprUnary {
-    expr_unary_op : UnOp,
-    expr_unary_expr : Expr,
+    expr_unary_op: UnOp,
+    expr_unary_expr: Expr,
   }
 }
 
 impl_from_ocaml_record! {
   ExprAssign {
-    expr_assign_l : Expr,
-    expr_assign_r : Expr,
+    expr_assign_l: Expr,
+    expr_assign_r: Expr,
   }
 }
 
 impl_from_ocaml_record! {
   ExprIf {
-    expr_if_cond : Expr,
-    expr_if_then : OCamlList<Stmt>,
-    expr_if_else : Option<Expr>
+    expr_if_cond: Expr,
+    expr_if_then: OCamlList<Stmt>,
+    expr_if_else: Option<Expr>
   }
 }
 
 impl_from_ocaml_record! {
   ExprWhile {
-    expr_while_cond : Expr,
-    expr_while_body : OCamlList<Stmt>,
+    expr_while_cond: Expr,
+    expr_while_body: OCamlList<Stmt>,
+  }
+}
+
+impl_from_ocaml_record! {
+  ExprIndex {
+    expr_index_base: Expr,
+    expr_index_index: Expr,
+  }
+}
+
+impl_from_ocaml_record! {
+  ExprRepeat {
+    expr_repeat_elem: Expr,
+    expr_repeat_len: Expr,
+  }
+}
+
+impl_from_ocaml_record! {
+  ExprReference {
+    expr_reference_is_mut: bool,
+    expr_reference_expr: Expr,
   }
 }
 
 impl_from_ocaml_record! {
   TypeReference {
-    type_reference_mut : bool,
-    type_reference_typ : Typ,
+    type_reference_mut: bool,
+    type_reference_typ: Typ,
+  }
+}
+
+impl_from_ocaml_record! {
+  TypePathSegment {
+    type_path_segment_name: String,
+    type_path_segment_generic_args: OCamlList<Typ>,
+  }
+}
+
+impl_from_ocaml_record! {
+  TypeArray {
+    type_array_elem: Typ,
+    type_array_len: Expr,
   }
 }
 
 impl_from_ocaml_variant! {
   Typ {
-    Typ::TName (payload:String),
+    Typ::TPath (payload:OCamlList<TypePathSegment>),
     Typ::TReference (payload:TypeReference),
+    Typ::TSlice (payload:Typ),
+    Typ::TArray (payload:TypeArray),
   }
 }
 
@@ -325,7 +401,7 @@ impl_from_ocaml_record! {
   }
 }
 
-fn to_syn_path(s: String) -> syn::Path {
+fn to_syn_path_basic(s: String) -> syn::Path {
     let mut segs: Punctuated<syn::PathSegment, syn::token::PathSep> = Punctuated::new();
     segs.push(PathSegment {
         ident: Ident::new(&s, Span::call_site()),
@@ -366,6 +442,68 @@ fn to_syn_binop(op: &BinOp) -> syn::BinOp {
     }
 }
 
+fn is_vec_new(e: &Expr) -> bool {
+    match e {
+        Expr::EPath(s) => s == VEC_NEW_FN,
+        _ => false,
+    }
+}
+
+fn is_panic(e: &Expr) -> bool {
+    match e {
+        Expr::EPath(s) => s == PANIC_FN,
+        _ => false,
+    }
+}
+
+fn to_syn_vec_new(args: &Vec<Expr>) -> syn::Expr {
+    let init = to_syn_expr(&args[0]);
+    let len = to_syn_expr(&args[1]);
+    let init_str = quote::quote!(#init).to_string();
+    let len_str = quote::quote!(#len).to_string();
+    let macro_args = format!("{}; {}", init_str, len_str);
+    let ts = proc_macro2::TokenStream::from_str(&macro_args).unwrap();
+    syn::Expr::Macro(syn::ExprMacro {
+        attrs: vec![],
+        mac: syn::Macro {
+            path: to_syn_path_basic("vec".to_string()),
+            bang_token: syn::token::Not {
+                spans: [Span::call_site()],
+            },
+            delimiter: syn::MacroDelimiter::Bracket(syn::token::Bracket {
+                span: proc_macro2::Group::new(
+                    proc_macro2::Delimiter::None,
+                    proc_macro2::TokenStream::new(),
+                )
+                .delim_span(),
+            }),
+            tokens: ts,
+        },
+    })
+}
+
+fn to_syn_panic() -> syn::Expr {
+    let macro_args = "";
+    let ts = proc_macro2::TokenStream::from_str(&macro_args).unwrap();
+    syn::Expr::Macro(syn::ExprMacro {
+        attrs: vec![],
+        mac: syn::Macro {
+            path: to_syn_path_basic("panic".to_string()),
+            bang_token: syn::token::Not {
+                spans: [Span::call_site()],
+            },
+            delimiter: syn::MacroDelimiter::Paren(syn::token::Paren {
+                span: proc_macro2::Group::new(
+                    proc_macro2::Delimiter::None,
+                    proc_macro2::TokenStream::new(),
+                )
+                .delim_span(),
+            }),
+            tokens: ts,
+        },
+    })
+}
+
 fn to_syn_expr(e: &Expr) -> syn::Expr {
     match e {
         Expr::EBinOp(e) => {
@@ -379,7 +517,7 @@ fn to_syn_expr(e: &Expr) -> syn::Expr {
             })
         }
         Expr::EPath(s) => {
-            let path = to_syn_path(s.to_string());
+            let path = to_syn_path_basic(s.to_string());
             syn::Expr::Path(syn::ExprPath {
                 attrs: vec![],
                 qself: None,
@@ -387,15 +525,21 @@ fn to_syn_expr(e: &Expr) -> syn::Expr {
             })
         }
         Expr::ECall(e) => {
-            let mut args: Punctuated<syn::Expr, Comma> = Punctuated::new();
-            e.call_args.iter().for_each(|a| args.push(to_syn_expr(a)));
-            let func = Box::new(to_syn_expr(&e.call_fn));
-            syn::Expr::Call(syn::ExprCall {
-                attrs: vec![],
-                func,
-                paren_token: Paren::default(),
-                args,
-            })
+            if is_vec_new(&e.call_fn) {
+                to_syn_vec_new(&e.call_args)
+            } else if is_panic(&e.call_fn) {
+                to_syn_panic()
+            } else {
+                let mut args: Punctuated<syn::Expr, Comma> = Punctuated::new();
+                e.call_args.iter().for_each(|a| args.push(to_syn_expr(a)));
+                let func = Box::new(to_syn_expr(&e.call_fn));
+                syn::Expr::Call(syn::ExprCall {
+                    attrs: vec![],
+                    func,
+                    paren_token: Paren::default(),
+                    args,
+                })
+            }
         }
         Expr::EUnOp(e) => {
             let e1 = to_syn_expr(&e.expr_unary_expr);
@@ -432,15 +576,20 @@ fn to_syn_expr(e: &Expr) -> syn::Expr {
                 },
             })
         }
-        Expr::ELit(lit) => match lit {
-            Lit::LitInt(LitInt { lit_int_val, .. }) => {
-                let litint = syn::LitInt::new(lit_int_val, Span::call_site());
-                syn::Expr::Lit(syn::ExprLit {
-                    attrs: vec![],
-                    lit: syn::Lit::Int(litint),
-                })
-            }
-        },
+        Expr::ELit(lit) => syn::Expr::Lit(syn::ExprLit {
+            attrs: vec![],
+            lit: {
+                match lit {
+                    Lit::LitInt(LitInt { lit_int_val, .. }) => {
+                        syn::Lit::Int(syn::LitInt::new(lit_int_val, Span::call_site()))
+                    }
+                    Lit::LitBool(b) => syn::Lit::Bool(syn::LitBool {
+                        value: *b,
+                        span: Span::call_site(),
+                    }),
+                }
+            },
+        }),
         Expr::EIf(ExprIf {
             expr_if_cond,
             expr_if_then,
@@ -489,6 +638,58 @@ fn to_syn_expr(e: &Expr) -> syn::Expr {
                 body,
             })
         }
+        Expr::EIndex(ExprIndex {
+            expr_index_base,
+            expr_index_index,
+        }) => syn::Expr::Index({
+            syn::ExprIndex {
+                attrs: vec![],
+                expr: Box::new(to_syn_expr(expr_index_base)),
+                bracket_token: syn::token::Bracket {
+                    span: proc_macro2::Group::new(
+                        proc_macro2::Delimiter::None,
+                        proc_macro2::TokenStream::new(),
+                    )
+                    .delim_span(),
+                },
+                index: Box::new(to_syn_expr(expr_index_index)),
+            }
+        }),
+        Expr::ERepeat(ExprRepeat {
+            expr_repeat_elem,
+            expr_repeat_len,
+        }) => syn::Expr::Repeat(syn::ExprRepeat {
+            attrs: vec![],
+            bracket_token: syn::token::Bracket {
+                span: proc_macro2::Group::new(
+                    proc_macro2::Delimiter::None,
+                    proc_macro2::TokenStream::new(),
+                )
+                .delim_span(),
+            },
+            expr: Box::new(to_syn_expr(expr_repeat_elem)),
+            semi_token: syn::token::Semi {
+                spans: [Span::call_site()],
+            },
+            len: Box::new(to_syn_expr(expr_repeat_len)),
+        }),
+        Expr::EReference(ExprReference {
+            expr_reference_is_mut,
+            expr_reference_expr,
+        }) => syn::Expr::Reference(syn::ExprReference {
+            attrs: vec![],
+            and_token: syn::token::And {
+                spans: [Span::call_site()],
+            },
+            mutability: if *expr_reference_is_mut {
+                Some(syn::token::Mut {
+                    span: Span::call_site(),
+                })
+            } else {
+                None
+            },
+            expr: Box::new(to_syn_expr(expr_reference_expr)),
+        }),
     }
 }
 
@@ -555,10 +756,38 @@ fn to_syn_block(l: &Vec<Stmt>) -> Block {
 
 fn to_syn_typ(t: &Typ) -> Type {
     match &t {
-        Typ::TName(s) => {
-            let path = to_syn_path(s.to_string());
-            Type::Path(TypePath { qself: None, path })
-        }
+        Typ::TPath(v) => syn::Type::Path(syn::TypePath {
+            qself: None,
+            path: syn::Path {
+                leading_colon: None,
+                segments: v
+                    .iter()
+                    .map(|s| syn::PathSegment {
+                        ident: Ident::new(&s.type_path_segment_name, Span::call_site()),
+                        arguments: if s.type_path_segment_generic_args.len() == 0 {
+                            syn::PathArguments::None
+                        } else {
+                            syn::PathArguments::AngleBracketed(
+                                syn::AngleBracketedGenericArguments {
+                                    colon2_token: None,
+                                    lt_token: syn::token::Lt {
+                                        spans: [Span::call_site()],
+                                    },
+                                    args: s
+                                        .type_path_segment_generic_args
+                                        .iter()
+                                        .map(|t| syn::GenericArgument::Type(to_syn_typ(t)))
+                                        .collect(),
+                                    gt_token: syn::token::Gt {
+                                        spans: [Span::call_site()],
+                                    },
+                                },
+                            )
+                        },
+                    })
+                    .collect(),
+            },
+        }),
         Typ::TReference(type_reference) => Type::Reference(syn::TypeReference {
             and_token: syn::token::And {
                 spans: [Span::call_site()],
@@ -572,6 +801,33 @@ fn to_syn_typ(t: &Typ) -> Type {
                 None
             },
             elem: Box::new(to_syn_typ(&type_reference.type_reference_typ)),
+        }),
+        Typ::TSlice(t) => syn::Type::Slice(syn::TypeSlice {
+            bracket_token: syn::token::Bracket {
+                span: proc_macro2::Group::new(
+                    proc_macro2::Delimiter::None,
+                    proc_macro2::TokenStream::new(),
+                )
+                .delim_span(),
+            },
+            elem: Box::new(to_syn_typ(&t)),
+        }),
+        Typ::TArray(TypeArray {
+            type_array_elem,
+            type_array_len,
+        }) => syn::Type::Array(syn::TypeArray {
+            bracket_token: syn::token::Bracket {
+                span: proc_macro2::Group::new(
+                    proc_macro2::Delimiter::None,
+                    proc_macro2::TokenStream::new(),
+                )
+                .delim_span(),
+            },
+            elem: Box::new(to_syn_typ(&type_array_elem)),
+            semi_token: syn::token::Semi {
+                spans: [Span::call_site()],
+            },
+            len: to_syn_expr(&type_array_len),
         }),
     }
 }
@@ -692,6 +948,7 @@ impl fmt::Display for Lit {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self {
             Lit::LitInt(LitInt { lit_int_val, .. }) => write!(f, "{}", lit_int_val),
+            Lit::LitBool(b) => write!(f, "{}", b),
         }
     }
 }
@@ -741,6 +998,23 @@ impl fmt::Display for Expr {
                     .join(";\n");
                 write!(f, "while {} {{ {} }}", expr_while_cond, while_body)
             }
+            Expr::EIndex(ExprIndex {
+                expr_index_base,
+                expr_index_index,
+            }) => write!(f, "{}[{}]", expr_index_base, expr_index_index),
+            Expr::ERepeat(ExprRepeat {
+                expr_repeat_elem,
+                expr_repeat_len,
+            }) => write!(f, "[{}; {}]", expr_repeat_elem, expr_repeat_len),
+            Expr::EReference(ExprReference {
+                expr_reference_is_mut,
+                expr_reference_expr,
+            }) => write!(
+                f,
+                "&{} {}",
+                if *expr_reference_is_mut { "mut" } else { "" },
+                expr_reference_expr
+            ),
         }
     }
 }
@@ -748,7 +1022,26 @@ impl fmt::Display for Expr {
 impl fmt::Display for Typ {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self {
-            Typ::TName(s) => write!(f, "{}", s),
+            Typ::TPath(v) => write!(
+                f,
+                "{}",
+                v.iter()
+                    .map(|s| if s.type_path_segment_generic_args.len() == 0 {
+                        s.type_path_segment_name.to_string()
+                    } else {
+                        format!(
+                            "{}<{}>",
+                            s.type_path_segment_name,
+                            s.type_path_segment_generic_args
+                                .iter()
+                                .map(|t| t.to_string())
+                                .collect::<Vec<_>>()
+                                .join(",")
+                        )
+                    })
+                    .collect::<Vec<_>>()
+                    .join("::")
+            ),
             Typ::TReference(type_reference) => write!(
                 f,
                 "&{} {}",
@@ -759,6 +1052,11 @@ impl fmt::Display for Typ {
                 },
                 type_reference.type_reference_typ
             ),
+            Typ::TSlice(t) => write!(f, "[{}]", t),
+            Typ::TArray(TypeArray {
+                type_array_elem,
+                type_array_len,
+            }) => write!(f, "[{}; {}]", type_array_elem, type_array_len),
         }
     }
 }

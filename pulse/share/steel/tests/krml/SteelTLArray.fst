@@ -11,6 +11,6 @@ let l = [0uy; 1uy]
 let x = create l
 
 let main () : SteelT Int32.t emp (fun _ -> emp) =
-  let i = get x 0ul in
-  let j = get x 1ul in
+  let i = get x 0sz in
+  let j = get x 1sz in
   if i = j then return 1l else return 0l
