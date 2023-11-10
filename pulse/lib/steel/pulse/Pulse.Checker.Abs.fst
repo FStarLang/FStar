@@ -181,26 +181,59 @@ let preprocess_abs
                  (Printf.sprintf "Expected an arrow type as an annotation, got %s"
                           (P.term_to_string annot))
 
-let check_effect_annotation g r (asc:comp_ascription) (c_computed:comp) =
+let check_effect_annotation g r (asc:comp_ascription) (c_computed:comp) : T.Tac (c2:comp & st_sub g c_computed c2) =
+  let nop = (| c_computed, STS_Refl _ _ |) in
   match asc.elaborated with
-  | None -> ()
+  | None -> nop
   | Some c ->
     match c, c_computed with
-    | C_Tot _, C_Tot _ -> ()
-    | C_ST _, C_ST _ -> ()
-    | C_STAtomic i _, C_STAtomic j _
-    | C_STGhost i _, C_STGhost j _ ->
-      if eq_tm i j
-      then ()
-      else fail g (Some i.range)
-                  (Printf.sprintf "Annotated effect expects only invariants in %s to be opened; but computed effect claims that invariants %s are opened"
-                    (P.term_to_string i)
-                    (P.term_to_string j))
+    | C_Tot _, C_Tot _ -> nop
+    | C_ST _, C_ST _ -> nop
+
+    | C_STAtomic i c1, C_STAtomic j c2
+    | C_STGhost i c1, C_STGhost j c2 ->
+      // This should be true since we used the annotated computation type
+      // to check the body of the function, but this fact is not exposed
+      // by the checker and post hints yet.
+      assume (c1 == c2);
+
+      if eq_tm i j then (
+        assert (c == c_computed);
+        nop
+      ) else
+
+      let b = mk_binder "res" Range.range_0 c2.res in
+      let phi = tm_inames_subset j i in
+      let typing = tm_inames_subset_typing g j i in
+      // Or:
+      // let typing = core_check_tot_term g phi tm_prop in
+      let tok = T.with_policy T.SMTSync (fun () -> try_check_prop_validity g phi typing) in
+      if None? tok then (
+        let open Pulse.PP in
+        fail_doc g (Some i.range) [
+          prefix 4 1 (text "Annotated effect expects only invariants in") (pp i) ^/^
+          prefix 4 1 (text "to be opened; but computed effect claims that invariants") (pp j) ^/^
+          text "are opened"
+        ]
+      );
+
+      let Some tok = tok in
+
+      let d_sub : st_sub g c_computed c =
+        match c_computed with
+        | C_STGhost _ _ -> STS_GhostInvs g c2 j i tok
+        | C_STAtomic _ _ -> STS_AtomicInvs g c2 j i tok
+      in
+      (| c, d_sub |)
+
     | _, _ ->
-      fail g (Some r)
-            (Printf.sprintf "Expected effect %s but this function body has effect %s"
-                    (P.tag_of_comp c)
-                    (P.tag_of_comp c_computed))
+      let open Pulse.PP in
+      fail_doc g (Some r) [
+        prefix 4 1 (text "Expected effect")
+                      (arbitrary_string (P.tag_of_comp c)) ^/^
+        prefix 4 1 (text "but this function body has effect")
+                      (arbitrary_string (P.tag_of_comp c_computed))
+      ]
 
 
 #push-options "--z3rlimit_factor 2 --fuel 0 --ifuel 1"
@@ -240,9 +273,10 @@ let rec check_abs_core
   (t:st_term{Tm_Abs? t.term})
   (check:check_t)
   : T.Tac (t:st_term & c:comp & st_typing g t c) =
+  //warn g (Some t.range) (Printf.sprintf "check_abs_core, t = %s" (P.st_term_to_string t));
   let range = t.range in
   match t.term with  
-  | Tm_Abs { b = {binder_ty=t;binder_ppname=ppname}; q=qual; ascription=c; body } -> //pre=pre_hint; body; ret_ty; post=post_hint_body } ->
+  | Tm_Abs { b = {binder_ty=t;binder_ppname=ppname}; q=qual; ascription=asc; body } -> //pre=pre_hint; body; ret_ty; post=post_hint_body } ->
 
     (*  (fun (x:t) -> {pre_hint} body : t { post_hint } *)
     let (| t, _, _ |) = compute_tot_term_type g t in //elaborate it first
@@ -254,9 +288,18 @@ let rec check_abs_core
     let body_opened = open_st_term_nv body px in
     match body_opened.term with
     | Tm_Abs _ ->
+      (* Check the opened body *)
       let (| body, c_body, body_typing |) = check_abs_core g' body_opened check in
-      check_effect_annotation g' body.range c c_body;
-      let (| c_body, body_typing |) = maybe_rewrite_body_typing body_typing c in
+
+      (* Check if it matches annotation (if any, likely not), and adjust derivation
+      if needed. Currently this only subtypes the invariants. *)
+      let (| c_body, d_sub |) = check_effect_annotation g' body.range asc c_body in
+      let body_typing = T_Sub _ _ _ _ body_typing d_sub in
+      (* Similar to above, fixes the type of the computation if we need to match
+      its annotation. TODO: merge these two by adding a tot subtyping (or equiv)
+      case to the st_sub judg. *)
+      let (| c_body, body_typing |) = maybe_rewrite_body_typing body_typing asc in
+
       FV.st_typing_freevars body_typing;
       let body_closed = close_st_term body x in
       assume (open_st_term body_closed x == body);
@@ -265,8 +308,8 @@ let rec check_abs_core
       let tres = tm_arrow {binder_ty=t;binder_ppname=ppname} qual (close_comp c_body x) in
       (| _, C_Tot tres, tt |)
     | _ ->
-      let elab_c, pre_opened, ret_ty, post_hint_body =
-        match c.elaborated with
+      let elab_c, pre_opened, inames_opened, ret_ty, post_hint_body =
+        match asc.elaborated with
         | None ->
           Env.fail g (Some body.range)
               "Missing annotation on a function body"
@@ -281,6 +324,7 @@ let rec check_abs_core
         | Some c -> 
           c,
           open_term_nv (comp_pre c) px,
+          (if C_ST? c then tm_emp_inames else open_term_nv (comp_inames c) px),
           Some (open_term_nv (comp_res c) px),
           Some (open_term' (comp_post c) var 1)
       in
@@ -288,7 +332,9 @@ let rec check_abs_core
       let pre = close_term pre_opened x in
       let post : post_hint_opt g' =
         match post_hint_body with
-        | None -> fail g (Some body.range) "Top-level functions must be annotated with pre and post conditions"
+        | None ->
+          let open Pulse.PP in
+          fail_doc g (Some body.range) [text "Top-level functions must be annotated with pre and post conditions"]
         | Some post ->
           let post_hint_typing
             : post_hint_t
@@ -306,8 +352,11 @@ let rec check_abs_core
       let (| body, c_body, body_typing |) : st_typing_in_ctxt g' pre_opened post =
         apply_checker_result_k #_ #_ #(Some?.v post) r ppname_ret in
 
-      check_effect_annotation g' body.range c c_body;
-      let (| c_body, body_typing |) = maybe_rewrite_body_typing body_typing c in
+      let c_opened : comp_ascription = { annotated = None; elaborated = Some (open_comp_nv elab_c px) } in
+      let (| c_body, d_sub |) = check_effect_annotation g' body.range c_opened c_body in
+      let body_typing = T_Sub _ _ _ _ body_typing d_sub in
+
+      let (| c_body, body_typing |) = maybe_rewrite_body_typing body_typing asc in
 
       FV.st_typing_freevars body_typing;
       let body_closed = close_st_term body x in
@@ -315,6 +364,7 @@ let rec check_abs_core
       let b = {binder_ty=t;binder_ppname=ppname} in
       let tt = T_Abs g x qual b u body_closed c_body t_typing body_typing in
       let tres = tm_arrow {binder_ty=t;binder_ppname=ppname} qual (close_comp c_body x) in
+
       (| _, C_Tot tres, tt |)
 
 let check_abs (g:env) (t:st_term{Tm_Abs? t.term}) (check:check_t)

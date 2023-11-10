@@ -34,6 +34,7 @@ module Return = Pulse.Checker.Return
 module Rewrite = Pulse.Checker.Rewrite
 module ElimPure = Pulse.Checker.Prover.ElimPure
 module ElimExists = Pulse.Checker.Prover.ElimExists
+module WithInv = Pulse.Checker.WithInv
 
 let terms_to_string (t:list term)
   : T.Tac string 
@@ -132,10 +133,12 @@ let rec check
   (res_ppname:ppname)
   (t:st_term) : T.Tac (checker_result_t g0 pre0 post_hint) =
 
-  // T.print (Printf.sprintf "At %s: context: %s, term: %s\n"
-  //            (T.range_to_string t.range)
-  //            (Pulse.Syntax.Printer.term_to_string pre0)
-  //            (Pulse.Syntax.Printer.st_term_to_string t));
+  if RU.debug_at_level (fstar_env g0) "pulse.checker" then
+    T.print (Printf.sprintf "At %s: context: %s, term: %s (LABEL %s)\n"
+              (T.range_to_string t.range)
+              (Pulse.Syntax.Printer.term_to_string pre0)
+              (Pulse.Syntax.Printer.st_term_to_string t)
+              (Pulse.Syntax.Printer.tag_of_st_term t));
 
   let (| g, pre, pre_typing, k_elim_pure |) =
     Pulse.Checker.Prover.ElimPure.elim_pure pre0_typing in
@@ -244,6 +247,9 @@ let rec check
 
     | Tm_Rewrite _ ->
       Rewrite.check g pre pre_typing post_hint res_ppname t
+
+    | Tm_WithInv _ ->
+      WithInv.check g pre pre_typing post_hint res_ppname t check
 
     | _ -> T.fail "Checker form not implemented"
   in

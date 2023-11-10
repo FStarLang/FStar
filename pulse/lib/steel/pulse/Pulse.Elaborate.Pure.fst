@@ -28,6 +28,11 @@ let rec elab_term (top:term)
     | Tm_Emp ->
       w (pack_ln (Tv_FVar (pack_fv emp_lid)))
       
+    | Tm_Inv p ->
+      let p = elab_term p in
+      let head = pack_ln (Tv_FVar (pack_fv inv_lid)) in
+      w (pack_ln (Tv_App head (p, Q_Explicit)))
+
     | Tm_Pure p ->
       let p = elab_term p in
       let head = pack_ln (Tv_FVar (pack_fv pure_lid)) in
@@ -52,6 +57,11 @@ let rec elab_term (top:term)
 
     | Tm_EmpInames ->
       w (emp_inames_tm)
+
+    | Tm_AddInv i is ->
+      let i = elab_term i in
+      let is = elab_term is in
+      w (add_inv_tm (`_) is i) // Careful on the order flip
 
     | Tm_Unknown ->
       w (pack_ln R.Tv_Unknown)

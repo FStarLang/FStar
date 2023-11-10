@@ -40,6 +40,9 @@ let rec close_open_inverse' (t:term)
     | Tm_EmpInames
     | Tm_Unknown -> ()
     
+    | Tm_Inv p ->
+      close_open_inverse' p x i
+
     | Tm_Pure p ->
       close_open_inverse' p x i
 
@@ -54,6 +57,10 @@ let rec close_open_inverse' (t:term)
 
     | Tm_FStar t ->
       RT.close_open_inverse' i t x
+
+    | Tm_AddInv n is ->
+      close_open_inverse' n  x i;
+      close_open_inverse' is x i
 
 let close_open_inverse_comp' (c:comp)
                              (x:var { ~(x `Set.mem` freevars_comp c) } )
@@ -225,6 +232,11 @@ let rec close_open_inverse_st'  (t:st_term)
       close_open_inverse_proof_hint_type' hint_type x (i + n);
       close_open_inverse_st' t x (i + n)
       
+    | Tm_WithInv { name; body; returns_inv } ->
+      close_open_inverse' name x i;
+      close_open_inverse_opt' returns_inv x i;
+      close_open_inverse_st' body x i
+
 let close_open_inverse (t:term) (x:var { ~(x `Set.mem` freevars t) } )
   : Lemma (ensures close_term (open_term t x) x == t)
           (decreases t)
@@ -246,6 +258,7 @@ let rec open_with_gt_ln (e:term) (i:int) (t:term) (j:nat)
   | Tm_Inames
   | Tm_EmpInames
   | Tm_Unknown -> ()
+  | Tm_Inv p -> open_with_gt_ln p i t j
   | Tm_Pure p -> open_with_gt_ln p i t j
   | Tm_Star e1 e2 ->
     open_with_gt_ln e1 i t j;
@@ -255,6 +268,9 @@ let rec open_with_gt_ln (e:term) (i:int) (t:term) (j:nat)
     open_with_gt_ln t1.binder_ty i t j;
     open_with_gt_ln body (i + 1) t (j + 1)
   | Tm_FStar _ -> admit()
+  | Tm_AddInv e1 e2 ->
+    open_with_gt_ln e1 i t j;
+    open_with_gt_ln e2 i t j
 
 let open_with_gt_ln_st (s:st_comp) (i:int) (t:term) (j:nat)
   : Lemma (requires ln_st_comp s i /\ i < j)
@@ -290,12 +306,16 @@ let rec close_with_non_freevar (e:term) (x:var) (i:nat)
   | Tm_Star t1 t2 ->
     close_with_non_freevar t1 x i;
     close_with_non_freevar t2 x i
+  | Tm_Inv p -> close_with_non_freevar p x i
   | Tm_Pure p -> close_with_non_freevar p x i
   | Tm_ExistsSL _ t1 body
   | Tm_ForallSL _ t1 body ->
     close_with_non_freevar t1.binder_ty x i;
     close_with_non_freevar body x (i + 1)
   | Tm_FStar _ -> admit()
+  | Tm_AddInv t1 t2 ->
+    close_with_non_freevar t1 x i;
+    close_with_non_freevar t2 x i
 
 let close_with_non_freevar_st (s:st_comp) (x:var) (i:nat)
   : Lemma

@@ -181,6 +181,12 @@ let rec readback_ty (t:R.term)
         let? t1 = readback_ty t1 in
         return (Tm_Pure t1)
       )
+      else if inspect_fv fv = inv_lid
+      then (
+        let t1 : R.term = fst a in
+        let? t1 = readback_ty t1 in
+        return (Tm_Inv t1)
+      )
       else aux ()
     | _ -> aux ()
     end

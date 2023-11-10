@@ -78,6 +78,13 @@ let rec term_to_string' (level:string) (t:term)
     | Tm_Inames -> "inames"
     | Tm_EmpInames -> "emp_inames"
     | Tm_Unknown -> "_"
+    | Tm_AddInv i is ->
+      sprintf "add_inv %s %s"
+        (term_to_string' level i)
+        (term_to_string' level is)
+    | Tm_Inv i ->
+      sprintf "inv %s"
+        (term_to_string' level i)
     | Tm_FStar t ->
       T.term_to_string t
 let term_to_string t = term_to_string' "" t
@@ -110,6 +117,10 @@ let rec term_to_doc t
     | Tm_VProp -> doc_of_string "vprop"
     | Tm_Inames -> doc_of_string "inames"
     | Tm_EmpInames -> doc_of_string "emp_inames"
+    | Tm_AddInv i is ->
+      doc_of_string "add_inv" ^/^ parens (term_to_doc i ^^ doc_of_string "," ^^ term_to_doc is)
+    | Tm_Inv i ->
+      doc_of_string "inv" ^/^ parens (term_to_doc i)
     | Tm_Unknown -> doc_of_string "_"
     | Tm_FStar t ->
       // Should call term_to_doc when available
@@ -325,6 +336,12 @@ let rec st_term_to_string' (level:string) (t:st_term)
       in
       sprintf "%s %s %s; %s" with_prefix ht p
         (st_term_to_string' level t)
+        
+    | Tm_WithInv { name; body; returns_inv } ->
+      sprintf "with_inv %s %s %s"
+        (term_to_string name)
+        (st_term_to_string' level body)
+        (term_opt_to_string returns_inv)
 
 and branches_to_string brs : T.Tac _ =
   match brs with
@@ -368,6 +385,8 @@ let tag_of_term (t:term) =
   | Tm_EmpInames -> "Tm_EmpInames"
   | Tm_Unknown -> "Tm_Unknown"
   | Tm_FStar _ -> "Tm_FStar"
+  | Tm_AddInv _ _ -> "Tm_AddInv"
+  | Tm_Inv _ -> "Tm_Inv"
 
 let tag_of_st_term (t:st_term) =
   match t.term with
@@ -388,6 +407,7 @@ let tag_of_st_term (t:st_term) =
   | Tm_Rewrite _ -> "Tm_Rewrite"
   | Tm_Admit _ -> "Tm_Admit"
   | Tm_ProofHintWithBinders _ -> "Tm_ProofHintWithBinders"
+  | Tm_WithInv _ -> "Tm_WithInv"
 
 let tag_of_comp (c:comp) : T.Tac string =
   match c with
@@ -418,6 +438,7 @@ let rec print_st_head (t:st_term)
   | Tm_IntroExists _ -> "IntroExists"
   | Tm_ElimExists _ -> "ElimExists"  
   | Tm_ProofHintWithBinders _ -> "AssertWithBinders"
+  | Tm_WithInv _ -> "WithInv"
 and print_head (t:term) =
   match t with
   // | Tm_FVar fv
@@ -445,6 +466,7 @@ let rec print_skel (t:st_term) =
   | Tm_IntroExists _ -> "IntroExists"
   | Tm_ElimExists _ -> "ElimExists"
   | Tm_ProofHintWithBinders _ -> "AssertWithBinders"
+  | Tm_WithInv _ -> "WithInv"
 
 let decl_to_string (d:decl) : T.Tac string =
   match d.d with

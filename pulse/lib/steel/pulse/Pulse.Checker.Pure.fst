@@ -229,7 +229,7 @@ let instantiate_term_implicits_uvs (g:env) (t0:term) =
           term =
         T.fold_left (fun (| uvs, t, ty |) (namedv, namedvt) ->
           let nview = R.inspect_namedv namedv in
-          let ppname = { name = nview.ppname; range = t0.range } in
+          let ppname = { name = nview.ppname; range = t0.range } <: Pulse.Syntax.Base.ppname in
           let xt = readback_ty namedvt in
           if None? xt
           then fail g (Some t0.range) (readback_failure namedvt)
@@ -492,6 +492,11 @@ let get_non_informative_witness g u t
         e
         T.E_Total
         (non_informative_witness_t u t)
+
+let try_check_prop_validity (g:env) (p:term) (_:tot_typing g p tm_prop)
+  : T.Tac (option (Pulse.Typing.prop_validity g p))
+  = let t_opt, issues = rtb_check_prop_validity g (elab_env g) (elab_term p) in
+    t_opt
 
 let check_prop_validity (g:env) (p:term) (_:tot_typing g p tm_prop)
   : T.Tac (Pulse.Typing.prop_validity g p)

@@ -46,9 +46,13 @@ let rec open_term_ln' (e:term)
     | Tm_EmpInames
     | Tm_Unknown -> ()
 
+    | Tm_Inv p ->
+      open_term_ln' p x i
+
     | Tm_Pure p ->
       open_term_ln' p x i
 
+    | Tm_AddInv l r
     | Tm_Star l r ->
       open_term_ln' l x i;
       open_term_ln' r x i
@@ -200,6 +204,7 @@ let map_opt_lemma_2 ($f: (x:'a -> y:'b -> z:'c -> Lemma (requires 'p x y z) (ens
      | None -> ()
      | Some x -> f x y z
 
+#push-options "--z3rlimit 20"
 let rec open_st_term_ln' (e:st_term)
                          (x:term)
                          (i:index)
@@ -289,6 +294,10 @@ let rec open_st_term_ln' (e:st_term)
       open_proof_hint_ln hint_type x (i + n);
       open_st_term_ln' t x (i + n)
 
+    | Tm_WithInv { name; body } ->
+      open_term_ln' name x i;
+      open_st_term_ln' body x i
+
 // The Tm_Match? and __brs_of conditions are to prove that the ln_branches' below
 // satisfies the termination refinment.
 and open_branches_ln' (t:st_term{Tm_Match? t.term})
@@ -348,10 +357,13 @@ let rec ln_weakening (e:term) (i j:int)
     | Tm_Inames
     | Tm_EmpInames
     | Tm_Unknown -> ()
+    | Tm_Inv p ->
+      ln_weakening p i j
     | Tm_Pure p ->
       ln_weakening p i j
       
     // | Tm_PureApp l _ r
+    | Tm_AddInv l r
     | Tm_Star l r ->
       ln_weakening l i j;
       ln_weakening r i j
@@ -363,6 +375,7 @@ let rec ln_weakening (e:term) (i j:int)
 
     | Tm_FStar t ->
       r_ln_weakening t i j
+#pop-options
 
 let ln_weakening_comp (c:comp) (i j:int)
   : Lemma 
@@ -514,6 +527,10 @@ let rec ln_weakening_st (t:st_term) (i j:int)
       ln_weakening_proof_hint hint_type (i + n) (j + n);
       ln_weakening_st t (i + n) (j + n)
 
+    | Tm_WithInv { name; body } ->
+      ln_weakening name i j;
+      ln_weakening_st body i j
+
 assume
 val r_open_term_ln_inv' (e:R.term) (x:R.term { RT.ln x }) (i:index)
   : Lemma 
@@ -535,10 +552,13 @@ let rec open_term_ln_inv' (e:term)
     | Tm_Unknown ->
       ln_weakening x (-1) (i - 1)
 
+    | Tm_Inv p ->
+      open_term_ln_inv' p x i
     | Tm_Pure p ->
       open_term_ln_inv' p x i
 
     // | Tm_PureApp l _ r
+    | Tm_AddInv l r
     | Tm_Star l r ->
       open_term_ln_inv' l x i;
       open_term_ln_inv' r x i
@@ -714,6 +734,10 @@ let rec open_term_ln_inv_st' (t:st_term)
       open_proof_hint_ln_inv hint_type x (i + n);
       open_term_ln_inv_st' t x (i + n)
 
+    | Tm_WithInv { name; body } ->
+      open_term_ln_inv' name x i;
+      open_term_ln_inv_st' body x i
+
 #pop-options
 
 assume
@@ -736,9 +760,12 @@ let rec close_term_ln' (e:term)
     | Tm_EmpInames
     | Tm_Unknown -> ()
 
+    | Tm_Inv p ->
+      close_term_ln' p x i
     | Tm_Pure p ->
       close_term_ln' p x i
 
+    | Tm_AddInv l r
     | Tm_Star l r ->
       close_term_ln' l x i;
       close_term_ln' r x i
@@ -908,6 +935,10 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
       close_proof_hint_ln hint_type x (i + n);
       close_st_term_ln' t x (i + n)
       
+    | Tm_WithInv { name; body } ->
+      close_term_ln' name x i;
+      close_st_term_ln' body x i
+
 let close_comp_ln (c:comp) (v:var)
   : Lemma 
     (requires ln_c c)
@@ -977,6 +1008,29 @@ let st_equiv_ln #g #c1 #c2 (d:st_equiv g c1 c2)
       let t2_typing = Pulse.Typing.Metatheory.Base.rt_equiv_typing eq t1_typing._0 in
       tot_or_ghost_typing_ln (E (Ghost.reveal t2_typing))
     
+let prop_valid_must_be_ln (g:env) (t:term) (d:prop_validity g t)
+  : Lemma (ensures ln t) =
+  admit()
+
+let rec st_sub_ln #g #c1 #c2 (d:st_sub g c1 c2)
+  : Lemma
+    (requires ln_c c1)
+    (ensures ln_c c2)
+    (decreases d)
+  = match d with
+    | STS_Refl _ _ -> ()
+    | STS_Trans _ _ _ _ d1 d2 ->
+      st_sub_ln d1;
+      st_sub_ln d2
+
+    | STS_GhostInvs g stc is1 is2 tok ->
+      prop_valid_must_be_ln g (tm_inames_subset is1 is2) tok;
+      (* This should be easy-ish to prove, since is2 is a subterm *)
+      assume (ln (tm_inames_subset is1 is2) ==> ln is2)
+
+    | STS_AtomicInvs g stc is1 is2 tok ->
+      prop_valid_must_be_ln g (tm_inames_subset is1 is2) tok;
+      assume (ln (tm_inames_subset is1 is2) ==> ln is2)
 
 let bind_comp_ln #g #x #c1 #c2 #c (d:bind_comp g x c1 c2 c)
   : Lemma 
@@ -1192,4 +1246,12 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       tot_or_ghost_typing_ln pre_typing;
       tot_or_ghost_typing_ln post_typing;
       open_term_ln' s.post (term_of_no_name_var x) 0
+
+    | T_Sub _ e c c' d d_sub ->
+      st_typing_ln d;
+      st_sub_ln d_sub
+
+    | T_WithInv _ _ _ _ _ _ _ _ ->
+      admit() // IOU
+
 #pop-options

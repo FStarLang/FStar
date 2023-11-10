@@ -15,7 +15,7 @@ module Metatheory = Pulse.Typing.Metatheory
 val format_failed_goal (g:env) (ctxt:list term) (goal:list term) : T.Tac string
 
 val intro_post_hint (g:env) (ctag_opt:option ctag) (ret_ty:option term) (post:term)
-  : T.Tac (post_hint_for_env g)
+  : T.Tac (h:post_hint_for_env g{h.ctag_hint == ctag_opt})
 
 val post_hint_from_comp_typing (#g:env) (#c:comp_st) (ct:Metatheory.comp_typing_u g c)
   : post_hint_for_env g

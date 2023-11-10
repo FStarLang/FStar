@@ -29,9 +29,12 @@ let rec freevars_close_term' (e:term) (x:var) (i:index)
     | Tm_EmpInames
     | Tm_Unknown -> ()
 
+    | Tm_Inv p ->
+      freevars_close_term' p x i
     | Tm_Pure p ->
       freevars_close_term' p x i
 
+    | Tm_AddInv l r
     | Tm_Star l r ->
       freevars_close_term' l x i;
       freevars_close_term' r x i
@@ -209,6 +212,11 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
       let n = L.length binders in
       freevars_close_proof_hint' hint_type x (i + n);
       freevars_close_st_term' t x (i + n)
+
+    | Tm_WithInv { name; body; returns_inv } ->
+      freevars_close_term' name x i;
+      freevars_close_term_opt' returns_inv x i;
+      freevars_close_st_term' body x i
 #pop-options
 
 let freevars_close_term (e:term) (x:var) (i:index)
@@ -336,6 +344,33 @@ let st_equiv_freevars #g (#c1 #c2:_)
       let t2_typing = Pulse.Typing.Metatheory.Base.rt_equiv_typing eq t1_typing._0 in
       tot_or_ghost_typing_freevars (E (Ghost.reveal t2_typing))
     
+let prop_validity_fv (g:env) (p:term)
+  : Lemma
+    (requires prop_validity g p)
+    (ensures freevars p `Set.subset` vars_of_env g)
+  = admit()
+
+let rec st_sub_freevars #g (#c1 #c2:_)
+                      (d:st_sub g c1 c2)
+  : Lemma
+    (requires freevars_comp c1 `Set.subset` vars_of_env g)
+    (ensures freevars_comp c2 `Set.subset` vars_of_env g)
+    (decreases d)
+=
+  match d with
+  | STS_Refl _ _ -> ()
+  | STS_Trans _ _ _ _ d1 d2 ->
+    st_sub_freevars d1;
+    st_sub_freevars d2
+  | STS_GhostInvs _ _ is1 is2 tok ->
+    (* This should follow from being a subterm *)
+    assume (freevars is2 `Set.subset` freevars (tm_inames_subset is1 is2));
+    prop_validity_fv g (tm_inames_subset is1 is2)
+
+  | STS_AtomicInvs _ _ is1 is2 tok ->
+    assume (freevars is2 `Set.subset` freevars (tm_inames_subset is1 is2));
+    prop_validity_fv g (tm_inames_subset is1 is2)
+
 let src_typing_freevars_t (d':'a) =
     (#g:_) -> (#t:_) -> (#c:_) -> (d:st_typing g t c { d << d' }) ->
     Lemma 
@@ -436,7 +471,7 @@ let freevars_array (t:term)
   = admit()
 
 // FIXME: tame this proof
-#push-options "--fuel 2 --ifuel 1 --z3rlimit_factor 10 --query_stats --retry 5"
+#push-options "--fuel 2 --ifuel 1 --z3rlimit_factor 15 --query_stats --retry 5"
 let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
                            (d:st_typing g t c)
   : Lemma 
@@ -624,4 +659,12 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
      tot_or_ghost_typing_freevars pre_typing;
      tot_or_ghost_typing_freevars post_typing;
      freevars_open_term s.post (term_of_no_name_var x) 0
+
+   | T_WithInv _ _ _ _ _ _ _ _ ->
+     admit () // IOU
+
+   | T_Sub _ _ _ _ d_t d_sub ->
+     st_typing_freevars d_t;
+     st_sub_freevars d_sub
+
 #pop-options //takes about 12s

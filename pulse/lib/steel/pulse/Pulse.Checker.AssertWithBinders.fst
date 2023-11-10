@@ -150,7 +150,12 @@ let visit_and_rewrite (p: (R.term & R.term)) (t:term) : T.Tac term =
       | Tm_VProp
       | Tm_Inames
       | Tm_EmpInames
+      | Tm_Inames
       | Tm_Unknown  -> t
+      | Tm_Inv i ->
+        { t with t = Tm_Inv (aux i) }
+      | Tm_AddInv i is ->
+        { t with t = Tm_AddInv (aux i) (aux is) }
       | Tm_Pure p -> { t with t = Tm_Pure (aux p) }
       | Tm_Star l r ->  { t with t = Tm_Star (aux l) (aux r) }
       | Tm_ExistsSL u b body -> { t with t = Tm_ExistsSL u { b with binder_ty=aux b.binder_ty} (aux body) }
