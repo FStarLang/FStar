@@ -55,12 +55,7 @@ let (normalize :
   FStar_TypeChecker_Env.steps ->
     FStar_TypeChecker_Env.env ->
       FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
-  =
-  fun s ->
-    fun e ->
-      fun t ->
-        FStar_TypeChecker_Normalize.normalize_with_primitive_steps
-          FStar_Reflection_V1_Interpreter.reflection_primops s e t
+  = fun s -> fun e -> fun t -> FStar_TypeChecker_Normalize.normalize s e t
 let (bnorm :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)

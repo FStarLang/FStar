@@ -261,6 +261,57 @@ let (quals_to_string' :
     | uu___ -> let uu___1 = quals_to_string quals in Prims.op_Hat uu___1 " "
 let (paren : Prims.string -> Prims.string) =
   fun s -> Prims.op_Hat "(" (Prims.op_Hat s ")")
+let rec (emb_typ_to_string : FStar_Syntax_Syntax.emb_typ -> Prims.string) =
+  fun uu___ ->
+    match uu___ with
+    | FStar_Syntax_Syntax.ET_abstract -> "abstract"
+    | FStar_Syntax_Syntax.ET_app (h, []) -> h
+    | FStar_Syntax_Syntax.ET_app (h, args) ->
+        let uu___1 =
+          let uu___2 =
+            let uu___3 =
+              let uu___4 =
+                let uu___5 = FStar_Compiler_List.map emb_typ_to_string args in
+                FStar_Compiler_Effect.op_Bar_Greater uu___5
+                  (FStar_String.concat " ") in
+              Prims.op_Hat uu___4 ")" in
+            Prims.op_Hat " " uu___3 in
+          Prims.op_Hat h uu___2 in
+        Prims.op_Hat "(" uu___1
+    | FStar_Syntax_Syntax.ET_fun (a, b) ->
+        let uu___1 =
+          let uu___2 = emb_typ_to_string a in
+          let uu___3 =
+            let uu___4 = emb_typ_to_string b in Prims.op_Hat ") -> " uu___4 in
+          Prims.op_Hat uu___2 uu___3 in
+        Prims.op_Hat "(" uu___1
+let (lkind_to_string : FStar_Syntax_Syntax.lazy_kind -> Prims.string) =
+  fun uu___ ->
+    match uu___ with
+    | FStar_Syntax_Syntax.BadLazy -> "BadLazy"
+    | FStar_Syntax_Syntax.Lazy_bv -> "Lazy_bv"
+    | FStar_Syntax_Syntax.Lazy_namedv -> "Lazy_namedv"
+    | FStar_Syntax_Syntax.Lazy_binder -> "Lazy_binder"
+    | FStar_Syntax_Syntax.Lazy_optionstate -> "Lazy_optionstate"
+    | FStar_Syntax_Syntax.Lazy_fvar -> "Lazy_fvar"
+    | FStar_Syntax_Syntax.Lazy_comp -> "Lazy_comp"
+    | FStar_Syntax_Syntax.Lazy_env -> "Lazy_env"
+    | FStar_Syntax_Syntax.Lazy_proofstate -> "Lazy_proofstate"
+    | FStar_Syntax_Syntax.Lazy_goal -> "Lazy_goal"
+    | FStar_Syntax_Syntax.Lazy_sigelt -> "Lazy_sigelt"
+    | FStar_Syntax_Syntax.Lazy_uvar -> "Lazy_uvar"
+    | FStar_Syntax_Syntax.Lazy_letbinding -> "Lazy_letbinding"
+    | FStar_Syntax_Syntax.Lazy_embedding (e, uu___1) ->
+        let uu___2 =
+          let uu___3 = emb_typ_to_string e in Prims.op_Hat uu___3 ")" in
+        Prims.op_Hat "Lazy_embedding(" uu___2
+    | FStar_Syntax_Syntax.Lazy_universe -> "Lazy_universe"
+    | FStar_Syntax_Syntax.Lazy_universe_uvar -> "Lazy_universe_uvar"
+    | FStar_Syntax_Syntax.Lazy_issue -> "Lazy_issue"
+    | FStar_Syntax_Syntax.Lazy_ident -> "Lazy_ident"
+    | FStar_Syntax_Syntax.Lazy_doc -> "Lazy_doc"
+    | FStar_Syntax_Syntax.Lazy_extension s ->
+        Prims.op_Hat "Lazy_extension:" s
 let rec (tag_of_term : FStar_Syntax_Syntax.term -> Prims.string) =
   fun t ->
     match t.FStar_Syntax_Syntax.n with
@@ -298,7 +349,11 @@ let rec (tag_of_term : FStar_Syntax_Syntax.term -> Prims.string) =
         { FStar_Syntax_Syntax.tm2 = uu___; FStar_Syntax_Syntax.meta = m;_} ->
         let uu___1 = metadata_to_string m in Prims.op_Hat "Tm_meta:" uu___1
     | FStar_Syntax_Syntax.Tm_unknown -> "Tm_unknown"
-    | FStar_Syntax_Syntax.Tm_lazy uu___ -> "Tm_lazy"
+    | FStar_Syntax_Syntax.Tm_lazy li ->
+        let uu___ =
+          let uu___1 = lkind_to_string li.FStar_Syntax_Syntax.lkind in
+          Prims.op_Hat uu___1 ")" in
+        Prims.op_Hat "Tm_lazy(" uu___
 and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
   fun x ->
     let uu___ =
@@ -1907,30 +1962,6 @@ let (ctx_uvar_to_string : FStar_Syntax_Syntax.ctx_uvar -> Prims.string) =
 let (ctx_uvar_to_string_no_reason :
   FStar_Syntax_Syntax.ctx_uvar -> Prims.string) =
   fun ctx_uvar -> ctx_uvar_to_string_aux false ctx_uvar
-let rec (emb_typ_to_string : FStar_Syntax_Syntax.emb_typ -> Prims.string) =
-  fun uu___ ->
-    match uu___ with
-    | FStar_Syntax_Syntax.ET_abstract -> "abstract"
-    | FStar_Syntax_Syntax.ET_app (h, []) -> h
-    | FStar_Syntax_Syntax.ET_app (h, args) ->
-        let uu___1 =
-          let uu___2 =
-            let uu___3 =
-              let uu___4 =
-                let uu___5 = FStar_Compiler_List.map emb_typ_to_string args in
-                FStar_Compiler_Effect.op_Bar_Greater uu___5
-                  (FStar_String.concat " ") in
-              Prims.op_Hat uu___4 ")" in
-            Prims.op_Hat " " uu___3 in
-          Prims.op_Hat h uu___2 in
-        Prims.op_Hat "(" uu___1
-    | FStar_Syntax_Syntax.ET_fun (a, b) ->
-        let uu___1 =
-          let uu___2 = emb_typ_to_string a in
-          let uu___3 =
-            let uu___4 = emb_typ_to_string b in Prims.op_Hat ") -> " uu___4 in
-          Prims.op_Hat uu___2 uu___3 in
-        Prims.op_Hat "(" uu___1
 let (fv_qual_to_string : FStar_Syntax_Syntax.fv_qual -> Prims.string) =
   fun fvq ->
     match fvq with

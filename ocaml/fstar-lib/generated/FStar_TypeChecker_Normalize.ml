@@ -2233,11 +2233,19 @@ let (should_unfold :
                                                (fun ns ->
                                                   let uu___20 =
                                                     let uu___21 =
-                                                      FStar_Syntax_Syntax.lid_of_fv
-                                                        fv in
-                                                    FStar_Ident.nsstr uu___21 in
+                                                      let uu___22 =
+                                                        FStar_Syntax_Syntax.lid_of_fv
+                                                          fv in
+                                                      FStar_Ident.nsstr
+                                                        uu___22 in
+                                                    FStar_String.op_Hat
+                                                      uu___21 "." in
+                                                  let uu___21 =
+                                                    FStar_String.op_Hat ns
+                                                      "." in
                                                   FStar_Compiler_Util.starts_with
-                                                    uu___20 ns) namespaces in
+                                                    uu___20 uu___21)
+                                               namespaces in
                                            FStar_Compiler_Effect.op_Less_Bar
                                              yesno uu___19 in
                                      [uu___18] in
@@ -2340,11 +2348,19 @@ let (should_unfold :
                                                (fun ns ->
                                                   let uu___20 =
                                                     let uu___21 =
-                                                      FStar_Syntax_Syntax.lid_of_fv
-                                                        fv in
-                                                    FStar_Ident.nsstr uu___21 in
+                                                      let uu___22 =
+                                                        FStar_Syntax_Syntax.lid_of_fv
+                                                          fv in
+                                                      FStar_Ident.nsstr
+                                                        uu___22 in
+                                                    FStar_String.op_Hat
+                                                      uu___21 "." in
+                                                  let uu___21 =
+                                                    FStar_String.op_Hat ns
+                                                      "." in
                                                   FStar_Compiler_Util.starts_with
-                                                    uu___20 ns) namespaces in
+                                                    uu___20 uu___21)
+                                               namespaces in
                                            FStar_Compiler_Effect.op_Less_Bar
                                              yesno uu___19 in
                                      [uu___18] in
@@ -2447,11 +2463,19 @@ let (should_unfold :
                                                (fun ns ->
                                                   let uu___20 =
                                                     let uu___21 =
-                                                      FStar_Syntax_Syntax.lid_of_fv
-                                                        fv in
-                                                    FStar_Ident.nsstr uu___21 in
+                                                      let uu___22 =
+                                                        FStar_Syntax_Syntax.lid_of_fv
+                                                          fv in
+                                                      FStar_Ident.nsstr
+                                                        uu___22 in
+                                                    FStar_String.op_Hat
+                                                      uu___21 "." in
+                                                  let uu___21 =
+                                                    FStar_String.op_Hat ns
+                                                      "." in
                                                   FStar_Compiler_Util.starts_with
-                                                    uu___20 ns) namespaces in
+                                                    uu___20 uu___21)
+                                               namespaces in
                                            FStar_Compiler_Effect.op_Less_Bar
                                              yesno uu___19 in
                                      [uu___18] in
@@ -2554,11 +2578,19 @@ let (should_unfold :
                                                (fun ns ->
                                                   let uu___20 =
                                                     let uu___21 =
-                                                      FStar_Syntax_Syntax.lid_of_fv
-                                                        fv in
-                                                    FStar_Ident.nsstr uu___21 in
+                                                      let uu___22 =
+                                                        FStar_Syntax_Syntax.lid_of_fv
+                                                          fv in
+                                                      FStar_Ident.nsstr
+                                                        uu___22 in
+                                                    FStar_String.op_Hat
+                                                      uu___21 "." in
+                                                  let uu___21 =
+                                                    FStar_String.op_Hat ns
+                                                      "." in
                                                   FStar_Compiler_Util.starts_with
-                                                    uu___20 ns) namespaces in
+                                                    uu___20 uu___21)
+                                               namespaces in
                                            FStar_Compiler_Effect.op_Less_Bar
                                              yesno uu___19 in
                                      [uu___18] in
@@ -2661,11 +2693,19 @@ let (should_unfold :
                                                (fun ns ->
                                                   let uu___20 =
                                                     let uu___21 =
-                                                      FStar_Syntax_Syntax.lid_of_fv
-                                                        fv in
-                                                    FStar_Ident.nsstr uu___21 in
+                                                      let uu___22 =
+                                                        FStar_Syntax_Syntax.lid_of_fv
+                                                          fv in
+                                                      FStar_Ident.nsstr
+                                                        uu___22 in
+                                                    FStar_String.op_Hat
+                                                      uu___21 "." in
+                                                  let uu___21 =
+                                                    FStar_String.op_Hat ns
+                                                      "." in
                                                   FStar_Compiler_Util.starts_with
-                                                    uu___20 ns) namespaces in
+                                                    uu___20 uu___21)
+                                               namespaces in
                                            FStar_Compiler_Effect.op_Less_Bar
                                              yesno uu___19 in
                                      [uu___18] in
