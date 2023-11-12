@@ -964,7 +964,7 @@ let should_unfold cfg strict_ok should_reify fv qninfo : should_unfold_res =
     // If this definition is marked strict_on_arguments, we will not
     // unfold standalone occurrences of it, only applications that
     // pass the strictness check.
-    | _ when not strict_ok && Some? (Env.fv_has_strict_args cfg.tcenv fv) ->
+    | _ when not strict_ok && Some? (Env.fv_has_strict_args cfg.tcenv fv) && not cfg.unfold_strict_fvs ->
         log_unfolding cfg (fun () -> BU.print_string " >> Not unfolding strict_on_arguments definition\n");
         no
 
@@ -1471,6 +1471,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
               log cfg (fun () -> BU.print1 "\tPushed %s arguments\n" (string_of_int <| List.length args));
               norm cfg env stack head
             in
+            if cfg.unfold_strict_fvs then
+              fallback ()
+            else
             let head_fv_us_opt =
               let head = U.unascribe head in
               let head = SS.compress head in

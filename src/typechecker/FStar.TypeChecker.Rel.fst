@@ -1344,6 +1344,7 @@ let head_matches_delta env smt_ok t1 t2 : (match_result & option (typ&typ)) =
           | Some _ ->
             let basic_steps =
                 [Env.UnfoldUntil delta_constant;
+                 Env.UnfoldStrict;
                  Env.Weak;
                  Env.HNF;
                  Env.Primops;

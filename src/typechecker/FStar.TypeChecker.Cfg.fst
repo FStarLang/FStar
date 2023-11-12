@@ -144,6 +144,7 @@ let fstep_add_one s fs =
     | Inlining -> fs // not a step // ZP : Adding qualification because of name clash
     | DoNotUnfoldPureLets ->  { fs with do_not_unfold_pure_lets = true }
     | UnfoldUntil d -> { fs with unfold_until = Some d }
+    | UnfoldStrict -> fs // Set at the cfg level
     | UnfoldOnly  lids -> { fs with unfold_only  = Some lids }
     | UnfoldFully lids -> { fs with unfold_fully = Some lids }
     | UnfoldAttr  lids -> { fs with unfold_attr  = Some lids }
@@ -355,6 +356,7 @@ let config' psteps s e =
       ;
      steps = steps;
      delta_level = d;
+     unfold_strict_fvs = List.mem UnfoldStrict s;
      primitive_steps = psteps;
      strong = false;
      memoize_lazy = true;
