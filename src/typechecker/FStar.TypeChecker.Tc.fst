@@ -383,10 +383,13 @@ let tc_sig_let env r se lbs lids : list sigelt * list sigelt * Env.env =
             List.length val_q = List.length q'
             && List.forall2 U.qualifier_equal val_q q')
         then Some q'  //but retain it in the returned list of qualifiers, some code may still add type annotations of Type0, which will hinder `logical` inference
-        else raise_error (Errors.Fatal_InconsistentQualifierAnnotation, (BU.format3 "Inconsistent qualifier annotations on %s; Expected {%s}, got {%s}"
-                              (Print.lid_to_string l)
-                              (Print.quals_to_string val_q)
-                              (Print.quals_to_string q'))) r
+        else
+          let open FStar.Pprint in
+          raise_error_doc (Errors.Fatal_InconsistentQualifierAnnotation, [
+              text "Inconsistent qualifier annotations on" ^/^ doc_of_string (Print.lid_to_string l);
+              prefix 4 1 (text "Expected") (squotes (arbitrary_string (Print.quals_to_string val_q))) ^/^
+              prefix 4 1 (text "got") (squotes (arbitrary_string (Print.quals_to_string q')))
+            ]) r
     in
 
     let rename_parameters lb =
