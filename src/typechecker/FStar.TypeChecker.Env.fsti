@@ -45,6 +45,11 @@ type step =
   | UnfoldQual  of list string
   | UnfoldNamespace of list string
   | UnfoldTac
+    // ^ Prevents unfolding of anything marked @@"tac_opaque", which are mostly
+    // the logical connectives.
+  | UnfoldStrict
+    // ^ Determines whether we should unconditionally unfold @@strict_on_arguments defns,
+    // ignoring the attribute. Used by the unifier.
   | PureSubtermsWithinComputations
   | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
   | EraseUniverses
