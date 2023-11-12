@@ -557,36 +557,28 @@ val cbor_get_major_type
       res == Cbor.get_major_type v
     ))
 
-(* `cbor_is_equal_aux` is an auxiliary function intended to compare two CBOR objects
+(* `cbor_compare_aux` is an auxiliary function intended to compare two CBOR objects
    represented by their serialized bytes. It returns an inconclusive result if one of
    the two is not such an object. The full equality test is implemented in Pulse, see
-   `CBOR.Pulse.cbor_is_equal`
+   `CBOR.Pulse.cbor_compare`
 *)
 
-noeq [@@no_auto_projectors]
-type cbor_is_equal_aux_t
-= | CborEqual
-  | CborNotEqual
-  | CborCompareFailure
-
 noextract
-let cbor_is_equal_aux_postcond
+let cbor_compare_aux_postcond
   (v1 v2: Cbor.raw_data_item)
-  (res: cbor_is_equal_aux_t)
+  (res: FStar.Int16.t)
 : Tot prop
-= match res with
-  | CborEqual -> v1 == v2
-  | CborNotEqual -> ~ (v1 == v2)
-  | _ -> True
+= let nres = FStar.Int16.v res in
+  (nres = -1 || nres = 0 || nres = 1) ==> nres == Cbor.cbor_compare v1 v2
 
-val cbor_is_equal_aux
+val cbor_compare_aux
   (c1 c2: cbor)
   (#p1 #p2: perm)
   (#v1 #v2: Ghost.erased Cbor.raw_data_item)
-: stt cbor_is_equal_aux_t
+: stt FStar.Int16.t
     (raw_data_item_match p1 c1 v1 ** raw_data_item_match p2 c2 v2)
     (fun res -> raw_data_item_match p1 c1 v1 ** raw_data_item_match p2 c2 v2 **
-      pure (cbor_is_equal_aux_postcond v1 v2 res)
+      pure (cbor_compare_aux_postcond v1 v2 res)
     )
 
 (* Serialization *)
