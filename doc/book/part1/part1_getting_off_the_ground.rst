@@ -692,7 +692,7 @@ Can you write down some more types for factorial?
 Fibonacci
 .........
 
-Here's a doubly recursive function::
+Here's a doubly recursive function:
 
 .. literalinclude:: ../code/Part1.GettingOffTheGround.fst
    :language: fstar
