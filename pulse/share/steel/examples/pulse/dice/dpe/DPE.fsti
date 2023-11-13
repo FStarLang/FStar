@@ -28,15 +28,24 @@ val destroy_context (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) : stt bool emp (fun _ ->
 
 val close_session (sid:sid_t) : stt bool emp (fun _ -> emp)
 
-val initialize_context (sid:sid_t) (uds:A.larray U8.t (US.v uds_len)) (#p:perm)
+val initialize_context (sid:sid_t) 
+                       (uds:A.larray U8.t (US.v uds_len))
+                       (#p:perm)
+                       (#uds_bytes:erased (Seq.seq U8.t))
   : stt (option ctxt_hndl_t) 
-        (A.pts_to uds #p uds_bytes ** 
-         uds_is_enabled)
+        (A.pts_to uds #p uds_bytes)
         (fun _ -> A.pts_to uds #p uds_bytes)
 
-val rotate_context_handle (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) : stt (option ctxt_hndl_t) emp (fun _ -> emp)
+val rotate_context_handle (sid:sid_t)
+                          (ctxt_hndl:ctxt_hndl_t)
+  : stt (option ctxt_hndl_t) emp (fun _ -> emp)
 
-val derive_child (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) (record:record_t) (#repr:erased repr_t) (#p:perm)
+val derive_child (sid:sid_t)
+                 (ctxt_hndl:ctxt_hndl_t)
+                 (record:record_t)
+                 (#repr:erased repr_t)
+                 (#p:perm)
   : stt (option ctxt_hndl_t) 
-        (record_perm record repr p)
-        (fun _ -> record_perm record repr p)
+        (record_perm record p repr)
+        (fun _ -> record_perm record p repr)
+

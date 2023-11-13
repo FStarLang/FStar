@@ -112,3 +112,70 @@ let pts_to_range_upd
     let _ = A.pts_to_range_upd a l i r v in
     noop ()
 *)
+
+assume val admits (#a:Type) (#p:vprop) (#q:a -> vprop) (_:unit)
+  : S.STF a p q True (fun _ -> False)
+
+#set-options "--print_implicits"
+let with_local'
+  (#a:Type0)
+  (init:a)
+  (len:SZ.t)
+  (#pre:vprop)
+  (ret_t:Type)
+  (#post:ret_t -> vprop)
+  (body:(arr:array a) -> stt ret_t (pre `S.star`
+                                    (pts_to arr (Seq.create (SZ.v len) init) `S.star`
+                                     (pure (is_full_array arr) `S.star`
+                                      pure (length arr == SZ.v len))))
+                                   (fun r -> post r `S.star` S.exists_ (A.pts_to arr full_perm)))
+  : stt ret_t pre post =
+
+  fun _ ->
+  let arr = A.alloc #a init len in
+  S.intro_pure (is_full_array arr);
+  S.intro_pure (length arr == SZ.v len);
+  let r = body arr () in
+  S.elim_pure (is_full_array arr);
+  A.free arr;
+  S.return r
+
+let with_local
+  (#a:Type0)
+  (init:a)
+  (len:SZ.t)
+  (#pre:vprop)
+  (ret_t:Type)
+  (#post:ret_t -> vprop)
+  (body:(arr:array a) -> stt ret_t (pre **
+                                    (pts_to arr (Seq.create (SZ.v len) init) **
+                                     (pure (is_full_array arr) **
+                                      pure (length arr == SZ.v len))))
+                                   (fun r -> post r ** exists_ (pts_to arr)))
+  : stt ret_t pre post =
+
+  let body (arr:array a) : stt ret_t (pre `S.star`
+                                      (pts_to arr (Seq.create (SZ.v len) init) `S.star`
+                                       (pure (is_full_array arr) `S.star`
+                                        pure (length arr == SZ.v len))))
+                                     (fun r -> post r `S.star` S.exists_ (A.pts_to arr full_perm)) =
+    fun _ ->
+    S.rewrite (pre `S.star`
+              (pts_to arr (Seq.create (SZ.v len) init) `S.star`
+               (pure (is_full_array arr) `S.star`
+                pure (length arr == SZ.v len))))
+             (pre **
+              (pts_to arr (Seq.create (SZ.v len) init) **
+               (pure (is_full_array arr) **
+                pure (length arr == SZ.v len))));
+    let r = body arr () in
+    S.rewrite (post r ** exists_ (pts_to arr #full_perm))
+              (post r `S.star` exists_ (pts_to arr #full_perm));
+    let w = S.elim_exists () in
+    S.rewrite (pts_to arr #full_perm w)
+              (A.pts_to arr full_perm w);
+    S.intro_exists_erased w (A.pts_to arr full_perm);
+    S.return r
+  in
+
+  with_local' init len ret_t body

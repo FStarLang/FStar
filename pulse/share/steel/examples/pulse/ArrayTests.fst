@@ -7,11 +7,9 @@ module R = Pulse.Lib.Reference
 
 #push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
 
-let elseq (a:Type) (l:nat) = s:Ghost.erased (Seq.seq a) { Seq.length s == l }
-
 ```pulse
 fn compare (#t:eqtype) (l:US.t) (a1 a2:A.larray t (US.v l))
-           (#p1 #p2:perm) (#s1 #s2:elseq t (US.v l))
+           (#p1 #p2:perm) (#s1 #s2:elseq t l)
   requires (
     A.pts_to a1 #p1 s1 **
     A.pts_to a2 #p2 s2
@@ -366,3 +364,65 @@ fn sort3_alt (a:array U32.t)
 }
 ```
 
+```pulse
+fn test_local_array0 (_:unit)
+  requires emp
+  returns  b:bool
+  ensures  pure (b)
+{
+  let mut a1 = [| 0; 2sz |];
+  let a2 = A.alloc 0 2sz;
+  let b = compare 2sz a1 a2;
+  A.free a2;
+  b
+}
+```
+
+```pulse
+fn test_local_array1 (_:unit)
+  requires emp
+  returns  i:int
+  ensures  pure (i == 3)
+{
+  let mut a = [| 1; 2sz |];
+  fill_array 2sz a 2;
+  fill_array 2sz a 3;
+  read_at_offset_refine_poly a 1sz
+}
+```
+
+[@@ expect_failure]  // cannot call free on a local array
+```pulse
+fn test_local_array2 (_:unit)
+  requires emp
+  ensures  emp
+{
+  let mut a = [| 1; 2sz |];
+  A.free a
+}
+```
+
+[@@ expect_failure]  // cannot return a local array
+```pulse
+fn test_local_array3 (_:unit)
+  requires emp
+  returns  a:array int
+  ensures  (
+    A.pts_to a (Seq.create (US.v 2sz) 0)
+  )
+{
+  let mut a = [| 0; 2sz |];
+  a
+}
+```
+
+[@@ expect_failure]  // immutable local arrays are not yet supported
+```pulse
+fn test_local_array4 (_:unit)
+  requires emp
+  ensures  emp
+{
+  let a = [| 0; 2sz |];
+  ()
+}
+```

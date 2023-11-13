@@ -191,6 +191,12 @@ let rec close_open_inverse_st'  (t:st_term)
       close_open_inverse' initializer x i;
       close_open_inverse_st' body x (i + 1)
 
+    | Tm_WithLocalArray { binder; initializer; length; body } ->
+      close_open_inverse' binder.binder_ty x i; 
+      close_open_inverse' initializer x i;
+      close_open_inverse' length x i;
+      close_open_inverse_st' body x (i + 1)
+
     | Tm_Rewrite { t1; t2 } ->
       close_open_inverse' t1 x i;
       close_open_inverse' t2 x i

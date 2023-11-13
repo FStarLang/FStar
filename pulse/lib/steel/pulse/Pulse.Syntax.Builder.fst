@@ -17,6 +17,7 @@ let tm_intro_exists p witnesses = Tm_IntroExists { p; witnesses }
 let tm_while invariant condition condition_var body = Tm_While { invariant; condition; condition_var; body }
 let tm_par pre1 body1 post1 pre2 body2 post2 = Tm_Par { pre1; body1; post1; pre2; body2; post2 }
 let tm_with_local binder initializer body = Tm_WithLocal { binder; initializer; body }
+let tm_with_local_array binder initializer length body = Tm_WithLocalArray { binder; initializer; length; body }
 let tm_rewrite t1 t2 = Tm_Rewrite { t1; t2 }
 let tm_rename pairs t = Tm_ProofHintWithBinders { hint_type = RENAME { pairs; goal=None}; binders=[]; t}
 let tm_admit ctag u typ post = Tm_Admit { ctag; u; typ; post }
@@ -27,3 +28,5 @@ let mk_unfold_hint_type names p = UNFOLD { names; p }
 let mk_fold_hint_type names p = FOLD { names; p }
 let mk_rename_hint_type pairs goal = RENAME { pairs; goal }
 let mk_rewrite_hint_type t1 t2 = REWRITE { t1; t2 }
+let mk_fn_decl id isrec bs comp meas body : decl' = FnDecl { id; isrec; bs; comp; meas; body }
+let mk_decl d range : decl = {d; range}

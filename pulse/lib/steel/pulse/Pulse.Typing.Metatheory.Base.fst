@@ -54,6 +54,7 @@ let pure_typing_inversion (#g:env) (#p:term) (_:tot_typing g (tm_pure p) tm_vpro
    : tot_typing g p (tm_fstar FStar.Reflection.Typing.tm_prop Range.range_0)
    = admit ()
 
+let typing_correctness _ = admit()
 let tot_typing_weakening _ _ _ _ _ _ = admit ()
 
 let non_informative_t_weakening (g g':env) (g1:env{ pairwise_disjoint g g1 g' })
@@ -148,7 +149,7 @@ let prop_validity_token_weakening (#g:env) (#t:term)
   admit ();
   token
 
-#push-options "--z3rlimit_factor 4 --fuel 1 --ifuel 1"
+#push-options "--split_queries no --z3rlimit_factor 8 --fuel 1 --ifuel 1"
 let rec st_typing_weakening g g' t c d g1
   : Tot (st_typing (push_env (push_env g g1) g') t c)
         (decreases d) =
@@ -371,7 +372,35 @@ let rec st_typing_weakening g g' t c d g1
     T_WithLocal _ init body init_t c x (magic ()) (magic ())
       (comp_typing_weakening g g' d_c g1)
       d_body
-  
+
+  | T_WithLocalArray _ init len body init_t c x _ _ _ d_c d_body ->
+    assume (~ (x `Set.mem` dom g'));
+    assume (~ (x `Set.mem` dom g1));
+    let d_body
+      : st_typing (push_binding (push_env g g') x ppname_default (mk_array init_t))
+                  (open_st_term_nv body (v_as_nv x))
+                  (comp_withlocal_array_body x init_t init len c) = d_body in
+    assert (equal (push_binding (push_env g g') x ppname_default (mk_array init_t))
+                  (push_env g (push_binding g' x ppname_default (mk_array init_t))));
+    let d_body
+      : st_typing (push_env g (push_binding g' x ppname_default (mk_array init_t)))
+                  (open_st_term_nv body (v_as_nv x))
+                  (comp_withlocal_array_body x init_t init len c) = d_body in
+    let d_body
+      : st_typing (push_env (push_env g g1) (push_binding g' x ppname_default (mk_array init_t)))
+                  (open_st_term_nv body (v_as_nv x))
+                  (comp_withlocal_array_body x init_t init len c)
+      = st_typing_weakening g (push_binding g' x ppname_default (mk_array init_t))  _ _ d_body g1 in
+    assert (equal (push_env (push_env g g1) (push_binding g' x ppname_default (mk_array init_t)))
+                  (push_binding (push_env (push_env g g1) g') x ppname_default (mk_array init_t)));
+    let d_body
+      : st_typing (push_binding (push_env (push_env g g1) g') x ppname_default (mk_array init_t))
+                  (open_st_term_nv body (v_as_nv x))
+                  (comp_withlocal_array_body x init_t init len c) = d_body in
+    T_WithLocalArray _ init len body init_t c x (magic ()) (magic ()) (magic ())
+      (comp_typing_weakening g g' d_c g1)
+      d_body
+
   | T_Rewrite _ p q _ _ -> T_Rewrite _ p q (magic ()) (magic ())
 
   | T_Admit _ s c d_s -> T_Admit _ s c (st_comp_typing_weakening g g' d_s g1)
@@ -666,6 +695,19 @@ let rec st_typing_subst g x t g' #e e_typing #e1 #c1 e1_typing
                   (magic ())
                   (comp_typing_subst g x t g' e_typing d_c)
                   (coerce_eq (st_typing_subst g x t (push_binding g' y ppname_default (mk_ref init_t)) e_typing d_body) ())
+
+  | T_WithLocalArray _ init len body init_t c y _ _ _ d_c d_body ->
+    T_WithLocalArray _ (subst_term init ss)
+                       (subst_term len ss)
+                       (subst_st_term body ss)
+                       (subst_term init_t ss)
+                       (subst_comp c ss)
+                       y
+                       (magic ())
+                       (magic ())
+                       (magic ())
+                       (comp_typing_subst g x t g' e_typing d_c)
+                       (coerce_eq (st_typing_subst g x t (push_binding g' y ppname_default (mk_ref init_t)) e_typing d_body) ())
 
   | T_Rewrite _ p q _ _ ->
     T_Rewrite _ (subst_term p ss)

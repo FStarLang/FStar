@@ -29,7 +29,7 @@ module SZ = FStar.SizeT
 module A = Pulse.Lib.Array
 module U64 = FStar.UInt64
 module Cast = FStar.Int.Cast
-open Pulse.Class.BoundedIntegers
+open Pulse.Lib.BoundedIntegers
 #push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
 #push-options "--fuel 0 --ifuel 0"
 

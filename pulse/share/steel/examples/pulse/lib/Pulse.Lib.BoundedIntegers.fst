@@ -1,4 +1,4 @@
-module Pulse.Class.BoundedIntegers
+module Pulse.Lib.BoundedIntegers
 
 module TC = FStar.Tactics.Typeclasses
 
@@ -63,6 +63,7 @@ let safe_add (#t:eqtype) {| c: bounded_unsigned t |} (x y : t)
     else (
       if x <= max_bound
       then (
+        assert (fits #t (v (max_bound #t) - v x));
         if (y <= max_bound - x)
         then Some (x + y)
         else None
@@ -78,7 +79,10 @@ let safe_mod (#t:eqtype) {| c: bounded_unsigned t |} (x : t) (y : t)
     then Some (x % y)
     else (
       if y <= max_bound
-      then Some (x % y)
+      then  (
+        assert (fits #t (v x % v y));
+        Some (x % y)
+      )
       else None
     )
 
@@ -178,6 +182,7 @@ instance bounded_int_pos : bounded_int pos = {
 
 // Using a fits predicate as the bounds check allows this class to also accomodate SizeT
 open FStar.SizeT
+
 instance bounded_int_size_t : bounded_int FStar.SizeT.t = {
     fits = (fun x -> x >= 0 /\ FStar.SizeT.fits x);
     v = (fun x -> FStar.SizeT.v x);

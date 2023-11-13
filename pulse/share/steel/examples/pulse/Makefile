@@ -3,7 +3,7 @@ STEEL_SHARE = ../../
 # the root (../../../..) since the OPAM package will detach the share
 # directory from the rest of the repo.
 
-INCLUDE_DIRS=bug-reports lib dice/common dice/dpe dice/engine dice/l0 parallel .
+INCLUDE_DIRS=bug-reports by-example lib dice/cbor dice/common dice/dpe dice/engine dice/l0 parallel .
 CACHE_DIR=.cache
 SRC_DIRS=$(addprefix $(STEEL_SHARE)/examples/pulse/, $(INCLUDE_DIRS))
 FSTAR_FILES=$(wildcard $(addsuffix /*.fst, $(SRC_DIRS))) $(wildcard $(addsuffix /*.fsti, $(SRC_DIRS)))
@@ -14,8 +14,15 @@ extract:
 #	$(FSTAR) --odir _output --codegen OCaml CustomSyntax.fst --extract CustomSyntax
 	$(FSTAR) --odir _output --codegen OCaml ExtractionTest.fst --extract ExtractionTest
 	
-extract_c:
-	$(FSTAR) --codegen krml ExtractionTest.fst --extract '* -Pulse.Lib.Core'
-	$(FSTAR_HOME)/../karamel/krml -bundle ExtractionTest=* -skip-compilation _output/out.krml
+extract_c: _output/cache/ExtractionTest.fst.checked
+	$(FSTAR) --odir _output --codegen krml ExtractionTest.fst --extract ExtractionTest
+	$(FSTAR_HOME)/../karamel/krml -bundle ExtractionTest=* -skip-compilation _output/ExtractionTest.krml -tmpdir _output
+
+#	$(FSTAR) --codegen krml Demo.MultiplyByRepeatedAddition.fst --extract '* -Pulse.Lib.Core'
+#	$(FSTAR_HOME)/../karamel/krml -bundle Demo.MultiplyByRepeatedAddition=* -skip-compilation _output/out.krml
+
+extract_cbor:
+	$(FSTAR) --codegen krml DPE.Messages.Parse.fst --extract '* -Pulse.Lib.Core'
+	$(FSTAR_HOME)/../karamel/krml -bundle DPE_Messages_Parse=* -skip-compilation _output/out.krml
 
 include Makefile.pulse.common

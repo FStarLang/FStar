@@ -275,6 +275,14 @@ let rec st_term_to_string' (level:string) (t:st_term)
         level
         (st_term_to_string' level body)
 
+    | Tm_WithLocalArray { binder; initializer; length; body } ->
+      sprintf "let mut %s = [| %s; %s |]\n%s%s"
+        (binder_to_string binder)
+        (term_to_string initializer)
+        (term_to_string length)
+        level
+        (st_term_to_string' level body)
+
     | Tm_Admit { ctag; u; typ; post } ->
       sprintf "%s<%s> %s%s"
         (match ctag with
@@ -324,7 +332,26 @@ and branches_to_string brs : T.Tac _ =
 
 and branch_to_string br : T.Tac _ =
   let (pat, e) = br in
-  st_term_to_string' "" e
+  Printf.sprintf "{ %s -> %s }"
+    (pattern_to_string pat)
+    (st_term_to_string' "" e)
+
+and pattern_to_string (p:pattern) : T.Tac string = 
+  match p with
+  | Pat_Cons fv pats ->
+    Printf.sprintf "(%s %s)"
+      (String.concat "." fv.fv_name) 
+      (String.concat " " (T.map (fun (p, _) -> pattern_to_string p) pats))
+  | Pat_Constant c ->
+    "<constant>"
+  | Pat_Var x _ ->
+    T.unseal x
+  | Pat_Dot_Term None ->
+    ""
+  | Pat_Dot_Term (Some t) ->
+    Printf.sprintf "(.??)" //%s)" (term_to_string t)
+    
+
 
 let st_term_to_string t = st_term_to_string' "" t
 
@@ -356,6 +383,7 @@ let tag_of_st_term (t:st_term) =
   | Tm_While _ -> "Tm_While"
   | Tm_Par _ -> "Tm_Par"
   | Tm_WithLocal _ -> "Tm_WithLocal"
+  | Tm_WithLocalArray _ -> "Tm_WithLocalArray"
   | Tm_Rewrite _ -> "Tm_Rewrite"
   | Tm_Admit _ -> "Tm_Admit"
   | Tm_ProofHintWithBinders _ -> "Tm_ProofHintWithBinders"
@@ -383,6 +411,7 @@ let rec print_st_head (t:st_term)
   | Tm_Par _ -> "Par"
   | Tm_Rewrite _ -> "Rewrite"
   | Tm_WithLocal _ -> "WithLocal"
+  | Tm_WithLocalArray _ -> "WithLocalArray"
   | Tm_STApp { head = p } -> print_head p
   | Tm_IntroPure _ -> "IntroPure"
   | Tm_IntroExists _ -> "IntroExists"
@@ -409,8 +438,14 @@ let rec print_skel (t:st_term) =
   | Tm_Par _ -> "Par"
   | Tm_Rewrite _ -> "Rewrite"
   | Tm_WithLocal _ -> "WithLocal"
+  | Tm_WithLocalArray _ -> "WithLocalArray"
   | Tm_STApp { head = p } -> print_head p
   | Tm_IntroPure _ -> "IntroPure"
   | Tm_IntroExists _ -> "IntroExists"
   | Tm_ElimExists _ -> "ElimExists"
   | Tm_ProofHintWithBinders _ -> "AssertWithBinders"
+
+let decl_to_string (d:decl) : T.Tac string =
+  match d.d with
+  | FnDecl {id; isrec; body} ->
+    "let " ^ (if isrec then "rec " else "") ^ fst (R.inspect_ident id) ^ " { " ^ st_term_to_string body ^ "}"

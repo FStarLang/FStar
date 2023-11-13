@@ -1,5 +1,8 @@
 module Pulse.Extract.CompilerLib
+
+module R = FStar.Reflection
 module T = FStar.Tactics.V2
+
 val uenv : Type0
 val mlexpr : Type0
 val e_tag : Type0
@@ -17,6 +20,9 @@ val mk_mllb (mllb_name:mlident)
             (mllb_tysc:mltyscheme)
             (mllb_def:mlexpr) : mllb
 
+val mk_mut_mllb (mllb_name:mlident)
+                (mllb_tysc:mltyscheme)
+                (mllb_def:mlexpr) : mllb
 
 val mlletbinding : Type0
 val mk_mlletbinding (is_rec:bool) (lbs:list mllb) : mlletbinding
@@ -55,6 +61,20 @@ module PSB = Pulse.Syntax.Base
 val extend_bv (g:uenv) (np:PSB.ppname) (uniq:nat) (ty:mlty) : Dv (uenv & mlident)
 val initial_core_env (g:uenv) : Pulse.Typing.Env.env
 val set_tcenv (g:uenv) (e:T.env) :  uenv
+val mlty_to_string (t:mlty) : Dv string
 val mlexpr_to_string (e:mlexpr) : Dv string
 open Pulse.Syntax.Base
 val sigelt_extension_data (e:T.sigelt) : option st_term
+
+val mlmodule1 : Type0
+type mlmodule = list mlmodule1
+
+val mlm_let (is_rec:bool) (lbs:list mllb) : mlmodule1
+val is_type (g:uenv) (t:R.typ) : Dv bool
+val extend_ty (g:uenv) (a:R.namedv) : Dv uenv
+val lookup_ty (g:uenv) (a:R.namedv) : Dv mlident
+
+val iface : Type0
+val exp_binding : Type0
+val iface_of_bindings : list (R.fv & exp_binding) -> iface
+val extend_fv : uenv -> R.fv -> mltyscheme -> Dv (uenv & mlident & exp_binding)

@@ -1,7 +1,7 @@
 %{
 (*
  We are expected to have only 6 shift-reduce conflicts in ML and 8 in F#.
- A lot (176) of end-of-stream conflicts are also reported and
+ A lot (222) of end-of-stream conflicts are also reported and
  should be investigated...
 *)
 (* (c) Microsoft Corporation. All rights reserved *)
@@ -65,9 +65,15 @@ let r p = rng (fst p) (snd p)
 %type <string> peekFnId
 %%
 
+maybeRec:
+  | REC
+    { true }
+  |
+    { false }
+
 /* This is to just peek at the name of the top-level definition */
 peekFnId:
-  | q=option(qual) FN id=lident
+  | q=option(qual) FN maybeRec id=lident
       { FStar_Ident.string_of_id id }
 
 qual:
@@ -76,10 +82,14 @@ qual:
 
 /* This is the main entry point for the pulse parser */
 pulseDecl:
-  | q=option(qual) FN lid=lident bs=nonempty_list(pulseMultiBinder) ascription=pulseComputationType LBRACE body=pulseStmt RBRACE
+  | q=option(qual)
+    FN isRec=maybeRec lid=lident bs=nonempty_list(pulseMultiBinder)
+    ascription=pulseComputationType
+    measure=option(DECREASES m=appTermNoRecordExp {m})
+    LBRACE body=pulseStmt RBRACE
     {
       let ascription = with_computation_tag ascription q in
-      PulseSugar.mk_decl lid (List.flatten bs) ascription body (rr $loc)
+      PulseSugar.mk_fn_decl lid isRec (List.flatten bs) ascription measure body (rr $loc)
     }
 
 pulseMultiBinder:
@@ -119,12 +129,14 @@ pulseStmtNoSeq:
     }
   | lhs=appTermNoRecordExp COLON_EQUALS a=noSeqTerm
     { PulseSugar.mk_assignment lhs a }
+  | LET q=option(mutOrRefQualifier) i=lident typOpt=option(preceded(COLON, appTerm)) EQUALS LBRACK_BAR v=noSeqTerm SEMICOLON n=noSeqTerm BAR_RBRACK
+    { PulseSugar.mk_let_binding q i typOpt (Some (Array_initializer { init=v; len=n })) }
   | LET q=option(mutOrRefQualifier) i=lident typOpt=option(preceded(COLON, appTerm)) EQUALS tm=noSeqTerm
-    { PulseSugar.mk_let_binding q i typOpt (Some tm) }
+    { PulseSugar.mk_let_binding q i typOpt (Some (Default_initializer tm)) }
   | LBRACE s=pulseStmt RBRACE
     { PulseSugar.mk_block s }
-  | IF tm=appTermNoRecordExp vp=option(ensuresVprop) LBRACE th=pulseStmt RBRACE e=option(elseBlock)
-    { PulseSugar.mk_if tm vp th e }
+  | s=ifStmt
+    { s }
   | MATCH tm=appTermNoRecordExp c=option(ensuresVprop) LBRACE brs=list(pulseMatchBranch) RBRACE
     { PulseSugar.mk_match tm c brs }
   | WHILE LPAREN tm=pulseStmt RPAREN INVARIANT i=lident DOT v=pulseVprop LBRACE body=pulseStmt RBRACE
@@ -184,9 +196,15 @@ pulseStmt:
       | Some s2 -> PulseSugar.mk_stmt (PulseSugar.mk_sequence s1 s2) (rr ($loc))
     }
 
+ifStmt:
+  | IF tm=appTermNoRecordExp vp=option(ensuresVprop) LBRACE th=pulseStmt RBRACE e=option(elseBlock)
+    { PulseSugar.mk_if tm vp th e }
+
 elseBlock:
   | ELSE LBRACE p=pulseStmt RBRACE
     { p }
+  | ELSE s=ifStmt
+    { PulseSugar.mk_stmt s (rr $loc) }
 
 mutOrRefQualifier:
   | MUT { MUT }

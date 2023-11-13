@@ -36,6 +36,18 @@ val tm_exists_inversion (#g:env) (#u:universe) (#ty:term) (#p:term)
 val pure_typing_inversion (#g:env) (#p:term) (_:tot_typing g (tm_pure p) tm_vprop)
    : tot_typing g p (tm_fstar FStar.Reflection.Typing.tm_prop Range.range_0)
 
+module RT = FStar.Reflection.Typing
+module R = FStar.Reflection.V2
+module C = FStar.Stubs.TypeChecker.Core
+open FStar.Ghost
+val typing_correctness
+  (#g:R.env) 
+  (#t:R.term)
+  (#ty:R.typ) 
+  (#eff:_)
+  (_:erased (RT.typing g t (eff, ty)))
+  : erased (u:R.universe & RT.typing g ty (C.E_Total, RT.tm_type u))
+
 val tot_typing_weakening
   (g:env) (g':env { disjoint g g' })
   (t:term) (ty:typ) (_:tot_typing (push_env g g') t ty)

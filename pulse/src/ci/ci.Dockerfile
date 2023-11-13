@@ -24,7 +24,7 @@ RUN sudo apt-get update && sudo apt-get install --yes --no-install-recommends \
     && \
     git clone --branch $(jq -c -r '.RepoVersions.fstar' steel/src/ci/config.json || echo master) https://github.com/FStarLang/FStar $FSTAR_HOME && \
     eval $(opam env) && \
-    opam depext conf-gmp z3.4.8.5 conf-m4 && \
+    opam depext conf-gmp z3.4.8.5-1 conf-m4 && \
     opam install --deps-only $FSTAR_HOME/fstar.opam && \
     env OTHERFLAGS='--admit_smt_queries true' make -C $FSTAR_HOME -j $opamthreads && \
     git clone --branch $(jq -c -r '.RepoVersions.karamel' steel/src/ci/config.json || echo master) https://github.com/FStarLang/karamel $KRML_HOME && \
@@ -35,3 +35,5 @@ RUN sudo apt-get update && sudo apt-get install --yes --no-install-recommends \
 ARG STEEL_NIGHTLY_CI
 ARG OTHERFLAGS=--use_hints
 RUN eval $(opam env) && env STEEL_NIGHTLY_CI="$STEEL_NIGHTLY_CI" make -k -j $opamthreads -C steel/src ci
+
+ENV STEEL_HOME $HOME/steel

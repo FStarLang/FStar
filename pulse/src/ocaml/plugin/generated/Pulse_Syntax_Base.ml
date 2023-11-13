@@ -169,7 +169,8 @@ type comp_st = comp
 type pattern =
   | Pat_Cons of fv * (pattern * Prims.bool) Prims.list 
   | Pat_Constant of constant 
-  | Pat_Var of FStar_Reflection_Typing.pp_name_t 
+  | Pat_Var of FStar_Reflection_Typing.pp_name_t *
+  FStar_Reflection_Typing.sort_t 
   | Pat_Dot_Term of term FStar_Pervasives_Native.option 
 let (uu___is_Pat_Cons : pattern -> Prims.bool) =
   fun projectee ->
@@ -185,10 +186,13 @@ let (uu___is_Pat_Constant : pattern -> Prims.bool) =
 let (__proj__Pat_Constant__item___0 : pattern -> constant) =
   fun projectee -> match projectee with | Pat_Constant _0 -> _0
 let (uu___is_Pat_Var : pattern -> Prims.bool) =
-  fun projectee -> match projectee with | Pat_Var _0 -> true | uu___ -> false
+  fun projectee ->
+    match projectee with | Pat_Var (_0, ty) -> true | uu___ -> false
 let (__proj__Pat_Var__item___0 :
   pattern -> FStar_Reflection_Typing.pp_name_t) =
-  fun projectee -> match projectee with | Pat_Var _0 -> _0
+  fun projectee -> match projectee with | Pat_Var (_0, ty) -> _0
+let (__proj__Pat_Var__item__ty : pattern -> FStar_Reflection_Typing.sort_t) =
+  fun projectee -> match projectee with | Pat_Var (_0, ty) -> ty
 let (uu___is_Pat_Dot_Term : pattern -> Prims.bool) =
   fun projectee ->
     match projectee with | Pat_Dot_Term _0 -> true | uu___ -> false
@@ -360,6 +364,12 @@ and st_term'__Tm_WithLocal__payload =
   binder2: binder ;
   initializer1: term ;
   body4: st_term }
+and st_term'__Tm_WithLocalArray__payload =
+  {
+  binder3: binder ;
+  initializer2: term ;
+  length: term ;
+  body5: st_term }
 and st_term'__Tm_Rewrite__payload = {
   t11: term ;
   t21: term }
@@ -388,6 +398,7 @@ and st_term' =
   | Tm_While of st_term'__Tm_While__payload 
   | Tm_Par of st_term'__Tm_Par__payload 
   | Tm_WithLocal of st_term'__Tm_WithLocal__payload 
+  | Tm_WithLocalArray of st_term'__Tm_WithLocalArray__payload 
   | Tm_Rewrite of st_term'__Tm_Rewrite__payload 
   | Tm_Admit of st_term'__Tm_Admit__payload 
   | Tm_ProofHintWithBinders of st_term'__Tm_ProofHintWithBinders__payload 
@@ -417,6 +428,8 @@ let uu___is_Tm_While uu___ =
 let uu___is_Tm_Par uu___ = match uu___ with | Tm_Par _ -> true | _ -> false
 let uu___is_Tm_WithLocal uu___ =
   match uu___ with | Tm_WithLocal _ -> true | _ -> false
+let uu___is_Tm_WithLocalArray uu___ =
+  match uu___ with | Tm_WithLocalArray _ -> true | _ -> false
 let uu___is_Tm_Rewrite uu___ =
   match uu___ with | Tm_Rewrite _ -> true | _ -> false
 let uu___is_Tm_Admit uu___ =
@@ -424,6 +437,58 @@ let uu___is_Tm_Admit uu___ =
 let uu___is_Tm_ProofHintWithBinders uu___ =
   match uu___ with | Tm_ProofHintWithBinders _ -> true | _ -> false
 type branch = (pattern * st_term)
+type decl'__FnDecl__payload =
+  {
+  id: FStar_Reflection_Types.ident ;
+  isrec: Prims.bool ;
+  bs: (qualifier FStar_Pervasives_Native.option * binder * bv) Prims.list ;
+  comp: comp ;
+  meas: term FStar_Pervasives_Native.option ;
+  body6: st_term }
+and decl' =
+  | FnDecl of decl'__FnDecl__payload 
+and decl = {
+  d: decl' ;
+  range3: range }
+let (__proj__Mkdecl'__FnDecl__payload__item__id :
+  decl'__FnDecl__payload -> FStar_Reflection_Types.ident) =
+  fun projectee ->
+    match projectee with
+    | { id; isrec; bs; comp = comp1; meas; body6 = body;_} -> id
+let (__proj__Mkdecl'__FnDecl__payload__item__isrec :
+  decl'__FnDecl__payload -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | { id; isrec; bs; comp = comp1; meas; body6 = body;_} -> isrec
+let (__proj__Mkdecl'__FnDecl__payload__item__bs :
+  decl'__FnDecl__payload ->
+    (qualifier FStar_Pervasives_Native.option * binder * bv) Prims.list)
+  =
+  fun projectee ->
+    match projectee with
+    | { id; isrec; bs; comp = comp1; meas; body6 = body;_} -> bs
+let (__proj__Mkdecl'__FnDecl__payload__item__comp :
+  decl'__FnDecl__payload -> comp) =
+  fun projectee ->
+    match projectee with
+    | { id; isrec; bs; comp = comp1; meas; body6 = body;_} -> comp1
+let (__proj__Mkdecl'__FnDecl__payload__item__meas :
+  decl'__FnDecl__payload -> term FStar_Pervasives_Native.option) =
+  fun projectee ->
+    match projectee with
+    | { id; isrec; bs; comp = comp1; meas; body6 = body;_} -> meas
+let (__proj__Mkdecl'__FnDecl__payload__item__body :
+  decl'__FnDecl__payload -> st_term) =
+  fun projectee ->
+    match projectee with
+    | { id; isrec; bs; comp = comp1; meas; body6 = body;_} -> body
+let (uu___is_FnDecl : decl' -> Prims.bool) = fun projectee -> true
+let (__proj__FnDecl__item___0 : decl' -> decl'__FnDecl__payload) =
+  fun projectee -> match projectee with | FnDecl _0 -> _0
+let (__proj__Mkdecl__item__d : decl -> decl') =
+  fun projectee -> match projectee with | { d; range3 = range1;_} -> d
+let (__proj__Mkdecl__item__range : decl -> range) =
+  fun projectee -> match projectee with | { d; range3 = range1;_} -> range1
 let (null_binder : term -> binder) =
   fun t -> { binder_ty = t; binder_ppname = ppname_default }
 let (mk_binder : Prims.string -> range -> term -> binder) =
@@ -541,7 +606,7 @@ let rec (eq_pattern : pattern -> pattern -> Prims.bool) =
       | (Pat_Cons (f1, vs1), Pat_Cons (f2, vs2)) ->
           (f1.fv_name = f2.fv_name) && (eq_list_dec p1 p2 eq_sub_pat vs1 vs2)
       | (Pat_Constant c1, Pat_Constant c2) -> fstar_const_eq c1 c2
-      | (Pat_Var uu___, Pat_Var uu___1) -> true
+      | (Pat_Var (uu___, uu___1), Pat_Var (uu___2, uu___3)) -> true
       | (Pat_Dot_Term to1, Pat_Dot_Term to2) -> eq_opt eq_tm to1 to2
       | uu___ -> false
 and (eq_sub_pat :
@@ -638,6 +703,13 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
          Tm_WithLocal { binder2 = x2; initializer1 = e2; body4 = b2;_}) ->
           ((eq_tm x1.binder_ty x2.binder_ty) && (eq_tm e1 e2)) &&
             (eq_st_term b1 b2)
+      | (Tm_WithLocalArray
+         { binder3 = x1; initializer2 = e1; length = n1; body5 = b1;_},
+         Tm_WithLocalArray
+         { binder3 = x2; initializer2 = e2; length = n2; body5 = b2;_}) ->
+          (((eq_tm x1.binder_ty x2.binder_ty) && (eq_tm e1 e2)) &&
+             (eq_tm n1 n2))
+            && (eq_st_term b1 b2)
       | (Tm_Rewrite { t11 = l1; t21 = r1;_}, Tm_Rewrite
          { t11 = l2; t21 = r2;_}) -> (eq_tm l1 l2) && (eq_tm r1 r2)
       | (Tm_Admit { ctag1 = c1; u1; typ = t11; post3 = post1;_}, Tm_Admit

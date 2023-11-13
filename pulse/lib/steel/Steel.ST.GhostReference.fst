@@ -24,6 +24,8 @@ let ref (a:Type u#0)
   : Type u#0
   = R.ghost_ref a
 
+let dummy_ref a = R.dummy_ghost_ref a
+
 let pts_to (#a:_)
            (r:ref a)
            (p:perm)
@@ -76,6 +78,10 @@ let write (#a:Type)
       (pts_to r full_perm v)
       (fun _ -> pts_to r full_perm x)
   = coerce_ghost (fun _ -> R.ghost_write_pt r x)
+
+let share_gen
+  #_ #_ #_ #v r p1 p2
+= coerce_ghost (fun _ -> R.ghost_share_gen_pt #_ #_ #_ #v r p1 p2)
 
 let share (#a:Type)
           (#u:_)

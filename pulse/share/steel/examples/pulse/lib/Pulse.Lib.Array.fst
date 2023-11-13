@@ -6,7 +6,7 @@ open Pulse.Lib.Array.Core
 open FStar.Ghost
 module US = FStar.SizeT
 module U8 = FStar.UInt8
-open Pulse.Class.BoundedIntegers
+open Pulse.Lib.BoundedIntegers
 module A = Pulse.Lib.Array.Core
 module R = Pulse.Lib.Reference
 

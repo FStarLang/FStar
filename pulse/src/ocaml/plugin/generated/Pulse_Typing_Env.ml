@@ -22,7 +22,8 @@ let (__proj__Mkenv__item__m : env -> bmap) =
   fun projectee -> match projectee with | { f; bs; names; m; ctxt;_} -> m
 let (__proj__Mkenv__item__ctxt : env -> Pulse_RuntimeUtils.context) =
   fun projectee -> match projectee with | { f; bs; names; m; ctxt;_} -> ctxt
-let (fstar_env : env -> FStar_Reflection_Typing.fstar_top_env) = fun g -> g.f
+let (fstar_env : env -> FStar_Reflection_Typing.fstar_top_env) =
+  fun g -> Pulse_RuntimeUtils.env_set_context g.f g.ctxt
 let (bindings : env -> env_bindings) = fun g -> g.bs
 let (as_map :
   env -> (Pulse_Syntax_Base.var, Pulse_Syntax_Base.typ) FStar_Map.t) =

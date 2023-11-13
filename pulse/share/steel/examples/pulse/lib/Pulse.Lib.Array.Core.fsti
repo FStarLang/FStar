@@ -1,14 +1,18 @@
 module Pulse.Lib.Array.Core
-open FStar.Tactics
+open FStar.Tactics.V2
 open Pulse.Lib.Core
 open Steel.FractionalPermission
 open FStar.Ghost
 module SZ = FStar.SizeT
 module Seq = FStar.Seq
 
-val array (a:Type u#0) : Type u#0
+val array ([@@@strictly_positive] a:Type u#0) : Type u#0
 
 val length (#a:Type u#0) (x:array a) : GTot nat
+
+type elseq (a:Type) (l:SZ.t) = s:erased (Seq.seq a) { Seq.length s == SZ.v l }
+
+type larray t (n:nat) = a:array t { length a == n }
 
 val is_full_array (#a:Type u#0) (x:array a) : prop
 
@@ -151,3 +155,17 @@ val pts_to_range_upd
     pure(
       Seq.length s0 == r - l /\ s == Seq.upd s0 (SZ.v i - l) v
     ))))
+
+val with_local
+  (#a:Type0)
+  (init:a)
+  (len:SZ.t)
+  (#pre:vprop)
+  (ret_t:Type)
+  (#post:ret_t -> vprop)
+  (body:(arr:array a) -> stt ret_t (pre **
+                                    (pts_to arr (Seq.create (SZ.v len) init) **
+                                     (pure (is_full_array arr) **
+                                      pure (length arr == SZ.v len))))
+                                   (fun r -> post r ** exists_ (pts_to arr)))
+  : stt ret_t pre post

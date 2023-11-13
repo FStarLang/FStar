@@ -30,7 +30,7 @@ type env = {
   ctxt: Pulse.RuntimeUtils.context
 }
 
-let fstar_env g = g.f
+let fstar_env g = RU.env_set_context g.f g.ctxt
 
 let bindings g = g.bs
 

@@ -134,7 +134,7 @@ noeq
 type pattern =
   | Pat_Cons     : fv -> list (pattern & bool) -> pattern
   | Pat_Constant : constant -> pattern
-  | Pat_Var      : RT.pp_name_t -> pattern
+  | Pat_Var      : RT.pp_name_t -> ty:RT.sort_t -> pattern
   | Pat_Dot_Term : option term -> pattern
 
 type ctag =
@@ -245,6 +245,12 @@ type st_term' =
       initializer:term;
       body:st_term;
     }
+  | Tm_WithLocalArray {
+      binder:binder;
+      initializer:term;
+      length:term;
+      body:st_term;
+    }
   | Tm_Rewrite {
       t1:term;
       t2:term;
@@ -269,6 +275,23 @@ and st_term = {
 
 and branch = pattern & st_term
 
+noeq
+type decl' =
+  | FnDecl {
+      (* A function declaration, currently the only Pulse
+      top-level decl. This will be mostly checked as a nested
+      Tm_Abs with bs and body, especially if non-recursive. *)
+      id : R.ident;
+      isrec : bool;
+      bs : list (option qualifier & binder & bv);
+      comp : comp; (* bs in scope *)
+      meas : (meas:option term{Some? meas ==> isrec}); (* bs in scope *)
+      body : st_term; (* bs in scope *)
+  }
+and decl = {
+  d : decl';
+  range : range;
+}
 
 let null_binder (t:term) : binder =
   {binder_ty=t;binder_ppname=ppname_default}

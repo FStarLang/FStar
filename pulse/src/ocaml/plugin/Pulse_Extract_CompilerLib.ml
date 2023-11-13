@@ -1,5 +1,11 @@
 module ML = FStar_Extraction_ML_Syntax
 module UEnv = FStar_Extraction_ML_UEnv
+module MLTerm = FStar_Extraction_ML_Term
+module MLModul = FStar_Extraction_ML_Modul
+module Env = FStar_TypeChecker_Env
+module PC = FStar_Parser_Const
+module BU = FStar_Compiler_Util
+
 type uenv = UEnv.uenv
 type mlexpr = ML.mlexpr
 type e_tag = ML.e_tag
@@ -25,6 +31,18 @@ let mk_mllb (mllb_name:mlident)
       mllb_def;
       mllb_meta=[];
       print_typ=false }
+
+let mk_mut_mllb
+  (mllb_name:mlident)
+  (mllb_tysc:mltyscheme)
+  (mllb_def:mlexpr)
+: mllb 
+= { mllb_name;
+    mllb_tysc=Some mllb_tysc;
+    mllb_add_unit=false;
+    mllb_def;
+    mllb_meta=[Mutable];
+    print_typ=false }
 
 type mlletbinding = ML.mlletbinding
 type mlpattern = ML.mlpattern
@@ -90,7 +108,9 @@ let mlty_top : mlty = ML.MLTY_Top
 
 let normalize_for_extraction (g:uenv) (t:FStar_Syntax_Syntax.term)
   : FStar_Syntax_Syntax.term
-  = FStar_Extraction_ML_Term.normalize_for_extraction g t
+  = (* let extra = [] in *)
+    let res = FStar_Extraction_ML_Term.normalize_for_extraction g t in
+    res
 
 let term_as_mlexpr (g:uenv) (t:FStar_Syntax_Syntax.term) : (mlexpr * e_tag * mlty) =
   FStar_Extraction_ML_Term.term_as_mlexpr g t
@@ -111,8 +131,26 @@ let initial_core_env (g:uenv) : Pulse_Typing_Env.env =
 
 let set_tcenv g e = UEnv.set_tcenv g e
 
+let mlty_to_string (t:mlty) = FStar_Extraction_ML_Syntax.mlty_to_string t
 let mlexpr_to_string (e:mlexpr) = FStar_Extraction_ML_Syntax.mlexpr_to_string e
 let sigelt_extension_data (e:S.sigelt) : Pulse_Syntax_Base.st_term option =
   match FStar_Compiler_List.tryFind (fun (s, _) -> s = "pulse") e.sigmeta.sigmeta_extension_data with
   | None -> None
   | Some (_, b) -> Some (Obj.magic b)
+
+type mlmodule1= ML.mlmodule1
+type mlmodule = ML.mlmodule
+
+let mlm_let (is_rec:bool) (lbs:mllb list) : mlmodule1 =
+  ML.MLM_Let ((if is_rec then ML.Rec else ML.NonRec), lbs)
+
+let is_type (g:uenv) (t:S.typ) = MLTerm.is_arity g t
+
+let extend_ty (g:uenv) (a:S.bv) = UEnv.extend_ty g a false
+
+let lookup_ty (g:uenv) (a:S.bv) = (UEnv.lookup_ty g a).ty_b_name
+
+type iface = MLModul.iface
+type exp_binding = UEnv.exp_binding
+let iface_of_bindings (l:(S.fv * exp_binding) list) = MLModul.iface_of_bindings l
+let extend_fv (g:uenv) (x:S.fv) (tysc:mltyscheme) = UEnv.extend_fv g x tysc false

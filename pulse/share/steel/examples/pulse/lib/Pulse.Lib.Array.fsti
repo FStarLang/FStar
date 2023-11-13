@@ -8,10 +8,6 @@ module SZ = FStar.SizeT
 module Seq = FStar.Seq
 module U8 = FStar.UInt8
 
-let e_lseq (a:Type) (l:SZ.t) = s:erased (Seq.seq a){ Seq.length s == SZ.v l }
-
-let larray t (n:nat) = a:array t { length a == n }
-
 val compare
         (#t:eqtype)
         (l:SZ.t)

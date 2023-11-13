@@ -30,9 +30,7 @@ module Seq = FStar.Seq
 module Map = FStar.PartialMap
 module US = FStar.SizeT
 module R = Steel.ST.Reference
-module GR = Steel.ST.GhostReference
 module A = Steel.ST.Array
-module BV = Steel.ST.BitVector
 
 
 /// `store` is the concrete store implemented as an array
@@ -44,8 +42,6 @@ noeq
 type tbl #k #v #contents (vp:vp_t k v contents) (h:hash_fn k) = {
   store_len    : n:us{US.v n > 0};
   store        : A.array (option (k & v));
-  g_repr       : GR.ref (Map.t k contents);
-  g_borrows    : GR.ref (Map.t k v);
   store_len_pf : squash (A.length store == US.v store_len);
 }
 
@@ -193,10 +189,6 @@ let store_contents_pred
   = fun s ->
     A.pts_to arr.store full_perm s
       `star`
-    GR.pts_to arr.g_repr full_perm m
-      `star`
-    GR.pts_to arr.g_borrows full_perm borrows
-      `star`
     pure (pure_invariant arr m borrows s)
       `star`
     value_vprops vp s m borrows
@@ -241,10 +233,6 @@ let pack_tperm (#opened:_)
   : STGhost unit opened
       (A.pts_to a.store full_perm s
          `star`
-       GR.pts_to a.g_repr full_perm m
-         `star`
-       GR.pts_to a.g_borrows full_perm borrows
-         `star`
        value_vprops vp s m borrows)
       (fun _ -> tperm a m borrows)
       (requires pure_invariant a m borrows s)
@@ -254,28 +242,16 @@ let pack_tperm (#opened:_)
 
 let create #k #v #contents vp h n =
   let store = A.alloc #(option (k & v)) None n in
-  let g_repr = GR.alloc (G.hide (Map.empty k contents)) in
-  let g_borrows = GR.alloc (G.hide (Map.empty k v)) in
   let arr : tbl #k #v #contents vp h = {
     store_len = n;
     store = store;
-    g_repr = g_repr;
-    g_borrows = g_borrows;
     store_len_pf = () } in
 
   //
   //rewrite in terms of projections from the arr record
   //
-  rewrite (A.pts_to store _ (Seq.create #(option (k & v)) (US.v n) None)
-             `star`
-           GR.pts_to g_repr full_perm (Map.empty k contents)
-             `star`
-           GR.pts_to g_borrows full_perm (Map.empty k v))
-          (A.pts_to arr.store _ (Seq.create #(option (k & v)) (US.v n) None)
-             `star`
-           GR.pts_to arr.g_repr full_perm (Map.empty k contents)
-             `star`
-           GR.pts_to arr.g_borrows full_perm (Map.empty k v));
+  rewrite (A.pts_to store _ (Seq.create #(option (k & v)) (US.v n) None))
+          (A.pts_to arr.store _ (Seq.create #(option (k & v)) (US.v n) None));
 
   //
   //The value vprops at this point are all emp
@@ -303,28 +279,16 @@ let create #k #v #contents vp h n =
 
 let create_v #k #v #contents vp h n c =
   let store = A.alloc #(option (k & v)) None n in
-  let g_repr = GR.alloc (G.hide (Map.const k (G.reveal c))) in
-  let g_borrows = GR.alloc (G.hide (Map.empty k v)) in
   let arr : tbl #k #v #contents vp h = {
     store_len = n;
     store = store;
-    g_repr = g_repr;
-    g_borrows = g_borrows;
     store_len_pf = () } in
 
   //
   //rewrite in terms of projections from the arr record
   //
-  rewrite (A.pts_to store _ (Seq.create #(option (k & v)) (US.v n) None)
-             `star`
-           GR.pts_to g_repr full_perm (Map.const k (G.reveal c))
-             `star`
-           GR.pts_to g_borrows full_perm (Map.empty k v))
-          (A.pts_to arr.store _ (Seq.create #(option (k & v)) (US.v n) None)
-             `star`
-           GR.pts_to arr.g_repr full_perm (Map.const k (G.reveal c))
-             `star`
-           GR.pts_to arr.g_borrows full_perm (Map.empty k v));
+  rewrite (A.pts_to store _ (Seq.create #(option (k & v)) (US.v n) None))
+          (A.pts_to arr.store _ (Seq.create #(option (k & v)) (US.v n) None));
 
   //
   //The value vprops at this point are all emp
@@ -673,8 +637,6 @@ let get #k #v #contents #vp #h #m #borrows a i =
 
        pack_value_vprops vp s m (Map.upd borrows i x) idx emp;
 
-       GR.write a.g_borrows (Map.upd borrows i x);
-
        pack_tperm s m (Map.upd borrows i x) a;
 
        rewrite (tperm a m (Map.upd borrows i x)
@@ -705,10 +667,6 @@ let put_vprops_aux (#opened:_)
   (_:squash (Seq.length s == A.length arr.store /\ idx == h i `US.rem` arr.store_len))
   : STGhost unit opened
       (A.pts_to arr.store full_perm (Seq.upd s (US.v idx) (Some (i, x)))
-         `star`
-       GR.pts_to arr.g_repr full_perm (Map.upd m i c)
-         `star`
-       GR.pts_to arr.g_borrows full_perm (Map.remove borrows i)
          `star`
        value_vprops vp s m borrows
          `star`
@@ -834,8 +792,6 @@ let put #k #v #contents #vp #h #m #borrows a i x c =
   let idx = h i `US.rem` a.store_len in
 
   A.write a.store idx (Some (i, x));
-  GR.write a.g_repr (Map.upd m i c);
-  GR.write a.g_borrows (Map.remove borrows i);
 
   put_vprops_aux a m borrows s i x c idx ()
 
@@ -846,9 +802,6 @@ let ghost_put #_ #k #v #contents #vp #h #m #borrows a i x c =
   elim_pure (pure_invariant a m borrows s);
   A.pts_to_length a.store s;
   let idx = h i `US.rem` a.store_len in
-
-  GR.write a.g_repr (Map.upd m i c);
-  GR.write a.g_borrows (Map.remove borrows i);
 
   //reestablish the invariant
 
@@ -937,10 +890,6 @@ let remove_vprops_aux (#opened:_)
   : STGhost unit opened
       (A.pts_to arr.store full_perm (Seq.upd s (US.v idx) None)
          `star`
-       GR.pts_to arr.g_repr full_perm m
-         `star`
-       GR.pts_to arr.g_borrows full_perm (Map.remove borrows i)
-         `star`
        value_vprops vp s m borrows)
       (fun _ -> tperm arr m (Map.remove borrows i))
       (requires pure_invariant arr m borrows s)
@@ -1008,7 +957,6 @@ let remove #k #v #contents #vp #h #m #borrows a i =
   let idx = h i `US.rem` a.store_len in
 
   A.write a.store idx None;
-  GR.write a.g_borrows (Map.remove borrows i);
   remove_vprops_aux a m borrows s i idx ()
 
 /// `free`
@@ -1019,6 +967,4 @@ let free #k #v #contents #vp #h #m #borrows a =
   A.pts_to_length a.store s;
   intro_exists (G.reveal s) (A.pts_to a.store full_perm);
   A.free a.store;
-  GR.free a.g_repr;
-  GR.free a.g_borrows;
   drop _

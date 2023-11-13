@@ -84,7 +84,7 @@ let inspect_const = FStar_Reflection_V2_Builtins.inspect_const
 
 type pattern = Pulse_Syntax_Base.pattern
 
-let pat_var s _r = PSB.(pat_var s)
+let pat_var s _r = PSB.(pat_var s S.tun)
 let pat_constant c _r = PSB.(pat_const c)
 let pat_cons fv vs _r = PSB.(pat_cons fv (List.map (fun v -> (v,false)) vs))
 
@@ -114,7 +114,11 @@ let tm_totbind (x:binder) (e1:term) (e2:st_term) r : st_term =
 
 let tm_let_mut (x:binder) (v:term) (k:st_term) r : st_term =
   PSB.(with_range (tm_with_local x v k) r)
-   
+
+let tm_let_mut_array (x:binder) (v:term) (n:term) (k:st_term) (r:range) : st_term =
+  PSB.(with_range (tm_with_local_array x v n k) r)
+
+  
 let tm_while (head:st_term) (invariant: (ident * vprop)) (body:st_term) r : st_term =
   PSB.(with_range (tm_while (snd invariant) head (ppname_of_id (fst invariant)) body) r)
    
@@ -222,3 +226,8 @@ let bvs_as_subst bvs =
 let subst_term s t = Pulse_Syntax_Naming.subst_term t s
 let subst_st_term s t = Pulse_Syntax_Naming.subst_st_term t s
 let subst_proof_hint s t = Pulse_Syntax_Naming.subst_proof_hint t s
+
+type decl = Pulse_Syntax_Base.decl
+
+let fn_decl rng id isrec bs comp meas body = 
+  PSB.mk_decl (PSB.mk_fn_decl id isrec bs comp meas body) rng
