@@ -21,7 +21,7 @@ a section on graded monads
 
 a section on Dijkstra monads generalized from before, as a morphism between computational and spec monad
 
-a section on algebraic effects, with some background on what they're good for and and how we model them
+a section on algebraic effects, with some background on what they're good for and how we model them
 
 etc.
 

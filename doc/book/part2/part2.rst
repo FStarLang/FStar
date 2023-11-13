@@ -102,7 +102,7 @@ learn about indexed inductive types from three related perspectives:
       programming language with structured concurrency <Part2_par>`,
       representing computations as infinitely branching inductively
       defined trees. The example introduces modeling computational
-      effects as monads and and showcases the use of inductive types
+      effects as monads and showcases the use of inductive types
       at higher order.
 
 This section is somewhat more advanced than the first. It also
