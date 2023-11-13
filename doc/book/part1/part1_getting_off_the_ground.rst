@@ -694,7 +694,7 @@ Fibonacci
 
 Here's a doubly recursive function::
 
-  .. literalinclude:: ../code/Part1.GettingOffTheGround.fst
+.. literalinclude:: ../code/Part1.GettingOffTheGround.fst
    :language: fstar
    :start-after: SNIPPET_START: fibonacci
    :end-before: SNIPPET_END: fibonacci

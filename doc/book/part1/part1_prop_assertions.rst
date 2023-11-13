@@ -100,7 +100,7 @@ Propositions defined in ``prop`` need not be decidable. For example,
 for a Turing machine ``tm``, the fact ``halts tm`` can be defined as a
 ``prop``, although it is impossible to decide for an arbitrary ``tm``
 whether ``tm`` halts on all inputs. This is contrast with ``bool``,
-the type of booleans ``{true, false}``. Clearly, one could not defined
+the type of booleans ``{true, false}``. Clearly, one could not define
 ``halts tm`` as a ``bool``, since one would be claiming that for
 ``halts`` is function that for any ``tm`` can decide (by returning
 true or false) whether or not ``tm`` halts on all inputs.
@@ -118,7 +118,7 @@ Propositional connectives
 
 Consider stating that ``factorial n`` always returns a positive
 number, when ``n:nat``. In the :ref:`previous section <Part1_ch1>` we
-learned that one way to this is to give ``factorial`` a type like so.
+learned that one way to do this is to give ``factorial`` a type like so.
 
 .. code-block:: fstar
 

@@ -359,7 +359,7 @@ Exercises
 
 Here's the definition of ``append``, a function that concatenates two
 lists. Can you give it a type that proves it always returns a list
-whose length is the sum of the lengths of its arguments.
+whose length is the sum of the lengths of its arguments?
 
 .. literalinclude:: ../code/Part1.Inductives.fst
    :language: fstar
