@@ -13,6 +13,9 @@ module FV = Pulse.Typing.FV
 module T = FStar.Tactics.V2
 module R = FStar.Reflection.V2
 module RU = Pulse.RuntimeUtils
+module Env = Pulse.Typing.Env
+module U = Pulse.Syntax.Pure
+
 (* Infers the the type of the binders from the specification alone, not the body *)
 
 let range_of_st_comp (st:st_comp) =
@@ -25,30 +28,82 @@ let range_of_comp (c:comp) =
   | C_STAtomic _ st -> range_of_st_comp st
   | C_STGhost _ st -> range_of_st_comp st
 
-let rec arrow_of_abs (t:st_term { Tm_Abs? t.term })
+let rec arrow_of_abs (env:_) (t:st_term { Tm_Abs? t.term })
   : T.Tac term
   = let Tm_Abs { b; q; ascription; body } = t.term in
+    let x = fresh env in
+    let px = b.binder_ppname, x in
+    let env = push_binding env x (fst px) b.binder_ty in
+    let body = open_st_term_nv body px in
+    let ascription = open_comp_with ascription (U.term_of_nvar px) in
     if Tm_Abs? body.term
     then (
-      let arr = arrow_of_abs body in
-      { tm_arrow b q (C_Tot arr) with range = RU.union_ranges b.binder_ty.range arr.range }
+      match ascription with
+      | C_Tot { t=Tm_Unknown } ->
+        //no meaningful user annotation to process
+        let arr = arrow_of_abs env body in
+        let arr = close_term arr x in
+        { tm_arrow b q (C_Tot arr) with range = RU.union_ranges b.binder_ty.range arr.range }
+
+      | C_Tot tannot -> (
+        let tannot' = RU.whnf_lax (elab_env env) (elab_term tannot) in
+        // T.print (Printf.sprintf "tannot=%s; tannot': %s" 
+        //   (P.term_to_string tannot)
+        //   (T.term_to_string tannot'));
+        match Pulse.Readback.readback_ty tannot' with
+        | None -> 
+          Env.fail 
+            env 
+            (Some t.range) 
+            (Printf.sprintf "Unexpected type of abstraction, expected an arrow, got: %s"
+                (T.term_to_string tannot'))
+        | Some t ->
+          let t = close_term t x in
+          { tm_arrow b q (C_Tot t) with range = RU.union_ranges b.binder_ty.range t.range }
+      )
+
+      | _ ->
+        Env.fail 
+          env 
+          (Some t.range) 
+          (Printf.sprintf "Unexpected type of abstraction: %s"
+              (P.comp_to_string ascription))
     )
     else (
+      let ascription = close_comp ascription x in
       { tm_arrow b q ascription with range = RU.union_ranges b.binder_ty.range (range_of_comp ascription) }
     )
-module Env = Pulse.Typing.Env
 
 let rec rebuild_abs (g:env) (t:st_term) (annot:T.term)
   : T.Tac (t:st_term { Tm_Abs? t.term })
-  = match t.term, R.inspect_ln annot with
+  = 
+  // T.print (Printf.sprintf "rebuild_abs\n\t%s\n\t%s\n"
+  //               (P.st_term_to_string t)
+  //               (T.term_to_string annot));
+    match t.term, R.inspect_ln annot with
     | Tm_Abs { b; q; ascription=C_Tot un; body }, R.Tv_Arrow b' c' -> (
       let ty = readback_ty (T.inspect_binder b').sort in
       let comp = R.inspect_comp c' in
       match ty, comp with
-      | Some ty, T.C_Total res_ty ->
-        let b = { binder_ty = ty ; binder_ppname = b.binder_ppname } in
-        let body = rebuild_abs g body res_ty in
-        { t with term = Tm_Abs { b; q; ascription=C_Tot un; body }}
+      | Some ty, T.C_Total res_ty -> (
+        if Tm_Abs? body.term
+        then (
+          let b = { binder_ty = ty ; binder_ppname = b.binder_ppname } in
+          let body = rebuild_abs g body res_ty in
+          { t with term = Tm_Abs { b; q; ascription=C_Tot un; body }}
+        )
+        else (
+          match readback_comp res_ty with
+          | None ->
+            Env.fail g (Some (T.range_of_term res_ty))
+              (Printf.sprintf "Expected a computation type; got %s"
+                  (T.term_to_string res_ty))
+          | Some c ->
+            let b = { binder_ty = ty ; binder_ppname = b.binder_ppname } in
+            { t with term = Tm_Abs { b; q; ascription=c; body }}
+              
+        )
+      )
       | _ ->
         Env.fail g (Some t.range) 
             (Printf.sprintf "Unexpected type of abstraction: %s"
@@ -83,11 +138,14 @@ let preprocess_abs
       (g:env)
       (t:st_term{Tm_Abs? t.term})
   : T.Tac (t:st_term { Tm_Abs? t.term })
-  = let annot = arrow_of_abs t in
+  = let annot = arrow_of_abs g t in
     let annot, _ = Pulse.Checker.Pure.instantiate_term_implicits g annot in
     match annot.t with
     | Tm_FStar annot ->
-      rebuild_abs g t annot
+      let abs = rebuild_abs g t annot in
+      // T.print (Printf.sprintf "preprocess_abs: %s\n"
+      //           (P.st_term_to_string abs));
+      abs
     | _ ->
       Env.fail g (Some t.range) 
                  (Printf.sprintf "Expected an arrow type as an annotation, got %s"
