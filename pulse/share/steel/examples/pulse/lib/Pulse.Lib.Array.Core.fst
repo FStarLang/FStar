@@ -1,4 +1,5 @@
 module Pulse.Lib.Array.Core
+open Steel.ST.Util
 open Pulse.Lib.Core
 open Steel.FractionalPermission
 open FStar.Ghost
@@ -73,8 +74,6 @@ let pts_to_range_intro
 let pts_to_range_elim
   #elt a p s
 = fun _ -> A.pts_to_range_elim a p s
-
-open Steel.ST.Util
 
 let pts_to_range_split
   #elt a i m j #p #s
