@@ -63,20 +63,6 @@ val deterministically_encoded_cbor_map_key_order_trans
   (ensures (Ghost.reveal deterministically_encoded_cbor_map_key_order x z == true))
   [SMTPat (Ghost.reveal deterministically_encoded_cbor_map_key_order x y); SMTPat (Ghost.reveal deterministically_encoded_cbor_map_key_order y z)]
 
-let rec list_ghost_assoc
-  (#key: Type)
-  (#value: Type)
-  (k: key)
-  (m: list (key & value))
-: GTot (option value)
-  (decreases m)
-= match m with
-  | [] -> None
-  | (k', v') :: m' ->
-    if FStar.StrongExcludedMiddle.strong_excluded_middle (k == k')
-    then Some v'
-    else list_ghost_assoc k m'
-
 val deterministically_encoded_cbor_map_key_order_assoc_ext :
   (m1: list (raw_data_item & raw_data_item)) ->
   (m2: list (raw_data_item & raw_data_item)) ->
@@ -121,6 +107,15 @@ let rec bytes_lex_compare
     if c = 0
     then bytes_lex_compare (Seq.tail s1) (Seq.tail s2)
     else c
+
+let rec bytes_lex_compare_opp
+  (s1 s2: Seq.seq U8.t)
+: Lemma
+  (ensures (bytes_lex_compare s1 s2 == - bytes_lex_compare s2 s1))
+  (decreases (Seq.length s1 + Seq.length s2))
+= if Seq.length s1 = 0 || Seq.length s2 = 0
+  then ()
+  else bytes_lex_compare_opp (Seq.tail s1) (Seq.tail s2)
 
 let rec bytes_lex_compare_values
   (s1 s2: Seq.seq U8.t)
@@ -250,3 +245,33 @@ let deterministically_encoded_cbor_map_key_order_int64
   [SMTPat (Ghost.reveal deterministically_encoded_cbor_map_key_order (Int64 ty v1) (Int64 ty v2))]
 = deterministically_encoded_cbor_map_key_order_spec (Int64 ty v1) (Int64 ty v2);
   cbor_compare_correct (Int64 ty v1) (Int64 ty v2)
+
+noextract [@@noextract_to "krml"]
+val cbor_map_sort
+  (l: list (raw_data_item & raw_data_item))
+: Tot (bool & list (raw_data_item & raw_data_item))
+
+// this is to avoid unnecessary unfolding of cbor_map_sort
+val cbor_map_sort_eq
+  (l: list (raw_data_item & raw_data_item))
+: Lemma
+  (cbor_map_sort l == map_sort cbor_compare l)
+
+let cbor_map_sort_correct
+  (l: list (raw_data_item & raw_data_item))
+: Lemma
+  (ensures (let (res, l') = cbor_map_sort l in
+    (forall x . List.Tot.memP x l' <==> List.Tot.memP x l) /\
+    (List.Tot.no_repeats_p (List.Tot.map fst l') <==> List.Tot.no_repeats_p (List.Tot.map fst l)) /\
+    (res == true <==> List.Tot.no_repeats_p (List.Tot.map fst l)) /\
+    (res == true ==> (
+      List.Tot.sorted (map_entry_order deterministically_encoded_cbor_map_key_order _) l' /\
+      (forall k . list_ghost_assoc k l' == list_ghost_assoc k l)
+    ))
+  ))
+= cbor_map_sort_eq l;
+  Classical.forall_intro_2 deterministically_encoded_cbor_map_key_order_spec;
+  Classical.forall_intro_2 cbor_compare_correct;
+  Classical.forall_intro_2 cbor_compare_equal;
+  Classical.forall_intro_2 bytes_lex_compare_opp;
+  map_sort_correct deterministically_encoded_cbor_map_key_order cbor_compare l
