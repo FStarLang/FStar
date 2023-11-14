@@ -5010,7 +5010,6 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option g
   let debug =
       (Env.debug env <| Options.Other "Rel")
     || (Env.debug env <| Options.Other "SMTQuery")
-    || (Env.debug env <| Options.Other "Tac")
   in
   if Env.debug env <| Options.Other "ResolveImplicitsHook"
   then BU.print1 "///////////////////ResolveImplicitsHook: discharge_guard'\n\
