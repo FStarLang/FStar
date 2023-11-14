@@ -325,6 +325,7 @@ let serialize_nlist_impl_inv
     ser == Seq.append (B.as_seq h bl) (serialize (serialize_nlist (n - i) s) ll)
   ))
 
+#push-options "--z3rlimit 128"
 inline_for_extraction
 let serialize_nlist_impl_body
   (n: nat)
@@ -376,6 +377,7 @@ let serialize_nlist_impl_body
     in
     phi ();
     false
+#pop-options
 
 inline_for_extraction
 let serialize_nlist_impl

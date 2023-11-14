@@ -19,11 +19,6 @@ open FStar.Tactics.V2
 open FStar.Tactics.Canon
 open FStar.Mul
 
-assume val w : int
-assume val x : int
-assume val y : int
-assume val z : int
-
 // Testing the canonicalizer, it should be the only thing needed for this file
 let check_canon () =
     canon ();
@@ -32,11 +27,25 @@ let check_canon () =
             (fun () -> dump "`canon` left the following goals";
                        fail "")
 
-let lem0 =  assert (x * (y * z) == (x * y) * z) by check_canon ()
-let lem0' = assert (w * (x * (y * z)) == ((z * y) * x) * w) by check_canon ()
+let test_neg (b : pos) =
+    assert (b - 1 == b + (-1))
+        by (check_canon ())
 
 // TODO: for now, canon is not enough as we don't collect factors, so we
 // leave the rest to the SMT
+let test_neg2 (b c : pos) =
+    assert (b * (c-1) + b == b*c)
+        by (canon ())
+
+assume val w : int
+assume val x : int
+assume val y : int
+assume val z : int
+
+let lem0 =  assert (x * (y * z) == (x * y) * z) by check_canon ()
+let lem0' = assert (w * (x * (y * z)) == ((z * y) * x) * w) by check_canon ()
+
+// Idem test_neg2
 let lem1 =
     assert ((x + y) * (z + z) == 2 * z * (y + x))
         by canon ()
