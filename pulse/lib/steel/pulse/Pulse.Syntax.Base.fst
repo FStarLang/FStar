@@ -146,6 +146,12 @@ let eq_hint_type (ht1 ht2:proof_hint_type)
       eq_tm t2 s2
     | _ -> false
 
+let eq_ascription (a1 a2:comp_ascription) 
+ : b:bool { b <==> (a1 == a2) }
+ = eq_comp a1.elaborated a2.elaborated &&
+   eq_opt eq_comp a1.annotated a2.annotated
+
+
 let rec eq_st_term (t1 t2:st_term) 
   : b:bool { b <==> (t1 == t2) }
   = match t1.term, t2.term with
@@ -159,7 +165,7 @@ let rec eq_st_term (t1 t2:st_term)
       Tm_Abs { b=b2; q=o2; ascription=c2; body=t2 } ->
       eq_tm b1.binder_ty b2.binder_ty &&
       o1=o2 &&
-      eq_comp c1 c2 &&
+      eq_opt eq_ascription c1 c2 &&
       eq_st_term t1 t2
   
     | Tm_STApp { head=h1; arg_qual=o1; arg=t1},

@@ -10,17 +10,18 @@ open Pulse.Lib.Pervasives
 //   }
 // ```
 
-// ```pulse
-// fn swap (#a:Type0) (x y:ref a) (#vx #vy:erased a)
-//     requires pts_to x vx ** pts_to y vy
-//     ensures pts_to x vy ** pts_to y vx
-// {
-//   let vx = !x;
-//   let vy = !y;
-//   x := vy;
-//   y := vx;
-// } 
-// ```
+```pulse
+fn swap (#a:Type0) (x y:ref a) (#vx #vy:erased a)
+    requires pts_to x vx ** pts_to y vy
+    ensures pts_to x vy ** pts_to y vx
+{
+  let vx = !x;
+  let vy = !y;
+  x := vy;
+  y := vx;
+} 
+```
+
 
 let swap_fun a = x:ref a -> y:ref a -> #vx:erased a -> #vy:erased a -> stt unit
     (requires pts_to x vx ** pts_to y vy)
@@ -39,6 +40,8 @@ fn test_top_level_lambda (#a:Type0)
     }
 ```
 
+
+let t = test_top_level_lambda
 // [@@expect_failure]
 // ```pulse
 // fn test_inner_lambda (#a:Type0)

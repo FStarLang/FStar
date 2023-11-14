@@ -175,6 +175,12 @@ type proof_hint_type =
     }
 
 
+noeq
+type comp_ascription = {
+  annotated:option comp;
+  elaborated:comp
+}
+  
 (* terms with STT types *)
 [@@ no_auto_projectors]
 noeq
@@ -187,7 +193,7 @@ type st_term' =
   | Tm_Abs {
       b:binder;
       q:option qualifier;
-      ascription: comp;
+      ascription: option comp_ascription;
       body:st_term;
     }
   | Tm_STApp {

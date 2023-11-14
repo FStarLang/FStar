@@ -2333,12 +2333,7 @@ let (desugar_lambda :
                    let uu___3 =
                      match ascription with
                      | FStar_Pervasives_Native.None ->
-                         let uu___4 =
-                           let uu___5 =
-                             let uu___6 = PulseSyntaxWrapper.tm_unknown range in
-                             PulseSyntaxWrapper.mk_tot uu___6 in
-                           (env1, bs, bvs, uu___5) in
-                         return uu___4
+                         return (env1, bs, bvs, FStar_Pervasives_Native.None)
                      | FStar_Pervasives_Native.Some c ->
                          let fvs = free_vars_comp env1 c in
                          let uu___4 = idents_as_binders env1 fvs in
@@ -2353,7 +2348,9 @@ let (desugar_lambda :
                                     desugar_computation_type env2 c in
                                   op_let_Question uu___6
                                     (fun comp ->
-                                       return (env2, bs1, bvs1, comp))) in
+                                       return
+                                         (env2, bs1, bvs1,
+                                           (FStar_Pervasives_Native.Some comp)))) in
                    op_let_Question uu___3
                      (fun uu___4 ->
                         match uu___4 with
@@ -2389,23 +2386,27 @@ let (desugar_lambda :
                                                               bv in
                                                           PulseSyntaxWrapper.close_st_term
                                                             body3 uu___11 in
-                                                        let c1 =
-                                                          let uu___11 =
-                                                            PulseSyntaxWrapper.index_of_bv
-                                                              bv in
-                                                          PulseSyntaxWrapper.close_comp
-                                                            c uu___11 in
-                                                        let c' =
-                                                          let uu___11 =
-                                                            PulseSyntaxWrapper.tm_unknown
-                                                              range in
-                                                          PulseSyntaxWrapper.mk_tot
-                                                            uu___11 in
+                                                        let asc =
+                                                          match c with
+                                                          | FStar_Pervasives_Native.None
+                                                              ->
+                                                              FStar_Pervasives_Native.None
+                                                          | FStar_Pervasives_Native.Some
+                                                              c1 ->
+                                                              let uu___11 =
+                                                                let uu___12 =
+                                                                  PulseSyntaxWrapper.index_of_bv
+                                                                    bv in
+                                                                PulseSyntaxWrapper.close_comp
+                                                                  c1 uu___12 in
+                                                              FStar_Pervasives_Native.Some
+                                                                uu___11 in
                                                         let uu___11 =
                                                           PulseSyntaxWrapper.tm_abs
-                                                            b q c1 body'
+                                                            b q asc body'
                                                             range in
-                                                        (c', uu___11)) qbs
+                                                        (FStar_Pervasives_Native.None,
+                                                          uu___11)) qbs
                                                (comp, body2) in
                                            match uu___8 with
                                            | (uu___9, abs) -> return abs)))))

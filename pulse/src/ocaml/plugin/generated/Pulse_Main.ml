@@ -78,8 +78,18 @@ let rec (mk_abs :
                               (fun uu___ ->
                                  with_range
                                    (Pulse_Syntax_Builder.tm_abs last q
-                                      (Pulse_Syntax_Naming.close_comp comp
-                                         last_bv.Pulse_Syntax_Base.bv_index)
+                                      (FStar_Pervasives_Native.Some
+                                         {
+                                           Pulse_Syntax_Base.annotated =
+                                             (FStar_Pervasives_Native.Some
+                                                (Pulse_Syntax_Naming.close_comp
+                                                   comp
+                                                   last_bv.Pulse_Syntax_Base.bv_index));
+                                           Pulse_Syntax_Base.elaborated =
+                                             (Pulse_Syntax_Naming.close_comp
+                                                comp
+                                                last_bv.Pulse_Syntax_Base.bv_index)
+                                         })
                                       (Pulse_Syntax_Naming.close_st_term body
                                          last_bv.Pulse_Syntax_Base.bv_index))
                                    (Pulse_Syntax_Naming.close_st_term body
@@ -91,9 +101,9 @@ let rec (mk_abs :
                               (FStar_Sealed.seal
                                  (Obj.magic
                                     (FStar_Range.mk_range "Pulse.Main.fst"
-                                       (Prims.of_int (36))
+                                       (Prims.of_int (37))
                                        (Prims.of_int (15))
-                                       (Prims.of_int (36))
+                                       (Prims.of_int (37))
                                        (Prims.of_int (37)))))
                               (FStar_Sealed.seal
                                  (Obj.magic
@@ -107,8 +117,7 @@ let rec (mk_abs :
                                    (fun uu___ ->
                                       with_range
                                         (Pulse_Syntax_Builder.tm_abs b q
-                                           (Pulse_Syntax_Base.C_Tot
-                                              Pulse_Syntax_Base.tm_unknown)
+                                           FStar_Pervasives_Native.None
                                            (Pulse_Syntax_Naming.close_st_term
                                               body1
                                               bv.Pulse_Syntax_Base.bv_index))

@@ -1001,14 +1001,14 @@ let desugar_lambda (env:env_t) (l:Sugar.lambda)
     let? env, bs, bvs, comp =
       match ascription with
       | None ->
-        return (env, bs, bvs, SW.mk_tot (SW.tm_unknown range))
+        return (env, bs, bvs, None)
       | Some c -> 
         let fvs = free_vars_comp env c in
         let? env, bs', bvs' = idents_as_binders env fvs in
         let bs = bs@bs' in
         let bvs = bvs@bvs' in
         let? comp = desugar_computation_type env c in
-        return (env, bs, bvs, comp)
+        return (env, bs, bvs, Some comp)
     in
     let? body = 
       if FStar.Options.ext_getv "pulse:rvalues" <> ""
@@ -1021,9 +1021,11 @@ let desugar_lambda (env:env_t) (l:Sugar.lambda)
       L.fold_right 
         (fun (q,b,bv) (c, body) ->
           let body' = SW.close_st_term body (SW.index_of_bv bv) in
-          let c = SW.close_comp c (SW.index_of_bv bv) in
-          let c' = SW.mk_tot (SW.tm_unknown range) in
-          c', SW.tm_abs b q c body' range)
+          let asc =
+            match c with
+            | None -> None
+            | Some c -> Some  (SW.close_comp c (SW.index_of_bv bv)) in
+          None, SW.tm_abs b q asc body' range)
         qbs (comp, body)
     in
     return abs

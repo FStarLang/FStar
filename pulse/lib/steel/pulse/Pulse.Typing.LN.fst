@@ -85,8 +85,8 @@ let open_comp_ln' (c:comp)
 
 let open_term_ln_opt' (t:option term) (x:term) (i:index)
   : Lemma
-    (requires ln_opt' (open_term_opt' t x i) (i - 1))
-    (ensures ln_opt' t i)
+    (requires ln_opt' ln' (open_term_opt' t x i) (i - 1))
+    (ensures ln_opt' ln' t i)
     (decreases t)
   = match t with
     | None -> ()
@@ -207,7 +207,16 @@ let rec open_st_term_ln' (e:st_term)
 
     | Tm_Abs { b; ascription=c; body } ->
       open_term_ln' b.binder_ty x i;
-      open_comp_ln' c x (i + 1);
+      (
+        match c with
+        | None -> ()
+        | Some c -> 
+          open_comp_ln' c.elaborated x (i + 1);
+          match c.annotated with
+          | None -> ()
+          | Some c -> 
+            open_comp_ln' c x (i + 1)
+      );
       open_st_term_ln' body x (i + 1)
       
     | Tm_Bind { binder; head; body } ->
@@ -375,8 +384,8 @@ let ln_weakening_comp (c:comp) (i j:int)
 
 let ln_weakening_opt (t:option term) (i j:int)
   : Lemma
-    (requires ln_opt' t i /\ i <= j)
-    (ensures ln_opt' t j)
+    (requires ln_opt' ln' t i /\ i <= j)
+    (ensures ln_opt' ln' t j)
     (decreases t)
   = match t with
     | None -> ()
@@ -469,7 +478,15 @@ let rec ln_weakening_st (t:st_term) (i j:int)
 
     | Tm_Abs { b; ascription=c; body } ->
       ln_weakening b.binder_ty i j;
-      ln_weakening_comp c (i + 1) (j + 1);
+      (
+        match c with
+        | None -> ()
+        | Some {elaborated=c; annotated=None} ->
+          ln_weakening_comp c (i + 1) (j + 1)
+        | Some {elaborated=c; annotated=Some c'} ->
+          ln_weakening_comp c (i + 1) (j + 1);
+          ln_weakening_comp c' (i + 1) (j + 1)
+      );
       ln_weakening_st body (i + 1) (j + 1)
 
     | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
@@ -566,8 +583,8 @@ let open_term_ln_inv_opt' (t:option term)
                           (x:term { ln x })
                           (i:index)
   : Lemma
-    (requires ln_opt' t i)
-    (ensures ln_opt' (open_term_opt' t x i) (i - 1))
+    (requires ln_opt' ln' t i)
+    (ensures ln_opt' ln' (open_term_opt' t x i) (i - 1))
     (decreases t)
   = match t with
     | None -> ()
@@ -666,7 +683,15 @@ let rec open_term_ln_inv_st' (t:st_term)
 
     | Tm_Abs { b; ascription=c; body } ->
       open_term_ln_inv' b.binder_ty x i;
-      open_comp_ln_inv' c x (i + 1);
+      (
+        match c with
+        | None -> ()
+        | Some {elaborated=c; annotated=None} ->
+          open_comp_ln_inv' c x (i + 1)
+        | Some {elaborated=c; annotated=Some c'} ->
+          open_comp_ln_inv' c x (i + 1);
+          open_comp_ln_inv' c' x (i + 1)
+      );
       open_term_ln_inv_st' body x (i + 1)
 
     | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
@@ -762,8 +787,8 @@ let close_comp_ln' (c:comp)
 
 let close_term_ln_opt' (t:option term) (x:var) (i:index)
   : Lemma
-    (requires ln_opt' t (i - 1))
-    (ensures ln_opt' (close_term_opt' t x i) i)
+    (requires ln_opt' ln' t (i - 1))
+    (ensures ln_opt' ln' (close_term_opt' t x i) i)
     (decreases t)
   = match t with
     | None -> ()
@@ -859,7 +884,15 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
 
     | Tm_Abs { b; ascription=c; body } ->
       close_term_ln' b.binder_ty x i;
-      close_comp_ln' c x (i + 1);
+      (
+        match c with
+        | None -> ()
+        | Some {elaborated=c; annotated=None} ->
+          close_comp_ln' c x (i + 1)
+        | Some {elaborated=c; annotated=Some c'} ->
+          close_comp_ln' c x (i + 1);
+          close_comp_ln' c' x (i + 1)
+      );
       close_st_term_ln' body x (i + 1)
 
     | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->

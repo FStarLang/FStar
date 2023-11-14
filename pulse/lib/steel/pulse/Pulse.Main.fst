@@ -31,12 +31,12 @@ let rec mk_abs (g:env) (qbs:list (option qualifier & binder & bv)) (body:st_term
   | [(q, last, last_bv)] -> 
     let body = close_st_term body last_bv.bv_index in
     let comp = close_comp comp last_bv.bv_index in
-    with_range (Pulse.Syntax.Builder.tm_abs last q comp body) body.range
+    let asc = { annotated = Some comp; elaborated = comp } in
+    with_range (Pulse.Syntax.Builder.tm_abs last q (Some asc) body) body.range
   | (q, b, bv)::qbs ->
     let body = mk_abs g qbs body comp in
     let body = close_st_term body bv.bv_index in
-    let comp = C_Tot tm_unknown in
-    with_range (Pulse.Syntax.Builder.tm_abs b q comp body) body.range
+    with_range (Pulse.Syntax.Builder.tm_abs b q None body) body.range
 
 let check_fndecl
     (d : decl{FnDecl? d.d})

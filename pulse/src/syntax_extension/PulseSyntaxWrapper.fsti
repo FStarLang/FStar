@@ -64,7 +64,7 @@ new val st_term : Type0
 type branch = pattern & st_term
 val tm_return (t:term) (_:range) : st_term
 val tm_ghost_return (t:term) (_:range) : st_term
-val tm_abs (b:binder) (q:option qualifier) (_:comp) (body:st_term) (_:range) : st_term
+val tm_abs (b:binder) (q:option qualifier) (_:option comp) (body:st_term) (_:range) : st_term
 val tm_st_app (head:term) (q:FStar.Syntax.Syntax.aqual) (arg:term) (_:range) : st_term
 val tm_bind (x:binder) (e1:st_term) (e2:st_term) (_:range) : st_term
 val tm_totbind (x:binder) (e1:term) (e2:st_term) (_:range) : st_term

@@ -121,7 +121,20 @@ let close_open_inverse_proof_hint_type' (ht:proof_hint_type)
       close_open_inverse' t1 x i;
       close_open_inverse' t2 x i
 
+let open_ascription' (t:comp_ascription) (v:term) (i:index) : comp_ascription =
+  subst_ascription t [DT i v]
+let close_ascription' (t:comp_ascription) (x:var) (i:index) : comp_ascription =
+  subst_ascription t [ND x i]
 
+let close_open_inverse_ascription' (t:comp_ascription)
+                                   (x:var { ~(x `Set.mem` freevars_ascription t) } )
+                                   (i:index)
+  : Lemma (ensures close_ascription' (open_ascription' t (U.term_of_no_name_var x) i) x i == t)
+  = close_open_inverse_comp' t.elaborated x i;
+    match t.annotated with
+    | None -> ()
+    | Some c -> close_open_inverse_comp' c x i
+          
 let rec close_open_inverse_st'  (t:st_term) 
                                 (x:var { ~(x `Set.mem` freevars_st t) } )
                                 (i:index)
@@ -136,8 +149,12 @@ let rec close_open_inverse_st'  (t:st_term)
 
     | Tm_Abs { b; ascription; body } ->
       close_open_inverse' b.binder_ty x i;
-      close_open_inverse_st' body x (i + 1);
-      close_open_inverse_comp' ascription x (i + 1)
+      close_open_inverse_st' body x (i + 1); (
+        match ascription with
+        | None -> ()
+        | Some c ->
+          close_open_inverse_ascription' c x (i + 1)
+      )
 
     | Tm_Bind { binder; head; body } ->
       close_open_inverse' binder.binder_ty x i;
