@@ -1,5 +1,5 @@
 module CBOR.Spec
-include CBOR.Spec.Type
+include CBOR.Spec.Map
 
 module U8 = FStar.UInt8
 
@@ -88,6 +88,14 @@ val deterministically_encoded_cbor_map_key_order_assoc_ext :
   Lemma
   (requires (List.Tot.sorted (map_entry_order deterministically_encoded_cbor_map_key_order _) m1 /\ List.Tot.sorted (map_entry_order deterministically_encoded_cbor_map_key_order _) m2))
   (ensures (m1 == m2))
+
+let list_sorted_map_entry_order_deterministically_encoded_cbor_map_key_order_no_repeats
+  (#t: Type)
+  (l: list (raw_data_item & t))
+: Lemma
+  (requires (List.Tot.sorted (map_entry_order deterministically_encoded_cbor_map_key_order _) l))
+  (ensures (List.Tot.no_repeats_p (List.Tot.map fst l)))
+= list_sorted_map_entry_order_no_repeats deterministically_encoded_cbor_map_key_order l
 
 (* Comparisons with unserialized values *)
 
