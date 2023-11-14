@@ -10480,10 +10480,8 @@ and (check_top_level_let :
                              if uu___4
                              then
                                FStar_TypeChecker_Normalize.normalize
-                                 [FStar_TypeChecker_Env.UnfoldAttr
-                                    [FStar_Parser_Const.tcnorm_attr];
-                                 FStar_TypeChecker_Env.Exclude
-                                   FStar_TypeChecker_Env.Beta;
+                                 [FStar_TypeChecker_Env.Exclude
+                                    FStar_TypeChecker_Env.Beta;
                                  FStar_TypeChecker_Env.Exclude
                                    FStar_TypeChecker_Env.Zeta;
                                  FStar_TypeChecker_Env.NoFullNorm;
