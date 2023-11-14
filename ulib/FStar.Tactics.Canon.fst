@@ -276,5 +276,6 @@ let canon_point_entry () : Tac unit =
     | _ ->
         fail ("impossible: " ^ term_to_string g)
 
+[@@plugin]
 let canon () : Tac unit =
     pointwise canon_point_entry
