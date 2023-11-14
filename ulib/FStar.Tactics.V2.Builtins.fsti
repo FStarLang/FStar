@@ -501,8 +501,10 @@ val universe_of (g:env) (e:term)
   : Tac (ret_t (u:universe{typing_token g e (E_Total, pack_ln (Tv_Type u))}))
 
 type prop_validity_token (g:env) (t:term) =
-  e:term{typing_token g t (E_Total, pack_ln (Tv_FVar (pack_fv prop_qn))) /\
-         typing_token g e (E_Total, t)}
+  Ghost.erased (
+    e:term{typing_token g t (E_Total, pack_ln (Tv_FVar (pack_fv prop_qn))) /\
+           typing_token g e (E_Total, t)}
+  )
 
 val check_prop_validity (g:env) (t:term)
   : Tac (ret_t (prop_validity_token g t))
