@@ -198,6 +198,17 @@ let rec append_mem #t l1 l2 a = match l1 with
   | [] -> ()
   | hd::tl -> append_mem tl l2 a
 
+val append_memP: #t:Type ->  l1:list t
+              -> l2:list t
+              -> a:t
+              -> Lemma (requires True)
+                       (ensures (memP a (l1 `append` l2) <==> (memP a l1 \/ memP a l2)))
+                       (* [SMTPat (mem a (l1@l2))] *)
+let rec append_memP #t l1 l2 a = match l1 with
+  | [] -> ()
+  | hd::tl -> append_memP tl l2 a
+
+
 val append_mem_forall: #a:eqtype -> l1:list a
               -> l2:list a
               -> Lemma (requires True)
@@ -205,6 +216,15 @@ val append_mem_forall: #a:eqtype -> l1:list a
 let rec append_mem_forall #a l1 l2 = match l1 with
   | [] -> ()
   | hd::tl -> append_mem_forall tl l2
+
+val append_memP_forall: #a:Type -> l1:list a
+              -> l2:list a
+              -> Lemma (requires True)
+                       (ensures (forall a. memP a (l1 `append` l2) <==> (memP a l1 \/ memP a l2)))
+let rec append_memP_forall #a l1 l2 = match l1 with
+  | [] -> ()
+  | hd::tl -> append_memP_forall tl l2
+
 
 val append_count: #t:eqtype ->  l1:list t
               -> l2:list t
@@ -695,6 +715,99 @@ let rec noRepeats_append_intro
   | x :: q1 ->
     append_mem q1 l2 x;
     noRepeats_append_intro q1 l2
+
+(** Properties of [no_repeats_p] *)
+let no_repeats_p_nil
+  (#a: Type)
+: Lemma
+  (ensures (no_repeats_p #a []))
+= ()
+
+let no_repeats_p_cons
+  (#a: Type)
+  (h: a)
+  (tl: list a)
+: Lemma
+  (requires ((~ (memP h tl)) /\ no_repeats_p tl))
+  (ensures (no_repeats_p #a (h::tl)))
+= ()
+
+let rec no_repeats_p_append_elim
+  (#a: Type)
+  (l1 l2: list a)
+: Lemma
+  (requires (no_repeats_p (l1 `append` l2)))
+  (ensures (no_repeats_p l1 /\ no_repeats_p l2 /\ (forall x . memP x l1 ==> ~ (memP x l2))))
+  (decreases l1)
+= match l1 with
+  | [] -> ()
+  | x :: q1 ->
+    append_memP q1 l2 x;
+    no_repeats_p_append_elim q1 l2
+
+let rec no_repeats_p_append_intro
+  (#a: Type)
+  (l1 l2: list a)
+: Lemma
+  (requires (no_repeats_p l1 /\ no_repeats_p l2 /\ (forall x . memP x l1 ==> ~ (memP x l2))))
+  (ensures (no_repeats_p (l1 `append` l2)))
+  (decreases l1)
+= match l1 with
+  | [] -> ()
+  | x :: q1 ->
+    append_memP q1 l2 x;
+    no_repeats_p_append_intro q1 l2
+
+let no_repeats_p_append
+  (#a: Type)
+  (l1 l2: list a)
+: Lemma
+  (no_repeats_p (l1 `append` l2) <==> (
+    (no_repeats_p l1 /\ no_repeats_p l2 /\ (forall x . memP x l1 ==> ~ (memP x l2)))
+  ))
+= FStar.Classical.move_requires (no_repeats_p_append_intro l1) l2;
+  FStar.Classical.move_requires (no_repeats_p_append_elim l1) l2
+
+let no_repeats_p_append_swap
+  (#a: Type)
+  (l1 l2: list a)
+: Lemma
+  (no_repeats_p (l1 `append` l2) <==> no_repeats_p (l2 `append` l1))
+= no_repeats_p_append l1 l2;
+  no_repeats_p_append l2 l1
+
+let no_repeats_p_append_permut
+  (#a: Type)
+  (l1 l2 l3 l4 l5: list a)
+: Lemma
+  ((no_repeats_p (l1 `append` (l2 `append` (l3 `append` (l4 `append` l5))))) <==> no_repeats_p (l1 `append` (l4 `append` (l3 `append` (l2 `append` l5)))))
+= no_repeats_p_append l1 (l2 `append` (l3 `append` (l4 `append` l5)));
+  append_memP_forall l2 (l3 `append` (l4 `append` l5));
+  append_memP_forall l3 (l4 `append` l5);
+  append_memP_forall l4 l5;
+  no_repeats_p_append l2 (l3 `append` (l4 `append` l5));
+  no_repeats_p_append l3 (l4 `append` l5);
+  no_repeats_p_append l4 l5;
+  no_repeats_p_append l2 l5;
+  no_repeats_p_append l3 (l2 `append` l5);
+  append_memP_forall l2 l5;
+  no_repeats_p_append l4 (l3 `append` (l2 `append` l5));
+  append_memP_forall l3 (l2 `append` l5);
+  no_repeats_p_append l1 (l4 `append` (l3 `append` (l2 `append` l5)));
+  append_memP_forall l4 (l3 `append` (l2 `append` l5))
+
+let no_repeats_p_false_intro
+  (#a: Type)
+  (l1 l l2 l3: list a)
+: Lemma
+  (requires (Cons? l))
+  (ensures (~ (no_repeats_p (l1 `append` (l `append` (l2 `append` (l `append` l3)))))))
+= let x = hd l in
+  assert (memP x l);
+  no_repeats_p_append l1 (l `append` (l2 `append` (l `append` l3)));
+  no_repeats_p_append l (l2 `append` (l `append` l3));
+  append_memP l2 (l `append` l3) x;
+  append_memP l l3 x
 
 (** Properties of [assoc] *)
 
