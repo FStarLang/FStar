@@ -243,7 +243,11 @@ private let rec canon_point e =
         step_lemma (`minus_is_plus);
         step_lemma (`cong_plus);
         trefl ();
-        let r = canon_point (Neg b) in
+        let negb = match b with | Lit n -> Lit (-n) | _ -> Neg b in
+        // ^ We need to take care wrt literals, since an application (- N)
+        // will get reduced to the literal -N and then neg_minus_one will not
+        // apply.
+        let r = canon_point negb in
         canon_point (Plus a r)
 
     | _ ->
@@ -261,7 +265,7 @@ private let rec canon_point e =
 // maybe having the inner tactic be of type (list a -> tactic a), where
 // the list is the collected results for all child calls.
 let canon_point_entry () : Tac unit =
-    norm [];
+    norm [primops];
     let g = cur_goal () in
     match term_as_formula g with
     | Comp (Eq _) l r ->
