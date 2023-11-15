@@ -76,6 +76,21 @@ let free = free'
 //[@@"__reduce__"; "__steel_reduce__"]
 let pts_to_range #a (r:array a) (i j: nat) (#[exact (`full_perm)] p:perm) (v:FStar.Seq.seq a) = A.pts_to_range r i j p v
 
+let pts_to_range_prop'
+  (#elt: Type0) (a: array elt) (#i #j: nat)
+  (#p: perm)
+  (#s: Seq.seq elt)
+: stt_ghost unit emp_inames
+    (pts_to_range a i j #p s)
+    (fun _ -> pts_to_range a i j #p s `S.star` S.pure (
+      (i <= j /\ j <= length a /\ Seq.length s == j - i)
+    ))
+= fun _ ->
+    A.pts_to_range_prop a i j p s;
+    noop ()
+
+let pts_to_range_prop = pts_to_range_prop'
+
 let pts_to_range_intro
   #elt a p s
 = fun _ -> A.pts_to_range_intro a p s
