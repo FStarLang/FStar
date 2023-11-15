@@ -611,3 +611,125 @@ ensures
     res
 }
 ```
+
+module SM = Pulse.Lib.SeqMatch
+module AS = Pulse.Lib.ArraySwap
+
+```pulse
+fn cbor_map_sort_merge
+    (a: A.array cbor_map_entry)
+    (lo: SZ.t)
+    (mi: SZ.t)
+    (hi: SZ.t)
+    (#c1: Ghost.erased (Seq.seq cbor_map_entry))
+    (#c2: Ghost.erased (Seq.seq cbor_map_entry))
+    (#l1: Ghost.erased (list (Cbor.raw_data_item & Cbor.raw_data_item)))
+    (#l2: Ghost.erased (list (Cbor.raw_data_item & Cbor.raw_data_item)))
+requires
+    A.pts_to_range a (SZ.v lo) (SZ.v mi) c1 **
+    A.pts_to_range a (SZ.v mi) (SZ.v hi) c2 **
+    SM.seq_list_match c1 l1 (raw_data_item_map_entry_match full_perm) **
+    SM.seq_list_match c2 l2 (raw_data_item_map_entry_match full_perm)
+returns res: bool
+ensures exists c l .
+    A.pts_to_range a (SZ.v lo) (SZ.v hi) c **
+    SM.seq_list_match c l (raw_data_item_map_entry_match full_perm) **
+    pure (
+        Cbor.map_sort_merge Cbor.cbor_compare [] l1 l2 == (res, l)
+    )
+{
+    admit ()
+}
+```
+
+```pulse
+fn rec cbor_map_sort_aux
+    (a: A.array cbor_map_entry)
+    (lo hi: SZ.t)
+    (#c: Ghost.erased (Seq.seq cbor_map_entry))
+    (#l: Ghost.erased (list (Cbor.raw_data_item & Cbor.raw_data_item)))
+requires
+    A.pts_to_range a (SZ.v lo) (SZ.v hi) c **
+    SM.seq_list_match c l (raw_data_item_map_entry_match full_perm)
+returns res: bool
+ensures (exists_ (fun (c': Seq.seq cbor_map_entry) -> exists_ (fun (l': list (Cbor.raw_data_item & Cbor.raw_data_item)) ->
+    // FIXME: WHY WHY WHY do I need to use exists_ instead of Pulse exists? Error message is: "IOU"
+    A.pts_to_range a (SZ.v lo) (SZ.v hi) c' **
+    SM.seq_list_match c' l' (raw_data_item_map_entry_match full_perm) **
+    pure (
+        Cbor.cbor_map_sort l == (res, l')
+    )
+)))
+{
+    Cbor.cbor_map_sort_eq l;
+    A.pts_to_range_prop a;
+    SM.seq_list_match_length (raw_data_item_map_entry_match full_perm) c l;
+    let len = hi `SZ.sub` lo;
+    if (len `SZ.lt` 2sz) {
+        true
+    } else {
+        let len_half = len `SZ.div` 2sz;
+        let mi = lo `SZ.add` len_half;
+        A.pts_to_range_split a (SZ.v lo) (SZ.v mi) (SZ.v hi);
+        with c1 . assert (A.pts_to_range a (SZ.v lo) (SZ.v mi) c1);
+        with c2 . assert (A.pts_to_range a (SZ.v mi) (SZ.v hi) c2);
+        let l1l2 = Ghost.hide (List.Tot.splitAt (SZ.v len_half) l);
+        let l1 = Ghost.hide (fst l1l2);
+        let l2 = Ghost.hide (snd l1l2);
+        rewrite (SM.seq_list_match c l (raw_data_item_map_entry_match full_perm))
+            as (SM.seq_list_match (c1 `Seq.append` c2) (l1 `List.Tot.append` l2) (raw_data_item_map_entry_match full_perm));
+        SM.seq_list_match_append_elim (raw_data_item_map_entry_match full_perm) c1 l1 c2 l2;
+        Cbor.cbor_map_sort_eq l1;
+        let res = cbor_map_sort_aux a lo mi;
+        with c1' l1' . assert (A.pts_to_range a (SZ.v lo) (SZ.v mi) c1' ** SM.seq_list_match c1' l1' (raw_data_item_map_entry_match full_perm));
+        if (not res) {
+            A.pts_to_range_join a (SZ.v lo) (SZ.v mi) (SZ.v hi);
+            SM.seq_list_match_append_intro (raw_data_item_map_entry_match full_perm) c1' l1' c2 l2;
+            false
+        } else {
+            Cbor.cbor_map_sort_eq l2;
+            let res = cbor_map_sort_aux a mi hi;
+            with c2' l2' . assert (A.pts_to_range a (SZ.v mi) (SZ.v hi) c2' ** SM.seq_list_match c2' l2' (raw_data_item_map_entry_match full_perm));
+            if (not res) {
+                A.pts_to_range_join a (SZ.v lo) (SZ.v mi) (SZ.v hi);
+                SM.seq_list_match_append_intro (raw_data_item_map_entry_match full_perm) c1' l1' c2' l2';
+                false
+            } else {
+                cbor_map_sort_merge a lo mi hi
+            }
+        }
+    }
+}
+```
+
+```pulse
+fn cbor_map_sort
+    (a: A.array cbor_map_entry)
+    (len: SZ.t)
+    (#c: Ghost.erased (Seq.seq cbor_map_entry))
+    (#l: Ghost.erased (list (Cbor.raw_data_item & Cbor.raw_data_item)))
+requires
+    A.pts_to a c **
+    SM.seq_list_match c l (raw_data_item_map_entry_match full_perm) **
+    pure (SZ.v len == A.length a \/ SZ.v len == Seq.length c \/ SZ.v len == List.Tot.length l)
+returns res: bool
+ensures exists c' l' .
+    A.pts_to a c' **
+    SM.seq_list_match c' l' (raw_data_item_map_entry_match full_perm) **
+    pure (
+        Cbor.cbor_map_sort l == (res, l')
+    )
+{
+    A.pts_to_len a;
+    SM.seq_list_match_length (raw_data_item_map_entry_match full_perm) c l;
+    A.pts_to_range_intro a full_perm c;
+    rewrite (A.pts_to_range a 0 (A.length a) c)
+      as (A.pts_to_range a (SZ.v 0sz) (SZ.v len) c);
+    let res = cbor_map_sort_aux a 0sz len;
+    with c' . assert (A.pts_to_range a (SZ.v 0sz) (SZ.v len) c');
+    rewrite (A.pts_to_range a (SZ.v 0sz) (SZ.v len) c')
+        as (A.pts_to_range a 0 (A.length a) c');
+    A.pts_to_range_elim a full_perm c';
+    res
+}
+```
