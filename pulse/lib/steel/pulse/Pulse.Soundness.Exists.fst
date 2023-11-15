@@ -52,7 +52,7 @@ let intro_exists_soundness
     (RT.Relc_typ _ _ _ _ _
        (RT.Rel_equiv _ _ _ _
           (elab_stghost_equiv _ c _ _
-             (RT.EQ_Beta _ rt R.Q_Explicit rp re) (RT.EQ_Refl _ _))))
+             (RT.Rel_beta _ rt R.Q_Explicit rp re) (RT.Rel_refl _ _ _))))
 
 #push-options "--z3rlimit_factor 4 --fuel 4 --ifuel 2"
 let elim_exists_soundness
@@ -94,9 +94,9 @@ let elim_exists_soundness
     assume (RT.ln' rp 0);
     assume (RT.ln rreveal_x);
     RT.equiv_abs_close (Pulse.Reflection.Util.mk_erased ru rt) R.Q_Explicit x
-      (RT.EQ_Beta (RT.extend_env (elab_env g) _ _) rt R.Q_Explicit rp rreveal_x)  in
+      (RT.Rel_beta (RT.extend_env (elab_env g) _ _) rt R.Q_Explicit rp rreveal_x)  in
 
-  let comp_equiv = elab_stghost_equiv (elab_env g) c _ _ (RT.EQ_Refl _ _) post_eq in
+  let comp_equiv = elab_stghost_equiv (elab_env g) c _ _ (RT.Rel_refl _ _ _) post_eq in
   let d = WT.elim_exists_typing #_ #u x rt_typing rp_typing in
   RT.T_Sub _ _ _ _ d
     (RT.Relc_typ _ _ _ _ _

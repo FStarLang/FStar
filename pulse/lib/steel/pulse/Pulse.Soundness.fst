@@ -19,6 +19,7 @@ module While = Pulse.Soundness.While
 module Admit = Pulse.Soundness.Admit
 module Par = Pulse.Soundness.Par
 module WithLocal = Pulse.Soundness.WithLocal
+module WithLocalArray = Pulse.Soundness.WithLocalArray
 module Rewrite = Pulse.Soundness.Rewrite
 module Comp = Pulse.Soundness.Comp
 module LN = Pulse.Typing.LN
@@ -158,7 +159,7 @@ let stghostapp_soundness
                  RT.R_Sub
                  r_head_t_ghost
     = RT.Rel_arrow _ (elab_term formal) (elab_term formal) (elab_qual q) (T.E_Total, elab_comp res) (T.E_Ghost, elab_comp res)
-        RT.R_Sub x (RT.Rel_equiv _ _ _ _ (RT.EQ_Refl _ _))
+        RT.R_Sub x (RT.Rel_equiv _ _ _ _ (RT.Rel_refl _ _ _))
         d_rel_comp in
 
   let r_head_typing : RT.ghost_typing _ r_head r_head_t_ghost =
@@ -382,6 +383,9 @@ let rec soundness (g:stt_env)
 
     | T_WithLocal _ _ _ _ _ _ _ _ _ _ ->
       WithLocal.withlocal_soundness d soundness
+
+    | T_WithLocalArray _ _ _ _ _ _ _ _ _ _ _ _ ->
+      WithLocalArray.withlocalarray_soundness d soundness
 
     | T_Rewrite _ _ _ _ _ ->
       Rewrite.rewrite_soundness d

@@ -11,6 +11,7 @@ module T = FStar.Tactics.V2
 module L = FStar.List.Tot.Base
 module R = FStar.Reflection.V2
 module RT = FStar.Reflection.Typing
+module RU = Pulse.RuntimeUtils
 
 let rec readback_pat (p : R.pattern) : option pattern =
   match p with
@@ -23,13 +24,14 @@ let rec readback_pat (p : R.pattern) : option pattern =
     Some (Pat_Constant c)
 
   | R.Pat_Var st nm ->
-    Some (Pat_Var nm)
+    Some (Pat_Var nm (RU.map_seal st RU.deep_compress))
     
   | R.Pat_Dot_Term None -> Some (Pat_Dot_Term None)
   | R.Pat_Dot_Term (Some t) ->
     if R.Tv_Unknown? (R.inspect_ln t)
     then None
     else
+      let t = RU.deep_compress t in
       let t = tm_fstar t Range.range_0 in
       Some (Pat_Dot_Term (Some t))
 
@@ -145,7 +147,7 @@ let rec elab_readback_pat_x (rp : R.pattern) (p : pattern)
     ()
 
   | R.Pat_Constant _, Pat_Constant _ -> ()
-  | R.Pat_Var st nm, Pat_Var _ ->
+  | R.Pat_Var st nm, Pat_Var _ _ ->
     Sealed.sealed_singl st (Sealed.seal RT.tun);
     ()
   | _ -> ()
@@ -171,7 +173,7 @@ let rec tot_typing_weakening_n bs d =
 let samepat (b1 b2 : branch) : prop = fst b1 == fst b2
 let samepats (bs1 bs2 : list branch) : prop = L.map fst bs1 == L.map fst bs2
 
-let open_st_term_bs (t:st_term) (bs:list binding) : T.Tac st_term =
+let open_st_term_bs (t:st_term) (bs:list binding) : st_term =
   let rec aux (bs:list binding) (i:nat) : subst =
     match bs with
     | [] -> []
@@ -272,7 +274,7 @@ let check_branches
     in
     let r = zipWith tr1 rest bnds in
     assume (samepats (L.map dfst r) brs0);
-    r
+    (| (p0, e0), d0 |)::r
   in
   let brs = List.Tot.map dfst brs_d in
   let _ = List.Tot.Properties.append_l_nil brs in // odd

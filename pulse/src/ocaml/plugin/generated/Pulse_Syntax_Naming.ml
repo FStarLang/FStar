@@ -164,6 +164,15 @@ let rec (freevars_st :
         ->
         FStar_Set.union (freevars binder.Pulse_Syntax_Base.binder_ty)
           (FStar_Set.union (freevars initializer1) (freevars_st body))
+    | Pulse_Syntax_Base.Tm_WithLocalArray
+        { Pulse_Syntax_Base.binder3 = binder;
+          Pulse_Syntax_Base.initializer2 = initializer1;
+          Pulse_Syntax_Base.length = length;
+          Pulse_Syntax_Base.body5 = body;_}
+        ->
+        FStar_Set.union (freevars binder.Pulse_Syntax_Base.binder_ty)
+          (FStar_Set.union (freevars initializer1)
+             (FStar_Set.union (freevars length) (freevars_st body)))
     | Pulse_Syntax_Base.Tm_Rewrite
         { Pulse_Syntax_Base.t11 = t1; Pulse_Syntax_Base.t21 = t2;_} ->
         FStar_Set.union (freevars t1) (freevars t2)
@@ -258,6 +267,41 @@ let (ln_proof_hint' :
       | Pulse_Syntax_Base.REWRITE
           { Pulse_Syntax_Base.t1 = t1; Pulse_Syntax_Base.t2 = t2;_} ->
           (ln' t1 i) && (ln' t2 i)
+let rec (pattern_shift_n : Pulse_Syntax_Base.pattern -> Prims.nat) =
+  fun p ->
+    match p with
+    | Pulse_Syntax_Base.Pat_Constant uu___ -> Prims.int_zero
+    | Pulse_Syntax_Base.Pat_Dot_Term uu___ -> Prims.int_zero
+    | Pulse_Syntax_Base.Pat_Var (uu___, uu___1) -> Prims.int_one
+    | Pulse_Syntax_Base.Pat_Cons (fv, l) -> pattern_args_shift_n l
+and (pattern_args_shift_n :
+  (Pulse_Syntax_Base.pattern * Prims.bool) Prims.list -> Prims.nat) =
+  fun ps ->
+    match ps with
+    | [] -> Prims.int_zero
+    | (p, uu___)::tl -> (pattern_shift_n p) + (pattern_args_shift_n tl)
+let rec (ln_pattern' : Pulse_Syntax_Base.pattern -> Prims.int -> Prims.bool)
+  =
+  fun p ->
+    fun i ->
+      match p with
+      | Pulse_Syntax_Base.Pat_Constant uu___ -> true
+      | Pulse_Syntax_Base.Pat_Var (uu___, uu___1) -> true
+      | Pulse_Syntax_Base.Pat_Dot_Term (FStar_Pervasives_Native.None) -> true
+      | Pulse_Syntax_Base.Pat_Dot_Term (FStar_Pervasives_Native.Some e) ->
+          ln' e i
+      | Pulse_Syntax_Base.Pat_Cons (fv, l) -> ln_pattern_args' l i
+and (ln_pattern_args' :
+  (Pulse_Syntax_Base.pattern * Prims.bool) Prims.list ->
+    Prims.int -> Prims.bool)
+  =
+  fun p ->
+    fun i ->
+      match p with
+      | [] -> true
+      | (p1, uu___)::tl ->
+          (ln_pattern' p1 i) &&
+            (ln_pattern_args' tl (i + (pattern_shift_n p1)))
 let rec (ln_st' : Pulse_Syntax_Base.st_term -> Prims.int -> Prims.bool) =
   fun t ->
     fun i ->
@@ -337,6 +381,16 @@ let rec (ln_st' : Pulse_Syntax_Base.st_term -> Prims.int -> Prims.bool) =
           ->
           ((ln' binder.Pulse_Syntax_Base.binder_ty i) && (ln' initializer1 i))
             && (ln_st' body (i + Prims.int_one))
+      | Pulse_Syntax_Base.Tm_WithLocalArray
+          { Pulse_Syntax_Base.binder3 = binder;
+            Pulse_Syntax_Base.initializer2 = initializer1;
+            Pulse_Syntax_Base.length = length;
+            Pulse_Syntax_Base.body5 = body;_}
+          ->
+          (((ln' binder.Pulse_Syntax_Base.binder_ty i) &&
+              (ln' initializer1 i))
+             && (ln' length i))
+            && (ln_st' body (i + Prims.int_one))
       | Pulse_Syntax_Base.Tm_Rewrite
           { Pulse_Syntax_Base.t11 = t1; Pulse_Syntax_Base.t21 = t2;_} ->
           (ln' t1 i) && (ln' t2 i)
@@ -358,16 +412,7 @@ and (ln_branch' :
     fun i ->
       let uu___ = b in
       match uu___ with
-      | (p, e) ->
-          (match p with
-           | Pulse_Syntax_Base.Pat_Cons (fv, l) ->
-               ln_st' e (i + (FStar_List_Tot_Base.length l))
-           | Pulse_Syntax_Base.Pat_Constant uu___1 -> ln_st' e i
-           | Pulse_Syntax_Base.Pat_Var uu___1 -> ln_st' e (i + Prims.int_one)
-           | Pulse_Syntax_Base.Pat_Dot_Term (FStar_Pervasives_Native.None) ->
-               ln_st' e i
-           | Pulse_Syntax_Base.Pat_Dot_Term (FStar_Pervasives_Native.Some e1)
-               -> false)
+      | (p, e) -> (ln_pattern' p i) && (ln_st' e (i + (pattern_shift_n p)))
 and (ln_branches' :
   Pulse_Syntax_Base.st_term ->
     Pulse_Syntax_Base.branch Prims.list -> Prims.int -> Prims.bool)
@@ -430,6 +475,27 @@ let (rt_subst_elt : subst_elt -> FStar_Reflection_Typing.subst_elt) =
 let (rt_subst :
   subst_elt Prims.list -> FStar_Reflection_Typing.subst_elt Prims.list) =
   FStar_List_Tot_Base.map rt_subst_elt
+let (r_subst_of_rt_subst_elt : subst_elt -> FStar_Syntax_Syntax.subst_elt) =
+  fun x ->
+    match x with
+    | DT (i, t) ->
+        FStar_Syntax_Syntax.DT (i, (Pulse_Elaborate_Pure.elab_term t))
+    | NT (x1, t) ->
+        FStar_Syntax_Syntax.NT
+          ((FStar_Reflection_Typing.var_as_namedv x1),
+            (Pulse_Elaborate_Pure.elab_term t))
+    | ND (x1, i) ->
+        FStar_Syntax_Syntax.NM
+          ((FStar_Reflection_Typing.var_as_namedv x1), i)
+let (subst_host_term' :
+  Pulse_Syntax_Base.host_term -> subst -> FStar_Reflection_Types.term) =
+  fun t ->
+    fun ss ->
+      FStar_Reflection_V2_Builtins.subst_term
+        (FStar_List_Tot_Base.map r_subst_of_rt_subst_elt ss) t
+let (subst_host_term :
+  Pulse_Syntax_Base.host_term -> subst -> Pulse_Syntax_Base.host_term) =
+  fun t -> fun ss -> let res0 = subst_host_term' t ss in res0
 let rec (subst_term :
   Pulse_Syntax_Base.term -> subst -> Pulse_Syntax_Base.term) =
   fun t ->
@@ -467,9 +533,7 @@ let rec (subst_term :
                      (b.Pulse_Syntax_Base.binder_ppname)
                  }, (subst_term body (shift_subst ss))))
       | Pulse_Syntax_Base.Tm_FStar t1 ->
-          w
-            (Pulse_Syntax_Base.Tm_FStar
-               (FStar_Reflection_Typing.subst_term t1 (rt_subst ss)))
+          w (Pulse_Syntax_Base.Tm_FStar (subst_host_term t1 ss))
 let (open_term' :
   Pulse_Syntax_Base.term ->
     Pulse_Syntax_Base.term ->
@@ -635,6 +699,37 @@ let (close_proof_hint' :
     Pulse_Syntax_Base.var ->
       Pulse_Syntax_Base.index -> Pulse_Syntax_Base.proof_hint_type)
   = fun ht -> fun x -> fun i -> subst_proof_hint ht [ND (x, i)]
+let rec (subst_pat :
+  Pulse_Syntax_Base.pattern -> subst -> Pulse_Syntax_Base.pattern) =
+  fun p ->
+    fun ss ->
+      match p with
+      | Pulse_Syntax_Base.Pat_Constant uu___ -> p
+      | Pulse_Syntax_Base.Pat_Dot_Term (FStar_Pervasives_Native.None) -> p
+      | Pulse_Syntax_Base.Pat_Var (n, t) ->
+          let t1 =
+            Pulse_RuntimeUtils.map_seal t
+              (fun t2 -> FStar_Reflection_Typing.subst_term t2 (rt_subst ss)) in
+          Pulse_Syntax_Base.Pat_Var (n, t1)
+      | Pulse_Syntax_Base.Pat_Dot_Term (FStar_Pervasives_Native.Some e) ->
+          Pulse_Syntax_Base.Pat_Dot_Term
+            (FStar_Pervasives_Native.Some (subst_term e ss))
+      | Pulse_Syntax_Base.Pat_Cons (d, args) ->
+          let args1 = subst_pat_args args ss in
+          Pulse_Syntax_Base.Pat_Cons (d, args1)
+and (subst_pat_args :
+  (Pulse_Syntax_Base.pattern * Prims.bool) Prims.list ->
+    subst -> (Pulse_Syntax_Base.pattern * Prims.bool) Prims.list)
+  =
+  fun args ->
+    fun ss ->
+      match args with
+      | [] -> []
+      | (arg, b)::tl ->
+          let arg' = subst_pat arg ss in
+          let tl1 =
+            subst_pat_args tl (shift_subst_n (pattern_shift_n arg) ss) in
+          (arg', b) :: tl1
 let rec (subst_st_term :
   Pulse_Syntax_Base.st_term -> subst -> Pulse_Syntax_Base.st_term) =
   fun t ->
@@ -784,6 +879,20 @@ let rec (subst_st_term :
                 Pulse_Syntax_Base.body4 =
                   (subst_st_term body (shift_subst ss))
               }
+        | Pulse_Syntax_Base.Tm_WithLocalArray
+            { Pulse_Syntax_Base.binder3 = binder;
+              Pulse_Syntax_Base.initializer2 = initializer1;
+              Pulse_Syntax_Base.length = length;
+              Pulse_Syntax_Base.body5 = body;_}
+            ->
+            Pulse_Syntax_Base.Tm_WithLocalArray
+              {
+                Pulse_Syntax_Base.binder3 = (subst_binder binder ss);
+                Pulse_Syntax_Base.initializer2 = (subst_term initializer1 ss);
+                Pulse_Syntax_Base.length = (subst_term length ss);
+                Pulse_Syntax_Base.body5 =
+                  (subst_st_term body (shift_subst ss))
+              }
         | Pulse_Syntax_Base.Tm_Rewrite
             { Pulse_Syntax_Base.t11 = t1; Pulse_Syntax_Base.t21 = t2;_} ->
             Pulse_Syntax_Base.Tm_Rewrite
@@ -819,7 +928,8 @@ let rec (subst_st_term :
               } in
       {
         Pulse_Syntax_Base.term1 = t';
-        Pulse_Syntax_Base.range2 = (t.Pulse_Syntax_Base.range2)
+        Pulse_Syntax_Base.range2 = (t.Pulse_Syntax_Base.range2);
+        Pulse_Syntax_Base.effect_tag = (t.Pulse_Syntax_Base.effect_tag)
       }
 and (subst_branches :
   Pulse_Syntax_Base.st_term ->
@@ -840,15 +950,9 @@ and (subst_branch :
       let uu___ = b in
       match uu___ with
       | (p, e) ->
-          let pat_n_binders p1 =
-            match p1 with
-            | Pulse_Syntax_Base.Pat_Constant uu___1 -> Prims.int_zero
-            | Pulse_Syntax_Base.Pat_Var uu___1 -> Prims.int_one
-            | Pulse_Syntax_Base.Pat_Cons (uu___1, args) ->
-                FStar_List_Tot_Base.length args
-            | Pulse_Syntax_Base.Pat_Dot_Term uu___1 -> Prims.int_zero in
-          let nn = pat_n_binders p in
-          let ss1 = shift_subst_n nn ss in (p, (subst_st_term e ss1))
+          let p1 = subst_pat p ss in
+          let ss1 = shift_subst_n (pattern_shift_n p1) ss in
+          (p1, (subst_st_term e ss1))
 let (open_st_term' :
   Pulse_Syntax_Base.st_term ->
     Pulse_Syntax_Base.term ->

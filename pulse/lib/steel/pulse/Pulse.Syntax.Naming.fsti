@@ -9,7 +9,7 @@ module L = FStar.List.Tot
 module R = FStar.Reflection
 module RTB = FStar.Reflection.Typing.Builtins
 module RT = FStar.Reflection.Typing
-
+module RU = Pulse.RuntimeUtils
 module U = Pulse.Syntax.Pure
 module E = Pulse.Elaborate.Pure
 
@@ -125,6 +125,12 @@ let rec freevars_st (t:st_term)
                 (Set.union (freevars initializer)
                            (freevars_st body))
 
+    | Tm_WithLocalArray { binder; initializer; length; body } ->
+      Set.union (freevars binder.binder_ty)
+                (Set.union (freevars initializer)
+                           (Set.union (freevars length)
+                                      (freevars_st body)))
+
     | Tm_Rewrite { t1; t2 } ->
       Set.union (freevars t1) (freevars t2)
 
@@ -206,6 +212,44 @@ let ln_proof_hint' (ht:proof_hint_type) (i:int) : bool =
     ln' t1 i &&
     ln' t2 i
 
+let rec pattern_shift_n (p:pattern)
+  : Tot nat
+  = match p with
+    | Pat_Constant _ 
+    | Pat_Dot_Term _ -> 
+      0
+    | Pat_Var _ _ ->
+      1
+    | Pat_Cons fv l ->
+      pattern_args_shift_n l
+and pattern_args_shift_n (ps:list (pattern & bool))
+  : Tot nat
+  = match ps with
+    | [] -> 0
+    | (p, _)::tl ->
+      pattern_shift_n p + pattern_args_shift_n tl
+
+let rec ln_pattern' (p : pattern) (i:int)
+  : Tot bool (decreases p)
+  = match p with
+    | Pat_Constant _ 
+    | Pat_Var _ _ 
+    | Pat_Dot_Term None ->
+      true
+    | Pat_Dot_Term (Some e) ->
+      ln' e i
+    | Pat_Cons fv l ->
+      ln_pattern_args' l i
+ 
+and ln_pattern_args' (p:list (pattern & bool)) (i:int)
+  : Tot bool (decreases p)
+  = match p with
+    | [] ->
+      true
+    | (p, _)::tl ->
+      ln_pattern' p i &&
+      ln_pattern_args' tl (i + pattern_shift_n p)
+
 let rec ln_st' (t:st_term) (i:int)
   : Tot bool (decreases t)
   = match t.term with
@@ -268,6 +312,12 @@ let rec ln_st' (t:st_term) (i:int)
       ln' initializer i &&
       ln_st' body (i + 1)
 
+    | Tm_WithLocalArray { binder; initializer; length; body } ->
+      ln' binder.binder_ty i &&
+      ln' initializer i &&
+      ln' length i &&
+      ln_st' body (i + 1)
+
     | Tm_Rewrite { t1; t2 } ->
       ln' t1 i &&
       ln' t2 i
@@ -283,13 +333,9 @@ let rec ln_st' (t:st_term) (i:int)
 
 and ln_branch' (b : pattern & st_term) (i:int) : Tot bool (decreases b) =
   let (p, e) = b in
-  match p with
-  | Pat_Cons fv l -> ln_st' e (i + length l)
-  | Pat_Constant _ -> ln_st' e i
-  | Pat_Var _ -> ln_st' e (i+1)
-  | Pat_Dot_Term None -> ln_st' e i
-  | Pat_Dot_Term (Some e) -> false // FIXME come back to this
-
+  ln_pattern' p i &&
+  ln_st' e (i + pattern_shift_n p)
+  
 and ln_branches' (t:st_term) (brs : list branch{brs << t}) (i:int) : Tot bool (decreases brs) =
   for_all_dec t brs (fun b -> ln_branch' b i)
 
@@ -325,6 +371,9 @@ let open_or_close_host_term (t:host_term) (ss:subst)
   : Lemma (not_tv_unknown (RT.subst_term t (rt_subst ss)))
   = admit()
 
+val subst_host_term (t:host_term) (ss:subst)
+  : Tot (t':host_term { t' == RT.subst_term t (rt_subst ss) })
+
 let rec subst_term (t:term) (ss:subst)
   : Tot term (decreases t)
   = let w t' = with_range t' t.range in
@@ -351,8 +400,7 @@ let rec subst_term (t:term) (ss:subst)
                        (subst_term body (shift_subst ss)))
     
     | Tm_FStar t ->
-      open_or_close_host_term t ss;
-      w (Tm_FStar (RT.subst_term t (rt_subst ss)))
+      w (Tm_FStar (subst_host_term t ss))
 
 let open_term' (t:term) (v:term) (i:index) =
   subst_term t [ DT i v ]
@@ -439,6 +487,28 @@ let open_proof_hint'  (ht:proof_hint_type) (v:term) (i:index) =
 let close_proof_hint' (ht:proof_hint_type) (x:var) (i:index) =
   subst_proof_hint ht [ND x i]
 
+let rec subst_pat (p:pattern) (ss:subst)
+  : Tot pattern (decreases p)
+  = match p with
+    | Pat_Constant _
+    | Pat_Dot_Term None ->
+      p
+    | Pat_Var n t -> 
+      let t = RU.map_seal t (fun t -> RT.subst_term t (rt_subst ss)) in
+      Pat_Var n t
+    | Pat_Dot_Term (Some e) ->
+      Pat_Dot_Term (Some (subst_term e ss))
+    | Pat_Cons d args ->
+      let args = subst_pat_args args ss in
+      Pat_Cons d args
+and subst_pat_args (args:list (pattern & bool)) (ss:subst)
+  : Tot (list (pattern & bool)) (decreases args)
+  = match args with
+    | [] -> []
+    | (arg, b)::tl ->
+      let arg' = subst_pat arg ss in
+      let tl = subst_pat_args tl (shift_subst_n (pattern_shift_n arg) ss) in
+      (arg', b)::tl
 
 let rec subst_st_term (t:st_term) (ss:subst)
   : Tot st_term (decreases t)
@@ -508,6 +578,12 @@ let rec subst_st_term (t:st_term) (ss:subst)
                      initializer = subst_term initializer ss;
                      body = subst_st_term body (shift_subst ss) }
 
+    | Tm_WithLocalArray { binder; initializer; length; body } ->
+      Tm_WithLocalArray { binder = subst_binder binder ss;
+                          initializer = subst_term initializer ss;
+                          length = subst_term length ss;
+                          body = subst_st_term body (shift_subst ss) }
+
     | Tm_Rewrite { t1; t2 } ->
       Tm_Rewrite { t1 = subst_term t1 ss;
                    t2 = subst_term t2 ss }
@@ -533,15 +609,8 @@ and subst_branches (t:st_term) (ss:subst) (brs : list branch{brs << t})
 
 and subst_branch (ss:subst) (b : pattern & st_term) : Tot (pattern & st_term) (decreases b) =
   let (p, e) = b in
-  let pat_n_binders (p:pattern) : nat =
-    match p with
-    | Pat_Constant _ -> 0
-    | Pat_Var _ -> 1
-    | Pat_Cons _ args -> L.length args
-    | Pat_Dot_Term _ -> 0
-  in
-  let nn = pat_n_binders p in
-  let ss = shift_subst_n nn ss in
+  let p = subst_pat p ss in
+  let ss = shift_subst_n (pattern_shift_n p) ss in
   p, subst_st_term e ss
 
 

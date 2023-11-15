@@ -24,6 +24,7 @@ module If = Pulse.Checker.If
 module Bind = Pulse.Checker.Bind
 module Match = Pulse.Checker.Match
 module WithLocal = Pulse.Checker.WithLocal
+module WithLocalArray = Pulse.Checker.WithLocalArray
 module While = Pulse.Checker.While
 module STApp = Pulse.Checker.STApp
 module Exists = Pulse.Checker.Exists
@@ -83,7 +84,7 @@ let instantiate_unknown_witnesses (g:env) (t:st_term { Tm_IntroExists? t.term })
     let e1 =
       let hint_type = ASSERT { p = opened_p } in
       let binders = [] in
-      {term=Tm_ProofHintWithBinders { hint_type;binders;t=e2 }; range=t.range} in
+      {term=Tm_ProofHintWithBinders { hint_type;binders;t=e2 }; range=t.range; effect_tag=as_effect_hint STT_Ghost } in
     
     let t = 
       L.fold_right
@@ -106,7 +107,7 @@ let rec transform_to_unary_intro_exists (g:env) (t:term) (ws:list term)
   | [] -> fail g (Some t.range) "intro exists with empty witnesses"
   | [w] ->
     if Tm_ExistsSL? t.t
-    then wr (Tm_IntroExists {p=t;witnesses=[w]})
+    then wtag (Some STT_Ghost) (Tm_IntroExists {p=t;witnesses=[w]})
     else fail g (Some t.range) "intro exists with non-existential"
   | w::ws ->
     match t.t with
@@ -114,10 +115,11 @@ let rec transform_to_unary_intro_exists (g:env) (t:term) (ws:list term)
       let body = subst_term body [ DT 0 w ] in
       let st = transform_to_unary_intro_exists g body ws in
       // w is the witness
-      let intro = wr (Tm_IntroExists {p=t;witnesses=[w]}) in
-      wr (Tm_Bind {binder=null_binder tm_unit;
-                   head=st;
-                   body= intro})
+      let intro = wtag None (Tm_IntroExists {p=t;witnesses=[w]}) in
+      wtag None
+           (Tm_Bind {binder=null_binder tm_unit;
+                     head=st;
+                     body= intro})
 
     | _ -> fail g (Some t.range) "intro exists with non-existential"
 
@@ -142,7 +144,7 @@ let rec check
     let g = push_context (P.tag_of_st_term t) t.range g in
     match t.term with
     | Tm_Return _ ->
-      Return.check g pre pre_typing post_hint res_ppname t
+      Return.check g pre pre_typing post_hint res_ppname t check
     
     | Tm_Abs _ -> T.fail "Tm_Abs check should not have been called in the checker"
 
@@ -227,6 +229,9 @@ let rec check
 
     | Tm_WithLocal _ ->
       WithLocal.check g pre pre_typing post_hint res_ppname t check
+
+    | Tm_WithLocalArray _ ->
+      WithLocalArray.check g pre pre_typing post_hint res_ppname t check
 
     | Tm_Par _ ->
       Par.check g pre pre_typing post_hint res_ppname t check

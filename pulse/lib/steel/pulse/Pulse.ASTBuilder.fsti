@@ -6,5 +6,5 @@ val parse_pulse (env:R.env)
                 (content:string)
                 (file_name:string)
                 (line col:int)
-  : Dv (either Pulse.Syntax.st_term (option (string & R.range)))
+  : Dv (either Pulse.Syntax.decl (option (string & R.range)))
   // Option can be empty if all errors were already logged.

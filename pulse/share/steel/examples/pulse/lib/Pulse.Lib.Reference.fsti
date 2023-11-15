@@ -5,7 +5,7 @@ open Steel.FractionalPermission
 open FStar.Ghost
 module U32 = FStar.UInt32
 
-val ref (a:Type u#0) : Type u#0
+val ref ([@@@strictly_positive] a:Type u#0) : Type u#0
 
 val pts_to (#a:Type) (r:ref a) (#[exact (`full_perm)]p:perm) (n:a) : vprop
 

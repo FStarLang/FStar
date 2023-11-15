@@ -50,7 +50,8 @@ let is_smt_fallback (t:R.term) : bool =
   match R.inspect_ln t with
   | R.Tv_FVar fv ->
     let name = R.inspect_fv fv in
-    name = ["Steel";"Effect";"Common";"smt_fallback"]
+    name = ["Steel";"Effect";"Common";"smt_fallback"] ||
+    name = ["Pulse"; "Lib"; "Core"; "equate_by_smt"]
   | _ -> false
 
 (*
@@ -247,14 +248,14 @@ let unify (g:env) (uvs:env { disjoint uvs g})
   let ss = try_solve_uvars g uvs p q in
   let q = ss.(q) in
   if eq_tm p q
-  then Some (| ss, RT.EQ_Refl _ _ |)
+  then Some (| ss, RT.Rel_refl _ _ _ |)
   else if contains_uvar q uvs g
   then None
   else if eligible_for_smt_equality g p q
   then let v0 = elab_term p in
        let v1 = elab_term q in
        match check_equiv_now (elab_env g) v0 v1 with
-       | Some token, _ -> Some (| ss, RT.EQ_Token _ _ _ (FStar.Squash.return_squash token) |)
+       | Some token, _ -> Some (| ss, RT.Rel_eq_token _ _ _ (FStar.Squash.return_squash token) |)
        | None, _ -> None
   else None
 

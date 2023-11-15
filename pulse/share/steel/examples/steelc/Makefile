@@ -3,7 +3,7 @@ all: verify test
 # assuming share/steel/examples/steelc
 STEEL_HOME ?= ../../../..
 
-FSTAR_OPTIONS += --include $(STEEL_HOME)/lib/steel/c
+FSTAR_OPTIONS += --include $(STEEL_HOME)/lib/steel/c --warn_error @250
 
 ifneq (,$(KRML_HOME))
 # We need to add some Low* files to the dependency roots, because
@@ -13,15 +13,15 @@ KRML_EXE = $(KRML_HOME)/krml
 FSTAR_OPTIONS += --include $(KRML_HOME)/krmllib --include $(KRML_HOME)/krmllib/obj
 endif
 
+FSTAR_DEP_OPTIONS += --extract krml:*,-FStar.List,-FStar.Tactics,-LowStar.Monotonic.Buffer
+
 include $(STEEL_HOME)/share/steel/Makefile.include
 
 ifneq (,$(KRML_HOME))
 
-FILTERED_KRML_FILES=$(filter-out FStar_NMST.krml Steel_%.krml,$(ALL_KRML_FILES))
-
 # NOTE: this is NOT a phony rule
-extract: $(FILTERED_KRML_FILES)
-	$(KRML_EXE) -skip-compilation -skip-makefiles -bundle 'FStar.\*,Steel.\*,C' -add-include '"steel_c.h"' $^
+extract: $(ALL_KRML_FILES)
+	$(KRML_EXE) -warn-error @4-26 -skip-compilation -skip-makefiles -bundle 'FStar.\*,Steel.\*,C' $^
 	touch $@
 
 ALL_MODULE_NAMES=$(basename $(wildcard *.fst))

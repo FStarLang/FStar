@@ -12,7 +12,18 @@ module P = Pulse.Syntax.Printer
 module FV = Pulse.Typing.FV
 module T = FStar.Tactics.V2
 module R = FStar.Reflection.V2
+module RU = Pulse.RuntimeUtils
 (* Infers the the type of the binders from the specification alone, not the body *)
+
+let range_of_st_comp (st:st_comp) =
+  RU.union_ranges (st.pre.range) (st.post.range)
+
+let range_of_comp (c:comp) =
+  match c with
+  | C_Tot t -> t.range
+  | C_ST st -> range_of_st_comp st
+  | C_STAtomic _ st -> range_of_st_comp st
+  | C_STGhost _ st -> range_of_st_comp st
 
 let rec arrow_of_abs (t:st_term { Tm_Abs? t.term })
   : T.Tac term
@@ -20,10 +31,11 @@ let rec arrow_of_abs (t:st_term { Tm_Abs? t.term })
     if Tm_Abs? body.term
     then (
       let arr = arrow_of_abs body in
-      tm_arrow b q (C_Tot arr)
+      { tm_arrow b q (C_Tot arr) with range = RU.union_ranges b.binder_ty.range arr.range }
     )
-    else
-      tm_arrow b q ascription
+    else (
+      { tm_arrow b q ascription with range = RU.union_ranges b.binder_ty.range (range_of_comp ascription) }
+    )
 module Env = Pulse.Typing.Env
 
 let rec rebuild_abs (g:env) (t:st_term) (annot:T.term)

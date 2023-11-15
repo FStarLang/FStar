@@ -1573,6 +1573,7 @@ let (check :
                                                                     uu___4 ->
                                                                     FStar_Pervasives.Mkdtuple3
                                                                     ((Pulse_Typing.wr
+                                                                    c
                                                                     (Pulse_Syntax_Base.Tm_If
                                                                     {
                                                                     Pulse_Syntax_Base.b1

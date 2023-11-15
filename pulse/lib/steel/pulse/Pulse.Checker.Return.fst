@@ -61,7 +61,7 @@ let check_core
   assume (open_term (close_term post_opened x) x == post_opened);
   let post = close_term post_opened x in
   let d = T_Return g c use_eq u ty t post x uty d post_typing in
-  prove_post_hint (try_frame_pre ctxt_typing d res_ppname) post_hint t.range
+  prove_post_hint (try_frame_pre ctxt_typing (match_comp_res_with_post_hint d post_hint) res_ppname) post_hint t.range
 
 let check
   (g:env)
@@ -70,11 +70,20 @@ let check
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (st:st_term { Tm_Return? st.term })
+  (check:check_t)
   : T.Tac (checker_result_t g ctxt post_hint)
-  = match post_hint, st.term with
-    | Some { ctag_hint = Some ct }, Tm_Return f ->
-      if ct = f.ctag
-      then check_core g ctxt ctxt_typing post_hint res_ppname st
-      else let st = { st with term = Tm_Return { f with ctag=ct }} in
-           check_core g ctxt ctxt_typing post_hint res_ppname st
-    | _ ->  check_core g ctxt ctxt_typing post_hint res_ppname st
+  = let Tm_Return f = st.term in
+    match Pulse.Checker.Base.is_stateful_application g f.term with
+    | Some st_app ->
+      check g ctxt ctxt_typing post_hint res_ppname st_app
+    
+    | None -> (
+      match post_hint with
+      | Some { ctag_hint = Some ct } -> (
+        if ct = f.ctag
+        then check_core g ctxt ctxt_typing post_hint res_ppname st
+        else let st = { st with term = Tm_Return { f with ctag=ct }} in
+             check_core g ctxt ctxt_typing post_hint res_ppname st
+      )
+      | _ ->  check_core g ctxt ctxt_typing post_hint res_ppname st
+    )

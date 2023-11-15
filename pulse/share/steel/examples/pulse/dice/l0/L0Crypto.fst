@@ -1,6 +1,6 @@
 module L0Crypto
 open Pulse.Lib.Pervasives
-open Pulse.Class.BoundedIntegers
+open Pulse.Lib.BoundedIntegers
 module R = Pulse.Lib.Reference
 module A = Pulse.Lib.Array
 module US = FStar.SizeT
@@ -26,11 +26,11 @@ val derive_key_pair_spec'
   (ikm: Seq.seq U8.t)
   (lbl_len: hkdf_lbl_len)
   (lbl: Seq.seq U8.t)
-  : elseq U8.t v32us & elseq U8.t v32us
+  : GTot (Seq.seq U8.t & Seq.seq U8.t)
 let derive_key_pair_spec = derive_key_pair_spec'
 
-```pulse
-fn derive_key_pair'
+assume
+val derive_key_pair'
   (pub : A.larray U8.t (US.v v32us))
   (priv: A.larray U8.t (US.v v32us))
   (ikm_len: hkdf_ikm_len) 
@@ -38,26 +38,52 @@ fn derive_key_pair'
   (lbl_len: hkdf_lbl_len) 
   (lbl: A.array U8.t)
   (#ikm_perm #lbl_perm:perm)
-  (#_pub_seq #_priv_seq:erased (elseq U8.t v32us))
-  (#ikm_seq #lbl_seq:erased (Seq.seq U8.t))
-  requires (
+  (#_pub_seq #_priv_seq #ikm_seq #lbl_seq:erased (Seq.seq U8.t))
+  : stt unit
+  (requires (
     A.pts_to pub _pub_seq ** 
     A.pts_to priv _priv_seq ** 
     A.pts_to ikm #ikm_perm ikm_seq ** 
     A.pts_to lbl #lbl_perm lbl_seq
-  )
-  ensures (
+  ))
+  (ensures (fun _ ->
     A.pts_to ikm #ikm_perm ikm_seq ** 
     A.pts_to lbl #lbl_perm lbl_seq **
-    exists (pub_seq priv_seq:elseq U8.t v32us). (
+    exists_ (fun (pub_seq:Seq.seq U8.t) ->
+    exists_ (fun (priv_seq:Seq.seq U8.t) ->
       A.pts_to pub pub_seq ** 
       A.pts_to priv priv_seq **
       pure ((pub_seq, priv_seq) == derive_key_pair_spec ikm_len ikm_seq lbl_len lbl_seq)
-    ))
-{
-  admit()
-}
-```
+    ))))
+
+// ```pulse
+// fn derive_key_pair'
+//   (pub : A.larray U8.t (US.v v32us))
+//   (priv: A.larray U8.t (US.v v32us))
+//   (ikm_len: hkdf_ikm_len) 
+//   (ikm: A.array U8.t)
+//   (lbl_len: hkdf_lbl_len) 
+//   (lbl: A.array U8.t)
+//   (#ikm_perm #lbl_perm:perm)
+//   (#_pub_seq #_priv_seq #ikm_seq #lbl_seq:erased (Seq.seq U8.t))
+//   requires (
+//     A.pts_to pub _pub_seq ** 
+//     A.pts_to priv _priv_seq ** 
+//     A.pts_to ikm #ikm_perm ikm_seq ** 
+//     A.pts_to lbl #lbl_perm lbl_seq
+//   )
+//   ensures (
+//     A.pts_to ikm #ikm_perm ikm_seq ** 
+//     A.pts_to lbl #lbl_perm lbl_seq **
+//     exists (pub_seq priv_seq:Seq.seq U8.t). (
+//       A.pts_to pub pub_seq ** 
+//       A.pts_to priv priv_seq **
+//       pure ((pub_seq, priv_seq) == derive_key_pair_spec ikm_len ikm_seq lbl_len lbl_seq)
+//     ))
+// {
+//   admit()
+// }
+// ```
 let derive_key_pair = derive_key_pair'
 
 ```pulse 
@@ -68,8 +94,7 @@ fn derive_DeviceID'
   (cdi:A.larray U8.t (US.v dice_digest_len))
   (deviceID_label_len:hkdf_lbl_len)
   (deviceID_label:A.larray U8.t (US.v deviceID_label_len))
-  (#cdi0 #deviceID_label0:erased (Seq.seq U8.t))
-  (#deviceID_pub0 #deviceID_priv0:erased (elseq U8.t v32us))
+  (#cdi0 #deviceID_label0 #deviceID_pub0 #deviceID_priv0:erased (Seq.seq U8.t))
   (#cdi_perm #p:perm)
   requires (
     A.pts_to cdi #cdi_perm cdi0 **
@@ -81,7 +106,7 @@ fn derive_DeviceID'
   ensures (
     A.pts_to cdi #cdi_perm cdi0 **
     A.pts_to deviceID_label #p deviceID_label0 **
-    (exists (deviceID_pub1 deviceID_priv1:elseq U8.t v32us). (
+    (exists (deviceID_pub1 deviceID_priv1:Seq.seq U8.t). (
         A.pts_to deviceID_pub deviceID_pub1 **
         A.pts_to deviceID_priv deviceID_priv1 **
         pure (
@@ -92,15 +117,13 @@ fn derive_DeviceID'
       ))
   )
 {
-  let cdigest = A.alloc 0uy (digest_len alg);
+  let mut cdigest = [| 0uy; digest_len alg |];
   hacl_hash alg dice_digest_len cdi cdigest;
 
   derive_key_pair
     deviceID_pub deviceID_priv
     (digest_len alg) cdigest
     deviceID_label_len deviceID_label;
-
-  A.free cdigest;
 }
 ```
 let derive_DeviceID = derive_DeviceID'
@@ -114,8 +137,7 @@ fn derive_AliasKey'
   (fwid: A.larray U8.t (US.v v32us))
   (aliasKey_label_len: hkdf_lbl_len)
   (aliasKey_label: A.larray U8.t (US.v aliasKey_label_len))
-  (#cdi0 #fwid0 #aliasKey_label0:erased (Seq.seq U8.t))
-  (#aliasKey_pub0 #aliasKey_priv0:erased (elseq U8.t v32us))
+  (#cdi0 #fwid0 #aliasKey_label0 #aliasKey_pub0 #aliasKey_priv0:erased (Seq.seq U8.t))
   (#cdi_perm #p:perm)
   requires (
     A.pts_to cdi #cdi_perm cdi0 **
@@ -129,7 +151,7 @@ fn derive_AliasKey'
     A.pts_to cdi #cdi_perm cdi0 **
     A.pts_to fwid #p fwid0 **
     A.pts_to aliasKey_label #p aliasKey_label0 **
-    (exists (aliasKey_pub1 aliasKey_priv1:elseq U8.t v32us). (
+    (exists (aliasKey_pub1 aliasKey_priv1:Seq.seq U8.t). (
         A.pts_to aliasKey_pub aliasKey_pub1 **
         A.pts_to aliasKey_priv aliasKey_priv1 **
         pure (
@@ -141,8 +163,8 @@ fn derive_AliasKey'
       ))
   )
 {
-  let cdigest = A.alloc 0uy (digest_len alg);
-  let adigest = A.alloc 0uy (digest_len alg);
+  let mut cdigest = [| 0uy; digest_len alg |];
+  let mut adigest = [| 0uy; digest_len alg |];
 
   hacl_hash alg dice_digest_len cdi cdigest;
   is_hashable_len_32;
@@ -152,9 +174,6 @@ fn derive_AliasKey'
     aliasKey_pub aliasKey_priv
     (digest_len alg) adigest
     aliasKey_label_len aliasKey_label;
-
-  A.free cdigest;
-  A.free adigest;
 }
 ```
 let derive_AliasKey = derive_AliasKey'
@@ -165,8 +184,7 @@ fn derive_AuthKeyID'
   (alg:alg_t)
   (authKeyID: A.larray U8.t (US.v (digest_len alg)))
   (deviceID_pub: A.larray U8.t (US.v v32us))
-  (#authKeyID0:erased (Seq.seq U8.t))
-  (#deviceID_pub0:erased (elseq U8.t v32us))
+  (#authKeyID0 #deviceID_pub0:erased (Seq.seq U8.t))
   (#p:perm)
   requires (
     A.pts_to deviceID_pub #p deviceID_pub0 **
@@ -181,7 +199,7 @@ fn derive_AuthKeyID'
   )
 {
   is_hashable_len_32;
-  hacl_hash alg v32us deviceID_pub authKeyID #p #(coerce v32us deviceID_pub0);
+  hacl_hash alg v32us deviceID_pub authKeyID;
 }
 ```
 let derive_AuthKeyID = derive_AuthKeyID'

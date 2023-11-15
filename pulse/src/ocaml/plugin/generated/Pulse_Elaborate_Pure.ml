@@ -107,11 +107,9 @@ let rec (elab_pat :
     match p with
     | Pulse_Syntax_Base.Pat_Constant c ->
         FStar_Reflection_V2_Data.Pat_Constant c
-    | Pulse_Syntax_Base.Pat_Var v ->
+    | Pulse_Syntax_Base.Pat_Var (v, ty) ->
         FStar_Reflection_V2_Data.Pat_Var
-          ((FStar_Sealed.seal
-              (FStar_Reflection_V2_Builtins.pack_ln
-                 FStar_Reflection_V2_Data.Tv_Unknown)), v)
+          (FStar_Reflection_Typing.sort_default, v)
     | Pulse_Syntax_Base.Pat_Cons (fv, vs) ->
         FStar_Reflection_V2_Data.Pat_Cons
           ((elab_fv fv), FStar_Pervasives_Native.None,
@@ -185,12 +183,15 @@ let (elab_stt_equiv :
               Pulse_Reflection_Util.mk_stt_comp_equiv g
                 (Pulse_Syntax_Base.comp_u c)
                 (elab_term (Pulse_Syntax_Base.comp_res c)) pre post
+                (elab_term (Pulse_Syntax_Base.comp_res c))
                 (elab_term (Pulse_Syntax_Base.comp_pre c))
                 (Pulse_Reflection_Util.mk_abs
                    (elab_term (Pulse_Syntax_Base.comp_res c))
                    FStar_Reflection_V2_Data.Q_Explicit
-                   (elab_term (Pulse_Syntax_Base.comp_post c))) eq_pre
-                eq_post
+                   (elab_term (Pulse_Syntax_Base.comp_post c)))
+                (FStar_Reflection_Typing.Rel_refl
+                   (g, (elab_term (Pulse_Syntax_Base.comp_res c)),
+                     FStar_Reflection_Typing.R_Eq)) eq_pre eq_post
 let (elab_statomic_equiv :
   FStar_Reflection_Types.env ->
     Pulse_Syntax_Base.comp ->

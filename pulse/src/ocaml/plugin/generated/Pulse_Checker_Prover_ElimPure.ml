@@ -37,7 +37,8 @@ let (mk_elim_pure : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.st_term) =
           Pulse_Syntax_Base.arg_qual = FStar_Pervasives_Native.None;
           Pulse_Syntax_Base.arg = p
         } in
-    Pulse_Typing.wr t
+    Pulse_Typing.wtag
+      (FStar_Pervasives_Native.Some Pulse_Syntax_Base.STT_Ghost) t
 let (elim_pure_comp : Pulse_Syntax_Base.host_term -> Pulse_Syntax_Base.comp)
   =
   fun p ->

@@ -8,16 +8,12 @@ module SZ = FStar.SizeT
 module Seq = FStar.Seq
 module U8 = FStar.UInt8
 
-let elseq (a:Type) (l:SZ.t) = s:Seq.seq a{ Seq.length s == SZ.v l }
-
-let larray t (n:nat) = a:array t { length a == n }
-
 val compare
         (#t:eqtype)
         (l:SZ.t)
         (a1 a2:larray t (SZ.v l))
         (#p1 #p2:perm)
-        (#s1 #s2:Ghost.erased (elseq t l))
+        (#s1 #s2:Ghost.erased (Seq.seq t))
   : stt bool
         (requires 
             pts_to a1 #p1 s1 **
@@ -32,7 +28,7 @@ val memcpy
         (l:SZ.t)
         (src dst:larray t (SZ.v l))
         (#p:perm)
-        (#src0 #dst0:Ghost.erased (elseq t l))
+        (#src0 #dst0:Ghost.erased (Seq.seq t))
   : stt unit
         (requires 
             pts_to src #p src0 **
@@ -46,7 +42,7 @@ val fill
         (l:SZ.t)
         (a:larray t (SZ.v l))
         (v:t)
-        (#s:Ghost.erased (elseq t l))
+        (#s:Ghost.erased (Seq.seq t))
   : stt unit
         (requires 
             pts_to a s)
@@ -58,7 +54,7 @@ val fill
 val zeroize
         (l:SZ.t)
         (a:array U8.t{ SZ.v l == length a })
-        (#s:Ghost.erased (elseq U8.t l))
+        (#s:Ghost.erased (Seq.seq U8.t))
   : stt unit
         (requires 
             pts_to a s)

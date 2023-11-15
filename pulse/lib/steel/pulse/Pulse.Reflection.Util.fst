@@ -1,6 +1,7 @@
 module Pulse.Reflection.Util
 
 module R = FStar.Reflection.V2
+module T = FStar.Tactics.V2
 module RT = FStar.Reflection.Typing
 module RU = Pulse.RuntimeUtils
 open FStar.List.Tot
@@ -22,6 +23,18 @@ let unit_fv = R.pack_fv unit_lid
 let unit_tm = R.pack_ln (R.Tv_FVar unit_fv)
 let bool_fv = R.pack_fv bool_lid
 let bool_tm = R.pack_ln (R.Tv_FVar bool_fv)
+let nat_lid = ["Prims"; "nat"]
+let nat_fv = R.pack_fv nat_lid
+let nat_tm = R.pack_ln (R.Tv_FVar nat_fv)
+let szt_lid = ["FStar"; "SizeT"; "t"]
+let szt_fv = R.pack_fv szt_lid
+let szt_tm = R.pack_ln (R.Tv_FVar szt_fv)
+let szv_lid = ["FStar"; "SizeT"; "v"]
+let szv_fv = R.pack_fv szv_lid
+let szv_tm = R.pack_ln (R.Tv_FVar szv_fv)
+let seq_lid = ["FStar"; "Seq"; "Base"; "seq"]
+let seq_create_lid = ["FStar"; "Seq"; "Base"; "create"]
+
 
 let tuple2_lid = ["FStar"; "Pervasives"; "Native"; "tuple2"]
 let fst_lid = ["FStar"; "Pervasives"; "Native"; "fst"]
@@ -84,7 +97,7 @@ let mk_squash (u:R.universe) (ty:R.term) : R.term =
 
 let mk_eq2 (u:R.universe) (ty e1 e2:R.term) : R.term =
   let open R in
-  let t = pack_ln (Tv_UInst (pack_fv (mk_pulse_lib_core_lid "eq2_prop")) [u]) in
+  let t = pack_ln (Tv_UInst (pack_fv R.eq2_qn) [u]) in
   let t = pack_ln (Tv_App t (ty, Q_Implicit)) in
   let t = pack_ln (Tv_App t (e1, Q_Explicit)) in
   pack_ln (Tv_App t (e2, Q_Explicit))
@@ -156,7 +169,7 @@ let mk_stt_ghost_comp_post_equiv (g:R.env) (u:R.universe) (a inames pre post1 po
   let t = R.pack_ln (R.Tv_App t (a, R.Q_Explicit)) in
   let t = R.pack_ln (R.Tv_App t (inames, R.Q_Explicit)) in
   let t = R.pack_ln (R.Tv_App t (pre, R.Q_Explicit)) in
-  EQ_Ctxt g post1 post2
+  Rel_ctxt g post1 post2
     (Ctxt_app_arg t Q_Explicit Ctxt_hole)
     posts_equiv
 
@@ -538,7 +551,6 @@ let mk_rewrite (p q:R.term) =
   let t = pack_ln (Tv_App t (q, Q_Explicit)) in
   pack_ln (Tv_App t (`(), Q_Explicit))
 
-
 let mk_withlocal (ret_u:R.universe) (a init pre ret_t post body:R.term) =
   let open R in
   let lid = mk_pulse_lib_reference_lid "with_local" in
@@ -558,11 +570,12 @@ let mk_star_equiv (g:R.env) (t1 t2 t3 t4:R.term)
   
   admit ()
 
-let mk_stt_comp_equiv (g:R.env) (u:R.universe) (res pre1 post1 pre2 post2:R.term)
+let mk_stt_comp_equiv (g:R.env) (u:R.universe) (res1 pre1 post1 res2 pre2 post2:R.term)
+  (res_eq: RT.equiv g res1 res2)
   (pre_eq:RT.equiv g pre1 pre2)
   (post_eq:RT.equiv g post1 post2)
-  : RT.equiv g (mk_stt_comp u res pre1 post1)
-               (mk_stt_comp u res pre2 post2)
+  : RT.equiv g (mk_stt_comp u res1 pre1 post1)
+               (mk_stt_comp u res2 pre2 post2)
   = admit ()
 
 let mk_stt_atomic_comp_equiv (g:R.env) (u:R.universe) (res inames pre1 post1 pre2 post2:R.term)
@@ -599,3 +612,74 @@ let mk_pts_to (a:R.term) (r:R.term) (perm:R.term) (v:R.term) : R.term =
 let full_perm_tm : R.term =
   let open R in
   pack_ln (Tv_FVar (pack_fv full_perm_lid))
+
+let pulse_lib_array_core = ["Pulse"; "Lib"; "Array"; "Core"]
+let mk_pulse_lib_array_core_lid s = pulse_lib_array_core @ [s]
+
+let array_lid = mk_pulse_lib_array_core_lid "array"
+let array_pts_to_lid = mk_pulse_lib_array_core_lid "pts_to"
+let array_length_lid = mk_pulse_lib_array_core_lid "length"
+let array_is_full_lid = mk_pulse_lib_array_core_lid "is_full_array"
+
+let mk_array (a:R.term) : R.term =
+  let open R in
+  let t = pack_ln (Tv_FVar (pack_fv array_lid)) in
+  pack_ln (Tv_App t (a, Q_Explicit))
+
+let mk_array_length (a:R.term) (arr:R.term) : R.term =
+  let open R in
+  let t = pack_ln (Tv_FVar (pack_fv array_length_lid)) in
+  let t = pack_ln (Tv_App t (a, Q_Implicit)) in
+  pack_ln (Tv_App t (arr, Q_Explicit))
+
+let mk_array_pts_to (a:R.term) (arr:R.term) (perm:R.term) (v:R.term) : R.term =
+  let open R in
+  let t = pack_ln (Tv_FVar (pack_fv array_pts_to_lid)) in
+  let t = pack_ln (Tv_App t (a, Q_Implicit)) in
+  let t = pack_ln (Tv_App t (arr, Q_Explicit)) in
+  let t = pack_ln (Tv_App t (perm, Q_Implicit)) in
+  pack_ln (Tv_App t (v, Q_Explicit))
+
+// let mk_array_is_full (a:R.term) (arr:R.term) : R.term =
+//   let open R in
+//   let t = pack_ln (Tv_FVar (pack_fv array_is_full_lid)) in
+//   let t = pack_ln (Tv_App t (a, Q_Implicit)) in
+//   pack_ln (Tv_App t (arr, Q_Explicit))
+
+let mk_seq (u:R.universe) (a:R.term) : R.term =
+  let open R in
+  let t = pack_ln (Tv_UInst (R.pack_fv seq_lid) [u]) in
+  pack_ln (Tv_App t (a, Q_Explicit))
+
+let mk_seq_create (u:R.universe) (a:R.term) (len:R.term) (v:R.term) : R.term =
+  let open R in
+  let t = pack_ln (Tv_UInst (R.pack_fv seq_create_lid) [u]) in
+  let t = pack_ln (Tv_App t (a, Q_Implicit)) in
+  let t = pack_ln (Tv_App t (len, Q_Explicit)) in
+  pack_ln (Tv_App t (v, Q_Explicit))
+
+let mk_withlocalarray (ret_u:R.universe) (a init len pre ret_t post body:R.term) =
+  let open R in
+  let lid = mk_pulse_lib_array_core_lid "with_local" in
+  let t = pack_ln (Tv_UInst (R.pack_fv lid) [ret_u]) in
+  let t = pack_ln (Tv_App t (a, Q_Implicit)) in
+  let t = pack_ln (Tv_App t (init, Q_Explicit)) in
+  let t = pack_ln (Tv_App t (len, Q_Explicit)) in
+  let t = pack_ln (Tv_App t (pre, Q_Implicit)) in
+  let t = pack_ln (Tv_App t (ret_t, Q_Implicit)) in
+  let t = pack_ln (Tv_App t (post, Q_Implicit)) in
+  pack_ln (Tv_App t (body, Q_Explicit))
+
+let mk_szv (n:R.term) =
+  let open R in
+  let t = pack_ln (Tv_FVar (pack_fv szv_lid)) in
+  pack_ln (Tv_App t (n, Q_Explicit))
+
+let mk_opaque_let (g:R.env) (nm:string) (tm:Ghost.erased R.term) (ty:R.typ{RT.typing g tm (T.E_Total, ty)}) : T.Tac (RT.sigelt_for g) =
+  let fv = R.pack_fv (T.cur_module () @ [nm]) in
+  let lb = R.pack_lb ({ lb_fv = fv; lb_us = []; lb_typ = ty; lb_def = (`_) }) in
+  let se = R.pack_sigelt (R.Sg_Let false [lb]) in
+  let pf : RT.sigelt_typing g se =
+    RT.ST_Let_Opaque g fv ty ()
+  in
+  (true, se, None)

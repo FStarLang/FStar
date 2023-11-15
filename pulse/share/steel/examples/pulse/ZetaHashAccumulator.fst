@@ -29,7 +29,7 @@ module SZ = FStar.SizeT
 module A = Pulse.Lib.Array
 module U64 = FStar.UInt64
 module Cast = FStar.Int.Cast
-open Pulse.Class.BoundedIntegers
+open Pulse.Lib.BoundedIntegers
 #push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
 #push-options "--fuel 0 --ifuel 0"
 
@@ -138,31 +138,31 @@ val array_pts_to_len (#t:Type0) (a:A.array t) (#p:perm) (#x:Seq.seq t)
           (A.pts_to a #p x)
           (fun _ -> A.pts_to a #p x ** pure (A.length a == Seq.length x))
 
-// Array compare is implemented in other Pulse array modules, but this is not
+// // Array compare is implemented in other Pulse array modules, but this is not
 
 
-// yet in a standard place in the library. So, I just assume it here.
-```pulse
-fn array_compare (#t:eqtype) (l:SZ.t) (a1 a2:A.larray t (SZ.v l))
-  requires (
-    A.pts_to a1 #p1 's1 **
-    A.pts_to a2 #p2 's2
-  )
-  returns res:bool
-  ensures (
-    A.pts_to a1 #p1 's1 **
-    A.pts_to a2 #p2 's2 **
-    (pure (res <==> Seq.equal 's1 's2))
-  )
-{
-  array_pts_to_len a1;
-  array_pts_to_len a2;
-  Pulse.Lib.Array.compare l a1 a2 
-            #p1 #p2
-            #(hide #(elseq t l) (reveal 's1))
-            #(hide #(elseq t l) (reveal 's2));
-}
-```
+// // yet in a standard place in the library. So, I just assume it here.
+// ```pulse
+// fn array_compare (#t:eqtype) (l:SZ.t) (a1 a2:A.larray t (SZ.v l))
+//   requires (
+//     A.pts_to a1 #p1 's1 **
+//     A.pts_to a2 #p2 's2
+//   )
+//   returns res:bool
+//   ensures (
+//     A.pts_to a1 #p1 's1 **
+//     A.pts_to a2 #p2 's2 **
+//     (pure (res <==> Seq.equal 's1 's2))
+//   )
+// {
+//   array_pts_to_len a1;
+//   array_pts_to_len a2;
+//   Pulse.Lib.Array.compare l a1 a2 
+//             #p1 #p2
+//             #(hide #(elseq t l) (reveal 's1))
+//             #(hide #(elseq t l) (reveal 's2));
+// }
+// ```
 
 (***************************************************************)
 (* Pulse *)
@@ -436,7 +436,7 @@ fn compare (b1 b2:ha)
   }
   else
   {
-    let res = array_compare 32sz b1.core.acc b2.core.acc;
+    let res = A.compare 32sz b1.core.acc b2.core.acc;
     fold_ha_val b1;
     fold_ha_val b2;
     res
@@ -451,7 +451,6 @@ fn compare (b1 b2:ha)
 //    the hash of the input
 // And then aggregate these two ha_cores into the first one
 // And then to repackage it as an ha
-#push-options "--debug ZetaHashAccumulator --print_implicits --debug_level with_binders"
 ```pulse
 fn add (ha:ha) (input:hashable_buffer) (l:SZ.t)
        (#s:(s:erased bytes {SZ.v l <= Seq.length s /\  SZ.v l <= blake2_max_input_length}))

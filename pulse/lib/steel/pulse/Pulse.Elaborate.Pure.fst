@@ -66,7 +66,7 @@ let rec elab_pat (p:pattern) : Tot R.pattern =
   in
   match p with
   | Pat_Constant c -> R.Pat_Constant c
-  | Pat_Var v -> R.Pat_Var (Sealed.seal R.(pack_ln Tv_Unknown)) v
+  | Pat_Var v ty -> R.Pat_Var RT.sort_default v
   | Pat_Cons fv vs ->
     R.Pat_Cons (elab_fv fv) None (Pulse.Common.map_dec p vs elab_sub_pat)
   | Pat_Dot_Term None ->
@@ -121,7 +121,7 @@ let elab_stt_equiv (g:R.env) (c:comp{C_ST? c}) (pre:R.term) (post:R.term)
   mk_stt_comp_equiv _
     (comp_u c)
     (elab_term (comp_res c))
-    _ _ _ _ eq_pre eq_post
+    _ _ _ _ _ (RT.Rel_refl _ _ _) eq_pre eq_post
 
 let elab_statomic_equiv (g:R.env) (c:comp{C_STAtomic? c}) (pre:R.term) (post:R.term)
   (eq_pre:RT.equiv g pre (elab_term (comp_pre c)))

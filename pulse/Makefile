@@ -108,3 +108,13 @@ install-share:
 	+$(MAKE) -C share/steel install
 
 install: install-ocaml install-lib install-include install-share install-src-c
+
+.PHONY: pulse2rust
+pulse2rust:
+	+$(MAKE) -C pulse2rust
+
+boot:
+	+$(MAKE) verify-pulse
+	+$(MAKE) -C src extract-pulse-plugin
+	+$(MAKE) ocaml
+  

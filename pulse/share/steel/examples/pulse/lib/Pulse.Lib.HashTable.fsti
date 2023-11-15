@@ -5,82 +5,91 @@ module US = FStar.SizeT
 module U8 = FStar.UInt8
 module PHT = Pulse.Lib.HashTable.Spec
 open Pulse.Lib.HashTable.Spec
-open Pulse.Class.BoundedIntegers
 
 type pos_us = n:US.t{US.v n > 0}
 
-noeq
-type pht_sig_us = {
-  keyt : eqtype;
-  valt : Type0;
-  hashf : keyt -> US.t;
-}
-let mk_pht_sig_us keyt valt hashf : pht_sig_us = { keyt; valt; hashf }
-let mk_used_cell #a #b (k:a) (v:b) = Used k v
+let mk_used_cell (#a:eqtype) #b (k:a) (v:b) : cell a b = Used k v
 
 noeq
-type ht_t (s : pht_sig_us) = {
+type ht_t (keyt:eqtype) (valt:Type) = {
   sz : pos_us;
-  contents : A.larray (cell s.keyt s.valt) (US.v sz);
+  hashf: keyt -> US.t;
+  contents : A.larray (cell keyt valt) (US.v sz);
 }
-let mk_ht (#s:pht_sig_us) (sz:pos_us) 
-          (contents:A.larray (cell s.keyt s.valt) (US.v sz))
-  : ht_t s 
-  = { sz; contents; }
 
-let s_to_ps (s:pht_sig_us) : pht_sig
-  = { keyt = s.keyt; valt = s.valt; hashf = (fun k -> US.v (s.hashf k)) }
+let mk_ht (#k:eqtype) #v 
+          (sz:pos_us) 
+          (hashf:k -> US.t)
+          (contents:A.larray (cell k v) (US.v sz))
+  : ht_t k v
+  = { sz; hashf; contents; }
 
-let mk_init_pht (#s:pht_sig_us) (sz:pos_us)
-  : pht_t (s_to_ps s)
+let lift_hash_fun (#k:eqtype) (hashf:k -> US.t) : k -> nat = fun k -> US.v (hashf k)
+
+let mk_init_pht (#k:eqtype) #v (hashf:k -> US.t) (sz:pos_us)
+  : GTot (pht_t k v)
   = 
-  { sz = US.v sz;
-    spec = (fun (k:s.keyt) -> None);
-    repr = Seq.create (US.v sz) Clean;
+  { spec = (fun k -> None);
+    repr = {
+      sz=US.v sz;
+      seq=Seq.create (US.v sz) Clean;
+      hashf=lift_hash_fun hashf;
+    };
     inv = (); }
 
-val models (s:pht_sig_us) (ht:ht_t s) (pht:pht_t (s_to_ps s)) : vprop
+val models #k #v (ht:ht_t k v) (pht:pht_t k v) : vprop
 
-let pht_sz #s (pht:pht_t s) : pos = pht.sz
+let pht_sz #k #v (pht:pht_t k v) : GTot pos = pht.repr.sz
 
-let destroy_fn_t (t:Type0) : Type = v:t -> stt unit emp (fun _ -> emp) 
+val alloc (#k:eqtype) (#v:Type0) (hashf:k -> US.t) (l:pos_us)
+  : stt (ht_t k v) emp 
+        (fun ht ->
+          exists_ (fun pht ->
+            models ht pht **
+            pure (pht == mk_init_pht hashf l)))
 
-val alloc (#s:pht_sig_us) (l:pos_us)
-  : stt (ht_t s) emp (fun ht -> exists_ (fun pht -> models s ht pht))
-
-val dealloc (#s:pht_sig_us) (ht:ht_t s) (l:pos_us) 
-  (destroy_val:destroy_fn_t s.valt)
-  (destroy_key:destroy_fn_t s.keyt)
-  : stt unit (requires exists_ (fun pht -> models s ht pht))
+val dealloc (#k:eqtype) (#v:Type0) (ht:ht_t k v)
+  : stt unit (requires exists_ (fun pht -> models ht pht))
              (ensures fun _ -> emp)
 
-val lookup (#s:pht_sig_us)
-           (#pht:erased (pht_t (s_to_ps s)))
-           (ht:ht_t s) (k:s.keyt)
-  : stt (bool & option s.valt)
-    (models s ht pht)
-    (fun p -> models s ht pht ** pure ( fst p ==> (snd p) == PHT.lookup pht k ))
+val lookup (#kt:eqtype) (#vt:Type0)
+           (ht:ht_t kt vt) (k:kt)
+           (#pht:erased (pht_t kt vt))
+  : stt (bool & option vt)
+    (models ht pht)
+    (fun p -> models ht pht ** pure (fst p ==> (snd p) == PHT.lookup pht k ))
 
-let maybe_update (b:bool) (s:pht_sig_us) (ht:ht_t s) (pht pht':pht_t (s_to_ps s)) =
-  if b then models s ht pht' else models s ht pht
-
-val insert (#s:pht_sig_us)
-          (#pht:(p:erased (pht_t (s_to_ps s)){PHT.not_full p.repr}))
-          (ht:ht_t s) (k:s.keyt) (v:s.valt)
+val insert (#kt:eqtype) (#vt:Type0)
+           (ht:ht_t kt vt) (k:kt) (v:vt)
+           (#pht:erased (pht_t kt vt){PHT.not_full pht.repr})
   : stt bool 
-    (models s ht pht)
-    (fun b -> maybe_update b s ht pht (PHT.insert pht k v))
+        (models ht pht)
+        (fun b -> 
+          exists_ (fun pht' -> 
+            models ht pht' **
+            pure (if b
+                  then pht'==PHT.insert pht k v
+                  else pht'==reveal pht)))
 
-val delete (#s:pht_sig_us)
-          (#pht:erased (pht_t (s_to_ps s)))
-          (ht:ht_t s) (k:s.keyt)
-  : stt bool
-    (models s ht pht)
-    (fun b -> maybe_update b s ht pht (PHT.delete pht k))
 
-val not_full (#s:pht_sig_us) (#pht:erased (pht_t (s_to_ps s))) (ht:ht_t s)
+val delete (#kt:eqtype) (#vt:Type0)
+           (ht:ht_t kt vt) (k:kt)
+           (#pht:erased (pht_t kt vt))
   : stt bool
-    (models s ht pht)
+    (models ht pht)
     (fun b -> 
-      models s ht pht ** 
-      pure (b ==> PHT.not_full #(s_to_ps s) #(pht_sz pht) pht.repr))
+        exists_ (fun pht' -> 
+            models ht pht' **
+            pure (if b
+                  then pht'==PHT.delete pht k
+                  else pht'==reveal pht)))
+
+val not_full (#kt:eqtype) (#vt:Type0)
+             (ht:ht_t kt vt)
+             (#pht:erased (pht_t kt vt))
+  : stt bool (models ht pht)
+      (fun b -> 
+        models ht pht ** 
+        pure (b ==> PHT.not_full pht.repr))
+
+val test_mono (_:unit) : stt unit emp (fun _ -> emp)

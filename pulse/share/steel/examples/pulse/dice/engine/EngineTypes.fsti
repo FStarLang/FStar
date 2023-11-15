@@ -10,8 +10,6 @@ val uds_is_enabled : vprop
 
 val uds_len : hashable_len 
 
-val uds_bytes : Ghost.erased (elseq U8.t uds_len)
-
 type dice_return_code = | DICE_SUCCESS | DICE_ERROR
 
 let cdi_t = A.larray U8.t (US.v (digest_len dice_hash_alg))
@@ -32,8 +30,8 @@ type engine_record_repr = {
     l0_image_header      : Seq.seq U8.t;
     l0_image_header_sig  : Seq.seq U8.t;
     l0_binary            : Seq.seq U8.t;
-    l0_binary_hash       : elseq U8.t dice_digest_len;
-    l0_image_auth_pubkey : elseq U8.t 32sz;
+    l0_binary_hash       : Seq.seq U8.t;
+    l0_image_auth_pubkey : Seq.seq U8.t;
 }
 
 let mk_engine_repr  l0_image_header_size l0_image_header l0_image_header_sig
@@ -41,7 +39,7 @@ let mk_engine_repr  l0_image_header_size l0_image_header l0_image_header_sig
   = {l0_image_header_size; l0_image_header; l0_image_header_sig;
      l0_binary_size; l0_binary; l0_binary_hash; l0_image_auth_pubkey}
 
-let engine_record_perm (record:engine_record_t) (repr:engine_record_repr) (p:perm)
+let engine_record_perm (record:engine_record_t) (p:perm) (repr:engine_record_repr)
   : vprop = 
   A.pts_to record.l0_image_header #p repr.l0_image_header **
   A.pts_to record.l0_image_header_sig #p repr.l0_image_header_sig **
