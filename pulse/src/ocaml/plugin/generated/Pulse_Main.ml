@@ -57,7 +57,7 @@ let rec (mk_abs :
                (Obj.magic
                   (FStar_Range.mk_range "Pulse.Main.fst" (Prims.of_int (30))
                      (Prims.of_int (2)) (Prims.of_int (39))
-                     (Prims.of_int (69)))))
+                     (Prims.of_int (81)))))
             (FStar_Tactics_Effect.lift_div_tac
                (fun uu___ ->
                   fun s ->
@@ -78,18 +78,15 @@ let rec (mk_abs :
                               (fun uu___ ->
                                  with_range
                                    (Pulse_Syntax_Builder.tm_abs last q
-                                      (FStar_Pervasives_Native.Some
-                                         {
-                                           Pulse_Syntax_Base.annotated =
-                                             (FStar_Pervasives_Native.Some
-                                                (Pulse_Syntax_Naming.close_comp
-                                                   comp
-                                                   last_bv.Pulse_Syntax_Base.bv_index));
-                                           Pulse_Syntax_Base.elaborated =
+                                      {
+                                        Pulse_Syntax_Base.annotated =
+                                          (FStar_Pervasives_Native.Some
                                              (Pulse_Syntax_Naming.close_comp
                                                 comp
-                                                last_bv.Pulse_Syntax_Base.bv_index)
-                                         })
+                                                last_bv.Pulse_Syntax_Base.bv_index));
+                                        Pulse_Syntax_Base.elaborated =
+                                          FStar_Pervasives_Native.None
+                                      }
                                       (Pulse_Syntax_Naming.close_st_term body
                                          last_bv.Pulse_Syntax_Base.bv_index))
                                    (Pulse_Syntax_Naming.close_st_term body
@@ -110,14 +107,14 @@ let rec (mk_abs :
                                     (FStar_Range.mk_range "Pulse.Main.fst"
                                        (Prims.of_int (39)) (Prims.of_int (4))
                                        (Prims.of_int (39))
-                                       (Prims.of_int (69)))))
+                                       (Prims.of_int (81)))))
                               (Obj.magic (mk_abs g qbs1 body comp))
                               (fun body1 ->
                                  FStar_Tactics_Effect.lift_div_tac
                                    (fun uu___ ->
                                       with_range
                                         (Pulse_Syntax_Builder.tm_abs b q
-                                           FStar_Pervasives_Native.None
+                                           Pulse_Syntax_Base.empty_ascription
                                            (Pulse_Syntax_Naming.close_st_term
                                               body1
                                               bv.Pulse_Syntax_Base.bv_index))

@@ -101,11 +101,8 @@ let tm_abs (b:binder)
            (body:st_term)
            r
   : st_term 
-  = let asc =
-      match c with
-      | None -> None
-      | Some c -> Some { annotated = Some c; elaborated = c }
-    in PSB.(with_range (tm_abs b q asc body) r)
+  = let asc = { annotated = c; elaborated = None } in
+    PSB.(with_range (tm_abs b q asc body) r)
 
 let tm_st_app (head:term) (q:S.aqual) (arg:term) r : st_term =
   PSB.(with_range (tm_stapp head (map_aqual q) arg) r)

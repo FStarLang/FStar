@@ -86,7 +86,8 @@ let (freevars_proof_hint :
 let (freevars_ascription :
   Pulse_Syntax_Base.comp_ascription -> Pulse_Syntax_Base.var FStar_Set.set) =
   fun c ->
-    FStar_Set.union (freevars_comp c.Pulse_Syntax_Base.elaborated)
+    FStar_Set.union
+      (freevars_opt freevars_comp c.Pulse_Syntax_Base.elaborated)
       (freevars_opt freevars_comp c.Pulse_Syntax_Base.annotated)
 let rec (freevars_st :
   Pulse_Syntax_Base.st_term -> Pulse_Syntax_Base.var FStar_Set.set) =
@@ -104,7 +105,7 @@ let rec (freevars_st :
         ->
         FStar_Set.union (freevars b.Pulse_Syntax_Base.binder_ty)
           (FStar_Set.union (freevars_st body)
-             (freevars_opt freevars_ascription ascription))
+             (freevars_ascription ascription))
     | Pulse_Syntax_Base.Tm_STApp
         { Pulse_Syntax_Base.head = head; Pulse_Syntax_Base.arg_qual = uu___;
           Pulse_Syntax_Base.arg = arg;_}
@@ -314,7 +315,7 @@ let (ln_ascription' :
   Pulse_Syntax_Base.comp_ascription -> Prims.int -> Prims.bool) =
   fun c ->
     fun i ->
-      (ln_c' c.Pulse_Syntax_Base.elaborated i) &&
+      (ln_opt' ln_c' c.Pulse_Syntax_Base.elaborated i) &&
         (ln_opt' ln_c' c.Pulse_Syntax_Base.annotated i)
 let rec (ln_st' : Pulse_Syntax_Base.st_term -> Prims.int -> Prims.bool) =
   fun t ->
@@ -332,7 +333,7 @@ let rec (ln_st' : Pulse_Syntax_Base.st_term -> Prims.int -> Prims.bool) =
           ->
           ((ln' b.Pulse_Syntax_Base.binder_ty i) &&
              (ln_st' body (i + Prims.int_one)))
-            && (ln_opt' ln_ascription' ascription (i + Prims.int_one))
+            && (ln_ascription' ascription (i + Prims.int_one))
       | Pulse_Syntax_Base.Tm_STApp
           { Pulse_Syntax_Base.head = head;
             Pulse_Syntax_Base.arg_qual = uu___;
@@ -768,7 +769,7 @@ let (subst_ascription :
         Pulse_Syntax_Base.annotated =
           (map2_opt subst_comp c.Pulse_Syntax_Base.annotated ss);
         Pulse_Syntax_Base.elaborated =
-          (subst_comp c.Pulse_Syntax_Base.elaborated ss)
+          (map2_opt subst_comp c.Pulse_Syntax_Base.elaborated ss)
       }
 let rec (subst_st_term :
   Pulse_Syntax_Base.st_term -> subst -> Pulse_Syntax_Base.st_term) =
@@ -797,7 +798,7 @@ let rec (subst_st_term :
                 Pulse_Syntax_Base.b = (subst_binder b ss);
                 Pulse_Syntax_Base.q = q;
                 Pulse_Syntax_Base.ascription =
-                  (map2_opt subst_ascription ascription (shift_subst ss));
+                  (subst_ascription ascription (shift_subst ss));
                 Pulse_Syntax_Base.body =
                   (subst_st_term body (shift_subst ss))
               }

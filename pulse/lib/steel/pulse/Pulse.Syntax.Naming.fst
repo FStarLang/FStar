@@ -130,10 +130,12 @@ let close_open_inverse_ascription' (t:comp_ascription)
                                    (x:var { ~(x `Set.mem` freevars_ascription t) } )
                                    (i:index)
   : Lemma (ensures close_ascription' (open_ascription' t (U.term_of_no_name_var x) i) x i == t)
-  = close_open_inverse_comp' t.elaborated x i;
-    match t.annotated with
-    | None -> ()
-    | Some c -> close_open_inverse_comp' c x i
+  = (match t.annotated with
+     | None -> ()
+     | Some c -> close_open_inverse_comp' c x i);
+    (match t.elaborated with
+     | None -> ()
+     | Some c -> close_open_inverse_comp' c x i)
           
 let rec close_open_inverse_st'  (t:st_term) 
                                 (x:var { ~(x `Set.mem` freevars_st t) } )
@@ -149,12 +151,8 @@ let rec close_open_inverse_st'  (t:st_term)
 
     | Tm_Abs { b; ascription; body } ->
       close_open_inverse' b.binder_ty x i;
-      close_open_inverse_st' body x (i + 1); (
-        match ascription with
-        | None -> ()
-        | Some c ->
-          close_open_inverse_ascription' c x (i + 1)
-      )
+      close_open_inverse_st' body x (i + 1); 
+      close_open_inverse_ascription' ascription x (i + 1)
 
     | Tm_Bind { binder; head; body } ->
       close_open_inverse' binder.binder_ty x i;

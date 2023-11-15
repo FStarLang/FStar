@@ -133,13 +133,16 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
     | Tm_Abs { b; ascription=c; body } ->
       freevars_close_term' b.binder_ty x i;
       (
-        match c with
+        match c.annotated with
         | None -> ()
-        | Some { elaborated=c ; annotated = None } ->
+        | Some c ->
           freevars_close_comp c x (i + 1)
-        | Some { elaborated=c ; annotated = Some c' } ->
-          freevars_close_comp c x (i + 1);
-          freevars_close_comp c' x (i + 1)
+      );
+      (
+        match c.elaborated with
+        | None -> ()
+        | Some c ->
+          freevars_close_comp c x (i + 1)
       );
       freevars_close_st_term' body x (i + 1)
 

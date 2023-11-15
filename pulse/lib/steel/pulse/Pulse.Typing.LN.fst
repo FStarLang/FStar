@@ -190,6 +190,16 @@ and open_pattern_args_ln (pats:list (pattern & bool)) (x:term) (i:index)
       open_pattern_ln hd x i;
       open_pattern_args_ln tl x (i + pattern_shift_n hd)
 
+let map_opt_lemma_2 ($f: (x:'a -> y:'b -> z:'c -> Lemma (requires 'p x y z) (ensures 'q x y z)))
+                    (x:option 'a) 
+                    (y:'b)
+                    (z:'c)
+   : Lemma (requires Some? x ==> 'p (Some?.v x) y z)
+           (ensures Some? x ==> 'q (Some?.v x) y z)
+   = match x with
+     | None -> ()
+     | Some x -> f x y z
+
 let rec open_st_term_ln' (e:st_term)
                          (x:term)
                          (i:index)
@@ -207,16 +217,8 @@ let rec open_st_term_ln' (e:st_term)
 
     | Tm_Abs { b; ascription=c; body } ->
       open_term_ln' b.binder_ty x i;
-      (
-        match c with
-        | None -> ()
-        | Some c -> 
-          open_comp_ln' c.elaborated x (i + 1);
-          match c.annotated with
-          | None -> ()
-          | Some c -> 
-            open_comp_ln' c x (i + 1)
-      );
+      map_opt_lemma_2 open_comp_ln' c.annotated x (i + 1);
+      map_opt_lemma_2 open_comp_ln' c.elaborated x (i + 1);
       open_st_term_ln' body x (i + 1)
       
     | Tm_Bind { binder; head; body } ->
@@ -478,15 +480,8 @@ let rec ln_weakening_st (t:st_term) (i j:int)
 
     | Tm_Abs { b; ascription=c; body } ->
       ln_weakening b.binder_ty i j;
-      (
-        match c with
-        | None -> ()
-        | Some {elaborated=c; annotated=None} ->
-          ln_weakening_comp c (i + 1) (j + 1)
-        | Some {elaborated=c; annotated=Some c'} ->
-          ln_weakening_comp c (i + 1) (j + 1);
-          ln_weakening_comp c' (i + 1) (j + 1)
-      );
+      map_opt_lemma_2 ln_weakening_comp c.annotated (i + 1) (j + 1);
+      map_opt_lemma_2 ln_weakening_comp c.elaborated (i + 1) (j + 1);
       ln_weakening_st body (i + 1) (j + 1)
 
     | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
@@ -683,15 +678,8 @@ let rec open_term_ln_inv_st' (t:st_term)
 
     | Tm_Abs { b; ascription=c; body } ->
       open_term_ln_inv' b.binder_ty x i;
-      (
-        match c with
-        | None -> ()
-        | Some {elaborated=c; annotated=None} ->
-          open_comp_ln_inv' c x (i + 1)
-        | Some {elaborated=c; annotated=Some c'} ->
-          open_comp_ln_inv' c x (i + 1);
-          open_comp_ln_inv' c' x (i + 1)
-      );
+      map_opt_lemma_2 open_comp_ln_inv' c.annotated x (i + 1);
+      map_opt_lemma_2 open_comp_ln_inv' c.elaborated x (i + 1);
       open_term_ln_inv_st' body x (i + 1)
 
     | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
@@ -884,15 +872,8 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
 
     | Tm_Abs { b; ascription=c; body } ->
       close_term_ln' b.binder_ty x i;
-      (
-        match c with
-        | None -> ()
-        | Some {elaborated=c; annotated=None} ->
-          close_comp_ln' c x (i + 1)
-        | Some {elaborated=c; annotated=Some c'} ->
-          close_comp_ln' c x (i + 1);
-          close_comp_ln' c' x (i + 1)
-      );
+      map_opt_lemma_2 close_comp_ln' c.annotated x (i + 1);
+      map_opt_lemma_2 close_comp_ln' c.elaborated x (i + 1);
       close_st_term_ln' body x (i + 1)
 
     | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->

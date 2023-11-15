@@ -40,11 +40,7 @@ let rec arrow_of_abs (env:_) (t:st_term { Tm_Abs? t.term })
     let px = b.binder_ppname, x in
     let env = push_binding env x (fst px) b.binder_ty in
     let body = open_st_term_nv body px in
-    let annot_of_ascription = function
-      | None -> None
-      | Some a -> a.annotated
-    in
-    let annot = annot_of_ascription ascription in
+    let annot = ascription.annotated in
     if Tm_Abs? body.term
     then (
       match annot with
@@ -92,6 +88,13 @@ let rec arrow_of_abs (env:_) (t:st_term { Tm_Abs? t.term })
       )
     )
 
+let qualifier_compat g r (q:option qualifier) (q':T.aqualv) : T.Tac unit =
+  match q, q' with
+  | None, T.Q_Explicit -> ()
+  | Some Implicit, T.Q_Implicit 
+  | Some Implicit, T.Q_Meta _ -> ()
+  | _ -> Env.fail g (Some r) "Unexpected binder qualifier"
+
 let rec rebuild_abs (g:env) (t:st_term) (annot:T.term)
   : T.Tac (t:st_term { Tm_Abs? t.term })
   = 
@@ -100,7 +103,9 @@ let rec rebuild_abs (g:env) (t:st_term) (annot:T.term)
                 (T.term_to_string annot));
     match t.term, R.inspect_ln annot with
     | Tm_Abs { b; q; ascription=asc; body }, R.Tv_Arrow b' c' -> (
-      let ty = readback_ty (T.inspect_binder b').sort in
+      let b' = T.inspect_binder b' in
+      qualifier_compat g b.binder_ppname.range q b'.qual;
+      let ty = readback_ty b'.sort in
       let comp = R.inspect_comp c' in
       match ty, comp with
       | Some ty, T.C_Total res_ty -> (
@@ -108,7 +113,8 @@ let rec rebuild_abs (g:env) (t:st_term) (annot:T.term)
         then (
           let b = { binder_ty = ty ; binder_ppname = b.binder_ppname } in
           let body = rebuild_abs g body res_ty in
-          { t with term = Tm_Abs { b; q; ascription=None; body }}
+          let asc = { asc with elaborated = None } in
+          { t with term = Tm_Abs { b; q; ascription=asc; body }}
         )
         else (
           match readback_comp res_ty with
@@ -118,8 +124,8 @@ let rec rebuild_abs (g:env) (t:st_term) (annot:T.term)
                   (T.term_to_string res_ty))
           | Some c ->
             let b = { binder_ty = ty ; binder_ppname = b.binder_ppname } in
-            let asc = { elaborated = c; annotated = None } in
-            { t with term = Tm_Abs { b; q; ascription=Some asc; body }}              
+            let asc = { asc with elaborated = Some c } in
+            { t with term = Tm_Abs { b; q; ascription=asc; body }}              
         )
       )
       | _ ->
@@ -170,11 +176,11 @@ let preprocess_abs
                  (Printf.sprintf "Expected an arrow type as an annotation, got %s"
                           (P.term_to_string annot))
 
-let check_effect_annotation g r (c_annot:option comp_ascription) (c_computed:comp) =
-  match c_annot with
+let check_effect_annotation g r (asc:comp_ascription) (c_computed:comp) =
+  match asc.elaborated with
   | None -> ()
-  | Some { elaborated = c_annot } ->
-    match c_annot, c_computed with
+  | Some c ->
+    match c, c_computed with
     | C_Tot _, C_Tot _ -> ()
     | C_ST _, C_ST _ -> ()
     | C_STAtomic i _, C_STAtomic j _
@@ -188,7 +194,7 @@ let check_effect_annotation g r (c_annot:option comp_ascription) (c_computed:com
     | _, _ ->
       fail g (Some r)
             (Printf.sprintf "Expected effect %s but this function body has effect %s"
-                    (P.tag_of_comp c_annot)
+                    (P.tag_of_comp c)
                     (P.tag_of_comp c_computed))
 
 
@@ -223,18 +229,18 @@ let rec check_abs_core
       (| _, C_Tot tres, tt |)
     | _ ->
       let elab_c, pre_opened, ret_ty, post_hint_body =
-        match c with
+        match c.elaborated with
         | None ->
           Env.fail g (Some body.range)
               "Missing annotation on a function body"
 
-        | Some { elaborated = C_Tot r } ->
+        | Some (C_Tot r) ->
           Env.fail g (Some body.range)
             (Printf.sprintf 
               "Incorrect annotation on a function body: %s"
               (P.comp_to_string (C_Tot r)))
 
-        | Some { elaborated = c } -> 
+        | Some c -> 
           c,
           open_term_nv (comp_pre c) px,
           Some (open_term_nv (comp_res c) px),

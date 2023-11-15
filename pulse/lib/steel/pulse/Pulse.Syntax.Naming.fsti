@@ -73,7 +73,7 @@ let freevars_proof_hint (ht:proof_hint_type) : Set.set var =
 
 let freevars_ascription (c:comp_ascription) 
   : Set.set var
-  = Set.union (freevars_comp c.elaborated)
+  = Set.union (freevars_opt freevars_comp c.elaborated)
               (freevars_opt freevars_comp c.annotated)
 
 let rec freevars_st (t:st_term)
@@ -84,7 +84,7 @@ let rec freevars_st (t:st_term)
     | Tm_Abs { b; ascription; body } ->
       Set.union (freevars b.binder_ty) 
                 (Set.union (freevars_st body)
-                           (freevars_opt freevars_ascription ascription))
+                           (freevars_ascription ascription))
     | Tm_STApp { head; arg } ->
       Set.union (freevars head) (freevars arg)
     | Tm_Bind { binder; head; body } ->
@@ -257,7 +257,7 @@ and ln_pattern_args' (p:list (pattern & bool)) (i:int)
 
 let ln_ascription' (c:comp_ascription) (i:int)
   : bool
-  = ln_c' c.elaborated i &&
+  = ln_opt' ln_c' c.elaborated i &&
     ln_opt' ln_c' c.annotated i
 
 let rec ln_st' (t:st_term) (i:int)
@@ -269,7 +269,7 @@ let rec ln_st' (t:st_term) (i:int)
     | Tm_Abs { b; ascription; body } ->
       ln' b.binder_ty i &&
       ln_st' body (i + 1) &&
-      ln_opt' ln_ascription' ascription (i + 1)
+      ln_ascription' ascription (i + 1)
 
     | Tm_STApp { head; arg } ->
       ln' head i &&
@@ -528,7 +528,7 @@ let map2_opt (f: 'a -> 'b -> 'c) (x:option 'a) (y:'b)
 
 let subst_ascription (c:comp_ascription) (ss:subst)
   : comp_ascription
-  = { elaborated = subst_comp c.elaborated ss;
+  = { elaborated = map2_opt subst_comp c.elaborated ss;
        annotated = map2_opt subst_comp c.annotated ss }
 
 let rec subst_st_term (t:st_term) (ss:subst)
@@ -541,7 +541,7 @@ let rec subst_st_term (t:st_term) (ss:subst)
     | Tm_Abs { b; q; ascription; body } ->
       Tm_Abs { b=subst_binder b ss;
                q;
-               ascription=map2_opt subst_ascription ascription (shift_subst ss);
+               ascription=subst_ascription ascription (shift_subst ss);
                body=subst_st_term body (shift_subst ss) }
 
     | Tm_STApp { head; arg_qual; arg } ->

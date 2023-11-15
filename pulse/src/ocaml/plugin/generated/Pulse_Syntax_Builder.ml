@@ -26,7 +26,7 @@ let (tm_return :
 let (tm_abs :
   Pulse_Syntax_Base.binder ->
     Pulse_Syntax_Base.qualifier FStar_Pervasives_Native.option ->
-      Pulse_Syntax_Base.comp_ascription FStar_Pervasives_Native.option ->
+      Pulse_Syntax_Base.comp_ascription ->
         Pulse_Syntax_Base.st_term -> Pulse_Syntax_Base.st_term')
   =
   fun b ->
