@@ -1,27 +1,16 @@
 module PulseLambdas
 open Pulse.Lib.Pervasives
 
-// [@@expect_failure]
-// ```pulse
-// fn test_tot_function (x:int)
-// : int
-// = { //should allow nullary "lambdas"
-//     x + 1
-//   }
-// ```
+let stt_trivial a = stt a emp (fun _ -> emp)
 
-// ```pulse
-// fn swap (#a:Type0) (x y:ref a) (#vx #vy:erased a)
-//     requires pts_to x vx ** pts_to y vy
-//     ensures pts_to x vy ** pts_to y vx
-// {
-//   let vx = !x;
-//   let vy = !y;
-//   x := vy;
-//   y := vx;
-// } 
-// ```
-
+[@@expect_failure]
+```pulse
+fn test_trivial_function (x:int)
+: stt_trivial int
+= { //should allow nullary "lambdas"
+    (x + 1)
+  }
+```
 
 let swap_fun = #a:Type0 -> x:ref a -> y:ref a -> #vx:erased a -> #vy:erased a -> stt unit
     (requires pts_to x vx ** pts_to y vy)
@@ -29,9 +18,22 @@ let swap_fun = #a:Type0 -> x:ref a -> y:ref a -> #vx:erased a -> #vy:erased a ->
 
 
 ```pulse
-fn ttt (_:unit) // should allow nullary "lambdas"
+fn s1 (_:unit) // should allow nullary "lambdas"
   : swap_fun 
   = (#a:Type0) (x y #_vx #_vy:_)
+    {
+      let vx = !x;
+      let vy = !y;
+      x := vy;
+      y := vx;
+    }
+```
+
+[@@expect_failure]
+```pulse
+fn s2 (_:unit)
+  : swap_fun 
+  = (#a:Type0) (x y:_) //make it so that implicit binders in the type can be left out
     {
       let vx = !x;
       let vy = !y;

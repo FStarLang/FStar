@@ -91,15 +91,20 @@ qual:
 /* This is the main entry point for the pulse parser */
 pulseDecl:
   | q=option(qual)
-    FN isRec=maybeRec lid=lident bs=nonempty_list(pulseMultiBinder)
+    FN isRec=maybeRec lid=lident bs=pulseBinderList
     body=fnBody
     {
       PulseSugar.FnDecl (mk_fn_decl q lid isRec bs body (rr $loc))
     }
 
+pulseBinderList:
+  /* |  { [] } We don't yet support nullary functions */
+  | bs=nonempty_list(pulseMultiBinder)
+    {  bs }
+
 localFnDecl:
   | q=option(qual) FN lid=lident
-    bs=nonempty_list(pulseMultiBinder)
+    bs=pulseBinderList
     body=fnBody
     {
       lid, mk_fn_decl q lid false bs body (rr $loc)
@@ -189,7 +194,7 @@ pulseStmtNoSeq:
     }
 
 pulseLambda:
-  | bs=nonempty_list(pulseMultiBinder)
+  | bs=pulseBinderList
     ascription=option(pulseComputationType)
     LBRACE body=pulseStmt RBRACE
     {

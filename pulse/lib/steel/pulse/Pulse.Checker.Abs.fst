@@ -122,6 +122,19 @@ let rec rebuild_abs (g:env) (t:st_term) (annot:T.term)
             Env.fail g (Some (T.range_of_term res_ty))
               (Printf.sprintf "Expected a computation type; got %s"
                   (T.term_to_string res_ty))
+          | Some (C_Tot ty) -> (
+            match T.inspect res_ty with
+            | T.Tv_Arrow b _ ->
+              Env.fail g (Some body.range)
+                         (Printf.sprintf "Expected a binder for %s" (T.binder_to_string b))
+
+            | _ -> 
+                Env.fail g (Some body.range)
+                    (Printf.sprintf 
+                      "Incorrect annotation on function body, expected a stateful computation type; got: %s"
+                      (P.comp_to_string (C_Tot ty)))
+          )
+
           | Some c ->
             let b = { binder_ty = ty ; binder_ppname = b.binder_ppname } in
             let asc = { asc with elaborated = Some c } in
@@ -245,11 +258,12 @@ let rec check_abs_core
           Env.fail g (Some body.range)
               "Missing annotation on a function body"
 
-        | Some (C_Tot r) ->
+        | Some (C_Tot r) -> (
           Env.fail g (Some body.range)
-            (Printf.sprintf 
-              "Incorrect annotation on a function body: %s"
-              (P.comp_to_string (C_Tot r)))
+                     (Printf.sprintf 
+                       "Incorrect annotation on a function, expected a computation type, got: %s"
+                        (P.comp_to_string (C_Tot r)))
+        )
 
         | Some c -> 
           c,
