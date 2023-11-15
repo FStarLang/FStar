@@ -5,7 +5,7 @@ let (k_intro_pure :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
       unit ->
-        (unit, unit) Pulse_Typing.prop_validity ->
+        unit ->
           Pulse_Syntax_Base.vprop ->
             ((unit, unit, unit, unit)
                Pulse_Checker_Base.continuation_elaborator,
@@ -77,7 +77,7 @@ let (k_intro_pure :
                                     (FStar_Tactics_Effect.lift_div_tac
                                        (fun uu___ ->
                                           Pulse_Typing.T_IntroPure
-                                            (g, p, (), token)))
+                                            (g, p, (), ())))
                                     (fun uu___ ->
                                        (fun d1 ->
                                           Obj.magic
@@ -868,8 +868,7 @@ let (intro_pure :
                                                                     (k_intro_pure
                                                                     pst.Pulse_Checker_Prover_Base.pg
                                                                     t_ss1 ()
-                                                                    d_valid
-                                                                    frame))
+                                                                    () frame))
                                                                     (fun
                                                                     k_pure ->
                                                                     FStar_Tactics_Effect.lift_div_tac

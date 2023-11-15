@@ -91,4 +91,5 @@ let rec list_as_vprop (vps:list term)
   : term
   = match vps with
     | [] -> tm_emp
+    | [hd] -> hd
     | hd::tl -> tm_star hd (list_as_vprop tl)
