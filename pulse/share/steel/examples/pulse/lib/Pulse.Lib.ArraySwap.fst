@@ -45,22 +45,23 @@ fn gcd (n0: SZ.t) (l0: SZ.t)
 
 inline_for_extraction
 let impl_jump
-  (n: SZ.t)
-  (l: SZ.t)
+  (lb rb mb: SZ.t)
   (idx: SZ.t)
   (_: squash (
-      SZ.v l < SZ.v n /\
-      SZ.v idx < SZ.v n
+      SZ.v lb < SZ.v mb /\
+      SZ.v mb < SZ.v rb /\
+      SZ.v lb <= SZ.v idx /\
+      SZ.v idx < SZ.v rb
   ))
 : Tot (idx': SZ.t {
-      SZ.v idx' == Prf.jump (SZ.v n) (SZ.v l) (SZ.v idx)
+      SZ.v idx' == SZ.v lb + Prf.jump (SZ.v rb - SZ.v lb) (SZ.v mb - SZ.v lb) (SZ.v idx - SZ.v lb)
   })
-= Prf.jump_if (SZ.v n) (SZ.v l) () (SZ.v idx);
+= Prf.jump_if (SZ.v rb - SZ.v lb) (SZ.v mb - SZ.v lb) () (SZ.v idx - SZ.v lb);
   [@@inline_let]
-  let nl = n `SZ.sub` l in
-  if idx `SZ.gte` nl
+  let nl = rb `SZ.sub` mb in
+  if (idx `SZ.sub` lb) `SZ.gte` nl
   then idx `SZ.sub` nl
-  else idx `SZ.add` l
+  else idx `SZ.add` (mb `SZ.sub` lb)
 
 inline_for_extraction
 let size_add
@@ -147,61 +148,63 @@ fn pulse_assert (p: prop)
 
 #push-options "--z3rlimit_factor 4"
 
+inline_for_extraction noextract [@@noextract_to "krml"]
 ```pulse
-fn array_swap(#t: Type0) (#s0: Ghost.erased (Seq.seq t)) (a: A.array t) (n: SZ.t) (l: SZ.t) (bz: Prf.bezout (SZ.v n) (SZ.v l)) (d: SZ.t) (q: SZ.t)
+fn array_swap'(#t: Type0) (#s0: Ghost.erased (Seq.seq t)) (a: A.array t) (lb: SZ.t) (rb: SZ.t) (mb: (mb: SZ.t {SZ.v mb > SZ.v lb /\ SZ.v mb < SZ.v rb})) (bz: Prf.bezout (SZ.v rb - SZ.v lb) (SZ.v mb - SZ.v lb)) (d: SZ.t) (q: SZ.t)
   requires (
-    A.pts_to a s0 **
+    A.pts_to_range a (Ghost.reveal (SZ.v lb)) (Ghost.reveal (SZ.v rb)) s0 **
     pure (
-      SZ.v n == A.length a /\
-      SZ.v n == Seq.length s0 /\
-      0 < SZ.v l /\
-      SZ.v l < SZ.v n /\
+      Seq.length s0 == SZ.v rb - SZ.v lb /\
       SZ.v d == bz.d /\
       SZ.v q == bz.q_n
     )
   )
   ensures exists s . (
-    A.pts_to a s **
-    pure (Prf.array_swap_post s0 (SZ.v n) (SZ.v l) s) // hoisted out because of the SMT pattern on array_as_ring_buffer_swap
+    A.pts_to_range a (Ghost.reveal (SZ.v lb)) (Ghost.reveal (SZ.v rb)) s **
+    pure (Prf.array_swap_post s0 (SZ.v rb - SZ.v lb) (SZ.v mb - SZ.v lb) s) // hoisted out because of the SMT pattern on array_as_ring_buffer_swap
   )
 {   
-    let mut pi = 0sz;
-    while (let i = !pi; (i `size_lt` d))
+    let mut pi = lb;
+    while (let i = !pi; ((i `SZ.sub` lb) `size_lt` d))
     invariant b . exists s i . (
-      A.pts_to a s **
+      A.pts_to_range a (Ghost.reveal (SZ.v lb)) (Ghost.reveal (SZ.v rb)) s **
       R.pts_to pi i **
       pure (
-        Prf.array_swap_outer_invariant s0 (SZ.v n) (SZ.v l) bz s (SZ.v i) /\
-        b == (SZ.v i < bz.d)
+        SZ.v i >= SZ.v lb /\
+        SZ.v i < SZ.v rb /\
+        Prf.array_swap_outer_invariant s0 (SZ.v rb - SZ.v lb) (SZ.v mb - SZ.v lb) bz s (SZ.v i - SZ.v lb) /\
+        b == (SZ.v i - SZ.v lb < bz.d)
     )) {
       let i = !pi;
-      let save = a.(i);
+      let save = A.pts_to_range_index a i;
       let mut pj = 0sz;
       let mut pidx = i;
       while (let j = !pj; (j `size_lt` (size_sub q 1sz ())))
       invariant b . exists s j idx . (
-        A.pts_to a s **
+        A.pts_to_range a (Ghost.reveal (SZ.v lb)) (Ghost.reveal (SZ.v rb)) s **
         R.pts_to pi i **
         R.pts_to pj j **
         R.pts_to pidx idx **
         pure (
-          Prf.array_swap_inner_invariant s0 (SZ.v n) (SZ.v l) bz s (SZ.v i) (SZ.v j) (SZ.v idx) /\
+          SZ.v idx >= SZ.v lb /\
+          SZ.v idx < SZ.v rb /\
+          Prf.array_swap_inner_invariant s0 (SZ.v rb - SZ.v lb) (SZ.v mb - SZ.v lb) bz s (SZ.v i - SZ.v lb) (SZ.v j) (SZ.v idx - SZ.v lb) /\
           b == (SZ.v j < bz.q_n - 1)
         )
       ) {
         let j = !pj;
         let idx = !pidx;
-        let idx' = impl_jump n l idx ();
-        let x = a.(idx');
+        let idx' = impl_jump lb rb mb idx ();
+        let x = A.pts_to_range_index a idx';
         let j' = size_add j 1sz ();
-        (a.(idx) <- x);
+        A.pts_to_range_upd a idx x;
         pj := j';
         pidx := idx';
         ()
       };
       ();
       let idx = !pidx;
-      (a.(idx) <- save);
+      A.pts_to_range_upd a idx save;
       let i' = size_add i 1sz ();
       pi := i';
       ()
