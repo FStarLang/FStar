@@ -187,15 +187,15 @@ requires (
     A.pts_to_range a (SZ.v lb) (SZ.v mb) s1 **
     A.pts_to_range a (SZ.v mb) (SZ.v rb) s2
   )
-returns prf: squash (SZ.v lb <= SZ.v mb /\ SZ.v mb <= SZ.v rb)
+returns mb' : SZ.t
 ensures (
-    A.pts_to_range a (SZ.v lb) (SZ.v lb + (SZ.v rb - SZ.v mb)) s2 **
-    A.pts_to_range a (SZ.v lb + (SZ.v rb - SZ.v mb)) (SZ.v rb) s1
+    A.pts_to_range a (SZ.v lb) (SZ.v mb') s2 **
+    A.pts_to_range a (SZ.v mb') (SZ.v rb) s1 **
+    pure (array_swap_post lb rb mb mb')
   )
 {
   A.pts_to_range_prop a #(SZ.v lb) #(SZ.v mb);
   A.pts_to_range_prop a #(SZ.v mb) #(SZ.v rb);
-  let prf : squash (SZ.v lb <= SZ.v mb /\ SZ.v mb <= SZ.v rb) = ();
   A.pts_to_range_join a (SZ.v lb) (SZ.v mb) (SZ.v rb);
   with s . assert (A.pts_to_range a (SZ.v lb) (SZ.v rb) s);
   if (lb = mb) {
@@ -208,10 +208,10 @@ ensures (
     let prf2 : squash (s2' `Seq.equal` s2) = ();
     let prf_mb : squash (SZ.v mb == SZ.v lb /\ SZ.v lb + (SZ.v rb - SZ.v mb) == SZ.v rb) = ();
     rewrite (A.pts_to_range a (SZ.v lb) (SZ.v rb) s2')
-      as (A.pts_to_range a (SZ.v lb) (SZ.v lb + (SZ.v rb - SZ.v mb)) s2);
+      as (A.pts_to_range a (SZ.v lb) (SZ.v rb) s2);
     rewrite (A.pts_to_range a (SZ.v rb) (SZ.v rb) s1')
-      as (A.pts_to_range a (SZ.v lb + (SZ.v rb - SZ.v mb)) (SZ.v rb) s1);
-    prf
+      as (A.pts_to_range a (SZ.v rb) (SZ.v rb) s1);
+    rb
   } else if (mb = rb) {
     let prf_s2 : squash (s2 `Seq.equal` Seq.empty) = ();
     let prf_s : squash (s1 `Seq.equal` s) = ();
@@ -222,10 +222,10 @@ ensures (
     let prf2 : squash (s2' `Seq.equal` s2) = ();
     let prf_mb : squash (SZ.v mb == SZ.v rb /\ SZ.v lb + (SZ.v rb - SZ.v mb) == SZ.v lb) = ();
     rewrite (A.pts_to_range a (SZ.v lb) (SZ.v lb) s2')
-      as (A.pts_to_range a (SZ.v lb) (SZ.v lb + (SZ.v rb - SZ.v mb)) s2);
+      as (A.pts_to_range a (SZ.v lb) (SZ.v lb) s2);
     rewrite (A.pts_to_range a (SZ.v lb) (SZ.v rb) s1')
-      as (A.pts_to_range a (SZ.v lb + (SZ.v rb - SZ.v mb)) (SZ.v rb) s1);
-    prf
+      as (A.pts_to_range a (SZ.v lb) (SZ.v rb) s1);
+    lb
   } else {
     Seq.lemma_split s (SZ.v mb - SZ.v lb);
     Seq.lemma_append_inj s1 s2 (Seq.slice s 0 (SZ.v mb - SZ.v lb)) (Seq.slice s (SZ.v mb - SZ.v lb) (Seq.length s));
@@ -239,14 +239,15 @@ ensures (
       as (A.pts_to_range a (SZ.v lb) (SZ.v rb) s');
     Seq.lemma_split s' (SZ.v rb - SZ.v mb);
     Seq.lemma_append_inj s2 s1 (Seq.slice s' 0 (SZ.v rb - SZ.v mb)) (Seq.slice s' (SZ.v rb - SZ.v mb) (Seq.length s'));
-    A.pts_to_range_split a (SZ.v lb) (SZ.v lb + (SZ.v rb - SZ.v mb)) (SZ.v rb);
-    with s2' . assert (A.pts_to_range a (SZ.v lb) (SZ.v lb + (SZ.v rb - SZ.v mb)) s2');
-    rewrite (A.pts_to_range a (SZ.v lb) (SZ.v lb + (SZ.v rb - SZ.v mb)) s2')
-      as (A.pts_to_range a (SZ.v lb) (SZ.v lb + (SZ.v rb - SZ.v mb)) s2);
-    with s1' . assert (A.pts_to_range a (SZ.v lb + (SZ.v rb - SZ.v mb)) (SZ.v rb) s1');
-    rewrite (A.pts_to_range a (SZ.v lb + (SZ.v rb - SZ.v mb)) (SZ.v rb) s1')
-      as (A.pts_to_range a (SZ.v lb + (SZ.v rb - SZ.v mb)) (SZ.v rb) s1);
-    prf
+    let mb' = (lb `SZ.add` (rb `SZ.sub` mb));
+    A.pts_to_range_split a (SZ.v lb) (SZ.v mb') (SZ.v rb);
+    with s2' . assert (A.pts_to_range a (SZ.v lb) (SZ.v mb') s2');
+    rewrite (A.pts_to_range a (SZ.v lb) (SZ.v mb') s2')
+      as (A.pts_to_range a (SZ.v lb) (SZ.v mb') s2);
+    with s1' . assert (A.pts_to_range a (SZ.v mb') (SZ.v rb) s1');
+    rewrite (A.pts_to_range a (SZ.v mb') (SZ.v rb) s1')
+      as (A.pts_to_range a (SZ.v mb') (SZ.v rb) s1);
+    mb'
   }
 }
 ```
