@@ -534,6 +534,15 @@ type st_equiv : env -> comp -> comp -> Type =
                   (open_term (comp_post c1) x)
                   (open_term (comp_post c2) x) ->      
       st_equiv g c1 c2
+    
+  | ST_TotEquiv :
+      g:env -> 
+      t1:term ->
+      t2:term ->
+      u:_ ->
+      universe_of g t1 u ->
+      Ghost.erased (RT.equiv (elab_env g) (elab_term t1) (elab_term t2)) ->
+      st_equiv g (C_Tot t1) (C_Tot t2)
 
 [@@ no_auto_projectors]
 noeq

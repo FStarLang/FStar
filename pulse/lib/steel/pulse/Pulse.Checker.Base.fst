@@ -90,16 +90,23 @@ let ve_unit_r g (p:term) : vprop_equiv g (tm_star p tm_emp) p =
 
 let st_equiv_trans (#g:env) (#c0 #c1 #c2:comp) (d01:st_equiv g c0 c1) (d12:st_equiv g c1 c2)
   : option (st_equiv g c0 c2)
-  = let ST_VPropEquiv _f _c0 _c1 x c0_pre_typing c0_res_typing c0_post_typing eq_res_01 eq_pre_01 eq_post_01 = d01 in
-    let ST_VPropEquiv _f _c1 _c2 y c1_pre_typing c1_res_typing c1_post_typing eq_res_12 eq_pre_12 eq_post_12 = d12 in
-    if x = y && eq_tm (comp_res c0) (comp_res c1)
-    then Some (
-          ST_VPropEquiv g c0 c2 x c0_pre_typing c0_res_typing c0_post_typing
-            (RT.Rel_trans _ _ _ _ _ eq_res_01 eq_res_12)
-            (VE_Trans _ _ _ _ eq_pre_01 eq_pre_12)
-            (VE_Trans _ _ _ _ eq_post_01 eq_post_12)
+  = 
+    match d01 with
+    | ST_VPropEquiv _f _c0 _c1 x c0_pre_typing c0_res_typing c0_post_typing eq_res_01 eq_pre_01 eq_post_01 -> (
+      let ST_VPropEquiv _f _c1 _c2 y c1_pre_typing c1_res_typing c1_post_typing eq_res_12 eq_pre_12 eq_post_12 = d12 in
+      if x = y && eq_tm (comp_res c0) (comp_res c1)
+      then Some (
+            ST_VPropEquiv g c0 c2 x c0_pre_typing c0_res_typing c0_post_typing
+              (RT.Rel_trans _ _ _ _ _ eq_res_01 eq_res_12)
+              (VE_Trans _ _ _ _ eq_pre_01 eq_pre_12)
+              (VE_Trans _ _ _ _ eq_post_01 eq_post_12)
+      )
+      else None
     )
-    else None
+    | ST_TotEquiv g t1 t2 u typing eq ->
+      let ST_TotEquiv _g _t1 t3 _ _ eq' = d12 in
+      let eq'' = Ghost.hide (RT.Rel_trans _ _ _ _ _ eq eq') in
+      Some (ST_TotEquiv g t1 t3 u typing eq'')
 
 let t_equiv #g #st #c (d:st_typing g st c) (#c':comp) (eq:st_equiv g c c')
   : st_typing g st c'
@@ -616,4 +623,96 @@ let is_stateful_application (g:env) (e:term)
           let st_app = { term = st_app; range=e.range; effect_tag=default_effect_hint } in
           Some st_app
     )
+    | _ -> None
+
+
+let apply_conversion
+      (#g:env) (#e:term) (#eff:_) (#t0:term)
+      (d:typing g e eff t0)
+      (#t1:term)
+      (eq:Ghost.erased (RT.related (elab_env g) (elab_term t0) RT.R_Eq (elab_term t1)))
+  : typing g e eff t1
+  = let d : RT.typing (elab_env g) (elab_term e) (eff, (elab_term t0)) = d._0 in
+    let r : RT.related (elab_env g) (elab_term t0) RT.R_Eq (elab_term t1) = eq in
+    let r  = RT.Rel_equiv _ _ _ RT.R_Sub r in
+    let s : RT.sub_comp (elab_env g) (eff, (elab_term t0)) (eff, elab_term t1) = 
+        RT.Relc_typ _ _ _ _ _ r
+    in
+    E (RT.T_Sub _ _ _ _ d s)
+    
+let norm_typing
+      (g:env) (e:term) (eff:_) (t0:term)
+      (d:typing g e eff t0)
+      (steps:list norm_step)
+  : T.Tac (t':term & typing g e eff t')
+  = let t = elab_term t0 in
+    let u_t_typing : Ghost.erased (u:R.universe & RT.typing _ _ _) = 
+      Pulse.Typing.Metatheory.Base.typing_correctness d._0
+    in
+    let (| t', t'_typing, related_t_t' |) =
+      Pulse.RuntimeUtils.norm_well_typed_term (dsnd u_t_typing) steps
+    in
+    match Pulse.Readback.readback_ty t' with
+    | None -> T.fail "Could not readback normalized type"
+    | Some t'' ->
+      let d : typing g e eff t'' = apply_conversion d related_t_t' in
+      (| t'', d |)
+
+module TermEq = FStar.Reflection.V2.TermEq
+let norm_typing_inverse
+      (g:env) (e:term) (eff:_) (t0:term)
+      (d:typing g e eff t0)
+      (t1:term)
+      (#u:_)
+      (d1:tot_typing g t1 (tm_type u))
+      (steps:list norm_step)
+  : T.Tac (option (typing g e eff t1))
+  = let (| t1', t1'_typing, related_t1_t1' |) =
+      let d1 = Ghost.hide d1._0 in
+      Pulse.RuntimeUtils.norm_well_typed_term d1 steps
+    in
+    match Pulse.Readback.readback_ty t1' with
+    | Some t1_p ->
+      if TermEq.term_eq (elab_term t0) t1'
+      then (
+        let related_t1'_t1 = Ghost.hide (RT.Rel_sym _ _ _ related_t1_t1') in
+        Some (apply_conversion d related_t1'_t1)
+      )
+      else None
+    | _ -> None
+
+
+let norm_st_typing_inverse
+      (#g:env) (#e:st_term) (#t0:term)
+      (d:st_typing g e (C_Tot t0))
+      (#u:_)
+      (t1:term)
+      (d1:tot_typing g t1 (tm_type u))
+      (steps:list norm_step)
+  : T.Tac (option (st_typing g e (C_Tot t1)))
+  = let d1 
+      : Ghost.erased (RT.tot_typing (elab_env g) (elab_term t1) (RT.tm_type u))
+      = Ghost.hide d1._0
+    in
+    let (| t1', t1'_typing, related_t1_t1' |) =
+      Pulse.RuntimeUtils.norm_well_typed_term d1 steps
+    in
+    match Pulse.Readback.readback_ty t1' with
+    | Some t1_p ->
+      if TermEq.term_eq (elab_term t0) t1'
+      then (
+        let t0_typing 
+          : Ghost.erased (RT.tot_typing (elab_env g) (elab_term t0) (RT.tm_type u)) =
+          rt_equiv_typing #_ #_ #(elab_term t0) related_t1_t1' d1
+        in
+        let eq
+          : Ghost.erased (RT.equiv (elab_env g) (elab_term t0) (elab_term t1))
+          = Ghost.hide (RT.Rel_sym _ _ _ related_t1_t1')
+        in
+        let steq : st_equiv g (C_Tot t0) (C_Tot t1) =
+          ST_TotEquiv _ _ _ u (E (Ghost.reveal t0_typing)) eq
+        in
+        Some (T_Equiv _ _ _ _ d steq)
+      )
+      else None
     | _ -> None

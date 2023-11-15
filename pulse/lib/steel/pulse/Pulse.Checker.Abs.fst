@@ -133,27 +133,7 @@ let rec rebuild_abs (g:env) (t:st_term) (annot:T.term)
             (Printf.sprintf "Unexpected type of abstraction: %s"
                 (T.term_to_string annot))
     )
-    // | Tm_Abs { b; q; ascription=Some asc; body }, R.Tv_Arrow b' c' -> (
-    //   let ty = readback_ty (T.inspect_binder b').sort in
-    //   let comp = R.inspect_comp c' in
-    //   match ty, comp with
-    //   | Some ty, R.C_Total res -> (
-    //     let c = readback_comp res in
-    //     match c with
-    //     | None -> 
-    //       Env.fail g (Some t.range) 
-    //                   (Printf.sprintf "Unexpected computation type in abstraction: %s"
-    //                       (T.term_to_string res))
-    //     | Some c ->
-    //       let b = { binder_ty = ty ; binder_ppname = b.binder_ppname } in
-    //       let asc = { asc with elaborated = c } in
-    //       { t with term = Tm_Abs { b; q; ascription=Some asc; body }}
-    //   )
-    //   | _ ->
-    //     Env.fail g (Some t.range) 
-    //                 (Printf.sprintf "Unexpected type of abstraction: %s"
-    //                       (T.term_to_string annot))
-    // )
+
     | _ -> 
       Env.fail g (Some t.range) 
                 (Printf.sprintf "Unexpected arity of abstraction: expected a term of type %s"
@@ -199,6 +179,36 @@ let check_effect_annotation g r (asc:comp_ascription) (c_computed:comp) =
 
 
 #push-options "--z3rlimit_factor 2 --fuel 0 --ifuel 1"
+let maybe_rewrite_body_typing
+      (#g:_) (#e:st_term) (#c:comp)
+      (d:st_typing g e c)
+      (asc:comp_ascription)
+  : T.Tac (c':comp & st_typing g e c')
+  = match asc.annotated with
+    | None ->  (| c, d |)
+    | Some (C_Tot t) -> (
+      match c with
+      | C_Tot t' -> (
+        let t, _ = Pulse.Checker.Pure.instantiate_term_implicits g t in
+        let (| u, t_typing |) = Pulse.Checker.Pure.check_universe g t in
+        match Pulse.Checker.Base.norm_st_typing_inverse
+                 #_ #_ #t' d t t_typing [weak;hnf;delta]
+        with
+        | None -> 
+          Env.fail g (Some e.range) "Inferred type is incompatible with annotation"
+        | Some d -> 
+          debug_abs g 
+            (fun _ -> Printf.sprintf "maybe_rewrite_body_typing:{\nfrom %s\nto %s}\n" 
+              (P.comp_to_string c)
+              (P.comp_to_string (C_Tot t)));
+          (| C_Tot t, d |)
+      )
+      | _ -> 
+      Env.fail g (Some e.range) "Inferred type is incompatible with annotation"
+    )
+    | Some _ -> 
+      Env.fail g (Some e.range) "Unexpected annotation on a function body"
+
 let rec check_abs_core
   (g:env)
   (t:st_term{Tm_Abs? t.term})
@@ -220,6 +230,7 @@ let rec check_abs_core
     | Tm_Abs _ ->
       let (| body, c_body, body_typing |) = check_abs_core g' body_opened check in
       check_effect_annotation g' body.range c c_body;
+      let (| c_body, body_typing |) = maybe_rewrite_body_typing body_typing c in
       FV.st_typing_freevars body_typing;
       let body_closed = close_st_term body x in
       assume (open_st_term body_closed x == body);

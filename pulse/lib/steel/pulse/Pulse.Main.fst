@@ -63,8 +63,9 @@ let check_fndecl
   let (| body, c, t_typing |) = Pulse.Checker.Abs.check_abs g body Pulse.Checker.check in
 
   Pulse.Checker.Prover.debug_prover g
-    (fun _ -> Printf.sprintf "\ncheck call returned in main with:\n%s\n"
-              (P.st_term_to_string body));
+    (fun _ -> Printf.sprintf "\ncheck call returned in main with:\n%s\nat type %s\n"
+              (P.st_term_to_string body)
+              (P.comp_to_string c));
   debug_main g
     (fun _ -> Printf.sprintf "\nchecker call returned in main with:\n%s\nderivation=%s\n"
               (P.st_term_to_string body)

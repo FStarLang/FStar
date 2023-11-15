@@ -7,7 +7,14 @@ let comp_typing_u (g:env) (c:comp_st) = comp_typing g c (comp_u c)
 
 val admit_comp_typing (g:env) (c:comp_st)
   : comp_typing_u g c
-  
+
+module RT = FStar.Reflection.Typing  
+let rt_equiv_typing (#g:_) (#t0 #t1:_) (d:RT.equiv g t0 t1)
+                    (#k:_)
+                    (d1:Ghost.erased (RT.tot_typing g t0 k))
+  : Ghost.erased (RT.tot_typing g t1 k)
+  = admit()
+
 val st_typing_correctness (#g:env) (#t:st_term) (#c:comp_st) 
                           (_:st_typing g t c)
   : comp_typing_u g c

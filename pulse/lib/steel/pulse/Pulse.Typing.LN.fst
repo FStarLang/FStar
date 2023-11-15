@@ -964,13 +964,19 @@ let st_equiv_ln #g #c1 #c2 (d:st_equiv g c1 c2)
   : Lemma 
     (requires ln_c c1)
     (ensures ln_c c2)
-  = let ST_VPropEquiv _ _ _ x (E dpre) _dres _dpost eq_res eq_pre eq_post = d in
-    vprop_equiv_ln eq_pre;
-    open_term_ln_inv' (comp_post c1) (term_of_no_name_var x) 0;
-    vprop_equiv_ln eq_post;
-    rt_equiv_ln _ _ _ eq_res;
-    elab_ln_inverse (comp_res c2);
-    open_term_ln' (comp_post c2) (term_of_no_name_var x) 0
+  = match d with
+    | ST_VPropEquiv _ _ _ x (E dpre) _dres _dpost eq_res eq_pre eq_post ->
+      vprop_equiv_ln eq_pre;
+      open_term_ln_inv' (comp_post c1) (term_of_no_name_var x) 0;
+      vprop_equiv_ln eq_post;
+      rt_equiv_ln _ _ _ eq_res;
+      elab_ln_inverse (comp_res c2);
+      open_term_ln' (comp_post c2) (term_of_no_name_var x) 0
+
+    | ST_TotEquiv g t1 t2 u t1_typing eq ->
+      let t2_typing = Pulse.Typing.Metatheory.Base.rt_equiv_typing eq t1_typing._0 in
+      tot_or_ghost_typing_ln (E (Ghost.reveal t2_typing))
+    
 
 let bind_comp_ln #g #x #c1 #c2 #c (d:bind_comp g x c1 c2 c)
   : Lemma 

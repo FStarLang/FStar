@@ -348,6 +348,10 @@ let rec (elab_st_typing :
               (uu___, uu___1, c1, frame, _frame_typing, e_typing) ->
               let e = elab_st_typing uu___ uu___1 c1 e_typing in
               elab_frame c1 frame e
+          | Pulse_Typing.T_Equiv
+              (uu___, uu___1, c1, c2, e_typing, Pulse_Typing.ST_TotEquiv
+               (uu___2, uu___3, uu___4, uu___5, uu___6, uu___7))
+              -> let e = elab_st_typing uu___ uu___1 c1 e_typing in e
           | Pulse_Typing.T_Equiv (uu___, uu___1, c1, c2, e_typing, uu___2) ->
               let e = elab_st_typing uu___ uu___1 c1 e_typing in
               elab_sub c1 c2 e
