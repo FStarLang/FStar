@@ -40,3 +40,12 @@ let __intro_stick #is hyp concl v f_elim =
                (fun _ -> f_elim () ())
 
 let intro_stick #is = __intro_stick #is
+
+let stick_sub_inv
+  (#os1 : inames)
+  (#os2 : inames{inames_subset os1 os2})
+  (hyp concl: vprop)
+: stt_ghost unit emp_inames
+    (stick #os1 hyp concl)
+    (fun _ -> stick #os2 hyp concl)
+=  intro_stick #os2 hyp concl (stick #os1 hyp concl) (fun () -> elim_stick #os1 hyp concl)

@@ -35,3 +35,11 @@ val intro_stick
 : stt_ghost unit emp_inames
     v
     (fun _ -> stick #is hyp concl)
+
+val stick_sub_inv
+  (#os1 : inames)
+  (#os2 : inames{inames_subset os1 os2})
+  (hyp concl: vprop)
+: stt_ghost unit emp_inames
+    (stick #os1 hyp concl)
+    (fun _ -> stick #os2 hyp concl)
