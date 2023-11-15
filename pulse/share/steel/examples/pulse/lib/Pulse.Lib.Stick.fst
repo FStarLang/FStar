@@ -9,36 +9,34 @@ let stick #is = implies_ #is
 
 (* Using this indirection as Steel tactic relies on 'star' instead of ** *)
 val __elim_stick
-  (#opened : inames)
-  (#is: inames{opened /! is})
+  (#is: inames)
   (hyp concl: vprop)
-: stt_ghost unit opened
+: stt_ghost unit is
     ((stick #is hyp concl) `star` hyp)
     (fun _ -> concl)
 
-let __elim_stick #opened #is hyp concl =
-  fun _ -> elim_implies_gen #opened #is hyp concl
+let __elim_stick #is hyp concl =
+  fun #opened () -> elim_implies_gen #opened #is hyp concl
 
-let elim_stick #opened #is = __elim_stick #opened #is
+let elim_stick #is = __elim_stick #is
 
 (* Using this indirection as Steel tactic relies on 'star' instead of ** *)
 val __intro_stick
-  (#opens: inames)
   (#is : inames)
   (hyp concl: vprop)
   (v: vprop)
-  (f_elim: (
-    (opens': inames{opens' /! is}) ->
-    stt_ghost unit opens'
+  (f_elim: unit -> (
+    stt_ghost unit is
     (v `star` hyp)
     (fun _ -> concl)
   ))
-: stt_ghost unit opens
+: stt_ghost unit emp_inames
     v
     (fun _ -> (@==>) #is hyp concl)
 
-let __intro_stick #opens #is hyp concl v f_elim =
-  fun _ -> intro_implies_gen #opens #is hyp concl v
-               (fun opens' -> f_elim opens' ())
+let __intro_stick #is hyp concl v f_elim =
+  fun #opened () ->
+     intro_implies_gen #opened #is hyp concl v
+               (fun _ -> f_elim () ())
 
-let intro_stick #opened #is = __intro_stick #opened #is
+let intro_stick #is = __intro_stick #is

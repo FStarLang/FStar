@@ -379,7 +379,7 @@ fn elim_yields (_:unit) (#p #q:vprop)
 {
   open Pulse.Lib.Stick;
   rewrite (yields p q) as (stick #emp_inames p q);
-  elim_stick #emp_inames #emp_inames p q;
+  elim_stick #emp_inames p q;
 }
 ```
 
@@ -406,8 +406,8 @@ val yields_elim' (#t:Type)
                  (v:node_ptr t)
                  (n:node t)
                  (tl:list t)
-                 (o:inames { o /! emp_inames })
-   : stt_ghost unit o
+                 (_:unit)
+   : stt_ghost unit emp_inames
         (pts_to v n ** is_list n.tail tl)
         (fun _ -> is_list (Some v) (n.head::tl))
 
