@@ -942,8 +942,7 @@ let uu___is_CT_STAtomic uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | CT_STAtomic _ -> true | _ -> false
 let uu___is_CT_STGhost uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | CT_STGhost _ -> true | _ -> false
-type ('g, 't) prop_validity =
-  (unit, unit) FStar_Tactics_V2_Builtins.prop_validity_token
+type ('g, 't) prop_validity = unit
 type ('g, 't1, 't2) subtyping_token =
   (unit, unit, unit) FStar_Tactics_Types.subtyping_token
 let (readback_binding :
@@ -1015,7 +1014,7 @@ type ('dummyV0, 'dummyV1, 'dummyV2) st_typing =
   Pulse_Syntax_Base.comp * Pulse_Syntax_Base.comp * (unit, unit, unit)
   st_typing * (unit, unit, unit) st_equiv 
   | T_IntroPure of Pulse_Typing_Env.env * Pulse_Syntax_Base.term * unit *
-  (unit, unit) prop_validity 
+  unit 
   | T_ElimExists of Pulse_Typing_Env.env * Pulse_Syntax_Base.universe *
   Pulse_Syntax_Base.term * Pulse_Syntax_Base.term * Pulse_Syntax_Base.var *
   unit * unit 

@@ -41,9 +41,6 @@ fn ttt (_:unit) // should allow nullary "lambdas"
 ```
 
 
-
-
-let w : unit -> swap_fun = ttt
 // [@@expect_failure]
 // ```pulse
 // fn test_inner_lambda (#a:Type0)

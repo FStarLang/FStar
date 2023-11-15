@@ -165,9 +165,7 @@ let (check_prop :
 let (check_prop_validity :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
-      unit ->
-        ((unit, unit) Pulse_Typing.prop_validity, unit)
-          FStar_Tactics_Effect.tac_repr)
+      unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
     fun p -> fun typing -> Pulse_Checker_Pure.check_prop_validity g p ()
@@ -298,7 +296,7 @@ let (check :
                                                                     uu___2 ->
                                                                     Pulse_Typing.T_IntroPure
                                                                     (g1, p1,
-                                                                    (), pv)))
+                                                                    (), ())))
                                                                     (
                                                                     fun
                                                                     uu___2 ->
