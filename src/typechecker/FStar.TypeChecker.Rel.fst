@@ -5517,11 +5517,16 @@ let force_trivial_guard env g =
     let g = resolve_implicits env g in
     match g.implicits with
     | [] -> ignore <| discharge_guard env g
-    | imp::_ -> raise_error (Errors.Fatal_FailToResolveImplicitArgument,
-                           BU.format3 "Failed to resolve implicit argument %s of type %s introduced for %s"
-                                (Print.uvar_to_string imp.imp_uvar.ctx_uvar_head)
-                                (N.term_to_string env (U.ctx_uvar_typ imp.imp_uvar))
-                                imp.imp_reason) imp.imp_range
+    | imp::_ ->
+      let open FStar.Pprint in
+      raise_error_doc (Errors.Fatal_FailToResolveImplicitArgument, [
+        prefix 4 1 (text "Failed to resolved implicit argument")
+                (arbitrary_string (Print.uvar_to_string imp.imp_uvar.ctx_uvar_head)) ^/^
+        prefix 4 1 (text "of type")
+                (N.term_to_doc env (U.ctx_uvar_typ imp.imp_uvar)) ^/^
+        prefix 4 1 (text "introduced for")
+                (text imp.imp_reason)
+        ]) imp.imp_range
 
 let subtype_nosmt_force env t1 t2 =
     match subtype_nosmt env t1 t2 with
