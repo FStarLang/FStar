@@ -33,47 +33,55 @@ let range_of_comp (c:comp) =
   | C_STAtomic _ st -> range_of_st_comp st
   | C_STGhost _ st -> range_of_st_comp st
 
-let rec arrow_of_abs (env:_) (t:st_term { Tm_Abs? t.term })
-  : T.Tac term
-  = let Tm_Abs { b; q; ascription; body } = t.term in
+let rec arrow_of_abs (env:_) (prog:st_term { Tm_Abs? prog.term })
+  : T.Tac (term & t:st_term { Tm_Abs? t.term })
+  = let Tm_Abs { b; q; ascription; body } = prog.term in
     let x = fresh env in
     let px = b.binder_ppname, x in
     let env = push_binding env x (fst px) b.binder_ty in
     let body = open_st_term_nv body px in
     let annot = ascription.annotated in
+    if Some? ascription.elaborated
+    then Env.fail env (Some prog.range) "Unexpected elaborated annotation on function";
     if Tm_Abs? body.term
     then (
       match annot with
       | None ->
         //no meaningful user annotation to process
-        let arr = arrow_of_abs env body in
+        let arr, body = arrow_of_abs env body in
         let arr = close_term arr x in
-        { tm_arrow b q (C_Tot arr) with range = RU.union_ranges b.binder_ty.range arr.range }
+        let body = close_st_term body x in
+        let ty : term = { tm_arrow b q (C_Tot arr) with range = RU.union_ranges b.binder_ty.range arr.range } in
+        let prog : st_term = { prog with term = Tm_Abs { b; q; ascription; body}} in
+        ty, prog
 
-      | Some c -> (
+      | Some c -> ( //we have an annotation
         let c = open_comp_with c (U.term_of_nvar px) in
         match c with
         | C_Tot tannot -> (
           let tannot' = RU.whnf_lax (elab_env env) (elab_term tannot) in
-          // T.print (Printf.sprintf "tannot=%s; tannot': %s" 
-          //   (P.term_to_string tannot)
-          //   (T.term_to_string tannot'));
           match Pulse.Readback.readback_ty tannot' with
           | None -> 
             Env.fail 
               env 
-              (Some t.range) 
+              (Some prog.range) 
               (Printf.sprintf "Unexpected type of abstraction, expected an arrow, got: %s"
                   (T.term_to_string tannot'))
           | Some t ->
+            //retain the original annotation, so that we check it wrt the inferred type in maybe_rewrite_body_typing
             let t = close_term t x in
-            { tm_arrow b q (C_Tot t) with range = RU.union_ranges b.binder_ty.range t.range }
+            let annot = close_comp c x in
+            let ty : term = { tm_arrow b q (C_Tot t) with range = RU.union_ranges b.binder_ty.range t.range } in
+            let ascription = { annotated = Some annot; elaborated = None } in
+            let body = close_st_term body x in
+            let prog : st_term = { prog with term = Tm_Abs { b; q; ascription; body} } in
+            ty, prog
         )
 
         | _ ->
           Env.fail 
             env 
-            (Some t.range) 
+            (Some prog.range) 
             (Printf.sprintf "Unexpected type of abstraction: %s"
                 (P.comp_to_string c))
       )
@@ -81,10 +89,14 @@ let rec arrow_of_abs (env:_) (t:st_term { Tm_Abs? t.term })
     else (
       match annot with
       | None -> 
-        Env.fail env (Some t.range) "Unannotated function body"
+        Env.fail env (Some prog.range) "Unannotated function body"
       
-      | Some c -> (
-        { tm_arrow b q c with range = RU.union_ranges b.binder_ty.range (range_of_comp c) }
+      | Some c -> ( //we're taking the annotation as is; remove it from the abstraction to avoid rechecking it
+        let ty : term = { tm_arrow b q c with range = RU.union_ranges b.binder_ty.range (range_of_comp c) } in
+        let ascription = empty_ascription in
+        let body = close_st_term body x in
+        let prog : st_term = { prog with term = Tm_Abs { b; q; ascription; body} } in
+        ty, prog
       )
     )
 
@@ -156,7 +168,7 @@ let preprocess_abs
       (g:env)
       (t:st_term{Tm_Abs? t.term})
   : T.Tac (t:st_term { Tm_Abs? t.term })
-  = let annot = arrow_of_abs g t in
+  = let annot, t = arrow_of_abs g t in
     debug_abs g (fun _ -> Printf.sprintf "arrow_of_abs = %s\n" (P.term_to_string annot));
     let annot, _ = Pulse.Checker.Pure.instantiate_term_implicits g annot in
     match annot.t with
