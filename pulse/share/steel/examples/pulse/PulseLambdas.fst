@@ -29,6 +29,8 @@ fn s1 (_:unit) // should allow nullary "lambdas"
     }
 ```
 
+let ss = s1
+
 [@@expect_failure]
 ```pulse
 fn s2 (_:unit)
