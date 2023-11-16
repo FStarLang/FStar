@@ -394,10 +394,11 @@ let interleave_module (a:modul) (expect_complete_modul:bool) : E.withenv modul =
         match remaining_iface_vals with
         | _::_ when expect_complete_modul ->
           let remaining = List.map FStar.Parser.AST.decl_to_string remaining_iface_vals in
-          FStar.Pprint.(raise_error_doc
+          FStar.Pprint.(log_issue_doc (Ident.range_of_lid l)
             (Errors.Fatal_InterfaceNotImplementedByModule,
               [text (Util.format1 "Some interface elements were not implemented by module %s:" (Ident.string_of_lid l))
-                ^^ sublist empty (List.map doc_of_string remaining)]) (Ident.range_of_lid l))
+                ^^ sublist empty (List.map doc_of_string remaining)]) );
+          a, env
         | _ ->
           if Options.dump_module (string_of_lid l)
           then Util.print1 "Interleaved module is:\n%s\n" (FStar.Parser.AST.modul_to_string a);

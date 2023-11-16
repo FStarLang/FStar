@@ -115,7 +115,7 @@ let default_settings : list error_setting =
     Fatal_InlineRenamedAsUnfold                       , CFatal, 95;
     Fatal_InsufficientPatternArguments                , CFatal, 96;
     Fatal_InterfaceAlreadyProcessed                   , CFatal, 97;
-    Fatal_InterfaceNotImplementedByModule             , CFatal, 98;
+    Fatal_InterfaceNotImplementedByModule             , CError, 98;
     Fatal_InterfaceWithTypeImplementation             , CFatal, 99;
     Fatal_InvalidFloatingPointNumber                  , CFatal, 100;
     Fatal_InvalidFSDocKeyword                         , CFatal, 101;

@@ -2021,7 +2021,7 @@ let (default_settings : error_setting Prims.list) =
   (Fatal_InlineRenamedAsUnfold, CFatal, (Prims.of_int (95)));
   (Fatal_InsufficientPatternArguments, CFatal, (Prims.of_int (96)));
   (Fatal_InterfaceAlreadyProcessed, CFatal, (Prims.of_int (97)));
-  (Fatal_InterfaceNotImplementedByModule, CFatal, (Prims.of_int (98)));
+  (Fatal_InterfaceNotImplementedByModule, CError, (Prims.of_int (98)));
   (Fatal_InterfaceWithTypeImplementation, CFatal, (Prims.of_int (99)));
   (Fatal_InvalidFloatingPointNumber, CFatal, (Prims.of_int (100)));
   (Fatal_InvalidFSDocKeyword, CFatal, (Prims.of_int (101)));

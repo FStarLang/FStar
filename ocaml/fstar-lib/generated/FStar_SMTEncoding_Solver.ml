@@ -2116,8 +2116,10 @@ let (split_and_solve :
             then
               let uu___3 =
                 let uu___4 =
-                  FStar_Compiler_Effect.op_Less_Bar FStar_Errors_Msg.mkmsg
-                    "The verification condition succeeded after splitting it to localize potential errors, although the original non-split verification condition failed. If you want to rely on splitting queries for verifying your program please use the '--split_queries always' option rather than relying on it implicitly." in
+                  let uu___5 =
+                    FStar_Errors_Msg.text
+                      "The verification condition succeeded after splitting it to localize potential errors, although the original non-split verification condition failed. If you want to rely on splitting queries for verifying your program please use the '--split_queries always' option rather than relying on it implicitly." in
+                  [uu___5] in
                 (FStar_Errors_Codes.Warning_SplitAndRetryQueries, uu___4) in
               FStar_TypeChecker_Err.log_issue tcenv
                 tcenv.FStar_TypeChecker_Env.range uu___3

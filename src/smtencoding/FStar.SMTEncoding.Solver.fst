@@ -1223,11 +1223,11 @@ let split_and_solve (retrying:bool) use_env_msg tcenv q : unit =
       tcenv
       tcenv.range
       (Errors.Warning_SplitAndRetryQueries,
-        Errors.mkmsg <|
+        [Errors.text
        "The verification condition succeeded after splitting it to localize potential errors, \
         although the original non-split verification condition failed. \
         If you want to rely on splitting queries for verifying your program \
-        please use the '--split_queries always' option rather than relying on it implicitly.")
+        please use the '--split_queries always' option rather than relying on it implicitly."])
    )
 
 let disable_quake_for (f : unit -> 'a) : 'a =
