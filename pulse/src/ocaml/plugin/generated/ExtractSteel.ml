@@ -797,6 +797,49 @@ let (steel_translate_expr : FStar_Extraction_Krml.translate_expr_t) =
                 uu___2);
              FStar_Extraction_ML_Syntax.mlty = uu___3;
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
+           e2::i::uu___5)
+          when
+          let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___6 = "Pulse.Lib.Array.Core.pts_to_range_index" ->
+          let uu___6 =
+            let uu___7 = FStar_Extraction_Krml.translate_expr env e2 in
+            let uu___8 = FStar_Extraction_Krml.translate_expr env i in
+            (uu___7, uu___8) in
+          FStar_Extraction_Krml.EBufRead uu___6
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_TApp
+               ({
+                  FStar_Extraction_ML_Syntax.expr =
+                    FStar_Extraction_ML_Syntax.MLE_Name p;
+                  FStar_Extraction_ML_Syntax.mlty = uu___;
+                  FStar_Extraction_ML_Syntax.loc = uu___1;_},
+                uu___2);
+             FStar_Extraction_ML_Syntax.mlty = uu___3;
+             FStar_Extraction_ML_Syntax.loc = uu___4;_},
+           e2::i::v::uu___5)
+          when
+          let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___6 = "Pulse.Lib.Array.Core.pts_to_range_upd" ->
+          let uu___6 =
+            let uu___7 = FStar_Extraction_Krml.translate_expr env e2 in
+            let uu___8 = FStar_Extraction_Krml.translate_expr env i in
+            let uu___9 = FStar_Extraction_Krml.translate_expr env v in
+            (uu___7, uu___8, uu___9) in
+          FStar_Extraction_Krml.EBufWrite uu___6
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_TApp
+               ({
+                  FStar_Extraction_ML_Syntax.expr =
+                    FStar_Extraction_ML_Syntax.MLE_Name p;
+                  FStar_Extraction_ML_Syntax.mlty = uu___;
+                  FStar_Extraction_ML_Syntax.loc = uu___1;_},
+                uu___2);
+             FStar_Extraction_ML_Syntax.mlty = uu___3;
+             FStar_Extraction_ML_Syntax.loc = uu___4;_},
            x::_w::[])
           when
           let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
@@ -914,7 +957,7 @@ let (steel_translate_let : FStar_Extraction_Krml.translate_let_t) =
         | uu___ ->
             FStar_Compiler_Effect.raise
               FStar_Extraction_Krml.NotSupportedByKrmlExtension
-let (uu___539 : unit) =
+let (uu___569 : unit) =
   FStar_Extraction_Krml.register_pre_translate_type_without_decay
     steel_translate_type_without_decay;
   FStar_Extraction_Krml.register_pre_translate_expr steel_translate_expr;
