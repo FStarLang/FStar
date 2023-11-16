@@ -867,16 +867,42 @@ let (tc_sig_let :
                   else
                     (let uu___2 =
                        let uu___3 =
-                         let uu___4 = FStar_Syntax_Print.lid_to_string l in
+                         let uu___4 =
+                           let uu___5 =
+                             FStar_Errors_Msg.text
+                               "Inconsistent qualifier annotations on" in
+                           let uu___6 =
+                             let uu___7 = FStar_Syntax_Print.lid_to_string l in
+                             FStar_Pprint.doc_of_string uu___7 in
+                           FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
                          let uu___5 =
-                           FStar_Syntax_Print.quals_to_string val_q in
-                         let uu___6 = FStar_Syntax_Print.quals_to_string q' in
-                         FStar_Compiler_Util.format3
-                           "Inconsistent qualifier annotations on %s; Expected {%s}, got {%s}"
-                           uu___4 uu___5 uu___6 in
+                           let uu___6 =
+                             let uu___7 =
+                               let uu___8 = FStar_Errors_Msg.text "Expected" in
+                               let uu___9 =
+                                 let uu___10 =
+                                   let uu___11 =
+                                     FStar_Syntax_Print.quals_to_string val_q in
+                                   FStar_Pprint.arbitrary_string uu___11 in
+                                 FStar_Pprint.squotes uu___10 in
+                               FStar_Pprint.prefix (Prims.of_int (4))
+                                 Prims.int_one uu___8 uu___9 in
+                             let uu___8 =
+                               let uu___9 = FStar_Errors_Msg.text "got" in
+                               let uu___10 =
+                                 let uu___11 =
+                                   let uu___12 =
+                                     FStar_Syntax_Print.quals_to_string q' in
+                                   FStar_Pprint.arbitrary_string uu___12 in
+                                 FStar_Pprint.squotes uu___11 in
+                               FStar_Pprint.prefix (Prims.of_int (4))
+                                 Prims.int_one uu___9 uu___10 in
+                             FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
+                           [uu___6] in
+                         uu___4 :: uu___5 in
                        (FStar_Errors_Codes.Fatal_InconsistentQualifierAnnotation,
                          uu___3) in
-                     FStar_Errors.raise_error uu___2 r) in
+                     FStar_Errors.raise_error_doc uu___2 r) in
             let rename_parameters lb =
               let rename_in_typ def typ =
                 let typ1 = FStar_Syntax_Subst.compress typ in

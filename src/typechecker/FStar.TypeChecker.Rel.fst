@@ -3741,10 +3741,9 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
                 //  by generating reveal (hide ?u) == reveal y
                 //  and simplifying it to       ?u == reveal y
                 //
-                let payload_of_hide_reveal h args =
+                let payload_of_hide_reveal h args : option (universe & typ & term) =
                     match h.n, args with
-                    | Tm_uinst(_, [u]), [(ty, Some ({ aqual_implicit = true })); (t, _)]
-                      when is_flex t ->
+                    | Tm_uinst(_, [u]), [(ty, Some ({ aqual_implicit = true })); (t, _)] ->
                       Some (u, ty, t)
                     | _ -> None
                 in
@@ -3772,7 +3771,8 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
 
                 | Some (Inl _), Some (Inl _)
                 | Some (Inr _), Some (Inr _) ->
-                  //reveal/reveal, or hide/hide; impossilbe
+                  //reveal/reveal, or hide/hide; impossible, head_matches_delta
+                  //would have matched
                   None
 
                 | Some (Inl _), Some (Inr _)
@@ -3780,29 +3780,37 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
                   //reveal/hide, or hide/reveal; inapplicable
                   None
 
-                | Some (Inl (u, ty, lhs)), None ->
-                  // reveal / _
-                  //add hide to both sides to simplify
+                (* We only apply these rules when the arg to reveal
+                is a flex, to avoid loops such as:
+                     reveal t1 =?= t2
+                  ~> t1        =?= hide t2
+                  ~> reveal t1 =?= t2
+                *)
+                | Some (Inl (u, ty, lhs)), None when is_flex lhs ->
+                  // reveal (?u _) / _
+                  //add hide to rhs and simplify lhs
                   let rhs = mk_fv_app PC.hide u [(ty, S.as_aqual_implicit true); (t2, None)] t2.pos in
                   Some (lhs, rhs)
 
-                | None, Some (Inl (u, ty, rhs)) ->
-                  // _ / reveal
-                  //add hide to both sides to simplify
+                | None, Some (Inl (u, ty, rhs)) when is_flex rhs ->
+                  // _ / reveal (?u _)
+                  //add hide to lhs and simplify rhs
                   let lhs = mk_fv_app PC.hide u [(ty, S.as_aqual_implicit true); (t1, None)] t1.pos in
                   Some (lhs, rhs)
 
                 | Some (Inr (u, ty, lhs)), None ->
-                  // hide / _
-                  //add reveal to both sides to simplify
+                  // hide _ / _
+                  //add reveal to rhs and simplify lhs
                   let rhs = mk_fv_app PC.reveal u [(ty,S.as_aqual_implicit true); (t2, None)] t2.pos in
                   Some (lhs, rhs)
 
                 | None, Some (Inr (u, ty, rhs)) ->
-                  // hide / _
-                  //add reveal to both sides to simplify
+                  // _ / hide _
+                  //add reveal to lhs and simplify rhs
                   let lhs = mk_fv_app PC.reveal u [(ty,S.as_aqual_implicit true); (t1, None)] t1.pos in
                   Some (lhs, rhs)
+
+                | _ -> None
             in
             begin
             match try_match_heuristic orig wl t1 t2 o with
@@ -5517,11 +5525,16 @@ let force_trivial_guard env g =
     let g = resolve_implicits env g in
     match g.implicits with
     | [] -> ignore <| discharge_guard env g
-    | imp::_ -> raise_error (Errors.Fatal_FailToResolveImplicitArgument,
-                           BU.format3 "Failed to resolve implicit argument %s of type %s introduced for %s"
-                                (Print.uvar_to_string imp.imp_uvar.ctx_uvar_head)
-                                (N.term_to_string env (U.ctx_uvar_typ imp.imp_uvar))
-                                imp.imp_reason) imp.imp_range
+    | imp::_ ->
+      let open FStar.Pprint in
+      raise_error_doc (Errors.Fatal_FailToResolveImplicitArgument, [
+        prefix 4 1 (text "Failed to resolved implicit argument")
+                (arbitrary_string (Print.uvar_to_string imp.imp_uvar.ctx_uvar_head)) ^/^
+        prefix 4 1 (text "of type")
+                (N.term_to_doc env (U.ctx_uvar_typ imp.imp_uvar)) ^/^
+        prefix 4 1 (text "introduced for")
+                (text imp.imp_reason)
+        ]) imp.imp_range
 
 let subtype_nosmt_force env t1 t2 =
     match subtype_nosmt env t1 t2 with
