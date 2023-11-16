@@ -6,13 +6,17 @@ module U64 = FStar.UInt64
 
 (* Simple values *)
 
-let min_simple_value_long_argument : Ghost.erased U8.t = 32uy
+[@@CMacro]
+let min_simple_value_long_argument = 32uy
 
-let max_simple_value_additional_info : Ghost.erased U8.t = 23uy
+[@@CMacro]
+let max_simple_value_additional_info = 23uy
 
+inline_for_extraction
+noextract
 let simple_value_wf
   (x: U8.t)
-: GTot bool
+: Tot bool
 = x `U8.lte` max_simple_value_additional_info || min_simple_value_long_argument `U8.lte` x
 
 inline_for_extraction
@@ -32,6 +36,9 @@ type raw_data_item
   | Map: (v: list (raw_data_item & raw_data_item) { FStar.UInt.fits (List.Tot.length v) U64.n }) -> raw_data_item
   | Tagged: (tag: U64.t) -> (v: raw_data_item) -> raw_data_item
 //  | Float: (v: Float.float) -> raw_data_item // TODO
+
+let dummy_raw_data_item : Ghost.erased raw_data_item =
+  Int64 major_type_uint64 0uL
 
 noextract
 let get_major_type

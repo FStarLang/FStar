@@ -484,6 +484,19 @@ val constr_cbor_map
       vres == Cbor.Map v'
     )))
 
+val cbor_map_length
+  (a: cbor)
+  (#p: perm)
+  (#v: Ghost.erased Cbor.raw_data_item)
+: stt U64.t
+    (raw_data_item_match p a v ** pure (
+      (Cbor.Map? v)
+    ))
+    (fun res -> raw_data_item_match p a v ** pure (
+      Cbor.Map? v /\
+      U64.v res == List.Tot.length (Cbor.Map?.v v)
+    ))
+
 val dummy_cbor_map_iterator: cbor_map_iterator_t
 
 val cbor_map_iterator_match
@@ -544,18 +557,29 @@ val cbor_get_major_type
       res == Cbor.get_major_type v
     ))
 
-val cbor_is_equal
-  (a1: cbor)
-  (a2: cbor)
-  (#p1: perm)
-  (#p2: perm)
-  (#v1: Ghost.erased Cbor.raw_data_item)
-  (#v2: Ghost.erased Cbor.raw_data_item)
-: stt bool
-    (raw_data_item_match p1 a1 v1 ** raw_data_item_match p2 a2 v2)
-    (fun res -> raw_data_item_match p1 a1 v1 ** raw_data_item_match p2 a2 v2 ** pure (
-      (~ (Cbor.Tagged? v1 \/ Cbor.Array? v1 \/ Cbor.Map? v1)) ==> (res == true <==> v1 == v2) // TODO: underspecified for tagged, arrays and maps, complete those missing cases
-    ))
+(* `cbor_compare_aux` is an auxiliary function intended to compare two CBOR objects
+   represented by their serialized bytes. It returns an inconclusive result if one of
+   the two is not such an object. The full equality test is implemented in Pulse, see
+   `CBOR.Pulse.cbor_compare`
+*)
+
+noextract
+let cbor_compare_aux_postcond
+  (v1 v2: Cbor.raw_data_item)
+  (res: FStar.Int16.t)
+: Tot prop
+= let nres = FStar.Int16.v res in
+  (nres = -1 || nres = 0 || nres = 1) ==> nres == Cbor.cbor_compare v1 v2
+
+val cbor_compare_aux
+  (c1 c2: cbor)
+  (#p1 #p2: perm)
+  (#v1 #v2: Ghost.erased Cbor.raw_data_item)
+: stt FStar.Int16.t
+    (raw_data_item_match p1 c1 v1 ** raw_data_item_match p2 c2 v2)
+    (fun res -> raw_data_item_match p1 c1 v1 ** raw_data_item_match p2 c2 v2 **
+      pure (cbor_compare_aux_postcond v1 v2 res)
+    )
 
 (* Serialization *)
 

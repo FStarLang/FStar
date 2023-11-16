@@ -60,6 +60,87 @@ let seq_list_match_cons_eq
     seq_list_match_cons0 c (a :: q) item_match seq_list_match
   )
 
+let seq_list_match_nil
+  (#opened: _)
+  (#t #t': Type)
+  (c: Seq.seq t)
+  (v: list t')
+  (item_match: (t -> (v': t' { v' << v }) -> vprop))
+: STGhost unit opened
+    emp
+    (fun _ -> seq_list_match c v item_match)
+    (c `Seq.equal` Seq.empty /\
+      Nil? v)
+    (fun _ -> True)
+= noop ();
+  rewrite
+    (seq_list_match_nil0 c)
+    (seq_list_match c v item_match)
+
+let list_cons_precedes
+  (#t: Type)
+  (a: t)
+  (q: list t)
+: Lemma
+  ((a << a :: q) /\ (q << a :: q))
+  [SMTPat (a :: q)]
+= assert (List.Tot.hd (a :: q) << (a :: q));
+  assert (List.Tot.tl (a :: q) << (a :: q))
+
+let seq_list_match_cons_intro
+  (#opened: _)
+  (#t #t': Type)
+  (a: t)
+  (a' : t')
+  (c: Seq.seq t)
+  (v: list t')
+  (item_match: (t -> (v': t' { v' << a' :: v }) -> vprop))
+: STGhostT unit opened
+    (item_match a a' `star` seq_list_match c v item_match)
+    (fun _ -> seq_list_match (Seq.cons a c) (a' :: v) item_match)
+= seq_list_match_cons_eq (Seq.cons a c) (a' :: v) item_match;
+  noop ();
+  rewrite
+    (seq_list_match_cons0 (Seq.cons a c) (a' :: v) item_match seq_list_match)
+    (seq_list_match (Seq.cons a c) (a' :: v) item_match)
+
+let seq_list_match_cons_elim
+  (#opened: _)
+  (#t #t': Type)
+  (c: Seq.seq t)
+  (v: list t' { Cons? v \/ Seq.length c > 0 })
+  (item_match: (t -> (v': t' { v' << v }) -> vprop))
+: STGhostT (squash (Cons? v /\ Seq.length c > 0)) opened
+    (seq_list_match c v item_match)
+    (fun _ -> item_match (Seq.head c) (List.Tot.hd v) `star`
+      seq_list_match (Seq.tail c) (List.Tot.tl v) item_match)
+= if Nil? v
+  then begin
+    rewrite
+      (seq_list_match c v item_match)
+      (seq_list_match_nil0 c);
+    let _ = gen_elim () in
+    assert False;
+    rewrite // by contradiction
+      emp
+      (item_match (Seq.head c) (List.Tot.hd v) `star`
+        seq_list_match (Seq.tail c) (List.Tot.tl v) item_match)
+  end else begin
+    seq_list_match_cons_eq c v item_match;
+    noop ();
+    rewrite
+      (seq_list_match c v item_match)
+      (seq_list_match_cons0 c v item_match seq_list_match);
+    let _ = gen_elim () in
+    let prf : squash (Cons? v /\ Seq.length c > 0) = () in
+    let c1 = vpattern (fun c1 -> item_match c1 (List.Tot.hd v)) in
+    let c2 = vpattern (fun c2 -> seq_list_match c2 (List.Tot.tl v) item_match) in
+    Seq.lemma_cons_inj c1 (Seq.head c) c2 (Seq.tail c);
+    vpattern_rewrite (fun c1 -> item_match c1 (List.Tot.hd v)) (Seq.head c);
+    vpattern_rewrite (fun c2 -> seq_list_match c2 (List.Tot.tl v) item_match) (Seq.tail c);
+    prf
+  end
+
 // this one cannot be proven with seq_seq_match because of the << refinement in the type of item_match
 let rec seq_list_match_weaken
   (#opened: _)

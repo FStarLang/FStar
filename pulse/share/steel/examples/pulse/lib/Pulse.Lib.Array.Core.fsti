@@ -74,6 +74,16 @@ val free
 
 val pts_to_range (#a:Type u#0) (x:array a) (i j: nat) (#[exact (`full_perm)] p:perm) (s: Seq.seq a) : vprop
 
+val pts_to_range_prop
+  (#elt: Type0) (a: array elt) (#i #j: nat)
+  (#p: perm)
+  (#s: Seq.seq elt)
+: stt_ghost unit emp_inames
+    (pts_to_range a i j #p s)
+    (fun _ -> pts_to_range a i j #p s ** pure (
+      (i <= j /\ j <= length a /\ Seq.length s == j - i)
+    ))
+
 val pts_to_range_intro
   (#elt: Type0) (a: array elt)
   (p: perm)
