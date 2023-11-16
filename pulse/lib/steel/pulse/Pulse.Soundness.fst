@@ -195,8 +195,16 @@ let stequiv_soundness
   let T_Equiv _ e c c' e_typing equiv = d in
   LN.st_typing_ln d;
   LN.st_typing_ln e_typing;
-  let r_e_typing = soundness _ _ _ e_typing in 
-  STEquiv.st_equiv_soundness _ _ _ equiv _ r_e_typing
+  let r_e_typing = soundness _ _ _ e_typing in
+  match equiv with
+  | ST_TotEquiv _ t1 t2 _ _ eq ->
+    let r_e_typing : RT.tot_typing (elab_env g) (elab_st_typing e_typing) (elab_term t1) = 
+        r_e_typing
+    in
+    let eq = RT.Rel_equiv _ _ _ RT.R_Sub eq in
+    RT.T_Sub _ _ _ _ r_e_typing (RT.Relc_typ _ _ _ _ _ eq)
+  | _ ->  
+    STEquiv.st_equiv_soundness _ _ _ equiv _ r_e_typing
 
 
 #push-options "--query_stats --fuel 2 --ifuel 2 --z3rlimit_factor 30"

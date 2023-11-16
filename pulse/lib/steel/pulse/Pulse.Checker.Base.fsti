@@ -145,3 +145,27 @@ val checker_result_for_st_typing (#g:env) (#ctxt:vprop) (#post_hint:post_hint_op
 
 val is_stateful_application (g:env) (e:term) 
   : T.Tac (option st_term)
+
+val norm_typing
+      (g:env) (e:term) (eff:_) (t0:term)
+      (d:typing g e eff t0)
+      (steps:list norm_step)
+  : T.Tac (t':term & typing g e eff t')
+
+val norm_typing_inverse
+      (g:env) (e:term) (eff:_) (t0:term)
+      (d:typing g e eff t0)
+      (t1:term)
+      (#u:_)
+      (d1:tot_typing g t1 (tm_type u))
+      (steps:list norm_step)
+  : T.Tac (option (typing g e eff t1))
+
+val norm_st_typing_inverse
+      (#g:env) (#e:st_term) (#t0:term)
+      (d:st_typing g e (C_Tot t0))
+      (#u:_)
+      (t1:term)
+      (d1:tot_typing g t1 (tm_type u))
+      (steps:list norm_step)
+  : T.Tac (option (st_typing g e (C_Tot t1)))

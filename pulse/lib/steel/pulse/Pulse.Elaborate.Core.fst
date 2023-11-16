@@ -178,6 +178,10 @@ let rec elab_st_typing (#g:env)
       let e = elab_st_typing e_typing in
       elab_frame c frame e
       
+    | T_Equiv _ _ c1 c2 e_typing (ST_TotEquiv _ _ _ _ _ _) ->
+      let e = elab_st_typing e_typing in
+      e
+
     | T_Equiv _ _ c1 c2 e_typing _ ->
       let e = elab_st_typing e_typing in
       elab_sub c1 c2 e

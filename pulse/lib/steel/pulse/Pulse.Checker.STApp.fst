@@ -185,35 +185,6 @@ let apply_impure_function
         Prover.prove_post_hint (Prover.try_frame_pre_uvs ctxt_typing uvs (match_comp_res_with_post_hint d post_hint) res_ppname) post_hint range
     )
   
-module R = FStar.Reflection.V2
-let norm_typing
-      (g:env) (e:term) (eff:_) (t0:term)
-      (d:typing g e eff t0)
-      (steps:list norm_step)
-  : T.Tac (t':term & typing g e eff t')
-  = let t = elab_term t0 in
-    let u_t_typing : Ghost.erased (u:R.universe & RT.typing _ _ _) = 
-      Pulse.Typing.Metatheory.Base.typing_correctness d._0
-    in
-    let (| t', t'_typing, related_t_t' |) =
-      Pulse.RuntimeUtils.norm_well_typed_term (dsnd u_t_typing) [weak;hnf;delta]
-    in
-    match Pulse.Readback.readback_ty t' with
-    | None -> T.fail "Could not readback normalized type"
-    | Some t'' -> 
-      let d : typing g e eff t'' =
-        let d : RT.typing (elab_env g) (elab_term e) (eff, t) = d._0 in
-        let r : RT.related (elab_env g) t RT.R_Eq t' = related_t_t' in
-        let r  = RT.Rel_equiv _ _ _ RT.R_Sub r in
-        let s : RT.sub_comp (elab_env g) (eff, t) (eff, t') = 
-          RT.Relc_typ _ _ _ _ _ r
-        in
-        let d: RT.typing (elab_env g) (elab_term e) (eff, t') =
-          RT.T_Sub _ _ _ _ d s
-        in
-        E d
-      in
-      (| t'', d |)
 
 let check
   (g0:env)

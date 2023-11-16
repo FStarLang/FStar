@@ -132,7 +132,18 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
     
     | Tm_Abs { b; ascription=c; body } ->
       freevars_close_term' b.binder_ty x i;
-      freevars_close_comp c x (i + 1);
+      (
+        match c.annotated with
+        | None -> ()
+        | Some c ->
+          freevars_close_comp c x (i + 1)
+      );
+      (
+        match c.elaborated with
+        | None -> ()
+        | Some c ->
+          freevars_close_comp c x (i + 1)
+      );
       freevars_close_st_term' body x (i + 1)
 
     | Tm_Bind { binder; head; body } ->
@@ -304,19 +315,26 @@ let rec vprop_equiv_freevars (#g:_) (#t0 #t1:_) (v:vprop_equiv g t0 t1)
       tot_or_ghost_typing_freevars d0;
       tot_or_ghost_typing_freevars d1
 
+
+
 let st_equiv_freevars #g (#c1 #c2:_)
                       (d:st_equiv g c1 c2)
   : Lemma
     (requires freevars_comp c1 `Set.subset` vars_of_env g)
     (ensures freevars_comp c2 `Set.subset` vars_of_env g)    
-  = let ST_VPropEquiv _ _ _ x _ _ _ eq_res eq_pre eq_post = d in
-    vprop_equiv_freevars eq_pre;
-    vprop_equiv_freevars eq_post;
-    freevars_open_term_inv (comp_post c1) x;
-    freevars_open_term_inv (comp_post c2) x;
-    Pulse.Elaborate.elab_freevars (comp_res c1);
-    refl_equiv_freevars eq_res;
-    Pulse.Elaborate.elab_freevars (comp_res c2)
+  = match d with
+    | ST_VPropEquiv _ _ _ x _ _ _ eq_res eq_pre eq_post -> (
+      vprop_equiv_freevars eq_pre;
+      vprop_equiv_freevars eq_post;
+      freevars_open_term_inv (comp_post c1) x;
+      freevars_open_term_inv (comp_post c2) x;
+      Pulse.Elaborate.elab_freevars (comp_res c1);
+      refl_equiv_freevars eq_res;
+      Pulse.Elaborate.elab_freevars (comp_res c2)
+    )
+    | ST_TotEquiv _ t1 t2 u t1_typing eq ->
+      let t2_typing = Pulse.Typing.Metatheory.Base.rt_equiv_typing eq t1_typing._0 in
+      tot_or_ghost_typing_freevars (E (Ghost.reveal t2_typing))
     
 let src_typing_freevars_t (d':'a) =
     (#g:_) -> (#t:_) -> (#c:_) -> (d:st_typing g t c { d << d' }) ->

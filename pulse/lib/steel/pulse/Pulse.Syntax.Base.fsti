@@ -60,6 +60,7 @@ type nm = {
 type qualifier =
   | Implicit
 
+
 noeq
 type fv = {
   fv_name : R.name;
@@ -175,6 +176,13 @@ type proof_hint_type =
     }
 
 
+noeq
+type comp_ascription = {
+  annotated:option comp;
+  elaborated:option comp
+}
+let empty_ascription = { annotated=None; elaborated=None }  
+
 (* terms with STT types *)
 [@@ no_auto_projectors]
 noeq
@@ -187,7 +195,7 @@ type st_term' =
   | Tm_Abs {
       b:binder;
       q:option qualifier;
-      ascription: comp;
+      ascription: comp_ascription;
       body:st_term;
     }
   | Tm_STApp {

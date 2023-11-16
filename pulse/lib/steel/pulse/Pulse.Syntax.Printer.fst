@@ -203,12 +203,13 @@ let rec st_term_to_string' (level:string) (t:st_term)
         (st_term_to_string' level body)
   
     | Tm_Abs { b; q; ascription=c; body } ->
-      sprintf "(fun (%s%s)\n%s\n {\n%s%s\n}"
+      sprintf "(fun (%s%s)\n%s\n ({\n%s%s\n}%s)"
               (qual_to_string q)
               (binder_to_string b)
-              (comp_to_string c)
+              (match c.annotated with | None -> "" | Some c -> comp_to_string c)
               (indent level)
               (st_term_to_string' (indent level) body)
+              (match c.elaborated with | None -> "" | Some c -> " <: " ^ comp_to_string c)
 
     | Tm_If { b; then_; else_ } ->
       sprintf "if (%s)\n%s{\n%s%s\n%s}\n%selse\n%s{\n%s%s\n%s}"
@@ -447,5 +448,8 @@ let rec print_skel (t:st_term) =
 
 let decl_to_string (d:decl) : T.Tac string =
   match d.d with
-  | FnDecl {id; isrec; body} ->
-    "let " ^ (if isrec then "rec " else "") ^ fst (R.inspect_ident id) ^ " { " ^ st_term_to_string body ^ "}"
+  | FnDecl {id; isrec; bs; body} ->
+    "fn " ^ (if isrec then "rec " else "") ^
+     fst (R.inspect_ident id) ^ " " ^ 
+     String.concat " " (T.map (fun (_, b, _) -> binder_to_string b) bs) ^
+      " { " ^ st_term_to_string body ^ "}"
