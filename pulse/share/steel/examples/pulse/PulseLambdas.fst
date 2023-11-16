@@ -18,7 +18,7 @@ let swap_fun = #a:Type0 -> x:ref a -> y:ref a -> #vx:erased a -> #vy:erased a ->
 
 
 ```pulse
-fn s1 (_:unit) // should allow nullary "lambdas"
+fn s1 (_:unit) 
   : swap_fun 
   = (#a:Type0) (x y #_vx #_vy:_)
     {
@@ -44,24 +44,42 @@ fn s2 (_:unit)
     }
 ```
 
+[@@expect_failure]
+```pulse
+fn s3 (_:unit) : swap_fun
+  = (#a:Type0) (x y #_vx #_vy:_)
+    requires pts_to x _vx ** pts_to y _vy //reject repeated annotation
+    ensures  pts_to x _vy ** pts_to y _vx
+    {
+      let vx = !x;
+      let vy = !y;
+      x := vy;
+      y := vx;
+    }
+    {
+      let vx = !x;
+      let vy = !y;
+      x := vy;
+      y := vx;
+    }
+```
 
-// [@@expect_failure]
-// ```pulse
-// fn test_inner_lambda (#a:Type0)
-//                      (x y:ref int)
-// requires pts_to x 'vx ** pts_to y 'vy
-// ensures  pts_to x 'vy ** pts_to y 'vx
-// {
-//   ghost
-//   fn write_helper (#a:Type) (x:ref a) (n:a)
-//     requires pts_to x 'vx
-//     ensures  pts_to x n
-//   {
-//     x := n;
-//   };
-//   let vx = !x;
-//   let vy = !y;
-//   write_helper x vy;
-//   write_helper y vy;
-// } 
-// ```
+[@@expect_failure]
+```pulse
+fn test_inner_lambda (#a:Type0)
+                     (x y:ref int)
+requires pts_to x 'vx ** pts_to y 'vy
+ensures  pts_to x 'vy ** pts_to y 'vx
+{
+  fn write_helper (#a:Type) (x:ref a) (n:a)
+    requires pts_to x 'vx
+    ensures  pts_to x n
+  {
+    x := n;
+  };
+  let vx = !x;
+  let vy = !y;
+  write_helper x vy;
+  write_helper y vy;
+} 
+```

@@ -219,8 +219,9 @@ let maybe_rewrite_body_typing
       | _ -> 
       Env.fail g (Some e.range) "Inferred type is incompatible with annotation"
     )
-    | Some _ -> 
-      Env.fail g (Some e.range) "Unexpected annotation on a function body"
+    | Some c -> 
+      let st = st_comp_of_comp c in
+      Env.fail g (Some st.pre.range) "Unexpected annotation on a function body"
 
 let rec check_abs_core
   (g:env)
@@ -294,6 +295,7 @@ let rec check_abs_core
         apply_checker_result_k #_ #_ #(Some?.v post) r ppname in
 
       check_effect_annotation g' body.range c c_body;
+      let (| c_body, body_typing |) = maybe_rewrite_body_typing body_typing c in
 
       FV.st_typing_freevars body_typing;
       let body_closed = close_st_term body x in
