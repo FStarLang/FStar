@@ -2133,7 +2133,7 @@ let issues = list Errors.issue
 
 let refl_typing_guard (e:env) (g:typ) : tac unit =
   let reason = "refl_typing_guard" in
-  proc_guard_formula "refl_typing_guard" e g None Range.dummyRange
+  proc_guard_formula "refl_typing_guard" e g None (Env.get_range e)
 
 let uncurry f (x, y) = f x y
 
@@ -2241,7 +2241,8 @@ let refl_is_non_informative (g:env) (t:typ) : tac (option unit & issues) =
                                 (string_of_bool b));
          if b then ((), [])
          else Errors.raise_error (Errors.Fatal_UnexpectedTerm,
-                "is_non_informative returned false ") Range.dummyRange)
+                "is_non_informative returned false ")
+                (Env.get_range g))
   else (
     ret (None, [unexpected_uvars_issue (Env.get_range g)])
   )
@@ -2272,7 +2273,8 @@ let refl_check_relation (g:env) (t0 t1:typ) (rel:relation)
            ((), [(g, guard_f)])
          | Inr err ->
            dbg_refl g (fun _ -> BU.format1 "refl_check_relation failed: %s\n" (Core.print_error err));
-           Errors.raise_error (Errors.Fatal_IllTyped, "check_relation failed: " ^ (Core.print_error err)) Range.dummyRange)
+           Errors.raise_error (Errors.Fatal_IllTyped, "check_relation failed: " ^ (Core.print_error err))
+                              (Env.get_range g))
   else (
     ret (None, [unexpected_uvars_issue (Env.get_range g)])
   )
@@ -2315,7 +2317,8 @@ let refl_core_compute_term_type (g:env) (e:term) : tac (option (Core.tot_or_ghos
            ((eff, t), !guards)
          | Inr err ->
            dbg_refl g (fun _ -> BU.format1 "refl_core_compute_term_type: %s\n" (Core.print_error err));
-           Errors.raise_error (Errors.Fatal_IllTyped, "core_compute_term_type failed: " ^ (Core.print_error err)) Range.dummyRange)
+           Errors.raise_error (Errors.Fatal_IllTyped, "core_compute_term_type failed: " ^ (Core.print_error err))
+                              (Env.get_range g))
   else ret (None, [unexpected_uvars_issue (Env.get_range g)])
 
 let refl_core_check_term (g:env) (e:term) (t:typ) (eff:Core.tot_or_ghost)
@@ -2339,7 +2342,8 @@ let refl_core_check_term (g:env) (e:term) (t:typ) (eff:Core.tot_or_ghost)
            ((), [(g, guard)])
          | Inr err ->
            dbg_refl g (fun _ -> BU.format1 "refl_core_check_term failed: %s\n" (Core.print_error err));
-           Errors.raise_error (Errors.Fatal_IllTyped, "refl_core_check_term failed: " ^ (Core.print_error err)) Range.dummyRange)
+           Errors.raise_error (Errors.Fatal_IllTyped, "refl_core_check_term failed: " ^ (Core.print_error err))
+                              (Env.get_range g))
   else ret (None, [unexpected_uvars_issue (Env.get_range g)])
 
 let refl_tc_term (g:env) (e:term) : tac (option (term & (Core.tot_or_ghost & typ)) & issues) =
@@ -2421,9 +2425,9 @@ let refl_tc_term (g:env) (e:term) : tac (option (term & (Core.tot_or_ghost & typ
     ret (None, [unexpected_uvars_issue (Env.get_range g)])
 
 let refl_universe_of (g:env) (e:term) : tac (option universe & issues) =
-  let check_univ_var_resolved u =
+  let check_univ_var_resolved g u =
     match SS.compress_univ u with
-    | S.U_unif _ -> Errors.raise_error (Errors.Fatal_IllTyped, "Unresolved variable in universe_of callback") Range.dummyRange
+    | S.U_unif _ -> Errors.raise_error (Errors.Fatal_IllTyped, "Unresolved variable in universe_of callback") (Env.get_range g)
     | u -> u in
 
   if no_uvars_in_g g &&
@@ -2433,13 +2437,13 @@ let refl_universe_of (g:env) (e:term) : tac (option universe & issues) =
          let t, u = U.type_u () in
          let must_tot = false in
          match Core.check_term g e t must_tot with
-         | Inl None -> (check_univ_var_resolved u, [])
+         | Inl None -> (check_univ_var_resolved g u, [])
          | Inl (Some guard) ->
-           (check_univ_var_resolved u, [(g, guard)])
+           (check_univ_var_resolved g u, [(g, guard)])
          | Inr err ->
-           let msg = BU.format1 "refl_universe_of failed: %s\n" (Core.print_error err) in
-           dbg_refl g (fun _ -> msg);
-           Errors.raise_error (Errors.Fatal_IllTyped, "universe_of failed: " ^ Core.print_error err) Range.dummyRange)
+           dbg_refl g (fun _ -> BU.format1 "refl_universe_of failed: %s\n" (Core.print_error err));
+           Errors.raise_error (Errors.Fatal_IllTyped, "universe_of failed: " ^ Core.print_error err)
+                              (Env.get_range g))
   else ret (None, [unexpected_uvars_issue (Env.get_range g)])
 
 let refl_check_prop_validity (g:env) (e:term) : tac (option unit & issues) =
@@ -2460,7 +2464,7 @@ let refl_check_prop_validity (g:env) (e:term) : tac (option unit & issues) =
              let msg = BU.format1 "refl_check_prop_validity failed (not a prop): %s\n"
                                   (Core.print_error err) in
              dbg_refl g (fun _ -> msg);
-             Errors.raise_error (Errors.Fatal_IllTyped, msg) Range.dummyRange
+             Errors.raise_error (Errors.Fatal_IllTyped, msg) (Env.get_range g)
          in
          ((), [(g, e)])
        )

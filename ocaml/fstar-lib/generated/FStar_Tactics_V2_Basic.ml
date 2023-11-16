@@ -6879,8 +6879,9 @@ let (refl_typing_guard :
   fun e ->
     fun g ->
       let reason = "refl_typing_guard" in
+      let uu___ = FStar_TypeChecker_Env.get_range e in
       proc_guard_formula "refl_typing_guard" e g FStar_Pervasives_Native.None
-        FStar_Compiler_Range_Type.dummyRange
+        uu___
 let uncurry :
   'uuuuu 'uuuuu1 'uuuuu2 .
     ('uuuuu -> 'uuuuu1 -> 'uuuuu2) -> ('uuuuu * 'uuuuu1) -> 'uuuuu2
@@ -7051,10 +7052,10 @@ let (refl_is_non_informative :
               if b
               then ((), [])
               else
-                FStar_Errors.raise_error
-                  (FStar_Errors_Codes.Fatal_UnexpectedTerm,
-                    "is_non_informative returned false ")
-                  FStar_Compiler_Range_Type.dummyRange))
+                (let uu___5 = FStar_TypeChecker_Env.get_range g1 in
+                 FStar_Errors.raise_error
+                   (FStar_Errors_Codes.Fatal_UnexpectedTerm,
+                     "is_non_informative returned false ") uu___5)))
       else
         (let uu___2 =
            let uu___3 =
@@ -7122,8 +7123,8 @@ let (refl_check_relation :
                               FStar_TypeChecker_Core.print_error err in
                             Prims.op_Hat "check_relation failed: " uu___7 in
                           (FStar_Errors_Codes.Fatal_IllTyped, uu___6) in
-                        FStar_Errors.raise_error uu___5
-                          FStar_Compiler_Range_Type.dummyRange))))
+                        let uu___6 = FStar_TypeChecker_Env.get_range g1 in
+                        FStar_Errors.raise_error uu___5 uu___6))))
           else
             (let uu___2 =
                let uu___3 =
@@ -7212,8 +7213,8 @@ let (refl_core_compute_term_type :
                         let uu___7 = FStar_TypeChecker_Core.print_error err in
                         Prims.op_Hat "core_compute_term_type failed: " uu___7 in
                       (FStar_Errors_Codes.Fatal_IllTyped, uu___6) in
-                    FStar_Errors.raise_error uu___5
-                      FStar_Compiler_Range_Type.dummyRange))))
+                    let uu___6 = FStar_TypeChecker_Env.get_range g1 in
+                    FStar_Errors.raise_error uu___5 uu___6))))
       else
         (let uu___2 =
            let uu___3 =
@@ -7281,8 +7282,8 @@ let (refl_core_check_term :
                             Prims.op_Hat "refl_core_check_term failed: "
                               uu___7 in
                           (FStar_Errors_Codes.Fatal_IllTyped, uu___6) in
-                        FStar_Errors.raise_error uu___5
-                          FStar_Compiler_Range_Type.dummyRange))))
+                        let uu___6 = FStar_TypeChecker_Env.get_range g1 in
+                        FStar_Errors.raise_error uu___5 uu___6))))
           else
             (let uu___2 =
                let uu___3 =
@@ -7656,14 +7657,14 @@ let (refl_universe_of :
   =
   fun g ->
     fun e ->
-      let check_univ_var_resolved u =
+      let check_univ_var_resolved g1 u =
         let uu___ = FStar_Syntax_Subst.compress_univ u in
         match uu___ with
         | FStar_Syntax_Syntax.U_unif uu___1 ->
+            let uu___2 = FStar_TypeChecker_Env.get_range g1 in
             FStar_Errors.raise_error
               (FStar_Errors_Codes.Fatal_IllTyped,
-                "Unresolved variable in universe_of callback")
-              FStar_Compiler_Range_Type.dummyRange
+                "Unresolved variable in universe_of callback") uu___2
         | u1 -> u1 in
       let uu___ = (no_uvars_in_g g) && (no_uvars_in_term e) in
       if uu___
@@ -7680,25 +7681,27 @@ let (refl_universe_of :
                    FStar_TypeChecker_Core.check_term g1 e t must_tot in
                  (match uu___3 with
                   | FStar_Pervasives.Inl (FStar_Pervasives_Native.None) ->
-                      let uu___4 = check_univ_var_resolved u in (uu___4, [])
+                      let uu___4 = check_univ_var_resolved g1 u in
+                      (uu___4, [])
                   | FStar_Pervasives.Inl (FStar_Pervasives_Native.Some guard)
                       ->
-                      let uu___4 = check_univ_var_resolved u in
+                      let uu___4 = check_univ_var_resolved g1 u in
                       (uu___4, [(g1, guard)])
                   | FStar_Pervasives.Inr err ->
-                      let msg =
-                        let uu___4 = FStar_TypeChecker_Core.print_error err in
-                        FStar_Compiler_Util.format1
-                          "refl_universe_of failed: %s\n" uu___4 in
-                      (dbg_refl g1 (fun uu___5 -> msg);
+                      (dbg_refl g1
+                         (fun uu___5 ->
+                            let uu___6 =
+                              FStar_TypeChecker_Core.print_error err in
+                            FStar_Compiler_Util.format1
+                              "refl_universe_of failed: %s\n" uu___6);
                        (let uu___5 =
                           let uu___6 =
                             let uu___7 =
                               FStar_TypeChecker_Core.print_error err in
                             Prims.op_Hat "universe_of failed: " uu___7 in
                           (FStar_Errors_Codes.Fatal_IllTyped, uu___6) in
-                        FStar_Errors.raise_error uu___5
-                          FStar_Compiler_Range_Type.dummyRange))))
+                        let uu___6 = FStar_TypeChecker_Env.get_range g1 in
+                        FStar_Errors.raise_error uu___5 uu___6))))
       else
         (let uu___2 =
            let uu___3 =
@@ -7755,9 +7758,9 @@ let (refl_check_prop_validity :
                        "refl_check_prop_validity failed (not a prop): %s\n"
                        uu___5 in
                    (dbg_refl g1 (fun uu___6 -> msg);
-                    FStar_Errors.raise_error
-                      (FStar_Errors_Codes.Fatal_IllTyped, msg)
-                      FStar_Compiler_Range_Type.dummyRange));
+                    (let uu___6 = FStar_TypeChecker_Env.get_range g1 in
+                     FStar_Errors.raise_error
+                       (FStar_Errors_Codes.Fatal_IllTyped, msg) uu___6)));
               ((), [(g1, e)])))
       else
         (let uu___2 =
