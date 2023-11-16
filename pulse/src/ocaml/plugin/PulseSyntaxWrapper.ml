@@ -17,7 +17,7 @@ type bv = Pulse_Syntax_Base.bv
 let mk_bv (i:index) (name:string) (r:range) : bv =
  let pp = { name; range=r} in
  { bv_index = i; bv_ppname=pp }
-
+let index_of_bv (x:bv) = x.bv_index
 type nm = Pulse_Syntax_Base.nm
 let mk_nm (i:index) (name:string) (r:range) : nm =
  let pp = { name; range=r} in
@@ -97,11 +97,12 @@ let tm_ghost_return (t:term) r : st_term = PSB.(with_range (tm_return STT_Ghost 
 
 let tm_abs (b:binder)
            (q:qualifier option)
-           (c:comp)
+           (c:comp option)
            (body:st_term)
            r
   : st_term 
-  = PSB.(with_range (tm_abs b q c body) r)
+  = let asc = { annotated = c; elaborated = None } in
+    PSB.(with_range (tm_abs b q asc body) r)
 
 let tm_st_app (head:term) (q:S.aqual) (arg:term) r : st_term =
   PSB.(with_range (tm_stapp head (map_aqual q) arg) r)
@@ -209,12 +210,19 @@ let tac_to_string (env:Env.env) f =
 let binder_to_string (env:Env.env) (b:binder)
   : string
   = tac_to_string env (Pulse_Syntax_Printer.binder_to_string b)
+let bv_to_string (x:bv) : string =
+    x.bv_ppname.name ^ "@" ^
+     (FStar_Compiler_Util.string_of_int x.bv_index)
 let term_to_string (env:Env.env) (t:term)
   : string
   = tac_to_string env (Pulse_Syntax_Printer.term_to_string t)
 let st_term_to_string (env:Env.env) (t:st_term)
   : string
   = tac_to_string env (Pulse_Syntax_Printer.st_term_to_string t)
+type decl = Pulse_Syntax_Base.decl
+let decl_to_string (env:Env.env) (t:decl)
+  : string
+  = tac_to_string env (Pulse_Syntax_Printer.decl_to_string t)
 let comp_to_string (env:Env.env) (t:comp)
   : string
   = tac_to_string env (Pulse_Syntax_Printer.comp_to_string t)  
@@ -227,7 +235,6 @@ let subst_term s t = Pulse_Syntax_Naming.subst_term t s
 let subst_st_term s t = Pulse_Syntax_Naming.subst_st_term t s
 let subst_proof_hint s t = Pulse_Syntax_Naming.subst_proof_hint t s
 
-type decl = Pulse_Syntax_Base.decl
 
 let fn_decl rng id isrec bs comp meas body = 
   PSB.mk_decl (PSB.mk_fn_decl id isrec bs comp meas body) rng

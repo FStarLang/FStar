@@ -53,6 +53,14 @@ let with_computation_tag (c:PulseSugar.computation_type) t =
 
 let rng p1 p2 = FStar_Parser_Util.mksyn_range p1 p2
 let r p = rng (fst p) (snd p)
+let mk_fn_decl q id is_rec bs body range = 
+    match body with
+    | Inl (ascription, measure, body) ->
+      let ascription = with_computation_tag ascription q in 
+      PulseSugar.mk_fn_decl id is_rec (List.flatten bs) (Inl ascription) measure (Inl body) range
+
+    | Inr (lambda, typ) ->
+      PulseSugar.mk_fn_decl id is_rec (List.flatten bs) (Inr typ) None (Inr lambda) range
 
 %}
 
@@ -83,14 +91,35 @@ qual:
 /* This is the main entry point for the pulse parser */
 pulseDecl:
   | q=option(qual)
-    FN isRec=maybeRec lid=lident bs=nonempty_list(pulseMultiBinder)
-    ascription=pulseComputationType
+    FN isRec=maybeRec lid=lident bs=pulseBinderList
+    body=fnBody
+    {
+      PulseSugar.FnDecl (mk_fn_decl q lid isRec bs body (rr $loc))
+    }
+
+pulseBinderList:
+  /* |  { [] } We don't yet support nullary functions */
+  | bs=nonempty_list(pulseMultiBinder)
+    {  bs }
+
+localFnDecl:
+  | q=option(qual) FN lid=lident
+    bs=pulseBinderList
+    body=fnBody
+    {
+      lid, mk_fn_decl q lid false bs body (rr $loc)
+    }
+
+fnBody:
+  | ascription=pulseComputationType
     measure=option(DECREASES m=appTermNoRecordExp {m})
     LBRACE body=pulseStmt RBRACE
     {
-      let ascription = with_computation_tag ascription q in
-      PulseSugar.mk_fn_decl lid isRec (List.flatten bs) ascription measure body (rr $loc)
+      Inl (ascription, measure, body)
     }
+
+  | COLON typ=option(appTerm) EQUALS lambda=pulseLambda
+    { Inr (lambda, typ) }
 
 pulseMultiBinder:
   | LPAREN qual_ids=nonempty_list(q=option(HASH) id=lidentOrUnderscore { (q, id) }) COLON t=appTerm RPAREN
@@ -158,6 +187,19 @@ pulseStmtNoSeq:
     { PulseSugar.mk_proof_hint_with_binders (UNFOLD (ns,p)) bs }
   | bs=withBindersOpt FOLD ns=option(names) p=pulseVprop
     { PulseSugar.mk_proof_hint_with_binders (FOLD (ns,p)) bs }
+  | f=localFnDecl
+    {
+      let id, fndecl = f in
+      PulseSugar.mk_let_binding None id None (Some (Lambda_initializer fndecl))
+    }
+
+pulseLambda:
+  | bs=pulseBinderList
+    ascription=option(pulseComputationType)
+    LBRACE body=pulseStmt RBRACE
+    {
+      PulseSugar.mk_lambda (List.flatten bs) ascription body (rr ($loc))
+    }
 
 rewriteBody:
   | EACH pairs=separated_nonempty_list (COMMA, x=appTerm AS y=appTerm { (x, y)}) goal=option(IN t=pulseVprop { t })

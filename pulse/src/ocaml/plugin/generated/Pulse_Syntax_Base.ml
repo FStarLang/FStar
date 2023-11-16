@@ -300,6 +300,23 @@ let (uu___is_REWRITE : proof_hint_type -> Prims.bool) =
 let (__proj__REWRITE__item___0 :
   proof_hint_type -> proof_hint_type__REWRITE__payload) =
   fun projectee -> match projectee with | REWRITE _0 -> _0
+type comp_ascription =
+  {
+  annotated: comp FStar_Pervasives_Native.option ;
+  elaborated: comp FStar_Pervasives_Native.option }
+let (__proj__Mkcomp_ascription__item__annotated :
+  comp_ascription -> comp FStar_Pervasives_Native.option) =
+  fun projectee ->
+    match projectee with | { annotated; elaborated;_} -> annotated
+let (__proj__Mkcomp_ascription__item__elaborated :
+  comp_ascription -> comp FStar_Pervasives_Native.option) =
+  fun projectee ->
+    match projectee with | { annotated; elaborated;_} -> elaborated
+let (empty_ascription : comp_ascription) =
+  {
+    annotated = FStar_Pervasives_Native.None;
+    elaborated = FStar_Pervasives_Native.None
+  }
 type st_term'__Tm_Return__payload =
   {
   ctag: ctag ;
@@ -309,7 +326,7 @@ and st_term'__Tm_Abs__payload =
   {
   b: binder ;
   q: qualifier FStar_Pervasives_Native.option ;
-  ascription: comp ;
+  ascription: comp_ascription ;
   body: st_term }
 and st_term'__Tm_STApp__payload =
   {
@@ -641,6 +658,11 @@ let (eq_hint_type : proof_hint_type -> proof_hint_type -> Prims.bool) =
       | (REWRITE { t1; t2;_}, REWRITE { t1 = s1; t2 = s2;_}) ->
           (eq_tm t1 s1) && (eq_tm t2 s2)
       | uu___ -> false
+let (eq_ascription : comp_ascription -> comp_ascription -> Prims.bool) =
+  fun a1 ->
+    fun a2 ->
+      (eq_opt eq_comp a1.elaborated a2.elaborated) &&
+        (eq_opt eq_comp a1.annotated a2.annotated)
 let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
   fun t1 ->
     fun t2 ->
@@ -651,7 +673,7 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
       | (Tm_Abs { b = b1; q = o1; ascription = c1; body = t11;_}, Tm_Abs
          { b = b2; q = o2; ascription = c2; body = t21;_}) ->
           (((eq_tm b1.binder_ty b2.binder_ty) && (o1 = o2)) &&
-             (eq_comp c1 c2))
+             (eq_ascription c1 c2))
             && (eq_st_term t11 t21)
       | (Tm_STApp { head = h1; arg_qual = o1; arg = t11;_}, Tm_STApp
          { head = h2; arg_qual = o2; arg = t21;_}) ->

@@ -110,14 +110,14 @@ let lax_check_term_with_unknown_universes (g:TcEnv.env) (e:S.term)
     | Some (Some x) -> Some x
 
 let whnf_lax (g:TcEnv.env) (t:S.term) : S.term = 
-  FStar_TypeChecker_Normalize.unfold_whnf g t
+  FStar_TypeChecker_Normalize.unfold_whnf' [TcEnv.Unascribe] g t
 
 let norm_well_typed_term_aux
       (g:TcEnv.env)
       (t:S.term)
       (steps:FStar_Pervasives.norm_step list)
   = let steps = FStar_TypeChecker_Cfg.translate_norm_steps steps in
-    let t' = FStar_TypeChecker_Normalize.normalize steps g t in
+    let t' = FStar_TypeChecker_Normalize.normalize (TcEnv.Unascribe::steps) g t in
     FStar_Pervasives.Mkdtuple3 (t', (), ())
 
 let norm_well_typed_term      

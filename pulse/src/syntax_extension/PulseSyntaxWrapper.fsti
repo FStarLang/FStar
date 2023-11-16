@@ -13,7 +13,7 @@ val u_unknown : universe
 
 new val bv : Type0
 val mk_bv (i:index) (name:string) (r:range) : bv
-
+val index_of_bv (bv:bv) : index
 new val nm : Type0
 val mk_nm (i:index) (name:string) (r:range) : nm
 
@@ -64,7 +64,7 @@ new val st_term : Type0
 type branch = pattern & st_term
 val tm_return (t:term) (_:range) : st_term
 val tm_ghost_return (t:term) (_:range) : st_term
-val tm_abs (b:binder) (q:option qualifier) (_:comp) (body:st_term) (_:range) : st_term
+val tm_abs (b:binder) (q:option qualifier) (_:option comp) (body:st_term) (_:range) : st_term
 val tm_st_app (head:term) (q:FStar.Syntax.Syntax.aqual) (arg:term) (_:range) : st_term
 val tm_bind (x:binder) (e1:st_term) (e2:st_term) (_:range) : st_term
 val tm_totbind (x:binder) (e1:term) (e2:st_term) (_:range) : st_term
@@ -95,7 +95,7 @@ val binder_to_string (env:FStar.TypeChecker.Env.env) (b:binder) : string
 val term_to_string (env:FStar.TypeChecker.Env.env) (_:term) : string
 val st_term_to_string (env:FStar.TypeChecker.Env.env) (_:st_term) : string
 val comp_to_string (env:FStar.TypeChecker.Env.env) (_:comp) : string
-
+val bv_to_string (_:bv) : string
 val subst : Type0
 val bvs_as_subst (l:list var) : subst
 val subst_term (s:subst) (t:term) : term
@@ -104,6 +104,7 @@ val subst_proof_hint (s:subst) (h:hint_type) : hint_type
 
 new
 val decl : Type0
+val decl_to_string (env:FStar.TypeChecker.Env.env) (_:decl) : string
 
 val fn_decl :
   range ->

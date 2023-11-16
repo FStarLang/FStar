@@ -31,12 +31,12 @@ let rec mk_abs (g:env) (qbs:list (option qualifier & binder & bv)) (body:st_term
   | [(q, last, last_bv)] -> 
     let body = close_st_term body last_bv.bv_index in
     let comp = close_comp comp last_bv.bv_index in
-    with_range (Pulse.Syntax.Builder.tm_abs last q comp body) body.range
+    let asc = { annotated = Some comp; elaborated = None } in
+    with_range (Pulse.Syntax.Builder.tm_abs last q asc body) body.range
   | (q, b, bv)::qbs ->
     let body = mk_abs g qbs body comp in
     let body = close_st_term body bv.bv_index in
-    let comp = C_Tot tm_unknown in
-    with_range (Pulse.Syntax.Builder.tm_abs b q comp body) body.range
+    with_range (Pulse.Syntax.Builder.tm_abs b q empty_ascription body) body.range
 
 let check_fndecl
     (d : decl{FnDecl? d.d})
@@ -63,8 +63,9 @@ let check_fndecl
   let (| body, c, t_typing |) = Pulse.Checker.Abs.check_abs g body Pulse.Checker.check in
 
   Pulse.Checker.Prover.debug_prover g
-    (fun _ -> Printf.sprintf "\ncheck call returned in main with:\n%s\n"
-              (P.st_term_to_string body));
+    (fun _ -> Printf.sprintf "\ncheck call returned in main with:\n%s\nat type %s\n"
+              (P.st_term_to_string body)
+              (P.comp_to_string c));
   debug_main g
     (fun _ -> Printf.sprintf "\nchecker call returned in main with:\n%s\nderivation=%s\n"
               (P.st_term_to_string body)
