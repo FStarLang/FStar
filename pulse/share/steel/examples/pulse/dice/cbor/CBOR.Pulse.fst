@@ -377,7 +377,7 @@ ensures
 ```
 
 ```pulse
-fn rec cbor_is_equal
+fn cbor_is_equal
   (a1: cbor)
   (a2: cbor)
   (#p1: perm)
