@@ -11,7 +11,7 @@ FSTAR_FILES=$(wildcard CDDLExtractionTest.*.fst) # but I still need to enumerate
 OTHERFLAGS += --cmi --already_cached '*,'
 
 FSTAR_DEP_OPTIONS=--extract '* -FStar.Tactics -FStar.Reflection -Steel -Pulse +Pulse.Class +Pulse.Lib -Pulse.Lib.Core'
-KRML=$(KRML_HOME)/krml
+KRML=$(KRML_HOME)/krml $(KRML_OPTS)
 all: verify test
 
 include $(PULSE_EXAMPLES_ROOT)/Makefile.pulse.common
