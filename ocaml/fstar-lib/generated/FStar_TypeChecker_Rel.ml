@@ -8777,7 +8777,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                           (ty, FStar_Pervasives_Native.Some
                            { FStar_Syntax_Syntax.aqual_implicit = true;
                              FStar_Syntax_Syntax.aqual_attributes = uu___6;_})::
-                          (t, uu___7)::[]) when is_flex t ->
+                          (t, uu___7)::[]) ->
                            FStar_Pervasives_Native.Some (u, ty, t)
                        | uu___5 -> FStar_Pervasives_Native.None in
                      let is_reveal_or_hide t =
@@ -8789,7 +8789,8 @@ and (solve_t' : tprob -> worklist -> solution) =
                                FStar_Parser_Const.reveal h in
                            if uu___6
                            then
-                             (match payload_of_hide_reveal h args with
+                             let uu___7 = payload_of_hide_reveal h args in
+                             (match uu___7 with
                               | FStar_Pervasives_Native.None ->
                                   FStar_Pervasives_Native.None
                               | FStar_Pervasives_Native.Some t3 ->
@@ -8801,7 +8802,8 @@ and (solve_t' : tprob -> worklist -> solution) =
                                   FStar_Parser_Const.hide h in
                               if uu___8
                               then
-                                match payload_of_hide_reveal h args with
+                                let uu___9 = payload_of_hide_reveal h args in
+                                match uu___9 with
                                 | FStar_Pervasives_Native.None ->
                                     FStar_Pervasives_Native.None
                                 | FStar_Pervasives_Native.Some t3 ->
@@ -8838,7 +8840,8 @@ and (solve_t' : tprob -> worklist -> solution) =
                         (FStar_Pervasives.Inl uu___7)) ->
                          FStar_Pervasives_Native.None
                      | (FStar_Pervasives_Native.Some (FStar_Pervasives.Inl
-                        (u, ty, lhs)), FStar_Pervasives_Native.None) ->
+                        (u, ty, lhs)), FStar_Pervasives_Native.None) when
+                         is_flex lhs ->
                          let rhs =
                            let uu___6 =
                              let uu___7 =
@@ -8851,7 +8854,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                          FStar_Pervasives_Native.Some (lhs, rhs)
                      | (FStar_Pervasives_Native.None,
                         FStar_Pervasives_Native.Some (FStar_Pervasives.Inl
-                        (u, ty, rhs))) ->
+                        (u, ty, rhs))) when is_flex rhs ->
                          let lhs =
                            let uu___6 =
                              let uu___7 =
@@ -8886,7 +8889,8 @@ and (solve_t' : tprob -> worklist -> solution) =
                              [uu___7; (t11, FStar_Pervasives_Native.None)] in
                            mk_fv_app FStar_Parser_Const.reveal u uu___6
                              t11.FStar_Syntax_Syntax.pos in
-                         FStar_Pervasives_Native.Some (lhs, rhs) in
+                         FStar_Pervasives_Native.Some (lhs, rhs)
+                     | uu___6 -> FStar_Pervasives_Native.None in
                    let uu___5 = try_match_heuristic orig wl1 t1 t2 o in
                    (match uu___5 with
                     | FStar_Pervasives.Inl _defer_ok ->
@@ -15357,18 +15361,39 @@ let (force_trivial_guard :
            let uu___2 =
              let uu___3 =
                let uu___4 =
-                 FStar_Syntax_Print.uvar_to_string
-                   (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head in
-               let uu___5 =
+                 let uu___5 =
+                   let uu___6 =
+                     FStar_Errors_Msg.text
+                       "Failed to resolved implicit argument" in
+                   let uu___7 =
+                     let uu___8 =
+                       FStar_Syntax_Print.uvar_to_string
+                         (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head in
+                     FStar_Pprint.arbitrary_string uu___8 in
+                   FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one
+                     uu___6 uu___7 in
                  let uu___6 =
-                   FStar_Syntax_Util.ctx_uvar_typ
-                     imp.FStar_TypeChecker_Common.imp_uvar in
-                 FStar_TypeChecker_Normalize.term_to_string env uu___6 in
-               FStar_Compiler_Util.format3
-                 "Failed to resolve implicit argument %s of type %s introduced for %s"
-                 uu___4 uu___5 imp.FStar_TypeChecker_Common.imp_reason in
+                   let uu___7 =
+                     let uu___8 = FStar_Errors_Msg.text "of type" in
+                     let uu___9 =
+                       let uu___10 =
+                         FStar_Syntax_Util.ctx_uvar_typ
+                           imp.FStar_TypeChecker_Common.imp_uvar in
+                       FStar_TypeChecker_Normalize.term_to_doc env uu___10 in
+                     FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one
+                       uu___8 uu___9 in
+                   let uu___8 =
+                     let uu___9 = FStar_Errors_Msg.text "introduced for" in
+                     let uu___10 =
+                       FStar_Errors_Msg.text
+                         imp.FStar_TypeChecker_Common.imp_reason in
+                     FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one
+                       uu___9 uu___10 in
+                   FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
+                 FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
+               [uu___4] in
              (FStar_Errors_Codes.Fatal_FailToResolveImplicitArgument, uu___3) in
-           FStar_Errors.raise_error uu___2
+           FStar_Errors.raise_error_doc uu___2
              imp.FStar_TypeChecker_Common.imp_range)
 let (subtype_nosmt_force :
   FStar_TypeChecker_Env.env ->
