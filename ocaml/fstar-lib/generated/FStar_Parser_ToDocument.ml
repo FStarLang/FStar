@@ -4505,8 +4505,11 @@ and (p_appTerm : FStar_Parser_AST.term -> FStar_Pprint.document) =
                            FStar_Pprint.empty p_argTerm args1 in
                        FStar_Pprint.group uu___4)))
     | FStar_Parser_AST.Construct (lid, args) when
-        (is_general_construction e) &&
-          (let uu___ = (is_dtuple_constructor lid) && (all1_explicit args) in
+        ((is_general_construction e) &&
+           (let uu___ = (is_dtuple_constructor lid) && (all1_explicit args) in
+            Prims.op_Negation uu___))
+          &&
+          (let uu___ = (is_tuple_constructor lid) && (all1_explicit args) in
            Prims.op_Negation uu___)
         ->
         (match args with
@@ -4677,6 +4680,9 @@ and (p_atomicTermNotQUident : FStar_Parser_AST.term -> FStar_Pprint.document)
           FStar_Pprint.op_Hat_Hat FStar_Pprint.bar FStar_Pprint.rparen in
         FStar_Pprint.surround (Prims.of_int (2)) Prims.int_one uu___ uu___1
           uu___2
+    | FStar_Parser_AST.Construct (lid, args) when
+        (is_tuple_constructor lid) && (all1_explicit args) ->
+        let uu___ = p_tmTuple e in FStar_Pprint.parens uu___
     | FStar_Parser_AST.Project (e1, lid) ->
         let uu___ =
           let uu___1 = p_atomicTermNotQUident e1 in
