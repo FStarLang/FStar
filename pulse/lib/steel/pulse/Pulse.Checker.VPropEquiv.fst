@@ -17,6 +17,15 @@ let rec list_as_vprop_append g (vp0 vp1:list term)
                             (tm_star tm_emp (list_as_vprop vp1)) = VE_Sym _ _ _ (VE_Unit _ _)
       in
       v
+    | [hd] ->
+      (* Need to check vp1 too in this case *)
+      begin match vp1 with
+      | [] ->
+        VE_Sym _ _ _
+          (VE_Trans _ _ _ _ (VE_Comm g hd tm_emp) (VE_Unit _ hd))
+      | _::_ ->
+        VE_Refl _ _
+      end
     | hd::tl ->
       let tl_vp1 = list_as_vprop_append g tl vp1 in
       let d : vprop_equiv g (list_as_vprop (vp0 @ vp1))
@@ -57,7 +66,7 @@ let list_as_vprop_singleton g
   (p q:term)
   (d:vprop_equiv g p q)
   : GTot (vprop_equiv g (list_as_vprop [p]) (list_as_vprop [q]))
-  = VE_Ctxt _ p tm_emp q tm_emp d (VE_Refl _ tm_emp)
+  = d
 
 let rec vprop_list_equiv (g:env)
                          (vp:term)
@@ -79,8 +88,7 @@ let rec vprop_list_equiv (g:env)
       VE_Trans _ _ _ _ step (VE_Sym _ _ _ app_eq)
       
     | _ -> 
-      VE_Sym _ _ _
-        (VE_Trans _ _ _ _ (VE_Comm g vp tm_emp) (VE_Unit _ vp))
+      VE_Refl _ _
 
 let vprop_equiv_swap_equiv (g:_)
                           (l0 l2:list term)
@@ -100,8 +108,7 @@ let vprop_equiv_swap_equiv (g:_)
                             (list_as_vprop ([q] @ (l0 @ l2)))
         = VE_Trans _ _ _ _ d d' in
     let d_q_p = VE_Sym _ _ _ d_p_q in
-    let d' : vprop_equiv g (list_as_vprop [q]) (list_as_vprop [p]) =
-        list_as_vprop_singleton _ _ _ d_q_p in
+    let d' : vprop_equiv g (list_as_vprop [q]) (list_as_vprop [p]) = d_q_p in
     let d' : vprop_equiv g (list_as_vprop ([q] @ (l0 @ l2)))
                             (list_as_vprop ([p] @ (l0 @ l2)))
         = list_as_vprop_ctx g [q] [p] (l0 @ l2) _ d' (VE_Refl _ _) in
