@@ -1990,9 +1990,10 @@ and p_appTerm e = match e.tm with
         group (soft_surround_map_or_flow 2 0 head_doc (head_doc ^^ space) break1 empty p_argTerm args)
       )
 
-  (* (explicit) dependent tuples are handled below *)
+  (* (explicit) tuples and dependent tuples are handled below *)
   | Construct (lid, args) when is_general_construction e
-        && not (is_dtuple_constructor lid && all1_explicit args) ->
+        && not (is_dtuple_constructor lid && all1_explicit args)
+        && not (is_tuple_constructor  lid && all1_explicit args) ->
     begin match args with
       | [] -> p_quident lid
       | [arg] -> group (p_quident lid ^/^ p_argTerm arg)
@@ -2074,6 +2075,8 @@ and p_atomicTermNotQUident e = match e.tm with
       surround 2 1 (lparen ^^ bar)
         (separate_map (comma ^^ break1) (fun (e, _) -> p_tmEq e) args)
                    (bar ^^ rparen)
+  | Construct (lid, args) when is_tuple_constructor lid && all1_explicit args ->
+      parens (p_tmTuple e)
   | Project (e, lid) ->
     group (prefix 2 0 (p_atomicTermNotQUident e)  (dot ^^ p_qlident lid))
   | _ ->
