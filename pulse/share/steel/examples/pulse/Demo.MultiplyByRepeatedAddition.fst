@@ -2,7 +2,9 @@ module Demo.MultiplyByRepeatedAddition
 open Pulse.Lib.Pervasives
 open FStar.UInt32
 #push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
-#push-options "--ext 'pulse:rvalues' --split_queries always"
+#set-options "--ext 'pulse:rvalues' --split_queries always"
+#set-options "--z3rlimit 40"
+
 module U32 = FStar.UInt32
 open FStar.Mul
 let rec multiply (x y:nat) : z:nat { z == x * y} =

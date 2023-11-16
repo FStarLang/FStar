@@ -712,18 +712,6 @@ let (mk_array_pts_to :
             (Pulse_Syntax_Pure.tm_fvar
                (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.full_perm_lid)) in
         Pulse_Syntax_Pure.tm_pureapp t3 FStar_Pervasives_Native.None v
-let (mk_array_is_full :
-  Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)
-  =
-  fun a ->
-    fun arr ->
-      let t =
-        Pulse_Syntax_Pure.tm_fvar
-          (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.array_is_full_lid) in
-      let t1 =
-        Pulse_Syntax_Pure.tm_pureapp t
-          (FStar_Pervasives_Native.Some Pulse_Syntax_Base.Implicit) a in
-      Pulse_Syntax_Pure.tm_pureapp t1 FStar_Pervasives_Native.None arr
 let (mk_seq_create :
   Pulse_Syntax_Base.universe ->
     Pulse_Syntax_Base.term ->
@@ -766,11 +754,9 @@ let (comp_withlocal_array_body_pre :
               (Pulse_Syntax_Base.tm_star
                  (mk_array_pts_to a arr
                     (mk_seq_create Pulse_Syntax_Pure.u0 a (mk_szv len) init))
-                 (Pulse_Syntax_Base.tm_star
-                    (Pulse_Syntax_Base.tm_pure (mk_array_is_full a arr))
-                    (Pulse_Syntax_Base.tm_pure
-                       (mk_eq2 Pulse_Syntax_Pure.u0 tm_nat
-                          (mk_array_length a arr) (mk_szv len)))))
+                 (Pulse_Syntax_Base.tm_pure
+                    (mk_eq2 Pulse_Syntax_Pure.u0 tm_nat
+                       (mk_array_length a arr) (mk_szv len))))
 let (mk_seq :
   Pulse_Syntax_Base.universe ->
     Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)
@@ -862,8 +848,12 @@ type ('dummyV0, 'dummyV1, 'dummyV2) st_equiv =
   | ST_VPropEquiv of Pulse_Typing_Env.env * Pulse_Syntax_Base.comp_st *
   Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.var * unit * unit * unit *
   (unit, unit, unit) FStar_Reflection_Typing.equiv * unit * unit 
+  | ST_TotEquiv of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
+  Pulse_Syntax_Base.term * Pulse_Syntax_Base.universe * unit * unit 
 let uu___is_ST_VPropEquiv uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | ST_VPropEquiv _ -> true | _ -> false
+let uu___is_ST_TotEquiv uu___2 uu___1 uu___ uu___3 =
+  match uu___3 with | ST_TotEquiv _ -> true | _ -> false
 type ('dummyV0, 'dummyV1, 'dummyV2, 'dummyV3, 'dummyV4) bind_comp =
   | Bind_comp of Pulse_Typing_Env.env * Pulse_Syntax_Base.var *
   Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.comp_st * unit *
@@ -952,8 +942,7 @@ let uu___is_CT_STAtomic uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | CT_STAtomic _ -> true | _ -> false
 let uu___is_CT_STGhost uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | CT_STGhost _ -> true | _ -> false
-type ('g, 't) prop_validity =
-  (unit, unit) FStar_Tactics_V2_Builtins.prop_validity_token
+type ('g, 't) prop_validity = unit
 type ('g, 't1, 't2) subtyping_token =
   (unit, unit, unit) FStar_Tactics_Types.subtyping_token
 let (readback_binding :
@@ -1025,7 +1014,7 @@ type ('dummyV0, 'dummyV1, 'dummyV2) st_typing =
   Pulse_Syntax_Base.comp * Pulse_Syntax_Base.comp * (unit, unit, unit)
   st_typing * (unit, unit, unit) st_equiv 
   | T_IntroPure of Pulse_Typing_Env.env * Pulse_Syntax_Base.term * unit *
-  (unit, unit) prop_validity 
+  unit 
   | T_ElimExists of Pulse_Typing_Env.env * Pulse_Syntax_Base.universe *
   Pulse_Syntax_Base.term * Pulse_Syntax_Base.term * Pulse_Syntax_Base.var *
   unit * unit 

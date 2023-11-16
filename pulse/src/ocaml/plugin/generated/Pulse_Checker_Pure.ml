@@ -1064,18 +1064,12 @@ let (mk_squash : FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
            ((FStar_Reflection_V2_Builtins.pack_fv
                FStar_Reflection_Const.squash_qn), [Pulse_Syntax_Pure.u_zero])) in
     FStar_Reflection_V2_Derived.mk_e_app sq [t]
-let (squash_prop_validity_token :
-  FStar_Reflection_Types.env ->
-    FStar_Reflection_Types.term ->
-      (unit, unit) FStar_Tactics_V2_Builtins.prop_validity_token ->
-        (unit, unit) FStar_Tactics_V2_Builtins.prop_validity_token)
-  = fun f -> fun p -> fun t -> t
+
 let (rtb_check_prop_validity :
   Pulse_Typing_Env.env ->
     FStar_Reflection_Types.env ->
       FStar_Reflection_Types.term ->
-        (((unit, unit) FStar_Tactics_V2_Builtins.prop_validity_token
-           FStar_Pervasives_Native.option * FStar_Issue.issue Prims.list),
+        ((unit FStar_Pervasives_Native.option * FStar_Issue.issue Prims.list),
           unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
@@ -1213,9 +1207,8 @@ let (rtb_check_prop_validity :
                                              | FStar_Pervasives_Native.Some
                                                  tok ->
                                                  ((FStar_Pervasives_Native.Some
-                                                     (squash_prop_validity_token
-                                                        f p tok)), issues))))))
-                          uu___1))) uu___)
+                                                     ()), issues)))))) uu___1)))
+               uu___)
 let (exn_as_issue : Prims.exn -> FStar_Issue.issue) =
   fun e ->
     FStar_Issue.mk_issue_doc "Error"
@@ -3767,9 +3760,7 @@ let (get_non_informative_witness :
 let (check_prop_validity :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
-      unit ->
-        ((unit, unit) Pulse_Typing.prop_validity, unit)
-          FStar_Tactics_Effect.tac_repr)
+      unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
     fun p ->
@@ -3889,7 +3880,7 @@ let (check_prop_validity :
                                    Obj.magic
                                      (Obj.repr
                                         (FStar_Tactics_Effect.lift_div_tac
-                                           (fun uu___3 -> tok)))) uu___2)))
+                                           (fun uu___3 -> ())))) uu___2)))
                uu___1)
 let fail_expected_tot_found_ghost :
   'uuuuu .

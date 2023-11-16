@@ -1914,23 +1914,6 @@ let (mk_array_pts_to :
           FStar_Reflection_V2_Builtins.pack_ln
             (FStar_Reflection_V2_Data.Tv_App
                (t3, (v, FStar_Reflection_V2_Data.Q_Explicit)))
-let (mk_array_is_full :
-  FStar_Reflection_Types.term ->
-    FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
-  =
-  fun a ->
-    fun arr ->
-      let t =
-        FStar_Reflection_V2_Builtins.pack_ln
-          (FStar_Reflection_V2_Data.Tv_FVar
-             (FStar_Reflection_V2_Builtins.pack_fv array_is_full_lid)) in
-      let t1 =
-        FStar_Reflection_V2_Builtins.pack_ln
-          (FStar_Reflection_V2_Data.Tv_App
-             (t, (a, FStar_Reflection_V2_Data.Q_Implicit))) in
-      FStar_Reflection_V2_Builtins.pack_ln
-        (FStar_Reflection_V2_Data.Tv_App
-           (t1, (arr, FStar_Reflection_V2_Data.Q_Explicit)))
 let (mk_seq :
   FStar_Reflection_Types.universe ->
     FStar_Reflection_Types.term -> FStar_Reflection_Types.term)

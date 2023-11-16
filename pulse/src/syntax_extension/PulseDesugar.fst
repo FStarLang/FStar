@@ -140,103 +140,26 @@ let resolve_lid (env:env_t) (lid:lident)
       | _ -> fail (BU.format2 "Name %s resolved unexpectedly to %s" (Ident.string_of_lid lid) (P.term_to_string t))
                   (Ident.range_of_lid lid)
 
-let pulse_arrow_formals (t:S.term) =
-    let formals, comp = U.arrow_formals_comp_ln t in
-    if U.is_total_comp comp
-    then (
-      let res = U.comp_result comp in        
-      let head, _ = U.head_and_args_full res in
-      match (SS.compress head).n with
-      | S.Tm_fvar fv
-      | S.Tm_uinst ({n=S.Tm_fvar fv}, _) ->
-        if L.existsML (S.fv_eq_lid fv) [stt_lid; stt_ghost_lid; stt_atomic_lid]
-        then Some formals
-        else None
-      | _ -> None
-    )
-    else None
-
 let ret (s:S.term) = SW.(tm_return (as_term s) s.pos)
 
-type stapp_or_return_t =
-  | STTerm : SW.st_term -> stapp_or_return_t
-  | Return : S.term -> stapp_or_return_t
+type admit_or_return_t =
+  | STTerm : SW.st_term -> admit_or_return_t
+  | Return : S.term -> admit_or_return_t
 
-let st_term_of_stapp_or_return (t:stapp_or_return_t) : SW.st_term =
+let st_term_of_admit_or_return (t:admit_or_return_t) : SW.st_term =
   match t with
   | STTerm t -> t
   | Return t -> ret t
 
-let type_is_stt_fun (env:env_t) (t:S.term) (args : list S.arg) : bool =
-  match pulse_arrow_formals t with
-  | None -> false
-  | Some formals ->
-    let is_binder_implicit (b:S.binder) =
-      match b.binder_qual with
-      | Some (S.Implicit _)
-      | Some (S.Meta _) -> true
-      | _ -> false
-    in
-    let is_arg_implicit (aq:S.arg) =
-      match snd aq with
-      | Some {aqual_implicit=b} -> b
-      | _ -> false
-    in
-    let rec uninst_formals formals args =
-      match formals, args with
-      | _, [] ->
-        Some formals
-
-      | [], _ -> //too many args, ill-typed
-        None
-
-      | f::formals, a::args ->
-        if is_binder_implicit f
-        then (
-          if is_arg_implicit a
-          then uninst_formals formals args
-          else uninst_formals formals (a::args)
-        )
-        else if is_arg_implicit a
-        then // this looks ill-typed
-             None
-        else //both explicit
-             uninst_formals formals args
-    in
-    match uninst_formals formals args with
-    | None -> //likely ill-typed; do not treat as stt
-      false
-
-    | Some formals ->
-      if L.for_all is_binder_implicit formals
-      then (
-         //this is an st app
-        true
-      ) else (
-        //partial app of a stateful function
-        false
-      )
-
-let mk_st_app rng (head:S.term) (args : list _) : SW.st_term =
-  let head = S.mk_Tm_app head (L.init args) rng in
-  let last, q = L.last args in
-  SW.(tm_st_app (tm_expr head head.pos) q (as_term last) rng)
-
-let stapp_or_return (env:env_t) (s:S.term)
-  : stapp_or_return_t
+let admit_or_return (env:env_t) (s:S.term)
+  : admit_or_return_t
   = let r = s.pos in
     let head, args = U.head_and_args_full s in
     match head.n with
     | S.Tm_fvar fv -> (
       if S.fv_eq_lid fv admit_lid
       then STTerm (SW.tm_admit r) 
-      else match TcEnv.try_lookup_lid env.tcenv fv.fv_name.v with
-      | None -> Return s
-      | Some ((_, t), _) -> (
-        if type_is_stt_fun env t args
-        then STTerm (mk_st_app r head args)
-        else Return s
-      )
+      else Return s
     )
     | _ -> Return s
 
@@ -397,7 +320,7 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
     match s.s with
     | Expr { e } -> 
       let? tm = tosyntax env e in
-      return (st_term_of_stapp_or_return (stapp_or_return env tm))
+      return (st_term_of_admit_or_return (admit_or_return env tm))
 
     | Assignment { lhs; value } ->
       let? lhs = tosyntax env lhs in
@@ -545,24 +468,28 @@ and desugar_bind (env:env_t) (lb:_) (s2:Sugar.stmt) (r:R.range)
     in        
     match lb.init with
     | None ->
-      failwith "Uninitialized variables are not yet handled"
+      fail "Uninitialized variables are not yet handled" r
 
     | Some e1 -> (
       match lb.qualifier with
       | None -> //just a regular bind
         if Sugar.Array_initializer? e1
-        then failwith "immutable local arrays are not yet supported";
-        let Default_initializer e1 = e1 in
-        let? s1 = tosyntax env e1 in
-        let b = SW.mk_binder lb.id annot in
-        let t =
-          match stapp_or_return env s1 with
-          | STTerm s1 ->
-            mk_bind b s1 s2 r
-          | Return s1 ->
-            mk_totbind b (as_term s1) s2 r
-        in
-        return t
+        then fail "immutable local arrays are not yet supported" r
+        else if Sugar.Lambda_initializer? e1
+        then fail "lambdas are not yet supported" r
+        else (
+          let Default_initializer e1 = e1 in
+          let? s1 = tosyntax env e1 in
+          let b = SW.mk_binder lb.id annot in
+          let t =
+            match admit_or_return env s1 with
+            | STTerm s1 ->
+              mk_bind b s1 s2 r
+            | Return s1 ->
+              mk_totbind b (as_term s1) s2 r
+          in
+          return t
+        )
       | Some MUT //these are handled the same for now
       | Some REF ->
         let b = SW.mk_binder lb.id annot in
@@ -899,6 +826,8 @@ let rec transform_stmt_with_reads (m:menv) (p:Sugar.stmt)
             let? init, needs, m = transform_term m init in
             let? len, len_needs, m = transform_term m len in
             return (Some (Array_initializer {init; len}), needs@len_needs, m)
+          | Some (Lambda_initializer { range }) ->
+            fail "Lambdas are not yet supported" range
       in
       let auto_deref_applicable =
         match init with
@@ -1053,52 +982,100 @@ let mk_knot_arr (env:env_t) (meas : option A.term) (bs:Sugar.binders) (res:Sugar
   let bs'' = init @ [last] in
   return (A.mk_term (A.Product (bs'', res_t)) r A.Expr)
 
-let rec desugar_decl (env:env_t)
-                     (d:Sugar.decl)
+let left (f:either 'a 'b) (r:R.range)
+  : err 'a
+  = match f with
+    | Inl x -> return x
+    | Inr _ -> fail "Unsupported case" r
+
+let right (f:either 'a 'b) (r:R.range)
+  : err 'b
+  = match f with
+    | Inr x -> return x
+    | Inl _ -> fail "Unsupported case" r
+
+let desugar_lambda (env:env_t) (l:Sugar.lambda)
+  : err SW.st_term
+  = let { binders; ascription; body; range } = l in
+    let? env, bs, bvs = desugar_binders env binders in
+    let? env, bs, bvs, comp =
+      match ascription with
+      | None ->
+        return (env, bs, bvs, None)
+      | Some c -> 
+        let fvs = free_vars_comp env c in
+        let? env, bs', bvs' = idents_as_binders env fvs in
+        let bs = bs@bs' in
+        let bvs = bvs@bvs' in
+        let? comp = desugar_computation_type env c in
+        return (env, bs, bvs, Some comp)
+    in
+    let? body = 
+      if FStar.Options.ext_getv "pulse:rvalues" <> ""
+      then transform_stmt { map=[]; env=env} body
+      else return body
+    in
+    let? body = desugar_stmt env body in
+    let? qbs = map2 faux bs bvs in
+    let _, abs =
+      L.fold_right 
+        (fun (q,b,bv) (c, body) ->
+          let body' = SW.close_st_term body (SW.index_of_bv bv) in
+          let asc =
+            match c with
+            | None -> None
+            | Some c -> Some  (SW.close_comp c (SW.index_of_bv bv)) in
+          None, SW.tm_abs b q asc body' range)
+        qbs (comp, body)
+    in
+    return abs
+    
+let desugar_decl' (env:env_t)
+                 (d:Sugar.decl)
   : err SW.decl
   = match d with
-    | Sugar.FnDecl p ->
-      let? env, bs, bvs = desugar_binders env p.binders in
-      let fvs = free_vars_comp env p.ascription in
+    | Sugar.FnDecl { id; is_rec; binders; ascription=Inl ascription; measure; body=Inl body; range } ->
+      let? env, bs, bvs = desugar_binders env binders in
+      let fvs = free_vars_comp env ascription in
       let? env, bs', bvs' = idents_as_binders env fvs in
       let bs = bs@bs' in
       let bvs = bvs@bvs' in
-      let? comp = desugar_computation_type env p.ascription in
+      let? comp = desugar_computation_type env ascription in
       let? body = 
         if FStar.Options.ext_getv "pulse:rvalues" <> ""
-        then transform_stmt { map=[]; env=env} p.body
-        else return p.body
+        then transform_stmt { map=[]; env=env} body
+        else return body
       in
-      let? meas = map_err_opt (desugar_term env) p.measure in
+      let? meas = map_err_opt (desugar_term env) measure in
       (* Perhaps push the recursive binding. *)
       let? (env, bs, bvs) =
-        if p.is_rec
+        if is_rec
         then
-          let? ty = mk_knot_arr env p.measure p.binders p.ascription in
+          let? ty = mk_knot_arr env measure binders ascription in
           let? ty = desugar_term env ty in
-          let env, bv = push_bv env p.id in
-          let b = SW.mk_binder p.id ty in
+          let env, bv = push_bv env id in
+          let b = SW.mk_binder id ty in
           return (env, bs@[(None, b)], bvs@[bv])
         else
           return (env, bs, bvs)
       in
       let? body = desugar_stmt env body in
-      // let rec aux (bs:list (option SW.qualifier & SW.binder)) (bvs:list S.bv) =
-      //   match bs, bvs with
-      //   | [(q, last)], [last_bv] -> 
-      //     let body = SW.close_st_term body last_bv.S.index in
-      //     let comp = SW.close_comp comp last_bv.S.index in
-      //     return (SW.tm_abs last q comp body p.range)
-      //   | (q, b)::bs, bv::bvs ->
-      //     let? body = aux bs bvs in
-      //     let body = SW.close_st_term body bv.index in
-      //     let comp = SW.mk_tot (SW.tm_unknown r_) in
-      //     return (SW.tm_abs b q comp body p.range)
-      //   | _ -> fail "Unexpected empty binders in decl" r_
-      // in
-      // let? st_tm = aux bs bvs in
       let? qbs = map2 faux bs bvs in
-      return (SW.fn_decl p.range p.id p.is_rec qbs comp meas body)
+      return (SW.fn_decl range id is_rec qbs comp meas body)
+  
+    | Sugar.FnDecl { id; is_rec=false; binders; ascription=Inr ascription; measure=None; body=Inr body; range } ->
+      let? env, bs, bvs = desugar_binders env binders in
+      let? comp = 
+        match ascription with
+        | None -> return (SW.mk_tot (SW.tm_unknown range))
+        | Some t -> let? t = desugar_term env t in return (SW.mk_tot t)
+      in
+      let? body = desugar_lambda env body in
+      let? qbs = map2 faux bs bvs in
+      return (SW.fn_decl range id false qbs comp None body)
+let desugar_decl env d =
+  let? decl = desugar_decl' env d in
+  return decl
 
 let name = list string
 

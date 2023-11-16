@@ -90,16 +90,23 @@ let ve_unit_r g (p:term) : vprop_equiv g (tm_star p tm_emp) p =
 
 let st_equiv_trans (#g:env) (#c0 #c1 #c2:comp) (d01:st_equiv g c0 c1) (d12:st_equiv g c1 c2)
   : option (st_equiv g c0 c2)
-  = let ST_VPropEquiv _f _c0 _c1 x c0_pre_typing c0_res_typing c0_post_typing eq_res_01 eq_pre_01 eq_post_01 = d01 in
-    let ST_VPropEquiv _f _c1 _c2 y c1_pre_typing c1_res_typing c1_post_typing eq_res_12 eq_pre_12 eq_post_12 = d12 in
-    if x = y && eq_tm (comp_res c0) (comp_res c1)
-    then Some (
-          ST_VPropEquiv g c0 c2 x c0_pre_typing c0_res_typing c0_post_typing
-            (RT.Rel_trans _ _ _ _ _ eq_res_01 eq_res_12)
-            (VE_Trans _ _ _ _ eq_pre_01 eq_pre_12)
-            (VE_Trans _ _ _ _ eq_post_01 eq_post_12)
+  = 
+    match d01 with
+    | ST_VPropEquiv _f _c0 _c1 x c0_pre_typing c0_res_typing c0_post_typing eq_res_01 eq_pre_01 eq_post_01 -> (
+      let ST_VPropEquiv _f _c1 _c2 y c1_pre_typing c1_res_typing c1_post_typing eq_res_12 eq_pre_12 eq_post_12 = d12 in
+      if x = y && eq_tm (comp_res c0) (comp_res c1)
+      then Some (
+            ST_VPropEquiv g c0 c2 x c0_pre_typing c0_res_typing c0_post_typing
+              (RT.Rel_trans _ _ _ _ _ eq_res_01 eq_res_12)
+              (VE_Trans _ _ _ _ eq_pre_01 eq_pre_12)
+              (VE_Trans _ _ _ _ eq_post_01 eq_post_12)
+      )
+      else None
     )
-    else None
+    | ST_TotEquiv g t1 t2 u typing eq ->
+      let ST_TotEquiv _g _t1 t3 _ _ eq' = d12 in
+      let eq'' = Ghost.hide (RT.Rel_trans _ _ _ _ _ eq eq') in
+      Some (ST_TotEquiv g t1 t3 u typing eq'')
 
 let t_equiv #g #st #c (d:st_typing g st c) (#c':comp) (eq:st_equiv g c c')
   : st_typing g st c'
@@ -521,16 +528,16 @@ let checker_result_for_st_typing (#g:env) (#ctxt:vprop) (#post_hint:post_hint_op
 
 module R = FStar.Reflection.V2
 
-let readback_comp_res_as_comp (c:R.comp) : option comp =
-  match R.inspect_comp c with
-  | R.C_Total t -> (
+let readback_comp_res_as_comp (c:T.comp) : option comp =
+  match c with
+  | T.C_Total t -> (
     match readback_comp t with
     | None -> None
     | Some c -> Some c
   )
   | _ -> None
 
-let rec is_stateful_arrow (c:option comp) (args:list T.argv) (out:list T.argv)
+let rec is_stateful_arrow (g:env) (c:option comp) (args:list T.argv) (out:list T.argv)
   : T.Tac (option (list T.argv & T.argv))
   = let open R in
     match c with
@@ -548,57 +555,164 @@ let rec is_stateful_arrow (c:option comp) (args:list T.argv) (out:list T.argv)
       then None
       else (
         let Tm_FStar c_res = c_res.t in
-        let ht = R.inspect_ln c_res in
+        let ht = T.inspect c_res in
         match ht with
-        | R.Tv_Arrow b c -> (
+        | T.Tv_Arrow b c -> (
           match args with
           | [] -> ( //no more args; check that only implicits remain, ending in an stateful comp  
             let bs, c = T.collect_arr_ln_bs c_res in
             if List.Tot.for_all (fun b -> R.Q_Implicit? (R.inspect_binder b).qual) bs
-            then is_stateful_arrow (readback_comp_res_as_comp c) [] out
+            then is_stateful_arrow g (readback_comp_res_as_comp (R.inspect_comp c)) [] out
             else None //too few args    
           )
 
           | (arg, qual)::args' -> ( //check that this arg qual matches the binder and recurse accordingly
-            let b = R.inspect_binder b in
             match b.qual, qual with
+            | T.Q_Meta _, T.Q_Implicit
             | T.Q_Implicit, T.Q_Implicit 
             | T.Q_Explicit, T.Q_Explicit ->  //consume this argument
-              is_stateful_arrow (readback_comp_res_as_comp c) args' ((arg, qual)::out)
+              is_stateful_arrow g (readback_comp_res_as_comp c) args' ((arg, qual)::out)
 
+            | T.Q_Meta _, T.Q_Explicit
             | T.Q_Implicit, T.Q_Explicit -> 
               //don't consume this argument
-              is_stateful_arrow (readback_comp_res_as_comp c) args out
+              is_stateful_arrow g (readback_comp_res_as_comp c) args out
 
             | _ -> None //incompatible qualifiers; bail
           )
         )
-        | _ -> None
+        | _ ->
+          let c_res' = RU.whnf_lax (elab_env g) c_res in
+          let ht = T.inspect c_res' in
+          if T.Tv_Arrow? ht
+          then (
+            assume (not_tv_unknown c_res');
+            let c_res' = tm_fstar c_res' (T.range_of_term c_res') in
+            is_stateful_arrow g (Some (C_Tot c_res')) args out
+          )
+          else None
       )
     )
-  
+
+module RU = Pulse.RuntimeUtils  
 let is_stateful_application (g:env) (e:term) 
   : T.Tac (option st_term)
   = match e.t with
     | Tm_FStar host_term -> (
       let head, args = T.collect_app_ln host_term in
       assume (not_tv_unknown head);
-      let (| head_t, _ |) = Pulse.Checker.Pure.core_check_tot_term g (tm_fstar head (T.range_of_term head)) in
-      match is_stateful_arrow (Some (C_Tot head_t)) args [] with 
+      match RU.lax_check_term_with_unknown_universes (elab_env g) head with
       | None -> None
-      | Some (applied_args, (last_arg, aqual))->
-        let head = T.mk_app head applied_args in
-        assume (not_tv_unknown head);
-        let head = tm_fstar head (T.range_of_term head) in
-        assume (not_tv_unknown last_arg);
-        let last_arg = tm_fstar last_arg (T.range_of_term last_arg) in
-        let qual = 
-          match aqual with
-          | T.Q_Implicit -> Some Implicit
-          | _ -> None
-        in
-        let st_app = Tm_STApp { head; arg=last_arg; arg_qual=qual} in
-        let st_app = { term = st_app; range=e.range; effect_tag=default_effect_hint } in
-        Some st_app
+      | Some ht -> 
+        assume (not_tv_unknown ht);
+        let head_t = tm_fstar ht (T.range_of_term ht) in
+        match is_stateful_arrow g (Some (C_Tot head_t)) args [] with 
+        | None -> None
+        | Some (applied_args, (last_arg, aqual))->
+          let head = T.mk_app head applied_args in
+          assume (not_tv_unknown head);
+          let head = tm_fstar head (T.range_of_term head) in
+          assume (not_tv_unknown last_arg);
+          let last_arg = tm_fstar last_arg (T.range_of_term last_arg) in
+          let qual = 
+            match aqual with
+            | T.Q_Implicit -> Some Implicit
+            | _ -> None
+          in
+          let st_app = Tm_STApp { head; arg=last_arg; arg_qual=qual} in
+          let st_app = { term = st_app; range=e.range; effect_tag=default_effect_hint } in
+          Some st_app
     )
+    | _ -> None
+
+
+let apply_conversion
+      (#g:env) (#e:term) (#eff:_) (#t0:term)
+      (d:typing g e eff t0)
+      (#t1:term)
+      (eq:Ghost.erased (RT.related (elab_env g) (elab_term t0) RT.R_Eq (elab_term t1)))
+  : typing g e eff t1
+  = let d : RT.typing (elab_env g) (elab_term e) (eff, (elab_term t0)) = d._0 in
+    let r : RT.related (elab_env g) (elab_term t0) RT.R_Eq (elab_term t1) = eq in
+    let r  = RT.Rel_equiv _ _ _ RT.R_Sub r in
+    let s : RT.sub_comp (elab_env g) (eff, (elab_term t0)) (eff, elab_term t1) = 
+        RT.Relc_typ _ _ _ _ _ r
+    in
+    E (RT.T_Sub _ _ _ _ d s)
+    
+let norm_typing
+      (g:env) (e:term) (eff:_) (t0:term)
+      (d:typing g e eff t0)
+      (steps:list norm_step)
+  : T.Tac (t':term & typing g e eff t')
+  = let t = elab_term t0 in
+    let u_t_typing : Ghost.erased (u:R.universe & RT.typing _ _ _) = 
+      Pulse.Typing.Metatheory.Base.typing_correctness d._0
+    in
+    let (| t', t'_typing, related_t_t' |) =
+      Pulse.RuntimeUtils.norm_well_typed_term (dsnd u_t_typing) steps
+    in
+    match Pulse.Readback.readback_ty t' with
+    | None -> T.fail "Could not readback normalized type"
+    | Some t'' ->
+      let d : typing g e eff t'' = apply_conversion d related_t_t' in
+      (| t'', d |)
+
+module TermEq = FStar.Reflection.V2.TermEq
+let norm_typing_inverse
+      (g:env) (e:term) (eff:_) (t0:term)
+      (d:typing g e eff t0)
+      (t1:term)
+      (#u:_)
+      (d1:tot_typing g t1 (tm_type u))
+      (steps:list norm_step)
+  : T.Tac (option (typing g e eff t1))
+  = let (| t1', t1'_typing, related_t1_t1' |) =
+      let d1 = Ghost.hide d1._0 in
+      Pulse.RuntimeUtils.norm_well_typed_term d1 steps
+    in
+    match Pulse.Readback.readback_ty t1' with
+    | Some t1_p ->
+      if TermEq.term_eq (elab_term t0) t1'
+      then (
+        let related_t1'_t1 = Ghost.hide (RT.Rel_sym _ _ _ related_t1_t1') in
+        Some (apply_conversion d related_t1'_t1)
+      )
+      else None
+    | _ -> None
+
+
+let norm_st_typing_inverse
+      (#g:env) (#e:st_term) (#t0:term)
+      (d:st_typing g e (C_Tot t0))
+      (#u:_)
+      (t1:term)
+      (d1:tot_typing g t1 (tm_type u))
+      (steps:list norm_step)
+  : T.Tac (option (st_typing g e (C_Tot t1)))
+  = let d1 
+      : Ghost.erased (RT.tot_typing (elab_env g) (elab_term t1) (RT.tm_type u))
+      = Ghost.hide d1._0
+    in
+    let (| t1', t1'_typing, related_t1_t1' |) =
+      Pulse.RuntimeUtils.norm_well_typed_term d1 steps
+    in
+    match Pulse.Readback.readback_ty t1' with
+    | Some t1_p ->
+      if TermEq.term_eq (elab_term t0) t1'
+      then (
+        let t0_typing 
+          : Ghost.erased (RT.tot_typing (elab_env g) (elab_term t0) (RT.tm_type u)) =
+          rt_equiv_typing #_ #_ #(elab_term t0) related_t1_t1' d1
+        in
+        let eq
+          : Ghost.erased (RT.equiv (elab_env g) (elab_term t0) (elab_term t1))
+          = Ghost.hide (RT.Rel_sym _ _ _ related_t1_t1')
+        in
+        let steq : st_equiv g (C_Tot t0) (C_Tot t1) =
+          ST_TotEquiv _ _ _ u (E (Ghost.reveal t0_typing)) eq
+        in
+        Some (T_Equiv _ _ _ _ d steq)
+      )
+      else None
     | _ -> None

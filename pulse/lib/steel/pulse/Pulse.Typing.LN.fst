@@ -85,8 +85,8 @@ let open_comp_ln' (c:comp)
 
 let open_term_ln_opt' (t:option term) (x:term) (i:index)
   : Lemma
-    (requires ln_opt' (open_term_opt' t x i) (i - 1))
-    (ensures ln_opt' t i)
+    (requires ln_opt' ln' (open_term_opt' t x i) (i - 1))
+    (ensures ln_opt' ln' t i)
     (decreases t)
   = match t with
     | None -> ()
@@ -190,6 +190,16 @@ and open_pattern_args_ln (pats:list (pattern & bool)) (x:term) (i:index)
       open_pattern_ln hd x i;
       open_pattern_args_ln tl x (i + pattern_shift_n hd)
 
+let map_opt_lemma_2 ($f: (x:'a -> y:'b -> z:'c -> Lemma (requires 'p x y z) (ensures 'q x y z)))
+                    (x:option 'a) 
+                    (y:'b)
+                    (z:'c)
+   : Lemma (requires Some? x ==> 'p (Some?.v x) y z)
+           (ensures Some? x ==> 'q (Some?.v x) y z)
+   = match x with
+     | None -> ()
+     | Some x -> f x y z
+
 let rec open_st_term_ln' (e:st_term)
                          (x:term)
                          (i:index)
@@ -207,7 +217,8 @@ let rec open_st_term_ln' (e:st_term)
 
     | Tm_Abs { b; ascription=c; body } ->
       open_term_ln' b.binder_ty x i;
-      open_comp_ln' c x (i + 1);
+      map_opt_lemma_2 open_comp_ln' c.annotated x (i + 1);
+      map_opt_lemma_2 open_comp_ln' c.elaborated x (i + 1);
       open_st_term_ln' body x (i + 1)
       
     | Tm_Bind { binder; head; body } ->
@@ -375,8 +386,8 @@ let ln_weakening_comp (c:comp) (i j:int)
 
 let ln_weakening_opt (t:option term) (i j:int)
   : Lemma
-    (requires ln_opt' t i /\ i <= j)
-    (ensures ln_opt' t j)
+    (requires ln_opt' ln' t i /\ i <= j)
+    (ensures ln_opt' ln' t j)
     (decreases t)
   = match t with
     | None -> ()
@@ -469,7 +480,8 @@ let rec ln_weakening_st (t:st_term) (i j:int)
 
     | Tm_Abs { b; ascription=c; body } ->
       ln_weakening b.binder_ty i j;
-      ln_weakening_comp c (i + 1) (j + 1);
+      map_opt_lemma_2 ln_weakening_comp c.annotated (i + 1) (j + 1);
+      map_opt_lemma_2 ln_weakening_comp c.elaborated (i + 1) (j + 1);
       ln_weakening_st body (i + 1) (j + 1)
 
     | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
@@ -566,8 +578,8 @@ let open_term_ln_inv_opt' (t:option term)
                           (x:term { ln x })
                           (i:index)
   : Lemma
-    (requires ln_opt' t i)
-    (ensures ln_opt' (open_term_opt' t x i) (i - 1))
+    (requires ln_opt' ln' t i)
+    (ensures ln_opt' ln' (open_term_opt' t x i) (i - 1))
     (decreases t)
   = match t with
     | None -> ()
@@ -666,7 +678,8 @@ let rec open_term_ln_inv_st' (t:st_term)
 
     | Tm_Abs { b; ascription=c; body } ->
       open_term_ln_inv' b.binder_ty x i;
-      open_comp_ln_inv' c x (i + 1);
+      map_opt_lemma_2 open_comp_ln_inv' c.annotated x (i + 1);
+      map_opt_lemma_2 open_comp_ln_inv' c.elaborated x (i + 1);
       open_term_ln_inv_st' body x (i + 1)
 
     | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
@@ -762,8 +775,8 @@ let close_comp_ln' (c:comp)
 
 let close_term_ln_opt' (t:option term) (x:var) (i:index)
   : Lemma
-    (requires ln_opt' t (i - 1))
-    (ensures ln_opt' (close_term_opt' t x i) i)
+    (requires ln_opt' ln' t (i - 1))
+    (ensures ln_opt' ln' (close_term_opt' t x i) i)
     (decreases t)
   = match t with
     | None -> ()
@@ -859,7 +872,8 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
 
     | Tm_Abs { b; ascription=c; body } ->
       close_term_ln' b.binder_ty x i;
-      close_comp_ln' c x (i + 1);
+      map_opt_lemma_2 close_comp_ln' c.annotated x (i + 1);
+      map_opt_lemma_2 close_comp_ln' c.elaborated x (i + 1);
       close_st_term_ln' body x (i + 1)
 
     | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
@@ -950,13 +964,19 @@ let st_equiv_ln #g #c1 #c2 (d:st_equiv g c1 c2)
   : Lemma 
     (requires ln_c c1)
     (ensures ln_c c2)
-  = let ST_VPropEquiv _ _ _ x (E dpre) _dres _dpost eq_res eq_pre eq_post = d in
-    vprop_equiv_ln eq_pre;
-    open_term_ln_inv' (comp_post c1) (term_of_no_name_var x) 0;
-    vprop_equiv_ln eq_post;
-    rt_equiv_ln _ _ _ eq_res;
-    elab_ln_inverse (comp_res c2);
-    open_term_ln' (comp_post c2) (term_of_no_name_var x) 0
+  = match d with
+    | ST_VPropEquiv _ _ _ x (E dpre) _dres _dpost eq_res eq_pre eq_post ->
+      vprop_equiv_ln eq_pre;
+      open_term_ln_inv' (comp_post c1) (term_of_no_name_var x) 0;
+      vprop_equiv_ln eq_post;
+      rt_equiv_ln _ _ _ eq_res;
+      elab_ln_inverse (comp_res c2);
+      open_term_ln' (comp_post c2) (term_of_no_name_var x) 0
+
+    | ST_TotEquiv g t1 t2 u t1_typing eq ->
+      let t2_typing = Pulse.Typing.Metatheory.Base.rt_equiv_typing eq t1_typing._0 in
+      tot_or_ghost_typing_ln (E (Ghost.reveal t2_typing))
+    
 
 let bind_comp_ln #g #x #c1 #c2 #c (d:bind_comp g x c1 c2 c)
   : Lemma 

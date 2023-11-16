@@ -131,6 +131,7 @@ let initial_core_env (g:uenv) : Pulse_Typing_Env.env =
 
 let set_tcenv g e = UEnv.set_tcenv g e
 
+let mlty_to_string (t:mlty) = FStar_Extraction_ML_Syntax.mlty_to_string t
 let mlexpr_to_string (e:mlexpr) = FStar_Extraction_ML_Syntax.mlexpr_to_string e
 let sigelt_extension_data (e:S.sigelt) : Pulse_Syntax_Base.st_term option =
   match FStar_Compiler_List.tryFind (fun (s, _) -> s = "pulse") e.sigmeta.sigmeta_extension_data with

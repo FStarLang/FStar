@@ -274,12 +274,7 @@ let (comp_typing_weakening :
                     ((Pulse_Typing_Env.push_env
                         (Pulse_Typing_Env.push_env g g1) g'), inames, uu___1,
                       (), (st_comp_typing_weakening g g' uu___1 d1 g1))
-let (prop_validity_token_weakening :
-  Pulse_Typing_Env.env ->
-    Pulse_Syntax_Base.term ->
-      (unit, unit) Pulse_Typing.prop_validity ->
-        Pulse_Typing_Env.env -> (unit, unit) Pulse_Typing.prop_validity)
-  = fun g -> fun t -> fun token -> fun g1 -> token
+
 let rec (st_typing_weakening :
   Pulse_Typing_Env.env ->
     Pulse_Typing_Env.env ->
@@ -434,10 +429,7 @@ let rec (st_typing_weakening :
               | Pulse_Typing.T_IntroPure (uu___, p, uu___1, token) ->
                   Pulse_Typing.T_IntroPure
                     ((Pulse_Typing_Env.push_env
-                        (Pulse_Typing_Env.push_env g g1) g'), p, (),
-                      (prop_validity_token_weakening uu___ p token
-                         (Pulse_Typing_Env.push_env
-                            (Pulse_Typing_Env.push_env g g1) g')))
+                        (Pulse_Typing_Env.push_env g g1) g'), p, (), ())
               | Pulse_Typing.T_ElimExists
                   (uu___, u, t1, p, x, uu___1, uu___2) ->
                   Pulse_Typing.T_ElimExists
@@ -983,8 +975,7 @@ let rec (st_typing_subst :
                         Pulse_Typing.T_IntroPure
                           ((Pulse_Typing_Env.push_env g
                               (Pulse_Typing_Env.subst_env g' (nt x e))),
-                            (Pulse_Syntax_Naming.subst_term p ss), (),
-                            (Prims.magic ()))
+                            (Pulse_Syntax_Naming.subst_term p ss), (), ())
                     | Pulse_Typing.T_ElimExists
                         (uu___, u, t1, p, y, uu___1, uu___2) ->
                         Pulse_Typing.T_ElimExists

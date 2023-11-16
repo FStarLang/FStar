@@ -410,9 +410,22 @@ let rec extract (g:env) (p:st_term)
         let mlletbinding = mk_mlletbinding false [mllb] in
         mle_let mlletbinding body, e_tag_impure
       
-      | Tm_WithLocalArray _ ->
-        T.fail "Extraction of local arrays is not yet supported"
-    
+      | Tm_WithLocalArray { binder; initializer; length; body } ->
+        let initializer = term_as_mlexpr g initializer in
+        let length = term_as_mlexpr g length in
+        let g, mlident, mlty, name = extend_env g { binder with binder_ty = binder.binder_ty } in
+        let body = LN.open_st_term_nv body name in
+        let body, _ = extract g body in
+        //
+        // Slice library doesn't have an alloc
+        //
+        // This is parsed by Pulse2Rust
+        //
+        let allocator = mle_app (mle_name (["Pulse"; "Lib"; "Array"; "Core"] , "alloc")) [initializer; length] in
+        let mllb = mk_mut_mllb mlident ([], mlty) allocator in
+        let mlletbinding = mk_mlletbinding false [mllb] in
+        mle_let mlletbinding body, e_tag_impure
+        
       | Tm_ProofHintWithBinders { t } -> T.fail "Unexpected constructor: ProofHintWithBinders should have been desugared away"
       | Tm_Admit _ -> T.raise (Extraction_failure (Printf.sprintf "Cannot extract code with admit: %s\n" (Pulse.Syntax.Printer.st_term_to_string p)))
     end

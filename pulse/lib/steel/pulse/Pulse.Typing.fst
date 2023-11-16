@@ -418,7 +418,8 @@ let comp_withlocal_body (r:var) (init_t:term) (init:term) (c:comp{C_ST? c}) : co
     post = comp_withlocal_body_post (comp_post c) init_t r
   }
 
-let mk_array (a:term) : term = tm_pureapp (tm_fvar (as_fv array_lid)) None a
+let mk_array (a:term) : term =
+  tm_pureapp (tm_fvar (as_fv array_lid)) None a
 
 let mk_array_length (a:term) (arr:term) : term =
   let t = tm_fvar (as_fv array_length_lid) in
@@ -432,10 +433,10 @@ let mk_array_pts_to (a:term) (arr:term) (v:term) : term =
   let t = tm_pureapp t (Some Implicit) (tm_fvar (as_fv full_perm_lid)) in
   tm_pureapp t None v
 
-let mk_array_is_full (a:term) (arr:term) : term =
-  let t = tm_fvar (as_fv array_is_full_lid) in
-  let t = tm_pureapp t (Some Implicit) a in
-  tm_pureapp t None arr
+// let mk_array_is_full (a:term) (arr:term) : term =
+//   let t = tm_fvar (as_fv array_is_full_lid) in
+//   let t = tm_pureapp t (Some Implicit) a in
+//   tm_pureapp t None arr
 
 let mk_seq_create (u:universe) (a:term) (len:term) (v:term) : term =
   let t = tm_uinst (as_fv seq_create_lid) [u] in
@@ -450,8 +451,7 @@ let mk_szv (n:term) : term =
 let comp_withlocal_array_body_pre (pre:vprop) (a:term) (arr:term) (init:term) (len:term) : vprop =
   tm_star pre
           (tm_star (mk_array_pts_to a arr (mk_seq_create u0 a (mk_szv len) init))
-                   (tm_star (tm_pure (mk_array_is_full a arr))
-                            (tm_pure (mk_eq2 u0 tm_nat (mk_array_length a arr) (mk_szv len)))))
+                   (tm_pure (mk_eq2 u0 tm_nat (mk_array_length a arr) (mk_szv len))))
 
 let mk_seq (u:universe) (a:term) : term =
   let t = tm_uinst (as_fv seq_lid) [u] in
@@ -534,6 +534,15 @@ type st_equiv : env -> comp -> comp -> Type =
                   (open_term (comp_post c1) x)
                   (open_term (comp_post c2) x) ->      
       st_equiv g c1 c2
+    
+  | ST_TotEquiv :
+      g:env -> 
+      t1:term ->
+      t2:term ->
+      u:_ ->
+      universe_of g t1 u ->
+      Ghost.erased (RT.equiv (elab_env g) (elab_term t1) (elab_term t2)) ->
+      st_equiv g (C_Tot t1) (C_Tot t2)
 
 [@@ no_auto_projectors]
 noeq
@@ -675,7 +684,7 @@ type st_typing : env -> st_term -> comp -> Type =
       c:comp ->
       tot_typing g b.binder_ty (tm_type u) ->
       st_typing (push_binding g x ppname_default b.binder_ty) (open_st_term_nv body (b.binder_ppname, x)) c ->
-      st_typing g (wtag None (Tm_Abs { b; q; body; ascription=(close_comp c x)}))
+      st_typing g (wtag None (Tm_Abs { b; q; body; ascription=empty_ascription}))
                   (C_Tot (tm_arrow b q (close_comp c x)))
   | T_STApp :
       g:env ->

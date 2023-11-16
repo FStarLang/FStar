@@ -7,7 +7,14 @@ let comp_typing_u (g:env) (c:comp_st) = comp_typing g c (comp_u c)
 
 val admit_comp_typing (g:env) (c:comp_st)
   : comp_typing_u g c
-  
+
+module RT = FStar.Reflection.Typing  
+let rt_equiv_typing (#g:_) (#t0 #t1:_) (d:RT.equiv g t0 t1)
+                    (#k:_)
+                    (d1:Ghost.erased (RT.tot_typing g t0 k))
+  : Ghost.erased (RT.tot_typing g t1 k)
+  = admit()
+
 val st_typing_correctness (#g:env) (#t:st_term) (#c:comp_st) 
                           (_:st_typing g t c)
   : comp_typing_u g c
@@ -35,6 +42,18 @@ val tm_exists_inversion (#g:env) (#u:universe) (#ty:term) (#p:term)
 
 val pure_typing_inversion (#g:env) (#p:term) (_:tot_typing g (tm_pure p) tm_vprop)
    : tot_typing g p (tm_fstar FStar.Reflection.Typing.tm_prop Range.range_0)
+
+module RT = FStar.Reflection.Typing
+module R = FStar.Reflection.V2
+module C = FStar.Stubs.TypeChecker.Core
+open FStar.Ghost
+val typing_correctness
+  (#g:R.env) 
+  (#t:R.term)
+  (#ty:R.typ) 
+  (#eff:_)
+  (_:erased (RT.typing g t (eff, ty)))
+  : erased (u:R.universe & RT.typing g ty (C.E_Total, RT.tm_type u))
 
 val tot_typing_weakening
   (g:env) (g':env { disjoint g g' })

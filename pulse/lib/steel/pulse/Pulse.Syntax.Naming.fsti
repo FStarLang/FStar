@@ -71,6 +71,11 @@ let freevars_proof_hint (ht:proof_hint_type) : Set.set var =
   | REWRITE { t1; t2 } ->
     Set.union (freevars t1) (freevars t2)
 
+let freevars_ascription (c:comp_ascription) 
+  : Set.set var
+  = Set.union (freevars_opt freevars_comp c.elaborated)
+              (freevars_opt freevars_comp c.annotated)
+
 let rec freevars_st (t:st_term)
   : Set.set var
   = match t.term with
@@ -79,7 +84,7 @@ let rec freevars_st (t:st_term)
     | Tm_Abs { b; ascription; body } ->
       Set.union (freevars b.binder_ty) 
                 (Set.union (freevars_st body)
-                           (freevars_comp ascription))
+                           (freevars_ascription ascription))
     | Tm_STApp { head; arg } ->
       Set.union (freevars head) (freevars arg)
     | Tm_Bind { binder; head; body } ->
@@ -185,10 +190,10 @@ let ln_c' (c:comp) (i:int)
       ln' inames i &&
       ln_st_comp s i
 
-let ln_opt' (t:option term) (i:int) : bool =
+let ln_opt' (f: ('a -> int -> bool)) (t:option 'a) (i:int) : bool =
   match t with
   | None -> true
-  | Some t -> ln' t i
+  | Some t -> f t i
 
 let rec ln_list' (t:list term) (i:int) : bool =
   match t with
@@ -207,7 +212,7 @@ let ln_proof_hint' (ht:proof_hint_type) (i:int) : bool =
   | FOLD   { p } -> ln' p i
   | RENAME { pairs; goal } ->
     ln_terms' pairs i &&
-    ln_opt' goal i
+    ln_opt' ln' goal i
   | REWRITE { t1; t2 } ->
     ln' t1 i &&
     ln' t2 i
@@ -250,6 +255,11 @@ and ln_pattern_args' (p:list (pattern & bool)) (i:int)
       ln_pattern' p i &&
       ln_pattern_args' tl (i + pattern_shift_n p)
 
+let ln_ascription' (c:comp_ascription) (i:int)
+  : bool
+  = ln_opt' ln_c' c.elaborated i &&
+    ln_opt' ln_c' c.annotated i
+
 let rec ln_st' (t:st_term) (i:int)
   : Tot bool (decreases t)
   = match t.term with
@@ -259,7 +269,7 @@ let rec ln_st' (t:st_term) (i:int)
     | Tm_Abs { b; ascription; body } ->
       ln' b.binder_ty i &&
       ln_st' body (i + 1) &&
-      ln_c' ascription (i + 1)
+      ln_ascription' ascription (i + 1)
 
     | Tm_STApp { head; arg } ->
       ln' head i &&
@@ -279,11 +289,11 @@ let rec ln_st' (t:st_term) (i:int)
       ln' b i &&
       ln_st' then_ i &&
       ln_st' else_ i &&
-      ln_opt' post (i + 1)
+      ln_opt' ln' post (i + 1)
   
     | Tm_Match {sc; returns_; brs } ->
       ln' sc i &&
-      ln_opt' returns_ i &&
+      ln_opt' ln' returns_ i &&
       ln_branches' t brs i
 
     | Tm_IntroPure { p }
@@ -324,7 +334,7 @@ let rec ln_st' (t:st_term) (i:int)
 
     | Tm_Admit { typ; post } ->
       ln' typ i &&
-      ln_opt' post (i + 1)
+      ln_opt' ln' post (i + 1)
 
     | Tm_ProofHintWithBinders { binders; hint_type; t } ->
       let n = L.length binders in
@@ -510,6 +520,17 @@ and subst_pat_args (args:list (pattern & bool)) (ss:subst)
       let tl = subst_pat_args tl (shift_subst_n (pattern_shift_n arg) ss) in
       (arg', b)::tl
 
+let map2_opt (f: 'a -> 'b -> 'c) (x:option 'a) (y:'b)
+  : option 'c
+  = match x with
+    | None -> None
+    | Some x -> Some (f x y)
+
+let subst_ascription (c:comp_ascription) (ss:subst)
+  : comp_ascription
+  = { elaborated = map2_opt subst_comp c.elaborated ss;
+       annotated = map2_opt subst_comp c.annotated ss }
+
 let rec subst_st_term (t:st_term) (ss:subst)
   : Tot st_term (decreases t)
   = let t' =
@@ -520,7 +541,7 @@ let rec subst_st_term (t:st_term) (ss:subst)
     | Tm_Abs { b; q; ascription; body } ->
       Tm_Abs { b=subst_binder b ss;
                q;
-               ascription=subst_comp ascription (shift_subst ss);
+               ascription=subst_ascription ascription (shift_subst ss);
                body=subst_st_term body (shift_subst ss) }
 
     | Tm_STApp { head; arg_qual; arg } ->

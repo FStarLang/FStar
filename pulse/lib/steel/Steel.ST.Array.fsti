@@ -397,6 +397,20 @@ let ptr_shift_zero
   (ptr_shift p 0sz == p)
 = ptr_base_offset_inj (ptr_shift p 0sz) p
 
+let ptr_shift_add
+  (#elt: Type)
+  (p: ptr elt)
+  (off1 off2: US.t)
+: Lemma
+  (requires (
+    offset p + US.v off1 + US.v off2 <= base_len (base p) /\
+    US.fits (US.v off1 + US.v off2) // cannot be deduced from base_len, because length_fits only works for arrays, not array pointers
+  ))
+  (ensures (
+    ptr_shift (ptr_shift p off1) off2 == ptr_shift p (off1 `US.add` off2)
+  ))
+= ptr_base_offset_inj (ptr_shift (ptr_shift p off1) off2) (ptr_shift p (off1 `US.add` off2))
+
 /// Computing the right-hand-side part of splitting an array a at
 /// offset i.
 inline_for_extraction
@@ -499,3 +513,115 @@ val ptrdiff (#t:_) (#p0 #p1:perm) (#s0 #s1:Ghost.erased (Seq.seq t))
     (fun _ -> pts_to a0 p0 s0 `star` pts_to a1 p1 s1)
     (base (ptr_of a0) == base (ptr_of a1) /\ UP.fits (offset (ptr_of a0) - offset (ptr_of a1)))
     (fun r -> UP.v r == offset (ptr_of a0) - offset (ptr_of a1))
+
+/// Splitting spatial permissions of an array without pointer arithmetic
+
+val pts_to_range
+  (#elt: Type0) (a: array elt) (i j: nat)
+  (p: P.perm)
+  ([@@@ smt_fallback ] s: Seq.seq elt)
+: Tot vprop
+
+val pts_to_range_prop
+  (#opened: _)
+  (#elt: Type0) (a: array elt) (i j: nat)
+  (p: P.perm)
+  (s: Seq.seq elt)
+: STGhost unit opened
+    (pts_to_range a i j p s)
+    (fun _ -> pts_to_range a i j p s)
+    True
+    (fun _ -> i <= j /\ j <= length a /\ Seq.length s == j - i)
+
+val pts_to_range_intro
+  (#opened: _)
+  (#elt: Type0) (a: array elt)
+  (p: P.perm)
+  (s: Seq.seq elt)
+: STGhostT unit opened
+    (pts_to a p s)
+    (fun _ -> pts_to_range a 0 (length a) p s)
+
+val pts_to_range_elim
+  (#opened: _)
+  (#elt: Type0) (a: array elt)
+  (p: P.perm)
+  (s: Seq.seq elt)
+: STGhostT unit opened
+    (pts_to_range a 0 (length a) p s)
+    (fun _ -> pts_to a p s)
+
+val pts_to_range_split
+  (#opened: _)
+  (#elt: Type0)
+  (#p: P.perm)
+  (#s: Seq.seq elt)
+  (a: array elt)
+  (i m j: nat)
+: STGhost unit opened
+    (pts_to_range a i j p s)
+    (fun _ -> exists_ (fun s1 -> exists_ (fun s2 ->
+      pts_to_range a i m p s1 `star`
+      pts_to_range a m j p s2 `star`
+      pure (
+        i <= m /\ m <= j /\ j <= length a /\
+        Seq.length s == j - i /\
+        s1 == Seq.slice s 0 (m - i) /\
+        s2 == Seq.slice s (m - i) (Seq.length s) /\
+        s == Seq.append s1 s2
+    ))))
+    (i <= m /\ m <= j)
+    (fun _ -> True)
+
+val pts_to_range_join
+  (#opened: _)
+  (#elt: Type0)
+  (#p: P.perm)
+  (#s1 #s2: Seq.seq elt)
+  (a: array elt)
+  (i m j: nat)
+: STGhostT unit opened
+    (pts_to_range a i m p s1 `star` pts_to_range a m j p s2)
+    (fun _ -> pts_to_range a i j p (s1 `Seq.append` s2))
+
+// FIXME: these two functions extract to correct, but horrendous code (something like (a + m)[0])
+
+inline_for_extraction
+[@@noextract_to "krml"]
+val pts_to_range_index
+  (#elt: Type0)
+  (#p: P.perm)
+  (#s: Ghost.erased (Seq.seq elt))
+  (a: array elt)
+  (i: Ghost.erased nat)
+  (m: US.t)
+  (j: Ghost.erased nat)
+: ST elt
+    (pts_to_range a i j p s)
+    (fun _ -> pts_to_range a i j p s)
+    (i <= US.v m /\ US.v m < j)
+    (fun res ->
+      i <= US.v m /\ US.v m < j /\
+      Seq.length s == j - i /\
+      res == Seq.index s (US.v m - i)
+    )
+
+inline_for_extraction
+[@@noextract_to "krml"]
+val pts_to_range_upd
+  (#elt: Type0)
+  (#s: Ghost.erased (Seq.seq elt))
+  (a: array elt)
+  (i: Ghost.erased nat)
+  (m: US.t)
+  (j: Ghost.erased nat)
+  (x: elt)
+: ST (Ghost.erased (Seq.seq elt))
+    (pts_to_range a i j full_perm s)
+    (fun s' -> pts_to_range a i j full_perm s')
+    (i <= US.v m /\ US.v m < j)
+    (fun s' ->
+      i <= US.v m /\ US.v m < j /\
+      Seq.length s == j - i /\
+      Ghost.reveal s' == Seq.upd s (US.v m - i) x
+    )
