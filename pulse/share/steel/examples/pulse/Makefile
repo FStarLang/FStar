@@ -8,17 +8,28 @@ CACHE_DIR=.cache
 SRC_DIRS=$(addprefix $(STEEL_SHARE)/examples/pulse/, $(INCLUDE_DIRS))
 FSTAR_FILES=$(wildcard $(addsuffix /*.fst, $(SRC_DIRS))) $(wildcard $(addsuffix /*.fsti, $(SRC_DIRS)))
 
-all: verify
+all: verify test
 
 extract:
 #	$(FSTAR) --odir _output --codegen OCaml CustomSyntax.fst --extract CustomSyntax
 	$(FSTAR) --odir _output --codegen OCaml ExtractionTest.fst --extract ExtractionTest
-	
+
 extract_c: _output/cache/ExtractionTest.fst.checked
 	$(FSTAR) --odir _output --codegen krml ExtractionTest.fst --extract ExtractionTest
 	$(FSTAR_HOME)/../karamel/krml -bundle ExtractionTest=* -skip-compilation _output/ExtractionTest.krml -tmpdir _output
 
 #	$(FSTAR) --codegen krml Demo.MultiplyByRepeatedAddition.fst --extract '* -Pulse.Lib.Core'
 #	$(FSTAR_HOME)/../karamel/krml -bundle Demo.MultiplyByRepeatedAddition=* -skip-compilation _output/out.krml
+
+ifneq (,$(KRML_HOME))
+test-cbor: verify
+	+$(MAKE) -C dice/cbor
+else
+test-cbor:
+endif
+
+test: test-cbor
+
+.PHONY: test test-cbor test-cbor-raw
 
 include Makefile.pulse.common
