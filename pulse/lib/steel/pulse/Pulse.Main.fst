@@ -84,6 +84,9 @@ let check_fndecl
   (* Set the blob *)
   let main_decl =
     let (chk, se, _) = main_decl in
+    let nm = R.pack_ln (R.Tv_Const (R.C_String nm_orig)) in
+    let attribute = `("pulse.recursive", `#(nm)) in
+    let se : T.sigelt = RU.add_attribute se attribute in
     (chk, se, Some blob)
   in
   let recursive_decls =
