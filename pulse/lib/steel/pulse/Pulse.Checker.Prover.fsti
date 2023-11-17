@@ -17,7 +17,8 @@ val prove
   (#goals:vprop) (goals_typing:tot_typing (push_env g uvs) goals tm_vprop)
 
   : T.Tac (g1 : env { g1 `env_extends` g /\ disjoint g1 uvs } &
-           nts : PS.nt_substs { PS.well_typed_nt_substs g1 uvs nts } &
+           nts : PS.nt_substs &
+           effect_labels:list T.tot_or_ghost { PS.well_typed_nt_substs g1 uvs nts effect_labels } &
            remaining_ctxt : vprop &
            continuation_elaborator g ctxt g1 ((PS.nt_subst_term goals nts) * remaining_ctxt))
 
