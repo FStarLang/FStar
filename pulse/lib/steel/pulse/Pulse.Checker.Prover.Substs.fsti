@@ -157,7 +157,9 @@ val st_typing_nt_substs
   (#t:st_term) (#c:comp_st) (t_typing:st_typing (push_env g (push_env uvs g')) t c)
   (ss:nt_substs)
   (effect_labels:list T.tot_or_ghost { well_typed_nt_substs g uvs ss effect_labels })
-: st_typing (push_env g (nt_subst_env g' ss)) (nt_subst_st_term t ss) (nt_subst_comp c ss)
+: either
+    (st_typing (push_env g (nt_subst_env g' ss)) (nt_subst_st_term t ss) (nt_subst_comp c ss))
+    string
 
 // val st_typing_subst (g:env) (uvs:env { disjoint uvs g }) (t:st_term) (c:comp_st)
 //   (d:st_typing (push_env g uvs) t c)
@@ -170,7 +172,7 @@ val st_typing_nt_substs_derived
   (#t:st_term) (#c:comp_st) (t_typing:st_typing (push_env g uvs) t c)
   (ss:nt_substs)
   (effect_labels:list T.tot_or_ghost { well_typed_nt_substs g uvs ss effect_labels })
-: st_typing g (nt_subst_st_term t ss) (nt_subst_comp c ss)
+: either (st_typing g (nt_subst_st_term t ss) (nt_subst_comp c ss)) string
 
 val vprop_equiv_nt_substs_derived
   (g:env) (uvs:env { disjoint g uvs })

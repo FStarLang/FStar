@@ -3,6 +3,7 @@ open Pulse.Syntax
 open Pulse.Syntax.Naming
 open Pulse.Typing
 
+module T = FStar.Tactics.V2
 module RT = FStar.Reflection.Typing
 
 let admit_st_comp_typing (g:env) (st:st_comp) 
@@ -540,7 +541,7 @@ let comp_typing_subst (g:env) (x:var) (t:typ) (g':env { pairwise_disjoint g (sin
 
 let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b { y == x } = x
 
-let rec st_typing_subst g x t g' #e e_typing #e1 #c1 e1_typing
+let rec st_typing_subst g x t g' #e #eff e_typing #e1 #c1 e1_typing _
   : Tot (st_typing (push_env g (subst_env g' (nt x e)))
                    (subst_st_term e1 (nt x e))
                    (subst_comp c1 (nt x e)))
@@ -585,7 +586,7 @@ let rec st_typing_subst g x t g' #e e_typing #e1 #c1 e1_typing
     T_Lift _ (subst_st_term e ss)
              (subst_comp c1 ss)
              (subst_comp c2 ss)
-             (st_typing_subst g x t g' e_typing d_e)
+             (st_typing_subst g x t g' e_typing d_e (magic ()))
              (lift_comp_subst g x t g' e_typing d_lift)
 
   | T_Bind _ e1 e2 c1 c2 b y c d_e1 _ d_e2 d_bc ->
@@ -596,9 +597,9 @@ let rec st_typing_subst g x t g' #e e_typing #e1 #c1 e1_typing
              (subst_binder b ss)
              y
              (subst_comp c ss)
-             (st_typing_subst g x t g' e_typing d_e1)
+             (st_typing_subst g x t g' e_typing d_e1 (magic ()))
              (magic ())
-             (coerce_eq (st_typing_subst g x t (push_binding g' y ppname_default (comp_res c1)) e_typing d_e2) ())
+             (coerce_eq (st_typing_subst g x t (push_binding g' y ppname_default (comp_res c1)) e_typing d_e2 (magic ())) ())
              (bind_comp_subst g x t g' e_typing d_bc)
 
   | T_TotBind _ e1 e2 t1 c2 b y _ d_e2 ->
@@ -609,7 +610,7 @@ let rec st_typing_subst g x t g' #e e_typing #e1 #c1 e1_typing
                 b
                 y
                 (magic ())
-                (coerce_eq (st_typing_subst g x t (push_binding g' y ppname_default t1) e_typing d_e2) ())
+                (coerce_eq (st_typing_subst g x t (push_binding g' y ppname_default t1) e_typing d_e2 (magic ())) ())
 
   | T_GhostBind _ e1 e2 t1 c2 b y _ d_e2 _ ->
     T_GhostBind _ (subst_term e1 ss)
@@ -619,7 +620,7 @@ let rec st_typing_subst g x t g' #e e_typing #e1 #c1 e1_typing
                 b
                 y
                 (magic ())
-                (coerce_eq (st_typing_subst g x t (push_binding g' y ppname_default t1) e_typing d_e2) ())
+                (coerce_eq (st_typing_subst g x t (push_binding g' y ppname_default t1) e_typing d_e2 (magic ())) ())
                 (magic ())
 
   | T_If _ b e1 e2 c uc hyp _ d_e1 d_e2 _ ->
@@ -630,8 +631,8 @@ let rec st_typing_subst g x t g' #e e_typing #e1 #c1 e1_typing
            uc
            hyp
            (magic ())
-           (coerce_eq (st_typing_subst g x t (push_binding g' hyp ppname_default (mk_eq2 u0 tm_bool b tm_true)) e_typing d_e1) ())
-           (coerce_eq (st_typing_subst g x t (push_binding g' hyp ppname_default (mk_eq2 u0 tm_bool b tm_false)) e_typing d_e2) ())
+           (coerce_eq (st_typing_subst g x t (push_binding g' hyp ppname_default (mk_eq2 u0 tm_bool b tm_true)) e_typing d_e1 (magic ())) ())
+           (coerce_eq (st_typing_subst g x t (push_binding g' hyp ppname_default (mk_eq2 u0 tm_bool b tm_false)) e_typing d_e2 (magic ())) ())
            (magic ())
 
   | T_Match _ _ _ _ _ _ _ _ _ _ -> magic ()
@@ -641,13 +642,13 @@ let rec st_typing_subst g x t g' #e e_typing #e1 #c1 e1_typing
               (subst_comp c ss)
               (subst_term frame ss)
               (magic ())
-              (st_typing_subst g x t g' e_typing d_e)
+              (st_typing_subst g x t g' e_typing d_e (magic ()))
 
   | T_Equiv _ e c c' d_e d_eq ->
     T_Equiv _ (subst_st_term e ss)
               (subst_comp c ss)
               (subst_comp c' ss)
-              (st_typing_subst g x t g' e_typing d_e)
+              (st_typing_subst g x t g' e_typing d_e (magic ()))
               (st_equiv_subst g x t g' e_typing d_eq)
 
   | T_IntroPure _ p _ _ ->
@@ -671,8 +672,8 @@ let rec st_typing_subst g x t g' #e e_typing #e1 #c1 e1_typing
               (subst_st_term cond ss)
               (subst_st_term body ss)
               (magic ())
-              (st_typing_subst g x t g' e_typing cond_typing)
-              (st_typing_subst g x t g' e_typing body_typing)
+              (st_typing_subst g x t g' e_typing cond_typing (magic ()))
+              (st_typing_subst g x t g' e_typing body_typing (magic ()))
 
   | T_Par _ eL cL eR cR y d_cL d_cR d_eL d_eR ->
     T_Par _ (subst_st_term eL ss)
@@ -682,8 +683,8 @@ let rec st_typing_subst g x t g' #e e_typing #e1 #c1 e1_typing
             y
             (comp_typing_subst g x t g' e_typing d_cL)
             (comp_typing_subst g x t g' e_typing d_cR)
-            (st_typing_subst g x t g' e_typing d_eL)
-            (st_typing_subst g x t g' e_typing d_eR)
+            (st_typing_subst g x t g' e_typing d_eL (magic ()))
+            (st_typing_subst g x t g' e_typing d_eR (magic ()))
 
   | T_WithLocal _ init body init_t c y _ _ d_c d_body ->
     T_WithLocal _ (subst_term init ss)
@@ -694,7 +695,7 @@ let rec st_typing_subst g x t g' #e e_typing #e1 #c1 e1_typing
                   (magic ())
                   (magic ())
                   (comp_typing_subst g x t g' e_typing d_c)
-                  (coerce_eq (st_typing_subst g x t (push_binding g' y ppname_default (mk_ref init_t)) e_typing d_body) ())
+                  (coerce_eq (st_typing_subst g x t (push_binding g' y ppname_default (mk_ref init_t)) e_typing d_body (magic ())) ())
 
   | T_WithLocalArray _ init len body init_t c y _ _ _ d_c d_body ->
     T_WithLocalArray _ (subst_term init ss)
@@ -707,7 +708,7 @@ let rec st_typing_subst g x t g' #e e_typing #e1 #c1 e1_typing
                        (magic ())
                        (magic ())
                        (comp_typing_subst g x t g' e_typing d_c)
-                       (coerce_eq (st_typing_subst g x t (push_binding g' y ppname_default (mk_ref init_t)) e_typing d_body) ())
+                       (coerce_eq (st_typing_subst g x t (push_binding g' y ppname_default (mk_ref init_t)) e_typing d_body (magic ())) ())
 
   | T_Rewrite _ p q _ _ ->
     T_Rewrite _ (subst_term p ss)

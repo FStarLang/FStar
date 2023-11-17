@@ -281,63 +281,89 @@ let rec ss_to_nt_substs (g:env) (uvs:env) (ss:ss_t)
            Inl r
     else Inr (Printf.sprintf "prover could not prove uvar _#%d" x)
 
-let rec well_typed_nt_substs_prefix (g:env) (uvs:env) (nts:nt_substs)
+let rec well_typed_nt_substs_prefix
+  (g:env)
+  (uvs:env)
+  (nts:nt_substs)
+  (effect_labels:list T.tot_or_ghost)
   (uvs1:env)
-  : Pure nt_substs
-         (requires well_typed_nt_substs g uvs nts /\ env_extends uvs uvs1)
-         (ensures fun nts1 -> well_typed_nt_substs g uvs1 nts1)
+  : Pure (nt_substs & list T.tot_or_ghost)
+         (requires well_typed_nt_substs g uvs nts effect_labels /\ env_extends uvs uvs1)
+         (ensures fun (nts1, effect_labels1) -> well_typed_nt_substs g uvs1 nts1 effect_labels1)
          (decreases L.length nts) =
   match bindings uvs1, bindings uvs with
-  | [], _ -> []
+  | [], _ -> [], []
   | _::_, _::_ ->
     let x1, ty1, rest_uvs1 = remove_binding uvs1 in
     let x, ty, rest_uvs = remove_binding uvs in
     assume (x1 == x /\ ty1 == ty);
     let (NT y e)::nts_rest = nts in
+    let eff::effect_labels_rest = effect_labels in
     assume (env_extends (subst_env rest_uvs [ NT y e ]) (subst_env rest_uvs1 [ NT y e ]));
-    (NT y e)::(well_typed_nt_substs_prefix g (subst_env rest_uvs [ NT y e ]) nts_rest (subst_env rest_uvs1 [ NT y e ]))
+    let nts, labs =
+      well_typed_nt_substs_prefix
+        g
+        (subst_env rest_uvs [ NT y e ])
+        nts_rest
+        effect_labels_rest
+        (subst_env rest_uvs1 [ NT y e ]) in
+    ((NT y e)::nts),
+    (eff::labs)
 
-let ss_nt_subst (g:env) (uvs:env) (ss:ss_t) (nts:nt_substs)
-  : Lemma (requires disjoint uvs g /\ well_typed_nt_substs g uvs nts /\ is_permutation nts ss)
-          (ensures
-             (forall (t:term). nt_subst_term t nts == ss_term t ss) /\
-             (forall (b:binder). nt_subst_binder b nts == ss_binder b ss) /\
-             (forall (t:st_term). nt_subst_st_term t nts == ss_st_term t ss) /\
-             (forall (c:comp). nt_subst_comp c nts == ss_comp c ss) /\
-             (forall (s:st_comp). nt_subst_st_comp s nts == ss_st_comp s ss)) = admit ()
+let ss_nt_subst (g:env) (uvs:env) (ss:ss_t) (nts:nt_substs) (effect_labels:list T.tot_or_ghost)
+  : Lemma
+      (requires
+         disjoint uvs g /\
+         well_typed_nt_substs g uvs nts effect_labels /\
+         is_permutation nts ss)
+      (ensures
+         (forall (t:term). nt_subst_term t nts == ss_term t ss) /\
+         (forall (b:binder). nt_subst_binder b nts == ss_binder b ss) /\
+         (forall (t:st_term). nt_subst_st_term t nts == ss_st_term t ss) /\
+         (forall (c:comp). nt_subst_comp c nts == ss_comp c ss) /\
+         (forall (s:st_comp). nt_subst_st_comp s nts == ss_st_comp s ss)) = admit ()
 
 let rec st_typing_nt_substs
   (g:env) (uvs:env) (g':env { pairwise_disjoint g uvs g' })
   (#t:st_term) (#c:comp_st) (t_typing:st_typing (push_env g (push_env uvs g')) t c)
-  (nts:nt_substs { well_typed_nt_substs g uvs nts })
-  : Tot (st_typing (push_env g (nt_subst_env g' nts)) (nt_subst_st_term t nts) (nt_subst_comp c nts))
+  (nts:nt_substs)
+  (effect_labels:list T.tot_or_ghost { well_typed_nt_substs g uvs nts effect_labels })
+  : Tot (either
+           (st_typing (push_env g (nt_subst_env g' nts)) (nt_subst_st_term t nts) (nt_subst_comp c nts))
+           string)
         (decreases L.length nts) =
 
   match bindings uvs with
   | [] ->
     assert (equal (push_env uvs g') g');
-    t_typing
+    Inl t_typing
   | _ ->
     let x, ty, uvs_rest = remove_binding uvs in
     let (NT _ e)::nts_rest = nts in
-    let e_typing : tot_typing g e ty = FStar.IndefiniteDescription.elim_squash () in
-    push_env_assoc (singleton_env (fstar_env uvs) x ty) uvs_rest g';
-    let t_typing
-      : st_typing (push_env g (push_env (singleton_env (fstar_env g) x ty) (push_env uvs_rest g'))) t c
-      = coerce_eq t_typing () in
-    let t_typing
-      : st_typing (push_env g (subst_env (push_env uvs_rest g') [ NT x e ]))
-                  (subst_st_term t [ NT x e ])
-                  (subst_comp c [ NT x e ])
-      = Metatheory.st_typing_subst g x ty (push_env uvs_rest g') e_typing t_typing in
+    let eff::effect_labels_rest = effect_labels in
+    let e_typing : typing g e eff ty = FStar.IndefiniteDescription.elim_squash () in
+    if eff = T.E_Ghost && C_STGhost? c
+    then begin
+      push_env_assoc (singleton_env (fstar_env uvs) x ty) uvs_rest g';
+      let t_typing
+        : st_typing (push_env g (push_env (singleton_env (fstar_env g) x ty) (push_env uvs_rest g'))) t c
+        = coerce_eq t_typing () in
+      let t_typing
+        : st_typing (push_env g (subst_env (push_env uvs_rest g') [ NT x e ]))
+                    (subst_st_term t [ NT x e ])
+                    (subst_comp c [ NT x e ])
+        = Metatheory.st_typing_subst g x ty (push_env uvs_rest g') e_typing t_typing () in
 
-    assume (subst_env (push_env uvs_rest g') [ NT x e ] ==
-            push_env (subst_env uvs_rest [ NT x e ]) (subst_env g' [ NT x e ]));
+      assume (subst_env (push_env uvs_rest g') [ NT x e ] ==
+              push_env (subst_env uvs_rest [ NT x e ]) (subst_env g' [ NT x e ]));
 
-    st_typing_nt_substs g
-      (subst_env uvs_rest [ NT x e ])
-      (subst_env g' [ NT x e ])
-      t_typing nts_rest
+
+      st_typing_nt_substs g
+        (subst_env uvs_rest [ NT x e ])
+        (subst_env g' [ NT x e ])
+        t_typing nts_rest effect_labels_rest
+    end
+    else Inr "Ghost uvar solution"  // TODO: FIXME: ERROR
 
 
 // let st_typing_subst (g:env) (uvs:env { disjoint uvs g }) (t:st_term) (c:comp_st)
@@ -359,14 +385,15 @@ let rec st_typing_nt_substs
 let st_typing_nt_substs_derived
   (g:env) (uvs:env { disjoint uvs g })
   (#t:st_term) (#c:comp_st) (t_typing:st_typing (push_env g uvs) t c)
-  (ss:nt_substs { well_typed_nt_substs g uvs ss })
-  : st_typing g (nt_subst_st_term t ss) (nt_subst_comp c ss) =
+  (ss:nt_substs)
+  (effect_labels:list T.tot_or_ghost { well_typed_nt_substs g uvs ss effect_labels })
+  : either (st_typing g (nt_subst_st_term t ss) (nt_subst_comp c ss)) string =
 
   let g' = mk_env (fstar_env g) in
   assert (equal (push_env g (push_env uvs g')) (push_env g uvs));
-  let d = st_typing_nt_substs g uvs g' (coerce_eq t_typing ()) ss in
+  let d = st_typing_nt_substs g uvs g' (coerce_eq t_typing ()) ss effect_labels in
   assume (nt_subst_env g' ss == g');
   assert (equal (push_env g (nt_subst_env g' ss)) g);
   d
 
-let vprop_equiv_nt_substs_derived _ _ _ _ = admit ()
+let vprop_equiv_nt_substs_derived _ _ _ _ _ = admit ()

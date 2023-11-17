@@ -3,6 +3,8 @@ open Pulse.Syntax
 open Pulse.Syntax.Naming
 open Pulse.Typing
 
+module T = FStar.Tactics.V2
+
 let comp_typing_u (g:env) (c:comp_st) = comp_typing g c (comp_u c)
 
 val admit_comp_typing (g:env) (c:comp_st)
@@ -78,9 +80,11 @@ let nt (x:var) (t:term) = [ NT x t ]
 val st_typing_subst
   (g:env) (x:var) (t:typ) (g':env { pairwise_disjoint g (singleton_env (fstar_env g) x t) g' })
   (#e:term)
-  (e_typing:tot_typing g e t)
+  (#eff:T.tot_or_ghost)
+  (e_typing:typing g e eff t)
   (#e1:st_term) (#c1:comp_st)
   (e1_typing:st_typing (push_env g (push_env (singleton_env (fstar_env g) x t) g')) e1 c1)
+  (_:squash (eff == T.E_Ghost ==> C_STGhost? c1))
 
   : st_typing (push_env g (subst_env g' (nt x e)))
               (subst_st_term e1 (nt x e))
@@ -89,7 +93,8 @@ val st_typing_subst
 let vprop_equiv_subst
   (g:env) (x:var) (t:typ) (g':env { pairwise_disjoint g (singleton_env (fstar_env g) x t) g' })
   (#e:term)
-  (e_typing:tot_typing g e t)
+  (#eff:T.tot_or_ghost)
+  (e_typing:typing g e eff t)
   (#p1:term) (#p2:term)
   (veq:vprop_equiv (push_env g (push_env (singleton_env (fstar_env g) x t) g')) p1 p2)
 
