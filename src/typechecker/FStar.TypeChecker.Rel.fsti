@@ -60,7 +60,7 @@ val base_and_refinement_maybe_delta : bool -> env -> term -> term * option (bv *
 val base_and_refinement       : env -> term -> term * option (bv * term)
 
 val unrefine   : env -> typ -> typ
-val try_teq    : bool -> env -> typ -> typ -> option guard_t
+val try_teq    : smt_ok:bool -> env -> typ -> typ -> option guard_t
 val teq        : env -> typ -> typ -> guard_t
 val get_teq_predicate : env -> typ -> typ -> option guard_t
 val teq_force  : env -> typ -> typ -> unit
