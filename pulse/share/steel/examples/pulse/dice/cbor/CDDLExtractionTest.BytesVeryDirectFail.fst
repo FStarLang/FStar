@@ -13,7 +13,7 @@ requires
 ensures
     raw_data_item_match full_perm c v
 {
-    let unused = impl_bytes c; // successfully typechecks, but fails to extract
+    let unused = impl_bytes () c; // successfully typechecks, but fails to extract
     ()
 }
 ```

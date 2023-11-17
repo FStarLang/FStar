@@ -26,56 +26,31 @@ let impl_typ
 
 inline_for_extraction noextract [@@noextract_to "krml"]
 ```pulse
-fn impl_coerce_to_bounded_typ'
+fn impl_coerce_to_bounded_typ
     (b: Ghost.erased (option raw_data_item))
     (#t: typ)
     (f: impl_typ t)
-    (c: cbor)
+: impl_typ #b (coerce_to_bounded_typ b t) // FIXME: WHY WHY WHY do I need to provide the implicit argument
+= (c: cbor)
     (#p: perm)
     (#v: Ghost.erased raw_data_item)
-requires
-        (raw_data_item_match p c v ** pure (
-            opt_precedes (Ghost.reveal v) (Ghost.reveal b)
-        ))
-returns res: bool
-ensures
-        (raw_data_item_match p c v ** pure (
-            opt_precedes (Ghost.reveal v) (Ghost.reveal b) /\
-            res == coerce_to_bounded_typ b t v
-        ))
 {
     f c;
 }
 ```
 
 inline_for_extraction noextract [@@noextract_to "krml"]
-let impl_coerce_to_bounded_typ
-    (b: Ghost.erased (option raw_data_item))
-    (#t: typ)
-    (f: impl_typ t)
-: Tot (impl_typ (coerce_to_bounded_typ b t))
-= impl_coerce_to_bounded_typ' b f
-
-inline_for_extraction noextract [@@noextract_to "krml"]
 ```pulse
-fn impl_t_choice'
+fn impl_t_choice
     (#b: Ghost.erased (option raw_data_item))
     (#t1 #t2: bounded_typ_gen b)
     (f1: impl_typ t1)
     (f2: impl_typ t2)
+: impl_typ #b (t_choice t1 t2)
+=
     (c: cbor)
     (#p: perm)
     (#v: Ghost.erased raw_data_item)
-requires
-        (raw_data_item_match p c v ** pure (
-            opt_precedes (Ghost.reveal v) (Ghost.reveal b)
-        ))
-returns res: bool
-ensures
-        (raw_data_item_match p c v ** pure (
-            opt_precedes (Ghost.reveal v) (Ghost.reveal b) /\
-            res == t_choice t1 t2 v
-        ))
 {
     let test = f1 c;
     if (test)
@@ -88,15 +63,6 @@ ensures
 ```
 
 inline_for_extraction noextract [@@noextract_to "krml"]
-let impl_t_choice
-    (#b: Ghost.erased (option raw_data_item))
-    (#t1 #t2: bounded_typ_gen b)
-    (f1: impl_typ t1)
-    (f2: impl_typ t2)
-: Tot (impl_typ (t_choice t1 t2))
-= impl_t_choice' f1 f2
-
-inline_for_extraction noextract [@@noextract_to "krml"]
 let impl_t_choice_none // FIXME: WHY WHY WHY can F* not automatically infer t1 and t2 by reducing (reveal (hide None)) to None?
     (#t1 #t2: bounded_typ_gen None)
     (f1: impl_typ t1)
@@ -106,56 +72,58 @@ let impl_t_choice_none // FIXME: WHY WHY WHY can F* not automatically infer t1 a
 
 inline_for_extraction noextract [@@noextract_to "krml"]
 ```pulse
-fn impl_any'
+fn impl_any
+    (_: unit)
+: impl_typ #None any
+=
     (c: cbor)
     (#p: perm)
     (#v: Ghost.erased raw_data_item)
-requires
-        (raw_data_item_match p c v ** pure (
-            opt_precedes (Ghost.reveal v) (None #raw_data_item)
-        ))
-returns res: bool
-ensures
-        (raw_data_item_match p c v ** pure (
-            opt_precedes (Ghost.reveal v) (None #raw_data_item) /\
-            res == any v
-        ))
 {
     true
 }
 ```
-inline_for_extraction noextract [@@noextract_to "krml"]
-let impl_any
-: impl_typ any
-= impl_any'
 
 inline_for_extraction noextract [@@noextract_to "krml"]
 ```pulse
-fn impl_uint'
+fn impl_uint
+    (_: unit)
+: impl_typ #None uint
+=
     (c: cbor)
     (#p: perm)
     (#v: Ghost.erased raw_data_item)
-requires
-        (raw_data_item_match p c v ** pure (
-            opt_precedes (Ghost.reveal v) (None #raw_data_item)
-        ))
-returns res: bool
-ensures
-        (raw_data_item_match p c v ** pure (
-            opt_precedes (Ghost.reveal v) (None #raw_data_item) /\
-            res == uint v
-        ))
 {
     let mt = cbor_get_major_type c;
     (mt = major_type_uint64)
 }
 ```
-inline_for_extraction noextract [@@noextract_to "krml"]
-let impl_uint
-: impl_typ uint
-= impl_uint'
 
 module U64 = FStar.UInt64
+
+(* FIXME: WHY WHY WHY does this one not work?
+
+inline_for_extraction noextract [@@noextract_to "krml"]
+```pulse
+fn impl_uint_literal
+    (n: U64.t)
+: impl_typ #None (t_uint_literal n)
+=
+    (c: cbor)
+    (#p: perm)
+    (#v: Ghost.erased raw_data_item)
+{
+    let mt = cbor_get_major_type c;
+    if (mt = major_type_uint64) {
+        let i = destr_cbor_int64 c;
+        (i.cbor_int_value = n)
+    } else {
+        false
+    }
+}
+```
+
+*)
 
 inline_for_extraction noextract [@@noextract_to "krml"]
 ```pulse
@@ -192,29 +160,18 @@ let impl_uint_literal
 
 inline_for_extraction noextract [@@noextract_to "krml"]
 ```pulse
-fn impl_bytes'
+fn impl_bytes
+    (_: unit)
+: impl_typ #None bytes
+=
     (c: cbor)
     (#p: perm)
     (#v: Ghost.erased raw_data_item)
-requires
-        (raw_data_item_match p c v ** pure (
-            opt_precedes (Ghost.reveal v) (None #raw_data_item)
-        ))
-returns res: bool
-ensures
-        (raw_data_item_match p c v ** pure (
-            opt_precedes (Ghost.reveal v) (None #raw_data_item) /\
-            res == bytes v
-        ))
 {
     let mt = cbor_get_major_type c;
     (mt = major_type_byte_string)
 }
 ```
-inline_for_extraction noextract [@@noextract_to "krml"]
-let impl_bytes
-: impl_typ bytes
-= impl_bytes'
 
 inline_for_extraction noextract [@@noextract_to "krml"]
 let impl_array_group3
@@ -283,33 +240,18 @@ ensures
 
 inline_for_extraction noextract [@@noextract_to "krml"]
 ```pulse
-fn impl_array_group3_concat'
+fn impl_array_group3_concat
     (#b: Ghost.erased (option raw_data_item))
     (#g1: array_group3 b)
     (f1: impl_array_group3 g1)
     (#g2: array_group3 b)
     (f2: impl_array_group3 g2)
+: impl_array_group3 #b (array_group3_concat g1 g2)
+=
     (pi: R.ref cbor_array_iterator_t)
     (#p: perm)
     (#gi: Ghost.erased cbor_array_iterator_t)
     (#l: Ghost.erased (list raw_data_item))
-requires
-        (R.pts_to pi gi **
-            cbor_array_iterator_match p gi l **
-            pure (opt_precedes (Ghost.reveal l) (Ghost.reveal b))
-        )
-returns res: bool
-ensures
-        (exists_ (fun i' -> exists_ (fun l' ->
-            R.pts_to pi i' **
-            cbor_array_iterator_match p i' l' **
-            (cbor_array_iterator_match p i' l' @==> cbor_array_iterator_match p gi l) **
-            pure (
-                opt_precedes (Ghost.reveal l) (Ghost.reveal b) /\
-                res == Some? (array_group3_concat g1 g2 l) /\
-                (res == true ==> Some?.v (array_group3_concat g1 g2 l) == l')
-            )
-        )))
 {
     let test1 = f1 pi;
     if (test1) {
@@ -323,42 +265,17 @@ ensures
 ```
 
 inline_for_extraction noextract [@@noextract_to "krml"]
-let impl_array_group3_concat
-    (#b: Ghost.erased (option raw_data_item))
-    (#g1: array_group3 b)
-    (f1: impl_array_group3 g1)
-    (#g2: array_group3 b)
-    (f2: impl_array_group3 g2)
-: Tot (impl_array_group3 (array_group3_concat g1 g2))
-= impl_array_group3_concat' f1 f2
-
-inline_for_extraction noextract [@@noextract_to "krml"]
 ```pulse
-fn impl_array_group3_item'
+fn impl_array_group3_item
     (#b: Ghost.erased (option raw_data_item))
     (#ty: bounded_typ_gen b)
     (fty: impl_typ ty)
+: impl_array_group3 #b (array_group3_item ty)
+=
     (pi: R.ref cbor_array_iterator_t)
     (#p: perm)
     (#gi: Ghost.erased cbor_array_iterator_t)
     (#l: Ghost.erased (list raw_data_item))
-requires
-        (R.pts_to pi gi **
-            cbor_array_iterator_match p gi l **
-            pure (opt_precedes (Ghost.reveal l) (Ghost.reveal b))
-        )
-returns res: bool
-ensures
-        (exists_ (fun i' -> exists_ (fun l' ->
-            R.pts_to pi i' **
-            cbor_array_iterator_match p i' l' **
-            (cbor_array_iterator_match p i' l' @==> cbor_array_iterator_match p gi l) **
-            pure (
-                opt_precedes (Ghost.reveal l) (Ghost.reveal b) /\
-                res == Some? (array_group3_item ty l) /\
-                (res == true ==> Some?.v (array_group3_item ty l) == l')
-            )
-        )))
 {
     let i = !pi;
     rewrite (cbor_array_iterator_match p gi l) as (cbor_array_iterator_match p i l);
@@ -397,32 +314,16 @@ ensures
 ```
 
 inline_for_extraction noextract [@@noextract_to "krml"]
-let impl_array_group3_item
-    (#b: Ghost.erased (option raw_data_item))
-    (#ty: bounded_typ_gen b)
-    (fty: impl_typ ty)
-: Tot (impl_array_group3 (array_group3_item ty))
-= impl_array_group3_item' fty
-
-inline_for_extraction noextract [@@noextract_to "krml"]
 ```pulse
-fn impl_t_array'
+fn impl_t_array
     (#b: Ghost.erased (option raw_data_item))
-    (g: (array_group3 b))
+    (#g: (array_group3 b))
     (ig: (impl_array_group3 (g)))
+: impl_typ #b (t_array3 g)
+=
     (c: cbor)
     (#p: perm)
     (#v: Ghost.erased raw_data_item)
-requires
-    raw_data_item_match p c v **
-    pure (opt_precedes (Ghost.reveal v) (Ghost.reveal b))
-returns res: bool
-ensures
-    raw_data_item_match p c v **
-    pure (
-        opt_precedes (Ghost.reveal v) (Ghost.reveal b) /\
-        res == t_array3 g v
-    )
 {
     let ty = cbor_get_major_type c;
     if (ty = major_type_array) {
@@ -445,14 +346,6 @@ ensures
     }
 }
 ```
-
-inline_for_extraction noextract [@@noextract_to "krml"]
-let impl_t_array
-    (#b: Ghost.erased (option raw_data_item))
-    (#g: array_group3 b)
-    (ig: impl_array_group3 g)
-: Tot (impl_typ (t_array3 g))
-= impl_t_array' g ig
 
 module U8 = FStar.UInt8
 
@@ -833,23 +726,15 @@ let impl_matches_map_group
 
 inline_for_extraction noextract [@@noextract_to "krml"]
 ```pulse
-fn impl_t_map'
+fn impl_t_map
     (#b: Ghost.erased (option raw_data_item))
     (#g: map_group b)
     (ig: (impl_matches_map_group (g)))
+: impl_typ #b (t_map g)
+=
     (c: cbor)
     (#p: perm)
     (#v: Ghost.erased raw_data_item)
-requires
-    raw_data_item_match p c v **
-    pure (opt_precedes (Ghost.reveal v) (Ghost.reveal b))
-returns res: bool
-ensures
-    raw_data_item_match p c v **
-    pure (
-        opt_precedes (Ghost.reveal v) (Ghost.reveal b) /\
-        res == t_map g v
-    )
 {
     let ty = cbor_get_major_type c;
     if (ty = major_type_map) {
@@ -859,14 +744,6 @@ ensures
     }
 }
 ```
-
-inline_for_extraction noextract [@@noextract_to "krml"]
-let impl_t_map
-    (#b: Ghost.erased (option raw_data_item))
-    (#g: map_group b)
-    (ig: impl_matches_map_group g)
-: Tot (impl_typ (t_map g))
-= impl_t_map' ig
 
 inline_for_extraction noextract [@@noextract_to "krml"]
 let impl_matches_map_entry_zero_or_more
@@ -887,6 +764,23 @@ let impl_matches_map_entry_zero_or_more
             res == List.Tot.existsb (pull_rel matches_map_group_entry' (Ghost.reveal v)) g.zero_or_more)
         )
 
+(* FIXME: WHY WHY WHY does this one not work?
+
+inline_for_extraction noextract [@@noextract_to "krml"]
+```pulse
+fn impl_matches_map_entry_zero_or_more_nil
+    (b: Ghost.erased (option raw_data_item))
+: impl_matches_map_entry_zero_or_more #b map_group_empty
+=
+    (c: cbor_map_entry)
+    (#p: perm)
+    (#v: Ghost.erased (raw_data_item & raw_data_item))
+{
+    false
+}
+```
+
+*)
 inline_for_extraction noextract [@@noextract_to "krml"]
 ```pulse
 fn impl_matches_map_entry_zero_or_more_nil'
@@ -919,28 +813,18 @@ let impl_matches_map_entry_zero_or_more_nil
 
 inline_for_extraction noextract [@@noextract_to "krml"]
 ```pulse
-fn impl_matches_map_entry_zero_or_more_cons'
+fn impl_matches_map_entry_zero_or_more_cons
     (#b: Ghost.erased (option raw_data_item))
     (e: map_group_entry b)
     (f_fst: impl_typ e.fst)
     (f_snd: impl_typ e.snd)
     (#g: map_group b)
     (f_g: impl_matches_map_entry_zero_or_more g)
+: impl_matches_map_entry_zero_or_more #b (map_group_cons_zero_or_more e false g)
+=
     (c: cbor_map_entry)
     (#p: perm)
     (#v: Ghost.erased (raw_data_item & raw_data_item))
-requires
-        (
-            raw_data_item_map_entry_match p c v **
-            pure (opt_precedes (Ghost.reveal v) b)
-        )
-returns res: bool
-ensures
-        (
-            raw_data_item_map_entry_match p c v **
-            pure (opt_precedes (Ghost.reveal v) b /\
-            res == List.Tot.existsb (pull_rel matches_map_group_entry' (Ghost.reveal v)) (map_group_cons_zero_or_more e false g).zero_or_more)
-        )
 {
     assert (pure (
         List.Tot.existsb (pull_rel matches_map_group_entry' (Ghost.reveal v)) (map_group_cons_zero_or_more e false g).zero_or_more == (
@@ -965,39 +849,19 @@ ensures
 ```
 
 inline_for_extraction noextract [@@noextract_to "krml"]
-let impl_matches_map_entry_zero_or_more_cons
-    (#b: Ghost.erased (option raw_data_item))
-    (e: map_group_entry b)
-    (f_fst: impl_typ e.fst)
-    (f_snd: impl_typ e.snd)
-    (#g: map_group b)
-    (f_g: impl_matches_map_entry_zero_or_more g)
-: Tot (impl_matches_map_entry_zero_or_more (map_group_cons_zero_or_more e false g))
-= impl_matches_map_entry_zero_or_more_cons' e f_fst f_snd f_g
-
-inline_for_extraction noextract [@@noextract_to "krml"]
 ```pulse
-fn impl_matches_map_group_no_restricted'
+fn impl_matches_map_group_no_restricted
     (#b: Ghost.erased (option raw_data_item))
     (#g: map_group b)
     (ig: (impl_matches_map_entry_zero_or_more (g)))
     (h_ig: squash (
         (Nil? g.one /\ Nil? g.zero_or_one)
     ))
+: impl_matches_map_group #b g
+=
     (c: cbor)
     (#p: perm)
     (#v: Ghost.erased raw_data_item)
-requires
-    raw_data_item_match p c v **
-    pure (opt_precedes (Ghost.reveal v) (Ghost.reveal b) /\ Map? v)
-returns res: bool
-ensures
-    raw_data_item_match p c v **
-    pure (
-        opt_precedes (Ghost.reveal v) (Ghost.reveal b) /\
-        Map? v /\
-        res == matches_map_group g (Map?.v v)
-    )
 {
     let i0 = cbor_map_iterator_init c;
     let mut pi = i0;
@@ -1041,14 +905,31 @@ ensures
 }
 ```
 
+(* FIXME: WHY WHY WHY does this one not work?
+
 inline_for_extraction noextract [@@noextract_to "krml"]
-let impl_matches_map_group_no_restricted
-    (#b: Ghost.erased (option raw_data_item))
-    (#g: map_group b)
-    (ig: impl_matches_map_entry_zero_or_more (g) {
-        (Nil? g.one /\ Nil? g.zero_or_one)
-    })
-= impl_matches_map_group_no_restricted' ig ()
+```pulse
+fn impl_str_size
+    (ty: major_type_byte_string_or_text_string)
+    (sz: (sz: SZ.t { SZ.fits_u64 }))
+: impl_typ #None (str_size ty (SZ.v sz))
+=
+    (c: cbor)
+    (#p: perm)
+    (#v: Ghost.erased raw_data_item)
+{
+    let mt = cbor_get_major_type c;
+    if (mt = ty) {
+        let str = destr_cbor_string c;
+        elim_stick0 ();
+        (SZ.uint64_to_sizet str.cbor_string_length = sz)
+    } else {
+        false
+    }
+}
+```
+
+*)
 
 inline_for_extraction noextract [@@noextract_to "krml"]
 ```pulse
