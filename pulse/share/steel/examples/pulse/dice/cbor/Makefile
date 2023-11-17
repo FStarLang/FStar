@@ -30,3 +30,5 @@ $(OUTPUT_DIRECTORY)/%.ml:
 	$(FSTAR) --codegen OCaml $(subst .checked,, $(notdir $<)) --extract_module $(basename $(subst .checked,, $(notdir $<)))
 
 test: $(OUTPUT_DIRECTORY)/CDDLExtractionTest.c
+	cp $(OUTPUT_DIRECTORY)/CBOR.h dist/ # I want to make sure that CBOR.c generated from Steel is compatible with CBOR.h generated from Pulse
+	+$(MAKE) -C dist
