@@ -13,8 +13,8 @@ requires
 ensures
     raw_data_item_match full_perm c v
 {
-    let unused' = impl_bytes' c; // this extracts well, but this is still not desirable unless and until the type for impl_bytes' can be abbreviated. See also the BytesDirect test, which fails even with one layer of definition.
-    // let unused = impl_bytes c;
+    // let unused' = impl_bytes' c; // this extracts well, but this is still not desirable unless and until the type for impl_bytes' can be abbreviated. See also the BytesDirect test, which fails even with one layer of definition.
+    let unused = impl_bytes () c;
     ()
 }
 ```

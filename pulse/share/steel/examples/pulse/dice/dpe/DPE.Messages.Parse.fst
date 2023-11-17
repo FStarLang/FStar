@@ -37,8 +37,8 @@ inline_for_extraction noextract [@@noextract_to "krml"]
 let impl_session_message1 : impl_typ Spec.session_message =
   impl_t_array (
     impl_array_group3_concat
-      (impl_array_group3_item impl_uint)
-      (impl_array_group3_item impl_bytes)
+      (impl_array_group3_item (impl_uint ()))
+      (impl_array_group3_item (impl_bytes ()))
   )
 
 
@@ -90,10 +90,11 @@ let impl_default_args_group : impl_matches_map_group Spec.default_args_group =
   impl_matches_map_group_no_restricted (
     impl_matches_map_entry_zero_or_more_cons
       (CDDL.Spec.uint `CDDL.Spec.MapGroupEntry` CDDL.Spec.any)
-      impl_uint
-      impl_any
+      (impl_uint ())
+      (impl_any ())
       (impl_matches_map_entry_zero_or_more_nil _)
   )
+  ()
 
 inline_for_extraction noextract [@@noextract_to "krml"]
 let impl_command_message1 : impl_typ Spec.command_message = // Wow, the equivalence with command_message' seems to work out of the box
