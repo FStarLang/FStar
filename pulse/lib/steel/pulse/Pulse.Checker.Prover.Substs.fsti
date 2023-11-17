@@ -102,46 +102,61 @@ val nt_subst_comp_commutes (c:comp) (nts:nt_substs)
                                                (nt_subst_st_comp (st_comp_of_comp c) nts))))
           [SMTPat (nt_subst_comp c nts)]
 
-let rec well_typed_nt_substs (g:env) (uvs:env) (nts:nt_substs)
+let rec well_typed_nt_substs
+  (g:env)
+  (uvs:env)
+  (nts:nt_substs)
+  (effect_labels:list T.tot_or_ghost)
   : Tot Type0 (decreases L.length nts) =
   
-  match bindings uvs, nts with
-  | [], [] -> True
-  | _::_, (NT x e)::nts_rest ->
+  match bindings uvs, nts, effect_labels with
+  | [], [], [] -> True
+  | _::_, (NT x e)::nts_rest, eff::effect_labels_rest ->
     let y, ty, rest_uvs = remove_binding uvs in
     x == y /\
-    tot_typing g e ty /\
-    well_typed_nt_substs g (subst_env rest_uvs [ NT x e ]) nts_rest
-  | _, _ -> False
+    typing g e eff ty /\
+    well_typed_nt_substs g (subst_env rest_uvs [ NT x e ]) nts_rest effect_labels_rest
+  | _, _, _ -> False
 
 val is_permutation (nts:nt_substs) (ss:ss_t) : Type0
 
 val ss_to_nt_substs (g:env) (uvs:env) (ss:ss_t)
-  : T.Tac (either (nts:nt_substs { well_typed_nt_substs g uvs nts /\
-                                   is_permutation nts ss })
+  : T.Tac (either (nts:nt_substs &
+                   effect_labels:list T.tot_or_ghost {
+                     well_typed_nt_substs g uvs nts effect_labels /\
+                     is_permutation nts ss
+                   })
                   string)
 
-val well_typed_nt_substs_prefix (g:env) (uvs:env) (nts:nt_substs)
+val well_typed_nt_substs_prefix
+  (g:env)
+  (uvs:env)
+  (nts:nt_substs)
+  (effect_labels:list T.tot_or_ghost)
   (uvs1:env)
-  : Pure nt_substs
-         (requires well_typed_nt_substs g uvs nts /\ env_extends uvs uvs1)
-         (ensures fun nts1 -> well_typed_nt_substs g uvs1 nts1)
+  : Pure (nt_substs & list T.tot_or_ghost)
+         (requires well_typed_nt_substs g uvs nts effect_labels /\ env_extends uvs uvs1)
+         (ensures fun (nts1, effect_labels1) -> well_typed_nt_substs g uvs1 nts1 effect_labels1)
 
-val ss_nt_subst (g:env) (uvs:env) (ss:ss_t) (nts:nt_substs)
-  : Lemma (requires disjoint uvs g /\ well_typed_nt_substs g uvs nts /\ is_permutation nts ss)
-          (ensures
-             (forall (t:term). nt_subst_term t nts == ss_term t ss) /\
-             (forall (b:binder). nt_subst_binder b nts == ss_binder b ss) /\
-             (forall (t:st_term). nt_subst_st_term t nts == ss_st_term t ss) /\
-             (forall (c:comp). nt_subst_comp c nts == ss_comp c ss) /\
-             (forall (s:st_comp). nt_subst_st_comp s nts == ss_st_comp s ss))
-          [SMTPat (well_typed_nt_substs g uvs nts); SMTPat (is_permutation nts ss)]
-
+val ss_nt_subst (g:env) (uvs:env) (ss:ss_t) (nts:nt_substs) (effect_labels:list T.tot_or_ghost)
+  : Lemma
+      (requires
+         disjoint uvs g /\
+         well_typed_nt_substs g uvs nts effect_labels /\
+         is_permutation nts ss)
+      (ensures
+         (forall (t:term). nt_subst_term t nts == ss_term t ss) /\
+         (forall (b:binder). nt_subst_binder b nts == ss_binder b ss) /\
+         (forall (t:st_term). nt_subst_st_term t nts == ss_st_term t ss) /\
+         (forall (c:comp). nt_subst_comp c nts == ss_comp c ss) /\
+         (forall (s:st_comp). nt_subst_st_comp s nts == ss_st_comp s ss))
+      [SMTPat (well_typed_nt_substs g uvs nts effect_labels); SMTPat (is_permutation nts ss)]
 
 val st_typing_nt_substs
   (g:env) (uvs:env) (g':env { pairwise_disjoint g uvs g' })
   (#t:st_term) (#c:comp_st) (t_typing:st_typing (push_env g (push_env uvs g')) t c)
-  (ss:nt_substs { well_typed_nt_substs g uvs ss })
+  (ss:nt_substs)
+  (effect_labels:list T.tot_or_ghost { well_typed_nt_substs g uvs ss effect_labels })
 : st_typing (push_env g (nt_subst_env g' ss)) (nt_subst_st_term t ss) (nt_subst_comp c ss)
 
 // val st_typing_subst (g:env) (uvs:env { disjoint uvs g }) (t:st_term) (c:comp_st)
@@ -153,11 +168,13 @@ val st_typing_nt_substs
 val st_typing_nt_substs_derived
   (g:env) (uvs:env { disjoint uvs g })
   (#t:st_term) (#c:comp_st) (t_typing:st_typing (push_env g uvs) t c)
-  (ss:nt_substs { well_typed_nt_substs g uvs ss })
+  (ss:nt_substs)
+  (effect_labels:list T.tot_or_ghost { well_typed_nt_substs g uvs ss effect_labels })
 : st_typing g (nt_subst_st_term t ss) (nt_subst_comp c ss)
 
 val vprop_equiv_nt_substs_derived
   (g:env) (uvs:env { disjoint g uvs })
   (#p1 #p2:vprop) (veq:vprop_equiv (push_env g uvs) p1 p2)
-  (ss:nt_substs { well_typed_nt_substs g uvs ss })
+  (ss:nt_substs)
+  (effect_labels:list T.tot_or_ghost { well_typed_nt_substs g uvs ss effect_labels })
 : vprop_equiv g (nt_subst_term p1 ss) (nt_subst_term p2 ss)

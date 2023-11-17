@@ -5,6 +5,7 @@ open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Typing.Env
 open Pulse.Typing
+open Pulse.Checker.Pure
 
 module L = FStar.List.Tot
 module Env = Pulse.Typing.Env
@@ -242,38 +243,42 @@ let rec is_permutation (nts:nt_substs) (ss:ss_t) : Type0 =
   | _ -> False
 
 let rec ss_to_nt_substs (g:env) (uvs:env) (ss:ss_t)
-  : T.Tac (either (nts:nt_substs { well_typed_nt_substs g uvs nts /\
-                                   is_permutation nts ss })
+  : T.Tac (either (nts:nt_substs &
+                   effect_labels:list T.tot_or_ghost {
+                     well_typed_nt_substs g uvs nts effect_labels /\
+                     is_permutation nts ss
+                   })
                   string) =
 
-  let g = push_context g "ss_to_nt_substs" (range_of_env g) in
+  let g = Env.push_context g "ss_to_nt_substs" (range_of_env g) in
   match bindings uvs with
   | [] ->
     (match ss.l with
-     | [] -> Inl []
+     | [] -> Inl (| [], [] |)
      | x::_ ->
        Inr (Printf.sprintf "extra uvars in the substitutions collected by the prover, e.g._#%d" x))
   | _ ->
     let x, ty, rest_uvs = remove_binding uvs in
     if Map.contains ss.m x
     then let t = Map.sel ss.m x in
-         //
-         // TODO: WE SHOULD FIX IT SOON
-         //       SOME OF THESE WITNESSED MAY BE GHOST
-         //       WE NEED TO SUPPORT GHOST PROPERLY
-         //
-         let d : tot_typing g t ty = admit () in
+         let (| t', eff, d |) = check_term_with_expected_type g t ty in
+         // TODO: FIXME, add a better callback in tc
+         assume (t' == t);
           //  let d = Pulse.Checker.Pure.core_check_term_with_expected_type g t ty in
           //  E d in
          let _ = FStar.Squash.return_squash d in
-         let nts_opt =
+         let ropt =
            ss_to_nt_substs g (subst_env rest_uvs [ NT x t ]) {l=remove_l ss.l x;
                                                               m=remove_map ss.m x} in
-         match nts_opt with
+         match ropt with
          | Inr e -> Inr e
-         | Inl nts ->
-           let nts : nts:nt_substs { well_typed_nt_substs g uvs nts } = (NT x t)::nts in
-           Inl nts
+         | Inl (| nts, effect_labels |) ->
+           let r : (nts:nt_substs &
+                    effect_labels:list T.tot_or_ghost {
+                      well_typed_nt_substs g uvs nts effect_labels /\
+                      is_permutation nts ss
+                    }) = (| (NT x t)::nts, eff::effect_labels |) in
+           Inl r
     else Inr (Printf.sprintf "prover could not prove uvar _#%d" x)
 
 let rec well_typed_nt_substs_prefix (g:env) (uvs:env) (nts:nt_substs)
