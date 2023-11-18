@@ -90,7 +90,7 @@ val l0_main
   (deviceIDCSR: A.larray U8.t (SZ.v deviceIDCSR_len))
   (record: l0_record_t)
   (#repr: erased l0_record_repr_t)
-  (#cdi0 #deviceID_pub0 #deviceID_priv0 #aliasKey_pub0 #aliasKey_priv0 #aliasKeyCRT0 #deviceIDCSR0: Seq.seq U8.t)
+  (#cdi0 #deviceID_pub0 #deviceID_priv0 #aliasKey_pub0 #aliasKey_priv0 #aliasKeyCRT0 #deviceIDCSR0: erased (Seq.seq U8.t))
   (#cdi_perm #p:perm)
   : stt unit (l0_record_perm record p repr **
               A.pts_to cdi #cdi_perm cdi0 **
