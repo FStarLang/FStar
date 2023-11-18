@@ -324,10 +324,21 @@ and on_subterms
                             | _ -> failwith "Impossible"
                           in
                           Tm_refine {b=x; phi})
-      
-      (* Do nothing (FIXME) *)
-      | Tm_arrow _ ->
-        ret (tm.n, Continue)
+
+      | Tm_arrow { bs = bs; comp = comp } ->
+        (match comp.n with
+        | Total t ->
+          let bs_orig, t, subst = SS.open_term' bs t in
+          descend_binders tm [] [] Continue env bs_orig t None
+                          (fun bs t _ -> Tm_arrow {bs; comp = {comp with n = Total t}})
+        | GTotal t ->
+          let bs_orig, t, subst = SS.open_term' bs t in
+          descend_binders tm [] [] Continue env bs_orig t None
+                          (fun bs t _ -> Tm_arrow {bs; comp = {comp with n = GTotal t}})
+        | _ ->
+          (* Do nothing (FIXME).
+            What should we do for effectful computations? *)
+          ret (tm.n, Continue))
 
       (* Descend on head and branches in parallel. Branches
        * are opened with their contexts extended. Ignore the when clause,
