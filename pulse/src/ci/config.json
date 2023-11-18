@@ -1,6 +1,6 @@
 {
     "RepoVersions" : {
-        "fstar": "nik_splice_quals_and_attrs",
+        "fstar": "master",
         "karamel" : "master"
     },
     "NotificationChannel" : "#steel-build"
