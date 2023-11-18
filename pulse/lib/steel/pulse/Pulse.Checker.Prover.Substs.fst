@@ -8,6 +8,7 @@ open Pulse.Typing
 open Pulse.Checker.Pure
 
 module L = FStar.List.Tot
+
 module Env = Pulse.Typing.Env
 module Metatheory = Pulse.Typing.Metatheory
 
@@ -330,7 +331,7 @@ let rec st_typing_nt_substs
   (effect_labels:list T.tot_or_ghost { well_typed_nt_substs g uvs nts effect_labels })
   : Tot (either
            (st_typing (push_env g (nt_subst_env g' nts)) (nt_subst_st_term t nts) (nt_subst_comp c nts))
-           string)
+           (var & term))
         (decreases L.length nts) =
 
   match bindings uvs with
@@ -363,7 +364,8 @@ let rec st_typing_nt_substs
         (subst_env g' [ NT x e ])
         t_typing nts_rest effect_labels_rest
     end
-    else Inr "Ghost uvar solution"  // TODO: FIXME: ERROR
+    else Inr (x, e)
+
 
 
 // let st_typing_subst (g:env) (uvs:env { disjoint uvs g }) (t:st_term) (c:comp_st)
@@ -387,7 +389,7 @@ let st_typing_nt_substs_derived
   (#t:st_term) (#c:comp_st) (t_typing:st_typing (push_env g uvs) t c)
   (ss:nt_substs)
   (effect_labels:list T.tot_or_ghost { well_typed_nt_substs g uvs ss effect_labels })
-  : either (st_typing g (nt_subst_st_term t ss) (nt_subst_comp c ss)) string =
+  : either (st_typing g (nt_subst_st_term t ss) (nt_subst_comp c ss)) (var & term) =
 
   let g' = mk_env (fstar_env g) in
   assert (equal (push_env g (push_env uvs g')) (push_env g uvs));

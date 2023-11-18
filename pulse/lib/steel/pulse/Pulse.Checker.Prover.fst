@@ -309,9 +309,11 @@ let try_frame_pre_uvs (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_v
   let d : st_typing g1 t c =
     let r = PS.st_typing_nt_substs_derived g1 uvs d nts effect_labels in
     match r with
-    | Inr msg ->
+    | Inr (x, x_t) ->
       fail g1 (Some t.range)
-        (Printf.sprintf "prover error: %s" msg)  // TODO: FIXME: BETTER ERROR
+        (Printf.sprintf "prover error: for term %s, implicit solution %s has ghost effect"
+           (P.st_term_to_string t)
+           (P.term_to_string x_t))
     | Inl d -> d in
 
   let k_frame : continuation_elaborator g ctxt g1 (comp_pre c * remaining_ctxt) = coerce_eq k_frame () in

@@ -11,7 +11,7 @@ val f : (x:bool -> #index:nat -> stt bool (p index) (fun _ -> emp))
 
 ```pulse
 fn apply_with_imps_inst3 (x:bool) (#i:erased nat)
-    requires p (Ghost.reveal i)
+    requires p i
     returns b:bool
     ensures emp
 {
