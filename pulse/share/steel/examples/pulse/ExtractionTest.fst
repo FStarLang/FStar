@@ -152,3 +152,15 @@ fn rec fib (x:nat)
   }
 }
 ```
+
+```pulse
+fn fib2 (x:nat)
+requires emp
+returns y:nat
+ensures emp
+{
+  let n = fib x;
+  let m = fib (x + 1);
+  (m + n)
+}
+```

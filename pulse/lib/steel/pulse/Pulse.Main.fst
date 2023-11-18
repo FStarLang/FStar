@@ -55,6 +55,7 @@ let check_fndecl
   in
 
   let FnDecl { id; isrec; bs; comp; meas; body } = d.d in
+  let nm_aux = fst (inspect_ident id) in
 
   if Nil? bs then
     fail g (Some d.range) "main: FnDecl does not have binders";
@@ -84,14 +85,23 @@ let check_fndecl
   (* Set the blob *)
   let main_decl =
     let (chk, se, _) = main_decl in
-    let nm = R.pack_ln (R.Tv_Const (R.C_String nm_orig)) in
-    let attribute = `("pulse.recursive", `#(nm)) in
-    let se : T.sigelt = RU.add_attribute se attribute in
+    let se = 
+      if fn_d.isrec
+      then (
+        let nm = R.pack_ln (R.Tv_Const (R.C_String nm_orig)) in
+        let attribute = `("pulse.recursive", `#(nm)) in
+        let se = RU.add_attribute se (`(noextract_to "krml")) in
+        let se = RU.add_noextract_qual se in
+        let se : T.sigelt = RU.add_attribute se attribute in
+        se
+      )
+      else se
+    in
     (chk, se, Some blob)
   in
   let recursive_decls =
     if fn_d.isrec
-    then Rec.tie_knot g rng nm_orig d refl_t
+    then Rec.tie_knot g rng nm_orig nm_aux d refl_t blob
     else []
   in
   main_decl :: recursive_decls

@@ -177,8 +177,8 @@ let add_knot (g : env) (rng : R.range)
   }
 
 let tie_knot (g : env)  (rng : R.range)
-             (nm_orig : string)
-             (d : decl) (r_typ : R.typ)
+             (nm_orig nm_aux : string)
+             (d : decl) (r_typ : R.typ) (blob:RT.blob)
 : Tac (list (RT.sigelt_for (fstar_env g)))
 =
   let knot_r_typ =
@@ -192,9 +192,7 @@ let tie_knot (g : env)  (rng : R.range)
   in
   (* This is a temporary implementation. It will just create
   a new letbinding at the appropriate type with a `magic()` body. *)
-  let flag, sig, blob = RT.mk_unchecked_let (fstar_env g) nm_orig (`(magic())) knot_r_typ in
-  let nm = string_as_term nm_orig in 
+  let flag, sig, _ = RT.mk_unchecked_let (fstar_env g) nm_orig (`(magic())) knot_r_typ in
+  let nm = string_as_term nm_aux in 
   let sig = RU.add_attribute sig (`("pulse.recursive.knot", `#(nm))) in
-  let sig = RU.add_attribute sig (`(noextract_to "krml")) in
-  let sig = RU.add_noextract_qual sig in
-  [flag,sig,blob]
+  [flag,sig,Some blob]
