@@ -488,8 +488,8 @@ and (on_subterms :
                                              FStar_Syntax_Subst.closing_of_binders
                                                bs1 in
                                            let bs2 =
-                                             FStar_Syntax_Subst.subst_binders
-                                               subst bs1 in
+                                             FStar_Syntax_Subst.close_binders
+                                               bs1 in
                                            let t3 =
                                              FStar_Syntax_Subst.subst subst
                                                t2 in
@@ -631,9 +631,9 @@ and (on_subterms :
                     ->
                     (match comp.FStar_Syntax_Syntax.n with
                      | FStar_Syntax_Syntax.Total t ->
-                         let uu___1 = FStar_Syntax_Subst.open_term' bs t in
+                         let uu___1 = FStar_Syntax_Subst.open_term bs t in
                          (match uu___1 with
-                          | (bs_orig, t1, subst) ->
+                          | (bs_orig, t1) ->
                               descend_binders tm1 [] []
                                 FStar_Tactics_Types.Continue env bs_orig t1
                                 FStar_Pervasives_Native.None
@@ -658,9 +658,9 @@ and (on_subterms :
                                              }
                                          }))
                      | FStar_Syntax_Syntax.GTotal t ->
-                         let uu___1 = FStar_Syntax_Subst.open_term' bs t in
+                         let uu___1 = FStar_Syntax_Subst.open_term bs t in
                          (match uu___1 with
-                          | (bs_orig, t1, subst) ->
+                          | (bs_orig, t1) ->
                               descend_binders tm1 [] []
                                 FStar_Tactics_Types.Continue env bs_orig t1
                                 FStar_Pervasives_Native.None
