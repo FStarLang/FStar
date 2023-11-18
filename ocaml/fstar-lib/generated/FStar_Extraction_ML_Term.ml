@@ -110,12 +110,12 @@ let err_value_restriction :
           uu___2 uu___3 in
       (FStar_Errors_Codes.Fatal_ValueRestriction, uu___1) in
     fail t.FStar_Syntax_Syntax.pos uu___
-let (err_unexpected_eff :
-  FStar_Extraction_ML_UEnv.uenv ->
-    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-      FStar_Extraction_ML_Syntax.mlty ->
-        FStar_Extraction_ML_Syntax.e_tag ->
-          FStar_Extraction_ML_Syntax.e_tag -> unit)
+let err_unexpected_eff :
+  'uuuuu .
+    FStar_Extraction_ML_UEnv.uenv ->
+      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
+        FStar_Extraction_ML_Syntax.mlty ->
+          FStar_Extraction_ML_Syntax.e_tag -> 'uuuuu -> unit
   =
   fun env ->
     fun t ->
@@ -124,18 +124,46 @@ let (err_unexpected_eff :
           fun f1 ->
             let uu___ =
               let uu___1 =
-                let uu___2 = FStar_Syntax_Print.term_to_string t in
+                let uu___2 =
+                  let uu___3 =
+                    let uu___4 = FStar_Errors_Msg.text "For expression" in
+                    let uu___5 = FStar_Syntax_Print.term_to_doc t in
+                    FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one
+                      uu___4 uu___5 in
+                  let uu___4 =
+                    let uu___5 = FStar_Errors_Msg.text "of type" in
+                    let uu___6 =
+                      let uu___7 =
+                        let uu___8 =
+                          FStar_Extraction_ML_UEnv.current_module_of_uenv env in
+                        FStar_Extraction_ML_Code.string_of_mlty uu___8 ty in
+                      FStar_Pprint.arbitrary_string uu___7 in
+                    FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one
+                      uu___5 uu___6 in
+                  FStar_Pprint.op_Hat_Slash_Hat uu___3 uu___4 in
                 let uu___3 =
                   let uu___4 =
-                    FStar_Extraction_ML_UEnv.current_module_of_uenv env in
-                  FStar_Extraction_ML_Code.string_of_mlty uu___4 ty in
-                let uu___4 = FStar_Extraction_ML_Util.eff_to_string f0 in
-                let uu___5 = FStar_Extraction_ML_Util.eff_to_string f1 in
-                FStar_Compiler_Util.format4
-                  "for expression %s of type %s, Expected effect %s; got effect %s"
-                  uu___2 uu___3 uu___4 uu___5 in
+                    let uu___5 =
+                      let uu___6 = FStar_Errors_Msg.text "Expected effect" in
+                      let uu___7 =
+                        let uu___8 =
+                          FStar_Extraction_ML_Util.eff_to_string f0 in
+                        FStar_Pprint.arbitrary_string uu___8 in
+                      FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one
+                        uu___6 uu___7 in
+                    let uu___6 =
+                      let uu___7 = FStar_Errors_Msg.text "got effect" in
+                      let uu___8 =
+                        let uu___9 =
+                          FStar_Extraction_ML_Util.eff_to_string f0 in
+                        FStar_Pprint.arbitrary_string uu___9 in
+                      FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one
+                        uu___7 uu___8 in
+                    FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
+                  [uu___4] in
+                uu___2 :: uu___3 in
               (FStar_Errors_Codes.Warning_ExtractionUnexpectedEffect, uu___1) in
-            FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu___
+            FStar_Errors.log_issue_doc t.FStar_Syntax_Syntax.pos uu___
 let err_cannot_extract_effect :
   'uuuuu .
     FStar_Ident.lident ->
