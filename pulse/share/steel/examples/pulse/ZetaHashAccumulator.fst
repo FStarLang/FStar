@@ -120,7 +120,7 @@ val blake2b:
   -> d:A.array U8.t { SZ.v ll ≤ A.length d}
   -> kk: SZ.t { kk == 0sz }                        //We do not use blake2 in keyed mode
   -> _dummy: A.array U8.t // this really should be a NULL, but krml doesn't extract Steel's null pointers yet
-  -> #sout:Ghost.erased (Seq.seq U8.t)
+  -> #sout:Ghost.erased (Seq.lseq U8.t 32)
   -> #p:perm
   -> #sd:Ghost.erased (Seq.seq U8.t) { Seq.length sd == SZ.v ll}
   -> stt unit
@@ -253,7 +253,7 @@ let mk_ha core tmp dummy = { core; tmp; dummy }
 // A representation predicate for ha, encapsulating an ha_val_core
 let ha_val (h:ha) (s:hash_value_t) =
   ha_val_core h.core s **
-  exists_ (fun s -> A.pts_to h.tmp s) **
+  exists_ (fun (s:Seq.lseq U8.t 32) -> A.pts_to h.tmp s) **
   A.pts_to h.dummy (Seq.create 1 0uy)
 
 // A ghost function to package up a ha_val predicate
@@ -452,8 +452,8 @@ fn compare (b1 b2:ha)
 // And then aggregate these two ha_cores into the first one
 // And then to repackage it as an ha
 ```pulse
-fn add (ha:ha) (input:hashable_buffer) (l:SZ.t)
-       (#s:(s:erased bytes {SZ.v l <= Seq.length s /\  SZ.v l <= blake2_max_input_length}))
+fn add (ha:ha) (input:hashable_buffer) (l:(l:SZ.t {SZ.v l <= blake2_max_input_length}))
+       (#s:(s:erased bytes {Seq.length s == SZ.v l}))
   requires
     ha_val ha 'h **
     A.pts_to input #p s
