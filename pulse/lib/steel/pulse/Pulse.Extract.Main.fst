@@ -147,8 +147,8 @@ let maybe_unfold_head (g:env) (head:R.term)
         || List.Tot.existsb (function | R.Inline_for_extraction -> true | _ -> false) quals
         then match sigelt_extension_data se with
              | Some se ->
-               T.print (Printf.sprintf "Unfolded head %s\n"  (T.term_to_string head));
-               T.print (Printf.sprintf "to %s\n"  (st_term_to_string se));
+               debug g (fun _ -> Printf.sprintf "Unfolded head %s\n"  (T.term_to_string head));
+               debug g (fun _ -> Printf.sprintf "to %s\n"  (st_term_to_string se));
                Some (Inl se)
              | None -> (
                 match T.inspect_sigelt se with
@@ -237,15 +237,11 @@ let maybe_inline (g:env) (head:term) (arg:term) :T.Tac (option st_term) =
             args
             (0, [])
       in
-      T.print "Ok 1\n";
       match body with
       | Inl body -> (
-        T.print "Ok 2\n";
         let applied_body = LN.subst_st_term body subst in
-        T.print "Ok 3\n";
         match rest with
         | [] -> 
-          T.print "Inlined successfully\n";
           Some applied_body
         | _ ->
           T.fail (Printf.sprintf 
@@ -372,9 +368,9 @@ let rec extract (g:env) (p:st_term)
         let sc = term_as_mlexpr g sc in
         let extract_branch (pat0, body) =
           let g, pat, bs = extend_env_pat g pat0 in
-          T.print (Printf.sprintf "Extracting branch with pattern %s\n"
+          debug g (fun _ -> 
+            Printf.sprintf "Extracting branch with pattern %s\n"
                     (Pulse.Syntax.Printer.pattern_to_string pat0)
-          //           // (String.concat ", " (L.map (fun (x, _) -> x) bs))
                     );
           let body = Pulse.Checker.Match.open_st_term_bs body bs in
           let body, _ = extract g body in
