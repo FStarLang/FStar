@@ -395,13 +395,13 @@ let intro_comp_typing (g:env)
       CT_ST _ _ stc
     | C_STAtomic i st -> 
       let stc = intro_st_comp_typing st in
-      let (| ty, i_typing |) = CP.core_check_tot_term g i in
+      let (| ty, i_typing |) = CP.core_compute_tot_term_type g i in
       if not (eq_tm ty tm_inames)
       then fail g None (Printf.sprintf "ill-typed inames term %s" (P.term_to_string i))
       else CT_STAtomic _ _ _ i_typing stc
     | C_STGhost i st -> 
       let stc = intro_st_comp_typing st in
-      let (| ty, i_typing |) = CP.core_check_tot_term g i in
+      let (| ty, i_typing |) = CP.core_compute_tot_term_type g i in
       if not (eq_tm ty tm_inames)
       then fail g None (Printf.sprintf "ill-typed inames term %s" (P.term_to_string i))
       else CT_STGhost _ _ _ i_typing stc

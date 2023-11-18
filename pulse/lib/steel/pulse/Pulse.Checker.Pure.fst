@@ -324,14 +324,14 @@ let core_compute_term_type (g:env) (t:term)
         | Some ty -> 
           (| eff, ty, E tok |)
 
-let core_check_term_with_expected_type g e eff t =
+let core_check_term g e eff t =
   let fg = elab_env g in
   let re = elab_term e in
   let rt = elab_term t in
   let topt, issues =
     catch_all (fun _ ->
      rtb_core_check_term
-      (push_context g "core_check_term_with_expected_type" (range_of_term rt))
+      (push_context g "core_check_term" (range_of_term rt))
        fg re eff rt) in
   T.log_issues issues;
   match topt with
@@ -350,7 +350,7 @@ let check_vprop_with_core (g:env)
                           (t:term)
   : T.Tac (tot_typing g t tm_vprop) =
 
-  core_check_term_with_expected_type
+  core_check_term
     (push_context_no_range g "check_vprop_with_core") t T.E_Total tm_vprop
 
   
@@ -431,13 +431,13 @@ let check_tot_term_and_type g t =
 let check_tot_term_with_expected_type g e t =
   check_term_with_expected_type_and_effect g e T.E_Total t
 
-let core_check_tot_term g t =
+let core_compute_tot_term_type g t =
   let (| eff, ty, d |) = core_compute_term_type g t in
   if eff = T.E_Total then (| ty, d |)
   else fail_expected_tot_found_ghost g t
 
-let core_check_tot_term_with_expected_type g e t =
-  core_check_term_with_expected_type g e T.E_Total t
+let core_check_tot_term g e t =
+  core_check_term g e T.E_Total t
 
 let is_non_informative g c = 
   let ropt, issues = catch_all (fun _ -> T.is_non_informative (elab_env g) (elab_comp c)) in

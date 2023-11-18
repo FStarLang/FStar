@@ -44,7 +44,7 @@ val core_compute_term_type (g:env) (t:term)
            ty:term &
            typing g t eff ty)
 
-val core_check_term_with_expected_type (g:env) (e:term) (eff:T.tot_or_ghost) (t:term)
+val core_check_term (g:env) (e:term) (eff:T.tot_or_ghost) (t:term)
   : T.Tac (typing g e eff t)
 
 val check_vprop (g:env)
@@ -75,11 +75,11 @@ val check_tot_term_with_expected_type (g:env) (e:term) (t:term)
   : T.Tac (e:term &
            tot_typing g e t)
 
-val core_check_tot_term (g:env) (t:term)
+val core_compute_tot_term_type (g:env) (t:term)
   : T.Tac (ty:typ &
            tot_typing g t ty)
 
-val core_check_tot_term_with_expected_type (g:env) (e:term) (t:typ)
+val core_check_tot_term (g:env) (e:term) (t:typ)
   : T.Tac (tot_typing g e t)
 
 val is_non_informative (g:env) (c:comp)
