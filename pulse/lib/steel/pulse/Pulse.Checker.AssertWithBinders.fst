@@ -304,7 +304,13 @@ let check
     let (| uvs, v_opened, body_opened |) = open_binders g bs (mk_env (fstar_env g)) v body in
     let v, body = v_opened, body_opened in
     let (| v, d |) = PC.check_vprop (push_env g uvs) v in
-    let (| g1, nts, pre', k_frame |) = Prover.prove pre_typing uvs d in
+    let (| g1, nts, _, pre', k_frame |) = Prover.prove pre_typing uvs d in
+    //
+    // No need to check effect labels for the uvs solution here,
+    //   since we are checking the substituted body anyway,
+    //   if some of them are ghost when they shouldn't be,
+    //   it will get caught
+    //
     let (| x, x_ty, pre'', g2, k |) =
       check g1 (tm_star (PS.nt_subst_term v nts) pre')
               (magic ()) 

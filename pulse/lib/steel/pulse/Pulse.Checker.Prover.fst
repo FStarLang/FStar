@@ -201,7 +201,8 @@ let prove
   (#goals:vprop) (goals_typing:vprop_typing (push_env g uvs) goals)
 
   : T.Tac (g1 : env { g1 `env_extends` g /\ disjoint g1 uvs } &
-           nts : PS.nt_substs { PS.well_typed_nt_substs g1 uvs nts } &
+           nts : PS.nt_substs &
+           effect_labels:list T.tot_or_ghost { PS.well_typed_nt_substs g1 uvs nts effect_labels } &
            remaining_ctxt : vprop &
            continuation_elaborator g ctxt g1 ((PS.nt_subst_term goals nts) * remaining_ctxt)) =
 
@@ -221,7 +222,7 @@ let prove
     assume (list_as_vprop (vprop_as_list ctxt) == ctxt);
     let d_eq
       : vprop_equiv g ctxt ((PS.nt_subst_term goals nts) * remaining_ctxt) = coerce_eq d_eq () in
-    (| g1, nts, remaining_ctxt, k_elab_equiv k (VE_Refl _ _) d_eq |)
+    (| g1, nts, [], remaining_ctxt, k_elab_equiv k (VE_Refl _ _) d_eq |)
   end
   else
     let ctxt_frame_typing : vprop_typing g (ctxt * tm_emp) = magic () in
@@ -249,15 +250,20 @@ let prove
 
     let pst = prover pst0 in
 
-    let nts : nts:PS.nt_substs { PS.well_typed_nt_substs pst.pg pst.uvs nts /\
-                                 PS.is_permutation nts pst.ss } =
+    let (| nts, effect_labels |)
+      : nts:PS.nt_substs &
+        effect_labels:list T.tot_or_ghost {
+          PS.well_typed_nt_substs pst.pg pst.uvs nts effect_labels /\
+          PS.is_permutation nts pst.ss
+    } =
       let r = PS.ss_to_nt_substs pst.pg pst.uvs pst.ss in
       match r with
       | Inr msg ->
         fail pst.pg None
           (Printf.sprintf "prover error: ill-typed substitutions (%s)" msg)
       | Inl nts -> nts in
-    let nts_uvs = PS.well_typed_nt_substs_prefix pst.pg pst.uvs nts uvs in
+    let nts_uvs, nts_uvs_effect_labels =
+      PS.well_typed_nt_substs_prefix pst.pg pst.uvs nts effect_labels uvs in
     let k
       : continuation_elaborator
           g (ctxt * tm_emp)
@@ -267,14 +273,14 @@ let prove
       : vprop_equiv (push_env pst.pg pst.uvs) goals (list_as_vprop [] * pst.solved) = pst.goals_inv in
     let goals_inv
       : vprop_equiv pst.pg (PS.nt_subst_term goals nts) (PS.nt_subst_term (list_as_vprop [] * pst.solved) nts) =
-      PS.vprop_equiv_nt_substs_derived pst.pg pst.uvs goals_inv nts in
+      PS.vprop_equiv_nt_substs_derived pst.pg pst.uvs goals_inv nts effect_labels in
   
     // goals is well-typed in initial g + uvs
     // so any of the remaining uvs in pst.uvs should not be in goals
     // so we can drop their substitutions from the tail of nts
     assume (PS.nt_subst_term goals nts == PS.nt_subst_term goals nts_uvs);
 
-    (| pst.pg, nts_uvs, list_as_vprop pst.remaining_ctxt, k_elab_equiv k (magic ()) (magic ()) |)
+    (| pst.pg, nts_uvs, nts_uvs_effect_labels, list_as_vprop pst.remaining_ctxt, k_elab_equiv k (magic ()) (magic ()) |)
 #pop-options
 
 #push-options "--z3rlimit_factor 8 --fuel 0 --ifuel 1 --retry 5"
@@ -289,7 +295,7 @@ let try_frame_pre_uvs (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_v
 
   let g = push_context g "try_frame_pre" t.range in
 
-  let (| g1, nts, remaining_ctxt, k_frame |) =
+  let (| g1, nts, effect_labels, remaining_ctxt, k_frame |) =
     prove #g #_ ctxt_typing uvs #(comp_pre c) (magic ()) in
   // assert (nts == []);
 
@@ -301,7 +307,12 @@ let try_frame_pre_uvs (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_v
   let c = PS.nt_subst_comp c nts in
 
   let d : st_typing g1 t c =
-    PS.st_typing_nt_substs_derived g1 uvs d nts in
+    let r = PS.st_typing_nt_substs_derived g1 uvs d nts effect_labels in
+    match r with
+    | Inr msg ->
+      fail g1 (Some t.range)
+        (Printf.sprintf "prover error: %s" msg)  // TODO: FIXME: BETTER ERROR
+    | Inl d -> d in
 
   let k_frame : continuation_elaborator g ctxt g1 (comp_pre c * remaining_ctxt) = coerce_eq k_frame () in
 
@@ -387,7 +398,7 @@ let prove_post_hint (#g:env) (#ctxt:vprop)
     else if eq_tm post_hint_opened ctxt'
     then (| x, g2, (| u_ty, ty, ty_typing |), (| ctxt', ctxt'_typing |), k |)
     else
-      let (| g3, nts, remaining_ctxt, k_post |) =
+      let (| g3, nts, _, remaining_ctxt, k_post |) =
         prove #g2 #ctxt' ctxt'_typing (mk_env (fstar_env g2)) #post_hint_opened (magic ()) in
           
       assert (nts == []);

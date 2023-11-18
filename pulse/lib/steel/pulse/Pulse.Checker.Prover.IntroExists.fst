@@ -116,8 +116,12 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
     : vprop_equiv (push_env pst_sub.pg pst_sub.uvs)
                   preamble_sub.goals
                   (list_as_vprop [] * pst_sub.solved) = pst_sub.goals_inv in
-  let nt : nts:PS.nt_substs { PS.well_typed_nt_substs pst_sub.pg pst_sub.uvs nts /\
-                              PS.is_permutation nts pst_sub.ss } =
+  let (| nt, effect_labels |)
+    : nts:PS.nt_substs &
+      effect_labels:list T.tot_or_ghost {
+        PS.well_typed_nt_substs pst_sub.pg pst_sub.uvs nts effect_labels /\
+        PS.is_permutation nts pst_sub.ss
+  } =
     let r = PS.ss_to_nt_substs pst_sub.pg pst_sub.uvs pst_sub.ss in
     match r with
     | Inr msg ->
@@ -126,12 +130,12 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
            "resulted substitution after intro exists protocol is not well-typed: %s"
            msg)
     | Inl nt -> nt in
-  assert (PS.well_typed_nt_substs pst_sub.pg pst_sub.uvs nt);
+  assert (PS.well_typed_nt_substs pst_sub.pg pst_sub.uvs nt effect_labels);
   let pst_sub_goals_inv
     : vprop_equiv pst_sub.pg
                   pst_sub.ss.(preamble_sub.goals)
                   pst_sub.ss.(list_as_vprop [] * pst_sub.solved) =
-    PS.vprop_equiv_nt_substs_derived pst_sub.pg pst_sub.uvs pst_sub_goals_inv nt in
+    PS.vprop_equiv_nt_substs_derived pst_sub.pg pst_sub.uvs pst_sub_goals_inv nt effect_labels in
   assume (pst_sub.ss.(list_as_vprop [] * pst_sub.solved) ==
           tm_emp * pst_sub.ss.(pst_sub.solved));
   let pst_sub_goals_inv
@@ -283,7 +287,6 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
                   preamble.goals
                   (list_as_vprop pst.unsolved * pst.solved) =
     pst.goals_inv in
-
   // weakening
   let goals_inv
     : vprop_equiv (push_env pst_sub.pg pst_sub.uvs)
@@ -297,7 +300,7 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
     : vprop_equiv pst_sub.pg
                   (pst_sub.ss.(preamble.goals))
                   (pst_sub.ss.(pst.solved * list_as_vprop pst.unsolved)) =
-    PS.vprop_equiv_nt_substs_derived pst_sub.pg pst_sub.uvs goals_inv nt in
+    PS.vprop_equiv_nt_substs_derived pst_sub.pg pst_sub.uvs goals_inv nt effect_labels in
 
   // rewrite k using goals_inv
   let k
