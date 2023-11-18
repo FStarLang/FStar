@@ -39,7 +39,7 @@ val check_term_with_expected_type_and_effect (g:env) (e:term) (eff:T.tot_or_ghos
 val check_term_with_expected_type (g:env) (e:term) (t:term)
   : T.Tac (e:term & eff:T.tot_or_ghost & typing g e eff t)
 
-val core_check_term (g:env) (t:term)
+val core_compute_term_type (g:env) (t:term)
   : T.Tac (eff:T.tot_or_ghost &
            ty:term &
            typing g t eff ty)

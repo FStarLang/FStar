@@ -304,7 +304,7 @@ let tc_with_core g (f:R.env) (e:R.term)
     | Some (eff, t) ->
       Some (| eff, t, RT.T_Token _ _ _ (FStar.Squash.get_proof _) |), issues
 
-let core_check_term (g:env) (t:term)
+let core_compute_term_type (g:env) (t:term)
   : T.Tac (eff:T.tot_or_ghost &
            ty:term &
            typing g t eff ty)
@@ -432,7 +432,7 @@ let check_tot_term_with_expected_type g e t =
   check_term_with_expected_type_and_effect g e T.E_Total t
 
 let core_check_tot_term g t =
-  let (| eff, ty, d |) = core_check_term g t in
+  let (| eff, ty, d |) = core_compute_term_type g t in
   if eff = T.E_Total then (| ty, d |)
   else fail_expected_tot_found_ghost g t
 
