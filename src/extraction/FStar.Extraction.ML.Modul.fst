@@ -1062,11 +1062,11 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list mlmodule1 =
                 let meta = extract_metadata se.sigattrs in
                 List.fold_left (fun (g, decls) d ->
                   match d with
-                  | MLM_Let (NonRec, [mllb]) ->
+                  | MLM_Let (maybe_rec, [mllb]) ->
                     let g, mlid, _ =
                       UEnv.extend_lb g lb.lbname lb.lbtyp (must mllb.mllb_tysc) mllb.mllb_add_unit in
                     let mllb = { mllb with mllb_name = mlid; mllb_meta = meta } in
-                    g, decls@[MLM_Let (NonRec, [mllb])]
+                    g, decls@[MLM_Let (maybe_rec, [mllb])]
                   | _ ->
                     failwith (BU.format1 "Unexpected ML decl returned by the extension: %s" (mlmodule1_to_string d))
                 ) (g, []) decls

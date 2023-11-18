@@ -3518,11 +3518,15 @@ let (tc_decl' :
                               (sp.FStar_Syntax_Syntax.sigel);
                             FStar_Syntax_Syntax.sigrng =
                               (sp.FStar_Syntax_Syntax.sigrng);
-                            FStar_Syntax_Syntax.sigquals = sigquals;
+                            FStar_Syntax_Syntax.sigquals =
+                              (FStar_Compiler_List.op_At sigquals
+                                 sp.FStar_Syntax_Syntax.sigquals);
                             FStar_Syntax_Syntax.sigmeta =
                               (sp.FStar_Syntax_Syntax.sigmeta);
                             FStar_Syntax_Syntax.sigattrs =
-                              (se2.FStar_Syntax_Syntax.sigattrs);
+                              (FStar_Compiler_List.op_At
+                                 se2.FStar_Syntax_Syntax.sigattrs
+                                 sp.FStar_Syntax_Syntax.sigattrs);
                             FStar_Syntax_Syntax.sigopens_and_abbrevs =
                               (sp.FStar_Syntax_Syntax.sigopens_and_abbrevs);
                             FStar_Syntax_Syntax.sigopts =

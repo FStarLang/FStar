@@ -2270,9 +2270,7 @@ let rec (extract_sig :
                                     | (g1, decls1) ->
                                         (match d with
                                          | FStar_Extraction_ML_Syntax.MLM_Let
-                                             (FStar_Extraction_ML_Syntax.NonRec,
-                                              mllb::[])
-                                             ->
+                                             (maybe_rec, mllb::[]) ->
                                              let uu___9 =
                                                let uu___10 =
                                                  FStar_Compiler_Util.must
@@ -2308,7 +2306,7 @@ let rec (extract_sig :
                                                     (FStar_Compiler_List.op_At
                                                        decls1
                                                        [FStar_Extraction_ML_Syntax.MLM_Let
-                                                          (FStar_Extraction_ML_Syntax.NonRec,
+                                                          (maybe_rec,
                                                             [mllb1])])))
                                          | uu___9 ->
                                              let uu___10 =

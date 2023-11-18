@@ -863,7 +863,7 @@ let tc_decl' env0 se: list sigelt * list sigelt * Env.env =
               | qs -> qs
            in
             List.map 
-              (fun sp -> { sp with sigquals = sigquals; sigattrs = se.sigattrs})
+              (fun sp -> { sp with sigquals = sigquals@sp.sigquals; sigattrs = se.sigattrs@sp.sigattrs})
               ses
       else ses
     in
