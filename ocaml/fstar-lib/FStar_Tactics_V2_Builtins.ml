@@ -145,6 +145,7 @@ let check_subtyping              = from_tac_3 "B.refl_check_subtyping" B.refl_ch
 let check_equiv                  = from_tac_3 "B.refl_check_equiv" B.refl_check_equiv
 let core_compute_term_type       = from_tac_2 "B.refl_core_compute_term_type" B.refl_core_compute_term_type
 let core_check_term              = from_tac_4 "B.refl_core_check_term" B.refl_core_check_term
+let core_check_term_at_type      = from_tac_3 "B.refl_core_check_term_at_type" B.refl_core_check_term_at_type
 let check_match_complete         = from_tac_4 "B.refl_check_match_complete" B.refl_check_match_complete
 let tc_term                      = from_tac_2 "B.refl_tc_term" B.refl_tc_term
 let universe_of                  = from_tac_2 "B.refl_universe_of" B.refl_universe_of

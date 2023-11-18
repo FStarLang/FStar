@@ -4289,8 +4289,7 @@ let (check_term_top :
       FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option ->
         Prims.bool ->
           guard_handler_t FStar_Pervasives_Native.option ->
-            (tot_or_ghost * FStar_Syntax_Syntax.typ)
-              FStar_Pervasives_Native.option result)
+            (tot_or_ghost * FStar_Syntax_Syntax.typ) result)
   =
   fun g ->
     fun e ->
@@ -4314,33 +4313,39 @@ let (check_term_top :
                                  Prims.op_Negation uu___3) in
                             if uu___2
                             then fail "expected total effect, found ghost"
-                            else
-                              return
-                                (FStar_Pervasives_Native.Some (E_Total, t)))
-                     else return (FStar_Pervasives_Native.Some eff_te)
+                            else return (E_Total, t))
+                     else return eff_te
                  | FStar_Pervasives_Native.Some t ->
-                     let target_comp =
+                     let uu___1 =
                        if
                          must_tot ||
                            ((FStar_Pervasives_Native.fst eff_te) = E_Total)
-                       then FStar_Syntax_Syntax.mk_Total t
-                       else FStar_Syntax_Syntax.mk_GTotal t in
-                     let uu___1 =
-                       with_context "top-level subtyping"
-                         FStar_Pervasives_Native.None
-                         (fun uu___2 ->
-                            let uu___3 = as_comp g1 eff_te in
-                            check_relation_comp
-                              {
-                                tcenv = (g1.tcenv);
-                                allow_universe_instantiation = true;
-                                max_binder_index = (g1.max_binder_index);
-                                guard_handler = (g1.guard_handler);
-                                should_read_cache = (g1.should_read_cache)
-                              } (SUBTYPING (FStar_Pervasives_Native.Some e))
-                              uu___3 target_comp) in
-                     op_let_Bang uu___1
-                       (fun uu___2 -> return FStar_Pervasives_Native.None))
+                       then
+                         let uu___2 = FStar_Syntax_Syntax.mk_Total t in
+                         (uu___2, E_Total)
+                       else
+                         (let uu___3 = FStar_Syntax_Syntax.mk_GTotal t in
+                          (uu___3, E_Ghost)) in
+                     (match uu___1 with
+                      | (target_comp, eff) ->
+                          let uu___2 =
+                            with_context "top-level subtyping"
+                              FStar_Pervasives_Native.None
+                              (fun uu___3 ->
+                                 let uu___4 = as_comp g1 eff_te in
+                                 check_relation_comp
+                                   {
+                                     tcenv = (g1.tcenv);
+                                     allow_universe_instantiation = true;
+                                     max_binder_index = (g1.max_binder_index);
+                                     guard_handler = (g1.guard_handler);
+                                     should_read_cache =
+                                       (g1.should_read_cache)
+                                   }
+                                   (SUBTYPING
+                                      (FStar_Pervasives_Native.Some e))
+                                   uu___4 target_comp) in
+                          op_let_Bang uu___2 (fun uu___3 -> return (eff, t))))
 let (simplify_steps : FStar_TypeChecker_Env.step Prims.list) =
   [FStar_TypeChecker_Env.Beta;
   FStar_TypeChecker_Env.UnfoldUntil FStar_Syntax_Syntax.delta_constant;
@@ -4357,8 +4362,7 @@ let (check_term_top_gh :
       FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option ->
         Prims.bool ->
           guard_handler_t FStar_Pervasives_Native.option ->
-            (((tot_or_ghost * FStar_Syntax_Syntax.typ)
-               FStar_Pervasives_Native.option * precondition),
+            (((tot_or_ghost * FStar_Syntax_Syntax.typ) * precondition),
               error) FStar_Pervasives.either)
   =
   fun g ->
@@ -4533,6 +4537,25 @@ let (check_term :
           match uu___ with
           | FStar_Pervasives.Inl (uu___1, g1) -> FStar_Pervasives.Inl g1
           | FStar_Pervasives.Inr err -> FStar_Pervasives.Inr err
+let (check_term_at_type :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.term ->
+      FStar_Syntax_Syntax.typ ->
+        ((tot_or_ghost * FStar_Syntax_Syntax.typ
+           FStar_Pervasives_Native.option),
+          error) FStar_Pervasives.either)
+  =
+  fun g ->
+    fun e ->
+      fun t ->
+        let must_tot = false in
+        let uu___ =
+          check_term_top_gh g e (FStar_Pervasives_Native.Some t) must_tot
+            FStar_Pervasives_Native.None in
+        match uu___ with
+        | FStar_Pervasives.Inl ((eff, uu___1), g1) ->
+            FStar_Pervasives.Inl (eff, g1)
+        | FStar_Pervasives.Inr err -> FStar_Pervasives.Inr err
 let (compute_term_type_handle_guards :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
@@ -4549,11 +4572,8 @@ let (compute_term_type_handle_guards :
           check_term_top_gh g e1 FStar_Pervasives_Native.None must_tot
             (FStar_Pervasives_Native.Some gh) in
         match uu___ with
-        | FStar_Pervasives.Inl
-            (FStar_Pervasives_Native.Some r, FStar_Pervasives_Native.None) ->
+        | FStar_Pervasives.Inl (r, FStar_Pervasives_Native.None) ->
             FStar_Pervasives.Inl r
-        | FStar_Pervasives.Inl (FStar_Pervasives_Native.None, uu___1) ->
-            failwith "Impossible: Success must return some effect and type"
         | FStar_Pervasives.Inl (uu___1, FStar_Pervasives_Native.Some uu___2)
             ->
             failwith

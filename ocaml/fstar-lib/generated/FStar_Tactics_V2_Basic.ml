@@ -7153,6 +7153,12 @@ let (to_must_tot : FStar_TypeChecker_Core.tot_or_ghost -> Prims.bool) =
     match eff with
     | FStar_TypeChecker_Core.E_Total -> true
     | FStar_TypeChecker_Core.E_Ghost -> false
+let (tot_or_ghost_to_string :
+  FStar_TypeChecker_Core.tot_or_ghost -> Prims.string) =
+  fun uu___ ->
+    match uu___ with
+    | FStar_TypeChecker_Core.E_Total -> "E_Total"
+    | FStar_TypeChecker_Core.E_Ghost -> "E_Ghost"
 let (refl_norm_type :
   env -> FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ) =
   fun g ->
@@ -7250,9 +7256,9 @@ let (refl_core_check_term :
                    (fun uu___3 ->
                       let uu___4 = FStar_Syntax_Print.term_to_string e in
                       let uu___5 = FStar_Syntax_Print.term_to_string t in
-                      FStar_Compiler_Util.format2
-                        "refl_core_check_term: term: %s, type: %s\n" uu___4
-                        uu___5);
+                      FStar_Compiler_Util.format3
+                        "refl_core_check_term: term: %s, type: %s, eff: %s\n"
+                        uu___4 uu___5 (tot_or_ghost_to_string eff));
                  (let must_tot = to_must_tot eff in
                   let uu___3 =
                     FStar_TypeChecker_Core.check_term g1 e t must_tot in
@@ -7293,6 +7299,71 @@ let (refl_core_check_term :
                  [uu___4] in
                (FStar_Pervasives_Native.None, uu___3) in
              FStar_Tactics_Monad.ret uu___2)
+let (refl_core_check_term_at_type :
+  env ->
+    FStar_Syntax_Syntax.term ->
+      FStar_Syntax_Syntax.typ ->
+        (FStar_TypeChecker_Core.tot_or_ghost FStar_Pervasives_Native.option *
+          issues) FStar_Tactics_Monad.tac)
+  =
+  fun g ->
+    fun e ->
+      fun t ->
+        let uu___ =
+          ((no_uvars_in_g g) && (no_uvars_in_term e)) && (no_uvars_in_term t) in
+        if uu___
+        then
+          refl_typing_builtin_wrapper
+            (fun uu___1 ->
+               let g1 =
+                 FStar_TypeChecker_Env.set_range g e.FStar_Syntax_Syntax.pos in
+               dbg_refl g1
+                 (fun uu___3 ->
+                    let uu___4 = FStar_Syntax_Print.term_to_string e in
+                    let uu___5 = FStar_Syntax_Print.term_to_string t in
+                    FStar_Compiler_Util.format2
+                      "refl_core_check_term_at_type: term: %s, type: %s\n"
+                      uu___4 uu___5);
+               (let uu___3 = FStar_TypeChecker_Core.check_term_at_type g1 e t in
+                match uu___3 with
+                | FStar_Pervasives.Inl (eff, FStar_Pervasives_Native.None) ->
+                    (dbg_refl g1
+                       (fun uu___5 ->
+                          FStar_Compiler_Util.format1
+                            "refl_core_check_term_at_type: succeeded with eff %s and no guard\n"
+                            (tot_or_ghost_to_string eff));
+                     (eff, []))
+                | FStar_Pervasives.Inl
+                    (eff, FStar_Pervasives_Native.Some guard) ->
+                    (dbg_refl g1
+                       (fun uu___5 ->
+                          FStar_Compiler_Util.format1
+                            "refl_core_check_term_at_type: succeeded with eff %s and guard\n"
+                            (tot_or_ghost_to_string eff));
+                     (eff, [(g1, guard)]))
+                | FStar_Pervasives.Inr err ->
+                    (dbg_refl g1
+                       (fun uu___5 ->
+                          let uu___6 = FStar_TypeChecker_Core.print_error err in
+                          FStar_Compiler_Util.format1
+                            "refl_core_check_term_at_type failed: %s\n"
+                            uu___6);
+                     (let uu___5 =
+                        let uu___6 =
+                          let uu___7 = FStar_TypeChecker_Core.print_error err in
+                          Prims.op_Hat "refl_core_check_term failed: " uu___7 in
+                        (FStar_Errors_Codes.Fatal_IllTyped, uu___6) in
+                      let uu___6 = FStar_TypeChecker_Env.get_range g1 in
+                      FStar_Errors.raise_error uu___5 uu___6))))
+        else
+          (let uu___2 =
+             let uu___3 =
+               let uu___4 =
+                 let uu___5 = FStar_TypeChecker_Env.get_range g in
+                 unexpected_uvars_issue uu___5 in
+               [uu___4] in
+             (FStar_Pervasives_Native.None, uu___3) in
+           FStar_Tactics_Monad.ret uu___2)
 let (refl_tc_term :
   env ->
     FStar_Syntax_Syntax.term ->
