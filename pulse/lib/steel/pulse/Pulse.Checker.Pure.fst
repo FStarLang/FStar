@@ -20,7 +20,7 @@ let debug (g:env) (msg: unit -> T.Tac string) =
   if tac_debugging || RU.debug_at_level (fstar_env g) "refl_tc_callbacks"
   then T.print (print_context g ^ "\n" ^ msg())
 
-let rtb_core_check_term g f e =
+let rtb_core_compute_term_type g f e =
   debug g (fun _ ->
     Printf.sprintf "(%s) Calling core_check_term on %s" 
           (T.range_to_string (RU.range_of_term e))
@@ -70,13 +70,22 @@ let rtb_instantiate_implicits g f t =
     debug g (fun _ -> Printf.sprintf "Returned from instantiate_implicits: %s" (T.term_to_string t));
     res, iss
 
-let rtb_core_check_term_at_type g f e eff t =
+let rtb_core_check_term g f e eff t =
   debug g (fun _ ->
     Printf.sprintf "(%s) Calling core_check_term on %s and %s"
                 (T.range_to_string (RU.range_of_term e))
                 (T.term_to_string e)
                 (T.term_to_string t));
   let res = RTB.core_check_term f e t eff in
+  res
+
+let rtb_core_check_term_at_type g f e t =
+  debug g (fun _ ->
+    Printf.sprintf "(%s) Calling core_check_term_at_type on %s and %s"
+                (T.range_to_string (RU.range_of_term e))
+                (T.term_to_string e)
+                (T.term_to_string t));
+  let res = RTB.core_check_term_at_type f e t in
   res
 
 let mk_squash t =
@@ -253,8 +262,8 @@ let check_term_with_expected_type_and_effect (g:env) (e:term) (eff:T.tot_or_ghos
 
   let topt, issues =
     catch_all (fun _ -> 
-    rtb_core_check_term_at_type 
-      (push_context g "check_term_with_expected_type" (range_of_term rt))
+    rtb_core_check_term 
+      (push_context g "check_term_with_expected_type_and_effect" (range_of_term rt))
        fg re eff rt) in
   T.log_issues issues;
   match topt with
@@ -264,21 +273,32 @@ let check_term_with_expected_type_and_effect (g:env) (e:term) (eff:T.tot_or_ghos
       g e.range (ill_typed_term e (Some t) None)
   | Some tok -> (| e, E (RT.T_Token _ _ _ (FStar.Squash.return_squash tok)) |)
 
-(* This function will use the expected type, but can return either
-a Tot or GTot term. It has an inefficient implementation right now,
-it will change once we add a new primitive to F* (or refactor the current ones)*)
 let check_term_with_expected_type (g:env) (e:term) (t:term)
   : T.Tac (e:term & eff:T.tot_or_ghost & typing g e eff t) =
-  try
-    let (| e, et |) = check_term_with_expected_type_and_effect g e T.E_Total t in
-    (| e, T.E_Total, et |) <: (e:term & eff:T.tot_or_ghost & typing g e eff t)
-  with | _ ->
-    let (| e, et |) = check_term_with_expected_type_and_effect g e T.E_Ghost t in
-    (| e, T.E_Ghost, et |)
+
+  let e, _ = instantiate_term_implicits g e in
+  
+  let fg = elab_env g in
+  let re = elab_term e in
+  let rt = elab_term t in
+
+  let effopt, issues =
+    catch_all (fun _ -> 
+    rtb_core_check_term_at_type 
+      (push_context g "check_term_with_expected_type" (range_of_term rt))
+       fg re rt) in
+  T.log_issues issues;
+  match effopt with
+  | None ->
+    maybe_fail_doc 
+      issues
+      g e.range (ill_typed_term e (Some t) None)
+  | Some eff ->
+    (| e, eff, E (RT.T_Token _ _ _ (FStar.Squash.get_proof _)) |)
 
 let tc_with_core g (f:R.env) (e:R.term) 
   : T.Tac (option (eff:T.tot_or_ghost & t:R.term & RT.typing f e (eff, t)) & issues)
-  = let ropt, issues = catch_all (fun _ -> rtb_core_check_term (push_context g "tc_with_core" (range_of_term e)) f e) in
+  = let ropt, issues = catch_all (fun _ -> rtb_core_compute_term_type (push_context g "tc_with_core" (range_of_term e)) f e) in
     match ropt with
     | None -> None, issues
     | Some (eff, t) ->
@@ -310,7 +330,7 @@ let core_check_term_with_expected_type g e eff t =
   let rt = elab_term t in
   let topt, issues =
     catch_all (fun _ ->
-     rtb_core_check_term_at_type
+     rtb_core_check_term
       (push_context g "core_check_term_with_expected_type" (range_of_term rt))
        fg re eff rt) in
   T.log_issues issues;

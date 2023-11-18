@@ -367,7 +367,6 @@ let rec st_typing_nt_substs
     else Inr (x, e)
 
 
-
 // let st_typing_subst (g:env) (uvs:env { disjoint uvs g }) (t:st_term) (c:comp_st)
 //   (d:st_typing (push_env g uvs) t c)
 //   (ss:ss_t)
