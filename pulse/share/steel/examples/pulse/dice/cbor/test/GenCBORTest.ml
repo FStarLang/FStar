@@ -1,5 +1,4 @@
 type c = [
-| `Nothing
 | `If of string
 | `Instr of string
 | `Block of c list
@@ -93,17 +92,21 @@ let list_assoc x l =
     Some (List.assoc x l)
   with Not_found -> None
 
-let gen_encoding_test_aux
-  (decoded: Yojson.Safe.t)
-  (hex_encoded: string)
+let gen_encoding_test_c
+  (count: int)
+  (num: int ref)
+  (item: Yojson.Safe.t * string * (c list))
 : c
-= let decoded_s = quote_string (Yojson.Safe.to_string decoded) in
+= num := !num + 1;
+  let (decoded, hex_encoded, decoded_c) = item in
+  let decoded_s = quote_string (Yojson.Safe.to_string decoded) in
   let (size, source_bytes) = gen_hex hex_encoded "source_bytes" in
   let size_s = string_of_int size in
   `Block (
+    `Instr ("printf(\"Test " ^ string_of_int !num ^ " out of " ^ string_of_int count ^ "\\n\")") ::
     `Instr ("printf(\"Testing: \"" ^ decoded_s ^ "\"\\n\")") ::
     `Instr source_bytes ::
-    gen decoded "source_cbor" @
+    decoded_c @
     `Instr ("uint8_t target_bytes[" ^ size_s ^ "]") ::
     `Instr ("size_t target_bytes_written = CBOR_write_cbor (source_cbor, target_bytes, " ^ size_s ^ ")") ::
     `If ("target_bytes_written != " ^ size_s) ::
@@ -139,11 +142,11 @@ let gen_encoding_test_aux
     []
   )
 
-let gen_encoding_test
-  (item: Yojson.Safe.t)
-: c
+let extract_encoding_test
+  (item0: Yojson.Safe.t)
+: Yojson.Safe.t * string * c list
 =
-match item with
+match item0 with
 | `Assoc item -> 
   begin match list_assoc "roundtrip" item with
   | Some (`Bool true) ->
@@ -152,36 +155,38 @@ match item with
         begin match list_assoc "hex" item with
         | Some (`String hex) ->
           begin try
-              gen_encoding_test_aux decoded hex
+              (decoded, hex, gen decoded "source_cbor")
           with GenUnsupported -> begin
-              prerr_endline ("skipping unsupported encoding test: " ^ Yojson.Safe.to_string (`Assoc item));
-              `Nothing
+              prerr_endline ("skipping unsupported encoding test: " ^ Yojson.Safe.to_string item0);
+              (decoded, "", [])
               end
           end
-        | _ -> failwith ("Not a valid test case assoc (hex):" ^ Yojson.Safe.to_string (`Assoc item))
+        | _ -> failwith ("Not a valid test case assoc (hex):" ^ Yojson.Safe.to_string item0)
         end
      | None ->
-        prerr_endline ("skipping no-decoded test case: " ^ Yojson.Safe.to_string (`Assoc item));
-        `Nothing
+        prerr_endline ("skipping no-decoded test case: " ^ Yojson.Safe.to_string item0);
+        (item0, "", [])
      end
   | Some (`Bool false) ->
-     prerr_endline ("skipping non-roundtrip test case: " ^ Yojson.Safe.to_string (`Assoc item));
-     `Nothing
+     prerr_endline ("skipping non-roundtrip test case: " ^ Yojson.Safe.to_string item0);
+     (item0, "", [])
   | _ ->
-     failwith ("Not a valid test case assoc (roundtrip): " ^ Yojson.Safe.to_string (`Assoc item))
+     failwith ("Not a valid test case assoc (roundtrip): " ^ Yojson.Safe.to_string item0)
   end
-| _ -> failwith ("Not a valid test case (expected map): " ^ Yojson.Safe.to_string item)        
+| _ -> failwith ("Not a valid test case (expected map): " ^ Yojson.Safe.to_string item0)
 
 let gen_encoding_tests
   (x: Yojson.Safe.t)
 : c list
 = match x with
   | `List items ->
-     let l = List.map gen_encoding_test items in
+     let l = List.map extract_encoding_test items in
      let len = List.length l in
-     let len' = List.length (List.filter (function `Nothing -> false | _ -> true) l) in
+     let l' = List.filter (function (_, _, []) -> false | _ -> true) l in
+     let len' = List.length l' in
      prerr_endline (string_of_int len' ^ " tests supported out of a total " ^ string_of_int len);
-     l
+     let num = ref 0 in
+     List.map (gen_encoding_test_c len' num) l'
   | _ -> failwith ("Not a valid test suite: (expected array): " ^ Yojson.Safe.to_string x)
 
 let rec c_to_string
@@ -189,7 +194,6 @@ let rec c_to_string
   (x: c)
 : string
 = match x with
-  | `Nothing -> ""
   | `If x -> indent ^ "if (" ^ x ^ ")\n"
   | `Instr x -> indent ^ x ^ ";\n"
   | `Block x -> indent ^ "{\n" ^ c_list_to_string (indent ^ "  ") "" x ^ indent ^ "}\n"
