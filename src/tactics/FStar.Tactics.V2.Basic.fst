@@ -2290,6 +2290,10 @@ let to_must_tot (eff:Core.tot_or_ghost) : bool =
   | Core.E_Total -> true
   | Core.E_Ghost -> false
 
+let tot_or_ghost_to_string = function
+  | Core.E_Total -> "E_Total"
+  | Core.E_Ghost -> "E_Ghost"
+
 let refl_norm_type (g:env) (t:typ) : typ =
   N.normalize [Env.Beta; Env.Exclude Zeta] g t
 
@@ -2330,8 +2334,9 @@ let refl_core_check_term (g:env) (e:term) (t:typ) (eff:Core.tot_or_ghost)
   then refl_typing_builtin_wrapper (fun _ ->
          let g = Env.set_range g e.pos in
          dbg_refl g (fun _ ->
-           BU.format2 "refl_core_check_term: term: %s, type: %s\n"
-             (Print.term_to_string e) (Print.term_to_string t));
+           BU.format3 "refl_core_check_term: term: %s, type: %s, eff: %s\n"
+             (Print.term_to_string e) (Print.term_to_string t)
+             (tot_or_ghost_to_string eff));
          let must_tot = to_must_tot eff in
          match Core.check_term g e t must_tot with
          | Inl None ->
@@ -2342,6 +2347,34 @@ let refl_core_check_term (g:env) (e:term) (t:typ) (eff:Core.tot_or_ghost)
            ((), [(g, guard)])
          | Inr err ->
            dbg_refl g (fun _ -> BU.format1 "refl_core_check_term failed: %s\n" (Core.print_error err));
+           Errors.raise_error (Errors.Fatal_IllTyped, "refl_core_check_term failed: " ^ (Core.print_error err))
+                              (Env.get_range g))
+  else ret (None, [unexpected_uvars_issue (Env.get_range g)])
+
+let refl_core_check_term_at_type (g:env) (e:term) (t:typ)
+  : tac (option Core.tot_or_ghost & issues) =
+
+  if no_uvars_in_g g &&
+     no_uvars_in_term e &&
+     no_uvars_in_term t
+  then refl_typing_builtin_wrapper (fun _ ->
+         let g = Env.set_range g e.pos in
+         dbg_refl g (fun _ ->
+           BU.format2 "refl_core_check_term_at_type: term: %s, type: %s\n"
+             (Print.term_to_string e) (Print.term_to_string t));
+         match Core.check_term_at_type g e t with
+         | Inl (eff, None) ->
+           dbg_refl g (fun _ ->
+             BU.format1 "refl_core_check_term_at_type: succeeded with eff %s and no guard\n"
+               (tot_or_ghost_to_string eff));
+           (eff, [])
+         | Inl (eff, Some guard) ->
+           dbg_refl g (fun _ ->
+             BU.format1 "refl_core_check_term_at_type: succeeded with eff %s and guard\n"
+               (tot_or_ghost_to_string eff));
+           (eff, [(g, guard)])
+         | Inr err ->
+           dbg_refl g (fun _ -> BU.format1 "refl_core_check_term_at_type failed: %s\n" (Core.print_error err));
            Errors.raise_error (Errors.Fatal_IllTyped, "refl_core_check_term failed: " ^ (Core.print_error err))
                               (Env.get_range g))
   else ret (None, [unexpected_uvars_issue (Env.get_range g)])

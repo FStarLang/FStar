@@ -30,6 +30,9 @@ val is_non_informative (g:Env.env) (t:typ) : bool
 val check_term (g:Env.env) (e:term) (t:typ) (must_tot:bool)
   : either (option typ) error
 
+val check_term_at_type (g:Env.env) (e:term) (t:typ)
+  : either (tot_or_ghost & option typ) error
+
 val compute_term_type_handle_guards (g:Env.env) (e:term)
                                     (discharge_guard: Env.env -> typ -> bool)
   : either (tot_or_ghost & typ) error

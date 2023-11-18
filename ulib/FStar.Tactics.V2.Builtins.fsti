@@ -486,10 +486,16 @@ val core_compute_term_type (g:env) (e:term)
   : Tac (ret_t (r:(tot_or_ghost & typ){typing_token g e r}))
 
 //
-// Check that e:t using the core typechecker
+// Check that e:eff t using the core typechecker
 //
 val core_check_term (g:env) (e:term) (t:typ) (eff:tot_or_ghost)
   : Tac (ret_t (typing_token g e (eff, t)))
+
+//
+// Return eff s.t. e:eff t using the core typechecker
+//
+val core_check_term_at_type (g:env) (e:term) (t:typ)
+  : Tac (ret_t (eff:tot_or_ghost{typing_token g e (eff, t)}))
 
 //
 // Instantiate the implicits in e and compute its type

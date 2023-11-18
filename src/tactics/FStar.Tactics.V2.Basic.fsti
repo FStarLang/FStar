@@ -136,6 +136,7 @@ val refl_check_subtyping              : env -> typ -> typ -> tac (option unit & 
 val refl_check_equiv                  : env -> typ -> typ -> tac (option unit & issues)
 val refl_core_compute_term_type       : env -> term -> tac (option (Core.tot_or_ghost & typ) & issues)
 val refl_core_check_term              : env -> term -> typ -> Core.tot_or_ghost -> tac (option unit & issues)
+val refl_core_check_term_at_type      : env -> term -> typ -> tac (option Core.tot_or_ghost & issues)
 val refl_tc_term                      : env -> term -> tac (option (term & (Core.tot_or_ghost & typ)) & issues)
 val refl_universe_of                  : env -> term -> tac (option universe & issues)
 val refl_check_prop_validity          : env -> term -> tac (option unit & issues)

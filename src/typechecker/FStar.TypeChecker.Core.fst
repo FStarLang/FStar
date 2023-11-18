@@ -1788,8 +1788,12 @@ let initial_env g gh =
     guard_handler = gh;
     should_read_cache = true }
 
+//
+// In case the expected type and effect are set,
+//   they are returned as is
+//
 let check_term_top g e topt (must_tot:bool) (gh:option guard_handler_t)
-  : result (option (tot_or_ghost & typ))
+  : result (tot_or_ghost & typ)
   = let g = initial_env g gh in
     let! eff_te = check "top" g e in
     match topt with
@@ -1800,13 +1804,13 @@ let check_term_top g e topt (must_tot:bool) (gh:option guard_handler_t)
            if eff = E_Ghost &&
               not (non_informative g t)
            then fail "expected total effect, found ghost"
-           else return (Some (E_Total, t))
-      else return (Some eff_te)
+           else return (E_Total, t)
+      else return eff_te
     | Some t ->
-      let target_comp =
+      let target_comp, eff =
         if must_tot || fst eff_te = E_Total
-        then S.mk_Total t
-        else S.mk_GTotal t
+        then S.mk_Total t, E_Total
+        else S.mk_GTotal t, E_Ghost
       in
       with_context "top-level subtyping" None (fun _ ->
         check_relation_comp
@@ -1814,7 +1818,7 @@ let check_term_top g e topt (must_tot:bool) (gh:option guard_handler_t)
           (SUBTYPING (Some e))
           (as_comp g eff_te)
           target_comp) ;!
-      return None
+      return (eff, t)
 
 let simplify_steps =
     [Env.Beta;
@@ -1827,8 +1831,8 @@ let simplify_steps =
 
 
 let check_term_top_gh g e topt (must_tot:bool) (gh:option guard_handler_t)
-  =
-    if Env.debug g (Options.Other "CoreEq")
+  : either ((tot_or_ghost & S.typ) & precondition) error
+  = if Env.debug g (Options.Other "CoreEq")
     then BU.print1 "(%s) Entering core ... \n"
                    (BU.string_of_int (get_goal_ctr()));
 
@@ -1907,12 +1911,17 @@ let check_term g e t must_tot =
   | Inl (_, g) -> Inl g
   | Inr err -> Inr err
 
+let check_term_at_type g e t =
+  let must_tot = false in
+  match check_term_top_gh g e (Some t) must_tot None with
+  | Inl ((eff, _), g) -> Inl (eff, g)
+  | Inr err -> Inr err
+
 let compute_term_type_handle_guards g e gh =
   let e = FStar.Syntax.Compress.deep_compress true true e in
   let must_tot = false in
   match check_term_top_gh g e None must_tot (Some gh) with
-  | Inl (Some r, None) -> Inl r
-  | Inl (None, _) -> failwith "Impossible: Success must return some effect and type"
+  | Inl (r, None) -> Inl r
   | Inl (_, Some _) -> failwith "Impossible: All guards should have been handled already"
   | Inr err -> Inr err
 
