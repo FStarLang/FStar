@@ -1,4 +1,4 @@
-module CBOR.Pulse
+module CBOR.Pulse.Extern
 include CBOR.Pulse.Type
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Stick
@@ -19,14 +19,6 @@ let fstp (#a1 #a2: Type) (x: (a1 & a2)) : Tot a1 = fst x
 noextract
 let sndp (#a1 #a2: Type) (x: (a1 & a2)) : Tot a2 = snd x
 
-let raw_data_item_map_entry_match1
-  (c1: cbor_map_entry)
-  (v1: (Cbor.raw_data_item & Cbor.raw_data_item))
-  (raw_data_item_match: (cbor -> (v': Cbor.raw_data_item { v' << v1 }) -> vprop))
-: Tot vprop
-= raw_data_item_match (cbor_map_entry_key c1) (fstp v1) **
-  raw_data_item_match (cbor_map_entry_value c1) (sndp v1)
-
 val raw_data_item_match
   (p: perm)
   (c: cbor)
@@ -45,7 +37,8 @@ let raw_data_item_map_entry_match
   (c1: cbor_map_entry)
   (v1: (Cbor.raw_data_item & Cbor.raw_data_item))
 : Tot vprop
-= raw_data_item_map_entry_match1 c1 v1 (raw_data_item_match p)
+= raw_data_item_match p (cbor_map_entry_key c1) (fstp v1) **
+  raw_data_item_match p (cbor_map_entry_value c1) (sndp v1)
 
 let raw_data_item_map_match
   (p: perm)
@@ -57,6 +50,7 @@ let raw_data_item_map_match
 
 (* Parsing *)
 
+[@@no_auto_projectors]
 noeq
 type read_cbor_success_t = {
   read_cbor_payload: cbor;
@@ -64,6 +58,7 @@ type read_cbor_success_t = {
   read_cbor_remainder_length: SZ.t;
 }
 
+[@@no_auto_projectors]
 noeq
 type read_cbor_t =
 | ParseError
@@ -223,6 +218,18 @@ val constr_cbor_simple_value
     emp
     (fun c -> raw_data_item_match full_perm c (Cbor.Simple value))
 
+noextract
+let destr_cbor_string_post
+  (va: Cbor.raw_data_item)
+  (c': cbor_string)
+  (vc' : Seq.seq U8.t)
+: Tot prop
+=         Cbor.String? va /\
+        U64.v c'.cbor_string_length == Seq.length vc' /\
+        c'.cbor_string_type == Cbor.String?.typ va /\
+        vc' == Cbor.String?.v va
+
+
 val destr_cbor_string
   (c: cbor)
   (#p: perm)
@@ -234,11 +241,7 @@ val destr_cbor_string
     (fun c' -> exists_ (fun vc' -> exists_ (fun p'->
       A.pts_to c'.cbor_string_payload #p' vc' **
       (A.pts_to c'.cbor_string_payload #p' vc' @==> raw_data_item_match p c (Ghost.reveal va)) **
-      pure (
-        Cbor.String? va /\
-        U64.v c'.cbor_string_length == Seq.length vc' /\
-        c'.cbor_string_type == Cbor.String?.typ va /\
-        vc' == Cbor.String?.v va
+      pure (destr_cbor_string_post va c'  vc'
     ))))
 
 val constr_cbor_string
@@ -420,6 +423,7 @@ let maybe_cbor_tagged_payload
   | Cbor.Tagged _ l -> l
   | _ -> dummy_raw_data_item
 
+[@@no_auto_projectors]
 noeq
 type cbor_tagged = {
   cbor_tagged_tag: U64.t;
@@ -480,6 +484,69 @@ val constr_cbor_map
       vres == Cbor.Map v'
     )))
 
+val cbor_map_length
+  (a: cbor)
+  (#p: perm)
+  (#v: Ghost.erased Cbor.raw_data_item)
+: stt U64.t
+    (raw_data_item_match p a v ** pure (
+      (Cbor.Map? v)
+    ))
+    (fun res -> raw_data_item_match p a v ** pure (
+      Cbor.Map? v /\
+      U64.v res == List.Tot.length (Cbor.Map?.v v)
+    ))
+
+val dummy_cbor_map_iterator: cbor_map_iterator_t
+
+val cbor_map_iterator_match
+  (p: perm)
+  (i: cbor_map_iterator_t)
+  (l: list (Cbor.raw_data_item & Cbor.raw_data_item))
+: Tot vprop
+
+val cbor_map_iterator_init
+  (a: cbor)
+  (#p: perm)
+  (#v: Ghost.erased Cbor.raw_data_item)
+: stt cbor_map_iterator_t
+    (raw_data_item_match p a v ** pure (Cbor.Map? v))
+    (fun i -> exists_ (fun l ->
+      cbor_map_iterator_match p i l **
+      (cbor_map_iterator_match p i l @==>
+        raw_data_item_match p a v) **
+      pure (
+        Cbor.Map? v /\
+        l == Cbor.Map?.v v
+      )
+    ))
+
+val cbor_map_iterator_is_done
+  (i: cbor_map_iterator_t)
+  (#p: perm)
+  (#l: Ghost.erased (list (Cbor.raw_data_item & Cbor.raw_data_item)))
+: stt bool
+    (cbor_map_iterator_match p i l)
+    (fun res -> cbor_map_iterator_match p i l ** pure (res == Nil? l))
+
+val cbor_map_iterator_next
+  (pi: R.ref cbor_map_iterator_t)
+  (#p: perm)
+  (#l: Ghost.erased (list (Cbor.raw_data_item & Cbor.raw_data_item)) { Cons? l})
+  (#i: Ghost.erased cbor_map_iterator_t)
+: stt cbor_map_entry
+    (pts_to pi i ** cbor_map_iterator_match p i l ** pure (Cons? l))
+    (fun c -> exists_ (fun i' -> exists_ (fun vc -> exists_ (fun l' ->
+      pts_to pi i' **
+      raw_data_item_map_entry_match p c vc **
+      cbor_map_iterator_match p i' l' **
+      ((raw_data_item_map_entry_match p c vc **
+        cbor_map_iterator_match p i' l' @==>
+        cbor_map_iterator_match p i l
+      ) **
+      pure (Ghost.reveal l == vc :: l')
+    )))))
+
 val cbor_get_major_type
   (a: cbor)
   (#p: perm)
@@ -490,91 +557,29 @@ val cbor_get_major_type
       res == Cbor.get_major_type v
     ))
 
-val cbor_is_equal
-  (a1: cbor)
-  (a2: cbor)
-  (#p1: perm)
-  (#p2: perm)
-  (#v1: Ghost.erased Cbor.raw_data_item)
-  (#v2: Ghost.erased Cbor.raw_data_item)
-: stt bool
-    (raw_data_item_match p1 a1 v1 ** raw_data_item_match p2 a2 v2)
-    (fun res -> raw_data_item_match p1 a1 v1 ** raw_data_item_match p2 a2 v2 ** pure (
-      (~ (Cbor.Tagged? v1 \/ Cbor.Array? v1 \/ Cbor.Map? v1)) ==> (res == true <==> v1 == v2) // TODO: underspecified for tagged, arrays and maps, complete those missing cases
-    ))
+(* `cbor_compare_aux` is an auxiliary function intended to compare two CBOR objects
+   represented by their serialized bytes. It returns an inconclusive result if one of
+   the two is not such an object. The full equality test is implemented in Pulse, see
+   `CBOR.Pulse.cbor_compare`
+*)
 
-noeq
-type cbor_map_get_t =
-| Found of cbor
-| NotFound
+noextract
+let cbor_compare_aux_postcond
+  (v1 v2: Cbor.raw_data_item)
+  (res: FStar.Int16.t)
+: Tot prop
+= let nres = FStar.Int16.v res in
+  (nres = -1 || nres = 0 || nres = 1) ==> nres == Cbor.cbor_compare v1 v2
 
-let rec list_ghost_assoc
-  (#key: Type)
-  (#value: Type)
-  (k: key)
-  (m: list (key & value))
-: GTot (option value)
-  (decreases m)
-= match m with
-  | [] -> None
-  | (k', v') :: m' ->
-    if FStar.StrongExcludedMiddle.strong_excluded_middle (k == k')
-    then Some v'
-    else list_ghost_assoc k m'
-
-let cbor_map_get_post_not_found
-  (p: perm)
-  (vkey: Cbor.raw_data_item)
-  (vmap: Cbor.raw_data_item)
-  (map: cbor)
-: Tot vprop
-= raw_data_item_match p map vmap ** pure (
-    Cbor.Map? vmap /\
-    list_ghost_assoc vkey (Cbor.Map?.v vmap) == None
-  )
-
-let cbor_map_get_post_found
-  (p: perm)
-  (vkey: Cbor.raw_data_item)
-  (vmap: Cbor.raw_data_item)
-  (map: cbor)
-  (value: cbor)
-: Tot vprop
-= exists_ (fun vvalue ->
-    raw_data_item_match p value vvalue **
-    (raw_data_item_match p value vvalue @==> raw_data_item_match p map vmap) **
-    pure (
-      Cbor.Map? vmap /\
-      list_ghost_assoc vkey (Cbor.Map?.v vmap) == Some vvalue
-  ))
-
-let cbor_map_get_post
-  (p: perm)
-  (vkey: Cbor.raw_data_item)
-  (vmap: Cbor.raw_data_item)
-  (map: cbor)
-  (res: cbor_map_get_t)
-: Tot vprop
-= match res with
-  | NotFound -> cbor_map_get_post_not_found p vkey vmap map
-  | Found value -> cbor_map_get_post_found p vkey vmap map value
-
-val cbor_map_get
-  (key: cbor)
-  (map: cbor)
-  (#pkey: perm)
-  (#pmap: perm)
-  (#vkey: Ghost.erased Cbor.raw_data_item)
-  (#vmap: Ghost.erased Cbor.raw_data_item)
-: stt cbor_map_get_t
-    (raw_data_item_match pkey key vkey ** raw_data_item_match pmap map vmap ** pure (
-      Cbor.Map? vmap /\
-      (~ (Cbor.Tagged? vkey \/ Cbor.Array? vkey \/ Cbor.Map? vkey))
-    ))
-    (fun res -> raw_data_item_match pkey key vkey ** cbor_map_get_post pmap vkey vmap map res ** pure (
-      Cbor.Map? vmap /\
-      Found? res == Some? (list_ghost_assoc (Ghost.reveal vkey) (Cbor.Map?.v vmap))
-    ))
+val cbor_compare_aux
+  (c1 c2: cbor)
+  (#p1 #p2: perm)
+  (#v1 #v2: Ghost.erased Cbor.raw_data_item)
+: stt FStar.Int16.t
+    (raw_data_item_match p1 c1 v1 ** raw_data_item_match p2 c2 v2)
+    (fun res -> raw_data_item_match p1 c1 v1 ** raw_data_item_match p2 c2 v2 **
+      pure (cbor_compare_aux_postcond v1 v2 res)
+    )
 
 (* Serialization *)
 

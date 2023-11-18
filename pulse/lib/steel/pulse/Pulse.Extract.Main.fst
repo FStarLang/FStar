@@ -132,17 +132,30 @@ let term_eq_string (s:string) (t:R.term) : bool =
   | R.Tv_Const (R.C_String s') -> s=s'
   | _ -> false
 
-let maybe_unfold_head (g:env) (f:R.term) 
-  : option st_term
-  = match R.inspect_ln f with
+let maybe_unfold_head (g:env) (head:R.term) 
+  : T.Tac (option (either st_term R.term))
+  = debug g (fun _ -> Printf.sprintf "Maybe unfolding head %s\n" (T.term_to_string head));
+    match R.inspect_ln head with
     | R.Tv_FVar f -> (
       let name = R.inspect_fv f in
       match R.lookup_typ (topenv_of_env g) name with
       | None -> None
       | Some se ->
         let attrs = R.sigelt_attrs se in
+        let quals = R.sigelt_quals se in
         if List.Tot.existsb (term_eq_string "inline") attrs
-        then sigelt_extension_data se
+        || List.Tot.existsb (function | R.Inline_for_extraction -> true | _ -> false) quals
+        then match sigelt_extension_data se with
+             | Some se ->
+               debug g (fun _ -> Printf.sprintf "Unfolded head %s\n"  (T.term_to_string head));
+               debug g (fun _ -> Printf.sprintf "to %s\n"  (st_term_to_string se));
+               Some (Inl se)
+             | None -> (
+                match T.inspect_sigelt se with
+                | T.Sg_Let { isrec=false; lbs = [ { lb_us=[]; lb_def }] } ->
+                  Some (Inr lb_def)
+                | _ -> None
+             )
         else None
     )
     | R.Tv_UInst f _ ->
@@ -150,39 +163,133 @@ let maybe_unfold_head (g:env) (f:R.term)
       None
     | _ -> None
 
-let rec abs_body (n_args:nat) (t:st_term) =
-  if n_args = 0 then Some t
-  else (
-    match t.term with 
-    | Tm_Abs { body } -> abs_body (n_args - 1) body
-    | _ -> None
-  )
+let rec st_term_abs_take_n_args (n_args:nat) (t:st_term)
+  : res:(st_term & nat){snd res <= n_args}
+  = if n_args = 0 then t, 0
+    else (
+      match t.term with 
+      | Tm_Abs { body } -> st_term_abs_take_n_args (n_args - 1) body
+      | _ -> (t, n_args)
+    )
 
+let rec term_abs_take_n_args (n_args:nat) (t:R.term)
+  : res:(R.term & nat){snd res <= n_args}
+  = if n_args = 0 then t, 0
+    else (
+      match R.inspect_ln t with 
+      | R.Tv_Abs _ body -> term_abs_take_n_args (n_args - 1) body
+      | _ -> (t, n_args)
+    )
 
-let maybe_inline (g:env) (head:term) (arg:term) : option st_term =
+let abs_take_n_args (n_args:nat) (t:either st_term R.term)
+  : T.Tac (res:(either st_term R.term & nat){snd res <= n_args}) 
+  = match t with
+    | Inl t -> 
+      let t, n_args = st_term_abs_take_n_args n_args t in
+      Inl t, n_args
+    | Inr t ->
+      let t, n_args = term_abs_take_n_args n_args t in
+      Inr t, n_args
+
+let rec unascribe (t:R.term) : T.Tac R.term =
+  match R.inspect_ln t with
+  | R.Tv_AscribedT e _ _ _ -> unascribe e
+  | R.Tv_AscribedC e _ _ _ -> unascribe e
+  | _ -> t
+
+let maybe_inline (g:env) (head:term) (arg:term) :T.Tac (option st_term) =
+  debug g (fun _ -> Printf.sprintf "Considering inlining %s\n"
+                      (term_to_string head));
   match head_and_args head with
   | None -> None
   | Some (head, args) ->
+    debug g (fun _ -> Printf.sprintf "head=%s with %d args\n"
+                      (T.term_to_string head)
+                      (List.length args));
     match maybe_unfold_head g head with
-    | None -> None
-    | Some body ->
-      let args =
-        L.map #R.argv (fun (t, _) -> assume (not_tv_unknown t); tm_fstar t Range.range_0) args
-        @ [arg]
+    | None -> 
+      debug g (fun _ -> Printf.sprintf "No unfolding of %s\n"
+                            (T.term_to_string head));
+      None
+
+    | Some def ->
+      // debug g (fun _ -> Printf.sprintf "Unfolded %s to body %s\n"
+      //                       (T.term_to_string head)
+      //                       (st_term_to_string body));
+      let as_term (a:R.term) = assume (not_tv_unknown a); tm_fstar a Range.range_0 in
+      let all_args : list (term & option qualifier) =
+        L.map #R.argv
+              (fun (t, q) -> 
+                let t = as_term t in
+                let qual = if R.Q_Implicit? q then Some Implicit else None in
+                t, qual)
+              args
+        @ [arg, None]
       in
-      let n_args = L.length args in
-      match abs_body n_args body with
-      | None -> None
-      | Some body ->
-        let _, subst = 
+      let n_args = L.length all_args in
+      let body, remaining_args = abs_take_n_args n_args def in
+      let args, rest = L.splitAt (n_args - remaining_args) all_args in
+      let _, subst =
           L.fold_right
             (fun arg (i, subst) ->
               i + 1,
-              LN.DT i arg::subst)
+              LN.DT i (fst arg)::subst)
             args
             (0, [])
+      in
+      match body with
+      | Inl body -> (
+        let applied_body = LN.subst_st_term body subst in
+        match rest with
+        | [] -> 
+          Some applied_body
+        | _ ->
+          T.fail (Printf.sprintf 
+            "Partial or over application of inlined Pulse definition is not yet supported\n\
+            %s has %d arguments, but %s were left unapplied"
+            (T.term_to_string head)
+            (L.length args)
+            (String.concat ", " (T.map (fun x -> term_to_string (fst x)) rest))
+          )
+      )
+      | Inr body ->
+        assume (not_tv_unknown body);
+        let applied_body = unascribe (LN.subst_host_term body subst) in
+        let mk_st_app (head:R.term) (arg:term) (arg_qual:option qualifier) =
+          assume (not_tv_unknown head);
+          let head = tm_fstar head (T.range_of_term head) in
+          let tm = Tm_STApp { head; arg_qual; arg } in 
+          Some { term = tm; range=FStar.Range.range_0; effect_tag=default_effect_hint }
         in
-        Some (LN.subst_st_term body subst)
+        match rest with
+        | [] -> (
+          match R.inspect_ln applied_body with
+          | R.Tv_App head (arg, aqual) ->
+            assume (not_tv_unknown arg);
+            let arg = tm_fstar arg (T.range_of_term arg) in
+            let arg_qual = if R.Q_Implicit? aqual then Some Implicit else None in
+            mk_st_app head arg arg_qual
+          | _ ->
+            T.fail 
+              (Printf.sprintf "Cannot inline F* definitions of stt terms whose body is not an application; got %s"
+                (T.term_to_string applied_body))
+        )
+        | rest ->
+          FStar.List.Tot.lemma_splitAt_snd_length (L.length rest - 1) rest;
+          let rest, [last] = L.splitAt (L.length rest - 1) rest in
+          let head = 
+            L.fold_left 
+              (fun head (tm, qual) ->
+                R.pack_ln (
+                  R.Tv_App head (Pulse.Elaborate.Pure.elab_term tm, (if Some? qual then R.Q_Implicit else R.Q_Explicit))
+                ))
+              applied_body
+              rest
+          in
+          mk_st_app head (fst last) (snd last)
+        
+
+
 
 let rec extract (g:env) (p:st_term)
   : T.Tac (mlexpr & e_tag)
@@ -217,7 +324,9 @@ let rec extract (g:env) (p:st_term)
           let head = term_as_mlexpr g head in
           let arg = term_as_mlexpr g arg in
           mle_app head [arg], e_tag_impure
-        | Some t -> extract g t
+        | Some t ->
+          debug g (fun _ -> Printf.sprintf "Inlined to: %s\n" (st_term_to_string t));
+          extract g t
       )
 
       | Tm_Bind { binder; head; body } ->
@@ -259,9 +368,9 @@ let rec extract (g:env) (p:st_term)
         let sc = term_as_mlexpr g sc in
         let extract_branch (pat0, body) =
           let g, pat, bs = extend_env_pat g pat0 in
-          T.print (Printf.sprintf "Extracting branch with pattern %s\n"
+          debug g (fun _ -> 
+            Printf.sprintf "Extracting branch with pattern %s\n"
                     (Pulse.Syntax.Printer.pattern_to_string pat0)
-          //           // (String.concat ", " (L.map (fun (x, _) -> x) bs))
                     );
           let body = Pulse.Checker.Match.open_st_term_bs body bs in
           let body, _ = extract g body in
@@ -321,7 +430,7 @@ let rec generalize (g:env) (t:R.typ) (e:option st_term)
   : T.Tac (env &
            list mlident &
            R.typ &
-           option st_term) =
+           o:option st_term { Some? e <==> Some? o}) =
 
   debug g (fun _ -> Printf.sprintf "Generalizing arrow:\n%s\n" (T.term_to_string t));
   let tv = R.inspect_ln t in
@@ -339,7 +448,7 @@ let rec generalize (g:env) (t:R.typ) (e:option st_term)
            let t = R.subst_term [R.DT 0 xt] t in
            let e =
              match e with
-             | Some ({term = Tm_Abs {b; body}}) ->
+             | Some {term=Tm_Abs {b; body}} ->
                Some (LN.subst_st_term body [LN.DT 0 (tm_fstar xt Range.range_0)])
              | _ -> e in
            let namedv = R.pack_namedv {
@@ -363,7 +472,75 @@ let rec generalize (g:env) (t:R.typ) (e:option st_term)
   | _ -> g, [], t, e
 
 let debug_ = debug
+
+let rec find_map (f: 'a -> option 'b) (l:list 'a) : option 'b =
+  match l with
+  | [] -> None
+  | hd::tl -> let x = f hd in if Some? x then x else find_map f tl
+
+let is_recursive (g:env) (knot_name:R.fv) (selt:R.sigelt)
+  : T.Tac (option string)
+  = let attrs = RU.get_attributes selt in
+    let unpack_string (t:R.term) : option string =
+      match R.inspect_ln t with
+      | R.Tv_Const (R.C_String s) -> Some s
+      | _ -> None
+    in
+    let pulse_recursive_attr (t:R.term) : option string =
+      match R.inspect_ln t with
+      | R.Tv_App _ _ -> (
+        let hd, args = T.collect_app_ln t in
+        if T.is_fvar hd (`%Mktuple2)
+        then match args with
+             | [_; _; (tag, _); (value, _)] -> (
+              match unpack_string tag, unpack_string value with
+              | Some "pulse.recursive.knot", Some v -> Some v
+              | _ -> None
+             )
+             | _ -> None
+        else None
+      )
+      | _ -> None
+    in
+    find_map pulse_recursive_attr attrs
+
+let rec extract_recursive g (p:st_term) (rec_name:R.fv)
+  : T.Tac (mlexpr & e_tag)
+  = match p.term with
+    | Tm_Abs { b; q; body } -> (
+      match body.term with
+      | Tm_Abs _ ->
+        let g, mlident, mlty, name = extend_env g b in
+        let body = LN.open_st_term_nv body name in
+        let body, _ = extract_recursive g body rec_name in
+        let res = mle_fun [mlident, mlty] body in
+        res, e_tag_pure
+      | _ -> //last binder used for knot; replace it with the recursively bound name
+        let body = LN.subst_st_term body [LN.DT 0 (tm_fstar R.(pack_ln (Tv_FVar rec_name)) Range.range_0)] in
+        let body, tag = extract g body in
+        body, tag
+    )
+
+    | _ -> T.fail "Unexpected recursive definition of non-function"
+
+let extract_recursive_knot (g:env) (p:st_term)
+                           (knot_name:R.fv) (knot_typ:R.term) =
+    let g, tys, lb_typ, Some p = generalize g knot_typ (Some p) in
+    let mlty = ECL.term_as_mlty g.uenv_inner lb_typ in
+    let uenv, _mli, _ml_binding = extend_fv g.uenv_inner knot_name (tys, mlty) in
+    let g = { g with uenv_inner = uenv } in
+    let tm, tag = extract_recursive g p knot_name in
+    let fv_name = 
+      let lids = R.inspect_fv knot_name in
+      if Nil? lids
+      then T.raise (Extraction_failure "Unexpected empty name");
+      FStar.List.Tot.last lids
+    in
+    debug_ g (fun _ -> Printf.sprintf "Extracted term (%s): %s\n" fv_name (mlexpr_to_string tm));
+    let mllb = mk_mllb fv_name (tys, mlty) tm in
+    Inl [mlm_let true [mllb]]
   
+
 let extract_pulse (g:uenv) (selt:R.sigelt) (p:st_term)
   : T.Tac (either mlmodule string) =
   
@@ -373,22 +550,27 @@ let extract_pulse (g:uenv) (selt:R.sigelt) (p:st_term)
   try
     let sigelt_view = R.inspect_sigelt selt in
     match sigelt_view with
-    | R.Sg_Let is_rec lbs ->
+    | R.Sg_Let is_rec lbs -> (
       if is_rec || List.length lbs <> 1
       then T.raise (Extraction_failure "Extraction of recursive lets is not yet supported")
-      else
+      else (
         let {lb_fv; lb_typ} = R.inspect_lb (List.Tot.hd lbs) in
-        let g, tys, lb_typ, p = generalize g lb_typ (Some p) in
-        let mlty = ECL.term_as_mlty g.uenv_inner lb_typ in
-        if None? p
-        then T.raise (Extraction_failure "Unexpected p");
-        let tm, tag = extract g (Some?.v p) in
-        debug_ g (fun _ -> Printf.sprintf "Extracted term: %s\n" (mlexpr_to_string tm));
-        let fv_name = R.inspect_fv lb_fv in
-        if List.Tot.length fv_name = 0
-        then T.raise (Extraction_failure "Unexpected empty name");
-        let mllb = mk_mllb (FStar.List.Tot.last fv_name) (tys, mlty) tm in
-        Inl [mlm_let false [mllb]]
+        match is_recursive g lb_fv selt with
+        | Some _ ->
+          extract_recursive_knot g p lb_fv lb_typ
+        | _ -> 
+          let g, tys, lb_typ, Some p = generalize g lb_typ (Some p) in
+          let mlty = ECL.term_as_mlty g.uenv_inner lb_typ in
+          let fv_name = R.inspect_fv lb_fv in
+          if Nil? fv_name
+          then T.raise (Extraction_failure "Unexpected empty name");
+          let tm, tag = extract g p in
+          let fv_name = FStar.List.Tot.last fv_name in
+          debug_ g (fun _ -> Printf.sprintf "Extracted term (%s): %s\n" fv_name (mlexpr_to_string tm));
+          let mllb = mk_mllb fv_name (tys, mlty) tm in
+          Inl [mlm_let false [mllb]]
+      )
+    )
     | _ -> T.raise (Extraction_failure "Unexpected sigelt")
   with
   | Extraction_failure msg -> 

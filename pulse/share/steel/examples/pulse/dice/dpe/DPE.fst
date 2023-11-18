@@ -24,7 +24,7 @@ val run_stt (#a:Type) (#post:a -> vprop) (f:stt a emp post) : a
 (* Global State *)
 
 let ctxt_hndl_t = U32.t
-let sid_t = U32.t
+
 noeq
 type session_state =
   | SessionStart

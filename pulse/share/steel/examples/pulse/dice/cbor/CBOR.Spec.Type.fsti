@@ -37,6 +37,9 @@ type raw_data_item
   | Tagged: (tag: U64.t) -> (v: raw_data_item) -> raw_data_item
 //  | Float: (v: Float.float) -> raw_data_item // TODO
 
+let dummy_raw_data_item : Ghost.erased raw_data_item =
+  Int64 major_type_uint64 0uL
+
 noextract
 let get_major_type
   (d: raw_data_item)

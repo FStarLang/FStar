@@ -57,3 +57,6 @@ val norm_well_typed_term
       Ghost.erased (RT.typing g t' (eff, Ghost.reveal k)) &
       Ghost.erased (RT.related g t RT.R_Eq t')
     )
+val add_attribute (x:T.sigelt) (_:R.term) : (y:T.sigelt { x == y })
+val get_attributes (x:T.sigelt) : T.Tac (list R.term)
+val add_noextract_qual (x:T.sigelt) : (y:T.sigelt { x == y })

@@ -34,6 +34,9 @@ let debug_main g (s: unit -> Tac string) : Tac unit =
   then print (s ())
   else ()
 
+let string_as_term (s:string) : R.term =
+  R.pack_ln (R.Tv_Const (C_String s))
+
 let add_knot (g : env) (rng : R.range)
              (d : decl{FnDecl? d.d})
 : Tac decl
@@ -174,8 +177,8 @@ let add_knot (g : env) (rng : R.range)
   }
 
 let tie_knot (g : env)  (rng : R.range)
-             (nm_orig : string)
-             (d : decl) (r_typ : R.typ)
+             (nm_orig nm_aux : string)
+             (d : decl) (r_typ : R.typ) (blob:RT.blob)
 : Tac (list (RT.sigelt_for (fstar_env g)))
 =
   let knot_r_typ =
@@ -189,5 +192,7 @@ let tie_knot (g : env)  (rng : R.range)
   in
   (* This is a temporary implementation. It will just create
   a new letbinding at the appropriate type with a `magic()` body. *)
-
-  [RT.mk_unchecked_let (fstar_env g) nm_orig (`(magic())) knot_r_typ]
+  let flag, sig, _ = RT.mk_unchecked_let (fstar_env g) nm_orig (`(magic())) knot_r_typ in
+  let nm = string_as_term nm_aux in 
+  let sig = RU.add_attribute sig (`("pulse.recursive.knot", `#(nm))) in
+  [flag,sig,Some blob]

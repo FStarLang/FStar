@@ -68,3 +68,5 @@ val mk_cbor_map_entry
   ))
 
 val cbor_array_iterator_t: Type0
+
+val cbor_map_iterator_t: Type0

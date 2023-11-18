@@ -473,6 +473,16 @@ let pull_rel
 : GTot ((x2: t2) -> Tot bool)
 = Pull.pull (fun x2 -> FStar.StrongExcludedMiddle.strong_excluded_middle (r x1 x2))
 
+let list_ghost_forall_exists_body
+  (#t1 #t2: Type)
+  (r: t1 -> t2 -> prop)
+  (l2: list t2)
+: GTot (t1 -> bool)
+= Pull.pull (fun x1 -> List.Tot.existsb
+    (pull_rel r x1)
+    l2
+  )
+
 let list_ghost_forall_exists
   (#t1 #t2: Type)
   (r: t1 -> t2 -> prop)
@@ -480,11 +490,30 @@ let list_ghost_forall_exists
   (l2: list t2)
 : GTot bool
 = List.Tot.for_all
-    (Pull.pull (fun x1 -> List.Tot.existsb
-      (pull_rel r x1)
-      l2
-    ))
+    (list_ghost_forall_exists_body r l2)
     l1
+
+noextract
+let matches_map_group_entry'
+  (#b: _)
+  (x: (Cbor.raw_data_item & Cbor.raw_data_item))
+  (y: map_group_entry b)
+: Tot prop
+= opt_map_entry_bounded b x ==> matches_map_group_entry y x
+
+val matches_map_group_no_restricted
+  (#b: _)
+  (g: map_group b)
+  (x: list (Cbor.raw_data_item & Cbor.raw_data_item) { List.Tot.for_all (opt_map_entry_bounded b) x })
+: Lemma
+  (requires (
+    Nil? g.one /\
+    Nil? g.zero_or_one
+  ))
+  (ensures (
+    matches_map_group g x <==> list_ghost_forall_exists matches_map_group_entry' x g.zero_or_more
+  ))
+  [SMTPat (matches_map_group g x)]
 
 let rec list_ghost_forall2
   (#t1 #t2: Type)
