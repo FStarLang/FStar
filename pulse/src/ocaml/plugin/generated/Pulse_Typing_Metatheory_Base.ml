@@ -797,289 +797,318 @@ let rec (st_typing_subst :
       Pulse_Syntax_Base.typ ->
         Pulse_Typing_Env.env ->
           Pulse_Syntax_Base.term ->
-            unit ->
-              Pulse_Syntax_Base.st_term ->
-                Pulse_Syntax_Base.comp_st ->
-                  (unit, unit, unit) Pulse_Typing.st_typing ->
-                    (unit, unit, unit) Pulse_Typing.st_typing)
+            FStar_TypeChecker_Core.tot_or_ghost ->
+              unit ->
+                Pulse_Syntax_Base.st_term ->
+                  Pulse_Syntax_Base.comp_st ->
+                    (unit, unit, unit) Pulse_Typing.st_typing ->
+                      unit -> (unit, unit, unit) Pulse_Typing.st_typing)
   =
   fun g ->
     fun x ->
       fun t ->
         fun g' ->
           fun e ->
-            fun e_typing ->
-              fun e1 ->
-                fun c1 ->
-                  fun e1_typing ->
-                    let ss = nt x e in
-                    match e1_typing with
-                    | Pulse_Typing.T_Abs
-                        (uu___, uu___1, uu___2, uu___3, uu___4, uu___5,
-                         uu___6, uu___7, uu___8)
-                        -> Prims.magic ()
-                    | Pulse_Typing.T_STApp
-                        (uu___, head, ty, q, res, arg, uu___1, uu___2) ->
-                        Pulse_Typing.T_STApp
-                          ((Pulse_Typing_Env.push_env g
-                              (Pulse_Typing_Env.subst_env g' (nt x e))),
-                            (Pulse_Syntax_Naming.subst_term head ss),
-                            (Pulse_Syntax_Naming.subst_term ty ss), q,
-                            (Pulse_Syntax_Naming.subst_comp res ss),
-                            (Pulse_Syntax_Naming.subst_term arg ss), (), ())
-                    | Pulse_Typing.T_STGhostApp
-                        (uu___, head, ty, q, res, arg, x1, uu___1, uu___2,
-                         uu___3)
-                        ->
-                        Pulse_Typing.T_STGhostApp
-                          ((Pulse_Typing_Env.push_env g
-                              (Pulse_Typing_Env.subst_env g' (nt x e))),
-                            (Pulse_Syntax_Naming.subst_term head ss),
-                            (Pulse_Syntax_Naming.subst_term ty ss), q,
-                            (Pulse_Syntax_Naming.subst_comp res ss),
-                            (Pulse_Syntax_Naming.subst_term arg ss), x1, (),
-                            (), ())
-                    | Pulse_Typing.T_Return
-                        (uu___, c, use_eq, u, t1, e2, post, x1, uu___1,
-                         uu___2, uu___3)
-                        ->
-                        Pulse_Typing.T_Return
-                          ((Pulse_Typing_Env.push_env g
-                              (Pulse_Typing_Env.subst_env g' (nt x e))), c,
-                            use_eq, u,
-                            (Pulse_Syntax_Naming.subst_term t1 ss),
-                            (Pulse_Syntax_Naming.subst_term e2 ss),
-                            (Pulse_Syntax_Naming.subst_term post ss), x1, (),
-                            (), ())
-                    | Pulse_Typing.T_Lift (uu___, e2, c11, c2, d_e, d_lift)
-                        ->
-                        Pulse_Typing.T_Lift
-                          ((Pulse_Typing_Env.push_env g
-                              (Pulse_Typing_Env.subst_env g' (nt x e))),
-                            (Pulse_Syntax_Naming.subst_st_term e2 ss),
-                            (Pulse_Syntax_Naming.subst_comp c11 ss),
-                            (Pulse_Syntax_Naming.subst_comp c2 ss),
-                            (st_typing_subst g x t g' e () e2 c11 d_e),
-                            (lift_comp_subst g x t g' e () c11 c2 d_lift))
-                    | Pulse_Typing.T_Bind
-                        (uu___, e11, e2, c11, c2, b, y, c, d_e1, uu___1,
-                         d_e2, d_bc)
-                        ->
-                        Pulse_Typing.T_Bind
-                          ((Pulse_Typing_Env.push_env g
-                              (Pulse_Typing_Env.subst_env g' (nt x e))),
-                            (Pulse_Syntax_Naming.subst_st_term e11 ss),
-                            (Pulse_Syntax_Naming.subst_st_term e2 ss),
-                            (Pulse_Syntax_Naming.subst_comp c11 ss),
-                            (Pulse_Syntax_Naming.subst_comp c2 ss),
-                            (Pulse_Syntax_Naming.subst_binder b ss), y,
-                            (Pulse_Syntax_Naming.subst_comp c ss),
-                            (st_typing_subst g x t g' e () e11 c11 d_e1), (),
-                            (coerce_eq
-                               (st_typing_subst g x t
-                                  (Pulse_Typing_Env.push_binding g' y
-                                     Pulse_Syntax_Base.ppname_default
-                                     (Pulse_Syntax_Base.comp_res c11)) e ()
-                                  (Pulse_Syntax_Naming.open_st_term_nv e2
-                                     ((b.Pulse_Syntax_Base.binder_ppname), y))
-                                  c2 d_e2) ()),
-                            (bind_comp_subst g x t g' e () y c11 c2 c d_bc))
-                    | Pulse_Typing.T_TotBind
-                        (uu___, e11, e2, t1, c2, b, y, uu___1, d_e2) ->
-                        Pulse_Typing.T_TotBind
-                          ((Pulse_Typing_Env.push_env g
-                              (Pulse_Typing_Env.subst_env g' (nt x e))),
-                            (Pulse_Syntax_Naming.subst_term e11 ss),
-                            (Pulse_Syntax_Naming.subst_st_term e2 ss),
-                            (Pulse_Syntax_Naming.subst_term t1 ss),
-                            (Pulse_Syntax_Naming.subst_comp c2 ss), b, y, (),
-                            (coerce_eq
-                               (st_typing_subst g x t
-                                  (Pulse_Typing_Env.push_binding g' y
-                                     Pulse_Syntax_Base.ppname_default t1) e
-                                  ()
-                                  (Pulse_Syntax_Naming.open_st_term_nv e2
-                                     (Pulse_Syntax_Base.v_as_nv y)) c2 d_e2)
-                               ()))
-                    | Pulse_Typing.T_GhostBind
-                        (uu___, e11, e2, t1, c2, b, y, uu___1, d_e2, uu___2)
-                        ->
-                        Pulse_Typing.T_GhostBind
-                          ((Pulse_Typing_Env.push_env g
-                              (Pulse_Typing_Env.subst_env g' (nt x e))),
-                            (Pulse_Syntax_Naming.subst_term e11 ss),
-                            (Pulse_Syntax_Naming.subst_st_term e2 ss),
-                            (Pulse_Syntax_Naming.subst_term t1 ss),
-                            (Pulse_Syntax_Naming.subst_comp c2 ss), b, y, (),
-                            (coerce_eq
-                               (st_typing_subst g x t
-                                  (Pulse_Typing_Env.push_binding g' y
-                                     Pulse_Syntax_Base.ppname_default t1) e
-                                  ()
-                                  (Pulse_Syntax_Naming.open_st_term_nv e2
-                                     (Pulse_Syntax_Base.v_as_nv y)) c2 d_e2)
-                               ()), ())
-                    | Pulse_Typing.T_If
-                        (uu___, b, e11, e2, c, uc, hyp, uu___1, d_e1, d_e2,
-                         uu___2)
-                        ->
-                        Pulse_Typing.T_If
-                          ((Pulse_Typing_Env.push_env g
-                              (Pulse_Typing_Env.subst_env g' (nt x e))),
-                            (Pulse_Syntax_Naming.subst_term b ss),
-                            (Pulse_Syntax_Naming.subst_st_term e11 ss),
-                            (Pulse_Syntax_Naming.subst_st_term e2 ss),
-                            (Pulse_Syntax_Naming.subst_comp c ss), uc, hyp,
-                            (),
-                            (coerce_eq
-                               (st_typing_subst g x t
-                                  (Pulse_Typing_Env.push_binding g' hyp
-                                     Pulse_Syntax_Base.ppname_default
-                                     (Pulse_Typing.mk_eq2
-                                        Pulse_Syntax_Pure.u0
-                                        Pulse_Typing.tm_bool b
-                                        Pulse_Typing.tm_true)) e () e11 c
-                                  d_e1) ()),
-                            (coerce_eq
-                               (st_typing_subst g x t
-                                  (Pulse_Typing_Env.push_binding g' hyp
-                                     Pulse_Syntax_Base.ppname_default
-                                     (Pulse_Typing.mk_eq2
-                                        Pulse_Syntax_Pure.u0
-                                        Pulse_Typing.tm_bool b
-                                        Pulse_Typing.tm_false)) e () e2 c
-                                  d_e2) ()), ())
-                    | Pulse_Typing.T_Match
-                        (uu___, uu___1, uu___2, uu___3, uu___4, uu___5,
-                         uu___6, uu___7, uu___8, uu___9)
-                        -> Prims.magic ()
-                    | Pulse_Typing.T_Frame (uu___, e2, c, frame, uu___1, d_e)
-                        ->
-                        Pulse_Typing.T_Frame
-                          ((Pulse_Typing_Env.push_env g
-                              (Pulse_Typing_Env.subst_env g' (nt x e))),
-                            (Pulse_Syntax_Naming.subst_st_term e2 ss),
-                            (Pulse_Syntax_Naming.subst_comp c ss),
-                            (Pulse_Syntax_Naming.subst_term frame ss), (),
-                            (st_typing_subst g x t g' e () e2 c d_e))
-                    | Pulse_Typing.T_Equiv (uu___, e2, c, c', d_e, d_eq) ->
-                        Pulse_Typing.T_Equiv
-                          ((Pulse_Typing_Env.push_env g
-                              (Pulse_Typing_Env.subst_env g' (nt x e))),
-                            (Pulse_Syntax_Naming.subst_st_term e2 ss),
-                            (Pulse_Syntax_Naming.subst_comp c ss),
-                            (Pulse_Syntax_Naming.subst_comp c' ss),
-                            (st_typing_subst g x t g' e () e2 c d_e),
-                            (st_equiv_subst g x t g' e () c c' d_eq))
-                    | Pulse_Typing.T_IntroPure (uu___, p, uu___1, uu___2) ->
-                        Pulse_Typing.T_IntroPure
-                          ((Pulse_Typing_Env.push_env g
-                              (Pulse_Typing_Env.subst_env g' (nt x e))),
-                            (Pulse_Syntax_Naming.subst_term p ss), (), ())
-                    | Pulse_Typing.T_ElimExists
-                        (uu___, u, t1, p, y, uu___1, uu___2) ->
-                        Pulse_Typing.T_ElimExists
-                          ((Pulse_Typing_Env.push_env g
-                              (Pulse_Typing_Env.subst_env g' (nt x e))), u,
-                            (Pulse_Syntax_Naming.subst_term t1 ss),
-                            (Pulse_Syntax_Naming.subst_term p ss), y, (), ())
-                    | Pulse_Typing.T_IntroExists
-                        (uu___, u, b, p, e2, uu___1, uu___2, uu___3) ->
-                        Pulse_Typing.T_IntroExists
-                          ((Pulse_Typing_Env.push_env g
-                              (Pulse_Typing_Env.subst_env g' (nt x e))), u,
-                            (Pulse_Syntax_Naming.subst_binder b ss),
-                            (Pulse_Syntax_Naming.subst_term p ss),
-                            (Pulse_Syntax_Naming.subst_term e2 ss), (), (),
-                            ())
-                    | Pulse_Typing.T_While
-                        (uu___, inv, cond, body, uu___1, cond_typing,
-                         body_typing)
-                        ->
-                        Pulse_Typing.T_While
-                          ((Pulse_Typing_Env.push_env g
-                              (Pulse_Typing_Env.subst_env g' (nt x e))),
-                            (Pulse_Syntax_Naming.subst_term inv ss),
-                            (Pulse_Syntax_Naming.subst_st_term cond ss),
-                            (Pulse_Syntax_Naming.subst_st_term body ss), (),
-                            (st_typing_subst g x t g' e () cond
-                               (Pulse_Typing.comp_while_cond
-                                  Pulse_Syntax_Base.ppname_default inv)
-                               cond_typing),
-                            (st_typing_subst g x t g' e () body
-                               (Pulse_Typing.comp_while_body
-                                  Pulse_Syntax_Base.ppname_default inv)
-                               body_typing))
-                    | Pulse_Typing.T_Par
-                        (uu___, eL, cL, eR, cR, y, d_cL, d_cR, d_eL, d_eR) ->
-                        Pulse_Typing.T_Par
-                          ((Pulse_Typing_Env.push_env g
-                              (Pulse_Typing_Env.subst_env g' (nt x e))),
-                            (Pulse_Syntax_Naming.subst_st_term eL ss),
-                            (Pulse_Syntax_Naming.subst_comp cL ss),
-                            (Pulse_Syntax_Naming.subst_st_term eR ss),
-                            (Pulse_Syntax_Naming.subst_comp cR ss), y,
-                            (comp_typing_subst g x t g' e () cL
-                               (Pulse_Syntax_Base.comp_u cL) d_cL),
-                            (comp_typing_subst g x t g' e () cR
-                               (Pulse_Syntax_Base.comp_u cR) d_cR),
-                            (st_typing_subst g x t g' e () eL cL d_eL),
-                            (st_typing_subst g x t g' e () eR cR d_eR))
-                    | Pulse_Typing.T_WithLocal
-                        (uu___, init, body, init_t, c, y, uu___1, uu___2,
-                         d_c, d_body)
-                        ->
-                        Pulse_Typing.T_WithLocal
-                          ((Pulse_Typing_Env.push_env g
-                              (Pulse_Typing_Env.subst_env g' (nt x e))),
-                            (Pulse_Syntax_Naming.subst_term init ss),
-                            (Pulse_Syntax_Naming.subst_st_term body ss),
-                            (Pulse_Syntax_Naming.subst_term init_t ss),
-                            (Pulse_Syntax_Naming.subst_comp c ss), y, (), (),
-                            (comp_typing_subst g x t g' e () c
-                               (Pulse_Syntax_Base.comp_u c) d_c),
-                            (coerce_eq
-                               (st_typing_subst g x t
-                                  (Pulse_Typing_Env.push_binding g' y
-                                     Pulse_Syntax_Base.ppname_default
-                                     (Pulse_Typing.mk_ref init_t)) e ()
-                                  (Pulse_Syntax_Naming.open_st_term_nv body
-                                     (Pulse_Syntax_Base.v_as_nv y))
-                                  (Pulse_Typing.comp_withlocal_body y init_t
-                                     init c) d_body) ()))
-                    | Pulse_Typing.T_WithLocalArray
-                        (uu___, init, len, body, init_t, c, y, uu___1,
-                         uu___2, uu___3, d_c, d_body)
-                        ->
-                        Pulse_Typing.T_WithLocalArray
-                          ((Pulse_Typing_Env.push_env g
-                              (Pulse_Typing_Env.subst_env g' (nt x e))),
-                            (Pulse_Syntax_Naming.subst_term init ss),
-                            (Pulse_Syntax_Naming.subst_term len ss),
-                            (Pulse_Syntax_Naming.subst_st_term body ss),
-                            (Pulse_Syntax_Naming.subst_term init_t ss),
-                            (Pulse_Syntax_Naming.subst_comp c ss), y, (), (),
-                            (),
-                            (comp_typing_subst g x t g' e () c
-                               (Pulse_Syntax_Base.comp_u c) d_c),
-                            (coerce_eq
-                               (st_typing_subst g x t
-                                  (Pulse_Typing_Env.push_binding g' y
-                                     Pulse_Syntax_Base.ppname_default
-                                     (Pulse_Typing.mk_ref init_t)) e ()
-                                  (Pulse_Syntax_Naming.open_st_term_nv body
-                                     (Pulse_Syntax_Base.v_as_nv y))
-                                  (Pulse_Typing.comp_withlocal_array_body y
-                                     init_t init len c) d_body) ()))
-                    | Pulse_Typing.T_Rewrite (uu___, p, q, uu___1, uu___2) ->
-                        Pulse_Typing.T_Rewrite
-                          ((Pulse_Typing_Env.push_env g
-                              (Pulse_Typing_Env.subst_env g' (nt x e))),
-                            (Pulse_Syntax_Naming.subst_term p ss),
-                            (Pulse_Syntax_Naming.subst_term q ss), (), ())
-                    | Pulse_Typing.T_Admit (uu___, s, c, d_s) ->
-                        Pulse_Typing.T_Admit
-                          ((Pulse_Typing_Env.push_env g
-                              (Pulse_Typing_Env.subst_env g' (nt x e))),
-                            (Pulse_Syntax_Naming.subst_st_comp s ss), c,
-                            (st_comp_typing_subst g x t g' e () s d_s))
+            fun eff ->
+              fun e_typing ->
+                fun e1 ->
+                  fun c1 ->
+                    fun e1_typing ->
+                      fun uu___ ->
+                        let ss = nt x e in
+                        match e1_typing with
+                        | Pulse_Typing.T_Abs
+                            (uu___1, uu___2, uu___3, uu___4, uu___5, uu___6,
+                             uu___7, uu___8, uu___9)
+                            -> Prims.magic ()
+                        | Pulse_Typing.T_STApp
+                            (uu___1, head, ty, q, res, arg, uu___2, uu___3)
+                            ->
+                            Pulse_Typing.T_STApp
+                              ((Pulse_Typing_Env.push_env g
+                                  (Pulse_Typing_Env.subst_env g' (nt x e))),
+                                (Pulse_Syntax_Naming.subst_term head ss),
+                                (Pulse_Syntax_Naming.subst_term ty ss), q,
+                                (Pulse_Syntax_Naming.subst_comp res ss),
+                                (Pulse_Syntax_Naming.subst_term arg ss), (),
+                                ())
+                        | Pulse_Typing.T_STGhostApp
+                            (uu___1, head, ty, q, res, arg, x1, uu___2,
+                             uu___3, uu___4)
+                            ->
+                            Pulse_Typing.T_STGhostApp
+                              ((Pulse_Typing_Env.push_env g
+                                  (Pulse_Typing_Env.subst_env g' (nt x e))),
+                                (Pulse_Syntax_Naming.subst_term head ss),
+                                (Pulse_Syntax_Naming.subst_term ty ss), q,
+                                (Pulse_Syntax_Naming.subst_comp res ss),
+                                (Pulse_Syntax_Naming.subst_term arg ss), x1,
+                                (), (), ())
+                        | Pulse_Typing.T_Return
+                            (uu___1, c, use_eq, u, t1, e2, post, x1, uu___2,
+                             uu___3, uu___4)
+                            ->
+                            Pulse_Typing.T_Return
+                              ((Pulse_Typing_Env.push_env g
+                                  (Pulse_Typing_Env.subst_env g' (nt x e))),
+                                c, use_eq, u,
+                                (Pulse_Syntax_Naming.subst_term t1 ss),
+                                (Pulse_Syntax_Naming.subst_term e2 ss),
+                                (Pulse_Syntax_Naming.subst_term post ss), x1,
+                                (), (), ())
+                        | Pulse_Typing.T_Lift
+                            (uu___1, e2, c11, c2, d_e, d_lift) ->
+                            Pulse_Typing.T_Lift
+                              ((Pulse_Typing_Env.push_env g
+                                  (Pulse_Typing_Env.subst_env g' (nt x e))),
+                                (Pulse_Syntax_Naming.subst_st_term e2 ss),
+                                (Pulse_Syntax_Naming.subst_comp c11 ss),
+                                (Pulse_Syntax_Naming.subst_comp c2 ss),
+                                (st_typing_subst g x t g' e eff () e2 c11 d_e
+                                   ()),
+                                (lift_comp_subst g x t g' e () c11 c2 d_lift))
+                        | Pulse_Typing.T_Bind
+                            (uu___1, e11, e2, c11, c2, b, y, c, d_e1, uu___2,
+                             d_e2, d_bc)
+                            ->
+                            Pulse_Typing.T_Bind
+                              ((Pulse_Typing_Env.push_env g
+                                  (Pulse_Typing_Env.subst_env g' (nt x e))),
+                                (Pulse_Syntax_Naming.subst_st_term e11 ss),
+                                (Pulse_Syntax_Naming.subst_st_term e2 ss),
+                                (Pulse_Syntax_Naming.subst_comp c11 ss),
+                                (Pulse_Syntax_Naming.subst_comp c2 ss),
+                                (Pulse_Syntax_Naming.subst_binder b ss), y,
+                                (Pulse_Syntax_Naming.subst_comp c ss),
+                                (st_typing_subst g x t g' e eff () e11 c11
+                                   d_e1 ()), (),
+                                (coerce_eq
+                                   (st_typing_subst g x t
+                                      (Pulse_Typing_Env.push_binding g' y
+                                         Pulse_Syntax_Base.ppname_default
+                                         (Pulse_Syntax_Base.comp_res c11)) e
+                                      eff ()
+                                      (Pulse_Syntax_Naming.open_st_term_nv e2
+                                         ((b.Pulse_Syntax_Base.binder_ppname),
+                                           y)) c2 d_e2 ()) ()),
+                                (bind_comp_subst g x t g' e () y c11 c2 c
+                                   d_bc))
+                        | Pulse_Typing.T_TotBind
+                            (uu___1, e11, e2, t1, c2, b, y, uu___2, d_e2) ->
+                            Pulse_Typing.T_TotBind
+                              ((Pulse_Typing_Env.push_env g
+                                  (Pulse_Typing_Env.subst_env g' (nt x e))),
+                                (Pulse_Syntax_Naming.subst_term e11 ss),
+                                (Pulse_Syntax_Naming.subst_st_term e2 ss),
+                                (Pulse_Syntax_Naming.subst_term t1 ss),
+                                (Pulse_Syntax_Naming.subst_comp c2 ss), b, y,
+                                (),
+                                (coerce_eq
+                                   (st_typing_subst g x t
+                                      (Pulse_Typing_Env.push_binding g' y
+                                         Pulse_Syntax_Base.ppname_default t1)
+                                      e eff ()
+                                      (Pulse_Syntax_Naming.open_st_term_nv e2
+                                         (Pulse_Syntax_Base.v_as_nv y)) c2
+                                      d_e2 ()) ()))
+                        | Pulse_Typing.T_GhostBind
+                            (uu___1, e11, e2, t1, c2, b, y, uu___2, d_e2,
+                             uu___3)
+                            ->
+                            Pulse_Typing.T_GhostBind
+                              ((Pulse_Typing_Env.push_env g
+                                  (Pulse_Typing_Env.subst_env g' (nt x e))),
+                                (Pulse_Syntax_Naming.subst_term e11 ss),
+                                (Pulse_Syntax_Naming.subst_st_term e2 ss),
+                                (Pulse_Syntax_Naming.subst_term t1 ss),
+                                (Pulse_Syntax_Naming.subst_comp c2 ss), b, y,
+                                (),
+                                (coerce_eq
+                                   (st_typing_subst g x t
+                                      (Pulse_Typing_Env.push_binding g' y
+                                         Pulse_Syntax_Base.ppname_default t1)
+                                      e eff ()
+                                      (Pulse_Syntax_Naming.open_st_term_nv e2
+                                         (Pulse_Syntax_Base.v_as_nv y)) c2
+                                      d_e2 ()) ()), ())
+                        | Pulse_Typing.T_If
+                            (uu___1, b, e11, e2, c, uc, hyp, uu___2, d_e1,
+                             d_e2, uu___3)
+                            ->
+                            Pulse_Typing.T_If
+                              ((Pulse_Typing_Env.push_env g
+                                  (Pulse_Typing_Env.subst_env g' (nt x e))),
+                                (Pulse_Syntax_Naming.subst_term b ss),
+                                (Pulse_Syntax_Naming.subst_st_term e11 ss),
+                                (Pulse_Syntax_Naming.subst_st_term e2 ss),
+                                (Pulse_Syntax_Naming.subst_comp c ss), uc,
+                                hyp, (),
+                                (coerce_eq
+                                   (st_typing_subst g x t
+                                      (Pulse_Typing_Env.push_binding g' hyp
+                                         Pulse_Syntax_Base.ppname_default
+                                         (Pulse_Typing.mk_eq2
+                                            Pulse_Syntax_Pure.u0
+                                            Pulse_Typing.tm_bool b
+                                            Pulse_Typing.tm_true)) e eff ()
+                                      e11 c d_e1 ()) ()),
+                                (coerce_eq
+                                   (st_typing_subst g x t
+                                      (Pulse_Typing_Env.push_binding g' hyp
+                                         Pulse_Syntax_Base.ppname_default
+                                         (Pulse_Typing.mk_eq2
+                                            Pulse_Syntax_Pure.u0
+                                            Pulse_Typing.tm_bool b
+                                            Pulse_Typing.tm_false)) e eff ()
+                                      e2 c d_e2 ()) ()), ())
+                        | Pulse_Typing.T_Match
+                            (uu___1, uu___2, uu___3, uu___4, uu___5, uu___6,
+                             uu___7, uu___8, uu___9, uu___10)
+                            -> Prims.magic ()
+                        | Pulse_Typing.T_Frame
+                            (uu___1, e2, c, frame, uu___2, d_e) ->
+                            Pulse_Typing.T_Frame
+                              ((Pulse_Typing_Env.push_env g
+                                  (Pulse_Typing_Env.subst_env g' (nt x e))),
+                                (Pulse_Syntax_Naming.subst_st_term e2 ss),
+                                (Pulse_Syntax_Naming.subst_comp c ss),
+                                (Pulse_Syntax_Naming.subst_term frame ss),
+                                (),
+                                (st_typing_subst g x t g' e eff () e2 c d_e
+                                   ()))
+                        | Pulse_Typing.T_Equiv (uu___1, e2, c, c', d_e, d_eq)
+                            ->
+                            Pulse_Typing.T_Equiv
+                              ((Pulse_Typing_Env.push_env g
+                                  (Pulse_Typing_Env.subst_env g' (nt x e))),
+                                (Pulse_Syntax_Naming.subst_st_term e2 ss),
+                                (Pulse_Syntax_Naming.subst_comp c ss),
+                                (Pulse_Syntax_Naming.subst_comp c' ss),
+                                (st_typing_subst g x t g' e eff () e2 c d_e
+                                   ()),
+                                (st_equiv_subst g x t g' e () c c' d_eq))
+                        | Pulse_Typing.T_IntroPure
+                            (uu___1, p, uu___2, uu___3) ->
+                            Pulse_Typing.T_IntroPure
+                              ((Pulse_Typing_Env.push_env g
+                                  (Pulse_Typing_Env.subst_env g' (nt x e))),
+                                (Pulse_Syntax_Naming.subst_term p ss), (),
+                                ())
+                        | Pulse_Typing.T_ElimExists
+                            (uu___1, u, t1, p, y, uu___2, uu___3) ->
+                            Pulse_Typing.T_ElimExists
+                              ((Pulse_Typing_Env.push_env g
+                                  (Pulse_Typing_Env.subst_env g' (nt x e))),
+                                u, (Pulse_Syntax_Naming.subst_term t1 ss),
+                                (Pulse_Syntax_Naming.subst_term p ss), y, (),
+                                ())
+                        | Pulse_Typing.T_IntroExists
+                            (uu___1, u, b, p, e2, uu___2, uu___3, uu___4) ->
+                            Pulse_Typing.T_IntroExists
+                              ((Pulse_Typing_Env.push_env g
+                                  (Pulse_Typing_Env.subst_env g' (nt x e))),
+                                u, (Pulse_Syntax_Naming.subst_binder b ss),
+                                (Pulse_Syntax_Naming.subst_term p ss),
+                                (Pulse_Syntax_Naming.subst_term e2 ss), (),
+                                (), ())
+                        | Pulse_Typing.T_While
+                            (uu___1, inv, cond, body, uu___2, cond_typing,
+                             body_typing)
+                            ->
+                            Pulse_Typing.T_While
+                              ((Pulse_Typing_Env.push_env g
+                                  (Pulse_Typing_Env.subst_env g' (nt x e))),
+                                (Pulse_Syntax_Naming.subst_term inv ss),
+                                (Pulse_Syntax_Naming.subst_st_term cond ss),
+                                (Pulse_Syntax_Naming.subst_st_term body ss),
+                                (),
+                                (st_typing_subst g x t g' e eff () cond
+                                   (Pulse_Typing.comp_while_cond
+                                      Pulse_Syntax_Base.ppname_default inv)
+                                   cond_typing ()),
+                                (st_typing_subst g x t g' e eff () body
+                                   (Pulse_Typing.comp_while_body
+                                      Pulse_Syntax_Base.ppname_default inv)
+                                   body_typing ()))
+                        | Pulse_Typing.T_Par
+                            (uu___1, eL, cL, eR, cR, y, d_cL, d_cR, d_eL,
+                             d_eR)
+                            ->
+                            Pulse_Typing.T_Par
+                              ((Pulse_Typing_Env.push_env g
+                                  (Pulse_Typing_Env.subst_env g' (nt x e))),
+                                (Pulse_Syntax_Naming.subst_st_term eL ss),
+                                (Pulse_Syntax_Naming.subst_comp cL ss),
+                                (Pulse_Syntax_Naming.subst_st_term eR ss),
+                                (Pulse_Syntax_Naming.subst_comp cR ss), y,
+                                (comp_typing_subst g x t g' e () cL
+                                   (Pulse_Syntax_Base.comp_u cL) d_cL),
+                                (comp_typing_subst g x t g' e () cR
+                                   (Pulse_Syntax_Base.comp_u cR) d_cR),
+                                (st_typing_subst g x t g' e eff () eL cL d_eL
+                                   ()),
+                                (st_typing_subst g x t g' e eff () eR cR d_eR
+                                   ()))
+                        | Pulse_Typing.T_WithLocal
+                            (uu___1, init, body, init_t, c, y, uu___2,
+                             uu___3, d_c, d_body)
+                            ->
+                            Pulse_Typing.T_WithLocal
+                              ((Pulse_Typing_Env.push_env g
+                                  (Pulse_Typing_Env.subst_env g' (nt x e))),
+                                (Pulse_Syntax_Naming.subst_term init ss),
+                                (Pulse_Syntax_Naming.subst_st_term body ss),
+                                (Pulse_Syntax_Naming.subst_term init_t ss),
+                                (Pulse_Syntax_Naming.subst_comp c ss), y, (),
+                                (),
+                                (comp_typing_subst g x t g' e () c
+                                   (Pulse_Syntax_Base.comp_u c) d_c),
+                                (coerce_eq
+                                   (st_typing_subst g x t
+                                      (Pulse_Typing_Env.push_binding g' y
+                                         Pulse_Syntax_Base.ppname_default
+                                         (Pulse_Typing.mk_ref init_t)) e eff
+                                      ()
+                                      (Pulse_Syntax_Naming.open_st_term_nv
+                                         body (Pulse_Syntax_Base.v_as_nv y))
+                                      (Pulse_Typing.comp_withlocal_body y
+                                         init_t init c) d_body ()) ()))
+                        | Pulse_Typing.T_WithLocalArray
+                            (uu___1, init, len, body, init_t, c, y, uu___2,
+                             uu___3, uu___4, d_c, d_body)
+                            ->
+                            Pulse_Typing.T_WithLocalArray
+                              ((Pulse_Typing_Env.push_env g
+                                  (Pulse_Typing_Env.subst_env g' (nt x e))),
+                                (Pulse_Syntax_Naming.subst_term init ss),
+                                (Pulse_Syntax_Naming.subst_term len ss),
+                                (Pulse_Syntax_Naming.subst_st_term body ss),
+                                (Pulse_Syntax_Naming.subst_term init_t ss),
+                                (Pulse_Syntax_Naming.subst_comp c ss), y, (),
+                                (), (),
+                                (comp_typing_subst g x t g' e () c
+                                   (Pulse_Syntax_Base.comp_u c) d_c),
+                                (coerce_eq
+                                   (st_typing_subst g x t
+                                      (Pulse_Typing_Env.push_binding g' y
+                                         Pulse_Syntax_Base.ppname_default
+                                         (Pulse_Typing.mk_ref init_t)) e eff
+                                      ()
+                                      (Pulse_Syntax_Naming.open_st_term_nv
+                                         body (Pulse_Syntax_Base.v_as_nv y))
+                                      (Pulse_Typing.comp_withlocal_array_body
+                                         y init_t init len c) d_body ()) ()))
+                        | Pulse_Typing.T_Rewrite
+                            (uu___1, p, q, uu___2, uu___3) ->
+                            Pulse_Typing.T_Rewrite
+                              ((Pulse_Typing_Env.push_env g
+                                  (Pulse_Typing_Env.subst_env g' (nt x e))),
+                                (Pulse_Syntax_Naming.subst_term p ss),
+                                (Pulse_Syntax_Naming.subst_term q ss), (),
+                                ())
+                        | Pulse_Typing.T_Admit (uu___1, s, c, d_s) ->
+                            Pulse_Typing.T_Admit
+                              ((Pulse_Typing_Env.push_env g
+                                  (Pulse_Typing_Env.subst_env g' (nt x e))),
+                                (Pulse_Syntax_Naming.subst_st_comp s ss), c,
+                                (st_comp_typing_subst g x t g' e () s d_s))
