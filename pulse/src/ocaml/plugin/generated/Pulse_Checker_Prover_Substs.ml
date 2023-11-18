@@ -458,8 +458,10 @@ let rec (st_typing_nt_substs :
                                 (match uu___4 with
                                  | eff::effect_labels_rest ->
                                      if
-                                       (eff = FStar_TypeChecker_Core.E_Ghost)
-                                         &&
+                                       (Prims.op_Negation
+                                          (eff =
+                                             FStar_TypeChecker_Core.E_Ghost))
+                                         ||
                                          (Pulse_Syntax_Base.uu___is_C_STGhost
                                             c)
                                      then

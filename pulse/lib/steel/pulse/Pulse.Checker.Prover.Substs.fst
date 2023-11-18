@@ -343,7 +343,7 @@ let rec st_typing_nt_substs
     let (NT _ e)::nts_rest = nts in
     let eff::effect_labels_rest = effect_labels in
     let e_typing : typing g e eff ty = FStar.IndefiniteDescription.elim_squash () in
-    if eff = T.E_Ghost && C_STGhost? c
+    if (not (eff = T.E_Ghost)) || C_STGhost? c
     then begin
       push_env_assoc (singleton_env (fstar_env uvs) x ty) uvs_rest g';
       let t_typing
