@@ -131,3 +131,9 @@ let norm_well_typed_term
   = let t' = norm_well_typed_term_aux g t steps in
     FStar_Tactics_Result.Success (t', ps)
 
+let add_attribute (s:S.sigelt) (x:S.attribute) =
+  { s with sigattrs = x::s.sigattrs }
+let add_noextract_qual (s:S.sigelt) =
+  { s with sigquals = S.NoExtract::s.sigquals }
+let get_attributes (s:S.sigelt) (ps:_) =
+  FStar_Tactics_Result.Success (s.sigattrs, ps)

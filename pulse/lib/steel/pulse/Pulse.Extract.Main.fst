@@ -434,7 +434,7 @@ let rec generalize (g:env) (t:R.typ) (e:option st_term)
   : T.Tac (env &
            list mlident &
            R.typ &
-           option st_term) =
+           o:option st_term { Some? e <==> Some? o}) =
 
   debug g (fun _ -> Printf.sprintf "Generalizing arrow:\n%s\n" (T.term_to_string t));
   let tv = R.inspect_ln t in
@@ -452,7 +452,7 @@ let rec generalize (g:env) (t:R.typ) (e:option st_term)
            let t = R.subst_term [R.DT 0 xt] t in
            let e =
              match e with
-             | Some ({term = Tm_Abs {b; body}}) ->
+             | Some {term=Tm_Abs {b; body}} ->
                Some (LN.subst_st_term body [LN.DT 0 (tm_fstar xt Range.range_0)])
              | _ -> e in
            let namedv = R.pack_namedv {
@@ -476,7 +476,75 @@ let rec generalize (g:env) (t:R.typ) (e:option st_term)
   | _ -> g, [], t, e
 
 let debug_ = debug
+
+let rec find_map (f: 'a -> option 'b) (l:list 'a) : option 'b =
+  match l with
+  | [] -> None
+  | hd::tl -> let x = f hd in if Some? x then x else find_map f tl
+
+let is_recursive (g:env) (knot_name:R.fv) (selt:R.sigelt)
+  : T.Tac (option string)
+  = let attrs = RU.get_attributes selt in
+    let unpack_string (t:R.term) : option string =
+      match R.inspect_ln t with
+      | R.Tv_Const (R.C_String s) -> Some s
+      | _ -> None
+    in
+    let pulse_recursive_attr (t:R.term) : option string =
+      match R.inspect_ln t with
+      | R.Tv_App _ _ -> (
+        let hd, args = T.collect_app_ln t in
+        if T.is_fvar hd (`%Mktuple2)
+        then match args with
+             | [_; _; (tag, _); (value, _)] -> (
+              match unpack_string tag, unpack_string value with
+              | Some "pulse.recursive.knot", Some v -> Some v
+              | _ -> None
+             )
+             | _ -> None
+        else None
+      )
+      | _ -> None
+    in
+    find_map pulse_recursive_attr attrs
+
+let rec extract_recursive g (p:st_term) (rec_name:R.fv)
+  : T.Tac (mlexpr & e_tag)
+  = match p.term with
+    | Tm_Abs { b; q; body } -> (
+      match body.term with
+      | Tm_Abs _ ->
+        let g, mlident, mlty, name = extend_env g b in
+        let body = LN.open_st_term_nv body name in
+        let body, _ = extract_recursive g body rec_name in
+        let res = mle_fun [mlident, mlty] body in
+        res, e_tag_pure
+      | _ -> //last binder used for knot; replace it with the recursively bound name
+        let body = LN.subst_st_term body [LN.DT 0 (tm_fstar R.(pack_ln (Tv_FVar rec_name)) Range.range_0)] in
+        let body, tag = extract g body in
+        body, tag
+    )
+
+    | _ -> T.fail "Unexpected recursive definition of non-function"
+
+let extract_recursive_knot (g:env) (p:st_term)
+                           (knot_name:R.fv) (knot_typ:R.term) =
+    let g, tys, lb_typ, Some p = generalize g knot_typ (Some p) in
+    let mlty = ECL.term_as_mlty g.uenv_inner lb_typ in
+    let uenv, _mli, _ml_binding = extend_fv g.uenv_inner knot_name (tys, mlty) in
+    let g = { g with uenv_inner = uenv } in
+    let tm, tag = extract_recursive g p knot_name in
+    let fv_name = 
+      let lids = R.inspect_fv knot_name in
+      if Nil? lids
+      then T.raise (Extraction_failure "Unexpected empty name");
+      FStar.List.Tot.last lids
+    in
+    debug_ g (fun _ -> Printf.sprintf "Extracted term (%s): %s\n" fv_name (mlexpr_to_string tm));
+    let mllb = mk_mllb fv_name (tys, mlty) tm in
+    Inl [mlm_let true [mllb]]
   
+
 let extract_pulse (g:uenv) (selt:R.sigelt) (p:st_term)
   : T.Tac (either mlmodule string) =
   
@@ -486,22 +554,27 @@ let extract_pulse (g:uenv) (selt:R.sigelt) (p:st_term)
   try
     let sigelt_view = R.inspect_sigelt selt in
     match sigelt_view with
-    | R.Sg_Let is_rec lbs ->
+    | R.Sg_Let is_rec lbs -> (
       if is_rec || List.length lbs <> 1
       then T.raise (Extraction_failure "Extraction of recursive lets is not yet supported")
-      else
+      else (
         let {lb_fv; lb_typ} = R.inspect_lb (List.Tot.hd lbs) in
-        let g, tys, lb_typ, p = generalize g lb_typ (Some p) in
-        let mlty = ECL.term_as_mlty g.uenv_inner lb_typ in
-        if None? p
-        then T.raise (Extraction_failure "Unexpected p");
-        let tm, tag = extract g (Some?.v p) in
-        debug_ g (fun _ -> Printf.sprintf "Extracted term: %s\n" (mlexpr_to_string tm));
-        let fv_name = R.inspect_fv lb_fv in
-        if List.Tot.length fv_name = 0
-        then T.raise (Extraction_failure "Unexpected empty name");
-        let mllb = mk_mllb (FStar.List.Tot.last fv_name) (tys, mlty) tm in
-        Inl [mlm_let false [mllb]]
+        match is_recursive g lb_fv selt with
+        | Some _ ->
+          extract_recursive_knot g p lb_fv lb_typ
+        | _ -> 
+          let g, tys, lb_typ, Some p = generalize g lb_typ (Some p) in
+          let mlty = ECL.term_as_mlty g.uenv_inner lb_typ in
+          let fv_name = R.inspect_fv lb_fv in
+          if Nil? fv_name
+          then T.raise (Extraction_failure "Unexpected empty name");
+          let tm, tag = extract g p in
+          let fv_name = FStar.List.Tot.last fv_name in
+          debug_ g (fun _ -> Printf.sprintf "Extracted term (%s): %s\n" fv_name (mlexpr_to_string tm));
+          let mllb = mk_mllb fv_name (tys, mlty) tm in
+          Inl [mlm_let false [mllb]]
+      )
+    )
     | _ -> T.raise (Extraction_failure "Unexpected sigelt")
   with
   | Extraction_failure msg -> 

@@ -133,3 +133,34 @@ fn extract_match (x:opt bool)
   }
 }
 ```
+
+```pulse
+fn rec fib (x:nat)
+  requires emp
+  returns y:nat
+  ensures emp
+{
+  if (x <= 1)
+  {
+    1
+  }
+  else
+  {
+    let x1 = fib (x - 1);
+    let x2 = fib (x - 2);
+    (x1 + x2)
+  }
+}
+```
+
+```pulse
+fn fib2 (x:nat)
+requires emp
+returns y:nat
+ensures emp
+{
+  let n = fib x;
+  let m = fib (x + 1);
+  (m + n)
+}
+```
