@@ -26,9 +26,9 @@ let check
   let Tm_Par {pre1=preL; body1=eL; post1=postL;
               pre2=preR; body2=eR; post2=postR} = t.term in
   let (| preL, preL_typing |) =
-    check_tot_term_with_expected_type g preL tm_vprop in
+    check_tot_term g preL tm_vprop in
   let (| preR, preR_typing |) =
-    check_tot_term_with_expected_type g preR tm_vprop in
+    check_tot_term g preR tm_vprop in
 
   let postL_hint = intro_post_hint g None None postL in
 

@@ -98,7 +98,7 @@ let check
   let g = Pulse.Typing.Env.push_context g "check_if" e1.range in
 
   let (| b, b_typing |) =
-    check_tot_term_with_expected_type g b tm_bool in
+    check_tot_term g b tm_bool in
 
   let post = post_hint.post in
   let hyp = fresh g in

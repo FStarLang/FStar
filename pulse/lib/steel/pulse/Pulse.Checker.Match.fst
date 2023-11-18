@@ -309,7 +309,7 @@ let check
   let orig_brs = brs in
   let nbr = L.length brs in
 
-  let (| sc, sc_u, sc_ty, sc_ty_typing, sc_typing |) = check_tot_term_and_type g sc in
+  let (| sc, sc_u, sc_ty, sc_ty_typing, sc_typing |) = compute_tot_term_type_and_u g sc in
   let elab_pats = L.map elab_pat (L.map fst brs) in
 
   assertby (L.length elab_pats == L.length brs) (fun () ->

@@ -28,9 +28,9 @@ let check_core
     universe_of g ty u &
     tot_typing g t ty =
     match post_hint with
-    | None -> check_tot_term_and_type g t
+    | None -> compute_tot_term_type_and_u g t
     | Some post ->
-      let (| t, d |) = check_tot_term_with_expected_type g t post.ret_ty in
+      let (| t, d |) = check_tot_term g t post.ret_ty in
       assert (g `env_extends` post.g);
       let ty_typing : universe_of post.g post.ret_ty post.u =
         post.ty_typing in
@@ -44,7 +44,7 @@ let check_core
   let (| post_opened, post_typing |) : t:term & tot_typing (push_binding g x (fst px) ty)  t tm_vprop =
       match post_hint with
       | None -> 
-        let (| t, ty |) = check_tot_term_with_expected_type (push_binding g x (fst px) ty) tm_emp tm_vprop in
+        let (| t, ty |) = check_tot_term (push_binding g x (fst px) ty) tm_emp tm_vprop in
         (| t, ty |)
         
       | Some post ->

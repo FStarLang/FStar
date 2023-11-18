@@ -204,7 +204,7 @@ let tc_meta_callback g (f:R.env) (e:R.term)
     in
     res
 
-let check_term (g:env) (t:term)
+let compute_term_type (g:env) (t:term)
   : T.Tac (t:term &
            eff:T.tot_or_ghost &
            ty:term &
@@ -228,7 +228,7 @@ let check_term (g:env) (t:term)
       | Some t, Some ty -> (| t, eff, ty, E tok |)
 
 
-let check_term_and_type (g:env) (t:term)
+let compute_term_type_and_u (g:env) (t:term)
   : T.Tac (t:term &
            eff:T.tot_or_ghost &
            ty:term &
@@ -251,7 +251,7 @@ let check_term_and_type (g:env) (t:term)
         let (| u, uty |) = check_universe g ty in
         (| t, eff, ty, (| u, uty |), E tok |)
 
-let check_term_with_expected_type_and_effect (g:env) (e:term) (eff:T.tot_or_ghost) (t:term)
+let check_term (g:env) (e:term) (eff:T.tot_or_ghost) (t:term)
   : T.Tac (e:term & typing g e eff t) =
 
   let e, _ = instantiate_term_implicits g e in 
@@ -273,7 +273,7 @@ let check_term_with_expected_type_and_effect (g:env) (e:term) (eff:T.tot_or_ghos
       g e.range (ill_typed_term e (Some t) None)
   | Some tok -> (| e, E (RT.T_Token _ _ _ (FStar.Squash.return_squash tok)) |)
 
-let check_term_with_expected_type (g:env) (e:term) (t:term)
+let check_term_at_type (g:env) (e:term) (t:term)
   : T.Tac (e:term & eff:T.tot_or_ghost & typing g e eff t) =
 
   let e, _ = instantiate_term_implicits g e in
@@ -341,10 +341,28 @@ let core_check_term g e eff t =
       g e.range (ill_typed_term e (Some t) None)
   | Some tok -> E (RT.T_Token _ _ _ (FStar.Squash.return_squash tok))
 
+let core_check_term_at_type g e t =
+  let fg = elab_env g in
+  let re = elab_term e in
+  let rt = elab_term t in
+  let effopt, issues =
+    catch_all (fun _ -> 
+    rtb_core_check_term_at_type 
+      (push_context g "core_check_term_at_type" (range_of_term rt))
+       fg re rt) in
+  T.log_issues issues;
+  match effopt with
+  | None ->
+    maybe_fail_doc 
+      issues
+      g e.range (ill_typed_term e (Some t) None)
+  | Some eff ->
+    (| eff, E (RT.T_Token _ _ _ (FStar.Squash.get_proof _)) |)
+
 let check_vprop (g:env)
                 (t:term)
   : T.Tac (t:term & tot_typing g t tm_vprop) =
-  check_term_with_expected_type_and_effect (push_context_no_range g "check_vprop") t T.E_Total tm_vprop
+  check_term (push_context_no_range g "check_vprop") t T.E_Total tm_vprop
 
 let check_vprop_with_core (g:env)
                           (t:term)
@@ -397,7 +415,7 @@ let get_non_informative_witness g u t
     match eopt with
     | None -> err ()
     | Some e ->
-      check_term_with_expected_type_and_effect
+      check_term
         (push_context_no_range g "get_noninformative_witness")
         e
         T.E_Total
@@ -418,18 +436,18 @@ let fail_expected_tot_found_ghost (g:env) (t:term) =
   fail g (Some t.range)
     (Printf.sprintf "Expected a total term, found ghost term %s" (P.term_to_string t))
 
-let check_tot_term g t =
-  let (| t, eff, ty, t_typing |) = check_term g t in
+let compute_tot_term_type g t =
+  let (| t, eff, ty, t_typing |) = compute_term_type g t in
   if eff = T.E_Total then (| t, ty, t_typing |)
   else fail_expected_tot_found_ghost g t
 
-let check_tot_term_and_type g t =
-  let (| t, eff, ty, (| u, ty_typing |), t_typing |) = check_term_and_type g t in
+let compute_tot_term_type_and_u g t =
+  let (| t, eff, ty, (| u, ty_typing |), t_typing |) = compute_term_type_and_u g t in
   if eff = T.E_Total then (| t, u, ty, ty_typing, t_typing |)
   else fail_expected_tot_found_ghost g t
 
-let check_tot_term_with_expected_type g e t =
-  check_term_with_expected_type_and_effect g e T.E_Total t
+let check_tot_term g e t =
+  check_term g e T.E_Total t
 
 let core_compute_tot_term_type g t =
   let (| eff, ty, d |) = core_compute_term_type g t in

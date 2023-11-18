@@ -100,7 +100,7 @@ let main' (nm:string) (d:decl) (pre:term) (g:RT.fstar_top_env)
     | Some g ->
       if RU.debug_at_level (fstar_env g) "Pulse" then 
         T.print (Printf.sprintf "About to check pulse decl:\n%s\n" (P.decl_to_string d));
-      let (| pre, ty, pre_typing |) = Pulse.Checker.Pure.check_tot_term g pre in
+      let (| pre, ty, pre_typing |) = Pulse.Checker.Pure.compute_tot_term_type g pre in
       if not (eq_tm ty tm_vprop) then
         fail g (Some pre.range) "pulse main: cannot typecheck pre at type vprop"; //fix range
       let pre_typing : tot_typing g pre tm_vprop = pre_typing in

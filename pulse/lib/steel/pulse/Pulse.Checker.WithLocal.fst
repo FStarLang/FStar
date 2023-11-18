@@ -38,10 +38,10 @@ let check
     (* Check against annotation if any *)
     let ty = binder.binder_ty in
     match ty.t with
-    | Tm_Unknown -> check_tot_term_and_type g init
+    | Tm_Unknown -> compute_tot_term_type_and_u g init
     | _ ->
       let (| u, ty_typing |) = check_universe g ty in
-      let (| init, init_typing |) = check_term_with_expected_type_and_effect g init T.E_Total ty in
+      let (| init, init_typing |) = check_term g init T.E_Total ty in
       let ty_typing : universe_of g ty u = ty_typing in
       let init_typing : typing g init T.E_Total ty = init_typing in
       (| init, u, ty, ty_typing, init_typing |)

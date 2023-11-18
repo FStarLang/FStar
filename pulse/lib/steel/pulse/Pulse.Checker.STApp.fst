@@ -135,7 +135,7 @@ let apply_impure_function
     )
     else (
       let eff_arg = if allow_ghost then T.E_Ghost else T.E_Total in
-      let (| arg, darg |) = check_term_with_expected_type_and_effect g arg eff_arg formal in
+      let (| arg, darg |) = check_term g arg eff_arg formal in
       let (| t, c, d |) : (t:st_term & c:comp_st & st_typing g t c) =
         match comp_typ with
         | C_ST res
@@ -204,7 +204,7 @@ let check
 
   let Tm_STApp { head; arg_qual=qual; arg } = t.term in
 
-  let (| head, eff_head, ty_head, dhead |) = check_term g head in
+  let (| head, eff_head, ty_head, dhead |) = compute_term_type g head in
 
   debug_log g (fun _ ->
     T.print (Printf.sprintf "st_app: head = %s, eff_head: %s, ty_head = %s\n"

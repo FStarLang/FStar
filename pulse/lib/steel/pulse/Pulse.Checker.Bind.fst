@@ -44,7 +44,7 @@ let check_bind
       begin match ty.t with
       | Tm_Unknown -> ()
       | _ ->
-        let (| ty, _, _ |) = check_tot_term g ty in //elaborate it first
+        let (| ty, _, _ |) = compute_tot_term_type g ty in //elaborate it first
         let (| _, _, (| _, t, _ |), _, _ |) = r in
         // TODO: once we have the rename operation then we should
         // ditch this check and just elaborate the bind
@@ -101,11 +101,11 @@ let check_tot_bind
       let ty = b.binder_ty in
       match ty.t with
       | Tm_Unknown ->
-        check_term_and_type g e1
+        compute_term_type_and_u g e1
       | _ ->
-        let (| ty, _, _ |) = check_tot_term g ty in //elaborate it first
+        let (| ty, _, _ |) = compute_tot_term_type g ty in //elaborate it first
         let (| u1, ty_typing |) = check_universe g ty in
-        let (| e1, eff1, e1_typing |) = check_term_with_expected_type g e1 ty in
+        let (| e1, eff1, e1_typing |) = check_term_at_type g e1 ty in
         let ty_typing : universe_of g ty u1 = ty_typing in
         let e1_typing : typing g e1 eff1 ty = e1_typing in
         (| e1, eff1, ty, (| u1, ty_typing |), e1_typing |)
@@ -119,7 +119,7 @@ let check_tot_bind
 
     // THIS IS WASTEFUL, CHECKING e1 MULTIPLE TIMES
     let (| e1, e1_typing |) =
-      check_term_with_expected_type_and_effect g e1 eff1 t1 in
+      check_term g e1 eff1 t1 in
 
     let x = fresh g in
 

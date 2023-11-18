@@ -262,11 +262,7 @@ let rec ss_to_nt_substs (g:env) (uvs:env) (ss:ss_t)
     let x, ty, rest_uvs = remove_binding uvs in
     if Map.contains ss.m x
     then let t = Map.sel ss.m x in
-         let (| t', eff, d |) = check_term_with_expected_type g t ty in
-         // TODO: FIXME, add a better callback in tc
-         assume (t' == t);
-          //  let d = Pulse.Checker.Pure.core_check_term_with_expected_type g t ty in
-          //  E d in
+         let (| eff, d |) = core_check_term_at_type g t ty in
          let _ = FStar.Squash.return_squash d in
          let ropt =
            ss_to_nt_substs g (subst_env rest_uvs [ NT x t ]) {l=remove_l ss.l x;

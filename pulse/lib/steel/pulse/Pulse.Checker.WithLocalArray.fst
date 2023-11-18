@@ -61,7 +61,7 @@ let check
     (* Check against annotation if any *)
     let ty = binder.binder_ty in
     match ty.t with
-    | Tm_Unknown -> check_tot_term_and_type g initializer
+    | Tm_Unknown -> compute_tot_term_type_and_u g initializer
     | _ ->
       match is_annotated_type_array ty with
       | None ->
@@ -71,7 +71,7 @@ let check
       | Some ty ->
         let (| u, ty_typing |) = check_universe g ty in
         let (| init, init_typing |) =
-          check_term_with_expected_type_and_effect g initializer T.E_Total ty in
+          check_term g initializer T.E_Total ty in
         let ty_typing : universe_of g ty u = ty_typing in
         let init_typing : typing g init T.E_Total ty = init_typing in
         (| init, u, ty, ty_typing, init_typing |)
@@ -79,7 +79,7 @@ let check
         (* ^ Need this annotation *)
   in
   let (| len, len_typing |) =
-    check_tot_term_with_expected_type g length tm_szt in
+    check_tot_term g length tm_szt in
   if eq_univ init_u u0
   then
     let x = fresh g in
