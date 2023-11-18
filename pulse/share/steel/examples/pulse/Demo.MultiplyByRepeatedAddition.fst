@@ -36,6 +36,8 @@ fn mult (x y:nat)
 ```
 
 open Pulse.Lib.BoundedIntegers
+
+#push-options "--z3rlimit 50"  // batch mode fails without these options, IDE works
 ```pulse
 fn mult32 (x y:U32.t)
     requires pure (fits #U32.t (v x * v y))
@@ -59,6 +61,7 @@ fn mult32 (x y:U32.t)
     acc
 }
 ```
+#pop-options
 
 open FStar.UInt32
 let i (x:U32.t) : GTot int = U32.v x 
