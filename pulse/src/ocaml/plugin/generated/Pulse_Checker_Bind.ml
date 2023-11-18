@@ -274,7 +274,7 @@ let (check_bind :
                                                                     (Prims.of_int (47))
                                                                     (Prims.of_int (29))
                                                                     (Prims.of_int (47))
-                                                                    (Prims.of_int (48)))))
+                                                                    (Prims.of_int (55)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -284,7 +284,7 @@ let (check_bind :
                                                                     (Prims.of_int (59))
                                                                     (Prims.of_int (108)))))
                                                                     (Obj.magic
-                                                                    (Pulse_Checker_Pure.check_tot_term
+                                                                    (Pulse_Checker_Pure.compute_tot_term_type
                                                                     g1 ty))
                                                                     (fun
                                                                     uu___5 ->
@@ -313,7 +313,7 @@ let (check_bind :
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Bind.fst"
                                                                     (Prims.of_int (47))
-                                                                    (Prims.of_int (51))
+                                                                    (Prims.of_int (58))
                                                                     (Prims.of_int (59))
                                                                     (Prims.of_int (108)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
@@ -852,7 +852,7 @@ let (check_tot_bind :
                                                                     Pulse_Syntax_Base.Tm_Unknown
                                                                     ->
                                                                     Obj.magic
-                                                                    (Pulse_Checker_Pure.check_term_and_type
+                                                                    (Pulse_Checker_Pure.compute_term_type_and_u
                                                                     g1 e1)
                                                                     | 
                                                                     uu___3 ->
@@ -865,7 +865,7 @@ let (check_tot_bind :
                                                                     (Prims.of_int (106))
                                                                     (Prims.of_int (29))
                                                                     (Prims.of_int (106))
-                                                                    (Prims.of_int (48)))))
+                                                                    (Prims.of_int (55)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -875,7 +875,7 @@ let (check_tot_bind :
                                                                     (Prims.of_int (112))
                                                                     (Prims.of_int (108)))))
                                                                     (Obj.magic
-                                                                    (Pulse_Checker_Pure.check_tot_term
+                                                                    (Pulse_Checker_Pure.compute_tot_term_type
                                                                     g1 ty))
                                                                     (fun
                                                                     uu___4 ->
@@ -904,7 +904,7 @@ let (check_tot_bind :
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Bind.fst"
                                                                     (Prims.of_int (106))
-                                                                    (Prims.of_int (51))
+                                                                    (Prims.of_int (58))
                                                                     (Prims.of_int (112))
                                                                     (Prims.of_int (108)))))
                                                                     (Obj.magic
@@ -930,7 +930,7 @@ let (check_tot_bind :
                                                                     (Prims.of_int (108))
                                                                     (Prims.of_int (40))
                                                                     (Prims.of_int (108))
-                                                                    (Prims.of_int (77)))))
+                                                                    (Prims.of_int (66)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -940,7 +940,7 @@ let (check_tot_bind :
                                                                     (Prims.of_int (112))
                                                                     (Prims.of_int (108)))))
                                                                     (Obj.magic
-                                                                    (Pulse_Checker_Pure.check_term_with_expected_type
+                                                                    (Pulse_Checker_Pure.check_term_at_type
                                                                     g1 e1 ty1))
                                                                     (fun
                                                                     uu___8 ->
@@ -1027,7 +1027,7 @@ let (check_tot_bind :
                                                                     (Prims.of_int (122))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (122))
-                                                                    (Prims.of_int (59)))))
+                                                                    (Prims.of_int (29)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -1037,7 +1037,7 @@ let (check_tot_bind :
                                                                     (Prims.of_int (138))
                                                                     (Prims.of_int (45)))))
                                                                     (Obj.magic
-                                                                    (Pulse_Checker_Pure.check_term_with_expected_type_and_effect
+                                                                    (Pulse_Checker_Pure.check_term
                                                                     g1 e11
                                                                     eff1 t11))
                                                                     (fun

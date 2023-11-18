@@ -327,7 +327,7 @@ let (check_core :
                                                                     (Prims.of_int (57))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (57))
-                                                                    (Prims.of_int (96)))))
+                                                                    (Prims.of_int (77)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -337,7 +337,7 @@ let (check_core :
                                                                     (Prims.of_int (59))
                                                                     (Prims.of_int (47)))))
                                                                     (Obj.magic
-                                                                    (Pulse_Checker_Pure.check_tot_term_with_expected_type
+                                                                    (Pulse_Checker_Pure.check_tot_term
                                                                     (Pulse_Typing_Env.push_binding
                                                                     g1 x
                                                                     (FStar_Pervasives_Native.fst

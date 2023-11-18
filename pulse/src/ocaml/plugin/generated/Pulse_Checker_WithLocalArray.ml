@@ -146,7 +146,7 @@ let (check :
                                                         | Pulse_Syntax_Base.Tm_Unknown
                                                             ->
                                                             Obj.magic
-                                                              (Pulse_Checker_Pure.check_tot_term_and_type
+                                                              (Pulse_Checker_Pure.compute_tot_term_type_and_u
                                                                  g1
                                                                  initializer1)
                                                         | uu___1 ->
@@ -257,7 +257,7 @@ let (check :
                                                                     (Prims.of_int (74))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (74))
-                                                                    (Prims.of_int (77)))))
+                                                                    (Prims.of_int (47)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -267,7 +267,7 @@ let (check :
                                                                     (Prims.of_int (78))
                                                                     (Prims.of_int (83)))))
                                                                     (Obj.magic
-                                                                    (Pulse_Checker_Pure.check_term_with_expected_type_and_effect
+                                                                    (Pulse_Checker_Pure.check_term
                                                                     g1
                                                                     initializer1
                                                                     FStar_TypeChecker_Core.E_Total
@@ -307,7 +307,7 @@ let (check :
                                                                     (Prims.of_int (82))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (82))
-                                                                    (Prims.of_int (53)))))
+                                                                    (Prims.of_int (34)))))
                                                            (FStar_Sealed.seal
                                                               (Obj.magic
                                                                  (FStar_Range.mk_range
@@ -317,7 +317,7 @@ let (check :
                                                                     (Prims.of_int (139))
                                                                     (Prims.of_int (38)))))
                                                            (Obj.magic
-                                                              (Pulse_Checker_Pure.check_tot_term_with_expected_type
+                                                              (Pulse_Checker_Pure.check_tot_term
                                                                  g1 length
                                                                  Pulse_Typing.tm_szt))
                                                            (fun uu___2 ->

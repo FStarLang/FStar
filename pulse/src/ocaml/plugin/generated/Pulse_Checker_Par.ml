@@ -70,7 +70,7 @@ let (check :
                                                      (Prims.of_int (29))
                                                      (Prims.of_int (4))
                                                      (Prims.of_int (29))
-                                                     (Prims.of_int (53)))))
+                                                     (Prims.of_int (34)))))
                                             (FStar_Sealed.seal
                                                (Obj.magic
                                                   (FStar_Range.mk_range
@@ -80,7 +80,7 @@ let (check :
                                                      (Prims.of_int (60))
                                                      (Prims.of_int (95)))))
                                             (Obj.magic
-                                               (Pulse_Checker_Pure.check_tot_term_with_expected_type
+                                               (Pulse_Checker_Pure.check_tot_term
                                                   g1 preL
                                                   Pulse_Syntax_Base.tm_vprop))
                                             (fun uu___1 ->
@@ -97,17 +97,17 @@ let (check :
                                                                     (Prims.of_int (31))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (31))
-                                                                    (Prims.of_int (53)))))
+                                                                    (Prims.of_int (34)))))
                                                            (FStar_Sealed.seal
                                                               (Obj.magic
                                                                  (FStar_Range.mk_range
                                                                     "Pulse.Checker.Par.fst"
                                                                     (Prims.of_int (29))
-                                                                    (Prims.of_int (56))
+                                                                    (Prims.of_int (37))
                                                                     (Prims.of_int (60))
                                                                     (Prims.of_int (95)))))
                                                            (Obj.magic
-                                                              (Pulse_Checker_Pure.check_tot_term_with_expected_type
+                                                              (Pulse_Checker_Pure.check_tot_term
                                                                  g1 preR
                                                                  Pulse_Syntax_Base.tm_vprop))
                                                            (fun uu___2 ->

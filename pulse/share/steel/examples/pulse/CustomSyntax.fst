@@ -7,7 +7,7 @@ module U32 = FStar.UInt32
 assume
 val p : nat -> vprop
 assume
-val f : (x:bool -> #index:erased nat -> stt bool (p index) (fun _ -> emp))
+val f : (x:bool -> #index:nat -> stt bool (p index) (fun _ -> emp))
 
 ```pulse
 fn apply_with_imps_inst3 (x:bool) (#i:erased nat)

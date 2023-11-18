@@ -128,7 +128,7 @@ let (check :
                                                         | Pulse_Syntax_Base.Tm_Unknown
                                                             ->
                                                             Obj.magic
-                                                              (Pulse_Checker_Pure.check_tot_term_and_type
+                                                              (Pulse_Checker_Pure.compute_tot_term_type_and_u
                                                                  g1 init)
                                                         | uu___1 ->
                                                             Obj.magic
@@ -175,7 +175,7 @@ let (check :
                                                                     (Prims.of_int (44))
                                                                     (Prims.of_int (36))
                                                                     (Prims.of_int (44))
-                                                                    (Prims.of_int (96)))))
+                                                                    (Prims.of_int (66)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -185,7 +185,7 @@ let (check :
                                                                     (Prims.of_int (48))
                                                                     (Prims.of_int (83)))))
                                                                     (Obj.magic
-                                                                    (Pulse_Checker_Pure.check_term_with_expected_type_and_effect
+                                                                    (Pulse_Checker_Pure.check_term
                                                                     g1 init
                                                                     FStar_TypeChecker_Core.E_Total
                                                                     ty))

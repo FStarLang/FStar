@@ -666,17 +666,17 @@ let (intro_pure :
                                                                     (Prims.of_int (144))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (144))
-                                                                    (Prims.of_int (68)))))
+                                                                    (Prims.of_int (49)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroPure.fst"
                                                                     (Prims.of_int (144))
-                                                                    (Prims.of_int (71))
+                                                                    (Prims.of_int (52))
                                                                     (Prims.of_int (261))
                                                                     (Prims.of_int (14)))))
                                                                     (Obj.magic
-                                                                    (Pulse_Checker_Pure.core_check_tot_term_with_expected_type
+                                                                    (Pulse_Checker_Pure.core_check_tot_term
                                                                     pst.Pulse_Checker_Prover_Base.pg
                                                                     t_ss1
                                                                     Pulse_Typing.tm_prop))

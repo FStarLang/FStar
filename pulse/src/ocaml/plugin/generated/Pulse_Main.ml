@@ -996,7 +996,7 @@ let (main' :
                                                    (Prims.of_int (103))
                                                    (Prims.of_int (38))
                                                    (Prims.of_int (103))
-                                                   (Prims.of_int (77)))))
+                                                   (Prims.of_int (84)))))
                                           (FStar_Sealed.seal
                                              (Obj.magic
                                                 (FStar_Range.mk_range
@@ -1006,7 +1006,7 @@ let (main' :
                                                    (Prims.of_int (109))
                                                    (Prims.of_int (39)))))
                                           (Obj.magic
-                                             (Pulse_Checker_Pure.check_tot_term
+                                             (Pulse_Checker_Pure.compute_tot_term_type
                                                 g1 pre))
                                           (fun uu___1 ->
                                              (fun uu___1 ->

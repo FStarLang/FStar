@@ -1355,7 +1355,7 @@ let (check :
                                                                     (Prims.of_int (312))
                                                                     (Prims.of_int (55))
                                                                     (Prims.of_int (312))
-                                                                    (Prims.of_int (83)))))
+                                                                    (Prims.of_int (87)))))
                                                                 (FStar_Sealed.seal
                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -1365,7 +1365,7 @@ let (check :
                                                                     (Prims.of_int (354))
                                                                     (Prims.of_int (55)))))
                                                                 (Obj.magic
-                                                                   (Pulse_Checker_Pure.check_tot_term_and_type
+                                                                   (Pulse_Checker_Pure.compute_tot_term_type_and_u
                                                                     g1 sc))
                                                                 (fun uu___ ->
                                                                    (fun uu___

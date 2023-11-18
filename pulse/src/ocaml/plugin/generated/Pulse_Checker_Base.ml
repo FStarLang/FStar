@@ -1790,7 +1790,7 @@ let (intro_comp_typing :
                                                    (Prims.of_int (398))
                                                    (Prims.of_int (31))
                                                    (Prims.of_int (398))
-                                                   (Prims.of_int (57)))))
+                                                   (Prims.of_int (64)))))
                                           (FStar_Sealed.seal
                                              (Obj.magic
                                                 (FStar_Range.mk_range
@@ -1800,7 +1800,7 @@ let (intro_comp_typing :
                                                    (Prims.of_int (401))
                                                    (Prims.of_int (41)))))
                                           (Obj.magic
-                                             (Pulse_Checker_Pure.core_check_tot_term
+                                             (Pulse_Checker_Pure.core_compute_tot_term_type
                                                 g i))
                                           (fun uu___ ->
                                              (fun uu___ ->
@@ -1917,7 +1917,7 @@ let (intro_comp_typing :
                                                    (Prims.of_int (404))
                                                    (Prims.of_int (31))
                                                    (Prims.of_int (404))
-                                                   (Prims.of_int (57)))))
+                                                   (Prims.of_int (64)))))
                                           (FStar_Sealed.seal
                                              (Obj.magic
                                                 (FStar_Range.mk_range
@@ -1927,7 +1927,7 @@ let (intro_comp_typing :
                                                    (Prims.of_int (407))
                                                    (Prims.of_int (40)))))
                                           (Obj.magic
-                                             (Pulse_Checker_Pure.core_check_tot_term
+                                             (Pulse_Checker_Pure.core_compute_tot_term_type
                                                 g i))
                                           (fun uu___ ->
                                              (fun uu___ ->
