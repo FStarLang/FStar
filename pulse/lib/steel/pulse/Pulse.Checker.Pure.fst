@@ -6,6 +6,7 @@ module T = FStar.Tactics.V2
 open FStar.Tactics.V2
 open FStar.Reflection.V2 (* shadow named view *)
 
+open Pulse.PP
 open Pulse.Reflection
 open FStar.List.Tot
 open Pulse.Syntax
@@ -14,13 +15,23 @@ open Pulse.Typing
 module P = Pulse.Syntax.Printer
 module RTB = FStar.Stubs.Tactics.V2.Builtins
 module RU = Pulse.RuntimeUtils
+module CheckLN = FStar.Tactics.CheckLN
 
 let debug (g:env) (msg: unit -> T.Tac string) =
   let tac_debugging = T.debugging () in
   if tac_debugging || RU.debug_at_level (fstar_env g) "refl_tc_callbacks"
   then T.print (print_context g ^ "\n" ^ msg())
 
+let check_ln (g:env) (label:string) (t:R.term) : Tac unit =
+  if not (CheckLN.check_ln t) then
+    fail_doc g (Some (RU.range_of_term t)) [
+      text "Failure: not locally nameless!";
+      text "Aborting before calling" ^/^ pp label;
+      text "term" ^/^ equals ^/^ pp t;
+    ]
+
 let rtb_core_compute_term_type g f e =
+  check_ln g "rtb_compute_term_type" e;
   debug g (fun _ ->
     Printf.sprintf "(%s) Calling core_check_term on %s" 
           (T.range_to_string (RU.range_of_term e))
@@ -30,6 +41,7 @@ let rtb_core_compute_term_type g f e =
 
 let rtb_tc_term g f e =
   (* WARN: unary dependence, see comment in RU *)
+  check_ln g "rtb_tc_term" e;
   let e = RU.deep_transform_to_unary_applications e in
   debug g (fun _ ->
     Printf.sprintf "(%s) Calling tc_term on %s"
@@ -39,6 +51,7 @@ let rtb_tc_term g f e =
   res
 
 let rtb_universe_of g f e =
+  check_ln g "rtb_universe_of" e;
   debug g (fun _ ->
     Printf.sprintf "(%s) Calling universe_of on %s"
       (T.range_to_string (RU.range_of_term e))
@@ -46,17 +59,22 @@ let rtb_universe_of g f e =
   let res = RTB.universe_of f e in
   res
 
-let rtb_check_subtyping g (t1 t2:term) =
+let rtb_check_subtyping g (t1 t2:term) : Tac (ret_t (subtyping_token g t1 t2)) =
+  let e1 = elab_term t1 in
+  let e2 = elab_term t2 in
+  check_ln g "rtb_check_subtyping.t1" e1;
+  check_ln g "rtb_check_subtyping.t2" e2;
   debug g (fun _ ->
     Printf.sprintf "(%s, %s) Calling check_subtyping on %s <: %s"
         (T.range_to_string (t1.range))
         (T.range_to_string (t2.range))
         (P.term_to_string t1)
         (P.term_to_string t2));
-  let res = RTB.check_subtyping (elab_env g) (elab_term t1) (elab_term t2) in
+  let res = RTB.check_subtyping (elab_env g) e1 e2 in
   res
 
 let rtb_instantiate_implicits g f t =
+  check_ln g "rtb_instantiate_implicits" t;
   debug g (fun _ -> Printf.sprintf "Calling instantiate_implicits on %s"
                                        (T.term_to_string t));
   (* WARN: unary dependence, see comment in RU *)
@@ -71,6 +89,8 @@ let rtb_instantiate_implicits g f t =
     res, iss
 
 let rtb_core_check_term g f e eff t =
+  check_ln g "rtb_core_check_term.e" e;
+  check_ln g "rtb_core_check_term.t" t;
   debug g (fun _ ->
     Printf.sprintf "(%s) Calling core_check_term on %s and %s"
                 (T.range_to_string (RU.range_of_term e))
@@ -97,6 +117,7 @@ let squash_prop_validity_token f p (t:prop_validity_token f (mk_squash p))
   = admit(); t
 
 let rtb_check_prop_validity (g:env) (f:_) (p:_) = 
+  check_ln g "rtb_check_prop_validity" p;
   debug g (fun _ -> 
     Printf.sprintf "(%s) Calling check_prop_validity on %s"
           (T.range_to_string (RU.range_of_term p))
