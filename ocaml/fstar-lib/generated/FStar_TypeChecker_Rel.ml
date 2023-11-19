@@ -2259,7 +2259,7 @@ let (solve_prob' :
                                           [uu___5]))
                             | uu___3 -> (fail (); [])))) in
              let wl1 =
-               let g = whnf wl.tcenv (p_guard prob) in
+               let g = whnf (p_env wl prob) (p_guard prob) in
                let uu___1 =
                  let uu___2 = is_flex g in Prims.op_Negation uu___2 in
                if uu___1
@@ -13390,52 +13390,56 @@ let (try_teq :
     fun env ->
       fun t1 ->
         fun t2 ->
-          let uu___ =
-            let uu___1 =
-              let uu___2 = FStar_TypeChecker_Env.current_module env in
-              FStar_Ident.string_of_lid uu___2 in
-            FStar_Pervasives_Native.Some uu___1 in
-          FStar_Profiling.profile
-            (fun uu___1 ->
-               (let uu___3 =
-                  FStar_Compiler_Effect.op_Less_Bar
-                    (FStar_TypeChecker_Env.debug env)
-                    (FStar_Options.Other "Rel") in
-                if uu___3
-                then
-                  let uu___4 = FStar_Syntax_Print.term_to_string t1 in
-                  let uu___5 = FStar_Syntax_Print.term_to_string t2 in
-                  let uu___6 =
-                    FStar_TypeChecker_Env.print_gamma
-                      env.FStar_TypeChecker_Env.gamma in
-                  FStar_Compiler_Util.print3 "try_teq of %s and %s in %s {\n"
-                    uu___4 uu___5 uu___6
-                else ());
-               (let uu___3 =
-                  let uu___4 = FStar_TypeChecker_Env.get_range env in
-                  new_t_problem (empty_worklist env) env t1
-                    FStar_TypeChecker_Common.EQ t2
-                    FStar_Pervasives_Native.None uu___4 in
-                match uu___3 with
-                | (prob, wl) ->
-                    let g =
-                      let uu___4 =
-                        solve_and_commit (singleton wl prob smt_ok)
-                          (fun uu___5 -> FStar_Pervasives_Native.None) in
-                      FStar_Compiler_Effect.op_Less_Bar (with_guard env prob)
-                        uu___4 in
-                    ((let uu___5 =
-                        FStar_Compiler_Effect.op_Less_Bar
-                          (FStar_TypeChecker_Env.debug env)
-                          (FStar_Options.Other "Rel") in
-                      if uu___5
-                      then
-                        let uu___6 =
-                          FStar_Common.string_of_option (guard_to_string env)
-                            g in
-                        FStar_Compiler_Util.print1 "} res = %s\n" uu___6
-                      else ());
-                     g))) uu___ "FStar.TypeChecker.Rel.try_teq"
+          FStar_TypeChecker_Env.def_check_closed_in_env
+            t1.FStar_Syntax_Syntax.pos "try_teq.1" env t1;
+          FStar_TypeChecker_Env.def_check_closed_in_env
+            t2.FStar_Syntax_Syntax.pos "try_teq.2" env t2;
+          (let uu___2 =
+             let uu___3 =
+               let uu___4 = FStar_TypeChecker_Env.current_module env in
+               FStar_Ident.string_of_lid uu___4 in
+             FStar_Pervasives_Native.Some uu___3 in
+           FStar_Profiling.profile
+             (fun uu___3 ->
+                (let uu___5 =
+                   FStar_Compiler_Effect.op_Less_Bar
+                     (FStar_TypeChecker_Env.debug env)
+                     (FStar_Options.Other "Rel") in
+                 if uu___5
+                 then
+                   let uu___6 = FStar_Syntax_Print.term_to_string t1 in
+                   let uu___7 = FStar_Syntax_Print.term_to_string t2 in
+                   let uu___8 =
+                     FStar_TypeChecker_Env.print_gamma
+                       env.FStar_TypeChecker_Env.gamma in
+                   FStar_Compiler_Util.print3
+                     "try_teq of %s and %s in %s {\n" uu___6 uu___7 uu___8
+                 else ());
+                (let uu___5 =
+                   let uu___6 = FStar_TypeChecker_Env.get_range env in
+                   new_t_problem (empty_worklist env) env t1
+                     FStar_TypeChecker_Common.EQ t2
+                     FStar_Pervasives_Native.None uu___6 in
+                 match uu___5 with
+                 | (prob, wl) ->
+                     let g =
+                       let uu___6 =
+                         solve_and_commit (singleton wl prob smt_ok)
+                           (fun uu___7 -> FStar_Pervasives_Native.None) in
+                       FStar_Compiler_Effect.op_Less_Bar
+                         (with_guard env prob) uu___6 in
+                     ((let uu___7 =
+                         FStar_Compiler_Effect.op_Less_Bar
+                           (FStar_TypeChecker_Env.debug env)
+                           (FStar_Options.Other "Rel") in
+                       if uu___7
+                       then
+                         let uu___8 =
+                           FStar_Common.string_of_option
+                             (guard_to_string env) g in
+                         FStar_Compiler_Util.print1 "} res = %s\n" uu___8
+                       else ());
+                      g))) uu___2 "FStar.TypeChecker.Rel.try_teq")
 let (teq :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.typ ->

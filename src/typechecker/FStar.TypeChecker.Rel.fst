@@ -1015,7 +1015,7 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
               [])
     in
     let wl =
-        let g = whnf wl.tcenv (p_guard prob) in
+        let g = whnf (p_env wl prob) (p_guard prob) in
         if not (is_flex g)
         then if resolve_ok
              then wl
@@ -4756,6 +4756,8 @@ let with_guard env prob dopt =
                   implicits=implicits})
 
 let try_teq smt_ok env t1 t2 : option guard_t =
+  def_check_closed_in_env t1.pos "try_teq.1" env t1;
+  def_check_closed_in_env t2.pos "try_teq.2" env t2;
   Profiling.profile
     (fun () ->
       if Env.debug env <| Options.Other "Rel" then

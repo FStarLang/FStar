@@ -550,24 +550,24 @@ let rec __knot_e_named_term_view _ =
                         FStar_Reflection_V2_Embeddings.e_aqualv) a_100)
                   (fun a_100 ->
                      FStar_Pervasives_Native.Some (Tv_App (hd_99, a_100))))
-       | ("FStar.Tactics.NamedView.Tv_Abs", bv_102::body_103::[]) ->
+       | ("FStar.Tactics.NamedView.Tv_Abs", b_102::body_103::[]) ->
            FStar_Compiler_Util.bind_opt
-             (FStar_Syntax_Embeddings_Base.extracted_unembed e_binder bv_102)
-             (fun bv_102 ->
+             (FStar_Syntax_Embeddings_Base.extracted_unembed e_binder b_102)
+             (fun b_102 ->
                 FStar_Compiler_Util.bind_opt
                   (FStar_Syntax_Embeddings_Base.extracted_unembed
                      FStar_Reflection_V2_Embeddings.e_term body_103)
                   (fun body_103 ->
-                     FStar_Pervasives_Native.Some (Tv_Abs (bv_102, body_103))))
-       | ("FStar.Tactics.NamedView.Tv_Arrow", bv_105::c_106::[]) ->
+                     FStar_Pervasives_Native.Some (Tv_Abs (b_102, body_103))))
+       | ("FStar.Tactics.NamedView.Tv_Arrow", b_105::c_106::[]) ->
            FStar_Compiler_Util.bind_opt
-             (FStar_Syntax_Embeddings_Base.extracted_unembed e_binder bv_105)
-             (fun bv_105 ->
+             (FStar_Syntax_Embeddings_Base.extracted_unembed e_binder b_105)
+             (fun b_105 ->
                 FStar_Compiler_Util.bind_opt
                   (FStar_Syntax_Embeddings_Base.extracted_unembed
                      FStar_Reflection_V2_Embeddings.e_comp_view c_106)
                   (fun c_106 ->
-                     FStar_Pervasives_Native.Some (Tv_Arrow (bv_105, c_106))))
+                     FStar_Pervasives_Native.Some (Tv_Arrow (b_105, c_106))))
        | ("FStar.Tactics.NamedView.Tv_Type", _0_108::[]) ->
            FStar_Compiler_Util.bind_opt
              (FStar_Syntax_Embeddings_Base.extracted_unembed
@@ -749,20 +749,20 @@ let rec __knot_e_named_term_view _ =
                     FStar_Reflection_V2_Embeddings.e_term
                     FStar_Reflection_V2_Embeddings.e_aqualv) a_151),
                FStar_Pervasives_Native.None)]
-       | Tv_Abs (bv_153, body_154) ->
+       | Tv_Abs (b_153, body_154) ->
            FStar_Syntax_Util.mk_app
              (FStar_Syntax_Syntax.tdataconstr
                 (FStar_Ident.lid_of_str "FStar.Tactics.NamedView.Tv_Abs"))
-             [((FStar_Syntax_Embeddings_Base.extracted_embed e_binder bv_153),
+             [((FStar_Syntax_Embeddings_Base.extracted_embed e_binder b_153),
                 FStar_Pervasives_Native.None);
              ((FStar_Syntax_Embeddings_Base.extracted_embed
                  FStar_Reflection_V2_Embeddings.e_term body_154),
                FStar_Pervasives_Native.None)]
-       | Tv_Arrow (bv_156, c_157) ->
+       | Tv_Arrow (b_156, c_157) ->
            FStar_Syntax_Util.mk_app
              (FStar_Syntax_Syntax.tdataconstr
                 (FStar_Ident.lid_of_str "FStar.Tactics.NamedView.Tv_Arrow"))
-             [((FStar_Syntax_Embeddings_Base.extracted_embed e_binder bv_156),
+             [((FStar_Syntax_Embeddings_Base.extracted_embed e_binder b_156),
                 FStar_Pervasives_Native.None);
              ((FStar_Syntax_Embeddings_Base.extracted_embed
                  FStar_Reflection_V2_Embeddings.e_comp_view c_157),
@@ -920,18 +920,18 @@ let (__proj__Tv_App__item__a :
   fun projectee -> match projectee with | Tv_App (hd, a) -> a
 let (uu___is_Tv_Abs : named_term_view -> Prims.bool) =
   fun projectee ->
-    match projectee with | Tv_Abs (bv1, body) -> true | uu___ -> false
-let (__proj__Tv_Abs__item__bv : named_term_view -> binder) =
-  fun projectee -> match projectee with | Tv_Abs (bv1, body) -> bv1
+    match projectee with | Tv_Abs (b, body) -> true | uu___ -> false
+let (__proj__Tv_Abs__item__b : named_term_view -> binder) =
+  fun projectee -> match projectee with | Tv_Abs (b, body) -> b
 let (__proj__Tv_Abs__item__body : named_term_view -> term) =
-  fun projectee -> match projectee with | Tv_Abs (bv1, body) -> body
+  fun projectee -> match projectee with | Tv_Abs (b, body) -> body
 let (uu___is_Tv_Arrow : named_term_view -> Prims.bool) =
   fun projectee ->
-    match projectee with | Tv_Arrow (bv1, c) -> true | uu___ -> false
-let (__proj__Tv_Arrow__item__bv : named_term_view -> binder) =
-  fun projectee -> match projectee with | Tv_Arrow (bv1, c) -> bv1
+    match projectee with | Tv_Arrow (b, c) -> true | uu___ -> false
+let (__proj__Tv_Arrow__item__b : named_term_view -> binder) =
+  fun projectee -> match projectee with | Tv_Arrow (b, c) -> b
 let (__proj__Tv_Arrow__item__c : named_term_view -> comp) =
-  fun projectee -> match projectee with | Tv_Arrow (bv1, c) -> c
+  fun projectee -> match projectee with | Tv_Arrow (b, c) -> c
 let (uu___is_Tv_Type : named_term_view -> Prims.bool) =
   fun projectee -> match projectee with | Tv_Type _0 -> true | uu___ -> false
 let (__proj__Tv_Type__item___0 : named_term_view -> universe) =

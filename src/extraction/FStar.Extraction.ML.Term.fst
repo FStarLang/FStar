@@ -97,13 +97,14 @@ let err_value_restriction t =
                     (Print.tag_of_term t) (Print.term_to_string t))
 
 let err_unexpected_eff env t ty f0 f1 =
-    Errors.log_issue t.pos
-      (Warning_ExtractionUnexpectedEffect,
-       BU.format4 "for expression %s of type %s, Expected effect %s; got effect %s"
-                        (Print.term_to_string t)
-                        (Code.string_of_mlty (current_module_of_uenv env) ty)
-                        (eff_to_string f0)
-                        (eff_to_string f1))
+    let open FStar.Errors.Msg in
+    let open FStar.Pprint in
+    Errors.log_issue_doc t.pos
+      (Warning_ExtractionUnexpectedEffect, [
+        prefix 4 1 (text "For expression") (Print.term_to_doc t) ^/^
+        prefix 4 1 (text "of type") (arbitrary_string (Code.string_of_mlty (current_module_of_uenv env) ty));
+        prefix 4 1 (text "Expected effect") (arbitrary_string (eff_to_string f0)) ^/^
+        prefix 4 1 (text "got effect") (arbitrary_string (eff_to_string f0))])
 
 let err_cannot_extract_effect (l:lident) (r:Range.range) (reason:string) (ctxt:string) =
   Errors.raise_error_doc
