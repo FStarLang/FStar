@@ -13,8 +13,8 @@ let free b = R.free b
 
 let box_to_ref b = b
 
-let to_ref_pts_to #a b #p v =
+let to_ref_pts_to #a b #p #v =
   rewrite (pts_to b #p v) (R.pts_to b #p v) (vprop_equiv_refl _)
 
-let to_box_pts_to #a r #p v =
+let to_box_pts_to #a r #p #v =
   rewrite (R.pts_to r #p v) (pts_to r #p v) (vprop_equiv_refl _)

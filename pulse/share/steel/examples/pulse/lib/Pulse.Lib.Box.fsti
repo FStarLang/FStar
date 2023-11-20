@@ -84,8 +84,8 @@ val free (#a:Type0) (b:box a) (#v:erased a)
 
 val box_to_ref  (#a:Type0) (b:box a) : R.ref a
 
-val to_ref_pts_to (#a:Type0) (b:box a) (#p:perm) (v:a)
+val to_ref_pts_to (#a:Type0) (b:box a) (#p:perm) (#v:a)
   : stt_ghost unit emp_inames (pts_to b #p v) (fun _ -> R.pts_to (box_to_ref b) #p v)
 
-val to_box_pts_to (#a:Type0) (b:box a) (#p:perm) (v:a)
+val to_box_pts_to (#a:Type0) (b:box a) (#p:perm) (#v:a)
   : stt_ghost unit emp_inames (R.pts_to (box_to_ref b) #p v) (fun _ -> pts_to b #p v)
