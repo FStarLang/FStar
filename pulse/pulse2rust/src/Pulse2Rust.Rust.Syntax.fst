@@ -39,6 +39,11 @@ let mk_option_typ (t:typ) : typ =
 let mk_array_typ (t:typ) (len:expr) : typ =
   Typ_array { typ_array_elem = t; typ_array_len = len }
 
+let mk_named_typ (s:string) (generic_args:list typ) : typ =
+  Typ_path [
+    { typ_path_segment_name = s; typ_path_segment_generic_args = generic_arg };
+  ]
+
 let mk_expr_path_singl s = Expr_path [s]
 let mk_expr_path l = Expr_path l
 

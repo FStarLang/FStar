@@ -130,6 +130,10 @@ let rec extract_mlty (g:env) (t:S.mlty) : typ =
     when S.string_of_mlpath p = "FStar.Pervasives.Native.option" ->
     arg |> extract_mlty g |> mk_option_typ
   | S.MLTY_Erased -> mk_scalar_typ "unit"
+
+  | S.MLTY_Named (args, p) ->
+    mk_named_typ (snd p) (List.map (extract_mlty g) args)
+
   | _ -> fail_nyi (format1 "mlty %s" (S.mlty_to_string t))
 
 let extract_top_level_fn_arg (g:env) (arg_name:string) (t:S.mlty) : fn_arg =

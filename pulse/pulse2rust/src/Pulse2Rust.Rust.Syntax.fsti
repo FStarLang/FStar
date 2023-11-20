@@ -191,6 +191,7 @@ val mk_slice_typ (t:typ) : typ
 val mk_vec_typ (t:typ) : typ
 val mk_option_typ (t:typ) : typ
 val mk_array_typ (t:typ) (len:expr) : typ
+val mk_named_typ (s:string) (generic_args:list typ) : typ
 
 val mk_expr_path_singl (s:string) : expr
 val mk_expr_path (l:list string) : expr
