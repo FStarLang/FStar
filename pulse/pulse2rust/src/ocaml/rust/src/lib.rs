@@ -104,6 +104,21 @@ struct ExprMatch {
     expr_match_arms: Vec<Arm>,
 }
 
+struct ExprField {
+    expr_field_base: Box<Expr>,
+    expr_field_name: String,
+}
+
+struct FieldVal {
+    field_val_name: String,
+    field_val_expr: Box<Expr>,
+}
+
+struct ExprStruct {
+    expr_struct_path: Vec<String>,
+    expr_struct_fields: Vec<FieldVal>,
+}
+
 enum Expr {
     EBinOp(ExprBin),
     EPath(Vec<String>),
@@ -118,6 +133,8 @@ enum Expr {
     ERepeat(ExprRepeat),
     EReference(ExprReference),
     EMatch(ExprMatch),
+    EField(ExprField),
+    EStruct(ExprStruct),
 }
 
 struct TypeReference {
@@ -270,6 +287,8 @@ impl_from_ocaml_variant! {
     Expr::ERepeat (payload:ExprRepeat),
     Expr::EReference (payload:ExprReference),
     Expr::EMatch (payload:ExprMatch),
+    Expr::EField (payload:ExprField),
+    Expr::EStruct (payload:ExprStruct),
   }
 }
 
@@ -349,6 +368,27 @@ impl_from_ocaml_record! {
   ExprMatch {
     expr_match_expr: Expr,
     expr_match_arms: OCamlList<Arm>,
+  }
+}
+
+impl_from_ocaml_record! {
+  ExprField {
+    expr_field_base: Expr,
+    expr_field_name: String,
+  }
+}
+
+impl_from_ocaml_record! {
+  FieldVal {
+    field_val_name: String,
+    field_val_expr: Expr,
+  }
+}
+
+impl_from_ocaml_record! {
+  ExprStruct {
+    expr_struct_path: OCamlList<String>,
+    expr_struct_fields: OCamlList<FieldVal>,
   }
 }
 
@@ -788,6 +828,42 @@ fn to_syn_expr(e: &Expr) -> syn::Expr {
             brace_token: Brace::default(),
             arms: expr_match_arms.iter().map(to_syn_arm).collect(),
         }),
+        Expr::EField(ExprField {
+            expr_field_base,
+            expr_field_name,
+        }) => syn::Expr::Field(syn::ExprField {
+            attrs: vec![],
+            base: Box::new(to_syn_expr(expr_field_base)),
+            dot_token: syn::token::Dot {
+                spans: [Span::call_site()],
+            },
+            member: syn::Member::Named(Ident::new(expr_field_name, Span::call_site())),
+        }),
+        Expr::EStruct(ExprStruct {
+            expr_struct_path,
+            expr_struct_fields,
+        }) => {
+            let mut fields: Punctuated<syn::FieldValue, Comma> = Punctuated::new();
+            expr_struct_fields.iter().for_each(|f| {
+                fields.push(syn::FieldValue {
+                    attrs: vec![],
+                    member: syn::Member::Named(Ident::new(&f.field_val_name, Span::call_site())),
+                    colon_token: Some(Colon {
+                        spans: [Span::call_site()],
+                    }),
+                    expr: to_syn_expr(&f.field_val_expr),
+                })
+            });
+            syn::Expr::Struct(syn::ExprStruct {
+                attrs: vec![],
+                qself: None,
+                path: to_syn_path(expr_struct_path),
+                brace_token: Brace::default(),
+                fields,
+                dot2_token: None,
+                rest: None,
+            })
+        }
     }
 }
 
@@ -1212,6 +1288,27 @@ impl fmt::Display for Expr {
                     .map(|a| a.to_string())
                     .collect::<Vec<_>>()
                     .join("|")
+            ),
+            Expr::EField(ExprField {
+                expr_field_base,
+                expr_field_name,
+            }) => write!(f, "{}.{}", expr_field_base, expr_field_name),
+            Expr::EStruct(ExprStruct {
+                expr_struct_path,
+                expr_struct_fields,
+            }) => write!(
+                f,
+                "{} {{ {} }}",
+                expr_struct_path
+                    .iter()
+                    .map(|s| s.to_string())
+                    .collect::<Vec<_>>()
+                    .join("::"),
+                expr_struct_fields
+                    .iter()
+                    .map(|f| format!("{}:{}", f.field_val_name, f.field_val_expr))
+                    .collect::<Vec<_>>()
+                    .join(",")
             ),
         }
     }

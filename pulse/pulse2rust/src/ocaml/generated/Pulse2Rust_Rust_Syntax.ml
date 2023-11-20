@@ -135,6 +135,8 @@ type expr =
   | Expr_repeat of expr_repeat 
   | Expr_reference of expr_reference 
   | Expr_match of expr_match 
+  | Expr_field of expr_field 
+  | Expr_struct of expr_struct 
 and expr_bin =
   {
   expr_bin_left: expr ;
@@ -173,6 +175,16 @@ and arm = {
 and expr_match = {
   expr_match_expr: expr ;
   expr_match_arms: arm Prims.list }
+and expr_field = {
+  expr_field_base: expr ;
+  expr_field_member: Prims.string }
+and expr_struct =
+  {
+  expr_struct_path: Prims.string Prims.list ;
+  expr_struct_fields: field_val Prims.list }
+and field_val = {
+  field_val_name: Prims.string ;
+  field_val_expr: expr }
 and local_stmt =
   {
   local_stmt_pat: pat ;
@@ -244,6 +256,16 @@ let (uu___is_Expr_match : expr -> Prims.bool) =
     match projectee with | Expr_match _0 -> true | uu___ -> false
 let (__proj__Expr_match__item___0 : expr -> expr_match) =
   fun projectee -> match projectee with | Expr_match _0 -> _0
+let (uu___is_Expr_field : expr -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Expr_field _0 -> true | uu___ -> false
+let (__proj__Expr_field__item___0 : expr -> expr_field) =
+  fun projectee -> match projectee with | Expr_field _0 -> _0
+let (uu___is_Expr_struct : expr -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Expr_struct _0 -> true | uu___ -> false
+let (__proj__Expr_struct__item___0 : expr -> expr_struct) =
+  fun projectee -> match projectee with | Expr_struct _0 -> _0
 let (__proj__Mkexpr_bin__item__expr_bin_left : expr_bin -> expr) =
   fun projectee ->
     match projectee with
@@ -344,6 +366,33 @@ let (__proj__Mkexpr_match__item__expr_match_arms :
   fun projectee ->
     match projectee with
     | { expr_match_expr; expr_match_arms;_} -> expr_match_arms
+let (__proj__Mkexpr_field__item__expr_field_base : expr_field -> expr) =
+  fun projectee ->
+    match projectee with
+    | { expr_field_base; expr_field_member;_} -> expr_field_base
+let (__proj__Mkexpr_field__item__expr_field_member :
+  expr_field -> Prims.string) =
+  fun projectee ->
+    match projectee with
+    | { expr_field_base; expr_field_member;_} -> expr_field_member
+let (__proj__Mkexpr_struct__item__expr_struct_path :
+  expr_struct -> Prims.string Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { expr_struct_path; expr_struct_fields;_} -> expr_struct_path
+let (__proj__Mkexpr_struct__item__expr_struct_fields :
+  expr_struct -> field_val Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { expr_struct_path; expr_struct_fields;_} -> expr_struct_fields
+let (__proj__Mkfield_val__item__field_val_name : field_val -> Prims.string) =
+  fun projectee ->
+    match projectee with
+    | { field_val_name; field_val_expr;_} -> field_val_name
+let (__proj__Mkfield_val__item__field_val_expr : field_val -> expr) =
+  fun projectee ->
+    match projectee with
+    | { field_val_name; field_val_expr;_} -> field_val_expr
 let (__proj__Mklocal_stmt__item__local_stmt_pat : local_stmt -> pat) =
   fun projectee ->
     match projectee with
@@ -522,6 +571,14 @@ let (mk_option_typ : typ -> typ) =
       }]
 let (mk_array_typ : typ -> expr -> typ) =
   fun t -> fun len -> Typ_array { typ_array_elem = t; typ_array_len = len }
+let (mk_named_typ : Prims.string -> typ Prims.list -> typ) =
+  fun s ->
+    fun generic_args ->
+      Typ_path
+        [{
+           typ_path_segment_name = s;
+           typ_path_segment_generic_args = generic_args
+         }]
 let (mk_expr_path_singl : Prims.string -> expr) = fun s -> Expr_path [s]
 let (mk_expr_path : Prims.string Prims.list -> expr) = fun l -> Expr_path l
 let (mk_lit_bool : Prims.bool -> expr) = fun b -> Expr_lit (Lit_bool b)
@@ -582,6 +639,21 @@ let (mk_arm : pat -> expr -> arm) =
 let (mk_match : expr -> arm Prims.list -> expr) =
   fun expr_match_expr ->
     fun expr_match_arms -> Expr_match { expr_match_expr; expr_match_arms }
+let (mk_expr_field : expr -> Prims.string -> expr) =
+  fun base ->
+    fun f -> Expr_field { expr_field_base = base; expr_field_member = f }
+let (mk_expr_struct :
+  Prims.string Prims.list -> (Prims.string * expr) Prims.list -> expr) =
+  fun path ->
+    fun fields ->
+      let uu___ =
+        let uu___1 =
+          FStar_Compiler_List.map
+            (fun uu___2 ->
+               match uu___2 with
+               | (f, e) -> { field_val_name = f; field_val_expr = e }) fields in
+        { expr_struct_path = path; expr_struct_fields = uu___1 } in
+      Expr_struct uu___
 let (mk_scalar_fn_arg : Prims.string -> typ -> fn_arg) =
   fun name ->
     fun t ->

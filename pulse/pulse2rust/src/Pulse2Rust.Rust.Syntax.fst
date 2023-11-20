@@ -41,7 +41,7 @@ let mk_array_typ (t:typ) (len:expr) : typ =
 
 let mk_named_typ (s:string) (generic_args:list typ) : typ =
   Typ_path [
-    { typ_path_segment_name = s; typ_path_segment_generic_args = generic_arg };
+    { typ_path_segment_name = s; typ_path_segment_generic_args = generic_args };
   ]
 
 let mk_expr_path_singl s = Expr_path [s]
@@ -98,6 +98,18 @@ let mk_arm (arm_pat:pat) (arm_body:expr) : arm = { arm_pat; arm_body }
 
 let mk_match (expr_match_expr:expr) (expr_match_arms:list arm) : expr =
   Expr_match { expr_match_expr; expr_match_arms }
+
+let mk_expr_field (base:expr) (f:string) : expr =
+  Expr_field { expr_field_base = base; expr_field_member = f }
+
+let mk_expr_struct (path:list string) (fields:list (string & expr)) : expr =
+  Expr_struct {
+    expr_struct_path = path;
+    expr_struct_fields = L.map (fun (f, e) -> {
+      field_val_name = f;
+      field_val_expr = e;
+    }) fields;
+  }
 
 let mk_scalar_fn_arg (name:string) (t:typ) =
   Fn_arg_pat {

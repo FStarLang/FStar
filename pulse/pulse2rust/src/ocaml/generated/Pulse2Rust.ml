@@ -180,6 +180,10 @@ let rec (extract_mlty :
             Pulse2Rust_Rust_Syntax.mk_option_typ
       | FStar_Extraction_ML_Syntax.MLTY_Erased ->
           Pulse2Rust_Rust_Syntax.mk_scalar_typ "unit"
+      | FStar_Extraction_ML_Syntax.MLTY_Named (args, p) ->
+          let uu___ = FStar_Compiler_List.map (extract_mlty g) args in
+          Pulse2Rust_Rust_Syntax.mk_named_typ (FStar_Pervasives_Native.snd p)
+            uu___
       | uu___ ->
           let uu___1 =
             let uu___2 = FStar_Extraction_ML_Syntax.mlty_to_string t in
@@ -863,6 +867,18 @@ and (extract_mlexpr :
           Pulse2Rust_Rust_Syntax.mk_match e2 uu___
       | FStar_Extraction_ML_Syntax.MLE_Coerce (e1, uu___, uu___1) ->
           extract_mlexpr g e1
+      | FStar_Extraction_ML_Syntax.MLE_Record (p, fields) ->
+          let uu___ =
+            FStar_Compiler_List.map
+              (fun uu___1 ->
+                 match uu___1 with
+                 | (f, e1) -> let uu___2 = extract_mlexpr g e1 in (f, uu___2))
+              fields in
+          Pulse2Rust_Rust_Syntax.mk_expr_struct p uu___
+      | FStar_Extraction_ML_Syntax.MLE_Proj (e1, p) ->
+          let uu___ = extract_mlexpr g e1 in
+          Pulse2Rust_Rust_Syntax.mk_expr_field uu___
+            (FStar_Pervasives_Native.snd p)
       | uu___ ->
           let uu___1 =
             let uu___2 = FStar_Extraction_ML_Syntax.mlexpr_to_string e in

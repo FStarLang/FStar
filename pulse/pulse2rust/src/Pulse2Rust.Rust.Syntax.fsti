@@ -62,6 +62,8 @@ type expr =
   | Expr_repeat of expr_repeat
   | Expr_reference of expr_reference
   | Expr_match of expr_match
+  | Expr_field of expr_field
+  | Expr_struct of expr_struct
 
 and expr_bin = {
   expr_bin_left : expr;
@@ -118,6 +120,21 @@ and arm = {
 and expr_match = {
   expr_match_expr : expr;
   expr_match_arms : list arm;
+}
+
+and expr_field = {
+  expr_field_base : expr;
+  expr_field_member : string;
+}
+
+and expr_struct = {
+  expr_struct_path : list string;
+  expr_struct_fields : list field_val;
+}
+
+and field_val = {
+  field_val_name : string;
+  field_val_expr : expr;
 }
 
 and local_stmt = {
@@ -211,6 +228,9 @@ val mk_pat_ident (path:string) : pat
 val mk_pat_ts (path:string) (elems:list pat) : pat
 val mk_arm (arm_pat:pat) (arm_body:expr) : arm
 val mk_match (scrutinee:expr) (arms:list arm) : expr
+val mk_expr_field (base:expr) (f:string) : expr
+val mk_expr_struct (path:list string) (fields:list (string & expr)) : expr
+
 val mk_local_stmt (name:string) (is_mut:bool) (init:expr) : stmt
 val mk_scalar_fn_arg (name:string) (t:typ) : fn_arg
 val mk_ref_fn_arg (name:string) (is_mut:bool) (t:typ) : fn_arg
