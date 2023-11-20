@@ -94,6 +94,16 @@ struct ExprReference {
     expr_reference_expr: Box<Expr>,
 }
 
+struct Arm {
+    arm_pat: Box<Pat>,
+    arm_body: Box<Expr>,
+}
+
+struct ExprMatch {
+    expr_match_expr: Box<Expr>,
+    expr_match_arms: Vec<Arm>,
+}
+
 enum Expr {
     EBinOp(ExprBin),
     EPath(String),
@@ -107,6 +117,7 @@ enum Expr {
     EIndex(ExprIndex),
     ERepeat(ExprRepeat),
     EReference(ExprReference),
+    EMatch(ExprMatch),
 }
 
 struct TypeReference {
@@ -137,8 +148,16 @@ struct PatIdent {
     is_mut: bool,
 }
 
+struct PatTupleStruct {
+    pat_ts_path: String,
+    pat_ts_elems: Vec<Pat>,
+}
+
 enum Pat {
     PIdent(PatIdent),
+    PTupleStruct(PatTupleStruct),
+    PWild,
+    PLit(Lit),
 }
 
 struct LocalStmt {
@@ -240,6 +259,7 @@ impl_from_ocaml_variant! {
     Expr::EIndex (payload:ExprIndex),
     Expr::ERepeat (payload:ExprRepeat),
     Expr::EReference (payload:ExprReference),
+    Expr::EMatch (payload:ExprMatch),
   }
 }
 
@@ -309,6 +329,20 @@ impl_from_ocaml_record! {
 }
 
 impl_from_ocaml_record! {
+  Arm {
+    arm_pat: Pat,
+    arm_body: Expr,
+  }
+}
+
+impl_from_ocaml_record! {
+  ExprMatch {
+    expr_match_expr: Expr,
+    expr_match_arms: OCamlList<Arm>,
+  }
+}
+
+impl_from_ocaml_record! {
   TypeReference {
     type_reference_mut: bool,
     type_reference_typ: Typ,
@@ -346,9 +380,19 @@ impl_from_ocaml_record! {
   }
 }
 
+impl_from_ocaml_record! {
+  PatTupleStruct {
+    pat_ts_path : String,
+    pat_ts_elems : OCamlList<Pat>,
+  }
+}
+
 impl_from_ocaml_variant! {
   Pat {
     Pat::PIdent (payload:PatIdent),
+    Pat::PTupleStruct (payload:PatTupleStruct),
+    Pat::PWild,
+    Pat::PLit (payload:Lit),
   }
 }
 
@@ -504,6 +548,33 @@ fn to_syn_panic() -> syn::Expr {
     })
 }
 
+fn to_syn_arm(e: &Arm) -> syn::Arm {
+    syn::Arm {
+        attrs: vec![],
+        pat: to_syn_pat(&e.arm_pat),
+        guard: None,
+        fat_arrow_token: syn::token::FatArrow {
+            spans: [Span::call_site(), Span::call_site()],
+        },
+        body: Box::new(to_syn_expr(&e.arm_body)),
+        comma: Some(syn::token::Comma {
+            spans: [Span::call_site()],
+        }),
+    }
+}
+
+fn to_syn_lit(e: &Lit) -> syn::Lit {
+    match e {
+        Lit::LitInt(LitInt { lit_int_val, .. }) => {
+            syn::Lit::Int(syn::LitInt::new(lit_int_val, Span::call_site()))
+        }
+        Lit::LitBool(b) => syn::Lit::Bool(syn::LitBool {
+            value: *b,
+            span: Span::call_site(),
+        }),
+    }
+}
+
 fn to_syn_expr(e: &Expr) -> syn::Expr {
     match e {
         Expr::EBinOp(e) => {
@@ -578,17 +649,7 @@ fn to_syn_expr(e: &Expr) -> syn::Expr {
         }
         Expr::ELit(lit) => syn::Expr::Lit(syn::ExprLit {
             attrs: vec![],
-            lit: {
-                match lit {
-                    Lit::LitInt(LitInt { lit_int_val, .. }) => {
-                        syn::Lit::Int(syn::LitInt::new(lit_int_val, Span::call_site()))
-                    }
-                    Lit::LitBool(b) => syn::Lit::Bool(syn::LitBool {
-                        value: *b,
-                        span: Span::call_site(),
-                    }),
-                }
-            },
+            lit: to_syn_lit(lit),
         }),
         Expr::EIf(ExprIf {
             expr_if_cond,
@@ -690,29 +751,74 @@ fn to_syn_expr(e: &Expr) -> syn::Expr {
             },
             expr: Box::new(to_syn_expr(expr_reference_expr)),
         }),
+        Expr::EMatch(ExprMatch {
+            expr_match_expr,
+            expr_match_arms,
+        }) => syn::Expr::Match(syn::ExprMatch {
+            attrs: vec![],
+            match_token: syn::token::Match {
+                span: Span::call_site(),
+            },
+            expr: Box::new(to_syn_expr(expr_match_expr)),
+            brace_token: Brace::default(),
+            arms: expr_match_arms.iter().map(to_syn_arm).collect(),
+        }),
     }
 }
 
-fn to_pat_ident(p: &PatIdent) -> SynPat {
-    SynPat::Ident(syn::PatIdent {
-        attrs: vec![],
-        by_ref: if p.by_ref {
-            Some(Ref {
-                span: Span::call_site(),
-            })
-        } else {
-            None
-        },
-        mutability: if p.is_mut {
-            Some(Mut {
-                span: Span::call_site(),
-            })
-        } else {
-            None
-        },
-        ident: Ident::new(&p.pat_name, Span::call_site()),
-        subpat: None,
-    })
+fn to_syn_pat(p: &Pat) -> syn::Pat {
+    match p {
+        Pat::PIdent(p) => SynPat::Ident(syn::PatIdent {
+            attrs: vec![],
+            by_ref: if p.by_ref {
+                Some(Ref {
+                    span: Span::call_site(),
+                })
+            } else {
+                None
+            },
+            mutability: if p.is_mut {
+                Some(Mut {
+                    span: Span::call_site(),
+                })
+            } else {
+                None
+            },
+            ident: Ident::new(&p.pat_name, Span::call_site()),
+            subpat: None,
+        }),
+        Pat::PTupleStruct(pts) => SynPat::TupleStruct(syn::PatTupleStruct {
+            attrs: vec![],
+            qself: None,
+            path: to_syn_path_basic(pts.pat_ts_path.to_string()),
+            paren_token: syn::token::Paren {
+                span: proc_macro2::Group::new(
+                    proc_macro2::Delimiter::None,
+                    proc_macro2::TokenStream::new(),
+                )
+                .delim_span(),
+            },
+            elems: {
+                let mut pats: Punctuated<syn::Pat, Comma> = Punctuated::new();
+                pts.pat_ts_elems
+                    .iter()
+                    .for_each(|p| pats.push(to_syn_pat(p)));
+                pats
+            },
+        }),
+        Pat::PWild => syn::Pat::Wild(syn::PatWild {
+            attrs: vec![],
+            underscore_token: syn::token::Underscore {
+                spans: [Span::call_site()],
+            },
+        }),
+        Pat::PLit(lit) => syn::Pat::Lit({
+            syn::PatLit {
+                attrs: vec![],
+                lit: to_syn_lit(lit),
+            }
+        }),
+    }
 }
 
 fn to_syn_stmt(s: &Stmt) -> syn::Stmt {
@@ -722,10 +828,7 @@ fn to_syn_stmt(s: &Stmt) -> syn::Stmt {
             let_token: Let {
                 span: Span::call_site(),
             },
-            pat: {
-                let Pat::PIdent(p) = &s.local_stmt_pat;
-                to_pat_ident(&p)
-            },
+            pat: { to_syn_pat(&s.local_stmt_pat) },
             init: s.local_stmt_init.as_ref().map(|e| {
                 let e = to_syn_expr(&e);
                 LocalInit {
@@ -835,8 +938,7 @@ fn to_syn_typ(t: &Typ) -> Type {
 fn to_syn_fn_arg(a: &FnArg) -> syn::FnArg {
     let FnArg::FnArgPat(pt) = a;
     let t = to_syn_typ(&pt.pat_typ_typ);
-    let Pat::PIdent(p) = &pt.pat_typ_pat;
-    let pat: SynPat = to_pat_ident(&p);
+    let pat: SynPat = to_syn_pat(&pt.pat_typ_pat);
     syn::FnArg::Typed(PatType {
         attrs: vec![],
         pat: Box::new(pat),
@@ -953,6 +1055,38 @@ impl fmt::Display for Lit {
     }
 }
 
+impl fmt::Display for Pat {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match &self {
+            Pat::PIdent(p) => write!(
+                f,
+                "{}{}{}",
+                if p.by_ref { "&" } else { "" },
+                if p.is_mut { "mut " } else { "" },
+                p.pat_name
+            ),
+            Pat::PTupleStruct(pts) => write!(
+                f,
+                "{}({})",
+                pts.pat_ts_path,
+                pts.pat_ts_elems
+                    .iter()
+                    .map(|p| p.to_string())
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+            Pat::PWild => write!(f, "_"),
+            Pat::PLit(lit) => write!(f, "{}", lit),
+        }
+    }
+}
+
+impl fmt::Display for Arm {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} => {}", self.arm_pat, self.arm_body)
+    }
+}
+
 impl fmt::Display for Expr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self {
@@ -1015,6 +1149,19 @@ impl fmt::Display for Expr {
                 if *expr_reference_is_mut { "mut" } else { "" },
                 expr_reference_expr
             ),
+            Expr::EMatch(ExprMatch {
+                expr_match_expr,
+                expr_match_arms,
+            }) => write!(
+                f,
+                "match {} {{ {} }}",
+                expr_match_expr,
+                expr_match_arms
+                    .iter()
+                    .map(|a| a.to_string())
+                    .collect::<Vec<_>>()
+                    .join("|")
+            ),
         }
     }
 }
@@ -1063,12 +1210,10 @@ impl fmt::Display for Typ {
 
 impl fmt::Display for LocalStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let Pat::PIdent(p) = &self.local_stmt_pat;
         write!(
             f,
-            "let {} {} {}",
-            if p.is_mut { "mut" } else { "" },
-            p.pat_name,
+            "let {} {}",
+            self.local_stmt_pat,
             if let Some(e) = &self.local_stmt_init {
                 format!("= {}", e)
             } else {
@@ -1090,16 +1235,7 @@ impl fmt::Display for Stmt {
 impl fmt::Display for FnArg {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let FnArg::FnArgPat(pt) = &self;
-        let Pat::PIdent(p) = &pt.pat_typ_pat;
-        // let FnArg::FnArgPat(Pat::PIdent(p)) = &self;
-        write!(
-            f,
-            "{}:{} {} {}",
-            p.pat_name,
-            if p.by_ref { "&" } else { "" },
-            if p.is_mut { "mut" } else { "" },
-            pt.pat_typ_typ
-        )
+        write!(f, "{}:{}", pt.pat_typ_pat, pt.pat_typ_typ)
     }
 }
 

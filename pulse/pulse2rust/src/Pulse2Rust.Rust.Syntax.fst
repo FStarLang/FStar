@@ -22,6 +22,13 @@ let mk_vec_typ (t:typ) : typ =
     { typ_path_segment_name = "Vec"; typ_path_segment_generic_args = [t] };
   ]
 
+let mk_option_typ (t:typ) : typ =
+  Typ_path [
+    { typ_path_segment_name = "std"; typ_path_segment_generic_args = [] };
+    { typ_path_segment_name = "option"; typ_path_segment_generic_args = [] };
+    { typ_path_segment_name = "Option"; typ_path_segment_generic_args = [t] };
+  ]
+
 let mk_array_typ (t:typ) (len:expr) : typ =
   Typ_array { typ_array_elem = t; typ_array_len = len }
 
@@ -63,6 +70,19 @@ let mk_repeat (expr_repeat_elem expr_repeat_len:expr) : expr =
 
 let mk_reference_expr (expr_reference_is_mut:bool) (expr_reference_expr:expr) : expr =
   Expr_reference { expr_reference_is_mut; expr_reference_expr }
+
+let mk_pat_ident (path:string) : pat =
+  Pat_ident { pat_name = path; by_ref = false; is_mut = false }
+
+let mk_pat_ts (pat_ts_path:string) (pat_ts_elems:list pat) : pat =
+  if List.Tot.length pat_ts_elems = 0
+  then Pat_ident { pat_name = pat_ts_path; by_ref = false; is_mut = false }
+  else Pat_tuple_struct { pat_ts_path; pat_ts_elems}
+
+let mk_arm (arm_pat:pat) (arm_body:expr) : arm = { arm_pat; arm_body }
+
+let mk_match (expr_match_expr:expr) (expr_match_arms:list arm) : expr =
+  Expr_match { expr_match_expr; expr_match_arms }
 
 let mk_scalar_fn_arg (name:string) (t:typ) =
   Fn_arg_pat {

@@ -123,6 +123,9 @@ let rec extract_mlty (g:env) (t:S.mlty) : typ =
   | S.MLTY_Named ([arg], p)
     when S.string_of_mlpath p = "Pulse.Lib.Vec.vec" ->
     arg |> extract_mlty g |> mk_vec_typ
+  | S.MLTY_Named ([arg], p)
+    when S.string_of_mlpath p = "FStar.Pervasives.Native.option" ->
+    arg |> extract_mlty g |> mk_option_typ
   | S.MLTY_Erased -> mk_scalar_typ "unit"
   | _ -> fail_nyi (format1 "mlty %s" (S.mlty_to_string t))
 
@@ -190,6 +193,36 @@ let is_binop (s:string) : option binop =
   else if s = "Prims.op_Equality"
   then Some Eq
   else None
+
+let extract_mlconstant_to_lit (c:S.mlconstant) : lit =
+  match c with 
+  | S.MLC_Int (lit_int_val, swopt) ->
+    let lit_int_signed =
+      match swopt with
+      | Some (FStar.Const.Unsigned, _) -> Some false
+      | Some (FStar.Const.Signed, _) -> Some true
+      | None -> None in
+    let lit_int_width =
+      match swopt with
+      | Some (_, FStar.Const.Int8) -> Some I8
+      | Some (_, FStar.Const.Int16) -> Some I16
+      | Some (_, FStar.Const.Int32) -> Some I32
+      | Some (_, FStar.Const.Int64) -> Some I64
+      | Some (_, FStar.Const.Sizet) -> Some I64  // TODO: FIXME
+      | None -> None in
+    Lit_int {lit_int_val; lit_int_signed; lit_int_width}
+  | S.MLC_Bool b -> Lit_bool b
+  | _ -> fail_nyi (format1 "mlconstant_to_lit %s" (S.mlconstant_to_string c))
+
+
+let rec extract_mlpattern_to_pat (p:S.mlpattern) : pat =
+  match p with
+  | S.MLP_Wild -> Pat_wild
+  | S.MLP_Const c -> Pat_lit (extract_mlconstant_to_lit c)
+  | S.MLP_Var x -> mk_pat_ident (varname x)
+  | S.MLP_CTor (p, ps) ->
+    mk_pat_ts (snd p) (List.map extract_mlpattern_to_pat ps)
+  | _ -> fail_nyi (format1 "mlpattern_to_pat %s" (S.mlpattern_to_string p))
 
 //
 // Given an mllb,
@@ -261,22 +294,13 @@ let rec lb_init_and_def (g:env) (lb:S.mllb)
 and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
   match e.expr with
   | S.MLE_Const (S.MLC_Unit) -> Expr_path "unitv"
-  | S.MLE_Const (S.MLC_Int (lit_int_val, swopt)) ->
-    let lit_int_signed =
-      match swopt with
-      | Some (FStar.Const.Unsigned, _) -> Some false
-      | Some (FStar.Const.Signed, _) -> Some true
-      | None -> None in
-    let lit_int_width =
-      match swopt with
-      | Some (_, FStar.Const.Int8) -> Some I8
-      | Some (_, FStar.Const.Int16) -> Some I16
-      | Some (_, FStar.Const.Int32) -> Some I32
-      | Some (_, FStar.Const.Int64) -> Some I64
-      | Some (_, FStar.Const.Sizet) -> Some I64  // TODO: FIXME
-      | None -> None in
-    Expr_lit (Lit_int {lit_int_val; lit_int_signed; lit_int_width})
-  | S.MLE_Const (S.MLC_Bool b) -> mk_lit_bool b
+    //
+    // Must come after unit,
+    //   no unit extraction in the lit function
+    //
+  | S.MLE_Const c ->
+    let lit = extract_mlconstant_to_lit c in
+    Expr_lit lit
   | S.MLE_App ({expr=S.MLE_Name p}, [e])
     when S.string_of_mlpath p = "FStar.SizeT.uint_to_t" ->
     extract_mlexpr g e
@@ -389,6 +413,10 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
       | Some else_ -> Some (mk_block_expr [Stmt_expr else_]) in 
     mk_if cond then_ else_
 
+  | S.MLE_Match (e, branches) ->
+    let e = extract_mlexpr g e in
+    mk_match e (List.map (extract_mlbranch_to_arm g) branches)
+
   | S.MLE_Coerce (e, _, _) -> extract_mlexpr g e  // TODO: FIXME: perhaps cast in Rust?
 
   | _ -> fail_nyi (format1 "mlexpr %s" (S.mlexpr_to_string e))
@@ -407,6 +435,14 @@ and extract_mlexpr_to_stmts (g:env) (e:S.mlexpr) : list stmt =
     [Stmt_expr (mk_call (Expr_path panic_fn) [])]
   | _ -> fail_nyi (format1 "mlexpr_to_stmt  %s" (S.mlexpr_to_string e))
 
+and extract_mlbranch_to_arm (g:env) ((pat, pat_guard, body):S.mlbranch) : arm =
+  match pat_guard with
+  | Some e -> fail_nyi (format1 "mlbranch_to_arm with pat guard %s" (S.mlexpr_to_string e))
+  | None ->
+    let pat = extract_mlpattern_to_pat pat in
+    let arm_body = extract_mlexpr g body in
+    mk_arm pat arm_body
+
 let extract_top_level_lb (g:env) (lbs:S.mlletbinding) : fn & env =
   let is_rec, lbs = lbs in
   if is_rec = S.Rec
@@ -419,8 +455,8 @@ let extract_top_level_lb (g:env) (lbs:S.mlletbinding) : fn & env =
     // if tsc is not set, we could get the arg types from the fun inside
     //
     let Some tsc = lb.mllb_tysc in
-    print1 "Typescheme is: %s\n\n" (S.mltyscheme_to_string tsc);
-    print1 "lbdef is: %s\n\n" (S.mlexpr_to_string lb.mllb_def);
+    // print1 "Typescheme is: %s\n\n" (S.mltyscheme_to_string tsc);
+    // print1 "lbdef is: %s\n\n" (S.mlexpr_to_string lb.mllb_def);
     let arg_names, body =
       match lb.mllb_def.expr with
       | S.MLE_Fun (bs, body) ->
@@ -430,10 +466,10 @@ let extract_top_level_lb (g:env) (lbs:S.mlletbinding) : fn & env =
     
     let tvars, arg_ts, ret_t = arg_ts_and_ret_t tsc in
     
-    print3 "tvars: %s, arg_ts: %s, ret_t: %s\n"
-      (String.concat ", " tvars)
-      (String.concat ", " (List.map S.mlty_to_string arg_ts))
-      (S.mlty_to_string ret_t);
+    // print3 "tvars: %s, arg_ts: %s, ret_t: %s\n"
+    //   (String.concat ", " tvars)
+    //   (String.concat ", " (List.map S.mlty_to_string arg_ts))
+    //   (S.mlty_to_string ret_t);
 
     let fn_sig, g_body = extract_top_level_sig g lb.mllb_name (List.map tyvar_of tvars) arg_names arg_ts ret_t in
     let fn_body = extract_mlexpr_to_stmts g_body body in

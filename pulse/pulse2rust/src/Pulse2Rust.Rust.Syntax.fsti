@@ -2,15 +2,6 @@ module Pulse2Rust.Rust.Syntax
 
 open FStar.Compiler.Effect
 
-type pat_ident = {
-  pat_name : string;
-  by_ref : bool;
-  is_mut : bool;
-}
-
-type pat =
-  | Pat_ident of pat_ident
-
 type lit_int_width =
   | I8
   | I16
@@ -40,6 +31,23 @@ type binop =
 type unop =
   | Deref
 
+type pat_ident = {
+  pat_name : string;
+  by_ref : bool;
+  is_mut : bool;
+}
+
+type pat_tuple_struct = {
+  pat_ts_path : string;
+  pat_ts_elems : list pat;
+}
+
+and pat =
+  | Pat_ident of pat_ident
+  | Pat_tuple_struct of pat_tuple_struct
+  | Pat_wild
+  | Pat_lit of lit
+
 type expr =
   | Expr_binop of expr_bin
   | Expr_path of string
@@ -53,6 +61,7 @@ type expr =
   | Expr_index of expr_index
   | Expr_repeat of expr_repeat
   | Expr_reference of expr_reference
+  | Expr_match of expr_match
 
 and expr_bin = {
   expr_bin_left : expr;
@@ -99,6 +108,16 @@ and expr_repeat = {
 and expr_reference = {
   expr_reference_is_mut : bool;
   expr_reference_expr : expr
+}
+
+and arm = {
+  arm_pat : pat;
+  arm_body : expr
+}
+
+and expr_match = {
+  expr_match_expr : expr;
+  expr_match_arms : list arm;
 }
 
 and local_stmt = {
@@ -161,6 +180,7 @@ val mk_scalar_typ (name:string) : typ
 val mk_ref_typ (is_mut:bool) (t:typ) : typ
 val mk_slice_typ (t:typ) : typ
 val mk_vec_typ (t:typ) : typ
+val mk_option_typ (t:typ) : typ
 val mk_array_typ (t:typ) (len:expr) : typ
 val mk_lit_bool (b:bool) : expr
 val mk_binop (e1:expr) (op:binop) (e2:expr) : expr
@@ -174,6 +194,10 @@ val mk_if (cond:expr) (then_:list stmt) (else_:option expr) : expr  // else is B
 val mk_while (cond:expr) (body:list stmt) : expr
 val mk_repeat (elem len:expr) : expr
 val mk_reference_expr (is_mut:bool) (e:expr) : expr
+val mk_pat_ident (path:string) : pat
+val mk_pat_ts (path:string) (elems:list pat) : pat
+val mk_arm (arm_pat:pat) (arm_body:expr) : arm
+val mk_match (scrutinee:expr) (arms:list arm) : expr
 val mk_local_stmt (name:string) (is_mut:bool) (init:expr) : stmt
 val mk_scalar_fn_arg (name:string) (t:typ) : fn_arg
 val mk_ref_fn_arg (name:string) (is_mut:bool) (t:typ) : fn_arg
