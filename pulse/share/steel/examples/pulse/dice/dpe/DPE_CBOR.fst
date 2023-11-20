@@ -24,6 +24,7 @@ open Pulse.Lib.Stick
 
 #push-options "--z3rlimit 16 --query_stats --ifuel 16" // to let z3 cope with CDDL specs
 
+#push-options "--z3rlimit 20"
 ```pulse
 fn initialize_context (len:SZ.t)
                       (input:A.larray U8.t (SZ.v len))
@@ -82,5 +83,6 @@ fn initialize_context (len:SZ.t)
     }
 }
 ```
+#pop-options
 
 #pop-options
