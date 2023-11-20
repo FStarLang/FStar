@@ -966,25 +966,31 @@ let (extract_one : Prims.string -> unit) =
         let uu___1 = uu___ in
         let uu___2 =
           FStar_Compiler_List.fold_left
-            (fun g ->
+            (fun uu___3 ->
                fun d ->
-                 match d with
-                 | FStar_Extraction_ML_Syntax.MLM_Let lb ->
-                     let uu___3 = extract_top_level_lb g lb in
-                     (match uu___3 with
-                      | (f, g1) ->
-                          ((let uu___5 =
-                              let uu___6 = RustBindings.fn_to_rust f in
-                              Prims.op_Hat uu___6 "\n" in
-                            FStar_Compiler_Util.print_string uu___5);
-                           g1))
-                 | FStar_Extraction_ML_Syntax.MLM_Loc uu___3 -> g
-                 | uu___3 ->
-                     let uu___4 =
-                       let uu___5 =
-                         FStar_Extraction_ML_Syntax.mlmodule1_to_string d in
-                       FStar_Compiler_Util.format1 "top level decl %s" uu___5 in
-                     fail_nyi uu___4) (empty_env ()) decls in
-        ()
+                 match uu___3 with
+                 | (items, g) ->
+                     (match d with
+                      | FStar_Extraction_ML_Syntax.MLM_Let lb ->
+                          let uu___4 = extract_top_level_lb g lb in
+                          (match uu___4 with
+                           | (f, g1) ->
+                               ((FStar_Compiler_List.op_At items
+                                   [Pulse2Rust_Rust_Syntax.Item_fn f]), g1))
+                      | FStar_Extraction_ML_Syntax.MLM_Loc uu___4 ->
+                          (items, g)
+                      | uu___4 ->
+                          let uu___5 =
+                            let uu___6 =
+                              FStar_Extraction_ML_Syntax.mlmodule1_to_string
+                                d in
+                            FStar_Compiler_Util.format1 "top level decl %s"
+                              uu___6 in
+                          fail_nyi uu___5)) ([], (empty_env ())) decls in
+        (match uu___2 with
+         | (items, uu___3) ->
+             let f = Pulse2Rust_Rust_Syntax.mk_file "a.rs" items in
+             let s = RustBindings.file_to_rust f in
+             FStar_Compiler_Util.print_string (Prims.op_Hat s "\n"))
 let (extract : Prims.string Prims.list -> unit) =
   fun files -> FStar_Compiler_List.iter extract_one files

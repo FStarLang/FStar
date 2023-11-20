@@ -476,6 +476,20 @@ let (__proj__Mkfn__item__fn_sig : fn -> fn_signature) =
   fun projectee -> match projectee with | { fn_sig; fn_body;_} -> fn_sig
 let (__proj__Mkfn__item__fn_body : fn -> stmt Prims.list) =
   fun projectee -> match projectee with | { fn_sig; fn_body;_} -> fn_body
+type item =
+  | Item_fn of fn 
+let (uu___is_Item_fn : item -> Prims.bool) = fun projectee -> true
+let (__proj__Item_fn__item___0 : item -> fn) =
+  fun projectee -> match projectee with | Item_fn _0 -> _0
+type file = {
+  file_name: Prims.string ;
+  file_items: item Prims.list }
+let (__proj__Mkfile__item__file_name : file -> Prims.string) =
+  fun projectee ->
+    match projectee with | { file_name; file_items;_} -> file_name
+let (__proj__Mkfile__item__file_items : file -> item Prims.list) =
+  fun projectee ->
+    match projectee with | { file_name; file_items;_} -> file_items
 let (vec_new_fn : Prims.string) = "vec_new"
 let (panic_fn : Prims.string) = "panic"
 let (mk_scalar_typ : Prims.string -> typ) =
@@ -603,3 +617,5 @@ let (mk_local_stmt : Prims.string -> Prims.bool -> expr -> stmt) =
           }
 let (mk_fn : fn_signature -> stmt Prims.list -> fn) =
   fun fn_sig -> fun fn_body -> { fn_sig; fn_body }
+let (mk_file : Prims.string -> item Prims.list -> file) =
+  fun file_name -> fun file_items -> { file_name; file_items }
