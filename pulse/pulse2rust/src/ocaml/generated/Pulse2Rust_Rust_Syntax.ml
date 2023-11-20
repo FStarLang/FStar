@@ -1,23 +1,4 @@
 open Prims
-type pat_ident =
-  {
-  pat_name: Prims.string ;
-  by_ref: Prims.bool ;
-  is_mut: Prims.bool }
-let (__proj__Mkpat_ident__item__pat_name : pat_ident -> Prims.string) =
-  fun projectee ->
-    match projectee with | { pat_name; by_ref; is_mut;_} -> pat_name
-let (__proj__Mkpat_ident__item__by_ref : pat_ident -> Prims.bool) =
-  fun projectee ->
-    match projectee with | { pat_name; by_ref; is_mut;_} -> by_ref
-let (__proj__Mkpat_ident__item__is_mut : pat_ident -> Prims.bool) =
-  fun projectee ->
-    match projectee with | { pat_name; by_ref; is_mut;_} -> is_mut
-type pat =
-  | Pat_ident of pat_ident 
-let (uu___is_Pat_ident : pat -> Prims.bool) = fun projectee -> true
-let (__proj__Pat_ident__item___0 : pat -> pat_ident) =
-  fun projectee -> match projectee with | Pat_ident _0 -> _0
 type lit_int_width =
   | I8 
   | I16 
@@ -93,6 +74,53 @@ let (uu___is_Ge : binop -> Prims.bool) =
 type unop =
   | Deref 
 let (uu___is_Deref : unop -> Prims.bool) = fun projectee -> true
+type pat_ident =
+  {
+  pat_name: Prims.string ;
+  by_ref: Prims.bool ;
+  is_mut: Prims.bool }
+let (__proj__Mkpat_ident__item__pat_name : pat_ident -> Prims.string) =
+  fun projectee ->
+    match projectee with | { pat_name; by_ref; is_mut;_} -> pat_name
+let (__proj__Mkpat_ident__item__by_ref : pat_ident -> Prims.bool) =
+  fun projectee ->
+    match projectee with | { pat_name; by_ref; is_mut;_} -> by_ref
+let (__proj__Mkpat_ident__item__is_mut : pat_ident -> Prims.bool) =
+  fun projectee ->
+    match projectee with | { pat_name; by_ref; is_mut;_} -> is_mut
+type pat_tuple_struct =
+  {
+  pat_ts_path: Prims.string ;
+  pat_ts_elems: pat Prims.list }
+and pat =
+  | Pat_ident of pat_ident 
+  | Pat_tuple_struct of pat_tuple_struct 
+  | Pat_wild 
+  | Pat_lit of lit 
+let (__proj__Mkpat_tuple_struct__item__pat_ts_path :
+  pat_tuple_struct -> Prims.string) =
+  fun projectee ->
+    match projectee with | { pat_ts_path; pat_ts_elems;_} -> pat_ts_path
+let (__proj__Mkpat_tuple_struct__item__pat_ts_elems :
+  pat_tuple_struct -> pat Prims.list) =
+  fun projectee ->
+    match projectee with | { pat_ts_path; pat_ts_elems;_} -> pat_ts_elems
+let (uu___is_Pat_ident : pat -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Pat_ident _0 -> true | uu___ -> false
+let (__proj__Pat_ident__item___0 : pat -> pat_ident) =
+  fun projectee -> match projectee with | Pat_ident _0 -> _0
+let (uu___is_Pat_tuple_struct : pat -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Pat_tuple_struct _0 -> true | uu___ -> false
+let (__proj__Pat_tuple_struct__item___0 : pat -> pat_tuple_struct) =
+  fun projectee -> match projectee with | Pat_tuple_struct _0 -> _0
+let (uu___is_Pat_wild : pat -> Prims.bool) =
+  fun projectee -> match projectee with | Pat_wild -> true | uu___ -> false
+let (uu___is_Pat_lit : pat -> Prims.bool) =
+  fun projectee -> match projectee with | Pat_lit _0 -> true | uu___ -> false
+let (__proj__Pat_lit__item___0 : pat -> lit) =
+  fun projectee -> match projectee with | Pat_lit _0 -> _0
 type expr =
   | Expr_binop of expr_bin 
   | Expr_path of Prims.string 
@@ -106,6 +134,7 @@ type expr =
   | Expr_index of expr_index 
   | Expr_repeat of expr_repeat 
   | Expr_reference of expr_reference 
+  | Expr_match of expr_match 
 and expr_bin =
   {
   expr_bin_left: expr ;
@@ -138,6 +167,12 @@ and expr_reference =
   {
   expr_reference_is_mut: Prims.bool ;
   expr_reference_expr: expr }
+and arm = {
+  arm_pat: pat ;
+  arm_body: expr }
+and expr_match = {
+  expr_match_expr: expr ;
+  expr_match_arms: arm Prims.list }
 and local_stmt =
   {
   local_stmt_pat: pat ;
@@ -204,6 +239,11 @@ let (uu___is_Expr_reference : expr -> Prims.bool) =
     match projectee with | Expr_reference _0 -> true | uu___ -> false
 let (__proj__Expr_reference__item___0 : expr -> expr_reference) =
   fun projectee -> match projectee with | Expr_reference _0 -> _0
+let (uu___is_Expr_match : expr -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Expr_match _0 -> true | uu___ -> false
+let (__proj__Expr_match__item___0 : expr -> expr_match) =
+  fun projectee -> match projectee with | Expr_match _0 -> _0
 let (__proj__Mkexpr_bin__item__expr_bin_left : expr_bin -> expr) =
   fun projectee ->
     match projectee with
@@ -291,6 +331,19 @@ let (__proj__Mkexpr_reference__item__expr_reference_expr :
   fun projectee ->
     match projectee with
     | { expr_reference_is_mut; expr_reference_expr;_} -> expr_reference_expr
+let (__proj__Mkarm__item__arm_pat : arm -> pat) =
+  fun projectee -> match projectee with | { arm_pat; arm_body;_} -> arm_pat
+let (__proj__Mkarm__item__arm_body : arm -> expr) =
+  fun projectee -> match projectee with | { arm_pat; arm_body;_} -> arm_body
+let (__proj__Mkexpr_match__item__expr_match_expr : expr_match -> expr) =
+  fun projectee ->
+    match projectee with
+    | { expr_match_expr; expr_match_arms;_} -> expr_match_expr
+let (__proj__Mkexpr_match__item__expr_match_arms :
+  expr_match -> arm Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { expr_match_expr; expr_match_arms;_} -> expr_match_arms
 let (__proj__Mklocal_stmt__item__local_stmt_pat : local_stmt -> pat) =
   fun projectee ->
     match projectee with
@@ -439,6 +492,14 @@ let (mk_vec_typ : typ -> typ) =
       [{ typ_path_segment_name = "std"; typ_path_segment_generic_args = [] };
       { typ_path_segment_name = "vec"; typ_path_segment_generic_args = [] };
       { typ_path_segment_name = "Vec"; typ_path_segment_generic_args = [t] }]
+let (mk_option_typ : typ -> typ) =
+  fun t ->
+    Typ_path
+      [{ typ_path_segment_name = "std"; typ_path_segment_generic_args = [] };
+      { typ_path_segment_name = "option"; typ_path_segment_generic_args = []
+      };
+      { typ_path_segment_name = "Option"; typ_path_segment_generic_args = [t]
+      }]
 let (mk_array_typ : typ -> expr -> typ) =
   fun t -> fun len -> Typ_array { typ_array_elem = t; typ_array_len = len }
 let (mk_lit_bool : Prims.bool -> expr) = fun b -> Expr_lit (Lit_bool b)
@@ -485,6 +546,20 @@ let (mk_reference_expr : Prims.bool -> expr -> expr) =
   fun expr_reference_is_mut ->
     fun expr_reference_expr ->
       Expr_reference { expr_reference_is_mut; expr_reference_expr }
+let (mk_pat_ident : Prims.string -> pat) =
+  fun path -> Pat_ident { pat_name = path; by_ref = false; is_mut = false }
+let (mk_pat_ts : Prims.string -> pat Prims.list -> pat) =
+  fun pat_ts_path ->
+    fun pat_ts_elems ->
+      if (FStar_List_Tot_Base.length pat_ts_elems) = Prims.int_zero
+      then
+        Pat_ident { pat_name = pat_ts_path; by_ref = false; is_mut = false }
+      else Pat_tuple_struct { pat_ts_path; pat_ts_elems }
+let (mk_arm : pat -> expr -> arm) =
+  fun arm_pat -> fun arm_body -> { arm_pat; arm_body }
+let (mk_match : expr -> arm Prims.list -> expr) =
+  fun expr_match_expr ->
+    fun expr_match_arms -> Expr_match { expr_match_expr; expr_match_arms }
 let (mk_scalar_fn_arg : Prims.string -> typ -> fn_arg) =
   fun name ->
     fun t ->
