@@ -195,6 +195,16 @@ struct Fn {
     fn_body: Vec<Stmt>,
 }
 
+enum Item {
+    ItemFn(Fn),
+}
+
+#[allow(dead_code)]
+struct File {
+    file_name: String,
+    file_items: Vec<Item>,
+}
+
 const VEC_NEW_FN: &str = "vec_new";
 const PANIC_FN: &str = "panic";
 
@@ -442,6 +452,19 @@ impl_from_ocaml_record! {
   Fn {
     fn_sig : FnSig,
     fn_body : OCamlList<Stmt>,
+  }
+}
+
+impl_from_ocaml_variant! {
+  Item {
+    Item::ItemFn (payload:Fn),
+  }
+}
+
+impl_from_ocaml_record! {
+  File {
+    file_name: String,
+    file_items : OCamlList<Item>,
   }
 }
 
@@ -1004,10 +1027,29 @@ fn to_syn_fn(f: &Fn) -> ItemFn {
     }
 }
 
-fn fn_to_syn_string(f: &Fn) -> String {
-    let f: ItemFn = to_syn_fn(f);
+fn to_syn_item(i: &Item) -> syn::Item {
+    match i {
+        Item::ItemFn(f) => syn::Item::Fn(to_syn_fn(f)),
+    }
+}
+
+fn to_syn_file(f: &File) -> syn::File {
+    syn::File {
+        shebang: None,
+        attrs: vec![],
+        items: f.file_items.iter().map(to_syn_item).collect(),
+    }
+}
+
+fn file_to_syn_string(f: &File) -> String {
+    let f: syn::File = to_syn_file(f);
     quote::quote!(#f).to_string()
 }
+
+// fn fn_to_syn_string(f: &Fn) -> String {
+//     let f: ItemFn = to_syn_fn(f);
+//     quote::quote!(#f).to_string()
+// }
 
 impl fmt::Display for BinOp {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -1270,6 +1312,28 @@ impl fmt::Display for Fn {
     }
 }
 
+impl fmt::Display for Item {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match &self {
+            Item::ItemFn(func) => write!(f, "{}", func),
+        }
+    }
+}
+
+impl fmt::Display for File {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            self.file_items
+                .iter()
+                .map(|i| i.to_string())
+                .collect::<Vec<_>>()
+                .join("\n")
+        )
+    }
+}
+
 ocaml_export! {
   fn rust_fn_to_string(cr, e:OCamlRef<Fn>) -> OCaml<String> {
     let e = cr.get(e);
@@ -1289,10 +1353,10 @@ ocaml_export! {
     e.to_string().to_owned().to_ocaml(cr)
   }
 
-  fn rust_fn_to_syn_string(cr, e:OCamlRef<Fn>) -> OCaml<String> {
+  fn rust_file_to_syn_string(cr, e:OCamlRef<File>) -> OCaml<String> {
     let e = cr.get(e);
-    let e: Fn = e.to_rust ();
-    fn_to_syn_string(&e).to_owned ().to_ocaml(cr)
+    let e: File = e.to_rust ();
+    file_to_syn_string(&e).to_owned ().to_ocaml(cr)
   }
 
   // fn rust_add_2(cr, x:OCamlRef<OCamlInt64>) -> OCaml<String> {

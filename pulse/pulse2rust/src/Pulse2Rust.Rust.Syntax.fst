@@ -116,3 +116,5 @@ let mk_local_stmt (name:string) (is_mut:bool) (init:expr) =
 
 let mk_fn (fn_sig:fn_signature) (fn_body:list stmt) =
   { fn_sig; fn_body; }
+
+let mk_file (file_name:string) (file_items:list item) : file = { file_name; file_items }

@@ -483,18 +483,23 @@ let extract_one (file:string) : unit =
     match load_value_from_file file with
     | Some r -> r
     | None -> failwith "Could not load file" in
-  let _ = List.fold_left (fun g d ->
+  
+  let items, _ = List.fold_left (fun (items, g) d ->
     // print1 "Decl: %s\n" (S.mlmodule1_to_string d);
     match d with
     | S.MLM_Let lb ->
       let f, g = extract_top_level_lb g lb in
       // print_string "Extracted to:\n";
-      print_string (RustBindings.fn_to_rust f ^ "\n");
+      // print_string (RustBindings.fn_to_rust f ^ "\n");
+      items@[Item_fn f],
       g
-    | S.MLM_Loc _ -> g
+    | S.MLM_Loc _ -> items, g
     | _ -> fail_nyi (format1 "top level decl %s" (S.mlmodule1_to_string d))
-  ) (empty_env ()) decls in
-  ()
+  ) ([], empty_env ()) decls in
+  
+  let f = mk_file "a.rs" items in
+  let s = RustBindings.file_to_rust f in
+  print_string (s ^ "\n")
 
 let extract (files:list string) : unit =
   List.iter extract_one files

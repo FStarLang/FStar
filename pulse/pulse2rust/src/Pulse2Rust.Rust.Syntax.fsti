@@ -173,6 +173,14 @@ type fn = {
   fn_body : list stmt;
 }
 
+type item =
+  | Item_fn of fn
+
+type file = {
+  file_name : string;
+  file_items : list item;
+}
+
 val vec_new_fn : string
 val panic_fn : string
 
@@ -203,3 +211,4 @@ val mk_scalar_fn_arg (name:string) (t:typ) : fn_arg
 val mk_ref_fn_arg (name:string) (is_mut:bool) (t:typ) : fn_arg
 val mk_fn_signature (fn_name:string) (fn_generics:list string) (fn_args:list fn_arg) (fn_ret_t:typ) : fn_signature
 val mk_fn (fn_sig:fn_signature) (fn_body:list stmt) : fn
+val mk_file (name:string) (items:list item) : file
