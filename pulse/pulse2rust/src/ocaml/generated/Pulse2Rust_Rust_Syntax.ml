@@ -123,7 +123,7 @@ let (__proj__Pat_lit__item___0 : pat -> lit) =
   fun projectee -> match projectee with | Pat_lit _0 -> _0
 type expr =
   | Expr_binop of expr_bin 
-  | Expr_path of Prims.string 
+  | Expr_path of Prims.string Prims.list 
   | Expr_call of expr_call 
   | Expr_unary of expr_unary 
   | Expr_assign of expr_assignment 
@@ -188,7 +188,7 @@ let (__proj__Expr_binop__item___0 : expr -> expr_bin) =
 let (uu___is_Expr_path : expr -> Prims.bool) =
   fun projectee ->
     match projectee with | Expr_path _0 -> true | uu___ -> false
-let (__proj__Expr_path__item___0 : expr -> Prims.string) =
+let (__proj__Expr_path__item___0 : expr -> Prims.string Prims.list) =
   fun projectee -> match projectee with | Expr_path _0 -> _0
 let (uu___is_Expr_call : expr -> Prims.bool) =
   fun projectee ->
@@ -499,6 +499,12 @@ let (mk_scalar_typ : Prims.string -> typ) =
 let (mk_ref_typ : Prims.bool -> typ -> typ) =
   fun is_mut ->
     fun t -> Typ_reference { typ_ref_mut = is_mut; typ_ref_typ = t }
+let (mk_box_typ : typ -> typ) =
+  fun t ->
+    Typ_path
+      [{ typ_path_segment_name = "std"; typ_path_segment_generic_args = [] };
+      { typ_path_segment_name = "boxed"; typ_path_segment_generic_args = [] };
+      { typ_path_segment_name = "Box"; typ_path_segment_generic_args = [t] }]
 let (mk_slice_typ : typ -> typ) = fun t -> Typ_slice t
 let (mk_vec_typ : typ -> typ) =
   fun t ->
@@ -516,6 +522,8 @@ let (mk_option_typ : typ -> typ) =
       }]
 let (mk_array_typ : typ -> expr -> typ) =
   fun t -> fun len -> Typ_array { typ_array_elem = t; typ_array_len = len }
+let (mk_expr_path_singl : Prims.string -> expr) = fun s -> Expr_path [s]
+let (mk_expr_path : Prims.string Prims.list -> expr) = fun l -> Expr_path l
 let (mk_lit_bool : Prims.bool -> expr) = fun b -> Expr_lit (Lit_bool b)
 let (mk_binop : expr -> binop -> expr -> expr) =
   fun l ->
