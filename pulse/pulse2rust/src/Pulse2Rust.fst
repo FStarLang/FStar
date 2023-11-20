@@ -65,7 +65,7 @@ let push_local (g:env) (s:string) (t:typ) (is_mut:bool) : env =
 //
 let type_of (g:env) (e:expr) : typ & bool =  // is_mut
   match e with
-  | Expr_path s ->
+  | Expr_path [s] ->
     (match lookup_local g s with
      | Some (t, b) -> t, b
      | None -> fail (format1 "lookup in env for %s" s))
@@ -112,6 +112,9 @@ let rec extract_mlty (g:env) (t:S.mlty) : typ =
     when S.string_of_mlpath p = "Pulse.Lib.Reference.ref" ->
     let is_mut = true in
     arg |> extract_mlty g |> mk_ref_typ is_mut
+  | S.MLTY_Named ([arg], p)
+    when S.string_of_mlpath p = "Pulse.Lib.Box.box" ->
+    arg |> extract_mlty g |> mk_box_typ
   | S.MLTY_Named ([arg], p)
     when S.string_of_mlpath p = "Pulse.Lib.Array.Core.array" ->
     let is_mut = true in
@@ -238,11 +241,10 @@ let rec extract_mlpattern_to_pat (p:S.mlpattern) : pat =
 // Basically, a local array in pulse becomes a mutable reference to a slice in rust
 // Note that the let binding itself is immutable, but the slice is mutable
 //
-// If the mllb does not have Mutable flag, but the initializer is Vec::alloc,
-//   we extract it as: let mut x = std::vec::new(...)
-// So we return true, extract (vec t), extract (Vec::alloc (...))
-//
-// When we introduce Box, it will follow a similar path as Vec
+// If the mllb does not have Mutable flag, but the initializer is Vec::alloc or Box::alloc,
+//   we extract it as: let mut x = std::vec::new(...) or std::boxed::Box::new(...)
+// So we return true, extract (vec t), extract (Vec::alloc (...)), or
+//              true, extract (box t), extract (Box::new (...))
 //
 let rec lb_init_and_def (g:env) (lb:S.mllb)
   : bool &       // whether the let binding in rust should be mut
@@ -279,7 +281,8 @@ let rec lb_init_and_def (g:env) (lb:S.mllb)
     let is_mut =
       match lb.mllb_def.expr with
       | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, _) ->
-        S.string_of_mlpath p = "Pulse.Lib.Vec.alloc"
+        S.string_of_mlpath p = "Pulse.Lib.Vec.alloc" ||
+        S.string_of_mlpath p = "Pulse.Lib.Box.alloc"
       | _ -> false in
     is_mut,
     lb.mllb_tysc |> must |> snd |> extract_mlty g,
@@ -293,7 +296,7 @@ let rec lb_init_and_def (g:env) (lb:S.mllb)
 //
 and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
   match e.expr with
-  | S.MLE_Const (S.MLC_Unit) -> Expr_path "unitv"
+  | S.MLE_Const (S.MLC_Unit) -> mk_expr_path_singl "unitv"
     //
     // Must come after unit,
     //   no unit extraction in the lit function
@@ -305,14 +308,15 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     when S.string_of_mlpath p = "FStar.SizeT.uint_to_t" ->
     extract_mlexpr g e
 
-  | S.MLE_Var x -> Expr_path (varname x)
-  | S.MLE_Name p -> Expr_path (snd p)
+  | S.MLE_Var x -> mk_expr_path_singl (varname x)
+  | S.MLE_Name p -> mk_expr_path_singl (snd p)
 
     // nested let binding
   | S.MLE_Let _ -> e |> extract_mlexpr_to_stmts g |> mk_block_expr
 
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2; _])
-    when S.string_of_mlpath p = "Pulse.Lib.Reference.op_Colon_Equals" ->
+    when S.string_of_mlpath p = "Pulse.Lib.Reference.op_Colon_Equals" ||
+         S.string_of_mlpath p = "Pulse.Lib.Box.op_Colon_Equals" ->
     let e1 = extract_mlexpr g e1 in
     let e2 = extract_mlexpr g e2 in
     let _, b = type_of g e1 in
@@ -320,11 +324,30 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     then mk_assign e1 e2
     else mk_ref_assign e1 e2
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e; _; _])
-    when S.string_of_mlpath p = "Pulse.Lib.Reference.op_Bang" ->
+    when S.string_of_mlpath p = "Pulse.Lib.Reference.op_Bang" ||
+         S.string_of_mlpath p = "Pulse.Lib.Box.op_Bang" ->
     let e = extract_mlexpr g e in
     let _, b = type_of g e in
     if b then e
     else mk_ref_read e
+  
+    //
+    // box_as_ref e extracted to &mut e
+    //
+    // We need to figure out permissions
+    //
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e])
+    when S.string_of_mlpath p = "Pulse.Lib.Box.box_to_ref" ->
+
+    let e = extract_mlexpr g e in
+    let is_mut = true in
+    mk_reference_expr is_mut e
+
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e])
+    when S.string_of_mlpath p = "Pulse.Lib.Box.alloc" ->
+    let e = extract_mlexpr g e in
+    mk_call (mk_expr_path (["std"; "boxed"; "Box"; "new"])) [e]
+
 
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e; i; _; _])
     when S.string_of_mlpath p = "Pulse.Lib.Array.Core.op_Array_Access" ||
@@ -357,7 +380,7 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     when S.string_of_mlpath p = "Pulse.Lib.Vec.alloc" ->
     let e1 = extract_mlexpr g e1 in
     let e2 = extract_mlexpr g e2 in
-    mk_call (Expr_path vec_new_fn) [e1; e2]
+    mk_call (mk_expr_path_singl vec_new_fn) [e1; e2]
 
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2])
     when S.string_of_mlpath p = "Pulse.Lib.Array.Core.alloc" ->
@@ -365,9 +388,10 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     fail_nyi (format1 "mlexpr %s" (S.mlexpr_to_string e))
 
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e; _])
-    when S.string_of_mlpath p = "Pulse.Lib.Vec.free" ->
+    when S.string_of_mlpath p = "Pulse.Lib.Vec.free" ||
+         S.string_of_mlpath p = "Pulse.Lib.Box.free" ->
     let e = extract_mlexpr g e in
-    mk_call (Expr_path "drop") [e]
+    mk_call (mk_expr_path_singl "drop") [e]
 
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2])
     when S.string_of_mlpath p = "Pulse.Lib.Array.Core.free" ->
@@ -382,7 +406,7 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
 
   | S.MLE_App ({ expr=S.MLE_TApp ({ expr=S.MLE_Name p }, _) }, _)
     when S.string_of_mlpath p = "failwith" ->
-    mk_call (Expr_path panic_fn) []
+    mk_call (mk_expr_path_singl panic_fn) []
 
   | S.MLE_App ({expr=S.MLE_Name p}, [e1; e2])
 
@@ -424,15 +448,15 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
 and extract_mlexpr_to_stmts (g:env) (e:S.mlexpr) : list stmt =
   match e.expr with
   | S.MLE_Const S.MLC_Unit -> []
-  | S.MLE_Var x -> [Stmt_expr (Expr_path (varname x))]
-  | S.MLE_Name p -> [Stmt_expr (Expr_path (S.mlpath_to_string p))]
+  | S.MLE_Var x -> [Stmt_expr (mk_expr_path_singl (varname x))]
+  | S.MLE_Name p -> [Stmt_expr (mk_expr_path_singl (S.mlpath_to_string p))]
   | S.MLE_Let ((S.NonRec, [lb]), e) ->
     let is_mut, ty, init = lb_init_and_def g lb in
     let s = mk_local_stmt lb.mllb_name is_mut init in
     s::(extract_mlexpr_to_stmts (push_local g lb.mllb_name ty is_mut) e)
   | S.MLE_App ({ expr=S.MLE_TApp ({ expr=S.MLE_Name p }, _) }, _)
     when S.string_of_mlpath p = "failwith" ->
-    [Stmt_expr (mk_call (Expr_path panic_fn) [])]
+    [Stmt_expr (mk_call (mk_expr_path_singl panic_fn) [])]
   | _ -> fail_nyi (format1 "mlexpr_to_stmt  %s" (S.mlexpr_to_string e))
 
 and extract_mlbranch_to_arm (g:env) ((pat, pat_guard, body):S.mlbranch) : arm =

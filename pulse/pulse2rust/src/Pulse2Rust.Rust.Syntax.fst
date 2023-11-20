@@ -13,6 +13,13 @@ let mk_scalar_typ (name:string) : typ =
 let mk_ref_typ (is_mut:bool) (t:typ) : typ =
   Typ_reference { typ_ref_mut = is_mut; typ_ref_typ = t }
 
+let mk_box_typ (t:typ) : typ =
+  Typ_path [
+    { typ_path_segment_name = "std"; typ_path_segment_generic_args = [] };
+    { typ_path_segment_name = "boxed"; typ_path_segment_generic_args = [] };
+    { typ_path_segment_name = "Box"; typ_path_segment_generic_args = [t] };
+  ]
+
 let mk_slice_typ (t:typ) : typ = Typ_slice t
 
 let mk_vec_typ (t:typ) : typ =
@@ -31,6 +38,9 @@ let mk_option_typ (t:typ) : typ =
 
 let mk_array_typ (t:typ) (len:expr) : typ =
   Typ_array { typ_array_elem = t; typ_array_len = len }
+
+let mk_expr_path_singl s = Expr_path [s]
+let mk_expr_path l = Expr_path l
 
 let mk_lit_bool (b:bool) : expr = Expr_lit (Lit_bool b)
 

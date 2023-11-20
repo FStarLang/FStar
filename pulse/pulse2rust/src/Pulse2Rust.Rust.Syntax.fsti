@@ -50,7 +50,7 @@ and pat =
 
 type expr =
   | Expr_binop of expr_bin
-  | Expr_path of string
+  | Expr_path of list string
   | Expr_call of expr_call
   | Expr_unary of expr_unary
   | Expr_assign of expr_assignment
@@ -186,10 +186,14 @@ val panic_fn : string
 
 val mk_scalar_typ (name:string) : typ
 val mk_ref_typ (is_mut:bool) (t:typ) : typ
+val mk_box_typ (t:typ) : typ
 val mk_slice_typ (t:typ) : typ
 val mk_vec_typ (t:typ) : typ
 val mk_option_typ (t:typ) : typ
 val mk_array_typ (t:typ) (len:expr) : typ
+
+val mk_expr_path_singl (s:string) : expr
+val mk_expr_path (l:list string) : expr
 val mk_lit_bool (b:bool) : expr
 val mk_binop (e1:expr) (op:binop) (e2:expr) : expr
 val mk_block_expr (l:list stmt) : expr

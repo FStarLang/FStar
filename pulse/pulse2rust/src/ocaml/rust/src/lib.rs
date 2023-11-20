@@ -106,7 +106,7 @@ struct ExprMatch {
 
 enum Expr {
     EBinOp(ExprBin),
-    EPath(String),
+    EPath(Vec<String>),
     ECall(ExprCall),
     EUnOp(ExprUnary),
     EAssign(ExprAssign),
@@ -258,7 +258,7 @@ impl_from_ocaml_variant! {
 impl_from_ocaml_variant! {
   Expr {
     Expr::EBinOp (payload:ExprBin),
-    Expr::EPath (payload:String),
+    Expr::EPath (payload:OCamlList<String>),
     Expr::ECall (payload:ExprCall),
     Expr::EUnOp (payload:ExprUnary),
     Expr::EAssign (payload:ExprAssign),
@@ -468,11 +468,13 @@ impl_from_ocaml_record! {
   }
 }
 
-fn to_syn_path_basic(s: String) -> syn::Path {
+fn to_syn_path(s: &Vec<String>) -> syn::Path {
     let mut segs: Punctuated<syn::PathSegment, syn::token::PathSep> = Punctuated::new();
-    segs.push(PathSegment {
-        ident: Ident::new(&s, Span::call_site()),
-        arguments: PathArguments::None,
+    s.iter().for_each(|s| {
+        segs.push(PathSegment {
+            ident: Ident::new(&s, Span::call_site()),
+            arguments: PathArguments::None,
+        })
     });
     Path {
         leading_colon: None,
@@ -511,14 +513,14 @@ fn to_syn_binop(op: &BinOp) -> syn::BinOp {
 
 fn is_vec_new(e: &Expr) -> bool {
     match e {
-        Expr::EPath(s) => s == VEC_NEW_FN,
+        Expr::EPath(s) => s[0] == VEC_NEW_FN,
         _ => false,
     }
 }
 
 fn is_panic(e: &Expr) -> bool {
     match e {
-        Expr::EPath(s) => s == PANIC_FN,
+        Expr::EPath(s) => s[0] == PANIC_FN,
         _ => false,
     }
 }
@@ -533,7 +535,7 @@ fn to_syn_vec_new(args: &Vec<Expr>) -> syn::Expr {
     syn::Expr::Macro(syn::ExprMacro {
         attrs: vec![],
         mac: syn::Macro {
-            path: to_syn_path_basic("vec".to_string()),
+            path: to_syn_path(&vec!["vec".to_string()]),
             bang_token: syn::token::Not {
                 spans: [Span::call_site()],
             },
@@ -555,7 +557,7 @@ fn to_syn_panic() -> syn::Expr {
     syn::Expr::Macro(syn::ExprMacro {
         attrs: vec![],
         mac: syn::Macro {
-            path: to_syn_path_basic("panic".to_string()),
+            path: to_syn_path(&vec!["panic".to_string()]),
             bang_token: syn::token::Not {
                 spans: [Span::call_site()],
             },
@@ -611,7 +613,7 @@ fn to_syn_expr(e: &Expr) -> syn::Expr {
             })
         }
         Expr::EPath(s) => {
-            let path = to_syn_path_basic(s.to_string());
+            let path = to_syn_path(s);
             syn::Expr::Path(syn::ExprPath {
                 attrs: vec![],
                 qself: None,
@@ -813,7 +815,7 @@ fn to_syn_pat(p: &Pat) -> syn::Pat {
         Pat::PTupleStruct(pts) => SynPat::TupleStruct(syn::PatTupleStruct {
             attrs: vec![],
             qself: None,
-            path: to_syn_path_basic(pts.pat_ts_path.to_string()),
+            path: to_syn_path(&vec![pts.pat_ts_path.to_string()]),
             paren_token: syn::token::Paren {
                 span: proc_macro2::Group::new(
                     proc_macro2::Delimiter::None,
@@ -1133,7 +1135,14 @@ impl fmt::Display for Expr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self {
             Expr::EBinOp(e) => write!(f, "{} {} {}", e.expr_bin_left, e.op, e.expr_bin_right),
-            Expr::EPath(s) => write!(f, "{}", s),
+            Expr::EPath(s) => write!(
+                f,
+                "{}",
+                s.iter()
+                    .map(|s| s.to_string())
+                    .collect::<Vec<_>>()
+                    .join("::")
+            ),
             Expr::ECall(e) => write!(f, "{}", e),
             Expr::EUnOp(e) => write!(f, "{} {}", e.expr_unary_op, e.expr_unary_expr),
             Expr::EAssign(e) => write!(f, "{} = {}", e.expr_assign_l, e.expr_assign_r),
