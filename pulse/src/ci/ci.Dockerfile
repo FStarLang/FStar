@@ -20,6 +20,7 @@ ADD --chown=opam:opam ./ steel/
 ENV FSTAR_HOME=$HOME/FStar
 ENV KRML_HOME=$HOME/karamel
 RUN sudo apt-get update && sudo apt-get install --yes --no-install-recommends \
+    wget \
     jq \
     && \
     git clone --branch $(jq -c -r '.RepoVersions.fstar' steel/src/ci/config.json || echo master) https://github.com/FStarLang/FStar $FSTAR_HOME && \
