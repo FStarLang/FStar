@@ -6967,18 +6967,49 @@ let catch_all :
              FStar_Tactics_Result.Success ((FStar_Pervasives.Inl errs), ps))
 let refl_typing_builtin_wrapper :
   'a .
-    (unit -> ('a * (env * FStar_Syntax_Syntax.typ) Prims.list)) ->
-      ('a FStar_Pervasives_Native.option * issues) FStar_Tactics_Monad.tac
+    Prims.string ->
+      (unit -> ('a * (env * FStar_Syntax_Syntax.typ) Prims.list)) ->
+        ('a FStar_Pervasives_Native.option * issues) FStar_Tactics_Monad.tac
   =
-  fun f ->
-    let uu___ =
-      let uu___1 = __refl_typing_builtin_wrapper f in catch_all uu___1 in
-    FStar_Tactics_Monad.op_let_Bang uu___
-      (fun uu___1 ->
-         match uu___1 with
-         | FStar_Pervasives.Inl errs ->
-             FStar_Tactics_Monad.ret (FStar_Pervasives_Native.None, errs)
-         | FStar_Pervasives.Inr r -> FStar_Tactics_Monad.ret r)
+  fun label ->
+    fun f ->
+      let uu___ =
+        let uu___1 =
+          let uu___2 = __refl_typing_builtin_wrapper f in catch_all uu___2 in
+        FStar_Tactics_Monad.op_let_Bang uu___1
+          (fun uu___2 ->
+             match uu___2 with
+             | FStar_Pervasives.Inl errs ->
+                 FStar_Tactics_Monad.ret (FStar_Pervasives_Native.None, errs)
+             | FStar_Pervasives.Inr r -> FStar_Tactics_Monad.ret r) in
+      FStar_Tactics_Monad.op_let_Bang uu___
+        (fun uu___1 ->
+           match uu___1 with
+           | (o, errs) ->
+               let errs1 =
+                 FStar_Compiler_Effect.op_Bar_Greater errs
+                   (FStar_Compiler_List.map
+                      (fun is ->
+                         let uu___2 =
+                           let uu___3 =
+                             let uu___4 =
+                               FStar_Errors_Msg.text
+                                 (Prims.op_Hat "Raised within Tactics." label) in
+                             [uu___4] in
+                           FStar_Compiler_List.op_At
+                             is.FStar_Errors.issue_msg uu___3 in
+                         {
+                           FStar_Errors.issue_msg = uu___2;
+                           FStar_Errors.issue_level =
+                             (is.FStar_Errors.issue_level);
+                           FStar_Errors.issue_range =
+                             (is.FStar_Errors.issue_range);
+                           FStar_Errors.issue_number =
+                             (is.FStar_Errors.issue_number);
+                           FStar_Errors.issue_ctx =
+                             (is.FStar_Errors.issue_ctx)
+                         })) in
+               FStar_Tactics_Monad.ret (o, errs1))
 let (no_uvars_in_term : FStar_Syntax_Syntax.term -> Prims.bool) =
   fun t ->
     (let uu___ =
@@ -7034,7 +7065,7 @@ let (refl_is_non_informative :
       let uu___ = (no_uvars_in_g g) && (no_uvars_in_term t) in
       if uu___
       then
-        refl_typing_builtin_wrapper
+        refl_typing_builtin_wrapper "refl_is_non_informative"
           (fun uu___1 ->
              let g1 =
                FStar_TypeChecker_Env.set_range g t.FStar_Syntax_Syntax.pos in
@@ -7082,7 +7113,7 @@ let (refl_check_relation :
               (no_uvars_in_term t1) in
           if uu___
           then
-            refl_typing_builtin_wrapper
+            refl_typing_builtin_wrapper "refl_check_relation"
               (fun uu___1 ->
                  let g1 =
                    FStar_TypeChecker_Env.set_range g
@@ -7177,7 +7208,7 @@ let (refl_core_compute_term_type :
       let uu___ = (no_uvars_in_g g) && (no_uvars_in_term e) in
       if uu___
       then
-        refl_typing_builtin_wrapper
+        refl_typing_builtin_wrapper "refl_core_compute_term_type"
           (fun uu___1 ->
              let g1 =
                FStar_TypeChecker_Env.set_range g e.FStar_Syntax_Syntax.pos in
@@ -7247,7 +7278,7 @@ let (refl_core_check_term :
               (no_uvars_in_term t) in
           if uu___
           then
-            refl_typing_builtin_wrapper
+            refl_typing_builtin_wrapper "refl_core_check_term"
               (fun uu___1 ->
                  let g1 =
                    FStar_TypeChecker_Env.set_range g
@@ -7313,7 +7344,7 @@ let (refl_core_check_term_at_type :
           ((no_uvars_in_g g) && (no_uvars_in_term e)) && (no_uvars_in_term t) in
         if uu___
         then
-          refl_typing_builtin_wrapper
+          refl_typing_builtin_wrapper "refl_core_check_term_at_type"
             (fun uu___1 ->
                let g1 =
                  FStar_TypeChecker_Env.set_range g e.FStar_Syntax_Syntax.pos in
@@ -7376,7 +7407,7 @@ let (refl_tc_term :
       let uu___ = (no_uvars_in_g g) && (no_uvars_in_term e) in
       if uu___
       then
-        refl_typing_builtin_wrapper
+        refl_typing_builtin_wrapper "refl_tc_term"
           (fun uu___1 ->
              let g1 =
                FStar_TypeChecker_Env.set_range g e.FStar_Syntax_Syntax.pos in
@@ -7740,7 +7771,7 @@ let (refl_universe_of :
       let uu___ = (no_uvars_in_g g) && (no_uvars_in_term e) in
       if uu___
       then
-        refl_typing_builtin_wrapper
+        refl_typing_builtin_wrapper "refl_universe_of"
           (fun uu___1 ->
              let g1 =
                FStar_TypeChecker_Env.set_range g e.FStar_Syntax_Syntax.pos in
@@ -7792,7 +7823,7 @@ let (refl_check_prop_validity :
       let uu___ = (no_uvars_in_g g) && (no_uvars_in_term e) in
       if uu___
       then
-        refl_typing_builtin_wrapper
+        refl_typing_builtin_wrapper "refl_check_prop_validity"
           (fun uu___1 ->
              let g1 =
                FStar_TypeChecker_Env.set_range g e.FStar_Syntax_Syntax.pos in
@@ -7962,7 +7993,7 @@ let (refl_instantiate_implicits :
       let uu___ = (no_uvars_in_g g) && (no_uvars_in_term e) in
       if uu___
       then
-        refl_typing_builtin_wrapper
+        refl_typing_builtin_wrapper "refl_instantiate_implicits"
           (fun uu___1 ->
              let g1 =
                FStar_TypeChecker_Env.set_range g e.FStar_Syntax_Syntax.pos in
@@ -8201,7 +8232,7 @@ let (refl_maybe_relate_after_unfolding :
             (no_uvars_in_term t1) in
         if uu___
         then
-          refl_typing_builtin_wrapper
+          refl_typing_builtin_wrapper "refl_maybe_relate_after_unfolding"
             (fun uu___1 ->
                let g1 =
                  FStar_TypeChecker_Env.set_range g t0.FStar_Syntax_Syntax.pos in
@@ -8241,7 +8272,7 @@ let (refl_maybe_unfold_head :
       let uu___ = (no_uvars_in_g g) && (no_uvars_in_term e) in
       if uu___
       then
-        refl_typing_builtin_wrapper
+        refl_typing_builtin_wrapper "refl_maybe_unfold_head"
           (fun uu___1 ->
              let g1 =
                FStar_TypeChecker_Env.set_range g e.FStar_Syntax_Syntax.pos in

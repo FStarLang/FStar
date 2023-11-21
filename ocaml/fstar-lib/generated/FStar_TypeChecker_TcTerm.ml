@@ -200,66 +200,111 @@ let (check_no_escape :
     fun env ->
       fun fvs ->
         fun kt ->
-          let rec aux try_norm t =
-            match fvs with
-            | [] -> (t, FStar_TypeChecker_Env.trivial_guard)
-            | uu___ ->
-                let t1 = if try_norm then norm env t else t in
-                let fvs' = FStar_Syntax_Free.names t1 in
-                let uu___1 =
-                  FStar_Compiler_List.tryFind
-                    (fun x -> FStar_Compiler_Util.set_mem x fvs') fvs in
-                (match uu___1 with
-                 | FStar_Pervasives_Native.None ->
-                     (t1, FStar_TypeChecker_Env.trivial_guard)
-                 | FStar_Pervasives_Native.Some x ->
-                     if Prims.op_Negation try_norm
-                     then aux true t1
-                     else
-                       (let fail uu___3 =
-                          let msg =
-                            match head_opt with
-                            | FStar_Pervasives_Native.None ->
-                                let uu___4 =
-                                  FStar_Syntax_Print.bv_to_string x in
-                                FStar_Compiler_Util.format1
-                                  "Bound variables '%s' escapes; add a type annotation"
-                                  uu___4
-                            | FStar_Pervasives_Native.Some head ->
-                                let uu___4 =
-                                  FStar_Syntax_Print.bv_to_string x in
-                                let uu___5 =
-                                  FStar_TypeChecker_Normalize.term_to_string
-                                    env head in
-                                FStar_Compiler_Util.format2
-                                  "Bound variables '%s' in the type of '%s' escape because of impure applications; add explicit let-bindings"
-                                  uu___4 uu___5 in
-                          let uu___4 = FStar_TypeChecker_Env.get_range env in
-                          FStar_Errors.raise_error
-                            (FStar_Errors_Codes.Fatal_EscapedBoundVar, msg)
-                            uu___4 in
-                        let uu___3 =
-                          let uu___4 = FStar_TypeChecker_Env.get_range env in
-                          let uu___5 =
-                            let uu___6 = FStar_Syntax_Util.type_u () in
-                            FStar_Compiler_Effect.op_Less_Bar
-                              FStar_Pervasives_Native.fst uu___6 in
-                          FStar_TypeChecker_Util.new_implicit_var "no escape"
-                            uu___4 env uu___5 in
-                        match uu___3 with
-                        | (s, uu___4, g0) ->
-                            let uu___5 =
-                              FStar_TypeChecker_Rel.try_teq true env t1 s in
-                            (match uu___5 with
-                             | FStar_Pervasives_Native.Some g ->
-                                 let g1 =
-                                   let uu___6 =
-                                     FStar_TypeChecker_Env.conj_guard g g0 in
-                                   FStar_TypeChecker_Rel.solve_deferred_constraints
-                                     env uu___6 in
-                                 (s, g1)
-                             | uu___6 -> fail ()))) in
-          aux false kt
+          FStar_Errors.with_ctx "While checking for escaped variables"
+            (fun uu___ ->
+               let fail x =
+                 let msg =
+                   match head_opt with
+                   | FStar_Pervasives_Native.None ->
+                       let uu___1 =
+                         let uu___2 = FStar_Errors_Msg.text "Bound variable" in
+                         let uu___3 =
+                           let uu___4 =
+                             let uu___5 =
+                               let uu___6 = FStar_Syntax_Print.bv_to_string x in
+                               FStar_Pprint.doc_of_string uu___6 in
+                             FStar_Pprint.squotes uu___5 in
+                           let uu___5 =
+                             FStar_Errors_Msg.text
+                               "would escape in the type of this letbinding" in
+                           FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
+                         FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
+                       let uu___2 =
+                         let uu___3 =
+                           FStar_Errors_Msg.text
+                             "Add a type annotation that does not mention it" in
+                         [uu___3] in
+                       uu___1 :: uu___2
+                   | FStar_Pervasives_Native.Some head ->
+                       let uu___1 =
+                         let uu___2 = FStar_Errors_Msg.text "Bound variable" in
+                         let uu___3 =
+                           let uu___4 =
+                             let uu___5 =
+                               let uu___6 = FStar_Syntax_Print.bv_to_string x in
+                               FStar_Pprint.doc_of_string uu___6 in
+                             FStar_Pprint.squotes uu___5 in
+                           let uu___5 =
+                             let uu___6 =
+                               FStar_Errors_Msg.text
+                                 "escapes because of impure applications in the type of" in
+                             let uu___7 =
+                               let uu___8 =
+                                 FStar_TypeChecker_Normalize.term_to_doc env
+                                   head in
+                               FStar_Pprint.squotes uu___8 in
+                             FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                           FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
+                         FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
+                       let uu___2 =
+                         let uu___3 =
+                           FStar_Errors_Msg.text
+                             "Add explicit let-bindings to avoid this" in
+                         [uu___3] in
+                       uu___1 :: uu___2 in
+                 let uu___1 = FStar_TypeChecker_Env.get_range env in
+                 FStar_Errors.raise_error_doc
+                   (FStar_Errors_Codes.Fatal_EscapedBoundVar, msg) uu___1 in
+               match fvs with
+               | [] -> (kt, FStar_TypeChecker_Env.trivial_guard)
+               | uu___1 ->
+                   let rec aux try_norm t =
+                     let t1 = if try_norm then norm env t else t in
+                     let fvs' = FStar_Syntax_Free.names t1 in
+                     let uu___2 =
+                       FStar_Compiler_List.tryFind
+                         (fun x -> FStar_Compiler_Util.set_mem x fvs') fvs in
+                     match uu___2 with
+                     | FStar_Pervasives_Native.None ->
+                         (t1, FStar_TypeChecker_Env.trivial_guard)
+                     | FStar_Pervasives_Native.Some x ->
+                         if Prims.op_Negation try_norm
+                         then let uu___3 = norm env t1 in aux true uu___3
+                         else
+                           (try
+                              (fun uu___4 ->
+                                 match () with
+                                 | () ->
+                                     let env_extended =
+                                       FStar_TypeChecker_Env.push_bvs env fvs in
+                                     let uu___5 =
+                                       let uu___6 =
+                                         FStar_TypeChecker_Env.get_range env in
+                                       let uu___7 =
+                                         let uu___8 =
+                                           FStar_Syntax_Util.type_u () in
+                                         FStar_Compiler_Effect.op_Less_Bar
+                                           FStar_Pervasives_Native.fst uu___8 in
+                                       FStar_TypeChecker_Util.new_implicit_var
+                                         "no escape" uu___6 env uu___7 in
+                                     (match uu___5 with
+                                      | (s, uu___6, g0) ->
+                                          let uu___7 =
+                                            FStar_TypeChecker_Rel.try_teq
+                                              false env_extended t1 s in
+                                          (match uu___7 with
+                                           | FStar_Pervasives_Native.Some g
+                                               ->
+                                               let g1 =
+                                                 let uu___8 =
+                                                   FStar_TypeChecker_Env.conj_guard
+                                                     g g0 in
+                                                 FStar_TypeChecker_Rel.solve_deferred_constraints
+                                                   env_extended uu___8 in
+                                               (s, g1)
+                                           | uu___8 -> fail x))) ()
+                            with | uu___5 -> fail x) in
+                   aux false kt)
 let (check_expected_aqual_for_binder :
   FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option ->
     FStar_Syntax_Syntax.binder ->
@@ -1841,8 +1886,9 @@ and (tc_maybe_toplevel_term :
             uu___4 uu___5
         else ());
        (match top.FStar_Syntax_Syntax.n with
-        | FStar_Syntax_Syntax.Tm_bvar uu___2 -> failwith "Impossible"
         | FStar_Syntax_Syntax.Tm_delayed uu___2 -> failwith "Impossible"
+        | FStar_Syntax_Syntax.Tm_bvar uu___2 ->
+            failwith "Impossible: tc_maybe_toplevel_term: not LN"
         | FStar_Syntax_Syntax.Tm_uinst uu___2 -> tc_value env1 e
         | FStar_Syntax_Syntax.Tm_uvar uu___2 -> tc_value env1 e
         | FStar_Syntax_Syntax.Tm_name uu___2 -> tc_value env1 e

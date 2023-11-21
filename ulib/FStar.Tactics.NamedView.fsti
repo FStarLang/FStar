@@ -97,8 +97,8 @@ type named_term_view =
   | Tv_FVar   : v:fv -> named_term_view
   | Tv_UInst  : v:fv -> us:universes -> named_term_view
   | Tv_App    : hd:term -> a:argv -> named_term_view
-  | Tv_Abs    : bv:binder -> body:term -> named_term_view
-  | Tv_Arrow  : bv:binder -> c:comp -> named_term_view
+  | Tv_Abs    : b:binder -> body:term -> named_term_view
+  | Tv_Arrow  : b:binder -> c:comp -> named_term_view
   | Tv_Type   : universe -> named_term_view
   | Tv_Refine : b:simple_binder -> ref:term -> named_term_view
   | Tv_Const  : vconst -> named_term_view

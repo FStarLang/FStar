@@ -2198,11 +2198,18 @@ let catch_all (f : tac 'a) : tac (either issues 'a) =
 above (__refl_typing_builtin_wrapper) is meant to catch errors in the
 execution of the primitive we are calling. This second is meant to catch
 errors in the tactic execution, e.g. those related to discharging the
-guards if a synchronous mode (SMTSync/Force) was used. *)
-let refl_typing_builtin_wrapper (f:unit -> 'a & list (env & typ)) : tac (option 'a & issues) =
-  match! catch_all (__refl_typing_builtin_wrapper f) with
-  | Inl errs -> ret (None, errs)
-  | Inr r -> ret r
+guards if a synchronous mode (SMTSync/Force) was used.
+
+This also adds the label to the messages. *)
+let refl_typing_builtin_wrapper (label:string) (f:unit -> 'a & list (env & typ)) : tac (option 'a & issues) =
+  let open FStar.Errors in
+  let! o, errs =
+    match! catch_all (__refl_typing_builtin_wrapper f) with
+    | Inl errs -> ret (None, errs)
+    | Inr r -> ret r
+  in
+  let errs = errs |> List.map (fun is -> { is with issue_msg = is.issue_msg @ [text ("Raised within Tactics." ^ label)] }) in
+  ret (o, errs)
 
 let no_uvars_in_term (t:term) : bool =
   t |> Free.uvars |> BU.set_is_empty &&
@@ -2231,7 +2238,7 @@ let unexpected_uvars_issue r =
 let refl_is_non_informative (g:env) (t:typ) : tac (option unit & issues) =
   if no_uvars_in_g g &&
      no_uvars_in_term t
-  then refl_typing_builtin_wrapper (fun _ ->
+  then refl_typing_builtin_wrapper "refl_is_non_informative" (fun _ ->
          let g = Env.set_range g t.pos in
          dbg_refl g (fun _ ->
            BU.format1 "refl_is_non_informative: %s\n"
@@ -2253,7 +2260,7 @@ let refl_check_relation (g:env) (t0 t1:typ) (rel:relation)
   if no_uvars_in_g g &&
      no_uvars_in_term t0 &&
      no_uvars_in_term t1
-  then refl_typing_builtin_wrapper (fun _ ->
+  then refl_typing_builtin_wrapper "refl_check_relation" (fun _ ->
          let g = Env.set_range g t0.pos in
          dbg_refl g (fun _ ->
            BU.format3 "refl_check_relation: %s %s %s\n"
@@ -2300,7 +2307,7 @@ let refl_norm_type (g:env) (t:typ) : typ =
 let refl_core_compute_term_type (g:env) (e:term) : tac (option (Core.tot_or_ghost & typ) & issues) =
   if no_uvars_in_g g &&
      no_uvars_in_term e
-  then refl_typing_builtin_wrapper (fun _ ->
+  then refl_typing_builtin_wrapper "refl_core_compute_term_type" (fun _ ->
          let g = Env.set_range g e.pos in
          dbg_refl g (fun _ ->
            BU.format1 "refl_core_compute_term_type: %s\n" (Print.term_to_string e));
@@ -2331,7 +2338,7 @@ let refl_core_check_term (g:env) (e:term) (t:typ) (eff:Core.tot_or_ghost)
   if no_uvars_in_g g &&
      no_uvars_in_term e &&
      no_uvars_in_term t
-  then refl_typing_builtin_wrapper (fun _ ->
+  then refl_typing_builtin_wrapper "refl_core_check_term" (fun _ ->
          let g = Env.set_range g e.pos in
          dbg_refl g (fun _ ->
            BU.format3 "refl_core_check_term: term: %s, type: %s, eff: %s\n"
@@ -2357,7 +2364,7 @@ let refl_core_check_term_at_type (g:env) (e:term) (t:typ)
   if no_uvars_in_g g &&
      no_uvars_in_term e &&
      no_uvars_in_term t
-  then refl_typing_builtin_wrapper (fun _ ->
+  then refl_typing_builtin_wrapper "refl_core_check_term_at_type" (fun _ ->
          let g = Env.set_range g e.pos in
          dbg_refl g (fun _ ->
            BU.format2 "refl_core_check_term_at_type: term: %s, type: %s\n"
@@ -2382,7 +2389,7 @@ let refl_core_check_term_at_type (g:env) (e:term) (t:typ)
 let refl_tc_term (g:env) (e:term) : tac (option (term & (Core.tot_or_ghost & typ)) & issues) =
   if no_uvars_in_g g &&
      no_uvars_in_term e
-  then refl_typing_builtin_wrapper (fun _ ->
+  then refl_typing_builtin_wrapper "refl_tc_term" (fun _ ->
     let g = Env.set_range g e.pos in
     dbg_refl g (fun _ ->
       BU.format2 "refl_tc_term@%s: %s\n" (Range.string_of_range e.pos) (Print.term_to_string e));
@@ -2465,7 +2472,7 @@ let refl_universe_of (g:env) (e:term) : tac (option universe & issues) =
 
   if no_uvars_in_g g &&
      no_uvars_in_term e
-  then refl_typing_builtin_wrapper (fun _ ->
+  then refl_typing_builtin_wrapper "refl_universe_of" (fun _ ->
          let g = Env.set_range g e.pos in
          let t, u = U.type_u () in
          let must_tot = false in
@@ -2482,7 +2489,7 @@ let refl_universe_of (g:env) (e:term) : tac (option universe & issues) =
 let refl_check_prop_validity (g:env) (e:term) : tac (option unit & issues) =
   if no_uvars_in_g g &&
      no_uvars_in_term e
-  then refl_typing_builtin_wrapper (fun _ ->
+  then refl_typing_builtin_wrapper "refl_check_prop_validity" (fun _ ->
          let g = Env.set_range g e.pos in
          dbg_refl g (fun _ ->
            BU.format1 "refl_check_prop_validity: %s\n" (Print.term_to_string e));
@@ -2539,7 +2546,7 @@ let refl_instantiate_implicits (g:env) (e:term)
   : tac (option (list (bv & typ) & term & typ) & issues) =
   if no_uvars_in_g g &&
      no_uvars_in_term e
-  then refl_typing_builtin_wrapper (fun _ ->
+  then refl_typing_builtin_wrapper "refl_instantiate_implicits" (fun _ ->
     let g = Env.set_range g e.pos in
     dbg_refl g (fun _ ->
       BU.format1 "refl_instantiate_implicits: %s\n" (Print.term_to_string e));
@@ -2598,7 +2605,7 @@ let refl_maybe_relate_after_unfolding (g:env) (t0 t1:typ)
   if no_uvars_in_g g &&
      no_uvars_in_term t0 &&
      no_uvars_in_term t1
-  then refl_typing_builtin_wrapper (fun _ ->
+  then refl_typing_builtin_wrapper "refl_maybe_relate_after_unfolding" (fun _ ->
         let g = Env.set_range g t0.pos in
          dbg_refl g (fun _ ->
            BU.format2 "refl_maybe_relate_after_unfolding: %s and %s {\n"
@@ -2614,7 +2621,7 @@ let refl_maybe_relate_after_unfolding (g:env) (t0 t1:typ)
 let refl_maybe_unfold_head (g:env) (e:term) : tac (option term & issues) =
   if no_uvars_in_g g &&
      no_uvars_in_term e
-  then refl_typing_builtin_wrapper (fun _ ->
+  then refl_typing_builtin_wrapper "refl_maybe_unfold_head" (fun _ ->
     let g = Env.set_range g e.pos in
     dbg_refl g (fun _ ->
       BU.format1 "refl_maybe_unfold_head: %s {\n" (Print.term_to_string e));

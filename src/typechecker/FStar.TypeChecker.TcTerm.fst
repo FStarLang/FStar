@@ -56,31 +56,64 @@ let is_eq = function
 let steps env = [Env.Beta; Env.Eager_unfolding; Env.NoFullNorm; Env.Exclude Env.Zeta]
 let norm   env t = N.normalize (steps env) env t
 let norm_c env c = N.normalize_comp (steps env) env c
-let check_no_escape head_opt env (fvs:list bv) kt : term * guard_t =
-    let rec aux try_norm t = match fvs with
-        | [] -> t, Env.trivial_guard
-        | _ ->
-          let t = if try_norm then norm env t else t in
-          let fvs' = Free.names t in
-          begin match List.tryFind (fun x -> BU.set_mem x fvs') fvs with
-            | None -> t, Env.trivial_guard
-            | Some x ->
-              if not try_norm
-              then aux true t
-              else let fail () =
-                       let msg = match head_opt with
-                        | None -> BU.format1 "Bound variables '%s' escapes; add a type annotation" (Print.bv_to_string x)
-                        | Some head -> BU.format2 "Bound variables '%s' in the type of '%s' escape because of impure applications; add explicit let-bindings"
-                                        (Print.bv_to_string x) (N.term_to_string env head) in
-                       raise_error (Errors.Fatal_EscapedBoundVar, msg) (Env.get_range env) in
-                   let s, _, g0 = TcUtil.new_implicit_var "no escape" (Env.get_range env) env (fst <| U.type_u()) in
-                   match Rel.try_teq true env t s with
-                    | Some g ->
-                      let g = Rel.solve_deferred_constraints env (Env.conj_guard g g0) in
-                      s, g
-                    | _ -> fail ()
-         end in
+
+(* Checks that the variables in `fvs` do not appear in the free vars of `t`.
+The environment `env` must not contain fvs in its gamma for this to work properly. *)
+let check_no_escape (head_opt : option term)
+    (env : Env.env)
+    (fvs:list bv)
+    (kt : term)
+: term * guard_t
+=
+  Errors.with_ctx "While checking for escaped variables" (fun () ->
+    let fail (x:bv) =
+      let open FStar.Pprint in
+      let msg =
+        match head_opt with
+        | None -> [
+           text "Bound variable" ^/^ squotes (doc_of_string (Print.bv_to_string x))
+             ^/^ text "would escape in the type of this letbinding";
+           text "Add a type annotation that does not mention it";
+        ]
+        | Some head -> [
+            text "Bound variable" ^/^ squotes (doc_of_string (Print.bv_to_string x))
+              ^/^ text "escapes because of impure applications in the type of"
+              ^/^ squotes (N.term_to_doc env head);
+            text "Add explicit let-bindings to avoid this";
+          ]
+      in
+      raise_error_doc (Errors.Fatal_EscapedBoundVar, msg) (Env.get_range env)
+    in
+    match fvs with
+    | [] -> kt, Env.trivial_guard
+    | _ ->
+    let rec aux try_norm t =
+      let t = if try_norm then norm env t else t in
+      let fvs' = Free.names t in
+      match List.tryFind (fun x -> BU.set_mem x fvs') fvs with
+      | None -> t, Env.trivial_guard
+      | Some x ->
+        (* some variable x seems to escape, try normalizing if we haven't *)
+        if not try_norm
+        then aux true (norm env t)
+        else
+          (* if it still appears, try using the unifier to equate 't' to a uvar
+          created in the "short" env, which cannot mention any of the fvs. If any exception
+          is raised, we just report that 'x' escapes. Since we're calling try_teq with
+          SMT disabled it should not log an error. *)
+          try
+            let env_extended = Env.push_bvs env fvs in
+            let s, _, g0 = TcUtil.new_implicit_var "no escape" (Env.get_range env) env (fst <| U.type_u()) in
+            match Rel.try_teq false env_extended t s with
+            | Some g ->
+              let g = Rel.solve_deferred_constraints env_extended (Env.conj_guard g g0) in
+              s, g
+            | _ -> fail x
+          with
+            | _ -> fail x
+    in
     aux false kt
+  )
 
 (*
    check_expected_aqual_for_binder:
@@ -705,8 +738,8 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   if debug env Options.Medium then
     BU.print3 "Typechecking %s (%s): %s\n" (Range.string_of_range <| Env.get_range env) (Print.tag_of_term top) (Print.term_to_string top);
   match top.n with
-  | Tm_bvar _
   | Tm_delayed _ -> failwith "Impossible"
+  | Tm_bvar _ -> failwith "Impossible: tc_maybe_toplevel_term: not LN"
 
   | Tm_uinst _
   | Tm_uvar _
