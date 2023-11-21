@@ -710,9 +710,10 @@ let (rtb_instantiate_implicits :
   Pulse_Typing_Env.env ->
     FStar_Reflection_Types.env ->
       FStar_Reflection_Types.term ->
-        (((FStar_Reflection_Types.namedv Prims.list *
-           FStar_Reflection_Types.term * FStar_Reflection_Types.typ)
-           FStar_Pervasives_Native.option * FStar_Issue.issue Prims.list),
+        ((((FStar_Reflection_Types.namedv * FStar_Reflection_Types.typ)
+           Prims.list * FStar_Reflection_Types.term *
+           FStar_Reflection_Types.typ) FStar_Pervasives_Native.option *
+           FStar_Issue.issue Prims.list),
           unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
