@@ -90,7 +90,7 @@ let mk_pat_ident (path:string) : pat =
   Pat_ident { pat_name = path; by_ref = false; is_mut = false }
 
 let mk_pat_ts (pat_ts_path:string) (pat_ts_elems:list pat) : pat =
-  if List.Tot.length pat_ts_elems = 0
+  if L.length pat_ts_elems = 0
   then Pat_ident { pat_name = pat_ts_path; by_ref = false; is_mut = false }
   else Pat_tuple_struct { pat_ts_path; pat_ts_elems}
 
