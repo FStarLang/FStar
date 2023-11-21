@@ -2548,6 +2548,10 @@ let refl_instantiate_implicits (g:env) (e:term)
     let must_tot = false in
     let g = {g with instantiate_imp=false; phase1=true; lax=true} in
     let e, t, guard = g.typeof_tot_or_gtot_term g e must_tot in
+    //
+    // We don't worry about the logical payload,
+    //   since this API does not return proof of typing
+    //
     let guard = guard |> Rel.solve_deferred_constraints g |> Rel.resolve_implicits g in
     let bvs_and_ts : list (bv & typ) =
       match guard.implicits with

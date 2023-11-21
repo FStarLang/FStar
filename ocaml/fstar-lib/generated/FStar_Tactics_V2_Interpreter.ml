@@ -2377,7 +2377,17 @@ let (uu___193 : unit) =
                                                                     =
                                                                     let uu___200
                                                                     =
+                                                                    let uu___201
+                                                                    =
+                                                                    let uu___202
+                                                                    =
                                                                     FStar_Syntax_Embeddings.e_tuple2
+                                                                    FStar_Reflection_V2_Embeddings.e_namedv
+                                                                    FStar_Reflection_V2_Embeddings.e_term in
+                                                                    FStar_Syntax_Embeddings.e_list
+                                                                    uu___202 in
+                                                                    FStar_Syntax_Embeddings.e_tuple3
+                                                                    uu___201
                                                                     FStar_Reflection_V2_Embeddings.e_term
                                                                     FStar_Reflection_V2_Embeddings.e_term in
                                                                     FStar_Syntax_Embeddings.e_option
@@ -2395,7 +2405,17 @@ let (uu___193 : unit) =
                                                                     =
                                                                     let uu___201
                                                                     =
+                                                                    let uu___202
+                                                                    =
+                                                                    let uu___203
+                                                                    =
                                                                     FStar_TypeChecker_NBETerm.e_tuple2
+                                                                    FStar_Reflection_V2_NBEEmbeddings.e_namedv
+                                                                    FStar_Reflection_V2_NBEEmbeddings.e_term in
+                                                                    FStar_TypeChecker_NBETerm.e_list
+                                                                    uu___203 in
+                                                                    FStar_TypeChecker_NBETerm.e_tuple3
+                                                                    uu___202
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_term
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_term in
                                                                     FStar_TypeChecker_NBETerm.e_option
