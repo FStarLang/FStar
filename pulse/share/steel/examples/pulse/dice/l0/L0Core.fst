@@ -13,12 +13,12 @@ open HACL
 
 ```pulse
 fn create_deviceIDCRI
+  (#pub_perm:perm)
+  (#pub #_buf:erased (Seq.seq U8.t))
   (deviceID_pub: A.larray U8.t (US.v v32us))
   (deviceIDCRI_len: US.t)
   (deviceIDCRI_buf: A.larray U8.t (US.v deviceIDCRI_len))
   (deviceIDCSR_ingredients: deviceIDCSR_ingredients_t)
-  (#pub_perm:perm)
-  (#pub #_buf:erased (Seq.seq U8.t))
   requires 
     A.pts_to deviceID_pub #pub_perm pub **
     A.pts_to deviceIDCRI_buf _buf **
@@ -60,14 +60,14 @@ fn create_deviceIDCRI
 // TODO: don't need full perm on all of these
 ```pulse
 fn sign_and_finalize_deviceIDCSR
+  (#priv_perm:perm)
+  (#priv #_cri_buf #_csr_buf:erased (Seq.seq U8.t))
   (deviceID_priv: A.larray U8.t (US.v v32us))
   (deviceIDCRI_len: US.t)
   (deviceIDCRI_buf: A.larray U8.t (US.v deviceIDCRI_len))
   (deviceIDCSR_len: US.t)
   (deviceIDCSR_buf: A.larray U8.t (US.v deviceIDCSR_len))
   (deviceIDCSR_ingredients: deviceIDCSR_ingredients_t)
-  (#priv_perm:perm)
-  (#priv #_cri_buf #_csr_buf:erased (Seq.seq U8.t))
   requires (
     A.pts_to deviceID_priv #priv_perm priv **
     A.pts_to deviceIDCRI_buf _cri_buf **
@@ -115,6 +115,8 @@ fn sign_and_finalize_deviceIDCSR
 
 ```pulse
 fn create_aliasKeyTBS
+  (#fwid_perm #authKey_perm #device_perm #aliasKey_perm:perm)
+  (#fwid0 #authKeyID0 #deviceID_pub0 #aliasKey_pub0 #_buf:erased (Seq.seq U8.t))
   (fwid: A.larray U8.t (US.v v32us))
   (authKeyID: A.array U8.t)
   (deviceID_pub: A.larray U8.t (US.v v32us))
@@ -122,8 +124,6 @@ fn create_aliasKeyTBS
   (aliasKeyTBS_len: US.t)
   (aliasKeyTBS_buf: A.larray U8.t (US.v aliasKeyTBS_len))
   (aliasKeyCRT_ingredients: aliasKeyCRT_ingredients_t)
-  (#fwid_perm #authKey_perm #device_perm #aliasKey_perm:perm)
-  (#fwid0 #authKeyID0 #deviceID_pub0 #aliasKey_pub0 #_buf:erased (Seq.seq U8.t))
   requires 
     A.pts_to fwid #fwid_perm fwid0 **
     A.pts_to authKeyID #authKey_perm authKeyID0 **
@@ -170,14 +170,14 @@ fn create_aliasKeyTBS
 
 ```pulse
 fn sign_and_finalize_aliasKeyCRT
+  (#priv_perm:perm)
+  (#priv #_tbs_buf #_crt_buf:erased (Seq.seq U8.t))
   (deviceID_priv: A.larray U8.t (US.v v32us))
   (aliasKeyTBS_len: US.t)
   (aliasKeyTBS_buf: A.larray U8.t (US.v aliasKeyTBS_len))
   (aliasKeyCRT_len: US.t)
   (aliasKeyCRT_buf: A.larray U8.t (US.v aliasKeyCRT_len))
   (aliasKeyCRT_ingredients: aliasKeyCRT_ingredients_t)
-  (#priv_perm:perm)
-  (#priv #_tbs_buf #_crt_buf:erased (Seq.seq U8.t))
   requires (
     A.pts_to deviceID_priv #priv_perm priv **
     A.pts_to aliasKeyTBS_buf _tbs_buf **

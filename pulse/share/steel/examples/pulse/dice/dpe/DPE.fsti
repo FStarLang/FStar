@@ -27,10 +27,10 @@ val destroy_context (sid:sid_t) (ctxt_hndl:ctxt_hndl_t) : stt bool emp (fun _ ->
 
 val close_session (sid:sid_t) : stt bool emp (fun _ -> emp)
 
-val initialize_context (sid:sid_t) 
-                       (uds:A.larray U8.t (US.v uds_len))
-                       (#p:perm)
+val initialize_context (#p:perm)
                        (#uds_bytes:erased (Seq.seq U8.t))
+                       (sid:sid_t) 
+                       (uds:A.larray U8.t (US.v uds_len))         
   : stt (option ctxt_hndl_t) 
         (A.pts_to uds #p uds_bytes)
         (fun _ -> A.pts_to uds #p uds_bytes)

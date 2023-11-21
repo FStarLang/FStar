@@ -17,6 +17,9 @@ let push_context (ctx:string) (r:range) (g:env) : (g':env { g == g' })
 val instantiate_term_implicits (g:env) (t:term)
   : T.Tac (term & term)
 
+val instantiate_term_implicits_uvs (g:env) (t:term)
+  : T.Tac (uvs:env { disjoint g uvs } & term & term)  // uvs
+
 val check_universe (g:env) (t:term)
   : T.Tac (u:universe & universe_of g t u)
 

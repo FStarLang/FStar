@@ -72,8 +72,8 @@ fn call_swap2 (r1 r2:ref U32.t)
 
 
 ```pulse
-fn swap_with_elim_pure (r1 r2:ref U32.t) 
-                       (#n1 #n2:erased U32.t)
+fn swap_with_elim_pure (#n1 #n2:erased U32.t)
+                       (r1 r2:ref U32.t)
    requires
       pts_to r1 n1 **
       pts_to r2 n2

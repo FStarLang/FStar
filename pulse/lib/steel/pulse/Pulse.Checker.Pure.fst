@@ -55,7 +55,7 @@ let rtb_check_subtyping g (t1 t2:term) =
         (P.term_to_string t2));
   let res = RTB.check_subtyping (elab_env g) (elab_term t1) (elab_term t2) in
   res
-  
+
 let rtb_instantiate_implicits g f t =
   debug g (fun _ -> Printf.sprintf "Calling instantiate_implicits on %s"
                                        (T.term_to_string t));
@@ -66,7 +66,7 @@ let rtb_instantiate_implicits g f t =
   | None ->
     debug g (fun _ -> "Returned from instantiate_implicits: None");
     res, iss
-  | Some (t, _) ->
+  | Some (_, t, _) ->
     debug g (fun _ -> Printf.sprintf "Returned from instantiate_implicits: %s" (T.term_to_string t));
     res, iss
 
@@ -163,16 +163,68 @@ let instantiate_term_implicits (g:env) (t0:term) =
                         (pp t0)
             ]
   )
-  | Some (t, ty) ->
+  | Some (namedvs, t, ty) ->
+    if L.length namedvs <> 0
+    then
+      let open Pulse.PP in
+      maybe_fail_doc []
+        g t0.range [
+          prefix 4 1 (text "check_term: could not infer implicit arguments in")
+                        (pp t0)
+        ]
+    else 
+      let topt = readback_ty t in
+      let tyopt = readback_ty ty in
+      match topt, tyopt with
+      | Some t, Some ty -> t, ty
+      | Some _, None ->
+        fail g (Some t0.range) (readback_failure ty)
+      | None, _ ->
+        fail g (Some t0.range) (readback_failure t)
+
+let instantiate_term_implicits_uvs (g:env) (t0:term) =
+  let f = elab_env g in
+  let rt = elab_term t0 in
+  let f = RU.env_set_range f (Pulse.Typing.Env.get_range g (Some t0.range)) in
+  let topt, issues = catch_all (fun _ -> rtb_instantiate_implicits g f rt) in
+  T.log_issues issues;
+  match topt with
+  | None -> (
+    let open Pulse.PP in
+    maybe_fail_doc issues
+         g t0.range [
+              prefix 4 1 (text "Could not infer implicit arguments in")
+                        (pp t0)
+            ]
+  )
+  | Some (namedvs, t, ty) ->
     let topt = readback_ty t in
     let tyopt = readback_ty ty in
     match topt, tyopt with
-    | Some t, Some ty -> t, ty
+    | Some t, Some ty ->
+      let (| uvs, t, ty |)
+        : uvs:env { disjoint g uvs } &
+          term &
+          term =
+        T.fold_left (fun (| uvs, t, ty |) (namedv, namedvt) ->
+          let nview = R.inspect_namedv namedv in
+          let ppname = { name = nview.ppname; range = t0.range } in
+          let xt = readback_ty namedvt in
+          if None? xt
+          then fail g (Some t0.range) (readback_failure namedvt)
+          else let Some xt = xt in
+               let x = fresh (push_env g uvs) in
+               let ss = [NT nview.uniq (tm_var {nm_index = x; nm_ppname = ppname})] in
+               let uvs : uvs:env { disjoint g uvs } = push_binding uvs x ppname xt in
+               (| uvs,
+                  subst_term t ss,
+                  subst_term ty ss |)) (| mk_env (fstar_env g), t, ty |) namedvs in
+      (| uvs, t, ty |)
     | Some _, None ->
       fail g (Some t0.range) (readback_failure ty)
     | None, _ ->
       fail g (Some t0.range) (readback_failure t)
-    
+
 let check_universe (g:env) (t:term)
   : T.Tac (u:universe & universe_of g t u)
   = let f = elab_env g in
@@ -254,17 +306,17 @@ let compute_term_type_and_u (g:env) (t:term)
 let check_term (g:env) (e:term) (eff:T.tot_or_ghost) (t:term)
   : T.Tac (e:term & typing g e eff t) =
 
-  let e, _ = instantiate_term_implicits g e in 
-  
+  let e, _ = instantiate_term_implicits g e in
+
   let fg = elab_env g in
   let re = elab_term e in
   let rt = elab_term t in
 
   let topt, issues =
     catch_all (fun _ -> 
-    rtb_core_check_term 
-      (push_context g "check_term_with_expected_type_and_effect" (range_of_term rt))
-       fg re eff rt) in
+      rtb_core_check_term 
+        (push_context g "check_term_with_expected_type_and_effect" (range_of_term rt))
+         fg re eff rt) in
   T.log_issues issues;
   match topt with
   | None ->
@@ -277,7 +329,6 @@ let check_term_at_type (g:env) (e:term) (t:term)
   : T.Tac (e:term & eff:T.tot_or_ghost & typing g e eff t) =
 
   let e, _ = instantiate_term_implicits g e in
-  
   let fg = elab_env g in
   let re = elab_term e in
   let rt = elab_term t in
@@ -286,7 +337,7 @@ let check_term_at_type (g:env) (e:term) (t:term)
     catch_all (fun _ -> 
     rtb_core_check_term_at_type 
       (push_context g "check_term_with_expected_type" (range_of_term rt))
-       fg re rt) in
+      fg re rt) in
   T.log_issues issues;
   match effopt with
   | None ->

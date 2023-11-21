@@ -8,8 +8,7 @@ module R = Pulse.Lib.Reference
 #push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
 
 ```pulse
-fn compare (#t:eqtype) (l:US.t) (a1 a2:A.larray t (US.v l))
-           (#p1 #p2:perm) (#s1 #s2:elseq t l)
+fn compare (#t:eqtype) (#p1 #p2:perm) (l:US.t) (#s1 #s2:elseq t l) (a1 a2:A.larray t (US.v l))
   requires (
     A.pts_to a1 #p1 s1 **
     A.pts_to a2 #p2 s2
@@ -90,7 +89,7 @@ fn array_of_zeroes (n:US.t)
 
 //this is not a recommended way to do this, since s is not erased, but it works
 ```pulse
-fn read_at_offset_0 (#t:Type0) (a:array t) (i:US.t) (#p:perm) (#s:Seq.seq t)
+fn read_at_offset_0 (#t:Type0) (#p:perm) (#s:Seq.seq t) (a:array t) (i:US.t)
    requires (A.pts_to a #p s **
              pure (US.v i < Seq.length s))
    returns x:t
@@ -107,7 +106,7 @@ fn read_at_offset_0 (#t:Type0) (a:array t) (i:US.t) (#p:perm) (#s:Seq.seq t)
 ```
 
 ```pulse
-fn read_at_offset_poly (#t:Type0) (a:array t) (i:US.t) (#p:perm) (#s:Ghost.erased (Seq.seq t))
+fn read_at_offset_poly (#t:Type0) (#p:perm) (#s:Ghost.erased (Seq.seq t)) (a:array t) (i:US.t)
    requires (A.pts_to a #p s **
              pure (US.v i < Seq.length s))
    returns x:t
@@ -141,10 +140,10 @@ fn read_at_offset (a:array U32.t) (i:US.t) (#p:perm) (#s:Ghost.erased (Seq.seq U
 assume
 val test_array_access
   (#t: Type)
+  (#p: perm)
   (a: A.array t)
   (i: US.t)
   (#s: Ghost.erased (Seq.seq t) {US.v i < A.length a \/ US.v i < Seq.length s})
-  (#p: perm)
 : stt t
     (requires
       A.pts_to a #p s)
@@ -155,7 +154,7 @@ val test_array_access
             res == Seq.index s (US.v i)))
 
 ```pulse
-fn read_at_offset_refine (a:array U32.t) (i:US.t) (#p:perm) (#s:Ghost.erased (Seq.seq U32.t))
+fn read_at_offset_refine (#p:perm) (#s:Ghost.erased (Seq.seq U32.t)) (a:array U32.t) (i:US.t) 
    requires (A.pts_to a #p s **
              pure (US.v i < A.length a \/ US.v i < Seq.length s))
    returns x:U32.t
@@ -174,7 +173,7 @@ fn read_at_offset_refine (a:array U32.t) (i:US.t) (#p:perm) (#s:Ghost.erased (Se
 
 
 ```pulse
-fn read_at_offset_refine_poly (#t:Type0) (a:array t) (i:US.t) (#p:perm) (#s:Ghost.erased (Seq.seq t))
+fn read_at_offset_refine_poly (#t:Type0) (#p:perm) (#s:Ghost.erased (Seq.seq t)) (a:array t) (i:US.t) 
    requires (A.pts_to a #p s **
              pure (US.v i < A.length a \/ US.v i < Seq.length s))
    returns x:t

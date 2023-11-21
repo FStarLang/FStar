@@ -525,11 +525,52 @@ let (__proj__Mkfn__item__fn_sig : fn -> fn_signature) =
   fun projectee -> match projectee with | { fn_sig; fn_body;_} -> fn_sig
 let (__proj__Mkfn__item__fn_body : fn -> stmt Prims.list) =
   fun projectee -> match projectee with | { fn_sig; fn_body;_} -> fn_body
+type field_typ = {
+  field_typ_name: Prims.string ;
+  field_typ_typ: typ }
+let (__proj__Mkfield_typ__item__field_typ_name : field_typ -> Prims.string) =
+  fun projectee ->
+    match projectee with
+    | { field_typ_name; field_typ_typ;_} -> field_typ_name
+let (__proj__Mkfield_typ__item__field_typ_typ : field_typ -> typ) =
+  fun projectee ->
+    match projectee with
+    | { field_typ_name; field_typ_typ;_} -> field_typ_typ
+type item_struct =
+  {
+  item_struct_name: Prims.string ;
+  item_struct_generics: generic_param Prims.list ;
+  item_struct_fields: field_typ Prims.list }
+let (__proj__Mkitem_struct__item__item_struct_name :
+  item_struct -> Prims.string) =
+  fun projectee ->
+    match projectee with
+    | { item_struct_name; item_struct_generics; item_struct_fields;_} ->
+        item_struct_name
+let (__proj__Mkitem_struct__item__item_struct_generics :
+  item_struct -> generic_param Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { item_struct_name; item_struct_generics; item_struct_fields;_} ->
+        item_struct_generics
+let (__proj__Mkitem_struct__item__item_struct_fields :
+  item_struct -> field_typ Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { item_struct_name; item_struct_generics; item_struct_fields;_} ->
+        item_struct_fields
 type item =
   | Item_fn of fn 
-let (uu___is_Item_fn : item -> Prims.bool) = fun projectee -> true
+  | Item_struct of item_struct 
+let (uu___is_Item_fn : item -> Prims.bool) =
+  fun projectee -> match projectee with | Item_fn _0 -> true | uu___ -> false
 let (__proj__Item_fn__item___0 : item -> fn) =
   fun projectee -> match projectee with | Item_fn _0 -> _0
+let (uu___is_Item_struct : item -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Item_struct _0 -> true | uu___ -> false
+let (__proj__Item_struct__item___0 : item -> item_struct) =
+  fun projectee -> match projectee with | Item_struct _0 -> _0
 type file = {
   file_name: Prims.string ;
   file_items: item Prims.list }
@@ -630,7 +671,7 @@ let (mk_pat_ident : Prims.string -> pat) =
 let (mk_pat_ts : Prims.string -> pat Prims.list -> pat) =
   fun pat_ts_path ->
     fun pat_ts_elems ->
-      if (FStar_List_Tot_Base.length pat_ts_elems) = Prims.int_zero
+      if (FStar_Compiler_List.length pat_ts_elems) = Prims.int_zero
       then
         Pat_ident { pat_name = pat_ts_path; by_ref = false; is_mut = false }
       else Pat_tuple_struct { pat_ts_path; pat_ts_elems }
@@ -697,5 +738,28 @@ let (mk_local_stmt : Prims.string -> Prims.bool -> expr -> stmt) =
           }
 let (mk_fn : fn_signature -> stmt Prims.list -> fn) =
   fun fn_sig -> fun fn_body -> { fn_sig; fn_body }
+let (mk_item_struct :
+  Prims.string ->
+    Prims.string Prims.list -> (Prims.string * typ) Prims.list -> item)
+  =
+  fun name ->
+    fun generics ->
+      fun fields ->
+        let uu___ =
+          let uu___1 =
+            FStar_Compiler_List.map (fun uu___2 -> Generic_type_param uu___2)
+              generics in
+          let uu___2 =
+            FStar_Compiler_List.map
+              (fun uu___3 ->
+                 match uu___3 with
+                 | (f, t) -> { field_typ_name = f; field_typ_typ = t })
+              fields in
+          {
+            item_struct_name = name;
+            item_struct_generics = uu___1;
+            item_struct_fields = uu___2
+          } in
+        Item_struct uu___
 let (mk_file : Prims.string -> item Prims.list -> file) =
   fun file_name -> fun file_items -> { file_name; file_items }

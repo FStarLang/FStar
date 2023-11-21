@@ -41,7 +41,7 @@ let canonicalize_st_typing (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c
 
 let coerce_eq (#a #b:Type) (x:a) (_:squash (a === b)) : y:b { y == x } = x
 
-let rec intro_uvars_for_logical_implicits (g:env) (uvs:env { disjoint uvs g }) (t:term) (ty:term)
+let rec intro_uvars_for_logical_implicits (g:env) (uvs:env { disjoint g uvs }) (t:term) (ty:term)
   : T.Tac (uvs':env &
            g':env { extends_with g' g uvs' } &
            t':st_term { Tm_STApp? t'.term }) =
@@ -68,7 +68,6 @@ let rec intro_uvars_for_logical_implicits (g:env) (uvs:env { disjoint uvs g }) (
                        with an implicit parameter, found: %s"
          (P.term_to_string ty))
 
-
 let instantiate_implicits (g:env) (t:st_term { Tm_STApp? t.term })
   : T.Tac (uvs : env &
            g' : env { extends_with g' g uvs } &
@@ -77,15 +76,14 @@ let instantiate_implicits (g:env) (t:st_term { Tm_STApp? t.term })
   let range = t.range in
   let Tm_STApp { head; arg_qual=qual; arg } = t.term in
   let pure_app = tm_pureapp head qual arg in
-  let t, ty = instantiate_term_implicits g pure_app in
+  let (| uvs, t, ty |) = instantiate_term_implicits_uvs g pure_app in
   match is_arrow ty with
   | Some (_, Some Implicit, _) ->
     //Some implicits to follow
-    intro_uvars_for_logical_implicits g (mk_env (fstar_env g)) t ty
+    intro_uvars_for_logical_implicits g uvs t ty
   | _ ->
     match is_pure_app t with
     | Some (head, q, arg) ->
-      let uvs = mk_env (fstar_env g) in
       (| uvs, push_env g uvs, {term=Tm_STApp {head;arg_qual=q;arg}; range=t.range; effect_tag=default_effect_hint } |)
     | _ ->
       fail g (Some t.range)

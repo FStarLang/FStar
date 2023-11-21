@@ -23,7 +23,7 @@ let emp_inames_disjoint (t:inames)
 
 ```pulse
 ghost
-fn elim_implies (_:unit) (#p #q:vprop)
+fn elim_implies (#p #q:vprop) (_:unit)
    requires `@(p @==> q) ** p
    ensures q
 {
@@ -207,10 +207,10 @@ let parse_dpe_cmd_post
     )
 
 ```pulse
-fn parse_dpe_cmd (len:SZ.t)
-                      (input:A.larray U8.t (SZ.v len))
-                      (#s:erased (Seq.seq U8.t))
-                      (#p:perm)
+fn parse_dpe_cmd (#s:erased (Seq.seq U8.t))
+                 (#p:perm)
+                 (len:SZ.t)
+                 (input:A.larray U8.t (SZ.v len))
     requires
         A.pts_to input #p s
     returns res:option dpe_cmd

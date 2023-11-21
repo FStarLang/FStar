@@ -204,7 +204,7 @@ let ha_val_core (core:ha_core) (h:hash_value_t)
 // ha_val_core using Pulse's primitive `fold` operation
 ```pulse
 ghost
-fn fold_ha_val_core (h:ha_core) (#acc:Seq.lseq U8.t 32)
+fn fold_ha_val_core (#acc:Seq.lseq U8.t 32) (h:ha_core)
   requires
    A.pts_to h.acc acc **
    pts_to h.ctr n
@@ -218,8 +218,7 @@ fn fold_ha_val_core (h:ha_core) (#acc:Seq.lseq U8.t 32)
 // This too is a bit of boilerplate. It use fold_ha_val_core, but also 
 // creates and returns a new ha_core value
 ```pulse
-fn package_core (acc:hash_value_buf) (ctr:ref U32.t) 
-                (#vacc:erased (Seq.lseq U8.t 32))
+fn package_core (#vacc:erased (Seq.lseq U8.t 32)) (acc:hash_value_buf) (ctr:ref U32.t)
   requires A.pts_to acc vacc **
            pts_to ctr 'vctr 
   returns h:ha_core
@@ -262,7 +261,7 @@ let ha_val (h:ha) (s:hash_value_t) =
 // But, this version is more convenient to use in a manual setting.
 ```pulse
 ghost
-fn fold_ha_val (h:ha) (#acc #s:Seq.lseq U8.t 32)
+fn fold_ha_val (#acc #s:Seq.lseq U8.t 32) (h:ha)
   requires
    A.pts_to h.core.acc acc **
    pts_to h.core.ctr n **
@@ -280,9 +279,10 @@ fn fold_ha_val (h:ha) (#acc #s:Seq.lseq U8.t 32)
 // Again, if we were to do generate this, then the first two conjuncts
 // and acc, ctr arguments would be replaced by ha_core/ha_val_core
 ```pulse
-fn package (acc:hash_value_buf) (ctr:ref U32.t) (tmp:hash_value_buf) (dummy:dummy_buf)
-           (#vacc:erased (Seq.lseq U8.t 32))
-           (#vtmp:erased (Seq.lseq U8.t 32))
+fn package
+  (#vacc:erased (Seq.lseq U8.t 32))
+  (#vtmp:erased (Seq.lseq U8.t 32))
+  (acc:hash_value_buf) (ctr:ref U32.t) (tmp:hash_value_buf) (dummy:dummy_buf)
   requires A.pts_to acc vacc **
            pts_to ctr 'vctr **
            A.pts_to tmp vtmp **
@@ -318,7 +318,7 @@ fn create (_:unit)
 
 // Free'ing an ha
 ```pulse
-fn reclaim (s:ha) (#h:hash_value_t) 
+fn reclaim (#h:hash_value_t) (s:ha)
     requires ha_val s h
     ensures emp
 {
@@ -347,8 +347,8 @@ fn reclaim (s:ha) (#h:hash_value_t)
 // I should try that again and open issues. 
 #push-options "--retry 2 --ext 'pulse:rvalues'" // GM: Part of this VC fails on batch mode, not on ide...
 ```pulse
-fn aggregate_raw_hashes (b1 b2: hash_value_buf)
-                        (#s1 #s2:e_raw_hash_value_t)
+fn aggregate_raw_hashes (#s1 #s2:e_raw_hash_value_t)
+                        (b1 b2: hash_value_buf)
   requires 
     A.pts_to b1 s1 **
     A.pts_to b2 s2
