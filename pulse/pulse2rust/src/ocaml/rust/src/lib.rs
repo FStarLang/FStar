@@ -212,8 +212,20 @@ struct Fn {
     fn_body: Vec<Stmt>,
 }
 
+struct FieldTyp {
+    field_typ_name: String,
+    field_typ_typ: Typ,
+}
+
+struct ItemStruct {
+    item_struct_name: String,
+    item_struct_generics: Vec<String>,
+    item_struct_fields: Vec<FieldTyp>,
+}
+
 enum Item {
-    ItemFn(Fn),
+    IFn(Fn),
+    IStruct(ItemStruct),
 }
 
 #[allow(dead_code)]
@@ -495,9 +507,25 @@ impl_from_ocaml_record! {
   }
 }
 
+impl_from_ocaml_record! {
+  FieldTyp {
+    field_typ_name : String,
+    field_typ_typ : Typ,
+  }
+}
+
+impl_from_ocaml_record! {
+  ItemStruct {
+    item_struct_name : String,
+    item_struct_generics : OCamlList<String>,
+    item_struct_fields : OCamlList<FieldTyp>,
+  }
+}
+
 impl_from_ocaml_variant! {
   Item {
-    Item::ItemFn (payload:Fn),
+    Item::IFn (payload:Fn),
+    Item::IStruct (payload:ItemStruct),
   }
 }
 
@@ -1107,7 +1135,72 @@ fn to_syn_fn(f: &Fn) -> ItemFn {
 
 fn to_syn_item(i: &Item) -> syn::Item {
     match i {
-        Item::ItemFn(f) => syn::Item::Fn(to_syn_fn(f)),
+        Item::IFn(f) => syn::Item::Fn(to_syn_fn(f)),
+        Item::IStruct(ItemStruct {
+            item_struct_name,
+            item_struct_generics,
+            item_struct_fields,
+        }) => {
+            let mut generics: Punctuated<syn::GenericParam, Comma> = Punctuated::new();
+            item_struct_generics.iter().for_each(|s| {
+                generics.push(syn::GenericParam::Type(syn::TypeParam {
+                    attrs: vec![],
+                    ident: Ident::new(s, Span::call_site()),
+                    colon_token: None,
+                    bounds: Punctuated::new(),
+                    eq_token: None,
+                    default: None,
+                }))
+            });
+            let mut fields: Punctuated<syn::Field, Comma> = Punctuated::new();
+            item_struct_fields.iter().for_each(|ft| {
+                fields.push(syn::Field {
+                    attrs: vec![],
+                    vis: Visibility::Inherited,
+                    mutability: syn::FieldMutability::None,
+                    ident: Some(Ident::new(&ft.field_typ_name, Span::call_site())),
+                    colon_token: Some(Colon {
+                        spans: [Span::call_site()],
+                    }),
+                    ty: to_syn_typ(&ft.field_typ_typ),
+                })
+            });
+            syn::Item::Struct(syn::ItemStruct {
+                attrs: vec![],
+                vis: syn::Visibility::Public({
+                    syn::token::Pub {
+                        span: Span::call_site(),
+                    }
+                }),
+                struct_token: syn::token::Struct {
+                    span: Span::call_site(),
+                },
+                ident: Ident::new(&item_struct_name, Span::call_site()),
+                generics: syn::Generics {
+                    lt_token: Some(syn::token::Lt {
+                        spans: [Span::call_site()],
+                    }),
+                    params: generics,
+                    gt_token: Some(syn::token::Gt {
+                        spans: [Span::call_site()],
+                    }),
+                    where_clause: None,
+                },
+                fields: syn::Fields::Named(syn::FieldsNamed {
+                    brace_token: syn::token::Brace {
+                        span: proc_macro2::Group::new(
+                            proc_macro2::Delimiter::None,
+                            proc_macro2::TokenStream::new(),
+                        )
+                        .delim_span(),
+                    },
+                    named: fields,
+                }),
+                semi_token: Some(syn::token::Semi {
+                    spans: [Span::call_site()],
+                }),
+            })
+        }
     }
 }
 
@@ -1418,10 +1511,35 @@ impl fmt::Display for Fn {
     }
 }
 
+impl fmt::Display for FieldTyp {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}:{}", self.field_typ_name, self.field_typ_typ)
+    }
+}
+
 impl fmt::Display for Item {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self {
-            Item::ItemFn(func) => write!(f, "{}", func),
+            Item::IFn(func) => write!(f, "{}", func),
+            Item::IStruct(ItemStruct {
+                item_struct_name,
+                item_struct_generics,
+                item_struct_fields,
+            }) => write!(
+                f,
+                "struct {}<{}> {{ {} }}",
+                item_struct_name,
+                item_struct_generics
+                    .iter()
+                    .map(|s| s.to_string())
+                    .collect::<Vec<_>>()
+                    .join(","),
+                item_struct_fields
+                    .iter()
+                    .map(|ft| ft.to_string())
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
         }
     }
 }

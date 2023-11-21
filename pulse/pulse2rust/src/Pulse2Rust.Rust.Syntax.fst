@@ -144,4 +144,16 @@ let mk_local_stmt (name:string) (is_mut:bool) (init:expr) =
 let mk_fn (fn_sig:fn_signature) (fn_body:list stmt) =
   { fn_sig; fn_body; }
 
+let mk_item_struct (name:string) (generics:list string) (fields:list (string & typ))
+  : item =
+
+  Item_struct {
+    item_struct_name = name;
+    item_struct_generics = L.map Generic_type_param generics;
+    item_struct_fields = L.map (fun (f, t) -> {
+      field_typ_name = f;
+      field_typ_typ = t;
+    }) fields;
+  }
+
 let mk_file (file_name:string) (file_items:list item) : file = { file_name; file_items }
