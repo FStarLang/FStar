@@ -2535,7 +2535,8 @@ let refl_check_match_complete (g:env) (sc:term) (scty:typ) (pats : list RD.patte
     ret (Some (List.map inspect_pat pats, List.map bnds_for_pat pats))
   | _ -> ret None
 
-let refl_instantiate_implicits (g:env) (e:term) : tac (option (term & typ) & issues) =
+let refl_instantiate_implicits (g:env) (e:term)
+  : tac (option (list (bv & typ) & term & typ) & issues) =
   if no_uvars_in_g g &&
      no_uvars_in_term e
   then refl_typing_builtin_wrapper (fun _ ->
@@ -2547,33 +2548,43 @@ let refl_instantiate_implicits (g:env) (e:term) : tac (option (term & typ) & iss
     let must_tot = false in
     let g = {g with instantiate_imp=false; phase1=true; lax=true} in
     let e, t, guard = g.typeof_tot_or_gtot_term g e must_tot in
-    (* We force this guard here, and do not delay it, since we
-    will return this term and it MUST be compressed. It's logical
-    part should be trivial too, as we only lax-typechecked the term. *)
-    Rel.force_trivial_guard g guard;
-    if not (no_uvars_in_term e)
-    then (
-      Errors.raise_error (Errors.Error_UnexpectedUnresolvedUvar,
-                          BU.format1 "Elaborated term has unresolved implicits: %s" (Print.term_to_string e))
-                          e.pos
-    )
-    else if not (no_uvars_in_term t)
-    then (
-      Errors.raise_error (Errors.Error_UnexpectedUnresolvedUvar,
-                          BU.format1 "Inferred type has unresolved implicits: %s" (Print.term_to_string t))
-                          e.pos
-    )
-    else (
-      let allow_uvars = false in
-      let allow_names = true in (* terms are potentially open, names are OK *)
-      let e = SC.deep_compress allow_uvars allow_names e in
-      let t = t |> refl_norm_type g |> SC.deep_compress allow_uvars allow_names in
-      dbg_refl g (fun _ ->
-        BU.format2 "} finished tc with e = %s and t = %s\n"
-          (Print.term_to_string e)
-          (Print.term_to_string t));
-      ((e, t), [])
-    )
+    let guard = guard |> Rel.solve_deferred_constraints g |> Rel.resolve_implicits g in
+    let bvs_and_ts : list (bv & typ) =
+      match guard.implicits with
+      | [] -> []
+      | _ ->
+        //
+        // We could not solve all implicits
+        //
+        // Create fresh names for the unsolved uvars, and
+        //   set the solution for the uvars to these names
+        // This way when we compress the terms later,
+        //   the uvars will be substituted with the names
+        //
+        let l : list (uvar & typ & bv) =
+          guard.implicits
+          |> List.map (fun {imp_uvar} ->
+                       (imp_uvar.ctx_uvar_head,
+                        U.ctx_uvar_typ imp_uvar,
+                        S.new_bv None (S.mk Tm_unknown Range.dummyRange)))
+        in
+        l |> List.iter (fun (uv, _, bv) -> U.set_uvar uv (S.bv_to_name bv));
+        List.map (fun (_, t, bv) -> bv, t) l
+    in
+    
+    let g = Env.push_bvs g (List.map (fun (bv, t) -> {bv with sort=t}) bvs_and_ts) in
+    let allow_uvars = false in
+    let allow_names = true in (* terms are potentially open, names are OK *)
+    let e = SC.deep_compress allow_uvars allow_names e in
+    let t = t |> refl_norm_type g |> SC.deep_compress allow_uvars allow_names in
+    let bvs_and_ts =
+      bvs_and_ts |> List.map (fun (bv, t) -> bv, SC.deep_compress allow_uvars allow_names t) in
+
+    dbg_refl g (fun _ ->
+      BU.format2 "} finished tc with e = %s and t = %s\n"
+        (Print.term_to_string e)
+        (Print.term_to_string t));
+    ((bvs_and_ts, e, t), [])
   )
   else ret (None, [unexpected_uvars_issue (Env.get_range g)])
 

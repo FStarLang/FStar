@@ -529,14 +529,14 @@ val check_match_complete (g:env) (sc:term) (t:typ) (pats:list pattern)
 //
 // Instantiate implicits in t
 //
-// When the return value is Some (t', ty),
+// When the return value is Some (l, t', ty),
+//   l is the list of fresh names (fresh w.r.t. g) and types,
+//     that represent implicits, of corresponding types, the API could not solve for
+//
 //   t' is the elaborated t, and ty is its type
 //
-// This API does not return a proof for typing of t'
-//   The client may follow it up with another call to core_check_term get the proof
-//
 val instantiate_implicits (g:env) (t:term)
-  : Tac (ret_t (term & typ))
+  : Tac (ret_t (list (namedv & typ) & term & typ))
 
 val maybe_relate_after_unfolding (g:env) (t1 t2:term)
   : Tac (ret_t unfold_side)
