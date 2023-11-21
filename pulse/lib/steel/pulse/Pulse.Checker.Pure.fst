@@ -182,6 +182,49 @@ let instantiate_term_implicits (g:env) (t0:term) =
       | None, _ ->
         fail g (Some t0.range) (readback_failure t)
 
+let instantiate_term_implicits_uvs (g:env) (t0:term) =
+  let f = elab_env g in
+  let rt = elab_term t0 in
+  let f = RU.env_set_range f (Pulse.Typing.Env.get_range g (Some t0.range)) in
+  let topt, issues = catch_all (fun _ -> rtb_instantiate_implicits g f rt) in
+  T.log_issues issues;
+  match topt with
+  | None -> (
+    let open Pulse.PP in
+    maybe_fail_doc issues
+         g t0.range [
+              prefix 4 1 (text "Could not infer implicit arguments in")
+                        (pp t0)
+            ]
+  )
+  | Some (namedvs, t, ty) ->
+    let topt = readback_ty t in
+    let tyopt = readback_ty ty in
+    match topt, tyopt with
+    | Some t, Some ty ->
+      let (| uvs, t, ty |)
+        : uvs:env { disjoint g uvs } &
+          term &
+          term =
+        T.fold_left (fun (| uvs, t, ty |) (namedv, namedvt) ->
+          let nview = R.inspect_namedv namedv in
+          let ppname = { name = nview.ppname; range = t0.range } in
+          let xt = readback_ty namedvt in
+          if None? xt
+          then fail g (Some t0.range) (readback_failure namedvt)
+          else let Some xt = xt in
+               let x = fresh (push_env g uvs) in
+               let ss = [NT nview.uniq (tm_var {nm_index = x; nm_ppname = ppname})] in
+               let uvs : uvs:env { disjoint g uvs } = push_binding uvs x ppname xt in
+               (| uvs,
+                  subst_term t ss,
+                  subst_term ty ss |)) (| mk_env (fstar_env g), t, ty |) namedvs in
+      (| uvs, t, ty |)
+    | Some _, None ->
+      fail g (Some t0.range) (readback_failure ty)
+    | None, _ ->
+      fail g (Some t0.range) (readback_failure t)
+
 let check_universe (g:env) (t:term)
   : T.Tac (u:universe & universe_of g t u)
   = let f = elab_env g in
