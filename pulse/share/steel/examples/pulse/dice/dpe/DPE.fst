@@ -810,8 +810,10 @@ fn init_l1_ctxt (deviceIDCSR_len: US.t) (aliasKeyCRT_len: US.t)
   success and None upon failure. 
 *)
 ```pulse
-fn initialize_context' (sid:sid_t) (uds:A.larray U8.t (US.v uds_len)) 
-                       (#p:perm) (#uds_bytes:Ghost.erased (Seq.seq U8.t))
+fn initialize_context'
+  (#p:perm) (#uds_bytes:Ghost.erased (Seq.seq U8.t))
+  (sid:sid_t) (uds:A.larray U8.t (US.v uds_len)) 
+                       
   requires A.pts_to uds #p uds_bytes
   returns _:option ctxt_hndl_t
   ensures A.pts_to uds #p uds_bytes
