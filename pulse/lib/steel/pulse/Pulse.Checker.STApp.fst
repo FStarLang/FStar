@@ -50,7 +50,8 @@ let rec intro_uvars_for_logical_implicits (g:env) (uvs:env { disjoint g uvs }) (
   match ropt with
   | Some (b, Some Implicit, c_rest) ->
     let x = fresh (push_env g uvs) in
-    let uvs' = push_binding uvs x ppname_default b.binder_ty in
+    let uvs' = push_binding uvs x b.binder_ppname b.binder_ty in
+    let c_rest = open_comp_with c_rest (tm_var {nm_index = x; nm_ppname = b.binder_ppname}) in
     begin
       match c_rest with
        | C_ST _
