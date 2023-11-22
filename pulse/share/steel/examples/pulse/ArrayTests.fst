@@ -425,3 +425,21 @@ fn test_local_array4 (_:unit)
   ()
 }
 ```
+
+```pulse
+fn test_array_swap
+  (a: A.array U32.t)
+  (#s: Ghost.erased (Seq.seq U32.t))
+requires
+  A.pts_to a s ** pure (A.length a == 2)
+ensures exists s' .
+  A.pts_to a s'
+{
+  A.pts_to_len a;
+  A.pts_to_range_intro a full_perm s;
+  A.pts_to_range_upd a 1sz 42ul;
+  A.pts_to_range_upd a 1sz 42ul;
+  A.pts_to_range_elim a _ _;
+  ()
+}
+```

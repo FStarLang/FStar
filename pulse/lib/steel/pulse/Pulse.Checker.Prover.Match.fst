@@ -242,33 +242,31 @@ let rec try_solve_uvars (g:env) (uvs:env { disjoint uvs g })
 
 let unify (g:env) (uvs:env { disjoint uvs g})
   (p q:term)
-  : T.Tac (option (ss:PS.ss_t { PS.dom ss `Set.subset` freevars q } &
-                   RT.equiv (elab_env g) (elab_term p) (elab_term ss.(q)))) =
+  : T.Tac (ss:PS.ss_t { PS.dom ss `Set.subset` freevars q } &
+           option (RT.equiv (elab_env g) (elab_term p) (elab_term ss.(q)))) =
 
   let ss = try_solve_uvars g uvs p q in
   let q = ss.(q) in
   if eq_tm p q
-  then Some (| ss, RT.Rel_refl _ _ _ |)
+  then (| ss, Some (RT.Rel_refl _ _ _) |)
   else if contains_uvar q uvs g
-  then None
+  then (| ss, None |)
   else if eligible_for_smt_equality g p q
   then let v0 = elab_term p in
        let v1 = elab_term q in
        match check_equiv_now (elab_env g) v0 v1 with
-       | Some token, _ -> Some (| ss, RT.Rel_eq_token _ _ _ (FStar.Squash.return_squash token) |)
-       | None, _ -> None
-  else None
+       | Some token, _ -> (| ss, Some (RT.Rel_eq_token _ _ _ (FStar.Squash.return_squash token)) |)
+       | None, _ -> (| ss, None |)
+  else (| ss, None |)
 
 let try_match_pq (g:env) (uvs:env { disjoint uvs g}) (p q:vprop)
-  : T.Tac (option (ss:PS.ss_t { PS.dom ss `Set.subset` freevars q } &
-                   vprop_equiv g p ss.(q))) =
+  : T.Tac (ss:PS.ss_t { PS.dom ss `Set.subset` freevars q } &
+           option (vprop_equiv g p ss.(q))) =
 
   let r = unify g uvs p q in
   match r with
-  | None -> None
-  | Some (| ss, _ |) ->
-    let ss : ss:PS.ss_t { PS.dom ss `Set.subset` freevars q } = ss in
-    Some (| ss, magic () |)
+  | (| ss, None |) -> (| ss, None |)
+  | (| ss, Some _ |) -> (| ss, Some (magic ()) |)
 
 let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y == x} = x
 
@@ -282,15 +280,15 @@ let match_step (#preamble:preamble) (pst:prover_state preamble)
 let q_ss = pst.ss.(q) in
 assume (freevars q_ss `Set.disjoint` PS.dom pst.ss);
 
-let ropt = try_match_pq pst.pg pst.uvs p q_ss in
+let (| ss_q, ropt |) = try_match_pq pst.pg pst.uvs p q_ss in
 
 debug_prover pst.pg (fun _ ->
-  Printf.sprintf "prover matcher: tried to match %s and %s, result: %s"
-    (P.term_to_string p) (P.term_to_string q_ss) (if None? ropt then "fail" else "success"));
+  Printf.sprintf "prover matcher: tried to match p %s and q (partially substituted) %s, result: %s"
+    (P.term_to_string p) (P.term_to_string (ss_q.(q_ss))) (if None? ropt then "fail" else "success"));
 
 match ropt with
 | None -> None
-| Some (| ss_q, veq |) ->
+| Some veq ->
   assert (PS.dom ss_q `Set.disjoint` PS.dom pst.ss);
   
   let ss_new = PS.push_ss pst.ss ss_q in
