@@ -2215,6 +2215,9 @@ let no_uvars_in_term (t:term) : bool =
   t |> Free.uvars |> BU.set_is_empty &&
   t |> Free.univs |> BU.set_is_empty
 
+let no_univ_uvars_in_term (t:term) : bool =
+  t |> Free.univs |> BU.set_is_empty
+
 let no_uvars_in_g (g:env) : bool =
   g.gamma |> BU.for_all (function
     | Binding_var bv -> no_uvars_in_term bv.sort
@@ -2583,19 +2586,28 @@ let refl_instantiate_implicits (g:env) (e:term)
         List.map (fun (_, t, bv) -> bv, t) l
     in
     
-    let g = Env.push_bvs g (List.map (fun (bv, t) -> {bv with sort=t}) bvs_and_ts) in
-    let allow_uvars = false in
-    let allow_names = true in (* terms are potentially open, names are OK *)
-    let e = SC.deep_compress allow_uvars allow_names e in
-    let t = t |> refl_norm_type g |> SC.deep_compress allow_uvars allow_names in
-    let bvs_and_ts =
-      bvs_and_ts |> List.map (fun (bv, t) -> bv, SC.deep_compress allow_uvars allow_names t) in
+    if not (no_univ_uvars_in_term e)
+    then Errors.raise_error (Errors.Error_UnexpectedUnresolvedUvar,
+                             BU.format1 "Elaborated term has unresolved univ uvars: %s" (Print.term_to_string e))
+                              e.pos
+    else if not (no_univ_uvars_in_term t)
+    then Errors.raise_error (Errors.Error_UnexpectedUnresolvedUvar,
+                             BU.format1 "Inferred type has unresolved univ uvars: %s" (Print.term_to_string t))
+                              e.pos
+    else
+      let g = Env.push_bvs g (List.map (fun (bv, t) -> {bv with sort=t}) bvs_and_ts) in
+      let allow_uvars = false in
+      let allow_names = true in (* terms are potentially open, names are OK *)
+      let e = SC.deep_compress allow_uvars allow_names e in
+      let t = t |> refl_norm_type g |> SC.deep_compress allow_uvars allow_names in
+      let bvs_and_ts =
+        bvs_and_ts |> List.map (fun (bv, t) -> bv, SC.deep_compress allow_uvars allow_names t) in
 
-    dbg_refl g (fun _ ->
-      BU.format2 "} finished tc with e = %s and t = %s\n"
-        (Print.term_to_string e)
-        (Print.term_to_string t));
-    ((bvs_and_ts, e, t), [])
+      dbg_refl g (fun _ ->
+        BU.format2 "} finished tc with e = %s and t = %s\n"
+          (Print.term_to_string e)
+          (Print.term_to_string t));
+      ((bvs_and_ts, e, t), [])
   )
   else ret (None, [unexpected_uvars_issue (Env.get_range g)])
 
