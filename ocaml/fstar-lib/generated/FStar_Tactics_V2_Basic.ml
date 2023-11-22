@@ -7021,6 +7021,12 @@ let (no_uvars_in_term : FStar_Syntax_Syntax.term -> Prims.bool) =
          FStar_Compiler_Effect.op_Bar_Greater t FStar_Syntax_Free.univs in
        FStar_Compiler_Effect.op_Bar_Greater uu___
          FStar_Compiler_Util.set_is_empty)
+let (no_univ_uvars_in_term : FStar_Syntax_Syntax.term -> Prims.bool) =
+  fun t ->
+    let uu___ =
+      FStar_Compiler_Effect.op_Bar_Greater t FStar_Syntax_Free.univs in
+    FStar_Compiler_Effect.op_Bar_Greater uu___
+      FStar_Compiler_Util.set_is_empty
 let (no_uvars_in_g : env -> Prims.bool) =
   fun g ->
     FStar_Compiler_Effect.op_Bar_Greater g.FStar_TypeChecker_Env.gamma
@@ -8164,50 +8170,84 @@ let (refl_instantiate_implicits :
                            (fun uu___7 ->
                               match uu___7 with
                               | (uu___8, t1, bv) -> (bv, t1)) l) in
-                  let g3 =
-                    let uu___5 =
-                      FStar_Compiler_List.map
-                        (fun uu___6 ->
-                           match uu___6 with
-                           | (bv, t1) ->
-                               {
-                                 FStar_Syntax_Syntax.ppname =
-                                   (bv.FStar_Syntax_Syntax.ppname);
-                                 FStar_Syntax_Syntax.index =
-                                   (bv.FStar_Syntax_Syntax.index);
-                                 FStar_Syntax_Syntax.sort = t1
-                               }) bvs_and_ts in
-                    FStar_TypeChecker_Env.push_bvs g2 uu___5 in
-                  let allow_uvars = false in
-                  let allow_names = true in
-                  let e2 =
-                    FStar_Syntax_Compress.deep_compress allow_uvars
-                      allow_names e1 in
-                  let t1 =
-                    let uu___5 =
-                      FStar_Compiler_Effect.op_Bar_Greater t
-                        (refl_norm_type g3) in
-                    FStar_Compiler_Effect.op_Bar_Greater uu___5
-                      (FStar_Syntax_Compress.deep_compress allow_uvars
-                         allow_names) in
-                  let bvs_and_ts1 =
-                    FStar_Compiler_Effect.op_Bar_Greater bvs_and_ts
-                      (FStar_Compiler_List.map
-                         (fun uu___5 ->
-                            match uu___5 with
-                            | (bv, t2) ->
-                                let uu___6 =
-                                  FStar_Syntax_Compress.deep_compress
-                                    allow_uvars allow_names t2 in
-                                (bv, uu___6))) in
-                  (dbg_refl g3
-                     (fun uu___6 ->
-                        let uu___7 = FStar_Syntax_Print.term_to_string e2 in
-                        let uu___8 = FStar_Syntax_Print.term_to_string t1 in
-                        FStar_Compiler_Util.format2
-                          "} finished tc with e = %s and t = %s\n" uu___7
-                          uu___8);
-                   ((bvs_and_ts1, e2, t1), []))))
+                  let uu___5 =
+                    let uu___6 = no_univ_uvars_in_term e1 in
+                    Prims.op_Negation uu___6 in
+                  if uu___5
+                  then
+                    let uu___6 =
+                      let uu___7 =
+                        let uu___8 = FStar_Syntax_Print.term_to_string e1 in
+                        FStar_Compiler_Util.format1
+                          "Elaborated term has unresolved univ uvars: %s"
+                          uu___8 in
+                      (FStar_Errors_Codes.Error_UnexpectedUnresolvedUvar,
+                        uu___7) in
+                    FStar_Errors.raise_error uu___6
+                      e1.FStar_Syntax_Syntax.pos
+                  else
+                    (let uu___7 =
+                       let uu___8 = no_univ_uvars_in_term t in
+                       Prims.op_Negation uu___8 in
+                     if uu___7
+                     then
+                       let uu___8 =
+                         let uu___9 =
+                           let uu___10 = FStar_Syntax_Print.term_to_string t in
+                           FStar_Compiler_Util.format1
+                             "Inferred type has unresolved univ uvars: %s"
+                             uu___10 in
+                         (FStar_Errors_Codes.Error_UnexpectedUnresolvedUvar,
+                           uu___9) in
+                       FStar_Errors.raise_error uu___8
+                         e1.FStar_Syntax_Syntax.pos
+                     else
+                       (let g3 =
+                          let uu___9 =
+                            FStar_Compiler_List.map
+                              (fun uu___10 ->
+                                 match uu___10 with
+                                 | (bv, t1) ->
+                                     {
+                                       FStar_Syntax_Syntax.ppname =
+                                         (bv.FStar_Syntax_Syntax.ppname);
+                                       FStar_Syntax_Syntax.index =
+                                         (bv.FStar_Syntax_Syntax.index);
+                                       FStar_Syntax_Syntax.sort = t1
+                                     }) bvs_and_ts in
+                          FStar_TypeChecker_Env.push_bvs g2 uu___9 in
+                        let allow_uvars = false in
+                        let allow_names = true in
+                        let e2 =
+                          FStar_Syntax_Compress.deep_compress allow_uvars
+                            allow_names e1 in
+                        let t1 =
+                          let uu___9 =
+                            FStar_Compiler_Effect.op_Bar_Greater t
+                              (refl_norm_type g3) in
+                          FStar_Compiler_Effect.op_Bar_Greater uu___9
+                            (FStar_Syntax_Compress.deep_compress allow_uvars
+                               allow_names) in
+                        let bvs_and_ts1 =
+                          FStar_Compiler_Effect.op_Bar_Greater bvs_and_ts
+                            (FStar_Compiler_List.map
+                               (fun uu___9 ->
+                                  match uu___9 with
+                                  | (bv, t2) ->
+                                      let uu___10 =
+                                        FStar_Syntax_Compress.deep_compress
+                                          allow_uvars allow_names t2 in
+                                      (bv, uu___10))) in
+                        dbg_refl g3
+                          (fun uu___10 ->
+                             let uu___11 =
+                               FStar_Syntax_Print.term_to_string e2 in
+                             let uu___12 =
+                               FStar_Syntax_Print.term_to_string t1 in
+                             FStar_Compiler_Util.format2
+                               "} finished tc with e = %s and t = %s\n"
+                               uu___11 uu___12);
+                        ((bvs_and_ts1, e2, t1), [])))))
       else
         (let uu___2 =
            let uu___3 =
