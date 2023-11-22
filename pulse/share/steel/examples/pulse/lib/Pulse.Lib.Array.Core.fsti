@@ -78,7 +78,7 @@ val pts_to_range
   ([@@@ equate_by_smt] i:nat)
   ([@@@ equate_by_smt] j: nat)
   (#[exact (`full_perm)] p:perm)
-  (s: Seq.seq a) : vprop
+  ([@@@ equate_by_smt] s: Seq.seq a) : vprop
 
 val pts_to_range_prop
   (#elt: Type0) (a: array elt) (#i #j: nat)
