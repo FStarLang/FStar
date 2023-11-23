@@ -289,6 +289,12 @@ let var_as_namedv (v:nat) : namedv =
   }
 
 let var_as_term (v:var) = pack_ln (Tv_Var (var_as_namedv v))
+let var_as_term_with_name (s:pp_name_t) (v:var) =
+  pack_ln (Tv_Var (pack_namedv {
+    uniq = v;
+    sort = sort_default;
+    ppname = s;
+  }))
 
 let binder_of_t_q t q = mk_binder pp_name_default t q
 let mk_abs ty qual t : R.term =  R.pack_ln (R.Tv_Abs (binder_of_t_q ty qual) t)
@@ -1216,6 +1222,24 @@ type typing : env -> term -> comp_typ -> Type0 =
      pp_name:pp_name_t ->
      typing g e1 (eff, t1) ->
      typing (extend_env g x t1) (open_term e2 x) (eff, t2) ->
+     typing g (mk_let pp_name e1 t1 e2) (eff, open_with (close_term t2 x) e1)
+
+  | T_LetEq:
+     g:env ->
+     x:var { None? (lookup_bvar g x) } ->
+     e1:term ->
+     t1:typ ->
+     u_t1:universe ->
+     e2:term ->
+     t2:typ ->
+     eff:T.tot_or_ghost ->
+     pp_name:pp_name_t ->
+     hyp:var { None? (lookup_bvar (extend_env g x t1) hyp) } ->
+     typing g t1 (eff, tm_type u_t1) ->
+     typing g e1 (eff, t1) ->
+     typing (extend_env (extend_env g x t1)
+                        hyp
+                        (eq2 u_t1 t1 (var_as_term_with_name pp_name x) e1)) (open_term e2 x) (eff, t2) ->
      typing g (mk_let pp_name e1 t1 e2) (eff, open_with (close_term t2 x) e1)
 
   | T_Arrow:

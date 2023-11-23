@@ -280,6 +280,18 @@ let (var_as_term :
   fun v ->
     FStar_Reflection_V2_Builtins.pack_ln
       (FStar_Reflection_V2_Data.Tv_Var (var_as_namedv v))
+let (var_as_term_with_name :
+  pp_name_t -> FStar_Reflection_V2_Data.var -> FStar_Reflection_Types.term) =
+  fun s ->
+    fun v ->
+      FStar_Reflection_V2_Builtins.pack_ln
+        (FStar_Reflection_V2_Data.Tv_Var
+           (FStar_Reflection_V2_Builtins.pack_namedv
+              {
+                FStar_Reflection_V2_Data.uniq = v;
+                FStar_Reflection_V2_Data.sort = sort_default;
+                FStar_Reflection_V2_Data.ppname = s
+              }))
 let (binder_of_t_q :
   FStar_Reflection_Types.term ->
     FStar_Reflection_V2_Data.aqualv -> FStar_Reflection_Types.binder)
@@ -1307,6 +1319,13 @@ type ('dummyV0, 'dummyV1, 'dummyV2) typing =
   FStar_Reflection_Types.term * FStar_Reflection_Types.typ *
   FStar_TypeChecker_Core.tot_or_ghost * pp_name_t * (unit, unit, unit) typing
   * (unit, unit, unit) typing 
+  | T_LetEq of FStar_Reflection_Types.env * FStar_Reflection_Types.term *
+  FStar_Reflection_Types.typ * FStar_Reflection_Types.universe *
+  FStar_Reflection_Types.term * FStar_Reflection_Types.typ *
+  FStar_TypeChecker_Core.tot_or_ghost * pp_name_t *
+  FStar_Reflection_V2_Data.var * FStar_Reflection_V2_Data.var * (unit, 
+  unit, unit) typing * (unit, unit, unit) typing * (unit, unit, unit) typing
+  * unit 
   | T_Arrow of FStar_Reflection_Types.env * FStar_Reflection_V2_Data.var *
   FStar_Reflection_Types.term * FStar_Reflection_Types.term *
   FStar_Reflection_Types.universe * FStar_Reflection_Types.universe *
@@ -1410,6 +1429,8 @@ let uu___is_T_App uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_App _ -> true | _ -> false
 let uu___is_T_Let uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_Let _ -> true | _ -> false
+let uu___is_T_LetEq uu___2 uu___1 uu___ uu___3 =
+  match uu___3 with | T_LetEq _ -> true | _ -> false
 let uu___is_T_Arrow uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_Arrow _ -> true | _ -> false
 let uu___is_T_Refine uu___2 uu___1 uu___ uu___3 =
@@ -1747,39 +1768,39 @@ let (mk_checked_let :
             (FStar_Sealed.seal
                (Obj.magic
                   (FStar_Range.mk_range "FStar.Reflection.Typing.fsti"
-                     (Prims.of_int (1833)) (Prims.of_int (11))
-                     (Prims.of_int (1833)) (Prims.of_int (43)))))
+                     (Prims.of_int (1858)) (Prims.of_int (11))
+                     (Prims.of_int (1858)) (Prims.of_int (43)))))
             (FStar_Sealed.seal
                (Obj.magic
                   (FStar_Range.mk_range "FStar.Reflection.Typing.fsti"
-                     (Prims.of_int (1833)) (Prims.of_int (46))
-                     (Prims.of_int (1839)) (Prims.of_int (20)))))
+                     (Prims.of_int (1858)) (Prims.of_int (46))
+                     (Prims.of_int (1864)) (Prims.of_int (20)))))
             (Obj.magic
                (FStar_Tactics_Effect.tac_bind
                   (FStar_Sealed.seal
                      (Obj.magic
                         (FStar_Range.mk_range "FStar.Reflection.Typing.fsti"
-                           (Prims.of_int (1833)) (Prims.of_int (19))
-                           (Prims.of_int (1833)) (Prims.of_int (43)))))
+                           (Prims.of_int (1858)) (Prims.of_int (19))
+                           (Prims.of_int (1858)) (Prims.of_int (43)))))
                   (FStar_Sealed.seal
                      (Obj.magic
                         (FStar_Range.mk_range "FStar.Reflection.Typing.fsti"
-                           (Prims.of_int (1833)) (Prims.of_int (11))
-                           (Prims.of_int (1833)) (Prims.of_int (43)))))
+                           (Prims.of_int (1858)) (Prims.of_int (11))
+                           (Prims.of_int (1858)) (Prims.of_int (43)))))
                   (Obj.magic
                      (FStar_Tactics_Effect.tac_bind
                         (FStar_Sealed.seal
                            (Obj.magic
                               (FStar_Range.mk_range
                                  "FStar.Reflection.Typing.fsti"
-                                 (Prims.of_int (1833)) (Prims.of_int (20))
-                                 (Prims.of_int (1833)) (Prims.of_int (35)))))
+                                 (Prims.of_int (1858)) (Prims.of_int (20))
+                                 (Prims.of_int (1858)) (Prims.of_int (35)))))
                         (FStar_Sealed.seal
                            (Obj.magic
                               (FStar_Range.mk_range
                                  "FStar.Reflection.Typing.fsti"
-                                 (Prims.of_int (1833)) (Prims.of_int (19))
-                                 (Prims.of_int (1833)) (Prims.of_int (43)))))
+                                 (Prims.of_int (1858)) (Prims.of_int (19))
+                                 (Prims.of_int (1858)) (Prims.of_int (43)))))
                         (Obj.magic (FStar_Tactics_V2_Derived.cur_module ()))
                         (fun uu___ ->
                            FStar_Tactics_Effect.lift_div_tac
@@ -1818,39 +1839,39 @@ let (mk_unchecked_let :
             (FStar_Sealed.seal
                (Obj.magic
                   (FStar_Range.mk_range "FStar.Reflection.Typing.fsti"
-                     (Prims.of_int (1842)) (Prims.of_int (11))
-                     (Prims.of_int (1842)) (Prims.of_int (43)))))
+                     (Prims.of_int (1867)) (Prims.of_int (11))
+                     (Prims.of_int (1867)) (Prims.of_int (43)))))
             (FStar_Sealed.seal
                (Obj.magic
                   (FStar_Range.mk_range "FStar.Reflection.Typing.fsti"
-                     (Prims.of_int (1842)) (Prims.of_int (46))
-                     (Prims.of_int (1845)) (Prims.of_int (21)))))
+                     (Prims.of_int (1867)) (Prims.of_int (46))
+                     (Prims.of_int (1870)) (Prims.of_int (21)))))
             (Obj.magic
                (FStar_Tactics_Effect.tac_bind
                   (FStar_Sealed.seal
                      (Obj.magic
                         (FStar_Range.mk_range "FStar.Reflection.Typing.fsti"
-                           (Prims.of_int (1842)) (Prims.of_int (19))
-                           (Prims.of_int (1842)) (Prims.of_int (43)))))
+                           (Prims.of_int (1867)) (Prims.of_int (19))
+                           (Prims.of_int (1867)) (Prims.of_int (43)))))
                   (FStar_Sealed.seal
                      (Obj.magic
                         (FStar_Range.mk_range "FStar.Reflection.Typing.fsti"
-                           (Prims.of_int (1842)) (Prims.of_int (11))
-                           (Prims.of_int (1842)) (Prims.of_int (43)))))
+                           (Prims.of_int (1867)) (Prims.of_int (11))
+                           (Prims.of_int (1867)) (Prims.of_int (43)))))
                   (Obj.magic
                      (FStar_Tactics_Effect.tac_bind
                         (FStar_Sealed.seal
                            (Obj.magic
                               (FStar_Range.mk_range
                                  "FStar.Reflection.Typing.fsti"
-                                 (Prims.of_int (1842)) (Prims.of_int (20))
-                                 (Prims.of_int (1842)) (Prims.of_int (35)))))
+                                 (Prims.of_int (1867)) (Prims.of_int (20))
+                                 (Prims.of_int (1867)) (Prims.of_int (35)))))
                         (FStar_Sealed.seal
                            (Obj.magic
                               (FStar_Range.mk_range
                                  "FStar.Reflection.Typing.fsti"
-                                 (Prims.of_int (1842)) (Prims.of_int (19))
-                                 (Prims.of_int (1842)) (Prims.of_int (43)))))
+                                 (Prims.of_int (1867)) (Prims.of_int (19))
+                                 (Prims.of_int (1867)) (Prims.of_int (43)))))
                         (Obj.magic (FStar_Tactics_V2_Derived.cur_module ()))
                         (fun uu___ ->
                            FStar_Tactics_Effect.lift_div_tac
