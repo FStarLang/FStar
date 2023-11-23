@@ -2883,15 +2883,15 @@ let rec (check_abs_core :
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
                                                                     (Prims.of_int (304))
-                                                                    (Prims.of_int (19))
+                                                                    (Prims.of_int (23))
                                                                     (Prims.of_int (304))
-                                                                    (Prims.of_int (45)))))
+                                                                    (Prims.of_int (49)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
                                                                     (Prims.of_int (304))
-                                                                    (Prims.of_int (48))
+                                                                    (Prims.of_int (52))
                                                                     (Prims.of_int (318))
                                                                     (Prims.of_int (29)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
@@ -2902,7 +2902,7 @@ let rec (check_abs_core :
                                                                     (fun
                                                                     uu___7 ->
                                                                     (fun
-                                                                    ppname1
+                                                                    ppname_ret
                                                                     ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -2913,20 +2913,20 @@ let rec (check_abs_core :
                                                                     (Prims.of_int (305))
                                                                     (Prims.of_int (15))
                                                                     (Prims.of_int (305))
-                                                                    (Prims.of_int (69)))))
+                                                                    (Prims.of_int (73)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
                                                                     (Prims.of_int (305))
-                                                                    (Prims.of_int (73))
+                                                                    (Prims.of_int (77))
                                                                     (Prims.of_int (318))
                                                                     (Prims.of_int (29)))))
                                                                     (Obj.magic
                                                                     (check g'
                                                                     pre_opened1
                                                                     () post
-                                                                    ppname1
+                                                                    ppname_ret
                                                                     body_opened))
                                                                     (fun
                                                                     uu___7 ->
@@ -2940,13 +2940,13 @@ let rec (check_abs_core :
                                                                     (Prims.of_int (307))
                                                                     (Prims.of_int (8))
                                                                     (Prims.of_int (307))
-                                                                    (Prims.of_int (61)))))
+                                                                    (Prims.of_int (65)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Abs.fst"
                                                                     (Prims.of_int (305))
-                                                                    (Prims.of_int (73))
+                                                                    (Prims.of_int (77))
                                                                     (Prims.of_int (318))
                                                                     (Prims.of_int (29)))))
                                                                     (Obj.magic
@@ -2955,7 +2955,7 @@ let rec (check_abs_core :
                                                                     pre_opened1
                                                                     (FStar_Pervasives_Native.__proj__Some__item__v
                                                                     post) r
-                                                                    ppname1))
+                                                                    ppname_ret))
                                                                     (fun
                                                                     uu___7 ->
                                                                     (fun
@@ -3070,7 +3070,7 @@ let rec (check_abs_core :
                                                                     Pulse_Syntax_Base.binder_ty
                                                                     = t2;
                                                                     Pulse_Syntax_Base.binder_ppname
-                                                                    = ppname1
+                                                                    = ppname
                                                                     };
                                                                     Pulse_Syntax_Base.q
                                                                     = qual;
@@ -3088,7 +3088,7 @@ let rec (check_abs_core :
                                                                     Pulse_Syntax_Base.binder_ty
                                                                     = t2;
                                                                     Pulse_Syntax_Base.binder_ppname
-                                                                    = ppname1
+                                                                    = ppname
                                                                     } qual
                                                                     (Pulse_Syntax_Naming.close_comp
                                                                     c_body1 x))),
@@ -3099,7 +3099,7 @@ let rec (check_abs_core :
                                                                     Pulse_Syntax_Base.binder_ty
                                                                     = t2;
                                                                     Pulse_Syntax_Base.binder_ppname
-                                                                    = ppname1
+                                                                    = ppname
                                                                     }, u,
                                                                     (Pulse_Syntax_Naming.close_st_term
                                                                     body1 x),
