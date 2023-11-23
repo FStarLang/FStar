@@ -301,10 +301,10 @@ let rec check_abs_core
           Some post_hint_typing
       in
 
-      let ppname = mk_ppname_no_range "_fret" in
-      let r  = check g' pre_opened pre_typing post ppname body_opened  in
+      let ppname_ret = mk_ppname_no_range "_fret" in
+      let r  = check g' pre_opened pre_typing post ppname_ret body_opened  in
       let (| body, c_body, body_typing |) : st_typing_in_ctxt g' pre_opened post =
-        apply_checker_result_k #_ #_ #(Some?.v post) r ppname in
+        apply_checker_result_k #_ #_ #(Some?.v post) r ppname_ret in
 
       check_effect_annotation g' body.range c c_body;
       let (| c_body, body_typing |) = maybe_rewrite_body_typing body_typing c in
