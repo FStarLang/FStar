@@ -17,7 +17,8 @@ let (tyvar_of : Prims.string -> Prims.string) =
         ((FStar_String.length s) - Prims.int_one) in
     FStar_String.uppercase uu___
 let (varname : Prims.string -> Prims.string) =
-  fun s -> FStar_Compiler_Util.replace_char s 39 95
+  fun s ->
+    if s = "uu___" then "_" else FStar_Compiler_Util.replace_char s 39 95
 let fail : 'uuuuu . Prims.string -> 'uuuuu =
   fun s ->
     let uu___ =
@@ -907,26 +908,10 @@ and (extract_mlexpr_to_stmts :
                FStar_Extraction_ML_Syntax.loc = uu___4;_},
              uu___5)
             ->
-            let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-            uu___6 = "Pulse.Lib.Reference.op_Colon_Equals"
+            let p1 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+            p1 = "Pulse.Lib.Reference.op_Colon_Equals"
         | uu___ -> false in
       match e.FStar_Extraction_ML_Syntax.expr with
-      | FStar_Extraction_ML_Syntax.MLE_Const
-          (FStar_Extraction_ML_Syntax.MLC_Unit) -> []
-      | FStar_Extraction_ML_Syntax.MLE_Var x ->
-          let uu___ =
-            let uu___1 =
-              let uu___2 = varname x in
-              Pulse2Rust_Rust_Syntax.mk_expr_path_singl uu___2 in
-            Pulse2Rust_Rust_Syntax.Stmt_expr uu___1 in
-          [uu___]
-      | FStar_Extraction_ML_Syntax.MLE_Name p ->
-          let uu___ =
-            let uu___1 =
-              Pulse2Rust_Rust_Syntax.mk_expr_path_singl
-                (FStar_Extraction_ML_Syntax.mlpath_to_string p) in
-            Pulse2Rust_Rust_Syntax.Stmt_expr uu___1 in
-          [uu___]
       | FStar_Extraction_ML_Syntax.MLE_Let
           ((FStar_Extraction_ML_Syntax.NonRec,
             { FStar_Extraction_ML_Syntax.mllb_name = uu___;
@@ -947,8 +932,8 @@ and (extract_mlexpr_to_stmts :
           (match uu___ with
            | (is_mut, ty, init) ->
                let s =
-                 Pulse2Rust_Rust_Syntax.mk_local_stmt
-                   lb.FStar_Extraction_ML_Syntax.mllb_name is_mut init in
+                 let uu___1 = varname lb.FStar_Extraction_ML_Syntax.mllb_name in
+                 Pulse2Rust_Rust_Syntax.mk_local_stmt uu___1 is_mut init in
                let uu___1 =
                  let uu___2 =
                    push_local g lb.FStar_Extraction_ML_Syntax.mllb_name ty
@@ -981,9 +966,9 @@ and (extract_mlexpr_to_stmts :
           [uu___6]
       | uu___ ->
           let uu___1 =
-            let uu___2 = FStar_Extraction_ML_Syntax.mlexpr_to_string e in
-            FStar_Compiler_Util.format1 "mlexpr_to_stmt  %s" uu___2 in
-          fail_nyi uu___1
+            let uu___2 = extract_mlexpr g e in
+            Pulse2Rust_Rust_Syntax.Stmt_expr uu___2 in
+          [uu___1]
 and (extract_mlbranch_to_arm :
   env -> FStar_Extraction_ML_Syntax.mlbranch -> Pulse2Rust_Rust_Syntax.arm) =
   fun g ->

@@ -60,3 +60,5 @@ val norm_well_typed_term
 val add_attribute (x:T.sigelt) (_:R.term) : (y:T.sigelt { x == y })
 val get_attributes (x:T.sigelt) : T.Tac (list R.term)
 val add_noextract_qual (x:T.sigelt) : (y:T.sigelt { x == y })
+
+val must_erase_for_extraction (g:env) (ty:T.term) : bool

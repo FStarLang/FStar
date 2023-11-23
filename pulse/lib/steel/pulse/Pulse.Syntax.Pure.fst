@@ -86,6 +86,18 @@ let term_of_nvar (x:nvar) : term =
 let term_of_no_name_var (x:var) : term =
   term_of_nvar (v_as_nv x)
 
+let is_bvar (t:term) : option nat =
+  let open R in
+  match t.t with
+  | Tm_FStar host_term ->
+    begin match R.inspect_ln host_term with
+          | R.Tv_BVar bv ->
+            let bv_view = R.inspect_bv bv in
+            Some bv_view.index
+          | _ -> None
+    end
+  | _ -> None
+
 let is_var (t:term) : option nm =
   let open R in
   match t.t with

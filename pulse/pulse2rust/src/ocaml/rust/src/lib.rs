@@ -1613,20 +1613,3 @@ ocaml_export! {
   //   z.to_string().to_owned().to_ocaml(cr)
   // }
 }
-
-pub fn write(r: &mut u32, n: u32) -> u32 {
-    let _fret = {
-        let x = *r;
-        let _bind_c = {
-            *r = n;
-            let _bind_c = {
-                *r = n;
-                let _bind_c = x;
-                _bind_c
-            };
-            _bind_c
-        };
-        _bind_c
-    };
-    _fret
-}

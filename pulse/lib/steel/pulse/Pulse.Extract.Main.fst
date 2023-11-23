@@ -1,6 +1,7 @@
 module Pulse.Extract.Main
 
 open Pulse.Syntax.Base
+open Pulse.Syntax.Pure
 open Pulse.Extract.CompilerLib
 open Pulse.Syntax.Printer
 open FStar.List.Tot
@@ -287,9 +288,122 @@ let maybe_inline (g:env) (head:term) (arg:term) :T.Tac (option st_term) =
               rest
           in
           mk_st_app head (fst last) (snd last)
-        
 
 
+let is_internal_binder (b:binder) : T.Tac bool =
+  let s = T.unseal b.binder_ppname.name in
+  s = "_fret" ||
+  s = "_bind_c"
+
+let is_return_bv0 (e:st_term) : bool =
+  match e.term with
+  | Tm_Return { term } -> is_bvar term = Some 0
+  | _ -> false
+
+let rec simplify_st_term (e:st_term) : T.Tac st_term =
+  T.print (Printf.sprintf "Simplifying %s\n" (Pulse.Syntax.Printer.st_term_to_string e));
+  match e.term with
+  | Tm_Bind { binder; head; body } ->
+    let is_internal_binder = is_internal_binder binder in
+    if is_internal_binder &&
+       is_return_bv0 body
+    then simplify_st_term head
+    else let body = simplify_st_term body in
+          { e with term = Tm_Bind { binder; head; body } }
+   
+  | _ -> e
+
+let erase_type_for_extraction (g:env) (t:term) : T.Tac bool =
+  match t.t with
+  | Tm_FStar t -> RU.must_erase_for_extraction (tcenv_of_env g) t
+  | _ -> false
+
+let rec erase_ghost_subterms (g:env) (p:st_term) : T.Tac st_term =
+  let open Pulse.Syntax.Naming in
+
+  let fresh (g:env) = Pulse.Typing.fresh g.coreenv in
+  let push_binding g x b =
+    { g with coreenv = E.push_binding g.coreenv x b.binder_ppname b.binder_ty } in
+
+  let open_erase_close (g:env) (b:binder) (e:st_term) : T.Tac st_term =
+    let x = fresh g in
+    let e = open_st_term' e (tm_var { nm_index = x; nm_ppname = b.binder_ppname }) 0 in
+    let e = erase_ghost_subterms (push_binding g x b) e in
+    close_st_term' e x 0 in
+
+  T.print (Printf.sprintf "Erasing %s\n" (Pulse.Syntax.Printer.st_term_to_string p));
+  let unit_tm =
+    { p with term = Tm_Return { ctag = STT; insert_eq = false; term = unit_val } }
+  in
+  let ret (t:st_term') = { p with term = t } in
+  if is_erasable p
+  then unit_tm
+  else begin
+    match p.term with
+    | Tm_IntroPure _
+    | Tm_ElimExists _
+    | Tm_IntroExists _ 
+    | Tm_Rewrite _ -> unit_tm
+
+    | Tm_Abs { b; q; body; ascription } ->
+      let body = open_erase_close g b body in
+      ret (Tm_Abs { b; q; body; ascription })
+    
+    | Tm_Return _ -> p
+
+    | Tm_STApp _ -> p
+
+    | Tm_Bind { binder; head; body } ->
+      if is_erasable head
+      then let body = LN.subst_st_term body [LN.DT 0 unit_val] in
+           erase_ghost_subterms g body
+      else let head = erase_ghost_subterms g head in
+           let body = open_erase_close g binder body in
+           ret (Tm_Bind { binder; head; body })
+
+    | Tm_TotBind { binder; head; body } ->
+      if erase_type_for_extraction g binder.binder_ty
+      then let body = LN.subst_st_term body [LN.DT 0 unit_val] in
+           erase_ghost_subterms g body
+      else let body = open_erase_close g binder body in
+           ret (Tm_TotBind { binder; head; body })
+
+    | Tm_If { b; then_; else_; post } ->
+      let then_ = erase_ghost_subterms g then_ in
+      let else_ = erase_ghost_subterms g else_ in
+      ret (Tm_If { b; then_; else_; post })
+
+    | Tm_Match { sc; brs; returns_ } ->
+      let brs = T.map (erase_ghost_subterms_branch g) brs in
+      ret (Tm_Match { sc; brs; returns_ })
+
+    | Tm_While { invariant; condition; condition_var; body } ->
+      let condition = erase_ghost_subterms g condition in
+      let body = erase_ghost_subterms g body in
+      ret (Tm_While { invariant; condition; condition_var; body })
+
+    | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
+      let body1 = erase_ghost_subterms g body1 in
+      let body2 = erase_ghost_subterms g body2 in
+      ret (Tm_Par { pre1; body1; post1; pre2; body2; post2 })
+
+    | Tm_WithLocal { binder; initializer; body } ->
+      let body = open_erase_close g binder body in
+      ret (Tm_WithLocal { binder; initializer; body })
+
+    | Tm_WithLocalArray { binder; initializer; length; body } ->
+      let body = open_erase_close g binder body in
+      ret (Tm_WithLocalArray { binder; initializer; length; body })
+
+    | _ -> T.fail "Unexpected st term when erasing ghost subterms"
+  end
+
+and erase_ghost_subterms_branch (g:env) (b:branch) : T.Tac branch =
+  let pat, body = b in
+  let g, _, bs = extend_env_pat g pat in
+  let body = Pulse.Checker.Match.open_st_term_bs body bs in
+  let body = erase_ghost_subterms g body in
+  pat, Pulse.Syntax.Naming.close_st_term_n body (L.map fst bs)
 
 let rec extract (g:env) (p:st_term)
   : T.Tac (mlexpr & e_tag)
@@ -310,6 +424,7 @@ let rec extract (g:env) (p:st_term)
       | Tm_Abs { b; q; body } -> 
         let g, mlident, mlty, name = extend_env g b in
         let body = LN.open_st_term_nv body name in
+        let body = simplify_st_term body in
         let body, _ = extract g body in
         let res = mle_fun [mlident, mlty] body in
         res, e_tag_pure
@@ -564,6 +679,7 @@ let extract_pulse (g:uenv) (selt:R.sigelt) (p:st_term)
           let fv_name = R.inspect_fv lb_fv in
           if Nil? fv_name
           then T.raise (Extraction_failure "Unexpected empty name");
+          let p = erase_ghost_subterms g p in
           let tm, tag = extract g p in
           let fv_name = FStar.List.Tot.last fv_name in
           debug_ g (fun _ -> Printf.sprintf "Extracted term (%s): %s\n" fv_name (mlexpr_to_string tm));
