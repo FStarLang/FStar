@@ -455,14 +455,28 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
   | _ -> fail_nyi (format1 "mlexpr %s" (S.mlexpr_to_string e))
 
 and extract_mlexpr_to_stmts (g:env) (e:S.mlexpr) : list stmt =
+
+  let is_assign (e:S.mlexpr) =
+    match e.expr with
+    | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, _) ->
+      S.string_of_mlpath p = "Pulse.Lib.Reference.op_Colon_Equals"
+    | _ -> false
+  in
+
   match e.expr with
   | S.MLE_Const S.MLC_Unit -> []
   | S.MLE_Var x -> [Stmt_expr (mk_expr_path_singl (varname x))]
   | S.MLE_Name p -> [Stmt_expr (mk_expr_path_singl (S.mlpath_to_string p))]
+
+  | S.MLE_Let ((S.NonRec, [{mllb_def=e1}]), e2)
+    when is_assign e1 ->
+    (Stmt_expr (extract_mlexpr g e1))::(extract_mlexpr_to_stmts g e2)
+
   | S.MLE_Let ((S.NonRec, [lb]), e) ->
     let is_mut, ty, init = lb_init_and_def g lb in
     let s = mk_local_stmt lb.mllb_name is_mut init in
     s::(extract_mlexpr_to_stmts (push_local g lb.mllb_name ty is_mut) e)
+
   | S.MLE_App ({ expr=S.MLE_TApp ({ expr=S.MLE_Name p }, _) }, _)
     when S.string_of_mlpath p = "failwith" ->
     [Stmt_expr (mk_call (mk_expr_path_singl panic_fn) [])]

@@ -973,8 +973,21 @@ fn to_syn_stmt(s: &Stmt) -> syn::Stmt {
             },
         }),
         Stmt::SExpr(e) => {
+            let add_semi = match e {
+                Expr::EAssign(_) => true,
+                _ => false,
+            };
             let e = to_syn_expr(&e);
-            syn::Stmt::Expr(e, None)
+            syn::Stmt::Expr(
+                e,
+                if add_semi {
+                    Some(syn::token::Semi {
+                        spans: [Span::call_site()],
+                    })
+                } else {
+                    None
+                },
+            )
         }
     }
 }
@@ -1599,4 +1612,21 @@ ocaml_export! {
   //   };
   //   z.to_string().to_owned().to_ocaml(cr)
   // }
+}
+
+pub fn write(r: &mut u32, n: u32) -> u32 {
+    let _fret = {
+        let x = *r;
+        let _bind_c = {
+            *r = n;
+            let _bind_c = {
+                *r = n;
+                let _bind_c = x;
+                _bind_c
+            };
+            _bind_c
+        };
+        _bind_c
+    };
+    _fret
 }
