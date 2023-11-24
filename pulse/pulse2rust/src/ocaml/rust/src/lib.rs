@@ -1629,33 +1629,3 @@ ocaml_export! {
   //   z.to_string().to_owned().to_ocaml(cr)
   // }
 }
-
-pub fn compare<T>(p1: (), p2: (), l: usize, s1: (), s2: (), a1: &mut [()], a2: &mut [()]) -> bool {
-    let mut i = 0;
-    while {
-        let vi = i;
-        if lt(vi, l) {
-            let v1 = a1[vi];
-            let v2 = a2[vi];
-            let _bind_c = v1 == v2;
-            let _bind_c1 = _bind_c;
-            let _if_br = _bind_c1;
-            _if_br
-        } else {
-            let _if_br = false;
-            _if_br
-        }
-    } {
-        let vi = i;
-        i = add(vi, 1);
-    }
-    let vi = i;
-    let _bind_c = {
-        let res = vi == l;
-        let _tbind_c = res;
-        _tbind_c
-    };
-    let _bind_c1 = _bind_c;
-    let i1 = _bind_c1;
-    i1
-}

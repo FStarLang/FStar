@@ -307,11 +307,17 @@ let is_internal_binder (b:binder) : T.Tac bool =
   s = "_fret" ||
   s = "_bind_c" ||
   s = "_while_c" ||
-  s = "_tbind_c"
+  s = "_tbind_c" ||
+  s = "_if_br"
+
+let is_return (e:st_term) : option term =
+  match e.term with
+  | Tm_Return { term } -> Some term
+  | _ -> None
 
 let is_return_bv0 (e:st_term) : bool =
-  match e.term with
-  | Tm_Return { term } -> is_bvar term = Some 0
+  match is_return e with
+  | Some term -> is_bvar term = Some 0
   | _ -> false
 
 let simplify_nested_let (e:st_term) (b_x:binder) (head:st_term) (e3:st_term) : option st_term =
@@ -351,13 +357,20 @@ let rec simplify_st_term (g:env) (e:st_term) : T.Tac st_term =
     if is_internal_binder &&
        is_return_bv0 body
     then simplify_st_term g head
+    else if is_internal_binder &&
+            Some? (is_return head)
+    then (
+        let Some head = is_return head in
+        simplify_st_term g (LN.subst_st_term body [LN.DT 0 head])
+    )    
     else (
       match simplify_nested_let e binder head body with
       | Some e -> simplify_st_term g e
       | None ->        
        let head = simplify_st_term g head in
        let body = with_open binder body in
-       ret (Tm_Bind { binder; head; body }))
+       ret (Tm_Bind { binder; head; body })
+    )
 
   | Tm_TotBind { binder; head; body } ->
     ret (Tm_TotBind { binder; head; body = with_open binder body })
