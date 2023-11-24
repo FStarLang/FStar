@@ -314,7 +314,7 @@ let is_return_bv0 (e:st_term) : bool =
   | _ -> false
 
 //
-// Implements only let x = e in x ~~> e for now
+// let x = e in x ~~> e
 //
 let rec simplify_st_term (g:env) (e:st_term) : T.Tac st_term =
   let ret t = { e with term = t } in
@@ -338,9 +338,27 @@ let rec simplify_st_term (g:env) (e:st_term) : T.Tac st_term =
     if is_internal_binder &&
        is_return_bv0 body
     then simplify_st_term g head
-    else let head = simplify_st_term g head in
-         let body = with_open binder body in
-         ret (Tm_Bind { binder; head; body })
+    else (
+      match head.term with
+      | Tm_Bind { binder = b_y; head = e1; body = e2 } ->
+        let b_x = binder in
+        let e3 = body in
+        //
+        // let x =
+        //   let y = e1 in
+        //   e2
+        // in
+        // e3
+        //
+        // And e is locally nameless
+        //
+        let mk t : st_term = { range = e.range; effect_tag = default_effect_hint; term = t } in
+        let t = mk (Tm_Bind { binder = b_y; head = e1; body = mk (Tm_Bind { binder = b_x; head = e2; body = e3 }) }) in
+        simplify_st_term g t
+      | _ ->
+       let head = simplify_st_term g head in
+       let body = with_open binder body in
+       ret (Tm_Bind { binder; head; body }))
 
   | Tm_TotBind { binder; head; body } ->
     ret (Tm_TotBind { binder; head; body = with_open binder body })
@@ -475,6 +493,8 @@ let rec extract (g:env) (p:st_term)
     if is_erasable p
     then erased_result
     else begin
+      let p = erase_ghost_subterms g p in
+      let p = simplify_st_term g p in
       match p.term with
       | Tm_IntroPure _
       | Tm_ElimExists _
@@ -485,7 +505,6 @@ let rec extract (g:env) (p:st_term)
       | Tm_Abs { b; q; body } -> 
         let g, mlident, mlty, name = extend_env g b in
         let body = LN.open_st_term_nv body name in
-        let body = simplify_st_term g body in
         let body, _ = extract g body in
         let res = mle_fun [mlident, mlty] body in
         res, e_tag_pure
@@ -740,7 +759,6 @@ let extract_pulse (g:uenv) (selt:R.sigelt) (p:st_term)
           let fv_name = R.inspect_fv lb_fv in
           if Nil? fv_name
           then T.raise (Extraction_failure "Unexpected empty name");
-          let p = erase_ghost_subterms g p in
           let tm, tag = extract g p in
           let fv_name = FStar.List.Tot.last fv_name in
           debug_ g (fun _ -> Printf.sprintf "Extracted term (%s): %s\n" fv_name (mlexpr_to_string tm));

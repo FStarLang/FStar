@@ -4,124 +4,124 @@ module U32 = FStar.UInt32
 #push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
 #push-options "--ide_id_info_off"
 
-assume val p : vprop
-assume val g : unit -> stt unit emp (fun _ -> p)
+// assume val p : vprop
+// assume val g : unit -> stt unit emp (fun _ -> p)
 
-let folded_pts_to (r:ref U32.t) (n:erased U32.t) : vprop = pts_to r n
+// let folded_pts_to (r:ref U32.t) (n:erased U32.t) : vprop = pts_to r n
 
-```pulse
-fn unfold_test (r:ref U32.t) 
-  requires folded_pts_to r 'n
-  ensures folded_pts_to r 'n
-{
-  with n. unfold (folded_pts_to r n);
-  with n. fold (folded_pts_to r n)
-}
-```
+// ```pulse
+// fn unfold_test (r:ref U32.t) 
+//   requires folded_pts_to r 'n
+//   ensures folded_pts_to r 'n
+// {
+//   with n. unfold (folded_pts_to r n);
+//   with n. fold (folded_pts_to r n)
+// }
+// ```
 
-```pulse
-fn test_write_10 (x:ref U32.t)
-   requires pts_to x 'n
-   ensures  pts_to x 0ul
-{
-    x := 1ul;
-    x := 0ul;
-}
-```
+// ```pulse
+// fn test_write_10 (x:ref U32.t)
+//    requires pts_to x 'n
+//    ensures  pts_to x 0ul
+// {
+//     x := 1ul;
+//     x := 0ul;
+// }
+// ```
 
-```pulse
-fn test_read (r:ref U32.t)
-   requires pts_to r #pm 'n
-   returns x : U32.t
-   ensures pts_to r #pm x
-{
-  !r
-}
-```
+// ```pulse
+// fn test_read (r:ref U32.t)
+//    requires pts_to r #pm 'n
+//    returns x : U32.t
+//    ensures pts_to r #pm x
+// {
+//   !r
+// }
+// ```
 
-```pulse
-fn swap (r1 r2:ref U32.t)
-  requires 
-      pts_to r1 'n1 **
-      pts_to r2 'n2
-  ensures
-      pts_to r1 'n2 **
-      pts_to r2 'n1
-{
-  let x = !r1;
-  let y = !r2;
-  r1 := y;
-  r2 := x
-}
-```
-
-
-```pulse
-fn call_swap2 (r1 r2:ref U32.t)
-   requires
-       pts_to r1 'n1 **
-       pts_to r2 'n2
-   ensures
-       pts_to r1 'n1 **
-       pts_to r2 'n2
-{
-   swap r1 r2;
-   swap r1 r2
-}
-```
+// ```pulse
+// fn swap (r1 r2:ref U32.t)
+//   requires 
+//       pts_to r1 'n1 **
+//       pts_to r2 'n2
+//   ensures
+//       pts_to r1 'n2 **
+//       pts_to r2 'n1
+// {
+//   let x = !r1;
+//   let y = !r2;
+//   r1 := y;
+//   r2 := x
+// }
+// ```
 
 
-```pulse
-fn swap_with_elim_pure (#n1 #n2:erased U32.t)
-                       (r1 r2:ref U32.t)
-   requires
-      pts_to r1 n1 **
-      pts_to r2 n2
-   ensures
-      pts_to r1 n2 **
-      pts_to r2 n1
-{
-   let x = !r1;
-   let y = !r2;
-   r1 := y;
-   r2 := x
-}
-```
-
-```pulse
-fn intro_pure_example (r:ref U32.t)
-   requires 
-     (pts_to r 'n1  **
-      pure (reveal 'n1 == reveal 'n2))
-   ensures 
-     (pts_to r 'n2  **
-      pure (reveal 'n2 == reveal 'n1))
-{
-  ()
-}
-```
+// ```pulse
+// fn call_swap2 (r1 r2:ref U32.t)
+//    requires
+//        pts_to r1 'n1 **
+//        pts_to r2 'n2
+//    ensures
+//        pts_to r1 'n1 **
+//        pts_to r2 'n2
+// {
+//    swap r1 r2;
+//    swap r1 r2
+// }
+// ```
 
 
-```pulse
-fn if_example (r:ref U32.t)
-              (n:(n:erased U32.t{U32.v (reveal n) == 1}))
-              (b:bool)
-   requires 
-     pts_to r n
-   ensures
-     pts_to r (U32.add (reveal n) 2ul)
-{
-   let x = read_atomic r;
-   if b
-   {
-     r := U32.add x 2ul
-   }
-   else
-   {
-     write_atomic r 3ul
-   }
-}
-```
+// ```pulse
+// fn swap_with_elim_pure (#n1 #n2:erased U32.t)
+//                        (r1 r2:ref U32.t)
+//    requires
+//       pts_to r1 n1 **
+//       pts_to r2 n2
+//    ensures
+//       pts_to r1 n2 **
+//       pts_to r2 n1
+// {
+//    let x = !r1;
+//    let y = !r2;
+//    r1 := y;
+//    r2 := x
+// }
+// ```
+
+// ```pulse
+// fn intro_pure_example (r:ref U32.t)
+//    requires 
+//      (pts_to r 'n1  **
+//       pure (reveal 'n1 == reveal 'n2))
+//    ensures 
+//      (pts_to r 'n2  **
+//       pure (reveal 'n2 == reveal 'n1))
+// {
+//   ()
+// }
+// ```
+
+
+// ```pulse
+// fn if_example (r:ref U32.t)
+//               (n:(n:erased U32.t{U32.v (reveal n) == 1}))
+//               (b:bool)
+//    requires 
+//      pts_to r n
+//    ensures
+//      pts_to r (U32.add (reveal n) 2ul)
+// {
+//    let x = read_atomic r;
+//    if b
+//    {
+//      r := U32.add x 2ul
+//    }
+//    else
+//    {
+//      write_atomic r 3ul
+//    }
+// }
+// ```
 
 // ```pulse
 // ghost
@@ -171,29 +171,29 @@ fn if_example (r:ref U32.t)
 // ```
 
 
-```pulse
-fn while_count2 (r:ref U32.t)
-  requires exists (n:U32.t). (pts_to r n)
-  ensures (pts_to r 10ul)
-{
-  open FStar.UInt32;
-  while (let x = !r; (x <> 10ul))
-  invariant b. 
-    exists n. (pts_to r n  **
-          pure (b == (n <> 10ul)))
-  {
-    let x = !r;
-    if (x <^ 10ul)
-    {
-      r := x +^ 1ul
-    }
-    else
-    {
-      r := x -^ 1ul
-    }
-  }
-}
-```
+// ```pulse
+// fn while_count2 (r:ref U32.t)
+//   requires exists (n:U32.t). (pts_to r n)
+//   ensures (pts_to r 10ul)
+// {
+//   open FStar.UInt32;
+//   while (let x = !r; (x <> 10ul))
+//   invariant b. 
+//     exists n. (pts_to r n  **
+//           pure (b == (n <> 10ul)))
+//   {
+//     let x = !r;
+//     if (x <^ 10ul)
+//     {
+//       r := x +^ 1ul
+//     }
+//     else
+//     {
+//       r := x -^ 1ul
+//     }
+//   }
+// }
+// ```
 
 
 // ```pulse
@@ -268,77 +268,78 @@ fn while_count2 (r:ref U32.t)
 // ```
 
 
-// let rec sum_spec (n:nat) : nat =
-//   if n = 0 then 0 else n + sum_spec (n - 1)
+let rec sum_spec (n:nat) : GTot nat =
+  if n = 0 then 0 else n + sum_spec (n - 1)
 
- 
-// let zero : nat = 0
+noextract
+inline_for_extraction
+let zero : nat = 0
 
-// ```pulse
-// fn sum (r:ref nat) (n:nat)
-//    requires exists i. (pts_to r i)
-//    ensures (pts_to r (sum_spec n))
-// {
-//    let mut i = zero;
-//    let mut sum = zero;
-//    introduce exists b m s. (
-//      pts_to i m  **
-//      pts_to sum s  **
-//      pure (s == sum_spec m /\
-//            b == (m <> n)))
-//    with (zero <> n);
+```pulse
+fn sum (r:ref nat) (n:nat)
+   requires exists i. (pts_to r i)
+   ensures (pts_to r (sum_spec n))
+{
+   let mut i = zero;
+   let mut sum = zero;
+   introduce exists b m s. (
+     pts_to i m  **
+     pts_to sum s  **
+     pure (s == sum_spec m /\
+           b == (m <> n)))
+   with (zero <> n);
         
-//    while (let m = !i; (m <> n))
-//    invariant b . exists m s. (
-//      pts_to i m  **
-//      pts_to sum s  **
-//      pure (s == sum_spec m /\
-//            b == (m <> n)))
-//    {
-//      let m = !i;
-//      let s = !sum;
-//      i := (m + 1);
-//      sum := s + m + 1;
-//      introduce exists b m s. (
-//        pts_to i m  **
-//        pts_to sum s  **
-//        pure (s == sum_spec m /\
-//              b == (m <> n)))
-//      with (m + 1 <> n)
-//    };
-//    let s = !sum;
-//    r := s;
-//    introduce exists m. (pts_to i m) 
-//    with _;
-//    introduce exists s. (pts_to sum s)
-//    with _
-// }
-// ```
+   while (let m = !i; (m <> n))
+   invariant b . exists m s. (
+     pts_to i m  **
+     pts_to sum s  **
+     pure (s == sum_spec m /\
+           b == (m <> n)))
+   {
+     let m = !i;
+     let s = !sum;
+     i := (m + 1);
+     sum := s + m + 1;
+     introduce exists b m s. (
+       pts_to i m  **
+       pts_to sum s  **
+       pure (s == sum_spec m /\
+             b == (m <> n)))
+     with (m + 1 <> n)
+   };
+   let s = !sum;
+   r := s;
+   introduce exists m. (pts_to i m) 
+   with _;
+   introduce exists s. (pts_to sum s)
+   with _
+}
+```
 
-// ```pulse
-// fn sum2 (r:ref nat) (n:nat)
-//    requires exists i. pts_to r i
-//    ensures pts_to r (sum_spec n)
-// {
-//    let mut i = zero;
-//    let mut sum = zero;
-//    while (let m = !i; (m <> n))
-//    invariant b . exists m s.
-//      pts_to i m  **
-//      pts_to sum s **
-//      pure (s == sum_spec m /\ b == (m <> n))
-//    {
-//      let m = !i;
-//      let s = !sum;
-//      i := (m + 1);
-//      sum := s + m + 1;
-//      ()
-//    };
-//    let s = !sum;
-//    r := s;
-//    ()
-// }
-// ```
+```pulse
+fn sum2 (r:ref nat) (n:nat)
+   requires exists i. pts_to r i
+   ensures pts_to r (sum_spec n)
+{
+   let mut i = zero;
+   let mut sum = zero;
+   while (let m = !i; (m <> n))
+   invariant b . exists m s.
+     pts_to i m  **
+     pts_to sum s **
+     pure (s == sum_spec m /\ b == (m <> n))
+   {
+     let m = !i;
+     let s = !sum;
+     i := (m + 1);
+     sum := s + m + 1;
+     ()
+   };
+   let s = !sum;
+   r := s;
+   ()
+}
+```
 
 // ```pulse
 // fn if_then_else_in_specs (r:ref U32.t)

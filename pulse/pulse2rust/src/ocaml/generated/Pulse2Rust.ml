@@ -901,6 +901,22 @@ and (extract_mlexpr_to_stmts :
       | FStar_Extraction_ML_Syntax.MLE_Const
           (FStar_Extraction_ML_Syntax.MLC_Unit) -> []
       | FStar_Extraction_ML_Syntax.MLE_Let
+          ((uu___,
+            { FStar_Extraction_ML_Syntax.mllb_name = uu___1;
+              FStar_Extraction_ML_Syntax.mllb_tysc = uu___2;
+              FStar_Extraction_ML_Syntax.mllb_add_unit = uu___3;
+              FStar_Extraction_ML_Syntax.mllb_def =
+                {
+                  FStar_Extraction_ML_Syntax.expr =
+                    FStar_Extraction_ML_Syntax.MLE_Const
+                    (FStar_Extraction_ML_Syntax.MLC_Unit);
+                  FStar_Extraction_ML_Syntax.mlty = uu___4;
+                  FStar_Extraction_ML_Syntax.loc = uu___5;_};
+              FStar_Extraction_ML_Syntax.mllb_meta = uu___6;
+              FStar_Extraction_ML_Syntax.print_typ = uu___7;_}::[]),
+           e1)
+          -> extract_mlexpr_to_stmts g e1
+      | FStar_Extraction_ML_Syntax.MLE_Let
           ((FStar_Extraction_ML_Syntax.NonRec, lb::[]), e1) ->
           let uu___ = lb_init_and_def g lb in
           (match uu___ with

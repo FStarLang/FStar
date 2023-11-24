@@ -467,6 +467,9 @@ and extract_mlexpr_to_stmts (g:env) (e:S.mlexpr) : list stmt =
   match e.expr with
   | S.MLE_Const S.MLC_Unit -> []
 
+  | S.MLE_Let ((_, [{mllb_def = {expr = S.MLE_Const S.MLC_Unit }}]), e) ->
+    extract_mlexpr_to_stmts g e
+
   | S.MLE_Let ((S.NonRec, [lb]), e) ->
     let is_mut, ty, init = lb_init_and_def g lb in
     let s = mk_local_stmt
