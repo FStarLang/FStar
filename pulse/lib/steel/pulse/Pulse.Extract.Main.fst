@@ -320,22 +320,34 @@ let is_return_bv0 (e:st_term) : bool =
   | Some term -> is_bvar term = Some 0
   | _ -> false
 
-let simplify_nested_let (e:st_term) (b_x:binder) (head:st_term) (e3:st_term) : option st_term =
+//
+// let x = (let y = e1 in e2) in e3 ~~> let y = e1 in let x = e2 in e3
+//
+// The y let binding can be a TotBind, Bind, let mut, let mut array
+//
+let simplify_nested_let (e:st_term) (b_x:binder) (head:st_term) (e3:st_term)
+  : option st_term =
+
   let mk t : st_term = { range = e.range; effect_tag = default_effect_hint; term = t } in
+  let body e2 = mk (Tm_Bind { binder = b_x; head = e2; body = e3 }) in
   match head.term with
   | Tm_TotBind { binder = b_y; head = e1; body = e2 } ->
-    Some (mk (Tm_TotBind { binder = b_y; head = e1; body = mk (Tm_Bind { binder = b_x; head = e2; body = e3 }) }))
+    Some (mk (Tm_TotBind { binder = b_y; head = e1; body = body e2 }))
   | Tm_Bind { binder = b_y; head = e1; body = e2 } ->
-    Some (mk (Tm_Bind { binder = b_y; head = e1; body = mk (Tm_Bind { binder = b_x; head = e2; body = e3 }) }))
+    Some (mk (Tm_Bind { binder = b_y; head = e1; body = body e2 }))
   | Tm_WithLocal { binder = b_y; initializer = e1; body = e2 } ->
-    Some (mk (Tm_WithLocal { binder = b_y; initializer = e1; body = mk (Tm_Bind { binder = b_x; head = e2; body = e3 }) }))
+    Some (mk (Tm_WithLocal { binder = b_y; initializer = e1; body = body e2 }))
   | Tm_WithLocalArray { binder = b_y; initializer = e1; length; body = e2 } ->
-  Some (mk (Tm_WithLocalArray { binder = b_y; initializer = e1; length; body = mk (Tm_Bind { binder = b_x; head = e2; body = e3 }) }))
+    Some (mk (Tm_WithLocalArray { binder = b_y; initializer = e1; length; body = body e2 }))
   
   | _ -> None
 
 //
-// let x = e in x ~~> e
+// 1. let x = e in x ~~> e
+// 2. let x = return e1 in e2 ~~> e2[e1/x]
+// 3. The nested let rule above
+//
+// These apply only when x is an internal binder 
 //
 let rec simplify_st_term (g:env) (e:st_term) : T.Tac st_term =
   let ret t = { e with term = t } in
@@ -424,7 +436,6 @@ let rec erase_ghost_subterms (g:env) (p:st_term) : T.Tac st_term =
     let e = erase_ghost_subterms (push_binding g x b) e in
     close_st_term' e x 0 in
 
-  // T.print (Printf.sprintf "Erasing %s\n" (Pulse.Syntax.Printer.st_term_to_string p));
   let unit_tm =
     { p with term = Tm_Return { ctag = STT; insert_eq = false; term = unit_val } }
   in
@@ -507,8 +518,6 @@ let rec extract (g:env) (p:st_term)
     if is_erasable p
     then erased_result
     else begin
-      let p = erase_ghost_subterms g p in
-      let p = simplify_st_term g p in
       match p.term with
       | Tm_IntroPure _
       | Tm_ElimExists _
@@ -774,6 +783,8 @@ let extract_pulse (g:uenv) (selt:R.sigelt) (p:st_term)
           let fv_name = R.inspect_fv lb_fv in
           if Nil? fv_name
           then T.raise (Extraction_failure "Unexpected empty name");
+          let p = erase_ghost_subterms g p in
+          let p = simplify_st_term g p in
           let tm, tag = extract g p in
           let fv_name = FStar.List.Tot.last fv_name in
           debug_ g (fun _ -> Printf.sprintf "Extracted term (%s): %s\n" fv_name (mlexpr_to_string tm));
