@@ -306,12 +306,25 @@ let is_internal_binder (b:binder) : T.Tac bool =
   let s = T.unseal b.binder_ppname.name in
   s = "_fret" ||
   s = "_bind_c" ||
-  s = "_while_c"
+  s = "_while_c" ||
+  s = "_tbind_c"
 
 let is_return_bv0 (e:st_term) : bool =
   match e.term with
   | Tm_Return { term } -> is_bvar term = Some 0
   | _ -> false
+
+let simplify_nested_let (e:st_term) (b_x:binder) (head:st_term) (e3:st_term) : option st_term =
+  let mk t : st_term = { range = e.range; effect_tag = default_effect_hint; term = t } in
+  match head.term with
+  | Tm_Bind { binder = b_y; head = e1; body = e2 } ->
+    Some (mk (Tm_Bind { binder = b_y; head = e1; body = mk (Tm_Bind { binder = b_x; head = e2; body = e3 }) }))
+  | Tm_WithLocal { binder = b_y; initializer = e1; body = e2 } ->
+    Some (mk (Tm_WithLocal { binder = b_y; initializer = e1; body = mk (Tm_Bind { binder = b_x; head = e2; body = e3 }) }))
+  | Tm_WithLocalArray { binder = b_y; initializer = e1; length; body = e2 } ->
+  Some (mk (Tm_WithLocalArray { binder = b_y; initializer = e1; length; body = mk (Tm_Bind { binder = b_x; head = e2; body = e3 }) }))
+  
+  | _ -> None
 
 //
 // let x = e in x ~~> e
@@ -339,23 +352,9 @@ let rec simplify_st_term (g:env) (e:st_term) : T.Tac st_term =
        is_return_bv0 body
     then simplify_st_term g head
     else (
-      match head.term with
-      | Tm_Bind { binder = b_y; head = e1; body = e2 } ->
-        let b_x = binder in
-        let e3 = body in
-        //
-        // let x =
-        //   let y = e1 in
-        //   e2
-        // in
-        // e3
-        //
-        // And e is locally nameless
-        //
-        let mk t : st_term = { range = e.range; effect_tag = default_effect_hint; term = t } in
-        let t = mk (Tm_Bind { binder = b_y; head = e1; body = mk (Tm_Bind { binder = b_x; head = e2; body = e3 }) }) in
-        simplify_st_term g t
-      | _ ->
+      match simplify_nested_let e binder head body with
+      | Some e -> simplify_st_term g e
+      | None ->        
        let head = simplify_st_term g head in
        let body = with_open binder body in
        ret (Tm_Bind { binder; head; body }))
