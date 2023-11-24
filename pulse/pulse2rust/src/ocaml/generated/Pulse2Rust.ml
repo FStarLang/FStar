@@ -276,7 +276,9 @@ let (is_binop :
   Prims.string -> Pulse2Rust_Rust_Syntax.binop FStar_Pervasives_Native.option)
   =
   fun s ->
-    if s = "Prims.op_Addition"
+    if
+      ((s = "Prims.op_Addition") || (s = "FStar.UInt32.add")) ||
+        (s = "FStar.SizeT.add")
     then FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Add
     else
       if s = "Prims.op_Subtraction"
@@ -288,13 +290,17 @@ let (is_binop :
           if s = "Prims.op_LessThanOrEqual"
           then FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Le
           else
-            if s = "Prims.op_LessThan"
+            if
+              ((s = "Prims.op_LessThan") || (s = "FStar.UInt32.lt")) ||
+                (s = "FStar.SizeT.lt")
             then FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Lt
             else
               if s = "Prims.op_GreaterThanOrEqual"
               then FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Ge
               else
-                if s = "Prims.op_GreaterThan"
+                if
+                  ((s = "Prims.op_GreaterThan") || (s = "FStar.UInt32.gt"))
+                    || (s = "FStar.SizeT.gt")
                 then FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Gt
                 else
                   if s = "Prims.op_Equality"
@@ -839,6 +845,33 @@ and (extract_mlexpr :
                   FStar_Extraction_ML_Syntax.string_of_mlpath in
               FStar_Compiler_Effect.op_Bar_Greater uu___6 is_binop in
             FStar_Compiler_Effect.op_Bar_Greater uu___5
+              FStar_Compiler_Util.must in
+          let e21 = extract_mlexpr g e2 in
+          Pulse2Rust_Rust_Syntax.mk_binop e11 op e21
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_Name p;
+             FStar_Extraction_ML_Syntax.mlty = uu___;
+             FStar_Extraction_ML_Syntax.loc = uu___1;_},
+           e1::e2::[])
+          when
+          let uu___2 =
+            let uu___3 =
+              FStar_Compiler_Effect.op_Bar_Greater p
+                FStar_Extraction_ML_Syntax.string_of_mlpath in
+            FStar_Compiler_Effect.op_Bar_Greater uu___3 is_binop in
+          FStar_Compiler_Effect.op_Bar_Greater uu___2
+            FStar_Pervasives_Native.uu___is_Some
+          ->
+          let e11 = extract_mlexpr g e1 in
+          let op =
+            let uu___2 =
+              let uu___3 =
+                FStar_Compiler_Effect.op_Bar_Greater p
+                  FStar_Extraction_ML_Syntax.string_of_mlpath in
+              FStar_Compiler_Effect.op_Bar_Greater uu___3 is_binop in
+            FStar_Compiler_Effect.op_Bar_Greater uu___2
               FStar_Compiler_Util.must in
           let e21 = extract_mlexpr g e2 in
           Pulse2Rust_Rust_Syntax.mk_binop e11 op e21

@@ -323,6 +323,8 @@ let is_return_bv0 (e:st_term) : bool =
 let simplify_nested_let (e:st_term) (b_x:binder) (head:st_term) (e3:st_term) : option st_term =
   let mk t : st_term = { range = e.range; effect_tag = default_effect_hint; term = t } in
   match head.term with
+  | Tm_TotBind { binder = b_y; head = e1; body = e2 } ->
+    Some (mk (Tm_TotBind { binder = b_y; head = e1; body = mk (Tm_Bind { binder = b_x; head = e2; body = e3 }) }))
   | Tm_Bind { binder = b_y; head = e1; body = e2 } ->
     Some (mk (Tm_Bind { binder = b_y; head = e1; body = mk (Tm_Bind { binder = b_x; head = e2; body = e3 }) }))
   | Tm_WithLocal { binder = b_y; initializer = e1; body = e2 } ->
@@ -752,6 +754,7 @@ let extract_pulse (g:uenv) (selt:R.sigelt) (p:st_term)
   : T.Tac (either mlmodule string) =
   
   let g = { uenv_inner=g; coreenv=initial_core_env g } in
+  T.print (Printf.sprintf "About to extract:\n%s\n" (st_term_to_string p));
   debug g (fun _ -> Printf.sprintf "About to extract:\n%s\n" (st_term_to_string p));
   let open T in
   try

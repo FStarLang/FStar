@@ -1629,3 +1629,69 @@ ocaml_export! {
   //   z.to_string().to_owned().to_ocaml(cr)
   // }
 }
+
+pub fn compare<T>(p1: (), p2: (), l: usize, s1: (), s2: (), a1: &mut [()], a2: &mut [()]) -> bool {
+    let mut i = 0;
+    while {
+        let vi = i;
+        if vi < l {
+            let v1 = a1[vi];
+            let v2 = a2[vi];
+            v1 == v2
+        } else {
+            false
+        }
+    } {
+        let vi = i;
+        i = vi + 1;
+    }
+    let vi = i;
+    let res = vi == l;
+    let i1 = res;
+    i1
+}
+pub fn fill_array<T>(l: usize, a: &mut [T], v: T, s: ()) -> () {
+    let mut i = 0;
+    while {
+        let vi = i;
+        vi < l
+    } {
+        let vi = i;
+        a[vi] = v;
+        i = vi + 1;
+    }
+}
+pub fn sort3(a: &mut [u32], s: ()) -> () {
+    let x = a[0];
+    let y = a[1];
+    let z = a[2];
+    if x > y {
+        if y > z {
+            a[0] = z;
+            a[1] = y;
+            a[2] = x
+        } else if x > z {
+            a[0] = y;
+            a[1] = z;
+            a[2] = x
+        } else {
+            a[0] = y;
+            a[1] = x;
+            a[2] = z
+        }
+    } else if y > z {
+        if x > z {
+            a[0] = z;
+            a[1] = x;
+            a[2] = y
+        } else {
+            a[0] = x;
+            a[1] = z;
+            a[2] = y
+        }
+    } else {
+        a[0] = x;
+        a[1] = y;
+        a[2] = z
+    }
+}

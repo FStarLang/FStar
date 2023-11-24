@@ -192,7 +192,9 @@ let arg_ts_and_ret_t (t:S.mltyscheme)
 // TODO: add machine integers binops?
 //
 let is_binop (s:string) : option binop =
-  if s = "Prims.op_Addition"
+  if s = "Prims.op_Addition" ||
+     s = "FStar.UInt32.add" ||
+     s = "FStar.SizeT.add"
   then Some Add
   else if s = "Prims.op_Subtraction"
   then Some Sub
@@ -200,11 +202,15 @@ let is_binop (s:string) : option binop =
   then Some Ne
   else if s = "Prims.op_LessThanOrEqual"
   then Some Le
-  else if s = "Prims.op_LessThan"
+  else if s = "Prims.op_LessThan" ||
+          s = "FStar.UInt32.lt" ||
+          s = "FStar.SizeT.lt"
   then Some Lt
   else if s = "Prims.op_GreaterThanOrEqual"
   then Some Ge
-  else if s = "Prims.op_GreaterThan"
+  else if s = "Prims.op_GreaterThan" ||
+          s = "FStar.UInt32.gt" ||
+          s = "FStar.SizeT.gt"
   then Some Gt
   else if s = "Prims.op_Equality"
   then Some Eq
@@ -424,6 +430,7 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
   | S.MLE_App ({expr=S.MLE_Name p}, [e1; e2])
 
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2])
+  | S.MLE_App ({expr=S.MLE_Name p}, [e1; e2])
     when p |> S.string_of_mlpath |> is_binop |> Some? ->
     let e1 = extract_mlexpr g e1 in
     let op = p |> S.string_of_mlpath |> is_binop |> must in

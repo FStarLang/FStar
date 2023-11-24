@@ -7,7 +7,7 @@ module R = Pulse.Lib.Reference
 
 #push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
 
-let some_f (#a:Type) (x:a) : GTot _ = ()
+let some_f (x:'a) : GTot _ = ()
 
 ```pulse
 fn compare (#t:eqtype) (#p1 #p2:perm) (l:US.t) (#s1 #s2:elseq t l) (a1 a2:A.larray t (US.v l))
@@ -45,35 +45,35 @@ fn compare (#t:eqtype) (#p1 #p2:perm) (l:US.t) (#s1 #s2:elseq t l) (a1 a2:A.larr
 }
 ```
 
-// ```pulse
-// fn fill_array (#t:Type0) (l:US.t) (a:(a:A.array t{ US.v l == A.length a })) (v:t)
-//               (#s:(s:Ghost.erased (Seq.seq t) { Seq.length s == US.v l }))
-//    requires (A.pts_to a s)
-//    ensures 
-//       exists (s:Seq.seq t). (
-//          A.pts_to a s **
-//          pure (s `Seq.equal` Seq.create (US.v l) v)
-//       )
-// {
-//    let mut i = 0sz;
-//    while (let vi = !i; US.(vi <^ l))
-//    invariant b. exists (s:Seq.seq t) (vi:US.t). ( 
-//       A.pts_to a s **
-//       R.pts_to i vi **
-//       pure ((b == US.(vi <^ l)) /\
-//             US.v vi <= US.v l /\
-//             Seq.length s == A.length a /\
-//             (forall (i:nat). i < US.v vi ==> Seq.index s i == v))
-//    )
-//    {
-//       let vi = !i; 
-//       a.(vi) <- v;
-//       i := US.(vi +^ 1sz);
-//       ()
-//    };
-//    ()
-// }
-// ```
+```pulse
+fn fill_array (#t:Type0) (l:US.t) (a:(a:A.array t{ US.v l == A.length a })) (v:t)
+              (#s:(s:Ghost.erased (Seq.seq t) { Seq.length s == US.v l }))
+   requires (A.pts_to a s)
+   ensures 
+      exists (s:Seq.seq t). (
+         A.pts_to a s **
+         pure (s `Seq.equal` Seq.create (US.v l) v)
+      )
+{
+   let mut i = 0sz;
+   while (let vi = !i; US.(vi <^ l))
+   invariant b. exists (s:Seq.seq t) (vi:US.t). ( 
+      A.pts_to a s **
+      R.pts_to i vi **
+      pure ((b == US.(vi <^ l)) /\
+            US.v vi <= US.v l /\
+            Seq.length s == A.length a /\
+            (forall (i:nat). i < US.v vi ==> Seq.index s i == v))
+   )
+   {
+      let vi = !i; 
+      a.(vi) <- v;
+      i := US.(vi +^ 1sz);
+      ()
+   };
+   ()
+}
+```
 
 // ```pulse
 // fn array_of_zeroes (n:US.t)
@@ -256,71 +256,72 @@ fn compare (#t:eqtype) (#p1 #p2:perm) (l:US.t) (#s1 #s2:elseq t l) (a1 a2:A.larr
 // }
 // ```
 
-// let sorted (s0 s:Seq.seq U32.t) =
-//    (forall (i:nat). i < Seq.length s - 1 ==> U32.v (Seq.index s i) <= U32.v (Seq.index s (i + 1))) /\
-//    (forall (i:nat). i < Seq.length s0 ==> (exists (j:nat). j < Seq.length s /\ U32.v (Seq.index s0 i) == U32.v (Seq.index s j)))
+noextract
+let sorted (s0 s:Seq.seq U32.t) : GTot _ =
+   (forall (i:nat). i < Seq.length s - 1 ==> U32.v (Seq.index s i) <= U32.v (Seq.index s (i + 1))) /\
+   (forall (i:nat). i < Seq.length s0 ==> (exists (j:nat). j < Seq.length s /\ U32.v (Seq.index s0 i) == U32.v (Seq.index s j)))
 
 
-// open FStar.UInt32
-// // #push-options "--query_stats"
+open FStar.UInt32
+// #push-options "--query_stats"
 
-// ```pulse
-// fn sort3 (a:array U32.t)
-//          (#s:(s:Ghost.erased (Seq.seq U32.t) {Seq.length s == 3}))
-//    requires (A.pts_to a s)
-//    ensures 
-//       exists s'. (
-//          A.pts_to a s' **
-//          pure (sorted s s')
-//       )
-// {
-//    let x = a.(0sz);
-//    let y = a.(1sz);
-//    let z = a.(2sz);
-//    if (x >^ y) 
-//    {
-//       if (y >^ z)
-//       {
-//          a.(0sz) <- z;
-//          a.(1sz) <- y;
-//          a.(2sz) <- x;
-//       }
-//       else {
-//          if (x >^ z)
-//          {
-//             a.(0sz) <- y;
-//             a.(1sz) <- z;
-//             a.(2sz) <- x;
-//          }
-//          else
-//          {
-//             a.(0sz) <- y;
-//             a.(1sz) <- x;
-//             a.(2sz) <- z;
-//          }     
-//       }
-//    }
-//    else {
-//       if (y >^ z) {
-//          if (x >^ z) {
-//             a.(0sz) <- z;
-//             a.(1sz) <- x;
-//             a.(2sz) <- y;
-//          }
-//          else {
-//             a.(0sz) <- x;
-//             a.(1sz) <- z;
-//             a.(2sz) <- y;
-//          }
-//       }
-//       else {
-//          a.(0sz) <- x;
-//          a.(1sz) <- y;
-//          a.(2sz) <- z;
-//       }
-//    }
-// }
-// ```
+```pulse
+fn sort3 (a:array U32.t)
+         (#s:(s:Ghost.erased (Seq.seq U32.t) {Seq.length s == 3}))
+   requires (A.pts_to a s)
+   ensures 
+      exists s'. (
+         A.pts_to a s' **
+         pure (sorted s s')
+      )
+{
+   let x = a.(0sz);
+   let y = a.(1sz);
+   let z = a.(2sz);
+   if (x >^ y) 
+   {
+      if (y >^ z)
+      {
+         a.(0sz) <- z;
+         a.(1sz) <- y;
+         a.(2sz) <- x;
+      }
+      else {
+         if (x >^ z)
+         {
+            a.(0sz) <- y;
+            a.(1sz) <- z;
+            a.(2sz) <- x;
+         }
+         else
+         {
+            a.(0sz) <- y;
+            a.(1sz) <- x;
+            a.(2sz) <- z;
+         }     
+      }
+   }
+   else {
+      if (y >^ z) {
+         if (x >^ z) {
+            a.(0sz) <- z;
+            a.(1sz) <- x;
+            a.(2sz) <- y;
+         }
+         else {
+            a.(0sz) <- x;
+            a.(1sz) <- z;
+            a.(2sz) <- y;
+         }
+      }
+      else {
+         a.(0sz) <- x;
+         a.(1sz) <- y;
+         a.(2sz) <- z;
+      }
+   }
+}
+```
 
 // //Pulse does not yet implement join point inference
 // [@@expect_failure [228]]
