@@ -37,6 +37,7 @@ let (__proj__Mklit_int__item__lit_int_width :
 type lit =
   | Lit_int of lit_int 
   | Lit_bool of Prims.bool 
+  | Lit_unit 
 let (uu___is_Lit_int : lit -> Prims.bool) =
   fun projectee -> match projectee with | Lit_int _0 -> true | uu___ -> false
 let (__proj__Lit_int__item___0 : lit -> lit_int) =
@@ -46,6 +47,8 @@ let (uu___is_Lit_bool : lit -> Prims.bool) =
     match projectee with | Lit_bool _0 -> true | uu___ -> false
 let (__proj__Lit_bool__item___0 : lit -> Prims.bool) =
   fun projectee -> match projectee with | Lit_bool _0 -> _0
+let (uu___is_Lit_unit : lit -> Prims.bool) =
+  fun projectee -> match projectee with | Lit_unit -> true | uu___ -> false
 type binop =
   | Add 
   | Sub 
@@ -187,7 +190,7 @@ and field_val = {
   field_val_expr: expr }
 and local_stmt =
   {
-  local_stmt_pat: pat ;
+  local_stmt_pat: pat FStar_Pervasives_Native.option ;
   local_stmt_init: expr FStar_Pervasives_Native.option }
 and stmt =
   | Stmt_local of local_stmt 
@@ -393,7 +396,8 @@ let (__proj__Mkfield_val__item__field_val_expr : field_val -> expr) =
   fun projectee ->
     match projectee with
     | { field_val_name; field_val_expr;_} -> field_val_expr
-let (__proj__Mklocal_stmt__item__local_stmt_pat : local_stmt -> pat) =
+let (__proj__Mklocal_stmt__item__local_stmt_pat :
+  local_stmt -> pat FStar_Pervasives_Native.option) =
   fun projectee ->
     match projectee with
     | { local_stmt_pat; local_stmt_init;_} -> local_stmt_pat
@@ -417,6 +421,7 @@ type typ =
   | Typ_reference of typ_reference 
   | Typ_slice of typ 
   | Typ_array of typ_array 
+  | Typ_unit 
 and typ_reference = {
   typ_ref_mut: Prims.bool ;
   typ_ref_typ: typ }
@@ -447,6 +452,8 @@ let (uu___is_Typ_array : typ -> Prims.bool) =
     match projectee with | Typ_array _0 -> true | uu___ -> false
 let (__proj__Typ_array__item___0 : typ -> typ_array) =
   fun projectee -> match projectee with | Typ_array _0 -> _0
+let (uu___is_Typ_unit : typ -> Prims.bool) =
+  fun projectee -> match projectee with | Typ_unit -> true | uu___ -> false
 let (__proj__Mktyp_reference__item__typ_ref_mut :
   typ_reference -> Prims.bool) =
   fun projectee ->
@@ -726,14 +733,20 @@ let (mk_fn_signature :
             FStar_Compiler_List.map (fun uu___ -> Generic_type_param uu___)
               fn_generics in
           { fn_name; fn_generics = fn_generics1; fn_args; fn_ret_t }
-let (mk_local_stmt : Prims.string -> Prims.bool -> expr -> stmt) =
+let (mk_local_stmt :
+  Prims.string FStar_Pervasives_Native.option -> Prims.bool -> expr -> stmt)
+  =
   fun name ->
     fun is_mut ->
       fun init ->
         Stmt_local
           {
             local_stmt_pat =
-              (Pat_ident { pat_name = name; by_ref = false; is_mut });
+              (match name with
+               | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
+               | FStar_Pervasives_Native.Some name1 ->
+                   FStar_Pervasives_Native.Some
+                     (Pat_ident { pat_name = name1; by_ref = false; is_mut }));
             local_stmt_init = (FStar_Pervasives_Native.Some init)
           }
 let (mk_fn : fn_signature -> stmt Prims.list -> fn) =

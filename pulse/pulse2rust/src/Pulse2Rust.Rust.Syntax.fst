@@ -135,9 +135,12 @@ let mk_fn_signature (fn_name:string) (fn_generics:list string) (fn_args:list fn_
   let fn_generics = L.map Generic_type_param fn_generics in
   { fn_name; fn_generics; fn_args; fn_ret_t }
 
-let mk_local_stmt (name:string) (is_mut:bool) (init:expr) =
+let mk_local_stmt (name:option string) (is_mut:bool) (init:expr) =
   Stmt_local {
-    local_stmt_pat = Pat_ident { pat_name = name; by_ref = false; is_mut };
+    local_stmt_pat =
+      (match name with
+       | None -> None
+       | Some name -> Some (Pat_ident { pat_name = name; by_ref = false; is_mut }));
     local_stmt_init = Some init
   }
 

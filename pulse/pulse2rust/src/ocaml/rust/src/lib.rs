@@ -30,6 +30,7 @@ struct LitInt {
 enum Lit {
     LitInt(LitInt),
     LitBool(bool),
+    LitUnit,
 }
 
 enum BinOp {
@@ -157,6 +158,7 @@ enum Typ {
     TReference(TypeReference),
     TSlice(Box<Typ>),
     TArray(TypeArray),
+    TUnit,
 }
 
 struct PatIdent {
@@ -178,7 +180,7 @@ enum Pat {
 }
 
 struct LocalStmt {
-    local_stmt_pat: Pat,
+    local_stmt_pat: Option<Pat>,
     local_stmt_init: Option<Expr>,
 }
 
@@ -262,6 +264,7 @@ impl_from_ocaml_variant! {
   Lit {
     Lit::LitInt (payload:LitInt),
     Lit::LitBool (payload:bool),
+    Lit::LitUnit,
   }
 }
 
@@ -431,6 +434,7 @@ impl_from_ocaml_variant! {
     Typ::TReference (payload:TypeReference),
     Typ::TSlice (payload:Typ),
     Typ::TArray (payload:TypeArray),
+    Typ::TUnit,
   }
 }
 
@@ -460,7 +464,7 @@ impl_from_ocaml_variant! {
 
 impl_from_ocaml_record! {
   LocalStmt {
-    local_stmt_pat : Pat,
+    local_stmt_pat : Option<Pat>,
     local_stmt_init : Option<Expr>,
   }
 }
@@ -665,6 +669,7 @@ fn to_syn_lit(e: &Lit) -> syn::Lit {
             value: *b,
             span: Span::call_site(),
         }),
+        Lit::LitUnit => panic!("Don't know how to translate LitUnit"),
     }
 }
 
@@ -740,10 +745,17 @@ fn to_syn_expr(e: &Expr) -> syn::Expr {
                 },
             })
         }
-        Expr::ELit(lit) => syn::Expr::Lit(syn::ExprLit {
-            attrs: vec![],
-            lit: to_syn_lit(lit),
-        }),
+        Expr::ELit(lit) => match lit {
+            Lit::LitUnit => syn::Expr::Tuple(syn::ExprTuple {
+                attrs: vec![],
+                paren_token: Paren::default(),
+                elems: Punctuated::new(),
+            }),
+            _ => syn::Expr::Lit(syn::ExprLit {
+                attrs: vec![],
+                lit: to_syn_lit(lit),
+            }),
+        },
         Expr::EIf(ExprIf {
             expr_if_cond,
             expr_if_then,
@@ -952,42 +964,38 @@ fn to_syn_pat(p: &Pat) -> syn::Pat {
 
 fn to_syn_stmt(s: &Stmt) -> syn::Stmt {
     match s {
-        Stmt::SLocal(s) => syn::Stmt::Local(Local {
-            attrs: vec![],
-            let_token: Let {
-                span: Span::call_site(),
-            },
-            pat: { to_syn_pat(&s.local_stmt_pat) },
-            init: s.local_stmt_init.as_ref().map(|e| {
-                let e = to_syn_expr(&e);
-                LocalInit {
-                    eq_token: Eq {
-                        spans: [Span::call_site()],
-                    },
-                    expr: Box::new(e),
-                    diverge: None,
-                }
-            }),
-            semi_token: Semi {
-                spans: [Span::call_site()],
-            },
-        }),
-        Stmt::SExpr(e) => {
-            let add_semi = match e {
-                Expr::EAssign(_) => true,
-                _ => false,
-            };
-            let e = to_syn_expr(&e);
-            syn::Stmt::Expr(
-                e,
-                if add_semi {
-                    Some(syn::token::Semi {
-                        spans: [Span::call_site()],
-                    })
-                } else {
-                    None
+        Stmt::SLocal(s) => match (&s.local_stmt_pat, &s.local_stmt_init) {
+            (None, None) => panic!("SLocal with no pat and no init"),
+            (None, Some(e)) => syn::Stmt::Expr(
+                to_syn_expr(&e),
+                Some(syn::token::Semi {
+                    spans: [Span::call_site()],
+                }),
+            ),
+            (Some(pat), _) => syn::Stmt::Local(Local {
+                attrs: vec![],
+                let_token: Let {
+                    span: Span::call_site(),
                 },
-            )
+                pat: { to_syn_pat(&pat) },
+                init: s.local_stmt_init.as_ref().map(|e| {
+                    let e = to_syn_expr(&e);
+                    LocalInit {
+                        eq_token: Eq {
+                            spans: [Span::call_site()],
+                        },
+                        expr: Box::new(e),
+                        diverge: None,
+                    }
+                }),
+                semi_token: Semi {
+                    spans: [Span::call_site()],
+                },
+            }),
+        },
+        Stmt::SExpr(e) => {
+            let e = to_syn_expr(&e);
+            syn::Stmt::Expr(e, None)
         }
     }
 }
@@ -1073,6 +1081,10 @@ fn to_syn_typ(t: &Typ) -> Type {
                 spans: [Span::call_site()],
             },
             len: to_syn_expr(&type_array_len),
+        }),
+        Typ::TUnit => syn::Type::Tuple(syn::TypeTuple {
+            paren_token: Paren::default(),
+            elems: Punctuated::new(),
         }),
     }
 }
@@ -1277,6 +1289,7 @@ impl fmt::Display for Lit {
         match &self {
             Lit::LitInt(LitInt { lit_int_val, .. }) => write!(f, "{}", lit_int_val),
             Lit::LitBool(b) => write!(f, "{}", b),
+            Lit::LitUnit => write!(f, "()"),
         }
     }
 }
@@ -1458,6 +1471,7 @@ impl fmt::Display for Typ {
                 type_array_elem,
                 type_array_len,
             }) => write!(f, "[{}; {}]", type_array_elem, type_array_len),
+            Typ::TUnit => write!(f, "()"),
         }
     }
 }
@@ -1467,7 +1481,9 @@ impl fmt::Display for LocalStmt {
         write!(
             f,
             "let {} {}",
-            self.local_stmt_pat,
+            self.local_stmt_pat
+                .as_ref()
+                .map_or("".to_string(), |p| p.to_string()),
             if let Some(e) = &self.local_stmt_init {
                 format!("= {}", e)
             } else {
@@ -1614,63 +1630,54 @@ ocaml_export! {
   // }
 }
 
-pub fn g(_: unit) -> unit {
+pub fn g(_: ()) -> () {
     panic!()
 }
-pub fn unfold_test(r: &mut u32, __n: unit) -> unit {
-    unitv
+pub fn unfold_test(r: &mut u32, __n: ()) -> () {}
+pub fn test_write_10(x: &mut u32, __n: ()) -> () {
+    *x = 1;
+    *x = 0
 }
-pub fn test_write_10(x: &mut u32, __n: unit) -> unit {
-    let _ = *x = 1;
-    *x = 0;
-}
-pub fn test_read(r: &mut u32, __n: unit, pm: unit) -> u32 {
+pub fn test_read(r: &mut u32, __n: (), pm: ()) -> u32 {
     *r
 }
-pub fn swap(r1: &mut u32, r2: &mut u32, __n2: unit, __n1: unit) -> unit {
+pub fn swap(r1: &mut u32, r2: &mut u32, __n2: (), __n1: ()) -> () {
     let x = *r1;
     let y = *r2;
-    let _ = *r1 = y;
-    *r2 = x;
+    *r1 = y;
+    *r2 = x
 }
-pub fn call_swap2(r1: &mut u32, r2: &mut u32, __n1: unit, __n2: unit) -> unit {
-    let _ = swap(r1, r2, unitv, unitv);
-    swap(r1, r2, unitv, unitv)
+pub fn call_swap2(r1: &mut u32, r2: &mut u32, __n1: (), __n2: ()) -> () {
+    swap(r1, r2, (), ());
+    swap(r1, r2, (), ())
 }
-pub fn swap_with_elim_pure(n1: unit, n2: unit, r1: &mut u32, r2: &mut u32) -> unit {
+pub fn swap_with_elim_pure(n1: (), n2: (), r1: &mut u32, r2: &mut u32) -> () {
     let x = *r1;
     let y = *r2;
-    let _ = *r1 = y;
-    *r2 = x;
+    *r1 = y;
+    *r2 = x
 }
-pub fn intro_pure_example(r: &mut u32, __n2: unit, __n1: unit) -> unit {
-    unitv
-}
-pub fn if_example(r: &mut u32, n: unit, b: bool) -> unit {
-    let x = read_atomic(r, unitv, unitv);
+pub fn intro_pure_example(r: &mut u32, __n2: (), __n1: ()) -> () {}
+pub fn if_example(r: &mut u32, n: (), b: bool) -> () {
+    let x = read_atomic(r, (), ());
     if b {
-        let _if_br = *r = add(x, 2);
-        unitv
+        *r = add(x, 2);
     } else {
-        let _if_br = write_atomic(r, 3, unitv);
-        unitv
+        write_atomic(r, 3, ());
     }
 }
-pub fn while_count2(r: &mut u32) -> unit {
+pub fn while_count2(r: &mut u32) -> () {
     while {
         let x = *r;
         x != 10
     } {
-        let _while_b = {
+        {
             let x = *r;
             if lt(x, 10) {
-                let _if_br = *r = add(x, 1);
-                unitv
+                *r = add(x, 1);
             } else {
-                let _if_br = *r = sub(x, 1);
-                unitv
+                *r = sub(x, 1);
             }
         };
-        unitv
     }
 }

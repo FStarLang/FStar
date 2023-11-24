@@ -17,6 +17,7 @@ type lit_int = {
 type lit =
   | Lit_int of lit_int
   | Lit_bool of bool
+  | Lit_unit
 
 type binop =
   | Add
@@ -138,7 +139,7 @@ and field_val = {
 }
 
 and local_stmt = {
-  local_stmt_pat : pat;
+  local_stmt_pat : option pat;
   local_stmt_init : option expr;
 }
 
@@ -151,6 +152,7 @@ type typ =
   | Typ_reference of typ_reference
   | Typ_slice of typ
   | Typ_array of typ_array
+  | Typ_unit
 
 and typ_reference = {
   typ_ref_mut : bool;
@@ -243,7 +245,7 @@ val mk_match (scrutinee:expr) (arms:list arm) : expr
 val mk_expr_field (base:expr) (f:string) : expr
 val mk_expr_struct (path:list string) (fields:list (string & expr)) : expr
 
-val mk_local_stmt (name:string) (is_mut:bool) (init:expr) : stmt
+val mk_local_stmt (name:option string) (is_mut:bool) (init:expr) : stmt
 val mk_scalar_fn_arg (name:string) (t:typ) : fn_arg
 val mk_ref_fn_arg (name:string) (is_mut:bool) (t:typ) : fn_arg
 val mk_fn_signature (fn_name:string) (fn_generics:list string) (fn_args:list fn_arg) (fn_ret_t:typ) : fn_signature

@@ -19,6 +19,12 @@ let (tyvar_of : Prims.string -> Prims.string) =
 let (varname : Prims.string -> Prims.string) =
   fun s ->
     if s = "uu___" then "_" else FStar_Compiler_Util.replace_char s 39 95
+let (is_internal_name : Prims.string -> Prims.bool) =
+  fun s ->
+    (((((s = "uu___") || (s = "_fret")) || (s = "_bind_c")) ||
+        (s = "_while_c"))
+       || (s = "_while_b"))
+      || (s = "_if_br")
 let fail : 'uuuuu . Prims.string -> 'uuuuu =
   fun s ->
     let uu___ =
@@ -180,7 +186,7 @@ let rec (extract_mlty :
           FStar_Compiler_Effect.op_Bar_Greater uu___
             Pulse2Rust_Rust_Syntax.mk_option_typ
       | FStar_Extraction_ML_Syntax.MLTY_Erased ->
-          Pulse2Rust_Rust_Syntax.mk_scalar_typ "unit"
+          Pulse2Rust_Rust_Syntax.Typ_unit
       | FStar_Extraction_ML_Syntax.MLTY_Named (args, p) ->
           let uu___ = FStar_Compiler_List.map (extract_mlty g) args in
           Pulse2Rust_Rust_Syntax.mk_named_typ (FStar_Pervasives_Native.snd p)
@@ -462,7 +468,7 @@ and (extract_mlexpr :
       match e.FStar_Extraction_ML_Syntax.expr with
       | FStar_Extraction_ML_Syntax.MLE_Const
           (FStar_Extraction_ML_Syntax.MLC_Unit) ->
-          Pulse2Rust_Rust_Syntax.mk_expr_path_singl "unitv"
+          Pulse2Rust_Rust_Syntax.Expr_lit Pulse2Rust_Rust_Syntax.Lit_unit
       | FStar_Extraction_ML_Syntax.MLE_Const c ->
           let lit = extract_mlconstant_to_lit c in
           Pulse2Rust_Rust_Syntax.Expr_lit lit
@@ -912,13 +918,23 @@ and (extract_mlexpr_to_stmts :
             p1 = "Pulse.Lib.Reference.op_Colon_Equals"
         | uu___ -> false in
       match e.FStar_Extraction_ML_Syntax.expr with
+      | FStar_Extraction_ML_Syntax.MLE_Const
+          (FStar_Extraction_ML_Syntax.MLC_Unit) -> []
       | FStar_Extraction_ML_Syntax.MLE_Let
           ((FStar_Extraction_ML_Syntax.NonRec, lb::[]), e1) ->
           let uu___ = lb_init_and_def g lb in
           (match uu___ with
            | (is_mut, ty, init) ->
                let s =
-                 let uu___1 = varname lb.FStar_Extraction_ML_Syntax.mllb_name in
+                 let uu___1 =
+                   let uu___2 =
+                     is_internal_name lb.FStar_Extraction_ML_Syntax.mllb_name in
+                   if uu___2
+                   then FStar_Pervasives_Native.None
+                   else
+                     (let uu___4 =
+                        varname lb.FStar_Extraction_ML_Syntax.mllb_name in
+                      FStar_Pervasives_Native.Some uu___4) in
                  Pulse2Rust_Rust_Syntax.mk_local_stmt uu___1 is_mut init in
                let uu___1 =
                  let uu___2 =

@@ -40,6 +40,14 @@ let varname (s:string) : string =
   then "_"
   else replace_char s '\'' '_'
 
+let is_internal_name (s:string) : bool =
+  s = "uu___" ||
+  s = "_fret" ||
+  s = "_bind_c" ||
+  s = "_while_c" ||
+  s = "_while_b" ||
+  s = "_if_br"
+
 let fail (s:string) =
   failwith (format1 "Pulse to Rust extraction failed: %s" s)
 
@@ -132,7 +140,7 @@ let rec extract_mlty (g:env) (t:S.mlty) : typ =
   | S.MLTY_Named ([arg], p)
     when S.string_of_mlpath p = "FStar.Pervasives.Native.option" ->
     arg |> extract_mlty g |> mk_option_typ
-  | S.MLTY_Erased -> mk_scalar_typ "unit"
+  | S.MLTY_Erased -> Typ_unit
 
   | S.MLTY_Named (args, p) ->
     mk_named_typ (snd p) (List.map (extract_mlty g) args)
@@ -303,7 +311,7 @@ let rec lb_init_and_def (g:env) (lb:S.mllb)
 //
 and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
   match e.expr with
-  | S.MLE_Const (S.MLC_Unit) -> mk_expr_path_singl "unitv"
+  | S.MLE_Const (S.MLC_Unit) -> Expr_lit Lit_unit
     //
     // Must come after unit,
     //   no unit extraction in the lit function
@@ -471,7 +479,7 @@ and extract_mlexpr_to_stmts (g:env) (e:S.mlexpr) : list stmt =
   in
 
   match e.expr with
-  // | S.MLE_Const S.MLC_Unit -> []
+  | S.MLE_Const S.MLC_Unit -> []
   // | S.MLE_Var x -> [Stmt_expr (mk_expr_path_singl (varname x))]
   // | S.MLE_Name p -> [Stmt_expr (mk_expr_path_singl (S.mlpath_to_string p))]
 
@@ -481,7 +489,11 @@ and extract_mlexpr_to_stmts (g:env) (e:S.mlexpr) : list stmt =
 
   | S.MLE_Let ((S.NonRec, [lb]), e) ->
     let is_mut, ty, init = lb_init_and_def g lb in
-    let s = mk_local_stmt (varname lb.mllb_name) is_mut init in
+    let s = mk_local_stmt
+      (if is_internal_name lb.mllb_name
+       then None else (Some (varname lb.mllb_name)))
+      is_mut
+      init in
     s::(extract_mlexpr_to_stmts (push_local g lb.mllb_name ty is_mut) e)
 
   | S.MLE_App ({ expr=S.MLE_TApp ({ expr=S.MLE_Name p }, _) }, _)
