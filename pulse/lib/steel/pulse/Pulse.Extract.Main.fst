@@ -313,24 +313,66 @@ let is_return_bv0 (e:st_term) : bool =
   | Tm_Return { term } -> is_bvar term = Some 0
   | _ -> false
 
+//
+// Implements only let x = e in x ~~> e for now
+//
 let rec simplify_st_term (g:env) (e:st_term) : T.Tac st_term =
-  // T.print (Printf.sprintf "Simplifying %s\n" (Pulse.Syntax.Printer.st_term_to_string e));
+  let ret t = { e with term = t } in
+  let with_open b e = with_open g b e simplify_st_term in
+
   match e.term with
+  | Tm_Return _
+  | Tm_IntroPure _
+  | Tm_ElimExists _
+  | Tm_IntroExists _
+  | Tm_STApp _
+  | Tm_Rewrite _
+  | Tm_Admit _
+  | Tm_ProofHintWithBinders _ -> e
+
+  | Tm_Abs { b; q; ascription; body } ->
+    ret (Tm_Abs { b; q; ascription; body = with_open b body })
+
   | Tm_Bind { binder; head; body } ->
     let is_internal_binder = is_internal_binder binder in
     if is_internal_binder &&
        is_return_bv0 body
     then simplify_st_term g head
     else let head = simplify_st_term g head in
-         let body = with_open g binder body simplify_st_term in
-         { e with term = Tm_Bind { binder; head; body } }
+         let body = with_open binder body in
+         ret (Tm_Bind { binder; head; body })
+
+  | Tm_TotBind { binder; head; body } ->
+    ret (Tm_TotBind { binder; head; body = with_open binder body })
+
+  | Tm_If { b; then_; else_; post } ->
+    ret (Tm_If { b; then_ = simplify_st_term g then_; else_ = simplify_st_term g else_; post })
+
+  | Tm_Match { sc; returns_; brs } ->
+    ret (Tm_Match { sc; returns_; brs = T.map (simplify_branch g) brs })
 
   | Tm_While { invariant; condition; condition_var; body } ->
     let condition = simplify_st_term g condition in
     let body = simplify_st_term g body in
     { e with term = Tm_While { invariant; condition; condition_var; body } }
+  
+  | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
+    let body1 = simplify_st_term g body1 in
+    let body2 = simplify_st_term g body2 in
+    { e with term = Tm_Par { pre1; body1; post1; pre2; body2; post2 } }
 
-  | _ -> e
+  | Tm_WithLocal { binder; initializer; body } ->
+    ret (Tm_WithLocal { binder; initializer; body = with_open binder body })
+  
+  | Tm_WithLocalArray { binder; initializer; length; body } ->
+    ret (Tm_WithLocalArray { binder; initializer; length; body = with_open binder body })
+
+and simplify_branch (g:env) (b:branch) : T.Tac branch =
+  let pat, body = b in
+  let g, _, bs = extend_env_pat g pat in
+  let body = Pulse.Checker.Match.open_st_term_bs body bs in
+  let body = simplify_st_term g body in
+  pat, Pulse.Syntax.Naming.close_st_term_n body (L.map fst bs)
 
 let erase_type_for_extraction (g:env) (t:term) : T.Tac bool =
   match t.t with
