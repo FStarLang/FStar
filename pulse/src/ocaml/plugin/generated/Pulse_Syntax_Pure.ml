@@ -182,6 +182,18 @@ let (term_of_nvar : Pulse_Syntax_Base.nvar -> Pulse_Syntax_Base.term) =
       }
 let (term_of_no_name_var : Pulse_Syntax_Base.var -> Pulse_Syntax_Base.term) =
   fun x -> term_of_nvar (Pulse_Syntax_Base.v_as_nv x)
+let (is_bvar :
+  Pulse_Syntax_Base.term -> Prims.nat FStar_Pervasives_Native.option) =
+  fun t ->
+    match t.Pulse_Syntax_Base.t with
+    | Pulse_Syntax_Base.Tm_FStar host_term ->
+        (match FStar_Reflection_V2_Builtins.inspect_ln host_term with
+         | FStar_Reflection_V2_Data.Tv_BVar bv ->
+             let bv_view = FStar_Reflection_V2_Builtins.inspect_bv bv in
+             FStar_Pervasives_Native.Some
+               (bv_view.FStar_Reflection_V2_Data.index)
+         | uu___ -> FStar_Pervasives_Native.None)
+    | uu___ -> FStar_Pervasives_Native.None
 let (is_var :
   Pulse_Syntax_Base.term ->
     Pulse_Syntax_Base.nm FStar_Pervasives_Native.option)

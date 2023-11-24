@@ -913,20 +913,6 @@ and (extract_mlexpr_to_stmts :
         | uu___ -> false in
       match e.FStar_Extraction_ML_Syntax.expr with
       | FStar_Extraction_ML_Syntax.MLE_Let
-          ((FStar_Extraction_ML_Syntax.NonRec,
-            { FStar_Extraction_ML_Syntax.mllb_name = uu___;
-              FStar_Extraction_ML_Syntax.mllb_tysc = uu___1;
-              FStar_Extraction_ML_Syntax.mllb_add_unit = uu___2;
-              FStar_Extraction_ML_Syntax.mllb_def = e1;
-              FStar_Extraction_ML_Syntax.mllb_meta = uu___3;
-              FStar_Extraction_ML_Syntax.print_typ = uu___4;_}::[]),
-           e2)
-          when is_assign e1 ->
-          let uu___5 =
-            let uu___6 = extract_mlexpr g e1 in
-            Pulse2Rust_Rust_Syntax.Stmt_expr uu___6 in
-          let uu___6 = extract_mlexpr_to_stmts g e2 in uu___5 :: uu___6
-      | FStar_Extraction_ML_Syntax.MLE_Let
           ((FStar_Extraction_ML_Syntax.NonRec, lb::[]), e1) ->
           let uu___ = lb_init_and_def g lb in
           (match uu___ with

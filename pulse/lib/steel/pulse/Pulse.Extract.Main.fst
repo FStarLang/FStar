@@ -289,28 +289,47 @@ let maybe_inline (g:env) (head:term) (arg:term) :T.Tac (option st_term) =
           in
           mk_st_app head (fst last) (snd last)
 
+let fresh (g:env) = Pulse.Typing.fresh g.coreenv
+
+let push_binding (g:env) (x:var { ~ (x `Set.mem` E.dom g.coreenv )}) (b:binder) =
+  { g with coreenv = E.push_binding g.coreenv x b.binder_ppname b.binder_ty }
+
+let with_open (g:env) (b:binder) (e:st_term) (f:env -> st_term -> T.Tac st_term) : T.Tac st_term =
+  let open Pulse.Syntax.Naming in
+  let x = fresh g in
+  let e = open_st_term' e (tm_var { nm_index = x; nm_ppname = b.binder_ppname }) 0 in
+  let e = f (push_binding g x b) e in
+  close_st_term' e x 0
+
 
 let is_internal_binder (b:binder) : T.Tac bool =
   let s = T.unseal b.binder_ppname.name in
   s = "_fret" ||
-  s = "_bind_c"
+  s = "_bind_c" ||
+  s = "_while_c"
 
 let is_return_bv0 (e:st_term) : bool =
   match e.term with
   | Tm_Return { term } -> is_bvar term = Some 0
   | _ -> false
 
-let rec simplify_st_term (e:st_term) : T.Tac st_term =
-  T.print (Printf.sprintf "Simplifying %s\n" (Pulse.Syntax.Printer.st_term_to_string e));
+let rec simplify_st_term (g:env) (e:st_term) : T.Tac st_term =
+  // T.print (Printf.sprintf "Simplifying %s\n" (Pulse.Syntax.Printer.st_term_to_string e));
   match e.term with
   | Tm_Bind { binder; head; body } ->
     let is_internal_binder = is_internal_binder binder in
     if is_internal_binder &&
        is_return_bv0 body
-    then simplify_st_term head
-    else let body = simplify_st_term body in
-          { e with term = Tm_Bind { binder; head; body } }
-   
+    then simplify_st_term g head
+    else let head = simplify_st_term g head in
+         let body = with_open g binder body simplify_st_term in
+         { e with term = Tm_Bind { binder; head; body } }
+
+  | Tm_While { invariant; condition; condition_var; body } ->
+    let condition = simplify_st_term g condition in
+    let body = simplify_st_term g body in
+    { e with term = Tm_While { invariant; condition; condition_var; body } }
+
   | _ -> e
 
 let erase_type_for_extraction (g:env) (t:term) : T.Tac bool =
@@ -424,7 +443,7 @@ let rec extract (g:env) (p:st_term)
       | Tm_Abs { b; q; body } -> 
         let g, mlident, mlty, name = extend_env g b in
         let body = LN.open_st_term_nv body name in
-        let body = simplify_st_term body in
+        let body = simplify_st_term g body in
         let body, _ = extract g body in
         let res = mle_fun [mlident, mlty] body in
         res, e_tag_pure

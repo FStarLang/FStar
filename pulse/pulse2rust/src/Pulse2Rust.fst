@@ -475,9 +475,9 @@ and extract_mlexpr_to_stmts (g:env) (e:S.mlexpr) : list stmt =
   // | S.MLE_Var x -> [Stmt_expr (mk_expr_path_singl (varname x))]
   // | S.MLE_Name p -> [Stmt_expr (mk_expr_path_singl (S.mlpath_to_string p))]
 
-  | S.MLE_Let ((S.NonRec, [{mllb_def=e1}]), e2)
-    when is_assign e1 ->
-    (Stmt_expr (extract_mlexpr g e1))::(extract_mlexpr_to_stmts g e2)
+  // | S.MLE_Let ((S.NonRec, [{mllb_def=e1}]), e2)
+  //   when is_assign e1 ->
+  //   (Stmt_expr (extract_mlexpr g e1))::(extract_mlexpr_to_stmts g e2)
 
   | S.MLE_Let ((S.NonRec, [lb]), e) ->
     let is_mut, ty, init = lb_init_and_def g lb in

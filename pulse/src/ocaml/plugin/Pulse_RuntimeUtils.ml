@@ -137,3 +137,6 @@ let add_noextract_qual (s:S.sigelt) =
   { s with sigquals = S.NoExtract::s.sigquals }
 let get_attributes (s:S.sigelt) (ps:_) =
   FStar_Tactics_Result.Success (s.sigattrs, ps)
+
+let must_erase_for_extraction (g:FStar_Reflection_Types.env) (ty:FStar_Syntax_Syntax.term) =
+  FStar_TypeChecker_Util.must_erase_for_extraction g ty

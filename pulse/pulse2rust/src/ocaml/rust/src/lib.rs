@@ -1613,3 +1613,64 @@ ocaml_export! {
   //   z.to_string().to_owned().to_ocaml(cr)
   // }
 }
+
+pub fn g(_: unit) -> unit {
+    panic!()
+}
+pub fn unfold_test(r: &mut u32, __n: unit) -> unit {
+    unitv
+}
+pub fn test_write_10(x: &mut u32, __n: unit) -> unit {
+    let _ = *x = 1;
+    *x = 0;
+}
+pub fn test_read(r: &mut u32, __n: unit, pm: unit) -> u32 {
+    *r
+}
+pub fn swap(r1: &mut u32, r2: &mut u32, __n2: unit, __n1: unit) -> unit {
+    let x = *r1;
+    let y = *r2;
+    let _ = *r1 = y;
+    *r2 = x;
+}
+pub fn call_swap2(r1: &mut u32, r2: &mut u32, __n1: unit, __n2: unit) -> unit {
+    let _ = swap(r1, r2, unitv, unitv);
+    swap(r1, r2, unitv, unitv)
+}
+pub fn swap_with_elim_pure(n1: unit, n2: unit, r1: &mut u32, r2: &mut u32) -> unit {
+    let x = *r1;
+    let y = *r2;
+    let _ = *r1 = y;
+    *r2 = x;
+}
+pub fn intro_pure_example(r: &mut u32, __n2: unit, __n1: unit) -> unit {
+    unitv
+}
+pub fn if_example(r: &mut u32, n: unit, b: bool) -> unit {
+    let x = read_atomic(r, unitv, unitv);
+    if b {
+        let _if_br = *r = add(x, 2);
+        unitv
+    } else {
+        let _if_br = write_atomic(r, 3, unitv);
+        unitv
+    }
+}
+pub fn while_count2(r: &mut u32) -> unit {
+    while {
+        let x = *r;
+        x != 10
+    } {
+        let _while_b = {
+            let x = *r;
+            if lt(x, 10) {
+                let _if_br = *r = add(x, 1);
+                unitv
+            } else {
+                let _if_br = *r = sub(x, 1);
+                unitv
+            }
+        };
+        unitv
+    }
+}
