@@ -253,7 +253,7 @@ let rec elab_st_typing (#g:env)
 						let rq = elab_term q in
 						mk_rewrite rp rq
 
-    | T_WithLocal _ init _ init_t c x _ _ _ body_typing ->
+    | T_WithLocal _ _ init _ init_t c x _ _ _ body_typing ->
       let rret_u = comp_u c in
       let ra = elab_term init_t in
       let rinit = elab_term init in
@@ -265,7 +265,7 @@ let rec elab_st_typing (#g:env)
       let rbody = mk_abs (mk_ref ra) R.Q_Explicit rbody in
       mk_withlocal rret_u ra rinit rpre rret_t rpost rbody
 
-    | T_WithLocalArray _ init len _ init_t c x _ _ _ _ body_typing ->
+    | T_WithLocalArray _ _ init len _ init_t c x _ _ _ _ body_typing ->
       let rret_u = comp_u c in
       let ra = elab_term init_t in
       let rinit = elab_term init in

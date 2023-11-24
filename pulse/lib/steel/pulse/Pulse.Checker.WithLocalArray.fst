@@ -125,7 +125,7 @@ let check
             let post_typing_rec = post_hint_typing g post x in
             intro_comp_typing g c pre_typing post_typing_rec.ty_typing x post_typing_rec.post_typing
           in
-          let d = T_WithLocalArray g init len body init_t c x
+          let d = T_WithLocalArray g binder.binder_ppname init len body init_t c x
             init_typing
             len_typing
             init_t_typing

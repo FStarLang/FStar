@@ -346,7 +346,7 @@ let rec st_typing_weakening g g' t c d g1
       (st_typing_weakening g g' eL cL eL_typing g1)
       (st_typing_weakening g g' eR cR eR_typing g1)
 
-  | T_WithLocal _ init body init_t c x _ _ d_c d_body ->
+  | T_WithLocal _ ppname init body init_t c x _ _ d_c d_body ->
     assume (~ (x `Set.mem` dom g'));
     assume (~ (x `Set.mem` dom g1));
     let d_body
@@ -370,11 +370,11 @@ let rec st_typing_weakening g g' t c d g1
       : st_typing (push_binding (push_env (push_env g g1) g') x ppname_default (mk_ref init_t))
                   (open_st_term_nv body (v_as_nv x))
                   (comp_withlocal_body x init_t init c) = d_body in
-    T_WithLocal _ init body init_t c x (magic ()) (magic ())
+    T_WithLocal _ ppname init body init_t c x (magic ()) (magic ())
       (comp_typing_weakening g g' d_c g1)
       d_body
 
-  | T_WithLocalArray _ init len body init_t c x _ _ _ d_c d_body ->
+  | T_WithLocalArray _ ppname init len body init_t c x _ _ _ d_c d_body ->
     assume (~ (x `Set.mem` dom g'));
     assume (~ (x `Set.mem` dom g1));
     let d_body
@@ -398,7 +398,7 @@ let rec st_typing_weakening g g' t c d g1
       : st_typing (push_binding (push_env (push_env g g1) g') x ppname_default (mk_array init_t))
                   (open_st_term_nv body (v_as_nv x))
                   (comp_withlocal_array_body x init_t init len c) = d_body in
-    T_WithLocalArray _ init len body init_t c x (magic ()) (magic ()) (magic ())
+    T_WithLocalArray _ ppname init len body init_t c x (magic ()) (magic ()) (magic ())
       (comp_typing_weakening g g' d_c g1)
       d_body
 
@@ -686,8 +686,9 @@ let rec st_typing_subst g x t g' #e #eff e_typing #e1 #c1 e1_typing _
             (st_typing_subst g x t g' e_typing d_eL (magic ()))
             (st_typing_subst g x t g' e_typing d_eR (magic ()))
 
-  | T_WithLocal _ init body init_t c y _ _ d_c d_body ->
-    T_WithLocal _ (subst_term init ss)
+  | T_WithLocal _ ppname init body init_t c y _ _ d_c d_body ->
+    T_WithLocal _ ppname
+                  (subst_term init ss)
                   (subst_st_term body ss)
                   (subst_term init_t ss)
                   (subst_comp c ss)
@@ -697,8 +698,9 @@ let rec st_typing_subst g x t g' #e #eff e_typing #e1 #c1 e1_typing _
                   (comp_typing_subst g x t g' e_typing d_c)
                   (coerce_eq (st_typing_subst g x t (push_binding g' y ppname_default (mk_ref init_t)) e_typing d_body (magic ())) ())
 
-  | T_WithLocalArray _ init len body init_t c y _ _ _ d_c d_body ->
-    T_WithLocalArray _ (subst_term init ss)
+  | T_WithLocalArray _ ppname init len body init_t c y _ _ _ d_c d_body ->
+    T_WithLocalArray _ ppname
+                       (subst_term init ss)
                        (subst_term len ss)
                        (subst_st_term body ss)
                        (subst_term init_t ss)

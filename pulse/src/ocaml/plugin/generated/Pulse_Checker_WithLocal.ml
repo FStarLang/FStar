@@ -820,6 +820,7 @@ let (check :
                                                                     uu___6 ->
                                                                     Pulse_Typing.T_WithLocal
                                                                     (g1,
+                                                                    (binder.Pulse_Syntax_Base.binder_ppname),
                                                                     init1,
                                                                     body1,
                                                                     init_t,
@@ -841,9 +842,15 @@ let (check :
                                                                     {
                                                                     Pulse_Syntax_Base.binder2
                                                                     =
-                                                                    (Pulse_Typing.as_binder
+                                                                    {
+                                                                    Pulse_Syntax_Base.binder_ty
+                                                                    =
                                                                     (Pulse_Typing.mk_ref
-                                                                    init_t));
+                                                                    init_t);
+                                                                    Pulse_Syntax_Base.binder_ppname
+                                                                    =
+                                                                    (binder.Pulse_Syntax_Base.binder_ppname)
+                                                                    };
                                                                     Pulse_Syntax_Base.initializer1
                                                                     = init1;
                                                                     Pulse_Syntax_Base.body4

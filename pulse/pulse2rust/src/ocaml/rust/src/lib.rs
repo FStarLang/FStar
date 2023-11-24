@@ -1629,38 +1629,3 @@ ocaml_export! {
   //   z.to_string().to_owned().to_ocaml(cr)
   // }
 }
-
-pub fn sum(r: &mut i64, n: i64) -> () {
-    let mut uu___ = 0;
-    {
-        let mut uu___1 = 0;
-        while {
-            let m = uu___;
-            m != n
-        } {
-            let m = uu___;
-            let s = uu___1;
-            uu___ = m + 1;
-            uu___1 = s + m + 1;
-        }
-        let s = uu___1;
-        *r = s;
-    };
-}
-pub fn sum2(r: &mut i64, n: i64) -> () {
-    let mut uu___ = 0;
-    {
-        let mut uu___1 = 0;
-        while {
-            let m = uu___;
-            m != n
-        } {
-            let m = uu___;
-            let s = uu___1;
-            uu___ = m + 1;
-            uu___1 = s + m + 1;
-        }
-        let s = uu___1;
-        *r = s;
-    };
-}

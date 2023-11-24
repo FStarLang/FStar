@@ -11,7 +11,7 @@ module WT = Pulse.Steel.Wrapper.Typing
 
 #push-options "--ifuel 1 --fuel 8 --z3rlimit_factor 10"
 let withlocalarray_soundness #g #t #c d soundness =
-  let T_WithLocalArray _ init len body init_t c x init_typing len_typing init_t_typing c_typing body_typing = d in
+  let T_WithLocalArray _ _ init len body init_t c x init_typing len_typing init_t_typing c_typing body_typing = d in
   let CT_ST _ st st_typing = c_typing in
   
   let rg =  elab_env g in

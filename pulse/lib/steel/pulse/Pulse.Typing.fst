@@ -903,6 +903,7 @@ type st_typing : env -> st_term -> comp -> Type =
 
   | T_WithLocal:
       g:env ->
+      binder_ppname:ppname ->
       init:term ->
       body:st_term ->
       init_t:term ->
@@ -914,10 +915,11 @@ type st_typing : env -> st_term -> comp -> Type =
       st_typing (push_binding g x ppname_default (mk_ref init_t))
                 (open_st_term_nv body (v_as_nv x))
                 (comp_withlocal_body x init_t init c) ->
-      st_typing g (wr c (Tm_WithLocal { binder=as_binder (mk_ref init_t); initializer=init; body } )) c
+      st_typing g (wr c (Tm_WithLocal { binder= { binder_ppname; binder_ty = mk_ref init_t }; initializer=init; body } )) c
 
   | T_WithLocalArray:
       g:env ->
+      binder_ppname:ppname ->
       initializer:term ->
       length:term ->
       body:st_term ->
@@ -931,7 +933,7 @@ type st_typing : env -> st_term -> comp -> Type =
       st_typing (push_binding g x ppname_default (mk_array a))
                 (open_st_term_nv body (v_as_nv x))
                 (comp_withlocal_array_body x a initializer length c) ->
-      st_typing g (wr c (Tm_WithLocalArray { binder=as_binder (mk_array a); initializer; length; body } )) c
+      st_typing g (wr c (Tm_WithLocalArray { binder= { binder_ppname; binder_ty = mk_array a }; initializer; length; body } )) c
 
   | T_Rewrite:
       g:env ->

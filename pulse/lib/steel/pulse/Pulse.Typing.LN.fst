@@ -1170,7 +1170,7 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       tot_or_ghost_typing_ln p_typing;
       vprop_equiv_ln equiv_p_q
 
-    | T_WithLocal g init body init_t c x init_typing init_t_typing c_typing body_typing ->
+    | T_WithLocal g _ init body init_t c x init_typing init_t_typing c_typing body_typing ->
       tot_or_ghost_typing_ln init_typing;
       st_typing_ln body_typing;
       open_st_term_ln' body (null_var x) 0;
@@ -1178,7 +1178,7 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       tot_or_ghost_typing_ln init_t_typing;
       ln_mk_ref init_t (-1)
 
-    | T_WithLocalArray g init len body init_t c x init_typing len_typing init_t_typing c_typing body_typing ->
+    | T_WithLocalArray g _ init len body init_t c x init_typing len_typing init_t_typing c_typing body_typing ->
       tot_or_ghost_typing_ln init_typing;
       tot_or_ghost_typing_ln len_typing;
       st_typing_ln body_typing;

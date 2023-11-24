@@ -602,7 +602,7 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
      vprop_equiv_freevars equiv_p_q
 
 
-   | T_WithLocal _ init body init_t c x init_typing u_typing c_typing body_typing ->
+   | T_WithLocal _ _ init body init_t c x init_typing u_typing c_typing body_typing ->
      tot_or_ghost_typing_freevars init_typing;
      st_typing_freevars body_typing;
      freevars_open_st_term_inv body x;
@@ -610,7 +610,7 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
      tot_or_ghost_typing_freevars u_typing;
      freevars_ref init_t
 
-   | T_WithLocalArray _ init len body init_t c x init_typing len_typing u_typing c_typing body_typing ->
+   | T_WithLocalArray _ _ init len body init_t c x init_typing len_typing u_typing c_typing body_typing ->
      tot_or_ghost_typing_freevars init_typing;
      tot_or_ghost_typing_freevars len_typing;
      st_typing_freevars body_typing;

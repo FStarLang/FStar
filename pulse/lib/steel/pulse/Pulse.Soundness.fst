@@ -389,10 +389,10 @@ let rec soundness (g:stt_env)
     | T_Par _ _ _ _ _ _ _ _ _ _ ->
       Par.par_soundness d soundness
 
-    | T_WithLocal _ _ _ _ _ _ _ _ _ _ ->
+    | T_WithLocal _ _ _ _ _ _ _ _ _ _ _ ->
       WithLocal.withlocal_soundness d soundness
 
-    | T_WithLocalArray _ _ _ _ _ _ _ _ _ _ _ _ ->
+    | T_WithLocalArray _ _ _ _ _ _ _ _ _ _ _ _ _ ->
       WithLocalArray.withlocalarray_soundness d soundness
 
     | T_Rewrite _ _ _ _ _ ->

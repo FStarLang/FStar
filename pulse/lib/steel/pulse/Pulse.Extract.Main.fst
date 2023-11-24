@@ -410,7 +410,7 @@ let rec erase_ghost_subterms (g:env) (p:st_term) : T.Tac st_term =
     let e = erase_ghost_subterms (push_binding g x b) e in
     close_st_term' e x 0 in
 
-  T.print (Printf.sprintf "Erasing %s\n" (Pulse.Syntax.Printer.st_term_to_string p));
+  // T.print (Printf.sprintf "Erasing %s\n" (Pulse.Syntax.Printer.st_term_to_string p));
   let unit_tm =
     { p with term = Tm_Return { ctag = STT; insert_eq = false; term = unit_val } }
   in

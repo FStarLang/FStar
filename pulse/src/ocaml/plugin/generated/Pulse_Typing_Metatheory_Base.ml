@@ -472,8 +472,8 @@ let rec (st_typing_weakening :
                       (st_typing_weakening g g' eL cL eL_typing g1),
                       (st_typing_weakening g g' eR cR eR_typing g1))
               | Pulse_Typing.T_WithLocal
-                  (uu___, init, body, init_t, c1, x, uu___1, uu___2, d_c,
-                   d_body)
+                  (uu___, ppname, init, body, init_t, c1, x, uu___1, uu___2,
+                   d_c, d_body)
                   ->
                   let d_body1 = d_body in
                   let d_body2 = d_body1 in
@@ -489,13 +489,13 @@ let rec (st_typing_weakening :
                   let d_body4 = d_body3 in
                   Pulse_Typing.T_WithLocal
                     ((Pulse_Typing_Env.push_env
-                        (Pulse_Typing_Env.push_env g g1) g'), init, body,
-                      init_t, c1, x, (), (),
+                        (Pulse_Typing_Env.push_env g g1) g'), ppname, init,
+                      body, init_t, c1, x, (), (),
                       (comp_typing_weakening g g' c1
                          (Pulse_Syntax_Base.comp_u c1) d_c g1), d_body4)
               | Pulse_Typing.T_WithLocalArray
-                  (uu___, init, len, body, init_t, c1, x, uu___1, uu___2,
-                   uu___3, d_c, d_body)
+                  (uu___, ppname, init, len, body, init_t, c1, x, uu___1,
+                   uu___2, uu___3, d_c, d_body)
                   ->
                   let d_body1 = d_body in
                   let d_body2 = d_body1 in
@@ -511,8 +511,8 @@ let rec (st_typing_weakening :
                   let d_body4 = d_body3 in
                   Pulse_Typing.T_WithLocalArray
                     ((Pulse_Typing_Env.push_env
-                        (Pulse_Typing_Env.push_env g g1) g'), init, len,
-                      body, init_t, c1, x, (), (), (),
+                        (Pulse_Typing_Env.push_env g g1) g'), ppname, init,
+                      len, body, init_t, c1, x, (), (), (),
                       (comp_typing_weakening g g' c1
                          (Pulse_Syntax_Base.comp_u c1) d_c g1), d_body4)
               | Pulse_Typing.T_Rewrite (uu___, p, q, uu___1, uu___2) ->
@@ -1050,12 +1050,13 @@ let rec (st_typing_subst :
                                 (st_typing_subst g x t g' e eff () eR cR d_eR
                                    ()))
                         | Pulse_Typing.T_WithLocal
-                            (uu___1, init, body, init_t, c, y, uu___2,
-                             uu___3, d_c, d_body)
+                            (uu___1, ppname, init, body, init_t, c, y,
+                             uu___2, uu___3, d_c, d_body)
                             ->
                             Pulse_Typing.T_WithLocal
                               ((Pulse_Typing_Env.push_env g
                                   (Pulse_Typing_Env.subst_env g' (nt x e))),
+                                ppname,
                                 (Pulse_Syntax_Naming.subst_term init ss),
                                 (Pulse_Syntax_Naming.subst_st_term body ss),
                                 (Pulse_Syntax_Naming.subst_term init_t ss),
@@ -1074,12 +1075,13 @@ let rec (st_typing_subst :
                                       (Pulse_Typing.comp_withlocal_body y
                                          init_t init c) d_body ()) ()))
                         | Pulse_Typing.T_WithLocalArray
-                            (uu___1, init, len, body, init_t, c, y, uu___2,
-                             uu___3, uu___4, d_c, d_body)
+                            (uu___1, ppname, init, len, body, init_t, c, y,
+                             uu___2, uu___3, uu___4, d_c, d_body)
                             ->
                             Pulse_Typing.T_WithLocalArray
                               ((Pulse_Typing_Env.push_env g
                                   (Pulse_Typing_Env.subst_env g' (nt x e))),
+                                ppname,
                                 (Pulse_Syntax_Naming.subst_term init ss),
                                 (Pulse_Syntax_Naming.subst_term len ss),
                                 (Pulse_Syntax_Naming.subst_st_term body ss),

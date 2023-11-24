@@ -472,8 +472,8 @@ let rec (elab_st_typing :
               let rq = Pulse_Elaborate_Pure.elab_term q in
               Pulse_Reflection_Util.mk_rewrite rp rq
           | Pulse_Typing.T_WithLocal
-              (uu___, init, uu___1, init_t, c1, x, uu___2, uu___3, uu___4,
-               body_typing)
+              (uu___, uu___1, init, uu___2, init_t, c1, x, uu___3, uu___4,
+               uu___5, body_typing)
               ->
               let rret_u = Pulse_Syntax_Base.comp_u c1 in
               let ra = Pulse_Elaborate_Pure.elab_term init_t in
@@ -494,7 +494,7 @@ let rec (elab_st_typing :
                   (Pulse_Typing_Env.push_binding uu___ x
                      Pulse_Syntax_Base.ppname_default
                      (Pulse_Typing.mk_ref init_t))
-                  (Pulse_Syntax_Naming.open_st_term_nv uu___1
+                  (Pulse_Syntax_Naming.open_st_term_nv uu___2
                      (Pulse_Syntax_Base.v_as_nv x))
                   (Pulse_Typing.comp_withlocal_body x init_t init c1)
                   body_typing in
@@ -506,8 +506,8 @@ let rec (elab_st_typing :
               Pulse_Reflection_Util.mk_withlocal rret_u ra rinit rpre rret_t
                 rpost rbody2
           | Pulse_Typing.T_WithLocalArray
-              (uu___, init, len, uu___1, init_t, c1, x, uu___2, uu___3,
-               uu___4, uu___5, body_typing)
+              (uu___, uu___1, init, len, uu___2, init_t, c1, x, uu___3,
+               uu___4, uu___5, uu___6, body_typing)
               ->
               let rret_u = Pulse_Syntax_Base.comp_u c1 in
               let ra = Pulse_Elaborate_Pure.elab_term init_t in
@@ -529,7 +529,7 @@ let rec (elab_st_typing :
                   (Pulse_Typing_Env.push_binding uu___ x
                      Pulse_Syntax_Base.ppname_default
                      (Pulse_Typing.mk_array init_t))
-                  (Pulse_Syntax_Naming.open_st_term_nv uu___1
+                  (Pulse_Syntax_Naming.open_st_term_nv uu___2
                      (Pulse_Syntax_Base.v_as_nv x))
                   (Pulse_Typing.comp_withlocal_array_body x init_t init len
                      c1) body_typing in

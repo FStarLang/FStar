@@ -316,30 +316,30 @@ fn sum (r:ref nat) (n:nat)
 }
 ```
 
-```pulse
-fn sum2 (r:ref nat) (n:nat)
-   requires exists i. pts_to r i
-   ensures pts_to r (sum_spec n)
-{
-   let mut i = zero;
-   let mut sum = zero;
-   while (let m = !i; (m <> n))
-   invariant b . exists m s.
-     pts_to i m  **
-     pts_to sum s **
-     pure (s == sum_spec m /\ b == (m <> n))
-   {
-     let m = !i;
-     let s = !sum;
-     i := (m + 1);
-     sum := s + m + 1;
-     ()
-   };
-   let s = !sum;
-   r := s;
-   ()
-}
-```
+// ```pulse
+// fn sum2 (r:ref nat) (n:nat)
+//    requires exists i. pts_to r i
+//    ensures pts_to r (sum_spec n)
+// {
+//    let mut i = zero;
+//    let mut sum = zero;
+//    while (let m = !i; (m <> n))
+//    invariant b . exists m s.
+//      pts_to i m  **
+//      pts_to sum s **
+//      pure (s == sum_spec m /\ b == (m <> n))
+//    {
+//      let m = !i;
+//      let s = !sum;
+//      i := (m + 1);
+//      sum := s + m + 1;
+//      ()
+//    };
+//    let s = !sum;
+//    r := s;
+//    ()
+// }
+// ```
 
 // ```pulse
 // fn if_then_else_in_specs (r:ref U32.t)

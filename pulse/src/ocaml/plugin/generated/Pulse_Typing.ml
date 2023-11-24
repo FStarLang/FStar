@@ -1029,14 +1029,15 @@ type ('dummyV0, 'dummyV1, 'dummyV2) st_typing =
   * Pulse_Syntax_Base.var * (unit, unit, unit) comp_typing * (unit, unit,
   unit) comp_typing * (unit, unit, unit) st_typing * (unit, unit, unit)
   st_typing 
-  | T_WithLocal of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
-  Pulse_Syntax_Base.st_term * Pulse_Syntax_Base.term * Pulse_Syntax_Base.comp
-  * Pulse_Syntax_Base.var * unit * unit * (unit, unit, unit) comp_typing *
-  (unit, unit, unit) st_typing 
-  | T_WithLocalArray of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
+  | T_WithLocal of Pulse_Typing_Env.env * Pulse_Syntax_Base.ppname *
   Pulse_Syntax_Base.term * Pulse_Syntax_Base.st_term * Pulse_Syntax_Base.term
-  * Pulse_Syntax_Base.comp * Pulse_Syntax_Base.var * unit * unit * unit *
-  (unit, unit, unit) comp_typing * (unit, unit, unit) st_typing 
+  * Pulse_Syntax_Base.comp * Pulse_Syntax_Base.var * unit * unit * (unit,
+  unit, unit) comp_typing * (unit, unit, unit) st_typing 
+  | T_WithLocalArray of Pulse_Typing_Env.env * Pulse_Syntax_Base.ppname *
+  Pulse_Syntax_Base.term * Pulse_Syntax_Base.term * Pulse_Syntax_Base.st_term
+  * Pulse_Syntax_Base.term * Pulse_Syntax_Base.comp * Pulse_Syntax_Base.var *
+  unit * unit * unit * (unit, unit, unit) comp_typing * (unit, unit, 
+  unit) st_typing 
   | T_Rewrite of Pulse_Typing_Env.env * Pulse_Syntax_Base.vprop *
   Pulse_Syntax_Base.vprop * unit * unit 
   | T_Admit of Pulse_Typing_Env.env * Pulse_Syntax_Base.st_comp *
