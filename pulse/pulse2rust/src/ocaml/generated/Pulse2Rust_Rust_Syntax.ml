@@ -422,6 +422,7 @@ type typ =
   | Typ_slice of typ 
   | Typ_array of typ_array 
   | Typ_unit 
+  | Typ_infer 
 and typ_reference = {
   typ_ref_mut: Prims.bool ;
   typ_ref_typ: typ }
@@ -454,6 +455,8 @@ let (__proj__Typ_array__item___0 : typ -> typ_array) =
   fun projectee -> match projectee with | Typ_array _0 -> _0
 let (uu___is_Typ_unit : typ -> Prims.bool) =
   fun projectee -> match projectee with | Typ_unit -> true | uu___ -> false
+let (uu___is_Typ_infer : typ -> Prims.bool) =
+  fun projectee -> match projectee with | Typ_infer -> true | uu___ -> false
 let (__proj__Mktyp_reference__item__typ_ref_mut :
   typ_reference -> Prims.bool) =
   fun projectee ->
@@ -586,10 +589,47 @@ let (__proj__Mkitem_type__item__item_type_typ : item_type -> typ) =
   fun projectee ->
     match projectee with
     | { item_type_name; item_type_generics; item_type_typ;_} -> item_type_typ
+type enum_variant =
+  {
+  enum_variant_name: Prims.string ;
+  enum_variant_fields: typ Prims.list }
+let (__proj__Mkenum_variant__item__enum_variant_name :
+  enum_variant -> Prims.string) =
+  fun projectee ->
+    match projectee with
+    | { enum_variant_name; enum_variant_fields;_} -> enum_variant_name
+let (__proj__Mkenum_variant__item__enum_variant_fields :
+  enum_variant -> typ Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { enum_variant_name; enum_variant_fields;_} -> enum_variant_fields
+type item_enum =
+  {
+  item_enum_name: Prims.string ;
+  item_enum_generics: generic_param Prims.list ;
+  item_enum_variants: enum_variant Prims.list }
+let (__proj__Mkitem_enum__item__item_enum_name : item_enum -> Prims.string) =
+  fun projectee ->
+    match projectee with
+    | { item_enum_name; item_enum_generics; item_enum_variants;_} ->
+        item_enum_name
+let (__proj__Mkitem_enum__item__item_enum_generics :
+  item_enum -> generic_param Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { item_enum_name; item_enum_generics; item_enum_variants;_} ->
+        item_enum_generics
+let (__proj__Mkitem_enum__item__item_enum_variants :
+  item_enum -> enum_variant Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { item_enum_name; item_enum_generics; item_enum_variants;_} ->
+        item_enum_variants
 type item =
   | Item_fn of fn 
   | Item_struct of item_struct 
   | Item_type of item_type 
+  | Item_enum of item_enum 
 let (uu___is_Item_fn : item -> Prims.bool) =
   fun projectee -> match projectee with | Item_fn _0 -> true | uu___ -> false
 let (__proj__Item_fn__item___0 : item -> fn) =
@@ -604,6 +644,11 @@ let (uu___is_Item_type : item -> Prims.bool) =
     match projectee with | Item_type _0 -> true | uu___ -> false
 let (__proj__Item_type__item___0 : item -> item_type) =
   fun projectee -> match projectee with | Item_type _0 -> _0
+let (uu___is_Item_enum : item -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Item_enum _0 -> true | uu___ -> false
+let (__proj__Item_enum__item___0 : item -> item_enum) =
+  fun projectee -> match projectee with | Item_enum _0 -> _0
 type file = {
   file_name: Prims.string ;
   file_items: item Prims.list }
@@ -814,5 +859,30 @@ let (mk_item_type : Prims.string -> Prims.string Prims.list -> typ -> item) =
             item_type_typ = t
           } in
         Item_type uu___
+let (mk_item_enum :
+  Prims.string ->
+    Prims.string Prims.list ->
+      (Prims.string * typ Prims.list) Prims.list -> item)
+  =
+  fun name ->
+    fun generics ->
+      fun variants ->
+        let uu___ =
+          let uu___1 =
+            FStar_Compiler_List.map (fun uu___2 -> Generic_type_param uu___2)
+              generics in
+          let uu___2 =
+            FStar_Compiler_List.map
+              (fun uu___3 ->
+                 match uu___3 with
+                 | (v, typs) ->
+                     { enum_variant_name = v; enum_variant_fields = typs })
+              variants in
+          {
+            item_enum_name = name;
+            item_enum_generics = uu___1;
+            item_enum_variants = uu___2
+          } in
+        Item_enum uu___
 let (mk_file : Prims.string -> item Prims.list -> file) =
   fun file_name -> fun file_items -> { file_name; file_items }

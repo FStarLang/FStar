@@ -159,6 +159,7 @@ enum Typ {
     TSlice(Box<Typ>),
     TArray(TypeArray),
     TUnit,
+    TInfer,
 }
 
 struct PatIdent {
@@ -231,10 +232,22 @@ struct ItemType {
     item_type_typ: Typ,
 }
 
+struct EnumVariant {
+    enum_variant_name: String,
+    enum_variant_fields: Vec<Typ>,
+}
+
+struct ItemEnum {
+    item_enum_name: String,
+    item_enum_generics: Vec<String>,
+    item_enum_variants: Vec<EnumVariant>,
+}
+
 enum Item {
     IFn(Fn),
     IStruct(ItemStruct),
     IType(ItemType),
+    IEnum(ItemEnum),
 }
 
 #[allow(dead_code)]
@@ -442,6 +455,7 @@ impl_from_ocaml_variant! {
     Typ::TSlice (payload:Typ),
     Typ::TArray (payload:TypeArray),
     Typ::TUnit,
+    Typ::TInfer,
   }
 }
 
@@ -541,11 +555,27 @@ impl_from_ocaml_record! {
   }
 }
 
+impl_from_ocaml_record! {
+  EnumVariant {
+    enum_variant_name : String,
+    enum_variant_fields : OCamlList<Typ>,
+  }
+}
+
+impl_from_ocaml_record! {
+  ItemEnum {
+    item_enum_name : String,
+    item_enum_generics : OCamlList<String>,
+    item_enum_variants : OCamlList<EnumVariant>,
+  }
+}
+
 impl_from_ocaml_variant! {
   Item {
     Item::IFn (payload:Fn),
     Item::IStruct (payload:ItemStruct),
     Item::IType (payload:ItemType),
+    Item::IEnum (payload:ItemEnum),
   }
 }
 
@@ -1102,6 +1132,11 @@ fn to_syn_typ(t: &Typ) -> Type {
             paren_token: Paren::default(),
             elems: Punctuated::new(),
         }),
+        Typ::TInfer => syn::Type::Infer(syn::TypeInfer {
+            underscore_token: syn::token::Underscore {
+                spans: [Span::call_site()],
+            },
+        }),
     }
 }
 
@@ -1286,6 +1321,78 @@ fn to_syn_item(i: &Item) -> syn::Item {
                 semi_token: syn::token::Semi {
                     spans: [Span::call_site()],
                 },
+            })
+        }
+        Item::IEnum(ItemEnum {
+            item_enum_name,
+            item_enum_generics,
+            item_enum_variants,
+        }) => {
+            let mut generics: Punctuated<syn::GenericParam, Comma> = Punctuated::new();
+            item_enum_generics.iter().for_each(|s| {
+                generics.push(syn::GenericParam::Type(syn::TypeParam {
+                    attrs: vec![],
+                    ident: Ident::new(s, Span::call_site()),
+                    colon_token: None,
+                    bounds: Punctuated::new(),
+                    eq_token: None,
+                    default: None,
+                }))
+            });
+            let mut variants: Punctuated<syn::Variant, Comma> = Punctuated::new();
+            item_enum_variants.iter().for_each(|v| {
+                let mut fields: Punctuated<syn::Field, Comma> = Punctuated::new();
+                v.enum_variant_fields.iter().for_each(|t| {
+                    fields.push(syn::Field {
+                        attrs: vec![],
+                        vis: Visibility::Inherited,
+                        mutability: syn::FieldMutability::None,
+                        ident: None,
+                        colon_token: Some(Colon {
+                            spans: [Span::call_site()],
+                        }),
+                        ty: to_syn_typ(&t),
+                    })
+                });
+                variants.push(syn::Variant {
+                    attrs: vec![],
+                    ident: Ident::new(&v.enum_variant_name, Span::call_site()),
+                    fields: syn::Fields::Unnamed(syn::FieldsUnnamed {
+                        paren_token: syn::token::Paren {
+                            span: proc_macro2::Group::new(
+                                proc_macro2::Delimiter::None,
+                                proc_macro2::TokenStream::new(),
+                            )
+                            .delim_span(),
+                        },
+                        unnamed: fields,
+                    }),
+                    discriminant: None,
+                })
+            });
+            syn::Item::Enum(syn::ItemEnum {
+                attrs: vec![],
+                vis: syn::Visibility::Public({
+                    syn::token::Pub {
+                        span: Span::call_site(),
+                    }
+                }),
+                enum_token: syn::token::Enum {
+                    span: Span::call_site(),
+                },
+                ident: Ident::new(&item_enum_name, Span::call_site()),
+                generics: syn::Generics {
+                    lt_token: Some(syn::token::Lt {
+                        spans: [Span::call_site()],
+                    }),
+                    params: generics,
+                    gt_token: Some(syn::token::Gt {
+                        spans: [Span::call_site()],
+                    }),
+                    where_clause: None,
+                },
+                brace_token: Brace::default(),
+                variants,
             })
         }
     }
@@ -1534,6 +1641,7 @@ impl fmt::Display for Typ {
                 type_array_len,
             }) => write!(f, "[{}; {}]", type_array_elem, type_array_len),
             Typ::TUnit => write!(f, "()"),
+            Typ::TInfer => write!(f, "_"),
         }
     }
 }
@@ -1608,6 +1716,21 @@ impl fmt::Display for FieldTyp {
     }
 }
 
+impl fmt::Display for EnumVariant {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}({})",
+            self.enum_variant_name,
+            self.enum_variant_fields
+                .iter()
+                .map(|t| t.to_string())
+                .collect::<Vec<_>>()
+                .join(",")
+        )
+    }
+}
+
 impl fmt::Display for Item {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self {
@@ -1645,6 +1768,25 @@ impl fmt::Display for Item {
                     .collect::<Vec<_>>()
                     .join(","),
                 item_type_typ
+            ),
+            Item::IEnum(ItemEnum {
+                item_enum_name,
+                item_enum_generics,
+                item_enum_variants,
+            }) => write!(
+                f,
+                "enum {}<{}> {{ {} }}",
+                item_enum_name,
+                item_enum_generics
+                    .iter()
+                    .map(|s| s.to_string())
+                    .collect::<Vec<_>>()
+                    .join(","),
+                item_enum_variants
+                    .iter()
+                    .map(|v| v.to_string())
+                    .collect::<Vec<_>>()
+                    .join(",")
             ),
         }
     }

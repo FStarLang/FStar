@@ -143,7 +143,14 @@ let rec extract_mlty (g:env) (t:S.mlty) : typ =
   | S.MLTY_Named (args, p) ->
     mk_named_typ (snd p) (List.map (extract_mlty g) args)
 
+  | S.MLTY_Top -> Typ_infer
+
   | _ -> fail_nyi (format1 "mlty %s" (S.mlty_to_string t))
+
+let extract_mltyopt (g:env) (t:option S.mlty) : typ =
+  match t with
+  | None -> Typ_infer
+  | Some t -> extract_mlty g t
 
 let extract_top_level_fn_arg (g:env) (arg_name:string) (t:S.mlty) : fn_arg =
   t |> extract_mlty g |> mk_scalar_fn_arg arg_name
@@ -166,13 +173,13 @@ let extract_top_level_sig
   (tvars:S.mlidents)
   (arg_names:list string)
   (arg_ts:list S.mlty)
-  (ret_t:S.mlty)
+  (ret_t:option S.mlty)
   
   : fn_signature & env =
 
   let fn_args =
     List.map2 (extract_top_level_fn_arg g) (List.map varname arg_names) arg_ts in
-  let fn_ret_t = extract_mlty g ret_t in
+  let fn_ret_t = extract_mltyopt g ret_t in
   mk_fn_signature fn_name tvars fn_args fn_ret_t,
   fold_left (fun g (arg_name, arg) -> push_fn_arg g arg_name arg) g (zip arg_names fn_args)
 
@@ -507,44 +514,92 @@ let extract_top_level_lb (g:env) (lbs:S.mlletbinding) : fn & env =
   then fail_nyi "recursive let bindings"
   else begin
     let [lb] = lbs in
-    if None? lb.mllb_tysc
-    then fail (format1 "unexpected: mllb_tsc is None for %s" lb.mllb_name);
-    //
-    // if tsc is not set, we could get the arg types from the fun inside
-    //
-    let Some tsc = lb.mllb_tysc in
-    // print1 "Typescheme is: %s\n\n" (S.mltyscheme_to_string tsc);
-    // print1 "lbdef is: %s\n\n" (S.mlexpr_to_string lb.mllb_def);
-    let arg_names, body =
-      match lb.mllb_def.expr with
-      | S.MLE_Fun (bs, body) ->
-        List.map fst bs, body
-      | _ -> fail_nyi (format1 "top level lb def %s" (S.mlexpr_to_string lb.mllb_def))
-    in
     
-    let tvars, arg_ts, ret_t = arg_ts_and_ret_t tsc in
+    match lb.mllb_def.expr with
+    | S.MLE_Fun (bs, body) ->
+      let arg_names = List.map fst bs in
+      let tvars, arg_ts, ret_t =
+        match lb.mllb_tysc with
+        | Some tsc ->
+          let tvars, arg_ts, ret_t = arg_ts_and_ret_t tsc in
+          tvars, arg_ts, Some ret_t
+        | None ->
+          [], List.map snd bs, None in
+      
+      let fn_sig, g_body =
+        extract_top_level_sig g lb.mllb_name (List.map tyvar_of tvars) arg_names arg_ts ret_t in
+       let fn_body = extract_mlexpr_to_stmts g_body body in
+
+      mk_fn fn_sig fn_body,
+      push_fv g lb.mllb_name fn_sig
     
-    // print3 "tvars: %s, arg_ts: %s, ret_t: %s\n"
-    //   (String.concat ", " tvars)
-    //   (String.concat ", " (List.map S.mlty_to_string arg_ts))
-    //   (S.mlty_to_string ret_t);
-
-    let fn_sig, g_body = extract_top_level_sig g lb.mllb_name (List.map tyvar_of tvars) arg_names arg_ts ret_t in
-    let fn_body = extract_mlexpr_to_stmts g_body body in
-
-    mk_fn fn_sig fn_body,
-    push_fv g lb.mllb_name fn_sig
+    | _ -> fail_nyi (format1 "top level lb def %s" (S.mlexpr_to_string lb.mllb_def))
   end
+          
 
-let extract_struct_defn (g:env) (d:S.mlmodule1) : item & env =
-  match d with
-  | S.MLM_Ty [ d ] ->
-    let Some (S.MLTD_Record fts) = d.tydecl_defn in
-    mk_item_struct
-      d.tydecl_name
-      d.tydecl_parameters
-      (List.map (fun (f, t) -> f, extract_mlty g t) fts),
-    g  // TODO: add it to env if needed later
+  //   let tvars, arg_ts, ret_t 
+
+  //   if None? lb.mllb_tysc
+  //   then fail (format1 "unexpected: mllb_tsc is None for %s" lb.mllb_name);
+  //   //
+  //   // if tsc is not set, we could get the arg types from the fun inside
+  //   //
+  //   let Some tsc = lb.mllb_tysc in
+  //   // print1 "Typescheme is: %s\n\n" (S.mltyscheme_to_string tsc);
+  //   // print1 "lbdef is: %s\n\n" (S.mlexpr_to_string lb.mllb_def);
+  //   let arg_names, body =
+  //     match lb.mllb_def.expr with
+  //     | S.MLE_Fun (bs, body) ->
+  //       List.map fst bs, body
+  //     | _ -> fail_nyi (format1 "top level lb def %s" (S.mlexpr_to_string lb.mllb_def))
+  //   in
+    
+  //   let tvars, arg_ts, ret_t = arg_ts_and_ret_t tsc in
+    
+  //   // print3 "tvars: %s, arg_ts: %s, ret_t: %s\n"
+  //   //   (String.concat ", " tvars)
+  //   //   (String.concat ", " (List.map S.mlty_to_string arg_ts))
+  //   //   (S.mlty_to_string ret_t);
+
+  //   let fn_sig, g_body = extract_top_level_sig g lb.mllb_name (List.map tyvar_of tvars) arg_names arg_ts ret_t in
+  //   let fn_body = extract_mlexpr_to_stmts g_body body in
+
+  //   mk_fn fn_sig fn_body,
+  //   push_fv g lb.mllb_name fn_sig
+  // end
+
+let extract_struct_defn (g:env) (d:S.one_mltydecl) : item & env =
+  let Some (S.MLTD_Record fts) = d.tydecl_defn in
+  mk_item_struct
+    d.tydecl_name
+    d.tydecl_parameters
+    (List.map (fun (f, t) -> f, extract_mlty g t) fts),
+  g  // TODO: add it to env if needed later
+
+let extract_type_abbrev (g:env) (d:S.one_mltydecl) : item & env =
+  let Some (S.MLTD_Abbrev t) = d.tydecl_defn in
+  (mk_item_type d.tydecl_name d.tydecl_parameters (extract_mlty g t)),
+  g
+  
+let extract_enum (g:env) (d:S.one_mltydecl) : item & env =
+  let Some (S.MLTD_DType cts) = d.tydecl_defn in
+  mk_item_enum
+    d.tydecl_name
+    d.tydecl_parameters
+    (List.map (fun (cname, dts) -> cname, List.map (fun (_, t) -> extract_mlty g t) dts) cts),
+  g  // TODO: add it to env if needed later
+
+let extract_mltydecl (g:env) (d:S.mltydecl) : list item & env =
+  List.fold_left (fun (items, g) d ->
+    let f =
+      match d.S.tydecl_defn with
+      | Some (S.MLTD_Abbrev _) -> extract_type_abbrev
+      | Some (S.MLTD_Record _) -> extract_struct_defn
+      | Some (S.MLTD_DType _) -> extract_enum
+      | _ -> fail_nyi (format1 "mltydecl %s" (S.one_mltydecl_to_string d))
+    in
+    let item, g = f g d in
+    items@[item], g) ([], g) d
 
 let extract_one (file:string) : unit =
   let (gamma, decls)  : (list UEnv.binding & S.mlmodule) =
@@ -553,7 +608,7 @@ let extract_one (file:string) : unit =
     | None -> failwith "Could not load file" in
   
   let items, _ = List.fold_left (fun (items, g) d ->
-    // print1 "Decl: %s\n" (S.mlmodule1_to_string d);
+    print1 "Decl: %s\n" (S.mlmodule1_to_string d);
     match d with
     | S.MLM_Let lb ->
       let f, g = extract_top_level_lb g lb in
@@ -562,11 +617,9 @@ let extract_one (file:string) : unit =
       items@[Item_fn f],
       g
     | S.MLM_Loc _ -> items, g
-    | S.MLM_Ty [ {tydecl_defn = Some (S.MLTD_Record _)} ] ->
-      let item, g = extract_struct_defn g d in
-      items@[item], g
-    | S.MLM_Ty [ { tydecl_name; tydecl_parameters; tydecl_defn = Some (S.MLTD_Abbrev t)} ] ->
-      items@[mk_item_type tydecl_name tydecl_parameters (extract_mlty g t)], g
+    | S.MLM_Ty d ->
+      let d_items, g = extract_mltydecl g d in
+      items@d_items, g
     | _ -> fail_nyi (format1 "top level decl %s" (S.mlmodule1_to_string d))
   ) ([], empty_env ()) decls in
   

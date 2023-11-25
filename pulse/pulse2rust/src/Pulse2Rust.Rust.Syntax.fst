@@ -166,4 +166,16 @@ let mk_item_type (name:string) (generics:list string) (t:typ) : item =
     item_type_typ = t;
   }
 
+let mk_item_enum (name:string) (generics:list string) (variants:list (string & list typ))
+  : item =
+
+  Item_enum {
+    item_enum_name = name;
+    item_enum_generics = L.map Generic_type_param generics;
+    item_enum_variants = L.map (fun (v, typs) -> {
+      enum_variant_name = v;
+      enum_variant_fields = typs;
+    }) variants;
+  }
+
 let mk_file (file_name:string) (file_items:list item) : file = { file_name; file_items }

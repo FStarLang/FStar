@@ -153,6 +153,7 @@ type typ =
   | Typ_slice of typ
   | Typ_array of typ_array
   | Typ_unit
+  | Typ_infer
 
 and typ_reference = {
   typ_ref_mut : bool;
@@ -209,10 +210,22 @@ type item_type = {
   item_type_typ : typ;
 }
 
+type enum_variant = {
+  enum_variant_name : string;
+  enum_variant_fields : list typ;
+}
+
+type item_enum = {
+  item_enum_name : string;
+  item_enum_generics : list generic_param;
+  item_enum_variants : list enum_variant
+}
+
 type item =
   | Item_fn of fn
   | Item_struct of item_struct
   | Item_type of item_type
+  | Item_enum of item_enum
 
 type file = {
   file_name : string;
@@ -262,5 +275,8 @@ val mk_item_struct (name:string) (generics:list string) (fields:list (string & t
   : item
 
 val mk_item_type (name:string) (generics:list string) (t:typ) : item
+
+val mk_item_enum (name:string) (generics:list string) (variants:list (string & list typ))
+  : item
 
 val mk_file (name:string) (items:list item) : file
