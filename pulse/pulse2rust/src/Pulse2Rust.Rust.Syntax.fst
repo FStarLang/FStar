@@ -94,6 +94,14 @@ let mk_pat_ts (pat_ts_path:string) (pat_ts_elems:list pat) : pat =
   then Pat_ident { pat_name = pat_ts_path; by_ref = false; is_mut = false }
   else Pat_tuple_struct { pat_ts_path; pat_ts_elems}
 
+let mk_pat_struct (pat_struct_path:string) (pats:list (string & pat)) : pat =
+  Pat_struct { pat_struct_path;
+    pat_struct_fields = L.map (fun (s, p) -> {
+      field_pat_name = s;
+      field_pat_pat = p;
+    }) pats;
+  }
+
 let mk_arm (arm_pat:pat) (arm_body:expr) : arm = { arm_pat; arm_body }
 
 let mk_match (expr_match_expr:expr) (expr_match_arms:list arm) : expr =

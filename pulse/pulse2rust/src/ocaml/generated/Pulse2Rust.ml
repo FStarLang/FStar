@@ -370,6 +370,16 @@ let rec (extract_mlpattern_to_pat :
         let uu___ = FStar_Compiler_List.map extract_mlpattern_to_pat ps in
         Pulse2Rust_Rust_Syntax.mk_pat_ts (FStar_Pervasives_Native.snd p1)
           uu___
+    | FStar_Extraction_ML_Syntax.MLP_Record (p1, fs) ->
+        let uu___ = FStar_Compiler_List.last p1 in
+        let uu___1 =
+          FStar_Compiler_List.map
+            (fun uu___2 ->
+               match uu___2 with
+               | (f, p2) ->
+                   let uu___3 = extract_mlpattern_to_pat p2 in (f, uu___3))
+            fs in
+        Pulse2Rust_Rust_Syntax.mk_pat_struct uu___ uu___1
     | uu___ ->
         let uu___1 =
           let uu___2 = FStar_Extraction_ML_Syntax.mlpattern_to_string p in

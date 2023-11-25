@@ -173,11 +173,22 @@ struct PatTupleStruct {
     pat_ts_elems: Vec<Pat>,
 }
 
+struct FieldPat {
+    field_pat_name: String,
+    field_pat_pat: Box<Pat>,
+}
+
+struct PatStruct {
+    pat_struct_path: String,
+    pat_struct_fields: Vec<FieldPat>,
+}
+
 enum Pat {
     PIdent(PatIdent),
     PTupleStruct(PatTupleStruct),
     PWild,
     PLit(Lit),
+    PStruct(PatStruct),
 }
 
 struct LocalStmt {
@@ -474,12 +485,27 @@ impl_from_ocaml_record! {
   }
 }
 
+impl_from_ocaml_record! {
+  FieldPat {
+    field_pat_name : String,
+    field_pat_pat : Pat,
+  }
+}
+
+impl_from_ocaml_record! {
+  PatStruct {
+    pat_struct_path : String,
+    pat_struct_fields : OCamlList<FieldPat>,
+  }
+}
+
 impl_from_ocaml_variant! {
   Pat {
     Pat::PIdent (payload:PatIdent),
     Pat::PTupleStruct (payload:PatTupleStruct),
     Pat::PWild,
     Pat::PLit (payload:Lit),
+    Pat::PStruct (payload:PatStruct),
   }
 }
 
@@ -1005,6 +1031,30 @@ fn to_syn_pat(p: &Pat) -> syn::Pat {
                 lit: to_syn_lit(lit),
             }
         }),
+        Pat::PStruct(PatStruct {
+            pat_struct_path,
+            pat_struct_fields,
+        }) => {
+            let mut fields: Punctuated<syn::FieldPat, Comma> = Punctuated::new();
+            pat_struct_fields.iter().for_each(|f| {
+                fields.push(syn::FieldPat {
+                    attrs: vec![],
+                    member: syn::Member::Named(Ident::new(&f.field_pat_name, Span::call_site())),
+                    colon_token: Some(Colon {
+                        spans: [Span::call_site()],
+                    }),
+                    pat: Box::new(to_syn_pat(&f.field_pat_pat)),
+                })
+            });
+            syn::Pat::Struct(syn::PatStruct {
+                attrs: vec![],
+                qself: None,
+                path: to_syn_path(&vec![pat_struct_path.to_string()]),
+                brace_token: Brace::default(),
+                fields,
+                rest: None,
+            })
+        }
     }
 }
 
@@ -1485,6 +1535,19 @@ impl fmt::Display for Pat {
             ),
             Pat::PWild => write!(f, "_"),
             Pat::PLit(lit) => write!(f, "{}", lit),
+            Pat::PStruct(PatStruct {
+                pat_struct_path,
+                pat_struct_fields,
+            }) => write!(
+                f,
+                "{} {{ {} }}",
+                pat_struct_path,
+                pat_struct_fields
+                    .iter()
+                    .map(|f| format!("{}:{}", f.field_pat_name, f.field_pat_pat))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
         }
     }
 }

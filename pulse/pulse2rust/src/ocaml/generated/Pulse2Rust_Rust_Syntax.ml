@@ -95,11 +95,19 @@ type pat_tuple_struct =
   {
   pat_ts_path: Prims.string ;
   pat_ts_elems: pat Prims.list }
+and field_pat = {
+  field_pat_name: Prims.string ;
+  field_pat_pat: pat }
+and pat_struct =
+  {
+  pat_struct_path: Prims.string ;
+  pat_struct_fields: field_pat Prims.list }
 and pat =
   | Pat_ident of pat_ident 
   | Pat_tuple_struct of pat_tuple_struct 
   | Pat_wild 
   | Pat_lit of lit 
+  | Pat_struct of pat_struct 
 let (__proj__Mkpat_tuple_struct__item__pat_ts_path :
   pat_tuple_struct -> Prims.string) =
   fun projectee ->
@@ -108,6 +116,24 @@ let (__proj__Mkpat_tuple_struct__item__pat_ts_elems :
   pat_tuple_struct -> pat Prims.list) =
   fun projectee ->
     match projectee with | { pat_ts_path; pat_ts_elems;_} -> pat_ts_elems
+let (__proj__Mkfield_pat__item__field_pat_name : field_pat -> Prims.string) =
+  fun projectee ->
+    match projectee with
+    | { field_pat_name; field_pat_pat;_} -> field_pat_name
+let (__proj__Mkfield_pat__item__field_pat_pat : field_pat -> pat) =
+  fun projectee ->
+    match projectee with
+    | { field_pat_name; field_pat_pat;_} -> field_pat_pat
+let (__proj__Mkpat_struct__item__pat_struct_path :
+  pat_struct -> Prims.string) =
+  fun projectee ->
+    match projectee with
+    | { pat_struct_path; pat_struct_fields;_} -> pat_struct_path
+let (__proj__Mkpat_struct__item__pat_struct_fields :
+  pat_struct -> field_pat Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { pat_struct_path; pat_struct_fields;_} -> pat_struct_fields
 let (uu___is_Pat_ident : pat -> Prims.bool) =
   fun projectee ->
     match projectee with | Pat_ident _0 -> true | uu___ -> false
@@ -124,6 +150,11 @@ let (uu___is_Pat_lit : pat -> Prims.bool) =
   fun projectee -> match projectee with | Pat_lit _0 -> true | uu___ -> false
 let (__proj__Pat_lit__item___0 : pat -> lit) =
   fun projectee -> match projectee with | Pat_lit _0 -> _0
+let (uu___is_Pat_struct : pat -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Pat_struct _0 -> true | uu___ -> false
+let (__proj__Pat_struct__item___0 : pat -> pat_struct) =
+  fun projectee -> match projectee with | Pat_struct _0 -> _0
 type expr =
   | Expr_binop of expr_bin 
   | Expr_path of Prims.string Prims.list 
@@ -753,6 +784,18 @@ let (mk_pat_ts : Prims.string -> pat Prims.list -> pat) =
       then
         Pat_ident { pat_name = pat_ts_path; by_ref = false; is_mut = false }
       else Pat_tuple_struct { pat_ts_path; pat_ts_elems }
+let (mk_pat_struct : Prims.string -> (Prims.string * pat) Prims.list -> pat)
+  =
+  fun pat_struct_path ->
+    fun pats ->
+      let uu___ =
+        let uu___1 =
+          FStar_Compiler_List.map
+            (fun uu___2 ->
+               match uu___2 with
+               | (s, p) -> { field_pat_name = s; field_pat_pat = p }) pats in
+        { pat_struct_path; pat_struct_fields = uu___1 } in
+      Pat_struct uu___
 let (mk_arm : pat -> expr -> arm) =
   fun arm_pat -> fun arm_body -> { arm_pat; arm_body }
 let (mk_match : expr -> arm Prims.list -> expr) =

@@ -43,11 +43,22 @@ type pat_tuple_struct = {
   pat_ts_elems : list pat;
 }
 
+and field_pat = {
+  field_pat_name : string;
+  field_pat_pat : pat;
+}
+
+and pat_struct = {
+  pat_struct_path : string;
+  pat_struct_fields : list field_pat;
+}
+
 and pat =
   | Pat_ident of pat_ident
   | Pat_tuple_struct of pat_tuple_struct
   | Pat_wild
   | Pat_lit of lit
+  | Pat_struct of pat_struct
 
 type expr =
   | Expr_binop of expr_bin
@@ -260,6 +271,7 @@ val mk_repeat (elem len:expr) : expr
 val mk_reference_expr (is_mut:bool) (e:expr) : expr
 val mk_pat_ident (path:string) : pat
 val mk_pat_ts (path:string) (elems:list pat) : pat
+val mk_pat_struct (path:string) (fields:list (string & pat)) : pat
 val mk_arm (arm_pat:pat) (arm_body:expr) : arm
 val mk_match (scrutinee:expr) (arms:list arm) : expr
 val mk_expr_field (base:expr) (f:string) : expr

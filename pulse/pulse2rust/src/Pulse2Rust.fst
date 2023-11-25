@@ -251,6 +251,8 @@ let rec extract_mlpattern_to_pat (p:S.mlpattern) : pat =
   | S.MLP_Var x -> mk_pat_ident (varname x)
   | S.MLP_CTor (p, ps) ->
     mk_pat_ts (snd p) (List.map extract_mlpattern_to_pat ps)
+  | S.MLP_Record (p, fs) ->
+    mk_pat_struct (List.last p) (List.map (fun (f, p) -> f, extract_mlpattern_to_pat p) fs)
   | _ -> fail_nyi (format1 "mlpattern_to_pat %s" (S.mlpattern_to_string p))
 
 //
