@@ -225,9 +225,16 @@ struct ItemStruct {
     item_struct_fields: Vec<FieldTyp>,
 }
 
+struct ItemType {
+    item_type_name: String,
+    item_type_generics: Vec<String>,
+    item_type_typ: Typ,
+}
+
 enum Item {
     IFn(Fn),
     IStruct(ItemStruct),
+    IType(ItemType),
 }
 
 #[allow(dead_code)]
@@ -526,10 +533,19 @@ impl_from_ocaml_record! {
   }
 }
 
+impl_from_ocaml_record! {
+  ItemType {
+    item_type_name : String,
+    item_type_generics : OCamlList<String>,
+    item_type_typ : Typ,
+  }
+}
+
 impl_from_ocaml_variant! {
   Item {
     Item::IFn (payload:Fn),
     Item::IStruct (payload:ItemStruct),
+    Item::IType (payload:ItemType),
   }
 }
 
@@ -1226,6 +1242,52 @@ fn to_syn_item(i: &Item) -> syn::Item {
                 }),
             })
         }
+        Item::IType(ItemType {
+            item_type_name,
+            item_type_generics,
+            item_type_typ,
+        }) => {
+            let mut generics: Punctuated<syn::GenericParam, Comma> = Punctuated::new();
+            item_type_generics.iter().for_each(|s| {
+                generics.push(syn::GenericParam::Type(syn::TypeParam {
+                    attrs: vec![],
+                    ident: Ident::new(s, Span::call_site()),
+                    colon_token: None,
+                    bounds: Punctuated::new(),
+                    eq_token: None,
+                    default: None,
+                }))
+            });
+            syn::Item::Type(syn::ItemType {
+                attrs: vec![],
+                vis: syn::Visibility::Public({
+                    syn::token::Pub {
+                        span: Span::call_site(),
+                    }
+                }),
+                type_token: syn::token::Type {
+                    span: Span::call_site(),
+                },
+                ident: Ident::new(&item_type_name, Span::call_site()),
+                generics: syn::Generics {
+                    lt_token: Some(syn::token::Lt {
+                        spans: [Span::call_site()],
+                    }),
+                    params: generics,
+                    gt_token: Some(syn::token::Gt {
+                        spans: [Span::call_site()],
+                    }),
+                    where_clause: None,
+                },
+                eq_token: syn::token::Eq {
+                    spans: [Span::call_site()],
+                },
+                ty: Box::new(to_syn_typ(&item_type_typ)),
+                semi_token: syn::token::Semi {
+                    spans: [Span::call_site()],
+                },
+            })
+        }
     }
 }
 
@@ -1568,6 +1630,21 @@ impl fmt::Display for Item {
                     .map(|ft| ft.to_string())
                     .collect::<Vec<_>>()
                     .join(",")
+            ),
+            Item::IType(ItemType {
+                item_type_name,
+                item_type_generics,
+                item_type_typ,
+            }) => write!(
+                f,
+                "type {}<{}> = {}",
+                item_type_name,
+                item_type_generics
+                    .iter()
+                    .map(|s| s.to_string())
+                    .collect::<Vec<_>>()
+                    .join(","),
+                item_type_typ
             ),
         }
     }

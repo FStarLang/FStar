@@ -536,15 +536,15 @@ let extract_top_level_lb (g:env) (lbs:S.mlletbinding) : fn & env =
     push_fv g lb.mllb_name fn_sig
   end
 
-// let extract_struct_defn (g:env) (d:S.mlmodule1) : item & env =
-//   match d with
-//   | S.MLM_Ty [ d ] ->
-//     let Some (S.MLTD_Record fts) = d.tydecl_defn in
-//     mk_item_struct
-//       d.tydecl_name
-//       d.tydecl_parameters
-//       (List.map (fun (f, t) -> f, extract_mlty g t) fts),
-//     g  // TODO: add it to env if needed later
+let extract_struct_defn (g:env) (d:S.mlmodule1) : item & env =
+  match d with
+  | S.MLM_Ty [ d ] ->
+    let Some (S.MLTD_Record fts) = d.tydecl_defn in
+    mk_item_struct
+      d.tydecl_name
+      d.tydecl_parameters
+      (List.map (fun (f, t) -> f, extract_mlty g t) fts),
+    g  // TODO: add it to env if needed later
 
 let extract_one (file:string) : unit =
   let (gamma, decls)  : (list UEnv.binding & S.mlmodule) =
@@ -562,9 +562,11 @@ let extract_one (file:string) : unit =
       items@[Item_fn f],
       g
     | S.MLM_Loc _ -> items, g
-    // | S.MLM_Ty [ {tydecl_defn = Some (S.MLTD_Record _)} ] ->
-    //   let item, g = extract_struct_defn g d in
-    //   items@[item], g
+    | S.MLM_Ty [ {tydecl_defn = Some (S.MLTD_Record _)} ] ->
+      let item, g = extract_struct_defn g d in
+      items@[item], g
+    | S.MLM_Ty [ { tydecl_name; tydecl_parameters; tydecl_defn = Some (S.MLTD_Abbrev t)} ] ->
+      items@[mk_item_type tydecl_name tydecl_parameters (extract_mlty g t)], g
     | _ -> fail_nyi (format1 "top level decl %s" (S.mlmodule1_to_string d))
   ) ([], empty_env ()) decls in
   

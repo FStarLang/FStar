@@ -566,9 +566,30 @@ let (__proj__Mkitem_struct__item__item_struct_fields :
     match projectee with
     | { item_struct_name; item_struct_generics; item_struct_fields;_} ->
         item_struct_fields
+type item_type =
+  {
+  item_type_name: Prims.string ;
+  item_type_generics: generic_param Prims.list ;
+  item_type_typ: typ }
+let (__proj__Mkitem_type__item__item_type_name : item_type -> Prims.string) =
+  fun projectee ->
+    match projectee with
+    | { item_type_name; item_type_generics; item_type_typ;_} ->
+        item_type_name
+let (__proj__Mkitem_type__item__item_type_generics :
+  item_type -> generic_param Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { item_type_name; item_type_generics; item_type_typ;_} ->
+        item_type_generics
+let (__proj__Mkitem_type__item__item_type_typ : item_type -> typ) =
+  fun projectee ->
+    match projectee with
+    | { item_type_name; item_type_generics; item_type_typ;_} -> item_type_typ
 type item =
   | Item_fn of fn 
   | Item_struct of item_struct 
+  | Item_type of item_type 
 let (uu___is_Item_fn : item -> Prims.bool) =
   fun projectee -> match projectee with | Item_fn _0 -> true | uu___ -> false
 let (__proj__Item_fn__item___0 : item -> fn) =
@@ -578,6 +599,11 @@ let (uu___is_Item_struct : item -> Prims.bool) =
     match projectee with | Item_struct _0 -> true | uu___ -> false
 let (__proj__Item_struct__item___0 : item -> item_struct) =
   fun projectee -> match projectee with | Item_struct _0 -> _0
+let (uu___is_Item_type : item -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Item_type _0 -> true | uu___ -> false
+let (__proj__Item_type__item___0 : item -> item_type) =
+  fun projectee -> match projectee with | Item_type _0 -> _0
 type file = {
   file_name: Prims.string ;
   file_items: item Prims.list }
@@ -774,5 +800,19 @@ let (mk_item_struct :
             item_struct_fields = uu___2
           } in
         Item_struct uu___
+let (mk_item_type : Prims.string -> Prims.string Prims.list -> typ -> item) =
+  fun name ->
+    fun generics ->
+      fun t ->
+        let uu___ =
+          let uu___1 =
+            FStar_Compiler_List.map (fun uu___2 -> Generic_type_param uu___2)
+              generics in
+          {
+            item_type_name = name;
+            item_type_generics = uu___1;
+            item_type_typ = t
+          } in
+        Item_type uu___
 let (mk_file : Prims.string -> item Prims.list -> file) =
   fun file_name -> fun file_items -> { file_name; file_items }

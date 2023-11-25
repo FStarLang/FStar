@@ -1085,6 +1085,30 @@ let (extract_top_level_lb :
                                           lb.FStar_Extraction_ML_Syntax.mllb_name
                                           fn_sig in
                                       (uu___8, uu___9)))))))
+let (extract_struct_defn :
+  env ->
+    FStar_Extraction_ML_Syntax.mlmodule1 ->
+      (Pulse2Rust_Rust_Syntax.item * env))
+  =
+  fun g ->
+    fun d ->
+      match d with
+      | FStar_Extraction_ML_Syntax.MLM_Ty (d1::[]) ->
+          let uu___ = d1.FStar_Extraction_ML_Syntax.tydecl_defn in
+          (match uu___ with
+           | FStar_Pervasives_Native.Some
+               (FStar_Extraction_ML_Syntax.MLTD_Record fts) ->
+               let uu___1 =
+                 let uu___2 =
+                   FStar_Compiler_List.map
+                     (fun uu___3 ->
+                        match uu___3 with
+                        | (f, t) ->
+                            let uu___4 = extract_mlty g t in (f, uu___4)) fts in
+                 Pulse2Rust_Rust_Syntax.mk_item_struct
+                   d1.FStar_Extraction_ML_Syntax.tydecl_name
+                   d1.FStar_Extraction_ML_Syntax.tydecl_parameters uu___2 in
+               (uu___1, g))
 let (extract_one : Prims.string -> unit) =
   fun file ->
     let uu___ =
@@ -1110,6 +1134,49 @@ let (extract_one : Prims.string -> unit) =
                                    [Pulse2Rust_Rust_Syntax.Item_fn f]), g1))
                       | FStar_Extraction_ML_Syntax.MLM_Loc uu___4 ->
                           (items, g)
+                      | FStar_Extraction_ML_Syntax.MLM_Ty
+                          ({
+                             FStar_Extraction_ML_Syntax.tydecl_assumed =
+                               uu___4;
+                             FStar_Extraction_ML_Syntax.tydecl_name = uu___5;
+                             FStar_Extraction_ML_Syntax.tydecl_ignored =
+                               uu___6;
+                             FStar_Extraction_ML_Syntax.tydecl_parameters =
+                               uu___7;
+                             FStar_Extraction_ML_Syntax.tydecl_meta = uu___8;
+                             FStar_Extraction_ML_Syntax.tydecl_defn =
+                               FStar_Pervasives_Native.Some
+                               (FStar_Extraction_ML_Syntax.MLTD_Record
+                               uu___9);_}::[])
+                          ->
+                          let uu___10 = extract_struct_defn g d in
+                          (match uu___10 with
+                           | (item, g1) ->
+                               ((FStar_Compiler_List.op_At items [item]), g1))
+                      | FStar_Extraction_ML_Syntax.MLM_Ty
+                          ({
+                             FStar_Extraction_ML_Syntax.tydecl_assumed =
+                               uu___4;
+                             FStar_Extraction_ML_Syntax.tydecl_name =
+                               tydecl_name;
+                             FStar_Extraction_ML_Syntax.tydecl_ignored =
+                               uu___5;
+                             FStar_Extraction_ML_Syntax.tydecl_parameters =
+                               tydecl_parameters;
+                             FStar_Extraction_ML_Syntax.tydecl_meta = uu___6;
+                             FStar_Extraction_ML_Syntax.tydecl_defn =
+                               FStar_Pervasives_Native.Some
+                               (FStar_Extraction_ML_Syntax.MLTD_Abbrev t);_}::[])
+                          ->
+                          let uu___7 =
+                            let uu___8 =
+                              let uu___9 =
+                                let uu___10 = extract_mlty g t in
+                                Pulse2Rust_Rust_Syntax.mk_item_type
+                                  tydecl_name tydecl_parameters uu___10 in
+                              [uu___9] in
+                            FStar_Compiler_List.op_At items uu___8 in
+                          (uu___7, g)
                       | uu___4 ->
                           let uu___5 =
                             let uu___6 =

@@ -159,4 +159,11 @@ let mk_item_struct (name:string) (generics:list string) (fields:list (string & t
     }) fields;
   }
 
+let mk_item_type (name:string) (generics:list string) (t:typ) : item =
+  Item_type {
+    item_type_name = name;
+    item_type_generics = L.map Generic_type_param generics;
+    item_type_typ = t;
+  }
+
 let mk_file (file_name:string) (file_items:list item) : file = { file_name; file_items }

@@ -203,9 +203,16 @@ type item_struct = {
   item_struct_fields : list field_typ;
 }
 
+type item_type = {
+  item_type_name : string;
+  item_type_generics : list generic_param;
+  item_type_typ : typ;
+}
+
 type item =
   | Item_fn of fn
   | Item_struct of item_struct
+  | Item_type of item_type
 
 type file = {
   file_name : string;
@@ -253,5 +260,7 @@ val mk_fn (fn_sig:fn_signature) (fn_body:list stmt) : fn
 
 val mk_item_struct (name:string) (generics:list string) (fields:list (string & typ))
   : item
+
+val mk_item_type (name:string) (generics:list string) (t:typ) : item
 
 val mk_file (name:string) (items:list item) : file
