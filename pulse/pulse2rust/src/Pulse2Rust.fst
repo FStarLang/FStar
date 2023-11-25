@@ -450,6 +450,10 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     let head = extract_mlexpr g head in
     let args = List.map (extract_mlexpr g) args in
     mk_call head args
+
+  | S.MLE_CTor (p, args) ->
+    mk_call (mk_expr_path_singl (snd p)) (List.map (extract_mlexpr g) args)
+
   | S.MLE_TApp (head, _) -> extract_mlexpr g head  // make type applications explicit in the Rust code?
   | S.MLE_If (cond, if_then, if_else_opt) ->
     let cond = extract_mlexpr g cond in

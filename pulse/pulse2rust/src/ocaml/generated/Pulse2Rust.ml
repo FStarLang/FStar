@@ -901,6 +901,12 @@ and (extract_mlexpr :
           let head1 = extract_mlexpr g head in
           let args1 = FStar_Compiler_List.map (extract_mlexpr g) args in
           Pulse2Rust_Rust_Syntax.mk_call head1 args1
+      | FStar_Extraction_ML_Syntax.MLE_CTor (p, args) ->
+          let uu___ =
+            Pulse2Rust_Rust_Syntax.mk_expr_path_singl
+              (FStar_Pervasives_Native.snd p) in
+          let uu___1 = FStar_Compiler_List.map (extract_mlexpr g) args in
+          Pulse2Rust_Rust_Syntax.mk_call uu___ uu___1
       | FStar_Extraction_ML_Syntax.MLE_TApp (head, uu___) ->
           extract_mlexpr g head
       | FStar_Extraction_ML_Syntax.MLE_If (cond, if_then, if_else_opt) ->
