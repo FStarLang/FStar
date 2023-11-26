@@ -233,13 +233,13 @@ struct FieldTyp {
 
 struct ItemStruct {
     item_struct_name: String,
-    item_struct_generics: Vec<String>,
+    item_struct_generics: Vec<GenericParam>,
     item_struct_fields: Vec<FieldTyp>,
 }
 
 struct ItemType {
     item_type_name: String,
-    item_type_generics: Vec<String>,
+    item_type_generics: Vec<GenericParam>,
     item_type_typ: Typ,
 }
 
@@ -250,7 +250,7 @@ struct EnumVariant {
 
 struct ItemEnum {
     item_enum_name: String,
-    item_enum_generics: Vec<String>,
+    item_enum_generics: Vec<GenericParam>,
     item_enum_variants: Vec<EnumVariant>,
 }
 
@@ -568,7 +568,7 @@ impl_from_ocaml_record! {
 impl_from_ocaml_record! {
   ItemStruct {
     item_struct_name : String,
-    item_struct_generics : OCamlList<String>,
+    item_struct_generics : OCamlList<GenericParam>,
     item_struct_fields : OCamlList<FieldTyp>,
   }
 }
@@ -576,7 +576,7 @@ impl_from_ocaml_record! {
 impl_from_ocaml_record! {
   ItemType {
     item_type_name : String,
-    item_type_generics : OCamlList<String>,
+    item_type_generics : OCamlList<GenericParam>,
     item_type_typ : Typ,
   }
 }
@@ -591,7 +591,7 @@ impl_from_ocaml_record! {
 impl_from_ocaml_record! {
   ItemEnum {
     item_enum_name : String,
-    item_enum_generics : OCamlList<String>,
+    item_enum_generics : OCamlList<GenericParam>,
     item_enum_variants : OCamlList<EnumVariant>,
   }
 }
@@ -1269,6 +1269,7 @@ fn to_syn_item(i: &Item) -> syn::Item {
         }) => {
             let mut generics: Punctuated<syn::GenericParam, Comma> = Punctuated::new();
             item_struct_generics.iter().for_each(|s| {
+                let GenericParam::GenericTypeParam(s) = s;
                 generics.push(syn::GenericParam::Type(syn::TypeParam {
                     attrs: vec![],
                     ident: Ident::new(s, Span::call_site()),
@@ -1334,6 +1335,7 @@ fn to_syn_item(i: &Item) -> syn::Item {
         }) => {
             let mut generics: Punctuated<syn::GenericParam, Comma> = Punctuated::new();
             item_type_generics.iter().for_each(|s| {
+                let GenericParam::GenericTypeParam(s) = s;
                 generics.push(syn::GenericParam::Type(syn::TypeParam {
                     attrs: vec![],
                     ident: Ident::new(s, Span::call_site()),
@@ -1380,6 +1382,7 @@ fn to_syn_item(i: &Item) -> syn::Item {
         }) => {
             let mut generics: Punctuated<syn::GenericParam, Comma> = Punctuated::new();
             item_enum_generics.iter().for_each(|s| {
+                let GenericParam::GenericTypeParam(s) = s;
                 generics.push(syn::GenericParam::Type(syn::TypeParam {
                     attrs: vec![],
                     ident: Ident::new(s, Span::call_site()),
@@ -1800,17 +1803,12 @@ impl fmt::Display for Item {
             Item::IFn(func) => write!(f, "{}", func),
             Item::IStruct(ItemStruct {
                 item_struct_name,
-                item_struct_generics,
                 item_struct_fields,
+                ..
             }) => write!(
                 f,
-                "struct {}<{}> {{ {} }}",
+                "struct {} {{ {} }}",
                 item_struct_name,
-                item_struct_generics
-                    .iter()
-                    .map(|s| s.to_string())
-                    .collect::<Vec<_>>()
-                    .join(","),
                 item_struct_fields
                     .iter()
                     .map(|ft| ft.to_string())
@@ -1819,32 +1817,17 @@ impl fmt::Display for Item {
             ),
             Item::IType(ItemType {
                 item_type_name,
-                item_type_generics,
                 item_type_typ,
-            }) => write!(
-                f,
-                "type {}<{}> = {}",
-                item_type_name,
-                item_type_generics
-                    .iter()
-                    .map(|s| s.to_string())
-                    .collect::<Vec<_>>()
-                    .join(","),
-                item_type_typ
-            ),
+                ..
+            }) => write!(f, "type {} = {}", item_type_name, item_type_typ),
             Item::IEnum(ItemEnum {
                 item_enum_name,
-                item_enum_generics,
                 item_enum_variants,
+                ..
             }) => write!(
                 f,
-                "enum {}<{}> {{ {} }}",
+                "enum {} {{ {} }}",
                 item_enum_name,
-                item_enum_generics
-                    .iter()
-                    .map(|s| s.to_string())
-                    .collect::<Vec<_>>()
-                    .join(","),
                 item_enum_variants
                     .iter()
                     .map(|v| v.to_string())
