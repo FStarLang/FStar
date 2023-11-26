@@ -18,6 +18,7 @@ type lit =
   | Lit_int of lit_int
   | Lit_bool of bool
   | Lit_unit
+  | Lit_string of string
 
 type binop =
   | Add
@@ -232,11 +233,18 @@ type item_enum = {
   item_enum_variants : list enum_variant
 }
 
+type item_static = {
+  item_static_name : string;
+  item_static_typ  : typ;
+  item_static_init : expr;
+}
+
 type item =
   | Item_fn of fn
   | Item_struct of item_struct
   | Item_type of item_type
   | Item_enum of item_enum
+  | Item_static of item_static
 
 type file = {
   file_name : string;
@@ -290,5 +298,7 @@ val mk_item_type (name:string) (generics:list string) (t:typ) : item
 
 val mk_item_enum (name:string) (generics:list string) (variants:list (string & list typ))
   : item
+
+val mk_item_static (name:string) (t:typ) (init:expr) : item
 
 val mk_file (name:string) (items:list item) : file

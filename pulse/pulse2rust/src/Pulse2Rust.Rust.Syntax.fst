@@ -186,4 +186,11 @@ let mk_item_enum (name:string) (generics:list string) (variants:list (string & l
     }) variants;
   }
 
+let mk_item_static (name:string) (t:typ) (init:expr) : item =
+  Item_static {
+    item_static_name = name;
+    item_static_typ = t;
+    item_static_init = init;
+  }
+
 let mk_file (file_name:string) (file_items:list item) : file = { file_name; file_items }

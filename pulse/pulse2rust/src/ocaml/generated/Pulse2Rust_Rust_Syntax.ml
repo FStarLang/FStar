@@ -38,6 +38,7 @@ type lit =
   | Lit_int of lit_int 
   | Lit_bool of Prims.bool 
   | Lit_unit 
+  | Lit_string of Prims.string 
 let (uu___is_Lit_int : lit -> Prims.bool) =
   fun projectee -> match projectee with | Lit_int _0 -> true | uu___ -> false
 let (__proj__Lit_int__item___0 : lit -> lit_int) =
@@ -49,6 +50,11 @@ let (__proj__Lit_bool__item___0 : lit -> Prims.bool) =
   fun projectee -> match projectee with | Lit_bool _0 -> _0
 let (uu___is_Lit_unit : lit -> Prims.bool) =
   fun projectee -> match projectee with | Lit_unit -> true | uu___ -> false
+let (uu___is_Lit_string : lit -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Lit_string _0 -> true | uu___ -> false
+let (__proj__Lit_string__item___0 : lit -> Prims.string) =
+  fun projectee -> match projectee with | Lit_string _0 -> _0
 type binop =
   | Add 
   | Sub 
@@ -656,11 +662,33 @@ let (__proj__Mkitem_enum__item__item_enum_variants :
     match projectee with
     | { item_enum_name; item_enum_generics; item_enum_variants;_} ->
         item_enum_variants
+type item_static =
+  {
+  item_static_name: Prims.string ;
+  item_static_typ: typ ;
+  item_static_init: expr }
+let (__proj__Mkitem_static__item__item_static_name :
+  item_static -> Prims.string) =
+  fun projectee ->
+    match projectee with
+    | { item_static_name; item_static_typ; item_static_init;_} ->
+        item_static_name
+let (__proj__Mkitem_static__item__item_static_typ : item_static -> typ) =
+  fun projectee ->
+    match projectee with
+    | { item_static_name; item_static_typ; item_static_init;_} ->
+        item_static_typ
+let (__proj__Mkitem_static__item__item_static_init : item_static -> expr) =
+  fun projectee ->
+    match projectee with
+    | { item_static_name; item_static_typ; item_static_init;_} ->
+        item_static_init
 type item =
   | Item_fn of fn 
   | Item_struct of item_struct 
   | Item_type of item_type 
   | Item_enum of item_enum 
+  | Item_static of item_static 
 let (uu___is_Item_fn : item -> Prims.bool) =
   fun projectee -> match projectee with | Item_fn _0 -> true | uu___ -> false
 let (__proj__Item_fn__item___0 : item -> fn) =
@@ -680,6 +708,11 @@ let (uu___is_Item_enum : item -> Prims.bool) =
     match projectee with | Item_enum _0 -> true | uu___ -> false
 let (__proj__Item_enum__item___0 : item -> item_enum) =
   fun projectee -> match projectee with | Item_enum _0 -> _0
+let (uu___is_Item_static : item -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Item_static _0 -> true | uu___ -> false
+let (__proj__Item_static__item___0 : item -> item_static) =
+  fun projectee -> match projectee with | Item_static _0 -> _0
 type file = {
   file_name: Prims.string ;
   file_items: item Prims.list }
@@ -927,5 +960,15 @@ let (mk_item_enum :
             item_enum_variants = uu___2
           } in
         Item_enum uu___
+let (mk_item_static : Prims.string -> typ -> expr -> item) =
+  fun name ->
+    fun t ->
+      fun init ->
+        Item_static
+          {
+            item_static_name = name;
+            item_static_typ = t;
+            item_static_init = init
+          }
 let (mk_file : Prims.string -> item Prims.list -> file) =
   fun file_name -> fun file_items -> { file_name; file_items }

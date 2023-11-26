@@ -22,7 +22,8 @@ type var = string
 type binding = var & typ & bool // name, type, is_mut
 
 type env = {
-  fvs : list (string & fn_signature);
+  fns : list (string & fn_signature);
+  statics : list (string & typ);
   gamma : list binding;
 }
 
@@ -52,16 +53,19 @@ let fail (s:string) =
 let fail_nyi (s:string) =
   failwith (format1 "Pulse to Rust extraction failed: no support yet for %s" s)
 
-let empty_env () = { fvs = []; gamma = [] }
+let empty_env () = { fns = []; gamma = []; statics = []; }
 
 let lookup_global_fn (g:env) (s:string) : option fn_signature =
-  map_option (fun (_, t) -> t) (tryFind (fun (f, _) -> f = s) g.fvs)
+  map_option (fun (_, t) -> t) (tryFind (fun (f, _) -> f = s) g.fns)
 
 let lookup_local (g:env) (s:string) : option (typ & bool) =
   map_option (fun (_, t, b) -> t, b) (tryFind (fun (x, _, _) -> x = s) g.gamma)
 
-let push_fv (g:env) (s:string) (t:fn_signature) : env =
-  { g with fvs = (s, t)::g.fvs }
+let push_fn (g:env) (s:string) (t:fn_signature) : env =
+  { g with fns = (s, t)::g.fns }
+
+let push_static (g:env) (s:string) (t:typ) : env =
+  { g with statics = (s, t)::g.statics }
 
 let push_local (g:env) (s:string) (t:typ) (is_mut:bool) : env =
   { g with gamma = (s, t, is_mut)::g.gamma }
@@ -72,14 +76,16 @@ let push_local (g:env) (s:string) (t:typ) (is_mut:bool) : env =
 //   to see whether a variable is mut
 // Later, this may be used to insert coercions (e.g., &)
 //
-let type_of (g:env) (e:expr) : typ & bool =  // is_mut
+let type_of (g:env) (e:expr) : bool =  // is_mut
   match e with
   | Expr_path [s] ->
     (match lookup_local g s with
-     | Some (t, b) -> t, b
+     | Some (_t, b) -> b
      | None -> fail (format1 "lookup in env for %s" s))
+  
+  | _ -> false
 
-  | _ -> fail_nyi (format1 "type_of %s" (expr_to_string e))
+  // | _ -> fail_nyi (format1 "type_of %s" (expr_to_string e))
 
 //
 // rust functions are uncurried
@@ -180,7 +186,7 @@ let extract_top_level_sig
   let fn_args =
     List.map2 (extract_top_level_fn_arg g) (List.map varname arg_names) arg_ts in
   let fn_ret_t = extract_mltyopt g ret_t in
-  mk_fn_signature fn_name tvars fn_args fn_ret_t,
+  mk_fn_signature fn_name (List.map tyvar_of tvars) fn_args fn_ret_t,
   fold_left (fun g (arg_name, arg) -> push_fn_arg g arg_name arg) g (zip arg_names fn_args)
 
 let arg_ts_and_ret_t (t:S.mltyscheme)
@@ -241,6 +247,7 @@ let extract_mlconstant_to_lit (c:S.mlconstant) : lit =
       | None -> None in
     Lit_int {lit_int_val; lit_int_signed; lit_int_width}
   | S.MLC_Bool b -> Lit_bool b
+  | S.MLC_String s -> Lit_string s
   | _ -> fail_nyi (format1 "mlconstant_to_lit %s" (S.mlconstant_to_string c))
 
 
@@ -347,7 +354,7 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
          S.string_of_mlpath p = "Pulse.Lib.Box.op_Colon_Equals" ->
     let e1 = extract_mlexpr g e1 in
     let e2 = extract_mlexpr g e2 in
-    let _, b = type_of g e1 in
+    let b = type_of g e1 in
     if b
     then mk_assign e1 e2
     else mk_ref_assign e1 e2
@@ -355,7 +362,7 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     when S.string_of_mlpath p = "Pulse.Lib.Reference.op_Bang" ||
          S.string_of_mlpath p = "Pulse.Lib.Box.op_Bang" ->
     let e = extract_mlexpr g e in
-    let _, b = type_of g e in
+    let b = type_of g e in
     if b then e
     else mk_ref_read e
   
@@ -514,7 +521,7 @@ and extract_mlbranch_to_arm (g:env) ((pat, pat_guard, body):S.mlbranch) : arm =
     let arm_body = extract_mlexpr g body in
     mk_arm pat arm_body
 
-let extract_top_level_lb (g:env) (lbs:S.mlletbinding) : fn & env =
+let extract_top_level_lb (g:env) (lbs:S.mlletbinding) : item & env =
   let is_rec, lbs = lbs in
   if is_rec = S.Rec
   then fail_nyi "recursive let bindings"
@@ -533,15 +540,22 @@ let extract_top_level_lb (g:env) (lbs:S.mlletbinding) : fn & env =
           [], List.map snd bs, None in
       
       let fn_sig, g_body =
-        extract_top_level_sig g lb.mllb_name (List.map tyvar_of tvars) arg_names arg_ts ret_t in
+        extract_top_level_sig g lb.mllb_name tvars arg_names arg_ts ret_t in
        let fn_body = extract_mlexpr_to_stmts g_body body in
 
-      mk_fn fn_sig fn_body,
-      push_fv g lb.mllb_name fn_sig
+      Item_fn (mk_fn fn_sig fn_body),
+      push_fn g lb.mllb_name fn_sig
     
-    | _ -> fail_nyi (format1 "top level lb def %s" (S.mlexpr_to_string lb.mllb_def))
+    | _ ->
+      match lb.mllb_tysc with
+      | Some ([], ty) ->
+        let name = lb.mllb_name in
+        let ty = extract_mlty g ty in
+        (mk_item_static name ty (extract_mlexpr g lb.mllb_def)),
+        push_static g name ty
+      | _ ->
+        fail_nyi (format1 "top level lb def with either no tysc or generics %s" (S.mlexpr_to_string lb.mllb_def))
   end
-          
 
   //   let tvars, arg_ts, ret_t 
 
@@ -578,20 +592,20 @@ let extract_struct_defn (g:env) (d:S.one_mltydecl) : item & env =
   let Some (S.MLTD_Record fts) = d.tydecl_defn in
   mk_item_struct
     d.tydecl_name
-    d.tydecl_parameters
+    (List.map tyvar_of d.tydecl_parameters)
     (List.map (fun (f, t) -> f, extract_mlty g t) fts),
   g  // TODO: add it to env if needed later
 
 let extract_type_abbrev (g:env) (d:S.one_mltydecl) : item & env =
   let Some (S.MLTD_Abbrev t) = d.tydecl_defn in
-  (mk_item_type d.tydecl_name d.tydecl_parameters (extract_mlty g t)),
+  (mk_item_type d.tydecl_name (List.map tyvar_of d.tydecl_parameters) (extract_mlty g t)),
   g
   
 let extract_enum (g:env) (d:S.one_mltydecl) : item & env =
   let Some (S.MLTD_DType cts) = d.tydecl_defn in
   mk_item_enum
     d.tydecl_name
-    d.tydecl_parameters
+    (List.map tyvar_of d.tydecl_parameters)
     (List.map (fun (cname, dts) -> cname, List.map (fun (_, t) -> extract_mlty g t) dts) cts),
   g  // TODO: add it to env if needed later
 
@@ -620,7 +634,7 @@ let extract_one (file:string) : unit =
       let f, g = extract_top_level_lb g lb in
       // print_string "Extracted to:\n";
       // print_string (RustBindings.fn_to_rust f ^ "\n");
-      items@[Item_fn f],
+      items@[f],
       g
     | S.MLM_Loc _ -> items, g
     | S.MLM_Ty d ->

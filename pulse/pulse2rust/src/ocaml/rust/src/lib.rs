@@ -31,6 +31,7 @@ enum Lit {
     LitInt(LitInt),
     LitBool(bool),
     LitUnit,
+    LitString(String),
 }
 
 enum BinOp {
@@ -254,11 +255,18 @@ struct ItemEnum {
     item_enum_variants: Vec<EnumVariant>,
 }
 
+struct ItemStatic {
+    item_static_name: String,
+    item_static_typ: Typ,
+    item_static_init: Expr,
+}
+
 enum Item {
     IFn(Fn),
     IStruct(ItemStruct),
     IType(ItemType),
     IEnum(ItemEnum),
+    IStatic(ItemStatic),
 }
 
 #[allow(dead_code)]
@@ -296,6 +304,7 @@ impl_from_ocaml_variant! {
     Lit::LitInt (payload:LitInt),
     Lit::LitBool (payload:bool),
     Lit::LitUnit,
+    Lit::LitString (payload:String),
   }
 }
 
@@ -596,12 +605,21 @@ impl_from_ocaml_record! {
   }
 }
 
+impl_from_ocaml_record! {
+  ItemStatic {
+    item_static_name : String,
+    item_static_typ : Typ,
+    item_static_init : Expr,
+  }
+}
+
 impl_from_ocaml_variant! {
   Item {
     Item::IFn (payload:Fn),
     Item::IStruct (payload:ItemStruct),
     Item::IType (payload:ItemType),
     Item::IEnum (payload:ItemEnum),
+    Item::IStatic (payload:ItemStatic),
   }
 }
 
@@ -742,6 +760,7 @@ fn to_syn_lit(e: &Lit) -> syn::Lit {
             span: Span::call_site(),
         }),
         Lit::LitUnit => panic!("Don't know how to translate LitUnit"),
+        Lit::LitString(s) => syn::Lit::Str(syn::LitStr::new(s, Span::call_site())),
     }
 }
 
@@ -1448,6 +1467,36 @@ fn to_syn_item(i: &Item) -> syn::Item {
                 variants,
             })
         }
+        Item::IStatic(ItemStatic {
+            item_static_name,
+            item_static_typ,
+            item_static_init,
+        }) => syn::Item::Static(syn::ItemStatic {
+            attrs: vec![],
+            vis: syn::Visibility::Public({
+                syn::token::Pub {
+                    span: Span::call_site(),
+                }
+            }),
+            static_token: syn::token::Static {
+                span: Span::call_site(),
+            },
+            mutability: syn::StaticMutability::Mut(syn::token::Mut {
+                span: Span::call_site(),
+            }),
+            ident: Ident::new(&item_static_name, Span::call_site()),
+            colon_token: Colon {
+                spans: [Span::call_site()],
+            },
+            ty: Box::new(to_syn_typ(&item_static_typ)),
+            eq_token: syn::token::Eq {
+                spans: [Span::call_site()],
+            },
+            expr: Box::new(to_syn_expr(&item_static_init)),
+            semi_token: syn::token::Semi {
+                spans: [Span::call_site()],
+            },
+        }),
     }
 }
 
@@ -1512,6 +1561,7 @@ impl fmt::Display for Lit {
             Lit::LitInt(LitInt { lit_int_val, .. }) => write!(f, "{}", lit_int_val),
             Lit::LitBool(b) => write!(f, "{}", b),
             Lit::LitUnit => write!(f, "()"),
+            Lit::LitString(s) => write!(f, "\"{}\"", s),
         }
     }
 }
@@ -1833,6 +1883,15 @@ impl fmt::Display for Item {
                     .map(|v| v.to_string())
                     .collect::<Vec<_>>()
                     .join(",")
+            ),
+            Item::IStatic(ItemStatic {
+                item_static_name,
+                item_static_typ,
+                item_static_init,
+            }) => write!(
+                f,
+                "static {}: {} = {}",
+                item_static_name, item_static_typ, item_static_init
             ),
         }
     }
