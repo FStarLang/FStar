@@ -33,3 +33,8 @@ test: test-cbor
 .PHONY: test test-cbor test-cbor-raw
 
 include Makefile.pulse.common
+
+PULSE_LIB_CHECKED_FILES=$(filter $(CACHE_DIRECTORY)/Pulse.Lib.%,$(ALL_CHECKED_FILES))
+
+.PHONY: lib
+lib: $(PULSE_LIB_CHECKED_FILES)
