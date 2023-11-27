@@ -24,7 +24,7 @@ let (char_of_typechar :
           if FStar_Compiler_Util.starts_with p1 "Steel.C.Typestring.c"
           then
             (let uu___1 =
-               FStar_String.get p1
+               FStar_Compiler_String.get p1
                  (FStar_String.strlen "Steel.C.Typestring.c") in
              FStar_Pervasives_Native.Some uu___1)
           else FStar_Pervasives_Native.None
@@ -50,7 +50,8 @@ let (string_of_typestring :
                opt_bind uu___1
                  (fun s' ->
                     let uu___2 =
-                      let uu___3 = FStar_String.make Prims.int_one c' in
+                      let uu___3 =
+                        FStar_Compiler_String.make Prims.int_one c' in
                       uu___3 :: s' in
                     FStar_Pervasives_Native.Some uu___2))
       | uu___ -> FStar_Pervasives_Native.None in
