@@ -26,7 +26,8 @@ open FStar.Compiler.Dyn
 open FStar.Const
 module O = FStar.Options
 open FStar.VConfig
-open FStar.Class.Printable
+
+include FStar.Class.HasRange
 
 (* Objects with metadata *)
 [@@ PpxDerivingYoJson; PpxDerivingShow ]
@@ -889,3 +890,7 @@ val t_sealed_of     : term -> term
 
 val unit_const_with_range : Range.range -> term
 val unit_const            : term
+
+instance val has_range_syntax #a : Tot (hasRange (syntax a))
+instance val has_range_withinfo #a : Tot (hasRange (withinfo_t a))
+instance val has_range_sigelt : hasRange sigelt

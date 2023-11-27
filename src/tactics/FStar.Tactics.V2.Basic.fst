@@ -583,7 +583,7 @@ let tadmit_t (t:term) : tac unit = wrap_err "tadmit_t" <|
     bind get (fun ps ->
     bind cur_goal (fun g ->
     // should somehow taint the state instead of just printing a warning
-    Err.log_issue (goal_type g).pos
+    Err.log_issue (pos (goal_type g))
         (Errors.Warning_TacAdmit, BU.format1 "Tactics admitted goal <%s>\n\n"
                     (goal_to_string "" None ps g));
     solve' g t))
