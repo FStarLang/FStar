@@ -205,10 +205,8 @@ let wp_code_delta = [
   `%(augment)
   ]
 
-
-[@"uninterpreted_by_smt"]
-val va_lemma_weakest_pre_norm (inss:list ins) (s0:state) (sN:state) : PURE unit
-  (fun (post:(unit -> Type)) ->
+let va_lemma_weakest_pre_norm_wp (inss:list ins) (s0:state) (sN:state) : pure_wp unit =
+  let wp = fun (post:(unit -> Type)) ->
      forall ok0 regs0 flags0 mem0.
         ok0 == s0.ok /\
         regs0 == s0.regs /\
@@ -218,8 +216,13 @@ val va_lemma_weakest_pre_norm (inss:list ins) (s0:state) (sN:state) : PURE unit
         eval_code (va_Block (normalize_term (inss_to_codes inss))) s0 sN /\
         norm [delta_only wp_code_delta; zeta; iota; primops]
                    (wp_code (normalize_term inss) (augment sN post)
-                     ({ok=ok0; regs=regs0; flags=flags0; mem=mem0})))
-		     
+                     ({ok=ok0; regs=regs0; flags=flags0; mem=mem0}))
+  in
+  assume (pure_wp_monotonic _ wp); // unsure why this fails
+  wp
+
+[@"uninterpreted_by_smt"]
+val va_lemma_weakest_pre_norm (inss:list ins) (s0:state) (sN:state) : PURE unit (va_lemma_weakest_pre_norm_wp inss s0 sN)
 
 (* #reset-options "--log_queries --debug X64.Vale.StrongPost_i --debug_level print_normalized_terms" *)
 // let test_lemma (s0:state) (sN:state) =

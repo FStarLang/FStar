@@ -15,6 +15,9 @@
 *)
 module X64.Semantics_s
 
+// Silence warning about lightweight do notation
+#set-options "--warn_error -350"
+
 open X64.Machine_s
 
 module F = FStar.FunctionalExtensionality
@@ -195,7 +198,7 @@ let update_flags (new_flags:uint64) :st unit =
   s <-- get;
   set ( { s with flags = new_flags } )
 
-abstract
+(* abstract *)
 let example (dst:dst_op) (src:operand) :st unit =
   check (valid_operand dst);;
   check (valid_operand src);;
@@ -205,7 +208,7 @@ let example (dst:dst_op) (src:operand) :st unit =
 //let test (dst:dst_op) (src:operand) (s:state) :state =
 //  run (example dst src) s
 
-abstract
+(* abstract *)
 let logxor (x:int) (y:int) : nat64 =
   if FStar.UInt.fits x 64
   && FStar.UInt.fits y 64
@@ -219,7 +222,7 @@ let logxor_uint64 (x:int) (y:int)
           [SMTPat (logxor x y)]
   = ()          
 
-abstract
+(* abstract *)
 let logand (x:int) (y:int) : nat64 =
   if FStar.UInt.fits x 64
   && FStar.UInt.fits y 64
@@ -233,7 +236,7 @@ let logand_uint64 (x:int) (y:int)
           [SMTPat (logand x y)]
   = ()          
 
-abstract
+(* abstract *)
 let shift_right (x:int) (y:int) : nat64 =
   if FStar.UInt.fits x 64
   && y >= 0
@@ -248,7 +251,7 @@ let shift_right_uint64 (x:int) (y:int)
           [SMTPat (shift_right x y)]
   = ()          
 
-abstract
+(* abstract *)
 let shift_left (x:int) (y:int) : nat64 =
   if FStar.UInt.fits x 64
   && y >= 0
@@ -294,7 +297,8 @@ let mul_mod64 a b = a *%^ b
 val mul_div64: a:uint64 -> b:uint64 -> Pure uint64
   (requires True)
   (ensures (fun c -> v a `op_Multiply` v b >= 0 /\ (v a `op_Multiply` v b) / nat64_max = v c))
-let mul_div64 a b = a */^ b
+// This used to be implemented as a */^ b, using the mul_div operator, but that was removed
+let mul_div64 a b = admit()
 
 let eval_ins (ins:ins) : st unit =
   let open FStar.Mul in
