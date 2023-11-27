@@ -1097,7 +1097,7 @@ let (check_smt_pat :
                 ->
                 (check_pat_fvs t.FStar_Syntax_Syntax.pos env pats bs;
                  check_no_smt_theory_symbols env pats)
-            | uu___1 -> failwith "Impossible"
+            | uu___1 -> failwith "Impossible: check_smt_pat: not Comp"
           else ()
 let (guard_letrecs :
   FStar_TypeChecker_Env.env ->
@@ -5380,7 +5380,9 @@ and (tc_abs_expected_function_typ :
                 | FStar_Syntax_Syntax.Tm_uvar uu___1 ->
                     ((match env.FStar_TypeChecker_Env.letrecs with
                       | [] -> ()
-                      | uu___3 -> failwith "Impossible");
+                      | uu___3 ->
+                          failwith
+                            "Impossible: uvar abs with non-empty environment");
                      (let uu___3 = tc_binders env bs in
                       match uu___3 with
                       | (bs1, envbody, g_env, uu___4) ->
@@ -5404,7 +5406,9 @@ and (tc_abs_expected_function_typ :
                     ->
                     ((match env.FStar_TypeChecker_Env.letrecs with
                       | [] -> ()
-                      | uu___7 -> failwith "Impossible");
+                      | uu___7 ->
+                          failwith
+                            "Impossible: uvar abs with non-empty environment");
                      (let uu___7 = tc_binders env bs in
                       match uu___7 with
                       | (bs1, envbody, g_env, uu___8) ->
@@ -9164,7 +9168,9 @@ and (tc_pat :
                                             -> []
                                         | FStar_Syntax_Syntax.Tm_uinst
                                             (uu___9, us1) -> us1
-                                        | uu___9 -> failwith "Impossible") in
+                                        | uu___9 ->
+                                            failwith
+                                              "Impossible: tc_pat: pattern head not fvar or uinst") in
                                  match pat.FStar_Syntax_Syntax.v with
                                  | FStar_Syntax_Syntax.Pat_cons
                                      (fv1, uu___6, simple_pats) ->
@@ -9180,7 +9186,9 @@ and (tc_pat :
                                        FStar_Syntax_Syntax.p =
                                          (pat.FStar_Syntax_Syntax.p)
                                      }
-                                 | uu___6 -> failwith "Impossible" in
+                                 | uu___6 ->
+                                     failwith
+                                       "Impossible: tc_pat: pat.v expected Pat_cons" in
                                let uu___6 =
                                  reconstruct_nested_pat simple_pat_elab in
                                (bvs, tms, pat_e, uu___6, g, erasable1)))))) in
@@ -10568,7 +10576,7 @@ and (check_top_level_let :
                               FStar_TypeChecker_Common.lcomp_of_comp cres in
                             (uu___5, uu___6,
                               FStar_TypeChecker_Env.trivial_guard)))))))
-      | uu___ -> failwith "Impossible"
+      | uu___ -> failwith "Impossible: check_top_level_let: not a let"
 and (maybe_intro_smt_lemma :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
@@ -11071,7 +11079,8 @@ and (check_top_level_let_rec :
                                               top.FStar_Syntax_Syntax.pos in
                                           (uu___7, cres,
                                             FStar_TypeChecker_Env.trivial_guard)))))))))
-      | uu___ -> failwith "Impossible"
+      | uu___ ->
+          failwith "Impossible: check_top_level_let_rec: not a let rec"
 and (check_inner_let_rec :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
@@ -11314,7 +11323,7 @@ and (check_inner_let_rec :
                                                          FStar_TypeChecker_Env.conj_guard
                                                            g_ex guard1 in
                                                        (e, cres6, uu___8))))))))))
-      | uu___ -> failwith "Impossible"
+      | uu___ -> failwith "Impossible: check_inner_let_rec: not a let rec"
 and (build_let_rec_env :
   Prims.bool ->
     FStar_TypeChecker_Env.env ->
@@ -12931,9 +12940,15 @@ let rec (universe_of_aux :
           let rec type_of_head retry env1 hd1 args1 =
             let hd2 = FStar_Syntax_Subst.compress hd1 in
             match hd2.FStar_Syntax_Syntax.n with
-            | FStar_Syntax_Syntax.Tm_unknown -> failwith "Impossible"
-            | FStar_Syntax_Syntax.Tm_bvar uu___1 -> failwith "Impossible"
-            | FStar_Syntax_Syntax.Tm_delayed uu___1 -> failwith "Impossible"
+            | FStar_Syntax_Syntax.Tm_unknown ->
+                failwith
+                  "Impossible: universe_of_aux: Tm_app: unexpected head type"
+            | FStar_Syntax_Syntax.Tm_bvar uu___1 ->
+                failwith
+                  "Impossible: universe_of_aux: Tm_app: unexpected head type"
+            | FStar_Syntax_Syntax.Tm_delayed uu___1 ->
+                failwith
+                  "Impossible: universe_of_aux: Tm_app: unexpected head type"
             | FStar_Syntax_Syntax.Tm_fvar uu___1 ->
                 let uu___2 = universe_of_aux env1 hd2 in (uu___2, args1)
             | FStar_Syntax_Syntax.Tm_name uu___1 ->

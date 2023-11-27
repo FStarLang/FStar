@@ -488,8 +488,8 @@ and (on_subterms :
                                              FStar_Syntax_Subst.closing_of_binders
                                                bs1 in
                                            let bs2 =
-                                             FStar_Syntax_Subst.subst_binders
-                                               subst bs1 in
+                                             FStar_Syntax_Subst.close_binders
+                                               bs1 in
                                            let t3 =
                                              FStar_Syntax_Subst.subst subst
                                                t2 in
@@ -625,10 +625,69 @@ and (on_subterms :
                                       FStar_Syntax_Syntax.b = x1;
                                       FStar_Syntax_Syntax.phi = phi2
                                     }))
-                | FStar_Syntax_Syntax.Tm_arrow uu___1 ->
-                    FStar_Tactics_Monad.ret
-                      ((tm1.FStar_Syntax_Syntax.n),
-                        FStar_Tactics_Types.Continue)
+                | FStar_Syntax_Syntax.Tm_arrow
+                    { FStar_Syntax_Syntax.bs1 = bs;
+                      FStar_Syntax_Syntax.comp = comp;_}
+                    ->
+                    (match comp.FStar_Syntax_Syntax.n with
+                     | FStar_Syntax_Syntax.Total t ->
+                         let uu___1 = FStar_Syntax_Subst.open_term bs t in
+                         (match uu___1 with
+                          | (bs_orig, t1) ->
+                              descend_binders tm1 [] []
+                                FStar_Tactics_Types.Continue env bs_orig t1
+                                FStar_Pervasives_Native.None
+                                (fun bs1 ->
+                                   fun t2 ->
+                                     fun uu___2 ->
+                                       FStar_Syntax_Syntax.Tm_arrow
+                                         {
+                                           FStar_Syntax_Syntax.bs1 = bs1;
+                                           FStar_Syntax_Syntax.comp =
+                                             {
+                                               FStar_Syntax_Syntax.n =
+                                                 (FStar_Syntax_Syntax.Total
+                                                    t2);
+                                               FStar_Syntax_Syntax.pos =
+                                                 (comp.FStar_Syntax_Syntax.pos);
+                                               FStar_Syntax_Syntax.vars =
+                                                 (comp.FStar_Syntax_Syntax.vars);
+                                               FStar_Syntax_Syntax.hash_code
+                                                 =
+                                                 (comp.FStar_Syntax_Syntax.hash_code)
+                                             }
+                                         }))
+                     | FStar_Syntax_Syntax.GTotal t ->
+                         let uu___1 = FStar_Syntax_Subst.open_term bs t in
+                         (match uu___1 with
+                          | (bs_orig, t1) ->
+                              descend_binders tm1 [] []
+                                FStar_Tactics_Types.Continue env bs_orig t1
+                                FStar_Pervasives_Native.None
+                                (fun bs1 ->
+                                   fun t2 ->
+                                     fun uu___2 ->
+                                       FStar_Syntax_Syntax.Tm_arrow
+                                         {
+                                           FStar_Syntax_Syntax.bs1 = bs1;
+                                           FStar_Syntax_Syntax.comp =
+                                             {
+                                               FStar_Syntax_Syntax.n =
+                                                 (FStar_Syntax_Syntax.GTotal
+                                                    t2);
+                                               FStar_Syntax_Syntax.pos =
+                                                 (comp.FStar_Syntax_Syntax.pos);
+                                               FStar_Syntax_Syntax.vars =
+                                                 (comp.FStar_Syntax_Syntax.vars);
+                                               FStar_Syntax_Syntax.hash_code
+                                                 =
+                                                 (comp.FStar_Syntax_Syntax.hash_code)
+                                             }
+                                         }))
+                     | uu___1 ->
+                         FStar_Tactics_Monad.ret
+                           ((tm1.FStar_Syntax_Syntax.n),
+                             FStar_Tactics_Types.Continue))
                 | FStar_Syntax_Syntax.Tm_match
                     { FStar_Syntax_Syntax.scrutinee = hd;
                       FStar_Syntax_Syntax.ret_opt = asc_opt;

@@ -481,7 +481,7 @@ let check_smt_pat env t bs c =
         | Comp ({effect_args=[_pre; _post; (pats, _)]}) ->
             check_pat_fvs t.pos env pats bs;
             check_no_smt_theory_symbols env pats
-        | _ -> failwith "Impossible"
+        | _ -> failwith "Impossible: check_smt_pat: not Comp"
 
 (************************************************************************************************************)
 (* Building the environment for the body of a let rec;                                                      *)
@@ -2006,7 +2006,7 @@ and tc_abs_expected_function_typ env (bs:binders) (t0:option (typ * bool)) (body
       | Tm_uvar _
       | Tm_app {hd={n=Tm_uvar _}} ->
         (* expected a uvar; build a function type from the term and unify with it *)
-        let _ = match env.letrecs with | [] -> () | _ -> failwith "Impossible" in
+        let _ = match env.letrecs with | [] -> () | _ -> failwith "Impossible: uvar abs with non-empty environment" in
         let bs, envbody, g_env, _ = tc_binders env bs in
         let envbody, _ = Env.clear_expected_typ envbody in
         Some t, bs, [], None, envbody, body, g_env
@@ -3388,13 +3388,13 @@ and tc_pat env (pat_t:typ) (p0:pat) :
                 match (SS.compress hd).n with
                 | Tm_fvar _ -> []
                 | Tm_uinst(_, us) -> us
-                | _ -> failwith "Impossible"
+                | _ -> failwith "Impossible: tc_pat: pattern head not fvar or uinst"
               in
               match pat.v with
               | Pat_cons(fv, _, simple_pats) ->
                 let nested_pats = aux simple_pats simple_bvs checked_sub_pats in
                 {pat with v=Pat_cons(fv, Some us, nested_pats)}
-              | _ -> failwith "Impossible"
+              | _ -> failwith "Impossible: tc_pat: pat.v expected Pat_cons"
           in
           bvs,
           tms,
@@ -3881,7 +3881,7 @@ and check_top_level_let env e =
          TcComm.lcomp_of_comp cres,
          Env.trivial_guard
 
-     | _ -> failwith "Impossible"
+     | _ -> failwith "Impossible: check_top_level_let: not a let"
 
 and maybe_intro_smt_lemma env lem_typ c2 =
     if U.is_smt_lemma lem_typ
@@ -4065,7 +4065,7 @@ and check_top_level_let_rec env top =
           cres,
           Env.trivial_guard
 
-        | _ -> failwith "Impossible"
+        | _ -> failwith "Impossible: check_top_level_let_rec: not a let rec"
 
 (******************************************************************************)
 (* inner let rec's are never implicitly generalized *)
@@ -4144,7 +4144,7 @@ and check_inner_let_rec env top =
                 e, cres, Env.conj_guard g_ex guard
           end
 
-        | _ -> failwith "Impossible"
+        | _ -> failwith "Impossible: check_inner_let_rec: not a let rec"
 
 (******************************************************************************)
 (* build an environment with recursively bound names.                         *)
@@ -4641,7 +4641,7 @@ let rec universe_of_aux env e : term =
         | Tm_unknown
         | Tm_bvar _
         | Tm_delayed _ ->
-          failwith "Impossible"
+          failwith "Impossible: universe_of_aux: Tm_app: unexpected head type"
         | Tm_fvar _
         | Tm_name _
         | Tm_uvar _

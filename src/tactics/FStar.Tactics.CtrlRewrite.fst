@@ -280,7 +280,8 @@ and on_subterms
           let! k, k_flag = recurse_option_residual_comp env retyping_subst k recurse in
           let bs = List.rev accum_binders in
           let subst = SS.closing_of_binders bs in
-          let bs = SS.subst_binders subst bs in
+          // For dependent binders, we need to re-compute the substitution incrementally; applying subst to bs doesn't work
+          let bs = SS.close_binders bs in
           let t = SS.subst subst t in
           let k = BU.map_option (SS.subst_residual_comp subst) k in
           ret (rebuild bs t k,
@@ -324,10 +325,21 @@ and on_subterms
                             | _ -> failwith "Impossible"
                           in
                           Tm_refine {b=x; phi})
-      
-      (* Do nothing (FIXME) *)
-      | Tm_arrow _ ->
-        ret (tm.n, Continue)
+
+      | Tm_arrow { bs = bs; comp = comp } ->
+        (match comp.n with
+        | Total t ->
+          let bs_orig, t = SS.open_term bs t in
+          descend_binders tm [] [] Continue env bs_orig t None
+                          (fun bs t _ -> Tm_arrow {bs; comp = {comp with n = Total t}})
+        | GTotal t ->
+          let bs_orig, t = SS.open_term bs t in
+          descend_binders tm [] [] Continue env bs_orig t None
+                          (fun bs t _ -> Tm_arrow {bs; comp = {comp with n = GTotal t}})
+        | _ ->
+          (* Do nothing (FIXME).
+            What should we do for effectful computations? *)
+          ret (tm.n, Continue))
 
       (* Descend on head and branches in parallel. Branches
        * are opened with their contexts extended. Ignore the when clause,
