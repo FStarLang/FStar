@@ -112,6 +112,8 @@ let (reifying_false : config -> config) =
            FStar_TypeChecker_Cfg.debug = (uu___.FStar_TypeChecker_Cfg.debug);
            FStar_TypeChecker_Cfg.delta_level =
              (uu___.FStar_TypeChecker_Cfg.delta_level);
+           FStar_TypeChecker_Cfg.unfold_strict_fvs =
+             (uu___.FStar_TypeChecker_Cfg.unfold_strict_fvs);
            FStar_TypeChecker_Cfg.primitive_steps =
              (uu___.FStar_TypeChecker_Cfg.primitive_steps);
            FStar_TypeChecker_Cfg.strong =
@@ -137,6 +139,8 @@ let (reifying_true : config -> config) =
            FStar_TypeChecker_Cfg.debug = (uu___.FStar_TypeChecker_Cfg.debug);
            FStar_TypeChecker_Cfg.delta_level =
              (uu___.FStar_TypeChecker_Cfg.delta_level);
+           FStar_TypeChecker_Cfg.unfold_strict_fvs =
+             (uu___.FStar_TypeChecker_Cfg.unfold_strict_fvs);
            FStar_TypeChecker_Cfg.primitive_steps =
              (uu___.FStar_TypeChecker_Cfg.primitive_steps);
            FStar_TypeChecker_Cfg.strong =
@@ -225,6 +229,8 @@ let (zeta_false : config -> config) =
             (cfg_core.FStar_TypeChecker_Cfg.debug);
           FStar_TypeChecker_Cfg.delta_level =
             (cfg_core.FStar_TypeChecker_Cfg.delta_level);
+          FStar_TypeChecker_Cfg.unfold_strict_fvs =
+            (cfg_core.FStar_TypeChecker_Cfg.unfold_strict_fvs);
           FStar_TypeChecker_Cfg.primitive_steps =
             (cfg_core.FStar_TypeChecker_Cfg.primitive_steps);
           FStar_TypeChecker_Cfg.strong =
@@ -1719,7 +1725,7 @@ and (translate_fv :
         then FStar_TypeChecker_NBETerm.mkConstruct fvar [] []
         else
           (let uu___2 =
-             FStar_TypeChecker_Normalize.should_unfold cfg.core_cfg
+             FStar_TypeChecker_Normalize.should_unfold cfg.core_cfg false
                (fun uu___3 -> (cfg.core_cfg).FStar_TypeChecker_Cfg.reifying)
                fvar qninfo in
            match uu___2 with
@@ -3347,6 +3353,8 @@ let (normalize :
               FStar_TypeChecker_Cfg.debug = (cfg.FStar_TypeChecker_Cfg.debug);
               FStar_TypeChecker_Cfg.delta_level =
                 (cfg.FStar_TypeChecker_Cfg.delta_level);
+              FStar_TypeChecker_Cfg.unfold_strict_fvs =
+                (cfg.FStar_TypeChecker_Cfg.unfold_strict_fvs);
               FStar_TypeChecker_Cfg.primitive_steps =
                 (cfg.FStar_TypeChecker_Cfg.primitive_steps);
               FStar_TypeChecker_Cfg.strong =
@@ -3459,6 +3467,8 @@ let (normalize_for_unit_test :
             FStar_TypeChecker_Cfg.debug = (cfg.FStar_TypeChecker_Cfg.debug);
             FStar_TypeChecker_Cfg.delta_level =
               (cfg.FStar_TypeChecker_Cfg.delta_level);
+            FStar_TypeChecker_Cfg.unfold_strict_fvs =
+              (cfg.FStar_TypeChecker_Cfg.unfold_strict_fvs);
             FStar_TypeChecker_Cfg.primitive_steps =
               (cfg.FStar_TypeChecker_Cfg.primitive_steps);
             FStar_TypeChecker_Cfg.strong = (cfg.FStar_TypeChecker_Cfg.strong);

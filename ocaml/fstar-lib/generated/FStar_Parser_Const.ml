@@ -292,6 +292,8 @@ let (must_erase_for_extraction_attr : FStar_Ident.lident) =
   psconst "must_erase_for_extraction"
 let (strict_on_arguments_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "strict_on_arguments"]
+let (strict_on_arguments_unfold_attr : FStar_Ident.lident) =
+  p2l ["FStar"; "Pervasives"; "strict_on_arguments_unfold"]
 let (resolve_implicits_attr_string : Prims.string) =
   "FStar.Pervasives.resolve_implicits"
 let (override_resolve_implicits_handler_lid : FStar_Ident.lident) =
