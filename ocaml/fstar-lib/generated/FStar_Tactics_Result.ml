@@ -12,3 +12,4 @@ let uu___is_Failed : 'a . 'a __result -> Prims.bool =
 let __proj__Failed__item___0 :
   'a . 'a __result -> (Prims.exn * FStar_Tactics_Types.proofstate) =
   fun projectee -> match projectee with | Failed _0 -> _0
+type proofstate = FStar_Tactics_Types.proofstate

@@ -47,7 +47,8 @@ let (lookup_tyname :
       FStar_Compiler_Util.psmap_try_find env.tydef_map uu___
 type var_set = FStar_Extraction_ML_Syntax.mlident FStar_Compiler_Util.set
 let (empty_var_set : Prims.string FStar_Compiler_Util.set) =
-  FStar_Compiler_Util.new_set (fun x -> fun y -> FStar_String.compare x y)
+  FStar_Compiler_Util.new_set
+    (fun x -> fun y -> FStar_Compiler_String.compare x y)
 let rec (freevars_of_mlty' :
   var_set -> FStar_Extraction_ML_Syntax.mlty -> var_set) =
   fun vars ->

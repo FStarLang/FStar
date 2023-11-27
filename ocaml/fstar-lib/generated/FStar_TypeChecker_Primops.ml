@@ -515,14 +515,13 @@ let (built_in_primitive_steps_list : primitive_step Prims.list) =
       FStar_Syntax_Syntax.mk
         (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_char c)) rng in
     let uu___ =
-      let uu___1 = FStar_String.list_of_string s in
-      FStar_Compiler_List.map charterm uu___1 in
+      FStar_Compiler_List.map charterm (FStar_String.list_of_string s) in
     FStar_Compiler_Effect.op_Less_Bar (FStar_Syntax_Util.mk_list char_t rng)
       uu___ in
   let string_of_list' rng l =
     let s = FStar_String.string_of_list l in FStar_Syntax_Util.exp_string s in
   let string_compare' rng s1 s2 =
-    let r = FStar_String.compare s1 s2 in
+    let r = FStar_Compiler_String.compare s1 s2 in
     let uu___ =
       let uu___1 = FStar_Compiler_Util.string_of_int r in
       FStar_BigInt.big_int_of_string uu___1 in
@@ -536,7 +535,7 @@ let (built_in_primitive_steps_list : primitive_step Prims.list) =
              let uu___1 = arg_as_list FStar_Syntax_Embeddings.e_string a2 in
              (match uu___1 with
               | FStar_Pervasives_Native.Some s2 ->
-                  let r = FStar_String.concat s1 s2 in
+                  let r = FStar_Compiler_String.concat s1 s2 in
                   let uu___2 =
                     embed_simple FStar_Syntax_Embeddings.e_string
                       psc1.psc_range r in
@@ -553,7 +552,7 @@ let (built_in_primitive_steps_list : primitive_step Prims.list) =
              let uu___1 = arg_as_string a2 in
              (match uu___1 with
               | FStar_Pervasives_Native.Some s2 ->
-                  let r = FStar_String.split s1 s2 in
+                  let r = FStar_Compiler_String.split s1 s2 in
                   let uu___2 =
                     let uu___3 =
                       FStar_Syntax_Embeddings.e_list
@@ -579,7 +578,7 @@ let (built_in_primitive_steps_list : primitive_step Prims.list) =
                 (fun uu___1 ->
                    match () with
                    | () ->
-                       let r = FStar_String.substring s1 n11 n21 in
+                       let r = FStar_Compiler_String.substring s1 n11 n21 in
                        let uu___2 =
                          embed_simple FStar_Syntax_Embeddings.e_string
                            psc1.psc_range r in
@@ -609,10 +608,10 @@ let (built_in_primitive_steps_list : primitive_step Prims.list) =
     embed_simple uu___ rng r in
   let lowercase rng s =
     embed_simple FStar_Syntax_Embeddings.e_string rng
-      (FStar_String.lowercase s) in
+      (FStar_Compiler_String.lowercase s) in
   let uppercase rng s =
     embed_simple FStar_Syntax_Embeddings.e_string rng
-      (FStar_String.uppercase s) in
+      (FStar_Compiler_String.uppercase s) in
   let string_index psc1 _norm_cb _us args =
     match args with
     | a1::a2::[] ->
@@ -626,7 +625,7 @@ let (built_in_primitive_steps_list : primitive_step Prims.list) =
                 (fun uu___1 ->
                    match () with
                    | () ->
-                       let r = FStar_String.index s i in
+                       let r = FStar_Compiler_String.index s i in
                        let uu___2 =
                          embed_simple FStar_Syntax_Embeddings.e_char
                            psc1.psc_range r in
@@ -647,7 +646,7 @@ let (built_in_primitive_steps_list : primitive_step Prims.list) =
                 (fun uu___1 ->
                    match () with
                    | () ->
-                       let r = FStar_String.index_of s c in
+                       let r = FStar_Compiler_String.index_of s c in
                        let uu___2 =
                          embed_simple FStar_Syntax_Embeddings.e_int
                            psc1.psc_range r in
@@ -1029,16 +1028,15 @@ let (built_in_primitive_steps_list : primitive_step Prims.list) =
                                                     FStar_TypeChecker_NBETerm.binary_string_op
                                                       (fun x ->
                                                          fun y ->
-                                                           FStar_String.op_Hat
-                                                             x y) in
+                                                           Prims.op_Hat x y) in
                                                   (FStar_Parser_Const.prims_strcat_lid,
                                                     (Prims.of_int (2)),
                                                     Prims.int_zero,
                                                     (binary_string_op
                                                        (fun x ->
                                                           fun y ->
-                                                            FStar_String.op_Hat
-                                                              x y)), uu___41) in
+                                                            Prims.op_Hat x y)),
+                                                    uu___41) in
                                                 let uu___41 =
                                                   let uu___42 =
                                                     let uu___43 =
@@ -1186,7 +1184,7 @@ let (built_in_primitive_steps_list : primitive_step Prims.list) =
                                                             let uu___40 =
                                                               FStar_BigInt.to_int_fs
                                                                 x in
-                                                            FStar_String.make
+                                                            FStar_Compiler_String.make
                                                               uu___40 y in
                                                           FStar_Pervasives_Native.Some
                                                             uu___39)),
@@ -1203,7 +1201,7 @@ let (built_in_primitive_steps_list : primitive_step Prims.list) =
                                                           let uu___40 =
                                                             FStar_BigInt.to_int_fs
                                                               x in
-                                                          FStar_String.make
+                                                          FStar_Compiler_String.make
                                                             uu___40 y in
                                                         FStar_Pervasives_Native.Some
                                                           uu___39)))

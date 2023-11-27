@@ -120,7 +120,7 @@ let (check_uvars :
                  FStar_Syntax_Print.uvar_to_string
                    u.FStar_Syntax_Syntax.ctx_uvar_head) uu___2 in
           FStar_Compiler_Effect.op_Bar_Greater uu___1
-            (FStar_String.concat ", ") in
+            (FStar_Compiler_String.concat ", ") in
         (FStar_Options.push ();
          FStar_Options.set_option "hide_uvar_nums" (FStar_Options.Bool false);
          FStar_Options.set_option "print_implicits" (FStar_Options.Bool true);
@@ -8999,7 +8999,7 @@ let make_record_fields_in_order :
                              | (i, uu___6) -> FStar_Ident.string_of_id i)
                           rdc1.FStar_Syntax_DsEnv.fields in
                       FStar_Compiler_Effect.op_Bar_Greater uu___4
-                        (FStar_String.concat "; ") in
+                        (FStar_Compiler_String.concat "; ") in
                     FStar_Compiler_Util.format3
                       "{typename=%s; constrname=%s; fields=[%s]}" uu___1
                       uu___2 uu___3 in
@@ -9010,7 +9010,7 @@ let make_record_fields_in_order :
                            match uu___2 with
                            | (i, uu___3) -> FStar_Ident.string_of_lid i) fas1 in
                     FStar_Compiler_Effect.op_Bar_Greater uu___1
-                      (FStar_String.concat "; ") in
+                      (FStar_Compiler_String.concat "; ") in
                   let print_topt topt1 =
                     match topt1 with
                     | FStar_Pervasives_Native.None ->
@@ -9054,7 +9054,7 @@ let make_record_fields_in_order :
                       FStar_Compiler_List.map FStar_Ident.string_of_lid
                         uc.FStar_Syntax_Syntax.uc_fields in
                     FStar_Compiler_Effect.op_Bar_Greater uu___3
-                      (FStar_String.concat "; ") in
+                      (FStar_Compiler_String.concat "; ") in
                   let uu___3 = print_topt topt in
                   let uu___4 = print_rdc rdc in
                   let uu___5 = print_fas fas in

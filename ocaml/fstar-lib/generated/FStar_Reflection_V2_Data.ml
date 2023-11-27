@@ -2,6 +2,8 @@ open Prims
 type name = Prims.string Prims.list
 type typ = FStar_Syntax_Syntax.term
 type binders = FStar_Syntax_Syntax.binder Prims.list
+type simple_binder = FStar_Reflection_Types.binder
+type ident_view = (Prims.string * FStar_Compiler_Range_Type.range)
 type namedv = FStar_Syntax_Syntax.bv
 type vconst =
   | C_Unit 
@@ -511,4 +513,3 @@ let (uu___is_Mult : exp -> Prims.bool) =
 let (__proj__Mult__item___0 : exp -> (exp * exp)) =
   fun projectee -> match projectee with | Mult _0 -> _0
 type decls = FStar_Syntax_Syntax.sigelt Prims.list
-type simple_binder = FStar_Syntax_Syntax.binder

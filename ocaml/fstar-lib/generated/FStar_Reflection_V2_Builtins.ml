@@ -1388,11 +1388,12 @@ and (univs_eq :
     FStar_Syntax_Syntax.universe Prims.list -> Prims.bool)
   = fun us1 -> fun us2 -> (eqlist ()) univ_eq us1 us2
 let (implode_qn : Prims.string Prims.list -> Prims.string) =
-  fun ns -> FStar_String.concat "." ns
+  fun ns -> FStar_Compiler_String.concat "." ns
 let (explode_qn : Prims.string -> Prims.string Prims.list) =
-  fun s -> FStar_String.split [46] s
+  fun s -> FStar_Compiler_String.split [46] s
 let (compare_string : Prims.string -> Prims.string -> FStar_BigInt.t) =
-  fun s1 -> fun s2 -> FStar_BigInt.of_int_fs (FStar_String.compare s1 s2)
+  fun s1 ->
+    fun s2 -> FStar_BigInt.of_int_fs (FStar_Compiler_String.compare s1 s2)
 let (push_binder :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.binder -> FStar_TypeChecker_Env.env)

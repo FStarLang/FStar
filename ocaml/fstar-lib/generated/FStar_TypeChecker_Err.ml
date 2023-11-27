@@ -448,7 +448,8 @@ let (disjunctive_pattern_vars :
         let uu___ =
           FStar_Compiler_Effect.op_Bar_Greater v
             (FStar_Compiler_List.map FStar_Syntax_Print.bv_to_string) in
-        FStar_Compiler_Effect.op_Bar_Greater uu___ (FStar_String.concat ", ") in
+        FStar_Compiler_Effect.op_Bar_Greater uu___
+          (FStar_Compiler_String.concat ", ") in
       let uu___ =
         let uu___1 = vars v1 in
         let uu___2 = vars v2 in
@@ -596,7 +597,7 @@ let (failed_to_prove_specification_of :
         let uu___1 = FStar_Syntax_Print.lbname_to_string l in
         let uu___2 =
           FStar_Compiler_Effect.op_Bar_Greater lbls
-            (FStar_String.concat ", ") in
+            (FStar_Compiler_String.concat ", ") in
         FStar_Compiler_Util.format2
           "Failed to prove specification of %s; assertions at [%s] may fail"
           uu___1 uu___2 in
@@ -611,7 +612,7 @@ let (failed_to_prove_specification :
       | uu___ ->
           let uu___1 =
             FStar_Compiler_Effect.op_Bar_Greater lbls
-              (FStar_String.concat "\n\t") in
+              (FStar_Compiler_String.concat "\n\t") in
           FStar_Compiler_Util.format1
             "The following problems were found:\n\t%s" uu___1 in
     (FStar_Errors_Codes.Error_TypeCheckerFailToProve, msg)

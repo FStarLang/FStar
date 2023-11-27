@@ -2175,13 +2175,13 @@ let (order_ident : FStar_Ident.ident -> FStar_Ident.ident -> Prims.int) =
     fun y ->
       let uu___ = FStar_Ident.string_of_id x in
       let uu___1 = FStar_Ident.string_of_id y in
-      FStar_String.compare uu___ uu___1
+      FStar_Compiler_String.compare uu___ uu___1
 let (order_fv : FStar_Ident.lident -> FStar_Ident.lident -> Prims.int) =
   fun x ->
     fun y ->
       let uu___ = FStar_Ident.string_of_lid x in
       let uu___1 = FStar_Ident.string_of_lid y in
-      FStar_String.compare uu___ uu___1
+      FStar_Compiler_String.compare uu___ uu___1
 let (range_of_lbname : lbname -> FStar_Compiler_Range_Type.range) =
   fun l ->
     match l with
@@ -2239,7 +2239,7 @@ let (order_univ_name : univ_name -> univ_name -> Prims.int) =
     fun y ->
       let uu___ = FStar_Ident.string_of_id x in
       let uu___1 = FStar_Ident.string_of_id y in
-      FStar_String.compare uu___ uu___1
+      FStar_Compiler_String.compare uu___ uu___1
 let (new_universe_names_set : unit -> univ_name FStar_Compiler_Util.set) =
   fun uu___ -> FStar_Compiler_Util.new_set order_univ_name
 type path = Prims.string Prims.list

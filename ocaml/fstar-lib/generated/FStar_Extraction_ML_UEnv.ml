@@ -262,7 +262,7 @@ let (print_mlpath_map : uenv -> Prims.string) =
   fun g ->
     let string_of_mlpath mlp =
       Prims.op_Hat
-        (FStar_String.concat "." (FStar_Pervasives_Native.fst mlp))
+        (FStar_Compiler_String.concat "." (FStar_Pervasives_Native.fst mlp))
         (Prims.op_Hat "." (FStar_Pervasives_Native.snd mlp)) in
     let entries =
       FStar_Compiler_Util.psmap_fold g.mlpath_of_lid
@@ -273,7 +273,7 @@ let (print_mlpath_map : uenv -> Prims.string) =
                  FStar_Compiler_Util.format2 "%s -> %s" key
                    (string_of_mlpath value) in
                uu___ :: entries1) [] in
-    FStar_String.concat "\n" entries
+    FStar_Compiler_String.concat "\n" entries
 let (lookup_fv_generic :
   uenv ->
     FStar_Syntax_Syntax.fv ->
@@ -482,7 +482,13 @@ let (lookup_record_field_name :
                  let uu___3 = FStar_Ident.string_of_lid key in
                  Prims.op_Hat "Field name not found: " uu___3 in
                failwith uu___2
-           | FStar_Pervasives_Native.Some mlp -> mlp)
+           | FStar_Pervasives_Native.Some mlp ->
+               let uu___2 = mlp in
+               (match uu___2 with
+                | (ns, id) ->
+                    let uu___3 =
+                      FStar_Compiler_List.filter (fun s -> s <> "Stubs") ns in
+                    (uu___3, id)))
 let (initial_mlident_map : unit -> Prims.string FStar_Compiler_Util.psmap) =
   let map = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None in
   fun uu___ ->

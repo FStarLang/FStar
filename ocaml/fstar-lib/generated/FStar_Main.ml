@@ -124,7 +124,7 @@ let (load_native_tactics : unit -> unit) =
      if uu___2
      then
        FStar_Compiler_Util.print1 "Will try to load cmxs files: [%s]\n"
-         (FStar_String.concat ", " cmxs_files)
+         (FStar_Compiler_String.concat ", " cmxs_files)
      else ());
     FStar_Tactics_Load.load_tactics cmxs_files;
     (let uu___4 = FStar_Options.use_native_tactics () in
@@ -348,7 +348,7 @@ let main : 'uuuuu . unit -> 'uuuuu =
                        let uu___7 = FStar_Compiler_Util.string_of_int time in
                        let uu___8 =
                          let uu___9 = FStar_Getopt.cmdline () in
-                         FStar_String.concat " " uu___9 in
+                         FStar_Compiler_String.concat " " uu___9 in
                        FStar_Compiler_Util.print2_error
                          "TOTAL TIME %s ms: %s\n" uu___7 uu___8
                      else ());

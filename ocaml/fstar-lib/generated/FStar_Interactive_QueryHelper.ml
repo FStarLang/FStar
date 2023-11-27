@@ -280,9 +280,10 @@ let (complookup :
                    then l
                    else
                      (let uu___4 =
-                        let uu___5 = FStar_String.get s i in uu___5 :: l in
+                        let uu___5 = FStar_Compiler_String.get s i in uu___5
+                          :: l in
                       exp (i - Prims.int_one) uu___4) in
-                 exp ((FStar_String.length s) - Prims.int_one) [] in
+                 exp ((FStar_Compiler_String.length s) - Prims.int_one) [] in
                let begin_col =
                  let uu___3 =
                    let uu___4 = explode str in FStar_Compiler_List.rev uu___4 in

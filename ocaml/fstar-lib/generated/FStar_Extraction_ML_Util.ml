@@ -597,12 +597,13 @@ let (resugar_mlty :
          | uu___1 -> t)
     | uu___ -> t
 let (flatten_ns : Prims.string Prims.list -> Prims.string) =
-  fun ns -> FStar_String.concat "_" ns
+  fun ns -> FStar_Compiler_String.concat "_" ns
 let (flatten_mlpath :
   (Prims.string Prims.list * Prims.string) -> Prims.string) =
   fun uu___ ->
     match uu___ with
-    | (ns, n) -> FStar_String.concat "_" (FStar_Compiler_List.op_At ns [n])
+    | (ns, n) ->
+        FStar_Compiler_String.concat "_" (FStar_Compiler_List.op_At ns [n])
 let (ml_module_name_of_lid : FStar_Ident.lident -> Prims.string) =
   fun l ->
     let mlp =

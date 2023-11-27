@@ -118,7 +118,8 @@ let (print_uvar_set :
                 FStar_Compiler_Effect.op_Less_Bar
                   FStar_Compiler_Util.string_of_int uu___3 in
               Prims.op_Hat "?" uu___2)) in
-    FStar_Compiler_Effect.op_Bar_Greater uu___ (FStar_String.concat "; ")
+    FStar_Compiler_Effect.op_Bar_Greater uu___
+      (FStar_Compiler_String.concat "; ")
 let (print_goal_dep : goal_dep -> Prims.string) =
   fun gd ->
     let uu___ = FStar_Compiler_Util.string_of_int gd.goal_dep_id in
@@ -129,7 +130,8 @@ let (print_goal_dep : goal_dep -> Prims.string) =
         FStar_Compiler_List.map
           (fun gd1 -> FStar_Compiler_Util.string_of_int gd1.goal_dep_id)
           uu___4 in
-      FStar_Compiler_Effect.op_Bar_Greater uu___3 (FStar_String.concat "; ") in
+      FStar_Compiler_Effect.op_Bar_Greater uu___3
+        (FStar_Compiler_String.concat "; ") in
     let uu___3 =
       FStar_Syntax_Print.ctx_uvar_to_string
         (gd.goal_imp).FStar_TypeChecker_Common.imp_uvar in
@@ -194,7 +196,8 @@ let (find_user_tac_for_uvar :
               candidates in
           FStar_Compiler_Effect.op_Bar_Greater uu___1
             (FStar_Compiler_List.map FStar_Ident.string_of_lid) in
-        FStar_Compiler_Effect.op_Bar_Greater uu___ (FStar_String.concat ", ") in
+        FStar_Compiler_Effect.op_Bar_Greater uu___
+          (FStar_Compiler_String.concat ", ") in
       match u.FStar_Syntax_Syntax.ctx_uvar_meta with
       | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Ctx_uvar_meta_attr
           a) ->

@@ -16,15 +16,16 @@ let (gt : order -> Prims.bool) = fun o -> o = Gt
 let (lt : order -> Prims.bool) = fun o -> o = Lt
 let (eq : order -> Prims.bool) = fun o -> o = Eq
 let (lex : order -> (unit -> order) -> order) =
-  fun o1 ->
-    fun o2 ->
-      match (o1, o2) with
-      | (Lt, uu___) -> Lt
-      | (Eq, uu___) -> o2 ()
-      | (Gt, uu___) -> Gt
+  fun o1 -> fun o2 -> match o1 with | Lt -> Lt | Eq -> o2 () | Gt -> Gt
 let (order_from_int : Prims.int -> order) =
   fun i ->
     if i < Prims.int_zero then Lt else if i = Prims.int_zero then Eq else Gt
+let (int_of_order : order -> Prims.int) =
+  fun uu___ ->
+    match uu___ with
+    | Lt -> ~- Prims.int_one
+    | Eq -> Prims.int_zero
+    | Gt -> Prims.int_one
 let (compare_int : Prims.int -> Prims.int -> order) =
   fun i -> fun j -> order_from_int (i - j)
 let rec compare_list :
@@ -36,9 +37,7 @@ let rec compare_list :
         | ([], []) -> Eq
         | ([], uu___) -> Lt
         | (uu___, []) -> Gt
-        | (x::xs, y::ys) ->
-            let uu___ = f x y in
-            lex uu___ (fun uu___1 -> compare_list xs ys f)
+        | (x::xs, y::ys) -> lex (f x y) (fun uu___ -> compare_list xs ys f)
 let compare_option :
   'a .
     ('a -> 'a -> order) ->

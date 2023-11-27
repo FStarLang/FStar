@@ -429,7 +429,7 @@ let (string_of_repl_stack_entry : repl_stack_entry_t -> Prims.string) =
 let (string_of_repl_stack : repl_stack_entry_t Prims.list -> Prims.string) =
   fun s ->
     let uu___ = FStar_Compiler_List.map string_of_repl_stack_entry s in
-    FStar_String.concat ";\n\t\t" uu___
+    FStar_Compiler_String.concat ";\n\t\t" uu___
 let (repl_state_to_string : repl_state -> Prims.string) =
   fun r ->
     let uu___ =
@@ -502,7 +502,7 @@ let (query_to_string : query -> Prims.string) =
               let uu___2 = FStar_Compiler_Util.string_of_int j in
               FStar_Compiler_Util.format3 "(%s, %s, %s)" f uu___1 uu___2 in
         FStar_Compiler_Util.format3 "(Lookup %s %s [%s])" s uu___
-          (FStar_String.concat "; " features)
+          (FStar_Compiler_String.concat "; " features)
     | Compute uu___ -> "Compute"
     | Search uu___ -> "Search"
     | GenericError uu___ -> "GenericError"

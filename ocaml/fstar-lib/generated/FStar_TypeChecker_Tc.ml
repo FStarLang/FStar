@@ -2127,7 +2127,8 @@ let (tc_sig_let :
                                                     uu___12
                                                 else "")) in
                                       FStar_Compiler_Effect.op_Bar_Greater
-                                        uu___10 (FStar_String.concat "\n") in
+                                        uu___10
+                                        (FStar_Compiler_String.concat "\n") in
                                     FStar_Compiler_Util.print1 "%s\n" uu___9
                                   else ());
                                  check_must_erase_attribute env0 se3;
@@ -2292,7 +2293,7 @@ let (tc_decl' :
                        FStar_Compiler_List.map
                          FStar_Compiler_Util.string_of_int expected_errors in
                      FStar_Compiler_Effect.op_Less_Bar
-                       (FStar_String.concat "; ") uu___5 in
+                       (FStar_Compiler_String.concat "; ") uu___5 in
                    FStar_Compiler_Util.print1 ">> Expecting errors: [%s]\n"
                      uu___4
                  else ());
@@ -3653,7 +3654,7 @@ let (tc_decl' :
                         FStar_Compiler_List.map
                           FStar_Syntax_Print.sigelt_to_string ses1 in
                       FStar_Compiler_Effect.op_Less_Bar
-                        (FStar_String.concat "\n") uu___6 in
+                        (FStar_Compiler_String.concat "\n") uu___6 in
                     FStar_Compiler_Util.print1
                       "Splice returned sigelts {\n%s\n}\n" uu___5
                   else ());

@@ -2,7 +2,8 @@ open Prims
 let (string_of_lids : FStar_Ident.lident Prims.list -> Prims.string) =
   fun lids ->
     let uu___ = FStar_Compiler_List.map FStar_Ident.string_of_lid lids in
-    FStar_Compiler_Effect.op_Bar_Greater uu___ (FStar_String.concat ", ")
+    FStar_Compiler_Effect.op_Bar_Greater uu___
+      (FStar_Compiler_String.concat ", ")
 let (debug_positivity :
   FStar_TypeChecker_Env.env_t -> (unit -> Prims.string) -> unit) =
   fun env ->
@@ -209,7 +210,7 @@ let (max_uniformly_recursive_parameters :
             let uu___1 =
               FStar_Compiler_List.map FStar_Syntax_Print.bv_to_string params in
             FStar_Compiler_Effect.op_Bar_Greater uu___1
-              (FStar_String.concat ", ") in
+              (FStar_Compiler_String.concat ", ") in
           debug_positivity env
             (fun uu___1 ->
                let uu___2 = params_to_string () in

@@ -1046,8 +1046,9 @@ let (fstar_options_list_cache : fstar_option Prims.list) =
     (FStar_Compiler_List.sortWith
        (fun o1 ->
           fun o2 ->
-            FStar_String.compare (FStar_String.lowercase o1.opt_name)
-              (FStar_String.lowercase o2.opt_name)))
+            FStar_Compiler_String.compare
+              (FStar_Compiler_String.lowercase o1.opt_name)
+              (FStar_Compiler_String.lowercase o2.opt_name)))
 let (fstar_options_map_cache : fstar_option FStar_Compiler_Util.smap) =
   let cache = FStar_Compiler_Util.smap_create (Prims.of_int (50)) in
   FStar_Compiler_List.iter
@@ -1079,7 +1080,7 @@ let (trim_option_name : Prims.string -> (Prims.string * Prims.string)) =
     then
       let uu___ =
         FStar_Compiler_Util.substring_from opt_name
-          (FStar_String.length opt_prefix) in
+          (FStar_Compiler_String.length opt_prefix) in
       (opt_prefix, uu___)
     else ("", opt_name)
 let (json_of_repl_state :
@@ -2238,7 +2239,7 @@ let run_option_autocomplete :
             let matcher opt =
               FStar_Compiler_Util.starts_with opt.opt_name trimmed_name in
             let options = current_fstar_options matcher in
-            let match_len = FStar_String.length search_term in
+            let match_len = FStar_Compiler_String.length search_term in
             let collect_candidates =
               candidates_of_fstar_option match_len is_reset in
             let results =
@@ -2490,7 +2491,7 @@ let (__proj__Mksearch_term__item__st_term : search_term -> search_term') =
 let (st_cost : search_term' -> Prims.int) =
   fun uu___ ->
     match uu___ with
-    | NameContainsStr str -> - (FStar_String.length str)
+    | NameContainsStr str -> - (FStar_Compiler_String.length str)
     | TypeContainsLid lid -> Prims.int_one
 type search_candidate =
   {
@@ -2616,12 +2617,12 @@ let run_search :
           let beg_quote = FStar_Compiler_Util.starts_with term1 "\"" in
           let end_quote = FStar_Compiler_Util.ends_with term1 "\"" in
           let strip_quotes str =
-            if (FStar_String.length str) < (Prims.of_int (2))
+            if (FStar_Compiler_String.length str) < (Prims.of_int (2))
             then
               FStar_Compiler_Effect.raise (InvalidSearch "Empty search term")
             else
               FStar_Compiler_Util.substring str Prims.int_one
-                ((FStar_String.length term1) - (Prims.of_int (2))) in
+                ((FStar_Compiler_String.length term1) - (Prims.of_int (2))) in
           let parsed =
             if beg_quote <> end_quote
             then

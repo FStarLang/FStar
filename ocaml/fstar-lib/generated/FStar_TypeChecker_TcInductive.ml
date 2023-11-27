@@ -801,7 +801,7 @@ let (generalize_and_inst_within :
                        (FStar_Compiler_List.map
                           (fun u -> FStar_Ident.string_of_id u)) in
                    FStar_Compiler_Effect.op_Bar_Greater uu___5
-                     (FStar_String.concat ", ") in
+                     (FStar_Compiler_String.concat ", ") in
                  let uu___5 = FStar_Syntax_Print.term_to_string t1 in
                  FStar_Compiler_Util.print2 "@@@@@@Generalized to (%s, %s)\n"
                    uu___4 uu___5
@@ -1077,14 +1077,14 @@ let (haseq_suffix : Prims.string) = "__uu___haseq"
 let (is_haseq_lid : FStar_Ident.lid -> Prims.bool) =
   fun lid ->
     let str = FStar_Ident.string_of_lid lid in
-    let len = FStar_String.length str in
-    let haseq_suffix_len = FStar_String.length haseq_suffix in
+    let len = FStar_Compiler_String.length str in
+    let haseq_suffix_len = FStar_Compiler_String.length haseq_suffix in
     (len > haseq_suffix_len) &&
       (let uu___ =
          let uu___1 =
-           FStar_String.substring str (len - haseq_suffix_len)
+           FStar_Compiler_String.substring str (len - haseq_suffix_len)
              haseq_suffix_len in
-         FStar_String.compare uu___1 haseq_suffix in
+         FStar_Compiler_String.compare uu___1 haseq_suffix in
        uu___ = Prims.int_zero)
 let (get_haseq_axiom_lid : FStar_Ident.lid -> FStar_Ident.lid) =
   fun lid ->

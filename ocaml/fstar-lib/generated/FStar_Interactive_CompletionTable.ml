@@ -1,6 +1,6 @@
 open Prims
 let (string_compare : Prims.string -> Prims.string -> Prims.int) =
-  fun s1 -> fun s2 -> FStar_String.compare s1 s2
+  fun s1 -> fun s2 -> FStar_Compiler_String.compare s1 s2
 type 'a heap =
   | EmptyHeap 
   | Heap of ('a * 'a heap Prims.list) 
@@ -332,7 +332,7 @@ let rec btree_fold :
             let uu___ = let uu___1 = btree_fold rbt f acc in f k v uu___1 in
             btree_fold lbt f uu___
 let (query_to_string : Prims.string Prims.list -> Prims.string) =
-  fun q -> FStar_String.concat "." q
+  fun q -> FStar_Compiler_String.concat "." q
 type 'a name_collection =
   | Names of 'a btree 
   | ImportedNames of (Prims.string * 'a name_collection Prims.list) 
@@ -732,7 +732,7 @@ let (register_module_path :
                    mod_loaded = loaded1
                  }) in
           let name_of_revq query1 =
-            FStar_String.concat "." (FStar_Compiler_List.rev query1) in
+            FStar_Compiler_String.concat "." (FStar_Compiler_List.rev query1) in
           let ins id q revq bindings loaded1 =
             let name = name_of_revq (id :: revq) in
             match q with
@@ -753,7 +753,7 @@ let (string_of_path : path -> Prims.string) =
   fun path1 ->
     let uu___ =
       FStar_Compiler_List.map (fun el -> (el.segment).completion) path1 in
-    FStar_String.concat "." uu___
+    FStar_Compiler_String.concat "." uu___
 let (match_length_of_path : path -> Prims.int) =
   fun path1 ->
     let uu___ =
@@ -766,7 +766,8 @@ let (match_length_of_path : path -> Prims.int) =
                  (match (elem.segment).prefix with
                   | FStar_Pervasives_Native.Some prefix ->
                       let completion_len =
-                        FStar_String.length (elem.segment).completion in
+                        FStar_Compiler_String.length
+                          (elem.segment).completion in
                       (((acc_len + Prims.int_one) + completion_len),
                         (prefix, completion_len))
                   | FStar_Pervasives_Native.None -> acc))
@@ -774,7 +775,7 @@ let (match_length_of_path : path -> Prims.int) =
     match uu___ with
     | (length, (last_prefix, last_completion_length)) ->
         ((length - Prims.int_one) - last_completion_length) +
-          (FStar_String.length last_prefix)
+          (FStar_Compiler_String.length last_prefix)
 let (first_import_of_path :
   path -> Prims.string FStar_Pervasives_Native.option) =
   fun path1 ->

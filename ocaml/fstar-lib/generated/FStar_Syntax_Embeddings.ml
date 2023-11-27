@@ -973,7 +973,7 @@ let e_list :
             let uu___3 = FStar_Syntax_Embeddings_Base.printer_of ea in
             FStar_Compiler_List.map uu___3 l in
           FStar_Compiler_Effect.op_Bar_Greater uu___2
-            (FStar_String.concat "; ") in
+            (FStar_Compiler_String.concat "; ") in
         Prims.op_Hat uu___1 "]" in
       Prims.op_Hat "[" uu___ in
     let rec em l rng shadow_l norm =

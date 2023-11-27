@@ -72,7 +72,7 @@ let err_ill_typed_application :
                             | (x, uu___8) ->
                                 FStar_Syntax_Print.term_to_string x)) in
                   FStar_Compiler_Effect.op_Bar_Greater uu___6
-                    (FStar_String.concat " ") in
+                    (FStar_Compiler_String.concat " ") in
                 FStar_Compiler_Util.format4
                   "Ill-typed application: source application is %s \n translated prefix to %s at type %s\n remaining args are %s\n"
                   uu___2 uu___3 uu___4 uu___5 in
@@ -1760,7 +1760,9 @@ let rec (extract_one_pat :
                                               uu___10 in
                                           FStar_Compiler_List.map uu___9 args in
                                         FStar_Compiler_Effect.op_Bar_Greater
-                                          uu___8 (FStar_String.concat " -> ") in
+                                          uu___8
+                                          (FStar_Compiler_String.concat
+                                             " -> ") in
                                       let res =
                                         let uu___8 =
                                           FStar_Extraction_ML_UEnv.current_module_of_uenv

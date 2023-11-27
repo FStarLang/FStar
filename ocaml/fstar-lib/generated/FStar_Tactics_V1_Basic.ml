@@ -1,4 +1,16 @@
 open Prims
+let (get_phi :
+  FStar_Tactics_Types.goal ->
+    FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
+  =
+  fun g ->
+    let uu___ =
+      let uu___1 = FStar_Tactics_Types.goal_env g in
+      let uu___2 = FStar_Tactics_Types.goal_type g in
+      FStar_TypeChecker_Normalize.unfold_whnf uu___1 uu___2 in
+    FStar_Syntax_Util.un_squash uu___
+let (is_irrelevant : FStar_Tactics_Types.goal -> Prims.bool) =
+  fun g -> let uu___ = get_phi g in FStar_Compiler_Option.isSome uu___
 let (core_check :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
@@ -4558,12 +4570,12 @@ let (join_goals :
              fun f1 ->
                FStar_Syntax_Util.mk_forall_no_univ
                  b.FStar_Syntax_Syntax.binder_bv f1) bs f in
-      let uu___ = FStar_Tactics_Types.get_phi g1 in
+      let uu___ = get_phi g1 in
       match uu___ with
       | FStar_Pervasives_Native.None ->
           FStar_Tactics_Monad.fail "goal 1 is not irrelevant"
       | FStar_Pervasives_Native.Some phi1 ->
-          let uu___1 = FStar_Tactics_Types.get_phi g2 in
+          let uu___1 = get_phi g2 in
           (match uu___1 with
            | FStar_Pervasives_Native.None ->
                FStar_Tactics_Monad.fail "goal 2 is not irrelevant"
@@ -5521,8 +5533,7 @@ let (t_destruct :
                                                   let uu___12 =
                                                     erasable &&
                                                       (let uu___13 =
-                                                         FStar_Tactics_Types.is_irrelevant
-                                                           g in
+                                                         is_irrelevant g in
                                                        Prims.op_Negation
                                                          uu___13) in
                                                   failwhen uu___12
@@ -7194,7 +7205,7 @@ let (t_smt_sync : FStar_VConfig.vconfig -> unit FStar_Tactics_Monad.tac) =
     let uu___ =
       FStar_Tactics_Monad.op_let_Bang FStar_Tactics_Monad.cur_goal
         (fun goal ->
-           let uu___1 = FStar_Tactics_Types.get_phi goal in
+           let uu___1 = get_phi goal in
            match uu___1 with
            | FStar_Pervasives_Native.None ->
                FStar_Tactics_Monad.fail "Goal is not irrelevant"

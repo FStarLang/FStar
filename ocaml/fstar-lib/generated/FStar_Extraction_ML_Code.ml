@@ -105,7 +105,7 @@ let (combine : doc -> doc Prims.list -> doc) =
                 then FStar_Pervasives_Native.None
                 else FStar_Pervasives_Native.Some d in
           let docs1 = FStar_Compiler_List.choose select docs in
-          Doc (FStar_String.concat sep docs1)
+          Doc (FStar_Compiler_String.concat sep docs1)
 let (reduce1 : doc Prims.list -> doc) = fun docs -> combine break1 docs
 let (hbox : doc -> doc) = fun d -> d
 let rec in_ns : 'a . ('a Prims.list * 'a Prims.list) -> Prims.bool =
@@ -170,9 +170,10 @@ let (ptsym_of_symbol :
   fun s ->
     let uu___ =
       let uu___1 =
-        let uu___2 = FStar_String.get s Prims.int_zero in
+        let uu___2 = FStar_Compiler_String.get s Prims.int_zero in
         FStar_Char.lowercase uu___2 in
-      let uu___2 = FStar_String.get s Prims.int_zero in uu___1 <> uu___2 in
+      let uu___2 = FStar_Compiler_String.get s Prims.int_zero in
+      uu___1 <> uu___2 in
     if uu___ then Prims.op_Hat "l__" s else s
 let (ptsym :
   FStar_Extraction_ML_Syntax.mlsymbol ->
@@ -189,7 +190,7 @@ let (ptsym :
              let uu___2 =
                let uu___3 = let uu___4 = ptsym_of_symbol s in [uu___4] in
                FStar_Compiler_List.op_At p uu___3 in
-             FStar_String.concat "." uu___2)
+             FStar_Compiler_String.concat "." uu___2)
 let (ptctor :
   FStar_Extraction_ML_Syntax.mlsymbol ->
     FStar_Extraction_ML_Syntax.mlpath -> FStar_Extraction_ML_Syntax.mlsymbol)
@@ -202,12 +203,12 @@ let (ptctor :
           let s1 =
             let uu___1 =
               let uu___2 =
-                let uu___3 = FStar_String.get s Prims.int_zero in
+                let uu___3 = FStar_Compiler_String.get s Prims.int_zero in
                 FStar_Char.uppercase uu___3 in
-              let uu___3 = FStar_String.get s Prims.int_zero in
+              let uu___3 = FStar_Compiler_String.get s Prims.int_zero in
               uu___2 <> uu___3 in
             if uu___1 then Prims.op_Hat "U__" s else s in
-          FStar_String.concat "." (FStar_Compiler_List.op_At p [s1])
+          FStar_Compiler_String.concat "." (FStar_Compiler_List.op_At p [s1])
 let (infix_prim_ops :
   (Prims.string * (Prims.int * fixity) * Prims.string) Prims.list) =
   [("op_Addition", e_bin_prio_op1, "+");
@@ -438,7 +439,7 @@ let (string_of_mlconstant :
     | FStar_Extraction_ML_Syntax.MLC_String chars ->
         let uu___ =
           let uu___1 =
-            FStar_String.collect
+            FStar_Compiler_String.collect
               (escape_or FStar_Compiler_Util.string_of_char) chars in
           Prims.op_Hat uu___1 "\"" in
         Prims.op_Hat "\"" uu___

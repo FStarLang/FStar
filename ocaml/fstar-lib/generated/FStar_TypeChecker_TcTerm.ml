@@ -9032,7 +9032,8 @@ and (tc_pat :
                                          Prims.op_Hat "(" uu___11)
                                       simple_bvs1 in
                                   FStar_Compiler_Effect.op_Bar_Greater
-                                    uu___10 (FStar_String.concat " ") in
+                                    uu___10
+                                    (FStar_Compiler_String.concat " ") in
                                 FStar_Compiler_Util.print3
                                   "$$$$$$$$$$$$Checked simple pattern %s at type %s with bvs=%s\n"
                                   uu___7 uu___8 uu___9

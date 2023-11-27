@@ -105,7 +105,8 @@ let (universe_to_string : FStar_Ident.ident Prims.list -> Prims.string) =
     then
       let uu___1 =
         FStar_Compiler_List.map (fun x -> FStar_Ident.string_of_id x) univs in
-      FStar_Compiler_Effect.op_Bar_Greater uu___1 (FStar_String.concat ", ")
+      FStar_Compiler_Effect.op_Bar_Greater uu___1
+        (FStar_Compiler_String.concat ", ")
     else ""
 let rec (resugar_universe :
   FStar_Syntax_Syntax.universe ->
@@ -238,7 +239,7 @@ let rec (resugar_term_as_op :
             let uu___2 =
               FStar_Ident.nsstr
                 (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-            FStar_String.length uu___2 in
+            FStar_Compiler_String.length uu___2 in
           let str =
             if length = Prims.int_zero
             then
@@ -312,7 +313,7 @@ let rec (resugar_term_as_op :
           let uu___1 =
             FStar_Ident.nsstr
               (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-          FStar_String.length uu___1 in
+          FStar_Compiler_String.length uu___1 in
         let s =
           if length = Prims.int_zero
           then
@@ -462,7 +463,7 @@ let rec (resugar_term' :
             let uu___1 =
               FStar_Ident.nsstr
                 (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-            FStar_String.length uu___1 in
+            FStar_Compiler_String.length uu___1 in
           let s =
             if length = Prims.int_zero
             then FStar_Ident.string_of_lid a
@@ -475,7 +476,7 @@ let rec (resugar_term' :
           then
             let rest =
               FStar_Compiler_Util.substring_from s
-                (FStar_String.length is_prefix) in
+                (FStar_Compiler_String.length is_prefix) in
             let uu___1 =
               let uu___2 =
                 FStar_Ident.lid_of_path [rest] t.FStar_Syntax_Syntax.pos in
@@ -488,7 +489,7 @@ let rec (resugar_term' :
             then
               (let rest =
                  FStar_Compiler_Util.substring_from s
-                   (FStar_String.length
+                   (FStar_Compiler_String.length
                       FStar_Syntax_Util.field_projector_prefix) in
                let r =
                  FStar_Compiler_Util.split rest
@@ -536,9 +537,11 @@ let rec (resugar_term' :
                              FStar_Parser_Const.assume_lid))
                          ||
                          (let uu___8 =
-                            let uu___9 = FStar_String.get s Prims.int_zero in
+                            let uu___9 =
+                              FStar_Compiler_String.get s Prims.int_zero in
                             FStar_Char.uppercase uu___9 in
-                          let uu___9 = FStar_String.get s Prims.int_zero in
+                          let uu___9 =
+                            FStar_Compiler_String.get s Prims.int_zero in
                           uu___8 <> uu___9) in
                      if uu___7
                      then

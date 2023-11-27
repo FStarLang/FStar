@@ -465,16 +465,6 @@ let (check_goal_solved : goal -> Prims.bool) =
   fun goal1 ->
     let uu___ = check_goal_solved' goal1 in
     FStar_Compiler_Option.isSome uu___
-let (get_phi :
-  goal -> FStar_Syntax_Syntax.term FStar_Pervasives_Native.option) =
-  fun g ->
-    let uu___ =
-      let uu___1 = goal_env g in
-      let uu___2 = goal_type g in
-      FStar_TypeChecker_Normalize.unfold_whnf uu___1 uu___2 in
-    FStar_Syntax_Util.un_squash uu___
-let (is_irrelevant : goal -> Prims.bool) =
-  fun g -> let uu___ = get_phi g in FStar_Compiler_Option.isSome uu___
 type ('g, 't) non_informative_token = unit
 type ('g, 't0, 't1) subtyping_token = unit
 type ('g, 't0, 't1) equiv_token = unit
