@@ -12,7 +12,7 @@ open Pulse.Syntax
 open Pulse.Reflection.Util
 open Pulse.Typing
 module P = Pulse.Syntax.Printer
-module RTB = FStar.Tactics.V2.Builtins
+module RTB = FStar.Stubs.Tactics.V2.Builtins
 module RU = Pulse.RuntimeUtils
 
 let debug (g:env) (msg: unit -> T.Tac string) =

@@ -289,6 +289,21 @@ typeclassDecl:
         (d, [at])
       }
 
+  | INSTANCE VAL lid=lidentOrOperator bs=binders COLON t=typ
+      {
+        (* Some duplication from rawDecl... *)
+        let r = rr $loc in
+        let t = match bs with
+          | [] -> t
+          | bs -> mk_term (Product(bs, t)) (rr2 $loc(bs) $loc(t)) Type_level
+        in
+        let d = Val(lid, t) in
+        (* Slapping a `tcinstance` attribute to it *)
+        let at = mk_term (Var tcinstance_lid) r Type_level in
+
+        (d, [at])
+      }
+
 rawDecl:
   | p=pragma
       { Pragma p }
