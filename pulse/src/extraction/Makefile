@@ -23,5 +23,6 @@ $(OUTPUT_DIRECTORY)/%.ml: %.fst
 	$(Q)$(BENCHMARK_PRE) $(FSTAR_C) $< \
 		   --odir "$(OUTPUT_DIRECTORY)" \
                    --codegen OCaml \
+		   --MLish \
                    --extract_module $(basename $(notdir $<))
 	chmod -x $@

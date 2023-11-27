@@ -9,7 +9,9 @@ include $(FSTAR_HOME)/ulib/gmake/z3.mk    # This pins $(Z3) ...
 include $(FSTAR_HOME)/ulib/gmake/fstar.mk # and $(FSTAR) for all sub-make calls
 include $(FSTAR_HOME)/src/Makefile.boot.common
 
-FSTAR_BOOT_OPTIONS+=--include .
+# FSTAR_BOOT_OPTIONS does not unconditionally contain --MLish now, but
+# we need it for every file, so add it.
+FSTAR_BOOT_OPTIONS+=--include . --MLish
 OUTPUT_DIRECTORY = $(CURDIR)/../ocaml/plugin/generated
 FSTAR_C=$(RUNLIM) $(FSTAR_EXE) $(SIL) $(FSTAR_BOOT_OPTIONS)
 ADDITIONAL_INCLUDES=
