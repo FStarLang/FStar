@@ -228,6 +228,37 @@ let (intro_pure_tm : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.st_term) =
                    (FStar_Reflection_V2_Data.Tv_Const
                       FStar_Reflection_V2_Data.C_Unit)) FStar_Range.range_0)
          })
+let (simple_arr :
+  FStar_Reflection_Types.term ->
+    FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
+  =
+  fun t1 ->
+    fun t2 ->
+      let b =
+        FStar_Reflection_V2_Builtins.pack_binder
+          {
+            FStar_Reflection_V2_Data.sort2 = t1;
+            FStar_Reflection_V2_Data.qual =
+              FStar_Reflection_V2_Data.Q_Explicit;
+            FStar_Reflection_V2_Data.attrs = [];
+            FStar_Reflection_V2_Data.ppname2 = (FStar_Sealed.seal "x")
+          } in
+      let v = Prims.magic () in
+      let t21 = FStar_Reflection_Typing.close_term t2 v in
+      FStar_Reflection_V2_Builtins.pack_ln
+        (FStar_Reflection_V2_Data.Tv_Arrow
+           (b,
+             (FStar_Reflection_V2_Builtins.pack_comp
+                (FStar_Reflection_V2_Data.C_Total t21))))
+let (elab_st_sub :
+  Pulse_Typing_Env.env ->
+    Pulse_Syntax_Base.comp ->
+      Pulse_Syntax_Base.comp ->
+        (unit, unit, unit) Pulse_Typing.st_sub ->
+          (FStar_Reflection_Types.term,
+            (unit, unit, unit) FStar_Reflection_Typing.tot_typing)
+            Prims.dtuple2)
+  = fun g -> fun c1 -> fun c2 -> fun d_sub -> Prims.magic ()
 let rec (elab_st_typing :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.st_term ->
@@ -355,6 +386,12 @@ let rec (elab_st_typing :
           | Pulse_Typing.T_Equiv (uu___, uu___1, c1, c2, e_typing, uu___2) ->
               let e = elab_st_typing uu___ uu___1 c1 e_typing in
               elab_sub c1 c2 e
+          | Pulse_Typing.T_Sub (uu___, uu___1, c1, c2, e_typing, d_sub) ->
+              let e = elab_st_typing uu___ uu___1 c1 e_typing in
+              let uu___2 = elab_st_sub uu___ c1 c2 d_sub in
+              (match uu___2 with
+               | Prims.Mkdtuple2 (coercion, uu___3) ->
+                   FStar_Reflection_V2_Derived.mk_e_app coercion [e])
           | Pulse_Typing.T_Lift (uu___, uu___1, c1, c2, e_typing, lc) ->
               let e = elab_st_typing uu___ uu___1 c1 e_typing in
               elab_lift uu___ c1 c2 lc e
@@ -563,6 +600,13 @@ let rec (elab_st_typing :
                | Pulse_Syntax_Base.STT_Ghost ->
                    Pulse_Reflection_Util.mk_stt_ghost_admit ru rres rpre
                      rpost1)
+          | Pulse_Typing.T_WithInv
+              (uu___, uu___1, uu___2, uu___3, uu___4, uu___5, uu___6, uu___7)
+              ->
+              FStar_Reflection_V2_Builtins.pack_ln
+                (FStar_Reflection_V2_Data.Tv_Const
+                   (FStar_Reflection_V2_Data.C_String
+                      "IOU: elab_st_typing of T_WithInv"))
 and (elab_br :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.comp_st ->

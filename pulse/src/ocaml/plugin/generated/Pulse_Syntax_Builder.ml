@@ -165,6 +165,21 @@ let (tm_par :
                   Pulse_Syntax_Base.body21 = body2;
                   Pulse_Syntax_Base.post2 = post2
                 }
+let (tm_with_inv :
+  Pulse_Syntax_Base.term ->
+    Pulse_Syntax_Base.st_term ->
+      Pulse_Syntax_Base.vprop FStar_Pervasives_Native.option ->
+        Pulse_Syntax_Base.st_term')
+  =
+  fun name ->
+    fun body ->
+      fun returns_inv ->
+        Pulse_Syntax_Base.Tm_WithInv
+          {
+            Pulse_Syntax_Base.name1 = name;
+            Pulse_Syntax_Base.body6 = body;
+            Pulse_Syntax_Base.returns_inv = returns_inv
+          }
 let (tm_with_local :
   Pulse_Syntax_Base.binder ->
     Pulse_Syntax_Base.term ->
@@ -323,7 +338,7 @@ let (mk_fn_decl :
                   Pulse_Syntax_Base.bs = bs;
                   Pulse_Syntax_Base.comp = comp;
                   Pulse_Syntax_Base.meas = meas;
-                  Pulse_Syntax_Base.body6 = body
+                  Pulse_Syntax_Base.body7 = body
                 }
 let (mk_decl :
   Pulse_Syntax_Base.decl' ->

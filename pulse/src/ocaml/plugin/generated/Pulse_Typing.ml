@@ -307,6 +307,10 @@ let (add_frame :
           Pulse_Syntax_Base.C_STAtomic (inames, (add_frame_s s1))
       | Pulse_Syntax_Base.C_STGhost (inames, s1) ->
           Pulse_Syntax_Base.C_STGhost (inames, (add_frame_s s1))
+let (add_inv :
+  Pulse_Syntax_Base.comp_st ->
+    Pulse_Syntax_Base.vprop -> Pulse_Syntax_Base.comp_st)
+  = fun s -> fun v -> add_frame s v
 type ('c1, 'c2) bind_comp_compatible = Obj.t
 type ('x, 'c1, 'c2) bind_comp_pre = unit
 let (bind_comp_out :
@@ -844,6 +848,52 @@ let (as_binder : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.binder) =
       Pulse_Syntax_Base.binder_ty = t;
       Pulse_Syntax_Base.binder_ppname = Pulse_Syntax_Base.ppname_default
     }
+let (tm_join_inames :
+  Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)
+  =
+  fun inames1 ->
+    fun inames2 ->
+      if Pulse_Syntax_Base.eq_tm inames1 Pulse_Syntax_Base.tm_emp_inames
+      then inames2
+      else
+        if Pulse_Syntax_Base.eq_tm inames2 Pulse_Syntax_Base.tm_emp_inames
+        then inames1
+        else
+          if Pulse_Syntax_Base.eq_tm inames1 inames2
+          then inames1
+          else
+            (let inames11 = Pulse_Elaborate_Pure.elab_term inames1 in
+             let inames21 = Pulse_Elaborate_Pure.elab_term inames2 in
+             let join_lid =
+               Pulse_Reflection_Util.mk_pulse_lib_core_lid "join_inames" in
+             let join =
+               FStar_Reflection_V2_Builtins.pack_ln
+                 (FStar_Reflection_V2_Data.Tv_FVar
+                    (FStar_Reflection_V2_Builtins.pack_fv join_lid)) in
+             Pulse_Syntax_Base.with_range
+               (Pulse_Syntax_Base.Tm_FStar
+                  (FStar_Reflection_V2_Derived.mk_e_app join
+                     [inames11; inames21]))
+               (FStar_Reflection_V2_Builtins.range_of_term inames11))
+let (tm_inames_subset :
+  Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)
+  =
+  fun inames1 ->
+    fun inames2 ->
+      let inames11 = Pulse_Elaborate_Pure.elab_term inames1 in
+      let inames21 = Pulse_Elaborate_Pure.elab_term inames2 in
+      let join_lid =
+        Pulse_Reflection_Util.mk_pulse_lib_core_lid "inames_subset" in
+      let join =
+        FStar_Reflection_V2_Builtins.pack_ln
+          (FStar_Reflection_V2_Data.Tv_FVar
+             (FStar_Reflection_V2_Builtins.pack_fv join_lid)) in
+      Pulse_Syntax_Base.with_range
+        (Pulse_Syntax_Base.Tm_FStar
+           (FStar_Reflection_V2_Derived.mk_e_app join [inames11; inames21]))
+        (FStar_Reflection_V2_Builtins.range_of_term inames11)
+
+type ('g, 't) prop_validity = unit
 type ('dummyV0, 'dummyV1, 'dummyV2) st_equiv =
   | ST_VPropEquiv of Pulse_Typing_Env.env * Pulse_Syntax_Base.comp_st *
   Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.var * unit * unit * unit *
@@ -854,6 +904,23 @@ let uu___is_ST_VPropEquiv uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | ST_VPropEquiv _ -> true | _ -> false
 let uu___is_ST_TotEquiv uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | ST_TotEquiv _ -> true | _ -> false
+type ('dummyV0, 'dummyV1, 'dummyV2) st_sub =
+  | STS_Refl of Pulse_Typing_Env.env * Pulse_Syntax_Base.comp 
+  | STS_Trans of Pulse_Typing_Env.env * Pulse_Syntax_Base.comp *
+  Pulse_Syntax_Base.comp * Pulse_Syntax_Base.comp * (unit, unit, unit) st_sub
+  * (unit, unit, unit) st_sub 
+  | STS_GhostInvs of Pulse_Typing_Env.env * Pulse_Syntax_Base.st_comp *
+  Pulse_Syntax_Base.term * Pulse_Syntax_Base.term * unit 
+  | STS_AtomicInvs of Pulse_Typing_Env.env * Pulse_Syntax_Base.st_comp *
+  Pulse_Syntax_Base.term * Pulse_Syntax_Base.term * unit 
+let uu___is_STS_Refl uu___2 uu___1 uu___ uu___3 =
+  match uu___3 with | STS_Refl _ -> true | _ -> false
+let uu___is_STS_Trans uu___2 uu___1 uu___ uu___3 =
+  match uu___3 with | STS_Trans _ -> true | _ -> false
+let uu___is_STS_GhostInvs uu___2 uu___1 uu___ uu___3 =
+  match uu___3 with | STS_GhostInvs _ -> true | _ -> false
+let uu___is_STS_AtomicInvs uu___2 uu___1 uu___ uu___3 =
+  match uu___3 with | STS_AtomicInvs _ -> true | _ -> false
 type ('dummyV0, 'dummyV1, 'dummyV2, 'dummyV3, 'dummyV4) bind_comp =
   | Bind_comp of Pulse_Typing_Env.env * Pulse_Syntax_Base.var *
   Pulse_Syntax_Base.comp_st * Pulse_Syntax_Base.comp_st * unit *
@@ -942,7 +1009,6 @@ let uu___is_CT_STAtomic uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | CT_STAtomic _ -> true | _ -> false
 let uu___is_CT_STGhost uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | CT_STGhost _ -> true | _ -> false
-type ('g, 't) prop_validity = unit
 type ('g, 't1, 't2) subtyping_token =
   (unit, unit, unit) FStar_Tactics_Types.subtyping_token
 let (readback_binding :
@@ -1013,6 +1079,9 @@ type ('dummyV0, 'dummyV1, 'dummyV2) st_typing =
   | T_Equiv of Pulse_Typing_Env.env * Pulse_Syntax_Base.st_term *
   Pulse_Syntax_Base.comp * Pulse_Syntax_Base.comp * (unit, unit, unit)
   st_typing * (unit, unit, unit) st_equiv 
+  | T_Sub of Pulse_Typing_Env.env * Pulse_Syntax_Base.st_term *
+  Pulse_Syntax_Base.comp * Pulse_Syntax_Base.comp * (unit, unit, unit)
+  st_typing * (unit, unit, unit) st_sub 
   | T_IntroPure of Pulse_Typing_Env.env * Pulse_Syntax_Base.term * unit *
   unit 
   | T_ElimExists of Pulse_Typing_Env.env * Pulse_Syntax_Base.universe *
@@ -1042,6 +1111,9 @@ type ('dummyV0, 'dummyV1, 'dummyV2) st_typing =
   Pulse_Syntax_Base.vprop * unit * unit 
   | T_Admit of Pulse_Typing_Env.env * Pulse_Syntax_Base.st_comp *
   Pulse_Syntax_Base.ctag * (unit, unit) st_comp_typing 
+  | T_WithInv of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
+  Pulse_Syntax_Base.vprop * unit * unit * Pulse_Syntax_Base.st_term *
+  Pulse_Syntax_Base.comp_st * (unit, unit, unit) st_typing 
 and ('dummyV0, 'dummyV1, 'dummyV2, 'dummyV3) pats_complete =
   | PC_Elab of Pulse_Typing_Env.env * Pulse_Syntax_Base.term *
   Pulse_Syntax_Base.typ * FStar_Reflection_V2_Data.pattern Prims.list *
@@ -1084,6 +1156,8 @@ let uu___is_T_Frame uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_Frame _ -> true | _ -> false
 let uu___is_T_Equiv uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_Equiv _ -> true | _ -> false
+let uu___is_T_Sub uu___2 uu___1 uu___ uu___3 =
+  match uu___3 with | T_Sub _ -> true | _ -> false
 let uu___is_T_IntroPure uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_IntroPure _ -> true | _ -> false
 let uu___is_T_ElimExists uu___2 uu___1 uu___ uu___3 =
@@ -1102,6 +1176,8 @@ let uu___is_T_Rewrite uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_Rewrite _ -> true | _ -> false
 let uu___is_T_Admit uu___2 uu___1 uu___ uu___3 =
   match uu___3 with | T_Admit _ -> true | _ -> false
+let uu___is_T_WithInv uu___2 uu___1 uu___ uu___3 =
+  match uu___3 with | T_WithInv _ -> true | _ -> false
 let uu___is_PC_Elab uu___3 uu___2 uu___1 uu___ uu___4 =
   match uu___4 with | PC_Elab _ -> true | _ -> false
 let uu___is_TBRS_0 uu___5 uu___4 uu___3 uu___2 uu___1 uu___ uu___6 =

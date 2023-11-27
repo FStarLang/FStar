@@ -59,8 +59,10 @@ type term' =
   | Tm_ExistsSL of universe * binder * term 
   | Tm_ForallSL of universe * binder * term 
   | Tm_VProp 
+  | Tm_Inv of term 
   | Tm_Inames 
   | Tm_EmpInames 
+  | Tm_AddInv of term * term 
   | Tm_FStar of host_term 
   | Tm_Unknown 
 and binder = {
@@ -78,10 +80,13 @@ let uu___is_Tm_ForallSL uu___ =
   match uu___ with | Tm_ForallSL _ -> true | _ -> false
 let uu___is_Tm_VProp uu___ =
   match uu___ with | Tm_VProp _ -> true | _ -> false
+let uu___is_Tm_Inv uu___ = match uu___ with | Tm_Inv _ -> true | _ -> false
 let uu___is_Tm_Inames uu___ =
   match uu___ with | Tm_Inames _ -> true | _ -> false
 let uu___is_Tm_EmpInames uu___ =
   match uu___ with | Tm_EmpInames _ -> true | _ -> false
+let uu___is_Tm_AddInv uu___ =
+  match uu___ with | Tm_AddInv _ -> true | _ -> false
 let uu___is_Tm_FStar uu___ =
   match uu___ with | Tm_FStar _ -> true | _ -> false
 let uu___is_Tm_Unknown uu___ =
@@ -94,6 +99,8 @@ let (tm_fstar : host_term -> range -> term) =
 let (with_range : term' -> range -> term) =
   fun t -> fun r -> { t; range1 = r }
 let (tm_vprop : term) = with_range Tm_VProp FStar_Range.range_0
+let (tm_inv : term -> term) =
+  fun p -> with_range (Tm_Inv p) FStar_Range.range_0
 let (tm_inames : term) = with_range Tm_Inames FStar_Range.range_0
 let (tm_emp : term) = with_range Tm_Emp FStar_Range.range_0
 let (tm_emp_inames : term) = with_range Tm_EmpInames FStar_Range.range_0
@@ -153,18 +160,18 @@ let (__proj__C_ST__item___0 : comp -> st_comp) =
   fun projectee -> match projectee with | C_ST _0 -> _0
 let (uu___is_C_STAtomic : comp -> Prims.bool) =
   fun projectee ->
-    match projectee with | C_STAtomic (_0, _1) -> true | uu___ -> false
-let (__proj__C_STAtomic__item___0 : comp -> term) =
-  fun projectee -> match projectee with | C_STAtomic (_0, _1) -> _0
+    match projectee with | C_STAtomic (inames, _1) -> true | uu___ -> false
+let (__proj__C_STAtomic__item__inames : comp -> term) =
+  fun projectee -> match projectee with | C_STAtomic (inames, _1) -> inames
 let (__proj__C_STAtomic__item___1 : comp -> st_comp) =
-  fun projectee -> match projectee with | C_STAtomic (_0, _1) -> _1
+  fun projectee -> match projectee with | C_STAtomic (inames, _1) -> _1
 let (uu___is_C_STGhost : comp -> Prims.bool) =
   fun projectee ->
-    match projectee with | C_STGhost (_0, _1) -> true | uu___ -> false
-let (__proj__C_STGhost__item___0 : comp -> term) =
-  fun projectee -> match projectee with | C_STGhost (_0, _1) -> _0
+    match projectee with | C_STGhost (inames, _1) -> true | uu___ -> false
+let (__proj__C_STGhost__item__inames : comp -> term) =
+  fun projectee -> match projectee with | C_STGhost (inames, _1) -> inames
 let (__proj__C_STGhost__item___1 : comp -> st_comp) =
-  fun projectee -> match projectee with | C_STGhost (_0, _1) -> _1
+  fun projectee -> match projectee with | C_STGhost (inames, _1) -> _1
 type comp_st = comp
 type pattern =
   | Pat_Cons of fv * (pattern * Prims.bool) Prims.list 
@@ -401,6 +408,11 @@ and st_term'__Tm_ProofHintWithBinders__payload =
   hint_type: proof_hint_type ;
   binders: binder Prims.list ;
   t3: st_term }
+and st_term'__Tm_WithInv__payload =
+  {
+  name1: term ;
+  body6: st_term ;
+  returns_inv: vprop FStar_Pervasives_Native.option }
 and st_term' =
   | Tm_Return of st_term'__Tm_Return__payload 
   | Tm_Abs of st_term'__Tm_Abs__payload 
@@ -419,6 +431,7 @@ and st_term' =
   | Tm_Rewrite of st_term'__Tm_Rewrite__payload 
   | Tm_Admit of st_term'__Tm_Admit__payload 
   | Tm_ProofHintWithBinders of st_term'__Tm_ProofHintWithBinders__payload 
+  | Tm_WithInv of st_term'__Tm_WithInv__payload 
 and st_term = {
   term1: st_term' ;
   range2: range ;
@@ -453,6 +466,8 @@ let uu___is_Tm_Admit uu___ =
   match uu___ with | Tm_Admit _ -> true | _ -> false
 let uu___is_Tm_ProofHintWithBinders uu___ =
   match uu___ with | Tm_ProofHintWithBinders _ -> true | _ -> false
+let uu___is_Tm_WithInv uu___ =
+  match uu___ with | Tm_WithInv _ -> true | _ -> false
 type branch = (pattern * st_term)
 type decl'__FnDecl__payload =
   {
@@ -461,7 +476,7 @@ type decl'__FnDecl__payload =
   bs: (qualifier FStar_Pervasives_Native.option * binder * bv) Prims.list ;
   comp: comp ;
   meas: term FStar_Pervasives_Native.option ;
-  body6: st_term }
+  body7: st_term }
 and decl' =
   | FnDecl of decl'__FnDecl__payload 
 and decl = {
@@ -471,34 +486,34 @@ let (__proj__Mkdecl'__FnDecl__payload__item__id :
   decl'__FnDecl__payload -> FStar_Reflection_Types.ident) =
   fun projectee ->
     match projectee with
-    | { id; isrec; bs; comp = comp1; meas; body6 = body;_} -> id
+    | { id; isrec; bs; comp = comp1; meas; body7 = body;_} -> id
 let (__proj__Mkdecl'__FnDecl__payload__item__isrec :
   decl'__FnDecl__payload -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | { id; isrec; bs; comp = comp1; meas; body6 = body;_} -> isrec
+    | { id; isrec; bs; comp = comp1; meas; body7 = body;_} -> isrec
 let (__proj__Mkdecl'__FnDecl__payload__item__bs :
   decl'__FnDecl__payload ->
     (qualifier FStar_Pervasives_Native.option * binder * bv) Prims.list)
   =
   fun projectee ->
     match projectee with
-    | { id; isrec; bs; comp = comp1; meas; body6 = body;_} -> bs
+    | { id; isrec; bs; comp = comp1; meas; body7 = body;_} -> bs
 let (__proj__Mkdecl'__FnDecl__payload__item__comp :
   decl'__FnDecl__payload -> comp) =
   fun projectee ->
     match projectee with
-    | { id; isrec; bs; comp = comp1; meas; body6 = body;_} -> comp1
+    | { id; isrec; bs; comp = comp1; meas; body7 = body;_} -> comp1
 let (__proj__Mkdecl'__FnDecl__payload__item__meas :
   decl'__FnDecl__payload -> term FStar_Pervasives_Native.option) =
   fun projectee ->
     match projectee with
-    | { id; isrec; bs; comp = comp1; meas; body6 = body;_} -> meas
+    | { id; isrec; bs; comp = comp1; meas; body7 = body;_} -> meas
 let (__proj__Mkdecl'__FnDecl__payload__item__body :
   decl'__FnDecl__payload -> st_term) =
   fun projectee ->
     match projectee with
-    | { id; isrec; bs; comp = comp1; meas; body6 = body;_} -> body
+    | { id; isrec; bs; comp = comp1; meas; body7 = body;_} -> body
 let (uu___is_FnDecl : decl' -> Prims.bool) = fun projectee -> true
 let (__proj__FnDecl__item___0 : decl' -> decl'__FnDecl__payload) =
   fun projectee -> match projectee with | FnDecl _0 -> _0
@@ -530,6 +545,7 @@ let rec (eq_tm : term -> term -> Prims.bool) =
       | (Tm_Unknown, Tm_Unknown) -> true
       | (Tm_Star (l1, r1), Tm_Star (l2, r2)) ->
           (eq_tm l1 l2) && (eq_tm r1 r2)
+      | (Tm_Inv p1, Tm_Inv p2) -> eq_tm p1 p2
       | (Tm_Pure p1, Tm_Pure p2) -> eq_tm p1 p2
       | (Tm_ExistsSL (u1, t11, b1), Tm_ExistsSL (u2, t21, b2)) ->
           ((eq_univ u1 u2) && (eq_tm t11.binder_ty t21.binder_ty)) &&
@@ -539,6 +555,8 @@ let rec (eq_tm : term -> term -> Prims.bool) =
             (eq_tm b1 b2)
       | (Tm_FStar t11, Tm_FStar t21) ->
           FStar_Reflection_V2_TermEq.term_eq_dec t11 t21
+      | (Tm_AddInv (i1, is1), Tm_AddInv (i2, is2)) ->
+          (eq_tm i1 i2) && (eq_tm is1 is2)
       | uu___ -> false
 let (eq_st_comp : st_comp -> st_comp -> Prims.bool) =
   fun s1 ->
@@ -744,6 +762,10 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
          { hint_type = ht2; binders = bs2; t3 = t21;_}) ->
           ((eq_hint_type ht1 ht2) && (eq_list eq_binder bs1 bs2)) &&
             (eq_st_term t11 t21)
+      | (Tm_WithInv { name1; body6 = body1; returns_inv = r1;_}, Tm_WithInv
+         { name1 = name2; body6 = body2; returns_inv = r2;_}) ->
+          ((eq_tm name1 name2) && (eq_tm_opt r1 r2)) &&
+            (eq_st_term body1 body2)
       | uu___ -> false
 and (eq_branch : (pattern * st_term) -> (pattern * st_term) -> Prims.bool) =
   fun b1 ->
