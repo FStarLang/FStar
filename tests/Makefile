@@ -12,6 +12,7 @@ ALL_TEST_DIRS += micro-benchmarks
 ALL_TEST_DIRS += prettyprinting
 ALL_TEST_DIRS += struct
 ALL_TEST_DIRS += tactics
+ALL_TEST_DIRS += vale
 
 all: $(addsuffix .all, $(ALL_TEST_DIRS))
 clean: $(addsuffix .clean, $(ALL_TEST_DIRS))
