@@ -186,7 +186,7 @@ let lemma_poly_bits64 =
   admit()
 
 let lemma_mul_strict_upper_bound (x:nat) (x_bound:int) (y:nat) (y_bound:int) =
-  lemma_mult_lt_right y x x_bound;
+  lemma_mult_le_right y x x_bound;
   if x_bound = 0 || y_bound = 0 then ()
   else
     if y = 0 then

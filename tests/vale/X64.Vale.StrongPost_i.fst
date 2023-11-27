@@ -176,3 +176,6 @@ let lemma_weakest_pre_norm' (inss: list ins) (s0: state) (sN:state) (#post:unit 
 
 let va_lemma_weakest_pre_norm inss s0 sN =
   admit () // connect with proof above
+
+// See issue #3108
+let _dummy = ()

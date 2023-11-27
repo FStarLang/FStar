@@ -41,10 +41,6 @@ private let rw_and_try (proof : unit -> Tac unit) () : Tac unit =
 let ( &|| ) #a (#req : Type0) (#ens : (_:a{req}) -> GTot Type0) ($f:(unit -> Pure a req ens))
       (proof: (unit -> Tac unit){with_tactic (rw_and_try proof) (squash req)})
         : Tot (x:a{req /\ ens x}) =
-            // GM: need to explicitly bring this (squash req) into the
-            // logical environment. Unsure why the SMT pattern doesn't
-            // kick in
-            by_tactic_seman unit (rw_and_try proof) (squash req);
             f ()
         //this is weird, but the sequencing "encourages" the
         //normalizer to actually reduce f(), which is important below

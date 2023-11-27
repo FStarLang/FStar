@@ -1,0 +1,11 @@
+{
+  "fstar_exe": "fstar.exe",
+  "options": [
+    "--cache_dir", ".cache"
+  ],
+  "include_dirs": [
+    "../../ulib/",
+    "../../ulib/experimental",
+    "../../ulib/legacy"
+  ]
+}
