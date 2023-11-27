@@ -862,7 +862,14 @@ let fv_has_strict_args env fv =
             fst (FStar.ToSyntax.ToSyntax.parse_attr_with_list
                 false x FStar.Parser.Const.strict_on_arguments_attr))
       in
-      true, res
+      if Some? res then true, Some (false, Some?.v res) else
+      let res =
+          BU.find_map attrs (fun x ->
+            fst (FStar.ToSyntax.ToSyntax.parse_attr_with_list
+                false x FStar.Parser.Const.strict_on_arguments_unfold_attr))
+      in
+      if Some? res then true, Some (true, Some?.v res) else
+      true, None
   in
   cache_in_fv_tab env.strict_args_tab fv f
 

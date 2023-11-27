@@ -101,6 +101,9 @@ type cfg = {
      tcenv: Env.env;
      debug: debug_switches;
      delta_level: list Env.delta_level;  // Controls how much unfolding of definitions should be performed
+     unfold_strict_fvs : bool;
+     // ^ Determines whether we should unconditionally unfold @@strict_on_arguments defns,
+     // ignoring the attribute. Used by the unifier.
      primitive_steps:BU.psmap primitive_step;
      strong : bool;                       // under a binder
      memoize_lazy : bool;

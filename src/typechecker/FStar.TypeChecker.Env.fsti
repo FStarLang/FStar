@@ -45,6 +45,11 @@ type step =
   | UnfoldQual  of list string
   | UnfoldNamespace of list string
   | UnfoldTac
+    // ^ Prevents unfolding of anything marked @@"tac_opaque", which are mostly
+    // the logical connectives.
+  | UnfoldStrict
+    // ^ Determines whether we should unconditionally unfold @@strict_on_arguments defns,
+    // ignoring the attribute. Used by the unifier.
   | PureSubtermsWithinComputations
   | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
   | EraseUniverses
@@ -207,7 +212,7 @@ and env = {
   tc_hooks       : tcenv_hooks;                   (* hooks that the interactive more relies onto for symbol tracking *)
   dsenv          : FStar.Syntax.DsEnv.env;        (* The desugaring environment from the front-end *)
   nbe            : list step -> env -> term -> term;  (* Callback to the NBE function *)
-  strict_args_tab:BU.smap (option (list int));  (* a dictionary of fv names to strict arguments *)
+  strict_args_tab:BU.smap (option (bool * list int));  (* a dictionary of fv names to strict arguments *)
   erasable_types_tab:BU.smap bool;              (* a dictionary of type names to erasable types *)
   enable_defer_to_tac: bool;                     (* Set by default; unset when running within a tactic itself, since we do not allow
                                                     a tactic to defer problems to another tactic via the attribute mechanism *)
@@ -316,7 +321,7 @@ val attrs_of_qninfo        : qninfo -> option (list attribute)
 val lookup_attrs_of_lid    : env -> lid -> option (list attribute)
 val fv_with_lid_has_attr   : env -> fv_lid:lid -> attr_lid:lid -> bool
 val fv_has_attr            : env -> fv -> attr_lid:lid -> bool
-val fv_has_strict_args     : env -> fv -> option (list int)
+val fv_has_strict_args     : env -> fv -> option (bool & list int) // bool: should_unfold
 val fv_has_erasable_attr   : env -> fv -> bool
 val non_informative        : env -> typ -> bool
 val try_lookup_effect_lid  : env -> lident -> option term
