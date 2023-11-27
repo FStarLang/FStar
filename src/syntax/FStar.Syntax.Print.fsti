@@ -47,6 +47,7 @@ val univ_names_to_string  : univ_names -> string
 val univ_to_string        : universe -> string
 val univs_to_string       : universes -> string
 val attrs_to_string       : list attribute -> string
+val pragma_to_string      : pragma -> string
 val sigelt_to_string      : sigelt -> string
 val sigelt_to_string'     : DsEnv.env -> sigelt -> string
 val sigelt_to_string_short: sigelt -> string
