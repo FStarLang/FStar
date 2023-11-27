@@ -2765,3 +2765,42 @@ let (unit_const_with_range : FStar_Compiler_Range_Type.range -> term) =
   fun r -> mk (Tm_constant FStar_Const.Const_unit) r
 let (unit_const : term) =
   unit_const_with_range FStar_Compiler_Range_Type.dummyRange
+let has_range_syntax : 'a . unit -> 'a syntax FStar_Class_HasRange.hasRange =
+  fun uu___ ->
+    (fun uu___ ->
+       Obj.magic
+         {
+           FStar_Class_HasRange.pos = (fun t -> t.pos);
+           FStar_Class_HasRange.setPos =
+             (fun r ->
+                fun t ->
+                  {
+                    n = (t.n);
+                    pos = r;
+                    vars = (t.vars);
+                    hash_code = (t.hash_code)
+                  })
+         }) uu___
+let has_range_withinfo :
+  'a . unit -> 'a withinfo_t FStar_Class_HasRange.hasRange =
+  fun uu___ ->
+    {
+      FStar_Class_HasRange.pos = (fun t -> t.p);
+      FStar_Class_HasRange.setPos = (fun r -> fun t -> { v = (t.v); p = r })
+    }
+let (has_range_sigelt : sigelt FStar_Class_HasRange.hasRange) =
+  {
+    FStar_Class_HasRange.pos = (fun t -> t.sigrng);
+    FStar_Class_HasRange.setPos =
+      (fun r ->
+         fun t ->
+           {
+             sigel = (t.sigel);
+             sigrng = r;
+             sigquals = (t.sigquals);
+             sigmeta = (t.sigmeta);
+             sigattrs = (t.sigattrs);
+             sigopens_and_abbrevs = (t.sigopens_and_abbrevs);
+             sigopts = (t.sigopts)
+           })
+  }

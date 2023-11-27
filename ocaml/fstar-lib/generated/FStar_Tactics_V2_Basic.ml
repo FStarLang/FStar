@@ -1246,7 +1246,8 @@ let (tadmit_t : FStar_Syntax_Syntax.term -> unit FStar_Tactics_Monad.tac) =
              (fun g ->
                 (let uu___2 =
                    let uu___3 = FStar_Tactics_Types.goal_type g in
-                   uu___3.FStar_Syntax_Syntax.pos in
+                   FStar_Class_HasRange.pos
+                     (FStar_Syntax_Syntax.has_range_syntax ()) uu___3 in
                  let uu___3 =
                    let uu___4 =
                      let uu___5 =
