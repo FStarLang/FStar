@@ -1633,8 +1633,16 @@ let set_options (s : string) : tac unit = wrap_err "set_options" <| (
 let top_env     () : tac env  = bind get (fun ps -> ret <| ps.main_context)
 
 let lax_on () : tac bool =
-    let! g = cur_goal in
-    ret (Options.lax () || (goal_env g).lax)
+  idtac ;!
+  if Options.lax () || Options.admit_smt_queries () then
+   ret true
+  else
+    (* Check the goal if any *)
+    match! trytac cur_goal with
+    | Some g ->
+      ret ((goal_env g).lax || (goal_env g).admit)
+    | None ->
+      ret false
 
 let unquote (ty : term) (tm : term) : tac term = wrap_err "unquote" <| (
     if_verbose (fun () -> BU.print1 "unquote: tm = %s\n" (show tm)) ;!
