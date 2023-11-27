@@ -133,7 +133,7 @@ let set_memo cfg (r:memo (Cfg.cfg * 'a)) (t:'a) : unit =
 
 let closure_to_string = function
     | Clos (env, t, _, _) -> BU.format2 "(env=%s elts; %s)" (List.length env |> string_of_int) (Print.term_to_string t)
-    | Univ _ -> "Univ"
+    | Univ u -> "Univ (" ^ Print.univ_to_string u ^ ")"
     | Dummy -> "dummy"
 
 let env_to_string env = //BU.format1 "(%s elements)" (string_of_int <| List.length env)
@@ -148,14 +148,13 @@ let stack_elt_to_string = function
     | Arg (c, _, _) -> BU.format1 "Closure %s" (closure_to_string c)
     | MemoLazy _ -> "MemoLazy"
     | Abs (_, bs, _, _, _) -> BU.format1 "Abs %s" (string_of_int <| List.length bs)
-    | UnivArgs _ -> "UnivArgs"
+    | UnivArgs (us, _) -> "UnivArgs (" ^ Print.univs_to_string us ^ ")"
     | Match   _ -> "Match"
     | App (_, t,_,_) -> BU.format1 "App %s" (Print.term_to_string t)
     | CBVApp (_, t,_,_) -> BU.format1 "CBVApp %s" (Print.term_to_string t)
     | Meta (_, m,_) -> "Meta"
     | Let  _ -> "Let"
     | Cfg _ -> "Cfg"
-    // | _ -> "Match"
 
 let stack_to_string s =
     List.map stack_elt_to_string s |> String.concat "; "
@@ -210,17 +209,25 @@ let norm_universe cfg (env:env) u =
         match u with
           | U_bvar x ->
             begin
-                try match snd (List.nth env x) with
-                      | Univ u ->
-                           if Env.debug cfg.tcenv <| Options.Other "univ_norm" then
-                               BU.print1 "Univ (in norm_universe): %s\n" (Print.univ_to_string u)
-                           else ();  aux u
-                      | Dummy -> [u]
-                      | _ -> failwith (BU.format1 "Impossible: universe variable u@%s bound to a term"
-                                                   (string_of_int x))
-                with _ -> if cfg.steps.allow_unbound_universes
-                          then [U_unknown]
-                          else failwith ("Universe variable not found: u@" ^ string_of_int x)
+              let vo =
+                try Some (snd (List.nth env x))
+                with | _ -> None
+              in
+              match vo with
+              | Some (Univ u) ->
+                if Env.debug cfg.tcenv <| Options.Other "univ_norm" then
+                    BU.print1 "Univ (in norm_universe): %s\n" (Print.univ_to_string u);
+                aux u
+              | Some Dummy ->
+                [u]
+              | Some _ ->
+                if cfg.steps.allow_unbound_universes
+                then [U_unknown]
+                else failwith (BU.format1 "Impossible: universe variable u@%s bound to a term" (string_of_int x))
+              | None ->
+                if cfg.steps.allow_unbound_universes
+                then [U_unknown]
+                else failwith ("Universe variable not found: u@" ^ string_of_int x ^ " -- " ^ string_of_int (List.length env))
             end
           | U_unif _ when cfg.steps.check_no_uvars ->
             [U_zero] // GM: why?
@@ -905,7 +912,7 @@ let rec maybe_weakly_reduced tm :  bool =
 Initialized below in normalize *)
 let plugin_unfold_warn_ctr : ref int = BU.mk_ref 0
 
-let should_unfold cfg should_reify fv qninfo : should_unfold_res =
+let should_unfold cfg strict_ok should_reify fv qninfo : should_unfold_res =
     let attrs =
       match Env.attrs_of_qninfo qninfo with
       | None -> []
@@ -953,6 +960,13 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
                                                (Print.fv_to_string fv)
                                                (string_of_bool b));
         if b then reif else no
+
+    // If this definition is marked strict_on_arguments, we will not
+    // unfold standalone occurrences of it, only applications that
+    // pass the strictness check.
+    | _ when not strict_ok && Some? (Env.fv_has_strict_args cfg.tcenv fv) && not cfg.unfold_strict_fvs ->
+        log_unfolding cfg (fun () -> BU.print_string " >> Not unfolding strict_on_arguments definition\n");
+        no
 
     // If it is handled primitively, then don't unfold
     | _ when Option.isSome (find_prim_step cfg fv) ->
@@ -1061,9 +1075,9 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
       plugin_unfold_warn_ctr := !plugin_unfold_warn_ctr - 1
     end;
     r
-let decide_unfolding cfg stack rng fv qninfo (* : option (cfg * stack) *) =
+let decide_unfolding cfg strict_ok stack rng fv qninfo (* : option (cfg * stack) *) =
     let res =
-        should_unfold cfg (fun cfg -> should_reify cfg stack) fv qninfo
+        should_unfold cfg strict_ok (fun cfg -> should_reify cfg stack) fv qninfo
     in
     match res with
     | Should_unfold_no ->
@@ -1203,7 +1217,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
               log_unfolding cfg (fun () -> BU.print1 " >> This is a constant: %s\n" (Print.term_to_string t));
               rebuild cfg empty_env stack t
             | _ ->
-              match decide_unfolding cfg stack t.pos fv qninfo with
+              match decide_unfolding cfg false stack t.pos fv qninfo with
               | Some (cfg, stack) -> do_unfold_fv cfg stack t qninfo fv
               | None -> rebuild cfg empty_env stack t
             end
@@ -1425,15 +1439,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 | [] -> fallback ()
             end
 
-          | Tm_app {hd=head; args} ->
-            let strict_args =
-              match (head |> U.unascribe |> U.un_uinst).n with
-              | Tm_fvar fv -> Env.fv_has_strict_args cfg.tcenv fv
-              | _ -> None
-            in
-            begin
-            match strict_args with
-            | None ->
+          | Tm_app {hd=head; args} -> begin
+            let fallback () =
+              (* normal application *)
               let stack =
                 List.fold_right
                   (fun (a, aq) stack ->
@@ -1460,44 +1468,29 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   args
                   stack
               in
-              log cfg  (fun () -> BU.print1 "\tPushed %s arguments\n" (string_of_int <| List.length args));
+              log cfg (fun () -> BU.print1 "\tPushed %s arguments\n" (string_of_int <| List.length args));
               norm cfg env stack head
-
-            | Some strict_args ->
-              // BU.print2 "%s has strict args [%s]\n"
-              //   (Print.term_to_string head)
-              //   (List.map string_of_int strict_args |> String.concat "; ");
-              let norm_args = args |> List.map (fun (a, i) -> (norm cfg env [] a, i)) in
-              let norm_args_len = List.length norm_args in
-              if strict_args
-                |> List.for_all (fun i ->
-                  if i >= norm_args_len then false
-                  else
-                    let arg_i, _ = List.nth norm_args i in
-                    let head, _ = arg_i |> U.unmeta_safe |> U.head_and_args in
-                    match (un_uinst head).n with
-                    | Tm_constant _ -> true
-                    | Tm_fvar fv -> Env.is_datacon cfg.tcenv (S.lid_of_fv fv)
-                    | _ -> false)
-              then //all strict args have constant head symbols
-                   let stack =
-                     stack |>
-                     List.fold_right (fun (a, aq) stack ->
-                       Arg (Clos(env, a, BU.mk_ref (Some (cfg, ([], a))), false),aq,t.pos)::stack)
-                     norm_args
-                   in
-                   log cfg  (fun () -> BU.print1 "\tPushed %s arguments\n" (string_of_int <| List.length args));
-                   norm cfg env stack head
-              else let head = closure_as_term cfg env head in
-                   let term = S.mk_Tm_app head norm_args t.pos in
-                   // let _ =
-                   //   BU.print3 "Rebuilding %s as %s\n%s\n"
-                   //     (Print.term_to_string t)
-                   //     (Print.term_to_string term)
-                   //     (BU.stack_dump())
-                   // in
-                   rebuild cfg env stack term
-            end
+            in
+            if cfg.unfold_strict_fvs then
+              fallback ()
+            else
+            let head_fv_us_opt =
+              let head = U.unascribe head in
+              let head = SS.compress head in
+              match head.n with
+              | Tm_fvar fv -> Some (head, fv, [])
+              | Tm_uinst ({n = Tm_fvar fv}, us) -> Some (fst (Tm_uinst?._0 head.n), fv, us)
+              | _ -> None
+            in
+            match head_fv_us_opt with
+            | None -> fallback ()
+            | Some (head, fv, us) ->
+              match Env.fv_has_strict_args cfg.tcenv fv with
+              | Some (strict_unfold, strict_args) ->
+                handle_strict_application cfg env stack head fv us strict_unfold strict_args args t.pos
+              | None ->
+                fallback()
+          end
 
           | Tm_refine {b=x}
               when cfg.steps.for_extraction
@@ -1765,38 +1758,163 @@ let rec norm : cfg -> env -> stack -> term -> term =
 (* NOTE: we do not need any environment here, since an fv does not
  * have any free indices. Hence, we use empty_env as environment when needed. *)
 and do_unfold_fv cfg stack (t0:term) (qninfo : qninfo) (f:fv) : term =
-    match Env.lookup_definition_qninfo cfg.delta_level f.fv_name.v qninfo with
-       | None ->
-         log_unfolding cfg (fun () -> // printfn "delta_level = %A, qninfo=%A" cfg.delta_level qninfo;
-                                      BU.print1 " >> No definition found for %s\n" (Print.fv_to_string f));
-         rebuild cfg empty_env stack t0
+  match Env.lookup_definition_qninfo cfg.delta_level f.fv_name.v qninfo with
+  | None ->
+    log_unfolding cfg (fun () -> // printfn "delta_level = %A, qninfo=%A" cfg.delta_level qninfo;
+                                 BU.print1 " >> No definition found for %s\n" (Print.fv_to_string f));
+    rebuild cfg empty_env stack t0
 
-       | Some (us, t) ->
-         begin
-         log_unfolding cfg (fun () -> BU.print2 " >> Unfolded %s to %s\n"
-                       (Print.term_to_string t0) (Print.term_to_string t));
-         // preserve the range info on the returned term
-         let t =
-           if cfg.steps.unfold_until = Some delta_constant
-           //we're really trying to compute here; no point propagating range information
-           //which can be expensive
-           then t
-           else Subst.set_use_range t0.pos t
-         in
-         let n = List.length us in
-         if n > 0
-         then match stack with //universe beta reduction
-                | UnivArgs(us', _)::stack ->
-                  if Env.debug cfg.tcenv <| Options.Other "univ_norm" then
-                      List.iter (fun x -> BU.print1 "Univ (normalizer) %s\n" (Print.univ_to_string x)) us'
-                  else ();
-                  let env = us' |> List.fold_left (fun env u -> (None, Univ u)::env) empty_env in
-                  norm cfg env stack t
-                | _ when cfg.steps.erase_universes || cfg.steps.allow_unbound_universes ->
-                  norm cfg empty_env stack t
-                | _ -> failwith (BU.format1 "Impossible: missing universe instantiation on %s" (Print.lid_to_string f.fv_name.v))
-         else norm cfg empty_env stack t
-         end
+  | Some (us, t) -> begin
+    log_unfolding cfg (fun () -> BU.print2 " >> Unfolded %s to %s\n"
+                  (Print.term_to_string t0) (Print.term_to_string t));
+    // preserve the range info on the returned term
+    let t =
+      if cfg.steps.unfold_until = Some delta_constant
+      //we're really trying to compute here; no point propagating range information
+      //which can be expensive
+      then t
+      else Subst.set_use_range t0.pos t
+    in
+    let n = List.length us in
+    if n > 0 then
+      (* Universe beta reduction *)
+      match stack with
+      | UnivArgs(us', _)::stack ->
+        if n <> List.length us' then
+          failwith "ah!!!";
+        if Env.debug cfg.tcenv <| Options.Other "univ_norm" then
+            List.iter (fun x -> BU.print1 "Univ (normalizer) %s\n" (Print.univ_to_string x)) us';
+        let env = us' |> List.fold_left (fun env u -> (None, Univ u)::env) empty_env in
+        norm cfg env stack t
+      | _ when cfg.steps.erase_universes || cfg.steps.allow_unbound_universes ->
+        norm cfg empty_env stack t
+      | _ ->
+        log cfg (fun () -> BU.print1 "top of stack = %s\n" (stack_to_string (fst <| firstn 4 stack)));
+        failwith (BU.format1 "Impossible: missing universe instantiation on %s" (Print.lid_to_string f.fv_name.v))
+    else
+      (* Not a universe-polymorphic definition, we should not have
+      universe arguments on the stack. *)
+      match stack with
+      | UnivArgs(us', _)::stack ->
+        failwith "univ args on not-uni-poly defn?"
+      | _ ->
+        norm cfg empty_env stack t
+   end
+
+and handle_strict_application (cfg:Cfg.cfg) (env:env) stack
+        (head:term)
+        (fv:fv) (us:universes) strict_unfold strict_args args
+        (rng:Range.range)
+=
+    log cfg (fun () -> BU.print3 "Got strict application for %s, strict_args = %s, strict_unfold = %s\n"
+                        (Print.fv_to_string fv)
+                        (FStar.Common.string_of_list string_of_int strict_args)
+                        (string_of_bool strict_unfold));
+    // BU.print2 "%s has strict args [%s]\n"
+    //   (Print.term_to_string head)
+    //   (List.map string_of_int strict_args |> String.concat "; ");
+    let cfg_args =
+      (* For strict_on_args_unfold, we change the config to make it
+      possibly unfold the argument. Note that we set WHNF, as all
+      we need is to check if the head reduced to a constructor. *)
+      if strict_unfold
+      then { cfg with steps = { cfg.steps with
+                                 unfold_only  = None
+                               ; unfold_fully = None
+                               ; unfold_attr  = None
+                               ; unfold_qual  = None
+                               ; unfold_namespace = None
+                               ; unfold_until = Some delta_constant
+                               ; weak = true
+                               ; hnf = true
+                               };
+                      delta_level = [Unfold delta_constant];
+           }
+      else cfg
+    in
+    //let cfg_args = { cfg_args with debug = Cfg.no_debug_switches } in
+    let args_len = List.length args in
+
+    (* Normalize the arguments. We take a pass through all of them,
+    but we only use cfg_unfold if strict_unfold is on and this is
+    one of the strict args. Otherwise we just normalize with the current cfg. *)
+    let norm_args = args |> List.mapi (fun idx (a, i) ->
+      let a =
+        log cfg (fun () -> BU.print2 "Normalizing strict arg %s (%s)\n"
+                      (string_of_int idx)
+                      (Print.term_to_string a));
+        if strict_unfold && List.mem idx strict_args then
+          norm cfg_args env [] a
+        else
+          norm cfg env [] a
+      in
+      (a, i))
+    in
+    let is_hnf (i:int) : bool =
+        if i >= args_len then false
+        else
+          let arg_i, _ = List.nth norm_args i in
+          let head, _ = arg_i |> U.unmeta_safe |> U.head_and_args in
+          match (un_uinst head).n with
+          | Tm_constant _ -> true
+          | Tm_fvar fv -> Env.is_datacon cfg.tcenv (S.lid_of_fv fv)
+          | _ -> false
+    in
+    if List.for_all is_hnf strict_args then (
+      log cfg (fun () -> BU.print2 "Strict reduction kicking in for %s<%s>\n"
+                                        (Print.term_to_string head)
+                                        (Print.univs_to_string us));
+      (* All strict args have constant head symbols, unfold and reduce.
+      We manually unfold the head fv here since the normal case
+      for fvars will ignore variables marked with a strict_on_arguments
+      attribute to prevent the unfolding of standalone occurrences. *)
+      let lid = fv.fv_name.v in
+      let qninfo = Env.lookup_qname cfg.tcenv lid in
+      let stack =
+        stack |>
+        List.fold_right (fun (a, aq) stack ->
+          Arg (Clos(env, a, BU.mk_ref (Some (cfg, ([], a))), false), aq, rng)::stack)
+        norm_args
+      in
+      log cfg (fun () -> BU.print1 "\tPushed %s arguments\n" (string_of_int <| List.length args));
+      let stack =
+        match us with
+        | [] -> stack
+        | us ->
+          (* This normalization is needed to close the universes wrt the env.
+          The stack should only hold universe values. *)
+          let us = List.map (norm_universe cfg env) us in
+          UnivArgs (us, head.pos) :: stack
+      in
+      let head = SS.compress head in
+      match decide_unfolding cfg true stack head.pos fv qninfo with
+      | Some (cfg, stack) ->
+        (* Push arguments and universes *)
+        do_unfold_fv cfg stack head qninfo fv
+      | None ->
+        (* Just rebuild *)
+        rebuild cfg env stack head
+    ) else (
+      (* Stop normalizing and rebuild. *)
+      log cfg (fun () -> BU.print2 "Strict reduction DID NOT kick in for %s<%s>, rebuilding\n"
+                                        (Print.term_to_string head)
+                                        (Print.univs_to_string us));
+      let head =
+        match us with
+        | [] -> head
+        | us -> mk_Tm_uinst head us
+      in
+      let head = closure_as_term cfg env head in
+      let term = S.mk_Tm_app head norm_args rng in
+      // let _ =
+      //   BU.print3 "Rebuilding %s as %s\n%s\n"
+      //     (Print.term_to_string t)
+      //     (Print.term_to_string term)
+      //     (BU.stack_dump())
+      // in
+      rebuild cfg env stack term
+    )
+
 
 and reduce_impure_comp cfg env stack (head : term) // monadic term
                                      (m : either monad_name (monad_name * monad_name))

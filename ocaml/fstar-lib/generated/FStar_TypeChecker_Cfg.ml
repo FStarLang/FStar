@@ -991,6 +991,7 @@ let (fstep_add_one : FStar_TypeChecker_Env.step -> fsteps -> fsteps) =
             for_extraction = (fs.for_extraction);
             unrefine = (fs.unrefine)
           }
+      | FStar_TypeChecker_Env.UnfoldStrict -> fs
       | FStar_TypeChecker_Env.UnfoldOnly lids ->
           {
             beta = (fs.beta);
@@ -1772,6 +1773,7 @@ type cfg =
   tcenv: FStar_TypeChecker_Env.env ;
   debug: debug_switches ;
   delta_level: FStar_TypeChecker_Env.delta_level Prims.list ;
+  unfold_strict_fvs: Prims.bool ;
   primitive_steps:
     FStar_TypeChecker_Primops.primitive_step FStar_Compiler_Util.psmap ;
   strong: Prims.bool ;
@@ -1782,65 +1784,71 @@ type cfg =
 let (__proj__Mkcfg__item__steps : cfg -> fsteps) =
   fun projectee ->
     match projectee with
-    | { steps; tcenv; debug; delta_level; primitive_steps; strong;
-        memoize_lazy; normalize_pure_lets; reifying;
+    | { steps; tcenv; debug; delta_level; unfold_strict_fvs; primitive_steps;
+        strong; memoize_lazy; normalize_pure_lets; reifying;
         compat_memo_ignore_cfg;_} -> steps
 let (__proj__Mkcfg__item__tcenv : cfg -> FStar_TypeChecker_Env.env) =
   fun projectee ->
     match projectee with
-    | { steps; tcenv; debug; delta_level; primitive_steps; strong;
-        memoize_lazy; normalize_pure_lets; reifying;
+    | { steps; tcenv; debug; delta_level; unfold_strict_fvs; primitive_steps;
+        strong; memoize_lazy; normalize_pure_lets; reifying;
         compat_memo_ignore_cfg;_} -> tcenv
 let (__proj__Mkcfg__item__debug : cfg -> debug_switches) =
   fun projectee ->
     match projectee with
-    | { steps; tcenv; debug; delta_level; primitive_steps; strong;
-        memoize_lazy; normalize_pure_lets; reifying;
+    | { steps; tcenv; debug; delta_level; unfold_strict_fvs; primitive_steps;
+        strong; memoize_lazy; normalize_pure_lets; reifying;
         compat_memo_ignore_cfg;_} -> debug
 let (__proj__Mkcfg__item__delta_level :
   cfg -> FStar_TypeChecker_Env.delta_level Prims.list) =
   fun projectee ->
     match projectee with
-    | { steps; tcenv; debug; delta_level; primitive_steps; strong;
-        memoize_lazy; normalize_pure_lets; reifying;
+    | { steps; tcenv; debug; delta_level; unfold_strict_fvs; primitive_steps;
+        strong; memoize_lazy; normalize_pure_lets; reifying;
         compat_memo_ignore_cfg;_} -> delta_level
+let (__proj__Mkcfg__item__unfold_strict_fvs : cfg -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | { steps; tcenv; debug; delta_level; unfold_strict_fvs; primitive_steps;
+        strong; memoize_lazy; normalize_pure_lets; reifying;
+        compat_memo_ignore_cfg;_} -> unfold_strict_fvs
 let (__proj__Mkcfg__item__primitive_steps :
   cfg -> FStar_TypeChecker_Primops.primitive_step FStar_Compiler_Util.psmap)
   =
   fun projectee ->
     match projectee with
-    | { steps; tcenv; debug; delta_level; primitive_steps; strong;
-        memoize_lazy; normalize_pure_lets; reifying;
+    | { steps; tcenv; debug; delta_level; unfold_strict_fvs; primitive_steps;
+        strong; memoize_lazy; normalize_pure_lets; reifying;
         compat_memo_ignore_cfg;_} -> primitive_steps
 let (__proj__Mkcfg__item__strong : cfg -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | { steps; tcenv; debug; delta_level; primitive_steps; strong;
-        memoize_lazy; normalize_pure_lets; reifying;
+    | { steps; tcenv; debug; delta_level; unfold_strict_fvs; primitive_steps;
+        strong; memoize_lazy; normalize_pure_lets; reifying;
         compat_memo_ignore_cfg;_} -> strong
 let (__proj__Mkcfg__item__memoize_lazy : cfg -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | { steps; tcenv; debug; delta_level; primitive_steps; strong;
-        memoize_lazy; normalize_pure_lets; reifying;
+    | { steps; tcenv; debug; delta_level; unfold_strict_fvs; primitive_steps;
+        strong; memoize_lazy; normalize_pure_lets; reifying;
         compat_memo_ignore_cfg;_} -> memoize_lazy
 let (__proj__Mkcfg__item__normalize_pure_lets : cfg -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | { steps; tcenv; debug; delta_level; primitive_steps; strong;
-        memoize_lazy; normalize_pure_lets; reifying;
+    | { steps; tcenv; debug; delta_level; unfold_strict_fvs; primitive_steps;
+        strong; memoize_lazy; normalize_pure_lets; reifying;
         compat_memo_ignore_cfg;_} -> normalize_pure_lets
 let (__proj__Mkcfg__item__reifying : cfg -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | { steps; tcenv; debug; delta_level; primitive_steps; strong;
-        memoize_lazy; normalize_pure_lets; reifying;
+    | { steps; tcenv; debug; delta_level; unfold_strict_fvs; primitive_steps;
+        strong; memoize_lazy; normalize_pure_lets; reifying;
         compat_memo_ignore_cfg;_} -> reifying
 let (__proj__Mkcfg__item__compat_memo_ignore_cfg : cfg -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | { steps; tcenv; debug; delta_level; primitive_steps; strong;
-        memoize_lazy; normalize_pure_lets; reifying;
+    | { steps; tcenv; debug; delta_level; unfold_strict_fvs; primitive_steps;
+        strong; memoize_lazy; normalize_pure_lets; reifying;
         compat_memo_ignore_cfg;_} -> compat_memo_ignore_cfg
 type prim_step_set =
   FStar_TypeChecker_Primops.primitive_step FStar_Compiler_Util.psmap
@@ -1876,8 +1884,15 @@ let (cfg_to_string : cfg -> Prims.string) =
       let uu___1 =
         let uu___2 =
           let uu___3 = steps_to_string cfg1.steps in
-          FStar_Compiler_Util.format1 "  steps = %s" uu___3 in
-        [uu___2; "}"] in
+          FStar_Compiler_Util.format1 "  steps = %s;" uu___3 in
+        let uu___3 =
+          let uu___4 =
+            let uu___5 =
+              (FStar_Common.string_of_list ())
+                FStar_TypeChecker_Env.string_of_delta_level cfg1.delta_level in
+            FStar_Compiler_Util.format1 "  delta_level = %s;" uu___5 in
+          [uu___4; "}"] in
+        uu___2 :: uu___3 in
       "{" :: uu___1 in
     FStar_String.concat "\n" uu___
 let (cfg_env : cfg -> FStar_TypeChecker_Env.env) = fun cfg1 -> cfg1.tcenv
@@ -2147,6 +2162,8 @@ let (config' :
           tcenv = e;
           debug = uu___;
           delta_level = d1;
+          unfold_strict_fvs =
+            (FStar_Compiler_List.mem FStar_TypeChecker_Env.UnfoldStrict s);
           primitive_steps = psteps1;
           strong = false;
           memoize_lazy = true;

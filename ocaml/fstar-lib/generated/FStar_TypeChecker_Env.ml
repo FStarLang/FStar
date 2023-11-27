@@ -18,6 +18,7 @@ type step =
   | UnfoldQual of Prims.string Prims.list 
   | UnfoldNamespace of Prims.string Prims.list 
   | UnfoldTac 
+  | UnfoldStrict 
   | PureSubtermsWithinComputations 
   | Simplify 
   | EraseUniverses 
@@ -90,6 +91,9 @@ let (__proj__UnfoldNamespace__item___0 : step -> Prims.string Prims.list) =
   fun projectee -> match projectee with | UnfoldNamespace _0 -> _0
 let (uu___is_UnfoldTac : step -> Prims.bool) =
   fun projectee -> match projectee with | UnfoldTac -> true | uu___ -> false
+let (uu___is_UnfoldStrict : step -> Prims.bool) =
+  fun projectee ->
+    match projectee with | UnfoldStrict -> true | uu___ -> false
 let (uu___is_PureSubtermsWithinComputations : step -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -352,7 +356,7 @@ and env =
       env -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
     ;
   strict_args_tab:
-    Prims.int Prims.list FStar_Pervasives_Native.option
+    (Prims.bool * Prims.int Prims.list) FStar_Pervasives_Native.option
       FStar_Compiler_Util.smap
     ;
   erasable_types_tab: Prims.bool FStar_Compiler_Util.smap ;
@@ -1231,7 +1235,7 @@ let (__proj__Mkenv__item__nbe :
         unif_allow_ref_guards; erase_erasable_args; core_check;_} -> nbe
 let (__proj__Mkenv__item__strict_args_tab :
   env ->
-    Prims.int Prims.list FStar_Pervasives_Native.option
+    (Prims.bool * Prims.int Prims.list) FStar_Pervasives_Native.option
       FStar_Compiler_Util.smap)
   =
   fun projectee ->
@@ -3833,7 +3837,7 @@ let (fv_has_erasable_attr : env -> FStar_Syntax_Syntax.fv -> Prims.bool) =
 let (fv_has_strict_args :
   env ->
     FStar_Syntax_Syntax.fv ->
-      Prims.int Prims.list FStar_Pervasives_Native.option)
+      (Prims.bool * Prims.int Prims.list) FStar_Pervasives_Native.option)
   =
   fun env1 ->
     fun fv ->
@@ -3852,7 +3856,27 @@ let (fv_has_strict_args :
                      FStar_ToSyntax_ToSyntax.parse_attr_with_list false x
                        FStar_Parser_Const.strict_on_arguments_attr in
                    FStar_Pervasives_Native.fst uu___1) in
-            (true, res) in
+            if FStar_Pervasives_Native.uu___is_Some res
+            then
+              (true,
+                (FStar_Pervasives_Native.Some
+                   (false,
+                     (FStar_Pervasives_Native.__proj__Some__item__v res))))
+            else
+              (let res1 =
+                 FStar_Compiler_Util.find_map attrs1
+                   (fun x ->
+                      let uu___2 =
+                        FStar_ToSyntax_ToSyntax.parse_attr_with_list false x
+                          FStar_Parser_Const.strict_on_arguments_unfold_attr in
+                      FStar_Pervasives_Native.fst uu___2) in
+               if FStar_Pervasives_Native.uu___is_Some res1
+               then
+                 (true,
+                   (FStar_Pervasives_Native.Some
+                      (true,
+                        (FStar_Pervasives_Native.__proj__Some__item__v res1))))
+               else (true, FStar_Pervasives_Native.None)) in
       cache_in_fv_tab env1.strict_args_tab fv f
 let (try_lookup_effect_lid :
   env ->

@@ -934,6 +934,7 @@ val unifier_hint_injective : unit
       Otherwise, [f] is not unfolded and the term is [f e0 e1 e2]
       reduces to [f v0 v1 v2]. *)
 val strict_on_arguments (x: list int) : Tot unit
+val strict_on_arguments_unfold (x: list int) : Tot unit
 
 (**
  * An attribute to tag a tactic designated to solve any

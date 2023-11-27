@@ -1344,6 +1344,7 @@ let head_matches_delta env smt_ok t1 t2 : (match_result & option (typ&typ)) =
           | Some _ ->
             let basic_steps =
                 [Env.UnfoldUntil delta_constant;
+                 Env.UnfoldStrict;
                  Env.Weak;
                  Env.HNF;
                  Env.Primops;
@@ -4205,7 +4206,7 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
          let head2 = U.head_and_args t2 |> fst in
          let _ =
              if debug wl (Options.Other "Rel")
-             then BU.print ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
+             then BU.print ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s; no_free_uvars=%s]\n"
                [(string_of_int problem.pid);
                 (string_of_bool wl.smt_ok);
                 (Print.term_to_string head1);
