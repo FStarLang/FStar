@@ -21,6 +21,7 @@ open FStar.Const
 open FStar.Ident
 open FStar.Syntax.Syntax
 open FStar.Class.Show
+open FStar.Class.PP
 
 module DsEnv = FStar.Syntax.DsEnv
 module Json = FStar.Json
@@ -89,6 +90,10 @@ val sigelt_to_doc'        : DsEnv.env -> sigelt -> Pprint.document
 val term_to_doc           : term -> Pprint.document
 val comp_to_doc           : comp -> Pprint.document
 val sigelt_to_doc         : sigelt -> Pprint.document
+
+instance val pretty_term : pretty term
+instance val pretty_comp : pretty comp
+instance val pretty_sigelt : pretty sigelt
 
 instance val showable_term : showable term
 instance val showable_sigelt : showable sigelt

@@ -987,5 +987,9 @@ let sigelt_to_doc t =
   then Pprint.arbitrary_string (sigelt_to_string t)
   else Pretty.sigelt_to_doc t
 
+instance pretty_sigelt = { pp = sigelt_to_doc; }
+instance pretty_comp = { pp = comp_to_doc; }
+instance pretty_term = { pp = term_to_doc; }
+
 instance showable_sigelt : showable sigelt = { show = sigelt_to_string; }
 instance showable_term : showable term = { show = term_to_string; }
