@@ -2,7 +2,7 @@
 * Error 170 at Bug2899.fst(7,12-7,18):
   - Tactic failed
   - Tactic got stuck!
-  - Reduction stopped at: FStar.Tactics.Result.Success (Prims.admit ())
+  - Reduction stopped at: FStar.Stubs.Tactics.Result.Success (Prims.admit ())
       "(((proofstate)))"
   - The term contains an `admit`, which will not reduce. Did you mean `tadmit()`?
   - See also FStar.Tactics.Effect.fsti(212,48-212,58)
@@ -21,7 +21,7 @@
 * Error 170 at Bug2899.fst(13,12-13,18):
   - Tactic failed
   - Tactic got stuck!
-  - Reduction stopped at: FStar.Tactics.V2.Builtins.dump (Prims.admit ())
+  - Reduction stopped at: FStar.Stubs.Tactics.V2.Builtins.dump (Prims.admit ())
       "(((proofstate)))"
   - The term contains an `admit`, which will not reduce. Did you mean `tadmit()`?
   - See also FStar.Tactics.Effect.fsti(212,48-212,58)
