@@ -4915,13 +4915,27 @@ let (top_env : unit -> env FStar_Tactics_Monad.tac) =
            ps.FStar_Tactics_Types.main_context)
 let (lax_on : unit -> Prims.bool FStar_Tactics_Monad.tac) =
   fun uu___ ->
-    FStar_Tactics_Monad.op_let_Bang FStar_Tactics_Monad.cur_goal
-      (fun g ->
-         let uu___1 =
-           (FStar_Options.lax ()) ||
-             (let uu___2 = FStar_Tactics_Types.goal_env g in
-              uu___2.FStar_TypeChecker_Env.lax) in
-         FStar_Tactics_Monad.ret uu___1)
+    FStar_Tactics_Monad.op_let_Bang FStar_Tactics_Monad.idtac
+      (fun uu___1 ->
+         let uu___2 =
+           (FStar_Options.lax ()) || (FStar_Options.admit_smt_queries ()) in
+         if uu___2
+         then FStar_Tactics_Monad.ret true
+         else
+           (let uu___4 =
+              FStar_Tactics_Monad.trytac FStar_Tactics_Monad.cur_goal in
+            FStar_Tactics_Monad.op_let_Bang uu___4
+              (fun uu___5 ->
+                 match uu___5 with
+                 | FStar_Pervasives_Native.Some g ->
+                     let uu___6 =
+                       (let uu___7 = FStar_Tactics_Types.goal_env g in
+                        uu___7.FStar_TypeChecker_Env.lax) ||
+                         (let uu___7 = FStar_Tactics_Types.goal_env g in
+                          uu___7.FStar_TypeChecker_Env.admit) in
+                     FStar_Tactics_Monad.ret uu___6
+                 | FStar_Pervasives_Native.None ->
+                     FStar_Tactics_Monad.ret false)))
 let (unquote :
   FStar_Syntax_Syntax.typ ->
     FStar_Syntax_Syntax.term ->
