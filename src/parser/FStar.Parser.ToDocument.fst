@@ -324,9 +324,9 @@ let is_non_latin_char (s:Char.char): bool
     = int_of_char s > 0x024f
 
 let matches_token (s:string) = function
-    | StartsWith c  -> FStar.String.get s 0 = c
+    | StartsWith c  -> FStar.Compiler.String.get s 0 = c
     | Exact      s' -> s = s'
-    | UnicodeOperator -> is_non_latin_char (FStar.String.get s 0)
+    | UnicodeOperator -> is_non_latin_char (FStar.Compiler.String.get s 0)
 
 let matches_level s (assoc_levels, tokens) =
     List.tryFind (matches_token s) tokens <> None
@@ -2172,7 +2172,7 @@ and p_constant = function
   | Const_bool b -> doc_of_bool b
   | Const_real r -> str (r ^"R")
   | Const_char x -> doc_of_char x
-  | Const_string(s, _) -> dquotes (str (FStar.String.escaped s))
+  | Const_string(s, _) -> dquotes (str (FStar.Compiler.String.escaped s))
   | Const_int (repr, sign_width_opt) ->
       let signedness = function
           | Unsigned -> str "u"

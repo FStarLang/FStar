@@ -760,7 +760,7 @@ let (tc_one_fragment :
           let uu___1 =
             let uu___2 =
               FStar_Ident.string_of_lid modul.FStar_Syntax_Syntax.name in
-            FStar_String.lowercase uu___2 in
+            FStar_Compiler_String.lowercase uu___2 in
           uu___ = uu___1 in
         let range_of_first_mod_decl modul =
           match modul with
@@ -960,7 +960,7 @@ let (emit : (uenv * FStar_Extraction_ML_Syntax.mllib) Prims.list -> unit) =
                              match uu___2 with
                              | (mname, modul, uu___3) ->
                                  let filename =
-                                   FStar_String.concat "_"
+                                   FStar_Compiler_String.concat "_"
                                      (FStar_Compiler_List.op_At
                                         (FStar_Pervasives_Native.fst mname)
                                         [FStar_Pervasives_Native.snd mname]) in
@@ -1388,12 +1388,12 @@ let (batch_mode_tc :
             "Auto-deps kicked in; here's some info.";
           FStar_Compiler_Util.print1
             "Here's the list of filenames we will process: %s\n"
-            (FStar_String.concat " " filenames);
+            (FStar_Compiler_String.concat " " filenames);
           (let uu___4 =
              let uu___5 =
                FStar_Compiler_Effect.op_Bar_Greater filenames
                  (FStar_Compiler_List.filter FStar_Options.should_verify_file) in
-             FStar_String.concat " " uu___5 in
+             FStar_Compiler_String.concat " " uu___5 in
            FStar_Compiler_Util.print1
              "Here's the list of modules we will verify: %s\n" uu___4))
        else ());

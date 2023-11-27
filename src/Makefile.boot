@@ -26,7 +26,8 @@ OUTPUT_DIRECTORY_FOR = $(if $(findstring FStar_Tests_,$(1)),$(DUNE_SNAPSHOT)/fst
 # Each "project" for the compiler is in its own namespace.  We want to
 # extract them all to OCaml.  Would be more convenient if all of them
 # were within, say, FStar.Compiler.*
-EXTRACT_NAMESPACES=FStar.Extraction FStar.Parser		\
+EXTRACT_NAMESPACES=FStar.Extraction FStar.Parser			\
+		   FStar.Class						\
 		   FStar.Reflection FStar.SMTEncoding FStar.Syntax	\
 		   FStar.Tactics FStar.Tests FStar.ToSyntax		\
 		   FStar.TypeChecker FStar.Profiling FStar.Compiler
@@ -36,9 +37,9 @@ EXTRACT_NAMESPACES=FStar.Extraction FStar.Parser		\
 # TODO: Do we really need this anymore? Which (implementation) modules
 # from src/basic are *not* extracted?
 EXTRACT_MODULES=FStar.Pervasives FStar.Common FStar.Thunk		\
-		FStar.VConfig FStar.Options FStar.Ident FStar.Errors FStar.Errors.Codes \
-		FStar.Errors.Msg FStar.Errors.Raise FStar.Const	\
-		FStar.Order FStar.Dependencies		\
+		FStar.VConfig FStar.Options FStar.Ident FStar.Errors FStar.Errors.Codes	\
+		FStar.Errors.Msg FStar.Errors.Raise FStar.Const				\
+		FStar.Compiler.Order FStar.Order FStar.Dependencies			\
 		FStar.Interactive.CompletionTable			\
 		FStar.Interactive.JsonHelper FStar.Interactive.QueryHelper \
 		FStar.Interactive.PushHelper FStar.Interactive.Lsp	\
@@ -64,16 +65,20 @@ EXTRACT = $(addprefix --extract_module , $(EXTRACT_MODULES))		\
 # recent than its dependences.
 %.checked.lax:
 	$(call msg, "LAXCHECK", $(basename $(basename $(notdir $@))))
-	$(Q)$(BENCHMARK_PRE) $(FSTAR_C) $< --already_cached '*,'-$(basename $(notdir $<))
+	$(Q)$(BENCHMARK_PRE) $(FSTAR_C) --already_cached '*,'-$(basename $(notdir $<)) \
+		$(if $(findstring /ulib/,$<),,--MLish) \
+		$<
 	$(Q)@touch -c $@
 
 # And then, in a separate invocation, from each .checked.lax we
 # extract an .ml file
+# We always extract with --MLish for the compiler.
 %.ml:
 	$(call msg, "EXTRACT", $(notdir $@))
 	$(Q)$(BENCHMARK_PRE) $(FSTAR_C) $(notdir $(subst .checked.lax,,$<)) \
+		   --MLish \
 		   --odir "$(call OUTPUT_DIRECTORY_FOR,"$@")" \
-                   --codegen OCaml \
+                   --codegen Plugin \
                    --extract_module $(basename $(notdir $(subst .checked.lax,,$<)))
 
 # --------------------------------------------------------------------

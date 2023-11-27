@@ -635,7 +635,7 @@ let rec (hash_of_term' : term' -> Prims.string) =
             let uu___3 =
               let uu___4 = FStar_Compiler_List.map hash_of_term tms in
               FStar_Compiler_Effect.op_Bar_Greater uu___4
-                (FStar_String.concat " ") in
+                (FStar_Compiler_String.concat " ") in
             Prims.op_Hat uu___3 ")" in
           Prims.op_Hat uu___1 uu___2 in
         Prims.op_Hat "(" uu___
@@ -657,7 +657,7 @@ let rec (hash_of_term' : term' -> Prims.string) =
               let uu___3 =
                 let uu___4 = FStar_Compiler_List.map strSort sorts in
                 FStar_Compiler_Effect.op_Bar_Greater uu___4
-                  (FStar_String.concat " ") in
+                  (FStar_Compiler_String.concat " ") in
               let uu___4 =
                 let uu___5 =
                   let uu___6 = hash_of_term body in
@@ -675,9 +675,10 @@ let rec (hash_of_term' : term' -> Prims.string) =
                                         FStar_Compiler_List.map hash_of_term
                                           pats1 in
                                       FStar_Compiler_Effect.op_Bar_Greater
-                                        uu___14 (FStar_String.concat " "))) in
+                                        uu___14
+                                        (FStar_Compiler_String.concat " "))) in
                             FStar_Compiler_Effect.op_Bar_Greater uu___13
-                              (FStar_String.concat "; ") in
+                              (FStar_Compiler_String.concat "; ") in
                           Prims.op_Hat uu___12 "))" in
                         Prims.op_Hat " " uu___11 in
                       Prims.op_Hat uu___9 uu___10 in
@@ -693,7 +694,7 @@ let rec (hash_of_term' : term' -> Prims.string) =
           let uu___1 =
             let uu___2 = FStar_Compiler_List.map hash_of_term es in
             FStar_Compiler_Effect.op_Bar_Greater uu___2
-              (FStar_String.concat " ") in
+              (FStar_Compiler_String.concat " ") in
           let uu___2 =
             let uu___3 =
               let uu___4 = hash_of_term body in Prims.op_Hat uu___4 ")" in
@@ -718,11 +719,12 @@ let (isInjective : Prims.string -> Prims.bool) =
   fun s ->
     if (FStar_String.length s) >= (Prims.of_int (3))
     then
-      (let uu___ = FStar_String.substring s Prims.int_zero (Prims.of_int (3)) in
+      (let uu___ =
+         FStar_Compiler_String.substring s Prims.int_zero (Prims.of_int (3)) in
        uu___ = "Box") &&
         (let uu___ =
-           let uu___1 = FStar_String.list_of_string s in
-           FStar_Compiler_List.existsML (fun c -> c = 46) uu___1 in
+           FStar_Compiler_List.existsML (fun c -> c = 46)
+             (FStar_String.list_of_string s) in
          Prims.op_Negation uu___)
     else false
 let (mk : term' -> FStar_Compiler_Range_Type.range -> term) =
@@ -1061,7 +1063,8 @@ let rec (print_smt_term : term -> Prims.string) =
 and (print_smt_term_list : term Prims.list -> Prims.string) =
   fun l ->
     let uu___ = FStar_Compiler_List.map print_smt_term l in
-    FStar_Compiler_Effect.op_Bar_Greater uu___ (FStar_String.concat " ")
+    FStar_Compiler_Effect.op_Bar_Greater uu___
+      (FStar_Compiler_String.concat " ")
 and (print_smt_term_list_list : term Prims.list Prims.list -> Prims.string) =
   fun l ->
     FStar_Compiler_List.fold_left
@@ -1697,7 +1700,7 @@ let (termToSmt : Prims.bool -> Prims.string -> term -> Prims.string) =
               let uu___1 =
                 let uu___2 = FStar_Compiler_List.map (aux1 n names) tms in
                 FStar_Compiler_Effect.op_Bar_Greater uu___2
-                  (FStar_String.concat "\n") in
+                  (FStar_Compiler_String.concat "\n") in
               FStar_Compiler_Util.format2 "(%s %s)" uu___ uu___1
           | Labeled (t2, uu___, uu___1) -> aux1 n names t2
           | LblPos (t2, s) ->
@@ -1711,7 +1714,7 @@ let (termToSmt : Prims.bool -> Prims.string -> term -> Prims.string) =
                | (names1, binders1, n1) ->
                    let binders2 =
                      FStar_Compiler_Effect.op_Bar_Greater binders1
-                       (FStar_String.concat " ") in
+                       (FStar_Compiler_String.concat " ") in
                    let pats1 = remove_guard_free pats in
                    let pats_str =
                      match pats1 with
@@ -1729,11 +1732,11 @@ let (termToSmt : Prims.bool -> Prims.string -> term -> Prims.string) =
                                             let uu___5 = aux1 n1 names1 p in
                                             FStar_Compiler_Util.format1 "%s"
                                               uu___5) pats2 in
-                                     FStar_String.concat " " uu___4 in
+                                     FStar_Compiler_String.concat " " uu___4 in
                                    FStar_Compiler_Util.format1
                                      "\n:pattern (%s)" uu___3)) in
                          FStar_Compiler_Effect.op_Bar_Greater uu___2
-                           (FStar_String.concat "\n") in
+                           (FStar_Compiler_String.concat "\n") in
                    let uu___1 =
                      let uu___2 =
                        let uu___3 =
@@ -1769,7 +1772,7 @@ let (termToSmt : Prims.bool -> Prims.string -> term -> Prims.string) =
                | (names1, binders1, n1) ->
                    let uu___1 = aux1 n1 names1 body in
                    FStar_Compiler_Util.format2 "(let (%s)\n%s)"
-                     (FStar_String.concat " " binders1) uu___1)
+                     (FStar_Compiler_String.concat " " binders1) uu___1)
         and aux depth n names t1 =
           let s = aux' depth n names t1 in
           if print_ranges && (t1.rng <> norng)
@@ -1790,10 +1793,10 @@ let (caption_to_string :
           let c1 =
             let uu___1 =
               FStar_Compiler_Effect.op_Bar_Greater
-                (FStar_String.split [10] c)
+                (FStar_Compiler_String.split [10] c)
                 (FStar_Compiler_List.map FStar_Compiler_Util.trim_string) in
             FStar_Compiler_Effect.op_Bar_Greater uu___1
-              (FStar_String.concat " ") in
+              (FStar_Compiler_String.concat " ") in
           Prims.op_Hat ";;;;;;;;;;;;;;;;" (Prims.op_Hat c1 "\n")
       | uu___1 -> ""
 let rec (declToSmt' : Prims.bool -> Prims.string -> decl -> Prims.string) =
@@ -1808,7 +1811,7 @@ let rec (declToSmt' : Prims.bool -> Prims.string -> decl -> Prims.string) =
                 FStar_Compiler_List.map (declToSmt' print_captions z3options)
                   decls in
               FStar_Compiler_Effect.op_Bar_Greater uu___
-                (FStar_String.concat "\n") in
+                (FStar_Compiler_String.concat "\n") in
             let uu___ = FStar_Options.keep_query_captions () in
             if uu___
             then
@@ -1816,7 +1819,8 @@ let rec (declToSmt' : Prims.bool -> Prims.string -> decl -> Prims.string) =
                 FStar_Compiler_Util.string_of_int
                   (FStar_Compiler_List.length decls) in
               let uu___2 =
-                FStar_Compiler_Util.string_of_int (FStar_String.length res) in
+                FStar_Compiler_Util.string_of_int
+                  (FStar_Compiler_String.length res) in
               FStar_Compiler_Util.format5
                 "\n;;; Start %s\n%s\n;;; End %s (%s decls; total size %s)" s
                 res s uu___1 uu___2
@@ -1831,7 +1835,7 @@ let rec (declToSmt' : Prims.bool -> Prims.string -> decl -> Prims.string) =
                     (FStar_Compiler_List.map
                        (fun s -> Prims.op_Hat "; " (Prims.op_Hat s "\n"))) in
                 FStar_Compiler_Effect.op_Bar_Greater uu___1
-                  (FStar_String.concat "") in
+                  (FStar_Compiler_String.concat "") in
               Prims.op_Hat "\n" uu___
             else ""
         | DeclFun (f, argsorts, retsort, c) ->
@@ -1839,7 +1843,7 @@ let rec (declToSmt' : Prims.bool -> Prims.string -> decl -> Prims.string) =
             let uu___ = caption_to_string print_captions c in
             let uu___1 = strSort retsort in
             FStar_Compiler_Util.format4 "%s(declare-fun %s (%s) %s)" uu___ f
-              (FStar_String.concat " " l) uu___1
+              (FStar_Compiler_String.concat " " l) uu___1
         | DefineFun (f, arg_sorts, retsort, body, c) ->
             let uu___ = name_macro_binders arg_sorts in
             (match uu___ with
@@ -1854,7 +1858,8 @@ let rec (declToSmt' : Prims.bool -> Prims.string -> decl -> Prims.string) =
                    let uu___4 = escape f in
                    termToSmt print_captions uu___4 body1 in
                  FStar_Compiler_Util.format5 "%s(define-fun %s (%s) %s\n %s)"
-                   uu___1 f (FStar_String.concat " " binders1) uu___2 uu___3)
+                   uu___1 f (FStar_Compiler_String.concat " " binders1)
+                   uu___2 uu___3)
         | Assume a ->
             let fact_ids_to_string ids =
               FStar_Compiler_Effect.op_Bar_Greater ids
@@ -1873,7 +1878,7 @@ let rec (declToSmt' : Prims.bool -> Prims.string -> decl -> Prims.string) =
               then
                 let uu___ =
                   let uu___1 = fact_ids_to_string a.assumption_fact_ids in
-                  FStar_String.concat "; " uu___1 in
+                  FStar_Compiler_String.concat "; " uu___1 in
                 FStar_Compiler_Util.format1 ";;; Fact-ids: %s\n" uu___
               else "" in
             let n = a.assumption_name in
@@ -1950,7 +1955,8 @@ and (mkPrelude : Prims.string -> Prims.string) =
             (FStar_Compiler_List.collect (constructor_to_decl norng)) in
         FStar_Compiler_Effect.op_Bar_Greater uu___1
           (FStar_Compiler_List.map (declToSmt z3options)) in
-      FStar_Compiler_Effect.op_Bar_Greater uu___ (FStar_String.concat "\n") in
+      FStar_Compiler_Effect.op_Bar_Greater uu___
+        (FStar_Compiler_String.concat "\n") in
     let precedes_partial_app =
       "\n(declare-fun Prims.precedes@tok () Term)\n(assert\n(forall ((@x0 Term) (@x1 Term) (@x2 Term) (@x3 Term))\n(! (= (ApplyTT (ApplyTT (ApplyTT (ApplyTT Prims.precedes@tok\n@x0)\n@x1)\n@x2)\n@x3)\n(Prims.precedes @x0 @x1 @x2 @x3))\n\n:pattern ((ApplyTT (ApplyTT (ApplyTT (ApplyTT Prims.precedes@tok\n@x0)\n@x1)\n@x2)\n@x3)))))\n" in
     let lex_ordering =
@@ -1978,7 +1984,8 @@ let (declsToSmt : Prims.string -> decl Prims.list -> Prims.string) =
   fun z3options ->
     fun decls ->
       let uu___ = FStar_Compiler_List.map (declToSmt z3options) decls in
-      FStar_Compiler_Effect.op_Bar_Greater uu___ (FStar_String.concat "\n")
+      FStar_Compiler_Effect.op_Bar_Greater uu___
+        (FStar_Compiler_String.concat "\n")
 let (declToSmt_no_caps : Prims.string -> decl -> Prims.string) =
   fun z3options -> fun decl1 -> declToSmt' false z3options decl1
 let (mkBvConstructor :

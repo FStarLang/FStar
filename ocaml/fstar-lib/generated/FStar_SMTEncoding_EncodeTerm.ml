@@ -3143,7 +3143,8 @@ and (encode_term :
                                                       vars in
                                                   FStar_Compiler_Effect.op_Bar_Greater
                                                     uu___13
-                                                    (FStar_String.concat ", ") in
+                                                    (FStar_Compiler_String.concat
+                                                       ", ") in
                                                 let uu___13 =
                                                   FStar_SMTEncoding_Term.print_smt_term
                                                     body3 in

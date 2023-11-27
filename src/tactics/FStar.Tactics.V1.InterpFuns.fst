@@ -64,7 +64,7 @@ let timing_nbe (l:Ident.lid) f =
         r
 
 let mk nm arity nunivs interp nbe_interp : PO.primitive_step =
-  let nm = PC.fstar_tactics_lid' ["V1"; "Builtins"; nm] in
+  let nm = PC.fstar_stubs_tactics_lid' ["V1"; "Builtins"; nm] in
   { name                         = nm
   ; arity                        = arity
   ; univ_arity                   = nunivs
@@ -77,7 +77,7 @@ let mk nm arity nunivs interp nbe_interp : PO.primitive_step =
   }
 
 let mkt nm arity nunivs interp nbe_interp : PO.primitive_step =
-  let nm = PC.fstar_tactics_lid' ["V1"; "Builtins"; nm] in
+  let nm = PC.fstar_stubs_tactics_lid' ["V1"; "Builtins"; nm] in
   { name                         = nm
   ; arity                        = arity
   ; univ_arity                   = nunivs

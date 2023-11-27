@@ -2,6 +2,8 @@ open Prims
 type name = FStar_Syntax_Syntax.bv
 let (fstar_tactics_lid' : Prims.string Prims.list -> FStar_Ident.lid) =
   fun s -> FStar_Parser_Const.fstar_tactics_lid' s
+let (fstar_stubs_tactics_lid' : Prims.string Prims.list -> FStar_Ident.lid) =
+  fun s -> FStar_Parser_Const.fstar_stubs_tactics_lid' s
 let (lid_as_tm : FStar_Ident.lident -> FStar_Syntax_Syntax.term) =
   fun l ->
     let uu___ = FStar_Syntax_Syntax.lid_as_fv l FStar_Pervasives_Native.None in
@@ -29,12 +31,12 @@ let (lid_as_data_tm : FStar_Ident.lident -> FStar_Syntax_Syntax.term) =
   fun l -> let uu___ = lid_as_data_fv l in FStar_Syntax_Syntax.fv_to_tm uu___
 let (fstar_tactics_data : Prims.string Prims.list -> tac_constant) =
   fun ns ->
-    let lid = fstar_tactics_lid' ns in
+    let lid = fstar_stubs_tactics_lid' ns in
     let uu___ = lid_as_data_fv lid in
     let uu___1 = lid_as_data_tm lid in { lid; fv = uu___; t = uu___1 }
 let (fstar_tactics_const : Prims.string Prims.list -> tac_constant) =
   fun ns ->
-    let lid = fstar_tactics_lid' ns in
+    let lid = fstar_stubs_tactics_lid' ns in
     let uu___ = FStar_Syntax_Syntax.fvconst lid in
     let uu___1 = FStar_Syntax_Syntax.tconst lid in
     { lid; fv = uu___; t = uu___1 }
@@ -61,7 +63,7 @@ let (fstar_tactics_goal : tac_constant) =
 let (fstar_tactics_TacticFailure : tac_constant) =
   fstar_tactics_data ["Common"; "TacticFailure"]
 let (fstar_tactics_result : tac_constant) =
-  fstar_tactics_const ["Types"; "result"]
+  fstar_tactics_const ["Result"; "__result"]
 let (fstar_tactics_Success : tac_constant) =
   fstar_tactics_data ["Result"; "Success"]
 let (fstar_tactics_Failed : tac_constant) =

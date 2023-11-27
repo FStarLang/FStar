@@ -24,7 +24,7 @@ let (fstar_syntax_syntax_lid : Prims.string Prims.list -> FStar_Ident.lident)
 let (fstar_refl_lid : Prims.string Prims.list -> FStar_Ident.lident) =
   fun s ->
     FStar_Ident.lid_of_path
-      (FStar_Compiler_List.op_At ["FStar"; "Reflection"] s)
+      (FStar_Compiler_List.op_At ["FStar"; "Stubs"; "Reflection"] s)
       FStar_Compiler_Range_Type.dummyRange
 let (fstar_refl_types_lid : Prims.string -> FStar_Ident.lident) =
   fun s -> fstar_refl_lid ["Types"; s]

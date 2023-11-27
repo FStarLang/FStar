@@ -489,7 +489,7 @@ and t_height #f (#g:src_env) (#t:s_ty) (d:src_ty_ok f g t)
     | OK_TArrow _ _ _ d0 d1 -> max (t_height d0) (t_height d1) + 1
     | OK_TRefine _ _ d -> height d + 1
 
-module FTB = FStar.Tactics.V2.Builtins
+module FTB = FStar.Stubs.Tactics.V2.Builtins
 
 let check_sub_typing (f:RT.fstar_top_env)
                      (sg:src_env)

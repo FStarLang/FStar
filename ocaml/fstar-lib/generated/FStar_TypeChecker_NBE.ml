@@ -589,7 +589,7 @@ let rec (translate :
                          FStar_Compiler_List.map
                            FStar_TypeChecker_NBETerm.t_to_string bs in
                        FStar_Compiler_Effect.op_Bar_Greater uu___6
-                         (FStar_String.concat "; ") in
+                         (FStar_Compiler_String.concat "; ") in
                      FStar_Compiler_Util.print2
                        "Resolved bvar to %s\n\tcontext is [%s]\n" uu___4
                        uu___5);
@@ -604,7 +604,7 @@ let rec (translate :
                        FStar_Compiler_List.map
                          FStar_Syntax_Print.univ_to_string us in
                      FStar_Compiler_Effect.op_Bar_Greater uu___6
-                       (FStar_String.concat ", ") in
+                       (FStar_Compiler_String.concat ", ") in
                    FStar_Compiler_Util.print2 "Uinst term : %s\nUnivs : %s\n"
                      uu___4 uu___5);
               (let uu___3 = translate cfg bs t in
@@ -1110,7 +1110,7 @@ let rec (translate :
                                             then "#"
                                             else "") uu___8)) in
                            FStar_Compiler_Effect.op_Bar_Greater uu___6
-                             (FStar_String.concat "; ") in
+                             (FStar_Compiler_String.concat "; ") in
                          FStar_Compiler_Util.print1 "Match args: %s\n" uu___5);
                     (let uu___4 = pickBranch cfg scrut2 branches in
                      match uu___4 with
@@ -1516,7 +1516,8 @@ and (iapp :
                                               FStar_TypeChecker_NBETerm.t_to_string
                                                 x) args_rev2 in
                                    FStar_Compiler_Effect.op_Bar_Greater
-                                     uu___9 (FStar_String.concat ", ") in
+                                     uu___9
+                                     (FStar_Compiler_String.concat ", ") in
                                  FStar_Compiler_Util.print3
                                    "Reducing body of %s = %s,\n\twith args = %s\n"
                                    uu___6 uu___7 uu___8);
@@ -1642,7 +1643,8 @@ and (iapp :
                                    FStar_Compiler_List.map
                                      FStar_TypeChecker_NBETerm.t_to_string
                                      env in
-                                 FStar_String.concat ",\n\t " uu___11 in
+                                 FStar_Compiler_String.concat ",\n\t "
+                                   uu___11 in
                                FStar_Compiler_Util.print1
                                  "LocalLetRec Env = {\n\t%s\n}\n" uu___10);
                               (let uu___10 =
@@ -1653,7 +1655,8 @@ and (iapp :
                                         | (t, uu___13) ->
                                             FStar_TypeChecker_NBETerm.t_to_string
                                               t) args1 in
-                                 FStar_String.concat ",\n\t " uu___11 in
+                                 FStar_Compiler_String.concat ",\n\t "
+                                   uu___11 in
                                FStar_Compiler_Util.print1
                                  "LocalLetRec Args = {\n\t%s\n}\n" uu___10));
                          (let uu___8 =
@@ -1778,7 +1781,8 @@ and (translate_fv :
                                                  FStar_TypeChecker_NBETerm.t_to_string
                                                    x) args' in
                                       FStar_Compiler_Effect.op_Bar_Greater
-                                        uu___12 (FStar_String.concat "; ") in
+                                        uu___12
+                                        (FStar_Compiler_String.concat "; ") in
                                     FStar_Compiler_Util.print1
                                       "Caling primop with args = [%s]\n"
                                       uu___11);

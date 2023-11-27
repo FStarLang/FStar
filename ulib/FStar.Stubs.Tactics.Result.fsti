@@ -13,7 +13,16 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module FStar.Tactics.Builtins
+module FStar.Stubs.Tactics.Result
 
-(* This module is a temporary for Meta-F* migration *)
-include FStar.Tactics.V1.Builtins
+// This file is never extracted. It's a copy of the one with the same name in
+// the compiler.  It lives here so that one doesn't need to adjust their load
+// path to use tactics from ulib.
+
+open FStar.Stubs.Tactics.Types
+
+noeq type __result a =
+    | Success : v:a -> ps:proofstate -> __result a
+    | Failed  : exn:exn         (* Error *)
+              -> ps:proofstate  (* The proofstate at time of failure *)
+              -> __result a

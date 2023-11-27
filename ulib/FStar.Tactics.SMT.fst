@@ -1,7 +1,7 @@
 module FStar.Tactics.SMT
 
 open FStar.Tactics.Effect
-open FStar.Tactics.V2.Builtins
+open FStar.Stubs.Tactics.V2.Builtins
 open FStar.VConfig
 
 (* Alias to just use the current vconfig *)

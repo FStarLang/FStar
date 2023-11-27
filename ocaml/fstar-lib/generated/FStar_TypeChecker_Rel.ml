@@ -951,7 +951,8 @@ let (names_to_string :
       let uu___1 = FStar_Compiler_Util.set_elements nms in
       FStar_Compiler_Effect.op_Bar_Greater uu___1
         (FStar_Compiler_List.map FStar_Syntax_Print.bv_to_string) in
-    FStar_Compiler_Effect.op_Bar_Greater uu___ (FStar_String.concat ", ")
+    FStar_Compiler_Effect.op_Bar_Greater uu___
+      (FStar_Compiler_String.concat ", ")
 let args_to_string :
   'uuuuu . (FStar_Syntax_Syntax.term * 'uuuuu) Prims.list -> Prims.string =
   fun args ->
@@ -961,7 +962,8 @@ let args_to_string :
            (fun uu___1 ->
               match uu___1 with
               | (x, uu___2) -> FStar_Syntax_Print.term_to_string x)) in
-    FStar_Compiler_Effect.op_Bar_Greater uu___ (FStar_String.concat " ")
+    FStar_Compiler_Effect.op_Bar_Greater uu___
+      (FStar_Compiler_String.concat " ")
 let (empty_worklist : FStar_TypeChecker_Env.env -> worklist) =
   fun env ->
     {
@@ -1414,7 +1416,7 @@ let (explain :
           let uu___2 = prob_to_string' wl d in
           let uu___3 =
             FStar_Compiler_Effect.op_Bar_Greater (p_reason d)
-              (FStar_String.concat "\n\t>") in
+              (FStar_Compiler_String.concat "\n\t>") in
           let uu___4 = FStar_Thunk.force s in
           FStar_Compiler_Util.format4
             "(%s) Failed to solve the sub-problem\n%s\nWhich arose because:\n\t%s\nFailed because:%s\n"
@@ -1885,7 +1887,8 @@ let (wl_to_string : worklist -> Prims.string) =
   fun wl ->
     let probs_to_string ps =
       let uu___ = FStar_Compiler_List.map (prob_to_string' wl) ps in
-      FStar_Compiler_Effect.op_Bar_Greater uu___ (FStar_String.concat "\n\t") in
+      FStar_Compiler_Effect.op_Bar_Greater uu___
+        (FStar_Compiler_String.concat "\n\t") in
     let uu___ = probs_to_string wl.attempting in
     let uu___1 =
       let uu___2 =
@@ -5818,7 +5821,7 @@ and (solve_rigid_flex_or_flex_rigid_subtyping :
                                                                   sub_probs) in
                                                               FStar_Compiler_Effect.op_Bar_Greater
                                                                 uu___18
-                                                                (FStar_String.concat
+                                                                (FStar_Compiler_String.concat
                                                                    "\n") in
                                                             FStar_Compiler_Util.print1
                                                               "meet/join attempted and failed to solve problems:\n%s\n"
@@ -7326,7 +7329,7 @@ and (solve_t_flex_rigid_eq :
                                   FStar_Compiler_List.map
                                     FStar_Syntax_Print.bv_to_string uu___7 in
                                 FStar_Compiler_Effect.op_Bar_Greater uu___6
-                                  (FStar_String.concat ", ") in
+                                  (FStar_Compiler_String.concat ", ") in
                               let fvs1 =
                                 binders_as_bv_set
                                   (FStar_Compiler_List.op_At
@@ -13145,7 +13148,8 @@ let (print_pending_implicits :
            (fun i ->
               FStar_Syntax_Print.ctx_uvar_to_string
                 i.FStar_TypeChecker_Common.imp_uvar)) in
-    FStar_Compiler_Effect.op_Bar_Greater uu___ (FStar_String.concat ", ")
+    FStar_Compiler_Effect.op_Bar_Greater uu___
+      (FStar_Compiler_String.concat ", ")
 let (ineqs_to_string :
   (FStar_Syntax_Syntax.universe Prims.list * (FStar_Syntax_Syntax.universe *
     FStar_Syntax_Syntax.universe) Prims.list) -> Prims.string)
@@ -13156,7 +13160,8 @@ let (ineqs_to_string :
         FStar_Compiler_Effect.op_Bar_Greater
           (FStar_Pervasives_Native.fst ineqs)
           (FStar_Compiler_List.map FStar_Syntax_Print.univ_to_string) in
-      FStar_Compiler_Effect.op_Bar_Greater uu___ (FStar_String.concat ", ") in
+      FStar_Compiler_Effect.op_Bar_Greater uu___
+        (FStar_Compiler_String.concat ", ") in
     let ineqs1 =
       let uu___ =
         FStar_Compiler_Effect.op_Bar_Greater
@@ -13168,7 +13173,8 @@ let (ineqs_to_string :
                     let uu___2 = FStar_Syntax_Print.univ_to_string u1 in
                     let uu___3 = FStar_Syntax_Print.univ_to_string u2 in
                     FStar_Compiler_Util.format2 "%s < %s" uu___2 uu___3)) in
-      FStar_Compiler_Effect.op_Bar_Greater uu___ (FStar_String.concat ", ") in
+      FStar_Compiler_Effect.op_Bar_Greater uu___
+        (FStar_Compiler_String.concat ", ") in
     FStar_Compiler_Util.format2 "Solving for {%s}; inequalities are {%s}"
       vars ineqs1
 let (guard_to_string :
@@ -13212,7 +13218,7 @@ let (guard_to_string :
                          Prims.op_Hat ": " uu___5 in
                        Prims.op_Hat msg uu___4) defs in
             FStar_Compiler_Effect.op_Bar_Greater uu___1
-              (FStar_String.concat ",\n") in
+              (FStar_Compiler_String.concat ",\n") in
           let imps = print_pending_implicits g in
           let uu___1 = carry g.FStar_TypeChecker_Common.deferred in
           let uu___2 = carry g.FStar_TypeChecker_Common.deferred_to_tac in

@@ -9,7 +9,8 @@ let subst_to_string :
               match uu___1 with
               | (b, uu___2) ->
                   FStar_Ident.string_of_id b.FStar_Syntax_Syntax.ppname)) in
-    FStar_Compiler_Effect.op_Bar_Greater uu___ (FStar_String.concat ", ")
+    FStar_Compiler_Effect.op_Bar_Greater uu___
+      (FStar_Compiler_String.concat ", ")
 let rec apply_until_some :
   'uuuuu 'uuuuu1 .
     ('uuuuu -> 'uuuuu1 FStar_Pervasives_Native.option) ->

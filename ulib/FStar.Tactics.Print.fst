@@ -2,7 +2,7 @@ module FStar.Tactics.Print
 
 open FStar.Reflection.V2
 open FStar.Tactics.Effect
-open FStar.Tactics.V2.Builtins
+open FStar.Stubs.Tactics.V2.Builtins
 open FStar.Tactics.V2.Derived
 open FStar.Tactics.NamedView
 

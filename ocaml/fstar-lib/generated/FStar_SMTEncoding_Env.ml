@@ -482,7 +482,7 @@ let (print_env : env_t -> Prims.string) =
       | l::uu___ ->
           let uu___1 = FStar_Syntax_Print.lid_to_string l in
           Prims.op_Hat "...," uu___1 in
-    FStar_String.concat ", " (last_fvar :: bvars)
+    FStar_Compiler_String.concat ", " (last_fvar :: bvars)
 let (lookup_bvar_binding :
   env_t ->
     FStar_Syntax_Syntax.bv ->

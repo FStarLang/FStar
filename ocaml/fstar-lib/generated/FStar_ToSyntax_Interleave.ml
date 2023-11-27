@@ -119,7 +119,7 @@ let rec (prefix_with_iface_decls :
                               (FStar_Compiler_List.map
                                  FStar_Ident.string_of_lid) in
                           FStar_Compiler_Effect.op_Bar_Greater uu___5
-                            (FStar_String.concat ", ") in
+                            (FStar_Compiler_String.concat ", ") in
                         FStar_Compiler_Util.format2
                           "Expected the definition of %s to precede %s"
                           uu___3 uu___4 in
@@ -515,7 +515,7 @@ let (prefix_with_interface_decls :
                     FStar_Compiler_List.map FStar_Parser_AST.decl_to_string
                       decls in
                   FStar_Compiler_Effect.op_Bar_Greater uu___4
-                    (FStar_String.concat "\n") in
+                    (FStar_Compiler_String.concat "\n") in
                 FStar_Compiler_Util.print1 "Interleaved decls:\n%s\n" uu___3
               else ());
              (decls, env1))

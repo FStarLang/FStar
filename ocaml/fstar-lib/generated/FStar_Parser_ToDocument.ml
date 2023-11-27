@@ -557,10 +557,11 @@ let (matches_token : Prims.string -> token -> Prims.bool) =
     fun uu___ ->
       match uu___ with
       | StartsWith c ->
-          let uu___1 = FStar_String.get s Prims.int_zero in uu___1 = c
+          let uu___1 = FStar_Compiler_String.get s Prims.int_zero in
+          uu___1 = c
       | Exact s' -> s = s'
       | UnicodeOperator ->
-          let uu___1 = FStar_String.get s Prims.int_zero in
+          let uu___1 = FStar_Compiler_String.get s Prims.int_zero in
           is_non_latin_char uu___1
 let matches_level :
   'uuuuu . Prims.string -> ('uuuuu * token Prims.list) -> Prims.bool =
@@ -642,7 +643,7 @@ let max_level : 'uuuuu . ('uuuuu * token Prims.list) Prims.list -> Prims.int
               let uu___3 =
                 FStar_Compiler_List.map token_to_string
                   (FStar_Pervasives_Native.snd level) in
-              FStar_String.concat "," uu___3 in
+              FStar_Compiler_String.concat "," uu___3 in
             FStar_Compiler_Util.format1 "Undefined associativity level %s"
               uu___2 in
           failwith uu___1 in
@@ -4857,7 +4858,7 @@ and (p_constant : FStar_Const.sconst -> FStar_Pprint.document) =
     | FStar_Const.Const_real r -> str (Prims.op_Hat r "R")
     | FStar_Const.Const_char x -> FStar_Pprint.doc_of_char x
     | FStar_Const.Const_string (s, uu___1) ->
-        let uu___2 = str (FStar_String.escaped s) in
+        let uu___2 = str (FStar_Compiler_String.escaped s) in
         FStar_Pprint.dquotes uu___2
     | FStar_Const.Const_int (repr, sign_width_opt) ->
         let signedness uu___1 =

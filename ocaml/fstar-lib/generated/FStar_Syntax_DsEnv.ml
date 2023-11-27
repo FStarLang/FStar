@@ -3500,7 +3500,7 @@ let fail_or :
                  | FStar_Pervasives_Native.None ->
                      let opened_modules1 =
                        FStar_Compiler_Effect.op_Bar_Greater
-                         (FStar_String.concat ", " opened_modules)
+                         (FStar_Compiler_String.concat ", " opened_modules)
                          FStar_Errors_Msg.text in
                      let uu___4 =
                        let uu___5 =
@@ -3524,7 +3524,7 @@ let fail_or :
                      Prims.op_Negation uu___4 ->
                      let opened_modules1 =
                        FStar_Compiler_Effect.op_Bar_Greater
-                         (FStar_String.concat ", " opened_modules)
+                         (FStar_Compiler_String.concat ", " opened_modules)
                          FStar_Errors_Msg.text in
                      let uu___4 =
                        let uu___5 =

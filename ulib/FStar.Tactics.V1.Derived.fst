@@ -17,11 +17,11 @@ module FStar.Tactics.V1.Derived
 
 open FStar.Reflection.V1
 open FStar.Reflection.V1.Formula
-open FStar.Tactics.Types
 open FStar.Tactics.Effect
-open FStar.Tactics.Result
+open FStar.Stubs.Tactics.Types
+open FStar.Stubs.Tactics.Result
 open FStar.Tactics.Util
-open FStar.Tactics.V1.Builtins
+open FStar.Stubs.Tactics.V1.Builtins
 open FStar.Tactics.V1.SyntaxHelpers
 open FStar.VConfig
 
@@ -479,7 +479,7 @@ let admit_all () : Tac unit =
 
 (** [is_guard] returns whether the current goal arose from a typechecking guard *)
 let is_guard () : Tac bool =
-    Tactics.Types.is_guard (_cur_goal ())
+    Stubs.Tactics.Types.is_guard (_cur_goal ())
 
 let skip_guard () : Tac unit =
     if is_guard ()

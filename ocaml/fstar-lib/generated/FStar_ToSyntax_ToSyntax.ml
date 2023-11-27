@@ -445,7 +445,7 @@ let (sort_ftv : FStar_Ident.ident Prims.list -> FStar_Ident.ident Prims.list)
             fun y ->
               let uu___1 = FStar_Ident.string_of_id x in
               let uu___2 = FStar_Ident.string_of_id y in
-              FStar_String.compare uu___1 uu___2)) uu___
+              FStar_Compiler_String.compare uu___1 uu___2)) uu___
 let rec (free_vars_b :
   Prims.bool ->
     FStar_Syntax_DsEnv.env ->
@@ -3795,7 +3795,8 @@ and (desugar_term_maybe_top :
                                                       x in
                                                   let uu___13 =
                                                     FStar_Ident.range_of_id x in
-                                                  (uu___12, "Local", uu___13)
+                                                  (uu___12, "Local binding",
+                                                    uu___13)
                                               | FStar_Pervasives.Inr l ->
                                                   let uu___12 =
                                                     FStar_Ident.string_of_lid
@@ -3803,19 +3804,35 @@ and (desugar_term_maybe_top :
                                                   let uu___13 =
                                                     FStar_Ident.range_of_lid
                                                       l in
-                                                  (uu___12, "Global",
+                                                  (uu___12, "Global binding",
                                                     uu___13) in
                                             (match uu___11 with
                                              | (nm, gl, rng) ->
                                                  let uu___12 =
                                                    let uu___13 =
-                                                     FStar_Compiler_Util.format2
-                                                       "%s binding %s is recursive but not used in its body"
-                                                       gl nm in
+                                                     let uu___14 =
+                                                       let uu___15 =
+                                                         FStar_Errors_Msg.text
+                                                           gl in
+                                                       let uu___16 =
+                                                         let uu___17 =
+                                                           FStar_Pprint.doc_of_string
+                                                             nm in
+                                                         FStar_Pprint.squotes
+                                                           uu___17 in
+                                                       let uu___17 =
+                                                         FStar_Errors_Msg.text
+                                                           "is recursive but not used in its body" in
+                                                       FStar_Pprint.surround
+                                                         (Prims.of_int (4))
+                                                         Prims.int_one
+                                                         uu___15 uu___16
+                                                         uu___17 in
+                                                     [uu___14] in
                                                    (FStar_Errors_Codes.Warning_UnusedLetRec,
                                                      uu___13) in
-                                                 FStar_Errors.log_issue rng
-                                                   uu___12)
+                                                 FStar_Errors.log_issue_doc
+                                                   rng uu___12)
                                           else ()) funs used_markers1
                              else ();
                              (let uu___6 =
@@ -7440,15 +7457,15 @@ let rec (desugar_tycon :
                                                      FStar_Compiler_List.map
                                                        FStar_Syntax_Print.term_to_string
                                                        val_attrs in
-                                                   FStar_String.concat ", "
-                                                     uu___16 in
+                                                   FStar_Compiler_String.concat
+                                                     ", " uu___16 in
                                                  let uu___16 =
                                                    let uu___17 =
                                                      FStar_Compiler_List.map
                                                        FStar_Syntax_Print.term_to_string
                                                        d_attrs in
-                                                   FStar_String.concat ", "
-                                                     uu___17 in
+                                                   FStar_Compiler_String.concat
+                                                     ", " uu___17 in
                                                  FStar_Compiler_Util.print3
                                                    "Adding attributes to type %s: val_attrs=[@@%s] attrs=[@@%s]\n"
                                                    uu___14 uu___15 uu___16
@@ -8979,7 +8996,7 @@ and (desugar_decl_core :
                        let uu___5 =
                          FStar_Compiler_List.map
                            FStar_Syntax_Print.sigelt_to_string ses in
-                       FStar_String.concat "\n" uu___5 in
+                       FStar_Compiler_String.concat "\n" uu___5 in
                      FStar_Compiler_Util.print2
                        "Desugared tycon from {%s} to {%s}\n" uu___3 uu___4
                    else ());

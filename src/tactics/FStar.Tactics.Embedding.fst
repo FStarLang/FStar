@@ -42,6 +42,7 @@ module U       = FStar.Syntax.Util
 type name = bv
 
 let fstar_tactics_lid' s = PC.fstar_tactics_lid' s
+let fstar_stubs_tactics_lid' s = PC.fstar_stubs_tactics_lid' s
 let lid_as_tm l = S.lid_as_fv l None |> S.fv_to_tm
 let mk_tactic_lid_as_term (s:string) = lid_as_tm (fstar_tactics_lid' ["Effect"; s])
 
@@ -56,13 +57,13 @@ let lid_as_data_fv l = S.lid_as_fv l (Some Data_ctor)
 let lid_as_data_tm l = S.fv_to_tm (lid_as_data_fv l)
 
 let fstar_tactics_data ns =
-    let lid = fstar_tactics_lid' ns in
+    let lid = fstar_stubs_tactics_lid' ns in
     { lid = lid;
       fv  = lid_as_data_fv lid;
       t   = lid_as_data_tm lid }
 
 let fstar_tactics_const ns =
-    let lid = fstar_tactics_lid' ns in
+    let lid = fstar_stubs_tactics_lid' ns in
     { lid = lid;
       fv  = S.fvconst lid;
       t   = S.tconst lid }
@@ -88,7 +89,7 @@ let fstar_tactics_goal          = fstar_tactics_const ["Types"; "goal"]
 
 let fstar_tactics_TacticFailure = fstar_tactics_data  ["Common"; "TacticFailure"]
 
-let fstar_tactics_result        = fstar_tactics_const ["Types"; "result"]
+let fstar_tactics_result        = fstar_tactics_const ["Result"; "__result"]
 let fstar_tactics_Success       = fstar_tactics_data  ["Result"; "Success"]
 let fstar_tactics_Failed        = fstar_tactics_data  ["Result"; "Failed"]
 

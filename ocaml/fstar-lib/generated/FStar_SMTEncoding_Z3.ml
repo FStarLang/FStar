@@ -299,7 +299,7 @@ let (check_z3version : FStar_Compiler_Util.proc -> unit) =
           warn_handler in
       if FStar_Compiler_Util.starts_with s (Prims.op_Hat "(:" arg)
       then
-        let ss = FStar_String.split [34] s in
+        let ss = FStar_Compiler_String.split [34] s in
         FStar_Compiler_List.nth ss Prims.int_one
       else
         (warn_handler s;
@@ -411,11 +411,12 @@ let (__proj__Mkbgproc__item__version : bgproc -> unit -> Prims.string) =
 let (cmd_and_args_to_string :
   (Prims.string * Prims.string Prims.list) -> Prims.string) =
   fun cmd_and_args ->
-    FStar_String.concat ""
+    FStar_Compiler_String.concat ""
       ["cmd=";
       FStar_Pervasives_Native.fst cmd_and_args;
       " args=[";
-      FStar_String.concat ", " (FStar_Pervasives_Native.snd cmd_and_args);
+      FStar_Compiler_String.concat ", "
+        (FStar_Pervasives_Native.snd cmd_and_args);
       "]"]
 let (bg_z3_proc : bgproc FStar_Compiler_Effect.ref) =
   let the_z3proc = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None in
@@ -611,7 +612,8 @@ let (smt_output_sections :
                                                ""
                                            | FStar_Pervasives_Native.Some f
                                                -> Prims.op_Hat f ": ")
-                                          (FStar_String.concat "\n" remaining) in
+                                          (FStar_Compiler_String.concat "\n"
+                                             remaining) in
                                       FStar_Errors.log_issue r
                                         (FStar_Errors_Codes.Warning_UnexpectedZ3Output,
                                           msg));
@@ -641,7 +643,7 @@ let (doZ3Exe :
               let parse z3out =
                 let lines =
                   FStar_Compiler_Effect.op_Bar_Greater
-                    (FStar_String.split [10] z3out)
+                    (FStar_Compiler_String.split [10] z3out)
                     (FStar_Compiler_List.map FStar_Compiler_Util.trim_string) in
                 let smt_output1 = smt_output_sections log_file r lines in
                 let unsat_core1 =
@@ -651,10 +653,11 @@ let (doZ3Exe :
                   | FStar_Pervasives_Native.Some s ->
                       let s1 =
                         FStar_Compiler_Util.trim_string
-                          (FStar_String.concat " " s) in
+                          (FStar_Compiler_String.concat " " s) in
                       let s2 =
                         FStar_Compiler_Util.substring s1 Prims.int_one
-                          ((FStar_String.length s1) - (Prims.of_int (2))) in
+                          ((FStar_Compiler_String.length s1) -
+                             (Prims.of_int (2))) in
                       if FStar_Compiler_Util.starts_with s2 "error"
                       then FStar_Pervasives_Native.None
                       else
@@ -662,7 +665,7 @@ let (doZ3Exe :
                            FStar_Compiler_Effect.op_Bar_Greater
                              (FStar_Compiler_Util.split s2 " ")
                              (FStar_Compiler_Util.sort_with
-                                FStar_String.compare) in
+                                FStar_Compiler_String.compare) in
                          FStar_Pervasives_Native.Some uu___1) in
                 let labels =
                   match smt_output1.smt_labels with
@@ -719,7 +722,8 @@ let (doZ3Exe :
                               then
                                 FStar_Compiler_Util.substring ltok
                                   Prims.int_zero
-                                  ((FStar_String.length ltok) - Prims.int_one)
+                                  ((FStar_Compiler_String.length ltok) -
+                                     Prims.int_one)
                               else ltok in
                             FStar_Compiler_Util.smap_add statistics1 key
                               value
@@ -735,7 +739,8 @@ let (doZ3Exe :
                               then
                                 FStar_Compiler_Util.substring ltok
                                   Prims.int_zero
-                                  ((FStar_String.length ltok) - Prims.int_one)
+                                  ((FStar_Compiler_String.length ltok) -
+                                     Prims.int_one)
                               else ltok in
                             FStar_Compiler_Util.smap_add statistics1 key
                               value
@@ -745,17 +750,19 @@ let (doZ3Exe :
                 let reason_unknown =
                   FStar_Compiler_Util.map_opt smt_output1.smt_reason_unknown
                     (fun x ->
-                       let ru = FStar_String.concat " " x in
+                       let ru = FStar_Compiler_String.concat " " x in
                        if
                          FStar_Compiler_Util.starts_with ru
                            "(:reason-unknown \""
                        then
                          let reason =
                            FStar_Compiler_Util.substring_from ru
-                             (FStar_String.length "(:reason-unknown \"") in
+                             (FStar_Compiler_String.length
+                                "(:reason-unknown \"") in
                          let res =
-                           FStar_String.substring reason Prims.int_zero
-                             ((FStar_String.length reason) -
+                           FStar_Compiler_String.substring reason
+                             Prims.int_zero
+                             ((FStar_Compiler_String.length reason) -
                                 (Prims.of_int (2))) in
                          res
                        else ru) in
@@ -765,7 +772,8 @@ let (doZ3Exe :
                    then
                      let uu___2 =
                        FStar_Compiler_Util.format1 "Z3 says: %s\n"
-                         (FStar_String.concat "\n" smt_output1.smt_result) in
+                         (FStar_Compiler_String.concat "\n"
+                            smt_output1.smt_result) in
                      FStar_Compiler_Effect.op_Less_Bar
                        FStar_Compiler_Util.print_string uu___2
                    else ());
@@ -783,7 +791,8 @@ let (doZ3Exe :
                        let uu___2 =
                          FStar_Compiler_Util.format1
                            "Unexpected output from Z3: got output result: %s\n"
-                           (FStar_String.concat "\n" smt_output1.smt_result) in
+                           (FStar_Compiler_String.concat "\n"
+                              smt_output1.smt_result) in
                        failwith uu___2) in
                 (status, statistics) in
               let log_result fwrite uu___ =
@@ -802,7 +811,7 @@ let (doZ3Exe :
                            | UNSAT (FStar_Pervasives_Native.Some core) ->
                                fwrite fname
                                  (Prims.op_Hat "; UNSAT CORE GENERATED: "
-                                    (FStar_String.concat ", " core))
+                                    (FStar_Compiler_String.concat ", " core))
                            | uu___3 -> ()))
                      | FStar_Pervasives_Native.None -> ()) in
               if fresh
@@ -977,7 +986,7 @@ let (mk_input :
         let uu___ =
           let uu___1 = FStar_Options.z3_smtopt () in
           FStar_Compiler_Effect.op_Bar_Greater uu___1
-            (FStar_String.concat "\n") in
+            (FStar_Compiler_String.concat "\n") in
         Prims.op_Hat options uu___ in
       (let uu___1 = FStar_Options.print_z3_statistics () in
        if uu___1 then context_profile theory else ());
@@ -1006,8 +1015,8 @@ let (mk_input :
                let suffix1 = check_sat :: suffix in
                let ps_lines = pp prefix in
                let ss_lines = pp suffix1 in
-               let ps = FStar_String.concat "\n" ps_lines in
-               let ss = FStar_String.concat "\n" ss_lines in
+               let ps = FStar_Compiler_String.concat "\n" ps_lines in
+               let ss = FStar_Compiler_String.concat "\n" ss_lines in
                let hs =
                  let uu___4 = FStar_Options.keep_query_captions () in
                  if uu___4
@@ -1017,7 +1026,7 @@ let (mk_input :
                        (FStar_Compiler_List.map
                           (FStar_SMTEncoding_Term.declToSmt_no_caps options1)) in
                    FStar_Compiler_Effect.op_Bar_Greater uu___5
-                     (FStar_String.concat "\n")
+                     (FStar_Compiler_String.concat "\n")
                  else ps in
                let hs1 = Prims.op_Hat hs (Prims.op_Hat "Z3 version: " ver) in
                let uu___4 =
@@ -1030,7 +1039,7 @@ let (mk_input :
                 FStar_Compiler_List.map
                   (FStar_SMTEncoding_Term.declToSmt options1) theory in
               FStar_Compiler_Effect.op_Bar_Greater uu___5
-                (FStar_String.concat "\n") in
+                (FStar_Compiler_String.concat "\n") in
             (uu___4, FStar_Pervasives_Native.None)) in
        match uu___1 with
        | (r, hash) ->

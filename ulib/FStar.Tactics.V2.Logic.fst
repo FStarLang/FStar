@@ -18,7 +18,7 @@ module FStar.Tactics.V2.Logic
 open FStar.Reflection.V2
 open FStar.Reflection.V2.Formula
 open FStar.Tactics.Effect
-open FStar.Tactics.V2.Builtins
+open FStar.Stubs.Tactics.V2.Builtins
 open FStar.Tactics.V2.Derived
 open FStar.Tactics.V2.SyntaxCoercions
 open FStar.Tactics.NamedView

@@ -489,7 +489,7 @@ let (check_uvar_ctx_invariant :
                             let uu___3 = FStar_Ident.string_of_lid l in
                             Prims.op_Hat "Binding_lid " uu___3)) in
               FStar_Compiler_Effect.op_Bar_Greater uu___
-                (FStar_String.concat "::\n") in
+                (FStar_Compiler_String.concat "::\n") in
             let fail uu___ =
               let uu___1 =
                 let uu___2 = FStar_Compiler_Range_Ops.string_of_range r in

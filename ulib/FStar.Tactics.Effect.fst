@@ -1,4 +1,4 @@
-(* 
+(*  
    Copyright 2008-2018 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,9 +15,9 @@
 *)
 module FStar.Tactics.Effect
 
-open FStar.Reflection.Types
-open FStar.Tactics.Types
-open FStar.Tactics.Result
+open FStar.Stubs.Reflection.Types
+open FStar.Stubs.Tactics.Types
+open FStar.Stubs.Tactics.Result
 
 /// This admit is to typecheck the bind implementation when the
 ///   interface is interleaved

@@ -498,7 +498,7 @@ let (run_full_buffer :
                                        FStar_Compiler_List.map
                                          FStar_Interactive_Ide_Types.query_to_string
                                          queries in
-                                     FStar_String.concat "\n" uu___8 in
+                                     FStar_Compiler_String.concat "\n" uu___8 in
                                    FStar_Compiler_Util.print1
                                      "Generating queries\n%s\n" uu___7
                                  else ());
@@ -552,7 +552,7 @@ let (format_code :
                    FStar_Compiler_Effect.op_Bar_Greater formatted_code_rev
                      FStar_Compiler_List.rev in
                  FStar_Compiler_Effect.op_Bar_Greater uu___1
-                   (FStar_String.concat "\n\n") in
+                   (FStar_Compiler_String.concat "\n\n") in
                let formatted_code =
                  match leftover_comments with
                  | [] -> code1

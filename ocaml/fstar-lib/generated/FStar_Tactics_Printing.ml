@@ -248,7 +248,7 @@ let (ps_to_string :
                 ps.FStar_Tactics_Types.smt_goals in
             FStar_Compiler_List.op_At uu___4 uu___5 in
           FStar_Compiler_List.op_At uu___2 uu___3 in
-        FStar_String.concat "" uu___1
+        FStar_Compiler_String.concat "" uu___1
 let (goal_to_json : FStar_Tactics_Types.goal -> FStar_Json.json) =
   fun g ->
     let g_binders =

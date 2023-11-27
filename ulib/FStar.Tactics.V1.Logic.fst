@@ -16,7 +16,7 @@
 module FStar.Tactics.V1.Logic
 
 open FStar.Tactics.Effect
-open FStar.Tactics.V1.Builtins
+open FStar.Stubs.Tactics.V1.Builtins
 open FStar.Tactics.V1.Derived
 open FStar.Tactics.Util
 open FStar.Reflection.V1

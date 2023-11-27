@@ -5358,7 +5358,8 @@ let (print_effects_graph : env -> Prims.string) =
       let uu___ =
         FStar_Compiler_Effect.op_Bar_Greater path
           (FStar_Compiler_List.map eff_name) in
-      FStar_Compiler_Effect.op_Bar_Greater uu___ (FStar_String.concat ";") in
+      FStar_Compiler_Effect.op_Bar_Greater uu___
+        (FStar_Compiler_String.concat ";") in
     let pbinds = FStar_Compiler_Util.smap_create (Prims.of_int (10)) in
     let lifts = FStar_Compiler_Util.smap_create (Prims.of_int (20)) in
     let psubcomps = FStar_Compiler_Util.smap_create (Prims.of_int (10)) in
@@ -5422,7 +5423,8 @@ let (print_effects_graph : env -> Prims.string) =
                              FStar_Compiler_Util.format3
                                "%s -> %s [label=\"%s\"]" src tgt path in
                            uu___5 :: s1) s) [] in
-       FStar_Compiler_Effect.op_Bar_Greater uu___4 (FStar_String.concat "\n") in
+       FStar_Compiler_Effect.op_Bar_Greater uu___4
+         (FStar_Compiler_String.concat "\n") in
      let uu___4 =
        let uu___5 =
          FStar_Compiler_Util.smap_fold pbinds
@@ -5433,7 +5435,8 @@ let (print_effects_graph : env -> Prims.string) =
                     FStar_Compiler_Util.format1
                       "\"%s\" [shape=\"plaintext\"]" k in
                   uu___7 :: s) [] in
-       FStar_Compiler_Effect.op_Bar_Greater uu___5 (FStar_String.concat "\n") in
+       FStar_Compiler_Effect.op_Bar_Greater uu___5
+         (FStar_Compiler_String.concat "\n") in
      let uu___5 =
        let uu___6 =
          FStar_Compiler_Util.smap_fold psubcomps
@@ -5444,7 +5447,8 @@ let (print_effects_graph : env -> Prims.string) =
                     FStar_Compiler_Util.format1
                       "\"%s\" [shape=\"plaintext\"]" k in
                   uu___8 :: s) [] in
-       FStar_Compiler_Effect.op_Bar_Greater uu___6 (FStar_String.concat "\n") in
+       FStar_Compiler_Effect.op_Bar_Greater uu___6
+         (FStar_Compiler_String.concat "\n") in
      FStar_Compiler_Util.format3
        "digraph {\nlabel=\"Effects ordering\"\nsubgraph cluster_lifts {\nlabel = \"Lifts\"\n\n      %s\n}\nsubgraph cluster_polymonadic_binds {\nlabel = \"Polymonadic binds\"\n%s\n}\nsubgraph cluster_polymonadic_subcomps {\nlabel = \"Polymonadic subcomps\"\n%s\n}}\n"
        uu___3 uu___4 uu___5)
@@ -6438,7 +6442,8 @@ let (print_gamma : FStar_Syntax_Syntax.gamma -> Prims.string) =
               | FStar_Syntax_Syntax.Binding_lid (l, uu___2) ->
                   let uu___3 = FStar_Ident.string_of_lid l in
                   Prims.op_Hat "Binding_lid " uu___3)) in
-    FStar_Compiler_Effect.op_Bar_Greater uu___ (FStar_String.concat "::\n")
+    FStar_Compiler_Effect.op_Bar_Greater uu___
+      (FStar_Compiler_String.concat "::\n")
 let (string_of_delta_level : delta_level -> Prims.string) =
   fun uu___ ->
     match uu___ with
@@ -6465,8 +6470,9 @@ let (should_enc_path : env -> Prims.string Prims.list -> Prims.bool) =
         match (xs, ys) with
         | ([], uu___) -> true
         | (x::xs1, y::ys1) ->
-            ((FStar_String.lowercase x) = (FStar_String.lowercase y)) &&
-              (str_i_prefix xs1 ys1)
+            ((FStar_Compiler_String.lowercase x) =
+               (FStar_Compiler_String.lowercase y))
+              && (str_i_prefix xs1 ys1)
         | (uu___, uu___1) -> false in
       let uu___ =
         FStar_Compiler_List.tryFind
@@ -6634,7 +6640,8 @@ let (string_of_proof_ns : env -> Prims.string) =
     let uu___ =
       let uu___1 = FStar_Compiler_List.map aux env1.proof_ns in
       FStar_Compiler_Effect.op_Bar_Greater uu___1 FStar_Compiler_List.rev in
-    FStar_Compiler_Effect.op_Bar_Greater uu___ (FStar_String.concat " ")
+    FStar_Compiler_Effect.op_Bar_Greater uu___
+      (FStar_Compiler_String.concat " ")
 let (guard_of_guard_formula :
   FStar_TypeChecker_Common.guard_formula -> guard_t) =
   fun g ->

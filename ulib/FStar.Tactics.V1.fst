@@ -16,17 +16,17 @@
 module FStar.Tactics.V1
 
 (* I don't expect many uses of tactics without syntax handling *)
-include FStar.Reflection.Types
+include FStar.Stubs.Reflection.Types
 include FStar.Reflection.Const
-include FStar.Reflection.V1.Data
-include FStar.Reflection.V1.Builtins
+include FStar.Stubs.Reflection.V1.Data
+include FStar.Stubs.Reflection.V1.Builtins
 include FStar.Reflection.V1.Derived
 include FStar.Reflection.V1.Formula
 include FStar.Reflection.V1.Compare
 
-include FStar.Tactics.Types
+include FStar.Stubs.Tactics.Types
 include FStar.Tactics.Effect
-include FStar.Tactics.V1.Builtins
+include FStar.Stubs.Tactics.V1.Builtins
 include FStar.Tactics.V1.Derived
 include FStar.Tactics.V1.SyntaxHelpers
 include FStar.Tactics.V1.Logic

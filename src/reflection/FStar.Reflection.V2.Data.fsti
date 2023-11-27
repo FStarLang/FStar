@@ -32,6 +32,12 @@ type name = list string
 type typ  = term
 type binders = list binder
 
+let binder_is_simple (b:Stubs.Reflection.Types.binder) : Tot Type0 = True
+
+type simple_binder = Stubs.Reflection.Types.binder
+
+type ident_view = string & Range.range
+
 (* No distinction internally between bvars and named vars *)
 type namedv = bv
 

@@ -32,7 +32,7 @@ open FStar.Reflection.V2
 module L = FStar.List.Tot
 module R = FStar.Reflection.V2
 module T = FStar.Tactics.V2
-module RD = FStar.Reflection.V2.Data
+module RD = FStar.Stubs.Reflection.V2.Data
 
 (* MOVE to some helper module *)
 let rec fold_left_dec #a #b

@@ -2,8 +2,8 @@ module FStar.Tactics.V1.SyntaxHelpers
 
 open FStar.Reflection.V1
 open FStar.Tactics.Effect
-open FStar.Tactics.V1.Builtins
-open FStar.Tactics.Types
+open FStar.Stubs.Tactics.Types
+open FStar.Stubs.Tactics.V1.Builtins
 
 (* These are fully-named variants of functions found in FStar.Reflection *)
 

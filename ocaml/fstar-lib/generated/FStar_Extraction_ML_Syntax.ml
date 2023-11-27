@@ -167,7 +167,8 @@ let (fsharpkeywords : Prims.string Prims.list) =
 let (string_of_mlpath : mlpath -> mlsymbol) =
   fun uu___ ->
     match uu___ with
-    | (p, s) -> FStar_String.concat "." (FStar_Compiler_List.op_At p [s])
+    | (p, s) ->
+        FStar_Compiler_String.concat "." (FStar_Compiler_List.op_At p [s])
 type mlidents = mlident Prims.list
 type mlsymbols = mlsymbol Prims.list
 type e_tag =
@@ -737,7 +738,8 @@ let (pop_unit : mltyscheme -> mltyscheme) =
 let (mlpath_to_string :
   (Prims.string Prims.list * Prims.string) -> Prims.string) =
   fun mlp ->
-    Prims.op_Hat (FStar_String.concat "." (FStar_Pervasives_Native.fst mlp))
+    Prims.op_Hat
+      (FStar_Compiler_String.concat "." (FStar_Pervasives_Native.fst mlp))
       (Prims.op_Hat "." (FStar_Pervasives_Native.snd mlp))
 let rec (mlty_to_string : mlty -> Prims.string) =
   fun t ->
@@ -750,13 +752,13 @@ let rec (mlty_to_string : mlty -> Prims.string) =
     | MLTY_Named (ts, p) ->
         let uu___ =
           let uu___1 = FStar_Compiler_List.map mlty_to_string ts in
-          FStar_String.concat " " uu___1 in
+          FStar_Compiler_String.concat " " uu___1 in
         FStar_Compiler_Util.format2 "(<MLTY_Named> %s %s)" uu___
           (mlpath_to_string p)
     | MLTY_Tuple ts ->
         let uu___ =
           let uu___1 = FStar_Compiler_List.map mlty_to_string ts in
-          FStar_String.concat " * " uu___1 in
+          FStar_Compiler_String.concat " * " uu___1 in
         FStar_Compiler_Util.format1 "(<MLTY_Tuple> %s)" uu___
     | MLTY_Top -> "MLTY_Top"
     | MLTY_Erased -> "MLTY_Erased"
@@ -764,7 +766,8 @@ let (mltyscheme_to_string : mltyscheme -> Prims.string) =
   fun tsc ->
     let uu___ = mlty_to_string (FStar_Pervasives_Native.snd tsc) in
     FStar_Compiler_Util.format2 "(<MLTY_Scheme> [%s], %s)"
-      (FStar_String.concat ", " (FStar_Pervasives_Native.fst tsc)) uu___
+      (FStar_Compiler_String.concat ", " (FStar_Pervasives_Native.fst tsc))
+      uu___
 let rec (mlexpr_to_string : mlexpr -> Prims.string) =
   fun e ->
     match e.expr with
@@ -774,7 +777,7 @@ let rec (mlexpr_to_string : mlexpr -> Prims.string) =
     | MLE_Var x -> FStar_Compiler_Util.format1 "(MLE_Var %s)" x
     | MLE_Name (p, x) ->
         FStar_Compiler_Util.format2 "(MLE_Name (%s, %s))"
-          (FStar_String.concat "." p) x
+          (FStar_Compiler_String.concat "." p) x
     | MLE_Let (lbs, e1) ->
         let uu___ = mlletbinding_to_string lbs in
         let uu___1 = mlexpr_to_string e1 in
@@ -783,13 +786,13 @@ let rec (mlexpr_to_string : mlexpr -> Prims.string) =
         let uu___ = mlexpr_to_string e1 in
         let uu___1 =
           let uu___2 = FStar_Compiler_List.map mlexpr_to_string es in
-          FStar_String.concat "; " uu___2 in
+          FStar_Compiler_String.concat "; " uu___2 in
         FStar_Compiler_Util.format2 "(MLE_App (%s, [%s]))" uu___ uu___1
     | MLE_TApp (e1, ts) ->
         let uu___ = mlexpr_to_string e1 in
         let uu___1 =
           let uu___2 = FStar_Compiler_List.map mlty_to_string ts in
-          FStar_String.concat "; " uu___2 in
+          FStar_Compiler_String.concat "; " uu___2 in
         FStar_Compiler_Util.format2 "(MLE_TApp (%s, [%s]))" uu___ uu___1
     | MLE_Fun (xs, e1) ->
         let uu___ =
@@ -800,14 +803,14 @@ let rec (mlexpr_to_string : mlexpr -> Prims.string) =
                  | (x, t) ->
                      let uu___3 = mlty_to_string t in
                      FStar_Compiler_Util.format2 "(%s, %s)" x uu___3) xs in
-          FStar_String.concat "; " uu___1 in
+          FStar_Compiler_String.concat "; " uu___1 in
         let uu___1 = mlexpr_to_string e1 in
         FStar_Compiler_Util.format2 "(MLE_Fun ([%s], %s))" uu___ uu___1
     | MLE_Match (e1, bs) ->
         let uu___ = mlexpr_to_string e1 in
         let uu___1 =
           let uu___2 = FStar_Compiler_List.map mlbranch_to_string bs in
-          FStar_String.concat "; " uu___2 in
+          FStar_Compiler_String.concat "; " uu___2 in
         FStar_Compiler_Util.format2 "(MLE_Match (%s, [%s]))" uu___ uu___1
     | MLE_Coerce (e1, t1, t2) ->
         let uu___ = mlexpr_to_string e1 in
@@ -818,18 +821,18 @@ let rec (mlexpr_to_string : mlexpr -> Prims.string) =
     | MLE_CTor (p, es) ->
         let uu___ =
           let uu___1 = FStar_Compiler_List.map mlexpr_to_string es in
-          FStar_String.concat "; " uu___1 in
+          FStar_Compiler_String.concat "; " uu___1 in
         FStar_Compiler_Util.format2 "(MLE_CTor (%s, [%s]))"
           (mlpath_to_string p) uu___
     | MLE_Seq es ->
         let uu___ =
           let uu___1 = FStar_Compiler_List.map mlexpr_to_string es in
-          FStar_String.concat "; " uu___1 in
+          FStar_Compiler_String.concat "; " uu___1 in
         FStar_Compiler_Util.format1 "(MLE_Seq [%s])" uu___
     | MLE_Tuple es ->
         let uu___ =
           let uu___1 = FStar_Compiler_List.map mlexpr_to_string es in
-          FStar_String.concat "; " uu___1 in
+          FStar_Compiler_String.concat "; " uu___1 in
         FStar_Compiler_Util.format1 "(MLE_Tuple [%s])" uu___
     | MLE_Record (p, es) ->
         let uu___ =
@@ -840,9 +843,9 @@ let rec (mlexpr_to_string : mlexpr -> Prims.string) =
                  | (x, e1) ->
                      let uu___3 = mlexpr_to_string e1 in
                      FStar_Compiler_Util.format2 "(%s, %s)" x uu___3) es in
-          FStar_String.concat "; " uu___1 in
+          FStar_Compiler_String.concat "; " uu___1 in
         FStar_Compiler_Util.format2 "(MLE_Record (%s, [%s]))"
-          (FStar_String.concat "; " p) uu___
+          (FStar_Compiler_String.concat "; " p) uu___
     | MLE_Proj (e1, p) ->
         let uu___ = mlexpr_to_string e1 in
         FStar_Compiler_Util.format2 "(MLE_Proj (%s, %s))" uu___
@@ -860,14 +863,14 @@ let rec (mlexpr_to_string : mlexpr -> Prims.string) =
     | MLE_Raise (p, es) ->
         let uu___ =
           let uu___1 = FStar_Compiler_List.map mlexpr_to_string es in
-          FStar_String.concat "; " uu___1 in
+          FStar_Compiler_String.concat "; " uu___1 in
         FStar_Compiler_Util.format2 "(MLE_Raise (%s, [%s]))"
           (mlpath_to_string p) uu___
     | MLE_Try (e1, bs) ->
         let uu___ = mlexpr_to_string e1 in
         let uu___1 =
           let uu___2 = FStar_Compiler_List.map mlbranch_to_string bs in
-          FStar_String.concat "; " uu___2 in
+          FStar_Compiler_String.concat "; " uu___2 in
         FStar_Compiler_Util.format2 "(MLE_Try (%s, [%s]))" uu___ uu___1
 and (mlbranch_to_string :
   (mlpattern * mlexpr FStar_Pervasives_Native.option * mlexpr) ->
@@ -894,12 +897,12 @@ and (mlletbinding_to_string :
     | (Rec, lbs1) ->
         let uu___ =
           let uu___1 = FStar_Compiler_List.map mllb_to_string lbs1 in
-          FStar_String.concat "; " uu___1 in
+          FStar_Compiler_String.concat "; " uu___1 in
         FStar_Compiler_Util.format1 "(Rec, [%s])" uu___
     | (NonRec, lbs1) ->
         let uu___ =
           let uu___1 = FStar_Compiler_List.map mllb_to_string lbs1 in
-          FStar_String.concat "; " uu___1 in
+          FStar_Compiler_String.concat "; " uu___1 in
         FStar_Compiler_Util.format1 "(NonRec, [%s])" uu___
 and (mllb_to_string : mllb -> Prims.string) =
   fun lb ->
@@ -940,13 +943,13 @@ and (mlpattern_to_string : mlpattern -> Prims.string) =
     | MLP_CTor (p, ps) ->
         let uu___ =
           let uu___1 = FStar_Compiler_List.map mlpattern_to_string ps in
-          FStar_String.concat "; " uu___1 in
+          FStar_Compiler_String.concat "; " uu___1 in
         FStar_Compiler_Util.format2 "(MLP_CTor (%s, [%s]))"
           (mlpath_to_string p) uu___
     | MLP_Branch ps ->
         let uu___ =
           let uu___1 = FStar_Compiler_List.map mlpattern_to_string ps in
-          FStar_String.concat "; " uu___1 in
+          FStar_Compiler_String.concat "; " uu___1 in
         FStar_Compiler_Util.format1 "(MLP_Branch [%s])" uu___
     | MLP_Record (p, ps) ->
         let uu___ =
@@ -957,13 +960,13 @@ and (mlpattern_to_string : mlpattern -> Prims.string) =
                  | (x, p1) ->
                      let uu___3 = mlpattern_to_string p1 in
                      FStar_Compiler_Util.format2 "(%s, %s)" x uu___3) ps in
-          FStar_String.concat "; " uu___1 in
+          FStar_Compiler_String.concat "; " uu___1 in
         FStar_Compiler_Util.format2 "(MLP_Record (%s, [%s]))"
-          (FStar_String.concat "; " p) uu___
+          (FStar_Compiler_String.concat "; " p) uu___
     | MLP_Tuple ps ->
         let uu___ =
           let uu___1 = FStar_Compiler_List.map mlpattern_to_string ps in
-          FStar_String.concat "; " uu___1 in
+          FStar_Compiler_String.concat "; " uu___1 in
         FStar_Compiler_Util.format1 "(MLP_Tuple [%s])" uu___
 let (mltybody_to_string : mltybody -> Prims.string) =
   fun d ->
@@ -980,7 +983,7 @@ let (mltybody_to_string : mltybody -> Prims.string) =
                  | (x, t) ->
                      let uu___3 = mlty_to_string t in
                      FStar_Compiler_Util.format2 "(%s, %s)" x uu___3) l in
-          FStar_String.concat "; " uu___1 in
+          FStar_Compiler_String.concat "; " uu___1 in
         FStar_Compiler_Util.format1 "(MLTD_Record { %s })" uu___
     | MLTD_DType l ->
         let uu___ =
@@ -998,9 +1001,9 @@ let (mltybody_to_string : mltybody -> Prims.string) =
                                   let uu___6 = mlty_to_string t in
                                   FStar_Compiler_Util.format2 "(%s, %s)" x1
                                     uu___6) l1 in
-                       FStar_String.concat "; " uu___4 in
+                       FStar_Compiler_String.concat "; " uu___4 in
                      FStar_Compiler_Util.format2 "(%s, [%s])" x uu___3) l in
-          FStar_String.concat "; " uu___1 in
+          FStar_Compiler_String.concat "; " uu___1 in
         FStar_Compiler_Util.format1 "(MLTD_DType [ %s ])" uu___
 let (one_mltydecl_to_string : one_mltydecl -> Prims.string) =
   fun d ->
@@ -1010,7 +1013,8 @@ let (one_mltydecl_to_string : one_mltydecl -> Prims.string) =
       | FStar_Pervasives_Native.Some d1 -> mltybody_to_string d1 in
     FStar_Compiler_Util.format3
       "{tydecl_name = %s; tydecl_parameters = %s; tydecl_defn = %s}"
-      d.tydecl_name (FStar_String.concat "," d.tydecl_parameters) uu___
+      d.tydecl_name (FStar_Compiler_String.concat "," d.tydecl_parameters)
+      uu___
 let (mlmodule1_to_string : mlmodule1 -> Prims.string) =
   fun m ->
     match m with
@@ -1018,7 +1022,7 @@ let (mlmodule1_to_string : mlmodule1 -> Prims.string) =
         let uu___ =
           let uu___1 = FStar_Compiler_List.map one_mltydecl_to_string d in
           FStar_Compiler_Effect.op_Bar_Greater uu___1
-            (FStar_String.concat "; ") in
+            (FStar_Compiler_String.concat "; ") in
         FStar_Compiler_Util.format1 "MLM_Ty [%s]" uu___
     | MLM_Let l ->
         let uu___ = mlletbinding_to_string l in
@@ -1032,7 +1036,7 @@ let (mlmodule1_to_string : mlmodule1 -> Prims.string) =
                  | (x, t) ->
                      let uu___3 = mlty_to_string t in
                      FStar_Compiler_Util.format2 "(%s, %s)" x uu___3) l in
-          FStar_String.concat "; " uu___1 in
+          FStar_Compiler_String.concat "; " uu___1 in
         FStar_Compiler_Util.format2 "MLM_Exn (%s, [%s])" s uu___
     | MLM_Top e ->
         let uu___ = mlexpr_to_string e in
@@ -1042,5 +1046,6 @@ let (mlmodule_to_string : mlmodule -> Prims.string) =
   fun m ->
     let uu___ =
       let uu___1 = FStar_Compiler_List.map mlmodule1_to_string m in
-      FStar_Compiler_Effect.op_Bar_Greater uu___1 (FStar_String.concat ";\n") in
+      FStar_Compiler_Effect.op_Bar_Greater uu___1
+        (FStar_Compiler_String.concat ";\n") in
     FStar_Compiler_Util.format1 "[ %s ]" uu___

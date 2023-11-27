@@ -417,7 +417,7 @@ let (print_ifamily : inductive_family -> unit) =
                   Prims.op_Hat " : " uu___7 in
                 Prims.op_Hat uu___5 uu___6)) in
       FStar_Compiler_Effect.op_Bar_Greater uu___4
-        (FStar_String.concat "\n\t\t") in
+        (FStar_Compiler_String.concat "\n\t\t") in
     FStar_Compiler_Util.print4 "\n\t%s %s : %s { %s }\n" uu___ uu___1 uu___2
       uu___3
 let (bundle_as_inductive_families :
@@ -639,7 +639,7 @@ let (iface_union_l : iface Prims.list -> iface) =
   fun ifs -> FStar_Compiler_List.fold_right iface_union ifs empty_iface
 let (mlpath_to_string : FStar_Extraction_ML_Syntax.mlpath -> Prims.string) =
   fun p ->
-    FStar_String.concat ". "
+    FStar_Compiler_String.concat ". "
       (FStar_Compiler_List.op_At (FStar_Pervasives_Native.fst p)
          [FStar_Pervasives_Native.snd p])
 let tscheme_to_string :
@@ -706,15 +706,18 @@ let (iface_to_string : iface -> Prims.string) =
     let uu___ =
       let uu___1 =
         FStar_Compiler_List.map (print_binding cm) iface1.iface_bindings in
-      FStar_Compiler_Effect.op_Bar_Greater uu___1 (FStar_String.concat "\n") in
+      FStar_Compiler_Effect.op_Bar_Greater uu___1
+        (FStar_Compiler_String.concat "\n") in
     let uu___1 =
       let uu___2 =
         FStar_Compiler_List.map (print_tydef cm) iface1.iface_tydefs in
-      FStar_Compiler_Effect.op_Bar_Greater uu___2 (FStar_String.concat "\n") in
+      FStar_Compiler_Effect.op_Bar_Greater uu___2
+        (FStar_Compiler_String.concat "\n") in
     let uu___2 =
       let uu___3 =
         FStar_Compiler_List.map print_type_name iface1.iface_type_names in
-      FStar_Compiler_Effect.op_Bar_Greater uu___3 (FStar_String.concat "\n") in
+      FStar_Compiler_Effect.op_Bar_Greater uu___3
+        (FStar_Compiler_String.concat "\n") in
     FStar_Compiler_Util.format4
       "Interface %s = {\niface_bindings=\n%s;\n\niface_tydefs=\n%s;\n\niface_type_names=%s;\n}"
       (mlpath_to_string iface1.iface_module_name) uu___ uu___1 uu___2
@@ -730,7 +733,8 @@ let (gamma_to_string : FStar_Extraction_ML_UEnv.uenv -> Prims.string) =
            | uu___2 -> []) uu___ in
     let uu___ =
       let uu___1 = FStar_Compiler_List.map (print_binding cm) gamma in
-      FStar_Compiler_Effect.op_Bar_Greater uu___1 (FStar_String.concat "\n") in
+      FStar_Compiler_Effect.op_Bar_Greater uu___1
+        (FStar_Compiler_String.concat "\n") in
     FStar_Compiler_Util.format1 "Gamma = {\n %s }" uu___
 let (extract_typ_abbrev :
   FStar_Extraction_ML_UEnv.uenv ->
@@ -2920,7 +2924,7 @@ let (extract' :
                            (FStar_Syntax_Util.lids_of_sigelt se)
                            (FStar_Compiler_List.map FStar_Ident.string_of_lid) in
                        FStar_Compiler_Effect.op_Bar_Greater uu___4
-                         (FStar_String.concat ", ") in
+                         (FStar_Compiler_String.concat ", ") in
                      (FStar_Compiler_Util.print1 "+++About to extract {%s}\n"
                         nm;
                       (let uu___5 =

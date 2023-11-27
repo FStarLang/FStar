@@ -331,7 +331,7 @@ let rec (read_chunk : unit -> input_chunks) =
             (let lc_lax =
                let uu___5 =
                  FStar_Compiler_Util.substring_from l
-                   (FStar_String.length "#push") in
+                   (FStar_Compiler_String.length "#push") in
                FStar_Compiler_Util.trim_string uu___5 in
              let lc =
                match FStar_Compiler_Util.split lc_lax " " with
@@ -460,7 +460,7 @@ let (deps_of_our_file :
                        let uu___5 =
                          FStar_Compiler_Util.format1
                            "Unexpected: ended up with %s"
-                           (FStar_String.concat " " same_name) in
+                           (FStar_Compiler_String.concat " " same_name) in
                        (FStar_Errors_Codes.Warning_UnexpectedFile, uu___5) in
                      FStar_Errors.log_issue
                        FStar_Compiler_Range_Type.dummyRange uu___4);
@@ -698,7 +698,8 @@ let rec (go :
                           (match ts1 with
                            | [] ->
                                FStar_Pervasives_Native.Some
-                                 (candidate, (FStar_String.length hs))
+                                 (candidate,
+                                   (FStar_Compiler_String.length hs))
                            | uu___1 ->
                                let uu___2 = measure_anchored_match ts1 tc in
                                FStar_Compiler_Effect.op_Bar_Greater uu___2
@@ -707,7 +708,8 @@ let rec (go :
                                        match uu___3 with
                                        | (matched, len) ->
                                            ((hc :: matched),
-                                             (((FStar_String.length hc_text)
+                                             (((FStar_Compiler_String.length
+                                                  hc_text)
                                                  + Prims.int_one)
                                                 + len)))))
                         else FStar_Pervasives_Native.None in
@@ -764,8 +766,9 @@ let rec (go :
                         else
                           ((Prims.op_Hat prefix (Prims.op_Hat "." matched)),
                             stripped_ns,
-                            (((FStar_String.length prefix) + match_len) +
-                               Prims.int_one)) in
+                            (((FStar_Compiler_String.length prefix) +
+                                match_len)
+                               + Prims.int_one)) in
                   let needle = FStar_Compiler_Util.split search_term "." in
                   let all_lidents_in_env = FStar_TypeChecker_Env.lidents env in
                   let matches =
@@ -777,9 +780,9 @@ let rec (go :
                         FStar_Compiler_List.fold_left
                           (fun out ->
                              fun s ->
-                               ((FStar_String.length s) + out) +
-                                 Prims.int_one) (FStar_String.length id)
-                          orig_ns in
+                               ((FStar_Compiler_String.length s) + out) +
+                                 Prims.int_one)
+                          (FStar_Compiler_String.length id) orig_ns in
                       FStar_Compiler_Effect.op_Bar_Greater exported_names
                         (FStar_Compiler_List.filter_map
                            (fun n ->
@@ -855,9 +858,10 @@ let rec (go :
                            fun uu___4 ->
                              match (uu___3, uu___4) with
                              | ((cd1, ns1, uu___5), (cd2, ns2, uu___6)) ->
-                                 (match FStar_String.compare cd1 cd2 with
+                                 (match FStar_Compiler_String.compare cd1 cd2
+                                  with
                                   | uu___7 when uu___7 = Prims.int_zero ->
-                                      FStar_String.compare ns1 ns2
+                                      FStar_Compiler_String.compare ns1 ns2
                                   | n -> n)) matches in
                     FStar_Compiler_List.iter
                       (fun uu___3 ->

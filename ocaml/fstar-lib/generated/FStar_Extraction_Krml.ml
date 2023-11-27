@@ -2663,8 +2663,8 @@ and (translate_constant : FStar_Extraction_ML_Syntax.mlconstant -> expr) =
     | FStar_Extraction_ML_Syntax.MLC_Bool b -> EBool b
     | FStar_Extraction_ML_Syntax.MLC_String s ->
         ((let uu___1 =
-            let uu___2 = FStar_String.list_of_string s in
-            FStar_Compiler_Effect.op_Bar_Greater uu___2
+            FStar_Compiler_Effect.op_Bar_Greater
+              (FStar_String.list_of_string s)
               (FStar_Compiler_Util.for_some
                  (fun c1 -> c1 = (FStar_Char.char_of_int Prims.int_zero))) in
           if uu___1
@@ -3024,7 +3024,7 @@ let (translate_let' :
                     FStar_Extraction_ML_Code.string_of_mlty ([], "") t in
                   FStar_Compiler_Util.print2
                     "Type scheme is: forall %s. %s\n"
-                    (FStar_String.concat ", " idents) uu___6
+                    (FStar_Compiler_String.concat ", " idents) uu___6
               | FStar_Pervasives_Native.None -> ());
              FStar_Pervasives_Native.None)
 type translate_let_t =
@@ -3086,7 +3086,7 @@ let (translate_module :
                 (translate_decl (empty module_name1)) decls
           | uu___2 ->
               failwith "Unexpected standalone interface or nested modules" in
-        ((FStar_String.concat "_" module_name1), program1)
+        ((FStar_Compiler_String.concat "_" module_name1), program1)
 let (translate : FStar_Extraction_ML_Syntax.mllib -> file Prims.list) =
   fun uu___ ->
     match uu___ with

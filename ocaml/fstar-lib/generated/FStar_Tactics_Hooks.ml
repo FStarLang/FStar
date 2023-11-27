@@ -2170,8 +2170,8 @@ let (splice :
                                                     FStar_Ident.string_of_lid
                                                     lids' in
                                                 FStar_Compiler_Effect.op_Less_Bar
-                                                  (FStar_String.concat ", ")
-                                                  uu___14 in
+                                                  (FStar_Compiler_String.concat
+                                                     ", ") uu___14 in
                                               FStar_Compiler_Util.format2
                                                 "Splice declared the name %s but it was not defined.\nThose defined were: %s"
                                                 uu___12 uu___13 in

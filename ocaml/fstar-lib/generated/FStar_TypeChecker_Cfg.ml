@@ -377,8 +377,9 @@ let (steps_to_string : fsteps -> Prims.string) =
       match o with
       | FStar_Pervasives_Native.None -> "None"
       | FStar_Pervasives_Native.Some x ->
-          let uu___ = let uu___1 = f1 x in FStar_String.op_Hat uu___1 ")" in
-          FStar_String.op_Hat "Some (" uu___ in
+          let uu___ =
+            let uu___1 = f1 x in FStar_Compiler_String.op_Hat uu___1 ")" in
+          FStar_Compiler_String.op_Hat "Some (" uu___ in
     let b = FStar_Compiler_Util.string_of_bool in
     let uu___ =
       let uu___1 = FStar_Compiler_Effect.op_Bar_Greater f.beta b in
@@ -413,7 +414,8 @@ let (steps_to_string : fsteps -> Prims.string) =
                                     FStar_Compiler_List.map
                                       FStar_Ident.string_of_lid x in
                                   FStar_Compiler_Effect.op_Bar_Greater
-                                    uu___20 (FStar_String.concat ", "))) in
+                                    uu___20
+                                    (FStar_Compiler_String.concat ", "))) in
                         let uu___20 =
                           let uu___21 =
                             FStar_Compiler_Effect.op_Bar_Greater
@@ -424,7 +426,8 @@ let (steps_to_string : fsteps -> Prims.string) =
                                       FStar_Compiler_List.map
                                         FStar_Ident.string_of_lid x in
                                     FStar_Compiler_Effect.op_Bar_Greater
-                                      uu___22 (FStar_String.concat ", "))) in
+                                      uu___22
+                                      (FStar_Compiler_String.concat ", "))) in
                           let uu___22 =
                             let uu___23 =
                               FStar_Compiler_Effect.op_Bar_Greater
@@ -435,17 +438,20 @@ let (steps_to_string : fsteps -> Prims.string) =
                                         FStar_Compiler_List.map
                                           FStar_Ident.string_of_lid x in
                                       FStar_Compiler_Effect.op_Bar_Greater
-                                        uu___24 (FStar_String.concat ", "))) in
+                                        uu___24
+                                        (FStar_Compiler_String.concat ", "))) in
                             let uu___24 =
                               let uu___25 =
                                 FStar_Compiler_Effect.op_Bar_Greater
                                   f.unfold_qual
-                                  (format_opt (FStar_String.concat ", ")) in
+                                  (format_opt
+                                     (FStar_Compiler_String.concat ", ")) in
                               let uu___26 =
                                 let uu___27 =
                                   FStar_Compiler_Effect.op_Bar_Greater
                                     f.unfold_namespace
-                                    (format_opt (FStar_String.concat ", ")) in
+                                    (format_opt
+                                       (FStar_Compiler_String.concat ", ")) in
                                 let uu___28 =
                                   let uu___29 =
                                     FStar_Compiler_Effect.op_Bar_Greater
@@ -1879,7 +1885,7 @@ let (cfg_to_string : cfg -> Prims.string) =
           FStar_Compiler_Util.format1 "  steps = %s" uu___3 in
         [uu___2; "}"] in
       "{" :: uu___1 in
-    FStar_String.concat "\n" uu___
+    FStar_Compiler_String.concat "\n" uu___
 let (cfg_env : cfg -> FStar_TypeChecker_Env.env) = fun cfg1 -> cfg1.tcenv
 let (find_prim_step :
   cfg ->
@@ -1929,10 +1935,12 @@ let (primop_time_count : Prims.string -> Prims.int -> unit) =
 let (fixto : Prims.int -> Prims.string -> Prims.string) =
   fun n ->
     fun s ->
-      if (FStar_String.length s) < n
+      if (FStar_Compiler_String.length s) < n
       then
-        let uu___ = FStar_String.make (n - (FStar_String.length s)) 32 in
-        FStar_String.op_Hat uu___ s
+        let uu___ =
+          FStar_Compiler_String.make (n - (FStar_Compiler_String.length s))
+            32 in
+        FStar_Compiler_String.op_Hat uu___ s
       else s
 let (primop_time_report : unit -> Prims.string) =
   fun uu___ ->
@@ -1955,7 +1963,7 @@ let (primop_time_report : unit -> Prims.string) =
                    let uu___4 = FStar_Compiler_Util.string_of_int ms in
                    fixto (Prims.of_int (10)) uu___4 in
                  FStar_Compiler_Util.format2 "%sms --- %s\n" uu___3 nm in
-               FStar_String.op_Hat uu___2 rest) pairs1 ""
+               FStar_Compiler_String.op_Hat uu___2 rest) pairs1 ""
 let (extendable_primops_dirty : Prims.bool FStar_Compiler_Effect.ref) =
   FStar_Compiler_Util.mk_ref true
 type register_prim_step_t = FStar_TypeChecker_Primops.primitive_step -> unit

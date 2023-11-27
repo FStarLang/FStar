@@ -75,7 +75,7 @@ let mk_total_step_1' :
                       ea er nf ena enr in
                   let uu___1 =
                     FStar_Ident.lid_of_str
-                      (Prims.op_Hat "FStar.Tactics.Types." nm) in
+                      (Prims.op_Hat "FStar.Stubs.Tactics.Types." nm) in
                   {
                     FStar_TypeChecker_Primops.name = uu___1;
                     FStar_TypeChecker_Primops.arity =
@@ -120,7 +120,7 @@ let mk_total_step_1'_psc :
                       f ea er nf ena enr in
                   let uu___1 =
                     FStar_Ident.lid_of_str
-                      (Prims.op_Hat "FStar.Tactics.Types." nm) in
+                      (Prims.op_Hat "FStar.Stubs.Tactics.Types." nm) in
                   {
                     FStar_TypeChecker_Primops.name = uu___1;
                     FStar_TypeChecker_Primops.arity =
@@ -169,7 +169,7 @@ let mk_total_step_2' :
                           f ea eb er nf ena enb enr in
                       let uu___1 =
                         FStar_Ident.lid_of_str
-                          (Prims.op_Hat "FStar.Tactics.Types." nm) in
+                          (Prims.op_Hat "FStar.Stubs.Tactics.Types." nm) in
                       {
                         FStar_TypeChecker_Primops.name = uu___1;
                         FStar_TypeChecker_Primops.arity =
@@ -3352,7 +3352,7 @@ let run_tactic_on_ps' :
                                  FStar_Tactics_V2_Basic.mark_goal_implicit_already_checked
                                    g1;
                                  (let uu___7 =
-                                    FStar_Tactics_Types.is_irrelevant g1 in
+                                    FStar_Tactics_V2_Basic.is_irrelevant g1 in
                                   if uu___7
                                   then
                                     ((let uu___9 =

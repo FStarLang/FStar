@@ -136,7 +136,7 @@ let (hash_dependences :
              fun fn2 ->
                let uu___ = FStar_Parser_Dep.lowercase_module_name fn11 in
                let uu___1 = FStar_Parser_Dep.lowercase_module_name fn2 in
-               FStar_String.compare uu___ uu___1) binary_deps in
+               FStar_Compiler_String.compare uu___ uu___1) binary_deps in
       let maybe_add_iface_hash out =
         match interface_checked_file_name with
         | FStar_Pervasives_Native.None ->

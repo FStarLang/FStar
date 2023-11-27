@@ -43,5 +43,3 @@ let as_ppname (x:string) : Tot string = x
 
 let notAscription (tv:term_view) : Tot bool =
   not (Tv_AscribedT? tv) && not (Tv_AscribedC? tv)
-
-type simple_binder = binder

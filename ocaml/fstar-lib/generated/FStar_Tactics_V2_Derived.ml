@@ -2906,13 +2906,13 @@ let (is_guard : unit -> (Prims.bool, unit) FStar_Tactics_Effect.tac_repr) =
       (FStar_Sealed.seal
          (Obj.magic
             (FStar_Range.mk_range "FStar.Tactics.V2.Derived.fst"
-               (Prims.of_int (517)) (Prims.of_int (27)) (Prims.of_int (517))
-               (Prims.of_int (41)))))
+               (Prims.of_int (517)) (Prims.of_int (33)) (Prims.of_int (517))
+               (Prims.of_int (47)))))
       (FStar_Sealed.seal
          (Obj.magic
             (FStar_Range.mk_range "FStar.Tactics.V2.Derived.fst"
                (Prims.of_int (517)) (Prims.of_int (4)) (Prims.of_int (517))
-               (Prims.of_int (41))))) (Obj.magic (_cur_goal ()))
+               (Prims.of_int (47))))) (Obj.magic (_cur_goal ()))
       (fun uu___1 ->
          FStar_Tactics_Effect.lift_div_tac
            (fun uu___2 -> FStar_Tactics_Types.is_guard uu___1))

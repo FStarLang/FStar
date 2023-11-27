@@ -23,8 +23,6 @@ open FStar.Tactics.Common
 module BU      = FStar.Compiler.Util
 module Cfg     = FStar.TypeChecker.Cfg
 module Core    = FStar.TypeChecker.Core
-module N       = FStar.TypeChecker.Normalize
-module O       = FStar.Options
 module PO      = FStar.TypeChecker.Primops
 module Range   = FStar.Compiler.Range
 
@@ -119,8 +117,6 @@ type direction =
 
 val check_goal_solved' : goal -> option term
 val check_goal_solved  : goal -> bool
-val get_phi            : goal -> option term
-val is_irrelevant      : goal -> bool
 
 (*** These are here for userspace, the library has an interface into this module. *)
 (* Typing reflection *)

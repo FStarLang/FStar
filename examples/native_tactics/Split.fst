@@ -15,7 +15,6 @@
 *)
 module Split
 open FStar.Tactics.V2
-open FStar.Reflection.Types
 
 private val split_lem : (#a:Type) -> (#b:Type) ->
                         squash a -> squash b -> Lemma (a /\ b)

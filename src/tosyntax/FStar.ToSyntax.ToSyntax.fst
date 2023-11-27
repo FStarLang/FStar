@@ -1698,12 +1698,16 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
             if not !used_marker then
               let nm, gl, rng =
                 match f with
-                | Inl x -> (string_of_id x, "Local", range_of_id x)
-                | Inr l -> (string_of_lid l, "Global", range_of_lid l)
+                | Inl x -> (string_of_id x, "Local binding", range_of_id x)
+                | Inr l -> (string_of_lid l, "Global binding", range_of_lid l)
               in
-              Errors.log_issue rng (Errors.Warning_UnusedLetRec,
-                                    BU.format2 "%s binding %s is recursive but not used in its body"
-                                                gl nm)) funs used_markers
+              let open FStar.Errors.Msg in
+              let open FStar.Pprint in
+              Errors.log_issue_doc rng (Errors.Warning_UnusedLetRec, [
+                surround 4 1 (text gl)
+                             (squotes (doc_of_string nm))
+                             (text "is recursive but not used in its body")])
+            ) funs used_markers
         end;
         mk <| (Tm_let {lbs=(is_rec, lbs); body=Subst.close rec_bindings body}), aq @ List.flatten aqss
       in

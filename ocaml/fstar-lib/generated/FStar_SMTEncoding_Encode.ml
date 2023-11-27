@@ -3807,7 +3807,8 @@ let (encode_top_level_let :
                                                       names in
                                                   FStar_Compiler_Effect.op_Bar_Greater
                                                     uu___15
-                                                    (FStar_String.concat ",") in
+                                                    (FStar_Compiler_String.concat
+                                                       ",") in
                                                 FStar_Compiler_Util.format3
                                                   "Definitions of inner let-rec%s %s and %s enclosing top-level letbinding are not encoded to the solver, you will only be able to reason with their types"
                                                   (if plural then "s" else "")
@@ -3837,7 +3838,7 @@ let (encode_top_level_let :
                              FStar_Syntax_Print.lbname_to_string
                                lb.FStar_Syntax_Syntax.lbname)) in
                    FStar_Compiler_Effect.op_Bar_Greater uu___2
-                     (FStar_String.concat " and ") in
+                     (FStar_Compiler_String.concat " and ") in
                  let decl =
                    FStar_SMTEncoding_Term.Caption
                      (Prims.op_Hat "let rec unencodeable: Skipping: " msg) in
@@ -7601,7 +7602,7 @@ let (encode_sig :
                     (FStar_Syntax_Util.lids_of_sigelt se)
                     (FStar_Compiler_List.map FStar_Syntax_Print.lid_to_string) in
                 FStar_Compiler_Effect.op_Bar_Greater uu___4
-                  (FStar_String.concat ", ") in
+                  (FStar_Compiler_String.concat ", ") in
               Prims.op_Hat "encoding sigelt " uu___3 in
             FStar_SMTEncoding_Term.Caption uu___2 in
           uu___1 :: decls
@@ -7953,8 +7954,8 @@ let (encode_query :
                                                  let uu___13 =
                                                    let uu___14 =
                                                      FStar_Errors.get_ctx () in
-                                                   FStar_String.concat "\n"
-                                                     uu___14 in
+                                                   FStar_Compiler_String.concat
+                                                     "\n" uu___14 in
                                                  Prims.op_Hat "Context: "
                                                    uu___13 in
                                                FStar_SMTEncoding_Term.Caption

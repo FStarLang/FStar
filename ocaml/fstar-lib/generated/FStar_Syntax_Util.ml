@@ -347,7 +347,7 @@ let rec (compare_univs :
         | (FStar_Syntax_Syntax.U_name u11, FStar_Syntax_Syntax.U_name u21) ->
             let uu___ = FStar_Ident.string_of_id u11 in
             let uu___1 = FStar_Ident.string_of_id u21 in
-            FStar_String.compare uu___ uu___1
+            FStar_Compiler_String.compare uu___ uu___1
         | (FStar_Syntax_Syntax.U_name uu___, uu___1) -> ~- Prims.int_one
         | (uu___, FStar_Syntax_Syntax.U_name uu___1) -> Prims.int_one
         | (FStar_Syntax_Syntax.U_unif u11, FStar_Syntax_Syntax.U_unif u21) ->

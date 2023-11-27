@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module FStar.Reflection.Types
+module FStar.Stubs.Reflection.Types
 
 include FStar.Range
 include FStar.Sealed

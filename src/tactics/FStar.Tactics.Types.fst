@@ -15,7 +15,8 @@
 *)
 module FStar.Tactics.Types
 
-open FStar open FStar.Compiler
+open FStar
+open FStar.Compiler
 open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
@@ -23,14 +24,8 @@ open FStar.TypeChecker.Common
 
 module Env     = FStar.TypeChecker.Env
 module O       = FStar.Options
-module SS      = FStar.Syntax.Subst
-module Cfg     = FStar.TypeChecker.Cfg
-module N       = FStar.TypeChecker.Normalize
 module Range   = FStar.Compiler.Range
-module BU      = FStar.Compiler.Util
-module S       = FStar.Syntax.Syntax
 module U       = FStar.Syntax.Util
-module UF      = FStar.Syntax.Unionfind
 
 let goal_env g = g.goal_main_env
 let goal_range g = g.goal_main_env.range
@@ -106,12 +101,6 @@ let check_goal_solved' goal =
 
 let check_goal_solved goal =
   Option.isSome (check_goal_solved' goal)
-
-let get_phi (g:goal) : option term =
-    U.un_squash (N.unfold_whnf (goal_env g) (goal_type g))
-
-let is_irrelevant (g:goal) : bool =
-    Option.isSome (get_phi g)
 
 let non_informative_token (g:env) (t:typ) = unit
 let subtyping_token (g:env) (t0 t1:typ) = unit

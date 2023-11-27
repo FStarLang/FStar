@@ -54,7 +54,8 @@ let (write_json : FStar_Json.json -> unit) =
 let (write_jsonrpc : FStar_Json.json -> unit) =
   fun js ->
     let js_str = FStar_Json.string_of_json js in
-    let len = FStar_Compiler_Util.string_of_int (FStar_String.length js_str) in
+    let len =
+      FStar_Compiler_Util.string_of_int (FStar_Compiler_String.length js_str) in
     let uu___ =
       FStar_Compiler_Util.format2 "Content-Length: %s\r\n\r\n%s" len js_str in
     FStar_Compiler_Util.print_raw uu___

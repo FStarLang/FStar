@@ -16,6 +16,9 @@
 
 module FStar.Tactics.V2.Interpreter
 
+(* Most of the tactic running logic is here. V1.Interpreter calls
+into this module for all of that. *)
+
 open FStar
 open FStar.Compiler
 open FStar.Compiler.Effect
@@ -80,15 +83,15 @@ let native_tactics_steps () =
  * are in other modules: *)
 let mk_total_step_1' uarity nm f ea er nf ena enr =
   { mk_total_step_1  uarity nm f ea er nf ena enr
-    with name = Ident.lid_of_str ("FStar.Tactics.Types." ^ nm) }
+    with name = Ident.lid_of_str ("FStar.Stubs.Tactics.Types." ^ nm) }
 
 let mk_total_step_1'_psc uarity nm f ea er nf ena enr =
   { mk_total_step_1_psc  uarity nm f ea er nf ena enr
-    with name = Ident.lid_of_str ("FStar.Tactics.Types." ^ nm) }
+    with name = Ident.lid_of_str ("FStar.Stubs.Tactics.Types." ^ nm) }
 
 let mk_total_step_2' uarity nm f ea eb er nf ena enb enr =
   { mk_total_step_2  uarity nm f ea eb er nf ena enb enr
-    with name = Ident.lid_of_str ("FStar.Tactics.Types." ^ nm) }
+    with name = Ident.lid_of_str ("FStar.Stubs.Tactics.Types." ^ nm) }
 
 (* This reference keeps all of the tactic primitives. *)
 let __primitive_steps_ref : ref (list PO.primitive_step) =
