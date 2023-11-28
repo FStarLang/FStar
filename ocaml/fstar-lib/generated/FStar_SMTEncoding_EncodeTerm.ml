@@ -1230,8 +1230,10 @@ and (encode_term :
   =
   fun t ->
     fun env ->
-      FStar_TypeChecker_Env.def_check_closed_in_env t.FStar_Syntax_Syntax.pos
-        "encode_term" env.FStar_SMTEncoding_Env.tcenv t;
+      FStar_Defensive.def_check_scoped FStar_TypeChecker_Env.hasBinders_env
+        FStar_Class_Binders.hasNames_term FStar_Syntax_Print.pretty_term
+        t.FStar_Syntax_Syntax.pos "encode_term"
+        env.FStar_SMTEncoding_Env.tcenv t;
       (let t1 = FStar_Syntax_Subst.compress t in
        let t0 = t1 in
        (let uu___2 =

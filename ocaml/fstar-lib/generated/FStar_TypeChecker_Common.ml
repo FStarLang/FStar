@@ -110,6 +110,7 @@ let (uu___is_CProb : prob -> Prims.bool) =
   fun projectee -> match projectee with | CProb _0 -> true | uu___ -> false
 let (__proj__CProb__item___0 : prob -> FStar_Syntax_Syntax.comp problem) =
   fun projectee -> match projectee with | CProb _0 -> _0
+type prob_t = prob
 let (as_tprob : prob -> FStar_Syntax_Syntax.typ problem) =
   fun uu___ ->
     match uu___ with | TProb p -> p | uu___1 -> failwith "Expected a TProb"

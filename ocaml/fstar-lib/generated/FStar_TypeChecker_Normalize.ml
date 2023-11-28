@@ -8586,8 +8586,10 @@ let (normalize_with_primitive_steps :
                      (fun uu___8 ->
                         let uu___9 = FStar_TypeChecker_Cfg.cfg_to_string c in
                         FStar_Compiler_Util.print1 ">>> cfg = %s\n" uu___9);
-                   FStar_TypeChecker_Env.def_check_closed_in_env
-                     t.FStar_Syntax_Syntax.pos
+                   FStar_Defensive.def_check_scoped
+                     FStar_TypeChecker_Env.hasBinders_env
+                     FStar_Class_Binders.hasNames_term
+                     FStar_Syntax_Print.pretty_term t.FStar_Syntax_Syntax.pos
                      "normalize_with_primitive_steps call" e t;
                    (let uu___9 =
                       FStar_Errors.with_ctx
@@ -8617,8 +8619,10 @@ let (normalize_with_primitive_steps :
                      (fun uu___9 ->
                         let uu___10 = FStar_TypeChecker_Cfg.cfg_to_string c in
                         FStar_Compiler_Util.print1 ">>> cfg = %s\n" uu___10);
-                   FStar_TypeChecker_Env.def_check_closed_in_env
-                     t.FStar_Syntax_Syntax.pos
+                   FStar_Defensive.def_check_scoped
+                     FStar_TypeChecker_Env.hasBinders_env
+                     FStar_Class_Binders.hasNames_term
+                     FStar_Syntax_Print.pretty_term t.FStar_Syntax_Syntax.pos
                      "normalize_with_primitive_steps call" e t;
                    (let uu___10 =
                       FStar_Errors.with_ctx "While normalizing a term"
@@ -8683,8 +8687,11 @@ let (normalize_comp :
                (fun uu___6 ->
                   let uu___7 = FStar_TypeChecker_Cfg.cfg_to_string cfg in
                   FStar_Compiler_Util.print1 ">>> cfg = %s\n" uu___7);
-             FStar_TypeChecker_Env.def_check_comp_closed_in_env
-               c.FStar_Syntax_Syntax.pos "normalize_comp call" e c;
+             FStar_Defensive.def_check_scoped
+               FStar_TypeChecker_Env.hasBinders_env
+               FStar_Class_Binders.hasNames_comp
+               FStar_Syntax_Print.pretty_comp c.FStar_Syntax_Syntax.pos
+               "normalize_comp call" e c;
              (let uu___7 =
                 FStar_Errors.with_ctx "While normalizing a computation type"
                   (fun uu___8 ->

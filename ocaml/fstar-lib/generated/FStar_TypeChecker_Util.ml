@@ -1072,7 +1072,9 @@ let (close_wp_comp :
     fun bvs ->
       fun c ->
         (let uu___1 = FStar_TypeChecker_Env.push_bvs env bvs in
-         FStar_TypeChecker_Env.def_check_comp_closed_in_env
+         FStar_Defensive.def_check_scoped
+           FStar_TypeChecker_Env.hasBinders_env
+           FStar_Class_Binders.hasNames_comp FStar_Syntax_Print.pretty_comp
            c.FStar_Syntax_Syntax.pos "close_wp_comp" uu___1 c);
         (let uu___1 = FStar_Syntax_Util.is_ml_comp c in
          if uu___1
@@ -4861,10 +4863,16 @@ let (check_comp :
       fun e ->
         fun c ->
           fun c' ->
-            FStar_TypeChecker_Env.def_check_comp_closed_in_env
-              c.FStar_Syntax_Syntax.pos "check_comp.c" env c;
-            FStar_TypeChecker_Env.def_check_comp_closed_in_env
-              c'.FStar_Syntax_Syntax.pos "check_comp.c'" env c';
+            FStar_Defensive.def_check_scoped
+              FStar_TypeChecker_Env.hasBinders_env
+              FStar_Class_Binders.hasNames_comp
+              FStar_Syntax_Print.pretty_comp c.FStar_Syntax_Syntax.pos
+              "check_comp.c" env c;
+            FStar_Defensive.def_check_scoped
+              FStar_TypeChecker_Env.hasBinders_env
+              FStar_Class_Binders.hasNames_comp
+              FStar_Syntax_Print.pretty_comp c'.FStar_Syntax_Syntax.pos
+              "check_comp.c'" env c';
             (let uu___3 =
                FStar_Compiler_Effect.op_Less_Bar
                  (FStar_TypeChecker_Env.debug env) FStar_Options.Extreme in
@@ -6472,7 +6480,8 @@ let (norm_reify :
   fun env ->
     fun steps ->
       fun t ->
-        FStar_TypeChecker_Env.def_check_closed_in_env
+        FStar_Defensive.def_check_scoped FStar_TypeChecker_Env.hasBinders_env
+          FStar_Class_Binders.hasNames_term FStar_Syntax_Print.pretty_term
           t.FStar_Syntax_Syntax.pos "norm_reify" env t;
         (let t' =
            FStar_TypeChecker_Normalize.normalize

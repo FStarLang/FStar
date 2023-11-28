@@ -496,7 +496,10 @@ let (value_check_expected_typ :
     fun e ->
       fun tlc ->
         fun guard ->
-          FStar_TypeChecker_Env.def_check_guard_wf e.FStar_Syntax_Syntax.pos
+          FStar_Defensive.def_check_scoped
+            FStar_TypeChecker_Env.hasBinders_env
+            FStar_TypeChecker_Env.hasNames_guard
+            FStar_TypeChecker_Env.pretty_guard e.FStar_Syntax_Syntax.pos
             "value_check_expected_typ" env guard;
           (let lc =
              match tlc with
@@ -741,11 +744,17 @@ let (check_expected_effect :
                                     FStar_Pervasives_Native.None))))) in
               (match uu___1 with
                | (expected_c_opt, c1, gopt) ->
-                   (FStar_TypeChecker_Env.def_check_comp_closed_in_env
+                   (FStar_Defensive.def_check_scoped
+                      FStar_TypeChecker_Env.hasBinders_env
+                      FStar_Class_Binders.hasNames_comp
+                      FStar_Syntax_Print.pretty_comp
                       c1.FStar_Syntax_Syntax.pos
                       "check_expected_effect.c.before_norm" env c1;
                     (let c2 = norm_c env c1 in
-                     FStar_TypeChecker_Env.def_check_comp_closed_in_env
+                     FStar_Defensive.def_check_scoped
+                       FStar_TypeChecker_Env.hasBinders_env
+                       FStar_Class_Binders.hasNames_comp
+                       FStar_Syntax_Print.pretty_comp
                        c2.FStar_Syntax_Syntax.pos
                        "check_expected_effect.c.after_norm" env c2;
                      (match expected_c_opt with
@@ -770,7 +779,10 @@ let (check_expected_effect :
                               FStar_TypeChecker_Common.lcomp_comp c3 in
                             match uu___5 with
                             | (c4, g_c) ->
-                                (FStar_TypeChecker_Env.def_check_comp_closed_in_env
+                                (FStar_Defensive.def_check_scoped
+                                   FStar_TypeChecker_Env.hasBinders_env
+                                   FStar_Class_Binders.hasNames_comp
+                                   FStar_Syntax_Print.pretty_comp
                                    c4.FStar_Syntax_Syntax.pos
                                    "check_expected_effect.c.after_assume" env
                                    c4;
@@ -1694,8 +1706,9 @@ let rec (tc_term :
   =
   fun env ->
     fun e ->
-      FStar_TypeChecker_Env.def_check_closed_in_env e.FStar_Syntax_Syntax.pos
-        "tc_term.entry" env e;
+      FStar_Defensive.def_check_scoped FStar_TypeChecker_Env.hasBinders_env
+        FStar_Class_Binders.hasNames_term FStar_Syntax_Print.pretty_term
+        e.FStar_Syntax_Syntax.pos "tc_term.entry" env e;
       (let uu___2 = FStar_TypeChecker_Env.debug env FStar_Options.Medium in
        if uu___2
        then
@@ -1870,8 +1883,9 @@ and (tc_maybe_toplevel_term :
         if e.FStar_Syntax_Syntax.pos = FStar_Compiler_Range_Type.dummyRange
         then env
         else FStar_TypeChecker_Env.set_range env e.FStar_Syntax_Syntax.pos in
-      FStar_TypeChecker_Env.def_check_closed_in_env e.FStar_Syntax_Syntax.pos
-        "tc_maybe_toplevel_term.entry" env1 e;
+      FStar_Defensive.def_check_scoped FStar_TypeChecker_Env.hasBinders_env
+        FStar_Class_Binders.hasNames_term FStar_Syntax_Print.pretty_term
+        e.FStar_Syntax_Syntax.pos "tc_maybe_toplevel_term.entry" env1 e;
       (let top = FStar_Syntax_Subst.compress e in
        (let uu___2 = FStar_TypeChecker_Env.debug env1 FStar_Options.Medium in
         if uu___2
@@ -9371,7 +9385,10 @@ and (tc_eqn :
                                          (branch_exp3, c, g_branch) in
                                    (match uu___8 with
                                     | (branch_exp1, c, g_branch) ->
-                                        (FStar_TypeChecker_Env.def_check_guard_wf
+                                        (FStar_Defensive.def_check_scoped
+                                           FStar_TypeChecker_Env.hasBinders_env
+                                           FStar_TypeChecker_Env.hasNames_guard
+                                           FStar_TypeChecker_Env.pretty_guard
                                            cbr.FStar_Syntax_Syntax.pos
                                            "tc_eqn.1" pat_env g_branch;
                                          (let when_condition =
@@ -13174,7 +13191,9 @@ let (universe_of :
               FStar_Compiler_Util.print1
                 "Calling universe_of_aux with %s {\n" uu___3
             else ());
-           FStar_TypeChecker_Env.def_check_closed_in_env
+           FStar_Defensive.def_check_scoped
+             FStar_TypeChecker_Env.hasBinders_env
+             FStar_Class_Binders.hasNames_term FStar_Syntax_Print.pretty_term
              e.FStar_Syntax_Syntax.pos "universe_of entry" env e;
            (let r = universe_of_aux env e in
             (let uu___4 = FStar_TypeChecker_Env.debug env FStar_Options.High in
@@ -13514,7 +13533,8 @@ let (typeof_tot_or_gtot_term_fastpath :
   fun env ->
     fun t ->
       fun must_tot ->
-        FStar_TypeChecker_Env.def_check_closed_in_env
+        FStar_Defensive.def_check_scoped FStar_TypeChecker_Env.hasBinders_env
+          FStar_Class_Binders.hasNames_term FStar_Syntax_Print.pretty_term
           t.FStar_Syntax_Syntax.pos "fastpath" env t;
         FStar_Errors.with_ctx "In a call to typeof_tot_or_gtot_term_fastpath"
           (fun uu___1 -> __typeof_tot_or_gtot_term_fastpath env t must_tot)
