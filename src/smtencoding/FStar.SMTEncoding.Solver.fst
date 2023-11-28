@@ -853,7 +853,6 @@ let make_solver_configs
 Not to be used directly, see ask_solver below. *)
 let __ask_solver
     (configs : list query_settings)
-    (prefix : list decl)
  : either (list errors) query_settings
  =
     let check_one_config config : z3result =
@@ -876,14 +875,8 @@ if --quake is specified. This function is always called, but when
 creating an [answer] record). *)
 let ask_solver_quake
     (configs : list query_settings)
-    (prefix : list decl)
  : answer
  =
-    // Feed the context of the query to the solver. We do this only
-    // once for every quake run. Every actual query will push and pop
-    // whatever else they encode.
-    Z3.giveZ3 prefix;
-
     let lo   = Options.quake_lo () in
     let hi   = Options.quake_hi () in
     let seed = Options.z3_seed () in
@@ -921,8 +914,8 @@ let ask_solver_quake
         if Options.z3_refresh ()
         then Options.with_saved_options (fun () ->
                Options.set_option "z3seed" (Options.Int seed);
-               __ask_solver configs prefix)
-        else __ask_solver configs prefix
+               __ask_solver configs)
+        else __ask_solver configs
     in
     let rec fold_nat' (f : 'a -> int -> 'a) (acc : 'a) (lo : int) (hi : int) : 'a =
         if lo > hi
@@ -1034,8 +1027,13 @@ let ask_solver
           //restore the hint as is, cf. #1651
           next_hint |> must |> store_hint;
         ans_ok
-      ) else
-        ask_solver_quake configs prefix
+      ) else (
+        // Feed the context of the query to the solver. We do this only
+        // once for every VC. Every actual query will push and pop
+        // whatever else they encode.
+        Z3.giveZ3 prefix;
+        ask_solver_quake configs
+      )
     in
     configs, ans
 
@@ -1268,6 +1266,7 @@ let do_solve_maybe_split use_env_msg tcenv q : unit =
       (* Set retrying=false so queries go through the full config list, etc. *)
       split_and_solve false use_env_msg tcenv q
   end
+
 (* Attempt to discharge a VC through the SMT solver. Will
 automatically retry increasing fuel as needed, and perform quake testing
 (repeating the query to make sure it is robust). This function will
