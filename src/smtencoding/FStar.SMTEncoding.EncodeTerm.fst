@@ -21,6 +21,7 @@ open FStar.Compiler.Effect
 open FStar.Compiler.List
 open FStar
 open FStar.Compiler
+open FStar.Defensive
 open FStar.TypeChecker.Env
 open FStar.Syntax
 open FStar.Syntax.Syntax
@@ -598,7 +599,7 @@ and encode_deeply_embedded_quantifier (t:S.term) (env:env_t) : term * decls_t =
 and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t to be in normal form already *)
                                      * decls_t)     (* top-level declarations to be emitted (for shared representations of existentially bound terms *) =
 
-    Env.def_check_closed_in_env t.pos "encode_term" env.tcenv t;
+    def_check_scoped t.pos "encode_term" env.tcenv t;
     let t = SS.compress t in
     let t0 = t in
     if Env.debug env.tcenv <| Options.Other "SMTEncoding"

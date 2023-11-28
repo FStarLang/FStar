@@ -21,6 +21,7 @@ open FStar.Compiler
 open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.TypeChecker.Common
+open FStar.Class.Binders
 
 module BU = FStar.Compiler.Util
 module S = FStar.Syntax.Syntax
@@ -474,16 +475,6 @@ val check_trivial             : term -> guard_formula
 (* Other utils *)
 val too_early_in_prims : env -> bool
 
-val def_check_closed_in       : Range.range -> msg:string -> scope:list bv -> term -> unit
-val def_check_closed_in_env   : Range.range -> msg:string -> env -> term -> unit
-
-val def_check_comp_closed_in     : Range.range -> msg:string -> scope:list bv -> comp -> unit
-val def_check_comp_closed_in_env : Range.range -> msg:string -> env -> comp -> unit
-
-val def_check_lcomp_closed_in     : Range.range -> msg:string -> scope:list bv -> lcomp -> unit
-val def_check_lcomp_closed_in_env : Range.range -> msg:string -> env -> lcomp -> unit
-
-val def_check_guard_wf        : Range.range -> msg:string -> env -> guard_t -> unit
 val close_forall              : env -> binders -> term -> term
 
 val new_tac_implicit_var (reason: string)
@@ -544,3 +535,11 @@ val get_letrec_arity : env -> lbname -> option int
 val fvar_of_nonqual_lid : env -> lident -> term
 
 val split_smt_query : env -> term -> option (list (env * term))
+
+(* Binding instances, mostly for defensive checks *)
+
+instance val hasBinders_env   : hasBinders env
+instance val hasNames_lcomp   : hasNames lcomp
+instance val pretty_lcomp     : FStar.Class.PP.pretty lcomp
+instance val hasNames_guard   : hasNames guard_t
+instance val pretty_guard     : FStar.Class.PP.pretty guard_t

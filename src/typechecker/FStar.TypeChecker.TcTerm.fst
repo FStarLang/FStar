@@ -21,6 +21,7 @@ open FStar.Compiler.List
 open FStar
 open FStar.Compiler
 open FStar.Errors
+open FStar.Defensive
 open FStar.TypeChecker
 open FStar.TypeChecker.Common
 open FStar.TypeChecker.Env
@@ -225,7 +226,7 @@ let maybe_warn_on_use env fv : unit =
 (************************************************************************************************************)
 let value_check_expected_typ env (e:term) (tlc:either term lcomp) (guard:guard_t)
     : term * lcomp * guard_t =
-  Env.def_check_guard_wf e.pos "value_check_expected_typ" env guard;
+  def_check_scoped e.pos "value_check_expected_typ" env guard;
   let lc = match tlc with
     | Inl t -> TcComm.lcomp_of_comp <| mk_Total t
     | Inr lc -> lc in
@@ -331,9 +332,9 @@ let check_expected_effect env (use_eq:bool) (copt:option comp) (ec : term * comp
                             Some g)
              else None, c, None
   in
-  def_check_comp_closed_in_env c.pos "check_expected_effect.c.before_norm" env c;
+  def_check_scoped c.pos "check_expected_effect.c.before_norm" env c;
   let c = norm_c env c in
-  def_check_comp_closed_in_env c.pos "check_expected_effect.c.after_norm" env c;
+  def_check_scoped c.pos "check_expected_effect.c.after_norm" env c;
   match expected_c_opt with
     | None ->
       e, c, (match gopt with | None -> Env.trivial_guard | Some g -> g)
@@ -345,7 +346,7 @@ let check_expected_effect env (use_eq:bool) (copt:option comp) (ec : term * comp
 
        let c = TcUtil.maybe_assume_result_eq_pure_term env e (TcComm.lcomp_of_comp c) in
        let c, g_c = TcComm.lcomp_comp c in
-       def_check_comp_closed_in_env c.pos "check_expected_effect.c.after_assume" env c;
+       def_check_scoped c.pos "check_expected_effect.c.after_assume" env c;
        if debug env <| Options.Medium then
        BU.print4 "In check_expected_effect, asking rel to solve the problem on e=(%s) and c=(%s), expected_c=(%s), and use_eq=%s\n"
                  (Print.term_to_string e)
@@ -705,7 +706,7 @@ let is_comp_ascribed_reflect (e:term) : option (lident * term * aqual) =
 (* Main type-checker begins here                                                                            *)
 (************************************************************************************************************)
 let rec tc_term env e =
-    def_check_closed_in_env e.pos "tc_term.entry" env e;
+    def_check_scoped e.pos "tc_term.entry" env e;
     if Env.debug env Options.Medium then
         BU.print5 "(%s) Starting tc_term (phase1=%s) of %s (%s), %s {\n"
           (Range.string_of_range <| Env.get_range env)
@@ -733,7 +734,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
                                         * lcomp                 (* computation type where the WPs are lazily evaluated *)
                                         * guard_t =             (* well-formedness condition                           *)
   let env = if e.pos=Range.dummyRange then env else Env.set_range env e.pos in
-  def_check_closed_in_env e.pos "tc_maybe_toplevel_term.entry" env e;
+  def_check_scoped e.pos "tc_maybe_toplevel_term.entry" env e;
   let top = SS.compress e in
   if debug env Options.Medium then
     BU.print3 "Typechecking %s (%s): %s\n" (Range.string_of_range <| Env.get_range env) (Print.tag_of_term top) (Print.term_to_string top);
@@ -3496,7 +3497,7 @@ and tc_eqn (scrutinee:bv) (env:Env.env) (ret_opt : option match_returns_ascripti
         | _ -> failwith "Impossible (expected the match branch with an ascription)" in
     branch_exp, c, g_branch in
 
-  Env.def_check_guard_wf cbr.pos "tc_eqn.1" pat_env g_branch;
+  def_check_scoped cbr.pos "tc_eqn.1" pat_env g_branch;
 
   (* 4. Lift the when clause to a logical condition. *)
   (*    It is used in step 5 (a) below, and in step 6 (d) to build the branch guard *)
@@ -4694,7 +4695,7 @@ let rec universe_of_aux env e : term =
 let universe_of env e = Errors.with_ctx "While attempting to compute a universe level" (fun () ->
     if debug env Options.High then
       BU.print1 "Calling universe_of_aux with %s {\n" (Print.term_to_string e);
-    def_check_closed_in_env e.pos "universe_of entry" env e;
+    def_check_scoped e.pos "universe_of entry" env e;
 
     let r = universe_of_aux env e in
     if debug env Options.High then
@@ -4832,7 +4833,7 @@ let rec __typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : 
       in the return type
 *)
 let typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : option typ =
-  def_check_closed_in_env t.pos "fastpath" env t;
+  def_check_scoped t.pos "fastpath" env t;
   Errors.with_ctx
     "In a call to typeof_tot_or_gtot_term_fastpath"
     (fun () -> __typeof_tot_or_gtot_term_fastpath env t must_tot)

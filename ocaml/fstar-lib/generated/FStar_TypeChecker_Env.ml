@@ -4648,233 +4648,60 @@ let (binders_of_bindings :
       FStar_Compiler_Effect.op_Bar_Greater uu___1
         (FStar_Compiler_List.map FStar_Syntax_Syntax.mk_binder) in
     FStar_Compiler_Effect.op_Bar_Greater uu___ FStar_Compiler_List.rev
-let (bound_vars : env -> FStar_Syntax_Syntax.bv Prims.list) =
-  fun env1 -> bound_vars_of_bindings env1.gamma
 let (all_binders : env -> FStar_Syntax_Syntax.binders) =
   fun env1 -> binders_of_bindings env1.gamma
-let (def_check_vars_in_set :
-  FStar_Compiler_Range_Type.range ->
-    Prims.string ->
-      FStar_Syntax_Syntax.bv FStar_Compiler_Util.set ->
-        FStar_Syntax_Syntax.term -> unit)
-  =
-  fun rng ->
-    fun msg ->
-      fun vset ->
-        fun t ->
-          let uu___ = FStar_Options.defensive () in
-          if uu___
-          then
-            let s = FStar_Syntax_Free.names t in
-            let uu___1 =
-              let uu___2 =
-                let uu___3 = FStar_Compiler_Util.set_difference s vset in
-                FStar_Compiler_Effect.op_Less_Bar
-                  FStar_Compiler_Util.set_is_empty uu___3 in
-              Prims.op_Negation uu___2 in
-            (if uu___1
-             then
-               let doclist ds =
-                 let uu___2 = FStar_Pprint.doc_of_string "[]" in
-                 let uu___3 =
-                   let uu___4 = FStar_Pprint.break_ Prims.int_one in
-                   FStar_Pprint.op_Hat_Hat FStar_Pprint.semi uu___4 in
-                 FStar_Pprint.surround_separate (Prims.of_int (2))
-                   Prims.int_zero uu___2 FStar_Pprint.lbracket uu___3
-                   FStar_Pprint.rbracket ds in
-               let uu___2 =
-                 let uu___3 =
-                   let uu___4 =
-                     let uu___5 =
-                       FStar_Errors_Msg.text
-                         "Internal: term is not well-scoped " in
-                     let uu___6 =
-                       let uu___7 = FStar_Pprint.doc_of_string msg in
-                       FStar_Pprint.parens uu___7 in
-                     FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
-                   let uu___5 =
-                     let uu___6 =
-                       let uu___7 = FStar_Errors_Msg.text "t = " in
-                       let uu___8 = FStar_Syntax_Print.term_to_doc t in
-                       FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
-                     let uu___7 =
-                       let uu___8 =
-                         let uu___9 = FStar_Errors_Msg.text "FVs = " in
-                         let uu___10 =
-                           let uu___11 =
-                             let uu___12 = FStar_Compiler_Util.set_elements s in
-                             FStar_Compiler_Effect.op_Bar_Greater uu___12
-                               (FStar_Compiler_List.map
-                                  (fun b ->
-                                     let uu___13 =
-                                       FStar_Syntax_Print.bv_to_string b in
-                                     FStar_Pprint.arbitrary_string uu___13)) in
-                           doclist uu___11 in
-                         FStar_Pprint.op_Hat_Slash_Hat uu___9 uu___10 in
-                       let uu___9 =
-                         let uu___10 =
-                           let uu___11 = FStar_Errors_Msg.text "Scope = " in
-                           let uu___12 =
-                             let uu___13 =
-                               let uu___14 =
-                                 FStar_Compiler_Util.set_elements vset in
-                               FStar_Compiler_Effect.op_Bar_Greater uu___14
-                                 (FStar_Compiler_List.map
-                                    (fun b ->
-                                       let uu___15 =
-                                         FStar_Syntax_Print.bv_to_string b in
-                                       FStar_Pprint.arbitrary_string uu___15)) in
-                             doclist uu___13 in
-                           FStar_Pprint.op_Hat_Slash_Hat uu___11 uu___12 in
-                         [uu___10] in
-                       uu___8 :: uu___9 in
-                     uu___6 :: uu___7 in
-                   uu___4 :: uu___5 in
-                 (FStar_Errors_Codes.Warning_Defensive, uu___3) in
-               FStar_Errors.log_issue_doc rng uu___2
-             else ())
-          else ()
-let (def_check_closed_in :
-  FStar_Compiler_Range_Type.range ->
-    Prims.string ->
-      FStar_Syntax_Syntax.bv Prims.list -> FStar_Syntax_Syntax.term -> unit)
-  =
-  fun rng ->
-    fun msg ->
-      fun l ->
-        fun t ->
-          let uu___ =
-            let uu___1 = FStar_Options.defensive () in
-            Prims.op_Negation uu___1 in
-          if uu___
-          then ()
-          else
-            (let uu___2 =
-               FStar_Compiler_Util.as_set l FStar_Syntax_Syntax.order_bv in
-             def_check_vars_in_set rng msg uu___2 t)
-let (def_check_closed_in_env :
-  FStar_Compiler_Range_Type.range ->
-    Prims.string -> env -> FStar_Syntax_Syntax.term -> unit)
-  =
-  fun rng ->
-    fun msg ->
-      fun e ->
-        fun t ->
-          let uu___ =
-            let uu___1 = FStar_Options.defensive () in
-            Prims.op_Negation uu___1 in
-          if uu___
-          then ()
-          else
-            (let uu___2 = bound_vars e in
-             def_check_closed_in rng msg uu___2 t)
-let (def_check_comp_closed_in :
-  FStar_Compiler_Range_Type.range ->
-    Prims.string ->
-      FStar_Syntax_Syntax.bv Prims.list -> FStar_Syntax_Syntax.comp -> unit)
-  =
-  fun rng ->
-    fun msg ->
-      fun l ->
-        fun c ->
-          let uu___ =
-            let uu___1 = FStar_Options.defensive () in
-            Prims.op_Negation uu___1 in
-          if uu___
-          then ()
-          else
-            (match c.FStar_Syntax_Syntax.n with
-             | FStar_Syntax_Syntax.Total t ->
-                 def_check_closed_in rng (Prims.op_Hat msg ".typ") l t
-             | FStar_Syntax_Syntax.GTotal t ->
-                 def_check_closed_in rng (Prims.op_Hat msg ".typ") l t
-             | FStar_Syntax_Syntax.Comp ct ->
-                 (def_check_closed_in rng (Prims.op_Hat msg ".typ") l
-                    ct.FStar_Syntax_Syntax.result_typ;
-                  FStar_Compiler_List.iter
-                    (fun uu___3 ->
-                       match uu___3 with
-                       | (a, uu___4) ->
-                           def_check_closed_in rng (Prims.op_Hat msg ".arg")
-                             l a) ct.FStar_Syntax_Syntax.effect_args))
-let (def_check_comp_closed_in_env :
-  FStar_Compiler_Range_Type.range ->
-    Prims.string -> env -> FStar_Syntax_Syntax.comp -> unit)
-  =
-  fun rng ->
-    fun msg ->
-      fun e ->
-        fun c ->
-          let uu___ =
-            let uu___1 = FStar_Options.defensive () in
-            Prims.op_Negation uu___1 in
-          if uu___
-          then ()
-          else
-            (match c.FStar_Syntax_Syntax.n with
-             | FStar_Syntax_Syntax.Total t ->
-                 def_check_closed_in_env rng (Prims.op_Hat msg ".typ") e t
-             | FStar_Syntax_Syntax.GTotal t ->
-                 def_check_closed_in_env rng (Prims.op_Hat msg ".typ") e t
-             | FStar_Syntax_Syntax.Comp ct ->
-                 (def_check_closed_in_env rng (Prims.op_Hat msg ".typ") e
-                    ct.FStar_Syntax_Syntax.result_typ;
-                  FStar_Compiler_List.iter
-                    (fun uu___3 ->
-                       match uu___3 with
-                       | (a, uu___4) ->
-                           def_check_closed_in_env rng
-                             (Prims.op_Hat msg ".arg") e a)
-                    ct.FStar_Syntax_Syntax.effect_args))
-let (def_check_lcomp_closed_in :
-  FStar_Compiler_Range_Type.range ->
-    Prims.string ->
-      FStar_Syntax_Syntax.bv Prims.list ->
-        FStar_TypeChecker_Common.lcomp -> unit)
-  =
-  fun rng ->
-    fun msg ->
-      fun l ->
-        fun lc ->
-          let uu___ = FStar_Options.defensive () in
-          if uu___
-          then
-            let uu___1 = FStar_TypeChecker_Common.lcomp_comp lc in
-            match uu___1 with
-            | (c, uu___2) -> def_check_comp_closed_in rng msg l c
-          else ()
-let (def_check_lcomp_closed_in_env :
-  FStar_Compiler_Range_Type.range ->
-    Prims.string -> env -> FStar_TypeChecker_Common.lcomp -> unit)
-  =
-  fun rng ->
-    fun msg ->
-      fun env1 ->
-        fun lc ->
-          let uu___ = FStar_Options.defensive () in
-          if uu___
-          then
-            let uu___1 = FStar_TypeChecker_Common.lcomp_comp lc in
-            match uu___1 with
-            | (c, uu___2) -> def_check_comp_closed_in_env rng msg env1 c
-          else ()
-let (def_check_guard_wf :
-  FStar_Compiler_Range_Type.range -> Prims.string -> env -> guard_t -> unit)
-  =
-  fun rng ->
-    fun msg ->
-      fun env1 ->
-        fun g ->
-          match g.FStar_TypeChecker_Common.guard_f with
-          | FStar_TypeChecker_Common.Trivial -> ()
-          | FStar_TypeChecker_Common.NonTrivial f ->
-              def_check_closed_in_env rng msg env1 f
+let (bound_vars : env -> FStar_Syntax_Syntax.bv Prims.list) =
+  fun env1 -> bound_vars_of_bindings env1.gamma
+let (hasBinders_env : env FStar_Class_Binders.hasBinders) =
+  {
+    FStar_Class_Binders.boundNames =
+      (fun e ->
+         let uu___ = bound_vars e in
+         FStar_Compiler_Util.as_set uu___ FStar_Syntax_Syntax.order_bv)
+  }
+let (hasNames_lcomp :
+  FStar_TypeChecker_Common.lcomp FStar_Class_Binders.hasNames) =
+  {
+    FStar_Class_Binders.freeNames =
+      (fun lc ->
+         let uu___ =
+           let uu___1 = FStar_TypeChecker_Common.lcomp_comp lc in
+           FStar_Pervasives_Native.fst uu___1 in
+         FStar_Class_Binders.freeNames FStar_Class_Binders.hasNames_comp
+           uu___)
+  }
+let (pretty_lcomp : FStar_TypeChecker_Common.lcomp FStar_Class_PP.pretty) =
+  { FStar_Class_PP.pp = (fun lc -> FStar_Pprint.empty) }
+let (hasNames_guard : guard_t FStar_Class_Binders.hasNames) =
+  {
+    FStar_Class_Binders.freeNames =
+      (fun g ->
+         match g.FStar_TypeChecker_Common.guard_f with
+         | FStar_TypeChecker_Common.Trivial ->
+             FStar_Compiler_Util.new_set FStar_Syntax_Syntax.order_bv
+         | FStar_TypeChecker_Common.NonTrivial f ->
+             FStar_Class_Binders.freeNames FStar_Class_Binders.hasNames_term
+               f)
+  }
+let (pretty_guard : guard_t FStar_Class_PP.pretty) =
+  {
+    FStar_Class_PP.pp =
+      (fun g ->
+         match g.FStar_TypeChecker_Common.guard_f with
+         | FStar_TypeChecker_Common.Trivial ->
+             FStar_Pprint.doc_of_string "Trivial"
+         | FStar_TypeChecker_Common.NonTrivial f ->
+             let uu___ = FStar_Pprint.doc_of_string "NonTrivial" in
+             let uu___1 = FStar_Class_PP.pp FStar_Syntax_Print.pretty_term f in
+             FStar_Pprint.op_Hat_Slash_Hat uu___ uu___1)
+  }
 let (comp_to_comp_typ :
   env -> FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.comp_typ) =
   fun env1 ->
     fun c ->
-      def_check_comp_closed_in_env c.FStar_Syntax_Syntax.pos
-        "comp_to_comp_typ" env1 c;
+      FStar_Defensive.def_check_scoped hasBinders_env
+        FStar_Class_Binders.hasNames_comp FStar_Syntax_Print.pretty_comp
+        c.FStar_Syntax_Syntax.pos "comp_to_comp_typ" env1 c;
       (match c.FStar_Syntax_Syntax.n with
        | FStar_Syntax_Syntax.Comp ct -> ct
        | uu___1 ->
@@ -4904,8 +4731,9 @@ let (comp_set_flags :
   fun env1 ->
     fun c ->
       fun f ->
-        def_check_comp_closed_in_env c.FStar_Syntax_Syntax.pos
-          "comp_set_flags.IN" env1 c;
+        FStar_Defensive.def_check_scoped hasBinders_env
+          FStar_Class_Binders.hasNames_comp FStar_Syntax_Print.pretty_comp
+          c.FStar_Syntax_Syntax.pos "comp_set_flags.IN" env1 c;
         (let r =
            let uu___1 =
              let uu___2 =
@@ -4929,15 +4757,17 @@ let (comp_set_flags :
              FStar_Syntax_Syntax.hash_code =
                (c.FStar_Syntax_Syntax.hash_code)
            } in
-         def_check_comp_closed_in_env c.FStar_Syntax_Syntax.pos
-           "comp_set_flags.OUT" env1 r;
+         FStar_Defensive.def_check_scoped hasBinders_env
+           FStar_Class_Binders.hasNames_comp FStar_Syntax_Print.pretty_comp
+           c.FStar_Syntax_Syntax.pos "comp_set_flags.OUT" env1 r;
          r)
 let rec (unfold_effect_abbrev :
   env -> FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.comp_typ) =
   fun env1 ->
     fun comp ->
-      def_check_comp_closed_in_env comp.FStar_Syntax_Syntax.pos
-        "unfold_effect_abbrev" env1 comp;
+      FStar_Defensive.def_check_scoped hasBinders_env
+        FStar_Class_Binders.hasNames_comp FStar_Syntax_Print.pretty_comp
+        comp.FStar_Syntax_Syntax.pos "unfold_effect_abbrev" env1 comp;
       (let c = comp_to_comp_typ env1 comp in
        let uu___1 =
          lookup_effect_abbrev env1 c.FStar_Syntax_Syntax.comp_univs
@@ -6865,7 +6695,9 @@ let (close_forall :
              (let uu___2 =
                 let uu___3 = FStar_Syntax_Syntax.mk_Total f in
                 FStar_Syntax_Util.arrow bs uu___3 in
-              def_check_closed_in_env f.FStar_Syntax_Syntax.pos
+              FStar_Defensive.def_check_scoped hasBinders_env
+                FStar_Class_Binders.hasNames_term
+                FStar_Syntax_Print.pretty_term f.FStar_Syntax_Syntax.pos
                 "close_forall" env1 uu___2);
              (let bvs =
                 FStar_Compiler_List.map
@@ -6884,7 +6716,9 @@ let (close_forall :
                                  FStar_Compiler_Util.must in
                              FStar_Compiler_Effect.op_Bar_Greater uu___4
                                FStar_Pervasives_Native.snd in
-                           (def_check_closed_in_env
+                           (FStar_Defensive.def_check_scoped hasBinders_env
+                              FStar_Class_Binders.hasNames_term
+                              FStar_Syntax_Print.pretty_term
                               FStar_Compiler_Range_Type.dummyRange
                               "close_forall.sort" e'
                               bv.FStar_Syntax_Syntax.sort;

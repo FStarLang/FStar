@@ -780,44 +780,45 @@ let (def_scope_wf :
                  FStar_Syntax_Syntax.binder_qual = uu___2;
                  FStar_Syntax_Syntax.binder_positivity = uu___3;
                  FStar_Syntax_Syntax.binder_attrs = uu___4;_}::bs ->
-                 (FStar_TypeChecker_Env.def_check_closed_in rng msg prev
+                 (FStar_Defensive.def_check_scoped
+                    FStar_Class_Binders.hasBinders_list_bv
+                    FStar_Class_Binders.hasNames_term
+                    FStar_Syntax_Print.pretty_term rng msg prev
                     bv.FStar_Syntax_Syntax.sort;
                   aux (FStar_Compiler_List.op_At prev [bv]) bs) in
            aux [] r)
-let (def_check_scoped :
+let (hasBinders_prob :
+  FStar_TypeChecker_Common.prob FStar_Class_Binders.hasBinders) =
+  {
+    FStar_Class_Binders.boundNames =
+      (fun prob ->
+         let uu___ =
+           let uu___1 = p_scope prob in
+           FStar_Compiler_Effect.op_Less_Bar
+             (FStar_Compiler_List.map
+                (fun b -> b.FStar_Syntax_Syntax.binder_bv)) uu___1 in
+         FStar_Compiler_Util.as_set uu___ FStar_Syntax_Syntax.order_bv)
+  }
+let (def_check_term_scoped_in_prob :
   Prims.string ->
     FStar_TypeChecker_Common.prob -> FStar_Syntax_Syntax.term -> unit)
   =
   fun msg ->
     fun prob ->
       fun phi ->
-        let uu___ =
-          let uu___1 = FStar_Options.defensive () in Prims.op_Negation uu___1 in
-        if uu___
-        then ()
-        else
-          (let uu___2 =
-             let uu___3 = p_scope prob in
-             FStar_Compiler_Effect.op_Less_Bar
-               (FStar_Compiler_List.map
-                  (fun b -> b.FStar_Syntax_Syntax.binder_bv)) uu___3 in
-           FStar_TypeChecker_Env.def_check_closed_in (p_loc prob) msg uu___2
-             phi)
-let (def_check_scoped_comp :
+        FStar_Defensive.def_check_scoped hasBinders_prob
+          FStar_Class_Binders.hasNames_term FStar_Syntax_Print.pretty_term
+          (p_loc prob) msg prob phi
+let (def_check_comp_scoped_in_prob :
   Prims.string ->
-    FStar_TypeChecker_Common.prob ->
-      FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax -> unit)
+    FStar_TypeChecker_Common.prob -> FStar_Syntax_Syntax.comp -> unit)
   =
   fun msg ->
     fun prob ->
-      fun comp ->
-        let uu___ =
-          let uu___1 = FStar_Options.defensive () in Prims.op_Negation uu___1 in
-        if uu___
-        then ()
-        else
-          (let uu___2 = FStar_Syntax_Util.arrow [] comp in
-           def_check_scoped msg prob uu___2)
+      fun phi ->
+        FStar_Defensive.def_check_scoped hasBinders_prob
+          FStar_Class_Binders.hasNames_comp FStar_Syntax_Print.pretty_comp
+          (p_loc prob) msg prob phi
 let (def_check_prob : Prims.string -> FStar_TypeChecker_Common.prob -> unit)
   =
   fun msg ->
@@ -838,19 +839,21 @@ let (def_check_prob : Prims.string -> FStar_TypeChecker_Common.prob -> unit)
           let uu___4 = p_scope prob in
           def_scope_wf uu___3 (p_loc prob) uu___4);
          (let uu___4 = msgf "guard" in
-          def_check_scoped uu___4 prob (p_guard prob));
+          def_check_term_scoped_in_prob uu___4 prob (p_guard prob));
          (match prob with
           | FStar_TypeChecker_Common.TProb p ->
               ((let uu___5 = msgf "lhs" in
-                def_check_scoped uu___5 prob p.FStar_TypeChecker_Common.lhs);
-               (let uu___5 = msgf "rhs" in
-                def_check_scoped uu___5 prob p.FStar_TypeChecker_Common.rhs))
-          | FStar_TypeChecker_Common.CProb p ->
-              ((let uu___5 = msgf "lhs" in
-                def_check_scoped_comp uu___5 prob
+                def_check_term_scoped_in_prob uu___5 prob
                   p.FStar_TypeChecker_Common.lhs);
                (let uu___5 = msgf "rhs" in
-                def_check_scoped_comp uu___5 prob
+                def_check_term_scoped_in_prob uu___5 prob
+                  p.FStar_TypeChecker_Common.rhs))
+          | FStar_TypeChecker_Common.CProb p ->
+              ((let uu___5 = msgf "lhs" in
+                def_check_comp_scoped_in_prob uu___5 prob
+                  p.FStar_TypeChecker_Common.lhs);
+               (let uu___5 = msgf "rhs" in
+                def_check_comp_scoped_in_prob uu___5 prob
                   p.FStar_TypeChecker_Common.rhs))))
 let (rel_to_string : FStar_TypeChecker_Common.rel -> Prims.string) =
   fun uu___ ->
@@ -1103,9 +1106,13 @@ let (mk_eq2 :
       fun t1 ->
         fun t2 ->
           let env = p_env wl prob in
-          FStar_TypeChecker_Env.def_check_closed_in_env
+          FStar_Defensive.def_check_scoped
+            FStar_TypeChecker_Env.hasBinders_env
+            FStar_Class_Binders.hasNames_term FStar_Syntax_Print.pretty_term
             t1.FStar_Syntax_Syntax.pos "mk_eq2.t1" env t1;
-          FStar_TypeChecker_Env.def_check_closed_in_env
+          FStar_Defensive.def_check_scoped
+            FStar_TypeChecker_Env.hasBinders_env
+            FStar_Class_Binders.hasNames_term FStar_Syntax_Print.pretty_term
             t2.FStar_Syntax_Syntax.pos "mk_eq2.t2" env t2;
           (let uu___2 =
              env.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term env
@@ -1473,7 +1480,7 @@ let set_uvar :
                FStar_Syntax_Unionfind.change_decoration
                  u.FStar_Syntax_Syntax.ctx_uvar_head uu___1);
           FStar_Syntax_Util.set_uvar u.FStar_Syntax_Syntax.ctx_uvar_head t
-let commit : 'uuuuu . 'uuuuu -> uvi Prims.list -> unit =
+let (commit : FStar_TypeChecker_Env.env_t -> uvi Prims.list -> unit) =
   fun env ->
     fun uvis ->
       FStar_Compiler_Effect.op_Bar_Greater uvis
@@ -1490,7 +1497,10 @@ let commit : 'uuuuu . 'uuuuu -> uvi Prims.list -> unit =
                       FStar_Compiler_List.map
                         (fun b -> b.FStar_Syntax_Syntax.binder_bv)
                         u.FStar_Syntax_Syntax.ctx_uvar_binders in
-                    FStar_TypeChecker_Env.def_check_closed_in
+                    FStar_Defensive.def_check_scoped
+                      FStar_Class_Binders.hasBinders_list_bv
+                      FStar_Class_Binders.hasNames_term
+                      FStar_Syntax_Print.pretty_term
                       t.FStar_Syntax_Syntax.pos "commit" uu___2 t);
                    set_uvar env u FStar_Pervasives_Native.None t)))
 let (find_term_uvar :
@@ -2222,8 +2232,11 @@ let (solve_prob' :
                    FStar_Compiler_Effect.op_Less_Bar
                      (FStar_Compiler_List.map
                         (fun b -> b.FStar_Syntax_Syntax.binder_bv)) uu___5 in
-                 FStar_TypeChecker_Env.def_check_closed_in (p_loc prob)
-                   uu___3 uu___4 phi2);
+                 FStar_Defensive.def_check_scoped
+                   FStar_Class_Binders.hasBinders_list_bv
+                   FStar_Class_Binders.hasNames_term
+                   FStar_Syntax_Print.pretty_term (p_loc prob) uu___3 uu___4
+                   phi2);
                 set_uvar wl.tcenv uv FStar_Pervasives_Native.None phi2) in
              let uv = p_guard_uvar prob in
              let fail uu___1 =
@@ -2327,7 +2340,7 @@ let (solve_prob :
         fun wl ->
           def_check_prob "solve_prob.prob" prob;
           FStar_Compiler_Util.iter_opt logical_guard
-            (def_check_scoped "solve_prob.guard" prob);
+            (def_check_term_scoped_in_prob "solve_prob.guard" prob);
           (let uu___3 =
              FStar_Compiler_Effect.op_Less_Bar (debug wl)
                (FStar_Options.Other "Rel") in
@@ -3957,7 +3970,10 @@ let (guard_of_prob :
                  let x =
                    FStar_Syntax_Syntax.new_bv FStar_Pervasives_Native.None
                      t11 in
-                 (FStar_TypeChecker_Env.def_check_closed_in_env
+                 (FStar_Defensive.def_check_scoped
+                    FStar_TypeChecker_Env.hasBinders_env
+                    FStar_Class_Binders.hasNames_term
+                    FStar_Syntax_Print.pretty_term
                     t11.FStar_Syntax_Syntax.pos "guard_of_prob.universe_of"
                     env t11;
                   (let u_x = env.FStar_TypeChecker_Env.universe_of env t11 in
@@ -4964,9 +4980,13 @@ and (solve_maybe_uinsts :
                  | failed_or_deferred -> failed_or_deferred)
             | uu___ -> ufailed_simple "Unequal number of universes" in
           let env = p_env wl orig in
-          FStar_TypeChecker_Env.def_check_closed_in_env
+          FStar_Defensive.def_check_scoped
+            FStar_TypeChecker_Env.hasBinders_env
+            FStar_Class_Binders.hasNames_term FStar_Syntax_Print.pretty_term
             t1.FStar_Syntax_Syntax.pos "solve_maybe_uinsts.whnf1" env t1;
-          FStar_TypeChecker_Env.def_check_closed_in_env
+          FStar_Defensive.def_check_scoped
+            FStar_TypeChecker_Env.hasBinders_env
+            FStar_Class_Binders.hasNames_term FStar_Syntax_Print.pretty_term
             t2.FStar_Syntax_Syntax.pos "solve_maybe_uinsts.whnf2" env t2;
           (let t11 = whnf env t1 in
            let t21 = whnf env t2 in
@@ -9060,14 +9080,18 @@ and (solve_t' : tprob -> worklist -> solution) =
               let uu___6 = p_scope orig in
               FStar_Compiler_List.map
                 (fun b -> b.FStar_Syntax_Syntax.binder_bv) uu___6 in
-            FStar_TypeChecker_Env.def_check_closed_in (p_loc orig) "ref.t1"
-              uu___5 t1);
+            FStar_Defensive.def_check_scoped
+              FStar_Class_Binders.hasBinders_list_bv
+              FStar_Class_Binders.hasNames_term
+              FStar_Syntax_Print.pretty_term (p_loc orig) "ref.t1" uu___5 t1);
            (let uu___6 =
               let uu___7 = p_scope orig in
               FStar_Compiler_List.map
                 (fun b -> b.FStar_Syntax_Syntax.binder_bv) uu___7 in
-            FStar_TypeChecker_Env.def_check_closed_in (p_loc orig) "ref.t2"
-              uu___6 t2);
+            FStar_Defensive.def_check_scoped
+              FStar_Class_Binders.hasBinders_list_bv
+              FStar_Class_Binders.hasNames_term
+              FStar_Syntax_Print.pretty_term (p_loc orig) "ref.t2" uu___6 t2);
            (let uu___7 = debug wl (FStar_Options.Other "Rel") in
             if uu___7
             then
@@ -9413,7 +9437,10 @@ and (solve_t' : tprob -> worklist -> solution) =
                                             (fun b ->
                                                b.FStar_Syntax_Syntax.binder_bv)
                                             uu___15 in
-                                        FStar_TypeChecker_Env.def_check_closed_in
+                                        FStar_Defensive.def_check_scoped
+                                          FStar_Class_Binders.hasBinders_list_bv
+                                          FStar_Class_Binders.hasNames_term
+                                          FStar_Syntax_Print.pretty_term
                                           (p_loc orig) "ref.1" uu___14
                                           (p_guard base_prob));
                                        (let uu___15 =
@@ -9422,7 +9449,10 @@ and (solve_t' : tprob -> worklist -> solution) =
                                             (fun b ->
                                                b.FStar_Syntax_Syntax.binder_bv)
                                             uu___16 in
-                                        FStar_TypeChecker_Env.def_check_closed_in
+                                        FStar_Defensive.def_check_scoped
+                                          FStar_Class_Binders.hasBinders_list_bv
+                                          FStar_Class_Binders.hasNames_term
+                                          FStar_Syntax_Print.pretty_term
                                           (p_loc orig) "ref.2" uu___15 impl);
                                        (let wl2 =
                                           solve_prob orig
@@ -13396,9 +13426,13 @@ let (try_teq :
     fun env ->
       fun t1 ->
         fun t2 ->
-          FStar_TypeChecker_Env.def_check_closed_in_env
+          FStar_Defensive.def_check_scoped
+            FStar_TypeChecker_Env.hasBinders_env
+            FStar_Class_Binders.hasNames_term FStar_Syntax_Print.pretty_term
             t1.FStar_Syntax_Syntax.pos "try_teq.1" env t1;
-          FStar_TypeChecker_Env.def_check_closed_in_env
+          FStar_Defensive.def_check_scoped
+            FStar_TypeChecker_Env.hasBinders_env
+            FStar_Class_Binders.hasNames_term FStar_Syntax_Print.pretty_term
             t2.FStar_Syntax_Syntax.pos "try_teq.2" env t2;
           (let uu___2 =
              let uu___3 =
@@ -13638,10 +13672,16 @@ let (sub_comp :
       fun c2 ->
         FStar_Errors.with_ctx "While trying to subtype computation types"
           (fun uu___ ->
-             FStar_TypeChecker_Env.def_check_comp_closed_in_env
-               c1.FStar_Syntax_Syntax.pos "sub_comp c1" env c1;
-             FStar_TypeChecker_Env.def_check_comp_closed_in_env
-               c2.FStar_Syntax_Syntax.pos "sub_comp c2" env c2;
+             FStar_Defensive.def_check_scoped
+               FStar_TypeChecker_Env.hasBinders_env
+               FStar_Class_Binders.hasNames_comp
+               FStar_Syntax_Print.pretty_comp c1.FStar_Syntax_Syntax.pos
+               "sub_comp c1" env c1;
+             FStar_Defensive.def_check_scoped
+               FStar_TypeChecker_Env.hasBinders_env
+               FStar_Class_Binders.hasNames_comp
+               FStar_Syntax_Print.pretty_comp c2.FStar_Syntax_Syntax.pos
+               "sub_comp c2" env c2;
              sub_or_eq_comp env false c1 c2)
 let (eq_comp :
   FStar_TypeChecker_Env.env ->
@@ -13654,10 +13694,16 @@ let (eq_comp :
       fun c2 ->
         FStar_Errors.with_ctx "While trying to equate computation types"
           (fun uu___ ->
-             FStar_TypeChecker_Env.def_check_comp_closed_in_env
-               c1.FStar_Syntax_Syntax.pos "sub_comp c1" env c1;
-             FStar_TypeChecker_Env.def_check_comp_closed_in_env
-               c2.FStar_Syntax_Syntax.pos "sub_comp c2" env c2;
+             FStar_Defensive.def_check_scoped
+               FStar_TypeChecker_Env.hasBinders_env
+               FStar_Class_Binders.hasNames_comp
+               FStar_Syntax_Print.pretty_comp c1.FStar_Syntax_Syntax.pos
+               "eq_comp c1" env c1;
+             FStar_Defensive.def_check_scoped
+               FStar_TypeChecker_Env.hasBinders_env
+               FStar_Class_Binders.hasNames_comp
+               FStar_Syntax_Print.pretty_comp c2.FStar_Syntax_Syntax.pos
+               "eq_comp c2" env c2;
              sub_or_eq_comp env true c1 c2)
 let (solve_universe_inequalities' :
   FStar_Syntax_Unionfind.tx ->
@@ -14012,7 +14058,10 @@ let (solve_non_tactic_deferred_constraints :
       fun g ->
         FStar_Errors.with_ctx "solve_non_tactic_deferred_constraints"
           (fun uu___ ->
-             FStar_TypeChecker_Env.def_check_guard_wf
+             FStar_Defensive.def_check_scoped
+               FStar_TypeChecker_Env.hasBinders_env
+               FStar_TypeChecker_Env.hasNames_guard
+               FStar_TypeChecker_Env.pretty_guard
                FStar_Compiler_Range_Type.dummyRange
                "solve_non_tactic_deferred_constraints.g" env g;
              (let defer_ok =
@@ -14113,7 +14162,10 @@ let (discharge_guard' :
                        FStar_Errors.diag uu___5 uu___6)
                     else ();
                     (let uu___6 = FStar_TypeChecker_Env.get_range env in
-                     FStar_TypeChecker_Env.def_check_closed_in_env uu___6
+                     FStar_Defensive.def_check_scoped
+                       FStar_TypeChecker_Env.hasBinders_env
+                       FStar_Class_Binders.hasNames_term
+                       FStar_Syntax_Print.pretty_term uu___6
                        "discharge_guard'" env vc1);
                     (let uu___6 = FStar_TypeChecker_Common.check_trivial vc1 in
                      match uu___6 with
@@ -14452,10 +14504,16 @@ let (get_subtyping_predicate :
       fun t2 ->
         FStar_Errors.with_ctx "While trying to get a subtyping predicate"
           (fun uu___ ->
-             FStar_TypeChecker_Env.def_check_closed_in_env
-               t1.FStar_Syntax_Syntax.pos "get_subtyping_predicate.1" env t1;
-             FStar_TypeChecker_Env.def_check_closed_in_env
-               t2.FStar_Syntax_Syntax.pos "get_subtyping_predicate.2" env t2;
+             FStar_Defensive.def_check_scoped
+               FStar_TypeChecker_Env.hasBinders_env
+               FStar_Class_Binders.hasNames_term
+               FStar_Syntax_Print.pretty_term t1.FStar_Syntax_Syntax.pos
+               "get_subtyping_predicate.1" env t1;
+             FStar_Defensive.def_check_scoped
+               FStar_TypeChecker_Env.hasBinders_env
+               FStar_Class_Binders.hasNames_term
+               FStar_Syntax_Print.pretty_term t2.FStar_Syntax_Syntax.pos
+               "get_subtyping_predicate.2" env t2;
              (let uu___3 = check_subtyping env t1 t2 in
               match uu___3 with
               | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
@@ -14475,10 +14533,16 @@ let (get_subtyping_prop :
       fun t2 ->
         FStar_Errors.with_ctx "While trying to get a subtyping proposition"
           (fun uu___ ->
-             FStar_TypeChecker_Env.def_check_closed_in_env
-               t1.FStar_Syntax_Syntax.pos "get_subtyping_prop.1" env t1;
-             FStar_TypeChecker_Env.def_check_closed_in_env
-               t2.FStar_Syntax_Syntax.pos "get_subtyping_prop.2" env t2;
+             FStar_Defensive.def_check_scoped
+               FStar_TypeChecker_Env.hasBinders_env
+               FStar_Class_Binders.hasNames_term
+               FStar_Syntax_Print.pretty_term t1.FStar_Syntax_Syntax.pos
+               "get_subtyping_prop.1" env t1;
+             FStar_Defensive.def_check_scoped
+               FStar_TypeChecker_Env.hasBinders_env
+               FStar_Class_Binders.hasNames_term
+               FStar_Syntax_Print.pretty_term t2.FStar_Syntax_Syntax.pos
+               "get_subtyping_prop.2" env t2;
              (let uu___3 = check_subtyping env t1 t2 in
               match uu___3 with
               | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None

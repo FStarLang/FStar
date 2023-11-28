@@ -22,6 +22,7 @@ open FStar
 open FStar.Compiler
 open FStar.Compiler.Util
 open FStar.Errors
+open FStar.Defensive
 open FStar.TypeChecker
 open FStar.TypeChecker.Common
 open FStar.TypeChecker.Env
@@ -639,7 +640,7 @@ let is_function t = match (compress t).n with
     | _ -> false
 
 let close_wp_comp env bvs (c:comp) =
-    def_check_comp_closed_in_env c.pos "close_wp_comp" (Env.push_bvs env bvs) c;
+    def_check_scoped c.pos "close_wp_comp" (Env.push_bvs env bvs) c;
     if U.is_ml_comp c then c
     else if env.lax
     && Options.ml_ish() //NS: disabling this optimization temporarily
@@ -2227,8 +2228,8 @@ let bind_cases env0 (res_t:typ)
     TcComm.mk_lcomp eff res_t bind_cases_flags bind_cases
 
 let check_comp env (use_eq:bool) (e:term) (c:comp) (c':comp) : term * comp * guard_t =
-  def_check_comp_closed_in_env c.pos "check_comp.c" env c;
-  def_check_comp_closed_in_env c'.pos "check_comp.c'" env c';
+  def_check_scoped c.pos "check_comp.c" env c;
+  def_check_scoped c'.pos "check_comp.c'" env c';
   if Env.debug env <| Options.Extreme then
     BU.print4 "Checking comp relation:\n%s has type %s\n\t %s \n%s\n"
             (Print.term_to_string e)
@@ -2774,7 +2775,7 @@ let pure_or_ghost_pre_and_post env comp =
 (* where env |- t0 : M t' for some effect M and type t' where M is reifiable *)
 (* and returns the result of reducing t with reification on *)
 let norm_reify (env:Env.env) (steps:Env.steps) (t:S.term) : S.term =
-    def_check_closed_in_env t.pos "norm_reify" env t;
+    def_check_scoped t.pos "norm_reify" env t;
     let t' = N.normalize
       ([Env.Beta; Env.Reify; Env.Eager_unfolding; Env.EraseUniverses; Env.AllowUnboundUniverses; Env.Exclude Env.Zeta]@steps)
       env t in

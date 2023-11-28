@@ -26,6 +26,7 @@ open FStar
 open FStar.Compiler
 open FStar.Compiler.Util
 open FStar.Errors
+open FStar.Defensive
 open FStar.TypeChecker
 open FStar.Syntax
 open FStar.TypeChecker.Env
@@ -276,35 +277,36 @@ let def_scope_wf msg rng r =
         | [] -> ()
         | ({binder_bv=bv})::bs ->
           begin
-            def_check_closed_in rng msg prev bv.sort;
+            def_check_scoped rng msg prev bv.sort;
             aux (prev @ [bv]) bs
           end
     in aux [] r
 
-let def_check_scoped msg prob phi =
-    if not (Options.defensive ()) then () else
-    def_check_closed_in (p_loc prob) msg (List.map (fun b -> b.binder_bv) <| p_scope prob) phi
+instance hasBinders_prob : Class.Binders.hasBinders prob = {
+  boundNames = (fun prob -> BU.as_set (List.map (fun b -> b.binder_bv) <| p_scope prob) Syntax.order_bv);
+}
 
-let def_check_scoped_comp msg prob comp =
-    if not (Options.defensive ()) then () else
-    (* Cheat *)
-    def_check_scoped msg prob (U.arrow [] comp)
+let def_check_term_scoped_in_prob msg prob phi =
+    def_check_scoped #prob_t #term (p_loc prob) msg prob phi
+
+let def_check_comp_scoped_in_prob msg prob phi =
+    def_check_scoped #prob_t #comp (p_loc prob) msg prob phi
 
 let def_check_prob msg prob =
     if not (Options.defensive ()) then () else
     let msgf m = msg ^ "." ^ string_of_int (p_pid prob) ^ "." ^ m in
     def_scope_wf (msgf "scope") (p_loc prob) (p_scope prob);
-    def_check_scoped (msgf "guard")      prob (p_guard prob);
+    def_check_term_scoped_in_prob (msgf "guard") prob (p_guard prob);
     match prob with
     | TProb p ->
         begin
-        def_check_scoped (msgf "lhs") prob p.lhs;
-        def_check_scoped (msgf "rhs") prob p.rhs
+        def_check_term_scoped_in_prob (msgf "lhs") prob p.lhs;
+        def_check_term_scoped_in_prob (msgf "rhs") prob p.rhs
         end
     | CProb p ->
         begin
-        def_check_scoped_comp (msgf "lhs") prob p.lhs;
-        def_check_scoped_comp (msgf "rhs") prob p.rhs
+        def_check_comp_scoped_in_prob (msgf "lhs") prob p.lhs;
+        def_check_comp_scoped_in_prob (msgf "rhs") prob p.rhs
         end
 
 (* ------------------------------------------------*)
@@ -408,8 +410,8 @@ let attempt probs wl             =
 
 let mk_eq2 wl prob t1 t2 : term * worklist =
     let env = p_env wl prob in
-    def_check_closed_in_env t1.pos "mk_eq2.t1" env t1;
-    def_check_closed_in_env t2.pos "mk_eq2.t2" env t2;
+    def_check_scoped t1.pos "mk_eq2.t1" env t1;
+    def_check_scoped t2.pos "mk_eq2.t2" env t2;
     (* NS: Rather than introducing a new variable, it would be much preferable
             to simply compute the type of t1 here.
             Sadly, it seems to be way too expensive to call env.type_of here.
@@ -591,14 +593,14 @@ let set_uvar env u (should_check_opt:option S.should_check_uvar) t =
 
   U.set_uvar u.ctx_uvar_head t
 
-let commit env uvis = uvis |> List.iter (function
+let commit (env:env_t) (uvis:list uvi) = uvis |> List.iter (function
     | UNIV(u, t)      ->
       begin match t with
         | U_unif u' -> UF.univ_union u u'
         | _ -> UF.univ_change u t
       end
     | TERM(u, t) ->
-      def_check_closed_in t.pos "commit" (List.map (fun b -> b.binder_bv) u.ctx_uvar_binders) t;
+      def_check_scoped #(list bv) #term t.pos "commit" (List.map (fun b -> b.binder_bv) u.ctx_uvar_binders) t;
       set_uvar env u None t
     )
 
@@ -992,8 +994,8 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
                             (print_ctx_uvar uv)
                             (Print.term_to_string phi);
         let phi = U.abs xs phi (Some (U.residual_tot U.ktype0)) in
-        def_check_closed_in (p_loc prob) ("solve_prob'.sol." ^ string_of_int (p_pid prob))
-                            (List.map (fun b -> b.binder_bv) <| p_scope prob) phi;
+        def_check_scoped (p_loc prob) ("solve_prob'.sol." ^ string_of_int (p_pid prob))
+                         (List.map (fun b -> b.binder_bv) <| p_scope prob) phi;
         set_uvar wl.tcenv uv None phi
     in
     let uv = p_guard_uvar prob in
@@ -1036,7 +1038,7 @@ let extend_universe_solution pid sol wl =
 
 let solve_prob (prob : prob) (logical_guard : option term) (uvis : list uvi) (wl:worklist) : worklist =
     def_check_prob "solve_prob.prob" prob;
-    BU.iter_opt logical_guard (def_check_scoped "solve_prob.guard" prob);
+    BU.iter_opt logical_guard (def_check_term_scoped_in_prob "solve_prob.guard" prob);
     if debug wl <| Options.Other "Rel"
     then BU.print2 "Solving %s: with %s\n" (string_of_int <| p_pid prob)
                                            (uvis_to_string wl.tcenv uvis);
@@ -1751,7 +1753,7 @@ let guard_of_prob (wl:worklist) (problem:tprob) (t1 : term) (t2 : term) : term *
             U.mk_has_type t1 (S.bv_to_name t) t2
         | None ->
             let x = S.new_bv None t1 in
-            def_check_closed_in_env t1.pos "guard_of_prob.universe_of" env t1;
+            def_check_scoped t1.pos "guard_of_prob.universe_of" env t1;
             let u_x = env.universe_of env t1 in
             U.mk_forall u_x x (U.mk_has_type t1 (S.bv_to_name x) t2)
     in
@@ -2180,8 +2182,8 @@ and solve_maybe_uinsts (orig:prob) (t1:term) (t2:term) (wl:worklist) : univ_eq_s
         | _ -> ufailed_simple "Unequal number of universes" in
 
     let env = p_env wl orig in
-    def_check_closed_in_env t1.pos "solve_maybe_uinsts.whnf1" env t1;
-    def_check_closed_in_env t2.pos "solve_maybe_uinsts.whnf2" env t2;
+    def_check_scoped t1.pos "solve_maybe_uinsts.whnf1" env t1;
+    def_check_scoped t2.pos "solve_maybe_uinsts.whnf2" env t2;
     let t1 = whnf env t1 in
     let t2 = whnf env t2 in
     match t1.n, t2.n with
@@ -3873,8 +3875,8 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
     if BU.physical_equality problem.lhs problem.rhs then solve (solve_prob orig None [] wl) else
     let t1 = problem.lhs in
     let t2 = problem.rhs in
-    def_check_closed_in (p_loc orig) "ref.t1" (List.map (fun b -> b.binder_bv) (p_scope orig)) t1;
-    def_check_closed_in (p_loc orig) "ref.t2" (List.map (fun b -> b.binder_bv) (p_scope orig)) t2;
+    def_check_scoped (p_loc orig) "ref.t1" (List.map (fun b -> b.binder_bv) (p_scope orig)) t1;
+    def_check_scoped (p_loc orig) "ref.t2" (List.map (fun b -> b.binder_bv) (p_scope orig)) t2;
     let _ =
         if debug wl (Options.Other "Rel")
         then BU.print4 "Attempting %s (%s vs %s); rel = (%s)\n" (string_of_int problem.pid)
@@ -3984,8 +3986,8 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
                     then mk_imp U.mk_iff phi1 phi2
                     else mk_imp U.mk_imp phi1 phi2 in
                 let guard = U.mk_conj (p_guard base_prob) impl in
-                def_check_closed_in (p_loc orig) "ref.1" (List.map (fun b -> b.binder_bv) (p_scope orig)) (p_guard base_prob);
-                def_check_closed_in (p_loc orig) "ref.2" (List.map (fun b -> b.binder_bv) (p_scope orig)) impl;
+                def_check_scoped (p_loc orig) "ref.1" (List.map (fun b -> b.binder_bv) (p_scope orig)) (p_guard base_prob);
+                def_check_scoped (p_loc orig) "ref.2" (List.map (fun b -> b.binder_bv) (p_scope orig)) impl;
                 let wl = solve_prob orig (Some guard) [] wl in
                 solve (attempt [base_prob] wl)
              in
@@ -4756,8 +4758,8 @@ let with_guard env prob dopt =
                   implicits=implicits})
 
 let try_teq smt_ok env t1 t2 : option guard_t =
-  def_check_closed_in_env t1.pos "try_teq.1" env t1;
-  def_check_closed_in_env t2.pos "try_teq.2" env t2;
+  def_check_scoped t1.pos "try_teq.1" env t1;
+  def_check_scoped t2.pos "try_teq.2" env t2;
   Profiling.profile
     (fun () ->
       if Env.debug env <| Options.Other "Rel" then
@@ -4828,15 +4830,15 @@ let sub_or_eq_comp env (use_eq:bool) c1 c2 =
 
 let sub_comp env c1 c2 =
     Errors.with_ctx "While trying to subtype computation types" (fun () ->
-      def_check_comp_closed_in_env c1.pos "sub_comp c1" env c1;
-      def_check_comp_closed_in_env c2.pos "sub_comp c2" env c2;
+      def_check_scoped c1.pos "sub_comp c1" env c1;
+      def_check_scoped c2.pos "sub_comp c2" env c2;
       sub_or_eq_comp env false c1 c2
     )
 
 let eq_comp env c1 c2 =
     Errors.with_ctx "While trying to equate computation types" (fun () ->
-      def_check_comp_closed_in_env c1.pos "sub_comp c1" env c1;
-      def_check_comp_closed_in_env c2.pos "sub_comp c2" env c2;
+      def_check_scoped c1.pos "eq_comp c1" env c1;
+      def_check_scoped c2.pos "eq_comp c2" env c2;
       sub_or_eq_comp env true c1 c2
     )
 
@@ -4990,7 +4992,7 @@ let solve_deferred_constraints env (g:guard_t) =
 
 let solve_non_tactic_deferred_constraints maybe_defer_flex_flex env (g:guard_t) =
   Errors.with_ctx "solve_non_tactic_deferred_constraints" (fun () ->
-    def_check_guard_wf Range.dummyRange "solve_non_tactic_deferred_constraints.g" env g;
+    def_check_scoped Range.dummyRange "solve_non_tactic_deferred_constraints.g" env g;
     let defer_ok = if maybe_defer_flex_flex then DeferFlexFlexOnly else NoDefer in
     let smt_ok = true in
     let deferred_to_tac_ok = false in
@@ -5049,7 +5051,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option g
       if debug
       then Errors.diag (Env.get_range env)
                        (BU.format1 "After normalization VC=\n%s\n" (Print.term_to_string vc));
-      def_check_closed_in_env (Env.get_range env) "discharge_guard'" env vc;
+      def_check_scoped (Env.get_range env) "discharge_guard'" env vc;
       match check_trivial vc with
       | Trivial -> Some ret_g
       | NonTrivial vc ->
@@ -5165,8 +5167,8 @@ let check_subtyping env t1 t2 =
 
 let get_subtyping_predicate env t1 t2 =
   Errors.with_ctx "While trying to get a subtyping predicate" (fun () ->
-    def_check_closed_in_env t1.pos "get_subtyping_predicate.1" env t1;
-    def_check_closed_in_env t2.pos "get_subtyping_predicate.2" env t2;
+    def_check_scoped t1.pos "get_subtyping_predicate.1" env t1;
+    def_check_scoped t2.pos "get_subtyping_predicate.2" env t2;
     match check_subtyping env t1 t2 with
     | None -> None
     | Some (x, g) ->
@@ -5175,8 +5177,8 @@ let get_subtyping_predicate env t1 t2 =
 
 let get_subtyping_prop env t1 t2 =
   Errors.with_ctx "While trying to get a subtyping proposition" (fun () ->
-    def_check_closed_in_env t1.pos "get_subtyping_prop.1" env t1;
-    def_check_closed_in_env t2.pos "get_subtyping_prop.2" env t2;
+    def_check_scoped t1.pos "get_subtyping_prop.1" env t1;
+    def_check_scoped t2.pos "get_subtyping_prop.2" env t2;
     match check_subtyping env t1 t2 with
     | None -> None
     | Some (x, g) ->

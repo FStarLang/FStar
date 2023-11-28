@@ -20,6 +20,7 @@ open FStar.Compiler.Effect
 open FStar.Compiler.List
 open FStar
 open FStar.Compiler
+open FStar.Defensive
 open FStar.Compiler.Util
 open FStar.String
 open FStar.Const
@@ -3100,7 +3101,7 @@ let normalize_with_primitive_steps ps s e t =
     if is_nbe_request s then begin
       log_top c (fun () -> BU.print1 "Starting NBE for (%s) {\n" (Print.term_to_string t));
       log_top c (fun () -> BU.print1 ">>> cfg = %s\n" (cfg_to_string c));
-      def_check_closed_in_env t.pos "normalize_with_primitive_steps call" e t;
+      def_check_scoped t.pos "normalize_with_primitive_steps call" e t;
       let (r, ms) = Errors.with_ctx "While normalizing a term via NBE" (fun () ->
                       BU.record_time (fun () ->
                         nbe_eval c s t))
@@ -3110,7 +3111,7 @@ let normalize_with_primitive_steps ps s e t =
     end else begin
       log_top c (fun () -> BU.print1 "Starting normalizer for (%s) {\n" (Print.term_to_string t));
       log_top c (fun () -> BU.print1 ">>> cfg = %s\n" (cfg_to_string c));
-      def_check_closed_in_env t.pos "normalize_with_primitive_steps call" e t;
+      def_check_scoped t.pos "normalize_with_primitive_steps call" e t;
       let (r, ms) = Errors.with_ctx "While normalizing a term" (fun () ->
                       BU.record_time (fun () ->
                         norm c [] [] t))
@@ -3134,7 +3135,7 @@ let normalize_comp s e c =
     plugin_unfold_warn_ctr := 10;
     log_top cfg (fun () -> BU.print1 "Starting normalizer for computation (%s) {\n" (Print.comp_to_string c));
     log_top cfg (fun () -> BU.print1 ">>> cfg = %s\n" (cfg_to_string cfg));
-    def_check_comp_closed_in_env c.pos "normalize_comp call" e c;
+    def_check_scoped c.pos "normalize_comp call" e c;
     let (c, ms) = Errors.with_ctx "While normalizing a computation type" (fun () ->
                     BU.record_time (fun () ->
                       norm_comp cfg [] c))
