@@ -179,8 +179,13 @@ let z3_cmd_and_args () =
                 (Options.z3_cliopt ()) in
   (cmd, cmd_args)
 
-let warn_handler (s:string) : unit =
-  Errors.log_issue Range.dummyRange (Errors.Warning_UnexpectedZ3Output, "Unexpected output from Z3: \"" ^ s ^ "\"")
+let warn_handler (suf:Errors.error_message) (s:string) : unit =
+  let open FStar.Errors.Msg in
+  let open FStar.Pprint in
+  Errors.log_issue_doc Range.dummyRange (Errors.Warning_UnexpectedZ3Output, [
+    text "Unexpected output from Z3:" ^^ hardline ^^
+     blank 2 ^^ align (dquotes (arbitrary_string s));
+    ] @ suf)
 
 (* Talk to the process to see if it's the correct version of Z3
 (i.e. the one in the optionstate). Also check that it indeed is Z3. By
@@ -189,12 +194,12 @@ into warnings. The warnings are anyway printed only once per F*
 invocation. *)
 let check_z3version (p:proc) : unit =
   let getinfo (arg:string) : string =
-    let s = BU.ask_process p (Util.format1 "(get-info :%s)\n(echo \"Done!\")\n" arg) (fun _ -> "Killed") warn_handler in
+    let s = BU.ask_process p (Util.format1 "(get-info :%s)\n(echo \"Done!\")\n" arg) (fun _ -> "Killed") (warn_handler []) in
     if BU.starts_with s ("(:" ^ arg) then
       let ss = String.split ['"'] s in
       List.nth ss 1
     else (
-      warn_handler s;
+      warn_handler [] s;
       Errors.raise_err (Errors.Error_Z3InvocationError, BU.format1 "Could not run Z3 from `%s'" (proc_prog p))
     )
   in
@@ -274,7 +279,7 @@ let bg_z3_proc =
     let ask input =
         incr the_z3proc_ask_count;
         let kill_handler () = "\nkilled\n" in
-        BU.ask_process (z3proc ()) input kill_handler warn_handler
+        BU.ask_process (z3proc ()) input kill_handler (warn_handler [])
     in
     let maybe_kill_z3proc () =
       if !the_z3proc <> None then begin
@@ -367,17 +372,15 @@ let smt_output_sections (log_file:option string) (r:Range.range) (lines:list str
         match remaining with
         | [] -> ()
         | _ ->
-            let msg =
-                BU.format2 "%sUnexpected output from Z3: %s\n"
-                                        (match log_file with
-                                         | None -> ""
-                                         | Some f -> f ^ ": ")
-                                        (String.concat "\n" remaining)
-            in
-            FStar.Errors.log_issue
-                     r
-                     (Errors.Warning_UnexpectedZ3Output,
-                      msg)
+          let msg = String.concat "\n" remaining in
+          let suf =
+            let open FStar.Errors.Msg in
+            let open FStar.Pprint in
+            match log_file with
+            | Some log_file -> [text "Log file:" ^/^ doc_of_string log_file]
+            | None -> []
+          in
+          warn_handler suf msg
     in
     {smt_result = BU.must result_opt;
      smt_reason_unknown = reason_unknown;
@@ -477,7 +480,7 @@ let doZ3Exe (log_file:_) (r:Range.range) (fresh:bool) (input:string) (label_mess
   if fresh then
     let proc = new_z3proc_with_id (z3_cmd_and_args ()) in
     let kill_handler () = "\nkilled\n" in
-    let out = BU.ask_process proc input kill_handler warn_handler in
+    let out = BU.ask_process proc input kill_handler (warn_handler []) in
     let r = parse (BU.trim_string out) in
     log_result (fun fname s ->
       let h = BU.open_file_for_appending fname in
