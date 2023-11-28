@@ -18,11 +18,17 @@ open Prims
 open FStar.Pervasives
 open FStar.Compiler.Effect
 
-open FStar open FStar.Compiler
+open FStar
+open FStar.Compiler
 open FStar.Compiler.Util
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Ident
+open FStar.Class.Show
+
+(* Bring instances in scope :-) *)
+let () = let open FStar.Syntax.Print in ()
+
 module S = FStar.Syntax.Syntax
 
 module BU = FStar.Compiler.Util
@@ -138,6 +144,9 @@ type implicit = {
     imp_tm     : term;                    // The term, made up of the ctx_uvar
     imp_range  : Range.range;             // Position where it was introduced
 }
+
+instance val show_implicit : showable implicit
+
 type implicits = list implicit
 
 val implicits_to_string : implicits -> string

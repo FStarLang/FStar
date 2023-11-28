@@ -52,16 +52,16 @@ let rec drop n l =
 
 let timing_int (l:Ident.lid) f =
     fun psc cb args ->
-        (* BU.print1 "Entering primitive %s {\n" (Ident.string_of_lid l); *)
+        (* BU.print1 "Entering primitive %s {\n" (show l); *)
         let r = f psc cb args in
-        (* BU.print1 "%s }\n" (Ident.string_of_lid l); *)
+        (* BU.print1 "%s }\n" (show l); *)
         r
 
 let timing_nbe (l:Ident.lid) f =
     fun nbe_cbs args ->
-        (* BU.print1 "Entering NBE primitive %s {\n" (Ident.string_of_lid l); *)
+        (* BU.print1 "Entering NBE primitive %s {\n" (show l); *)
         let r = f nbe_cbs args in
-        (* BU.print1 "%s }\n" (Ident.string_of_lid l); *)
+        (* BU.print1 "%s }\n" (show l); *)
         r
 
 let mk nm arity nunivs interp nbe_interp : PO.primitive_step =

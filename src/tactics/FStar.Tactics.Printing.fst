@@ -25,6 +25,7 @@ open FStar.Syntax.Syntax
 open FStar.TypeChecker.Common
 open FStar.TypeChecker.Env
 open FStar.Tactics.Types
+open FStar.Class.Show
 
 module BU      = FStar.Compiler.Util
 module Range   = FStar.Compiler.Range
@@ -42,18 +43,17 @@ let term_to_string (e:Env.env) (t:term) : string =
 
 let goal_to_string_verbose (g:goal) : string =
     BU.format2 "%s%s\n"
-        (Print.ctx_uvar_to_string g.goal_ctx_uvar)
+        (show g.goal_ctx_uvar)
         (match check_goal_solved' g with
          | None -> ""
          | Some t -> BU.format1 "\tGOAL ALREADY SOLVED!: %s" (term_to_string (goal_env g) t))
 
 let unshadow (bs : binders) (t : term) : binders * term =
     (* string name of a bv *)
-    let s b = (string_of_id b.ppname) in
     let sset bv s = S.gen_bv s (Some (range_of_id bv.ppname)) bv.sort in
     let fresh_until b f =
         let rec aux i =
-            let t = b ^ "'" ^ string_of_int i in
+            let t = b ^ "'" ^ show i in
             if f t then t else aux (i+1)
         in
         if f b then b else aux 0
@@ -67,7 +67,7 @@ let unshadow (bs : binders) (t : term) : binders * term =
                     | _ -> failwith "impossible: unshadow subst_binders"
             in
             let (bv0, q) = b.binder_bv, b.binder_qual in
-            let nbs = fresh_until (s bv0) (fun s -> not (List.mem s seen)) in
+            let nbs = fresh_until (show bv0.ppname) (fun s -> not (List.mem s seen)) in
             let bv = sset bv0 nbs in
             let b = S.mk_binder_with_attrs bv q b.binder_positivity b.binder_attrs in
             go (nbs::seen) (subst @ [NT (bv0, S.bv_to_name bv)]) bs (b :: bs') t
@@ -85,7 +85,7 @@ let goal_to_string (kind : string) (maybe_num : option (int * int)) (ps:proofsta
     in
     let num = match maybe_num with
               | None -> ""
-              | Some (i, n) -> BU.format2 " %s/%s" (string_of_int i) (string_of_int n)
+              | Some (i, n) -> BU.format2 " %s/%s" (show i) (show n)
     in
     let maybe_label =
         match g.label with
@@ -127,14 +127,12 @@ let goal_to_string (kind : string) (maybe_num : option (int * int)) (ps:proofsta
 (* Note: we use def ranges. In tactics we keep the position in there, while the
  * use range is the original position of the assertion / synth / splice. *)
 let ps_to_string (msg, ps) =
-    let p_imp imp =
-        Print.uvar_to_string imp.imp_uvar.ctx_uvar_head
-    in
+    let p_imp imp = show imp.imp_uvar.ctx_uvar_head in
     let n_active = List.length ps.goals in
     let n_smt    = List.length ps.smt_goals in
     let n = n_active + n_smt in
     String.concat ""
-              ([BU.format2 "State dump @ depth %s (%s):\n" (string_of_int ps.depth) msg;
+              ([BU.format2 "State dump @ depth %s (%s):\n" (show ps.depth) msg;
                 (if ps.entry_range <> Range.dummyRange
                  then BU.format1 "Location: %s\n" (Range.string_of_def_range ps.entry_range)
                  else "");

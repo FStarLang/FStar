@@ -29,6 +29,7 @@ open FStar.TypeChecker.Common
 open FStar.Tactics.Types
 open FStar.Tactics.V1.Interpreter
 open FStar.Tactics.V2.Interpreter
+open FStar.Class.Show
 
 module BU      = FStar.Compiler.Util
 module Range   = FStar.Compiler.Range
@@ -301,7 +302,7 @@ let preprocess (env:Env.env) (goal:term) : list (Env.env * term * O.optionstate)
     if !tacdbg then
         BU.print2 "About to preprocess %s |= %s\n"
                         (Env.all_binders env |> Print.binders_to_string ",")
-                        (Print.term_to_string goal);
+                        (show goal);
     let initial = (1, []) in
     // This match should never fail
     let (t', gs) =
@@ -313,19 +314,19 @@ let preprocess (env:Env.env) (goal:term) : list (Env.env * term * O.optionstate)
     if !tacdbg then
         BU.print2 "Main goal simplified to: %s |- %s\n"
                 (Env.all_binders env |> Print.binders_to_string ", ")
-                (Print.term_to_string t');
+                (show t');
     let s = initial in
     let s = List.fold_left (fun (n,gs) g ->
                  let phi = match getprop (goal_env g) (goal_type g) with
                            | None ->
                                 Err.raise_error (Err.Fatal_TacticProofRelevantGoal,
-                                    (BU.format1 "Tactic returned proof-relevant goal: %s" (Print.term_to_string (goal_type g)))) env.range
+                                    (BU.format1 "Tactic returned proof-relevant goal: %s" (show (goal_type g)))) env.range
                            | Some phi -> phi
                  in
                  if !tacdbg then
-                     BU.print2 "Got goal #%s: %s\n" (string_of_int n) (Print.term_to_string (goal_type g));
+                     BU.print2 "Got goal #%s: %s\n" (show n) (show (goal_type g));
                  let label =
-                    "Could not prove goal #" ^ string_of_int n ^
+                    "Could not prove goal #" ^ show n ^
                     (if get_label g = "" then "" else " (" ^ get_label g ^ ")")
                  in
                  let gt' = TcUtil.label label (goal_range g) phi in
@@ -403,7 +404,7 @@ let rec traverse_for_spinoff
         let spinoff t =
           match pol with
           | StrictlyPositive ->
-            if debug then BU.print1 "Spinning off %s\n" (Print.term_to_string t);
+            if debug then BU.print1 "Spinning off %s\n" (show t);
             Simplified (FStar.Syntax.Util.t_true, [label_goal (e,t)])
 
           | _ ->
@@ -490,15 +491,15 @@ let rec traverse_for_spinoff
                if debug_any
                then FStar.Errors.diag 
                       (Env.get_range env)
-                      (BU.format2 "Failed to split match term because %s (%s)" msg (Print.term_to_string t));
+                      (BU.format2 "Failed to split match term because %s (%s)" msg (show t));
                None
              | Inr res ->
                if debug_any
                then FStar.Errors.diag 
                       (Env.get_range env)
                       (BU.format2 "Rewrote match term\n%s\ninto %s\n"
-                        (Print.term_to_string t)
-                        (Print.term_to_string res));
+                        (show t)
+                        (show res));
              
                Some res)
           | _ -> None
@@ -623,7 +624,7 @@ let pol_to_string = function
 let spinoff_strictly_positive_goals (env:Env.env) (goal:term)
   : list (Env.env * term)
   = let debug = Env.debug env (O.Other "SpinoffAll") in
-    if debug then BU.print1 "spinoff_all called with %s\n" (Print.term_to_string goal);
+    if debug then BU.print1 "spinoff_all called with %s\n" (show goal);
     Errors.with_ctx "While spinning off all goals" (fun () ->
       let initial = (1, []) in
       // This match should never fail
@@ -645,7 +646,7 @@ let spinoff_strictly_positive_goals (env:Env.env) (goal:term)
           then (
             let msg = BU.format2 "Main goal simplified to: %s |- %s\n"
                             (Env.all_binders env |> Print.binders_to_string ", ")
-                            (Print.term_to_string t) in
+                            (show t) in
             FStar.Errors.diag
               (Env.get_range env)
               (BU.format1 
@@ -676,12 +677,12 @@ let spinoff_strictly_positive_goals (env:Env.env) (goal:term)
             | Trivial -> None
             | NonTrivial t ->
               if debug
-              then BU.print1 "Got goal: %s\n" (Print.term_to_string t);
+              then BU.print1 "Got goal: %s\n" (show t);
               Some (env, t))
       in
 
       FStar.Errors.diag (Env.get_range env)
-              (BU.format1 "Split query into %s sub-goals" (BU.string_of_int (List.length gs)));
+              (BU.format1 "Split query into %s sub-goals" (show (List.length gs)));
 
       main_goal@gs
   )
@@ -704,7 +705,7 @@ let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
         | Some vc ->
             begin
             if !tacdbg then
-              BU.print1 "Synthesis left a goal: %s\n" (Print.term_to_string vc);
+              BU.print1 "Synthesis left a goal: %s\n" (show vc);
             let guard = { guard_f = NonTrivial vc
                         ; deferred_to_tac = []
                         ; deferred = []
@@ -729,7 +730,7 @@ let solve_implicits (env:Env.env) (tau:term) (imps:Env.implicits) : unit =
     // TODO: It would be nicer to combine all of these into a guard and return
     // that to TcTerm, but the varying environments make it awkward.
     if Options.profile_enabled None "FStar.TypeChecker"
-    then BU.print1 "solve_implicits produced %s goals\n" (BU.string_of_int (List.length gs));
+    then BU.print1 "solve_implicits produced %s goals\n" (show (List.length gs));
     
     Options.with_saved_options (fun () ->
       let _ = Options.set_options "--no_tactics" in
@@ -739,7 +740,7 @@ let solve_implicits (env:Env.env) (tau:term) (imps:Env.implicits) : unit =
         | Some vc ->
           begin
             if !tacdbg then
-              BU.print1 "Synthesis left a goal: %s\n" (Print.term_to_string vc);
+              BU.print1 "Synthesis left a goal: %s\n" (show vc);
             if not (Options.admit_smt_queries())
             then (
               let guard = { guard_f = NonTrivial vc
@@ -803,7 +804,7 @@ let handle_smt_goal env goal =
             match getprop (goal_env g) (goal_type g) with
             | Some vc ->
                 if !tacdbg then
-                  BU.print1 "handle_smt_goals left a goal: %s\n" (Print.term_to_string vc);
+                  BU.print1 "handle_smt_goals left a goal: %s\n" (show vc);
                 (goal_env g), vc
             | None ->
                 Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "Handling an SMT goal by tactic left non-prop open goals")
@@ -882,7 +883,7 @@ let splice (env:Env.env) (is_typed:bool) (lids:list Ident.lident) (tau:term) (rn
         | Some vc ->
             begin
             if !tacdbg then
-              BU.print1 "Splice left a goal: %s\n" (Print.term_to_string vc);
+              BU.print1 "Splice left a goal: %s\n" (show vc);
             let guard = { guard_f = NonTrivial vc
                         ; deferred_to_tac = []
                         ; deferred = []
@@ -902,14 +903,12 @@ let splice (env:Env.env) (is_typed:bool) (lids:list Ident.lident) (tau:term) (rn
         Err.raise_error
           (Errors.Fatal_SplicedUndef,
            BU.format2 "Splice declared the name %s but it was not defined.\nThose defined were: %s"
-             (Ident.string_of_lid lid)
-             (String.concat ", " <| List.map Ident.string_of_lid lids')) rng
+             (show lid) (show lids')) rng
       | _ -> ()
     ) lids;
 
     if !tacdbg then
-      BU.print1 "splice: got decls = {\n\n%s\n\n}\n"
-                 (FStar.Common.string_of_list Print.sigelt_to_string sigelts);
+      BU.print1 "splice: got decls = {\n\n%s\n\n}\n" (show sigelts);
 
     (* Check for bare Sig_datacon and Sig_inductive_typ, and abort if so. Also set range. *)
     let sigelts = sigelts |> List.map (fun se ->
@@ -971,7 +970,7 @@ let postprocess (env:Env.env) (tau:term) (typ:term) (tm:term) : term =
         | Some vc ->
             begin
             if !tacdbg then
-              BU.print1 "Postprocessing left a goal: %s\n" (Print.term_to_string vc);
+              BU.print1 "Postprocessing left a goal: %s\n" (show vc);
             let guard = { guard_f = NonTrivial vc
                         ; deferred_to_tac = []
                         ; deferred = []

@@ -28,6 +28,7 @@ open FStar.Tactics.Types
 open FStar.Tactics.Result
 open FStar.Tactics.Printing
 open FStar.Tactics.Common
+open FStar.Class.Show
 
 module O       = FStar.Options
 module BU      = FStar.Compiler.Util
@@ -66,14 +67,14 @@ let register_goal (g:goal) =
   if Allow_untyped? (U.ctx_uvar_should_check g.goal_ctx_uvar) then () else
   let env = {env with gamma = uv.ctx_uvar_gamma } in
   if Env.debug env <| Options.Other "CoreEq"      
-  then BU.print1 "(%s) Registering goal\n" (BU.string_of_int i);
+  then BU.print1 "(%s) Registering goal\n" (show i);
   let should_register = is_goal_safe_as_well_typed g in
   if not should_register
   then (
     if Env.debug env <| Options.Other "Core"
     ||  Env.debug env <| Options.Other "RegisterGoal"
     then BU.print1 "(%s) Not registering goal since it has unresolved uvar deps\n"
-                     (BU.string_of_int i);
+                     (show i);
         
     ()
   )
@@ -81,8 +82,8 @@ let register_goal (g:goal) =
     if Env.debug env <| Options.Other "Core"
     ||  Env.debug env <| Options.Other "RegisterGoal"
     then BU.print2 "(%s) Registering goal for %s\n"
-                     (BU.string_of_int i)
-                     (Print.ctx_uvar_to_string uv);
+                     (show i)
+                     (show uv);
     let goal_ty = U.ctx_uvar_typ uv in
     match FStar.TypeChecker.Core.compute_term_type_handle_guards env goal_ty (fun _ _ -> true) 
     with
@@ -90,7 +91,7 @@ let register_goal (g:goal) =
     | Inr err ->
       let msg = 
           BU.format2 "Failed to check initial tactic goal %s because %s"
-                     (Print.term_to_string (U.ctx_uvar_typ uv))
+                     (show (U.ctx_uvar_typ uv))
                      (FStar.TypeChecker.Core.print_error_short err)
       in
       Errors.log_issue uv.ctx_uvar_range
@@ -217,7 +218,7 @@ let check_valid_goal g =
           | None -> ()
           | Some (bv, e) ->
             if not (Env.closed e bv.sort) then
-              raise (Bad ("bv: " ^ Print.bv_to_string bv));
+              raise (Bad ("bv: " ^ show bv));
             aux e
       in
       aux env
@@ -263,7 +264,7 @@ let cur_goal : tac goal =
     | Some t ->
       BU.print2 "!!!!!!!!!!!! GOAL IS ALREADY SOLVED! %s\nsol is %s\n"
               (goal_to_string_verbose hd)
-              (Print.term_to_string t);
+              (show t);
       ret hd)
 
 let remove_solved_goals : tac unit =

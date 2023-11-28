@@ -24,6 +24,7 @@ open FStar.Syntax.Syntax
 open FStar.Syntax.Embeddings
 open FStar.Compiler.Util
 open FStar.Compiler.List
+open FStar.Class.Show
 
 open FStar.Tactics.Common
 open FStar.Tactics.Types
@@ -152,7 +153,7 @@ let unfold_lazy_goal (i : lazyinfo) : term =
 (* On that note, we use this (inefficient, FIXME) hack in this module *)
 let mkFV fv us ts = NBETerm.mkFV fv (List.rev us) (List.rev ts)
 let mkConstruct fv us ts = NBETerm.mkConstruct fv (List.rev us) (List.rev ts)
-let fv_as_emb_typ fv = S.ET_app (FStar.Ident.string_of_lid fv.fv_name.v, [])
+let fv_as_emb_typ fv = S.ET_app (show fv.fv_name.v, [])
 
 let e_proofstate_nbe =
     let embed_proofstate _cb (ps:proofstate) : NBETerm.t =
@@ -235,7 +236,7 @@ let e_exn : embedding exn =
         unembed_exn
         t_exn
         (fun _ -> "(exn)")
-        (ET_app (PC.exn_lid |> Ident.string_of_lid, []))
+        (ET_app (show PC.exn_lid, []))
 
 let e_exn_nbe =
     let embed_exn cb (e:exn) : NBET.t =
@@ -298,7 +299,7 @@ let e_result (ea : embedding 'a)  =
         unembed_result
         (t_result_of (type_of ea))
         (fun _ -> "")
-        (ET_app (fstar_tactics_result.lid |> Ident.string_of_lid, [emb_typ_of ea]))
+        (ET_app (show fstar_tactics_result.lid, [emb_typ_of ea]))
 
 let e_result_nbe (ea : NBET.embedding 'a)  =
     let embed_result cb (res:__result 'a) : NBET.t =
