@@ -1,7 +1,8 @@
 >> Got issues: [
 * Error 19 at NegativeTests.Bug260.fst(26,12-26,19):
   - Subtyping check failed; expected type validity (S (S t)); got type validity (S t)
-  - The SMT solver could not prove the query. Use --query_stats for more details.
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
   - See also NegativeTests.Bug260.fst(23,37-26,9)
 
 >>]

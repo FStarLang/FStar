@@ -29,6 +29,8 @@ open FStar.TypeChecker.Env
 open FStar.SMTEncoding
 open FStar.SMTEncoding.ErrorReporting
 open FStar.SMTEncoding.Util
+open FStar.Class.Show
+open FStar.Class.PP
 
 module BU       = FStar.Compiler.Util
 module Env      = FStar.TypeChecker.Env
@@ -354,8 +356,8 @@ let errors_to_report (settings : query_settings) : list Errors.error =
     in
     let basic_errors =
         (*
-         * AR: smt_error is either an Inr of a multi-line detailed message OR an Inl of a single line short message
-         *     depending on whether Options.query_stats is on or off
+         * smt_error is a single error message containing either a multi-line detailed message
+         * or a single short component, depending on whether --query_stats is on
          *)
         let smt_error =
           if Options.query_stats () then
@@ -380,22 +382,32 @@ let errors_to_report (settings : query_settings) : list Errors.error =
              *       (I think), so incomplete or resource messages are in parenthesis, whereas
              *       canceled, timeout, etc. are without
              *)
-            let incomplete_count, canceled_count, unknown_count =
-              List.fold_left (fun (ic, cc, uc) err ->
+            let incomplete_count, canceled_count, unknown_count, z3_overflow_bug_count =
+              List.fold_left (fun (ic, cc, uc, bc) err ->
                 let err = BU.substring_from err.error_reason (String.length "unknown because ") in
                 //err is (incomplete quantifiers), (resource ...), canceled, or unknown etc.
-                if BU.starts_with err "canceled"  ||
-                   BU.starts_with err "(resource" ||
-                   BU.starts_with err "timeout"
-                then (ic, cc + 1, uc)
-                else if BU.starts_with err "(incomplete" then (ic + 1, cc, uc)
-                else (ic, cc, uc + 1)  //note this covers unknowns, overflows, etc.
-              ) (0, 0, 0) settings.query_errors
+
+                match () with
+                | _ when BU.starts_with err "(incomplete" ->
+                    (ic + 1, cc, uc, bc)
+                | _ when BU.starts_with err "canceled" || BU.starts_with err "(resource" || BU.starts_with err "timeout" ->
+                    (ic, cc + 1, uc, bc)
+                | _ when BU.starts_with err "Overflow encountered when expanding old_vector" ->
+                    (ic, cc, uc, bc + 1)
+                | _ ->
+                    (ic, cc, uc + 1, bc)  //note this covers unknowns, overflows, etc.
+              ) (0, 0, 0, 0) settings.query_errors
             in
+            (* If we notice the z3 overflow bug, add a separate error to warn the user. *)
+            if z3_overflow_bug_count > 0 then
+              Errors.log_issue_doc settings.query_range (Errors.Warning_UnexpectedZ3Stderr, [
+                text "Z3 ran into an internal overflow while trying to prove this query.";
+                text "Try breaking it down, or using --split_queries."
+              ]);
             match incomplete_count, canceled_count, unknown_count with
-            | _, 0, 0 when incomplete_count > 0 -> mkmsg "The SMT solver could not prove the query. Use --query_stats for more details."
-            | 0, _, 0 when canceled_count > 0   -> mkmsg "The SMT query timed out, you might want to increase the rlimit"
-            | _, _, _                           -> mkmsg "Try with --query_stats to get more details"
+            | _, 0, 0 when incomplete_count > 0 -> [text "The SMT solver could not prove the query. Use --query_stats for more details."]
+            | 0, _, 0 when canceled_count > 0   -> [text "The SMT query timed out, you might want to increase the rlimit"]
+            | _, _, _                           -> [text "Try with --query_stats to get more details"]
         in
         match find_localized_errors settings.query_errors, settings.query_all_labels with
         | Some err, _ ->
@@ -615,7 +627,7 @@ let query_info settings z3result =
          | UNSAT core -> BU.colorize_green "succeeded", core
          | _ -> BU.colorize_red ("failed {reason-unknown=" ^ status_string ^ "}"), None
         in
-        let range = "(" ^ (Range.string_of_range settings.query_range) ^ at_log_file ^ ")" in
+        let range = "(" ^ show settings.query_range ^ at_log_file ^ ")" in
         let used_hint_tag = if used_hint settings then " (with hint)" else "" in
         let stats =
             if Options.query_stats() then
@@ -626,13 +638,13 @@ let query_info settings z3result =
         BU.print "%s\tQuery-stats (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s and rlimit %s %s\n"
              [  range;
                 settings.query_name;
-                BU.string_of_int settings.query_index;
+                show settings.query_index;
                 tag;
                 used_hint_tag;
-                BU.string_of_int z3result.z3result_time;
-                BU.string_of_int settings.query_fuel;
-                BU.string_of_int settings.query_ifuel;
-                BU.string_of_int (settings.query_rlimit / rlimit_conversion_factor);
+                show z3result.z3result_time;
+                show settings.query_fuel;
+                show settings.query_ifuel;
+                show (settings.query_rlimit / rlimit_conversion_factor);
                 stats
              ];
         if Options.print_z3_statistics () then process_unsat_core core;
@@ -841,7 +853,6 @@ let make_solver_configs
 Not to be used directly, see ask_solver below. *)
 let __ask_solver
     (configs : list query_settings)
-    (prefix : list decl)
  : either (list errors) query_settings
  =
     let check_one_config config : z3result =
@@ -864,14 +875,8 @@ if --quake is specified. This function is always called, but when
 creating an [answer] record). *)
 let ask_solver_quake
     (configs : list query_settings)
-    (prefix : list decl)
  : answer
  =
-    // Feed the context of the query to the solver. We do this only
-    // once for every quake run. Every actual query will push and pop
-    // whatever else they encode.
-    Z3.giveZ3 prefix;
-
     let lo   = Options.quake_lo () in
     let hi   = Options.quake_hi () in
     let seed = Options.z3_seed () in
@@ -909,8 +914,8 @@ let ask_solver_quake
         if Options.z3_refresh ()
         then Options.with_saved_options (fun () ->
                Options.set_option "z3seed" (Options.Int seed);
-               __ask_solver configs prefix)
-        else __ask_solver configs prefix
+               __ask_solver configs)
+        else __ask_solver configs
     in
     let rec fold_nat' (f : 'a -> int -> 'a) (acc : 'a) (lo : int) (hi : int) : 'a =
         if lo > hi
@@ -1022,8 +1027,13 @@ let ask_solver
           //restore the hint as is, cf. #1651
           next_hint |> must |> store_hint;
         ans_ok
-      ) else
-        ask_solver_quake configs prefix
+      ) else (
+        // Feed the context of the query to the solver. We do this only
+        // once for every VC. Every actual query will push and pop
+        // whatever else they encode.
+        Z3.giveZ3 prefix;
+        ask_solver_quake configs
+      )
     in
     configs, ans
 
@@ -1072,8 +1082,8 @@ let report (env:Env.env) (default_settings : query_settings) (a : answer) : unit
           in
           FStar.TypeChecker.Err.log_issue
             env rng
-            (Errors.Error_QuakeFailed,
-              Errors.mkmsg <|
+            (Errors.Error_QuakeFailed, [
+              Errors.text <|
               BU.format6
                 "Query %s failed the quake test, %s out of %s attempts succeded, \
                  but the threshold was %s out of %s%s"
@@ -1082,7 +1092,7 @@ let report (env:Env.env) (default_settings : query_settings) (a : answer) : unit
                 (string_of_int total_ran)
                 (string_of_int lo)
                 (string_of_int hi)
-                (if total_ran < hi then " (early abort)" else ""))
+                (if total_ran < hi then " (early abort)" else "")])
         end
 
       end else begin
@@ -1180,11 +1190,11 @@ let do_solve (can_split:bool) (is_retry:bool) use_env_msg tcenv q : unit =
     | FStar.SMTEncoding.Env.Inner_let_rec names ->
       FStar.TypeChecker.Err.log_issue
         tcenv tcenv.range
-        (Errors.Error_NonTopRecFunctionNotFullyEncoded,
-          Errors.mkmsg <|
+        (Errors.Error_NonTopRecFunctionNotFullyEncoded, [
+          Errors.text <|
          BU.format1
            "Could not encode the query since F* does not support precise smtencoding of inner let-recs yet (in this case %s)"
-           (String.concat "," (List.map fst names)));
+           (String.concat "," (List.map fst names))]);
        None
   in
   match ans_opt with
@@ -1256,6 +1266,7 @@ let do_solve_maybe_split use_env_msg tcenv q : unit =
       (* Set retrying=false so queries go through the full config list, etc. *)
       split_and_solve false use_env_msg tcenv q
   end
+
 (* Attempt to discharge a VC through the SMT solver. Will
 automatically retry increasing fuel as needed, and perform quake testing
 (repeating the query to make sure it is robust). This function will

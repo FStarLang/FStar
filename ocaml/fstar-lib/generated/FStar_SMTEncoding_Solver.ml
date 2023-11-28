@@ -736,44 +736,70 @@ let (errors_to_report : query_settings -> FStar_Errors.error Prims.list) =
                (fun uu___3 ->
                   fun err ->
                     match uu___3 with
-                    | (ic, cc, uc) ->
+                    | (ic, cc, uc, bc) ->
                         let err1 =
                           FStar_Compiler_Util.substring_from err.error_reason
                             (FStar_Compiler_String.length "unknown because ") in
-                        if
-                          ((FStar_Compiler_Util.starts_with err1 "canceled")
-                             ||
-                             (FStar_Compiler_Util.starts_with err1
-                                "(resource"))
-                            ||
-                            (FStar_Compiler_Util.starts_with err1 "timeout")
-                        then (ic, (cc + Prims.int_one), uc)
+                        if FStar_Compiler_Util.starts_with err1 "(incomplete"
+                        then ((ic + Prims.int_one), cc, uc, bc)
                         else
                           if
-                            FStar_Compiler_Util.starts_with err1
-                              "(incomplete"
-                          then ((ic + Prims.int_one), cc, uc)
-                          else (ic, cc, (uc + Prims.int_one)))
-               (Prims.int_zero, Prims.int_zero, Prims.int_zero)
-               settings.query_errors in
+                            ((FStar_Compiler_Util.starts_with err1 "canceled")
+                               ||
+                               (FStar_Compiler_Util.starts_with err1
+                                  "(resource"))
+                              ||
+                              (FStar_Compiler_Util.starts_with err1 "timeout")
+                          then (ic, (cc + Prims.int_one), uc, bc)
+                          else
+                            if
+                              FStar_Compiler_Util.starts_with err1
+                                "Overflow encountered when expanding old_vector"
+                            then (ic, cc, uc, (bc + Prims.int_one))
+                            else (ic, cc, (uc + Prims.int_one), bc))
+               (Prims.int_zero, Prims.int_zero, Prims.int_zero,
+                 Prims.int_zero) settings.query_errors in
            match uu___2 with
-           | (incomplete_count, canceled_count, unknown_count) ->
-               (match (incomplete_count, canceled_count, unknown_count) with
-                | (uu___3, uu___4, uu___5) when
-                    ((uu___4 = Prims.int_zero) && (uu___5 = Prims.int_zero))
-                      && (incomplete_count > Prims.int_zero)
-                    ->
-                    FStar_Errors_Msg.mkmsg
-                      "The SMT solver could not prove the query. Use --query_stats for more details."
-                | (uu___3, uu___4, uu___5) when
-                    ((uu___3 = Prims.int_zero) && (uu___5 = Prims.int_zero))
-                      && (canceled_count > Prims.int_zero)
-                    ->
-                    FStar_Errors_Msg.mkmsg
-                      "The SMT query timed out, you might want to increase the rlimit"
-                | (uu___3, uu___4, uu___5) ->
-                    FStar_Errors_Msg.mkmsg
-                      "Try with --query_stats to get more details")) in
+           | (incomplete_count, canceled_count, unknown_count,
+              z3_overflow_bug_count) ->
+               (if z3_overflow_bug_count > Prims.int_zero
+                then
+                  (let uu___4 =
+                     let uu___5 =
+                       let uu___6 =
+                         FStar_Errors_Msg.text
+                           "Z3 ran into an internal overflow while trying to prove this query." in
+                       let uu___7 =
+                         let uu___8 =
+                           FStar_Errors_Msg.text
+                             "Try breaking it down, or using --split_queries." in
+                         [uu___8] in
+                       uu___6 :: uu___7 in
+                     (FStar_Errors_Codes.Warning_UnexpectedZ3Stderr, uu___5) in
+                   FStar_Errors.log_issue_doc settings.query_range uu___4)
+                else ();
+                (match (incomplete_count, canceled_count, unknown_count) with
+                 | (uu___4, uu___5, uu___6) when
+                     ((uu___5 = Prims.int_zero) && (uu___6 = Prims.int_zero))
+                       && (incomplete_count > Prims.int_zero)
+                     ->
+                     let uu___7 =
+                       FStar_Errors_Msg.text
+                         "The SMT solver could not prove the query. Use --query_stats for more details." in
+                     [uu___7]
+                 | (uu___4, uu___5, uu___6) when
+                     ((uu___4 = Prims.int_zero) && (uu___6 = Prims.int_zero))
+                       && (canceled_count > Prims.int_zero)
+                     ->
+                     let uu___7 =
+                       FStar_Errors_Msg.text
+                         "The SMT query timed out, you might want to increase the rlimit" in
+                     [uu___7]
+                 | (uu___4, uu___5, uu___6) ->
+                     let uu___7 =
+                       FStar_Errors_Msg.text
+                         "Try with --query_stats to get more details" in
+                     [uu___7]))) in
       let uu___ =
         let uu___1 = find_localized_errors settings.query_errors in
         (uu___1, (settings.query_all_labels)) in
@@ -1033,7 +1059,8 @@ let (query_info : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
                  let range =
                    let uu___3 =
                      let uu___4 =
-                       FStar_Compiler_Range_Ops.string_of_range
+                       FStar_Class_Show.show
+                         FStar_Compiler_Range_Ops.show_range
                          settings.query_range in
                      Prims.op_Hat uu___4 (Prims.op_Hat at_log_file ")") in
                    Prims.op_Hat "(" uu___3 in
@@ -1060,25 +1087,35 @@ let (query_info : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
                      let uu___5 =
                        let uu___6 =
                          let uu___7 =
-                           FStar_Compiler_Util.string_of_int
+                           FStar_Class_Show.show
+                             (FStar_Class_Show.printableshow
+                                FStar_Class_Printable.printable_int)
                              settings.query_index in
                          let uu___8 =
                            let uu___9 =
                              let uu___10 =
                                let uu___11 =
-                                 FStar_Compiler_Util.string_of_int
+                                 FStar_Class_Show.show
+                                   (FStar_Class_Show.printableshow
+                                      FStar_Class_Printable.printable_int)
                                    z3result.FStar_SMTEncoding_Z3.z3result_time in
                                let uu___12 =
                                  let uu___13 =
-                                   FStar_Compiler_Util.string_of_int
+                                   FStar_Class_Show.show
+                                     (FStar_Class_Show.printableshow
+                                        FStar_Class_Printable.printable_int)
                                      settings.query_fuel in
                                  let uu___14 =
                                    let uu___15 =
-                                     FStar_Compiler_Util.string_of_int
+                                     FStar_Class_Show.show
+                                       (FStar_Class_Show.printableshow
+                                          FStar_Class_Printable.printable_int)
                                        settings.query_ifuel in
                                    let uu___16 =
                                      let uu___17 =
-                                       FStar_Compiler_Util.string_of_int
+                                       FStar_Class_Show.show
+                                         (FStar_Class_Show.printableshow
+                                            FStar_Class_Printable.printable_int)
                                          (settings.query_rlimit /
                                             rlimit_conversion_factor) in
                                      [uu___17; stats] in
@@ -1510,174 +1547,165 @@ let (make_solver_configs :
                       (cfgs, next_hint)
 let (__ask_solver :
   query_settings Prims.list ->
-    FStar_SMTEncoding_Term.decl Prims.list ->
-      (errors Prims.list, query_settings) FStar_Pervasives.either)
+    (errors Prims.list, query_settings) FStar_Pervasives.either)
   =
   fun configs ->
-    fun prefix ->
-      let check_one_config config =
-        (let uu___1 = FStar_Options.z3_refresh () in
-         if uu___1 then FStar_SMTEncoding_Z3.refresh () else ());
-        (let uu___1 = with_fuel_and_diagnostics config [] in
-         let uu___2 =
-           let uu___3 = FStar_Compiler_Util.string_of_int config.query_index in
-           FStar_Compiler_Util.format2 "(%s, %s)" config.query_name uu___3 in
-         let uu___3 =
-           let uu___4 = FStar_SMTEncoding_Z3.mk_fresh_scope () in
-           FStar_Pervasives_Native.Some uu___4 in
-         FStar_SMTEncoding_Z3.ask config.query_range
-           (filter_assertions config.query_env
-              (FStar_Pervasives_Native.Some config) config.query_hint)
-           config.query_hash config.query_all_labels uu___1 uu___2 uu___3
-           (used_hint config)) in
-      fold_queries configs check_one_config process_result
-let (ask_solver_quake :
-  query_settings Prims.list ->
-    FStar_SMTEncoding_Term.decl Prims.list -> answer)
-  =
+    let check_one_config config =
+      (let uu___1 = FStar_Options.z3_refresh () in
+       if uu___1 then FStar_SMTEncoding_Z3.refresh () else ());
+      (let uu___1 = with_fuel_and_diagnostics config [] in
+       let uu___2 =
+         let uu___3 = FStar_Compiler_Util.string_of_int config.query_index in
+         FStar_Compiler_Util.format2 "(%s, %s)" config.query_name uu___3 in
+       let uu___3 =
+         let uu___4 = FStar_SMTEncoding_Z3.mk_fresh_scope () in
+         FStar_Pervasives_Native.Some uu___4 in
+       FStar_SMTEncoding_Z3.ask config.query_range
+         (filter_assertions config.query_env
+            (FStar_Pervasives_Native.Some config) config.query_hint)
+         config.query_hash config.query_all_labels uu___1 uu___2 uu___3
+         (used_hint config)) in
+    fold_queries configs check_one_config process_result
+let (ask_solver_quake : query_settings Prims.list -> answer) =
   fun configs ->
-    fun prefix ->
-      FStar_SMTEncoding_Z3.giveZ3 prefix;
-      (let lo = FStar_Options.quake_lo () in
-       let hi = FStar_Options.quake_hi () in
-       let seed = FStar_Options.z3_seed () in
-       let default_settings = FStar_Compiler_List.hd configs in
-       let name = full_query_id default_settings in
-       let quaking =
-         (hi > Prims.int_one) &&
-           (let uu___1 = FStar_Options.retry () in Prims.op_Negation uu___1) in
-       let quaking_or_retrying = hi > Prims.int_one in
-       let hi1 = if hi < Prims.int_one then Prims.int_one else hi in
-       let lo1 =
-         if lo < Prims.int_one
-         then Prims.int_one
-         else if lo > hi1 then hi1 else lo in
-       let run_one seed1 =
-         let uu___1 = FStar_Options.z3_refresh () in
-         if uu___1
+    let lo = FStar_Options.quake_lo () in
+    let hi = FStar_Options.quake_hi () in
+    let seed = FStar_Options.z3_seed () in
+    let default_settings = FStar_Compiler_List.hd configs in
+    let name = full_query_id default_settings in
+    let quaking =
+      (hi > Prims.int_one) &&
+        (let uu___ = FStar_Options.retry () in Prims.op_Negation uu___) in
+    let quaking_or_retrying = hi > Prims.int_one in
+    let hi1 = if hi < Prims.int_one then Prims.int_one else hi in
+    let lo1 =
+      if lo < Prims.int_one
+      then Prims.int_one
+      else if lo > hi1 then hi1 else lo in
+    let run_one seed1 =
+      let uu___ = FStar_Options.z3_refresh () in
+      if uu___
+      then
+        FStar_Options.with_saved_options
+          (fun uu___1 ->
+             FStar_Options.set_option "z3seed" (FStar_Options.Int seed1);
+             __ask_solver configs)
+      else __ask_solver configs in
+    let rec fold_nat' f acc lo2 hi2 =
+      if lo2 > hi2
+      then acc
+      else
+        (let uu___1 = f acc lo2 in
+         fold_nat' f uu___1 (lo2 + Prims.int_one) hi2) in
+    let best_fuel = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None in
+    let best_ifuel = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None in
+    let maybe_improve r n =
+      let uu___ = FStar_Compiler_Effect.op_Bang r in
+      match uu___ with
+      | FStar_Pervasives_Native.None ->
+          FStar_Compiler_Effect.op_Colon_Equals r
+            (FStar_Pervasives_Native.Some n)
+      | FStar_Pervasives_Native.Some m ->
+          if n < m
+          then
+            FStar_Compiler_Effect.op_Colon_Equals r
+              (FStar_Pervasives_Native.Some n)
+          else () in
+    let uu___ =
+      fold_nat'
+        (fun uu___1 ->
+           fun n ->
+             match uu___1 with
+             | (nsucc, nfail, rs) ->
+                 let uu___2 =
+                   (let uu___3 = FStar_Options.quake_keep () in
+                    Prims.op_Negation uu___3) &&
+                     ((nsucc >= lo1) || (nfail > (hi1 - lo1))) in
+                 if uu___2
+                 then (nsucc, nfail, rs)
+                 else
+                   ((let uu___5 =
+                       (quaking_or_retrying &&
+                          ((FStar_Options.interactive ()) ||
+                             (FStar_Options.debug_any ())))
+                         && (n > Prims.int_zero) in
+                     if uu___5
+                     then
+                       let uu___6 =
+                         if quaking
+                         then
+                           let uu___7 =
+                             FStar_Compiler_Util.string_of_int nsucc in
+                           FStar_Compiler_Util.format1
+                             "succeeded %s times and " uu___7
+                         else "" in
+                       let uu___7 =
+                         if quaking
+                         then FStar_Compiler_Util.string_of_int nfail
+                         else
+                           (let uu___9 =
+                              FStar_Compiler_Util.string_of_int nfail in
+                            Prims.op_Hat uu___9 " times") in
+                       let uu___8 =
+                         FStar_Compiler_Util.string_of_int (hi1 - n) in
+                       FStar_Compiler_Util.print5
+                         "%s: so far query %s %sfailed %s (%s runs remain)\n"
+                         (if quaking then "Quake" else "Retry") name uu___6
+                         uu___7 uu___8
+                     else ());
+                    (let r = run_one (seed + n) in
+                     let uu___5 =
+                       match r with
+                       | FStar_Pervasives.Inr cfg ->
+                           (maybe_improve best_fuel cfg.query_fuel;
+                            maybe_improve best_ifuel cfg.query_ifuel;
+                            ((nsucc + Prims.int_one), nfail))
+                       | uu___6 -> (nsucc, (nfail + Prims.int_one)) in
+                     match uu___5 with
+                     | (nsucc1, nfail1) -> (nsucc1, nfail1, (r :: rs)))))
+        (Prims.int_zero, Prims.int_zero, []) Prims.int_zero
+        (hi1 - Prims.int_one) in
+    match uu___ with
+    | (nsuccess, nfailures, rs) ->
+        let total_ran = nsuccess + nfailures in
+        (if quaking
          then
-           FStar_Options.with_saved_options
-             (fun uu___2 ->
-                FStar_Options.set_option "z3seed" (FStar_Options.Int seed1);
-                __ask_solver configs prefix)
-         else __ask_solver configs prefix in
-       let rec fold_nat' f acc lo2 hi2 =
-         if lo2 > hi2
-         then acc
-         else
-           (let uu___2 = f acc lo2 in
-            fold_nat' f uu___2 (lo2 + Prims.int_one) hi2) in
-       let best_fuel =
-         FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None in
-       let best_ifuel =
-         FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None in
-       let maybe_improve r n =
-         let uu___1 = FStar_Compiler_Effect.op_Bang r in
-         match uu___1 with
-         | FStar_Pervasives_Native.None ->
-             FStar_Compiler_Effect.op_Colon_Equals r
-               (FStar_Pervasives_Native.Some n)
-         | FStar_Pervasives_Native.Some m ->
-             if n < m
-             then
-               FStar_Compiler_Effect.op_Colon_Equals r
-                 (FStar_Pervasives_Native.Some n)
-             else () in
-       let uu___1 =
-         fold_nat'
-           (fun uu___2 ->
-              fun n ->
-                match uu___2 with
-                | (nsucc, nfail, rs) ->
-                    let uu___3 =
-                      (let uu___4 = FStar_Options.quake_keep () in
-                       Prims.op_Negation uu___4) &&
-                        ((nsucc >= lo1) || (nfail > (hi1 - lo1))) in
-                    if uu___3
-                    then (nsucc, nfail, rs)
-                    else
-                      ((let uu___6 =
-                          (quaking_or_retrying &&
-                             ((FStar_Options.interactive ()) ||
-                                (FStar_Options.debug_any ())))
-                            && (n > Prims.int_zero) in
-                        if uu___6
-                        then
-                          let uu___7 =
-                            if quaking
-                            then
-                              let uu___8 =
-                                FStar_Compiler_Util.string_of_int nsucc in
-                              FStar_Compiler_Util.format1
-                                "succeeded %s times and " uu___8
-                            else "" in
-                          let uu___8 =
-                            if quaking
-                            then FStar_Compiler_Util.string_of_int nfail
-                            else
-                              (let uu___10 =
-                                 FStar_Compiler_Util.string_of_int nfail in
-                               Prims.op_Hat uu___10 " times") in
-                          let uu___9 =
-                            FStar_Compiler_Util.string_of_int (hi1 - n) in
-                          FStar_Compiler_Util.print5
-                            "%s: so far query %s %sfailed %s (%s runs remain)\n"
-                            (if quaking then "Quake" else "Retry") name
-                            uu___7 uu___8 uu___9
-                        else ());
-                       (let r = run_one (seed + n) in
-                        let uu___6 =
-                          match r with
-                          | FStar_Pervasives.Inr cfg ->
-                              (maybe_improve best_fuel cfg.query_fuel;
-                               maybe_improve best_ifuel cfg.query_ifuel;
-                               ((nsucc + Prims.int_one), nfail))
-                          | uu___7 -> (nsucc, (nfail + Prims.int_one)) in
-                        match uu___6 with
-                        | (nsucc1, nfail1) -> (nsucc1, nfail1, (r :: rs)))))
-           (Prims.int_zero, Prims.int_zero, []) Prims.int_zero
-           (hi1 - Prims.int_one) in
-       match uu___1 with
-       | (nsuccess, nfailures, rs) ->
-           let total_ran = nsuccess + nfailures in
-           (if quaking
-            then
-              (let fuel_msg =
-                 let uu___3 =
-                   let uu___4 = FStar_Compiler_Effect.op_Bang best_fuel in
-                   let uu___5 = FStar_Compiler_Effect.op_Bang best_ifuel in
-                   (uu___4, uu___5) in
-                 match uu___3 with
-                 | (FStar_Pervasives_Native.Some f,
-                    FStar_Pervasives_Native.Some i) ->
-                     let uu___4 = FStar_Compiler_Util.string_of_int f in
-                     let uu___5 = FStar_Compiler_Util.string_of_int i in
-                     FStar_Compiler_Util.format2
-                       " (best fuel=%s, best ifuel=%s)" uu___4 uu___5
-                 | (uu___4, uu___5) -> "" in
-               let uu___3 = FStar_Compiler_Util.string_of_int nsuccess in
-               let uu___4 = FStar_Compiler_Util.string_of_int total_ran in
-               FStar_Compiler_Util.print5
-                 "Quake: query %s succeeded %s/%s times%s%s\n" name uu___3
-                 uu___4 (if total_ran < hi1 then " (early finish)" else "")
-                 fuel_msg)
-            else ();
-            (let all_errs =
-               FStar_Compiler_List.concatMap
-                 (fun uu___3 ->
-                    match uu___3 with
-                    | FStar_Pervasives.Inr uu___4 -> []
-                    | FStar_Pervasives.Inl es -> [es]) rs in
-             {
-               ok = (nsuccess >= lo1);
-               nsuccess;
-               lo = lo1;
-               hi = hi1;
-               errs = all_errs;
-               quaking;
-               quaking_or_retrying;
-               total_ran
-             })))
+           (let fuel_msg =
+              let uu___2 =
+                let uu___3 = FStar_Compiler_Effect.op_Bang best_fuel in
+                let uu___4 = FStar_Compiler_Effect.op_Bang best_ifuel in
+                (uu___3, uu___4) in
+              match uu___2 with
+              | (FStar_Pervasives_Native.Some f, FStar_Pervasives_Native.Some
+                 i) ->
+                  let uu___3 = FStar_Compiler_Util.string_of_int f in
+                  let uu___4 = FStar_Compiler_Util.string_of_int i in
+                  FStar_Compiler_Util.format2
+                    " (best fuel=%s, best ifuel=%s)" uu___3 uu___4
+              | (uu___3, uu___4) -> "" in
+            let uu___2 = FStar_Compiler_Util.string_of_int nsuccess in
+            let uu___3 = FStar_Compiler_Util.string_of_int total_ran in
+            FStar_Compiler_Util.print5
+              "Quake: query %s succeeded %s/%s times%s%s\n" name uu___2
+              uu___3 (if total_ran < hi1 then " (early finish)" else "")
+              fuel_msg)
+         else ();
+         (let all_errs =
+            FStar_Compiler_List.concatMap
+              (fun uu___2 ->
+                 match uu___2 with
+                 | FStar_Pervasives.Inr uu___3 -> []
+                 | FStar_Pervasives.Inl es -> [es]) rs in
+          {
+            ok = (nsuccess >= lo1);
+            nsuccess;
+            lo = lo1;
+            hi = hi1;
+            errs = all_errs;
+            quaking;
+            quaking_or_retrying;
+            total_ran
+          }))
 let (ask_solver :
   Prims.bool ->
     Prims.bool ->
@@ -1732,7 +1760,9 @@ let (ask_solver :
                                 store_hint
                             else ());
                            ans_ok)
-                        else ask_solver_quake configs prefix in
+                        else
+                          (FStar_SMTEncoding_Z3.giveZ3 prefix;
+                           ask_solver_quake configs) in
                       (configs, ans)
 let (report : FStar_TypeChecker_Env.env -> query_settings -> answer -> unit)
   =
@@ -1816,17 +1846,19 @@ let (report : FStar_TypeChecker_Env.env -> query_settings -> answer -> unit)
                    let uu___3 =
                      let uu___4 =
                        let uu___5 =
-                         FStar_Compiler_Util.string_of_int nsuccess in
-                       let uu___6 =
-                         FStar_Compiler_Util.string_of_int total_ran in
-                       let uu___7 = FStar_Compiler_Util.string_of_int lo in
-                       let uu___8 = FStar_Compiler_Util.string_of_int hi in
-                       FStar_Compiler_Util.format6
-                         "Query %s failed the quake test, %s out of %s attempts succeded, but the threshold was %s out of %s%s"
-                         name uu___5 uu___6 uu___7 uu___8
-                         (if total_ran < hi then " (early abort)" else "") in
-                     FStar_Compiler_Effect.op_Less_Bar FStar_Errors_Msg.mkmsg
-                       uu___4 in
+                         let uu___6 =
+                           FStar_Compiler_Util.string_of_int nsuccess in
+                         let uu___7 =
+                           FStar_Compiler_Util.string_of_int total_ran in
+                         let uu___8 = FStar_Compiler_Util.string_of_int lo in
+                         let uu___9 = FStar_Compiler_Util.string_of_int hi in
+                         FStar_Compiler_Util.format6
+                           "Query %s failed the quake test, %s out of %s attempts succeded, but the threshold was %s out of %s%s"
+                           name uu___6 uu___7 uu___8 uu___9
+                           (if total_ran < hi then " (early abort)" else "") in
+                       FStar_Compiler_Effect.op_Less_Bar
+                         FStar_Errors_Msg.text uu___5 in
+                     [uu___4] in
                    (FStar_Errors_Codes.Error_QuakeFailed, uu___3) in
                  FStar_TypeChecker_Err.log_issue env rng uu___2)
               else ())
@@ -2053,14 +2085,16 @@ let (do_solve :
                         let uu___4 =
                           let uu___5 =
                             let uu___6 =
-                              FStar_Compiler_List.map
-                                FStar_Pervasives_Native.fst names in
-                            FStar_Compiler_String.concat "," uu___6 in
-                          FStar_Compiler_Util.format1
-                            "Could not encode the query since F* does not support precise smtencoding of inner let-recs yet (in this case %s)"
-                            uu___5 in
-                        FStar_Compiler_Effect.op_Less_Bar
-                          FStar_Errors_Msg.mkmsg uu___4 in
+                              let uu___7 =
+                                FStar_Compiler_List.map
+                                  FStar_Pervasives_Native.fst names in
+                              FStar_Compiler_String.concat "," uu___7 in
+                            FStar_Compiler_Util.format1
+                              "Could not encode the query since F* does not support precise smtencoding of inner let-recs yet (in this case %s)"
+                              uu___6 in
+                          FStar_Compiler_Effect.op_Less_Bar
+                            FStar_Errors_Msg.text uu___5 in
+                        [uu___4] in
                       (FStar_Errors_Codes.Error_NonTopRecFunctionNotFullyEncoded,
                         uu___3) in
                     FStar_TypeChecker_Err.log_issue tcenv

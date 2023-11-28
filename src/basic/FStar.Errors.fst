@@ -156,9 +156,9 @@ let format_issue' (print_hdr:bool) (issue:issue) : string =
   let r = issue.issue_range in
   let atrng : document =
     match r with
-    | Some r ->
+    | Some r when r <> Range.dummyRange ->
       blank 1 ^^ doc_of_string "at" ^^ blank 1 ^^ doc_of_string (Range.string_of_use_range r)
-    | None ->
+    | _ ->
       empty
   in
   let hdr : document =

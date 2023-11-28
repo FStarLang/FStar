@@ -1,61 +1,70 @@
 >> Got issues: [
 * Error 19 at NegativeTests.Neg.fst(20,8-20,10):
   - Subtyping check failed; expected type Prims.nat; got type Prims.int
-  - The SMT solver could not prove the query. Use --query_stats for more details.
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
   - See also prims.fst(659,18-659,24)
 
 >>]
 >> Got issues: [
 * Error 19 at NegativeTests.Neg.fst(24,8-24,10):
   - Subtyping check failed; expected type Prims.nat; got type Prims.int
-  - The SMT solver could not prove the query. Use --query_stats for more details.
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
   - See also prims.fst(659,18-659,24)
 
 >>]
 >> Got issues: [
 * Error 19 at NegativeTests.Neg.fst(27,30-27,35):
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more details.
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
 
 >>]
 >> Got issues: [
 * Error 19 at NegativeTests.Neg.fst(30,28-31,15):
   - Patterns are incomplete
-  - The SMT solver could not prove the query. Use --query_stats for more details.
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
 
 >>]
 >> Got issues: [
 * Error 19 at NegativeTests.Neg.fst(38,32-38,42):
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more details.
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
   - See also NegativeTests.Neg.fst(33,44-33,57)
 
 >>]
 >> Got issues: [
 * Error 19 at NegativeTests.Neg.fst(42,33-42,34):
   - Could not prove post-condition
-  - The SMT solver could not prove the query. Use --query_stats for more details.
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
   - See also NegativeTests.Neg.fst(40,83-40,88)
 
 >>]
 >> Got issues: [
 * Error 19 at NegativeTests.Neg.fst(46,30-46,31):
   - Subtyping check failed; expected type _: FStar.Pervasives.Native.option 'a {Some? _}; got type FStar.Pervasives.Native.option 'a
-  - The SMT solver could not prove the query. Use --query_stats for more details.
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
   - See also FStar.Pervasives.Native.fst(33,4-33,8)
 
 >>]
 >> Got issues: [
 * Error 19 at NegativeTests.Neg.fst(50,45-50,47):
   - Subtyping check failed; expected type _: FStar.Pervasives.result Prims.int {V? _}; got type FStar.Pervasives.result Prims.int
-  - The SMT solver could not prove the query. Use --query_stats for more details.
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
   - See also FStar.Pervasives.fsti(517,4-517,5)
 
 >>]
 >> Got issues: [
 * Error 19 at NegativeTests.Neg.fst(55,25-55,26):
   - Subtyping check failed; expected type Prims.nat; got type Prims.int
-  - The SMT solver could not prove the query. Use --query_stats for more details.
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
   - See also prims.fst(659,18-659,24)
 
 >>]

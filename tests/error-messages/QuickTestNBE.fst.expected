@@ -1,6 +1,7 @@
 >> Got issues: [
 * Error 19 at QuickTestNBE.fst(133,2-136,34):
-  - The SMT solver could not prove the query. Use --query_stats for more details.
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
   - Also see: QuickTestNBE(1,2-3,4)
   - Other related locations: QuickTestNBE.fst(116,16-116,18)
 

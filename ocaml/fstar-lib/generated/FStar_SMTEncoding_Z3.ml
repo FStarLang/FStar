@@ -283,11 +283,29 @@ let (z3_cmd_and_args : unit -> (Prims.string * Prims.string Prims.list)) =
       let uu___2 = FStar_Options.z3_cliopt () in
       FStar_Compiler_List.append uu___1 uu___2 in
     (cmd, cmd_args)
-let (warn_handler : Prims.string -> unit) =
-  fun s ->
-    FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange
-      (FStar_Errors_Codes.Warning_UnexpectedZ3Output,
-        (Prims.op_Hat "Unexpected output from Z3: \"" (Prims.op_Hat s "\"")))
+let (warn_handler : FStar_Errors_Msg.error_message -> Prims.string -> unit) =
+  fun suf ->
+    fun s ->
+      let uu___ =
+        let uu___1 =
+          let uu___2 =
+            let uu___3 =
+              let uu___4 = FStar_Errors_Msg.text "Unexpected output from Z3:" in
+              let uu___5 =
+                let uu___6 =
+                  let uu___7 = FStar_Pprint.blank (Prims.of_int (2)) in
+                  let uu___8 =
+                    let uu___9 =
+                      let uu___10 = FStar_Pprint.arbitrary_string s in
+                      FStar_Pprint.dquotes uu___10 in
+                    FStar_Pprint.align uu___9 in
+                  FStar_Pprint.op_Hat_Hat uu___7 uu___8 in
+                FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline uu___6 in
+              FStar_Pprint.op_Hat_Hat uu___4 uu___5 in
+            [uu___3] in
+          FStar_Compiler_List.op_At uu___2 suf in
+        (FStar_Errors_Codes.Warning_UnexpectedZ3Output, uu___1) in
+      FStar_Errors.log_issue_doc FStar_Compiler_Range_Type.dummyRange uu___
 let (check_z3version : FStar_Compiler_Util.proc -> unit) =
   fun p ->
     let getinfo arg =
@@ -296,13 +314,13 @@ let (check_z3version : FStar_Compiler_Util.proc -> unit) =
           FStar_Compiler_Util.format1 "(get-info :%s)\n(echo \"Done!\")\n"
             arg in
         FStar_Compiler_Util.ask_process p uu___ (fun uu___1 -> "Killed")
-          warn_handler in
+          (warn_handler []) in
       if FStar_Compiler_Util.starts_with s (Prims.op_Hat "(:" arg)
       then
         let ss = FStar_Compiler_String.split [34] s in
         FStar_Compiler_List.nth ss Prims.int_one
       else
-        (warn_handler s;
+        (warn_handler [] s;
          (let uu___2 =
             let uu___3 =
               let uu___4 = FStar_Compiler_Util.proc_prog p in
@@ -447,7 +465,8 @@ let (bg_z3_proc : bgproc FStar_Compiler_Effect.ref) =
      FStar_Compiler_Util.incr the_z3proc_ask_count;
      (let kill_handler uu___2 = "\nkilled\n" in
       let uu___2 = z3proc () in
-      FStar_Compiler_Util.ask_process uu___2 input kill_handler warn_handler) in
+      FStar_Compiler_Util.ask_process uu___2 input kill_handler
+        (warn_handler [])) in
    let maybe_kill_z3proc uu___1 =
      let uu___2 =
        let uu___3 = FStar_Compiler_Effect.op_Bang the_z3proc in
@@ -605,18 +624,24 @@ let (smt_output_sections :
                                   | [] -> ()
                                   | uu___6 ->
                                       let msg =
-                                        FStar_Compiler_Util.format2
-                                          "%sUnexpected output from Z3: %s\n"
-                                          (match log_file with
-                                           | FStar_Pervasives_Native.None ->
-                                               ""
-                                           | FStar_Pervasives_Native.Some f
-                                               -> Prims.op_Hat f ": ")
-                                          (FStar_Compiler_String.concat "\n"
-                                             remaining) in
-                                      FStar_Errors.log_issue r
-                                        (FStar_Errors_Codes.Warning_UnexpectedZ3Output,
-                                          msg));
+                                        FStar_Compiler_String.concat "\n"
+                                          remaining in
+                                      let suf =
+                                        match log_file with
+                                        | FStar_Pervasives_Native.Some
+                                            log_file1 ->
+                                            let uu___7 =
+                                              let uu___8 =
+                                                FStar_Errors_Msg.text
+                                                  "Log file:" in
+                                              let uu___9 =
+                                                FStar_Pprint.doc_of_string
+                                                  log_file1 in
+                                              FStar_Pprint.op_Hat_Slash_Hat
+                                                uu___8 uu___9 in
+                                            [uu___7]
+                                        | FStar_Pervasives_Native.None -> [] in
+                                      warn_handler suf msg);
                                  (let uu___6 =
                                     FStar_Compiler_Util.must result_opt in
                                   {
@@ -821,7 +846,7 @@ let (doZ3Exe :
                 let kill_handler uu___ = "\nkilled\n" in
                 let out =
                   FStar_Compiler_Util.ask_process proc input kill_handler
-                    warn_handler in
+                    (warn_handler []) in
                 let r1 = parse (FStar_Compiler_Util.trim_string out) in
                 (log_result
                    (fun fname ->

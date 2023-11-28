@@ -1,21 +1,24 @@
 >> Got issues: [
-* Error 19 at dummy(0,0-0,0):
+* Error 19:
   - Patterns are incomplete
-  - The SMT solver could not prove the query. Use --query_stats for more details.
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
   - Also see: PatternMatch.fst(21,4-21,8)
 
 >>]
 >> Got issues: [
-* Error 19 at dummy(0,0-0,0):
+* Error 19:
   - Patterns are incomplete
-  - The SMT solver could not prove the query. Use --query_stats for more details.
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
   - Also see: PatternMatch.fst(24,4-24,11)
 
 >>]
 >> Got issues: [
-* Error 19 at dummy(0,0-0,0):
+* Error 19:
   - Patterns are incomplete
-  - The SMT solver could not prove the query. Use --query_stats for more details.
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
   - Also see: PatternMatch.fst(29,4-29,8)
 
 >>]
@@ -32,9 +35,10 @@
 
 >>]
 >> Got issues: [
-* Error 19 at dummy(0,0-0,0):
+* Error 19:
   - Patterns are incomplete
-  - The SMT solver could not prove the query. Use --query_stats for more details.
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
   - Also see: PatternMatch.fst(38,4-38,5)
 
 >>]
@@ -49,16 +53,18 @@
 
 >>]
 >> Got issues: [
-* Error 19 at dummy(0,0-0,0):
+* Error 19:
   - Patterns are incomplete
-  - The SMT solver could not prove the query. Use --query_stats for more details.
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
   - Also see: PatternMatch.fst(61,5-61,12)
 
 >>]
 >> Got issues: [
-* Error 19 at dummy(0,0-0,0):
+* Error 19:
   - Patterns are incomplete
-  - The SMT solver could not prove the query. Use --query_stats for more details.
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
   - Also see: PatternMatch.fst(64,5-64,20)
 
 >>]
