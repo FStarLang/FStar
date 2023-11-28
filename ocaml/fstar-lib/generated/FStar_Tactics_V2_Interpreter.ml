@@ -2945,13 +2945,15 @@ let (report_implicits :
                        let uu___2 =
                          let uu___3 =
                            let uu___4 =
-                             FStar_Syntax_Print.uvar_to_string
+                             FStar_Class_Show.show
+                               FStar_Syntax_Print.showable_uvar
                                (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head in
                            let uu___5 =
                              let uu___6 =
                                FStar_Syntax_Util.ctx_uvar_typ
                                  imp.FStar_TypeChecker_Common.imp_uvar in
-                             FStar_Syntax_Print.term_to_string uu___6 in
+                             FStar_Class_Show.show
+                               FStar_Syntax_Print.showable_term uu___6 in
                            FStar_Compiler_Util.format3
                              "Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")"
                              uu___4 uu___5
@@ -2964,13 +2966,15 @@ let (report_implicits :
                        let uu___2 =
                          let uu___3 =
                            let uu___4 =
-                             FStar_Syntax_Print.uvar_to_string
+                             FStar_Class_Show.show
+                               FStar_Syntax_Print.showable_uvar
                                (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head in
                            let uu___5 =
                              let uu___6 =
                                FStar_Syntax_Util.ctx_uvar_typ
                                  imp.FStar_TypeChecker_Common.imp_uvar in
-                             FStar_Syntax_Print.term_to_string uu___6 in
+                             FStar_Class_Show.show
+                               FStar_Syntax_Print.showable_term uu___6 in
                            FStar_Compiler_Util.format3
                              "Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")"
                              uu___4 uu___5
@@ -2983,15 +2987,21 @@ let (report_implicits :
                        let uu___2 =
                          let uu___3 =
                            let uu___4 =
-                             FStar_Syntax_Print.uvar_to_string
+                             FStar_Class_Show.show
+                               FStar_Syntax_Print.showable_uvar
                                (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head in
                            let uu___5 =
                              let uu___6 =
                                FStar_Syntax_Util.ctx_uvar_typ
                                  imp.FStar_TypeChecker_Common.imp_uvar in
-                             FStar_Syntax_Print.term_to_string uu___6 in
-                           let uu___6 = FStar_Syntax_Print.term_to_string tm in
-                           let uu___7 = FStar_Syntax_Print.term_to_string ty in
+                             FStar_Class_Show.show
+                               FStar_Syntax_Print.showable_term uu___6 in
+                           let uu___6 =
+                             FStar_Class_Show.show
+                               FStar_Syntax_Print.showable_term tm in
+                           let uu___7 =
+                             FStar_Class_Show.show
+                               FStar_Syntax_Print.showable_term ty in
                            FStar_Compiler_Util.format4
                              "Tactic solved goal %s of type %s to %s : %s, but it has a non-trivial typing guard. Use gather_or_solve_explicit_guards_for_resolved_goals to inspect and prove these goals"
                              uu___4 uu___5 uu___6 uu___7 in
@@ -3295,9 +3305,13 @@ let run_tactic_on_ps' :
                     (let uu___1 = FStar_Compiler_Effect.op_Bang tacdbg in
                      if uu___1
                      then
-                       let uu___2 = FStar_Syntax_Print.term_to_string tactic in
+                       let uu___2 =
+                         FStar_Class_Show.show
+                           FStar_Syntax_Print.showable_term tactic in
                        let uu___3 =
-                         FStar_Compiler_Util.string_of_bool
+                         FStar_Class_Show.show
+                           (FStar_Class_Show.printableshow
+                              FStar_Class_Printable.printable_bool)
                            tactic_already_typed in
                        FStar_Compiler_Util.print2
                          "Typechecking tactic: (%s) (already_typed: %s) {\n"
@@ -3363,7 +3377,8 @@ let run_tactic_on_ps' :
                                           let uu___11 =
                                             FStar_Tactics_Types.goal_witness
                                               g1 in
-                                          FStar_Syntax_Print.term_to_string
+                                          FStar_Class_Show.show
+                                            FStar_Syntax_Print.showable_term
                                             uu___11 in
                                         FStar_Compiler_Util.print1
                                           "Assigning irrelevant goal %s\n"
@@ -3385,7 +3400,8 @@ let run_tactic_on_ps' :
                                              let uu___13 =
                                                FStar_Tactics_Types.goal_witness
                                                  g1 in
-                                             FStar_Syntax_Print.term_to_string
+                                             FStar_Class_Show.show
+                                               FStar_Syntax_Print.showable_term
                                                uu___13 in
                                            FStar_Compiler_Util.format1
                                              "Irrelevant tactic witness does not unify with (): %s"
@@ -3399,7 +3415,8 @@ let run_tactic_on_ps' :
                                let uu___8 =
                                  (FStar_Common.string_of_list ())
                                    (fun imp ->
-                                      FStar_Syntax_Print.ctx_uvar_to_string
+                                      FStar_Class_Show.show
+                                        FStar_Syntax_Print.showable_ctxu
                                         imp.FStar_TypeChecker_Common.imp_uvar)
                                    ps3.FStar_Tactics_Types.all_implicits in
                                FStar_Compiler_Util.print1
@@ -3427,14 +3444,15 @@ let run_tactic_on_ps' :
                               if uu___8
                               then
                                 let uu___9 =
-                                  FStar_Compiler_Util.string_of_int
+                                  FStar_Class_Show.show
+                                    (FStar_Class_Show.printableshow
+                                       FStar_Class_Printable.printable_nat)
                                     (FStar_Compiler_List.length
                                        ps3.FStar_Tactics_Types.all_implicits) in
                                 let uu___10 =
-                                  (FStar_Common.string_of_list ())
-                                    (fun imp ->
-                                       FStar_Syntax_Print.ctx_uvar_to_string
-                                         imp.FStar_TypeChecker_Common.imp_uvar)
+                                  FStar_Class_Show.show
+                                    (FStar_Class_Show.show_list
+                                       FStar_TypeChecker_Common.show_implicit)
                                     ps3.FStar_Tactics_Types.all_implicits in
                                 FStar_Compiler_Util.print2
                                   "Checked %s implicits (1): %s\n" uu___9
@@ -3448,14 +3466,15 @@ let run_tactic_on_ps' :
                                if uu___9
                                then
                                  let uu___10 =
-                                   FStar_Compiler_Util.string_of_int
+                                   FStar_Class_Show.show
+                                     (FStar_Class_Show.printableshow
+                                        FStar_Class_Printable.printable_nat)
                                      (FStar_Compiler_List.length
                                         ps3.FStar_Tactics_Types.all_implicits) in
                                  let uu___11 =
-                                   (FStar_Common.string_of_list ())
-                                     (fun imp ->
-                                        FStar_Syntax_Print.ctx_uvar_to_string
-                                          imp.FStar_TypeChecker_Common.imp_uvar)
+                                   FStar_Class_Show.show
+                                     (FStar_Class_Show.show_list
+                                        FStar_TypeChecker_Common.show_implicit)
                                      ps3.FStar_Tactics_Types.all_implicits in
                                  FStar_Compiler_Util.print2
                                    "Checked %s implicits (2): %s\n" uu___10
@@ -3495,7 +3514,8 @@ let run_tactic_on_ps' :
                                    Prims.op_Hat "\"" (Prims.op_Hat s "\"")
                                | FStar_Tactics_Common.EExn t ->
                                    let uu___6 =
-                                     FStar_Syntax_Print.term_to_string t in
+                                     FStar_Class_Show.show
+                                       FStar_Syntax_Print.showable_term t in
                                    Prims.op_Hat "Uncaught exception: " uu___6
                                | e2 -> FStar_Compiler_Effect.raise e2 in
                              let rng =

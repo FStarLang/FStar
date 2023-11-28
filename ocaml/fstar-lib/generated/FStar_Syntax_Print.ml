@@ -2044,3 +2044,11 @@ let (showable_sigelt : FStar_Syntax_Syntax.sigelt FStar_Class_Show.showable)
   = { FStar_Class_Show.show = sigelt_to_string }
 let (showable_term : FStar_Syntax_Syntax.term FStar_Class_Show.showable) =
   { FStar_Class_Show.show = term_to_string }
+let (showable_bv : FStar_Syntax_Syntax.bv FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = bv_to_string }
+let (showable_binder : FStar_Syntax_Syntax.binder FStar_Class_Show.showable)
+  = { FStar_Class_Show.show = binder_to_string }
+let (showable_uvar : FStar_Syntax_Syntax.uvar FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = uvar_to_string }
+let (showable_ctxu : FStar_Syntax_Syntax.ctx_uvar FStar_Class_Show.showable)
+  = { FStar_Class_Show.show = ctx_uvar_to_string }

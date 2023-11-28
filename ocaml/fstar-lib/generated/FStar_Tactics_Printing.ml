@@ -7,7 +7,7 @@ let (term_to_string :
 let (goal_to_string_verbose : FStar_Tactics_Types.goal -> Prims.string) =
   fun g ->
     let uu___ =
-      FStar_Syntax_Print.ctx_uvar_to_string
+      FStar_Class_Show.show FStar_Syntax_Print.showable_ctxu
         g.FStar_Tactics_Types.goal_ctx_uvar in
     let uu___1 =
       let uu___2 = FStar_Tactics_Types.check_goal_solved' g in
@@ -26,17 +26,19 @@ let (unshadow :
   =
   fun bs ->
     fun t ->
-      let s b = FStar_Ident.string_of_id b.FStar_Syntax_Syntax.ppname in
-      let sset bv s1 =
+      let sset bv s =
         let uu___ =
           let uu___1 = FStar_Ident.range_of_id bv.FStar_Syntax_Syntax.ppname in
           FStar_Pervasives_Native.Some uu___1 in
-        FStar_Syntax_Syntax.gen_bv s1 uu___ bv.FStar_Syntax_Syntax.sort in
+        FStar_Syntax_Syntax.gen_bv s uu___ bv.FStar_Syntax_Syntax.sort in
       let fresh_until b f =
         let rec aux i =
           let t1 =
             let uu___ =
-              let uu___1 = FStar_Compiler_Util.string_of_int i in
+              let uu___1 =
+                FStar_Class_Show.show
+                  (FStar_Class_Show.printableshow
+                     FStar_Class_Printable.printable_int) i in
               Prims.op_Hat "'" uu___1 in
             Prims.op_Hat b uu___ in
           let uu___ = f t1 in if uu___ then t1 else aux (i + Prims.int_one) in
@@ -58,10 +60,12 @@ let (unshadow :
             (match uu___ with
              | (bv0, q) ->
                  let nbs =
-                   let uu___1 = s bv0 in
+                   let uu___1 =
+                     FStar_Class_Show.show FStar_Ident.showable_ident
+                       bv0.FStar_Syntax_Syntax.ppname in
                    fresh_until uu___1
-                     (fun s1 ->
-                        Prims.op_Negation (FStar_Compiler_List.mem s1 seen)) in
+                     (fun s ->
+                        Prims.op_Negation (FStar_Compiler_List.mem s seen)) in
                  let bv = sset bv0 nbs in
                  let b2 =
                    FStar_Syntax_Syntax.mk_binder_with_attrs bv q
@@ -107,8 +111,14 @@ let (goal_to_string :
             match maybe_num with
             | FStar_Pervasives_Native.None -> ""
             | FStar_Pervasives_Native.Some (i, n) ->
-                let uu___ = FStar_Compiler_Util.string_of_int i in
-                let uu___1 = FStar_Compiler_Util.string_of_int n in
+                let uu___ =
+                  FStar_Class_Show.show
+                    (FStar_Class_Show.printableshow
+                       FStar_Class_Printable.printable_int) i in
+                let uu___1 =
+                  FStar_Class_Show.show
+                    (FStar_Class_Show.printableshow
+                       FStar_Class_Printable.printable_int) n in
                 FStar_Compiler_Util.format2 " %s/%s" uu___ uu___1 in
           let maybe_label =
             match g.FStar_Tactics_Types.label with
@@ -188,7 +198,7 @@ let (ps_to_string :
     match uu___ with
     | (msg, ps) ->
         let p_imp imp =
-          FStar_Syntax_Print.uvar_to_string
+          FStar_Class_Show.show FStar_Syntax_Print.showable_uvar
             (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head in
         let n_active =
           FStar_Compiler_List.length ps.FStar_Tactics_Types.goals in
@@ -199,7 +209,9 @@ let (ps_to_string :
           let uu___2 =
             let uu___3 =
               let uu___4 =
-                FStar_Compiler_Util.string_of_int
+                FStar_Class_Show.show
+                  (FStar_Class_Show.printableshow
+                     FStar_Class_Printable.printable_int)
                   ps.FStar_Tactics_Types.depth in
               FStar_Compiler_Util.format2 "State dump @ depth %s (%s):\n"
                 uu___4 msg in

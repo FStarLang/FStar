@@ -570,7 +570,8 @@ let (preprocess :
                 let uu___5 = FStar_TypeChecker_Env.all_binders env in
                 FStar_Compiler_Effect.op_Bar_Greater uu___5
                   (FStar_Syntax_Print.binders_to_string ",") in
-              let uu___5 = FStar_Syntax_Print.term_to_string goal in
+              let uu___5 =
+                FStar_Class_Show.show FStar_Syntax_Print.showable_term goal in
               FStar_Compiler_Util.print2 "About to preprocess %s |= %s\n"
                 uu___4 uu___5
             else ());
@@ -593,7 +594,9 @@ let (preprocess :
                       let uu___7 = FStar_TypeChecker_Env.all_binders env in
                       FStar_Compiler_Effect.op_Bar_Greater uu___7
                         (FStar_Syntax_Print.binders_to_string ", ") in
-                    let uu___7 = FStar_Syntax_Print.term_to_string t' in
+                    let uu___7 =
+                      FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                        t' in
                     FStar_Compiler_Util.print2
                       "Main goal simplified to: %s |- %s\n" uu___6 uu___7
                   else ());
@@ -618,7 +621,8 @@ let (preprocess :
                                          let uu___9 =
                                            let uu___10 =
                                              FStar_Tactics_Types.goal_type g in
-                                           FStar_Syntax_Print.term_to_string
+                                           FStar_Class_Show.show
+                                             FStar_Syntax_Print.showable_term
                                              uu___10 in
                                          FStar_Compiler_Util.format1
                                            "Tactic returned proof-relevant goal: %s"
@@ -634,11 +638,15 @@ let (preprocess :
                                  if uu___7
                                  then
                                    let uu___8 =
-                                     FStar_Compiler_Util.string_of_int n in
+                                     FStar_Class_Show.show
+                                       (FStar_Class_Show.printableshow
+                                          FStar_Class_Printable.printable_int)
+                                       n in
                                    let uu___9 =
                                      let uu___10 =
                                        FStar_Tactics_Types.goal_type g in
-                                     FStar_Syntax_Print.term_to_string
+                                     FStar_Class_Show.show
+                                       FStar_Syntax_Print.showable_term
                                        uu___10 in
                                    FStar_Compiler_Util.print2
                                      "Got goal #%s: %s\n" uu___8 uu___9
@@ -646,7 +654,10 @@ let (preprocess :
                                 (let label =
                                    let uu___7 =
                                      let uu___8 =
-                                       FStar_Compiler_Util.string_of_int n in
+                                       FStar_Class_Show.show
+                                         (FStar_Class_Show.printableshow
+                                            FStar_Class_Printable.printable_int)
+                                         n in
                                      let uu___9 =
                                        let uu___10 =
                                          let uu___11 =
@@ -784,7 +795,9 @@ let rec (traverse_for_spinoff :
               | StrictlyPositive ->
                   (if debug
                    then
-                     (let uu___1 = FStar_Syntax_Print.term_to_string t2 in
+                     (let uu___1 =
+                        FStar_Class_Show.show
+                          FStar_Syntax_Print.showable_term t2 in
                       FStar_Compiler_Util.print1 "Spinning off %s\n" uu___1)
                    else ();
                    (let uu___1 =
@@ -1053,7 +1066,8 @@ let rec (traverse_for_spinoff :
                            (let uu___3 = FStar_TypeChecker_Env.get_range env in
                             let uu___4 =
                               let uu___5 =
-                                FStar_Syntax_Print.term_to_string t1 in
+                                FStar_Class_Show.show
+                                  FStar_Syntax_Print.showable_term t1 in
                               FStar_Compiler_Util.format2
                                 "Failed to split match term because %s (%s)"
                                 msg uu___5 in
@@ -1066,9 +1080,11 @@ let rec (traverse_for_spinoff :
                            (let uu___3 = FStar_TypeChecker_Env.get_range env in
                             let uu___4 =
                               let uu___5 =
-                                FStar_Syntax_Print.term_to_string t1 in
+                                FStar_Class_Show.show
+                                  FStar_Syntax_Print.showable_term t1 in
                               let uu___6 =
-                                FStar_Syntax_Print.term_to_string res1 in
+                                FStar_Class_Show.show
+                                  FStar_Syntax_Print.showable_term res1 in
                               FStar_Compiler_Util.format2
                                 "Rewrote match term\n%s\ninto %s\n" uu___5
                                 uu___6 in
@@ -1382,7 +1398,8 @@ let (spinoff_strictly_positive_goals :
         FStar_TypeChecker_Env.debug env (FStar_Options.Other "SpinoffAll") in
       if debug
       then
-        (let uu___1 = FStar_Syntax_Print.term_to_string goal in
+        (let uu___1 =
+           FStar_Class_Show.show FStar_Syntax_Print.showable_term goal in
          FStar_Compiler_Util.print1 "spinoff_all called with %s\n" uu___1)
       else ();
       FStar_Errors.with_ctx "While spinning off all goals"
@@ -1417,7 +1434,9 @@ let (spinoff_strictly_positive_goals :
                                FStar_TypeChecker_Env.all_binders env in
                              FStar_Compiler_Effect.op_Bar_Greater uu___5
                                (FStar_Syntax_Print.binders_to_string ", ") in
-                           let uu___5 = FStar_Syntax_Print.term_to_string t1 in
+                           let uu___5 =
+                             FStar_Class_Show.show
+                               FStar_Syntax_Print.showable_term t1 in
                            FStar_Compiler_Util.format2
                              "Main goal simplified to: %s |- %s\n" uu___4
                              uu___5 in
@@ -1468,7 +1487,8 @@ let (spinoff_strictly_positive_goals :
                                        (if debug
                                         then
                                           (let uu___8 =
-                                             FStar_Syntax_Print.term_to_string
+                                             FStar_Class_Show.show
+                                               FStar_Syntax_Print.showable_term
                                                t2 in
                                            FStar_Compiler_Util.print1
                                              "Got goal: %s\n" uu___8)
@@ -1478,7 +1498,9 @@ let (spinoff_strictly_positive_goals :
                     ((let uu___6 = FStar_TypeChecker_Env.get_range env in
                       let uu___7 =
                         let uu___8 =
-                          FStar_Compiler_Util.string_of_int
+                          FStar_Class_Show.show
+                            (FStar_Class_Show.printableshow
+                               FStar_Class_Printable.printable_nat)
                             (FStar_Compiler_List.length gs3) in
                         FStar_Compiler_Util.format1
                           "Split query into %s sub-goals" uu___8 in
@@ -1530,7 +1552,8 @@ let (synthesize :
                                  if uu___7
                                  then
                                    let uu___8 =
-                                     FStar_Syntax_Print.term_to_string vc in
+                                     FStar_Class_Show.show
+                                       FStar_Syntax_Print.showable_term vc in
                                    FStar_Compiler_Util.print1
                                      "Synthesis left a goal: %s\n" uu___8
                                  else ());
@@ -1582,7 +1605,9 @@ let (solve_implicits :
                   if uu___4
                   then
                     let uu___5 =
-                      FStar_Compiler_Util.string_of_int
+                      FStar_Class_Show.show
+                        (FStar_Class_Show.printableshow
+                           FStar_Class_Printable.printable_nat)
                         (FStar_Compiler_List.length gs) in
                     FStar_Compiler_Util.print1
                       "solve_implicits produced %s goals\n" uu___5
@@ -1607,7 +1632,9 @@ let (solve_implicits :
                                      if uu___9
                                      then
                                        let uu___10 =
-                                         FStar_Syntax_Print.term_to_string vc in
+                                         FStar_Class_Show.show
+                                           FStar_Syntax_Print.showable_term
+                                           vc in
                                        FStar_Compiler_Util.print1
                                          "Synthesis left a goal: %s\n"
                                          uu___10
@@ -1734,7 +1761,8 @@ let (handle_smt_goal :
                                          if uu___8
                                          then
                                            let uu___9 =
-                                             FStar_Syntax_Print.term_to_string
+                                             FStar_Class_Show.show
+                                               FStar_Syntax_Print.showable_term
                                                vc in
                                            FStar_Compiler_Util.print1
                                              "handle_smt_goals left a goal: %s\n"
@@ -2115,7 +2143,8 @@ let (splice :
                                                  if uu___12
                                                  then
                                                    let uu___13 =
-                                                     FStar_Syntax_Print.term_to_string
+                                                     FStar_Class_Show.show
+                                                       FStar_Syntax_Print.showable_term
                                                        vc in
                                                    FStar_Compiler_Util.print1
                                                      "Splice left a goal: %s\n"
@@ -2163,15 +2192,14 @@ let (splice :
                                           let uu___10 =
                                             let uu___11 =
                                               let uu___12 =
-                                                FStar_Ident.string_of_lid lid in
+                                                FStar_Class_Show.show
+                                                  FStar_Ident.showable_lident
+                                                  lid in
                                               let uu___13 =
-                                                let uu___14 =
-                                                  FStar_Compiler_List.map
-                                                    FStar_Ident.string_of_lid
-                                                    lids' in
-                                                FStar_Compiler_Effect.op_Less_Bar
-                                                  (FStar_Compiler_String.concat
-                                                     ", ") uu___14 in
+                                                FStar_Class_Show.show
+                                                  (FStar_Class_Show.show_list
+                                                     FStar_Ident.showable_lident)
+                                                  lids' in
                                               FStar_Compiler_Util.format2
                                                 "Splice declared the name %s but it was not defined.\nThose defined were: %s"
                                                 uu___12 uu___13 in
@@ -2186,8 +2214,9 @@ let (splice :
                                   if uu___10
                                   then
                                     let uu___11 =
-                                      (FStar_Common.string_of_list ())
-                                        FStar_Syntax_Print.sigelt_to_string
+                                      FStar_Class_Show.show
+                                        (FStar_Class_Show.show_list
+                                           FStar_Syntax_Print.showable_sigelt)
                                         sigelts1 in
                                     FStar_Compiler_Util.print1
                                       "splice: got decls = {\n\n%s\n\n}\n"
@@ -2363,7 +2392,8 @@ let (postprocess :
                                         if uu___9
                                         then
                                           let uu___10 =
-                                            FStar_Syntax_Print.term_to_string
+                                            FStar_Class_Show.show
+                                              FStar_Syntax_Print.showable_term
                                               vc in
                                           FStar_Compiler_Util.print1
                                             "Postprocessing left a goal: %s\n"

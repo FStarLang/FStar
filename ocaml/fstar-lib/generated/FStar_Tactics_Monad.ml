@@ -156,7 +156,10 @@ let (register_goal : FStar_Tactics_Types.goal -> unit) =
                   (FStar_Options.Other "CoreEq") in
               if uu___6
               then
-                let uu___7 = FStar_Compiler_Util.string_of_int i in
+                let uu___7 =
+                  FStar_Class_Show.show
+                    (FStar_Class_Show.printableshow
+                       FStar_Class_Printable.printable_int) i in
                 FStar_Compiler_Util.print1 "(%s) Registering goal\n" uu___7
               else ());
              (let should_register = is_goal_safe_as_well_typed g in
@@ -172,7 +175,10 @@ let (register_goal : FStar_Tactics_Types.goal -> unit) =
                        (FStar_Options.Other "RegisterGoal")) in
                 (if uu___7
                  then
-                   let uu___8 = FStar_Compiler_Util.string_of_int i in
+                   let uu___8 =
+                     FStar_Class_Show.show
+                       (FStar_Class_Show.printableshow
+                          FStar_Class_Printable.printable_int) i in
                    FStar_Compiler_Util.print1
                      "(%s) Not registering goal since it has unresolved uvar deps\n"
                      uu___8
@@ -188,8 +194,13 @@ let (register_goal : FStar_Tactics_Types.goal -> unit) =
                          (FStar_Options.Other "RegisterGoal")) in
                   if uu___8
                   then
-                    let uu___9 = FStar_Compiler_Util.string_of_int i in
-                    let uu___10 = FStar_Syntax_Print.ctx_uvar_to_string uv in
+                    let uu___9 =
+                      FStar_Class_Show.show
+                        (FStar_Class_Show.printableshow
+                           FStar_Class_Printable.printable_int) i in
+                    let uu___10 =
+                      FStar_Class_Show.show FStar_Syntax_Print.showable_ctxu
+                        uv in
                     FStar_Compiler_Util.print2
                       "(%s) Registering goal for %s\n" uu___9 uu___10
                   else ());
@@ -203,7 +214,8 @@ let (register_goal : FStar_Tactics_Types.goal -> unit) =
                       let msg =
                         let uu___9 =
                           let uu___10 = FStar_Syntax_Util.ctx_uvar_typ uv in
-                          FStar_Syntax_Print.term_to_string uu___10 in
+                          FStar_Class_Show.show
+                            FStar_Syntax_Print.showable_term uu___10 in
                         let uu___10 =
                           FStar_TypeChecker_Core.print_error_short err in
                         FStar_Compiler_Util.format2
@@ -426,7 +438,8 @@ let (check_valid_goal : FStar_Tactics_Types.goal -> unit) =
                            let uu___7 =
                              let uu___8 =
                                let uu___9 =
-                                 FStar_Syntax_Print.bv_to_string bv in
+                                 FStar_Class_Show.show
+                                   FStar_Syntax_Print.showable_bv bv in
                                Prims.op_Hat "bv: " uu___9 in
                              Bad uu___8 in
                            FStar_Compiler_Effect.raise uu___7
@@ -535,7 +548,8 @@ let (cur_goal : FStar_Tactics_Types.goal tac) =
             | FStar_Pervasives_Native.Some t ->
                 ((let uu___3 =
                     FStar_Tactics_Printing.goal_to_string_verbose hd in
-                  let uu___4 = FStar_Syntax_Print.term_to_string t in
+                  let uu___4 =
+                    FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
                   FStar_Compiler_Util.print2
                     "!!!!!!!!!!!! GOAL IS ALREADY SOLVED! %s\nsol is %s\n"
                     uu___3 uu___4);

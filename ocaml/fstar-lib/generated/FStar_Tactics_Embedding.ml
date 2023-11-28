@@ -204,7 +204,7 @@ let (fv_as_emb_typ : FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.emb_typ) =
   fun fv ->
     let uu___ =
       let uu___1 =
-        FStar_Ident.string_of_lid
+        FStar_Class_Show.show FStar_Ident.showable_lident
           (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
       (uu___1, []) in
     FStar_Syntax_Syntax.ET_app uu___
@@ -366,8 +366,8 @@ let (e_exn : Prims.exn FStar_Syntax_Embeddings_Base.embedding) =
   let uu___ =
     let uu___1 =
       let uu___2 =
-        FStar_Compiler_Effect.op_Bar_Greater FStar_Parser_Const.exn_lid
-          FStar_Ident.string_of_lid in
+        FStar_Class_Show.show FStar_Ident.showable_lident
+          FStar_Parser_Const.exn_lid in
       (uu___2, []) in
     FStar_Syntax_Syntax.ET_app uu___1 in
   FStar_Syntax_Embeddings_Base.mk_emb_full embed_exn unembed_exn
@@ -489,8 +489,8 @@ let e_result :
     let uu___1 =
       let uu___2 =
         let uu___3 =
-          FStar_Compiler_Effect.op_Bar_Greater fstar_tactics_result.lid
-            FStar_Ident.string_of_lid in
+          FStar_Class_Show.show FStar_Ident.showable_lident
+            fstar_tactics_result.lid in
         let uu___4 =
           let uu___5 = FStar_Syntax_Embeddings_Base.emb_typ_of ea in [uu___5] in
         (uu___3, uu___4) in

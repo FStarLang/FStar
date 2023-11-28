@@ -128,3 +128,7 @@ let (qual_id : lident -> ident -> lident) =
         lid_of_ids (FStar_Compiler_List.op_At lid1.ns [lid1.ident; id]) in
       let uu___1 = range_of_id id in set_lid_range uu___ uu___1
 let (nsstr : lident -> Prims.string) = fun l -> l.nsstr
+let (showable_ident : ident FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = string_of_id }
+let (showable_lident : lident FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = string_of_lid }

@@ -550,6 +550,13 @@ let (__proj__Mkimplicit__item__imp_range :
   fun projectee ->
     match projectee with
     | { imp_reason; imp_uvar; imp_tm; imp_range;_} -> imp_range
+let (show_implicit : implicit FStar_Class_Show.showable) =
+  {
+    FStar_Class_Show.show =
+      (fun i ->
+         FStar_Class_Show.show FStar_Syntax_Print.showable_uvar
+           (i.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head)
+  }
 type implicits = implicit Prims.list
 let (implicits_to_string : implicits -> Prims.string) =
   fun imps ->
