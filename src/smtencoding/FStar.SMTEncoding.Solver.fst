@@ -29,6 +29,8 @@ open FStar.TypeChecker.Env
 open FStar.SMTEncoding
 open FStar.SMTEncoding.ErrorReporting
 open FStar.SMTEncoding.Util
+open FStar.Class.Show
+open FStar.Class.PP
 
 module BU       = FStar.Compiler.Util
 module Env      = FStar.TypeChecker.Env
@@ -354,8 +356,8 @@ let errors_to_report (settings : query_settings) : list Errors.error =
     in
     let basic_errors =
         (*
-         * AR: smt_error is either an Inr of a multi-line detailed message OR an Inl of a single line short message
-         *     depending on whether Options.query_stats is on or off
+         * smt_error is a single error message containing either a multi-line detailed message
+         * or a single short component, depending on whether --query_stats is on
          *)
         let smt_error =
           if Options.query_stats () then
@@ -393,9 +395,9 @@ let errors_to_report (settings : query_settings) : list Errors.error =
               ) (0, 0, 0) settings.query_errors
             in
             match incomplete_count, canceled_count, unknown_count with
-            | _, 0, 0 when incomplete_count > 0 -> mkmsg "The SMT solver could not prove the query. Use --query_stats for more details."
-            | 0, _, 0 when canceled_count > 0   -> mkmsg "The SMT query timed out, you might want to increase the rlimit"
-            | _, _, _                           -> mkmsg "Try with --query_stats to get more details"
+            | _, 0, 0 when incomplete_count > 0 -> [text "The SMT solver could not prove the query. Use --query_stats for more details."]
+            | 0, _, 0 when canceled_count > 0   -> [text "The SMT query timed out, you might want to increase the rlimit"]
+            | _, _, _                           -> [text "Try with --query_stats to get more details"]
         in
         match find_localized_errors settings.query_errors, settings.query_all_labels with
         | Some err, _ ->
@@ -615,7 +617,7 @@ let query_info settings z3result =
          | UNSAT core -> BU.colorize_green "succeeded", core
          | _ -> BU.colorize_red ("failed {reason-unknown=" ^ status_string ^ "}"), None
         in
-        let range = "(" ^ (Range.string_of_range settings.query_range) ^ at_log_file ^ ")" in
+        let range = "(" ^ show settings.query_range ^ at_log_file ^ ")" in
         let used_hint_tag = if used_hint settings then " (with hint)" else "" in
         let stats =
             if Options.query_stats() then
@@ -626,13 +628,13 @@ let query_info settings z3result =
         BU.print "%s\tQuery-stats (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s and rlimit %s %s\n"
              [  range;
                 settings.query_name;
-                BU.string_of_int settings.query_index;
+                show settings.query_index;
                 tag;
                 used_hint_tag;
-                BU.string_of_int z3result.z3result_time;
-                BU.string_of_int settings.query_fuel;
-                BU.string_of_int settings.query_ifuel;
-                BU.string_of_int (settings.query_rlimit / rlimit_conversion_factor);
+                show z3result.z3result_time;
+                show settings.query_fuel;
+                show settings.query_ifuel;
+                show (settings.query_rlimit / rlimit_conversion_factor);
                 stats
              ];
         if Options.print_z3_statistics () then process_unsat_core core;
@@ -1072,8 +1074,8 @@ let report (env:Env.env) (default_settings : query_settings) (a : answer) : unit
           in
           FStar.TypeChecker.Err.log_issue
             env rng
-            (Errors.Error_QuakeFailed,
-              Errors.mkmsg <|
+            (Errors.Error_QuakeFailed, [
+              Errors.text <|
               BU.format6
                 "Query %s failed the quake test, %s out of %s attempts succeded, \
                  but the threshold was %s out of %s%s"
@@ -1082,7 +1084,7 @@ let report (env:Env.env) (default_settings : query_settings) (a : answer) : unit
                 (string_of_int total_ran)
                 (string_of_int lo)
                 (string_of_int hi)
-                (if total_ran < hi then " (early abort)" else ""))
+                (if total_ran < hi then " (early abort)" else "")])
         end
 
       end else begin
@@ -1180,11 +1182,11 @@ let do_solve (can_split:bool) (is_retry:bool) use_env_msg tcenv q : unit =
     | FStar.SMTEncoding.Env.Inner_let_rec names ->
       FStar.TypeChecker.Err.log_issue
         tcenv tcenv.range
-        (Errors.Error_NonTopRecFunctionNotFullyEncoded,
-          Errors.mkmsg <|
+        (Errors.Error_NonTopRecFunctionNotFullyEncoded, [
+          Errors.text <|
          BU.format1
            "Could not encode the query since F* does not support precise smtencoding of inner let-recs yet (in this case %s)"
-           (String.concat "," (List.map fst names)));
+           (String.concat "," (List.map fst names))]);
        None
   in
   match ans_opt with
