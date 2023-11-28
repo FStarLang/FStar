@@ -382,18 +382,28 @@ let errors_to_report (settings : query_settings) : list Errors.error =
              *       (I think), so incomplete or resource messages are in parenthesis, whereas
              *       canceled, timeout, etc. are without
              *)
-            let incomplete_count, canceled_count, unknown_count =
-              List.fold_left (fun (ic, cc, uc) err ->
+            let incomplete_count, canceled_count, unknown_count, z3_overflow_bug_count =
+              List.fold_left (fun (ic, cc, uc, bc) err ->
                 let err = BU.substring_from err.error_reason (String.length "unknown because ") in
                 //err is (incomplete quantifiers), (resource ...), canceled, or unknown etc.
-                if BU.starts_with err "canceled"  ||
-                   BU.starts_with err "(resource" ||
-                   BU.starts_with err "timeout"
-                then (ic, cc + 1, uc)
-                else if BU.starts_with err "(incomplete" then (ic + 1, cc, uc)
-                else (ic, cc, uc + 1)  //note this covers unknowns, overflows, etc.
-              ) (0, 0, 0) settings.query_errors
+
+                match () with
+                | _ when BU.starts_with err "(incomplete" ->
+                    (ic + 1, cc, uc, bc)
+                | _ when BU.starts_with err "canceled" || BU.starts_with err "(resource" || BU.starts_with err "timeout" ->
+                    (ic, cc + 1, uc, bc)
+                | _ when BU.starts_with err "Overflow encountered when expanding old_vector" ->
+                    (ic, cc, uc, bc + 1)
+                | _ ->
+                    (ic, cc, uc + 1, bc)  //note this covers unknowns, overflows, etc.
+              ) (0, 0, 0, 0) settings.query_errors
             in
+            (* If we notice the z3 overflow bug, add a separate error to warn the user. *)
+            if z3_overflow_bug_count > 0 then
+              Errors.log_issue_doc settings.query_range (Errors.Warning_UnexpectedZ3Stderr, [
+                text "Z3 ran into an internal overflow while trying to prove this query.";
+                text "Try breaking it down, or using --split_queries."
+              ]);
             match incomplete_count, canceled_count, unknown_count with
             | _, 0, 0 when incomplete_count > 0 -> [text "The SMT solver could not prove the query. Use --query_stats for more details."]
             | 0, _, 0 when canceled_count > 0   -> [text "The SMT query timed out, you might want to increase the rlimit"]
