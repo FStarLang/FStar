@@ -37,6 +37,8 @@ module UF = FStar.Syntax.Unionfind
 module Const = FStar.Parser.Const
 module TcComm = FStar.TypeChecker.Common
 
+open FStar.Defensive
+
 let rec eq_step s1 s2 =
   match s1, s2 with
   | Beta, Beta
@@ -1172,73 +1174,36 @@ let bound_vars_of_bindings bs =
         | Binding_univ _ -> [])
 
 let binders_of_bindings bs = bound_vars_of_bindings bs |> List.map Syntax.mk_binder |> List.rev
-
+let all_binders env = binders_of_bindings env.gamma
 let bound_vars env = bound_vars_of_bindings env.gamma
 
-let all_binders env = binders_of_bindings env.gamma
+instance hasBinders_env : hasBinders env = {
+  boundNames = (fun e -> BU.as_set (bound_vars e) Syntax.order_bv);
+}
 
-let def_check_vars_in_set rng msg vset t =
-    if Options.defensive () then begin
-        let s = Free.names t in
-        if not (BU.set_is_empty <| BU.set_difference s vset)
-        then 
-          let open FStar.Pprint in
-          let doclist (ds : list Pprint.document) : Pprint.document =
-            surround_separate 2 0 (doc_of_string "[]") lbracket (semi ^^ break_ 1) rbracket ds
-          in
-          Errors.log_issue_doc rng (Errors.Warning_Defensive, [
-               text "Internal: term is not well-scoped " ^/^ parens (doc_of_string msg);
-               text "t = " ^/^ Print.term_to_doc t;
-               text "FVs = " ^/^ doclist (BU.set_elements s |> List.map (fun b -> arbitrary_string (Print.bv_to_string b)));
-               text "Scope = " ^/^ doclist (BU.set_elements vset |> List.map (fun b -> arbitrary_string (Print.bv_to_string b)));
-             ])
-    end
+instance hasNames_lcomp : hasNames lcomp = {
+  freeNames = (fun lc -> freeNames (fst (lcomp_comp lc)));
+}
 
-let def_check_closed_in rng msg l t =
-    if not (Options.defensive ()) then () else
-    def_check_vars_in_set rng msg (BU.as_set l Syntax.order_bv) t
+instance pretty_lcomp : FStar.Class.PP.pretty lcomp = {
+  pp = (fun lc -> let open FStar.Pprint in empty);
+}
 
-let def_check_closed_in_env rng msg e t =
-    if not (Options.defensive ()) then () else
-    def_check_closed_in rng msg (bound_vars e) t
+instance hasNames_guard : hasNames guard_t = {
+  freeNames = (fun g -> match g.guard_f with
+                        | Trivial -> new_set Syntax.order_bv
+                        | NonTrivial f -> freeNames f);
+}
 
-let def_check_comp_closed_in rng msg l c =
-    if not (Options.defensive ()) then () else
-    match c.n with
-    | Total t
-    | GTotal t -> def_check_closed_in rng (msg^".typ") l t
-    | Comp ct -> begin
-      def_check_closed_in rng (msg^".typ") l (ct.result_typ);
-      List.iter (fun (a, _) -> def_check_closed_in rng (msg^".arg") l a) ct.effect_args
-    end
-
-let def_check_comp_closed_in_env rng msg e c =
-    if not (Options.defensive ()) then () else
-    match c.n with
-    | Total t
-    | GTotal t -> def_check_closed_in_env rng (msg^".typ") e t
-    | Comp ct -> begin
-      def_check_closed_in_env rng (msg^".typ") e (ct.result_typ);
-      List.iter (fun (a, _) -> def_check_closed_in_env rng (msg^".arg") e a) ct.effect_args
-    end
-
-let def_check_lcomp_closed_in rng msg l lc =
-  if Options.defensive () then
-    let c, _ = lcomp_comp lc in
-    def_check_comp_closed_in rng msg l c
-
-let def_check_lcomp_closed_in_env rng msg env lc =
-  if Options.defensive () then
-    let c, _ = lcomp_comp lc in
-    def_check_comp_closed_in_env rng msg env c
-
-let def_check_guard_wf rng msg env g =
-    match g.guard_f with
-    | Trivial -> ()
-    | NonTrivial f -> def_check_closed_in_env rng msg env f
+instance pretty_guard : Class.PP.pretty guard_t = {
+  pp = (fun g -> let open FStar.Pprint in
+                 match g.guard_f with
+                 | Trivial -> doc_of_string "Trivial"
+                 | NonTrivial f -> doc_of_string "NonTrivial" ^/^ Class.PP.pp f);
+}
 
 let comp_to_comp_typ (env:env) c =
-  def_check_comp_closed_in_env c.pos "comp_to_comp_typ" env c;
+  def_check_scoped c.pos "comp_to_comp_typ" env c;
   match c.n with
   | Comp ct -> ct
   | _ ->
@@ -1253,13 +1218,13 @@ let comp_to_comp_typ (env:env) c =
      flags = U.comp_flags c}
 
 let comp_set_flags env c f =
-    def_check_comp_closed_in_env c.pos "comp_set_flags.IN" env c;
+    def_check_scoped c.pos "comp_set_flags.IN" env c;
     let r = {c with n=Comp ({comp_to_comp_typ env c with flags=f})} in
-    def_check_comp_closed_in_env c.pos "comp_set_flags.OUT" env r;
+    def_check_scoped c.pos "comp_set_flags.OUT" env r;
     r
 
 let rec unfold_effect_abbrev env comp =
-  def_check_comp_closed_in_env comp.pos "unfold_effect_abbrev" env comp;
+  def_check_scoped comp.pos "unfold_effect_abbrev" env comp;
   let c = comp_to_comp_typ env comp in
   match lookup_effect_abbrev env c.comp_univs c.effect_name with
     | None -> c
@@ -1889,7 +1854,7 @@ let close_guard_univs us bs g =
 
 let close_forall (env:env) (bs:binders) (f:formula) : formula =
   Errors.with_ctx "While closing a formula" (fun () ->
-    def_check_closed_in_env f.pos "close_forall" env (U.arrow bs (S.mk_Total f));
+    def_check_scoped f.pos "close_forall" env (U.arrow bs (S.mk_Total f));
     let bvs = List.map (fun b -> b.binder_bv) bs in
     (* We start with env_full and pop bvs one-by-one. This way each
      * bv sort is always well scoped in the call to universe_of below. *)
@@ -1898,7 +1863,7 @@ let close_forall (env:env) (bs:binders) (f:formula) : formula =
     let (f', e) =
       List.fold_right (fun bv (f, e) ->
         let e' = pop_bv e |> must |> snd in
-        def_check_closed_in_env Range.dummyRange "close_forall.sort" e' bv.sort;
+        def_check_scoped Range.dummyRange "close_forall.sort" e' bv.sort;
         let f' =
               if Syntax.is_null_bv bv then f
               else let u = e'.universe_of e' bv.sort in

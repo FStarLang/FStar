@@ -63,6 +63,7 @@ type problem 'a = {                  //Try to prove: lhs rel rhs ~ guard
 type prob =
   | TProb of problem typ
   | CProb of problem comp
+type prob_t = prob
 
 val as_tprob : prob -> problem typ
 
