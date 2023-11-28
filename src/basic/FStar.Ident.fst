@@ -73,3 +73,12 @@ let qual_id lid id =
     set_lid_range (lid_of_ids (lid.ns @ [lid.ident;id])) (range_of_id id)
 
 let nsstr (l:lid) : string = l.nsstr
+
+(* Showable instances *)
+instance showable_ident = {
+  show = string_of_id;
+}
+
+instance showable_lident = {
+  show = string_of_lid;
+}

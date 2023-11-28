@@ -90,7 +90,7 @@ let core_check env sol t must_tot
     | Inr err ->
       debug (fun _ ->
                BU.print5 "(%s) Core checking failed (%s) on term %s and type %s\n%s\n"
-                         (Range.string_of_range (Env.get_range env))
+                         (show (Env.get_range env))
                          (Core.print_error_short err)
                          (show sol)
                          (show t)
@@ -249,33 +249,33 @@ let proc_guard_formula
     // should somehow taint the state instead of just printing a warning
     Err.log_issue e.range
         (Errors.Warning_TacAdmit, BU.format1 "Tactics admitted guard <%s>\n\n"
-                    (Print.term_to_string f));
+                    (show f));
     ret ()
 
   | Goal ->
-    mlog (fun () -> BU.print2 "Making guard (%s:%s) into a goal\n" reason (Print.term_to_string f)) (fun () ->
+    mlog (fun () -> BU.print2 "Making guard (%s:%s) into a goal\n" reason (show f)) (fun () ->
     let! g = goal_of_guard reason e f sc_opt rng in
     push_goals [g])
 
   | SMT ->
-    mlog (fun () -> BU.print2 "Pushing guard (%s:%s) as SMT goal\n" reason (Print.term_to_string f)) (fun () ->
+    mlog (fun () -> BU.print2 "Pushing guard (%s:%s) as SMT goal\n" reason (show f)) (fun () ->
     let! g = goal_of_guard reason e f sc_opt rng in
     push_smt_goals [g])
 
   | SMTSync ->
-    mlog (fun () -> BU.print2 "Sending guard (%s:%s) to SMT Synchronously\n" reason (Print.term_to_string f)) (fun () ->
+    mlog (fun () -> BU.print2 "Sending guard (%s:%s) to SMT Synchronously\n" reason (show f)) (fun () ->
     let g = { Env.trivial_guard with guard_f = NonTrivial f } in
     Rel.force_trivial_guard e g;
     ret ())
 
   | Force ->
-    mlog (fun () -> BU.print2 "Forcing guard (%s:%s)\n" reason (Print.term_to_string f)) (fun () ->
+    mlog (fun () -> BU.print2 "Forcing guard (%s:%s)\n" reason (show f)) (fun () ->
     let g = { Env.trivial_guard with guard_f = NonTrivial f } in
     try if not (Env.is_trivial <| Rel.discharge_guard_no_smt e g)
         then fail1 "Forcing the guard failed (%s)" reason
         else ret ()
     with
-    | _ -> mlog (fun () -> BU.print1 "guard = %s\n" (Print.term_to_string f)) (fun () ->
+    | _ -> mlog (fun () -> BU.print1 "guard = %s\n" (show f)) (fun () ->
            fail1 "Forcing the guard failed (%s)" reason))
 
 let proc_guard' (simplify:bool) (reason:string) (e : env) (g : guard_t) (sc_opt:option should_check_uvar) (rng:Range.range) : tac unit =
@@ -337,7 +337,7 @@ let tc_unifier_solved_implicits env (must_tot:bool) (allow_guards:bool) (uvs:lis
           && NonTrivial? guard.guard_f
           then (
             fail3 "Could not typecheck unifier solved implicit %s to %s since it produced a guard and guards were not allowed;guard is\n%s"
-                (Print.uvar_to_string u.ctx_uvar_head)
+                (show u.ctx_uvar_head)
                 (show sol)
                 (show g)
           )
@@ -349,7 +349,7 @@ let tc_unifier_solved_implicits env (must_tot:bool) (allow_guards:bool) (uvs:lis
 
         | Inr failed ->
           fail3 "Could not typecheck unifier solved implicit %s to %s because %s"
-            (Print.uvar_to_string u.ctx_uvar_head)
+            (show u.ctx_uvar_head)
             (show sol)
             (Core.print_error failed)
   in
@@ -418,7 +418,7 @@ let __do_unify_wflags
                end
              | Errors.Error (_, msg, r, _) -> begin
                             mlog (fun () -> BU.print2 ">> do_unify error, (%s) at (%s)\n"
-                            (Errors.rendermsg msg) (Range.string_of_range r)) (fun _ ->
+                            (Errors.rendermsg msg) (show r)) (fun _ ->
                             ret None)
                end
         )
@@ -705,14 +705,14 @@ let bv_to_binding (bv : bv) : RD.binding =
   {
     uniq   = Z.of_int_fs bv.index;
     sort   = bv.sort;
-    ppname = string_of_id bv.ppname;
+    ppname = show bv.ppname;
   }
 
 let binder_to_binding (b:binder) : RD.binding =
   bv_to_binding b.binder_bv
 
 let binding_to_string (b : RD.binding) : string =
-  b.ppname ^ "#" ^ string_of_int (Z.to_int_fs b.uniq)
+  b.ppname ^ "#" ^ show (Z.to_int_fs b.uniq)
 
 
 let binding_to_bv (b : RD.binding) : bv =
@@ -767,7 +767,7 @@ let intro () : tac RD.binding = wrap_err "intro" <| (
              //           (show sol);
              //BU.print1 "[intro]: old goal is %s" (goal_to_string goal);
              //BU.print1 "[intro]: new goal is %s"
-             //           (Print.ctx_uvar_to_string ctx_uvar);
+             //           (show ctx_uvar);
              //ignore (FStar.Options.set_options "--debug_level Rel");
               (* Suppose if instead of simply assigning `?u` to the lambda term on
                 the RHS, we tried to unify `?u` with the `(fun (x:t) -> ?v @ [NM(x, 0)])`.
@@ -933,7 +933,7 @@ let try_unify_by_application (should_check:option should_check_uvar)
             | Some (b, c) ->
               if not (U.is_total_comp c) then fail "Codomain is effectful" else
               let! uvt, uv = new_uvar "apply arg" e b.binder_bv.sort should_check typedness_deps rng in
-              if_verbose (fun () -> BU.print1 "t_apply: generated uvar %s\n" (Print.ctx_uvar_to_string uv)) ;!
+              if_verbose (fun () -> BU.print1 "t_apply: generated uvar %s\n" (show uv)) ;!
               let typ = U.comp_result c in
               let typ' = SS.subst [S.NT (b.binder_bv, uvt)] typ in
               aux ((uvt, U.aqual_of_binder b, uv)::acc) (uv::typedness_deps) typ'
@@ -986,9 +986,9 @@ let t_apply (uopt:bool) (only_match:bool) (tc_resolved_uvars:bool) (tm:term) : t
     let tc_resolved_uvars = true in
     if_verbose
       (fun () -> BU.print4 "t_apply: uopt %s, only_match %s, tc_resolved_uvars %s, tm = %s\n"
-                   (string_of_bool uopt)
-                   (string_of_bool only_match)
-                   (string_of_bool tc_resolved_uvars)
+                   (show uopt)
+                   (show only_match)
+                   (show tc_resolved_uvars)
                    (show tm)) ;!
     let! ps = get in
     let! goal = cur_goal in
@@ -1098,7 +1098,7 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
                    if Env.debug env <| Options.Other "2635"
                    then
                      BU.print2 "Apply lemma created a new uvar %s while applying %s\n"
-                       (Print.ctx_uvar_to_string u)
+                       (show u)
                        (show tm);
                    ret ((t, aq)::uvs, u::deps, (t, u)::imps, S.NT(b, t)::subst))
           ([], [], [], [])
@@ -1215,7 +1215,7 @@ let rewrite (hh:RD.binding) : tac unit = wrap_err "rewrite" <| (
     let! goal = cur_goal in
     let h = binding_to_binder hh in
     let bv = h.binder_bv in
-    if_verbose (fun _ -> BU.print2 "+++Rewrite %s : %s\n" (Print.bv_to_string bv) (show bv.sort)) ;!
+    if_verbose (fun _ -> BU.print2 "+++Rewrite %s : %s\n" (show bv) (show bv.sort)) ;!
     match split_env bv (goal_env goal) with
     | None -> fail "binder not found in environment"
     | Some (e0, bv, bvs) ->
@@ -1334,7 +1334,7 @@ let clear (b : RD.binding) : tac unit =
     let! goal = cur_goal in
     if_verbose (fun () -> BU.print2 "Clear of (%s), env has %s binders\n"
                         (binding_to_string b)
-                        (Env.all_binders (goal_env goal) |> List.length |> string_of_int)) ;!
+                        (Env.all_binders (goal_env goal) |> List.length |> show)) ;!
     match split_env bv (goal_env goal) with
     | None -> fail "Cannot clear; binder not in environment"
     | Some (e', bv, bvs) ->
@@ -1344,7 +1344,7 @@ let clear (b : RD.binding) : tac unit =
           | bv'::bvs ->
             if free_in bv bv'.sort
             then fail (BU.format1 "Cannot clear; binder present in the type of %s"
-                                    (Print.bv_to_string bv'))
+                                    (show bv'))
             else check bvs
       in
       if free_in bv (goal_type goal) then
@@ -1855,7 +1855,7 @@ let t_destruct (s_tm : term) : tac (list (fv * Z.t)) = wrap_err "destruct" <| (
                     | Some se ->
                     match se.sigel with
                     | Sig_datacon {us=c_us; t=c_ty; num_ty_params=nparam; mutuals=mut} ->
-                        (* BU.print2 "ty of %s = %s\n" (Ident.string_of_lid c_lid) *)
+                        (* BU.print2 "ty of %s = %s\n" (show c_lid) *)
                         (*                             (show c_ty); *)
                         let fv = S.lid_as_fv c_lid (Some Data_ctor) in
 
@@ -1868,7 +1868,7 @@ let t_destruct (s_tm : term) : tac (list (fv * Z.t)) = wrap_err "destruct" <| (
                          * fresh univ_uvars for its universes. *)
                         let c_us, c_ty = Env.inst_tscheme (c_us, c_ty) in
 
-                        (* BU.print2 "ty(2) of %s = %s\n" (Ident.string_of_lid c_lid) *)
+                        (* BU.print2 "ty(2) of %s = %s\n" (show c_lid) *)
                         (*                                (show c_ty); *)
 
                         (* Deconstruct its type, separating the parameters from the
@@ -1879,7 +1879,7 @@ let t_destruct (s_tm : term) : tac (list (fv * Z.t)) = wrap_err "destruct" <| (
                         let bs, comp =
                           let rename_bv bv =
                               let ppname = bv.ppname in
-                              let ppname = mk_ident ("a" ^ string_of_id ppname, range_of_id ppname) in
+                              let ppname = mk_ident ("a" ^ show ppname, range_of_id ppname) in
                               // freshen just to be extra safe.. probably not needed
                               freshen_bv ({ bv with ppname = ppname })
                           in
@@ -2028,11 +2028,11 @@ let string_to_term (e: Env.env) (s: string): tac term
       let dsenv = FStar.Syntax.DsEnv.set_current_module e.dsenv (current_module e) in
       begin try ret (FStar.ToSyntax.ToSyntax.desugar_term dsenv t) with
           | FStar.Errors.Error (_, e, _, _) ->
-            fail ("string_of_term: " ^ Errors.rendermsg e)
-          | _ -> fail ("string_of_term: Unknown error")
+            fail ("string_to_term: " ^ Errors.rendermsg e)
+          | _ -> fail ("string_to_term: Unknown error")
       end
-    | ASTFragment _ -> fail ("string_of_term: expected a Term as a result, got an ASTFragment")
-    | ParseError (_, err, _) -> fail ("string_of_term: got error " ^ Errors.rendermsg err) // FIXME
+    | ASTFragment _ -> fail ("string_to_term: expected a Term as a result, got an ASTFragment")
+    | ParseError (_, err, _) -> fail ("string_to_term: got error " ^ Errors.rendermsg err) // FIXME
 
 let push_bv_dsenv (e: Env.env) (i: string): tac (env * RD.binding)
   = let ident = Ident.mk_ident (i, FStar.Compiler.Range.dummyRange) in
@@ -2060,7 +2060,7 @@ let comp_to_doc (c:comp) : tac Pprint.document
     ret s
 
 let range_to_string (r:FStar.Compiler.Range.range) : tac string
-  = ret (Range.string_of_range r)
+  = ret (show r)
 
 let term_eq_old (t1:term) (t2:term) : tac bool
   = idtac ;!
@@ -2260,10 +2260,10 @@ let refl_is_non_informative (g:env) (t:typ) : tac (option unit & issues) =
          let g = Env.set_range g t.pos in
          dbg_refl g (fun _ ->
            BU.format1 "refl_is_non_informative: %s\n"
-             (Print.term_to_string t));
+             (show t));
          let b = Core.is_non_informative g t in
          dbg_refl g (fun _ -> BU.format1 "refl_is_non_informative: returned %s"
-                                (string_of_bool b));
+                                (show b));
          if b then ((), [])
          else Errors.raise_error (Errors.Fatal_UnexpectedTerm,
                 "is_non_informative returned false ")
@@ -2386,7 +2386,7 @@ let refl_core_check_term_at_type (g:env) (e:term) (t:typ)
          let g = Env.set_range g e.pos in
          dbg_refl g (fun _ ->
            BU.format2 "refl_core_check_term_at_type: term: %s, type: %s\n"
-             (Print.term_to_string e) (Print.term_to_string t));
+             (show e) (show t));
          match Core.check_term_at_type g e t with
          | Inl (eff, None) ->
            dbg_refl g (fun _ ->
@@ -2410,7 +2410,7 @@ let refl_tc_term (g:env) (e:term) : tac (option (term & (Core.tot_or_ghost & typ
   then refl_typing_builtin_wrapper "refl_tc_term" (fun _ ->
     let g = Env.set_range g e.pos in
     dbg_refl g (fun _ ->
-      BU.format2 "refl_tc_term@%s: %s\n" (Range.string_of_range e.pos) (show e));
+      BU.format2 "refl_tc_term@%s: %s\n" (show e.pos) (show e));
     dbg_refl g (fun _ -> "refl_tc_term: starting tc {\n");
     //
     // we don't instantiate implicits at the end of e
@@ -2439,7 +2439,7 @@ let refl_tc_term (g:env) (e:term) : tac (option (term & (Core.tot_or_ghost & typ
      if not (no_uvars_in_term e)
      then (
         Errors.raise_error (Errors.Error_UnexpectedUnresolvedUvar,
-                            BU.format1 "Elaborated term has unresolved implicits: %s" (Print.term_to_string e))
+                            BU.format1 "Elaborated term has unresolved implicits: %s" (show e))
                             e.pos
      )
      else ( 
@@ -2449,15 +2449,15 @@ let refl_tc_term (g:env) (e:term) : tac (option (term & (Core.tot_or_ghost & typ
       // TODO: may be should we check here that e has no unresolved implicits?
       dbg_refl g (fun _ ->
         BU.format1 "} finished tc with e = %s\n"
-          (Print.term_to_string e));
+          (show e));
       let guards : ref (list (env & typ)) = BU.mk_ref [] in
       let gh = fun g guard ->
         (* collect guards and return them *)
         dbg_refl g (fun _ -> 
           BU.format3 "Got guard in Env@%s |- %s@%s\n"
-            (Env.get_range g |> Range.string_of_range)
-            (Print.term_to_string guard)
-            (Range.string_of_range guard.pos)
+            (Env.get_range g |> show)
+            (show guard)
+            (show guard.pos)
             );
         guards := (g, guard) :: !guards;
         true
@@ -2467,9 +2467,9 @@ let refl_tc_term (g:env) (e:term) : tac (option (term & (Core.tot_or_ghost & typ
           let t = refl_norm_type g t in
           dbg_refl g (fun _ ->
             BU.format3 "refl_tc_term@%s for %s computed type %s\n"
-              (Range.string_of_range e.pos)
-              (Print.term_to_string e)
-              (Print.term_to_string t));
+              (show e.pos)
+              (show e)
+              (show t));
           ((e, (eff, t)), !guards)
       | Inr err ->
         dbg_refl g (fun _ -> BU.format1 "refl_tc_term failed: %s\n" (Core.print_error err));
@@ -2603,11 +2603,11 @@ let refl_instantiate_implicits (g:env) (e:term)
     
     if not (no_univ_uvars_in_term e)
     then Errors.raise_error (Errors.Error_UnexpectedUnresolvedUvar,
-                             BU.format1 "Elaborated term has unresolved univ uvars: %s" (Print.term_to_string e))
+                             BU.format1 "Elaborated term has unresolved univ uvars: %s" (show e))
                               e.pos
     else if not (no_univ_uvars_in_term t)
     then Errors.raise_error (Errors.Error_UnexpectedUnresolvedUvar,
-                             BU.format1 "Inferred type has unresolved univ uvars: %s" (Print.term_to_string t))
+                             BU.format1 "Inferred type has unresolved univ uvars: %s" (show t))
                               e.pos
     else
       let g = Env.push_bvs g (List.map (fun (bv, t) -> {bv with sort=t}) bvs_and_ts) in
@@ -2620,8 +2620,8 @@ let refl_instantiate_implicits (g:env) (e:term)
 
       dbg_refl g (fun _ ->
         BU.format2 "} finished tc with e = %s and t = %s\n"
-          (Print.term_to_string e)
-          (Print.term_to_string t));
+          (show e)
+          (show t));
       ((bvs_and_ts, e, t), [])
   )
   else ret (None, [unexpected_uvars_issue (Env.get_range g)])
@@ -2662,7 +2662,7 @@ let refl_maybe_unfold_head (g:env) (e:term) : tac (option term & issues) =
     then Errors.raise_error (Errors.Fatal_UnexpectedTerm,
                              BU.format1
                                "Could not unfold head: %s\n"
-                               (Print.term_to_string e)) e.pos
+                               (show e)) e.pos
     else (eopt |> must, []))
   else ret (None, [unexpected_uvars_issue (Env.get_range g)])
 

@@ -30,6 +30,7 @@ open FStar.Tactics.Types
 open FStar.Tactics.Monad
 open FStar.Tactics.Common
 open FStar.Syntax.Syntax
+open FStar.Class.Show
 
 module Print  = FStar.Syntax.Print
 module BU     = FStar.Compiler.Util
@@ -117,7 +118,7 @@ let __do_rewrite
     in
     if_verbose (fun () ->
                   BU.print2 "do_rewrite: making equality\n\t%s ==\n\t%s\n"
-                    (Print.term_to_string tm) (Print.term_to_string ut)) ;!
+                    (show tm) (show ut)) ;!
     add_irrelevant_goal
                       g0
                       "do_rewrite.eq"
@@ -130,8 +131,8 @@ let __do_rewrite
     let ut = N.reduce_uvar_solutions env ut in
     if_verbose (fun () ->
        BU.print2 "rewrite_rec: succeeded rewriting\n\t%s to\n\t%s\n"
-                   (Print.term_to_string tm)
-                   (Print.term_to_string ut)) ;!
+                   (show tm)
+                   (show ut)) ;!
     ret ut
   end
 
@@ -427,12 +428,12 @@ let ctrl_rewrite
     dismiss_all ;!
     let gt = (goal_type g) in
     if_verbose (fun () ->
-        BU.print1 "ctrl_rewrite starting with %s\n" (Print.term_to_string gt)) ;!
+        BU.print1 "ctrl_rewrite starting with %s\n" (show gt)) ;!
 
     let! gt' = do_ctrl_rewrite g dir controller rewriter (goal_env g) gt in
 
     if_verbose (fun () ->
-        BU.print1 "ctrl_rewrite seems to have succeded with %s\n" (Print.term_to_string gt')) ;!
+        BU.print1 "ctrl_rewrite seems to have succeded with %s\n" (show gt')) ;!
 
     push_goals gs ;!
     let g = V2.Basic.goal_with_type g gt' in

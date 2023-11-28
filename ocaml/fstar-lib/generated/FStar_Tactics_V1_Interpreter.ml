@@ -308,7 +308,9 @@ let unembed_tactic_0 :
                    else "" in
                  let uu___ =
                    let uu___1 =
-                     let uu___2 = FStar_Syntax_Print.term_to_string h_result in
+                     let uu___2 =
+                       FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                         h_result in
                      FStar_Compiler_Util.format2
                        "Tactic got stuck!\nReduction stopped at: %s%s" uu___2
                        maybe_admit_tip in

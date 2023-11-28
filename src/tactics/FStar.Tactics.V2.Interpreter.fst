@@ -38,6 +38,7 @@ open FStar.Tactics.CtrlRewrite
 open FStar.Tactics.V2.InterpFuns
 open FStar.Tactics.Native
 open FStar.Tactics.Common
+open FStar.Class.Show
 
 module BU      = FStar.Compiler.Util
 module Cfg     = FStar.TypeChecker.Cfg
@@ -154,10 +155,10 @@ let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac
                  else N.normalize_with_primitive_steps
     in
     (* if proof_state.tac_verb_dbg then *)
-    (*     BU.print1 "Starting normalizer with %s\n" (Print.term_to_string tm); *)
+    (*     BU.print1 "Starting normalizer with %s\n" (show tm); *)
     let result = norm_f (primitive_steps ()) steps proof_state.main_context tm in
     (* if proof_state.tac_verb_dbg then *)
-    (*     BU.print1 "Reduced tactic: got %s\n" (Print.term_to_string result); *)
+    (*     BU.print1 "Reduced tactic: got %s\n" (show result); *)
 
     let res = unembed (E.e_result eb) result ncb in
 
@@ -732,17 +733,17 @@ let report_implicits rng (is : TcRel.tagged_implicits) : unit =
         Errors.log_issue rng
                 (Err.Error_UninstantiatedUnificationVarInTactic,
                  BU.format3 ("Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")")
-                             (Print.uvar_to_string imp.imp_uvar.ctx_uvar_head)
-                             (Print.term_to_string (U.ctx_uvar_typ imp.imp_uvar))
+                             (show imp.imp_uvar.ctx_uvar_head)
+                             (show (U.ctx_uvar_typ imp.imp_uvar))
                              imp.imp_reason)
       | TcRel.Implicit_has_typing_guard (tm, ty) ->
         Errors.log_issue rng
                 (Err.Error_UninstantiatedUnificationVarInTactic,
                  BU.format4 ("Tactic solved goal %s of type %s to %s : %s, but it has a non-trivial typing guard. Use gather_or_solve_explicit_guards_for_resolved_goals to inspect and prove these goals")
-                             (Print.uvar_to_string imp.imp_uvar.ctx_uvar_head)
-                             (Print.term_to_string (U.ctx_uvar_typ imp.imp_uvar))
-                             (Print.term_to_string tm)
-                             (Print.term_to_string ty)));
+                             (show imp.imp_uvar.ctx_uvar_head)
+                             (show (U.ctx_uvar_typ imp.imp_uvar))
+                             (show tm)
+                             (show ty)));
   Err.stop_if_err ()
 
 let run_tactic_on_ps'
@@ -763,8 +764,8 @@ let run_tactic_on_ps'
     let env = ps.main_context in
     if !tacdbg then
         BU.print2 "Typechecking tactic: (%s) (already_typed: %s) {\n"
-          (Print.term_to_string tactic)
-          (string_of_bool tactic_already_typed);
+          (show tactic)
+          (show tactic_already_typed);
 
     (* Do NOT use the returned tactic, the typechecker is not idempotent and
      * will mess up the monadic lifts. We're just making sure it's well-typed
@@ -783,7 +784,7 @@ let run_tactic_on_ps'
     let tau = unembed_tactic_1 e_arg e_res tactic FStar.Syntax.Embeddings.id_norm_cb in
 
     (* if !tacdbg then *)
-    (*     BU.print1 "Running tactic with goal = (%s) {\n" (Print.term_to_string typ); *)
+    (*     BU.print1 "Running tactic with goal = (%s) {\n" (show typ); *)
     let res =
       Profiling.profile
         (fun () -> run_safe (tau arg) ps)
@@ -796,42 +797,38 @@ let run_tactic_on_ps'
     match res with
     | Success (ret, ps) ->
         (* if !tacdbg || Options.tactics_info () then *)
-        (*     BU.print1 "Tactic generated proofterm %s\n" (Print.term_to_string w); *)
+        (*     BU.print1 "Tactic generated proofterm %s\n" (show w); *)
         let remaining_smt_goals = ps.goals@ps.smt_goals in
         List.iter
           (fun g ->
             FStar.Tactics.V2.Basic.mark_goal_implicit_already_checked g;//all of these will be fed to SMT anyway
             if is_irrelevant g
             then (
-              if !tacdbg then BU.print1 "Assigning irrelevant goal %s\n" (Print.term_to_string (goal_witness g));
+              if !tacdbg then BU.print1 "Assigning irrelevant goal %s\n" (show (goal_witness g));
               if TcRel.teq_nosmt_force (goal_env g) (goal_witness g) U.exp_unit
               then ()
               else failwith (BU.format1 "Irrelevant tactic witness does not unify with (): %s"
-                                                           (Print.term_to_string (goal_witness g)))
+                                                           (show (goal_witness g)))
             ))
           remaining_smt_goals;
 
         // Check that all implicits were instantiated
         if !tacdbg then
             BU.print1 "About to check tactic implicits: %s\n" (FStar.Common.string_of_list
-                                                                    (fun imp -> Print.ctx_uvar_to_string imp.imp_uvar)
+                                                                    (fun imp -> show imp.imp_uvar)
                                                                     ps.all_implicits);
 
         let g = {Env.trivial_guard with TcComm.implicits=ps.all_implicits} in
         let g = TcRel.solve_deferred_constraints env g in
         if !tacdbg then
             BU.print2 "Checked %s implicits (1): %s\n"
-                        (string_of_int (List.length ps.all_implicits))
-                        (FStar.Common.string_of_list
-                                (fun imp -> Print.ctx_uvar_to_string imp.imp_uvar)
-                                ps.all_implicits);
+                        (show (List.length ps.all_implicits))
+                        (show ps.all_implicits);
         let tagged_implicits = TcRel.resolve_implicits_tac env g in
         if !tacdbg then
             BU.print2 "Checked %s implicits (2): %s\n"
-                        (string_of_int (List.length ps.all_implicits))
-                        (FStar.Common.string_of_list
-                                (fun imp -> Print.ctx_uvar_to_string imp.imp_uvar)
-                                ps.all_implicits);
+                        (show (List.length ps.all_implicits))
+                        (show ps.all_implicits);
         report_implicits rng_goal tagged_implicits;
         // /implicits
 
@@ -857,7 +854,7 @@ let run_tactic_on_ps'
             | TacticFailure s ->
                 "\"" ^ s ^ "\""
             | EExn t ->
-                "Uncaught exception: " ^ (Print.term_to_string t)
+                "Uncaught exception: " ^ (show t)
             | e ->
                 raise e
         in

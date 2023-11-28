@@ -198,6 +198,10 @@ let check_uvar_ctx_invariant (reason:string) (r:range) (should_check:bool) (g:ga
         end
      | _ -> fail()
 
+instance show_implicit : showable implicit = {
+  show = (fun i -> show i.imp_uvar.ctx_uvar_head);
+}
+
 let implicits_to_string imps =
     let imp_to_string i =
         Print.uvar_to_string i.imp_uvar.ctx_uvar_head

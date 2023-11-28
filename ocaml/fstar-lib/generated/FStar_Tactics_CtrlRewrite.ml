@@ -199,9 +199,11 @@ let (__do_rewrite :
                                FStar_Tactics_Monad.if_verbose
                                  (fun uu___7 ->
                                     let uu___8 =
-                                      FStar_Syntax_Print.term_to_string tm in
+                                      FStar_Class_Show.show
+                                        FStar_Syntax_Print.showable_term tm in
                                     let uu___9 =
-                                      FStar_Syntax_Print.term_to_string ut in
+                                      FStar_Class_Show.show
+                                        FStar_Syntax_Print.showable_term ut in
                                     FStar_Compiler_Util.print2
                                       "do_rewrite: making equality\n\t%s ==\n\t%s\n"
                                       uu___8 uu___9) in
@@ -232,10 +234,12 @@ let (__do_rewrite :
                                               FStar_Tactics_Monad.if_verbose
                                                 (fun uu___13 ->
                                                    let uu___14 =
-                                                     FStar_Syntax_Print.term_to_string
+                                                     FStar_Class_Show.show
+                                                       FStar_Syntax_Print.showable_term
                                                        tm in
                                                    let uu___15 =
-                                                     FStar_Syntax_Print.term_to_string
+                                                     FStar_Class_Show.show
+                                                       FStar_Syntax_Print.showable_term
                                                        ut1 in
                                                    FStar_Compiler_Util.print2
                                                      "rewrite_rec: succeeded rewriting\n\t%s to\n\t%s\n"
@@ -939,7 +943,8 @@ let (ctrl_rewrite :
                           FStar_Tactics_Monad.if_verbose
                             (fun uu___4 ->
                                let uu___5 =
-                                 FStar_Syntax_Print.term_to_string gt in
+                                 FStar_Class_Show.show
+                                   FStar_Syntax_Print.showable_term gt in
                                FStar_Compiler_Util.print1
                                  "ctrl_rewrite starting with %s\n" uu___5) in
                         FStar_Tactics_Monad.op_let_Bang uu___3
@@ -954,7 +959,8 @@ let (ctrl_rewrite :
                                     FStar_Tactics_Monad.if_verbose
                                       (fun uu___7 ->
                                          let uu___8 =
-                                           FStar_Syntax_Print.term_to_string
+                                           FStar_Class_Show.show
+                                             FStar_Syntax_Print.showable_term
                                              gt' in
                                          FStar_Compiler_Util.print1
                                            "ctrl_rewrite seems to have succeded with %s\n"

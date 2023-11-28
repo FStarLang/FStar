@@ -35,6 +35,7 @@ open FStar.Tactics.CtrlRewrite
 open FStar.Tactics.V1.InterpFuns
 open FStar.Tactics.Native
 open FStar.Tactics.Common
+open FStar.Class.Show
 
 module BU      = FStar.Compiler.Util
 module Cfg     = FStar.TypeChecker.Cfg
@@ -144,10 +145,10 @@ let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac
                  else N.normalize_with_primitive_steps
     in
     (* if proof_state.tac_verb_dbg then *)
-    (*     BU.print1 "Starting normalizer with %s\n" (Print.term_to_string tm); *)
+    (*     BU.print1 "Starting normalizer with %s\n" (show tm); *)
     let result = norm_f (primitive_steps ()) steps proof_state.main_context tm in
     (* if proof_state.tac_verb_dbg then *)
-    (*     BU.print1 "Reduced tactic: got %s\n" (Print.term_to_string result); *)
+    (*     BU.print1 "Reduced tactic: got %s\n" (show result); *)
 
     let res = unembed (E.e_result eb) result ncb in
 
@@ -178,7 +179,7 @@ let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac
         in
         Err.raise_error (Err.Fatal_TacticGotStuck,
           (BU.format2 "Tactic got stuck!\n\
-                       Reduction stopped at: %s%s" (Print.term_to_string h_result) maybe_admit_tip)) proof_state.main_context.range
+                       Reduction stopped at: %s%s" (show h_result) maybe_admit_tip)) proof_state.main_context.range
     )
 
 let unembed_tactic_nbe_0 (eb:NBET.embedding 'b) (cb:NBET.nbe_cbs) (embedded_tac_b:NBET.t) : tac 'b =

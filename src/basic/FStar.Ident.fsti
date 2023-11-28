@@ -16,6 +16,7 @@
 module FStar.Ident
 
 open FStar.Compiler.Range
+open FStar.Class.Show
 
 (** A (short) identifier for a local name.
  *  e.g. x in `fun x -> ...` *)
@@ -130,3 +131,7 @@ val text_of_path        : path -> string
 
 (* Similar to string_of_lid, but separates with "_" instead of "." *)
 val ml_path_of_lid      : lident -> string
+
+(* Showable instances *)
+instance val showable_ident  : showable ident
+instance val showable_lident : showable lident

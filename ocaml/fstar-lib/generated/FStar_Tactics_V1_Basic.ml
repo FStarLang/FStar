@@ -14,7 +14,7 @@ let (is_irrelevant : FStar_Tactics_Types.goal -> Prims.bool) =
 let (core_check :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
-      FStar_Syntax_Syntax.term ->
+      FStar_Syntax_Syntax.typ ->
         Prims.bool ->
           (FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option,
             FStar_TypeChecker_Core.error) FStar_Pervasives.either)
@@ -47,11 +47,16 @@ let (core_check :
                     (fun uu___4 ->
                        let uu___5 =
                          let uu___6 = FStar_TypeChecker_Env.get_range env in
-                         FStar_Compiler_Range_Ops.string_of_range uu___6 in
+                         FStar_Class_Show.show
+                           FStar_Compiler_Range_Ops.show_range uu___6 in
                        let uu___6 =
                          FStar_TypeChecker_Core.print_error_short err in
-                       let uu___7 = FStar_Syntax_Print.term_to_string sol in
-                       let uu___8 = FStar_Syntax_Print.term_to_string t in
+                       let uu___7 =
+                         FStar_Class_Show.show
+                           FStar_Syntax_Print.showable_term sol in
+                       let uu___8 =
+                         FStar_Class_Show.show
+                           FStar_Syntax_Print.showable_term t in
                        let uu___9 = FStar_TypeChecker_Core.print_error err in
                        FStar_Compiler_Util.print5
                          "(%s) Core checking failed (%s) on term %s and type %s\n%s\n"
@@ -505,7 +510,8 @@ let (proc_guard' :
                                       FStar_Tactics_Monad.mlog
                                         (fun uu___4 ->
                                            let uu___5 =
-                                             FStar_Syntax_Print.term_to_string
+                                             FStar_Class_Show.show
+                                               FStar_Syntax_Print.showable_term
                                                f in
                                            FStar_Compiler_Util.print2
                                              "Pushing guard (%s:%s) as SMT goal\n"
@@ -523,7 +529,8 @@ let (proc_guard' :
                                       FStar_Tactics_Monad.mlog
                                         (fun uu___4 ->
                                            let uu___5 =
-                                             FStar_Syntax_Print.term_to_string
+                                             FStar_Class_Show.show
+                                               FStar_Syntax_Print.showable_term
                                                f in
                                            FStar_Compiler_Util.print2
                                              "Sending guard (%s:%s) to SMT Synchronously\n"
@@ -768,11 +775,15 @@ let (tc_unifier_solved_implicits :
                           if uu___3
                           then
                             let uu___4 =
-                              FStar_Syntax_Print.uvar_to_string
+                              FStar_Class_Show.show
+                                FStar_Syntax_Print.showable_uvar
                                 u.FStar_Syntax_Syntax.ctx_uvar_head in
                             let uu___5 =
-                              FStar_Syntax_Print.term_to_string sol in
-                            let uu___6 = FStar_Syntax_Print.term_to_string g in
+                              FStar_Class_Show.show
+                                FStar_Syntax_Print.showable_term sol in
+                            let uu___6 =
+                              FStar_Class_Show.show
+                                FStar_Syntax_Print.showable_term g in
                             fail3
                               "Could not typecheck unifier solved implicit %s to %s since it produced a guard and guards were not allowed;guard is\n%s"
                               uu___4 uu___5 uu___6
@@ -787,9 +798,12 @@ let (tc_unifier_solved_implicits :
                                   FStar_Tactics_Monad.ret ()))
                       | FStar_Pervasives.Inr failed ->
                           let uu___3 =
-                            FStar_Syntax_Print.uvar_to_string
+                            FStar_Class_Show.show
+                              FStar_Syntax_Print.showable_uvar
                               u.FStar_Syntax_Syntax.ctx_uvar_head in
-                          let uu___4 = FStar_Syntax_Print.term_to_string sol in
+                          let uu___4 =
+                            FStar_Class_Show.show
+                              FStar_Syntax_Print.showable_term sol in
                           let uu___5 =
                             FStar_TypeChecker_Core.print_error failed in
                           fail3
@@ -839,8 +853,12 @@ let (__do_unify_wflags :
               fun t2 ->
                 if dbg
                 then
-                  (let uu___1 = FStar_Syntax_Print.term_to_string t1 in
-                   let uu___2 = FStar_Syntax_Print.term_to_string t2 in
+                  (let uu___1 =
+                     FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                       t1 in
+                   let uu___2 =
+                     FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                       t2 in
                    FStar_Compiler_Util.print2 "%%%%%%%%do_unify %s =? %s\n"
                      uu___1 uu___2)
                 else ();
@@ -882,9 +900,13 @@ let (__do_unify_wflags :
                                            (FStar_TypeChecker_Rel.guard_to_string
                                               env1) res in
                                        let uu___7 =
-                                         FStar_Syntax_Print.term_to_string t1 in
+                                         FStar_Class_Show.show
+                                           FStar_Syntax_Print.showable_term
+                                           t1 in
                                        let uu___8 =
-                                         FStar_Syntax_Print.term_to_string t2 in
+                                         FStar_Class_Show.show
+                                           FStar_Syntax_Print.showable_term
+                                           t2 in
                                        FStar_Compiler_Util.print3
                                          "%%%%%%%%do_unify (RESULT %s) %s =? %s\n"
                                          uu___6 uu___7 uu___8)
@@ -926,8 +948,8 @@ let (__do_unify_wflags :
                                    let uu___8 =
                                      FStar_Errors_Msg.rendermsg msg in
                                    let uu___9 =
-                                     FStar_Compiler_Range_Ops.string_of_range
-                                       r in
+                                     FStar_Class_Show.show
+                                       FStar_Compiler_Range_Ops.show_range r in
                                    FStar_Compiler_Util.print2
                                      ">> do_unify error, (%s) at (%s)\n"
                                      uu___8 uu___9)
@@ -1143,8 +1165,9 @@ let (solve :
         (fun uu___ ->
            let uu___1 =
              let uu___2 = FStar_Tactics_Types.goal_witness goal in
-             FStar_Syntax_Print.term_to_string uu___2 in
-           let uu___2 = FStar_Syntax_Print.term_to_string solution in
+             FStar_Class_Show.show FStar_Syntax_Print.showable_term uu___2 in
+           let uu___2 =
+             FStar_Class_Show.show FStar_Syntax_Print.showable_term solution in
            FStar_Compiler_Util.print2 "solve %s := %s\n" uu___1 uu___2)
         (fun uu___ ->
            let uu___1 = trysolve goal solution in
@@ -1282,7 +1305,8 @@ let (__tc :
         (fun ps ->
            FStar_Tactics_Monad.mlog
              (fun uu___ ->
-                let uu___1 = FStar_Syntax_Print.term_to_string t in
+                let uu___1 =
+                  FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
                 FStar_Compiler_Util.print1 "Tac> __tc(%s)\n" uu___1)
              (fun uu___ ->
                 let e1 =
@@ -1429,7 +1453,8 @@ let (__tc_ghost :
         (fun ps ->
            FStar_Tactics_Monad.mlog
              (fun uu___ ->
-                let uu___1 = FStar_Syntax_Print.term_to_string t in
+                let uu___1 =
+                  FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
                 FStar_Compiler_Util.print1 "Tac> __tc_ghost(%s)\n" uu___1)
              (fun uu___ ->
                 let e1 =
@@ -1686,7 +1711,8 @@ let (__tc_lax :
         (fun ps ->
            FStar_Tactics_Monad.mlog
              (fun uu___ ->
-                let uu___1 = FStar_Syntax_Print.term_to_string t in
+                let uu___1 =
+                  FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
                 let uu___2 =
                   let uu___3 = FStar_TypeChecker_Env.all_binders e in
                   FStar_Compiler_Effect.op_Bar_Greater uu___3
@@ -2455,7 +2481,8 @@ let (norm :
              (fun uu___1 ->
                 let uu___2 =
                   let uu___3 = FStar_Tactics_Types.goal_witness goal in
-                  FStar_Syntax_Print.term_to_string uu___3 in
+                  FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                    uu___3 in
                 FStar_Compiler_Util.print1 "norm: witness = %s\n" uu___2) in
          FStar_Tactics_Monad.op_let_Bang uu___
            (fun uu___1 ->
@@ -2485,7 +2512,9 @@ let (norm_term_env :
                let uu___1 =
                  FStar_Tactics_Monad.if_verbose
                    (fun uu___2 ->
-                      let uu___3 = FStar_Syntax_Print.term_to_string t in
+                      let uu___3 =
+                        FStar_Class_Show.show
+                          FStar_Syntax_Print.showable_term t in
                       FStar_Compiler_Util.print1 "norm_term_env: t = %s\n"
                         uu___3) in
                FStar_Tactics_Monad.op_let_Bang uu___1
@@ -2508,7 +2537,8 @@ let (norm_term_env :
                                FStar_Tactics_Monad.if_verbose
                                  (fun uu___8 ->
                                     let uu___9 =
-                                      FStar_Syntax_Print.term_to_string t2 in
+                                      FStar_Class_Show.show
+                                        FStar_Syntax_Print.showable_term t2 in
                                     FStar_Compiler_Util.print1
                                       "norm_term_env: t' = %s\n" uu___9) in
                              FStar_Tactics_Monad.op_let_Bang uu___7
@@ -2592,7 +2622,9 @@ let (__exact_now :
                     let uu___2 =
                       FStar_Tactics_Monad.if_verbose
                         (fun uu___3 ->
-                           let uu___4 = FStar_Syntax_Print.term_to_string typ in
+                           let uu___4 =
+                             FStar_Class_Show.show
+                               FStar_Syntax_Print.showable_term typ in
                            let uu___5 =
                              let uu___6 = FStar_Tactics_Types.goal_env goal in
                              FStar_TypeChecker_Rel.guard_to_string uu___6
@@ -2615,11 +2647,13 @@ let (__exact_now :
                                 FStar_Tactics_Monad.if_verbose
                                   (fun uu___7 ->
                                      let uu___8 =
-                                       FStar_Syntax_Print.term_to_string typ in
+                                       FStar_Class_Show.show
+                                         FStar_Syntax_Print.showable_term typ in
                                      let uu___9 =
                                        let uu___10 =
                                          FStar_Tactics_Types.goal_type goal in
-                                       FStar_Syntax_Print.term_to_string
+                                       FStar_Class_Show.show
+                                         FStar_Syntax_Print.showable_term
                                          uu___10 in
                                      FStar_Compiler_Util.print2
                                        "__exact_now: unifying %s and %s\n"
@@ -2680,7 +2714,8 @@ let (t_exact :
           let uu___1 =
             FStar_Tactics_Monad.if_verbose
               (fun uu___2 ->
-                 let uu___3 = FStar_Syntax_Print.term_to_string tm in
+                 let uu___3 =
+                   FStar_Class_Show.show FStar_Syntax_Print.showable_term tm in
                  FStar_Compiler_Util.print1 "t_exact: tm = %s\n" uu___3) in
           FStar_Tactics_Monad.op_let_Bang uu___1
             (fun uu___2 ->
@@ -2789,7 +2824,8 @@ let (try_unify_by_application :
                                           FStar_Tactics_Monad.if_verbose
                                             (fun uu___8 ->
                                                let uu___9 =
-                                                 FStar_Syntax_Print.ctx_uvar_to_string
+                                                 FStar_Class_Show.show
+                                                   FStar_Syntax_Print.showable_ctxu
                                                    uv in
                                                FStar_Compiler_Util.print1
                                                  "t_apply: generated uvar %s\n"
@@ -2873,11 +2909,22 @@ let (t_apply :
             let uu___1 =
               FStar_Tactics_Monad.if_verbose
                 (fun uu___2 ->
-                   let uu___3 = FStar_Compiler_Util.string_of_bool uopt in
-                   let uu___4 = FStar_Compiler_Util.string_of_bool only_match in
+                   let uu___3 =
+                     FStar_Class_Show.show
+                       (FStar_Class_Show.printableshow
+                          FStar_Class_Printable.printable_bool) uopt in
+                   let uu___4 =
+                     FStar_Class_Show.show
+                       (FStar_Class_Show.printableshow
+                          FStar_Class_Printable.printable_bool) only_match in
                    let uu___5 =
-                     FStar_Compiler_Util.string_of_bool tc_resolved_uvars1 in
-                   let uu___6 = FStar_Syntax_Print.term_to_string tm in
+                     FStar_Class_Show.show
+                       (FStar_Class_Show.printableshow
+                          FStar_Class_Printable.printable_bool)
+                       tc_resolved_uvars1 in
+                   let uu___6 =
+                     FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                       tm in
                    FStar_Compiler_Util.print4
                      "t_apply: uopt %s, only_match %s, tc_resolved_uvars %s, tm = %s\n"
                      uu___3 uu___4 uu___5 uu___6) in
@@ -2900,7 +2947,8 @@ let (t_apply :
                                        FStar_Tactics_Monad.if_verbose
                                          (fun uu___7 ->
                                             let uu___8 =
-                                              FStar_Syntax_Print.term_to_string
+                                              FStar_Class_Show.show
+                                                FStar_Syntax_Print.showable_term
                                                 tm1 in
                                             let uu___9 =
                                               FStar_Tactics_Printing.goal_to_string_verbose
@@ -2909,7 +2957,8 @@ let (t_apply :
                                               FStar_TypeChecker_Env.print_gamma
                                                 e.FStar_TypeChecker_Env.gamma in
                                             let uu___11 =
-                                              FStar_Syntax_Print.term_to_string
+                                              FStar_Class_Show.show
+                                                FStar_Syntax_Print.showable_term
                                                 typ in
                                             let uu___12 =
                                               FStar_TypeChecker_Rel.guard_to_string
@@ -2943,7 +2992,8 @@ let (t_apply :
                                                              with
                                                              | (t, uu___13,
                                                                 uu___14) ->
-                                                                 FStar_Syntax_Print.term_to_string
+                                                                 FStar_Class_Show.show
+                                                                   FStar_Syntax_Print.showable_term
                                                                    t) uvs in
                                                       FStar_Compiler_Util.print1
                                                         "t_apply: found args = %s\n"
@@ -3122,7 +3172,9 @@ let (t_apply_lemma :
                  let uu___2 =
                    FStar_Tactics_Monad.if_verbose
                      (fun uu___3 ->
-                        let uu___4 = FStar_Syntax_Print.term_to_string tm in
+                        let uu___4 =
+                          FStar_Class_Show.show
+                            FStar_Syntax_Print.showable_term tm in
                         FStar_Compiler_Util.print1 "apply_lemma: tm = %s\n"
                           uu___4) in
                  FStar_Tactics_Monad.op_let_Bang uu___2
@@ -3255,11 +3307,13 @@ let (t_apply_lemma :
                                                                     then
                                                                     let uu___20
                                                                     =
-                                                                    FStar_Syntax_Print.ctx_uvar_to_string
+                                                                    FStar_Class_Show.show
+                                                                    FStar_Syntax_Print.showable_ctxu
                                                                     u in
                                                                     let uu___21
                                                                     =
-                                                                    FStar_Syntax_Print.term_to_string
+                                                                    FStar_Class_Show.show
+                                                                    FStar_Syntax_Print.showable_term
                                                                     tm1 in
                                                                     FStar_Compiler_Util.print2
                                                                     "Apply lemma created a new uvar %s while applying %s\n"
@@ -3664,9 +3718,10 @@ let (rewrite : FStar_Syntax_Syntax.binder -> unit FStar_Tactics_Monad.tac) =
            let uu___1 =
              FStar_Tactics_Monad.if_verbose
                (fun uu___2 ->
-                  let uu___3 = FStar_Syntax_Print.bv_to_string bv in
+                  let uu___3 =
+                    FStar_Class_Show.show FStar_Syntax_Print.showable_bv bv in
                   let uu___4 =
-                    FStar_Syntax_Print.term_to_string
+                    FStar_Class_Show.show FStar_Syntax_Print.showable_term
                       bv.FStar_Syntax_Syntax.sort in
                   FStar_Compiler_Util.print2 "+++Rewrite %s : %s\n" uu___3
                     uu___4) in
@@ -4018,7 +4073,8 @@ let (clear : FStar_Syntax_Syntax.binder -> unit FStar_Tactics_Monad.tac) =
          let uu___ =
            FStar_Tactics_Monad.if_verbose
              (fun uu___1 ->
-                let uu___2 = FStar_Syntax_Print.binder_to_string b in
+                let uu___2 =
+                  FStar_Class_Show.show FStar_Syntax_Print.showable_binder b in
                 let uu___3 =
                   let uu___4 =
                     let uu___5 =
@@ -4027,7 +4083,9 @@ let (clear : FStar_Syntax_Syntax.binder -> unit FStar_Tactics_Monad.tac) =
                     FStar_Compiler_Effect.op_Bar_Greater uu___5
                       FStar_Compiler_List.length in
                   FStar_Compiler_Effect.op_Bar_Greater uu___4
-                    FStar_Compiler_Util.string_of_int in
+                    (FStar_Class_Show.show
+                       (FStar_Class_Show.printableshow
+                          FStar_Class_Printable.printable_nat)) in
                 FStar_Compiler_Util.print2
                   "Clear of (%s), env has %s binders\n" uu___2 uu___3) in
          FStar_Tactics_Monad.op_let_Bang uu___
@@ -4048,7 +4106,9 @@ let (clear : FStar_Syntax_Syntax.binder -> unit FStar_Tactics_Monad.tac) =
                         if uu___3
                         then
                           let uu___4 =
-                            let uu___5 = FStar_Syntax_Print.bv_to_string bv' in
+                            let uu___5 =
+                              FStar_Class_Show.show
+                                FStar_Syntax_Print.showable_bv bv' in
                             FStar_Compiler_Util.format1
                               "Cannot clear; binder present in the type of %s"
                               uu___5 in
@@ -4854,7 +4914,8 @@ let (unquote :
         let uu___1 =
           FStar_Tactics_Monad.if_verbose
             (fun uu___2 ->
-               let uu___3 = FStar_Syntax_Print.term_to_string tm in
+               let uu___3 =
+                 FStar_Class_Show.show FStar_Syntax_Print.showable_term tm in
                FStar_Compiler_Util.print1 "unquote: tm = %s\n" uu___3) in
         FStar_Tactics_Monad.op_let_Bang uu___1
           (fun uu___2 ->
@@ -4872,7 +4933,8 @@ let (unquote :
                              FStar_Tactics_Monad.if_verbose
                                (fun uu___6 ->
                                   let uu___7 =
-                                    FStar_Syntax_Print.term_to_string tm1 in
+                                    FStar_Class_Show.show
+                                      FStar_Syntax_Print.showable_term tm1 in
                                   FStar_Compiler_Util.print1
                                     "unquote: tm' = %s\n" uu___7) in
                            FStar_Tactics_Monad.op_let_Bang uu___5
@@ -4881,7 +4943,8 @@ let (unquote :
                                   FStar_Tactics_Monad.if_verbose
                                     (fun uu___8 ->
                                        let uu___9 =
-                                         FStar_Syntax_Print.term_to_string
+                                         FStar_Class_Show.show
+                                           FStar_Syntax_Print.showable_term
                                            typ in
                                        FStar_Compiler_Util.print1
                                          "unquote: typ = %s\n" uu___9) in
@@ -5362,7 +5425,8 @@ let (change : FStar_Syntax_Syntax.typ -> unit FStar_Tactics_Monad.tac) =
       let uu___1 =
         FStar_Tactics_Monad.if_verbose
           (fun uu___2 ->
-             let uu___3 = FStar_Syntax_Print.term_to_string ty in
+             let uu___3 =
+               FStar_Class_Show.show FStar_Syntax_Print.showable_term ty in
              FStar_Compiler_Util.print1 "change: ty = %s\n" uu___3) in
       FStar_Tactics_Monad.op_let_Bang uu___1
         (fun uu___2 ->
@@ -5658,7 +5722,8 @@ let (t_destruct :
                                                                     =
                                                                     let uu___27
                                                                     =
-                                                                    FStar_Ident.string_of_id
+                                                                    FStar_Class_Show.show
+                                                                    FStar_Ident.showable_ident
                                                                     ppname in
                                                                     Prims.op_Hat
                                                                     "a"
@@ -6558,7 +6623,9 @@ let rec (inspect :
                ((let uu___4 =
                    let uu___5 =
                      let uu___6 = FStar_Syntax_Print.tag_of_term t2 in
-                     let uu___7 = FStar_Syntax_Print.term_to_string t2 in
+                     let uu___7 =
+                       FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                         t2 in
                      FStar_Compiler_Util.format2
                        "inspect: outside of expected syntax (%s, %s)\n"
                        uu___6 uu___7 in
@@ -6980,7 +7047,7 @@ let (string_to_term :
     fun s ->
       let frag_of_text s1 =
         {
-          FStar_Parser_ParseIt.frag_fname = "<string_of_term>";
+          FStar_Parser_ParseIt.frag_fname = "<string_to_term>";
           FStar_Parser_ParseIt.frag_text = s1;
           FStar_Parser_ParseIt.frag_line = Prims.int_one;
           FStar_Parser_ParseIt.frag_col = Prims.int_zero
@@ -7004,17 +7071,17 @@ let (string_to_term :
            | FStar_Errors.Error (uu___2, e1, uu___3, uu___4) ->
                let uu___5 =
                  let uu___6 = FStar_Errors_Msg.rendermsg e1 in
-                 Prims.op_Hat "string_of_term: " uu___6 in
+                 Prims.op_Hat "string_to_term: " uu___6 in
                FStar_Tactics_Monad.fail uu___5
            | uu___2 ->
-               FStar_Tactics_Monad.fail "string_of_term: Unknown error")
+               FStar_Tactics_Monad.fail "string_to_term: Unknown error")
       | FStar_Parser_ParseIt.ASTFragment uu___1 ->
           FStar_Tactics_Monad.fail
-            "string_of_term: expected a Term as a result, got an ASTFragment"
+            "string_to_term: expected a Term as a result, got an ASTFragment"
       | FStar_Parser_ParseIt.ParseError (uu___1, err, uu___2) ->
           let uu___3 =
             let uu___4 = FStar_Errors_Msg.rendermsg err in
-            Prims.op_Hat "string_of_term: got error " uu___4 in
+            Prims.op_Hat "string_to_term: got error " uu___4 in
           FStar_Tactics_Monad.fail uu___3
 let (push_bv_dsenv :
   env ->
@@ -7132,7 +7199,8 @@ let (push_bv_dsenv :
 let (term_to_string :
   FStar_Syntax_Syntax.term -> Prims.string FStar_Tactics_Monad.tac) =
   fun t ->
-    let s = FStar_Syntax_Print.term_to_string t in FStar_Tactics_Monad.ret s
+    let s = FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
+    FStar_Tactics_Monad.ret s
 let (comp_to_string :
   FStar_Syntax_Syntax.comp -> Prims.string FStar_Tactics_Monad.tac) =
   fun c ->
@@ -7140,7 +7208,7 @@ let (comp_to_string :
 let (range_to_string :
   FStar_Compiler_Range_Type.range -> Prims.string FStar_Tactics_Monad.tac) =
   fun r ->
-    let uu___ = FStar_Compiler_Range_Ops.string_of_range r in
+    let uu___ = FStar_Class_Show.show FStar_Compiler_Range_Ops.show_range r in
     FStar_Tactics_Monad.ret uu___
 let (term_eq_old :
   FStar_Syntax_Syntax.term ->

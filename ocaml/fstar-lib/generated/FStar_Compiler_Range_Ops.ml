@@ -255,3 +255,5 @@ let (json_of_def_range : FStar_Compiler_Range_Type.range -> FStar_Json.json)
     let uu___ = file_of_range r in
     let uu___1 = start_of_range r in
     let uu___2 = end_of_range r in json_of_range_fields uu___ uu___1 uu___2
+let (show_range : FStar_Compiler_Range_Type.range FStar_Class_Show.showable)
+  = { FStar_Class_Show.show = string_of_range }
