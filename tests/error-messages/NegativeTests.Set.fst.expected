@@ -1,19 +1,22 @@
 >> Got issues: [
 * Error 19 at NegativeTests.Set.fst(28,9-28,30):
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more details.
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
 
 >>]
 >> Got issues: [
 * Error 19 at NegativeTests.Set.fst(33,9-33,67):
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more details.
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
 
 >>]
 >> Got issues: [
 * Error 19 at NegativeTests.Set.fst(38,9-38,52):
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more details.
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
 
 >>]
 * Warning 240 at NegativeTests.Set.fst(25,4-25,16):

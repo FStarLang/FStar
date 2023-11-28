@@ -15,14 +15,16 @@
 >> Got issues: [
 * Error 19 at ExpectFailure.fst(28,8-28,14):
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more details.
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
   - See also ExpectFailure.fst(28,15-28,20)
 
 >>]
 >> Got issues: [
 * Error 19 at ExpectFailure.fst(30,8-30,14):
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more details.
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
   - See also ExpectFailure.fst(30,15-30,20)
 
 >>]
