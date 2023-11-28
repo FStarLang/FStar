@@ -64,6 +64,21 @@ let tm_pureapp (head:term) (q:option qualifier) (arg:term) : term =
   tm_fstar (R.mk_app (elab_term head) [(elab_term arg, elab_qual q)])
            FStar.Range.range_0
 
+let tm_pureabs (ppname:R.ppname_t) (ty : term) (q : option qualifier) (body:term) : term =
+  let open R in
+  let open T in
+  let b : T.binder = {
+      uniq = 0;
+      ppname = ppname;
+      sort = elab_term ty;
+      qual = elab_qual q;
+      attrs = [];
+  }
+  in
+  let r = pack (Tv_Abs b (elab_term body)) in
+  assume (~(R.Tv_Unknown? (R.inspect_ln r))); // NamedView API doesn't ensure this, it should
+  tm_fstar r FStar.Range.range_0
+
 let tm_arrow (b:binder) (q:option qualifier) (c:comp) : term =
   tm_fstar (mk_arrow_with_name b.binder_ppname.name (elab_term b.binder_ty, elab_qual q)
                                                     (elab_comp c))

@@ -126,6 +126,31 @@ let (tm_pureapp :
              (Pulse_Elaborate_Pure.elab_term head)
              [((Pulse_Elaborate_Pure.elab_term arg),
                 (Pulse_Elaborate_Pure.elab_qual q))]) FStar_Range.range_0
+let (tm_pureabs :
+  FStar_Reflection_V2_Data.ppname_t ->
+    Pulse_Syntax_Base.term ->
+      Pulse_Syntax_Base.qualifier FStar_Pervasives_Native.option ->
+        Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)
+  =
+  fun ppname ->
+    fun ty ->
+      fun q ->
+        fun body ->
+          let b =
+            {
+              FStar_Tactics_NamedView.uniq = Prims.int_zero;
+              FStar_Tactics_NamedView.ppname = ppname;
+              FStar_Tactics_NamedView.sort =
+                (Pulse_Elaborate_Pure.elab_term ty);
+              FStar_Tactics_NamedView.qual =
+                (Pulse_Elaborate_Pure.elab_qual q);
+              FStar_Tactics_NamedView.attrs = []
+            } in
+          let r =
+            FStar_Tactics_NamedView.pack
+              (FStar_Tactics_NamedView.Tv_Abs
+                 (b, (Pulse_Elaborate_Pure.elab_term body))) in
+          Pulse_Syntax_Base.tm_fstar r FStar_Range.range_0
 let (tm_arrow :
   Pulse_Syntax_Base.binder ->
     Pulse_Syntax_Base.qualifier FStar_Pervasives_Native.option ->

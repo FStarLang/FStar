@@ -21,6 +21,7 @@ let rec freevars (t:term)
     | Tm_Inames
     | Tm_EmpInames
     | Tm_Unknown -> Set.empty
+    | Tm_Inv p -> freevars p
     | Tm_Star t1 t2 ->
       Set.union (freevars t1) (freevars t2)
     | Tm_ExistsSL _ t1 t2
@@ -28,6 +29,7 @@ let rec freevars (t:term)
       Set.union (freevars t1.binder_ty) (freevars t2)
     | Tm_Pure p -> freevars p
     | Tm_FStar t -> RT.freevars t
+    | Tm_AddInv i is -> Set.union (freevars i) (freevars is)
 
 let freevars_st_comp (s:st_comp) : Set.set var =
   freevars s.res `Set.union`
@@ -146,6 +148,10 @@ let rec freevars_st (t:st_term)
     | Tm_ProofHintWithBinders { binders; hint_type; t } ->
       Set.union (freevars_proof_hint hint_type) (freevars_st t)
 
+    | Tm_WithInv { name; body; returns_inv } ->
+      Set.union (Set.union (freevars name) (freevars_st body))
+                (freevars_term_opt returns_inv)
+
 and freevars_branches (t:list (pattern & st_term)) : Set.set var =
   match t with
   | [] -> Set.empty
@@ -158,6 +164,8 @@ let rec ln' (t:term) (i:int) : Tot bool (decreases t) =
   | Tm_Inames
   | Tm_EmpInames
   | Tm_Unknown -> true
+
+  | Tm_Inv p -> ln' p i
 
   | Tm_Star t1 t2 ->
     ln' t1 i &&
@@ -173,6 +181,11 @@ let rec ln' (t:term) (i:int) : Tot bool (decreases t) =
     
   | Tm_FStar t ->
     RT.ln' t i
+
+  | Tm_AddInv x is ->
+    ln' x i &&
+    ln' is i
+
 
 let ln_st_comp (s:st_comp) (i:int) : bool =
   ln' s.res i &&
@@ -341,6 +354,10 @@ let rec ln_st' (t:st_term) (i:int)
       ln_proof_hint' hint_type (i + n) &&
       ln_st' t (i + n)
 
+    | Tm_WithInv { name; body } ->
+      ln' name i &&
+      ln_st' body i
+
 and ln_branch' (b : pattern & st_term) (i:int) : Tot bool (decreases b) =
   let (p, e) = b in
   ln_pattern' p i &&
@@ -393,6 +410,9 @@ let rec subst_term (t:term) (ss:subst)
     | Tm_Inames
     | Tm_EmpInames
     | Tm_Unknown -> t
+
+    | Tm_Inv p ->
+      w (Tm_Inv (subst_term p ss))
                  
     | Tm_Pure p ->
       w (Tm_Pure (subst_term p ss))
@@ -411,6 +431,10 @@ let rec subst_term (t:term) (ss:subst)
     
     | Tm_FStar t ->
       w (Tm_FStar (subst_host_term t ss))
+
+    | Tm_AddInv i is ->
+      w (Tm_AddInv (subst_term i ss)
+                   (subst_term is ss))
 
 let open_term' (t:term) (v:term) (i:index) =
   subst_term t [ DT i v ]
@@ -621,6 +645,13 @@ let rec subst_st_term (t:st_term) (ss:subst)
       Tm_ProofHintWithBinders { binders;
                                 hint_type=subst_proof_hint hint_type ss; 
                                 t = subst_st_term t ss }
+
+    | Tm_WithInv { name; body; returns_inv } ->
+      let name = subst_term name ss in
+      let body = subst_st_term body ss in
+      let returns_inv = subst_term_opt returns_inv ss in
+      Tm_WithInv { name; body; returns_inv }
+
     in
     { t with term = t' }
 
@@ -653,6 +684,9 @@ let open_st_term t v : GTot st_term =
     open_st_term_nv t (v_as_nv v)
 
 let open_comp_with (c:comp) (x:term) = open_comp' c x 0
+
+let open_comp_nv c nv =
+    open_comp' c (U.term_of_nvar nv) 0
 
 let close_term' (t:term) (v:var) (i:index) : term =
   subst_term t [ ND v i ]

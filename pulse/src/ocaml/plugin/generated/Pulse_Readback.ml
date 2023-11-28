@@ -265,7 +265,15 @@ let rec (readback_ty :
                     let t1 = FStar_Pervasives_Native.fst a1 in
                     op_let_Question (readback_ty t1)
                       (fun t11 -> return (Pulse_Syntax_Base.Tm_Pure t11))
-                  else aux ()
+                  else
+                    if
+                      (FStar_Reflection_V2_Builtins.inspect_fv fv) =
+                        Pulse_Reflection_Util.inv_lid
+                    then
+                      (let t1 = FStar_Pervasives_Native.fst a1 in
+                       op_let_Question (readback_ty t1)
+                         (fun t11 -> return (Pulse_Syntax_Base.Tm_Inv t11)))
+                    else aux ()
               | uu___1 -> aux ()))
     | FStar_Reflection_V2_Data.Tv_Refine (uu___, uu___1) ->
         return (Pulse_Syntax_Base.Tm_FStar t)

@@ -86,8 +86,18 @@ let vprop_equiv_cong (p1 p2 p3 p4:vprop)
 
 let vprop_equiv_ext p1 p2 _ = equiv_refl p1
 
+(* Invariants, just reexport *)
 let iname = iname
-let emp_inames = Ghost.hide Set.empty
+
+let join_sub _ _ = ()
+let join_emp is =
+  Set.lemma_equal_intro (join_inames is emp_inames) (reveal is);
+  Set.lemma_equal_intro (join_inames emp_inames is) (reveal is)
+
+let inv = inv
+let name_of_inv = name_of_inv
+
+let add_already_there i is = Set.lemma_equal_intro (add_inv is i) is
 
 // inline_for_extraction
 type stt (a:Type u#a) (pre:vprop) (post:a -> vprop) = unit -> STT a pre post
@@ -96,21 +106,53 @@ let mk_stt #a #pre #post e = e
 
 let reveal_stt #a #pre #post e = e
 
+(** Set lemmas **)
+
+// let set_sub (#a:eqtype) (s1 s2 : Set.set a) : Set.set a =
+//   s1 `Set.intersect` (Set.complement s2)
+
+// let comp_comp (#a:eqtype) (s : Set.set a)
+//   : Lemma (Set.complement (Set.complement s) == s)
+//           [SMTPat (Set.complement (Set.complement s))]
+//   = Set.lemma_equal_intro (Set.complement (Set.complement s)) s
+
+// let s_minus_s (#a:eqtype) (s : Set.set a)
+//   : Lemma (set_sub s s == Set.empty)
+//           [SMTPat (set_sub s s)]
+//   = Set.lemma_equal_intro (set_sub s s) Set.empty
+
+(** / Set lemmas **)
+
+
+(* NOTE: invariants
+
+ These three definitions represent functions (boundedly) parametric
+ over the set of opened invariants. The `opens` argument is "positive"
+ or covariant wrt inclusion, which means that a `stt_ghost unit emp_inames ...`
+ has the most general, least restrictive, set of invariants. Morally this
+ is just taking the complement, but that does not work for technical reasons.
+
+*)
+unfold
+let inames_disj (ictx:inames) : Type = is:inames{is /! ictx}
+
 // inline_for_extraction
-type stt_atomic (a:Type u#a) (opened:inames) (pre:vprop) (post:a -> vprop) =
-  unit -> STAtomicT a opened pre post
+type stt_unobservable (a:Type u#a) (opens:inames) (pre:vprop) (post:a -> vprop) =
+  (#ictx : inames_disj opens) ->
+  unit -> 
+  STAtomicUT a ictx pre post
 
-let mk_stt_atomic #a #opened #pre #post e = e
-
-let reveal_stt_atomic #a #opened #pre #post e = e
+//inline_for_extraction
+type stt_atomic (a:Type u#a) (opens:inames) (pre:vprop) (post:a -> vprop) =
+  (#ictx : inames_disj opens) ->
+  unit -> 
+  STAtomicT a ictx pre post
  
-// inline_for_extraction
-type stt_ghost (a:Type u#a) (opened:inames) (pre:vprop) (post:a -> vprop) =
-  unit -> STGhostT a opened pre post
-
-let mk_stt_ghost #a #opened #pre #post e = e
-
-let reveal_stt_ghost #a #opened #pre #post e = e
+//inline_for_extraction
+type stt_ghost (a:Type u#a) (opens:inames) (pre:vprop) (post:a -> vprop) =
+  (#ictx : inames_disj opens) ->
+  unit -> 
+  STGhostT a ictx pre post
 
 inline_for_extraction
 let return_stt (#a:Type u#a) (x:a) (p:a -> vprop) =
@@ -152,7 +194,7 @@ let bind_stt (#a:Type u#a) (#b:Type u#b) (#pre1:vprop) (#post1:a -> vprop) (#pos
   e2 x ()
 
 inline_for_extraction
-let lift_stt_atomic #a #pre #post e = fun _ -> e ()
+let lift_stt_atomic #a #opens #pre #post e = fun _ -> e #emp_inames ()
 
 inline_for_extraction
 let bind_sttg #a #b #opened #pre1 #post1 #post2 e1 e2 =
@@ -160,14 +202,15 @@ let bind_sttg #a #b #opened #pre1 #post1 #post2 e1 e2 =
   let x = e1 () in
   e2 x ()
 
-let bind_stt_atomic_ghost #a #b #opened #pre1 #post1 #post2 e1 e2 reveal_b =
+let bind_stt_atomic_ghost #a #b #opens #pre1 #post1 #post2 e1 e2 reveal_b =
   fun _ ->
   let x = e1 () in
   let y =
     let y = e2 x () in
     rewrite (post2 y) (post2 (reveal_b (Ghost.hide y)));
-    Ghost.hide y in
-  Steel.ST.Util.return (reveal_b y)
+    Ghost.hide y
+  in
+  Steel.ST.Util.return #b (reveal_b y)
 
 let bind_stt_ghost_atomic #a #b #opened #pre1 #post1 #post2 e1 e2 reveal_a =
   fun _ ->
@@ -196,7 +239,7 @@ let frame_stt (#a:Type u#a) (#pre:vprop) (#post:a -> vprop) (frame:vprop) (e:stt
     Steel.ST.Util.return x
     
 let frame_stt_atomic #a #opened #pre #post frame e = 
-  fun _ -> 
+  fun _ ->
     rewrite (pre ** frame) (pre `star` frame);
     let x = e () in
     rewrite (post x `star` frame) (post x ** frame);
@@ -241,6 +284,10 @@ let sub_stt_atomic #a #opened #pre1 pre2 #post1 post2 pf1 pf2 e =
   rewrite_equiv (post1 x) (post2 x);
   Steel.ST.Util.return x
 
+(* Trivial to subtype the invariants, as the restriction on ictx becomes weaker. *)
+inline_for_extraction
+let sub_invs_stt_atomic #a #opens1 #opens2 #pre #post e _ = e
+
 inline_for_extraction
 let sub_stt_ghost #a #opened #pre1 pre2 #post1 post2 pf1 pf2 e =
   fun _ ->
@@ -253,8 +300,79 @@ let sub_stt_ghost #a #opened #pre1 pre2 #post1 post2 pf1 pf2 e =
   rewrite_equiv (post1 x) (post2 x);
   x
 
-let rewrite p q _ = fun _ -> rewrite_equiv p q
+inline_for_extraction
+let sub_invs_stt_ghost #a #opens1 #opens2 #pre #post e _ = e
 
+(* odd workaround for definition below *)
+// let thunk #a #r #opens #pre (#post : (x:a -> r x -> vprop))
+//   ($f : (x:a -> STAtomicUT (r x) opens (pre x) (post x)))
+//   : (x:a -> stt_unobservable (r x) opens (pre x) (post x))
+//   = fun x () -> f x
+
+// val noop (#opened:inames) (_:unit)
+//   : STGhostT unit opened emp (fun _ -> emp)
+// let noop #opened () =
+//   return_stt_ghost_noeq () (fun _ -> emp) () #opened
+
+let return_stt_unobservable #a x p
+: stt_unobservable a emp_inames (p x) (fun r -> p r ** pure (r == x))
+=
+  fun _ ->
+    intro_pure (x == x);
+    rewrite (p x `star` pure (x == x))
+            (p x ** pure (x == x));
+    Steel.ST.Util.return x
+
+let return_stt_unobservable_noeq #a x (p:(a -> vprop))
+: stt_unobservable a emp_inames (p x) p
+= fun _ ->
+    Steel.ST.Util.return x
+
+let __new_invariant (p:vprop)
+  : stt_unobservable (inv p) emp_inames p (fun _ -> Steel.Effect.Common.emp)
+  = fun () -> Steel.ST.Util.new_invariant p
+ 
+ let new_invariant p = __new_invariant p
+
+let __new_invariant' (p:vprop)
+  : stt_atomic (inv p) emp_inames p (fun _ -> Steel.Effect.Common.emp)
+  = fun () -> Steel.ST.Util.new_invariant p
+
+ let new_invariant' p = __new_invariant' p
+
+(* WARNING: this definition is *extremely* brittle. If you try to edit
+it and find weird failures of things that "should" work, consider that
+1) unfolding can make a difference to the steel tactic (e.g. star vs ** )
+2) raising guards can change the effect names
+3) implicit hide/reveals can confuse the checker
+4) eta expansion may make a difference. *)
+let __with_invariant_g (#a:Type)
+                     (#fp:vprop)
+                     (#fp':erased a -> vprop)
+                     (#f_opens:inames)
+                     (#p:vprop)
+                     (i:inv p{not (mem_inv f_opens i)})
+                     ($f: unit -> stt_ghost a f_opens (p `star` fp) (fun x -> p `star` fp' x))
+   : stt_unobservable (erased a) (add_inv f_opens i) fp fp'
+   = fun #ictx () ->
+       let ictx' : inames_disj f_opens = add_inv ictx i in
+       Steel.ST.Util.with_invariant_g i (f () #ictx')
+
+let with_invariant_g = __with_invariant_g
+
+let with_invariant_a (#a:Type)
+                   (#fp:vprop)
+                   (#fp':a -> vprop)
+                   (#opened_invariants:inames)
+                   (#p:vprop)
+                   (i:inv p{not (mem_inv opened_invariants i)})
+                   ($f:unit -> stt_atomic a (add_inv opened_invariants i) 
+                                            (p ** fp)
+                                            (fun x -> p ** fp' x))
+  : stt_atomic a opened_invariants fp fp'
+  = admit()
+
+let rewrite p q _ = fun _ -> rewrite_equiv p q
 
 let elim_pure_explicit p = fun _ -> elim_pure p
 let elim_pure _ #p = fun _ -> elim_pure p

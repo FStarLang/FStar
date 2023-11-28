@@ -1,5 +1,7 @@
 open Prims
 type rng = FStar_Compiler_Range_Type.range
+let (dummyRange : FStar_Compiler_Range_Type.range) =
+  FStar_Compiler_Range_Type.dummyRange
 type binder =
   (FStar_Parser_AST.aqual * FStar_Ident.ident * FStar_Parser_AST.term)
 type binders = binder Prims.list
@@ -43,19 +45,14 @@ let (__proj__Mkvprop__item__vrange : vprop -> rng) =
 let (as_vprop : vprop' -> rng -> vprop) = fun v -> fun r -> { v; vrange = r }
 type st_comp_tag =
   | ST 
-  | STAtomic of FStar_Parser_AST.term 
-  | STGhost of FStar_Parser_AST.term 
+  | STAtomic 
+  | STGhost 
 let (uu___is_ST : st_comp_tag -> Prims.bool) =
   fun projectee -> match projectee with | ST -> true | uu___ -> false
 let (uu___is_STAtomic : st_comp_tag -> Prims.bool) =
-  fun projectee ->
-    match projectee with | STAtomic _0 -> true | uu___ -> false
-let (__proj__STAtomic__item___0 : st_comp_tag -> FStar_Parser_AST.term) =
-  fun projectee -> match projectee with | STAtomic _0 -> _0
+  fun projectee -> match projectee with | STAtomic -> true | uu___ -> false
 let (uu___is_STGhost : st_comp_tag -> Prims.bool) =
-  fun projectee -> match projectee with | STGhost _0 -> true | uu___ -> false
-let (__proj__STGhost__item___0 : st_comp_tag -> FStar_Parser_AST.term) =
-  fun projectee -> match projectee with | STGhost _0 -> _0
+  fun projectee -> match projectee with | STGhost -> true | uu___ -> false
 type computation_type =
   {
   tag: st_comp_tag ;
@@ -63,42 +60,49 @@ type computation_type =
   return_name: FStar_Ident.ident ;
   return_type: FStar_Parser_AST.term ;
   postcondition: vprop ;
+  opens: FStar_Parser_AST.term FStar_Pervasives_Native.option ;
   range: rng }
 let (__proj__Mkcomputation_type__item__tag : computation_type -> st_comp_tag)
   =
   fun projectee ->
     match projectee with
-    | { tag; precondition; return_name; return_type; postcondition; range;_}
-        -> tag
+    | { tag; precondition; return_name; return_type; postcondition; opens;
+        range;_} -> tag
 let (__proj__Mkcomputation_type__item__precondition :
   computation_type -> vprop) =
   fun projectee ->
     match projectee with
-    | { tag; precondition; return_name; return_type; postcondition; range;_}
-        -> precondition
+    | { tag; precondition; return_name; return_type; postcondition; opens;
+        range;_} -> precondition
 let (__proj__Mkcomputation_type__item__return_name :
   computation_type -> FStar_Ident.ident) =
   fun projectee ->
     match projectee with
-    | { tag; precondition; return_name; return_type; postcondition; range;_}
-        -> return_name
+    | { tag; precondition; return_name; return_type; postcondition; opens;
+        range;_} -> return_name
 let (__proj__Mkcomputation_type__item__return_type :
   computation_type -> FStar_Parser_AST.term) =
   fun projectee ->
     match projectee with
-    | { tag; precondition; return_name; return_type; postcondition; range;_}
-        -> return_type
+    | { tag; precondition; return_name; return_type; postcondition; opens;
+        range;_} -> return_type
 let (__proj__Mkcomputation_type__item__postcondition :
   computation_type -> vprop) =
   fun projectee ->
     match projectee with
-    | { tag; precondition; return_name; return_type; postcondition; range;_}
-        -> postcondition
+    | { tag; precondition; return_name; return_type; postcondition; opens;
+        range;_} -> postcondition
+let (__proj__Mkcomputation_type__item__opens :
+  computation_type -> FStar_Parser_AST.term FStar_Pervasives_Native.option) =
+  fun projectee ->
+    match projectee with
+    | { tag; precondition; return_name; return_type; postcondition; opens;
+        range;_} -> opens
 let (__proj__Mkcomputation_type__item__range : computation_type -> rng) =
   fun projectee ->
     match projectee with
-    | { tag; precondition; return_name; return_type; postcondition; range;_}
-        -> range
+    | { tag; precondition; return_name; return_type; postcondition; opens;
+        range;_} -> range
 type mut_or_ref =
   | MUT 
   | REF 
@@ -229,6 +233,11 @@ and stmt'__ProofHintWithBinders__payload =
   {
   hint_type: hint_type ;
   binders1: binders }
+and stmt'__WithInvariants__payload =
+  {
+  names: FStar_Parser_AST.term Prims.list ;
+  body2: stmt ;
+  returns_: vprop FStar_Pervasives_Native.option }
 and stmt' =
   | Open of FStar_Ident.lident 
   | Expr of stmt'__Expr__payload 
@@ -244,6 +253,7 @@ and stmt' =
   | Parallel of stmt'__Parallel__payload 
   | Rewrite of stmt'__Rewrite__payload 
   | ProofHintWithBinders of stmt'__ProofHintWithBinders__payload 
+  | WithInvariants of stmt'__WithInvariants__payload 
 and stmt = {
   s: stmt' ;
   range1: rng }
@@ -251,7 +261,7 @@ and lambda =
   {
   binders2: binders ;
   ascription: computation_type FStar_Pervasives_Native.option ;
-  body2: stmt ;
+  body3: stmt ;
   range2: rng }
 and fn_decl =
   {
@@ -263,7 +273,7 @@ and fn_decl =
       FStar_Pervasives.either
     ;
   measure: FStar_Parser_AST.term FStar_Pervasives_Native.option ;
-  body3: (stmt, lambda) FStar_Pervasives.either ;
+  body4: (stmt, lambda) FStar_Pervasives.either ;
   range3: rng }
 and let_init =
   | Array_initializer of array_init 
@@ -412,6 +422,18 @@ let (__proj__Mkstmt'__ProofHintWithBinders__payload__item__binders :
   stmt'__ProofHintWithBinders__payload -> binders) =
   fun projectee ->
     match projectee with | { hint_type = hint_type1; binders1;_} -> binders1
+let (__proj__Mkstmt'__WithInvariants__payload__item__names :
+  stmt'__WithInvariants__payload -> FStar_Parser_AST.term Prims.list) =
+  fun projectee ->
+    match projectee with | { names; body2 = body; returns_;_} -> names
+let (__proj__Mkstmt'__WithInvariants__payload__item__body :
+  stmt'__WithInvariants__payload -> stmt) =
+  fun projectee ->
+    match projectee with | { names; body2 = body; returns_;_} -> body
+let (__proj__Mkstmt'__WithInvariants__payload__item__returns_ :
+  stmt'__WithInvariants__payload -> vprop FStar_Pervasives_Native.option) =
+  fun projectee ->
+    match projectee with | { names; body2 = body; returns_;_} -> returns_
 let (uu___is_Open : stmt' -> Prims.bool) =
   fun projectee -> match projectee with | Open _0 -> true | uu___ -> false
 let (__proj__Open__item___0 : stmt' -> FStar_Ident.lident) =
@@ -477,6 +499,12 @@ let (uu___is_ProofHintWithBinders : stmt' -> Prims.bool) =
 let (__proj__ProofHintWithBinders__item___0 :
   stmt' -> stmt'__ProofHintWithBinders__payload) =
   fun projectee -> match projectee with | ProofHintWithBinders _0 -> _0
+let (uu___is_WithInvariants : stmt' -> Prims.bool) =
+  fun projectee ->
+    match projectee with | WithInvariants _0 -> true | uu___ -> false
+let (__proj__WithInvariants__item___0 :
+  stmt' -> stmt'__WithInvariants__payload) =
+  fun projectee -> match projectee with | WithInvariants _0 -> _0
 let (__proj__Mkstmt__item__s : stmt -> stmt') =
   fun projectee -> match projectee with | { s; range1 = range;_} -> s
 let (__proj__Mkstmt__item__range : stmt -> rng) =
@@ -484,39 +512,39 @@ let (__proj__Mkstmt__item__range : stmt -> rng) =
 let (__proj__Mklambda__item__binders : lambda -> binders) =
   fun projectee ->
     match projectee with
-    | { binders2 = binders1; ascription; body2 = body; range2 = range;_} ->
+    | { binders2 = binders1; ascription; body3 = body; range2 = range;_} ->
         binders1
 let (__proj__Mklambda__item__ascription :
   lambda -> computation_type FStar_Pervasives_Native.option) =
   fun projectee ->
     match projectee with
-    | { binders2 = binders1; ascription; body2 = body; range2 = range;_} ->
+    | { binders2 = binders1; ascription; body3 = body; range2 = range;_} ->
         ascription
 let (__proj__Mklambda__item__body : lambda -> stmt) =
   fun projectee ->
     match projectee with
-    | { binders2 = binders1; ascription; body2 = body; range2 = range;_} ->
+    | { binders2 = binders1; ascription; body3 = body; range2 = range;_} ->
         body
 let (__proj__Mklambda__item__range : lambda -> rng) =
   fun projectee ->
     match projectee with
-    | { binders2 = binders1; ascription; body2 = body; range2 = range;_} ->
+    | { binders2 = binders1; ascription; body3 = body; range2 = range;_} ->
         range
 let (__proj__Mkfn_decl__item__id : fn_decl -> FStar_Ident.ident) =
   fun projectee ->
     match projectee with
     | { id2 = id; is_rec; binders3 = binders1; ascription1 = ascription;
-        measure; body3 = body; range3 = range;_} -> id
+        measure; body4 = body; range3 = range;_} -> id
 let (__proj__Mkfn_decl__item__is_rec : fn_decl -> Prims.bool) =
   fun projectee ->
     match projectee with
     | { id2 = id; is_rec; binders3 = binders1; ascription1 = ascription;
-        measure; body3 = body; range3 = range;_} -> is_rec
+        measure; body4 = body; range3 = range;_} -> is_rec
 let (__proj__Mkfn_decl__item__binders : fn_decl -> binders) =
   fun projectee ->
     match projectee with
     | { id2 = id; is_rec; binders3 = binders1; ascription1 = ascription;
-        measure; body3 = body; range3 = range;_} -> binders1
+        measure; body4 = body; range3 = range;_} -> binders1
 let (__proj__Mkfn_decl__item__ascription :
   fn_decl ->
     (computation_type, FStar_Parser_AST.term FStar_Pervasives_Native.option)
@@ -525,24 +553,24 @@ let (__proj__Mkfn_decl__item__ascription :
   fun projectee ->
     match projectee with
     | { id2 = id; is_rec; binders3 = binders1; ascription1 = ascription;
-        measure; body3 = body; range3 = range;_} -> ascription
+        measure; body4 = body; range3 = range;_} -> ascription
 let (__proj__Mkfn_decl__item__measure :
   fn_decl -> FStar_Parser_AST.term FStar_Pervasives_Native.option) =
   fun projectee ->
     match projectee with
     | { id2 = id; is_rec; binders3 = binders1; ascription1 = ascription;
-        measure; body3 = body; range3 = range;_} -> measure
+        measure; body4 = body; range3 = range;_} -> measure
 let (__proj__Mkfn_decl__item__body :
   fn_decl -> (stmt, lambda) FStar_Pervasives.either) =
   fun projectee ->
     match projectee with
     | { id2 = id; is_rec; binders3 = binders1; ascription1 = ascription;
-        measure; body3 = body; range3 = range;_} -> body
+        measure; body4 = body; range3 = range;_} -> body
 let (__proj__Mkfn_decl__item__range : fn_decl -> rng) =
   fun projectee ->
     match projectee with
     | { id2 = id; is_rec; binders3 = binders1; ascription1 = ascription;
-        measure; body3 = body; range3 = range;_} -> range
+        measure; body4 = body; range3 = range;_} -> range
 let (uu___is_Array_initializer : let_init -> Prims.bool) =
   fun projectee ->
     match projectee with | Array_initializer _0 -> true | uu___ -> false
@@ -568,22 +596,27 @@ let (mk_comp :
   st_comp_tag ->
     vprop ->
       FStar_Ident.ident ->
-        FStar_Parser_AST.term -> vprop -> rng -> computation_type)
+        FStar_Parser_AST.term ->
+          vprop ->
+            FStar_Parser_AST.term FStar_Pervasives_Native.option ->
+              rng -> computation_type)
   =
   fun tag ->
     fun precondition ->
       fun return_name ->
         fun return_type ->
           fun postcondition ->
-            fun range ->
-              {
-                tag;
-                precondition;
-                return_name;
-                return_type;
-                postcondition;
-                range
-              }
+            fun opens ->
+              fun range ->
+                {
+                  tag;
+                  precondition;
+                  return_name;
+                  return_type;
+                  postcondition;
+                  opens;
+                  range
+                }
 let (mk_vprop_exists : binders -> vprop -> vprop') =
   fun binders1 -> fun body -> VPropExists { binders = binders1; body }
 let (mk_expr : FStar_Parser_AST.term -> stmt') = fun e -> Expr { e }
@@ -656,7 +689,7 @@ let (mk_fn_decl :
                   binders3 = binders1;
                   ascription1 = ascription;
                   measure;
-                  body3 = body;
+                  body4 = body;
                   range3 = range
                 }
 let (mk_open : FStar_Ident.lident -> stmt') = fun lid -> Open lid
@@ -677,4 +710,11 @@ let (mk_lambda :
     fun ascription ->
       fun body ->
         fun range ->
-          { binders2 = bs; ascription; body2 = body; range2 = range }
+          { binders2 = bs; ascription; body3 = body; range2 = range }
+let (mk_with_invs :
+  FStar_Parser_AST.term Prims.list ->
+    stmt -> vprop FStar_Pervasives_Native.option -> stmt')
+  =
+  fun names ->
+    fun body ->
+      fun returns_ -> WithInvariants { names; body2 = body; returns_ }

@@ -209,6 +209,14 @@ let add_frame (s:comp_st) (frame:term)
     | C_STAtomic inames s -> C_STAtomic inames (add_frame_s s)
     | C_STGhost inames s -> C_STGhost inames (add_frame_s s)
 
+let add_inv (s:comp_st) (v:vprop)
+  : comp_st
+  = add_frame s v
+  (* TODO: this is pretty correct as it is, it's just missing
+  adding the invariant name to the comp type. And maybe check that
+  it's only atomic/ghost. *)
+
+
 //
 // TODO: there is a observability flag upcoming in the underlying steel framework
 //       the bind will then also allow for (statomic unobservable, statomic observable)
@@ -515,6 +523,36 @@ let non_informative_c (g:env) (c:comp_st) =
 
 let as_binder t = { binder_ty = t; binder_ppname = ppname_default }
 
+// TODO: move
+let tm_join_inames (inames1 inames2 : term) : term =
+  if eq_tm inames1 tm_emp_inames then inames2 else
+  if eq_tm inames2 tm_emp_inames then inames1 else
+  if eq_tm inames1 inames2 then inames1 else
+
+  let inames1 = elab_term inames1 in
+  let inames2 = elab_term inames2 in
+  let join_lid = Pulse.Reflection.Util.mk_pulse_lib_core_lid "join_inames" in
+  let join : R.term = R.pack_ln (R.Tv_FVar (R.pack_fv join_lid)) in
+  with_range (Tm_FStar (R.mk_e_app join [inames1; inames2]))
+             (T.range_of_term inames1)
+
+let tm_inames_subset (inames1 inames2 : term) : term =
+  let inames1 = elab_term inames1 in
+  let inames2 = elab_term inames2 in
+  let join_lid = Pulse.Reflection.Util.mk_pulse_lib_core_lid "inames_subset" in
+  let join : R.term = R.pack_ln (R.Tv_FVar (R.pack_fv join_lid)) in
+  with_range (Tm_FStar (R.mk_e_app join [inames1; inames2]))
+             (T.range_of_term inames1)
+
+let tm_inames_subset_typing (g:env) (inames1 inames2 : term) : tot_typing g (tm_inames_subset inames1 inames2) tm_prop =
+  (* Need to add the typing hypothesis for `inames_subset` to
+  the env and a precondition that the inames have type Pulse.Lib.Core.inames in g,
+  which the caller should get from an inversion lemma *)
+  magic()
+
+let prop_validity (g:env) (t:term) =
+  FTB.prop_validity_token (elab_env g) (elab_term t)
+
 [@@ no_auto_projectors]
 noeq
 type st_equiv : env -> comp -> comp -> Type =
@@ -543,6 +581,39 @@ type st_equiv : env -> comp -> comp -> Type =
       universe_of g t1 u ->
       Ghost.erased (RT.equiv (elab_env g) (elab_term t1) (elab_term t2)) ->
       st_equiv g (C_Tot t1) (C_Tot t2)
+
+[@@ no_auto_projectors]
+noeq
+type st_sub : env -> comp -> comp -> Type =
+  | STS_Refl :
+    g:env ->
+    c:comp ->
+    st_sub g c c
+
+  | STS_Trans :
+    g:env ->
+    c1:comp ->
+    c2:comp ->
+    c3:comp ->
+    st_sub g c1 c2 ->
+    st_sub g c2 c3 ->
+    st_sub g c1 c3
+
+  | STS_GhostInvs :
+    g:env ->
+    stc:st_comp ->
+    is1:term ->
+    is2:term ->
+    prop_validity g (tm_inames_subset is1 is2) ->
+    st_sub g (C_STGhost is1 stc) (C_STGhost is2 stc)
+
+  | STS_AtomicInvs :
+    g:env ->
+    stc:st_comp ->
+    is1:term ->
+    is2:term ->
+    prop_validity g (tm_inames_subset is1 is2) ->
+    st_sub g (C_STAtomic is1 stc) (C_STAtomic is2 stc)
 
 [@@ no_auto_projectors]
 noeq
@@ -587,7 +658,7 @@ noeq
 type lift_comp : env -> comp -> comp -> Type =
   | Lift_STAtomic_ST :
       g:env ->
-      c:comp_st{C_STAtomic? c /\ comp_inames c == tm_emp_inames} ->
+      c:comp_st{C_STAtomic? c} -> // Note: we no longer require an empty set of invariants, due to the positive view
       lift_comp g c (C_ST (st_comp_of_comp c))
 
   | Lift_STGhost_STAtomic :
@@ -652,9 +723,6 @@ type comp_typing : env -> comp -> universe -> Type =
       tot_typing g inames tm_inames ->      
       st_comp_typing g st ->
       comp_typing g (C_STGhost inames st) st.u
-
-let prop_validity (g:env) (t:term) =
-  FTB.prop_validity_token (elab_env g) (elab_term t)
 
 let subtyping_token g t1 t2 =
   T.subtyping_token (elab_env g) (elab_term t1) (elab_term t2)
@@ -839,6 +907,15 @@ type st_typing : env -> st_term -> comp -> Type =
       st_equiv g c c' ->
       st_typing g e c'
 
+  | T_Sub :
+      g:env ->
+      e:st_term ->
+      c:comp ->
+      c':comp ->
+      st_typing g e c ->
+      st_sub g c c' ->
+      st_typing g e c'
+
   | T_IntroPure:
       g:env ->
       p:term ->
@@ -951,6 +1028,19 @@ type st_typing : env -> st_term -> comp -> Type =
       st_comp_typing g s ->
       st_typing g (wtag (Some c) (Tm_Admit { ctag=c; u=s.u; typ=s.res; post=None }))
                   (comp_admit c s)
+
+  (* FAKE: takes an stt sub function, needs to check effects. Also it can be either
+  atomic, unobservable, or ghost. *)
+  | T_WithInv:
+      g:env ->
+      inv_tm : term ->
+      inv_vprop : vprop ->
+      inv_vprop_typing : tot_typing g inv_vprop tm_vprop -> // could be ghost
+      inv_typing : tot_typing g inv_tm (tm_inv inv_vprop) ->
+      body : st_term ->
+      c : comp_st ->
+      body_typing : st_typing g body (add_frame c inv_vprop) ->
+      st_typing g (wtag (Some STT_Atomic) (Tm_WithInv {name=inv_tm; body; returns_inv=None})) c
 
 and pats_complete : env -> term -> typ -> list R.pattern -> Type0 =
   // just check the elaborated term with the core tc

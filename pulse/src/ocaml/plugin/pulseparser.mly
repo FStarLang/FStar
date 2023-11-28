@@ -66,6 +66,7 @@ let mk_fn_decl q id is_rec bs body range =
 
 /* pulse specific tokens; rest are inherited from F* */
 %token MUT FN INVARIANT WHILE REF PARALLEL REWRITE FOLD GHOST ATOMIC EACH
+%token WITH_INVS OPENS
 
 %start pulseDecl
 %start peekFnId
@@ -85,8 +86,8 @@ peekFnId:
       { FStar_Ident.string_of_id id }
 
 qual:
-  | GHOST { PulseSugar.STGhost (unit_const (rr $loc)) }
-  | ATOMIC { PulseSugar.STAtomic (unit_const (rr $loc)) }
+  | GHOST { PulseSugar.STGhost }
+  | ATOMIC { PulseSugar.STAtomic }
 
 /* This is the main entry point for the pulse parser */
 pulseDecl:
@@ -131,13 +132,14 @@ pulseComputationType:
   | REQUIRES t=pulseVprop
     ret=option(RETURNS i=lidentOrUnderscore COLON r=term { (i, r) })
     ENSURES t2=pulseVprop
+    maybe_opens=option(OPENS inv=appTermNoRecordExp { inv })
     {
         let i, r =
           match ret with
           | Some (i, r) -> i, r
           | None -> default_return
         in
-        PulseSugar.mk_comp ST t i r t2 (rr $loc)
+        PulseSugar.mk_comp ST t i r t2 maybe_opens (rr $loc)
     }
 
 
@@ -187,6 +189,9 @@ pulseStmtNoSeq:
     { PulseSugar.mk_proof_hint_with_binders (UNFOLD (ns,p)) bs }
   | bs=withBindersOpt FOLD ns=option(names) p=pulseVprop
     { PulseSugar.mk_proof_hint_with_binders (FOLD (ns,p)) bs }
+  | WITH_INVS names=nonempty_list(atomicTerm) r=option(ensuresVprop) LBRACE body=pulseStmt RBRACE
+    { PulseSugar.mk_with_invs names body r }
+
   | f=localFnDecl
     {
       let id, fndecl = f in

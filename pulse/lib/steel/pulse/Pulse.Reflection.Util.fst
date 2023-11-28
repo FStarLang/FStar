@@ -36,6 +36,10 @@ let seq_lid = ["FStar"; "Seq"; "Base"; "seq"]
 let seq_create_lid = ["FStar"; "Seq"; "Base"; "create"]
 
 
+(* The "plicities" *)
+let ex t : R.argv = (t, R.Q_Explicit)
+let im t : R.argv = (t, R.Q_Implicit)
+
 let tuple2_lid = ["FStar"; "Pervasives"; "Native"; "tuple2"]
 let fst_lid = ["FStar"; "Pervasives"; "Native"; "fst"]
 let snd_lid = ["FStar"; "Pervasives"; "Native"; "snd"]
@@ -63,6 +67,7 @@ let mk_snd (u1 u2:R.universe) (a1 a2 e:R.term) : R.term =
 let true_tm = R.pack_ln (R.Tv_Const (R.C_True))
 let false_tm = R.pack_ln (R.Tv_Const (R.C_False))
 
+let inv_lid = mk_pulse_lib_core_lid "inv"
 let emp_lid = mk_pulse_lib_core_lid "emp"
 let inames_lid = mk_pulse_lib_core_lid "inames"
 
@@ -127,6 +132,7 @@ let mk_stt_ghost_admit (u:R.universe) (t pre post:R.term) : R.term =
   pack_ln (Tv_App t (post, Q_Explicit))
 
 let emp_inames_lid = mk_pulse_lib_core_lid "emp_inames"
+let add_inv_lid = mk_pulse_lib_core_lid "add_inv"
 let elim_pure_lid = mk_pulse_lib_core_lid "elim_pure"
 
  //the thunked, value-type counterpart of the effect STT
@@ -256,6 +262,10 @@ let vprop_eq_tm t1 t2 =
   t
 
 let emp_inames_tm : R.term = R.pack_ln (R.Tv_FVar (R.pack_fv emp_inames_lid))
+
+let add_inv_tm (p is i : R.term) : R.term =
+  let h = R.pack_ln (R.Tv_FVar (R.pack_fv add_inv_lid)) in
+  R.mk_app h [im p; ex is; ex i]
 
 let non_informative_witness_lid = mk_pulse_lib_core_lid "non_informative_witness"
 let non_informative_witness_rt (u:R.universe) (a:R.term) : R.term =
@@ -516,6 +526,18 @@ let mk_sub_stt_atomic (u:R.universe) (a opened pre1 pre2 post1 post2 e:R.term)  
   let t = pack_ln (R.Tv_App t (`(), Q_Explicit)) in
   pack_ln (R.Tv_App t (e, Q_Explicit))
 
+let mk_sub_inv_atomic (u:R.universe) (a pre post opens1 opens2 e : R.term) : R.term =
+  let open R in
+  let lid = mk_pulse_lib_core_lid "sub_invs_stt_atomic" in
+  let head : R.term = pack_ln (R.Tv_UInst (R.pack_fv lid) [u]) in
+  R.mk_app head
+    [(a, Q_Implicit);
+     (opens1, Q_Implicit);
+     (opens2, Q_Implicit);
+     (pre, Q_Implicit);
+     (post, Q_Implicit);
+     (e, Q_Explicit)]
+
 // Wrapper.sub_stt_ghost<u> #a #opened #pre1 pre2 #post1 post2 () () e
 let mk_sub_stt_ghost (u:R.universe) (a opened pre1 pre2 post1 post2 e:R.term)  =
   let open R in
@@ -530,6 +552,18 @@ let mk_sub_stt_ghost (u:R.universe) (a opened pre1 pre2 post1 post2 e:R.term)  =
   let t = pack_ln (R.Tv_App t (`(), Q_Explicit)) in
   let t = pack_ln (R.Tv_App t (`(), Q_Explicit)) in
   pack_ln (R.Tv_App t (e, Q_Explicit))
+
+let mk_sub_inv_ghost (u:R.universe) (a pre post opens1 opens2 e : R.term) : R.term =
+  let open R in
+  let lid = mk_pulse_lib_core_lid "sub_invs_stt_ghost" in
+  let head : R.term = pack_ln (R.Tv_UInst (R.pack_fv lid) [u]) in
+  R.mk_app head
+    [(a, Q_Implicit);
+     (opens1, Q_Implicit);
+     (opens2, Q_Implicit);
+     (pre, Q_Implicit);
+     (post, Q_Implicit);
+     (e, Q_Explicit)]
 
 let mk_par (u:R.universe) (aL aR preL postL preR postR eL eR:R.term) =
   let open R in
@@ -612,7 +646,6 @@ let mk_pts_to (a:R.term) (r:R.term) (perm:R.term) (v:R.term) : R.term =
 let full_perm_tm : R.term =
   let open R in
   pack_ln (Tv_FVar (pack_fv full_perm_lid))
-
 let pulse_lib_array_core = ["Pulse"; "Lib"; "Array"; "Core"]
 let mk_pulse_lib_array_core_lid s = pulse_lib_array_core @ [s]
 

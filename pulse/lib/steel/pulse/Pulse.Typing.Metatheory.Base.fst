@@ -120,6 +120,34 @@ let st_equiv_weakening (g:env) (g':env { disjoint g g' })
     ST_VPropEquiv _ c1 c2 x (magic ()) (magic ()) (magic ()) (FStar.Reflection.Typing.Rel_refl _ _ _) (magic ()) (magic ())
 #pop-options
 
+// TODO: add precondition that g1 extends g'
+let prop_validity_token_weakening (#g:env) (#t:term)
+  (token:prop_validity g t)
+  (g1:env)
+  : prop_validity g1 t =
+  admit ();
+  token
+
+let rec st_sub_weakening (g:env) (g':env { disjoint g g' })
+  (#c1 #c2:comp) (d:st_sub (push_env g g') c1 c2)
+  (g1:env { pairwise_disjoint g g1 g' })
+  : Tot (st_sub (push_env (push_env g g1) g') c1 c2)
+        (decreases d)
+=
+  let g'' = push_env (push_env g g1) g' in
+  match d with
+  | STS_Refl _ _ ->
+    STS_Refl _ _
+  | STS_Trans _ _ _ _ dl dr ->
+    STS_Trans _ _ _ _ (st_sub_weakening g g' dl g1) (st_sub_weakening g g' dr g1)
+
+  | STS_GhostInvs _ stc is1 is2 tok ->
+    let tok : prop_validity g'' (tm_inames_subset is1 is2) = prop_validity_token_weakening tok g'' in
+    STS_GhostInvs g'' stc is1 is2 tok
+  | STS_AtomicInvs _ stc is1 is2 tok ->
+    let tok : prop_validity g'' (tm_inames_subset is1 is2) = prop_validity_token_weakening tok g'' in
+    STS_AtomicInvs g'' stc is1 is2 tok
+
 let st_comp_typing_weakening (g:env) (g':env { disjoint g g' })
   (#s:st_comp) (d:st_comp_typing (push_env g g') s)
   (g1:env { pairwise_disjoint g g1 g' })
@@ -141,14 +169,6 @@ let comp_typing_weakening (g:env) (g':env { disjoint g g' })
     CT_STAtomic _ inames _ (magic ()) (st_comp_typing_weakening g g' d g1)
   | CT_STGhost _ inames _ _ d ->
     CT_STGhost _ inames _ (magic ()) (st_comp_typing_weakening g g' d g1)
-
-// TODO: add precondition that g1 extends g'
-let prop_validity_token_weakening (#g:env) (#t:term)
-  (token:prop_validity g t)
-  (g1:env)
-  : prop_validity g1 t =
-  admit ();
-  token
 
 #push-options "--split_queries no --z3rlimit_factor 8 --fuel 1 --ifuel 1"
 let rec st_typing_weakening g g' t c d g1
@@ -322,6 +342,9 @@ let rec st_typing_weakening g g' t c d g1
   | T_Equiv _ e c c' d_e d_eq ->
     T_Equiv _ e c c' (st_typing_weakening g g' e c d_e g1) (st_equiv_weakening g g' d_eq g1)
 
+  | T_Sub _ e c c' d_e d_sub ->
+    T_Sub _ e c c' (st_typing_weakening g g' e c d_e g1) (st_sub_weakening g g' d_sub g1)
+
   | T_IntroPure _ p _ token -> T_IntroPure _ p (magic ()) (prop_validity_token_weakening token _)
 
   | T_ElimExists _ u t p x _ _ ->
@@ -405,6 +428,12 @@ let rec st_typing_weakening g g' t c d g1
   | T_Rewrite _ p q _ _ -> T_Rewrite _ p q (magic ()) (magic ())
 
   | T_Admit _ s c d_s -> T_Admit _ s c (st_comp_typing_weakening g g' d_s g1)
+
+  | T_WithInv  _ _ _ p_typing inv_typing _ _ body_typing ->
+    T_WithInv _ _ _ (tot_typing_weakening g g' _ _ p_typing g1)
+                    (tot_typing_weakening g g' _ _ inv_typing g1)
+                    _ _
+                    (st_typing_weakening g g' _ _ body_typing g1)
 #pop-options
 
 #push-options "--admit_smt_queries true"

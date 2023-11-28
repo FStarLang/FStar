@@ -126,6 +126,22 @@ let intro_pure_tm (p:term) =
           arg_qual = None;
           arg = tm_fstar (`()) Range.range_0 })
 
+let simple_arr (t1 t2 : R.term) : R.term =
+  let b = R.pack_binder {
+           sort = t1;
+           ppname = Sealed.seal "x";
+           qual = R.Q_Explicit;
+           attrs = [] } in
+  let v : var = magic () in
+  let t2 = RT.close_term t2 v in
+  R.pack_ln (R.Tv_Arrow b (R.pack_comp (R.C_Total t2)))
+
+let elab_st_sub (#g:env) (#c1 #c2 : comp)
+     (d_sub : st_sub g c1 c2)
+   : Tot (t:R.term
+          & RT.tot_typing (elab_env g) t (simple_arr (elab_comp c1) (elab_comp c2)))
+= magic()
+
 let rec elab_st_typing (#g:env)
                        (#t:st_term)
                        (#c:comp)
@@ -185,6 +201,11 @@ let rec elab_st_typing (#g:env)
     | T_Equiv _ _ c1 c2 e_typing _ ->
       let e = elab_st_typing e_typing in
       elab_sub c1 c2 e
+
+    | T_Sub _ _ c1 c2 e_typing d_sub ->
+      let e = elab_st_typing e_typing in
+      let (| coercion, _ |) = elab_st_sub d_sub in
+      R.mk_e_app coercion [e]
 
     | T_Lift _ _ c1 c2 e_typing lc ->
       let e = elab_st_typing e_typing in
@@ -288,6 +309,9 @@ let rec elab_st_typing (#g:env)
        | STT -> mk_stt_admit ru rres rpre rpost
        | STT_Atomic -> mk_stt_atomic_admit ru rres rpre rpost
        | STT_Ghost -> mk_stt_ghost_admit ru rres rpre rpost)
+
+    | T_WithInv _ _ _ _ _ _ _ _ ->
+      `("IOU: elab_st_typing of T_WithInv")
 
 and elab_br (#g:env)
             (#c:comp_st)

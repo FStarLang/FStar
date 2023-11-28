@@ -40,10 +40,11 @@ val tm_arrow (b:binder) (q:FStar.Syntax.Syntax.aqual) (body:comp) (_:range)  : t
 val tm_expr (t:FStar.Syntax.Syntax.term) (_:range) : term
 val tm_unknown (_:range)  : term
 val tm_emp_inames : term 
+val tm_add_inv : i:term -> is:term -> range -> term
 val mk_tot (t:term) : comp
 val mk_comp (pre:term) (ret:binder) (post:term) : comp
-val ghost_comp (inames:term) (pre:term) (ret:binder) (post:term) : comp
-val atomic_comp (inames:term) (pre:term) (ret:binder) (post:term) : comp
+val ghost_comp (opens:term) (pre:term) (ret:binder) (post:term) : comp
+val atomic_comp (opens:term) (pre:term) (ret:binder) (post:term) : comp
 
 val hint_type : Type0
 val mk_assert_hint_type (vp:vprop) : hint_type
@@ -81,6 +82,7 @@ val tm_rewrite (p1:term) (p2:term) (_:range) : st_term
 val tm_rename (pairs:list (term & term)) (_:range) : st_term
 val tm_admit (_:range) : st_term
 val tm_proof_hint_with_binders (_:hint_type) (_:list binder) (body:st_term) (_:range) : st_term
+val tm_with_inv (iname:term) (body:st_term) (returns_:option term) (_:range) : st_term
 val close_binders (bs:list binder) (xs:list var) : list binder
 val close_term (t:term) (v:var) : term
 val close_st_term (t:st_term) (v:var) : st_term

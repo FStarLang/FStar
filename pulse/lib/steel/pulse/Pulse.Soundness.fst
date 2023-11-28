@@ -25,6 +25,7 @@ module Comp = Pulse.Soundness.Comp
 module LN = Pulse.Typing.LN
 module FV = Pulse.Typing.FV
 module STT = Pulse.Soundness.STT
+module Sub = Pulse.Soundness.Sub
 
 module Typing = Pulse.Typing
 module EPure = Pulse.Elaborate.Pure
@@ -399,6 +400,10 @@ let rec soundness (g:stt_env)
       Rewrite.rewrite_soundness d
 
     | T_Admit _ _ _ _ -> Admit.admit_soundess d
+
+    | T_Sub _ _ _ _ _ _ -> Sub.sub_soundness d soundness
+
+    | T_WithInv _ _ _ _ _ _ _ _ -> magic() // IOU
 #pop-options
 
 let soundness_lemma

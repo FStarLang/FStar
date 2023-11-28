@@ -410,6 +410,9 @@ let rec simplify_st_term (g:env) (e:st_term) : T.Tac st_term =
   
   | Tm_WithLocalArray { binder; initializer; length; body } ->
     ret (Tm_WithLocalArray { binder; initializer; length; body = with_open binder body })
+    
+  | Tm_WithInv {body} ->
+    simplify_st_term g body
 
 and simplify_branch (g:env) (b:branch) : T.Tac branch =
   let pat, body = b in
@@ -639,7 +642,10 @@ let rec extract (g:env) (p:st_term)
         let mllb = mk_mut_mllb mlident ([], mlty) allocator in
         let mlletbinding = mk_mlletbinding false [mllb] in
         mle_let mlletbinding body, e_tag_impure
-        
+
+      | Tm_WithInv { body } ->
+        extract g body
+    
       | Tm_ProofHintWithBinders { t } -> T.fail "Unexpected constructor: ProofHintWithBinders should have been desugared away"
       | Tm_Admit _ -> T.raise (Extraction_failure (Printf.sprintf "Cannot extract code with admit: %s\n" (Pulse.Syntax.Printer.st_term_to_string p)))
     end
