@@ -320,7 +320,8 @@ let (format_issue' : Prims.bool -> issue -> Prims.string) =
       let r = issue1.issue_range in
       let atrng =
         match r with
-        | FStar_Pervasives_Native.Some r1 ->
+        | FStar_Pervasives_Native.Some r1 when
+            r1 <> FStar_Compiler_Range_Type.dummyRange ->
             let uu___ = FStar_Pprint.blank Prims.int_one in
             let uu___1 =
               let uu___2 = FStar_Pprint.doc_of_string "at" in
@@ -333,7 +334,7 @@ let (format_issue' : Prims.bool -> issue -> Prims.string) =
                 FStar_Pprint.op_Hat_Hat uu___4 uu___5 in
               FStar_Pprint.op_Hat_Hat uu___2 uu___3 in
             FStar_Pprint.op_Hat_Hat uu___ uu___1
-        | FStar_Pervasives_Native.None -> FStar_Pprint.empty in
+        | uu___ -> FStar_Pprint.empty in
       let hdr =
         if print_hdr
         then
