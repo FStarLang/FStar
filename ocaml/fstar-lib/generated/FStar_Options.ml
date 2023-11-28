@@ -348,6 +348,7 @@ let (defaults : (Prims.string * option_val) Prims.list) =
   ("print_universes", (Bool false));
   ("print_z3_statistics", (Bool false));
   ("prn", (Bool false));
+  ("proof_recovery", (Bool false));
   ("quake", (Int Prims.int_zero));
   ("quake_lo", (Int Prims.int_one));
   ("quake_hi", (Int Prims.int_one));
@@ -597,6 +598,8 @@ let (get_print_universes : unit -> Prims.bool) =
 let (get_print_z3_statistics : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "print_z3_statistics" as_bool
 let (get_prn : unit -> Prims.bool) = fun uu___ -> lookup_opt "prn" as_bool
+let (get_proof_recovery : unit -> Prims.bool) =
+  fun uu___ -> lookup_opt "proof_recovery" as_bool
 let (get_quake_lo : unit -> Prims.int) =
   fun uu___ -> lookup_opt "quake_lo" as_int
 let (get_quake_hi : unit -> Prims.int) =
@@ -985,7 +988,7 @@ let (interp_quake_arg : Prims.string -> (Prims.int * Prims.int * Prims.bool))
           let uu___ = ios f1 in let uu___1 = ios f2 in (uu___, uu___1, true)
         else failwith "unexpected value for --quake"
     | uu___ -> failwith "unexpected value for --quake"
-let (uu___451 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
+let (uu___452 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
   =
   let cb = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None in
   let set1 f =
@@ -997,11 +1000,11 @@ let (uu___451 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
     | FStar_Pervasives_Native.Some f -> f msg in
   (set1, call)
 let (set_option_warning_callback_aux : (Prims.string -> unit) -> unit) =
-  match uu___451 with
+  match uu___452 with
   | (set_option_warning_callback_aux1, option_warning_callback) ->
       set_option_warning_callback_aux1
 let (option_warning_callback : Prims.string -> unit) =
-  match uu___451 with
+  match uu___452 with
   | (set_option_warning_callback_aux1, option_warning_callback1) ->
       option_warning_callback1
 let (set_option_warning_callback : (Prims.string -> unit) -> unit) =
@@ -1235,6 +1238,8 @@ let rec (specs_with_types :
       "Print Z3 statistics for each SMT query (details such as relevant modules, facts, etc. for each proof)");
     (FStar_Getopt.noshort, "prn", (Const (Bool true)),
       "Print full names (deprecated; use --print_full_names instead)");
+    (FStar_Getopt.noshort, "proof_recovery", (Const (Bool true)),
+      "Proof recovery mode: before failing an SMT query, retry 3 times, increasing rlimits.\nIf the query goes through after retrying, verification will succeed, but a warning will be emitted.\nThis feature is useful to restore a project after some change to its libraries or F* upgrade.\nImportantly, then, this option cannot be used in a pragma (#set-options, etc).");
     (FStar_Getopt.noshort, "quake",
       (PostProcessed
          (((fun uu___ ->
@@ -1515,7 +1520,7 @@ let (settable_specs :
     (FStar_Compiler_List.filter
        (fun uu___ ->
           match uu___ with | (uu___1, x, uu___2, uu___3) -> settable x))
-let (uu___644 :
+let (uu___645 :
   (((unit -> FStar_Getopt.parse_cmdline_res) -> unit) *
     (unit -> FStar_Getopt.parse_cmdline_res)))
   =
@@ -1532,11 +1537,11 @@ let (uu___644 :
   (set1, call)
 let (set_error_flags_callback_aux :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
-  match uu___644 with
+  match uu___645 with
   | (set_error_flags_callback_aux1, set_error_flags) ->
       set_error_flags_callback_aux1
 let (set_error_flags : unit -> FStar_Getopt.parse_cmdline_res) =
-  match uu___644 with
+  match uu___645 with
   | (set_error_flags_callback_aux1, set_error_flags1) -> set_error_flags1
 let (set_error_flags_callback :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
@@ -2027,6 +2032,8 @@ let (print_universes : unit -> Prims.bool) =
   fun uu___ -> get_print_universes ()
 let (print_z3_statistics : unit -> Prims.bool) =
   fun uu___ -> get_print_z3_statistics ()
+let (proof_recovery : unit -> Prims.bool) =
+  fun uu___ -> get_proof_recovery ()
 let (quake_lo : unit -> Prims.int) = fun uu___ -> get_quake_lo ()
 let (quake_hi : unit -> Prims.int) = fun uu___ -> get_quake_hi ()
 let (quake_keep : unit -> Prims.bool) = fun uu___ -> get_quake_keep ()
