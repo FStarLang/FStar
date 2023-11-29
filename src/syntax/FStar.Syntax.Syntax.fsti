@@ -28,6 +28,7 @@ module O = FStar.Options
 open FStar.VConfig
 
 include FStar.Class.HasRange
+open FStar.Class.Show
 
 (* Objects with metadata *)
 [@@ PpxDerivingYoJson; PpxDerivingShow ]
@@ -895,3 +896,5 @@ val unit_const            : term
 instance val has_range_syntax #a : Tot (hasRange (syntax a))
 instance val has_range_withinfo #a : Tot (hasRange (withinfo_t a))
 instance val has_range_sigelt : hasRange sigelt
+
+instance val showable_lazy_kind : showable lazy_kind
