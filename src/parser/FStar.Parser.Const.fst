@@ -213,11 +213,15 @@ let bv_xor_lid         = bvconst "bvxor"
 let bv_or_lid          = bvconst "bvor"
 let bv_add_lid         = bvconst "bvadd"
 let bv_sub_lid         = bvconst "bvsub"
-let bv_shift_left_lid  = bvconst "bvshl"
-let bv_shift_right_lid = bvconst "bvshr"
+// bvshl and bvshr exist for backwards compatability and are implemented
+// in terms of bvshl' and bvshr'. We only need to handle bvshl' and bvshr'
+// specially.
+let bv_shift_left_lid  = bvconst "bvshl'"
+let bv_shift_right_lid = bvconst "bvshr'"
 let bv_udiv_lid        = bvconst "bvdiv"
 let bv_udiv_unsafe_lid = bvconst "bvdiv_unsafe"
 let bv_mod_lid         = bvconst "bvmod"
+let bv_mod_unsafe_lid  = bvconst "bvmod_unsafe"
 let bv_mul_lid         = bvconst "bvmul"
 let bv_ult_lid         = bvconst "bvult"
 let bv_uext_lid        = bvconst "bv_uext"

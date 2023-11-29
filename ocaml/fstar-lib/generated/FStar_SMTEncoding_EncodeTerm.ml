@@ -1102,8 +1102,9 @@ and (encode_BitVector_term :
                         (FStar_Parser_Const.bv_shift_left_lid, bv_shl);
                         (FStar_Parser_Const.bv_shift_right_lid, bv_shr);
                         (FStar_Parser_Const.bv_udiv_lid, bv_udiv);
-                        (FStar_Parser_Const.bv_udiv_unsafe_lid, bv_udiv);
                         (FStar_Parser_Const.bv_mod_lid, bv_mod);
+                        (FStar_Parser_Const.bv_udiv_unsafe_lid, bv_udiv);
+                        (FStar_Parser_Const.bv_mod_unsafe_lid, bv_mod);
                         (FStar_Parser_Const.bv_mul_lid, bv_mul);
                         (FStar_Parser_Const.bv_ult_lid, bv_ult);
                         (FStar_Parser_Const.bv_uext_lid, bv_uext);

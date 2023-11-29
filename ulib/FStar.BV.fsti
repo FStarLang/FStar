@@ -19,7 +19,16 @@ module FStar.BV
 /// This module defines an abstract type of length-indexed bit
 /// vectors.  The type and its operations are handled primitively in
 /// F*'s SMT encoding, which maps them to the SMT sort of bit vectors
-/// and operations on that sort.
+/// and operations on that sort. Note that this encoding only applies
+/// when the length [n] is a syntactic literal: bit vectors with a
+/// length referring to some variable, bound or otherwise, are encoded
+/// as abstract sequences of bits.
+///
+/// Because of this syntactic encoding, it is also often helpful to
+/// explicitly specify the bit length on all operations -- for example
+/// constructing a 64-bit vector with [int2bv #64 1]. These explicit
+/// annotations ensure that the encoding uses the literal length 64,
+/// rather than inferring some variable as the length.
 ///
 /// One way to use this module is in conjunction with
 /// FStar.Tactics.BV. Its main tactic, [bv_tac], converts bitwise
@@ -129,8 +138,24 @@ val bvnot (#n: pos) (a: bv_t n) : Tot (bv_t n)
 val int2bv_lognot: #n: pos -> #x: uint_t n -> #z: bv_t n -> squash (bvnot #n (int2bv #n x) == z)
   -> Lemma (int2bv #n (lognot #n x) == z)
 
-(** Bitwise shift left *)
-val bvshl (#n: pos) (a: bv_t n) (s: nat) : Tot (bv_t n)
+(** Bitwise shift left: shift by bit-vector.
+  This variant directly corresponds to the SMT-LIB bvshl function. In some
+  cases, it may be more efficient to use this variant rather than the below
+  natural number [bvshl] variant, as the below requires a conversion from
+  unbounded integers. *)
+val bvshl' (#n: pos) (a: bv_t n) (s: bv_t n) : Tot (bv_t n)
+
+(** Bitwise shift left: shift by integer.
+  This variant uses an unbounded natural and exists for compatibility. *)
+val bvshl  (#n: pos) (a: bv_t n) (s: nat)    : Tot (bv_t n)
+
+val int2bv_shl':
+    #n: pos ->
+    #x: uint_t n ->
+    #y: uint_t n ->
+    #z: bv_t n ->
+    squash (bvshl' #n (int2bv #n x) (int2bv #n y) == z)
+  -> Lemma (int2bv #n (shift_left #n x y) == z)
 
 val int2bv_shl:
     #n: pos ->
@@ -140,8 +165,25 @@ val int2bv_shl:
     squash (bvshl #n (int2bv #n x) y == z)
   -> Lemma (int2bv #n (shift_left #n x y) == z)
 
-(** Bitwise shift right *)
-val bvshr (#n: pos) (a: bv_t n) (s: nat) : Tot (bv_t n)
+(** Bitwise shift right: shift by bit-vector.
+  This variant directly corresponds to the SMT-LIB bvshr function. In some
+  cases, it may be more efficient to use this variant rather than the below
+  natural number [bvshr] variant, as the below requires a conversion from
+  unbounded integers.
+ *)
+val bvshr' (#n: pos) (a: bv_t n) (s: bv_t n) : Tot (bv_t n)
+
+(** Bitwise shift right: shift by integer.
+  This variant uses an unbounded natural and exists for compatibility. *)
+val bvshr  (#n: pos) (a: bv_t n) (s: nat)    : Tot (bv_t n)
+
+val int2bv_shr':
+    #n: pos ->
+    #x: uint_t n ->
+    #y: uint_t n ->
+    #z: bv_t n ->
+    squash (bvshr' #n (int2bv #n x) (int2bv #n y) == z)
+  -> Lemma (int2bv #n (shift_right #n x y) == z)
 
 val int2bv_shr:
     #n: pos ->
@@ -223,6 +265,20 @@ val int2bv_mod:
     #z: bv_t n ->
     squash (bvmod #n (int2bv #n x) y == z)
   -> Lemma (int2bv #n (mod #n x y) == z)
+
+(** 'bvmod_unsafe' is an uninterpreted function on 'bv_t n',
+    modeling the corresponding operator from SMT-LIB.
+    When its second argument is nonzero, the lemma below
+    says that it is equivalent to bvmod. *)
+val bvmod_unsafe (#n: pos) (a b: bv_t n) : Tot (bv_t n)
+
+(** 'bvmod_unsafe' behaves as 'bvmod' when denominator is nonzero *)
+val bvmod_unsafe_sound :
+    #n: pos ->
+    #a : bv_t n ->
+    #b : bv_t n ->
+    squash (bv2int b <> 0)
+  -> Lemma (bvmod_unsafe #n a b = bvmod a (bv2int b))
 
 (** Multiplication modulo*)
 val bvmul (#n: pos) (a: bv_t n) (b: uint_t n) : Tot (bv_t n)
