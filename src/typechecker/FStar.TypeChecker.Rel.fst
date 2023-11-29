@@ -35,6 +35,7 @@ open FStar.Syntax.Subst
 open FStar.Ident
 open FStar.TypeChecker.Common
 open FStar.Syntax
+open FStar.Class.Deq
 
 open FStar.Common
 module BU = FStar.Compiler.Util //basic util
@@ -1291,7 +1292,7 @@ let rec head_matches env t1 t2 : match_result =
     | Tm_lazy ({lkind=Lazy_embedding _}), _ -> head_matches env (U.unlazy t1) t2
     |  _, Tm_lazy({lkind=Lazy_embedding _}) -> head_matches env t1 (U.unlazy t2)
     | Tm_lazy li1, Tm_lazy li2 ->
-      if U.eq_lazy_kind li1.lkind li2.lkind
+      if li1.lkind =? li2.lkind
       then HeadMatch false
       else MisMatch(None, None)
 
@@ -4288,7 +4289,7 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
                             (Print.tag_of_term t1) (Print.tag_of_term t2)
                             (Print.term_to_string t1) (Print.term_to_string t2)) t1.pos
 
-      | Tm_lazy li1, Tm_lazy li2 when U.eq_lazy_kind li1.lkind li2.lkind
+      | Tm_lazy li1, Tm_lazy li2 when li1.lkind =? li2.lkind
                                    && lazy_complete_repr li1.lkind ->
         solve_t' ({problem with lhs = U.unfold_lazy li1; rhs = U.unfold_lazy li2}) wl
 

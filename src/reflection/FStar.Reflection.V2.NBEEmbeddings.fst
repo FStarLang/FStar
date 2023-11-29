@@ -330,9 +330,10 @@ let e_match_returns_annotation =
                      (e_tuple3 (e_either e_term e_comp) (e_option e_term) e_bool))
 
 let unlazy_as_t k t =
+    let open FStar.Class.Deq in
     match t.nbe_t with
     | Lazy (Inl {lkind=k'; blob=v}, _)
-        when U.eq_lazy_kind k k' ->
+        when k =? k' ->
       FStar.Compiler.Dyn.undyn v
     | _ ->
       failwith "Not a Lazy of the expected kind (NBE)"

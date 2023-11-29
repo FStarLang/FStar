@@ -468,40 +468,12 @@ let unlazy_emb t =
         end
     | _ -> t
 
-(* NOTE: Lazy_embedding compares false to itself, by design. *)
-let eq_lazy_kind k k' =
-    match k, k' with
-     | BadLazy, BadLazy
-     | Lazy_bv, Lazy_bv
-     | Lazy_namedv, Lazy_namedv
-     | Lazy_binder, Lazy_binder
-     | Lazy_optionstate, Lazy_optionstate
-     | Lazy_fvar, Lazy_fvar
-     | Lazy_comp, Lazy_comp
-     | Lazy_env, Lazy_env
-     | Lazy_proofstate, Lazy_proofstate
-     | Lazy_goal, Lazy_goal
-     | Lazy_sigelt, Lazy_sigelt
-     | Lazy_letbinding, Lazy_letbinding
-     | Lazy_uvar, Lazy_uvar
-     | Lazy_universe, Lazy_universe
-     | Lazy_universe_uvar, Lazy_universe_uvar
-     | Lazy_issue, Lazy_issue
-     | Lazy_ident, Lazy_ident
-     | Lazy_doc, Lazy_doc
-     | Lazy_tref, Lazy_tref
-       -> true
-     | Lazy_extension s, Lazy_extension t ->
-       s = t
-     | Lazy_embedding _, _
-     | _, Lazy_embedding _ -> false
-     | _ -> failwith "FIXME! eq_lazy_kind must be complete"
-
 let unlazy_as_t k t =
     let open FStar.Class.Show in
+    let open FStar.Class.Deq in
     match (compress t).n with
     | Tm_lazy ({lkind=k'; blob=v}) ->
-      if eq_lazy_kind k k'
+      if k =? k'
       then FStar.Compiler.Dyn.undyn v
       else failwith (U.format2 "Expected Tm_lazy of kind %s, got %s"
                        (show k) (show k'))
