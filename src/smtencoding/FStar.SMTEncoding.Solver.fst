@@ -335,7 +335,7 @@ let detail_hint_replay settings z3result =
 let find_localized_errors (errs : list errors) : option errors =
     errs |> List.tryFind (fun err -> match err.error_messages with [] -> false | _ -> true)
 
-let errors_to_report (settings : query_settings) : list Errors.error =
+let errors_to_report (tried_recovery : bool) (settings : query_settings) : list Errors.error =
     let open FStar.Pprint in
     let open FStar.Errors in
     let format_smt_error (msg:list document) : list document =
@@ -353,6 +353,13 @@ let errors_to_report (settings : query_settings) : list Errors.error =
           ]
       in
       [d] // single error component
+    in
+    let recovery_failed_msg : Errors.error_message =
+      if tried_recovery then
+        [text "This query was retried due to the --proof_recovery option, yet it
+               still failed on all attempts."]
+      else
+        []
     in
     let basic_errors =
         (*
@@ -404,10 +411,13 @@ let errors_to_report (settings : query_settings) : list Errors.error =
                 text "Z3 ran into an internal overflow while trying to prove this query.";
                 text "Try breaking it down, or using --split_queries."
               ]);
-            match incomplete_count, canceled_count, unknown_count with
-            | _, 0, 0 when incomplete_count > 0 -> [text "The SMT solver could not prove the query. Use --query_stats for more details."]
-            | 0, _, 0 when canceled_count > 0   -> [text "The SMT query timed out, you might want to increase the rlimit"]
-            | _, _, _                           -> [text "Try with --query_stats to get more details"]
+            let base =
+              match incomplete_count, canceled_count, unknown_count with
+              | _, 0, 0 when incomplete_count > 0 -> [text "The SMT solver could not prove the query. Use --query_stats for more details."]
+              | 0, _, 0 when canceled_count > 0   -> [text "The SMT query timed out, you might want to increase the rlimit"]
+              | _, _, _                           -> [text "Try with --query_stats to get more details"]
+            in
+            base @ recovery_failed_msg
         in
         match find_localized_errors settings.query_errors, settings.query_all_labels with
         | Some err, _ ->
@@ -419,7 +429,7 @@ let errors_to_report (settings : query_settings) : list Errors.error =
           FStar.TypeChecker.Err.errors_smt_detail
                      settings.query_env
                      [(Error_Z3SolverError, mkmsg msg, rng, get_ctx())]
-                     []
+                     recovery_failed_msg
 
         | None, _ ->
           //We didn't get a useful countermodel from Z3 to localize an error
@@ -467,7 +477,7 @@ let errors_to_report (settings : query_settings) : list Errors.error =
                    FStar.TypeChecker.Err.errors_smt_detail
                      settings.query_env
                      [(Error_Z3SolverError, mkmsg msg, rng, get_ctx())]
-                     [] // Nothing to add
+                     recovery_failed_msg
                      )
             )
     in
@@ -497,8 +507,8 @@ let errors_to_report (settings : query_settings) : list Errors.error =
     in
     basic_errors
 
-let report_errors qry_settings =
-    FStar.Errors.add_errors (errors_to_report qry_settings)
+let report_errors tried_recovery qry_settings =
+    FStar.Errors.add_errors (errors_to_report tried_recovery qry_settings)
 
 (* Translation from F* rlimit to Z3 rlimit *)
 let rlimit_conversion_factor = 544656
@@ -745,6 +755,7 @@ type answer = {
     quaking             : bool;
     quaking_or_retrying : bool;
     total_ran           : int;
+    tried_recovery      : bool;
 }
 
 let ans_ok : answer = {
@@ -756,6 +767,7 @@ let ans_ok : answer = {
     quaking             = false;
     quaking_or_retrying = false;
     total_ran           = 1;
+    tried_recovery      = false;
 }
 
 let ans_fail : answer =
@@ -991,7 +1003,57 @@ let ask_solver_quake
     ; total_ran           = total_ran
     ; quaking_or_retrying = quaking_or_retrying
     ; quaking             = quaking
+    ; tried_recovery      = false (* possibly set by caller *)
     }
+
+(* If --proof_recovery is on, then we retry the query multiple
+times, increasing rlimits, until we get a success. If not, we just
+call ask_solver_quake. *)
+let ask_solver_recover
+    (configs : list query_settings)
+ : answer
+ =
+ let open FStar.Pprint in
+ let open FStar.Errors.Msg in
+ let open FStar.Class.PP in
+ if Options.proof_recovery () then (
+   let r = ask_solver_quake configs in
+   if r.ok then r else (
+     let last_cfg = List.last configs in
+     Errors.diag_doc last_cfg.query_range [
+       text "This query failed to be solved. Will now retry with higher rlimits due to --proof_recovery.";
+     ];
+
+     let try_factor (n:int) : answer =
+       let open FStar.Mul in
+       Errors.diag_doc last_cfg.query_range [
+         text "Retrying query with rlimit factor" ^/^ pp n;
+       ];
+       let cfg = { last_cfg with query_rlimit = n * last_cfg.query_rlimit } in
+       ask_solver_quake [cfg]
+     in
+
+     let rec aux (factors : list int) : answer =
+       match factors with
+       | [] ->
+         { r with tried_recovery = true }
+       | n::ns ->
+         let r = try_factor n in
+         if r.ok then (
+           Errors.log_issue_doc last_cfg.query_range (Errors.Warning_ProofRecovery, [
+              text "This query succeeded after increasing its rlimit by" ^/^
+                   pp n ^^ doc_of_string "x";
+              text "Increase the rlimit in the file or simplify the proof. \
+                    This is only succeeding due to --proof_recovery being given."
+              ]);
+           r
+         ) else
+           aux ns
+     in
+     aux [2;4;8]
+   )
+ ) else
+   ask_solver_quake configs
 
 let ask_solver
     (can_split : bool)
@@ -1032,7 +1094,7 @@ let ask_solver
         // once for every VC. Every actual query will push and pop
         // whatever else they encode.
         Z3.giveZ3 prefix;
-        ask_solver_quake configs
+        ask_solver_recover configs
       )
     in
     configs, ans
@@ -1052,7 +1114,7 @@ let report (env:Env.env) (default_settings : query_settings) (a : answer) : unit
     if nsuccess < lo then begin
       if quaking_or_retrying && not (Options.query_stats ()) then begin
         let errors_to_report errs =
-            errors_to_report ({default_settings with query_errors=errs})
+            errors_to_report a.tried_recovery ({default_settings with query_errors=errs})
         in
 
         (* Obtain all errors that would have been reported *)
@@ -1097,7 +1159,7 @@ let report (env:Env.env) (default_settings : query_settings) (a : answer) : unit
 
       end else begin
         (* Not quaking, or we have --query_stats: just report all errors as usual *)
-        let report errs = report_errors ({default_settings with query_errors=errs}) in
+        let report errs = report_errors a.tried_recovery ({default_settings with query_errors=errs}) in
         List.iter report all_errs
       end
     end

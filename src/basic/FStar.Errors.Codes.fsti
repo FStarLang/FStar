@@ -386,6 +386,7 @@ type raw_error =
   | Warning_UnexpectedZ3Stderr
   | Warning_SolverMismatch
   | Warning_SolverVersionMismatch
+  | Warning_ProofRecovery
 
 type error_setting = raw_error * error_flag * int
 
