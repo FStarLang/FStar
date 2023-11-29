@@ -419,6 +419,7 @@ and lazy_kind =
   | Lazy_ident 
   | Lazy_doc 
   | Lazy_extension of Prims.string 
+  | Lazy_tref 
 and binding =
   | Binding_var of bv 
   | Binding_lid of (FStar_Ident.lident * (univ_names * term' syntax)) 
@@ -1082,6 +1083,8 @@ let (uu___is_Lazy_extension : lazy_kind -> Prims.bool) =
     match projectee with | Lazy_extension _0 -> true | uu___ -> false
 let (__proj__Lazy_extension__item___0 : lazy_kind -> Prims.string) =
   fun projectee -> match projectee with | Lazy_extension _0 -> _0
+let (uu___is_Lazy_tref : lazy_kind -> Prims.bool) =
+  fun projectee -> match projectee with | Lazy_tref -> true | uu___ -> false
 let (uu___is_Binding_var : binding -> Prims.bool) =
   fun projectee ->
     match projectee with | Binding_var _0 -> true | uu___ -> false
@@ -2803,4 +2806,32 @@ let (has_range_sigelt : sigelt FStar_Class_HasRange.hasRange) =
              sigopens_and_abbrevs = (t.sigopens_and_abbrevs);
              sigopts = (t.sigopts)
            })
+  }
+let (showable_lazy_kind : lazy_kind FStar_Class_Show.showable) =
+  {
+    FStar_Class_Show.show =
+      (fun uu___ ->
+         match uu___ with
+         | BadLazy -> "BadLazy"
+         | Lazy_bv -> "Lazy_bv"
+         | Lazy_namedv -> "Lazy_namedv"
+         | Lazy_binder -> "Lazy_binder"
+         | Lazy_optionstate -> "Lazy_optionstate"
+         | Lazy_fvar -> "Lazy_fvar"
+         | Lazy_comp -> "Lazy_comp"
+         | Lazy_env -> "Lazy_env"
+         | Lazy_proofstate -> "Lazy_proofstate"
+         | Lazy_goal -> "Lazy_goal"
+         | Lazy_sigelt -> "Lazy_sigelt"
+         | Lazy_letbinding -> "Lazy_letbinding"
+         | Lazy_uvar -> "Lazy_uvar"
+         | Lazy_universe -> "Lazy_universe"
+         | Lazy_universe_uvar -> "Lazy_universe_uvar"
+         | Lazy_issue -> "Lazy_issue"
+         | Lazy_doc -> "Lazy_doc"
+         | Lazy_ident -> "Lazy_ident"
+         | Lazy_tref -> "Lazy_tref"
+         | Lazy_embedding uu___1 -> "Lazy_embedding _"
+         | Lazy_extension s -> Prims.op_Hat "Lazy_extension " s
+         | uu___1 -> failwith "FIXME! lazy_kind_to_string must be complete")
   }

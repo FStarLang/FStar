@@ -392,3 +392,30 @@ instance has_range_sigelt : hasRange sigelt = {
   pos = (fun t -> t.sigrng);
   setPos = (fun r t -> { t with sigrng = r });
 }
+
+instance showable_lazy_kind = {
+  show = (function
+          | BadLazy -> "BadLazy"
+          | Lazy_bv -> "Lazy_bv"
+          | Lazy_namedv -> "Lazy_namedv"
+          | Lazy_binder -> "Lazy_binder"
+          | Lazy_optionstate -> "Lazy_optionstate"
+          | Lazy_fvar -> "Lazy_fvar"
+          | Lazy_comp -> "Lazy_comp"
+          | Lazy_env -> "Lazy_env"
+          | Lazy_proofstate -> "Lazy_proofstate"
+          | Lazy_goal -> "Lazy_goal"
+          | Lazy_sigelt -> "Lazy_sigelt"
+          | Lazy_letbinding -> "Lazy_letbinding"
+          | Lazy_uvar -> "Lazy_uvar"
+          | Lazy_universe -> "Lazy_universe"
+          | Lazy_universe_uvar -> "Lazy_universe_uvar"
+          | Lazy_issue -> "Lazy_issue"
+          | Lazy_doc -> "Lazy_doc"
+          | Lazy_ident -> "Lazy_ident"
+          | Lazy_tref -> "Lazy_tref"
+          | Lazy_embedding _ -> "Lazy_embedding _"
+          | Lazy_extension s -> "Lazy_extension " ^ s
+          | _ -> failwith "FIXME! lazy_kind_to_string must be complete"
+  );
+}

@@ -500,6 +500,56 @@ let e_tot_or_ghost_nbe  =
   ; NBETerm.typ = mkFV fstar_tc_core_tot_or_ghost.fv [] []
   ; NBETerm.emb_typ = fv_as_emb_typ fstar_tc_core_tot_or_ghost.fv }
 
+let t_tref = S.lid_as_fv PC.tref_lid None
+  |> S.fv_to_tm
+  |> (fun tm -> S.mk_Tm_uinst tm [U_zero])
+  |> (fun head -> S.mk_Tm_app head [S.iarg S.t_term] Range.dummyRange)
+
+let e_tref #a =
+  let em (r:tref a) (rng:Range.range) _shadow _norm : term =
+    U.mk_lazy r t_tref Lazy_tref (Some rng)
+  in
+  let un (t:term) _ : option (tref a) =
+    match (SS.compress t).n with
+    | Tm_lazy { lkind = Lazy_tref; blob } -> Some (Dyn.undyn blob)
+    | _ -> None
+  in
+  mk_emb_full
+    em
+    un
+    t_tref
+    (fun i -> "tref")
+    (ET_app (PC.tref_lid |> Ident.string_of_lid, [ET_abstract]))
+
+let e_tref_nbe #a =
+  let embed_tref _cb (r:tref a) : NBETerm.t =
+    let li = { lkind = Lazy_tref
+             ; blob = FStar.Compiler.Dyn.mkdyn r
+             ; ltyp = t_tref
+             ; rng = Range.dummyRange }
+    in
+  let thunk = Thunk.mk (fun () -> NBETerm.mk_t <| NBETerm.Constant (NBETerm.String ("(((tref.nbe)))", Range.dummyRange))) in
+    NBETerm.mk_t (NBETerm.Lazy (Inl li, thunk))
+  in
+  let unembed_tref _cb (t:NBETerm.t) : option (tref a) =
+    match NBETerm.nbe_t_of_t t with
+    | NBETerm.Lazy (Inl {blob=b; lkind = Lazy_tref}, _) ->
+      Some <| FStar.Compiler.Dyn.undyn b
+    | _ ->
+      if !Options.debug_embedding then
+        Err.log_issue Range.dummyRange
+          (Err.Warning_NotEmbedded,
+           BU.format1 "Not an embedded NBE tref: %s\n"
+             (NBETerm.t_to_string t));
+      None
+  in
+  { NBETerm.em = embed_tref
+  ; NBETerm.un = unembed_tref
+  ; NBETerm.typ =
+    (let term_t = mkFV (S.lid_as_fv PC.fstar_syntax_syntax_term None) [] [] in
+      mkFV (S.lid_as_fv PC.tref_lid None) [U_zero] [NBETerm.as_arg term_t])
+  ; NBETerm.emb_typ = ET_app (PC.tref_lid |> Ident.string_of_lid, [ET_abstract]) }
+
 let e_guard_policy =
     let embed_guard_policy (rng:Range.range) (p : guard_policy) : term =
         match p with

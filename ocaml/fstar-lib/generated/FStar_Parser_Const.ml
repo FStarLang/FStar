@@ -618,6 +618,8 @@ let (unseal_lid : FStar_Ident.lident) =
 let (map_seal_lid : FStar_Ident.lident) = p2l ["FStar"; "Sealed"; "map_seal"]
 let (bind_seal_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Sealed"; "bind_seal"]
+let (tref_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Stubs"; "Tactics"; "Types"; "tref"]
 let (document_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Stubs"; "Pprint"; "document"]
 let (issue_lid : FStar_Ident.lident) = p2l ["FStar"; "Issue"; "issue"]

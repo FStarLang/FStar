@@ -2138,6 +2138,19 @@ let ext_getns (ns:string) : tac (list (string & string))
   = idtac ;!
     ret (Options.ext_getns ns)
 
+let alloc (x:'a) : tac (tref 'a) =
+  idtac;!
+  ret (BU.mk_ref x)
+
+let read (r:tref 'a) : tac 'a =
+  idtac;!
+  ret (!r)
+
+let write (r:tref 'a) (x:'a) : tac unit =
+  idtac;!
+  r := x;
+  ret ()
+
 (***** Builtins used in the meta DSL framework *****)
 
 let dbg_refl (g:env) (msg:unit -> string) =

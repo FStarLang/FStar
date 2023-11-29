@@ -28,6 +28,7 @@ module O = FStar.Options
 open FStar.VConfig
 
 include FStar.Class.HasRange
+open FStar.Class.Show
 
 (* Objects with metadata *)
 [@@ PpxDerivingYoJson; PpxDerivingShow ]
@@ -416,6 +417,7 @@ and lazy_kind =
   | Lazy_ident
   | Lazy_doc
   | Lazy_extension of string
+  | Lazy_tref
 and binding =
   | Binding_var      of bv
   | Binding_lid      of lident * (univ_names * typ)
@@ -894,3 +896,5 @@ val unit_const            : term
 instance val has_range_syntax #a : Tot (hasRange (syntax a))
 instance val has_range_withinfo #a : Tot (hasRange (withinfo_t a))
 instance val has_range_sigelt : hasRange sigelt
+
+instance val showable_lazy_kind : showable lazy_kind

@@ -129,6 +129,9 @@ val all_ext_options        : unit -> tac (list (string & string))
 val ext_getv               : string -> tac string
 val ext_getns              : string -> tac (list (string & string))
 
+val alloc                  : 'a -> tac (tref 'a)
+val read                   : tref 'a -> tac 'a
+val write                  : tref 'a -> 'a -> tac unit
 
 (***** Callbacks for the meta DSL framework *****)
 let issues = list FStar.Errors.issue

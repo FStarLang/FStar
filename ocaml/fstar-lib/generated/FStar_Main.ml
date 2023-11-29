@@ -295,6 +295,8 @@ let (lazy_chooser :
           FStar_Syntax_Util.exp_string "((document))"
       | FStar_Syntax_Syntax.Lazy_ident ->
           FStar_Syntax_Util.exp_string "((ident))"
+      | FStar_Syntax_Syntax.Lazy_tref ->
+          FStar_Syntax_Util.exp_string "((tref))"
       | FStar_Syntax_Syntax.Lazy_embedding (uu___, t) -> FStar_Thunk.force t
       | FStar_Syntax_Syntax.Lazy_extension s ->
           let uu___ = FStar_Compiler_Util.format1 "((extension %s))" s in

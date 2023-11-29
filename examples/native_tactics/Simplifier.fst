@@ -51,7 +51,7 @@ let op_Colon_Equals (#a:Type) (#rel:preorder a) (r:mref a rel) (v:a)
     (fun h0 x h1 -> rel (sel h0 r) v /\ h0 `contains` r /\
                  modifies_singleton r h0 h1 /\ equal_dom h0 h1 /\
                  sel h1 r == v)
-= write #a #rel r v
+= ST.write #a #rel r v
 
 let test1 (r: ref int) =
   (r := 0

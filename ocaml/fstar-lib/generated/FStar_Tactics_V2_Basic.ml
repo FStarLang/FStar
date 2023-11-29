@@ -6967,6 +6967,26 @@ let (ext_getns :
       (fun uu___ ->
          let uu___1 = FStar_Options.ext_getns ns in
          FStar_Tactics_Monad.ret uu___1)
+let alloc : 'a . 'a -> 'a FStar_Tactics_Types.tref FStar_Tactics_Monad.tac =
+  fun x ->
+    FStar_Tactics_Monad.op_let_Bang FStar_Tactics_Monad.idtac
+      (fun uu___ ->
+         let uu___1 = FStar_Compiler_Util.mk_ref x in
+         FStar_Tactics_Monad.ret uu___1)
+let read : 'a . 'a FStar_Tactics_Types.tref -> 'a FStar_Tactics_Monad.tac =
+  fun r ->
+    FStar_Tactics_Monad.op_let_Bang FStar_Tactics_Monad.idtac
+      (fun uu___ ->
+         let uu___1 = FStar_Compiler_Effect.op_Bang r in
+         FStar_Tactics_Monad.ret uu___1)
+let write :
+  'a . 'a FStar_Tactics_Types.tref -> 'a -> unit FStar_Tactics_Monad.tac =
+  fun r ->
+    fun x ->
+      FStar_Tactics_Monad.op_let_Bang FStar_Tactics_Monad.idtac
+        (fun uu___ ->
+           FStar_Compiler_Effect.op_Colon_Equals r x;
+           FStar_Tactics_Monad.ret ())
 let (dbg_refl : env -> (unit -> Prims.string) -> unit) =
   fun g ->
     fun msg ->

@@ -22,6 +22,7 @@ open FStar.Compiler.Effect
 open FStar.Compiler.Range
 open FStar.Pervasives
 open FStar.Syntax.Syntax
+open FStar.Class.Show
 
 module BU    = FStar.Compiler.Util
 module Err   = FStar.Errors
@@ -228,8 +229,7 @@ let e_lazy #a (k:lazy_kind) (ty : typ) : embedding a =
                 BU.format3 "Warning, lazy unembedding failed, tag mismatch.\n\t\
                             Expected %s, got %s\n\t\
                             t = %s."
-                            (U.lazy_kind_to_string lkind) (U.lazy_kind_to_string k)
-                            (Print.term_to_string t0));
+                            (show lkind) (show k) (show t0));
       None
     | _ ->
       None
