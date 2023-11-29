@@ -1005,6 +1005,9 @@ let t_apply (uopt:bool) (only_match:bool) (tc_resolved_uvars:bool) (tm:term) : t
                         (Rel.guard_to_string e guard)) ;!
     // Focus helps keep the goal order
     let typ = bnorm e typ in
+    if only_match && not (BU.set_is_empty (Free.uvars_uncached typ)) then
+      fail "t_apply: only_match is on, but the type of the term to apply is not a uvar"
+    else ret ();!
     let! uvs = try_unify_by_application (Some should_check) only_match e typ (goal_type goal) (rangeof goal) in
     if_verbose
       (fun () -> BU.print1 "t_apply: found args = %s\n"
