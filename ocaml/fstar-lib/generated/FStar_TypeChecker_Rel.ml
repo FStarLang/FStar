@@ -2902,8 +2902,9 @@ let rec (head_matches :
          | (FStar_Syntax_Syntax.Tm_lazy li1, FStar_Syntax_Syntax.Tm_lazy li2)
              ->
              let uu___1 =
-               FStar_Syntax_Util.eq_lazy_kind li1.FStar_Syntax_Syntax.lkind
-                 li2.FStar_Syntax_Syntax.lkind in
+               FStar_Class_Deq.op_Equals_Question
+                 FStar_Syntax_Syntax.deq_lazy_kind
+                 li1.FStar_Syntax_Syntax.lkind li2.FStar_Syntax_Syntax.lkind in
              if uu___1
              then HeadMatch false
              else
@@ -11999,7 +12000,9 @@ and (solve_t' : tprob -> worklist -> solution) =
                 FStar_Errors.raise_error uu___9 t1.FStar_Syntax_Syntax.pos
             | (FStar_Syntax_Syntax.Tm_lazy li1, FStar_Syntax_Syntax.Tm_lazy
                li2) when
-                (FStar_Syntax_Util.eq_lazy_kind li1.FStar_Syntax_Syntax.lkind
+                (FStar_Class_Deq.op_Equals_Question
+                   FStar_Syntax_Syntax.deq_lazy_kind
+                   li1.FStar_Syntax_Syntax.lkind
                    li2.FStar_Syntax_Syntax.lkind)
                   && (lazy_complete_repr li1.FStar_Syntax_Syntax.lkind)
                 ->

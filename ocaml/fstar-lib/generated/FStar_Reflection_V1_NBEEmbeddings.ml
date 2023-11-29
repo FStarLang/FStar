@@ -690,8 +690,10 @@ let unlazy_as_t :
              FStar_Syntax_Syntax.ltyp = uu___;
              FStar_Syntax_Syntax.rng = uu___1;_},
            uu___2)
-          when FStar_Syntax_Util.eq_lazy_kind k k' ->
-          FStar_Compiler_Dyn.undyn v
+          when
+          FStar_Class_Deq.op_Equals_Question
+            FStar_Syntax_Syntax.deq_lazy_kind k k'
+          -> FStar_Compiler_Dyn.undyn v
       | uu___ -> failwith "Not a Lazy of the expected kind (NBE)"
 let (e_ident :
   FStar_Reflection_V1_Data.ident FStar_TypeChecker_NBETerm.embedding) =

@@ -254,7 +254,10 @@ let e_lazy :
               FStar_Syntax_Syntax.lkind = lkind;
               FStar_Syntax_Syntax.ltyp = uu___1;
               FStar_Syntax_Syntax.rng = uu___2;_}
-            when FStar_Syntax_Util.eq_lazy_kind lkind k ->
+            when
+            FStar_Class_Deq.op_Equals_Question
+              FStar_Syntax_Syntax.deq_lazy_kind lkind k
+            ->
             let uu___3 = FStar_Compiler_Dyn.undyn b in
             FStar_Pervasives_Native.Some uu___3
         | FStar_Syntax_Syntax.Tm_lazy

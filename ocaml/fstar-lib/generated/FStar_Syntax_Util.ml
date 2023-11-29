@@ -889,52 +889,6 @@ let (unlazy_emb : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
              FStar_Compiler_Effect.op_Less_Bar unlazy uu___2
          | uu___1 -> t)
     | uu___1 -> t
-let (eq_lazy_kind :
-  FStar_Syntax_Syntax.lazy_kind ->
-    FStar_Syntax_Syntax.lazy_kind -> Prims.bool)
-  =
-  fun k ->
-    fun k' ->
-      match (k, k') with
-      | (FStar_Syntax_Syntax.BadLazy, FStar_Syntax_Syntax.BadLazy) -> true
-      | (FStar_Syntax_Syntax.Lazy_bv, FStar_Syntax_Syntax.Lazy_bv) -> true
-      | (FStar_Syntax_Syntax.Lazy_namedv, FStar_Syntax_Syntax.Lazy_namedv) ->
-          true
-      | (FStar_Syntax_Syntax.Lazy_binder, FStar_Syntax_Syntax.Lazy_binder) ->
-          true
-      | (FStar_Syntax_Syntax.Lazy_optionstate,
-         FStar_Syntax_Syntax.Lazy_optionstate) -> true
-      | (FStar_Syntax_Syntax.Lazy_fvar, FStar_Syntax_Syntax.Lazy_fvar) ->
-          true
-      | (FStar_Syntax_Syntax.Lazy_comp, FStar_Syntax_Syntax.Lazy_comp) ->
-          true
-      | (FStar_Syntax_Syntax.Lazy_env, FStar_Syntax_Syntax.Lazy_env) -> true
-      | (FStar_Syntax_Syntax.Lazy_proofstate,
-         FStar_Syntax_Syntax.Lazy_proofstate) -> true
-      | (FStar_Syntax_Syntax.Lazy_goal, FStar_Syntax_Syntax.Lazy_goal) ->
-          true
-      | (FStar_Syntax_Syntax.Lazy_sigelt, FStar_Syntax_Syntax.Lazy_sigelt) ->
-          true
-      | (FStar_Syntax_Syntax.Lazy_letbinding,
-         FStar_Syntax_Syntax.Lazy_letbinding) -> true
-      | (FStar_Syntax_Syntax.Lazy_uvar, FStar_Syntax_Syntax.Lazy_uvar) ->
-          true
-      | (FStar_Syntax_Syntax.Lazy_universe,
-         FStar_Syntax_Syntax.Lazy_universe) -> true
-      | (FStar_Syntax_Syntax.Lazy_universe_uvar,
-         FStar_Syntax_Syntax.Lazy_universe_uvar) -> true
-      | (FStar_Syntax_Syntax.Lazy_issue, FStar_Syntax_Syntax.Lazy_issue) ->
-          true
-      | (FStar_Syntax_Syntax.Lazy_ident, FStar_Syntax_Syntax.Lazy_ident) ->
-          true
-      | (FStar_Syntax_Syntax.Lazy_doc, FStar_Syntax_Syntax.Lazy_doc) -> true
-      | (FStar_Syntax_Syntax.Lazy_tref, FStar_Syntax_Syntax.Lazy_tref) ->
-          true
-      | (FStar_Syntax_Syntax.Lazy_extension s,
-         FStar_Syntax_Syntax.Lazy_extension t) -> s = t
-      | (FStar_Syntax_Syntax.Lazy_embedding uu___, uu___1) -> false
-      | (uu___, FStar_Syntax_Syntax.Lazy_embedding uu___1) -> false
-      | uu___ -> failwith "FIXME! eq_lazy_kind must be complete"
 let unlazy_as_t :
   'uuuuu .
     FStar_Syntax_Syntax.lazy_kind -> FStar_Syntax_Syntax.term -> 'uuuuu
@@ -950,7 +904,9 @@ let unlazy_as_t :
             FStar_Syntax_Syntax.ltyp = uu___1;
             FStar_Syntax_Syntax.rng = uu___2;_}
           ->
-          let uu___3 = eq_lazy_kind k k' in
+          let uu___3 =
+            FStar_Class_Deq.op_Equals_Question
+              FStar_Syntax_Syntax.deq_lazy_kind k k' in
           if uu___3
           then FStar_Compiler_Dyn.undyn v
           else
