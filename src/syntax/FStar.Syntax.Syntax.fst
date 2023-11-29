@@ -393,6 +393,37 @@ instance has_range_sigelt : hasRange sigelt = {
   setPos = (fun r t -> { t with sigrng = r });
 }
 
+instance deq_lazy_kind : deq lazy_kind = {
+  (=?) = (fun k k' ->
+(* NOTE: Lazy_embedding compares false to itself, by design. *)
+          match k, k' with
+          | BadLazy, BadLazy
+          | Lazy_bv, Lazy_bv
+          | Lazy_namedv, Lazy_namedv
+          | Lazy_binder, Lazy_binder
+          | Lazy_optionstate, Lazy_optionstate
+          | Lazy_fvar, Lazy_fvar
+          | Lazy_comp, Lazy_comp
+          | Lazy_env, Lazy_env
+          | Lazy_proofstate, Lazy_proofstate
+          | Lazy_goal, Lazy_goal
+          | Lazy_sigelt, Lazy_sigelt
+          | Lazy_letbinding, Lazy_letbinding
+          | Lazy_uvar, Lazy_uvar
+          | Lazy_universe, Lazy_universe
+          | Lazy_universe_uvar, Lazy_universe_uvar
+          | Lazy_issue, Lazy_issue
+          | Lazy_ident, Lazy_ident
+          | Lazy_doc, Lazy_doc
+          | Lazy_tref, Lazy_tref
+            -> true
+          | Lazy_extension s, Lazy_extension t ->
+            s = t
+          | Lazy_embedding _, _
+          | _, Lazy_embedding _ -> false
+          | _ -> failwith "FIXME! eq_lazy_kind must be complete");
+}
+
 instance showable_lazy_kind = {
   show = (function
           | BadLazy -> "BadLazy"

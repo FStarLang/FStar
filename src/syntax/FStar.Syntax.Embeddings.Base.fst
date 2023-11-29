@@ -23,6 +23,7 @@ open FStar.Compiler.Range
 open FStar.Pervasives
 open FStar.Syntax.Syntax
 open FStar.Class.Show
+open FStar.Class.Deq
 
 module BU    = FStar.Compiler.Util
 module Err   = FStar.Errors
@@ -222,7 +223,7 @@ let e_lazy #a (k:lazy_kind) (ty : typ) : embedding a =
   let uu (t:term) _norm : option a =
     let t0 = t in
     match (SS.compress t).n with
-    | Tm_lazy {blob=b; lkind=lkind} when U.eq_lazy_kind lkind k -> Some (Dyn.undyn b)
+    | Tm_lazy {blob=b; lkind=lkind} when lkind =? k -> Some (Dyn.undyn b)
     | Tm_lazy {blob=b; lkind=lkind} ->
       (* This is very likely a bug, warn! *)
       Err.log_issue t0.pos (Err.Warning_NotEmbedded,
