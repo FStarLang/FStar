@@ -6988,7 +6988,9 @@ let rec (desugar_tycon :
                            then
                              FStar_Pervasives_Native.Some
                                FStar_Syntax_Syntax.teff
-                           else FStar_Pervasives_Native.None
+                           else
+                             FStar_Pervasives_Native.Some
+                               FStar_Syntax_Util.ktype
                        | FStar_Pervasives_Native.Some k ->
                            let uu___1 = desugar_term env' k in
                            FStar_Pervasives_Native.Some uu___1 in
