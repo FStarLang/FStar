@@ -44,7 +44,7 @@ module FLT = FStar.List.Tot
 
 /// Internally, we represent a sequence as a list.
 
-type seq (ty: Type) = list ty
+type seq ([@@@ strictly_positive] ty: Type u#a) = list ty
 
 /// We represent the Dafny function `Seq#Length` with `length`:
 ///

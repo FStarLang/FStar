@@ -16,7 +16,7 @@ let norm_lhs steps : Tac unit =
     | _ ->
       fail "not an eq"
 
-type unit_t = unit
+let unit_t = unit
 
 let tau () = norm_lhs [delta; hnf; weak]; trefl ()
 
