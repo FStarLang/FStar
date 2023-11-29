@@ -465,6 +465,7 @@ let (check_goal_solved : goal -> Prims.bool) =
   fun goal1 ->
     let uu___ = check_goal_solved' goal1 in
     FStar_Compiler_Option.isSome uu___
+type 'a tref = 'a FStar_Compiler_Effect.ref
 type ('g, 't) non_informative_token = unit
 type ('g, 't0, 't1) subtyping_token = unit
 type ('g, 't0, 't1) equiv_token = unit

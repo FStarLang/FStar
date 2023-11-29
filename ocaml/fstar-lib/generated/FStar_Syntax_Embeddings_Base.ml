@@ -265,9 +265,14 @@ let e_lazy :
             ->
             ((let uu___4 =
                 let uu___5 =
-                  let uu___6 = FStar_Syntax_Util.lazy_kind_to_string lkind in
-                  let uu___7 = FStar_Syntax_Util.lazy_kind_to_string k in
-                  let uu___8 = FStar_Syntax_Print.term_to_string t0 in
+                  let uu___6 =
+                    FStar_Class_Show.show
+                      FStar_Syntax_Syntax.showable_lazy_kind lkind in
+                  let uu___7 =
+                    FStar_Class_Show.show
+                      FStar_Syntax_Syntax.showable_lazy_kind k in
+                  let uu___8 =
+                    FStar_Class_Show.show FStar_Syntax_Print.showable_term t0 in
                   FStar_Compiler_Util.format3
                     "Warning, lazy unembedding failed, tag mismatch.\n\tExpected %s, got %s\n\tt = %s."
                     uu___6 uu___7 uu___8 in
