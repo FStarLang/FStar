@@ -7335,7 +7335,20 @@ let rec (desugar_tycon :
                                                               failwith
                                                                 "Impossible: [VpRecord _] should have disappeared after [desugar_tycon_variant_record]"
                                                           | FStar_Pervasives_Native.None
-                                                              -> tconstr in
+                                                              ->
+                                                              let uu___14 =
+                                                                FStar_Ident.range_of_id
+                                                                  id in
+                                                              {
+                                                                FStar_Parser_AST.tm
+                                                                  =
+                                                                  (tconstr.FStar_Parser_AST.tm);
+                                                                FStar_Parser_AST.range
+                                                                  = uu___14;
+                                                                FStar_Parser_AST.level
+                                                                  =
+                                                                  (tconstr.FStar_Parser_AST.level)
+                                                              } in
                                                         let t1 =
                                                           let uu___14 =
                                                             close env_tps t in

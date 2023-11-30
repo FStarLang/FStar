@@ -3107,7 +3107,7 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs:list S.term) quals tcs : (env_t
                       | Some (VpArbitrary  t) -> t
                       | Some (VpOfNotation t) -> mk_term (Product([mk_binder (NoName t) t.range t.level None], tot_tconstr)) t.range t.level
                       | Some (VpRecord     _) -> failwith "Impossible: [VpRecord _] should have disappeared after [desugar_tycon_variant_record]"
-                      | None                  -> tconstr
+                      | None                  -> { tconstr with range = range_of_id id }
                 in
                 let t = desugar_term env_tps (close env_tps t) in
                 let name = qualify env id in
