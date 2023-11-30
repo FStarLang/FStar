@@ -139,6 +139,16 @@ let (mkBvShr :
     (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) ->
       FStar_SMTEncoding_Term.term)
   = fun sz -> norng (FStar_SMTEncoding_Term.mkBvShr sz)
+let (mkBvShl' :
+  Prims.int ->
+    (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) ->
+      FStar_SMTEncoding_Term.term)
+  = fun sz -> norng (FStar_SMTEncoding_Term.mkBvShl' sz)
+let (mkBvShr' :
+  Prims.int ->
+    (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) ->
+      FStar_SMTEncoding_Term.term)
+  = fun sz -> norng (FStar_SMTEncoding_Term.mkBvShr' sz)
 let (mkBvUdiv :
   Prims.int ->
     (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) ->

@@ -329,9 +329,12 @@ let is_BitVector_primitive head args =
       || S.fv_eq_lid fv Const.bv_sub_lid
       || S.fv_eq_lid fv Const.bv_shift_left_lid
       || S.fv_eq_lid fv Const.bv_shift_right_lid
+      || S.fv_eq_lid fv Const.bv_shift_left'_lid
+      || S.fv_eq_lid fv Const.bv_shift_right'_lid
       || S.fv_eq_lid fv Const.bv_udiv_lid
       || S.fv_eq_lid fv Const.bv_udiv_unsafe_lid
       || S.fv_eq_lid fv Const.bv_mod_lid
+      || S.fv_eq_lid fv Const.bv_mod_unsafe_lid
       || S.fv_eq_lid fv Const.bv_ult_lid
       || S.fv_eq_lid fv Const.bv_uext_lid
       || S.fv_eq_lid fv Const.bv_mul_lid) &&
@@ -530,6 +533,8 @@ and encode_arith_term env head args_e =
     let bv_sub  = mk_bv Util.mkBvSub binary (Term.boxBitVec sz) in
     let bv_shl  = mk_bv (Util.mkBvShl sz) binary_arith (Term.boxBitVec sz) in
     let bv_shr  = mk_bv (Util.mkBvShr sz) binary_arith (Term.boxBitVec sz) in
+    let bv_shl' = mk_bv (Util.mkBvShl' sz) binary (Term.boxBitVec sz) in
+    let bv_shr' = mk_bv (Util.mkBvShr' sz) binary (Term.boxBitVec sz) in
     let bv_udiv = mk_bv (Util.mkBvUdiv sz) binary_arith (Term.boxBitVec sz) in
     let bv_mod  = mk_bv (Util.mkBvMod sz) binary_arith (Term.boxBitVec sz) in
     let bv_mul  = mk_bv (Util.mkBvMul sz) binary_arith (Term.boxBitVec sz) in
@@ -547,6 +552,8 @@ and encode_arith_term env head args_e =
          (Const.bv_sub_lid, bv_sub);
          (Const.bv_shift_left_lid, bv_shl);
          (Const.bv_shift_right_lid, bv_shr);
+         (Const.bv_shift_left'_lid, bv_shl');
+         (Const.bv_shift_right'_lid, bv_shr');
          (Const.bv_udiv_lid, bv_udiv);
          (Const.bv_mod_lid, bv_mod);
          (* NOTE: unsafe 'udiv' and 'mod' variants also compile to the same smtlib2 expr *)

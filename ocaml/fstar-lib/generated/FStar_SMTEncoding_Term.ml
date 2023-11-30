@@ -866,6 +866,16 @@ let (mkBvShr :
                   :: uu___3 in
               (BvShr, uu___2) in
             mkApp' uu___1 r
+let (mkBvShl' :
+  Prims.int -> (term * term) -> FStar_Compiler_Range_Type.range -> term) =
+  fun sz ->
+    fun uu___ ->
+      fun r -> match uu___ with | (t1, t2) -> mkApp' (BvShl, [t1; t2]) r
+let (mkBvShr' :
+  Prims.int -> (term * term) -> FStar_Compiler_Range_Type.range -> term) =
+  fun sz ->
+    fun uu___ ->
+      fun r -> match uu___ with | (t1, t2) -> mkApp' (BvShr, [t1; t2]) r
 let (mkBvUdiv :
   Prims.int -> (term * term) -> FStar_Compiler_Range_Type.range -> term) =
   fun sz ->
