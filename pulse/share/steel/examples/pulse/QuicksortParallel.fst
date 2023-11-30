@@ -151,6 +151,11 @@ let sorted (s: Seq.seq int)
 let to_nat (x: int{x >= 0}): nat = x
 
 #push-options "--z3rlimit 30"
+
+(* Proof below is flaky for whatever reason on 4.8.5, but not
+4.12.3. Use this for now. *)
+#restart-solver
+
 ```pulse
 fn partition (a: A.array int) (lo: nat) (hi:(hi:nat{lo < hi - 1})) (n: nat) (lb rb: int) (#s0: Ghost.erased (Seq.seq int))
   requires (
