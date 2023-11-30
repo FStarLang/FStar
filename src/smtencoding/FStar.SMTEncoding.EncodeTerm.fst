@@ -537,6 +537,8 @@ and encode_arith_term env head args_e =
     let bv_shr' = mk_bv (Util.mkBvShr' sz) binary (Term.boxBitVec sz) in
     let bv_udiv = mk_bv (Util.mkBvUdiv sz) binary_arith (Term.boxBitVec sz) in
     let bv_mod  = mk_bv (Util.mkBvMod sz) binary_arith (Term.boxBitVec sz) in
+    let bv_udiv_unsafe = mk_bv (Util.mkBvUdivUnsafe sz) binary (Term.boxBitVec sz) in
+    let bv_mod_unsafe  = mk_bv (Util.mkBvModUnsafe sz) binary (Term.boxBitVec sz) in
     let bv_mul  = mk_bv (Util.mkBvMul sz) binary_arith (Term.boxBitVec sz) in
     let bv_ult  = mk_bv Util.mkBvUlt binary Term.boxBool in
     let bv_uext arg_tms =
@@ -556,9 +558,8 @@ and encode_arith_term env head args_e =
          (Const.bv_shift_right'_lid, bv_shr');
          (Const.bv_udiv_lid, bv_udiv);
          (Const.bv_mod_lid, bv_mod);
-         (* NOTE: unsafe 'udiv' and 'mod' variants also compile to the same smtlib2 expr *)
-         (Const.bv_udiv_unsafe_lid, bv_udiv);
-         (Const.bv_mod_unsafe_lid, bv_mod);
+         (Const.bv_udiv_unsafe_lid, bv_udiv_unsafe);
+         (Const.bv_mod_unsafe_lid, bv_mod_unsafe);
          (Const.bv_mul_lid, bv_mul);
          (Const.bv_ult_lid, bv_ult);
          (Const.bv_uext_lid, bv_uext);

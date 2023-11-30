@@ -902,6 +902,16 @@ let (mkBvMod :
                   :: uu___3 in
               (BvMod, uu___2) in
             mkApp' uu___1 r
+let (mkBvUdivUnsafe :
+  Prims.int -> (term * term) -> FStar_Compiler_Range_Type.range -> term) =
+  fun sz ->
+    fun uu___ ->
+      fun r -> match uu___ with | (t1, t2) -> mkApp' (BvUdiv, [t1; t2]) r
+let (mkBvModUnsafe :
+  Prims.int -> (term * term) -> FStar_Compiler_Range_Type.range -> term) =
+  fun sz ->
+    fun uu___ ->
+      fun r -> match uu___ with | (t1, t2) -> mkApp' (BvMod, [t1; t2]) r
 let (mkBvMul :
   Prims.int -> (term * term) -> FStar_Compiler_Range_Type.range -> term) =
   fun sz ->

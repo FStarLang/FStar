@@ -1078,6 +1078,12 @@ and (encode_BitVector_term :
                       let bv_mod =
                         mk_bv (FStar_SMTEncoding_Util.mkBvMod sz)
                           binary_arith (FStar_SMTEncoding_Term.boxBitVec sz) in
+                      let bv_udiv_unsafe =
+                        mk_bv (FStar_SMTEncoding_Util.mkBvUdivUnsafe sz)
+                          binary (FStar_SMTEncoding_Term.boxBitVec sz) in
+                      let bv_mod_unsafe =
+                        mk_bv (FStar_SMTEncoding_Util.mkBvModUnsafe sz)
+                          binary (FStar_SMTEncoding_Term.boxBitVec sz) in
                       let bv_mul =
                         mk_bv (FStar_SMTEncoding_Util.mkBvMul sz)
                           binary_arith (FStar_SMTEncoding_Term.boxBitVec sz) in
@@ -1120,8 +1126,9 @@ and (encode_BitVector_term :
                         (FStar_Parser_Const.bv_shift_right'_lid, bv_shr');
                         (FStar_Parser_Const.bv_udiv_lid, bv_udiv);
                         (FStar_Parser_Const.bv_mod_lid, bv_mod);
-                        (FStar_Parser_Const.bv_udiv_unsafe_lid, bv_udiv);
-                        (FStar_Parser_Const.bv_mod_unsafe_lid, bv_mod);
+                        (FStar_Parser_Const.bv_udiv_unsafe_lid,
+                          bv_udiv_unsafe);
+                        (FStar_Parser_Const.bv_mod_unsafe_lid, bv_mod_unsafe);
                         (FStar_Parser_Const.bv_mul_lid, bv_mul);
                         (FStar_Parser_Const.bv_ult_lid, bv_ult);
                         (FStar_Parser_Const.bv_uext_lid, bv_uext);

@@ -250,6 +250,8 @@ val mkBvShl'  : (int -> (term * term) -> Range.range -> term)
 val mkBvShr'  : (int -> (term * term) -> Range.range -> term)
 val mkBvUdiv  : (int -> (term * term) -> Range.range -> term)
 val mkBvMod   : (int -> (term * term) -> Range.range -> term)
+val mkBvUdivUnsafe : (int -> (term * term) -> Range.range -> term)
+val mkBvModUnsafe  : (int -> (term * term) -> Range.range -> term)
 val mkBvMul   : (int -> (term * term) -> Range.range -> term)
 
 val mkITE: (term * term * term) -> Range.range -> term
