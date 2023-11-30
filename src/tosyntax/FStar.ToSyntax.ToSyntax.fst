@@ -657,7 +657,21 @@ let rec generalize_annotated_univs (s:sigelt) :sigelt =
                                fail_in_lax=lax;
                                ses=List.map generalize_annotated_univs ses} }
 
-  | Sig_new_effect _
+  (* Works over the signature only *)
+  | Sig_new_effect ed ->
+    let generalize_annotated_univs_signature (s : effect_signature) : effect_signature =
+      match s with
+      | Layered_eff_sig (n, (_, t)) ->
+        let uvs = Free.univnames t |> BU.set_elements in
+        let usubst = Subst.univ_var_closing uvs in
+        Layered_eff_sig (n, (uvs, Subst.subst usubst t))
+      | WP_eff_sig (_, t) ->
+        let uvs = Free.univnames t |> BU.set_elements in
+        let usubst = Subst.univ_var_closing uvs in
+        WP_eff_sig (uvs, Subst.subst usubst t)
+    in
+    { s with sigel = Sig_new_effect { ed with signature = generalize_annotated_univs_signature ed.signature } }
+
   | Sig_sub_effect _
   | Sig_polymonadic_bind _
   | Sig_polymonadic_subcomp _
