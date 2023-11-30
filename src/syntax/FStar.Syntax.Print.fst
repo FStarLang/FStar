@@ -962,6 +962,11 @@ let term_to_doc' dsenv t =
   then Pprint.arbitrary_string (term_to_string t)
   else Pretty.term_to_doc' dsenv t
 
+let univ_to_doc' dsenv t =
+  if Options.ugly ()
+  then Pprint.arbitrary_string (univ_to_string t)
+  else Pretty.univ_to_doc' dsenv t
+
 let comp_to_doc' dsenv t =
   if Options.ugly ()
   then Pprint.arbitrary_string (comp_to_string t)
@@ -977,6 +982,11 @@ let term_to_doc t =
   then Pprint.arbitrary_string (term_to_string t)
   else Pretty.term_to_doc t
 
+let univ_to_doc t =
+  if Options.ugly ()
+  then Pprint.arbitrary_string (univ_to_string t)
+  else Pretty.univ_to_doc t
+
 let comp_to_doc t =
   if Options.ugly ()
   then Pprint.arbitrary_string (comp_to_string t)
@@ -987,12 +997,14 @@ let sigelt_to_doc t =
   then Pprint.arbitrary_string (sigelt_to_string t)
   else Pretty.sigelt_to_doc t
 
+instance pretty_term     = { pp   = term_to_doc; }
+instance pretty_univ     = { pp   = univ_to_doc; }
 instance pretty_sigelt   = { pp   = sigelt_to_doc; }
 instance pretty_comp     = { pp   = comp_to_doc; }
-instance pretty_term     = { pp   = term_to_doc; }
 
-instance showable_sigelt = { show = sigelt_to_string; }
 instance showable_term   = { show = term_to_string; }
+instance showable_univ   = { show = univ_to_string; }
+instance showable_sigelt = { show = sigelt_to_string; }
 instance showable_bv     = { show = bv_to_string; }
 instance showable_binder = { show = binder_to_string; }
 instance showable_uvar   = { show = uvar_to_string; }

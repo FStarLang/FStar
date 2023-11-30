@@ -32,8 +32,18 @@ let term_to_doc' env (tm:term) : Pprint.document = GenSym.with_frozen_gensym (fu
   ToDocument.term_to_document e
 )
 
+let univ_to_doc' env (u:universe) : Pprint.document = GenSym.with_frozen_gensym (fun () ->
+  let e = Resugar.resugar_universe' env u Range.dummyRange in
+  ToDocument.term_to_document e
+)
+
 let term_to_string' env (tm:term) : string = GenSym.with_frozen_gensym (fun () ->
   let d = term_to_doc' env tm in
+  pp d
+)
+
+let univ_to_string' env (u:universe) : string = GenSym.with_frozen_gensym (fun () ->
+  let d = univ_to_doc' env u in
   pp d
 )
 
@@ -58,12 +68,17 @@ let sigelt_to_string' env (se:sigelt) : string = GenSym.with_frozen_gensym (fun 
   pp d
 )
 
-(* These three are duplicated instead of being a special case
+(* These are duplicated instead of being a special case
 of the above so we can reuse the empty_env created at module
 load time for DsEnv. Otherwise we need to create another empty
 DsEnv.env here. *)
 let term_to_doc (tm:term) : Pprint.document = GenSym.with_frozen_gensym (fun () ->
   let e = Resugar.resugar_term tm in
+  ToDocument.term_to_document e
+)
+
+let univ_to_doc (u:universe) : Pprint.document = GenSym.with_frozen_gensym (fun () ->
+  let e = Resugar.resugar_universe u Range.dummyRange in
   ToDocument.term_to_document e
 )
 
