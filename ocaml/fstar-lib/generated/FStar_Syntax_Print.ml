@@ -1991,6 +1991,17 @@ let (term_to_doc' :
       then
         let uu___1 = term_to_string t in FStar_Pprint.arbitrary_string uu___1
       else FStar_Syntax_Print_Pretty.term_to_doc' dsenv t
+let (univ_to_doc' :
+  FStar_Syntax_DsEnv.env ->
+    FStar_Syntax_Syntax.universe -> FStar_Pprint.document)
+  =
+  fun dsenv ->
+    fun t ->
+      let uu___ = FStar_Options.ugly () in
+      if uu___
+      then
+        let uu___1 = univ_to_string t in FStar_Pprint.arbitrary_string uu___1
+      else FStar_Syntax_Print_Pretty.univ_to_doc' dsenv t
 let (comp_to_doc' :
   FStar_Syntax_DsEnv.env -> FStar_Syntax_Syntax.comp -> FStar_Pprint.document)
   =
@@ -2020,6 +2031,13 @@ let (term_to_doc : FStar_Syntax_Syntax.term -> FStar_Pprint.document) =
     then
       let uu___1 = term_to_string t in FStar_Pprint.arbitrary_string uu___1
     else FStar_Syntax_Print_Pretty.term_to_doc t
+let (univ_to_doc : FStar_Syntax_Syntax.universe -> FStar_Pprint.document) =
+  fun t ->
+    let uu___ = FStar_Options.ugly () in
+    if uu___
+    then
+      let uu___1 = univ_to_string t in FStar_Pprint.arbitrary_string uu___1
+    else FStar_Syntax_Print_Pretty.univ_to_doc t
 let (comp_to_doc : FStar_Syntax_Syntax.comp -> FStar_Pprint.document) =
   fun t ->
     let uu___ = FStar_Options.ugly () in
@@ -2034,16 +2052,20 @@ let (sigelt_to_doc : FStar_Syntax_Syntax.sigelt -> FStar_Pprint.document) =
     then
       let uu___1 = sigelt_to_string t in FStar_Pprint.arbitrary_string uu___1
     else FStar_Syntax_Print_Pretty.sigelt_to_doc t
+let (pretty_term : FStar_Syntax_Syntax.term FStar_Class_PP.pretty) =
+  { FStar_Class_PP.pp = term_to_doc }
+let (pretty_univ : FStar_Syntax_Syntax.universe FStar_Class_PP.pretty) =
+  { FStar_Class_PP.pp = univ_to_doc }
 let (pretty_sigelt : FStar_Syntax_Syntax.sigelt FStar_Class_PP.pretty) =
   { FStar_Class_PP.pp = sigelt_to_doc }
 let (pretty_comp : FStar_Syntax_Syntax.comp FStar_Class_PP.pretty) =
   { FStar_Class_PP.pp = comp_to_doc }
-let (pretty_term : FStar_Syntax_Syntax.term FStar_Class_PP.pretty) =
-  { FStar_Class_PP.pp = term_to_doc }
-let (showable_sigelt : FStar_Syntax_Syntax.sigelt FStar_Class_Show.showable)
-  = { FStar_Class_Show.show = sigelt_to_string }
 let (showable_term : FStar_Syntax_Syntax.term FStar_Class_Show.showable) =
   { FStar_Class_Show.show = term_to_string }
+let (showable_univ : FStar_Syntax_Syntax.universe FStar_Class_Show.showable)
+  = { FStar_Class_Show.show = univ_to_string }
+let (showable_sigelt : FStar_Syntax_Syntax.sigelt FStar_Class_Show.showable)
+  = { FStar_Class_Show.show = sigelt_to_string }
 let (showable_bv : FStar_Syntax_Syntax.bv FStar_Class_Show.showable) =
   { FStar_Class_Show.show = bv_to_string }
 let (showable_binder : FStar_Syntax_Syntax.binder FStar_Class_Show.showable)

@@ -1420,7 +1420,62 @@ let rec (generalize_annotated_univs :
             (s.FStar_Syntax_Syntax.sigopens_and_abbrevs);
           FStar_Syntax_Syntax.sigopts = (s.FStar_Syntax_Syntax.sigopts)
         }
-    | FStar_Syntax_Syntax.Sig_new_effect uu___ -> s
+    | FStar_Syntax_Syntax.Sig_new_effect ed ->
+        let generalize_annotated_univs_signature s1 =
+          match s1 with
+          | FStar_Syntax_Syntax.Layered_eff_sig (n, (uu___, t)) ->
+              let uvs =
+                let uu___1 = FStar_Syntax_Free.univnames t in
+                FStar_Compiler_Effect.op_Bar_Greater uu___1
+                  FStar_Compiler_Util.set_elements in
+              let usubst = FStar_Syntax_Subst.univ_var_closing uvs in
+              let uu___1 =
+                let uu___2 =
+                  let uu___3 = FStar_Syntax_Subst.subst usubst t in
+                  (uvs, uu___3) in
+                (n, uu___2) in
+              FStar_Syntax_Syntax.Layered_eff_sig uu___1
+          | FStar_Syntax_Syntax.WP_eff_sig (uu___, t) ->
+              let uvs =
+                let uu___1 = FStar_Syntax_Free.univnames t in
+                FStar_Compiler_Effect.op_Bar_Greater uu___1
+                  FStar_Compiler_Util.set_elements in
+              let usubst = FStar_Syntax_Subst.univ_var_closing uvs in
+              let uu___1 =
+                let uu___2 = FStar_Syntax_Subst.subst usubst t in
+                (uvs, uu___2) in
+              FStar_Syntax_Syntax.WP_eff_sig uu___1 in
+        let uu___ =
+          let uu___1 =
+            let uu___2 =
+              generalize_annotated_univs_signature
+                ed.FStar_Syntax_Syntax.signature in
+            {
+              FStar_Syntax_Syntax.mname = (ed.FStar_Syntax_Syntax.mname);
+              FStar_Syntax_Syntax.cattributes =
+                (ed.FStar_Syntax_Syntax.cattributes);
+              FStar_Syntax_Syntax.univs = (ed.FStar_Syntax_Syntax.univs);
+              FStar_Syntax_Syntax.binders = (ed.FStar_Syntax_Syntax.binders);
+              FStar_Syntax_Syntax.signature = uu___2;
+              FStar_Syntax_Syntax.combinators =
+                (ed.FStar_Syntax_Syntax.combinators);
+              FStar_Syntax_Syntax.actions = (ed.FStar_Syntax_Syntax.actions);
+              FStar_Syntax_Syntax.eff_attrs =
+                (ed.FStar_Syntax_Syntax.eff_attrs);
+              FStar_Syntax_Syntax.extraction_mode =
+                (ed.FStar_Syntax_Syntax.extraction_mode)
+            } in
+          FStar_Syntax_Syntax.Sig_new_effect uu___1 in
+        {
+          FStar_Syntax_Syntax.sigel = uu___;
+          FStar_Syntax_Syntax.sigrng = (s.FStar_Syntax_Syntax.sigrng);
+          FStar_Syntax_Syntax.sigquals = (s.FStar_Syntax_Syntax.sigquals);
+          FStar_Syntax_Syntax.sigmeta = (s.FStar_Syntax_Syntax.sigmeta);
+          FStar_Syntax_Syntax.sigattrs = (s.FStar_Syntax_Syntax.sigattrs);
+          FStar_Syntax_Syntax.sigopens_and_abbrevs =
+            (s.FStar_Syntax_Syntax.sigopens_and_abbrevs);
+          FStar_Syntax_Syntax.sigopts = (s.FStar_Syntax_Syntax.sigopts)
+        }
     | FStar_Syntax_Syntax.Sig_sub_effect uu___ -> s
     | FStar_Syntax_Syntax.Sig_polymonadic_bind uu___ -> s
     | FStar_Syntax_Syntax.Sig_polymonadic_subcomp uu___ -> s
