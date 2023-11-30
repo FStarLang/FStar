@@ -579,6 +579,10 @@ match%sedlex lexbuf with
  | '`', '`', (Plus (Compl ('`' | 10 | 13 | 0x2028 | 0x2029) | '`', Compl ('`' | 10 | 13 | 0x2028 | 0x2029))), '`', '`' ->
    IDENT (trim_both lexbuf 2 2)
 
+ (* Pipe operators have special treatment in the parser. *)
+ | "<|" -> PIPE_LEFT
+ | "|>" -> PIPE_RIGHT
+
  | op_token_1
  | op_token_2
  | op_token_3

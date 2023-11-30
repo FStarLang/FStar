@@ -1229,6 +1229,12 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
             " in non-universe context")
           top.range
 
+    | Op(s, [f;e]) when Ident.string_of_id s = "<|" ->
+      desugar_term_maybe_top top_level env (mkApp f [e,Nothing] top.range)
+
+    | Op(s, [e;f]) when Ident.string_of_id s = "|>" ->
+      desugar_term_maybe_top top_level env (mkApp f [e,Nothing] top.range)
+
     | Op(s, args) ->
       begin
       match op_as_term env (List.length args) s with

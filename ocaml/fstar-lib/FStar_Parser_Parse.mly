@@ -118,7 +118,8 @@ let parse_extension_blob (extension_name:string)
 %token DOT_LENS_PAREN_LEFT DOT_LPAREN DOT_LBRACK_BAR LBRACK LBRACK_BAR LBRACE_BAR LBRACE BANG_LBRACE
 %token BAR_RBRACK BAR_RBRACE UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
 %token BAR RBRACK RBRACE DOLLAR
-%token PRIVATE REIFIABLE REFLECTABLE REIFY RANGE_OF SET_RANGE_OF LBRACE_COLON_PATTERN PIPE_RIGHT
+%token PRIVATE REIFIABLE REFLECTABLE REIFY RANGE_OF SET_RANGE_OF LBRACE_COLON_PATTERN
+%token PIPE_LEFT PIPE_RIGHT
 %token NEW_EFFECT SUB_EFFECT LAYERED_EFFECT POLYMONADIC_BIND POLYMONADIC_SUBCOMP SPLICE SPLICET SQUIGGLY_RARROW TOTAL
 %token REQUIRES ENSURES DECREASES LBRACE_COLON_WELL_FOUNDED
 %token MINUS COLON_EQUALS QUOTE BACKTICK_AT BACKTICK_HASH
@@ -144,6 +145,7 @@ let parse_extension_blob (extension_name:string)
 %left     OPINFIX0c EQUALS
 %left     OPINFIX0d
 %left     PIPE_RIGHT
+%right    PIPE_LEFT
 %right    OPINFIX1
 %left     OPINFIX2 MINUS QUOTE
 %left     OPINFIX3
@@ -1199,8 +1201,14 @@ tmEqWith(X):
   (* see https:/ /github.com/fsprojects/FsLexYacc/issues/39 *)
   | e1=tmEqWith(X) tok=COLON_EQUALS e2=tmEqWith(X)
       { mk_term (Op(mk_ident(":=", rr $loc(tok)), [e1; e2])) (rr $loc) Un}
-  | e1=tmEqWith(X) tok=PIPE_RIGHT e2=tmEqWith(X)
-      { mk_term (Op(mk_ident("|>", rr $loc(tok)), [e1; e2])) (rr $loc) Un}
+
+ | e1=tmEqWith(X) op=PIPE_LEFT e2=tmEqWith(X)
+      { mk_term (Op(mk_ident("<|", rr $loc(op)), [e1; e2])) (rr $loc) Un}
+
+ | e1=tmEqWith(X) op=PIPE_RIGHT e2=tmEqWith(X)
+      { mk_term (Op(mk_ident("|>", rr $loc(op)), [e1; e2])) (rr $loc) Un}
+
+
   | e1=tmEqWith(X) op=operatorInfix0ad12 e2=tmEqWith(X)
       { mk_term (Op(op, [e1; e2])) (rr2 $loc(e1) $loc(e2)) Un}
   | e1=tmEqWith(X) tok=MINUS e2=tmEqWith(X)
@@ -1267,7 +1275,6 @@ binop_name:
   | o=CONJUNCTION            { mk_ident ("/\\", rr $loc) }
   | o=DISJUNCTION            { mk_ident ("\\/", rr $loc) }
   | o=IFF                    { mk_ident ("<==>", rr $loc) }
-  | o=PIPE_RIGHT             { mk_ident ("|>", rr $loc) }
   | o=COLON_EQUALS           { mk_ident (":=", rr $loc) }
   | o=COLON_COLON            { mk_ident ("::", rr $loc) }
   | o=OP_MIXFIX_ASSIGNMENT   { mk_ident (o, rr $loc) }
