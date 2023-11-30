@@ -7731,9 +7731,13 @@ and (check_application_args :
                                     let rec aux norm1 solve ghead3 tres =
                                       let tres1 =
                                         let uu___5 =
-                                          FStar_Syntax_Subst.compress tres in
+                                          let uu___6 =
+                                            FStar_Syntax_Subst.compress tres in
+                                          FStar_Compiler_Effect.op_Bar_Greater
+                                            uu___6 FStar_Syntax_Util.unrefine in
                                         FStar_Compiler_Effect.op_Bar_Greater
-                                          uu___5 FStar_Syntax_Util.unrefine in
+                                          uu___5
+                                          FStar_Syntax_Util.unmeta_safe in
                                       match tres1.FStar_Syntax_Syntax.n with
                                       | FStar_Syntax_Syntax.Tm_arrow
                                           { FStar_Syntax_Syntax.bs1 = bs1;
@@ -7805,22 +7809,55 @@ and (check_application_args :
                                           let uu___6 =
                                             let uu___7 =
                                               let uu___8 =
-                                                FStar_TypeChecker_Normalize.term_to_string
-                                                  env thead in
+                                                let uu___9 =
+                                                  FStar_Errors_Msg.text
+                                                    "Too many arguments to function of type" in
+                                                let uu___10 =
+                                                  FStar_Class_PP.pp
+                                                    FStar_Syntax_Print.pretty_term
+                                                    thead in
+                                                FStar_Pprint.prefix
+                                                  (Prims.of_int (4))
+                                                  Prims.int_one uu___9
+                                                  uu___10 in
                                               let uu___9 =
-                                                FStar_Compiler_Util.string_of_int
-                                                  n_args in
-                                              let uu___10 =
-                                                FStar_Syntax_Print.term_to_string
-                                                  tres1 in
-                                              FStar_Compiler_Util.format3
-                                                "Too many arguments to function of type %s; got %s arguments, remaining type is %s"
-                                                uu___8 uu___9 uu___10 in
+                                                let uu___10 =
+                                                  let uu___11 =
+                                                    FStar_Errors_Msg.text
+                                                      "Got" in
+                                                  let uu___12 =
+                                                    let uu___13 =
+                                                      FStar_Class_PP.pp
+                                                        FStar_Class_PP.pp_int
+                                                        n_args in
+                                                    let uu___14 =
+                                                      FStar_Errors_Msg.text
+                                                        "arguments" in
+                                                    FStar_Pprint.op_Hat_Slash_Hat
+                                                      uu___13 uu___14 in
+                                                  FStar_Pprint.op_Hat_Slash_Hat
+                                                    uu___11 uu___12 in
+                                                let uu___11 =
+                                                  let uu___12 =
+                                                    let uu___13 =
+                                                      FStar_Errors_Msg.text
+                                                        "Remaining type is" in
+                                                    let uu___14 =
+                                                      FStar_Class_PP.pp
+                                                        FStar_Syntax_Print.pretty_term
+                                                        tres1 in
+                                                    FStar_Pprint.prefix
+                                                      (Prims.of_int (4))
+                                                      Prims.int_one uu___13
+                                                      uu___14 in
+                                                  [uu___12] in
+                                                uu___10 :: uu___11 in
+                                              uu___8 :: uu___9 in
                                             (FStar_Errors_Codes.Fatal_ToManyArgumentToFunction,
                                               uu___7) in
                                           let uu___7 =
                                             FStar_Syntax_Syntax.argpos arg in
-                                          FStar_Errors.raise_error uu___6
+                                          FStar_Errors.raise_error_doc uu___6
                                             uu___7 in
                                     aux false false ghead2
                                       (FStar_Syntax_Util.comp_result chead2)))) in

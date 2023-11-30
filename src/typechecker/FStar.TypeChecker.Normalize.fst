@@ -1732,6 +1732,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
                           norm cfg env (Meta(env, Meta_pattern(names, args), t.pos)::stack) head
                           //meta doesn't block reduction, but we need to put the label back
 
+                      (* Try to retain Sequence nodes when not normalizing letbindings. *)
+                      | Meta_desugared Sequence when cfg.steps.do_not_unfold_pure_lets ->
+                        norm cfg env (Meta(env,m,t.pos)::stack) head
+
                       | Meta_desugared (Machine_integer (_,_)) ->
                         (* meta doesn't block reduction,
                            but we need to put the label back *)

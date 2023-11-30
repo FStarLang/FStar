@@ -2811,7 +2811,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
             let head, chead, ghead = monadic_application head_info subst outargs arg_rets g fvs [] in
             let chead, ghead = TcComm.lcomp_comp chead |> (fun (c, g) -> c, Env.conj_guard ghead g) in
             let rec aux norm solve ghead tres =
-                let tres = SS.compress tres |> U.unrefine in
+                let tres = SS.compress tres |> U.unrefine |> U.unmeta_safe in
                 match tres.n with
                 | Tm_arrow {bs; comp=cres'} ->
                         let bs, cres' = SS.open_comp bs cres' in
@@ -2834,12 +2834,14 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
                     aux norm true ghead tres
 
                 | _ ->
-                    raise_error (Errors.Fatal_ToManyArgumentToFunction,
-                                        BU.format3 "Too many arguments to function of type %s; got %s arguments, remaining type is %s"
-                                                      (N.term_to_string env thead)
-                                                      (BU.string_of_int n_args)
-                                                      (Print.term_to_string tres))
-                                       (argpos arg) in
+                    let open FStar.Class.PP in
+                    let open FStar.Pprint in
+                    raise_error_doc (Fatal_ToManyArgumentToFunction, [
+                        prefix 4 1 (text "Too many arguments to function of type") (pp thead);
+                        text "Got" ^/^ pp (n_args <: int) ^/^ text "arguments";
+                        prefix 4 1 (text "Remaining type is") (pp tres);
+                      ]) (argpos arg)
+            in
             aux false false ghead (U.comp_result chead)
     in //end tc_args
 
