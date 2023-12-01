@@ -329,15 +329,16 @@ let is_BitVector_primitive head args =
       || S.fv_eq_lid fv Const.bv_sub_lid
       || S.fv_eq_lid fv Const.bv_shift_left_lid
       || S.fv_eq_lid fv Const.bv_shift_right_lid
+      || S.fv_eq_lid fv Const.bv_udiv_lid
+      || S.fv_eq_lid fv Const.bv_mod_lid
+      || S.fv_eq_lid fv Const.bv_mul_lid
       || S.fv_eq_lid fv Const.bv_shift_left'_lid
       || S.fv_eq_lid fv Const.bv_shift_right'_lid
-      || S.fv_eq_lid fv Const.bv_udiv_lid
       || S.fv_eq_lid fv Const.bv_udiv_unsafe_lid
-      || S.fv_eq_lid fv Const.bv_mod_lid
       || S.fv_eq_lid fv Const.bv_mod_unsafe_lid
+      || S.fv_eq_lid fv Const.bv_mul'_lid
       || S.fv_eq_lid fv Const.bv_ult_lid
-      || S.fv_eq_lid fv Const.bv_uext_lid
-      || S.fv_eq_lid fv Const.bv_mul_lid) &&
+      || S.fv_eq_lid fv Const.bv_uext_lid) &&
       (isInteger sz_arg.n)
     | Tm_fvar fv, [(sz_arg, _); _] ->
         (S.fv_eq_lid fv Const.nat_to_bv_lid
@@ -533,13 +534,17 @@ and encode_arith_term env head args_e =
     let bv_sub  = mk_bv Util.mkBvSub binary (Term.boxBitVec sz) in
     let bv_shl  = mk_bv (Util.mkBvShl sz) binary_arith (Term.boxBitVec sz) in
     let bv_shr  = mk_bv (Util.mkBvShr sz) binary_arith (Term.boxBitVec sz) in
-    let bv_shl' = mk_bv (Util.mkBvShl' sz) binary (Term.boxBitVec sz) in
-    let bv_shr' = mk_bv (Util.mkBvShr' sz) binary (Term.boxBitVec sz) in
     let bv_udiv = mk_bv (Util.mkBvUdiv sz) binary_arith (Term.boxBitVec sz) in
     let bv_mod  = mk_bv (Util.mkBvMod sz) binary_arith (Term.boxBitVec sz) in
+    let bv_mul  = mk_bv (Util.mkBvMul sz) binary_arith (Term.boxBitVec sz) in
+
+    // Binary bv_t -> bv_t -> bv_t variants
+    let bv_shl' = mk_bv (Util.mkBvShl' sz) binary (Term.boxBitVec sz) in
+    let bv_shr' = mk_bv (Util.mkBvShr' sz) binary (Term.boxBitVec sz) in
     let bv_udiv_unsafe = mk_bv (Util.mkBvUdivUnsafe sz) binary (Term.boxBitVec sz) in
     let bv_mod_unsafe  = mk_bv (Util.mkBvModUnsafe sz) binary (Term.boxBitVec sz) in
-    let bv_mul  = mk_bv (Util.mkBvMul sz) binary_arith (Term.boxBitVec sz) in
+    let bv_mul' = mk_bv (Util.mkBvMul' sz) binary (Term.boxBitVec sz) in
+
     let bv_ult  = mk_bv Util.mkBvUlt binary Term.boxBool in
     let bv_uext arg_tms =
            mk_bv (Util.mkBvUext (match ext_sz with | Some x -> x | None -> failwith "impossible")) unary
@@ -554,13 +559,14 @@ and encode_arith_term env head args_e =
          (Const.bv_sub_lid, bv_sub);
          (Const.bv_shift_left_lid, bv_shl);
          (Const.bv_shift_right_lid, bv_shr);
-         (Const.bv_shift_left'_lid, bv_shl');
-         (Const.bv_shift_right'_lid, bv_shr');
          (Const.bv_udiv_lid, bv_udiv);
          (Const.bv_mod_lid, bv_mod);
+         (Const.bv_mul_lid, bv_mul);
+         (Const.bv_shift_left'_lid, bv_shl');
+         (Const.bv_shift_right'_lid, bv_shr');
          (Const.bv_udiv_unsafe_lid, bv_udiv_unsafe);
          (Const.bv_mod_unsafe_lid, bv_mod_unsafe);
-         (Const.bv_mul_lid, bv_mul);
+         (Const.bv_mul'_lid, bv_mul');
          (Const.bv_ult_lid, bv_ult);
          (Const.bv_uext_lid, bv_uext);
          (Const.bv_to_nat_lid, to_int);

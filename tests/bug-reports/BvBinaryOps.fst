@@ -37,7 +37,8 @@ let lemma_test_bv64' (bv: BV.bv_t 64) (i: UInt.uint_t 6): unit =
   let shl = BV.bvshl' #64 (BV.int2bv #64 1) i' in
   assert ((BV.bvand #64 (BV.bvor #64 bv shl) shl <> BV.int2bv #64 0 == true))
 
-(** Tests for bvdiv_unsafe *)
+(** Tests for division and mod *)
+
 // This follows from lemma bvdiv_unsafe_sound, but it doesn't have an SMT pattern,
 // so if it succeeds then the encoding is probably correct.
 let lemma_test_bvdiv_unsafe (bv: BV.bv_t 64) (num: UInt.uint_t 8 { num <> 0 }): unit =
@@ -45,3 +46,6 @@ let lemma_test_bvdiv_unsafe (bv: BV.bv_t 64) (num: UInt.uint_t 8 { num <> 0 }): 
 
 let lemma_test_bvmod_unsafe (bv: BV.bv_t 64) (num: UInt.uint_t 8 { num <> 0 }): unit =
   assert (BV.bvmod_unsafe #64 bv (BV.int2bv #64 num) == BV.bvmod #64 bv num)
+
+let lemma_test_bvmul' (bv: BV.bv_t 64) (num: UInt.uint_t 64): unit =
+  assert (BV.bvmul' #64 bv (BV.int2bv #64 num) == BV.bvmul #64 bv num)

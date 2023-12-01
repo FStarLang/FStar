@@ -291,3 +291,14 @@ val int2bv_mul:
     squash (bvmul #n (int2bv #n x) y == z)
   -> Lemma (int2bv #n (mul_mod #n x y) == z)
 
+(** Bit-vector multiplication *)
+val bvmul' (#n: pos) (a b: bv_t n) : Tot (bv_t n)
+
+val int2bv_mul':
+    #n: pos ->
+    #x: uint_t n ->
+    #y: uint_t n ->
+    #z: bv_t n ->
+    squash (bvmul' #n (int2bv #n x) (int2bv #n y) == z)
+  -> Lemma (int2bv #n (mul_mod #n x y) == z)
+

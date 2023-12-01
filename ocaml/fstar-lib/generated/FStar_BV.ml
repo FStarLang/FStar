@@ -61,3 +61,7 @@ let (bvmod_unsafe : Prims.pos -> unit bv_t -> unit bv_t -> unit bv_t) =
         else int2bv n Prims.int_zero
 let (bvmul : Prims.pos -> unit bv_t -> unit FStar_UInt.uint_t -> unit bv_t) =
   fun n -> fun a -> fun b -> int2bv n (FStar_UInt.mul_mod n (bv2int n a) b)
+let (bvmul' : Prims.pos -> unit bv_t -> unit bv_t -> unit bv_t) =
+  fun n ->
+    fun a ->
+      fun b -> int2bv n (FStar_UInt.mul_mod n (bv2int n a) (bv2int n b))

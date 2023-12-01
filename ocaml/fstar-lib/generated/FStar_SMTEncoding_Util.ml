@@ -139,16 +139,6 @@ let (mkBvShr :
     (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) ->
       FStar_SMTEncoding_Term.term)
   = fun sz -> norng (FStar_SMTEncoding_Term.mkBvShr sz)
-let (mkBvShl' :
-  Prims.int ->
-    (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) ->
-      FStar_SMTEncoding_Term.term)
-  = fun sz -> norng (FStar_SMTEncoding_Term.mkBvShl' sz)
-let (mkBvShr' :
-  Prims.int ->
-    (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) ->
-      FStar_SMTEncoding_Term.term)
-  = fun sz -> norng (FStar_SMTEncoding_Term.mkBvShr' sz)
 let (mkBvUdiv :
   Prims.int ->
     (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) ->
@@ -159,6 +149,21 @@ let (mkBvMod :
     (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) ->
       FStar_SMTEncoding_Term.term)
   = fun sz -> norng (FStar_SMTEncoding_Term.mkBvMod sz)
+let (mkBvMul :
+  Prims.int ->
+    (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) ->
+      FStar_SMTEncoding_Term.term)
+  = fun sz -> norng (FStar_SMTEncoding_Term.mkBvMul sz)
+let (mkBvShl' :
+  Prims.int ->
+    (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) ->
+      FStar_SMTEncoding_Term.term)
+  = fun sz -> norng (FStar_SMTEncoding_Term.mkBvShl' sz)
+let (mkBvShr' :
+  Prims.int ->
+    (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) ->
+      FStar_SMTEncoding_Term.term)
+  = fun sz -> norng (FStar_SMTEncoding_Term.mkBvShr' sz)
 let (mkBvUdivUnsafe :
   Prims.int ->
     (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) ->
@@ -169,11 +174,11 @@ let (mkBvModUnsafe :
     (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) ->
       FStar_SMTEncoding_Term.term)
   = fun sz -> norng (FStar_SMTEncoding_Term.mkBvModUnsafe sz)
-let (mkBvMul :
+let (mkBvMul' :
   Prims.int ->
     (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) ->
       FStar_SMTEncoding_Term.term)
-  = fun sz -> norng (FStar_SMTEncoding_Term.mkBvMul sz)
+  = fun sz -> norng (FStar_SMTEncoding_Term.mkBvMul' sz)
 let (mkBvUlt :
   (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) ->
     FStar_SMTEncoding_Term.term)

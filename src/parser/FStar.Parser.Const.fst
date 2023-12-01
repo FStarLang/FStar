@@ -215,19 +215,19 @@ let bv_add_lid         = bvconst "bvadd"
 let bv_sub_lid         = bvconst "bvsub"
 let bv_shift_left_lid  = bvconst "bvshl"
 let bv_shift_right_lid = bvconst "bvshr"
-// bvshl and bvshr take a natural number for the shift, which incurs some
-// encoding overhead. The primed versions bvshl' and bvshr' take a bitvector,
-// which more closely matches SMT-LIB.
-// Although bvshl is implemented in terms of bvshl', removing the encoding for
-// bvshl breaks some proofs such as FStar.UInt128:lem_ult_1, so for backwards
-// compatibility, we'll translate both.
+let bv_udiv_lid        = bvconst "bvdiv"
+let bv_mod_lid         = bvconst "bvmod"
+let bv_mul_lid         = bvconst "bvmul"
+// shifts, division and multiplication take natural numbers as their second
+// arguments, which incurs some encoding overhead. The primed versions bvshl',
+// bvshr', bvdiv_unsafe, bvmod_unsafe and bvmul' take a bitvector as the second
+// argument instead, which more closely matches SMT-LIB.
 let bv_shift_left'_lid = bvconst "bvshl'"
 let bv_shift_right'_lid= bvconst "bvshr'"
-let bv_udiv_lid        = bvconst "bvdiv"
 let bv_udiv_unsafe_lid = bvconst "bvdiv_unsafe"
-let bv_mod_lid         = bvconst "bvmod"
 let bv_mod_unsafe_lid  = bvconst "bvmod_unsafe"
-let bv_mul_lid         = bvconst "bvmul"
+let bv_mul'_lid        = bvconst "bvmul'"
+
 let bv_ult_lid         = bvconst "bvult"
 let bv_uext_lid        = bvconst "bv_uext"
 

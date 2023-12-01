@@ -866,16 +866,6 @@ let (mkBvShr :
                   :: uu___3 in
               (BvShr, uu___2) in
             mkApp' uu___1 r
-let (mkBvShl' :
-  Prims.int -> (term * term) -> FStar_Compiler_Range_Type.range -> term) =
-  fun sz ->
-    fun uu___ ->
-      fun r -> match uu___ with | (t1, t2) -> mkApp' (BvShl, [t1; t2]) r
-let (mkBvShr' :
-  Prims.int -> (term * term) -> FStar_Compiler_Range_Type.range -> term) =
-  fun sz ->
-    fun uu___ ->
-      fun r -> match uu___ with | (t1, t2) -> mkApp' (BvShr, [t1; t2]) r
 let (mkBvUdiv :
   Prims.int -> (term * term) -> FStar_Compiler_Range_Type.range -> term) =
   fun sz ->
@@ -902,16 +892,6 @@ let (mkBvMod :
                   :: uu___3 in
               (BvMod, uu___2) in
             mkApp' uu___1 r
-let (mkBvUdivUnsafe :
-  Prims.int -> (term * term) -> FStar_Compiler_Range_Type.range -> term) =
-  fun sz ->
-    fun uu___ ->
-      fun r -> match uu___ with | (t1, t2) -> mkApp' (BvUdiv, [t1; t2]) r
-let (mkBvModUnsafe :
-  Prims.int -> (term * term) -> FStar_Compiler_Range_Type.range -> term) =
-  fun sz ->
-    fun uu___ ->
-      fun r -> match uu___ with | (t1, t2) -> mkApp' (BvMod, [t1; t2]) r
 let (mkBvMul :
   Prims.int -> (term * term) -> FStar_Compiler_Range_Type.range -> term) =
   fun sz ->
@@ -925,6 +905,31 @@ let (mkBvMul :
                   :: uu___3 in
               (BvMul, uu___2) in
             mkApp' uu___1 r
+let (mkBvShl' :
+  Prims.int -> (term * term) -> FStar_Compiler_Range_Type.range -> term) =
+  fun sz ->
+    fun uu___ ->
+      fun r -> match uu___ with | (t1, t2) -> mkApp' (BvShl, [t1; t2]) r
+let (mkBvShr' :
+  Prims.int -> (term * term) -> FStar_Compiler_Range_Type.range -> term) =
+  fun sz ->
+    fun uu___ ->
+      fun r -> match uu___ with | (t1, t2) -> mkApp' (BvShr, [t1; t2]) r
+let (mkBvMul' :
+  Prims.int -> (term * term) -> FStar_Compiler_Range_Type.range -> term) =
+  fun sz ->
+    fun uu___ ->
+      fun r -> match uu___ with | (t1, t2) -> mkApp' (BvMul, [t1; t2]) r
+let (mkBvUdivUnsafe :
+  Prims.int -> (term * term) -> FStar_Compiler_Range_Type.range -> term) =
+  fun sz ->
+    fun uu___ ->
+      fun r -> match uu___ with | (t1, t2) -> mkApp' (BvUdiv, [t1; t2]) r
+let (mkBvModUnsafe :
+  Prims.int -> (term * term) -> FStar_Compiler_Range_Type.range -> term) =
+  fun sz ->
+    fun uu___ ->
+      fun r -> match uu___ with | (t1, t2) -> mkApp' (BvMod, [t1; t2]) r
 let (mkBvUlt : (term * term) -> FStar_Compiler_Range_Type.range -> term) =
   mk_bin_op BvUlt
 let (mkIff : (term * term) -> FStar_Compiler_Range_Type.range -> term) =

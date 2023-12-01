@@ -129,3 +129,9 @@ let bvmul #n a b =
   int2bv #n (U.mul_mod #n (bv2int #n a) b)
 let int2bv_mul #n #x #y #z pf =
   inverse_vec_lemma #n (bvmul #n (int2bv #n x) y)
+
+let bvmul' #n a b =
+  int2bv #n (U.mul_mod #n (bv2int #n a) (bv2int #n b))
+
+let int2bv_mul' #n #x #y #z pf =
+  inverse_vec_lemma #n (bvmul' #n (int2bv #n x) (int2bv #n y))

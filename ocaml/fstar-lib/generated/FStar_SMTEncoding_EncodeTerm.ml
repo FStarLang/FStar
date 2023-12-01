@@ -591,52 +591,54 @@ let is_BitVector_primitive :
       match ((head.FStar_Syntax_Syntax.n), args) with
       | (FStar_Syntax_Syntax.Tm_fvar fv, (sz_arg, uu___)::uu___1::uu___2::[])
           ->
-          ((((((((((((((((FStar_Syntax_Syntax.fv_eq_lid fv
-                            FStar_Parser_Const.bv_and_lid)
+          (((((((((((((((((FStar_Syntax_Syntax.fv_eq_lid fv
+                             FStar_Parser_Const.bv_and_lid)
+                            ||
+                            (FStar_Syntax_Syntax.fv_eq_lid fv
+                               FStar_Parser_Const.bv_xor_lid))
                            ||
                            (FStar_Syntax_Syntax.fv_eq_lid fv
-                              FStar_Parser_Const.bv_xor_lid))
+                              FStar_Parser_Const.bv_or_lid))
                           ||
                           (FStar_Syntax_Syntax.fv_eq_lid fv
-                             FStar_Parser_Const.bv_or_lid))
+                             FStar_Parser_Const.bv_add_lid))
                          ||
                          (FStar_Syntax_Syntax.fv_eq_lid fv
-                            FStar_Parser_Const.bv_add_lid))
+                            FStar_Parser_Const.bv_sub_lid))
                         ||
                         (FStar_Syntax_Syntax.fv_eq_lid fv
-                           FStar_Parser_Const.bv_sub_lid))
+                           FStar_Parser_Const.bv_shift_left_lid))
                        ||
                        (FStar_Syntax_Syntax.fv_eq_lid fv
-                          FStar_Parser_Const.bv_shift_left_lid))
+                          FStar_Parser_Const.bv_shift_right_lid))
                       ||
                       (FStar_Syntax_Syntax.fv_eq_lid fv
-                         FStar_Parser_Const.bv_shift_right_lid))
+                         FStar_Parser_Const.bv_udiv_lid))
                      ||
                      (FStar_Syntax_Syntax.fv_eq_lid fv
-                        FStar_Parser_Const.bv_shift_left'_lid))
+                        FStar_Parser_Const.bv_mod_lid))
                     ||
                     (FStar_Syntax_Syntax.fv_eq_lid fv
-                       FStar_Parser_Const.bv_shift_right'_lid))
+                       FStar_Parser_Const.bv_mul_lid))
                    ||
                    (FStar_Syntax_Syntax.fv_eq_lid fv
-                      FStar_Parser_Const.bv_udiv_lid))
+                      FStar_Parser_Const.bv_shift_left'_lid))
                   ||
                   (FStar_Syntax_Syntax.fv_eq_lid fv
-                     FStar_Parser_Const.bv_udiv_unsafe_lid))
+                     FStar_Parser_Const.bv_shift_right'_lid))
                  ||
                  (FStar_Syntax_Syntax.fv_eq_lid fv
-                    FStar_Parser_Const.bv_mod_lid))
+                    FStar_Parser_Const.bv_udiv_unsafe_lid))
                 ||
                 (FStar_Syntax_Syntax.fv_eq_lid fv
                    FStar_Parser_Const.bv_mod_unsafe_lid))
                ||
                (FStar_Syntax_Syntax.fv_eq_lid fv
-                  FStar_Parser_Const.bv_ult_lid))
+                  FStar_Parser_Const.bv_mul'_lid))
               ||
-              (FStar_Syntax_Syntax.fv_eq_lid fv
-                 FStar_Parser_Const.bv_uext_lid))
+              (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.bv_ult_lid))
              ||
-             (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.bv_mul_lid))
+             (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.bv_uext_lid))
             && (isInteger sz_arg.FStar_Syntax_Syntax.n)
       | (FStar_Syntax_Syntax.Tm_fvar fv, (sz_arg, uu___)::uu___1::[]) ->
           ((FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.nat_to_bv_lid)
@@ -1066,27 +1068,30 @@ and (encode_BitVector_term :
                       let bv_shr =
                         mk_bv (FStar_SMTEncoding_Util.mkBvShr sz)
                           binary_arith (FStar_SMTEncoding_Term.boxBitVec sz) in
-                      let bv_shl' =
-                        mk_bv (FStar_SMTEncoding_Util.mkBvShl' sz) binary
-                          (FStar_SMTEncoding_Term.boxBitVec sz) in
-                      let bv_shr' =
-                        mk_bv (FStar_SMTEncoding_Util.mkBvShr' sz) binary
-                          (FStar_SMTEncoding_Term.boxBitVec sz) in
                       let bv_udiv =
                         mk_bv (FStar_SMTEncoding_Util.mkBvUdiv sz)
                           binary_arith (FStar_SMTEncoding_Term.boxBitVec sz) in
                       let bv_mod =
                         mk_bv (FStar_SMTEncoding_Util.mkBvMod sz)
                           binary_arith (FStar_SMTEncoding_Term.boxBitVec sz) in
+                      let bv_mul =
+                        mk_bv (FStar_SMTEncoding_Util.mkBvMul sz)
+                          binary_arith (FStar_SMTEncoding_Term.boxBitVec sz) in
+                      let bv_shl' =
+                        mk_bv (FStar_SMTEncoding_Util.mkBvShl' sz) binary
+                          (FStar_SMTEncoding_Term.boxBitVec sz) in
+                      let bv_shr' =
+                        mk_bv (FStar_SMTEncoding_Util.mkBvShr' sz) binary
+                          (FStar_SMTEncoding_Term.boxBitVec sz) in
                       let bv_udiv_unsafe =
                         mk_bv (FStar_SMTEncoding_Util.mkBvUdivUnsafe sz)
                           binary (FStar_SMTEncoding_Term.boxBitVec sz) in
                       let bv_mod_unsafe =
                         mk_bv (FStar_SMTEncoding_Util.mkBvModUnsafe sz)
                           binary (FStar_SMTEncoding_Term.boxBitVec sz) in
-                      let bv_mul =
-                        mk_bv (FStar_SMTEncoding_Util.mkBvMul sz)
-                          binary_arith (FStar_SMTEncoding_Term.boxBitVec sz) in
+                      let bv_mul' =
+                        mk_bv (FStar_SMTEncoding_Util.mkBvMul' sz) binary
+                          (FStar_SMTEncoding_Term.boxBitVec sz) in
                       let bv_ult =
                         mk_bv FStar_SMTEncoding_Util.mkBvUlt binary
                           FStar_SMTEncoding_Term.boxBool in
@@ -1122,14 +1127,15 @@ and (encode_BitVector_term :
                         (FStar_Parser_Const.bv_sub_lid, bv_sub);
                         (FStar_Parser_Const.bv_shift_left_lid, bv_shl);
                         (FStar_Parser_Const.bv_shift_right_lid, bv_shr);
-                        (FStar_Parser_Const.bv_shift_left'_lid, bv_shl');
-                        (FStar_Parser_Const.bv_shift_right'_lid, bv_shr');
                         (FStar_Parser_Const.bv_udiv_lid, bv_udiv);
                         (FStar_Parser_Const.bv_mod_lid, bv_mod);
+                        (FStar_Parser_Const.bv_mul_lid, bv_mul);
+                        (FStar_Parser_Const.bv_shift_left'_lid, bv_shl');
+                        (FStar_Parser_Const.bv_shift_right'_lid, bv_shr');
                         (FStar_Parser_Const.bv_udiv_unsafe_lid,
                           bv_udiv_unsafe);
                         (FStar_Parser_Const.bv_mod_unsafe_lid, bv_mod_unsafe);
-                        (FStar_Parser_Const.bv_mul_lid, bv_mul);
+                        (FStar_Parser_Const.bv_mul'_lid, bv_mul');
                         (FStar_Parser_Const.bv_ult_lid, bv_ult);
                         (FStar_Parser_Const.bv_uext_lid, bv_uext);
                         (FStar_Parser_Const.bv_to_nat_lid, to_int);
