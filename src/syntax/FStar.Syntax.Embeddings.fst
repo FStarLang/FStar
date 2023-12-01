@@ -990,7 +990,7 @@ let e_sealed (ea : embedding 'a) : embedding 'a =
                   [S.iarg (type_of ea); S.as_arg (embed ea a rng shadow_a norm)]
                   rng
     in
-    let un (t:term) norm : option (option 'a) =
+    let un (t:term) norm : option 'a =
       let hd, args = U.head_and_args_full t in
       match (U.un_uinst hd).n, args with
       | Tm_fvar fv, [_; (a, _)] when S.fv_eq_lid fv PC.seal_lid ->

@@ -4761,6 +4761,8 @@ let with_guard env prob dopt =
 let try_teq smt_ok env t1 t2 : option guard_t =
   def_check_scoped t1.pos "try_teq.1" env t1;
   def_check_scoped t2.pos "try_teq.2" env t2;
+  // --MLish disables use of SMT. See PR #3123 for explanation.
+  let smt_ok = smt_ok && not (Options.ml_ish ()) in
   Profiling.profile
     (fun () ->
       if Env.debug env <| Options.Other "Rel" then
@@ -4922,6 +4924,7 @@ let solve_universe_inequalities env ineqs : unit =
     UF.commit tx
 
 let try_solve_deferred_constraints (defer_ok:defer_ok_t) smt_ok deferred_to_tac_ok env (g:guard_t) : guard_t =
+  let smt_ok = smt_ok && not (Options.ml_ish ()) in
   Profiling.profile (fun () ->
    let typeclass_variables =
     g.implicits
@@ -4987,7 +4990,7 @@ let try_solve_deferred_constraints (defer_ok:defer_ok_t) smt_ok deferred_to_tac_
 
 let solve_deferred_constraints env (g:guard_t) =
     let defer_ok = NoDefer in
-    let smt_ok = true in
+    let smt_ok = not (Options.ml_ish ()) in
     let deferred_to_tac_ok = true in
     try_solve_deferred_constraints defer_ok smt_ok deferred_to_tac_ok env g
 
@@ -4995,7 +4998,7 @@ let solve_non_tactic_deferred_constraints maybe_defer_flex_flex env (g:guard_t) 
   Errors.with_ctx "solve_non_tactic_deferred_constraints" (fun () ->
     def_check_scoped Range.dummyRange "solve_non_tactic_deferred_constraints.g" env g;
     let defer_ok = if maybe_defer_flex_flex then DeferFlexFlexOnly else NoDefer in
-    let smt_ok = true in
+    let smt_ok = not (Options.ml_ish ()) in
     let deferred_to_tac_ok = false in
     try_solve_deferred_constraints defer_ok smt_ok deferred_to_tac_ok env g
   )
