@@ -22,7 +22,7 @@ extract_c: _output/cache/ExtractionTest.fst.checked
 #	$(FSTAR_HOME)/../karamel/krml -bundle Demo.MultiplyByRepeatedAddition=* -skip-compilation _output/out.krml
 
 ifneq (,$(KRML_HOME))
-test-cbor: verify
+test-cbor: cbor
 	+$(MAKE) -C dice/cbor
 else
 test-cbor:
@@ -38,3 +38,8 @@ PULSE_LIB_CHECKED_FILES=$(filter $(CACHE_DIRECTORY)/Pulse.Lib.%,$(ALL_CHECKED_FI
 
 .PHONY: lib
 lib: $(PULSE_LIB_CHECKED_FILES)
+
+CBOR_CHECKED_FILES=$(filter $(CACHE_DIRECTORY)/CBOR.% $(CACHE_DIRECTORY)/CDDL.% $(CACHE_DIRECTORY)/CDDLExtractionTest.%,$(ALL_CHECKED_FILES))
+
+.PHONY: cbor
+cbor: lib $(CBOR_CHECKED_FILES)
