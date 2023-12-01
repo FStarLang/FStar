@@ -36,11 +36,6 @@ module C          = FStar.Parser.Const
 module SU         = FStar.Syntax.Util
 module Pretty     = FStar.Syntax.Print.Pretty
 
-let rec delta_depth_to_string = function
-    | Delta_constant_at_level i   -> "Delta_constant_at_level " ^ string_of_int i
-    | Delta_equational_at_level i -> "Delta_equational_at_level " ^ string_of_int i
-    | Delta_abstract d -> "Delta_abstract (" ^ delta_depth_to_string d ^ ")"
-
 let sli (l:lident) : string =
     if Options.print_real_names()
     then string_of_lid l
@@ -52,7 +47,7 @@ let sli (l:lident) : string =
 let lid_to_string (l:lid) = sli l
 
 // let fv_to_string fv = Printf.sprintf "%s@%A" (lid_to_string fv.fv_name.v) fv.fv_delta
-let fv_to_string fv = lid_to_string fv.fv_name.v //^ "(@@" ^ delta_depth_to_string fv.fv_delta ^ ")"
+let fv_to_string fv = lid_to_string fv.fv_name.v //^ "(@@" ^ showfv.fv_delta ^ ")"
 let bv_to_string bv = (string_of_id bv.ppname) ^ "#" ^ (string_of_int bv.index)
 
 let nm_to_string bv =
@@ -155,12 +150,6 @@ let quals_to_string' quals =
 
 let paren s = "(" ^ s ^ ")"
 
-let rec emb_typ_to_string = function
-    | ET_abstract -> "abstract"
-    | ET_app (h, []) -> h
-    | ET_app(h, args) -> "(" ^h^ " " ^ (List.map emb_typ_to_string args |> String.concat " ")  ^")"
-    | ET_fun(a, b) -> "(" ^ emb_typ_to_string a ^ ") -> " ^ emb_typ_to_string b
-
 let lkind_to_string = function
   | BadLazy -> "BadLazy"
   | Lazy_bv -> "Lazy_bv"
@@ -175,7 +164,7 @@ let lkind_to_string = function
   | Lazy_sigelt -> "Lazy_sigelt"
   | Lazy_uvar -> "Lazy_uvar"
   | Lazy_letbinding -> "Lazy_letbinding"
-  | Lazy_embedding (e, _) -> "Lazy_embedding(" ^ emb_typ_to_string e ^ ")"
+  | Lazy_embedding (e, _) -> "Lazy_embedding(" ^ show e ^ ")"
   | Lazy_universe -> "Lazy_universe"
   | Lazy_universe_uvar -> "Lazy_universe_uvar"
   | Lazy_issue -> "Lazy_issue"
@@ -962,6 +951,11 @@ let term_to_doc' dsenv t =
   then Pprint.arbitrary_string (term_to_string t)
   else Pretty.term_to_doc' dsenv t
 
+let univ_to_doc' dsenv t =
+  if Options.ugly ()
+  then Pprint.arbitrary_string (univ_to_string t)
+  else Pretty.univ_to_doc' dsenv t
+
 let comp_to_doc' dsenv t =
   if Options.ugly ()
   then Pprint.arbitrary_string (comp_to_string t)
@@ -977,6 +971,11 @@ let term_to_doc t =
   then Pprint.arbitrary_string (term_to_string t)
   else Pretty.term_to_doc t
 
+let univ_to_doc t =
+  if Options.ugly ()
+  then Pprint.arbitrary_string (univ_to_string t)
+  else Pretty.univ_to_doc t
+
 let comp_to_doc t =
   if Options.ugly ()
   then Pprint.arbitrary_string (comp_to_string t)
@@ -987,12 +986,15 @@ let sigelt_to_doc t =
   then Pprint.arbitrary_string (sigelt_to_string t)
   else Pretty.sigelt_to_doc t
 
+instance pretty_term     = { pp   = term_to_doc; }
+instance pretty_univ     = { pp   = univ_to_doc; }
 instance pretty_sigelt   = { pp   = sigelt_to_doc; }
 instance pretty_comp     = { pp   = comp_to_doc; }
-instance pretty_term     = { pp   = term_to_doc; }
 
-instance showable_sigelt = { show = sigelt_to_string; }
 instance showable_term   = { show = term_to_string; }
+instance showable_univ   = { show = univ_to_string; }
+instance showable_comp   = { show = comp_to_string; }
+instance showable_sigelt = { show = sigelt_to_string; }
 instance showable_bv     = { show = bv_to_string; }
 instance showable_binder = { show = binder_to_string; }
 instance showable_uvar   = { show = uvar_to_string; }

@@ -1,18 +1,4 @@
 open Prims
-let rec (delta_depth_to_string :
-  FStar_Syntax_Syntax.delta_depth -> Prims.string) =
-  fun uu___ ->
-    match uu___ with
-    | FStar_Syntax_Syntax.Delta_constant_at_level i ->
-        let uu___1 = FStar_Compiler_Util.string_of_int i in
-        Prims.op_Hat "Delta_constant_at_level " uu___1
-    | FStar_Syntax_Syntax.Delta_equational_at_level i ->
-        let uu___1 = FStar_Compiler_Util.string_of_int i in
-        Prims.op_Hat "Delta_equational_at_level " uu___1
-    | FStar_Syntax_Syntax.Delta_abstract d ->
-        let uu___1 =
-          let uu___2 = delta_depth_to_string d in Prims.op_Hat uu___2 ")" in
-        Prims.op_Hat "Delta_abstract (" uu___1
 let (sli : FStar_Ident.lident -> Prims.string) =
   fun l ->
     let uu___ = FStar_Options.print_real_names () in
@@ -264,30 +250,6 @@ let (quals_to_string' :
     | uu___ -> let uu___1 = quals_to_string quals in Prims.op_Hat uu___1 " "
 let (paren : Prims.string -> Prims.string) =
   fun s -> Prims.op_Hat "(" (Prims.op_Hat s ")")
-let rec (emb_typ_to_string : FStar_Syntax_Syntax.emb_typ -> Prims.string) =
-  fun uu___ ->
-    match uu___ with
-    | FStar_Syntax_Syntax.ET_abstract -> "abstract"
-    | FStar_Syntax_Syntax.ET_app (h, []) -> h
-    | FStar_Syntax_Syntax.ET_app (h, args) ->
-        let uu___1 =
-          let uu___2 =
-            let uu___3 =
-              let uu___4 =
-                let uu___5 = FStar_Compiler_List.map emb_typ_to_string args in
-                FStar_Compiler_Effect.op_Bar_Greater uu___5
-                  (FStar_Compiler_String.concat " ") in
-              Prims.op_Hat uu___4 ")" in
-            Prims.op_Hat " " uu___3 in
-          Prims.op_Hat h uu___2 in
-        Prims.op_Hat "(" uu___1
-    | FStar_Syntax_Syntax.ET_fun (a, b) ->
-        let uu___1 =
-          let uu___2 = emb_typ_to_string a in
-          let uu___3 =
-            let uu___4 = emb_typ_to_string b in Prims.op_Hat ") -> " uu___4 in
-          Prims.op_Hat uu___2 uu___3 in
-        Prims.op_Hat "(" uu___1
 let (lkind_to_string : FStar_Syntax_Syntax.lazy_kind -> Prims.string) =
   fun uu___ ->
     match uu___ with
@@ -306,7 +268,9 @@ let (lkind_to_string : FStar_Syntax_Syntax.lazy_kind -> Prims.string) =
     | FStar_Syntax_Syntax.Lazy_letbinding -> "Lazy_letbinding"
     | FStar_Syntax_Syntax.Lazy_embedding (e, uu___1) ->
         let uu___2 =
-          let uu___3 = emb_typ_to_string e in Prims.op_Hat uu___3 ")" in
+          let uu___3 =
+            FStar_Class_Show.show FStar_Syntax_Syntax.showable_emb_typ e in
+          Prims.op_Hat uu___3 ")" in
         Prims.op_Hat "Lazy_embedding(" uu___2
     | FStar_Syntax_Syntax.Lazy_universe -> "Lazy_universe"
     | FStar_Syntax_Syntax.Lazy_universe_uvar -> "Lazy_universe_uvar"
@@ -1991,6 +1955,17 @@ let (term_to_doc' :
       then
         let uu___1 = term_to_string t in FStar_Pprint.arbitrary_string uu___1
       else FStar_Syntax_Print_Pretty.term_to_doc' dsenv t
+let (univ_to_doc' :
+  FStar_Syntax_DsEnv.env ->
+    FStar_Syntax_Syntax.universe -> FStar_Pprint.document)
+  =
+  fun dsenv ->
+    fun t ->
+      let uu___ = FStar_Options.ugly () in
+      if uu___
+      then
+        let uu___1 = univ_to_string t in FStar_Pprint.arbitrary_string uu___1
+      else FStar_Syntax_Print_Pretty.univ_to_doc' dsenv t
 let (comp_to_doc' :
   FStar_Syntax_DsEnv.env -> FStar_Syntax_Syntax.comp -> FStar_Pprint.document)
   =
@@ -2020,6 +1995,13 @@ let (term_to_doc : FStar_Syntax_Syntax.term -> FStar_Pprint.document) =
     then
       let uu___1 = term_to_string t in FStar_Pprint.arbitrary_string uu___1
     else FStar_Syntax_Print_Pretty.term_to_doc t
+let (univ_to_doc : FStar_Syntax_Syntax.universe -> FStar_Pprint.document) =
+  fun t ->
+    let uu___ = FStar_Options.ugly () in
+    if uu___
+    then
+      let uu___1 = univ_to_string t in FStar_Pprint.arbitrary_string uu___1
+    else FStar_Syntax_Print_Pretty.univ_to_doc t
 let (comp_to_doc : FStar_Syntax_Syntax.comp -> FStar_Pprint.document) =
   fun t ->
     let uu___ = FStar_Options.ugly () in
@@ -2034,16 +2016,22 @@ let (sigelt_to_doc : FStar_Syntax_Syntax.sigelt -> FStar_Pprint.document) =
     then
       let uu___1 = sigelt_to_string t in FStar_Pprint.arbitrary_string uu___1
     else FStar_Syntax_Print_Pretty.sigelt_to_doc t
+let (pretty_term : FStar_Syntax_Syntax.term FStar_Class_PP.pretty) =
+  { FStar_Class_PP.pp = term_to_doc }
+let (pretty_univ : FStar_Syntax_Syntax.universe FStar_Class_PP.pretty) =
+  { FStar_Class_PP.pp = univ_to_doc }
 let (pretty_sigelt : FStar_Syntax_Syntax.sigelt FStar_Class_PP.pretty) =
   { FStar_Class_PP.pp = sigelt_to_doc }
 let (pretty_comp : FStar_Syntax_Syntax.comp FStar_Class_PP.pretty) =
   { FStar_Class_PP.pp = comp_to_doc }
-let (pretty_term : FStar_Syntax_Syntax.term FStar_Class_PP.pretty) =
-  { FStar_Class_PP.pp = term_to_doc }
-let (showable_sigelt : FStar_Syntax_Syntax.sigelt FStar_Class_Show.showable)
-  = { FStar_Class_Show.show = sigelt_to_string }
 let (showable_term : FStar_Syntax_Syntax.term FStar_Class_Show.showable) =
   { FStar_Class_Show.show = term_to_string }
+let (showable_univ : FStar_Syntax_Syntax.universe FStar_Class_Show.showable)
+  = { FStar_Class_Show.show = univ_to_string }
+let (showable_comp : FStar_Syntax_Syntax.comp FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = comp_to_string }
+let (showable_sigelt : FStar_Syntax_Syntax.sigelt FStar_Class_Show.showable)
+  = { FStar_Class_Show.show = sigelt_to_string }
 let (showable_bv : FStar_Syntax_Syntax.bv FStar_Class_Show.showable) =
   { FStar_Class_Show.show = bv_to_string }
 let (showable_binder : FStar_Syntax_Syntax.binder FStar_Class_Show.showable)

@@ -61,11 +61,10 @@ let __proj__Mkembedding__item__emb_typ :
     match projectee with | { em; un; typ; print; emb_typ;_} -> emb_typ
 let emb_typ_of : 'a . 'a embedding -> FStar_Syntax_Syntax.emb_typ =
   fun e -> e.emb_typ
-let unknown_printer :
-  'uuuuu . FStar_Syntax_Syntax.term -> 'uuuuu -> Prims.string =
+let unknown_printer : 'a . FStar_Syntax_Syntax.term -> 'a -> Prims.string =
   fun typ ->
     fun uu___ ->
-      let uu___1 = FStar_Syntax_Print.term_to_string typ in
+      let uu___1 = FStar_Class_Show.show FStar_Syntax_Print.showable_term typ in
       FStar_Compiler_Util.format1 "unknown %s" uu___1
 let (term_as_fv : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.fv) =
   fun t ->
@@ -76,7 +75,8 @@ let (term_as_fv : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.fv) =
     | FStar_Syntax_Syntax.Tm_fvar fv -> fv
     | uu___1 ->
         let uu___2 =
-          let uu___3 = FStar_Syntax_Print.term_to_string t in
+          let uu___3 =
+            FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
           FStar_Compiler_Util.format1 "Embeddings not defined for type %s"
             uu___3 in
         failwith uu___2
@@ -187,7 +187,7 @@ let unembed :
                    FStar_Errors_Msg.text "Unembedding failed for type" in
                  let uu___5 =
                    let uu___6 = type_of e in
-                   FStar_Syntax_Print.term_to_doc uu___6 in
+                   FStar_Class_PP.pp FStar_Syntax_Print.pretty_term uu___6 in
                  FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
                let uu___4 =
                  let uu___5 =
@@ -195,13 +195,15 @@ let unembed :
                    let uu___7 =
                      let uu___8 =
                        let uu___9 = emb_typ_of e in
-                       FStar_Syntax_Print.emb_typ_to_string uu___9 in
+                       FStar_Class_Show.show
+                         FStar_Syntax_Syntax.showable_emb_typ uu___9 in
                      FStar_Pprint.doc_of_string uu___8 in
                    FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
                  let uu___6 =
                    let uu___7 =
                      let uu___8 = FStar_Errors_Msg.text "Term =" in
-                     let uu___9 = FStar_Syntax_Print.term_to_doc t in
+                     let uu___9 =
+                       FStar_Class_PP.pp FStar_Syntax_Print.pretty_term t in
                      FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
                    [uu___7] in
                  uu___5 :: uu___6 in
@@ -303,8 +305,11 @@ let lazy_embed :
                  FStar_Compiler_Effect.op_Bang FStar_Options.debug_embedding in
                if uu___1
                then
-                 let uu___2 = FStar_Syntax_Print.term_to_string ta in
-                 let uu___3 = FStar_Syntax_Print.emb_typ_to_string et in
+                 let uu___2 =
+                   FStar_Class_Show.show FStar_Syntax_Print.showable_term ta in
+                 let uu___3 =
+                   FStar_Class_Show.show FStar_Syntax_Syntax.showable_emb_typ
+                     et in
                  let uu___4 = pa x in
                  FStar_Compiler_Util.print3
                    "Embedding a %s\n\temb_typ=%s\n\tvalue is %s\n" uu___2
@@ -354,8 +359,12 @@ let lazy_unembed :
                         FStar_Options.debug_embedding in
                     if uu___4
                     then
-                      let uu___5 = FStar_Syntax_Print.emb_typ_to_string et in
-                      let uu___6 = FStar_Syntax_Print.emb_typ_to_string et' in
+                      let uu___5 =
+                        FStar_Class_Show.show
+                          FStar_Syntax_Syntax.showable_emb_typ et in
+                      let uu___6 =
+                        FStar_Class_Show.show
+                          FStar_Syntax_Syntax.showable_emb_typ et' in
                       let uu___7 =
                         match res with
                         | FStar_Pervasives_Native.None -> "None"
@@ -373,7 +382,9 @@ let lazy_unembed :
                         FStar_Options.debug_embedding in
                     if uu___5
                     then
-                      let uu___6 = FStar_Syntax_Print.emb_typ_to_string et in
+                      let uu___6 =
+                        FStar_Class_Show.show
+                          FStar_Syntax_Syntax.showable_emb_typ et in
                       let uu___7 = pa a1 in
                       FStar_Compiler_Util.print2
                         "Unembed cancelled for %s\n\tvalue is %s\n" uu___6
@@ -387,8 +398,12 @@ let lazy_unembed :
                       FStar_Options.debug_embedding in
                   if uu___2
                   then
-                    let uu___3 = FStar_Syntax_Print.emb_typ_to_string et in
-                    let uu___4 = FStar_Syntax_Print.term_to_string x1 in
+                    let uu___3 =
+                      FStar_Class_Show.show
+                        FStar_Syntax_Syntax.showable_emb_typ et in
+                    let uu___4 =
+                      FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                        x1 in
                     let uu___5 =
                       match aopt with
                       | FStar_Pervasives_Native.None -> "None"

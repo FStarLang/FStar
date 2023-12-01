@@ -13,6 +13,13 @@ instance val printableshow (_ : printable 'a) : Tot (showable 'a)
 
 instance val show_list (a:Type) (_ : showable a) : Tot (showable (list a))
 
+instance val show_option (a:Type) (_ : showable a) : Tot (showable (option a))
+
+instance val show_either
+   (_ : showable 'a)
+   (_ : showable 'b)
+: Tot (showable (either 'a 'b))
+
 instance val show_tuple2
    (_ : showable 'a)
    (_ : showable 'b)

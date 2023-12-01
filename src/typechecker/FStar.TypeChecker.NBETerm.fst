@@ -26,6 +26,7 @@ open FStar.Ident
 open FStar.Errors
 open FStar.Char
 open FStar.String
+open FStar.Class.Show
 
 friend FStar.Pervasives (* To expose norm_step *)
 
@@ -194,7 +195,7 @@ let rec t_to_string (x:t) =
   | Reflect t -> "Reflect " ^ t_to_string t
   | Quote _ -> "Quote _"
   | Lazy (Inl li, _) -> BU.format1 "Lazy (Inl {%s})" (P.term_to_string (U.unfold_lazy li))
-  | Lazy (Inr (_, et), _) -> BU.format1 "Lazy (Inr (?, %s))" (P.emb_typ_to_string et)
+  | Lazy (Inr (_, et), _) -> BU.format1 "Lazy (Inr (?, %s))" (show et)
   | LocalLetRec (_, l, _, _, _, _, _) -> "LocalLetRec (" ^ (FStar.Syntax.Print.lbs_to_string [] (true, [l])) ^ ")"
   | TopLevelLet (lb, _, _) -> "TopLevelLet (" ^ FStar.Syntax.Print.fv_to_string (BU.right lb.lbname) ^ ")"
   | TopLevelRec (lb, _, _, _) -> "TopLevelRec (" ^ FStar.Syntax.Print.fv_to_string (BU.right lb.lbname) ^ ")"
@@ -251,7 +252,7 @@ let make_arrow1 t1 (a:arg) : t = mk_t <| Arrow (Inr ([a], Tot t1))
 let lazy_embed (et:emb_typ) (x:'a) (f:unit -> t) =
     if !Options.debug_embedding
     then BU.print1 "Embedding\n\temb_typ=%s\n"
-                         (P.emb_typ_to_string et);
+                         (show et);
     if !Options.eager_embedding
     then f()
     else let thunk = Thunk.mk f in
@@ -269,21 +270,21 @@ let lazy_unembed (et:emb_typ) (x:t) (f:t -> option 'a) : option 'a =
       then let res = f (Thunk.force thunk) in
            let _ = if !Options.debug_embedding
                    then BU.print2 "Unembed cancellation failed\n\t%s <> %s\n"
-                                (P.emb_typ_to_string et)
-                                (P.emb_typ_to_string et')
+                                (show et)
+                                (show et')
            in
            res
       else let a = FStar.Compiler.Dyn.undyn b in
            let _ = if !Options.debug_embedding
                    then BU.print1 "Unembed cancelled for %s\n"
-                                     (P.emb_typ_to_string et)
+                                     (show et)
            in
            Some a
     | _ ->
       let aopt = f x in
       let _ = if !Options.debug_embedding
               then BU.print1 "Unembedding:\n\temb_typ=%s\n"
-                               (P.emb_typ_to_string et) in
+                               (show et) in
       aopt
 
 let lazy_unembed_lazy_kind (#a:Type) (k:lazy_kind) (x:t) : option a =

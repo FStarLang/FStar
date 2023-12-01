@@ -9,6 +9,24 @@ let printableshow : 'a . 'a FStar_Class_Printable.printable -> 'a showable =
   fun uu___ -> { show = (FStar_Class_Printable.to_string uu___) }
 let show_list : 'a . 'a showable -> 'a Prims.list showable =
   fun uu___ -> { show = ((FStar_Common.string_of_list ()) (show uu___)) }
+let show_option :
+  'a . 'a showable -> 'a FStar_Pervasives_Native.option showable =
+  fun uu___ -> { show = (FStar_Common.string_of_option (show uu___)) }
+let show_either :
+  'a 'b .
+    'a showable -> 'b showable -> ('a, 'b) FStar_Pervasives.either showable
+  =
+  fun uu___ ->
+    fun uu___1 ->
+      {
+        show =
+          (fun uu___2 ->
+             match uu___2 with
+             | FStar_Pervasives.Inl x ->
+                 let uu___3 = show uu___ x in Prims.op_Hat "Inl " uu___3
+             | FStar_Pervasives.Inr y ->
+                 let uu___3 = show uu___1 y in Prims.op_Hat "Inr " uu___3)
+      }
 let show_tuple2 : 'a 'b . 'a showable -> 'b showable -> ('a * 'b) showable =
   fun uu___ ->
     fun uu___1 ->

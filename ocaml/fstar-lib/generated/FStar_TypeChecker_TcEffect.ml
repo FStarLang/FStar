@@ -21,85 +21,108 @@ let (check_and_gen :
           fun uu___ ->
             match uu___ with
             | (us, t) ->
-                let uu___1 = FStar_Syntax_Subst.open_univ_vars us t in
-                (match uu___1 with
-                 | (us1, t1) ->
-                     let uu___2 =
-                       let uu___3 =
+                let uu___1 =
+                  let uu___2 =
+                    let uu___3 =
+                      let uu___4 =
+                        FStar_Class_Show.show
+                          (FStar_Class_Show.show_tuple2
+                             (FStar_Class_Show.show_list
+                                FStar_Ident.showable_ident)
+                             FStar_Syntax_Print.showable_term) (us, t) in
+                      Prims.op_Hat " = " uu___4 in
+                    Prims.op_Hat comb uu___3 in
+                  Prims.op_Hat "While checking combinator " uu___2 in
+                FStar_Errors.with_ctx uu___1
+                  (fun uu___2 ->
+                     let uu___3 = FStar_Syntax_Subst.open_univ_vars us t in
+                     match uu___3 with
+                     | (us1, t1) ->
                          let uu___4 =
-                           FStar_TypeChecker_Env.push_univ_vars env us1 in
-                         FStar_TypeChecker_TcTerm.tc_tot_or_gtot_term uu___4
-                           t1 in
-                       match uu___3 with
-                       | (t2, lc, g) ->
-                           (FStar_TypeChecker_Rel.force_trivial_guard env g;
-                            (t2, (lc.FStar_TypeChecker_Common.res_typ))) in
-                     (match uu___2 with
-                      | (t2, ty) ->
-                          let uu___3 =
-                            FStar_TypeChecker_Generalize.generalize_universes
-                              env t2 in
-                          (match uu___3 with
-                           | (g_us, t3) ->
-                               let ty1 =
-                                 FStar_Syntax_Subst.close_univ_vars g_us ty in
-                               (if (FStar_Compiler_List.length g_us) <> n
-                                then
-                                  (let error =
-                                     let uu___4 =
-                                       FStar_Compiler_Util.string_of_int n in
-                                     let uu___5 =
-                                       let uu___6 =
-                                         FStar_Compiler_Effect.op_Bar_Greater
-                                           g_us FStar_Compiler_List.length in
-                                       FStar_Compiler_Effect.op_Bar_Greater
-                                         uu___6
-                                         FStar_Compiler_Util.string_of_int in
-                                     let uu___6 =
-                                       FStar_Syntax_Print.tscheme_to_string
-                                         (g_us, t3) in
-                                     FStar_Compiler_Util.format5
-                                       "Expected %s:%s to be universe-polymorphic in %s universes, but found %s (tscheme: %s)"
-                                       eff_name comb uu___4 uu___5 uu___6 in
-                                   FStar_Errors.raise_error
-                                     (FStar_Errors_Codes.Fatal_MismatchUniversePolymorphic,
-                                       error) t3.FStar_Syntax_Syntax.pos;
-                                   (match us1 with
-                                    | [] -> ()
-                                    | uu___5 ->
-                                        let uu___6 =
-                                          ((FStar_Compiler_List.length us1) =
-                                             (FStar_Compiler_List.length g_us))
-                                            &&
-                                            (FStar_Compiler_List.forall2
-                                               (fun u1 ->
-                                                  fun u2 ->
-                                                    let uu___7 =
-                                                      FStar_Syntax_Syntax.order_univ_name
-                                                        u1 u2 in
-                                                    uu___7 = Prims.int_zero)
-                                               us1 g_us) in
-                                        if uu___6
-                                        then ()
-                                        else
-                                          (let uu___8 =
-                                             let uu___9 =
-                                               let uu___10 =
-                                                 FStar_Syntax_Print.univ_names_to_string
-                                                   us1 in
-                                               let uu___11 =
-                                                 FStar_Syntax_Print.univ_names_to_string
-                                                   g_us in
-                                               FStar_Compiler_Util.format4
-                                                 "Expected and generalized universes in the declaration for %s:%s are different, input: %s, but after gen: %s"
-                                                 eff_name comb uu___10
-                                                 uu___11 in
-                                             (FStar_Errors_Codes.Fatal_UnexpectedNumberOfUniverse,
-                                               uu___9) in
-                                           FStar_Errors.raise_error uu___8
-                                             t3.FStar_Syntax_Syntax.pos)))
-                                else ();
-                                (g_us, t3, ty1)))))
+                           let uu___5 =
+                             let uu___6 =
+                               FStar_TypeChecker_Env.push_univ_vars env us1 in
+                             FStar_TypeChecker_TcTerm.tc_tot_or_gtot_term
+                               uu___6 t1 in
+                           match uu___5 with
+                           | (t2, lc, g) ->
+                               (FStar_TypeChecker_Rel.force_trivial_guard env
+                                  g;
+                                (t2, (lc.FStar_TypeChecker_Common.res_typ))) in
+                         (match uu___4 with
+                          | (t2, ty) ->
+                              let uu___5 =
+                                FStar_TypeChecker_Generalize.generalize_universes
+                                  env t2 in
+                              (match uu___5 with
+                               | (g_us, t3) ->
+                                   let ty1 =
+                                     FStar_Syntax_Subst.close_univ_vars g_us
+                                       ty in
+                                   (if (FStar_Compiler_List.length g_us) <> n
+                                    then
+                                      (let error =
+                                         let uu___6 =
+                                           FStar_Compiler_Util.string_of_int
+                                             n in
+                                         let uu___7 =
+                                           let uu___8 =
+                                             FStar_Compiler_Effect.op_Bar_Greater
+                                               g_us
+                                               FStar_Compiler_List.length in
+                                           FStar_Compiler_Effect.op_Bar_Greater
+                                             uu___8
+                                             FStar_Compiler_Util.string_of_int in
+                                         let uu___8 =
+                                           FStar_Syntax_Print.tscheme_to_string
+                                             (g_us, t3) in
+                                         FStar_Compiler_Util.format5
+                                           "Expected %s:%s to be universe-polymorphic in %s universes, but found %s (tscheme: %s)"
+                                           eff_name comb uu___6 uu___7 uu___8 in
+                                       FStar_Errors.raise_error
+                                         (FStar_Errors_Codes.Fatal_MismatchUniversePolymorphic,
+                                           error) t3.FStar_Syntax_Syntax.pos;
+                                       (match us1 with
+                                        | [] -> ()
+                                        | uu___7 ->
+                                            let uu___8 =
+                                              ((FStar_Compiler_List.length
+                                                  us1)
+                                                 =
+                                                 (FStar_Compiler_List.length
+                                                    g_us))
+                                                &&
+                                                (FStar_Compiler_List.forall2
+                                                   (fun u1 ->
+                                                      fun u2 ->
+                                                        let uu___9 =
+                                                          FStar_Syntax_Syntax.order_univ_name
+                                                            u1 u2 in
+                                                        uu___9 =
+                                                          Prims.int_zero) us1
+                                                   g_us) in
+                                            if uu___8
+                                            then ()
+                                            else
+                                              (let uu___10 =
+                                                 let uu___11 =
+                                                   let uu___12 =
+                                                     FStar_Syntax_Print.univ_names_to_string
+                                                       us1 in
+                                                   let uu___13 =
+                                                     FStar_Syntax_Print.univ_names_to_string
+                                                       g_us in
+                                                   FStar_Compiler_Util.format4
+                                                     "Expected and generalized universes in the declaration for %s:%s are different, input: %s, but after gen: %s"
+                                                     eff_name comb uu___12
+                                                     uu___13 in
+                                                 (FStar_Errors_Codes.Fatal_UnexpectedNumberOfUniverse,
+                                                   uu___11) in
+                                               FStar_Errors.raise_error
+                                                 uu___10
+                                                 t3.FStar_Syntax_Syntax.pos)))
+                                    else ();
+                                    (g_us, t3, ty1)))))
 let (pure_wp_uvar :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.typ ->
