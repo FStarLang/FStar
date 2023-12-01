@@ -3269,19 +3269,19 @@ let term_to_doc env t =
   in
   FStar.Syntax.Print.Pretty.term_to_doc' (DsEnv.set_current_module env.dsenv env.curmodule) t
 
-let term_to_string env t =
+let term_to_string env t = GenSym.with_frozen_gensym (fun () ->
   let t =
     try normalize [AllowUnboundUniverses] env t
     with e -> Errors.log_issue t.pos (Errors.Warning_NormalizationFailure, (BU.format1 "Normalization failed with error %s\n" (BU.message_of_exn e))) ; t
   in
-  Print.term_to_string' (DsEnv.set_current_module env.dsenv env.curmodule) t
+  Print.term_to_string' (DsEnv.set_current_module env.dsenv env.curmodule) t)
 
-let comp_to_string env c =
+let comp_to_string env c = GenSym.with_frozen_gensym (fun () ->
   let c =
     try norm_comp (config [AllowUnboundUniverses] env) [] c
     with e -> Errors.log_issue c.pos (Errors.Warning_NormalizationFailure, (BU.format1 "Normalization failed with error %s\n" (BU.message_of_exn e))) ; c
   in
-  Print.comp_to_string' (DsEnv.set_current_module env.dsenv env.curmodule) c
+  Print.comp_to_string' (DsEnv.set_current_module env.dsenv env.curmodule) c)
 
 let normalize_refinement steps env t0 =
    let t = normalize (steps@[Beta]) env t0 in
