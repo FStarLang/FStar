@@ -5,7 +5,7 @@ set -eu
 declare -A files # Store all basenames in repo
 declare -A hints # Store all paths of hints in repo
 
-trap 'rm -f .filelist; exit 1' EXIT INT
+trap 'RC=$?; rm -f .filelist; exit $RC' EXIT INT
 
 # Find all (normal) files, not descending into .git, and store in
 # the array. Using a pipe here would be better, but a pipe creates a
