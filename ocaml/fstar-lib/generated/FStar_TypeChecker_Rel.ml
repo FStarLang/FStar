@@ -13437,7 +13437,11 @@ let (try_teq :
             FStar_TypeChecker_Env.hasBinders_env
             FStar_Class_Binders.hasNames_term FStar_Syntax_Print.pretty_term
             t2.FStar_Syntax_Syntax.pos "try_teq.2" env t2;
-          (let uu___2 =
+          (let smt_ok1 =
+             smt_ok &&
+               (let uu___2 = FStar_Options.ml_ish () in
+                Prims.op_Negation uu___2) in
+           let uu___2 =
              let uu___3 =
                let uu___4 = FStar_TypeChecker_Env.current_module env in
                FStar_Ident.string_of_lid uu___4 in
@@ -13467,7 +13471,7 @@ let (try_teq :
                  | (prob, wl) ->
                      let g =
                        let uu___6 =
-                         solve_and_commit (singleton wl prob smt_ok)
+                         solve_and_commit (singleton wl prob smt_ok1)
                            (fun uu___7 -> FStar_Pervasives_Native.None) in
                        FStar_Compiler_Effect.op_Less_Bar
                          (with_guard env prob) uu___6 in
@@ -13896,6 +13900,10 @@ let (try_solve_deferred_constraints :
       fun deferred_to_tac_ok ->
         fun env ->
           fun g ->
+            let smt_ok1 =
+              smt_ok &&
+                (let uu___ = FStar_Options.ml_ish () in
+                 Prims.op_Negation uu___) in
             let uu___ =
               let uu___1 =
                 let uu___2 = FStar_TypeChecker_Env.current_module env in
@@ -13939,7 +13947,7 @@ let (try_solve_deferred_constraints :
                      wl_deferred_to_tac = (uu___2.wl_deferred_to_tac);
                      ctr = (uu___2.ctr);
                      defer_ok;
-                     smt_ok;
+                     smt_ok = smt_ok1;
                      umax_heuristic_ok = (uu___2.umax_heuristic_ok);
                      tcenv = (uu___2.tcenv);
                      wl_implicits = (uu___2.wl_implicits);
@@ -14048,7 +14056,8 @@ let (solve_deferred_constraints :
   fun env ->
     fun g ->
       let defer_ok = NoDefer in
-      let smt_ok = true in
+      let smt_ok =
+        let uu___ = FStar_Options.ml_ish () in Prims.op_Negation uu___ in
       let deferred_to_tac_ok = true in
       try_solve_deferred_constraints defer_ok smt_ok deferred_to_tac_ok env g
 let (solve_non_tactic_deferred_constraints :
@@ -14069,7 +14078,9 @@ let (solve_non_tactic_deferred_constraints :
                "solve_non_tactic_deferred_constraints.g" env g;
              (let defer_ok =
                 if maybe_defer_flex_flex then DeferFlexFlexOnly else NoDefer in
-              let smt_ok = true in
+              let smt_ok =
+                let uu___2 = FStar_Options.ml_ish () in
+                Prims.op_Negation uu___2 in
               let deferred_to_tac_ok = false in
               try_solve_deferred_constraints defer_ok smt_ok
                 deferred_to_tac_ok env g))
