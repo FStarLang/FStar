@@ -4929,7 +4929,9 @@ let (tc_decls :
          | (uu___2, env1) ->
              let r =
                let uu___3 =
-                 let uu___4 = FStar_Syntax_Print.sigelt_to_string_short se in
+                 let uu___4 =
+                   let uu___5 = FStar_TypeChecker_Env.current_module env1 in
+                   FStar_Ident.string_of_lid uu___5 in
                  FStar_Pervasives_Native.Some uu___4 in
                FStar_Profiling.profile
                  (fun uu___4 -> process_one_decl acc se) uu___3

@@ -4038,3 +4038,39 @@ let (inspect_bv : bv -> bv) = fun x -> x
 let (pack_bv : bv -> bv) = fun x -> x
 let (inspect_comp : comp -> comp) = fun x -> x
 let (pack_comp : comp -> comp) = fun x -> x
+let (tag_of : term -> (Prims.string, unit) FStar_Tactics_Effect.tac_repr) =
+  fun t ->
+    FStar_Tactics_Effect.tac_bind
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.NamedView.fsti"
+               (Prims.of_int (220)) (Prims.of_int (8)) (Prims.of_int (220))
+               (Prims.of_int (17)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.NamedView.fsti"
+               (Prims.of_int (220)) (Prims.of_int (2)) (Prims.of_int (237))
+               (Prims.of_int (28))))) (Obj.magic (inspect t))
+      (fun uu___ ->
+         FStar_Tactics_Effect.lift_div_tac
+           (fun uu___1 ->
+              match uu___ with
+              | Tv_Var bv1 -> "Tv_Var"
+              | Tv_BVar fv -> "Tv_BVar"
+              | Tv_FVar fv -> "Tv_FVar"
+              | Tv_UInst (uu___2, uu___3) -> "Tv_UInst"
+              | Tv_App (f, x) -> "Tv_App"
+              | Tv_Abs (x, t1) -> "Tv_Abs"
+              | Tv_Arrow (x, t1) -> "Tv_Arrow"
+              | Tv_Type uu___2 -> "Tv_Type"
+              | Tv_Refine (x, t1) -> "Tv_Refine"
+              | Tv_Const cst -> "Tv_Const"
+              | Tv_Uvar (i, t1) -> "Tv_Uvar"
+              | Tv_Let (r, attrs, b, t1, t2) -> "Tv_Let"
+              | Tv_Match (t1, uu___2, branches) -> "Tv_Match"
+              | Tv_AscribedT (uu___2, uu___3, uu___4, uu___5) ->
+                  "Tv_AscribedT"
+              | Tv_AscribedC (uu___2, uu___3, uu___4, uu___5) ->
+                  "Tv_AscribedC"
+              | Tv_Unknown -> "Tv_Unknown"
+              | Tv_Unsupp -> "Tv_Unsupp"))

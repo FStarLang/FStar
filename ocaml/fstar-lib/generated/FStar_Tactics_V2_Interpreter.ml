@@ -197,8 +197,8 @@ let (__primitive_steps_ref :
 let (primitive_steps :
   unit -> FStar_TypeChecker_Primops.primitive_step Prims.list) =
   fun uu___ ->
-    let uu___1 = FStar_Compiler_Effect.op_Bang __primitive_steps_ref in
-    let uu___2 = native_tactics_steps () in
+    let uu___1 = native_tactics_steps () in
+    let uu___2 = FStar_Compiler_Effect.op_Bang __primitive_steps_ref in
     FStar_Compiler_List.op_At uu___1 uu___2
 let (register_tactic_primitive_step :
   FStar_TypeChecker_Primops.primitive_step -> unit) =

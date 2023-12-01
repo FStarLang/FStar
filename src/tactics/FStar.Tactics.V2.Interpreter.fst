@@ -99,8 +99,8 @@ let __primitive_steps_ref : ref (list PO.primitive_step) =
   BU.mk_ref []
 
 let primitive_steps () : list PO.primitive_step =
-    (!__primitive_steps_ref)
-    @ (native_tactics_steps ())
+    (native_tactics_steps ())
+    @ (!__primitive_steps_ref)
 
 let register_tactic_primitive_step (s : PO.primitive_step) : unit =
   __primitive_steps_ref := s :: !__primitive_steps_ref
