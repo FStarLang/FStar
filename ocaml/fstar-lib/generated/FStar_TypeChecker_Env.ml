@@ -3722,11 +3722,13 @@ let (delta_depth_of_fv :
                        then
                          let uu___8 = FStar_Syntax_Print.fv_to_string fv in
                          let uu___9 =
-                           FStar_Syntax_Print.delta_depth_to_string
+                           FStar_Class_Show.show
+                             FStar_Syntax_Syntax.showable_delta_depth
                              (FStar_Pervasives_Native.__proj__Some__item__v
                                 fv.FStar_Syntax_Syntax.fv_delta) in
                          let uu___10 =
-                           FStar_Syntax_Print.delta_depth_to_string d in
+                           FStar_Class_Show.show
+                             FStar_Syntax_Syntax.showable_delta_depth d in
                          FStar_Compiler_Util.print3
                            "WARNING WARNING WARNING fv=%s, delta_depth=%s, env.delta_depth=%s\n"
                            uu___8 uu___9 uu___10
@@ -6281,7 +6283,8 @@ let (string_of_delta_level : delta_level -> Prims.string) =
     | InliningDelta -> "Inlining"
     | Eager_unfolding_only -> "Eager_unfolding_only"
     | Unfold d ->
-        let uu___1 = FStar_Syntax_Print.delta_depth_to_string d in
+        let uu___1 =
+          FStar_Class_Show.show FStar_Syntax_Syntax.showable_delta_depth d in
         Prims.op_Hat "Unfold " uu___1
 let (lidents : env -> FStar_Ident.lident Prims.list) =
   fun env1 ->

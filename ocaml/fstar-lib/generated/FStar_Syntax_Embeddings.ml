@@ -63,8 +63,11 @@ let lazy_embed :
                  FStar_Compiler_Effect.op_Bang FStar_Options.debug_embedding in
                if uu___1
                then
-                 let uu___2 = FStar_Syntax_Print.term_to_string ta in
-                 let uu___3 = FStar_Syntax_Print.emb_typ_to_string et in
+                 let uu___2 =
+                   FStar_Class_Show.show FStar_Syntax_Print.showable_term ta in
+                 let uu___3 =
+                   FStar_Class_Show.show FStar_Syntax_Syntax.showable_emb_typ
+                     et in
                  let uu___4 = pa x in
                  FStar_Compiler_Util.print3
                    "Embedding a %s\n\temb_typ=%s\n\tvalue is %s\n" uu___2
@@ -114,8 +117,12 @@ let lazy_unembed :
                         FStar_Options.debug_embedding in
                     if uu___4
                     then
-                      let uu___5 = FStar_Syntax_Print.emb_typ_to_string et in
-                      let uu___6 = FStar_Syntax_Print.emb_typ_to_string et' in
+                      let uu___5 =
+                        FStar_Class_Show.show
+                          FStar_Syntax_Syntax.showable_emb_typ et in
+                      let uu___6 =
+                        FStar_Class_Show.show
+                          FStar_Syntax_Syntax.showable_emb_typ et' in
                       let uu___7 =
                         match res with
                         | FStar_Pervasives_Native.None -> "None"
@@ -133,7 +140,9 @@ let lazy_unembed :
                         FStar_Options.debug_embedding in
                     if uu___5
                     then
-                      let uu___6 = FStar_Syntax_Print.emb_typ_to_string et in
+                      let uu___6 =
+                        FStar_Class_Show.show
+                          FStar_Syntax_Syntax.showable_emb_typ et in
                       let uu___7 = pa a1 in
                       FStar_Compiler_Util.print2
                         "Unembed cancelled for %s\n\tvalue is %s\n" uu___6
@@ -147,7 +156,9 @@ let lazy_unembed :
                       FStar_Options.debug_embedding in
                   if uu___2
                   then
-                    let uu___3 = FStar_Syntax_Print.emb_typ_to_string et in
+                    let uu___3 =
+                      FStar_Class_Show.show
+                        FStar_Syntax_Syntax.showable_emb_typ et in
                     let uu___4 = FStar_Syntax_Print.term_to_string x1 in
                     let uu___5 =
                       match aopt with

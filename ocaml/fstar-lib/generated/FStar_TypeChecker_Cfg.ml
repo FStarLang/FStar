@@ -404,7 +404,8 @@ let (steps_to_string : fsteps -> Prims.string) =
                       let uu___17 =
                         FStar_Compiler_Effect.op_Bar_Greater f.unfold_until
                           (format_opt
-                             FStar_Syntax_Print.delta_depth_to_string) in
+                             (FStar_Class_Show.show
+                                FStar_Syntax_Syntax.showable_delta_depth)) in
                       let uu___18 =
                         let uu___19 =
                           FStar_Compiler_Effect.op_Bar_Greater f.unfold_only

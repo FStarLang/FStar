@@ -662,7 +662,8 @@ let rec (t_to_string : t -> Prims.string) =
           FStar_Syntax_Print.term_to_string uu___2 in
         FStar_Compiler_Util.format1 "Lazy (Inl {%s})" uu___1
     | Lazy (FStar_Pervasives.Inr (uu___, et), uu___1) ->
-        let uu___2 = FStar_Syntax_Print.emb_typ_to_string et in
+        let uu___2 =
+          FStar_Class_Show.show FStar_Syntax_Syntax.showable_emb_typ et in
         FStar_Compiler_Util.format1 "Lazy (Inr (?, %s))" uu___2
     | LocalLetRec (uu___, l, uu___1, uu___2, uu___3, uu___4, uu___5) ->
         let uu___6 =
@@ -809,7 +810,8 @@ let lazy_embed : 'a . FStar_Syntax_Syntax.emb_typ -> 'a -> (unit -> t) -> t =
            FStar_Compiler_Effect.op_Bang FStar_Options.debug_embedding in
          if uu___1
          then
-           let uu___2 = FStar_Syntax_Print.emb_typ_to_string et in
+           let uu___2 =
+             FStar_Class_Show.show FStar_Syntax_Syntax.showable_emb_typ et in
            FStar_Compiler_Util.print1 "Embedding\n\temb_typ=%s\n" uu___2
          else ());
         (let uu___1 =
@@ -845,8 +847,12 @@ let lazy_unembed :
                   FStar_Compiler_Effect.op_Bang FStar_Options.debug_embedding in
                 if uu___2
                 then
-                  let uu___3 = FStar_Syntax_Print.emb_typ_to_string et in
-                  let uu___4 = FStar_Syntax_Print.emb_typ_to_string et' in
+                  let uu___3 =
+                    FStar_Class_Show.show
+                      FStar_Syntax_Syntax.showable_emb_typ et in
+                  let uu___4 =
+                    FStar_Class_Show.show
+                      FStar_Syntax_Syntax.showable_emb_typ et' in
                   FStar_Compiler_Util.print2
                     "Unembed cancellation failed\n\t%s <> %s\n" uu___3 uu___4
                 else ());
@@ -857,7 +863,9 @@ let lazy_unembed :
                   FStar_Compiler_Effect.op_Bang FStar_Options.debug_embedding in
                 if uu___3
                 then
-                  let uu___4 = FStar_Syntax_Print.emb_typ_to_string et in
+                  let uu___4 =
+                    FStar_Class_Show.show
+                      FStar_Syntax_Syntax.showable_emb_typ et in
                   FStar_Compiler_Util.print1 "Unembed cancelled for %s\n"
                     uu___4
                 else ());
@@ -868,7 +876,9 @@ let lazy_unembed :
                 FStar_Compiler_Effect.op_Bang FStar_Options.debug_embedding in
               if uu___2
               then
-                let uu___3 = FStar_Syntax_Print.emb_typ_to_string et in
+                let uu___3 =
+                  FStar_Class_Show.show FStar_Syntax_Syntax.showable_emb_typ
+                    et in
                 FStar_Compiler_Util.print1 "Unembedding:\n\temb_typ=%s\n"
                   uu___3
               else ());
