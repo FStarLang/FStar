@@ -80,8 +80,6 @@ val metadata_to_string : metadata -> string
 val ctx_uvar_to_string    : ctx_uvar -> string
 val ctx_uvar_to_string_no_reason    : ctx_uvar -> string
 
-val emb_typ_to_string: emb_typ -> string
-
 val fv_qual_to_string : fv_qual -> string
 
 val term_to_doc'          : DsEnv.env -> term -> Pprint.document

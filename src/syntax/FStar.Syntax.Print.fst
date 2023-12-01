@@ -155,12 +155,6 @@ let quals_to_string' quals =
 
 let paren s = "(" ^ s ^ ")"
 
-let rec emb_typ_to_string = function
-    | ET_abstract -> "abstract"
-    | ET_app (h, []) -> h
-    | ET_app(h, args) -> "(" ^h^ " " ^ (List.map emb_typ_to_string args |> String.concat " ")  ^")"
-    | ET_fun(a, b) -> "(" ^ emb_typ_to_string a ^ ") -> " ^ emb_typ_to_string b
-
 let lkind_to_string = function
   | BadLazy -> "BadLazy"
   | Lazy_bv -> "Lazy_bv"
@@ -175,7 +169,7 @@ let lkind_to_string = function
   | Lazy_sigelt -> "Lazy_sigelt"
   | Lazy_uvar -> "Lazy_uvar"
   | Lazy_letbinding -> "Lazy_letbinding"
-  | Lazy_embedding (e, _) -> "Lazy_embedding(" ^ emb_typ_to_string e ^ ")"
+  | Lazy_embedding (e, _) -> "Lazy_embedding(" ^ show e ^ ")"
   | Lazy_universe -> "Lazy_universe"
   | Lazy_universe_uvar -> "Lazy_universe_uvar"
   | Lazy_issue -> "Lazy_issue"

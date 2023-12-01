@@ -23,6 +23,7 @@ open FStar.Compiler.Range
 open FStar.Pervasives
 open FStar.Syntax.Syntax
 open FStar.Class.Show
+open FStar.Class.PP
 open FStar.Class.Deq
 
 module BU    = FStar.Compiler.Util
@@ -126,13 +127,13 @@ type embedding (a:Type0) = {
 }
 let emb_typ_of e = e.emb_typ
 
-let unknown_printer typ _ =
-    BU.format1 "unknown %s" (Print.term_to_string typ)
+let unknown_printer (typ : term) (_ : 'a) : string =
+    BU.format1 "unknown %s" (show typ)
 
 let term_as_fv t =
     match (SS.compress t).n with
     | Tm_fvar fv -> fv
-    | _ -> failwith (BU.format1 "Embeddings not defined for type %s" (Print.term_to_string t))
+    | _ -> failwith (BU.format1 "Embeddings not defined for type %s" (show t))
 
 let mk_emb em un fv =
     let typ = S.fv_to_tm fv in
@@ -203,9 +204,9 @@ let unembed (e:embedding 'a) t n =
   let open FStar.Pprint in
   if None? r then
     Err.log_issue_doc t.pos (Err.Warning_NotEmbedded, [
-      text "Unembedding failed for type" ^/^ Print.term_to_doc (type_of e);
-      text "emb_typ = " ^/^ doc_of_string (Print.emb_typ_to_string (emb_typ_of e));
-      text "Term =" ^/^ Print.term_to_doc t;
+      text "Unembedding failed for type" ^/^ pp (type_of e);
+      text "emb_typ = " ^/^ doc_of_string (show (emb_typ_of e));
+      text "Term =" ^/^ pp t;
       ]);
   r
 
@@ -237,11 +238,11 @@ let e_lazy #a (k:lazy_kind) (ty : typ) : embedding a =
   in
   mk_emb ee uu (term_as_fv ty)
 
-let lazy_embed (pa:printer 'a) (et:emb_typ) rng ta (x:'a) (f:unit -> term) =
+let lazy_embed (pa:printer 'a) (et:emb_typ) rng (ta:term) (x:'a) (f:unit -> term) =
     if !Options.debug_embedding
     then BU.print3 "Embedding a %s\n\temb_typ=%s\n\tvalue is %s\n"
-                         (Print.term_to_string ta)
-                         (Print.emb_typ_to_string et)
+                         (show ta)
+                         (show et)
                          (pa x);
     if !Options.eager_embedding
     then f()
@@ -257,24 +258,22 @@ let lazy_unembed (pa:printer 'a) (et:emb_typ) (x:term) (ta:term) (f:term -> opti
       then let res = f (Thunk.force t) in
            let _ = if !Options.debug_embedding
                    then BU.print3 "Unembed cancellation failed\n\t%s <> %s\nvalue is %s\n"
-                                (Print.emb_typ_to_string et)
-                                (Print.emb_typ_to_string et')
+                                (show et)
+                                (show et')
                                 (match res with None -> "None" | Some x -> "Some " ^ (pa x))
            in
            res
       else let a = Dyn.undyn b in
            let _ = if !Options.debug_embedding
                    then BU.print2 "Unembed cancelled for %s\n\tvalue is %s\n"
-                                (Print.emb_typ_to_string et)
-                                  (pa a)
+                                (show et) (pa a)
            in
            Some a
     | _ ->
       let aopt = f x in
       let _ = if !Options.debug_embedding
               then BU.print3 "Unembedding:\n\temb_typ=%s\n\tterm is %s\n\tvalue is %s\n"
-                               (Print.emb_typ_to_string et)
-                               (Print.term_to_string x)
+                               (show et) (show x)
                                (match aopt with None -> "None" | Some a -> "Some " ^ pa a) in
       aopt
 

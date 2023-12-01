@@ -66,6 +66,8 @@ type emb_typ =
   | ET_fun  of emb_typ * emb_typ
   | ET_app  of string * list emb_typ
 
+instance val showable_emb_typ : showable emb_typ
+
 //versioning for unification variables
 [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type version = {
