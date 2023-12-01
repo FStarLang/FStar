@@ -50,7 +50,7 @@ let info_at_pos env file row col =
  * a discrepancy of implicits before one of universes, etc.
  *)
 let print_discrepancy (#a:Type) (#b:eqtype) (f : a -> b) (x : a) (y : a) : b * b =
-    let print () : string * string * bool =
+    let print () : b * b * bool =
         let xs = f x in
         let ys = f y in
         xs, ys, xs <> ys
