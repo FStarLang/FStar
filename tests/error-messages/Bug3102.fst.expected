@@ -28,7 +28,7 @@
 >>]
 >> Got issues: [
 * Error 56 at Bug3102.fst(49,16-51,7):
-  - Bound variable 'z#1156' would escape in the type of this letbinding
+  - Bound variable 'z#1155' would escape in the type of this letbinding
   - Add a type annotation that does not mention it
 
 >>]
