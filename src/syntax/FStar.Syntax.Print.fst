@@ -36,11 +36,6 @@ module C          = FStar.Parser.Const
 module SU         = FStar.Syntax.Util
 module Pretty     = FStar.Syntax.Print.Pretty
 
-let rec delta_depth_to_string = function
-    | Delta_constant_at_level i   -> "Delta_constant_at_level " ^ string_of_int i
-    | Delta_equational_at_level i -> "Delta_equational_at_level " ^ string_of_int i
-    | Delta_abstract d -> "Delta_abstract (" ^ delta_depth_to_string d ^ ")"
-
 let sli (l:lident) : string =
     if Options.print_real_names()
     then string_of_lid l
@@ -52,7 +47,7 @@ let sli (l:lident) : string =
 let lid_to_string (l:lid) = sli l
 
 // let fv_to_string fv = Printf.sprintf "%s@%A" (lid_to_string fv.fv_name.v) fv.fv_delta
-let fv_to_string fv = lid_to_string fv.fv_name.v //^ "(@@" ^ delta_depth_to_string fv.fv_delta ^ ")"
+let fv_to_string fv = lid_to_string fv.fv_name.v //^ "(@@" ^ showfv.fv_delta ^ ")"
 let bv_to_string bv = (string_of_id bv.ppname) ^ "#" ^ (string_of_int bv.index)
 
 let nm_to_string bv =
@@ -998,6 +993,7 @@ instance pretty_comp     = { pp   = comp_to_doc; }
 
 instance showable_term   = { show = term_to_string; }
 instance showable_univ   = { show = univ_to_string; }
+instance showable_comp   = { show = comp_to_string; }
 instance showable_sigelt = { show = sigelt_to_string; }
 instance showable_bv     = { show = bv_to_string; }
 instance showable_binder = { show = binder_to_string; }

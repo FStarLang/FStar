@@ -41,6 +41,16 @@ instance showable_emb_typ = {
   show = emb_typ_to_string;
 }
 
+
+let rec delta_depth_to_string = function
+    | Delta_constant_at_level i   -> "Delta_constant_at_level " ^ string_of_int i
+    | Delta_equational_at_level i -> "Delta_equational_at_level " ^ string_of_int i
+    | Delta_abstract d -> "Delta_abstract (" ^ delta_depth_to_string d ^ ")"
+
+instance showable_delta_depth = {
+  show = delta_depth_to_string;
+}
+
 // This is set in FStar.Main.main, where all modules are in-scope.
 let lazy_chooser : ref (option (lazy_kind -> lazyinfo -> term)) = mk_ref None
 

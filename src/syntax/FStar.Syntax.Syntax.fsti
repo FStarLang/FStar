@@ -112,6 +112,8 @@ type delta_depth =
   | Delta_equational_at_level of int  //level 0 is a symbol that may be equated to another by extensional reasoning, n > 0 can be unfolded n times to a Delta_equational_at_level 0 term
   | Delta_abstract of delta_depth   //A symbol marked abstract whose depth is the argument d
 
+instance val showable_delta_depth : showable delta_depth
+
 [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type should_check_uvar =
   | Allow_unresolved of string  (* Escape hatch for uvars in logical guards that are sometimes left unresolved *)
