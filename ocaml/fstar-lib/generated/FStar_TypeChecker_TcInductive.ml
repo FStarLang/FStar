@@ -235,6 +235,13 @@ let (tc_tycon :
                                                          (s.FStar_Syntax_Syntax.sigopts)
                                                      }, u, guard1))))))))))
       | uu___ -> failwith "impossible"
+let (mk_implicit : FStar_Syntax_Syntax.bqual -> FStar_Syntax_Syntax.bqual) =
+  fun uu___ ->
+    match uu___ with
+    | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Meta q) ->
+        FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Meta q)
+    | uu___1 ->
+        FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Implicit false)
 let (tc_data :
   FStar_TypeChecker_Env.env_t ->
     (FStar_Syntax_Syntax.sigelt * FStar_Syntax_Syntax.universe) Prims.list ->
@@ -2450,12 +2457,13 @@ let (mk_discriminator_and_indexed_projectors :
                               (FStar_Compiler_List.op_At tps indices)
                               (FStar_Compiler_List.map
                                  (fun b ->
+                                    let uu___ =
+                                      mk_implicit
+                                        b.FStar_Syntax_Syntax.binder_qual in
                                     {
                                       FStar_Syntax_Syntax.binder_bv =
                                         (b.FStar_Syntax_Syntax.binder_bv);
-                                      FStar_Syntax_Syntax.binder_qual =
-                                        (FStar_Pervasives_Native.Some
-                                           FStar_Syntax_Syntax.imp_tag);
+                                      FStar_Syntax_Syntax.binder_qual = uu___;
                                       FStar_Syntax_Syntax.binder_positivity =
                                         (b.FStar_Syntax_Syntax.binder_positivity);
                                       FStar_Syntax_Syntax.binder_attrs =
