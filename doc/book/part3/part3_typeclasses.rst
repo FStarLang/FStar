@@ -646,11 +646,12 @@ easily.
    :end-before: //SNIPPET_END: test$
 
 F* infers the typeclass instantiations and the type of ``test`` to be
-``count_st s monoid_nat_plus (op 0 1) unit``.
+``count_st s #monoid_nat_plus (op 0 1) unit``.
 
-In ``test2``, F* infers the type ``count_st s monoid_nat_plus (op 0 (op 1
+In ``test2``, F* infers the type ``count_st s #monoid_nat_plus (op 0 (op 1
 1)) unit``, and then automatically proves that this type is equivalent
-to the user annotation ``count_st s monoid_nat_plus 2 unit``.
+to the user annotation ``count_st s #monoid_nat_plus 2 unit``, using
+the definition of ``monoid_nat_plus``.
 
 Summary
 -------
