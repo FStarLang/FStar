@@ -175,3 +175,15 @@ let max_suffix :
         (fun uu___1 ->
            match uu___1 with
            | (xs1, ys) -> ((FStar_Compiler_List.rev ys), xs1))
+let rec eq_list :
+  'a .
+    ('a -> 'a -> Prims.bool) -> 'a Prims.list -> 'a Prims.list -> Prims.bool
+  =
+  fun f ->
+    fun l1 ->
+      fun l2 ->
+        match (l1, l2) with
+        | ([], []) -> true
+        | ([], uu___) -> false
+        | (uu___, []) -> false
+        | (x1::t1, x2::t2) -> (f x1 x2) && (eq_list f t1 t2)

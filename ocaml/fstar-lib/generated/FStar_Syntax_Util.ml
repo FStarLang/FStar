@@ -5299,3 +5299,20 @@ let (deduplicate_terms :
   fun l ->
     FStar_Compiler_List.deduplicate
       (fun x -> fun y -> let uu___ = eq_tm x y in uu___ = Equal) l
+let (eq_binding :
+  FStar_Syntax_Syntax.binding -> FStar_Syntax_Syntax.binding -> Prims.bool) =
+  fun b1 ->
+    fun b2 ->
+      match (b1, b2) with
+      | (FStar_Syntax_Syntax.Binding_var bv1, FStar_Syntax_Syntax.Binding_var
+         bv2) ->
+          (FStar_Syntax_Syntax.bv_eq bv1 bv2) &&
+            (term_eq bv1.FStar_Syntax_Syntax.sort
+               bv2.FStar_Syntax_Syntax.sort)
+      | (FStar_Syntax_Syntax.Binding_lid (lid1, uu___),
+         FStar_Syntax_Syntax.Binding_lid (lid2, uu___1)) ->
+          FStar_Ident.lid_equals lid1 lid2
+      | (FStar_Syntax_Syntax.Binding_univ u1,
+         FStar_Syntax_Syntax.Binding_univ u2) ->
+          FStar_Ident.ident_equals u1 u2
+      | uu___ -> false

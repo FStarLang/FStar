@@ -5404,6 +5404,37 @@ let is_tac_implicit_resolved (env:env) (i:implicit) : bool =
 let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
   : list (implicit * implicit_checking_status) =
   
+  (* Meta argument cache: during a single run of this resolve_implicits' function
+  we keep track of all results of the "cacheable" tactics that are used for meta
+  arguments. The only cacheable tactic, for now, is tcresolve. Before trying to run
+  it, we check the cache to see if we have already solved a problem in the same environment
+  and for the same uvar type (in this case, the constraint). If so, we just take that result.
+
+  This is pretty conservative. e.g. in
+    f (1 + 1);
+    g (1 + 1)
+  we cannot reuse the solution for each +, since there is an extra unit binder when
+  we check `g ...`. But it does lead to big gains in expressions like `1 + 1 + 1 ...`. *)
+  let cacheable tac = U.is_fvar PC.tcresolve_lid tac in
+  let __meta_arg_cache : ref (list (term & env_t & typ & term)) = BU.mk_ref [] in
+  let meta_arg_cache_result (tac : term) (e : env_t) (ty : term) (res : term) : unit =
+    __meta_arg_cache := (tac, e, ty, res) :: !__meta_arg_cache
+  in
+  let meta_arg_cache_lookup (tac : term) (e : env_t) (ty : term) : option term =
+    let rec aux l : option term =
+      match l with
+      | [] -> None
+      | (tac', e', ty', res') :: l' ->
+        if U.term_eq tac tac'
+           && FStar.Common.eq_list U.eq_binding e.gamma e'.gamma
+           && U.term_eq ty ty'
+        then Some res'
+        else aux l'
+    in
+    aux !__meta_arg_cache
+  in
+  (* / cache *) 
+
   let rec until_fixpoint (acc:tagged_implicits * bool)
                          (implicits:Env.implicits) 
     : tagged_implicits =
@@ -5434,34 +5465,46 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
 
     | hd::tl ->
       let { imp_reason = reason; imp_tm = tm; imp_uvar = ctx_u; imp_range = r } = hd in
-      let { 
-            uvar_decoration_typ;
-            uvar_decoration_should_check 
-          } = UF.find_decoration ctx_u.ctx_uvar_head
-      in
-      if Env.debug env <| Options.Other "Rel"
-      then BU.print3 "resolve_implicits' loop, imp_tm = %s and ctx_u = %s, is_tac: %s\n"
-             (show tm)
-             (Print.ctx_uvar_to_string ctx_u)
-             (string_of_bool is_tac);
-      if Allow_unresolved? uvar_decoration_should_check
-      then until_fixpoint (out, true) tl
-      else if unresolved ctx_u
-      then (if flex_uvar_has_meta_tac ctx_u
-            then let t = run_meta_arg_tac ctx_u in
-                 // let the unifier handle setting the variable
-                 let extra =
-                   match teq_nosmt env t tm with
-                   | None -> failwith "resolve_implicits: unifying with an unresolved uvar failed?"
-                   | Some g -> g.implicits in
+      let { uvar_decoration_typ; uvar_decoration_should_check } = UF.find_decoration ctx_u.ctx_uvar_head in
+      if Env.debug env <| Options.Other "Rel" then
+        BU.print3 "resolve_implicits' loop, imp_tm = %s and ctx_u = %s, is_tac: %s\n"
+             (show tm) (show ctx_u) (show is_tac);
+      begin match () with
+      | _ when Allow_unresolved? uvar_decoration_should_check ->
+        until_fixpoint (out, true) tl
 
-                 until_fixpoint (out, true) (extra @ tl)
-            else until_fixpoint ((hd, Implicit_unresolved)::out, changed) tl)
-      else if Allow_untyped? uvar_decoration_should_check ||
-              Already_checked? uvar_decoration_should_check ||
-              is_gen
-      then until_fixpoint (out, true) tl
-      else begin
+      | _ when unresolved ctx_u && flex_uvar_has_meta_tac ctx_u ->
+        let Some (Ctx_uvar_meta_tac meta) = ctx_u.ctx_uvar_meta in
+        let m_env : env_t = Dyn.undyn (fst meta) in
+        let tac = snd meta in
+        let typ = U.ctx_uvar_typ ctx_u in
+        let solve_with (t:term) =
+          let extra =
+            match teq_nosmt env t tm with
+            | None -> failwith "resolve_implicits: unifying with an unresolved uvar failed?"
+            | Some g -> g.implicits
+          in
+          until_fixpoint (out, true) (extra @ tl)
+        in
+        if cacheable tac then
+          match meta_arg_cache_lookup tac m_env typ with
+          | Some res -> solve_with res
+          | None ->
+            let t = run_meta_arg_tac ctx_u in
+            meta_arg_cache_result tac m_env typ t;
+            solve_with t
+        else
+          let t = run_meta_arg_tac ctx_u in
+          solve_with t
+
+      | _ when unresolved ctx_u ->
+        until_fixpoint ((hd, Implicit_unresolved)::out, changed) tl
+
+      | _ when Allow_untyped? uvar_decoration_should_check ||
+               Already_checked? uvar_decoration_should_check ||
+               is_gen ->
+        until_fixpoint (out, true) tl
+      | _ ->
         let env = {env with gamma=ctx_u.ctx_uvar_gamma} in
         (*
          * AR: Some opportunities for optimization here,
