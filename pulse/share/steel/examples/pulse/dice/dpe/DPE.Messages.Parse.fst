@@ -217,18 +217,15 @@ fn parse_dpe_cmd (#s:erased (Seq.seq U8.t))
     ensures
       parse_dpe_cmd_post len input s p res
 {
-    let rc = read_deterministically_encoded_cbor_with_typ impl_session_message input len;
-    match rc
-    {
-      ParseError ->
-      {
-        unfold (read_deterministically_encoded_cbor_with_typ_post Spec.session_message input p s ParseError); 
+    let c = read_deterministically_encoded_cbor_with_typ impl_session_message input len;
+    if (not c.read_cbor_is_success) {
+        unfold (read_deterministically_encoded_cbor_with_typ_post Spec.session_message input p s c); 
+        unfold (read_deterministically_encoded_cbor_with_typ_error_post Spec.session_message input p s); 
         fold (parse_dpe_cmd_post len input s p None);
         None #dpe_cmd
-      }
-      ParseSuccess c ->
-      {
-        unfold (read_deterministically_encoded_cbor_with_typ_post Spec.session_message input p s (ParseSuccess c));
+    } else {
+        unfold (read_deterministically_encoded_cbor_with_typ_post Spec.session_message input p s c);
+        unfold (read_deterministically_encoded_cbor_with_typ_success_post Spec.session_message input p s c);
         with vc . assert (raw_data_item_match full_perm c.read_cbor_payload vc);
         with vrem1 . assert (A.pts_to c.read_cbor_remainder #p vrem1);
         stick_consume_r ()
@@ -245,20 +242,17 @@ fn parse_dpe_cmd (#s:erased (Seq.seq U8.t))
         let cbor_str = destr_cbor_string i1;
         stick_trans ();
         with cs ps . assert (A.pts_to cbor_str.cbor_string_payload #ps cs);
-        let msg_rc = read_deterministically_encoded_cbor_with_typ impl_command_message cbor_str.cbor_string_payload (SZ.of_u64 cbor_str.cbor_string_length);
-        match msg_rc
-        {
-          ParseError ->
-          {
-            unfold (read_deterministically_encoded_cbor_with_typ_post Spec.command_message cbor_str.cbor_string_payload ps cs ParseError);
+        let msg = read_deterministically_encoded_cbor_with_typ impl_command_message cbor_str.cbor_string_payload (SZ.of_u64 cbor_str.cbor_string_length);
+        if (not msg.read_cbor_is_success) {
+            unfold (read_deterministically_encoded_cbor_with_typ_post Spec.command_message cbor_str.cbor_string_payload ps cs msg);
+            unfold (read_deterministically_encoded_cbor_with_typ_error_post Spec.command_message cbor_str.cbor_string_payload ps cs);
             elim_implies ();
             serialize_cbor_inj' vc vrem1;
             fold (parse_dpe_cmd_post len input s p None);
             None #dpe_cmd
-          }
-          ParseSuccess msg ->
-          {
-            unfold (read_deterministically_encoded_cbor_with_typ_post Spec.command_message cbor_str.cbor_string_payload ps cs (ParseSuccess msg));
+        } else {
+            unfold (read_deterministically_encoded_cbor_with_typ_post Spec.command_message cbor_str.cbor_string_payload ps cs msg);
+            unfold (read_deterministically_encoded_cbor_with_typ_success_post Spec.command_message cbor_str.cbor_string_payload ps cs msg);
             with vmsg . assert (raw_data_item_match full_perm msg.read_cbor_payload vmsg);
             with vrem2 . assert (A.pts_to msg.read_cbor_remainder #ps vrem2);
             stick_consume_r ()
@@ -294,9 +288,7 @@ fn parse_dpe_cmd (#s:erased (Seq.seq U8.t))
               fold (parse_dpe_cmd_post len input s p (Some res));
               Some res
             }
-          }
         }
-      }
     }
 }
 ```

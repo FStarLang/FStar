@@ -55,19 +55,6 @@ and cbor =
   v: cbor_serialized ->
   cbor
 
-let dummy_cbor : cbor = CBOR_Case_Simple_value 0uy
-
-let cbor_map_entry_key x = x.cbor_map_entry_key
-let cbor_map_entry_value x = x.cbor_map_entry_value
-
-let cbor_map_entry_key_value_inj
-  m1 m2
-= ()
-
-let mk_cbor_map_entry
-  k v
-= Mkcbor_map_entry k v
-
 [@@no_auto_projectors]
 noeq
 type cbor_array_iterator_payload_t =

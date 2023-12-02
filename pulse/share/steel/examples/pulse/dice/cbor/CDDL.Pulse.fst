@@ -353,7 +353,7 @@ noextract [@@noextract_to "krml"]
 let read_cbor_with_typ_success_postcond
   (t: typ)
   (va: Ghost.erased (Seq.seq U8.t))
-  (c: read_cbor_success_t)
+  (c: read_cbor_t)
   (v: raw_data_item)
   (rem: Seq.seq U8.t)
 : Tot prop
@@ -368,7 +368,7 @@ let read_cbor_with_typ_success_post
   (a: A.array U8.t)
   (p: perm)
   (va: Ghost.erased (Seq.seq U8.t))
-  (c: read_cbor_success_t)
+  (c: read_cbor_t)
 : Tot vprop
 = exists_ (fun v -> exists_ (fun rem ->
     raw_data_item_match full_perm c.read_cbor_payload v **
@@ -390,7 +390,7 @@ let read_cbor_with_typ_error_postcond
 let read_cbor_with_typ_error_postcond_intro_typ_fail
   (t: typ)
   (va: Ghost.erased (Seq.seq U8.t))
-  (c: read_cbor_success_t)
+  (c: read_cbor_t)
   (v: raw_data_item)
   (rem: Seq.seq U8.t)
 : Lemma
@@ -418,11 +418,17 @@ let read_cbor_with_typ_post
   (va: Ghost.erased (Seq.seq U8.t))
   (res: read_cbor_t)
 : Tot vprop
-= match res with
-  | ParseError -> read_cbor_with_typ_error_post t a p va
-  | ParseSuccess c -> read_cbor_with_typ_success_post t a p va c
+= if res.read_cbor_is_success
+  then read_cbor_with_typ_success_post t a p va res
+  else read_cbor_with_typ_error_post t a p va
 
 module SZ = FStar.SizeT
+
+inline_for_extraction noextract
+let mk_read_cbor_error
+    (res: read_cbor_t)
+: Tot read_cbor_t
+= {res with read_cbor_is_success = false}
 
 inline_for_extraction noextract [@@noextract_to "krml"]
 ```pulse
@@ -441,24 +447,24 @@ returns res: read_cbor_t
 ensures read_cbor_with_typ_post t a p va res
 {
     let res = read_cbor a sz;
-    if (ParseSuccess? res) {
-        let sres = ParseSuccess?._0 res;
-        rewrite (read_cbor_post a p va res) as (read_cbor_success_post a p va sres);
-        unfold (read_cbor_success_post a p va sres);
-        let test = ft sres.read_cbor_payload;
+    if (res.read_cbor_is_success) {
+        rewrite (read_cbor_post a p va res) as (read_cbor_success_post a p va res);
+        unfold (read_cbor_success_post a p va res);
+        let test = ft res.read_cbor_payload;
         if (test) {
-            fold (read_cbor_with_typ_success_post t a p va sres);
-            rewrite (read_cbor_with_typ_success_post t a p va sres) as (read_cbor_with_typ_post t a p va res);
+            fold (read_cbor_with_typ_success_post t a p va res);
+            rewrite (read_cbor_with_typ_success_post t a p va res) as (read_cbor_with_typ_post t a p va res);
             res
         } else {
-            with v . assert (raw_data_item_match full_perm sres.read_cbor_payload v);
-            with vrem . assert (A.pts_to sres.read_cbor_remainder #p vrem);
-            read_cbor_with_typ_error_postcond_intro_typ_fail t va sres v vrem;
+            with v . assert (raw_data_item_match full_perm res.read_cbor_payload v);
+            with vrem . assert (A.pts_to res.read_cbor_remainder #p vrem);
+            read_cbor_with_typ_error_postcond_intro_typ_fail t va res v vrem;
             elim_stick0 ()
-                #(raw_data_item_match full_perm sres.read_cbor_payload v ** A.pts_to sres.read_cbor_remainder #p vrem);
+                #(raw_data_item_match full_perm res.read_cbor_payload v ** A.pts_to res.read_cbor_remainder #p vrem);
             fold (read_cbor_with_typ_error_post t a p va);
-            rewrite (read_cbor_with_typ_error_post t a p va) as (read_cbor_with_typ_post t a p va ParseError);
-            ParseError
+            let res = mk_read_cbor_error res;
+            rewrite (read_cbor_with_typ_error_post t a p va) as (read_cbor_with_typ_post t a p va res);
+            res
         }
     } else {
         rewrite (read_cbor_post a p va res) as (read_cbor_error_post a p va);
@@ -473,7 +479,7 @@ noextract [@@noextract_to "krml"]
 let read_deterministically_encoded_cbor_with_typ_success_postcond
   (t: typ)
   (va: Ghost.erased (Seq.seq U8.t))
-  (c: read_cbor_success_t)
+  (c: read_cbor_t)
   (v: raw_data_item)
   (rem: Seq.seq U8.t)
 : Tot prop
@@ -495,7 +501,7 @@ let read_deterministically_encoded_cbor_with_typ_error_postcond
 let read_deterministically_encoded_cbor_with_typ_error_postcond_intro_typ_fail
   (t: typ)
   (va: Ghost.erased (Seq.seq U8.t))
-  (c: read_cbor_success_t)
+  (c: read_cbor_t)
   (v: raw_data_item)
   (rem: Seq.seq U8.t)
 : Lemma
@@ -508,6 +514,29 @@ let read_deterministically_encoded_cbor_with_typ_error_postcond_intro_typ_fail
     ))
 = serialize_cbor_with_test_correct v rem (fun v' rem' -> data_item_wf deterministically_encoded_cbor_map_key_order v' == true /\ t v' == true)
 
+let read_deterministically_encoded_cbor_with_typ_success_post
+  (t: typ)
+  (a: A.array U8.t)
+  (p: perm)
+  (va: Ghost.erased (Seq.seq U8.t))
+  (res: read_cbor_t)
+: Tot vprop
+=   exists_ (fun v -> exists_ (fun rem ->
+        raw_data_item_match full_perm res.read_cbor_payload v **
+        A.pts_to res.read_cbor_remainder #p rem **
+        ((raw_data_item_match full_perm res.read_cbor_payload v ** A.pts_to res.read_cbor_remainder #p rem) @==>
+        A.pts_to a #p va) **
+        pure (read_deterministically_encoded_cbor_with_typ_success_postcond t va res v rem)
+    ))
+
+let read_deterministically_encoded_cbor_with_typ_error_post
+  (t: typ)
+  (a: A.array U8.t)
+  (p: perm)
+  (va: Ghost.erased (Seq.seq U8.t))
+: Tot vprop
+= A.pts_to a #p va ** pure (read_deterministically_encoded_cbor_with_typ_error_postcond t va)
+
 let read_deterministically_encoded_cbor_with_typ_post
   (t: typ)
   (a: A.array U8.t)
@@ -515,17 +544,9 @@ let read_deterministically_encoded_cbor_with_typ_post
   (va: Ghost.erased (Seq.seq U8.t))
   (res: read_cbor_t)
 : Tot vprop
-= match res with
-  | ParseError ->
-    A.pts_to a #p va ** pure (read_deterministically_encoded_cbor_with_typ_error_postcond t va)
-  | ParseSuccess c ->
-    exists_ (fun v -> exists_ (fun rem ->
-        raw_data_item_match full_perm c.read_cbor_payload v **
-        A.pts_to c.read_cbor_remainder #p rem **
-        ((raw_data_item_match full_perm c.read_cbor_payload v ** A.pts_to c.read_cbor_remainder #p rem) @==>
-        A.pts_to a #p va) **
-        pure (read_deterministically_encoded_cbor_with_typ_success_postcond t va c v rem)
-    ))
+= if res.read_cbor_is_success
+  then read_deterministically_encoded_cbor_with_typ_success_post t a p va res
+  else read_deterministically_encoded_cbor_with_typ_error_post t a p va
 
 module SZ = FStar.SizeT
 
@@ -546,27 +567,30 @@ returns res: read_cbor_t
 ensures read_deterministically_encoded_cbor_with_typ_post t a p va res
 {
     let res = read_deterministically_encoded_cbor a sz;
-    if (ParseSuccess? res) {
-        let sres = ParseSuccess?._0 res;
-        rewrite (read_deterministically_encoded_cbor_post a p va res) as (read_deterministically_encoded_cbor_success_post a p va sres);
-        unfold (read_deterministically_encoded_cbor_success_post a p va sres);
-        let test = ft sres.read_cbor_payload;
+    if (res.read_cbor_is_success) {
+        rewrite (read_deterministically_encoded_cbor_post a p va res) as (read_deterministically_encoded_cbor_success_post a p va res);
+        unfold (read_deterministically_encoded_cbor_success_post a p va res);
+        let test = ft res.read_cbor_payload;
         if (test) {
-            fold (read_deterministically_encoded_cbor_with_typ_post t a p va (ParseSuccess sres));
+            fold (read_deterministically_encoded_cbor_with_typ_success_post t a p va res);
+            fold (read_deterministically_encoded_cbor_with_typ_post t a p va res);
             res
         } else {
-            with v . assert (raw_data_item_match full_perm sres.read_cbor_payload v);
-            with vrem . assert (A.pts_to sres.read_cbor_remainder #p vrem);
-            read_deterministically_encoded_cbor_with_typ_error_postcond_intro_typ_fail t va sres v vrem;
+            with v . assert (raw_data_item_match full_perm res.read_cbor_payload v);
+            with vrem . assert (A.pts_to res.read_cbor_remainder #p vrem);
+            read_deterministically_encoded_cbor_with_typ_error_postcond_intro_typ_fail t va res v vrem;
             elim_stick0 ()
-                #(raw_data_item_match full_perm sres.read_cbor_payload v ** A.pts_to sres.read_cbor_remainder #p vrem);
-            fold (read_deterministically_encoded_cbor_with_typ_post t a p va ParseError);
-            ParseError
+                #(raw_data_item_match full_perm res.read_cbor_payload v ** A.pts_to res.read_cbor_remainder #p vrem);
+            let res = mk_read_cbor_error res;
+            fold (read_deterministically_encoded_cbor_with_typ_error_post t a p va);
+            fold (read_deterministically_encoded_cbor_with_typ_post t a p va res);
+            res
         }
     } else {
         rewrite (read_deterministically_encoded_cbor_post a p va res) as (read_deterministically_encoded_cbor_error_post a p va);
         unfold (read_deterministically_encoded_cbor_error_post a p va);
-        fold (read_deterministically_encoded_cbor_with_typ_post t a p va ParseError);
+        fold (read_deterministically_encoded_cbor_with_typ_error_post t a p va);
+        fold (read_deterministically_encoded_cbor_with_typ_post t a p va res);
         res
     }
 }

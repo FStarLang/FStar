@@ -41,7 +41,7 @@ fn elim_implies (_:unit) (#p #q:vprop)
 ```
 
 ```pulse
-fn finish (c:read_cbor_success_t)
+fn finish (c:read_cbor_t)
           (#p:perm)
           (#v:erased (raw_data_item))
           (#s:erased (Seq.seq U8.t))
