@@ -66,6 +66,7 @@ let llist = llist'
 
 let intro_llist_nil a =
   ();
+  ();
   rewrite_slprop emp (llist null_llist [])
     (fun m -> pure_interp (null_llist #a == null_llist) m;
            norm_spec [delta; zeta] ((llist (null_llist #a) [])))
