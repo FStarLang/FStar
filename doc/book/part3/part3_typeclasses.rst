@@ -650,7 +650,7 @@ F* infers the typeclass instantiations and the type of ``test`` to be
 
 In ``test2``, F* infers the type ``count_st s monoid_nat_plus (op 0 (op 1
 1)) unit``, and then automatically proves that this type is equivalent
-to the user annotation ``count_st s monoid_nat_plis 2 unit``.
+to the user annotation ``count_st s monoid_nat_plus 2 unit``.
 
 Summary
 -------
