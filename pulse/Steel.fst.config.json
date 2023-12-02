@@ -7,6 +7,7 @@
   "include_dirs": [
     "lib/steel",
     "lib/steel/pulse",
+    "share/steel/examples/steel",
     "share/steel/examples/pulse",
     "share/steel/examples/pulse/bug-reports",
     "share/steel/examples/pulse/by-example",
