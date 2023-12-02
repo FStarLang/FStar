@@ -143,7 +143,7 @@ and trywith (head_fv : fv) (seen:list term) (glb : list fv) (fuel:int) (t typ : 
           debug (fun () -> dump "next"; "apply seems to have worked");
           tcresolve' seen glb (fuel-1))
       ) else (
-        debug (fun () -> "different class");
+        debug (fun () -> "different class: " ^ fv_to_string fv' ^ " <> " ^ fv_to_string head_fv);
         raise NoInst
       )
 
@@ -158,6 +158,7 @@ let rec maybe_intros () : Tac unit =
 
 [@@plugin]
 let tcresolve () : Tac unit =
+    debug (fun () -> dump ""; "tcresolve entry point");
     // We sometimes get goal type as _ -> t
     // So intro if that's the case
     // Not using intros () directly, since that unfolds aggressively if the term is not an arrow
