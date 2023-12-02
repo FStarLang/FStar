@@ -100,11 +100,16 @@ let rec tcresolve' (seen : list term) (glb : list fv) (fuel : int) : Tac unit =
     let g = cur_goal () in
 
     (* Try to detect loops *)
-    if L.existsb (Reflection.V2.TermEq.term_eq g) seen then
-      raise NoInst;
+    if L.existsb (Reflection.V2.TermEq.term_eq g) seen then (
+      debug (fun () -> "loop");
+      raise NoInst
+    );
 
     match head_of g with
-    | None -> fail ("goal does not look like a typeclass")
+    | None ->
+      debug (fun () -> "goal does not look like a typeclass");
+      raise NoInst
+
     | Some head_fv ->
       (* ^ Maybe should check is this really is a class too? *)
       let seen = g :: seen in
@@ -125,15 +130,22 @@ and global (head_fv : fv) (seen : list term) (glb : list fv) (fuel : int) () : T
           glb
 
 and trywith (head_fv : fv) (seen:list term) (glb : list fv) (fuel:int) (t typ : term) : Tac unit =
+    debug (fun () -> "trywith " ^ term_to_string t);
     match head_of (res_typ typ) with
-    | None -> raise NoInst
+    | None ->
+      debug (fun () -> "no head for typ of this? " ^ term_to_string t ^ "    typ=" ^ term_to_string typ);
+      raise NoInst
     | Some fv' ->
       if fv_eq fv' head_fv
       then (
         debug (fun () -> "Trying to apply hypothesis/instance: " ^ term_to_string t);
-        (fun () -> apply_noinst t) `seq` (fun () -> tcresolve' seen glb (fuel-1))
-      ) else
+        (fun () -> apply_noinst t) `seq` (fun () ->
+          debug (fun () -> dump "next"; "apply seems to have worked");
+          tcresolve' seen glb (fuel-1))
+      ) else (
+        debug (fun () -> "different class");
         raise NoInst
+      )
 
 private
 let rec maybe_intros () : Tac unit =

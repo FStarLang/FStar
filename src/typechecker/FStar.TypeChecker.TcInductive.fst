@@ -749,6 +749,8 @@ let check_inductive_well_typedness (env:env_t) (ses:list sigelt) (quals:list qua
     env, (tc, tc_u)::all_tcs, Env.conj_guard g (Env.conj_guard guard g')
   ) tys (env, [], Env.trivial_guard)
   in
+  (* Try to solve some implicits. See issue #3130. *)
+  let g = Rel.resolve_implicits env g in
 
   (* Check each datacon *)
   let datas, g = List.fold_right (fun se (datas, g) ->
