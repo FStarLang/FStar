@@ -126,13 +126,13 @@ let gen_encoding_test_c
      ) ::
     `Instr ("printf(\"Encoding succeeded!\\n\")") ::
     `Instr ("CBOR_read_cbor_t target_cbor = CBOR_read_cbor(source_bytes, " ^ size_s ^ ")") ::
-    `If ("target_cbor.tag == CBOR_ParseError") ::
+    `If ("! (target_cbor.read_cbor_is_success)") ::
     `Block (
         `Instr ("printf(\"Decoding failed!\\n\")") ::
         `Instr ("return 1") ::
         []
     ) ::
-    `If ("! (CBOR_Pulse_cbor_is_equal(source_cbor, target_cbor._0.read_cbor_payload))") ::
+    `If ("! (CBOR_Pulse_cbor_is_equal(source_cbor, target_cbor.read_cbor_payload))") ::
     `Block (
         `Instr ("printf(\"Decoding mismatch!\\n\")") ::
         `Instr ("return 1") ::
