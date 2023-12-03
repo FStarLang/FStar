@@ -797,6 +797,10 @@ let flex_uvar_has_meta_tac u =
   | Some (Ctx_uvar_meta_tac _) -> true
   | _ -> false
 
+let flex_uvar_meta_tac_env u : env_t =
+  match u.ctx_uvar_meta with
+  | Some (Ctx_uvar_meta_tac (denv, _)) -> Dyn.undyn denv
+
 let flex_t_to_string (Flex (_, c, args)) =
     BU.format2 "%s [%s]" (show c) (Print.args_to_string args)
 
@@ -2105,6 +2109,11 @@ let lazy_complete_repr (k:lazy_kind) : bool =
   | Lazy_universe -> true
   | _ -> false
 
+let has_free_uvars (t:term) : bool =
+  not (BU.set_is_empty (Free.uvars_uncached t))
+let env_has_free_uvars (e:env_t) : bool =
+  List.existsb (fun b -> has_free_uvars b.binder_bv.sort) (Env.all_binders e)
+
 (******************************************************************************************************)
 (* Main solving algorithm begins here *)
 (******************************************************************************************************)
@@ -3245,7 +3254,9 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
     let should_run_meta_arg_tac (flex:flex_t) =
       let uv = flex_uvar flex in
       flex_uvar_has_meta_tac uv &&
-      BU.set_is_empty (Free.uvars (U.ctx_uvar_typ uv)) in
+      not (has_free_uvars (U.ctx_uvar_typ uv)) &&
+      not (env_has_free_uvars (flex_uvar_meta_tac_env uv))
+    in
 
     let run_meta_arg_tac_and_try_again (flex:flex_t) =
       let uv = flex_uvar flex in
@@ -5431,20 +5442,35 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
   in
   (* / cache *) 
 
-  let rec until_fixpoint (acc:tagged_implicits * bool)
+  let rec until_fixpoint (acc : tagged_implicits & (*changed:*)bool & (*defer_open_metas:*)bool )
                          (implicits:Env.implicits) 
     : tagged_implicits =
 
-    let out, changed = acc in
+    let out, changed, defer_open_metas = acc in
+    (* changed: we made some progress
+       defer_open_metas: starts at true, it means to not try to run
+         meta arg tactics in environments/types that have unresolved
+         uvars. We first do a pass with this set to true, and if nothing
+         changed, we then give up and set it to false, trying to eagerly
+         solve some partially-unresolved constraints. This is definitely
+         not ideal, maybe the right thing to do is to never run metas
+         in open contexts, but that is raising many regressions rihgt now,
+         particularly in Steel (which uses the resolve_implicits hook pervasively). *)
 
     match implicits with
     | [] ->
-      if not changed
-      then //Nothing changed in this iteration of the loop
+      if changed then (
+        (* We made some progress, keep going from the start *)
+        until_fixpoint ([], false, true) (List.map fst out)
+      ) else if defer_open_metas then (
+        (* No progress... but we could try being more eager with metas. *)
+        until_fixpoint ([], false, false) (List.map fst out)
+      ) else (
+           //Nothing changed in this iteration of the loop
            //We will try to make progress by either solving a single valued implicit,
            //  or solving an implicit that generates univ constraint, with force flag on
            let imps, changed = try_solve_single_valued_implicits env is_tac (List.map fst out) in
-           if changed then until_fixpoint ([], false) imps
+           if changed then until_fixpoint ([], false, true) imps
            else let imp_opt, rest = pick_a_univ_deffered_implicit out in
                 (match imp_opt with
                  | None -> rest  //No such implicit exists, return remaining implicits
@@ -5456,8 +5482,8 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
                        imp
                        is_tac
                        force_univ_constraints |> must in
-                   until_fixpoint ([], false) (imps@List.map fst rest))
-      else until_fixpoint ([], false) (List.map fst out)
+                   until_fixpoint ([], false, true) (imps@List.map fst rest))
+      )
 
     | hd::tl ->
       let { imp_reason = reason; imp_tm = tm; imp_uvar = ctx_u; imp_range = r } = hd in
@@ -5467,39 +5493,47 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
              (show tm) (show ctx_u) (show is_tac);
       begin match () with
       | _ when Allow_unresolved? uvar_decoration_should_check ->
-        until_fixpoint (out, true) tl
+        until_fixpoint (out, true, defer_open_metas) tl
 
       | _ when unresolved ctx_u && flex_uvar_has_meta_tac ctx_u ->
         let Some (Ctx_uvar_meta_tac meta) = ctx_u.ctx_uvar_meta in
         let m_env : env_t = Dyn.undyn (fst meta) in
         let tac = snd meta in
         let typ = U.ctx_uvar_typ ctx_u in
-        let solve_with (t:term) =
-          let extra =
-            match teq_nosmt env t tm with
-            | None -> failwith "resolve_implicits: unifying with an unresolved uvar failed?"
-            | Some g -> g.implicits
+        if defer_open_metas && (has_free_uvars typ || env_has_free_uvars m_env) then (
+          (* If the result type for this meta arg has a free uvar, delay it.
+          Some other meta arg being solved may instantiate the uvar. See #3130. *)
+          if Env.debug env <| Options.Other "Rel" then
+            BU.print1 "Deferring implicit due to open ctx/typ %s\n" (show ctx_u);
+          until_fixpoint ((hd, Implicit_unresolved)::out, changed, defer_open_metas) tl
+        ) else (
+          let solve_with (t:term) =
+            let extra =
+              match teq_nosmt env t tm with
+              | None -> failwith "resolve_implicits: unifying with an unresolved uvar failed?"
+              | Some g -> g.implicits
+            in
+            until_fixpoint (out, true, defer_open_metas) (extra @ tl)
           in
-          until_fixpoint (out, true) (extra @ tl)
-        in
-        if cacheable tac then
-          match meta_arg_cache_lookup tac m_env typ with
-          | Some res -> solve_with res
-          | None ->
+          if cacheable tac then
+            match meta_arg_cache_lookup tac m_env typ with
+            | Some res -> solve_with res
+            | None ->
+              let t = run_meta_arg_tac ctx_u in
+              meta_arg_cache_result tac m_env typ t;
+              solve_with t
+          else
             let t = run_meta_arg_tac ctx_u in
-            meta_arg_cache_result tac m_env typ t;
             solve_with t
-        else
-          let t = run_meta_arg_tac ctx_u in
-          solve_with t
+        )
 
       | _ when unresolved ctx_u ->
-        until_fixpoint ((hd, Implicit_unresolved)::out, changed) tl
+        until_fixpoint ((hd, Implicit_unresolved)::out, changed, defer_open_metas) tl
 
       | _ when Allow_untyped? uvar_decoration_should_check ||
                Already_checked? uvar_decoration_should_check ||
                is_gen ->
-        until_fixpoint (out, true) tl
+        until_fixpoint (out, true, defer_open_metas) tl
       | _ ->
         let env = {env with gamma=ctx_u.ctx_uvar_gamma} in
         (*
@@ -5522,7 +5556,7 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
                then failwith "Impossible: check_implicit_solution_and_discharge_guard for tac must return Some []"
                else ()
           else ();
-          until_fixpoint (out, true) tl
+          until_fixpoint (out, true, defer_open_metas) tl
         end
         else
         begin
@@ -5536,14 +5570,14 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
 
           match imps_opt with
           | None ->
-            until_fixpoint ((hd, Implicit_checking_defers_univ_constraint)::out, changed) tl  //Move hd to out
+            until_fixpoint ((hd, Implicit_checking_defers_univ_constraint)::out, changed, defer_open_metas) tl  //Move hd to out
           | Some imps ->
             //add imps to out
-            until_fixpoint ((imps |> List.map (fun i -> i, Implicit_unresolved))@out, true) tl
+            until_fixpoint ((imps |> List.map (fun i -> i, Implicit_unresolved))@out, true, defer_open_metas) tl
         end
       end
   in
-  until_fixpoint ([], false) implicits
+  until_fixpoint ([], false, true) implicits
 
 let resolve_implicits env g =
     if Env.debug env <| Options.Other "ResolveImplicitsHook"
