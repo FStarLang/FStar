@@ -25,6 +25,7 @@ open FStar.Getopt
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
 open FStar.Syntax.DsEnv
+open FStar.Class.Show
 
 (* Module abbreviations for the universal type-checker  *)
 module Syntax  = FStar.Syntax.Syntax
@@ -93,6 +94,12 @@ type tc_result_t =
   | Unknown
   | Invalid of string  //reason why this is invalid
   | Valid   of string  //digest of the checked file
+
+instance _ : showable tc_result_t = {
+  show = (function Unknown   -> "Unknown"
+                 | Invalid s -> "Invalid " ^ show s
+                 | Valid   s -> "Valid " ^ show s);
+}
 
 (*
  * The cache of checked files

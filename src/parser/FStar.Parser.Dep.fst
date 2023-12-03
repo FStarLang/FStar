@@ -34,6 +34,7 @@ open FStar.Const
 open FStar.String
 open FStar.Ident
 open FStar.Errors
+open FStar.Class.Show
 
 module Const = FStar.Parser.Const
 module BU = FStar.Compiler.Util
@@ -141,6 +142,10 @@ let dep_to_string = function
     | PreferInterface f -> "PreferInterface " ^ f
     | UseImplementation f -> "UseImplementation " ^ f
     | FriendImplementation f -> "FriendImplementation " ^ f
+instance showable_dependence : showable dependence = {
+  show = dep_to_string;
+}
+
 type dependences = list dependence
 let empty_dependences = []
 type dep_node = {
@@ -763,7 +768,7 @@ let collect_one
   if data_from_cache |> is_some then begin  //we found the parsing data in the checked file
     let deps, has_inline_for_extraction, mo_roots = from_parsing_data (data_from_cache |> must) original_map filename in
     if Options.debug_at_level_no_module (Options.Other "Dep") then
-      BU.print2 "Reading the parsing data for %s from its checked file .. found [%s]\n" filename (List.map dep_to_string deps |> String.concat ", ");
+      BU.print2 "Reading the parsing data for %s from its checked file .. found [%s]\n" filename (show deps);
     data_from_cache |> must,
     deps, has_inline_for_extraction, mo_roots
   end
@@ -1233,8 +1238,7 @@ let topological_dependences_of'
     | White ->
         if Options.debug_at_level_no_module (Options.Other "Dep")
         then BU.print2 "Visiting %s: direct deps are %s\n"
-                filename
-                (String.concat ", " (List.map dep_to_string dep_node.edges));
+                filename (show dep_node.edges);
         (* Unvisited. Compute. *)
         deps_add_dep dep_graph filename ({dep_node with color=Gray});
         let all_friends, all_files =
