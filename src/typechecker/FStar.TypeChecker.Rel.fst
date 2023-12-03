@@ -59,8 +59,6 @@ let is_base_type env typ =
     | Tm_type _ -> true
     | _ -> false
 
-let print_ctx_uvar ctx_uvar = Print.ctx_uvar_to_string ctx_uvar
-
 let binders_as_bv_set (bs:binders) =
     FStar.Compiler.Util.as_set (List.map (fun b -> b.binder_bv) bs)
                                Syntax.order_bv
@@ -329,7 +327,7 @@ let term_to_string t =
     match head.n with
     | Tm_uvar (u, s) ->
       BU.format3 "%s%s %s"
-            (Print.ctx_uvar_to_string u)
+            (show u)
             (match fst s with | [] -> "" | s -> BU.format1 "@<%s>" (Print.subst_to_string (List.hd s)))
             (Print.args_to_string args)
     | _ -> show t
@@ -577,7 +575,7 @@ let set_uvar env u (should_check_opt:option S.should_check_uvar) t =
   // if Env.debug env <| Options.Other "Rel"
   // then (
   //   BU.print2 "Setting uvar %s to %s\n"
-  //     (Print.ctx_uvar_to_string u)
+  //     (show u)
   //     (show t);
   //   match Unionfind.find u.ctx_uvar_head with
   //   | None -> ()
@@ -800,7 +798,7 @@ let flex_uvar_has_meta_tac u =
   | _ -> false
 
 let flex_t_to_string (Flex (_, c, args)) =
-    BU.format2 "%s [%s]" (print_ctx_uvar c) (Print.args_to_string args)
+    BU.format2 "%s [%s]" (show c) (Print.args_to_string args)
 
 let is_flex t =
     let head, _args = U.head_and_args t in
@@ -901,7 +899,7 @@ let ensure_no_uvar_subst env (t0:term) (wl:worklist)
         let sol = S.mk_Tm_app t_v args_sol t0.pos in
         if Env.debug env <| Options.Other "Rel"
         then BU.print2 "ensure_no_uvar_subst solving %s with %s\n"
-               (Print.ctx_uvar_to_string uv)
+               (show uv)
                (show sol);
         set_uvar env uv (Some Already_checked) sol;
 
@@ -994,7 +992,7 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
         if debug wl <| Options.Other "Rel"
         then BU.print3 "Solving %s (%s) with formula %s\n"
                             (string_of_int (p_pid prob))
-                            (print_ctx_uvar uv)
+                            (show uv)
                             (show phi);
         let phi = U.abs xs phi (Some (U.residual_tot U.ktype0)) in
         def_check_scoped (p_loc prob) ("solve_prob'.sol." ^ string_of_int (p_pid prob))
@@ -1004,7 +1002,7 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
     let uv = p_guard_uvar prob in
     let fail () =
         failwith (BU.format2 "Impossible: this instance %s has already been assigned a solution\n%s\n"
-                              (Print.ctx_uvar_to_string uv)
+                              (show uv)
                               (show (p_guard prob)))
     in
     let args_as_binders args =
@@ -1843,8 +1841,8 @@ let run_meta_arg_tac (ctx_u:ctx_uvar) : term =
   match ctx_u.ctx_uvar_meta with
   | Some (Ctx_uvar_meta_tac (env_dyn, tau)) ->
     let env : Env.env = FStar.Compiler.Dyn.undyn env_dyn in
-    if Env.debug env (Options.Other "Tac")
-    then BU.print1 "Running tactic for meta-arg %s\n" (Print.ctx_uvar_to_string ctx_u);
+    if Env.debug env (Options.Other "Tac") then
+      BU.print1 "Running tactic for meta-arg %s\n" (show ctx_u);
     Errors.with_ctx "Running tactic for meta-arg"
       (fun () -> env.synth_hook env (U.ctx_uvar_typ ctx_u) tau)
   | _ ->
@@ -2627,7 +2625,7 @@ and imitate_arrow (orig:prob) (wl:worklist)
 
             | ({binder_bv=x;binder_qual=imp;binder_positivity=pqual;binder_attrs=attrs})::formals ->
               let _ctx_u_x, u_x, wl = copy_uvar u_lhs (bs_lhs@bs) (U.type_u() |> fst) wl in
-              //printfn "Generated formal %s where %s" (show t_y) (Print.ctx_uvar_to_string ctx_u_x);
+              //printfn "Generated formal %s where %s" (show t_y) (show ctx_u_x);
               let y = S.new_bv (Some (S.range_of_bv x)) u_x in
               let b = S.mk_binder_with_attrs y imp pqual attrs in
               aux (bs@[b]) (bs_terms@[U.arg_of_non_null_binder b]) formals wl
@@ -3252,10 +3250,8 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
     let run_meta_arg_tac_and_try_again (flex:flex_t) =
       let uv = flex_uvar flex in
       let t = run_meta_arg_tac uv in
-      if debug wl <| Options.Other "Rel"
-      then BU.print2 "solve_t_flex_flex: solving meta arg uvar %s with %s\n"
-             (Print.ctx_uvar_to_string uv)
-             (show t);
+      if debug wl <| Options.Other "Rel" then
+        BU.print2 "solve_t_flex_flex: solving meta arg uvar %s with %s\n" (show uv) (show t);
       set_uvar env uv None t;
       solve (attempt [orig] wl) in
 
@@ -5327,7 +5323,7 @@ let check_implicit_solution_and_discharge_guard env
          | Inr print_err ->
            raise_error (Errors.Fatal_FailToResolveImplicitArgument,
                         BU.format5 "Core checking failed for implicit %s (is_tac: %s) (reason: %s) (%s <: %s)"
-                          (Print.ctx_uvar_to_string imp_uvar)
+                          (show imp_uvar)
                           (string_of_bool is_tac)
                           imp_reason
                           (show imp_tm)
