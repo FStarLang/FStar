@@ -3252,6 +3252,8 @@ and solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:flex_t) (rhs:term)
 *)
 and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
     let should_run_meta_arg_tac (flex:flex_t) =
+      (* If this flex has a meta-arg, and the problem is fully
+      defined (no uvars in env/typ), then we can run it now. *)
       let uv = flex_uvar flex in
       flex_uvar_has_meta_tac uv &&
       not (has_free_uvars (U.ctx_uvar_typ uv)) &&
@@ -3342,7 +3344,10 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
                                            ^"\trhs=" ^u_rhs.ctx_uvar_reason)
                                          wl range gamma_w ctx_w new_uvar_typ
                                          new_uvar_should_check
-                                         None in
+                                         (if Some? u_lhs.ctx_uvar_meta
+                                          then u_lhs.ctx_uvar_meta
+                                          else u_rhs.ctx_uvar_meta) // Try to retain the meta, if any
+                   in
                    let w_app = S.mk_Tm_app w (List.map (fun ({binder_bv=z}) -> S.as_arg (S.bv_to_name z)) zs) w.pos in
                    let _ =
                      if debug wl <| Options.Other "Rel"
