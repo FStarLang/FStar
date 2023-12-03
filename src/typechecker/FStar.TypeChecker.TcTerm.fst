@@ -2765,7 +2765,17 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
                                                             (Range.use_range t.pos))
             in
             let varg, _, implicits =
-              Env.new_implicit_var_aux "Instantiating meta argument in application" r env t Strict (Some ctx_uvar_meta)
+              let msg =
+                let is_typeclass =
+                  match ctx_uvar_meta with
+                  | Ctx_uvar_meta_tac (_, tau) -> U.is_fvar Const.tcresolve_lid tau
+                  | _ -> false
+                in
+                if is_typeclass
+                then "Typeclass constraint argument"
+                else "Instantiating meta argument in application"
+              in
+              Env.new_implicit_var_aux msg r env t Strict (Some ctx_uvar_meta)
             in
             let subst = NT(x, varg)::subst in
             let aq = U.aqual_of_binder (List.hd bs) in
