@@ -19,5 +19,8 @@ let test5 (y : it 6) = let p : Type0 = y == mk6 in ()
 let test6 () = let p : Type0 = mk5 == mk6 in ()
 let test7 () = let p : Type0 = mk6 == mk5 in ()
 
+(* These are ambiguous. They only work since we are running the meta
+args in contexts with yet-unresolved uvars, which is somewhat shady to
+do. If we forbid that, and these break, it's not too bad. *)
 let test8 (x:_) = let p : Type0 = mk5 == x /\ x == mk6 in ()
 let test9 (x:_) = let p : Type0 = mk6 == x /\ x == mk5 in ()

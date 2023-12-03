@@ -36,8 +36,8 @@
 
 >>]
 >> Got issues: [
-* Error 66 at Bug2021.fst(37,13-37,14):
-  - Failed to resolved implicit argument ?11
+* Error 66 at Bug2021.fst(37,13-37,17):
+  - Failed to resolved implicit argument ?13
     of type Prims.int
     introduced for Instantiating implicit argument in application
   - See also Bug2021.fst(36,11-36,12)
