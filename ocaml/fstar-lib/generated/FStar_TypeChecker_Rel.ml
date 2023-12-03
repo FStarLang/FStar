@@ -65,8 +65,6 @@ let (is_base_type :
            | FStar_Syntax_Syntax.Tm_fvar uu___2 -> true
            | FStar_Syntax_Syntax.Tm_type uu___2 -> true
            | uu___2 -> false)
-let (print_ctx_uvar : FStar_Syntax_Syntax.ctx_uvar -> Prims.string) =
-  fun ctx_uvar -> FStar_Syntax_Print.ctx_uvar_to_string ctx_uvar
 let (binders_as_bv_set :
   FStar_Syntax_Syntax.binders ->
     FStar_Syntax_Syntax.bv FStar_Compiler_Util.set)
@@ -868,7 +866,8 @@ let (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
     | (head, args) ->
         (match head.FStar_Syntax_Syntax.n with
          | FStar_Syntax_Syntax.Tm_uvar (u, s) ->
-             let uu___1 = FStar_Syntax_Print.ctx_uvar_to_string u in
+             let uu___1 =
+               FStar_Class_Show.show FStar_Syntax_Print.showable_ctxu u in
              let uu___2 =
                match FStar_Pervasives_Native.fst s with
                | [] -> ""
@@ -1936,11 +1935,17 @@ let (flex_uvar_has_meta_tac : FStar_Syntax_Syntax.ctx_uvar -> Prims.bool) =
     | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Ctx_uvar_meta_tac
         uu___) -> true
     | uu___ -> false
+let (flex_uvar_meta_tac_env :
+  FStar_Syntax_Syntax.ctx_uvar -> FStar_TypeChecker_Env.env_t) =
+  fun u ->
+    match u.FStar_Syntax_Syntax.ctx_uvar_meta with
+    | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Ctx_uvar_meta_tac
+        (denv, uu___)) -> FStar_Compiler_Dyn.undyn denv
 let (flex_t_to_string : flex_t -> Prims.string) =
   fun uu___ ->
     match uu___ with
     | Flex (uu___1, c, args) ->
-        let uu___2 = print_ctx_uvar c in
+        let uu___2 = FStar_Class_Show.show FStar_Syntax_Print.showable_ctxu c in
         let uu___3 = FStar_Syntax_Print.args_to_string args in
         FStar_Compiler_Util.format2 "%s [%s]" uu___2 uu___3
 let (is_flex : FStar_Syntax_Syntax.term -> Prims.bool) =
@@ -2046,8 +2051,8 @@ let (ensure_no_uvar_subst :
                                   if uu___6
                                   then
                                     let uu___7 =
-                                      FStar_Syntax_Print.ctx_uvar_to_string
-                                        uv in
+                                      FStar_Class_Show.show
+                                        FStar_Syntax_Print.showable_ctxu uv in
                                     let uu___8 =
                                       FStar_Class_Show.show
                                         FStar_Syntax_Print.showable_term sol in
@@ -2221,7 +2226,8 @@ let (solve_prob' :
                 if uu___2
                 then
                   let uu___3 = FStar_Compiler_Util.string_of_int (p_pid prob) in
-                  let uu___4 = print_ctx_uvar uv in
+                  let uu___4 =
+                    FStar_Class_Show.show FStar_Syntax_Print.showable_ctxu uv in
                   let uu___5 =
                     FStar_Class_Show.show FStar_Syntax_Print.showable_term
                       phi1 in
@@ -2251,7 +2257,8 @@ let (solve_prob' :
              let uv = p_guard_uvar prob in
              let fail uu___1 =
                let uu___2 =
-                 let uu___3 = FStar_Syntax_Print.ctx_uvar_to_string uv in
+                 let uu___3 =
+                   FStar_Class_Show.show FStar_Syntax_Print.showable_ctxu uv in
                  let uu___4 =
                    FStar_Class_Show.show FStar_Syntax_Print.showable_term
                      (p_guard prob) in
@@ -4182,7 +4189,8 @@ let (run_meta_arg_tac :
             FStar_TypeChecker_Env.debug env (FStar_Options.Other "Tac") in
           if uu___1
           then
-            let uu___2 = FStar_Syntax_Print.ctx_uvar_to_string ctx_u in
+            let uu___2 =
+              FStar_Class_Show.show FStar_Syntax_Print.showable_ctxu ctx_u in
             FStar_Compiler_Util.print1 "Running tactic for meta-arg %s\n"
               uu___2
           else ());
@@ -4850,6 +4858,19 @@ let (lazy_complete_repr : FStar_Syntax_Syntax.lazy_kind -> Prims.bool) =
     | FStar_Syntax_Syntax.Lazy_sigelt -> true
     | FStar_Syntax_Syntax.Lazy_universe -> true
     | uu___ -> false
+let (has_free_uvars : FStar_Syntax_Syntax.term -> Prims.bool) =
+  fun t ->
+    let uu___ =
+      let uu___1 = FStar_Syntax_Free.uvars_uncached t in
+      FStar_Compiler_Util.set_is_empty uu___1 in
+    Prims.op_Negation uu___
+let (env_has_free_uvars : FStar_TypeChecker_Env.env_t -> Prims.bool) =
+  fun e ->
+    let uu___ = FStar_TypeChecker_Env.all_binders e in
+    FStar_Compiler_List.existsb
+      (fun b ->
+         has_free_uvars
+           (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort) uu___
 let rec (solve : worklist -> solution) =
   fun probs ->
     (let uu___1 =
@@ -7501,11 +7522,16 @@ and (solve_t_flex_flex :
           fun rhs ->
             let should_run_meta_arg_tac flex =
               let uv = flex_uvar flex in
-              (flex_uvar_has_meta_tac uv) &&
+              ((flex_uvar_has_meta_tac uv) &&
+                 (let uu___ =
+                    let uu___1 = FStar_Syntax_Util.ctx_uvar_typ uv in
+                    has_free_uvars uu___1 in
+                  Prims.op_Negation uu___))
+                &&
                 (let uu___ =
-                   let uu___1 = FStar_Syntax_Util.ctx_uvar_typ uv in
-                   FStar_Syntax_Free.uvars uu___1 in
-                 FStar_Compiler_Util.set_is_empty uu___) in
+                   let uu___1 = flex_uvar_meta_tac_env uv in
+                   env_has_free_uvars uu___1 in
+                 Prims.op_Negation uu___) in
             let run_meta_arg_tac_and_try_again flex =
               let uv = flex_uvar flex in
               let t = run_meta_arg_tac uv in
@@ -7514,7 +7540,8 @@ and (solve_t_flex_flex :
                    (FStar_Options.Other "Rel") in
                if uu___1
                then
-                 let uu___2 = FStar_Syntax_Print.ctx_uvar_to_string uv in
+                 let uu___2 =
+                   FStar_Class_Show.show FStar_Syntax_Print.showable_ctxu uv in
                  let uu___3 =
                    FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
                  FStar_Compiler_Util.print2
@@ -7720,7 +7747,13 @@ and (solve_t_flex_flex :
                                                             ctx_w
                                                             new_uvar_typ
                                                             new_uvar_should_check
-                                                            FStar_Pervasives_Native.None in
+                                                            (if
+                                                               FStar_Pervasives_Native.uu___is_Some
+                                                                 u_lhs.FStar_Syntax_Syntax.ctx_uvar_meta
+                                                             then
+                                                               u_lhs.FStar_Syntax_Syntax.ctx_uvar_meta
+                                                             else
+                                                               u_rhs.FStar_Syntax_Syntax.ctx_uvar_meta) in
                                                         (match uu___23 with
                                                          | (uu___24, w, wl1)
                                                              ->
@@ -15080,7 +15113,8 @@ let (check_implicit_solution_and_discharge_guard :
                               let uu___5 =
                                 let uu___6 =
                                   let uu___7 =
-                                    FStar_Syntax_Print.ctx_uvar_to_string
+                                    FStar_Class_Show.show
+                                      FStar_Syntax_Print.showable_ctxu
                                       imp_uvar in
                                   let uu___8 =
                                     FStar_Compiler_Util.string_of_bool is_tac in
@@ -15230,48 +15264,58 @@ let (resolve_implicits' :
           let rec until_fixpoint acc implicits1 =
             let uu___ = acc in
             match uu___ with
-            | (out, changed) ->
+            | (out, changed, defer_open_metas) ->
                 (match implicits1 with
                  | [] ->
-                     if Prims.op_Negation changed
+                     if changed
                      then
                        let uu___1 =
-                         let uu___2 =
-                           FStar_Compiler_List.map
-                             FStar_Pervasives_Native.fst out in
-                         try_solve_single_valued_implicits env is_tac uu___2 in
-                       (match uu___1 with
-                        | (imps, changed1) ->
-                            if changed1
-                            then until_fixpoint ([], false) imps
-                            else
-                              (let uu___3 = pick_a_univ_deffered_implicit out in
-                               match uu___3 with
-                               | (imp_opt, rest) ->
-                                   (match imp_opt with
-                                    | FStar_Pervasives_Native.None -> rest
-                                    | FStar_Pervasives_Native.Some imp ->
-                                        let force_univ_constraints = true in
-                                        let imps1 =
-                                          let uu___4 =
-                                            check_implicit_solution_and_discharge_guard
-                                              env imp is_tac
-                                              force_univ_constraints in
-                                          FStar_Compiler_Effect.op_Bar_Greater
-                                            uu___4 FStar_Compiler_Util.must in
-                                        let uu___4 =
-                                          let uu___5 =
-                                            FStar_Compiler_List.map
-                                              FStar_Pervasives_Native.fst
-                                              rest in
-                                          FStar_Compiler_List.op_At imps1
-                                            uu___5 in
-                                        until_fixpoint ([], false) uu___4)))
+                         FStar_Compiler_List.map FStar_Pervasives_Native.fst
+                           out in
+                       until_fixpoint ([], false, true) uu___1
                      else
-                       (let uu___2 =
-                          FStar_Compiler_List.map FStar_Pervasives_Native.fst
-                            out in
-                        until_fixpoint ([], false) uu___2)
+                       if defer_open_metas
+                       then
+                         (let uu___2 =
+                            FStar_Compiler_List.map
+                              FStar_Pervasives_Native.fst out in
+                          until_fixpoint ([], false, false) uu___2)
+                       else
+                         (let uu___3 =
+                            let uu___4 =
+                              FStar_Compiler_List.map
+                                FStar_Pervasives_Native.fst out in
+                            try_solve_single_valued_implicits env is_tac
+                              uu___4 in
+                          match uu___3 with
+                          | (imps, changed1) ->
+                              if changed1
+                              then until_fixpoint ([], false, true) imps
+                              else
+                                (let uu___5 =
+                                   pick_a_univ_deffered_implicit out in
+                                 match uu___5 with
+                                 | (imp_opt, rest) ->
+                                     (match imp_opt with
+                                      | FStar_Pervasives_Native.None -> rest
+                                      | FStar_Pervasives_Native.Some imp ->
+                                          let force_univ_constraints = true in
+                                          let imps1 =
+                                            let uu___6 =
+                                              check_implicit_solution_and_discharge_guard
+                                                env imp is_tac
+                                                force_univ_constraints in
+                                            FStar_Compiler_Effect.op_Bar_Greater
+                                              uu___6 FStar_Compiler_Util.must in
+                                          let uu___6 =
+                                            let uu___7 =
+                                              FStar_Compiler_List.map
+                                                FStar_Pervasives_Native.fst
+                                                rest in
+                                            FStar_Compiler_List.op_At imps1
+                                              uu___7 in
+                                          until_fixpoint ([], false, true)
+                                            uu___6)))
                  | hd::tl ->
                      let uu___1 = hd in
                      (match uu___1 with
@@ -15316,7 +15360,9 @@ let (resolve_implicits' :
                                  | uu___5 when
                                      FStar_Syntax_Syntax.uu___is_Allow_unresolved
                                        uvar_decoration_should_check
-                                     -> until_fixpoint (out, true) tl
+                                     ->
+                                     until_fixpoint
+                                       (out, true, defer_open_metas) tl
                                  | uu___5 when
                                      (unresolved ctx_u) &&
                                        (flex_uvar_has_meta_tac ctx_u)
@@ -15336,43 +15382,73 @@ let (resolve_implicits' :
                                           let typ =
                                             FStar_Syntax_Util.ctx_uvar_typ
                                               ctx_u in
-                                          let solve_with t =
-                                            let extra =
-                                              let uu___7 = teq_nosmt env t tm in
-                                              match uu___7 with
-                                              | FStar_Pervasives_Native.None
-                                                  ->
-                                                  failwith
-                                                    "resolve_implicits: unifying with an unresolved uvar failed?"
-                                              | FStar_Pervasives_Native.Some
-                                                  g ->
-                                                  g.FStar_TypeChecker_Common.implicits in
-                                            until_fixpoint (out, true)
-                                              (FStar_Compiler_List.op_At
-                                                 extra tl) in
-                                          let uu___7 = cacheable tac in
+                                          let uu___7 =
+                                            defer_open_metas &&
+                                              ((has_free_uvars typ) ||
+                                                 (env_has_free_uvars m_env)) in
                                           if uu___7
                                           then
-                                            let uu___8 =
-                                              meta_arg_cache_lookup tac m_env
-                                                typ in
-                                            (match uu___8 with
-                                             | FStar_Pervasives_Native.Some
-                                                 res -> solve_with res
-                                             | FStar_Pervasives_Native.None
-                                                 ->
-                                                 let t =
-                                                   run_meta_arg_tac ctx_u in
-                                                 (meta_arg_cache_result tac
-                                                    m_env typ t;
-                                                  solve_with t))
+                                            ((let uu___9 =
+                                                FStar_Compiler_Effect.op_Less_Bar
+                                                  (FStar_TypeChecker_Env.debug
+                                                     env)
+                                                  (FStar_Options.Other "Rel") in
+                                              if uu___9
+                                              then
+                                                let uu___10 =
+                                                  FStar_Class_Show.show
+                                                    FStar_Syntax_Print.showable_ctxu
+                                                    ctx_u in
+                                                FStar_Compiler_Util.print1
+                                                  "Deferring implicit due to open ctx/typ %s\n"
+                                                  uu___10
+                                              else ());
+                                             until_fixpoint
+                                               (((hd, Implicit_unresolved) ::
+                                                 out), changed,
+                                                 defer_open_metas) tl)
                                           else
-                                            (let t = run_meta_arg_tac ctx_u in
-                                             solve_with t))
+                                            (let solve_with t =
+                                               let extra =
+                                                 let uu___9 =
+                                                   teq_nosmt env t tm in
+                                                 match uu___9 with
+                                                 | FStar_Pervasives_Native.None
+                                                     ->
+                                                     failwith
+                                                       "resolve_implicits: unifying with an unresolved uvar failed?"
+                                                 | FStar_Pervasives_Native.Some
+                                                     g ->
+                                                     g.FStar_TypeChecker_Common.implicits in
+                                               until_fixpoint
+                                                 (out, true,
+                                                   defer_open_metas)
+                                                 (FStar_Compiler_List.op_At
+                                                    extra tl) in
+                                             let uu___9 = cacheable tac in
+                                             if uu___9
+                                             then
+                                               let uu___10 =
+                                                 meta_arg_cache_lookup tac
+                                                   m_env typ in
+                                               match uu___10 with
+                                               | FStar_Pervasives_Native.Some
+                                                   res -> solve_with res
+                                               | FStar_Pervasives_Native.None
+                                                   ->
+                                                   let t =
+                                                     run_meta_arg_tac ctx_u in
+                                                   (meta_arg_cache_result tac
+                                                      m_env typ t;
+                                                    solve_with t)
+                                             else
+                                               (let t =
+                                                  run_meta_arg_tac ctx_u in
+                                                solve_with t)))
                                  | uu___5 when unresolved ctx_u ->
                                      until_fixpoint
                                        (((hd, Implicit_unresolved) :: out),
-                                         changed) tl
+                                         changed, defer_open_metas) tl
                                  | uu___5 when
                                      ((FStar_Syntax_Syntax.uu___is_Allow_untyped
                                          uvar_decoration_should_check)
@@ -15380,7 +15456,9 @@ let (resolve_implicits' :
                                         (FStar_Syntax_Syntax.uu___is_Already_checked
                                            uvar_decoration_should_check))
                                        || is_gen
-                                     -> until_fixpoint (out, true) tl
+                                     ->
+                                     until_fixpoint
+                                       (out, true, defer_open_metas) tl
                                  | uu___5 ->
                                      let env1 =
                                        {
@@ -15543,7 +15621,8 @@ let (resolve_implicits' :
                                                 "Impossible: check_implicit_solution_and_discharge_guard for tac must return Some []"
                                             else ())
                                          else ());
-                                        until_fixpoint (out, true) tl)
+                                        until_fixpoint
+                                          (out, true, defer_open_metas) tl)
                                      else
                                        (let force_univ_constraints = false in
                                         let imps_opt =
@@ -15555,7 +15634,8 @@ let (resolve_implicits' :
                                             until_fixpoint
                                               (((hd1,
                                                   Implicit_checking_defers_univ_constraint)
-                                                :: out), changed) tl
+                                                :: out), changed,
+                                                defer_open_metas) tl
                                         | FStar_Pervasives_Native.Some imps
                                             ->
                                             let uu___7 =
@@ -15569,9 +15649,10 @@ let (resolve_implicits' :
                                                             Implicit_unresolved))) in
                                                 FStar_Compiler_List.op_At
                                                   uu___9 out in
-                                              (uu___8, true) in
+                                              (uu___8, true,
+                                                defer_open_metas) in
                                             until_fixpoint uu___7 tl)))))) in
-          until_fixpoint ([], false) implicits
+          until_fixpoint ([], false, true) implicits
 let (resolve_implicits :
   FStar_TypeChecker_Env.env ->
     FStar_TypeChecker_Common.guard_t -> FStar_TypeChecker_Common.guard_t)

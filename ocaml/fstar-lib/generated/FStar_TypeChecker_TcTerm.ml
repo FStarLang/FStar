@@ -7554,9 +7554,22 @@ and (check_application_args :
                                           FStar_Compiler_Range_Type.range_of_rng
                                             uu___11 uu___12 in
                                     let uu___7 =
+                                      let msg =
+                                        let is_typeclass =
+                                          match ctx_uvar_meta with
+                                          | FStar_Syntax_Syntax.Ctx_uvar_meta_tac
+                                              (uu___8, tau) ->
+                                              FStar_Syntax_Util.is_fvar
+                                                FStar_Parser_Const.tcresolve_lid
+                                                tau
+                                          | uu___8 -> false in
+                                        if is_typeclass
+                                        then "Typeclass constraint argument"
+                                        else
+                                          "Instantiating meta argument in application" in
                                       FStar_TypeChecker_Env.new_implicit_var_aux
-                                        "Instantiating meta argument in application"
-                                        r1 env t1 FStar_Syntax_Syntax.Strict
+                                        msg r1 env t1
+                                        FStar_Syntax_Syntax.Strict
                                         (FStar_Pervasives_Native.Some
                                            ctx_uvar_meta) in
                                     (match uu___7 with
