@@ -104,6 +104,12 @@ val frame3
     (f:cmd p q)
   : cmd pre post
 
+(*
+GM 2023-12-03: This example now fails since we don't run meta args
+in contexts/types that have uvars in them. But the only thing forcing
+the resolution of pre and post is the tactic
+*)
+[@@expect_failure [66]]
 let test2
   : cmd (r1 ** r2) (r1 ** r2)
   =
