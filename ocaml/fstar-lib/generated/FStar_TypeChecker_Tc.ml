@@ -356,20 +356,25 @@ let (tc_decl_attributes :
             se.FStar_Syntax_Syntax.sigattrs in
       match uu___ with
       | (blacklisted_attrs, other_attrs) ->
-          let uu___1 =
-            let uu___2 =
-              FStar_TypeChecker_TcTerm.tc_attributes env other_attrs in
-            FStar_Compiler_List.op_At blacklisted_attrs uu___2 in
-          {
-            FStar_Syntax_Syntax.sigel = (se.FStar_Syntax_Syntax.sigel);
-            FStar_Syntax_Syntax.sigrng = (se.FStar_Syntax_Syntax.sigrng);
-            FStar_Syntax_Syntax.sigquals = (se.FStar_Syntax_Syntax.sigquals);
-            FStar_Syntax_Syntax.sigmeta = (se.FStar_Syntax_Syntax.sigmeta);
-            FStar_Syntax_Syntax.sigattrs = uu___1;
-            FStar_Syntax_Syntax.sigopens_and_abbrevs =
-              (se.FStar_Syntax_Syntax.sigopens_and_abbrevs);
-            FStar_Syntax_Syntax.sigopts = (se.FStar_Syntax_Syntax.sigopts)
-          }
+          let uu___1 = FStar_TypeChecker_TcTerm.tc_attributes env other_attrs in
+          (match uu___1 with
+           | (g, other_attrs1) ->
+               (FStar_TypeChecker_Rel.force_trivial_guard env g;
+                {
+                  FStar_Syntax_Syntax.sigel = (se.FStar_Syntax_Syntax.sigel);
+                  FStar_Syntax_Syntax.sigrng =
+                    (se.FStar_Syntax_Syntax.sigrng);
+                  FStar_Syntax_Syntax.sigquals =
+                    (se.FStar_Syntax_Syntax.sigquals);
+                  FStar_Syntax_Syntax.sigmeta =
+                    (se.FStar_Syntax_Syntax.sigmeta);
+                  FStar_Syntax_Syntax.sigattrs =
+                    (FStar_Compiler_List.op_At blacklisted_attrs other_attrs1);
+                  FStar_Syntax_Syntax.sigopens_and_abbrevs =
+                    (se.FStar_Syntax_Syntax.sigopens_and_abbrevs);
+                  FStar_Syntax_Syntax.sigopts =
+                    (se.FStar_Syntax_Syntax.sigopts)
+                }))
 let (tc_inductive' :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.sigelt Prims.list ->
@@ -4957,7 +4962,7 @@ let (tc_decls :
                ([], env) ses) in
       match uu___ with
       | (ses1, env1) -> ((FStar_Compiler_List.rev_append ses1 []), env1)
-let (uu___905 : unit) =
+let (uu___909 : unit) =
   FStar_Compiler_Effect.op_Colon_Equals tc_decls_knot
     (FStar_Pervasives_Native.Some tc_decls)
 let (snapshot_context :

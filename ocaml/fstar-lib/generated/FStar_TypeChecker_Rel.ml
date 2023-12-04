@@ -15729,7 +15729,7 @@ let (force_trivial_guard :
                  let uu___5 =
                    let uu___6 =
                      FStar_Errors_Msg.text
-                       "Failed to resolved implicit argument" in
+                       "Failed to resolve implicit argument" in
                    let uu___7 =
                      let uu___8 =
                        FStar_Syntax_Print.uvar_to_string
