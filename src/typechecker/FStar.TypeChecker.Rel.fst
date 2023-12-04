@@ -5494,7 +5494,7 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
         let tac = snd meta in
         let typ = U.ctx_uvar_typ ctx_u in
         if has_free_uvars typ || env_has_free_uvars m_env then (
-          (* If the result type for this meta arg has a free uvar, delay it.
+          (* If the result type or env for this meta arg has a free uvar, delay it.
           Some other meta arg being solved may instantiate the uvar. See #3130. *)
           if Env.debug env <| Options.Other "Rel" then
             BU.print1 "Deferring implicit due to open ctx/typ %s\n" (show ctx_u);

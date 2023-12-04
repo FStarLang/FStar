@@ -120,7 +120,10 @@ let tc_decl_attributes env se =
     if lid_exists env PC.attr_substitute_lid
     then ([], se.sigattrs)
     else partition ((=) attr_substitute) se.sigattrs
-  in {se with sigattrs = blacklisted_attrs @ tc_attributes env other_attrs }
+  in
+  let g, other_attrs = tc_attributes env other_attrs in
+  Rel.force_trivial_guard env g;
+  {se with sigattrs = blacklisted_attrs @ other_attrs }
 
 let tc_inductive' env ses quals attrs lids =
     if Env.debug env Options.Low then
