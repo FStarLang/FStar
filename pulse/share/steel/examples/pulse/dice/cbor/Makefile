@@ -35,15 +35,15 @@ $(OUTPUT_DIRECTORY)/%.krml:
 $(OUTPUT_DIRECTORY)/%.ml:
 	$(FSTAR) --codegen OCaml $(subst .checked,, $(notdir $<)) --extract_module $(basename $(subst .checked,, $(notdir $<)))
 
-.PHONY: dist
+.PHONY: extern
 
-dist/CBOR.h: $(OUTPUT_DIRECTORY)/CBOR.h
+extern/CBOR.h: $(OUTPUT_DIRECTORY)/CBOR.h
 	cp $^ $@ # I want to make sure that CBOR.c generated from Steel is compatible with CBOR.h generated from Pulse
 
-dist/CBOR.o: dist/CBOR.h dist/CBOR.c
-	+$(MAKE) -C dist
+extern/CBOR.o: extern/CBOR.h extern/CBOR.c
+	+$(MAKE) -C extern
 
-dist: dist/CBOR.o
+extern: extern/CBOR.o
 
-test: dist
+test: extern
 	+$(MAKE) -C test
