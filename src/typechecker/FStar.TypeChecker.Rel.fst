@@ -50,6 +50,13 @@ module PC = FStar.Parser.Const
 module FC = FStar.Const
 module TcComm = FStar.TypeChecker.Common
 
+instance showable_implicit_checking_status : showable implicit_checking_status = {
+  show = (function
+          | Implicit_unresolved -> "Implicit_unresolved"
+          | Implicit_checking_defers_univ_constraint -> "Implicit_checking_defers_univ_constraint"
+          | Implicit_has_typing_guard (tm, typ) -> "Implicit_has_typing_guard");
+}
+
 let is_base_type env typ =
     let t = FStar.TypeChecker.Normalize.unfold_whnf env typ in
     let head, args = U.head_and_args t in
