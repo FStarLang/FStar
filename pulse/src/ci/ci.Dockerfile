@@ -32,6 +32,16 @@ RUN sudo apt-get update && sudo apt-get install --yes --no-install-recommends \
     eval $(opam env) && $KRML_HOME/.docker/build/install-other-deps.sh && \
     env OTHERFLAGS='--admit_smt_queries true' make -C $KRML_HOME -j $opamthreads
 
+# FIXME: The recent changes to MLish and bootstrapping mean that we must
+# not try to check prims.fst or the rest of ulib in --MLish mode, since
+# some files fail to do so. This will happen when trying to extract the
+# files in src/syntax_extension, as there are no checked files for them.
+# So, call the F* makefile to bootstrap F* and generate the files. This
+# is probably only a bandaid... but I'm not sure what the best thing to
+# do is.
+RUN eval $(opam env) && \
+    env OTHERFLAGS='--admit_smt_queries true' make -C $FSTAR_HOME -j $opamthreads bootstrap
+
 # Steel CI proper
 ARG STEEL_NIGHTLY_CI
 ARG OTHERFLAGS=--use_hints
