@@ -15264,7 +15264,7 @@ let (resolve_implicits' :
           let rec until_fixpoint acc implicits1 =
             let uu___ = acc in
             match uu___ with
-            | (out, changed, defer_open_metas) ->
+            | (out, changed) ->
                 (match implicits1 with
                  | [] ->
                      if changed
@@ -15272,50 +15272,40 @@ let (resolve_implicits' :
                        let uu___1 =
                          FStar_Compiler_List.map FStar_Pervasives_Native.fst
                            out in
-                       until_fixpoint ([], false, true) uu___1
+                       until_fixpoint ([], false) uu___1
                      else
-                       if defer_open_metas
-                       then
-                         (let uu___2 =
+                       (let uu___2 =
+                          let uu___3 =
                             FStar_Compiler_List.map
                               FStar_Pervasives_Native.fst out in
-                          until_fixpoint ([], false, false) uu___2)
-                       else
-                         (let uu___3 =
-                            let uu___4 =
-                              FStar_Compiler_List.map
-                                FStar_Pervasives_Native.fst out in
-                            try_solve_single_valued_implicits env is_tac
-                              uu___4 in
-                          match uu___3 with
-                          | (imps, changed1) ->
-                              if changed1
-                              then until_fixpoint ([], false, true) imps
-                              else
-                                (let uu___5 =
-                                   pick_a_univ_deffered_implicit out in
-                                 match uu___5 with
-                                 | (imp_opt, rest) ->
-                                     (match imp_opt with
-                                      | FStar_Pervasives_Native.None -> rest
-                                      | FStar_Pervasives_Native.Some imp ->
-                                          let force_univ_constraints = true in
-                                          let imps1 =
-                                            let uu___6 =
-                                              check_implicit_solution_and_discharge_guard
-                                                env imp is_tac
-                                                force_univ_constraints in
-                                            FStar_Compiler_Effect.op_Bar_Greater
-                                              uu___6 FStar_Compiler_Util.must in
+                          try_solve_single_valued_implicits env is_tac uu___3 in
+                        match uu___2 with
+                        | (imps, changed1) ->
+                            if changed1
+                            then until_fixpoint ([], false) imps
+                            else
+                              (let uu___4 = pick_a_univ_deffered_implicit out in
+                               match uu___4 with
+                               | (imp_opt, rest) ->
+                                   (match imp_opt with
+                                    | FStar_Pervasives_Native.None -> rest
+                                    | FStar_Pervasives_Native.Some imp ->
+                                        let force_univ_constraints = true in
+                                        let imps1 =
+                                          let uu___5 =
+                                            check_implicit_solution_and_discharge_guard
+                                              env imp is_tac
+                                              force_univ_constraints in
+                                          FStar_Compiler_Effect.op_Bar_Greater
+                                            uu___5 FStar_Compiler_Util.must in
+                                        let uu___5 =
                                           let uu___6 =
-                                            let uu___7 =
-                                              FStar_Compiler_List.map
-                                                FStar_Pervasives_Native.fst
-                                                rest in
-                                            FStar_Compiler_List.op_At imps1
-                                              uu___7 in
-                                          until_fixpoint ([], false, true)
-                                            uu___6)))
+                                            FStar_Compiler_List.map
+                                              FStar_Pervasives_Native.fst
+                                              rest in
+                                          FStar_Compiler_List.op_At imps1
+                                            uu___6 in
+                                        until_fixpoint ([], false) uu___5)))
                  | hd::tl ->
                      let uu___1 = hd in
                      (match uu___1 with
@@ -15360,9 +15350,7 @@ let (resolve_implicits' :
                                  | uu___5 when
                                      FStar_Syntax_Syntax.uu___is_Allow_unresolved
                                        uvar_decoration_should_check
-                                     ->
-                                     until_fixpoint
-                                       (out, true, defer_open_metas) tl
+                                     -> until_fixpoint (out, true) tl
                                  | uu___5 when
                                      (unresolved ctx_u) &&
                                        (flex_uvar_has_meta_tac ctx_u)
@@ -15383,9 +15371,8 @@ let (resolve_implicits' :
                                             FStar_Syntax_Util.ctx_uvar_typ
                                               ctx_u in
                                           let uu___7 =
-                                            defer_open_metas &&
-                                              ((has_free_uvars typ) ||
-                                                 (env_has_free_uvars m_env)) in
+                                            (has_free_uvars typ) ||
+                                              (env_has_free_uvars m_env) in
                                           if uu___7
                                           then
                                             ((let uu___9 =
@@ -15405,8 +15392,7 @@ let (resolve_implicits' :
                                               else ());
                                              until_fixpoint
                                                (((hd, Implicit_unresolved) ::
-                                                 out), changed,
-                                                 defer_open_metas) tl)
+                                                 out), changed) tl)
                                           else
                                             (let solve_with t =
                                                let extra =
@@ -15420,9 +15406,7 @@ let (resolve_implicits' :
                                                  | FStar_Pervasives_Native.Some
                                                      g ->
                                                      g.FStar_TypeChecker_Common.implicits in
-                                               until_fixpoint
-                                                 (out, true,
-                                                   defer_open_metas)
+                                               until_fixpoint (out, true)
                                                  (FStar_Compiler_List.op_At
                                                     extra tl) in
                                              let uu___9 = cacheable tac in
@@ -15448,7 +15432,7 @@ let (resolve_implicits' :
                                  | uu___5 when unresolved ctx_u ->
                                      until_fixpoint
                                        (((hd, Implicit_unresolved) :: out),
-                                         changed, defer_open_metas) tl
+                                         changed) tl
                                  | uu___5 when
                                      ((FStar_Syntax_Syntax.uu___is_Allow_untyped
                                          uvar_decoration_should_check)
@@ -15456,9 +15440,7 @@ let (resolve_implicits' :
                                         (FStar_Syntax_Syntax.uu___is_Already_checked
                                            uvar_decoration_should_check))
                                        || is_gen
-                                     ->
-                                     until_fixpoint
-                                       (out, true, defer_open_metas) tl
+                                     -> until_fixpoint (out, true) tl
                                  | uu___5 ->
                                      let env1 =
                                        {
@@ -15621,8 +15603,7 @@ let (resolve_implicits' :
                                                 "Impossible: check_implicit_solution_and_discharge_guard for tac must return Some []"
                                             else ())
                                          else ());
-                                        until_fixpoint
-                                          (out, true, defer_open_metas) tl)
+                                        until_fixpoint (out, true) tl)
                                      else
                                        (let force_univ_constraints = false in
                                         let imps_opt =
@@ -15634,8 +15615,7 @@ let (resolve_implicits' :
                                             until_fixpoint
                                               (((hd1,
                                                   Implicit_checking_defers_univ_constraint)
-                                                :: out), changed,
-                                                defer_open_metas) tl
+                                                :: out), changed) tl
                                         | FStar_Pervasives_Native.Some imps
                                             ->
                                             let uu___7 =
@@ -15649,10 +15629,9 @@ let (resolve_implicits' :
                                                             Implicit_unresolved))) in
                                                 FStar_Compiler_List.op_At
                                                   uu___9 out in
-                                              (uu___8, true,
-                                                defer_open_metas) in
+                                              (uu___8, true) in
                                             until_fixpoint uu___7 tl)))))) in
-          until_fixpoint ([], false, true) implicits
+          until_fixpoint ([], false) implicits
 let (resolve_implicits :
   FStar_TypeChecker_Env.env ->
     FStar_TypeChecker_Common.guard_t -> FStar_TypeChecker_Common.guard_t)
