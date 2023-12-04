@@ -182,14 +182,16 @@ let gen env (is_rec:bool) (lecs:list (lbname * term * comp)) : option (list (lbn
      let lecs = lec_hd :: lecs in
 
      let gen_types (uvs:list ctx_uvar) : list (bv * bqual) =
-         let fail rng k : unit =
+         let fail (rng:Range.range) (k:typ) : unit =
+             let open FStar.Pprint in
+             let open FStar.Class.PP in
              let lbname, e, c = lec_hd in
-               raise_error (Errors.Fatal_FailToResolveImplicitArgument,
-                            BU.format3 "Failed to resolve implicit argument of type '%s' in the type of %s (%s)"
-                                       (Print.term_to_string k)
-                                       (Print.lbname_to_string lbname)
-                                       (Print.term_to_string (U.comp_result c)))
-                            rng
+             raise_error_doc (Errors.Fatal_FailToResolveImplicitArgument, [
+               prefix 4 1 (text "Failed to resolve implicit argument of type")
+                              (pp k) ^/^
+               prefix 4 1 (group (text "in the type of" ^/^ squotes (doc_of_string (Print.lbname_to_string lbname)) ^^ colon))
+                              (pp (U.comp_result c))
+               ]) rng
          in
          uvs |> List.map (fun u ->
          match UF.find u.ctx_uvar_head with
