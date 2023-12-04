@@ -5,10 +5,11 @@
 PULSE_EXAMPLES_ROOT = ../..
 STEEL_HOME = $(PULSE_EXAMPLES_ROOT)/../../../../
 
-INCLUDE_DIRS=lib dice/common dice/dpe dice/engine dice/l0 dice/cbor _output/cache .
+# The INCLUDE_DIRS are relative to PULSE_EXAMPLES_ROOT
+INCLUDE_DIRS=lib _output/cache dice/cbor/extern
 SRC_DIRS=$(addprefix $(PULSE_EXAMPLES_ROOT)/, $(INCLUDE_DIRS))
 FSTAR_FILES=$(wildcard CDDLExtractionTest.*.fst) # but I still need to enumerate them in the Karamel bundle
-OTHERFLAGS += --cmi --already_cached '*,'
+OTHERFLAGS += --cmi --already_cached '*,-CBOR.Pulse.Type'
 
 FSTAR_DEP_OPTIONS=--extract '* -FStar.Tactics -FStar.Reflection -Steel -Pulse +Pulse.Class +Pulse.Lib -Pulse.Lib.Core'
 KRML=$(KRML_HOME)/krml $(KRML_OPTS)
