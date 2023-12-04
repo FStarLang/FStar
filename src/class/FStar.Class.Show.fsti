@@ -2,6 +2,7 @@ module FStar.Class.Show
 
 open FStar.Compiler.Effect
 open FStar.Class.Printable
+module BU = FStar.Compiler.Util
 
 class showable (a:Type) = {
   show : a -> ML string;
@@ -12,6 +13,7 @@ ML effect of the `printer. *)
 instance val printableshow (_ : printable 'a) : Tot (showable 'a)
 
 instance val show_list (a:Type) (_ : showable a) : Tot (showable (list a))
+instance val show_set  (a:Type) (_ : showable a) : Tot (showable (BU.set a))
 
 instance val show_option (a:Type) (_ : showable a) : Tot (showable (option a))
 
