@@ -5601,7 +5601,7 @@ let force_trivial_guard env g =
     | imp::_ ->
       let open FStar.Pprint in
       raise_error_doc (Errors.Fatal_FailToResolveImplicitArgument, [
-        prefix 4 1 (text "Failed to resolved implicit argument")
+        prefix 4 1 (text "Failed to resolve implicit argument")
                 (arbitrary_string (Print.uvar_to_string imp.imp_uvar.ctx_uvar_head)) ^/^
         prefix 4 1 (text "of type")
                 (N.term_to_doc env (U.ctx_uvar_typ imp.imp_uvar)) ^/^
