@@ -193,7 +193,11 @@ let gen env (is_rec:bool) (lecs:list (lbname * term * comp)) : option (list (lbn
                               (pp (U.comp_result c))
                ]) rng
          in
-         uvs |> List.map (fun u ->
+         uvs |> List.concatMap (fun u ->
+         (* If this implicit has a meta, don't generalize it. Just leave it
+         unresolved for the resolve_implicits phase to fill it in. *)
+         if Some? u.ctx_uvar_meta then [] else
+
          match UF.find u.ctx_uvar_head with
          | Some _ -> failwith "Unexpected instantiation of mutually recursive uvar"
          | _ ->
@@ -222,7 +226,7 @@ let gen env (is_rec:bool) (lecs:list (lbname * term * comp)) : option (list (lbn
            U.set_uvar u.ctx_uvar_head t;
             //t clearly has a free variable; this is the one place we break the
             //invariant of a uvar always being resolved to a term well-typed in its given context
-           a, S.as_bqual_implicit true)
+           [a, S.as_bqual_implicit true])
      in
 
      let gen_univs = gen_univs env univs in

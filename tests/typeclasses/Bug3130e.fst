@@ -10,10 +10,9 @@ let transitivity {| ord_leq 'a |} (x y z : 'a)
   [SMTPat (x `leq` y); SMTPat (x `leq` z)]
   = trans x y z
 
-(* Currently fails since the type of the uu binder is undefined,
-and tcresolve won't run *)
-[@@expect_failure [66]]
-let transitivity_forall #a {| ord_leq a |} uu
+(* NB: unused will be generalized *)
+let transitivity_forall #a {| ord_leq a |}
+    unused
   : Lemma (forall (x y z : a). x `leq` y /\ y `leq` z ==> x `leq` z )
 = ()
 
