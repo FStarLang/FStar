@@ -21,7 +21,5 @@ let test7 () = let p : Type0 = mk6 == mk5 in ()
 
 (* These are ambiguous. They used to work when we ran meta args in
 contexts with yet-unresolved uvars, but that is now forbidden. *)
-[@@expect_failure [66]]
 let test8 (x:_) = let p : Type0 = mk5 == x /\ x == mk6 in ()
-[@@expect_failure [66]]
 let test9 (x:_) = let p : Type0 = mk6 == x /\ x == mk5 in ()

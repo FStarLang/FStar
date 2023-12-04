@@ -804,10 +804,6 @@ let flex_uvar_has_meta_tac u =
   | Some (Ctx_uvar_meta_tac _) -> true
   | _ -> false
 
-let flex_uvar_meta_tac_env u : env_t =
-  match u.ctx_uvar_meta with
-  | Some (Ctx_uvar_meta_tac (denv, _)) -> Dyn.undyn denv
-
 let flex_t_to_string (Flex (_, c, args)) =
     BU.format2 "%s [%s]" (show c) (Print.args_to_string args)
 
@@ -1852,6 +1848,7 @@ let run_meta_arg_tac (ctx_u:ctx_uvar) : term =
   match ctx_u.ctx_uvar_meta with
   | Some (Ctx_uvar_meta_tac (env_dyn, tau)) ->
     let env : Env.env = FStar.Compiler.Dyn.undyn env_dyn in
+    let env = { env with gamma = ctx_u.ctx_uvar_gamma } in
     if Env.debug env (Options.Other "Tac") then
       BU.print1 "Running tactic for meta-arg %s\n" (show ctx_u);
     Errors.with_ctx "Running tactic for meta-arg"
@@ -2118,8 +2115,13 @@ let lazy_complete_repr (k:lazy_kind) : bool =
 
 let has_free_uvars (t:term) : bool =
   not (BU.set_is_empty (Free.uvars_uncached t))
+
 let env_has_free_uvars (e:env_t) : bool =
   List.existsb (fun b -> has_free_uvars b.binder_bv.sort) (Env.all_binders e)
+
+let gamma_has_free_uvars (g:list binding) : bool =
+  List.existsb (function Binding_var bv -> has_free_uvars bv.sort
+                       | _ -> false) g
 
 (******************************************************************************************************)
 (* Main solving algorithm begins here *)
@@ -3264,7 +3266,7 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
       let uv = flex_uvar flex in
       flex_uvar_has_meta_tac uv &&
       not (has_free_uvars (U.ctx_uvar_typ uv)) &&
-      not (env_has_free_uvars (flex_uvar_meta_tac_env uv))
+      not (gamma_has_free_uvars uv.ctx_uvar_gamma)
     in
 
     let run_meta_arg_tac_and_try_again (flex:flex_t) =
@@ -5496,13 +5498,15 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
 
       | _ when unresolved ctx_u && flex_uvar_has_meta_tac ctx_u ->
         let Some (Ctx_uvar_meta_tac meta) = ctx_u.ctx_uvar_meta in
-        let m_env : env_t = Dyn.undyn (fst meta) in
+        let env = { env with gamma = ctx_u.ctx_uvar_gamma } in
         let tac = snd meta in
         let typ = U.ctx_uvar_typ ctx_u in
-        if has_free_uvars typ || env_has_free_uvars m_env then (
+        if (has_free_uvars typ || gamma_has_free_uvars ctx_u.ctx_uvar_gamma)
+            && Options.ext_getv "compat:open_metas" = "" then // i.e. compat option unset
+        (
           (* If the result type or env for this meta arg has a free uvar, delay it.
           Some other meta arg being solved may instantiate the uvar. See #3130. *)
-          if Env.debug env <| Options.Other "Rel" then
+          if Env.debug env <| Options.Other "Rel" || Env.debug env <| Options.Other "Imps" then
             BU.print1 "Deferring implicit due to open ctx/typ %s\n" (show ctx_u);
           until_fixpoint ((hd, Implicit_unresolved)::out, changed) tl
         ) else (
@@ -5515,11 +5519,11 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
             until_fixpoint (out, true) (extra @ tl)
           in
           if cacheable tac then
-            match meta_arg_cache_lookup tac m_env typ with
+            match meta_arg_cache_lookup tac env typ with
             | Some res -> solve_with res
             | None ->
               let t = run_meta_arg_tac ctx_u in
-              meta_arg_cache_result tac m_env typ t;
+              meta_arg_cache_result tac env typ t;
               solve_with t
           else
             let t = run_meta_arg_tac ctx_u in

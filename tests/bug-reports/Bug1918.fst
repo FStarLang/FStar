@@ -1,9 +1,11 @@
 module Bug1918
 
 class mon = {
-  t : Type;
+  t : Type0;
   comp : t -> t -> t;
 }
 
-[@@expect_failure [66]]
-let (++) (a:_) (b:_) = comp a b
+let comp1 (_:mon) (x:t) (y:t) : t = comp x y
+
+[@@expect_failure [228]]
+let comp2 (x:t) (y:t) : t = comp x y
