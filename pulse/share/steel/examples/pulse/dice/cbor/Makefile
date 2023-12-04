@@ -32,4 +32,4 @@ $(OUTPUT_DIRECTORY)/%.ml:
 test: $(OUTPUT_DIRECTORY)/CDDLExtractionTest.c
 	cp $(OUTPUT_DIRECTORY)/CBOR.h dist/ # I want to make sure that CBOR.c generated from Steel is compatible with CBOR.h generated from Pulse
 	+$(MAKE) -C dist
-	./test/CBORTest.sh
+	+$(MAKE) -C test
