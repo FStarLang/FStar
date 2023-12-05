@@ -1844,10 +1844,9 @@ let quasi_pattern env (f:flex_t) : option (binders * typ) =
       let formals, t_res = U.arrow_formals t_hd in
       aux [] formals t_res args
 
-let run_meta_arg_tac (ctx_u:ctx_uvar) : term =
+let run_meta_arg_tac (env:env_t) (ctx_u:ctx_uvar) : term =
   match ctx_u.ctx_uvar_meta with
-  | Some (Ctx_uvar_meta_tac (env_dyn, tau)) ->
-    let env : Env.env = FStar.Compiler.Dyn.undyn env_dyn in
+  | Some (Ctx_uvar_meta_tac tau) ->
     let env = { env with gamma = ctx_u.ctx_uvar_gamma } in
     if Env.debug env (Options.Other "Tac") then
       BU.print1 "Running tactic for meta-arg %s\n" (show ctx_u);
@@ -3271,7 +3270,7 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
 
     let run_meta_arg_tac_and_try_again (flex:flex_t) =
       let uv = flex_uvar flex in
-      let t = run_meta_arg_tac uv in
+      let t = run_meta_arg_tac env uv in
       if debug wl <| Options.Other "Rel" then
         BU.print2 "solve_t_flex_flex: solving meta arg uvar %s with %s\n" (show uv) (show t);
       set_uvar env uv None t;
@@ -4950,7 +4949,7 @@ let try_solve_deferred_constraints (defer_ok:defer_ok_t) smt_ok deferred_to_tac_
     |> List.collect
           (fun i ->
             match i.imp_uvar.ctx_uvar_meta with
-            | Some (Ctx_uvar_meta_tac (_, tac)) -> 
+            | Some (Ctx_uvar_meta_tac tac) ->
               let head, _ = U.head_and_args_full tac in
               if U.is_fvar PC.tcresolve_lid head
               then (
@@ -5497,9 +5496,8 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
         until_fixpoint (out, true) tl
 
       | _ when unresolved ctx_u && flex_uvar_has_meta_tac ctx_u ->
-        let Some (Ctx_uvar_meta_tac meta) = ctx_u.ctx_uvar_meta in
+        let Some (Ctx_uvar_meta_tac tac) = ctx_u.ctx_uvar_meta in
         let env = { env with gamma = ctx_u.ctx_uvar_gamma } in
-        let tac = snd meta in
         let typ = U.ctx_uvar_typ ctx_u in
         if (has_free_uvars typ || gamma_has_free_uvars ctx_u.ctx_uvar_gamma)
             && Options.ext_getv "compat:open_metas" = "" then // i.e. compat option unset
@@ -5522,11 +5520,11 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
             match meta_arg_cache_lookup tac env typ with
             | Some res -> solve_with res
             | None ->
-              let t = run_meta_arg_tac ctx_u in
+              let t = run_meta_arg_tac env ctx_u in
               meta_arg_cache_result tac env typ t;
               solve_with t
           else
-            let t = run_meta_arg_tac ctx_u in
+            let t = run_meta_arg_tac env ctx_u in
             solve_with t
         )
 

@@ -2748,7 +2748,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
                 | Some (Meta tau), _ ->
                   let tau = SS.subst subst tau in
                   let tau, _, g_tau = tc_tactic t_unit t_unit env tau in
-                  Ctx_uvar_meta_tac (mkdyn env, tau), g_tau
+                  Ctx_uvar_meta_tac tau, g_tau
                 | Some (Implicit _), attr::_ ->
                   let attr = SS.subst subst attr in
                   let attr, _, g_attr = tc_tot_or_gtot_term env attr in
@@ -2768,7 +2768,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
               let msg =
                 let is_typeclass =
                   match ctx_uvar_meta with
-                  | Ctx_uvar_meta_tac (_, tau) -> U.is_fvar Const.tcresolve_lid tau
+                  | Ctx_uvar_meta_tac tau -> U.is_fvar Const.tcresolve_lid tau
                   | _ -> false
                 in
                 if is_typeclass

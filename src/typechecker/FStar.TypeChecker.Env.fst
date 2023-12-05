@@ -1925,7 +1925,7 @@ let uvars_for_binders env (bs:S.binders) substs reason r =
     let ctx_uvar_meta_t =
       match b.binder_qual, b.binder_attrs with
       | Some (Meta t), [] ->
-        Some (Ctx_uvar_meta_tac (FStar.Compiler.Dyn.mkdyn env, t))
+        Some (Ctx_uvar_meta_tac t)
       | _, t::_ -> Some (Ctx_uvar_meta_attr t)
       | _ -> None in
 
