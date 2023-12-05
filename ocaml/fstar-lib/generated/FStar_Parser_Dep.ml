@@ -191,6 +191,8 @@ let (dep_to_string : dependence -> Prims.string) =
     | PreferInterface f -> Prims.op_Hat "PreferInterface " f
     | UseImplementation f -> Prims.op_Hat "UseImplementation " f
     | FriendImplementation f -> Prims.op_Hat "FriendImplementation " f
+let (showable_dependence : dependence FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = dep_to_string }
 type dependences = dependence Prims.list
 let empty_dependences : 'uuuuu . unit -> 'uuuuu Prims.list = fun uu___ -> []
 type dep_node = {
@@ -1216,9 +1218,8 @@ let (collect_one :
                 if uu___3
                 then
                   let uu___4 =
-                    let uu___5 = FStar_Compiler_List.map dep_to_string deps1 in
-                    FStar_Compiler_Effect.op_Bar_Greater uu___5
-                      (FStar_Compiler_String.concat ", ") in
+                    FStar_Class_Show.show
+                      (FStar_Class_Show.show_list showable_dependence) deps1 in
                   FStar_Compiler_Util.print2
                     "Reading the parsing data for %s from its checked file .. found [%s]\n"
                     filename uu___4
@@ -1921,10 +1922,9 @@ let (topological_dependences_of' :
                          if uu___2
                          then
                            let uu___3 =
-                             let uu___4 =
-                               FStar_Compiler_List.map dep_to_string
-                                 dep_node1.edges in
-                             FStar_Compiler_String.concat ", " uu___4 in
+                             FStar_Class_Show.show
+                               (FStar_Class_Show.show_list
+                                  showable_dependence) dep_node1.edges in
                            FStar_Compiler_Util.print2
                              "Visiting %s: direct deps are %s\n" filename
                              uu___3

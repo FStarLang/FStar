@@ -2748,7 +2748,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
                 | Some (Meta tau), _ ->
                   let tau = SS.subst subst tau in
                   let tau, _, g_tau = tc_tactic t_unit t_unit env tau in
-                  Ctx_uvar_meta_tac (mkdyn env, tau), g_tau
+                  Ctx_uvar_meta_tac tau, g_tau
                 | Some (Implicit _), attr::_ ->
                   let attr = SS.subst subst attr in
                   let attr, _, g_attr = tc_tot_or_gtot_term env attr in
@@ -2765,7 +2765,17 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
                                                             (Range.use_range t.pos))
             in
             let varg, _, implicits =
-              Env.new_implicit_var_aux "Instantiating meta argument in application" r env t Strict (Some ctx_uvar_meta)
+              let msg =
+                let is_typeclass =
+                  match ctx_uvar_meta with
+                  | Ctx_uvar_meta_tac tau -> U.is_fvar Const.tcresolve_lid tau
+                  | _ -> false
+                in
+                if is_typeclass
+                then "Typeclass constraint argument"
+                else "Instantiating meta argument in application"
+              in
+              Env.new_implicit_var_aux msg r env t Strict (Some ctx_uvar_meta)
             in
             let subst = NT(x, varg)::subst in
             let aq = U.aqual_of_binder (List.hd bs) in
@@ -4385,7 +4395,8 @@ and tc_binder env ({binder_bv=x;binder_qual=imp;binder_positivity=pqual;binder_a
           Some (Meta tau), g
         | _ -> imp, Env.trivial_guard
     in
-    let attrs = tc_attributes env attrs in
+    let g_attrs, attrs = tc_attributes env attrs in
+    let g = Env.conj_guard g g_attrs in
     check_erasable_binder_attributes env attrs t;
     let x = S.mk_binder_with_attrs ({x with sort=t}) imp pqual attrs in
     if Env.debug env Options.High
@@ -4454,8 +4465,13 @@ and tc_trivial_guard env t =
   Rel.force_trivial_guard env g;
   t,c
 
-and tc_attributes env attrs =
-  List.map (fun attr -> fst (tc_trivial_guard env attr)) attrs
+and tc_attributes (env:env_t) (attrs : list term) : guard_t * list term =
+  List.fold_left
+    (fun (g, attrs) attr ->
+        let attr', _, g' = tc_tot_or_gtot_term env attr in
+        Env.conj_guard g g', attr' :: attrs)
+    (Env.trivial_guard, [])
+    (List.rev attrs)
 
 let tc_check_trivial_guard env t k =
   let t, _, g = tc_check_tot_or_gtot_term env t k "" in

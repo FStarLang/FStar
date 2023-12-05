@@ -1717,16 +1717,6 @@ let univnames env =
     in
     aux no_univ_names env.gamma
 
-let print_gamma gamma =
-    (gamma |> List.map (function
-        | Binding_var x -> "Binding_var (" ^ (Print.bv_to_string x) ^ ":" ^ (Print.term_to_string x.sort) ^ ")"
-        | Binding_univ u -> "Binding_univ " ^ (string_of_id u)
-        | Binding_lid (l, _) -> "Binding_lid " ^ (Ident.string_of_lid l)))//  @
-    // (env.gamma_sig |> List.map (fun (ls, _) ->
-    //     "Binding_sig " ^ (ls |> List.map Ident.string_of_lid |> String.concat ", ")
-    // ))
-    |> String.concat "::\n"
-
 let string_of_delta_level = function
   | NoDelta -> "NoDelta"
   | InliningDelta -> "Inlining"
@@ -1935,7 +1925,7 @@ let uvars_for_binders env (bs:S.binders) substs reason r =
     let ctx_uvar_meta_t =
       match b.binder_qual, b.binder_attrs with
       | Some (Meta t), [] ->
-        Some (Ctx_uvar_meta_tac (FStar.Compiler.Dyn.mkdyn env, t))
+        Some (Ctx_uvar_meta_tac t)
       | _, t::_ -> Some (Ctx_uvar_meta_attr t)
       | _ -> None in
 

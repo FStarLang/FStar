@@ -7503,14 +7503,8 @@ and (check_application_args :
                                     FStar_Syntax_Syntax.t_unit env tau1 in
                                 (match uu___7 with
                                  | (tau2, uu___8, g_tau) ->
-                                     let uu___9 =
-                                       let uu___10 =
-                                         let uu___11 =
-                                           FStar_Compiler_Dyn.mkdyn env in
-                                         (uu___11, tau2) in
-                                       FStar_Syntax_Syntax.Ctx_uvar_meta_tac
-                                         uu___10 in
-                                     (uu___9, g_tau))
+                                     ((FStar_Syntax_Syntax.Ctx_uvar_meta_tac
+                                         tau2), g_tau))
                             | (FStar_Pervasives_Native.Some
                                (FStar_Syntax_Syntax.Implicit uu___6),
                                attr::uu___7) ->
@@ -7554,9 +7548,22 @@ and (check_application_args :
                                           FStar_Compiler_Range_Type.range_of_rng
                                             uu___11 uu___12 in
                                     let uu___7 =
+                                      let msg =
+                                        let is_typeclass =
+                                          match ctx_uvar_meta with
+                                          | FStar_Syntax_Syntax.Ctx_uvar_meta_tac
+                                              tau ->
+                                              FStar_Syntax_Util.is_fvar
+                                                FStar_Parser_Const.tcresolve_lid
+                                                tau
+                                          | uu___8 -> false in
+                                        if is_typeclass
+                                        then "Typeclass constraint argument"
+                                        else
+                                          "Instantiating meta argument in application" in
                                       FStar_TypeChecker_Env.new_implicit_var_aux
-                                        "Instantiating meta argument in application"
-                                        r1 env t1 FStar_Syntax_Syntax.Strict
+                                        msg r1 env t1
+                                        FStar_Syntax_Syntax.Strict
                                         (FStar_Pervasives_Native.Some
                                            ctx_uvar_meta) in
                                     (match uu___7 with
@@ -12220,33 +12227,37 @@ and (tc_binder :
                        | uu___6 -> (imp, FStar_TypeChecker_Env.trivial_guard) in
                      (match uu___5 with
                       | (imp1, g') ->
-                          let attrs1 = tc_attributes env attrs in
-                          (check_erasable_binder_attributes env attrs1 t;
-                           (let x1 =
-                              FStar_Syntax_Syntax.mk_binder_with_attrs
-                                {
-                                  FStar_Syntax_Syntax.ppname =
-                                    (x.FStar_Syntax_Syntax.ppname);
-                                  FStar_Syntax_Syntax.index =
-                                    (x.FStar_Syntax_Syntax.index);
-                                  FStar_Syntax_Syntax.sort = t
-                                } imp1 pqual attrs1 in
-                            (let uu___8 =
-                               FStar_TypeChecker_Env.debug env
-                                 FStar_Options.High in
-                             if uu___8
-                             then
-                               let uu___9 =
-                                 FStar_Syntax_Print.bv_to_string
-                                   x1.FStar_Syntax_Syntax.binder_bv in
-                               let uu___10 =
-                                 FStar_Syntax_Print.term_to_string t in
-                               FStar_Compiler_Util.print2
-                                 "Pushing binder %s at type %s\n" uu___9
-                                 uu___10
-                             else ());
-                            (let uu___8 = push_binding env x1 in
-                             (x1, uu___8, g, u))))))))
+                          let uu___6 = tc_attributes env attrs in
+                          (match uu___6 with
+                           | (g_attrs, attrs1) ->
+                               let g1 =
+                                 FStar_TypeChecker_Env.conj_guard g g_attrs in
+                               (check_erasable_binder_attributes env attrs1 t;
+                                (let x1 =
+                                   FStar_Syntax_Syntax.mk_binder_with_attrs
+                                     {
+                                       FStar_Syntax_Syntax.ppname =
+                                         (x.FStar_Syntax_Syntax.ppname);
+                                       FStar_Syntax_Syntax.index =
+                                         (x.FStar_Syntax_Syntax.index);
+                                       FStar_Syntax_Syntax.sort = t
+                                     } imp1 pqual attrs1 in
+                                 (let uu___9 =
+                                    FStar_TypeChecker_Env.debug env
+                                      FStar_Options.High in
+                                  if uu___9
+                                  then
+                                    let uu___10 =
+                                      FStar_Syntax_Print.bv_to_string
+                                        x1.FStar_Syntax_Syntax.binder_bv in
+                                    let uu___11 =
+                                      FStar_Syntax_Print.term_to_string t in
+                                    FStar_Compiler_Util.print2
+                                      "Pushing binder %s at type %s\n"
+                                      uu___10 uu___11
+                                  else ());
+                                 (let uu___9 = push_binding env x1 in
+                                  (x1, uu___9, g1, u)))))))))
 and (tc_binders :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.binders ->
@@ -12429,14 +12440,22 @@ and (tc_trivial_guard :
 and (tc_attributes :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term Prims.list ->
-      FStar_Syntax_Syntax.term Prims.list)
+      (FStar_TypeChecker_Env.guard_t * FStar_Syntax_Syntax.term Prims.list))
   =
   fun env ->
     fun attrs ->
-      FStar_Compiler_List.map
-        (fun attr ->
-           let uu___ = tc_trivial_guard env attr in
-           FStar_Pervasives_Native.fst uu___) attrs
+      FStar_Compiler_List.fold_left
+        (fun uu___ ->
+           fun attr ->
+             match uu___ with
+             | (g, attrs1) ->
+                 let uu___1 = tc_tot_or_gtot_term env attr in
+                 (match uu___1 with
+                  | (attr', uu___2, g') ->
+                      let uu___3 = FStar_TypeChecker_Env.conj_guard g g' in
+                      (uu___3, (attr' :: attrs1))))
+        (FStar_TypeChecker_Env.trivial_guard, [])
+        (FStar_Compiler_List.rev attrs)
 let (tc_check_trivial_guard :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->

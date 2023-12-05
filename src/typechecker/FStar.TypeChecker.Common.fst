@@ -163,16 +163,6 @@ let id_info_at_pos (table: id_info_table) (fn:string) (row:int) (col:int) : opti
       if col <= last_col then Some info else None
 
 let check_uvar_ctx_invariant (reason:string) (r:range) (should_check:bool) (g:gamma) (bs:binders) =
-    let print_gamma gamma =
-        (gamma |> List.map (function
-          | Binding_var x -> "Binding_var " ^ (Print.bv_to_string x)
-          | Binding_univ u -> "Binding_univ " ^ (string_of_id u)
-          | Binding_lid (l, _) -> "Binding_lid " ^ (Ident.string_of_lid l)))//  @
-    // (env.gamma_sig |> List.map (fun (ls, _) ->
-    //     "Binding_sig " ^ (ls |> List.map Ident.string_of_lid |> String.concat ", ")
-    // ))
-      |> String.concat "::\n"
-     in
      let fail () =
          failwith (BU.format5
                    "Invariant violation: gamma and binders are out of sync\n\t\
@@ -182,7 +172,7 @@ let check_uvar_ctx_invariant (reason:string) (r:range) (should_check:bool) (g:ga
                                reason
                                (Range.string_of_range r)
                                (if should_check then "true" else "false")
-                               (print_gamma g)
+                               (show g)
                                (FStar.Syntax.Print.binders_to_string ", " bs))
      in
      if not should_check then ()

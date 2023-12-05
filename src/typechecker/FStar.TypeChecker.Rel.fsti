@@ -27,6 +27,8 @@ open FStar.TypeChecker.Env
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Common
 open FStar.Compiler.Range
+open FStar.Class.Show
+
 type match_result =
   | MisMatch of option delta_depth * option delta_depth
   | HeadMatch of bool // true iff the heads MAY match after further unification, false if already the same
@@ -36,6 +38,8 @@ type implicit_checking_status =
   | Implicit_unresolved
   | Implicit_checking_defers_univ_constraint
   | Implicit_has_typing_guard of term * typ
+
+instance val showable_implicit_checking_status : showable implicit_checking_status
 
 type tagged_implicits = list (implicit * implicit_checking_status)
 

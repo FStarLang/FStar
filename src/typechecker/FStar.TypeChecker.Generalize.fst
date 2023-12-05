@@ -182,45 +182,43 @@ let gen env (is_rec:bool) (lecs:list (lbname * term * comp)) : option (list (lbn
      let lecs = lec_hd :: lecs in
 
      let gen_types (uvs:list ctx_uvar) : list (bv * bqual) =
-         let fail rng k : unit =
-             let lbname, e, c = lec_hd in
-               raise_error (Errors.Fatal_FailToResolveImplicitArgument,
-                            BU.format3 "Failed to resolve implicit argument of type '%s' in the type of %s (%s)"
-                                       (Print.term_to_string k)
-                                       (Print.lbname_to_string lbname)
-                                       (Print.term_to_string (U.comp_result c)))
-                            rng
-         in
-         uvs |> List.map (fun u ->
+         uvs |> List.concatMap (fun u ->
+         (* If this implicit has a meta, don't generalize it. Just leave it
+         unresolved for the resolve_implicits phase to fill it in. *)
+         if Some? u.ctx_uvar_meta then [] else
+
          match UF.find u.ctx_uvar_head with
          | Some _ -> failwith "Unexpected instantiation of mutually recursive uvar"
          | _ ->
            let k = N.normalize [Env.Beta; Env.Exclude Env.Zeta] env (U.ctx_uvar_typ u) in
            let bs, kres = U.arrow_formals k in
-           let _ =
-             //we only generalize variables at type k = a:Type{phi}
-             //where k is closed
-             //this is in support of ML-style polymorphism, while also allowing generalizing
-             //over things like eqtype, which is a common case
-             //Otherwise, things go badly wrong: see #1091
-             match (U.unrefine (N.unfold_whnf env kres)).n with
-             | Tm_type _ ->
-                let free = FStar.Syntax.Free.names kres in
-                if not (BU.set_is_empty free) then fail u.ctx_uvar_range kres
+           //we only generalize variables at type k = a:Type{phi}
+           //where k is closed
+           //this is in support of ML-style polymorphism, while also allowing generalizing
+           //over things like eqtype, which is a common case
+           //Otherwise, things go badly wrong: see #1091
+           match (U.unrefine (N.unfold_whnf env kres)).n with
+           | Tm_type _ ->
+              let free = FStar.Syntax.Free.names kres in
+              if not (BU.set_is_empty free) then
+                []
+              else
+              let a = S.new_bv (Some <| Env.get_range env) kres in
+              let t =
+                  match bs with
+                  | [] -> S.bv_to_name a
+                  | _ -> U.abs bs (S.bv_to_name a) (Some (U.residual_tot kres))
+              in
+              U.set_uvar u.ctx_uvar_head t;
+               //t clearly has a free variable; this is the one place we break the
+               //invariant of a uvar always being resolved to a term well-typed in its given context
+              [a, S.as_bqual_implicit true]
 
-             | _ ->
-               fail u.ctx_uvar_range kres
-           in
-           let a = S.new_bv (Some <| Env.get_range env) kres in
-           let t =
-               match bs with
-               | [] -> S.bv_to_name a
-               | _ -> U.abs bs (S.bv_to_name a) (Some (U.residual_tot kres))
-           in
-           U.set_uvar u.ctx_uvar_head t;
-            //t clearly has a free variable; this is the one place we break the
-            //invariant of a uvar always being resolved to a term well-typed in its given context
-           a, S.as_bqual_implicit true)
+           | _ ->
+             (* This uvar was not a type. Do not generalize it and
+             leave the rest of typechecker attempt solving it, or fail *)
+             []
+         )
      in
 
      let gen_univs = gen_univs env univs in

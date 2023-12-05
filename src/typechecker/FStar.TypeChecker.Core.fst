@@ -570,10 +570,10 @@ let lookup (g:env) (e:term) : result (tot_or_ghost & typ) =
      then (
        record_cache_hit();
        // BU.print4 "cache hit\n %s |- %s : %s\nmatching env %s\n"
-       //   (Env.print_gamma g.tcenv.gamma)
+       //   (show g.tcenv.gamma)
        //   (P.term_to_string e)
        //   (P.term_to_string (snd (fst he.he_res)))
-       //   (Env.print_gamma he.he_gamma);
+       //   (show he.he_gamma);
        fun _ -> Inl he.he_res
      )
      else (

@@ -50,6 +50,13 @@ module PC = FStar.Parser.Const
 module FC = FStar.Const
 module TcComm = FStar.TypeChecker.Common
 
+instance showable_implicit_checking_status : showable implicit_checking_status = {
+  show = (function
+          | Implicit_unresolved -> "Implicit_unresolved"
+          | Implicit_checking_defers_univ_constraint -> "Implicit_checking_defers_univ_constraint"
+          | Implicit_has_typing_guard (tm, typ) -> "Implicit_has_typing_guard");
+}
+
 let is_base_type env typ =
     let t = FStar.TypeChecker.Normalize.unfold_whnf env typ in
     let head, args = U.head_and_args t in
@@ -58,8 +65,6 @@ let is_base_type env typ =
     | Tm_fvar _
     | Tm_type _ -> true
     | _ -> false
-
-let print_ctx_uvar ctx_uvar = Print.ctx_uvar_to_string ctx_uvar
 
 let binders_as_bv_set (bs:binders) =
     FStar.Compiler.Util.as_set (List.map (fun b -> b.binder_bv) bs)
@@ -329,7 +334,7 @@ let term_to_string t =
     match head.n with
     | Tm_uvar (u, s) ->
       BU.format3 "%s%s %s"
-            (Print.ctx_uvar_to_string u)
+            (show u)
             (match fst s with | [] -> "" | s -> BU.format1 "@<%s>" (Print.subst_to_string (List.hd s)))
             (Print.args_to_string args)
     | _ -> show t
@@ -577,7 +582,7 @@ let set_uvar env u (should_check_opt:option S.should_check_uvar) t =
   // if Env.debug env <| Options.Other "Rel"
   // then (
   //   BU.print2 "Setting uvar %s to %s\n"
-  //     (Print.ctx_uvar_to_string u)
+  //     (show u)
   //     (show t);
   //   match Unionfind.find u.ctx_uvar_head with
   //   | None -> ()
@@ -800,7 +805,7 @@ let flex_uvar_has_meta_tac u =
   | _ -> false
 
 let flex_t_to_string (Flex (_, c, args)) =
-    BU.format2 "%s [%s]" (print_ctx_uvar c) (Print.args_to_string args)
+    BU.format2 "%s [%s]" (show c) (Print.args_to_string args)
 
 let is_flex t =
     let head, _args = U.head_and_args t in
@@ -901,7 +906,7 @@ let ensure_no_uvar_subst env (t0:term) (wl:worklist)
         let sol = S.mk_Tm_app t_v args_sol t0.pos in
         if Env.debug env <| Options.Other "Rel"
         then BU.print2 "ensure_no_uvar_subst solving %s with %s\n"
-               (Print.ctx_uvar_to_string uv)
+               (show uv)
                (show sol);
         set_uvar env uv (Some Already_checked) sol;
 
@@ -994,7 +999,7 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
         if debug wl <| Options.Other "Rel"
         then BU.print3 "Solving %s (%s) with formula %s\n"
                             (string_of_int (p_pid prob))
-                            (print_ctx_uvar uv)
+                            (show uv)
                             (show phi);
         let phi = U.abs xs phi (Some (U.residual_tot U.ktype0)) in
         def_check_scoped (p_loc prob) ("solve_prob'.sol." ^ string_of_int (p_pid prob))
@@ -1004,7 +1009,7 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
     let uv = p_guard_uvar prob in
     let fail () =
         failwith (BU.format2 "Impossible: this instance %s has already been assigned a solution\n%s\n"
-                              (Print.ctx_uvar_to_string uv)
+                              (show uv)
                               (show (p_guard prob)))
     in
     let args_as_binders args =
@@ -1839,12 +1844,12 @@ let quasi_pattern env (f:flex_t) : option (binders * typ) =
       let formals, t_res = U.arrow_formals t_hd in
       aux [] formals t_res args
 
-let run_meta_arg_tac (ctx_u:ctx_uvar) : term =
+let run_meta_arg_tac (env:env_t) (ctx_u:ctx_uvar) : term =
   match ctx_u.ctx_uvar_meta with
-  | Some (Ctx_uvar_meta_tac (env_dyn, tau)) ->
-    let env : Env.env = FStar.Compiler.Dyn.undyn env_dyn in
-    if Env.debug env (Options.Other "Tac")
-    then BU.print1 "Running tactic for meta-arg %s\n" (Print.ctx_uvar_to_string ctx_u);
+  | Some (Ctx_uvar_meta_tac tau) ->
+    let env = { env with gamma = ctx_u.ctx_uvar_gamma } in
+    if Env.debug env (Options.Other "Tac") then
+      BU.print1 "Running tactic for meta-arg %s\n" (show ctx_u);
     Errors.with_ctx "Running tactic for meta-arg"
       (fun () -> env.synth_hook env (U.ctx_uvar_typ ctx_u) tau)
   | _ ->
@@ -2106,6 +2111,16 @@ let lazy_complete_repr (k:lazy_kind) : bool =
   | Lazy_sigelt
   | Lazy_universe -> true
   | _ -> false
+
+let has_free_uvars (t:term) : bool =
+  not (BU.set_is_empty (Free.uvars_uncached t))
+
+let env_has_free_uvars (e:env_t) : bool =
+  List.existsb (fun b -> has_free_uvars b.binder_bv.sort) (Env.all_binders e)
+
+let gamma_has_free_uvars (g:list binding) : bool =
+  List.existsb (function Binding_var bv -> has_free_uvars bv.sort
+                       | _ -> false) g
 
 (******************************************************************************************************)
 (* Main solving algorithm begins here *)
@@ -2627,7 +2642,7 @@ and imitate_arrow (orig:prob) (wl:worklist)
 
             | ({binder_bv=x;binder_qual=imp;binder_positivity=pqual;binder_attrs=attrs})::formals ->
               let _ctx_u_x, u_x, wl = copy_uvar u_lhs (bs_lhs@bs) (U.type_u() |> fst) wl in
-              //printfn "Generated formal %s where %s" (show t_y) (Print.ctx_uvar_to_string ctx_u_x);
+              //printfn "Generated formal %s where %s" (show t_y) (show ctx_u_x);
               let y = S.new_bv (Some (S.range_of_bv x)) u_x in
               let b = S.mk_binder_with_attrs y imp pqual attrs in
               aux (bs@[b]) (bs_terms@[U.arg_of_non_null_binder b]) formals wl
@@ -3245,17 +3260,19 @@ and solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:flex_t) (rhs:term)
 *)
 and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
     let should_run_meta_arg_tac (flex:flex_t) =
+      (* If this flex has a meta-arg, and the problem is fully
+      defined (no uvars in env/typ), then we can run it now. *)
       let uv = flex_uvar flex in
       flex_uvar_has_meta_tac uv &&
-      BU.set_is_empty (Free.uvars (U.ctx_uvar_typ uv)) in
+      not (has_free_uvars (U.ctx_uvar_typ uv)) &&
+      not (gamma_has_free_uvars uv.ctx_uvar_gamma)
+    in
 
     let run_meta_arg_tac_and_try_again (flex:flex_t) =
       let uv = flex_uvar flex in
-      let t = run_meta_arg_tac uv in
-      if debug wl <| Options.Other "Rel"
-      then BU.print2 "solve_t_flex_flex: solving meta arg uvar %s with %s\n"
-             (Print.ctx_uvar_to_string uv)
-             (show t);
+      let t = run_meta_arg_tac env uv in
+      if debug wl <| Options.Other "Rel" then
+        BU.print2 "solve_t_flex_flex: solving meta arg uvar %s with %s\n" (show uv) (show t);
       set_uvar env uv None t;
       solve (attempt [orig] wl) in
 
@@ -3335,7 +3352,10 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
                                            ^"\trhs=" ^u_rhs.ctx_uvar_reason)
                                          wl range gamma_w ctx_w new_uvar_typ
                                          new_uvar_should_check
-                                         None in
+                                         (if Some? u_lhs.ctx_uvar_meta
+                                          then u_lhs.ctx_uvar_meta
+                                          else u_rhs.ctx_uvar_meta) // Try to retain the meta, if any
+                   in
                    let w_app = S.mk_Tm_app w (List.map (fun ({binder_bv=z}) -> S.as_arg (S.bv_to_name z)) zs) w.pos in
                    let _ =
                      if debug wl <| Options.Other "Rel"
@@ -4765,8 +4785,7 @@ let try_teq smt_ok env t1 t2 : option guard_t =
   Profiling.profile
     (fun () ->
       if Env.debug env <| Options.Other "Rel" then
-        BU.print3 "try_teq of %s and %s in %s {\n" (show t1) (show t2)
-          (Env.print_gamma env.gamma);
+        BU.print3 "try_teq of %s and %s in %s {\n" (show t1) (show t2) (show env.gamma);
       let prob, wl = new_t_problem (empty_worklist env) env t1 EQ t2 None (Env.get_range env) in
       let g = with_guard env prob <| solve_and_commit (singleton wl prob smt_ok) (fun _ -> None) in
       if Env.debug env <| Options.Other "Rel" then
@@ -4930,7 +4949,7 @@ let try_solve_deferred_constraints (defer_ok:defer_ok_t) smt_ok deferred_to_tac_
     |> List.collect
           (fun i ->
             match i.imp_uvar.ctx_uvar_meta with
-            | Some (Ctx_uvar_meta_tac (_, tac)) -> 
+            | Some (Ctx_uvar_meta_tac tac) ->
               let head, _ = U.head_and_args_full tac in
               if U.is_fvar PC.tcresolve_lid head
               then (
@@ -5327,7 +5346,7 @@ let check_implicit_solution_and_discharge_guard env
          | Inr print_err ->
            raise_error (Errors.Fatal_FailToResolveImplicitArgument,
                         BU.format5 "Core checking failed for implicit %s (is_tac: %s) (reason: %s) (%s <: %s)"
-                          (Print.ctx_uvar_to_string imp_uvar)
+                          (show imp_uvar)
                           (string_of_bool is_tac)
                           imp_reason
                           (show imp_tm)
@@ -5435,7 +5454,7 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
   in
   (* / cache *) 
 
-  let rec until_fixpoint (acc:tagged_implicits * bool)
+  let rec until_fixpoint (acc : tagged_implicits & (*changed:*)bool)
                          (implicits:Env.implicits) 
     : tagged_implicits =
 
@@ -5443,8 +5462,11 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
 
     match implicits with
     | [] ->
-      if not changed
-      then //Nothing changed in this iteration of the loop
+      if changed then (
+        (* We made some progress, keep going from the start *)
+        until_fixpoint ([], false) (List.map fst out)
+      ) else (
+           //Nothing changed in this iteration of the loop
            //We will try to make progress by either solving a single valued implicit,
            //  or solving an implicit that generates univ constraint, with force flag on
            let imps, changed = try_solve_single_valued_implicits env is_tac (List.map fst out) in
@@ -5461,7 +5483,7 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
                        is_tac
                        force_univ_constraints |> must in
                    until_fixpoint ([], false) (imps@List.map fst rest))
-      else until_fixpoint ([], false) (List.map fst out)
+      )
 
     | hd::tl ->
       let { imp_reason = reason; imp_tm = tm; imp_uvar = ctx_u; imp_range = r } = hd in
@@ -5474,28 +5496,37 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
         until_fixpoint (out, true) tl
 
       | _ when unresolved ctx_u && flex_uvar_has_meta_tac ctx_u ->
-        let Some (Ctx_uvar_meta_tac meta) = ctx_u.ctx_uvar_meta in
-        let m_env : env_t = Dyn.undyn (fst meta) in
-        let tac = snd meta in
+        let Some (Ctx_uvar_meta_tac tac) = ctx_u.ctx_uvar_meta in
+        let env = { env with gamma = ctx_u.ctx_uvar_gamma } in
         let typ = U.ctx_uvar_typ ctx_u in
-        let solve_with (t:term) =
-          let extra =
-            match teq_nosmt env t tm with
-            | None -> failwith "resolve_implicits: unifying with an unresolved uvar failed?"
-            | Some g -> g.implicits
+        if (has_free_uvars typ || gamma_has_free_uvars ctx_u.ctx_uvar_gamma)
+            && Options.ext_getv "compat:open_metas" = "" then // i.e. compat option unset
+        (
+          (* If the result type or env for this meta arg has a free uvar, delay it.
+          Some other meta arg being solved may instantiate the uvar. See #3130. *)
+          if Env.debug env <| Options.Other "Rel" || Env.debug env <| Options.Other "Imps" then
+            BU.print1 "Deferring implicit due to open ctx/typ %s\n" (show ctx_u);
+          until_fixpoint ((hd, Implicit_unresolved)::out, changed) tl
+        ) else (
+          let solve_with (t:term) =
+            let extra =
+              match teq_nosmt env t tm with
+              | None -> failwith "resolve_implicits: unifying with an unresolved uvar failed?"
+              | Some g -> g.implicits
+            in
+            until_fixpoint (out, true) (extra @ tl)
           in
-          until_fixpoint (out, true) (extra @ tl)
-        in
-        if cacheable tac then
-          match meta_arg_cache_lookup tac m_env typ with
-          | Some res -> solve_with res
-          | None ->
-            let t = run_meta_arg_tac ctx_u in
-            meta_arg_cache_result tac m_env typ t;
+          if cacheable tac then
+            match meta_arg_cache_lookup tac env typ with
+            | Some res -> solve_with res
+            | None ->
+              let t = run_meta_arg_tac env ctx_u in
+              meta_arg_cache_result tac env typ t;
+              solve_with t
+          else
+            let t = run_meta_arg_tac env ctx_u in
             solve_with t
-        else
-          let t = run_meta_arg_tac ctx_u in
-          solve_with t
+        )
 
       | _ when unresolved ctx_u ->
         until_fixpoint ((hd, Implicit_unresolved)::out, changed) tl
@@ -5578,7 +5609,7 @@ let force_trivial_guard env g =
     | imp::_ ->
       let open FStar.Pprint in
       raise_error_doc (Errors.Fatal_FailToResolveImplicitArgument, [
-        prefix 4 1 (text "Failed to resolved implicit argument")
+        prefix 4 1 (text "Failed to resolve implicit argument")
                 (arbitrary_string (Print.uvar_to_string imp.imp_uvar.ctx_uvar_head)) ^/^
         prefix 4 1 (text "of type")
                 (N.term_to_doc env (U.ctx_uvar_typ imp.imp_uvar)) ^/^

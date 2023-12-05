@@ -1,5 +1,5 @@
 open Prims
-let (cache_version_number : Prims.int) = (Prims.of_int (63))
+let (cache_version_number : Prims.int) = (Prims.of_int (64))
 type tc_result =
   {
   checked_module: FStar_Syntax_Syntax.modul ;
@@ -81,6 +81,25 @@ let (uu___is_Valid : tc_result_t -> Prims.bool) =
   fun projectee -> match projectee with | Valid _0 -> true | uu___ -> false
 let (__proj__Valid__item___0 : tc_result_t -> Prims.string) =
   fun projectee -> match projectee with | Valid _0 -> _0
+let (uu___46 : tc_result_t FStar_Class_Show.showable) =
+  {
+    FStar_Class_Show.show =
+      (fun uu___ ->
+         match uu___ with
+         | Unknown -> "Unknown"
+         | Invalid s ->
+             let uu___1 =
+               FStar_Class_Show.show
+                 (FStar_Class_Show.printableshow
+                    FStar_Class_Printable.printable_string) s in
+             Prims.op_Hat "Invalid " uu___1
+         | Valid s ->
+             let uu___1 =
+               FStar_Class_Show.show
+                 (FStar_Class_Show.printableshow
+                    FStar_Class_Printable.printable_string) s in
+             Prims.op_Hat "Valid " uu___1)
+  }
 type cache_t =
   (tc_result_t * (Prims.string, FStar_Parser_Dep.parsing_data)
     FStar_Pervasives.either)

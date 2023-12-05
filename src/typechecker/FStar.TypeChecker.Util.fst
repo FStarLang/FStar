@@ -2883,13 +2883,21 @@ let maybe_instantiate (env:Env.env) e t =
                       let t = SS.subst subst x.sort in
                       let meta_t =
                         match qual, attrs with
-                        | Some (Meta tau), _ ->
-                          Ctx_uvar_meta_tac (mkdyn env, tau)
-                        | _, attr::_ ->
-                          Ctx_uvar_meta_attr attr
+                        | Some (Meta tau), _ -> Ctx_uvar_meta_tac tau
+                        | _, attr::_ -> Ctx_uvar_meta_attr attr
                         | _ -> failwith "Impossible, match is under a guard, did not expect this case"
                       in
-                      let v, _, g = Env.new_implicit_var_aux "Instantiation of meta argument"
+                      let msg =
+                        let is_typeclass =
+                          match meta_t with
+                          | Ctx_uvar_meta_tac tau -> U.is_fvar C.tcresolve_lid tau
+                          | _ -> false
+                        in
+                        if is_typeclass
+                        then "Typeclass constraint argument"
+                        else "Instantiation of meta argument"
+                      in
+                      let v, _, g = Env.new_implicit_var_aux msg
                                                              e.pos env t Strict
                                                              (Some meta_t) in
                       if Env.debug env Options.High then

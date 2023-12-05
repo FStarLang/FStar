@@ -964,7 +964,7 @@ let t_apply (uopt:bool) (only_match:bool) (tc_resolved_uvars:bool) (tm:term) : t
       (fun () -> BU.print5 "t_apply: tm = %s\nt_apply: goal = %s\nenv.gamma=%s\ntyp=%s\nguard=%s\n"
                         (show tm)
                         (goal_to_string_verbose goal)
-                        (Env.print_gamma e.gamma)
+                        (show e.gamma)
                         (show typ)
                         (Rel.guard_to_string e guard)) ;!
     // Focus helps keep the goal order

@@ -2954,7 +2954,9 @@ let (t_apply :
                                               FStar_Tactics_Printing.goal_to_string_verbose
                                                 goal in
                                             let uu___10 =
-                                              FStar_TypeChecker_Env.print_gamma
+                                              FStar_Class_Show.show
+                                                (FStar_Class_Show.show_list
+                                                   FStar_Syntax_Print.showable_binding)
                                                 e.FStar_TypeChecker_Env.gamma in
                                             let uu___11 =
                                               FStar_Class_Show.show

@@ -19,5 +19,7 @@ let test5 (y : it 6) = let p : Type0 = y == mk6 in ()
 let test6 () = let p : Type0 = mk5 == mk6 in ()
 let test7 () = let p : Type0 = mk6 == mk5 in ()
 
+(* These are ambiguous, but they work. Wouldn't be a big deal if they
+regress though. *)
 let test8 (x:_) = let p : Type0 = mk5 == x /\ x == mk6 in ()
 let test9 (x:_) = let p : Type0 = mk6 == x /\ x == mk5 in ()

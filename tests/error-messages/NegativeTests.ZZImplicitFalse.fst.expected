@@ -1,6 +1,6 @@
 >> Got issues: [
 * Error 66 at NegativeTests.ZZImplicitFalse.fst(20,26-20,27):
-  - Failed to resolved implicit argument ?1
+  - Failed to resolve implicit argument ?1
     of type Prims.l_False
     introduced for
         user-provided implicit term at

@@ -2040,3 +2040,24 @@ let (showable_uvar : FStar_Syntax_Syntax.uvar FStar_Class_Show.showable) =
   { FStar_Class_Show.show = uvar_to_string }
 let (showable_ctxu : FStar_Syntax_Syntax.ctx_uvar FStar_Class_Show.showable)
   = { FStar_Class_Show.show = ctx_uvar_to_string }
+let (showable_binding :
+  FStar_Syntax_Syntax.binding FStar_Class_Show.showable) =
+  {
+    FStar_Class_Show.show =
+      (fun uu___ ->
+         match uu___ with
+         | FStar_Syntax_Syntax.Binding_var x ->
+             let uu___1 = FStar_Class_Show.show showable_bv x in
+             Prims.op_Hat "Binding_var " uu___1
+         | FStar_Syntax_Syntax.Binding_lid x ->
+             let uu___1 =
+               FStar_Class_Show.show
+                 (FStar_Class_Show.show_tuple2 FStar_Ident.showable_lident
+                    (FStar_Class_Show.show_tuple2
+                       (FStar_Class_Show.show_list FStar_Ident.showable_ident)
+                       showable_term)) x in
+             Prims.op_Hat "Binding_lid " uu___1
+         | FStar_Syntax_Syntax.Binding_univ x ->
+             let uu___1 = FStar_Class_Show.show FStar_Ident.showable_ident x in
+             Prims.op_Hat "Binding_univ " uu___1)
+  }

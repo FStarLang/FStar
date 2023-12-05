@@ -187,7 +187,7 @@ and ctx_uvar = {                                                 (* (G |- ?u : t
   ctx_uvar_meta: option ctx_uvar_meta_t;
 }
 and ctx_uvar_meta_t =
-  | Ctx_uvar_meta_tac of dyn * term (* the dyn is an FStar.TypeChecker.Env.env *)
+  | Ctx_uvar_meta_tac of term
   | Ctx_uvar_meta_attr of term (* An attribute associated with an implicit argument using the #[@@...] notation *)
 and ctx_uvar_and_subst = ctx_uvar * subst_ts
 
