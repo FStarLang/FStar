@@ -156,9 +156,9 @@ let rec (print_st_typing :
                                                    (Obj.magic
                                                       (FStar_Range.mk_range
                                                          "FStar.Printf.fst"
-                                                         (Prims.of_int (121))
+                                                         (Prims.of_int (122))
                                                          (Prims.of_int (8))
-                                                         (Prims.of_int (123))
+                                                         (Prims.of_int (124))
                                                          (Prims.of_int (44)))))
                                                 (Obj.magic
                                                    (print_st_typing g1 e1 c1
@@ -264,9 +264,9 @@ let rec (print_st_typing :
                                                    (Obj.magic
                                                       (FStar_Range.mk_range
                                                          "FStar.Printf.fst"
-                                                         (Prims.of_int (121))
+                                                         (Prims.of_int (122))
                                                          (Prims.of_int (8))
-                                                         (Prims.of_int (123))
+                                                         (Prims.of_int (124))
                                                          (Prims.of_int (44)))))
                                                 (Obj.magic
                                                    (Pulse_Syntax_Printer.term_to_string
