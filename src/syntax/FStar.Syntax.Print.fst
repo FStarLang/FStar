@@ -999,3 +999,10 @@ instance showable_bv     = { show = bv_to_string; }
 instance showable_binder = { show = binder_to_string; }
 instance showable_uvar   = { show = uvar_to_string; }
 instance showable_ctxu   = { show = ctx_uvar_to_string; }
+
+instance showable_binding = {
+  show = (function
+          | Binding_var x -> "Binding_var " ^ show x
+          | Binding_lid x -> "Binding_lid " ^ show x
+          | Binding_univ x -> "Binding_univ " ^ show x);
+}

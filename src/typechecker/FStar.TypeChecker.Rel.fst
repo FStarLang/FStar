@@ -4777,8 +4777,7 @@ let try_teq smt_ok env t1 t2 : option guard_t =
   Profiling.profile
     (fun () ->
       if Env.debug env <| Options.Other "Rel" then
-        BU.print3 "try_teq of %s and %s in %s {\n" (show t1) (show t2)
-          (Env.print_gamma env.gamma);
+        BU.print3 "try_teq of %s and %s in %s {\n" (show t1) (show t2) (show env.gamma);
       let prob, wl = new_t_problem (empty_worklist env) env t1 EQ t2 None (Env.get_range env) in
       let g = with_guard env prob <| solve_and_commit (singleton wl prob smt_ok) (fun _ -> None) in
       if Env.debug env <| Options.Other "Rel" then

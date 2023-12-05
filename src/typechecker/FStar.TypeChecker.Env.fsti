@@ -494,9 +494,6 @@ val new_implicit_var_aux : string ->
                            option ctx_uvar_meta_t ->
                            (term * list (ctx_uvar * Range.range) * guard_t)
 
-
-val print_gamma : gamma -> string
-
 (* layered effect utils *)
 
 (*
