@@ -1006,6 +1006,22 @@ let ask_solver_quake
     ; tried_recovery      = false (* possibly set by caller *)
     }
 
+(* A very simple command language for recovering, though keep in
+mind its execution is stateful in the sense that anything after a
+(RestartSolver h) will run in the new solver instance. *)
+type recovery_hammer =
+  | IncreaseRLimit of (*factor : *)int
+  | RestartAnd of recovery_hammer
+
+let rec pp_hammer (h : recovery_hammer) : Pprint.document =
+  let open FStar.Errors.Msg in
+  let open FStar.Pprint in
+  match h with
+  | IncreaseRLimit factor ->
+    text "increasing its rlimit by" ^/^ pp factor ^^ doc_of_string "x"
+  | RestartAnd h ->
+    text "restarting the solver and" ^/^ pp_hammer h
+
 (* If --proof_recovery is on, then we retry the query multiple
 times, increasing rlimits, until we get a success. If not, we just
 call ask_solver_quake. *)
@@ -1013,47 +1029,59 @@ let ask_solver_recover
     (configs : list query_settings)
  : answer
  =
- let open FStar.Pprint in
- let open FStar.Errors.Msg in
- let open FStar.Class.PP in
- if Options.proof_recovery () then (
-   let r = ask_solver_quake configs in
-   if r.ok then r else (
-     let last_cfg = List.last configs in
-     Errors.diag_doc last_cfg.query_range [
-       text "This query failed to be solved. Will now retry with higher rlimits due to --proof_recovery.";
-     ];
+  let open FStar.Pprint in
+  let open FStar.Errors.Msg in
+  let open FStar.Class.PP in
+  if Options.proof_recovery () then (
+    let r = ask_solver_quake configs in
+    if r.ok then r else (
+      let restarted = BU.mk_ref false in
+      let cfg = List.last configs in
 
-     let try_factor (n:int) : answer =
-       let open FStar.Mul in
-       Errors.diag_doc last_cfg.query_range [
-         text "Retrying query with rlimit factor" ^/^ pp n;
-       ];
-       let cfg = { last_cfg with query_rlimit = n * last_cfg.query_rlimit } in
-       ask_solver_quake [cfg]
-     in
+      Errors.diag_doc cfg.query_range [
+        text "This query failed to be solved. Will now retry with higher rlimits due to --proof_recovery.";
+      ];
 
-     let rec aux (factors : list int) : answer =
-       match factors with
-       | [] ->
-         { r with tried_recovery = true }
-       | n::ns ->
-         let r = try_factor n in
-         if r.ok then (
-           Errors.log_issue_doc last_cfg.query_range (Errors.Warning_ProofRecovery, [
-              text "This query succeeded after increasing its rlimit by" ^/^
-                   pp n ^^ doc_of_string "x";
-              text "Increase the rlimit in the file or simplify the proof. \
-                    This is only succeeding due to --proof_recovery being given."
-              ]);
-           r
-         ) else
-           aux ns
-     in
-     aux [2;4;8]
-   )
- ) else
-   ask_solver_quake configs
+      let try_factor (n:int) : answer =
+        let open FStar.Mul in
+        Errors.diag_doc cfg.query_range [text "Retrying query with rlimit factor" ^/^ pp n];
+        let cfg = { cfg with query_rlimit = n * cfg.query_rlimit } in
+        ask_solver_quake [cfg]
+      in
+
+      let rec try_hammer (h : recovery_hammer) : answer =
+        match h with
+        | IncreaseRLimit factor -> try_factor factor
+        | RestartAnd h ->
+          Errors.diag_doc cfg.query_range [text "Trying a solver restart"];
+          cfg.query_env.solver.refresh();
+          try_hammer h
+      in
+
+      let rec aux (hammers : list recovery_hammer) : answer =
+        match hammers with
+        | [] -> { r with tried_recovery = true }
+        | h::hs ->
+          let r = try_hammer h in
+          if r.ok then (
+            Errors.log_issue_doc cfg.query_range (Errors.Warning_ProofRecovery, [
+               text "This query succeeded after " ^/^ pp_hammer h;
+               text "Increase the rlimit in the file or simplify the proof. \
+                     This is only succeeding due to --proof_recovery being given."
+               ]);
+            r
+          ) else
+            aux hs
+      in
+      aux [
+        IncreaseRLimit 2;
+        IncreaseRLimit 4;
+        IncreaseRLimit 8;
+        RestartAnd (IncreaseRLimit 8);
+      ]
+    )
+  ) else
+    ask_solver_quake configs
 
 let ask_solver
     (can_split : bool)
