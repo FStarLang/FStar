@@ -474,27 +474,13 @@ let (check_uvar_ctx_invariant :
       fun should_check ->
         fun g ->
           fun bs ->
-            let print_gamma gamma =
-              let uu___ =
-                FStar_Compiler_Effect.op_Bar_Greater gamma
-                  (FStar_Compiler_List.map
-                     (fun uu___1 ->
-                        match uu___1 with
-                        | FStar_Syntax_Syntax.Binding_var x ->
-                            let uu___2 = FStar_Syntax_Print.bv_to_string x in
-                            Prims.op_Hat "Binding_var " uu___2
-                        | FStar_Syntax_Syntax.Binding_univ u ->
-                            let uu___2 = FStar_Ident.string_of_id u in
-                            Prims.op_Hat "Binding_univ " uu___2
-                        | FStar_Syntax_Syntax.Binding_lid (l, uu___2) ->
-                            let uu___3 = FStar_Ident.string_of_lid l in
-                            Prims.op_Hat "Binding_lid " uu___3)) in
-              FStar_Compiler_Effect.op_Bar_Greater uu___
-                (FStar_Compiler_String.concat "::\n") in
             let fail uu___ =
               let uu___1 =
                 let uu___2 = FStar_Compiler_Range_Ops.string_of_range r in
-                let uu___3 = print_gamma g in
+                let uu___3 =
+                  FStar_Class_Show.show
+                    (FStar_Class_Show.show_list
+                       FStar_Syntax_Print.showable_binding) g in
                 let uu___4 = FStar_Syntax_Print.binders_to_string ", " bs in
                 FStar_Compiler_Util.format5
                   "Invariant violation: gamma and binders are out of sync\n\treason=%s, range=%s, should_check=%s\n\t\n                               gamma=%s\n\tbinders=%s\n"

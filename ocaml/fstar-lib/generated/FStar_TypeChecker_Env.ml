@@ -6249,33 +6249,6 @@ let (univnames :
             let uu___3 = FStar_Syntax_Free.univnames t in ext out uu___3 in
           aux uu___2 tl in
     aux no_univ_names env1.gamma
-let (print_gamma : FStar_Syntax_Syntax.gamma -> Prims.string) =
-  fun gamma ->
-    let uu___ =
-      FStar_Compiler_Effect.op_Bar_Greater gamma
-        (FStar_Compiler_List.map
-           (fun uu___1 ->
-              match uu___1 with
-              | FStar_Syntax_Syntax.Binding_var x ->
-                  let uu___2 =
-                    let uu___3 = FStar_Syntax_Print.bv_to_string x in
-                    let uu___4 =
-                      let uu___5 =
-                        let uu___6 =
-                          FStar_Syntax_Print.term_to_string
-                            x.FStar_Syntax_Syntax.sort in
-                        Prims.op_Hat uu___6 ")" in
-                      Prims.op_Hat ":" uu___5 in
-                    Prims.op_Hat uu___3 uu___4 in
-                  Prims.op_Hat "Binding_var (" uu___2
-              | FStar_Syntax_Syntax.Binding_univ u ->
-                  let uu___2 = FStar_Ident.string_of_id u in
-                  Prims.op_Hat "Binding_univ " uu___2
-              | FStar_Syntax_Syntax.Binding_lid (l, uu___2) ->
-                  let uu___3 = FStar_Ident.string_of_lid l in
-                  Prims.op_Hat "Binding_lid " uu___3)) in
-    FStar_Compiler_Effect.op_Bar_Greater uu___
-      (FStar_Compiler_String.concat "::\n")
 let (string_of_delta_level : delta_level -> Prims.string) =
   fun uu___ ->
     match uu___ with
