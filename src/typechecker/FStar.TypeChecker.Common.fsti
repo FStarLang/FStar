@@ -73,6 +73,8 @@ type guard_formula =
   | Trivial
   | NonTrivial of formula
 
+instance val showable_guard_formula : showable guard_formula
+
 type deferred_reason =
   | Deferred_univ_constraint
   | Deferred_occur_check_failed
@@ -83,6 +85,8 @@ type deferred_reason =
   | Deferred_flex_flex_nonpattern
   | Deferred_delay_match_heuristic
   | Deferred_to_user_tac
+
+instance val showable_deferred_reason : showable deferred_reason
 
 type deferred = list (deferred_reason * string * prob)
 

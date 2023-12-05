@@ -594,7 +594,7 @@ let context_profile (theory:list decl) =
                         (string_of_int n))
                modules
 
-let mk_input fresh theory =
+let mk_input (fresh : bool) (theory : list decl) : string & option string & option string =
     let ver = Options.z3_version () in
     let options = z3_options ver in
     let options = options ^ (Options.z3_smtopt() |> String.concat "\n") in

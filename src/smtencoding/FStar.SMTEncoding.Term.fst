@@ -14,15 +14,15 @@
    limitations under the License.
 *)
 module FStar.SMTEncoding.Term
-open FStar.Compiler.Effect
-open FStar.Compiler.List
+
 open FStar
 open FStar.Compiler
-open FStar.Syntax.Syntax
-open FStar.Syntax
-open FStar.Compiler.Util
-module BU = FStar.Compiler.Util
-module U = FStar.Syntax.Util
+open FStar.Compiler.Effect
+open FStar.Compiler.List
+
+module S   = FStar.Syntax.Syntax
+module BU  = FStar.Compiler.Util
+module U   = FStar.Syntax.Util
 
 let escape (s:string) = BU.replace_char s '\'' '_'
 
@@ -129,6 +129,7 @@ let mk_decls_trivial decls = [{
 let decls_list_of l = l |> List.collect (fun elt -> elt.decls)
 
 let mk_fv (x, y) : fv = x, y, false
+
 let fv_name (x:fv) = let nm, _, _ = x in nm
 let fv_sort (x:fv) = let _, sort, _ = x in sort
 let fv_force (x:fv) = let _, _, force = x in force

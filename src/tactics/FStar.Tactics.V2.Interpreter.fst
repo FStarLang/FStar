@@ -808,6 +808,9 @@ let run_tactic_on_ps'
 
     match res with
     | Success (ret, ps) ->
+        if !tacdbg then
+            do_dump_proofstate ps "at the finish line";
+
         (* if !tacdbg || Options.tactics_info () then *)
         (*     BU.print1 "Tactic generated proofterm %s\n" (show w); *)
         let remaining_smt_goals = ps.goals@ps.smt_goals in
@@ -825,27 +828,25 @@ let run_tactic_on_ps'
           remaining_smt_goals;
 
         // Check that all implicits were instantiated
-        if !tacdbg then
-            BU.print1 "About to check tactic implicits: %s\n" (FStar.Common.string_of_list
-                                                                    (fun imp -> show imp.imp_uvar)
-                                                                    ps.all_implicits);
+        Errors.with_ctx "While checking implicits left by a tactic" (fun () ->
+          if !tacdbg then
+              BU.print1 "About to check tactic implicits: %s\n" (FStar.Common.string_of_list
+                                                                      (fun imp -> show imp.imp_uvar)
+                                                                      ps.all_implicits);
 
-        let g = {Env.trivial_guard with TcComm.implicits=ps.all_implicits} in
-        let g = TcRel.solve_deferred_constraints env g in
-        if !tacdbg then
-            BU.print2 "Checked %s implicits (1): %s\n"
-                        (show (List.length ps.all_implicits))
-                        (show ps.all_implicits);
-        let tagged_implicits = TcRel.resolve_implicits_tac env g in
-        if !tacdbg then
-            BU.print2 "Checked %s implicits (2): %s\n"
-                        (show (List.length ps.all_implicits))
-                        (show ps.all_implicits);
-        report_implicits rng_goal tagged_implicits;
-        // /implicits
-
-        if !tacdbg then
-            do_dump_proofstate ps "at the finish line";
+          let g = {Env.trivial_guard with TcComm.implicits=ps.all_implicits} in
+          let g = TcRel.solve_deferred_constraints env g in
+          if !tacdbg then
+              BU.print2 "Checked %s implicits (1): %s\n"
+                          (show (List.length ps.all_implicits))
+                          (show ps.all_implicits);
+          let tagged_implicits = TcRel.resolve_implicits_tac env g in
+          if !tacdbg then
+              BU.print2 "Checked %s implicits (2): %s\n"
+                          (show (List.length ps.all_implicits))
+                          (show ps.all_implicits);
+          report_implicits rng_goal tagged_implicits
+        );
 
         (remaining_smt_goals, ret)
 

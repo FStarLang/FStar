@@ -876,7 +876,7 @@ let __ask_solver
                   (with_fuel_and_diagnostics config [])
                   (BU.format2 "(%s, %s)" config.query_name (string_of_int config.query_index))
                   (Some (Z3.mk_fresh_scope()))
-                  (used_hint config)
+                  (used_hint config) // hint queries run in a fresh solver
     in
 
     fold_queries configs check_one_config process_result
