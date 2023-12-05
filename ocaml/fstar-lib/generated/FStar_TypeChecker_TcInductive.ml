@@ -235,6 +235,13 @@ let (tc_tycon :
                                                          (s.FStar_Syntax_Syntax.sigopts)
                                                      }, u, guard1))))))))))
       | uu___ -> failwith "impossible"
+let (mk_implicit : FStar_Syntax_Syntax.bqual -> FStar_Syntax_Syntax.bqual) =
+  fun uu___ ->
+    match uu___ with
+    | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Meta q) ->
+        FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Meta q)
+    | uu___1 ->
+        FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Implicit false)
 let (tc_data :
   FStar_TypeChecker_Env.env_t ->
     (FStar_Syntax_Syntax.sigelt * FStar_Syntax_Syntax.universe) Prims.list ->
@@ -1993,41 +2000,42 @@ let (check_inductive_well_typedness :
                     tys (env, [], FStar_TypeChecker_Env.trivial_guard) in
                 match uu___2 with
                 | (env1, tcs, g) ->
+                    let g1 = FStar_TypeChecker_Rel.resolve_implicits env1 g in
                     let uu___3 =
                       FStar_Compiler_List.fold_right
                         (fun se ->
                            fun uu___4 ->
                              match uu___4 with
-                             | (datas1, g1) ->
+                             | (datas1, g2) ->
                                  let uu___5 =
                                    let uu___6 = tc_data env1 tcs in uu___6 se in
                                  (match uu___5 with
                                   | (data, g') ->
                                       let uu___6 =
-                                        FStar_TypeChecker_Env.conj_guard g1
+                                        FStar_TypeChecker_Env.conj_guard g2
                                           g' in
                                       ((data :: datas1), uu___6))) datas
-                        ([], g) in
+                        ([], g1) in
                     (match uu___3 with
-                     | (datas1, g1) ->
+                     | (datas1, g2) ->
                          let uu___4 =
                            let tc_universe_vars =
                              FStar_Compiler_List.map
                                FStar_Pervasives_Native.snd tcs in
-                           let g2 =
+                           let g3 =
                              {
                                FStar_TypeChecker_Common.guard_f =
-                                 (g1.FStar_TypeChecker_Common.guard_f);
+                                 (g2.FStar_TypeChecker_Common.guard_f);
                                FStar_TypeChecker_Common.deferred_to_tac =
-                                 (g1.FStar_TypeChecker_Common.deferred_to_tac);
+                                 (g2.FStar_TypeChecker_Common.deferred_to_tac);
                                FStar_TypeChecker_Common.deferred =
-                                 (g1.FStar_TypeChecker_Common.deferred);
+                                 (g2.FStar_TypeChecker_Common.deferred);
                                FStar_TypeChecker_Common.univ_ineqs =
                                  (tc_universe_vars,
                                    (FStar_Pervasives_Native.snd
-                                      g1.FStar_TypeChecker_Common.univ_ineqs));
+                                      g2.FStar_TypeChecker_Common.univ_ineqs));
                                FStar_TypeChecker_Common.implicits =
-                                 (g1.FStar_TypeChecker_Common.implicits)
+                                 (g2.FStar_TypeChecker_Common.implicits)
                              } in
                            (let uu___6 =
                               FStar_Compiler_Effect.op_Less_Bar
@@ -2036,12 +2044,12 @@ let (check_inductive_well_typedness :
                             if uu___6
                             then
                               let uu___7 =
-                                FStar_TypeChecker_Rel.guard_to_string env1 g2 in
+                                FStar_TypeChecker_Rel.guard_to_string env1 g3 in
                               FStar_Compiler_Util.print1
                                 "@@@@@@Guard before (possible) generalization: %s\n"
                                 uu___7
                             else ());
-                           FStar_TypeChecker_Rel.force_trivial_guard env0 g2;
+                           FStar_TypeChecker_Rel.force_trivial_guard env0 g3;
                            if
                              (FStar_Compiler_List.length univs) =
                                Prims.int_zero
@@ -2449,12 +2457,13 @@ let (mk_discriminator_and_indexed_projectors :
                               (FStar_Compiler_List.op_At tps indices)
                               (FStar_Compiler_List.map
                                  (fun b ->
+                                    let uu___ =
+                                      mk_implicit
+                                        b.FStar_Syntax_Syntax.binder_qual in
                                     {
                                       FStar_Syntax_Syntax.binder_bv =
                                         (b.FStar_Syntax_Syntax.binder_bv);
-                                      FStar_Syntax_Syntax.binder_qual =
-                                        (FStar_Pervasives_Native.Some
-                                           FStar_Syntax_Syntax.imp_tag);
+                                      FStar_Syntax_Syntax.binder_qual = uu___;
                                       FStar_Syntax_Syntax.binder_positivity =
                                         (b.FStar_Syntax_Syntax.binder_positivity);
                                       FStar_Syntax_Syntax.binder_attrs =

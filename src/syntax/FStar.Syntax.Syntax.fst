@@ -31,6 +31,26 @@ module PC   = FStar.Parser.Const
 module Err  = FStar.Errors
 module GS   = FStar.GenSym
 
+let rec emb_typ_to_string = function
+    | ET_abstract -> "abstract"
+    | ET_app (h, []) -> h
+    | ET_app(h, args) -> "(" ^h^ " " ^ (List.map emb_typ_to_string args |> String.concat " ")  ^")"
+    | ET_fun(a, b) -> "(" ^ emb_typ_to_string a ^ ") -> " ^ emb_typ_to_string b
+
+instance showable_emb_typ = {
+  show = emb_typ_to_string;
+}
+
+
+let rec delta_depth_to_string = function
+    | Delta_constant_at_level i   -> "Delta_constant_at_level " ^ string_of_int i
+    | Delta_equational_at_level i -> "Delta_equational_at_level " ^ string_of_int i
+    | Delta_abstract d -> "Delta_abstract (" ^ delta_depth_to_string d ^ ")"
+
+instance showable_delta_depth = {
+  show = delta_depth_to_string;
+}
+
 // This is set in FStar.Main.main, where all modules are in-scope.
 let lazy_chooser : ref (option (lazy_kind -> lazyinfo -> term)) = mk_ref None
 

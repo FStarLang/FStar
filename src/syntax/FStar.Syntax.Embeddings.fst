@@ -24,6 +24,8 @@ open FStar.Syntax.Syntax
 open FStar.Compiler.Range
 open FStar.VConfig
 
+open FStar.Class.Show
+
 module BU    = FStar.Compiler.Util
 module C     = FStar.Const
 module Err   = FStar.Errors
@@ -134,11 +136,11 @@ let term_as_fv t =
     | Tm_fvar fv -> fv
     | _ -> failwith (BU.format1 "Embeddings not defined for type %s" (Print.term_to_string t))
 
-let lazy_embed (pa:printer 'a) (et:emb_typ) rng ta (x:'a) (f:unit -> term) =
+let lazy_embed (pa:printer 'a) (et:emb_typ) rng (ta:term) (x:'a) (f:unit -> term) =
     if !Options.debug_embedding
     then BU.print3 "Embedding a %s\n\temb_typ=%s\n\tvalue is %s\n"
-                         (Print.term_to_string ta)
-                         (Print.emb_typ_to_string et)
+                         (show ta)
+                         (show et)
                          (pa x);
     if !Options.eager_embedding
     then f()
@@ -154,15 +156,15 @@ let lazy_unembed (pa:printer 'a) (et:emb_typ) (x:term) (ta:term) (f:term -> opti
       then let res = f (Thunk.force t) in
            let _ = if !Options.debug_embedding
                    then BU.print3 "Unembed cancellation failed\n\t%s <> %s\nvalue is %s\n"
-                                (Print.emb_typ_to_string et)
-                                (Print.emb_typ_to_string et')
+                                (show et)
+                                (show et')
                                 (match res with None -> "None" | Some x -> "Some " ^ (pa x))
            in
            res
       else let a = Dyn.undyn b in
            let _ = if !Options.debug_embedding
                    then BU.print2 "Unembed cancelled for %s\n\tvalue is %s\n"
-                                (Print.emb_typ_to_string et)
+                                (show et)
                                   (pa a)
            in
            Some a
@@ -170,7 +172,7 @@ let lazy_unembed (pa:printer 'a) (et:emb_typ) (x:term) (ta:term) (f:term -> opti
       let aopt = f x in
       let _ = if !Options.debug_embedding
               then BU.print3 "Unembedding:\n\temb_typ=%s\n\tterm is %s\n\tvalue is %s\n"
-                               (Print.emb_typ_to_string et)
+                               (show et)
                                (Print.term_to_string x)
                                (match aopt with None -> "None" | Some a -> "Some " ^ pa a) in
       aopt
@@ -990,7 +992,7 @@ let e_sealed (ea : embedding 'a) : embedding 'a =
                   [S.iarg (type_of ea); S.as_arg (embed ea a rng shadow_a norm)]
                   rng
     in
-    let un (t:term) norm : option (option 'a) =
+    let un (t:term) norm : option 'a =
       let hd, args = U.head_and_args_full t in
       match (U.un_uinst hd).n, args with
       | Tm_fvar fv, [_; (a, _)] when S.fv_eq_lid fv PC.seal_lid ->

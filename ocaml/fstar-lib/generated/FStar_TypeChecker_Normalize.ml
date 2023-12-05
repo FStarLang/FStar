@@ -2036,7 +2036,8 @@ let (should_unfold :
                    let uu___5 =
                      FStar_TypeChecker_Env.delta_depth_of_fv
                        cfg.FStar_TypeChecker_Cfg.tcenv fv in
-                   FStar_Syntax_Print.delta_depth_to_string uu___5 in
+                   FStar_Class_Show.show
+                     FStar_Syntax_Syntax.showable_delta_depth uu___5 in
                  let uu___5 =
                    (FStar_Common.string_of_list ())
                      FStar_TypeChecker_Env.string_of_delta_level
@@ -9008,56 +9009,62 @@ let (term_to_string :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> Prims.string) =
   fun env1 ->
     fun t ->
-      let t1 =
-        try
-          (fun uu___ ->
-             match () with
-             | () ->
-                 normalize [FStar_TypeChecker_Env.AllowUnboundUniverses] env1
-                   t) ()
-        with
-        | uu___ ->
-            ((let uu___2 =
-                let uu___3 =
-                  let uu___4 = FStar_Compiler_Util.message_of_exn uu___ in
-                  FStar_Compiler_Util.format1
-                    "Normalization failed with error %s\n" uu___4 in
-                (FStar_Errors_Codes.Warning_NormalizationFailure, uu___3) in
-              FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu___2);
-             t) in
-      let uu___ =
-        FStar_Syntax_DsEnv.set_current_module
-          env1.FStar_TypeChecker_Env.dsenv
-          env1.FStar_TypeChecker_Env.curmodule in
-      FStar_Syntax_Print.term_to_string' uu___ t1
+      FStar_GenSym.with_frozen_gensym
+        (fun uu___ ->
+           let t1 =
+             try
+               (fun uu___1 ->
+                  match () with
+                  | () ->
+                      normalize [FStar_TypeChecker_Env.AllowUnboundUniverses]
+                        env1 t) ()
+             with
+             | uu___1 ->
+                 ((let uu___3 =
+                     let uu___4 =
+                       let uu___5 = FStar_Compiler_Util.message_of_exn uu___1 in
+                       FStar_Compiler_Util.format1
+                         "Normalization failed with error %s\n" uu___5 in
+                     (FStar_Errors_Codes.Warning_NormalizationFailure,
+                       uu___4) in
+                   FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu___3);
+                  t) in
+           let uu___1 =
+             FStar_Syntax_DsEnv.set_current_module
+               env1.FStar_TypeChecker_Env.dsenv
+               env1.FStar_TypeChecker_Env.curmodule in
+           FStar_Syntax_Print.term_to_string' uu___1 t1)
 let (comp_to_string :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.comp -> Prims.string) =
   fun env1 ->
     fun c ->
-      let c1 =
-        try
-          (fun uu___ ->
-             match () with
-             | () ->
-                 let uu___1 =
-                   FStar_TypeChecker_Cfg.config
-                     [FStar_TypeChecker_Env.AllowUnboundUniverses] env1 in
-                 norm_comp uu___1 [] c) ()
-        with
-        | uu___ ->
-            ((let uu___2 =
-                let uu___3 =
-                  let uu___4 = FStar_Compiler_Util.message_of_exn uu___ in
-                  FStar_Compiler_Util.format1
-                    "Normalization failed with error %s\n" uu___4 in
-                (FStar_Errors_Codes.Warning_NormalizationFailure, uu___3) in
-              FStar_Errors.log_issue c.FStar_Syntax_Syntax.pos uu___2);
-             c) in
-      let uu___ =
-        FStar_Syntax_DsEnv.set_current_module
-          env1.FStar_TypeChecker_Env.dsenv
-          env1.FStar_TypeChecker_Env.curmodule in
-      FStar_Syntax_Print.comp_to_string' uu___ c1
+      FStar_GenSym.with_frozen_gensym
+        (fun uu___ ->
+           let c1 =
+             try
+               (fun uu___1 ->
+                  match () with
+                  | () ->
+                      let uu___2 =
+                        FStar_TypeChecker_Cfg.config
+                          [FStar_TypeChecker_Env.AllowUnboundUniverses] env1 in
+                      norm_comp uu___2 [] c) ()
+             with
+             | uu___1 ->
+                 ((let uu___3 =
+                     let uu___4 =
+                       let uu___5 = FStar_Compiler_Util.message_of_exn uu___1 in
+                       FStar_Compiler_Util.format1
+                         "Normalization failed with error %s\n" uu___5 in
+                     (FStar_Errors_Codes.Warning_NormalizationFailure,
+                       uu___4) in
+                   FStar_Errors.log_issue c.FStar_Syntax_Syntax.pos uu___3);
+                  c) in
+           let uu___1 =
+             FStar_Syntax_DsEnv.set_current_module
+               env1.FStar_TypeChecker_Env.dsenv
+               env1.FStar_TypeChecker_Env.curmodule in
+           FStar_Syntax_Print.comp_to_string' uu___1 c1)
 let (normalize_refinement :
   FStar_TypeChecker_Env.steps ->
     FStar_TypeChecker_Env.env ->

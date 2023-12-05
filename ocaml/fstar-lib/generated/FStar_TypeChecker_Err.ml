@@ -40,66 +40,58 @@ let (info_at_pos :
                        uu___3) in
                    FStar_Pervasives_Native.Some uu___1)
 let print_discrepancy : 'a 'b . ('a -> 'b) -> 'a -> 'a -> ('b * 'b) =
-  fun uu___2 ->
-    fun uu___1 ->
-      fun uu___ ->
-        (fun f ->
-           fun x ->
-             fun y ->
-               let print uu___ =
-                 let xs = f x in
-                 let ys = f y in ((Obj.magic xs), (Obj.magic ys), (xs <> ys)) in
-               let rec blist_leq l1 l2 =
-                 match (l1, l2) with
-                 | (h1::t1, h2::t2) ->
-                     ((Prims.op_Negation h1) || h2) && (blist_leq t1 t2)
-                 | ([], []) -> true
-                 | uu___ -> failwith "print_discrepancy: bad lists" in
-               let rec succ l =
-                 match l with
-                 | (false)::t -> true :: t
-                 | (true)::t -> let uu___ = succ t in false :: uu___
-                 | [] -> failwith "" in
-               let full l = FStar_Compiler_List.for_all (fun b1 -> b1) l in
-               let get_bool_option s =
-                 let uu___ = FStar_Options.get_option s in
-                 match uu___ with
-                 | FStar_Options.Bool b1 -> b1
-                 | uu___1 -> failwith "print_discrepancy: impossible" in
-               let set_bool_option s b1 =
-                 FStar_Options.set_option s (FStar_Options.Bool b1) in
-               let get uu___ =
-                 let pi = get_bool_option "print_implicits" in
-                 let pu = get_bool_option "print_universes" in
-                 let pea = get_bool_option "print_effect_args" in
-                 let pf = get_bool_option "print_full_names" in
-                 [pi; pu; pea; pf] in
-               let set l =
-                 match l with
-                 | pi::pu::pea::pf::[] ->
-                     (set_bool_option "print_implicits" pi;
-                      set_bool_option "print_universes" pu;
-                      set_bool_option "print_effect_args" pea;
-                      set_bool_option "print_full_names " pf)
-                 | uu___ -> failwith "impossible: print_discrepancy" in
-               let bas = get () in
-               let rec go cur =
-                 match () with
-                 | () when full cur ->
-                     let uu___ = print () in
-                     (match uu___ with | (xs, ys, uu___1) -> (xs, ys))
-                 | () when
-                     let uu___ = blist_leq bas cur in Prims.op_Negation uu___
-                     -> let uu___ = succ cur in go uu___
-                 | () ->
-                     (set cur;
-                      (let uu___1 = print () in
-                       match uu___1 with
-                       | (xs, ys, true) -> (xs, ys)
-                       | uu___2 -> let uu___3 = succ cur in go uu___3)) in
-               Obj.magic
-                 (FStar_Options.with_saved_options (fun uu___ -> go bas)))
-          uu___2 uu___1 uu___
+  fun f ->
+    fun x ->
+      fun y ->
+        let print uu___ =
+          let xs = f x in let ys = f y in (xs, ys, (xs <> ys)) in
+        let rec blist_leq l1 l2 =
+          match (l1, l2) with
+          | (h1::t1, h2::t2) ->
+              ((Prims.op_Negation h1) || h2) && (blist_leq t1 t2)
+          | ([], []) -> true
+          | uu___ -> failwith "print_discrepancy: bad lists" in
+        let rec succ l =
+          match l with
+          | (false)::t -> true :: t
+          | (true)::t -> let uu___ = succ t in false :: uu___
+          | [] -> failwith "" in
+        let full l = FStar_Compiler_List.for_all (fun b1 -> b1) l in
+        let get_bool_option s =
+          let uu___ = FStar_Options.get_option s in
+          match uu___ with
+          | FStar_Options.Bool b1 -> b1
+          | uu___1 -> failwith "print_discrepancy: impossible" in
+        let set_bool_option s b1 =
+          FStar_Options.set_option s (FStar_Options.Bool b1) in
+        let get uu___ =
+          let pi = get_bool_option "print_implicits" in
+          let pu = get_bool_option "print_universes" in
+          let pea = get_bool_option "print_effect_args" in
+          let pf = get_bool_option "print_full_names" in [pi; pu; pea; pf] in
+        let set l =
+          match l with
+          | pi::pu::pea::pf::[] ->
+              (set_bool_option "print_implicits" pi;
+               set_bool_option "print_universes" pu;
+               set_bool_option "print_effect_args" pea;
+               set_bool_option "print_full_names " pf)
+          | uu___ -> failwith "impossible: print_discrepancy" in
+        let bas = get () in
+        let rec go cur =
+          match () with
+          | () when full cur ->
+              let uu___ = print () in
+              (match uu___ with | (xs, ys, uu___1) -> (xs, ys))
+          | () when let uu___ = blist_leq bas cur in Prims.op_Negation uu___
+              -> let uu___ = succ cur in go uu___
+          | () ->
+              (set cur;
+               (let uu___1 = print () in
+                match uu___1 with
+                | (xs, ys, true) -> (xs, ys)
+                | uu___2 -> let uu___3 = succ cur in go uu___3)) in
+        FStar_Options.with_saved_options (fun uu___ -> go bas)
 let (errors_smt_detail :
   FStar_TypeChecker_Env.env ->
     FStar_Errors.error Prims.list ->

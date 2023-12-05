@@ -65,6 +65,32 @@ let (uu___is_ET_app : emb_typ -> Prims.bool) =
 let (__proj__ET_app__item___0 :
   emb_typ -> (Prims.string * emb_typ Prims.list)) =
   fun projectee -> match projectee with | ET_app _0 -> _0
+let rec (emb_typ_to_string : emb_typ -> Prims.string) =
+  fun uu___ ->
+    match uu___ with
+    | ET_abstract -> "abstract"
+    | ET_app (h, []) -> h
+    | ET_app (h, args) ->
+        let uu___1 =
+          let uu___2 =
+            let uu___3 =
+              let uu___4 =
+                let uu___5 = FStar_Compiler_List.map emb_typ_to_string args in
+                FStar_Compiler_Effect.op_Bar_Greater uu___5
+                  (FStar_Compiler_String.concat " ") in
+              Prims.op_Hat uu___4 ")" in
+            Prims.op_Hat " " uu___3 in
+          Prims.op_Hat h uu___2 in
+        Prims.op_Hat "(" uu___1
+    | ET_fun (a, b) ->
+        let uu___1 =
+          let uu___2 = emb_typ_to_string a in
+          let uu___3 =
+            let uu___4 = emb_typ_to_string b in Prims.op_Hat ") -> " uu___4 in
+          Prims.op_Hat uu___2 uu___3 in
+        Prims.op_Hat "(" uu___1
+let (showable_emb_typ : emb_typ FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = emb_typ_to_string }
 type version = {
   major: Prims.int ;
   minor: Prims.int }[@@deriving yojson,show]
@@ -159,6 +185,21 @@ let (uu___is_Delta_abstract : delta_depth -> Prims.bool) =
     match projectee with | Delta_abstract _0 -> true | uu___ -> false
 let (__proj__Delta_abstract__item___0 : delta_depth -> delta_depth) =
   fun projectee -> match projectee with | Delta_abstract _0 -> _0
+let rec (delta_depth_to_string : delta_depth -> Prims.string) =
+  fun uu___ ->
+    match uu___ with
+    | Delta_constant_at_level i ->
+        let uu___1 = FStar_Compiler_Util.string_of_int i in
+        Prims.op_Hat "Delta_constant_at_level " uu___1
+    | Delta_equational_at_level i ->
+        let uu___1 = FStar_Compiler_Util.string_of_int i in
+        Prims.op_Hat "Delta_equational_at_level " uu___1
+    | Delta_abstract d ->
+        let uu___1 =
+          let uu___2 = delta_depth_to_string d in Prims.op_Hat uu___2 ")" in
+        Prims.op_Hat "Delta_abstract (" uu___1
+let (showable_delta_depth : delta_depth FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = delta_depth_to_string }
 type should_check_uvar =
   | Allow_unresolved of Prims.string 
   | Allow_untyped of Prims.string 

@@ -13,12 +13,30 @@ let (term_to_doc' :
         (fun uu___ ->
            let e = FStar_Syntax_Resugar.resugar_term' env tm in
            FStar_Parser_ToDocument.term_to_document e)
+let (univ_to_doc' :
+  FStar_Syntax_DsEnv.env ->
+    FStar_Syntax_Syntax.universe -> FStar_Pprint.document)
+  =
+  fun env ->
+    fun u ->
+      FStar_GenSym.with_frozen_gensym
+        (fun uu___ ->
+           let e =
+             FStar_Syntax_Resugar.resugar_universe' env u
+               FStar_Compiler_Range_Type.dummyRange in
+           FStar_Parser_ToDocument.term_to_document e)
 let (term_to_string' :
   FStar_Syntax_DsEnv.env -> FStar_Syntax_Syntax.term -> Prims.string) =
   fun env ->
     fun tm ->
       FStar_GenSym.with_frozen_gensym
         (fun uu___ -> let d = term_to_doc' env tm in pp d)
+let (univ_to_string' :
+  FStar_Syntax_DsEnv.env -> FStar_Syntax_Syntax.universe -> Prims.string) =
+  fun env ->
+    fun u ->
+      FStar_GenSym.with_frozen_gensym
+        (fun uu___ -> let d = univ_to_doc' env u in pp d)
 let (comp_to_doc' :
   FStar_Syntax_DsEnv.env -> FStar_Syntax_Syntax.comp -> FStar_Pprint.document)
   =
@@ -58,6 +76,14 @@ let (term_to_doc : FStar_Syntax_Syntax.term -> FStar_Pprint.document) =
     FStar_GenSym.with_frozen_gensym
       (fun uu___ ->
          let e = FStar_Syntax_Resugar.resugar_term tm in
+         FStar_Parser_ToDocument.term_to_document e)
+let (univ_to_doc : FStar_Syntax_Syntax.universe -> FStar_Pprint.document) =
+  fun u ->
+    FStar_GenSym.with_frozen_gensym
+      (fun uu___ ->
+         let e =
+           FStar_Syntax_Resugar.resugar_universe u
+             FStar_Compiler_Range_Type.dummyRange in
          FStar_Parser_ToDocument.term_to_document e)
 let (comp_to_doc : FStar_Syntax_Syntax.comp -> FStar_Pprint.document) =
   fun c ->

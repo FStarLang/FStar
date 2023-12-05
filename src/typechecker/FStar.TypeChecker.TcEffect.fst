@@ -40,6 +40,7 @@ module TcUtil = FStar.TypeChecker.Util
 module Gen = FStar.TypeChecker.Generalize
 
 module BU = FStar.Compiler.Util
+open FStar.Class.Show
 
 let dmff_cps_and_elaborate env ed =
   (* This is only an elaboration rule not a typechecking one *)
@@ -56,6 +57,7 @@ let dmff_cps_and_elaborate env ed =
  * (us, t) is the tscheme to check and generalize (us will be [] in the first phase)
  *)
 let check_and_gen env (eff_name:string) (comb:string) (n:int) (us, t) : (univ_names * term * typ) =
+  Errors.with_ctx ("While checking combinator " ^ comb ^ " = " ^ show (us, t)) (fun () ->
   let us, t = SS.open_univ_vars us t in
   let t, ty =
     let t, lc, g = tc_tot_or_gtot_term (Env.push_univ_vars env us) t in
@@ -82,6 +84,7 @@ let check_and_gen env (eff_name:string) (comb:string) (n:int) (us, t) : (univ_na
                eff_name comb (Print.univ_names_to_string us) (Print.univ_names_to_string g_us)))
             t.pos in
   g_us, t, ty
+  )
 
 (*
  * A small gadget to get a uvar for pure wp with given result type

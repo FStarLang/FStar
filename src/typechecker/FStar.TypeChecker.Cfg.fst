@@ -12,6 +12,8 @@ open FStar.Syntax.Syntax
 open FStar.TypeChecker
 open FStar.TypeChecker.Env
 
+open FStar.Class.Show
+
 module S   = FStar.Syntax.Syntax
 module SS  = FStar.Syntax.Subst
 module BU  = FStar.Compiler.Util
@@ -72,7 +74,7 @@ let steps_to_string f =
     f.hnf  |> b;
     f.primops |> b;
     f.do_not_unfold_pure_lets |> b;
-    f.unfold_until |> format_opt Print.delta_depth_to_string;
+    f.unfold_until |> format_opt show;
     f.unfold_only |> format_opt (fun x -> List.map Ident.string_of_lid x |> String.concat ", ");
     f.unfold_fully |> format_opt (fun x -> List.map Ident.string_of_lid x |> String.concat ", ");
     f.unfold_attr |> format_opt (fun x -> List.map Ident.string_of_lid x |> String.concat ", ");

@@ -35,6 +35,8 @@ open FStar.TypeChecker.Common
 open FStar.TypeChecker.Env
 open FStar.TypeChecker.Cfg
 
+open FStar.Class.Show
+
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 //basic util
@@ -931,7 +933,7 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
     let default_unfolding () =
         log_unfolding cfg (fun () -> BU.print3 "should_unfold: Reached a %s with delta_depth = %s\n >> Our delta_level is %s\n"
                                                (Print.fv_to_string fv)
-                                               (Print.delta_depth_to_string (Env.delta_depth_of_fv cfg.tcenv fv))
+                                               (show (Env.delta_depth_of_fv cfg.tcenv fv))
                                                (FStar.Common.string_of_list Env.string_of_delta_level cfg.delta_level));
         yesno <| (cfg.delta_level |> BU.for_some (function
              | NoDelta -> false
@@ -3267,19 +3269,19 @@ let term_to_doc env t =
   in
   FStar.Syntax.Print.Pretty.term_to_doc' (DsEnv.set_current_module env.dsenv env.curmodule) t
 
-let term_to_string env t =
+let term_to_string env t = GenSym.with_frozen_gensym (fun () ->
   let t =
     try normalize [AllowUnboundUniverses] env t
     with e -> Errors.log_issue t.pos (Errors.Warning_NormalizationFailure, (BU.format1 "Normalization failed with error %s\n" (BU.message_of_exn e))) ; t
   in
-  Print.term_to_string' (DsEnv.set_current_module env.dsenv env.curmodule) t
+  Print.term_to_string' (DsEnv.set_current_module env.dsenv env.curmodule) t)
 
-let comp_to_string env c =
+let comp_to_string env c = GenSym.with_frozen_gensym (fun () ->
   let c =
     try norm_comp (config [AllowUnboundUniverses] env) [] c
     with e -> Errors.log_issue c.pos (Errors.Warning_NormalizationFailure, (BU.format1 "Normalization failed with error %s\n" (BU.message_of_exn e))) ; c
   in
-  Print.comp_to_string' (DsEnv.set_current_module env.dsenv env.curmodule) c
+  Print.comp_to_string' (DsEnv.set_current_module env.dsenv env.curmodule) c)
 
 let normalize_refinement steps env t0 =
    let t = normalize (steps@[Beta]) env t0 in

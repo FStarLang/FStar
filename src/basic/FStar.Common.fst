@@ -150,3 +150,10 @@ let max_suffix (f : 'a -> bool) (xs : list 'a) : list 'a * list 'a =
       (acc, x::xs)
   in
   xs |> List.rev |> aux [] |> (fun (xs, ys) -> List.rev ys, xs)
+
+let rec eq_list (f: 'a -> 'a -> bool) (l1 l2 : list 'a)
+  : bool
+  = match l1, l2 with
+    | [], [] -> true
+    | [], _ | _, [] -> false
+    | x1::t1, x2::t2 -> f x1 x2 && eq_list f t1 t2

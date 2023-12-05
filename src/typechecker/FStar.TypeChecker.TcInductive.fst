@@ -110,6 +110,12 @@ let tc_tycon (env:env_t)     (* environment that contains all mutually defined t
 
     | _ -> failwith "impossible"
 
+(* Used to make the binders of the tycon (ie parameters) implicit in
+the projectors and discriminators. We always make them implicit, but
+the argument already had a meta-qualifier, we must retain it. See bug #2591. *)
+let mk_implicit : bqual -> bqual = function
+  | Some (Meta q) -> Some (Meta q)
+  | _ -> Some (Implicit false)
 
 (* 2. Checking each datacon *)
 let tc_data (env:env_t) (tcs : list (sigelt * universe))
@@ -749,6 +755,8 @@ let check_inductive_well_typedness (env:env_t) (ses:list sigelt) (quals:list qua
     env, (tc, tc_u)::all_tcs, Env.conj_guard g (Env.conj_guard guard g')
   ) tys (env, [], Env.trivial_guard)
   in
+  (* Try to solve some implicits. See issue #3130. *)
+  let g = Rel.resolve_implicits env g in
 
   (* Check each datacon *)
   let datas, g = List.fold_right (fun se (datas, g) ->
@@ -916,7 +924,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
     let ntps = List.length tps in
     let all_params = List.map (fun b -> {b with binder_qual=Some S.imp_tag}) tps @ fields in
 
-    let imp_binders = tps @ indices |> List.map (fun b -> {b with binder_qual=Some S.imp_tag}) in
+    let imp_binders = tps @ indices |> List.map (fun b -> {b with binder_qual=mk_implicit b.binder_qual}) in
 
     let early_prims_inductive =
       lid_equals C.prims_lid  (Env.current_module env) &&

@@ -29,6 +29,9 @@ open FStar.Compiler.Range
 open FStar.Errors
 open FStar.TypeChecker.Common
 
+open FStar.Class.Show
+open FStar.Class.PP
+
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module BU = FStar.Compiler.Util
@@ -794,8 +797,8 @@ let delta_depth_of_fv env fv =
           && Options.debug_any()
           then BU.print3 "WARNING WARNING WARNING fv=%s, delta_depth=%s, env.delta_depth=%s\n"
                          (Print.fv_to_string fv)
-                         (Print.delta_depth_to_string (Some?.v fv.fv_delta))
-                         (Print.delta_depth_to_string d);
+                         (show (Some?.v fv.fv_delta))
+                         (show d);
           BU.smap_add env.fv_delta_depths (string_of_lid lid) d;
           d)
 
@@ -1185,7 +1188,7 @@ instance hasNames_lcomp : hasNames lcomp = {
   freeNames = (fun lc -> freeNames (fst (lcomp_comp lc)));
 }
 
-instance pretty_lcomp : FStar.Class.PP.pretty lcomp = {
+instance pretty_lcomp : pretty lcomp = {
   pp = (fun lc -> let open FStar.Pprint in empty);
 }
 
@@ -1195,11 +1198,11 @@ instance hasNames_guard : hasNames guard_t = {
                         | NonTrivial f -> freeNames f);
 }
 
-instance pretty_guard : Class.PP.pretty guard_t = {
+instance pretty_guard : pretty guard_t = {
   pp = (fun g -> let open FStar.Pprint in
                  match g.guard_f with
                  | Trivial -> doc_of_string "Trivial"
-                 | NonTrivial f -> doc_of_string "NonTrivial" ^/^ Class.PP.pp f);
+                 | NonTrivial f -> doc_of_string "NonTrivial" ^/^ pp f);
 }
 
 let comp_to_comp_typ (env:env) c =
@@ -1728,7 +1731,7 @@ let string_of_delta_level = function
   | NoDelta -> "NoDelta"
   | InliningDelta -> "Inlining"
   | Eager_unfolding_only -> "Eager_unfolding_only"
-  | Unfold d -> "Unfold " ^ Print.delta_depth_to_string d
+  | Unfold d -> "Unfold " ^ show d
 
 let lidents env : list lident =
   let keys = List.collect fst env.gamma_sig in

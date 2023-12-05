@@ -11,6 +11,18 @@ instance show_list (a:Type) (_ : showable a) : Tot (showable (list a)) = {
   show = FStar.Common.string_of_list show;
 }
 
+instance show_option (a:Type) (_ : showable a) : Tot (showable (option a)) = {
+  show = FStar.Common.string_of_option show;
+}
+
+instance show_either
+   (_ : showable 'a)
+   (_ : showable 'b)
+= {
+  show = (function Inl x -> "Inl " ^ show x
+                 | Inr y -> "Inr " ^ show y);
+}
+
 instance show_tuple2
    (_ : showable 'a)
    (_ : showable 'b)

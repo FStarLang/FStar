@@ -66,6 +66,8 @@ type emb_typ =
   | ET_fun  of emb_typ * emb_typ
   | ET_app  of string * list emb_typ
 
+instance val showable_emb_typ : showable emb_typ
+
 //versioning for unification variables
 [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type version = {
@@ -109,6 +111,8 @@ type delta_depth =
   | Delta_constant_at_level of int    //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int, level 0 is a constant
   | Delta_equational_at_level of int  //level 0 is a symbol that may be equated to another by extensional reasoning, n > 0 can be unfolded n times to a Delta_equational_at_level 0 term
   | Delta_abstract of delta_depth   //A symbol marked abstract whose depth is the argument d
+
+instance val showable_delta_depth : showable delta_depth
 
 [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type should_check_uvar =

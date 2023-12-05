@@ -74,13 +74,10 @@ val quals_to_string       : list qualifier -> string
 val tscheme_to_string     : tscheme -> string
 val cflag_to_string       : cflag -> string
 val cflags_to_string      : list cflag -> string
-val delta_depth_to_string : delta_depth -> string
 val action_to_string  : action -> string
 val metadata_to_string : metadata -> string
 val ctx_uvar_to_string    : ctx_uvar -> string
 val ctx_uvar_to_string_no_reason    : ctx_uvar -> string
-
-val emb_typ_to_string: emb_typ -> string
 
 val fv_qual_to_string : fv_qual -> string
 
@@ -93,10 +90,13 @@ val comp_to_doc           : comp -> Pprint.document
 val sigelt_to_doc         : sigelt -> Pprint.document
 
 instance val pretty_term     : pretty term
+instance val pretty_univ     : pretty universe
 instance val pretty_comp     : pretty comp
 instance val pretty_sigelt   : pretty sigelt
 
 instance val showable_term   : showable term
+instance val showable_univ   : showable universe
+instance val showable_comp   : showable comp
 instance val showable_sigelt : showable sigelt
 instance val showable_bv     : showable bv
 instance val showable_binder : showable binder
