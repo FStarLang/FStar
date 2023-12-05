@@ -4,6 +4,7 @@ all: verify test
 STEEL_HOME ?= ../../../..
 
 FSTAR_OPTIONS += --include $(STEEL_HOME)/lib/steel/c --warn_error @250
+FSTAR_OPTIONS += --ext compat:open_metas
 
 ifneq (,$(KRML_HOME))
 # We need to add some Low* files to the dependency roots, because
