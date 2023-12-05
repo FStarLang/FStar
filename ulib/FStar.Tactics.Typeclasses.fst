@@ -163,6 +163,7 @@ let tcresolve () : Tac unit =
     // So intro if that's the case
     // Not using intros () directly, since that unfolds aggressively if the term is not an arrow
     // TODO: Should we..?  Why wouldn't the head always be an FV?
+    let w = cur_witness () in
     maybe_intros ();
 
     // Fetch a list of all instances in scope right now.
@@ -170,7 +171,8 @@ let tcresolve () : Tac unit =
     // stored.
     let glb = lookup_attr (`tcinstance) (cur_env ()) in
     try
-      tcresolve' [] glb 16
+      tcresolve' [] glb 16;
+      debug (fun () -> "Solved to:\n\t" ^ term_to_string w)
     with
     | NoInst ->
       fail ("Could not solve constraint " ^ term_to_string (cur_goal ()))
