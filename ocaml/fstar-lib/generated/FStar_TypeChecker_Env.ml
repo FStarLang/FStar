@@ -6853,14 +6853,8 @@ let (uvars_for_binders :
                               with
                               | (FStar_Pervasives_Native.Some
                                  (FStar_Syntax_Syntax.Meta t), []) ->
-                                  let uu___2 =
-                                    let uu___3 =
-                                      let uu___4 =
-                                        FStar_Compiler_Dyn.mkdyn env1 in
-                                      (uu___4, t) in
-                                    FStar_Syntax_Syntax.Ctx_uvar_meta_tac
-                                      uu___3 in
-                                  FStar_Pervasives_Native.Some uu___2
+                                  FStar_Pervasives_Native.Some
+                                    (FStar_Syntax_Syntax.Ctx_uvar_meta_tac t)
                               | (uu___2, t::uu___3) ->
                                   FStar_Pervasives_Native.Some
                                     (FStar_Syntax_Syntax.Ctx_uvar_meta_attr t)

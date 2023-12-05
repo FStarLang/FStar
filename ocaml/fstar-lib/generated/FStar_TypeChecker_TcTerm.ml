@@ -7503,14 +7503,8 @@ and (check_application_args :
                                     FStar_Syntax_Syntax.t_unit env tau1 in
                                 (match uu___7 with
                                  | (tau2, uu___8, g_tau) ->
-                                     let uu___9 =
-                                       let uu___10 =
-                                         let uu___11 =
-                                           FStar_Compiler_Dyn.mkdyn env in
-                                         (uu___11, tau2) in
-                                       FStar_Syntax_Syntax.Ctx_uvar_meta_tac
-                                         uu___10 in
-                                     (uu___9, g_tau))
+                                     ((FStar_Syntax_Syntax.Ctx_uvar_meta_tac
+                                         tau2), g_tau))
                             | (FStar_Pervasives_Native.Some
                                (FStar_Syntax_Syntax.Implicit uu___6),
                                attr::uu___7) ->
@@ -7558,7 +7552,7 @@ and (check_application_args :
                                         let is_typeclass =
                                           match ctx_uvar_meta with
                                           | FStar_Syntax_Syntax.Ctx_uvar_meta_tac
-                                              (uu___8, tau) ->
+                                              tau ->
                                               FStar_Syntax_Util.is_fvar
                                                 FStar_Parser_Const.tcresolve_lid
                                                 tau

@@ -316,7 +316,7 @@ and ctx_uvar =
   ctx_uvar_range: FStar_Compiler_Range_Type.range ;
   ctx_uvar_meta: ctx_uvar_meta_t FStar_Pervasives_Native.option }
 and ctx_uvar_meta_t =
-  | Ctx_uvar_meta_tac of (FStar_Compiler_Dyn.dyn * term' syntax) 
+  | Ctx_uvar_meta_tac of term' syntax 
   | Ctx_uvar_meta_attr of term' syntax 
 and uvar_decoration =
   {
@@ -684,8 +684,7 @@ let (__proj__Mkctx_uvar__item__ctx_uvar_meta :
 let (uu___is_Ctx_uvar_meta_tac : ctx_uvar_meta_t -> Prims.bool) =
   fun projectee ->
     match projectee with | Ctx_uvar_meta_tac _0 -> true | uu___ -> false
-let (__proj__Ctx_uvar_meta_tac__item___0 :
-  ctx_uvar_meta_t -> (FStar_Compiler_Dyn.dyn * term' syntax)) =
+let (__proj__Ctx_uvar_meta_tac__item___0 : ctx_uvar_meta_t -> term' syntax) =
   fun projectee -> match projectee with | Ctx_uvar_meta_tac _0 -> _0
 let (uu___is_Ctx_uvar_meta_attr : ctx_uvar_meta_t -> Prims.bool) =
   fun projectee ->

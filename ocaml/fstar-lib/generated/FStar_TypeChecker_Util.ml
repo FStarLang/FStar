@@ -6712,10 +6712,7 @@ let (maybe_instantiate :
                              match (qual, attrs) with
                              | (FStar_Pervasives_Native.Some
                                 (FStar_Syntax_Syntax.Meta tau), uu___5) ->
-                                 let uu___6 =
-                                   let uu___7 = FStar_Compiler_Dyn.mkdyn env in
-                                   (uu___7, tau) in
-                                 FStar_Syntax_Syntax.Ctx_uvar_meta_tac uu___6
+                                 FStar_Syntax_Syntax.Ctx_uvar_meta_tac tau
                              | (uu___5, attr::uu___6) ->
                                  FStar_Syntax_Syntax.Ctx_uvar_meta_attr attr
                              | uu___5 ->
@@ -6724,8 +6721,7 @@ let (maybe_instantiate :
                            let msg =
                              let is_typeclass =
                                match meta_t with
-                               | FStar_Syntax_Syntax.Ctx_uvar_meta_tac
-                                   (uu___5, tau) ->
+                               | FStar_Syntax_Syntax.Ctx_uvar_meta_tac tau ->
                                    FStar_Syntax_Util.is_fvar
                                      FStar_Parser_Const.tcresolve_lid tau
                                | uu___5 -> false in
