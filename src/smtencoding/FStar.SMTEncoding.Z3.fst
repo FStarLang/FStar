@@ -217,14 +217,17 @@ let check_z3version (p:proc) : unit =
   let ver_found : string = BU.trim_string (List.hd (BU.split (getinfo "version") "-")) in
   let ver_conf  : string = BU.trim_string (Options.z3_version ()) in
   if ver_conf <> ver_found && not (!_already_warned_version_mismatch) then (
-    Errors.log_issue Range.dummyRange (Errors.Warning_SolverMismatch,
-      BU.format5 "Unexpected Z3 version for `%s': expected `%s', got `%s'.\n\
-                  Please download the correct version of Z3 from %s\n\
-                  and install it into your $PATH as `%s'."
-        (proc_prog p)
-        ver_conf ver_found
-        z3url (Platform.exe ("z3-" ^ Options.z3_version  ()))
-        );
+    let open FStar.Errors in
+    let open FStar.Pprint in
+    Errors.log_issue_doc Range.dummyRange (Errors.Warning_SolverMismatch, [
+      text (BU.format3 "Unexpected Z3 version for '%s': expected '%s', got '%s'."
+                  (proc_prog p) ver_conf ver_found);
+      prefix 4 1 (text "Please download the correct version of Z3 from")
+                 (url z3url) ^/^
+        group (text "and install it into your $PATH as" ^/^ squotes
+          (doc_of_string (Platform.exe ("z3-" ^ Options.z3_version  ()))) ^^ dot);
+    ]);
+    Errors.stop_if_err(); (* stop now if this was a hard error *)
     _already_warned_version_mismatch := true
   );
   ()
